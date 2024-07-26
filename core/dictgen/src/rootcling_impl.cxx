@@ -3707,8 +3707,7 @@ gOptCint("cint", llvm::cl::desc("Deprecated, legacy flag which is ignored."),
         llvm::cl::Hidden,
         llvm::cl::cat(gRootclingOptions));
 static llvm::cl::opt<bool>
-gOptReflex("reflex", llvm::cl::desc("Deprecated, legacy flag which is ignored."),
-          llvm::cl::Hidden,
+gOptReflex("reflex", llvm::cl::desc("Behave internally like genreflex."),
           llvm::cl::cat(gRootclingOptions));
 static llvm::cl::opt<bool>
 gOptGccXml("gccxml", llvm::cl::desc("Deprecated, legacy flag which is ignored."),
@@ -3846,7 +3845,7 @@ gOptWDiags("W", llvm::cl::Prefix, llvm::cl::ZeroOrMore,
 // Really OneOrMore, will be changed in RootClingMain below.
 static llvm::cl::list<std::string>
 gOptDictionaryHeaderFiles(llvm::cl::Positional, llvm::cl::ZeroOrMore,
-                         llvm::cl::desc("<list of dictionary header files> <LinkDef file>"),
+                         llvm::cl::desc("<list of dictionary header files> <LinkDef file | selection xml file>"),
                          llvm::cl::cat(gRootclingOptions));
 static llvm::cl::list<std::string>
 gOptSink(llvm::cl::ZeroOrMore, llvm::cl::Sink,
@@ -5295,6 +5294,7 @@ namespace genreflex {
                        bool noGlobalUsingStd,
                        const std::vector<std::string> &headersNames,
                        bool failOnWarnings,
+                       bool printRootclingInvocation,
                        const std::string &ofilename)
    {
       // Prepare and invoke the commandline to invoke rootcling
@@ -5347,6 +5347,10 @@ namespace genreflex {
          argvVector.push_back(string2charptr("-rml"));
          argvVector.push_back(string2charptr(newRootmapLibName));
       }
+
+      // Always use the -reflex option: we want rootcling to behave
+      // like genreflex in this case
+      argvVector.push_back(string2charptr("-reflex"));
 
       // Interpreter only dictionaries
       if (interpreteronly)
@@ -5407,10 +5411,16 @@ namespace genreflex {
       const int argc = argvVector.size();
 
       // Output commandline for rootcling
-      if (genreflex::verbose) {
-         std::cout << "Rootcling commandline:\n";
-         for (int i = 0; i < argc; i++)
-            std::cout << i << ") " << argvVector[i] << std::endl;
+      if (genreflex::verbose || printRootclingInvocation) {
+         std::string cmd;
+         for (int i = 0; i < argc; i++) {
+            cmd += argvVector[i];
+            cmd += " ";
+         }
+         cmd.pop_back();
+         if (genreflex::verbose) std::cout << "Rootcling commandline: ";
+         std::cout << cmd << std::endl;
+         if (printRootclingInvocation) return 0; // we do not generate anything
       }
 
       char **argv =  & (argvVector[0]);
@@ -5449,6 +5459,7 @@ namespace genreflex {
                            bool noGlobalUsingStd,
                            const std::vector<std::string> &headersNames,
                            bool failOnWarnings,
+                           bool printRootclingInvocation,
                            const std::string &outputDirName_const = "")
    {
       std::string outputDirName(outputDirName_const);
@@ -5486,6 +5497,7 @@ namespace genreflex {
                                           noGlobalUsingStd,
                                           namesSingleton,
                                           failOnWarnings,
+                                          printRootclingInvocation,
                                           ofilenameFullPath);
          if (returnCode != 0)
             return returnCode;
@@ -5587,6 +5599,7 @@ int GenReflexMain(int argc, char **argv)
 
    // Setup the options parser
    enum  optionIndex { UNKNOWN,
+                       PRINTROOTCLINGINVOCATION,
                        OFILENAME,
                        TARGETLIB,
                        MULTIDICT,
@@ -5621,9 +5634,21 @@ int GenReflexMain(int argc, char **argv)
 
    // Some long help strings
    const char *genreflexUsage =
+      "********************************************************************************\n"
+      "* The genreflex utility does not allow to generate C++ modules containing      *\n"
+      "* reflection information required at runtime. Please use rootcling instead     *\n"
+      "* To print the rootcling invocation that corresponds to the current genreflex  *\n"
+      "* invocation please use the --print-rootcling-invocation flag.                 *\n"
+      "********************************************************************************\n"
+      "\n"
       "Generates dictionary sources and related ROOT pcm starting from an header.\n"
       "Usage: genreflex headerfile.h [opts] [preproc. opts]\n\n"
       "Options:\n";
+
+   const char *printRootclingInvocationUsage =
+      "--print-rootcling-invocation\n"
+      "      Print to screen the rootcling invocation corresponding to the current \n"
+      "      genreflex invocation.\n";
 
    const char *selectionFilenameUsage =
       "-s, --selection_file\tSelection filename\n"
@@ -5720,12 +5745,21 @@ int GenReflexMain(int argc, char **argv)
 
    // The Descriptor
    const ROOT::option::Descriptor genreflexUsageDescriptor[] = {
+
       {
          UNKNOWN,
          NOTYPE,
          "", "",
          ROOT::option::Arg::None,
          genreflexUsage
+      },
+
+      {
+         PRINTROOTCLINGINVOCATION,
+         NOTYPE,
+         "", "print-rootcling-invocation",
+         ROOT::option::Arg::None,
+         printRootclingInvocationUsage
       },
 
       {
@@ -6051,6 +6085,10 @@ int GenReflexMain(int argc, char **argv)
       return 1;
    }
 
+   bool printRootclingInvocation = false;
+   if (options[PRINTROOTCLINGINVOCATION])
+      printRootclingInvocation = true;
+
    bool interpreteronly = false;
    if (options[INTERPRETERONLY])
       interpreteronly = true;
@@ -6137,6 +6175,7 @@ int GenReflexMain(int argc, char **argv)
                                     noGlobalUsingStd,
                                     headersNames,
                                     failOnWarnings,
+                                    printRootclingInvocation,
                                     ofileName);
    } else {
       // Here ofilename is either "" or a directory: this is irrelevant.
@@ -6160,6 +6199,7 @@ int GenReflexMain(int argc, char **argv)
                                         noGlobalUsingStd,
                                         headersNames,
                                         failOnWarnings,
+                                        printRootclingInvocation,
                                         ofileName);
    }
 
