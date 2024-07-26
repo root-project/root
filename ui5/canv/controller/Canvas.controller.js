@@ -47,6 +47,7 @@ sap.ui.define([
                                      TooltipIcon: chk_icon(true),
                                      AutoResizeIcon: chk_icon(true),
                                      HighlightPadIcon: chk_icon(false),
+                                     CanvasName: 'c1',
                                      StatusLbl1: '', StatusLbl2: '', StatusLbl3: '', StatusLbl4: '',
                                      Standalone: true, isRoot6: true, canResize: true, FixedSize: false });
          this.getView().setModel(model);
@@ -70,6 +71,7 @@ sap.ui.define([
             cp.removeGed = this.cleanupIfGed.bind(this);
             cp.hasGed = this.isGedEditor.bind(this);
 
+            cp.onCanvasUpdated = this.onCanvasUpdated.bind(this);
             cp.hasMenuBar = this.isMenuBarShow.bind(this);
             cp.actiavteMenuBar = this.toggleMenuBar.bind(this);
             cp.hasEventStatus = this.isStatusShown.bind(this);
@@ -111,6 +113,12 @@ sap.ui.define([
 
       isv7() {
          return this.getCanvasPainter()?.v7canvas;
+      },
+
+      onCanvasUpdated() {
+         const canv_name = this.getCanvasPainter()?.getCanvasName();
+         if (canv_name)
+            this.getView().getModel().setProperty('/CanvasName', canv_name);
       },
 
       executeObjectMethod(painter, method, menu_obj_id) {
@@ -278,7 +286,8 @@ sap.ui.define([
          let p = this.getCanvasPainter();
          if (!p) return;
 
-         let name = oEvent.getParameter('item').getText();
+         let name = oEvent.getParameter('item').getText(),
+             canname = this.getView().getModel().getProperty('/CanvasName');
 
          switch (name) {
             case 'Close canvas':
@@ -294,15 +303,15 @@ sap.ui.define([
             case 'Quit ROOT':
                p.sendWebsocket('QUIT');
                break;
-            case 'Canvas.png':
-            case 'Canvas.jpeg':
-            case 'Canvas.svg':
+            case canname + '.png':
+            case canname + '.jpeg':
+            case canname + '.svg':
                p.saveCanvasAsFile(name);
                break;
-            case 'Canvas.root':
-            case 'Canvas.pdf':
-            case 'Canvas.ps':
-            case 'Canvas.C':
+            case canname + '.root':
+            case canname + '.pdf':
+            case canname + '.ps':
+            case canname + '.C':
                p.sendSaveCommand(name);
                break;
             case 'Save as ...': {
@@ -312,7 +321,7 @@ sap.ui.define([
 
                FileDialogController.SaveAs({
                   websocket: p._websocket,
-                  filename: 'Canvas.png',
+                  filename: canname + '.png',
                   title: 'Select file name to save canvas',
                   filter: 'Png files',
                   filters,
