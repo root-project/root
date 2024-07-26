@@ -282,7 +282,6 @@ public:
    /// If CppT == void, use the default C++ type for the given column type
    template <typename CppT = void>
    static std::unique_ptr<RColumnElementBase> Generate(EColumnType type);
-   static std::size_t GetBitsOnStorage(EColumnType type);
    static std::string GetTypeName(EColumnType type);
    /// Most types have a fixed on-disk bit width. Some low-precision column types
    /// have a range of possible bit widths. Return the minimum and maximum allowed
