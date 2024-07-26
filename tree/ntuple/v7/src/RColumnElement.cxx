@@ -15,8 +15,6 @@
 
 #include <ROOT/RColumnElement.hxx>
 
-#include <TError.h>
-
 #include <algorithm>
 #include <bitset>
 #include <cassert>
@@ -59,7 +57,7 @@ ROOT::Experimental::Internal::RColumnElementBase::Generate<void>(EColumnType typ
    case EColumnType::kSplitUInt32: return std::make_unique<RColumnElement<std::uint32_t, EColumnType::kSplitUInt32>>();
    case EColumnType::kSplitInt16: return std::make_unique<RColumnElement<std::int16_t, EColumnType::kSplitInt16>>();
    case EColumnType::kSplitUInt16: return std::make_unique<RColumnElement<std::uint16_t, EColumnType::kSplitUInt16>>();
-   default: R__ASSERT(false);
+   default: assert(false);
    }
    // never here
    return nullptr;
