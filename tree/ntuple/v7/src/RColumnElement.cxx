@@ -65,42 +65,6 @@ ROOT::Experimental::Internal::RColumnElementBase::Generate<void>(EColumnType typ
    return nullptr;
 }
 
-std::size_t ROOT::Experimental::Internal::RColumnElementBase::GetBitsOnStorage(EColumnType type)
-{
-   switch (type) {
-   case EColumnType::kIndex64: return 64;
-   case EColumnType::kIndex32: return 32;
-   case EColumnType::kSwitch: return 96;
-   case EColumnType::kByte: return 8;
-   case EColumnType::kChar: return 8;
-   case EColumnType::kBit: return 1;
-   case EColumnType::kReal64: return 64;
-   case EColumnType::kReal32: return 32;
-   case EColumnType::kReal16: return 16;
-   case EColumnType::kInt64: return 64;
-   case EColumnType::kUInt64: return 64;
-   case EColumnType::kInt32: return 32;
-   case EColumnType::kUInt32: return 32;
-   case EColumnType::kInt16: return 16;
-   case EColumnType::kUInt16: return 16;
-   case EColumnType::kInt8: return 8;
-   case EColumnType::kUInt8: return 8;
-   case EColumnType::kSplitIndex64: return 64;
-   case EColumnType::kSplitIndex32: return 32;
-   case EColumnType::kSplitReal64: return 64;
-   case EColumnType::kSplitReal32: return 32;
-   case EColumnType::kSplitInt64: return 64;
-   case EColumnType::kSplitUInt64: return 64;
-   case EColumnType::kSplitInt32: return 32;
-   case EColumnType::kSplitUInt32: return 32;
-   case EColumnType::kSplitInt16: return 16;
-   case EColumnType::kSplitUInt16: return 16;
-   default: R__ASSERT(false);
-   }
-   // never here
-   return 0;
-}
-
 std::pair<std::uint16_t, std::uint16_t>
 ROOT::Experimental::Internal::RColumnElementBase::GetValidBitRange(EColumnType type)
 {
