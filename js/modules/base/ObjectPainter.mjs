@@ -2,7 +2,7 @@ import { select as d3_select, pointer as d3_pointer } from '../d3.mjs';
 import { settings, constants, internals, isNodeJs, isBatchMode, getPromise, BIT,
          prROOT, clTObjString, clTAxis, isObject, isFunc, isStr, getDocument } from '../core.mjs';
 import { isPlainText, producePlainText, produceLatex, produceMathjax, typesetMathjax } from './latex.mjs';
-import { getElementRect, BasePainter, makeTranslate } from './BasePainter.mjs';
+import { getElementRect, BasePainter, makeTranslate, DrawOptions } from './BasePainter.mjs';
 import { TAttMarkerHandler } from './TAttMarkerHandler.mjs';
 import { TAttFillHandler } from './TAttFillHandler.mjs';
 import { TAttLineHandler } from './TAttLineHandler.mjs';
@@ -310,6 +310,11 @@ class ObjectPainter extends BasePainter {
      * @protected */
    createG(frame_layer) {
       let layer;
+
+      if (frame_layer === 'frame2d') {
+         const fp = this.getFramePainter();
+         frame_layer = fp && !fp.mode3d;
+      }
 
       if (frame_layer) {
          const frame = this.getFrameSvg();
@@ -1734,4 +1739,5 @@ const EAxisBits = {
 
 export { getElementCanvPainter, getElementMainPainter, drawingJSON,
          selectActivePad, getActivePad, cleanup, resize,
-         ObjectPainter, drawRawText, EAxisBits, kAxisLabels, kAxisNormal, kAxisFunc, kAxisTime };
+         ObjectPainter, DrawOptions, drawRawText,
+         EAxisBits, kAxisLabels, kAxisNormal, kAxisFunc, kAxisTime };
