@@ -1214,7 +1214,7 @@ ROOT::Experimental::RCardinalityField::GetColumnRepresentations() const
 
 void ROOT::Experimental::RCardinalityField::GenerateColumns(const RNTupleDescriptor &desc)
 {
-   GenerateColumnsImpl<0, ClusterSize_t>(desc);
+   GenerateColumnsImpl<ClusterSize_t>(desc);
 }
 
 void ROOT::Experimental::RCardinalityField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
@@ -1458,12 +1458,12 @@ ROOT::Experimental::RField<std::string>::GetColumnRepresentations() const
 
 void ROOT::Experimental::RField<std::string>::GenerateColumns()
 {
-   GenerateColumnsImpl<0, ClusterSize_t, char>();
+   GenerateColumnsImpl<ClusterSize_t, char>();
 }
 
 void ROOT::Experimental::RField<std::string>::GenerateColumns(const RNTupleDescriptor &desc)
 {
-   GenerateColumnsImpl<0, ClusterSize_t, char>(desc);
+   GenerateColumnsImpl<ClusterSize_t, char>(desc);
 }
 
 std::size_t ROOT::Experimental::RField<std::string>::AppendImpl(const void *from)
@@ -1892,12 +1892,12 @@ ROOT::Experimental::RUnsplitField::GetColumnRepresentations() const
 
 void ROOT::Experimental::RUnsplitField::GenerateColumns()
 {
-   GenerateColumnsImpl<0, ClusterSize_t, std::byte>();
+   GenerateColumnsImpl<ClusterSize_t, std::byte>();
 }
 
 void ROOT::Experimental::RUnsplitField::GenerateColumns(const RNTupleDescriptor &desc)
 {
-   GenerateColumnsImpl<0, ClusterSize_t, std::byte>(desc);
+   GenerateColumnsImpl<ClusterSize_t, std::byte>(desc);
 }
 
 void ROOT::Experimental::RUnsplitField::ConstructValue(void *where) const
@@ -2152,12 +2152,12 @@ ROOT::Experimental::RProxiedCollectionField::GetColumnRepresentations() const
 
 void ROOT::Experimental::RProxiedCollectionField::GenerateColumns()
 {
-   GenerateColumnsImpl<0, ClusterSize_t>();
+   GenerateColumnsImpl<ClusterSize_t>();
 }
 
 void ROOT::Experimental::RProxiedCollectionField::GenerateColumns(const RNTupleDescriptor &desc)
 {
-   GenerateColumnsImpl<0, ClusterSize_t>(desc);
+   GenerateColumnsImpl<ClusterSize_t>(desc);
 }
 
 void ROOT::Experimental::RProxiedCollectionField::ConstructValue(void *where) const
@@ -2422,12 +2422,12 @@ ROOT::Experimental::RVectorField::GetColumnRepresentations() const
 
 void ROOT::Experimental::RVectorField::GenerateColumns()
 {
-   GenerateColumnsImpl<0, ClusterSize_t>();
+   GenerateColumnsImpl<ClusterSize_t>();
 }
 
 void ROOT::Experimental::RVectorField::GenerateColumns(const RNTupleDescriptor &desc)
 {
-   GenerateColumnsImpl<0, ClusterSize_t>(desc);
+   GenerateColumnsImpl<ClusterSize_t>(desc);
 }
 
 void ROOT::Experimental::RVectorField::RVectorDeleter::operator()(void *objPtr, bool dtorOnly)
@@ -2663,12 +2663,12 @@ ROOT::Experimental::RRVecField::GetColumnRepresentations() const
 
 void ROOT::Experimental::RRVecField::GenerateColumns()
 {
-   GenerateColumnsImpl<0, ClusterSize_t>();
+   GenerateColumnsImpl<ClusterSize_t>();
 }
 
 void ROOT::Experimental::RRVecField::GenerateColumns(const RNTupleDescriptor &desc)
 {
-   GenerateColumnsImpl<0, ClusterSize_t>(desc);
+   GenerateColumnsImpl<ClusterSize_t>(desc);
 }
 
 void ROOT::Experimental::RRVecField::ConstructValue(void *where) const
@@ -2779,12 +2779,12 @@ ROOT::Experimental::RField<std::vector<bool>>::GetColumnRepresentations() const
 
 void ROOT::Experimental::RField<std::vector<bool>>::GenerateColumns()
 {
-   GenerateColumnsImpl<0, ClusterSize_t>();
+   GenerateColumnsImpl<ClusterSize_t>();
 }
 
 void ROOT::Experimental::RField<std::vector<bool>>::GenerateColumns(const RNTupleDescriptor &desc)
 {
-   GenerateColumnsImpl<0, ClusterSize_t>(desc);
+   GenerateColumnsImpl<ClusterSize_t>(desc);
 }
 
 std::vector<ROOT::Experimental::RFieldBase::RValue>
@@ -3070,12 +3070,12 @@ ROOT::Experimental::RBitsetField::GetColumnRepresentations() const
 
 void ROOT::Experimental::RBitsetField::GenerateColumns()
 {
-   GenerateColumnsImpl<0, bool>();
+   GenerateColumnsImpl<bool>();
 }
 
 void ROOT::Experimental::RBitsetField::GenerateColumns(const RNTupleDescriptor &desc)
 {
-   GenerateColumnsImpl<0, bool>(desc);
+   GenerateColumnsImpl<bool>(desc);
 }
 
 std::size_t ROOT::Experimental::RBitsetField::AppendImpl(const void *from)
@@ -3223,12 +3223,12 @@ ROOT::Experimental::RVariantField::GetColumnRepresentations() const
 
 void ROOT::Experimental::RVariantField::GenerateColumns()
 {
-   GenerateColumnsImpl<0, RColumnSwitch>();
+   GenerateColumnsImpl<RColumnSwitch>();
 }
 
 void ROOT::Experimental::RVariantField::GenerateColumns(const RNTupleDescriptor &desc)
 {
-   GenerateColumnsImpl<0, RColumnSwitch>(desc);
+   GenerateColumnsImpl<RColumnSwitch>(desc);
 }
 
 void ROOT::Experimental::RVariantField::ConstructValue(void *where) const
@@ -3780,12 +3780,12 @@ ROOT::Experimental::RCollectionField::GetColumnRepresentations() const
 
 void ROOT::Experimental::RCollectionField::GenerateColumns()
 {
-   GenerateColumnsImpl<0, ClusterSize_t>();
+   GenerateColumnsImpl<ClusterSize_t>();
 }
 
 void ROOT::Experimental::RCollectionField::GenerateColumns(const RNTupleDescriptor &desc)
 {
-   GenerateColumnsImpl<0, ClusterSize_t>(desc);
+   GenerateColumnsImpl<ClusterSize_t>(desc);
 }
 
 std::unique_ptr<ROOT::Experimental::RFieldBase>
