@@ -130,6 +130,21 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+inline std::ostream &Err() {
+   std::cerr << "[ Error ] hadd: ";
+   return std::cerr;
+}
+
+inline std::ostream &Warn() {
+   std::cerr << "[Warning] hadd: ";
+   return std::cerr;
+}
+
+inline std::ostream &Info() {
+   std::cerr << "[ Info  ] hadd: ";
+   return std::cerr;
+}
+
 using IntFlag_t = uint32_t;
 
 struct HAddArgs {
@@ -162,7 +177,7 @@ static EFlagResult FlagToggle(const char *arg, const char *flagStr, bool &flagOu
    const auto flagLen = strlen(flagStr);
    if (argLen == flagLen && strncmp(arg, flagStr, flagLen) == 0) {
       if (flagOut)
-         std::cerr << "[warn] Duplicate flag: " << flagStr << "\n";
+         Warn() << "duplicate flag: " << flagStr << "\n";
       flagOut = true;
    }
    return flagOut ? EFlagResult::kParsed : EFlagResult::kIgnored;
@@ -214,7 +229,7 @@ FlagConvResult<IntFlag_t> ConvertArg<IntFlag_t>(const char *arg)
    if (intOpt)
       return { *intOpt, EFlagResult::kParsed };
 
-   std::cerr << "[err] Error parsing integer argument '" << arg << "'\n";
+   Err() << "error parsing integer argument '" << arg << "'\n";
    return { {}, EFlagResult::kError };
 }
 
@@ -227,7 +242,7 @@ FlagConvResult<ROOT::TIOFeatures> ConvertArg<ROOT::TIOFeatures>(const char *arg)
    std::string item;
    while (std::getline(ss, item, ',')) {
       if (!features.Set(item))
-         std::cerr << "Ignoring unknown feature request: " << item << std::endl;
+         Warn() << "ignoring unknown feature request: " << item << "\n";
    }
    return { features, EFlagResult::kParsed };
 }
@@ -241,7 +256,7 @@ static FlagConvResult<IntFlag_t> ConvertNProcesses(const char *arg)
       np = { 0, EFlagResult::kParsed };
    }
    if (np.fValue == 0) {
-      std::cerr << "Error: the number of parallel processes passed after -j is invalid: " << arg
+      Warn() << "the number of parallel processes passed after -j is invalid: " << arg
                 << ". We will use the system maximum.\n";
    }
    return np;
@@ -253,16 +268,15 @@ static FlagConvResult<TString> ConvertCacheSize(const char *arg)
    int size;
    auto parseResult = ROOT::FromHumanReadableSize(arg, size);
    if (parseResult == ROOT::EFromHumanReadableSize::kParseFail) {
-      std::cerr << "Error: could not parse the cache size passed after -cachesize: " << arg
-                << ". We will use the default value.\n";
-      return { "", EFlagResult::kParsed };
+      Err() << "could not parse the cache size passed after -cachesize: '" << arg << "'\n";
+      return { "", EFlagResult::kError };
    } else if (parseResult == ROOT::EFromHumanReadableSize::kOverflow) {
       double m;
       const char *munit = nullptr;
       ROOT::ToHumanReadableSize(INT_MAX, false, &m, &munit);
-      std::cerr << "Error: the cache size passed after -cachesize is too large: " << arg << " is greater than " << m
-                << munit << ". We will use the default value.\n";
-      return { "", EFlagResult::kParsed };
+      Warn() << "the cache size passed after -cachesize is too large: " << arg << " is greater than " << m
+                << munit << ". We will use the maximum value.\n";
+      return { std::to_string(m) + munit, EFlagResult::kParsed };
    } else {
       cacheSize = "cachesize=";
       cacheSize.Append(arg);
@@ -298,7 +312,7 @@ static EFlagResult FlagArg(int argc, char **argv, int &argIdxInOut, const char *
          ++argIdxInOut;
          nxtArg = argv[argIdxInOut];
       } else {
-         std::cerr << "[err] Expected argument after '-" << flagStr << "' flag.\n";
+         Err() << "Expected argument after '-" << flagStr << "' flag.\n";
          return EFlagResult::kError;
       }
    } else {
@@ -314,7 +328,7 @@ static EFlagResult FlagArg(int argc, char **argv, int &argIdxInOut, const char *
          // If we had tried parsing the next argument, step back one arg idx.
          argIdxInOut -= (argIdxInOut > argIdx);
       } else {
-         std::cerr << "[err] The argument after '-" << flagStr << "' flag was not of the expected type.\n";
+         Err() << "the argument after '-" << flagStr << "' flag was not of the expected type.\n";
          return EFlagResult::kError;
       }
    } else {
@@ -329,6 +343,12 @@ static bool ValidCompressionSettings(int compSettings)
    // Must be a number between 0 and 509 (with a 0 in the middle) 
    if (compSettings == 0)
       return true;
+   // We also accept [1-9] as aliases of [101-109], but it's discouraged.
+   if (compSettings >= 1 && compSettings <= 9) {
+      Warn() << "interpreting " << compSettings << " as " << 100 + compSettings << "."
+         " This behavior is deprecated, please use the full compression settings.\n";
+      return true;
+   }
    return (compSettings >= 100 && compSettings <= 509) && ((compSettings / 10) % 10 == 0);
 }
 
@@ -362,7 +382,7 @@ static EFlagResult FlagF(const char *arg, HAddArgs &args)
       switch (cur[0]) {
       case 'f':
          if (args.fUseFirstInputCompression)
-            std::cerr << "[warn] Duplicate flag: -ff\n";
+            Warn() << "duplicate flag: -ff\n";
          if (args.fCompressionSettings) {
             std::cerr
                << "[err] Cannot specify both -ff and -f[0-9]. Either use the first input compression or specify it.\n";
@@ -372,13 +392,13 @@ static EFlagResult FlagF(const char *arg, HAddArgs &args)
          break;
       case 'k':
          if (args.fKeepCompressionAsIs)
-            std::cerr << "[warn] Duplicate flag: -fk\n";
+            Warn() << "duplicate flag: -fk\n";
          args.fKeepCompressionAsIs = true;
          break;
       default:
          if (isdigit(cur[0])) {
             if (args.fUseFirstInputCompression) {
-               std::cerr << "[err] Cannot specify both -ff and -f[0-9]. Either use the first input compression or "
+               Err() << "cannot specify both -ff and -f[0-9]. Either use the first input compression or "
                             "specify it.\n";
                return EFlagResult::kError;
             } else if (!args.fCompressionSettings) {
@@ -389,19 +409,19 @@ static EFlagResult FlagF(const char *arg, HAddArgs &args)
                      // incorrectly parsing the rest of the characters in `arg`.
                      return EFlagResult::kParsed;
                   } else {
-                     std::cerr << "[err] " << *compLv << " is not a supported compression settings.\n";
+                     Err() << *compLv << " is not a supported compression settings.\n";
                      return EFlagResult::kError;
                   }
                } else {
-                  std::cerr << "[err] Failed to parse compression settings '" << cur << "' as an integer.\n";
+                  Err() << "failed to parse compression settings '" << cur << "' as an integer.\n";
                   return EFlagResult::kError;
                }
             } else {
-               std::cerr << "[err] Cannot specify -f[0-9] multiple times!\n";
+               Err() << "cannot specify -f[0-9] multiple times!\n";
                return EFlagResult::kError;
             }
          } else {
-            std::cerr << "[err] Invalid flag: " << arg << "\n";
+            Err() << "invalid flag: " << arg << "\n";
             return EFlagResult::kError;
          }
       }
@@ -451,7 +471,7 @@ static std::optional<HAddArgs> ParseArgs(int argc, char **argv)
 #undef PARSE_FLAG
 
          if (!validFlag)
-            std::cerr << "[warn] Unknown flag: " << argRaw << "\n";
+            Warn() << "unknown flag: " << argRaw << "\n";
 
       } else if (!args.fOutputArgIdx) {
          args.fOutputArgIdx = argIdx;
@@ -491,14 +511,13 @@ int main(int argc, char **argv)
       nProcesses = s.fCpus;
    }
    if (multiproc)
-      std::cout << "Parallelizing  with " << nProcesses << " processes.\n";
+      Info() << "parallelizing  with " << nProcesses << " processes.\n";
    std::string workingDir;
    if (!args.fWorkingDir) {
       workingDir = gSystem->TempDirectory();
    } else if (args.fWorkingDir && gSystem->AccessPathName(args.fWorkingDir->c_str())) {
-      std::cerr << "Error: could not access the directory specified: " << *args.fWorkingDir
-                << ". We will use the system's temporary directory.\n";
-      workingDir = gSystem->TempDirectory();
+      Err() << "could not access the directory specified: " << *args.fWorkingDir << ".\n";
+      return 1;
    } else {
       workingDir = *args.fWorkingDir;
    }
@@ -508,17 +527,17 @@ int main(int argc, char **argv)
 
    const char *targetname = 0;
    if (!args.fOutputArgIdx) {
-      std::cerr << "Missing output file.\n";
+      Err() << "missing output file.\n";
       return 1;
    }
    if (!args.fFirstInputIdx) {
-      std::cerr << "Missing input file.\n";
+      Err() << "missing input file.\n";
       return 1;
    }
    targetname = argv[args.fOutputArgIdx];
 
    if (verbosity > 1) {
-      std::cout << "hadd Target file: " << targetname << std::endl;
+      Info() << "target file: " << targetname << std::endl;
    }
 
    TFileMerger fileMerger(kFALSE, kFALSE);
@@ -538,7 +557,7 @@ int main(int argc, char **argv)
       if (argv[a] && argv[a][0] == '@') {
          std::ifstream indirect_file(argv[a] + 1);
          if (!indirect_file.is_open()) {
-            std::cerr << "hadd could not open indirect file " << (argv[a] + 1) << std::endl;
+            Err() << "could not open indirect file " << (argv[a] + 1) << std::endl;
             if (!args.fSkipErrors)
                return 1;
          } else {
@@ -546,7 +565,7 @@ int main(int argc, char **argv)
             while (indirect_file) {
                if (std::getline(indirect_file, line) && line.length()) {
                   if (gSystem->AccessPathName(line.c_str(), kReadPermission) == kTRUE) {
-                     std::cerr << "hadd could not validate the file name \"" << line << "\" within indirect file "
+                     Err() << "could not validate the file name \"" << line << "\" within indirect file "
                                << (argv[a] + 1) << std::endl;
                      if (!args.fSkipErrors)
                         return 1;
@@ -558,7 +577,7 @@ int main(int argc, char **argv)
       } else {
          const std::string line = argv[a];
          if (gSystem->AccessPathName(line.c_str(), kReadPermission) == kTRUE) {
-            std::cerr << "hadd could not validate argument \"" << line << "\" as input file " << std::endl;
+            Err() << "could not validate argument \"" << line << "\" as input file " << std::endl;
             if (!args.fSkipErrors)
                return 1;
          } else
@@ -566,7 +585,7 @@ int main(int argc, char **argv)
       }
    }
    if (allSubfiles.empty()) {
-      std::cerr << "hadd could not find any valid input file " << std::endl;
+      Err() << "could not find any valid input file " << std::endl;
       return 1;
    }
    // The next snippet determines the output compression if unset
@@ -585,20 +604,20 @@ int main(int argc, char **argv)
    }
    if (verbosity > 1) {
       if (args.fKeepCompressionAsIs && !args.fReoptimize)
-         std::cout << "hadd compression setting for meta data: " << newcomp << '\n';
+         Info() << "compression setting for meta data: " << newcomp << '\n';
       else
-         std::cout << "hadd compression setting for all output: " << newcomp << '\n';
+         Info() << "compression setting for all output: " << newcomp << '\n';
    }
    if (args.fAppend) {
       if (!fileMerger.OutputFile(targetname, "UPDATE", newcomp)) {
-         std::cerr << "hadd error opening target file for update :" << targetname << "." << std::endl;
-         exit(2);
+         Err() << "error opening target file for update :" << targetname << ".\n";
+         return 2;
       }
    } else if (!fileMerger.OutputFile(targetname, args.fForce, newcomp)) {
-      std::cerr << "hadd error opening target file (does " << targetname << " exist?)." << std::endl;
+      Err() << "error opening target file (does " << targetname << " exist?).\n";
       if (!args.fForce)
-         std::cerr << "Pass \"-f\" argument to force re-creation of output file." << std::endl;
-      exit(1);
+         Info() << "pass \"-f\" argument to force re-creation of output file.\n";
+      return 1;
    }
 
    auto step = (allSubfiles.size() + nProcesses - 1) / nProcesses;
@@ -606,8 +625,8 @@ int main(int argc, char **argv)
       // At least 3 files per process
       step = 3;
       nProcesses = (allSubfiles.size() + step - 1) / step;
-      std::cout << "Each process should handle at least 3 files for efficiency.";
-      std::cout << " Setting the number of processes to: " << nProcesses << std::endl;
+      Info() << "each process should handle at least 3 files for efficiency."
+         " Setting the number of processes to: " << nProcesses << std::endl;
    }
    if (nProcesses == 1)
       multiproc = kFALSE;
@@ -636,7 +655,7 @@ int main(int argc, char **argv)
          if (!args.fKeepCompressionAsIs && merger.HasCompressionChange()) {
             // Don't warn if the user has requested any re-optimization.
             Warn() << "Sources and Target have different compression settings\n"
-               "hadd merging will be slower\n";
+                      "hadd merging will be slower\n";
          }
       }
       merger.SetNotrees(args.fNoTrees);
@@ -654,9 +673,9 @@ int main(int argc, char **argv)
       for (auto i = start; i < (start + nFiles) && i < static_cast<int>(allSubfiles.size()); i++) {
          if (!merger.AddFile(allSubfiles[i].c_str())) {
             if (args.fSkipErrors) {
-               std::cerr << "hadd skipping file with error: " << allSubfiles[i] << std::endl;
+               Warn() << "skipping file with error: " << allSubfiles[i] << std::endl;
             } else {
-               std::cerr << "hadd exiting due to error in " << allSubfiles[i] << std::endl;
+               Err() << "exiting due to error in " << allSubfiles[i] << std::endl;
                return kFALSE;
             }
          }
@@ -672,7 +691,7 @@ int main(int argc, char **argv)
          mergerP.SetMaxOpenedFiles(maxopenedfiles / nProcesses);
       }
       if (!mergerP.OutputFile(partialFiles[start / step].c_str(), newcomp)) {
-         std::cerr << "hadd error opening target partial file" << std::endl;
+         Err() << "error opening target partial file\n";
          exit(1);
       }
       return sequentialMerge(mergerP, start, step);
@@ -695,7 +714,7 @@ int main(int argc, char **argv)
       if (status) {
          status = reductionFunc();
       } else {
-         std::cout << "hadd failed at the parallel stage" << std::endl;
+         Err() << "failed at the parallel stage\n";
       }
       if (!args.fDebug) {
          for (const auto &pf : partialFiles) {
@@ -711,13 +730,13 @@ int main(int argc, char **argv)
 
    if (status) {
       if (verbosity == 1) {
-         std::cout << "hadd merged " << allSubfiles.size() << " (" << fileMerger.GetMergeList()->GetEntries()
+         Info() << "merged " << allSubfiles.size() << " (" << fileMerger.GetMergeList()->GetEntries()
                    << ") input (partial) files into " << targetname << ".\n";
       }
       return 0;
    } else {
       if (verbosity == 1) {
-         std::cout << "hadd failure during the merge of " << allSubfiles.size() << " ("
+         Err() << "failure during the merge of " << allSubfiles.size() << " ("
                    << fileMerger.GetMergeList()->GetEntries() << ") input (partial) files into " << targetname << ".\n";
       }
       return 1;
