@@ -54,6 +54,11 @@ class TCanvasPainter extends TPadPainter {
       super.cleanup();
    }
 
+   /** @summary Returns canvas name */
+   getCanvasName() {
+      return this.getObjectName();
+   }
+
    /** @summary Returns layout kind */
    getLayoutKind() {
       const origin = this.selectDom('origin'),
@@ -377,7 +382,7 @@ class TCanvasPainter extends TPadPainter {
                cmdid = msg.slice(0, p1),
                cmd = msg.slice(p1+1),
                reply = `REPLY:${cmdid}:`;
-         if ((cmd === 'SVG') || (cmd === 'PNG') || (cmd === 'JPEG')) {
+         if ((cmd === 'SVG') || (cmd === 'PNG') || (cmd === 'JPEG') || (cmd === 'WEBP') || (cmd === 'PDF')) {
             this.createImage(cmd.toLowerCase())
                 .then(res => handle.send(reply + res));
          } else {

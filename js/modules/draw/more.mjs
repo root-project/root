@@ -1,5 +1,5 @@
 import { BIT, isFunc, clTLatex, clTMathText, clTAnnotation } from '../core.mjs';
-import { BasePainter, makeTranslate } from '../base/BasePainter.mjs';
+import { BasePainter, makeTranslate, DrawOptions } from '../base/BasePainter.mjs';
 import { addMoveHandler } from '../gui/utils.mjs';
 import { assignContextMenu, kToFront } from '../gui/menu.mjs';
 
@@ -12,7 +12,7 @@ async function drawText() {
          w = pp.getPadWidth(),
          h = pp.getPadHeight(),
          fp = this.getFramePainter();
-   let pos_x = text.fX, pos_y = text.fY,
+   let pos_x = text.fX, pos_y = text.fY, use_frame = false,
        fact = 1,
        annot = this.matchObjectType(clTAnnotation);
 
@@ -29,6 +29,8 @@ async function drawText() {
       this.isndc = true;
    } else if (pp.getRootPad(true)) {
       // force pad coordinates
+      const d = new DrawOptions(this.getDrawOpt());
+      use_frame = d.check('FRAME');
    } else {
       // place in the middle
       this.isndc = true;
@@ -36,12 +38,16 @@ async function drawText() {
       text.fTextAlign = 22;
    }
 
-   this.createG();
+   this.createG(use_frame ? 'frame2d' : undefined);
 
    this.draw_g.attr('transform', null); // remove transform from interactive changes
 
    this.pos_x = this.axisToSvg('x', pos_x, this.isndc);
    this.pos_y = this.axisToSvg('y', pos_y, this.isndc);
+   this.swap_xy = use_frame && fp?.swap_xy;
+
+   if (this.swap_xy)
+      [this.pos_x, this.pos_y] = [this.pos_y, this.pos_x];
 
    const arg = this.textatt.createArg({ x: this.pos_x, y: this.pos_y, text: text.fTitle, latex: 0 });
 
@@ -74,9 +80,14 @@ async function drawText() {
          this.moveEnd = function(not_changed) {
             if (not_changed) return;
             const text = this.getObject();
-            text.fX = this.svgToAxis('x', this.pos_x + this.pos_dx, this.isndc);
-            text.fY = this.svgToAxis('y', this.pos_y + this.pos_dy, this.isndc);
-            this.submitCanvExec(`SetX(${text.fX});;SetY(${text.fY});;`);
+            let x = this.svgToAxis('x', this.pos_x + this.pos_dx, this.isndc),
+                y = this.svgToAxis('y', this.pos_y + this.pos_dy, this.isndc);
+            if (this.swap_xy)
+               [x, y] = [y, x];
+
+            text.fX = x;
+            text.fY = y;
+            this.submitCanvExec(`SetX(${x});;SetY(${y});;`);
          };
       }
 

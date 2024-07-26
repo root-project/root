@@ -879,8 +879,9 @@ class TH2Painter extends THistPainter {
 
    /** @summary Scan TH2 histogram content */
    scanContent(when_axis_changed) {
-      // no need to rescan histogram while result does not depend from axis selection
-      if (when_axis_changed && this.nbinsx && this.nbinsy) return;
+      // no need to re-scan histogram while result does not depend from axis selection
+      if (when_axis_changed && this.nbinsx && this.nbinsy)
+         return;
 
       const histo = this.getObject();
       let i, j;
@@ -926,7 +927,19 @@ class TH2Painter extends THistPainter {
       if ((this.gminposbin === null) && (this.gmaxbin > 0))
          this.gminposbin = this.gmaxbin*1e-4;
 
-      const is_content = (this.gmaxbin !== 0) || (this.gminbin !== 0);
+      let is_content = (this.gmaxbin !== 0) || (this.gminbin !== 0);
+
+      // for TProfile2D show empty bin if there are entries for it
+      if (!is_content && (histo._typename === clTProfile2D)) {
+         for (i = 0; i < this.nbinsx && !is_content; ++i) {
+            for (j = 0; j < this.nbinsy; ++j) {
+               if (histo.getBinEntries(i + 1, j + 1)) {
+                  is_content = true;
+                  break;
+               }
+            }
+         }
+      }
 
       if (this.options.Axis > 0) {
          // Paint histogram axis only
@@ -1201,7 +1214,12 @@ class TH2Painter extends THistPainter {
       };
 
       // check in the beginning if zero can be skipped
-      if (!skip_zero && !show_empty && (cntr.getPaletteIndex(palette, 0) === null)) skip_zero = true;
+      if (!skip_zero && !show_empty && (cntr.getPaletteIndex(palette, 0) === null))
+         skip_zero = true;
+
+      // special check for TProfile2D - empty bin with no entries shown
+      if (skip_zero && (histo?._typename === clTProfile2D))
+         skip_zero = 0;
 
       // now start build
       for (let i = handle.i1; i < handle.i2; ++i) {
@@ -1218,18 +1236,20 @@ class TH2Painter extends THistPainter {
             is_zero = (binz === 0);
 
             if ((is_zero && skip_zero) || (test_cutg && !test_cutg.IsInside(histo.fXaxis.GetBinCoord(i + 0.5), histo.fYaxis.GetBinCoord(j + 0.5)))) {
-               if (last_entry) flush_last_entry();
+               if (last_entry)
+                  flush_last_entry();
                continue;
-            }
+            } else
+               colindx = cntr.getPaletteIndex(palette, binz);
 
-            colindx = cntr.getPaletteIndex(palette, binz);
             if (colindx === null) {
-               if (is_zero && show_empty)
+               if ((is_zero && show_empty) || ((skip_zero === 0) && histo.getBinEntries(i+1, j+1)))
                   colindx = 0;
-                 else {
-                   if (last_entry) flush_last_entry();
+               else {
+                   if (last_entry)
+                     flush_last_entry();
                    continue;
-                }
+               }
             }
 
             dy = (handle.gry[j] - handle.gry[j+1]) || 1;
@@ -1534,13 +1554,13 @@ class TH2Painter extends THistPainter {
    /** @summary draw TH2Poly bins */
    async drawPolyBins() {
       const histo = this.getObject(),
-            pmain = this.getFramePainter(),
-            funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y),
+            fp = this.getFramePainter(),
+            funcs = fp.getGrFuncs(this.options.second_x, this.options.second_y),
             draw_colors = this.options.Color || (!this.options.Line && !this.options.Fill && !this.options.Text && !this.options.Mark),
             draw_lines = this.options.Line || (this.options.Text && !draw_colors),
             draw_fill = this.options.Fill && !draw_colors,
             draw_mark = this.options.Mark,
-            h = pmain.getFrameHeight(),
+            h = fp.getFrameHeight(),
             textbins = [],
             len = histo.fBins.arr.length;
        let colindx, cmd,
@@ -2085,9 +2105,9 @@ class TH2Painter extends THistPainter {
 
       const histo = this.getHisto(),
             handle = this.prepareDraw(),
-            pmain = this.getFramePainter(), // used for axis values conversions
+            fp = this.getFramePainter(), // used for axis values conversions
             cp = this.getCanvPainter(),
-            funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y),
+            funcs = fp.getGrFuncs(this.options.second_x, this.options.second_y),
             swapXY = isOption(kHorizontal);
       let bars = '', lines = '', dashed_lines = '',
           hists = '', hlines = '',
@@ -2879,8 +2899,8 @@ class TH2Painter extends THistPainter {
 
    /** @summary Provide text information (tooltips) for candle bin */
    getCandleTooltips(p) {
-      const pmain = this.getFramePainter(),
-            funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y),
+      const fp = this.getFramePainter(),
+            funcs = fp.getGrFuncs(this.options.second_x, this.options.second_y),
             histo = this.getHisto();
 
       return [this.getObjectHint(),
@@ -2896,8 +2916,8 @@ class TH2Painter extends THistPainter {
    getPolyBinTooltips(binindx, realx, realy) {
       const histo = this.getHisto(),
             bin = histo.fBins.arr[binindx],
-            pmain = this.getFramePainter(),
-            funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y),
+            fp = this.getFramePainter(),
+            funcs = fp.getGrFuncs(this.options.second_x, this.options.second_y),
             lines = [];
       let binname = bin.fPoly.fName, numpoints = 0;
 
@@ -2952,8 +2972,8 @@ class TH2Painter extends THistPainter {
       if (h.poly) {
          // process tooltips from TH2Poly
 
-         const pmain = this.getFramePainter(),
-               funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y),
+         const fp = this.getFramePainter(),
+               funcs = fp.getGrFuncs(this.options.second_x, this.options.second_y),
                realx = funcs.revertAxis('x', pnt.x),
                realy = funcs.revertAxis('y', pnt.y);
          let foundindx = -1, bin;
@@ -3076,12 +3096,12 @@ class TH2Painter extends THistPainter {
          return res;
       }
 
-      const pmain = this.getFramePainter();
+      const fp = this.getFramePainter();
       let i, j, binz = 0, colindx = null,
           i1, i2, j1, j2, x1, x2, y1, y2;
 
       // search bins position
-      if (pmain.reverse_x) {
+      if (fp.reverse_x) {
          for (i = h.i1; i < h.i2; ++i)
             if ((pnt.x <= h.grx[i]) && (pnt.x >= h.grx[i+1])) break;
       } else {
@@ -3089,7 +3109,7 @@ class TH2Painter extends THistPainter {
             if ((pnt.x >= h.grx[i]) && (pnt.x <= h.grx[i+1])) break;
       }
 
-      if (pmain.reverse_y) {
+      if (fp.reverse_y) {
          for (j = h.j1; j < h.j2; ++j)
             if ((pnt.y <= h.gry[j+1]) && (pnt.y >= h.gry[j])) break;
       } else {
@@ -3111,12 +3131,12 @@ class TH2Painter extends THistPainter {
             x1 = Math.round(x1 + dx*h.xbar1);
             y2 = Math.round(y1 + dy*h.ybar2);
             y1 = Math.round(y1 + dy*h.ybar1);
-            if (pmain.reverse_x) {
+            if (fp.reverse_x) {
                if ((pnt.x > x1) || (pnt.x <= x2)) match = false;
             } else
                if ((pnt.x < x1) || (pnt.x >= x2)) match = false;
 
-            if (pmain.reverse_y) {
+            if (fp.reverse_y) {
                if ((pnt.y > y1) || (pnt.y <= y2)) match = false;
             } else
                if ((pnt.y < y1) || (pnt.y >= y2)) match = false;
@@ -3131,7 +3151,9 @@ class TH2Painter extends THistPainter {
             colindx = (binz === 0) && !this.options.ShowEmpty ? null : 0;
           else {
             colindx = this.getContour().getPaletteIndex(this.getHistPalette(), binz);
-            if ((colindx === null) && (binz === 0) && this.options.ShowEmpty) colindx = 0;
+            if ((colindx === null) && (binz === 0) &&
+                (this.options.ShowEmpty || (histo._typename === clTProfile2D && histo.getBinEntries(i + 1, j + 1))))
+                   colindx = 0;
          }
       }
 
@@ -3185,18 +3207,18 @@ class TH2Painter extends THistPainter {
          }
 
          if (this.is_projection === 'X') {
-            x1 = 0; x2 = pmain.getFrameWidth();
+            x1 = 0; x2 = fp.getFrameWidth();
             y1 = h.gry[j2]; y2 = h.gry[j1];
             binid = j1*777 + j2*333;
          } else if (this.is_projection === 'Y') {
-            y1 = 0; y2 = pmain.getFrameHeight();
+            y1 = 0; y2 = fp.getFrameHeight();
             x1 = h.grx[i1]; x2 = h.grx[i2];
             binid = i1*777 + i2*333;
          } else if (this.is_projection === 'XY') {
             y1 = h.gry[j2]; y2 = h.gry[j1];
             x1 = h.grx[i1]; x2 = h.grx[i2];
             binid = i1*789 + i2*653 + j1*12345 + j2*654321;
-            path = `M${x1},0H${x2}V${y1}H${pmain.getFrameWidth()}V${y2}H${x2}V${pmain.getFrameHeight()}H${x1}V${y2}H0V${y1}H${x1}Z`;
+            path = `M${x1},0H${x2}V${y1}H${fp.getFrameWidth()}V${y2}H${x2}V${fp.getFrameHeight()}H${x1}V${y2}H0V${y1}H${x1}Z`;
          }
 
          res.changed = ttrect.property('current_bin') !== binid;
@@ -3252,7 +3274,7 @@ class TH2Painter extends THistPainter {
       return !obj || (obj.FindBin(max, 0.5) - obj.FindBin(min, 0) > 1);
    }
 
-   /** @summary Complete paletted drawing */
+   /** @summary Complete palette drawing */
    completePalette(pp) {
       if (!pp) return true;
 
