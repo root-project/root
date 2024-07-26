@@ -559,7 +559,7 @@ ROOT::Experimental::Internal::RPagePersistentSink::AddColumn(DescriptorId_t fiel
    columnBuilder.LogicalColumnId(columnId)
       .PhysicalColumnId(columnId)
       .FieldId(fieldId)
-      .BitsOnStorage(RColumnElementBase::GetBitsOnStorage(column.GetType()))
+      .BitsOnStorage(column.GetBitsOnStorage())
       .Type(column.GetType())
       .Index(column.GetIndex())
       .RepresentationIndex(column.GetRepresentationIndex())
