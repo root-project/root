@@ -171,10 +171,10 @@ RooStats::HistFactory::MakeModelAndMeasurementFast(RooStats::HistFactory::Measur
       channel_names.push_back(ch_name);
       std::unique_ptr<RooWorkspace> ws_single{factory.MakeSingleChannelModel( measurement, channel )};
 
-      {
+      if (cfg.createPerRegionWorkspaces) {
         // Make the output
-        std::string ChannelFileName = measurement.GetOutputFilePrefix() + "_"
-    + ch_name + "_" + rowTitle + "_model.root";
+        std::string ChannelFileName = measurement.GetOutputFilePrefix() + "_" 
+          + ch_name + "_" + rowTitle + "_model.root";
         cxcoutIHF << "Opening File to hold channel: " << ChannelFileName << std::endl;
         std::unique_ptr<TFile> chanFile{TFile::Open( ChannelFileName.c_str(), "RECREATE" )};
         chanFile->WriteTObject(ws_single.get());
