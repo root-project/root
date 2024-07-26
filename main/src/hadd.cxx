@@ -34,8 +34,8 @@
   \param -dbg Enable verbosity. If -j was specified, do not not delete partial files stored inside working directory.
   \param -experimental-io-features `<feature>` Enables the corresponding experimental feature for output trees. \see ROOT::Experimental::EIOFeatures
   \param -f   Force overwriting of output file.
-  \param -f[0-9] Set target compression level. 0 = uncompressed, 9 = highly compressed. Default is 101 (kDefaultZLIB). You can also specify the full compression algorithm, e.g. -f206
-  \param -fk  Sets the target file to contain the baskets with the same compression as the input files (unless -O is specified). Compresses the meta data using the compression level specified in the first input or the compression setting after fk (for example 206 when using -fk206)
+  \param -f[0-9] Set target compression level. 0 = uncompressed, 9 = highly compressed. Default is 101 (kDefaultZLIB). You can also specify the full compression algorithm, e.g. -f505
+  \param -fk  Sets the target file to contain the baskets with the same compression as the input files (unless -O is specified). Compresses the meta data using the compression level specified in the first input or the compression setting after fk (for example 505 when using -fk505)
   \param -ff  The compression level used is the one specified in the first input
   \param -j   Parallelise the execution in `J` processes. If the number of processes is not specified, use the system maximum.
   \param -k   Skip corrupt or non-existent files, do not exit
@@ -438,13 +438,19 @@ static std::optional<HAddArgs> ParseArgs(int argc, char **argv)
 {
    HAddArgs args{};
 
-   bool flagsAlreadyParsed = false;
+   enum {
+      kParseStart,
+      kParseFirstFlagGroup,
+      kParseFirstPosArgGroup,
+      kParseSecondFlagGroup
+   } parseState = kParseStart;
+
    for (int argIdx = 1; argIdx < argc; ++argIdx) {
       const char *argRaw = argv[argIdx];
       if (!*argRaw) continue;
       if (argRaw[0] == '-' && argRaw[1] != '\0') {
          // parse flag
-         flagsAlreadyParsed = true;
+         parseState = (parseState == kParseFirstPosArgGroup) ? kParseSecondFlagGroup : kParseFirstFlagGroup;
 
          const char *arg = argRaw + 1;
          bool validFlag = false;
@@ -478,15 +484,28 @@ static std::optional<HAddArgs> ParseArgs(int argc, char **argv)
             Warn() << "unknown flag: " << argRaw << "\n";
 
       } else if (!args.fOutputArgIdx) {
+         // First positional argument is the output
          args.fOutputArgIdx = argIdx;
-      } else if (!args.fFirstInputIdx) {
-         args.fFirstInputIdx = argIdx;
-      } else if (flagsAlreadyParsed) {
-         Err() << "seen a positional argument '" << argRaw << "' after some flags."
-                  " Positional arguments were already parsed at this point (from '" << argv[args.fOutputArgIdx]
-                  << "' onwards), so you cannot pass more."
-                  " Please regroup your positional arguments so that hadd works as you expect.\n";
-         return {};
+         assert(parseState < kParseFirstPosArgGroup);
+         parseState = kParseFirstPosArgGroup;
+      } else {
+         // We should be in the same positional argument group as the output, error otherwise
+         if (parseState == kParseFirstPosArgGroup) {
+            if (!args.fFirstInputIdx) {
+               args.fFirstInputIdx = argIdx;
+            }
+         } else {
+            Err() << "seen a positional argument '" << argRaw << "' after some flags."
+                     " Positional arguments were already parsed at this point (from '" << argv[args.fOutputArgIdx]
+                     << "' onwards), so you cannot pass more."
+                     " Please regroup your positional arguments so that hadd works as you expect.\n"
+                     "Cmdline: ";
+            for (int i = 0; i < argc; ++i)
+               std::cerr << argv[i] << " ";
+            std::cerr << "\n";
+
+            return {};
+         }
       }
    }
 
