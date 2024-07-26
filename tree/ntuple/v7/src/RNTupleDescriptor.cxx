@@ -835,10 +835,13 @@ ROOT::Experimental::Internal::RColumnDescriptorBuilder::MakeDescriptor() const
       return R__FAIL("invalid physical column id");
    if (fColumn.GetType() == EColumnType::kUnknown)
       return R__FAIL("invalid column model");
-   if (fColumn.GetBitsOnStorage() != RColumnElementBase::GetBitsOnStorage(fColumn.GetType()))
-      return R__FAIL("invalid column bit width");
    if (fColumn.GetFieldId() == kInvalidDescriptorId)
       return R__FAIL("invalid field id, dangling column");
+
+   const auto [minBits, maxBits] = RColumnElementBase::GetValidBitRange(fColumn.GetType());
+   if (fColumn.GetBitsOnStorage() < minBits || fColumn.GetBitsOnStorage() > maxBits)
+      return R__FAIL("invalid column bit width");
+
    return fColumn.Clone();
 }
 

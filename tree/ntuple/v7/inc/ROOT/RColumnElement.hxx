@@ -284,6 +284,10 @@ public:
    static std::unique_ptr<RColumnElementBase> Generate(EColumnType type);
    static std::size_t GetBitsOnStorage(EColumnType type);
    static std::string GetTypeName(EColumnType type);
+   /// Most types have a fixed on-disk bit width. Some low-precision column types
+   /// have a range of possible bit widths. Return the minimum and maximum allowed
+   /// bit size per type.
+   static std::pair<std::uint16_t, std::uint16_t> GetValidBitRange(EColumnType type);
 
    /// Derived, typed classes tell whether the on-storage layout is bitwise identical to the memory layout
    virtual bool IsMappable() const
