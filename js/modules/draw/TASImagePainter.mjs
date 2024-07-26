@@ -1,8 +1,7 @@
 import { create, settings, isNodeJs, isStr, btoa_func, clTAxis, clTPaletteAxis, clTImagePalette, getDocument } from '../core.mjs';
 import { toHex } from '../base/colors.mjs';
 import { assignContextMenu } from '../gui/menu.mjs';
-import { DrawOptions } from '../base/BasePainter.mjs';
-import { ObjectPainter } from '../base/ObjectPainter.mjs';
+import { ObjectPainter, DrawOptions } from '../base/ObjectPainter.mjs';
 import { TPavePainter } from '../hist/TPavePainter.mjs';
 import { ensureTCanvas } from '../gpad/TCanvasPainter.mjs';
 

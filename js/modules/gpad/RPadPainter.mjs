@@ -1191,7 +1191,11 @@ class RPadPainter extends RObjectPainter {
          this.createCanvasSvg(0);
          this.addPadButtons(true);
 
-         return this.drawNextSnap(snap.fPrimitives);
+         return this.drawNextSnap(snap.fPrimitives).then(() => {
+            if (isFunc(this.onCanvasUpdated))
+               this.onCanvasUpdated(this);
+            return this;
+         });
       }
 
       // update only pad/canvas attributes
@@ -1254,6 +1258,8 @@ class RPadPainter extends RObjectPainter {
          this.addPadInteractive();
          if (getActivePad() === this)
             this.getCanvPainter()?.producePadEvent('padredraw', this);
+         if (isFunc(this.onCanvasUpdated))
+            this.onCanvasUpdated(this);
          return this;
       });
    }
@@ -1263,7 +1269,7 @@ class RPadPainter extends RObjectPainter {
      * @return {Promise} with image data, coded with btoa() function
      * @private */
    async createImage(format) {
-      if ((format === 'png') || (format === 'jpeg') || (format === 'svg') || (format === 'pdf')) {
+      if ((format === 'png') || (format === 'jpeg') || (format === 'svg') || (format === 'webp') || (format === 'pdf')) {
          return this.produceImage(true, format).then(res => {
             if (!res || (format === 'svg')) return res;
             const separ = res.indexOf('base64,');

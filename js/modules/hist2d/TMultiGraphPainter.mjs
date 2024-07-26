@@ -1,6 +1,5 @@
 import { create, createHistogram, clTH1I, clTH2I, clTObjString, clTHashList, kNoZoom, kNoStats, BIT } from '../core.mjs';
-import { DrawOptions } from '../base/BasePainter.mjs';
-import { ObjectPainter } from '../base/ObjectPainter.mjs';
+import { ObjectPainter, DrawOptions } from '../base/ObjectPainter.mjs';
 import { FunctionsHandler } from './THistPainter.mjs';
 import { TH1Painter, PadDrawOptions } from './TH1Painter.mjs';
 import { TGraphPainter } from './TGraphPainter.mjs';
