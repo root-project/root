@@ -107,8 +107,8 @@ ParserFuncSignature ParseConstant = [](RModelParser_ONNX &parser, const onnx::No
       // case of Constant of Shape : if attribute is not there use by default float type with zero values
       if (isConstantOfShape) {
          std::vector<float> values(1);
-         std::vector<size_t> shape(1,1);
-         op.reset(new ROperator_Constant<float>("float",values,shape, input_name, output_name));
+         std::vector<size_t> constantShape(1,1);
+         op.reset(new ROperator_Constant<float>("float",values,constantShape, input_name, output_name));
       } else {
          throw std::runtime_error("TMVA::SOFIE ONNX Parser Constant has no attribute");
       }
