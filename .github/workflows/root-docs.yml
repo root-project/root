@@ -146,59 +146,24 @@ jobs:
               ls -la
             '
 
-    - name: Run Doxygen
-      shell: bash
-      run: |
-         echo "Sourcing thisroot.sh..."
-         source /github/home/ROOT-CI/build/bin/thisroot.sh
-         DOXYGEN_OUTPUT_DIRECTORY=/github/home/rootdoc_TMP
-      
-         echo "Changing directory to /github/home/ROOT-CI/src/documentation/doxygen..."
-         cd /github/home/ROOT-CI/src/documentation/doxygen || { echo "Failed to change directory"; exit 1; }
-      
-         echo "Running make..."
-         make -j$(nproc) || { echo "Make failed"; exit 1; }
-      
-         echo "Checking if /github/home/rootdoc/html exists..."
-         if [ -d /github/home/rootdoc/html ]; then
-             echo "Directory /github/home/rootdoc/html exists. Removing..."
-             rm -rf /github/home/rootdoc/html || { echo "Failed to remove /github/home/rootdoc/html"; exit 1; }
-         fi
-      
-         echo "Moving generated HTML to /github/home/rootdoc..."
-         mv -f ${DOXYGEN_OUTPUT_DIRECTORY}/html /github/home/rootdoc || { echo "Failed to move HTML"; exit 1; }
-      
-         echo "Checking if ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks exists..."
-         if [ -d ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks ]; then
-             echo "Directory ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks exists. Moving..."
-             mv ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks /github/home/rootdoc/notebooks || { echo "Failed to move notebooks"; exit 1; }
-         fi
-
     - name: Pull Request Build
       if: github.event_name == 'pull_request'
       env:
         INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') }}
         GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
       run: ".github/workflows/root-ci-config/build_root.py
-                  --buildtype       Release
-                  --platform        alma9
-                  --image           registry.cern.ch/root-ci/alma9:buildready
-                  --dockeropts      '--security-opt label=disable --rm'
-                  --incremental     $INCREMENTAL
-                  --base_ref        ${{ github.base_ref }}
-                  --sha             ${{ github.sha }}
-                  --pull_repository ${{ github.event.pull_request.head.repo.clone_url }}
-                  --head_ref        refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }}
-                  --head_sha        ${{ github.event.pull_request.head.sha }}
-                  --repository      ${{ github.server_url }}/${{ github.repository }}
-            "
-    - name: Upload root_doc
-      if:   ${{ !cancelled() }}
-      uses: actions/upload-artifact@v4
-      with:
-          name: rootdoc
-          path: ${{env.DOC_LOCATION}}/${{env.DOC_DIR}}
-
+                        --buildtype       Release
+                        --platform        alma9
+                        --image           registry.cern.ch/root-ci/alma9:buildready
+                        --dockeropts      '--security-opt label=disable --rm'
+                        --incremental     $INCREMENTAL
+                        --base_ref        ${{ github.base_ref }}
+                        --sha             ${{ github.sha }}
+                        --pull_repository ${{ github.event.pull_request.head.repo.clone_url }}
+                        --head_ref        refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }}
+                        --head_sha        ${{ github.event.pull_request.head.sha }}
+                        --repository      ${{ github.server_url }}/${{ github.repository }}
+                  "
     # - name: Nightly build
     #   if:   github.event_name == 'schedule'
     #   run: ".github/workflows/root-ci-config/build_root.py
@@ -221,6 +186,41 @@ jobs:
                   --binaries       ${{ inputs.binaries }}
                   --repository     ${{ github.server_url }}/${{ github.repository }}
            "
+
+    - name: Run Doxygen
+      shell: bash
+      run: |
+              echo "Sourcing thisroot.sh..."
+              source /github/home/ROOT-CI/build/bin/thisroot.sh
+              DOXYGEN_OUTPUT_DIRECTORY=/github/home/rootdoc_TMP
+           
+              echo "Changing directory to /github/home/ROOT-CI/src/documentation/doxygen..."
+              cd /github/home/ROOT-CI/src/documentation/doxygen || { echo "Failed to change directory"; exit 1; }
+           
+              echo "Running make..."
+              make -j$(nproc) || { echo "Make failed"; exit 1; }
+           
+              echo "Checking if /github/home/rootdoc/html exists..."
+              if [ -d /github/home/rootdoc/html ]; then
+                  echo "Directory /github/home/rootdoc/html exists. Removing..."
+                  rm -rf /github/home/rootdoc/html || { echo "Failed to remove /github/home/rootdoc/html"; exit 1; }
+              fi
+           
+              echo "Moving generated HTML to /github/home/rootdoc..."
+              mv -f ${DOXYGEN_OUTPUT_DIRECTORY}/html /github/home/rootdoc || { echo "Failed to move HTML"; exit 1; }
+           
+              echo "Checking if ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks exists..."
+              if [ -d ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks ]; then
+                  echo "Directory ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks exists. Moving..."
+                  mv ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks /github/home/rootdoc/notebooks || { echo "Failed to move notebooks"; exit 1; }
+              fi
+     
+    - name: Upload root_doc
+      if:   ${{ !cancelled() }}
+      uses: actions/upload-artifact@v4
+      with:
+          name: rootdoc
+          path: ${{env.DOC_LOCATION}}/${{env.DOC_DIR}}
 
     # - name: Create documentation archives
     #   working-directory: ${{ env.DOC_LOCATION }}
