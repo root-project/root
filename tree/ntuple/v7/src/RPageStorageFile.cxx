@@ -120,9 +120,8 @@ ROOT::Experimental::RNTupleLocator
 ROOT::Experimental::Internal::RPageSinkFile::CommitSealedPageImpl(DescriptorId_t physicalColumnId,
                                                                   const RPageStorage::RSealedPage &sealedPage)
 {
-   const auto bitsOnStorage = RColumnElementBase::GetBitsOnStorage(
-      fDescriptorBuilder.GetDescriptor().GetColumnDescriptor(physicalColumnId).GetType());
-   const auto bytesPacked = (bitsOnStorage * sealedPage.GetNElements() + 7) / 8;
+   const auto nBits = fDescriptorBuilder.GetDescriptor().GetColumnDescriptor(physicalColumnId).GetBitsOnStorage();
+   const auto bytesPacked = (nBits * sealedPage.GetNElements() + 7) / 8;
    return WriteSealedPage(sealedPage, bytesPacked);
 }
 
@@ -170,8 +169,8 @@ ROOT::Experimental::Internal::RPageSinkFile::CommitSealedPageVImpl(std::span<RPa
          continue;
       }
 
-      const auto bitsOnStorage = RColumnElementBase::GetBitsOnStorage(
-         fDescriptorBuilder.GetDescriptor().GetColumnDescriptor(range.fPhysicalColumnId).GetType());
+      const auto bitsOnStorage =
+         fDescriptorBuilder.GetDescriptor().GetColumnDescriptor(range.fPhysicalColumnId).GetBitsOnStorage();
 
       for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt, ++iPage) {
          if (!mask[iPage])

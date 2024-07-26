@@ -210,7 +210,6 @@ std::uint32_t SerializePhysicalColumn(const ROOT::Experimental::RColumnDescripto
                                       const ROOT::Experimental::Internal::RNTupleSerializer::RContext &context,
                                       void *buffer)
 {
-   using RColumnElementBase = ROOT::Experimental::Internal::RColumnElementBase;
    R__ASSERT(!columnDesc.IsAliasColumn());
 
    auto base = reinterpret_cast<unsigned char *>(buffer);
@@ -220,7 +219,7 @@ std::uint32_t SerializePhysicalColumn(const ROOT::Experimental::RColumnDescripto
    pos += RNTupleSerializer::SerializeRecordFramePreamble(*where);
 
    pos += RNTupleSerializer::SerializeColumnType(columnDesc.GetType(), *where);
-   pos += RNTupleSerializer::SerializeUInt16(RColumnElementBase::GetBitsOnStorage(columnDesc.GetType()), *where);
+   pos += RNTupleSerializer::SerializeUInt16(columnDesc.GetBitsOnStorage(), *where);
    pos += RNTupleSerializer::SerializeUInt32(context.GetOnDiskFieldId(columnDesc.GetFieldId()), *where);
    std::uint16_t flags = 0;
    if (columnDesc.IsDeferredColumn())
@@ -299,10 +298,7 @@ RResult<std::uint32_t> DeserializeColumn(const void *buffer, std::uint64_t bufSi
       bytes += RNTupleSerializer::DeserializeInt64(bytes, firstElementIdx);
    }
 
-   if (ROOT::Experimental::Internal::RColumnElementBase::GetBitsOnStorage(type) != bitsOnStorage)
-      return R__FAIL("column element size mismatch");
-
-   columnDesc.FieldId(fieldId).Type(type).RepresentationIndex(representationIndex);
+   columnDesc.FieldId(fieldId).BitsOnStorage(bitsOnStorage).Type(type).RepresentationIndex(representationIndex);
    columnDesc.FirstElementIndex(std::abs(firstElementIdx));
    if (firstElementIdx < 0)
       columnDesc.SetSuppressedDeferred();
@@ -1406,6 +1402,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeSchemaDescription(co
       RColumnDescriptorBuilder columnBuilder;
       columnBuilder.LogicalColumnId(aliasColumnIdRangeBegin + i).PhysicalColumnId(physicalId).FieldId(fieldId);
       const auto &physicalColumnDesc = descBuilder.GetDescriptor().GetColumnDescriptor(physicalId);
+      columnBuilder.BitsOnStorage(physicalColumnDesc.GetBitsOnStorage());
       columnBuilder.Type(physicalColumnDesc.GetType());
       columnBuilder.RepresentationIndex(physicalColumnDesc.GetRepresentationIndex());
       columnBuilder.Index(fnNextColumnIndex(columnBuilder.GetFieldId(), columnBuilder.GetRepresentationIndex()));

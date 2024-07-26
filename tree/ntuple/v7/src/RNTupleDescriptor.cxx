@@ -111,8 +111,8 @@ ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplD
 bool ROOT::Experimental::RColumnDescriptor::operator==(const RColumnDescriptor &other) const
 {
    return fLogicalColumnId == other.fLogicalColumnId && fPhysicalColumnId == other.fPhysicalColumnId &&
-          fType == other.fType && fFieldId == other.fFieldId && fIndex == other.fIndex &&
-          fRepresentationIndex == other.fRepresentationIndex;
+          fBitsOnStorage == other.fBitsOnStorage && fType == other.fType && fFieldId == other.fFieldId &&
+          fIndex == other.fIndex && fRepresentationIndex == other.fRepresentationIndex;
 }
 
 
@@ -122,6 +122,7 @@ ROOT::Experimental::RColumnDescriptor::Clone() const
    RColumnDescriptor clone;
    clone.fLogicalColumnId = fLogicalColumnId;
    clone.fPhysicalColumnId = fPhysicalColumnId;
+   clone.fBitsOnStorage = fBitsOnStorage;
    clone.fType = fType;
    clone.fFieldId = fFieldId;
    clone.fIndex = fIndex;
@@ -834,6 +835,8 @@ ROOT::Experimental::Internal::RColumnDescriptorBuilder::MakeDescriptor() const
       return R__FAIL("invalid physical column id");
    if (fColumn.GetType() == EColumnType::kUnknown)
       return R__FAIL("invalid column model");
+   if (fColumn.GetBitsOnStorage() != RColumnElementBase::GetBitsOnStorage(fColumn.GetType()))
+      return R__FAIL("invalid column bit width");
    if (fColumn.GetFieldId() == kInvalidDescriptorId)
       return R__FAIL("invalid field id, dangling column");
    return fColumn.Clone();
