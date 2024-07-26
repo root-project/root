@@ -1216,7 +1216,7 @@ void ROOT::Experimental::Internal::RNTupleSerializer::RContext::MapSchema(const 
 
    if (forHeaderExtension) {
       // Create physical IDs for column representations that extend fields of the regular header.
-      // First the physical columns than the alias columns
+      // First the physical columns then the alias columns.
       for (auto memId : desc.GetHeaderExtension()->GetExtendedColumnRepresentations()) {
          const auto &columnDesc = desc.GetColumnDescriptor(memId);
          if (!columnDesc.IsAliasColumn()) {
