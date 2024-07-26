@@ -24,12 +24,12 @@
                         <MenuItem text="Close canvas" icon="sap-icon://decline" tooltip="Close browser window"/>
                         <MenuItem text="Save" startsSection="true" icon="sap-icon://save">
                            <items>
-                              <MenuItem text="{/CanvasName}.png" tooltip="Creates PNG snapshot of browser window"/>
-                              <MenuItem text="{/CanvasName}.svg" tooltip="Creates SVG snapshot of browser window"/>
-                              <MenuItem text="{/CanvasName}.jpeg" tooltip="Creates JPEG snapshot of browser window"/>
+                              <MenuItem text="{/CanvasName}.png" tooltip="Creates PNG snapshot of canvas"/>
+                              <MenuItem text="{/CanvasName}.svg" tooltip="Creates SVG snapshot of canvas"/>
+                              <MenuItem text="{/CanvasName}.jpeg" tooltip="Creates JPEG snapshot of canvas"/>
+                              <MenuItem text="{/CanvasName}.webp" tooltip="Creates WEBP snapshot of canvas"/>
+                              <MenuItem text="{/CanvasName}.pdf" enabled="{/isRoot6}" tooltip="Create PDF snapshot of canvas"/>
                               <MenuItem text="{/CanvasName}.root" startsSection="true" tooltip="Produces ROOT output on C++ side"/>
-                              <MenuItem text="{/CanvasName}.pdf" enabled="{/isRoot6}" tooltip="Produces PDF output on C++ side"/>
-                              <MenuItem text="{/CanvasName}.ps" enabled="{/isRoot6}" tooltip="Produces PS output on C++ side"/>
                               <MenuItem text="{/CanvasName}.C" enabled="{/isRoot6}" tooltip="Produces C output on server side"/>
                            </items>
                         </MenuItem>
