@@ -432,17 +432,17 @@ protected:
    }
 
    /// For writing, use the currently set column representative
-   template <int ColumnIndexT, typename HeadT, typename... TailTs>
+   template <typename... ColumnCppTs>
    void GenerateColumnsImpl()
    {
-      GenerateColumnsImpl<0, HeadT, TailTs...>(GetColumnRepresentative());
+      GenerateColumnsImpl<0, ColumnCppTs...>(GetColumnRepresentative());
    }
 
    /// For reading, use the on-disk column list
-   template <int ColumnIndexT, typename HeadT, typename... TailTs>
+   template <typename... ColumnCppTs>
    void GenerateColumnsImpl(const RNTupleDescriptor &desc)
    {
-      GenerateColumnsImpl<0, HeadT, TailTs...>(EnsureCompatibleColumnTypes(desc));
+      GenerateColumnsImpl<0, ColumnCppTs...>(EnsureCompatibleColumnTypes(desc));
    }
 
    /// Implementations in derived classes should return a static RColumnRepresentations object. The default
@@ -1875,8 +1875,8 @@ public:
 template <typename T>
 class RSimpleField : public RFieldBase {
 protected:
-   void GenerateColumns() final { GenerateColumnsImpl<0, T>(); }
-   void GenerateColumns(const RNTupleDescriptor &desc) final { GenerateColumnsImpl<0, T>(desc); }
+   void GenerateColumns() final { GenerateColumnsImpl<T>(); }
+   void GenerateColumns(const RNTupleDescriptor &desc) final { GenerateColumnsImpl<T>(desc); }
 
    void ConstructValue(void *where) const final { new (where) T{0}; }
 

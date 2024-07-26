@@ -86,7 +86,7 @@ public:
    }
    // Field is only used for reading
    void GenerateColumns() final { assert(false && "Cardinality fields must only be used for reading"); }
-   void GenerateColumns(const RNTupleDescriptor &desc) final { GenerateColumnsImpl<0, ClusterSize_t>(desc); }
+   void GenerateColumns(const RNTupleDescriptor &desc) final { GenerateColumnsImpl<ClusterSize_t>(desc); }
 
    size_t GetValueSize() const final { return sizeof(std::size_t); }
    size_t GetAlignment() const final { return alignof(std::size_t); }
