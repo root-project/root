@@ -151,11 +151,11 @@ TEST(RNTupleDescriptorBuilder, CatchBadColumnDescriptors)
    descBuilder.AddFieldLink(0, 2);
    EColumnType colType{EColumnType::kInt32};
    RColumnDescriptorBuilder colBuilder1;
-   colBuilder1.LogicalColumnId(0).PhysicalColumnId(0).Type(colType).FieldId(1).Index(0);
+   colBuilder1.LogicalColumnId(0).PhysicalColumnId(0).BitsOnStorage(32).Type(colType).FieldId(1).Index(0);
    descBuilder.AddColumn(colBuilder1.MakeDescriptor().Unwrap()).ThrowOnError();
 
    RColumnDescriptorBuilder colBuilder2;
-   colBuilder2.LogicalColumnId(1).PhysicalColumnId(0).Type(colType).FieldId(42).Index(0);
+   colBuilder2.LogicalColumnId(1).PhysicalColumnId(0).BitsOnStorage(32).Type(colType).FieldId(42).Index(0);
    try {
       descBuilder.AddColumn(colBuilder2.MakeDescriptor().Unwrap()).ThrowOnError();
    } catch (const RException &err) {
@@ -163,7 +163,7 @@ TEST(RNTupleDescriptorBuilder, CatchBadColumnDescriptors)
    }
 
    RColumnDescriptorBuilder colBuilder3;
-   colBuilder3.LogicalColumnId(0).PhysicalColumnId(0).Type(colType).FieldId(1).Index(0);
+   colBuilder3.LogicalColumnId(0).PhysicalColumnId(0).BitsOnStorage(32).Type(colType).FieldId(1).Index(0);
    try {
       descBuilder.AddColumn(colBuilder3.MakeDescriptor().Unwrap()).ThrowOnError();
    } catch (const RException &err) {
@@ -171,7 +171,7 @@ TEST(RNTupleDescriptorBuilder, CatchBadColumnDescriptors)
    }
 
    RColumnDescriptorBuilder colBuilder4;
-   colBuilder4.LogicalColumnId(1).PhysicalColumnId(0).Type(colType).FieldId(2).Index(1);
+   colBuilder4.LogicalColumnId(1).PhysicalColumnId(0).BitsOnStorage(32).Type(colType).FieldId(2).Index(1);
    try {
       descBuilder.AddColumn(colBuilder4.MakeDescriptor().Unwrap()).ThrowOnError();
    } catch (const RException &err) {
@@ -180,7 +180,7 @@ TEST(RNTupleDescriptorBuilder, CatchBadColumnDescriptors)
 
    RColumnDescriptorBuilder colBuilder5;
    EColumnType falseType(EColumnType::kInt64);
-   colBuilder5.LogicalColumnId(1).PhysicalColumnId(0).Type(falseType).FieldId(2).Index(0);
+   colBuilder5.LogicalColumnId(1).PhysicalColumnId(0).BitsOnStorage(64).Type(falseType).FieldId(2).Index(0);
    try {
       descBuilder.AddColumn(colBuilder5.MakeDescriptor().Unwrap()).ThrowOnError();
    } catch (const RException &err) {
@@ -188,7 +188,7 @@ TEST(RNTupleDescriptorBuilder, CatchBadColumnDescriptors)
    }
 
    RColumnDescriptorBuilder colBuilder6;
-   colBuilder6.LogicalColumnId(1).PhysicalColumnId(0).Type(colType).FieldId(2).Index(0);
+   colBuilder6.LogicalColumnId(1).PhysicalColumnId(0).BitsOnStorage(32).Type(colType).FieldId(2).Index(0);
    descBuilder.AddColumn(colBuilder6.MakeDescriptor().Unwrap()).ThrowOnError();
 }
 
@@ -223,6 +223,7 @@ TEST(RFieldDescriptorBuilder, HeaderExtension)
    descBuilder.AddColumn(RColumnDescriptorBuilder()
                             .LogicalColumnId(0)
                             .PhysicalColumnId(0)
+                            .BitsOnStorage(32)
                             .Type(EColumnType::kInt32)
                             .FieldId(1)
                             .Index(0)
@@ -250,6 +251,7 @@ TEST(RFieldDescriptorBuilder, HeaderExtension)
    descBuilder.AddColumn(RColumnDescriptorBuilder()
                             .LogicalColumnId(1)
                             .PhysicalColumnId(1)
+                            .BitsOnStorage(64)
                             .Type(EColumnType::kInt64)
                             .FieldId(3)
                             .Index(0)
@@ -268,6 +270,7 @@ TEST(RFieldDescriptorBuilder, HeaderExtension)
    descBuilder.AddColumn(RColumnDescriptorBuilder()
                             .LogicalColumnId(2)
                             .PhysicalColumnId(2)
+                            .BitsOnStorage(1)
                             .Type(EColumnType::kBit)
                             .FieldId(4)
                             .Index(0)
@@ -285,6 +288,7 @@ TEST(RFieldDescriptorBuilder, HeaderExtension)
    descBuilder.AddColumn(RColumnDescriptorBuilder()
                             .LogicalColumnId(3)
                             .PhysicalColumnId(1)
+                            .BitsOnStorage(64)
                             .Type(EColumnType::kInt64)
                             .FieldId(5)
                             .Index(0)
