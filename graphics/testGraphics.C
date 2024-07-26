@@ -21,55 +21,18 @@
 #include "TLatex.h"
 #include <TSystem.h>
 
-#include <string>
-#include <fstream>
-#include <sstream>
-#include <iostream>
 #include <algorithm>
-#include <cstdlib>
 #include <cstdio>
+#include <cstdlib>
+#include <fstream>
+#include <iostream>
 #include <regex>
 #include <stdexcept>
+#include <string>
+#include <sstream>
+#include <tuple>
 
-// FUNCTION DECLARATIONS
 
-// JSON Preprocessing
-std::string preprocessJSONContent(const std::string& jsonString);
-
-// JSON Comparison
-bool compare_json(const TString& jsonOutput, const std::string& ref_filename, const std::string& macroName);
-
-// JSON Test
-int test_json(TCanvas* c1, const std::string& macroName, const std::string& builddir);
-
-// File Content Reading
-std::string readFileToString(const std::string& filePath);
-
-// SVG Preprocessing
-std::string preprocessSVGContent(const std::string& svgContent);
-
-// SVG Comparison
-bool compareSVGFiles(const std::string& filePath1, const std::string& filePath2);
-
-// SVG Test
-int test_svg(TCanvas* c1, const std::string& macroName, const std::string& builddir);
-
-// PDF Preprocessing
-std::string preprocessPDFContent(const std::string& pdfString);
-
-// PDF Comparison
-bool comparePDFFiles(const std::string& filePath1, const std::string& filePath2);
-
-// PDF Test
-int test_pdf(TCanvas* c1, const std::string& macroName, const std::string& builddir);
-
-// Root Test
-int testGraphics(const std::string& macroName, const std::string& test_type, const std::string& macro_folder, const std::string& builddir);
-
-// MAIN FUNCTION
-int main(int argc, char** argv);
-
-// FUNCTION DEFINITIONS
 //---------------------HELPER--------------------------------------------------------------
 // Function to read file content into a string
 std::string readFileToString(const std::string& filePath) {
@@ -80,6 +43,52 @@ std::string readFileToString(const std::string& filePath) {
     std::stringstream buffer;
     buffer << file.rdbuf();
     return buffer.str();
+}
+
+std::vector<std::string> splitString(const std::string &str, const char delimiter = '\n')
+{
+    auto lines = std::vector<std::string>{};
+    lines.reserve(128);
+    auto strAsStream = std::stringstream{str};
+
+    for (std::string line; std::getline(strAsStream, line, delimiter);) {
+        lines.emplace_back(line);
+    }
+
+    return lines;
+}
+
+std::string chopString(const std::string &str, size_t width = 256)
+{
+    return str.length() > width ? (str.substr(0, width) + " ...") : str;
+}
+
+void printSideBySide(const std::string &str1, const std::string &str2)
+{
+    auto lines1 = splitString(str1);
+    auto lines2 = splitString(str2);
+    for (auto [idx1, idx2, nDiff] = std::tuple<unsigned int, unsigned int, unsigned int>{0, 0, 0};
+         idx1 < lines1.size() || idx2 < lines2.size();) {
+        auto &line1 = lines1[idx1];
+        auto &line2 = lines2[idx2];
+        if (line1 != line2) {
+           nDiff++;
+           auto choppedLine1 = chopString(line1);
+           auto choppedLine2 = chopString(line2);
+           std::cout << idx1 << ", " << idx2 << ": " << choppedLine1 << "  <->  " << choppedLine2 << std::endl;
+        }
+
+        if (nDiff == 16) {
+            std::cout << "*** Truncating " << std::endl;
+            idx1 = lines1.size();
+            idx2 = lines2.size();
+        }
+
+        if (idx1 < lines1.size())
+           ++idx1;
+        if (idx2 < lines2.size())
+           ++idx2;
+    }
 }
 
 //---------------------JSON----------------------------------------------------------------
@@ -122,7 +131,10 @@ bool compare_json(const TString& jsonOutput, const std::string& ref_filename, co
     std::cerr << "Length of produced JSON after adjustments: " << jsonOutput.Length() << std::endl;
     std::cerr << "Length of reference JSON after adjustments: " << refBuffer.str().length() << std::endl;
 
-    return produced_json == reference_json;
+    const auto areEqual = produced_json == reference_json;
+    if (!areEqual) printSideBySide(produced_json, reference_json);
+
+    return areEqual;
 }
 
 int test_json(TCanvas* c1, const std::string& macroName, const std::string& builddir) {
@@ -148,16 +160,6 @@ int test_json(TCanvas* c1, const std::string& macroName, const std::string& buil
         std::cout << "JSON test passed for " << macroName << std::endl;
     } else {
         std::cerr << "JSON test failed for " << macroName << std::endl;
-
-        // // Overwrite the reference JSON file with the produced one
-        // std::ofstream refFile(ref_filename);
-        // if (refFile.is_open()) {
-        //     refFile << jsonOutput.Data();
-        //     refFile.close();
-        //     std::cerr << "Reference JSON file updated for " << macroName << std::endl;
-        // } else {
-        //     std::cerr << "Error: Unable to open reference file for writing" << std::endl;
-        // }
         return 1;
     }
     return 0;
@@ -192,7 +194,10 @@ bool compareSVGFiles(const std::string& filePath1, const std::string& filePath2)
         std::cerr << "Length of produced SVG after adjustments: " << content1.length() << std::endl;
         std::cerr << "Length of reference SVG after adjustments: " << content2.length() << std::endl;
 
-        return content1 == content2;
+        const auto areEqual = content1 == content2;
+        if (!areEqual) printSideBySide(content1, content2);
+
+        return areEqual;
 
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
@@ -250,7 +255,6 @@ bool comparePDFFiles(const std::string& filePath1, const std::string& filePath2)
     try {
         std::string content1 = readFileToString(filePath1);
         std::string content2 = readFileToString(filePath2);
-        //std::cout << content1 << std::endl;
 
         content1 = preprocessPDFContent(content1);
         content2 = preprocessPDFContent(content2);
@@ -259,7 +263,9 @@ bool comparePDFFiles(const std::string& filePath1, const std::string& filePath2)
         std::cerr << "Length of produced PDF after adjustments: " << content1.length() << std::endl;
         std::cerr << "Length of reference PDF after adjustments: " << content2.length() << std::endl;
 
-        return content1 == content2;
+        const auto areEqual = content1 == content2;
+
+        return areEqual;
 
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
