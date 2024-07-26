@@ -31,17 +31,18 @@
   \param -cachesize Resize the prefetching cache use to speed up I/O operations (use 0 to disable).
   \param -d   Carry out the partial multiprocess execution in the specified directory
   \param -dbg Enable verbosity. If -j was specified, do not not delete partial files stored inside working directory.
-  \param -experimental-io-features `<feature>` Enables the corresponding experimental feature for output trees. \see
-  ROOT::Experimental::EIOFeatures \param -f   Force overwriting of output file. \param -f[0-9] Set target compression
-  level. 0 = uncompressed, 9 = highly compressed. Default is 1 (kDefaultZLIB). You can also specify the full compresion
-  algorithm, e.g. -f206 \param -fk  Sets the target file to contain the baskets with the same compression as the input
-  files (unless -O is specified). Compresses the meta data using the compression level specified in the first input or
-  the compression setting after fk (for example 206 when using -fk206) \param -ff  The compression level used is the one
-  specified in the first input \param -j   Parallelise the execution in `J` processes. If the number of processes is not
-  specified, use the system maximum. \param -k   Skip corrupt or non-existent files, do not exit \param -n   Open at
-  most `N` files at once (use 0 to request to use the system maximum) \param -O   Re-optimize basket size when merging
-  TTree \param -T   Do not merge Trees \param -v   Explicitly set the verbosity level: 0 request no output, 99 is the
-  default \return hadd returns a status code: 0 if OK, 1 otherwise
+  \param -experimental-io-features `<feature>` Enables the corresponding experimental feature for output trees. \see ROOT::Experimental::EIOFeatures
+  \param -f   Force overwriting of output file.
+  \param -f[0-9] Set target compression level. 0 = uncompressed, 9 = highly compressed. Default is 101 (kDefaultZLIB). You can also specify the full compression algorithm, e.g. -f206
+  \param -fk  Sets the target file to contain the baskets with the same compression as the input files (unless -O is specified). Compresses the meta data using the compression level specified in the first input or the compression setting after fk (for example 206 when using -fk206)
+  \param -ff  The compression level used is the one specified in the first input
+  \param -j   Parallelise the execution in `J` processes. If the number of processes is not specified, use the system maximum.
+  \param -k   Skip corrupt or non-existent files, do not exit
+  \param -n   Open at most `N` files at once (use 0 to request to use the system maximum)
+  \param -O   Re-optimize basket size when merging TTree 
+  \param -T   Do not merge Trees
+  \param -v   Explicitly set the verbosity level: 0 request no output, 99 is the default
+  \return hadd returns a status code: 0 if OK, 1 otherwise
 
   For example assume 3 files f1, f2, f3 containing histograms hn and Trees Tn
    - f1 with h1 h2 h3 T1
@@ -131,7 +132,7 @@
 
 using IntFlag_t = uint32_t;
 
-struct HaddArgs {
+struct HAddArgs {
    bool fNoTrees;
    bool fAppend;
    bool fForce;
@@ -316,7 +317,7 @@ static bool ValidCompressionSettings(int compSettings)
 // change with the previous arg parsing semantic, changing the meaning of a cmdline like:
 //
 // $ hadd -f 200 f.root g.root  # <- '200' is the output file, not an argument to -f!
-static EFlagResult FlagF(const char *arg, HaddArgs &args)
+static EFlagResult FlagF(const char *arg, HAddArgs &args)
 {
    if (arg[0] != 'f')
       return EFlagResult::kIgnored;
@@ -375,9 +376,9 @@ static EFlagResult FlagF(const char *arg, HaddArgs &args)
 
 // Returns nullopt if any of the flags failed to parse.
 // If an unknown flag is encountered, it will print a warning and go on.
-static std::optional<HaddArgs> ParseArgs(int argc, char **argv)
+static std::optional<HAddArgs> ParseArgs(int argc, char **argv)
 {
-   HaddArgs args{};
+   HAddArgs args{};
 
    for (int argIdx = 1; argIdx < argc; ++argIdx) {
       const char *argRaw = argv[argIdx];
@@ -435,7 +436,7 @@ int main(int argc, char **argv)
    const auto argsOpt = ParseArgs(argc, argv);
    if (!argsOpt)
       return 1;
-   const HaddArgs &args = *argsOpt;
+   const HAddArgs &args = *argsOpt;
 
    ROOT::TIOFeatures features = args.fFeatures.value_or(ROOT::TIOFeatures{});
    Int_t maxopenedfiles = args.fMaxOpenedFiles.value_or(0);
