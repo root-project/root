@@ -101,7 +101,7 @@ public:
       std::uint64_t GetNPages() const { return fCompressedPageSizes.size(); }
       std::uint64_t GetCompressedSize() const
       {
-         return std::reduce(fCompressedPageSizes.begin(), fCompressedPageSizes.end());
+         return std::accumulate(fCompressedPageSizes.begin(), fCompressedPageSizes.end(), static_cast<std::uint64_t>(0));
       }
       std::uint64_t GetUncompressedSize() const { return fElementSize * fNElements; }
       std::uint64_t GetElementSize() const { return fElementSize; }
