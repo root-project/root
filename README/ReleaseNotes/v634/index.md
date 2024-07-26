@@ -72,6 +72,10 @@ The following people have contributed to this new version:
 
 ## Core Libraries
 
+* The `rootcling` invocation corresponding to a `genreflex` invocation can be obtained with the new `genreflex`
+  command line argument `--print-rootcling-invocation`. This can be useful when migrating from genreflex to
+  rootcling.
+* The `rootcling` utility now fully supports selection xml files and not only LinkDef files.
 
 ## I/O Libraries
 
