@@ -1,18 +1,19 @@
 /**
   \file hadd.cxx
-  \brief This program will add histograms (see note) and Trees from a list of root files and write them to a target root
-  file. The target file is newly created and must not be identical to one of the source files.
+  \brief This program will merge compatible ROOT objects, such as histograms and Trees,
+         from a list of root files and write them to a target root file.
+         The target file is newly created and must not be identical to one of the source files.
 
   Syntax:
   ```{.cpp}
-       hadd [flags] targetfile source1 source2 ...
+       hadd [flags] targetfile source1 source2 ... [flags]
   ```
 
   Flags can be passed before or after the positional arguments.
   The first positional (non-flag) argument will be interpreted as the targetfile.
   After that, the first sequence of positional arguments will be interpreted as the input files.
-  If two sequences of positional arguments are separated by flags, all sequences but the first
-  will be ignored.
+  If two sequences of positional arguments are separated by flags, hadd will emit an error and abort.
+
   If a flag requires an argument, the argument can be specified in any of these ways:
 
      # All equally valid:
@@ -437,11 +438,14 @@ static std::optional<HAddArgs> ParseArgs(int argc, char **argv)
 {
    HAddArgs args{};
 
+   bool flagsAlreadyParsed = false;
    for (int argIdx = 1; argIdx < argc; ++argIdx) {
       const char *argRaw = argv[argIdx];
       if (!*argRaw) continue;
       if (argRaw[0] == '-' && argRaw[1] != '\0') {
          // parse flag
+         flagsAlreadyParsed = true;
+
          const char *arg = argRaw + 1;
          bool validFlag = false;
 
@@ -477,6 +481,12 @@ static std::optional<HAddArgs> ParseArgs(int argc, char **argv)
          args.fOutputArgIdx = argIdx;
       } else if (!args.fFirstInputIdx) {
          args.fFirstInputIdx = argIdx;
+      } else if (flagsAlreadyParsed) {
+         Err() << "seen a positional argument '" << argRaw << "' after some flags."
+                  " Positional arguments were already parsed at this point (from '" << argv[args.fOutputArgIdx]
+                  << "' onwards), so you cannot pass more."
+                  " Please regroup your positional arguments so that hadd works as you expect.\n";
+         return {};
       }
    }
 
@@ -497,7 +507,7 @@ int main(int argc, char **argv)
 
    ROOT::TIOFeatures features = args.fFeatures.value_or(ROOT::TIOFeatures{});
    Int_t maxopenedfiles = args.fMaxOpenedFiles.value_or(0);
-   Int_t verbosity = args.fVerbosity.value_or(0);
+   Int_t verbosity = args.fVerbosity.value_or(99);
    TString cacheSize = args.fCacheSize.value_or("");
    if (args.fCacheSize)
       std::cerr << "Using " << cacheSize << "\n";
