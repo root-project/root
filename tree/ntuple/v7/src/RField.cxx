@@ -1114,7 +1114,10 @@ void ROOT::Experimental::RFieldBase::ConnectPageSink(Internal::RPageSink &pageSi
    if (!fColumns.empty())
       fPrincipalColumn = fColumns[0].get();
    for (auto &column : fColumns) {
-      auto firstElementIndex = (column.get() == fPrincipalColumn) ? EntryToColumnElementIndex(firstEntry) : 0;
+      // Only the first column of every representation can be a deferred column. In all column representations,
+      // larger column indexes are data columns of collections (string, unsplit) and thus
+      // they have no elements on late model extension
+      auto firstElementIndex = (column->GetIndex() == 0) ? EntryToColumnElementIndex(firstEntry) : 0;
       column->ConnectPageSink(fOnDiskId, pageSink, firstElementIndex);
    }
 
@@ -3390,12 +3393,17 @@ ROOT::Experimental::RNullableField::GetColumnRepresentations() const
 
 void ROOT::Experimental::RNullableField::GenerateColumns()
 {
-   // TODO(jblomer): handle all column representatives
-   if (GetColumnRepresentatives()[0][0] == EColumnType::kBit) {
-      fDefaultItemValue = std::make_unique<RValue>(fSubFields[0]->CreateValue());
-      fColumns.emplace_back(Internal::RColumn::Create<bool>(EColumnType::kBit, 0, 0));
-   } else {
-      fColumns.emplace_back(Internal::RColumn::Create<ClusterSize_t>(GetColumnRepresentatives()[0][0], 0, 0));
+   const auto r = GetColumnRepresentatives();
+   const auto N = r.size();
+   fColumns.reserve(N);
+   for (std::uint16_t i = 0; i < N; ++i) {
+      if (r[i][0] == EColumnType::kBit) {
+         if (!fDefaultItemValue)
+            fDefaultItemValue = std::make_unique<RValue>(fSubFields[0]->CreateValue());
+         fColumns.emplace_back(Internal::RColumn::Create<bool>(EColumnType::kBit, 0, i));
+      } else {
+         fColumns.emplace_back(Internal::RColumn::Create<ClusterSize_t>(r[i][0], 0, i));
+      }
    }
 }
 
