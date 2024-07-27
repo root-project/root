@@ -99,6 +99,11 @@ void ROOT::Experimental::Internal::RColumn::Flush()
    fWritePage[fWritePageIdx].Reset(fNElements);
 }
 
+void ROOT::Experimental::Internal::RColumn::CommitSuppressed()
+{
+   fPageSink->CommitSuppressedColumn(fHandleSink);
+}
+
 void ROOT::Experimental::Internal::RColumn::MapPage(const NTupleSize_t index)
 {
    fPageSource->ReleasePage(fReadPage);
