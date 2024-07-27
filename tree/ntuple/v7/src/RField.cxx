@@ -998,12 +998,19 @@ void ROOT::Experimental::RFieldBase::SetOnDiskId(DescriptorId_t id)
    fOnDiskId = id;
 }
 
-const ROOT::Experimental::RFieldBase::ColumnRepresentation_t &
-ROOT::Experimental::RFieldBase::GetColumnRepresentative() const
+ROOT::Experimental::RFieldBase::RColumnRepresentations::Selection_t
+ROOT::Experimental::RFieldBase::GetColumnRepresentatives() const
 {
-   if (!fColumnRepresentatives.empty())
-      return fColumnRepresentatives[0].get();
-   return GetColumnRepresentations().GetSerializationDefault();
+   if (fColumnRepresentatives.empty()) {
+      return {GetColumnRepresentations().GetSerializationDefault()};
+   }
+
+   RColumnRepresentations::Selection_t result;
+   result.reserve(fColumnRepresentatives.size());
+   for (const auto &r : fColumnRepresentatives) {
+      result.emplace_back(r.get());
+   }
+   return result;
 }
 
 void ROOT::Experimental::RFieldBase::SetColumnRepresentatives(
@@ -1062,7 +1069,7 @@ void ROOT::Experimental::RFieldBase::RemoveReadCallback(size_t idx)
 void ROOT::Experimental::RFieldBase::AutoAdjustColumnTypes(const RNTupleWriteOptions &options)
 {
    if ((options.GetCompression() == 0) && HasDefaultColumnRepresentative()) {
-      ColumnRepresentation_t rep = GetColumnRepresentative();
+      ColumnRepresentation_t rep = GetColumnRepresentations().GetSerializationDefault();
       for (auto &colType : rep) {
          switch (colType) {
          case EColumnType::kSplitIndex64: colType = EColumnType::kIndex64; break;
@@ -1079,7 +1086,7 @@ void ROOT::Experimental::RFieldBase::AutoAdjustColumnTypes(const RNTupleWriteOpt
    }
 
    if (options.GetHasSmallClusters()) {
-      ColumnRepresentation_t rep = GetColumnRepresentative();
+      ColumnRepresentation_t rep = GetColumnRepresentations().GetSerializationDefault();
       for (auto &colType : rep) {
          switch (colType) {
          case EColumnType::kSplitIndex64: colType = EColumnType::kSplitIndex32; break;
@@ -3383,11 +3390,12 @@ ROOT::Experimental::RNullableField::GetColumnRepresentations() const
 
 void ROOT::Experimental::RNullableField::GenerateColumns()
 {
-   if (GetColumnRepresentative()[0] == EColumnType::kBit) {
+   // TODO(jblomer): handle all column representatives
+   if (GetColumnRepresentatives()[0][0] == EColumnType::kBit) {
       fDefaultItemValue = std::make_unique<RValue>(fSubFields[0]->CreateValue());
       fColumns.emplace_back(Internal::RColumn::Create<bool>(EColumnType::kBit, 0));
    } else {
-      fColumns.emplace_back(Internal::RColumn::Create<ClusterSize_t>(GetColumnRepresentative()[0], 0));
+      fColumns.emplace_back(Internal::RColumn::Create<ClusterSize_t>(GetColumnRepresentatives()[0][0], 0));
    }
 }
 

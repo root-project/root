@@ -1234,13 +1234,13 @@ TYPED_TEST(UniquePtr, Basics)
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
 
       if constexpr (std::is_same_v<typename TestFixture::Tag_t, RTagNullableFieldDefault>) {
-         EXPECT_EQ(EColumnType::kSplitIndex64, writer->GetModel().GetField("PBool").GetColumnRepresentative()[0]);
+         EXPECT_EQ(EColumnType::kSplitIndex64, writer->GetModel().GetField("PBool").GetColumnRepresentatives()[0][0]);
       }
       if constexpr (std::is_same_v<typename TestFixture::Tag_t, RTagNullableFieldSparse>) {
-         EXPECT_EQ(EColumnType::kSplitIndex64, writer->GetModel().GetField("PBool").GetColumnRepresentative()[0]);
+         EXPECT_EQ(EColumnType::kSplitIndex64, writer->GetModel().GetField("PBool").GetColumnRepresentatives()[0][0]);
       }
       if constexpr (std::is_same_v<typename TestFixture::Tag_t, RTagNullableFieldDense>) {
-         EXPECT_EQ(EColumnType::kBit, writer->GetModel().GetField("PBool").GetColumnRepresentative()[0]);
+         EXPECT_EQ(EColumnType::kBit, writer->GetModel().GetField("PBool").GetColumnRepresentatives()[0][0]);
       }
 
       auto pBool = writer->GetModel().GetDefaultEntry().GetPtr<std::unique_ptr<bool>>("PBool");
@@ -1542,12 +1542,12 @@ TEST(RNTuple, HalfPrecisionFloat)
    // TODO: Add std::float16 tests once available (from C++23)
    auto f1Fld = RFieldBase::Create("f1", "float").Unwrap();
    dynamic_cast<RField<float> *>(f1Fld.get())->SetHalfPrecision();
-   EXPECT_EQ(EColumnType::kReal16, f1Fld->GetColumnRepresentative()[0]);
+   EXPECT_EQ(EColumnType::kReal16, f1Fld->GetColumnRepresentatives()[0][0]);
    EXPECT_EQ("float", f1Fld->GetTypeName());
 
    auto fVecFld = RFieldBase::Create("fVec", "std::vector<float>").Unwrap();
    dynamic_cast<RField<float> *>(fVecFld->GetSubFields()[0])->SetHalfPrecision();
-   EXPECT_EQ(EColumnType::kReal16, fVecFld->GetSubFields()[0]->GetColumnRepresentative()[0]);
+   EXPECT_EQ(EColumnType::kReal16, fVecFld->GetSubFields()[0]->GetColumnRepresentatives()[0][0]);
 
    auto model = RNTupleModel::Create();
    model->AddField(std::move(f1Fld));
@@ -1625,9 +1625,9 @@ TEST(RNTuple, Double32)
    }
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-   EXPECT_EQ(EColumnType::kReal32, reader->GetModel().GetField("d1").GetColumnRepresentative()[0]);
+   EXPECT_EQ(EColumnType::kReal32, reader->GetModel().GetField("d1").GetColumnRepresentatives()[0][0]);
    EXPECT_EQ("", reader->GetModel().GetField("d1").GetTypeAlias());
-   EXPECT_EQ(EColumnType::kSplitReal32, reader->GetModel().GetField("d2").GetColumnRepresentative()[0]);
+   EXPECT_EQ(EColumnType::kSplitReal32, reader->GetModel().GetField("d2").GetColumnRepresentatives()[0][0]);
    EXPECT_EQ("Double32_t", reader->GetModel().GetField("d2").GetTypeAlias());
    auto d1 = reader->GetModel().GetDefaultEntry().GetPtr<double>("d1");
    auto d2 = reader->GetModel().GetDefaultEntry().GetPtr<double>("d2");

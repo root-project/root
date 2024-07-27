@@ -353,7 +353,7 @@ TEST(Packing, OnDiskEncoding)
    EXPECT_EQ(memcmp(sealedPage.GetBuffer(), expIndex64, sizeof(expIndex64)), 0);
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-   EXPECT_EQ(EColumnType::kIndex64, reader->GetModel().GetField("str").GetColumnRepresentative()[0]);
+   EXPECT_EQ(EColumnType::kIndex64, reader->GetModel().GetField("str").GetColumnRepresentatives()[0][0]);
    EXPECT_EQ(2u, reader->GetNEntries());
    auto viewStr = reader->GetView<std::string>("str");
    EXPECT_EQ(std::string("abc"), viewStr(0));

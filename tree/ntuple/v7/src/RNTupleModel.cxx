@@ -477,7 +477,9 @@ std::size_t ROOT::Experimental::RNTupleModel::EstimateWriteMemoryUsage(const RNT
 
    std::size_t nColumns = 0;
    for (auto &&field : *fFieldZero) {
-      nColumns += field.GetColumnRepresentative().size();
+      for (const auto &r : field.GetColumnRepresentatives()) {
+         nColumns += r.size();
+      }
    }
    const std::size_t pageBuffersPerModel = nColumns * pageBufferPerColumn;
    bytes += pageBuffersPerModel;
