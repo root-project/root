@@ -76,7 +76,7 @@ private:
    /// Used to pack and unpack pages on writing/reading
    std::unique_ptr<RColumnElementBase> fElement;
 
-   RColumn(EColumnType type, std::uint32_t index);
+   RColumn(EColumnType type, std::uint32_t columnIndex, std::uint16_t representationIndex);
 
    /// Used in Append() and AppendV() to handle the case when the main page reached the target size.
    /// If tail page optimization is enabled, switch the pages; the other page has been flushed when
@@ -112,9 +112,9 @@ private:
 
 public:
    template <typename CppT>
-   static std::unique_ptr<RColumn> Create(EColumnType type, std::uint32_t index)
+   static std::unique_ptr<RColumn> Create(EColumnType type, std::uint32_t columnIdx, std::uint16_t representationIdx)
    {
-      auto column = std::unique_ptr<RColumn>(new RColumn(type, index));
+      auto column = std::unique_ptr<RColumn>(new RColumn(type, columnIdx, representationIdx));
       column->fElement = RColumnElementBase::Generate<CppT>(type);
       return column;
    }

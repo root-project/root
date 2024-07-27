@@ -425,13 +425,14 @@ protected:
    /// Helpers for generating columns. We use the fact that most fields have the same C++/memory types
    /// for all their column representations.
    /// Where possible, we call the helpers not from the header to reduce compilation time.
-   template <int ColumnIndexT, typename HeadT, typename... TailTs>
-   void GenerateColumnsImpl(const ColumnRepresentation_t &representation)
+   template <std::uint32_t ColumnIndexT, typename HeadT, typename... TailTs>
+   void GenerateColumnsImpl(const ColumnRepresentation_t &representation, std::uint16_t representationIndex)
    {
       assert(ColumnIndexT < representation.size());
-      fColumns.emplace_back(Internal::RColumn::Create<HeadT>(representation[ColumnIndexT], ColumnIndexT));
+      fColumns.emplace_back(
+         Internal::RColumn::Create<HeadT>(representation[ColumnIndexT], ColumnIndexT, representationIndex));
       if constexpr (sizeof...(TailTs))
-         GenerateColumnsImpl<ColumnIndexT + 1, TailTs...>(representation);
+         GenerateColumnsImpl<ColumnIndexT + 1, TailTs...>(representation, representationIndex);
    }
 
    /// For writing, use the currently set column representative
@@ -439,10 +440,10 @@ protected:
    void GenerateColumnsImpl()
    {
       if (fColumnRepresentatives.empty()) {
-         GenerateColumnsImpl<0, ColumnCppTs...>(GetColumnRepresentations().GetSerializationDefault());
+         GenerateColumnsImpl<0, ColumnCppTs...>(GetColumnRepresentations().GetSerializationDefault(), 0);
       } else {
          // TODO(jblomer): generate columns for all of the available representations
-         GenerateColumnsImpl<0, ColumnCppTs...>(fColumnRepresentatives[0].get());
+         GenerateColumnsImpl<0, ColumnCppTs...>(fColumnRepresentatives[0].get(), 0);
       }
    }
 
@@ -450,7 +451,7 @@ protected:
    template <typename... ColumnCppTs>
    void GenerateColumnsImpl(const RNTupleDescriptor &desc)
    {
-      GenerateColumnsImpl<0, ColumnCppTs...>(EnsureCompatibleColumnTypes(desc));
+      GenerateColumnsImpl<0, ColumnCppTs...>(EnsureCompatibleColumnTypes(desc), 0);
    }
 
    /// Implementations in derived classes should return a static RColumnRepresentations object. The default

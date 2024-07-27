@@ -3393,9 +3393,9 @@ void ROOT::Experimental::RNullableField::GenerateColumns()
    // TODO(jblomer): handle all column representatives
    if (GetColumnRepresentatives()[0][0] == EColumnType::kBit) {
       fDefaultItemValue = std::make_unique<RValue>(fSubFields[0]->CreateValue());
-      fColumns.emplace_back(Internal::RColumn::Create<bool>(EColumnType::kBit, 0));
+      fColumns.emplace_back(Internal::RColumn::Create<bool>(EColumnType::kBit, 0, 0));
    } else {
-      fColumns.emplace_back(Internal::RColumn::Create<ClusterSize_t>(GetColumnRepresentatives()[0][0], 0));
+      fColumns.emplace_back(Internal::RColumn::Create<ClusterSize_t>(GetColumnRepresentatives()[0][0], 0, 0));
    }
 }
 
@@ -3403,9 +3403,9 @@ void ROOT::Experimental::RNullableField::GenerateColumns(const RNTupleDescriptor
 {
    auto onDiskTypes = EnsureCompatibleColumnTypes(desc);
    if (onDiskTypes[0] == EColumnType::kBit) {
-      fColumns.emplace_back(Internal::RColumn::Create<bool>(EColumnType::kBit, 0));
+      fColumns.emplace_back(Internal::RColumn::Create<bool>(EColumnType::kBit, 0, 0));
    } else {
-      fColumns.emplace_back(Internal::RColumn::Create<ClusterSize_t>(onDiskTypes[0], 0));
+      fColumns.emplace_back(Internal::RColumn::Create<ClusterSize_t>(onDiskTypes[0], 0, 0));
    }
 }
 
