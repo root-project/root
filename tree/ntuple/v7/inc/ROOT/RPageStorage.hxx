@@ -300,6 +300,9 @@ public:
    /// registered by specific fields (e.g., unsplit field) and during merging.
    virtual void UpdateExtraTypeInfo(const RExtraTypeInfoDescriptor &extraTypeInfo) = 0;
 
+   /// Commits a suppressed column for the current cluster. Can be called anytime before CommitCluster().
+   /// For any given column and cluster, there must be no calls to both CommitSuppressedColumn() and page commits.
+   virtual void CommitSuppressedColumn(ColumnHandle_t columnHandle) = 0;
    /// Write a page to the storage. The column must have been added before.
    virtual void CommitPage(ColumnHandle_t columnHandle, const RPage &page) = 0;
    /// Write a preprocessed page to storage. The column must have been added before.
@@ -452,6 +455,7 @@ public:
    /// Initialize sink based on an existing descriptor and fill into the descriptor builder.
    void InitFromDescriptor(const RNTupleDescriptor &descriptor);
 
+   void CommitSuppressedColumn(ColumnHandle_t columnHandle) final;
    void CommitPage(ColumnHandle_t columnHandle, const RPage &page) final;
    void CommitSealedPage(DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) final;
    void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup> ranges) final;

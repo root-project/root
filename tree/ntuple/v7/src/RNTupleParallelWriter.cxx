@@ -82,6 +82,7 @@ public:
       throw RException(R__FAIL("UpdateExtraTypeInfo not supported via RPageSynchronizingSink"));
    }
 
+   void CommitSuppressedColumn(ColumnHandle_t handle) final { fInnerSink->CommitSuppressedColumn(handle); }
    void CommitPage(ColumnHandle_t, const RPage &) final
    {
       throw RException(R__FAIL("should never commit single pages via RPageSynchronizingSink"));
