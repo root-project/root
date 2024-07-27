@@ -3375,12 +3375,7 @@ ROOT::Experimental::RNullableField::GetColumnRepresentations() const
 
 void ROOT::Experimental::RNullableField::GenerateColumns()
 {
-   if (HasDefaultColumnRepresentative()) {
-      if (fSubFields[0]->GetValueSize() < 4) {
-         SetColumnRepresentative({EColumnType::kBit});
-      }
-   }
-   if (IsDense()) {
+   if (GetColumnRepresentative()[0] == EColumnType::kBit) {
       fDefaultItemValue = std::make_unique<RValue>(fSubFields[0]->CreateValue());
       fColumns.emplace_back(Internal::RColumn::Create<bool>(EColumnType::kBit, 0));
    } else {
@@ -3400,7 +3395,7 @@ void ROOT::Experimental::RNullableField::GenerateColumns(const RNTupleDescriptor
 
 std::size_t ROOT::Experimental::RNullableField::AppendNull()
 {
-   if (IsDense()) {
+   if (fPrincipalColumn->GetType() == EColumnType::kBit) {
       bool mask = false;
       fPrincipalColumn->Append(&mask);
       return 1 + CallAppendOn(*fSubFields[0], fDefaultItemValue->GetPtr<void>().get());
@@ -3413,7 +3408,7 @@ std::size_t ROOT::Experimental::RNullableField::AppendNull()
 std::size_t ROOT::Experimental::RNullableField::AppendValue(const void *from)
 {
    auto nbytesItem = CallAppendOn(*fSubFields[0], from);
-   if (IsDense()) {
+   if (fPrincipalColumn->GetType() == EColumnType::kBit) {
       bool mask = true;
       fPrincipalColumn->Append(&mask);
       return 1 + nbytesItem;
@@ -3427,7 +3422,7 @@ std::size_t ROOT::Experimental::RNullableField::AppendValue(const void *from)
 ROOT::Experimental::RClusterIndex ROOT::Experimental::RNullableField::GetItemIndex(NTupleSize_t globalIndex)
 {
    RClusterIndex nullIndex;
-   if (IsDense()) {
+   if (fPrincipalColumn->GetType() == EColumnType::kBit) {
       const bool isValidItem = *fPrincipalColumn->Map<bool>(globalIndex);
       return isValidItem ? fPrincipalColumn->GetClusterIndex(globalIndex) : nullIndex;
    } else {

@@ -1535,10 +1535,8 @@ public:
    RNullableField &operator=(RNullableField &&other) = default;
    ~RNullableField() override = default;
 
-   bool IsDense() const { return GetColumnRepresentative()[0] ==  EColumnType::kBit; }
-   bool IsSparse() const { return !IsDense(); }
    void SetDense() { SetColumnRepresentative({EColumnType::kBit}); }
-   void SetSparse() { SetColumnRepresentative({EColumnType::kSplitIndex32}); }
+   void SetSparse() { SetColumnRepresentative({EColumnType::kSplitIndex64}); }
 
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
