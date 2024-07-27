@@ -978,8 +978,15 @@ std::vector<const ROOT::Experimental::RFieldBase *> ROOT::Experimental::RFieldBa
 
 void ROOT::Experimental::RFieldBase::CommitCluster()
 {
-   for (auto& column : fColumns) {
-      column->Flush();
+   if (!fColumns.empty()) {
+      const auto activeRepresentationIndex = fColumns[0]->GetRepresentationIndex();
+      for (auto &column : fColumns) {
+         if (column->GetRepresentationIndex() == activeRepresentationIndex) {
+            column->Flush();
+         } else {
+            column->CommitSuppressed();
+         }
+      }
    }
    CommitClusterImpl();
 }

@@ -330,6 +330,7 @@ public:
    }
 
    void Flush();
+   void CommitSuppressed();
    void MapPage(const NTupleSize_t index);
    void MapPage(RClusterIndex clusterIndex);
    NTupleSize_t GetNElements() const { return fNElements; }
