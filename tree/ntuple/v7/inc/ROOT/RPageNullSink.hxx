@@ -73,6 +73,7 @@ public:
    }
    void UpdateExtraTypeInfo(const RExtraTypeInfoDescriptor &) final {}
 
+   void CommitSuppressedColumn(ColumnHandle_t) final {}
    void CommitPage(ColumnHandle_t, const RPage &page) final { fNBytesCurrentCluster += page.GetNBytes(); }
    void CommitSealedPage(DescriptorId_t, const RSealedPage &page) final
    {
