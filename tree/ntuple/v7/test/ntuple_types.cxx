@@ -1205,8 +1205,6 @@ static void AddUniquePtrField(RNTupleModel &model, const std::string &fieldName)
 
 TYPED_TEST(UniquePtr, Basics)
 {
-   using RUniquePtrField = ROOT::Experimental::RUniquePtrField;
-
    FileRaii fileGuard("test_ntuple_unique_ptr.root");
 
    {
@@ -1228,23 +1226,13 @@ TYPED_TEST(UniquePtr, Basics)
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
 
       if constexpr (std::is_same_v<typename TestFixture::Tag_t, RTagNullableFieldDefault>) {
-         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel().GetField("PBool")).IsDense());
-         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel().GetField("PCustomStruct")).IsSparse());
-         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel().GetField("PArray")).IsDense());
+         EXPECT_EQ(EColumnType::kSplitIndex64, writer->GetModel().GetField("PBool").GetColumnRepresentative()[0]);
       }
       if constexpr (std::is_same_v<typename TestFixture::Tag_t, RTagNullableFieldSparse>) {
-         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel().GetField("PBool")).IsSparse());
-         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel().GetField("PCustomStruct")).IsSparse());
-         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel().GetField("PIOConstructor")).IsSparse());
-         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel().GetField("PPString")).IsSparse());
-         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel().GetField("PArray")).IsSparse());
+         EXPECT_EQ(EColumnType::kSplitIndex64, writer->GetModel().GetField("PBool").GetColumnRepresentative()[0]);
       }
       if constexpr (std::is_same_v<typename TestFixture::Tag_t, RTagNullableFieldDense>) {
-         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel().GetField("PBool")).IsDense());
-         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel().GetField("PCustomStruct")).IsDense());
-         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel().GetField("PIOConstructor")).IsDense());
-         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel().GetField("PPString")).IsDense());
-         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel().GetField("PArray")).IsDense());
+         EXPECT_EQ(EColumnType::kBit, writer->GetModel().GetField("PBool").GetColumnRepresentative()[0]);
       }
 
       auto pBool = writer->GetModel().GetDefaultEntry().GetPtr<std::unique_ptr<bool>>("PBool");
