@@ -418,8 +418,8 @@ protected:
    /// for classes with dictionaries.
    std::uint32_t fOnDiskTypeChecksum = 0;
    /// Pointers into the static vector GetColumnRepresentations().GetSerializationTypes() when
-   /// SetColumnRepresentative(s) is called.  Otherwise (if empty) GetColumnRepresentative() returns the
-   /// default representation.
+   /// SetColumnRepresentatives is called.  Otherwise (if empty) GetColumnRepresentatives() returns a vector
+   /// with a single element, the default representation.
    std::vector<std::reference_wrapper<const ColumnRepresentation_t>> fColumnRepresentatives;
 
    /// Helpers for generating columns. We use the fact that most fields have the same C++/memory types
@@ -438,7 +438,12 @@ protected:
    template <typename... ColumnCppTs>
    void GenerateColumnsImpl()
    {
-      GenerateColumnsImpl<0, ColumnCppTs...>(GetColumnRepresentative());
+      if (fColumnRepresentatives.empty()) {
+         GenerateColumnsImpl<0, ColumnCppTs...>(GetColumnRepresentations().GetSerializationDefault());
+      } else {
+         // TODO(jblomer): generate columns for all of the available representations
+         GenerateColumnsImpl<0, ColumnCppTs...>(fColumnRepresentatives[0].get());
+      }
    }
 
    /// For reading, use the on-disk column list
@@ -729,7 +734,7 @@ public:
    void SetOnDiskId(DescriptorId_t id);
 
    /// Returns the fColumnRepresentative pointee or, if unset, the field's default representative
-   const ColumnRepresentation_t &GetColumnRepresentative() const;
+   RColumnRepresentations::Selection_t GetColumnRepresentatives() const;
    /// Fixes a column representative. This can only be done _before_ connecting the field to a page sink.
    /// Otherwise, or if the provided representation is not in the list of GetColumnRepresentations,
    /// an exception is thrown
