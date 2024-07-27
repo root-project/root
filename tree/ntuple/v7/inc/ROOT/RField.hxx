@@ -400,11 +400,12 @@ protected:
    std::vector<std::unique_ptr<RFieldBase>> fSubFields;
    /// Sub fields point to their mother field
    RFieldBase* fParent;
-   /// Points into fColumns.  All fields that have columns have a distinct main column. For simple fields
-   /// (float, int, ...), the principal column corresponds to the field type. For collection fields expect std::array,
-   /// the main column is the offset field.  Class fields have no column of their own.
+   /// Points to the first element of fColumns. All fields that have columns have a distinct main column.
+   /// For simple fields (float, int, ...), the principal column corresponds to the field type. For collection fields
+   /// except std::array, the main column is the offset field.  Class fields have no column of their own.
    Internal::RColumn *fPrincipalColumn;
    /// The columns are connected either to a sink or to a source (not to both); they are owned by the field.
+   /// Contains all columns of all representations in order of representation and column index.
    std::vector<std::unique_ptr<Internal::RColumn>> fColumns;
    /// Properties of the type that allow for optimizations of collections of that type
    int fTraits = 0;
@@ -440,10 +441,14 @@ protected:
    void GenerateColumnsImpl()
    {
       if (fColumnRepresentatives.empty()) {
+         fColumns.reserve(sizeof...(ColumnCppTs));
          GenerateColumnsImpl<0, ColumnCppTs...>(GetColumnRepresentations().GetSerializationDefault(), 0);
       } else {
-         // TODO(jblomer): generate columns for all of the available representations
-         GenerateColumnsImpl<0, ColumnCppTs...>(fColumnRepresentatives[0].get(), 0);
+         const auto N = fColumnRepresentatives.size();
+         fColumns.reserve(N * sizeof...(ColumnCppTs));
+         for (unsigned i = 0; i < N; ++i) {
+            GenerateColumnsImpl<0, ColumnCppTs...>(fColumnRepresentatives[i].get(), i);
+         }
       }
    }
 

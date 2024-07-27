@@ -616,6 +616,10 @@ ROOT::Experimental::Internal::RPagePersistentSink::AddColumn(DescriptorId_t fiel
       .Index(column.GetIndex())
       .RepresentationIndex(column.GetRepresentationIndex())
       .FirstElementIndex(column.GetFirstElementIndex());
+   // For late model extension, we assume that the primary column representation is the active one for the
+   // deferred range. All other representations are suppressed.
+   if (column.GetFirstElementIndex() > 0 && column.GetRepresentationIndex() > 0)
+      columnBuilder.SetSuppressedDeferred();
    fDescriptorBuilder.AddColumn(columnBuilder.MakeDescriptor().Unwrap());
    return ColumnHandle_t{columnId, &column};
 }
