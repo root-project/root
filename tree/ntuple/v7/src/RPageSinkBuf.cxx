@@ -136,6 +136,11 @@ void ROOT::Experimental::Internal::RPageSinkBuf::UpdateExtraTypeInfo(const RExtr
    fInnerSink->UpdateExtraTypeInfo(extraTypeInfo);
 }
 
+void ROOT::Experimental::Internal::RPageSinkBuf::CommitSuppressedColumn(ColumnHandle_t columnHandle)
+{
+   fSuppressedColumns.emplace_back(columnHandle);
+}
+
 void ROOT::Experimental::Internal::RPageSinkBuf::CommitPage(ColumnHandle_t columnHandle, const RPage &page)
 {
    auto colId = columnHandle.fPhysicalId;
@@ -214,6 +219,10 @@ std::uint64_t ROOT::Experimental::Internal::RPageSinkBuf::CommitCluster(ROOT::Ex
       RPageSink::RSinkGuard g(fInnerSink->GetSinkGuard());
       Detail::RNTuplePlainTimer timer(fCounters->fTimeWallCriticalSection, fCounters->fTimeCpuCriticalSection);
       fInnerSink->CommitSealedPageV(toCommit);
+
+      for (auto handle : fSuppressedColumns)
+         fInnerSink->CommitSuppressedColumn(handle);
+      fSuppressedColumns.clear();
 
       nbytes = fInnerSink->CommitCluster(nNewEntries);
    }

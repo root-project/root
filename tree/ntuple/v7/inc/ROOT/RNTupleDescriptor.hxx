@@ -1255,6 +1255,11 @@ public:
    /// should happen before calling this function.
    RClusterDescriptorBuilder &AddExtendedColumnRanges(const RNTupleDescriptor &desc);
 
+   const RClusterDescriptor::RColumnRange &GetColumnRange(DescriptorId_t physicalId)
+   {
+      return fCluster.GetColumnRange(physicalId);
+   }
+
    /// Move out the full cluster descriptor including page locations
    RResult<RClusterDescriptor> MoveDescriptor();
 };
