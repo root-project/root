@@ -12,18 +12,6 @@
 ///
 /// Our abstract base shape class.
 ///
-/// As we overload TObject::Paint which is called directly from compiled
-/// code, this script must also be compiled to work correctly.
-///
-/// ~~~{.cpp}
-/// #if defined(__CINT__) && !defined(__MAKECINT__)
-/// {
-///    gSystem->CompileMacro("viewer3DLocal.C");
-///    viewer3DLocal();
-/// }
-/// #else
-/// ~~~
-///
 /// \macro_code
 ///
 /// \author Richard Maunder

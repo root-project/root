@@ -135,7 +135,7 @@ template<class Func>
 class LSResidualFunc : public IMultiGradFunction {
 public:
 
-   //default ctor (required by CINT)
+   //default ctor
    LSResidualFunc() : fIndex(0), fChi2(0)
    {}
 

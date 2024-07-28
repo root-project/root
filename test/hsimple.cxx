@@ -16,7 +16,6 @@
 
 int hsimple();
 
-#ifndef __CINT__
 #include "TFile.h"
 #include "TH1.h"
 #include "TH2.h"
@@ -24,14 +23,12 @@ int hsimple();
 #include "TNtuple.h"
 #include "TRandom.h"
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
 int main()
 {
   return hsimple();
 }
-#endif
 
 int hsimple()
 {

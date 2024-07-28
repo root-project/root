@@ -191,7 +191,6 @@ TArrayF &StockReturn(TFile *f,const TString &name,Int_t sDay,Int_t eDay)
   return *r;
 }
 
-#ifndef __MAKECINT__
 //---------------------------------------------------------------------------
 TVectorD OptimalInvest(Double_t riskFactor,TVectorD r,TMatrixDSym Covar)
 {
@@ -279,7 +278,6 @@ TVectorD OptimalInvest(Double_t riskFactor,TVectorD r,TMatrixDSym Covar)
 
   return weight;
 }
-#endif
 
  //---------------------------------------------------------------------------
 void portfolio()
