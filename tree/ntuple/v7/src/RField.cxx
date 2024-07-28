@@ -1036,15 +1036,26 @@ void ROOT::Experimental::RFieldBase::SetColumnRepresentatives(
 }
 
 const ROOT::Experimental::RFieldBase::ColumnRepresentation_t &
-ROOT::Experimental::RFieldBase::EnsureCompatibleColumnTypes(const RNTupleDescriptor &desc) const
+ROOT::Experimental::RFieldBase::EnsureCompatibleColumnTypes(const RNTupleDescriptor &desc,
+                                                            std::uint16_t representationIndex) const
 {
+   static const ColumnRepresentation_t kEmpty;
+
    if (fOnDiskId == kInvalidDescriptorId)
-      throw RException(R__FAIL("No on-disk column information for field `" + GetQualifiedFieldName() + "`"));
+      throw RException(R__FAIL("No on-disk field information for `" + GetQualifiedFieldName() + "`"));
 
    ColumnRepresentation_t onDiskTypes;
    for (const auto &c : desc.GetColumnIterable(fOnDiskId)) {
-      onDiskTypes.emplace_back(c.GetType());
+      if (c.GetRepresentationIndex() == representationIndex)
+         onDiskTypes.emplace_back(c.GetType());
    }
+   if (onDiskTypes.empty()) {
+      if (representationIndex == 0) {
+         throw RException(R__FAIL("No on-disk column information for field `" + GetQualifiedFieldName() + "`"));
+      }
+      return kEmpty;
+   }
+
    for (const auto &t : GetColumnRepresentations().GetDeserializationTypes()) {
       if (t == onDiskTypes)
          return t;
@@ -1054,10 +1065,10 @@ ROOT::Experimental::RFieldBase::EnsureCompatibleColumnTypes(const RNTupleDescrip
    for (const auto &t : onDiskTypes) {
       if (!columnTypeNames.empty())
          columnTypeNames += ", ";
-      columnTypeNames += Internal::RColumnElementBase::GetTypeName(t);
+      columnTypeNames += std::string("`") + Internal::RColumnElementBase::GetTypeName(t) + "`";
    }
-   throw RException(R__FAIL("On-disk column types `" + columnTypeNames + "` for field `" + GetQualifiedFieldName() +
-                            "` cannot be matched."));
+   throw RException(R__FAIL("On-disk column types {" + columnTypeNames + "} for field `" + GetQualifiedFieldName() +
+                            "` cannot be matched (representation index: " + std::to_string(representationIndex) + ")"));
 }
 
 size_t ROOT::Experimental::RFieldBase::AddReadCallback(ReadCallback_t func)
@@ -1159,15 +1170,13 @@ void ROOT::Experimental::RFieldBase::ConnectPageSource(Internal::RPageSource &pa
       const auto descriptorGuard = pageSource.GetSharedDescriptorGuard();
       const RNTupleDescriptor &desc = descriptorGuard.GetRef();
       GenerateColumns(desc);
-      ColumnRepresentation_t onDiskColumnTypes;
-      onDiskColumnTypes.reserve(fColumns.size());
-      for (const auto &c : fColumns) {
-         onDiskColumnTypes.emplace_back(c->GetType());
-      }
-      for (const auto &t : GetColumnRepresentations().GetDeserializationTypes()) {
-         if (t == onDiskColumnTypes) {
-            fColumnRepresentatives = {t};
-            break;
+      if (fColumnRepresentatives.empty()) {
+         // If we didn't get columns from the descriptor, ensure that we actually expect a field without columns
+         for (const auto &t : GetColumnRepresentations().GetDeserializationTypes()) {
+            if (t.empty()) {
+               fColumnRepresentatives = {t};
+               break;
+            }
          }
       }
       R__ASSERT(!fColumnRepresentatives.empty());
@@ -3416,12 +3425,21 @@ void ROOT::Experimental::RNullableField::GenerateColumns()
 
 void ROOT::Experimental::RNullableField::GenerateColumns(const RNTupleDescriptor &desc)
 {
-   auto onDiskTypes = EnsureCompatibleColumnTypes(desc);
-   if (onDiskTypes[0] == EColumnType::kBit) {
-      fColumns.emplace_back(Internal::RColumn::Create<bool>(EColumnType::kBit, 0, 0));
-   } else {
-      fColumns.emplace_back(Internal::RColumn::Create<ClusterSize_t>(onDiskTypes[0], 0, 0));
-   }
+   std::uint16_t representationIndex = 0;
+   do {
+      const auto &onDiskTypes = EnsureCompatibleColumnTypes(desc, representationIndex);
+      if (onDiskTypes.empty())
+         break;
+
+      if (onDiskTypes[0] == EColumnType::kBit) {
+         fColumns.emplace_back(Internal::RColumn::Create<bool>(EColumnType::kBit, 0, representationIndex));
+      } else {
+         fColumns.emplace_back(Internal::RColumn::Create<ClusterSize_t>(onDiskTypes[0], 0, representationIndex));
+      }
+      fColumnRepresentatives.emplace_back(onDiskTypes);
+
+      representationIndex++;
+   } while (true);
 }
 
 std::size_t ROOT::Experimental::RNullableField::AppendNull()
