@@ -456,7 +456,15 @@ protected:
    template <typename... ColumnCppTs>
    void GenerateColumnsImpl(const RNTupleDescriptor &desc)
    {
-      GenerateColumnsImpl<0, ColumnCppTs...>(EnsureCompatibleColumnTypes(desc), 0);
+      std::uint16_t representationIndex = 0;
+      do {
+         const auto &onDiskTypes = EnsureCompatibleColumnTypes(desc, representationIndex);
+         if (onDiskTypes.empty())
+            break;
+         GenerateColumnsImpl<0, ColumnCppTs...>(onDiskTypes, representationIndex);
+         fColumnRepresentatives.emplace_back(onDiskTypes);
+         representationIndex++;
+      } while (true);
    }
 
    /// Implementations in derived classes should return a static RColumnRepresentations object. The default
@@ -469,9 +477,14 @@ protected:
    /// The default implementation does not attach any columns to the field. The method should check, using the page
    /// source and fOnDiskId, if the column types match and throw if they don't.
    virtual void GenerateColumns(const RNTupleDescriptor & /*desc*/) {}
-   /// Returns the on-disk column types found in the provided descriptor for fOnDiskId. Throws an exception if the types
-   /// don't match any of the deserialization types from GetColumnRepresentations().
-   const ColumnRepresentation_t &EnsureCompatibleColumnTypes(const RNTupleDescriptor &desc) const;
+   /// Returns the on-disk column types found in the provided descriptor for fOnDiskId and the given
+   /// representation index. If there are no columns for the given representation index, return an empty
+   /// ColumnRepresentation_t list. Otherwise, the returned reference points into the static array returned by
+   /// GetColumnRepresentations().
+   /// Throws an exception if the types on disk don't match any of the deserialization types from
+   /// GetColumnRepresentations().
+   const ColumnRepresentation_t &
+   EnsureCompatibleColumnTypes(const RNTupleDescriptor &desc, std::uint16_t representationIndex) const;
    /// When connecting a field to a page sink, the field's default column representation is subject
    /// to adjustment according to the write options. E.g., if compression is turned off, encoded columns
    /// are changed to their unencoded counterparts.
