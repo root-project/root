@@ -411,7 +411,7 @@ protected:
    TIter         *fThreadedClassIter; // fClasses iterator for MakeClassThreaded
    Int_t          fThreadedClassCount; // counter of processed classes for MakeClassThreaded
    TVirtualMutex *fMakeClassMutex; // Mutex for MakeClassThreaded
-   TGClient      *fGClient; // gClient, cached and queried through CINT
+   TGClient      *fGClient; // gClient, cached and queried through the interpreter
    DocSyntax_t     fDocSyntax;      // doc syntax configuration
    LinkInfo_t      fLinkInfo;       // link (URL) configuration
    OutputStyle_t   fOutputStyle;    // output style configuration

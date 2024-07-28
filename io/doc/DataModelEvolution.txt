@@ -26,10 +26,10 @@ is no other option.
 2. The dictionaries
 
    The most convenient place to specify the conversion rules is a dictionary. One can
-do that either in CINT's LinkDef file or in the selection xml file being fed to genreflex.
+do that either in a LinkDef or in the selection xml file.
 The syntax of the rules is the following:
 
-   * For CINT dictionaries:
+   * For LinkDef:
 
 #pragma read                                              \
     sourceClass="ClassA"                                  \
@@ -58,7 +58,7 @@ fXbins.Set( xbins ); \
 }"
 
 
-   * For REFLEX dictionaries:
+   * For selection xmls:
 
 <ioread sourceClass="ClassA"
         source="double m_a; double m_b; double m_c"

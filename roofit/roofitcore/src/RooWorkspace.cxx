@@ -1075,7 +1075,7 @@ bool RooWorkspace::commitTransaction()
     return false ;
   }
 
-  // Publish sandbox nodes in directory and/or CINT if requested
+  // Publish sandbox nodes in directory if requested
   for(RooAbsArg* sarg : _sandboxNodes) {
     if (_dir && sarg->IsA() != RooConstVar::Class()) {
       _dir->InternalAppend(sarg) ;

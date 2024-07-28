@@ -21,7 +21,7 @@ void geom_lhcb()
 
    gEve->FullRedraw3D(kTRUE);
 
-   // EClipType not exported to CINT (see TGLUtil.h):
+   // EClipType (see TGLUtil.h):
    // 0 - no clip, 1 - clip plane, 2 - clip box
    auto v = gEve->GetDefaultGLViewer();
    v->GetClipSet()->SetClipType(TGLClip::EType(1));

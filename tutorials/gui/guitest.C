@@ -1746,7 +1746,7 @@ void TestSliders::DoSlider(Int_t pos)
    char buf[32];
    snprintf(buf, 32, "%d", pos);
 
-#ifdef CINT_FIXED
+#ifdef CLING_FIX
    switch (id) {
    case HSId1:
 #else
@@ -1758,7 +1758,7 @@ void TestSliders::DoSlider(Int_t pos)
       fTeh1->SetCursorPosition(fTeh1->GetCursorPosition());
       fTeh1->Deselect();
       gClient->NeedRedraw(fTeh1);
-#ifdef CINT_FIXED
+#ifdef CLING_FIX
       break;
    case VSId1:
 #else
@@ -1770,7 +1770,7 @@ void TestSliders::DoSlider(Int_t pos)
       fTev1->SetCursorPosition(fTev1->GetCursorPosition());
       fTev1->Deselect();
       gClient->NeedRedraw(fTev1);
-#ifdef CINT_FIXED
+#ifdef CLING_FIX
       break;
    case HSId2:
 #else
@@ -1782,7 +1782,7 @@ void TestSliders::DoSlider(Int_t pos)
       fTeh2->SetCursorPosition(fTeh2->GetCursorPosition());
       fTeh2->Deselect();
       gClient->NeedRedraw(fTeh2);
-#ifdef CINT_FIXED
+#ifdef CLING_FIX
       break;
    case VSId2:
 #else
@@ -1795,7 +1795,7 @@ void TestSliders::DoSlider(Int_t pos)
       fTev2->SetCursorPosition(fTev2->GetCursorPosition());
       fTev2->Deselect();
       gClient->NeedRedraw(fTev2);
-#ifdef CINT_FIXED
+#ifdef CLING_FIX
       break;
    default:
       break;

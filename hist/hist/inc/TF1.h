@@ -389,9 +389,8 @@ public:
    // and returning a double.
    // The class name is not needed when using compile code, while it is required when using
    // interpreted code via the specialized constructor with void *.
-   // An instance of the C++ function class or its pointer can both be used. The former is reccomended when using
-   // C++ compiled code, but if CINT compatibility is needed, then a pointer to the function class must be used.
-   // xmin and xmax specify the plotting range,  npar is the number of parameters.
+   // Both an instance of the C++ function class or its pointer can both be used.
+   // The parameters xmin and xmax specify the plotting range,  npar is the number of parameters.
    // See the tutorial math/exampleFunctor.C for an example of using this constructor
    template <typename Func>
    TF1(const char *name, Func f, Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim = 1, EAddToList addToGlobList = EAddToList::kDefault) :

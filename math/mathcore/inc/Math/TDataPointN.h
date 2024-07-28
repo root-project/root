@@ -39,18 +39,14 @@ public:
    static void SetDimension(UInt_t dim) {assert(dim>0);kDimension=dim;}
 
    TDataPointN();
-#ifndef __MAKECINT__
    template<typename _coord_typ>
    TDataPointN(const _coord_typ* pData,value_type fWeight = 1);
    template<typename _val>
    TDataPointN(const TDataPointN<_val>&);
-#endif
    virtual ~TDataPointN();
 
-#ifndef __MAKECINT__
    template<typename _val>
    _val_type   Distance(const TDataPointN<_val>& rPoint) const;
-#endif
    _val_type   GetCoordinate(unsigned int iAxis) const;
    _val_type   GetWeight() const {return m_fWeight;}
    bool        Less(TDataPointN& rPoint,unsigned int iAxis) const;

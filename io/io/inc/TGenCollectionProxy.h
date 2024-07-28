@@ -42,7 +42,7 @@ public:
 #endif
 
    enum {
-      // Those 'bits' are used in conjunction with CINT's bit to store the 'type'
+      // Those 'bits' were used in conjunction with CINT's bit to store the 'type'
       // info into one int
       kBIT_ISSTRING   = 0x20000000,  // We can optimized a value operation when the content are strings
       kBIT_ISTSTRING  = 0x40000000

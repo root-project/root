@@ -1848,7 +1848,8 @@ void CallWriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
 void GenerateLinkdef(llvm::cl::list<std::string> &InputFiles,
                      std::string &code_for_parser)
 {
-   code_for_parser += "#ifdef __CINT__\n\n";
+   // Below we mention CINT only for compatibility reasons
+   code_for_parser += "#if defined(__CINT__) || defined(__CLING__)\n\n";
    code_for_parser += "#pragma link off all globals;\n";
    code_for_parser += "#pragma link off all classes;\n";
    code_for_parser += "#pragma link off all functions;\n\n";
@@ -4270,9 +4271,9 @@ int RootClingMain(int argc,
    // Data is in 'outputFile', therefore in the same scope.
    llvm::StringRef moduleName;
    std::string vfsArg;
-   // Adding -fmodules to the args will break lexing with __CINT__ defined,
-   // and we actually do lex with __CINT__ and reuse this variable later,
-   // we have to copy it now.
+   // Adding -fmodules to the args will break lexing with __CLING__/__CINT__
+   // defined, and we actually do lex with __CLING__/__CINT__ and reuse this
+   // variable later, we have to copy it now.
    auto clingArgsInterpreter = clingArgs;
 
    if (gOptSharedLibFileName.empty()) {
@@ -4480,8 +4481,10 @@ int RootClingMain(int argc,
    TClassEdit::Init(&helper);
 
    // flags used only for the pragma parser:
-   clingArgs.push_back("-D__CINT__");
-   clingArgs.push_back("-D__MAKECINT__");
+   clingArgs.push_back("-D__CINT__"); // for compatibility
+   clingArgs.push_back("-D__MAKECINT__"); // for compatibility
+   clingArgs.push_back("-D__CLING__"); // for compatibility
+   clingArgs.push_back("-D__MAKECLING__"); // for compatibility
 
    AddPlatformDefines(clingArgs);
 
@@ -5411,27 +5414,35 @@ namespace genreflex {
       const int argc = argvVector.size();
 
       // Output commandline for rootcling
+      std::string cmd;
+
+      for (int i = 0; i < argc; i++) {
+         cmd += argvVector[i];
+         cmd += " ";
+      }
+      cmd.pop_back();
+
       if (genreflex::verbose || printRootclingInvocation) {
-         std::string cmd;
-         for (int i = 0; i < argc; i++) {
-            cmd += argvVector[i];
-            cmd += " ";
-         }
-         cmd.pop_back();
          if (genreflex::verbose) std::cout << "Rootcling commandline: ";
          std::cout << cmd << std::endl;
-         if (printRootclingInvocation) return 0; // we do not generate anything
       }
 
-      char **argv =  & (argvVector[0]);
-      int rootclingReturnCode = RootClingMain(argc,
-                                              argv,
-                                              /*isGenReflex=*/true);
+      if (printRootclingInvocation) return 0; // we do not generate anything
 
-      for (int i = 0; i < argc; i++)
-         delete [] argvVector[i];
+      return system(cmd.c_str());
 
-      return rootclingReturnCode;
+
+
+
+      // char **argv =  & (argvVector[0]);
+      // int rootclingReturnCode = RootClingMain(argc,
+      //                                         argv,
+      //                                         /*isGenReflex=*/true);
+
+      // for (int i = 0; i < argc; i++)
+      //    delete [] argvVector[i];
+
+      // return rootclingReturnCode;
 
    }
 
