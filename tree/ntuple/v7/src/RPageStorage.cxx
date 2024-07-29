@@ -299,6 +299,9 @@ void ROOT::Experimental::Internal::RPageSource::PrepareLoadCluster(
    const auto &clusterDesc = descriptorGuard->GetClusterDescriptor(clusterKey.fClusterId);
 
    for (auto physicalColumnId : clusterKey.fPhysicalColumnSet) {
+      if (clusterDesc.GetColumnRange(physicalColumnId).fIsSuppressed)
+         continue;
+
       const auto &pageRange = clusterDesc.GetPageRange(physicalColumnId);
       NTupleSize_t pageNo = 0;
       for (const auto &pageInfo : pageRange.fPageInfos) {
