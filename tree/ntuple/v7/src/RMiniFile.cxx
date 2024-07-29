@@ -1523,12 +1523,9 @@ std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::WriteBlob(const v
    const size_t nChunks = ComputeNumChunks(nbytes, maxKeySize);
    const size_t nbytesChunkOffsets = (nChunks - 1) * sizeof(std::uint64_t);
    const size_t nbytesFirstChunk = maxKeySize - nbytesChunkOffsets;
-   // Write first chunk.
-   // Note that the last bytes we write here will be overridden later by the other chunks'
-   // offsets, and we're gonna write those bytes again in the following chunk.
-   const std::uint64_t firstOffset = writeKey(data, maxKeySize, maxKeySize);
+   // Skip writing the first chunk, it will be written last (in the file) below.
 
-   data = reinterpret_cast<const uint8_t *>(data) + nbytesFirstChunk;
+   const uint8_t *chunkData = reinterpret_cast<const uint8_t *>(data) + nbytesFirstChunk;
    size_t remainingBytes = nbytes - nbytesFirstChunk;
 
    const auto chunkOffsetsToWrite = std::make_unique<std::uint64_t[]>(nChunks - 1);
@@ -1536,22 +1533,21 @@ std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::WriteBlob(const v
 
    do {
       const size_t bytesNextChunk = std::min<size_t>(remainingBytes, maxKeySize);
-      const std::uint64_t offset = writeKey(data, bytesNextChunk, bytesNextChunk);
+      const std::uint64_t offset = writeKey(chunkData, bytesNextChunk, bytesNextChunk);
 
       RNTupleSerializer::SerializeUInt64(offset, &chunkOffsetsToWrite[chunkOffsetIdx]);
       ++chunkOffsetIdx;
 
       remainingBytes -= bytesNextChunk;
-      data = reinterpret_cast<const uint8_t *>(data) + bytesNextChunk;
+      chunkData += bytesNextChunk;
 
    } while (remainingBytes > 0);
 
-   // patch the chunk offset into the first chunk
-   const std::uint64_t patchOffset = firstOffset + nbytesFirstChunk;
-   if (fFileSimple)
-      fFileSimple.Write(chunkOffsetsToWrite.get(), nbytesChunkOffsets, patchOffset);
-   else
-      fFileProper.Write(chunkOffsetsToWrite.get(), nbytesChunkOffsets, patchOffset);
+   // Write the first key, with part of the data and the pointers to (logically) following keys appended.
+   const std::uint64_t firstOffset = ReserveBlob(maxKeySize, maxKeySize);
+   WriteIntoReservedBlob(data, nbytesFirstChunk, firstOffset);
+   const std::uint64_t chunkOffsetsOffset = firstOffset + nbytesFirstChunk;
+   WriteIntoReservedBlob(chunkOffsetsToWrite.get(), nbytesChunkOffsets, chunkOffsetsOffset);
 
    return firstOffset;
 }
