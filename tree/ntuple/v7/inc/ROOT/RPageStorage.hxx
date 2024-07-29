@@ -566,6 +566,16 @@ protected:
       RCluster::ColumnSet_t ToColumnSet() const;
    };
 
+   /// Summarizes cluster-level information that are necessary to populate a certain page.
+   /// Used by PopulatePageImpl().
+   struct RClusterInfo {
+      DescriptorId_t fClusterId = 0;
+      /// Location of the page on disk
+      RClusterDescriptor::RPageRange::RPageInfoExtended fPageInfo;
+      /// The first element number of the page's column in the given cluster
+      std::uint64_t fColumnOffset = 0;
+   };
+
    std::unique_ptr<RCounters> fCounters;
 
    RNTupleReadOptions fOptions;
@@ -582,6 +592,9 @@ protected:
    virtual std::unique_ptr<RPageSource> CloneImpl() const = 0;
    // Only called if a task scheduler is set. No-op be default.
    virtual void UnzipClusterImpl(RCluster *cluster);
+   // Returns a page from storage if not found in the page pool. Should be able to handle zero page locators.
+   virtual RPage PopulatePageImpl(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo,
+                                  ClusterSize_t::ValueType idxInCluster) = 0;
 
    /// Prepare a page range read for the column set in `clusterKey`.  Specifically, pages referencing the
    /// `kTypePageZero` locator are filled in `pageZeroMap`; otherwise, `perPageFunc` is called for each page. This is
@@ -649,10 +662,11 @@ public:
    void SetEntryRange(const REntryRange &range);
    REntryRange GetEntryRange() const { return fEntryRange; }
 
-   /// Allocates and fills a page that contains the index-th element
-   virtual RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex) = 0;
-   /// Another version of `PopulatePage` that allows to specify cluster-relative indexes
-   virtual RPage PopulatePage(ColumnHandle_t columnHandle, RClusterIndex clusterIndex) = 0;
+   /// Allocates and fills a page that contains the index-th element. The default implementation searches
+   /// the page and calls PopulatePageImpl().
+   virtual RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex);
+   /// Another version of `PopulatePage` that allows to specify cluster-relative indexes.
+   virtual RPage PopulatePage(ColumnHandle_t columnHandle, RClusterIndex clusterIndex);
 
    /// Read the packed and compressed bytes of a page into the memory buffer provided by `sealedPage`. The sealed page
    /// can be used subsequently in a call to `RPageSink::CommitSealedPage`.

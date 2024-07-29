@@ -123,16 +123,6 @@ class RPageSourceFile : public RPageSource {
    friend class ROOT::Experimental::RNTuple;
 
 private:
-   /// Summarizes cluster-level information that are necessary to populate a certain page.
-   /// Used by PopulatePageFromCluster().
-   struct RClusterInfo {
-      DescriptorId_t fClusterId = 0;
-      /// Location of the page on disk
-      RClusterDescriptor::RPageRange::RPageInfoExtended fPageInfo;
-      /// The first element number of the page's column in the given cluster
-      std::uint64_t fColumnOffset = 0;
-   };
-
    /// Holds the uncompressed header and footer
    struct RStructureBuffer {
       std::unique_ptr<unsigned char[]> fBuffer; ///< single buffer for both header and footer
@@ -164,9 +154,6 @@ private:
 
    RPageSourceFile(std::string_view ntupleName, const RNTupleReadOptions &options);
 
-   RPage PopulatePageFromCluster(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo,
-                                 ClusterSize_t::ValueType idxInCluster);
-
    /// Helper function for LoadClusters: it prepares the memory buffer (page map) and the
    /// read requests for a given cluster and columns.  The reead requests are appended to
    /// the provided vector.  This way, requests can be collected for multiple clusters before
@@ -179,6 +166,10 @@ protected:
    RNTupleDescriptor AttachImpl() final;
    /// The cloned page source creates a new raw file and reader and opens its own file descriptor to the data.
    std::unique_ptr<RPageSource> CloneImpl() const final;
+
+   // Should be implemented if the default PopulatePage() are used.
+   virtual RPage PopulatePageImpl(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo,
+                                  ClusterSize_t::ValueType idxInCluster) final;
 
 public:
    RPageSourceFile(std::string_view ntupleName, std::string_view path, const RNTupleReadOptions &options);
@@ -195,8 +186,6 @@ public:
    RPageSourceFile &operator=(RPageSourceFile &&) = delete;
    ~RPageSourceFile() override;
 
-   RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex) final;
-   RPage PopulatePage(ColumnHandle_t columnHandle, RClusterIndex clusterIndex) final;
    void ReleasePage(RPage &page) final;
 
    void LoadSealedPage(DescriptorId_t physicalColumnId, RClusterIndex clusterIndex, RSealedPage &sealedPage) final;
