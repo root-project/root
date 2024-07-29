@@ -1071,7 +1071,7 @@ static size_t ComputeNumChunks(size_t nbytes, size_t maxChunkSize)
    size_t nChunks = (nbytes + maxChunkSize - 1) / maxChunkSize;
    size_t nbytesTail = nbytes % maxChunkSize;
    size_t nbytesExtra = (nbytesTail > 0) * (maxChunkSize - nbytesTail);
-   size_t nbytesChunkOffsets = nChunks * kChunkOffsetSize;
+   size_t nbytesChunkOffsets = (nChunks - 1) * kChunkOffsetSize;
    if (nbytesChunkOffsets > nbytesExtra) {
       ++nChunks;
       nbytesChunkOffsets += kChunkOffsetSize;

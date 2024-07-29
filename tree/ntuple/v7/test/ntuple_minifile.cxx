@@ -417,6 +417,52 @@ TEST(MiniFile, MultiKeyBlob_ExactlyMax)
    }
 }
 
+TEST(MiniFile, MultiKeyBlob_ExactlyTwo)
+{
+   // Write a payload that fits into two keys.
+
+   FileRaii fileGuard("test_ntuple_minifile_multi_key_two.root");
+
+   const auto kMaxKeySize = 100 * 1024; // 100 KiB
+   const auto dataSize = 2 * kMaxKeySize - 8;
+   auto data = std::make_unique<unsigned char[]>(dataSize);
+   std::uint64_t blobOffset;
+
+   {
+      auto writer = RNTupleFileWriter::Recreate("ntpl", fileGuard.GetPath(), 0, EContainerFormat::kTFile, kMaxKeySize);
+      memset(data.get(), 0, dataSize / 2);
+      memset(data.get() + dataSize / 2, 0x99, dataSize / 2);
+      data[42] = 0x42;
+      data[dataSize - 42] = 0x84;
+      blobOffset = writer->WriteBlob(data.get(), dataSize, dataSize);
+      writer->Commit();
+   }
+   {
+      // Fill read buffer with sentinel data (they should be overwritten by zeroes)
+      memset(data.get(), 0x99, dataSize);
+
+      auto rawFile = RRawFile::Create(fileGuard.GetPath());
+      auto reader = RMiniFileReader{rawFile.get()};
+      // Force reader to read the max key size
+      (void)reader.GetNTuple("ntpl");
+
+      rawFile->ReadAt(data.get(), dataSize, blobOffset);
+      // If the blob was split into exactly two keys, there should be only one pointer to the next chunk.
+      uint64_t secondLastU64 = *reinterpret_cast<uint64_t *>(&data[kMaxKeySize - 2 * sizeof(uint64_t)]);
+      EXPECT_EQ(secondLastU64, 0);
+
+      memset(data.get(), 0, dataSize);
+      reader.ReadBuffer(data.get(), dataSize, blobOffset);
+
+      EXPECT_EQ(data[0], 0);
+      EXPECT_EQ(data[dataSize / 2 - 1], 0);
+      EXPECT_EQ(data[2 * dataSize / 3], 0x99);
+      EXPECT_EQ(data[dataSize - 1], 0x99);
+      EXPECT_EQ(data[42], 0x42);
+      EXPECT_EQ(data[dataSize - 42], 0x84);
+   }
+}
+
 TEST(MiniFile, MultiKeyBlob_SmallKey)
 {
    FileRaii fileGuard("test_ntuple_minifile_multi_key_blob_small_key.root");
