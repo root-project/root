@@ -1530,7 +1530,7 @@ std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::WriteBlob(const v
    data = reinterpret_cast<const uint8_t *>(data) + nbytesFirstChunk;
    size_t remainingBytes = nbytes - nbytesFirstChunk;
 
-   const auto chunkOffsetsToWrite = std::make_unique<std::uint64_t[]>(nbytesChunkOffsets);
+   const auto chunkOffsetsToWrite = std::make_unique<std::uint64_t[]>(nChunks - 1);
    std::uint64_t chunkOffsetIdx = 0;
 
    do {
