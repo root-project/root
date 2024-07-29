@@ -153,16 +153,6 @@ public:
 // clang-format on
 class RPageSourceDaos : public RPageSource {
 private:
-   /// Summarizes cluster-level information that are necessary to populate a certain page.
-   /// Used by PopulatePageFromCluster().
-   struct RClusterInfo {
-      DescriptorId_t fClusterId = 0;
-      /// Location of the page on disk
-      RClusterDescriptor::RPageRange::RPageInfoExtended fPageInfo;
-      /// The first element number of the page's column in the given cluster
-      std::uint64_t fColumnOffset = 0;
-   };
-
    ntuple_index_t fNTupleIndex{0};
 
    /// The last cluster from which a page got populated.  Points into fClusterPool->fPool
@@ -176,8 +166,8 @@ private:
 
    RNTupleDescriptorBuilder fDescriptorBuilder;
 
-   RPage PopulatePageFromCluster(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo,
-                                 ClusterSize_t::ValueType idxInCluster);
+   RPage PopulatePageImpl(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo,
+                          ClusterSize_t::ValueType idxInCluster) final;
 
 protected:
    void LoadStructureImpl() final {}
@@ -189,8 +179,6 @@ public:
    RPageSourceDaos(std::string_view ntupleName, std::string_view uri, const RNTupleReadOptions &options);
    ~RPageSourceDaos() override;
 
-   RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex) final;
-   RPage PopulatePage(ColumnHandle_t columnHandle, RClusterIndex clusterIndex) final;
    void ReleasePage(RPage &page) final;
 
    void LoadSealedPage(DescriptorId_t physicalColumnId, RClusterIndex clusterIndex, RSealedPage &sealedPage) final;

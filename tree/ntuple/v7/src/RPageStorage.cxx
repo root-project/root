@@ -314,6 +314,58 @@ void ROOT::Experimental::Internal::RPageSource::PrepareLoadCluster(
    }
 }
 
+ROOT::Experimental::Internal::RPage
+ROOT::Experimental::Internal::RPageSource::PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex)
+{
+   const auto columnId = columnHandle.fPhysicalId;
+   auto cachedPage = fPagePool->GetPage(columnId, globalIndex);
+   if (!cachedPage.IsNull())
+      return cachedPage;
+
+   std::uint64_t idxInCluster;
+   RClusterInfo clusterInfo;
+   {
+      auto descriptorGuard = GetSharedDescriptorGuard();
+      clusterInfo.fClusterId = descriptorGuard->FindClusterId(columnId, globalIndex);
+
+      if (clusterInfo.fClusterId == kInvalidDescriptorId)
+         throw RException(R__FAIL("entry with index " + std::to_string(globalIndex) + " out of bounds"));
+
+      const auto &clusterDescriptor = descriptorGuard->GetClusterDescriptor(clusterInfo.fClusterId);
+      clusterInfo.fColumnOffset = clusterDescriptor.GetColumnRange(columnId).fFirstElementIndex;
+      R__ASSERT(clusterInfo.fColumnOffset <= globalIndex);
+      idxInCluster = globalIndex - clusterInfo.fColumnOffset;
+      clusterInfo.fPageInfo = clusterDescriptor.GetPageRange(columnId).Find(idxInCluster);
+   }
+
+   return PopulatePageImpl(columnHandle, clusterInfo, idxInCluster);
+}
+
+ROOT::Experimental::Internal::RPage
+ROOT::Experimental::Internal::RPageSource::PopulatePage(ColumnHandle_t columnHandle, RClusterIndex clusterIndex)
+{
+   const auto clusterId = clusterIndex.GetClusterId();
+   const auto idxInCluster = clusterIndex.GetIndex();
+   const auto columnId = columnHandle.fPhysicalId;
+   auto cachedPage = fPagePool->GetPage(columnId, clusterIndex);
+   if (!cachedPage.IsNull())
+      return cachedPage;
+
+   if (clusterId == kInvalidDescriptorId)
+      throw RException(R__FAIL("entry out of bounds"));
+
+   RClusterInfo clusterInfo;
+   {
+      auto descriptorGuard = GetSharedDescriptorGuard();
+      const auto &clusterDescriptor = descriptorGuard->GetClusterDescriptor(clusterId);
+      clusterInfo.fClusterId = clusterId;
+      clusterInfo.fColumnOffset = clusterDescriptor.GetColumnRange(columnId).fFirstElementIndex;
+      clusterInfo.fPageInfo = clusterDescriptor.GetPageRange(columnId).Find(idxInCluster);
+   }
+
+   return PopulatePageImpl(columnHandle, clusterInfo, idxInCluster);
+}
+
 void ROOT::Experimental::Internal::RPageSource::EnableDefaultMetrics(const std::string &prefix)
 {
    fMetrics = Detail::RNTupleMetrics(prefix);

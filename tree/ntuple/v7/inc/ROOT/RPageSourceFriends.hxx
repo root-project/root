@@ -88,6 +88,13 @@ protected:
    RNTupleDescriptor AttachImpl() final;
    std::unique_ptr<RPageSource> CloneImpl() const final;
 
+   // Unused because we overwrite PopulatePage()
+   virtual RPage PopulatePageImpl(ColumnHandle_t /* columnHandle */, const RClusterInfo & /* clusterInfo */,
+                                  ClusterSize_t::ValueType /* idxInCluster */)
+   {
+      return RPage();
+   }
+
 public:
    RPageSourceFriends(std::string_view ntupleName, std::span<std::unique_ptr<RPageSource>> sources);
    ~RPageSourceFriends() final;
