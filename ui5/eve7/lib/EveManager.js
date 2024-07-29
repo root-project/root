@@ -309,9 +309,9 @@ sap.ui.define([], function() {
                   }
                }
             }
-            else {
+            else
                console.warning("EveManager.removeElements can't remove child from mother, mother id = ", elem.fMotherId);
-            }
+
             delete this.map[elId];
          }
       }
@@ -418,9 +418,6 @@ sap.ui.define([], function() {
                delete obj.render_data;
                // AMT note ... the REveSelection changes fall here
                // I think this should be a separate change bit
-               // Yes, or maybe Color should be be json only, ObjProps for RnrData.
-               // Although some classes might have an extended json part --
-               // and this case could be separated out.
                delete obj.sel_list;
                jQuery.extend(obj, em);
                this.ParseUpdateTriggersAndProcessPostStream(obj);
@@ -489,10 +486,12 @@ sap.ui.define([], function() {
                rd.vtxBuff = new Float32Array(rawdata, off, rd.vert_size);
                off += rd.vert_size*4;
             }
+
             if (rd.norm_size) {
                rd.nrmBuff = new Float32Array(rawdata, off, rd.norm_size);
                off += rd.norm_size*4;
             }
+
             if (rd.index_size) {
                rd.idxBuff = new Uint32Array(rawdata, off, rd.index_size);
                off += rd.index_size*4;

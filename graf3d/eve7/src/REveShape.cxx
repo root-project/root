@@ -31,7 +31,13 @@ It provides:
 /// Constructor.
 
 REveShape::REveShape(const std::string &n, const std::string &t) :
-   REveElement(n, t)
+   REveElement(n, t),
+   fFillColor(5),
+   fLineColor(5),
+   fLineWidth(1),
+   fDrawFrame(kTRUE),
+   fHighlightFrame(kFALSE),
+   fMiniFrame(kTRUE)
 {
    fCanEditMainColor        = kTRUE;
    fCanEditMainTransparency = kTRUE;
@@ -54,8 +60,6 @@ Int_t REveShape::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 
    j["fFillColor"] = fFillColor;
    j["fLineColor"] = fLineColor;
-   j["fFillAlpha"] = fFillAlpha;
-   j["fLineAlpha"] = fLineAlpha;
    j["fLineWidth"] = fLineWidth;
    j["fDrawFrame"] = fDrawFrame;
 

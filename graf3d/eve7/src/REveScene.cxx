@@ -59,11 +59,9 @@ REveScene::~REveScene()
 int REveScene::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 {
    j["Mandatory"] = fMandatory;
-   j["IsOverlay"] = fIsOverlay;
 
    return REveElement::WriteCoreJson(j, rnr_offset);
 }
-
 //------------------------------------------------------------------------------
 
 void REveScene::AddSubscriber(std::unique_ptr<REveClient> &&sub)
@@ -351,6 +349,126 @@ Bool_t REveScene::IsChanged() const
 }
 
 
+/*
+////////////////////////////////////////////////////////////////////////////////
+/// Repaint the scene.
+
+void REveScene::Repaint(Bool_t dropLogicals)
+{
+   if (dropLogicals) fGLScene->SetSmartRefresh(kFALSE);
+   fGLScene->PadPaint(fPad);
+   if (dropLogicals) fGLScene->SetSmartRefresh(kTRUE);
+   fChanged = kFALSE;
+
+   // Hack to propagate selection state to physical shapes.
+   //
+   // Should actually be published in PadPaint() following a direct
+   // AddObject() call, but would need some other stuff for that.
+   // Optionally, this could be exported via the TAtt3D and everything
+   // would be sweet.
+
+   TGLScene::LogicalShapeMap_t& logs = fGLScene->RefLogicalShapes();
+   REveElement* elm;
+   for (TGLScene::LogicalShapeMapIt_t li = logs.begin(); li != logs.end(); ++li)
+   {
+      elm = dynamic_cast<REveElement*>(li->first);
+      if (elm && li->second->Ref() == 1)
+      {
+         TGLPhysicalShape* pshp = const_cast<TGLPhysicalShape*>(li->second->GetFirstPhysical());
+         pshp->Select(elm->GetSelectedLevel());
+      }
+   }
+
+   // Fix positions for hierarchical scenes.
+   if (fHierarchical)
+   {
+      RetransHierarchically();
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Entry point for hierarchical transformation update.
+/// Calls the recursive variant on all children.
+
+void REveScene::RetransHierarchically()
+{
+   fGLScene->BeginUpdate();
+
+   RetransHierarchicallyRecurse(this, RefMainTrans());
+
+   fGLScene->EndUpdate();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set transformation matrix for physical shape of element el in
+/// the GL-scene and recursively descend into children (if enabled).
+
+void REveScene::RetransHierarchicallyRecurse(REveElement* el, const REveTrans& tp)
+{
+   static const REveException eh("REveScene::RetransHierarchicallyRecurse ");
+
+   REveTrans t(tp);
+   if (el->HasMainTrans())
+      t *= el->RefMainTrans();
+
+   if (el->GetRnrSelf() && el != this)
+   {
+      fGLScene->UpdatePhysioLogical(el->GetRenderObject(eh), t.Array(), 0);
+   }
+
+   if (el->GetRnrChildren())
+   {
+      for (auto &c: el->RefChildren())
+      {
+         if (c->GetRnrAnything())
+            RetransHierarchicallyRecurse(c, t);
+      }
+   }
+}
+*/
+
+
+/*
+////////////////////////////////////////////////////////////////////////////////
+/// Paint the scene. Iterate over children and calls PadPaint().
+
+void REveScene::Paint(Option_t* option)
+{
+   if (GetRnrState())
+   {
+      for (auto &c: fChildren)
+      {
+         // c->PadPaint(option);
+      }
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Remove element from the scene.
+/// It is not an error if the element is not found in the scene.
+
+void REveScene::DestroyElementRenderers(REveElement* element)
+{
+   static const REveException eh("REveScene::DestroyElementRenderers ");
+
+   fGLScene->BeginUpdate();
+   Bool_t changed = fGLScene->DestroyLogical(element->GetRenderObject(eh), kFALSE);
+   fGLScene->EndUpdate(changed, changed);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Remove element represented by object rnrObj from the scene.
+/// It is not an error if the element is not found in the scene.
+
+void REveScene::DestroyElementRenderers(TObject* rnrObj)
+{
+   fGLScene->BeginUpdate();
+   Bool_t changed = fGLScene->DestroyLogical(rnrObj, kFALSE);
+   fGLScene->EndUpdate(changed, changed);
+}
+*/
+
+
 /** \class REveSceneList
 \ingroup REve
 List of Scenes providing common operations on REveScene collections.
@@ -381,23 +499,61 @@ void REveSceneList::DestroyScenes()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Loop-wrapers over Scene children, element type checked on insertion.
+/// Set accept changes flag on all scenes.
 
-void REveSceneList::BeginAcceptingChanges()
+void REveSceneList::AcceptChanges(bool on)
 {
    for (auto &c: fChildren)
    {
-      static_cast<REveScene*>(c)->BeginAcceptingChanges();
+      REveScene *s = (REveScene *)c;
+      if (on)
+         s->BeginAcceptingChanges();
+      else
+         s->EndAcceptingChanges();
    }
 }
+/*
+////////////////////////////////////////////////////////////////////////////////
+/// Repaint scenes that are tagged as changed.
 
-void REveSceneList::EndAcceptingChanges()
+void REveSceneList::RepaintChangedScenes(Bool_t dropLogicals)
 {
    for (auto &c: fChildren)
    {
-      static_cast<REveScene*>(c)->EndAcceptingChanges();
+      REveScene* s = (REveScene*) c;
+      if (s->IsChanged())
+      {
+         s->Repaint(dropLogicals);
+      }
    }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Repaint all scenes.
+
+void REveSceneList::RepaintAllScenes(Bool_t dropLogicals)
+{
+   for (auto &c: fChildren)
+   {
+      ((REveScene *)c)->Repaint(dropLogicals);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Loop over all scenes and remove all instances of element from them.
+
+void REveSceneList::DestroyElementRenderers(REveElement* element)
+{
+   static const REveException eh("REveSceneList::DestroyElementRenderers ");
+
+   TObject* obj = element->GetRenderObject(eh);
+   for (auto &c: fChildren)
+   {
+      ((REveScene *)c)->DestroyElementRenderers(obj);
+   }
+}
+
+*/
 
 bool REveSceneList::AnyChanges() const
 {

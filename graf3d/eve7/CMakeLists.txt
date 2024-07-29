@@ -52,7 +52,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTEve
     ROOT/REveSystem.hxx
     ROOT/REveTableInfo.hxx
     ROOT/REveTableProxyBuilder.hxx
-    ROOT/REveText.hxx
     ROOT/REveTrack.hxx
     ROOT/REveTrackProjected.hxx
     ROOT/REveTrackPropagator.hxx
@@ -114,7 +113,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTEve
     src/REveStraightLineSet.cxx
     src/REveTableInfo.cxx
     src/REveTableProxyBuilder.cxx
-    src/REveText.cxx
     src/REveTrack.cxx
     src/REveTrackProjected.cxx
     src/REveTrackPropagator.cxx

@@ -149,8 +149,6 @@
 #pragma link C++ class TGLFont;
 #pragma link C++ class TGLFontManager;
 
-#pragma link C++ class TGLSdfFontMaker;
-
 #pragma link C++ namespace Rgl;
 
 #endif

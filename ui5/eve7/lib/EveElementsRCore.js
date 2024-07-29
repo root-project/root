@@ -510,7 +510,10 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
 
          RC = rc;
          this.viewer = viewer;
-         this.tex_cache = viewer.tex_cache;
+
+         RC.Cache.enabled = true;
+
+         this.tex_cache = new RC.TextureCache;
 
          this.POINT_SIZE_FAC = 1;
          this.LINE_WIDTH_FAC = 1;
@@ -611,7 +614,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
          mat._color = color;
          mat._specular = new RC.Color(0.3, 0.4, 0.3); // this.ColorWhite;
          mat._shininess = 64;
-
+   
          if (opacity !== undefined && opacity < 1.0) {
             mat._opacity = opacity;
             mat._transparent = true;
@@ -624,7 +627,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
       }
 
       RcMakeZSprite(colIdx, sSize, nInstance, vbuff, instX, instY, textureName)
-      {
+      { 
          let col = RcCol(colIdx);
          sSize *= this.POINT_SIZE_FAC;
          let sm = new RC.ZSpriteBasicMaterial( {
@@ -656,7 +659,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
 
          return s;
       }
-
+      
       RcMakeStripes(geom, line_width, line_color)
       {
          // Setup width for SSAA, scaled down for picking and outline materials.
@@ -775,15 +778,6 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
          if (o3d.outlineMaterial) o3d.outlineMaterial.addMap(tex);
       }
 
-      AddTextureToMaterialMap(o3d, tex)
-      {
-         if (o3d.material)
-         {
-            o3d.material.clearMaps();
-            o3d.material.addMap(tex);
-         }
-      }
-
       //----------------------------------------------------------------------------
       // Builder functions
       //----------------------------------------------------------------------------
@@ -863,48 +857,12 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
 
          const geom = new RC.Geometry();
          geom.vertices = new RC.Float32Attribute(buf, 3);
-
+ 
          const line = this.RcMakeStripes(geom, track_width, track_color);
          this.RcApplyStripesMaterials(track, line, 2);
          this.RcPickable(track, line);
 
          return line;
-      }
-
-      //==============================================================================
-      // makeZText
-      //==============================================================================
-
-      makeZText(el, rnr_data)
-      {
-         // if (this.TestRnr("jet", el, rnr_data)) return null;
-
-         let text = new RC.ZText({
-            text: el.fText,
-            xPos: el.fPosX,
-            yPos: el.fPosY,
-            fontSize: el.fFontSize,
-            mode: el.fMode,
-            fontHinting: el.fFontHinting,
-            color: RcCol(el.fTextColor),
-         });
-         let url_base = this.viewer.top_path + 'sdf-fonts/' + el.fFont;
-         this.tex_cache.deliver_font(url_base,
-            (texture, font_metrics) => {
-               text.setupFrameStuff((100 - el.fMainTransparency) / 100.0, el.fDrawFrame,
-                                    RcCol(el.fFillColor), el.fFillAlpha / 255.0,
-                                    RcCol(el.fLineColor), el.fLineAlpha / 255.0,
-                                    el.fExtraBorder, el.fLineWidth);
-               text.setTextureAndFont(texture, font_metrics);
-               if (el.fMode == 0) text.material.side = RC.FRONT_AND_BACK_SIDE;
-            },
-            (img) => RC.ZText.createDefaultTexture(img),
-            () => this.viewer.request_render()
-         );
-
-        text.position.copy(new RC.Vector3(el.fPosX, el.fPosY, el.fPosZ));
-        if (el.fPickable) this.RcPickable(el, text);
-        return text;
       }
 
       //==============================================================================
@@ -1234,7 +1192,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
 
             let protoIdcs = [0,1,2, 0,2,3, 0,3,4, 0,4,5, 0,5,6, 0,6,1];
             let protoIdcs2 = [2,1,0,  3,2,0,  4,3, 0,   5,4,0,  6, 5, 0,  1, 6, 0];
-            let sideIdcs = [8,1,2,2,9,8,  9,2,3,3,10,9,  10,3,4,4,11,10,
+            let sideIdcs = [8,1,2,2,9,8,  9,2,3,3,10,9,  10,3,4,4,11,10,  
                             11,4,5,5,12,11,  5,6,13,5,13,12, 13,6,1,1,8,13 ];
             let idxBuffSize =  N_hex * (protoIdcs.length * 2 + sideIdcs.length);
             idxBuff = new Uint32Array(idxBuffSize);

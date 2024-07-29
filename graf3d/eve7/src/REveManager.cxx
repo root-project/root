@@ -1050,17 +1050,14 @@ void REveManager::MIRExecThread()
 
          lock.unlock();
 
-         // Ideally, as in gled, MIR execution would be steered by scenes themselves.
-         // But this requires alpha/beta/gamma MIR elements and scene dependenices,
-         // so dependent scenes can be locked, too.
-         // On top of that, one could also implements authorization framework, as in gled.
-
+         // allow scenes to accept changes in the element
          gEve->GetWorld()->BeginAcceptingChanges();
-         gEve->GetScenes()->BeginAcceptingChanges();
+         gEve->GetScenes()->AcceptChanges(true);
 
          ExecuteMIR(mir);
 
-         gEve->GetScenes()->EndAcceptingChanges();
+         // disable scene's element changing
+         gEve->GetScenes()->AcceptChanges(false);
          gEve->GetWorld()->EndAcceptingChanges();
 
          StreamSceneChangesToJson();
@@ -1173,14 +1170,14 @@ void REveManager::BeginChange()
       fServerState.fVal = ServerState::UpdatingScenes;
    }
    GetWorld()->BeginAcceptingChanges();
-   GetScenes()->BeginAcceptingChanges();
+   GetScenes()->AcceptChanges(true);
 }
 
 //____________________________________________________________________
 void REveManager::EndChange()
 {
    // tag scene to disable accepting chages, write the change json
-   GetScenes()->EndAcceptingChanges();
+   GetScenes()->AcceptChanges(false);
    GetWorld()->EndAcceptingChanges();
 
    StreamSceneChangesToJson();

@@ -177,7 +177,7 @@ void REveSelection::AddNieceForSelection(REveElement* el, bool secondary, const 
       DoElementSelect(i);
       SelectionAdded(el);
    }
-   StampObjProps();
+   StampObjPropsPreChk();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -195,7 +195,7 @@ void REveSelection::RemoveNieceInternal(REveElement* el)
          SelectionRemoved(el);
       }
       fMap.erase(i);
-      StampObjProps();
+      StampObjPropsPreChk();
    }
    else
    {
@@ -218,7 +218,7 @@ void REveSelection::RemoveNieces()
    }
    fMap.clear();
    if (fActive) SelectionCleared();
-   StampObjProps();
+   StampObjPropsPreChk();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -242,7 +242,7 @@ void REveSelection::RemoveImpliedSelected(REveElement *el)
       }
    }
 
-   if (changed) StampObjProps();
+   if (changed) StampObjPropsPreChk();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -265,7 +265,7 @@ void REveSelection::RecheckImpliedSet(SelMap_i &smi)
       }
    }
 
-   if (changed) StampObjProps();
+   if (changed) StampObjPropsPreChk();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

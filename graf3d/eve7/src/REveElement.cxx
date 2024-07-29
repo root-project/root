@@ -1492,9 +1492,9 @@ Int_t REveElement::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
          nlohmann::json rd = {};
 
          rd["rnr_offset"] = rnr_offset;
-         rd["rnr_func"]   = fRenderData->GetRnrFunc();
-         rd["vert_size"]  = fRenderData->SizeV();
-         rd["norm_size"]  = fRenderData->SizeN();
+         rd["rnr_func"] = fRenderData->GetRnrFunc();
+         rd["vert_size"] = fRenderData->SizeV();
+         rd["norm_size"] = fRenderData->SizeN();
          rd["index_size"] = fRenderData->SizeI();
          rd["trans_size"] = fRenderData->SizeT();
 

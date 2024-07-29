@@ -18,7 +18,6 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
          this.creator = glctrl.viewer.creator;
          this.id2obj_map  = new Map; // base on element id
 
-         this.IsOverlay = mgr.GetElement(sceneInfo.fSceneId).IsOverlay;
          this.first_time = true;
          this.need_visibility_update = false;
 
@@ -93,7 +92,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
             let elem = prnt.childs[k];
             if (elem.render_data)
             {
-               let fname = elem.render_data.rnr_func;
+               let fname = elem.render_data.rnr_func, obj3d = null;
                if ( ! this.creator[fname])
                {
                   console.error("Function " + fname + " missing in creator");
@@ -128,13 +127,12 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
       /** method insert all objects into three.js container */
       redrawScene()
       {
-         let eveScene = this.mgr.GetElement(this.id);
          if (!this.glctrl) return;
 
          let res3d = this.create3DObjects(true);
          if ( ! res3d.length && this.first_time) return;
 
-         let cont = this.glctrl.getSceneContainer(this);
+         let cont = this.glctrl.getSceneContainer("scene" + this.id);
          while (cont.children.length > 0)
             cont.remove(cont.children[0]);
 
@@ -151,7 +149,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
       {
          if (!this.glctrl) return;
 
-         let cont = this.glctrl.getSceneContainer(this);
+         let cont = this.glctrl.getSceneContainer("scene" + this.id);
          while (cont.children.length > 0)
             cont.remove(cont.children[0]);
 
@@ -214,7 +212,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
          if ( ! obj3d) return;
 
          // let scene = this.mgr.GetElement(this.id);
-         let container = this.glctrl.getSceneContainer(this);
+         let container = this.glctrl.getSceneContainer("scene" + this.id);
 
          container.add(obj3d);
 
@@ -226,7 +224,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
       replaceElement(el) {
          if (!this.glctrl) return;
 
-         let container = this.glctrl.getSceneContainer(this);
+         let container = this.glctrl.getSceneContainer("scene" + this.id);
 
          try {
             let obj3d = this.getObj3D(el.fElementId);
@@ -254,12 +252,12 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
             if (!obj3d) {
                let el = this.mgr.GetElement(elId);
                if (el && el.render_data) {
-                  console.warning("EveScene.elementsRemoved can't find obj3d ", this.mgr.GetElement(el));
+                  console.log("ERROR EveScene.elementsRemoved can't find obj3d ", this.mgr.GetElement(el));
                }
                continue;
             }
 
-            let container = this.glctrl.getSceneContainer(this);
+            let container = this.glctrl.getSceneContainer("scene" + this.id);
             container.remove(obj3d);
 
             this.id2obj_map.delete(elId);
@@ -295,22 +293,22 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
       // Selection handling
       //==============================================================================
 
-      sanitizeIndex(index)
+      sanitizeIndx(indx)
       {
-         if (Array.isArray(index))    return index.length > 0 ? index : undefined;
-         if (Number.isInteger(index)) return [ index ];
+         if (Array.isArray(indx))    return indx.length > 0 ? indx : undefined;
+         if (Number.isInteger(indx)) return [ indx ];
          return undefined;
       }
 
-      sendSelectMIR(sel_id, eve_el, is_multi, index)
+      sendSelectMIR(sel_id, eve_el, is_multi, indx)
       {
-         index = this.sanitizeIndex(index);
-         let is_secsel = index !== undefined;
+         indx = this.sanitizeIndx(indx);
+         let is_secsel = indx !== undefined;
 
          let fcall = "NewElementPickedStr(" + (eve_el ? eve_el.fElementId : 0) + `, ${is_multi}, ${is_secsel}`;
          if (is_secsel)
          {
-            fcall += ", \"" + index.join(",") + "\"";
+            fcall += ", \"" + indx.join(",") + "\"";
          }
          fcall += ")";
 
@@ -318,32 +316,32 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
       }
 
       /** interactive handler. Calculates selection state, apply to element and distribute to other scene */
-      processElementSelected(eve_el, index, event)
+      processElementSelected(eve_el, indx, event)
       {
-         // console.log("EveScene.processElementSelected", obj3d, col, index, evnt);
+         // console.log("EveScene.processElementSelected", obj3d, col, indx, evnt);
 
          let is_multi  = event && event.ctrlKey ? true : false;
-         this.sendSelectMIR(this.mgr.global_selection_id, eve_el, is_multi, index);
+         this.sendSelectMIR(this.mgr.global_selection_id, eve_el, is_multi, indx);
 
          return true;
       }
 
       /** interactive handler */
-      processElementHighlighted(eve_el, index, event)
+      processElementHighlighted(eve_el, indx, event)
       {
          // RenderCore viewer is organizing selection on stack, the last selection will set the color
-         if (!this.mgr.is_rcore && this.mgr.MatchSelection(this.mgr.global_selection_id, eve_el, index))
+         if (!this.mgr.is_rcore && this.mgr.MatchSelection(this.mgr.global_selection_id, eve_el, indx))
             return true;
 
          // Need check for duplicates before call server, else server will un-higlight highlighted element
-         if (this.mgr.MatchSelection(this.mgr.global_highlight_id, eve_el, index))
+         if (this.mgr.MatchSelection(this.mgr.global_highlight_id, eve_el, indx))
             return true;
 
          // when send queue below threshold, ignore highlight
          if (this.mgr.CheckSendThreshold())
             return true;
 
-         this.sendSelectMIR(this.mgr.global_highlight_id, eve_el, false, index);
+         this.sendSelectMIR(this.mgr.global_highlight_id, eve_el, false, indx);
 
          return true;
       }

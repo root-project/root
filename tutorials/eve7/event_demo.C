@@ -148,7 +148,6 @@ void addJets()
    event->AddElement(jetHolder);
 }
 
-
 void makeEventScene()
 {
    addPoints();

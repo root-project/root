@@ -19,11 +19,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ASImage
     TASImage.h
     TASImagePlugin.h
     TASPluginGS.h
-    TASPngWriter.h
   SOURCES
     TASImage.cxx
     TASPluginGS.cxx
-    TASPngWriter.cxx
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
   LIBRARIES

@@ -55,7 +55,6 @@ SET(SRC_FILES
     asimage.c asstorage.c asvisual.c blender.c bmp.c char2uni.c
     export.c import.c transform.c ungif.c xcf.c ximage.c xpm.c draw.c
     imencdec.c scanline.c
-    afterrootpngwrite.c
 )
 
 ADD_LIBRARY(${LIB_NAME} STATIC ${H_FILES} ${SRC_FILES})
