@@ -332,7 +332,11 @@ ROOT::Experimental::Internal::RPageSource::PopulatePage(ColumnHandle_t columnHan
          throw RException(R__FAIL("entry with index " + std::to_string(globalIndex) + " out of bounds"));
 
       const auto &clusterDescriptor = descriptorGuard->GetClusterDescriptor(clusterInfo.fClusterId);
-      clusterInfo.fColumnOffset = clusterDescriptor.GetColumnRange(columnId).fFirstElementIndex;
+      const auto &columnRange = clusterDescriptor.GetColumnRange(columnId);
+      if (columnRange.fIsSuppressed)
+         return RPage();
+
+      clusterInfo.fColumnOffset = columnRange.fFirstElementIndex;
       R__ASSERT(clusterInfo.fColumnOffset <= globalIndex);
       idxInCluster = globalIndex - clusterInfo.fColumnOffset;
       clusterInfo.fPageInfo = clusterDescriptor.GetPageRange(columnId).Find(idxInCluster);
@@ -358,8 +362,12 @@ ROOT::Experimental::Internal::RPageSource::PopulatePage(ColumnHandle_t columnHan
    {
       auto descriptorGuard = GetSharedDescriptorGuard();
       const auto &clusterDescriptor = descriptorGuard->GetClusterDescriptor(clusterId);
+      const auto &columnRange = clusterDescriptor.GetColumnRange(columnId);
+      if (columnRange.fIsSuppressed)
+         return RPage();
+
       clusterInfo.fClusterId = clusterId;
-      clusterInfo.fColumnOffset = clusterDescriptor.GetColumnRange(columnId).fFirstElementIndex;
+      clusterInfo.fColumnOffset = columnRange.fFirstElementIndex;
       clusterInfo.fPageInfo = clusterDescriptor.GetPageRange(columnId).Find(idxInCluster);
    }
 

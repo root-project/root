@@ -139,6 +139,7 @@ public:
    /// Return a pointer to the page zero buffer used if there is no on-disk data for a particular deferred column
    static const void *GetPageZeroBuffer();
 
+   bool IsValid() const { return fColumnId != kInvalidColumnId; }
    bool IsNull() const { return fBuffer == nullptr; }
    bool IsPageZero() const { return fBuffer == GetPageZeroBuffer(); }
    bool IsEmpty() const { return fNElements == 0; }

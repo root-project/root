@@ -160,6 +160,9 @@ ROOT::Experimental::Internal::RPageSourceFriends::PopulatePage(ColumnHandle_t co
    columnHandle.fPhysicalId = originColumnId.fId;
 
    auto page = fSources[originColumnId.fSourceIdx]->PopulatePage(columnHandle, globalIndex);
+   // Suppressed column
+   if (!page.IsValid())
+      return RPage();
 
    auto virtualClusterId = fIdBiMap.GetVirtualId({originColumnId.fSourceIdx, page.GetClusterInfo().GetId()});
    page.ChangeIds(virtualColumnId, virtualClusterId);
@@ -176,6 +179,9 @@ ROOT::Experimental::Internal::RPageSourceFriends::PopulatePage(ColumnHandle_t co
    columnHandle.fPhysicalId = originColumnId.fId;
 
    auto page = fSources[originColumnId.fSourceIdx]->PopulatePage(columnHandle, originClusterIndex);
+   // Suppressed column
+   if (!page.IsValid())
+      return RPage();
 
    page.ChangeIds(virtualColumnId, clusterIndex.GetClusterId());
    return page;

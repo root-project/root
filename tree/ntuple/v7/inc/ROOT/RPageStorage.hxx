@@ -667,9 +667,10 @@ public:
    REntryRange GetEntryRange() const { return fEntryRange; }
 
    /// Allocates and fills a page that contains the index-th element. The default implementation searches
-   /// the page and calls PopulatePageImpl().
+   /// the page and calls PopulatePageImpl(). Returns a default-constructed RPage for suppressed columns.
    virtual RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex);
    /// Another version of `PopulatePage` that allows to specify cluster-relative indexes.
+   /// Returns a default-constructed RPage for suppressed columns.
    virtual RPage PopulatePage(ColumnHandle_t columnHandle, RClusterIndex clusterIndex);
 
    /// Read the packed and compressed bytes of a page into the memory buffer provided by `sealedPage`. The sealed page
