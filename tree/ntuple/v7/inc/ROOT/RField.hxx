@@ -463,6 +463,11 @@ protected:
             break;
          GenerateColumnsImpl<0, ColumnCppTs...>(onDiskTypes, representationIndex);
          fColumnRepresentatives.emplace_back(onDiskTypes);
+         if (representationIndex > 0) {
+            for (std::size_t i = 0; i < sizeof...(ColumnCppTs); ++i) {
+               fColumns[i]->MergeTeams(*fColumns[representationIndex * sizeof...(ColumnCppTs) + i].get());
+            }
+         }
          representationIndex++;
       } while (true);
    }
