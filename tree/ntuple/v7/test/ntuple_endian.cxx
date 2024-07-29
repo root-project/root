@@ -86,6 +86,10 @@ protected:
    void LoadStructureImpl() final {}
    RNTupleDescriptor AttachImpl() final { return RNTupleDescriptor(); }
    std::unique_ptr<RPageSource> CloneImpl() const final { return nullptr; }
+   RPage PopulatePageImpl(ColumnHandle_t, const RClusterInfo &, ROOT::Experimental::ClusterSize_t::ValueType) final
+   {
+      return RPage();
+   }
 
 public:
    RPageSourceMock(const std::vector<RPageStorage::RSealedPage> &pages, const RColumnElementBase &elt)

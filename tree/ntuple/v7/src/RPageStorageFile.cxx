@@ -435,9 +435,9 @@ void ROOT::Experimental::Internal::RPageSourceFile::LoadSealedPage(DescriptorId_
 }
 
 ROOT::Experimental::Internal::RPage
-ROOT::Experimental::Internal::RPageSourceFile::PopulatePageFromCluster(ColumnHandle_t columnHandle,
-                                                                       const RClusterInfo &clusterInfo,
-                                                                       ClusterSize_t::ValueType idxInCluster)
+ROOT::Experimental::Internal::RPageSourceFile::PopulatePageImpl(ColumnHandle_t columnHandle,
+                                                                const RClusterInfo &clusterInfo,
+                                                                ClusterSize_t::ValueType idxInCluster)
 {
    const auto columnId = columnHandle.fPhysicalId;
    const auto clusterId = clusterInfo.fClusterId;
@@ -497,58 +497,6 @@ ROOT::Experimental::Internal::RPageSourceFile::PopulatePageFromCluster(ColumnHan
       newPage, RPageDeleter([](const RPage &page, void *) { RPageAllocatorHeap::DeletePage(page); }, nullptr));
    fCounters->fNPagePopulated.Inc();
    return newPage;
-}
-
-ROOT::Experimental::Internal::RPage
-ROOT::Experimental::Internal::RPageSourceFile::PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex)
-{
-   const auto columnId = columnHandle.fPhysicalId;
-   auto cachedPage = fPagePool->GetPage(columnId, globalIndex);
-   if (!cachedPage.IsNull())
-      return cachedPage;
-
-   std::uint64_t idxInCluster;
-   RClusterInfo clusterInfo;
-   {
-      auto descriptorGuard = GetSharedDescriptorGuard();
-      clusterInfo.fClusterId = descriptorGuard->FindClusterId(columnId, globalIndex);
-
-      if (clusterInfo.fClusterId == kInvalidDescriptorId)
-         throw RException(R__FAIL("entry with index " + std::to_string(globalIndex) + " out of bounds"));
-
-      const auto &clusterDescriptor = descriptorGuard->GetClusterDescriptor(clusterInfo.fClusterId);
-      clusterInfo.fColumnOffset = clusterDescriptor.GetColumnRange(columnId).fFirstElementIndex;
-      R__ASSERT(clusterInfo.fColumnOffset <= globalIndex);
-      idxInCluster = globalIndex - clusterInfo.fColumnOffset;
-      clusterInfo.fPageInfo = clusterDescriptor.GetPageRange(columnId).Find(idxInCluster);
-   }
-
-   return PopulatePageFromCluster(columnHandle, clusterInfo, idxInCluster);
-}
-
-ROOT::Experimental::Internal::RPage
-ROOT::Experimental::Internal::RPageSourceFile::PopulatePage(ColumnHandle_t columnHandle, RClusterIndex clusterIndex)
-{
-   const auto clusterId = clusterIndex.GetClusterId();
-   const auto idxInCluster = clusterIndex.GetIndex();
-   const auto columnId = columnHandle.fPhysicalId;
-   auto cachedPage = fPagePool->GetPage(columnId, clusterIndex);
-   if (!cachedPage.IsNull())
-      return cachedPage;
-
-   if (clusterId == kInvalidDescriptorId)
-      throw RException(R__FAIL("entry out of bounds"));
-
-   RClusterInfo clusterInfo;
-   {
-      auto descriptorGuard = GetSharedDescriptorGuard();
-      const auto &clusterDescriptor = descriptorGuard->GetClusterDescriptor(clusterId);
-      clusterInfo.fClusterId = clusterId;
-      clusterInfo.fColumnOffset = clusterDescriptor.GetColumnRange(columnId).fFirstElementIndex;
-      clusterInfo.fPageInfo = clusterDescriptor.GetPageRange(columnId).Find(idxInCluster);
-   }
-
-   return PopulatePageFromCluster(columnHandle, clusterInfo, idxInCluster);
 }
 
 void ROOT::Experimental::Internal::RPageSourceFile::ReleasePage(RPage &page)
