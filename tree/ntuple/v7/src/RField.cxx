@@ -649,6 +649,8 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
       result = std::make_unique<RField<bool>>(fieldName);
    } else if (canonicalType == "char") {
       result = std::make_unique<RField<char>>(fieldName);
+   } else if (canonicalType == "signed char") {
+      result = std::make_unique<RField<signed char>>(fieldName);
    } else if (canonicalType == "unsigned char") {
       result = std::make_unique<RField<unsigned char>>(fieldName);
    } else if (canonicalType == "short") {

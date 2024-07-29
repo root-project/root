@@ -2242,6 +2242,14 @@ struct RIntegralTypeMap {
 };
 
 // RField<char> has its own specialization, we should not need a specialization of RIntegralTypeMap.
+// From https://en.cppreference.com/w/cpp/language/types:
+// char has the same representation and alignment as either signed char or
+// unsigned char, but is always a distinct type.
+template <>
+struct RIntegralTypeMap<signed char> {
+   static_assert(sizeof(signed char) == sizeof(std::int8_t));
+   using type = std::int8_t;
+};
 template <>
 struct RIntegralTypeMap<unsigned char> {
    static_assert(sizeof(unsigned char) == sizeof(std::uint8_t));
