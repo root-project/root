@@ -15,9 +15,7 @@ endif()
 set_property(TARGET Core APPEND PROPERTY DICT_HEADERS TWinNTSystem.h)
 
 target_sources(Core PRIVATE
-  src/TWin32SplashThread.cxx
   src/TWinNTSystem.cxx
-  src/Win32Splash.cxx
 )
 
 target_link_libraries(Core PRIVATE
