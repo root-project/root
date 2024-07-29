@@ -20,10 +20,14 @@
 #include <TError.h>
 
 #include <cassert>
+#include <utility>
 
 ROOT::Experimental::Internal::RColumn::RColumn(EColumnType type, std::uint32_t columnIndex,
                                                std::uint16_t representationIndex)
-   : fType(type), fIndex(columnIndex), fRepresentationIndex(representationIndex)
+   : fType(type),
+     fIndex(columnIndex),
+     fRepresentationIndex(representationIndex),
+     fTeam(std::make_shared<std::vector<RColumn *>>(std::vector<RColumn *>{this}))
 {
    // TODO(jblomer): fix for column types with configurable bit length once available
    const auto [minBits, maxBits] = RColumnElementBase::GetValidBitRange(type);
@@ -110,7 +114,16 @@ void ROOT::Experimental::Internal::RColumn::MapPage(const NTupleSize_t index)
    // Set fReadPage to an empty page before populating it to prevent double destruction of the previously page in case
    // the page population fails.
    fReadPage = RPage();
-   fReadPage = fPageSource->PopulatePage(fHandleSource, index);
+
+   const auto nTeam = fTeam->size();
+   std::size_t iTeam = 1;
+   do {
+      fReadPage = fPageSource->PopulatePage(fTeam->at(fLastGoodTeamIdx)->GetHandleSource(), index);
+      if (fReadPage.IsValid())
+         break;
+      fLastGoodTeamIdx = (fLastGoodTeamIdx + iTeam++) % nTeam;
+   } while (iTeam <= nTeam);
+
    R__ASSERT(fReadPage.Contains(index));
 }
 
@@ -120,6 +133,21 @@ void ROOT::Experimental::Internal::RColumn::MapPage(RClusterIndex clusterIndex)
    // Set fReadPage to an empty page before populating it to prevent double destruction of the previously page in case
    // the page population fails.
    fReadPage = RPage();
-   fReadPage = fPageSource->PopulatePage(fHandleSource, clusterIndex);
+
+   const auto nTeam = fTeam->size();
+   std::size_t iTeam = 1;
+   do {
+      fReadPage = fPageSource->PopulatePage(fTeam->at(fLastGoodTeamIdx)->GetHandleSource(), clusterIndex);
+      if (fReadPage.IsValid())
+         break;
+      fLastGoodTeamIdx = (fLastGoodTeamIdx + iTeam++) % nTeam;
+   } while (iTeam <= nTeam);
+
    R__ASSERT(fReadPage.Contains(clusterIndex));
+}
+
+void ROOT::Experimental::Internal::RColumn::MergeTeams(RColumn &other)
+{
+   fTeam->emplace_back(&other);
+   other.TeamUp(*this);
 }
