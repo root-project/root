@@ -940,6 +940,14 @@ TEST(RNTuple, Char)
    EXPECT_EQ("char", field->GetTypeName());
 }
 
+TEST(RNTuple, SignedChar)
+{
+   RField<signed char> typedField("test");
+   EXPECT_EQ("std::int8_t", typedField.GetTypeName());
+   auto field = RFieldBase::Create("test", "signed char").Unwrap();
+   EXPECT_EQ("std::int8_t", field->GetTypeName());
+}
+
 TEST(RNTuple, UnsignedChar)
 {
    RField<unsigned char> typedField("test");
