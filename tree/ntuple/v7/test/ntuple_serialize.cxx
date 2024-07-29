@@ -1095,6 +1095,8 @@ TEST(RNTuple, SerializeMultiColumnRepresentation)
    EXPECT_TRUE(clusterDesc0.ContainsColumn(columnIds[1]));
    EXPECT_TRUE(clusterDesc0.ContainsColumn(columnIds[2]));
    EXPECT_TRUE(clusterDesc0.ContainsColumn(columnIds[3]));
+   EXPECT_THROW(clusterDesc0.GetPageRange(0), std::out_of_range);
+   EXPECT_THROW(clusterDesc0.GetPageRange(1), std::out_of_range);
    const auto columnRange0_0 = clusterDesc0.GetColumnRange(columnIds[0]);
    const auto columnRange0_1 = clusterDesc0.GetColumnRange(columnIds[1]);
    const auto columnRange0_2 = clusterDesc0.GetColumnRange(columnIds[2]);
@@ -1115,6 +1117,8 @@ TEST(RNTuple, SerializeMultiColumnRepresentation)
    EXPECT_TRUE(clusterDesc1.ContainsColumn(columnIds[1]));
    EXPECT_TRUE(clusterDesc1.ContainsColumn(columnIds[2]));
    EXPECT_TRUE(clusterDesc1.ContainsColumn(columnIds[3]));
+   EXPECT_THROW(clusterDesc1.GetPageRange(2), std::out_of_range);
+   EXPECT_THROW(clusterDesc1.GetPageRange(3), std::out_of_range);
    const auto columnRange1_0 = clusterDesc1.GetColumnRange(columnIds[0]);
    const auto columnRange1_1 = clusterDesc1.GetColumnRange(columnIds[1]);
    const auto columnRange1_2 = clusterDesc1.GetColumnRange(columnIds[2]);

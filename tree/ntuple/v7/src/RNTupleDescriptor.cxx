@@ -681,9 +681,8 @@ ROOT::Experimental::Internal::RClusterDescriptorBuilder::AddExtendedColumnRanges
                      const auto element = Internal::RColumnElementBase::Generate<void>(c.GetType());
                      pageRange.ExtendToFitColumnRange(columnRange, *element, Internal::RPage::kPageZeroSize);
                   }
-               } else {
-                  auto &pageRange = fCluster.fPageRanges[physicalId];
-                  pageRange.fPhysicalColumnId = physicalId;
+               } else if (!columnRange.fIsSuppressed) {
+                  fCluster.fPageRanges[physicalId].fPhysicalColumnId = physicalId;
                }
             }
          },
