@@ -792,14 +792,18 @@ TEST(RPageStorageFile, MultiKeyBlob_Pages)
       auto modelUcmp = RNTupleModel::Create();
       auto modelComp = RNTupleModel::Create();
       auto fU = modelUcmp->MakeField<double>("f");
+      auto iU = modelUcmp->MakeField<std::uint32_t>("i");
       auto fC = modelComp->MakeField<double>("f");
+      auto iC = modelComp->MakeField<std::uint32_t>("i");
       auto writerUcmp =
          RNTupleWriter::Recreate(std::move(modelUcmp), "myNTuple", fileGuardUcmp.GetPath(), *optionsUcmp);
       auto writerComp = RNTupleWriter::Recreate(std::move(modelComp), "myNTuple", fileGuardComp.GetPath(), optionsComp);
       TRandom3 rnd(42);
       for (int i = 0; i < 100000; ++i) {
          *fC = rnd.Rndm() * std::numeric_limits<double>::max();
+         *iC = rnd.Integer(std::numeric_limits<std::int32_t>::max());
          *fU = rnd.Rndm() * std::numeric_limits<double>::max();
+         *iU = rnd.Integer(std::numeric_limits<std::int32_t>::max());
          writerComp->Fill();
          writerUcmp->Fill();
       }
@@ -809,7 +813,9 @@ TEST(RPageStorageFile, MultiKeyBlob_Pages)
       auto modelUcmp = RNTupleModel::Create();
       auto modelComp = RNTupleModel::Create();
       auto fU = modelUcmp->MakeField<double>("f");
+      auto iU = modelUcmp->MakeField<std::uint32_t>("i");
       auto fC = modelComp->MakeField<double>("f");
+      auto iC = modelComp->MakeField<std::uint32_t>("i");
       auto ntupleUcmp = RNTupleReader::Open(std::move(modelUcmp), "myNTuple", fileGuardUcmp.GetPath());
       auto ntupleComp = RNTupleReader::Open(std::move(modelComp), "myNTuple", fileGuardComp.GetPath());
 
@@ -827,10 +833,16 @@ TEST(RPageStorageFile, MultiKeyBlob_Pages)
          ntupleComp->LoadEntry(i);
          double valC = *fC;
          double expectC = rnd.Rndm() * std::numeric_limits<double>::max();
+         std::int32_t valIC = *iC;
+         std::int32_t expectIC = rnd.Integer(std::numeric_limits<std::int32_t>::max());
          double valU = *fU;
          double expectU = rnd.Rndm() * std::numeric_limits<double>::max();
+         std::int32_t valIU = *iU;
+         std::int32_t expectIU = rnd.Integer(std::numeric_limits<std::int32_t>::max());
          EXPECT_DOUBLE_EQ(valC, expectC);
+         EXPECT_DOUBLE_EQ(valIC, expectIC);
          EXPECT_DOUBLE_EQ(valU, expectU);
+         EXPECT_DOUBLE_EQ(valIU, expectIU);
       }
    }
 }
