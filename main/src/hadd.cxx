@@ -172,7 +172,7 @@ struct HAddArgs {
    int fFirstInputIdx;
 };
 
-enum class EFlagResult { kIgnored, kParsed, kError };
+enum class EFlagResult { kIgnored, kParsed, kErr };
 
 static EFlagResult FlagToggle(const char *arg, const char *flagStr, bool &flagOut)
 {
@@ -233,7 +233,7 @@ FlagConvResult<IntFlag_t> ConvertArg<IntFlag_t>(const char *arg)
       return { *intOpt, EFlagResult::kParsed };
 
    Err() << "error parsing integer argument '" << arg << "'\n";
-   return { {}, EFlagResult::kError };
+   return { {}, EFlagResult::kErr };
 }
 
 template <>
@@ -272,7 +272,7 @@ static FlagConvResult<TString> ConvertCacheSize(const char *arg)
    auto parseResult = ROOT::FromHumanReadableSize(arg, size);
    if (parseResult == ROOT::EFromHumanReadableSize::kParseFail) {
       Err() << "could not parse the cache size passed after -cachesize: '" << arg << "'\n";
-      return { "", EFlagResult::kError };
+      return { "", EFlagResult::kErr };
    } else if (parseResult == ROOT::EFromHumanReadableSize::kOverflow) {
       double m;
       const char *munit = nullptr;
@@ -316,7 +316,7 @@ static EFlagResult FlagArg(int argc, char **argv, int &argIdxInOut, const char *
          nxtArg = argv[argIdxInOut];
       } else {
          Err() << "Expected argument after '-" << flagStr << "' flag.\n";
-         return EFlagResult::kError;
+         return EFlagResult::kErr;
       }
    } else {
       return EFlagResult::kIgnored;
@@ -332,10 +332,10 @@ static EFlagResult FlagArg(int argc, char **argv, int &argIdxInOut, const char *
          argIdxInOut -= (argIdxInOut > argIdx);
       } else {
          Err() << "the argument after '-" << flagStr << "' flag was not of the expected type.\n";
-         return EFlagResult::kError;
+         return EFlagResult::kErr;
       }
    } else {
-      return EFlagResult::kError;
+      return EFlagResult::kErr;
    }
 
    return EFlagResult::kParsed;
@@ -389,7 +389,7 @@ static EFlagResult FlagF(const char *arg, HAddArgs &args)
          if (args.fCompressionSettings) {
             std::cerr
                << "[err] Cannot specify both -ff and -f[0-9]. Either use the first input compression or specify it.\n";
-            return EFlagResult::kError;
+            return EFlagResult::kErr;
          } else
             args.fUseFirstInputCompression = true;
          break;
@@ -403,7 +403,7 @@ static EFlagResult FlagF(const char *arg, HAddArgs &args)
             if (args.fUseFirstInputCompression) {
                Err() << "cannot specify both -ff and -f[0-9]. Either use the first input compression or "
                             "specify it.\n";
-               return EFlagResult::kError;
+               return EFlagResult::kErr;
             } else if (!args.fCompressionSettings) {
                if (auto compLv = StrToUInt(cur)) {
                   if (ValidCompressionSettings(*compLv)) {
@@ -413,19 +413,19 @@ static EFlagResult FlagF(const char *arg, HAddArgs &args)
                      return EFlagResult::kParsed;
                   } else {
                      Err() << *compLv << " is not a supported compression settings.\n";
-                     return EFlagResult::kError;
+                     return EFlagResult::kErr;
                   }
                } else {
                   Err() << "failed to parse compression settings '" << cur << "' as an integer.\n";
-                  return EFlagResult::kError;
+                  return EFlagResult::kErr;
                }
             } else {
                Err() << "cannot specify -f[0-9] multiple times!\n";
-               return EFlagResult::kError;
+               return EFlagResult::kErr;
             }
          } else {
             Err() << "invalid flag: " << arg << "\n";
-            return EFlagResult::kError;
+            return EFlagResult::kErr;
          }
       }
       ++cur;
@@ -461,7 +461,7 @@ static std::optional<HAddArgs> ParseArgs(int argc, char **argv)
    do {                                          \
       if (!validFlag) {                          \
          const auto res = func(__VA_ARGS__);     \
-         if (res == EFlagResult::kError)          \
+         if (res == EFlagResult::kErr)          \
             return {};                           \
          validFlag = res == EFlagResult::kParsed; \
       }                                          \
