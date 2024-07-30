@@ -2917,7 +2917,7 @@ TVirtualGeoPainter *TGeoManager::GetGeomPainter()
 {
    if (!fPainter) {
       const char *kind = gEnv->GetValue("GeomPainter.Name", "");
-      if (!kind || !*kind);
+      if (!kind || !*kind)
          kind = (gROOT->IsWebDisplay() && !gROOT->IsWebDisplayBatch()) ? "web" : "root";
       if (auto h = gROOT->GetPluginManager()->FindHandler("TVirtualGeoPainter", kind)) {
          if (h->LoadPlugin() == -1) {
