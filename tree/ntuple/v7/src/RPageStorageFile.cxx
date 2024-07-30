@@ -698,8 +698,8 @@ ROOT::Experimental::Internal::RPageSourceFile::LoadClusters(std::span<RCluster::
 
    auto nReqs = readRequests.size();
    auto readvLimits = fFile->GetReadVLimits();
-   // We never want to do vectorized reads of split blobs, so we limit our single size to maxBlobSize.
-   readvLimits.fMaxSingleSize = std::min<size_t>(readvLimits.fMaxSingleSize, fReader.GetMaxBlobSize());
+   // We never want to do vectorized reads of split blobs, so we limit our single size to maxKeySize.
+   readvLimits.fMaxSingleSize = std::min<size_t>(readvLimits.fMaxSingleSize, fReader.GetMaxKeySize());
 
    int iReq = 0;
    while (nReqs > 0) {

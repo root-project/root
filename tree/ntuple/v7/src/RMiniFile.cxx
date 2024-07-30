@@ -1210,7 +1210,7 @@ ROOT::Experimental::Internal::RMiniFileReader::GetNTupleProper(std::string_view 
       return R__FAIL("RNTuple anchor checksum mismatch");
    }
 
-   fMaxBlobSize = ntuple->fMaxKeySize;
+   fMaxKeySize = ntuple->fMaxKeySize;
 
    return CreateAnchor(ntuple->fVersionEpoch, ntuple->fVersionMajor, ntuple->fVersionMinor, ntuple->fVersionPatch,
                        ntuple->fSeekHeader, ntuple->fNBytesHeader, ntuple->fLenHeader, ntuple->fSeekFooter,
@@ -1241,7 +1241,7 @@ ROOT::Experimental::Internal::RMiniFileReader::GetNTupleBare(std::string_view nt
    if (checksum != static_cast<uint64_t>(onDiskChecksum))
       return R__FAIL("RNTuple bare file: anchor checksum mismatch");
 
-   fMaxBlobSize = ntuple.fMaxKeySize;
+   fMaxKeySize = ntuple.fMaxKeySize;
 
    return CreateAnchor(ntuple.fVersionEpoch, ntuple.fVersionMajor, ntuple.fVersionMinor, ntuple.fVersionPatch,
                        ntuple.fSeekHeader, ntuple.fNBytesHeader, ntuple.fLenHeader, ntuple.fSeekFooter,
@@ -1251,19 +1251,19 @@ ROOT::Experimental::Internal::RMiniFileReader::GetNTupleBare(std::string_view nt
 void ROOT::Experimental::Internal::RMiniFileReader::ReadBuffer(void *buffer, size_t nbytes, std::uint64_t offset)
 {
    size_t nread;
-   if (fMaxBlobSize == 0 || nbytes <= fMaxBlobSize) {
+   if (fMaxKeySize == 0 || nbytes <= fMaxKeySize) {
       // Fast path: read single blob
       nread = fRawFile->ReadAt(buffer, nbytes, offset);
    } else {
       // Read chunked blob. See RNTupleFileWriter::WriteBlob() for details.
-      const size_t nChunks = ComputeNumChunks(nbytes, fMaxBlobSize);
+      const size_t nChunks = ComputeNumChunks(nbytes, fMaxKeySize);
       const size_t nbytesChunkOffsets = (nChunks - 1) * sizeof(std::uint64_t);
-      const size_t nbytesFirstChunk = fMaxBlobSize - nbytesChunkOffsets;
+      const size_t nbytesFirstChunk = fMaxKeySize - nbytesChunkOffsets;
       uint8_t *bufCur = reinterpret_cast<uint8_t *>(buffer);
 
       // Read first chunk
-      nread = fRawFile->ReadAt(bufCur, fMaxBlobSize, offset);
-      R__ASSERT(nread == fMaxBlobSize);
+      nread = fRawFile->ReadAt(bufCur, fMaxKeySize, offset);
+      R__ASSERT(nread == fMaxKeySize);
       // NOTE: we read the entire chunk in `bufCur`, but we only advance the pointer by `nbytesFirstChunk`,
       // since the last part of `bufCur` will later be overwritten by the next chunk's payload.
       // We do this to avoid a second ReadAt to read in the chunk offsets.
@@ -1281,7 +1281,7 @@ void ROOT::Experimental::Internal::RMiniFileReader::ReadBuffer(void *buffer, siz
          RNTupleSerializer::DeserializeUInt64(curChunkOffset, chunkOffset);
          ++curChunkOffset;
 
-         const size_t bytesToRead = std::min<size_t>(fMaxBlobSize, remainingBytes);
+         const size_t bytesToRead = std::min<size_t>(fMaxKeySize, remainingBytes);
          // Ensure we don't read outside of the buffer
          R__ASSERT(static_cast<size_t>(bufCur - reinterpret_cast<uint8_t *>(buffer)) <= nbytes - bytesToRead);
 
