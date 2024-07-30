@@ -69,6 +69,7 @@ class REntry;
 
 namespace Internal {
 struct RFieldCallbackInjector;
+struct RFieldRepresentationModifier;
 class RPageSink;
 class RPageSource;
 // TODO(jblomer): find a better way to not have these three methods in the RFieldBase public API
@@ -99,6 +100,7 @@ This is and can only be partially enforced through C++.
 class RFieldBase {
    friend class ROOT::Experimental::RCollectionField; // to move the fields from the collection model
    friend struct ROOT::Experimental::Internal::RFieldCallbackInjector; // used for unit tests
+   friend struct ROOT::Experimental::Internal::RFieldRepresentationModifier; // used for unit tests
    friend void Internal::CallCommitClusterOnField(RFieldBase &);
    friend void Internal::CallConnectPageSinkOnField(RFieldBase &, Internal::RPageSink &, NTupleSize_t);
    friend void Internal::CallConnectPageSourceOnField(RFieldBase &, Internal::RPageSource &);
@@ -791,6 +793,24 @@ public:
 
    virtual void AcceptVisitor(Detail::RFieldVisitor &visitor) const;
 }; // class RFieldBase
+
+namespace Internal {
+// At some point, RFieldBase::OnClusterCommit() may allow for a user-defined callback to change the
+// column representation. For now, we inject this for testing and internal use only.
+struct RFieldRepresentationModifier {
+   static void SwapPrimayColumnRepresentation(RFieldBase &field, std::uint16_t newRepresentationIdx)
+   {
+      R__ASSERT(newRepresentationIdx != 0);
+      R__ASSERT(newRepresentationIdx < field.fColumnRepresentatives.size());
+      const auto N = field.fColumnRepresentatives[0].get().size();
+      std::swap(field.fColumnRepresentatives[0], field.fColumnRepresentatives[newRepresentationIdx]);
+      for (std::size_t i = 0; i < N; ++i) {
+         std::swap(field.fColumns[i], field.fColumns[i + newRepresentationIdx * N]);
+      }
+      field.fPrincipalColumn = field.fColumns[0].get();
+   }
+};
+} // namespace Internal
 
 /// The container field for an ntuple model, which itself has no physical representation.
 /// Therefore, the zero field must not be connected to a page source or sink.
