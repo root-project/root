@@ -340,9 +340,17 @@ public:
 
    void Flush();
    void CommitSuppressed();
-   void MapPage(const NTupleSize_t index);
-   void MapPage(RClusterIndex clusterIndex);
+
+   void MapPage(NTupleSize_t globalIndex) { R__ASSERT(TryMapPage(globalIndex)); }
+   void MapPage(RClusterIndex clusterIndex) { R__ASSERT(TryMapPage(clusterIndex)); }
+   bool TryMapPage(NTupleSize_t globalIndex);
+   bool TryMapPage(RClusterIndex clusterIndex);
+
+   bool ReadPageContains(NTupleSize_t globalIndex) const { return fReadPage.Contains(globalIndex); }
+   bool ReadPageContains(RClusterIndex clusterIndex) const { return fReadPage.Contains(clusterIndex); }
+
    void MergeTeams(RColumn &other);
+
    NTupleSize_t GetNElements() const { return fNElements; }
    RColumnElementBase *GetElement() const { return fElement.get(); }
    EColumnType GetType() const { return fType; }
