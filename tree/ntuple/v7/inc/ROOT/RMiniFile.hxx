@@ -37,6 +37,8 @@ class RRawFile;
 
 namespace Experimental {
 
+class RNTupleWriteOptions;
+
 namespace Internal {
 /// Holds status information of an open ROOT file during writing
 struct RTFileControlBlock;
@@ -194,8 +196,8 @@ public:
    /// Create or truncate the local file given by path with the new empty RNTuple identified by ntupleName.
    /// Uses a C stream for writing
    static std::unique_ptr<RNTupleFileWriter> Recreate(std::string_view ntupleName, std::string_view path,
-                                                      int defaultCompression, EContainerFormat containerFormat,
-                                                      std::uint64_t maxKeySize);
+                                                      EContainerFormat containerFormat,
+                                                      const RNTupleWriteOptions &options);
    /// Add a new RNTuple identified by ntupleName to the existing TFile.
    static std::unique_ptr<RNTupleFileWriter> Append(std::string_view ntupleName, TFile &file, std::uint64_t maxKeySize);
 

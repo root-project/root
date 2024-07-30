@@ -2,6 +2,8 @@
 #include <TKey.h>
 #include <TTree.h>
 
+using ROOT::Experimental::Internal::RNTupleWriteOptionsManip;
+
 namespace {
 bool IsEqual(const ROOT::Experimental::RNTuple &a, const ROOT::Experimental::RNTuple &b)
 {
@@ -25,8 +27,8 @@ TEST(MiniFile, Raw)
 {
    FileRaii fileGuard("test_ntuple_minifile_raw.ntuple");
 
-   auto writer = RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), 0, EContainerFormat::kBare,
-                                             RNTupleWriteOptions::kDefaultMaxKeySize);
+   RNTupleWriteOptions options;
+   auto writer = RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), EContainerFormat::kBare, options);
    char header = 'h';
    char footer = 'f';
    char blob = 'b';
@@ -54,8 +56,8 @@ TEST(MiniFile, Stream)
 {
    FileRaii fileGuard("test_ntuple_minifile_stream.root");
 
-   auto writer = RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), 0, EContainerFormat::kTFile,
-                                             RNTupleWriteOptions::kDefaultMaxKeySize);
+   RNTupleWriteOptions options;
+   auto writer = RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), EContainerFormat::kTFile, options);
    char header = 'h';
    char footer = 'f';
    char blob = 'b';
@@ -118,8 +120,8 @@ TEST(MiniFile, SimpleKeys)
 {
    FileRaii fileGuard("test_ntuple_minifile_simple_keys.root");
 
-   auto writer = RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), 0, EContainerFormat::kTFile,
-                                             RNTupleWriteOptions::kDefaultMaxKeySize);
+   RNTupleWriteOptions options;
+   auto writer = RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), EContainerFormat::kTFile, options);
 
    char blob1 = '1';
    auto offBlob1 = writer->WriteBlob(&blob1, 1, 1);
@@ -358,7 +360,9 @@ TEST(MiniFile, MultiKeyBlob)
    std::uint64_t blobOffset;
 
    {
-      auto writer = RNTupleFileWriter::Recreate("ntpl", fileGuard.GetPath(), 0, EContainerFormat::kTFile, kMaxKeySize);
+      RNTupleWriteOptions options;
+      RNTupleWriteOptionsManip::SetMaxKeySize(options, kMaxKeySize);
+      auto writer = RNTupleFileWriter::Recreate("ntpl", fileGuard.GetPath(), EContainerFormat::kTFile, options);
       memset(data.get(), 0x99, dataSize);
       data[42] = 0x42;
       data[dataSize - 42] = 0x11;
@@ -395,7 +399,9 @@ TEST(MiniFile, MultiKeyBlob_ExactlyMax)
    std::uint64_t blobOffset;
 
    {
-      auto writer = RNTupleFileWriter::Recreate("ntpl", fileGuard.GetPath(), 0, EContainerFormat::kTFile, kMaxKeySize);
+      RNTupleWriteOptions options;
+      RNTupleWriteOptionsManip::SetMaxKeySize(options, kMaxKeySize);
+      auto writer = RNTupleFileWriter::Recreate("ntpl", fileGuard.GetPath(), EContainerFormat::kTFile, options);
       memset(data.get(), 0, dataSize);
       blobOffset = writer->WriteBlob(data.get(), dataSize, dataSize);
       writer->Commit();
@@ -429,7 +435,9 @@ TEST(MiniFile, MultiKeyBlob_ExactlyTwo)
    std::uint64_t blobOffset;
 
    {
-      auto writer = RNTupleFileWriter::Recreate("ntpl", fileGuard.GetPath(), 0, EContainerFormat::kTFile, kMaxKeySize);
+      RNTupleWriteOptions options;
+      RNTupleWriteOptionsManip::SetMaxKeySize(options, kMaxKeySize);
+      auto writer = RNTupleFileWriter::Recreate("ntpl", fileGuard.GetPath(), EContainerFormat::kTFile, options);
       memset(data.get(), 0, dataSize / 2);
       memset(data.get() + dataSize / 2, 0x99, dataSize / 2);
       data[42] = 0x42;
@@ -473,7 +481,9 @@ TEST(MiniFile, MultiKeyBlob_SmallKey)
    std::uint64_t blobOffset;
 
    {
-      auto writer = RNTupleFileWriter::Recreate("ntpl", fileGuard.GetPath(), 0, EContainerFormat::kTFile, kMaxKeySize);
+      RNTupleWriteOptions options;
+      RNTupleWriteOptionsManip::SetMaxKeySize(options, kMaxKeySize);
+      auto writer = RNTupleFileWriter::Recreate("ntpl", fileGuard.GetPath(), EContainerFormat::kTFile, options);
       memset(data.get(), 0x99, dataSize);
       data[42] = 0x42;
       data[dataSize - 42] = 0x84;
@@ -511,11 +521,13 @@ TEST(MiniFile, MultiKeyBlob_TooManyChunks)
    FileRaii fileGuard("test_ntuple_minifile_multi_key_blob_small_key.root");
 
    const auto kMaxKeySize = 128;
+   RNTupleWriteOptions options;
+   RNTupleWriteOptionsManip::SetMaxKeySize(options, kMaxKeySize);
 
    {
       const auto kOkayDataSize = 1024;
       const auto data = std::make_unique<unsigned char[]>(kOkayDataSize);
-      auto writer = RNTupleFileWriter::Recreate("ntpl", fileGuard.GetPath(), 0, EContainerFormat::kTFile, kMaxKeySize);
+      auto writer = RNTupleFileWriter::Recreate("ntpl", fileGuard.GetPath(), EContainerFormat::kTFile, options);
       memset(data.get(), 0x99, kOkayDataSize);
       writer->WriteBlob(data.get(), kOkayDataSize, kOkayDataSize);
       writer->Commit();
@@ -524,7 +536,7 @@ TEST(MiniFile, MultiKeyBlob_TooManyChunks)
    {
       const auto kTooBigDataSize = 5000;
       const auto data = std::make_unique<unsigned char[]>(kTooBigDataSize);
-      auto writer = RNTupleFileWriter::Recreate("ntpl", fileGuard.GetPath(), 0, EContainerFormat::kTFile, kMaxKeySize);
+      auto writer = RNTupleFileWriter::Recreate("ntpl", fileGuard.GetPath(), EContainerFormat::kTFile, options);
       memset(data.get(), 0x99, kTooBigDataSize);
       EXPECT_DEATH(writer->WriteBlob(data.get(), kTooBigDataSize, kTooBigDataSize), "");
       writer->Commit();
@@ -580,15 +592,13 @@ TEST(MiniFile, Multi)
 
 TEST(MiniFile, Failures)
 {
+   RNTupleWriteOptions options;
    // TODO(jblomer): failures should be exceptions
-   EXPECT_DEATH(RNTupleFileWriter::Recreate("MyNTuple", "/can/not/open", 0, EContainerFormat::kTFile,
-                                            RNTupleWriteOptions::kDefaultMaxKeySize),
-                ".*");
+   EXPECT_DEATH(RNTupleFileWriter::Recreate("MyNTuple", "/can/not/open", EContainerFormat::kTFile, options), ".*");
 
    FileRaii fileGuard("test_ntuple_minifile_failures.root");
 
-   auto writer = RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), 0, EContainerFormat::kTFile,
-                                             RNTupleWriteOptions::kDefaultMaxKeySize);
+   auto writer = RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), EContainerFormat::kTFile, options);
    char header = 'h';
    char footer = 'f';
    char blob = 'b';
