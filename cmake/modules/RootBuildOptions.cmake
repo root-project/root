@@ -378,7 +378,7 @@ if (NOT builtin_cling)
 endif(NOT builtin_cling)
 
 if(NOT http AND webgui)
-   message(STATUS "Cannot build WebGui components without HTTP: webgui is disabled.")
+   message(WARNING "Cannot build WebGui components without HTTP: webgui is disabled.")
    set(webgui OFF)
 endif()
 
