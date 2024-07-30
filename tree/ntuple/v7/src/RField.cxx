@@ -3470,6 +3470,19 @@ std::size_t ROOT::Experimental::RNullableField::AppendValue(const void *from)
 
 ROOT::Experimental::RClusterIndex ROOT::Experimental::RNullableField::GetItemIndex(NTupleSize_t globalIndex)
 {
+   // We ensure first that the principle column points to the non-suppressed column and
+   // that it has the correct page mapped
+   if (!fPrincipalColumn->ReadPageContains(globalIndex) && !fPrincipalColumn->TryMapPage(globalIndex)) {
+      for (const auto &c : fColumns) {
+         if (!c->TryMapPage(globalIndex))
+            continue;
+
+         fPrincipalColumn = c.get();
+         break;
+      }
+      R__ASSERT(fPrincipalColumn->ReadPageContains(globalIndex));
+   }
+
    RClusterIndex nullIndex;
    if (fPrincipalColumn->GetType() == EColumnType::kBit) {
       const bool isValidItem = *fPrincipalColumn->Map<bool>(globalIndex);
@@ -3480,6 +3493,22 @@ ROOT::Experimental::RClusterIndex ROOT::Experimental::RNullableField::GetItemInd
       fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &collectionSize);
       return (collectionSize == 0) ? nullIndex : collectionStart;
    }
+}
+
+void ROOT::Experimental::RNullableField::ReadInClusterImpl(RClusterIndex clusterIndex, void *to)
+{
+   if ((fColumns.size() > 1) && !fPrincipalColumn->TryMapPage(clusterIndex)) {
+      for (const auto &c : fColumns) {
+         if (!c->TryMapPage(clusterIndex))
+            continue;
+
+         fPrincipalColumn = c.get();
+         break;
+      }
+      R__ASSERT(fPrincipalColumn->ReadPageContains(clusterIndex));
+   }
+
+   ReadGlobalImpl(fPrincipalColumn->GetGlobalIndex(clusterIndex), to);
 }
 
 void ROOT::Experimental::RNullableField::AcceptVisitor(Detail::RFieldVisitor &visitor) const

@@ -1556,6 +1556,10 @@ protected:
    std::size_t AppendValue(const void *from);
    void CommitClusterImpl() final { fNWritten = 0; }
 
+   // The default implementation that translates the request into a call to ReadGlobalImpl() cannot be used
+   // because we don't team up the columns of the different column representations for this field.
+   void ReadInClusterImpl(RClusterIndex clusterIndex, void *to) final;
+
    /// Given the index of the nullable field, returns the corresponding global index of the subfield or,
    /// if it is null, returns kInvalidClusterIndex
    RClusterIndex GetItemIndex(NTupleSize_t globalIndex);

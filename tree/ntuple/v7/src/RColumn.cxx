@@ -108,7 +108,7 @@ void ROOT::Experimental::Internal::RColumn::CommitSuppressed()
    fPageSink->CommitSuppressedColumn(fHandleSink);
 }
 
-void ROOT::Experimental::Internal::RColumn::MapPage(const NTupleSize_t index)
+bool ROOT::Experimental::Internal::RColumn::TryMapPage(NTupleSize_t globalIndex)
 {
    fPageSource->ReleasePage(fReadPage);
    // Set fReadPage to an empty page before populating it to prevent double destruction of the previously page in case
@@ -118,16 +118,16 @@ void ROOT::Experimental::Internal::RColumn::MapPage(const NTupleSize_t index)
    const auto nTeam = fTeam->size();
    std::size_t iTeam = 1;
    do {
-      fReadPage = fPageSource->PopulatePage(fTeam->at(fLastGoodTeamIdx)->GetHandleSource(), index);
+      fReadPage = fPageSource->PopulatePage(fTeam->at(fLastGoodTeamIdx)->GetHandleSource(), globalIndex);
       if (fReadPage.IsValid())
          break;
       fLastGoodTeamIdx = (fLastGoodTeamIdx + iTeam++) % nTeam;
    } while (iTeam <= nTeam);
 
-   R__ASSERT(fReadPage.Contains(index));
+   return fReadPage.Contains(globalIndex);
 }
 
-void ROOT::Experimental::Internal::RColumn::MapPage(RClusterIndex clusterIndex)
+bool ROOT::Experimental::Internal::RColumn::TryMapPage(RClusterIndex clusterIndex)
 {
    fPageSource->ReleasePage(fReadPage);
    // Set fReadPage to an empty page before populating it to prevent double destruction of the previously page in case
@@ -143,7 +143,7 @@ void ROOT::Experimental::Internal::RColumn::MapPage(RClusterIndex clusterIndex)
       fLastGoodTeamIdx = (fLastGoodTeamIdx + iTeam++) % nTeam;
    } while (iTeam <= nTeam);
 
-   R__ASSERT(fReadPage.Contains(clusterIndex));
+   return fReadPage.Contains(clusterIndex);
 }
 
 void ROOT::Experimental::Internal::RColumn::MergeTeams(RColumn &other)
