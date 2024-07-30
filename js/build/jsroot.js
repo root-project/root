@@ -11,7 +11,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '26/07/2024',
+version_date = '30/07/2024',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -64433,23 +64433,32 @@ const TooltipHandler = {
             case 3: this.zoom_curr[1] = m[1]; changed[0] = false; break; // only Y
          }
 
-         const idx = this.swap_xy ? 1 : 0, idy = 1 - idx;
          let xmin, xmax, ymin, ymax, isany = false,
              namex = 'x', namey = 'y';
 
-         if (changed[idx] && (Math.abs(this.zoom_curr[idx] - this.zoom_origin[idx]) > 10)) {
-            if (this.zoom_second && (this.zoom_kind === 2)) namex = 'x2';
-            xmin = Math.min(this.revertAxis(namex, this.zoom_origin[idx]), this.revertAxis(namex, this.zoom_curr[idx]));
-            xmax = Math.max(this.revertAxis(namex, this.zoom_origin[idx]), this.revertAxis(namex, this.zoom_curr[idx]));
+         if (changed[0] && (Math.abs(this.zoom_curr[0] - this.zoom_origin[0]) > 5)) {
+            if (this.zoom_second && (this.zoom_kind === 2))
+               namex = 'x2';
+            const v1 = this.revertAxis(namex, this.zoom_origin[0]),
+                  v2 = this.revertAxis(namex, this.zoom_curr[0]);
+            xmin = Math.min(v1, v2);
+            xmax = Math.max(v1, v2);
             isany = true;
          }
 
-         if (changed[idy] && (Math.abs(this.zoom_curr[idy] - this.zoom_origin[idy]) > 10)) {
-            if (this.zoom_second && (this.zoom_kind === 3)) namey = 'y2';
-            ymin = Math.min(this.revertAxis(namey, this.zoom_origin[idy]), this.revertAxis(namey, this.zoom_curr[idy]));
-            ymax = Math.max(this.revertAxis(namey, this.zoom_origin[idy]), this.revertAxis(namey, this.zoom_curr[idy]));
+         if (changed[1] && (Math.abs(this.zoom_curr[1] - this.zoom_origin[1]) > 5)) {
+            if (this.zoom_second && (this.zoom_kind === 3))
+               namey = 'y2';
+
+            const v1 = this.revertAxis(namey, this.zoom_origin[1]),
+                  v2 = this.revertAxis(namey, this.zoom_curr[1]);
+            ymin = Math.min(v1, v2);
+            ymax = Math.max(v1, v2);
             isany = true;
          }
+
+         if (this.swap_xy && !this.zoom_second)
+            [xmin, xmax, ymin, ymax] = [ymin, ymax, xmin, xmax];
 
          if (namex === 'x2') {
             pr = this.zoomSingle(namex, xmin, xmax, true);
