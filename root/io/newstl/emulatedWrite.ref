@@ -1,5 +1,5 @@
-hadd Target file: result.root
-hadd compression setting for all output: 101
+Info in <hadd>: target file: result.root
+Info in <hadd>: compression setting for all output: 101
 hadd Source file 1: cmsJets_0.root
 Warning in <TClass::Init>: no dictionary for class edm::EDProduct is available
 Warning in <TClass::Init>: no dictionary for class edm::EventAux is available
