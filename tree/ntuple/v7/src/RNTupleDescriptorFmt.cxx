@@ -41,19 +41,25 @@ struct ColumnInfo {
    ROOT::Experimental::DescriptorId_t fPhysicalColumnId = 0;
    ROOT::Experimental::DescriptorId_t fLogicalColumnId = 0;
    ROOT::Experimental::DescriptorId_t fFieldId = 0;
-   std::uint64_t fLocalOrder = 0;
    std::uint64_t fNElements = 0;
    std::uint64_t fNPages = 0;
    std::uint64_t fBytesOnStorage = 0;
    std::uint32_t fElementSize = 0;
+   std::uint32_t fColumnIndex = 0;
+   std::uint16_t fRepresentationIndex = 0;
    ROOT::Experimental::EColumnType fType;
    std::string fFieldName;
    std::string fFieldDescription;
 
    bool operator<(const ColumnInfo &other) const
    {
-      if (fFieldName == other.fFieldName)
-         return fLocalOrder < other.fLocalOrder;
+      if (fFieldName == other.fFieldName) {
+         if (fRepresentationIndex < other.fRepresentationIndex)
+            return true;
+         else if (fRepresentationIndex > other.fRepresentationIndex)
+            return false;
+         return fColumnIndex < other.fColumnIndex;
+      }
       return fFieldName < other.fFieldName;
    }
 };
@@ -108,12 +114,16 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
       info.fPhysicalColumnId = column.second.GetPhysicalId();
       info.fLogicalColumnId = column.second.GetLogicalId();
       info.fFieldId = column.second.GetFieldId();
-      info.fLocalOrder = column.second.GetIndex();
+      info.fColumnIndex = column.second.GetIndex();
       info.fElementSize = elementSize;
       info.fType = column.second.GetType();
+      info.fRepresentationIndex = column.second.GetRepresentationIndex();
 
       for (const auto &cluster : fClusterDescriptors) {
          auto columnRange = cluster.second.GetColumnRange(column.second.GetPhysicalId());
+         if (columnRange.fIsSuppressed)
+            continue;
+
          info.fNElements += columnRange.fNElements;
          if (compression == -1) {
             compression = columnRange.fCompressionSettings;
@@ -183,8 +193,10 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
    for (const auto &col : columns) {
       auto avgPageSize = (col.fNPages == 0) ? 0 : (col.fBytesOnStorage / col.fNPages);
       auto avgElementsPerPage = (col.fNPages == 0) ? 0 : (col.fNElements / col.fNPages);
-      std::string nameAndType = std::string("  ") + col.fFieldName + " [#" + std::to_string(col.fLocalOrder) + "]" +
-                                "  --  " + Internal::RColumnElementBase::GetTypeName(col.fType);
+      std::string nameAndType = std::string("  ") + col.fFieldName + " [#" + std::to_string(col.fColumnIndex);
+      if (col.fRepresentationIndex > 0)
+         nameAndType += " / R." + std::to_string(col.fRepresentationIndex);
+      nameAndType += "]  --  " + Internal::RColumnElementBase::GetTypeName(col.fType);
       std::string id = std::string("{id:") + std::to_string(col.fLogicalColumnId) + "}";
       if (col.fLogicalColumnId != col.fPhysicalColumnId)
          id += " --alias--> " + std::to_string(col.fPhysicalColumnId);
