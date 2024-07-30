@@ -181,6 +181,26 @@ TH2F *TScatter::GetHistogram() const
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Get the scatter's x axis.
+
+TAxis *TScatter::GetXaxis() const
+{
+   auto h = GetHistogram();
+   return h ? h->GetXaxis() : nullptr;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get the scatter's y axis.
+
+TAxis *TScatter::GetYaxis() const
+{
+   auto h = GetHistogram();
+   return h ? h->GetYaxis() : nullptr;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Paint this scatter plot with its current attributes.
 
 void TScatter::Paint(Option_t *option)
