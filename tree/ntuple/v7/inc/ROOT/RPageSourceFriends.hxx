@@ -76,6 +76,7 @@ private:
    Detail::RNTupleMetrics fMetrics;
    std::vector<std::unique_ptr<RPageSource>> fSources;
    RIdBiMap fIdBiMap;
+   RIdBiMap fColumnMap;
 
    RNTupleDescriptorBuilder fBuilder;
    DescriptorId_t fNextId = 1;  ///< 0 is reserved for the friend zero field
