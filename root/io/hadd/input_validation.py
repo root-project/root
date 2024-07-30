@@ -51,7 +51,7 @@ class TestInputValidation:
         finally:
             os.remove(outputfile)
 
-        assert f"hadd exiting due to error in {FILENAME+'_txt'}" in out.stderr.decode()
+        assert f"exiting due to error in {FILENAME+'_txt'}" in out.stderr.decode()
 
     def test_hadd_input_validation_indirect(self):
         """
@@ -65,7 +65,7 @@ class TestInputValidation:
         finally:
             os.remove(outputfile)
 
-        assert f"hadd exiting due to error in {FILENAME+'_txt'}" in out.stderr.decode()
+        assert f"exiting due to error in {FILENAME+'_txt'}" in out.stderr.decode()
 
 
 if __name__ == "__main__":
