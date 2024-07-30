@@ -760,3 +760,28 @@ TEST(RNTupleInspector, FieldsByName)
       EXPECT_EQ("std::int32_t", inspector->GetFieldTreeInspector(fieldId).GetDescriptor().GetTypeName());
    }
 }
+
+TEST(RNTupleInspector, MultiColumnRepresentations)
+{
+   FileRaii fileGuard("test_ntuple_inspector_multi_column_representations.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto fldPx = RFieldBase::Create("px", "float").Unwrap();
+      fldPx->SetColumnRepresentatives({{EColumnType::kReal32}, {EColumnType::kReal16}});
+      model->AddField(std::move(fldPx));
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      writer->Fill();
+      writer->CommitCluster();
+      ROOT::Experimental::Internal::RFieldRepresentationModifier::SwapPrimayColumnRepresentation(
+         const_cast<RFieldBase &>(writer->GetModel().GetField("px")), 1);
+      writer->Fill();
+   }
+
+   auto inspector = RNTupleInspector::Create("ntpl", fileGuard.GetPath());
+   auto px0Inspector = inspector->GetColumnInspector(0);
+   auto px1Inspector = inspector->GetColumnInspector(1);
+   EXPECT_EQ(EColumnType::kReal32, px0Inspector.GetType());
+   EXPECT_EQ(1u, px0Inspector.GetNElements());
+   EXPECT_EQ(EColumnType::kReal16, px1Inspector.GetType());
+   EXPECT_EQ(1u, px1Inspector.GetNElements());
+}
