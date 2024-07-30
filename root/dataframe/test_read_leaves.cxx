@@ -28,7 +28,7 @@ int main()
    }
 
    RDataFrame d("t", "test_read_leaves.root");
-   auto check_a_b = [](int a, int b) {
+   auto check_a_b = []([[maybe_unused]] int a, [[maybe_unused]] int b) {
       assert(a == 1);
       assert(b == 2);
       return true;
