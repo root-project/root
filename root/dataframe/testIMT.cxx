@@ -36,7 +36,7 @@ void getTracks(unsigned int mu, FourVectors& tracks) {
    auto nPart = R.Poisson(mu);
    tracks.clear();
    tracks.reserve(nPart);
-   for (int i = 0; i < nPart; ++i) {
+   for (size_t i = 0; i < nPart; ++i) {
       double px = R.Gaus(0,10);
       double py = R.Gaus(0,10);
       double pt = sqrt(px*px +py*py);
