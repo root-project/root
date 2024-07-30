@@ -2251,7 +2251,19 @@ void TCanvas::Streamer(TBuffer &b)
                   delete colcur;
                }
                colors->Remove(colold);
-               if (root_colors) root_colors->AddAtAndExpand(colold, cn);
+               if (root_colors) {
+                  if (colcur) {
+                     root_colors->AddAtAndExpand(colold, cn);
+                  }
+                  else {
+                     // Copy to current session
+                     // do not use copy constructor which does not update highest color index
+                     TColor* const colnew = new TColor(cn, colold->GetRed(), colold->GetGreen(), colold->GetBlue(), colold->GetName(), colold->GetAlpha());
+                     delete colold;
+                     // No need to delete colnew, as the constructor adds it to global list of colors
+                     assert(root_colors->At(cn) == colnew);
+                  }
+               }
             }
          }
          //restore the palette if needed
