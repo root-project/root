@@ -2051,7 +2051,7 @@ static void G__defineMacro(const char* name, long value, const char* cintname = 
          --end;
       }
 
-      snprintf(end + 1, G__ONELINE - (end-temp), "=%ld", value);
+      snprintf(end + 1, G__ONELINE - (end+1-temp), "=%ld", value);
       while (cap && end != start) {
          // capitalize the CINT macro name
          *end = (char)toupper(*end);
