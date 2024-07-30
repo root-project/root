@@ -128,6 +128,13 @@ TScatter::~TScatter()
 
 Int_t TScatter::DistancetoPrimitive(Int_t px, Int_t py)
 {
+   // Are we on the axis?
+   Int_t distance;
+   if (this->GetHistogram()) {
+      distance = this->GetHistogram()->DistancetoPrimitive(px,py);
+      if (distance <= 5) return distance;
+   }
+
    TVirtualGraphPainter *painter = TVirtualGraphPainter::GetPainter();
    if (painter)
       return painter->DistancetoPrimitiveHelper(this->GetGraph(), px, py);
