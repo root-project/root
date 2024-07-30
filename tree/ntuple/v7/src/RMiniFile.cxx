@@ -1068,7 +1068,9 @@ static size_t ComputeNumChunks(size_t nbytes, size_t maxChunkSize)
 {
    constexpr size_t kChunkOffsetSize = sizeof(std::uint64_t);
 
+   assert(nbytes > maxChunkSize);
    size_t nChunks = (nbytes + maxChunkSize - 1) / maxChunkSize;
+   assert(nChunks > 1);
    size_t nbytesTail = nbytes % maxChunkSize;
    size_t nbytesExtra = (nbytesTail > 0) * (maxChunkSize - nbytesTail);
    size_t nbytesChunkOffsets = (nChunks - 1) * kChunkOffsetSize;
@@ -1077,7 +1079,6 @@ static size_t ComputeNumChunks(size_t nbytes, size_t maxChunkSize)
       nbytesChunkOffsets += kChunkOffsetSize;
    }
 
-   assert(nChunks > 1);
    // We don't support having more chunkOffsets than what fits in one chunk.
    // For a reasonable-sized maxKeySize it looks very unlikely that we can have more chunks
    // than we can fit in the first `maxKeySize` bytes. E.g. for maxKeySize = 1GiB we can fit
