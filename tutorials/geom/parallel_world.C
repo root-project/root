@@ -21,6 +21,9 @@ void align();
 //______________________________________________________________________________
 void parallel_world(Bool_t usepw=kTRUE, Bool_t useovlp=kTRUE)
 {
+   // web geometry display does not support "parallel world" feature
+   gROOT->SetWebDisplay("off");
+
    TGeoManager *geom = new TGeoManager("parallel_world", "Showcase for prioritized physical paths");
    TGeoMaterial *matV = new TGeoMaterial("Vac", 0,0,0);
    TGeoMedium *medV = new TGeoMedium("MEDVAC",1,matV);
@@ -60,7 +63,7 @@ void parallel_world(Bool_t usepw=kTRUE, Bool_t useovlp=kTRUE)
       top->AddNode(chip, i+1, new TGeoTranslation(0, -225.+50.*i, 10));
 
    gGeoManager->CloseGeometry();
-   TGeoParallelWorld *pw = 0;
+   TGeoParallelWorld *pw = nullptr;
    if (usepw) pw = gGeoManager->CreateParallelWorld("priority_sensors");
 // Align chips
    align();
@@ -85,8 +88,10 @@ void parallel_world(Bool_t usepw=kTRUE, Bool_t useovlp=kTRUE)
    timer.Stop();
    timer.Print();
    TView3D *view = (TView3D*)gPad->GetView();
-   view->SetParallel();
-   view->Side();
+   if (view) {
+      view->SetParallel();
+      view->Side();
+   }
    if (usepw) pw->PrintDetectedOverlaps();
 }
 
