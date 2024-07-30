@@ -167,9 +167,8 @@ protected:
    /// The cloned page source creates a new raw file and reader and opens its own file descriptor to the data.
    std::unique_ptr<RPageSource> CloneImpl() const final;
 
-   // Should be implemented if the default PopulatePage() are used.
-   virtual RPage PopulatePageImpl(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo,
-                                  ClusterSize_t::ValueType idxInCluster) final;
+   RPage PopulatePageImpl(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo,
+                          ClusterSize_t::ValueType idxInCluster) final;
 
 public:
    RPageSourceFile(std::string_view ntupleName, std::string_view path, const RNTupleReadOptions &options);
