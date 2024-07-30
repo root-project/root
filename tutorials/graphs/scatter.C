@@ -11,6 +11,7 @@
 void scatter()
 {
    auto canvas = new TCanvas();
+   canvas->SetRightMargin(0.14);
    gStyle->SetPalette(kBird, 0, 0.6); // define a transparent palette
 
    const int n = 100;
@@ -30,16 +31,6 @@ void scatter()
 
    auto scatter = new TScatter(n, x, y, c, s);
    scatter->SetMarkerStyle(20);
-   scatter->SetTitle("Scatter plot;X;Y");
+   scatter->SetTitle("Scatter plot title;X title;Y title;Z title");
    scatter->Draw("A");
-
-   // The next snippet is only needed if you want to change the colorbar title
-   canvas->Modified();
-   canvas->Update();
-   TPaletteAxis *palette = (TPaletteAxis*)scatter->GetGraph()->GetListOfFunctions()->FindObject("palette");
-   palette->SetX1NDC(0.86);
-   palette->SetX2NDC(0.90);
-   palette->SetTitle("Palette Title");
-   canvas->Modified();
-   canvas->Update();
 }
