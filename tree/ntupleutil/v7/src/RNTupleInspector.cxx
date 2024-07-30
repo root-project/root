@@ -64,6 +64,9 @@ void ROOT::Experimental::RNTupleInspector::CollectColumnInfo()
          }
 
          auto columnRange = clusterDescriptor.GetColumnRange(colId);
+         if (columnRange.fIsSuppressed)
+            continue;
+
          nElems += columnRange.fNElements;
 
          if (fCompressionSettings == -1) {
