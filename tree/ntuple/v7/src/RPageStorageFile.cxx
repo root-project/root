@@ -635,6 +635,7 @@ ROOT::Experimental::Internal::RPageSourceFile::PrepareSingleCluster(
    ROOT::Internal::RRawFile::RIOVec req;
    std::size_t szPayload = 0;
    std::size_t szOverhead = 0;
+   const std::uint64_t maxKeySize = fReader.GetMaxKeySize();
    for (auto &s : onDiskPages) {
       R__ASSERT(s.fSize > 0);
       const std::int64_t readUpTo = req.fOffset + req.fSize;
@@ -642,7 +643,7 @@ ROOT::Experimental::Internal::RPageSourceFile::PrepareSingleCluster(
       const std::uint64_t overhead = std::max(static_cast<std::int64_t>(s.fOffset) - readUpTo, std::int64_t(0));
       const std::uint64_t extent = std::max(static_cast<std::int64_t>(s.fOffset + s.fSize) - readUpTo, std::int64_t(0));
       szPayload += extent;
-      if (overhead <= gapCut) {
+      if (req.fSize + extent < maxKeySize && overhead <= gapCut) {
          szOverhead += overhead;
          s.fBufPos = reinterpret_cast<intptr_t>(req.fBuffer) + s.fOffset - req.fOffset;
          req.fSize += extent;
