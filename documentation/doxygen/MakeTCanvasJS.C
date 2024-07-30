@@ -42,23 +42,13 @@ void MakeTCanvasJS(const char *MacroName, const char *IN, const char *OutDir, bo
    }
    fprintf(fh,"</center>\n");
 
-   fprintf(fh,"<script type=\"text/javascript\">\n");
-   fprintf(fh,"   function load_jsroot_%s() {\n", IN);
-   fprintf(fh,"      return new Promise(resolveFunc => {\n");
-   fprintf(fh,"         if (typeof JSROOT != 'undefined') return resolveFunc(true);\n");
-   fprintf(fh,"         let script = document.createElement('script');\n");
-   fprintf(fh,"         script.src = './js/scripts/JSRoot.core.js';\n");
-   fprintf(fh,"         script.onload = resolveFunc;\n");
-   fprintf(fh,"         document.head.appendChild(script);\n");
-   fprintf(fh,"      });\n");
-   fprintf(fh,"   }\n");
-   fprintf(fh,"   load_jsroot_%s().then(() => {\n", IN);
-   fprintf(fh,"      JSROOT.settings.HandleKeys = false;\n");
+   fprintf(fh,"<script type=\"module\">\n");
+   fprintf(fh,"   import { settings, parse, draw } from './js/modules/main.mjs';\n");
+   fprintf(fh,"   settings.HandleKeys = false;\n");
    for (int i=1; i<=ImageNum; i++) {
-      fprintf(fh,"      let obj%d = JSROOT.parse(%s);\n", i, json_codes[i-1].Data());
-      fprintf(fh,"      JSROOT.draw(\"draw_pict%d_%s\", obj%d, \"\");\n", i,IN,i);
+      fprintf(fh,"   let obj%d = parse(%s);\n", i, json_codes[i-1].Data());
+      fprintf(fh,"   draw('draw_pict%d_%s', obj%d, \"\");\n", i,IN,i);
    }
-   fprintf(fh,"   });\n");
    fprintf(fh,"</script>\n");
 
    fclose(fh);
