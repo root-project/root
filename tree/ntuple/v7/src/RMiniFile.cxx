@@ -22,6 +22,7 @@
 #include <ROOT/RRawFile.hxx>
 #include <ROOT/RNTupleZip.hxx>
 #include <ROOT/RNTupleSerialize.hxx>
+#include <ROOT/RNTupleWriteOptions.hxx>
 
 #include <Byteswap.h>
 #include <TError.h>
@@ -1494,8 +1495,8 @@ ROOT::Experimental::Internal::RNTupleFileWriter::~RNTupleFileWriter() {}
 
 std::unique_ptr<ROOT::Experimental::Internal::RNTupleFileWriter>
 ROOT::Experimental::Internal::RNTupleFileWriter::Recreate(std::string_view ntupleName, std::string_view path,
-                                                          int defaultCompression, EContainerFormat containerFormat,
-                                                          std::uint64_t maxKeySize)
+                                                          EContainerFormat containerFormat,
+                                                          const RNTupleWriteOptions &options)
 {
    std::string fileName(path);
    size_t idxDirSep = fileName.find_last_of("\\/");
@@ -1511,10 +1512,11 @@ ROOT::Experimental::Internal::RNTupleFileWriter::Recreate(std::string_view ntupl
    // RNTupleFileWriter::RFileSimple does its own buffering, turn off additional buffering from C stdio.
    std::setvbuf(fileStream, nullptr, _IONBF, 0);
 
-   auto writer = std::unique_ptr<RNTupleFileWriter>(new RNTupleFileWriter(ntupleName, maxKeySize));
+   auto writer = std::unique_ptr<RNTupleFileWriter>(new RNTupleFileWriter(ntupleName, options.GetMaxKeySize()));
    writer->fFileSimple.fFile = fileStream;
    writer->fFileName = fileName;
 
+   int defaultCompression = options.GetCompression();
    switch (containerFormat) {
    case EContainerFormat::kTFile: writer->WriteTFileSkeleton(defaultCompression); break;
    case EContainerFormat::kBare:
