@@ -233,7 +233,7 @@ FlagConvResult<IntFlag_t> ConvertArg<IntFlag_t>(const char *arg)
       return { *intOpt, EFlagResult::kParsed };
 
    Err() << "error parsing integer argument '" << arg << "'\n";
-   return { {}, EFlagResult::kErr };
+   return { 0, EFlagResult::kErr };
 }
 
 template <>
@@ -529,9 +529,13 @@ int main(int argc, char **argv)
    ROOT::TIOFeatures features = args.fFeatures.value_or(ROOT::TIOFeatures{});
    Int_t maxopenedfiles = args.fMaxOpenedFiles.value_or(0);
    Int_t verbosity = args.fVerbosity.value_or(99);
+   Int_t newcomp = args.fCompressionSettings.value_or(-1);
    TString cacheSize = args.fCacheSize.value_or("");
-   if (args.fCacheSize)
-      std::cerr << "Using " << cacheSize << "\n";
+
+   // For the -j flag (nProcesses), we check if the flag is present and, if so, if it has a
+   // valid value (i.e. any value > 0).
+   // If the flag is present at all, we do multiprocessing. If the value of nProcesses is invalid,
+   // we default to the number of cpus on the machine.
    Bool_t multiproc = args.fNProcesses.has_value();
    int nProcesses;
    if (args.fNProcesses && *args.fNProcesses > 0) {
@@ -543,6 +547,8 @@ int main(int argc, char **argv)
    }
    if (multiproc)
       Info() << "parallelizing  with " << nProcesses << " processes.\n";
+
+   // If the user specified a workingDir, use that. Otherwise, default to the system temp dir.
    std::string workingDir;
    if (!args.fWorkingDir) {
       workingDir = gSystem->TempDirectory();
@@ -552,7 +558,6 @@ int main(int argc, char **argv)
    } else {
       workingDir = *args.fWorkingDir;
    }
-   Int_t newcomp = args.fCompressionSettings.value_or(-1);
 
    gSystem->Load("libTreePlayer");
 
@@ -567,9 +572,11 @@ int main(int argc, char **argv)
    }
    targetname = argv[args.fOutputArgIdx];
 
-   if (verbosity > 1) {
-      Info() << "target file: " << targetname << std::endl;
-   }
+   if (verbosity > 1)
+      Info() << "target file: " << targetname << "\n";
+
+   if (args.fCacheSize)
+      Info() << "Using " << cacheSize << "\n";
 
    TFileMerger fileMerger(kFALSE, kFALSE);
    fileMerger.SetMsgPrefix("hadd");
