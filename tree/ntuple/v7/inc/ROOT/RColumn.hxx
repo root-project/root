@@ -75,11 +75,11 @@ private:
    NTupleSize_t fFirstElementIndex = 0;
    /// Used to pack and unpack pages on writing/reading
    std::unique_ptr<RColumnElementBase> fElement;
-   /// The column team is a set of columns that serve the same column index for different representation IDs
-   /// Initially, the team has only one member, the very column it belongs to. Through MergeTeams(), two column
+   /// The column team is a set of columns that serve the same column index for different representation IDs.
+   /// Initially, the team has only one member, the very column it belongs to. Through MergeTeams(), two columns
    /// can join forces. The team is used to react on suppressed columns: if the current team member has a suppressed
    /// column for a MapPage() call, it get the page from the active column in the corresponding cluster.
-   std::shared_ptr<std::vector<RColumn *>> fTeam;
+   std::vector<RColumn *> fTeam;
    /// Points into fTeam to the column that successfully returned the last page.
    std::size_t fLastGoodTeamIdx = 0;
 
@@ -116,8 +116,6 @@ private:
       // fNElements in SwapWritePagesIfFull() when the pages swap
       fWritePage[otherIdx].Reset(0);
    }
-
-   void TeamUp(const RColumn &other) { fTeam = other.fTeam; }
 
 public:
    template <typename CppT>
