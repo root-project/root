@@ -772,7 +772,7 @@ TEST(RNTupleInspector, MultiColumnRepresentations)
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       writer->Fill();
       writer->CommitCluster();
-      ROOT::Experimental::Internal::RFieldRepresentationModifier::SwapPrimayColumnRepresentation(
+      ROOT::Experimental::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
          const_cast<RFieldBase &>(writer->GetModel().GetField("px")), 1);
       writer->Fill();
    }
