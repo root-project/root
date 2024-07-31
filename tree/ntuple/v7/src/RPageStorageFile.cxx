@@ -255,8 +255,7 @@ void ROOT::Experimental::Internal::RPageSinkFile::CommitDatasetImpl(unsigned cha
 ROOT::Experimental::Internal::RPage
 ROOT::Experimental::Internal::RPageSinkFile::ReservePage(ColumnHandle_t columnHandle, std::size_t nElements)
 {
-   if (nElements == 0)
-      throw RException(R__FAIL("invalid call: request empty page"));
+   R__ASSERT(nElements > 0);
    auto elementSize = columnHandle.fColumn->GetElement()->GetSize();
    return fPageAllocator->NewPage(columnHandle.fPhysicalId, elementSize, nElements);
 }

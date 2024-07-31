@@ -320,8 +320,8 @@ public:
    /// Run the registered callbacks and finalize the current cluster and the entrire data set.
    void CommitDataset();
 
-   /// Get a new, empty page for the given column that can be filled with up to nElements.  If nElements is zero,
-   /// the page sink picks an appropriate size.
+   /// Get a new, empty page for the given column that can be filled with up to nElements;
+   /// nElements must be larger than zero.
    virtual RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) = 0;
 
    /// An RAII wrapper used to synchronize a page sink. See GetSinkGuard().
