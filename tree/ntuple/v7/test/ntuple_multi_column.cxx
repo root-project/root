@@ -231,6 +231,57 @@ TEST(RNTuple, MultiColumnRepresentationVector)
    EXPECT_FLOAT_EQ(3.0, ptrVec->at(1));
 }
 
+TEST(RNTuple, MultiColumnRepresentationMany)
+{
+   using ROOT::Experimental::kUnknownCompressionSettings;
+   FileRaii fileGuard("test_ntuple_multi_column_representation_many.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto fldVec = RFieldBase::Create("vec", "std::vector<float>").Unwrap();
+      fldVec->SetColumnRepresentatives({{EColumnType::kIndex32},
+                                        {EColumnType::kSplitIndex64},
+                                        {EColumnType::kIndex64},
+                                        {EColumnType::kSplitIndex32}});
+      model->AddField(std::move(fldVec));
+      auto ptrVec = model->GetDefaultEntry().GetPtr<std::vector<float>>("vec");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      ptrVec->push_back(1.0);
+      writer->Fill();
+      writer->CommitCluster();
+      ROOT::Experimental::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
+         const_cast<RFieldBase &>(writer->GetModel().GetField("vec")), 1);
+      (*ptrVec)[0] = 2.0;
+      writer->Fill();
+      writer->CommitCluster();
+      ROOT::Experimental::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
+         const_cast<RFieldBase &>(writer->GetModel().GetField("vec")), 2);
+      (*ptrVec)[0] = 3.0;
+      writer->Fill();
+      writer->CommitCluster();
+      ROOT::Experimental::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
+         const_cast<RFieldBase &>(writer->GetModel().GetField("vec")), 3);
+      (*ptrVec)[0] = 4.0;
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   EXPECT_EQ(4u, reader->GetNEntries());
+   auto ptrVec = reader->GetModel().GetDefaultEntry().GetPtr<std::vector<float>>("vec");
+   reader->LoadEntry(0);
+   EXPECT_EQ(1u, ptrVec->size());
+   EXPECT_FLOAT_EQ(1.0, ptrVec->at(0));
+   reader->LoadEntry(1);
+   EXPECT_EQ(1u, ptrVec->size());
+   EXPECT_FLOAT_EQ(2.0, ptrVec->at(0));
+   reader->LoadEntry(2);
+   EXPECT_EQ(1u, ptrVec->size());
+   EXPECT_FLOAT_EQ(3.0, ptrVec->at(0));
+   reader->LoadEntry(3);
+   EXPECT_EQ(1u, ptrVec->size());
+   EXPECT_FLOAT_EQ(4.0, ptrVec->at(0));
+}
+
 TEST(RNTuple, MultiColumnRepresentationNullable)
 {
    FileRaii fileGuard("test_ntuple_multi_column_representation_nullable.root");
