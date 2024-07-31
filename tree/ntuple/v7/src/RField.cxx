@@ -1027,6 +1027,7 @@ void ROOT::Experimental::RFieldBase::SetColumnRepresentatives(
       throw RException(R__FAIL("cannot set column representative once field is connected"));
    const auto &validTypes = GetColumnRepresentations().GetSerializationTypes();
    fColumnRepresentatives.clear();
+   fColumnRepresentatives.reserve(representatives.size());
    for (const auto &r : representatives) {
       auto itRepresentative = std::find(validTypes.begin(), validTypes.end(), r);
       if (itRepresentative == std::end(validTypes))
