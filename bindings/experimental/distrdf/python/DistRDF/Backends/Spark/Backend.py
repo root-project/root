@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import ntpath  # Filename from path (should be platform-independent)
 import warnings
+from typing import Any, Dict, List, Optional, Callable, TYPE_CHECKING, Union, Tuple
 
 from DistRDF import DataFrame
 from DistRDF import HeadNode
@@ -77,7 +78,16 @@ class SparkBackend(Base.BaseBackend):
         """
         return self.sc.defaultParallelism
 
-    def ProcessAndMerge(self, ranges, mapper, reducer):
+    def ProcessAndMerge(self,
+                        ranges: List[Any],
+                        mapper: Callable[[Ranges.DataRange,
+                                        Callable[[Union[Ranges.EmptySourceRange, Ranges.TreeRangePerc]],
+                                                    Base.TaskObjects],
+                                        Callable[[ROOT.RDF.RNode, int], List],
+                                        Callable],
+                                        Base.TaskResult],
+                        reducer: Callable[[Base.TaskResult, Base.TaskResult], Base.TaskResult],
+                        ) -> Base.TaskResult:
         """
         Performs map-reduce using Spark framework.
 
@@ -94,12 +104,14 @@ class SparkBackend(Base.BaseBackend):
         """
 
         # These need to be passed as variables and not as class attributes
-        # otherwise the `spark_mapper` function would be referencing this
+        # otherwise the `spark_mapper` function would be referencing
         # this instance of the Spark backend along with the referenced
         # SparkContext. This would cause the errors described in SPARK-5063.
         headers = self.headers
         shared_libraries = self.shared_libraries
-
+        pcms = self.pcms
+        files = self.files
+        
         def spark_mapper(current_range):
             """
             Gets the paths to the file(s) in the current executor, then
@@ -118,16 +130,21 @@ class SparkBackend(Base.BaseBackend):
                 pyspark.SparkFiles.get(ntpath.basename(filepath))
                 for filepath in headers
             ]
-            Utils.declare_headers(headers_on_executor)
+            Utils.distribute_headers(headers_on_executor)
 
             # Get and declare shared libraries on each worker
             shared_libs_on_ex = [
                 pyspark.SparkFiles.get(ntpath.basename(filepath))
                 for filepath in shared_libraries
             ]
-            Utils.declare_shared_libraries(shared_libs_on_ex)
+            Utils.distribute_shared_libraries(shared_libs_on_ex)
 
             return mapper(current_range)
+        
+        self.distribute_unique_paths(headers)
+        self.distribute_unique_paths(shared_libraries)
+        self.distribute_unique_paths(pcms)
+        self.distribute_unique_paths(files)
 
         # Build parallel collection
         parallel_collection = self.sc.parallelize(ranges, len(ranges))

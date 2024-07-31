@@ -721,8 +721,7 @@ parts of the RDataFrame API currently work with this package. The subset that is
 - Parallel submission of distributed graphs: [RunGraphs](\ref ROOT::RDF::RunGraphs).
 - Information about the dataframe: GetColumnNames.
 
-with support for more operations coming in the future. Data sources other than TTree and TChain (e.g. CSV, RNTuple) are
-currently not supported.
+with support for more operations coming in the future. Currently, to the supported data sources belong TTree, TChain, RNTuple and RDatasetSpec.
 
 \note The distributed RDataFrame module requires at least Python version 3.8.
 
@@ -931,6 +930,63 @@ LiveVisualize(plot_callback_dict, write_to_tfile)
       - Profile1D(), Profile2D()
 
 \warning The Live Visualization feature is only supported for the Dask backend.
+
+### Injecting C++ code and using external files into distributed RDF script
+
+Distributed RDF provides an interface for the users who want to inject the C++ code (via header files, shared libraries or declare the code directly)
+into their distributed RDF application, or their application needs to use information from external files which should be distributed 
+to the workers (for example, a JSON or a txt file with necessary parameters information). 
+
+The examples below show the usage of these interface functions: firstly, how this is done in a local Python 
+RDF application and secondly, how it is done distributedly.
+
+#### Include and distribute header files.
+
+~~~{.py}
+# Local RDataFrame script
+ROOT.gInterpreter.AddIncludePath("myheader.hxx")
+df.Define(...)
+
+# Distributed RDF script
+ROOT.RDF.Experimental.Distributed.DistributeHeaders("myheader.hxx")
+df.Define(...)
+~~~
+
+#### Load and distribute shared libraries 
+
+~~~{.py}
+# Local RDataFrame script
+ROOT.gSystem.Load("my_library.so")
+df.Define(...)
+
+# Distributed RDF script
+ROOT.RDF.Experimental.Distributed.DistributeSharedLibs("my_library.so")
+df.Define(...)
+~~~
+
+#### Declare and distribute the cpp code
+
+The cpp code is always available to all dataframes. 
+
+~~~{.py}
+# Local RDataFrame script
+ROOT.gInterpreter.Declare("my_code")
+df.Define(...)
+
+# Distributed RDF script
+ROOT.RDF.Experimental.Distributed.DistributeCppCode("my_code")
+df.Define(...)
+~~~
+
+#### Distribute additional files (other than headers or shared libraries). 
+
+~~~{.py}
+# Local RDataFrame script is not applicable here as local RDF application can simply access the external files it needs. 
+
+# Distributed RDF script
+ROOT.RDF.Experimental.Distributed.DistributeFiles("my_file")
+df.Define(...)
+~~~
 
 \anchor parallel-execution
 ## Performance tips and parallel execution
