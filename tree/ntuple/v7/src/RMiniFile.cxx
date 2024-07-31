@@ -1373,7 +1373,9 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::RFileSimple::Flush()
          throw RException(R__FAIL(std::string("write failed: ") + strerror(errno)));
    }
 
-   fflush(fFile);
+   retval = fflush(fFile);
+   if (retval)
+      throw RException(R__FAIL(std::string("Flush failed: ") + strerror(errno)));
 }
 
 void ROOT::Experimental::Internal::RNTupleFileWriter::RFileSimple::Write(const void *buffer, size_t nbytes,
