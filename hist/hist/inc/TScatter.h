@@ -59,6 +59,7 @@ public:
    TH2F     *GetHistogram() const;                             ///< Get the graph histogram used for drawing axis
    TAxis    *GetXaxis() const ;
    TAxis    *GetYaxis() const ;
+   TAxis    *GetZaxis() const ;
 
    void      SetMaxMarkerSize(Double_t max) {fMaxMarkerSize = max;} ///< Set the largest marker size used to paint the markers
    void      SetMinMarkerSize(Double_t min) {fMinMarkerSize = min;} ///< Set the smallest marker size used to paint the markers

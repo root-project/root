@@ -208,6 +208,16 @@ TAxis *TScatter::GetYaxis() const
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Get the scatter's z axis.
+
+TAxis *TScatter::GetZaxis() const
+{
+   auto h = GetHistogram();
+   return h ? h->GetZaxis() : nullptr;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Paint this scatter plot with its current attributes.
 
 void TScatter::Paint(Option_t *option)
