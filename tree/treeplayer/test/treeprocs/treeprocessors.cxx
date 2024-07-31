@@ -1,3 +1,16 @@
+#include <TFile.h>
+#include <TParameter.h>
+#include <TTree.h>
+#include <TSystem.h>
+#include <TTreeReader.h>
+#include <TTreeReaderValue.h>
+#ifndef MSVC
+#include <ROOT/TTreeProcessorMP.hxx>
+#endif
+#include <ROOT/TTreeProcessorMT.hxx>
+
+#include "gtest/gtest.h"
+
 #include <algorithm>
 #include <atomic>
 #include <chrono>
@@ -6,16 +19,7 @@
 #include <thread>
 #include <utility>
 
-#include <TFile.h>
-#include <TTree.h>
-#include <TSystem.h>
-#include <TTreeReader.h>
-#include <TTreeReaderValue.h>
-#include <ROOT/TTreeProcessorMT.hxx>
-
-#include "gtest/gtest.h"
-
-void WriteFiles(const std::vector<std::string> &treenames, const std::vector<std::string> &filenames)
+void WriteFiles(const std::vector<std::string> &treenames, const std::vector<std::string> &filenames, int nEvts = 10)
 {
    int v = 0;
    const auto nFiles = filenames.size();
@@ -27,7 +31,7 @@ void WriteFiles(const std::vector<std::string> &treenames, const std::vector<std
       TFile file(fname.c_str(), "recreate");
       TTree t(treename.c_str(), treename.c_str());
       t.Branch("v", &v);
-      for (auto e = 0; e < 10; ++e) {
+      for (auto e = 0; e < nEvts; ++e) {
          ++v;
          t.Fill();
       }
@@ -55,6 +59,70 @@ void DeleteFiles(const std::vector<std::string> &filenames)
    for (const auto &f : filenames)
       gSystem->Unlink(f.c_str());
 }
+
+class FilesRAII {
+   std::vector<std::string> fFileNames;
+
+public:
+   FilesRAII(const std::vector<std::string> &treenames, const std::vector<std::string> &filenames, int nEvts = 10)
+      : fFileNames(filenames)
+   {
+      WriteFiles(treenames, filenames, nEvts);
+   }
+   ~FilesRAII() { DeleteFiles(fFileNames); }
+};
+
+#ifndef MSVC
+
+class TestSelector : public TSelector {
+public:
+   TParameter<int> fParameter;
+
+   virtual void SlaveBegin(TTree *) {}
+   virtual bool Process(Long64_t)
+   {
+      auto newVal = fParameter.GetVal() + 1;
+      fParameter.SetVal(newVal);
+      return true;
+   }
+   virtual void SlaveTerminate() { GetOutputList()->Add(fParameter.Clone()); }
+};
+
+// See issue #15425
+TEST(TreeProcessorMP, moreWorkersThanEvents)
+{
+   auto func = [](TTreeReader &r) {
+      int n = 0;
+      while (r.Next())
+         n++;
+      auto par = new TParameter<int>("n", n);
+      return par;
+   };
+
+   std::vector<std::string> files = {"f_moreWorkersThanEvents.root"};
+   std::vector<std::string> trees = {"t"};
+
+   FilesRAII fr(trees, files, 2);
+
+   // Test function
+   {
+      ROOT::TTreeProcessorMP proc(3);
+      auto res = proc.Process(files, func);
+
+      EXPECT_EQ(2, res->GetVal()) << "The counter incremented in the worker processes has the wrong value.";
+
+      delete res;
+   }
+   // Test selector
+   {
+      ROOT::TTreeProcessorMP pool(3);
+      TestSelector sel;
+      auto resl = pool.Process(files[0], sel);
+      auto tparami = (TParameter<int> *)resl->At(0);
+      EXPECT_EQ(2, tparami->GetVal()) << "The counter incremented in the worker processes has the wrong value.";
+   }
+}
+#endif // MSVC
 
 TEST(TreeProcessorMT, EmptyTChain)
 {
