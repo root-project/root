@@ -11,9 +11,11 @@ if(NOT MSVC OR win_broken_tests)
 endif()
 
 if(imt)
-   ROOT_ADD_GTEST(treeprocessormt treeprocmt/treeprocessormt.cxx LIBRARIES TreePlayer)
+   if (NOT MSVC)
+      ROOT_ADD_GTEST(treeprocessors treeprocs/treeprocessors.cxx LIBRARIES TreePlayer)
+   endif()
    if(xrootd)
-      ROOT_ADD_GTEST(treeprocessormt_remotefiles treeprocmt/treeprocessormt_remotefiles.cxx LIBRARIES TreePlayer)
+      ROOT_ADD_GTEST(treeprocessormt_remotefiles treeprocs/treeprocessormt_remotefiles.cxx LIBRARIES TreePlayer)
    endif()
 endif()
 
