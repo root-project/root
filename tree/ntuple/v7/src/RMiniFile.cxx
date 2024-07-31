@@ -1305,17 +1305,24 @@ ROOT::Experimental::Internal::RNTupleFileWriter::RFileSimple::~RFileSimple()
       fclose(fFile);
 }
 
+namespace {
+int FSeek64(FILE *stream, std::int64_t offset, int origin)
+{
+#ifdef R__SEEK64
+   return fseeko64(stream, offset, origin);
+#else
+   return fseek(stream, offset, origin);
+#endif
+}
+} // namespace
+
 void ROOT::Experimental::Internal::RNTupleFileWriter::RFileSimple::Write(const void *buffer, size_t nbytes,
                                                                          std::int64_t offset)
 {
    R__ASSERT(fFile);
    size_t retval;
    if ((offset >= 0) && (static_cast<std::uint64_t>(offset) != fFilePos)) {
-#ifdef R__SEEK64
-      retval = fseeko64(fFile, offset, SEEK_SET);
-#else
-      retval = fseek(fFile, offset, SEEK_SET);
-#endif
+      retval = FSeek64(fFile, offset, SEEK_SET);
       if (retval)
          throw RException(R__FAIL(std::string("Seek failed: ") + strerror(errno)));
       fFilePos = offset;
