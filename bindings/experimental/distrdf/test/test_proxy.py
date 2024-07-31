@@ -197,10 +197,6 @@ class GetValueTests(unittest.TestCase):
             """
             self.obtained_head_node = generator.head_node
 
-        def distribute_files(self, includes_list):
-            """do nothing"""
-            pass
-
         def make_dataframe(self, *args, **kwargs):
             """Dummy make_dataframe"""
             pass

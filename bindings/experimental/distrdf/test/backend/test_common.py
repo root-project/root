@@ -32,17 +32,17 @@ class BackendInitTest(unittest.TestCase):
 
 
 class DeclareHeadersTest(unittest.TestCase):
-    """Static method 'declare_headers' in Backend class."""
+    """Static method 'distribute_headers' in Backend class."""
 
     def test_single_header_declare(self):
-        """'declare_headers' with a single header to be included."""
-        Utils.declare_headers(["test_headers/header1.hxx"])
+        """'distribute_headers' with a single header to be included."""
+        Utils.distribute_headers(["test_headers/header1.hxx"])
 
         self.assertEqual(ROOT.f(1), True)
 
     def test_multiple_headers_declare(self):
-        """'declare_headers' with multiple headers to be included."""
-        Utils.declare_headers(["test_headers/header2.hxx",
+        """'distribute_headers' with multiple headers to be included."""
+        Utils.distribute_headers(["test_headers/header2.hxx",
                                "test_headers/header3.hxx"])
 
         self.assertEqual(ROOT.a(1), True)
@@ -55,7 +55,7 @@ class DeclareHeadersTest(unittest.TestCase):
         # ROOT interpreter
         with self.assertRaises(AttributeError):
             self.assertRaises(ROOT.b(1))
-        Utils.declare_headers(["test_headers/header4.hxx"])
+        Utils.distribute_headers(["test_headers/header4.hxx"])
         self.assertEqual(ROOT.b(1), True)
 
 
