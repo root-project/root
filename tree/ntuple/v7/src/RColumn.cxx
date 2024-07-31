@@ -19,15 +19,13 @@
 
 #include <TError.h>
 
+#include <algorithm>
 #include <cassert>
 #include <utility>
 
 ROOT::Experimental::Internal::RColumn::RColumn(EColumnType type, std::uint32_t columnIndex,
                                                std::uint16_t representationIndex)
-   : fType(type),
-     fIndex(columnIndex),
-     fRepresentationIndex(representationIndex),
-     fTeam(std::make_shared<std::vector<RColumn *>>(std::vector<RColumn *>{this}))
+   : fType(type), fIndex(columnIndex), fRepresentationIndex(representationIndex), fTeam({this})
 {
    // TODO(jblomer): fix for column types with configurable bit length once available
    const auto [minBits, maxBits] = RColumnElementBase::GetValidBitRange(type);
@@ -115,10 +113,10 @@ bool ROOT::Experimental::Internal::RColumn::TryMapPage(NTupleSize_t globalIndex)
    // the page population fails.
    fReadPage = RPage();
 
-   const auto nTeam = fTeam->size();
+   const auto nTeam = fTeam.size();
    std::size_t iTeam = 1;
    do {
-      fReadPage = fPageSource->PopulatePage(fTeam->at(fLastGoodTeamIdx)->GetHandleSource(), globalIndex);
+      fReadPage = fPageSource->PopulatePage(fTeam.at(fLastGoodTeamIdx)->GetHandleSource(), globalIndex);
       if (fReadPage.IsValid())
          break;
       fLastGoodTeamIdx = (fLastGoodTeamIdx + 1) % nTeam;
@@ -135,10 +133,10 @@ bool ROOT::Experimental::Internal::RColumn::TryMapPage(RClusterIndex clusterInde
    // the page population fails.
    fReadPage = RPage();
 
-   const auto nTeam = fTeam->size();
+   const auto nTeam = fTeam.size();
    std::size_t iTeam = 1;
    do {
-      fReadPage = fPageSource->PopulatePage(fTeam->at(fLastGoodTeamIdx)->GetHandleSource(), clusterIndex);
+      fReadPage = fPageSource->PopulatePage(fTeam.at(fLastGoodTeamIdx)->GetHandleSource(), clusterIndex);
       if (fReadPage.IsValid())
          break;
       fLastGoodTeamIdx = (fLastGoodTeamIdx + 1) % nTeam;
@@ -150,6 +148,15 @@ bool ROOT::Experimental::Internal::RColumn::TryMapPage(RClusterIndex clusterInde
 
 void ROOT::Experimental::Internal::RColumn::MergeTeams(RColumn &other)
 {
-   fTeam->emplace_back(&other);
-   other.TeamUp(*this);
+   // We are working on very small vectors here, so quadratic complexity works
+   for (auto *c : other.fTeam) {
+      if (std::find(fTeam.begin(), fTeam.end(), c) == fTeam.end())
+         fTeam.emplace_back(c);
+   }
+
+   for (auto c : fTeam) {
+      if (c == this)
+         continue;
+      c->fTeam = fTeam;
+   }
 }
