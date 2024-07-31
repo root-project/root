@@ -191,8 +191,8 @@ bool compareSVGFiles(const std::string& filePath1, const std::string& filePath2)
         content2 = preprocessSVGContent(content2);
 
          // Compare the created SVG to the reference SVG
-        std::cerr << "Length of produced SVG after adjustments: " << content1.length() << std::endl;
-        std::cerr << "Length of reference SVG after adjustments: " << content2.length() << std::endl;
+        std::cerr << "Length of produced SVG after adjustments: " << content2.length() << std::endl;
+        std::cerr << "Length of reference SVG after adjustments: " << content1.length() << std::endl;
 
         const auto areEqual = content1 == content2;
         if (!areEqual) printSideBySide(content1, content2);
@@ -260,8 +260,8 @@ bool comparePDFFiles(const std::string& filePath1, const std::string& filePath2)
         content2 = preprocessPDFContent(content2);
 
          // Compare the created JSON to the reference JSON
-        std::cerr << "Length of produced PDF after adjustments: " << content1.length() << std::endl;
-        std::cerr << "Length of reference PDF after adjustments: " << content2.length() << std::endl;
+        std::cerr << "Length of produced PDF after adjustments: " << content2.length() << std::endl;
+        std::cerr << "Length of reference PDF after adjustments: " << content1.length() << std::endl;
 
         const auto areEqual = content1 == content2;
 
