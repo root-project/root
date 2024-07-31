@@ -402,13 +402,19 @@ protected:
    std::vector<std::unique_ptr<RFieldBase>> fSubFields;
    /// Sub fields point to their mother field
    RFieldBase* fParent;
-   /// Points to the first element of fColumns. All fields that have columns have a distinct main column.
-   /// For simple fields (float, int, ...), the principal column corresponds to the field type. For collection fields
-   /// except std::array, the main column is the offset field.  Class fields have no column of their own.
-   Internal::RColumn *fPrincipalColumn;
+   /// All fields that have columns have a distinct main column. E.g., for simple fields (float, int, ...), the
+   /// principal column corresponds to the field type. For collection fields except fixed-sized arrays,
+   /// the main column is the offset field.  Class fields have no column of their own.
+   /// When reading, points to any column of the column team of the active representation. Usually, this is just
+   /// the first column, except for the nullable field.
+   /// When writing, points to the first column index of the currently active (not suppressed) column representation.
+   Internal::RColumn *fPrincipalColumn = nullptr;
+   /// Some fields have a second column in its column representation. In this case, fAuxiliaryColumn points into
+   /// fAvailableColumns to the column that immediately follows the column fPrincipalColumn points to.
+   Internal::RColumn *fAuxiliaryColumn = nullptr;
    /// The columns are connected either to a sink or to a source (not to both); they are owned by the field.
    /// Contains all columns of all representations in order of representation and column index.
-   std::vector<std::unique_ptr<Internal::RColumn>> fColumns;
+   std::vector<std::unique_ptr<Internal::RColumn>> fAvailableColumns;
    /// Properties of the type that allow for optimizations of collections of that type
    int fTraits = 0;
    /// A typedef or using name that was used when creating the field
@@ -432,8 +438,19 @@ protected:
    void GenerateColumnsImpl(const ColumnRepresentation_t &representation, std::uint16_t representationIndex)
    {
       assert(ColumnIndexT < representation.size());
-      fColumns.emplace_back(
+      fAvailableColumns.emplace_back(
          Internal::RColumn::Create<HeadT>(representation[ColumnIndexT], ColumnIndexT, representationIndex));
+
+      // Initially, the first two columns become the active column representation
+      if (representationIndex == 0 && !fPrincipalColumn) {
+         fPrincipalColumn = fAvailableColumns.back().get();
+      } else if (representationIndex == 0 && !fAuxiliaryColumn) {
+         fAuxiliaryColumn = fAvailableColumns.back().get();
+      } else {
+         // We currently have no fields with more than 2 columns in its column representation
+         R__ASSERT(representationIndex > 0);
+      }
+
       if constexpr (sizeof...(TailTs))
          GenerateColumnsImpl<ColumnIndexT + 1, TailTs...>(representation, representationIndex);
    }
@@ -443,11 +460,11 @@ protected:
    void GenerateColumnsImpl()
    {
       if (fColumnRepresentatives.empty()) {
-         fColumns.reserve(sizeof...(ColumnCppTs));
+         fAvailableColumns.reserve(sizeof...(ColumnCppTs));
          GenerateColumnsImpl<0, ColumnCppTs...>(GetColumnRepresentations().GetSerializationDefault(), 0);
       } else {
          const auto N = fColumnRepresentatives.size();
-         fColumns.reserve(N * sizeof...(ColumnCppTs));
+         fAvailableColumns.reserve(N * sizeof...(ColumnCppTs));
          for (unsigned i = 0; i < N; ++i) {
             GenerateColumnsImpl<0, ColumnCppTs...>(fColumnRepresentatives[i].get(), i);
          }
@@ -467,7 +484,8 @@ protected:
          fColumnRepresentatives.emplace_back(onDiskTypes);
          if (representationIndex > 0) {
             for (std::size_t i = 0; i < sizeof...(ColumnCppTs); ++i) {
-               fColumns[i]->MergeTeams(*fColumns[representationIndex * sizeof...(ColumnCppTs) + i].get());
+               fAvailableColumns[i]->MergeTeams(
+                  *fAvailableColumns[representationIndex * sizeof...(ColumnCppTs) + i].get());
             }
          }
          representationIndex++;
@@ -798,16 +816,17 @@ namespace Internal {
 // At some point, RFieldBase::OnClusterCommit() may allow for a user-defined callback to change the
 // column representation. For now, we inject this for testing and internal use only.
 struct RFieldRepresentationModifier {
-   static void SwapPrimayColumnRepresentation(RFieldBase &field, std::uint16_t newRepresentationIdx)
+   static void SetPrimaryColumnRepresentation(RFieldBase &field, std::uint16_t newRepresentationIdx)
    {
-      R__ASSERT(newRepresentationIdx != 0);
       R__ASSERT(newRepresentationIdx < field.fColumnRepresentatives.size());
       const auto N = field.fColumnRepresentatives[0].get().size();
-      std::swap(field.fColumnRepresentatives[0], field.fColumnRepresentatives[newRepresentationIdx]);
-      for (std::size_t i = 0; i < N; ++i) {
-         std::swap(field.fColumns[i], field.fColumns[i + newRepresentationIdx * N]);
+      R__ASSERT(N >= 1 && N <= 2);
+      R__ASSERT(field.fPrincipalColumn);
+      field.fPrincipalColumn = field.fAvailableColumns[newRepresentationIdx * N].get();
+      if (field.fAuxiliaryColumn) {
+         R__ASSERT(N == 2);
+         field.fAuxiliaryColumn = field.fAvailableColumns[newRepresentationIdx * N + 1].get();
       }
-      field.fPrincipalColumn = field.fColumns[0].get();
    }
 };
 } // namespace Internal
@@ -2697,8 +2716,8 @@ protected:
          nbytes += CallAppendOn(*fSubFields[0], &typedValue->data()[i]);
       }
       this->fNWritten += count;
-      fColumns[0]->Append(&this->fNWritten);
-      return nbytes + fColumns[0]->GetElement()->GetPackedSize();
+      fPrincipalColumn->Append(&this->fNWritten);
+      return nbytes + fPrincipalColumn->GetElement()->GetPackedSize();
    }
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final
    {
