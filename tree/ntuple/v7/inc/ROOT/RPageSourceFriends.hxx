@@ -76,6 +76,10 @@ private:
    Detail::RNTupleMetrics fMetrics;
    std::vector<std::unique_ptr<RPageSource>> fSources;
    RIdBiMap fIdBiMap;
+   /// TODO(jblomer): Not only the columns, but actually all the different objects of the descriptor would need
+   /// their own maps to avoid descriptor ID clashes. The need for the distinct column map was triggered by adding
+   /// support for multi-column representations. A follow-up patch should either fix the friend page source properly
+   /// or remove it in favor of the RNTupleProcessor.
    RIdBiMap fColumnMap;
 
    RNTupleDescriptorBuilder fBuilder;
