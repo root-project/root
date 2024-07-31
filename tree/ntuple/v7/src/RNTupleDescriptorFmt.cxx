@@ -54,11 +54,9 @@ struct ColumnInfo {
    bool operator<(const ColumnInfo &other) const
    {
       if (fFieldName == other.fFieldName) {
-         if (fRepresentationIndex < other.fRepresentationIndex)
-            return true;
-         else if (fRepresentationIndex > other.fRepresentationIndex)
-            return false;
-         return fColumnIndex < other.fColumnIndex;
+         if (fRepresentationIndex == other.fRepresentationIndex)
+            return fColumnIndex < other.fColumnIndex;
+         return fRepresentationIndex < other.fRepresentationIndex;
       }
       return fFieldName < other.fFieldName;
    }
