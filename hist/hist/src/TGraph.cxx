@@ -613,6 +613,23 @@ Double_t** TGraph::AllocateArrays(Int_t Narrays, Int_t arraySize)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Performs the operation: `y = y + c1*f(x,y)`
+/// Errors are not recalculated.
+///
+/// \param f may be a 1-D function TF1 or 2-d function TF2
+/// \param c1 a scaling factor, 1 by default
+
+void TGraph::Add(TF1 *f, Double_t c1)
+{
+   if (fHistogram) SetBit(kResetHisto);
+
+   for (Int_t i = 0; i < fNpoints; i++) {
+      fY[i] += c1*f->Eval(fX[i], fY[i]);
+   }
+   if (gPad) gPad->Modified();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Apply function f to all the data points
 /// f may be a 1-D function TF1 or 2-d function TF2
 /// The Y values of the graph are replaced by the new values computed
@@ -2094,14 +2111,14 @@ void TGraph::SaveAs(const char *filename, Option_t *option) const
       }
       if (InheritsFrom(TGraphErrors::Class()) ) {
          if(opt.Contains("title"))
-         out << "# " << GetXaxis()->GetTitle() << del << "ex" << del << GetYaxis()->GetTitle() << del << "ey" << std::endl;
+         out << "# " << GetXaxis()->GetTitle() << "\tex\t" << GetYaxis()->GetTitle() << "\tey" << std::endl;
          double *ex = this->GetEX();
          double *ey = this->GetEY();
          for(int i=0 ; i<fNpoints ; i++)
          out << fX[i] << del << (ex?ex[i]:0) << del << fY[i] << del << (ey?ey[i]:0) << std::endl;
       } else if (InheritsFrom(TGraphAsymmErrors::Class()) || InheritsFrom(TGraphBentErrors::Class())) {
          if(opt.Contains("title"))
-         out << "# " << GetXaxis()->GetTitle() << del << "exl" << del << "exh" << del << GetYaxis()->GetTitle() << del << "eyl" << del << "eyh" << std::endl;
+         out << "# " << GetXaxis()->GetTitle() << "\texl\t" << "\texh\t" << GetYaxis()->GetTitle() << "\teyl" << "\teyh" << std::endl;
          double *exl = this->GetEXlow();
          double *exh = this->GetEXhigh();
          double *eyl = this->GetEYlow();
@@ -2110,7 +2127,7 @@ void TGraph::SaveAs(const char *filename, Option_t *option) const
          out << fX[i] << del << (exl?exl[i]:0) << del << (exh?exh[i]:0) << del << fY[i] << del << (eyl?eyl[i]:0) << del << (eyh?eyh[i]:0) << std::endl;
       } else {
          if(opt.Contains("title"))
-         out << "# " << GetXaxis()->GetTitle() << del << GetYaxis()->GetTitle() << std::endl;
+         out << "# " << GetXaxis()->GetTitle() << "\t" << GetYaxis()->GetTitle() << std::endl;
          for (int i=0 ; i<fNpoints ; i++)
          out << fX[i] << del << fY[i] << std::endl;
       }

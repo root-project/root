@@ -96,6 +96,7 @@ public:
    ~TGraph() override;
 
    virtual void          AddPoint(Double_t x, Double_t y) { SetPoint(fNpoints, x, y); } ///< Append a new point to the graph.
+   virtual void          Add(TF1 *f, Double_t c1=1);
    virtual void          Apply(TF1 *f);
    void                  Browse(TBrowser *b) override;
    virtual Double_t      Chisquare(TF1 *f1, Option_t *option="") const;
