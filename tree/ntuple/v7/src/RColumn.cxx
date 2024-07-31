@@ -121,7 +121,8 @@ bool ROOT::Experimental::Internal::RColumn::TryMapPage(NTupleSize_t globalIndex)
       fReadPage = fPageSource->PopulatePage(fTeam->at(fLastGoodTeamIdx)->GetHandleSource(), globalIndex);
       if (fReadPage.IsValid())
          break;
-      fLastGoodTeamIdx = (fLastGoodTeamIdx + iTeam++) % nTeam;
+      fLastGoodTeamIdx = (fLastGoodTeamIdx + 1) % nTeam;
+      iTeam++;
    } while (iTeam <= nTeam);
 
    return fReadPage.Contains(globalIndex);
@@ -140,7 +141,8 @@ bool ROOT::Experimental::Internal::RColumn::TryMapPage(RClusterIndex clusterInde
       fReadPage = fPageSource->PopulatePage(fTeam->at(fLastGoodTeamIdx)->GetHandleSource(), clusterIndex);
       if (fReadPage.IsValid())
          break;
-      fLastGoodTeamIdx = (fLastGoodTeamIdx + iTeam++) % nTeam;
+      fLastGoodTeamIdx = (fLastGoodTeamIdx + 1) % nTeam;
+      iTeam++;
    } while (iTeam <= nTeam);
 
    return fReadPage.Contains(clusterIndex);
