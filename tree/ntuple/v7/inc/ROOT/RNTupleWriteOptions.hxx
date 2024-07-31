@@ -73,6 +73,21 @@ protected:
    /// Whether to optimize tail pages to avoid an undersized last page per cluster (see above). Increases the
    /// required memory by a factor 3x.
    bool fUseTailPageOptimization = true;
+   /// Initially, columns start with a page large enough to hold the given number of elements. The initial
+   /// page size is the given number of elements multiplied by the column's element size.
+   /// If more elements are needed, pages are increased up until the byte limit given by fMaxUnzippedPageSize
+   /// or until the total page buffer limit is reached (as a sum of all page buffers).
+   /// The total write buffer limit needs to be large enough to hold the initial pages of all columns.
+   std::size_t fInitialNElementsPerPage = 64;
+   /// Pages can grow only to the given limit in bytes.
+   std::size_t fMaxUnzippedPageSize = 1024 * 1024;
+   /// The maximum size that the sum of all page buffers used for writing into a persistent sink are allowed to use.
+   /// If set to zero, RNTuple will auto-adjust the budget based on the value of fApproxZippedClusterSize.
+   /// If set manually, the size needs to be large enough to hold all initial page buffers.
+   /// The total amount of memory for writing is larger, e.g. for the additional compressed buffers etc.
+   /// Use RNTupleModel::EstimateWriteMemoryUsage() for the total estimated memory use for writing.
+   /// The default values are tuned for a total write memory of around 1GB per fill context.
+   std::size_t fPageBufferBudget = 0;
    /// Whether to use buffered writing (with RPageSinkBuf). This buffers compressed pages in memory, reorders them
    /// to keep pages of the same column adjacent, and coalesces the writes when committing a cluster.
    bool fUseBufferedWrite = true;
@@ -114,6 +129,15 @@ public:
 
    bool GetUseTailPageOptimization() const { return fUseTailPageOptimization; }
    void SetUseTailPageOptimization(bool val) { fUseTailPageOptimization = val; }
+
+   std::size_t GetInitialNElementsPerPage() const { return fInitialNElementsPerPage; }
+   void SetInitialNElementsPerPage(std::size_t val);
+
+   std::size_t GetMaxUnzippedPageSize() const { return fMaxUnzippedPageSize; }
+   void SetMaxUnzippedPageSize(std::size_t val);
+
+   std::size_t GetPageBufferBudget() const;
+   void SetPageBufferBudget(std::size_t val) { fPageBufferBudget = val; }
 
    bool GetUseBufferedWrite() const { return fUseBufferedWrite; }
    void SetUseBufferedWrite(bool val) { fUseBufferedWrite = val; }
