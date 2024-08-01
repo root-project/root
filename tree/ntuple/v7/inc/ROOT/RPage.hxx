@@ -59,22 +59,19 @@ public:
    };
 
 private:
-   ColumnId_t fColumnId;
-   void *fBuffer;
-   std::uint32_t fElementSize;
-   std::uint32_t fNElements;
+   ColumnId_t fColumnId = kInvalidColumnId;
+   void *fBuffer = nullptr;
+   std::uint32_t fElementSize = 0;
+   std::uint32_t fNElements = 0;
    /// The capacity of the page in number of elements
-   std::uint32_t fMaxElements;
-   NTupleSize_t fRangeFirst;
+   std::uint32_t fMaxElements = 0;
+   NTupleSize_t fRangeFirst = 0;
    RClusterInfo fClusterInfo;
 
 public:
-   RPage()
-      : fColumnId(kInvalidColumnId), fBuffer(nullptr), fElementSize(0), fNElements(0), fMaxElements(0), fRangeFirst(0)
-   {}
-   RPage(ColumnId_t columnId, void* buffer, ClusterSize_t::ValueType elementSize, ClusterSize_t::ValueType maxElements)
-      : fColumnId(columnId), fBuffer(buffer), fElementSize(elementSize), fNElements(0), fMaxElements(maxElements),
-        fRangeFirst(0)
+   RPage() = default;
+   RPage(ColumnId_t columnId, void *buffer, ClusterSize_t::ValueType elementSize, ClusterSize_t::ValueType maxElements)
+      : fColumnId(columnId), fBuffer(buffer), fElementSize(elementSize), fMaxElements(maxElements)
    {}
    ~RPage() = default;
 
