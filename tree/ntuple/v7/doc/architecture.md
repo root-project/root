@@ -40,7 +40,7 @@ Walkthrough: Reading Data
 
 ```c++
 auto file = std::make_unique<TFile>("data.root");
-auto ntuple = file->Get<RNTuple>("ntpl");
+auto ntuple = std::unique_ptr<RNTuple>(file->Get<RNTuple>("ntpl"));
 
 // Option 1: entire row
 // The reader creates a page source; the page source creates a model from the on-disk information

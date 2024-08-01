@@ -27,7 +27,7 @@ TEST(RNTupleInspector, CreateFromPointer)
    }
 
    std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str()));
-   auto ntuple = file->Get<RNTuple>("ntuple");
+   auto ntuple = std::unique_ptr<RNTuple>(file->Get<RNTuple>("ntuple"));
    auto inspector = RNTupleInspector::Create(*ntuple);
    EXPECT_EQ(inspector->GetDescriptor()->GetName(), "ntuple");
 }
