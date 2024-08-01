@@ -109,7 +109,6 @@ public:
    ~RPageSinkFile() override;
 
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final;
-   void ReleasePage(RPage &page) final;
 }; // class RPageSinkFile
 
 // clang-format off
