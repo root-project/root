@@ -214,7 +214,8 @@ TEST(RNTuple, FileAnchor)
    auto readerB = RNTupleReader::Open("B", fileGuard.GetPath());
 
    auto f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str()));
-   auto readerA = RNTupleReader::Open(*f->Get<RNTuple>("A"));
+   auto ntuple = std::unique_ptr<RNTuple>(f->Get<RNTuple>("A"));
+   auto readerA = RNTupleReader::Open(*ntuple);
 
    EXPECT_EQ(1U, readerA->GetNEntries());
    EXPECT_EQ(1U, readerB->GetNEntries());
