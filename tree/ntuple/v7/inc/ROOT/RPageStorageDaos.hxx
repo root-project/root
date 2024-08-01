@@ -155,7 +155,7 @@ class RPageSourceDaos : public RPageSource {
 private:
    ntuple_index_t fNTupleIndex{0};
 
-   /// The last cluster from which a page got populated.  Points into fClusterPool->fPool
+   /// The last cluster from which a page got loaded.  Points into fClusterPool->fPool
    RCluster *fCurrentCluster = nullptr;
    /// A container that stores object data (header/footer, pages, etc.)
    std::unique_ptr<RDaosContainer> fDaosContainer;
@@ -166,8 +166,8 @@ private:
 
    RNTupleDescriptorBuilder fDescriptorBuilder;
 
-   RPage PopulatePageImpl(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo,
-                          ClusterSize_t::ValueType idxInCluster) final;
+   RPage LoadPageImpl(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo,
+                      ClusterSize_t::ValueType idxInCluster) final;
 
 protected:
    void LoadStructureImpl() final {}

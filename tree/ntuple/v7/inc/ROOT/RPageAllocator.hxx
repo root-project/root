@@ -63,7 +63,7 @@ public:
 \ingroup NTuple
 \brief Uses standard C++ memory allocation for the column data pages
 
-The page allocator acquires and releases memory for pages.  It does not populate the pages, the returned pages
+The page allocator acquires and releases memory for pages.  It does not load the page data, the returned pages
 are empty but guaranteed to have enough contiguous space for the given number of elements.  While a common
 concrete implementation uses the heap, other implementations are possible, e.g. using arenas or mmap().
 */

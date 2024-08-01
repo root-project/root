@@ -93,9 +93,9 @@ protected:
    RNTupleDescriptor AttachImpl() final;
    std::unique_ptr<RPageSource> CloneImpl() const final;
 
-   // Unused because we overwrite PopulatePage()
-   virtual RPage PopulatePageImpl(ColumnHandle_t /* columnHandle */, const RClusterInfo & /* clusterInfo */,
-                                  ClusterSize_t::ValueType /* idxInCluster */)
+   // Unused because we overwrite LoadPage()
+   virtual RPage LoadPageImpl(ColumnHandle_t /* columnHandle */, const RClusterInfo & /* clusterInfo */,
+                              ClusterSize_t::ValueType /* idxInCluster */)
    {
       return RPage();
    }
@@ -107,8 +107,8 @@ public:
    ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) final;
    void DropColumn(ColumnHandle_t columnHandle) final;
 
-   RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex) final;
-   RPage PopulatePage(ColumnHandle_t columnHandle, RClusterIndex clusterIndex) final;
+   RPage LoadPage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex) final;
+   RPage LoadPage(ColumnHandle_t columnHandle, RClusterIndex clusterIndex) final;
    void ReleasePage(RPage &page) final;
 
    void LoadSealedPage(DescriptorId_t physicalColumnId, RClusterIndex clusterIndex, RSealedPage &sealedPage) final;

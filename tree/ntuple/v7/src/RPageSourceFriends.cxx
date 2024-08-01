@@ -160,13 +160,13 @@ void ROOT::Experimental::Internal::RPageSourceFriends::DropColumn(ColumnHandle_t
 }
 
 ROOT::Experimental::Internal::RPage
-ROOT::Experimental::Internal::RPageSourceFriends::PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex)
+ROOT::Experimental::Internal::RPageSourceFriends::LoadPage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex)
 {
    auto virtualColumnId = columnHandle.fPhysicalId;
    auto originColumnId = fColumnMap.GetOriginId(virtualColumnId);
    columnHandle.fPhysicalId = originColumnId.fId;
 
-   auto page = fSources[originColumnId.fSourceIdx]->PopulatePage(columnHandle, globalIndex);
+   auto page = fSources[originColumnId.fSourceIdx]->LoadPage(columnHandle, globalIndex);
    // Suppressed column
    if (!page.IsValid())
       return RPage();
@@ -178,14 +178,14 @@ ROOT::Experimental::Internal::RPageSourceFriends::PopulatePage(ColumnHandle_t co
 }
 
 ROOT::Experimental::Internal::RPage
-ROOT::Experimental::Internal::RPageSourceFriends::PopulatePage(ColumnHandle_t columnHandle, RClusterIndex clusterIndex)
+ROOT::Experimental::Internal::RPageSourceFriends::LoadPage(ColumnHandle_t columnHandle, RClusterIndex clusterIndex)
 {
    auto virtualColumnId = columnHandle.fPhysicalId;
    auto originColumnId = fColumnMap.GetOriginId(virtualColumnId);
    RClusterIndex originClusterIndex(fIdBiMap.GetOriginId(clusterIndex.GetClusterId()).fId, clusterIndex.GetIndex());
    columnHandle.fPhysicalId = originColumnId.fId;
 
-   auto page = fSources[originColumnId.fSourceIdx]->PopulatePage(columnHandle, originClusterIndex);
+   auto page = fSources[originColumnId.fSourceIdx]->LoadPage(columnHandle, originClusterIndex);
    // Suppressed column
    if (!page.IsValid())
       return RPage();

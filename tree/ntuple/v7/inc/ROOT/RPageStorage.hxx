@@ -544,8 +544,8 @@ protected:
       Detail::RNTupleAtomicCounter &fSzReadOverhead;
       Detail::RNTupleAtomicCounter &fSzUnzip;
       Detail::RNTupleAtomicCounter &fNClusterLoaded;
+      Detail::RNTupleAtomicCounter &fNPageRead;
       Detail::RNTupleAtomicCounter &fNPageLoaded;
-      Detail::RNTupleAtomicCounter &fNPagePopulated;
       Detail::RNTupleAtomicCounter &fTimeWallRead;
       Detail::RNTupleAtomicCounter &fTimeWallUnzip;
       Detail::RNTupleTickCounter<Detail::RNTupleAtomicCounter> &fTimeCpuRead;
@@ -570,8 +570,8 @@ protected:
       RCluster::ColumnSet_t ToColumnSet() const;
    };
 
-   /// Summarizes cluster-level information that are necessary to populate a certain page.
-   /// Used by PopulatePageImpl().
+   /// Summarizes cluster-level information that are necessary to load a certain page.
+   /// Used by LoadPageImpl().
    struct RClusterInfo {
       DescriptorId_t fClusterId = 0;
       /// Location of the page on disk
@@ -597,8 +597,8 @@ protected:
    // Only called if a task scheduler is set. No-op be default.
    virtual void UnzipClusterImpl(RCluster *cluster);
    // Returns a page from storage if not found in the page pool. Should be able to handle zero page locators.
-   virtual RPage PopulatePageImpl(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo,
-                                  ClusterSize_t::ValueType idxInCluster) = 0;
+   virtual RPage LoadPageImpl(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo,
+                              ClusterSize_t::ValueType idxInCluster) = 0;
 
    /// Prepare a page range read for the column set in `clusterKey`.  Specifically, pages referencing the
    /// `kTypePageZero` locator are filled in `pageZeroMap`; otherwise, `perPageFunc` is called for each page. This is
@@ -667,11 +667,11 @@ public:
    REntryRange GetEntryRange() const { return fEntryRange; }
 
    /// Allocates and fills a page that contains the index-th element. The default implementation searches
-   /// the page and calls PopulatePageImpl(). Returns a default-constructed RPage for suppressed columns.
-   virtual RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex);
-   /// Another version of `PopulatePage` that allows to specify cluster-relative indexes.
+   /// the page and calls LoadPageImpl(). Returns a default-constructed RPage for suppressed columns.
+   virtual RPage LoadPage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex);
+   /// Another version of `LoadPage` that allows to specify cluster-relative indexes.
    /// Returns a default-constructed RPage for suppressed columns.
-   virtual RPage PopulatePage(ColumnHandle_t columnHandle, RClusterIndex clusterIndex);
+   virtual RPage LoadPage(ColumnHandle_t columnHandle, RClusterIndex clusterIndex);
 
    /// Read the packed and compressed bytes of a page into the memory buffer provided by `sealedPage`. The sealed page
    /// can be used subsequently in a call to `RPageSink::CommitSealedPage`.
