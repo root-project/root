@@ -102,7 +102,6 @@ using RNTuplePlainTimer = ROOT::Experimental::Detail::RNTuplePlainTimer;
 using RNTupleSerializer = ROOT::Experimental::Internal::RNTupleSerializer;
 using RPage = ROOT::Experimental::Internal::RPage;
 using RPageAllocatorHeap = ROOT::Experimental::Internal::RPageAllocatorHeap;
-using RPageDeleter = ROOT::Experimental::Internal::RPageDeleter;
 using RPagePool = ROOT::Experimental::Internal::RPagePool;
 using RPageSink = ROOT::Experimental::Internal::RPageSink;
 using RPageSinkBuf = ROOT::Experimental::Internal::RPageSinkBuf;
