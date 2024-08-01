@@ -1310,7 +1310,9 @@ ROOT::Experimental::Internal::RNTupleFileWriter::RFileSimple::RFileSimple()
    static_assert(kBlockSize % kBlockAlign == 0, "invalid block size");
    std::align_val_t blockAlign{kBlockAlign};
    fHeaderBlock = static_cast<unsigned char *>(::operator new[](kHeaderBlockSize, blockAlign));
+   memset(fHeaderBlock, 0, kHeaderBlockSize);
    fBlock = static_cast<unsigned char *>(::operator new[](kBlockSize, blockAlign));
+   memset(fBlock, 0, kBlockSize);
 }
 
 ROOT::Experimental::Internal::RNTupleFileWriter::RFileSimple::~RFileSimple()
@@ -1411,7 +1413,8 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::RFileSimple::Write(const v
          if (retval != kBlockSize)
             throw RException(R__FAIL(std::string("write failed: ") + strerror(errno)));
 
-         // TODO: do we want to null the buffer contents?
+         // Null the buffer contents for good measure.
+         memset(fBlock, 0, kBlockSize);
       }
 
       fBlockOffset = blockOffset;
