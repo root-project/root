@@ -27,7 +27,7 @@ ROOT::Experimental::Internal::RPage ROOT::Experimental::Internal::RPageAllocator
    R__ASSERT((elementSize > 0) && (nElements > 0));
    auto nbytes = elementSize * nElements;
    auto buffer = new unsigned char[nbytes];
-   return RPage(columnId, buffer, elementSize, nElements);
+   return RPage(columnId, buffer, this, elementSize, nElements);
 }
 
 void ROOT::Experimental::Internal::RPageAllocatorHeap::DeletePage(RPage &page)
