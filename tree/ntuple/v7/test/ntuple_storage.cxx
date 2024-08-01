@@ -399,7 +399,8 @@ TEST(RNTuple, PageFillingString)
 TEST(RNTuple, OpenHTTP)
 {
    std::unique_ptr<TFile> file(TFile::Open("http://root.cern/files/tutorials/ntpl004_dimuon_v1rc2.root"));
-   auto reader = RNTupleReader::Open(*file->Get<RNTuple>("Events"));
+   auto Events = std::unique_ptr<RNTuple>(file->Get<RNTuple>("Events"));
+   auto reader = RNTupleReader::Open(*Events);
    reader->LoadEntry(0);
 }
 #endif
@@ -416,7 +417,8 @@ TEST(RNTuple, TMemFile)
       writer->Fill();
    }
 
-   auto reader = RNTupleReader::Open(*file.Get<RNTuple>("ntpl"));
+   auto ntpl = std::unique_ptr<RNTuple>(file.Get<RNTuple>("ntpl"));
+   auto reader = RNTupleReader::Open(*ntpl);
    auto pt = reader->GetModel().GetDefaultEntry().GetPtr<float>("pt");
    reader->LoadEntry(0);
    EXPECT_EQ(*pt, 42.0);

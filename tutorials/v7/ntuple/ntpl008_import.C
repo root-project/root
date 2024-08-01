@@ -53,7 +53,7 @@ void ntpl008_import()
       std::cerr << "cannot open " << kNTupleFileName << std::endl;
       return;
    }
-   auto ntpl = file->Get<RNTuple>("Events");
+   auto ntpl = std::unique_ptr<RNTuple>(file->Get<RNTuple>("Events"));
    auto reader = RNTupleReader::Open(*ntpl);
    reader->PrintInfo();
 

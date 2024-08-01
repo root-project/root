@@ -120,7 +120,7 @@ TEST(RNTupleCompat, FwdCompat_FutureNTuple)
    {
       auto tfile = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "READ"));
       assert(!tfile->IsZombie());
-      auto *ntuple = tfile->Get<RNTuple>(kNtupleObjName);
+      auto ntuple = std::unique_ptr<RNTuple>(tfile->Get<RNTuple>(kNtupleObjName));
       EXPECT_EQ(ntuple->GetVersionEpoch(), RXTuple{}.fVersionEpoch);
       EXPECT_EQ(ntuple->GetVersionMajor(), RXTuple{}.fVersionMajor);
       EXPECT_EQ(ntuple->GetVersionMinor(), RXTuple{}.fVersionMinor);
