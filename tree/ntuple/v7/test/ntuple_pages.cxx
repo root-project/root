@@ -14,22 +14,20 @@ TEST(Pages, Allocation)
 
 TEST(Pages, Pool)
 {
-   RPagePool pool;
+   RPageAllocatorHeap allocator;
+   RPagePool pool(&allocator);
 
    auto page = pool.GetPage(0, 0);
    EXPECT_TRUE(page.IsNull());
    pool.ReturnPage(page); // should not crash
 
    RPage::RClusterInfo clusterInfo(2, 40);
-   page = RPage(1, &page, 1, 10);
+   page = allocator.NewPage(1, 1, 10);
    page.GrowUnchecked(10);
    EXPECT_EQ(page.GetMaxElements(), page.GetNElements());
    page.SetWindow(50, clusterInfo);
    EXPECT_FALSE(page.IsNull());
-   unsigned int nCallDeleter = 0;
-   pool.RegisterPage(page, RPageDeleter([&nCallDeleter](const RPage & /*page*/, void * /*userData*/) {
-      nCallDeleter++;
-   }));
+   pool.RegisterPage(page);
 
    page = pool.GetPage(0, 0);
    EXPECT_TRUE(page.IsNull());
@@ -48,11 +46,8 @@ TEST(Pages, Pool)
    EXPECT_FALSE(page.IsNull());
 
    pool.ReturnPage(page);
-   EXPECT_EQ(0U, nCallDeleter);
    pool.ReturnPage(page);
-   EXPECT_EQ(0U, nCallDeleter);
    pool.ReturnPage(page);
-   EXPECT_EQ(1U, nCallDeleter);
    page = pool.GetPage(1, 55);
    EXPECT_TRUE(page.IsNull());
 }

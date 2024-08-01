@@ -18,6 +18,8 @@
 
 #include <TError.h>
 
+#include <algorithm>
+
 ROOT::Experimental::Internal::RPage ROOT::Experimental::Internal::RPageAllocatorHeap::NewPage(ColumnId_t columnId,
                                                                                               std::size_t elementSize,
                                                                                               std::size_t nElements)
@@ -28,7 +30,7 @@ ROOT::Experimental::Internal::RPage ROOT::Experimental::Internal::RPageAllocator
    return RPage(columnId, buffer, elementSize, nElements);
 }
 
-void ROOT::Experimental::Internal::RPageAllocatorHeap::DeletePage(const RPage &page)
+void ROOT::Experimental::Internal::RPageAllocatorHeap::DeletePage(RPage &page)
 {
    if (!page.IsPageZero())
       delete[] reinterpret_cast<unsigned char *>(page.GetBuffer());
