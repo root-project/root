@@ -502,11 +502,6 @@ ROOT::Experimental::Internal::RPageSinkDaos::ReservePage(ColumnHandle_t columnHa
    return fPageAllocator->NewPage(columnHandle.fPhysicalId, elementSize, nElements);
 }
 
-void ROOT::Experimental::Internal::RPageSinkDaos::ReleasePage(RPage &page)
-{
-   fPageAllocator->DeletePage(page);
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 ROOT::Experimental::Internal::RPageSourceDaos::RPageSourceDaos(std::string_view ntupleName, std::string_view uri,

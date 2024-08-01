@@ -109,7 +109,6 @@ public:
    {
       return fInnerSink->ReservePage(columnHandle, nElements);
    }
-   void ReleasePage(RPage &page) final { fInnerSink->ReleasePage(page); }
 
    RSinkGuard GetSinkGuard() final { return RSinkGuard(fMutex); }
 };

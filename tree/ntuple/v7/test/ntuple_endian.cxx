@@ -59,7 +59,6 @@ protected:
    void CommitDatasetImpl() final {}
 
    RPage ReservePage(ColumnHandle_t, std::size_t) final { return {}; }
-   void ReleasePage(RPage &) final {}
 
 public:
    RPageSinkMock(const RColumnElementBase &elt)
