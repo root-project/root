@@ -87,7 +87,7 @@ protected:
    void LoadStructureImpl() final {}
    RNTupleDescriptor AttachImpl() final { return RNTupleDescriptor(); }
    std::unique_ptr<RPageSource> CloneImpl() const final { return nullptr; }
-   RPage PopulatePageImpl(ColumnHandle_t, const RClusterInfo &, ROOT::Experimental::ClusterSize_t::ValueType) final
+   RPage LoadPageImpl(ColumnHandle_t, const RClusterInfo &, ROOT::Experimental::ClusterSize_t::ValueType) final
    {
       return RPage();
    }
@@ -98,11 +98,11 @@ public:
    {
    }
 
-   RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t i) final
+   RPage LoadPage(ColumnHandle_t columnHandle, NTupleSize_t i) final
    {
       return RPageSource::UnsealPage(fPages[i], fElement, columnHandle.fPhysicalId).Unwrap();
    }
-   RPage PopulatePage(ColumnHandle_t, ROOT::Experimental::RClusterIndex) final { return RPage(); }
+   RPage LoadPage(ColumnHandle_t, ROOT::Experimental::RClusterIndex) final { return RPage(); }
    void ReleasePage(RPage &) final {}
    void LoadSealedPage(ROOT::Experimental::DescriptorId_t, ROOT::Experimental::RClusterIndex, RSealedPage &) final {}
    std::vector<std::unique_ptr<RCluster>> LoadClusters(std::span<RCluster::RKey>) final { return {}; }
@@ -128,7 +128,7 @@ TEST(RColumnElementEndian, ByteCopy)
                        "\x03\x02\x01\x00\x07\x06\x05\x04\x0b\x0a\x09\x08\x0f\x0e\x0d\x0c", 16));
 
    RPageSourceMock source1(sink1.GetPages(), element);
-   auto page2 = source1.PopulatePage(RPageStorage::ColumnHandle_t{}, NTupleSize_t{0});
+   auto page2 = source1.LoadPage(RPageStorage::ColumnHandle_t{}, NTupleSize_t{0});
    std::unique_ptr<unsigned char[]> buf2(static_cast<unsigned char *>(page2.GetBuffer())); // adopt buffer
    EXPECT_EQ(0, memcmp(buf2.get(), "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f", 16));
 #endif
@@ -154,7 +154,7 @@ TEST(RColumnElementEndian, Cast)
                        "\x03\x02\x01\x00\x07\x06\x05\x04\x0b\x0a\x09\x08\x0f\x0e\x0d\x0c", 16));
 
    RPageSourceMock source1(sink1.GetPages(), element);
-   auto page2 = source1.PopulatePage(RPageStorage::ColumnHandle_t{}, NTupleSize_t{0});
+   auto page2 = source1.LoadPage(RPageStorage::ColumnHandle_t{}, NTupleSize_t{0});
    std::unique_ptr<unsigned char[]> buf2(static_cast<unsigned char *>(page2.GetBuffer())); // adopt buffer
    EXPECT_EQ(0, memcmp(buf2.get(),
                        "\x00\x01\x02\x03\x00\x00\x00\x00\x04\x05\x06\x07\x00\x00\x00\x00"
@@ -181,7 +181,7 @@ TEST(RColumnElementEndian, Split)
                        "\x07\x0f\x06\x0e\x05\x0d\x04\x0c\x03\x0b\x02\x0a\x01\x09\x00\x08", 16));
 
    RPageSourceMock source1(sink1.GetPages(), splitElement);
-   auto page2 = source1.PopulatePage(RPageStorage::ColumnHandle_t{}, NTupleSize_t{0});
+   auto page2 = source1.LoadPage(RPageStorage::ColumnHandle_t{}, NTupleSize_t{0});
    std::unique_ptr<unsigned char[]> buf2(static_cast<unsigned char *>(page2.GetBuffer())); // adopt buffer
    EXPECT_EQ(0, memcmp(buf2.get(), "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f", 16));
 #endif
@@ -209,7 +209,7 @@ TEST(RColumnElementEndian, DeltaSplit)
                        "\x03\x04\x04\x04\x02\x04\x04\x04\x01\x04\x04\x04\x00\x04\x04\x04", 16));
 
    RPageSourceMock source1(sink1.GetPages(), element);
-   auto page2 = source1.PopulatePage(RPageStorage::ColumnHandle_t{}, NTupleSize_t{0});
+   auto page2 = source1.LoadPage(RPageStorage::ColumnHandle_t{}, NTupleSize_t{0});
    std::unique_ptr<unsigned char[]> buf2(static_cast<unsigned char *>(page2.GetBuffer())); // adopt buffer
    EXPECT_EQ(0, memcmp(buf2.get(),
                        "\x00\x01\x02\x03\x00\x00\x00\x00\x04\x05\x06\x07\x00\x00\x00\x00"

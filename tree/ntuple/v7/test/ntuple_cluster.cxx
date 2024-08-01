@@ -42,7 +42,7 @@ protected:
    void LoadStructureImpl() final {}
    RNTupleDescriptor AttachImpl() final { return RNTupleDescriptor(); }
    std::unique_ptr<RPageSource> CloneImpl() const final { return nullptr; }
-   RPage PopulatePageImpl(ColumnHandle_t, const RClusterInfo &, ClusterSize_t::ValueType) final { return RPage(); }
+   RPage LoadPageImpl(ColumnHandle_t, const RClusterInfo &, ClusterSize_t::ValueType) final { return RPage(); }
 
 public:
    /// Records the cluster IDs requests by LoadClusters() calls

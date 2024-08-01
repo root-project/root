@@ -282,7 +282,7 @@ void ROOT::Experimental::Internal::RPageSource::UnzipClusterImpl(RCluster *clust
       } // for all pages in column
    }    // for all columns in cluster
 
-   fCounters->fNPagePopulated.Add(cluster->GetNOnDiskPages());
+   fCounters->fNPageLoaded.Add(cluster->GetNOnDiskPages());
 
    fTaskScheduler->Wait();
 
@@ -318,7 +318,7 @@ void ROOT::Experimental::Internal::RPageSource::PrepareLoadCluster(
 }
 
 ROOT::Experimental::Internal::RPage
-ROOT::Experimental::Internal::RPageSource::PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex)
+ROOT::Experimental::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex)
 {
    const auto columnId = columnHandle.fPhysicalId;
    auto cachedPage = fPagePool->GetPage(columnId, globalIndex);
@@ -345,11 +345,11 @@ ROOT::Experimental::Internal::RPageSource::PopulatePage(ColumnHandle_t columnHan
       clusterInfo.fPageInfo = clusterDescriptor.GetPageRange(columnId).Find(idxInCluster);
    }
 
-   return PopulatePageImpl(columnHandle, clusterInfo, idxInCluster);
+   return LoadPageImpl(columnHandle, clusterInfo, idxInCluster);
 }
 
 ROOT::Experimental::Internal::RPage
-ROOT::Experimental::Internal::RPageSource::PopulatePage(ColumnHandle_t columnHandle, RClusterIndex clusterIndex)
+ROOT::Experimental::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle, RClusterIndex clusterIndex)
 {
    const auto clusterId = clusterIndex.GetClusterId();
    const auto idxInCluster = clusterIndex.GetIndex();
@@ -374,7 +374,7 @@ ROOT::Experimental::Internal::RPageSource::PopulatePage(ColumnHandle_t columnHan
       clusterInfo.fPageInfo = clusterDescriptor.GetPageRange(columnId).Find(idxInCluster);
    }
 
-   return PopulatePageImpl(columnHandle, clusterInfo, idxInCluster);
+   return LoadPageImpl(columnHandle, clusterInfo, idxInCluster);
 }
 
 void ROOT::Experimental::Internal::RPageSource::EnableDefaultMetrics(const std::string &prefix)
@@ -390,7 +390,7 @@ void ROOT::Experimental::Internal::RPageSource::EnableDefaultMetrics(const std::
       *fMetrics.MakeCounter<Detail::RNTupleAtomicCounter *>("szUnzip", "B", "volume after unzipping"),
       *fMetrics.MakeCounter<Detail::RNTupleAtomicCounter *>("nClusterLoaded", "",
                                                             "number of partial clusters preloaded from storage"),
-      *fMetrics.MakeCounter<Detail::RNTupleAtomicCounter *>("nPageLoaded", "", "number of pages loaded from storage"),
+      *fMetrics.MakeCounter<Detail::RNTupleAtomicCounter *>("nPageRead", "", "number of pages read from storage"),
       *fMetrics.MakeCounter<Detail::RNTupleAtomicCounter *>("nPagePopulated", "", "number of populated pages"),
       *fMetrics.MakeCounter<Detail::RNTupleAtomicCounter *>("timeWallRead", "ns", "wall clock time spent reading"),
       *fMetrics.MakeCounter<Detail::RNTupleAtomicCounter *>("timeWallUnzip", "ns",

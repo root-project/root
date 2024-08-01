@@ -434,9 +434,9 @@ void ROOT::Experimental::Internal::RPageSourceFile::LoadSealedPage(DescriptorId_
 }
 
 ROOT::Experimental::Internal::RPage
-ROOT::Experimental::Internal::RPageSourceFile::PopulatePageImpl(ColumnHandle_t columnHandle,
-                                                                const RClusterInfo &clusterInfo,
-                                                                ClusterSize_t::ValueType idxInCluster)
+ROOT::Experimental::Internal::RPageSourceFile::LoadPageImpl(ColumnHandle_t columnHandle,
+                                                            const RClusterInfo &clusterInfo,
+                                                            ClusterSize_t::ValueType idxInCluster)
 {
    const auto columnId = columnHandle.fPhysicalId;
    const auto clusterId = clusterInfo.fClusterId;
@@ -464,7 +464,7 @@ ROOT::Experimental::Internal::RPageSourceFile::PopulatePageImpl(ColumnHandle_t c
       directReadBuffer = std::unique_ptr<unsigned char[]>(new unsigned char[sealedPage.GetBufferSize()]);
       fReader.ReadBuffer(directReadBuffer.get(), sealedPage.GetBufferSize(),
                          pageInfo.fLocator.GetPosition<std::uint64_t>());
-      fCounters->fNPageLoaded.Inc();
+      fCounters->fNPageRead.Inc();
       fCounters->fNRead.Inc();
       fCounters->fSzReadPayload.Add(sealedPage.GetBufferSize());
       sealedPage.SetBuffer(directReadBuffer.get());
@@ -494,7 +494,7 @@ ROOT::Experimental::Internal::RPageSourceFile::PopulatePageImpl(ColumnHandle_t c
                      RPage::RClusterInfo(clusterId, clusterInfo.fColumnOffset));
    fPagePool->RegisterPage(
       newPage, RPageDeleter([](const RPage &page, void *) { RPageAllocatorHeap::DeletePage(page); }, nullptr));
-   fCounters->fNPagePopulated.Inc();
+   fCounters->fNPageLoaded.Inc();
    return newPage;
 }
 
@@ -618,7 +618,7 @@ ROOT::Experimental::Internal::RPageSourceFile::PrepareSingleCluster(
       ROnDiskPage::Key key(s.fColumnId, s.fPageNo);
       pageMap->Register(key, ROnDiskPage(buffer + s.fBufPos, s.fSize));
    }
-   fCounters->fNPageLoaded.Add(onDiskPages.size());
+   fCounters->fNPageRead.Add(onDiskPages.size());
    for (auto i = currentReadRequestIdx; i < readRequests.size(); ++i) {
       readRequests[i].fBuffer = buffer + reinterpret_cast<intptr_t>(readRequests[i].fBuffer);
    }
