@@ -57,7 +57,6 @@ protected:
       auto elementSize = columnHandle.fColumn->GetElement()->GetSize();
       return fPageAllocator.NewPage(columnHandle.fPhysicalId, elementSize, nElements);
    }
-   void ReleasePage(RPage &page) final { fPageAllocator.DeletePage(page); }
 
 public:
    RPageSinkMock(const ROOT::Experimental::RNTupleWriteOptions &options) : RPageSink("test", options) {}

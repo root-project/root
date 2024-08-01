@@ -260,11 +260,6 @@ ROOT::Experimental::Internal::RPageSinkFile::ReservePage(ColumnHandle_t columnHa
    return fPageAllocator->NewPage(columnHandle.fPhysicalId, elementSize, nElements);
 }
 
-void ROOT::Experimental::Internal::RPageSinkFile::ReleasePage(RPage &page)
-{
-   fPageAllocator->DeletePage(page);
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 ROOT::Experimental::Internal::RPageSourceFile::RPageSourceFile(std::string_view ntupleName,

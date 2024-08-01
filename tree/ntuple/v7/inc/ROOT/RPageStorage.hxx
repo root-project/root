@@ -185,10 +185,6 @@ public:
    /// For a page sink, dropping columns is currently a no-op.
    virtual void DropColumn(ColumnHandle_t columnHandle) = 0;
 
-   /// Every page store needs to be able to free pages it handed out.  But Sinks and sources have different means
-   /// of allocating pages.
-   virtual void ReleasePage(RPage &page) = 0;
-
    /// Returns the default metrics object.  Subclasses might alternatively provide their own metrics object by
    /// overriding this.
    virtual Detail::RNTupleMetrics &GetMetrics() { return fMetrics; }
@@ -706,6 +702,9 @@ public:
    /// actual implementation will only run if a task scheduler is set. In practice, a task scheduler is set
    /// if implicit multi-threading is turned on.
    void UnzipCluster(RCluster *cluster);
+
+   /// Release the page buffer of returned (unsealed) pages. Eventually, this will be handled by the page pool.
+   virtual void ReleasePage(RPage &page) = 0;
 }; // class RPageSource
 
 } // namespace Internal

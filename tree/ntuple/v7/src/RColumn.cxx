@@ -35,10 +35,8 @@ ROOT::Experimental::Internal::RColumn::RColumn(EColumnType type, std::uint32_t c
 
 ROOT::Experimental::Internal::RColumn::~RColumn()
 {
-   if (!fWritePage[0].IsNull())
-      fPageSink->ReleasePage(fWritePage[0]);
-   if (!fWritePage[1].IsNull())
-      fPageSink->ReleasePage(fWritePage[1]);
+   fWritePage[0].ReleaseBuffer();
+   fWritePage[1].ReleaseBuffer();
    if (!fReadPage.IsNull())
       fPageSource->ReleasePage(fReadPage);
    if (fHandleSink)

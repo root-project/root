@@ -39,8 +39,8 @@ namespace Internal {
 // clang-format on
 class RPageSinkBuf : public RPageSink {
 private:
-   /// A buffered column. The column is not responsible for RPage memory management (i.e.
-   /// ReservePage/ReleasePage), which is handled by the enclosing RPageSinkBuf.
+   /// A buffered column. The column is not responsible for RPage memory management (i.e. ReservePage),
+   /// which is handled by the enclosing RPageSinkBuf.
    class RColumnBuf {
    public:
       struct RPageZipItem {
@@ -81,8 +81,8 @@ private:
       using BufferedPages_t = std::tuple<std::deque<RPageZipItem>, RPageStorage::SealedPageSequence_t>;
       /// When the return value of DrainBufferedPages() is destroyed, all references
       /// returned by GetBuffer are invalidated.
-      /// This function gives up on the ownership of the buffered pages.  Thus, `ReleasePage()` must be called
-      /// accordingly.
+      /// This function gives up on the ownership of the buffered pages.  Thus, `RPage::ReleaseBuffer()`
+      /// must be called accordingly.
       BufferedPages_t DrainBufferedPages()
       {
          BufferedPages_t drained;
@@ -158,7 +158,6 @@ public:
    void CommitDatasetImpl() final;
 
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final;
-   void ReleasePage(RPage &page) final;
 }; // RPageSinkBuf
 
 } // namespace Internal
