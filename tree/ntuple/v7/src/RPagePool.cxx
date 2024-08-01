@@ -20,23 +20,27 @@
 
 #include <cstdlib>
 
-void ROOT::Experimental::Internal::RPagePool::RegisterPage(const RPage &page, const RPageDeleter &deleter)
+ROOT::Experimental::Internal::RPagePool::~RPagePool()
+{
+   for (auto &p : fPages)
+      fPageAllocator->DeletePage(p);
+}
+
+void ROOT::Experimental::Internal::RPagePool::RegisterPage(RPage &page)
 {
    std::lock_guard<std::mutex> lockGuard(fLock);
    fPages.emplace_back(page);
    fReferences.emplace_back(1);
-   fDeleters.emplace_back(deleter);
 }
 
-void ROOT::Experimental::Internal::RPagePool::PreloadPage(const RPage &page, const RPageDeleter &deleter)
+void ROOT::Experimental::Internal::RPagePool::PreloadPage(RPage &page)
 {
    std::lock_guard<std::mutex> lockGuard(fLock);
    fPages.emplace_back(page);
    fReferences.emplace_back(0);
-   fDeleters.emplace_back(deleter);
 }
 
-void ROOT::Experimental::Internal::RPagePool::ReturnPage(const RPage &page)
+void ROOT::Experimental::Internal::RPagePool::ReturnPage(RPage &page)
 {
    if (page.IsNull()) return;
    std::lock_guard<std::mutex> lockGuard(fLock);
@@ -46,13 +50,11 @@ void ROOT::Experimental::Internal::RPagePool::ReturnPage(const RPage &page)
       if (fPages[i] != page) continue;
 
       if (--fReferences[i] == 0) {
-         fDeleters[i](fPages[i]);
+         fPageAllocator->DeletePage(fPages[i]);
          fPages[i] = fPages[N-1];
-         fReferences[i] = fReferences[N-1];
-         fDeleters[i] = fDeleters[N-1];
+         fReferences[i] = fReferences[N - 1];
          fPages.resize(N-1);
-         fReferences.resize(N-1);
-         fDeleters.resize(N-1);
+         fReferences.resize(N - 1);
       }
       return;
    }

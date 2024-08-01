@@ -21,7 +21,7 @@
 #include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleSerialize.hxx>
-#include <ROOT/RPagePool.hxx>
+#include <ROOT/RPageAllocator.hxx>
 #include <ROOT/RPageSinkBuf.hxx>
 #include <ROOT/RPageStorageFile.hxx>
 #ifdef R__ENABLE_DAOS
@@ -38,7 +38,10 @@
 #include <unordered_map>
 #include <utility>
 
-ROOT::Experimental::Internal::RPageStorage::RPageStorage(std::string_view name) : fMetrics(""), fNTupleName(name) {}
+ROOT::Experimental::Internal::RPageStorage::RPageStorage(std::string_view name)
+   : fMetrics(""), fPageAllocator(std::make_unique<RPageAllocatorHeap>()), fNTupleName(name)
+{
+}
 
 ROOT::Experimental::Internal::RPageStorage::~RPageStorage() {}
 
@@ -130,7 +133,7 @@ bool ROOT::Experimental::Internal::RPageSource::REntryRange::IntersectsWith(cons
 }
 
 ROOT::Experimental::Internal::RPageSource::RPageSource(std::string_view name, const RNTupleReadOptions &options)
-   : RPageStorage(name), fOptions(options), fPagePool(std::make_shared<RPagePool>())
+   : RPageStorage(name), fOptions(options), fPagePool(fPageAllocator.get())
 {
 }
 
@@ -271,8 +274,7 @@ void ROOT::Experimental::Internal::RPageSource::UnzipClusterImpl(RCluster *clust
             fCounters->fSzUnzip.Add(element->GetSize() * sealedPage.GetNElements());
 
             newPage.SetWindow(indexOffset + firstInPage, RPage::RClusterInfo(clusterId, indexOffset));
-            fPagePool->PreloadPage(
-               newPage, RPageDeleter([](const RPage &page, void *) { RPageAllocatorHeap::DeletePage(page); }, nullptr));
+            fPagePool.PreloadPage(newPage);
          };
 
          fTaskScheduler->AddTask(taskFunc);
@@ -321,7 +323,7 @@ ROOT::Experimental::Internal::RPage
 ROOT::Experimental::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex)
 {
    const auto columnId = columnHandle.fPhysicalId;
-   auto cachedPage = fPagePool->GetPage(columnId, globalIndex);
+   auto cachedPage = fPagePool.GetPage(columnId, globalIndex);
    if (!cachedPage.IsNull())
       return cachedPage;
 
@@ -354,7 +356,7 @@ ROOT::Experimental::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle,
    const auto clusterId = clusterIndex.GetClusterId();
    const auto idxInCluster = clusterIndex.GetIndex();
    const auto columnId = columnHandle.fPhysicalId;
-   auto cachedPage = fPagePool->GetPage(columnId, clusterIndex);
+   auto cachedPage = fPagePool.GetPage(columnId, clusterIndex);
    if (!cachedPage.IsNull())
       return cachedPage;
 
@@ -489,8 +491,7 @@ ROOT::Experimental::Internal::RPageSource::UnsealPage(const RSealedPage &sealedP
       return R__FORWARD_ERROR(rv);
 
    const auto bytesPacked = element.GetPackedSize(sealedPage.GetNElements());
-   using Allocator_t = RPageAllocatorHeap;
-   auto page = Allocator_t::NewPage(physicalColumnId, element.GetSize(), sealedPage.GetNElements());
+   auto page = fPageAllocator->NewPage(physicalColumnId, element.GetSize(), sealedPage.GetNElements());
    if (sealedPage.GetDataSize() != bytesPacked) {
       RNTupleDecompressor::Unzip(sealedPage.GetBuffer(), sealedPage.GetDataSize(), bytesPacked, page.GetBuffer());
    } else {
@@ -501,9 +502,9 @@ ROOT::Experimental::Internal::RPageSource::UnsealPage(const RSealedPage &sealedP
    }
 
    if (!element.IsMappable()) {
-      auto tmp = Allocator_t::NewPage(physicalColumnId, element.GetSize(), sealedPage.GetNElements());
+      auto tmp = fPageAllocator->NewPage(physicalColumnId, element.GetSize(), sealedPage.GetNElements());
       element.Unpack(tmp.GetBuffer(), page.GetBuffer(), sealedPage.GetNElements());
-      Allocator_t::DeletePage(page);
+      fPageAllocator->DeletePage(page);
       page = tmp;
    }
 

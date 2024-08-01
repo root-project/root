@@ -25,7 +25,7 @@
 #include <ROOT/RNTupleWriteOptions.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RPage.hxx>
-#include <ROOT/RPageAllocator.hxx>
+#include <ROOT/RPagePool.hxx>
 #include <ROOT/RSpan.hxx>
 #include <string_view>
 
@@ -50,7 +50,7 @@ class RColumn;
 class RColumnElementBase;
 class RNTupleCompressor;
 struct RNTupleModelChangeset;
-class RPagePool;
+class RPageAllocator;
 
 enum class EPageStorageType {
    kSink,
@@ -143,6 +143,9 @@ public:
 
 protected:
    Detail::RNTupleMetrics fMetrics;
+
+   /// For the time being, we will use the heap allocator for all sources and sinks. This may change in the future.
+   std::unique_ptr<RPageAllocator> fPageAllocator;
 
    std::string fNTupleName;
    RTaskScheduler *fTaskScheduler = nullptr;
@@ -585,8 +588,8 @@ protected:
    /// The active columns are implicitly defined by the model fields or views
    RActivePhysicalColumns fActivePhysicalColumns;
 
-   /// Populated pages might be shared; the page pool might, at some point, be used by multiple page sources
-   std::shared_ptr<RPagePool> fPagePool;
+   /// Pages that are unzipped with IMT are staged into the page pool
+   RPagePool fPagePool;
 
    virtual void LoadStructureImpl() = 0;
    /// `LoadStructureImpl()` has been called before `AttachImpl()` is called
