@@ -176,8 +176,6 @@ TH2F *TScatter::GetHistogram() const
       double dx = (rwxmax-rwxmin)*fMargin;
       double dy = (rwymax-rwymin)*fMargin;
       auto h = new TH2F(TString::Format("%s_h",GetName()),GetTitle(),npt,rwxmin-dx,rwxmax+dx,npt,rwymin-dy,rwymax+dy);
-//          h->SetMinimum(rwymin-dy);
-//          h->SetMaximum(rwymax+dy);
       h->SetBit(TH1::kNoStats);
       h->SetDirectory(nullptr);
       h->Sumw2(kFALSE);
