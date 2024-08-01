@@ -139,7 +139,7 @@ private:
 
    /// Either provided by CreateFromAnchor, or read from the ROOT file given the ntuple name
    std::optional<RNTuple> fAnchor;
-   /// The last cluster from which a page got populated.  Points into fClusterPool->fPool
+   /// The last cluster from which a page got loaded.  Points into fClusterPool->fPool
    RCluster *fCurrentCluster = nullptr;
    /// An RRawFile is used to request the necessary byte ranges from a local or a remote file
    std::unique_ptr<ROOT::Internal::RRawFile> fFile;
@@ -167,8 +167,8 @@ protected:
    /// The cloned page source creates a new raw file and reader and opens its own file descriptor to the data.
    std::unique_ptr<RPageSource> CloneImpl() const final;
 
-   RPage PopulatePageImpl(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo,
-                          ClusterSize_t::ValueType idxInCluster) final;
+   RPage LoadPageImpl(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo,
+                      ClusterSize_t::ValueType idxInCluster) final;
 
 public:
    RPageSourceFile(std::string_view ntupleName, std::string_view path, const RNTupleReadOptions &options);

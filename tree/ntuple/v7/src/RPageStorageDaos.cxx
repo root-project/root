@@ -611,9 +611,9 @@ void ROOT::Experimental::Internal::RPageSourceDaos::LoadSealedPage(DescriptorId_
 }
 
 ROOT::Experimental::Internal::RPage
-ROOT::Experimental::Internal::RPageSourceDaos::PopulatePageImpl(ColumnHandle_t columnHandle,
-                                                                const RClusterInfo &clusterInfo,
-                                                                ClusterSize_t::ValueType idxInCluster)
+ROOT::Experimental::Internal::RPageSourceDaos::LoadPageImpl(ColumnHandle_t columnHandle,
+                                                            const RClusterInfo &clusterInfo,
+                                                            ClusterSize_t::ValueType idxInCluster)
 {
    const auto columnId = columnHandle.fPhysicalId;
    const auto clusterId = clusterInfo.fClusterId;
@@ -648,7 +648,7 @@ ROOT::Experimental::Internal::RPageSourceDaos::PopulatePageImpl(ColumnHandle_t c
          fNTupleIndex, clusterId, columnId, pageInfo.fLocator.GetPosition<RNTupleLocatorObject64>().fLocation);
       fDaosContainer->ReadSingleAkey(directReadBuffer.get(), sealedPage.GetBufferSize(), daosKey.fOid, daosKey.fDkey,
                                      daosKey.fAkey);
-      fCounters->fNPageLoaded.Inc();
+      fCounters->fNPageRead.Inc();
       fCounters->fNRead.Inc();
       fCounters->fSzReadPayload.Add(sealedPage.GetBufferSize());
       sealedPage.SetBuffer(directReadBuffer.get());
@@ -678,7 +678,7 @@ ROOT::Experimental::Internal::RPageSourceDaos::PopulatePageImpl(ColumnHandle_t c
                      RPage::RClusterInfo(clusterId, clusterInfo.fColumnOffset));
    fPagePool->RegisterPage(
       newPage, RPageDeleter([](const RPage &page, void *) { RPageAllocatorHeap::DeletePage(page); }, nullptr));
-   fCounters->fNPagePopulated.Inc();
+   fCounters->fNPageLoaded.Inc();
    return newPage;
 }
 
@@ -715,7 +715,7 @@ ROOT::Experimental::Internal::RPageSourceDaos::LoadClusters(std::span<RCluster::
                                      RDaosContainer::MultiObjectRWOperation_t &readRequests) {
       auto clusterId = clusterKey.fClusterId;
       // Group page locators by their position in the object store; with caging enabled, this facilitates the
-      // processing of cages' requests together into a single IOV to be populated.
+      // processing of cages' requests together into a single IOV to be loaded.
       std::unordered_map<std::uint32_t, std::vector<RDaosSealedPageLocator>> onDiskPages;
 
       unsigned clusterBufSz = 0, nPages = 0;
@@ -765,7 +765,7 @@ ROOT::Experimental::Internal::RPageSourceDaos::LoadClusters(std::span<RCluster::
 
          cageBuffer += cageSz;
       }
-      fCounters->fNPageLoaded.Add(nPages);
+      fCounters->fNPageRead.Add(nPages);
       fCounters->fSzReadPayload.Add(clusterBufSz);
 
       auto cluster = std::make_unique<RCluster>(clusterId);
