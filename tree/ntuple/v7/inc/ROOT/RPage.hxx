@@ -26,6 +26,8 @@ namespace ROOT {
 namespace Experimental {
 namespace Internal {
 
+class RPageAllocator;
+
 // clang-format off
 /**
 \class ROOT::Experimental::Internal::RPage
@@ -61,6 +63,8 @@ public:
 private:
    ColumnId_t fColumnId = kInvalidColumnId;
    void *fBuffer = nullptr;
+   /// The allocator used to allocate fBuffer. Can be null if the buffer doesn't need to be freed.
+   RPageAllocator *fPageAllocator = nullptr;
    std::uint32_t fElementSize = 0;
    std::uint32_t fNElements = 0;
    /// The capacity of the page in number of elements
@@ -70,8 +74,13 @@ private:
 
 public:
    RPage() = default;
-   RPage(ColumnId_t columnId, void *buffer, ClusterSize_t::ValueType elementSize, ClusterSize_t::ValueType maxElements)
-      : fColumnId(columnId), fBuffer(buffer), fElementSize(elementSize), fMaxElements(maxElements)
+   RPage(ColumnId_t columnId, void *buffer, RPageAllocator *pageAllocator, ClusterSize_t::ValueType elementSize,
+         ClusterSize_t::ValueType maxElements)
+      : fColumnId(columnId),
+        fBuffer(buffer),
+        fPageAllocator(pageAllocator),
+        fElementSize(elementSize),
+        fMaxElements(maxElements)
    {}
    ~RPage() = default;
 
@@ -130,11 +139,14 @@ public:
    /// invoking `GrowUnchecked()` and `SetWindow()` as appropriate.
    static RPage MakePageZero(ColumnId_t columnId, ClusterSize_t::ValueType elementSize)
    {
-      return RPage{columnId, const_cast<void *>(GetPageZeroBuffer()), elementSize,
+      return RPage{columnId, const_cast<void *>(GetPageZeroBuffer()), nullptr, elementSize,
                    /*maxElements=*/(kPageZeroSize / elementSize)};
    }
    /// Return a pointer to the page zero buffer used if there is no on-disk data for a particular deferred column
    static const void *GetPageZeroBuffer();
+
+   /// Transition method, eventually the page will delete itself on destruction
+   void ReleaseBuffer();
 
    bool IsValid() const { return fColumnId != kInvalidColumnId; }
    bool IsNull() const { return fBuffer == nullptr; }
