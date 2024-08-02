@@ -128,12 +128,6 @@ if(NOT ROOT_roofit_FOUND)
                   roostats/*.C roostats/*.py
                   histfactory/*.C histfactory/*.py)
 else()
-  if(DEFINED ENV{JENKINS_HOME})
-    if(MSVC AND NOT win_broken_tests)
-      message(STATUS "Running in Jenkins: Disabling rf401_importttreethx.py rf708_bphysics.py and rf501_simultaneouspdf.py")
-      set(roofit_veto roofit/rf401_importttreethx.py roofit/rf708_bphysics.py roofit/rf501_simultaneouspdf.py)
-    endif()
-  endif()
   if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 4 AND NOT llvm13_broken_tests)
     # The following tutorials are failing with this error:
     # IncrementalExecutor::executeFunction: symbol '__std_find_trivial_4@12' unresolved while linking [cling interface function]!
