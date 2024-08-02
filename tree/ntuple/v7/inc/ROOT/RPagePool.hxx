@@ -77,6 +77,60 @@ public:
    void ReturnPage(RPage &page);
 };
 
+// clang-format off
+/**
+\class ROOT::Experimental::Internal::RPageRef
+\ingroup NTuple
+\brief Reference to a page stored in the page pool
+
+The referenced page knows about its page pool and decreases the reference counter on destruction.
+*/
+// clang-format on
+class RPageRef {
+   friend class RPagePool;
+
+   RPage fPage;
+   RPagePool *fPagePool = nullptr;
+
+   // Called as delegated constructor and directly by the page pool
+   RPageRef(const RPage &page, RPagePool *pagePool) : fPagePool(pagePool)
+   {
+      // We leave the fPage::fPageAllocator member unset (nullptr), since fPage is a non-owning view on the page
+      fPage.fColumnId = page.fColumnId;
+      fPage.fBuffer = page.fBuffer;
+      fPage.fElementSize = page.fElementSize;
+      fPage.fNElements = page.fNElements;
+      fPage.fMaxElements = page.fMaxElements;
+      fPage.fRangeFirst = page.fRangeFirst;
+      fPage.fClusterInfo = page.fClusterInfo;
+   }
+
+public:
+   RPageRef() = default;
+   RPageRef(const RPageRef &other) = delete;
+   RPageRef &operator=(const RPageRef &other) = delete;
+
+   RPageRef(RPageRef &&other) : RPageRef(other.fPage, other.fPagePool) { other.fPagePool = nullptr; }
+
+   RPageRef &operator=(RPageRef &&other)
+   {
+      if (this != &other) {
+         std::swap(fPage, other.fPage);
+         std::swap(fPagePool, other.fPagePool);
+      }
+      return *this;
+   }
+
+   ~RPageRef()
+   {
+      if (fPagePool)
+         fPagePool->ReturnPage(fPage);
+   }
+
+   const RPage &Get() const { return fPage; }
+   RPage &Get() { return fPage; }
+};
+
 } // namespace Internal
 
 } // namespace Experimental

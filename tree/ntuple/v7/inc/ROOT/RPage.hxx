@@ -27,6 +27,7 @@ namespace Experimental {
 namespace Internal {
 
 class RPageAllocator;
+class RPageRef;
 
 // clang-format off
 /**
@@ -41,6 +42,8 @@ with the page pool and allocated/freed by the page storage.
 */
 // clang-format on
 class RPage {
+   friend class RPageRef;
+
 public:
    static constexpr size_t kPageZeroSize = 64 * 1024;
 
