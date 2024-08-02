@@ -185,10 +185,10 @@ RooDataSet *RooBinnedGenContext::generate(double nEvt, bool /*skipInit*/, bool e
 
       if (ranY<_hist->weight()) {
    if (wgt==1) {
-     if (size_t(ibinRand) < histOut.size()) histOut[ibinRand]++ ;
+     histOut[ibinRand]++ ;
    } else {
      // If weight is negative, prior bin content must be at least 1
-     if (size_t(ibinRand) < histOut.size() && histOut[ibinRand]>0) {
+     if (histOut[ibinRand]>0) {
        histOut[ibinRand]-- ;
      } else {
        continue ;
