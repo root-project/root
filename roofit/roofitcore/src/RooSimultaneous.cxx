@@ -151,6 +151,14 @@ RooSimultaneous::RooSimultaneous(const char *name, const char *title, std::map<s
 {
 }
 
+/// For internal use in RooFit.
+RooSimultaneous::RooSimultaneous(const char *name, const char *title,
+                                 RooFit::Detail::FlatMap<std::string, RooAbsPdf *> const &pdfMap,
+                                 RooAbsCategoryLValue &inIndexCat)
+   : RooSimultaneous(name, title, RooFit::Detail::flatMapToStdMap(pdfMap), inIndexCat)
+{
+}
+
 RooSimultaneous::RooSimultaneous(const char *name, const char *title, RooSimultaneous::InitializationOutput &&initInfo)
    : RooAbsPdf(name, title),
      _plotCoefNormSet("!plotCoefNormSet", "plotCoefNormSet", this, false, false),

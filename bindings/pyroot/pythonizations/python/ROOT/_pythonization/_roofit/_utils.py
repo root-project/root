@@ -85,7 +85,7 @@ def _string_to_root_attribute(value, lookup_map):
         return value
 
 
-def _dict_to_std_map(arg_dict, allowed_val_dict):
+def _dict_to_flat_map(arg_dict, allowed_val_dict):
     """
     Helper function to convert python dict to std::map.
 
@@ -157,15 +157,16 @@ def _dict_to_std_map(arg_dict, allowed_val_dict):
 
         return key_type + "," + value_type
 
-    # The std::map created by this function usually contains non-owning pointers as values.
+    # The map created by this function usually contains non-owning pointers as values.
     # This is not considered by Pythons reference counter. To ensure that the pointed-to objects
-    # live at least as long as the std::map, a python list containing references to these objects
-    # is added as an attribute to the std::map.
-    arg_map = ROOT.std.map[get_template_args(arg_dict)]()
+    # live at least as long as the map, a python list containing references to these objects
+    # is added as an attribute to the map.
+    arg_map = ROOT.RooFit.Detail.FlatMap[get_template_args(arg_dict)]()
     arg_map.keepalive = list()
-    for key, value in arg_dict.items():
-        arg_map.keepalive.append(value)
-        arg_map[key] = value
+    for key, val in arg_dict.items():
+        arg_map.keepalive.append(val)
+        arg_map.keys.push_back(key)
+        arg_map.vals.push_back(val)
 
     return arg_map
 

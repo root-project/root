@@ -37,7 +37,7 @@ ROOT.RooMCStudy(model, ROOT.RooArgSet(x), FitOptions=dict(Save=True, PrintEvalEr
 */
 """
 
-from ._utils import _kwargs_to_roocmdargs, _string_to_root_attribute, _dict_to_std_map, cpp_signature
+from ._utils import _kwargs_to_roocmdargs, _string_to_root_attribute, _dict_to_flat_map, cpp_signature
 
 
 # Color and Style dictionary to define matplotlib conventions
@@ -163,9 +163,7 @@ def Slice(*args, **kwargs):
     from cppyy.gbl import RooFit
 
     if len(args) == 1 and len(kwargs) == 0 and isinstance(args[0], dict):
-        args = list(args)
-        args[0] = _dict_to_std_map(args[0], {"RooCategory*": "std::string"})
-        return RooFit._Slice(args[0])
+        return RooFit.Detail.SliceFlatMap(_dict_to_flat_map(args[0], {"RooCategory*": "std::string"}))
 
     return RooFit._Slice(*args, **kwargs)
 
@@ -186,9 +184,7 @@ def Import(*args, **kwargs):
     from cppyy.gbl import RooFit
 
     if len(args) == 1 and len(kwargs) == 0 and isinstance(args[0], dict):
-        args = list(args)
-        args[0] = _dict_to_std_map(args[0], {"std::string": ["TH1*", "RooDataHist*", "RooDataSet*"]})
-        return RooFit._Import(args[0])
+        return RooFit.Detail.ImportFlatMap(_dict_to_flat_map(args[0], {"std::string": ["TH1*", "RooDataHist*", "RooDataSet*"]}))
 
     return RooFit._Import(*args, **kwargs)
 
@@ -203,9 +199,7 @@ def Link(*args, **kwargs):
     from cppyy.gbl import RooFit
 
     if len(args) == 1 and len(kwargs) == 0 and isinstance(args[0], dict):
-        args = list(args)
-        args[0] = _dict_to_std_map(args[0], {"std::string": "RooAbsData*"})
-        return RooFit._Link(args[0])
+        return RooFit.Detail.LinkFlatMap(_dict_to_flat_map(args[0], {"std::string": "RooAbsData*"}))
 
     return RooFit._Link(*args, **kwargs)
 
