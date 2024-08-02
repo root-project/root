@@ -94,10 +94,10 @@ protected:
    std::unique_ptr<RPageSource> CloneImpl() const final;
 
    // Unused because we overwrite LoadPage()
-   virtual RPage LoadPageImpl(ColumnHandle_t /* columnHandle */, const RClusterInfo & /* clusterInfo */,
-                              ClusterSize_t::ValueType /* idxInCluster */)
+   virtual RPageRef LoadPageImpl(ColumnHandle_t /* columnHandle */, const RClusterInfo & /* clusterInfo */,
+                                 ClusterSize_t::ValueType /* idxInCluster */)
    {
-      return RPage();
+      return RPageRef();
    }
 
 public:
@@ -107,8 +107,8 @@ public:
    ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) final;
    void DropColumn(ColumnHandle_t columnHandle) final;
 
-   RPage LoadPage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex) final;
-   RPage LoadPage(ColumnHandle_t columnHandle, RClusterIndex clusterIndex) final;
+   RPageRef LoadPage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex) final;
+   RPageRef LoadPage(ColumnHandle_t columnHandle, RClusterIndex clusterIndex) final;
    void ReleasePage(RPage &page) final;
 
    void LoadSealedPage(DescriptorId_t physicalColumnId, RClusterIndex clusterIndex, RSealedPage &sealedPage) final;
