@@ -37,16 +37,6 @@ public:
       : fTreeValue(std::make_unique<TTreeReaderValue<T>>(r, colName.c_str()))
    {
    }
-
-   /// The dtor resets the TTreeReaderValue object.
-   //
-   // Otherwise a race condition is present in which a TTreeReader
-   // and its TTreeReader{Value,Array}s can be deleted concurrently:
-   // - Thread #1) a task ends and pushes back processing slot
-   // - Thread #2) a task starts and overwrites thread-local TTreeReaderValues
-   // - Thread #1) first task deletes TTreeReader
-   // See https://github.com/root-project/root/commit/26e8ace6e47de6794ac9ec770c3bbff9b7f2e945
-   ~RTreeColumnReader() override { fTreeValue.reset(); }
 };
 
 /// RTreeColumnReader specialization for TTree values read via TTreeReaderArrays.
@@ -135,9 +125,6 @@ public:
       : fTreeArray(std::make_unique<TTreeReaderArray<T>>(r, colName.c_str()))
    {
    }
-
-   /// See the other class template specializations for an explanation.
-   ~RTreeColumnReader() override { fTreeArray.reset(); }
 };
 
 /// RTreeColumnReader specialization for arrays of boolean values read via TTreeReaderArrays.
@@ -176,9 +163,6 @@ public:
       : fTreeArray(std::make_unique<TTreeReaderArray<bool>>(r, colName.c_str()))
    {
    }
-
-   /// See the other class template specializations for an explanation.
-   ~RTreeColumnReader() override { fTreeArray.reset(); }
 };
 
 } // namespace RDF
