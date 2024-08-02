@@ -98,7 +98,7 @@ This is and can only be partially enforced through C++.
 */
 // clang-format on
 class RFieldBase {
-   friend class ROOT::Experimental::RCollectionField; // to move the fields from the collection model
+   friend class ROOT::Experimental::RCollectionField;                  // to move the fields from the collection model
    friend struct ROOT::Experimental::Internal::RFieldCallbackInjector; // used for unit tests
    friend struct ROOT::Experimental::Internal::RFieldRepresentationModifier; // used for unit tests
    friend void Internal::CallCommitClusterOnField(RFieldBase &);
@@ -198,7 +198,7 @@ public:
       friend class RFieldBase;
 
    private:
-      RFieldBase *fField = nullptr; ///< The field that created the RValue
+      RFieldBase *fField = nullptr;  ///< The field that created the RValue
       std::shared_ptr<void> fObjPtr; ///< Set by Bind() or by RFieldBase::CreateValue(), SplitValue() or BindValue()
 
       RValue(RFieldBase *field, std::shared_ptr<void> objPtr) : fField(field), fObjPtr(objPtr) {}
@@ -242,11 +242,11 @@ public:
    private:
       friend class RFieldBase;
 
-      RFieldBase *fField = nullptr;       ///< The field that created the array of values
+      RFieldBase *fField = nullptr;                   ///< The field that created the array of values
       std::unique_ptr<RFieldBase::RDeleter> fDeleter; /// Cached deleter of fField
-      void *fValues = nullptr;            ///< Pointer to the start of the array
-      std::size_t fValueSize = 0;         ///< Cached copy of fField->GetValueSize()
-      std::size_t fCapacity = 0;          ///< The size of the array memory block in number of values
+      void *fValues = nullptr;                        ///< Pointer to the start of the array
+      std::size_t fValueSize = 0;                     ///< Cached copy of fField->GetValueSize()
+      std::size_t fCapacity = 0;                      ///< The size of the array memory block in number of values
       std::size_t fSize = 0;              ///< The number of available values in the array (provided their mask is set)
       bool fIsAdopted = false;            ///< True if the user provides the memory buffer for fValues
       std::unique_ptr<bool[]> fMaskAvail; ///< Masks invalid values in the array
@@ -401,7 +401,7 @@ protected:
    /// Collections and classes own sub fields
    std::vector<std::unique_ptr<RFieldBase>> fSubFields;
    /// Sub fields point to their mother field
-   RFieldBase* fParent;
+   RFieldBase *fParent;
    /// All fields that have columns have a distinct main column. E.g., for simple fields (float, int, ...), the
    /// principal column corresponds to the field type. For collection fields except fixed-sized arrays,
    /// the main column is the offset field.  Class fields have no column of their own.
@@ -639,13 +639,14 @@ public:
    private:
       struct Position {
          using FieldPtr_t = std::conditional_t<IsConstT, const RFieldBase *, RFieldBase *>;
-         Position() : fFieldPtr(nullptr), fIdxInParent(-1) { }
+         Position() : fFieldPtr(nullptr), fIdxInParent(-1) {}
          Position(FieldPtr_t fieldPtr, int idxInParent) : fFieldPtr(fieldPtr), fIdxInParent(idxInParent) {}
          FieldPtr_t fFieldPtr;
          int fIdxInParent;
       };
       /// The stack of nodes visited when walking down the tree of fields
       std::vector<Position> fStack;
+
    public:
       using iterator = RSchemaIteratorTemplate<IsConstT>;
       using iterator_category = std::forward_iterator_tag;
@@ -681,12 +682,21 @@ public:
          itr->fFieldPtr = itr->fFieldPtr->fParent->fSubFields[nextIdxInParent].get();
       }
 
-      iterator  operator++(int) /* postfix */        { auto r = *this; Advance(); return r; }
-      iterator& operator++()    /* prefix */         { Advance(); return *this; }
-      reference operator* () const                   { return *fStack.back().fFieldPtr; }
-      pointer   operator->() const                   { return fStack.back().fFieldPtr; }
-      bool      operator==(const iterator& rh) const { return fStack.back().fFieldPtr == rh.fStack.back().fFieldPtr; }
-      bool      operator!=(const iterator& rh) const { return fStack.back().fFieldPtr != rh.fStack.back().fFieldPtr; }
+      iterator operator++(int) /* postfix */
+      {
+         auto r = *this;
+         Advance();
+         return r;
+      }
+      iterator &operator++() /* prefix */
+      {
+         Advance();
+         return *this;
+      }
+      reference operator*() const { return *fStack.back().fFieldPtr; }
+      pointer operator->() const { return fStack.back().fFieldPtr; }
+      bool operator==(const iterator &rh) const { return fStack.back().fFieldPtr == rh.fStack.back().fFieldPtr; }
+      bool operator!=(const iterator &rh) const { return fStack.back().fFieldPtr != rh.fStack.back().fFieldPtr; }
    };
    using RSchemaIterator = RSchemaIteratorTemplate<false>;
    using RConstSchemaIterator = RSchemaIteratorTemplate<true>;
@@ -709,18 +719,17 @@ public:
    /// field might be demoted to non-simple if a post-read callback is set.
    RFieldBase(std::string_view name, std::string_view type, ENTupleStructure structure, bool isSimple,
               std::size_t nRepetitions = 0);
-   RFieldBase(const RFieldBase&) = delete;
-   RFieldBase(RFieldBase&&) = default;
-   RFieldBase& operator =(const RFieldBase&) = delete;
-   RFieldBase& operator =(RFieldBase&&) = default;
+   RFieldBase(const RFieldBase &) = delete;
+   RFieldBase(RFieldBase &&) = default;
+   RFieldBase &operator=(const RFieldBase &) = delete;
+   RFieldBase &operator=(RFieldBase &&) = default;
    virtual ~RFieldBase() = default;
 
    /// Copies the field and its sub fields using a possibly new name and a new, unconnected set of columns
    std::unique_ptr<RFieldBase> Clone(std::string_view newName) const;
 
    /// Factory method to resurrect a field from the stored on-disk type information
-   static RResult<std::unique_ptr<RFieldBase>>
-   Create(const std::string &fieldName, const std::string &typeName);
+   static RResult<std::unique_ptr<RFieldBase>> Create(const std::string &fieldName, const std::string &typeName);
    /// Checks if the given type is supported by RNTuple. In case of success, the result vector is empty.
    /// Otherwise there is an error record for each failing sub field (sub type).
    static std::vector<RCheckResult> Check(const std::string &fieldName, const std::string &typeName);
@@ -894,7 +903,7 @@ private:
       void operator()(void *objPtr, bool dtorOnly) final;
    };
 
-   TClass* fClass;
+   TClass *fClass;
    /// Additional information kept for each entry in `fSubFields`
    std::vector<RSubFieldInfo> fSubFieldsInfo;
    std::size_t fMaxAlignment = 1;
@@ -919,8 +928,8 @@ protected:
 
 public:
    RClassField(std::string_view fieldName, std::string_view className);
-   RClassField(RClassField&& other) = default;
-   RClassField& operator =(RClassField&& other) = default;
+   RClassField(RClassField &&other) = default;
+   RClassField &operator=(RClassField &&other) = default;
    ~RClassField() override = default;
 
    std::vector<RValue> SplitValue(const RValue &value) const final;
@@ -945,7 +954,7 @@ private:
 
    TClass *fClass = nullptr;
    Internal::RNTupleSerializer::StreamerInfoMap_t fStreamerInfos; ///< streamer info records seen during writing
-   ClusterSize_t fIndex; ///< number of bytes written in the current cluster
+   ClusterSize_t fIndex;                                          ///< number of bytes written in the current cluster
 
 private:
    // Note that className may be different from classp->GetName(), e.g. through different canonicalization of RNTuple
@@ -1075,6 +1084,7 @@ protected:
       unsigned char fEndSmallBuf[TVirtualCollectionProxy::fgIteratorArenaSize];
       void *fBegin = &fBeginSmallBuf;
       void *fEnd = &fEndSmallBuf;
+
    public:
       /// Construct a `RCollectionIterableOnce` that iterates over `collection`.  If elements are guaranteed to be
       /// contiguous in memory (e.g. a vector), `stride` can be provided for faster iteration, i.e. the address of each
@@ -1211,13 +1221,14 @@ protected:
          Attach(std::move(itemFields[i]));
       }
    }
+
 public:
    /// Construct a RRecordField based on a vector of child fields. The ownership of the child fields is transferred
    /// to the RRecordField instance.
    RRecordField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> &&itemFields);
    RRecordField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> &itemFields);
-   RRecordField(RRecordField&& other) = default;
-   RRecordField& operator =(RRecordField&& other) = default;
+   RRecordField(RRecordField &&other) = default;
+   RRecordField &operator=(RRecordField &&other) = default;
    ~RRecordField() override = default;
 
    std::vector<RValue> SplitValue(const RValue &value) const final;
@@ -1264,15 +1275,16 @@ protected:
 
 public:
    RVectorField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField);
-   RVectorField(RVectorField&& other) = default;
-   RVectorField& operator =(RVectorField&& other) = default;
+   RVectorField(RVectorField &&other) = default;
+   RVectorField &operator=(RVectorField &&other) = default;
    ~RVectorField() override = default;
 
    std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetValueSize() const override { return sizeof(std::vector<char>); }
    size_t GetAlignment() const final { return std::alignment_of<std::vector<char>>(); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
-   void GetCollectionInfo(NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const {
+   void GetCollectionInfo(NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const
+   {
       fPrincipalColumn->GetCollectionInfo(globalIndex, collectionStart, size);
    }
    void GetCollectionInfo(RClusterIndex clusterIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const
@@ -1376,7 +1388,7 @@ protected:
 public:
    RArrayField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField, std::size_t arrayLength);
    RArrayField(RArrayField &&other) = default;
-   RArrayField& operator =(RArrayField &&other) = default;
+   RArrayField &operator=(RArrayField &&other) = default;
    ~RArrayField() override = default;
 
    std::vector<RValue> SplitValue(const RValue &value) const final;
@@ -1529,7 +1541,7 @@ public:
    // TODO(jblomer): use std::span in signature
    RVariantField(std::string_view fieldName, const std::vector<RFieldBase *> &itemFields);
    RVariantField(RVariantField &&other) = default;
-   RVariantField& operator =(RVariantField &&other) = default;
+   RVariantField &operator=(RVariantField &&other) = default;
    ~RVariantField() override = default;
 
    size_t GetValueSize() const final;
@@ -1727,7 +1739,8 @@ protected:
 
 public:
    static std::string TypeName() { return ROOT::Internal::GetDemangledTypeName(typeid(T)); }
-   RField(std::string_view name) : RClassField(name, TypeName()) {
+   RField(std::string_view name) : RClassField(name, TypeName())
+   {
       static_assert(std::is_class_v<T>, "no I/O support for this basic C++ type");
    }
    RField(RField &&other) = default;
@@ -1820,8 +1833,8 @@ public:
    {
       static_assert(std::is_class<T>::value, "collection proxy unsupported for fundamental types");
    }
-   RField(RField&& other) = default;
-   RField& operator =(RField&& other) = default;
+   RField(RField &&other) = default;
+   RField &operator=(RField &&other) = default;
    ~RField() override = default;
 };
 
@@ -1847,8 +1860,8 @@ public:
    static std::string TypeName() { return ""; }
    RCollectionField(std::string_view name, std::shared_ptr<RNTupleCollectionWriter> collectionWriter,
                     std::unique_ptr<RFieldZero> collectionParent);
-   RCollectionField(RCollectionField&& other) = default;
-   RCollectionField& operator =(RCollectionField&& other) = default;
+   RCollectionField(RCollectionField &&other) = default;
+   RCollectionField &operator=(RCollectionField &&other) = default;
    ~RCollectionField() override = default;
 
    size_t GetValueSize() const final { return sizeof(ClusterSize_t); }
@@ -1999,12 +2012,13 @@ protected:
 public:
    static std::string TypeName() { return "ROOT::Experimental::ClusterSize_t"; }
    explicit RField(std::string_view name) : RSimpleField(name, TypeName()) {}
-   RField(RField&& other) = default;
-   RField& operator =(RField&& other) = default;
+   RField(RField &&other) = default;
+   RField &operator=(RField &&other) = default;
    ~RField() override = default;
 
    /// Special help for offset fields
-   void GetCollectionInfo(NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *size) {
+   void GetCollectionInfo(NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *size)
+   {
       fPrincipalColumn->GetCollectionInfo(globalIndex, collectionStart, size);
    }
    void GetCollectionInfo(RClusterIndex clusterIndex, RClusterIndex *collectionStart, ClusterSize_t *size)
@@ -2091,8 +2105,8 @@ protected:
 public:
    static std::string TypeName() { return "bool"; }
    explicit RField(std::string_view name) : RSimpleField(name, TypeName()) {}
-   RField(RField&& other) = default;
-   RField& operator =(RField&& other) = default;
+   RField(RField &&other) = default;
+   RField &operator=(RField &&other) = default;
    ~RField() override = default;
 
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
@@ -2111,8 +2125,8 @@ protected:
 public:
    static std::string TypeName() { return "float"; }
    explicit RField(std::string_view name) : RSimpleField(name, TypeName()) {}
-   RField(RField&& other) = default;
-   RField& operator =(RField&& other) = default;
+   RField(RField &&other) = default;
+   RField &operator=(RField &&other) = default;
    ~RField() override = default;
 
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
@@ -2133,8 +2147,8 @@ protected:
 public:
    static std::string TypeName() { return "double"; }
    explicit RField(std::string_view name) : RSimpleField(name, TypeName()) {}
-   RField(RField&& other) = default;
-   RField& operator =(RField&& other) = default;
+   RField(RField &&other) = default;
+   RField &operator=(RField &&other) = default;
    ~RField() override = default;
 
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
@@ -2176,8 +2190,8 @@ protected:
 public:
    static std::string TypeName() { return "char"; }
    explicit RField(std::string_view name) : RSimpleField(name, TypeName()) {}
-   RField(RField&& other) = default;
-   RField& operator =(RField&& other) = default;
+   RField(RField &&other) = default;
+   RField &operator=(RField &&other) = default;
    ~RField() override = default;
 
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
@@ -2432,8 +2446,8 @@ public:
       : RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, false /* isSimple */), fIndex(0)
    {
    }
-   RField(RField&& other) = default;
-   RField& operator =(RField&& other) = default;
+   RField(RField &&other) = default;
+   RField &operator=(RField &&other) = default;
    ~RField() override = default;
 
    size_t GetValueSize() const final { return sizeof(std::string); }
@@ -2483,13 +2497,10 @@ protected:
    void ConstructValue(void *where) const final { new (where) ContainerT(); }
 
 public:
-   static std::string TypeName() {
-      return "std::array<" + RField<ItemT>::TypeName() + "," + std::to_string(N) + ">";
-   }
-   explicit RField(std::string_view name) : RArrayField(name, std::make_unique<RField<ItemT>>("_0"), N)
-   {}
-   RField(RField&& other) = default;
-   RField& operator =(RField&& other) = default;
+   static std::string TypeName() { return "std::array<" + RField<ItemT>::TypeName() + "," + std::to_string(N) + ">"; }
+   explicit RField(std::string_view name) : RArrayField(name, std::make_unique<RField<ItemT>>("_0"), N) {}
+   RField(RField &&other) = default;
+   RField &operator=(RField &&other) = default;
    ~RField() override = default;
 };
 
@@ -2597,12 +2608,13 @@ public:
 template <typename... ItemTs>
 class RField<std::variant<ItemTs...>> final : public RVariantField {
    using ContainerT = typename std::variant<ItemTs...>;
+
 private:
    template <typename HeadT, typename... TailTs>
    static std::string BuildItemTypes()
    {
       std::string result = RField<HeadT>::TypeName();
-      if constexpr(sizeof...(TailTs) > 0)
+      if constexpr (sizeof...(TailTs) > 0)
          result += "," + BuildItemTypes<TailTs...>();
       return result;
    }
@@ -2612,7 +2624,7 @@ private:
    {
       std::vector<RFieldBase *> result;
       result.emplace_back(new RField<HeadT>("_" + std::to_string(index)));
-      if constexpr(sizeof...(TailTs) > 0) {
+      if constexpr (sizeof...(TailTs) > 0) {
          auto tailFields = BuildItemFields<TailTs...>(index + 1);
          result.insert(result.end(), tailFields.begin(), tailFields.end());
       }
@@ -2625,8 +2637,8 @@ protected:
 public:
    static std::string TypeName() { return "std::variant<" + BuildItemTypes<ItemTs...>() + ">"; }
    explicit RField(std::string_view name) : RVariantField(name, BuildItemFields<ItemTs...>()) {}
-   RField(RField&& other) = default;
-   RField& operator =(RField&& other) = default;
+   RField(RField &&other) = default;
+   RField &operator=(RField &&other) = default;
    ~RField() override = default;
 };
 
@@ -2639,11 +2651,9 @@ protected:
 
 public:
    static std::string TypeName() { return "std::vector<" + RField<ItemT>::TypeName() + ">"; }
-   explicit RField(std::string_view name)
-      : RVectorField(name, std::make_unique<RField<ItemT>>("_0"))
-   {}
-   RField(RField&& other) = default;
-   RField& operator =(RField&& other) = default;
+   explicit RField(std::string_view name) : RVectorField(name, std::make_unique<RField<ItemT>>("_0")) {}
+   RField(RField &&other) = default;
+   RField &operator=(RField &&other) = default;
    ~RField() override = default;
 
    size_t GetValueSize() const final { return sizeof(ContainerT); }
@@ -2676,8 +2686,8 @@ protected:
 public:
    static std::string TypeName() { return "std::vector<bool>"; }
    explicit RField(std::string_view name);
-   RField(RField&& other) = default;
-   RField& operator =(RField&& other) = default;
+   RField(RField &&other) = default;
+   RField &operator=(RField &&other) = default;
    ~RField() override = default;
 
    std::vector<RValue> SplitValue(const RValue &value) const final;
@@ -2685,7 +2695,8 @@ public:
    size_t GetValueSize() const final { return sizeof(std::vector<bool>); }
    size_t GetAlignment() const final { return std::alignment_of<std::vector<bool>>(); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
-   void GetCollectionInfo(NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const {
+   void GetCollectionInfo(NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const
+   {
       fPrincipalColumn->GetCollectionInfo(globalIndex, collectionStart, size);
    }
    void GetCollectionInfo(RClusterIndex clusterIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const
@@ -2697,6 +2708,7 @@ public:
 template <typename ItemT>
 class RField<ROOT::VecOps::RVec<ItemT>> final : public RRVecField {
    using ContainerT = typename ROOT::VecOps::RVec<ItemT>;
+
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
    {
@@ -2737,12 +2749,9 @@ public:
    {
    }
 
-   explicit RField(std::string_view name)
-      : RField(name, std::make_unique<RField<ItemT>>("_0"))
-   {
-   }
-   RField(RField&& other) = default;
-   RField& operator =(RField&& other) = default;
+   explicit RField(std::string_view name) : RField(name, std::make_unique<RField<ItemT>>("_0")) {}
+   RField(RField &&other) = default;
+   RField &operator=(RField &&other) = default;
    ~RField() override = default;
 
    static std::string TypeName() { return "ROOT::VecOps::RVec<" + RField<ItemT>::TypeName() + ">"; }
@@ -2753,7 +2762,8 @@ public:
 
 template <typename T1, typename T2>
 class RField<std::pair<T1, T2>> final : public RPairField {
-   using ContainerT = typename std::pair<T1,T2>;
+   using ContainerT = typename std::pair<T1, T2>;
+
 private:
    template <typename Ty1, typename Ty2>
    static std::array<std::unique_ptr<RFieldBase>, 2> BuildItemFields()
@@ -2781,9 +2791,7 @@ protected:
    std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RTypedDeleter<ContainerT>>(); }
 
 public:
-   static std::string TypeName() {
-      return "std::pair<" + RField<T1>::TypeName() + "," + RField<T2>::TypeName() + ">";
-   }
+   static std::string TypeName() { return "std::pair<" + RField<T1>::TypeName() + "," + RField<T2>::TypeName() + ">"; }
    explicit RField(std::string_view name, std::array<std::unique_ptr<RFieldBase>, 2> &&itemFields)
       : RPairField(name, std::move(itemFields), BuildItemOffsets())
    {
@@ -2791,14 +2799,15 @@ public:
       fSize = sizeof(ContainerT);
    }
    explicit RField(std::string_view name) : RField(name, BuildItemFields<T1, T2>()) {}
-   RField(RField&& other) = default;
-   RField& operator =(RField&& other) = default;
+   RField(RField &&other) = default;
+   RField &operator=(RField &&other) = default;
    ~RField() override = default;
 };
 
 template <typename... ItemTs>
 class RField<std::tuple<ItemTs...>> final : public RTupleField {
    using ContainerT = typename std::tuple<ItemTs...>;
+
 private:
    template <typename HeadT, typename... TailTs>
    static std::string BuildItemTypes()
