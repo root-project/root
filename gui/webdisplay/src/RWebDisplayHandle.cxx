@@ -914,28 +914,30 @@ bool RWebDisplayHandle::ProduceImages(const std::string &fname, const std::vecto
    if (jsons.empty())
       return false;
 
-   std::string _fname = fname;
-   std::transform(_fname.begin(), _fname.end(), _fname.begin(), ::tolower);
-   auto EndsWith = [&_fname](const std::string &suffix) {
+   auto EndsWith = [&fname](const std::string &suffix) {
+      std::string _fname = fname;
+      std::transform(_fname.begin(), _fname.end(), _fname.begin(), ::tolower);
       return (_fname.length() > suffix.length()) ? (0 == _fname.compare(_fname.length() - suffix.length(), suffix.length(), suffix)) : false;
    };
 
    std::vector<std::string> fnames;
 
    if (!EndsWith(".pdf")) {
-      bool has_quialifier = _fname.find("%") != std::string::npos;
+      std::string farg = fname;
+
+      bool has_quialifier = farg.find("%") != std::string::npos;
 
       if (!has_quialifier && (jsons.size() > 1)) {
-         _fname.insert(_fname.rfind("."), "%d");
+         farg.insert(farg.rfind("."), "%d");
          has_quialifier = true;
       }
 
       for (unsigned n = 0; n < jsons.size(); n++) {
          if (has_quialifier) {
-            auto expand_name = TString::Format(_fname.c_str(), (int) n);
+            auto expand_name = TString::Format(farg.c_str(), (int) n);
             fnames.emplace_back(expand_name.Data());
          } else {
-            fnames.emplace_back(_fname);
+            fnames.emplace_back(farg);
          }
       }
    }
