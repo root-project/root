@@ -282,7 +282,7 @@ void ROOT::Experimental::Internal::RPageSource::UnzipClusterImpl(RCluster *clust
       } // for all pages in column
    }    // for all columns in cluster
 
-   fCounters->fNPageLoaded.Add(cluster->GetNOnDiskPages());
+   fCounters->fNPageUnsealed.Add(cluster->GetNOnDiskPages());
 
    fTaskScheduler->Wait();
 
@@ -391,7 +391,8 @@ void ROOT::Experimental::Internal::RPageSource::EnableDefaultMetrics(const std::
       *fMetrics.MakeCounter<Detail::RNTupleAtomicCounter *>("nClusterLoaded", "",
                                                             "number of partial clusters preloaded from storage"),
       *fMetrics.MakeCounter<Detail::RNTupleAtomicCounter *>("nPageRead", "", "number of pages read from storage"),
-      *fMetrics.MakeCounter<Detail::RNTupleAtomicCounter *>("nPagePopulated", "", "number of populated pages"),
+      *fMetrics.MakeCounter<Detail::RNTupleAtomicCounter *>("nPageUnsealed", "",
+                                                            "number of pages unzipped and decoded"),
       *fMetrics.MakeCounter<Detail::RNTupleAtomicCounter *>("timeWallRead", "ns", "wall clock time spent reading"),
       *fMetrics.MakeCounter<Detail::RNTupleAtomicCounter *>("timeWallUnzip", "ns",
                                                             "wall clock time spent decompressing"),
