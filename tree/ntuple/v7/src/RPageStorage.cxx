@@ -319,13 +319,13 @@ void ROOT::Experimental::Internal::RPageSource::PrepareLoadCluster(
    }
 }
 
-ROOT::Experimental::Internal::RPage
+ROOT::Experimental::Internal::RPageRef
 ROOT::Experimental::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex)
 {
    const auto columnId = columnHandle.fPhysicalId;
-   auto cachedPage = fPagePool.GetPage(columnId, globalIndex);
-   if (!cachedPage.IsNull())
-      return cachedPage;
+   auto cachedPageRef = fPagePool.GetPage(columnId, globalIndex);
+   if (!cachedPageRef.Get().IsNull())
+      return cachedPageRef;
 
    std::uint64_t idxInCluster;
    RClusterInfo clusterInfo;
@@ -339,7 +339,7 @@ ROOT::Experimental::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle,
       const auto &clusterDescriptor = descriptorGuard->GetClusterDescriptor(clusterInfo.fClusterId);
       const auto &columnRange = clusterDescriptor.GetColumnRange(columnId);
       if (columnRange.fIsSuppressed)
-         return RPage();
+         return RPageRef();
 
       clusterInfo.fColumnOffset = columnRange.fFirstElementIndex;
       R__ASSERT(clusterInfo.fColumnOffset <= globalIndex);
@@ -350,15 +350,15 @@ ROOT::Experimental::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle,
    return LoadPageImpl(columnHandle, clusterInfo, idxInCluster);
 }
 
-ROOT::Experimental::Internal::RPage
+ROOT::Experimental::Internal::RPageRef
 ROOT::Experimental::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle, RClusterIndex clusterIndex)
 {
    const auto clusterId = clusterIndex.GetClusterId();
    const auto idxInCluster = clusterIndex.GetIndex();
    const auto columnId = columnHandle.fPhysicalId;
-   auto cachedPage = fPagePool.GetPage(columnId, clusterIndex);
-   if (!cachedPage.IsNull())
-      return cachedPage;
+   auto cachedPageRef = fPagePool.GetPage(columnId, clusterIndex);
+   if (!cachedPageRef.Get().IsNull())
+      return cachedPageRef;
 
    if (clusterId == kInvalidDescriptorId)
       throw RException(R__FAIL("entry out of bounds"));
@@ -369,7 +369,7 @@ ROOT::Experimental::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle,
       const auto &clusterDescriptor = descriptorGuard->GetClusterDescriptor(clusterId);
       const auto &columnRange = clusterDescriptor.GetColumnRange(columnId);
       if (columnRange.fIsSuppressed)
-         return RPage();
+         return RPageRef();
 
       clusterInfo.fClusterId = clusterId;
       clusterInfo.fColumnOffset = columnRange.fFirstElementIndex;

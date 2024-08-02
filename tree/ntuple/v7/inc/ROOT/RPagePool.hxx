@@ -64,13 +64,13 @@ public:
 
    /// Adds a new page to the pool. Upon registration, the page pool takes ownership of the page's memory.
    /// The new page has its reference counter set to 1.
-   void RegisterPage(RPage &page);
+   RPageRef RegisterPage(RPage &page);
    /// Like RegisterPage() but the reference counter is initialized to 0
    void PreloadPage(RPage &page);
    /// Tries to find the page corresponding to column and index in the cache. If the page is found, its reference
    /// counter is increased
-   RPage GetPage(ColumnId_t columnId, NTupleSize_t globalIndex);
-   RPage GetPage(ColumnId_t columnId, RClusterIndex clusterIndex);
+   RPageRef GetPage(ColumnId_t columnId, NTupleSize_t globalIndex);
+   RPageRef GetPage(ColumnId_t columnId, RClusterIndex clusterIndex);
    /// Give back a page to the pool and decrease the reference counter. There must not be any pointers anymore into
    /// this page. If the reference counter drops to zero, the page pool might decide to call the deleter given in
    /// during registration.

@@ -603,7 +603,7 @@ void ROOT::Experimental::Internal::RPageSourceDaos::LoadSealedPage(DescriptorId_
    sealedPage.VerifyChecksumIfEnabled().ThrowOnError();
 }
 
-ROOT::Experimental::Internal::RPage
+ROOT::Experimental::Internal::RPageRef
 ROOT::Experimental::Internal::RPageSourceDaos::LoadPageImpl(ColumnHandle_t columnHandle,
                                                             const RClusterInfo &clusterInfo,
                                                             ClusterSize_t::ValueType idxInCluster)
@@ -620,8 +620,7 @@ ROOT::Experimental::Internal::RPageSourceDaos::LoadPageImpl(ColumnHandle_t colum
       pageZero.GrowUnchecked(pageInfo.fNElements);
       pageZero.SetWindow(clusterInfo.fColumnOffset + pageInfo.fFirstInPage,
                          RPage::RClusterInfo(clusterId, clusterInfo.fColumnOffset));
-      fPagePool.RegisterPage(pageZero);
-      return pageZero;
+      return fPagePool.RegisterPage(pageZero);
    }
 
    RSealedPage sealedPage;
@@ -650,9 +649,9 @@ ROOT::Experimental::Internal::RPageSourceDaos::LoadPageImpl(ColumnHandle_t colum
          fCurrentCluster = fClusterPool->GetCluster(clusterId, fActivePhysicalColumns.ToColumnSet());
       R__ASSERT(fCurrentCluster->ContainsColumn(columnId));
 
-      auto cachedPage = fPagePool.GetPage(columnId, RClusterIndex(clusterId, idxInCluster));
-      if (!cachedPage.IsNull())
-         return cachedPage;
+      auto cachedPageRef = fPagePool.GetPage(columnId, RClusterIndex(clusterId, idxInCluster));
+      if (!cachedPageRef.Get().IsNull())
+         return cachedPageRef;
 
       ROnDiskPage::Key key(columnId, pageInfo.fPageNo);
       auto onDiskPage = fCurrentCluster->GetOnDiskPage(key);
@@ -669,9 +668,8 @@ ROOT::Experimental::Internal::RPageSourceDaos::LoadPageImpl(ColumnHandle_t colum
 
    newPage.SetWindow(clusterInfo.fColumnOffset + pageInfo.fFirstInPage,
                      RPage::RClusterInfo(clusterId, clusterInfo.fColumnOffset));
-   fPagePool.RegisterPage(newPage);
    fCounters->fNPageUnsealed.Inc();
-   return newPage;
+   return fPagePool.RegisterPage(newPage);
 }
 
 void ROOT::Experimental::Internal::RPageSourceDaos::ReleasePage(RPage &page)
