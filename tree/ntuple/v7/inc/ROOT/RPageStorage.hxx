@@ -545,7 +545,7 @@ protected:
       Detail::RNTupleAtomicCounter &fSzUnzip;
       Detail::RNTupleAtomicCounter &fNClusterLoaded;
       Detail::RNTupleAtomicCounter &fNPageRead;
-      Detail::RNTupleAtomicCounter &fNPageLoaded;
+      Detail::RNTupleAtomicCounter &fNPageUnsealed;
       Detail::RNTupleAtomicCounter &fTimeWallRead;
       Detail::RNTupleAtomicCounter &fTimeWallUnzip;
       Detail::RNTupleTickCounter<Detail::RNTupleAtomicCounter> &fTimeCpuRead;
