@@ -595,8 +595,8 @@ protected:
    // Only called if a task scheduler is set. No-op be default.
    virtual void UnzipClusterImpl(RCluster *cluster);
    // Returns a page from storage if not found in the page pool. Should be able to handle zero page locators.
-   virtual RPage LoadPageImpl(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo,
-                              ClusterSize_t::ValueType idxInCluster) = 0;
+   virtual RPageRef LoadPageImpl(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo,
+                                 ClusterSize_t::ValueType idxInCluster) = 0;
 
    /// Prepare a page range read for the column set in `clusterKey`.  Specifically, pages referencing the
    /// `kTypePageZero` locator are filled in `pageZeroMap`; otherwise, `perPageFunc` is called for each page. This is
@@ -666,10 +666,10 @@ public:
 
    /// Allocates and fills a page that contains the index-th element. The default implementation searches
    /// the page and calls LoadPageImpl(). Returns a default-constructed RPage for suppressed columns.
-   virtual RPage LoadPage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex);
+   virtual RPageRef LoadPage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex);
    /// Another version of `LoadPage` that allows to specify cluster-relative indexes.
    /// Returns a default-constructed RPage for suppressed columns.
-   virtual RPage LoadPage(ColumnHandle_t columnHandle, RClusterIndex clusterIndex);
+   virtual RPageRef LoadPage(ColumnHandle_t columnHandle, RClusterIndex clusterIndex);
 
    /// Read the packed and compressed bytes of a page into the memory buffer provided by `sealedPage`. The sealed page
    /// can be used subsequently in a call to `RPageSink::CommitSealedPage`.
