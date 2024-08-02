@@ -24,13 +24,14 @@
 #include <utility>
 #include <vector>
 
-using ClusterSize_t = ROOT::Experimental::ClusterSize_t;
-using RCluster = ROOT::Experimental::Internal::RCluster;
-using RClusterPool = ROOT::Experimental::Internal::RClusterPool;
-using RNTupleDescriptor = ROOT::Experimental::RNTupleDescriptor;
-using ROnDiskPage = ROOT::Experimental::Internal::ROnDiskPage;
-using RPage = ROOT::Experimental::Internal::RPage;
-using RPageSource = ROOT::Experimental::Internal::RPageSource;
+using ROOT::Experimental::ClusterSize_t;
+using ROOT::Experimental::RNTupleDescriptor;
+using ROOT::Experimental::Internal::RCluster;
+using ROOT::Experimental::Internal::RClusterPool;
+using ROOT::Experimental::Internal::ROnDiskPage;
+using ROOT::Experimental::Internal::RPage;
+using ROOT::Experimental::Internal::RPageRef;
+using ROOT::Experimental::Internal::RPageSource;
 
 namespace {
 
@@ -42,7 +43,7 @@ protected:
    void LoadStructureImpl() final {}
    RNTupleDescriptor AttachImpl() final { return RNTupleDescriptor(); }
    std::unique_ptr<RPageSource> CloneImpl() const final { return nullptr; }
-   RPage LoadPageImpl(ColumnHandle_t, const RClusterInfo &, ClusterSize_t::ValueType) final { return RPage(); }
+   RPageRef LoadPageImpl(ColumnHandle_t, const RClusterInfo &, ClusterSize_t::ValueType) final { return RPageRef(); }
 
 public:
    /// Records the cluster IDs requests by LoadClusters() calls

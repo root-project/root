@@ -26,11 +26,12 @@ ROOT::Experimental::Internal::RPagePool::~RPagePool()
       fPageAllocator->DeletePage(p);
 }
 
-void ROOT::Experimental::Internal::RPagePool::RegisterPage(RPage &page)
+ROOT::Experimental::Internal::RPageRef ROOT::Experimental::Internal::RPagePool::RegisterPage(RPage &page)
 {
    std::lock_guard<std::mutex> lockGuard(fLock);
    fPages.emplace_back(page);
    fReferences.emplace_back(1);
+   return RPageRef(page, this);
 }
 
 void ROOT::Experimental::Internal::RPagePool::PreloadPage(RPage &page)
@@ -61,7 +62,7 @@ void ROOT::Experimental::Internal::RPagePool::ReturnPage(RPage &page)
    R__ASSERT(false);
 }
 
-ROOT::Experimental::Internal::RPage
+ROOT::Experimental::Internal::RPageRef
 ROOT::Experimental::Internal::RPagePool::GetPage(ColumnId_t columnId, NTupleSize_t globalIndex)
 {
    std::lock_guard<std::mutex> lockGuard(fLock);
@@ -71,12 +72,12 @@ ROOT::Experimental::Internal::RPagePool::GetPage(ColumnId_t columnId, NTupleSize
       if (fPages[i].GetColumnId() != columnId) continue;
       if (!fPages[i].Contains(globalIndex)) continue;
       fReferences[i]++;
-      return fPages[i];
+      return RPageRef(fPages[i], this);
    }
-   return RPage();
+   return RPageRef();
 }
 
-ROOT::Experimental::Internal::RPage
+ROOT::Experimental::Internal::RPageRef
 ROOT::Experimental::Internal::RPagePool::GetPage(ColumnId_t columnId, RClusterIndex clusterIndex)
 {
    std::lock_guard<std::mutex> lockGuard(fLock);
@@ -86,7 +87,7 @@ ROOT::Experimental::Internal::RPagePool::GetPage(ColumnId_t columnId, RClusterIn
       if (fPages[i].GetColumnId() != columnId) continue;
       if (!fPages[i].Contains(clusterIndex)) continue;
       fReferences[i]++;
-      return fPages[i];
+      return RPageRef(fPages[i], this);
    }
-   return RPage();
+   return RPageRef();
 }

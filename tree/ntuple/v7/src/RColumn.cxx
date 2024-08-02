@@ -37,8 +37,6 @@ ROOT::Experimental::Internal::RColumn::~RColumn()
 {
    fWritePage[0].ReleaseBuffer();
    fWritePage[1].ReleaseBuffer();
-   if (!fReadPage.IsNull())
-      fPageSource->ReleasePage(fReadPage);
    if (fHandleSink)
       fPageSink->DropColumn(fHandleSink);
    if (fHandleSource)
@@ -106,42 +104,32 @@ void ROOT::Experimental::Internal::RColumn::CommitSuppressed()
 
 bool ROOT::Experimental::Internal::RColumn::TryMapPage(NTupleSize_t globalIndex)
 {
-   fPageSource->ReleasePage(fReadPage);
-   // Set fReadPage to an empty page before populating it to prevent double destruction of the previously page in case
-   // the page population fails.
-   fReadPage = RPage();
-
    const auto nTeam = fTeam.size();
    std::size_t iTeam = 1;
    do {
-      fReadPage = fPageSource->LoadPage(fTeam.at(fLastGoodTeamIdx)->GetHandleSource(), globalIndex);
-      if (fReadPage.IsValid())
+      fReadPageRef = fPageSource->LoadPage(fTeam.at(fLastGoodTeamIdx)->GetHandleSource(), globalIndex);
+      if (fReadPageRef.Get().IsValid())
          break;
       fLastGoodTeamIdx = (fLastGoodTeamIdx + 1) % nTeam;
       iTeam++;
    } while (iTeam <= nTeam);
 
-   return fReadPage.Contains(globalIndex);
+   return fReadPageRef.Get().Contains(globalIndex);
 }
 
 bool ROOT::Experimental::Internal::RColumn::TryMapPage(RClusterIndex clusterIndex)
 {
-   fPageSource->ReleasePage(fReadPage);
-   // Set fReadPage to an empty page before populating it to prevent double destruction of the previously page in case
-   // the page population fails.
-   fReadPage = RPage();
-
    const auto nTeam = fTeam.size();
    std::size_t iTeam = 1;
    do {
-      fReadPage = fPageSource->LoadPage(fTeam.at(fLastGoodTeamIdx)->GetHandleSource(), clusterIndex);
-      if (fReadPage.IsValid())
+      fReadPageRef = fPageSource->LoadPage(fTeam.at(fLastGoodTeamIdx)->GetHandleSource(), clusterIndex);
+      if (fReadPageRef.Get().IsValid())
          break;
       fLastGoodTeamIdx = (fLastGoodTeamIdx + 1) % nTeam;
       iTeam++;
    } while (iTeam <= nTeam);
 
-   return fReadPage.Contains(clusterIndex);
+   return fReadPageRef.Get().Contains(clusterIndex);
 }
 
 void ROOT::Experimental::Internal::RColumn::MergeTeams(RColumn &other)

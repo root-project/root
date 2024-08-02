@@ -165,8 +165,8 @@ private:
 
    RNTupleDescriptorBuilder fDescriptorBuilder;
 
-   RPage LoadPageImpl(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo,
-                      ClusterSize_t::ValueType idxInCluster) final;
+   RPageRef LoadPageImpl(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo,
+                         ClusterSize_t::ValueType idxInCluster) final;
 
 protected:
    void LoadStructureImpl() final {}
