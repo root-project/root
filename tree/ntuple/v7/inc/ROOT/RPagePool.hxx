@@ -61,7 +61,7 @@ public:
    explicit RPagePool(RPageAllocator *pageAllocator) : fPageAllocator(pageAllocator) {}
    RPagePool(const RPagePool&) = delete;
    RPagePool& operator =(const RPagePool&) = delete;
-   ~RPagePool();
+   ~RPagePool() = default;
 
    /// Adds a new page to the pool. Upon registration, the page pool takes ownership of the page's memory.
    /// The new page has its reference counter set to 1.

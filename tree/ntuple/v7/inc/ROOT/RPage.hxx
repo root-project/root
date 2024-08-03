@@ -115,7 +115,7 @@ public:
       }
       return *this;
    }
-   ~RPage() = default;
+   ~RPage();
 
    ColumnId_t GetColumnId() const { return fColumnId; }
    /// The space taken by column elements in the buffer
@@ -170,9 +170,6 @@ public:
    }
    /// Return a pointer to the page zero buffer used if there is no on-disk data for a particular deferred column
    static const void *GetPageZeroBuffer();
-
-   /// Transition method, eventually the page will delete itself on destruction
-   void ReleaseBuffer();
 
    bool IsValid() const { return fColumnId != kInvalidColumnId; }
    bool IsNull() const { return fBuffer == nullptr; }
