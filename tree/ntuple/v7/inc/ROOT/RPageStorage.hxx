@@ -682,8 +682,6 @@ public:
    /// Helper for unstreaming a page. This is commonly used in derived, concrete page sources.  The implementation
    /// currently always makes a memory copy, even if the sealed page is uncompressed and in the final memory layout.
    /// The optimization of directly mapping pages is left to the concrete page source implementations.
-   /// Memory is allocated via `RPageAllocatorHeap`; use `RPageAllocatorHeap::DeletePage()` to deallocate returned
-   /// pages.
    RResult<RPage>
    UnsealPage(const RSealedPage &sealedPage, const RColumnElementBase &element, DescriptorId_t physicalColumnId);
 
