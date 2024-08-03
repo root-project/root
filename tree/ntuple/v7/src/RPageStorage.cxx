@@ -274,7 +274,7 @@ void ROOT::Experimental::Internal::RPageSource::UnzipClusterImpl(RCluster *clust
             fCounters->fSzUnzip.Add(element->GetSize() * sealedPage.GetNElements());
 
             newPage.SetWindow(indexOffset + firstInPage, RPage::RClusterInfo(clusterId, indexOffset));
-            fPagePool.PreloadPage(newPage);
+            fPagePool.PreloadPage(std::move(newPage));
          };
 
          fTaskScheduler->AddTask(taskFunc);
@@ -505,7 +505,7 @@ ROOT::Experimental::Internal::RPageSource::UnsealPage(const RSealedPage &sealedP
       auto tmp = fPageAllocator->NewPage(physicalColumnId, element.GetSize(), sealedPage.GetNElements());
       element.Unpack(tmp.GetBuffer(), page.GetBuffer(), sealedPage.GetNElements());
       fPageAllocator->DeletePage(page);
-      page = tmp;
+      page = std::move(tmp);
    }
 
    page.GrowUnchecked(sealedPage.GetNElements());
