@@ -30,7 +30,7 @@ TEST(Pages, Pool)
    EXPECT_FALSE(page.IsNull());
 
    {
-      auto registeredPage = pool.RegisterPage(page);
+      auto registeredPage = pool.RegisterPage(std::move(page));
 
       {
          auto pageRef = pool.GetPage(0, 0);
