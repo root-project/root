@@ -81,8 +81,7 @@ private:
       using BufferedPages_t = std::tuple<std::deque<RPageZipItem>, RPageStorage::SealedPageSequence_t>;
       /// When the return value of DrainBufferedPages() is destroyed, all references
       /// returned by GetBuffer are invalidated.
-      /// This function gives up on the ownership of the buffered pages.  Thus, `RPage::ReleaseBuffer()`
-      /// must be called accordingly.
+      /// This function gives up on the ownership of the buffered pages.
       BufferedPages_t DrainBufferedPages()
       {
          BufferedPages_t drained;

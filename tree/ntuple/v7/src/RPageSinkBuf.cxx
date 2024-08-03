@@ -25,11 +25,6 @@
 
 void ROOT::Experimental::Internal::RPageSinkBuf::RColumnBuf::DropBufferedPages()
 {
-   for (auto &bufPage : fBufferedPages) {
-      if (!bufPage.fPage.IsNull()) {
-         bufPage.fPage.ReleaseBuffer();
-      }
-   }
    fBufferedPages.clear();
    // Each RSealedPage points to the same region as `fBuf` for some element in `fBufferedPages`; thus, no further
    // clean-up is required

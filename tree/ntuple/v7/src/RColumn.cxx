@@ -35,8 +35,6 @@ ROOT::Experimental::Internal::RColumn::RColumn(EColumnType type, std::uint32_t c
 
 ROOT::Experimental::Internal::RColumn::~RColumn()
 {
-   fWritePage[0].ReleaseBuffer();
-   fWritePage[1].ReleaseBuffer();
    if (fHandleSink)
       fPageSink->DropColumn(fHandleSink);
    if (fHandleSource)

@@ -9,7 +9,6 @@ TEST(Pages, Allocation)
    EXPECT_EQ(16U, page.GetMaxElements());
    EXPECT_EQ(0U, page.GetNElements());
    EXPECT_EQ(0U, page.GetNBytes());
-   allocator.DeletePage(page);
 }
 
 TEST(Pages, Pool)
