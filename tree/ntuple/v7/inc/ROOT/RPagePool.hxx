@@ -33,15 +33,11 @@ namespace Internal {
 /**
 \class ROOT::Experimental::Internal::RPagePool
 \ingroup NTuple
-\brief A thread-safe cache of column pages.
+\brief A thread-safe cache of pages loaded from the page source.
 
-The page pool provides memory tracking for data written into an ntuple or read from an ntuple. Adding and removing
-pages is thread-safe. The page pool does not allocate the memory -- allocation and deallocation is performed by the
-page storage, which might do it in a way optimized to the backing store (e.g., mmap()).
-Multiple page caches can coexist.
-
-TODO(jblomer): it should be possible to register pages and to find them by column and index; this would
-facilitate pre-filling a cache, e.g. by read-ahead.
+The page pool is used as a cache for pages loaded from a page source.
+In this way, identical page needed at the same time, only need to be loaded once.
+Page sources also use the page pool to stage (preload) pages unsealed by IMT tasks.
 */
 // clang-format on
 class RPagePool {
@@ -51,7 +47,6 @@ class RPagePool {
    ///   - random insert
    ///   - random delete
    ///   - searching by page
-   ///   - searching by tree index
    std::vector<RPage> fPages;
    std::vector<std::int32_t> fReferences;
    RPageAllocator *fPageAllocator; ///< The allocator is used to release the added pages

@@ -37,8 +37,10 @@ class RPageRef;
 
 The page provides an opaque memory buffer for uncompressed, unpacked data. It does not interpret
 the contents but it does now about the size (and thus the number) of the elements inside as well as the element
-number range within the backing column/cluster. The memory buffer is not managed by the page. It is normally registered
-with the page pool and allocated/freed by the page storage.
+number range within the backing column/cluster.
+For reading, pages are allocated and filled by the page source and then registered with the page pool.
+For writing, the page sink allocates uninitialized pages of a given size.
+The page has a pointer to its memory allocator so that it can release itself.
 */
 // clang-format on
 class RPage {
