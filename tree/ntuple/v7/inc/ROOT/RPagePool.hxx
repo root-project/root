@@ -45,7 +45,8 @@ facilitate pre-filling a cache, e.g. by read-ahead.
 */
 // clang-format on
 class RPagePool {
-private:
+   friend class RPageRef;
+
    /// TODO(jblomer): should be an efficient index structure that allows
    ///   - random insert
    ///   - random delete
@@ -55,6 +56,11 @@ private:
    std::vector<std::int32_t> fReferences;
    RPageAllocator *fPageAllocator; ///< The allocator is used to release the added pages
    std::mutex fLock;
+
+   /// Give back a page to the pool and decrease the reference counter. There must not be any pointers anymore into
+   /// this page. If the reference counter drops to zero, the page pool might decide to call the deleter given in
+   /// during registration. Called by the RPageRef destructor.
+   void ReturnPage(RPage &page);
 
 public:
    explicit RPagePool(RPageAllocator *pageAllocator) : fPageAllocator(pageAllocator) {}
@@ -71,10 +77,6 @@ public:
    /// counter is increased
    RPageRef GetPage(ColumnId_t columnId, NTupleSize_t globalIndex);
    RPageRef GetPage(ColumnId_t columnId, RClusterIndex clusterIndex);
-   /// Give back a page to the pool and decrease the reference counter. There must not be any pointers anymore into
-   /// this page. If the reference counter drops to zero, the page pool might decide to call the deleter given in
-   /// during registration.
-   void ReturnPage(RPage &page);
 };
 
 // clang-format off
