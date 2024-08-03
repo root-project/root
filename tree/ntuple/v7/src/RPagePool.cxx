@@ -21,12 +21,6 @@
 #include <cstdlib>
 #include <utility>
 
-ROOT::Experimental::Internal::RPagePool::~RPagePool()
-{
-   for (auto &p : fPages)
-      fPageAllocator->DeletePage(p);
-}
-
 ROOT::Experimental::Internal::RPageRef ROOT::Experimental::Internal::RPagePool::RegisterPage(RPage page)
 {
    std::lock_guard<std::mutex> lockGuard(fLock);
@@ -52,7 +46,6 @@ void ROOT::Experimental::Internal::RPagePool::ReturnPage(const RPage &page)
       if (fPages[i] != page) continue;
 
       if (--fReferences[i] == 0) {
-         fPageAllocator->DeletePage(fPages[i]);
          fPages[i] = std::move(fPages[N - 1]);
          fReferences[i] = fReferences[N - 1];
          fPages.resize(N-1);

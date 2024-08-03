@@ -16,7 +16,7 @@
 #include <ROOT/RPage.hxx>
 #include <ROOT/RPageAllocator.hxx>
 
-void ROOT::Experimental::Internal::RPage::ReleaseBuffer()
+ROOT::Experimental::Internal::RPage::~RPage()
 {
    if (fPageAllocator)
       fPageAllocator->DeletePage(*this);

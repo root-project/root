@@ -504,7 +504,6 @@ ROOT::Experimental::Internal::RPageSource::UnsealPage(const RSealedPage &sealedP
    if (!element.IsMappable()) {
       auto tmp = fPageAllocator->NewPage(physicalColumnId, element.GetSize(), sealedPage.GetNElements());
       element.Unpack(tmp.GetBuffer(), page.GetBuffer(), sealedPage.GetNElements());
-      fPageAllocator->DeletePage(page);
       page = std::move(tmp);
    }
 
