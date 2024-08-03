@@ -101,7 +101,7 @@ public:
    RPageRef LoadPage(ColumnHandle_t columnHandle, NTupleSize_t i) final
    {
       auto page = RPageSource::UnsealPage(fPages[i], fElement, columnHandle.fPhysicalId).Unwrap();
-      return fPagePool.RegisterPage(page);
+      return fPagePool.RegisterPage(std::move(page));
    }
    RPageRef LoadPage(ColumnHandle_t, ROOT::Experimental::RClusterIndex) final { return RPageRef(); }
    void LoadSealedPage(ROOT::Experimental::DescriptorId_t, ROOT::Experimental::RClusterIndex, RSealedPage &) final {}

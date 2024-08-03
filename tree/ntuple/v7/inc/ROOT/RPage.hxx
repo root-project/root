@@ -87,6 +87,34 @@ public:
         fElementSize(elementSize),
         fMaxElements(maxElements)
    {}
+   RPage(const RPage &) = delete;
+   RPage &operator=(const RPage &) = delete;
+   RPage(RPage &&other)
+   {
+      fColumnId = other.fColumnId;
+      fBuffer = other.fBuffer;
+      fPageAllocator = other.fPageAllocator;
+      fElementSize = other.fElementSize;
+      fNElements = other.fNElements;
+      fMaxElements = other.fMaxElements;
+      fRangeFirst = other.fRangeFirst;
+      fClusterInfo = other.fClusterInfo;
+      other.fPageAllocator = nullptr;
+   }
+   RPage &operator=(RPage &&other)
+   {
+      if (this != &other) {
+         std::swap(fColumnId, other.fColumnId);
+         std::swap(fBuffer, other.fBuffer);
+         std::swap(fPageAllocator, other.fPageAllocator);
+         std::swap(fElementSize, other.fElementSize);
+         std::swap(fNElements, other.fNElements);
+         std::swap(fMaxElements, other.fMaxElements);
+         std::swap(fRangeFirst, other.fRangeFirst);
+         std::swap(fClusterInfo, other.fClusterInfo);
+      }
+      return *this;
+   }
    ~RPage() = default;
 
    ColumnId_t GetColumnId() const { return fColumnId; }

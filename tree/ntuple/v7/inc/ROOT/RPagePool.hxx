@@ -55,7 +55,7 @@ class RPagePool {
    /// Give back a page to the pool and decrease the reference counter. There must not be any pointers anymore into
    /// this page. If the reference counter drops to zero, the page pool might decide to call the deleter given in
    /// during registration. Called by the RPageRef destructor.
-   void ReturnPage(RPage &page);
+   void ReturnPage(const RPage &page);
 
 public:
    explicit RPagePool(RPageAllocator *pageAllocator) : fPageAllocator(pageAllocator) {}
@@ -65,9 +65,9 @@ public:
 
    /// Adds a new page to the pool. Upon registration, the page pool takes ownership of the page's memory.
    /// The new page has its reference counter set to 1.
-   RPageRef RegisterPage(RPage &page);
+   RPageRef RegisterPage(RPage page);
    /// Like RegisterPage() but the reference counter is initialized to 0
-   void PreloadPage(RPage &page);
+   void PreloadPage(RPage page);
    /// Tries to find the page corresponding to column and index in the cache. If the page is found, its reference
    /// counter is increased
    RPageRef GetPage(ColumnId_t columnId, NTupleSize_t globalIndex);
