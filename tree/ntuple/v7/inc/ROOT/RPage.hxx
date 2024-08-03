@@ -131,13 +131,6 @@ public:
    void Reset(NTupleSize_t rangeFirst) { fNElements = 0; fRangeFirst = rangeFirst; }
    void ResetCluster(const RClusterInfo &clusterInfo) { fNElements = 0; fClusterInfo = clusterInfo; }
 
-   /// Used by virtual page sources to map the physical column and cluster IDs to ther virtual counterparts
-   void ChangeIds(DescriptorId_t columnId, DescriptorId_t clusterId)
-   {
-      fColumnId = columnId;
-      fClusterInfo = RClusterInfo(clusterId, fClusterInfo.GetIndexOffset());
-   }
-
    /// Make a 'zero' page for column `columnId` (that is comprised of 0x00 bytes only). The caller is responsible for
    /// invoking `GrowUnchecked()` and `SetWindow()` as appropriate.
    static RPage MakePageZero(ColumnId_t columnId, ClusterSize_t::ValueType elementSize)
