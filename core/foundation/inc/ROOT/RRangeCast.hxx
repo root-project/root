@@ -2,6 +2,8 @@
 /// \ingroup Base StdExt
 /// \author Jonas Rembser <jonas.rembser@cern.ch>
 /// \date 2021-08-04
+/// \author Vincenzo Eduardo Padulano <vincenzo.eduardo.padulano@cern.ch>
+/// \date 2024-08-04
 
 /*************************************************************************
  * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
@@ -76,8 +78,12 @@ constexpr bool hasBeginEnd(...)
 
 template <typename T, typename WrappedIterator_t, bool isDynamic>
 class TypedIter {
-
 public:
+   using value_type = T;
+   using size_type = std::size_t;
+   using difference_type = std::ptrdiff_t;
+   using reference = T &;
+
    TypedIter(WrappedIterator_t const &iter) : fIter{iter} {}
 
    TypedIter &operator++()
@@ -228,5 +234,13 @@ RRangeCast<T, true, std::span<U>> RangeDynCast(U (&arr)[N])
 }
 
 } // namespace ROOT
+
+template <typename T, typename WrappedIterator_t, bool isDynamic>
+struct std::iterator_traits<ROOT::Internal::TypedIter<T, WrappedIterator_t, isDynamic>> {
+   using difference_type = typename ROOT::Internal::TypedIter<T, WrappedIterator_t, isDynamic>::difference_type;
+   using value_type = typename ROOT::Internal::TypedIter<T, WrappedIterator_t, isDynamic>::value_type;
+   using reference = typename ROOT::Internal::TypedIter<T, WrappedIterator_t, isDynamic>::reference;
+   using iterator_category = std::input_iterator_tag;
+};
 
 #endif
