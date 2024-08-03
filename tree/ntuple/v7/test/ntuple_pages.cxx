@@ -14,7 +14,7 @@ TEST(Pages, Allocation)
 TEST(Pages, Pool)
 {
    RPageAllocatorHeap allocator;
-   RPagePool pool(&allocator);
+   RPagePool pool;
 
    {
       auto pageRef = pool.GetPage(0, 0);

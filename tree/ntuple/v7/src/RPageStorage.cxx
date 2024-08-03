@@ -133,7 +133,7 @@ bool ROOT::Experimental::Internal::RPageSource::REntryRange::IntersectsWith(cons
 }
 
 ROOT::Experimental::Internal::RPageSource::RPageSource(std::string_view name, const RNTupleReadOptions &options)
-   : RPageStorage(name), fOptions(options), fPagePool(fPageAllocator.get())
+   : RPageStorage(name), fOptions(options)
 {
 }
 
