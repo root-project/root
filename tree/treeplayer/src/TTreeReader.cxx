@@ -257,8 +257,6 @@ TTreeReader::~TTreeReader()
    // they will have a dangling pointer.
    fProxies.clear();
 
-   delete fDirector;
-
    if (fEntryStatus != kEntryNoTree && !TestBit(kBitIsExternalTree)) {
       // a plain TTree is automatically added to the current directory,
       // do not delete it here
@@ -291,7 +289,7 @@ void TTreeReader::Initialize()
       return;
    }
 
-   fDirector = new ROOT::Internal::TBranchProxyDirector(fTree, -1);
+   fDirector = std::make_unique<ROOT::Internal::TBranchProxyDirector>(fTree, -1);
 
    if (!fNotify.IsLinked()) {
       fNotify.PrependLink(*fTree);

@@ -601,7 +601,7 @@ void ROOT::Internal::TTreeReaderValueBase::CreateProxy() {
             membername = branch->GetName();
          }
       }
-      auto director = fTreeReader->fDirector;
+      auto director = fTreeReader->fDirector.get();
       // Determine if the branch is actually in a Friend TTree and if so which.
       if (branch->GetTree() != fTreeReader->GetTree()->GetTree()) {
          // It is in a friend, let's find the 'index' in the list of friend ...
