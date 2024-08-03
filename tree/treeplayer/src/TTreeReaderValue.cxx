@@ -624,12 +624,13 @@ void ROOT::Internal::TTreeReaderValueBase::CreateProxy() {
          }
          TFriendProxy *feproxy = nullptr;
          if ((size_t)index < fTreeReader->fFriendProxies.size()) {
-            feproxy = fTreeReader->fFriendProxies.at(index);
+            feproxy = fTreeReader->fFriendProxies.at(index).get();
          }
          if (!feproxy) {
-            feproxy = new ROOT::Internal::TFriendProxy(director, fTreeReader->GetTree(), index);
             fTreeReader->fFriendProxies.resize(index+1);
-            fTreeReader->fFriendProxies.at(index) = feproxy;
+            fTreeReader->fFriendProxies.at(index) =
+               std::make_unique<ROOT::Internal::TFriendProxy>(director, fTreeReader->GetTree(), index);
+            feproxy = fTreeReader->fFriendProxies.at(index).get();
          }
          namedProxy = new TNamedBranchProxy(feproxy->GetDirector(), branch, originalBranchName.c_str(), branch->GetName(), membername);
       } else {
