@@ -184,8 +184,6 @@ public:
    RPageSourceFile &operator=(RPageSourceFile &&) = delete;
    ~RPageSourceFile() override;
 
-   void ReleasePage(RPage &page) final;
-
    void LoadSealedPage(DescriptorId_t physicalColumnId, RClusterIndex clusterIndex, RSealedPage &sealedPage) final;
 
    std::vector<std::unique_ptr<RCluster>> LoadClusters(std::span<RCluster::RKey> clusterKeys) final;

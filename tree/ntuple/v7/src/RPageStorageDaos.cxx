@@ -672,11 +672,6 @@ ROOT::Experimental::Internal::RPageSourceDaos::LoadPageImpl(ColumnHandle_t colum
    return fPagePool.RegisterPage(newPage);
 }
 
-void ROOT::Experimental::Internal::RPageSourceDaos::ReleasePage(RPage &page)
-{
-   fPagePool.ReturnPage(page);
-}
-
 std::unique_ptr<ROOT::Experimental::Internal::RPageSource>
 ROOT::Experimental::Internal::RPageSourceDaos::CloneImpl() const
 {
