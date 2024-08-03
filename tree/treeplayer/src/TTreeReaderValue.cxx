@@ -622,23 +622,6 @@ void ROOT::Internal::TTreeReaderValueBase::CreateProxy() {
                   fBranchName.Data());
             return;
          }
-         const char *localBranchName =  originalBranchName.c_str();
-         if (branch != branch->GetTree()->GetBranch(localBranchName)) {
-            // Try removing the name of the TTree.
-            auto len = strlen( branch->GetTree()->GetName());
-            if (strncmp(localBranchName, branch->GetTree()->GetName(), len) == 0
-                && localBranchName[len] == '.'
-                && branch != branch->GetTree()->GetBranch(localBranchName+len+1)) {
-               localBranchName = localBranchName + len + 1;
-            } else {
-               len = strlen(fe_found->GetName());
-               if (strncmp(localBranchName, fe_found->GetName(), len) == 0
-                  && localBranchName[len] == '.'
-                  && branch != branch->GetTree()->GetBranch(localBranchName+len+1)) {
-                  localBranchName = localBranchName + len + 1;
-               }
-            }
-         }
          TFriendProxy *feproxy = nullptr;
          if ((size_t)index < fTreeReader->fFriendProxies.size()) {
             feproxy = fTreeReader->fFriendProxies.at(index);
