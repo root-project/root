@@ -172,7 +172,7 @@ ROOT::Experimental::Internal::RPageSourceFriends::LoadPage(ColumnHandle_t column
       return RPageRef();
 
    auto virtualClusterId = fIdBiMap.GetVirtualId({originColumnId.fSourceIdx, pageRef.Get().GetClusterInfo().GetId()});
-   pageRef.Get().ChangeIds(virtualColumnId, virtualClusterId);
+   pageRef.ChangeIds(virtualColumnId, virtualClusterId);
 
    return pageRef;
 }
@@ -190,7 +190,7 @@ ROOT::Experimental::Internal::RPageSourceFriends::LoadPage(ColumnHandle_t column
    if (!pageRef.Get().IsValid())
       return RPageRef();
 
-   pageRef.Get().ChangeIds(virtualColumnId, clusterIndex.GetClusterId());
+   pageRef.ChangeIds(virtualColumnId, clusterIndex.GetClusterId());
    return pageRef;
 }
 

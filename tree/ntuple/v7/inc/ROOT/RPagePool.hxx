@@ -129,8 +129,14 @@ public:
          fPagePool->ReturnPage(fPage);
    }
 
+   /// Used by the friend virtual page source to map the physical column and cluster IDs to ther virtual counterparts
+   void ChangeIds(DescriptorId_t columnId, DescriptorId_t clusterId)
+   {
+      fPage.fColumnId = columnId;
+      fPage.fClusterInfo = RPage::RClusterInfo(clusterId, fPage.fClusterInfo.GetIndexOffset());
+   }
+
    const RPage &Get() const { return fPage; }
-   RPage &Get() { return fPage; }
 };
 
 } // namespace Internal
