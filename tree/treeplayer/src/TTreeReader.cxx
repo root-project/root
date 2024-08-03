@@ -254,8 +254,6 @@ TTreeReader::~TTreeReader()
    // Need to clear the map of proxies before deleting the director otherwise
    // they will have a dangling pointer.
    fProxies.clear();
-
-   delete fDirector;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -281,7 +279,7 @@ void TTreeReader::Initialize()
       return;
    }
 
-   fDirector = new ROOT::Internal::TBranchProxyDirector(fTree, -1);
+   fDirector = std::make_unique<ROOT::Internal::TBranchProxyDirector>(fTree, -1);
 
    if (!fNotify.IsLinked()) {
       fNotify.PrependLink(*fTree);
