@@ -49,7 +49,6 @@ class RPagePool {
    ///   - searching by page
    std::vector<RPage> fPages;
    std::vector<std::int32_t> fReferences;
-   RPageAllocator *fPageAllocator; ///< The allocator is used to release the added pages
    std::mutex fLock;
 
    /// Give back a page to the pool and decrease the reference counter. There must not be any pointers anymore into
@@ -58,7 +57,7 @@ class RPagePool {
    void ReturnPage(const RPage &page);
 
 public:
-   explicit RPagePool(RPageAllocator *pageAllocator) : fPageAllocator(pageAllocator) {}
+   RPagePool() = default;
    RPagePool(const RPagePool&) = delete;
    RPagePool& operator =(const RPagePool&) = delete;
    ~RPagePool() = default;
