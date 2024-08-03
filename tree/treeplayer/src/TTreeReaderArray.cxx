@@ -475,12 +475,13 @@ void ROOT::Internal::TTreeReaderArrayBase::CreateProxy()
       if (branch->GetTree() != fTreeReader->GetTree()->GetTree()) {
          // It is in a friend, let's find the 'index' in the list of friend ...
          int index = -1;
-         int current = 0;
-         for(auto fe : TRangeDynCast<TFriendElement>( fTreeReader->GetTree()->GetTree()->GetListOfFriends())) {
-            if (branch->GetTree() == fe->GetTree()) {
-               index = current;
-            }
-            ++current;
+         const auto friendElements =
+            TRangeDynCast<TFriendElement>(fTreeReader->GetTree()->GetTree()->GetListOfFriends());
+         if (auto foundFriend =
+                std::find_if(friendElements.begin(), friendElements.end(),
+                             [&branch](TFriendElement *fe) { return branch->GetTree() == fe->GetTree(); });
+             foundFriend != friendElements.end()) {
+            index = static_cast<int>(std::distance(friendElements.begin(), foundFriend));
          }
          if (index == -1) {
             Error("TTreeReaderArrayBase::CreateProxy()", "The branch %s is contained in a Friend TTree that is not directly attached to the main.\n"
