@@ -18,6 +18,7 @@
 #include <TTreeReaderValue.h>
 #include <TTreeReaderArray.h>
 
+#include <array>
 #include <memory>
 #include <string>
 
@@ -161,6 +162,41 @@ class R__CLING_PTRCHECK(off) RTreeColumnReader<RVec<bool>> final : public ROOT::
 public:
    RTreeColumnReader(TTreeReader &r, const std::string &colName)
       : fTreeArray(std::make_unique<TTreeReaderArray<bool>>(r, colName.c_str()))
+   {
+   }
+};
+
+/// RTreeColumnReader specialization for TTree values read via TTreeReaderArrays.
+///
+/// This specialization is used when the requested type for reading is std::array
+template <typename T, std::size_t N>
+class R__CLING_PTRCHECK(off) RTreeColumnReader<std::array<T, N>> final : public ROOT::Detail::RDF::RColumnReaderBase {
+   std::unique_ptr<TTreeReaderArray<T>> fTreeArray;
+
+   /// We return a reference to this RVec to clients, to guarantee a stable address and contiguous memory layout
+   RVec<T> fArray;
+
+   Long64_t fLastEntry = -1;
+
+   void *GetImpl(Long64_t entry) final
+   {
+      if (entry == fLastEntry)
+         return fArray.data();
+
+      // This is a non-owning view on the contents of the TTreeReaderArray
+      RVec<T> view{&fTreeArray->At(0), fTreeArray->GetSize()};
+      swap(fArray, view);
+
+      fLastEntry = entry;
+      // The data member of this class is an RVec, to avoid an extra copy
+      // but we need to return the array buffer as the reader expects
+      // a std::array
+      return fArray.data();
+   }
+
+public:
+   RTreeColumnReader(TTreeReader &r, const std::string &colName)
+      : fTreeArray(std::make_unique<TTreeReaderArray<T>>(r, colName.c_str()))
    {
    }
 };
