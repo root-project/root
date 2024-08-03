@@ -255,11 +255,6 @@ TTreeReader::~TTreeReader()
    // they will have a dangling pointer.
    fProxies.clear();
 
-   for (auto feproxy: fFriendProxies) {
-      delete feproxy;
-   }
-   fFriendProxies.clear();
-
    delete fDirector;
 }
 
