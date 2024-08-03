@@ -19,6 +19,7 @@
 #include <TError.h>
 
 #include <cstdlib>
+#include <utility>
 
 ROOT::Experimental::Internal::RPagePool::~RPagePool()
 {
@@ -26,22 +27,22 @@ ROOT::Experimental::Internal::RPagePool::~RPagePool()
       fPageAllocator->DeletePage(p);
 }
 
-ROOT::Experimental::Internal::RPageRef ROOT::Experimental::Internal::RPagePool::RegisterPage(RPage &page)
+ROOT::Experimental::Internal::RPageRef ROOT::Experimental::Internal::RPagePool::RegisterPage(RPage page)
 {
    std::lock_guard<std::mutex> lockGuard(fLock);
-   fPages.emplace_back(page);
+   fPages.emplace_back(std::move(page));
    fReferences.emplace_back(1);
    return RPageRef(page, this);
 }
 
-void ROOT::Experimental::Internal::RPagePool::PreloadPage(RPage &page)
+void ROOT::Experimental::Internal::RPagePool::PreloadPage(RPage page)
 {
    std::lock_guard<std::mutex> lockGuard(fLock);
-   fPages.emplace_back(page);
+   fPages.emplace_back(std::move(page));
    fReferences.emplace_back(0);
 }
 
-void ROOT::Experimental::Internal::RPagePool::ReturnPage(RPage &page)
+void ROOT::Experimental::Internal::RPagePool::ReturnPage(const RPage &page)
 {
    if (page.IsNull()) return;
    std::lock_guard<std::mutex> lockGuard(fLock);
@@ -52,7 +53,7 @@ void ROOT::Experimental::Internal::RPagePool::ReturnPage(RPage &page)
 
       if (--fReferences[i] == 0) {
          fPageAllocator->DeletePage(fPages[i]);
-         fPages[i] = fPages[N-1];
+         fPages[i] = std::move(fPages[N - 1]);
          fReferences[i] = fReferences[N - 1];
          fPages.resize(N-1);
          fReferences.resize(N - 1);
