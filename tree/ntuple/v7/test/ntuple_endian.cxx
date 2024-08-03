@@ -104,7 +104,6 @@ public:
       return fPagePool.RegisterPage(page);
    }
    RPageRef LoadPage(ColumnHandle_t, ROOT::Experimental::RClusterIndex) final { return RPageRef(); }
-   void ReleasePage(RPage &) final {}
    void LoadSealedPage(ROOT::Experimental::DescriptorId_t, ROOT::Experimental::RClusterIndex, RSealedPage &) final {}
    std::vector<std::unique_ptr<RCluster>> LoadClusters(std::span<RCluster::RKey>) final { return {}; }
 };

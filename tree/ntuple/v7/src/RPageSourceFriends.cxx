@@ -204,14 +204,6 @@ void ROOT::Experimental::Internal::RPageSourceFriends::LoadSealedPage(Descriptor
    fSources[originColumnId.fSourceIdx]->LoadSealedPage(physicalColumnId, originClusterIndex, sealedPage);
 }
 
-void ROOT::Experimental::Internal::RPageSourceFriends::ReleasePage(RPage &page)
-{
-   if (page.IsNull())
-      return;
-   auto sourceIdx = fIdBiMap.GetOriginId(page.GetClusterInfo().GetId()).fSourceIdx;
-   fSources[sourceIdx]->ReleasePage(page);
-}
-
 std::vector<std::unique_ptr<ROOT::Experimental::Internal::RCluster>>
 ROOT::Experimental::Internal::RPageSourceFriends::LoadClusters(std::span<RCluster::RKey> clusterKeys)
 {

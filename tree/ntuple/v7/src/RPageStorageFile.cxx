@@ -488,11 +488,6 @@ ROOT::Experimental::Internal::RPageSourceFile::LoadPageImpl(ColumnHandle_t colum
    return fPagePool.RegisterPage(newPage);
 }
 
-void ROOT::Experimental::Internal::RPageSourceFile::ReleasePage(RPage &page)
-{
-   fPagePool.ReturnPage(page);
-}
-
 std::unique_ptr<ROOT::Experimental::Internal::RPageSource>
 ROOT::Experimental::Internal::RPageSourceFile::CloneImpl() const
 {

@@ -71,7 +71,6 @@ public:
       auto descriptorGuard = GetExclDescriptorGuard();
       descriptorGuard.MoveIn(descBuilder.MoveDescriptor());
    }
-   void ReleasePage(RPage &) final {}
    void LoadSealedPage(ROOT::Experimental::DescriptorId_t, ROOT::Experimental::RClusterIndex, RSealedPage &) final {}
    std::vector<std::unique_ptr<RCluster>> LoadClusters(std::span<RCluster::RKey> clusterKeys) final
    {

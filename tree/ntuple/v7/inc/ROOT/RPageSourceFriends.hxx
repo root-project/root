@@ -109,7 +109,6 @@ public:
 
    RPageRef LoadPage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex) final;
    RPageRef LoadPage(ColumnHandle_t columnHandle, RClusterIndex clusterIndex) final;
-   void ReleasePage(RPage &page) final;
 
    void LoadSealedPage(DescriptorId_t physicalColumnId, RClusterIndex clusterIndex, RSealedPage &sealedPage) final;
 

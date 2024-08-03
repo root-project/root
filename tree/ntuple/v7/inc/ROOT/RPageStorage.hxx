@@ -702,9 +702,6 @@ public:
    /// actual implementation will only run if a task scheduler is set. In practice, a task scheduler is set
    /// if implicit multi-threading is turned on.
    void UnzipCluster(RCluster *cluster);
-
-   /// Release the page buffer of returned (unsealed) pages. Eventually, this will be handled by the page pool.
-   virtual void ReleasePage(RPage &page) = 0;
 }; // class RPageSource
 
 } // namespace Internal
