@@ -20,3 +20,5 @@ if(imt)
 endif()
 
 ROOT_ADD_GTEST(ttreeindex_clone ttreeindex_clone.cxx LIBRARIES TreePlayer)
+
+ROOT_ADD_GTEST(ttreereader_friends ttreereader_friends.cxx LIBRARIES TreePlayer)
