@@ -38,13 +38,17 @@ The page allocator must be thread-safe.
 */
 // clang-format on
 class RPageAllocator {
+   friend class RPage;
+
+protected:
+   /// Releases the memory pointed to by page and resets the page's information. Note that the memory of the
+   /// zero page must not be deleted. Called by the RPage destructor.
+   virtual void DeletePage(RPage &page) = 0;
+
 public:
    /// Reserves memory large enough to hold nElements of the given size. The page is immediately tagged with
    /// a column id. Returns a default constructed page on out-of-memory condition.
    virtual RPage NewPage(ColumnId_t columnId, std::size_t elementSize, std::size_t nElements) = 0;
-   /// Releases the memory pointed to by page and resets the page's information. Note that the memory of the
-   /// zero page must not be deleted.
-   virtual void DeletePage(RPage &page) = 0;
 };
 
 // clang-format off
@@ -55,9 +59,11 @@ public:
 */
 // clang-format on
 class RPageAllocatorHeap : public RPageAllocator {
+protected:
+   void DeletePage(RPage &page) final;
+
 public:
    RPage NewPage(ColumnId_t columnId, std::size_t elementSize, std::size_t nElements) final;
-   void DeletePage(RPage &page) final;
 };
 
 } // namespace Internal
