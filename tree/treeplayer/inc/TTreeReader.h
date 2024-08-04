@@ -273,6 +273,7 @@ protected:
    bool SetProxies();
 
 private:
+   void WarnIfFriendsHaveMoreEntries();
 
    std::string GetProxyKey(const char *branchname)
    {

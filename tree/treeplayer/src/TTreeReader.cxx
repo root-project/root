@@ -17,7 +17,7 @@
 #include "TTreeCache.h"
 #include "TTreeReaderValue.h"
 #include "TFriendProxy.h"
-
+#include "ROOT/InternalTreeUtils.hxx"
 
 // clang-format off
 /**
@@ -380,6 +380,23 @@ bool TTreeReader::SetProxies() {
    return true;
 }
 
+void TTreeReader::WarnIfFriendsHaveMoreEntries()
+{
+   for (auto &&fp : fFriendProxies) {
+      const auto *frTree = fp->GetDirector()->GetTree();
+      if (!frTree)
+         return;
+      if (fEntry >= frTree->GetEntriesFast())
+         return;
+      // The friend tree still has entries beyond the last one of the main
+      // tree, warn the user about it.
+      const std::string frTreeName = dynamic_cast<const TChain *>(frTree)
+                                        ? frTree->GetName()
+                                        : ROOT::Internal::TreeUtils::GetTreeFullPaths(*frTree)[0];
+      std::string msg = "Friend tree '" + frTreeName + "' has more entries beyond the end of the main tree.";
+      Warning("SetEntryBase()", "%s", msg.c_str());
+   }
+}
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the range of entries to be loaded by `Next()`; end will not be loaded.
 ///
@@ -570,6 +587,7 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, bool local)
             }
          }
          fEntryStatus = kEntryBeyondEnd;
+         WarnIfFriendsHaveMoreEntries();
          return fEntryStatus;
       }
 
@@ -609,10 +627,34 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, bool local)
 
    if ((fEndEntry >= 0 && entry >= fEndEntry) || (fEntry >= fTree->GetEntriesFast())) {
       fEntryStatus = kEntryBeyondEnd;
+      WarnIfFriendsHaveMoreEntries();
       return fEntryStatus;
    }
    fDirector->SetReadEntry(loadResult);
    fEntryStatus = kEntryValid;
+
+   for (auto &&fp : fFriendProxies) {
+      if (fp->GetReadEntry() >= 0)
+         break;
+      // We are going to read an invalid entry from a friend, propagate
+      // this information to the user.
+      const auto *frTree = fp->GetDirector()->GetTree();
+      if (!frTree)
+         break;
+      const std::string frTreeName = dynamic_cast<const TChain *>(frTree)
+                                        ? frTree->GetName()
+                                        : ROOT::Internal::TreeUtils::GetTreeFullPaths(*frTree)[0];
+      // If the friend does not have a TTreeIndex, the cause of a failure reading an entry
+      // is most probably a difference in number of entries between main tree and friend tree
+      if (!fp->IsIndexed()) {
+         std::string msg = "Cannot read entry " + std::to_string(entry) + " from friend tree '" + frTreeName +
+                           "'. The friend tree has less entries than the main tree. Make sure all trees "
+                           "of the dataset have the same number of entries.";
+         throw std::runtime_error{msg};
+      }
+      // TODO: Also handle the opposite situation where the friend has a TTreeIndex
+   }
+
    return fEntryStatus;
 }
 

@@ -40,9 +40,14 @@ TFriendProxy::TFriendProxy() : fDirector(nullptr,-1), fIndex(-1)
       // might not recover the list correctly (see #6993 for the TTreeReader issue
       // and #6741 for a more complete discussion/explanation).
       if (main && main->GetTree()->GetListOfFriends()) {
-         TObject *obj = main->GetTree()->GetListOfFriends()->At(fIndex);
-         TFriendElement *element = dynamic_cast<TFriendElement*>( obj );
-         if (element) fDirector.SetTree(element->GetTree());
+         auto *obj = main->GetTree()->GetListOfFriends()->At(fIndex);
+         if (auto *element = dynamic_cast<TFriendElement *>(obj)) {
+            if (auto *tree = element->GetTree()) {
+               fDirector.SetTree(tree);
+               if (auto *idx = tree->GetTreeIndex())
+                  fIsIndexed = true;
+            }
+         }
       }
       director->Attach(this);
    }
