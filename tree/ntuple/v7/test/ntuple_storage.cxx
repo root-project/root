@@ -1,4 +1,7 @@
 #include "ntuple_test.hxx"
+#include <TRandom3.h>
+#include <TMemFile.h>
+#include <TVirtualStreamerInfo.h>
 
 #include <ROOT/RPageNullSink.hxx>
 #include <ROOT/RNTupleWriteOptions.hxx>
@@ -13,6 +16,8 @@
 
 using ROOT::Experimental::Internal::RNTupleWriteOptionsManip;
 using ROOT::Experimental::Internal::RPageNullSink;
+
+#include <cstring>
 
 namespace {
 /// An RPageSink that keeps counters of (vector) commit of (sealed) pages; used to test RPageSinkBuf
@@ -1001,4 +1006,28 @@ TEST(RPageSink, SamePageMerging)
       EXPECT_FLOAT_EQ(1.0, viewPx(0));
       EXPECT_FLOAT_EQ(1.0, viewPy(0));
    }
+}
+
+TEST(RPageSinkFile, StreamerInfo)
+{
+   FileRaii fileGuard("test_ntuple_page_sink_file_streamer_info.ntuple");
+
+   auto model = RNTupleModel::Create();
+   model->MakeField<CustomStruct>("f1");
+   model->AddField(std::make_unique<ROOT::Experimental::RUnsplitField>("f2", "StructWithArrays"));
+   auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+   writer->Fill(); // need one entry to trigger streamer info record for unsplit field
+   writer.reset();
+
+   auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str()));
+   bool found[2] = {false, false};
+   for (auto info : TRangeDynCast<TVirtualStreamerInfo>(*file->GetStreamerInfoList())) {
+      if (strcmp(info->GetName(), "CustomStruct") == 0)
+         found[0] = true;
+      if (strcmp(info->GetName(), "StructWithArrays") == 0)
+         found[1] = true;
+      if (found[0] && found[1])
+         return;
+   }
+   FAIL() << "not all streamer infos found! ";
 }

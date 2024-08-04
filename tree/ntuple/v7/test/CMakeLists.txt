@@ -33,6 +33,11 @@ ROOT_GENERATE_DICTIONARY(RXTupleDict ${CMAKE_CURRENT_SOURCE_DIR}/RXTuple.hxx
                        LINKDEF RXTupleLinkDef.h
                        DEPENDENCIES RIO)
 ROOT_ADD_GTEST(ntuple_descriptor ntuple_descriptor.cxx LIBRARIES ROOTNTuple CustomStruct)
+ROOT_GENERATE_DICTIONARY(RNTupleDescriptorDict ${CMAKE_CURRENT_SOURCE_DIR}/RNTupleDescriptorDict.hxx
+                       MODULE ntuple_descriptor
+                       LINKDEF RNTupleDescriptorLinkDef.h
+                       OPTIONS -inlineInputHeader
+                       DEPENDENCIES RIO CustomStruct)
 ROOT_ADD_GTEST(ntuple_endian ntuple_endian.cxx LIBRARIES ROOTNTuple)
 ROOT_ADD_GTEST(ntuple_friends ntuple_friends.cxx LIBRARIES ROOTNTuple CustomStruct)
 ROOT_ADD_GTEST(ntuple_merger ntuple_merger.cxx LIBRARIES ROOTNTuple CustomStruct ZLIB::ZLIB)
@@ -67,7 +72,7 @@ if(MSVC)
 endif()
 ROOT_ADD_GTEST(rfield_vector rfield_vector.cxx LIBRARIES ROOTNTuple CustomStruct)
 
-ROOT_ADD_GTEST(ntuple_minifile ntuple_minifile.cxx LIBRARIES ROOTNTuple Tree CustomStruct)
+ROOT_ADD_GTEST(ntuple_minifile ntuple_minifile.cxx LIBRARIES ROOTNTuple Physics Tree CustomStruct)
 ROOT_ADD_GTEST(ntuple_show ntuple_show.cxx LIBRARIES ROOTNTuple CustomStruct)
 ROOT_ADD_GTEST(ntuple_storage ntuple_storage.cxx LIBRARIES ROOTNTuple MathCore CustomStruct)
 ROOT_ADD_GTEST(ntuple_extended ntuple_extended.cxx LIBRARIES ROOTNTuple MathCore CustomStruct)
