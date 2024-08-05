@@ -925,7 +925,7 @@ public:
    std::uint64_t GetOnDiskFooterSize() const { return fOnDiskFooterSize; }
 
    const RFieldDescriptor &GetFieldDescriptor(DescriptorId_t fieldId) const { return fFieldDescriptors.at(fieldId); }
-   const RFieldDescriptor *FindFieldDescriptor(const std::string &fieldName) const 
+   const RFieldDescriptor *FindFieldDescriptor(const std::string &fieldName) const
    {
       for (const auto &[_, desc] : fFieldDescriptors)
          if (desc.GetFieldName() == fieldName)

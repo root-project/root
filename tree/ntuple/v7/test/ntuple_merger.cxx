@@ -841,34 +841,31 @@ TEST(RNTupleMerger, MergeLateModelExtension)
    {
       auto model = RNTupleModel::Create();
       auto fieldFoo = model->MakeField<int>("foo", 0);
-      // auto fieldVfoo = model->MakeField<std::vector<int>>("vfoo", 0);
-      // auto fieldBar = model->MakeField<int>("bar", 0);
-      auto wopts =RNTupleWriteOptions();
-      // wopts.SetCompression(0);
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath(), wopts);
+      auto fieldVfoo = model->MakeField<std::vector<int>>("vfoo", 0);
+      auto fieldBar = model->MakeField<int>("bar", 0);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath(), RNTupleWriteOptions());
       for (size_t i = 0; i < 10; ++i) {
          *fieldFoo = i * 123;
-         // *fieldVfoo = { (int)i * 123 };
-         // *fieldBar = i * 321;
+         *fieldVfoo = {(int)i * 123};
+         *fieldBar = i * 321;
          ntuple->Fill();
       }
    }
-   // return;
 
    FileRaii fileGuard2("test_ntuple_merge_in_2.root");
    fileGuard2.PreserveFile();
    {
       auto model = RNTupleModel::Create();
-      // auto fieldBaz = model->MakeField<int>("baz", 0);
+      auto fieldBaz = model->MakeField<int>("baz", 0);
       auto fieldFoo = model->MakeField<int>("foo", 0);
-      // auto fieldVfoo = model->MakeField<std::vector<int>>("vfoo", 0);
-      auto wopts =RNTupleWriteOptions();
-      // wopts.SetCompression(0);
+      auto fieldVfoo = model->MakeField<std::vector<int>>("vfoo", 0);
+      auto wopts = RNTupleWriteOptions();
+      wopts.SetCompression(0);
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath(), wopts);
       for (size_t i = 0; i < 10; ++i) {
-         // *fieldBaz = i * 567;
+         *fieldBaz = i * 567;
          *fieldFoo = i * 765;
-         // *fieldVfoo = { (int)i * 123 };
+         *fieldVfoo = {(int)i * 765};
          ntuple->Fill();
       }
    }
@@ -902,22 +899,23 @@ TEST(RNTupleMerger, MergeLateModelExtension)
    {
       auto ntuple = RNTupleReader::Open("ntuple", fileGuard3.GetPath());
       auto foo = ntuple->GetModel().GetDefaultEntry().GetPtr<int>("foo");
-      // auto vfoo = ntuple->GetModel().GetDefaultEntry().GetPtr<std::vector<int>>("vfoo");
-      // auto bar = ntuple->GetModel().GetDefaultEntry().GetPtr<int>("bar");
-      // auto baz = ntuple->GetModel().GetDefaultEntry().GetPtr<int>("baz");
+      auto vfoo = ntuple->GetModel().GetDefaultEntry().GetPtr<std::vector<int>>("vfoo");
+      auto bar = ntuple->GetModel().GetDefaultEntry().GetPtr<int>("bar");
+      auto baz = ntuple->GetModel().GetDefaultEntry().GetPtr<int>("baz");
 
       for (int i = 0; i < 10; ++i) {
          ntuple->LoadEntry(i);
          ASSERT_EQ(*foo, i * 123);
-         // ASSERT_EQ((*vfoo)[0], i * 123);
-         // ASSERT_EQ(*bar, i * 321);
-         // ASSERT_EQ(*baz, 0);
+         ASSERT_EQ((*vfoo)[0], i * 123);
+         ASSERT_EQ(*bar, i * 321);
+         ASSERT_EQ(*baz, 0);
       }
       for (int i = 10; i < 20; ++i) {
          ntuple->LoadEntry(i);
-         // ASSERT_EQ((*vfoo)[0], (i - 10) * 765);
          ASSERT_EQ(*foo, (i - 10) * 765);
-         // ASSERT_EQ(*baz, (i - 10) * 567);
+         ASSERT_EQ((*vfoo)[0], (i - 10) * 765);
+         ASSERT_EQ(*bar, 0);
+         ASSERT_EQ(*baz, (i - 10) * 567);
       }
    }
 }

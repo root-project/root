@@ -69,7 +69,7 @@ struct RNTupleMergeOptions {
 class RNTupleMerger final {
 public:
    struct RChangeCompressionFunc;
-   
+
    /// Merge a given set of sources into the destination
    RResult<void> Merge(std::span<RPageSource *> sources, RPageSink &destination,
                        const RNTupleMergeOptions &options = RNTupleMergeOptions()) const;

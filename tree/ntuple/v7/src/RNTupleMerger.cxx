@@ -168,13 +168,7 @@ struct RNTupleMerger::RChangeCompressionFunc {
 
 namespace {
 struct RDescriptorsComparison {
-   struct RCommonField {
-      const RFieldDescriptor *fDst;
-      const RFieldDescriptor *fSrc;
-   };
-
-   std::vector<const RFieldDescriptor *> fExtraDstFields, fExtraSrcFields;
-   std::vector<RCommonField> fCommonFields;
+   std::vector<const RFieldDescriptor *> fExtraDstFields, fExtraSrcFields, fCommonFields;
 };
 
 struct RColumnOutInfo {
@@ -213,9 +207,15 @@ CompareDescriptorStructure(const RNTupleDescriptor &dst, const RNTupleDescriptor
    std::vector<std::stringstream> errors;
    RDescriptorsComparison res;
 
+   struct RCommonField {
+      const RFieldDescriptor *fDst;
+      const RFieldDescriptor *fSrc;
+   };
+   std::vector<RCommonField> commonFields;
+
    for (const auto &dstField : dst.GetTopLevelFields()) {
       if (const auto *srcField = src.FindFieldDescriptor(dstField.GetFieldName()))
-         res.fCommonFields.push_back({&dstField, srcField});
+         commonFields.push_back({&dstField, srcField});
       else
          res.fExtraDstFields.emplace_back(&dstField);
    }
@@ -225,7 +225,7 @@ CompareDescriptorStructure(const RNTupleDescriptor &dst, const RNTupleDescriptor
    }
 
    // Check compatibility of common fields
-   for (const auto &field : res.fCommonFields) {
+   for (const auto &field : commonFields) {
       const auto &srcFdName = field.fSrc->GetFieldName();
 
       // Require that fields are both projected or both not projected
@@ -284,6 +284,11 @@ CompareDescriptorStructure(const RNTupleDescriptor &dst, const RNTupleDescriptor
    if (errMsg.length())
       return R__FAIL(errMsg);
 
+   res.fCommonFields.reserve(commonFields.size());
+   for (const auto &[_, srcField] : commonFields) {
+      res.fCommonFields.emplace_back(srcField);
+   }
+
    return RResult(res);
 }
 
@@ -303,8 +308,8 @@ static void ExtendDestinationModel(std::span<const RFieldDescriptor *> newFields
    msg += std::accumulate(newFields.begin(), newFields.end(), std::string{}, [](const auto &acc, const auto *field) {
       return acc + (acc.length() ? ", " : "") + '`' + field->GetFieldName() + '`';
    });
-   Info("RNTuple::Merge", "%s: adding %s to the destination model.", msg.c_str(),
-        (newFields.size() > 1 ? "them" : "it"));
+   Info("RNTuple::Merge", "%s: adding %s to the destination model (entry #%lu).", msg.c_str(),
+        (newFields.size() > 1 ? "them" : "it"), nDstEntries);
 
    changeset.fAddedFields.reserve(newFields.size());
    for (const auto *fieldDesc : newFields) {
@@ -359,8 +364,8 @@ static void MergeCommonColumns(RClusterPool &clusterPool, DescriptorId_t cluster
                                           colRangeCompressionSettings != options.fCompressionSettings;
 
       if (needsCompressionChange)
-         Info("RNTuple::Merge", "Changing source compression from %d to %d", colRangeCompressionSettings,
-              options.fCompressionSettings);
+         Info("RNTuple::Merge", "Column %s: changing source compression from %d to %d", column.fColumnName.c_str(),
+              colRangeCompressionSettings, options.fCompressionSettings);
 
       // If the column range is already uncompressed we don't need to allocate any new buffer, so we don't
       // bother reserving memory for them.
@@ -451,7 +456,7 @@ static void GenerateExtraDstColumns(size_t nClusterEntries, std::span<RColumnInf
       const auto nElements = nClusterEntries * nRepetitions;
       const auto bytesOnStorage = colElement->GetPackedSize(nElements);
       constexpr auto kPageSizeLimit = 64 * 1024; // TODO: make this an option
-      // TODO: consider coalescing the last page if it's less than some threshold big
+      // TODO: consider coalescing the last page if its size is less than some threshold
       const size_t nPages = bytesOnStorage / kPageSizeLimit + !!(bytesOnStorage % kPageSizeLimit);
       for (size_t i = 0; i < nPages; ++i) {
          const auto pageSize = (i < nPages - 1) ? kPageSizeLimit : bytesOnStorage - kPageSizeLimit * (nPages - 1);
@@ -463,7 +468,7 @@ static void GenerateExtraDstColumns(size_t nClusterEntries, std::span<RColumnInf
          sealedPage.SetBufferSize(pageSize);
          sealedPage.SetBuffer(buffer.get());
 
-         memset(buffer.get(), 0, pageSize); // XXX: is 0 a valid default value for every type?
+         memset(buffer.get(), 0, pageSize);
 
          sealedPagesV.push_back({sealedPage});
       }
@@ -564,7 +569,13 @@ static void AddColumnsFromField(std::vector<RColumnInfo> &columns, ColumnIdMap_t
          info.fColumnType = it->second.fColumnType;
       } else {
          info.fOutputId = colIdMap.size();
-         // map type of src column to type of dst column
+         // NOTE(gparolini): map the type of src column to the type of dst column.
+         // This mapping is only relevant for common columns and it's done to ensure we keep a consistent
+         // on-disk representation of the same column.
+         // This is also important to do for first source when it is used to generate the destination sink,
+         // because even in that case their column representations may differ.
+         // e.g. if the destination has a different compression than the source, an integer column might be
+         // zigzag-encoded in the source but not in the destination.
          const auto &dstColumn = (&dstDesc == &srcDesc) ? srcColumn : dstDesc.GetColumnDescriptor(columnId);
          info.fColumnType = dstColumn.GetType();
          colIdMap[info.fColumnName] = {info.fOutputId, info.fColumnType};
@@ -576,6 +587,9 @@ static void AddColumnsFromField(std::vector<RColumnInfo> &columns, ColumnIdMap_t
       AddColumnsFromField(columns, colIdMap, srcDesc, dstDesc, field, name);
 }
 
+// Converts the fields comparison data to the corresponding column information.
+// While doing so, it collects such information in `colIdMap`, which is used by later calls to this function
+// to map already-seen column names to their chosen outputId, type and so on.
 static RColumnInfoGroup GatherColumnInfos(const RDescriptorsComparison &descCmp, const RNTupleDescriptor &dstDesc,
                                           const RNTupleDescriptor &srcDesc, ColumnIdMap_t &colIdMap)
 {
@@ -583,9 +597,8 @@ static RColumnInfoGroup GatherColumnInfos(const RDescriptorsComparison &descCmp,
    for (const RFieldDescriptor *field : descCmp.fExtraDstFields) {
       AddColumnsFromField(res.fExtraDstColumns, colIdMap, dstDesc, dstDesc, *field);
    }
-   for (const auto &[fieldDst, fieldSrc] : descCmp.fCommonFields) {
-      (void)fieldDst;
-      AddColumnsFromField(res.fCommonColumns, colIdMap, srcDesc, dstDesc, *fieldSrc);
+   for (const auto *field : descCmp.fCommonFields) {
+      AddColumnsFromField(res.fCommonColumns, colIdMap, srcDesc, dstDesc, *field);
    }
    return res;
 }
@@ -650,6 +663,8 @@ RNTupleMerger::Merge(std::span<RPageSource *> sources, RPageSink &destination, c
          if (options.fMergingMode == ENTupleMergingMode::kUnion) {
             // late model extension for all fExtraSrcFields in Union mode
             ExtendDestinationModel(descCmp.fExtraSrcFields, destination, *model, nDstEntries);
+            descCmp.fCommonFields.insert(descCmp.fCommonFields.end(), descCmp.fExtraSrcFields.begin(),
+                                         descCmp.fExtraSrcFields.end());
          } else if (options.fMergingMode == ENTupleMergingMode::kStrict) {
             std::string msg = "Source RNTuple has extra fields that the destination RNTuple doesn't have:";
             for (const auto *field : descCmp.fExtraSrcFields) {
