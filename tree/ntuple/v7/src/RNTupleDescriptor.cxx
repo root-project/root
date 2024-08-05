@@ -32,7 +32,6 @@
 #include <set>
 #include <utility>
 
-
 bool ROOT::Experimental::RFieldDescriptor::operator==(const RFieldDescriptor &other) const
 {
    return fFieldId == other.fFieldId && fFieldVersion == other.fFieldVersion && fTypeVersion == other.fTypeVersion &&
@@ -43,8 +42,7 @@ bool ROOT::Experimental::RFieldDescriptor::operator==(const RFieldDescriptor &ot
           fLogicalColumnIds == other.fLogicalColumnIds && other.fTypeChecksum == other.fTypeChecksum;
 }
 
-ROOT::Experimental::RFieldDescriptor
-ROOT::Experimental::RFieldDescriptor::Clone() const
+ROOT::Experimental::RFieldDescriptor ROOT::Experimental::RFieldDescriptor::Clone() const
 {
    RFieldDescriptor clone;
    clone.fFieldId = fFieldId;
@@ -104,9 +102,7 @@ ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplD
    return field;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-
 
 bool ROOT::Experimental::RColumnDescriptor::operator==(const RColumnDescriptor &other) const
 {
@@ -115,9 +111,7 @@ bool ROOT::Experimental::RColumnDescriptor::operator==(const RColumnDescriptor &
           fIndex == other.fIndex && fRepresentationIndex == other.fRepresentationIndex;
 }
 
-
-ROOT::Experimental::RColumnDescriptor
-ROOT::Experimental::RColumnDescriptor::Clone() const
+ROOT::Experimental::RColumnDescriptor ROOT::Experimental::RColumnDescriptor::Clone() const
 {
    RColumnDescriptor clone;
    clone.fLogicalColumnId = fLogicalColumnId;
@@ -130,7 +124,6 @@ ROOT::Experimental::RColumnDescriptor::Clone() const
    clone.fRepresentationIndex = fRepresentationIndex;
    return clone;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -267,7 +260,6 @@ ROOT::Experimental::RNTupleDescriptor::GetNElements(DescriptorId_t physicalColum
    return result;
 }
 
-
 ROOT::Experimental::DescriptorId_t
 ROOT::Experimental::RNTupleDescriptor::FindFieldId(std::string_view fieldName, DescriptorId_t parentId) const
 {
@@ -288,7 +280,6 @@ ROOT::Experimental::RNTupleDescriptor::FindFieldId(std::string_view fieldName, D
    return kInvalidDescriptorId;
 }
 
-
 std::string ROOT::Experimental::RNTupleDescriptor::GetQualifiedFieldName(DescriptorId_t fieldId) const
 {
    if (fieldId == kInvalidDescriptorId)
@@ -301,8 +292,7 @@ std::string ROOT::Experimental::RNTupleDescriptor::GetQualifiedFieldName(Descrip
    return prefix + "." + fieldDescriptor.GetFieldName();
 }
 
-ROOT::Experimental::DescriptorId_t
-ROOT::Experimental::RNTupleDescriptor::FindFieldId(std::string_view fieldName) const
+ROOT::Experimental::DescriptorId_t ROOT::Experimental::RNTupleDescriptor::FindFieldId(std::string_view fieldName) const
 {
    return FindFieldId(fieldName, GetFieldZeroId());
 }
@@ -346,7 +336,6 @@ ROOT::Experimental::RNTupleDescriptor::FindClusterId(DescriptorId_t physicalColu
    return kInvalidDescriptorId;
 }
 
-
 // TODO(jblomer): fix for cases of sharded clasters
 ROOT::Experimental::DescriptorId_t
 ROOT::Experimental::RNTupleDescriptor::FindNextClusterId(DescriptorId_t clusterId) const
@@ -360,7 +349,6 @@ ROOT::Experimental::RNTupleDescriptor::FindNextClusterId(DescriptorId_t clusterI
    }
    return kInvalidDescriptorId;
 }
-
 
 // TODO(jblomer): fix for cases of sharded clasters
 ROOT::Experimental::DescriptorId_t
@@ -905,7 +893,7 @@ ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AddFieldLink(DescriptorI
    if (!(fieldExists = EnsureFieldExists(fieldId)))
       return R__FORWARD_ERROR(fieldExists);
    if (!(fieldExists = EnsureFieldExists(linkId)))
-      return  R__FAIL("child field with id '" + std::to_string(linkId) + "' doesn't exist in NTuple");
+      return R__FAIL("child field with id '" + std::to_string(linkId) + "' doesn't exist in NTuple");
 
    if (linkId == fDescriptor.GetFieldZeroId()) {
       return R__FAIL("cannot make FieldZero a child field");
@@ -913,8 +901,7 @@ ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AddFieldLink(DescriptorI
    // fail if field already has another valid parent
    auto parentId = fDescriptor.fFieldDescriptors.at(linkId).GetParentId();
    if ((parentId != kInvalidDescriptorId) && (parentId != fieldId)) {
-      return R__FAIL("field '" + std::to_string(linkId) + "' already has a parent ('" +
-         std::to_string(parentId) + ")");
+      return R__FAIL("field '" + std::to_string(linkId) + "' already has a parent ('" + std::to_string(parentId) + ")");
    }
    if (fieldId == linkId) {
       return R__FAIL("cannot make field '" + std::to_string(fieldId) + "' a child of itself");
@@ -1057,4 +1044,83 @@ ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AddExtraTypeInfo(RExtraT
    }
    fDescriptor.fExtraTypeInfoDescriptors.emplace_back(std::move(extraTypeInfoDesc));
    return RResult<void>::Success();
+}
+
+ROOT::Experimental::RClusterDescriptor::RColumnRangeIterable
+ROOT::Experimental::RClusterDescriptor::GetColumnRangeIterable() const
+{
+   return RColumnRangeIterable(*this);
+}
+
+ROOT::Experimental::RNTupleDescriptor::RFieldDescriptorIterable
+ROOT::Experimental::RNTupleDescriptor::GetFieldIterable(const RFieldDescriptor &fieldDesc) const
+{
+   return RFieldDescriptorIterable(*this, fieldDesc);
+}
+
+ROOT::Experimental::RNTupleDescriptor::RFieldDescriptorIterable ROOT::Experimental::RNTupleDescriptor::GetFieldIterable(
+   const RFieldDescriptor &fieldDesc, const std::function<bool(DescriptorId_t, DescriptorId_t)> &comparator) const
+{
+   return RFieldDescriptorIterable(*this, fieldDesc, comparator);
+}
+
+ROOT::Experimental::RNTupleDescriptor::RFieldDescriptorIterable
+ROOT::Experimental::RNTupleDescriptor::GetFieldIterable(DescriptorId_t fieldId) const
+{
+   return GetFieldIterable(GetFieldDescriptor(fieldId));
+}
+
+ROOT::Experimental::RNTupleDescriptor::RFieldDescriptorIterable ROOT::Experimental::RNTupleDescriptor::GetFieldIterable(
+   DescriptorId_t fieldId, const std::function<bool(DescriptorId_t, DescriptorId_t)> &comparator) const
+{
+   return GetFieldIterable(GetFieldDescriptor(fieldId), comparator);
+}
+
+ROOT::Experimental::RNTupleDescriptor::RFieldDescriptorIterable
+ROOT::Experimental::RNTupleDescriptor::GetTopLevelFields() const
+{
+   return GetFieldIterable(GetFieldZeroId());
+}
+
+ROOT::Experimental::RNTupleDescriptor::RFieldDescriptorIterable
+ROOT::Experimental::RNTupleDescriptor::GetTopLevelFields(
+   const std::function<bool(DescriptorId_t, DescriptorId_t)> &comparator) const
+{
+   return GetFieldIterable(GetFieldZeroId(), comparator);
+}
+
+ROOT::Experimental::RNTupleDescriptor::RColumnDescriptorIterable
+ROOT::Experimental::RNTupleDescriptor::GetColumnIterable() const
+{
+   return RColumnDescriptorIterable(*this);
+}
+
+ROOT::Experimental::RNTupleDescriptor::RColumnDescriptorIterable
+ROOT::Experimental::RNTupleDescriptor::GetColumnIterable(const RFieldDescriptor &fieldDesc) const
+{
+   return RColumnDescriptorIterable(*this, fieldDesc);
+}
+
+ROOT::Experimental::RNTupleDescriptor::RColumnDescriptorIterable
+ROOT::Experimental::RNTupleDescriptor::GetColumnIterable(DescriptorId_t fieldId) const
+{
+   return RColumnDescriptorIterable(*this, GetFieldDescriptor(fieldId));
+}
+
+ROOT::Experimental::RNTupleDescriptor::RClusterGroupDescriptorIterable
+ROOT::Experimental::RNTupleDescriptor::GetClusterGroupIterable() const
+{
+   return RClusterGroupDescriptorIterable(*this);
+}
+
+ROOT::Experimental::RNTupleDescriptor::RClusterDescriptorIterable
+ROOT::Experimental::RNTupleDescriptor::GetClusterIterable() const
+{
+   return RClusterDescriptorIterable(*this);
+}
+
+ROOT::Experimental::RNTupleDescriptor::RExtraTypeInfoDescriptorIterable
+ROOT::Experimental::RNTupleDescriptor::GetExtraTypeInfoIterable() const
+{
+   return RExtraTypeInfoDescriptorIterable(*this);
 }
