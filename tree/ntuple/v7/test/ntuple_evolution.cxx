@@ -89,6 +89,62 @@ void ProcessLineImpl(const char *line)
    } while (0)
 } // namespace
 
+TEST(RNTupleEvolution, AddedMember)
+{
+   FileRaii fileGuard("test_ntuple_evolution_added_member.root");
+
+   WriteOldInFork([&] {
+      // The child process writes the file and exits, but the file must be preserved to be read by the parent.
+      fileGuard.PreserveFile();
+
+      ASSERT_TRUE(gInterpreter->Declare(R"(
+struct AddedMember {
+   int fInt1 = 1;
+   int fInt3 = 3;
+};
+)"));
+
+      auto model = RNTupleModel::Create();
+      model->AddField(RFieldBase::Create("f", "AddedMember").Unwrap());
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      writer->Fill();
+
+      void *ptr = writer->GetModel().GetDefaultEntry().GetPtr<void>("f").get();
+      DeclarePointer("AddedMember", "ptrAddedMember", ptr);
+      ProcessLine("ptrAddedMember->fInt1 = 71;");
+      ProcessLine("ptrAddedMember->fInt3 = 93;");
+      writer->Fill();
+
+      // Reset / close the writer and flush the file.
+      writer.reset();
+   });
+
+   ASSERT_TRUE(gInterpreter->Declare(R"(
+struct AddedMember {
+   int fInt1 = 1;
+   int fInt2 = 2;
+   int fInt3 = 3;
+};
+)"));
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   ASSERT_EQ(2, reader->GetNEntries());
+
+   void *ptr = reader->GetModel().GetDefaultEntry().GetPtr<void>("f").get();
+   DeclarePointer("AddedMember", "ptrAddedMember", ptr);
+
+   reader->LoadEntry(0);
+   EXPECT_EVALUATE_EQ("ptrAddedMember->fInt1", 1);
+   EXPECT_EVALUATE_EQ("ptrAddedMember->fInt2", 2);
+   EXPECT_EVALUATE_EQ("ptrAddedMember->fInt3", 3);
+
+   reader->LoadEntry(1);
+   EXPECT_EVALUATE_EQ("ptrAddedMember->fInt1", 71);
+   EXPECT_EVALUATE_EQ("ptrAddedMember->fInt2", 2);
+   EXPECT_EVALUATE_EQ("ptrAddedMember->fInt3", 93);
+}
+
 TEST(RNTupleEvolution, RemovedMember)
 {
    FileRaii fileGuard("test_ntuple_evolution_removed_member.root");
