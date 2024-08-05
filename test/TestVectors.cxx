@@ -1,7 +1,6 @@
 // @(#)root/test:$Id$
 // Author: Peter Malzacher   19/06/99
 
-#ifndef __CINT__
 #include <Riostream.h>
 #include <TMath.h>
 #include <TVector3.h>
@@ -9,7 +8,6 @@
 #include <TRotation.h>
 #include <TLorentzRotation.h>
 #include <assert.h>
-#endif
 
 Double_t DEPS=1.0e-14;
 Double_t FEPS=1.0e-6;

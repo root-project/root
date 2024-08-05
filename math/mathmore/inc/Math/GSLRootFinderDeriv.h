@@ -86,7 +86,7 @@ public:
 
 
 
-#if defined(__MAKECINT__) || defined(G__DICTIONARY)
+#if defined(G__DICTIONARY)
    bool SetFunction( const IGenFunction & , double , double ) override {
       std::cerr <<"GSLRootFinderDeriv - Error : Algorithm requirs derivatives" << std::endl;
       return false;

@@ -31,7 +31,7 @@ or (for version 1.8) from [here](http://seal.web.cern.ch/seal/MathLibs/gsl-1.8.t
 Windows binaries, compiled using Visual Studio 7.1 can be downloaded from
 [this location](http://seal.web.cern.ch/seal/MathLibs/GSL-1.8.zip).
 
-MathMore (and its %ROOT CINT dictionary) can be built within %ROOT whenever a GSL library
+MathMore (and its %ROOT dictionary) can be built within %ROOT whenever a GSL library
 is found in the system. Optionally the GSL library and header file location can be specified
 in the %ROOT configure script with _configure --with-gsl-incdir=... --with-gsl-libdir=..._
 MathMore links with the GSL static libraries. On some platform (like Linux x86-64)  GSL
