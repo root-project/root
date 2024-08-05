@@ -34,6 +34,11 @@ void CreateTTree(const char *filename, const char *treename, int nentries, int a
    auto a = new double[arraysize];
    t.Branch("arrayb", a, std::string("arrayb[") + arraysize + "]/D");
 
+   // Multidimensional static array branch
+   constexpr int arraysizeInner = 2;
+   auto a2D = new float[arraysize][arraysizeInner];
+   t.Branch("array2Db", a2D, std::string("array2Db[") + arraysize + "][" + arraysizeInner + "]/F");
+
    // Char array branch
    char s[10] = "onetwo";
    t.Branch("chararrayb", s, std::string("chararrayb[") + sizeof(s) + "]/C");
@@ -56,12 +61,12 @@ void CreateTTree(const char *filename, const char *treename, int nentries, int a
 
       for (int j = 0; j < arraysize; ++j) {
          a[j] = v[j] = i + j;
+         for (int k = 0; k < arraysizeInner; ++k) {
+            a2D[j][k] = i + j + k;
+         }
       }
 
-      if (i % 2 == 0)
-         s[3] = '\0';
-      else
-         s[3] = 't';
+      s[3] = i % 2 == 0 ? '\0' : 't';
 
       mystruct.myint1 = i + more;
       mystruct.myint2 = i * more;

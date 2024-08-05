@@ -14,12 +14,7 @@
 #include "../../cppyy/CPyCppyy/src/CPPInstance.h"
 #include "../../cppyy/CPyCppyy/src/ProxyWrappers.h"
 #include "../../cppyy/CPyCppyy/src/Utility.h"
-
-// Th API changed a bit with the new CPyCppyy, which we can detect by checking
-// if CPYCPPYY_VERSION_HEX is defined.
-#ifdef CPYCPPYY_VERSION_HEX
 #include "../../cppyy/CPyCppyy/src/Dimensions.h"
-#endif
 
 #include "CPyCppyy/API.h"
 
@@ -36,6 +31,9 @@
 #include "TLeafObject.h"
 #include "TStreamerElement.h"
 #include "TStreamerInfo.h"
+
+#include <algorithm>
+#include <sstream>
 
 namespace {
 
@@ -101,18 +99,48 @@ static std::pair<void *, std::string> ResolveBranch(TTree *tree, const char *nam
    return {nullptr, ""};
 }
 
+/**
+ * @brief Extracts static dimensions from the title of a TLeaf object.
+ *
+ * The function assumes that the title of the TLeaf object contains dimensions
+ * in the format `[dim1][dim2]...`.
+ *
+ * @note In the current implementation of TLeaf, there is no way to extract the
+ *       dimensions without string parsing.
+ *
+ * @param leaf Pointer to the TLeaf object from which to extract dimensions.
+ * @return std::vector<dim_t> A vector containing the extracted dimensions.
+ */
+static std::vector<dim_t> getMultiDims(std::string const &title)
+{
+   std::vector<dim_t> dims;
+   std::stringstream ss{title};
+
+   while (ss.good()) {
+      std::string substr;
+      getline(ss, substr, '[');
+      getline(ss, substr, ']');
+      if (!substr.empty()) {
+         dims.push_back(std::stoi(substr));
+      }
+   }
+
+   return dims;
+}
+
 static PyObject *WrapLeaf(TLeaf *leaf)
 {
    if (1 < leaf->GetLenStatic() || leaf->GetLeafCount()) {
       bool isStatic = 1 < leaf->GetLenStatic();
       // array types
       std::string typeName = leaf->GetTypeName();
-#ifdef CPYCPPYY_VERSION_HEX
-      dim_t dimsArr[]{leaf->GetNdata()};
-      CPyCppyy::Dimensions dims{1, dimsArr};
-#else
-      dim_t dims[]{1, leaf->GetNdata()}; // first entry is the number of dims
-#endif
+      std::vector<dim_t> dimsVec{leaf->GetNdata()};
+      std::string title = leaf->GetTitle();
+      // Multidimensional array case
+      if (std::count(title.begin(), title.end(), '[') >= 2) {
+         dimsVec = getMultiDims(title);
+      }
+      CPyCppyy::Dimensions dims{static_cast<dim_t>(dimsVec.size()), dimsVec.data()};
       Converter *pcnv = CreateConverter(typeName + (isStatic ? "[]" : "*"), dims);
 
       void *address = 0;

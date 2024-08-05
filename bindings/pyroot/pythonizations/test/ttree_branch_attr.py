@@ -2,6 +2,8 @@ import unittest
 
 import ROOT
 
+import numpy as np
+
 
 class TTreeBranchAttr(unittest.TestCase):
     """
@@ -73,6 +75,21 @@ class TTreeBranchAttr(unittest.TestCase):
 
             for j in range(self.arraysize):
                 self.assertEqual(a[j], j)
+
+    def test_array_2D_branch(self):
+        f, t, c = self.get_tree_and_chain()
+
+        # Synchronized with arraysizeInner in TreeHelper.h
+        arraysize_inner = 2
+
+        for ds in t, c:
+            a = ds.array2Db
+
+            self.assertEqual(a.shape, (self.arraysize, arraysize_inner))
+
+            for j in range(self.arraysize):
+                for k in range(arraysize_inner):
+                    self.assertEqual(a[j][k], j + k)
 
     def test_char_array_branch(self):
         f, t, c = self.get_tree_and_chain()
