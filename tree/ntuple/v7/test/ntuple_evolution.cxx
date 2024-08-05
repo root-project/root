@@ -259,6 +259,75 @@ struct ReorderedMembers {
    EXPECT_EVALUATE_EQ("ptrReorderedMembers->fInt3", 93);
 }
 
+TEST(RNTupleEvolution, AddedBaseClass)
+{
+   FileRaii fileGuard("test_ntuple_evolution_added_base_class.root");
+
+   WriteOldInFork([&] {
+      // The child process writes the file and exits, but the file must be preserved to be read by the parent.
+      fileGuard.PreserveFile();
+
+      ASSERT_TRUE(gInterpreter->Declare(R"(
+struct AddedBaseIntermediate {
+   int fIntermediate = 2;
+};
+struct AddedBaseDerived : public AddedBaseIntermediate {
+   int fDerived = 3;
+};
+)"));
+
+      auto model = RNTupleModel::Create();
+      model->AddField(RFieldBase::Create("f", "AddedBaseDerived").Unwrap());
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      writer->Fill();
+
+      void *ptr = writer->GetModel().GetDefaultEntry().GetPtr<void>("f").get();
+      DeclarePointer("AddedBaseDerived", "ptrAddedBaseDerived", ptr);
+      ProcessLine("ptrAddedBaseDerived->fIntermediate = 82;");
+      ProcessLine("ptrAddedBaseDerived->fDerived = 93;");
+      writer->Fill();
+
+      // Reset / close the writer and flush the file.
+      {
+         // TStreamerInfo::Build will report a warning for interpreted classes (but only for base classes).
+         // See also https://github.com/root-project/root/issues/9371
+         ROOT::TestSupport::CheckDiagsRAII diagRAII;
+         diagRAII.optionalDiag(kWarning, "TStreamerInfo::Build", "has no streamer or dictionary",
+                               /*matchFullMessage=*/false);
+         writer.reset();
+      }
+   });
+
+   ASSERT_TRUE(gInterpreter->Declare(R"(
+struct AddedBase {
+   int fBase = 1;
+};
+struct AddedBaseIntermediate : public AddedBase {
+   int fIntermediate = 2;
+};
+struct AddedBaseDerived : public AddedBaseIntermediate {
+   int fDerived = 3;
+};
+)"));
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   ASSERT_EQ(2, reader->GetNEntries());
+
+   void *ptr = reader->GetModel().GetDefaultEntry().GetPtr<void>("f").get();
+   DeclarePointer("AddedBaseDerived", "ptrAddedBaseDerived", ptr);
+
+   reader->LoadEntry(0);
+   EXPECT_EVALUATE_EQ("ptrAddedBaseDerived->fBase", 1);
+   EXPECT_EVALUATE_EQ("ptrAddedBaseDerived->fIntermediate", 2);
+   EXPECT_EVALUATE_EQ("ptrAddedBaseDerived->fDerived", 3);
+
+   reader->LoadEntry(1);
+   EXPECT_EVALUATE_EQ("ptrAddedBaseDerived->fBase", 1);
+   EXPECT_EVALUATE_EQ("ptrAddedBaseDerived->fIntermediate", 82);
+   EXPECT_EVALUATE_EQ("ptrAddedBaseDerived->fDerived", 93);
+}
+
 TEST(RNTupleEvolution, RemovedBaseClass)
 {
    FileRaii fileGuard("test_ntuple_evolution_removed_base_class.root");
