@@ -113,9 +113,12 @@ inline double interpolate6thDegreeExp(double x, double low, double high, double 
 {
    double x0 = boundary;
 
+   high /= nominal;
+   low /= nominal;
+
    // GHL: Swagato's suggestions
-   double powUp = std::pow(high / nominal, x0);
-   double powDown = std::pow(low / nominal, x0);
+   double powUp = std::pow(high, x0);
+   double powDown = std::pow(low, x0);
    double logHi = std::log(high);
    double logLo = std::log(low);
    double powUpLog = high <= 0.0 ? 0.0 : powUp * logHi;
