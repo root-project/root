@@ -14,6 +14,9 @@
 # These files are linked into rootcling_stage1 and libCling. rootcling accesses
 # them through rootcling_impl.
 
+# This directory contains files that include llvm, which can give warnings.
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error")
+
 ROOT_OBJECT_LIBRARY(Dictgen
   BaseSelectionRule.cxx
   ClassSelectionRule.cxx
