@@ -36,7 +36,7 @@ void ROOT::Experimental::Internal::RPagePool::PreloadPage(RPage page)
    fReferences.emplace_back(0);
 }
 
-void ROOT::Experimental::Internal::RPagePool::ReturnPage(const RPage &page)
+void ROOT::Experimental::Internal::RPagePool::ReleasePage(const RPage &page)
 {
    if (page.IsNull()) return;
    std::lock_guard<std::mutex> lockGuard(fLock);
