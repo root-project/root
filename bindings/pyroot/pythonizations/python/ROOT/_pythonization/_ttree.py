@@ -8,7 +8,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-r'''
+r"""
 /**
 \class TTree
 \brief \parblock \endparblock
@@ -128,10 +128,12 @@ ds.SetBranchAddress('structb', ms)
 </div>
 \endhtmlonly
 */
-'''
+"""
 
 from libROOTPythonizations import GetBranchAttr, BranchPyz
+from ._rvec import _array_interface_dtype_map, _get_cpp_type_from_numpy_type
 from . import pythonization
+
 
 # TTree iterator
 def _TTree__iter__(self):
@@ -145,6 +147,7 @@ def _TTree__iter__(self):
     if bytes_read == -1:
         raise RuntimeError("TTree I/O error")
 
+
 def _pythonize_branch_addr(branch, addr_orig):
     """Helper for the SetBranchAddress pythonization, extracting the relevant
     address from a Python object if possible.
@@ -152,39 +155,60 @@ def _pythonize_branch_addr(branch, addr_orig):
     import cppyy
     import ctypes
 
-    # Pythonization for cppyy proxies (of type CPPInstance)
-    if isinstance(addr_orig, cppyy._backend.CPPInstance):
+    is_leaf_list = branch.IsA() is cppyy.gbl.TBranch.Class()
 
-        is_leaf_list = branch.IsA() is cppyy.gbl.TBranch.Class()
+    if is_leaf_list:
+        # If the branch is a leaf list, SetBranchAddress expects the
+        # address of the object that has the corresponding data members.
+        return ctypes.c_void_p(cppyy.addressof(instance=addr_orig, byref=False))
 
-        if is_leaf_list:
-            # If the branch is a leaf list, SetBranchAddress expects the
-            # address of the object that has the corresponding data members.
-            return ctypes.c_void_p(cppyy.addressof(instance=addr_orig, byref=False))
+    # Otherwise, SetBranchAddress is expecting a pointer to the address of
+    # the object, and the pointer needs to stay alive. Therefore, we create
+    # a container for the pointer and cache it in the original cppyy proxy.
+    addr_view = cppyy.gbl.array["std::intptr_t", 1]([cppyy.addressof(instance=addr_orig, byref=False)])
 
-        # Otherwise, SetBranchAddress is expecting a pointer to the address of
-        # the object, and the pointer needs to stay alive. Therefore, we create
-        # a container for the pointer and cache it in the original cppyy proxy.
-        addr_view = cppyy.gbl.array["std::intptr_t", 1]([cppyy.addressof(instance=addr_orig, byref=False)])
+    if not hasattr(addr_orig, "_set_branch_cached_pointers"):
+        addr_orig._set_branch_cached_pointers = []
+    addr_orig._set_branch_cached_pointers.append(addr_view)
 
-        if not hasattr(addr_orig, "_set_branch_cached_pointers"):
-            addr_orig._set_branch_cached_pointers = []
-        addr_orig._set_branch_cached_pointers.append(addr_view)
+    # Finally, we have to return the address of the container
+    return ctypes.c_void_p(cppyy.addressof(instance=addr_view, byref=False))
 
-        # Finally, we have to return the address of the container
-        return ctypes.c_void_p(cppyy.addressof(instance=addr_view, byref=False))
+
+def _get_cpp_type_from_array_typecode(typecode):
+    # Complete list from https://docs.python.org/3/library/array.html
+    c_type_names = {
+        "b": "signed char",
+        "B": "unsigned char",
+        "u": "wchar_t",
+        "h": "signed short",
+        "H": "unsigned short",
+        "i": "signed int",
+        "I": "unsigned int",
+        "l": "signed long",
+        "L": "unsigned long",
+        "q": "signed long long",
+        "Q": "unsigned long long",
+        "f": "float",
+        "d": "double",
+    }
+    return c_type_names[typecode]
+
+
+def _determine_data_type(addr):
+    """ Figure out data_type in case addr is a numpy.ndarray or array.array.
+    """
 
     # For NumPy arrays
-    if hasattr(addr_orig, "__array_interface__"):
-        return ctypes.c_void_p(addr_orig.__array_interface__["data"][0])
+    if hasattr(addr, "__array_interface__"):
+        return _get_cpp_type_from_numpy_type(addr.__array_interface__["typestr"][1:])
 
     # For the builtin array library
-    if hasattr(addr_orig, "buffer_info"):
-        return ctypes.c_void_p(addr_orig.buffer_info()[0])
+    if hasattr(addr, "buffer_info"):
+        return _get_cpp_type_from_array_typecode(addr.typecode)
 
-    # We don't know how to pythonize the address parameter. return the
-    # original value one.
-    return addr_orig
+    return None
+
 
 def _SetBranchAddress(self, bname, addr, *args, **kwargs):
     """
@@ -200,11 +224,22 @@ def _SetBranchAddress(self, bname, addr, *args, **kwargs):
     t.SetBranchAddress("my_vector_branch", v)
     ```
     """
+    import cppyy
 
     branch = self.GetBranch(bname)
-    addr = _pythonize_branch_addr(branch, addr)
 
-    return self._OriginalSetBranchAddress(bname, addr, *args, **kwargs)
+    # Pythonization for cppyy proxies (of type CPPInstance)
+    if isinstance(addr, cppyy._backend.CPPInstance):
+        addr = _pythonize_branch_addr(branch, addr)
+
+    # Figure out data_type in case addr is a numpy.ndarray or array.array
+    data_type = _determine_data_type(addr)
+
+    # We call the template specialization if we know the data type
+    func = self._OriginalSetBranchAddress if data_type is None else self._OriginalSetBranchAddress[data_type]
+
+    return func(bname, addr, *args, **kwargs)
+
 
 def _Branch(self, *args):
     # Modify the behaviour if args is one of:
@@ -218,6 +253,7 @@ def _Branch(self, *args):
         res = self._OriginalBranch(*args)
 
     return res
+
 
 def _TTree__getattr__(self, key):
     """
@@ -243,7 +279,8 @@ def _TTree__getattr__(self, key):
         out = cppyy.ll.cast[cast_type](out)
     return out
 
-@pythonization('TTree')
+
+@pythonization("TTree")
 def pythonize_ttree(klass, name):
     # Parameters:
     # klass: class to be pythonized
@@ -268,7 +305,8 @@ def pythonize_ttree(klass, name):
     klass._OriginalBranch = klass.Branch
     klass.Branch = _Branch
 
-@pythonization('TChain')
+
+@pythonization("TChain")
 def pythonize_tchain(klass):
     # Parameters:
     # klass: class to be pythonized
