@@ -198,11 +198,11 @@ bool IsSame<>(const TH1F& a, const TH1F& b){
       if (gVerboseComparison) std::cout << "The # of bins of the histograms differ: " << nbinsa << " " << nbinsb << std::endl;
       return false;
    }
-   const auto AreBitwiseEqual = [](auto a, auto b) {
-     ULong64_t la, lb;
-     memcpy(&la, &a, sizeof(a));
-     memcpy(&lb, &b, sizeof(b));
-     return la == lb;
+   const auto AreBitwiseEqual = [](auto x, auto y) {
+     ULong64_t lx, ly;
+     memcpy(&lx, &x, sizeof(x));
+     memcpy(&ly, &y, sizeof(y));
+     return lx == ly;
    };
    for (int i=0;i<a.GetNbinsX();++i) {
       auto binca = a.GetBinContent(i);
