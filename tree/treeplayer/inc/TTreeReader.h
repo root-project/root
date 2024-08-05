@@ -162,7 +162,7 @@ public:
 
    TTreeReader();
 
-   TTreeReader(TTree* tree, TEntryList* entryList = nullptr);
+   TTreeReader(TTree *tree, TEntryList *entryList = nullptr, bool warnAboutLongerFriends = true);
    TTreeReader(const char* keyname, TDirectory* dir, TEntryList* entryList = nullptr);
    TTreeReader(const char *keyname, TEntryList *entryList = nullptr) : TTreeReader(keyname, nullptr, entryList) {}
 
@@ -273,8 +273,6 @@ protected:
    bool SetProxies();
 
 private:
-   void WarnIfFriendsHaveMoreEntries();
-
    std::string GetProxyKey(const char *branchname)
    {
       std::string key(branchname);
@@ -308,6 +306,14 @@ private:
    Long64_t fBeginEntry = 0LL; ///< This allows us to propagate the range to the TTreeCache
    bool fProxiesSet = false; ///< True if the proxies have been set, false otherwise
    bool fSetEntryBaseCallingLoadTree = false; ///< True if during the LoadTree execution triggered by SetEntryBase.
+
+   // Flag to activate or deactivate warnings in case the friend trees have
+   // more entries than the main one. In some cases we may want to deactivate
+   // this behaviour, notably in multithreaded runs where we have to partition
+   // the main tree but keep the entire friend trees in every thread to ensure
+   // alignment.
+   bool fWarnAboutLongerFriends{true};
+   void WarnIfFriendsHaveMoreEntries();
 
    friend class ROOT::Internal::TTreeReaderValueBase;
    friend class ROOT::Internal::TTreeReaderArrayBase;

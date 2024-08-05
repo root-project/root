@@ -199,10 +199,8 @@ TTreeReader::TTreeReader() : fNotify(this) {}
 ///                  In the latter case, the TEntryList must be associated to the TChain, as
 ///                  per chain.SetEntryList(&entryList).
 
-TTreeReader::TTreeReader(TTree* tree, TEntryList* entryList /*= nullptr*/):
-   fTree(tree),
-   fEntryList(entryList),
-   fNotify(this)
+TTreeReader::TTreeReader(TTree *tree, TEntryList *entryList /*= nullptr*/, bool warnAboutLongerFriends)
+   : fTree(tree), fEntryList(entryList), fNotify(this), fWarnAboutLongerFriends(warnAboutLongerFriends)
 {
    if (!fTree) {
       ::Error("TTreeReader::TTreeReader", "TTree is NULL!");
@@ -382,18 +380,44 @@ bool TTreeReader::SetProxies() {
 
 void TTreeReader::WarnIfFriendsHaveMoreEntries()
 {
+   if (!fWarnAboutLongerFriends)
+      return;
+   if (!fTree)
+      return;
+   // Make sure all proxies are set, as in certain situations we might get to this
+   // point without having set the proxies first. For example, when processing a
+   // TChain and calling `SetEntry(N)` with N beyond the real number of entries.
+   // If the proxies can't be set return from the function and give up the warning.
+   if (!fProxiesSet && !SetProxies())
+      return;
+
+   // If we are stopping the reading because we reached the last entry specified
+   // explicitly via SetEntriesRange, do not bother the user with a warning
+   if (fEntry == fEndEntry)
+      return;
+
+   const std::string mainTreeName =
+      dynamic_cast<const TChain *>(fTree) ? fTree->GetName() : ROOT::Internal::TreeUtils::GetTreeFullPaths(*fTree)[0];
+
    for (auto &&fp : fFriendProxies) {
       const auto *frTree = fp->GetDirector()->GetTree();
       if (!frTree)
-         return;
-      if (fEntry >= frTree->GetEntriesFast())
-         return;
+         break;
+      // We are looking for the situation where there are actually still more
+      // entries to read in the friend. So we check that either:
+      // * The current entry being read is strictly below the number of entries in the friend dataset.
+      // * There are still more files to read in the friend dataset (case of TChain where we reach the boundary of the
+      //   current friend file).
+      // In any other case we break the loop.
+      if (fEntry >= frTree->GetChainOffset() + frTree->GetEntriesFast() && !(fp->GetNTrees() > fp->GetNTreesSoFar()))
+         break;
       // The friend tree still has entries beyond the last one of the main
       // tree, warn the user about it.
       const std::string frTreeName = dynamic_cast<const TChain *>(frTree)
                                         ? frTree->GetName()
                                         : ROOT::Internal::TreeUtils::GetTreeFullPaths(*frTree)[0];
-      std::string msg = "Friend tree '" + frTreeName + "' has more entries beyond the end of the main tree.";
+      std::string msg = "Last entry available from main tree '" + mainTreeName + "' was " + std::to_string(fEntry - 1) +
+                        " but friend tree '" + frTreeName + "' has more entries beyond the end of the main tree.";
       Warning("SetEntryBase()", "%s", msg.c_str());
    }
 }

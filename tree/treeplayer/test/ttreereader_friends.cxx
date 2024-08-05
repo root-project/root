@@ -139,7 +139,8 @@ TEST_F(TTreeReaderFriends, MainTreeShorterTTree)
    TTreeReaderValue<int> y(r, "y");
 
    ROOT_EXPECT_WARNING(r.SetEntry(2), "SetEntryBase",
-                       "Friend tree '" + std::string(fMainTreeName) +
+                       "Last entry available from main tree '" + std::string(fFriendTreeName) +
+                          "' was 1 but friend tree '" + std::string(fMainTreeName) +
                           "' has more entries beyond the end of the main tree.");
 }
 
@@ -153,7 +154,8 @@ TEST_F(TTreeReaderFriends, MainTreeShorterTChain)
    TTreeReaderValue<int> x(r, "x");
    TTreeReaderValue<int> y(r, "y");
    ROOT_EXPECT_WARNING(r.SetEntry(2), "SetEntryBase",
-                       "Friend tree '" + std::string(fMainTreeName) +
+                       "Last entry available from main tree '" + std::string(fFriendTreeName) +
+                          "' was 1 but friend tree '" + std::string(fMainTreeName) +
                           "' has more entries beyond the end of the main tree.");
 }
 
@@ -175,11 +177,13 @@ TEST_F(TTreeReaderFriends, MainTreeShorterTTreeExtraFriend)
 
    ROOT::TestSupport::CheckDiagsRAII diags;
    diags.requiredDiag(kWarning, "SetEntryBase",
-                      "Friend tree '" + std::string(fMainTreeName) +
+                      "Last entry available from main tree '" + std::string(fFriendTreeName) +
+                         "' was 1 but friend tree '" + std::string(fMainTreeName) +
                          "' has more entries beyond the end of the main tree.",
                       /*matchFullMessage*/ true);
    diags.requiredDiag(kWarning, "SetEntryBase",
-                      "Friend tree '" + std::string(fExtraTreeName) +
+                      "Last entry available from main tree '" + std::string(fFriendTreeName) +
+                         "' was 1 but friend tree '" + std::string(fExtraTreeName) +
                          "' has more entries beyond the end of the main tree.",
                       /*matchFullMessage*/ true);
    r.SetEntry(2);
@@ -199,11 +203,13 @@ TEST_F(TTreeReaderFriends, MainTreeShorterTChainExtraFriend)
 
    ROOT::TestSupport::CheckDiagsRAII diags;
    diags.requiredDiag(kWarning, "SetEntryBase",
-                      "Friend tree '" + std::string(fMainTreeName) +
+                      "Last entry available from main tree '" + std::string(fFriendTreeName) +
+                         "' was 1 but friend tree '" + std::string(fMainTreeName) +
                          "' has more entries beyond the end of the main tree.",
                       /*matchFullMessage*/ true);
    diags.requiredDiag(kWarning, "SetEntryBase",
-                      "Friend tree '" + std::string(fExtraTreeName) +
+                      "Last entry available from main tree '" + std::string(fFriendTreeName) +
+                         "' was 1 but friend tree '" + std::string(fExtraTreeName) +
                          "' has more entries beyond the end of the main tree.",
                       /*matchFullMessage*/ true);
    r.SetEntry(2);
