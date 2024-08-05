@@ -131,6 +131,25 @@ The following people have contributed to this new version:
 ## PROOF Libraries
 
 
+## PyROOT
+
+### Typesafe `TTree::SetBranchAddress()` for array inputs
+
+If you call `TTree::SetBranchAddress` with NumPy array or `array.array` inputs, ROOT will now check if the array type matches with the column type.
+If it doesn't, `SetBranchAddress()` will return a negative status code and print an error.
+Take for example this code snippet:
+```python
+arr = array.array(typecode, "d")
+status = t.SetBranchAddress("name", arr)
+print("Status = %s" % (status, ))
+```
+If the branch type is also `double` (like the type of the array indicated by `"d"`), the call to `SetBranchAddress()` would succeed with status code zero.
+If the type doesn't match, you now get a clear error instead of garbage values.
+```txt
+Error in <TTree::SetBranchAddress>: The pointer type given "Double_t" (8) does not correspond to the type needed "Float_t" (5) by the branch: a
+Status = -2
+```
+
 ## Language Bindings
 
 

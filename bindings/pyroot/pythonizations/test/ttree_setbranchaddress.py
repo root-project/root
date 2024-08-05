@@ -72,22 +72,38 @@ class TTreeSetBranchAddress(unittest.TestCase):
 
         for ds in t, c:
             a = array("d", self.arraysize * [0.0])
-            ds.SetBranchAddress("arrayb", a)
+
+            status = ds.SetBranchAddress("arrayb", a)
+            self.assertEqual(status, 0)  # should return status 0 for success
+
             ds.GetEntry(0)
 
             for j in range(self.arraysize):
                 self.assertEqual(a[j], j)
+
+            # check if type mismatch is correctly detected
+            a_wrong_type = array("f", self.arraysize * [0.0])
+            status = ds.SetBranchAddress("arrayb", a_wrong_type)
+            self.assertEqual(status, -2)  # should return error code because of type mismatch
 
     def test_numpy_array_branch(self):
         f, t, c = self.get_tree_and_chain()
 
         for ds in t, c:
             a = np.array(self.arraysize * [0.0])  # dtype='float64'
-            ds.SetBranchAddress("arrayb", a)
+
+            status = ds.SetBranchAddress("arrayb", a)
+            self.assertEqual(status, 0)  # should return status 0 for success
+
             ds.GetEntry(0)
 
             for j in range(self.arraysize):
                 self.assertEqual(a[j], j)
+
+            # check if type mismatch is correctly detected
+            a_wrong_type = np.zeros(self.arraysize, dtype=np.float32)
+            status = ds.SetBranchAddress("arrayb", a_wrong_type)
+            self.assertEqual(status, -2)  # should return error code because of type mismatch
 
     def test_struct_branch_leaflist(self):
         f, t, c = self.get_tree_and_chain()
