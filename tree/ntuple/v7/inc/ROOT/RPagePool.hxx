@@ -54,7 +54,7 @@ class RPagePool {
    /// Give back a page to the pool and decrease the reference counter. There must not be any pointers anymore into
    /// this page. If the reference counter drops to zero, the page pool might decide to call the deleter given in
    /// during registration. Called by the RPageRef destructor.
-   void ReturnPage(const RPage &page);
+   void ReleasePage(const RPage &page);
 
 public:
    RPagePool() = default;
@@ -120,7 +120,7 @@ public:
    ~RPageRef()
    {
       if (fPagePool)
-         fPagePool->ReturnPage(fPage);
+         fPagePool->ReleasePage(fPage);
    }
 
    /// Used by the friend virtual page source to map the physical column and cluster IDs to ther virtual counterparts
