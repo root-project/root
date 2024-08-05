@@ -204,7 +204,7 @@ CompareDescriptorStructure(const RNTupleDescriptor &dst, const RNTupleDescriptor
    // 3. src has fields that dst hasn't
    // 4. dst and src have fields that differ (compatible or incompatible)
 
-   std::vector<std::stringstream> errors;
+   std::vector<std::string> errors;
    RDescriptorsComparison res;
 
    struct RCommonField {
@@ -231,21 +231,20 @@ CompareDescriptorStructure(const RNTupleDescriptor &dst, const RNTupleDescriptor
       // Require that fields are both projected or both not projected
       bool projCompatible = field.fSrc->IsProjectedField() == field.fDst->IsProjectedField();
       if (!projCompatible) {
-         errors.push_back(std::stringstream{}
-                          << "Field `" << srcFdName
-                          << "` is incompatible with previously-seen field with that name because the "
-                          << (field.fSrc->IsProjectedField() ? "new" : "old")
-                          << " one is projected and the other isn't");
+         std::stringstream ss;
+         ss << "Field `" << srcFdName << "` is incompatible with previously-seen field with that name because the "
+            << (field.fSrc->IsProjectedField() ? "new" : "old") << " one is projected and the other isn't";
+         errors.push_back(ss.str());
       } else if (field.fSrc->IsProjectedField()) {
          // if both fields are projected, verify that they point to the same real field
          const auto srcId = field.fSrc->GetProjectionSourceId();
          const auto dstId = field.fDst->GetProjectionSourceId();
          if (srcId != dstId) {
-            errors.push_back(
-               std::stringstream{}
-               << "Field `" << srcFdName
+            std::stringstream ss;
+            ss << "Field `" << srcFdName
                << "` is projected to a different field than a previously-seen field with the same name (old: " << dstId
-               << ", new: " << srcId << ")");
+               << ", new: " << srcId << ")";
+            errors.push_back(ss.str());
          }
       }
 
@@ -253,33 +252,36 @@ CompareDescriptorStructure(const RNTupleDescriptor &dst, const RNTupleDescriptor
       const auto &srcTyName = field.fSrc->GetTypeName();
       const auto &dstTyName = field.fDst->GetTypeName();
       if (srcTyName != dstTyName) {
-         errors.push_back(std::stringstream{}
-                          << "Field `" << srcFdName
-                          << "` has a type incompatible with a previously-seen field with the same name: (old: "
-                          << dstTyName << ", new: " << srcTyName << ")");
+         std::stringstream ss;
+         ss << "Field `" << srcFdName
+            << "` has a type incompatible with a previously-seen field with the same name: (old: " << dstTyName
+            << ", new: " << srcTyName << ")";
+         errors.push_back(ss.str());
       }
 
       const auto srcTyChk = field.fSrc->GetTypeChecksum();
       const auto dstTyChk = field.fDst->GetTypeChecksum();
       if (srcTyChk && dstTyChk && *srcTyChk != *dstTyChk) {
-         errors.push_back(std::stringstream{}
-                          << "Field `" << field.fSrc->GetFieldName()
-                          << "` has a different type checksum than previously-seen field with the same name");
+         std::stringstream ss;
+         ss << "Field `" << field.fSrc->GetFieldName()
+            << "` has a different type checksum than previously-seen field with the same name";
+         errors.push_back(ss.str());
       }
 
       const auto srcTyVer = field.fSrc->GetTypeVersion();
       const auto dstTyVer = field.fDst->GetTypeVersion();
       if (srcTyVer != dstTyVer) {
-         errors.push_back(std::stringstream{}
-                          << "Field `" << field.fSrc->GetFieldName()
-                          << "` has a different type version than previously-seen field with the same name (old: "
-                          << dstTyVer << ", new: " << srcTyVer << ")");
+         std::stringstream ss;
+         ss << "Field `" << field.fSrc->GetFieldName()
+            << "` has a different type version than previously-seen field with the same name (old: " << dstTyVer
+            << ", new: " << srcTyVer << ")";
+         errors.push_back(ss.str());
       }
    }
 
    std::string errMsg;
    for (const auto &err : errors)
-      errMsg += std::string("\n  * ") + err.str();
+      errMsg += std::string("\n  * ") + err;
 
    if (errMsg.length())
       return R__FAIL(errMsg);
