@@ -278,9 +278,12 @@ inline double flexibleInterpSingle(unsigned int code, double low, double high, d
          // interpolate 6th degree exp
          double x0 = boundary;
 
+         high /= nominal;
+         low /= nominal;
+
          // GHL: Swagato's suggestions
-         double powUp = std::pow(high / nominal, x0);
-         double powDown = std::pow(low / nominal, x0);
+         double powUp = std::pow(high, x0);
+         double powDown = std::pow(low, x0);
          double logHi = std::log(high);
          double logLo = std::log(low);
          double powUpLog = high <= 0.0 ? 0.0 : powUp * logHi;
