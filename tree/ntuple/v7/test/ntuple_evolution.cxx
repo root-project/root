@@ -704,6 +704,61 @@ struct RemovedBaseDerived : public RemovedBaseIntermediate {
    EXPECT_EVALUATE_EQ("ptrRemovedBaseDerived->fDerived", 93);
 }
 
+TEST(RNTupleEvolution, RemovedIntermediateClass)
+{
+   FileRaii fileGuard("test_ntuple_evolution_removed_intermediate_class.root");
+
+   WriteOldInFork([&] {
+      // The child process writes the file and exits, but the file must be preserved to be read by the parent.
+      fileGuard.PreserveFile();
+
+      ASSERT_TRUE(gInterpreter->Declare(R"(
+struct RemovedIntermediateBase {
+   int fBase = 1;
+};
+struct RemovedIntermediate : public RemovedIntermediateBase {
+   int fIntermediate = 2;
+};
+struct RemovedIntermediateDerived : public RemovedIntermediate {
+   int fDerived = 3;
+};
+)"));
+
+      auto model = RNTupleModel::Create();
+      model->AddField(RFieldBase::Create("f", "RemovedIntermediateDerived").Unwrap());
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      writer->Fill();
+
+      // Reset / close the writer and flush the file.
+      {
+         // TStreamerInfo::Build will report a warning for interpreted classes (but only for base classes).
+         // See also https://github.com/root-project/root/issues/9371
+         ROOT::TestSupport::CheckDiagsRAII diagRAII;
+         diagRAII.optionalDiag(kWarning, "TStreamerInfo::Build", "has no streamer or dictionary",
+                               /*matchFullMessage=*/false);
+         writer.reset();
+      }
+   });
+
+   ASSERT_TRUE(gInterpreter->Declare(R"(
+struct RemovedIntermediateBase {
+   int fBase = 1;
+};
+struct RemovedIntermediateDerived : public RemovedIntermediateBase {
+   int fDerived = 3;
+};
+)"));
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   try {
+      reader->GetModel();
+      FAIL() << "model reconstruction should fail";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("incompatible type name for field"));
+   }
+}
+
 TEST(RNTupleEvolution, RenamedBaseClass)
 {
    // RNTuple currently does not support automatic schema evolution when a class is renamed.
