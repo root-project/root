@@ -36,7 +36,7 @@ static PyObject* dm_get(CPPDataMember* dm, CPPInstance* pyobj, PyObject* /* kls 
     if (pyobj && dm->fFlags & kIsCachable) {
         CPyCppyy::CI_DatamemberCache_t& cache = pyobj->GetDatamemberCache();
         for (auto it = cache.begin(); it != cache.end(); ++it) {
-            if (it->first == dm->fOffset) {
+            if (it->first == dm->GetOffset()) {
                 if (it->second) {
                     Py_INCREF(it->second);
                     return it->second;
@@ -99,7 +99,7 @@ static PyObject* dm_get(CPPDataMember* dm, CPPInstance* pyobj, PyObject* /* kls 
         bool isLLView = LowLevelView_CheckExact(result);
         if (isLLView && CPPInstance_Check(pyobj)) {
             Py_INCREF(result);
-            pyobj->GetDatamemberCache().push_back(std::make_pair(dm->fOffset, result));
+            pyobj->GetDatamemberCache().push_back(std::make_pair(dm->GetOffset(), result));
             dm->fFlags |= kIsCachable;
         }
 
@@ -152,7 +152,7 @@ static int dm_set(CPPDataMember* dm, CPPInstance* pyobj, PyObject* value)
     if (dm->fFlags & kIsCachable) {
         CPyCppyy::CI_DatamemberCache_t& cache = pyobj->GetDatamemberCache();
         for (auto it = cache.begin(); it != cache.end(); ++it) {
-            if (it->first == dm->fOffset) {
+            if (it->first == dm->GetOffset()) {
                 Py_XDECREF(it->second);
                 cache.erase(it);
                 break;
@@ -233,7 +233,7 @@ static PyObject* dm_reflex(CPPDataMember* dm, PyObject* args)
             return CPyCppyy_PyText_FromString(dm->fFullType.c_str());
     } else if (request == Cppyy::Reflex::OFFSET) {
         if (format == Cppyy::Reflex::OPTIMAL)
-            return PyLong_FromLong(dm->fOffset);
+            return PyLong_FromLong(dm->GetOffset());
     }
 
     PyErr_Format(PyExc_ValueError, "unsupported reflex request %d or format %d", request, format);
@@ -316,11 +316,19 @@ PyTypeObject CPPDataMember_Type = {
 
 
 //- public members -----------------------------------------------------------
+intptr_t CPyCppyy::CPPDataMember::GetOffset()
+{
+    // Calculate the offset again.
+    // The memory leak for `EnumConstantDecl` was fixed in LLVM commit 142f270
+    // We were previosuly relying on the leak to provide the address.
+    return Cppyy::GetDatamemberOffset(fEnclosingScope, fIdata);
+}
+
 void CPyCppyy::CPPDataMember::Set(Cppyy::TCppScope_t scope, Cppyy::TCppIndex_t idata)
 {
     fEnclosingScope = scope;
-    fOffset         = Cppyy::GetDatamemberOffset(scope, idata); // TODO: make lazy
     fFlags          = Cppyy::IsStaticData(scope, idata) ? kIsStaticData : 0;
+    fIdata          = idata;
 
     std::vector<dim_t> dims;
     int ndim = 0; Py_ssize_t size = 0;
@@ -368,24 +376,13 @@ void CPyCppyy::CPPDataMember::Set(Cppyy::TCppScope_t scope, Cppyy::TCppIndex_t i
         fDescription = CPyCppyy_PyText_FromString(name.c_str());
 }
 
-//-----------------------------------------------------------------------------
-void CPyCppyy::CPPDataMember::Set(Cppyy::TCppScope_t scope, const std::string& name, void* address)
-{
-    fEnclosingScope = scope;
-    fDescription    = CPyCppyy_PyText_FromString(name.c_str());
-    fOffset         = (intptr_t)address;
-    fFlags          = kIsStaticData | kIsConstData;
-    fConverter      = CreateConverter("internal_enum_type_t");
-    fFullType       = "unsigned int";
-}
-
 
 //-----------------------------------------------------------------------------
 void* CPyCppyy::CPPDataMember::GetAddress(CPPInstance* pyobj)
 {
 // class attributes, global properties
     if (fFlags & kIsStaticData)
-        return (void*)fOffset;
+        return (void *)GetOffset();
 
 // special case: non-static lookup through class
     if (!pyobj) {
@@ -412,7 +409,7 @@ void* CPyCppyy::CPPDataMember::GetAddress(CPPInstance* pyobj)
     if (oisa != fEnclosingScope)
         offset = Cppyy::GetBaseOffset(oisa, fEnclosingScope, obj, 1 /* up-cast */);
 
-    return (void*)((intptr_t)obj + offset + fOffset);
+    return (void *)((intptr_t)obj + offset + GetOffset());
 }
 
 

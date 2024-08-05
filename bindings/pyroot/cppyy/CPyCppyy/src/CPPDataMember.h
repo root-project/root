@@ -19,10 +19,12 @@ public:
 
     std::string GetName();
     void* GetAddress(CPPInstance* pyobj /* owner */);
+    intptr_t GetOffset();
 
 public:                 // public, as the python C-API works with C structs
     PyObject_HEAD
     intptr_t           fOffset;
+    Cppyy::TCppIndex_t fIdata;
     long               fFlags;
     Converter*         fConverter;
     Cppyy::TCppScope_t fEnclosingScope;
@@ -61,16 +63,6 @@ inline CPPDataMember* CPPDataMember_New(
     CPPDataMember* pyprop =
         (CPPDataMember*)CPPDataMember_Type.tp_new(&CPPDataMember_Type, nullptr, nullptr);
     pyprop->Set(scope, idata);
-    return pyprop;
-}
-
-inline CPPDataMember* CPPDataMember_NewConstant(
-    Cppyy::TCppScope_t scope, const std::string& name, void* address)
-{
-// Create an initialize a new property descriptor, given the C++ datum.
-    CPPDataMember* pyprop =
-        (CPPDataMember*)CPPDataMember_Type.tp_new(&CPPDataMember_Type, nullptr, nullptr);
-    pyprop->Set(scope, name, address);
     return pyprop;
 }
 
