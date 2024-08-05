@@ -636,6 +636,61 @@ struct PrependSecondBaseDerived : public PrependSecondBaseSecond, public Prepend
    }
 }
 
+TEST(RNTupleEvolution, AddedIntermediateClass)
+{
+   FileRaii fileGuard("test_ntuple_evolution_added_intermediate_class.root");
+
+   WriteOldInFork([&] {
+      // The child process writes the file and exits, but the file must be preserved to be read by the parent.
+      fileGuard.PreserveFile();
+
+      ASSERT_TRUE(gInterpreter->Declare(R"(
+struct AddedIntermediateBase {
+   int fBase = 1;
+};
+struct AddedIntermediateDerived : public AddedIntermediateBase {
+   int fDerived = 3;
+};
+)"));
+
+      auto model = RNTupleModel::Create();
+      model->AddField(RFieldBase::Create("f", "AddedIntermediateDerived").Unwrap());
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      writer->Fill();
+
+      // Reset / close the writer and flush the file.
+      {
+         // TStreamerInfo::Build will report a warning for interpreted classes (but only for base classes).
+         // See also https://github.com/root-project/root/issues/9371
+         ROOT::TestSupport::CheckDiagsRAII diagRAII;
+         diagRAII.optionalDiag(kWarning, "TStreamerInfo::Build", "has no streamer or dictionary",
+                               /*matchFullMessage=*/false);
+         writer.reset();
+      }
+   });
+
+   ASSERT_TRUE(gInterpreter->Declare(R"(
+struct AddedIntermediateBase {
+   int fBase = 1;
+};
+struct AddedIntermediate : public AddedIntermediateBase {
+   int fIntermediate = 2;
+};
+struct AddedIntermediateDerived : public AddedIntermediate {
+   int fDerived = 3;
+};
+)"));
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   try {
+      reader->GetModel();
+      FAIL() << "model reconstruction should fail";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("incompatible type name for field"));
+   }
+}
+
 TEST(RNTupleEvolution, RemovedBaseClass)
 {
    FileRaii fileGuard("test_ntuple_evolution_removed_base_class.root");
