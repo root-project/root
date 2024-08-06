@@ -18,7 +18,7 @@ void PyClassTest2() {
    TPython::Exec( "sys.stdout.write( \'instance count: %d\\n\' % (MyOtherPyClass.count,) )" );
    TPython::Exec( "op = MyOtherPyClass()" );
    TPython::Exec( "sys.stdout.write( \'instance count: %d\\n\' % (MyOtherPyClass.count,) )" );
-   TPython::Eval( "op" );
+   TPython::Exec( "op" );
    TPython::Exec( "del op" );
    TPython::Exec( "sys.stdout.write( \'instance count: %d\\n\' % (MyOtherPyClass.count,) )" );
 }
