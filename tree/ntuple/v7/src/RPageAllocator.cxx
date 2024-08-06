@@ -32,6 +32,5 @@ ROOT::Experimental::Internal::RPage ROOT::Experimental::Internal::RPageAllocator
 
 void ROOT::Experimental::Internal::RPageAllocatorHeap::DeletePage(RPage &page)
 {
-   if (!page.IsPageZero())
-      delete[] reinterpret_cast<unsigned char *>(page.GetBuffer());
+   delete[] reinterpret_cast<unsigned char *>(page.GetBuffer());
 }
