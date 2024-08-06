@@ -75,9 +75,6 @@ protected:
    void       RecursiveRemove(TObject *obj) override;
    TObject   *Remove(TObject *obj) override;
    TObject   *Remove(TObjLink *lnk) override;
-
-public:
-   ClassDefInlineOverride(TViewPubDataMembers, 0)
 };
 
 // Preventing warnings with -Weffc++ in GCC since it is a false positive for the TListIter destructor.
@@ -90,7 +87,7 @@ public:
 //                                                                      //
 // TViewPubDataMembersIter                                              //
 //                                                                      //
-// Iterator of view of linked list.      `                              //
+// Iterator of view of linked list.                                     //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 class TViewPubDataMembersIter : public TIterator {
