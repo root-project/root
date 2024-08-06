@@ -173,7 +173,6 @@ public:
 
    bool IsValid() const { return fColumnId != kInvalidColumnId; }
    bool IsNull() const { return fBuffer == nullptr; }
-   bool IsPageZero() const { return fBuffer == GetPageZeroBuffer(); }
    bool IsEmpty() const { return fNElements == 0; }
    bool operator ==(const RPage &other) const { return fBuffer == other.fBuffer; }
    bool operator !=(const RPage &other) const { return !(*this == other); }
