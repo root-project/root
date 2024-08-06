@@ -30,6 +30,10 @@ class RLogChannel;
 /// Log channel for RNTuple diagnostics.
 RLogChannel &NTupleLog();
 
+inline constexpr auto kReal32TruncBitsMin = 10;
+inline constexpr auto kReal32TruncBitsMax = 31;
+inline constexpr auto kReal32TruncBitsRangeLen = kReal32TruncBitsMax - kReal32TruncBitsMin;
+
 // clang-format off
 /**
 \class ROOT::Experimental::EColumnType
@@ -78,6 +82,11 @@ enum class EColumnType {
    kSplitUInt32,
    kSplitInt16,
    kSplitUInt16,
+   kReal32TruncBegin,
+   // ---
+   // Values reserved for all Real32Trunc bit widths
+   // ---
+   kReal32TruncEnd = kReal32TruncBegin + kReal32TruncBitsRangeLen,
    kMax,
 };
 
