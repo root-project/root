@@ -2230,17 +2230,43 @@ bool RooJSONFactoryWSTool::importYML(std::string const &filename)
 
 void RooJSONFactoryWSTool::importJSONElement(const std::string &name, const std::string &jsonString)
 {
+   // Create the JSON Tree from the string
    std::unique_ptr<RooFit::Detail::JSONTree> tree = RooFit::Detail::JSONTree::create(jsonString);
    JSONNode &n = tree->rootnode();
+
+   // If the objects containts a parameter of interest, import it as a modelConfig
+   if (n.find("poi")) {
+
+      RooStats::ModelConfig modelConfig{"ModelConfig"};
+      std::string poi = n.find("poi")->val();
+      std::string pdname = n.find("pdfName")->val();
+      modelConfig.SetWS(_workspace);
+      modelConfig.SetPdf(pdname.c_str());
+      modelConfig.SetParametersOfInterest(_workspace.argSet(poi));
+      _workspace.import(modelConfig);
+
+      return;
+   }
+
    n["name"] << name;
 
    bool isVariable = true;
+   bool isData = false;
+   // Check for the type of object, if it doesn't contain a type, it must be a variable
    if (n.find("type")) {
       isVariable = false;
+      std::string elementType = n.find("type")->val();
+      if (elementType == "binned" || elementType == "unbinned") {
+         isData = true;
+      }
    }
 
+   // Import the object to the workspace
    if (isVariable) {
       this->importVariableElement(n);
+   } else if (isData) {
+      auto absData = loadData(n, _workspace);
+      _workspace.import(*absData);
    } else {
       this->importFunction(n, false);
    }
