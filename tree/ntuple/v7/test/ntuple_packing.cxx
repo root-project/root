@@ -1,5 +1,7 @@
 #include "ntuple_test.hxx"
 
+#include "../src/RColumnElement.hxx"
+
 #include <array>
 #include <cmath>
 #include <cstring> // for memcmp
@@ -359,4 +361,109 @@ TEST(Packing, OnDiskEncoding)
    auto viewStr = reader->GetView<std::string>("str");
    EXPECT_EQ(std::string("abc"), viewStr(0));
    EXPECT_EQ(std::string("de"), viewStr(1));
+}
+
+TEST(Packing, Real32Trunc)
+{
+   {
+      constexpr auto kBitsOnStorage = 10;
+      RColumnElement<float, EColumnType::kReal32TruncBegin> element{kBitsOnStorage};
+      element.Pack(nullptr, nullptr, 0);
+      element.Unpack(nullptr, nullptr, 0);
+
+      float f1 = 3.5f;
+      unsigned char out[std::max<size_t>(4, (kBitsOnStorage + 31) / 32)];
+      element.Pack(out, &f1, 1);
+
+      float f2;
+      element.Unpack(&f2, out, 1);
+      // Dropping all but first 10 bits:
+      // 0x40600000 -> 0x40400000
+      // 3.5f       -> 3.f
+      EXPECT_EQ(f2, 3.f);
+
+      float f[5] = {3.5f, 3.5f, 3.5f, 3.5f, 3.5f};
+      unsigned char out2[20];
+      element.Pack(out2, f, 5);
+
+      float fout[5];
+      element.Unpack(fout, out2, 5);
+      for (int i = 0; i < 5; ++i)
+         EXPECT_EQ(fout[i], 3.f);
+   }
+
+   {
+      constexpr auto kBitsOnStorage = 11;
+      RColumnElement<float, EColumnType::kReal32TruncBegin> element{kBitsOnStorage};
+      element.Pack(nullptr, nullptr, 0);
+      element.Unpack(nullptr, nullptr, 0);
+
+      float f1 = 992.f;
+      unsigned char out[std::max<size_t>(4, (kBitsOnStorage + 31) / 32)];
+      element.Pack(out, &f1, 1);
+
+      float f2;
+      element.Unpack(&f2, out, 1);
+      // Dropping all but first 11 bits:
+      // 0x44780000 -> 0x44600000
+      // 992.f       -> 896.f
+      EXPECT_EQ(f2, 896.f);
+
+      // NOTE: 0b000'0000'0011, 0b000'0000'0111, 0b000'0000'1111, ...
+      float f[5] = {4.408104e-39, 1.0285575e-38, -2.2040519e-38, 8.8162076e-38, 1.4105932e-36};
+      // ... truncated to: 0b000'0000'0010, 0b000'0000'0110, 0b000'0000'1110, ...
+      const float expf[5] = {2.938736e-39, 8.816207e-39, -2.0571151e-38, 8.2284604e-38, 1.3165537e-36};
+      unsigned char out2[20];
+      element.Pack(out2, f, 5);
+
+      float fout[5];
+      element.Unpack(fout, out2, 5);
+      for (int i = 0; i < 5; ++i)
+         EXPECT_EQ(fout[i], expf[i]);
+   }
+
+   {
+      constexpr auto kBitsOnStorage = 31;
+      RColumnElement<float, EColumnType::kReal32TruncBegin> element{kBitsOnStorage};
+      element.Pack(nullptr, nullptr, 0);
+      element.Unpack(nullptr, nullptr, 0);
+
+      float f1 = 2.126f;
+      unsigned char out[std::max<size_t>(4, (kBitsOnStorage + 31) / 32)];
+      element.Pack(out, &f1, 1);
+
+      float f2;
+      element.Unpack(&f2, out, 1);
+      // 2.126f has a 1 in the 30th bit of the mantissa, we should have preserved it.
+      EXPECT_EQ(f2, 2.126f);
+
+      constexpr auto N = 10000;
+      float f[N];
+      for (int i = 0; i < N; ++i)
+         f[i] = -2097176.7f;
+      unsigned char out2[(N * 30 + 7) / 8];
+      element.Pack(out2, f, N);
+
+      float fout[N];
+      element.Unpack(fout, out2, N);
+      for (int i = 0; i < N; ++i)
+         EXPECT_EQ(fout[i], -2097176.5f); // dropped last bit of mantissa
+   }
+
+   {
+      constexpr auto kBitsOnStorage = 18;
+      constexpr auto N = 1000;
+      RColumnElement<float, EColumnType::kReal32TruncBegin> element{kBitsOnStorage};
+      float f[N];
+      for (int i = 0; i < N; ++i)
+         f[i] = 2.f + (0.000001f * i);
+
+      unsigned char out[(N * kBitsOnStorage + 31) / 32];
+      element.Pack(out, f, N);
+
+      float fout[N];
+      element.Unpack(fout, out, N);
+      for (int i = 0; i < N; ++i)
+         EXPECT_EQ(fout[i], 2.f);
+   }
 }

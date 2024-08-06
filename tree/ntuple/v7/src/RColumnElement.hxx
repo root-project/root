@@ -23,6 +23,21 @@
 #endif
 #endif /* R__LITTLE_ENDIAN */
 
+namespace ROOT::Experimental::Internal {
+/// Tightly packs `count` floats contained in `src` into `dst` using `nFloatBits` per float.
+/// `nFloatBits` must be >= kReal32TruncBitsMin and <= kReal32TruncBitsMax.
+/// The extra bits are dropped from the mantissa. The sign and exponent bits are always preserved.
+/// IMPORTANT: the size of `dst` must be rounded up from `count * nFloatBits`
+/// to the next multiple of 4 (i.e. the word size).
+void PackFloats(void *dst, const float *src, std::size_t count, std::size_t nFloatBits);
+
+/// Undoes the effect of `PackFloats`. The bits that were truncated in the packed representation
+/// are filled with zeroes, effectively rounding the original float towards 0.
+/// IMPORTANT: the size of `src` must be rounded up from `count * nFloatBits`
+/// to the next multiple of 4 (i.e. the word size).
+void UnpackFloats(float *dst, const void *src, std::size_t count, std::size_t nFloatBits);
+} // namespace ROOT::Experimental::Internal
+
 namespace {
 
 // In this namespace, common routines are defined for element packing and unpacking of ints and floats.
@@ -648,6 +663,32 @@ public:
          ByteSwapIfNecessary(val);
          doubleArray[i] = static_cast<double>(ROOT::Experimental::Internal::HalfToFloat(val));
       }
+   }
+};
+
+template <>
+class RColumnElement<float, EColumnType::kReal32TruncBegin> : public RColumnElementBase {
+   static constexpr std::size_t kWordSize = sizeof(std::uint32_t);
+   static constexpr std::size_t kBitsPerWord = kWordSize * 8;
+
+public:
+   static constexpr bool kIsMappable = false;
+   static constexpr std::size_t kSize = sizeof(float);
+
+   RColumnElement(std::size_t nFloatBits) : RColumnElementBase(kSize, nFloatBits)
+   {
+      namespace REx = ROOT::Experimental;
+      R__ASSERT(nFloatBits >= REx::kReal32TruncBitsMin && nFloatBits <= REx::kReal32TruncBitsMax);
+   }
+
+   void Pack(void *dst, const void *src, std::size_t count) const final
+   {
+      ROOT::Experimental::Internal::PackFloats(dst, reinterpret_cast<const float *>(src), count, fBitsOnStorage);
+   }
+
+   void Unpack(void *dst, const void *src, std::size_t count) const final
+   {
+      ROOT::Experimental::Internal::UnpackFloats(reinterpret_cast<float *>(dst), src, count, fBitsOnStorage);
    }
 };
 

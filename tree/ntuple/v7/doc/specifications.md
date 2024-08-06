@@ -508,6 +508,7 @@ The column type and bits on storage integers can have one of the following value
 | 0x14 |   32 | SplitUInt32  | Like UInt32 but in split encoding                                             |
 | 0x1C |   16 | SplitInt16   | Like Int16 but in split + zigzag encoding                                     |
 | 0x15 |   16 | SplitUInt16  | Like UInt16 but in split encoding                                             |
+| 0x1D |10-31 | Real32Trunc  | IEEE-754 single precision float with truncated mantissa                       |
 
 The "split encoding" columns apply a byte transformation encoding to all pages of that column
 and in addition, depending on the column type, delta or zigzag encoding:
@@ -525,6 +526,10 @@ Zigzag + split
 
 **Note**: these encodings always happen within each page, thus decoding should be done page-wise,
 not cluster-wise.
+
+The "Real32Trunc" type column is a variable-sized floating point column with lower precision than `Real32` and `SplitReal32`.
+It is a IEEE-754 single precision float with some of the mantissa's least significant bits truncated. The amount of truncated bits
+is fixed per-cluster.
 
 Future versions of the file format may introduce additional column types
 without changing the minimum version of the header.
