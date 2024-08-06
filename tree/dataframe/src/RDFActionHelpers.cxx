@@ -147,12 +147,6 @@ double &MeanHelper::PartialUpdate(unsigned int slot)
    return fPartialMeans[slot];
 }
 
-template void MeanHelper::Exec(unsigned int, const std::vector<float> &);
-template void MeanHelper::Exec(unsigned int, const std::vector<double> &);
-template void MeanHelper::Exec(unsigned int, const std::vector<char> &);
-template void MeanHelper::Exec(unsigned int, const std::vector<int> &);
-template void MeanHelper::Exec(unsigned int, const std::vector<unsigned int> &);
-
 StdDevHelper::StdDevHelper(const std::shared_ptr<double> &meanVPtr, const unsigned int nSlots)
    : fNSlots(nSlots), fResultStdDev(meanVPtr), fCounts(nSlots, 0), fMeans(nSlots, 0), fDistancesfromMean(nSlots, 0)
 {
@@ -203,12 +197,6 @@ void StdDevHelper::Finalize()
    variance = variance / (totalElements - 1);
    *fResultStdDev = std::sqrt(variance);
 }
-
-template void StdDevHelper::Exec(unsigned int, const std::vector<float> &);
-template void StdDevHelper::Exec(unsigned int, const std::vector<double> &);
-template void StdDevHelper::Exec(unsigned int, const std::vector<char> &);
-template void StdDevHelper::Exec(unsigned int, const std::vector<int> &);
-template void StdDevHelper::Exec(unsigned int, const std::vector<unsigned int> &);
 
 // External templates are disabled for gcc5 since this version wrongly omits the C++11 ABI attribute
 #if __GNUC__ > 5
