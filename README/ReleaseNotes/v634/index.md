@@ -129,6 +129,24 @@ The following people have contributed to this new version:
 ## PROOF Libraries
 
 
+## PyROOT
+
+### Deprecation of `TPython::Eval()`
+
+The `TPython::Eval()` method is deprecated and scheduled for removal in ROOT 6.36.
+Its implementation was fragile, and the same functionality can be achieved with `TPython::Exec()`, using a C++ variable that is known to the ROOT interpreter for crossing over from Python to C++. You can use the static `TPython::Result()` value for that.
+
+Example:
+```c++
+// Before, with TPython::Eval()
+std::string stringVal = static_cast<const char*>(TPython::Eval("'done'"));
+std::cout << stringVal << std::endl;
+
+// Now, with TPython::Exec()
+TPython::Exec("ROOT.TPython.Result().stringVal = 'done'");
+std::cout << TPython::Result().stringVal << std::endl;
+```
+
 ## Language Bindings
 
 

@@ -43,16 +43,18 @@
 ///  root [0] TPython::Exec( "print(\'Hello World!\')" );
 ///  Hello World!
 ///
-///  // Create a TBrowser on the python side, and transfer it back and forth.
+///  // Create a TNamed on the python side, and transfer it back and forth.
 ///  // Note the required explicit (void*) cast!
-///  root [1] TBrowser* b = (void*)TPython::Eval( "ROOT.TBrowser()" );
-///  root [2] TPython::Bind( b, "b" );
-///  root [3] b == (void*) TPython::Eval( "b" )
+///  root [1] TPython::Exec("ROOT.TPython.Result().voidPtrVal = ROOT.TNamed(\"hello\", \"\")");
+///  root [2] auto *n = static_cast<TNamed *>(TPython::Result().voidPtrVal);
+///  root [3] TPython::Bind(n, "n");
+///  root [4] TPython::Exec("ROOT.TPython.Result().voidPtrVal = n");
+///  root [5] (n == TPython::Result().voidPtrVal)
 ///  (int)1
 ///
-///  // Builtin variables can cross-over by using implicit casts.
-///  root [4] int i = TPython::Eval( "1 + 1" );
-///  root [5] i
+///  // Variables can cross-over by using TPython::Result().
+///  root [6] TPython::Exec("ROOT.TPython.Result().longVal = 1 + 1");
+///  root [7] TPython::Result().longVal
 ///  (int)2
 /// ~~~
 ///
@@ -402,6 +404,8 @@ Bool_t TPython::Exec(const char *cmd)
 /// Caution: do not hold on to the return value: either store it in a builtin
 /// type (implicit casting will work), or in a pointer to a ROOT object (explicit
 /// casting to a void* is required).
+///
+/// \deprecated Use TPython::Exec() In combination with TPython::Result() instead.
 
 const TPyReturn TPython::Eval(const char *expr)
 {
@@ -569,4 +573,13 @@ PyObject *TPython::CPPInstance_FromVoidPtr(void *addr, const char *classname, Bo
    // perform cast (the call will check TClass and addr, and set python errors)
    // give ownership, for ref-counting, to the python side, if so requested
    return CPyCppyy::Instance_FromVoidPtr(addr, classname, python_owns);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Result buffer for the communication between the Python and C++
+/// interpreters.
+
+TPython::TPyResult &TPython::Result() {
+   static TPyResult result;
+   return result;
 }
