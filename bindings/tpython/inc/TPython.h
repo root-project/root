@@ -26,6 +26,8 @@
 // ROOT
 #include "TObject.h"
 
+#include "ROOT/RConfig.hxx" // R__DEPRECATED
+
 class TPython {
 
 private:
@@ -45,7 +47,7 @@ public:
    static Bool_t Exec(const char *cmd);
 
    // evaluate a python expression (e.g. "1+1")
-   static const TPyReturn Eval(const char *expr);
+   static const TPyReturn Eval(const char *expr) R__DEPRECATED(6,36, "Use TPython::Exec() In combination with TPython::Result() instead.");
 
    // bind a ROOT object with, at the python side, the name "label"
    static Bool_t Bind(TObject *object, const char *label);
@@ -66,6 +68,17 @@ public:
 
    // void* to CPPInstance conversion, returns a new reference
    static PyObject *CPPInstance_FromVoidPtr(void *addr, const char *classname, Bool_t python_owns = kFALSE);
+
+   struct TPyResult {
+      std::string stringVal;
+      Double_t doubleVal;
+      Long_t longVal;
+      ULong_t unsignedLongVal;
+      Char_t charVal;
+      void *voidPtrVal = nullptr;
+   };
+
+   static TPyResult &Result();
 
    virtual ~TPython() {}
    ClassDef(TPython, 0) // Access to the python interpreter
