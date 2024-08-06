@@ -3731,7 +3731,7 @@ TH3C& TH3C::operator=(const TH3C &h3c)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator *
 
-TH3C operator*(Float_t c1, TH3C &h3c)
+TH3C operator*(Float_t c1, TH3C const &h3c)
 {
    TH3C hnew = h3c;
    hnew.Scale(c1);
@@ -3743,7 +3743,7 @@ TH3C operator*(Float_t c1, TH3C &h3c)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator +
 
-TH3C operator+(TH3C &h1, TH3C &h2)
+TH3C operator+(TH3C const &h1, TH3C const &h2)
 {
    TH3C hnew = h1;
    hnew.Add(&h2,1);
@@ -3755,7 +3755,7 @@ TH3C operator+(TH3C &h1, TH3C &h2)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator -
 
-TH3C operator-(TH3C &h1, TH3C &h2)
+TH3C operator-(TH3C const &h1, TH3C const &h2)
 {
    TH3C hnew = h1;
    hnew.Add(&h2,-1);
@@ -3767,7 +3767,7 @@ TH3C operator-(TH3C &h1, TH3C &h2)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator *
 
-TH3C operator*(TH3C &h1, TH3C &h2)
+TH3C operator*(TH3C const &h1, TH3C const &h2)
 {
    TH3C hnew = h1;
    hnew.Multiply(&h2);
@@ -3779,7 +3779,7 @@ TH3C operator*(TH3C &h1, TH3C &h2)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator /
 
-TH3C operator/(TH3C &h1, TH3C &h2)
+TH3C operator/(TH3C const &h1, TH3C const &h2)
 {
    TH3C hnew = h1;
    hnew.Divide(&h2);
@@ -3971,7 +3971,7 @@ TH3S& TH3S::operator=(const TH3S &h3s)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator *
 
-TH3S operator*(Float_t c1, TH3S &h3s)
+TH3S operator*(Float_t c1, TH3S const &h3s)
 {
    TH3S hnew = h3s;
    hnew.Scale(c1);
@@ -3983,7 +3983,7 @@ TH3S operator*(Float_t c1, TH3S &h3s)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator +
 
-TH3S operator+(TH3S &h1, TH3S &h2)
+TH3S operator+(TH3S const &h1, TH3S const &h2)
 {
    TH3S hnew = h1;
    hnew.Add(&h2,1);
@@ -3995,7 +3995,7 @@ TH3S operator+(TH3S &h1, TH3S &h2)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator -
 
-TH3S operator-(TH3S &h1, TH3S &h2)
+TH3S operator-(TH3S const &h1, TH3S const &h2)
 {
    TH3S hnew = h1;
    hnew.Add(&h2,-1);
@@ -4007,7 +4007,7 @@ TH3S operator-(TH3S &h1, TH3S &h2)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator *
 
-TH3S operator*(TH3S &h1, TH3S &h2)
+TH3S operator*(TH3S const &h1, TH3S const &h2)
 {
    TH3S hnew = h1;
    hnew.Multiply(&h2);
@@ -4019,7 +4019,7 @@ TH3S operator*(TH3S &h1, TH3S &h2)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator /
 
-TH3S operator/(TH3S &h1, TH3S &h2)
+TH3S operator/(TH3S const &h1, TH3S const &h2)
 {
    TH3S hnew = h1;
    hnew.Divide(&h2);
@@ -4178,7 +4178,7 @@ TH3I& TH3I::operator=(const TH3I &h3i)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator *
 
-TH3I operator*(Float_t c1, TH3I &h3i)
+TH3I operator*(Float_t c1, TH3I const &h3i)
 {
    TH3I hnew = h3i;
    hnew.Scale(c1);
@@ -4190,7 +4190,7 @@ TH3I operator*(Float_t c1, TH3I &h3i)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator +
 
-TH3I operator+(TH3I &h1, TH3I &h2)
+TH3I operator+(TH3I const &h1, TH3I const &h2)
 {
    TH3I hnew = h1;
    hnew.Add(&h2,1);
@@ -4202,7 +4202,7 @@ TH3I operator+(TH3I &h1, TH3I &h2)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator _
 
-TH3I operator-(TH3I &h1, TH3I &h2)
+TH3I operator-(TH3I const &h1, TH3I const &h2)
 {
    TH3I hnew = h1;
    hnew.Add(&h2,-1);
@@ -4214,7 +4214,7 @@ TH3I operator-(TH3I &h1, TH3I &h2)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator *
 
-TH3I operator*(TH3I &h1, TH3I &h2)
+TH3I operator*(TH3I const &h1, TH3I const &h2)
 {
    TH3I hnew = h1;
    hnew.Multiply(&h2);
@@ -4226,7 +4226,7 @@ TH3I operator*(TH3I &h1, TH3I &h2)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator /
 
-TH3I operator/(TH3I &h1, TH3I &h2)
+TH3I operator/(TH3I const &h1, TH3I const &h2)
 {
    TH3I hnew = h1;
    hnew.Divide(&h2);
@@ -4385,7 +4385,7 @@ TH3L& TH3L::operator=(const TH3L &h3l)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator *
 
-TH3L operator*(Float_t c1, TH3L &h3l)
+TH3L operator*(Float_t c1, TH3L const &h3l)
 {
    TH3L hnew = h3l;
    hnew.Scale(c1);
@@ -4397,7 +4397,7 @@ TH3L operator*(Float_t c1, TH3L &h3l)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator +
 
-TH3L operator+(TH3L &h1, TH3L &h2)
+TH3L operator+(TH3L const &h1, TH3L const &h2)
 {
    TH3L hnew = h1;
    hnew.Add(&h2,1);
@@ -4409,7 +4409,7 @@ TH3L operator+(TH3L &h1, TH3L &h2)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator _
 
-TH3L operator-(TH3L &h1, TH3L &h2)
+TH3L operator-(TH3L const &h1, TH3L const &h2)
 {
    TH3L hnew = h1;
    hnew.Add(&h2,-1);
@@ -4421,7 +4421,7 @@ TH3L operator-(TH3L &h1, TH3L &h2)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator *
 
-TH3L operator*(TH3L &h1, TH3L &h2)
+TH3L operator*(TH3L const &h1, TH3L const &h2)
 {
    TH3L hnew = h1;
    hnew.Multiply(&h2);
@@ -4433,7 +4433,7 @@ TH3L operator*(TH3L &h1, TH3L &h2)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator /
 
-TH3L operator/(TH3L &h1, TH3L &h2)
+TH3L operator/(TH3L const &h1, TH3L const &h2)
 {
    TH3L hnew = h1;
    hnew.Divide(&h2);
@@ -4601,7 +4601,7 @@ TH3F& TH3F::operator=(const TH3F &h3f)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator *
 
-TH3F operator*(Float_t c1, TH3F &h3f)
+TH3F operator*(Float_t c1, TH3F const &h3f)
 {
    TH3F hnew = h3f;
    hnew.Scale(c1);
@@ -4613,7 +4613,7 @@ TH3F operator*(Float_t c1, TH3F &h3f)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator +
 
-TH3F operator+(TH3F &h1, TH3F &h2)
+TH3F operator+(TH3F const &h1, TH3F const &h2)
 {
    TH3F hnew = h1;
    hnew.Add(&h2,1);
@@ -4625,7 +4625,7 @@ TH3F operator+(TH3F &h1, TH3F &h2)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator -
 
-TH3F operator-(TH3F &h1, TH3F &h2)
+TH3F operator-(TH3F const &h1, TH3F const &h2)
 {
    TH3F hnew = h1;
    hnew.Add(&h2,-1);
@@ -4637,7 +4637,7 @@ TH3F operator-(TH3F &h1, TH3F &h2)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator *
 
-TH3F operator*(TH3F &h1, TH3F &h2)
+TH3F operator*(TH3F const &h1, TH3F const &h2)
 {
    TH3F hnew = h1;
    hnew.Multiply(&h2);
@@ -4649,7 +4649,7 @@ TH3F operator*(TH3F &h1, TH3F &h2)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator /
 
-TH3F operator/(TH3F &h1, TH3F &h2)
+TH3F operator/(TH3F const &h1, TH3F const &h2)
 {
    TH3F hnew = h1;
    hnew.Divide(&h2);
@@ -4819,7 +4819,7 @@ TH3D& TH3D::operator=(const TH3D &h3d)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator *
 
-TH3D operator*(Float_t c1, TH3D &h3d)
+TH3D operator*(Float_t c1, TH3D const &h3d)
 {
    TH3D hnew = h3d;
    hnew.Scale(c1);
@@ -4831,7 +4831,7 @@ TH3D operator*(Float_t c1, TH3D &h3d)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator +
 
-TH3D operator+(TH3D &h1, TH3D &h2)
+TH3D operator+(TH3D const &h1, TH3D const &h2)
 {
    TH3D hnew = h1;
    hnew.Add(&h2,1);
@@ -4843,7 +4843,7 @@ TH3D operator+(TH3D &h1, TH3D &h2)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator -
 
-TH3D operator-(TH3D &h1, TH3D &h2)
+TH3D operator-(TH3D const &h1, TH3D const &h2)
 {
    TH3D hnew = h1;
    hnew.Add(&h2,-1);
@@ -4855,7 +4855,7 @@ TH3D operator-(TH3D &h1, TH3D &h2)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator *
 
-TH3D operator*(TH3D &h1, TH3D &h2)
+TH3D operator*(TH3D const &h1, TH3D const &h2)
 {
    TH3D hnew = h1;
    hnew.Multiply(&h2);
@@ -4867,7 +4867,7 @@ TH3D operator*(TH3D &h1, TH3D &h2)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator /
 
-TH3D operator/(TH3D &h1, TH3D &h2)
+TH3D operator/(TH3D const &h1, TH3D const &h2)
 {
    TH3D hnew = h1;
    hnew.Divide(&h2);
