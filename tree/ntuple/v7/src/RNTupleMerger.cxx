@@ -249,6 +249,7 @@ CompareDescriptorStructure(const RNTupleDescriptor &dst, const RNTupleDescriptor
       }
 
       // Require that fields types match
+      // TODO: allow non-identical but compatible types
       const auto &srcTyName = field.fSrc->GetTypeName();
       const auto &dstTyName = field.fDst->GetTypeName();
       if (srcTyName != dstTyName) {
@@ -652,7 +653,8 @@ RNTupleMerger::Merge(std::span<RPageSource *> sources, RPageSink &destination, c
       }
       auto descCmp = descCmpRes.Unwrap();
 
-      if (options.fMergingMode == ENTupleMergingMode::kFilter && !descCmp.fExtraDstFields.empty()) {
+      // If the current source is missing some fields and we're not in Union mode, error
+      if (options.fMergingMode != ENTupleMergingMode::kUnion && !descCmp.fExtraDstFields.empty()) {
          std::string msg = "Source RNTuple is missing the following fields:";
          for (const auto *field : descCmp.fExtraDstFields) {
             msg += "\n  " + field->GetFieldName() + " : " + field->GetTypeName();
@@ -668,6 +670,7 @@ RNTupleMerger::Merge(std::span<RPageSource *> sources, RPageSink &destination, c
             descCmp.fCommonFields.insert(descCmp.fCommonFields.end(), descCmp.fExtraSrcFields.begin(),
                                          descCmp.fExtraSrcFields.end());
          } else if (options.fMergingMode == ENTupleMergingMode::kStrict) {
+            // If the current source has extra fields and we're in Strict mode, error
             std::string msg = "Source RNTuple has extra fields that the destination RNTuple doesn't have:";
             for (const auto *field : descCmp.fExtraSrcFields) {
                msg += "\n  " + field->GetFieldName() + " : " + field->GetTypeName();
