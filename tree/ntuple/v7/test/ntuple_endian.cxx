@@ -19,17 +19,18 @@
 #include <memory>
 #include <vector>
 
-using EColumnType = ROOT::Experimental::EColumnType;
-using NTupleSize_t = ROOT::Experimental::NTupleSize_t;
-using RCluster = ROOT::Experimental::Internal::RCluster;
-using RColumnElementBase = ROOT::Experimental::Internal::RColumnElementBase;
-using RNTupleDescriptor = ROOT::Experimental::RNTupleDescriptor;
-using RNTupleModel = ROOT::Experimental::RNTupleModel;
-using RNTupleLocator = ROOT::Experimental::RNTupleLocator;
-using RPage = ROOT::Experimental::Internal::RPage;
-using RPageSink = ROOT::Experimental::Internal::RPageSink;
-using RPageSource = ROOT::Experimental::Internal::RPageSource;
-using RPageStorage = ROOT::Experimental::Internal::RPageStorage;
+using ROOT::Experimental::EColumnType;
+using ROOT::Experimental::NTupleSize_t;
+using ROOT::Experimental::RNTupleDescriptor;
+using ROOT::Experimental::RNTupleLocator;
+using ROOT::Experimental::RNTupleModel;
+using ROOT::Experimental::Internal::RCluster;
+using ROOT::Experimental::Internal::RColumnElementBase;
+using ROOT::Experimental::Internal::RPage;
+using ROOT::Experimental::Internal::RPageRef;
+using ROOT::Experimental::Internal::RPageSink;
+using ROOT::Experimental::Internal::RPageSource;
+using ROOT::Experimental::Internal::RPageStorage;
 
 namespace {
 class RPageSinkMock : public RPageSink {
@@ -59,7 +60,6 @@ protected:
    void CommitDatasetImpl() final {}
 
    RPage ReservePage(ColumnHandle_t, std::size_t) final { return {}; }
-   void ReleasePage(RPage &) final {}
 
 public:
    RPageSinkMock(const RColumnElementBase &elt)
@@ -87,9 +87,9 @@ protected:
    void LoadStructureImpl() final {}
    RNTupleDescriptor AttachImpl() final { return RNTupleDescriptor(); }
    std::unique_ptr<RPageSource> CloneImpl() const final { return nullptr; }
-   RPage LoadPageImpl(ColumnHandle_t, const RClusterInfo &, ROOT::Experimental::ClusterSize_t::ValueType) final
+   RPageRef LoadPageImpl(ColumnHandle_t, const RClusterInfo &, ROOT::Experimental::ClusterSize_t::ValueType) final
    {
-      return RPage();
+      return RPageRef();
    }
 
 public:
@@ -98,12 +98,12 @@ public:
    {
    }
 
-   RPage LoadPage(ColumnHandle_t columnHandle, NTupleSize_t i) final
+   RPageRef LoadPage(ColumnHandle_t columnHandle, NTupleSize_t i) final
    {
-      return RPageSource::UnsealPage(fPages[i], fElement, columnHandle.fPhysicalId).Unwrap();
+      auto page = RPageSource::UnsealPage(fPages[i], fElement, columnHandle.fPhysicalId).Unwrap();
+      return fPagePool.RegisterPage(std::move(page));
    }
-   RPage LoadPage(ColumnHandle_t, ROOT::Experimental::RClusterIndex) final { return RPage(); }
-   void ReleasePage(RPage &) final {}
+   RPageRef LoadPage(ColumnHandle_t, ROOT::Experimental::RClusterIndex) final { return RPageRef(); }
    void LoadSealedPage(ROOT::Experimental::DescriptorId_t, ROOT::Experimental::RClusterIndex, RSealedPage &) final {}
    std::vector<std::unique_ptr<RCluster>> LoadClusters(std::span<RCluster::RKey>) final { return {}; }
 };
@@ -120,7 +120,7 @@ TEST(RColumnElementEndian, ByteCopy)
    RPageSinkMock sink1(element);
    unsigned char buf1[] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
                            0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f};
-   RPage page1(0, buf1, 4, 4);
+   RPage page1(0, buf1, nullptr, 4, 4);
    page1.GrowUnchecked(4);
    sink1.CommitPage(RPageStorage::ColumnHandle_t{}, page1);
 
@@ -128,9 +128,9 @@ TEST(RColumnElementEndian, ByteCopy)
                        "\x03\x02\x01\x00\x07\x06\x05\x04\x0b\x0a\x09\x08\x0f\x0e\x0d\x0c", 16));
 
    RPageSourceMock source1(sink1.GetPages(), element);
-   auto page2 = source1.LoadPage(RPageStorage::ColumnHandle_t{}, NTupleSize_t{0});
-   std::unique_ptr<unsigned char[]> buf2(static_cast<unsigned char *>(page2.GetBuffer())); // adopt buffer
-   EXPECT_EQ(0, memcmp(buf2.get(), "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f", 16));
+   auto page2Ref = source1.LoadPage(RPageStorage::ColumnHandle_t{}, NTupleSize_t{0});
+   EXPECT_EQ(
+      0, memcmp(page2Ref.Get().GetBuffer(), "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f", 16));
 #endif
 }
 
@@ -146,7 +146,7 @@ TEST(RColumnElementEndian, Cast)
    unsigned char buf1[] = {0x00, 0x01, 0x02, 0x03, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
                            0x07, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x08, 0x09,
                            0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x0c, 0x0d, 0x0e, 0x0f};
-   RPage page1(0, buf1, 8, 4);
+   RPage page1(0, buf1, nullptr, 8, 4);
    page1.GrowUnchecked(4);
    sink1.CommitPage(RPageStorage::ColumnHandle_t{}, page1);
 
@@ -154,9 +154,8 @@ TEST(RColumnElementEndian, Cast)
                        "\x03\x02\x01\x00\x07\x06\x05\x04\x0b\x0a\x09\x08\x0f\x0e\x0d\x0c", 16));
 
    RPageSourceMock source1(sink1.GetPages(), element);
-   auto page2 = source1.LoadPage(RPageStorage::ColumnHandle_t{}, NTupleSize_t{0});
-   std::unique_ptr<unsigned char[]> buf2(static_cast<unsigned char *>(page2.GetBuffer())); // adopt buffer
-   EXPECT_EQ(0, memcmp(buf2.get(),
+   auto page2Ref = source1.LoadPage(RPageStorage::ColumnHandle_t{}, NTupleSize_t{0});
+   EXPECT_EQ(0, memcmp(page2Ref.Get().GetBuffer(),
                        "\x00\x01\x02\x03\x00\x00\x00\x00\x04\x05\x06\x07\x00\x00\x00\x00"
                        "\x08\x09\x0a\x0b\x00\x00\x00\x00\x0c\x0d\x0e\x0f\x00\x00\x00\x00",
                        32));
@@ -173,7 +172,7 @@ TEST(RColumnElementEndian, Split)
    RPageSinkMock sink1(splitElement);
    unsigned char buf1[] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
                            0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f};
-   RPage page1(0, buf1, 8, 2);
+   RPage page1(0, buf1, nullptr, 8, 2);
    page1.GrowUnchecked(2);
    sink1.CommitPage(RPageStorage::ColumnHandle_t{}, page1);
 
@@ -181,9 +180,9 @@ TEST(RColumnElementEndian, Split)
                        "\x07\x0f\x06\x0e\x05\x0d\x04\x0c\x03\x0b\x02\x0a\x01\x09\x00\x08", 16));
 
    RPageSourceMock source1(sink1.GetPages(), splitElement);
-   auto page2 = source1.LoadPage(RPageStorage::ColumnHandle_t{}, NTupleSize_t{0});
-   std::unique_ptr<unsigned char[]> buf2(static_cast<unsigned char *>(page2.GetBuffer())); // adopt buffer
-   EXPECT_EQ(0, memcmp(buf2.get(), "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f", 16));
+   auto page2Ref = source1.LoadPage(RPageStorage::ColumnHandle_t{}, NTupleSize_t{0});
+   EXPECT_EQ(
+      0, memcmp(page2Ref.Get().GetBuffer(), "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f", 16));
 #endif
 }
 
@@ -201,7 +200,7 @@ TEST(RColumnElementEndian, DeltaSplit)
    unsigned char buf1[] = {0x00, 0x01, 0x02, 0x03, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
                            0x07, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x08, 0x09,
                            0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x0c, 0x0d, 0x0e, 0x0f};
-   RPage page1(0, buf1, 8, 4);
+   RPage page1(0, buf1, nullptr, 8, 4);
    page1.GrowUnchecked(4);
    sink1.CommitPage(RPageStorage::ColumnHandle_t{}, page1);
 
@@ -209,9 +208,8 @@ TEST(RColumnElementEndian, DeltaSplit)
                        "\x03\x04\x04\x04\x02\x04\x04\x04\x01\x04\x04\x04\x00\x04\x04\x04", 16));
 
    RPageSourceMock source1(sink1.GetPages(), element);
-   auto page2 = source1.LoadPage(RPageStorage::ColumnHandle_t{}, NTupleSize_t{0});
-   std::unique_ptr<unsigned char[]> buf2(static_cast<unsigned char *>(page2.GetBuffer())); // adopt buffer
-   EXPECT_EQ(0, memcmp(buf2.get(),
+   auto page2Ref = source1.LoadPage(RPageStorage::ColumnHandle_t{}, NTupleSize_t{0});
+   EXPECT_EQ(0, memcmp(page2Ref.Get().GetBuffer(),
                        "\x00\x01\x02\x03\x00\x00\x00\x00\x04\x05\x06\x07\x00\x00\x00\x00"
                        "\x08\x09\x0a\x0b\x00\x00\x00\x00\x0c\x0d\x0e\x0f\x00\x00\x00\x00",
                        32));

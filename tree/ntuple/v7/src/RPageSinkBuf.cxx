@@ -25,11 +25,6 @@
 
 void ROOT::Experimental::Internal::RPageSinkBuf::RColumnBuf::DropBufferedPages()
 {
-   for (auto &bufPage : fBufferedPages) {
-      if (!bufPage.fPage.IsNull()) {
-         fCol.fColumn->GetPageSink()->ReleasePage(bufPage.fPage);
-      }
-   }
    fBufferedPages.clear();
    // Each RSealedPage points to the same region as `fBuf` for some element in `fBufferedPages`; thus, no further
    // clean-up is required
@@ -250,9 +245,4 @@ ROOT::Experimental::Internal::RPage
 ROOT::Experimental::Internal::RPageSinkBuf::ReservePage(ColumnHandle_t columnHandle, std::size_t nElements)
 {
    return fInnerSink->ReservePage(columnHandle, nElements);
-}
-
-void ROOT::Experimental::Internal::RPageSinkBuf::ReleasePage(RPage &page)
-{
-   fInnerSink->ReleasePage(page);
 }

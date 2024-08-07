@@ -25,7 +25,7 @@
 #include <ROOT/RNTupleWriteOptions.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RPage.hxx>
-#include <ROOT/RPageAllocator.hxx>
+#include <ROOT/RPagePool.hxx>
 #include <ROOT/RSpan.hxx>
 #include <string_view>
 
@@ -50,7 +50,7 @@ class RColumn;
 class RColumnElementBase;
 class RNTupleCompressor;
 struct RNTupleModelChangeset;
-class RPagePool;
+class RPageAllocator;
 
 enum class EPageStorageType {
    kSink,
@@ -144,6 +144,9 @@ public:
 protected:
    Detail::RNTupleMetrics fMetrics;
 
+   /// For the time being, we will use the heap allocator for all sources and sinks. This may change in the future.
+   std::unique_ptr<RPageAllocator> fPageAllocator;
+
    std::string fNTupleName;
    RTaskScheduler *fTaskScheduler = nullptr;
    void WaitForAllTasks()
@@ -181,10 +184,6 @@ public:
    /// Unregisters a column.  A page source decreases the reference counter for the corresponding active column.
    /// For a page sink, dropping columns is currently a no-op.
    virtual void DropColumn(ColumnHandle_t columnHandle) = 0;
-
-   /// Every page store needs to be able to free pages it handed out.  But Sinks and sources have different means
-   /// of allocating pages.
-   virtual void ReleasePage(RPage &page) = 0;
 
    /// Returns the default metrics object.  Subclasses might alternatively provide their own metrics object by
    /// overriding this.
@@ -320,8 +319,8 @@ public:
    /// Run the registered callbacks and finalize the current cluster and the entrire data set.
    void CommitDataset();
 
-   /// Get a new, empty page for the given column that can be filled with up to nElements.  If nElements is zero,
-   /// the page sink picks an appropriate size.
+   /// Get a new, empty page for the given column that can be filled with up to nElements;
+   /// nElements must be larger than zero.
    virtual RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) = 0;
 
    /// An RAII wrapper used to synchronize a page sink. See GetSinkGuard().
@@ -585,8 +584,8 @@ protected:
    /// The active columns are implicitly defined by the model fields or views
    RActivePhysicalColumns fActivePhysicalColumns;
 
-   /// Populated pages might be shared; the page pool might, at some point, be used by multiple page sources
-   std::shared_ptr<RPagePool> fPagePool;
+   /// Pages that are unzipped with IMT are staged into the page pool
+   RPagePool fPagePool;
 
    virtual void LoadStructureImpl() = 0;
    /// `LoadStructureImpl()` has been called before `AttachImpl()` is called
@@ -596,8 +595,8 @@ protected:
    // Only called if a task scheduler is set. No-op be default.
    virtual void UnzipClusterImpl(RCluster *cluster);
    // Returns a page from storage if not found in the page pool. Should be able to handle zero page locators.
-   virtual RPage LoadPageImpl(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo,
-                              ClusterSize_t::ValueType idxInCluster) = 0;
+   virtual RPageRef LoadPageImpl(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo,
+                                 ClusterSize_t::ValueType idxInCluster) = 0;
 
    /// Prepare a page range read for the column set in `clusterKey`.  Specifically, pages referencing the
    /// `kTypePageZero` locator are filled in `pageZeroMap`; otherwise, `perPageFunc` is called for each page. This is
@@ -667,10 +666,10 @@ public:
 
    /// Allocates and fills a page that contains the index-th element. The default implementation searches
    /// the page and calls LoadPageImpl(). Returns a default-constructed RPage for suppressed columns.
-   virtual RPage LoadPage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex);
+   virtual RPageRef LoadPage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex);
    /// Another version of `LoadPage` that allows to specify cluster-relative indexes.
    /// Returns a default-constructed RPage for suppressed columns.
-   virtual RPage LoadPage(ColumnHandle_t columnHandle, RClusterIndex clusterIndex);
+   virtual RPageRef LoadPage(ColumnHandle_t columnHandle, RClusterIndex clusterIndex);
 
    /// Read the packed and compressed bytes of a page into the memory buffer provided by `sealedPage`. The sealed page
    /// can be used subsequently in a call to `RPageSink::CommitSealedPage`.
@@ -683,8 +682,6 @@ public:
    /// Helper for unstreaming a page. This is commonly used in derived, concrete page sources.  The implementation
    /// currently always makes a memory copy, even if the sealed page is uncompressed and in the final memory layout.
    /// The optimization of directly mapping pages is left to the concrete page source implementations.
-   /// Memory is allocated via `RPageAllocatorHeap`; use `RPageAllocatorHeap::DeletePage()` to deallocate returned
-   /// pages.
    RResult<RPage>
    UnsealPage(const RSealedPage &sealedPage, const RColumnElementBase &element, DescriptorId_t physicalColumnId);
 

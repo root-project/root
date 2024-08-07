@@ -159,25 +159,25 @@ void ROOT::Experimental::Internal::RPageSourceFriends::DropColumn(ColumnHandle_t
    fSources[originColumnId.fSourceIdx]->DropColumn(columnHandle);
 }
 
-ROOT::Experimental::Internal::RPage
+ROOT::Experimental::Internal::RPageRef
 ROOT::Experimental::Internal::RPageSourceFriends::LoadPage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex)
 {
    auto virtualColumnId = columnHandle.fPhysicalId;
    auto originColumnId = fColumnMap.GetOriginId(virtualColumnId);
    columnHandle.fPhysicalId = originColumnId.fId;
 
-   auto page = fSources[originColumnId.fSourceIdx]->LoadPage(columnHandle, globalIndex);
+   auto pageRef = fSources[originColumnId.fSourceIdx]->LoadPage(columnHandle, globalIndex);
    // Suppressed column
-   if (!page.IsValid())
-      return RPage();
+   if (!pageRef.Get().IsValid())
+      return RPageRef();
 
-   auto virtualClusterId = fIdBiMap.GetVirtualId({originColumnId.fSourceIdx, page.GetClusterInfo().GetId()});
-   page.ChangeIds(virtualColumnId, virtualClusterId);
+   auto virtualClusterId = fIdBiMap.GetVirtualId({originColumnId.fSourceIdx, pageRef.Get().GetClusterInfo().GetId()});
+   pageRef.ChangeIds(virtualColumnId, virtualClusterId);
 
-   return page;
+   return pageRef;
 }
 
-ROOT::Experimental::Internal::RPage
+ROOT::Experimental::Internal::RPageRef
 ROOT::Experimental::Internal::RPageSourceFriends::LoadPage(ColumnHandle_t columnHandle, RClusterIndex clusterIndex)
 {
    auto virtualColumnId = columnHandle.fPhysicalId;
@@ -185,13 +185,13 @@ ROOT::Experimental::Internal::RPageSourceFriends::LoadPage(ColumnHandle_t column
    RClusterIndex originClusterIndex(fIdBiMap.GetOriginId(clusterIndex.GetClusterId()).fId, clusterIndex.GetIndex());
    columnHandle.fPhysicalId = originColumnId.fId;
 
-   auto page = fSources[originColumnId.fSourceIdx]->LoadPage(columnHandle, originClusterIndex);
+   auto pageRef = fSources[originColumnId.fSourceIdx]->LoadPage(columnHandle, originClusterIndex);
    // Suppressed column
-   if (!page.IsValid())
-      return RPage();
+   if (!pageRef.Get().IsValid())
+      return RPageRef();
 
-   page.ChangeIds(virtualColumnId, clusterIndex.GetClusterId());
-   return page;
+   pageRef.ChangeIds(virtualColumnId, clusterIndex.GetClusterId());
+   return pageRef;
 }
 
 void ROOT::Experimental::Internal::RPageSourceFriends::LoadSealedPage(DescriptorId_t physicalColumnId,
@@ -202,14 +202,6 @@ void ROOT::Experimental::Internal::RPageSourceFriends::LoadSealedPage(Descriptor
    RClusterIndex originClusterIndex(fIdBiMap.GetOriginId(clusterIndex.GetClusterId()).fId, clusterIndex.GetIndex());
 
    fSources[originColumnId.fSourceIdx]->LoadSealedPage(physicalColumnId, originClusterIndex, sealedPage);
-}
-
-void ROOT::Experimental::Internal::RPageSourceFriends::ReleasePage(RPage &page)
-{
-   if (page.IsNull())
-      return;
-   auto sourceIdx = fIdBiMap.GetOriginId(page.GetClusterInfo().GetId()).fSourceIdx;
-   fSources[sourceIdx]->ReleasePage(page);
 }
 
 std::vector<std::unique_ptr<ROOT::Experimental::Internal::RCluster>>
