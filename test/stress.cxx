@@ -359,6 +359,7 @@ void stress2()
    //Long64_t lastgood = 12383; //9428;
    //Long64_t lastgood = 9789;  // changes for new TFormula
    //Long64_t lastgood = 9797;  // changes for TH1 v8 ROOT-9173 on 32-bits
+   //Long64_t lastgood = 10034;  // changes in TFormula (v12)
 #ifdef R__HAS_DEFAULT_LZ4
       Long64_t lastgood = 10733;
       if (last < lastgood - 200 || last > lastgood + 200 || comp < 1.5 || comp > 2.1)
@@ -367,7 +368,7 @@ void stress2()
 #ifdef R__HAS_CLOUDFLARE_ZLIB
       Long64_t lastgood = 9813;
 #else
-      Long64_t lastgood = 10034;  // changes in TFormula (v12)
+      Long64_t lastgood = 10100;  // changes in TFormula (v13)
 #endif
       if (last < lastgood - 200 || last > lastgood + 200 || comp < 2.0 || comp > 2.4)
          OK = kFALSE;
