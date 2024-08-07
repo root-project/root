@@ -330,8 +330,8 @@ public:
 template <typename T>
 class RSimpleField : public RFieldBase {
 protected:
-   void GenerateColumns() final { GenerateColumnsImpl<T>(); }
-   void GenerateColumns(const RNTupleDescriptor &desc) final { GenerateColumnsImpl<T>(desc); }
+   void GenerateColumns() override { GenerateColumnsImpl<T>(); }
+   void GenerateColumns(const RNTupleDescriptor &desc) override { GenerateColumnsImpl<T>(desc); }
 
    void ConstructValue(void *where) const final { new (where) T{0}; }
 

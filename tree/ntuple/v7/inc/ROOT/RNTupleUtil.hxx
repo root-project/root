@@ -82,11 +82,7 @@ enum class EColumnType {
    kSplitUInt32,
    kSplitInt16,
    kSplitUInt16,
-   kReal32TruncBegin,
-   // ---
-   // Values reserved for all Real32Trunc bit widths
-   // ---
-   kReal32TruncEnd = kReal32TruncBegin + kReal32TruncBitsRangeLen,
+   kReal32Trunc,
    kMax,
 };
 
