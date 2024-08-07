@@ -296,6 +296,11 @@ public:
       return false;
    }
 
+   virtual void SetBitsOnStorage(std::size_t)
+   {
+      throw RException(R__FAIL(std::string("internal error: cannot change bit width of this column type")));
+   }
+
    /// If the on-storage layout and the in-memory layout differ, packing creates an on-disk page from an in-memory page
    virtual void Pack(void *destination, void *source, std::size_t count) const
    {
@@ -698,18 +703,20 @@ void PackFloats(void *dst, const float *src, std::size_t count, std::size_t nFlo
 void UnpackFloats(float *dst, const void *src, std::size_t count, std::size_t nFloatBits);
 
 template <>
-class RColumnElement<float, EColumnType::kReal32TruncBegin> : public RColumnElementBase {
-   static constexpr std::size_t kWordSize = sizeof(std::uint32_t);
-   static constexpr std::size_t kBitsPerWord = kWordSize * 8;
-
+class RColumnElement<float, EColumnType::kReal32Trunc> : public RColumnElementBase {
 public:
    static constexpr bool kIsMappable = false;
    static constexpr std::size_t kSize = sizeof(float);
 
-   RColumnElement(std::size_t nFloatBits) : RColumnElementBase(kSize, nFloatBits)
+   RColumnElement() : RColumnElementBase(kSize, kReal32TruncBitsMax) {}
+
+   void SetBitsOnStorage(std::size_t bitsOnStorage) final
    {
-      R__ASSERT(nFloatBits >= kReal32TruncBitsMin && nFloatBits <= kReal32TruncBitsMax);
+      R__ASSERT(bitsOnStorage >= kReal32TruncBitsMin && bitsOnStorage <= kReal32TruncBitsMax);
+      fBitsOnStorage = bitsOnStorage;
    }
+
+   bool IsMappable() const final { return kIsMappable; }
 
    void Pack(void *dst, void *src, std::size_t count) const final
    {
@@ -859,6 +866,7 @@ std::unique_ptr<RColumnElementBase> RColumnElementBase::Generate(EColumnType typ
    case EColumnType::kSplitUInt32: return std::make_unique<RColumnElement<CppT, EColumnType::kSplitUInt32>>();
    case EColumnType::kSplitInt16: return std::make_unique<RColumnElement<CppT, EColumnType::kSplitInt16>>();
    case EColumnType::kSplitUInt16: return std::make_unique<RColumnElement<CppT, EColumnType::kSplitUInt16>>();
+   case EColumnType::kReal32Trunc: return std::make_unique<RColumnElement<CppT, EColumnType::kReal32Trunc>>();
    default: R__ASSERT(false);
    }
    // never here
