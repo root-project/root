@@ -36,6 +36,7 @@
 #include <numeric>
 #include <ctime>
 #include <chrono>
+#include <iomanip>
 
 #ifdef __INTEL_COMPILER
 #include "ittnotify.h"
