@@ -12,6 +12,7 @@
 #include "TFitResultPtr.h"
 #include "TFitResult.h"
 #include "TError.h"
+#include "TBuffer.h"
 
 /** \class TFitResultPtr
 Provides an indirection to the TFitResult class and with a semantics
@@ -95,7 +96,7 @@ TFitResultPtr & TFitResultPtr::operator=(const TFitResultPtr& rhs)
 {
    if ( &rhs == this) return *this; // self assignment
    fStatus = rhs.fStatus;
-   fPointer = rhs.fPointer; 
+   fPointer = rhs.fPointer;
    // if ( fPointer ) delete fPointer;
    // fPointer = 0;
    // if (rhs.fPointer != 0)  fPointer = new TFitResult(*rhs);
@@ -109,4 +110,24 @@ std::string cling::printValue(const TFitResultPtr* val) {
    if (TFitResult* fr = val->Get())
       return printValue(fr);
    return "<nullptr TFitResult>";
+}
+
+///////////////////////////////////////////////////////////////////////////////
+/// Streaming of TFitResultPtr as a TFitResult
+void TFitResultPtr::Streamer(TBuffer &b) {
+   if (b.IsReading()) {
+      UInt_t R__s, R__c;
+      Version_t v = b.ReadVersion(&R__s, &R__c);
+      b.ReadClassBuffer(TFitResultPtr::Class(), this, v, R__s, R__c);
+      if (v < 3)
+         Error("TFitResultPtr","Reading old versions of TFitResultPtr is not supported - use TFitResult for saving fit results in a file");
+      else {
+         fPointer = std::shared_ptr<TFitResult>(fSavedPointer);
+         fSavedPointer = nullptr;
+      }
+   }  else {
+      // case of writing
+      fSavedPointer = fPointer.get();
+      b.WriteClassBuffer(TFitResultPtr::Class(), this);
+   }
 }
