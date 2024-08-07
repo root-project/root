@@ -273,10 +273,10 @@ protected:
    }
 
 public:
-   RColumnElementBase(const RColumnElementBase& other) = default;
-   RColumnElementBase(RColumnElementBase&& other) = default;
-   RColumnElementBase& operator =(const RColumnElementBase& other) = delete;
-   RColumnElementBase& operator =(RColumnElementBase&& other) = default;
+   RColumnElementBase(const RColumnElementBase &other) = default;
+   RColumnElementBase(RColumnElementBase &&other) = default;
+   RColumnElementBase &operator=(const RColumnElementBase &other) = delete;
+   RColumnElementBase &operator=(RColumnElementBase &&other) = default;
    virtual ~RColumnElementBase() = default;
 
    /// If CppT == void, use the default C++ type for the given column type

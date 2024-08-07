@@ -93,7 +93,8 @@ const std::unordered_map<std::string_view, std::string_view> typeTranslationMap{
 
 /// Used in CreateField() in order to get the comma-separated list of template types
 /// E.g., gets {"int", "std::variant<double,int>"} from "int,std::variant<double,int>"
-std::vector<std::string> TokenizeTypeList(std::string templateType) {
+std::vector<std::string> TokenizeTypeList(std::string templateType)
+{
    std::vector<std::string> result;
    if (templateType.empty())
       return result;
@@ -104,12 +105,8 @@ std::vector<std::string> TokenizeTypeList(std::string templateType) {
    unsigned int nestingLevel = 0;
    while (typeCursor != eol) {
       switch (*typeCursor) {
-      case '<':
-         ++nestingLevel;
-         break;
-      case '>':
-         --nestingLevel;
-         break;
+      case '<': ++nestingLevel; break;
+      case '>': --nestingLevel; break;
       case ',':
          if (nestingLevel == 0) {
             result.push_back(std::string(typeBegin, typeCursor - typeBegin));
@@ -430,8 +427,8 @@ ROOT::Experimental::RFieldBase::RColumnRepresentations::RColumnRepresentations(
    const Selection_t &serializationTypes, const Selection_t &deserializationExtraTypes)
    : fSerializationTypes(serializationTypes), fDeserializationTypes(serializationTypes)
 {
-   fDeserializationTypes.insert(fDeserializationTypes.end(),
-                                deserializationExtraTypes.begin(), deserializationExtraTypes.end());
+   fDeserializationTypes.insert(fDeserializationTypes.end(), deserializationExtraTypes.begin(),
+                                deserializationExtraTypes.end());
 }
 
 //------------------------------------------------------------------------------
@@ -1209,12 +1206,10 @@ ROOT::Experimental::RFieldZero::CloneImpl(std::string_view /*newName*/) const
    return result;
 }
 
-
 void ROOT::Experimental::RFieldZero::AcceptVisitor(Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitFieldZero(*this);
 }
-
 
 //------------------------------------------------------------------------------
 
@@ -1577,8 +1572,7 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::st
       auto subField =
          RFieldBase::Create(std::string(kPrefixInherited) + "_" + std::to_string(i), c->GetName()).Unwrap();
       fTraits &= subField->GetTraits();
-      Attach(std::move(subField),
-	     RSubFieldInfo{kBaseClass, static_cast<std::size_t>(baseClass->GetDelta())});
+      Attach(std::move(subField), RSubFieldInfo{kBaseClass, static_cast<std::size_t>(baseClass->GetDelta())});
       i++;
    }
    for (auto dataMember : ROOT::Detail::TRangeStaticCast<TDataMember>(*fClass->GetListOfDataMembers())) {
@@ -1605,8 +1599,7 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::st
 
       subField = RFieldBase::Create(dataMember->GetName(), typeName, typeAlias).Unwrap();
       fTraits &= subField->GetTraits();
-      Attach(std::move(subField),
-	     RSubFieldInfo{kDataMember, static_cast<std::size_t>(dataMember->GetOffset())});
+      Attach(std::move(subField), RSubFieldInfo{kDataMember, static_cast<std::size_t>(dataMember->GetOffset())});
    }
    fTraits |= kTraitTypeChecksum;
 }
@@ -1719,7 +1712,6 @@ ROOT::Experimental::RClassField::SplitValue(const RValue &value) const
    }
    return result;
 }
-
 
 size_t ROOT::Experimental::RClassField::GetValueSize() const
 {
@@ -2103,25 +2095,20 @@ ROOT::Experimental::RProxiedCollectionField::RProxiedCollectionField(std::string
       itemField = RFieldBase::Create("_0", valueClass->GetName()).Unwrap();
    } else {
       switch (fProxy->GetType()) {
-      case EDataType::kChar_t:   itemField = std::make_unique<RField<char>>("_0"); break;
-      case EDataType::kUChar_t:  itemField = std::make_unique<RField<std::uint8_t>>("_0"); break;
-      case EDataType::kShort_t:  itemField = std::make_unique<RField<std::int16_t>>("_0"); break;
+      case EDataType::kChar_t: itemField = std::make_unique<RField<char>>("_0"); break;
+      case EDataType::kUChar_t: itemField = std::make_unique<RField<std::uint8_t>>("_0"); break;
+      case EDataType::kShort_t: itemField = std::make_unique<RField<std::int16_t>>("_0"); break;
       case EDataType::kUShort_t: itemField = std::make_unique<RField<std::uint16_t>>("_0"); break;
-      case EDataType::kInt_t:    itemField = std::make_unique<RField<std::int32_t>>("_0"); break;
-      case EDataType::kUInt_t:   itemField = std::make_unique<RField<std::uint32_t>>("_0"); break;
+      case EDataType::kInt_t: itemField = std::make_unique<RField<std::int32_t>>("_0"); break;
+      case EDataType::kUInt_t: itemField = std::make_unique<RField<std::uint32_t>>("_0"); break;
       case EDataType::kLong_t:
-      case EDataType::kLong64_t:
-         itemField = std::make_unique<RField<std::int64_t>>("_0");
-         break;
+      case EDataType::kLong64_t: itemField = std::make_unique<RField<std::int64_t>>("_0"); break;
       case EDataType::kULong_t:
-      case EDataType::kULong64_t:
-         itemField = std::make_unique<RField<std::uint64_t>>("_0");
-         break;
-      case EDataType::kFloat_t:  itemField = std::make_unique<RField<float>>("_0"); break;
+      case EDataType::kULong64_t: itemField = std::make_unique<RField<std::uint64_t>>("_0"); break;
+      case EDataType::kFloat_t: itemField = std::make_unique<RField<float>>("_0"); break;
       case EDataType::kDouble_t: itemField = std::make_unique<RField<double>>("_0"); break;
-      case EDataType::kBool_t:   itemField = std::make_unique<RField<bool>>("_0"); break;
-      default:
-         throw RException(R__FAIL("unsupported value type"));
+      case EDataType::kBool_t: itemField = std::make_unique<RField<bool>>("_0"); break;
+      default: throw RException(R__FAIL("unsupported value type"));
       }
    }
 
@@ -2358,7 +2345,6 @@ ROOT::Experimental::RRecordField::SplitValue(const RValue &value) const
    return result;
 }
 
-
 void ROOT::Experimental::RRecordField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitRecordField(*this);
@@ -2501,7 +2487,6 @@ void ROOT::Experimental::RVectorField::AcceptVisitor(Detail::RFieldVisitor &visi
 {
    visitor.VisitVectorField(*this);
 }
-
 
 //------------------------------------------------------------------------------
 
@@ -2839,7 +2824,6 @@ void ROOT::Experimental::RField<std::vector<bool>>::AcceptVisitor(Detail::RField
    visitor.VisitVectorBoolField(*this);
 }
 
-
 //------------------------------------------------------------------------------
 
 ROOT::Experimental::RArrayField::RArrayField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField,
@@ -3025,7 +3009,7 @@ void ROOT::Experimental::RArrayAsRVecField::ReadGlobalImpl(ROOT::Experimental::N
    auto rvecBeginPtr = reinterpret_cast<char *>(*beginPtr); // for pointer arithmetics
 
    if (fSubFields[0]->IsSimple()) {
-      GetPrincipalColumnOf(*fSubFields[0])->ReadV(globalIndex*fArrayLength, fArrayLength, rvecBeginPtr);
+      GetPrincipalColumnOf(*fSubFields[0])->ReadV(globalIndex * fArrayLength, fArrayLength, rvecBeginPtr);
       return;
    }
 
@@ -3149,7 +3133,7 @@ std::string ROOT::Experimental::RVariantField::GetTypeList(const std::vector<RFi
       result += itemFields[i]->GetTypeName() + ",";
    }
    R__ASSERT(!result.empty()); // there is always at least one variant
-   result.pop_back(); // remove trailing comma
+   result.pop_back();          // remove trailing comma
    return result;
 }
 
@@ -3398,9 +3382,12 @@ ROOT::Experimental::RNullableField::RNullableField(std::string_view fieldName, s
 const ROOT::Experimental::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RNullableField::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations(
-      {{EColumnType::kSplitIndex64}, {EColumnType::kIndex64}, {EColumnType::kSplitIndex32}, {EColumnType::kIndex32},
-       {EColumnType::kBit}}, {});
+   static RColumnRepresentations representations({{EColumnType::kSplitIndex64},
+                                                  {EColumnType::kIndex64},
+                                                  {EColumnType::kSplitIndex32},
+                                                  {EColumnType::kIndex32},
+                                                  {EColumnType::kBit}},
+                                                 {});
    return representations;
 }
 
@@ -3769,7 +3756,7 @@ ROOT::Experimental::RTupleField::RTupleField::GetTypeList(const std::vector<std:
    for (size_t i = 0; i < itemFields.size(); ++i) {
       result += itemFields[i]->GetTypeName() + ",";
    }
-   result.pop_back();          // remove trailing comma
+   result.pop_back(); // remove trailing comma
    return result;
 }
 
@@ -3865,7 +3852,7 @@ std::unique_ptr<ROOT::Experimental::RFieldBase>
 ROOT::Experimental::RCollectionField::CloneImpl(std::string_view newName) const
 {
    auto parent = std::make_unique<RFieldZero>();
-   for (auto& f : fSubFields) {
+   for (auto &f : fSubFields) {
       parent->Attach(f->Clone(f->GetFieldName()));
    }
    return std::make_unique<RCollectionField>(newName, fCollectionWriter, std::move(parent));
