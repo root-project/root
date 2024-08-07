@@ -38,7 +38,6 @@
 template <typename T>
 using RResult = ROOT::Experimental::RResult<T>;
 
-
 namespace {
 using RNTupleSerializer = ROOT::Experimental::Internal::RNTupleSerializer;
 
@@ -49,7 +48,7 @@ std::uint32_t SerializeField(const ROOT::Experimental::RFieldDescriptor &fieldDe
 
    auto base = reinterpret_cast<unsigned char *>(buffer);
    auto pos = base;
-   void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
+   void **where = (buffer == nullptr) ? &buffer : reinterpret_cast<void **>(&pos);
 
    pos += RNTupleSerializer::SerializeRecordFramePreamble(*where);
 
@@ -104,7 +103,7 @@ std::uint32_t SerializeFieldList(const ROOT::Experimental::RNTupleDescriptor &de
 
    auto base = reinterpret_cast<unsigned char *>(buffer);
    auto pos = base;
-   void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
+   void **where = (buffer == nullptr) ? &buffer : reinterpret_cast<void **>(&pos);
 
    auto fieldZeroId = desc.GetFieldZeroId();
    ROOT::Experimental::DescriptorId_t onDiskFieldId = firstOnDiskId;
@@ -141,10 +140,8 @@ RResult<std::uint32_t> DeserializeField(const void *buffer, std::uint64_t bufSiz
    // initialize properly for call to SerializeFieldStructure()
    ENTupleStructure structure{ENTupleStructure::kLeaf};
    std::uint16_t flags;
-   if (fnFrameSizeLeft() < 3 * sizeof(std::uint32_t) +
-                           RNTupleSerializer::SerializeFieldStructure(structure, nullptr) +
-                           sizeof(std::uint16_t))
-   {
+   if (fnFrameSizeLeft() < 3 * sizeof(std::uint32_t) + RNTupleSerializer::SerializeFieldStructure(structure, nullptr) +
+                              sizeof(std::uint16_t)) {
       return R__FAIL("field record frame too short");
    }
    bytes += RNTupleSerializer::DeserializeUInt32(bytes, fieldVersion);
@@ -214,7 +211,7 @@ std::uint32_t SerializePhysicalColumn(const ROOT::Experimental::RColumnDescripto
 
    auto base = reinterpret_cast<unsigned char *>(buffer);
    auto pos = base;
-   void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
+   void **where = (buffer == nullptr) ? &buffer : reinterpret_cast<void **>(&pos);
 
    pos += RNTupleSerializer::SerializeRecordFramePreamble(*where);
 
@@ -279,9 +276,8 @@ RResult<std::uint32_t> DeserializeColumn(const void *buffer, std::uint64_t bufSi
    std::uint16_t flags;
    std::uint16_t representationIndex;
    std::int64_t firstElementIdx = 0;
-   if (fnFrameSizeLeft() < RNTupleSerializer::SerializeColumnType(type, nullptr) +
-                           sizeof(std::uint16_t) + 2 * sizeof(std::uint32_t))
-   {
+   if (fnFrameSizeLeft() <
+       RNTupleSerializer::SerializeColumnType(type, nullptr) + sizeof(std::uint16_t) + 2 * sizeof(std::uint32_t)) {
       return R__FAIL("column record frame too short");
    }
    result = RNTupleSerializer::DeserializeColumnType(bytes, type);
@@ -516,7 +512,6 @@ ROOT::Experimental::Internal::RNTupleSerializer::VerifyXxHash3(const unsigned ch
    return R__FORWARD_RESULT(VerifyXxHash3(data, length, xxhash3));
 }
 
-
 std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeInt16(std::int16_t val, void *buffer)
 {
    if (buffer != nullptr) {
@@ -559,8 +554,8 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeInt32(st
 std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::DeserializeInt32(const void *buffer, std::int32_t &val)
 {
    auto bytes = reinterpret_cast<const unsigned char *>(buffer);
-   val = std::int32_t(bytes[0]) + (std::int32_t(bytes[1]) << 8) +
-         (std::int32_t(bytes[2]) << 16) + (std::int32_t(bytes[3]) << 24);
+   val = std::int32_t(bytes[0]) + (std::int32_t(bytes[1]) << 8) + (std::int32_t(bytes[2]) << 16) +
+         (std::int32_t(bytes[3]) << 24);
    return 4;
 }
 
@@ -593,9 +588,8 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeInt64(st
 std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::DeserializeInt64(const void *buffer, std::int64_t &val)
 {
    auto bytes = reinterpret_cast<const unsigned char *>(buffer);
-   val = std::int64_t(bytes[0]) + (std::int64_t(bytes[1]) << 8) +
-         (std::int64_t(bytes[2]) << 16) + (std::int64_t(bytes[3]) << 24) +
-         (std::int64_t(bytes[4]) << 32) + (std::int64_t(bytes[5]) << 40) +
+   val = std::int64_t(bytes[0]) + (std::int64_t(bytes[1]) << 8) + (std::int64_t(bytes[2]) << 16) +
+         (std::int64_t(bytes[3]) << 24) + (std::int64_t(bytes[4]) << 32) + (std::int64_t(bytes[5]) << 40) +
          (std::int64_t(bytes[6]) << 48) + (std::int64_t(bytes[7]) << 56);
    return 8;
 }
@@ -780,7 +774,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeEnvelopePreamble(std::
 {
    auto base = reinterpret_cast<unsigned char *>(buffer);
    auto pos = base;
-   void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
+   void **where = (buffer == nullptr) ? &buffer : reinterpret_cast<void **>(&pos);
 
    pos += SerializeUInt64(envelopeType, *where);
    // The 48bits size information is filled in the postscript
@@ -852,20 +846,18 @@ RResult<std::uint32_t> ROOT::Experimental::Internal::RNTupleSerializer::Deserial
    return R__FORWARD_RESULT(DeserializeEnvelope(buffer, bufSize, expectedType, xxhash3));
 }
 
-
 std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeRecordFramePreamble(void *buffer)
 {
    // Marker: multiply the final size with 1
    return SerializeInt64(1, buffer);
 }
 
-
-std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeListFramePreamble(
-   std::uint32_t nitems, void *buffer)
+std::uint32_t
+ROOT::Experimental::Internal::RNTupleSerializer::SerializeListFramePreamble(std::uint32_t nitems, void *buffer)
 {
    auto base = reinterpret_cast<unsigned char *>(buffer);
    auto pos = base;
-   void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
+   void **where = (buffer == nullptr) ? &buffer : reinterpret_cast<void **>(&pos);
 
    // Marker: multiply the final size with -1
    pos += SerializeInt64(-1, *where);
@@ -973,8 +965,8 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeFeatureFlags(const v
    return (flags.size() * sizeof(std::uint64_t));
 }
 
-std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeLocator(
-   const RNTupleLocator &locator, void *buffer)
+std::uint32_t
+ROOT::Experimental::Internal::RNTupleSerializer::SerializeLocator(const RNTupleLocator &locator, void *buffer)
 {
    if (locator.fType > RNTupleLocator::kLastSerializableType)
       throw RException(R__FAIL("locator is not serializable"));
@@ -1041,12 +1033,11 @@ RResult<std::uint32_t> ROOT::Experimental::Internal::RNTupleSerializer::Deserial
    return bytes - reinterpret_cast<const unsigned char *>(buffer);
 }
 
-std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeEnvelopeLink(
-   const REnvelopeLink &envelopeLink, void *buffer)
+std::uint32_t
+ROOT::Experimental::Internal::RNTupleSerializer::SerializeEnvelopeLink(const REnvelopeLink &envelopeLink, void *buffer)
 {
    auto size = SerializeUInt64(envelopeLink.fLength, buffer);
-   size += SerializeLocator(envelopeLink.fLocator,
-                            buffer ? reinterpret_cast<unsigned char *>(buffer) + size : nullptr);
+   size += SerializeLocator(envelopeLink.fLocator, buffer ? reinterpret_cast<unsigned char *>(buffer) + size : nullptr);
    return size;
 }
 
@@ -1067,13 +1058,13 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeEnvelopeLink(const v
    return bytes - reinterpret_cast<const unsigned char *>(buffer);
 }
 
-
-std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeClusterSummary(
-   const RClusterSummary &clusterSummary, void *buffer)
+std::uint32_t
+ROOT::Experimental::Internal::RNTupleSerializer::SerializeClusterSummary(const RClusterSummary &clusterSummary,
+                                                                         void *buffer)
 {
    auto base = reinterpret_cast<unsigned char *>(buffer);
    auto pos = base;
-   void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
+   void **where = (buffer == nullptr) ? &buffer : reinterpret_cast<void **>(&pos);
 
    auto frame = pos;
    pos += SerializeRecordFramePreamble(*where);
@@ -1124,13 +1115,12 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeClusterSummary(const
    return frameSize;
 }
 
-
-std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeClusterGroup(
-   const RClusterGroup &clusterGroup, void *buffer)
+std::uint32_t
+ROOT::Experimental::Internal::RNTupleSerializer::SerializeClusterGroup(const RClusterGroup &clusterGroup, void *buffer)
 {
    auto base = reinterpret_cast<unsigned char *>(buffer);
    auto pos = base;
-   void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
+   void **where = (buffer == nullptr) ? &buffer : reinterpret_cast<void **>(&pos);
 
    auto frame = pos;
    pos += SerializeRecordFramePreamble(*where);
@@ -1238,7 +1228,7 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeSchemaDe
 {
    auto base = reinterpret_cast<unsigned char *>(buffer);
    auto pos = base;
-   void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
+   void **where = (buffer == nullptr) ? &buffer : reinterpret_cast<void **>(&pos);
 
    std::size_t nFields = 0, nColumns = 0, nAliasColumns = 0, fieldListOffset = 0;
    // Columns in the extension header that are attached to a field of the regular header
@@ -1475,7 +1465,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializePageList(void *buffer,
 {
    auto base = reinterpret_cast<unsigned char *>(buffer);
    auto pos = base;
-   void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
+   void **where = (buffer == nullptr) ? &buffer : reinterpret_cast<void **>(&pos);
 
    pos += SerializeEnvelopePreamble(kEnvelopeTypePageList, *where);
 
@@ -1545,7 +1535,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeFooter(void *buffer,
 {
    auto base = reinterpret_cast<unsigned char *>(buffer);
    auto pos = base;
-   void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
+   void **where = (buffer == nullptr) ? &buffer : reinterpret_cast<void **>(&pos);
 
    pos += SerializeEnvelopePreamble(kEnvelopeTypeFooter, *where);
 
@@ -1666,7 +1656,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeFooter(const void *b
    if (!result)
       return R__FORWARD_ERROR(result);
    bytes += result.Unwrap();
-   for (auto f: featureFlags) {
+   for (auto f : featureFlags) {
       if (f)
          R__LOG_WARNING(NTupleLog()) << "Unsupported feature flag! " << f;
    }
