@@ -11,6 +11,9 @@
 #define ROOT_Minuit2_MnPlot
 
 #include "Minuit2/MnConfig.h"
+
+#include <ROOT/RSpan.hxx>
+
 #include <vector>
 #include <utility>
 
@@ -37,8 +40,8 @@ public:
 
    ~MnPlot() {}
 
-   void operator()(const std::vector<std::pair<double, double>> &) const;
-   void operator()(double, double, const std::vector<std::pair<double, double>> &) const;
+   void operator()(std::span<const std::pair<double, double>> ) const;
+   void operator()(double, double, std::span<const std::pair<double, double>> ) const;
 
    unsigned int Width() const { return fPageWidth; }
    unsigned int Length() const { return fPageLength; }

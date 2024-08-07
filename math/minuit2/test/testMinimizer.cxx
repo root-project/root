@@ -406,7 +406,7 @@ const double *TrueMinimum(const ROOT::Math::IMultiGenFunction &func)
    return nullptr;
 }
 
-void printMinimum(const std::vector<double> &x)
+void printMinimum(std::span<const double> x)
 {
    std::cout << "Minimum X values\n";
    std::cout << "\t";

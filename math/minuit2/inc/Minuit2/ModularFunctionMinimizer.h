@@ -43,18 +43,18 @@ public:
    ~ModularFunctionMinimizer() override {}
 
    // inherited interface
-   FunctionMinimum Minimize(const FCNBase &, const std::vector<double> &, const std::vector<double> &,
+   FunctionMinimum Minimize(const FCNBase &, std::span<const double>, std::span<const double>,
                                     unsigned int stra = 1, unsigned int maxfcn = 0, double toler = 0.1) const override;
 
-   FunctionMinimum Minimize(const FCNGradientBase &, const std::vector<double> &, const std::vector<double> &,
+   FunctionMinimum Minimize(const FCNGradientBase &, std::span<const double>, std::span<const double>,
                                     unsigned int stra = 1, unsigned int maxfcn = 0, double toler = 0.1) const override;
 
-   FunctionMinimum Minimize(const FCNBase &, const std::vector<double> &, unsigned int,
-                                    const std::vector<double> &, unsigned int stra = 1, unsigned int maxfcn = 0,
+   FunctionMinimum Minimize(const FCNBase &, std::span<const double>, unsigned int,
+                                    std::span<const double>, unsigned int stra = 1, unsigned int maxfcn = 0,
                                     double toler = 0.1) const override;
 
-   FunctionMinimum Minimize(const FCNGradientBase &, const std::vector<double> &, unsigned int,
-                                    const std::vector<double> &, unsigned int stra = 1, unsigned int maxfcn = 0,
+   FunctionMinimum Minimize(const FCNGradientBase &, std::span<const double>, unsigned int,
+                                    std::span<const double>, unsigned int stra = 1, unsigned int maxfcn = 0,
                                     double toler = 0.1) const override;
 
    // extension

@@ -14,6 +14,8 @@
 
 #include "Minuit2/GradientCalculator.h"
 
+#include <ROOT/RSpan.hxx>
+
 #include <vector>
 
 namespace ROOT {
@@ -41,7 +43,7 @@ public:
 
    FunctionGradient operator()(const MinimumParameters &) const override;
 
-   virtual FunctionGradient operator()(const std::vector<double> &params) const;
+   virtual FunctionGradient operator()(std::span<const double> params) const;
 
    FunctionGradient operator()(const MinimumParameters &, const FunctionGradient &) const override;
 

@@ -55,7 +55,7 @@ NumericalDerivator::NumericalDerivator(const NumericalDerivator &/*other*/) = de
 /// This function sets internal state based on input parameters. This state
 /// setup is used in the actual (partial) derivative calculations.
 void NumericalDerivator::SetupDifferentiate(const ROOT::Math::IBaseFunctionMultiDim *function, const double *cx,
-                                            const std::vector<ROOT::Fit::ParameterSettings> &parameters)
+                                            std::span<const ROOT::Fit::ParameterSettings> parameters)
 {
    assert(function != nullptr && "function is a nullptr");
 
@@ -80,7 +80,7 @@ void NumericalDerivator::SetupDifferentiate(const ROOT::Math::IBaseFunctionMulti
 
 DerivatorElement NumericalDerivator::PartialDerivative(const ROOT::Math::IBaseFunctionMultiDim *function,
                                                        const double *x,
-                                                       const std::vector<ROOT::Fit::ParameterSettings> &parameters,
+                                                       std::span<const ROOT::Fit::ParameterSettings> parameters,
                                                        unsigned int i_component, DerivatorElement previous)
 {
    SetupDifferentiate(function, x, parameters);
@@ -89,7 +89,7 @@ DerivatorElement NumericalDerivator::PartialDerivative(const ROOT::Math::IBaseFu
 
 // leaves the parameter setup to the caller
 DerivatorElement NumericalDerivator::FastPartialDerivative(const ROOT::Math::IBaseFunctionMultiDim *function,
-                                                           const std::vector<ROOT::Fit::ParameterSettings> &parameters,
+                                                           std::span<const ROOT::Fit::ParameterSettings> parameters,
                                                            unsigned int i_component, const DerivatorElement &previous)
 {
    DerivatorElement deriv{previous};
@@ -143,7 +143,7 @@ DerivatorElement NumericalDerivator::FastPartialDerivative(const ROOT::Math::IBa
 }
 
 DerivatorElement NumericalDerivator::operator()(const ROOT::Math::IBaseFunctionMultiDim *function, const double *x,
-                                                const std::vector<ROOT::Fit::ParameterSettings> &parameters,
+                                                std::span<const ROOT::Fit::ParameterSettings> parameters,
                                                 unsigned int i_component, const DerivatorElement &previous)
 {
    return PartialDerivative(function, x, parameters, i_component, previous);
@@ -151,8 +151,8 @@ DerivatorElement NumericalDerivator::operator()(const ROOT::Math::IBaseFunctionM
 
 std::vector<DerivatorElement>
 NumericalDerivator::Differentiate(const ROOT::Math::IBaseFunctionMultiDim *function, const double *cx,
-                                  const std::vector<ROOT::Fit::ParameterSettings> &parameters,
-                                  const std::vector<DerivatorElement> &previous_gradient)
+                                  std::span<const ROOT::Fit::ParameterSettings> parameters,
+                                  std::span<const DerivatorElement> previous_gradient)
 {
    SetupDifferentiate(function, cx, parameters);
 
@@ -222,7 +222,7 @@ double NumericalDerivator::DInt2Ext(const ROOT::Fit::ParameterSettings &paramete
 /// This function was not implemented as in Minuit2. Now it copies the behavior
 /// of InitialGradientCalculator. See https://github.com/roofit-dev/root/issues/10
 void NumericalDerivator::SetInitialGradient(const ROOT::Math::IBaseFunctionMultiDim *,
-                                            const std::vector<ROOT::Fit::ParameterSettings> &parameters,
+                                            std::span<const ROOT::Fit::ParameterSettings> parameters,
                                             std::vector<DerivatorElement> &gradient)
 {
    // set an initial gradient using some given steps

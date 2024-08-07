@@ -15,7 +15,7 @@ namespace Minuit2 {
 
 void mnplot(double *xpt, double *ypt, char *chpt, int nxypt, int npagwd, int npagln);
 
-void MnPlot::operator()(const std::vector<std::pair<double, double>> &points) const
+void MnPlot::operator()(std::span<const std::pair<double, double>> points) const
 {
    // call routine from Fortran minuit (mnplot) to plot the vector of (x,y) points
    std::vector<double> x;
@@ -25,17 +25,16 @@ void MnPlot::operator()(const std::vector<std::pair<double, double>> &points) co
    std::vector<char> chpt;
    chpt.reserve(points.size());
 
-   for (std::vector<std::pair<double, double>>::const_iterator ipoint = points.begin(); ipoint != points.end();
-        ++ipoint) {
-      x.push_back((*ipoint).first);
-      y.push_back((*ipoint).second);
+   for (auto const &ipoint : points) {
+      x.push_back(ipoint.first);
+      y.push_back(ipoint.second);
       chpt.push_back('*');
    }
 
    mnplot(&(x.front()), &(y.front()), &(chpt.front()), points.size(), Width(), Length());
 }
 
-void MnPlot::operator()(double xmin, double ymin, const std::vector<std::pair<double, double>> &points) const
+void MnPlot::operator()(double xmin, double ymin, std::span<const std::pair<double, double>> points) const
 {
    // call routine from Fortran minuit (mnplot) to plot the vector of (x,y) points + minimum values
    std::vector<double> x;
@@ -51,10 +50,9 @@ void MnPlot::operator()(double xmin, double ymin, const std::vector<std::pair<do
    chpt.push_back(' ');
    chpt.push_back('X');
 
-   for (std::vector<std::pair<double, double>>::const_iterator ipoint = points.begin(); ipoint != points.end();
-        ++ipoint) {
-      x.push_back((*ipoint).first);
-      y.push_back((*ipoint).second);
+   for (auto const &ipoint : points) {
+      x.push_back(ipoint.first);
+      y.push_back(ipoint.second);
       chpt.push_back('*');
    }
 
