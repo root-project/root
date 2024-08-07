@@ -350,13 +350,20 @@ extern template class RSimpleField<float>;
 
 template <>
 class RField<float> final : public RSimpleField<float> {
+   std::size_t fBitWidth = sizeof(float) * 8;
+   
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
    {
-      return std::make_unique<RField>(newName);
+      auto cloned = std::make_unique<RField<float>>(newName);
+      cloned->fBitWidth = fBitWidth;
+      return cloned;
    }
 
    const RColumnRepresentations &GetColumnRepresentations() const final;
+
+   void GenerateColumns() final;
+   void GenerateColumns(const RNTupleDescriptor &desc) final;
 
 public:
    static std::string TypeName() { return "float"; }
@@ -368,6 +375,7 @@ public:
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 
    void SetHalfPrecision();
+   void SetTruncated(std::size_t nBits);
 };
 
 extern template class RSimpleField<double>;

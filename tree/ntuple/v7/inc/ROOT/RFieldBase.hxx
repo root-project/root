@@ -405,14 +405,14 @@ protected:
    void GenerateColumnsImpl(const ColumnRepresentation_t &representation, std::uint16_t representationIndex)
    {
       assert(ColumnIndexT < representation.size());
-      fAvailableColumns.emplace_back(
+      auto &column = fAvailableColumns.emplace_back(
          Internal::RColumn::Create<HeadT>(representation[ColumnIndexT], ColumnIndexT, representationIndex));
 
       // Initially, the first two columns become the active column representation
       if (representationIndex == 0 && !fPrincipalColumn) {
-         fPrincipalColumn = fAvailableColumns.back().get();
+         fPrincipalColumn = column.get();
       } else if (representationIndex == 0 && !fAuxiliaryColumn) {
-         fAuxiliaryColumn = fAvailableColumns.back().get();
+         fAuxiliaryColumn = column.get();
       } else {
          // We currently have no fields with more than 2 columns in its column representation
          R__ASSERT(representationIndex > 0);

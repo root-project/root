@@ -226,8 +226,6 @@ TYPED_TEST(PackingIndex, SplitIndex)
    EXPECT_EQ(mem, cmp);
 }
 
-namespace {
-
 template <typename PodT, EColumnType ColumnT>
 static void AddField(RNTupleModel &model, const std::string &fieldName)
 {
@@ -236,7 +234,13 @@ static void AddField(RNTupleModel &model, const std::string &fieldName)
    model.AddField(std::move(fld));
 }
 
-} // anonymous namespace
+static void AddReal32TruncField(RNTupleModel &model, const std::string &fieldName, std::size_t nBits)
+{
+   auto fld = std::make_unique<RField<float>>(fieldName);
+   fld->SetColumnRepresentatives({{EColumnType::kReal32Trunc}});
+   fld->SetTruncated(nBits);
+   model.AddField(std::move(fld));
+}
 
 TEST(Packing, OnDiskEncoding)
 {
@@ -257,6 +261,7 @@ TEST(Packing, OnDiskEncoding)
    AddField<double, EColumnType::kSplitReal64>(*model, "double");
    AddField<ClusterSize_t, EColumnType::kSplitIndex32>(*model, "index32");
    AddField<ClusterSize_t, EColumnType::kSplitIndex64>(*model, "index64");
+   AddReal32TruncField(*model, "float32Trunc", 10);
    auto fldStr = std::make_unique<RField<std::string>>("str");
    model->AddField(std::move(fldStr));
    {
@@ -276,6 +281,7 @@ TEST(Packing, OnDiskEncoding)
       *e->GetPtr<double>("double") = std::nextafter(1., 2.);    // 0x3ff0 0000 0000 0001
       *e->GetPtr<ClusterSize_t>("index32") = 39916801;          // 0x0261 1501
       *e->GetPtr<ClusterSize_t>("index64") = 0x0706050403020100L;
+      *e->GetPtr<float>("float32Trunc") = -3.75f; // 1 10000000 11100000000000000000000 == 0xC0700000
       e->GetPtr<std::string>("str")->assign("abc");
 
       writer->Fill(*e);
@@ -291,6 +297,7 @@ TEST(Packing, OnDiskEncoding)
       *e->GetPtr<double>("double") = std::numeric_limits<double>::max(); // 0x7fef ffff ffff ffff
       *e->GetPtr<ClusterSize_t>("index32") = 39916808;                   // d(previous) == 7
       *e->GetPtr<ClusterSize_t>("index64") = 0x070605040302010DL;        // d(previous) == 13
+      *e->GetPtr<float>("float32Trunc") = 1.75f; // 0 01111111 11000000000000000000000 == 0x3fe00000
       e->GetPtr<std::string>("str")->assign("de");
 
       writer->Fill(*e);
@@ -355,19 +362,28 @@ TEST(Packing, OnDiskEncoding)
                                  0x04, 0x00, 0x05, 0x00, 0x06, 0x00, 0x07, 0x00};
    EXPECT_EQ(memcmp(sealedPage.GetBuffer(), expIndex64, sizeof(expIndex64)), 0);
 
+   source->LoadSealedPage(fnGetColumnId("float32Trunc"), RClusterIndex(0, 0), sealedPage);
+   // Two tightly packed 10bit floats: 0b0'01111111'1 + 0b1'10000000'1 = 0b111111111100000001 = 0x03ff01
+   unsigned char expF32Trunc[] = {0x01, 0xFF, 0x03};
+   EXPECT_EQ(memcmp(sealedPage.GetBuffer(), expF32Trunc, sizeof(expF32Trunc)), 0);
+
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    EXPECT_EQ(EColumnType::kIndex64, reader->GetModel().GetField("str").GetColumnRepresentatives()[0][0]);
    EXPECT_EQ(2u, reader->GetNEntries());
    auto viewStr = reader->GetView<std::string>("str");
    EXPECT_EQ(std::string("abc"), viewStr(0));
    EXPECT_EQ(std::string("de"), viewStr(1));
+   auto viewFtrunc = reader->GetView<float>("float32Trunc");
+   EXPECT_EQ(-3.f, viewFtrunc(0));
+   EXPECT_EQ(1.5f, viewFtrunc(1));
 }
 
 TEST(Packing, Real32Trunc)
 {
    {
       constexpr auto kBitsOnStorage = 10;
-      RColumnElement<float, EColumnType::kReal32TruncBegin> element{kBitsOnStorage};
+      RColumnElement<float, EColumnType::kReal32Trunc> element;
+      element.SetBitsOnStorage(kBitsOnStorage);
       element.Pack(nullptr, nullptr, 0);
       element.Unpack(nullptr, nullptr, 0);
 
@@ -394,7 +410,8 @@ TEST(Packing, Real32Trunc)
 
    {
       constexpr auto kBitsOnStorage = 11;
-      RColumnElement<float, EColumnType::kReal32TruncBegin> element{kBitsOnStorage};
+      RColumnElement<float, EColumnType::kReal32Trunc> element;
+      element.SetBitsOnStorage(kBitsOnStorage);
       element.Pack(nullptr, nullptr, 0);
       element.Unpack(nullptr, nullptr, 0);
 
@@ -424,7 +441,8 @@ TEST(Packing, Real32Trunc)
 
    {
       constexpr auto kBitsOnStorage = 31;
-      RColumnElement<float, EColumnType::kReal32TruncBegin> element{kBitsOnStorage};
+      RColumnElement<float, EColumnType::kReal32Trunc> element;
+      element.SetBitsOnStorage(kBitsOnStorage);
       element.Pack(nullptr, nullptr, 0);
       element.Unpack(nullptr, nullptr, 0);
 
@@ -453,7 +471,8 @@ TEST(Packing, Real32Trunc)
    {
       constexpr auto kBitsOnStorage = 18;
       constexpr auto N = 1000;
-      RColumnElement<float, EColumnType::kReal32TruncBegin> element{kBitsOnStorage};
+      RColumnElement<float, EColumnType::kReal32Trunc> element;
+      element.SetBitsOnStorage(kBitsOnStorage);
       float f[N];
       for (int i = 0; i < N; ++i)
          f[i] = 2.f + (0.000001f * i);

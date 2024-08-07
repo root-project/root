@@ -278,6 +278,7 @@ std::unique_ptr<RColumnElementBase> GenerateColumnElementInternal(EColumnType ty
    case EColumnType::kSplitUInt32: return std::make_unique<RColumnElement<CppT, EColumnType::kSplitUInt32>>();
    case EColumnType::kSplitInt16: return std::make_unique<RColumnElement<CppT, EColumnType::kSplitInt16>>();
    case EColumnType::kSplitUInt16: return std::make_unique<RColumnElement<CppT, EColumnType::kSplitUInt16>>();
+   case EColumnType::kReal32Trunc: return std::make_unique<RColumnElement<CppT, EColumnType::kReal32Trunc>>();
    default: R__ASSERT(false);
    }
    // never here
@@ -667,19 +668,21 @@ public:
 };
 
 template <>
-class RColumnElement<float, EColumnType::kReal32TruncBegin> : public RColumnElementBase {
-   static constexpr std::size_t kWordSize = sizeof(std::uint32_t);
-   static constexpr std::size_t kBitsPerWord = kWordSize * 8;
-
+class RColumnElement<float, EColumnType::kReal32Trunc> : public RColumnElementBase {
 public:
    static constexpr bool kIsMappable = false;
    static constexpr std::size_t kSize = sizeof(float);
 
-   RColumnElement(std::size_t nFloatBits) : RColumnElementBase(kSize, nFloatBits)
+   RColumnElement() : RColumnElementBase(kSize, ROOT::Experimental::kReal32TruncBitsMax) {}
+
+   void SetBitsOnStorage(std::size_t bitsOnStorage) final
    {
       namespace REx = ROOT::Experimental;
-      R__ASSERT(nFloatBits >= REx::kReal32TruncBitsMin && nFloatBits <= REx::kReal32TruncBitsMax);
+      R__ASSERT(bitsOnStorage >= REx::kReal32TruncBitsMin && bitsOnStorage <= REx::kReal32TruncBitsMax);
+      fBitsOnStorage = bitsOnStorage;
    }
+
+   bool IsMappable() const final { return kIsMappable; }
 
    void Pack(void *dst, const void *src, std::size_t count) const final
    {

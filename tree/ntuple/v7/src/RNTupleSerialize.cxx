@@ -25,6 +25,7 @@
 #include <TList.h>
 #include <TStreamerInfo.h>
 #include <TVirtualStreamerInfo.h>
+#include "ROOT/RNTupleUtil.hxx"
 #include <xxhash.h>
 
 #include <cassert>
@@ -655,6 +656,7 @@ std::uint32_t
 ROOT::Experimental::Internal::RNTupleSerializer::SerializeColumnType(ROOT::Experimental::EColumnType type, void *buffer)
 {
    using EColumnType = ROOT::Experimental::EColumnType;
+
    switch (type) {
    case EColumnType::kIndex64: return SerializeUInt16(0x01, buffer);
    case EColumnType::kIndex32: return SerializeUInt16(0x02, buffer);
@@ -683,6 +685,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeColumnType(ROOT::Exper
    case EColumnType::kSplitUInt32: return SerializeUInt16(0x14, buffer);
    case EColumnType::kSplitInt16: return SerializeUInt16(0x1C, buffer);
    case EColumnType::kSplitUInt16: return SerializeUInt16(0x15, buffer);
+   case EColumnType::kReal32Trunc: return SerializeUInt16(0x1D, buffer);
    default: throw RException(R__FAIL("ROOT bug: unexpected column type"));
    }
 }
@@ -694,6 +697,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeColumnType(const voi
    using EColumnType = ROOT::Experimental::EColumnType;
    std::uint16_t onDiskType;
    auto result = DeserializeUInt16(buffer, onDiskType);
+
    switch (onDiskType) {
    case 0x01: type = EColumnType::kIndex64; break;
    case 0x02: type = EColumnType::kIndex32; break;
@@ -722,6 +726,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeColumnType(const voi
    case 0x14: type = EColumnType::kSplitUInt32; break;
    case 0x1C: type = EColumnType::kSplitInt16; break;
    case 0x15: type = EColumnType::kSplitUInt16; break;
+   case 0x1D: type = EColumnType::kReal32Trunc; break;
    default: return R__FAIL("unexpected on-disk column type");
    }
    return result;
