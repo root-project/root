@@ -333,7 +333,6 @@ def archive_and_upload(archive_name, prefix):
     with tarfile.open(f"{WORKDIR}/{new_archive}", "x:gz", compresslevel=COMPRESSIONLEVEL) as targz:
         targz.add("src")
         targz.add("build")
-        targz.add("docs") 
 
     upload_file(
         connection=CONNECTION,
