@@ -56,6 +56,7 @@ ROOT::Experimental::Internal::RColumnElementBase::GetValidBitRange(EColumnType t
    case EColumnType::kSplitUInt32: return std::make_pair(32, 32);
    case EColumnType::kSplitInt16: return std::make_pair(16, 16);
    case EColumnType::kSplitUInt16: return std::make_pair(16, 16);
+   case EColumnType::kReal32Trunc: return std::make_pair(kReal32TruncBitsMin, kReal32TruncBitsMax);
    default: assert(false);
    }
    // never here
@@ -92,6 +93,7 @@ std::string ROOT::Experimental::Internal::RColumnElementBase::GetTypeName(EColum
    case EColumnType::kSplitUInt32: return "SplitUInt32";
    case EColumnType::kSplitInt16: return "SplitInt16";
    case EColumnType::kSplitUInt16: return "SplitUInt16";
+   case EColumnType::kReal32Trunc: return "Real32Trunc";
    default: return "UNKNOWN";
    }
 }
@@ -131,6 +133,7 @@ ROOT::Experimental::Internal::RColumnElementBase::Generate<void>(EColumnType typ
    case EColumnType::kSplitUInt32: return std::make_unique<RColumnElement<std::uint32_t, EColumnType::kSplitUInt32>>();
    case EColumnType::kSplitInt16: return std::make_unique<RColumnElement<std::int16_t, EColumnType::kSplitInt16>>();
    case EColumnType::kSplitUInt16: return std::make_unique<RColumnElement<std::uint16_t, EColumnType::kSplitUInt16>>();
+   case EColumnType::kReal32Trunc: return std::make_unique<RColumnElement<std::uint16_t, EColumnType::kReal32Trunc>>();
    default: assert(false);
    }
    // never here
