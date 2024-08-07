@@ -625,7 +625,8 @@ Cppyy::TCppType_t Cppyy::GetActualClass(TCppType_t klass, TCppObject_t obj)
 #endif
 
     TClass* clActual = cr->GetActualClass((void*)obj);
-    if (clActual && clActual != cr.GetClass()) {
+    // The additional check using TClass::GetClassInfo is to prevent returning classes of which the Interpreter has no info
+    if (clActual && clActual != cr.GetClass() && clActual->GetClassInfo()) {
         auto itt = g_name2classrefidx.find(clActual->GetName());
         if (itt != g_name2classrefidx.end())
             return (TCppType_t)itt->second;
