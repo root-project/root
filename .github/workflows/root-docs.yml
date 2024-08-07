@@ -199,13 +199,7 @@ jobs:
            
               echo "Running make..."
               make -j$(nproc) || { echo "Make failed"; exit 1; }
-           
-              echo "Checking if /github/home/rootdoc/html exists..."
-              if [ -d /github/home/rootdoc/html ]; then
-                  echo "Directory /github/home/rootdoc/html exists. Removing..."
-                  rm -rf /github/home/rootdoc/html || { echo "Failed to remove /github/home/rootdoc/html"; exit 1; }
-              fi
-           
+
               echo "Moving generated HTML to /github/home/rootdoc..."
               mv -f ${DOXYGEN_OUTPUT_DIRECTORY}/html /github/home/rootdoc || { echo "Failed to move HTML"; exit 1; }
            
@@ -247,3 +241,30 @@ jobs:
     #   with:
     #     name: rootdoc.tar.xz
     #     path: ${{env.DOC_LOCATION}}/${{env.DOC_DIR}}.tar.xz
+
+    - uses: actions/checkout@master
+    - uses: chrnorm/deployment-action@releases/v1
+      name: Create GitHub deployment
+      id: test
+      with:
+        token: ${{ secrets.GITHUB_TOKEN}}
+        description: 'Preview my app'
+        environment: preview
+
+    - uses: shallwefootball/s3-upload-action@master
+      name: Upload S3
+      id: S3
+      with:
+        aws_key_id: ${{ secrets.AWS_KEY_ID }}
+        aws_secret_access_key: ${{ secrets.OS_APPLICATION_CREDENTIAL_SECRET}}
+        aws_bucket: root
+        source_dir: ${{env.DOC_LOCATION}}/${{env.DOC_DIR}}
+    
+    - name: Update deployment status (success)
+      if: success()
+      uses: chrnorm/deployment-status@releases/v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        target_url: https://aws-bucket.s3.ap-northeast-2.amazonaws.com/${{steps.S3.outputs.object_key}}/index.html
+        state: 'success'
+        deployment_id: ${{ steps.test.outputs.deployment_id }}
