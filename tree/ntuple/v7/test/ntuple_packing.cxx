@@ -466,8 +466,11 @@ TEST(Packing, Real32Trunc)
 
       float fout[N];
       element.Unpack(fout, out2, N);
-      for (int i = 0; i < N; ++i)
+      for (int i = 0; i < N; ++i) {
          EXPECT_EQ(fout[i], -2097176.5f); // dropped last bit of mantissa
+         if (fout[i] != -2097176.5f) // prevent spamming
+            break;
+      }
    }
 
    {
@@ -484,7 +487,10 @@ TEST(Packing, Real32Trunc)
 
       float fout[N];
       element.Unpack(fout, out, N);
-      for (int i = 0; i < N; ++i)
+      for (int i = 0; i < N; ++i) {
          EXPECT_EQ(fout[i], 2.f);
+         if (fout[i] != 2.f) // prevent spamming
+            break;
+      }
    }
 }

@@ -315,7 +315,7 @@ public:
 
    std::size_t GetSize() const { return fSize; }
    std::size_t GetBitsOnStorage() const { return fBitsOnStorage; }
-   std::size_t GetPackedSize(std::size_t nElements = 1U) const { return (nElements * fBitsOnStorage + 7) / 8; }
+   virtual std::size_t GetPackedSize(std::size_t nElements = 1U) const { return (nElements * fBitsOnStorage + 7) / 8; }
 }; // class RColumnElementBase
 
 /**
@@ -692,14 +692,14 @@ public:
 /// Tightly packs `count` floats contained in `src` into `dst` using `nFloatBits` per float.
 /// `nFloatBits` must be >= kReal32TruncBitsMin and <= kReal32TruncBitsMax.
 /// The extra bits are dropped from the mantissa. The sign and exponent bits are always preserved.
-/// IMPORTANT: the size of `dst` must be rounded up from `count * nFloatBits`
-/// to the next multiple of 4 (i.e. the word size).
+/// IMPORTANT: the size of `dst` must be at least `(count * nFloatBits + 63) / 64` (i.e.
+/// it needs to be rounded up to the next word).
 void PackFloats(void *dst, const float *src, std::size_t count, std::size_t nFloatBits);
 
 /// Undoes the effect of `PackFloats`. The bits that were truncated in the packed representation
 /// are filled with zeroes, effectively rounding the original float towards 0.
-/// IMPORTANT: the size of `src` must be rounded up from `count * nFloatBits`
-/// to the next multiple of 4 (i.e. the word size).
+/// IMPORTANT: the size of `src` must be at least `(count * nFloatBits + 63) / 64` (i.e.
+/// it needs to be rounded up to the next word).
 void UnpackFloats(float *dst, const void *src, std::size_t count, std::size_t nFloatBits);
 
 template <>
@@ -717,6 +717,11 @@ public:
    }
 
    bool IsMappable() const final { return kIsMappable; }
+
+   std::size_t GetPackedSize(std::size_t nElements = 1U) const final
+   {
+      return (nElements != 0) * std::max<std::size_t>(8, (nElements * fBitsOnStorage + 63) / 64);
+   }
 
    void Pack(void *dst, void *src, std::size_t count) const final
    {
