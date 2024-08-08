@@ -640,6 +640,38 @@ void TGraph2D::Build(Int_t n)
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Performs the operation: `z = z + c1*f(x,y,z)`
+/// Errors are not recalculated.
+///
+/// \param f may be a 2-D function TF2 or 3-d function TF3
+/// \param c1 a scaling factor, 1 by default
+
+void TGraph2D::Add(TF2 *f, Double_t c1)
+{
+   //if (fHistogram) SetBit(kResetHisto);
+
+   for (Int_t i = 0; i < fNpoints; i++) {
+      fZ[i] += c1*f->Eval(fX[i], fY[i], fZ[i]);
+   }
+   if (gPad) gPad->Modified();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Apply function f to all the data points
+/// f may be a 2-D function TF2 or 3-d function TF3
+/// The Z values of the 2D graph are replaced by the new values computed
+/// using the function
+
+void TGraph2D::Apply(TF2 *f)
+{
+   //if (fHistogram) SetBit(kResetHisto);
+
+   for (Int_t i = 0; i < fNpoints; i++) {
+      fZ[i] = f->Eval(fX[i], fY[i], fZ[i]);
+   }
+   if (gPad) gPad->Modified();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Browse
