@@ -60,7 +60,6 @@ NUMPY_TO_TREE = {
     numpy.int16 : 'Int_t',
     numpy.int32: 'Int_t',
     numpy.int64 : 'Long_t',
-    numpy.float_ : 'Float_t',
     numpy.float32 : 'Float_t',
     numpy.float64 : 'Double_t',
 }
