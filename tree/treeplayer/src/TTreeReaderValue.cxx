@@ -30,6 +30,7 @@
 #include "TNtuple.h"
 #include "TROOT.h"
 #include <vector>
+#include <iterator>
 
 // clang-format off
 /**
@@ -601,52 +602,35 @@ void ROOT::Internal::TTreeReaderValueBase::CreateProxy() {
             membername = branch->GetName();
          }
       }
-      auto director = fTreeReader->fDirector;
+      auto director = fTreeReader->fDirector.get();
       // Determine if the branch is actually in a Friend TTree and if so which.
       if (branch->GetTree() != fTreeReader->GetTree()->GetTree()) {
          // It is in a friend, let's find the 'index' in the list of friend ...
          int index = -1;
-         int current = 0;
-         TFriendElement *fe_found = nullptr;
-         for(auto fe : TRangeDynCast<TFriendElement>( fTreeReader->GetTree()->GetTree()->GetListOfFriends())) {
-            if (branch->GetTree() == fe->GetTree()) {
-               index = current;
-               fe_found = fe;
-               break;
-            }
-            ++current;
+         const auto friendElements =
+            TRangeDynCast<TFriendElement>(fTreeReader->GetTree()->GetTree()->GetListOfFriends());
+         if (auto foundFriend =
+                std::find_if(friendElements.begin(), friendElements.end(),
+                             [&branch](TFriendElement *fe) { return branch->GetTree() == fe->GetTree(); });
+             foundFriend != friendElements.end()) {
+            index = static_cast<int>(std::distance(friendElements.begin(), foundFriend));
          }
          if (index == -1) {
-            Error(errPrefix, "The branch %s is contained in a Friend TTree that is not directly attached to the main.\n"
+            Error(errPrefix,
+                  "The branch %s is contained in a Friend TTree that is not directly attached to the main.\n"
                   "This is not yet supported by TTreeReader.",
                   fBranchName.Data());
             return;
          }
-         const char *localBranchName =  originalBranchName.c_str();
-         if (branch != branch->GetTree()->GetBranch(localBranchName)) {
-            // Try removing the name of the TTree.
-            auto len = strlen( branch->GetTree()->GetName());
-            if (strncmp(localBranchName, branch->GetTree()->GetName(), len) == 0
-                && localBranchName[len] == '.'
-                && branch != branch->GetTree()->GetBranch(localBranchName+len+1)) {
-               localBranchName = localBranchName + len + 1;
-            } else {
-               len = strlen(fe_found->GetName());
-               if (strncmp(localBranchName, fe_found->GetName(), len) == 0
-                  && localBranchName[len] == '.'
-                  && branch != branch->GetTree()->GetBranch(localBranchName+len+1)) {
-                  localBranchName = localBranchName + len + 1;
-               }
-            }
-         }
          TFriendProxy *feproxy = nullptr;
          if ((size_t)index < fTreeReader->fFriendProxies.size()) {
-            feproxy = fTreeReader->fFriendProxies.at(index);
+            feproxy = fTreeReader->fFriendProxies.at(index).get();
          }
          if (!feproxy) {
-            feproxy = new ROOT::Internal::TFriendProxy(director, fTreeReader->GetTree(), index);
             fTreeReader->fFriendProxies.resize(index+1);
-            fTreeReader->fFriendProxies.at(index) = feproxy;
+            fTreeReader->fFriendProxies.at(index) =
+               std::make_unique<ROOT::Internal::TFriendProxy>(director, fTreeReader->GetTree(), index);
+            feproxy = fTreeReader->fFriendProxies.at(index).get();
          }
          namedProxy = new TNamedBranchProxy(feproxy->GetDirector(), branch, originalBranchName.c_str(), branch->GetName(), membername);
       } else {

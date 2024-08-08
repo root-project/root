@@ -293,8 +293,8 @@ private:
    ELoadTreeStatus fLoadTreeStatus = kNoTree;   ///< Indicator on how LoadTree was called 'last' time.
    /// TTree and TChain will notify this object upon LoadTree, leading to a call to TTreeReader::Notify().
    TNotifyLink<TTreeReader> fNotify;
-   ROOT::Internal::TBranchProxyDirector* fDirector = nullptr; ///< proxying director, owned
-   std::deque<ROOT::Internal::TFriendProxy*> fFriendProxies; ///< proxying for friend TTrees, owned
+   std::unique_ptr<ROOT::Internal::TBranchProxyDirector> fDirector{nullptr}; ///< proxying director
+   std::deque<std::unique_ptr<ROOT::Internal::TFriendProxy>> fFriendProxies; ///< proxying for friend TTrees
    std::deque<ROOT::Internal::TTreeReaderValueBase*> fValues; ///< readers that use our director
    NamedProxies_t fProxies; ///< attached ROOT::TNamedBranchProxies; owned
 
