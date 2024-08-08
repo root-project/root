@@ -190,7 +190,7 @@ jobs:
     - name: Run Doxygen
       shell: bash
       run: |
-              ource ${DOC_LOCATION}/ROOT-CI/build/bin/thisroot.sh
+              source ${DOC_LOCATION}/ROOT-CI/build/bin/thisroot.sh
               export DOXYGEN_OUTPUT_DIRECTORY=${DOC_LOCATION}/${DOC_DIR}_TMP
            
               cd ${DOC_LOCATION}/ROOT-CI/src/documentation/doxygen
