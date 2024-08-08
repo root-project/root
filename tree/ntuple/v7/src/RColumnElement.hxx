@@ -31,7 +31,11 @@ inline constexpr std::size_t kBitsPerWord = sizeof(Word_t) * 8;
 /// Returns the minimum safe size of a buffer that is intended to be used as a destination for PackFloats
 /// or a source for UnpackFloats.
 /// Passing a buffer that's less than this size will cause invalid memory reads and writes.
-std::size_t MinBufSize(std::size_t count, std::size_t nFloatBits);
+constexpr std::size_t MinBufSize(std::size_t count, std::size_t nFloatBits)
+{
+   return (count != 0) * sizeof(Word_t) *
+          std::max<std::size_t>(1, (count * nFloatBits + kBitsPerWord - 1) / kBitsPerWord);
+}
 
 /// Tightly packs `count` floats contained in `src` into `dst` using `nFloatBits` per float.
 /// `nFloatBits` must be >= kReal32TruncBitsMin and <= kReal32TruncBitsMax.
