@@ -9,6 +9,11 @@
 #include "CPPScope.h"
 #include "ProxyWrappers.h"
 #include "PyStrings.h"
+#include "TPyClassGenerator.h"
+
+// ROOT
+#include <TClass.h>
+#include <TROOT.h>
 
 // Standard
 #include <stdio.h>
@@ -92,6 +97,19 @@ static bool Initialize()
     }
 
 // declare success ...
+    isInitialized = true;
+    return true;
+}
+
+static bool InitializeClassGenerator()
+{
+    static bool isInitialized = false;
+    if (isInitialized)
+        return true;
+
+// python side class construction, managed by ROOT
+   gROOT->AddClassGenerator(new TPyClassGenerator);
+
     isInitialized = true;
     return true;
 }
@@ -259,6 +277,8 @@ bool CPyCppyy::Import(const std::string& mod_name)
     if (!Initialize())
         return false;
 
+    InitializeClassGenerator();
+
     PyObject* mod = PyImport_ImportModule(mod_name.c_str());
     if (!mod) {
         PyErr_Print();
@@ -270,8 +290,7 @@ bool CPyCppyy::Import(const std::string& mod_name)
     PyModule_AddObject(gThisModule, mod_name.c_str(), mod);
 
 // force creation of the module as a namespace
-// TODO: the following is broken (and should live in Cppyy.cxx)
-//   TClass::GetClass(mod_name, true);
+    TClass::GetClass(mod_name.c_str(), true);
 
     PyObject* dct = PyModule_GetDict(mod);
 
@@ -281,23 +300,26 @@ bool CPyCppyy::Import(const std::string& mod_name)
         PyObject* value = PyList_GET_ITEM(values, i);
         Py_INCREF(value);
 
-    // collect classes
-        if (PyClass_Check(value) || PyObject_HasAttr(value, PyStrings::gBases)) {
-        // get full class name (including module)
-            PyObject* pyClName = PyObject_GetAttr(value, PyStrings::gName);
-            if (PyErr_Occurred())
-                PyErr_Clear();
+        {
+        // collect classes
+            if (PyClass_Check(value) || PyObject_HasAttr(value, PyStrings::gBases)) {
+            // get full class name (including module)
+                PyObject* pyClName = PyObject_GetAttr(value, PyStrings::gName);
+                if (PyErr_Occurred())
+                    PyErr_Clear();
 
-        // build full, qualified name
-            std::string fullname = mod_name;
-            fullname += ".";
-            fullname += CPyCppyy_PyText_AsString(pyClName);
+                {
+                // build full, qualified name
+                    std::string fullname = mod_name;
+                    fullname += '.';
+                    fullname += CPyCppyy_PyText_AsString(pyClName);
 
-      // force class creation (this will eventually call TPyClassGenerator)
-      // TODO: the following is broken (and should live in Cppyy.cxx) to
-      //         TClass::GetClass(fullname.c_str(), true);
+              // force class creation (this will eventually call TPyClassGenerator)
+                    TClass::GetClass(fullname.c_str(), true);
+                }
 
-            Py_XDECREF(pyClName);
+                Py_XDECREF(pyClName);
+            }
         }
 
         Py_DECREF(value);
@@ -308,6 +330,75 @@ bool CPyCppyy::Import(const std::string& mod_name)
 // TODO: mod "leaks" here
     if (PyErr_Occurred())
         return false;
+    return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Execute the give python script as if it were a macro (effectively an
+/// execfile in __main__), and create Cling equivalents for any newly available
+/// python classes.
+
+bool CPyCppyy::LoadMacro(const std::string& name)
+{
+// Import the named python module and create Cling equivalents for its classes.
+   if (!Initialize())
+      return false;
+
+   InitializeClassGenerator();
+
+   // obtain a reference to look for new classes later
+   PyObject *old = PyDict_Values(gMainDict);
+
+// actual execution
+   Exec("__pyroot_f = open(\"" + name + "\"); exec(__pyroot_f.read()); __pyroot_f.close(); del __pyroot_f");
+
+   PyObject *dct = gMainDict;
+
+   // create Cling classes for all new python classes
+   PyObject *values = PyDict_Values(dct);
+   for (int i = 0; i < PyList_GET_SIZE(values); ++i) {
+      PyObject *value = PyList_GET_ITEM(values, i);
+      Py_INCREF(value);
+
+      if (!PySequence_Contains(old, value)) {
+         // collect classes
+         if (PyClass_Check(value) || PyObject_HasAttr(value, PyStrings::gBases)) {
+            // get full class name (including module)
+            PyObject *pyModName = PyObject_GetAttr(value, PyStrings::gModule);
+            PyObject *pyClName = PyObject_GetAttr(value, PyStrings::gName);
+            std::string mod_name = CPyCppyy_PyText_AsString(pyModName);
+
+            if (PyErr_Occurred())
+               PyErr_Clear();
+
+            // need to check for both exact and derived (differences exist between older and newer
+            // versions of python ... bug?)
+            if ((pyModName && pyClName) &&
+                ((PyUnicode_CheckExact(pyModName) && PyUnicode_CheckExact(pyClName)) ||
+                 (PyUnicode_Check(pyModName) && PyUnicode_Check(pyClName)))) {
+               // build full, qualified name
+               std::string fullname = mod_name;
+               fullname += '.';
+               fullname += CPyCppyy_PyText_AsString(pyClName);
+
+               // force class creation (this will eventually call TPyClassGenerator)
+               TClass::GetClass(fullname.c_str(), true);
+            }
+
+            Py_XDECREF(pyClName);
+            Py_XDECREF(pyModName);
+         }
+      }
+
+      Py_DECREF(value);
+   }
+
+   Py_DECREF(values);
+   Py_DECREF(old);
+
+    if (PyErr_Occurred())
+        return false;
+
     return true;
 }
 
