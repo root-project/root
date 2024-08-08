@@ -329,7 +329,7 @@ public:
 template <>
 class RField<float> final : public RSimpleField<float> {
    std::size_t fBitWidth = sizeof(float) * 8;
-   
+
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
    {

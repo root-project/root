@@ -58,6 +58,7 @@ ROOT::Experimental::Internal::RColumnElementBase::Generate<void>(EColumnType typ
    case EColumnType::kSplitUInt32: return std::make_unique<RColumnElement<std::uint32_t, EColumnType::kSplitUInt32>>();
    case EColumnType::kSplitInt16: return std::make_unique<RColumnElement<std::int16_t, EColumnType::kSplitInt16>>();
    case EColumnType::kSplitUInt16: return std::make_unique<RColumnElement<std::uint16_t, EColumnType::kSplitUInt16>>();
+   case EColumnType::kReal32Trunc: return std::make_unique<RColumnElement<std::uint16_t, EColumnType::kReal32Trunc>>();
    default: assert(false);
    }
    // never here
@@ -236,7 +237,7 @@ void ROOT::Experimental::Internal::FloatPacking::UnpackFloats(float *dst, const 
    const Word_t *srcArray = reinterpret_cast<const Word_t *>(src);
    const auto nWordsToLoad = (count * nFloatBits + kBitsPerWord - 1) / kBitsPerWord;
 
-   // bit offset inside the loaded word of the next packed float
+   // bit offset of the next packed float inside the currently loaded word
    int offInWord = 0;
    std::size_t dstIdx = 0;
    std::uint32_t prevWordAccum = 0;
@@ -280,9 +281,6 @@ void ROOT::Experimental::Internal::FloatPacking::UnpackFloats(float *dst, const 
          memcpy(&dst[dstIdx], &packedFloat, sizeof(float));
          ByteSwapIfNecessary(dst[dstIdx]);
          ++dstIdx;
-
-         // advance to next float. This may be either fully contained in this word (easy case)
-         // or it may be split between this and the next word.
          offInWord += nFloatBits;
       }
    }
