@@ -23,7 +23,16 @@
 #endif
 #endif /* R__LITTLE_ENDIAN */
 
-namespace ROOT::Experimental::Internal {
+namespace ROOT::Experimental::Internal::FloatPacking {
+
+using Word_t = std::uintmax_t;
+inline constexpr std::size_t kBitsPerWord = sizeof(Word_t) * 8;
+
+/// Returns the minimum safe size of a buffer that is intended to be used as a destination for PackFloats
+/// or a source for UnpackFloats.
+/// Passing a buffer that's less than this size will cause invalid memory reads and writes.
+std::size_t MinBufSize(std::size_t count, std::size_t nFloatBits);
+
 /// Tightly packs `count` floats contained in `src` into `dst` using `nFloatBits` per float.
 /// `nFloatBits` must be >= kReal32TruncBitsMin and <= kReal32TruncBitsMax.
 /// The extra bits are dropped from the mantissa. The sign and exponent bits are always preserved.
@@ -36,7 +45,7 @@ void PackFloats(void *dst, const float *src, std::size_t count, std::size_t nFlo
 /// IMPORTANT: the size of `src` must be rounded up from `count * nFloatBits`
 /// to the next multiple of 4 (i.e. the word size).
 void UnpackFloats(float *dst, const void *src, std::size_t count, std::size_t nFloatBits);
-} // namespace ROOT::Experimental::Internal
+} // namespace ROOT::Experimental::Internal::FloatPacking
 
 namespace {
 
@@ -686,12 +695,14 @@ public:
 
    void Pack(void *dst, const void *src, std::size_t count) const final
    {
-      ROOT::Experimental::Internal::PackFloats(dst, reinterpret_cast<const float *>(src), count, fBitsOnStorage);
+      ROOT::Experimental::Internal::FloatPacking::PackFloats(dst, reinterpret_cast<const float *>(src), count,
+                                                             fBitsOnStorage);
    }
 
    void Unpack(void *dst, const void *src, std::size_t count) const final
    {
-      ROOT::Experimental::Internal::UnpackFloats(reinterpret_cast<float *>(dst), src, count, fBitsOnStorage);
+      ROOT::Experimental::Internal::FloatPacking::UnpackFloats(reinterpret_cast<float *>(dst), src, count,
+                                                               fBitsOnStorage);
    }
 };
 
