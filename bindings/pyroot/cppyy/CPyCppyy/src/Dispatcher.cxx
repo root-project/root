@@ -45,7 +45,7 @@ static inline void InjectMethod(Cppyy::TCppMethod_t method, const std::string& m
             "      return";
     if (retType != "void") {
         if (retType.back() != '*')
-            code << " " << CPyCppyy::TypeManip::remove_const(retType) << "{}";
+            code << " (" << CPyCppyy::TypeManip::remove_const(retType) << "){}";
         else
             code << " nullptr";
     }
