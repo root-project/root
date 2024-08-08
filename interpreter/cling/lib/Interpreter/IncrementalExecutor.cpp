@@ -58,7 +58,7 @@ IncrementalExecutor::IncrementalExecutor(clang::DiagnosticsEngine& /*diags*/,
   m_BackendPasses.reset(new BackendPasses(CI.getCodeGenOpts(), *m_JIT, m_JIT->getTargetMachine()));
 }
 
-IncrementalExecutor::~IncrementalExecutor() {}
+IncrementalExecutor::~IncrementalExecutor() { m_JIT.release(); }
 
 void IncrementalExecutor::registerExternalIncrementalExecutor(
     IncrementalExecutor& IE) {
