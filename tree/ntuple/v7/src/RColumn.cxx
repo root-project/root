@@ -27,11 +27,9 @@ ROOT::Experimental::Internal::RColumn::RColumn(EColumnType type, std::uint32_t c
                                                std::uint16_t representationIndex)
    : fType(type), fIndex(columnIndex), fRepresentationIndex(representationIndex), fTeam({this})
 {
-   // TODO(jblomer): fix for column types with configurable bit length once available
    const auto [minBits, maxBits] = RColumnElementBase::GetValidBitRange(type);
-   // assert(minBits == maxBits);
-   (void)maxBits;
-   fBitsOnStorage = minBits;
+   (void)minBits;
+   fBitsOnStorage = maxBits;
 }
 
 ROOT::Experimental::Internal::RColumn::~RColumn()
