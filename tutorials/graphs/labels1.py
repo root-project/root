@@ -2,9 +2,7 @@
 ## \ingroup tutorial_graphs
 ## \notebook
 ##
-## This script shows how to divide a canvas
-## into adjacent subpads and put on axis labels on the top and right side
-## of their pads.
+## Setting alphanumeric labels in a 1-d histogram.
 ##
 ## \macro_image
 ## \macro_code
@@ -17,7 +15,6 @@ import ROOT
 import ctypes
 
 #classes
-TH2F = ROOT.TH2F
 TCanvas = ROOT.TCanvas
 TH1F = ROOT.TH1F
 TGraph = ROOT.TGraph
@@ -69,38 +66,49 @@ gROOT = ROOT.gROOT
 
 
 # void
-def zones() :
+def labels1() :
 
-   gStyle.SetOptStat(0)
+   i = Int_t()
+   nx = 20
+
+   people = ["Jean", "Pierre", "Marie", "Odile", "Sebastien", "Fons", "Rene", "Nicolas", "Xavier", "Greg", "Bjarne", "Anton", "Otto", "Eddy", "Peter", "Pasha", "Philippe", "Suzanne", "Jeff", "Valery"]
+
 
    global c1
-   c1 = TCanvas("c1", "multipads", 900, 700)
-   c1.Divide(2, 2, 0, 0)
+   c1 = TCanvas("c1", "demo bin labels", 10, 10, 900, 500)
+   c1.SetGrid()
+   c1.SetBottomMargin(0.15)
 
-   global h1, h2, h3, h4
-   h1 = TH2F("h1", "test1", 10, 0, 1, 20, 0, 20)
-   h2 = TH2F("h2", "test2", 10, 0, 1, 20, 0, 100)
-   h3 = TH2F("h3", "test3", 10, 0, 1, 20, -1, 1)
-   h4 = TH2F("h4", "test4", 10, 0, 1, 20, 0, 1000)
-   
-   c1.cd(1)
-   gPad.SetTickx(2)
-   h1.Draw()
-   
-   c1.cd(2)
-   gPad.SetTickx(2)
-   gPad.SetTicky(2)
-   h2.GetYaxis().SetLabelOffset(0.01)
-   h2.Draw()
-   
-   c1.cd(3)
-   h3.Draw()
-   
-   c1.cd(4)
-   gPad.SetTicky(2)
-   h4.Draw()
+   global h
+   h = TH1F("h", "test", nx, 0, nx)
+   h.SetFillColor(38)
+
+   #   for (i = 0; i < 5000; i++) {
+   for i in range(0, 5000, 1):
+      h.Fill(gRandom.Gaus(0.5 * nx, 0.2 * nx))
+
+   h.SetStats(0)
+
+   #   for (i = 1; i <= nx; i++) {
+   for i in range(1, nx + 1, 1):
+      h.GetXaxis().SetBinLabel(i, people[i - 1])
+
+   h.Draw()
+
+
+   global pt
+   pt = TPaveText(0.6, 0.7, 0.98, 0.98, "brNDC")
+
+   pt.SetFillColor(18)
+   pt.SetTextAlign(12)
+   pt.AddText("Use the axis Context Menu LabelsOption")
+   pt.AddText(" \"a\"   to sort by alphabetic order")
+   pt.AddText(" \">\"   to sort by decreasing values")
+   pt.AddText(" \"<\"   to sort by increasing values")
+
+   pt.Draw()
    
 
 
 if __name__ == "__main__":
-   zones()
+   labels1()
