@@ -190,23 +190,15 @@ jobs:
     - name: Run Doxygen
       shell: bash
       run: |
-              echo "Sourcing thisroot.sh..."
-              source /github/home/ROOT-CI/build/bin/thisroot.sh
-              DOXYGEN_OUTPUT_DIRECTORY=/github/home/rootdoc_TMP
+              ource ${DOC_LOCATION}/ROOT-CI/build/bin/thisroot.sh
+              export DOXYGEN_OUTPUT_DIRECTORY=${DOC_LOCATION}/${DOC_DIR}_TMP
            
-              echo "Changing directory to /github/home/ROOT-CI/src/documentation/doxygen..."
-              cd /github/home/ROOT-CI/src/documentation/doxygen || { echo "Failed to change directory"; exit 1; }
+              cd ${DOC_LOCATION}/ROOT-CI/src/documentation/doxygen
+              make -j$(nproc)
+              mv -f ${DOXYGEN_OUTPUT_DIRECTORY}/html ${DOC_LOCATION}/${DOC_DIR}
            
-              echo "Running make..."
-              make -j$(nproc) || { echo "Make failed"; exit 1; }
-
-              echo "Moving generated HTML to /github/home/rootdoc..."
-              mv -f ${DOXYGEN_OUTPUT_DIRECTORY}/html /github/home/rootdoc || { echo "Failed to move HTML"; exit 1; }
-           
-              echo "Checking if ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks exists..."
               if [ -d ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks ]; then
-                  echo "Directory ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks exists. Moving..."
-                  mv ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks /github/home/rootdoc/notebooks || { echo "Failed to move notebooks"; exit 1; }
+                  mv ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks ${DOC_LOCATION}/${DOC_DIR}/notebooks
               fi
      
     # - name: Upload root_doc
