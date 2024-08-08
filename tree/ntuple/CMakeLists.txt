@@ -110,6 +110,7 @@ endif()
 
 if(MSVC)
   target_compile_definitions(ROOTNTuple PRIVATE _USE_MATH_DEFINES)
+  set_source_files_properties(v7/src/RField.cxx PROPERTIES COMPILE_FLAGS /bigobj)
 endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(v7/test)
