@@ -209,38 +209,38 @@ jobs:
                   mv ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks /github/home/rootdoc/notebooks || { echo "Failed to move notebooks"; exit 1; }
               fi
      
-    - name: Upload root_doc
+    # - name: Upload root_doc
+    #   if:   ${{ !cancelled() }}
+    #   uses: actions/upload-artifact@v4
+    #   with:
+    #       name: rootdoc
+    #       path: ${{env.DOC_LOCATION}}/${{env.DOC_DIR}}
+
+    - name: Create documentation archives
+      working-directory: ${{ env.DOC_LOCATION }}
+      shell: bash
+      run: |
+        tarnamegz=${DOC_DIR}.tar.gz
+        tar zcf $tarnamegz ${DOC_DIR}
+        tarnamexz1=${DOC_DIR}.tar
+        tar cf $tarnamexz1 ${DOC_DIR}
+        xz -T5 -f $tarnamexz1
+        ls -lh ${DOC_LOCATION} # Debug statement to list files and verify tarball creation
+
+    #Upload to GitHub as an artifact (optional)
+    - name: Upload tar.gz
       if:   ${{ !cancelled() }}
       uses: actions/upload-artifact@v4
       with:
-          name: rootdoc
-          path: ${{env.DOC_LOCATION}}/${{env.DOC_DIR}}
+        name: rootdoc.tar.gz
+        path: ${{env.DOC_LOCATION}}/${{env.DOC_DIR}}.tar.gz
 
-    # - name: Create documentation archives
-    #   working-directory: ${{ env.DOC_LOCATION }}
-    #   shell: bash
-    #   run: |
-    #     tarnamegz=${DOC_DIR}.tar.gz
-    #     tar zcf $tarnamegz ${DOC_DIR}
-    #     tarnamexz1=${DOC_DIR}.tar
-    #     tar cf $tarnamexz1 ${DOC_DIR}
-    #     xz -T5 -f $tarnamexz1
-    #     ls -lh ${DOC_LOCATION} # Debug statement to list files and verify tarball creation
-
-    # Upload to GitHub as an artifact (optional)
-    # - name: Upload tar.gz
-    #   if:   ${{ !cancelled() }}
-    #   uses: actions/upload-artifact@v4
-    #   with:
-    #     name: rootdoc.tar.gz
-    #     path: ${{env.DOC_LOCATION}}/${{env.DOC_DIR}}.tar.gz
-
-    # - name: Upload tar.xz
-    #   if:   ${{ !cancelled() }}
-    #   uses: actions/upload-artifact@v4
-    #   with:
-    #     name: rootdoc.tar.xz
-    #     path: ${{env.DOC_LOCATION}}/${{env.DOC_DIR}}.tar.xz
+    - name: Upload tar.xz
+      if:   ${{ !cancelled() }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: rootdoc.tar.xz
+        path: ${{env.DOC_LOCATION}}/${{env.DOC_DIR}}.tar.xz
 
     # - uses: actions/checkout@master
     # - uses: chrnorm/deployment-action@releases/v1
