@@ -689,18 +689,28 @@ public:
    }
 };
 
+namespace FloatPacking {
+
+using Word_t = std::uintmax_t;
+inline constexpr std::size_t kBitsPerWord = sizeof(Word_t) * 8;
+
+/// Returns the minimum safe size of a buffer that is intended to be used as a destination for PackFloats
+/// or a source for UnpackFloats.
+/// Passing a buffer that's less than this size will cause invalid memory reads and writes.
+std::size_t MinBufSize(std::size_t count, std::size_t nFloatBits);
+
 /// Tightly packs `count` floats contained in `src` into `dst` using `nFloatBits` per float.
 /// `nFloatBits` must be >= kReal32TruncBitsMin and <= kReal32TruncBitsMax.
 /// The extra bits are dropped from the mantissa. The sign and exponent bits are always preserved.
-/// IMPORTANT: the size of `dst` must be at least `(count * nFloatBits + 63) / 64` (i.e.
-/// it needs to be rounded up to the next word).
+/// IMPORTANT: the size of `dst` must be at least `MinBufSize(count, nFloatBits)`
 void PackFloats(void *dst, const float *src, std::size_t count, std::size_t nFloatBits);
 
 /// Undoes the effect of `PackFloats`. The bits that were truncated in the packed representation
 /// are filled with zeroes, effectively rounding the original float towards 0.
-/// IMPORTANT: the size of `src` must be at least `(count * nFloatBits + 63) / 64` (i.e.
-/// it needs to be rounded up to the next word).
+/// IMPORTANT: the size of `src` must be at least `MinBufSize(count, nFloatBits)`
 void UnpackFloats(float *dst, const void *src, std::size_t count, std::size_t nFloatBits);
+
+}; // namespace FloatPacking
 
 template <>
 class RColumnElement<float, EColumnType::kReal32Trunc> : public RColumnElementBase {
@@ -720,17 +730,17 @@ public:
 
    std::size_t GetPackedSize(std::size_t nElements = 1U) const final
    {
-      return (nElements != 0) * std::max<std::size_t>(8, (nElements * fBitsOnStorage + 63) / 64);
+      return FloatPacking::MinBufSize(nElements, fBitsOnStorage);
    }
 
    void Pack(void *dst, void *src, std::size_t count) const final
    {
-      PackFloats(dst, reinterpret_cast<const float *>(src), count, fBitsOnStorage);
+      FloatPacking::PackFloats(dst, reinterpret_cast<const float *>(src), count, fBitsOnStorage);
    }
 
    void Unpack(void *dst, void *src, std::size_t count) const final
    {
-      UnpackFloats(reinterpret_cast<float *>(dst), src, count, fBitsOnStorage);
+      FloatPacking::UnpackFloats(reinterpret_cast<float *>(dst), src, count, fBitsOnStorage);
    }
 };
 
