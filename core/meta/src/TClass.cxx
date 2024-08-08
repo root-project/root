@@ -775,7 +775,7 @@ void TBuildRealData::Inspect(TClass* cl, const char* pname, const char* mname, c
       return;
    }
 
-   Bool_t isTransientMember = kFALSE;
+   Bool_t isTransientMember = isTransient;
 
    if (!dm->IsPersistent()) {
       // For the DataModelEvolution we need access to the transient member.
