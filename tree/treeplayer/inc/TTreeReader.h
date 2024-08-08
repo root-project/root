@@ -284,7 +284,8 @@ private:
    enum EStatusBits {
       kBitIsChain = BIT(14), ///< our tree is a chain
       kBitHaveWarnedAboutEntryListAttachedToTTree = BIT(15), ///< the tree had a TEntryList and we have warned about that
-      kBitSetEntryBaseCallingLoadTree = BIT(16) ///< SetEntryBase is in the process of calling TChain/TTree::%LoadTree.
+      kBitSetEntryBaseCallingLoadTree = BIT(16), ///< SetEntryBase is in the process of calling TChain/TTree::%LoadTree.
+      kBitIsExternalTree = BIT(17)  ///< we do not own the tree
    };
 
    TTree* fTree = nullptr; ///< tree that's read
