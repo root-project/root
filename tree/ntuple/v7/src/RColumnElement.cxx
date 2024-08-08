@@ -165,11 +165,6 @@ ROOT::Experimental::Internal::GenerateColumnElement(EColumnCppType cppType, ECol
    return nullptr;
 }
 
-std::size_t ROOT::Experimental::Internal::FloatPacking::MinBufSize(std::size_t count, std::size_t nFloatBits)
-{
-   return (count != 0) * std::max<std::size_t>(sizeof(Word_t), (count * nFloatBits + kBitsPerWord - 1) / kBitsPerWord);
-}
-
 void ROOT::Experimental::Internal::FloatPacking::PackFloats(void *dst, const float *src, std::size_t count,
                                                             std::size_t nFloatBits)
 {
