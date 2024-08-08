@@ -230,7 +230,7 @@ void ROOT::Experimental::Internal::FloatPacking::UnpackFloats(float *dst, const 
    const Word_t *srcArray = reinterpret_cast<const Word_t *>(src);
    const auto nWordsToLoad = (count * nFloatBits + kBitsPerWord - 1) / kBitsPerWord;
 
-   // bit offset inside the loaded word of the next packed float
+   // bit offset of the next packed float inside the currently loaded word
    int offInWord = 0;
    std::size_t dstIdx = 0;
    std::uint32_t prevWordAccum = 0;
@@ -274,9 +274,6 @@ void ROOT::Experimental::Internal::FloatPacking::UnpackFloats(float *dst, const 
          memcpy(&dst[dstIdx], &packedFloat, sizeof(float));
          ByteSwapIfNecessary(dst[dstIdx]);
          ++dstIdx;
-
-         // advance to next float. This may be either fully contained in this word (easy case)
-         // or it may be split between this and the next word.
          offInWord += nFloatBits;
       }
    }
