@@ -16,3 +16,7 @@ ROOTTEST_ADD_TEST(test_oddName
 ROOTTEST_ADD_TEST(test_numberBranchesRead
                   MACRO  test_numberBranchesRead.C
                   MACROARG "\"${CMAKE_CURRENT_SOURCE_DIR}/../../dataframe/Slimmed_TotemNTuple_9883.040.ntuple.root\"")
+
+# ROOT-6286
+ROOTTEST_ADD_TEST(test_runcleanupChain
+                  MACRO runcleanupChain.C)
