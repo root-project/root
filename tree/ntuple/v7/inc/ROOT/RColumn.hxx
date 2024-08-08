@@ -364,6 +364,12 @@ public:
    RPageSink *GetPageSink() const { return fPageSink; }
    RPageStorage::ColumnHandle_t GetHandleSource() const { return fHandleSource; }
    RPageStorage::ColumnHandle_t GetHandleSink() const { return fHandleSink; }
+
+   void SetBitsOnStorage(std::size_t bits)
+   {
+      fElement->SetBitsOnStorage(bits);
+      fBitsOnStorage = bits;
+   }
 }; // class RColumn
 
 } // namespace Internal

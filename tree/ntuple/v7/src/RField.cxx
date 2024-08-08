@@ -1400,7 +1400,7 @@ void ROOT::Experimental::RField<float>::GenerateColumns()
    for (std::uint16_t i = 0; i < n; ++i) {
       auto &column = fAvailableColumns.emplace_back(Internal::RColumn::Create<float>(r[i][0], 0, i));
       if (r[i][0] == EColumnType::kReal32Trunc) {
-         column->GetElement()->SetBitsOnStorage(fBitWidth);
+         column->SetBitsOnStorage(fBitWidth);
       }
    }
    fPrincipalColumn = fAvailableColumns[0].get();
@@ -1414,12 +1414,12 @@ void ROOT::Experimental::RField<float>::GenerateColumns(const RNTupleDescriptor 
       if (onDiskTypes.empty())
          break;
 
-      auto &column = fAvailableColumns.emplace_back(
-            Internal::RColumn::Create<float>(onDiskTypes[0], 0, representationIndex));
+      auto &column =
+         fAvailableColumns.emplace_back(Internal::RColumn::Create<float>(onDiskTypes[0], 0, representationIndex));
       if (onDiskTypes[0] == EColumnType::kReal32Trunc) {
          const auto &fdesc = desc.GetFieldDescriptor(GetOnDiskId());
          const auto &coldesc = desc.GetColumnDescriptor(fdesc.GetLogicalColumnIds()[0]);
-         column->GetElement()->SetBitsOnStorage(coldesc.GetBitsOnStorage());
+         column->SetBitsOnStorage(coldesc.GetBitsOnStorage());
       }
       fColumnRepresentatives.emplace_back(onDiskTypes);
       if (representationIndex > 0) {

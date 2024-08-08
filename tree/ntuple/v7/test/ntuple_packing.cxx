@@ -261,7 +261,7 @@ TEST(Packing, OnDiskEncoding)
    AddField<double, EColumnType::kSplitReal64>(*model, "double");
    AddField<ClusterSize_t, EColumnType::kSplitIndex32>(*model, "index32");
    AddField<ClusterSize_t, EColumnType::kSplitIndex64>(*model, "index64");
-   AddReal32TruncField(*model, "float32Trunc", 10);
+   AddReal32TruncField(*model, "float32Trunc", 11);
    auto fldStr = std::make_unique<RField<std::string>>("str");
    model->AddField(std::move(fldStr));
    {
@@ -297,7 +297,7 @@ TEST(Packing, OnDiskEncoding)
       *e->GetPtr<double>("double") = std::numeric_limits<double>::max(); // 0x7fef ffff ffff ffff
       *e->GetPtr<ClusterSize_t>("index32") = 39916808;                   // d(previous) == 7
       *e->GetPtr<ClusterSize_t>("index64") = 0x070605040302010DL;        // d(previous) == 13
-      *e->GetPtr<float>("float32Trunc") = 1.75f; // 0 01111111 11000000000000000000000 == 0x3fe00000
+      *e->GetPtr<float>("float32Trunc") = 1.875f; // 0 01111111 11100000000000000000000 == 0x3ff00000
       e->GetPtr<std::string>("str")->assign("de");
 
       writer->Fill(*e);
@@ -363,8 +363,8 @@ TEST(Packing, OnDiskEncoding)
    EXPECT_EQ(memcmp(sealedPage.GetBuffer(), expIndex64, sizeof(expIndex64)), 0);
 
    source->LoadSealedPage(fnGetColumnId("float32Trunc"), RClusterIndex(0, 0), sealedPage);
-   // Two tightly packed 10bit floats: 0b0'01111111'1 + 0b1'10000000'1 = 0b111111111100000001 = 0x03ff01
-   unsigned char expF32Trunc[] = {0x01, 0xFF, 0x03};
+   // Two tightly packed 11bit floats: 0b0'01111111'11 + 0b1'10000000'11 = 0b11111111111000000011 = 0x03fe0f
+   unsigned char expF32Trunc[] = {0x03, 0xFE, 0x0F};
    EXPECT_EQ(memcmp(sealedPage.GetBuffer(), expF32Trunc, sizeof(expF32Trunc)), 0);
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
@@ -374,8 +374,8 @@ TEST(Packing, OnDiskEncoding)
    EXPECT_EQ(std::string("abc"), viewStr(0));
    EXPECT_EQ(std::string("de"), viewStr(1));
    auto viewFtrunc = reader->GetView<float>("float32Trunc");
-   EXPECT_EQ(-3.f, viewFtrunc(0));
-   EXPECT_EQ(1.5f, viewFtrunc(1));
+   EXPECT_EQ(-3.5f, viewFtrunc(0));
+   EXPECT_EQ(1.75f, viewFtrunc(1));
 }
 
 TEST(Packing, Real32Trunc)
@@ -466,7 +466,7 @@ TEST(Packing, Real32Trunc)
       element.Unpack(fout, out2, N);
       for (int i = 0; i < N; ++i) {
          EXPECT_EQ(fout[i], -2097176.5f); // dropped last bit of mantissa
-         if (fout[i] != -2097176.5f) // prevent spamming
+         if (fout[i] != -2097176.5f)      // prevent spamming
             break;
       }
    }
