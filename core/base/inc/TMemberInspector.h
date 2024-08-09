@@ -39,6 +39,7 @@ private:
    class TParentBuf;
    TParentBuf* fParent; // current inspection "path"
    EObjectPointerState fObjectPointerState; // whether the address is valid or only an offset
+   UInt_t fNestedTransient;
 
    TMemberInspector(const TMemberInspector &) = delete;
    TMemberInspector &operator=(const TMemberInspector &) = delete;
@@ -75,6 +76,10 @@ public:
 
    void GenericShowMembers(const char *topClassName, const void *obj,
                            Bool_t transientMember);
+
+   void DecrementNestedTransient() { --fNestedTransient; }
+   void IncrementNestedTransient() { ++fNestedTransient; }
+   bool IsNestedTransient() { return fNestedTransient != 0; }
 
    ClassDef(TMemberInspector,0)  //ABC for inspecting class data members
 };
