@@ -775,7 +775,7 @@ void TBuildRealData::Inspect(TClass* cl, const char* pname, const char* mname, c
       return;
    }
 
-   Bool_t isTransientMember = isTransient;
+   Bool_t isTransientMember = kFALSE;
 
    if (!dm->IsPersistent()) {
       // For the DataModelEvolution we need access to the transient member.
@@ -824,6 +824,8 @@ void TBuildRealData::Inspect(TClass* cl, const char* pname, const char* mname, c
       TRealData::GetName(rdName,dm);
       rname += rdName;
       TRealData* rd = new TRealData(rname.Data(), offset, dm);
+      if (isTransientMember || IsNestedTransient())
+         rd->SetBit(TRealData::kTransient);
       fRealDataClass->GetListOfRealData()->Add(rd);
       return;
    }
@@ -833,12 +835,14 @@ void TBuildRealData::Inspect(TClass* cl, const char* pname, const char* mname, c
    if (dm->IsaPointer()) {
       // Data member is a pointer.
       TRealData* rd = new TRealData(rname, offset, dm);
-      if (isTransientMember) { rd->SetBit(TRealData::kTransient); };
+      if (isTransientMember || IsNestedTransient())
+         rd->SetBit(TRealData::kTransient);
       fRealDataClass->GetListOfRealData()->Add(rd);
    } else {
       // Data Member is a basic data type.
       TRealData* rd = new TRealData(rname, offset, dm);
-      if (isTransientMember) { rd->SetBit(TRealData::kTransient); };
+      if (isTransientMember || IsNestedTransient())
+         rd->SetBit(TRealData::kTransient);
       if (!dm->IsBasic()) {
          rd->SetIsObject(kTRUE);
 

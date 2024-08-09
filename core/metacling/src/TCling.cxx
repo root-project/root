@@ -2980,9 +2980,12 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
             // if we can not find the member (which should not really happen),
             // let's consider it transient.
             Bool_t transient = isTransient || !mbr || !mbr->IsPersistent();
-
+            if (!mbr || !mbr->IsPersistent())
+               insp.IncrementNestedTransient();
             insp.InspectMember(sFieldRecName.c_str(), cobj + fieldOffset,
                                (fieldName + '.').c_str(), transient);
+            if (!mbr || !mbr->IsPersistent())
+               insp.DecrementNestedTransient();
 
          }
       }
