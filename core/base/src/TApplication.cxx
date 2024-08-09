@@ -541,8 +541,12 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
                   fFiles->Add(new TNamed("NOT FOUND!", argv[i]));
                   // only warn if we're plain root,
                   // other progs might have their own params
-                  if (!strcmp(gROOT->GetName(), "Rint"))
-                     Warning("GetOptions", "macro %s not found", fname.Data());
+                  if (!strcmp(gROOT->GetName(), "Rint")) {
+                     Error("GetOptions", "macro %s not found", fname.Data());
+                     // Return 2 as the Python interpreter does in case the macro
+                     // is not found.
+                     Terminate(2);
+                  }
                }
             }
          }
