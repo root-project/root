@@ -110,9 +110,9 @@ jobs:
 
     - name: Install qhelpgenerator
       run: |
-        sudo dnf update -y
-        sudo dnf upgrade -y
-        sudo dnf install -y qt5-qttools qt5-qtbase-devel qt5-qtbase-gui
+        dnf update -y
+        dnf upgrade -y
+        dnf install -y qt5-qttools qt5-qtbase-devel qt5-qtbase-gui
       
 
     - name: Apply option overrides
