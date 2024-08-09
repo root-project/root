@@ -110,10 +110,9 @@ jobs:
 
     - name: Install qhelpgenerator
       run : |
-        dnf update -y && dnf install -y sudo
-        sudo dnf update -y
+        sudo dnf update -y 
         sudo dnf upgrade -y
-        sudo dnf install -y qt5-qhelpgenerator
+        sudo dnf install -y qt-devel
 
     - name: Apply option overrides
       if: ${{ github.event_name != 'schedule' }}
@@ -200,12 +199,6 @@ jobs:
               if [ -d ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks ]; then
                   mv ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks ${DOC_LOCATION}/${DOC_DIR}/notebooks
               fi
-     
-    - name: Run qhelpgenerator
-      shell: bash
-      run: |
-            cd ${DOC_LOCATION}/ROOT-CI/src/documentation/doxygen
-            qhelpgenerator index.qhp -o ${DOC_LOCATION}/${DOC_DIR}/index.qch
 
     - name: Create documentation archives
       working-directory: ${{ env.DOC_LOCATION }}
@@ -246,7 +239,7 @@ jobs:
       name: Upload S3
       id: S3
       with:
-        aws_key_id: ${{ secrets.AWS_KEY_ID }}
+        aws_key_id: ${{ secrets.OS_APPLICATION_CREDENTIAL_ID }}
         aws_secret_access_key: ${{ secrets.OS_APPLICATION_CREDENTIAL_SECRET}}
         aws_bucket: root
         source_dir: ${{env.DOC_LOCATION}}/${{env.DOC_DIR}}
