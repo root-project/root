@@ -618,7 +618,7 @@ namespace cling {
     if (!hasTrailingReturn)
       prettyPrintAttributes(D);
 
-    if (D->isPure())
+    if (D->isPureVirtual())
       Out() << " = 0";
     else if (D->isDeletedAsWritten())
       Out() << " = delete";
@@ -1419,11 +1419,11 @@ namespace cling {
 
   void ForwardDeclPrinter::PrintLinkageOpen(llvm::raw_ostream& Stream,
                                             const LinkageSpecDecl* LSD) {
-    assert((LSD->getLanguage() == LinkageSpecDecl::lang_cxx ||
-            LSD->getLanguage() == LinkageSpecDecl::lang_c) &&
+    assert((LSD->getLanguage() == LinkageSpecLanguageIDs::CXX ||
+            LSD->getLanguage() == LinkageSpecLanguageIDs::C) &&
            "Unknown linkage spec!");
     Stream << "extern \"C";
-    if (LSD->getLanguage() == LinkageSpecDecl::lang_cxx) {
+    if (LSD->getLanguage() == LinkageSpecLanguageIDs::CXX) {
       Stream << "++";
     }
     Stream << "\" {";

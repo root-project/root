@@ -7,7 +7,7 @@ if (NOT builtin_clang)
 endif()
 
 #--Set the LLVM version required for ROOT-----------------------------------------------------------
-set(ROOT_LLVM_VERSION_REQUIRED_MAJOR 16)
+set(ROOT_LLVM_VERSION_REQUIRED_MAJOR 18)
 
 #---Define the way we want to build and what of llvm/clang/cling------------------------------------
 set(LLVM_ENABLE_RTTI ON CACHE BOOL "")

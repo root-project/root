@@ -26,7 +26,6 @@
 #include "llvm/Transforms/IPO.h"
 #include "llvm/Transforms/IPO/AlwaysInliner.h"
 #include "llvm/Transforms/IPO/Inliner.h"
-#include "llvm/Transforms/IPO/PassManagerBuilder.h"
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/Transforms/Utils.h"
 
@@ -394,7 +393,7 @@ void BackendPasses::CreatePasses(int OptLevel, llvm::ModulePassManager& MPM,
     });
   }
 
-  SI.registerCallbacks(PIC, &FAM);
+  SI.registerCallbacks(PIC, &MAM);
 
   PipelineTuningOptions PTO;
   std::optional<PGOOptions> PGOOpt;
@@ -452,12 +451,9 @@ void BackendPasses::runOnModule(Module& M, int OptLevel) {
 
   CreatePasses(OptLevel, MPM, LAM, FAM, CGAM, MAM, PIC, SI);
 
-  static constexpr std::array<llvm::CodeGenOpt::Level, 4> CGOptLevel {{
-    llvm::CodeGenOpt::None,
-    llvm::CodeGenOpt::Less,
-    llvm::CodeGenOpt::Default,
-    llvm::CodeGenOpt::Aggressive
-  }};
+  static constexpr std::array<llvm::CodeGenOptLevel, 4> CGOptLevel{
+      {llvm::CodeGenOptLevel::None, llvm::CodeGenOptLevel::Less,
+       llvm::CodeGenOptLevel::Default, llvm::CodeGenOptLevel::Aggressive}};
   // TM's OptLevel is used to build orc::SimpleCompiler passes for every Module.
   m_TM.setOptLevel(CGOptLevel[OptLevel]);
 

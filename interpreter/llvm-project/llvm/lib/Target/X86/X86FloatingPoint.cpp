@@ -26,7 +26,6 @@
 #include "X86InstrInfo.h"
 #include "llvm/ADT/DepthFirstIterator.h"
 #include "llvm/ADT/STLExtras.h"
-#include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/ADT/SmallSet.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/Statistic.h"
@@ -463,8 +462,7 @@ bool FPS::processBasicBlock(MachineFunction &MF, MachineBasicBlock &BB) {
 
     // Check to see if any of the values defined by this instruction are dead
     // after definition.  If so, pop them.
-    for (unsigned i = 0, e = DeadRegs.size(); i != e; ++i) {
-      unsigned Reg = DeadRegs[i];
+    for (unsigned Reg : DeadRegs) {
       // Check if Reg is live on the stack. An inline-asm register operand that
       // is in the clobber list and marked dead might not be live on the stack.
       static_assert(X86::FP7 - X86::FP0 == 7, "sequential FP regnumbers");
@@ -931,8 +929,8 @@ void FPS::adjustLiveRegs(unsigned Mask, MachineBasicBlock::iterator I) {
 
   // Produce implicit-defs for free by using killed registers.
   while (Kills && Defs) {
-    unsigned KReg = countTrailingZeros(Kills);
-    unsigned DReg = countTrailingZeros(Defs);
+    unsigned KReg = llvm::countr_zero(Kills);
+    unsigned DReg = llvm::countr_zero(Defs);
     LLVM_DEBUG(dbgs() << "Renaming %fp" << KReg << " as imp %fp" << DReg
                       << "\n");
     std::swap(Stack[getSlot(KReg)], Stack[getSlot(DReg)]);
@@ -956,7 +954,7 @@ void FPS::adjustLiveRegs(unsigned Mask, MachineBasicBlock::iterator I) {
 
   // Manually kill the rest.
   while (Kills) {
-    unsigned KReg = countTrailingZeros(Kills);
+    unsigned KReg = llvm::countr_zero(Kills);
     LLVM_DEBUG(dbgs() << "Killing %fp" << KReg << "\n");
     freeStackSlotBefore(I, KReg);
     Kills &= ~(1 << KReg);
@@ -964,7 +962,7 @@ void FPS::adjustLiveRegs(unsigned Mask, MachineBasicBlock::iterator I) {
 
   // Load zeros for all the imp-defs.
   while(Defs) {
-    unsigned DReg = countTrailingZeros(Defs);
+    unsigned DReg = llvm::countr_zero(Defs);
     LLVM_DEBUG(dbgs() << "Defining %fp" << DReg << " as 0\n");
     BuildMI(*MBB, I, DebugLoc(), TII->get(X86::LD_F0));
     pushReg(DReg);
@@ -1047,7 +1045,7 @@ void FPS::handleCall(MachineBasicBlock::iterator &I) {
   if (!ClobbersFPStack)
     return;
 
-  unsigned N = countTrailingOnes(STReturns);
+  unsigned N = llvm::countr_one(STReturns);
 
   // FP registers used for function return must be consecutive starting at
   // FP0
@@ -1598,8 +1596,9 @@ void FPS::handleSpecialFP(MachineBasicBlock::iterator &Inst) {
     for (unsigned i = InlineAsm::MIOp_FirstOperand, e = MI.getNumOperands();
          i != e && MI.getOperand(i).isImm(); i += 1 + NumOps) {
       unsigned Flags = MI.getOperand(i).getImm();
+      const InlineAsm::Flag F(Flags);
 
-      NumOps = InlineAsm::getNumOperandRegisters(Flags);
+      NumOps = F.getNumOperandRegisters();
       if (NumOps != 1)
         continue;
       const MachineOperand &MO = MI.getOperand(i + 1);
@@ -1611,20 +1610,20 @@ void FPS::handleSpecialFP(MachineBasicBlock::iterator &Inst) {
 
       // If the flag has a register class constraint, this must be an operand
       // with constraint "f". Record its index and continue.
-      if (InlineAsm::hasRegClassConstraint(Flags, RCID)) {
+      if (F.hasRegClassConstraint(RCID)) {
         FRegIdx.insert(i + 1);
         continue;
       }
 
-      switch (InlineAsm::getKind(Flags)) {
-      case InlineAsm::Kind_RegUse:
+      switch (F.getKind()) {
+      case InlineAsm::Kind::RegUse:
         STUses |= (1u << STReg);
         break;
-      case InlineAsm::Kind_RegDef:
-      case InlineAsm::Kind_RegDefEarlyClobber:
+      case InlineAsm::Kind::RegDef:
+      case InlineAsm::Kind::RegDefEarlyClobber:
         STDefs |= (1u << STReg);
         break;
-      case InlineAsm::Kind_Clobber:
+      case InlineAsm::Kind::Clobber:
         STClobbers |= (1u << STReg);
         break;
       default:
@@ -1634,14 +1633,14 @@ void FPS::handleSpecialFP(MachineBasicBlock::iterator &Inst) {
 
     if (STUses && !isMask_32(STUses))
       MI.emitError("fixed input regs must be last on the x87 stack");
-    unsigned NumSTUses = countTrailingOnes(STUses);
+    unsigned NumSTUses = llvm::countr_one(STUses);
 
     // Defs must be contiguous from the stack top. ST0-STn.
     if (STDefs && !isMask_32(STDefs)) {
       MI.emitError("output regs must be last on the x87 stack");
       STDefs = NextPowerOf2(STDefs) - 1;
     }
-    unsigned NumSTDefs = countTrailingOnes(STDefs);
+    unsigned NumSTDefs = llvm::countr_one(STDefs);
 
     // So must the clobbered stack slots. ST0-STm, m >= n.
     if (STClobbers && !isMask_32(STDefs | STClobbers))
@@ -1651,7 +1650,7 @@ void FPS::handleSpecialFP(MachineBasicBlock::iterator &Inst) {
     unsigned STPopped = STUses & (STDefs | STClobbers);
     if (STPopped && !isMask_32(STPopped))
       MI.emitError("implicitly popped regs must be last on the x87 stack");
-    unsigned NumSTPopped = countTrailingOnes(STPopped);
+    unsigned NumSTPopped = llvm::countr_one(STPopped);
 
     LLVM_DEBUG(dbgs() << "Asm uses " << NumSTUses << " fixed regs, pops "
                       << NumSTPopped << ", and defines " << NumSTDefs
@@ -1727,7 +1726,7 @@ void FPS::handleSpecialFP(MachineBasicBlock::iterator &Inst) {
     // Note: this might be a non-optimal pop sequence.  We might be able to do
     // better by trying to pop in stack order or something.
     while (FPKills) {
-      unsigned FPReg = countTrailingZeros(FPKills);
+      unsigned FPReg = llvm::countr_zero(FPKills);
       if (isLive(FPReg))
         freeStackSlotAfter(Inst, FPReg);
       FPKills &= ~(1U << FPReg);

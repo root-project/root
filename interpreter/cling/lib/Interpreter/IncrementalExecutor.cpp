@@ -58,7 +58,7 @@ IncrementalExecutor::IncrementalExecutor(clang::DiagnosticsEngine& /*diags*/,
   m_BackendPasses.reset(new BackendPasses(CI.getCodeGenOpts(), *m_JIT, m_JIT->getTargetMachine()));
 }
 
-IncrementalExecutor::~IncrementalExecutor() {}
+IncrementalExecutor::~IncrementalExecutor() { m_JIT.release(); }
 
 void IncrementalExecutor::registerExternalIncrementalExecutor(
     IncrementalExecutor& IE) {
@@ -235,7 +235,7 @@ void IncrementalExecutor::replaceSymbol(const char* Name, void* Addr) const {
   // FIXME: Look at the registration of at_quick_exit and uncomment.
   // assert(m_JIT->getSymbolAddress(Name, /*IncludeHostSymbols*/true) &&
   //        "The symbol must exist");
-  m_JIT->addOrReplaceDefinition(Name, llvm::pointerToJITTargetAddress(Addr));
+  m_JIT->addOrReplaceDefinition(Name, orc::ExecutorAddr::fromPtr(Addr));
 }
 
 void* IncrementalExecutor::getAddressOfGlobal(llvm::StringRef symbolName,
