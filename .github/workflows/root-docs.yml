@@ -110,8 +110,10 @@ jobs:
 
     - name: Install qhelpgenerator
       run : |
+        dnf update -y && dnf install -y sudo
         sudo dnf update -y
-        sudo dnf install -y qt5-qttools qt5-qhelpgenerator
+        sudo dnf upgrade -y
+        sudo dnf install -y qt5-qhelpgenerator
 
     - name: Apply option overrides
       if: ${{ github.event_name != 'schedule' }}
