@@ -306,7 +306,7 @@ TTreeView::GetTreeReader(Long64_t start, Long64_t end, const std::vector<std::st
          }
       }
    }
-   auto reader = std::make_unique<TTreeReader>(fChain.get(), fEntryList.get());
+   auto reader = std::make_unique<TTreeReader>(fChain.get(), fEntryList.get(), /*warnAboutLongerFriends*/ false);
    reader->SetEntriesRange(start, end);
    return reader;
 }

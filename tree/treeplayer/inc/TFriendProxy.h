@@ -23,6 +23,10 @@ namespace Internal {
    protected:
       TBranchProxyDirector fDirector; ///< Contain pointer to TTree and entry to be read
       Int_t  fIndex;                  ///< Index of this tree in the list of friends
+      bool fIsIndexed{false};         ///< Whether this friend has a TTreeIndex attached
+      Int_t fNTrees{0};               ///< How many trees are in this friend dataset
+      Int_t fNTreesSoFar{0};          ///< How many trees have been processed so far
+      Long64_t fLastChainOffset{-1};  ///< Offset of the current tree in the chain
 
    public:
       TFriendProxy();
@@ -33,6 +37,9 @@ namespace Internal {
       Long64_t GetReadEntry() const;
       void     ResetReadEntry();
       void     Update(TTree *newmain);
+      bool IsIndexed() const { return fIsIndexed; }
+      Int_t GetNTrees() const { return fNTrees; }
+      Int_t GetNTreesSoFar() const { return fNTreesSoFar; }
    };
 
 } // namespace Internal
