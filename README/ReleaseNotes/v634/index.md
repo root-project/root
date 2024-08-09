@@ -69,6 +69,7 @@ The following people have contributed to this new version:
 
 ## Deprecation and Removal
 
+* The `RooAbsReal::plotSliceOn()` function that was deprecated since at least ROOT 6 was removed. Use `plotOn(frame,Slice(...))` instead.
 
 ## Core Libraries
 
