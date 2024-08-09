@@ -110,10 +110,8 @@ jobs:
 
     - name: Install qhelpgenerator
       run : |
-        dnf update -y && dnf install -y sudo
         sudo dnf update -y
-        sudo dnf upgrade -y
-        sudo dnf install -y qt5-qhelpgenerator
+        sudo dnf install -y qt5-qttools qt5-qhelpgenerator
 
     - name: Apply option overrides
       if: ${{ github.event_name != 'schedule' }}
@@ -201,12 +199,11 @@ jobs:
                   mv ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks ${DOC_LOCATION}/${DOC_DIR}/notebooks
               fi
      
-    # - name: Upload root_doc
-    #   if:   ${{ !cancelled() }}
-    #   uses: actions/upload-artifact@v4
-    #   with:
-    #       name: rootdoc
-    #       path: ${{env.DOC_LOCATION}}/${{env.DOC_DIR}}
+    - name: Run qhelpgenerator
+      shell: bash
+      run: |
+            cd ${DOC_LOCATION}/ROOT-CI/src/documentation/doxygen
+            qhelpgenerator index.qhp -o ${DOC_LOCATION}/${DOC_DIR}/index.qch
 
     - name: Create documentation archives
       working-directory: ${{ env.DOC_LOCATION }}
