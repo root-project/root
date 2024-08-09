@@ -49,6 +49,7 @@ namespace Internal {
 class RColumn;
 class RColumnElementBase;
 class RNTupleCompressor;
+class RNTupleMerger;
 struct RNTupleModelChangeset;
 class RPagePool;
 
@@ -215,6 +216,8 @@ public:
    using Callback_t = std::function<void(RPageSink &)>;
 
 protected:
+   friend class Internal::RNTupleMerger;
+
    /// Parameters for the SealPage() method
    struct RSealPageConfig {
       const RPage *fPage = nullptr;                 ///< Input page to be sealed
