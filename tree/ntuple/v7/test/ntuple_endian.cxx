@@ -55,7 +55,8 @@ protected:
    void CommitSuppressedColumn(ColumnHandle_t) final {}
    void CommitSealedPage(ROOT::Experimental::DescriptorId_t, const RPageStorage::RSealedPage &) final {}
    void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup>) final {}
-   std::uint64_t CommitCluster(NTupleSize_t) final { return 0; }
+   RStagedCluster StageCluster(NTupleSize_t) final { return {}; }
+   void CommitStagedClusters(std::span<RStagedCluster>) final {}
    void CommitClusterGroup() final {}
    void CommitDatasetImpl() final {}
 

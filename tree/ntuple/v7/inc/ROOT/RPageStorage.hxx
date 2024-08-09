@@ -257,6 +257,20 @@ class RPageSink : public RPageStorage {
 public:
    using Callback_t = std::function<void(RPageSink &)>;
 
+   /// Cluster that was staged, but not yet logically appended to the RNTuple
+   struct RStagedCluster {
+      std::uint64_t fNBytesWritten = 0;
+      NTupleSize_t fNEntries = 0;
+
+      struct RColumnInfo {
+         RClusterDescriptor::RPageRange fPageRange;
+         ClusterSize_t fNElements = kInvalidClusterIndex;
+         bool fIsSuppressed = false;
+      };
+
+      std::vector<RColumnInfo> fColumnInfos;
+   };
+
 protected:
    /// Parameters for the SealPage() method
    struct RSealPageConfig {
@@ -354,9 +368,20 @@ public:
    virtual void CommitSealedPage(DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) = 0;
    /// Write a vector of preprocessed pages to storage. The corresponding columns must have been added before.
    virtual void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup> ranges) = 0;
+   /// Stage the current cluster and create a new one for the following data.
+   /// Returns the object that must be passed to CommitStagedClusters to logically append the staged cluster to the
+   /// ntuple descriptor.
+   virtual RStagedCluster StageCluster(NTupleSize_t nNewEntries) = 0;
+   /// Commit staged clusters, logically appending them to the ntuple descriptor.
+   virtual void CommitStagedClusters(std::span<RStagedCluster> clusters) = 0;
    /// Finalize the current cluster and create a new one for the following data.
    /// Returns the number of bytes written to storage (excluding meta-data).
-   virtual std::uint64_t CommitCluster(NTupleSize_t nNewEntries) = 0;
+   virtual std::uint64_t CommitCluster(NTupleSize_t nNewEntries)
+   {
+      RStagedCluster stagedClusters[] = {StageCluster(nNewEntries)};
+      CommitStagedClusters(stagedClusters);
+      return stagedClusters[0].fNBytesWritten;
+   }
    /// Write out the page locations (page list envelope) for all the committed clusters since the last call of
    /// CommitClusterGroup (or the beginning of writing).
    virtual void CommitClusterGroup() = 0;
@@ -461,7 +486,7 @@ protected:
    virtual std::vector<RNTupleLocator>
    CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges, const std::vector<bool> &mask);
    /// Returns the number of bytes written to storage (excluding metadata)
-   virtual std::uint64_t CommitClusterImpl() = 0;
+   virtual std::uint64_t StageClusterImpl() = 0;
    /// Returns the locator of the page list envelope of the given buffer that contains the serialized page list.
    /// Typically, the implementation takes care of compressing and writing the provided buffer.
    virtual RNTupleLocator CommitClusterGroupImpl(unsigned char *serializedPageList, std::uint32_t length) = 0;
@@ -504,7 +529,8 @@ public:
    void CommitPage(ColumnHandle_t columnHandle, const RPage &page) final;
    void CommitSealedPage(DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) final;
    void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup> ranges) final;
-   std::uint64_t CommitCluster(NTupleSize_t nEntries) final;
+   RStagedCluster StageCluster(NTupleSize_t nNewEntries) final;
+   void CommitStagedClusters(std::span<RStagedCluster> clusters) final;
    void CommitClusterGroup() final;
    void CommitDatasetImpl() final;
 }; // class RPagePersistentSink
