@@ -275,10 +275,6 @@ public:
 
   enum ScaleType { Raw, Relative, NumEvent, RelativeExpected } ;
 
-  // Forwarder function for backward compatibility
-  virtual RooPlot *plotSliceOn(RooPlot *frame, const RooArgSet& sliceSet, Option_t* drawOptions="L",
-                double scaleFactor=1.0, ScaleType stype=Relative, const RooAbsData* projData=nullptr) const;
-
   // Fill an existing histogram
   TH1 *fillHistogram(TH1 *hist, const RooArgList &plotVars,
            double scaleFactor= 1, const RooArgSet *projectedVars= nullptr, bool scaling=true,
