@@ -113,6 +113,8 @@ jobs:
         dnf update -y
         dnf upgrade -y
         dnf install -y qt5-qttools qt5-qtbase-devel qt5-qtbase-gui
+        echo "PATH=$PATH:/usr/lib64/qt5/bin" >> $GITHUB_ENV
+        source $GITHUB_ENV
       
 
     - name: Apply option overrides
