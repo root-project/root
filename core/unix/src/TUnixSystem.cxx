@@ -5230,6 +5230,22 @@ static void GetLinuxMemInfo(MemInfo_t *meminfo)
          TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
          meminfo->fMemFree = (s.Atoi() / 1024);
       }
+      if (s.BeginsWith("MemAvailable")) {
+         TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
+         meminfo->fMemAvailable = (s.Atoi() / 1024);
+      }
+      if (s.BeginsWith("Cached")) {
+         TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
+         meminfo->fMemCached = (s.Atoi() / 1024);
+      }
+      if (s.BeginsWith("Buffers")) {
+         TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
+         meminfo->fMemBuffer = (s.Atoi() / 1024);
+      }
+      if (s.BeginsWith("Shmem")) {
+         TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
+         meminfo->fMemShared = (s.Atoi() / 1024);
+      }
       if (s.BeginsWith("SwapTotal")) {
          TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
          meminfo->fSwapTotal = (s.Atoi() / 1024);
@@ -5238,11 +5254,32 @@ static void GetLinuxMemInfo(MemInfo_t *meminfo)
          TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
          meminfo->fSwapFree = (s.Atoi() / 1024);
       }
+      if (s.BeginsWith("SwapCached")) {
+         TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
+         meminfo->fSwapCached = (s.Atoi() / 1024);
+      }
+      if (s.BeginsWith("SReclaimable")) {
+         TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
+         meminfo->fSReclaimable = (s.Atoi() / 1024);
+      }
+      
    }
    fclose(f);
 
-   meminfo->fMemUsed  = meminfo->fMemTotal - meminfo->fMemFree;
-   meminfo->fSwapUsed = meminfo->fSwapTotal - meminfo->fSwapFree;
+   /*
+    * Compute memory partition like procps(free), see https://gitlab.com/procps-ng/procps/-/blob/master/proc/sysinfo.c
+    * 
+    * fMemShared is a part of Cached (see https://lore.kernel.org/patchwork/patch/648763/), does not subtract twice from used
+    */
+   
+   meminfo->fMemCached = meminfo->fMemCached + meminfo->fSReclaimable - meminfo->fMemShared;
+   const Int_t usedDiff = meminfo->fMemFree + meminfo->fMemCached + meminfo->fSReclaimable + meminfo->fMemBuffer;
+
+   meminfo->fMemUsed = (meminfo->fMemTotal >= usedDiff) ? meminfo->fMemTotal - usedDiff : meminfo->fMemTotal - meminfo->fMemFree;
+   meminfo->fMemAvailable = meminfo->fMemAvailable != 0 ? std::min(meminfo->fMemAvailable, meminfo->fMemTotal) : meminfo->fMemFree;
+
+   meminfo->fSwapUsed = meminfo->fSwapTotal - meminfo->fSwapFree - meminfo->fSwapCached;
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
