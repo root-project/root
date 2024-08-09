@@ -80,7 +80,7 @@ public:
     GenSpec(const GenSpec& other) ;
 
     friend class RooAbsPdf ;
-    RooAbsGenContext* _genContext = nullptr;
+    std::unique_ptr<RooAbsGenContext> _genContext;
     RooArgSet _whatVars ;
     RooDataSet* _protoData = nullptr;
     Int_t _nGen = 0;
@@ -325,7 +325,7 @@ protected:
     CacheElem(RooAbsReal& norm) : _norm(&norm) {} ;
     ~CacheElem() override ;
     RooArgList containedArgs(Action) override { return RooArgList(*_norm) ; }
-    RooAbsReal* _norm ;
+    std::unique_ptr<RooAbsReal> _norm;
   } ;
   mutable RooObjCacheManager _normMgr ; //! The cache manager
 
