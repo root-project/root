@@ -428,7 +428,7 @@ ROOT::Experimental::Internal::RPageSinkDaos::CommitSealedPageVImpl(std::span<RPa
    return locators;
 }
 
-std::uint64_t ROOT::Experimental::Internal::RPageSinkDaos::CommitClusterImpl()
+std::uint64_t ROOT::Experimental::Internal::RPageSinkDaos::StageClusterImpl()
 {
    return std::exchange(fNBytesCurrentCluster, 0);
 }

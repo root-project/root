@@ -19,6 +19,7 @@
 #include <ROOT/RConfig.hxx> // for R__unlikely
 #include <ROOT/REntry.hxx>
 #include <ROOT/RError.hxx>
+#include <ROOT/RPageStorage.hxx>
 #include <ROOT/RNTupleFillStatus.hxx>
 #include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleModel.hxx>
@@ -27,13 +28,10 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <vector>
 
 namespace ROOT {
 namespace Experimental {
-
-namespace Internal {
-class RPageSink;
-}
 
 // clang-format off
 /**
@@ -74,6 +72,12 @@ private:
    std::size_t fMaxUnzippedClusterSize;
    /// Estimator of uncompressed cluster size, taking into account the estimated compression ratio
    std::size_t fUnzippedClusterSizeEst;
+
+   /// Whether to enable staged cluster committing, where only an explicit call to CommitStagedClusters() will logically
+   /// append the clusters to the RNTuple.
+   bool fStagedClusterCommitting = false;
+   /// Vector of currently staged clusters.
+   std::vector<Internal::RPageSink::RStagedCluster> fStagedClusters;
 
    RNTupleFillContext(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Internal::RPageSink> sink);
    RNTupleFillContext(const RNTupleFillContext &) = delete;
@@ -117,13 +121,25 @@ public:
    void FlushColumns();
    /// Flush so far filled entries to storage
    void FlushCluster();
+   /// Logically append staged clusters to the RNTuple.
+   void CommitStagedClusters();
 
+   const RNTupleModel &GetModel() const { return *fModel; }
    std::unique_ptr<REntry> CreateEntry() { return fModel->CreateEntry(); }
 
    /// Return the entry number that was last flushed in a cluster.
    NTupleSize_t GetLastFlushed() const { return fLastFlushed; }
    /// Return the number of entries filled so far.
    NTupleSize_t GetNEntries() const { return fNEntries; }
+
+   void EnableStagedClusterCommitting(bool val = true)
+   {
+      if (!val && !fStagedClusters.empty()) {
+         throw RException(R__FAIL("cannot disable staged committing with pending clusters"));
+      }
+      fStagedClusterCommitting = val;
+   }
+   bool IsStagedClusterCommittingEnabled() const { return fStagedClusterCommitting; }
 
    void EnableMetrics() { fMetrics.Enable(); }
    const Detail::RNTupleMetrics &GetMetrics() const { return fMetrics; }
