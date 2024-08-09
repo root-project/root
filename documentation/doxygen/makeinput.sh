@@ -88,4 +88,3 @@ echo "        ../../bindings/r/                \\" >> Doxyfile_INPUT
 # and print_roofit_pyz_doctrings.py
 ls $DOXYGEN_PYZDOC_PATH/*.pyzdoc | sed -e "s/$/ \\\\/"  \
 >> Doxyfile_INPUT
-
