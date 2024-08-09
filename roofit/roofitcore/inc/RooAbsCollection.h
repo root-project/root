@@ -443,7 +443,7 @@ private:
   bool replaceImpl(const RooAbsArg& var1, const RooAbsArg& var2);
 
   using HashAssistedFind = RooFit::Detail::HashAssistedFind;
-  mutable std::unique_ptr<HashAssistedFind> _hashAssistedFind; ///<!
+  mutable HashAssistedFind *_hashAssistedFind = nullptr; ///<!
   std::size_t _sizeThresholdForMapSearch = 100; ///<!
 
   void insert(RooAbsArg*);
