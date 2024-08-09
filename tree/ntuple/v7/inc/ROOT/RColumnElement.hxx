@@ -16,6 +16,7 @@
 #ifndef ROOT7_RColumnElement
 #define ROOT7_RColumnElement
 
+#include "RtypesCore.h"
 #include <ROOT/RConfig.hxx>
 #include <ROOT/RError.hxx>
 #include <ROOT/RFloat16.hxx>
@@ -295,6 +296,11 @@ public:
       return false;
    }
 
+   virtual void SetBitsOnStorage(std::size_t)
+   {
+      throw RException(R__FAIL(std::string("internal error: cannot change bit width of this column type")));
+   }
+
    /// If the on-storage layout and the in-memory layout differ, packing creates an on-disk page from an in-memory page
    virtual void Pack(void *destination, void *source, std::size_t count) const
    {
@@ -309,7 +315,7 @@ public:
 
    std::size_t GetSize() const { return fSize; }
    std::size_t GetBitsOnStorage() const { return fBitsOnStorage; }
-   std::size_t GetPackedSize(std::size_t nElements = 1U) const { return (nElements * fBitsOnStorage + 7) / 8; }
+   virtual std::size_t GetPackedSize(std::size_t nElements = 1U) const { return (nElements * fBitsOnStorage + 7) / 8; }
 }; // class RColumnElementBase
 
 /**
@@ -683,6 +689,65 @@ public:
    }
 };
 
+namespace FloatPacking {
+
+using Word_t = std::uintmax_t;
+inline constexpr std::size_t kBitsPerWord = sizeof(Word_t) * 8;
+
+/// Returns the minimum safe size (in bytes) of a buffer that is intended to be used as a destination for PackFloats
+/// or a source for UnpackFloats.
+/// Passing a buffer that's less than this size will cause invalid memory reads and writes.
+constexpr std::size_t MinBufSize(std::size_t count, std::size_t nFloatBits)
+{
+   return (count != 0) * sizeof(Word_t) *
+          std::max<std::size_t>(1, (count * nFloatBits + kBitsPerWord - 1) / kBitsPerWord);
+}
+
+/// Tightly packs `count` floats contained in `src` into `dst` using `nFloatBits` per float.
+/// `nFloatBits` must be >= kReal32TruncBitsMin and <= kReal32TruncBitsMax.
+/// The extra bits are dropped from the mantissa. The sign and exponent bits are always preserved.
+/// IMPORTANT: the size of `dst` must be at least `MinBufSize(count, nFloatBits)`
+void PackFloats(void *dst, const float *src, std::size_t count, std::size_t nFloatBits);
+
+/// Undoes the effect of `PackFloats`. The bits that were truncated in the packed representation
+/// are filled with zeroes, effectively rounding the original float towards 0.
+/// IMPORTANT: the size of `src` must be at least `MinBufSize(count, nFloatBits)`
+void UnpackFloats(float *dst, const void *src, std::size_t count, std::size_t nFloatBits);
+
+}; // namespace FloatPacking
+
+template <>
+class RColumnElement<float, EColumnType::kReal32Trunc> : public RColumnElementBase {
+public:
+   static constexpr bool kIsMappable = false;
+   static constexpr std::size_t kSize = sizeof(float);
+
+   RColumnElement() : RColumnElementBase(kSize, kReal32TruncBitsMax) {}
+
+   void SetBitsOnStorage(std::size_t bitsOnStorage) final
+   {
+      R__ASSERT(bitsOnStorage >= kReal32TruncBitsMin && bitsOnStorage <= kReal32TruncBitsMax);
+      fBitsOnStorage = bitsOnStorage;
+   }
+
+   bool IsMappable() const final { return kIsMappable; }
+
+   std::size_t GetPackedSize(std::size_t nElements = 1U) const final
+   {
+      return FloatPacking::MinBufSize(nElements, fBitsOnStorage);
+   }
+
+   void Pack(void *dst, void *src, std::size_t count) const final
+   {
+      FloatPacking::PackFloats(dst, reinterpret_cast<const float *>(src), count, fBitsOnStorage);
+   }
+
+   void Unpack(void *dst, void *src, std::size_t count) const final
+   {
+      FloatPacking::UnpackFloats(reinterpret_cast<float *>(dst), src, count, fBitsOnStorage);
+   }
+};
+
 #define __RCOLUMNELEMENT_SPEC_BODY(CppT, BaseT, BitsOnStorage)  \
    static constexpr std::size_t kSize = sizeof(CppT);           \
    static constexpr std::size_t kBitsOnStorage = BitsOnStorage; \
@@ -820,6 +885,7 @@ std::unique_ptr<RColumnElementBase> RColumnElementBase::Generate(EColumnType typ
    case EColumnType::kSplitUInt32: return std::make_unique<RColumnElement<CppT, EColumnType::kSplitUInt32>>();
    case EColumnType::kSplitInt16: return std::make_unique<RColumnElement<CppT, EColumnType::kSplitInt16>>();
    case EColumnType::kSplitUInt16: return std::make_unique<RColumnElement<CppT, EColumnType::kSplitUInt16>>();
+   case EColumnType::kReal32Trunc: return std::make_unique<RColumnElement<CppT, EColumnType::kReal32Trunc>>();
    default: R__ASSERT(false);
    }
    // never here

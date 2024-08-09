@@ -13,6 +13,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include "ROOT/RNTupleUtil.hxx"
 #include <ROOT/RColumnElement.hxx>
 
 #include <algorithm>
@@ -57,6 +58,7 @@ ROOT::Experimental::Internal::RColumnElementBase::Generate<void>(EColumnType typ
    case EColumnType::kSplitUInt32: return std::make_unique<RColumnElement<std::uint32_t, EColumnType::kSplitUInt32>>();
    case EColumnType::kSplitInt16: return std::make_unique<RColumnElement<std::int16_t, EColumnType::kSplitInt16>>();
    case EColumnType::kSplitUInt16: return std::make_unique<RColumnElement<std::uint16_t, EColumnType::kSplitUInt16>>();
+   case EColumnType::kReal32Trunc: return std::make_unique<RColumnElement<std::uint16_t, EColumnType::kReal32Trunc>>();
    default: assert(false);
    }
    // never here
@@ -67,33 +69,34 @@ std::pair<std::uint16_t, std::uint16_t>
 ROOT::Experimental::Internal::RColumnElementBase::GetValidBitRange(EColumnType type)
 {
    switch (type) {
-   case EColumnType::kIndex64: return std::make_pair<std::uint16_t, std::uint16_t>(64, 64);
-   case EColumnType::kIndex32: return std::make_pair<std::uint16_t, std::uint16_t>(32, 32);
-   case EColumnType::kSwitch: return std::make_pair<std::uint16_t, std::uint16_t>(96, 96);
-   case EColumnType::kByte: return std::make_pair<std::uint16_t, std::uint16_t>(8, 8);
-   case EColumnType::kChar: return std::make_pair<std::uint16_t, std::uint16_t>(8, 8);
-   case EColumnType::kBit: return std::make_pair<std::uint16_t, std::uint16_t>(1, 1);
-   case EColumnType::kReal64: return std::make_pair<std::uint16_t, std::uint16_t>(64, 64);
-   case EColumnType::kReal32: return std::make_pair<std::uint16_t, std::uint16_t>(32, 32);
-   case EColumnType::kReal16: return std::make_pair<std::uint16_t, std::uint16_t>(16, 16);
-   case EColumnType::kInt64: return std::make_pair<std::uint16_t, std::uint16_t>(64, 64);
-   case EColumnType::kUInt64: return std::make_pair<std::uint16_t, std::uint16_t>(64, 64);
-   case EColumnType::kInt32: return std::make_pair<std::uint16_t, std::uint16_t>(32, 32);
-   case EColumnType::kUInt32: return std::make_pair<std::uint16_t, std::uint16_t>(32, 32);
-   case EColumnType::kInt16: return std::make_pair<std::uint16_t, std::uint16_t>(16, 16);
-   case EColumnType::kUInt16: return std::make_pair<std::uint16_t, std::uint16_t>(16, 16);
-   case EColumnType::kInt8: return std::make_pair<std::uint16_t, std::uint16_t>(8, 8);
-   case EColumnType::kUInt8: return std::make_pair<std::uint16_t, std::uint16_t>(8, 8);
-   case EColumnType::kSplitIndex64: return std::make_pair<std::uint16_t, std::uint16_t>(64, 64);
-   case EColumnType::kSplitIndex32: return std::make_pair<std::uint16_t, std::uint16_t>(32, 32);
-   case EColumnType::kSplitReal64: return std::make_pair<std::uint16_t, std::uint16_t>(64, 64);
-   case EColumnType::kSplitReal32: return std::make_pair<std::uint16_t, std::uint16_t>(32, 32);
-   case EColumnType::kSplitInt64: return std::make_pair<std::uint16_t, std::uint16_t>(64, 64);
-   case EColumnType::kSplitUInt64: return std::make_pair<std::uint16_t, std::uint16_t>(64, 64);
-   case EColumnType::kSplitInt32: return std::make_pair<std::uint16_t, std::uint16_t>(32, 32);
-   case EColumnType::kSplitUInt32: return std::make_pair<std::uint16_t, std::uint16_t>(32, 32);
-   case EColumnType::kSplitInt16: return std::make_pair<std::uint16_t, std::uint16_t>(16, 16);
-   case EColumnType::kSplitUInt16: return std::make_pair<std::uint16_t, std::uint16_t>(16, 16);
+   case EColumnType::kIndex64: return std::make_pair(64, 64);
+   case EColumnType::kIndex32: return std::make_pair(32, 32);
+   case EColumnType::kSwitch: return std::make_pair(96, 96);
+   case EColumnType::kByte: return std::make_pair(8, 8);
+   case EColumnType::kChar: return std::make_pair(8, 8);
+   case EColumnType::kBit: return std::make_pair(1, 1);
+   case EColumnType::kReal64: return std::make_pair(64, 64);
+   case EColumnType::kReal32: return std::make_pair(32, 32);
+   case EColumnType::kReal16: return std::make_pair(16, 16);
+   case EColumnType::kInt64: return std::make_pair(64, 64);
+   case EColumnType::kUInt64: return std::make_pair(64, 64);
+   case EColumnType::kInt32: return std::make_pair(32, 32);
+   case EColumnType::kUInt32: return std::make_pair(32, 32);
+   case EColumnType::kInt16: return std::make_pair(16, 16);
+   case EColumnType::kUInt16: return std::make_pair(16, 16);
+   case EColumnType::kInt8: return std::make_pair(8, 8);
+   case EColumnType::kUInt8: return std::make_pair(8, 8);
+   case EColumnType::kSplitIndex64: return std::make_pair(64, 64);
+   case EColumnType::kSplitIndex32: return std::make_pair(32, 32);
+   case EColumnType::kSplitReal64: return std::make_pair(64, 64);
+   case EColumnType::kSplitReal32: return std::make_pair(32, 32);
+   case EColumnType::kSplitInt64: return std::make_pair(64, 64);
+   case EColumnType::kSplitUInt64: return std::make_pair(64, 64);
+   case EColumnType::kSplitInt32: return std::make_pair(32, 32);
+   case EColumnType::kSplitUInt32: return std::make_pair(32, 32);
+   case EColumnType::kSplitInt16: return std::make_pair(16, 16);
+   case EColumnType::kSplitUInt16: return std::make_pair(16, 16);
+   case EColumnType::kReal32Trunc: return std::make_pair(kReal32TruncBitsMin, kReal32TruncBitsMax);
    default: assert(false);
    }
    // never here
@@ -130,6 +133,7 @@ std::string ROOT::Experimental::Internal::RColumnElementBase::GetTypeName(EColum
    case EColumnType::kSplitUInt32: return "SplitUInt32";
    case EColumnType::kSplitInt16: return "SplitInt16";
    case EColumnType::kSplitUInt16: return "SplitUInt16";
+   case EColumnType::kReal32Trunc: return "Real32Trunc";
    default: return "UNKNOWN";
    }
 }
@@ -166,4 +170,116 @@ void ROOT::Experimental::Internal::RColumnElement<bool, ROOT::Experimental::ECol
          boolArray[j] = bitSet[j % 8];
       }
    }
+}
+
+void ROOT::Experimental::Internal::FloatPacking::PackFloats(void *dst, const float *src, std::size_t count,
+                                                            std::size_t nFloatBits)
+{
+   Word_t *dstArray = reinterpret_cast<Word_t *>(dst);
+   Word_t accum = 0;
+   std::size_t bitsUsed = 0;
+   std::size_t dstIdx = 0;
+   for (std::size_t i = 0; i < count; ++i) {
+      Word_t packedFloat = 0;
+      memcpy(&packedFloat, &src[i], sizeof(float));
+      // make sure we represent the float as LE on disk
+      ByteSwapIfNecessary(packedFloat);
+      // truncate the LSB of the mantissa
+      packedFloat >>= sizeof(float) * 8 - nFloatBits;
+
+      const std::size_t bitsRem = kBitsPerWord - bitsUsed;
+      if (bitsRem >= nFloatBits) {
+         // append the entire float to the accumulator
+         accum |= (packedFloat << bitsUsed);
+         bitsUsed += nFloatBits;
+      } else {
+         // chop up the float into its `bitsRem` LSB bits + `nFloatBits - bitsRem` MSB bits.
+         // The LSB bits will be saved in the current word and the MSB will be saved in the next one.
+         if (bitsRem > 0) {
+            Word_t packedFloatLsb = packedFloat;
+            packedFloatLsb <<= (kBitsPerWord - bitsRem);
+            packedFloatLsb >>= (kBitsPerWord - bitsRem);
+            accum |= (packedFloatLsb << bitsUsed);
+         }
+
+         memcpy(&dstArray[dstIdx++], &accum, sizeof(accum));
+         accum = 0;
+         bitsUsed = 0;
+
+         if (bitsRem > 0) {
+            Word_t packedFloatMsb = packedFloat;
+            packedFloatMsb >>= bitsRem;
+            accum |= packedFloatMsb;
+            bitsUsed += nFloatBits - bitsRem;
+         } else {
+            // we realigned to a word boundary: append the entire float
+            accum = packedFloat;
+            bitsUsed += nFloatBits;
+         }
+      }
+   }
+
+   if (bitsUsed)
+      memcpy(&dstArray[dstIdx++], &accum, sizeof(accum));
+
+   [[maybe_unused]] auto expDstCount = (count * nFloatBits + kBitsPerWord - 1) / kBitsPerWord;
+   assert(dstIdx == expDstCount);
+}
+
+void ROOT::Experimental::Internal::FloatPacking::UnpackFloats(float *dst, const void *src, std::size_t count,
+                                                              std::size_t nFloatBits)
+{
+   const Word_t *srcArray = reinterpret_cast<const Word_t *>(src);
+   const auto nWordsToLoad = (count * nFloatBits + kBitsPerWord - 1) / kBitsPerWord;
+
+   // bit offset of the next packed float inside the currently loaded word
+   int offInWord = 0;
+   std::size_t dstIdx = 0;
+   std::uint32_t prevWordAccum = 0;
+   for (std::size_t i = 0; i < nWordsToLoad; ++i) {
+      assert(dstIdx < count);
+
+      // load the next word, containing some packed floats
+      Word_t packedBytes;
+      memcpy(&packedBytes, &srcArray[i], sizeof(packedBytes));
+
+      // If `offInWord` is negative, it means that the last float was split
+      // across 2 words and we need to recombine it.
+      if (offInWord < 0) {
+         std::size_t nMsb = nFloatBits + offInWord;
+         std::uint32_t msb = packedBytes << (8 * sizeof(float) - nMsb);
+         std::uint32_t packedFloat = msb | prevWordAccum;
+         prevWordAccum = 0;
+         memcpy(&dst[dstIdx], &packedFloat, sizeof(float));
+         ByteSwapIfNecessary(dst[dstIdx]);
+         ++dstIdx;
+         offInWord = nMsb;
+      }
+
+      // isolate each float in the loaded word
+      while (dstIdx < count) {
+         // Check if we need to load a split float or a full one
+         if (offInWord > static_cast<int>(kBitsPerWord - nFloatBits)) {
+            // save the LSB of the next float, next `for` loop will merge them with the MSB in the next word.
+            assert(offInWord <= static_cast<int>(kBitsPerWord));
+            std::size_t nLsbNext = kBitsPerWord - offInWord;
+            if (nLsbNext)
+               prevWordAccum = (packedBytes >> offInWord) << (8 * sizeof(float) - nFloatBits);
+            offInWord -= kBitsPerWord;
+            break;
+         }
+
+         Word_t packedFloat = packedBytes;
+         assert(nFloatBits + offInWord <= kBitsPerWord);
+         packedFloat >>= offInWord;
+         packedFloat <<= 8 * sizeof(float) - nFloatBits;
+         memcpy(&dst[dstIdx], &packedFloat, sizeof(float));
+         ByteSwapIfNecessary(dst[dstIdx]);
+         ++dstIdx;
+         offInWord += nFloatBits;
+      }
+   }
+
+   assert(prevWordAccum == 0);
+   assert(dstIdx == count);
 }
