@@ -3527,7 +3527,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    // ======= Generate the rootcling command line
    TString rcling = "rootcling";
    PrependPathName(TROOT::GetBinDir(), rcling);
-   rcling += " -v0 \"--lib-list-prefix=";
+   rcling += " \"--lib-list-prefix=";
    rcling += mapfile;
    rcling += "\" -f \"";
    rcling.Append(dict).Append("\" ");
