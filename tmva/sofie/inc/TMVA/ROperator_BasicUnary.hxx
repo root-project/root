@@ -51,8 +51,8 @@ private:
    std::string fNX;
    std::string fNY;
 
-   std::vector<size_t> fShapeX;
-   std::vector<size_t> fShapeY;
+   std::vector<Dim> fShapeX;
+   std::vector<Dim> fShapeY;
 
 public:
    ROperator_BasicUnary() {}
@@ -62,6 +62,7 @@ public:
    {}
 
    std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) override { return input; }
+   std::vector<std::vector<Dim>> ShapeInference(std::vector<std::vector<Dim>> input) { return input; }
 
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override { return input; }
 
@@ -70,7 +71,7 @@ public:
       if (!model.CheckIfTensorAlreadyExist(fNX)) {
          throw std::runtime_error("TMVA::SOFIE - Tensor " + fNX + " not found.");
       }
-      fShapeX = model.GetTensorShape(fNX);
+      fShapeX = model.GetDynamicTensorShape(fNX);
       fShapeY = ShapeInference({fShapeX})[0];
       model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShapeY);
    }
@@ -81,7 +82,7 @@ public:
       std::stringstream out;
 
       out << SP << "\n//---- Operator" << UnaryOpTraits<T, Op>::Name() << " " << OpName << "\n";
-      size_t length = ConvertShapeToLength(fShapeX);
+      std::string length = ConvertDynamicShapeToLength(fShapeX);
       out << SP << "for (size_t i = 0; i < " << length << "; i++) {\n";
       out << SP << SP << "tensor_" << fNY << "[i] = " << UnaryOpTraits<T, Op>::Op("tensor_" + fNX + "[i]") << ";\n";
       out << SP << "}\n";
