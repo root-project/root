@@ -69,7 +69,7 @@ jobs:
       - x64
 
     env:
-      PLATFORM: fedora39
+      PLATFORM: alma9
       DOC_DIR: rootdoc
       DOC_LOCATION: /github/home
 
@@ -109,10 +109,11 @@ jobs:
         echo PATH=$PATH:${{ github.workspace }}/doxygen/bin >> $GITHUB_ENV
 
     - name: Install qhelpgenerator
-      run : |
-        dnf update -y 
-        dnf upgrade -y
-        dnf install -y qt-devel
+      run: |
+        sudo dnf update -y
+        sudo dnf upgrade -y
+        sudo dnf install -y qt5-qttools qt5-qtbase-devel qt5-qtbase-gui
+      
 
     - name: Apply option overrides
       if: ${{ github.event_name != 'schedule' }}
