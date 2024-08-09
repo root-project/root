@@ -445,7 +445,7 @@ const RooAbsReal* RooAbsPdf::getNormObj(const RooArgSet* nset, const RooArgSet* 
   // Check normalization is already stored
   CacheElem* cache = static_cast<CacheElem*>(_normMgr.getObj(nset,iset,nullptr,rangeName)) ;
   if (cache) {
-    return cache->_norm ;
+    return cache->_norm.get();
   }
 
   // If not create it now
@@ -459,8 +459,7 @@ const RooAbsReal* RooAbsPdf::getNormObj(const RooArgSet* nset, const RooArgSet* 
   RooAbsReal* norm = std::unique_ptr<RooAbsReal>{createIntegral(depList,*nset, *getIntegratorConfig(), RooNameReg::str(rangeName))}.release();
 
   // Store it in the cache
-  cache = new CacheElem(*norm) ;
-  _normMgr.setObj(nset,iset,cache,rangeName) ;
+  _normMgr.setObj(nset,iset,new CacheElem(*norm),rangeName) ;
 
   // And return the newly created integral
   return norm ;
@@ -487,8 +486,8 @@ bool RooAbsPdf::syncNormalization(const RooArgSet* nset, bool adjustProxies) con
   CacheElem* cache = static_cast<CacheElem*>(_normMgr.getObj(nset)) ;
   if (cache) {
 
-    bool nintChanged = (_norm!=cache->_norm) ;
-    _norm = cache->_norm ;
+    bool nintChanged = (_norm!=cache->_norm.get()) ;
+    _norm = cache->_norm.get();
 
     // In the past, this condition read `if (nintChanged && adjustProxies)`.
     // However, the cache checks if the nset was already cached **by content**,
@@ -2433,12 +2432,10 @@ RooAbsPdf::CacheElem::~CacheElem()
   // Zero _norm pointer in RooAbsPdf if it is points to our cache payload
   if (_owner) {
     RooAbsPdf* pdfOwner = static_cast<RooAbsPdf*>(_owner) ;
-    if (pdfOwner->_norm == _norm) {
+    if (pdfOwner->_norm == _norm.get()) {
       pdfOwner->_norm = nullptr ;
     }
   }
-
-  delete _norm ;
 }
 
 
@@ -2449,20 +2446,7 @@ RooAbsPdf::CacheElem::~CacheElem()
 RooAbsPdf* RooAbsPdf::createProjection(const RooArgSet& iset)
 {
   // Construct name for new object
-  std::string name(GetName()) ;
-  name.append("_Proj[") ;
-  if (!iset.empty()) {
-    bool first = true;
-    for(auto const& arg : iset) {
-      if (first) {
-        first = false ;
-      } else {
-        name.append(",") ;
-      }
-      name.append(arg->GetName()) ;
-    }
-  }
-  name.append("]") ;
+  std::string name = std::string{GetName()} + "_Proj[" + RooHelpers::getColonSeparatedNameString(iset, ',') + "]";
 
   // Return projected p.d.f.
   return new RooProjectedPdf(name.c_str(),name.c_str(),*this,iset) ;
@@ -2666,14 +2650,7 @@ void RooAbsPdf::setGeneratorConfig()
   _specGeneratorConfig.reset();
 }
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-RooAbsPdf::GenSpec::~GenSpec()
-{
-  delete _genContext ;
-}
+RooAbsPdf::GenSpec::~GenSpec() = default;
 
 
 ////////////////////////////////////////////////////////////////////////////////
