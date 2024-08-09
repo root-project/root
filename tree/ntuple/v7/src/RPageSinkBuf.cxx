@@ -197,7 +197,10 @@ void ROOT::Experimental::Internal::RPageSinkBuf::CommitSealedPageV(std::span<RPa
    throw RException(R__FAIL("should never commit sealed pages to RPageSinkBuf"));
 }
 
-std::uint64_t ROOT::Experimental::Internal::RPageSinkBuf::CommitCluster(ROOT::Experimental::NTupleSize_t nNewEntries)
+// We implement both StageCluster() and CommitCluster() because we can call CommitCluster() on the inner sink more
+// efficiently in a single critical section. For parallel writing, it also guarantees that we produce a fully sequential
+// file.
+void ROOT::Experimental::Internal::RPageSinkBuf::FlushClusterImpl(std::function<void(void)> FlushClusterFn)
 {
    WaitForAllTasks();
 
@@ -209,7 +212,6 @@ std::uint64_t ROOT::Experimental::Internal::RPageSinkBuf::CommitCluster(ROOT::Ex
       toCommit.emplace_back(bufColumn.GetHandle().fPhysicalId, sealedPages.cbegin(), sealedPages.cend());
    }
 
-   std::uint64_t nbytes;
    {
       RPageSink::RSinkGuard g(fInnerSink->GetSinkGuard());
       Detail::RNTuplePlainTimer timer(fCounters->fTimeWallCriticalSection, fCounters->fTimeCpuCriticalSection);
@@ -219,12 +221,33 @@ std::uint64_t ROOT::Experimental::Internal::RPageSinkBuf::CommitCluster(ROOT::Ex
          fInnerSink->CommitSuppressedColumn(handle);
       fSuppressedColumns.clear();
 
-      nbytes = fInnerSink->CommitCluster(nNewEntries);
+      FlushClusterFn();
    }
 
    for (auto &bufColumn : fBufferedColumns)
       bufColumn.DropBufferedPages();
+}
+
+std::uint64_t ROOT::Experimental::Internal::RPageSinkBuf::CommitCluster(ROOT::Experimental::NTupleSize_t nNewEntries)
+{
+   std::uint64_t nbytes;
+   FlushClusterImpl([&] { nbytes = fInnerSink->CommitCluster(nNewEntries); });
    return nbytes;
+}
+
+ROOT::Experimental::Internal::RPageSink::RStagedCluster
+ROOT::Experimental::Internal::RPageSinkBuf::StageCluster(ROOT::Experimental::NTupleSize_t nNewEntries)
+{
+   ROOT::Experimental::Internal::RPageSink::RStagedCluster stagedCluster;
+   FlushClusterImpl([&] { stagedCluster = fInnerSink->StageCluster(nNewEntries); });
+   return stagedCluster;
+}
+
+void ROOT::Experimental::Internal::RPageSinkBuf::CommitStagedClusters(std::span<RStagedCluster> clusters)
+{
+   RPageSink::RSinkGuard g(fInnerSink->GetSinkGuard());
+   Detail::RNTuplePlainTimer timer(fCounters->fTimeWallCriticalSection, fCounters->fTimeCpuCriticalSection);
+   fInnerSink->CommitStagedClusters(clusters);
 }
 
 void ROOT::Experimental::Internal::RPageSinkBuf::CommitClusterGroup()

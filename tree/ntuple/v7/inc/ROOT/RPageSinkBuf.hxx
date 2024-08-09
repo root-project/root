@@ -22,6 +22,7 @@
 #include <ROOT/RPageStorage.hxx>
 
 #include <deque>
+#include <functional>
 #include <iterator>
 #include <memory>
 #include <tuple>
@@ -131,6 +132,7 @@ private:
    DescriptorId_t fNColumns = 0;
 
    void ConnectFields(const std::vector<RFieldBase *> &fields, NTupleSize_t firstEntry);
+   void FlushClusterImpl(std::function<void(void)> FlushClusterFn);
 
 public:
    explicit RPageSinkBuf(std::unique_ptr<RPageSink> inner);
@@ -153,6 +155,8 @@ public:
    void CommitSealedPage(DescriptorId_t physicalColumnId, const RSealedPage &sealedPage) final;
    void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup> ranges) final;
    std::uint64_t CommitCluster(NTupleSize_t nNewEntries) final;
+   RStagedCluster StageCluster(NTupleSize_t nNewEntries) final;
+   void CommitStagedClusters(std::span<RStagedCluster> clusters) final;
    void CommitClusterGroup() final;
    void CommitDatasetImpl() final;
 

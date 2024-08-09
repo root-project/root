@@ -51,7 +51,8 @@ protected:
       fCounters.fNCommitSealedPage++;
    }
    void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup>) override { fCounters.fNCommitSealedPageV++; }
-   std::uint64_t CommitCluster(NTupleSize_t) final { return 0; }
+   RStagedCluster StageCluster(NTupleSize_t) final { return {}; }
+   void CommitStagedClusters(std::span<RStagedCluster>) final {}
    void CommitClusterGroup() final {}
    void CommitDatasetImpl() final {}
 

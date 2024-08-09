@@ -221,7 +221,7 @@ ROOT::Experimental::Internal::RPageSinkFile::CommitSealedPageVImpl(std::span<RPa
    return locators;
 }
 
-std::uint64_t ROOT::Experimental::Internal::RPageSinkFile::CommitClusterImpl()
+std::uint64_t ROOT::Experimental::Internal::RPageSinkFile::StageClusterImpl()
 {
    auto result = fNBytesCurrentCluster;
    fNBytesCurrentCluster = 0;

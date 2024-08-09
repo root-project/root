@@ -98,6 +98,8 @@ public:
       fInnerSink->CommitSealedPageV(ranges);
    }
    std::uint64_t CommitCluster(NTupleSize_t nNewEntries) final { return fInnerSink->CommitCluster(nNewEntries); }
+   RStagedCluster StageCluster(NTupleSize_t nNewEntries) final { return fInnerSink->StageCluster(nNewEntries); }
+   void CommitStagedClusters(std::span<RStagedCluster> clusters) final { fInnerSink->CommitStagedClusters(clusters); }
    void CommitClusterGroup() final
    {
       throw RException(R__FAIL("should never commit cluster group via RPageSynchronizingSink"));

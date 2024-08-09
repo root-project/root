@@ -80,12 +80,14 @@ public:
       }
    }
 
-   std::uint64_t CommitCluster(NTupleSize_t) final
+   RStagedCluster StageCluster(NTupleSize_t) final
    {
-      std::uint64_t bytes = fNBytesCurrentCluster;
+      RStagedCluster stagedCluster;
+      stagedCluster.fNBytesWritten = fNBytesCurrentCluster;
       fNBytesCurrentCluster = 0;
-      return bytes;
+      return stagedCluster;
    }
+   void CommitStagedClusters(std::span<RStagedCluster>) final {}
    void CommitClusterGroup() final {}
    void CommitDatasetImpl() final {}
 };
