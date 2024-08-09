@@ -207,6 +207,8 @@ TTreeReader::TTreeReader(TTree* tree, TEntryList* entryList /*= nullptr*/):
    if (!fTree) {
       ::Error("TTreeReader::TTreeReader", "TTree is NULL!");
    } else {
+      // We do not own the tree
+      SetBit(kBitIsExternalTree);
       Initialize();
    }
 }
@@ -261,6 +263,14 @@ TTreeReader::~TTreeReader()
    fFriendProxies.clear();
 
    delete fDirector;
+
+   if (fEntryStatus != kEntryNoTree && !TestBit(kBitIsExternalTree)) {
+      // a plain TTree is automatically added to the current directory,
+      // do not delete it here
+      if (IsChain()) {
+         delete fTree;
+      }
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -629,10 +639,20 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, bool local)
 
 void TTreeReader::SetTree(TTree* tree, TEntryList* entryList /*= nullptr*/)
 {
+   if (fEntryStatus != kEntryNoTree && !TestBit(kBitIsExternalTree)) {
+      // a plain TTree is automatically added to the current directory,
+      // do not delete it here
+      if (IsChain()) {
+         delete fTree;
+      }
+   }
+
    fTree = tree;
    fEntryList = entryList;
    fEntry = -1;
 
+   SetBit(kBitIsExternalTree);
+   ResetBit(kBitIsChain);
    if (fTree) {
       fLoadTreeStatus = kLoadTreeNone;
       SetBit(kBitIsChain, fTree->InheritsFrom(TChain::Class()));
