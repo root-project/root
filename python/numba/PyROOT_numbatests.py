@@ -90,6 +90,7 @@ class TestClasNumba:
         """This test shows one of the limitations of the current support"""
 
         from numba.core.errors import TypingError
+        errtyp = TypingError if numba.version_info < (0, 60) else KeyError
 
         ROOT.gInterpreter.Declare("""
         class Base {
@@ -107,7 +108,7 @@ class TestClasNumba:
             return obj.get_one()
 
         assert call_get_one(ROOT.Base()) == 1
-        with pytest.raises(TypingError):
+        with pytest.raises(errtyp):
             call_get_one(ROOT.Derived())
 
 
