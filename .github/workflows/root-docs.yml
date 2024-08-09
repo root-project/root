@@ -69,7 +69,7 @@ jobs:
       - x64
 
     env:
-      PLATFORM: alma9
+      PLATFORM: fedora39
       DOC_DIR: rootdoc
       DOC_LOCATION: /github/home
 
