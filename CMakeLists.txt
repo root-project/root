@@ -396,17 +396,29 @@ if(MSVC)
 else()
   set(_os_cat "cat")
 endif()
+
 file(TO_NATIVE_PATH "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" _from_native)
+file(TO_NATIVE_PATH "${CMAKE_BINARY_DIR}/include/module.modulemap.split.extra" _from_native_split)
+
+# we use this modulemap for compilation because modules can not be located in case
+# of a distributed file. Should be fixed in the future.
 file(TO_NATIVE_PATH "${CMAKE_BINARY_DIR}/include/ROOT.modulemap" _to_native)
+# this modulemap is installed together with its partial components
+file(TO_NATIVE_PATH "${CMAKE_BINARY_DIR}/include/ROOT.modulemap.split" _to_native_split)
+
+make_directory("${CMAKE_BINARY_DIR}/include/ROOT.modulemap.d")
 
 add_custom_target(copymodulemap DEPENDS "${CMAKE_BINARY_DIR}/include/ROOT.modulemap")
 add_custom_command(
 		  OUTPUT "${CMAKE_BINARY_DIR}/include/ROOT.modulemap"
-                  DEPENDS cmake/unix/module.modulemap "${CMAKE_BINARY_DIR}/include/module.modulemap.extra"
-		  COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/cmake/unix/module.modulemap" "${CMAKE_BINARY_DIR}/include/ROOT.modulemap"
+                  DEPENDS build/unix/module.modulemap "${CMAKE_BINARY_DIR}/include/module.modulemap.extra"
+		  COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/build/unix/module.modulemap" "${CMAKE_BINARY_DIR}/include/ROOT.modulemap"
+                  COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/build/unix/module.modulemap" "${CMAKE_BINARY_DIR}/include/ROOT.modulemap.split"
                   COMMAND ${_os_cat} "${_from_native}" >> "${_to_native}"
+                  COMMAND ${_os_cat} "${_from_native_split}" >> "${_to_native_split}"
 )
-install(FILES "${CMAKE_BINARY_DIR}/include/ROOT.modulemap" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
+install(DIRECTORY "${CMAKE_BINARY_DIR}/include/ROOT.modulemap.d" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(FILES  "${CMAKE_BINARY_DIR}/include/ROOT.modulemap.split" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} RENAME "ROOT.modulemap")
 
 add_dependencies(move_headers copymodulemap)
 
@@ -414,12 +426,21 @@ add_dependencies(move_headers copymodulemap)
 # We have to delay this because the ROOT_CXXMODULES_EXTRA_MODULEMAP_CONTENT is filled in the
 # add_subdirectory calls above.
 get_property(__modulemap_extra_content GLOBAL PROPERTY ROOT_CXXMODULES_EXTRA_MODULEMAP_CONTENT)
+get_property(__modulemap_split_extra_content GLOBAL PROPERTY ROOT_CXXMODULES_EXTRA_SPLIT_MODULEMAP_CONTENT)
 string(REPLACE ";" "" __modulemap_extra_content "${__modulemap_extra_content}")
+string(REPLACE ";" "" __modulemap_split_extra_content "${__modulemap_split_extra_content}")
+
 # Write module.modulemap.extra to a temporary file first, to not touch module.modulemap.extra
 # if it's unchanged.
 file(WRITE "${CMAKE_BINARY_DIR}/include/module.modulemap.extra.tmp" "${__modulemap_extra_content}")
+file(WRITE "${CMAKE_BINARY_DIR}/include/module.modulemap.split.extra.tmp" "${__modulemap_split_extra_content}")
+
 configure_file("${CMAKE_BINARY_DIR}/include/module.modulemap.extra.tmp"
     "${CMAKE_BINARY_DIR}/include/module.modulemap.extra"
+    COPYONLY)
+
+configure_file("${CMAKE_BINARY_DIR}/include/module.modulemap.split.extra.tmp"
+    "${CMAKE_BINARY_DIR}/include/module.modulemap.split.extra"
     COPYONLY)
 
 # From now on we handled all exposed module and want to make all new modulemaps private to ROOT.
