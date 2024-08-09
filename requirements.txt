@@ -15,9 +15,9 @@ torch
 xgboost
 
 # PyROOT: ROOT.Numba.Declare decorator
-numba>=0.47.0,<0.60.0 ; python_version < "3.11" # See https://github.com/numba/numba/issues/8304
-numba>=0.57.0,<0.60.0 ; python_version >= "3.11" and python_version < "3.12"
-numba>=0.59.0,<0.60.0 ; python_version >= "3.12"
+numba>=0.47.0 ; python_version < "3.11" # See https://github.com/numba/numba/issues/8304
+numba>=0.57.0 ; python_version >= "3.11" and python_version < "3.12"
+numba>=0.59.0 ; python_version >= "3.12"
 cffi>=1.9.1
 
 # Notebooks: ROOT C++ kernel
