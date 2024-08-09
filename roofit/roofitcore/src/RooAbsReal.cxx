@@ -1852,8 +1852,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
 /// possible, which can be selection with 'stype' (see RooAbsPdf::plotOn() for details).
 ///
 /// The default projection behaviour can be overridden by supplying an optional set of dependents
-/// to project. For most cases, plotSliceOn() and plotProjOn() provide a more intuitive interface
-/// to modify the default projection behaviour.
+/// to project via RooFit command arguments.
 //_____________________________________________________________________________
 // coverity[PASS_BY_VALUE]
 RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
@@ -2168,40 +2167,6 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
   plotVar->setVal(oldPlotVarVal); // reset the plot variable value to not disturb the original state
   return frame;
 }
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// \deprecated OBSOLETE -- RETAINED FOR BACKWARD COMPATIBILITY. Use plotOn() with Slice() instead
-
-RooPlot* RooAbsReal::plotSliceOn(RooPlot *frame, const RooArgSet& sliceSet, Option_t* drawOptions,
-             double scaleFactor, ScaleType stype, const RooAbsData* projData) const
-{
-  RooArgSet projectedVars ;
-  makeProjectionSet(frame->getPlotVar(),frame->getNormVars(),projectedVars,true) ;
-
-  // Take out the sliced variables
-  for(RooAbsArg * sliceArg : sliceSet) {
-    RooAbsArg* arg = projectedVars.find(sliceArg->GetName()) ;
-    if (arg) {
-      projectedVars.remove(*arg) ;
-    } else {
-      coutI(Plotting) << "RooAbsReal::plotSliceOn(" << GetName() << ") slice variable "
-            << sliceArg->GetName() << " was not projected anyway" << std::endl ;
-    }
-  }
-
-  PlotOpt o ;
-  o.drawOptions = drawOptions ;
-  o.scaleFactor = scaleFactor ;
-  o.stype = stype ;
-  o.projData = projData ;
-  o.projSet = &projectedVars ;
-  return plotOn(frame,o) ;
-}
-
-
 
 
 //_____________________________________________________________________________
