@@ -1,7 +1,7 @@
 # ROOT requirements for third-party Python packages
 
 # PyROOT: Interoperability with numpy arrays
-numpy>=1.4.1
+numpy>=1.4.1, <=1.26.4
 
 # TMVA: SOFIE
 graph_nets
