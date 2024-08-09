@@ -1041,6 +1041,41 @@ TEST_P(RDFSimpleTests, FillWithCustomClassJitted)
    EXPECT_EQ(h.GetEntries(), 10);
 }
 
+TEST_P(RDFSimpleTests, ReadStdArray)
+{
+   struct ArrayDataset {
+      std::string treename{"rdf_simple_array_dataset"};
+      std::string filename{"rdf_simple_array_dataset.root"};
+      std::string branchname{"arr"};
+      std::array<int, 6> arr{11, 22, 33, 44, 55, 66};
+      ArrayDataset()
+      {
+         TFile f{filename.c_str(), "recreate"};
+         TTree t{treename.c_str(), treename.c_str()};
+         t.Branch(branchname.c_str(), &arr);
+         t.Fill();
+         f.WriteObject(&t, treename.c_str());
+      }
+      ~ArrayDataset() { std::remove(filename.c_str()); }
+   } dataset;
+
+   ROOT::RDataFrame df{dataset.treename, dataset.filename};
+
+   auto col = df.Take<std::array<int, 6>>(dataset.branchname);
+   EXPECT_EQ(col->size(), 1);
+   std::array<int, 6> value = col->at(0);
+   for (unsigned i = 0; i < 6; i++) {
+      EXPECT_EQ(value[i], dataset.arr[i]);
+   }
+
+   auto colrvec = df.Take<ROOT::RVec<int>>(dataset.branchname);
+   EXPECT_EQ(colrvec->size(), 1);
+   ROOT::RVec<int> valuervec = colrvec->at(0);
+   for (unsigned i = 0; i < 6; i++) {
+      EXPECT_EQ(valuervec[i], dataset.arr[i]);
+   }
+}
+
 // run single-thread tests
 INSTANTIATE_TEST_SUITE_P(Seq, RDFSimpleTests, ::testing::Values(false));
 
