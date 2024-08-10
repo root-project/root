@@ -45,9 +45,6 @@ git apply patches/CPyCppyy-Disable-initializer-style-construction.patch
 git apply patches/CPyCppyy-Adapt-to-no-std-in-ROOT.patch
 git apply patches/CPyCppyy-Always-convert-returned-std-string.patch
 git apply patches/CPyCppyy-Disable-implicit-conversion-to-smart-ptr.patch
-git apply patches/CPyCppyy-Revert-don-t-allow-implicit-conversions-for-string_v.patch
-git apply patches/CPyCppyy-Revert-do-not-allow-implicit-conversions-to-an-std-s.patch
-git apply patches/CPyCppyy-Revert-Fix-bugs-introduced-by-73cbd9bde436afbc6e4d39.patch
 git apply patches/CPyCppyy-TString_converter.patch
 git apply patches/cppyy-No-CppyyLegacy-namespace.patch
 git apply patches/cppyy-Remove-Windows-workaround.patch

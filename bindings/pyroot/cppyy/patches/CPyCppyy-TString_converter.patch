@@ -1,7 +1,7 @@
-From c25b52ff20bae61607f46161ec598464cffcc84d Mon Sep 17 00:00:00 2001
+From 1e235725934294f6c85197d07103f0b48ce55f83 Mon Sep 17 00:00:00 2001
 From: Jonas Rembser <jonas.rembser@cern.ch>
-Date: Thu, 8 Aug 2024 13:39:50 +0200
-Subject: [PATCH] [CPyCppyy] Add`TString` converters
+Date: Sat, 10 Aug 2024 15:44:23 +0200
+Subject: [PATCH] [CPyCppyy] Add `TString` converters
 
 ---
  bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx      | 4 ++++
@@ -9,7 +9,7 @@ Subject: [PATCH] [CPyCppyy] Add`TString` converters
  2 files changed, 8 insertions(+)
 
 diff --git a/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx b/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx
-index f1e54496d58..1083c924522 100644
+index dd1752ff629..0a8bce36923 100644
 --- a/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx
 +++ b/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx
 @@ -1889,6 +1889,7 @@ bool CPyCppyy::name##Converter::ToMemory(                                    \
@@ -18,9 +18,9 @@ index f1e54496d58..1083c924522 100644
  
 +CPPYY_IMPL_STRING_AS_PRIMITIVE_CONVERTER(TString, TString, Data, Length)
  CPPYY_IMPL_STRING_AS_PRIMITIVE_CONVERTER(STLString, std::string, c_str, size)
- #if __cplusplus > 201402L
- CPPYY_IMPL_STRING_AS_PRIMITIVE_CONVERTER(STLStringViewBase, std::string_view, data, size)
-@@ -3471,6 +3472,9 @@ public:
+ 
+ 
+@@ -3503,6 +3504,9 @@ public:
          gf[CCOMPLEX_D " ptr"] =             gf["std::complex<double> ptr"];
  
      // factories for special cases
@@ -31,7 +31,7 @@ index f1e54496d58..1083c924522 100644
          gf["const char*"] =                 (cf_t)+[](cdims_t) { return new CStringConverter{}; };
          gf["const signed char*"] =          gf["const char*"];
 diff --git a/bindings/pyroot/cppyy/CPyCppyy/src/DeclareConverters.h b/bindings/pyroot/cppyy/CPyCppyy/src/DeclareConverters.h
-index 6062e6d4b81..24f3633614c 100644
+index 5fab4ad6ebf..609e130e2fc 100644
 --- a/bindings/pyroot/cppyy/CPyCppyy/src/DeclareConverters.h
 +++ b/bindings/pyroot/cppyy/CPyCppyy/src/DeclareConverters.h
 @@ -9,6 +9,9 @@
@@ -44,14 +44,14 @@ index 6062e6d4b81..24f3633614c 100644
  
  namespace CPyCppyy {
  
-@@ -360,6 +363,7 @@ protected:                                                                   \
-     strtype fStringBuffer;                                                   \
+@@ -365,6 +368,7 @@ protected:                                                                   \
+     strtype fBuffer;                                                         \
  }
  
 +CPPYY_DECLARE_STRING_CONVERTER(TString, TString);
  CPPYY_DECLARE_STRING_CONVERTER(STLString, std::string);
+ CPPYY_DECLARE_STRING_CONVERTER(STLWString, std::wstring);
  #if __cplusplus > 201402L
- // The buffer type needs to be std::string also in the string_view case,
 -- 
 2.46.0
 
