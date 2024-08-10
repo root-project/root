@@ -5,3 +5,9 @@
 #
 #-------------------------------------------------------------------------------
 ROOTTEST_ADD_OLDTEST(LABELS longtest)
+
+# New tests follow
+
+# ROOT-5983
+ROOTTEST_ADD_TEST(initOffset
+                  MACRO  initOffset.C+)
