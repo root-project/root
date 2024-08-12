@@ -108,13 +108,13 @@ jobs:
         curl -L https://github.com/doxygen/doxygen/releases/download/Release_1_10_0/doxygen-1.10.0.linux.bin.tar.gz | tar -xz -C ${{ github.workspace }}/doxygen/ --strip-components=1
         echo PATH=$PATH:${{ github.workspace }}/doxygen/bin >> $GITHUB_ENV
 
-    - name: Install qhelpgenerator
-      run: |
-        dnf update -y
-        dnf upgrade -y
-        dnf install -y qt5-qttools qt5-qtbase-devel qt5-qtbase-gui
-        echo "PATH=$PATH:/usr/lib64/qt5/bin" >> $GITHUB_ENV
-        source $GITHUB_ENV
+    # - name: Install qhelpgenerator
+    #   run: |
+    #     dnf update -y
+    #     dnf upgrade -y
+    #     dnf install -y qt5-qttools qt5-qtbase-devel qt5-qtbase-gui
+    #     echo "PATH=$PATH:/usr/lib64/qt5/bin" >> $GITHUB_ENV
+    #     source $GITHUB_ENV
       
 
     - name: Apply option overrides
@@ -197,37 +197,41 @@ jobs:
            
               cd ${DOC_LOCATION}/ROOT-CI/src/documentation/doxygen
               make -j$(nproc)
+
+              if [ -d "${DOC_LOCATION}/${DOC_DIR}/html" ]; then
+                rm -rf "${DOC_LOCATION}/${DOC_DIR}/html"
+              fi
               mv -f ${DOXYGEN_OUTPUT_DIRECTORY}/html ${DOC_LOCATION}/${DOC_DIR}
            
               if [ -d ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks ]; then
                   mv ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks ${DOC_LOCATION}/${DOC_DIR}/notebooks
               fi
 
-    # - name: Create documentation archives
-    #   working-directory: ${{ env.DOC_LOCATION }}
-    #   shell: bash
-    #   run: |
-    #     tarnamegz=${DOC_DIR}.tar.gz
-    #     tar zcf $tarnamegz ${DOC_DIR}
-    #     tarnamexz1=${DOC_DIR}.tar
-    #     tar cf $tarnamexz1 ${DOC_DIR}
-    #     xz -T5 -f $tarnamexz1
-    #     ls -lh ${DOC_LOCATION} # Debug statement to list files and verify tarball creation
+    - name: Create documentation archives
+      working-directory: ${{ env.DOC_LOCATION }}
+      shell: bash
+      run: |
+        tarnamegz=${DOC_DIR}.tar.gz
+        tar zcf $tarnamegz ${DOC_DIR}
+        tarnamexz1=${DOC_DIR}.tar
+        tar cf $tarnamexz1 ${DOC_DIR}
+        xz -T5 -f $tarnamexz1
+        ls -lh ${DOC_LOCATION} # Debug statement to list files and verify tarball creation
 
-    # #Upload to GitHub as an artifact (optional)
-    # - name: Upload tar.gz
-    #   if:   ${{ !cancelled() }}
-    #   uses: actions/upload-artifact@v4
-    #   with:
-    #     name: rootdoc.tar.gz
-    #     path: ${{env.DOC_LOCATION}}/${{env.DOC_DIR}}.tar.gz
+    #Upload to GitHub as an artifact (optional)
+    - name: Upload tar.gz
+      if:   ${{ !cancelled() }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: rootdoc.tar.gz
+        path: ${{env.DOC_LOCATION}}/${{env.DOC_DIR}}.tar.gz
 
-    # - name: Upload tar.xz
-    #   if:   ${{ !cancelled() }}
-    #   uses: actions/upload-artifact@v4
-    #   with:
-    #     name: rootdoc.tar.xz
-    #     path: ${{env.DOC_LOCATION}}/${{env.DOC_DIR}}.tar.xz
+    - name: Upload tar.xz
+      if:   ${{ !cancelled() }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: rootdoc.tar.xz
+        path: ${{env.DOC_LOCATION}}/${{env.DOC_DIR}}.tar.xz
 
     # - uses: actions/checkout@master
     # - uses: chrnorm/deployment-action@releases/v1
