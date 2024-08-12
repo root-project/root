@@ -1,7 +1,8 @@
 # ROOT requirements for third-party Python packages
 
 # PyROOT: Interoperability with numpy arrays
-numpy>=1.4.1, <=1.26.4
+numpy
+pandas
 
 # TMVA: SOFIE
 graph_nets
@@ -15,9 +16,7 @@ torch
 xgboost
 
 # PyROOT: ROOT.Numba.Declare decorator
-numba>=0.47.0 ; python_version < "3.11" # See https://github.com/numba/numba/issues/8304
-numba>=0.57.0 ; python_version >= "3.11" and python_version < "3.12"
-numba>=0.59.0 ; python_version >= "3.12"
+numba
 cffi>=1.9.1
 
 # Notebooks: ROOT C++ kernel
@@ -26,8 +25,8 @@ metakernel>=0.20.0
 
 # Distributed RDataFrame
 pyspark>=2.4 # Spark backend
-dask>=2022.08.1 ; python_version >= "3.8" # Dask backend
-distributed>=2022.08.1 ; python_version >= "3.8" # Dask backend
+dask>=2022.08.1 # Dask backend
+distributed>=2022.08.1 # Dask backend
 
 # JsMVA: Jupyter notebook magic for TMVA
 ipywidgets
