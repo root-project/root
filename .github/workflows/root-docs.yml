@@ -203,55 +203,84 @@ jobs:
                   mv ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks ${DOC_LOCATION}/${DOC_DIR}/notebooks
               fi
 
-    - name: Create documentation archives
-      working-directory: ${{ env.DOC_LOCATION }}
-      shell: bash
-      run: |
-        tarnamegz=${DOC_DIR}.tar.gz
-        tar zcf $tarnamegz ${DOC_DIR}
-        tarnamexz1=${DOC_DIR}.tar
-        tar cf $tarnamexz1 ${DOC_DIR}
-        xz -T5 -f $tarnamexz1
-        ls -lh ${DOC_LOCATION} # Debug statement to list files and verify tarball creation
+    # - name: Create documentation archives
+    #   working-directory: ${{ env.DOC_LOCATION }}
+    #   shell: bash
+    #   run: |
+    #     tarnamegz=${DOC_DIR}.tar.gz
+    #     tar zcf $tarnamegz ${DOC_DIR}
+    #     tarnamexz1=${DOC_DIR}.tar
+    #     tar cf $tarnamexz1 ${DOC_DIR}
+    #     xz -T5 -f $tarnamexz1
+    #     ls -lh ${DOC_LOCATION} # Debug statement to list files and verify tarball creation
 
-    #Upload to GitHub as an artifact (optional)
-    - name: Upload tar.gz
-      if:   ${{ !cancelled() }}
-      uses: actions/upload-artifact@v4
-      with:
-        name: rootdoc.tar.gz
-        path: ${{env.DOC_LOCATION}}/${{env.DOC_DIR}}.tar.gz
+    # #Upload to GitHub as an artifact (optional)
+    # - name: Upload tar.gz
+    #   if:   ${{ !cancelled() }}
+    #   uses: actions/upload-artifact@v4
+    #   with:
+    #     name: rootdoc.tar.gz
+    #     path: ${{env.DOC_LOCATION}}/${{env.DOC_DIR}}.tar.gz
 
-    - name: Upload tar.xz
-      if:   ${{ !cancelled() }}
-      uses: actions/upload-artifact@v4
-      with:
-        name: rootdoc.tar.xz
-        path: ${{env.DOC_LOCATION}}/${{env.DOC_DIR}}.tar.xz
+    # - name: Upload tar.xz
+    #   if:   ${{ !cancelled() }}
+    #   uses: actions/upload-artifact@v4
+    #   with:
+    #     name: rootdoc.tar.xz
+    #     path: ${{env.DOC_LOCATION}}/${{env.DOC_DIR}}.tar.xz
 
-    - uses: actions/checkout@master
-    - uses: chrnorm/deployment-action@releases/v1
-      name: Create GitHub deployment
-      id: test
-      with:
-        token: ${{ secrets.GITHUB_TOKEN}}
-        description: 'Preview my app'
-        environment: preview
+    # - uses: actions/checkout@master
+    # - uses: chrnorm/deployment-action@releases/v1
+    #   name: Create GitHub deployment
+    #   id: test
+    #   with:
+    #     token: ${{ secrets.GITHUB_TOKEN}}
+    #     description: 'Preview my app'
+    #     environment: preview
 
-    - uses: shallwefootball/s3-upload-action@master
-      name: Upload S3
-      id: S3
-      with:
-        aws_key_id: ${{ secrets.OS_APPLICATION_CREDENTIAL_ID }}
-        aws_secret_access_key: ${{ secrets.OS_APPLICATION_CREDENTIAL_SECRET}}
-        aws_bucket: root
-        source_dir: ${{env.DOC_LOCATION}}/${{env.DOC_DIR}}
+    # - uses: shallwefootball/s3-upload-action@master
+    #   name: Upload S3
+    #   id: S3
+    #   with:
+    #     aws_key_id: ${{ secrets.OS_APPLICATION_CREDENTIAL_ID }}
+    #     aws_secret_access_key: ${{ secrets.OS_APPLICATION_CREDENTIAL_SECRET}}
+    #     aws_bucket: root
+    #     source_dir: ${{env.DOC_LOCATION}}/${{env.DOC_DIR}}
     
+    # - name: Update deployment status (success)
+    #   if: success()
+    #   uses: chrnorm/deployment-status@releases/v1
+    #   with:
+    #     token: ${{ secrets.GITHUB_TOKEN }}
+    #     target_url: https://aws-bucket.s3.ap-northeast-2.amazonaws.com/${{steps.S3.outputs.object_key}}/index.html
+    #     state: 'success'
+    #     deployment_id: ${{ steps.test.outputs.deployment_id }}
+
+    - name: Install OpenStack CLI
+      run: |
+        sudo dnf install -y python3-openstackclient
+        pip install --upgrade openstacksdk
+
+    - name: Configure OpenStack CLI
+      run: |
+        export OS_APPLICATION_CREDENTIAL_ID=${{ secrets.OS_APPLICATION_CREDENTIAL_ID }}
+        export OS_APPLICATION_CREDENTIAL_SECRET=${{ secrets.OS_APPLICATION_CREDENTIAL_SECRET }}
+        export OS_AUTH_TYPE=v3applicationcredential
+        export OS_AUTH_URL=https://keystone.cern.ch/v3
+        export OS_IDENTITY_API_VERSION=3
+        export OS_INTERFACE=public
+        export OS_REGION_NAME=cern
+
+    - name: Upload Documentation to OpenStack Swift
+      run: |
+        openstack container create rootdoc  # Replace 'rootdoc' with your container name if needed
+        openstack object create rootdoc ${{env.DOC_LOCATION}}/${{env.DOC_DIR}} --recursive
+
     - name: Update deployment status (success)
       if: success()
       uses: chrnorm/deployment-status@releases/v1
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
-        target_url: https://aws-bucket.s3.ap-northeast-2.amazonaws.com/${{steps.S3.outputs.object_key}}/index.html
+        target_url: https://your-openstack-object-storage-url/rootdoc/index.html  # Replace with the actual URL
         state: 'success'
         deployment_id: ${{ steps.test.outputs.deployment_id }}
