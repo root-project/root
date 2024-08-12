@@ -1,7 +1,7 @@
 # ROOT requirements for third-party Python packages
 
 # PyROOT: Interoperability with numpy arrays
-numpy
+numpy<=1.26.4
 pandas
 
 # TMVA: SOFIE
@@ -16,7 +16,7 @@ torch
 xgboost
 
 # PyROOT: ROOT.Numba.Declare decorator
-numba
+numba>=0.48
 cffi>=1.9.1
 
 # Notebooks: ROOT C++ kernel
