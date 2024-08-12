@@ -18,6 +18,10 @@
 #pragma link C++ class std::multiset<float>+;
 #pragma link C++ class std::multiset<CustomStruct>+;
 
+#pragma link C++ class std::unordered_multiset<std::int64_t>+;
+#pragma link C++ class std::unordered_multiset<float>+;
+#pragma link C++ class std::unordered_multiset<CustomStruct>+;
+
 #pragma link C++ class std::map<char, long>+;
 #pragma link C++ class std::map<char, std::int64_t>+;
 #pragma link C++ class std::map<int, std::string>+;

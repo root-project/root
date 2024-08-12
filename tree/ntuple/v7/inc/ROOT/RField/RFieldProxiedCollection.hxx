@@ -433,6 +433,26 @@ public:
    size_t GetAlignment() const final { return std::alignment_of<ContainerT>(); }
 };
 
+template <typename ItemT>
+class RField<std::unordered_multiset<ItemT>> : public RSetField {
+   using ContainerT = typename std::unordered_multiset<ItemT>;
+
+protected:
+   void ConstructValue(void *where) const final { new (where) ContainerT(); }
+   std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RTypedDeleter<ContainerT>>(); }
+
+public:
+   static std::string TypeName() { return "std::unordered_multiset<" + RField<ItemT>::TypeName() + ">"; }
+
+   explicit RField(std::string_view name) : RSetField(name, TypeName(), std::make_unique<RField<ItemT>>("_0")) {}
+   RField(RField &&other) = default;
+   RField &operator=(RField &&other) = default;
+   ~RField() override = default;
+
+   size_t GetValueSize() const final { return sizeof(ContainerT); }
+   size_t GetAlignment() const final { return std::alignment_of<ContainerT>(); }
+};
+
 } // namespace Experimental
 } // namespace ROOT
 

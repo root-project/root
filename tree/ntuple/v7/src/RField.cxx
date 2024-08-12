@@ -188,6 +188,8 @@ std::string GetNormalizedTypeName(const std::string &typeName)
       normalizedType = "std::" + normalizedType;
    if (normalizedType.substr(0, 9) == "multiset<")
       normalizedType = "std::" + normalizedType;
+   if (normalizedType.substr(0, 19) == "unordered_multiset<")
+      normalizedType = "std::" + normalizedType;
    if (normalizedType.substr(0, 4) == "map<")
       normalizedType = "std::" + normalizedType;
    if (normalizedType.substr(0, 14) == "unordered_map<")
@@ -774,6 +776,12 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
       auto normalizedInnerTypeName = itemField->GetTypeName();
       result =
          std::make_unique<RSetField>(fieldName, "std::multiset<" + normalizedInnerTypeName + ">", std::move(itemField));
+   } else if (canonicalType.substr(0, 24) == "std::unordered_multiset<") {
+      std::string itemTypeName = canonicalType.substr(24, canonicalType.length() - 25);
+      auto itemField = Create("_0", itemTypeName).Unwrap();
+      auto normalizedInnerTypeName = itemField->GetTypeName();
+      result = std::make_unique<RSetField>(fieldName, "std::unordered_multiset<" + normalizedInnerTypeName + ">",
+                                           std::move(itemField));
    } else if (canonicalType.substr(0, 9) == "std::map<") {
       auto innerTypes = TokenizeTypeList(canonicalType.substr(9, canonicalType.length() - 10));
       if (innerTypes.size() != 2) {
