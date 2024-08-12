@@ -772,26 +772,29 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
          return R__FORWARD_RESULT(fnFail("the type list for std::map must have exactly two elements"));
       }
 
-      auto normalizedKeyTypeName = GetNormalizedTypeName(innerTypes[0]);
-      auto normalizedValueTypeName = GetNormalizedTypeName(innerTypes[1]);
+      auto itemField = Create("_0", "std::pair<" + innerTypes[0] + "," + innerTypes[1] + ">").Unwrap();
 
-      auto itemField =
-         Create("_0", "std::pair<" + normalizedKeyTypeName + "," + normalizedValueTypeName + ">").Unwrap();
-      result = std::make_unique<RMapField>(
-         fieldName, "std::map<" + normalizedKeyTypeName + "," + normalizedValueTypeName + ">", std::move(itemField));
+      // We use the type names of subfields of the newly created item fields to create the map's type name to ensure
+      // the inner type names are properly normalized.
+      auto keyTypeName = itemField->GetSubFields()[0]->GetTypeName();
+      auto valueTypeName = itemField->GetSubFields()[1]->GetTypeName();
+
+      result = std::make_unique<RMapField>(fieldName, "std::map<" + keyTypeName + "," + valueTypeName + ">",
+                                           std::move(itemField));
    } else if (canonicalType.substr(0, 19) == "std::unordered_map<") {
       auto innerTypes = TokenizeTypeList(canonicalType.substr(19, canonicalType.length() - 20));
       if (innerTypes.size() != 2)
          return R__FORWARD_RESULT(fnFail("the type list for std::unordered_map must have exactly two elements"));
 
-      auto normalizedKeyTypeName = GetNormalizedTypeName(innerTypes[0]);
-      auto normalizedValueTypeName = GetNormalizedTypeName(innerTypes[1]);
+      auto itemField = Create("_0", "std::pair<" + innerTypes[0] + "," + innerTypes[1] + ">").Unwrap();
 
-      auto itemField =
-         Create("_0", "std::pair<" + normalizedKeyTypeName + "," + normalizedValueTypeName + ">").Unwrap();
-      result = std::make_unique<RMapField>(
-         fieldName, "std::unordered_map<" + normalizedKeyTypeName + "," + normalizedValueTypeName + ">",
-         std::move(itemField));
+      // We use the type names of subfields of the newly created item fields to create the map's type name to ensure
+      // the inner type names are properly normalized.
+      auto keyTypeName = itemField->GetSubFields()[0]->GetTypeName();
+      auto valueTypeName = itemField->GetSubFields()[1]->GetTypeName();
+
+      result = std::make_unique<RMapField>(fieldName, "std::unordered_map<" + keyTypeName + "," + valueTypeName + ">",
+                                           std::move(itemField));
    } else if (canonicalType.substr(0, 12) == "std::atomic<") {
       std::string itemTypeName = canonicalType.substr(12, canonicalType.length() - 13);
       auto itemField = Create("_0", itemTypeName).Unwrap();
