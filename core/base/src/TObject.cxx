@@ -23,6 +23,18 @@ ROOT collection classes.
 TObject's bits can be used as flags, bits 0 - 13 and 24-31 are
 reserved as  global bits while bits 14 - 23 can be used in different
 class hierarchies (watch out for overlaps).
+
+\Note
+   Class inheriting directly or indirectly from TObject should not use
+   `= default` for any of the constructors.
+   The default implementation for a constructor can sometime do 'more' than we
+   expect (and still being standard compliant).  On some platforms it will reset
+   all the data member of the class including its base class's member before the=
+   actual execution of the base class constructor.
+   `TObject`'s implementation of the `IsOnHeap` bit requires the memory occupied
+   by `TObject::fUniqueID` to *not* be reset between the execution of `TObject::operator new`
+   and the `TObject` constructor (Finding the magic pattern there is how we can determine
+   that the object was allocated on the heap).
 */
 
 #include <cstring>
