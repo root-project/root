@@ -528,16 +528,19 @@ TEST(RNTuple, StdMap)
       auto map_field = model->MakeField<std::map<std::string, float>>({"myMap", "string to float map"});
       auto map_field2 = model->MakeField<std::map<int, std::vector<CustomStruct>>>({"myMap2"});
 
-      auto myMap3 = RFieldBase::Create("myMap3", "std::map<char, std::string>").Unwrap();
-      auto myMap4 = RFieldBase::Create("myMap4", "std::map<float, std::map<char, std::int32_t>>").Unwrap();
+      auto myMap3 = RFieldBase::Create("myMap3", "std::map<int, std::string>").Unwrap();
+      auto myMap4 = RFieldBase::Create("myMap4", "std::map<std::int32_t, std::string>").Unwrap();
+      auto myMap5 = RFieldBase::Create("myMap5", "std::map<std::int32_t, std::map<std::int64_t, float>>").Unwrap();
 
       model->AddField(std::move(myMap3));
       model->AddField(std::move(myMap4));
+      model->AddField(std::move(myMap5));
 
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "map_ntuple", fileGuard.GetPath());
-      auto map_field3 = ntuple->GetModel().GetDefaultEntry().GetPtr<std::map<char, std::string>>("myMap3");
-      auto map_field4 =
-         ntuple->GetModel().GetDefaultEntry().GetPtr<std::map<float, std::map<char, std::int32_t>>>("myMap4");
+      auto map_field3 = ntuple->GetModel().GetDefaultEntry().GetPtr<std::map<int, std::string>>("myMap3");
+      auto map_field4 = ntuple->GetModel().GetDefaultEntry().GetPtr<std::map<std::int32_t, std::string>>("myMap4");
+      auto map_field5 =
+         ntuple->GetModel().GetDefaultEntry().GetPtr<std::map<std::int32_t, std::map<std::int64_t, float>>>("myMap5");
       for (int i = 0; i < 2; i++) {
          *map_field = {{"foo", static_cast<float>(i + 0.1)},
                        {"bar", static_cast<float>(i * 0.2)},
@@ -546,10 +549,9 @@ TEST(RNTuple, StdMap)
                          {CustomStruct{6.f, {7.f, 8.f}, {{9.f}, {10.f}}, "foo"},
                           CustomStruct{2.f, {3.f, 4.f}, {{5.f}, {6.f}}, "bar"}}},
                         {i + 1, {CustomStruct{3.f, {4.f, 5.f}, {{1.f}, {2.f}}, "baz"}}}};
-         *map_field3 = {{static_cast<char>(i), "Hello"}, {static_cast<char>(i), "world!"}};
-         *map_field4 = {{static_cast<float>(i * 3.14), {{'a', static_cast<std::int32_t>(i)}}},
-                        {static_cast<float>(i / 10),
-                         {{'a', static_cast<std::int32_t>(i)}, {'b', static_cast<std::int32_t>(i * 2)}}}};
+         *map_field3 = {{i, "Hello"}, {i * 2, "world!"}};
+         *map_field4 = {{i, "Hello"}, {i * 2, "world!"}};
+         *map_field5 = {{i, {{i + 1, 0.1}}}, {i * 2, {{i + 2, 0.2}, {i + 3, 0.3}}}};
          ntuple->Fill();
       }
    }
@@ -559,8 +561,9 @@ TEST(RNTuple, StdMap)
 
    auto viewMap = ntuple->GetView<std::map<std::string, float>>("myMap");
    auto viewMap2 = ntuple->GetView<std::map<int, std::vector<CustomStruct>>>("myMap2");
-   auto viewMap3 = ntuple->GetView<std::map<char, std::string>>("myMap3");
-   auto viewMap4 = ntuple->GetView<std::map<float, std::map<char, std::int32_t>>>("myMap4");
+   auto viewMap3 = ntuple->GetView<std::map<int, std::string>>("myMap3");
+   auto viewMap4 = ntuple->GetView<std::map<int, std::string>>("myMap4");
+   auto viewMap5 = ntuple->GetView<std::map<std::int32_t, std::map<std::int64_t, float>>>("myMap5");
    for (auto i : ntuple->GetEntryRange()) {
       std::map<std::string, float> map1{{"foo", static_cast<float>(i + 0.1)},
                                         {"bar", static_cast<float>(i * 0.2)},
@@ -574,13 +577,15 @@ TEST(RNTuple, StdMap)
          {static_cast<int>(i + 1), {CustomStruct{3.f, {4.f, 5.f}, {{1.f}, {2.f}}, "baz"}}}};
       EXPECT_EQ(map2, viewMap2(i));
 
-      std::map<char, std::string> map3{{static_cast<char>(i), "Hello"}, {static_cast<char>(i), "world!"}};
+      std::map<int, std::string> map3{{static_cast<int>(i), "Hello"}, {static_cast<int>(i * 2), "world!"}};
       EXPECT_EQ(map3, viewMap3(i));
+      EXPECT_EQ(viewMap3(i), viewMap4(i));
 
-      std::map<float, std::map<char, std::int32_t>> map4{
-         {static_cast<float>(i * 3.14), {{'a', static_cast<std::int32_t>(i)}}},
-         {static_cast<float>(i / 10), {{'a', static_cast<std::int32_t>(i)}, {'b', static_cast<std::int32_t>(i * 2)}}}};
-      EXPECT_EQ(map4, viewMap4(i));
+      std::map<std::int32_t, std::map<std::int64_t, float>> map5{
+         {static_cast<std::int32_t>(i), {{static_cast<std::int64_t>(i + 1), 0.1}}},
+         {static_cast<std::int32_t>(i * 2),
+          {{static_cast<std::int64_t>(i + 2), 0.2}, {static_cast<std::int64_t>(i + 3), 0.3}}}};
+      EXPECT_EQ(map5, viewMap5(i));
    }
 
    ntuple->LoadEntry(0);
