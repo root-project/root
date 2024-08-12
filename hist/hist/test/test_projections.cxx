@@ -81,7 +81,7 @@ TEST(Projections, Issue_6658_Profile2D)
    auto *hist_pxy = prof2d.ProjectionXY("x");
    auto *xaxis_pxy = hist_pxy->GetXaxis();
    auto xaxis_pxy_nbins = xaxis_pxy->GetNbins();
-   auto *labels_pxy = xaxis_pyx->GetLabels();
+   auto *labels_pxy = xaxis_pxy->GetLabels();
    EXPECT_EQ(xaxis_2d_nbins, xaxis_pxy_nbins);
    expect_list_eq_names(*labels_2d, *labels_pxy);
 }
