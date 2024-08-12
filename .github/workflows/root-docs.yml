@@ -262,7 +262,7 @@ jobs:
 
     - name: Install OpenStack CLI
       run: |
-        sudo dnf install -y python3-openstackclient
+        dnf install -y python3-openstackclient
         pip install --upgrade openstacksdk
 
     - name: Configure OpenStack CLI
@@ -285,6 +285,6 @@ jobs:
       uses: chrnorm/deployment-status@releases/v1
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
-        target_url: https://your-openstack-object-storage-url/rootdoc/index.html  # Replace with the actual URL
+        target_url: https://adrianduesselberg/rootdoc/index.html  # Replace with the actual URL
         state: 'success'
         deployment_id: ${{ steps.test.outputs.deployment_id }}
