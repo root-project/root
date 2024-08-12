@@ -943,7 +943,7 @@ This is called sparse representation.
 The alternative, dense representation uses a `Bit` column to mask non-existing instances of the subfield.
 In this second case, a default-constructed `T` (or, if applicable, a `T` constructed by the ROOT I/O constructor) is stored on disk for the non-existing instances.
 
-#### std::set\<T\>, std::unordered_set\<T\>, std::multiset\<T\>
+#### std::set\<T\>, std::unordered_set\<T\>, std::multiset\<T\>, std::unordered_multiset\<T\>
 
 While STL (unordered) (multi)sets by definition are associative containers (i.e., elements are referenced by their keys,
 which in the case for sets are equal to the values), on disk they are represented as indexed collections.
