@@ -112,6 +112,9 @@ target_compile_definitions(Core PRIVATE
  )
 
 if (runtime_cxxmodules)
+  if(APPLE)
+    list(APPEND core_implicit_modules "-mByproduct" "Darwin")
+  endif()
   if(MSVC)
     list(APPEND core_implicit_modules "-mByproduct" "services")
   endif()
