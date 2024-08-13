@@ -203,9 +203,10 @@ jobs:
               fi
               mv -f ${DOXYGEN_OUTPUT_DIRECTORY}/html ${DOC_LOCATION}/${DOC_DIR}
            
-              if [ -d ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks ]; then
-                  mv ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks ${DOC_LOCATION}/${DOC_DIR}/notebooks
+              if [ -d ${DOC_LOCATION}/${DOC_DIR}/notebooks ]; then
+                rm -rf "${DOC_LOCATION}/${DOC_DIR}/notebooks"
               fi
+              mv -f ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks ${DOC_LOCATION}/${DOC_DIR}
 
     - name: Create documentation archives
       working-directory: ${{ env.DOC_LOCATION }}
