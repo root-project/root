@@ -78,7 +78,7 @@ TEST(Projections, Issue_6658_Profile2D)
    auto xaxis_2d_nbins = xaxis_2d->GetNbins();
    auto *labels_2d = xaxis_2d->GetLabels();
 
-   auto *hist_pxy = prof2d.ProjectionXY("x");
+   auto *hist_pxy = prof2d.ProjectionXY("xy");
    auto *xaxis_pxy = hist_pxy->GetXaxis();
    auto xaxis_pxy_nbins = xaxis_pxy->GetNbins();
    auto *labels_pxy = xaxis_pxy->GetLabels();
