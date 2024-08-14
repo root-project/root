@@ -7,18 +7,18 @@
 #include <type_traits>
 #include <utility>
 
-template <typename PodT, typename NarrowT, ROOT::Experimental::EColumnType ColumnT>
+template <typename PodT, typename NarrowT, EColumnType ColumnT>
 struct Helper {
    using Pod_t = PodT;
    using Narrow_t = NarrowT;
-   static constexpr ROOT::Experimental::EColumnType kColumnType = ColumnT;
+   static constexpr EColumnType kColumnType = ColumnT;
 };
 
-template <typename NarrowT, ROOT::Experimental::EColumnType ColumnT>
-struct Helper<ROOT::Experimental::ClusterSize_t, NarrowT, ColumnT> {
+template <typename NarrowT, EColumnType ColumnT>
+struct Helper<ClusterSize_t, NarrowT, ColumnT> {
    using Pod_t = std::uint64_t;
    using Narrow_t = NarrowT;
-   static constexpr ROOT::Experimental::EColumnType kColumnType = ColumnT;
+   static constexpr EColumnType kColumnType = ColumnT;
 };
 
 template <typename HelperT>
@@ -39,27 +39,25 @@ public:
    using Helper_t = HelperT;
 };
 
-using PackingRealTypes = ::testing::Types<Helper<double, double, ROOT::Experimental::EColumnType::kSplitReal64>,
-                                          Helper<float, float, ROOT::Experimental::EColumnType::kSplitReal32>>;
+using PackingRealTypes =
+   ::testing::Types<Helper<double, double, EColumnType::kSplitReal64>, Helper<float, float, EColumnType::kSplitReal32>>;
 TYPED_TEST_SUITE(PackingReal, PackingRealTypes);
 
-using PackingIntTypes =
-   ::testing::Types<Helper<std::int64_t, std::int64_t, ROOT::Experimental::EColumnType::kSplitInt64>,
-                    Helper<std::uint64_t, std::uint64_t, ROOT::Experimental::EColumnType::kSplitUInt64>,
-                    Helper<std::int32_t, std::int32_t, ROOT::Experimental::EColumnType::kSplitInt32>,
-                    Helper<std::uint32_t, std::uint32_t, ROOT::Experimental::EColumnType::kSplitUInt32>,
-                    Helper<std::int16_t, std::int16_t, ROOT::Experimental::EColumnType::kSplitInt16>,
-                    Helper<std::uint16_t, std::uint16_t, ROOT::Experimental::EColumnType::kSplitUInt16>>;
+using PackingIntTypes = ::testing::Types<Helper<std::int64_t, std::int64_t, EColumnType::kSplitInt64>,
+                                         Helper<std::uint64_t, std::uint64_t, EColumnType::kSplitUInt64>,
+                                         Helper<std::int32_t, std::int32_t, EColumnType::kSplitInt32>,
+                                         Helper<std::uint32_t, std::uint32_t, EColumnType::kSplitUInt32>,
+                                         Helper<std::int16_t, std::int16_t, EColumnType::kSplitInt16>,
+                                         Helper<std::uint16_t, std::uint16_t, EColumnType::kSplitUInt16>>;
 TYPED_TEST_SUITE(PackingInt, PackingIntTypes);
 
-using PackingIndexTypes = ::testing::Types<
-   Helper<ROOT::Experimental::ClusterSize_t, std::uint32_t, ROOT::Experimental::EColumnType::kSplitIndex32>,
-   Helper<ROOT::Experimental::ClusterSize_t, std::uint64_t, ROOT::Experimental::EColumnType::kSplitIndex64>>;
+using PackingIndexTypes = ::testing::Types<Helper<ClusterSize_t, std::uint32_t, EColumnType::kSplitIndex32>,
+                                           Helper<ClusterSize_t, std::uint64_t, EColumnType::kSplitIndex64>>;
 TYPED_TEST_SUITE(PackingIndex, PackingIndexTypes);
 
 TEST(Packing, Bitfield)
 {
-   ROOT::Experimental::Internal::RColumnElement<bool, ROOT::Experimental::EColumnType::kBit> element;
+   RColumnElement<bool, EColumnType::kBit> element;
    element.Pack(nullptr, nullptr, 0);
    element.Unpack(nullptr, nullptr, 0);
 
@@ -92,8 +90,8 @@ TEST(Packing, Bitfield)
 
 TEST(Packing, HalfPrecisionFloat)
 {
-   ROOT::Experimental::Internal::RColumnElement<float, ROOT::Experimental::EColumnType::kReal16> element32_16;
-   ROOT::Experimental::Internal::RColumnElement<double, ROOT::Experimental::EColumnType::kReal16> element64_16;
+   RColumnElement<float, EColumnType::kReal16> element32_16;
+   RColumnElement<double, EColumnType::kReal16> element64_16;
    element32_16.Pack(nullptr, nullptr, 0);
    element32_16.Unpack(nullptr, nullptr, 0);
    element64_16.Pack(nullptr, nullptr, 0);
@@ -142,16 +140,14 @@ TEST(Packing, HalfPrecisionFloat)
 
 TEST(Packing, RColumnSwitch)
 {
-   ROOT::Experimental::Internal::RColumnElement<ROOT::Experimental::RColumnSwitch,
-                                                ROOT::Experimental::EColumnType::kSwitch>
-      element;
+   RColumnElement<RColumnSwitch, EColumnType::kSwitch> element;
    element.Pack(nullptr, nullptr, 0);
    element.Unpack(nullptr, nullptr, 0);
 
-   ROOT::Experimental::RColumnSwitch s1(ClusterSize_t{0xaa}, 0x55);
+   RColumnSwitch s1(ClusterSize_t{0xaa}, 0x55);
    unsigned char out[12];
    element.Pack(out, &s1, 1);
-   ROOT::Experimental::RColumnSwitch s2;
+   RColumnSwitch s2;
    element.Unpack(&s2, out, 1);
    EXPECT_EQ(0xaa, s2.GetIndex());
    EXPECT_EQ(0x55, s2.GetTag());
@@ -162,7 +158,7 @@ TYPED_TEST(PackingReal, SplitReal)
    using Pod_t = typename TestFixture::Helper_t::Pod_t;
    using Narrow_t = typename TestFixture::Helper_t::Narrow_t;
 
-   ROOT::Experimental::Internal::RColumnElement<Pod_t, TestFixture::Helper_t::kColumnType> element;
+   RColumnElement<Pod_t, TestFixture::Helper_t::kColumnType> element;
    element.Pack(nullptr, nullptr, 0);
    element.Unpack(nullptr, nullptr, 0);
 
@@ -187,13 +183,18 @@ TYPED_TEST(PackingInt, SplitInt)
    using Pod_t = typename TestFixture::Helper_t::Pod_t;
    using Narrow_t = typename TestFixture::Helper_t::Narrow_t;
 
-   ROOT::Experimental::Internal::RColumnElement<Pod_t, TestFixture::Helper_t::kColumnType> element;
+   RColumnElement<Pod_t, TestFixture::Helper_t::kColumnType> element;
    element.Pack(nullptr, nullptr, 0);
    element.Unpack(nullptr, nullptr, 0);
 
-   std::array<Pod_t, 9> mem{0, std::is_signed_v<Pod_t> ? -42 : 1, 42, std::numeric_limits<Narrow_t>::min(),
-                            std::numeric_limits<Narrow_t>::min() + 1, std::numeric_limits<Narrow_t>::min() + 2,
-                            std::numeric_limits<Narrow_t>::max(), std::numeric_limits<Narrow_t>::max() - 1,
+   std::array<Pod_t, 9> mem{0,
+                            std::is_signed_v<Pod_t> ? -42 : 1,
+                            42,
+                            std::numeric_limits<Narrow_t>::min(),
+                            std::numeric_limits<Narrow_t>::min() + 1,
+                            std::numeric_limits<Narrow_t>::min() + 2,
+                            std::numeric_limits<Narrow_t>::max(),
+                            std::numeric_limits<Narrow_t>::max() - 1,
                             std::numeric_limits<Narrow_t>::max() - 2};
    std::array<Pod_t, 9> packed;
    std::array<Pod_t, 9> cmp;
@@ -209,7 +210,7 @@ TYPED_TEST(PackingIndex, SplitIndex)
    using Pod_t = typename TestFixture::Helper_t::Pod_t;
    using Narrow_t = typename TestFixture::Helper_t::Narrow_t;
 
-   ROOT::Experimental::Internal::RColumnElement<ClusterSize_t, TestFixture::Helper_t::kColumnType> element;
+   RColumnElement<ClusterSize_t, TestFixture::Helper_t::kColumnType> element;
    element.Pack(nullptr, nullptr, 0);
    element.Unpack(nullptr, nullptr, 0);
 
@@ -225,7 +226,7 @@ TYPED_TEST(PackingIndex, SplitIndex)
 
 namespace {
 
-template <typename PodT, ROOT::Experimental::EColumnType ColumnT>
+template <typename PodT, EColumnType ColumnT>
 static void AddField(RNTupleModel &model, const std::string &fieldName)
 {
    auto fld = std::make_unique<RField<PodT>>(fieldName);
@@ -243,17 +244,17 @@ TEST(Packing, OnDiskEncoding)
 
    auto model = RNTupleModel::Create();
 
-   AddField<std::int16_t, ROOT::Experimental::EColumnType::kSplitInt16>(*model, "int16");
-   AddField<std::int32_t, ROOT::Experimental::EColumnType::kSplitInt32>(*model, "int32");
-   AddField<std::int64_t, ROOT::Experimental::EColumnType::kSplitInt64>(*model, "int64");
-   AddField<std::uint16_t, ROOT::Experimental::EColumnType::kSplitUInt16>(*model, "uint16");
-   AddField<std::uint32_t, ROOT::Experimental::EColumnType::kSplitUInt32>(*model, "uint32");
-   AddField<std::uint64_t, ROOT::Experimental::EColumnType::kSplitUInt64>(*model, "uint64");
-   AddField<float, ROOT::Experimental::EColumnType::kSplitReal32>(*model, "float");
-   AddField<float, ROOT::Experimental::EColumnType::kReal16>(*model, "float16");
-   AddField<double, ROOT::Experimental::EColumnType::kSplitReal64>(*model, "double");
-   AddField<ClusterSize_t, ROOT::Experimental::EColumnType::kSplitIndex32>(*model, "index32");
-   AddField<ClusterSize_t, ROOT::Experimental::EColumnType::kSplitIndex64>(*model, "index64");
+   AddField<std::int16_t, EColumnType::kSplitInt16>(*model, "int16");
+   AddField<std::int32_t, EColumnType::kSplitInt32>(*model, "int32");
+   AddField<std::int64_t, EColumnType::kSplitInt64>(*model, "int64");
+   AddField<std::uint16_t, EColumnType::kSplitUInt16>(*model, "uint16");
+   AddField<std::uint32_t, EColumnType::kSplitUInt32>(*model, "uint32");
+   AddField<std::uint64_t, EColumnType::kSplitUInt64>(*model, "uint64");
+   AddField<float, EColumnType::kSplitReal32>(*model, "float");
+   AddField<float, EColumnType::kReal16>(*model, "float16");
+   AddField<double, EColumnType::kSplitReal64>(*model, "double");
+   AddField<ClusterSize_t, EColumnType::kSplitIndex32>(*model, "index32");
+   AddField<ClusterSize_t, EColumnType::kSplitIndex64>(*model, "index64");
    auto fldStr = std::make_unique<RField<std::string>>("str");
    model->AddField(std::move(fldStr));
    {

@@ -67,37 +67,37 @@ std::pair<std::uint16_t, std::uint16_t>
 ROOT::Experimental::Internal::RColumnElementBase::GetValidBitRange(EColumnType type)
 {
    switch (type) {
-   case EColumnType::kIndex64: return std::make_pair<std::uint16_t, std::uint16_t>(64, 64);
-   case EColumnType::kIndex32: return std::make_pair<std::uint16_t, std::uint16_t>(32, 32);
-   case EColumnType::kSwitch: return std::make_pair<std::uint16_t, std::uint16_t>(96, 96);
-   case EColumnType::kByte: return std::make_pair<std::uint16_t, std::uint16_t>(8, 8);
-   case EColumnType::kChar: return std::make_pair<std::uint16_t, std::uint16_t>(8, 8);
-   case EColumnType::kBit: return std::make_pair<std::uint16_t, std::uint16_t>(1, 1);
-   case EColumnType::kReal64: return std::make_pair<std::uint16_t, std::uint16_t>(64, 64);
-   case EColumnType::kReal32: return std::make_pair<std::uint16_t, std::uint16_t>(32, 32);
-   case EColumnType::kReal16: return std::make_pair<std::uint16_t, std::uint16_t>(16, 16);
-   case EColumnType::kInt64: return std::make_pair<std::uint16_t, std::uint16_t>(64, 64);
-   case EColumnType::kUInt64: return std::make_pair<std::uint16_t, std::uint16_t>(64, 64);
-   case EColumnType::kInt32: return std::make_pair<std::uint16_t, std::uint16_t>(32, 32);
-   case EColumnType::kUInt32: return std::make_pair<std::uint16_t, std::uint16_t>(32, 32);
-   case EColumnType::kInt16: return std::make_pair<std::uint16_t, std::uint16_t>(16, 16);
-   case EColumnType::kUInt16: return std::make_pair<std::uint16_t, std::uint16_t>(16, 16);
-   case EColumnType::kInt8: return std::make_pair<std::uint16_t, std::uint16_t>(8, 8);
-   case EColumnType::kUInt8: return std::make_pair<std::uint16_t, std::uint16_t>(8, 8);
-   case EColumnType::kSplitIndex64: return std::make_pair<std::uint16_t, std::uint16_t>(64, 64);
-   case EColumnType::kSplitIndex32: return std::make_pair<std::uint16_t, std::uint16_t>(32, 32);
-   case EColumnType::kSplitReal64: return std::make_pair<std::uint16_t, std::uint16_t>(64, 64);
-   case EColumnType::kSplitReal32: return std::make_pair<std::uint16_t, std::uint16_t>(32, 32);
-   case EColumnType::kSplitInt64: return std::make_pair<std::uint16_t, std::uint16_t>(64, 64);
-   case EColumnType::kSplitUInt64: return std::make_pair<std::uint16_t, std::uint16_t>(64, 64);
-   case EColumnType::kSplitInt32: return std::make_pair<std::uint16_t, std::uint16_t>(32, 32);
-   case EColumnType::kSplitUInt32: return std::make_pair<std::uint16_t, std::uint16_t>(32, 32);
-   case EColumnType::kSplitInt16: return std::make_pair<std::uint16_t, std::uint16_t>(16, 16);
-   case EColumnType::kSplitUInt16: return std::make_pair<std::uint16_t, std::uint16_t>(16, 16);
+   case EColumnType::kIndex64: return std::make_pair(64, 64);
+   case EColumnType::kIndex32: return std::make_pair(32, 32);
+   case EColumnType::kSwitch: return std::make_pair(96, 96);
+   case EColumnType::kByte: return std::make_pair(8, 8);
+   case EColumnType::kChar: return std::make_pair(8, 8);
+   case EColumnType::kBit: return std::make_pair(1, 1);
+   case EColumnType::kReal64: return std::make_pair(64, 64);
+   case EColumnType::kReal32: return std::make_pair(32, 32);
+   case EColumnType::kReal16: return std::make_pair(16, 16);
+   case EColumnType::kInt64: return std::make_pair(64, 64);
+   case EColumnType::kUInt64: return std::make_pair(64, 64);
+   case EColumnType::kInt32: return std::make_pair(32, 32);
+   case EColumnType::kUInt32: return std::make_pair(32, 32);
+   case EColumnType::kInt16: return std::make_pair(16, 16);
+   case EColumnType::kUInt16: return std::make_pair(16, 16);
+   case EColumnType::kInt8: return std::make_pair(8, 8);
+   case EColumnType::kUInt8: return std::make_pair(8, 8);
+   case EColumnType::kSplitIndex64: return std::make_pair(64, 64);
+   case EColumnType::kSplitIndex32: return std::make_pair(32, 32);
+   case EColumnType::kSplitReal64: return std::make_pair(64, 64);
+   case EColumnType::kSplitReal32: return std::make_pair(32, 32);
+   case EColumnType::kSplitInt64: return std::make_pair(64, 64);
+   case EColumnType::kSplitUInt64: return std::make_pair(64, 64);
+   case EColumnType::kSplitInt32: return std::make_pair(32, 32);
+   case EColumnType::kSplitUInt32: return std::make_pair(32, 32);
+   case EColumnType::kSplitInt16: return std::make_pair(16, 16);
+   case EColumnType::kSplitUInt16: return std::make_pair(16, 16);
    default: assert(false);
    }
    // never here
-   return std::make_pair<std::uint16_t, std::uint16_t>(0, 0);
+   return std::make_pair(0, 0);
 }
 
 std::string ROOT::Experimental::Internal::RColumnElementBase::GetTypeName(EColumnType type)

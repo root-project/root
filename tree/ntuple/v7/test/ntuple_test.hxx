@@ -1,6 +1,7 @@
 #ifndef ROOT7_RNTuple_Test
 #define ROOT7_RNTuple_Test
 
+#include <ROOT/RColumnElement.hxx>
 #include <ROOT/RError.hxx>
 #include <ROOT/RField.hxx>
 #include <ROOT/RFieldVisitor.hxx>
@@ -15,6 +16,7 @@
 #include <ROOT/RNTupleReader.hxx>
 #include <ROOT/RNTupleParallelWriter.hxx>
 #include <ROOT/RNTupleSerialize.hxx>
+#include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RNTupleWriteOptions.hxx>
 #include <ROOT/RNTupleWriteOptionsDaos.hxx>
 #include <ROOT/RNTupleWriter.hxx>
@@ -62,6 +64,9 @@ using RClusterDescriptor = ROOT::Experimental::RClusterDescriptor;
 using RClusterDescriptorBuilder = ROOT::Experimental::Internal::RClusterDescriptorBuilder;
 using RClusterGroupDescriptorBuilder = ROOT::Experimental::Internal::RClusterGroupDescriptorBuilder;
 using RColumnDescriptorBuilder = ROOT::Experimental::Internal::RColumnDescriptorBuilder;
+template <typename T, EColumnType C>
+using RColumnElement = ROOT::Experimental::Internal::RColumnElement<T, C>;
+using RColumnSwitch = ROOT::Experimental::RColumnSwitch;
 using ROOT::Experimental::Internal::RExtraTypeInfoDescriptorBuilder;
 using RFieldDescriptorBuilder = ROOT::Experimental::Internal::RFieldDescriptorBuilder;
 using RException = ROOT::Experimental::RException;
