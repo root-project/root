@@ -1321,7 +1321,7 @@ void RooProdPdf::groupProductTerms(std::list<std::vector<RooArgSet*>>& groupedTe
   }
 
   outerIntDeps.removeAll() ;
-  outerIntDeps.add(*std::unique_ptr<RooArgSet>{static_cast<RooArgSet*>(allIntDeps.selectCommon(allImpDeps))});
+  outerIntDeps.add(*std::unique_ptr<RooArgSet>{allIntDeps.selectCommon(allImpDeps)});
 
   // Now iteratively merge groups that should be (partially) integrated together
   for(RooAbsArg * outerIntDep : outerIntDeps) {
@@ -2265,11 +2265,8 @@ bool RooProdPdf::redirectServersHook(const RooAbsCollection& newServerList, bool
   for(std::unique_ptr<RooArgSet> const& normSet : _pdfNSetList) {
     for(RooAbsArg * arg : *normSet) {
       if(RooAbsArg * newArg = arg->findNewServer(newServerList, nameChange)) {
-        // Need to do some tricks here because it's not possible to replace in
-        // an owning RooAbsCollection.
-        normSet->releaseOwnership();
-        normSet->replace(*std::unique_ptr<RooAbsArg>{arg}, *newArg->cloneTree());
-        normSet->takeOwnership();
+        // Since normSet is owning, the original arg is now deleted.
+        normSet->replace(arg, std::unique_ptr<RooAbsArg>{newArg->cloneTree()});
       }
     }
   }
@@ -2367,6 +2364,15 @@ public:
    void doEval(RooFit::EvalContext &ctx) const override
    {
       _prodPdf->doEvalImpl(this, *_cache, ctx);
+   }
+
+   void translate(RooFit::Detail::CodeSquashContext &ctx) const override
+   {
+      if (_cache->_isRearranged) {
+         ctx.addResult(this, ctx.buildCall("RooFit::Detail::MathFuncs::ratio", *_cache->_rearrangedNum, *_cache->_rearrangedDen));
+      } else {
+         ctx.addResult(this, ctx.buildCall("RooFit::Detail::MathFuncs::product", _cache->_partList, _cache->_partList.size()));
+      }
    }
 
    ExtendMode extendMode() const override { return _prodPdf->extendMode(); }

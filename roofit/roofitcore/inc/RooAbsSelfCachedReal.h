@@ -105,7 +105,7 @@ RooFit::OwningPtr<RooArgSet> RooAbsSelfCached<Base_t>::actualObservables(const R
    }
 
    // Return servers that are in common with given normalization set
-   return RooFit::OwningPtr<RooArgSet>{static_cast<RooArgSet *>(serverSet.selectCommon(nset))};
+   return RooFit::OwningPtr<RooArgSet>{serverSet.selectCommon(nset)};
 }
 
 template <>

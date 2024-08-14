@@ -47,6 +47,7 @@ namespace RooStats{
 
       struct Configuration {
         bool binnedFitOptimization = true;
+        bool createPerRegionWorkspaces = true;
       };
 
       HistoToWorkspaceFactoryFast() {}

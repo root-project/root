@@ -155,7 +155,7 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
 
   // Mark all projected dependents as such
   if (!projDeps.empty()) {
-    std::unique_ptr<RooArgSet> projDataDeps{static_cast<RooArgSet*>(_funcObsSet->selectCommon(projDeps))};
+    std::unique_ptr<RooArgSet> projDataDeps{_funcObsSet->selectCommon(projDeps)};
     projDataDeps->setAttribAll("projectedDependent") ;
   }
 
@@ -571,9 +571,7 @@ void RooAbsOptTestStatistic::optimizeConstantTerms(bool activate, bool applyTrac
         arg->setCacheAndTrackHints(trackNodes);
       }
       // Do not set CacheAndTrack on constant expressions
-      RooArgSet* constNodes = static_cast<RooArgSet*>(trackNodes.selectByAttrib("Constant",true)) ;
-      trackNodes.remove(*constNodes) ;
-      delete constNodes ;
+      trackNodes.remove(*std::unique_ptr<RooAbsCollection>{trackNodes.selectByAttrib("Constant",true)});
 
       // Set CacheAndTrack flag on all remaining nodes
       trackNodes.setAttribAll("CacheAndTrack",true) ;
@@ -592,7 +590,7 @@ void RooAbsOptTestStatistic::optimizeConstantTerms(bool activate, bool applyTrac
       cacheArg->setOperMode(RooAbsArg::AClean) ;
     }
 
-    RooArgSet* constNodes = static_cast<RooArgSet*>(_cachedNodes.selectByAttrib("ConstantExpressionCached",true)) ;
+    std::unique_ptr<RooAbsCollection> constNodes{_cachedNodes.selectByAttrib("ConstantExpressionCached",true)};
     RooArgSet actualTrackNodes(_cachedNodes) ;
     actualTrackNodes.remove(*constNodes) ;
     if (!constNodes->empty()) {
@@ -609,7 +607,6 @@ void RooAbsOptTestStatistic::optimizeConstantTerms(bool activate, bool applyTrac
         coutI(Minimization) << " A total of " << constNodes->size() << " expressions will be evaluated in cache-and-track-mode." << endl ;
       }
     }
-    delete constNodes ;
 
     // Disable reading of observables that are no longer used
     _dataClone->optimizeReadingWithCaching(*_funcClone, _cachedNodes,requiredExtraObservables()) ;

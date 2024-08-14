@@ -76,10 +76,17 @@ RooAbsMinimizerFcn::RooAbsMinimizerFcn(RooArgList paramList, RooMinimizer *conte
 }
 
 RooAbsMinimizerFcn::RooAbsMinimizerFcn(const RooAbsMinimizerFcn &other)
-   : _context(other._context), _maxFCN(other._maxFCN), _funcOffset(other._funcOffset), _numBadNLL(other._numBadNLL),
-     _evalCounter(other._evalCounter), _nDim(other._nDim), _optConst(other._optConst),
-     _floatParamList(new RooArgList(*other._floatParamList)), _constParamList(new RooArgList(*other._constParamList)),
-     _initFloatParamList(std::make_unique<RooArgList>()), _initConstParamList(std::make_unique<RooArgList>()),
+   : _context(other._context),
+     _maxFCN(other._maxFCN),
+     _funcOffset(other._funcOffset),
+     _numBadNLL(other._numBadNLL),
+     _evalCounter(other._evalCounter),
+     _nDim(other._nDim),
+     _optConst(other._optConst),
+     _floatParamList(std::make_unique<RooArgList>(*other._floatParamList)),
+     _constParamList(std::make_unique<RooArgList>(*other._constParamList)),
+     _initFloatParamList(std::make_unique<RooArgList>()),
+     _initConstParamList(std::make_unique<RooArgList>()),
      _logfile(other._logfile)
 {
    other._initFloatParamList->snapshot(*_initFloatParamList, false);
@@ -440,6 +447,36 @@ void RooAbsMinimizerFcn::printEvalErrors() const
 
    RooAbsReal::printEvalErrors(msg, cfg().printEvalErrors);
    ooccoutW(_context, Minimization) << msg.str() << endl;
+}
+
+/// Apply corrections on the fvalue if errors were signaled.
+///
+/// Two kinds of errors are possible: 1. infinite or nan values (the latter
+/// can be a signaling nan, using RooNaNPacker) or 2. logEvalError-type errors.
+/// Both are caught here and fvalue is updated so that Minuit in turn is nudged
+/// to move the search outside of the problematic parameter space area.
+double RooAbsMinimizerFcn::applyEvalErrorHandling(double fvalue) const
+{
+   if (!std::isfinite(fvalue) || RooAbsReal::numEvalErrors() > 0 || fvalue > 1e30) {
+      printEvalErrors();
+      RooAbsReal::clearEvalErrorLog();
+      _numBadNLL++;
+
+      if (cfg().doEEWall) {
+         const double badness = RooNaNPacker::unpackNaN(fvalue);
+         fvalue = (std::isfinite(_maxFCN) ? _maxFCN : 0.) + cfg().recoverFromNaN * badness;
+      }
+   } else {
+      if (_evalCounter > 0 && _evalCounter == _numBadNLL) {
+         // This is the first time we get a valid function value; while before, the
+         // function was always invalid. For invalid  cases, we returned values > 0.
+         // Now, we offset valid values such that they are < 0.
+         _funcOffset = -fvalue;
+      }
+      fvalue += _funcOffset;
+      _maxFCN = std::max(fvalue, _maxFCN);
+   }
+   return fvalue;
 }
 
 void RooAbsMinimizerFcn::finishDoEval() const

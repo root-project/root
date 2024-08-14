@@ -29,7 +29,6 @@
 #include <RooMinimizer.h>
 #include <RooPoisson.h>
 #include <RooPolynomial.h>
-#include <RooProduct.h>
 #include <RooRealSumPdf.h>
 #include <RooRealVar.h>
 #include <RooSimultaneous.h>
@@ -239,6 +238,10 @@ TEST_P(FactoryTest, NLLFit)
    std::unique_ptr<RooAbsReal> nllRef = _params._createNLL(model, *data, ws, RooFit::EvalBackend::Cpu());
    std::unique_ptr<RooAbsReal> nllFunc = _params._createNLL(model, *data, ws, RooFit::EvalBackend::Codegen());
 
+   // We don't use the RooFit::Evaluator for the nominal likelihood. Like this,
+   // we make sure to validate also the NLL values of the generated code.
+   static_cast<RooFit::Experimental::RooFuncWrapper &>(*nllFunc).disableEvaluator();
+
    double tol = _params._fitResultTolerance;
 
    EXPECT_NEAR(nllRef->getVal(observables), nllFunc->getVal(), tol);
@@ -371,7 +374,7 @@ std::unique_ptr<RooAbsPdf> createSimPdfModel(RooRealVar &x, std::string const &c
 
    RooExponential expo(prefix("expo").c_str(), "expo", x, c);
 
-   // Create two Gaussian PDFs g1(x,mean1,sigma) anf g2(x,mean2,sigma) and their parameters
+   // Create two Gaussian PDFs g1(x,mean1,sigma) and g2(x,mean2,sigma) and their parameters
    RooRealVar mean1(prefix("mean1").c_str(), "mean of gaussians", 3, 0, 5);
    RooRealVar sigma1(prefix("sigma1").c_str(), "width of gaussians", 0.8, .01, 3.0);
    RooRealVar mean2(prefix("mean2").c_str(), "mean of gaussians", 6, 5, 10);
@@ -585,8 +588,7 @@ FactoryTestParams param13{"RooFormulaVar",
                           /*randomizeParameters=*/false};
 
 // Test for the uniform pdf. Since it doesn't depend on any parameters, we need
-// to add it with some other model like a Gaussian to get a meaningful model to
-// fit.
+// to add it to some other model like a Gaussian to get a meaningful fit model.
 FactoryTestParams param14{"Uniform",
                           [](RooWorkspace &ws) {
                              ws.factory("Gaussian::sig(x[0, 10], mean[5, -10, 10], sigma1[0.50, .01, 10])");

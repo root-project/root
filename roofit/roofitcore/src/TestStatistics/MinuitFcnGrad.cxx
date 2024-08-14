@@ -15,6 +15,7 @@
 #include "RooMinimizer.h"
 #include "RooMsgService.h"
 #include "RooAbsPdf.h"
+#include "RooNaNPacker.h"
 
 #include <iomanip> // std::setprecision
 
@@ -133,59 +134,17 @@ void MinuitFcnGrad::syncOffsets() const
 
 double MinuitFcnGrad::operator()(const double *x) const
 {
-   bool parameters_changed = syncParameterValuesFromMinuitCalls(x, false);
+   syncParameterValuesFromMinuitCalls(x, false);
 
    syncOffsets();
 
    // Calculate the function for these parameters
-   //   RooAbsReal::setHideOffset(false);
    auto &likelihoodHere(_likelihoodInGradient && _gradient->isCalculating() ? *_likelihoodInGradient : *_likelihood);
    likelihoodHere.evaluate();
    double fvalue = likelihoodHere.getResult().Sum();
    _calculationIsClean->likelihood = true;
-   //   RooAbsReal::setHideOffset(true);
 
-   if (!parameters_changed) {
-      return fvalue;
-   }
-
-   if (!std::isfinite(fvalue) || RooAbsReal::numEvalErrors() > 0 || fvalue > 1e30) {
-
-      if (cfg().printEvalErrors >= 0) {
-
-         if (cfg().doEEWall) {
-            oocoutW(nullptr, Eval) << "MinuitFcnGrad: Minimized function has error status." << std::endl
-                                   << "Returning maximum FCN so far (" << _maxFCN
-                                   << ") to force MIGRAD to back out of this region. Error log follows" << std::endl;
-         } else {
-            oocoutW(nullptr, Eval) << "MinuitFcnGrad: Minimized function has error status but is ignored" << std::endl;
-         }
-
-         bool first(true);
-         ooccoutW(nullptr, Eval) << "Parameter values: ";
-         for (auto *var : static_range_cast<const RooRealVar *>(*_floatParamList)) {
-            if (first) {
-               first = false;
-            } else {
-               ooccoutW(nullptr, Eval) << ", ";
-            }
-            ooccoutW(nullptr, Eval) << var->GetName() << "=" << var->getVal();
-         }
-         ooccoutW(nullptr, Eval) << std::endl;
-
-         RooAbsReal::printEvalErrors(ooccoutW(nullptr, Eval), cfg().printEvalErrors);
-         ooccoutW(nullptr, Eval) << std::endl;
-      }
-
-      if (cfg().doEEWall) {
-         fvalue = _maxFCN + 1;
-      }
-
-      RooAbsReal::clearEvalErrorLog();
-      _numBadNLL++;
-   } else if (fvalue > _maxFCN) {
-      _maxFCN = fvalue;
-   }
+   fvalue = applyEvalErrorHandling(fvalue);
 
    // Optional logging
    if (cfg().verbose) {

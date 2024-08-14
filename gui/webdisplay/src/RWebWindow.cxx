@@ -141,6 +141,8 @@ void RWebWindow::SetPanelName(const std::string &name)
 
    fPanelName = name;
    SetDefaultPage("file:rootui5sys/panel/panel.html");
+   if (fPanelName.find("localapp.") == 0)
+      SetUseCurrentDir(true);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -771,7 +773,8 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
       }
 
       std::string key, ntry;
-      key = url.GetValueFromOptions("key");
+      if (url.HasOption("key"))
+         key = url.GetValueFromOptions("key");
       if(url.HasOption("ntry"))
          ntry = url.GetValueFromOptions("ntry");
 

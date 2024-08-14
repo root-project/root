@@ -151,6 +151,14 @@ RooSimultaneous::RooSimultaneous(const char *name, const char *title, std::map<s
 {
 }
 
+/// For internal use in RooFit.
+RooSimultaneous::RooSimultaneous(const char *name, const char *title,
+                                 RooFit::Detail::FlatMap<std::string, RooAbsPdf *> const &pdfMap,
+                                 RooAbsCategoryLValue &inIndexCat)
+   : RooSimultaneous(name, title, RooFit::Detail::flatMapToStdMap(pdfMap), inIndexCat)
+{
+}
+
 RooSimultaneous::RooSimultaneous(const char *name, const char *title, RooSimultaneous::InitializationOutput &&initInfo)
    : RooAbsPdf(name, title),
      _plotCoefNormSet("!plotCoefNormSet", "plotCoefNormSet", this, false, false),
@@ -1054,13 +1062,14 @@ RooFit::OwningPtr<RooDataSet> RooSimultaneous::generateSimGlobal(const RooArgSet
       // Get pdf associated with state from simpdf
       RooAbsPdf* pdftmp = getPdf(nameIdx.first);
 
-      // Generate only global variables defined by the pdf associated with this state
       RooArgSet globtmp;
       pdftmp->getObservables(&whatVars, globtmp) ;
-      std::unique_ptr<RooDataSet> tmp{pdftmp->generate(globtmp,1)};
 
-      // Transfer values to output placeholder
-      globClone.assign(*tmp->get(0)) ;
+      // If there are any, generate only global variables defined by the pdf
+      // associated with this state and transfer values to output placeholder.
+      if (!globtmp.empty()) {
+        globClone.assign(*std::unique_ptr<RooDataSet>{pdftmp->generate(globtmp,1)}->get(0)) ;
+      }
     }
     data->add(globClone) ;
   }

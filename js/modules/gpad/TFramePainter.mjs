@@ -5,7 +5,7 @@ import { getActivePad, ObjectPainter, EAxisBits, kAxisLabels } from '../base/Obj
 import { getSvgLineStyle } from '../base/TAttLineHandler.mjs';
 import { TAxisPainter } from './TAxisPainter.mjs';
 import { FontHandler } from '../base/FontHandler.mjs';
-import { createMenu, closeMenu, showPainterMenu } from '../gui/menu.mjs';
+import { createMenu, closeMenu, showPainterMenu, hasMenu } from '../gui/menu.mjs';
 import { detectRightButton } from '../gui/utils.mjs';
 
 
@@ -841,6 +841,10 @@ const TooltipHandler = {
 
    /** @summary Handle key press */
    processKeyPress(evnt) {
+      // no custom keys handling when menu is present
+      if (hasMenu())
+         return true;
+
       const allowed = ['PageUp', 'PageDown', 'ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown', 'PrintScreen', 'Escape', '*'],
             main = this.selectDom(),
             pp = this.getPadPainter();

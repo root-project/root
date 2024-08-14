@@ -18,6 +18,7 @@ ROOT_ADD_GTEST(TGraphMultiErrorsTests TGraphMultiErrorsTests.cxx LIBRARIES Hist 
 ROOT_ADD_GTEST(test_TF123_Moments test_TF123_Moments.cxx LIBRARIES Hist)
 ROOT_ADD_GTEST(test_THBinIterator test_THBinIterator.cxx LIBRARIES Hist)
 ROOT_ADD_GTEST(testTMultiGraphGetHistogram test_TMultiGraph_GetHistogram.cxx LIBRARIES Hist Gpad)
+ROOT_ADD_GTEST(testMapCppName test_MapCppName.cxx LIBRARIES Hist Gpad)
 ROOT_ADD_GTEST(testTGraphSorting test_TGraph_sorting.cxx LIBRARIES Hist)
 ROOT_ADD_GTEST(testSpline test_spline.cxx LIBRARIES Hist)
 

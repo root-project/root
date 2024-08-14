@@ -2796,6 +2796,18 @@ void TROOT::SetMacroPath(const char *newpath)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set batch mode for ROOT
+/// If the argument evaluates to `true`, the session does not use interactive graphics.
+/// If web graphics runs in server mode, the web widgets are still available via URL
+
+void TROOT::SetBatch(Bool_t batch)
+{
+   fIsWebDisplayBatch = fBatch = batch;
+   if (fIsWebDisplayBatch && (fWebDisplay == "server"))
+      fIsWebDisplayBatch = kFALSE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// \brief Specify where web graphics shall be rendered
 ///
 /// The input parameter `webdisplay` defines where web graphics is rendered.
@@ -2824,6 +2836,8 @@ void TROOT::SetWebDisplay(const char *webdisplay)
    static TString brName = gEnv->GetValue("Browser.Name", "");
    static TString trName = gEnv->GetValue("TreeViewer.Name", "");
 
+   fIsWebDisplayBatch = fBatch;
+
    if (!strcmp(wd, "off")) {
       fIsWebDisplay = kFALSE;
       fWebDisplay = "off";
@@ -2833,6 +2847,7 @@ void TROOT::SetWebDisplay(const char *webdisplay)
       // handle server mode
       if (!strncmp(wd, "server", 6)) {
          fWebDisplay = "server";
+         fIsWebDisplayBatch = kFALSE;
          if (wd[6] == ':') {
             if ((wd[7] >= '0') && (wd[7] <= '9')) {
                auto port = TString(wd+7).Atoi();

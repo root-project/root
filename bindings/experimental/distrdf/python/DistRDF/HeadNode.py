@@ -182,6 +182,28 @@ class HeadNode(Node, ABC):
     def _handle_returned_values(self, values: TaskResult) -> Iterable:
         pass
 
+    def _execute_and_retrieve_results(self, mapper, local_nodes) -> TaskResult:
+        if self.drawables_dict is not None:
+            # Prepare a dictionary with additional information for live visualization
+            drawables_info_dict = {
+                # Key: node_id
+                node.node_id: (
+                    # Tuple containing:
+                    # 1. Callback functions passed by the user
+                    self.drawables_dict[node.node_id],
+                    # 2. Index of the node in the local_nodes list
+                    i,
+                    # 3. Name of the operation associated with the node
+                    node.operation.name
+                )
+                for i, node in enumerate(local_nodes)
+                # Filter: Only include nodes requested by the user
+                if node.node_id in self.drawables_dict
+            }
+            return self.backend.ProcessAndMergeLive(self._build_ranges(), mapper, distrdf_reducer, drawables_info_dict)
+        else:
+            return self.backend.ProcessAndMerge(self._build_ranges(), mapper, distrdf_reducer)
+
     def execute_graph(self) -> None:
         """
         Executes an RDataFrame computation graph on a distributed backend.
@@ -225,26 +247,11 @@ class HeadNode(Node, ABC):
 
         # Execute graph distributedly and return the aggregated results from all tasks
         # using the appropriate backend method based on whether or not live visualization is enabled
-        if self.drawables_dict is not None:
-            # Prepare a dictionary with additional information for live visualization
-            drawables_info_dict = {
-                # Key: node_id
-                node.node_id: (
-                    # Tuple containing:
-                    # 1. Callback functions passed by the user
-                    self.drawables_dict[node.node_id],
-                    # 2. Index of the node in the local_nodes list
-                    i,
-                    # 3. Name of the operation associated with the node
-                    node.operation.name
-                )
-                for i, node in enumerate(local_nodes)
-                # Filter: Only include nodes requested by the user
-                if node.node_id in self.drawables_dict
-            }
-            returned_values = self.backend.ProcessAndMergeLive(self._build_ranges(), mapper, distrdf_reducer, drawables_info_dict)
-        else:
-            returned_values = self.backend.ProcessAndMerge(self._build_ranges(), mapper, distrdf_reducer)
+        try:
+            returned_values = self._execute_and_retrieve_results(mapper, local_nodes)
+        finally:
+            # Cleanup the current execution artifacts from the caches on the workers
+            self.backend.cleanup_cache(self.exec_id)
 
         # Perform any extra checks that may be needed according to the
         # type of the head node
@@ -389,15 +396,13 @@ class EmptySourceHeadNode(HeadNode):
             Builds an RDataFrame instance for a distributed mapper.
             """
             if current_range.exec_id not in _graph_cache._RDF_REGISTER:
-                rdf_toprocess = ROOT.RDataFrame(nentries)
-                _graph_cache._RDF_REGISTER[current_range.exec_id] = rdf_toprocess
-            else:
-                rdf_toprocess = _graph_cache._RDF_REGISTER[current_range.exec_id]
+                _graph_cache._RDF_REGISTER[current_range.exec_id] = ROOT.RDataFrame(nentries)
 
             ROOT.Internal.RDF.ChangeEmptyEntryRange(
-                ROOT.RDF.AsRNode(rdf_toprocess), (current_range.start, current_range.end))
+                ROOT.RDF.AsRNode(_graph_cache._RDF_REGISTER[current_range.exec_id]),
+                (current_range.start, current_range.end))
 
-            return TaskObjects(rdf_toprocess, None)
+            return TaskObjects(_graph_cache._RDF_REGISTER[current_range.exec_id], None)
 
         return build_rdf_from_range
 
@@ -584,16 +589,15 @@ class TreeHeadNode(HeadNode):
             attach_friend_info_if_present(clustered_range, ds)
 
             if current_range.exec_id not in _graph_cache._RDF_REGISTER:
-                rdf_toprocess = ROOT.RDataFrame(ds)
                 # Fill the cache with the new RDataFrame
-                _graph_cache._RDF_REGISTER[current_range.exec_id] = rdf_toprocess
+                _graph_cache._RDF_REGISTER[current_range.exec_id] = ROOT.RDataFrame(ds)
             else:
-                # Retrieve an already present RDataFrame from the cache
-                rdf_toprocess = _graph_cache._RDF_REGISTER[current_range.exec_id]
                 # Update it to the range of entries for this task
-                ROOT.Internal.RDF.ChangeSpec(ROOT.RDF.AsRNode(rdf_toprocess), ROOT.std.move(ds))
+                ROOT.Internal.RDF.ChangeSpec(
+                    ROOT.RDF.AsRNode(_graph_cache._RDF_REGISTER[current_range.exec_id]),
+                    ROOT.std.move(ds))
 
-            return TaskObjects(rdf_toprocess, entries_in_trees)
+            return TaskObjects(_graph_cache._RDF_REGISTER[current_range.exec_id], entries_in_trees)
 
         return build_rdf_from_range
 
@@ -773,17 +777,15 @@ class RDatasetSpecHeadNode(HeadNode):
             attach_friend_info_if_present(clustered_range, ds)
 
             if current_range.exec_id not in _graph_cache._RDF_REGISTER:
-                rdf_toprocess = ROOT.RDataFrame(ds)
                 # Fill the cache with the new RDataFrame
-                _graph_cache._RDF_REGISTER[current_range.exec_id] = rdf_toprocess
+                _graph_cache._RDF_REGISTER[current_range.exec_id] = ROOT.RDataFrame(ds)
             else:
-                # Retrieve an already present RDataFrame from the cache
-                rdf_toprocess = _graph_cache._RDF_REGISTER[current_range.exec_id]
                 # Update it to the range of entries for this task
                 ROOT.Internal.RDF.ChangeSpec(
-                    ROOT.RDF.AsRNode(rdf_toprocess), ROOT.std.move(ds))
+                    ROOT.RDF.AsRNode( _graph_cache._RDF_REGISTER[current_range.exec_id]),
+                    ROOT.std.move(ds))
 
-            return TaskObjects(rdf_toprocess, entries_in_trees)
+            return TaskObjects(_graph_cache._RDF_REGISTER[current_range.exec_id], entries_in_trees)
 
         return build_rdf_from_range
 
@@ -876,8 +878,7 @@ class RNTupleHeadNode(HeadNode):
             if not filenames:
                 return TaskObjects(None, None)
 
-            rdf_toprocess = ROOT.RDF.Experimental.FromRNTuple(ntuplename, filenames)
-            return TaskObjects(rdf_toprocess, None)
+            return TaskObjects(ROOT.RDF.Experimental.FromRNTuple(ntuplename, filenames), None)
 
         return build_rdf_from_range
 

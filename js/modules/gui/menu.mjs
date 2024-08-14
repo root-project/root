@@ -1471,6 +1471,18 @@ function closeMenu(menuname) {
    return !!element;
 }
 
+/** @summary Returns true if menu or modual dialog present
+  * @private */
+function hasMenu(menuname) {
+   if (!menuname) menuname = 'root_ctx_menu';
+   const doc = getDocument();
+   if (doc.getElementById(menuname))
+      return true;
+   if (doc.getElementById(menuname + '_dialog'))
+      return true;
+   return false;
+}
+
 /** @summary Fill and show context menu for painter object
   * @private */
 function showPainterMenu(evnt, painter, kind) {
@@ -1513,4 +1525,4 @@ function assignContextMenu(painter, kind) {
       painter.draw_g.on('contextmenu', settings.ContextMenu ? evnt => showPainterMenu(evnt, painter, kind) : null);
 }
 
-export { createMenu, closeMenu, showPainterMenu, assignContextMenu, kToFront };
+export { createMenu, closeMenu, showPainterMenu, assignContextMenu, hasMenu, kToFront };

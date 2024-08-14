@@ -148,7 +148,7 @@ private:
                                              double xhi);
 
   static void rooHistTranslateImpl(RooAbsArg const *klass, RooFit::Detail::CodeSquashContext &ctx, int intOrder,
-                                   RooDataHist const *dataHist, const RooArgSet &obs, bool correctForBinSize);
+                                   RooDataHist const *dataHist, const RooArgSet &obs, bool correctForBinSize, bool cdfBoundaries);
 
   static std::string rooHistIntegralTranslateImpl(int code, RooAbsArg const *klass, RooDataHist const *dataHist,
                                                   const RooArgSet &obs, bool histFuncMode);

@@ -909,7 +909,7 @@ const RooAbsReal *RooAbsReal::createPlotProjection(const RooArgSet &dependentVar
   // are still in the cloneList and so will be cleaned up eventually.
   //cout << "redirection leafNodes : " ; leafNodes.Print("1") ;
 
-  std::unique_ptr<RooArgSet> plotLeafNodes{static_cast<RooArgSet*>(leafNodes.selectCommon(dependentVars))};
+  std::unique_ptr<RooArgSet> plotLeafNodes{leafNodes.selectCommon(dependentVars)};
   theClone->recursiveRedirectServers(*plotLeafNodes,false,false,false);
 
   // Create the set of normalization variables to use in the projection integrand
@@ -1419,9 +1419,9 @@ TH1* RooAbsReal::createHistogram(const char *name, const RooAbsRealLValue& xvar,
 
     std::unique_ptr<RooArgSet> dirSelNodes;
     if (compSet) {
-      dirSelNodes.reset(static_cast<RooArgSet*>(branchNodeSet.selectCommon(*compSet)));
+      dirSelNodes = std::unique_ptr<RooArgSet>{branchNodeSet.selectCommon(*compSet)};
     } else {
-      dirSelNodes.reset(static_cast<RooArgSet*>(branchNodeSet.selectByName(compSpec)));
+      dirSelNodes = std::unique_ptr<RooArgSet>{branchNodeSet.selectByName(compSpec)};
     }
     if (!dirSelNodes->empty()) {
       coutI(Plotting) << "RooAbsPdf::createHistogram(" << GetName() << ") directly selected PDF components: " << *dirSelNodes << std::endl ;
@@ -1940,7 +1940,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
   if (o.projData) {
     cxcoutD(Plotting) << "RooAbsReal::plotOn(" << GetName() << ") have ProjData with observables = " << *o.projData->get() << std::endl ;
     if (o.projDataSet) {
-      std::unique_ptr<RooArgSet> tmp{static_cast<RooArgSet*>(o.projData->get()->selectCommon(*o.projDataSet))};
+      std::unique_ptr<RooArgSet> tmp{o.projData->get()->selectCommon(*o.projDataSet)};
       projDataVars.add(*tmp) ;
       cxcoutD(Plotting) << "RooAbsReal::plotOn(" << GetName() << ") have ProjDataSet = " << *o.projDataSet << " will only use this subset of projData" << std::endl ;
     } else {
@@ -1970,7 +1970,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
       sliceSetTmp.remove(*frame->getPlotVar(),true,true) ;
 
       if (o.projData) {
-        std::unique_ptr<RooArgSet> tmp{static_cast<RooArgSet*>(projDataVars.selectCommon(*o.projSet))};
+        std::unique_ptr<RooArgSet> tmp{projDataVars.selectCommon(*o.projSet)};
         sliceSetTmp.remove(*tmp,true,true) ;
       }
 
@@ -1990,7 +1990,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
   RooArgSet* projDataNeededVars = nullptr ;
   // Take out data-projected dependents from projectedVars
   if (o.projData) {
-    projDataNeededVars = static_cast<RooArgSet*>(projectedVars.selectCommon(projDataVars)) ;
+    projDataNeededVars = projectedVars.selectCommon(projDataVars);
     projectedVars.remove(projDataVars,true,true) ;
   }
 
@@ -2060,7 +2060,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
     if (projDataNeededVars->size() < o.projData->get()->size()) {
 
       // Determine if there are any slice variables in the projection set
-        std::unique_ptr<RooArgSet> sliceDataSet{static_cast<RooArgSet*>(sliceSet.selectCommon(*o.projData->get()))};
+        std::unique_ptr<RooArgSet> sliceDataSet{sliceSet.selectCommon(*o.projData->get())};
       TString cutString ;
       if (!sliceDataSet->empty()) {
    bool first(true) ;
@@ -2304,7 +2304,7 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
   RooArgSet projDataVars ;
   if (o.projData) {
     if (o.projDataSet) {
-      std::unique_ptr<RooArgSet> tmp{static_cast<RooArgSet*>(o.projData->get()->selectCommon(*o.projDataSet))};
+      std::unique_ptr<RooArgSet> tmp{o.projData->get()->selectCommon(*o.projDataSet)};
       projDataVars.add(*tmp) ;
     } else {
       projDataVars.add(*o.projData->get()) ;
@@ -2339,7 +2339,7 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
       sliceSetTmp.remove(*frame->getPlotVar(),true,true) ;
 
       if (o.projData) {
-        std::unique_ptr<RooArgSet> tmp{static_cast<RooArgSet*>(projDataVars.selectCommon(*o.projSet))};
+        std::unique_ptr<RooArgSet> tmp{projDataVars.selectCommon(*o.projSet)};
         sliceSetTmp.remove(*tmp,true,true) ;
       }
 
@@ -2357,7 +2357,7 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
   // Take out data-projected dependens from projectedVars
   RooArgSet* projDataNeededVars = nullptr ;
   if (o.projData) {
-    projDataNeededVars = static_cast<RooArgSet*>(projectedVars.selectCommon(projDataVars)) ;
+    projDataNeededVars = projectedVars.selectCommon(projDataVars);
     projectedVars.remove(projDataVars,true,true) ;
   }
 

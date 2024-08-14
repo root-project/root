@@ -189,6 +189,9 @@ CPYCPPYY_EXTERN bool Scope_CheckExact(PyObject* pyobject);
 CPYCPPYY_EXTERN bool Instance_Check(PyObject* pyobject);
 CPYCPPYY_EXTERN bool Instance_CheckExact(PyObject* pyobject);
 
+// type verifier for sequences
+CPYCPPYY_EXTERN bool Sequence_Check(PyObject* pyobject);
+
 // helper to verify expected safety of moving an instance into C++
 CPYCPPYY_EXTERN bool Instance_IsLively(PyObject* pyobject);
 

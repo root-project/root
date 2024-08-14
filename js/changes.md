@@ -1,11 +1,16 @@
 # JSROOT changelog
 
-## Changes in 7.7.x
+## Changes in 7.7.2
 1. Fix - hide empty title on the canvas
 2. Fix - properly handle zooming in THStack histogram
 3. Fix - always use 0 as minimum in THStack drawings
 4. Fix - always show all ticks for labeled axis
 5. Fix - draw TProfile2D bins content as text, not entries
+6. Fix - interactive zooming on log color palette
+7. Fix - keyboard handling while input dialog active
+8. Fix - legend entry with not configured fill attributes
+9. Fix - prevent that color palette exceed graphical range
+10. Fix - exponential log axis labels with kMoreLogLabels bit set
 
 
 ## Changes in 7.7.1

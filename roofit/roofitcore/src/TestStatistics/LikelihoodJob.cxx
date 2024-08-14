@@ -25,6 +25,9 @@
 #include "RooFit/TestStatistics/RooSubsidiaryL.h"
 #include "RooFit/TestStatistics/RooSumL.h"
 #include "RooRealVar.h"
+#include "RooNaNPacker.h"
+
+#include "TMath.h" // IsNaN
 
 namespace RooFit {
 namespace TestStatistics {
@@ -209,15 +212,27 @@ void LikelihoodJob::evaluate()
       // wait for task results back from workers to master
       gather_worker_results();
 
+      RooNaNPacker packedNaN;
+
       // Note: initializing result_ to results_[0] instead of zero-initializing it makes
       // a difference due to Kahan sum precision. This way, a single-worker run gives
       // the same result as a run with serial likelihood. Adding the terms to a zero
       // initial sum can cancel the carry in some cases, causing divergent values.
       result_ = results_[0];
+      packedNaN.accumulate(results_[0].Sum());
       for (auto item_it = results_.cbegin() + 1; item_it != results_.cend(); ++item_it) {
          result_ += *item_it;
+         packedNaN.accumulate(item_it->Sum());
       }
       results_.clear();
+
+      if (packedNaN.getPayload() != 0) {
+         result_ = ROOT::Math::KahanSum<double>(packedNaN.getNaNWithPayload());
+      }
+
+      if (TMath::IsNaN(result_.Sum())) {
+         RooAbsReal::logEvalError(nullptr, GetName().c_str(), "function value is NAN");
+      }
    }
 }
 
@@ -225,7 +240,14 @@ void LikelihoodJob::evaluate()
 
 void LikelihoodJob::send_back_task_result_from_worker(std::size_t /*task*/)
 {
-   task_result_t task_result{id_, result_.Result(), result_.Carry()};
+   int numErrors = RooAbsReal::numEvalErrors();
+
+   if (numErrors) {
+      // Clear error list on local side
+      RooAbsReal::clearEvalErrorLog();
+   }
+
+   task_result_t task_result{id_, result_.Result(), result_.Carry(), numErrors > 0};
    zmq::message_t message(sizeof(task_result_t));
    memcpy(message.data(), &task_result, sizeof(task_result_t));
    get_manager()->messenger().send_from_worker_to_master(std::move(message));
@@ -235,6 +257,9 @@ bool LikelihoodJob::receive_task_result_on_master(const zmq::message_t &message)
 {
    auto task_result = message.data<task_result_t>();
    results_.emplace_back(task_result->value, task_result->carry);
+   if (task_result->has_errors) {
+      RooAbsReal::logEvalError(nullptr, "LikelihoodJob", "evaluation errors at the worker processes", "no servervalue");
+   }
    --n_tasks_at_workers_;
    bool job_completed = (n_tasks_at_workers_ == 0);
    return job_completed;
@@ -292,8 +317,10 @@ void LikelihoodJob::evaluate_task(std::size_t task)
       }
 
       result_ = ROOT::Math::KahanSum<double>();
+      RooNaNPacker packedNaN;
       for (std::size_t comp_ix = components_first; comp_ix < components_last; ++comp_ix) {
          auto component_result = likelihood_->evaluatePartition({section_first, section_last}, comp_ix, comp_ix + 1);
+         packedNaN.accumulate(component_result.Sum());
          if (do_offset_ && section_last == 1 &&
              shared_offset_.offsets()[comp_ix] != ROOT::Math::KahanSum<double>(0, 0)) {
             // we only subtract at the end of event sections, otherwise the offset is subtracted for each event split
@@ -301,6 +328,9 @@ void LikelihoodJob::evaluate_task(std::size_t task)
          } else {
             result_ += component_result;
          }
+      }
+      if (packedNaN.getPayload() != 0) {
+         result_ = ROOT::Math::KahanSum<double>(packedNaN.getNaNWithPayload());
       }
 
       break;

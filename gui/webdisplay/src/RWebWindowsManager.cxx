@@ -149,13 +149,24 @@ bool RWebWindowsManager::IsLoopbackMode()
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-/// Enable or disable usage of session key
-/// If enabled, each packet send to or from server is signed with special hashsum
-/// This protects http server from different attacks to get access to server functionality
+/// Enable or disable usage of session key (default on)
+/// If enabled, secrete session key used to calculate hash sum of each packet send to or from server
+/// This protects ROOT http server from anauthorized usage
 
 void RWebWindowsManager::SetUseSessionKey(bool on)
 {
    gWebWinUseSessionKey = on;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Enable or disable usage of connection key (default on)
+/// If enabled, each connection (and reconnection) to widget requires unique key
+/// Connection key used together with session key to calculate hash sum of each packet send to or from server
+/// This protects ROOT http server from anauthorized usage
+
+void RWebWindowsManager::SetUseConnectionKey(bool on)
+{
+   gEnv->SetValue("WebGui.OnetimeKey", on ? "yes" : "no");
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -613,7 +624,7 @@ std::string RWebWindowsManager::GetUrl(RWebWindow &win, bool remote, std::string
 
    auto token = win.GetConnToken();
    if (!token.empty()) {
-      if (!qmark) addr.append("?");
+      addr.append(qmark ? "&" : "?");
       addr.append("token=");
       addr.append(token);
    }
@@ -654,7 +665,7 @@ std::string RWebWindowsManager::GetUrl(RWebWindow &win, bool remote, std::string
 /// Following parameters can be configured in rootrc file:
 ///
 ///      WebGui.Display: kind of display like chrome or firefox or browser, can be overwritten by --web=value command line argument
-///      WebGui.OnetimeKey: if configured requires unique key every time window is connected (default no)
+///      WebGui.OnetimeKey: if configured requires unique key every time window is connected (default yes)
 ///      WebGui.Chrome: full path to Google Chrome executable
 ///      WebGui.ChromeBatch: command to start chrome in batch, used for image production, like "$prog --headless --disable-gpu $geometry $url"
 ///      WebGui.ChromeHeadless: command to start chrome in headless mode, like "fork: --headless --disable-gpu $geometry $url"
@@ -717,7 +728,7 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &
    std::string key;
 
    std::string url = GetUrl(win, normal_http, &key);
-   // empty url indicates failure, which already pinted by GetUrl method
+   // empty url indicates failure, which already printed by GetUrl method
    if (url.empty())
       return 0;
 
@@ -763,7 +774,7 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &
                "ROOT web-based widget started in the session where DISPLAY set to " << displ << "\n" <<
                "Means web browser will be displayed on remote X11 server which is usually very inefficient\n"
                "One can start ROOT session in server mode like \"root -b --web=server:8877\" and forward http port to display node\n"
-               "Or one can use rootssh script to configure pore forwarding and display web widgets automatically\n"
+               "Or one can use rootssh script to configure port forwarding and display web widgets automatically\n"
                "Find more info on https://root.cern/for_developers/root7/#rbrowser\n"
                "This message can be disabled by setting \"" << varname << ": no\" in .rootrc file\n";
          }
@@ -771,8 +782,13 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &
    }
 #endif
 
+   auto server = GetServer();
+
+   if (win.IsUseCurrentDir())
+      server->AddLocation("currentdir/", ".");
+
    if (!normal_http)
-      args.SetHttpServer(GetServer());
+      args.SetHttpServer(server);
 
    auto handle = RWebDisplayHandle::Display(args);
 
