@@ -268,8 +268,8 @@ jobs:
 
     - name: Configure OpenStack CLI
       run: |
-        export OS_APPLICATION_CREDENTIAL_ID= '7f5b64a265244623a3a933308569bdba'
-        export OS_APPLICATION_CREDENTIAL_SECRET=${{secrets.OS_APPLICATION_CREDENTIAL_SECRET }}
+        export OS_APPLICATION_CREDENTIAL_ID='7f5b64a265244623a3a933308569bdba'
+        export OS_APPLICATION_CREDENTIAL_SECRET=${{ secrets.OS_APPLICATION_CREDENTIAL_SECRET }}
         export OS_AUTH_TYPE=v3applicationcredential
         export OS_AUTH_URL=https://keystone.cern.ch/v3
         export OS_IDENTITY_API_VERSION=3
