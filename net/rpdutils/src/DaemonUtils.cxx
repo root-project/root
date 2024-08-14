@@ -553,7 +553,7 @@ namespace ROOT {
       char    buf[1024];
       va_list ap;
       va_start(ap,va_(fmt));
-      vsprintf(buf, fmt, ap);
+      vsnprintf(buf, sizeof(buf), fmt, ap);
       va_end(ap);
       printf("%s\n", buf);
       fflush(stdout);
@@ -567,7 +567,7 @@ namespace ROOT {
       char    buf[1024];
       va_list ap;
       va_start(ap,va_(fmt));
-      vsprintf(buf, fmt, ap);
+      vsnprintf(buf, sizeof(buf), fmt, ap);
       va_end(ap);
       printf("%s\n", buf);
       fflush(stdout);
