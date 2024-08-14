@@ -165,34 +165,38 @@ ROOT::Experimental::Internal::GenerateColumnElement(EColumnCppType cppType, ECol
    return nullptr;
 }
 
-void ROOT::Experimental::Internal::FloatPacking::PackFloats(void *dst, const float *src, std::size_t count,
-                                                            std::size_t nFloatBits)
+void ROOT::Experimental::Internal::BitPacking::PackBits(void *dst, const void *src, std::size_t count,
+                                                        std::size_t sizeofSrc, std::size_t nDstBits)
 {
+   R__ASSERT(sizeofSrc <= sizeof(Word_t));
+   R__ASSERT(0 < nDstBits && nDstBits <= sizeofSrc * 8);
+   
+   const unsigned char *srcArray = reinterpret_cast<const unsigned char *>(src);
    Word_t *dstArray = reinterpret_cast<Word_t *>(dst);
    Word_t accum = 0;
    std::size_t bitsUsed = 0;
    std::size_t dstIdx = 0;
    for (std::size_t i = 0; i < count; ++i) {
-      Word_t packedFloat = 0;
-      memcpy(&packedFloat, &src[i], sizeof(float));
-      // make sure we represent the float as LE on disk
-      ByteSwapIfNecessary(packedFloat);
+      Word_t packedWord = 0;
+      memcpy(&packedWord, srcArray + i * sizeofSrc, sizeofSrc);
+      // make sure we represent the packed word as LE on disk
+      ByteSwapIfNecessary(packedWord);
       // truncate the LSB of the mantissa
-      packedFloat >>= sizeof(float) * 8 - nFloatBits;
+      packedWord >>= sizeofSrc * 8 - nDstBits;
 
       const std::size_t bitsRem = kBitsPerWord - bitsUsed;
-      if (bitsRem >= nFloatBits) {
-         // append the entire float to the accumulator
-         accum |= (packedFloat << bitsUsed);
-         bitsUsed += nFloatBits;
+      if (bitsRem >= nDstBits) {
+         // append the entire item to the accumulator
+         accum |= (packedWord << bitsUsed);
+         bitsUsed += nDstBits;
       } else {
-         // chop up the float into its `bitsRem` LSB bits + `nFloatBits - bitsRem` MSB bits.
+         // chop up the item into its `bitsRem` LSB bits + `nDstBits - bitsRem` MSB bits.
          // The LSB bits will be saved in the current word and the MSB will be saved in the next one.
          if (bitsRem > 0) {
-            Word_t packedFloatLsb = packedFloat;
-            packedFloatLsb <<= (kBitsPerWord - bitsRem);
-            packedFloatLsb >>= (kBitsPerWord - bitsRem);
-            accum |= (packedFloatLsb << bitsUsed);
+            Word_t packedWordLsb = packedWord;
+            packedWordLsb <<= (kBitsPerWord - bitsRem);
+            packedWordLsb >>= (kBitsPerWord - bitsRem);
+            accum |= (packedWordLsb << bitsUsed);
          }
 
          memcpy(&dstArray[dstIdx++], &accum, sizeof(accum));
@@ -200,14 +204,14 @@ void ROOT::Experimental::Internal::FloatPacking::PackFloats(void *dst, const flo
          bitsUsed = 0;
 
          if (bitsRem > 0) {
-            Word_t packedFloatMsb = packedFloat;
-            packedFloatMsb >>= bitsRem;
-            accum |= packedFloatMsb;
-            bitsUsed += nFloatBits - bitsRem;
+            Word_t packedWordMsb = packedWord;
+            packedWordMsb >>= bitsRem;
+            accum |= packedWordMsb;
+            bitsUsed += nDstBits - bitsRem;
          } else {
-            // we realigned to a word boundary: append the entire float
-            accum = packedFloat;
-            bitsUsed += nFloatBits;
+            // we realigned to a word boundary: append the entire item
+            accum = packedWord;
+            bitsUsed += nDstBits;
          }
       }
    }
@@ -215,61 +219,65 @@ void ROOT::Experimental::Internal::FloatPacking::PackFloats(void *dst, const flo
    if (bitsUsed)
       memcpy(&dstArray[dstIdx++], &accum, sizeof(accum));
 
-   [[maybe_unused]] auto expDstCount = (count * nFloatBits + kBitsPerWord - 1) / kBitsPerWord;
+   [[maybe_unused]] auto expDstCount = (count * nDstBits + kBitsPerWord - 1) / kBitsPerWord;
    assert(dstIdx == expDstCount);
 }
 
-void ROOT::Experimental::Internal::FloatPacking::UnpackFloats(float *dst, const void *src, std::size_t count,
-                                                              std::size_t nFloatBits)
+void ROOT::Experimental::Internal::BitPacking::UnpackBits(void *dst, const void *src, std::size_t count,
+                                                          std::size_t sizeofDst, std::size_t nSrcBits)
 {
-   const Word_t *srcArray = reinterpret_cast<const Word_t *>(src);
-   const auto nWordsToLoad = (count * nFloatBits + kBitsPerWord - 1) / kBitsPerWord;
+   R__ASSERT(sizeofDst <= sizeof(Word_t));
+   R__ASSERT(0 < nSrcBits && nSrcBits <= sizeofDst * 8);
 
-   // bit offset of the next packed float inside the currently loaded word
+   unsigned char *dstArray = reinterpret_cast<unsigned char *>(dst);
+   const Word_t *srcArray = reinterpret_cast<const Word_t *>(src);
+   const auto nWordsToLoad = (count * nSrcBits + kBitsPerWord - 1) / kBitsPerWord;
+
+   // bit offset of the next packed item inside the currently loaded word
    int offInWord = 0;
    std::size_t dstIdx = 0;
    std::uint32_t prevWordAccum = 0;
    for (std::size_t i = 0; i < nWordsToLoad; ++i) {
       assert(dstIdx < count);
 
-      // load the next word, containing some packed floats
+      // load the next word, containing some packed items
       Word_t packedBytes;
       memcpy(&packedBytes, &srcArray[i], sizeof(packedBytes));
 
-      // If `offInWord` is negative, it means that the last float was split
+      // If `offInWord` is negative, it means that the last item was split
       // across 2 words and we need to recombine it.
       if (offInWord < 0) {
-         std::size_t nMsb = nFloatBits + offInWord;
-         std::uint32_t msb = packedBytes << (8 * sizeof(float) - nMsb);
-         std::uint32_t packedFloat = msb | prevWordAccum;
+         std::size_t nMsb = nSrcBits + offInWord;
+         std::uint32_t msb = packedBytes << (8 * sizeofDst - nMsb);
+         std::uint32_t packedWord = msb | prevWordAccum;
          prevWordAccum = 0;
-         memcpy(&dst[dstIdx], &packedFloat, sizeof(float));
+         memcpy(dstArray + dstIdx * sizeofDst, &packedWord, sizeofDst);
          ByteSwapIfNecessary(dst[dstIdx]);
          ++dstIdx;
          offInWord = nMsb;
       }
 
-      // isolate each float in the loaded word
+      // isolate each item in the loaded word
       while (dstIdx < count) {
-         // Check if we need to load a split float or a full one
-         if (offInWord > static_cast<int>(kBitsPerWord - nFloatBits)) {
-            // save the LSB of the next float, next `for` loop will merge them with the MSB in the next word.
+         // Check if we need to load a split item or a full one
+         if (offInWord > static_cast<int>(kBitsPerWord - nSrcBits)) {
+            // save the LSB of the next item, next `for` loop will merge them with the MSB in the next word.
             assert(offInWord <= static_cast<int>(kBitsPerWord));
             std::size_t nLsbNext = kBitsPerWord - offInWord;
             if (nLsbNext)
-               prevWordAccum = (packedBytes >> offInWord) << (8 * sizeof(float) - nFloatBits);
+               prevWordAccum = (packedBytes >> offInWord) << (8 * sizeofDst - nSrcBits);
             offInWord -= kBitsPerWord;
             break;
          }
 
-         Word_t packedFloat = packedBytes;
-         assert(nFloatBits + offInWord <= kBitsPerWord);
-         packedFloat >>= offInWord;
-         packedFloat <<= 8 * sizeof(float) - nFloatBits;
-         memcpy(&dst[dstIdx], &packedFloat, sizeof(float));
+         Word_t packedWord = packedBytes;
+         assert(nSrcBits + offInWord <= kBitsPerWord);
+         packedWord >>= offInWord;
+         packedWord <<= 8 * sizeofDst - nSrcBits;
+         memcpy(dstArray + dstIdx * sizeofDst, &packedWord, sizeofDst);
          ByteSwapIfNecessary(dst[dstIdx]);
          ++dstIdx;
-         offInWord += nFloatBits;
+         offInWord += nSrcBits;
       }
    }
 
