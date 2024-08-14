@@ -66,6 +66,8 @@ std::uint32_t SerializeField(const ROOT::Experimental::RFieldDescriptor &fieldDe
       flags |= RNTupleSerializer::kFlagProjectedField;
    if (fieldDesc.GetTypeChecksum().has_value())
       flags |= RNTupleSerializer::kFlagHasTypeChecksum;
+   if (fieldDesc.GetValueRange().has_value())
+      flags |= RNTupleSerializer::kFlagHasValueRange;
    pos += RNTupleSerializer::SerializeUInt16(flags, *where);
 
    if (flags & RNTupleSerializer::kFlagRepetitiveField) {
@@ -76,6 +78,15 @@ std::uint32_t SerializeField(const ROOT::Experimental::RFieldDescriptor &fieldDe
    }
    if (flags & RNTupleSerializer::kFlagHasTypeChecksum) {
       pos += RNTupleSerializer::SerializeUInt32(fieldDesc.GetTypeChecksum().value(), *where);
+   }
+   if (flags & RNTupleSerializer::kFlagHasValueRange) {
+      auto [min, max] = *fieldDesc.GetValueRange();
+      std::uint64_t intMin, intMax;
+      static_assert(sizeof(min) == sizeof(intMin) && sizeof(max) == sizeof(intMax));
+      memcpy(&intMin, &min, sizeof(min));
+      memcpy(&intMax, &max, sizeof(max));
+      pos += RNTupleSerializer::SerializeUInt64(intMin, *where);
+      pos += RNTupleSerializer::SerializeUInt64(intMax, *where);
    }
 
    pos += RNTupleSerializer::SerializeString(fieldDesc.GetFieldName(), *where);
@@ -178,6 +189,18 @@ RResult<std::uint32_t> DeserializeField(const void *buffer, std::uint64_t bufSiz
       std::uint32_t typeChecksum;
       bytes += RNTupleSerializer::DeserializeUInt32(bytes, typeChecksum);
       fieldDesc.TypeChecksum(typeChecksum);
+   }
+
+   if (flags & RNTupleSerializer::kFlagHasValueRange) {
+      if (fnFrameSizeLeft() < 2 * sizeof(std::uint64_t))
+         return R__FAIL("field record frame too short");
+      std::uint64_t minInt, maxInt;
+      bytes += RNTupleSerializer::DeserializeUInt64(bytes, minInt);
+      bytes += RNTupleSerializer::DeserializeUInt64(bytes, maxInt);
+      double min, max;
+      memcpy(&min, &minInt, sizeof(min));
+      memcpy(&max, &maxInt, sizeof(max));
+      fieldDesc.ValueRange({{ min, max }});
    }
 
    std::string fieldName;
@@ -686,6 +709,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeColumnType(ROOT::Exper
    case EColumnType::kSplitInt16: return SerializeUInt16(0x1C, buffer);
    case EColumnType::kSplitUInt16: return SerializeUInt16(0x15, buffer);
    case EColumnType::kReal32Trunc: return SerializeUInt16(0x1D, buffer);
+   case EColumnType::kReal32Quant: return SerializeUInt16(0x1E, buffer);
    default: throw RException(R__FAIL("ROOT bug: unexpected column type"));
    }
 }
@@ -727,6 +751,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeColumnType(const voi
    case 0x1C: type = EColumnType::kSplitInt16; break;
    case 0x15: type = EColumnType::kSplitUInt16; break;
    case 0x1D: type = EColumnType::kReal32Trunc; break;
+   case 0x1E: type = EColumnType::kReal32Quant; break;
    default: return R__FAIL("unexpected on-disk column type");
    }
    return result;
