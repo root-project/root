@@ -202,7 +202,11 @@ TEST(RNTupleImporter, ConvertDotsInBranchNames)
       std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
       auto tree = std::make_unique<TTree>("tree", "");
       Int_t a = 42;
+      Int_t muons_length = 1;
+      float muon_pt[1] = {3.14};
       tree->Branch("a.a", &a);
+      tree->Branch("muon.length", &muons_length);
+      tree->Branch("muon.pt", muon_pt, "muon.pt[muon.length]");
       tree->Fill();
       tree->Write();
    }
@@ -218,6 +222,11 @@ TEST(RNTupleImporter, ConvertDotsInBranchNames)
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    reader->LoadEntry(0);
    EXPECT_EQ(42, *reader->GetModel().GetDefaultEntry().GetPtr<std::int32_t>("a_a"));
+
+   auto viewMuon = reader->GetCollectionView("_collection0");
+   auto viewMuonPt = viewMuon.GetView<float>("muon_pt");
+   EXPECT_EQ(1, viewMuon(0));
+   EXPECT_FLOAT_EQ(3.14, viewMuonPt(0));
 }
 
 TEST(RNTupleImporter, FieldModifier)
