@@ -323,7 +323,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
    for (auto &p : fLeafCountCollections) {
       // We want to capture this variable, which is not possible with a
       // structured binding in C++17. Explicitly defining a variable works.
-      auto &countLeafName = p.first;
+      auto countLeafName = p.first;
       auto &c = p.second;
       c.fCollectionModel->Freeze();
       c.fCollectionEntry = c.fCollectionModel->CreateBareEntry();
@@ -347,6 +347,12 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
                return c.fFieldName + "." + name;
          });
       }
+
+      if (fConvertDotsInBranchNames) {
+         // Replace any occurrenceof a dot ('.') in the count leaf name with an underscore.
+         std::replace(countLeafName.begin(), countLeafName.end(), '.', '_');
+      }
+
       // Add projected fields for count leaf
       auto projectedField =
          RFieldBase::Create(countLeafName, "ROOT::Experimental::RNTupleCardinality<std::uint32_t>").Unwrap();
