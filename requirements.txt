@@ -1,7 +1,7 @@
 # ROOT requirements for third-party Python packages
 
 # PyROOT: Interoperability with numpy arrays
-numpy<=1.26.4
+numpy
 pandas
 
 # TMVA: SOFIE
