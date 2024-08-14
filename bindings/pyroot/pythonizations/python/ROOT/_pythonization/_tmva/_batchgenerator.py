@@ -334,7 +334,7 @@ class BaseGenerator:
 
         data.reshape((batch_size * num_columns,))
 
-        return_data = np.array(data).reshape(batch_size, num_columns)
+        return_data = np.asarray(data).reshape(batch_size, num_columns)
 
         # Splice target column from the data if target is given
         if self.target_given:
@@ -367,13 +367,14 @@ class BaseGenerator:
             torch.Tensor: converted batch
         """
         import torch
+        import numpy as np
 
         data = batch.GetData()
         batch_size, num_columns = tuple(batch.GetShape())
 
         data.reshape((batch_size * num_columns,))
-
-        return_data = torch.Tensor(data).reshape(batch_size, num_columns)
+        
+        return_data = torch.as_tensor(np.asarray(data)).reshape(self.batch_size, self.num_columns)
 
         # Splice target column from the data if target is given
         if self.target_given:
