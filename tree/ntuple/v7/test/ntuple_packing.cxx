@@ -380,7 +380,7 @@ TEST(Packing, OnDiskEncoding)
 
 TEST(Packing, Real32Trunc)
 {
-   namespace FloatPacking = ROOT::Experimental::Internal::FloatPacking;
+   namespace BitPacking = ROOT::Experimental::Internal::BitPacking;
    {
       constexpr auto kBitsOnStorage = 10;
       RColumnElement<float, EColumnType::kReal32Trunc> element;
@@ -400,7 +400,7 @@ TEST(Packing, Real32Trunc)
       EXPECT_EQ(f2, 3.f);
 
       float f[5] = {3.5f, 3.5f, 3.5f, 3.5f, 3.5f};
-      unsigned char out2[FloatPacking::MinBufSize(5, kBitsOnStorage)];
+      unsigned char out2[BitPacking::MinBufSize(5, kBitsOnStorage)];
       element.Pack(out2, f, 5);
 
       float fout[5];
@@ -431,7 +431,7 @@ TEST(Packing, Real32Trunc)
       float f[5] = {4.408104e-39, 1.0285575e-38, -2.2040519e-38, 8.8162076e-38, 1.4105932e-36};
       // ... truncated to: 0b000'0000'0010, 0b000'0000'0110, 0b000'0000'1110, ...
       const float expf[5] = {2.938736e-39, 8.816207e-39, -2.0571151e-38, 8.2284604e-38, 1.3165537e-36};
-      unsigned char out2[FloatPacking::MinBufSize(5, kBitsOnStorage)];
+      unsigned char out2[BitPacking::MinBufSize(5, kBitsOnStorage)];
       element.Pack(out2, f, 5);
 
       float fout[5];
@@ -461,7 +461,7 @@ TEST(Packing, Real32Trunc)
       for (int i = 0; i < N; ++i)
          f[i] = -2097176.7f;
       auto out2 =
-         std::make_unique<unsigned char[]>(FloatPacking::MinBufSize(N, kBitsOnStorage));
+         std::make_unique<unsigned char[]>(BitPacking::MinBufSize(N, kBitsOnStorage));
       element.Pack(out2.get(), f, N);
 
       float fout[N];
@@ -483,7 +483,7 @@ TEST(Packing, Real32Trunc)
          f[i] = 2.f + (0.000001f * i);
 
       auto out =
-         std::make_unique<unsigned char[]>(FloatPacking::MinBufSize(N, kBitsOnStorage));
+         std::make_unique<unsigned char[]>(BitPacking::MinBufSize(N, kBitsOnStorage));
       element.Pack(out.get(), f, N);
 
       float fout[N];
