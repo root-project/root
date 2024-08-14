@@ -71,6 +71,11 @@ class RFieldDescriptor {
    friend class Internal::RNTupleDescriptorBuilder;
    friend class Internal::RFieldDescriptorBuilder;
 
+public:
+   struct RValueRange {
+      double fMin, fMax;
+   };
+
 private:
    DescriptorId_t fFieldId = kInvalidDescriptorId;
    /// The version of the C++-type-to-column translation mechanics
@@ -105,6 +110,8 @@ private:
    /// For custom classes, we store the ROOT TClass reported checksum to facilitate the use of I/O rules that
    /// identify types by their checksum
    std::optional<std::uint32_t> fTypeChecksum;
+   /// Optional value range (used e.g. by quantized real fields)
+   std::optional<RValueRange> fValueRange;
 
 public:
    RFieldDescriptor() = default;
@@ -140,6 +147,7 @@ public:
    /// natively supported stdlib classes.
    /// The dictionary does not need to be available for this method.
    bool IsCustomClass() const;
+   std::optional<RValueRange> GetValueRange() const { return fValueRange; }
 };
 
 // clang-format off
@@ -1158,6 +1166,11 @@ public:
    RFieldDescriptorBuilder &TypeChecksum(const std::optional<std::uint32_t> typeChecksum)
    {
       fField.fTypeChecksum = typeChecksum;
+      return *this;
+   }
+   RFieldDescriptorBuilder &ValueRange(const std::optional<RFieldDescriptor::RValueRange> valueRange)
+   {
+      fField.fValueRange = valueRange;
       return *this;
    }
    DescriptorId_t GetParentId() const { return fField.fParentId; }

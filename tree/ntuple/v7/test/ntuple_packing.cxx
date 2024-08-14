@@ -8,6 +8,7 @@
 #include <limits>
 #include <type_traits>
 #include <utility>
+#include <random>
 
 #if defined(__GNUC__)
 #pragma GCC diagnostic push
@@ -545,6 +546,65 @@ TEST(Packing, Real32Trunc)
             EXPECT_NEAR(outputs[j], inputs[j], maxErr);
          }
       }
+   }
+}
+
+TEST(Packing, RealQuantize)
+{
+   using namespace Quantize;
+
+   float fs[5] = {1.f, 2.f, 3.f, 4.f, 5.f};
+   Quantized_t qs[5];
+   QuantizeReals(qs, fs, 5, 1., 5., 16);
+
+   float fuqs[5];
+   UnquantizeReals(fuqs, qs, 5, 1., 5., 16);
+   EXPECT_NEAR(fuqs[0], 1.f, 0.001f);
+   EXPECT_NEAR(fuqs[1], 2.f, 0.001f);
+   EXPECT_NEAR(fuqs[2], 3.f, 0.001f);
+   EXPECT_NEAR(fuqs[3], 4.f, 0.001f);
+   EXPECT_NEAR(fuqs[4], 5.f, 0.001f);
+
+   {
+      std::default_random_engine rng{42};
+      double min = -250, max = 500;
+      std::uniform_real_distribution<decltype(min)> dist{min, max};
+
+      constexpr auto N = 10000;
+      constexpr auto kNbits = 20;
+      auto inputs = std::make_unique<decltype(min)[]>(N);
+      for (int i = 0; i < N; ++i)
+         inputs.get()[i] = dist(rng);
+
+      auto quant = std::make_unique<Quantized_t[]>(N);
+      QuantizeReals(quant.get(), inputs.get(), N, min, max, kNbits);
+
+      auto unquant = std::make_unique<decltype(min)[]>(N);
+      UnquantizeReals(unquant.get(), quant.get(), N, min, max, kNbits);
+
+      for (int i = 0; i < N; ++i)
+         EXPECT_NEAR(inputs.get()[i], unquant.get()[i], 0.001);
+   }
+
+   {
+      std::default_random_engine rng{1337};
+      float min = 0, max = 1;
+      std::uniform_real_distribution<decltype(min)> dist{min, max};
+
+      constexpr auto N = 10000;
+      constexpr auto kNbits = 8;
+      auto inputs = std::make_unique<decltype(min)[]>(N);
+      for (int i = 0; i < N; ++i)
+         inputs.get()[i] = dist(rng);
+
+      auto quant = std::make_unique<Quantized_t[]>(N);
+      QuantizeReals(quant.get(), inputs.get(), N, min, max, kNbits);
+
+      auto unquant = std::make_unique<decltype(min)[]>(N);
+      UnquantizeReals(unquant.get(), quant.get(), N, min, max, kNbits);
+
+      for (int i = 0; i < N; ++i)
+         EXPECT_NEAR(inputs.get()[i], unquant.get()[i], 0.01);
    }
 }
 

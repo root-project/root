@@ -12,6 +12,7 @@
 #include <Byteswap.h>
 
 #include <bitset>
+#include <cassert>
 
 // NOTE: some tests might define R__LITTLE_ENDIAN to simulate a different-endianness machine
 #ifndef R__LITTLE_ENDIAN
@@ -739,6 +740,143 @@ public:
 #endif
    }
 };
+
+namespace Quantize {
+
+using Quantized_t = std::uint32_t;
+
+[[maybe_unused]] inline std::size_t LeadingZeroes(std::uint32_t x)
+{
+#ifdef _MSC_VER
+   unsigned long idx = 0;
+   _BitScanForward(&idx, x);
+   return static_cast<std::size_t>(idx);
+#else
+   return static_cast<std::size_t>(__builtin_clzl(x));
+#endif
+}
+
+[[maybe_unused]] inline std::size_t TrailingZeroes(std::uint32_t x)
+{
+#ifdef _MSC_VER
+   unsigned long idx = 0;
+   _BitScanReverse(&idx, x);
+   return static_cast<std::size_t>(idx);
+#else
+   return static_cast<std::size_t>(__builtin_ctzl(x));
+#endif
+}
+
+/// Converts the array `src` of `count` floating point numbers into an array of their quantized representations.
+/// Each element of `src` is assumed to be in the inclusive range [min, max].
+/// The quantized representation will consist of unsigned integers of at most `nQuantBits`, with `8 <= nQuantBits <=
+/// 32`. The unused bits are kept in the LSB of the quantized integers, to allow for easy bit packing of those integers
+/// via BitPacking::PackBits().
+template <typename T>
+void QuantizeReals(Quantized_t *dst, const T *src, std::size_t count, double min, double max, std::size_t nQuantBits)
+{
+   static_assert(std::is_floating_point_v<T>);
+   static_assert(sizeof(T) <= sizeof(double));
+   R__ASSERT(nQuantBits >= 8 && nQuantBits <= 8 * sizeof(Quantized_t));
+
+   const std::size_t quantMax = (1ull << nQuantBits) - 1;
+   const double scale = quantMax / (max - min);
+   const std::size_t unusedBits = sizeof(Quantized_t) * 8 - nQuantBits;
+
+   for (std::size_t i = 0; i < count; ++i) {
+      T elem = src[i];
+      assert(min <= elem && elem <= max);
+      double e = (elem - min) * scale;
+      Quantized_t q = static_cast<Quantized_t>(e);
+      ByteSwapIfNecessary(q);
+
+      // double-check we actually used at most `nQuantBits`
+      assert(LeadingZeroes(q) >= unusedBits);
+
+      // we want to leave zeroes in the LSB, not the MSB, because we'll then drop the LSB
+      // when bit packing.
+      dst[i] = q << unusedBits;
+   }
+}
+
+/// Undoes the transformation performed by QuantizeReals() (assuming the same `count`, `min`, `max` and `nQuantBits`).
+template <typename T>
+void UnquantizeReals(T *dst, const Quantized_t *src, std::size_t count, double min, double max, std::size_t nQuantBits)
+{
+   static_assert(std::is_floating_point_v<T>);
+   static_assert(sizeof(T) <= sizeof(double));
+   R__ASSERT(nQuantBits >= 8 && nQuantBits <= 8 * sizeof(Quantized_t));
+
+   const std::size_t quantMax = (1ull << nQuantBits) - 1;
+   const double scale = (max - min) / quantMax;
+   const double bias = min * quantMax / (max - min);
+   const std::size_t unusedBits = sizeof(Quantized_t) * 8 - nQuantBits;
+
+   for (std::size_t i = 0; i < count; ++i) {
+      Quantized_t elem = src[i];
+      // Undo the LSB-preserving shift performed by QuantizeReals
+      assert(TrailingZeroes(elem) >= unusedBits);
+      elem >>= unusedBits;
+      ByteSwapIfNecessary(elem);
+
+      double fq = static_cast<double>(elem);
+      double e = (fq + bias) * scale;
+      dst[i] = static_cast<T>(e);
+      assert(min <= dst[i] && dst[i] <= max);
+   }
+}
+} // namespace Quantize
+
+template <typename T>
+class RColumnElementQuantized : public RColumnElementBase {
+   static_assert(std::is_floating_point_v<T>);
+
+   double fMin = std::numeric_limits<double>::min();
+   double fMax = std::numeric_limits<double>::max();
+
+public:
+   static constexpr bool kIsMappable = false;
+   static constexpr std::size_t kSize = sizeof(T);
+
+   RColumnElementQuantized() : RColumnElementBase(kSize, 0) {}
+
+   void SetBitsOnStorage(std::size_t bitsOnStorage) final
+   {
+      const auto [minBits, maxBits] = GetValidBitRange(EColumnType::kReal32Quant);
+      R__ASSERT(bitsOnStorage >= minBits && bitsOnStorage <= maxBits);
+      fBitsOnStorage = bitsOnStorage;
+   }
+
+   void SetValueRange(double min, double max) final
+   {
+      fMin = min;
+      fMax = max;
+   }
+
+   bool IsMappable() const final { return kIsMappable; }
+
+   void Pack(void *dst, const void *src, std::size_t count) const final
+   {
+      auto quantized = std::make_unique<Quantize::Quantized_t[]>(count);
+      Quantize::QuantizeReals(quantized.get(), reinterpret_cast<const float *>(src), count, fMin, fMax, fBitsOnStorage);
+      ROOT::Experimental::Internal::BitPacking::PackBits(dst, quantized.get(), count, sizeof(Quantize::Quantized_t),
+                                                         fBitsOnStorage);
+   }
+
+   void Unpack(void *dst, const void *src, std::size_t count) const final
+   {
+      auto quantized = std::make_unique<Quantize::Quantized_t[]>(count);
+      ROOT::Experimental::Internal::BitPacking::UnpackBits(quantized.get(), src, count, sizeof(Quantize::Quantized_t),
+                                                           fBitsOnStorage);
+      Quantize::UnquantizeReals(reinterpret_cast<float *>(dst), quantized.get(), count, fMin, fMax, fBitsOnStorage);
+   }
+};
+
+template <>
+class RColumnElement<float, EColumnType::kReal32Quant> : public RColumnElementQuantized<float> {};
+
+template <>
+class RColumnElement<double, EColumnType::kReal32Quant> : public RColumnElementQuantized<double> {};
 
 #define __RCOLUMNELEMENT_SPEC_BODY(CppT, BaseT, BitsOnStorage)  \
    static constexpr std::size_t kSize = sizeof(CppT);           \
