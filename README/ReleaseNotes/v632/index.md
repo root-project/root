@@ -767,4 +767,35 @@ Published on June 18, 2024
 * [[ROOT-8439](https://its.cern.ch/jira/browse/ROOT-8439)] - PyROOT does not treat exceptions properly in overloaded methods
 * [[ROOT-9307](https://its.cern.ch/jira/browse/ROOT-9307)] - TPad::GetListOfPrimitives() double deletion error in TList::Clear()
 
+## Release 6.32.04
+
+Published on August 14, 2024
+
+### Items addressed in this release
+* [[#7223](https://github.com/root-project/root/issues/7223)] - [RF] RDataFrame to RooDataSet/RooDataHist conversion
+* [[#7782](https://github.com/root-project/root/issues/7782)] - [RF] Allow to set nbins for RooPlot (or disallow)
+* [[#9838](https://github.com/root-project/root/issues/9838)] - [RF] RooCurve::Average() overestimating average values of standard precision curves on small
+* [[#11565](https://github.com/root-project/root/issues/11565)] - [RF] Crash in RooStats::ToyMCSample::GenerateToyData
+* [[#13387](https://github.com/root-project/root/issues/13387)] - Please recover SrvAuthenticate from libSrvAuth library
+* [[#14541](https://github.com/root-project/root/issues/14541)] - [ROOT-6193] Editor for palette axis cannot set title properties
+* [[#15104](https://github.com/root-project/root/issues/15104)] - new PyROOT/cppyy fails to pickle enums
+* [[#15161](https://github.com/root-project/root/issues/15161)] - Attribute (__getitem__) differences for PyROOT objects in ROOT master
+* [[#15234](https://github.com/root-project/root/issues/15234)] - cppyy - wrong object type when iterating over a polymorphic container
+* [[#15315](https://github.com/root-project/root/issues/15315)] - [PyROOT] Example with inheriting from ROOT.Math.IMultiGenFunction doesn't work after recent cppyy upgrade
+* [[#15425](https://github.com/root-project/root/issues/15425)] - TTreeProcessorMP processes events multiple times when there are more threads than entries
+* [[#15755](https://github.com/root-project/root/issues/15755)] - [RF][HS3] Higgs discovery workspaces roundtrip
+* [[#15874](https://github.com/root-project/root/issues/15874)] - [Hist] Backwards compatibility broken for THnSparseL in 6.32
+* [[#15887](https://github.com/root-project/root/issues/15887)] - Broken plot .C macros for default Name() argument in plotOn()
+* [[#15977](https://github.com/root-project/root/issues/15977)] - [gui] Event StatusBar does not work well when TMarker outside of zoom region
+* [[#15986](https://github.com/root-project/root/issues/15986)] - Problems with TUri compilation
+* [[#16031](https://github.com/root-project/root/issues/16031)] - VecOps binary functions not using the right types
+* [[#16038](https://github.com/root-project/root/issues/16038)] - Could NOT find Vdt error when using 6.32.02 docker image
+* [[#16087](https://github.com/root-project/root/issues/16087)] - [docs] Potential typo in function name case: DistanceToPrimitive
+* [[#16201](https://github.com/root-project/root/issues/16201)] - [PyROOT] Support most recent numba version 0.60.0
+intervals
+* [[ROOT-6286](https://its.cern.ch/jira/browse/ROOT-6286)] - Reading a TChain and TTreeCache
+* [[ROOT-7991](https://its.cern.ch/jira/browse/ROOT-7991)] - THnSparse::ProjectionND yields disfunctional histogram
+* [[ROOT-8238](https://its.cern.ch/jira/browse/ROOT-8238)] - TPrincipal tries to make histograms with nbin=0
+* [[ROOT-8519](https://its.cern.ch/jira/browse/ROOT-8519)] - Bug when use simple math functions in TTree::SetAlias()
+
 ## HEAD of the v6-32-00-patches branch
