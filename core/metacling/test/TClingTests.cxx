@@ -274,3 +274,62 @@ TEST_F(TClingTests, ROOT10499) {
    EXPECT_EQ((void*)&errno, (void*)gInterpreter->Calc("&errno"));
 #endif
 }
+
+// ROOT-6913
+TEST_F(TClingTests, ClassInfoProperty)
+{
+   gInterpreter->Declare(R"cpp(
+class ClassHasExplicitCtor{
+   public:
+      ClassHasExplicitCtor(){};
+};
+
+class ClassHasExplicitDtor{
+   public:
+      ~ClassHasExplicitDtor(){};
+};
+
+class ClassHasImplicitCtor {
+   ClassHasExplicitCtor c;
+};
+
+class ClassHasImplicitDtor{
+   ClassHasExplicitDtor c;
+};
+
+class ClassHasDefaultCtor{
+   ClassHasDefaultCtor(){};
+};
+
+class ClassIsAbstract{
+   virtual void PureVirtual() = 0;
+};
+
+class ClassHasVirtual{
+   virtual void Virtual() {};
+};
+
+class ClassHasAssignOpr{
+   ClassHasAssignOpr& operator=(const ClassHasAssignOpr&);
+};
+
+// according to the C++ standard, being a POD implies being an aggregate
+struct ClassIsAggregate {
+    int x;
+    double y;
+};
+                          )cpp");
+
+   const std::vector<std::pair<std::string, Long_t>> classNPPairs{
+      {"ClassHasImplicitCtor", kClassHasImplicitCtor}, {"ClassHasExplicitCtor", kClassHasExplicitCtor},
+      {"ClassHasExplicitDtor", kClassHasExplicitDtor}, {"ClassHasImplicitDtor", kClassHasImplicitDtor},
+      {"ClassHasDefaultCtor", kClassHasDefaultCtor},   {"ClassHasDefaultCtor", kClassIsValid},
+      {"ClassIsAbstract", kClassIsAbstract},           {"ClassHasVirtual", kClassHasVirtual},
+      {"ClassHasAssignOpr", kClassHasAssignOpr},       {"ClassIsAggregate", kClassIsAggregate}};
+
+   for (auto &[clName, clPropRef] : classNPPairs) {
+      auto cl = TClass::GetClass(clName.c_str());
+      const auto prop = gInterpreter->ClassInfo_ClassProperty(cl->GetClassInfo());
+      EXPECT_TRUE(prop & clPropRef) << "Error checking property for class " << clName;
+   }
+}
