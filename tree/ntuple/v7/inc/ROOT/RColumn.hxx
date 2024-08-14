@@ -61,9 +61,9 @@ private:
    RPage fWritePage[2];
    /// Index of the current write page
    int fWritePageIdx = 0;
-   /// For writing, the targeted number of elements, given by `fApproxNElementsPerPage` (in the write options) and the element size.
-   /// We ensure this value to be >= 2 in Connect() so that we have meaningful
-   /// "page full" and "page half full" events when writing the page.
+   /// For writing, the targeted number of elements, given by `fApproxNElementsPerPage` (in the write options) and the
+   /// element size. We ensure this value to be >= 2 in Connect() so that we have meaningful "page full" and "page half
+   /// full" events when writing the page.
    std::uint32_t fApproxNElementsPerPage = 0;
    /// The number of elements written resp. available in the column
    NTupleSize_t fNElements = 0;
@@ -107,7 +107,8 @@ private:
    }
 
    /// When the main write page surpasses the 50% fill level, the (full) shadow write page gets flushed
-   void FlushShadowWritePage() {
+   void FlushShadowWritePage()
+   {
       auto otherIdx = 1 - fWritePageIdx;
       if (fWritePage[otherIdx].IsEmpty())
          return;
@@ -126,8 +127,8 @@ public:
       return column;
    }
 
-   RColumn(const RColumn&) = delete;
-   RColumn &operator =(const RColumn&) = delete;
+   RColumn(const RColumn &) = delete;
+   RColumn &operator=(const RColumn &) = delete;
    ~RColumn();
 
    /// Connect the column to a page sink.  `firstElementIndex` can be used to specify the first column element index
@@ -168,8 +169,7 @@ public:
       // This check should be done before calling `RPage::GrowUnchecked()` as the latter affects the return value of
       // `RPage::GetNElements()`.
       if ((fWritePage[fWritePageIdx].GetNElements() < fApproxNElementsPerPage / 2) &&
-          (fWritePage[fWritePageIdx].GetNElements() + count >= fApproxNElementsPerPage / 2))
-      {
+          (fWritePage[fWritePageIdx].GetNElements() + count >= fApproxNElementsPerPage / 2)) {
          FlushShadowWritePage();
       }
 
@@ -243,7 +243,8 @@ public:
    }
 
    template <typename CppT>
-   CppT *Map(const NTupleSize_t globalIndex) {
+   CppT *Map(const NTupleSize_t globalIndex)
+   {
       NTupleSize_t nItems;
       return MapV<CppT>(globalIndex, nItems);
    }
@@ -256,15 +257,15 @@ public:
    }
 
    template <typename CppT>
-   CppT *MapV(const NTupleSize_t globalIndex, NTupleSize_t &nItems) {
+   CppT *MapV(const NTupleSize_t globalIndex, NTupleSize_t &nItems)
+   {
       if (R__unlikely(!fReadPage.Contains(globalIndex))) {
          MapPage(globalIndex);
       }
       // +1 to go from 0-based indexing to 1-based number of items
       nItems = fReadPage.GetGlobalRangeLast() - globalIndex + 1;
-      return reinterpret_cast<CppT*>(
-         static_cast<unsigned char *>(fReadPage.GetBuffer()) +
-         (globalIndex - fReadPage.GetGlobalRangeFirst()) * RColumnElement<CppT>::kSize);
+      return reinterpret_cast<CppT *>(static_cast<unsigned char *>(fReadPage.GetBuffer()) +
+                                      (globalIndex - fReadPage.GetGlobalRangeFirst()) * RColumnElement<CppT>::kSize);
    }
 
    template <typename CppT>
@@ -275,9 +276,9 @@ public:
       }
       // +1 to go from 0-based indexing to 1-based number of items
       nItems = fReadPage.GetClusterRangeLast() - clusterIndex.GetIndex() + 1;
-      return reinterpret_cast<CppT*>(
-         static_cast<unsigned char *>(fReadPage.GetBuffer()) +
-         (clusterIndex.GetIndex() - fReadPage.GetClusterRangeFirst()) * RColumnElement<CppT>::kSize);
+      return reinterpret_cast<CppT *>(static_cast<unsigned char *>(fReadPage.GetBuffer()) +
+                                      (clusterIndex.GetIndex() - fReadPage.GetClusterRangeFirst()) *
+                                         RColumnElement<CppT>::kSize);
    }
 
    NTupleSize_t GetGlobalIndex(RClusterIndex clusterIndex)
@@ -288,7 +289,8 @@ public:
       return fReadPage.GetClusterInfo().GetIndexOffset() + clusterIndex.GetIndex();
    }
 
-   RClusterIndex GetClusterIndex(NTupleSize_t globalIndex) {
+   RClusterIndex GetClusterIndex(NTupleSize_t globalIndex)
+   {
       if (!fReadPage.Contains(globalIndex)) {
          MapPage(globalIndex);
       }
@@ -330,7 +332,8 @@ public:
    }
 
    /// Get the currently active cluster id
-   void GetSwitchInfo(NTupleSize_t globalIndex, RClusterIndex *varIndex, std::uint32_t *tag) {
+   void GetSwitchInfo(NTupleSize_t globalIndex, RClusterIndex *varIndex, std::uint32_t *tag)
+   {
       auto varSwitch = Map<RColumnSwitch>(globalIndex);
       *varIndex = RClusterIndex(fReadPage.GetClusterInfo().GetId(), varSwitch->GetIndex());
       *tag = varSwitch->GetTag();
