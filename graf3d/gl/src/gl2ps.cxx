@@ -445,7 +445,7 @@ static int gl2psPrintf(const char* fmt, ...)
   static char buf[1000];
   if(gl2ps->options & GL2PS_COMPRESS){
     va_start(args, fmt);
-    ret = vsprintf(buf, fmt, args);
+    ret = vsnprintf(buf, sizeof(buf), fmt, args);
     va_end(args);
     oldsize = gl2ps->compress->srcLen;
     gl2ps->compress->start = (Bytef*)gl2psReallocCompress(oldsize + ret);
