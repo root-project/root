@@ -397,7 +397,7 @@ class BaseGenerator:
 
         return return_data
 
-    def ConvertBatchToTF(self, batch: Any) -> np.ndarray:
+    def ConvertBatchToTF(self, batch: Any) -> Any:
         """
         Convert a RTensor into a TensorFlow tensor
 
