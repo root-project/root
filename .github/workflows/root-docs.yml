@@ -115,7 +115,11 @@ jobs:
     #     dnf install -y qt5-qttools qt5-qtbase-devel qt5-qtbase-gui
     #     echo "PATH=$PATH:/usr/lib64/qt5/bin" >> $GITHUB_ENV
     #     source $GITHUB_ENV
-      
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v4
+      with:
+        version: '5.15.2'
+        tools: 'all'
 
     - name: Apply option overrides
       if: ${{ github.event_name != 'schedule' }}
