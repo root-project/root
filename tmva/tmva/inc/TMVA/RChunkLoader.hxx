@@ -80,12 +80,17 @@ private:
    void AssignVector(const ROOT::RVec<VecType> &vec)
    {
       std::size_t max_vec_size = fMaxVecSizes[fVecSizeIdx++];
-      // Create a new temporary RVec of vector column and resize it
-      ROOT::RVec<VecType> temp(vec.begin(), vec.end());
-      temp.resize(max_vec_size, fVecPadding);
-
-      // Copy resized vector to Chunk
-      std::copy(temp.begin(), temp.end(), &fChunkTensor->GetData()[fOffset]);
+      std::size_t vec_size = vec.size();
+      if(vec_size < max_vec_size) // Padding vector column to max_vec_size with fVecPadding
+      {
+         ROOT::RVec<VecType> pad(max_vec_size - vec_size, fVecPadding);
+         std::copy(vec.begin(), vec.end(), &fChunkTensor->GetData()[fOffset]);
+         std::copy(pad.begin(), pad.end(), &fChunkTensor->GetData()[fOffset+vec_size]);
+      }
+      else // Copy only max_vec_size length from vector column
+      {
+         std::copy(vec.begin(), vec.begin()+max_vec_size, &fChunkTensor->GetData()[fOffset]);
+      }
       fOffset+=max_vec_size;
    }
 
@@ -179,12 +184,17 @@ private:
    void AssignVector(const ROOT::RVec<VecType> &vec)
    {
       std::size_t max_vec_size = fMaxVecSizes[fVecSizeIdx++];
-      // Create a new temporary RVec of vector column and resize it
-      ROOT::RVec<VecType> temp(vec.begin(), vec.end());
-      temp.resize(max_vec_size, fVecPadding);
-
-      // Copy resized vector to Chunk
-      std::copy(temp.begin(), temp.end(), &fChunkTensor->GetData()[fOffset]);
+      std::size_t vec_size = vec.size();
+      if(vec_size < max_vec_size) // Padding vector column to max_vec_size with fVecPadding
+      {
+         ROOT::RVec<VecType> pad(max_vec_size - vec_size, fVecPadding);
+         std::copy(vec.begin(), vec.end(), &fChunkTensor->GetData()[fOffset]);
+         std::copy(pad.begin(), pad.end(), &fChunkTensor->GetData()[fOffset+vec_size]);
+      }
+      else // Copy only max_vec_size length from vector column
+      {
+         std::copy(vec.begin(), vec.begin()+max_vec_size, &fChunkTensor->GetData()[fOffset]);
+      }
       fOffset+=max_vec_size;
    }
 
