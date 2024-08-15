@@ -170,7 +170,7 @@ void ROOT::Experimental::Internal::BitPacking::PackBits(void *dst, const void *s
 {
    R__ASSERT(sizeofSrc <= sizeof(Word_t));
    R__ASSERT(0 < nDstBits && nDstBits <= sizeofSrc * 8);
-   
+
    const unsigned char *srcArray = reinterpret_cast<const unsigned char *>(src);
    Word_t *dstArray = reinterpret_cast<Word_t *>(dst);
    Word_t accum = 0;
@@ -179,9 +179,7 @@ void ROOT::Experimental::Internal::BitPacking::PackBits(void *dst, const void *s
    for (std::size_t i = 0; i < count; ++i) {
       Word_t packedWord = 0;
       memcpy(&packedWord, srcArray + i * sizeofSrc, sizeofSrc);
-      // make sure we represent the packed word as LE on disk
-      ByteSwapIfNecessary(packedWord);
-      // truncate the LSB of the mantissa
+      // truncate the LSB of the item
       packedWord >>= sizeofSrc * 8 - nDstBits;
 
       const std::size_t bitsRem = kBitsPerWord - bitsUsed;
@@ -217,7 +215,7 @@ void ROOT::Experimental::Internal::BitPacking::PackBits(void *dst, const void *s
    }
 
    if (bitsUsed)
-      memcpy(&dstArray[dstIdx++], &accum, sizeof(accum));
+      memcpy(&dstArray[dstIdx++], &accum, (bitsUsed + 7) / 8);
 
    [[maybe_unused]] auto expDstCount = (count * nDstBits + kBitsPerWord - 1) / kBitsPerWord;
    assert(dstIdx == expDstCount);
@@ -237,12 +235,17 @@ void ROOT::Experimental::Internal::BitPacking::UnpackBits(void *dst, const void 
    int offInWord = 0;
    std::size_t dstIdx = 0;
    std::uint32_t prevWordAccum = 0;
+   std::size_t remBytesToLoad = (count * nSrcBits + 7) / 8;
    for (std::size_t i = 0; i < nWordsToLoad; ++i) {
       assert(dstIdx < count);
 
       // load the next word, containing some packed items
-      Word_t packedBytes;
-      memcpy(&packedBytes, &srcArray[i], sizeof(packedBytes));
+      Word_t packedBytes = 0;
+      std::size_t bytesLoaded = std::min(remBytesToLoad, sizeof(Word_t));
+      memcpy(&packedBytes, &srcArray[i], bytesLoaded);
+
+      assert(remBytesToLoad >= bytesLoaded);
+      remBytesToLoad -= bytesLoaded;
 
       // If `offInWord` is negative, it means that the last item was split
       // across 2 words and we need to recombine it.

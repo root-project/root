@@ -407,6 +407,19 @@ TEST(Packing, Real32Trunc)
       element.Unpack(fout, out2, 5);
       for (int i = 0; i < 5; ++i)
          EXPECT_EQ(fout[i], 3.f);
+
+      // verify that Pack() doesn't write past the end of the valid buffer
+      unsigned char outExtra[BitPacking::MinBufSize(5, kBitsOnStorage) + 4];
+      outExtra[BitPacking::MinBufSize(5, kBitsOnStorage)] = 44;
+      outExtra[BitPacking::MinBufSize(5, kBitsOnStorage) + 1] = 11;
+      outExtra[BitPacking::MinBufSize(5, kBitsOnStorage) + 2] = 22;
+      outExtra[BitPacking::MinBufSize(5, kBitsOnStorage) + 3] = 33;
+      element.Pack(outExtra, f, 5);
+
+      EXPECT_EQ(outExtra[BitPacking::MinBufSize(5, kBitsOnStorage)], 44);
+      EXPECT_EQ(outExtra[BitPacking::MinBufSize(5, kBitsOnStorage) + 1], 11);
+      EXPECT_EQ(outExtra[BitPacking::MinBufSize(5, kBitsOnStorage) + 2], 22);
+      EXPECT_EQ(outExtra[BitPacking::MinBufSize(5, kBitsOnStorage) + 3], 33);
    }
 
    {
@@ -460,8 +473,7 @@ TEST(Packing, Real32Trunc)
       float f[N];
       for (int i = 0; i < N; ++i)
          f[i] = -2097176.7f;
-      auto out2 =
-         std::make_unique<unsigned char[]>(BitPacking::MinBufSize(N, kBitsOnStorage));
+      auto out2 = std::make_unique<unsigned char[]>(BitPacking::MinBufSize(N, kBitsOnStorage));
       element.Pack(out2.get(), f, N);
 
       float fout[N];
@@ -482,8 +494,7 @@ TEST(Packing, Real32Trunc)
       for (int i = 0; i < N; ++i)
          f[i] = 2.f + (0.000001f * i);
 
-      auto out =
-         std::make_unique<unsigned char[]>(BitPacking::MinBufSize(N, kBitsOnStorage));
+      auto out = std::make_unique<unsigned char[]>(BitPacking::MinBufSize(N, kBitsOnStorage));
       element.Pack(out.get(), f, N);
 
       float fout[N];
