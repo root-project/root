@@ -20,6 +20,9 @@ if(MSVC)
     set(_clad_build_type Release)
   endif()
 endif(MSVC)
+if(NOT _clad_build_type STREQUAL "" AND NOT _clad_build_type STREQUAL ".")
+  set(EXTRA_BUILD_ARGS --config ${_clad_build_type})
+endif()
 set(_CLAD_LIBRARY_PATH ${CMAKE_CURRENT_BINARY_DIR}/clad-prefix/src/clad-build/${_clad_build_type}/lib${LLVM_LIBDIR_SUFFIX})
 
 # build byproducts only needed by Ninja
@@ -86,8 +89,8 @@ ExternalProject_Add(
              -DLLVM_DIR=${LLVM_BINARY_DIR}
              -DCLANG_INCLUDE_DIRS=${CLANG_INCLUDE_DIRS}
              ${_clad_extra_cmake_args}
-  BUILD_COMMAND ${CMAKE_COMMAND} --build . --config ${_clad_build_type}
-  INSTALL_COMMAND ${CMAKE_COMMAND} --build . --config ${_clad_build_type} --target install
+  BUILD_COMMAND ${CMAKE_COMMAND} --build . ${EXTRA_BUILD_ARGS}
+  INSTALL_COMMAND ${CMAKE_COMMAND} --build . ${EXTRA_BUILD_ARGS} --target install
   BUILD_BYPRODUCTS ${CLAD_BYPRODUCTS}
   ${_clad_cmake_logging_settings}
   # We need the target clangBasic to be built before building clad. However, we
