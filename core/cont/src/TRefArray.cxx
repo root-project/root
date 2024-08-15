@@ -966,3 +966,31 @@ TObject *TRefArrayIter::operator*() const
    return (((fCurCursor >= 0) && (fCurCursor < fArray->Capacity())) ?
            fArray->At(fCurCursor) : nullptr);
 }
+
+TObject *TRefArray::operator[](Int_t at) const
+{
+   return At(at);
+}
+
+TObject *TRefArray::At(Int_t at) const
+{
+   // Return the object at position i. Returns 0 if i is out of bounds.
+   int j = at - fLowerBound;
+   if (j >= 0 && j < fSize) {
+
+      auto table = TRefTable::GetRefTable();
+      table->Notify();
+
+      if (!fPID || !TProcessID::IsValid(fPID)) return nullptr;
+
+      auto obj = fPID->GetObjectWithID(fUIDs[j]);
+      if (obj) return obj;
+
+      if ((obj = GetFromTable(j))) return obj;
+
+      return nullptr;
+
+   }
+   BoundsOk("At", at);
+   return nullptr;
+}

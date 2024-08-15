@@ -161,33 +161,4 @@ inline Bool_t TRefArray::BoundsOk(const char *where, Int_t at) const
                   : kTRUE;
 }
 
-inline TObject *TRefArray::operator[](Int_t at) const
-{
-   int j = at-fLowerBound;
-   if (j >= 0 && j < fSize) {
-      if (!fPID) return nullptr;
-      if (!TProcessID::IsValid(fPID)) return nullptr;
-      TObject *obj = fPID->GetObjectWithID(fUIDs[j]);
-      if (!obj) obj = GetFromTable(j);
-      return obj;
-   }
-   BoundsOk("At", at);
-   return nullptr;
-}
-
-inline TObject *TRefArray::At(Int_t at) const
-{
-   // Return the object at position i. Returns 0 if i is out of bounds.
-   int j = at-fLowerBound;
-   if (j >= 0 && j < fSize) {
-      if (!fPID) return nullptr;
-      if (!TProcessID::IsValid(fPID)) return nullptr;
-      TObject *obj = fPID->GetObjectWithID(fUIDs[j]);
-      if (!obj) obj = GetFromTable(j);
-      return obj;
-   }
-   BoundsOk("At", at);
-   return nullptr;
-}
-
 #endif
