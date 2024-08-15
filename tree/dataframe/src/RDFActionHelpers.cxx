@@ -212,7 +212,7 @@ template class TakeHelper<float, float, std::vector<float>>;
 template class TakeHelper<double, double, std::vector<double>>;
 #endif
 
-void ValidateSnapshotOutput(const RSnapshotOptions &opts, const std::string &treeName, const std::string &fileName)
+void ValidateSnapshotTTreeOutput(const RSnapshotOptions &opts, const std::string &treeName, const std::string &fileName)
 {
    TString fileMode = opts.fMode;
    fileMode.ToLower();
