@@ -254,7 +254,7 @@ struct SnapshotHelperArgs {
    bool fToNTuple;
 };
 
-// Snapshot action
+// SnapshotTTree action
 template <typename... ColTypes, typename PrevNodeType>
 std::unique_ptr<RActionBase>
 BuildAction(const ColumnNames_t &colNames, const std::shared_ptr<SnapshotHelperArgs> &snapHelperArgs,
@@ -293,14 +293,14 @@ BuildAction(const ColumnNames_t &colNames, const std::shared_ptr<SnapshotHelperA
    } else {
       if (!ROOT::IsImplicitMTEnabled()) {
          // single-thread snapshot
-         using Helper_t = SnapshotHelper<ColTypes...>;
+         using Helper_t = SnapshotTTreeHelper<ColTypes...>;
          using Action_t = RAction<Helper_t, PrevNodeType>;
          actionPtr.reset(
             new Action_t(Helper_t(filename, dirname, treename, colNames, outputColNames, options, std::move(isDefine)),
                          colNames, prevNode, colRegister));
       } else {
          // multi-thread snapshot
-         using Helper_t = SnapshotHelperMT<ColTypes...>;
+         using Helper_t = SnapshotTTreeHelperMT<ColTypes...>;
          using Action_t = RAction<Helper_t, PrevNodeType>;
          actionPtr.reset(new Action_t(
             Helper_t(nSlots, filename, dirname, treename, colNames, outputColNames, options, std::move(isDefine)),
