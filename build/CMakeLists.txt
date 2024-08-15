@@ -16,13 +16,3 @@ if(WIN32)
   file(COPY win/w32pragma.h DESTINATION ${CMAKE_BINARY_DIR}/include/)
   file(COPY win/sehmap.h DESTINATION ${CMAKE_BINARY_DIR}/include/)
 endif()
-
-ROOT_EXECUTABLE(rmkdepend
-  rmkdepend/cppsetup.c
-  rmkdepend/ifparser.c
-  rmkdepend/include.c
-  rmkdepend/main.c
-  rmkdepend/mainroot.cxx
-  rmkdepend/parse.c
-  rmkdepend/pr.c
-)
