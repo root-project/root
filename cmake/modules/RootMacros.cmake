@@ -2022,7 +2022,7 @@ endfunction()
 
 #----------------------------------------------------------------------------
 # generateHeader(target input output)
-# Generate a help header file with build/misc/argparse2help.py script
+# Generate a help header file with cmake/scripts/argparse2help.py script
 # The 1st argument is the target to which the custom command will be attached
 # The 2nd argument is the path to the python argparse input file
 # The 3rd argument is the path to the output header file
@@ -2032,15 +2032,15 @@ function(generateHeader target input output)
     MAIN_DEPENDENCY
       ${input}
     DEPENDS
-      ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py
+      ${CMAKE_SOURCE_DIR}/cmake/scripts/argparse2help.py
     COMMAND
-      ${Python3_EXECUTABLE} -B ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py ${input} ${output}
+      ${Python3_EXECUTABLE} -B ${CMAKE_SOURCE_DIR}/cmake/scripts/argparse2help.py ${input} ${output}
   )
   target_sources(${target} PRIVATE ${output})
 endfunction()
 
 #----------------------------------------------------------------------------
-# Generate and install manual page with build/misc/argparse2help.py script
+# Generate and install manual page with cmake/scripts/argparse2help.py script
 # The 1st argument is the name of the manual page
 # The 2nd argument is the path to the python argparse input file
 # The 3rd argument is the path to the output manual page
@@ -2052,9 +2052,9 @@ function(generateManual name input output)
     MAIN_DEPENDENCY
       ${input}
     DEPENDS
-      ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py
+      ${CMAKE_SOURCE_DIR}/cmake/scripts/argparse2help.py
     COMMAND
-      ${Python3_EXECUTABLE} -B ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py ${input} ${output}
+      ${Python3_EXECUTABLE} -B ${CMAKE_SOURCE_DIR}/cmake/scripts/argparse2help.py ${input} ${output}
   )
 
   install(FILES ${output} DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
