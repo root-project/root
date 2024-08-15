@@ -66,10 +66,9 @@
 #include <cctype>   // need to use c version of toupper defined here
 
 
-ClassImp(RooStats::LikelihoodInterval); ;
+ClassImp(RooStats::LikelihoodInterval);
 
 using namespace RooStats;
-using namespace std;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -313,8 +312,8 @@ bool LikelihoodInterval::FindLimits(const RooRealVar & param, double &lower, dou
    std::unique_ptr<RooArgSet> partmp{fLikelihoodRatio->getVariables()};
    RemoveConstantParameters(&*partmp);
    RooArgList params(*partmp);
-   int ix = params.index(&param);
-   if (ix < 0 ) {
+   int iX = params.index(&param);
+   if (iX < 0 ) {
       ccoutE(InputArguments) << "Error - invalid parameter " << param.GetName() << " specified for finding the interval limits " << std::endl;
       return false;
    }
@@ -333,7 +332,7 @@ bool LikelihoodInterval::FindLimits(const RooRealVar & param, double &lower, dou
    err_level = err_level/2; // since we are using -log LR
    fMinimizer->SetErrorDef(err_level);
 
-   unsigned int ivarX = ix;
+   unsigned int ivarX = iX;
 
    double elow = 0;
    double eup = 0;
@@ -372,9 +371,9 @@ Int_t LikelihoodInterval::GetContourPoints(const RooRealVar & paramX, const RooR
    std::unique_ptr<RooArgSet> partmp{fLikelihoodRatio->getVariables()};
    RemoveConstantParameters(&*partmp);
    RooArgList params(*partmp);
-   int ix = params.index(&paramX);
-   int iy = params.index(&paramY);
-   if (ix < 0 || iy < 0) {
+   int iX = params.index(&paramX);
+   int iY = params.index(&paramY);
+   if (iX < 0 || iY < 0) {
       coutE(InputArguments) << "LikelihoodInterval - Error - invalid parameters specified for finding the contours; parX = " << paramX.GetName()
              << " parY = " << paramY.GetName() << std::endl;
          return 0;
@@ -395,8 +394,8 @@ Int_t LikelihoodInterval::GetContourPoints(const RooRealVar & paramX, const RooR
    fMinimizer->SetErrorDef(cont_level);
 
    unsigned int ncp = npoints;
-   unsigned int ivarX = ix;
-   unsigned int ivarY = iy;
+   unsigned int ivarX = iX;
+   unsigned int ivarY = iY;
    coutI(Minimization)  << "LikelihoodInterval - Finding the contour of " << paramX.GetName() << " ( " << ivarX << " ) and " << paramY.GetName() << " ( " << ivarY << " ) " << std::endl;
    ret = fMinimizer->Contour(ivarX, ivarY, ncp, x, y );
    if (!ret) {

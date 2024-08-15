@@ -117,7 +117,7 @@ the new `RooAbsData::uniqueId()`.
 #include <fstream>
 
 
-using namespace std;
+using std::endl, std::string, std::map, std::list, std::ifstream, std::ofstream, std::ostream;
 
 ClassImp(RooDataSet);
 
@@ -494,14 +494,14 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet&
 
     // process StoreError requests
     if (errorSet) {
-      std::unique_ptr<RooArgSet> intErrorSet{static_cast<RooArgSet*>(_vars.selectCommon(*errorSet))};
+      std::unique_ptr<RooArgSet> intErrorSet{_vars.selectCommon(*errorSet)};
       intErrorSet->setAttribAll("StoreError") ;
       for(RooAbsArg* arg : *intErrorSet) {
         arg->attachToStore(*_dstore) ;
       }
     }
     if (asymErrorSet) {
-      std::unique_ptr<RooArgSet> intAsymErrorSet{static_cast<RooArgSet*>(_vars.selectCommon(*asymErrorSet))};
+      std::unique_ptr<RooArgSet> intAsymErrorSet{_vars.selectCommon(*asymErrorSet)};
       intAsymErrorSet->setAttribAll("StoreAsymError") ;
       for(RooAbsArg* arg : *intAsymErrorSet) {
         arg->attachToStore(*_dstore) ;
@@ -919,7 +919,7 @@ std::span<const double> RooDataSet::getWeightBatch(std::size_t first, std::size_
 
   std::size_t nEntries = this->numEntries(); // for the casting to std::size_t
 
-  if(first >= nEntries || (first + len) > nEntries) {
+  if(first + len > nEntries) {
     throw std::runtime_error("RooDataSet::getWeightBatch(): requested range not valid for dataset.");
   }
 

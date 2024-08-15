@@ -2,6 +2,7 @@ import { select as d3_select } from '../d3.mjs';
 import { settings, internals, isNodeJs, isFunc, isStr, isObject, btoa_func, getDocument, source_dir, loadScript, httpRequest } from '../core.mjs';
 import { detectFont, addCustomFont, getCustomFont, FontHandler } from './FontHandler.mjs';
 import { approximateLabelWidth, replaceSymbolsInTextNode } from './latex.mjs';
+import { getColor } from './colors.mjs';
 
 
 /** @summary Returns visible rect of element
@@ -101,7 +102,7 @@ function floatToString(value, fmt, ret_fmt) {
    }
 
    if (isexp) {
-      // for exponential representation only one significant digit befor point
+      // for exponential representation only one significant digit before point
       if (significance) prec--;
       if (prec < 0) prec = 0;
 
@@ -146,7 +147,7 @@ class DrawOptions {
       this.part = '';
    }
 
-   /** @summary Returns true if remaining options are empty or contain only seperators symbols. */
+   /** @summary Returns true if remaining options are empty or contain only separators symbols. */
    empty() {
       if (this.opt.length === 0) return true;
       return this.opt.replace(/[ ;_,]/g, '').length === 0;
@@ -169,7 +170,19 @@ class DrawOptions {
          this.part = this.opt.slice(pos, pos2);
          this.opt = this.opt.slice(0, pos) + this.opt.slice(pos2);
       }
-      return true;
+
+      if (postpart !== 'color')
+         return true;
+
+      this.color = this.partAsInt(1) - 1;
+      if (this.color >= 0) return true;
+      for (let col = 0; col < 8; ++col) {
+         if (getColor(col).toUpperCase() === this.part) {
+            this.color = col;
+            return true;
+         }
+      }
+      return false;
    }
 
    /** @summary Returns remaining part of found option as integer. */
@@ -229,7 +242,7 @@ class TRandom {
 } // class TRandom
 
 
-/** @summary Build smooth SVG curve uzing Bezier
+/** @summary Build smooth SVG curve using Bezier
   * @desc Reuse code from https://stackoverflow.com/questions/62855310
   * @private */
 function buildSvgCurve(p, args) {
@@ -394,9 +407,10 @@ function compressSVG(svg) {
             .replace(/ title=""/g, '')                                 // remove all empty titles
             .replace(/<g objname="\w*" objtype="\w*"/g, '<g')          // remove object ids
             .replace(/<g transform="translate\(\d+,\d+\)"><\/g>/g, '') // remove all empty groups with transform
+            .replace(/<g transform="translate\(\d+,\d+\)" style="display: none;"><\/g>/g, '') // remove hidden title
             .replace(/<g><\/g>/g, '');                                 // remove all empty groups
 
-   // remove all empty frame svgs, typically appears in 3D drawings, maybe should be improved in frame painter itself
+   // remove all empty frame svg, typically appears in 3D drawings, maybe should be improved in frame painter itself
    svg = svg.replace(/<svg x="0" y="0" overflow="hidden" width="\d+" height="\d+" viewBox="0 0 \d+ \d+"><\/svg>/g, '');
 
    return svg;
@@ -434,7 +448,7 @@ class BasePainter {
    }
 
    /** @summary Selects main HTML element assigned for drawing
-     * @desc if main element was layouted, returns main element inside layout
+     * @desc if main element was layout, returns main element inside layout
      * @param {string} [is_direct] - if 'origin' specified, returns original element even if actual drawing moved to some other place
      * @return {object} d3.select object for main element for drawing */
    selectDom(is_direct) {
@@ -614,7 +628,7 @@ class BasePainter {
          enlarge = d3_select(doc.body)
             .append('div')
             .attr('id', 'jsroot_enlarge_div')
-            .attr('style', 'position: fixed; margin: 0px; border: 0px; padding: 0px; inset: 1px; background: white; opacity: 0.95; z-index: 100; overflow: hidden;');
+            .attr('style', 'position: fixed; margin: 0px; border: 0px; padding: 0px; left: 1px; top: 1px; bottom: 1px; right: 1px; background: white; opacity: 0.95; z-index: 100; overflow: hidden;');
 
          const rect1 = getElementRect(main),
                rect2 = getElementRect(enlarge);
@@ -657,7 +671,7 @@ class BasePainter {
          this._hitemname = name;
       else
          delete this._hitemname;
-      // only upate draw option, never delete.
+      // only update draw option, never delete.
       if (isStr(opt))
          this._hdrawopt = opt;
 
@@ -722,7 +736,7 @@ async function svgToPDF(args, as_buffer) {
    let _jspdf, _svg2pdf, need_symbols = false;
 
    const pr = nodejs
-      ? import('../../scripts/jspdf.es.min.js').then(h => { _jspdf = h; return import('svg2pdf.js'); }).then(h => { _svg2pdf = h.default; })
+      ? import('../../scripts/jspdf.es.min.js').then(h1 => { _jspdf = h1; return import('../../scripts/svg2pdf.es.min.js'); }).then(h2 => { _svg2pdf = h2; })
       : loadScript(source_dir + 'scripts/jspdf.umd.min.js').then(() => loadScript(source_dir + 'scripts/svg2pdf.umd.min.js')).then(() => { _jspdf = globalThis.jspdf; _svg2pdf = globalThis.svg2pdf; }),
         restore_fonts = [], restore_dominant = [], restore_text = [],
         node_transform = args.node.getAttribute('transform'), custom_fonts = {};
@@ -747,7 +761,7 @@ async function svgToPDF(args, as_buffer) {
             this.removeAttribute('dominant-baseline');
             if (!args.can_modify) restore_dominant.push(this); // keep to restore it
          } else if (args.can_modify && nodejs && this.getAttribute('dy') === '.4em')
-            this.setAttribute('dy', '.2em'); // better allignment in PDF
+            this.setAttribute('dy', '.2em'); // better alignment in PDF
 
          if (replaceSymbolsInTextNode(this)) {
             need_symbols = true;
@@ -911,6 +925,33 @@ async function svgToImage(svg, image_format, as_buffer) {
    });
 }
 
-export { getElementRect, getAbsPosInCanvas,
+/** @summary Convert ROOT TDatime object into Date
+ * @desc Always use UTC to avoid any variation between timezones */
+function getTDatime(dt) {
+   const y = (dt.fDatime >>> 26) + 1995,
+         m = ((dt.fDatime << 6) >>> 28) - 1,
+         d = (dt.fDatime << 10) >>> 27,
+         h = (dt.fDatime << 15) >>> 27,
+         min = (dt.fDatime << 20) >>> 26,
+         s = (dt.fDatime << 26) >>> 26;
+   return new Date(Date.UTC(y, m, d, h, min, s));
+}
+
+/** @summary Convert Date object into string used configured time zone
+ * @desc Time zone stored in settings.TimeZone */
+function convertDate(dt) {
+   let res = '';
+
+   if (settings.TimeZone && isStr(settings.TimeZone)) {
+     try {
+        res = dt.toLocaleString('en-GB', { timeZone: settings.TimeZone });
+     } catch (err) {
+        res = '';
+     }
+   }
+   return res || dt.toLocaleString('en-GB');
+}
+
+export { getElementRect, getAbsPosInCanvas, getTDatime, convertDate,
          DrawOptions, TRandom, floatToString, buildSvgCurve, compressSVG,
          BasePainter, _loadJSDOM, makeTranslate, addHighlightStyle, svgToImage };

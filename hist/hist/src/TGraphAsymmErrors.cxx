@@ -450,6 +450,15 @@ Double_t** TGraphAsymmErrors::Allocate(Int_t size) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Add a point with asymmetric errorbars to the graph.
+
+void TGraphAsymmErrors::AddPointError(Double_t x, Double_t y, Double_t exl, Double_t exh, Double_t eyl, Double_t eyh)
+{
+   AddPoint(x, y);
+   SetPointError(fNpoints - 1, exl, exh, eyl, eyh);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Apply a function to all data points \f$ y = f(x,y) \f$
 ///
 /// Errors are calculated as \f$ eyh = f(x,y+eyh)-f(x,y) \f$ and

@@ -11,12 +11,15 @@
 ## \author Anirudh Dagar <anirudhdagar6@gmail.com> - IIT, Roorkee
 
 
+# PyTorch has to be imported before ROOT to avoid crashes because of clashing
+# std::regexp symbols that are exported by cppyy.
+# See also: https://github.com/wlav/cppyy/issues/227
+import torch
+from torch import nn
+
 from ROOT import TMVA, TFile, TTree, TCut
 from subprocess import call
 from os.path import isfile
-
-import torch
-from torch import nn
 
 
 # Setup TMVA

@@ -205,7 +205,7 @@ void RooFFTConvPdf_doFFT(int n, double *input1, double *input2, double *output)
 
 #endif
 
-using namespace std;
+using std::endl, std::string, std::ostream;
 
 ClassImp(RooFFTConvPdf);
 

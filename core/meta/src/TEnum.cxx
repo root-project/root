@@ -277,8 +277,21 @@ TEnum *TEnum::GetEnum(const char *enumName, ESearchAction sa)
       return nullptr;
    }
 
-   // Keep the state consistent.  I particular prevent change in the state of AutoLoading and AutoParsing allowance
-   // and gROOT->GetListOfClasses() and the later update/modification to the autoparsing state.
+   std::string normalizedName;
+   {
+      R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
+      TInterpreter::SuspendAutoLoadingRAII autoloadOff(gInterpreter);
+      TClassEdit::GetNormalizedName(normalizedName, enumName);
+   }
+
+   if (normalizedName != enumName) {
+      enumName = normalizedName.c_str();
+      lastPos = TClassEdit::GetUnqualifiedName(enumName);
+   }
+
+   // Keep the state consistent.  In particular prevent change in the state of
+   // AutoLoading and AutoParsing allowance and gROOT->GetListOfClasses()
+   // and the later update/modification to the autoparsing state.
    R__READ_LOCKGUARD(ROOT::gCoreMutex);
 
    if (lastPos != enumName) {

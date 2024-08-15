@@ -734,7 +734,6 @@ void TStreamerInfo::BuildCheck(TFile *file /* = 0 */, Bool_t load /* = kTRUE */)
       // of the StreamerInfo is 'hard' (for forward compatibility), so
       // leave it as is for now.
       fClass = new TClass(GetName(), (Version_t)fClassVersion);
-      fClass->SetBit(TClass::kIsEmulation);
 
       // Case of a custom collection (the user provided a CollectionProxy
       // for a class that is not an STL collection).
@@ -795,7 +794,7 @@ void TStreamerInfo::BuildCheck(TFile *file /* = 0 */, Bool_t load /* = kTRUE */)
       const TObjArray *array = fClass->GetStreamerInfos();
       TStreamerInfo* info = 0;
 
-      if (fClass->TestBit(TClass::kIsEmulation) && array->IsEmpty()) {
+      if (fClass->GetState() == TClass::kNoInfo && array->IsEmpty()) {
          // We have an emulated class that has no TStreamerInfo, this
          // means it was created to insert a (default) rule.  Consequently
          // the error message about the missing dictionary was not printed.
@@ -1790,7 +1789,7 @@ void TStreamerInfo::BuildOld()
 
    if (ruleSet) rules = ruleSet->FindRules( GetName(), fOnFileClassVersion, fCheckSum );
 
-   Bool_t shouldHaveInfoLoc = fClass->TestBit(TClass::kIsEmulation) && !TClassEdit::IsStdClass(fClass->GetName());
+   Bool_t shouldHaveInfoLoc = fClass->GetState() == TClass::kEmulated && !TClassEdit::IsStdClass(fClass->GetName());
    Int_t virtualInfoLocAlloc = 0;
    fNVirtualInfoLoc = 0;
    delete [] fVirtualInfoLoc;
@@ -1831,7 +1830,7 @@ void TStreamerInfo::BuildOld()
             // We do not have this base class - check if we're renaming
             ////////////////////////////////////////////////////////////////////
 
-            if( !baseclass && !fClass->TestBit( TClass::kIsEmulation ) ) {
+            if( !baseclass && fClass->GetState() > TClass::kEmulated ) {
                const ROOT::TSchemaRule* rule = (rules ? rules.GetRuleWithSource( base->GetName() ) : 0);
 
                //---------------------------------------------------------------
@@ -1903,7 +1902,7 @@ void TStreamerInfo::BuildOld()
             // Force the StreamerInfo "Compilation" of the base classes first. This is necessary in
             // case the base class contains a member used as an array dimension in the derived classes.
             TStreamerInfo* infobase;
-            if (fClass->TestBit(TClass::kIsEmulation) && (baseclass->Property() & kIsAbstract)) {
+            if (fClass->GetState() == TClass::kEmulated && (baseclass->Property() & kIsAbstract)) {
                Int_t version = base->GetBaseVersion();
                if (version >= 0 || base->GetBaseCheckSum() == 0) {
                   infobase = (TStreamerInfo*)baseclass->GetStreamerInfoAbstractEmulated(version);
@@ -1920,7 +1919,7 @@ void TStreamerInfo::BuildOld()
                infobase->BuildOld();
             }
 
-            if (infobase && shouldHaveInfoLoc && baseclass->TestBit(TClass::kIsEmulation) ) {
+            if (infobase && shouldHaveInfoLoc && baseclass->GetState() == TClass::kEmulated ) {
                if ( (fNVirtualInfoLoc + infobase->fNVirtualInfoLoc) > virtualInfoLocAlloc ) {
                   ULong_t *store = fVirtualInfoLoc;
                   virtualInfoLocAlloc = 16 * ( (fNVirtualInfoLoc + infobase->fNVirtualInfoLoc) / 16 + 1);
@@ -1985,7 +1984,7 @@ void TStreamerInfo::BuildOld()
                baseOffset = bc->GetDelta();
                asize = bc->GetClassPointer()->Size();
 
-            } else if (fClass->TestBit( TClass::kIsEmulation )) {
+            } else if (fClass->GetState() == TClass::kEmulated) {
                // Do a search for the classname and some of its alternatives spelling.
 
                TStreamerInfo* newInfo = (TStreamerInfo*) fClass->GetStreamerInfos()->At(fClass->GetClassVersion());

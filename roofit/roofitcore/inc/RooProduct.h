@@ -48,7 +48,7 @@ public:
   RooArgList components() { RooArgList tmp(_compRSet) ; tmp.add(_compCSet) ; return tmp ; }
 
   const RooArgList& realComponents() const { return _compRSet; }
-  const RooArgList& categorialComponents() const { return _compCSet; }
+  const RooArgList& categoricalComponents() const { return _compCSet; }
 
   ~RooProduct() override ;
 
@@ -84,7 +84,7 @@ protected:
 
   double calculate(const RooArgList& partIntList) const;
   double evaluate() const override;
-  void computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;
+  void doEval(RooFit::EvalContext &) const override;
 
   const char* makeFPName(const char *pfx,const RooArgSet& terms) const ;
   ProdMap* groupProductTerms(const RooArgSet&) const;

@@ -30,8 +30,6 @@ This function can be analytically convolved with any RooResolutionModel implemen
 #include "RooRandom.h"
 #include "RooBatchCompute.h"
 
-using namespace std;
-
 ClassImp(RooBMixDecay);
 
 /// \brief Constructor for RooBMixDecay.
@@ -121,11 +119,11 @@ double RooBMixDecay::coefficient(Int_t basisIndex) const
   return 0 ;
 }
 
-void RooBMixDecay::computeBatch(double *output, size_t nEvents, RooFit::Detail::DataMap const &dataMap) const
+void RooBMixDecay::doEval(RooFit::EvalContext &ctx) const
 {
-   RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::BMixDecay, output, nEvents,
-                            {dataMap.at(&_convSet[0]), dataMap.at(&_convSet[1]), dataMap.at(_tagFlav),
-                             dataMap.at(_delMistag), dataMap.at(_mixState), dataMap.at(_mistag)});
+   RooBatchCompute::compute(ctx.config(this), RooBatchCompute::BMixDecay, ctx.output(),
+                            {ctx.at(&_convSet[0]), ctx.at(&_convSet[1]), ctx.at(_tagFlav),
+                             ctx.at(_delMistag), ctx.at(_mixState), ctx.at(_mistag)});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -295,7 +293,7 @@ void RooBMixDecay::generateEvent(Int_t code)
 
     // Accept event if T is in generated range
     double dil = 1-2.*_mistag ;
-    double maxAcceptProb = 1 + TMath::Abs(_delMistag) + TMath::Abs(dil) ;
+    double maxAcceptProb = 1 + std::abs(_delMistag) + std::abs(dil) ;
     double acceptProb = (1-_tagFlav*_delMistag) + _mixState*dil*cos(_dm*tval);
     bool mixAccept = maxAcceptProb*RooRandom::uniform() < acceptProb ? true : false ;
 

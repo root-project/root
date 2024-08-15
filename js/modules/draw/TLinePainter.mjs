@@ -4,6 +4,9 @@ import { ensureTCanvas } from '../gpad/TCanvasPainter.mjs';
 import { addMoveHandler } from '../gui/utils.mjs';
 import { assignContextMenu, kToFront } from '../gui/menu.mjs';
 
+
+const kLineNDC = BIT(14);
+
 class TLinePainter extends ObjectPainter {
 
    /** @summary Start interactive moving */
@@ -40,16 +43,32 @@ class TLinePainter extends ObjectPainter {
       this.submitCanvExec(exec + 'Notify();;');
    }
 
+   /** @summary Returns object ranges
+     * @desc Can be used for newly created canvas */
+   getUserRanges() {
+      const line = this.getObject(),
+            isndc = line.TestBit(kLineNDC);
+      if (isndc)
+         return null;
+      const minx = Math.min(line.fX1, line.fX2),
+            maxx = Math.max(line.fX1, line.fX2),
+            miny = Math.min(line.fY1, line.fY2),
+            maxy = Math.max(line.fY1, line.fY2);
+      return { minx, miny, maxx, maxy };
+   }
+
    /** @summary Calculate line coordinates */
    prepareDraw() {
-      const line = this.getObject(), kLineNDC = BIT(14);
+      const line = this.getObject();
 
       this.isndc = line.TestBit(kLineNDC);
 
-      this.x1 = this.axisToSvg('x', line.fX1, this.isndc, true);
-      this.y1 = this.axisToSvg('y', line.fY1, this.isndc, true);
-      this.x2 = this.axisToSvg('x', line.fX2, this.isndc, true);
-      this.y2 = this.axisToSvg('y', line.fY2, this.isndc, true);
+      const func = this.getAxisToSvgFunc(this.isndc, true, true);
+
+      this.x1 = func.x(line.fX1);
+      this.y1 = func.y(line.fY1);
+      this.x2 = func.x(line.fX2);
+      this.y2 = func.y(line.fY2);
 
       this.createAttLine({ attr: line });
    }
@@ -65,18 +84,21 @@ class TLinePainter extends ObjectPainter {
 
    /** @summary Redraw line */
    redraw() {
-      this.prepareDraw();
-
       this.createG();
+
+      this.prepareDraw();
 
       const elem = this.draw_g.append('svg:path')
                        .attr('d', this.createPath())
                        .call(this.lineatt.func);
 
-      this.addExtras(elem);
-
-      addMoveHandler(this);
-      assignContextMenu(this, kToFront);
+      if (this.getObject()?.$do_not_draw)
+         elem.remove();
+      else {
+         this.addExtras(elem);
+         addMoveHandler(this);
+         assignContextMenu(this, kToFront);
+      }
 
       return this;
    }

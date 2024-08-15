@@ -12,10 +12,12 @@
 #include "ROOT/InternalTreeUtils.hxx" // GetTreeFullPaths
 #include "ROOT/RDF/RActionBase.hxx"
 #include "ROOT/RDF/RDefineBase.hxx"
+#include "ROOT/RDF/RDefineReader.hxx" // RDefinesWithReaders
 #include "ROOT/RDF/RFilterBase.hxx"
 #include "ROOT/RDF/RLoopManager.hxx"
 #include "ROOT/RDF/RRangeBase.hxx"
 #include "ROOT/RDF/RVariationBase.hxx"
+#include "ROOT/RDF/RVariationReader.hxx" // RVariationsWithReaders
 #include "ROOT/RLogger.hxx"
 #include "RtypesCore.h" // Long64_t
 #include "TStopwatch.h"
@@ -25,7 +27,7 @@
 #include "TEntryList.h"
 #include "TFile.h"
 #include "TFriendElement.h"
-#include "TROOT.h" // IsImplicitMTEnabled
+#include "TROOT.h" // IsImplicitMTEnabled, gCoreMutex, R__*_LOCKGUARD
 #include "TTreeReader.h"
 #include "TTree.h" // For MaxTreeSizeRAII. Revert when #6640 will be solved.
 
@@ -37,7 +39,6 @@
 
 #ifdef R__HAS_ROOT7
 #include "ROOT/RNTuple.hxx"
-#include "ROOT/RPageStorage.hxx"
 #include "ROOT/RNTupleDS.hxx"
 #endif
 
@@ -737,8 +738,15 @@ void RLoopManager::UpdateSampleInfo(unsigned int slot, TTreeReader &r) {
    if (range.second == -1) {
       range.second = tree->GetEntries(); // convert '-1', i.e. 'until the end', to the actual entry number
    }
-   const std::string &id = fname + '/' + treename;
-   fSampleInfos[slot] = fSampleMap.empty() ? RSampleInfo(id, range) : RSampleInfo(id, range, fSampleMap[id]);
+   // If the tree is stored in a subdirectory, treename will be the full path to it starting with the root directory '/'
+   const std::string &id = fname + (treename.rfind('/', 0) == 0 ? "" : "/") + treename;
+   if (fSampleMap.empty()) {
+      fSampleInfos[slot] = RSampleInfo(id, range);
+   } else {
+      if (fSampleMap.find(id) == fSampleMap.end())
+         throw std::runtime_error("Full sample identifier '" + id + "' cannot be found in the available samples.");
+      fSampleInfos[slot] = RSampleInfo(id, range, fSampleMap[id]);
+   }
 }
 
 /// Initialize all nodes of the functional graph before running the event loop.
@@ -804,14 +812,18 @@ void RLoopManager::CleanUpTask(TTreeReader *r, unsigned int slot)
 /// This method also clears the contents of GetCodeToJit().
 void RLoopManager::Jit()
 {
-   // TODO this should be a read lock unless we find GetCodeToJit non-empty
-   R__LOCKGUARD(gROOTMutex);
-
-   const std::string code = std::move(GetCodeToJit());
-   if (code.empty()) {
-      R__LOG_INFO(RDFLogChannel()) << "Nothing to jit and execute.";
-      return;
+   {
+      R__READ_LOCKGUARD(ROOT::gCoreMutex);
+      if (GetCodeToJit().empty()) {
+         R__LOG_INFO(RDFLogChannel()) << "Nothing to jit and execute.";
+         return;
+      }
    }
+
+   const std::string code = []() {
+      R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
+      return std::move(GetCodeToJit());
+   }();
 
    TStopwatch s;
    s.Start();
@@ -979,7 +991,7 @@ void RLoopManager::SetTree(std::shared_ptr<TTree> tree)
 
 void RLoopManager::ToJitExec(const std::string &code) const
 {
-   R__LOCKGUARD(gROOTMutex);
+   R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
    GetCodeToJit().append(code);
 }
 

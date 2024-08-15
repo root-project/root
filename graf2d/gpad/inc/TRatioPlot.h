@@ -2,7 +2,7 @@
 // Author: Paul Gessinger   25/08/2016
 
 /*************************************************************************
- * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2024, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -25,17 +25,17 @@
 
 #include "TString.h"
 
-#include "TGraph.h"
+#include "TFitResultPtr.h"
 
 class TH1;
 class TPad;
 class TVirtualPad;
+class TGraph;
 class TGraphAsymmErrors;
 class TGraphErrors;
 class TAxis;
 class TGaxis;
 class TLine;
-class TFitResultPtr;
 class TFitResult;
 class THStack;
 class TBrowser;
@@ -43,7 +43,7 @@ class TBrowser;
 class TRatioPlot : public TObject {
 
 private:
-   TRatioPlot& operator=(const TRatioPlot&) = delete;
+   TRatioPlot &operator=(const TRatioPlot &) = delete;
    TRatioPlot(const TRatioPlot &) = delete;
 
    enum CalculationMode {
@@ -79,14 +79,15 @@ protected:
    TH1 *fH1 = nullptr; ///< Stores the primary histogram
    TH1 *fH2 = nullptr; ///< Stores the secondary histogram, if there is one
    TObject *fHistDrawProxy = nullptr; ///< The object which is actually drawn, this might be TH1 or THStack
+   Bool_t fHistDrawProxyStack = kFALSE; ///< If stack was assigned as proxy
 
    Int_t fMode = 0; ///< Stores which calculation is supposed to be performed as specified by user option
-   Int_t fErrorMode = TRatioPlot::ErrorMode::kErrorSymmetric; ///< Stores the error mode, sym, asym or func
-   TString fOption = ""; ///< Stores the option which is given in the constructor as a string
-   TString fH1DrawOpt = ""; ///< Stores draw option for h1 given in constructor
-   TString fH2DrawOpt = ""; ///< Stores draw option for h2 given in constructor
-   TString fGraphDrawOpt = ""; ///< Stores draw option for the lower plot graph given in constructor
-   TString fFitDrawOpt = ""; ///< Stores draw option for the fit function in the fit residual case
+   Int_t fErrorMode = ErrorMode::kErrorSymmetric; ///< Stores the error mode, sym, asym or func
+   TString fOption; ///< Stores the option which is given in the constructor as a string
+   TString fH1DrawOpt; ///< Stores draw option for h1 given in constructor
+   TString fH2DrawOpt; ///< Stores draw option for h2 given in constructor
+   TString fGraphDrawOpt; ///< Stores draw option for the lower plot graph given in constructor
+   TString fFitDrawOpt; ///< Stores draw option for the fit function in the fit residual case
 
    Float_t fSplitFraction = 0.3; ///< Stores the fraction at which the upper and lower pads meet
 
@@ -122,7 +123,7 @@ protected:
    std::vector<TLine*> fGridlines; ///< Keeps TLine objects for the gridlines
    std::vector<double> fGridlinePositions; ///< Stores the y positions for the gridlines
    Bool_t fShowGridlines = kTRUE; ///< Stores whether to show the gridlines at all
-   Int_t fHideLabelMode = TRatioPlot::HideLabelMode::kHideLow; ///< Stores which label to hide if the margin is to narrow, if at all
+   Int_t fHideLabelMode = HideLabelMode::kHideLow; ///< Stores which label to hide if the margin is to narrow, if at all
 
    // store margins to be able do determine
    // what has changed when user drags
@@ -136,20 +137,20 @@ protected:
 
    Float_t fInsetWidth = 0.0025;
 
-   Bool_t fIsUpdating = kFALSE; ///< Keeps track of whether its currently updating to reject other calls until done
-   Bool_t fIsPadUpdating = kFALSE; ///< Keeps track whether pads are updating during resizing
+   Bool_t fIsUpdating = kFALSE; ///<! Keeps track of whether its currently updating to reject other calls until done
 
    virtual void SyncAxesRanges();
    virtual void SetupPads();
+   virtual void ConnectPadsSignals();
    virtual void CreateVisualAxes();
+   virtual void UpdateVisualAxes();
    virtual Bool_t SyncPadMargins();
    void SetPadMargins();
-   void CreateGridline();
+   void CreateGridlines();
+   void UpdateGridlines();
    Int_t BuildLowerPlot();
 
    void ImportAxisAttributes(TGaxis* gaxis, TAxis* axis);
-
-   Bool_t IsDrawn();
 
    virtual void Init(TH1* h1, TH1* h2, Option_t *option = "");
 
@@ -171,8 +172,6 @@ public:
    void SetInsetWidth(Double_t width);
 
    void Draw(Option_t *chopt = "") override;
-   void Browse(TBrowser *b) override;
-
 
    void Paint(Option_t *opt = "") override;
 
@@ -186,29 +185,13 @@ public:
    TAxis *GetUpYaxis() const { return fUpYaxis; }
    TAxis *GetLowYaxis() const { return fLowYaxis; }
 
-   virtual TGraph *GetLowerRefGraph() const;
-
-   ////////////////////////////////////////////////////////////////////////////////
-   /// Shortcut for:
-   ///
-   /// ~~~{.cpp}
-   /// rp->GetLowerRefGraph()->GetXaxis();
-   /// ~~~
-
-   TAxis *GetLowerRefXaxis() const { return GetLowerRefGraph()->GetXaxis(); }
-
-   ////////////////////////////////////////////////////////////////////////////////
-   /// Shortcut for:
-   ///
-   /// ~~~{.cpp}
-   /// rp->GetLowerRefGraph()->GetYaxis();
-   /// ~~~
-
-   TAxis *GetLowerRefYaxis() const { return GetLowerRefGraph()->GetYaxis(); }
-
    virtual TObject *GetUpperRefObject() const;
    TAxis *GetUpperRefXaxis() const;
    TAxis *GetUpperRefYaxis() const;
+
+   virtual TGraph *GetLowerRefGraph() const;
+   TAxis *GetLowerRefXaxis() const;
+   TAxis *GetLowerRefYaxis() const;
 
    ////////////////////////////////////////////////////////////////////////////////
    /// Get the output of the calculation in the form of a graph. The type of
@@ -226,8 +209,8 @@ public:
 
    TGraphErrors *GetConfidenceInterval2() const { return fConfidenceInterval2; }
 
-   TPad * GetUpperPad() const { return fUpperPad; }
-   TPad * GetLowerPad() const { return fLowerPad; }
+   TPad *GetUpperPad() const { return fUpperPad; }
+   TPad *GetLowerPad() const { return fLowerPad; }
 
    // Setters
 
@@ -261,7 +244,7 @@ public:
    void SetC1(Double_t c1) { fC1 = c1; }
    void SetC2(Double_t c2) { fC2 = c2; }
 
-   ClassDefOverride(TRatioPlot, 1)  //A ratio of histograms
+   ClassDefOverride(TRatioPlot, 2)  //A ratio of histograms
 };
 
 #endif

@@ -132,7 +132,7 @@ TEST_F(TClingTests, GetClassSharedLibs)
 {
    // Shortens the invocation.
    auto GetLibs = [](const char *cls) -> std::string {
-      if (const char *val = gInterpreter->GetClassSharedLibs(cls))
+      if (const char *val = gInterpreter->GetClassSharedLibs(cls,false))
          return val;
       return "";
    };
@@ -239,6 +239,19 @@ TEST_F(TClingTests, GetSharedLibDeps)
 }
 #endif
 
+// Check that a warning message is generated when using auto-injection.
+TEST_F(TClingTests, WarningAutoInjection)
+{
+   ROOT::TestSupport::CheckDiagsRAII diags;
+   diags.requiredDiag(kWarning, "cling", "declaration without the 'auto' keyword is deprecated",
+                      /*matchFullMessage=*/false);
+
+   gInterpreter->ProcessLine("/* no auto */ t = new int;");
+
+   auto t = gInterpreter->GetDataMember(nullptr, "t");
+   EXPECT_TRUE(t != nullptr);
+}
+
 // Check the interface which interacts with the cling::LookupHelper.
 TEST_F(TClingTests, ClingLookupHelper) {
   // Exception spec evaluation.
@@ -260,4 +273,63 @@ TEST_F(TClingTests, ROOT10499) {
    // strangely enough, this works on the command prompt, but not in this test...
    EXPECT_EQ((void*)&errno, (void*)gInterpreter->Calc("&errno"));
 #endif
+}
+
+// ROOT-6913
+TEST_F(TClingTests, ClassInfoProperty)
+{
+   gInterpreter->Declare(R"cpp(
+class ClassHasExplicitCtor{
+   public:
+      ClassHasExplicitCtor(){};
+};
+
+class ClassHasExplicitDtor{
+   public:
+      ~ClassHasExplicitDtor(){};
+};
+
+class ClassHasImplicitCtor {
+   ClassHasExplicitCtor c;
+};
+
+class ClassHasImplicitDtor{
+   ClassHasExplicitDtor c;
+};
+
+class ClassHasDefaultCtor{
+   ClassHasDefaultCtor(){};
+};
+
+class ClassIsAbstract{
+   virtual void PureVirtual() = 0;
+};
+
+class ClassHasVirtual{
+   virtual void Virtual() {};
+};
+
+class ClassHasAssignOpr{
+   ClassHasAssignOpr& operator=(const ClassHasAssignOpr&);
+};
+
+// according to the C++ standard, being a POD implies being an aggregate
+struct ClassIsAggregate {
+    int x;
+    double y;
+};
+                          )cpp");
+
+   const std::vector<std::pair<std::string, Long_t>> classNPPairs{
+      {"ClassHasImplicitCtor", kClassHasImplicitCtor}, {"ClassHasExplicitCtor", kClassHasExplicitCtor},
+      {"ClassHasExplicitDtor", kClassHasExplicitDtor}, {"ClassHasImplicitDtor", kClassHasImplicitDtor},
+      {"ClassHasDefaultCtor", kClassHasDefaultCtor},   {"ClassHasDefaultCtor", kClassIsValid},
+      {"ClassIsAbstract", kClassIsAbstract},           {"ClassHasVirtual", kClassHasVirtual},
+      {"ClassHasAssignOpr", kClassHasAssignOpr},       {"ClassIsAggregate", kClassIsAggregate}};
+
+   for (auto &[clName, clPropRef] : classNPPairs) {
+      auto cl = TClass::GetClass(clName.c_str());
+      const auto prop = gInterpreter->ClassInfo_ClassProperty(cl->GetClassInfo());
+      EXPECT_TRUE(prop & clPropRef) << "Error checking property for class " << clName;
+   }
 }

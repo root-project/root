@@ -59,6 +59,9 @@ protected:
    /// By default no-cache header is provided
    virtual void VerifyDefaultPageContent(std::shared_ptr<THttpCallArg> &arg) { arg->AddNoCacheHeader(); }
 
+   /// Method generate extra suffix for all kinds of loaded code
+   virtual std::string GetCodeVersion() { return ""; }
+
 public:
    virtual ~THttpWSHandler();
 

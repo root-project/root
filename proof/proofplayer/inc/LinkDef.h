@@ -8,7 +8,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifdef __CINT__
+#ifdef __CLING__
 
 #pragma link off all globals;
 #pragma link off all classes;
@@ -38,7 +38,6 @@
 #pragma link C++ class TPerfStats;
 #pragma link C++ class TPerfEvent+;
 #pragma link C++ class TProofMonSender+;
-#pragma link C++ class TProofMonSenderML+;
 #pragma link C++ class TProofMonSenderSQL+;
 
 #pragma link C++ class TProofLimitsFinder;

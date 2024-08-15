@@ -356,7 +356,8 @@ static bool UseJITLink(const Triple& TT) {
   // LLJITBuilderState::prepareForConstruction.
   if (TT.getArch() == Triple::riscv64 ||
       (TT.isOSBinFormatMachO() &&
-       (TT.getArch() == Triple::aarch64 || TT.getArch() == Triple::x86_64))) {
+       (TT.getArch() == Triple::aarch64 || TT.getArch() == Triple::x86_64)) ||
+      (TT.isOSBinFormatELF() && TT.getArch() == Triple::ppc64le)) {
     jitLink = true;
   }
   // Finally, honor the user's choice by setting an environment variable.
@@ -641,35 +642,17 @@ JITTargetAddress
 IncrementalJIT::addOrReplaceDefinition(StringRef Name,
                                        JITTargetAddress KnownAddr) {
 
-  void* Symbol = getSymbolAddress(Name, /*IncludeFromHost=*/true);
-
-  // Nothing to define, we are redefining the same function. FIXME: Diagnose.
-  if (Symbol && (JITTargetAddress)Symbol == KnownAddr)
-    return KnownAddr;
-
-  llvm::SmallString<128> LinkerMangledName;
-  char LinkerPrefix = this->m_TM->createDataLayout().getGlobalPrefix();
-  bool HasLinkerPrefix = LinkerPrefix != '\0';
-  if (HasLinkerPrefix && Name.front() == LinkerPrefix) {
-    LinkerMangledName.assign(1, LinkerPrefix);
-    LinkerMangledName.append(Name);
-  } else {
-    LinkerMangledName.assign(Name);
-  }
-
   // Let's inject it
   bool Inserted;
   SymbolMap::iterator It;
   std::tie(It, Inserted) = m_InjectedSymbols.try_emplace(
-      Jit->getExecutionSession().intern(LinkerMangledName),
+      Jit->mangleAndIntern(Name),
       JITEvaluatedSymbol(KnownAddr, JITSymbolFlags::Exported));
   assert(Inserted && "Why wasn't this found in the initial Jit lookup?");
 
   JITDylib& DyLib = Jit->getMainJITDylib();
   // We want to replace a symbol with a custom provided one.
-  if (Symbol && KnownAddr)
-     // The symbol be in the DyLib or in-process.
-     llvm::consumeError(DyLib.remove({It->first}));
+  llvm::consumeError(DyLib.remove({It->first}));
 
   if (Error Err = DyLib.define(absoluteSymbols({*It}))) {
     logAllUnhandledErrors(std::move(Err), errs(),

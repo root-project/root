@@ -45,4 +45,4 @@ documentation/doxygen/*.pcm
 documentation/doxygen/*.jpg
 
 # Pycache
-.github/workflows/root-ci-config/__pycache__
+__pycache__

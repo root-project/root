@@ -62,15 +62,16 @@ have to appear in any specific place in the list.
 #include "RooFitImplHelpers.h"
 #include "strtok.h"
 
+#include <algorithm>
+#include <array>
 #include <cstring>
 #include <sstream>
-#include <algorithm>
 
 #ifndef _WIN32
 #include <strings.h>
 #endif
 
-using namespace std;
+using std::endl, std::string, std::vector, std::list, std::ostream, std::map, std::ostringstream;
 
 ClassImp(RooProdPdf);
 
@@ -409,23 +410,21 @@ double RooProdPdf::calculate(const RooProdPdf::CacheElem& cache, bool /*verbose*
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate product of PDFs in batch mode.
-void RooProdPdf::calculateBatch(RooAbsArg const *caller, const RooProdPdf::CacheElem &cache, double *output,
-                                size_t nEvents, RooFit::Detail::DataMap const &dataMap) const
+void RooProdPdf::doEvalImpl(RooAbsArg const *caller, const RooProdPdf::CacheElem &cache, RooFit::EvalContext &ctx) const
 {
    if (cache._isRearranged) {
-      auto numerator = dataMap.at(cache._rearrangedNum.get());
-      auto denominator = dataMap.at(cache._rearrangedDen.get());
-      RooBatchCompute::compute(dataMap.config(caller), RooBatchCompute::Ratio, output, nEvents,
-                               {numerator, denominator});
+      auto numerator = ctx.at(cache._rearrangedNum.get());
+      auto denominator = ctx.at(cache._rearrangedDen.get());
+      RooBatchCompute::compute(ctx.config(caller), RooBatchCompute::Ratio, ctx.output(), {numerator, denominator});
    } else {
-      RooBatchCompute::VarVector factors;
+      std::vector<std::span<const double>> factors;
       factors.reserve(cache._partList.size());
       for (const RooAbsArg *i : cache._partList) {
-         auto span = dataMap.at(i);
+         auto span = ctx.at(i);
          factors.push_back(span);
       }
-      RooBatchCompute::ArgVector special{static_cast<double>(factors.size())};
-      RooBatchCompute::compute(dataMap.config(caller), RooBatchCompute::ProdPdf, output, nEvents, factors, special);
+      std::array<double, 1> special{static_cast<double>(factors.size())};
+      RooBatchCompute::compute(ctx.config(caller), RooBatchCompute::ProdPdf, ctx.output(), factors, special);
    }
 }
 
@@ -1322,7 +1321,7 @@ void RooProdPdf::groupProductTerms(std::list<std::vector<RooArgSet*>>& groupedTe
   }
 
   outerIntDeps.removeAll() ;
-  outerIntDeps.add(*std::unique_ptr<RooArgSet>{static_cast<RooArgSet*>(allIntDeps.selectCommon(allImpDeps))});
+  outerIntDeps.add(*std::unique_ptr<RooArgSet>{allIntDeps.selectCommon(allImpDeps)});
 
   // Now iteratively merge groups that should be (partially) integrated together
   for(RooAbsArg * outerIntDep : outerIntDeps) {
@@ -2266,11 +2265,8 @@ bool RooProdPdf::redirectServersHook(const RooAbsCollection& newServerList, bool
   for(std::unique_ptr<RooArgSet> const& normSet : _pdfNSetList) {
     for(RooAbsArg * arg : *normSet) {
       if(RooAbsArg * newArg = arg->findNewServer(newServerList, nameChange)) {
-        // Need to do some tricks here because it's not possible to replace in
-        // an owning RooAbsCollection.
-        normSet->releaseOwnership();
-        normSet->replace(*std::unique_ptr<RooAbsArg>{arg}, *newArg->cloneTree());
-        normSet->takeOwnership();
+        // Since normSet is owning, the original arg is now deleted.
+        normSet->replace(arg, std::unique_ptr<RooAbsArg>{newArg->cloneTree()});
       }
     }
   }
@@ -2365,10 +2361,18 @@ public:
 
    inline bool canComputeBatchWithCuda() const override { return true; }
 
-   void computeBatch(double *output, size_t nEvents,
-                     RooFit::Detail::DataMap const &dataMap) const override
+   void doEval(RooFit::EvalContext &ctx) const override
    {
-      _prodPdf->calculateBatch(this, *_cache, output, nEvents, dataMap);
+      _prodPdf->doEvalImpl(this, *_cache, ctx);
+   }
+
+   void translate(RooFit::Detail::CodeSquashContext &ctx) const override
+   {
+      if (_cache->_isRearranged) {
+         ctx.addResult(this, ctx.buildCall("RooFit::Detail::MathFuncs::ratio", *_cache->_rearrangedNum, *_cache->_rearrangedDen));
+      } else {
+         ctx.addResult(this, ctx.buildCall("RooFit::Detail::MathFuncs::product", _cache->_partList, _cache->_partList.size()));
+      }
    }
 
    ExtendMode extendMode() const override { return _prodPdf->extendMode(); }

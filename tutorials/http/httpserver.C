@@ -16,23 +16,22 @@
 ///
 /// \author Sergey Linev
 
-#include <TFile.h>
-#include <TMemFile.h>
-#include <TNtuple.h>
-#include <TH2.h>
-#include <TProfile.h>
-#include <TCanvas.h>
-#include <TFrame.h>
-#include <TROOT.h>
-#include <TSystem.h>
-#include <TRandom3.h>
-#include <TBenchmark.h>
-#include <TInterpreter.h>
-#include <THttpServer.h>
+#include "TFile.h"
+#include "TMemFile.h"
+#include "TNtuple.h"
+#include "TH2.h"
+#include "TProfile.h"
+#include "TCanvas.h"
+#include "TFrame.h"
+#include "TROOT.h"
+#include "TSystem.h"
+#include "TRandom3.h"
+#include "TBenchmark.h"
+#include "THttpServer.h"
 
 void httpserver(const char* jobname = "job1", Long64_t maxcnt = 0)
 {
-   TString filename = Form("%s.root", jobname);
+   auto filename = TString::Format("%s.root", jobname);
    TFile *hfile = new TMemFile(filename,"RECREATE","Demo ROOT file with histograms");
 
    // Create some histograms, a profile histogram and an ntuple
@@ -45,20 +44,18 @@ void httpserver(const char* jobname = "job1", Long64_t maxcnt = 0)
 
 
    // http server with port 8080, use jobname as top-folder name
-   THttpServer* serv = new THttpServer(Form("http:8080?top=%s", jobname));
+   THttpServer* serv = new THttpServer(TString::Format("http:8080?top=%s", jobname));
 
    // fastcgi server with port 9000, use jobname as top-folder name
-   // THttpServer* serv = new THttpServer(Form("fastcgi:9000?top=%s_fastcgi", jobname));
-
-   // dabc agent, connects to DABC master_host:1237, works only when DABC configured
-   // THttpServer* serv = new THttpServer(Form("dabc:master_host:1237?top=%s_dabc", jobname));
+   // THttpServer* serv = new THttpServer(TString::Format("fastcgi:9000?top=%s_fastcgi", jobname));
 
    // when read-only mode disabled one could execute object methods like TTree::Draw()
    serv->SetReadOnly(kFALSE);
 
    // One could specify location of newer version of JSROOT
    // serv->SetJSROOT("https://root.cern/js/latest/");
-   // serv->SetJSROOT("http://jsroot.gsi.de/latest/");
+   // serv->SetJSROOT("https://jsroot.gsi.de/latest/");
+
 
    gBenchmark->Start(jobname);
 
@@ -68,7 +65,6 @@ void httpserver(const char* jobname = "job1", Long64_t maxcnt = 0)
    c1->GetFrame()->SetFillColor(21);
    c1->GetFrame()->SetBorderSize(6);
    c1->GetFrame()->SetBorderMode(-1);
-
 
    // Fill histograms randomly
    TRandom3 random;
@@ -84,7 +80,7 @@ void httpserver(const char* jobname = "job1", Long64_t maxcnt = 0)
       hpxpy->Fill(px,py);
       hprof->Fill(px,pz);
       // fill only first 25000 events in NTuple
-      if (i<25000) ntuple->Fill(px,py,pz,rnd,i);
+      if (i < 25000) ntuple->Fill(px,py,pz,rnd,i);
       if (i && (i%kUPDATE) == 0) {
          if (i == kUPDATE) hpx->Draw();
          c1->Modified();

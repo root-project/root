@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_dataframe
-/// \notebook -jss
+/// \notebook -js
 /// Plot the ROOT downloads based on the version reading a remote sqlite3 file.
 ///
 /// This tutorial uses the Reduce method which allows to extract the minimum time
@@ -13,10 +13,11 @@
 /// \macro_image
 ///
 /// \date August 2018
-/// \author Alexandra-Maria Dobrescu
+/// \authors Alexandra-Maria Dobrescu, Sergey Linev
 
-void df027_SQliteDependencyOverVersion () {
 
+void df027_SQliteDependencyOverVersion ()
+{
    auto rdfb = ROOT::RDF::FromSqlite("http://root.cern/files/root_download_stats.sqlite", "SELECT * FROM accesslog;");
 
    auto minTimeStr = *rdfb.Reduce([](std::string a, std::string b) {return std::min(a, b);}, "Time", std::string("Z"));
@@ -24,36 +25,36 @@ void df027_SQliteDependencyOverVersion () {
    std::cout << "Minimum time is '" << minTimeStr << "'" << std::endl;
 
    double minTime = TDatime(minTimeStr.c_str()).Convert();
-   double now = TDatime().Convert();
+   double maxTime = minTime + 3600.*24*365.25*4; // cover approx 4 years from minimal time
 
    auto rdf = rdfb.Define("datime", [](const std::string &time){return TDatime(time.c_str()).Convert();}, {"Time"});
 
    auto h614 = rdf.Filter([](const std::string &v){ return 0 == v.find("6.14");}, {"Version"})
-                  .Histo1D({"h614", "Download time for version 6.14", 16, minTime, now}, {"datime"});
+                  .Histo1D({"h614", "Download time for version 6.14", 64, minTime, maxTime}, {"datime"});
 
    auto h616 = rdf.Filter([](const std::string &v){ return 0 == v.find("6.16");}, {"Version"})
-                  .Histo1D({"h616", "Download time for version 6.16", 16, minTime, now}, {"datime"});
+                  .Histo1D({"h616", "Download time for version 6.16", 64, minTime, maxTime}, {"datime"});
 
    auto h618 = rdf.Filter([](const std::string &v){ return 0 == v.find("6.18");}, {"Version"})
-                  .Histo1D({"h618", "Download time for version 6.18", 16, minTime, now}, {"datime"});
+                  .Histo1D({"h618", "Download time for version 6.18", 64, minTime, maxTime}, {"datime"});
 
-   // Add here a newer version!
+   auto customize_histo = [](TH1D &histo) {
+      auto *xaxis = histo.GetXaxis();
+      xaxis->SetTimeDisplay(1);
+      xaxis->SetLabelSize(0.02);
+      xaxis->SetNdivisions(512, kFALSE);
+      xaxis->SetTimeFormat("%Y-%m-%d%F1970-00-00 00:00:00");
+      histo.SetStats(kFALSE);
+   };
 
-   auto histoList = {h614, h616, h618};
-   auto canvases = new std::vector<TCanvas*>(histoList.size());
+   customize_histo(*h614);
+   customize_histo(*h616);
+   customize_histo(*h618);
 
-   gStyle->SetTimeOffset(0);
-   gStyle->SetOptStat(0);
-   auto histoIdx = 0U;
-   for (auto histo : histoList) {
-      canvases->at(histoIdx) = new TCanvas();
-      histo->GetXaxis()->LabelsOption("v");
-      histo->GetXaxis()->SetTimeDisplay(1);
-      histo->GetXaxis()->SetLabelSize(0.02);
-      histo->GetXaxis()->SetNdivisions(512, kFALSE);
-      histo->GetXaxis()->SetTimeFormat("%Y-%m-%d");
-      histo->DrawClone();
-      histoIdx++;
-   }
+   std::vector drawables{h614->Clone(), h616->Clone(), h618->Clone()};
 
+   auto c1 = new TCanvas("c1","Download time", 800, 1500);
+   c1->Divide(1, drawables.size());
+   for (unsigned n = 0; n < drawables.size(); ++n)
+      c1->GetPad(n + 1)->Add(drawables[n]);
 }

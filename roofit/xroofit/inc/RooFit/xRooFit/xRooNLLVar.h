@@ -52,7 +52,7 @@ class HypoTestResult;
 class HypoTestInverterResult;
 } // namespace RooStats
 
-BEGIN_XROOFIT_NAMESPACE;
+BEGIN_XROOFIT_NAMESPACE
 
 class xRooNode;
 
@@ -60,7 +60,7 @@ class xRooNLLVar : public std::shared_ptr<RooAbsReal> {
 
 public:
    struct xValueWithError : public std::pair<double, double> {
-      xValueWithError(const std::pair<double, double> &in) : std::pair<double, double>(in) {}
+      xValueWithError(const std::pair<double, double> &in = {0, 0}) : std::pair<double, double>(in) {}
       double value() const { return std::pair<double, double>::first; }
       double error() const { return std::pair<double, double>::second; }
    };
@@ -100,7 +100,8 @@ public:
       operator const RooFitResult *() const;
       void Draw(Option_t *opt = "");
 
-      xRooNLLVar nll();
+      std::shared_ptr<xRooNLLVar> nll() const { return fNll; }
+
       RooArgList poi()
       {
          return get()
@@ -166,8 +167,8 @@ public:
       // 0 = all ok
       int status() const;
 
-      std::pair<double, double> pll(bool readOnly = false);      // observed test statistic value
-      std::pair<double, double> sigma_mu(bool readOnly = false); // estimate of sigma_mu parameter
+      xValueWithError pll(bool readOnly = false);      // observed test statistic value
+      xValueWithError sigma_mu(bool readOnly = false); // estimate of sigma_mu parameter
       std::shared_ptr<const RooFitResult> ufit(bool readOnly = false);
       std::shared_ptr<const RooFitResult> cfit_null(bool readOnly = false);
       std::shared_ptr<const RooFitResult> cfit_alt(bool readOnly = false);
@@ -177,21 +178,20 @@ public:
       std::pair<std::shared_ptr<RooAbsData>, std::shared_ptr<const RooAbsCollection>> fData;
       std::pair<std::shared_ptr<RooAbsData>, std::shared_ptr<const RooAbsCollection>> data();
 
-      std::pair<double, double> getVal(const char *what);
+      xValueWithError getVal(const char *what);
 
       // leave nSigma=NaN for observed p-value
-      std::pair<double, double> pNull_asymp(double nSigma = std::numeric_limits<double>::quiet_NaN());
-      std::pair<double, double> pAlt_asymp(double nSigma = std::numeric_limits<double>::quiet_NaN());
-      std::pair<double, double> pCLs_asymp(double nSigma = std::numeric_limits<double>::quiet_NaN());
-      std::pair<double, double>
-      ts_asymp(double nSigma = std::numeric_limits<double>::quiet_NaN()); // test statistic value
+      xValueWithError pNull_asymp(double nSigma = std::numeric_limits<double>::quiet_NaN());
+      xValueWithError pAlt_asymp(double nSigma = std::numeric_limits<double>::quiet_NaN());
+      xValueWithError pCLs_asymp(double nSigma = std::numeric_limits<double>::quiet_NaN());
+      xValueWithError ts_asymp(double nSigma = std::numeric_limits<double>::quiet_NaN()); // test statistic value
 
-      std::pair<double, double> pNull_toys(double nSigma = std::numeric_limits<double>::quiet_NaN());
-      std::pair<double, double> pAlt_toys(double nSigma = std::numeric_limits<double>::quiet_NaN());
-      std::pair<double, double> pCLs_toys(double nSigma = std::numeric_limits<double>::quiet_NaN())
+      xValueWithError pNull_toys(double nSigma = std::numeric_limits<double>::quiet_NaN());
+      xValueWithError pAlt_toys(double nSigma = std::numeric_limits<double>::quiet_NaN());
+      xValueWithError pCLs_toys(double nSigma = std::numeric_limits<double>::quiet_NaN())
       {
          if (fNullVal() == fAltVal())
-            return std::pair(1, 0); // by construction
+            return std::pair<double, double>(1, 0); // by construction
          auto null = pNull_toys(nSigma);
          auto alt = pAlt_toys(nSigma);
          double nom = (null.first == 0) ? 0 : null.first / alt.first;
@@ -201,13 +201,12 @@ public:
          //  old way ... now doing like in pCLs_asymp by calculating the two variations ... but this is pessimistic
          //  assumes p-values are anticorrelated!
          //  so reverting to old
-         return std::make_pair(nom, (alt.first - alt.second <= 0)
-                                       ? std::numeric_limits<double>::infinity()
-                                       : (sqrt(pow(null.second, 2) + pow(alt.second * nom, 2)) / alt.first));
+         return std::pair<double, double>(nom, (alt.first - alt.second <= 0)
+                                                  ? std::numeric_limits<double>::infinity()
+                                                  : (sqrt(pow(null.second, 2) + pow(alt.second * nom, 2)) / alt.first));
          // return std::pair(nom,std::max(std::abs(up - nom), std::abs(down - nom)));
       }
-      std::pair<double, double>
-      ts_toys(double nSigma = std::numeric_limits<double>::quiet_NaN()); // test statistic value
+      xValueWithError ts_toys(double nSigma = std::numeric_limits<double>::quiet_NaN()); // test statistic value
 
       // Create a HypoTestResult representing the current state of this hypoPoint
       RooStats::HypoTestResult result();
@@ -261,7 +260,7 @@ public:
       TString tsTitle(bool inWords = false) const;
 
    private:
-      std::pair<double, double> pX_toys(bool alt, double nSigma = std::numeric_limits<double>::quiet_NaN());
+      xValueWithError pX_toys(bool alt, double nSigma = std::numeric_limits<double>::quiet_NaN());
       size_t addToys(bool alt, int nToys, int initialSeed = 0, double target = std::numeric_limits<double>::quiet_NaN(),
                      double target_nSigma = std::numeric_limits<double>::quiet_NaN(), bool targetCLs = false,
                      double relErrThreshold = 2., size_t maxToys = 10000);
@@ -342,7 +341,7 @@ public:
 
       // key is nSigma or "obs" for observed
       // will only do obs if "obs" dataset is not a generated dataset
-      std::map<std::string, std::pair<double, double>>
+      std::map<std::string, xValueWithError>
       limits(const char *opt = "cls",
              const std::vector<double> &nSigmas = {0, 1, 2, -1, -2, std::numeric_limits<double>::quiet_NaN()},
              double relUncert = std::numeric_limits<double>::infinity());
@@ -357,8 +356,7 @@ public:
       // estimates where corresponding pValues graph becomes equal to 0.05
       // linearly interpolates log(pVal) when obtaining limits.
       // returns value and error
-      static std::pair<double, double>
-      GetLimit(const TGraph &pValues, double target = std::numeric_limits<double>::quiet_NaN());
+      static xValueWithError GetLimit(const TGraph &pValues, double target = std::numeric_limits<double>::quiet_NaN());
 
       static RooArgList toArgs(const char *str);
 
@@ -426,13 +424,13 @@ public:
    RooAbsData *data() const; // returns the data hidden inside the NLLVar if there is some
    const RooAbsCollection *globs() const { return fGlobs.get(); }
 
-   // NLL = nllTerm + constraintTerm
-   // nllTerm = sum( entryVals ) + extendedTerm + simTerm [+ binnedDataTerm if activated binnedL option]
+   // NLL = mainTerm + constraintTerm
+   // mainTerm = sum( entryVals ) + extendedTerm + simTerm [+ binnedDataTerm if activated binnedL option]
    // this is what it should be, at least
 
    // total nll should be all these values + constraint term + extended term + simTerm [+binnedDataTerm if activated
    // binnedL option]
-   RooNLLVar *nllTerm() const;
+   RooNLLVar *mainTerm() const;
    RooConstraintSum *constraintTerm() const;
 
    double getEntryVal(size_t entry) const; // get the Nll value for a specific entry
@@ -444,8 +442,12 @@ public:
    double ndof() const;
    double saturatedVal() const;
    double saturatedConstraintTerm() const;
-   double saturatedNllTerm() const;
+   double saturatedMainTerm() const;
    double pgof() const; // a goodness-of-fit pvalue based on profile likelihood of a saturated model
+   double mainTermPgof() const;
+   double mainTermNdof() const;
+
+   std::set<std::string> binnedChannels() const;
 
    // change the dataset - will check globs are the same
    bool setData(const std::pair<std::shared_ptr<RooAbsData>, std::shared_ptr<const RooAbsCollection>> &_data);
@@ -472,6 +474,11 @@ public:
    bool kReuseNLL = true;
 };
 
-END_XROOFIT_NAMESPACE;
+namespace cling {
+std::string printValue(const xRooNLLVar::xValueWithError *val);
+std::string printValue(const std::map<std::string, xRooNLLVar::xValueWithError> *m);
+} // namespace cling
+
+END_XROOFIT_NAMESPACE
 
 #endif // include guard

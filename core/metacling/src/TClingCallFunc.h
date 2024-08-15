@@ -34,7 +34,8 @@
 
 #include "cling/Interpreter/Value.h"
 
-#include <llvm/ADT/SmallVector.h>
+#include "clang/AST/ASTContext.h"
+#include "llvm/ADT/SmallVector.h"
 
 namespace clang {
 class BuiltinType;
@@ -203,7 +204,37 @@ public:
    void ResetArg();
    template<typename T, std::enable_if_t<std::is_fundamental<T>::value, bool> = true>
    void SetArg(T arg) {
-      fArgVals.push_back(cling::Value::Create(*fInterp, arg));
+      cling::Value ArgValue = cling::Value::Create(*fInterp, arg);
+      // T can be different from the actual parameter of the underlying function.
+      // If we know already the function signature, make sure we create the
+      // cling::Value with the proper type and representation to avoid
+      // re-adjusting at the time we execute.
+      if (const clang::FunctionDecl* FD = GetDecl()) {
+         // FIXME: We need to think how to handle the implicit this pointer.
+         // See the comment in TClingCallFunc::exec.
+         if (!llvm::isa<clang::CXXMethodDecl>(FD)) {
+            clang::QualType QT = FD->getParamDecl(fArgVals.size())->getType();
+            QT = QT.getCanonicalType();
+            clang::ASTContext &C = FD->getASTContext();
+            if (QT->isBuiltinType() && !C.hasSameType(QT, ArgValue.getType())) {
+               switch(QT->getAs<clang::BuiltinType>()->getKind()) {
+               default:
+                  ROOT::TMetaUtils::Error("TClingCallFunc::SetArg", "Unknown builtin type!");
+#ifndef NDEBUG
+                  QT->dump();
+#endif // NDEBUG
+                  break;
+#define X(type, name)                                                      \
+                  case clang::BuiltinType::name:                           \
+                     ArgValue = cling::Value::Create(*fInterp, (type)arg); \
+                  break;
+                  CLING_VALUE_BUILTIN_TYPES
+#undef X
+               }
+            }
+         }
+      }
+      fArgVals.push_back(ArgValue);
    }
    void SetArgArray(Longptr_t* argArr, int narg);
    void SetArgs(const char* args);

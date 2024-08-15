@@ -89,14 +89,6 @@
 // Note that the order is relevant, more than one of the flag might be
 // on at the same time and we want to use 'best' option available.
 
-#ifdef __CINT__
-
-#  define TTHREAD_TLS(type) static type
-#  define TTHREAD_TLS_ARRAY(type,size,name) static type name[size]
-#  define TTHREAD_TLS_PTR(name) &name
-
-#else
-
 #  define TTHREAD_TLS(type) thread_local type
 #  define TTHREAD_TLS_ARRAY(type,size,name) thread_local type name[size]
 #  define TTHREAD_TLS_PTR(name) &name
@@ -104,8 +96,6 @@
 #  define TTHREAD_TLS_DECL(type, name) thread_local type name
 #  define TTHREAD_TLS_DECL_ARG(type, name, arg) thread_local type name(arg)
 #  define TTHREAD_TLS_DECL_ARG2(type, name, arg1, arg2) thread_local type name(arg1,arg2)
-
-#endif
 
 // Available on all platforms
 

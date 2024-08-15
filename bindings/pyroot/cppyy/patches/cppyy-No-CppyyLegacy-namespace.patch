@@ -1,0 +1,48 @@
+From e990e7bcb5a119ad619c847d61d29cae4e447ec1 Mon Sep 17 00:00:00 2001
+From: Jonas Rembser <jonas.rembser@cern.ch>
+Date: Tue, 12 Mar 2024 01:35:52 +0100
+Subject: [PATCH] [cppyy] Don't use `CppyyLegacy` namespace
+
+---
+ bindings/pyroot/cppyy/cppyy/python/cppyy/__init__.py | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/bindings/pyroot/cppyy/cppyy/python/cppyy/__init__.py b/bindings/pyroot/cppyy/cppyy/python/cppyy/__init__.py
+index 1a2afbd211..2a169cadee 100644
+--- a/bindings/pyroot/cppyy/cppyy/python/cppyy/__init__.py
++++ b/bindings/pyroot/cppyy/cppyy/python/cppyy/__init__.py
+@@ -178,7 +178,7 @@ del make_smartptr
+ #--- interface to Cling ------------------------------------------------------
+ class _stderr_capture(object):
+     def __init__(self):
+-       self._capture = not gbl.CppyyLegacy.gDebug and True or False
++       self._capture = not gbl.gDebug and True or False
+        self.err = ""
+ 
+     def __enter__(self):
+@@ -242,8 +242,8 @@ def load_library(name):
+     with _stderr_capture() as err:
+         gSystem = gbl.gSystem
+         if name[:3] != 'lib':
+-            if not gSystem.FindDynamicLibrary(gbl.CppyyLegacy.TString(name), True) and\
+-                   gSystem.FindDynamicLibrary(gbl.CppyyLegacy.TString('lib'+name), True):
++            if not gSystem.FindDynamicLibrary(gbl.TString(name), True) and\
++                   gSystem.FindDynamicLibrary(gbl.TString('lib'+name), True):
+                 name = 'lib'+name
+         sc = gSystem.Load(name)
+     if sc == -1:
+@@ -378,9 +378,9 @@ def add_autoload_map(fname):
+ def set_debug(enable=True):
+     """Enable/disable debug output."""
+     if enable:
+-        gbl.CppyyLegacy.gDebug = 10
++        gbl.gDebug = 10
+     else:
+-        gbl.CppyyLegacy.gDebug =  0
++        gbl.gDebug =  0
+ 
+ def _get_name(tt):
+     if type(tt) == str:
+-- 
+2.44.0
+

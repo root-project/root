@@ -46,7 +46,7 @@ namespace ROOT {
    TMinuitMinimizer class:
    ROOT::Math::Minimizer implementation based on TMinuit
 
-   @ingroup TMinuit
+   @ingroup MinuitOld
 */
 class TMinuitMinimizer  : public ROOT::Math::Minimizer {
 

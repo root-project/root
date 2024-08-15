@@ -37,7 +37,7 @@ public:
   RooTreeDataStore() ;
   RooTreeDataStore(TTree* t, const RooArgSet& vars, const char* wgtVarName=nullptr) ;
 
-  // Empty ctor
+  // Empty constructor
   RooTreeDataStore(RooStringView name, RooStringView title, const RooArgSet& vars, const char* wgtVarName=nullptr) ;
   RooAbsDataStore* clone(const char* newname=nullptr) const override { return new RooTreeDataStore(*this,newname) ; }
   RooAbsDataStore* clone(const RooArgSet& vars, const char* newname=nullptr) const override { return new RooTreeDataStore(*this,vars,newname) ; }

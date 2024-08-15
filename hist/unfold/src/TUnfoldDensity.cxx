@@ -158,7 +158,7 @@ whichever algorithm is used, the output has to be checked:
 //#define DEBUG
 
 #ifdef DEBUG
-using namespace std;
+using std::cout;
 #endif
 
 ClassImp(TUnfoldDensity);

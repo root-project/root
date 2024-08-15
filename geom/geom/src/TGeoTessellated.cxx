@@ -578,7 +578,7 @@ const TBuffer3D &TGeoTessellated::GetBuffer3D(int reqSections, Bool_t localFrame
 
 TGeoTessellated *TGeoTessellated::ImportFromObjFormat(const char *objfile, bool check, bool verbose)
 {
-   using namespace std;
+   using std::vector, std::string, std::ifstream, std::stringstream, std::endl;
 
    vector<Vertex_t> vertices;
    vector<string> sfacets;

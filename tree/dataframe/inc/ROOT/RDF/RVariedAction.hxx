@@ -212,7 +212,7 @@ public:
 
       auto upmostNode = AddDefinesToGraph(thisNode, GetColRegister(), prevColumns, visitedMap);
 
-      thisNode->AddDefinedColumns(GetColRegister().GetNames());
+      thisNode->AddDefinedColumns(GetColRegister().GenerateColumnNames());
       upmostNode->SetPrevNode(prevNode);
       return thisNode;
    }

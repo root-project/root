@@ -34,9 +34,9 @@ F may have an arbitrary number of dependents and parameters
 #include "RooStreamParser.h"
 #include "RooArgList.h"
 
-#include "TError.h"
+#include <RooFit/Detail/MathFuncs.h>
 
-using namespace std;
+#include "TError.h"
 
 ClassImp(RooEfficiency);
 
@@ -73,46 +73,28 @@ RooEfficiency::RooEfficiency(const RooEfficiency& other, const char* name) :
 
 double RooEfficiency::evaluate() const
 {
-  double effFuncVal = _effFunc ;
-
-  // Truncate efficiency function in range 0.0-1.0
-  if (_effFunc>1) {
-    effFuncVal = 1.0 ;
-  } else if (_effFunc<0) {
-    effFuncVal = 0.0 ;
-  }
-
-  if (_cat.label() == _sigCatName) {
-    // Accept case
-    return effFuncVal ;
-  } else {
-    // Reject case
-    return 1 - effFuncVal ;
-  }
+   const int sigCatIndex = _cat->lookupIndex(_sigCatName.Data());
+   return RooFit::Detail::MathFuncs::efficiency(_effFunc, _cat, sigCatIndex);
 }
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-Int_t RooEfficiency::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const
+int RooEfficiency::getAnalyticalIntegral(RooArgSet &allVars, RooArgSet &analVars, const char * /*rangeName*/) const
 {
-  if (matchArgs(allVars,analVars,_cat)) return 1 ;
-  return 0 ;
+   return matchArgs(allVars, analVars, _cat) ? 1 : 0;
 }
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-double RooEfficiency::analyticalIntegral(Int_t code, const char* /*rangeName*/) const
+double RooEfficiency::analyticalIntegral(int /*code*/, const char * /*rangeName*/) const
 {
-  R__ASSERT(code==1) ;
-  return 1.0 ;
+   return 1.0;
 }
 
+void RooEfficiency::translate(RooFit::Detail::CodeSquashContext &ctx) const
+{
+   int sigCatIndex = _cat->lookupIndex(_sigCatName.Data());
+   ctx.addResult(this, ctx.buildCall("RooFit::Detail::MathFuncs::efficiency", _effFunc, _cat, sigCatIndex));
+}
 
-
-
-
-
+std::string RooEfficiency::buildCallToAnalyticIntegral(int /*code*/, const char * /*rangeName*/,
+                                                       RooFit::Detail::CodeSquashContext &) const
+{
+   return "1.0";
+}

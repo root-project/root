@@ -440,7 +440,8 @@ void TClonesArray::Clear(Option_t *option)
 
 void TClonesArray::Delete(Option_t *)
 {
-   if ( fClass->TestBit(TClass::kIsEmulation) ) {
+   if (fClass->GetState() == TClass::kEmulated)
+   {
       // In case of emulated class, we can not use the delete operator
       // directly, it would use the wrong destructor.
       for (Int_t i = 0; i < fSize; i++) {

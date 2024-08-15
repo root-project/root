@@ -2,6 +2,7 @@
 #define CPYCPPYY_UTILITY_H
 
 // Standard
+#include <map>
 #include <string>
 #include <vector>
 
@@ -10,12 +11,14 @@ namespace CPyCppyy {
 
 class PyCallable;
 
+#if PY_VERSION_HEX < 0x030b0000
 extern dict_lookup_func gDictLookupOrg;
 extern bool gDictLookupActive;
+#endif
 
 // additional converter functions
 unsigned long PyLongOrInt_AsULong(PyObject* pyobject);
-ULong64_t     PyLongOrInt_AsULong64(PyObject* pyobject);
+PY_ULONG_LONG PyLongOrInt_AsULong64(PyObject* pyobject);
 
 namespace Utility {
 
@@ -54,15 +57,18 @@ bool InitProxy(PyObject* module, PyTypeObject* pytype, const char* name);
 Py_ssize_t GetBuffer(PyObject* pyobject, char tc, int size, void*& buf, bool check = true);
 
 // data/operator mappings
-std::string MapOperatorName(const std::string& name, bool bTakesParames);
+std::string MapOperatorName(const std::string& name, bool bTakesParames, bool* stubbed = nullptr);
 
 struct PyOperators {
-    PyOperators() : fEq(nullptr), fNe(nullptr), fLAdd(nullptr), fRAdd(nullptr),
-        fSub(nullptr), fLMul(nullptr), fRMul(nullptr), fDiv(nullptr), fHash(nullptr) {}
+    PyOperators() : fEq(nullptr), fNe(nullptr), fLt(nullptr), fLe(nullptr), fGt(nullptr), fGe(nullptr),
+        fLAdd(nullptr), fRAdd(nullptr), fSub(nullptr), fLMul(nullptr), fRMul(nullptr), fDiv(nullptr),
+        fHash(nullptr) {}
     ~PyOperators();
 
     PyObject* fEq;
     PyObject* fNe;
+    PyObject *fLt, *fLe;
+    PyObject *fGt, *fGe;
     PyObject *fLAdd, *fRAdd;
     PyObject* fSub;
     PyObject *fLMul, *fRMul;
@@ -71,16 +77,15 @@ struct PyOperators {
 };
 
 // meta information
-const std::string Compound(const std::string& name);
-Py_ssize_t ArraySize(const std::string& name);
 std::string ClassName(PyObject* pyobj);
+bool IsSTLIterator(const std::string& classname);
 
 // for threading: save call to PyErr_Occurred()
 PyObject* PyErr_Occurred_WithGIL();
 
 // helpers for collecting/maintaining python exception data
 struct PyError_t {
-    PyError_t() { fType = fValue = fTrace = 0; }
+    PyError_t(bool is_cpp = false) : fIsCpp(is_cpp) { fType = fValue = fTrace = 0; }
 
     static void Clear(PyError_t& e)
     {
@@ -90,9 +95,10 @@ struct PyError_t {
     }
 
     PyObject *fType, *fValue, *fTrace;
+    bool fIsCpp;
 };
 
-size_t FetchError(std::vector<PyError_t>&);
+size_t FetchError(std::vector<PyError_t>&, bool is_cpp = false);
 void SetDetailedException(
     std::vector<PyError_t>& errors /* clears */, PyObject* topmsg /* steals ref */, PyObject* defexc);
 

@@ -2,6 +2,8 @@
 #include <TKey.h>
 #include <TTree.h>
 
+using ROOT::Experimental::Internal::RNTupleWriteOptionsManip;
+
 namespace {
 bool IsEqual(const ROOT::Experimental::RNTuple &a, const ROOT::Experimental::RNTuple &b)
 {
@@ -10,7 +12,7 @@ bool IsEqual(const ROOT::Experimental::RNTuple &a, const ROOT::Experimental::RNT
           a.GetSeekHeader() == b.GetSeekHeader() && a.GetNBytesHeader() == b.GetNBytesHeader() &&
           a.GetLenHeader() == b.GetLenHeader() && a.GetSeekFooter() == b.GetSeekFooter() &&
           a.GetNBytesFooter() == b.GetNBytesFooter() && a.GetLenFooter() == b.GetLenFooter() &&
-          a.GetChecksum() == b.GetChecksum();
+          a.GetMaxKeySize() == b.GetMaxKeySize();
 }
 
 struct RNTupleTester {
@@ -25,8 +27,8 @@ TEST(MiniFile, Raw)
 {
    FileRaii fileGuard("test_ntuple_minifile_raw.ntuple");
 
-   auto writer = std::unique_ptr<RNTupleFileWriter>(
-      RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), 0, RNTupleFileWriter::EContainerFormat::kBare));
+   RNTupleWriteOptions options;
+   auto writer = RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), EContainerFormat::kBare, options);
    char header = 'h';
    char footer = 'f';
    char blob = 'b';
@@ -50,13 +52,12 @@ TEST(MiniFile, Raw)
    EXPECT_EQ(footer, buf);
 }
 
-
 TEST(MiniFile, Stream)
 {
    FileRaii fileGuard("test_ntuple_minifile_stream.root");
 
-   auto writer = std::unique_ptr<RNTupleFileWriter>(
-      RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), 0, RNTupleFileWriter::EContainerFormat::kTFile));
+   RNTupleWriteOptions options;
+   auto writer = RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), EContainerFormat::kTFile, options);
    char header = 'h';
    char footer = 'f';
    char blob = 'b';
@@ -85,13 +86,12 @@ TEST(MiniFile, Stream)
    EXPECT_TRUE(IsEqual(ntuple, RNTupleTester(*k).GetAnchor()));
 }
 
-
 TEST(MiniFile, Proper)
 {
    FileRaii fileGuard("test_ntuple_minifile_proper.root");
 
    std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
-   auto writer = std::unique_ptr<RNTupleFileWriter>(RNTupleFileWriter::Append("MyNTuple", *file));
+   auto writer = RNTupleFileWriter::Append("MyNTuple", *file, RNTupleWriteOptions::kDefaultMaxKeySize);
 
    char header = 'h';
    char footer = 'f';
@@ -120,8 +120,10 @@ TEST(MiniFile, SimpleKeys)
 {
    FileRaii fileGuard("test_ntuple_minifile_simple_keys.root");
 
-   auto writer = std::unique_ptr<RNTupleFileWriter>(
-      RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), 0, RNTupleFileWriter::EContainerFormat::kTFile));
+   RNTupleWriteOptions options;
+   // We check the file size at the end, so Direct I/O alignment requirements must not introduce padding.
+   options.SetUseDirectIO(false);
+   auto writer = RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), EContainerFormat::kTFile, options);
 
    char blob1 = '1';
    auto offBlob1 = writer->WriteBlob(&blob1, 1, 1);
@@ -226,7 +228,7 @@ TEST(MiniFile, ProperKeys)
    FileRaii fileGuard("test_ntuple_minifile_proper_keys.root");
 
    std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
-   auto writer = std::unique_ptr<RNTupleFileWriter>(RNTupleFileWriter::Append("MyNTuple", *file));
+   auto writer = RNTupleFileWriter::Append("MyNTuple", *file, RNTupleWriteOptions::kDefaultMaxKeySize);
 
    char blob1 = '1';
    auto offBlob1 = writer->WriteBlob(&blob1, 1, 1);
@@ -335,7 +337,7 @@ TEST(MiniFile, LongString)
       "store in a TFile header. For longer strings, a length of 255 is special and means that the first length byte is "
       "followed by an integer length.";
    std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE", LongString));
-   auto writer = std::unique_ptr<RNTupleFileWriter>(RNTupleFileWriter::Append("ntuple", *file));
+   auto writer = RNTupleFileWriter::Append("ntuple", *file, RNTupleWriteOptions::kDefaultMaxKeySize);
 
    char header = 'h';
    char footer = 'f';
@@ -350,14 +352,206 @@ TEST(MiniFile, LongString)
    EXPECT_EQ(offFooter, ntuple1.GetSeekFooter());
 }
 
+TEST(MiniFile, MultiKeyBlob)
+{
+   FileRaii fileGuard("test_ntuple_minifile_multi_key_blob.root");
+
+   const auto kMaxKeySize = 10 * 1024 * 1024; // 10 MiB
+   const auto dataSize = kMaxKeySize * 2;
+   auto data = std::make_unique<unsigned char[]>(dataSize);
+   std::uint64_t blobOffset;
+
+   {
+      RNTupleWriteOptions options;
+      RNTupleWriteOptionsManip::SetMaxKeySize(options, kMaxKeySize);
+      auto writer = RNTupleFileWriter::Recreate("ntpl", fileGuard.GetPath(), EContainerFormat::kTFile, options);
+      memset(data.get(), 0x99, dataSize);
+      data[42] = 0x42;
+      data[dataSize - 42] = 0x11;
+      blobOffset = writer->WriteBlob(data.get(), dataSize, dataSize);
+      writer->Commit();
+   }
+   {
+      memset(data.get(), 0, dataSize);
+
+      auto rawFile = RRawFile::Create(fileGuard.GetPath());
+      auto reader = RMiniFileReader{rawFile.get()};
+      // Force reader to read the max key size
+      (void)reader.GetNTuple("ntpl");
+      reader.ReadBuffer(data.get(), dataSize, blobOffset);
+
+      EXPECT_EQ(data[0], 0x99);
+      EXPECT_EQ(data[dataSize / 2], 0x99);
+      EXPECT_EQ(data[2 * dataSize / 3], 0x99);
+      EXPECT_EQ(data[dataSize - 1], 0x99);
+      EXPECT_EQ(data[42], 0x42);
+      EXPECT_EQ(data[dataSize - 42], 0x11);
+   }
+}
+
+TEST(MiniFile, MultiKeyBlob_ExactlyMax)
+{
+   // Write a payload that's exactly `maxKeySize` long and verify it doesn't split the key.
+
+   FileRaii fileGuard("test_ntuple_minifile_multi_key_exact.root");
+
+   const auto kMaxKeySize = 100 * 1024; // 100 KiB
+   const auto dataSize = kMaxKeySize;
+   auto data = std::make_unique<unsigned char[]>(dataSize);
+   std::uint64_t blobOffset;
+
+   {
+      RNTupleWriteOptions options;
+      RNTupleWriteOptionsManip::SetMaxKeySize(options, kMaxKeySize);
+      auto writer = RNTupleFileWriter::Recreate("ntpl", fileGuard.GetPath(), EContainerFormat::kTFile, options);
+      memset(data.get(), 0, dataSize);
+      blobOffset = writer->WriteBlob(data.get(), dataSize, dataSize);
+      writer->Commit();
+   }
+   {
+      // Fill read buffer with sentinel data (they should be overwritten by zeroes)
+      memset(data.get(), 0x99, dataSize);
+
+      auto rawFile = RRawFile::Create(fileGuard.GetPath());
+      auto reader = RMiniFileReader{rawFile.get()};
+      // Force reader to read the max key size
+      (void)reader.GetNTuple("ntpl");
+      rawFile->ReadAt(data.get(), dataSize, blobOffset);
+
+      // If we didn't split the key, we expect to find all zeroes at the end of `data`.
+      // Otherwise we will have some non-zero bytes, since it will host the next chunk offset.
+      uint64_t lastU64 = *reinterpret_cast<uint64_t *>(&data[dataSize - sizeof(uint64_t)]);
+      EXPECT_EQ(lastU64, 0);
+   }
+}
+
+TEST(MiniFile, MultiKeyBlob_ExactlyTwo)
+{
+   // Write a payload that fits into two keys.
+
+   FileRaii fileGuard("test_ntuple_minifile_multi_key_two.root");
+
+   const auto kMaxKeySize = 100 * 1024; // 100 KiB
+   const auto dataSize = 2 * kMaxKeySize - 8;
+   auto data = std::make_unique<unsigned char[]>(dataSize);
+   std::uint64_t blobOffset;
+
+   {
+      RNTupleWriteOptions options;
+      RNTupleWriteOptionsManip::SetMaxKeySize(options, kMaxKeySize);
+      auto writer = RNTupleFileWriter::Recreate("ntpl", fileGuard.GetPath(), EContainerFormat::kTFile, options);
+      memset(data.get(), 0, dataSize / 2);
+      memset(data.get() + dataSize / 2, 0x99, dataSize / 2);
+      data[42] = 0x42;
+      data[dataSize - 42] = 0x84;
+      blobOffset = writer->WriteBlob(data.get(), dataSize, dataSize);
+      writer->Commit();
+   }
+   {
+      // Fill read buffer with sentinel data (they should be overwritten by zeroes)
+      memset(data.get(), 0x99, dataSize);
+
+      auto rawFile = RRawFile::Create(fileGuard.GetPath());
+      auto reader = RMiniFileReader{rawFile.get()};
+      // Force reader to read the max key size
+      (void)reader.GetNTuple("ntpl");
+
+      rawFile->ReadAt(data.get(), dataSize, blobOffset);
+      // If the blob was split into exactly two keys, there should be only one pointer to the next chunk.
+      uint64_t secondLastU64 = *reinterpret_cast<uint64_t *>(&data[kMaxKeySize - 2 * sizeof(uint64_t)]);
+      EXPECT_EQ(secondLastU64, 0);
+
+      memset(data.get(), 0, dataSize);
+      reader.ReadBuffer(data.get(), dataSize, blobOffset);
+
+      EXPECT_EQ(data[0], 0);
+      EXPECT_EQ(data[dataSize / 2 - 1], 0);
+      EXPECT_EQ(data[2 * dataSize / 3], 0x99);
+      EXPECT_EQ(data[dataSize - 1], 0x99);
+      EXPECT_EQ(data[42], 0x42);
+      EXPECT_EQ(data[dataSize - 42], 0x84);
+   }
+}
+
+TEST(MiniFile, MultiKeyBlob_SmallKey)
+{
+   FileRaii fileGuard("test_ntuple_minifile_multi_key_blob_small_key.root");
+
+   const auto kMaxKeySize = 50 * 1024; // 50 KiB
+   const auto dataSize = kMaxKeySize * 1000;
+   auto data = std::make_unique<unsigned char[]>(dataSize);
+   std::uint64_t blobOffset;
+
+   {
+      RNTupleWriteOptions options;
+      RNTupleWriteOptionsManip::SetMaxKeySize(options, kMaxKeySize);
+      auto writer = RNTupleFileWriter::Recreate("ntpl", fileGuard.GetPath(), EContainerFormat::kTFile, options);
+      memset(data.get(), 0x99, dataSize);
+      data[42] = 0x42;
+      data[dataSize - 42] = 0x84;
+      blobOffset = writer->WriteBlob(data.get(), dataSize, dataSize);
+      writer->Commit();
+   }
+   {
+      memset(data.get(), 0, dataSize);
+
+      auto rawFile = RRawFile::Create(fileGuard.GetPath());
+      auto reader = RMiniFileReader{rawFile.get()};
+      // Force reader to read the max key size
+      (void)reader.GetNTuple("ntpl");
+      reader.ReadBuffer(data.get(), dataSize, blobOffset);
+
+      EXPECT_EQ(data[0], 0x99);
+      EXPECT_EQ(data[dataSize / 2], 0x99);
+      EXPECT_EQ(data[2 * dataSize / 3], 0x99);
+      EXPECT_EQ(data[dataSize - 1], 0x99);
+      EXPECT_EQ(data[42], 0x42);
+      EXPECT_EQ(data[dataSize - 42], 0x84);
+   }
+}
+
+TEST(MiniFile, MultiKeyBlob_TooManyChunks)
+{
+   // Try writing more than the max possible number of chunks for a split key and verify it fails
+
+#ifdef GTEST_FLAG_SET
+   // Death tests must run single-threaded:
+   // https://github.com/google/googletest/blob/main/docs/advanced.md#death-tests-and-threads
+   GTEST_FLAG_SET(death_test_style, "threadsafe");
+#endif
+
+   FileRaii fileGuard("test_ntuple_minifile_multi_key_blob_small_key.root");
+
+   const auto kMaxKeySize = 128;
+   RNTupleWriteOptions options;
+   RNTupleWriteOptionsManip::SetMaxKeySize(options, kMaxKeySize);
+
+   {
+      const auto kOkayDataSize = 1024;
+      const auto data = std::make_unique<unsigned char[]>(kOkayDataSize);
+      auto writer = RNTupleFileWriter::Recreate("ntpl", fileGuard.GetPath(), EContainerFormat::kTFile, options);
+      memset(data.get(), 0x99, kOkayDataSize);
+      writer->WriteBlob(data.get(), kOkayDataSize, kOkayDataSize);
+      writer->Commit();
+   }
+
+   {
+      const auto kTooBigDataSize = 5000;
+      const auto data = std::make_unique<unsigned char[]>(kTooBigDataSize);
+      auto writer = RNTupleFileWriter::Recreate("ntpl", fileGuard.GetPath(), EContainerFormat::kTFile, options);
+      memset(data.get(), 0x99, kTooBigDataSize);
+      EXPECT_DEATH(writer->WriteBlob(data.get(), kTooBigDataSize, kTooBigDataSize), "");
+      writer->Commit();
+   }
+}
+
 TEST(MiniFile, Multi)
 {
    FileRaii fileGuard("test_ntuple_minifile_multi.root");
 
    std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
-   auto writer1 =
-      std::unique_ptr<RNTupleFileWriter>(RNTupleFileWriter::Append("FirstNTuple", *file));
-   auto writer2 = std::unique_ptr<RNTupleFileWriter>(RNTupleFileWriter::Append("SecondNTuple", *file));
+   auto writer1 = RNTupleFileWriter::Append("FirstNTuple", *file, RNTupleWriteOptions::kDefaultMaxKeySize);
+   auto writer2 = RNTupleFileWriter::Append("SecondNTuple", *file, RNTupleWriteOptions::kDefaultMaxKeySize);
 
    char header1 = 'h';
    char footer1 = 'f';
@@ -398,17 +592,15 @@ TEST(MiniFile, Multi)
    EXPECT_EQ(footer2, buf);
 }
 
-
 TEST(MiniFile, Failures)
 {
+   RNTupleWriteOptions options;
    // TODO(jblomer): failures should be exceptions
-   EXPECT_DEATH(
-      RNTupleFileWriter::Recreate("MyNTuple", "/can/not/open", 0, RNTupleFileWriter::EContainerFormat::kTFile), ".*");
+   EXPECT_DEATH(RNTupleFileWriter::Recreate("MyNTuple", "/can/not/open", EContainerFormat::kTFile, options), ".*");
 
    FileRaii fileGuard("test_ntuple_minifile_failures.root");
 
-   auto writer = std::unique_ptr<RNTupleFileWriter>(
-      RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), 0, RNTupleFileWriter::EContainerFormat::kTFile));
+   auto writer = RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), EContainerFormat::kTFile, options);
    char header = 'h';
    char footer = 'f';
    char blob = 'b';
@@ -423,7 +615,7 @@ TEST(MiniFile, Failures)
    try {
       anchor = reader.GetNTuple("No such RNTuple").Inspect();
       FAIL() << "bad RNTuple names should throw";
-   } catch (const RException& err) {
+   } catch (const RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("no RNTuple named 'No such RNTuple' in file '" + fileGuard.GetPath()));
    }
 }

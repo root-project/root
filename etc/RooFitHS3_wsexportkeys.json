@@ -40,6 +40,19 @@
             "sigma": "sigma"
         }
     },
+    "RooCrystalBall": {
+        "type": "crystalball_doublesided_dist",
+        "proxies": {
+            "alphaL": "alpha_L",
+            "alphaR": "alpha_R",
+            "nL": "n_L",
+            "nR": "n_R",
+            "x": "m",
+            "x0": "m0",
+            "sigmaL": "sigma_L",
+            "sigmaR": "sigma_R"
+        }
+    },
     "RooGamma": {
         "type": "gamma_dist",
         "proxies": {
@@ -72,8 +85,8 @@
             "sigma": "sigma"
         }
     },
-    "RooPower": {
-        "type": "power_dist",
+    "RooPowerSum": {
+        "type": "power_sum_dist",
         "proxies": {
             "coefList": "coefficients",
             "expList": "exponents",

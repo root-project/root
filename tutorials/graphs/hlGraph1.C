@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_graPads
+/// \ingroup tutorial_graphs
 ///
 /// This tutorial demonstrates how to use the highlight mode on graph.
 ///

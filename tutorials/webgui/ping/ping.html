@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8">
     <title>RWebWindow latency test</title>
+    <!--jsroot_importmap-->
   </head>
 
   <body>
@@ -15,18 +16,18 @@
 
   <script type="module">
 
-    import { connectWebWindow } from './jsrootsys/modules/webwindow.mjs';
+    import { connectWebWindow } from 'jsroot/webwindow';
 
-    import { redraw, cleanup } from './jsrootsys/modules/draw.mjs';
+    import { redraw, cleanup } from 'jsroot/draw';
 
-    import { createHistogram } from './jsrootsys/modules/core.mjs';
+    import { createHistogram } from 'jsroot/core';
 
     class PingPongHandler {
 
        /** @summary constructor */
        constructor(is_main, out_id) {
           this.is_main = is_main;
-          this.out_id = out_id || "output";
+          this.out_id = out_id || 'output';
           this.handle = null;
           this.last_show = this.last_ping = new Date().getTime();
           this.sum = [0, 0, 0];
@@ -53,13 +54,13 @@
        onWebsocketMsg(handle, msg, offset) {
           if (typeof msg != 'string') {
              // let arr = new Float32Array(msg, offset);
-             // AddOutput("bin: " + arr.toString());
+             // AddOutput('bin: ' + arr.toString());
           } else if (msg.indexOf('PING:') == 0) {
              this.processPing(msg.slice(5));
           } else if (msg.indexOf('CLIENTS:') == 0) {
-             let nclients = parseInt(msg.slice(8));
-             if (this.is_main && (nclients > 1))
-                this.startMoreClients(nclients-1);
+             const arr = JSON.parse(msg.slice(8));
+             if (this.is_main && (arr?.length > 0))
+                this.startMoreClients(arr);
            }
        }
 
@@ -156,19 +157,21 @@
        }
 
        /** @summary Start more clients */
-       startMoreClients(nclients) {
+       startMoreClients(arr) {
           let html  = '';
-          for (let n = 0; n < nclients; ++n)
-             html += `<p>Client${n+1}:  <b id='out${n}'>output</b></p>`;
+          for (let n = 0; n < arr.length; ++n)
+            html += `<p>Client${n+1}:  <b id='out${n}'>output</b></p>`;
           document.getElementById('clients').innerHTML = html;
 
           this.clients = [];
 
-          for (let n = 0; n < nclients; ++n) {
+          for (let n = 0; n < arr.length; ++n) {
              let sub_handler = new PingPongHandler(false, `out${n}`);
              sub_handler.cnt = 10000*(n+1);
-             connectWebWindow({ receiver: sub_handler, socket_kind: this.handle.kind });
+             let sub_ws = this.handle.createNewInstance(arr[n]);
+             sub_ws.setReceiver(sub_handler);
              this.clients.push(sub_handler);
+             sub_ws.connect();
           }
        }
 
@@ -196,20 +199,18 @@
     let main_handler = new PingPongHandler(true);
 
     document.getElementById('halt_btn').onclick = () => {
-       if (main_handler && main_handler.handle)
-            main_handler.handle.send('halt');
+        main_handler?.handle?.send('halt');
     };
 
     document.getElementById('toggle_btn').onclick = () => {
-
        let draw = document.getElementById('draw');
        if (!draw) return;
 
        if (main_handler.hist) {
-          cleanup(draw);
-          main_handler.clearHistogram();
-          draw.style.display = 'none';
-          return;
+         cleanup(draw);
+         main_handler.clearHistogram();
+         draw.style.display = 'none';
+         return;
        }
 
        main_handler.createHistogram();

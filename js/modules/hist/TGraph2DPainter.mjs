@@ -1,8 +1,7 @@
 import { settings, createHistogram, setHistogramTitle, kNoZoom,
          clTH2F, clTGraph2DErrors, clTGraph2DAsymmErrors, clTPaletteAxis, kNoStats } from '../core.mjs';
 import { Color, DoubleSide, LineBasicMaterial, MeshBasicMaterial, Mesh } from '../three.mjs';
-import { DrawOptions } from '../base/BasePainter.mjs';
-import { ObjectPainter } from '../base/ObjectPainter.mjs';
+import { ObjectPainter, DrawOptions } from '../base/ObjectPainter.mjs';
 import { TH2Painter } from './TH2Painter.mjs';
 import { Triangles3DHandler } from '../hist2d/TH2Painter.mjs';
 import { createLineSegments, PointsCreator, getMaterialArgs } from '../base/base3d.mjs';
@@ -75,7 +74,7 @@ class TGraphDelaunay {
    }
 
    ComputeZ(x, y) {
-      // Initialise the Delaunay algorithm if needed.
+      // Initialize the Delaunay algorithm if needed.
       // CreateTrianglesDataStructure computes fXoffset, fYoffset,
       // fXScaleFactor and fYScaleFactor;
       // needed in this function.
@@ -211,7 +210,7 @@ class TGraphDelaunay {
       // loop over all Delaunay triangles (including those constantly being
       // produced within the loop) and check to see if their 3 sides also
       // correspond to the sides of other Delaunay triangles, i.e. that they
-      // have all their neighbours.
+      // have all their neighbors.
       t1 = 1;
       while (t1 <= this.fNdt) {
          // get the three points that make up this triangle
@@ -246,7 +245,7 @@ class TGraphDelaunay {
             // forget about it
             if (s[0] && s[1] && s[2]) continue;
          }
-         // Looks like t1 is missing a neighbour on at least one side.
+         // Looks like t1 is missing a neighbor on at least one side.
          // For each side, take a point a little bit beyond it and calculate
          // the Delaunay triangle for that point, this should be the triangle
          // which shares the side.
@@ -354,7 +353,7 @@ class TGraphDelaunay {
       }
 
       //  n1 and n2 will represent the two points most separated by angle
-      //  from point e. Initially the angle between them will be <180 degs.
+      //  from point e. Initially the angle between them will be <180 degrees.
       //  But subsequent points will increase the n1-e-n2 angle. If it
       //  increases above 180 degrees then point e must be surrounded by
       //  points - it is not part of the hull.
@@ -420,7 +419,7 @@ class TGraphDelaunay {
                   if (dphi < 0) dphi += Math.PI*2;
                   if ((dphi - Math.PI)*(lastdphi - Math.PI) < 0) {
                      // The addition of point m means the angle n1-e-n2 has risen
-                     // above 180 degs, the point is in the hull.
+                     // above 180 degrees, the point is in the hull.
                      deTinhull = true;
                      return deTinhull;
                   }
@@ -478,7 +477,7 @@ class TGraphDelaunay {
           dx1, dx2, dx3, dy1, dy2, dy3, u, v;
       const dxz = [0, 0, 0], dyz = [0, 0, 0];
 
-      // initialise the Delaunay algorithm if needed
+      // initialize the Delaunay algorithm if needed
       this.Initialize();
 
       // create vectors needed for sorting
@@ -878,15 +877,23 @@ class TGraph2DPainter extends ObjectPainter {
       if (!this.options)
          this.options = {};
 
-      const res = this.options;
+      const res = this.options, gr2d = this.getObject();
+
+      if (d.check('FILL_', 'color') && gr2d)
+         gr2d.fFillColor = d.color;
+
+      if (d.check('LINE_', 'color') && gr2d)
+         gr2d.fLineColor = d.color;
 
       d.check('SAME');
       if (d.check('TRI1'))
-         res.Triangles = 11; // wireframe and colors
+         res.Triangles = 11; // wire-frame and colors
       else if (d.check('TRI2'))
          res.Triangles = 10; // only color triangles
-      else if (d.check('TRIW') || d.check('TRI'))
+      else if (d.check('TRIW'))
          res.Triangles = 1;
+      else if (d.check('TRI'))
+         res.Triangles = 2;
       else
          res.Triangles = 0;
       res.Line = d.check('LINE');
@@ -1018,8 +1025,9 @@ class TGraph2DPainter extends ObjectPainter {
       if (!dulaunay) return;
 
       const main_grz = !fp.logz ? fp.grz : value => (value < fp.scale_zmin) ? -0.1 : fp.grz(value),
-            do_faces = this.options.Triangles >= 10,
-            do_lines = this.options.Triangles % 10 === 1,
+            plain_mode = this.options.Triangles === 2,
+            do_faces = (this.options.Triangles >= 10) || plain_mode,
+            do_lines = (this.options.Triangles % 10 === 1) || (plain_mode && (graph.fLineColor !== graph.fFillColor)),
             triangles = new Triangles3DHandler(levels, main_grz, 0, 2*fp.size_z3d, do_lines);
 
       for (triangles.loop = 0; triangles.loop < 2; ++triangles.loop) {
@@ -1053,8 +1061,8 @@ class TGraph2DPainter extends ObjectPainter {
 
       triangles.callFuncs((lvl, pos) => {
          const geometry = createLegoGeom(this.getMainPainter(), pos, null, 100, 100),
-             color = palette.calcColor(lvl, levels.length),
-             material = new MeshBasicMaterial(getMaterialArgs(color, { side: DoubleSide, vertexColors: false })),
+               color = plain_mode ? this.getColor(graph.fFillColor) : palette.calcColor(lvl, levels.length),
+               material = new MeshBasicMaterial(getMaterialArgs(color, { side: DoubleSide, vertexColors: false })),
 
           mesh = new Mesh(geometry, material);
 
@@ -1119,7 +1127,7 @@ class TGraph2DPainter extends ObjectPainter {
       fp.remove3DMeshes(this);
 
       if (!this.options.isAny()) {
-         // no need to draw somthing if histogram content was drawn
+         // no need to draw smoothing if histogram content was drawn
          if (main.draw_content)
             return this;
          if ((graph.fMarkerSize === 1) && (graph.fMarkerStyle === 1))
@@ -1165,7 +1173,7 @@ class TGraph2DPainter extends ObjectPainter {
 
       scale *= 7 * Math.max(fp.size_x3d / fp.getFrameWidth(), fp.size_z3d / fp.getFrameHeight());
 
-      if (this.options.Color || this.options.Triangles) {
+      if (this.options.Color || (this.options.Triangles >= 10)) {
          levels = main.getContourLevels(true);
          palette = main.getHistPalette();
       }
@@ -1309,11 +1317,22 @@ class TGraph2DPainter extends ObjectPainter {
       }
 
       return Promise.all(promises).then(() => {
-         if (this.options.Zscale && this.axes_draw) {
-            const pal = this.getMainPainter()?.findFunction(clTPaletteAxis),
-                  pal_painter = this.getPadPainter()?.findPainterFor(pal);
-            return pal_painter?.drawPave();
-         }
+         const main = this.getMainPainter(),
+               handle_palette = this.axes_draw || (main?.draw_content === false);
+         if (!handle_palette)
+            return;
+
+         const pal = main?.findFunction(clTPaletteAxis),
+               pal_painter = this.getPadPainter()?.findPainterFor(pal);
+         if (!pal_painter)
+            return;
+
+         pal_painter.Enabled = this.options.Zscale;
+
+         if (this.options.Zscale)
+            return pal_painter.drawPave();
+         else
+            pal_painter.removeG(); // completely remove drawing without need to redraw complete pad
       }).then(() => {
          fp.render3D(100);
          return this;

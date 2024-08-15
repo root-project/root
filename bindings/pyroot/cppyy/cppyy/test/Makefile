@@ -13,14 +13,15 @@ dicts = advancedcppDict.so \
         std_streamsDict.so \
         stltypesDict.so \
         templatesDict.so
+
 all : $(dicts)
 
 genreflex_flags := $(shell genreflex --cppflags)
-cppflags=$(shell cling-config --cppflags) $(genreflex_flags) -O3 -fPIC -I$(shell python -c 'import distutils.sysconfig as ds; print(ds.get_config_var("INCLUDEPY"))') -Wno-register
+cppflags=$(shell cling-config --cppflags) $(genreflex_flags) -O3 -fPIC -I$(shell python -c 'import sysconfig as sc; print(sc.get_config_var("INCLUDEPY"))') -Wno-register
 
 PLATFORM := $(shell uname -s)
 ifeq ($(PLATFORM),Darwin)
-  cppflags+=-dynamiclib -single_module -arch x86_64 -undefined dynamic_lookup -Wno-delete-non-virtual-dtor
+  cppflags+=-dynamiclib -undefined dynamic_lookup -Wno-delete-non-virtual-dtor
 endif
 
 %Dict.so: %_rflx.cpp %.cxx

@@ -42,7 +42,7 @@ in the input dataset.
 
 #include "TError.h"
 
-using namespace std;
+using std::cout, std::endl, std::string, std::vector, std::pair, std::map;
 
 ClassImp(RooNDKeysPdf);
 
@@ -506,7 +506,7 @@ void RooNDKeysPdf::loadDataSet(bool firstCall, RooDataSet const& data)
     TVectorD& pointV = _dataPtsR[i];
 
     double myweight = data.weight(); // default is one?
-    if ( TMath::Abs(myweight)>_maxWeight ) { _maxWeight = TMath::Abs(myweight); }
+    if ( std::abs(myweight)>_maxWeight ) { _maxWeight = std::abs(myweight); }
     _nEventsW += myweight;
 
     for (Int_t j=0; j<_nDim; j++) {
@@ -530,9 +530,9 @@ void RooNDKeysPdf::loadDataSet(bool firstCall, RooDataSet const& data)
     }
   }
 
-  _n = TMath::Power(4./(_nEventsW*(_d+2.)), 1./(_d+4.)) ;
+  _n = std::pow(4./(_nEventsW*(_d+2.)), 1./(_d+4.)) ;
   // = (4/[n(dim(R) + 2)])^1/(dim(R)+4); dim(R) = 2
-  _minWeight = (0.5 - TMath::Erf(_nSigma/sqrt(2.))/2.) * _maxWeight;
+  _minWeight = (0.5 - std::erf(_nSigma/sqrt(2.))/2.) * _maxWeight;
 
   for (Int_t j=0; j<_nDim; j++) {
     _mean[j]  = _x1[j]/_x0[j];
@@ -557,7 +557,7 @@ void RooNDKeysPdf::loadDataSet(bool firstCall, RooDataSet const& data)
 
   _sigmaAvgR=1.;
   for (Int_t j=0; j<_nDim; j++) { _sigmaAvgR *= sigmaRraw[j]; }
-  _sigmaAvgR = TMath::Power(_sigmaAvgR, 1./_d) ;
+  _sigmaAvgR = std::pow(_sigmaAvgR, 1./_d) ;
 
   // find decorrelation matrix and eigenvalues (R)
   if (_nDim > 1 && _rotate) {
@@ -700,7 +700,7 @@ void RooNDKeysPdf::loadWeightSet(RooDataSet const& data)
   for (Int_t i=0; i<_nEventsM; i++) {
     data.get(_idx[i]);
     double myweight = data.weight();
-    //if ( TMath::Abs(myweight)>_minWeight ) {
+    //if ( std::abs(myweight)>_minWeight ) {
       _wMap[i] = myweight;
     //}
   }
@@ -897,7 +897,7 @@ void RooNDKeysPdf::calculateBandWidth()
 
         for (Int_t i = 0; i < _nEvents; ++i) {
            vector<double> &x = _dataPts[i];
-           double f = TMath::Power(gauss(x, *weights_prev) / _nEventsW, -1. / (2. * _d));
+           double f = std::pow(gauss(x, *weights_prev) / _nEventsW, -1. / (2. * _d));
 
            vector<double> &weight = (*weights_new)[i];
            for (Int_t j = 0; j < _nDim; j++) {
@@ -1197,9 +1197,9 @@ double RooNDKeysPdf::analyticalIntegral(Int_t code, const char* rangeName) const
    }
 
    if (chi[j] > 0) { // inVarRange
-              prob *= (0.5 + TMath::Erf(std::abs(chi[j]) / sqrt(2.)) / 2.);
+              prob *= (0.5 + std::erf(std::abs(chi[j]) / sqrt(2.)) / 2.);
    } else { // outside Var range
-              prob *= (0.5 - TMath::Erf(std::abs(chi[j]) / sqrt(2.)) / 2.);
+              prob *= (0.5 - std::erf(std::abs(chi[j]) / sqrt(2.)) / 2.);
    }
       }
 

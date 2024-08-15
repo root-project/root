@@ -41,7 +41,7 @@ Population definition for genetic algorithm.
 
 ClassImp(TMVA::GeneticPopulation);
 
-using namespace std;
+using std::vector, std::ostream;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor

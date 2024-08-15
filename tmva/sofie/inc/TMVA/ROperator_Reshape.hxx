@@ -162,6 +162,8 @@ public:
             std::vector<size_t> descShape(n);
             std::copy(input_shape, input_shape + n, descShape.begin());
             fShapeOutput = ShapeInference({fShapeInput, descShape})[0];
+            // set flag to not write tensor in weight file. Its data will be hard-coded in way model is constructed
+            model.SetNotWritableInitializedTensor(fNShape);
          } else {
             throw std::runtime_error("TMVA Reshape Op Shape Tensor " + fNShape + " is not found in model");
          }

@@ -600,7 +600,7 @@ So the complete macro is:
 
 Begin_Macro(source)
 {
-   c1 = new TCanvas("c1","Examples of TGaxis",10,10,700,100);
+   auto c1 = new TCanvas("c1","Examples of TGaxis",10,10,700,100);
    c1->Range(-10,-1,10,1);
 
    TGaxis *axis = new TGaxis(-8,0.,8,0.,-100000,150000,2405,"tS");
@@ -628,7 +628,7 @@ will produce the following axis:
 
 Begin_Macro
 {
-   c1 = new TCanvas("c1","Examples of TGaxis",10,10,700,100);
+   auto c1 = new TCanvas("c1","Examples of TGaxis",10,10,700,100);
    c1->Range(-10,-1,10,1);
 
    TGaxis *axis = new TGaxis(-8,0.,8,0.,-100000,150000,2405,"tS");
@@ -2795,11 +2795,11 @@ void TGaxis::ChangeLabel(Int_t labNum, Double_t labAngle, Double_t labSize,
 ///   axis->SetTickSize(0.15);
 ///   axis->SetTitleColor(kBlue);
 ///   axis->SetTitleFont(42);
-///   axis->ChangeLabelByValue(-5.,-1,-1,-1,2);
-///   axis->ChangeLabelByValue(-3.,-1,0.);
-///   axis->ChangeLabelByValue(0.,30.,-1,0);
-///   axis->ChangeLabelByValue(3.,-1,-1,-1,3,-1,"label for 3.");
-///   axis->ChangeValue(5.,-2,-1,-1,-1,3,-1,"label for 5.");
+///   axis->ChangeLabelByValue(0., -1, -1, -1, kRed);
+///   axis->ChangeLabelByValue(20., -1, 0);
+///   axis->ChangeLabelByValue(40., 30.);
+///   axis->ChangeLabelByValue(50., -1, -1, -1, kBlue, -1, "blue for 50.");
+///   axis->ChangeLabelByValue(90., -1, -1, -1, kGreen, -1, "green for 90.");
 ///   axis->Draw();
 /// }
 /// End_Macro
@@ -2807,8 +2807,7 @@ void TGaxis::ChangeLabel(Int_t labNum, Double_t labAngle, Double_t labSize,
 ///  #### Notes:
 ///
 ///  - If an attribute should not be changed just give the value "-1".
-///  - If labnum=0 the list of modified labels is reset.
-///  - To erase a label set labSize to 0.
+///  - To erase a label set labSize to 0
 ///  - If labText is not specified or is an empty string, the text label is not changed.
 
 void TGaxis::ChangeLabelByValue(Double_t labValue, Double_t labAngle, Double_t labSize,

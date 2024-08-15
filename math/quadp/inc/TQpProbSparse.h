@@ -66,7 +66,6 @@ public:
 
    ~TQpProbSparse() override {}
 
-#ifndef __CINT__
    virtual TQpDataBase      *MakeData      (Double_t *c,
                                             Int_t nnzQ,Int_t *irowQ,Int_t *icolQ,Double_t *Q,
                                             Double_t *xlo,Bool_t *ixlo,
@@ -76,7 +75,6 @@ public:
                                             Int_t nnzC,Int_t *irowC,Int_t *icolC,Double_t *C,
                                             Double_t *clo,Bool_t *iclo,
                                             Double_t *cup,Bool_t *icup);
-#endif
    TQpDataBase      *MakeData     (TVectorD     &c,
                                             TMatrixDBase &Q_in,
                                             TVectorD     &xlo, TVectorD &ixlo,

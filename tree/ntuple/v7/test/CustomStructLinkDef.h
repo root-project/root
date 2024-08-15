@@ -1,8 +1,4 @@
-#ifdef __CINT__
-
-#pragma link off all globals;
-#pragma link off all classes;
-#pragma link off all functions;
+#ifdef __CLING__
 
 #pragma link C++ enum CustomEnum;
 #pragma link C++ enum CustomEnumInt8;
@@ -70,5 +66,29 @@
 
 #pragma read sourceClass = "StructWithIORules" source = "float a;float b" version = "[1-]" targetClass = \
    "StructWithIORules" target = "c" code = "{ c = onfile.a + onfile.b; }"
+
+// This rule uses a checksum to identify the source class
+#pragma read sourceClass = "StructWithIORules" source = "float checksumA" checksum = "[3494027874]" targetClass = \
+   "StructWithIORules" target = "checksumA" code = "{ checksumA = 42.0; }"
+// This rule will be ignored due to a checksum mismatch
+#pragma read sourceClass = "StructWithIORules" source = "float checksumB" checksum = "[1]" targetClass = \
+   "StructWithIORules" target = "checksumB" code = "{ checksumB = 0.0; }"
+
+#pragma link C++ class Cyclic + ;
+#pragma link C++ class CyclicCollectionProxy + ;
+#pragma link C++ class Unsupported + ;
+
+#pragma link C++ class BaseA + ;
+#pragma link C++ class DiamondVirtualB + ;
+#pragma link C++ class DiamondVirtualC + ;
+#pragma link C++ class DiamondVirtualD + ;
+#pragma link C++ class DuplicateBaseB + ;
+#pragma link C++ class DuplicateBaseC + ;
+#pragma link C++ class DuplicateBaseD + ;
+
+#pragma link C++ class Left + ;
+#pragma link C++ class DerivedFromLeftAndTObject+;
+
+#pragma link C++ class ThrowForVariant + ;
 
 #endif

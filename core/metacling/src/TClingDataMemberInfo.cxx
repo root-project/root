@@ -453,22 +453,25 @@ long TClingDataMemberInfo::Property() const
    };
 
    getParentAccessAndNonTransparentDC();
-
+   // TODO: Now that we have the kIsNotReacheable we could return the property
+   // to be reflecting the local information.  However it is unclear if the
+   // information is used as-is (it appears to not be used in ROOT proper)
    switch (strictestAccess) {
       case clang::AS_public:
          property |= kIsPublic;
          break;
       case clang::AS_protected:
-         property |= kIsProtected;
+         property |= kIsProtected | kIsNotReacheable;
          break;
       case clang::AS_private:
-         property |= kIsPrivate;
+         property |= kIsPrivate | kIsNotReacheable;
          break;
       case clang::AS_none: //?
          property |= kIsPublic;
          break;
       default:
          // IMPOSSIBLE
+         assert(false && "Unexpected value for the access property value in Clang");
          break;
    }
    if (llvm::isa<clang::UsingShadowDecl>(thisDecl))

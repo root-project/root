@@ -195,6 +195,15 @@ class RH1Painter extends RHistPainter {
       return true;
    }
 
+   /** @summary Get baseline for bar drawings
+    * @private */
+   getBarBaseline(funcs, height) {
+      let gry = funcs.swap_xy ? 0 : height;
+      if (Number.isFinite(this.options.BaseLine) && (this.options.BaseLine >= funcs.scale_ymin))
+         gry = Math.round(funcs.gry(this.options.BaseLine));
+      return gry;
+   }
+
    /** @summary Draw histogram as bars */
    async drawBars(handle, funcs, width, height) {
       this.createG(true);
@@ -202,14 +211,10 @@ class RH1Painter extends RHistPainter {
       const left = handle.i1, right = handle.i2, di = handle.stepi,
             pmain = this.getFramePainter(),
             histo = this.getHisto(), xaxis = this.getAxis('x');
-      let i, x1, x2, grx1, grx2, y, gry1, gry2, w,
+      let i, x1, x2, grx1, grx2, y, gry1, w,
           bars = '', barsl = '', barsr = '';
 
-      gry2 = pmain.swap_xy ? 0 : height;
-      if (Number.isFinite(this.options.BaseLine)) {
-         if (this.options.BaseLine >= funcs.scale_ymin)
-            gry2 = Math.round(funcs.gry(this.options.BaseLine));
-      }
+      const gry2 = this.getBarBaseline(funcs, height);
 
       for (i = left; i < right; i += di) {
          x1 = xaxis.GetBinCoord(i);
@@ -726,7 +731,7 @@ class RH1Painter extends RHistPainter {
 
          gapx = 0;
 
-         gry1 = Math.round(funcs.gry(((this.options.BaseLine!==false) && (this.options.BaseLine > funcs.scale_ymin)) ? this.options.BaseLine : funcs.scale_ymin));
+         gry1 = this.getBarBaseline(funcs, height);
 
          if (gry1 > gry2)
             [gry1, gry2] = [gry2, gry1];
@@ -899,7 +904,7 @@ class RH1Painter extends RHistPainter {
       let min = histo.getBinContent(left + 1);
       for (let indx = left; indx < right; ++indx)
          min = Math.min(min, histo.getBinContent(indx+1));
-      if (min > 0) return; // if all points positive, no chance for autoscale
+      if (min > 0) return; // if all points positive, no chance for auto-scale
 
       while ((left < right) && (histo.getBinContent(left+1) <= min)) ++left;
       while ((left < right) && (histo.getBinContent(right) <= min)) --right;
@@ -952,7 +957,7 @@ class RH1Painter extends RHistPainter {
       return this.draw2D(reason);
    }
 
-   /** @summary Readraw histogram */
+   /** @summary Redraw histogram */
    async redraw(reason) {
       return this.callDrawFunc(reason);
    }

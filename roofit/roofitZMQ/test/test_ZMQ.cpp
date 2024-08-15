@@ -14,11 +14,15 @@
 
 #include <TSystem.h>
 
+#include <ROOT/RVersion.hxx>
+
 #include "gtest/gtest.h"
 
+#if ROOT_VERSION_CODE < ROOT_VERSION(6, 32, 99)
 // Backward compatibility for gtest version < 1.10.0
 #ifndef INSTANTIATE_TEST_SUITE_P
 #define INSTANTIATE_TEST_SUITE_P INSTANTIATE_TEST_CASE_P
+#endif
 #endif
 
 #include <unistd.h> // fork, usleep

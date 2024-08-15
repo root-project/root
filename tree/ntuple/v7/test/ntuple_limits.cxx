@@ -14,11 +14,11 @@
 
 TEST(RNTuple, DISABLED_Limits_ManyFields)
 {
-   // Writing and reading a model with 10k integer fields takes around 30s and seems to have more than quadratic
-   // complexity (5k fields take 6s).
+   // Writing and reading a model with 40k integer fields takes around 2s and seems to have more than linear
+   // complexity (80k fields take 9s).
    FileRaii fileGuard("test_ntuple_limits_manyFields.root");
 
-   static constexpr int NumFields = 10'000;
+   static constexpr int NumFields = 40'000;
 
    {
       auto model = RNTupleModel::Create();
@@ -144,7 +144,7 @@ TEST(RNTuple, DISABLED_Limits_ManyPages)
    const auto &descriptor = reader->GetDescriptor();
    const auto &model = reader->GetModel();
    auto fieldId = descriptor.FindFieldId("id");
-   auto columnId = descriptor.FindPhysicalColumnId(fieldId, 0);
+   auto columnId = descriptor.FindPhysicalColumnId(fieldId, 0, 0);
 
    EXPECT_EQ(reader->GetNEntries(), NumEntries);
    EXPECT_EQ(descriptor.GetNClusters(), 1);
@@ -185,7 +185,7 @@ TEST(RNTuple, DISABLED_Limits_ManyPagesOneEntry)
    const auto &model = reader->GetModel();
    auto fieldId = descriptor.FindFieldId("ids");
    auto subFieldId = descriptor.FindFieldId("_0", fieldId);
-   auto columnId = descriptor.FindPhysicalColumnId(subFieldId, 0);
+   auto columnId = descriptor.FindPhysicalColumnId(subFieldId, 0, 0);
 
    EXPECT_EQ(reader->GetNEntries(), 1);
    EXPECT_EQ(descriptor.GetNClusters(), 1);
@@ -227,7 +227,7 @@ TEST(RNTuple, DISABLED_Limits_LargePage)
    const auto &descriptor = reader->GetDescriptor();
    const auto &model = reader->GetModel();
    auto fieldId = descriptor.FindFieldId("id");
-   auto columnId = descriptor.FindPhysicalColumnId(fieldId, 0);
+   auto columnId = descriptor.FindPhysicalColumnId(fieldId, 0, 0);
 
    EXPECT_EQ(reader->GetNEntries(), NumElements);
    EXPECT_EQ(descriptor.GetNClusters(), 1);
@@ -269,7 +269,7 @@ TEST(RNTuple, DISABLED_Limits_LargePageOneEntry)
    const auto &model = reader->GetModel();
    auto fieldId = descriptor.FindFieldId("ids");
    auto subFieldId = descriptor.FindFieldId("_0", fieldId);
-   auto columnId = descriptor.FindPhysicalColumnId(subFieldId, 0);
+   auto columnId = descriptor.FindPhysicalColumnId(subFieldId, 0, 0);
 
    EXPECT_EQ(reader->GetNEntries(), 1);
    EXPECT_EQ(descriptor.GetNClusters(), 1);

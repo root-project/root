@@ -1,6 +1,9 @@
 #ifndef CPYCPPYY_PROXYWRAPPERS_H
 #define CPYCPPYY_PROXYWRAPPERS_H
 
+// Bindings
+#include "Dimensions.h"
+
 // Standard
 #include <string>
 
@@ -9,10 +12,10 @@ namespace CPyCppyy {
 
 // construct a Python shadow class for the named C++ class
 PyObject* GetScopeProxy(Cppyy::TCppScope_t);
-PyObject* CreateScopeProxy(Cppyy::TCppScope_t);
+PyObject* CreateScopeProxy(Cppyy::TCppScope_t, const unsigned flags = 0);
 PyObject* CreateScopeProxy(PyObject*, PyObject* args);
 PyObject* CreateScopeProxy(
-    const std::string& scope_name, PyObject* parent = nullptr);
+    const std::string& scope_name, PyObject* parent = nullptr, const unsigned flags = 0);
 
 // C++ exceptions form a special case b/c they have to derive from BaseException
 PyObject* CreateExcScopeProxy(PyObject* pyscope, PyObject* pyname, PyObject* parent);
@@ -23,7 +26,7 @@ PyObject* BindCppObjectNoCast(Cppyy::TCppObject_t object,
 PyObject* BindCppObject(Cppyy::TCppObject_t object,
     Cppyy::TCppType_t klass, const unsigned flags = 0);
 PyObject* BindCppObjectArray(
-    Cppyy::TCppObject_t address, Cppyy::TCppType_t klass, Py_ssize_t* dims);
+    Cppyy::TCppObject_t address, Cppyy::TCppType_t klass, cdims_t dims);
 
 } // namespace CPyCppyy
 

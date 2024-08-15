@@ -122,7 +122,7 @@ def get_defined_attributes(klass, consider_base_classes=False):
     any of its base classes (except for `object`).
     """
 
-    blacklist = ["__dict__", "__doc__", "__hash__", "__module__", "__weakref__"]
+    blacklist = ["__dict__", "__doc__", "__hash__", "__module__", "__weakref__", "__firstlineno__", "__static_attributes__"]
 
     if not consider_base_classes:
         return sorted([attr for attr in klass.__dict__.keys() if attr not in blacklist])

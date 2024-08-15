@@ -671,12 +671,12 @@ bool RooRealIntegral::initNumIntegrator() const
   // Bind the appropriate analytic integral of our RooRealVar object to
   // those of its arguments that will be integrated out numerically.
   if(_mode != 0) {
-    std::unique_ptr<RooAbsReal> analyticalPart{_function->createIntegral(_anaList, *funcNormSet(), RooNameReg::str(_rangeName))};
+    std::unique_ptr<RooAbsReal> analyticalPart{_function->createIntegral(_anaList, *actualFuncNormSet(), RooNameReg::str(_rangeName))};
     _numIntegrand = std::make_unique<RooRealBinding>(*analyticalPart,_intList,nullptr,false,_rangeName);
     const_cast<RooRealIntegral*>(this)->addOwnedComponents(std::move(analyticalPart));
   }
   else {
-    _numIntegrand = std::make_unique<RooRealBinding>(*_function,_intList,funcNormSet(),false,_rangeName);
+    _numIntegrand = std::make_unique<RooRealBinding>(*_function,_intList,actualFuncNormSet(),false,_rangeName);
   }
   if(nullptr == _numIntegrand || !_numIntegrand->isValid()) {
     coutE(Integration) << ClassName() << "::" << GetName() << ": failed to create valid integrand." << std::endl;
@@ -715,7 +715,7 @@ RooRealIntegral::RooRealIntegral(const RooRealIntegral &other, const char *name)
      _intList("!intList", this, other._intList),
      _anaList("!anaList", this, other._anaList),
      _jacList("!jacList", this, other._jacList),
-     _facList("!facList", "Variables independent of function", this, false, true),
+     _facList("!facList", this, other._facList),
      _function("!func", this, other._function),
      _iconfig(other._iconfig),
      _sumCat("!sumCat", this, other._sumCat),
@@ -726,12 +726,6 @@ RooRealIntegral::RooRealIntegral(const RooRealIntegral &other, const char *name)
  if(other._funcNormSet) {
    _funcNormSet = std::make_unique<RooArgSet>();
    other._funcNormSet->snapshot(*_funcNormSet, false);
- }
-
- for (const auto arg : other._facList) {
-   std::unique_ptr<RooAbsArg> argClone{static_cast<RooAbsArg*>(arg->Clone())};
-   _facList.addOwned(*argClone);
-   addOwnedComponents(std::move(argClone));
  }
 
  other._intList.snapshot(_saveInt) ;
@@ -885,7 +879,7 @@ double RooRealIntegral::evaluate() const
       assert(servers().size() == _facList.size() + 1);
 
       //setDirtyInhibit(true) ;
-      retVal= _function->getVal(funcNormSet());
+      retVal= _function->getVal(actualFuncNormSet());
       //setDirtyInhibit(false) ;
       break ;
     }
@@ -1055,7 +1049,7 @@ void RooRealIntegral::translate(RooFit::Detail::CodeSquashContext &ctx) const
 
    auto &intVar = static_cast<RooAbsRealLValue &>(*_intList[0]);
 
-   RooFuncWrapper wrapper{GetName(), GetTitle(), *_function, {}, nullptr, nullptr, false};
+   RooFit::Experimental::RooFuncWrapper wrapper{GetName(), GetTitle(), *_function};
 
    RooArgSet params;
    _function->getParameters(nullptr, params);
@@ -1095,11 +1089,11 @@ void RooRealIntegral::translate(RooFit::Detail::CodeSquashContext &ctx) const
       << "   double eps = d / n;\n"
       << "   for (int i = 0; i < n; ++i) {\n"
       << "      " << paramsName << "[" << intVarIdx << "] = " << intVar.getMin(intRange()) << " + eps * i;\n"
-      // TODO: the second "paramsName" should be nullptr, but until Clad issue
-      // 636 is fixed, we have to pass a non-nullptr dummy.
-      << "      " << resName << " += " << " + " << ctx.buildCall(wrapper.funcName(), paramsName, paramsName) << ";\n"
+      << "      double tmpA = " << ctx.buildCall(wrapper.funcName(), paramsName, nullptr, nullptr) << ";\n"
+      << "      " << paramsName << "[" << intVarIdx << "] = " << intVar.getMin(intRange()) << " + eps * (i + 1);\n"
+      << "      double tmpB = " << ctx.buildCall(wrapper.funcName(), paramsName, nullptr, nullptr) << ";\n"
+      << "      " << resName << " += (tmpA + tmpB) * 0.5 * eps;\n"
       << "   }\n"
-      << "   " << resName << " *= " << " d / n;\n"
       << "}\n";
 
    ctx.addToGlobalScope(ss.str());

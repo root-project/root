@@ -16,10 +16,13 @@
 #ifndef ROOT7_RPageStorage
 #define ROOT7_RPageStorage
 
+#include <ROOT/RError.hxx>
 #include <ROOT/RCluster.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleMetrics.hxx>
-#include <ROOT/RNTupleOptions.hxx>
+#include <ROOT/RNTupleReadOptions.hxx>
+#include <ROOT/RNTupleSerialize.hxx>
+#include <ROOT/RNTupleWriteOptions.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RPage.hxx>
 #include <ROOT/RPageAllocator.hxx>
@@ -27,6 +30,7 @@
 #include <string_view>
 
 #include <atomic>
+#include <cassert>
 #include <cstddef>
 #include <deque>
 #include <functional>
@@ -39,15 +43,14 @@
 namespace ROOT {
 namespace Experimental {
 
-class RFieldBase;
 class RNTupleModel;
 
 namespace Internal {
 class RColumn;
 class RColumnElementBase;
 class RNTupleCompressor;
-class RNTupleDecompressor;
 struct RNTupleModelChangeset;
+class RPagePool;
 
 enum class EPageStorageType {
    kSink,
@@ -66,12 +69,13 @@ an ntuple.  Concrete implementations can use a TFile, a raw file, an object stor
 // clang-format on
 class RPageStorage {
 public:
+   /// The page checksum is a 64bit xxhash3
+   static constexpr std::size_t kNBytesPageChecksum = sizeof(std::uint64_t);
+
    /// The interface of a task scheduler to schedule page (de)compression tasks
    class RTaskScheduler {
    public:
       virtual ~RTaskScheduler() = default;
-      /// Start a new set of tasks
-      virtual void Reset() = 0;
       /// Take a callable that represents a task
       virtual void AddTask(const std::function<void(void)> &taskFunc) = 0;
       /// Blocks until all scheduled tasks finished
@@ -83,16 +87,44 @@ public:
    /// RSealedPage does _not_ own the buffer it is pointing to in order to not interfere with the memory management
    /// of concrete page sink and page source implementations.
    struct RSealedPage {
+   private:
       const void *fBuffer = nullptr;
-      std::uint32_t fSize = 0;
+      std::uint32_t fBufferSize = 0; ///< Size of the page payload and the trailing checksum (if available)
       std::uint32_t fNElements = 0;
+      bool fHasChecksum = false; ///< If set, the last 8 bytes of the buffer are the xxhash of the rest of the buffer
 
+   public:
       RSealedPage() = default;
-      RSealedPage(const void *b, std::uint32_t s, std::uint32_t n) : fBuffer(b), fSize(s), fNElements(n) {}
-      RSealedPage(const RSealedPage &other) = delete;
-      RSealedPage& operator =(const RSealedPage &other) = delete;
+      RSealedPage(const void *buffer, std::uint32_t bufferSize, std::uint32_t nElements, bool hasChecksum = false)
+         : fBuffer(buffer), fBufferSize(bufferSize), fNElements(nElements), fHasChecksum(hasChecksum)
+      {
+      }
+      RSealedPage(const RSealedPage &other) = default;
+      RSealedPage &operator=(const RSealedPage &other) = default;
       RSealedPage(RSealedPage &&other) = default;
-      RSealedPage& operator =(RSealedPage &&other) = default;
+      RSealedPage &operator=(RSealedPage &&other) = default;
+
+      const void *GetBuffer() const { return fBuffer; }
+      void SetBuffer(const void *buffer) { fBuffer = buffer; }
+
+      std::uint32_t GetDataSize() const
+      {
+         assert(fBufferSize >= fHasChecksum * kNBytesPageChecksum);
+         return fBufferSize - fHasChecksum * kNBytesPageChecksum;
+      }
+      std::uint32_t GetBufferSize() const { return fBufferSize; }
+      void SetBufferSize(std::uint32_t bufferSize) { fBufferSize = bufferSize; }
+
+      std::uint32_t GetNElements() const { return fNElements; }
+      void SetNElements(std::uint32_t nElements) { fNElements = nElements; }
+
+      bool GetHasChecksum() const { return fHasChecksum; }
+      void SetHasChecksum(bool hasChecksum) { fHasChecksum = hasChecksum; }
+
+      void ChecksumIfEnabled();
+      RResult<void> VerifyChecksumIfEnabled() const;
+      /// Returns a failure if the sealed page has no checksum
+      RResult<std::uint64_t> GetChecksum() const;
    };
 
    using SealedPageSequence_t = std::deque<RSealedPage>;
@@ -102,6 +134,7 @@ public:
       SealedPageSequence_t::const_iterator fFirst;
       SealedPageSequence_t::const_iterator fLast;
 
+      RSealedPageGroup() = default;
       RSealedPageGroup(DescriptorId_t d, SealedPageSequence_t::const_iterator b, SealedPageSequence_t::const_iterator e)
          : fPhysicalColumnId(d), fFirst(b), fLast(e)
       {
@@ -118,15 +151,14 @@ protected:
       if (!fTaskScheduler)
          return;
       fTaskScheduler->Wait();
-      fTaskScheduler->Reset();
    }
 
 public:
    explicit RPageStorage(std::string_view name);
    RPageStorage(const RPageStorage &other) = delete;
-   RPageStorage& operator =(const RPageStorage &other) = delete;
+   RPageStorage &operator=(const RPageStorage &other) = delete;
    RPageStorage(RPageStorage &&other) = default;
-   RPageStorage& operator =(RPageStorage &&other) = default;
+   RPageStorage &operator=(RPageStorage &&other) = default;
    virtual ~RPageStorage();
 
    /// Whether the concrete implementation is a sink or a source
@@ -179,7 +211,25 @@ inheriting from RPagePersistentSink.
 */
 // clang-format on
 class RPageSink : public RPageStorage {
+public:
+   using Callback_t = std::function<void(RPageSink &)>;
+
 protected:
+   /// Parameters for the SealPage() method
+   struct RSealPageConfig {
+      const RPage *fPage = nullptr;                 ///< Input page to be sealed
+      const RColumnElementBase *fElement = nullptr; ///< Corresponds to the page's elements, for size calculation etc.
+      int fCompressionSetting = 0;                  ///< Compression algorithm and level to apply
+      /// Adds a 8 byte little-endian xxhash3 checksum to the page payload. The buffer has to be large enough to
+      /// to store the additional 8 bytes.
+      bool fWriteChecksum = true;
+      /// If false, the output buffer must not point to the input page buffer, which would otherwise be an option
+      /// if the page is mappable and should not be compressed
+      bool fAllowAlias = false;
+      /// Location for sealed output. The memory buffer has to be large enough.
+      void *fBuffer = nullptr;
+   };
+
    std::unique_ptr<RNTupleWriteOptions> fOptions;
 
    /// Helper to zip pages and header/footer; includes a 16MB (kMAXZIPBUF) zip buffer.
@@ -188,23 +238,28 @@ protected:
    std::unique_ptr<RNTupleCompressor> fCompressor;
 
    /// Helper for streaming a page. This is commonly used in derived, concrete page sinks. Note that if
-   /// compressionSetting is 0 (uncompressed) and the page is mappable, the returned sealed page will
-   /// point directly to the input page buffer.  Otherwise, the sealed page references an internal buffer
+   /// compressionSetting is 0 (uncompressed) and the page is mappable and not checksummed, the returned sealed page
+   /// will point directly to the input page buffer.  Otherwise, the sealed page references an internal buffer
    /// of fCompressor.  Thus, the buffer pointed to by the RSealedPage should never be freed.
    /// Usage of this method requires construction of fCompressor.
-   RSealedPage SealPage(const RPage &page, const RColumnElementBase &element, int compressionSetting);
+   RSealedPage SealPage(const RPage &page, const RColumnElementBase &element);
 
-   /// Seal a page using the provided buffer.
-   static RSealedPage SealPage(const RPage &page, const RColumnElementBase &element, int compressionSetting, void *buf,
-                               bool allowAlias = true);
+   /// Seal a page using the provided info.
+   static RSealedPage SealPage(const RSealPageConfig &config);
+
+private:
+   /// Flag if sink was initialized
+   bool fIsInitialized = false;
+   std::vector<Callback_t> fOnDatasetCommitCallbacks;
+   std::vector<unsigned char> fSealPageBuffer; ///< Used as destination buffer in the simple SealPage overload
 
 public:
    RPageSink(std::string_view ntupleName, const RNTupleWriteOptions &options);
 
-   RPageSink(const RPageSink&) = delete;
-   RPageSink& operator=(const RPageSink&) = delete;
-   RPageSink(RPageSink&&) = default;
-   RPageSink& operator=(RPageSink&&) = default;
+   RPageSink(const RPageSink &) = delete;
+   RPageSink &operator=(const RPageSink &) = delete;
+   RPageSink(RPageSink &&) = default;
+   RPageSink &operator=(RPageSink &&) = default;
    ~RPageSink() override;
 
    EPageStorageType GetType() final { return EPageStorageType::kSink; }
@@ -213,14 +268,40 @@ public:
 
    void DropColumn(ColumnHandle_t /*columnHandle*/) final {}
 
+   bool IsInitialized() const { return fIsInitialized; }
+
+   /// Return the RNTupleDescriptor being constructed.
+   virtual const RNTupleDescriptor &GetDescriptor() const = 0;
+
    /// Physically creates the storage container to hold the ntuple (e.g., a keys a TFile or an S3 bucket)
    /// Init() associates column handles to the columns referenced by the model
-   virtual void Init(RNTupleModel &model) = 0;
+   void Init(RNTupleModel &model)
+   {
+      if (fIsInitialized) {
+         throw RException(R__FAIL("already initialized"));
+      }
+      fIsInitialized = true;
+      InitImpl(model);
+   }
+
+protected:
+   virtual void InitImpl(RNTupleModel &model) = 0;
+   virtual void CommitDatasetImpl() = 0;
+
+public:
    /// Incorporate incremental changes to the model into the ntuple descriptor. This happens, e.g. if new fields were
    /// added after the initial call to `RPageSink::Init(RNTupleModel &)`.
    /// `firstEntry` specifies the global index for the first stored element in the added columns.
    virtual void UpdateSchema(const RNTupleModelChangeset &changeset, NTupleSize_t firstEntry) = 0;
+   /// Adds an extra type information record to schema. The extra type information will be written to the
+   /// extension header. The information in the record will be merged with the existing information, e.g.
+   /// duplicate streamer info records will be removed. This method is called by the "on commit dataset" callback
+   /// registered by specific fields (e.g., unsplit field) and during merging.
+   virtual void UpdateExtraTypeInfo(const RExtraTypeInfoDescriptor &extraTypeInfo) = 0;
 
+   /// Commits a suppressed column for the current cluster. Can be called anytime before CommitCluster().
+   /// For any given column and cluster, there must be no calls to both CommitSuppressedColumn() and page commits.
+   virtual void CommitSuppressedColumn(ColumnHandle_t columnHandle) = 0;
    /// Write a page to the storage. The column must have been added before.
    virtual void CommitPage(ColumnHandle_t columnHandle, const RPage &page) = 0;
    /// Write a preprocessed page to storage. The column must have been added before.
@@ -233,8 +314,11 @@ public:
    /// Write out the page locations (page list envelope) for all the committed clusters since the last call of
    /// CommitClusterGroup (or the beginning of writing).
    virtual void CommitClusterGroup() = 0;
-   /// Finalize the current cluster and the entrire data set.
-   virtual void CommitDataset() = 0;
+
+   /// The registered callback is executed at the beginning of CommitDataset();
+   void RegisterOnCommitDatasetCallback(Callback_t callback) { fOnDatasetCommitCallbacks.emplace_back(callback); }
+   /// Run the registered callbacks and finalize the current cluster and the entrire data set.
+   void CommitDataset();
 
    /// Get a new, empty page for the given column that can be filled with up to nElements.  If nElements is zero,
    /// the page sink picks an appropriate size.
@@ -291,7 +375,16 @@ private:
    /// Keeps track of the written pages in the currently open cluster. Indexed by column id.
    std::vector<RClusterDescriptor::RPageRange> fOpenPageRanges;
 
+   /// Union of the streamer info records that are sent from unsplit fields to the sink before committing the dataset.
+   RNTupleSerializer::StreamerInfoMap_t fStreamerInfos;
+
 protected:
+   /// Set of optional features supported by the persistent sink
+   struct RFeatures {
+      bool fCanMergePages = false;
+   };
+
+   RFeatures fFeatures;
    Internal::RNTupleDescriptorBuilder fDescriptorBuilder;
 
    /// Default I/O performance counters that get registered in fMetrics
@@ -315,9 +408,12 @@ protected:
    /// committed for each column.  The returned vector contains, in order, the RNTupleLocator for each
    /// page on each range in `ranges`, i.e. the first N entries refer to the N pages in `ranges[0]`,
    /// followed by M entries that refer to the M pages in `ranges[1]`, etc.
+   /// The mask allows to skip writing out certain pages. The vector has the size of all the pages.
+   /// For every `false` value in the mask, the corresponding locator is skipped (missing) in the output vector.
    /// The default is to call `CommitSealedPageImpl` for each page; derived classes may provide an
    /// optimized implementation though.
-   virtual std::vector<RNTupleLocator> CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges);
+   virtual std::vector<RNTupleLocator>
+   CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges, const std::vector<bool> &mask);
    /// Returns the number of bytes written to storage (excluding metadata)
    virtual std::uint64_t CommitClusterImpl() = 0;
    /// Returns the locator of the page list envelope of the given buffer that contains the serialized page list.
@@ -348,16 +444,23 @@ public:
 
    ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) final;
 
-   /// Updates the descriptor and calls InitImpl() that handles the backend-specific details (file, DAOS, etc.)
-   void Init(RNTupleModel &model) final;
-   void UpdateSchema(const RNTupleModelChangeset &changeset, NTupleSize_t firstEntry) final;
+   const RNTupleDescriptor &GetDescriptor() const final { return fDescriptorBuilder.GetDescriptor(); }
 
+   /// Updates the descriptor and calls InitImpl() that handles the backend-specific details (file, DAOS, etc.)
+   void InitImpl(RNTupleModel &model) final;
+   void UpdateSchema(const RNTupleModelChangeset &changeset, NTupleSize_t firstEntry) final;
+   void UpdateExtraTypeInfo(const RExtraTypeInfoDescriptor &extraTypeInfo) final;
+
+   /// Initialize sink based on an existing descriptor and fill into the descriptor builder.
+   void InitFromDescriptor(const RNTupleDescriptor &descriptor);
+
+   void CommitSuppressedColumn(ColumnHandle_t columnHandle) final;
    void CommitPage(ColumnHandle_t columnHandle, const RPage &page) final;
    void CommitSealedPage(DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) final;
    void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup> ranges) final;
    std::uint64_t CommitCluster(NTupleSize_t nEntries) final;
    void CommitClusterGroup() final;
-   void CommitDataset() final;
+   void CommitDatasetImpl() final;
 }; // class RPagePersistentSink
 
 // clang-format off
@@ -382,7 +485,7 @@ public:
       bool IntersectsWith(const RClusterDescriptor &clusterDesc) const;
    };
 
-   /// An RAII wrapper used for the read-only access to RPageSource::fDescriptor. See GetExclDescriptorGuard().
+   /// An RAII wrapper used for the read-only access to `RPageSource::fDescriptor`. See `GetExclDescriptorGuard()``.
    class RSharedDescriptorGuard {
       const RNTupleDescriptor &fDescriptor;
       std::shared_mutex &fLock;
@@ -401,7 +504,7 @@ public:
       const RNTupleDescriptor &GetRef() const { return fDescriptor; }
    };
 
-   /// An RAII wrapper used for the writable access to RPageSource::fDescriptor. See GetSharedDescriptorGuard().
+   /// An RAII wrapper used for the writable access to `RPageSource::fDescriptor`. See `GetSharedDescriptorGuard()`.
    class RExclDescriptorGuard {
       RNTupleDescriptor &fDescriptor;
       std::shared_mutex &fLock;
@@ -427,10 +530,12 @@ public:
 private:
    RNTupleDescriptor fDescriptor;
    mutable std::shared_mutex fDescriptorLock;
-   REntryRange fEntryRange; ///< Used by the cluster pool to prevent reading beyond the given range
+   REntryRange fEntryRange;    ///< Used by the cluster pool to prevent reading beyond the given range
+   bool fHasStructure = false; ///< Set to true once `LoadStructure()` is called
+   bool fIsAttached = false;   ///< Set to true once `Attach()` is called
 
 protected:
-   /// Default I/O performance counters that get registered in fMetrics
+   /// Default I/O performance counters that get registered in `fMetrics`
    struct RCounters {
       Detail::RNTupleAtomicCounter &fNReadV;
       Detail::RNTupleAtomicCounter &fNRead;
@@ -438,8 +543,8 @@ protected:
       Detail::RNTupleAtomicCounter &fSzReadOverhead;
       Detail::RNTupleAtomicCounter &fSzUnzip;
       Detail::RNTupleAtomicCounter &fNClusterLoaded;
-      Detail::RNTupleAtomicCounter &fNPageLoaded;
-      Detail::RNTupleAtomicCounter &fNPagePopulated;
+      Detail::RNTupleAtomicCounter &fNPageRead;
+      Detail::RNTupleAtomicCounter &fNPageUnsealed;
       Detail::RNTupleAtomicCounter &fTimeWallRead;
       Detail::RNTupleAtomicCounter &fTimeWallUnzip;
       Detail::RNTupleTickCounter<Detail::RNTupleAtomicCounter> &fTimeCpuRead;
@@ -464,28 +569,35 @@ protected:
       RCluster::ColumnSet_t ToColumnSet() const;
    };
 
+   /// Summarizes cluster-level information that are necessary to load a certain page.
+   /// Used by LoadPageImpl().
+   struct RClusterInfo {
+      DescriptorId_t fClusterId = 0;
+      /// Location of the page on disk
+      RClusterDescriptor::RPageRange::RPageInfoExtended fPageInfo;
+      /// The first element number of the page's column in the given cluster
+      std::uint64_t fColumnOffset = 0;
+   };
+
    std::unique_ptr<RCounters> fCounters;
 
    RNTupleReadOptions fOptions;
    /// The active columns are implicitly defined by the model fields or views
    RActivePhysicalColumns fActivePhysicalColumns;
 
-   /// Helper to unzip pages and header/footer; comprises a 16MB (kMAXZIPBUF) unzip buffer.
-   /// Not all page sources need a decompressor (e.g. virtual ones for chains and friends don't), thus we
-   /// leave it up to the derived class whether or not the decompressor gets constructed.
-   std::unique_ptr<RNTupleDecompressor> fDecompressor;
+   /// Populated pages might be shared; the page pool might, at some point, be used by multiple page sources
+   std::shared_ptr<RPagePool> fPagePool;
 
+   virtual void LoadStructureImpl() = 0;
+   /// `LoadStructureImpl()` has been called before `AttachImpl()` is called
    virtual RNTupleDescriptor AttachImpl() = 0;
+   /// Returns a new, unattached page source for the same data set
+   virtual std::unique_ptr<RPageSource> CloneImpl() const = 0;
    // Only called if a task scheduler is set. No-op be default.
-   virtual void UnzipClusterImpl(RCluster * /* cluster */)
-      { }
-
-   /// Helper for unstreaming a page. This is commonly used in derived, concrete page sources.  The implementation
-   /// currently always makes a memory copy, even if the sealed page is uncompressed and in the final memory layout.
-   /// The optimization of directly mapping pages is left to the concrete page source implementations.
-   /// Usage of this method requires construction of fDecompressor. Memory is allocated via
-   /// `RPageAllocatorHeap`; use `RPageAllocatorHeap::DeletePage()` to deallocate returned pages.
-   RPage UnsealPage(const RSealedPage &sealedPage, const RColumnElementBase &element, DescriptorId_t physicalColumnId);
+   virtual void UnzipClusterImpl(RCluster *cluster);
+   // Returns a page from storage if not found in the page pool. Should be able to handle zero page locators.
+   virtual RPage LoadPageImpl(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo,
+                              ClusterSize_t::ValueType idxInCluster) = 0;
 
    /// Prepare a page range read for the column set in `clusterKey`.  Specifically, pages referencing the
    /// `kTypePageZero` locator are filled in `pageZeroMap`; otherwise, `perPageFunc` is called for each page. This is
@@ -499,35 +611,36 @@ protected:
    /// A subclass using the default set of metrics is responsible for updating the counters
    /// appropriately, e.g. `fCounters->fNRead.Inc()`
    /// Alternatively, a subclass might provide its own RNTupleMetrics object by overriding the
-   /// GetMetrics() member function.
+   /// `GetMetrics()` member function.
    void EnableDefaultMetrics(const std::string &prefix);
 
-   /// Note that the underlying lock is not recursive. See GetSharedDescriptorGuard() for further information.
+   /// Note that the underlying lock is not recursive. See `GetSharedDescriptorGuard()` for further information.
    RExclDescriptorGuard GetExclDescriptorGuard() { return RExclDescriptorGuard(fDescriptor, fDescriptorLock); }
 
 public:
    RPageSource(std::string_view ntupleName, const RNTupleReadOptions &fOptions);
-   RPageSource(const RPageSource&) = delete;
-   RPageSource& operator=(const RPageSource&) = delete;
+   RPageSource(const RPageSource &) = delete;
+   RPageSource &operator=(const RPageSource &) = delete;
    RPageSource(RPageSource &&) = delete;
    RPageSource &operator=(RPageSource &&) = delete;
    ~RPageSource() override;
    /// Guess the concrete derived page source from the file name (location)
    static std::unique_ptr<RPageSource> Create(std::string_view ntupleName, std::string_view location,
                                               const RNTupleReadOptions &options = RNTupleReadOptions());
-   /// Open the same storage multiple time, e.g. for reading in multiple threads
-   virtual std::unique_ptr<RPageSource> Clone() const = 0;
+   /// Open the same storage multiple time, e.g. for reading in multiple threads.
+   /// If the source is already attached, the clone will be attached, too. The clone will use, however,
+   /// it's own connection to the underlying storage (e.g., file descriptor, XRootD handle, etc.)
+   std::unique_ptr<RPageSource> Clone() const;
 
    EPageStorageType GetType() final { return EPageStorageType::kSource; }
    const RNTupleReadOptions &GetReadOptions() const { return fOptions; }
 
    /// Takes the read lock for the descriptor. Multiple threads can take the lock concurrently.
-   /// The underlying std::shared_mutex, however, is neither read nor write recursive:
+   /// The underlying `std::shared_mutex`, however, is neither read nor write recursive:
    /// within one thread, only one lock (shared or exclusive) must be acquired at the same time. This requires special
-   /// care in sections protected by GetSharedDescriptorGuard() and GetExclDescriptorGuard() especially to avoid that
-   /// the locks are acquired indirectly (e.g. by a call to GetNEntries()).
-   /// As a general guideline, no other method of the page source should be called (directly or indirectly) in a
-   /// guarded section.
+   /// care in sections protected by `GetSharedDescriptorGuard()` and `GetExclDescriptorGuard()` especially to avoid
+   /// that the locks are acquired indirectly (e.g. by a call to `GetNEntries()`). As a general guideline, no other
+   /// method of the page source should be called (directly or indirectly) in a guarded section.
    const RSharedDescriptorGuard GetSharedDescriptorGuard() const
    {
       return RSharedDescriptorGuard(fDescriptor, fDescriptorLock);
@@ -536,36 +649,51 @@ public:
    ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) override;
    void DropColumn(ColumnHandle_t columnHandle) override;
 
-   /// Open the physical storage container for the tree
-   void Attach() { GetExclDescriptorGuard().MoveIn(AttachImpl()); }
+   /// Loads header and footer without decompressing or deserializing them. This can be used to asynchronously open
+   /// a file in the background. The method is idempotent and it is called as a first step in `Attach()`.
+   /// Pages sources may or may not make use of splitting loading and processing meta-data.
+   /// Therefore, `LoadStructure()` may do nothing and defer loading the meta-data to `Attach()`.
+   void LoadStructure();
+   /// Open the physical storage container and deserialize header and footer
+   void Attach();
    NTupleSize_t GetNEntries();
    NTupleSize_t GetNElements(ColumnHandle_t columnHandle);
    ColumnId_t GetColumnId(ColumnHandle_t columnHandle);
 
    /// Promise to only read from the given entry range. If set, prevents the cluster pool from reading-ahead beyond
-   /// the given range. The range needs to be within [0, GetNEntries()).
+   /// the given range. The range needs to be within `[0, GetNEntries())`.
    void SetEntryRange(const REntryRange &range);
    REntryRange GetEntryRange() const { return fEntryRange; }
 
-   /// Allocates and fills a page that contains the index-th element
-   virtual RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex) = 0;
-   /// Another version of PopulatePage that allows to specify cluster-relative indexes
-   virtual RPage PopulatePage(ColumnHandle_t columnHandle, RClusterIndex clusterIndex) = 0;
+   /// Allocates and fills a page that contains the index-th element. The default implementation searches
+   /// the page and calls LoadPageImpl(). Returns a default-constructed RPage for suppressed columns.
+   virtual RPage LoadPage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex);
+   /// Another version of `LoadPage` that allows to specify cluster-relative indexes.
+   /// Returns a default-constructed RPage for suppressed columns.
+   virtual RPage LoadPage(ColumnHandle_t columnHandle, RClusterIndex clusterIndex);
 
-   /// Read the packed and compressed bytes of a page into the memory buffer provided by selaedPage. The sealed page
-   /// can be used subsequently in a call to RPageSink::CommitSealedPage.
-   /// The fSize and fNElements member of the sealedPage parameters are always set. If sealedPage.fBuffer is nullptr,
-   /// no data will be copied but the returned size information can be used by the caller to allocate a large enough
-   /// buffer and call LoadSealedPage again.
+   /// Read the packed and compressed bytes of a page into the memory buffer provided by `sealedPage`. The sealed page
+   /// can be used subsequently in a call to `RPageSink::CommitSealedPage`.
+   /// The `fSize` and `fNElements` member of the sealedPage parameters are always set. If `sealedPage.fBuffer` is
+   /// `nullptr`, no data will be copied but the returned size information can be used by the caller to allocate a large
+   /// enough buffer and call `LoadSealedPage` again.
    virtual void
    LoadSealedPage(DescriptorId_t physicalColumnId, RClusterIndex clusterIndex, RSealedPage &sealedPage) = 0;
 
+   /// Helper for unstreaming a page. This is commonly used in derived, concrete page sources.  The implementation
+   /// currently always makes a memory copy, even if the sealed page is uncompressed and in the final memory layout.
+   /// The optimization of directly mapping pages is left to the concrete page source implementations.
+   /// Memory is allocated via `RPageAllocatorHeap`; use `RPageAllocatorHeap::DeletePage()` to deallocate returned
+   /// pages.
+   RResult<RPage>
+   UnsealPage(const RSealedPage &sealedPage, const RColumnElementBase &element, DescriptorId_t physicalColumnId);
+
    /// Populates all the pages of the given cluster ids and columns; it is possible that some columns do not
    /// contain any pages.  The page source may load more columns than the minimal necessary set from `columns`.
-   /// To indicate which columns have been loaded, LoadClusters() must mark them with SetColumnAvailable().
+   /// To indicate which columns have been loaded, `LoadClusters()`` must mark them with `SetColumnAvailable()`.
    /// That includes the ones from the `columns` that don't have pages; otherwise subsequent requests
    /// for the cluster would assume an incomplete cluster and trigger loading again.
-   /// LoadClusters() is typically called from the I/O thread of a cluster pool, i.e. the method runs
+   /// `LoadClusters()` is typically called from the I/O thread of a cluster pool, i.e. the method runs
    /// concurrently to other methods of the page source.
    virtual std::vector<std::unique_ptr<RCluster>> LoadClusters(std::span<RCluster::RKey> clusterKeys) = 0;
 

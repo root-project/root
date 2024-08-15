@@ -86,7 +86,7 @@ ClassImp(RooStats::MCMCInterval);
 
 using namespace RooFit;
 using namespace RooStats;
-using namespace std;
+using std::endl;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -613,8 +613,8 @@ void MCMCInterval::DetermineTailFractionInterval()
       x = fChain->Get(fVector[i])->getRealValue(name);
       w = fChain->Weight();
 
-      if (TMath::Abs(leftTailSum + w - leftTailCutoff) <
-          TMath::Abs(leftTailSum - leftTailCutoff)) {
+      if (std::abs(leftTailSum + w - leftTailCutoff) <
+          std::abs(leftTailSum - leftTailCutoff)) {
          // moving the lower limit to x would bring us closer to the desired
          // left tail size
          ll = x;
@@ -628,8 +628,8 @@ void MCMCInterval::DetermineTailFractionInterval()
       x = fChain->Get(fVector[i])->getRealValue(name);
       w = fChain->Weight();
 
-      if (TMath::Abs(rightTailSum + w - rightTailCutoff) <
-          TMath::Abs(rightTailSum - rightTailCutoff)) {
+      if (std::abs(rightTailSum + w - rightTailCutoff) <
+          std::abs(rightTailSum - rightTailCutoff)) {
          // moving the lower limit to x would bring us closer to the desired
          // left tail size
          ul = x;
@@ -1406,14 +1406,14 @@ RooArgSet* MCMCInterval::GetParameters() const
 
 bool MCMCInterval::AcceptableConfLevel(double confLevel)
 {
-   return (TMath::Abs(confLevel - fConfidenceLevel) < fEpsilon);
+   return (std::abs(confLevel - fConfidenceLevel) < fEpsilon);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCMCInterval::WithinDeltaFraction(double a, double b)
 {
-   return (TMath::Abs(a - b) < TMath::Abs(fDelta * (a + b)/2));
+   return (std::abs(a - b) < std::abs(fDelta * (a + b)/2));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

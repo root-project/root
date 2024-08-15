@@ -22,16 +22,39 @@
 ## The difference between signal and background is in the gaussian width.
 ## The width for the background gaussian is slightly larger than the signal width by few % values
 
+import os
+import importlib.util
+
+opt = [1, 1, 1, 1, 1]
+useTMVACNN = opt[0] if len(opt) > 0  else False
+useKerasCNN = opt[1] if len(opt) > 1 else False
+useTMVADNN = opt[2] if len(opt) > 2 else False
+useTMVABDT = opt[3] if len(opt) > 3 else False
+usePyTorchCNN = opt[4] if len(opt) > 4 else False
+
+tf_spec = importlib.util.find_spec("tensorflow")
+if tf_spec is None:
+    useKerasCNN = False
+    print("TMVA_CNN_Classificaton","Skip using Keras since tensorflow is not installed")
+else:
+    import tensorflow
+
+# PyTorch has to be imported before ROOT to avoid crashes because of clashing
+# std::regexp symbols that are exported by cppyy.
+# See also: https://github.com/wlav/cppyy/issues/227
+torch_spec = importlib.util.find_spec("torch")
+if torch_spec is None:
+    usePyTorchCNN = False
+    print("TMVA_CNN_Classificaton","Skip using PyTorch since torch is not installed")
+else:
+    import torch
+
 
 import ROOT
 
 
 TMVA = ROOT.TMVA
 TFile = ROOT.TFile
-
-
-import os
-import importlib
 
 TMVA.Tools.Instance()
 
@@ -107,12 +130,6 @@ hasGPU = "tmva-gpu" in ROOT.gROOT.GetConfigFeatures()
 hasCPU = "tmva-cpu" in ROOT.gROOT.GetConfigFeatures()
 
 nevt = 1000    # use a larger value to get better results
-opt = [1, 1, 1, 1, 1]
-useTMVACNN = opt[0] if len(opt) > 0  else False
-useKerasCNN = opt[1] if len(opt) > 1 else False
-useTMVADNN = opt[2] if len(opt) > 2 else False
-useTMVABDT = opt[3] if len(opt) > 3 else False
-usePyTorchCNN = opt[4] if len(opt) > 4 else False
 
 if (not hasCPU and not hasGPU) :
     ROOT.Warning("TMVA_CNN_Classificaton","ROOT is not supporting tmva-cpu and tmva-gpu skip using TMVA-DNN and TMVA-CNN")
@@ -124,16 +141,6 @@ if not "tmva-pymva" in ROOT.gROOT.GetConfigFeatures():
     usePyTorchCNN = False
 else:
     TMVA.PyMethodBase.PyInitialize()
-
-tf_spec = importlib.util.find_spec("tensorflow")
-if tf_spec is None:
-    useKerasCNN = False
-    ROOT.Warning("TMVA_CNN_Classificaton","Skip using Keras since tensorflow is not installed")
-
-torch_spec = importlib.util.find_spec("torch")
-if torch_spec is None:
-    usePyTorchCNN = False
-    ROOT.Warning("TMVA_CNN_Classificaton","Skip using PyTorch since torch is not installed")
 
 if not useTMVACNN:
     ROOT.Warning(

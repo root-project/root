@@ -68,8 +68,6 @@
 
 ClassImp(TSVDUnfold);
 
-using namespace std;
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Alternative constructor
 /// User provides data and MC test spectra, as well as detector response matrix, diagonal covariance matrix of measured spectrum built from the uncertainties on measured spectrum

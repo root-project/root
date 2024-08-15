@@ -22,6 +22,12 @@ namespace RooFit {
 
 namespace Detail {
 
+CodeSquashContext::CodeSquashContext(std::map<RooFit::Detail::DataKey, std::size_t> const &outputSizes,
+                                     std::vector<double> &xlarr, Experimental::RooFuncWrapper &wrapper)
+   : _wrapper{&wrapper}, _nodeOutputSizes(outputSizes), _xlArr(xlarr)
+{
+}
+
 /// @brief Adds (or overwrites) the string representing the result of a node.
 /// @param key The name of the node to add the result for.
 /// @param value The new name to assign/overwrite.
@@ -180,9 +186,9 @@ void CodeSquashContext::endLoop(LoopScope const &scope)
 }
 
 /// @brief Get a unique variable name to be used in the generated code.
-std::string CodeSquashContext::getTmpVarName()
+std::string CodeSquashContext::getTmpVarName() const
 {
-   return "tmpVar" + std::to_string(_tmpVarIdx++);
+   return "t" + std::to_string(_tmpVarIdx++);
 }
 
 /// @brief A function to save an expression that includes/depends on the result of the input node.
@@ -190,7 +196,8 @@ std::string CodeSquashContext::getTmpVarName()
 /// @param valueToSave The actual string value to save as a temporary.
 void CodeSquashContext::addResult(RooAbsArg const *in, std::string const &valueToSave)
 {
-   std::string savedName = RooFit::Detail::makeValidVarName(in->GetName());
+   //std::string savedName = RooFit::Detail::makeValidVarName(in->GetName());
+   std::string savedName = getTmpVarName();
 
    // Only save values if they contain operations.
    bool hasOperations = valueToSave.find_first_of(":-+/*") != std::string::npos;
@@ -214,6 +221,10 @@ void CodeSquashContext::addResult(RooAbsArg const *in, std::string const &valueT
 /// @return Name of the array that stores the input list in the squashed code.
 std::string CodeSquashContext::buildArg(RooAbsCollection const &in)
 {
+   if (in.empty()) {
+      return "nullptr";
+   }
+
    auto it = listNames.find(in.uniqueId().value());
    if (it != listNames.end())
       return it->second;
@@ -239,16 +250,12 @@ std::string CodeSquashContext::buildArg(RooAbsCollection const &in)
 std::string CodeSquashContext::buildArg(std::span<const double> arr)
 {
    unsigned int n = arr.size();
-   std::string arrName = getTmpVarName();
-   std::string arrDecl = "double " + arrName + "[" + std::to_string(n) + "] = {";
+   std::string offset = std::to_string(_xlArr.size());
+   _xlArr.reserve(_xlArr.size() + n);
    for (unsigned int i = 0; i < n; i++) {
-      arrDecl += " " + std::to_string(arr[i]) + ",";
+      _xlArr.push_back(arr[i]);
    }
-   arrDecl.back() = '}';
-   arrDecl += ";\n";
-   addToCodeBody(arrDecl, true);
-
-   return arrName;
+   return "xlArr + " + offset;
 }
 
 bool CodeSquashContext::isScopeIndependent(RooAbsArg const *in) const

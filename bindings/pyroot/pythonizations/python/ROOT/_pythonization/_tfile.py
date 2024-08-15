@@ -18,9 +18,9 @@ r'''
 \endhtmlonly
 ## PyROOT
 
-In the same way as for TDirectory, it is possible to inspect the content of a
-TFile object from Python as if the directories and objects it contains were its
-attributes. For more information, please refer to the TDirectory documentation.
+In the same way as for TDirectory, it is possible to get the content of a
+TFile object with the familiar item-getting syntax.
+For more information, please refer to the TDirectory documentation.
 
 In addition, TFile instances can be inspected via the `Get` method, a feature
 that is inherited from TDirectoryFile (please see the documentation of
@@ -73,7 +73,6 @@ statement, you can use the context manager functionality offered by TContext.
 '''
 
 from . import pythonization
-from libcppyy import bind_object
 
 
 def _TFileConstructor(self, *args):
@@ -90,6 +89,9 @@ def _TFileConstructor(self, *args):
 
 
 def _TFileOpen(klass, *args):
+
+    import ROOT
+
     # Redefinition of ROOT.TFile.Open(str, ...):
     # check if the instance of TFile is a C++ nullptr and raise a
     # OSError if this is the case.
@@ -97,7 +99,7 @@ def _TFileOpen(klass, *args):
     # klass: TFile class
     # *args: arguments passed to the constructor
     f = klass._OriginalOpen(*args)
-    if f == bind_object(0, klass):
+    if f == ROOT.bind_object(0, klass):
         # args[0] can be either a string or a TFileOpenHandle
         raise OSError('Failed to open file {}'.format(str(args[0])))
     return f
@@ -109,6 +111,13 @@ def _TFileExit(obj, exc_type, exc_val, exc_tb):
     Signature and return value are imposed by Python, see
     https://docs.python.org/3/library/stdtypes.html#typecontextmanager.
     """
+    # A TFile might be storing references to objects retrieved by the user in
+    # a cache. Make sure the cache is cleaned at exit time rather than having
+    # to wait for the garbage collector.
+    try:
+        delattr(obj, "_cached_items")
+    except AttributeError:
+        pass
     obj.Close()
     return False
 

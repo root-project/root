@@ -53,11 +53,11 @@ conditional MLE (eg. profiled values).
 
 */
 
-ClassImp(RooStats::FeldmanCousins); ;
+ClassImp(RooStats::FeldmanCousins);
 
 using namespace RooFit;
 using namespace RooStats;
-using namespace std;
+using std::endl;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// standard constructor

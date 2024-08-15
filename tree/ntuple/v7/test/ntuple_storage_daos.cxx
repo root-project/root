@@ -217,6 +217,35 @@ TEST_F(RPageStorageDaos, MultipleNTuplesPerContainer)
    EXPECT_THROW(RNTupleReader::Open("ntuple3", daosUri), ROOT::Experimental::RException);
 }
 
+TEST_F(RPageStorageDaos, DisabledSamePageMerging)
+{
+   std::string daosUri = RegisterLabel("ntuple-test-disabled-same-page-merging");
+   auto model = RNTupleModel::Create();
+   model->MakeField<float>("px", 1.0);
+   model->MakeField<float>("py", 1.0);
+   RNTupleWriteOptionsDaos options;
+   options.SetEnablePageChecksums(true);
+   auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", daosUri, options);
+   writer->Fill();
+   writer.reset();
+
+   auto reader = RNTupleReader::Open("ntpl", daosUri);
+   EXPECT_EQ(1u, reader->GetNEntries());
+
+   const auto &desc = reader->GetDescriptor();
+   const auto pxColId = desc.FindPhysicalColumnId(desc.FindFieldId("px"), 0, 0);
+   const auto pyColId = desc.FindPhysicalColumnId(desc.FindFieldId("py"), 0, 0);
+   const auto clusterId = desc.FindClusterId(pxColId, 0);
+   const auto &clusterDesc = desc.GetClusterDescriptor(clusterId);
+   EXPECT_FALSE(clusterDesc.GetPageRange(pxColId).Find(0).fLocator.fPosition ==
+                clusterDesc.GetPageRange(pyColId).Find(0).fLocator.fPosition);
+
+   auto viewPx = reader->GetView<float>("px");
+   auto viewPy = reader->GetView<float>("py");
+   EXPECT_FLOAT_EQ(1.0, viewPx(0));
+   EXPECT_FLOAT_EQ(1.0, viewPy(0));
+}
+
 #ifdef R__USE_IMT
 // This feature depends on RPageSinkBuf and the ability to issue a single `CommitSealedPageV()` call; thus, disable if
 // ROOT was built with `-Dimt=OFF`
@@ -228,6 +257,7 @@ TEST_F(RPageStorageDaos, CagedPages)
 
    auto model = RNTupleModel::Create();
    auto wrVector = model->MakeField<std::vector<double>>("vector");
+   auto wrCnt = model->MakeField<std::uint32_t>("cnt");
 
    TRandom3 rnd(42);
    double chksumWrite = 0.0;
@@ -238,6 +268,7 @@ TEST_F(RPageStorageDaos, CagedPages)
       auto ntuple = RNTupleWriter::Recreate(std::move(model), ntupleName, daosUri, options);
       constexpr unsigned int nEvents = 180000;
       for (unsigned int i = 0; i < nEvents; ++i) {
+         *wrCnt = i;
          auto nVec = 1 + floor(rnd.Rndm() * 1000.);
          wrVector->resize(nVec);
          for (unsigned int n = 0; n < nVec; ++n) {
@@ -266,12 +297,83 @@ TEST_F(RPageStorageDaos, CagedPages)
       EXPECT_EQ(chksumRead, chksumWrite);
    }
 
-   // Wrongly attempt to read a single caged page when cluster cache is disabled.
    {
       RNTupleReadOptions options;
       options.SetClusterCache(RNTupleReadOptions::EClusterCache::kOff);
       auto ntuple = RNTupleReader::Open(ntupleName, daosUri, options);
+      // Attempt to read a caged page data when cluster cache is disabled.
       EXPECT_THROW(ntuple->LoadEntry(1), ROOT::Experimental::RException);
+
+      // However, loading a single sealed page should work
+      auto pageSource = RPageSource::Create(ntupleName, daosUri, options);
+      pageSource->Attach();
+      const auto &desc = pageSource->GetSharedDescriptorGuard()->Clone();
+      const auto colId = desc->FindPhysicalColumnId(desc->FindFieldId("cnt"), 0, 0);
+      const auto clusterId = desc->FindClusterId(colId, 0);
+
+      RPageStorage::RSealedPage sealedPage;
+      pageSource->LoadSealedPage(colId, RClusterIndex{clusterId, 0}, sealedPage);
+      EXPECT_GT(sealedPage.GetNElements(), 0);
+      auto pageBuf = std::make_unique<unsigned char[]>(sealedPage.GetBufferSize());
+      sealedPage.SetBuffer(pageBuf.get());
+      pageSource->LoadSealedPage(colId, RClusterIndex{clusterId, 0}, sealedPage);
+
+      auto colType = desc->GetColumnDescriptor(colId).GetType();
+      auto elem = ROOT::Experimental::Internal::RColumnElementBase::Generate<std::uint32_t>(colType);
+      auto page = pageSource->UnsealPage(sealedPage, *elem, colId).Unwrap();
+      EXPECT_GT(page.GetNElements(), 0);
+      auto ptrData = static_cast<std::uint32_t *>(page.GetBuffer());
+      for (std::uint32_t i = 0; i < page.GetNElements(); ++i) {
+         EXPECT_EQ(i, *(ptrData + i));
+      }
    }
+}
+
+TEST_F(RPageStorageDaos, Checksum)
+{
+   std::string daosUri = RegisterLabel("ntuple-test-checksum");
+   CreateCorruptedRNTuple(daosUri);
+
+   {
+      IMTRAII _;
+
+      auto reader = RNTupleReader::Open("ntpl", daosUri);
+      EXPECT_EQ(1u, reader->GetNEntries());
+
+      auto viewPx = reader->GetView<float>("px");
+      auto viewPy = reader->GetView<float>("py");
+      auto viewPz = reader->GetView<float>("pz");
+      EXPECT_THROW(viewPz(0), RException); // we run under IMT, even the valid column should fail
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", daosUri);
+   EXPECT_EQ(1u, reader->GetNEntries());
+
+   auto viewPx = reader->GetView<float>("px");
+   auto viewPy = reader->GetView<float>("py");
+   auto viewPz = reader->GetView<float>("pz");
+   EXPECT_THROW(viewPx(0), RException);
+   EXPECT_THROW(viewPy(0), RException);
+   EXPECT_FLOAT_EQ(3.0, viewPz(0));
+
+   DescriptorId_t pxColId;
+   DescriptorId_t pyColId;
+   DescriptorId_t clusterId;
+   auto pageSource = RPageSource::Create("ntpl", daosUri);
+   pageSource->Attach();
+   {
+      auto descGuard = pageSource->GetSharedDescriptorGuard();
+      pxColId = descGuard->FindPhysicalColumnId(descGuard->FindFieldId("px"), 0, 0);
+      pyColId = descGuard->FindPhysicalColumnId(descGuard->FindFieldId("py"), 0, 0);
+      clusterId = descGuard->FindClusterId(pxColId, 0);
+   }
+   RClusterIndex index{clusterId, 0};
+
+   RPageStorage::RSealedPage sealedPage;
+   constexpr std::size_t bufSize = 12;
+   unsigned char buffer[bufSize];
+   sealedPage.SetBuffer(buffer);
+   EXPECT_THROW(pageSource->LoadSealedPage(pxColId, index, sealedPage), RException);
+   EXPECT_THROW(pageSource->LoadSealedPage(pyColId, index, sealedPage), RException);
 }
 #endif

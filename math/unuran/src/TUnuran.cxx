@@ -342,8 +342,6 @@ bool  TUnuran::SetDiscreteDistribution(const TUnuranDiscrDist & dist)
    return (ret ==0) ? true : false;
 }
 
-
-//bool TUnuran::SetMethodAndInit(const std::string & s) {
 bool TUnuran::SetMethodAndInit() {
 
    // internal function to set a method from a distribution and
@@ -374,25 +372,25 @@ bool TUnuran::SetMethodAndInit() {
    return true;
  }
 
-std::string TUnuran::GetInfo(bool extended) 
+std::string TUnuran::GetInfo(bool extended)
 {
    // get information string about Unuran generator
    if (!fGen) return std::string();
-   return std::string(unur_gen_info(fGen, extended)); 
+   return std::string(unur_gen_info(fGen, extended));
 }
 
 std::string TUnuran::GetGenId() const
 {
    // get Unuran generator ID
    if (!fGen) return std::string();
-   return std::string(unur_get_genid(fGen)); 
+   return std::string(unur_get_genid(fGen));
 }
 
 int TUnuran::GetDimension() const
 {
    // get dimension of the UNURAN generator
    if (!fGen) return 0;
-   return unur_get_dimension(fGen); 
+   return unur_get_dimension(fGen);
 }
 
 int TUnuran::GetDistType() const
@@ -402,19 +400,19 @@ int TUnuran::GetDistType() const
    return unur_distr_get_type (unur_get_distr(fGen));
 }
 
-bool TUnuran::IsDistCont() const { 
+bool TUnuran::IsDistCont() const {
    if (!fGen) return false;
    return unur_distr_is_cont (unur_get_distr(fGen));
 }
-bool TUnuran::IsDistMultiCont() const { 
+bool TUnuran::IsDistMultiCont() const {
    if (!fGen) return false;
    return unur_distr_is_cvec (unur_get_distr(fGen));
 }
-bool TUnuran::IsDistDiscrete() const { 
+bool TUnuran::IsDistDiscrete() const {
    if (!fGen) return false;
    return unur_distr_is_discr (unur_get_distr(fGen));
 }
-bool TUnuran::IsDistEmpirical() const { 
+bool TUnuran::IsDistEmpirical() const {
    if (!fGen) return false;
    return unur_distr_is_cemp (unur_get_distr(fGen));
 }

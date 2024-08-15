@@ -32,7 +32,7 @@ be analytically convolved with any RooResolutionModel implementation.
 
 #include "TError.h"
 
-using namespace std;
+using std::cout, std::endl;
 
 ClassImp(RooBDecay);
 
@@ -223,7 +223,7 @@ Int_t RooBDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generateVa
 void RooBDecay::generateEvent(Int_t code)
 {
   R__ASSERT(code==1);
-  double gammamin = 1/_tau-TMath::Abs(_dgamma)/2;
+  double gammamin = 1/_tau-std::abs(_dgamma)/2;
   while(true) {
     double t = -log(RooRandom::uniform())/gammamin;
     if (_type == Flipped || (_type == DoubleSided && RooRandom::uniform() <0.5) ) t *= -1;
@@ -237,7 +237,7 @@ void RooBDecay::generateEvent(Int_t code)
       cout << "RooBDecay::generateEvent(" << GetName() << ") ERROR: PDF value less than zero" << endl;
       ::abort();
     }
-    double w = 1.001*exp(-ft*gammamin)*(TMath::Abs(_f0)+TMath::Abs(_f1)+sqrt(_f2*_f2+_f3*_f3));
+    double w = 1.001*exp(-ft*gammamin)*(std::abs(_f0)+std::abs(_f1)+sqrt(_f2*_f2+_f3*_f3));
     if(w < f) {
       cout << "RooBDecay::generateEvent(" << GetName() << ") ERROR: Envelope function less than p.d.f. " << endl;
       cout << _f0 << endl;

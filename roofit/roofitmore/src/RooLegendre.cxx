@@ -28,10 +28,7 @@
 #include "TMath.h"
 
 #include <cmath>
-#include <string>
 #include <algorithm>
-
-using namespace std;
 
 ClassImp(RooLegendre);
 
@@ -146,9 +143,9 @@ void compute(  size_t batchSize, const int l1, const int m1, const int l2, const
 }
 };
 
-void RooLegendre::computeBatch(double* output, size_t size, RooFit::Detail::DataMap const& dataMap) const
+void RooLegendre::doEval(RooFit::EvalContext &ctx) const
 {
-  compute(size, _l1, _m1, _l2, _m2, output, dataMap.at(_ctheta).data());
+   compute(ctx.output().size(), _l1, _m1, _l2, _m2, ctx.output().data(), ctx.at(_ctheta).data());
 }
 
 

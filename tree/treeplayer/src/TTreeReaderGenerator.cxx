@@ -71,6 +71,12 @@ namespace Internal {
             }
          }
          name.ReplaceAll('.', '_'); // Replace dots with underscore
+         name.ReplaceAll(',', '_');
+         name.ReplaceAll(':', '_');
+         name.ReplaceAll('<', '_');
+         name.ReplaceAll('>', '_');
+         name.ReplaceAll('#', '_');
+         name.ReplaceAll('@', '_');
          // Remove array dimensions from name
          while (name.Index('[') >= 0 && name.Index(']') >= 0 && name.Index(']') > name.Index('[')) {
             name.Remove(name.Index('['), name.Index(']') - name.Index('[') + 1);
@@ -725,7 +731,7 @@ namespace Internal {
 
             // Check class inside container and create a descriptor or add a reader
             if (cl) {
-               if (cl->TestBit(TClass::kIsEmulation) || branchName[strlen(branchName)-1] == '.' || branch->GetSplitLevel()) {
+               if (cl->GetState() == TClass::kEmulated || branchName[strlen(branchName)-1] == '.' || branch->GetSplitLevel()) {
                   TBranchElement *be = dynamic_cast<TBranchElement*>(branch);
                   TVirtualStreamerInfo *beinfo = (be && isclones == kOut)
                      ? be->GetInfo() : cl->GetStreamerInfo(); // the 2nd hand need to be fixed

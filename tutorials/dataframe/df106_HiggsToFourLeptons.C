@@ -16,12 +16,15 @@
 /// Systematic uncertainties for those scale factors are evaluated and the Vary function of RDataFrame is used to
 /// propagate the variations to the final four leptons mass distribution.
 ///
+/// See the [corresponding spec json file](https://github.com/root-project/root/blob/master/tutorials/dataframe/df106_HiggsToFourLeptons_spec.json).
+///
 /// \macro_code
 /// \macro_image
 ///
 /// \date March 2020, August 2022, August 2023
 /// \authors Stefan Wunsch (KIT, CERN), Julia Mathe (CERN), Marta Czurylo (CERN)
 
+#include "TInterpreter.h"
 #include <Math/Vector4D.h>
 #include <ROOT/RDFHelpers.hxx>
 #include <ROOT/RDataFrame.hxx>
@@ -83,6 +86,19 @@ void df106_HiggsToFourLeptons()
 
    // Add the ProgressBar feature
    ROOT::RDF::Experimental::AddProgressBar(df);
+
+#ifndef __CLING__
+   // If this tutorial is compiled, rather than run as a ROOT macro, the interpreter needs to be fed the signatures
+   // of all the functions we want to JIT in our analysis, as well as any type used in those signatures.
+   // clang-format off
+   gInterpreter->Declare(
+      "using ROOT::RVecF;"
+      "bool GoodElectronsAndMuons(const ROOT::RVecI &type, const RVecF &pt, const RVecF &eta, const RVecF &phi, const RVecF &e,"
+                           "const RVecF &trackd0pv, const RVecF &tracksigd0pv, const RVecF &z0);"
+      "float ComputeInvariantMass(const RVecF &pt, const RVecF &eta, const RVecF &phi, const RVecF &e);"
+   );
+   // clang-format on
+#endif
 
    // Perform the analysis
    // Access metadata information that is stored in the JSON config file of the RDataFrame
@@ -193,18 +209,21 @@ void df106_HiggsToFourLeptons()
    pad->cd();
 
    // Draw stack with MC contributions
-   auto stack = new THStack("stack", "");
-   auto h_other = df_other.GetPtr();
-   h_other->SetFillColor(kViolet - 9);
-   stack->Add(h_other);
-   auto h_zz = df_zz.GetPtr();
-   h_zz->SetFillColor(kAzure - 9);
-   stack->Add(h_zz);
-   auto h_higgs = df_higgs.GetPtr();
-   h_higgs->SetFillColor(kRed + 2);
-   stack->Add(h_higgs);
+   // Draw cloned histograms to preserve graphics when original objects goes out of scope
+   df_other->SetFillColor(kViolet - 9);
+   df_zz->SetFillColor(kAzure - 9);
+   df_higgs->SetFillColor(kRed + 2);
 
+   auto stack = new THStack("stack", "");
+   auto h_other = static_cast<TH1 *>(df_other->Clone());
+   stack->Add(h_other);
+   auto h_zz = static_cast<TH1 *>(df_zz->Clone());
+   stack->Add(h_zz);
+   auto h_higgs = static_cast<TH1 *>(df_higgs->Clone());
+   stack->Add(h_higgs);
    stack->Draw("HIST");
+
+   // stack histogram can be accessed only after drawing
    stack->GetHistogram()->SetTitle("");
    stack->GetHistogram()->GetXaxis()->SetLabelSize(0.035);
    stack->GetHistogram()->GetXaxis()->SetTitleSize(0.045);
@@ -215,45 +234,39 @@ void df106_HiggsToFourLeptons()
    stack->GetHistogram()->GetYaxis()->SetTitle("Events");
    stack->SetMaximum(35);
    stack->GetHistogram()->GetYaxis()->ChangeLabel(1, -1, 0);
-   stack->DrawClone(
-      "HIST"); // DrawClone() method is necessary to draw a TObject in case the original object goes out of scope
 
    // Draw MC scale factor and variations
-   histos_mc["nominal"].SetStats(false);
    histos_mc["nominal"].SetFillColor(kBlack);
    histos_mc["nominal"].SetFillStyle(3254);
-   histos_mc["nominal"].DrawClone("E2 sames");
+   auto h_nominal = histos_mc["nominal"].DrawClone("E2 same");
    histos_mc["weight:up"].SetLineColor(kGreen + 2);
-   histos_mc["weight:up"].SetStats(false);
-   histos_mc["weight:up"].DrawClone("HIST sames");
+   auto h_weight_up = histos_mc["weight:up"].DrawClone("HIST same");
    histos_mc["weight:down"].SetLineColor(kBlue + 2);
-   histos_mc["weight:down"].SetStats(false);
-   histos_mc["weight:down"].DrawClone("HIST sames");
+   auto h_weight_down = histos_mc["weight:down"].DrawClone("HIST same");
 
    // Draw data histogram
-   auto h_data = df_h_mass_data.GetPtr();
-   h_data->SetMarkerStyle(20);
-   h_data->SetMarkerSize(1.);
-   h_data->SetLineWidth(2);
-   h_data->SetLineColor(kBlack);
-   h_data->SetStats(false);
-   h_data->DrawClone("E sames");
+   df_h_mass_data->SetMarkerStyle(20);
+   df_h_mass_data->SetMarkerSize(1.);
+   df_h_mass_data->SetLineWidth(2);
+   df_h_mass_data->SetLineColor(kBlack);
+   df_h_mass_data->SetStats(false);
+   auto h_mass_data = df_h_mass_data->DrawClone("E sames");
 
    // Add legend
-   TLegend legend(0.57, 0.65, 0.94, 0.94);
-   legend.SetTextFont(42);
-   legend.SetFillStyle(0);
-   legend.SetBorderSize(0);
-   legend.SetTextSize(0.025);
-   legend.SetTextAlign(32);
-   legend.AddEntry(h_data, "Data", "lep");
-   legend.AddEntry(h_higgs, "Higgs MC", "f");
-   legend.AddEntry(h_zz, "ZZ MC", "f");
-   legend.AddEntry(h_other, "Other MC", "f");
-   legend.AddEntry(&(histos_mc["weight:down"]), "Total MC Variations Down", "l");
-   legend.AddEntry(&(histos_mc["weight:up"]), "Total MC Variations Up", "l");
-   legend.AddEntry(&(histos_mc["nominal"]), "Total MC Uncertainty", "f");
-   legend.DrawClone("Same");
+   auto legend = new TLegend(0.57, 0.65, 0.94, 0.94);
+   legend->SetTextFont(42);
+   legend->SetFillStyle(0);
+   legend->SetBorderSize(0);
+   legend->SetTextSize(0.025);
+   legend->SetTextAlign(32);
+   legend->AddEntry(h_mass_data, "Data", "lep");
+   legend->AddEntry(h_higgs, "Higgs MC", "f");
+   legend->AddEntry(h_zz, "ZZ MC", "f");
+   legend->AddEntry(h_other, "Other MC", "f");
+   legend->AddEntry(h_weight_down, "Total MC Variations Down", "l");
+   legend->AddEntry(h_weight_up, "Total MC Variations Up", "l");
+   legend->AddEntry(h_nominal, "Total MC Uncertainty", "f");
+   legend->Draw();
 
    // Add ATLAS label
    TLatex atlas_label;

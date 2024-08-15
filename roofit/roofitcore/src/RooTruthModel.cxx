@@ -31,13 +31,14 @@ functions used in D mixing have been hand coded for increased execution speed.
 #include <RooBatchCompute.h>
 #include <RooGenContext.h>
 
-#include <RooFit/Detail/EvaluateFuncs.h>
+#include <RooFit/Detail/MathFuncs.h>
 
 #include <Riostream.h>
 
 #include <TError.h>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <limits>
 
@@ -235,20 +236,20 @@ double RooTruthModel::evaluate() const
 }
 
 
-void RooTruthModel::computeBatch(double *output, size_t nEvents, RooFit::Detail::DataMap const &dataMap) const
+void RooTruthModel::doEval(RooFit::EvalContext &ctx) const
 {
-   auto config = dataMap.config(this);
-   auto xVals = dataMap.at(x);
+   auto config = ctx.config(this);
+   auto xVals = ctx.at(x);
 
    // No basis: delta function
    if (_basisCode == noBasis) {
-      RooBatchCompute::compute(config, RooBatchCompute::DeltaFunction, output, nEvents, {xVals});
+      RooBatchCompute::compute(config, RooBatchCompute::DeltaFunction, ctx.output(), {xVals});
       return;
    }
 
    // Generic basis: evaluate basis function object
    if (_basisCode == genericBasis) {
-      RooBatchCompute::compute(config, RooBatchCompute::Identity, output, nEvents, {dataMap.at(&basis())});
+      RooBatchCompute::compute(config, RooBatchCompute::Identity, ctx.output(), {ctx.at(&basis())});
       return;
    }
 
@@ -261,44 +262,44 @@ void RooTruthModel::computeBatch(double *output, size_t nEvents, RooFit::Detail:
 
    auto param1 = static_cast<RooAbsReal const *>(basis().getParameter(1));
    auto param2 = static_cast<RooAbsReal const *>(basis().getParameter(2));
-   auto param1Vals = param1 ? dataMap.at(param1) : std::span<const double>{};
-   auto param2Vals = param2 ? dataMap.at(param2) : std::span<const double>{};
+   auto param1Vals = param1 ? ctx.at(param1) : std::span<const double>{};
+   auto param2Vals = param2 ? ctx.at(param2) : std::span<const double>{};
 
    // Return desired basis function
-   RooBatchCompute::ArgVector extraArgs{basisSign};
+   std::array<double, 1> extraArgs{basisSign};
    switch (basisType) {
    case expBasis: {
-      RooBatchCompute::compute(config, RooBatchCompute::TruthModelExpBasis, output, nEvents, {xVals, param1Vals},
+      RooBatchCompute::compute(config, RooBatchCompute::TruthModelExpBasis, ctx.output(), {xVals, param1Vals},
                                extraArgs);
       break;
    }
    case sinBasis: {
-      RooBatchCompute::compute(config, RooBatchCompute::TruthModelSinBasis, output, nEvents,
+      RooBatchCompute::compute(config, RooBatchCompute::TruthModelSinBasis, ctx.output(),
                                {xVals, param1Vals, param2Vals}, extraArgs);
       break;
    }
    case cosBasis: {
-      RooBatchCompute::compute(config, RooBatchCompute::TruthModelCosBasis, output, nEvents,
+      RooBatchCompute::compute(config, RooBatchCompute::TruthModelCosBasis, ctx.output(),
                                {xVals, param1Vals, param2Vals}, extraArgs);
       break;
    }
    case linBasis: {
-      RooBatchCompute::compute(config, RooBatchCompute::TruthModelLinBasis, output, nEvents, {xVals, param1Vals},
+      RooBatchCompute::compute(config, RooBatchCompute::TruthModelLinBasis, ctx.output(), {xVals, param1Vals},
                                extraArgs);
       break;
    }
    case quadBasis: {
-      RooBatchCompute::compute(config, RooBatchCompute::TruthModelQuadBasis, output, nEvents, {xVals, param1Vals},
+      RooBatchCompute::compute(config, RooBatchCompute::TruthModelQuadBasis, ctx.output(), {xVals, param1Vals},
                                extraArgs);
       break;
    }
    case sinhBasis: {
-      RooBatchCompute::compute(config, RooBatchCompute::TruthModelSinhBasis, output, nEvents,
+      RooBatchCompute::compute(config, RooBatchCompute::TruthModelSinhBasis, ctx.output(),
                                {xVals, param1Vals, param2Vals}, extraArgs);
       break;
    }
    case coshBasis: {
-      RooBatchCompute::compute(config, RooBatchCompute::TruthModelCoshBasis, output, nEvents,
+      RooBatchCompute::compute(config, RooBatchCompute::TruthModelCoshBasis, ctx.output(),
                                {xVals, param1Vals, param2Vals}, extraArgs);
       break;
    }

@@ -70,7 +70,7 @@ Class that contains all the data information
 #include "TMVA/Types.h"
 #include "TMVA/VariableInfo.h"
 
-using namespace std;
+using std::setiosflags, std::ios;
 
 //TMVA::DataSetFactory* TMVA::DataSetFactory::fgInstance = 0;
 

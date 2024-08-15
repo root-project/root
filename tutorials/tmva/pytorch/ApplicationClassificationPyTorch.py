@@ -10,6 +10,11 @@
 ## \author Anirudh Dagar <anirudhdagar6@gmail.com> - IIT, Roorkee
 
 
+# PyTorch has to be imported before ROOT to avoid crashes because of clashing
+# std::regexp symbols that are exported by cppyy.
+# See also: https://github.com/wlav/cppyy/issues/227
+import torch
+
 from ROOT import TMVA, TFile, TString
 from array import array
 from subprocess import call

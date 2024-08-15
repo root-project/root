@@ -39,7 +39,7 @@ subsequently explicitly smeared with the resolution model distribution.
 #include "Riostream.h"
 
 
-using namespace std;
+using std::cout, std::endl, std::ostream;
 
 ClassImp(RooConvGenContext);
 
@@ -233,10 +233,10 @@ void RooConvGenContext::attach(const RooArgSet& args)
   auto* cvPdf   = static_cast<RooRealVar*>(_pdfVars->find(_convVarName));
 
   // Replace all servers in _pdfVars and _modelVars with those in theEvent, except for the convolution variable
-  std::unique_ptr<RooArgSet> pdfCommon{static_cast<RooArgSet*>(args.selectCommon(*_pdfVars))};
+  std::unique_ptr<RooArgSet> pdfCommon{args.selectCommon(*_pdfVars)};
   pdfCommon->remove(*cvPdf,true,true) ;
 
-  std::unique_ptr<RooArgSet> modelCommon{static_cast<RooArgSet*>(args.selectCommon(*_modelVars))};
+  std::unique_ptr<RooArgSet> modelCommon{args.selectCommon(*_modelVars)};
   modelCommon->remove(*cvModel,true,true) ;
 
   _pdfGen->attach(*pdfCommon) ;
@@ -256,11 +256,11 @@ void RooConvGenContext::initGenerator(const RooArgSet &theEvent)
   _cvOut   = static_cast<RooRealVar*>(theEvent.find(_convVarName)) ;
 
   // Replace all servers in _pdfVars and _modelVars with those in theEvent, except for the convolution variable
-  std::unique_ptr<RooArgSet> pdfCommon{static_cast<RooArgSet*>(theEvent.selectCommon(*_pdfVars))};
+  std::unique_ptr<RooArgSet> pdfCommon{theEvent.selectCommon(*_pdfVars)};
   pdfCommon->remove(*_cvPdf,true,true) ;
   _pdfVars->replace(*pdfCommon) ;
 
-  std::unique_ptr<RooArgSet> modelCommon{static_cast<RooArgSet*>(theEvent.selectCommon(*_modelVars))};
+  std::unique_ptr<RooArgSet> modelCommon{theEvent.selectCommon(*_modelVars)};
   modelCommon->remove(*_cvModel,true,true) ;
   _modelVars->replace(*modelCommon) ;
 

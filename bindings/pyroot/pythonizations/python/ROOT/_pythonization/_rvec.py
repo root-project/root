@@ -8,7 +8,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-r'''
+r"""
 /**
 \class ROOT::VecOps::RVec
 \brief \parblock \endparblock
@@ -63,22 +63,79 @@ print(rvec) # { 42.000000, 2.0000000, 3.0000000 }
 </div>
 \endhtmlonly
 */
-'''
+"""
 
 from . import pythonization
-from libROOTPythonizations import GetEndianess, GetDataPointer, GetSizeOfType
+import cppyy
+import sys
 
 
 _array_interface_dtype_map = {
-    "float": "f",
+    "Long64_t": "i",
+    "ULong64_t": "u",
     "double": "f",
+    "float": "f",
     "int": "i",
     "long": "i",
-    "Long64_t": "i",
+    "unsigned char": "b",
     "unsigned int": "u",
     "unsigned long": "u",
-    "ULong64_t": "u",
 }
+
+
+def _get_cpp_type_from_numpy_type(dtype):
+    cpptypes = {"i4": "int", "u4": "unsigned int", "i8": "Long64_t", "u8": "ULong64_t", "f4": "float", "f8": "double"}
+
+    if not dtype in cpptypes:
+        raise RuntimeError("Object not convertible: Python object has unknown data-type '" + dtype + "'.")
+
+    return cpptypes[dtype]
+
+
+def _AsRVec(arr):
+    r"""
+    Adopt memory of a Python object with array interface using an RVec.
+
+    \param[in] self self object
+    \param[in] obj PyObject with array interface
+
+    This function returns an RVec which adopts the memory of the given
+    PyObject. The RVec takes the data pointer and the size from the array
+    interface dictionary.
+    """
+    import ROOT
+    import math
+    import platform
+
+    # Get array interface of object
+    interface = arr.__array_interface__
+
+    # Get the data-pointer
+    data = interface["data"][0]
+
+    # Get the size of the contiguous memory
+    shape = interface["shape"]
+    size = math.prod(shape) if len(shape) > 0 else 0
+
+    # Get the typestring and properties thereof
+    typestr = interface["typestr"]
+    if len(typestr) != 3:
+        raise RuntimeError(
+            "Object not convertible: __array_interface__['typestr'] returned '"
+            + typestr
+            + "' with invalid length unequal 3."
+        )
+
+    dtype = typestr[1:]
+    cppdtype = _get_cpp_type_from_numpy_type(dtype)
+
+    # Construct an RVec of the correct data-type
+    out = ROOT.VecOps.RVec[cppdtype](ROOT.module.cppyy.ll.reinterpret_cast[f"{cppdtype} *"](data), size)
+
+    # Bind pyobject holding adopted memory to the RVec
+    out.__adopted__ = arr
+
+    return out
 
 
 def get_array_interface(self):
@@ -86,27 +143,25 @@ def get_array_interface(self):
     for dtype in _array_interface_dtype_map:
         if cppname.endswith("<{}>".format(dtype)):
             dtype_numpy = _array_interface_dtype_map[dtype]
-            dtype_size = GetSizeOfType(dtype)
-            endianess = GetEndianess()
+            dtype_size = cppyy.sizeof(dtype)
+            endianness = "<" if sys.byteorder == "little" else ">"
             size = self.size()
             # Numpy breaks for data pointer of 0 even though the array is empty.
             # We set the pointer to 1 but the value itself is arbitrary and never accessed.
             if self.empty():
                 pointer = 1
             else:
-                pointer = GetDataPointer(self, cppname, "data")
+                pointer = cppyy.ll.addressof(self.data())
             return {
-                "shape": (size, ),
-                "typestr": "{}{}{}".format(endianess, dtype_numpy, dtype_size),
+                "shape": (size,),
+                "typestr": "{}{}{}".format(endianness, dtype_numpy, dtype_size),
                 "version": 3,
-                "data": (pointer, False)
+                "data": (pointer, False),
             }
 
 
 def add_array_interface_property(klass, name):
-    if True in [
-            name.endswith("<{}>".format(dtype)) for dtype in _array_interface_dtype_map
-    ]:
+    if True in [name.endswith("<{}>".format(dtype)) for dtype in _array_interface_dtype_map]:
         klass.__array_interface__ = property(get_array_interface)
 
 

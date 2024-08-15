@@ -216,7 +216,7 @@ public: // Public Interface
    Int_t   GenerateDictionary(const char* classes, const char* includes = "", const char* options = nullptr) final;
    char*   GetPrompt() final { return fPrompt; }
    const char* GetSharedLibs() final;
-   const char* GetClassSharedLibs(const char* cls) final;
+   const char* GetClassSharedLibs(const char* cls, bool skipCore = true) final;
    const char* GetSharedLibDeps(const char* lib, bool tryDyld = false) final;
    const char* GetIncludePath() final;
    virtual const char* GetSTLIncludePath() const final;
@@ -270,7 +270,7 @@ public: // Public Interface
    void    UpdateListOfGlobals() final;
    void    UpdateListOfGlobalFunctions() final;
    void    UpdateListOfTypes() final;
-   void    SetClassInfo(TClass* cl, Bool_t reload = kFALSE) final;
+   void    SetClassInfo(TClass* cl, Bool_t reload = kFALSE, Bool_t silent = kFALSE) final;
 
    ECheckClassInfo CheckClassInfo(const char *name, Bool_t autoload, Bool_t isClassOrNamespaceOnly = kFALSE) final;
 

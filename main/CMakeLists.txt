@@ -15,9 +15,6 @@ if(NOT WIN32)
     SET_TARGET_PROPERTIES(rootn.exe PROPERTIES LINK_FLAGS "-Wl,--no-as-needed")
   endif()
   ROOT_EXECUTABLE(roots.exe roots.cxx LIBRARIES Core MathCore)
-  if(proof)
-    ROOT_EXECUTABLE(xpdtest xpdtest.cxx LIBRARIES Proof Tree Hist RIO Net Thread Matrix MathCore)
-  endif()
 endif()
 ROOT_EXECUTABLE(root.exe rmain.cxx LIBRARIES Core Rint)
 if(MSVC)
@@ -81,8 +78,8 @@ if(IS_ABSOLUTE ${runtimedir})
 else()
   set(absruntimedir \${CMAKE_INSTALL_PREFIX}/${runtimedir})
 endif()
-install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} -m py_compile \$ENV{DESTDIR}${absruntimedir}/cmdLineUtils.py)")
-install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} -O -m py_compile \$ENV{DESTDIR}${absruntimedir}/cmdLineUtils.py)")
+install(CODE "execute_process(COMMAND ${Python3_EXECUTABLE} -m py_compile \$ENV{DESTDIR}${absruntimedir}/cmdLineUtils.py)")
+install(CODE "execute_process(COMMAND ${Python3_EXECUTABLE} -O -m py_compile \$ENV{DESTDIR}${absruntimedir}/cmdLineUtils.py)")
 configure_file(python/cmdLineUtils.py ${localruntimedir}/cmdLineUtils.py @ONLY)
 
 
@@ -105,6 +102,7 @@ target_include_directories(rootcling PRIVATE
 set_property(TARGET rootcling PROPERTY ENABLE_EXPORTS 1)
 if(WIN32)
   set_target_properties(rootcling PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS 1)
+  set_property(TARGET rootcling APPEND_STRING PROPERTY LINK_FLAGS " -STACK:4000000")
 endif()
 
 # Create aliases: rootcint, genreflex.

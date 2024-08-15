@@ -204,6 +204,7 @@ TLegend::TLegend(): TPave(0.3,0.15,0.3,0.15,4,"brNDC"),
    SetDefaults();
    SetBorderSize(gStyle->GetLegendBorderSize());
    SetFillColor(gStyle->GetLegendFillColor());
+   SetFillStyle(gStyle->GetLegendFillStyle());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -237,6 +238,7 @@ TLegend::TLegend( Double_t x1, Double_t y1,Double_t x2, Double_t y2,
    SetDefaults();
    SetBorderSize(gStyle->GetLegendBorderSize());
    SetFillColor(gStyle->GetLegendFillColor());
+   SetFillStyle(gStyle->GetLegendFillStyle());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -270,6 +272,7 @@ TLegend::TLegend( Double_t w, Double_t h, const char *header, Option_t *option)
    SetDefaults();
    SetBorderSize(gStyle->GetLegendBorderSize());
    SetFillColor(gStyle->GetLegendFillColor());
+   SetFillStyle(gStyle->GetLegendFillStyle());
 }
 
 ////////////////////////////////////////////////////////////////////////////////

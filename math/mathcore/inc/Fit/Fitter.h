@@ -263,7 +263,7 @@ public:
       For the options see documentation for following methods FitFCN(IMultiGenFunction & fcn,..)
     */
    template <class Function>
-   bool FitFCN(unsigned int npar, Function  & fcn, const double * params = nullptr, unsigned int dataSize = 0, bool chi2fit = false);
+   bool FitFCN(unsigned int npar, Function  & fcn, const double * params = nullptr, unsigned int dataSize = 0, int fitType = 0);
 
    /**
       Set a generic FCN function as a C++ callable object implementing
@@ -272,13 +272,14 @@ public:
       For the options see documentation for following methods FitFCN(IMultiGenFunction & fcn,..)
     */
    template <class Function>
-   bool SetFCN(unsigned int npar, Function  & fcn, const double * params = nullptr, unsigned int dataSize = 0, bool chi2fit = false);
+   bool SetFCN(unsigned int npar, Function  & fcn, const double * params = nullptr, unsigned int dataSize = 0, int fitType = 0);
 
    /**
       Fit using the given FCN function represented by a multi-dimensional function interface
       (ROOT::Math::IMultiGenFunction).
       Give optionally the initial parameter values, data size to have the fit Ndf correctly
-      set in the FitResult and flag specifying if it is a chi2 fit.
+      set in the FitResult and flag specifying the type of fit. The fitType can be:
+      0 undefined, 1 least square fit, 2 unbinned likelihood fit, 3 binned likelihood fit
       Note that if the parameters values are not given (params=0) the
       current parameter settings are used. The parameter settings can be created before
       by using the FitConfig::SetParamsSetting. If they have not been created they are created
@@ -286,7 +287,7 @@ public:
       Note that passing a params != 0 will set the parameter settings to the new value AND also the
       step sizes to some pre-defined value (stepsize = 0.3 * abs(parameter_value) )
     */
-   bool FitFCN(const ROOT::Math::IMultiGenFunction &fcn, const double *params = nullptr, unsigned int dataSize = 0, bool chi2fit = false);
+   bool FitFCN(const ROOT::Math::IMultiGenFunction &fcn, const double *params = nullptr, unsigned int dataSize = 0, int fitType = 0);
 
    /**
        Fit using a FitMethodFunction interface. Same as method above, but now extra information
@@ -299,7 +300,7 @@ public:
       (ROOT::Math::IMultiGenFunction) and optionally the initial parameters
       See also note above for the initial parameters for FitFCN
     */
-   bool SetFCN(const ROOT::Math::IMultiGenFunction &fcn, const double *params = nullptr, unsigned int dataSize = 0, bool chi2fit = false);
+   bool SetFCN(const ROOT::Math::IMultiGenFunction &fcn, const double *params = nullptr, unsigned int dataSize = 0, int fitType = 0);
 
    /**
       Set the FCN function represented by a multi-dimensional function interface
@@ -309,7 +310,7 @@ public:
       used to compute confidence interval of the fit
    */
    bool SetFCN(const ROOT::Math::IMultiGenFunction &fcn, const IModelFunction & func, const double *params = nullptr,
-               unsigned int dataSize = 0, bool chi2fit = false);
+               unsigned int dataSize = 0, int fitType = 0);
 
    /**
        Set the objective function (FCN)  using a FitMethodFunction interface.
@@ -336,14 +337,14 @@ public:
       For the options same consideration as in the previous method
     */
    typedef  void (* MinuitFCN_t )(int &npar, double *gin, double &f, double *u, int flag);
-   bool FitFCN( MinuitFCN_t fcn, int npar = 0, const double *params = nullptr, unsigned int dataSize = 0, bool chi2fit = false);
+   bool FitFCN( MinuitFCN_t fcn, int npar = 0, const double *params = nullptr, unsigned int dataSize = 0, int fitType = 0);
 
    /**
       set objective function using user provided FCN with Minuit-like interface
       If npar = 0 it is assumed that the parameters are specified in the parameter settings created before
       For the options same consideration as in the previous method
     */
-   bool SetFCN( MinuitFCN_t fcn, int npar = 0, const double *params = nullptr, unsigned int dataSize = 0, bool chi2fit = false);
+   bool SetFCN( MinuitFCN_t fcn, int npar = 0, const double *params = nullptr, unsigned int dataSize = 0, int fitType = 0);
 
    /**
       Perform a fit with the previously set FCN function. Require SetFCN before
@@ -495,7 +496,7 @@ protected:
    bool DoLinearFit();
    /// Set Objective function
    bool DoSetFCN(bool useExtFCN, const ROOT::Math::IMultiGenFunction &fcn, const double *params, unsigned int dataSize,
-                 bool chi2fit);
+                 int fitType);
 
    // initialize the minimizer
    bool DoInitMinimizer();
@@ -641,26 +642,23 @@ void Fitter::SetFunction(const IGradModelFunction_v &func, bool useGradient)
 // implementation of inline methods
 
 
-#ifndef __CINT__
 
 #include "Math/WrappedFunction.h"
 
 template<class Function>
-bool ROOT::Fit::Fitter::FitFCN(unsigned int npar, Function & f, const double * par, unsigned int datasize,bool chi2fit) {
+bool ROOT::Fit::Fitter::FitFCN(unsigned int npar, Function & f, const double * par, unsigned int datasize,int fitType) {
    ROOT::Math::WrappedMultiFunction<Function &> wf(f,npar);
-   if (!DoSetFCN(false, wf, par, datasize, chi2fit))
+   if (!DoSetFCN(false, wf, par, datasize, fitType))
       return false;
    return FitFCN();
 }
 template<class Function>
-bool ROOT::Fit::Fitter::SetFCN(unsigned int npar, Function & f, const double * par, unsigned int datasize,bool chi2fit) {
+bool ROOT::Fit::Fitter::SetFCN(unsigned int npar, Function & f, const double * par, unsigned int datasize,int fitType) {
    ROOT::Math::WrappedMultiFunction<Function &> wf(f,npar);
-   return DoSetFCN(false, wf, par, datasize, chi2fit);
+   return DoSetFCN(false, wf, par, datasize, fitType);
 }
 
 
 
-
-#endif  // endif __CINT__
 
 #endif /* ROOT_Fit_Fitter */

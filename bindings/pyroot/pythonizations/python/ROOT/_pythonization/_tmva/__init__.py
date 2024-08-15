@@ -47,11 +47,11 @@ from ._gnn import RModel_GNN, RModel_GraphIndependent
 
 hasRDF = "dataframe" in gROOT.GetConfigFeatures()
 if hasRDF:
-    from ._rtensor import get_array_interface, add_array_interface_property, RTensorGetitem, pythonize_rtensor
+    from ._rtensor import get_array_interface, add_array_interface_property, RTensorGetitem, pythonize_rtensor, _AsRTensor
 
 #this should be available only when xgboost is there ?
 # We probably don't need a protection here since the code is run only when there is xgboost
-from ._tree_inference import SaveXGBoost, pythonize_tree_inference
+from ._tree_inference import SaveXGBoost
 
 
 # list of python classes that are used to pythonize TMVA classes
@@ -69,7 +69,7 @@ def get_defined_attributes(klass, consider_base_classes=False):
     any of its base classes (except for `object`).
     """
 
-    blacklist = ["__dict__", "__doc__", "__hash__", "__module__", "__weakref__"]
+    blacklist = ["__dict__", "__doc__", "__hash__", "__module__", "__weakref__", "__firstlineno__", "__static_attributes__"]
 
     if not consider_base_classes:
         return sorted([attr for attr in klass.__dict__.keys() if attr not in blacklist])

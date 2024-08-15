@@ -85,7 +85,7 @@ namespace TMVA {
       const std::vector<TMVA::Interval*>  fRanges;       // allowed intervals
       Int_t                               fNpars;        // number of parameters
 
-      mutable MsgLogger*                  fLogger;       // message logger
+      mutable MsgLogger*                  fLogger;       //! message logger
       MsgLogger& Log() const { return *fLogger; }
 
       TString                             fClassName;    // remove TMVA:: from TObject name

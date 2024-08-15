@@ -66,7 +66,7 @@ Check the tutorial rf506_msgservice.C for details.
 #include <sstream>
 #include <cctype>
 
-using namespace std;
+using std::sregex_iterator, std::ostream;
 
 namespace {
 
@@ -184,33 +184,21 @@ void replaceVarNamesWithIndexStyle(std::string &formula, RooArgList const &varLi
 
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct a new formula.
 /// \param[in] name Name of the formula.
 /// \param[in] formula Formula to be evaluated. Parameters/observables are identified by name
 /// or ordinal position in `varList`.
 /// \param[in] varList List of variables to be passed to the formula.
-/// \param[in] checkVariables Check that the variables being passed in the `varList` are used in
-/// the formula expression.
-RooFormula::RooFormula(const char* name, const char* formula, const RooArgList& varList,
-    bool checkVariables) :
-  TNamed(name, formula)
+/// \param[in] checkVariables Unused parameter.
+RooFormula::RooFormula(const char *name, const char *formula, const RooArgList &varList, bool /*checkVariables*/)
+   : TNamed(name, formula)
 {
-  _origList.add(varList);
-  _isCategory = findCategoryServers(_origList);
+   _origList.add(varList);
+   _isCategory = findCategoryServers(_origList);
 
-  installFormulaOrThrow(formula);
-
-  RooArgList useList = usedVariables();
-  if (checkVariables && _origList.size() != useList.size()) {
-    coutI(InputArguments) << "The formula " << GetName() << " claims to use the variables " << _origList
-        << " but only " << useList << " seem to be in use."
-        << "\n  inputs:         " << formula << std::endl;
-  }
+   installFormulaOrThrow(formula);
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
@@ -416,21 +404,24 @@ double RooFormula::eval(const RooArgSet* nset) const
   return _tFormula->EvalPar(pars.data());
 }
 
-void RooFormula::computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+void RooFormula::doEval(RooFit::EvalContext &ctx) const
 {
-  const int nPars=_origList.size();
-  std::vector<std::span<const double>> inputSpans(nPars);
-  for (int i=0; i<nPars; i++) {
-    std::span<const double> rhs = dataMap.at( static_cast<const RooAbsReal*>(&_origList[i]) );
-    inputSpans[i] = rhs;
-  }
+   std::span<double> output = ctx.output();
 
-  std::vector<double> pars(nPars);
-  for (size_t i=0; i<nEvents; i++)
-  {
-    for (int j=0; j<nPars; j++) pars[j] = inputSpans[j].size()>1 ? inputSpans[j][i] : inputSpans[j][0];
-    output[i] = _tFormula->EvalPar( pars.data() );
-  }
+   const int nPars = _origList.size();
+   std::vector<std::span<const double>> inputSpans(nPars);
+   for (int i = 0; i < nPars; i++) {
+      std::span<const double> rhs = ctx.at(static_cast<const RooAbsReal *>(&_origList[i]));
+      inputSpans[i] = rhs;
+   }
+
+   std::vector<double> pars(nPars);
+   for (size_t i = 0; i < output.size(); i++) {
+      for (int j = 0; j < nPars; j++) {
+         pars[j] = inputSpans[j].size() > 1 ? inputSpans[j][i] : inputSpans[j][0];
+      }
+      output[i] = _tFormula->EvalPar(pars.data());
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -1,4 +1,4 @@
-import { settings, browser, gStyle, isBatchMode, isNodeJs, isObject, isFunc, isStr, source_dir, atob_func, btoa_func } from '../core.mjs';
+import { settings, internals, browser, gStyle, isBatchMode, isNodeJs, isObject, isFunc, isStr, source_dir, atob_func, btoa_func } from '../core.mjs';
 import { select as d3_select, pointer as d3_pointer, drag as d3_drag, color as d3_color } from '../d3.mjs';
 import { BasePainter } from '../base/BasePainter.mjs';
 import { resize } from '../base/ObjectPainter.mjs';
@@ -8,42 +8,54 @@ import { getRootColors } from '../base/colors.mjs';
   * @desc Previous message will be overwritten
   * if no argument specified, any shown messages will be removed
   * @param {string} msg - message to display
-  * @param {number} tmout - optional timeout in milliseconds, after message will disappear
+  * @param {number} [tmout] - optional timeout in milliseconds, after message will disappear
+  * @param {function} [click_handle] - optional handle to process click events
   * @private */
-function showProgress(msg, tmout) {
+function showProgress(msg, tmout, click_handle) {
    if (isBatchMode() || (typeof document === 'undefined'))
       return;
-   const id = 'jsroot_progressbox';
+
+   const id = 'jsroot_progressbox', modal = (settings.ProgressBox === 'modal') && isFunc(internals._modalProgress) ? internals._modalProgress : null;
    let box = d3_select('#' + id);
 
-   if (!settings.ProgressBox)
+   if (!settings.ProgressBox) {
+      if (modal) modal();
       return box.remove();
+   }
 
    if ((arguments.length === 0) || !msg) {
       if ((tmout !== -1) || (!box.empty() && box.property('with_timeout'))) box.remove();
+      if (modal) modal();
       return;
    }
 
-   if (box.empty()) {
-      box = d3_select(document.body)
-              .append('div').attr('id', id)
-              .attr('style', 'position: fixed; min-width: 100px; height: auto; overflow: visible; z-index: 101; border: 1px solid #999; background: #F8F8F8; left: 10px; bottom: 10px;');
-      box.append('p');
+   if (modal) {
+      box.remove();
+      modal(msg, click_handle);
+   } else {
+      if (box.empty()) {
+         box = d3_select(document.body)
+               .append('div').attr('id', id)
+               .attr('style', 'position: fixed; min-width: 100px; height: auto; overflow: visible; z-index: 101; border: 1px solid #999; background: #F8F8F8; left: 10px; bottom: 10px;');
+         box.append('p');
+      }
+
+      box.property('with_timeout', false);
+
+      const p = box.select('p');
+
+      if (isStr(msg)) {
+         p.html(msg)
+          .on('click', isFunc(click_handle) ? click_handle : null)
+          .attr('title', isFunc(click_handle) ? 'Click element to abort current operation' : '');
+      }
+
+      p.attr('style', 'font-size: 10px; margin-left: 10px; margin-right: 10px; margin-top: 3px; margin-bottom: 3px');
    }
-
-   box.property('with_timeout', false);
-
-   if (isStr(msg))
-      box.select('p').html(msg);
-    else {
-      box.html('');
-      box.node().appendChild(msg);
-   }
-
-   box.select('p').attr('style', 'font-size: 10px; margin-left: 10px; margin-right: 10px; margin-top: 3px; margin-bottom: 3px');
 
    if (Number.isFinite(tmout) && (tmout > 0)) {
-      box.property('with_timeout', true);
+      if (!box.empty())
+         box.property('with_timeout', true);
       setTimeout(() => showProgress('', -1), tmout);
    }
 }
@@ -414,71 +426,69 @@ function selectgStyle(name) {
    }
 }
 
-/** @summary Save object as a cookie
+let _storage_prefix = 'jsroot_';
+
+/** @summary Set custom prefix for the local storage
   * @private */
-function saveCookie(obj, expires, name) {
-   const arg = (expires <= 0) ? '' : btoa_func(JSON.stringify(obj)),
-         d = new Date();
-   d.setTime((expires <= 0) ? 0 : d.getTime() + expires*24*60*60*1000);
-   if (typeof document !== 'undefined')
-      document.cookie = `${name}=${arg}; expires=${d.toUTCString()}; SameSite=None; Secure; path=/;`;
+function setStoragePrefix(prefix) {
+   _storage_prefix = prefix || 'jsroot_';
 }
 
-/** @summary Read cookie with specified name
+/** @summary Save object in local storage
   * @private */
-function readCookie(name) {
-   if (typeof document === 'undefined')
+function saveLocalStorage(obj, expires, name) {
+   if (typeof localStorage === 'undefined')
+      return;
+   if (Number.isFinite(expires) && (expires < 0))
+      localStorage.removeItem(_storage_prefix + name);
+   else
+      localStorage.setItem(_storage_prefix + name, btoa_func(JSON.stringify(obj)));
+}
+
+/** @summary Read object from storage with specified name
+  * @private */
+function readLocalStorage(name) {
+   if (typeof localStorage === 'undefined')
       return null;
-   const decodedCookie = decodeURIComponent(document.cookie),
-         ca = decodedCookie.split(';');
-   name += '=';
-   for (let i = 0; i < ca.length; i++) {
-      let c = ca[i];
-      while (c.charAt(0) === ' ')
-        c = c.substring(1);
-      if (c.indexOf(name) === 0) {
-         const s = JSON.parse(atob_func(c.substring(name.length, c.length)));
-
-         return isObject(s) ? s : null;
-      }
-   }
-   return null;
+   const v = localStorage.getItem(_storage_prefix + name),
+         s = v ? JSON.parse(atob_func(v)) : null;
+   return isObject(s) ? s : null;
 }
 
-/** @summary Save JSROOT settings as specified cookie parameter
-  * @param {Number} expires - days when cookie will be removed by browser, negative - delete immediately
-  * @param {String} name - cookie parameter name
+/** @summary Save JSROOT settings in local storage
+  * @param {Number} [expires] - delete settings when negative
+  * @param {String} [name] - storage name, 'settings' by default
   * @private */
-function saveSettings(expires = 365, name = 'jsroot_settings') {
-   saveCookie(settings, expires, name);
+function saveSettings(expires = 365, name = 'settings') {
+   saveLocalStorage(settings, expires, name);
 }
 
 /** @summary Read JSROOT settings from specified cookie parameter
   * @param {Boolean} only_check - when true just checks if settings were stored before with provided name
-  * @param {String} name - cookie parameter name
+  * @param {String} [name] - storage name, 'settings' by default
   * @private */
-function readSettings(only_check = false, name = 'jsroot_settings') {
-   const s = readCookie(name);
+function readSettings(only_check = false, name = 'settings') {
+   const s = readLocalStorage(name);
    if (!s) return false;
    if (!only_check)
       Object.assign(settings, s);
    return true;
 }
 
-/** @summary Save JSROOT gStyle object as specified cookie parameter
-  * @param {Number} expires - days when cookie will be removed by browser, negative - delete immediately
-  * @param {String} name - cookie parameter name
+/** @summary Save JSROOT gStyle object in local storage
+  * @param {Number} [expires] - delete style when negative
+  * @param {String} [name] - storage name, 'style' by default
   * @private */
-function saveStyle(expires = 365, name = 'jsroot_style') {
-   saveCookie(gStyle, expires, name);
+function saveStyle(expires = 365, name = 'style') {
+   saveLocalStorage(gStyle, expires, name);
 }
 
-/** @summary Read JSROOT gStyle object specified cookie parameter
-  * @param {Boolean} only_check - when true just checks if settings were stored before with provided name
-  * @param {String} name - cookie parameter name
+/** @summary Read JSROOT gStyle object from local storage
+  * @param {Boolean} [only_check] - when true just checks if settings were stored before with provided name
+  * @param {String} [name] - storage name, 'style' by default
   * @private */
-function readStyle(only_check = false, name = 'jsroot_style') {
-   const s = readCookie(name);
+function readStyle(only_check = false, name = 'style') {
+   const s = readLocalStorage(name);
    if (!s) return false;
    if (!only_check)
       Object.assign(gStyle, s);
@@ -538,11 +548,9 @@ function setSaveFile(func) {
    _saveFileFunc = func;
 }
 
-/** @summary Produce exec string for WebCanas to set color value
-  * @desc Color can be id or string, but should belong to list of known colors
-  * For higher color numbers TColor::GetColor(r,g,b) will be invoked to ensure color is exists
+/** @summary Returns color id for the color
   * @private */
-function getColorExec(col, method) {
+function getColorId(col) {
    const arr = getRootColors();
    let id = -1;
    if (isStr(col)) {
@@ -559,18 +567,46 @@ function getColorExec(col, method) {
       col = arr[id];
    }
 
-   if (id < 0) return '';
+   return { id, col };
+}
+
+/** @summary Produce exec string for WebCanvas to set color value
+  * @desc Color can be id or string, but should belong to list of known colors
+  * For higher color numbers TColor::GetColor(r,g,b) will be invoked to ensure color is exists
+  * @private */
+function getColorExec(col, method) {
+   const d = getColorId(col);
+
+   if (d.id < 0)
+      return '';
 
    // for higher color numbers ensure that such color exists
-   if (id >= 50) {
-      const c = d3_color(col);
-      id = `TColor::GetColor(${c.r},${c.g},${c.b})`;
+   if (d.id >= 50) {
+      const c = d3_color(d.col);
+      d.id = `TColor::GetColor(${c.r},${c.g},${c.b})`;
     }
 
-   return `exec:${method}(${id})`;
+   return `exec:${method}(${d.id})`;
+}
+
+/** @summary Change object member in the painter
+  * @desc Used when interactively change in the menu
+  * Special handling for color is provided
+  * @private */
+function changeObjectMember(painter, member, val, is_color) {
+   if (is_color) {
+      const d = getColorId(val);
+      if ((d.id < 0) || (d.id === 9999))
+         return;
+      val = d.id;
+   }
+
+   const obj = painter?.getObject();
+   if (obj && (obj[member] !== undefined))
+      obj[member] = val;
 }
 
 export { showProgress, closeCurrentWindow, loadOpenui5, ToolbarIcons, registerForResize,
          detectRightButton, addMoveHandler, injectStyle,
-         selectgStyle, saveSettings, readSettings, saveStyle, readStyle,
-         saveFile, setSaveFile, getBinFileContent, getColorExec };
+         selectgStyle, setStoragePrefix, saveSettings, readSettings, saveStyle, readStyle,
+         saveFile, setSaveFile, getBinFileContent, getColorExec, changeObjectMember };

@@ -73,16 +73,18 @@ void RModel_GraphIndependent::Generate() {
     if (edges_update_block) {
        size_t block_size = num_edges;
        fGC += "\n\nnamespace Edge_Update{\nstruct Session {\n";
-       std::vector<std::vector<std::size_t>> update_Input = {{block_size, num_edge_features}};
+       std::vector<std::vector<Dim>> update_Input = { { Dim{"num_edges",block_size}, Dim{num_edge_features}} };
        edges_update_block->Initialize();
        edges_update_block->AddInputTensors(update_Input);
        fGC += edges_update_block->GenerateModel(fName);
        next_pos = edges_update_block->GetFunctionBlock()->WriteInitializedTensorsToFile(fName + ".dat");
        fGC += "};\n}\n";
 
-       // the numvoid RModel_ber of output edges features can be smaller, so we need to correct here
-       if(edges_update_block->GetFunctionBlock()->GetTensorShape(edges_update_block->GetFunctionBlock()->GetOutputTensorNames()[0])[1] != num_edge_features) {
-          num_edge_features = edges_update_block->GetFunctionBlock()->GetTensorShape(edges_update_block->GetFunctionBlock()->GetOutputTensorNames()[0])[1];
+       // the number of output edges features can be smaller, so we need to correct here
+       // assume num_edge_features is not a parametric shape
+       auto edges_update_output_shape =  edges_update_block->GetFunctionBlock()->GetDynamicTensorShape(edges_update_block->GetFunctionBlock()->GetOutputTensorNames()[0]);
+       if(!edges_update_output_shape[1].isParam && edges_update_output_shape[1].dim != num_edge_features_input) {
+          num_edge_features = edges_update_output_shape[1].dim;
        }
     }
 
@@ -91,7 +93,7 @@ void RModel_GraphIndependent::Generate() {
       // Generating Infer function definition for Node Update function
       // num_node_features is  the output one
       size_t block_size = num_nodes;
-      std::vector<std::vector<std::size_t>> update_Input = {{block_size, num_node_features}};
+      std::vector<std::vector<Dim>> update_Input = { {Dim{"num_nodes", block_size}, Dim{num_node_features}} };
       nodes_update_block->Initialize();
       nodes_update_block->AddInputTensors(update_Input);
       fGC+=nodes_update_block->GenerateModel(fName,next_pos);
@@ -99,9 +101,9 @@ void RModel_GraphIndependent::Generate() {
       fGC+="};\n}\n";
 
       // we need to correct the output number of node features
-
-      if(nodes_update_block->GetFunctionBlock()->GetTensorShape(nodes_update_block->GetFunctionBlock()->GetOutputTensorNames()[0])[1] != num_node_features) {
-         num_node_features = nodes_update_block->GetFunctionBlock()->GetTensorShape(nodes_update_block->GetFunctionBlock()->GetOutputTensorNames()[0])[1];
+      auto nodes_update_output_shape =  nodes_update_block->GetFunctionBlock()->GetDynamicTensorShape(nodes_update_block->GetFunctionBlock()->GetOutputTensorNames()[0]);
+       if(!nodes_update_output_shape[1].isParam && nodes_update_output_shape[1].dim != num_node_features_input) {
+          num_node_features = nodes_update_output_shape[1].dim;
       }
     }
 
@@ -117,6 +119,12 @@ void RModel_GraphIndependent::Generate() {
 
       // we need to correct the output number of global features
       // global features are in shape[1]
+#if 0
+      auto globals_update_output_shape =  globals_update_block->GetFunctionBlock()->GetDynamicTensorShape(globals_update_block->GetFunctionBlock()->GetOutputTensorNames()[0]);
+       if(!globals_update_output_shape[1].isParam && globals_update_output_shape[1].dim != num_global_features_input) {
+          num_global_features = globals_update_output_shape[1].dim;
+       }
+#endif
       if(globals_update_block->GetFunctionBlock()->GetTensorShape(globals_update_block->GetFunctionBlock()->GetOutputTensorNames()[0])[1] != num_global_features) {
          num_global_features = globals_update_block->GetFunctionBlock()->GetTensorShape(globals_update_block->GetFunctionBlock()->GetOutputTensorNames()[0])[1];
       }
@@ -158,7 +166,7 @@ void RModel_GraphIndependent::Generate() {
               e_size_input + ");\n";
        fGC += "}\n";
 
-       fGC += "auto edgeUpdates = " + edges_update_block->Generate({"fEdgeInputs.data()"}) + "\n";
+       fGC += "auto edgeUpdates = " + edges_update_block->Generate({"n_edges","fEdgeInputs.data()"}) + "\n";
 
        if (num_edge_features != num_edge_features_input) {
           fGC += "\n//  resize edge graph data since output feature size is not equal to input size\n";
@@ -186,7 +194,7 @@ void RModel_GraphIndependent::Generate() {
        fGC += "}\n";
 
        fGC += "auto nodeUpdates = ";
-       fGC += nodes_update_block->Generate({"fNodeInputs.data()"}); // computing updated node attributes
+       fGC += nodes_update_block->Generate({"n_nodes","fNodeInputs.data()"}); // computing updated node attributes
        fGC += "\n";
 
        if (num_node_features != num_node_features_input) {

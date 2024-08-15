@@ -76,7 +76,7 @@ See RooAbsData::plotOn().
 #include "TMath.h"
 #include "Math/Util.h"
 
-using namespace std;
+using std::cout, std::endl, std::string, std::ostream;
 
 ClassImp(RooDataHist);
 
@@ -401,28 +401,28 @@ void RooDataHist::importTH1(const RooArgList& vars, const TH1& histo, double wgt
     zmin = offset[2] ;
   }
 
-  Int_t ix(0);
-  Int_t iy(0);
+  Int_t iX(0);
+  Int_t iY(0);
   Int_t iz(0);
-  for (ix=0 ; ix < xvar->getBins() ; ix++) {
-    xvar->setBin(ix) ;
+  for (iX=0 ; iX < xvar->getBins() ; iX++) {
+    xvar->setBin(iX) ;
     if (yvar) {
-      for (iy=0 ; iy < yvar->getBins() ; iy++) {
-        yvar->setBin(iy) ;
+      for (iY=0 ; iY < yvar->getBins() ; iY++) {
+        yvar->setBin(iY) ;
         if (zvar) {
           for (iz=0 ; iz < zvar->getBins() ; iz++) {
             zvar->setBin(iz) ;
             double bv = doDensityCorrection ? binVolume(vset) : 1;
-            add(vset,bv*histo.GetBinContent(ix+1+xmin,iy+1+ymin,iz+1+zmin)*wgt,bv*TMath::Power(histo.GetBinError(ix+1+xmin,iy+1+ymin,iz+1+zmin)*wgt,2)) ;
+            add(vset,bv*histo.GetBinContent(iX+1+xmin,iY+1+ymin,iz+1+zmin)*wgt,bv*std::pow(histo.GetBinError(iX+1+xmin,iY+1+ymin,iz+1+zmin)*wgt,2)) ;
           }
         } else {
           double bv = doDensityCorrection ? binVolume(vset) : 1;
-          add(vset,bv*histo.GetBinContent(ix+1+xmin,iy+1+ymin)*wgt,bv*TMath::Power(histo.GetBinError(ix+1+xmin,iy+1+ymin)*wgt,2)) ;
+          add(vset,bv*histo.GetBinContent(iX+1+xmin,iY+1+ymin)*wgt,bv*std::pow(histo.GetBinError(iX+1+xmin,iY+1+ymin)*wgt,2)) ;
         }
       }
     } else {
       double bv = doDensityCorrection ? binVolume(vset) : 1 ;
-      add(vset,bv*histo.GetBinContent(ix+1+xmin)*wgt,bv*TMath::Power(histo.GetBinError(ix+1+xmin)*wgt,2)) ;
+      add(vset,bv*histo.GetBinContent(iX+1+xmin)*wgt,bv*std::pow(histo.GetBinError(iX+1+xmin)*wgt,2)) ;
     }
   }
 
@@ -564,31 +564,31 @@ void RooDataHist::importTH1Set(const RooArgList& vars, RooCategory& indexCat, st
   double avgBV = volume / numEntries() ;
 
   Int_t ic(0);
-  Int_t ix(0);
-  Int_t iy(0);
+  Int_t iX(0);
+  Int_t iY(0);
   Int_t iz(0);
   for (ic=0 ; ic < icat->numBins(nullptr) ; ic++) {
     icat->setBin(ic) ;
     histo = hmap[icat->getCurrentLabel()] ;
-    for (ix=0 ; ix < xvar->getBins() ; ix++) {
-      xvar->setBin(ix) ;
+    for (iX=0 ; iX < xvar->getBins() ; iX++) {
+      xvar->setBin(iX) ;
       if (yvar) {
-        for (iy=0 ; iy < yvar->getBins() ; iy++) {
-          yvar->setBin(iy) ;
+        for (iY=0 ; iY < yvar->getBins() ; iY++) {
+          yvar->setBin(iY) ;
           if (zvar) {
             for (iz=0 ; iz < zvar->getBins() ; iz++) {
               zvar->setBin(iz) ;
               double bv = doDensityCorrection ? binVolume(vset)/avgBV : 1;
-              add(vset,bv*histo->GetBinContent(ix+1+xmin,iy+1+ymin,iz+1+zmin)*wgt,bv*TMath::Power(histo->GetBinError(ix+1+xmin,iy+1+ymin,iz+1+zmin)*wgt,2)) ;
+              add(vset,bv*histo->GetBinContent(iX+1+xmin,iY+1+ymin,iz+1+zmin)*wgt,bv*std::pow(histo->GetBinError(iX+1+xmin,iY+1+ymin,iz+1+zmin)*wgt,2)) ;
             }
           } else {
             double bv = doDensityCorrection ? binVolume(vset)/avgBV : 1;
-            add(vset,bv*histo->GetBinContent(ix+1+xmin,iy+1+ymin)*wgt,bv*TMath::Power(histo->GetBinError(ix+1+xmin,iy+1+ymin)*wgt,2)) ;
+            add(vset,bv*histo->GetBinContent(iX+1+xmin,iY+1+ymin)*wgt,bv*std::pow(histo->GetBinError(iX+1+xmin,iY+1+ymin)*wgt,2)) ;
           }
         }
       } else {
         double bv = doDensityCorrection ? binVolume(vset)/avgBV : 1;
-        add(vset,bv*histo->GetBinContent(ix+1+xmin)*wgt,bv*TMath::Power(histo->GetBinError(ix+1+xmin)*wgt,2)) ;
+        add(vset,bv*histo->GetBinContent(iX+1+xmin)*wgt,bv*std::pow(histo->GetBinError(iX+1+xmin)*wgt,2)) ;
       }
     }
   }
@@ -992,30 +992,28 @@ Int_t RooDataHist::getIndex(const RooAbsCollection& coord, bool fast) const {
   return calcTreeIndex(coord, fast);
 }
 
-std::string RooDataHist::declWeightArrayForCodeSquash(RooAbsArg const *klass, RooFit::Detail::CodeSquashContext &ctx,
+std::string RooDataHist::declWeightArrayForCodeSquash(RooFit::Detail::CodeSquashContext &ctx,
                                                       bool correctForBinSize) const
 {
-   std::string weightName = RooFit::Detail::makeValidVarName(klass->GetName()) + "_HistWeights";
-
-   std::string arrayDecl = "double " + weightName + "[" + std::to_string(_arrSize) + "] = {";
-   for (Int_t i = 0; i < _arrSize; i++) {
-      arrayDecl += " " + std::to_string(_wgt[i]) + (correctForBinSize ? " / " + std::to_string(_binv[i]) : "") + ",";
+   std::vector<double> vals(_arrSize);
+   if (correctForBinSize) {
+      for (std::size_t i = 0; i < vals.size(); ++i) {
+         vals[i] = _wgt[i] / _binv[i];
+      }
+   } else {
+      for (std::size_t i = 0; i < vals.size(); ++i) {
+         vals[i] = _wgt[i];
+      }
    }
-   arrayDecl.back() = ' ';
-   arrayDecl += "};\n";
-
-   ctx.addToCodeBody(arrayDecl, true);
-
-   return weightName;
+   return ctx.buildArg(vals);
 }
 
-std::string RooDataHist::calculateTreeIndexForCodeSquash(RooAbsArg const *klass, RooFit::Detail::CodeSquashContext &ctx,
+std::string RooDataHist::calculateTreeIndexForCodeSquash(RooAbsArg const * /*klass*/, RooFit::Detail::CodeSquashContext &ctx,
                                                          const RooAbsCollection &coords, bool reverse) const
 {
    assert(coords.size() == _vars.size());
 
-   std::string idxName = "idx_" + ctx.getTmpVarName();
-   ctx.addToCodeBody(klass, "unsigned int " + idxName + " = 0;\n");
+   std::string code;
    int idxMult = 1;
 
    for (std::size_t i = 0; i < _vars.size(); ++i) {
@@ -1036,16 +1034,16 @@ std::string RooDataHist::calculateTreeIndexForCodeSquash(RooAbsArg const *klass,
          return "";
       }
 
-      std::string const &bin = ctx.buildCall("RooFit::Detail::EvaluateFuncs::getUniformBinning", binning->lowBound(),
+      std::string const &bin = ctx.buildCall("RooFit::Detail::MathFuncs::getUniformBinning", binning->lowBound(),
                                              binning->highBound(), *theVar, binning->numBins());
-      ctx.addToCodeBody(klass, idxName + " += " + std::to_string(idxMult) + " * " + bin + ";\n");
+      code += " + " + std::to_string(idxMult) + " * " + bin;
 
       // Use RooAbsLValue here because it also generalized to categories, which
       // is useful in the future. dynamic_cast because it's a cross-cast.
       idxMult *= dynamic_cast<RooAbsLValue const *>(internalVar)->numBins();
    }
 
-   return idxName;
+   return "(" + code + ")";
 }
 
 ////////////////////////////////////////////////////////////////////////////////

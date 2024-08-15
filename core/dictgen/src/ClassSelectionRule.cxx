@@ -157,6 +157,11 @@ void ClassSelectionRule::SetRequestedVersionNumber(int version)
    fRequestedVersionNumber = version;
 }
 
+void ClassSelectionRule::SetRequestedRNTupleSplitMode(int splitMode)
+{
+   fRequestedRNTupleSplitMode = splitMode;
+}
+
 bool ClassSelectionRule::RequestOnlyTClass() const
 {
    return fRequestOnlyTClass;
@@ -175,4 +180,9 @@ bool ClassSelectionRule::RequestPrivate() const
 int ClassSelectionRule::RequestedVersionNumber() const
 {
    return fRequestedVersionNumber;
+}
+
+int ClassSelectionRule::RequestedRNTupleSplitMode() const
+{
+   return fRequestedRNTupleSplitMode;
 }

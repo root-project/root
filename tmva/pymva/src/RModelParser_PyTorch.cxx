@@ -398,7 +398,7 @@ RModel Parse(std::string filename, std::vector<std::vector<size_t>> inputShapes,
     PyRunString("import torch",fGlobalNS,fLocalNS);
     PyRunString("print('Torch Version: '+torch.__version__)",fGlobalNS,fLocalNS);
     PyRunString("from torch.onnx.utils import _model_to_graph",fGlobalNS,fLocalNS);
-    PyRunString("from torch.onnx.symbolic_helper import _set_onnx_shape_inference",fGlobalNS,fLocalNS);
+    //PyRunString("from torch.onnx.symbolic_helper import _set_onnx_shape_inference",fGlobalNS,fLocalNS);
     PyRunString(TString::Format("model= torch.jit.load('%s')",filename.c_str()),fGlobalNS,fLocalNS);
     PyRunString("globals().update(locals())",fGlobalNS,fLocalNS);
     PyRunString("model.cpu()",fGlobalNS,fLocalNS);
@@ -416,7 +416,7 @@ RModel Parse(std::string filename, std::vector<std::vector<size_t>> inputShapes,
 
 
     //Getting the ONNX graph from model using the dummy inputs and example outputs
-    PyRunString("_set_onnx_shape_inference(True)",fGlobalNS,fLocalNS);
+    //PyRunString("_set_onnx_shape_inference(True)",fGlobalNS,fLocalNS);
     PyRunString("graph=_model_to_graph(model,dummyInputs)",fGlobalNS,fLocalNS);
 
 

@@ -35,7 +35,7 @@ The combination only 'reject' can be chosen to be visible or not visible
 #include <string>
 #include <vector>
 
-using namespace std ;
+using std::endl, std::vector, std::string;
 
 ClassImp(RooMultiBinomial);
 

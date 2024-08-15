@@ -39,10 +39,15 @@ class RooRealVar;
 class RooArgSet;
 class RooPlot;
 class RooDataSet;
+namespace RooFit {
+namespace TestStatistics {
+class LikelihoodGradientJob;
+}
+} // namespace RooFit
 
 class RooMinimizer : public TObject {
 public:
-   /// Config argument to RooMinimizer ctor
+   /// Config argument to RooMinimizer constructor.
    struct Config {
 
       Config() {}
@@ -55,23 +60,23 @@ public:
       int offsetting = -1;         // RooAbsMinimizerFcn config
       const char *logf = nullptr;  // RooAbsMinimizerFcn config
 
-      // RooAbsMinimizerFcn config that can only be set in ctor, 0 means no parallelization (default),
+      // RooAbsMinimizerFcn config that can only be set in constructor, 0 means no parallelization (default),
       // -1 is parallelization with the number of workers controlled by RooFit::MultiProcess which
       // defaults to the number of available processors, n means parallelization with n CPU's
       int parallelize = 0;
 
-      // Experimental: RooAbsMinimizerFcn config that can only be set in ctor
+      // Experimental: RooAbsMinimizerFcn config that can only be set in constructor
       // argument is ignored when parallelize is 0
       bool enableParallelGradient = true;
 
-      // Experimental: RooAbsMinimizerFcn config that can only be set in ctor
+      // Experimental: RooAbsMinimizerFcn config that can only be set in constructor
       // argument is ignored when parallelize is 0
       bool enableParallelDescent = false;
 
-      bool verbose = false;           // local config
-      bool profile = false;           // local config
-      bool timingAnalysis = false;    // local config
-      std::string minimizerType;      // local config
+      bool verbose = false;        // local config
+      bool profile = false;        // local config
+      bool timingAnalysis = false; // local config
+      std::string minimizerType;   // local config
    private:
       int getDefaultWorkers();
    };
@@ -136,16 +141,10 @@ public:
    static RooFit::OwningPtr<RooFitResult> lastMinuitFit();
    static RooFit::OwningPtr<RooFitResult> lastMinuitFit(const RooArgList &varList);
 
-   void saveStatus(const char *label, int status)
-   {
-      _statusHistory.emplace_back(label, status);
-   }
+   void saveStatus(const char *label, int status) { _statusHistory.emplace_back(label, status); }
 
    /// Clears the Minuit status history.
-   void clearStatusHistory()
-   {
-      _statusHistory.clear();
-   }
+   void clearStatusHistory() { _statusHistory.clear(); }
 
    int evalCounter() const;
    void zeroEvalCount();
@@ -162,6 +161,7 @@ public:
 private:
    friend class RooAbsMinimizerFcn;
    friend class RooMinimizerFcn;
+   friend class RooFit::TestStatistics::LikelihoodGradientJob;
 
    std::unique_ptr<RooAbsReal::EvalErrorContext> makeEvalErrorContext() const;
 
@@ -172,12 +172,15 @@ private:
 
    std::ofstream *logfile();
    double &maxFCN();
+   double &fcnOffset() const;
 
    bool fitFcn() const;
 
    // constructor helper functions
    void initMinimizerFirstPart();
    void initMinimizerFcnDependentPart(double defaultErrorLevel);
+
+   void determineStatus(bool fitterReturnValue);
 
    int _status = -99;
    bool _profileStart = false;

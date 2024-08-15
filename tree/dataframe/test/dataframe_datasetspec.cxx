@@ -1,10 +1,5 @@
 #include <gtest/gtest.h>
 
-// Backward compatibility for gtest version < 1.10.0
-#ifndef INSTANTIATE_TEST_SUITE_P
-#define INSTANTIATE_TEST_SUITE_P INSTANTIATE_TEST_CASE_P
-#endif
-
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RVec.hxx>
 #include <ROOT/RDFHelpers.hxx>
@@ -712,6 +707,44 @@ TEST(RDatasetSpecTest, Clusters)
    }
 }
 #endif
+
+TEST_P(RDatasetSpecTest, TreeInSubdir)
+{
+   class FileRAII {
+   private:
+      std::string fPath;
+
+   public:
+      explicit FileRAII(const std::string &path) : fPath(path) {}
+      FileRAII(const FileRAII &) = delete;
+      FileRAII &operator=(const FileRAII &) = delete;
+      ~FileRAII() { std::remove(fPath.c_str()); }
+      auto GetPath() const { return fPath.c_str(); }
+   };
+   FileRAII fraii("definepersample_treeinsubdir.root");
+   // Write TTree in TFile subdirectory
+   {
+      TFile f{fraii.GetPath(), "recreate"};
+      auto *outDir = f.mkdir("subdir");
+
+      outDir->cd();
+      int event{42};
+      TTree tree("T", "T");
+      tree.Branch("event", &event, "event/I");
+      tree.Fill();
+      tree.SetDirectory(outDir);
+      f.Write();
+   }
+
+   RDatasetSpec spec;
+   spec.AddSample({"mysample", {{"subdir/T", fraii.GetPath()}}});
+   ROOT::RDataFrame df{spec};
+   auto df_sample =
+      df.DefinePerSample("sample_id", [](unsigned int, const ROOT::RDF::RSampleInfo &id) { return id.AsString(); });
+   auto sample_ids = df_sample.Take<std::string>("sample_id");
+   EXPECT_EQ(sample_ids->size(), 1);
+   EXPECT_EQ(sample_ids->at(0), fraii.GetPath() + std::string("/subdir/T"));
+}
 
 // instantiate single-thread tests
 INSTANTIATE_TEST_SUITE_P(Seq, RDatasetSpecTest, ::testing::Values(false));

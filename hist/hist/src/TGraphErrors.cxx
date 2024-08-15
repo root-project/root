@@ -371,6 +371,14 @@ TGraphErrors::~TGraphErrors()
    delete [] fEY;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Add a point with errorbars to the graph.
+
+void TGraphErrors::AddPointError(Double_t x, Double_t y, Double_t ex, Double_t ey)
+{
+   AddPoint(x, y); // fNpoints will increase automatically
+   SetPointError(fNpoints - 1, ex, ey);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Apply function to all the data points \f$ y = f(x,y) \f$.

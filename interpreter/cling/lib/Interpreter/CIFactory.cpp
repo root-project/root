@@ -396,6 +396,8 @@ namespace {
 //    Opts.StackProtector = 0;
 #endif // _MSC_VER
 
+    Opts.IncrementalExtensions = 1;
+
     Opts.Exceptions = 1;
     if (Opts.CPlusPlus) {
       Opts.CXXExceptions = 1;
@@ -442,8 +444,8 @@ namespace {
       Opts.MSVCCompat = 1;
       Opts.ThreadsafeStatics = 0; // FIXME: this is removing the thread guard around static init!
 #endif
-      // Should fix http://llvm.org/bugs/show_bug.cgi?id=10528
-      Opts.DelayedTemplateParsing = 1;
+      // Disable delayed template parsing, it is "a deprecated technique".
+      Opts.DelayedTemplateParsing = 0;
     } else {
       Opts.MicrosoftExt = 0;
     }
@@ -610,7 +612,7 @@ namespace {
       llvm::sys::path::append(systemLoc, modulemapFilename);
       // Check if we need to mount a custom modulemap. We may have it, for
       // instance when we are on osx or using libc++.
-      if (AllowModulemapOverride &&llvm::sys::fs::exists(systemLoc.str())) {
+      if (AllowModulemapOverride && llvm::sys::fs::exists(systemLoc.str())) {
         if (HSOpts.Verbose)
           cling::log() << "Loading '" << systemLoc.str() << "'\n";
 
@@ -652,6 +654,8 @@ namespace {
         ModuleMapFiles.push_back(systemLoc.str().str());
     };
 
+    const llvm::Triple &Triple = CI.getTarget().getTriple();
+
     if (!HSOpts.ImplicitModuleMaps) {
       // Register the modulemap files.
       llvm::SmallString<512> resourceDirLoc(HSOpts.ResourceDir);
@@ -660,17 +664,20 @@ namespace {
       llvm::SmallString<512> clingModuleMap(clingIncLoc);
       llvm::sys::path::append(clingModuleMap, "module.modulemap");
       ModuleMapFiles.push_back(clingModuleMap.str().str());
-#ifdef __APPLE__
-      llvm::SmallString<512> libcModuleMap(cIncLoc);
-      llvm::sys::path::append(libcModuleMap, "module.modulemap");
-      ModuleMapFiles.push_back(libcModuleMap.str().str());
-      llvm::SmallString<512> stdModuleMap(stdIncLoc);
-      llvm::sys::path::append(stdModuleMap, "module.modulemap");
-      ModuleMapFiles.push_back(stdModuleMap.str().str());
-#endif // __APPLE__
+      if (Triple.isMacOSX()) {
+        llvm::SmallString<512> libcModuleMap(cIncLoc);
+        llvm::sys::path::append(libcModuleMap, "module.modulemap");
+        ModuleMapFiles.push_back(libcModuleMap.str().str());
+        if (CI.getTarget().getSDKVersion() < VersionTuple(14, 4)) {
+          llvm::SmallString<512> stdModuleMap(stdIncLoc);
+          llvm::sys::path::append(stdModuleMap, "module.modulemap");
+          ModuleMapFiles.push_back(stdModuleMap.str().str());
+        }
+      }
     }
 
     std::string MOverlay;
+
 #ifdef _WIN32
     maybeAppendOverlayEntry(vcIncLoc.str(), "vcruntime.modulemap",
                             clingIncLoc.str().str(), MOverlay,
@@ -688,6 +695,12 @@ namespace {
                             clingIncLoc.str().str(), MOverlay,
                             /*RegisterModuleMap=*/ true,
                             /*AllowModulemapOverride=*/ false);
+#elif __APPLE__
+    if (Triple.isMacOSX() && CI.getTarget().getSDKVersion() >= VersionTuple(14, 4))
+      maybeAppendOverlayEntry(stdIncLoc.str(), "std_darwin.modulemap",
+                              clingIncLoc.str().str(), MOverlay,
+                              /*RegisterModuleMap=*/ true,
+                              /*AllowModulemapOverride=*/ false);
 #else
     maybeAppendOverlayEntry(cIncLoc.str(), "libc.modulemap",
                             clingIncLoc.str().str(), MOverlay,
@@ -1349,6 +1362,11 @@ namespace {
     // Keep frame pointer to make JIT stack unwinding reliable for profiling
     if (profilingEnabled)
       argvCompile.push_back("-fno-omit-frame-pointer");
+#endif
+
+#ifdef __cpp_sized_deallocation
+      // Propagate the setting of the compiler to the interpreter
+      argvCompile.push_back("-fsized-deallocation");
 #endif
 
     // Disable optimizations and keep frame pointer when debugging, overriding

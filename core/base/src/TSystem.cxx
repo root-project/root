@@ -259,6 +259,18 @@ const char *TSystem::GetError()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return cryptographic random number
+/// Fill provided buffer with random values
+/// Returns number of bytes written to buffer or -1 in case of error
+
+Int_t TSystem::GetCryptoRandom(void * /* buf */, Int_t /* len */)
+{
+   Error("GetCryptoRandom", "Not implemented");
+   return -1;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Static function returning system error number.
 
 Int_t TSystem::GetErrno()
@@ -1477,12 +1489,14 @@ const char *TSystem::TempDirectory() const
 /// Create a secure temporary file by appending a unique
 /// 6 letter string to base. The file will be created in
 /// a standard (system) directory or in the directory
-/// provided in dir. The full filename is returned in base
+/// provided in dir. Optionally one can provide suffix
+/// append to the final name - like extension ".txt" or ".html".
+/// The full filename is returned in base
 /// and a filepointer is returned for safely writing to the file
 /// (this avoids certain security problems). Returns 0 in case
 /// of error.
 
-FILE *TSystem::TempFileName(TString &, const char *)
+FILE *TSystem::TempFileName(TString &, const char *, const char *)
 {
    AbstractMethod("TempFileName");
    return nullptr;
@@ -3325,7 +3339,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 
    // FIXME: Switch to generic polymorphic when we make c++14 default.
    auto ForeachSharedLibDep = [](const char *lib, std::function<bool(const char *)> f) {
-      using namespace std;
+      using std::string, std::vector, std::istringstream, std::istream_iterator;
       string deps = gInterpreter->GetSharedLibDeps(lib, /*tryDyld*/ true);
       istringstream iss(deps);
       vector<string> libs{istream_iterator<std::string>{iss}, istream_iterator<string>{}};

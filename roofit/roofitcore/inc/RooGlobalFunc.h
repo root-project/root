@@ -52,7 +52,7 @@ The namespace RooFit contains mostly switches that change the behaviour of funct
 
 These switches are documented with the relevant functions, e.g. RooAbsPdf::fitTo().
 For an introduction to RooFit (not the namespace), check the [user's guides](https://root.cern/root-user-guides-and-manuals),
-[courses](https://root.cern/courses) or [the RooFit chapter of the Manual](https://root.cern/manual/roofit/).
+[courses](https://root.cern/learn/courses) or [the RooFit chapter of the Manual](https://root.cern/manual/roofit/).
 */
 namespace RooFit {
 
@@ -467,6 +467,31 @@ inline std::unique_ptr<RooLinkedList> createCmdList(RooLinkedList const *cmdList
    }
    return cmdListCopy;
 }
+
+// RooFit-internal helper struct to build a map object that only uses
+// std::vector, which can be implicitly converted to std::map in C++. Used to
+// avoid std::map in pythonizations.
+template <class Key_t, class Val_t>
+struct FlatMap {
+   std::vector<Key_t> keys;
+   std::vector<Val_t> vals;
+};
+
+template <class Key_t, class Val_t>
+auto flatMapToStdMap(FlatMap<Key_t, Val_t> const& flatMap) {
+   std::map<Key_t, Val_t> out;
+   for (std::size_t i = 0; i < flatMap.keys.size(); ++i) {
+      out[flatMap.keys[i]] = flatMap.vals[i];
+   }
+   return out;
+}
+
+// Internal variant of Slice(), Import(), and Link(), that take flat maps instad of std::map.
+RooCmdArg SliceFlatMap(FlatMap<RooCategory *, std::string> const &args);
+RooCmdArg ImportFlatMap(FlatMap<std::string, RooDataHist *> const &args);
+RooCmdArg ImportFlatMap(FlatMap<std::string, TH1 *> const &args);
+RooCmdArg ImportFlatMap(FlatMap<std::string, RooDataSet *> const &args);
+RooCmdArg LinkFlatMap(FlatMap<std::string, RooAbsData *> const &args);
 
 } // namespace Detail
 

@@ -1,14 +1,22 @@
 # ROOT requirements for third-party Python packages
 
 # PyROOT: Interoperability with numpy arrays
+numpy
+pandas
+
+# TMVA: SOFIE
+graph_nets
+onnx
+dm-sonnet # used for GNNs
+
 # TMVA: PyMVA interfaces
-numpy>=1.4.1
+scikit-learn
+tensorflow<2.16 ; python_version < "3.12"
+torch
+xgboost
 
 # PyROOT: ROOT.Numba.Declare decorator
-numba>=0.47.0 ; python_version < "3.11" # See https://github.com/numba/numba/issues/8304
-numba>=0.57.0 ; python_version >= "3.11" and python_version < "3.12"
-# Not yet released.
-# numba>=0.59 ; python_version >= "3.12"
+numba>=0.48
 cffi>=1.9.1
 
 # Notebooks: ROOT C++ kernel
@@ -17,5 +25,11 @@ metakernel>=0.20.0
 
 # Distributed RDataFrame
 pyspark>=2.4 # Spark backend
-dask>=2022.08.1 ; python_version >= "3.8" # Dask backend
-distributed>=2022.08.1 ; python_version >= "3.8" # Dask backend
+dask>=2022.08.1 # Dask backend
+distributed>=2022.08.1 # Dask backend
+
+# JsMVA: Jupyter notebook magic for TMVA
+ipywidgets
+
+# Look for CPU-only versions of PyTorch to avoid pulling CUDA in the CI docker images.
+-f https://download.pytorch.org/whl/cpu/torch_stable.html

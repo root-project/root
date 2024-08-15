@@ -15,8 +15,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <ROOT/RNTupleOptions.hxx>
 #include <ROOT/RNTupleModel.hxx>
+#include <ROOT/RNTupleWriteOptions.hxx>
 #include <ROOT/RNTupleZip.hxx>
 #include <ROOT/RPageSinkBuf.hxx>
 
@@ -81,7 +81,12 @@ void ROOT::Experimental::Internal::RPageSinkBuf::ConnectFields(const std::vector
    fBufferedColumns.resize(fNColumns);
 }
 
-void ROOT::Experimental::Internal::RPageSinkBuf::Init(RNTupleModel &model)
+const ROOT::Experimental::RNTupleDescriptor &ROOT::Experimental::Internal::RPageSinkBuf::GetDescriptor() const
+{
+   return fInnerSink->GetDescriptor();
+}
+
+void ROOT::Experimental::Internal::RPageSinkBuf::InitImpl(RNTupleModel &model)
 {
    ConnectFields(model.GetFieldZero().GetSubFields(), 0U);
 
@@ -124,6 +129,18 @@ void ROOT::Experimental::Internal::RPageSinkBuf::UpdateSchema(const RNTupleModel
    fInnerSink->UpdateSchema(innerChangeset, firstEntry);
 }
 
+void ROOT::Experimental::Internal::RPageSinkBuf::UpdateExtraTypeInfo(const RExtraTypeInfoDescriptor &extraTypeInfo)
+{
+   RPageSink::RSinkGuard g(fInnerSink->GetSinkGuard());
+   Detail::RNTuplePlainTimer timer(fCounters->fTimeWallCriticalSection, fCounters->fTimeCpuCriticalSection);
+   fInnerSink->UpdateExtraTypeInfo(extraTypeInfo);
+}
+
+void ROOT::Experimental::Internal::RPageSinkBuf::CommitSuppressedColumn(ColumnHandle_t columnHandle)
+{
+   fSuppressedColumns.emplace_back(columnHandle);
+}
+
 void ROOT::Experimental::Internal::RPageSinkBuf::CommitPage(ColumnHandle_t columnHandle, const RPage &page)
 {
    auto colId = columnHandle.fPhysicalId;
@@ -134,14 +151,20 @@ void ROOT::Experimental::Internal::RPageSinkBuf::CommitPage(ColumnHandle_t colum
    // valid until the return value of DrainBufferedPages() goes out of scope in
    // CommitCluster().
    auto &zipItem = fBufferedColumns.at(colId).BufferPage(columnHandle);
-   zipItem.AllocateSealedPageBuf(page.GetNBytes());
+   zipItem.AllocateSealedPageBuf(page.GetNBytes() + GetWriteOptions().GetEnablePageChecksums() * kNBytesPageChecksum);
    R__ASSERT(zipItem.fBuf);
    auto &sealedPage = fBufferedColumns.at(colId).RegisterSealedPage();
 
    if (!fTaskScheduler) {
       // Seal the page right now, avoiding the allocation and copy, but making sure that the page buffer is not aliased.
-      sealedPage =
-         SealPage(page, element, GetWriteOptions().GetCompression(), zipItem.fBuf.get(), /*allowAlias=*/false);
+      RSealPageConfig config;
+      config.fPage = &page;
+      config.fElement = &element;
+      config.fCompressionSetting = GetWriteOptions().GetCompression();
+      config.fWriteChecksum = GetWriteOptions().GetEnablePageChecksums();
+      config.fAllowAlias = false;
+      config.fBuffer = zipItem.fBuf.get();
+      sealedPage = SealPage(config);
       zipItem.fSealedPage = &sealedPage;
       return;
    }
@@ -156,7 +179,14 @@ void ROOT::Experimental::Internal::RPageSinkBuf::CommitPage(ColumnHandle_t colum
    // Thread safety: Each thread works on a distinct zipItem which owns its
    // compression buffer.
    fTaskScheduler->AddTask([this, &zipItem, &sealedPage, &element] {
-      sealedPage = SealPage(zipItem.fPage, element, GetWriteOptions().GetCompression(), zipItem.fBuf.get());
+      RSealPageConfig config;
+      config.fPage = &zipItem.fPage;
+      config.fElement = &element;
+      config.fCompressionSetting = GetWriteOptions().GetCompression();
+      config.fWriteChecksum = GetWriteOptions().GetEnablePageChecksums();
+      config.fAllowAlias = true;
+      config.fBuffer = zipItem.fBuf.get();
+      sealedPage = SealPage(config);
       zipItem.fSealedPage = &sealedPage;
    });
 }
@@ -190,6 +220,10 @@ std::uint64_t ROOT::Experimental::Internal::RPageSinkBuf::CommitCluster(ROOT::Ex
       Detail::RNTuplePlainTimer timer(fCounters->fTimeWallCriticalSection, fCounters->fTimeCpuCriticalSection);
       fInnerSink->CommitSealedPageV(toCommit);
 
+      for (auto handle : fSuppressedColumns)
+         fInnerSink->CommitSuppressedColumn(handle);
+      fSuppressedColumns.clear();
+
       nbytes = fInnerSink->CommitCluster(nNewEntries);
    }
 
@@ -205,7 +239,7 @@ void ROOT::Experimental::Internal::RPageSinkBuf::CommitClusterGroup()
    fInnerSink->CommitClusterGroup();
 }
 
-void ROOT::Experimental::Internal::RPageSinkBuf::CommitDataset()
+void ROOT::Experimental::Internal::RPageSinkBuf::CommitDatasetImpl()
 {
    RPageSink::RSinkGuard g(fInnerSink->GetSinkGuard());
    Detail::RNTuplePlainTimer timer(fCounters->fTimeWallCriticalSection, fCounters->fTimeCpuCriticalSection);

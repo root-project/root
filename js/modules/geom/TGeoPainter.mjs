@@ -1,15 +1,15 @@
 import { httpRequest, browser, source_dir, settings, internals, constants, create, clone,
          findFunction, isBatchMode, isNodeJs, getDocument, isObject, isFunc, isStr, postponePromise, getPromise,
          prROOT, clTNamed, clTList, clTAxis, clTObjArray, clTPolyMarker3D, clTPolyLine3D,
-         clTGeoVolume, clTGeoNode, clTGeoNodeMatrix, nsREX, kInspect } from '../core.mjs';
+         clTGeoVolume, clTGeoNode, clTGeoNodeMatrix, nsREX, nsSVG, kInspect } from '../core.mjs';
 import { REVISION, DoubleSide, FrontSide,
          Color, Vector2, Vector3, Matrix4, Object3D, Box3, Group, Plane, PlaneHelper,
          Euler, Quaternion, Mesh, InstancedMesh, MeshLambertMaterial, MeshBasicMaterial,
          LineSegments, LineBasicMaterial, LineDashedMaterial, BufferAttribute,
-         TextGeometry, BufferGeometry, BoxGeometry, CircleGeometry, SphereGeometry,
+         BufferGeometry, BoxGeometry, CircleGeometry, SphereGeometry,
          Scene, Fog, OrthographicCamera, PerspectiveCamera,
-         DirectionalLight, AmbientLight, HemisphereLight,
-         EffectComposer, RenderPass, UnrealBloomPass } from '../three.mjs';
+         DirectionalLight, AmbientLight, HemisphereLight } from '../three.mjs';
+import { EffectComposer, RenderPass, UnrealBloomPass, TextGeometry } from '../three_addons.mjs';
 import { showProgress, injectStyle, ToolbarIcons } from '../gui/utils.mjs';
 import { GUI } from '../gui/lil-gui.mjs';
 import { assign3DHandler, disposeThreejsObject, createOrbitControl,
@@ -17,8 +17,7 @@ import { assign3DHandler, disposeThreejsObject, createOrbitControl,
          createRender3D, beforeRender3D, afterRender3D, getRender3DKind, cleanupRender3D,
          HelveticerRegularFont } from '../base/base3d.mjs';
 import { getColor, getRootColors } from '../base/colors.mjs';
-import { DrawOptions } from '../base/BasePainter.mjs';
-import { ObjectPainter } from '../base/ObjectPainter.mjs';
+import { ObjectPainter, DrawOptions } from '../base/ObjectPainter.mjs';
 import { createMenu, closeMenu } from '../gui/menu.mjs';
 import { TAxisPainter } from '../gpad/TAxisPainter.mjs';
 import { ensureTCanvas } from '../gpad/TCanvasPainter.mjs';
@@ -609,7 +608,7 @@ class TGeoPainter extends ObjectPainter {
       this.cleanup(true);
    }
 
-   /** @summary Function callled by framework when dark mode is changed
+   /** @summary Function called by framework when dark mode is changed
      * @private */
    changeDarkMode(mode) {
       if ((this.ctrl.background === '#000000') || (this.ctrl.background === '#ffffff'))
@@ -1123,7 +1122,7 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary Fill context menu */
    fillContextMenu(menu) {
-      menu.add('header: Draw options');
+      menu.header('Draw options');
 
       menu.addchk(this.ctrl.update_browser, 'Browser update', () => {
          this.ctrl.update_browser = !this.ctrl.update_browser;
@@ -1131,11 +1130,11 @@ class TGeoPainter extends ObjectPainter {
       });
       menu.addchk(this.ctrl.show_controls, 'Show Controls', () => this.showControlGui('toggle'));
 
-      menu.add('sub:Show axes', () => this.setAxesDraw('toggle'));
+      menu.sub('Show axes', () => this.setAxesDraw('toggle'));
       menu.addchk(this.ctrl._axis === 0, 'off', 0, arg => this.setAxesDraw(parseInt(arg)));
       menu.addchk(this.ctrl._axis === 1, 'side', 1, arg => this.setAxesDraw(parseInt(arg)));
       menu.addchk(this.ctrl._axis === 2, 'center', 2, arg => this.setAxesDraw(parseInt(arg)));
-      menu.add('endsub:');
+      menu.endsub();
 
       if (this.geo_manager)
          menu.addchk(this.ctrl.showtop, 'Show top volume', () => this.setShowTop(!this.ctrl.showtop));
@@ -1145,7 +1144,7 @@ class TGeoPainter extends ObjectPainter {
       if (!this.getCanvPainter())
          menu.addchk(this.isTooltipAllowed(), 'Show tooltips', () => this.setTooltipAllowed('toggle'));
 
-      menu.add('sub:Highlight');
+      menu.sub('Highlight');
 
       menu.addchk(!this.ctrl.highlight, 'Off', () => {
          this.ctrl.highlight = false;
@@ -1162,16 +1161,16 @@ class TGeoPainter extends ObjectPainter {
          this.changedHighlight();
       });
 
-      menu.add('separator');
+      menu.separator();
 
       menu.addchk(this.ctrl.highlight_scene, 'Scene', flag => {
          this.ctrl.highlight_scene = flag;
          this.changedHighlight();
       });
 
-      menu.add('endsub:');
+      menu.endsub();
 
-      menu.add('sub:Camera');
+      menu.sub('Camera');
       menu.add('Reset position', () => this.focusCamera());
       if (!this.ctrl.project)
           menu.addchk(this.ctrl.rotate, 'Autorotate', () => this.setAutoRotate(!this.ctrl.rotate));
@@ -1187,25 +1186,25 @@ class TGeoPainter extends ObjectPainter {
             });
          }
 
-         menu.add('sub:Kind');
+         menu.sub('Kind');
          this.ctrl.cameraKindItems.forEach(item =>
             menu.addchk(this.ctrl.camera_kind === item.value, item.name, item.value, arg => {
                this.ctrl.camera_kind = arg;
                this.changeCamera();
             }));
-         menu.add('endsub:');
+         menu.endsub();
 
          if (this.isOrthoCamera()) {
-            menu.add('sub:Overlay');
+            menu.sub('Overlay');
             this.ctrl.cameraOverlayItems.forEach(item =>
                menu.addchk(this.ctrl.camera_overlay === item.value, item.name, item.value, arg => {
                   this.ctrl.camera_overlay = arg;
                   this.changeCamera();
                }));
-            menu.add('endsub:');
+            menu.endsub();
          }
       }
-      menu.add('endsub:');
+      menu.endsub();
 
       menu.addchk(this.ctrl.select_in_view, 'Select in view', () => {
          this.ctrl.select_in_view = !this.ctrl.select_in_view;
@@ -1372,7 +1371,7 @@ class TGeoPainter extends ObjectPainter {
          this.drawAxesAndOverlay();
    }
 
-   /** @summary Should be called when autorotate property changed */
+   /** @summary Should be called when auto rotate property changed */
    changedAutoRotate() {
       this.autorotate(2.5);
    }
@@ -1645,7 +1644,7 @@ class TGeoPainter extends ObjectPainter {
       }
    }
 
-   /** @summary show material docu */
+   /** @summary show material documentation from https://threejs.org  */
    showMaterialDocu() {
       const cfg = this.ctrl.getMaterialCfg();
       if (cfg?.name && typeof window !== 'undefined')
@@ -1768,7 +1767,7 @@ class TGeoPainter extends ObjectPainter {
           else {
             const many = (numnodes + numitems) > 1;
 
-            if (many) menu.add('header:' + ((numitems > 0) ? 'Items' : 'Nodes'));
+            if (many) menu.header((numitems > 0) ? 'Items' : 'Nodes');
 
             for (let n = 0; n < intersects.length; ++n) {
                const obj = intersects[n].object,
@@ -1825,7 +1824,7 @@ class TGeoPainter extends ObjectPainter {
                      menu.painter.render3D();
                   }, 'Hide this physical node');
 
-                  if (many) menu.add('endsub:');
+                  if (many) menu.endsub();
 
                   continue;
                }
@@ -1892,7 +1891,7 @@ class TGeoPainter extends ObjectPainter {
                   }
                }
 
-               if (many) menu.add('endsub:');
+               if (many) menu.endsub();
             }
          }
          menu.show();
@@ -1904,7 +1903,7 @@ class TGeoPainter extends ObjectPainter {
       if (!intersects?.length)
          return intersects;
 
-      // check redirections
+      // check redirection
       for (let n = 0; n < intersects.length; ++n) {
          if (intersects[n].object.geo_highlight)
             intersects[n].object = intersects[n].object.geo_highlight;
@@ -2112,7 +2111,7 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary Add orbit control */
    addOrbitControls() {
-      if (this._controls || !this._webgl || this.isBatchMode() || this.superimpose) return;
+      if (this._controls || !this._webgl || this.isBatchMode() || this.superimpose || isNodeJs()) return;
 
       if (!this.getCanvPainter())
          this.setTooltipAllowed(settings.Tooltip);
@@ -2657,13 +2656,13 @@ class TGeoPainter extends ObjectPainter {
          if (enabled) plights.push(light);
       }
 
-      // keep light power of all soources constant
+      // keep light power of all sources constant
       plights.forEach(ll => { ll.power = p*4*Math.PI/plights.length; });
 
       if (need_render) this.render3D();
    }
 
-   /** @summary Returns true if orthogarphic camera is used */
+   /** @summary Returns true if orthographic camera is used */
    isOrthoCamera() {
       return this.ctrl.camera_kind.indexOf('ortho') === 0;
    }
@@ -2783,9 +2782,9 @@ class TGeoPainter extends ObjectPainter {
          this.createSpecialEffects();
 
          if (this._fit_main_area && !this._webgl) {
-            // create top-most SVG for geomtery drawings
+            // create top-most SVG for geometry drawings
             const doc = getDocument(),
-                  svg = doc.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                  svg = doc.createElementNS(nsSVG, 'svg');
             svg.setAttribute('width', w);
             svg.setAttribute('height', h);
             svg.appendChild(this._renderer.jsroot_dom);
@@ -2942,7 +2941,7 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary Place camera to default position,
      * @param arg - true forces camera readjustment, 'first' is called when suppose to be first after complete drawing
-     * @param keep_zoom - tries to keep zomming factor of the camera */
+     * @param keep_zoom - tries to keep zooming factor of the camera */
    adjustCameraPosition(arg, keep_zoom) {
       if (!this._toplevel || this.superimpose) return;
 
@@ -3131,7 +3130,7 @@ class TGeoPainter extends ObjectPainter {
             this._camera.left = m - szy * screen_ratio / 2;
             this._camera.right = m + szy * screen_ratio / 2;
          } else {
-            // screen heigher than actual geometry
+            // screen higher than actual geometry
             const m = (this._camera.top + this._camera.bottom) / 2;
             this._camera.top = m + szx / screen_ratio / 2;
             this._camera.bottom = m - szx / screen_ratio / 2;
@@ -3191,7 +3190,7 @@ class TGeoPainter extends ObjectPainter {
          this.focusCamera(this._clones.resolveStack(stack, true), false);
    }
 
-   /** @summary focus camera on speicifed position */
+   /** @summary focus camera on specified position */
    focusCamera(focus, autoClip) {
       if (this.ctrl.project || this.isOrthoCamera()) {
          this.adjustCameraPosition(true);
@@ -3282,7 +3281,7 @@ class TGeoPainter extends ObjectPainter {
    //   this._controls.update();
    }
 
-   /** @summary actiavte auto rotate */
+   /** @summary activate auto rotate */
    autorotate(speed) {
       const rotSpeed = (speed === undefined) ? 2.0 : speed;
       let last = new Date();
@@ -3312,7 +3311,7 @@ class TGeoPainter extends ObjectPainter {
    }
 
    /** @summary Drawing with 'count' option
-     * @desc Scans hieararchy and check for unique nodes
+     * @desc Scans hierarchy and check for unique nodes
      * @return {Promise} with object drawing ready */
    async drawCount(unqievis, clonetm) {
       const makeTime = tm => (this.isBatchMode() ? 'anytime' : tm.toString()) + ' ms',
@@ -3451,7 +3450,7 @@ class TGeoPainter extends ObjectPainter {
       return true;
    }
 
-   /** @summary manipulate visisbility of extra objects, used for HierarchyPainter
+   /** @summary manipulate visibility of extra objects, used for HierarchyPainter
      * @private */
    extraObjectVisible(hpainter, hitem, toggle) {
       if (!this._extraObjects) return;
@@ -3751,7 +3750,7 @@ class TGeoPainter extends ObjectPainter {
       return true;
    }
 
-   /** @summary Serach for specified node
+   /** @summary Search for specified node
      * @private */
    findNodeWithVolume(name, action, prnt, itemname, volumes) {
       let first_level = false, res = null;
@@ -4191,7 +4190,7 @@ class TGeoPainter extends ObjectPainter {
      * @param [measure] - when true, for the first time printout rendering time
      * @return {Promise} when tmout bigger than 0 is specified
      * @desc Timeout used to avoid multiple rendering of the picture when several 3D drawings
-     * superimposed with each other. If tmeout <= 0, rendering performed immediately
+     * superimposed with each other. If tmout <= 0, rendering performed immediately
      * Several special values are used:
      *   -1    - force recheck of rendering order based on camera position */
    render3D(tmout, measure) {
@@ -4858,7 +4857,7 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary Should be called when depth method is changed */
    changedDepthMethod(arg) {
-      // force recalculatiion of render order
+      // force recalculation of render order
       delete this._last_camera_position;
       if (arg !== 'norender')
          return this.render3D();
@@ -5370,11 +5369,11 @@ class TGeoPainter extends ObjectPainter {
          shape = obj; obj = null;
       } else if ((obj._typename === clTGeoVolumeAssembly) || (obj._typename === clTGeoVolume))
          shape = obj.fShape;
-       else if ((obj._typename === clTEveGeoShapeExtract) || (obj._typename === clREveGeoShapeExtract)) {
+      else if ((obj._typename === clTEveGeoShapeExtract) || (obj._typename === clREveGeoShapeExtract)) {
          shape = obj.fShape; is_eve = true;
       } else if (obj._typename === clTGeoManager)
          shape = obj.fMasterVolume.fShape;
-       else if (obj._typename === clTGeoOverlap) {
+      else if (obj._typename === clTGeoOverlap) {
          extras = obj.fMarker; extras_path = '<prnt>/Marker';
          obj = buildOverlapVolume(obj);
          if (!opt) opt = 'wire';
@@ -5502,9 +5501,9 @@ function provideMenu(menu, item, hpainter) {
 
    if (!vol && !iseve) return false;
 
-   menu.add('separator');
+   menu.separator();
 
-   const ScanEveVisible = (obj, arg, skip_this) => {
+   const scanEveVisible = (obj, arg, skip_this) => {
       if (!arg) arg = { visible: 0, hidden: 0 };
 
       if (!skip_this) {
@@ -5518,17 +5517,17 @@ function provideMenu(menu, item, hpainter) {
 
       if (obj.fElements) {
          for (let n = 0; n < obj.fElements.arr.length; ++n)
-            ScanEveVisible(obj.fElements.arr[n], arg, false);
+            scanEveVisible(obj.fElements.arr[n], arg, false);
       }
 
       return arg;
-   }, ToggleEveVisibility = arg => {
+   }, toggleEveVisibility = arg => {
       if (arg === 'self') {
          obj.fRnrSelf = !obj.fRnrSelf;
          item._icon = item._icon.split(' ')[0] + provideVisStyle(obj);
          hpainter.updateTreeNode(item);
       } else {
-         ScanEveVisible(obj, { assign: (arg === 'true') }, true);
+         scanEveVisible(obj, { assign: (arg === 'true') }, true);
          hpainter.forEachItem(m => {
             // update all child items
             if (m._geoobj && m._icon) {
@@ -5539,7 +5538,7 @@ function provideMenu(menu, item, hpainter) {
       }
 
       findItemWithPainter(item, 'testGeomChanges');
-   }, ToggleMenuBit = arg => {
+   }, toggleMenuBit = arg => {
       toggleGeoBit(vol, arg);
       const newname = item._icon.split(' ')[0] + provideVisStyle(vol);
       hpainter.forEachItem(m => {
@@ -5552,10 +5551,8 @@ function provideMenu(menu, item, hpainter) {
 
       hpainter.updateTreeNode(item);
       findItemWithPainter(item, 'testGeomChanges');
-   },
-
-    drawitem = findItemWithPainter(item),
-       fullname = drawitem ? hpainter.itemFullName(item, drawitem) : '';
+   }, drawitem = findItemWithPainter(item),
+      fullname = drawitem ? hpainter.itemFullName(item, drawitem) : '';
 
    if ((item._geoobj._typename.indexOf(clTGeoNode) === 0) && drawitem) {
       menu.add('Focus', () => {
@@ -5565,35 +5562,34 @@ function provideMenu(menu, item, hpainter) {
    }
 
    if (iseve) {
-      menu.addchk(obj.fRnrSelf, 'Visible', 'self', ToggleEveVisibility);
-      const res = ScanEveVisible(obj, undefined, true);
+      menu.addchk(obj.fRnrSelf, 'Visible', 'self', toggleEveVisibility);
+      const res = scanEveVisible(obj, undefined, true);
       if (res.hidden + res.visible > 0)
-         menu.addchk((res.hidden === 0), 'Daughters', res.hidden !== 0 ? 'true' : 'false', ToggleEveVisibility);
+         menu.addchk((res.hidden === 0), 'Daughters', res.hidden !== 0 ? 'true' : 'false', toggleEveVisibility);
    } else {
       const stack = drawitem?._painter?._clones?.findStackByName(fullname),
           phys_vis = stack ? drawitem._painter._clones.getPhysNodeVisibility(stack) : null,
           is_visible = testGeoBit(vol, geoBITS.kVisThis);
 
-      menu.addchk(testGeoBit(vol, geoBITS.kVisNone), 'Invisible',
-            geoBITS.kVisNone, ToggleMenuBit);
+      menu.addchk(testGeoBit(vol, geoBITS.kVisNone), 'Invisible', geoBITS.kVisNone, toggleMenuBit);
       if (stack) {
          const changePhysVis = arg => {
             drawitem._painter._clones.setPhysNodeVisibility(stack, (arg === 'off') ? false : arg);
             findItemWithPainter(item, 'testGeomChanges');
          };
 
-         menu.add('sub:Physical vis', 'Physical node visibility - only for this instance');
+         menu.sub('Physical vis', 'Physical node visibility - only for this instance');
          menu.addchk(phys_vis?.visible, 'on', 'on', changePhysVis, 'Enable visibility of phys node');
          menu.addchk(phys_vis && !phys_vis.visible, 'off', 'off', changePhysVis, 'Disable visibility of physical node');
          menu.add('reset', 'clear', changePhysVis, 'Reset custom visibility of physical node');
          menu.add('reset all', 'clearall', changePhysVis, 'Reset all custom settings for all nodes');
-         menu.add('endsub:');
+         menu.endsub();
       }
 
       menu.addchk(is_visible, 'Logical vis',
-            geoBITS.kVisThis, ToggleMenuBit, 'Logical node visibility - all instances');
+            geoBITS.kVisThis, toggleMenuBit, 'Logical node visibility - all instances');
       menu.addchk(testGeoBit(vol, geoBITS.kVisDaughters), 'Daughters',
-            geoBITS.kVisDaughters, ToggleMenuBit, 'Logical node daugthers visibility');
+            geoBITS.kVisDaughters, toggleMenuBit, 'Logical node daugthers visibility');
    }
 
    return true;
@@ -5762,7 +5758,7 @@ async function drawDummy3DGeom(painter) {
          pp = painter.getPadPainter(),
          opt = (pp?.pad?.fFillColor && (pp?.pad?.fFillStyle > 1000)) ? 'bkgr_' + pp.pad.fFillColor : '';
 
-   return TGeoPainter.draw(painter.getDom(), obj, opt)
+   return TGeoPainter.draw(pp, obj, opt)
                      .then(geop => { geop._dummy = true; return geop; });
 }
 
@@ -5788,6 +5784,8 @@ function drawAxis3D() {
   * @param {boolean} [opt.wireframe=false] - show wireframe for created shapes
   * @param {boolean} [opt.transparency=0] - make nodes transparent
   * @param {boolean} [opt.dflt_colors=false] - use default ROOT colors
+  * @param {boolean} [opt.set_names=true] - set names to all Object3D instances
+  * @param {boolean} [opt.set_origin=false] - set TGeoNode/TGeoVolume as Object3D.userData
   * @return {object} Object3D with created model
   * @example
   * import { build } from 'https://root.cern/js/latest/modules/geom/TGeoPainter.mjs';
@@ -5893,6 +5891,8 @@ function build(obj, opt) {
 
    if (!opt.material_kind)
       opt.material_kind = 'lambert';
+   if (opt.set_names === undefined)
+      opt.set_names = true;
 
    clones.setConfig(opt);
 
@@ -5915,14 +5915,11 @@ function build(obj, opt) {
 
       const shape = entry.server_shape || shapes[entry.shapeid];
       if (!shape.ready) {
-         console.warn('shape marked as not ready when should');
+         console.warn('shape marked as not ready when it should');
          break;
       }
 
-      const mesh = clones.createEntryMesh(opt, toplevel, entry, shape, colors);
-
-      if (mesh)
-         mesh.name = clones.getNodeName(entry.nodeid);
+      clones.createEntryMesh(opt, toplevel, entry, shape, colors);
    }
 
    return toplevel;

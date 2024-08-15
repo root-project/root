@@ -337,7 +337,7 @@ TEveGeoShapeExtract* TEveGeoNode::DumpShapeTree(TEveGeoNode*         geon,
       {
          TEvePad pad;
          TEvePadHolder gpad(kFALSE, &pad);
-         pad.GetListOfPrimitives()->Add(tshape);
+         pad.Add(tshape);
          TGLScenePad scene_pad(&pad);
          pad.SetViewer3D(&scene_pad);
 

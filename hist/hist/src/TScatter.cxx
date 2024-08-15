@@ -128,6 +128,13 @@ TScatter::~TScatter()
 
 Int_t TScatter::DistancetoPrimitive(Int_t px, Int_t py)
 {
+   // Are we on the axis?
+   Int_t distance;
+   if (this->GetHistogram()) {
+      distance = this->GetHistogram()->DistancetoPrimitive(px,py);
+      if (distance <= 5) return distance;
+   }
+
    TVirtualGraphPainter *painter = TVirtualGraphPainter::GetPainter();
    if (painter)
       return painter->DistancetoPrimitiveHelper(this->GetGraph(), px, py);
@@ -169,14 +176,42 @@ TH2F *TScatter::GetHistogram() const
       double dx = (rwxmax-rwxmin)*fMargin;
       double dy = (rwymax-rwymin)*fMargin;
       auto h = new TH2F(TString::Format("%s_h",GetName()),GetTitle(),npt,rwxmin-dx,rwxmax+dx,npt,rwymin-dy,rwymax+dy);
-//          h->SetMinimum(rwymin-dy);
-//          h->SetMaximum(rwymax+dy);
       h->SetBit(TH1::kNoStats);
       h->SetDirectory(nullptr);
       h->Sumw2(kFALSE);
       const_cast<TScatter *>(this)->fHistogram = h;
    }
    return fHistogram;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get the scatter's x axis.
+
+TAxis *TScatter::GetXaxis() const
+{
+   auto h = GetHistogram();
+   return h ? h->GetXaxis() : nullptr;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get the scatter's y axis.
+
+TAxis *TScatter::GetYaxis() const
+{
+   auto h = GetHistogram();
+   return h ? h->GetYaxis() : nullptr;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get the scatter's z axis.
+
+TAxis *TScatter::GetZaxis() const
+{
+   auto h = GetHistogram();
+   return h ? h->GetZaxis() : nullptr;
 }
 
 

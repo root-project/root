@@ -189,10 +189,8 @@ public:
    void     operator delete(void*, size_t);
    void     operator delete[](void*, size_t);
 #endif
-#ifdef R__PLACEMENTDELETE
    void     operator delete(void *ptr, void *vp);
    void     operator delete[](void *ptr, void *vp);
-#endif
 
    //----- bit manipulation
    void     SetBit(UInt_t f, Bool_t set);
@@ -204,27 +202,27 @@ public:
 
    //---- error handling
    virtual void     Info(const char *method, const char *msgfmt, ...) const
-#if defined(__GNUC__) && !defined(__CINT__)
+#if defined(__GNUC__)
    __attribute__((format(printf, 3, 4)))   /* 1 is the this pointer */
 #endif
    ;
    virtual void     Warning(const char *method, const char *msgfmt, ...) const
-#if defined(__GNUC__) && !defined(__CINT__)
+#if defined(__GNUC__)
    __attribute__((format(printf, 3, 4)))   /* 1 is the this pointer */
 #endif
    ;
    virtual void     Error(const char *method, const char *msgfmt, ...) const
-#if defined(__GNUC__) && !defined(__CINT__)
+#if defined(__GNUC__)
    __attribute__((format(printf, 3, 4)))   /* 1 is the this pointer */
 #endif
    ;
    virtual void     SysError(const char *method, const char *msgfmt, ...) const
-#if defined(__GNUC__) && !defined(__CINT__)
+#if defined(__GNUC__)
    __attribute__((format(printf, 3, 4)))   /* 1 is the this pointer */
 #endif
    ;
    virtual void     Fatal(const char *method, const char *msgfmt, ...) const
-#if defined(__GNUC__) && !defined(__CINT__)
+#if defined(__GNUC__)
    __attribute__((format(printf, 3, 4)))   /* 1 is the this pointer */
 #endif
    ;

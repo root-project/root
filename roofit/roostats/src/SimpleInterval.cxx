@@ -31,9 +31,7 @@ In addition, you can ask it for the upper- or lower-bound.
 #include <string>
 
 
-using namespace std;
-
-ClassImp(RooStats::SimpleInterval); ;
+ClassImp(RooStats::SimpleInterval);
 
 using namespace RooStats;
 

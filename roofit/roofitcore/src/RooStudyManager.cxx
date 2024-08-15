@@ -41,7 +41,7 @@ repeated applications of generate-and-fit operations on a workspace
 #include "TROOT.h"
 #include "TSystem.h"
 
-using namespace std ;
+using std::string, std::endl, std::ios, std::list, std::ofstream;
 
 ClassImp(RooStudyManager);
 

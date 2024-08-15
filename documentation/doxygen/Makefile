@@ -10,9 +10,9 @@ else
    NJOB ?= $(shell nproc)
 endif
 
-PYTHON_EXECUTABLE ?= python3
-export PYTHON_EXECUTABLE
-export PYSPARK_PYTHON := $(PYTHON_EXECUTABLE)
+Python3_EXECUTABLE ?= python3
+export Python3_EXECUTABLE
+export PYSPARK_PYTHON := $(Python3_EXECUTABLE)
 
 DOXYGEN_OUTPUT_DIRECTORY ?= $(HOME)/rootdoc
 export DOXYGEN_OUTPUT_DIRECTORY
@@ -52,8 +52,8 @@ images:
 
 pyzdoc:
 	$(call MkDir,$(DOXYGEN_PYZDOC_PATH))
-	$(PYTHON_EXECUTABLE) extract_docstrings.py $(PYZ_DIR) $(DOXYGEN_PYZDOC_PATH)
-	$(PYTHON_EXECUTABLE) print_roofit_pyz_doctrings.py > $(DOXYGEN_PYZDOC_PATH)/_roofit.pyzdoc
+	$(Python3_EXECUTABLE) extract_docstrings.py $(PYZ_DIR) $(DOXYGEN_PYZDOC_PATH)
+	$(Python3_EXECUTABLE) print_roofit_pyz_doctrings.py > $(DOXYGEN_PYZDOC_PATH)/_roofit.pyzdoc
 
 doxygen: filter pyzdoc
 	rm -f tutorialWorklist_py tutorialWorklist_root
@@ -63,6 +63,7 @@ doxygen: filter pyzdoc
 	./makehtmlfooter.sh > htmlfooter.html
 	./makeinput.sh
 	doxygen
+	bash ./CleanNamespaces.sh
 	gzip $(DOXYGEN_IMAGE_PATH)/ROOT.tag
 	gzip $(DOXYGEN_IMAGE_PATH)/ROOT.qch
 	rm -rf files c1* *.ps *.eps *.png *.jpg *.tex *.svg *.pdf *.root *.xpm *.out *.dat *.dtd *.dot *.txt *.csv *.log *.rs
@@ -89,4 +90,4 @@ rootWork: tutorialWorklist_root
 	xargs -L 1 -P 12 root < $<
 
 clean:
-	rm -rf $(DOXYGEN_OUTPUT_DIRECTORY) tutorialWorklist_py tutorialWorklist_root
+	rm -rf $(DOXYGEN_OUTPUT_DIRECTORY) tutorialWorklist_py tutorialWorklist_root CleanNamespaces.sh

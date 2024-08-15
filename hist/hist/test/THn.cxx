@@ -111,3 +111,36 @@ TEST(THn, Projection) {
    }
 
 }
+
+TEST(THn, Integral)
+{
+   Int_t bins[2] = {2, 3};
+   Double_t xmin[2] = {0., -3.};
+   Double_t xmax[2] = {10., 3.};
+   THnD hn("hn", "hn", 2, bins, xmin, xmax);
+   Double_t x[2];
+   x[0] = 4;
+   x[1] = -0.1;
+   hn.Fill(x);
+   x[0] = 7;
+   x[1] = 1.0;
+   hn.Fill(x);
+   x[0] = 1;
+   x[1] = 2.6;
+   hn.Fill(x);
+   x[0] = 9;
+   x[1] = -0.9;
+   hn.Fill(x);
+   EXPECT_DOUBLE_EQ(hn.Integral(false), 4);
+}
+
+TEST(THn, GetBinCenter)
+{
+   Int_t bins[2] = {2, 2};
+   Double_t xmin[2] = {0., -3.};
+   Double_t xmax[2] = {10., 3.};
+   THnD hn("hn", "hn", 2, bins, xmin, xmax);
+   auto centers = hn.GetBinCenter({1, 1});
+   EXPECT_DOUBLE_EQ(centers.at(0), 2.5);
+   EXPECT_DOUBLE_EQ(centers.at(1), -1.5);
+}

@@ -26,6 +26,8 @@ Landau distribution p.d.f
 #include "RooRandom.h"
 #include "RooBatchCompute.h"
 
+#include "RooFit/Detail/MathFuncs.h"
+
 #include "TMath.h"
 #include "Math/ProbFunc.h"
 
@@ -56,37 +58,34 @@ RooLandau::RooLandau(const RooLandau& other, const char* name) :
 
 double RooLandau::evaluate() const
 {
-  return TMath::Landau(x, mean, sigma);
+  return RooFit::Detail::MathFuncs::landau(x, mean, sigma);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void RooLandau::translate(RooFit::Detail::CodeSquashContext &ctx) const
 {
-   ctx.addResult(this, ctx.buildCall("TMath::Landau", x, mean, sigma));
+   ctx.addResult(this, ctx.buildCall("RooFit::Detail::MathFuncs::landau", x, mean, sigma));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of Landau distribution.
-void RooLandau::computeBatch(double *output, size_t nEvents, RooFit::Detail::DataMap const &dataMap) const
+void RooLandau::doEval(RooFit::EvalContext &ctx) const
 {
-   RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::Landau, output, nEvents,
-                            {dataMap.at(x), dataMap.at(mean), dataMap.at(sigma)});
+   RooBatchCompute::compute(ctx.config(this), RooBatchCompute::Landau, ctx.output(),
+                            {ctx.at(x), ctx.at(mean), ctx.at(sigma)});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 Int_t RooLandau::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool /*staticInitOK*/) const
 {
-  if (matchArgs(directVars,generateVars,x)) return 1 ;
-  return 0;
+  return matchArgs(directVars,generateVars,x) ? 1 : 0;
 }
 
 Int_t RooLandau::getAnalyticalIntegral(RooArgSet &allVars, RooArgSet &analVars, const char * /*rangeName*/) const
 {
-   if (matchArgs(allVars, analVars, x))
-      return 1;
-   return 0;
+   return matchArgs(allVars, analVars, x) ? 1 : 0;
 }
 
 Double_t RooLandau::analyticalIntegral(Int_t /*code*/, const char *rangeName) const

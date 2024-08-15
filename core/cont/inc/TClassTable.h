@@ -61,10 +61,17 @@ private:
 
 public:
    // bits that can be set in pragmabits
+   // clang-format off
    enum {
-      kNoStreamer = 0x01, kNoInputOperator = 0x02, kAutoStreamer = 0x04,
-      kHasVersion = 0x08, kHasCustomStreamerMember = 0x10
+      kNoStreamer              = 0x01,
+      kNoInputOperator         = 0x02,
+      kAutoStreamer            = 0x04,
+      kHasVersion              = 0x08,
+      kHasCustomStreamerMember = 0x10,
+      kNtplForceSplit          = 0x20,
+      kNtplForceUnsplit        = 0x40
    };
+   // clang-format on
 
    ~TClassTable();
 

@@ -404,7 +404,12 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr,
 
          // special case for TObject::fBits in case of a referenced object
          case TStreamerInfo::kBits: { DOLOOP {
-            UInt_t *x=(UInt_t*)(arr[k]+ioffset); b << (*x & (~kIsOnHeap & ~kNotDeleted));
+            UInt_t *x=(UInt_t*)(arr[k]+ioffset);
+            const auto parent = b.GetParent();
+            if (R__unlikely(parent && parent->TestBit(TFile::k630forwardCompatibility)))
+               b << *x;
+            else
+               b << (*x & (~kIsOnHeap & ~kNotDeleted));
             if ((*x & kIsReferenced) != 0) {
                TObject *obj = (TObject*)(arr[k]+eoffset);
                TProcessID *pid = TProcessID::GetProcessWithUID(obj->GetUniqueID(),obj);
@@ -508,7 +513,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr,
                    && GetStreamMemberWise()
                    && cl->CanSplit()
                    && !(strspn(aElement->GetTitle(),"||") == 2)
-                   && !(vClass->TestBit(TClass::kHasCustomStreamerMember)) ) {
+                   && !(vClass->HasCustomStreamerMember()) ) {
                   // Let's save the collection member-wise.
 
                   UInt_t pos = b.WriteVersionMemberWise(this->IsA(),kTRUE);
@@ -569,7 +574,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr,
                    && proxy && vClass
                    && GetStreamMemberWise() && cl->CanSplit()
                    && !(strspn(aElement->GetTitle(),"||") == 2)
-                   && !(vClass->TestBit(TClass::kHasCustomStreamerMember)) ) {
+                   && !(vClass->HasCustomStreamerMember()) ) {
                   // Let's save the collection in member-wise order.
 
                   UInt_t pos = b.WriteVersionMemberWise(this->IsA(),kTRUE);

@@ -37,7 +37,7 @@ a constrained split
 #include "RooArgSet.h"
 #include "RooMsgService.h"
 
-using namespace std;
+using std::endl;
 
 ClassImp(RooFracRemainder);
 

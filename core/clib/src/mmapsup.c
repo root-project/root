@@ -171,8 +171,14 @@ PTR __mmalloc_mmap_morecore(struct mdesc *mdp, int size)
           } else {
             /*fprintf(stderr, "mmap_morecore: try to extend mapping by %d bytes, use bigger TMapFile\n", mapbytes);*/
 #ifndef WIN32
+            if (mdp -> top != PAGE_ALIGN(mdp -> top)) {
+              fprintf(stderr,
+                      "mmap_morecore error: base memory location (%p) is not aligned with %zu as required.\n",
+                      mdp -> top, pagesize);
+              return result;
+            }
             mapto = mmap (mdp -> top, mapbytes, PROT_READ | PROT_WRITE,
-                          MAP_SHARED | MAP_FIXED, mdp -> fd, foffset);
+                          MAP_SHARED /* | MAP_FIXED */, mdp -> fd, foffset);
 #else
             hMap = CreateFileMapping(mdp -> fd, NULL, PAGE_READWRITE,
                           0, mapbytes, NULL);
@@ -185,6 +191,11 @@ PTR __mmalloc_mmap_morecore(struct mdesc *mdp, int size)
                 mdp -> top = moveto;
                 result = (PTR) mdp -> breakval;
                 mdp -> breakval += size;
+              }
+            else
+              {
+                fprintf(stderr, "mmap_morecore unexpected mmap result: mapto=%p vs top=%p mapbytes=%ld offset=%ld\n",
+                        mapto, mdp -> top, (long)mapbytes, (long)foffset);
               }
           }
         }
@@ -224,7 +235,7 @@ PTR __mmalloc_remap_core(struct mdesc *mdp)
   if (rdonly) {
 #ifndef WIN32
     base = mmap (mdp -> base, mdp -> top - mdp -> base,
-                 PROT_READ, MAP_SHARED | MAP_FIXED,
+                 PROT_READ, MAP_SHARED /* | MAP_FIXED */,
                  mdp -> fd, 0);
     if (base == (char *)-1)
        base = mmap (0, mdp -> top - mdp -> base,
@@ -253,7 +264,7 @@ PTR __mmalloc_remap_core(struct mdesc *mdp)
   } else {
 #ifndef WIN32
     base = mmap (mdp -> base, mdp -> top - mdp -> base,
-                 PROT_READ | PROT_WRITE, MAP_SHARED | MAP_FIXED,
+                 PROT_READ | PROT_WRITE, MAP_SHARED /* | MAP_FIXED */,
                  mdp -> fd, 0);
 #else
     HANDLE hMap;
@@ -295,7 +306,7 @@ int mmalloc_update_mapping(PTR md)
 #endif
 
   oldtop = mdp->top;
-  top    = ((struct mdesc *)mdp->base)->top;
+  top    = ((struct mdesc *)(mdp->base + mdp->offset))->top;
 
   if (oldtop == top) return 0;
 
@@ -314,7 +325,7 @@ int mmalloc_update_mapping(PTR md)
     foffset = oldtop - mdp->base;
 #ifndef WIN32
     mapto = mmap (oldtop, mapbytes, PROT_READ,
-                  MAP_SHARED | MAP_FIXED, mdp -> fd, foffset);
+                  MAP_SHARED /* | MAP_FIXED */, mdp -> fd, foffset);
 #else
 //    hMap = OpenFileMapping(FILE_MAP_READ, FALSE, (LPTSTR)mdp->magic);
     hMap = CreateFileMapping(mdp -> fd, NULL, PAGE_READWRITE,

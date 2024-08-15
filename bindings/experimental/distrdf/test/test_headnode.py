@@ -284,73 +284,17 @@ class NumEntriesTest(unittest.TestCase):
     def tearDownClass(cls):
         os.remove(cls.test_filename)
 
-    def test_num_entries_two_args_case(self):
-        """
-        Ensure that the number of entries recorded are correct in the case
-        of two arguments to RDataFrame constructor.
+    def test_num_entries_with_rdatasetspec(self):
+        """Compute number of entries from an RDatasetSpec-based headnode."""
 
-        """
-        files_vec = ROOT.std.vector("string")()
-        files_vec.push_back(self.test_filename)
+        spec = ROOT.RDF.Experimental.RDatasetSpec()
+        spec.AddSample(("", self.test_treename, self.test_filename))
 
-        # Create RDataFrame instances
-        hn = create_dummy_headnode(self.test_treename, self.test_filename)
-        hn_1 = create_dummy_headnode(self.test_treename, [self.test_filename])
-        hn_2 = create_dummy_headnode(self.test_treename, files_vec)
+        hn = create_dummy_headnode(spec)
 
-        self.assertEqual(hn.tree.GetEntries(), self.test_tree_entries)
-        self.assertEqual(hn_1.tree.GetEntries(), self.test_tree_entries)
-        self.assertEqual(hn_2.tree.GetEntries(), self.test_tree_entries)
+        self.assertListEqual(hn.inputfiles, [self.test_filename])
+        self.assertListEqual(hn.subtreenames, [self.test_treename])
 
-    def test_num_entries_three_args_case(self):
-        """
-        Ensure that the number of entries recorded are correct in the case
-        of three arguments to RDataFrame constructor.
-
-        """
-        # Create RDataFrame instances
-        hn = create_dummy_headnode(
-            self.test_treename, self.test_filename, ["b1"])
-        branches_vec_1 = ROOT.std.vector("string")()
-        branches_vec_1.push_back("b0")
-        hn_2 = create_dummy_headnode(
-            self.test_treename, self.test_filename, branches_vec_1)
-
-        self.assertEqual(hn.tree.GetEntries(), self.test_tree_entries)
-        self.assertEqual(hn_2.tree.GetEntries(), self.test_tree_entries)
-
-    def test_num_entries_with_ttree_arg(self):
-        """
-        Ensure that the number of entries recorded are correct in the case
-        of RDataFrame constructor with a TTree.
-
-        """
-        with ROOT.TFile(self.test_filename) as f:
-            tree = f.Get(self.test_treename)
-            hn = create_dummy_headnode(tree)
-            self.assertEqual(hn.tree.GetEntries(), self.test_tree_entries)
-
-
-class InternalDataFrameTests(unittest.TestCase):
-    """The HeadNode stores an internal RDataFrame for certain information"""
-
-    def test_getcolumnnames(self):
-        treename = "tree"
-        filename = "test_distrdf_getcolumnnames.root"
-        f = ROOT.TFile(filename, "recreate")
-        tree = ROOT.TTree(treename, "test")
-        x = array("i", [0])
-        tree.Branch("myColumn", x, "myColumn/I")
-
-        for i in range(3):
-            x[0] = i
-            tree.Fill()
-
-        f.Write()
-        f.Close()
-
-        hn = create_dummy_headnode(treename, filename)
-        cn_vec = hn.GetColumnNames()
-        self.assertListEqual([str(col) for col in cn_vec], ["myColumn"])
-
-        os.remove(filename)
+        with ROOT.TFile(hn.inputfiles[0]) as f:
+            t = f.Get(hn.subtreenames[0])
+            self.assertEqual(t.GetEntries(), self.test_tree_entries)

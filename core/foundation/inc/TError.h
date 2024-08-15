@@ -32,6 +32,7 @@
 
 #include <DllImport.h> // for R__EXTERN
 #include "RtypesCore.h"
+#include <ROOT/RConfig.hxx>
 
 #include <cstdarg>
 #include <functional>
@@ -78,32 +79,32 @@ extern ErrorHandlerFunc_t SetErrorHandler(ErrorHandlerFunc_t newhandler);
 extern ErrorHandlerFunc_t GetErrorHandler();
 
 extern void Info(const char *location, const char *msgfmt, ...)
-#if defined(__GNUC__) && !defined(__CINT__)
+#if defined(__GNUC__)
 __attribute__((format(printf, 2, 3)))
 #endif
 ;
 extern void Warning(const char *location, const char *msgfmt, ...)
-#if defined(__GNUC__) && !defined(__CINT__)
+#if defined(__GNUC__)
 __attribute__((format(printf, 2, 3)))
 #endif
 ;
 extern void Error(const char *location, const char *msgfmt, ...)
-#if defined(__GNUC__) && !defined(__CINT__)
+#if defined(__GNUC__)
 __attribute__((format(printf, 2, 3)))
 #endif
 ;
 extern void Break(const char *location, const char *msgfmt, ...)
-#if defined(__GNUC__) && !defined(__CINT__)
+#if defined(__GNUC__)
 __attribute__((format(printf, 2, 3)))
 #endif
 ;
 extern void SysError(const char *location, const char *msgfmt, ...)
-#if defined(__GNUC__) && !defined(__CINT__)
+#if defined(__GNUC__)
 __attribute__((format(printf, 2, 3)))
 #endif
 ;
 extern void Fatal(const char *location, const char *msgfmt, ...)
-#if defined(__GNUC__) && !defined(__CINT__)
+#if defined(__GNUC__)
 __attribute__((format(printf, 2, 3)))
 #endif
 ;
@@ -115,13 +116,25 @@ extern void Obsolete(const char *function, const char *asOfVers, const char *rem
 R__EXTERN const char *kAssertMsg;
 R__EXTERN const char *kCheckMsg;
 
-#define R__ASSERT(e)                                                     \
-   do {                                                                  \
-      if (!(e)) ::Fatal("", kAssertMsg, _QUOTE_(e), __LINE__, __FILE__); \
+/*! Checks condition `e` and reports a fatal error if it's false.
+ * \warning
+ *   - this check is NOT stripped in release mode, so it should not be used for hot paths.
+ *     For those cases, prefer a regular `assert()`;
+ *   - depending on `gErrorIgnoreLevel`, this might not terminate the program, \see ::Fatal.
+ */
+#define R__ASSERT(e)                                              \
+   do {                                                           \
+      if (R__unlikely(!(e)))                                      \
+         ::Fatal("", kAssertMsg, _QUOTE_(e), __LINE__, __FILE__); \
    } while (false)
-#define R__CHECK(e)                                                       \
-   do {                                                                   \
-      if (!(e)) ::Warning("", kCheckMsg, _QUOTE_(e), __LINE__, __FILE__); \
+
+/*! Checks condition `e` and reports a warning message if it's false.
+ * \warning this check is NOT stripped in release mode, so it should not be used for hot paths.
+ */
+#define R__CHECK(e)                                                \
+   do {                                                            \
+      if (R__unlikely(!(e)))                                       \
+         ::Warning("", kCheckMsg, _QUOTE_(e), __LINE__, __FILE__); \
    } while (false)
 
 R__EXTERN Int_t  gErrorIgnoreLevel;

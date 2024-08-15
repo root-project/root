@@ -124,7 +124,7 @@ In order to access the name of a class within the ROOT type system, the method T
 #include "TRef.h"
 #include "TRefArray.h"
 
-using namespace std;
+using std::multimap, std::make_pair, std::string;
 
 // Mutex to protect CINT and META operations
 // (exported to be used for similar cases in related classes)
@@ -1075,7 +1075,7 @@ TClass::TClass() :
    fStreamer(nullptr), fIsA(nullptr), fGlobalIsA(nullptr), fIsAMethod(nullptr),
    fMerge(nullptr), fResetAfterMerge(nullptr), fNew(nullptr), fNewArray(nullptr), fDelete(nullptr), fDeleteArray(nullptr),
    fDestructor(nullptr), fDirAutoAdd(nullptr), fStreamerFunc(nullptr), fConvStreamerFunc(nullptr), fSizeof(-1),
-   fCanSplit(-1), fIsSyntheticPair(kFALSE), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
+   fCanSplit(-1), fIsSyntheticPair(kFALSE), fHasCustomStreamerMember(kFALSE), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
    fIsOffsetStreamerSet(kFALSE), fVersionUsed(kFALSE), fRuntimeProperties(0), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
    fState(kNoInfo),
    fCurrentInfo(nullptr), fLastReadInfo(nullptr), fRefProxy(nullptr),
@@ -1113,7 +1113,7 @@ TClass::TClass(const char *name, Bool_t silent) :
    fStreamer(nullptr), fIsA(nullptr), fGlobalIsA(nullptr), fIsAMethod(nullptr),
    fMerge(nullptr), fResetAfterMerge(nullptr), fNew(nullptr), fNewArray(nullptr), fDelete(nullptr), fDeleteArray(nullptr),
    fDestructor(nullptr), fDirAutoAdd(nullptr), fStreamerFunc(nullptr), fConvStreamerFunc(nullptr), fSizeof(-1),
-   fCanSplit(-1), fIsSyntheticPair(kFALSE), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
+   fCanSplit(-1), fIsSyntheticPair(kFALSE), fHasCustomStreamerMember(kFALSE), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
    fIsOffsetStreamerSet(kFALSE), fVersionUsed(kFALSE), fRuntimeProperties(0), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
    fState(kNoInfo),
    fCurrentInfo(nullptr), fLastReadInfo(nullptr), fRefProxy(nullptr),
@@ -1161,7 +1161,7 @@ TClass::TClass(const char *name, Version_t cversion, Bool_t silent) :
    fStreamer(nullptr), fIsA(nullptr), fGlobalIsA(nullptr), fIsAMethod(nullptr),
    fMerge(nullptr), fResetAfterMerge(nullptr), fNew(nullptr), fNewArray(nullptr), fDelete(nullptr), fDeleteArray(nullptr),
    fDestructor(nullptr), fDirAutoAdd(nullptr), fStreamerFunc(nullptr), fConvStreamerFunc(nullptr), fSizeof(-1),
-   fCanSplit(-1), fIsSyntheticPair(kFALSE), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
+   fCanSplit(-1), fIsSyntheticPair(kFALSE), fHasCustomStreamerMember(kFALSE), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
    fIsOffsetStreamerSet(kFALSE), fVersionUsed(kFALSE), fRuntimeProperties(0), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
    fState(kNoInfo),
    fCurrentInfo(nullptr), fLastReadInfo(nullptr), fRefProxy(nullptr),
@@ -1189,7 +1189,7 @@ TClass::TClass(const char *name, Version_t cversion, EState theState, Bool_t sil
    fStreamer(nullptr), fIsA(nullptr), fGlobalIsA(nullptr), fIsAMethod(nullptr),
    fMerge(nullptr), fResetAfterMerge(nullptr), fNew(nullptr), fNewArray(nullptr), fDelete(nullptr), fDeleteArray(nullptr),
    fDestructor(nullptr), fDirAutoAdd(nullptr), fStreamerFunc(nullptr), fConvStreamerFunc(nullptr), fSizeof(-1),
-   fCanSplit(-1), fIsSyntheticPair(kFALSE), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
+   fCanSplit(-1), fIsSyntheticPair(kFALSE), fHasCustomStreamerMember(kFALSE), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
    fIsOffsetStreamerSet(kFALSE), fVersionUsed(kFALSE), fRuntimeProperties(0), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
    fState(theState),
    fCurrentInfo(nullptr), fLastReadInfo(nullptr), fRefProxy(nullptr),
@@ -1235,7 +1235,7 @@ TClass::TClass(ClassInfo_t *classInfo, Version_t cversion,
    fStreamer(nullptr), fIsA(nullptr), fGlobalIsA(nullptr), fIsAMethod(nullptr),
    fMerge(nullptr), fResetAfterMerge(nullptr), fNew(nullptr), fNewArray(nullptr), fDelete(nullptr), fDeleteArray(nullptr),
    fDestructor(nullptr), fDirAutoAdd(nullptr), fStreamerFunc(nullptr), fConvStreamerFunc(nullptr), fSizeof(-1),
-   fCanSplit(-1), fIsSyntheticPair(kFALSE), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
+   fCanSplit(-1), fIsSyntheticPair(kFALSE), fHasCustomStreamerMember(kFALSE), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
    fIsOffsetStreamerSet(kFALSE), fVersionUsed(kFALSE), fRuntimeProperties(0), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
    fState(kNoInfo),
    fCurrentInfo(nullptr), fLastReadInfo(nullptr), fRefProxy(nullptr),
@@ -1286,7 +1286,7 @@ TClass::TClass(const char *name, Version_t cversion,
    fStreamer(nullptr), fIsA(nullptr), fGlobalIsA(nullptr), fIsAMethod(nullptr),
    fMerge(nullptr), fResetAfterMerge(nullptr), fNew(nullptr), fNewArray(nullptr), fDelete(nullptr), fDeleteArray(nullptr),
    fDestructor(nullptr), fDirAutoAdd(nullptr), fStreamerFunc(nullptr), fConvStreamerFunc(nullptr), fSizeof(-1),
-   fCanSplit(-1), fIsSyntheticPair(kFALSE), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
+   fCanSplit(-1), fIsSyntheticPair(kFALSE), fHasCustomStreamerMember(kFALSE), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
    fIsOffsetStreamerSet(kFALSE), fVersionUsed(kFALSE), fRuntimeProperties(0), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
    fState(kNoInfo),
    fCurrentInfo(nullptr), fLastReadInfo(nullptr), fRefProxy(nullptr),
@@ -1318,7 +1318,7 @@ TClass::TClass(const char *name, Version_t cversion,
    fStreamer(nullptr), fIsA(nullptr), fGlobalIsA(nullptr), fIsAMethod(nullptr),
    fMerge(nullptr), fResetAfterMerge(nullptr), fNew(nullptr), fNewArray(nullptr), fDelete(nullptr), fDeleteArray(nullptr),
    fDestructor(nullptr), fDirAutoAdd(nullptr), fStreamerFunc(nullptr), fConvStreamerFunc(nullptr), fSizeof(-1),
-   fCanSplit(-1), fIsSyntheticPair(kFALSE), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
+   fCanSplit(-1), fIsSyntheticPair(kFALSE), fHasCustomStreamerMember(kFALSE), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
    fIsOffsetStreamerSet(kFALSE), fVersionUsed(kFALSE), fRuntimeProperties(0), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
    fState(kHasTClassInit),
    fCurrentInfo(nullptr), fLastReadInfo(nullptr), fRefProxy(nullptr),
@@ -1514,7 +1514,7 @@ void TClass::Init(const char *name, Version_t cversion,
             proto->FillTClass(this);
       }
       if (!fHasRootPcmInfo && gInterpreter->CheckClassInfo(fName, /* autoload = */ kTRUE)) {
-         gInterpreter->SetClassInfo(this);   // sets fClassInfo pointer
+         gInterpreter->SetClassInfo(this, kFALSE, silent);   // sets fClassInfo pointer
          if (fClassInfo) {
             // This should be moved out of GetCheckSum itself however the last time
             // we tried this cause problem, in particular in the end-of-process operation.
@@ -2366,7 +2366,7 @@ Bool_t TClass::CanSplit() const
       This->fCanSplit = 0;
       return kFALSE;
 
-   } else if ( TestBit(TClass::kHasCustomStreamerMember) ) {
+   } else if ( fHasCustomStreamerMember ) {
 
       // We have a custom member function streamer or
       // an older (not StreamerInfo based) automatic streamer.
@@ -2959,11 +2959,11 @@ TVirtualIsAProxy* TClass::GetIsAProxy() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Static method returning pointer to TClass of the specified class name.
-/// If load is true an attempt is made to obtain the class by loading
+/// If load is true, an attempt is made to obtain the class by loading
 /// the appropriate shared library (directed by the rootmap file).
 /// If silent is 'true', do not warn about missing dictionary for the class.
-/// (typically used for class that are used only for transient members)
-/// Returns 0 in case class is not found.
+/// (typically used for classes that are used only for transient members)
+/// Returns `nullptr` in case class is not found.
 
 TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
 {
@@ -4054,7 +4054,7 @@ void TClass::GetMissingDictionariesWithRecursionCheck(TCollection& result, TColl
 
    visited.Add(this);
    //Check whether a custom streamer
-   if (!TestBit(TClass::kHasCustomStreamerMember)) {
+   if (!fHasCustomStreamerMember) {
       if (GetCollectionProxy()) {
          // We need to look at the collection's content
          // The collection has different kind of elements the check would be required.
@@ -4112,7 +4112,7 @@ void TClass::GetMissingDictionaries(THashTable& result, bool recurse)
    visited.Add(this);
 
    //Check whether a custom streamer
-   if (!TestBit(TClass::kHasCustomStreamerMember)) {
+   if (!fHasCustomStreamerMember) {
       if (GetCollectionProxy()) {
          // We need to look at the collection's content
          // The collection has different kind of elements the check would be required.
@@ -5827,7 +5827,7 @@ void TClass::LoadClassInfo() const
 
    // Return if another thread already loaded the info
    // while we were waiting for the lock
-   if (!fCanLoadClassInfo)
+   if (!fCanLoadClassInfo || TestBit(kLoading))
       return;
 
    bool autoParse = !gInterpreter->IsAutoParsingSuspended();

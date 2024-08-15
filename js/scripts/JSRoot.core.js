@@ -154,7 +154,7 @@ function v6_require(need) {
          arr.push(import('../modules/tree.mjs'));
       else if (name == 'geom')
          arr.push(geo ? Promise.resolve(geo) : loadPainter().then(() => Promise.all([import('../modules/geom/geobase.mjs'),
-            import('../modules/geom/TGeoPainter.mjs'), import('../modules/base/base3d.mjs'), import('../modules/three.mjs')])).then(res => {
+            import('../modules/geom/TGeoPainter.mjs'), import('../modules/base/base3d.mjs'), import('../modules/three.mjs'), import('../modules/three_addons.mjs')])).then(res => {
 
             if (geo) return geo;
 
@@ -169,7 +169,7 @@ function v6_require(need) {
             globalThis.JSROOT.Painter.PointsCreator = myPoints;
 
             if (!globalThis.THREE)
-               globalThis.THREE = Object.assign({}, res[3]); // copy methods, let add more
+               globalThis.THREE = Object.assign({}, res[3], res[4]);
 
             return geo;
          }));

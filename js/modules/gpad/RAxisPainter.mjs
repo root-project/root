@@ -7,6 +7,7 @@ import { makeTranslate, addHighlightStyle } from '../base/BasePainter.mjs';
 import { AxisPainterMethods, chooseTimeFormat } from './TAxisPainter.mjs';
 import { createMenu } from '../gui/menu.mjs';
 import { addDragHandler } from './TFramePainter.mjs';
+import { kAxisLabels, kAxisNormal, kAxisTime } from '../base/ObjectPainter.mjs';
 import { RObjectPainter } from '../base/RObjectPainter.mjs';
 
 
@@ -51,7 +52,7 @@ class RAxisPainter extends RObjectPainter {
    /** @summary Configure only base parameters, later same handle will be used for drawing  */
    configureZAxis(name, fp) {
       this.name = name;
-      this.kind = 'normal';
+      this.kind = kAxisNormal;
       this.log = false;
       const _log = this.v7EvalAttr('log', 0);
       if (_log) {
@@ -67,14 +68,14 @@ class RAxisPainter extends RObjectPainter {
 
    /** @summary Configure axis painter
      * @desc Axis can be drawn inside frame <g> group with offset to 0 point for the frame
-     * Therefore one should distinguish when caclulated coordinates used for axis drawing itself or for calculation of frame coordinates
+     * Therefore one should distinguish when calculated coordinates used for axis drawing itself or for calculation of frame coordinates
      * @private */
    configureAxis(name, min, max, smin, smax, vertical, frame_range, axis_range, opts) {
       if (!opts) opts = {};
       this.name = name;
       this.full_min = min;
       this.full_max = max;
-      this.kind = 'normal';
+      this.kind = kAxisNormal;
       this.vertical = vertical;
       this.log = false;
       const _log = this.v7EvalAttr('log', 0),
@@ -82,7 +83,7 @@ class RAxisPainter extends RObjectPainter {
       this.reverse = opts.reverse || false;
 
       if (this.v7EvalAttr('time')) {
-         this.kind = 'time';
+         this.kind = kAxisTime;
          this.timeoffset = 0;
          let toffset = this.v7EvalAttr('timeOffset');
          if (toffset !== undefined) {
@@ -90,17 +91,17 @@ class RAxisPainter extends RObjectPainter {
             if (Number.isFinite(toffset)) this.timeoffset = toffset*1000;
          }
       } else if (this.axis?.fLabelsIndex) {
-         this.kind = 'labels';
+         this.kind = kAxisLabels;
          delete this.own_labels;
       } else if (opts.labels)
-         this.kind = 'labels';
+         this.kind = kAxisLabels;
        else
-         this.kind = 'normal';
+         this.kind = kAxisNormal;
 
 
-      if (this.kind === 'time')
+      if (this.kind === kAxisTime)
          this.func = d3_scaleTime().domain([this.convertDate(smin), this.convertDate(smax)]);
-       else if (_symlog && (_symlog > 0)) {
+      else if (_symlog && (_symlog > 0)) {
          this.symlog = _symlog;
          this.func = d3_scaleSymlog().constant(_symlog).domain([smin, smax]);
       } else if (_log) {
@@ -131,7 +132,7 @@ class RAxisPainter extends RObjectPainter {
       else
          this.func.range(range);
 
-      if (this.kind === 'time')
+      if (this.kind === kAxisTime)
          this.gr = val => this.func(this.convertDate(val));
       else if (this.log)
          this.gr = val => (val < this.scale_min) ? (this.vertical ? this.func.range()[0]+5 : -5) : this.func(val);
@@ -150,7 +151,7 @@ class RAxisPainter extends RObjectPainter {
 
       const gr_range = Math.abs(this.gr_range) || 100;
 
-      if (this.kind === 'time') {
+      if (this.kind === kAxisTime) {
          if (this.nticks > 8) this.nticks = 8;
 
          const scale_range = this.scale_max - this.scale_min,
@@ -175,7 +176,7 @@ class RAxisPainter extends RObjectPainter {
          this.moreloglabels = this.v7EvalAttr('moreloglbls', false);
 
          this.format = this.formatLog;
-      } else if (this.kind === 'labels') {
+      } else if (this.kind === kAxisLabels) {
          this.nticks = 50; // for text output allow max 50 names
          const scale_range = this.scale_max - this.scale_min;
          if (this.nticks > scale_range)
@@ -219,11 +220,10 @@ class RAxisPainter extends RObjectPainter {
 
    /** @summary Creates array with minor/middle/major ticks */
    createTicks(only_major_as_array, optionNoexp, optionNoopt, optionInt) {
-      if (optionNoopt && this.nticks && (this.kind === 'normal')) this.noticksopt = true;
+      if (optionNoopt && this.nticks && (this.kind === kAxisNormal)) this.noticksopt = true;
 
-      const handle = { nminor: 0, nmiddle: 0, nmajor: 0, func: this.func };
-
-      handle.minor = handle.middle = handle.major = this.produceTicks(this.nticks);
+      const ticks = this.produceTicks(this.nticks),
+            handle = { nminor: 0, nmiddle: 0, nmajor: 0, func: this.func, minor: ticks, middle: ticks, major: ticks };
 
       if (only_major_as_array) {
          const res = handle.major, delta = (this.scale_max - this.scale_min)*1e-5;
@@ -286,7 +286,7 @@ class RAxisPainter extends RObjectPainter {
 
       // at the moment when drawing labels, we can try to find most optimal text representation for them
 
-      if ((this.kind === 'normal') && !this.log && (handle.major.length > 0)) {
+      if ((this.kind === kAxisNormal) && !this.log && (handle.major.length > 0)) {
          let maxorder = 0, minorder = 0, exclorder3 = false;
 
          if (!optionNoexp) {
@@ -324,7 +324,7 @@ class RAxisPainter extends RObjectPainter {
                lbls = []; indx = 0; totallen = 0;
             }
 
-            // for order === 0 we should virually remove '0.' and extra label on top
+            // for order === 0 we should virtually remove '0.' and extra label on top
             if (!order && (this.ndig < 4))
                totallen -= (handle.major.length * 2 + 3);
 
@@ -351,7 +351,7 @@ class RAxisPainter extends RObjectPainter {
 
    /** @summary Is labels should be centered */
    isCenteredLabels() {
-      if (this.kind === 'labels') return true;
+      if (this.kind === kAxisLabels) return true;
       if (this.kind === 'log') return false;
       return this.v7EvalAttr('labels_center', false);
    }
@@ -583,7 +583,7 @@ class RAxisPainter extends RObjectPainter {
 
          if (this.handle.kind === 1) {
             // if not showing labels, not show large tick
-            if ((this.kind === 'labels') || (this.format(this.handle.tick, true) !== null)) h1 = this.ticksSize;
+            if ((this.kind === kAxisLabels) || (this.format(this.handle.tick, true) !== null)) h1 = this.ticksSize;
 
             if (main_draw) this.ticks.push(grpos); // keep graphical positions of major ticks
          }
@@ -730,7 +730,7 @@ class RAxisPainter extends RObjectPainter {
       });
    }
 
-   /** @summary Add zomming rect to axis drawing */
+   /** @summary Add zooming rect to axis drawing */
    addZoomingRect(axis_g, side, lgaps) {
       if (settings.Zooming && !this.disable_zooming && !this.isBatchMode()) {
          const sz = Math.max(lgaps[side], 10),
@@ -881,7 +881,7 @@ class RAxisPainter extends RObjectPainter {
    }
 
    /** @summary Assign handler, which is called when axis redraw by interactive changes
-     * @desc Used by palette painter to reassign iteractive handlers
+     * @desc Used by palette painter to reassign interactive handlers
      * @private */
    setAfterDrawHandler(handler) {
       this._afterDrawAgain = handler;
@@ -981,7 +981,7 @@ class RAxisPainter extends RObjectPainter {
                evnt.stopPropagation(); // disable main context menu
                evnt.preventDefault();  // disable browser context menu
                createMenu(evnt, this).then(menu => {
-                 menu.add('header:RAxisDrawable');
+                 menu.header('RAxisDrawable');
                  menu.add('Unzoom', () => this.zoomStandalone());
                  this.fillAxisContextMenu(menu, '');
                  menu.show();
@@ -1044,7 +1044,7 @@ class RAxisPainter extends RObjectPainter {
 
    /** @summary Change axis log scale kind */
    changeAxisLog(arg) {
-      if ((this.kind === 'labels') || (this.kind === 'time')) return;
+      if ((this.kind === kAxisLabels) || (this.kind === kAxisTime)) return;
       if (arg === 'toggle') arg = this.log ? 0 : 10;
 
       arg = parseFloat(arg);
@@ -1055,34 +1055,34 @@ class RAxisPainter extends RObjectPainter {
    fillAxisContextMenu(menu, kind) {
       if (kind) menu.add('Unzoom', () => this.getFramePainter().unzoom(kind));
 
-      menu.add('sub:Log scale', () => this.changeAxisLog('toggle'));
+      menu.sub('Log scale', () => this.changeAxisLog('toggle'));
       menu.addchk(!this.log && !this.symlog, 'linear', 0, arg => this.changeAxisLog(arg));
       menu.addchk(this.log && !this.symlog && (this.logbase === 10), 'log10', () => this.changeAxisLog(10));
       menu.addchk(this.log && !this.symlog && (this.logbase === 2), 'log2', () => this.changeAxisLog(2));
       menu.addchk(this.log && !this.symlog && Math.abs(this.logbase - Math.exp(1)) < 0.1, 'ln', () => this.changeAxisLog(Math.exp(1)));
       menu.addchk(!this.log && this.symlog, 'symlog', 0, () =>
          menu.input('set symlog constant', this.symlog || 10, 'float').then(v => this.changeAxisAttr(2, 'symlog', v)));
-      menu.add('endsub:');
+      menu.endsub();
 
       menu.add('Divisions', () => menu.input('Set axis devisions', this.v7EvalAttr('ndiv', 508), 'int').then(val => this.changeAxisAttr(2, 'ndiv', val)));
 
-      menu.add('sub:Ticks');
+      menu.sub('Ticks');
       menu.addRColorMenu('color', this.ticksColor, col => this.changeAxisAttr(1, 'ticks_color', col));
       menu.addSizeMenu('size', 0, 0.05, 0.01, this.ticksSize/this.scalingSize, sz => this.changeAxisAttr(1, 'ticks_size', sz));
       menu.addSelectMenu('side', ['normal', 'invert', 'both'], this.ticksSide, side => this.changeAxisAttr(1, 'ticks_side', side));
-      menu.add('endsub:');
+      menu.endsub();
 
       if (!this.optionUnlab && this.labelsFont) {
-         menu.add('sub:Labels');
+         menu.sub('Labels');
          menu.addSizeMenu('offset', -0.05, 0.05, 0.01, this.labelsOffset/this.scalingSize,
                          offset => this.changeAxisAttr(1, 'labels_offset', offset));
          menu.addRAttrTextItems(this.labelsFont, { noangle: 1, noalign: 1 },
                change => this.changeAxisAttr(1, 'labels_' + change.name, change.value));
          menu.addchk(this.labelsFont.angle, 'rotate', res => this.changeAxisAttr(1, 'labels_angle', res ? 180 : 0));
-         menu.add('endsub:');
+         menu.endsub();
       }
 
-      menu.add('sub:Title', () => menu.input('Enter axis title', this.fTitle).then(t => this.changeAxisAttr(1, 'title_value', t)));
+      menu.sub('Title', () => menu.input('Enter axis title', this.fTitle).then(t => this.changeAxisAttr(1, 'title_value', t)));
 
       if (this.fTitle) {
          menu.addSizeMenu('offset', -0.05, 0.05, 0.01, this.titleOffset/this.scalingSize,
@@ -1096,7 +1096,7 @@ class RAxisPainter extends RObjectPainter {
          menu.addRAttrTextItems(this.titleFont, { noangle: 1, noalign: 1 }, change => this.changeAxisAttr(1, 'title_' + change.name, change.value));
       }
 
-      menu.add('endsub:');
+      menu.endsub();
       return true;
    }
 

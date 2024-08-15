@@ -15,7 +15,7 @@
 #define RooFit_Evaluator_h
 
 #include <RooAbsReal.h>
-#include <RooFit/Detail/DataMap.h>
+#include <RooFit/EvalContext.h>
 
 #include <RConfig.h>
 
@@ -25,17 +25,13 @@
 class ChangeOperModeRAII;
 class RooAbsArg;
 
+namespace RooBatchCompute {
+class AbsBufferManager;
+}
+
 namespace RooFit {
 
-namespace Detail {
-class BufferManager;
-}
-
 struct NodeInfo;
-
-namespace Detail {
-class BufferManager;
-}
 
 class Evaluator {
 public:
@@ -45,7 +41,9 @@ public:
    std::span<const double> run();
    void setInput(std::string const &name, std::span<const double> inputArray, bool isOnDevice);
    RooArgSet getParameters() const;
-   void print(std::ostream &os) const;
+   void print(std::ostream &os);
+
+   void setOffsetMode(RooFit::EvalContext::OffsetMode);
 
 private:
    void processVariable(NodeInfo &nodeInfo);
@@ -58,13 +56,13 @@ private:
    void syncDataTokens();
    void updateOutputSizes();
 
-   std::unique_ptr<Detail::BufferManager> _bufferManager;
+   std::unique_ptr<RooBatchCompute::AbsBufferManager> _bufferManager;
    RooAbsReal &_topNode;
    const bool _useGPU = false;
    int _nEvaluations = 0;
    bool _needToUpdateOutputSizes = false;
-   RooFit::Detail::DataMap _dataMapCPU;
-   RooFit::Detail::DataMap _dataMapCUDA;
+   RooFit::EvalContext _evalContextCPU;
+   RooFit::EvalContext _evalContextCUDA;
    std::vector<NodeInfo> _nodes; // the ordered computation graph
    std::stack<std::unique_ptr<ChangeOperModeRAII>> _changeOperModeRAIIs;
 };

@@ -194,7 +194,7 @@ class RLegendPainter extends RPavePainter {
          if (entry.fDrawableId !== 'custom')
             objp = pp.findSnap(entry.fDrawableId, true);
           else if (entry.fDrawable.fIO) {
-            objp = new RObjectPainter(this.getDom(), entry.fDrawable.fIO);
+            objp = new RObjectPainter(this.getPadPainter(), entry.fDrawable.fIO);
             if (entry.fLine) objp.createv7AttLine();
             if (entry.fFill) objp.createv7AttFill();
             if (entry.fMarker) objp.createv7AttMarker();
@@ -328,7 +328,7 @@ class RHistStatsPainter extends RPavePainter {
          return main.fillStatistic(this, gStyle.fOptStat, gStyle.fOptFit);
       }
 
-      // show lines which are exists, maybe server request will be recieved later
+      // show lines which are exists, maybe server request will be received later
       return (this.stats_lines !== undefined);
    }
 
@@ -380,9 +380,9 @@ class RHistStatsPainter extends RPavePainter {
          const obj = this.getObject(),
              action = this.changeMask.bind(this);
 
-         menu.add('header: StatBox');
+         menu.header('Stat Box');
 
-         for (let n=0; n<obj.fEntries.length; ++n)
+         for (let n = 0; n < obj.fEntries.length; ++n)
             menu.addchk((obj.fShowMask & (1<<n)), obj.fEntries[n], n, action);
 
          return this.fillObjectExecMenu(menu);

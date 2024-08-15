@@ -239,6 +239,57 @@ TEST(RNTuple, ModelExtensionProject)
    EXPECT_EQ(refVec, aliasVec(1));
 }
 
+TEST(RNTuple, ModelExtensionSubFields)
+{
+   FileRaii fileGuard("test_ntuple_modelext_cluster_boundaries.root");
+   CustomStruct refStruct{42.0, {1., 2., 3.}, {{4., 5.}, {}, {6.}}, "foo"};
+   {
+      auto model = RNTupleModel::Create();
+
+      auto structFld = model->MakeField<CustomStruct>("structFld", refStruct);
+
+      RNTupleWriteOptions opts;
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath());
+
+      for (unsigned i = 0; i < 2; ++i) {
+         for (unsigned j = 0; j < 3; ++j) {
+            ntuple->Fill();
+         }
+         ntuple->CommitCluster();
+      }
+
+      ntuple->Fill();
+
+      auto modelUpdater = ntuple->CreateModelUpdater();
+
+      modelUpdater->BeginUpdate();
+      auto extStructField = modelUpdater->MakeField<CustomStruct>("extStructFld", refStruct);
+      modelUpdater->CommitUpdate();
+
+      ntuple->Fill();
+   }
+
+   auto ntuple = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
+   auto &desc = ntuple->GetDescriptor();
+
+   EXPECT_EQ(3, desc.GetNClusters());
+   EXPECT_EQ(8, desc.GetNEntries());
+
+   auto structFldView = ntuple->GetView<CustomStruct>("structFld");
+   auto extStructFldView = ntuple->GetView<CustomStruct>("extStructFld");
+
+   EXPECT_EQ(structFldView(7), extStructFldView(7));
+
+   // Check that the column ranges for model-extended subfields are properly constructed by iterating over their view.
+   // For improper column ranges, the global field range would go until the value of kInvalidClusterIndex and result in
+   // an out-of-bounds error.
+   auto vecStructElemView = ntuple->GetView<float>("structFld.v2._0._0");
+   auto extVecStructElemView = ntuple->GetView<float>("extStructFld.v2._0._0");
+   for (const auto i : extVecStructElemView.GetFieldRange()) {
+      EXPECT_EQ(vecStructElemView(i), extVecStructElemView(i));
+   }
+}
+
 // Based on the RealWorld1 test in `ntuple_extended.cxx`, but here some fields are added after the fact
 TEST(RNTuple, ModelExtensionRealWorld1)
 {
@@ -365,8 +416,8 @@ TEST(RNTuple, ModelExtensionComplex)
          ntuple->Fill();
       }
 
-      // Force the serialization of a page list which will not know about the deferred columns coming later.
-      // `RClusterDescriptorBuilder::AddDeferredColumnRanges()` should thus make up page ranges for the missing columns
+      // Force the serialization of a page list which will not know about the extended columns coming later.
+      // `RClusterDescriptorBuilder::AddExtendedColumnRanges()` should thus make up page ranges for the missing columns
       ntuple->CommitCluster(true /* commitClusterGroup */);
 
       modelUpdater->BeginUpdate();

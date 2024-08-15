@@ -192,6 +192,8 @@ protected:
    void SetEntries(Double_t entries) { fEntries = entries; }
    void SetTitle(const char *title) override;
 
+   std::vector<Double_t> GetBinCenter(const std::vector<Int_t> &idx) const;
+
    Double_t GetBinContent(const Int_t *idx) const { return GetBinContent(GetBin(idx)); } // intentionally non-virtual
    virtual Double_t GetBinContent(Long64_t bin, Int_t* idx = nullptr) const = 0;
    virtual Double_t GetBinError2(Long64_t linidx) const = 0;
@@ -273,6 +275,7 @@ protected:
 
    Double_t ComputeIntegral();
    void GetRandom(Double_t *rand, Bool_t subBinRandom = kTRUE);
+   Double_t Integral(Bool_t respectAxisRange) const;
 
    void Print(Option_t* option = "") const override;
    void PrintEntries(Long64_t from = 0, Long64_t howmany = -1, Option_t* options = nullptr) const;

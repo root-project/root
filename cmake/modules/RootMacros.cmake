@@ -915,6 +915,10 @@ function(ROOT_LINKER_LIBRARY library)
     target_link_libraries(${library} PUBLIC ${ARG_LIBRARIES} ${ARG_DEPENDENCIES})
   endif()
 
+  if(DEFINED CMAKE_CXX_STANDARD)
+    target_compile_features(${library} INTERFACE cxx_std_${CMAKE_CXX_STANDARD})
+  endif()
+
   if(PROJECT_NAME STREQUAL "ROOT")
     if(NOT TARGET ROOT::${library})
       add_library(ROOT::${library} ALIAS ${library})
@@ -1746,7 +1750,7 @@ function(ROOT_ADD_TEST test)
   if(ARG_PYTHON_DEPS)
     foreach(python_dep ${ARG_PYTHON_DEPS})
       if(NOT TEST test-import-${python_dep})
-        add_test(NAME test-import-${python_dep} COMMAND ${PYTHON_EXECUTABLE} -c "import ${python_dep}")
+        add_test(NAME test-import-${python_dep} COMMAND ${Python3_EXECUTABLE} -c "import ${python_dep}")
         set_tests_properties(test-import-${python_dep} PROPERTIES FIXTURES_SETUP requires_${python_dep})
       endif()
       list(APPEND fixtures "requires_${python_dep}")
@@ -1829,7 +1833,7 @@ function(ROOT_ADD_GTEST test_suite)
   # against. For example, tests in Core should link only against libCore. This could be tricky
   # to implement because some ROOT components create more than one library.
   ROOT_EXECUTABLE(${test_suite} ${source_files} LIBRARIES ${ARG_LIBRARIES})
-  target_link_libraries(${test_suite} gtest_main gmock gmock_main)
+  target_link_libraries(${test_suite} gtest gtest_main gmock gmock_main)
   if(TARGET ROOT::TestSupport)
     target_link_libraries(${test_suite} ROOT::TestSupport)
   else()
@@ -1892,7 +1896,7 @@ function(ROOT_ADD_PYUNITTESTS name)
   endif()
   string(REGEX REPLACE "[_]" "-" good_name "${name}")
   ROOT_ADD_TEST(pyunittests-${good_name}
-                COMMAND ${PYTHON_EXECUTABLE} -B -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR} -p "*.py" -v
+                COMMAND ${Python3_EXECUTABLE} -B -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR} -p "*.py" -v
                 ENVIRONMENT ${ROOT_ENV})
 endfunction()
 
@@ -1935,7 +1939,7 @@ function(ROOT_ADD_PYUNITTEST name file)
   endif()
 
   ROOT_ADD_TEST(pyunittests-${good_name}
-              COMMAND ${PYTHON_EXECUTABLE} -B -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR}/${file_dir} -p ${file_name} -v
+              COMMAND ${Python3_EXECUTABLE} -B -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR}/${file_dir} -p ${file_name} -v
               ENVIRONMENT ${ROOT_ENV} ${ARG_ENVIRONMENT}
               LABELS ${labels}
               ${copy_to_builddir}
@@ -1993,7 +1997,7 @@ function(find_python_module module)
       endif()
       # A module's location is usually a directory, but for binary modules
       # it's a .so file.
-      execute_process(COMMAND "${PYTHON_EXECUTABLE}" "-c"
+      execute_process(COMMAND "${Python3_EXECUTABLE}" "-c"
          "import re, ${module}; print(re.compile('/__init__.py.*').sub('',${module}.__file__))"
          RESULT_VARIABLE _${module}_status
          OUTPUT_VARIABLE _${module}_location
@@ -2027,7 +2031,7 @@ function(generateHeader target input output)
     DEPENDS
       ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py
     COMMAND
-      ${PYTHON_EXECUTABLE} -B ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py ${input} ${output}
+      ${Python3_EXECUTABLE} -B ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py ${input} ${output}
   )
   target_sources(${target} PRIVATE ${output})
 endfunction()
@@ -2047,7 +2051,7 @@ function(generateManual name input output)
     DEPENDS
       ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py
     COMMAND
-      ${PYTHON_EXECUTABLE} -B ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py ${input} ${output}
+      ${Python3_EXECUTABLE} -B ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py ${input} ${output}
   )
 
   install(FILES ${output} DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)

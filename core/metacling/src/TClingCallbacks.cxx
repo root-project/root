@@ -33,6 +33,7 @@
 #include "clang/Sema/Scope.h"
 #include "clang/Serialization/ASTReader.h"
 #include "clang/Serialization/GlobalModuleIndex.h"
+#include "clang/Basic/DiagnosticSema.h"
 
 #include "llvm/ExecutionEngine/Orc/Core.h"
 
@@ -181,7 +182,6 @@ public:
       // provides the symbol and create one MaterializationUnit per library to
       // actually load it if needed.
       std::unordered_map<std::string, llvm::orc::SymbolNameVector> found;
-      llvm::orc::SymbolNameSet missing;
 
       // TODO: Do we need to take gInterpreterMutex?
       // R__LOCKGUARD(gInterpreterMutex);
@@ -203,9 +203,7 @@ public:
          // is made available as argument to `CreateInterpreter`.
          assert(libName.find("/libCling.") == std::string::npos && "Must not autoload libCling!");
 
-         if (libName.empty())
-            missing.insert(name);
-         else
+         if (!libName.empty())
             found[libName].push_back(name);
       }
 
@@ -214,10 +212,6 @@ public:
          if (auto Err = JD.define(MU))
             return Err;
       }
-
-      if (!missing.empty())
-         return llvm::make_error<llvm::orc::SymbolsNotFound>(
-            JD.getExecutionSession().getSymbolStringPool(), std::move(missing));
 
       return llvm::Error::success();
    }
@@ -1004,6 +998,12 @@ bool TClingCallbacks::tryInjectImplicitAutoKeyword(LookupResult &R, Scope *S) {
    Result->addAttr(AnnotateAttr::CreateImplicit(C, "__Auto"));
 
    R.addDecl(Result);
+
+   // Raise a warning when trying to use implicit auto injection feature.
+   SemaRef.getDiagnostics().setSeverity(diag::warn_deprecated_message, diag::Severity::Warning, SourceLocation());
+   SemaRef.Diag(Loc, diag::warn_deprecated_message)
+      << "declaration without the 'auto' keyword" << DC << Loc << FixItHint::CreateInsertion(Loc, "auto ");
+
    // Say that we can handle the situation. Clang should try to recover
    return true;
 }
@@ -1050,19 +1050,6 @@ void TClingCallbacks::TransactionRollback(const Transaction &T) {
 
 void TClingCallbacks::DefinitionShadowed(const clang::NamedDecl *D) {
    TCling__InvalidateGlobal(D);
-}
-
-void TClingCallbacks::DeclDeserialized(const clang::Decl* D) {
-   if (const RecordDecl* RD = dyn_cast<RecordDecl>(D)) {
-      // FIXME: Our AutoLoading doesn't work (load the library) when the looked
-      // up decl is found in the PCH/PCM. We have to do that extra step, which
-      // loads the corresponding library when a decl was deserialized.
-      //
-      // Unfortunately we cannot do that with the current implementation,
-      // because the library load will pull in the header files of the library
-      // as well, even though they are in the PCH/PCM and available.
-      (void)RD;//TCling__AutoLoadCallback(RD->getNameAsString().c_str());
-   }
 }
 
 void TClingCallbacks::LibraryLoaded(const void* dyLibHandle,

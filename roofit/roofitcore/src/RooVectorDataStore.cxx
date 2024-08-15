@@ -47,7 +47,7 @@ which returns spans pointing directly to the data.
 #include "TBuffer.h"
 
 #include <iomanip>
-using namespace std;
+using std::string, std::vector, std::cout, std::endl, std::list;
 
 ClassImp(RooVectorDataStore);
 ClassImp(RooVectorDataStore::RealVector);
@@ -135,7 +135,7 @@ RooRealVar* RooVectorDataStore::weightVar(const RooArgSet& allVars, const char* 
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Regular copy ctor
+/// Regular copy constructor.
 
 RooVectorDataStore::RooVectorDataStore(const RooVectorDataStore& other, const char* newname) :
   RooAbsDataStore(other,newname),
@@ -193,7 +193,7 @@ RooVectorDataStore::RooVectorDataStore(const RooTreeDataStore& other, const RooA
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Clone ctor, must connect internal storage to given new external set of vars
+/// Clone constructor, must connect internal storage to given new external set of variables.
 
 RooVectorDataStore::RooVectorDataStore(const RooVectorDataStore& other, const RooArgSet& vars, const char* newname) :
   RooAbsDataStore(other,varsNoWeight(vars,other._wgtVar?other._wgtVar->GetName():nullptr),newname),
@@ -847,7 +847,7 @@ void RooVectorDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet,
 //       cout << "RooVectorDataStore::cacheArgs() cached node " << arg->GetName() << " has a normalization set specification CATNormSet = " << catNset << endl ;
 
       RooArgSet anset = RooHelpers::selectFromArgSet(nset ? *nset : RooArgSet{}, catNset);
-      normSet = static_cast<RooArgSet*>(anset.selectCommon(*argObs)) ;
+      normSet = anset.selectCommon(*argObs);
 
     }
     const char* catCset = arg->getStringAttribute("CATCondSet") ;
@@ -984,7 +984,7 @@ void RooVectorDataStore::attachCache(const RooAbsArg* newOwner, const RooArgSet&
   // Only applicable if a cache exists
   if (!_cache) return ;
 
-  // Clone ctor, must connect internal storage to given new external set of vars
+  // Clone constructor, must connect internal storage to given new external set of variables
   std::vector<RealVector*> cacheElements(_cache->realStoreList());
   cacheElements.insert(cacheElements.end(), _cache->_realfStoreList.begin(), _cache->_realfStoreList.end());
 

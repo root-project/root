@@ -16,24 +16,25 @@
 
 // Global helper functions
 
-#include "RooGlobalFunc.h"
+#include <RooGlobalFunc.h>
 
-#include "RooCategory.h"
-#include "RooRealConstant.h"
-#include "RooDataSet.h"
-#include "RooDataHist.h"
-#include "RooNumIntConfig.h"
-#include "RooRealVar.h"
-#include "RooFitResult.h"
-#include "RooAbsPdf.h"
-#include "RooFormulaVar.h"
-#include "RooHelpers.h"
-#include "RooMsgService.h"
-#include "TH1.h"
+#include <RooAbsPdf.h>
+#include <RooCategory.h>
+#include <RooDataHist.h>
+#include <RooDataSet.h>
+#include <RooFitResult.h>
+#include <RooFormulaVar.h>
+#include <RooHelpers.h>
+#include <RooMsgService.h>
+#include <RooNumIntConfig.h>
+#include <RooRealConstant.h>
+#include <RooRealVar.h>
+
+#include <TH1.h>
 
 #include <algorithm>
 
-using namespace std;
+using std::ostream;
 
 namespace RooFit {
 
@@ -41,28 +42,39 @@ namespace RooFit {
 namespace {
 
 template <class T>
-RooCmdArg processImportItem(std::pair<std::string const, T *> const &item)
+RooCmdArg processImportItem(std::string const &key, T *val)
 {
-   return Import(item.first.c_str(), *item.second);
+   return Import(key.c_str(), *val);
 }
 
 template <class T>
-RooCmdArg processLinkItem(std::pair<std::string const, T *> const &item)
+RooCmdArg processLinkItem(std::string const &key, T *val)
 {
-   return Link(item.first.c_str(), *item.second);
+   return Link(key.c_str(), *val);
 }
 
-RooCmdArg processSliceItem(std::pair<RooCategory *const, std::string> const &item)
+RooCmdArg processSliceItem(RooCategory *key, std::string const &val)
 {
-   return Slice(*item.first, item.second.c_str());
+   return Slice(*key, val.c_str());
 }
 
-template <class Map_t, class Func_t>
-RooCmdArg processMap(const char *name, Func_t func, Map_t const &map)
+template <class Key_t, class Val_t, class Func_t>
+RooCmdArg processMap(const char *name, Func_t func, std::map<Key_t, Val_t> const &map)
 {
    RooCmdArg container(name, 0, 0, 0, 0, nullptr, nullptr, nullptr, nullptr);
    for (auto const &item : map) {
-      container.addArg(func(item));
+      container.addArg(func(item.first, item.second));
+   }
+   container.setProcessRecArgs(true, false);
+   return container;
+}
+
+template <class Key_t, class Val_t, class Func_t>
+RooCmdArg processFlatMap(const char *name, Func_t func, Detail::FlatMap<Key_t, Val_t> const &map)
+{
+   RooCmdArg container(name, 0, 0, 0, 0, nullptr, nullptr, nullptr, nullptr);
+   for (std::size_t i = 0; i < map.keys.size(); ++i) {
+      container.addArg(func(map.keys[i], map.vals[i]));
    }
    container.setProcessRecArgs(true, false);
    return container;
@@ -1050,7 +1062,32 @@ RooConstVar &RooConst(double val)
    return RooRealConstant::value(val);
 }
 
-} // End namespace RooFit
+namespace Detail {
+
+RooCmdArg SliceFlatMap(FlatMap<RooCategory *, std::string> const &args)
+{
+   return processFlatMap("SliceCatMany", processSliceItem, args);
+}
+RooCmdArg ImportFlatMap(FlatMap<std::string, RooDataHist *> const &args)
+{
+   return processFlatMap("ImportDataSliceMany", processImportItem<RooDataHist>, args);
+}
+RooCmdArg ImportFlatMap(FlatMap<std::string, TH1 *> const &args)
+{
+   return processFlatMap("ImportDataSliceMany", processImportItem<TH1>, args);
+}
+RooCmdArg ImportFlatMap(FlatMap<std::string, RooDataSet *> const &args)
+{
+   return processFlatMap("ImportDataSliceMany", processImportItem<RooDataSet>, args);
+}
+RooCmdArg LinkFlatMap(FlatMap<std::string, RooAbsData *> const &args)
+{
+   return processFlatMap("LinkDataSliceMany", processLinkItem<RooAbsData>, args);
+}
+
+}
+
+} // namespace RooFit
 
 namespace RooFitShortHand {
 

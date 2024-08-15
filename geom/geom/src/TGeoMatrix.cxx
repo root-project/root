@@ -2439,8 +2439,10 @@ TGeoHMatrix &TGeoHMatrix::operator=(const TGeoMatrix &matrix)
    Clear();
    Bool_t registered = TestBit(kGeoRegistered);
    TNamed::operator=(matrix);
-   if (matrix.IsIdentity())
+   if (matrix.IsIdentity()) {
+      SetBit(kGeoRegistered, registered);
       return *this;
+   }
    if (matrix.IsTranslation())
       memcpy(fTranslation, matrix.GetTranslation(), kN3);
    if (matrix.IsRotation())

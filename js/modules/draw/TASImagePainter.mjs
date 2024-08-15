@@ -1,8 +1,7 @@
 import { create, settings, isNodeJs, isStr, btoa_func, clTAxis, clTPaletteAxis, clTImagePalette, getDocument } from '../core.mjs';
 import { toHex } from '../base/colors.mjs';
 import { assignContextMenu } from '../gui/menu.mjs';
-import { DrawOptions } from '../base/BasePainter.mjs';
-import { ObjectPainter } from '../base/ObjectPainter.mjs';
+import { ObjectPainter, DrawOptions } from '../base/ObjectPainter.mjs';
 import { TPavePainter } from '../hist/TPavePainter.mjs';
 import { ensureTCanvas } from '../gpad/TCanvasPainter.mjs';
 
@@ -36,7 +35,7 @@ class TASImagePainter extends ObjectPainter {
             pal = obj?.fPalette;
       if (!pal) return null;
 
-      const rgba = new Array((nlevels+1) * 4).fill(0); // precaclucated colors
+      const rgba = new Array((nlevels+1) * 4).fill(0); // precalculated colors
 
       for (let lvl = 0, indx = 1; lvl <= nlevels; ++lvl) {
          const l = lvl/nlevels;
@@ -58,7 +57,7 @@ class TASImagePainter extends ObjectPainter {
      * @private */
    async makeUrlFromImageBuf(obj, fp) {
       const nlevels = 1000;
-      this.rgba = this.createRGBA(nlevels); // precaclucated colors
+      this.rgba = this.createRGBA(nlevels); // precalculated colors
 
       let min = obj.fImgBuf[0], max = obj.fImgBuf[0];
       for (let k = 1; k < obj.fImgBuf.length; ++k) {
@@ -71,7 +70,7 @@ class TASImagePainter extends ObjectPainter {
       // min = Math.min.apply(null, obj.fImgBuf),
       // max = Math.max.apply(null, obj.fImgBuf);
 
-      // create countor like in hist painter to allow palette drawing
+      // create contour like in hist painter to allow palette drawing
       this.fContour = {
          arr: new Array(200),
          rgba: this.rgba,
@@ -346,7 +345,7 @@ class TASImagePainter extends ObjectPainter {
          Object.assign(pal, { fX1NDC: 0.91, fX2NDC: 0.95, fY1NDC: 0.1, fY2NDC: 0.9, fInit: 1 });
          pal.fAxis.fChopt = '+';
          this.draw_palette = pal;
-         this._color_palette = true; // to emulate behaviour of hist painter
+         this._color_palette = true; // to emulate behavior of hist painter
       }
 
       let pal_painter = this.getPadPainter().findPainterFor(this.draw_palette);
@@ -375,12 +374,9 @@ class TASImagePainter extends ObjectPainter {
          return pal_painter.drawPave('');
       }
 
-      const prev_name = this.selectCurrentPad(this.getPadName());
-
-      return TPavePainter.draw(this.getDom(), this.draw_palette).then(p => {
+      return TPavePainter.draw(this.getPadPainter(), this.draw_palette).then(p => {
          pal_painter = p;
 
-         this.selectCurrentPad(prev_name);
          // mark painter as secondary - not in list of TCanvas primitives
          pal_painter.setSecondary(this);
 

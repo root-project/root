@@ -1,6 +1,6 @@
-import py, os, sys
+import py
 from pytest import raises
-from .support import setup_make, pylong, pyunicode
+from .support import setup_make
 
 currpath = py.path.local(__file__).dirpath()
 test_dct = str(currpath.join("conversionsDict"))
@@ -47,6 +47,7 @@ class TestCONVERSIONS:
 
         assert CC.s_count == 0
         c = CC()
+        assert c.__python_owns__
         assert CC.s_count == 1
         del c; gc.collect()
         assert CC.s_count == 0
@@ -89,9 +90,38 @@ class TestCONVERSIONS:
     def test04_implicit_conversion_from_tuple(self):
         """Allow implicit conversions from tuples as arguments {}-like"""
 
+        # Note: fails on windows b/c the assignment operator for strings is
+        # template, which ("operator=(std::string)") doesn't instantiate
         import cppyy
 
         m = cppyy.gbl.std.map[str, str]()
         m.insert(('a', 'b'))      # implicit conversion to std::pair
 
         assert m['a'] == 'b'
+
+    def test05_bool_conversions(self):
+        """Test operator bool() and null pointer behavior"""
+
+        import cppyy
+
+        cppyy.cppdef("""\
+        namespace BoolConversions {
+        struct Test1 {};
+        struct Test2 {
+            Test2(bool b) : m_b(b) {}
+            explicit operator bool() const { return m_b; }
+            bool m_b;
+        };
+
+        Test1* CreateNullTest1() { return nullptr; }
+        Test2* CreateNullTest2() { return nullptr; }
+        }""")
+
+        ns = cppyy.gbl.BoolConversions
+
+        for t in [ns.CreateNullTest1(), ns.CreateNullTest2()]:
+            assert not t
+
+        assert     ns.Test1()
+        assert     ns.Test2(True)
+        assert not ns.Test2(False)

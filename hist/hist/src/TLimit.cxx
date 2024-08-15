@@ -23,15 +23,12 @@
 //  Alex Read, "Modified Frequentist Analysis of Search Results (The CLs Method)"
 //  CERN 2000-005 (30 May 2000)
 //
-// see note about: "Should I use TRolke, TFeldmanCousins, TLimit?"
-//  in the TRolke class description.
-//
 ///////////////////////////////////////////////////////////////////////////
 
 /** \class TLimit
+    \legacy{TLimit, Consider switching to RooStats.}
     \ingroup Hist
- Algorithm to compute 95% C.L. limits using the Likelihood ratio
- semi-bayesian method.
+ Algorithm to compute 95% CL limits using the Likelihood ratio semi-bayesian method.
 
  Implemented by C. Delaere from the mclimit code written by Tom Junk [HEP-EX/9902006].
  See [http://cern.ch/thomasj/searchlimits/ecl.html](http://cern.ch/thomasj/searchlimits/ecl.html) for more details.
@@ -78,6 +75,8 @@
  infile->Close();
 ~~~
  More information can still be found on [this page](http://cern.ch/aleph-proj-alphapp/doc/tlimit.html)
+ \see https://doi.org/10.1088/0954-3899/28/10/313 and https://cds.cern.ch/record/451614/files/open-2000-205.pdf
+ \note see note about: "Should I use TRolke, TFeldmanCousins, TLimit?" in the TRolke class description.
  */
 
 #include "TLimit.h"

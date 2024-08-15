@@ -171,7 +171,7 @@ public:
       {
          return entriesForTraining / fBatchSize;
       }
-
+      
       return entriesForTraining / fBatchSize + 1;
    }
 

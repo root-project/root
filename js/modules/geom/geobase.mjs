@@ -20,7 +20,6 @@ function geoCfg(name, value) {
    cfg[name] = value;
 }
 
-
 const kindGeo = 0,    // TGeoNode / TGeoShape
       kindEve = 1,    // TEveShape / TEveGeoShapeExtract
       kindShape = 2,  // special kind for single shape handling
@@ -312,7 +311,7 @@ class GeometryCreator {
       }
    }
 
-   /** @summary Caclualte normal */
+   /** @summary Calculate normal */
    calcNormal() {
       if (!this.cb) {
          this.pA = new Vector3();
@@ -455,9 +454,9 @@ class PolygonsCreator {
             this.polygons.push(polygon);
          } else {
             polygon = this.polygons[this.polygons.length-1];
-            // check that last vertice equals to v2
+            // check that last vertex equals to v2
             const last = this.mnormal ? polygon.vertices[polygon.vertices.length-1] : polygon.vertices[0],
-                comp = this.mnormal ? this.v2 : this.v3;
+                  comp = this.mnormal ? this.v2 : this.v3;
 
             if (comp.diff(last) > 1e-12)
                console.error('vertex missmatch when building polygon');
@@ -562,7 +561,7 @@ class PolygonsCreator {
 
 // ================= all functions to create geometry ===================================
 
-/** @summary Creates cube geometrey
+/** @summary Creates cube geometry
   * @private */
 function createCubeBuffer(shape, faces_limit) {
    if (faces_limit < 0) return 12;
@@ -609,7 +608,7 @@ function create8edgesBuffer(v, faces_limit) {
    return creator.create();
 }
 
-/** @summary Creates PARA geometrey
+/** @summary Creates PARA geometry
   * @private */
 function createParaBuffer(shape, faces_limit) {
    if (faces_limit < 0) return 12;
@@ -627,7 +626,7 @@ function createParaBuffer(shape, faces_limit) {
    return create8edgesBuffer(v, faces_limit);
 }
 
-/** @summary Creates Ttrapezoid geometrey
+/** @summary Creates trapezoid geometry
   * @private */
 function createTrapezoidBuffer(shape, faces_limit) {
    if (faces_limit < 0) return 12;
@@ -654,7 +653,7 @@ function createTrapezoidBuffer(shape, faces_limit) {
 }
 
 
-/** @summary Creates arb8 geometrey
+/** @summary Creates arb8 geometry
   * @private */
 function createArb8Buffer(shape, faces_limit) {
    if (faces_limit < 0) return 12;
@@ -764,7 +763,7 @@ function createArb8Buffer(shape, faces_limit) {
    return creator.create();
 }
 
-/** @summary Creates sphere geometrey
+/** @summary Creates sphere geometry
   * @private */
 function createSphereBuffer(shape, faces_limit) {
    const radius = [shape.fRmax, shape.fRmin],
@@ -885,7 +884,7 @@ function createSphereBuffer(shape, faces_limit) {
    return creator.create();
 }
 
-/** @summary Creates tube geometrey
+/** @summary Creates tube geometry
   * @private */
 function createTubeBuffer(shape, faces_limit) {
    let outerR, innerR; // inner/outer tube radius
@@ -1007,7 +1006,7 @@ function createTubeBuffer(shape, faces_limit) {
                        outerR[1] * _cos[0], outerR[1] * _sin[0], -shape.fDZ,
                        outerR[0] * _cos[0], outerR[0] * _sin[0], shape.fDZ,
                        innerR[0] * _cos[0], innerR[0] * _sin[0], shape.fDZ,
-                       (outerR[0] === innerR[0]) ? 2 : ((innerR[1]===outerR[1]) ? 1 : 0));
+                       (outerR[0] === innerR[0]) ? 2 : ((innerR[1] === outerR[1]) ? 1 : 0));
       if (calcZ) creator.recalcZ(calcZ);
       creator.calcNormal();
 
@@ -1015,7 +1014,7 @@ function createTubeBuffer(shape, faces_limit) {
                        outerR[0] * _cos[radiusSegments], outerR[0] * _sin[radiusSegments], shape.fDZ,
                        outerR[1] * _cos[radiusSegments], outerR[1] * _sin[radiusSegments], -shape.fDZ,
                        innerR[1] * _cos[radiusSegments], innerR[1] * _sin[radiusSegments], -shape.fDZ,
-                       (outerR[0] === innerR[0]) ? 1 : ((innerR[1]===outerR[1]) ? 2 : 0));
+                       (outerR[0] === innerR[0]) ? 1 : ((innerR[1] === outerR[1]) ? 2 : 0));
 
       if (calcZ) creator.recalcZ(calcZ);
       creator.calcNormal();
@@ -1024,7 +1023,7 @@ function createTubeBuffer(shape, faces_limit) {
    return creator.create();
 }
 
-/** @summary Creates eltu geometrey
+/** @summary Creates eltu geometry
   * @private */
 function createEltuBuffer(shape, faces_limit) {
    const radiusSegments = Math.max(4, Math.round(360/cfg.GradPerSegm));
@@ -1074,7 +1073,7 @@ function createEltuBuffer(shape, faces_limit) {
    return creator.create();
 }
 
-/** @summary Creates torus geometrey
+/** @summary Creates torus geometry
   * @private */
 function createTorusBuffer(shape, faces_limit) {
    const radius = shape.fR;
@@ -1166,7 +1165,7 @@ function createTorusBuffer(shape, faces_limit) {
 }
 
 
-/** @summary Creates polygon geometrey
+/** @summary Creates polygon geometry
   * @private */
 function createPolygonBuffer(shape, faces_limit) {
    const thetaStart = shape.fPhi1,
@@ -1193,7 +1192,7 @@ function createPolygonBuffer(shape, faces_limit) {
    // coordinate of point on cut edge (x,z)
    const pnts = (thetaLength === 360) ? null : [];
 
-   // first analyse levels - if we need to create all of them
+   // first analyze levels - if we need to create all of them
    for (let side = 0; side < 2; ++side) {
       const rside = (side === 0) ? 'fRmax' : 'fRmin';
 
@@ -1339,7 +1338,7 @@ function createPolygonBuffer(shape, faces_limit) {
    return creator.create();
 }
 
-/** @summary Creates xtru geometrey
+/** @summary Creates xtru geometry
   * @private */
 function createXtruBuffer(shape, faces_limit) {
    let nfaces = (shape.fNz-1) * shape.fNvert * 2;
@@ -1396,7 +1395,7 @@ function createXtruBuffer(shape, faces_limit) {
    return creator.create();
 }
 
-/** @summary Creates para geometrey
+/** @summary Creates para geometry
   * @private */
 function createParaboloidBuffer(shape, faces_limit) {
    let radiusSegments = Math.max(4, Math.round(360/cfg.GradPerSegm)),
@@ -1489,7 +1488,7 @@ function createParaboloidBuffer(shape, faces_limit) {
    return creator.create();
 }
 
-/** @summary Creates hype geometrey
+/** @summary Creates hype geometry
   * @private */
 function createHypeBuffer(shape, faces_limit) {
    if ((shape.fTin === 0) && (shape.fTout === 0))
@@ -1561,7 +1560,7 @@ function createHypeBuffer(shape, faces_limit) {
    return creator.create();
 }
 
-/** @summary Creates tessalated geometrey
+/** @summary Creates tessellated geometry
   * @private */
 function createTessellatedBuffer(shape, faces_limit) {
    let numfaces = 0;
@@ -1843,7 +1842,7 @@ function countGeometryFaces(geom) {
    return attr?.count ? Math.round(attr.count / 3) : 0;
 }
 
-/** @summary Creates geometrey for composite shape
+/** @summary Creates geometry for composite shape
   * @private */
 function createComposite(shape, faces_limit) {
    if (faces_limit < 0) {
@@ -2058,7 +2057,7 @@ function makeEveGeometry(rd) {
    return body;
 }
 
-/** @summary Create single shape from geometry veiwer render date
+/** @summary Create single shape from geometry viewer render date
   * @private */
 function makeViewerGeometry(rd) {
    const vtxBuff = new Float32Array(rd.raw.buffer, 0, rd.raw.buffer.byteLength/4),
@@ -2377,7 +2376,7 @@ class ClonedNodes {
       this.name_prefix = ''; // name prefix used for nodes names
       this.maxdepth = 1;  // maximal hierarchy depth, required for transparency
       this.vislevel = 4;  // maximal depth of nodes visibility aka gGeoManager->SetVisLevel, same default
-      this.maxnodes = 10000; // maximal number of visisble nodes aka gGeoManager->fMaxVisNodes
+      this.maxnodes = 10000; // maximal number of visible nodes aka gGeoManager->fMaxVisNodes
 
       if (obj) {
          if (obj.$geoh) this.toplevel = false;
@@ -2396,9 +2395,10 @@ class ClonedNodes {
       return this.vislevel;
    }
 
-   /** @summary Set maximal number of visible nodes */
+   /** @summary Set maximal number of visible nodes
+    * @desc By default 10000 nodes will be visualized */
    setMaxVisNodes(v, more) {
-      this.maxnodes = Number.isFinite(v) ? v : 10000;
+      this.maxnodes = (v === Infinity) ? 1e9 : (Number.isFinite(v) ? v : 10000);
       if (more && Number.isFinite(more))
          this.maxnodes *= more;
    }
@@ -2521,7 +2521,7 @@ class ClonedNodes {
          const matrix = getNodeMatrix(kind, obj);
          if (matrix) {
             clone.matrix = matrix.elements; // take only matrix elements, matrix will be constructed in worker
-            if (clone.matrix[0] === 1) {
+            if (clone.matrix && (clone.matrix[0] === 1)) {
                let issimple = true;
                for (let k = 1; (k < clone.matrix.length) && issimple; ++k)
                   issimple = (clone.matrix[k] === ((k === 5) || (k === 10) || (k === 15) ? 1 : 0));
@@ -2583,7 +2583,7 @@ class ClonedNodes {
       this.nodes = [node];
    }
 
-   /** @summary Count all visisble nodes */
+   /** @summary Count all visible nodes */
    countVisibles() {
       const len = this.nodes?.length || 0;
       let cnt = 0;
@@ -2592,11 +2592,13 @@ class ClonedNodes {
       return cnt;
    }
 
-   /** @summary Mark visisble nodes.
+   /** @summary Mark visible nodes.
      * @desc Set only basic flags, actual visibility depends from hierarchy */
    markVisibles(on_screen, copy_bits, hide_top_volume) {
-      if (this.plain_shape) return 1;
-      if (!this.origin || !this.nodes) return 0;
+      if (this.plain_shape)
+         return 1;
+      if (!this.origin || !this.nodes)
+         return 0;
 
       let res = 0;
 
@@ -2623,11 +2625,12 @@ class ClonedNodes {
                } else {
                   clone.vis = !testGeoBit(obj.fVolume, geoBITS.kVisNone) && testGeoBit(obj.fVolume, geoBITS.kVisThis) ? 99 : 0;
 
-                  if (!testGeoBit(obj, geoBITS.kVisDaughters) ||
-                      !testGeoBit(obj.fVolume, geoBITS.kVisDaughters)) clone.nochlds = true;
+                  if (!testGeoBit(obj, geoBITS.kVisDaughters) || !testGeoBit(obj.fVolume, geoBITS.kVisDaughters))
+                     clone.nochlds = true;
 
                   // node with childs only shown in case if it is last level in hierarchy
-                  if ((clone.vis > 0) && clone.chlds && !clone.nochlds) clone.vis = 1;
+                  if ((clone.vis > 0) && clone.chlds && !clone.nochlds)
+                     clone.vis = 1;
 
                   // special handling for top node
                   if (n === 0) {
@@ -2654,7 +2657,7 @@ class ClonedNodes {
       return res;
    }
 
-   /** @summary After visibility flags is set, produce idshift for all nodes as it would be maximum level */
+   /** @summary After visibility flags is set, produce id shifts for all nodes as it would be maximum level */
    produceIdShifts() {
       for (let k = 0; k < this.nodes.length; ++k)
          this.nodes[k].idshift = -1;
@@ -2822,7 +2825,9 @@ class ClonedNodes {
 
       let node_vis = node.vis, node_nochlds = node.nochlds;
 
-      if (arg.testPhysVis) {
+      if ((arg.nodeid === 0) && arg.main_visible)
+         node_vis = vislvl + 1;
+      else if (arg.testPhysVis) {
          const res = arg.testPhysVis();
          if (res !== undefined) {
             node_vis = res && !node.chlds ? vislvl + 1 : 0;
@@ -2955,7 +2960,7 @@ class ClonedNodes {
       return stack;
    }
 
-   /** @summary Retuns ids array which correspond to the stack */
+   /** @summary Returns ids array which correspond to the stack */
    buildIdsByStack(stack) {
       if (!stack) return null;
       let node = this.nodes[0];
@@ -2968,7 +2973,7 @@ class ClonedNodes {
       return ids;
    }
 
-   /** @summary Retuns node id by stack */
+   /** @summary Returns node id by stack */
    getNodeIdByStack(stack) {
       if (!stack || !this.nodes)
          return -1;
@@ -3170,6 +3175,12 @@ class ClonedNodes {
 
          obj3d = new Object3D();
 
+         if (this._cfg?.set_names)
+            obj3d.name = this.getNodeName(node.id);
+
+         if (this._cfg?.set_origin && this.origin)
+            obj3d.userData = this.origin[node.id];
+
          if (node.abs_matrix) {
             obj3d.absMatrix = new Matrix4();
             obj3d.absMatrix.fromArray(node.matrix);
@@ -3266,6 +3277,12 @@ class ClonedNodes {
       mesh.stack = entry.stack;
       mesh.renderOrder = this.maxdepth - entry.stack.length; // order of transparency handling
 
+      if (ctrl.set_names)
+         mesh.name = this.getNodeName(entry.nodeid);
+
+      if (ctrl.set_origin)
+         mesh.userData = prop.volume;
+
       // keep hierarchy level
       mesh.$jsroot_order = obj3d.$jsroot_depth;
 
@@ -3339,17 +3356,18 @@ class ClonedNodes {
             if (instance.entries.length === 1)
                this.createEntryMesh(ctrl, toplevel, entry0, shape, colors);
             else {
-               const arr1 = [], arr2 = [], stacks1 = [], stacks2 = [];
+               const arr1 = [], arr2 = [], stacks1 = [], stacks2 = [], names1 = [], names2 = [];
 
                instance.entries.forEach(entry => {
                   const info = this.resolveStack(entry.stack, true);
-
                   if (info.matrix.determinant() > -0.9) {
                      arr1.push(info.matrix);
                      stacks1.push(entry.stack);
+                     names1.push(this.getNodeName(entry.nodeid));
                   } else {
                      arr2.push(info.matrix);
                      stacks2.push(entry.stack);
+                     names2.push(this.getNodeName(entry.nodeid));
                   }
                   entry.done = true;
                });
@@ -3363,6 +3381,14 @@ class ClonedNodes {
                   toplevel.add(mesh1);
 
                   mesh1.renderOrder = 1;
+
+                  if (ctrl.set_names) {
+                     mesh1.name = names1[0];
+                     mesh1.names = names1;
+                  }
+
+                  if (ctrl.set_origin)
+                     mesh1.userData = prop.volume;
 
                   mesh1.$jsroot_order = 1;
                   ctrl.info.num_meshes++;
@@ -3385,6 +3411,13 @@ class ClonedNodes {
                   toplevel.add(mesh2);
 
                   mesh2.renderOrder = 1;
+                  if (ctrl.set_names) {
+                     mesh2.name = names2[0];
+                     mesh2.names = names2;
+                  }
+                  if (ctrl.set_origin)
+                     mesh2.userData = prop.volume;
+
                   mesh2.$jsroot_order = 1;
                   ctrl.info.num_meshes++;
                   ctrl.info.num_faces += shape.nfaces*arr2.length;
@@ -3458,6 +3491,13 @@ class ClonedNodes {
       arg.reset();
 
       let total = this.scanVisible(arg);
+      if ((total === 0) && (this.nodes[0].vis < 2) && !this.nodes[0].nochlds) {
+         // try to draw only main node by default
+         arg.reset();
+         arg.main_visible = true;
+         total = this.scanVisible(arg);
+      }
+
       const maxnumnodes = this.getMaxVisNodes();
 
       if (maxnumnodes > 0) {
@@ -3471,8 +3511,6 @@ class ClonedNodes {
       this.actual_level = arg.vislvl; // not used, can be shown somewhere in the gui
 
       let minVol = 0, maxVol = 0, camVol = -1, camFact = 10, sortidcut = this.nodes.length + 1;
-
-      console.log(`Total visible nodes ${total} numfaces ${arg.facecnt}`);
 
       if (arg.facecnt > maxnumfaces) {
          const bignumfaces = maxnumfaces * (frustum ? 0.8 : 1.0),
@@ -3709,7 +3747,7 @@ class ClonedNodes {
          nm[0] = nm[5] = nm[10] = nm[15] = 1;
 
          if (m.length === 3) {
-            // translation martix
+            // translation matrix
             nm[12] = m[0]; nm[13] = m[1]; nm[14] = m[2];
          } else if (m.length === 4) {
             // scale matrix

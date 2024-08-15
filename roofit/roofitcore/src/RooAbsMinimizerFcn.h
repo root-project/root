@@ -58,7 +58,7 @@ public:
    Int_t evalCounter() const { return _evalCounter; }
    void zeroEvalCount() { _evalCounter = 0; }
    /// Return a possible offset that's applied to the function to separate invalid function values from valid ones.
-   double getOffset() const { return _funcOffset; }
+   double &getOffset() const { return _funcOffset; }
 
    /// Put Minuit results back into RooFit objects.
    void BackProp(const ROOT::Fit::FitResult &results);
@@ -107,6 +107,7 @@ protected:
 
    void printEvalErrors() const;
 
+   double applyEvalErrorHandling(double fvalue) const;
    void finishDoEval() const;
 
    // members
@@ -118,6 +119,10 @@ protected:
    mutable double _funcOffset{0.};
    mutable int _numBadNLL = 0;
    mutable int _evalCounter{0};
+   // PB: these mutables signal a suboptimal design. A separate error handling
+   // object containing all this would clean up this class. It would allow const
+   // functions to be actually const (even though state still changes in the
+   // error handling object).
 
    unsigned int _nDim = 0;
 

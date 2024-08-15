@@ -3263,7 +3263,7 @@ void TEfficiency::SavePrimitive(std::ostream& out,Option_t* opt)
    << std::endl;
    out << indent << name << "->SetBetaBeta(" << fBeta_beta << ");" << std::endl;
    out << indent << name << "->SetWeight(" << fWeight << ");" << std::endl;
-   out << indent << name << "->SetStatisticOption(" << fStatisticOption << ");"
+   out << indent << name << "->SetStatisticOption(static_cast<EStatOption>(" << fStatisticOption << "));"
    << std::endl;
    out << indent << name << "->SetPosteriorMode(" << TestBit(kPosteriorMode) << ");" << std::endl;
    out << indent << name << "->SetShortestInterval(" << TestBit(kShortestInterval) << ");" << std::endl;
@@ -3757,14 +3757,14 @@ void TEfficiency::SetTitle(const char* title)
 ///
 /// Note: - requires: fPassedHistogram->GetBinContent(bin) <= events
 
-Bool_t TEfficiency::SetTotalEvents(Int_t bin,Int_t events)
+Bool_t TEfficiency::SetTotalEvents(Int_t bin, Double_t events)
 {
    if(events >= fPassedHistogram->GetBinContent(bin)) {
       fTotalHistogram->SetBinContent(bin,events);
       return true;
    }
    else {
-      Error("SetTotalEvents(Int_t,Int_t)","passed number of events (%.1lf) in bin %i is bigger than given number of total events %i",fPassedHistogram->GetBinContent(bin),bin,events);
+      Error("SetTotalEvents(Int_t,Double_t)","passed number of events (%.1lf) in bin %i is bigger than given number of total events %.1lf",fPassedHistogram->GetBinContent(bin),bin,events);
       return false;
    }
 }

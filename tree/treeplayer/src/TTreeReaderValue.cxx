@@ -795,3 +795,19 @@ const char* ROOT::Internal::TTreeReaderValueBase::GetBranchDataType(TBranch* bra
 
    return nullptr;
 }
+
+namespace cling {
+// The value printers of TTreeReaderValue and TTreeReaderArray rely on the
+// one of TTreeReaderValueBase, from which they both inherit.
+// This is why we use RTTI inside the function, avoiding to duplicate code.
+// The performance penalty is irrelevant because we are already printing
+// the objects in an interactive environment.
+std::string printValue(ROOT::Internal::TTreeReaderValueBase *val)
+{
+   auto cl = TClass::GetClass(typeid(*val));
+   std::string str = cl->GetName();
+   str += " instance associated to column ";
+   str += val->GetBranchName();
+   return str;
+}
+} // namespace cling

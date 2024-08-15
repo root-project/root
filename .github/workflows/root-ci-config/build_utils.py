@@ -5,14 +5,24 @@ import os
 import subprocess
 import sys
 import textwrap
+import datetime
+import time
 from functools import wraps
+from hashlib import sha1
 from http import HTTPStatus
+from shutil import which
 from typing import Callable, Dict
 from collections import namedtuple
 
 from openstack.connection import Connection
 from requests import get
 
+class SimpleTimer:
+    def __init__(self):
+        self._start_time = time.perf_counter()
+    def get_elapsed_time(self):
+        elapsed_time = time.perf_counter() - self._start_time
+        return str(datetime.timedelta(seconds = elapsed_time))[:-5]
 
 def github_log_group(title: str):
     """ decorator that places function's stdout/stderr output in a
@@ -22,12 +32,15 @@ def github_log_group(title: str):
         def wrapper(*args, **kwargs):
             print(f"\n::group::{title}\n")
 
+            timer = SimpleTimer()
+
             try:
                 result = func(*args, **kwargs)
             except Exception as exc:
                 print("\n::endgroup::\n")
                 raise exc
 
+            print(f'\n** Elapsed time for group "{title}" {timer.get_elapsed_time()}\n')
             print("\n::endgroup::\n")
 
             return result
@@ -157,7 +170,13 @@ def load_config(filename) -> dict:
             if '=' not in line:
                 continue
 
-            key, val = line.rstrip().split('=')
+            split_line = line.rstrip().split('=')
+
+            if len(split_line) == 2:
+               key, val = split_line
+            else:
+               key = split_line[0]
+               val = split_line[1]+'='+split_line[2]
 
             if val.lower() in ["on", "off"]:
                 val = val.lower()
@@ -188,6 +207,22 @@ def cmake_options_from_dict(config: Dict[str, str]) -> str:
 
     return ' '.join(output)
 
+def calc_options_hash(options: str) -> str:
+    """Calculate the hash of the options string. If "march=native" is in the
+    list of options, make the preprocessor defines resulting from it part of
+    the hash.
+    """
+    options_and_defines = options
+    if ('march=native' in options):
+        print_info(f"A march=native build was detected.")
+        compiler_name = 'c++' if which('c++') else 'clang++'
+        command = f'echo | {compiler_name} -dM -E - -march=native'
+        sp_result = subprocess.run([command], shell=True, capture_output=True, text=True)
+        if 0 != sp_result.returncode:
+            die(msg=f'Error while determining march=native flags: "{sp_result.stderr}"')
+        print_info(f"The following are the preprocessor defines created by {compiler_name}:\n{sp_result.stdout}")
+        options_and_defines += sp_result.stdout
+    return sha1(options_and_defines.encode('utf-8')).hexdigest()
 
 def upload_file(connection: Connection, container: str, dest_object: str, src_file: str) -> None:
     print(f"Attempting to upload {src_file} to {dest_object}")

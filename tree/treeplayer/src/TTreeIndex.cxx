@@ -20,6 +20,8 @@ A Tree Index with majorname and minorname.
 #include "TBuffer.h"
 #include "TMath.h"
 
+#include <cstring> // std::strlen
+
 ClassImp(TTreeIndex);
 
 
@@ -638,3 +640,37 @@ void TTreeIndex::SetTree(TTree *T)
    fTree = T;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// \brief Create a deep copy of the TTreeIndex
+/// \param[in] newname A new name for the index
+///
+/// The new index is allocated on the heap without being managed. Also, it is
+/// not attached to any tree. It is the responsibility of the caller to manage
+/// its lifetime and attach it to a tree if necessary.
+TObject *TTreeIndex::Clone(const char *newname) const
+{
+   auto index = new TTreeIndex();
+   index->SetName(newname && std::strlen(newname) ? newname : GetName());
+   index->SetTitle(GetTitle());
+
+   // Note that the TTreeFormula * data members are not cloned since they would
+   // need the attached tree data member to function properly.
+   index->fMajorName = fMajorName;
+   index->fMinorName = fMinorName;
+
+   if (fN == 0)
+      return index;
+
+   index->fN = fN;
+
+   index->fIndexValues = new Long64_t[index->fN];
+   std::copy(fIndexValues, fIndexValues + fN, index->fIndexValues);
+
+   index->fIndexValuesMinor = new Long64_t[index->fN];
+   std::copy(fIndexValuesMinor, fIndexValuesMinor + fN, index->fIndexValuesMinor);
+
+   index->fIndex = new Long64_t[index->fN];
+   std::copy(fIndex, fIndex + fN, index->fIndex);
+
+   return index;
+}

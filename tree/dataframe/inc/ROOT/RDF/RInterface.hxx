@@ -1210,7 +1210,7 @@ public:
                                                  std::string_view columnNameRegexp = "",
                                                  const RSnapshotOptions &options = RSnapshotOptions())
    {
-      const auto definedColumns = fColRegister.GetNames();
+      const auto definedColumns = fColRegister.GenerateColumnNames();
       auto *tree = fLoopManager->GetTree();
       const auto treeBranchNames = tree != nullptr ? ROOT::Internal::TreeUtils::GetTopLevelBranchNames(*tree) : ColumnNames_t{};
       const auto dsColumns = fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{};
@@ -1353,7 +1353,7 @@ public:
    /// is empty, all columns are selected. See the previous overloads for more information.
    RInterface<RLoopManager> Cache(std::string_view columnNameRegexp = "")
    {
-      const auto definedColumns = fColRegister.GetNames();
+      const auto definedColumns = fColRegister.GenerateColumnNames();
       auto *tree = fLoopManager->GetTree();
       const auto treeBranchNames =
          tree != nullptr ? ROOT::Internal::TreeUtils::GetTopLevelBranchNames(*tree) : ColumnNames_t{};
@@ -2631,7 +2631,7 @@ public:
       // certainly does not contain named filters.
       // The number 4 takes into account the implicit columns for entry and slot number
       // and their aliases (2 + 2, i.e. {r,t}dfentry_ and {r,t}dfslot_)
-      if (std::is_same<Proxied, RLoopManager>::value && fColRegister.GetNames().size() > 4)
+      if (std::is_same<Proxied, RLoopManager>::value && fColRegister.GenerateColumnNames().size() > 4)
          returnEmptyReport = true;
 
       auto rep = std::make_shared<RCutFlowReport>();

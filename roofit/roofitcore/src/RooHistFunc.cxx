@@ -192,13 +192,17 @@ double RooHistFunc::evaluate() const
 
 void RooHistFunc::translate(RooFit::Detail::CodeSquashContext &ctx) const
 {
-   RooHistPdf::rooHistTranslateImpl(this, ctx, _intOrder, _dataHist, _depList, false);
+   RooHistPdf::rooHistTranslateImpl(this, ctx, _intOrder, _dataHist, _depList, false, _cdfBoundaries);
 }
 
-void RooHistFunc::computeBatch(double* output, size_t size, RooFit::Detail::DataMap const& dataMap) const {
+void RooHistFunc::doEval(RooFit::EvalContext & ctx) const
+{
+  std::span<double> output = ctx.output();
+  std::size_t nEvents = output.size();
+
   if (_depList.size() == 1) {
-    auto xVals = dataMap.at(_depList[0]);
-    _dataHist->weights(output, xVals, _intOrder, false, _cdfBoundaries);
+    auto xVals = ctx.at(_depList[0]);
+    _dataHist->weights(output.data(), xVals, _intOrder, false, _cdfBoundaries);
     return;
   }
 
@@ -206,13 +210,13 @@ void RooHistFunc::computeBatch(double* output, size_t size, RooFit::Detail::Data
   for (const auto& obs : _depList) {
     auto realObs = dynamic_cast<const RooAbsReal*>(obs);
     if (realObs) {
-      inputValues.push_back(dataMap.at(realObs));
+      inputValues.push_back(ctx.at(realObs));
     } else {
       inputValues.emplace_back();
     }
   }
 
-  for (std::size_t i = 0; i < size; ++i) {
+  for (std::size_t i = 0; i < nEvents; ++i) {
     bool skip = false;
 
     for (auto j = 0u; j < _histObsList.size(); ++j) {
@@ -563,12 +567,12 @@ Int_t RooHistFunc::getBin() const {
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute bin numbers corresponding to all coordinates in `evalData`.
 /// \return Vector of bin numbers. If a bin is not in the current range of the observables, return -1.
-std::vector<Int_t> RooHistFunc::getBins(RooFit::Detail::DataMap const& dataMap) const {
+std::vector<Int_t> RooHistFunc::getBins(RooFit::EvalContext & ctx) const {
   std::vector<std::span<const double>> depData;
   for (const auto dep : _depList) {
     auto real = dynamic_cast<const RooAbsReal*>(dep);
     if (real) {
-      depData.push_back(dataMap.at(real));
+      depData.push_back(ctx.at(real));
     } else {
       depData.emplace_back();
     }

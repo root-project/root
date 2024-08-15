@@ -1,6 +1,6 @@
-import py, os, sys
-from pytest import raises
-from .support import setup_make, pylong
+import py
+from pytest import raises, skip
+from .support import setup_make, pylong, ispypy
 
 currpath = py.path.local(__file__).dirpath()
 test_dct = str(currpath.join("example01Dict"))
@@ -99,7 +99,7 @@ class TestPYTHONIFY:
         instance = example01_class(-13)
         res = instance.addDataToDouble(16)
         assert round(res-3, 8) == 0.
-        instance.__destruct__() 
+        instance.__destruct__()
 
         instance = example01_class(42)
         assert example01_class.getCount() == 1
@@ -312,6 +312,9 @@ class TestPYTHONIFY:
     def test14_bound_unbound_calls(self):
         """Test (un)bound method calls"""
 
+        if ispypy:
+            skip('segfaults in pypy')
+
         import cppyy
 
         raises(TypeError, cppyy.gbl.example01.addDataToInt, 1)
@@ -399,13 +402,13 @@ class TestPYTHONIFY:
 
         cppyy.cppdef("""namespace KeyWords {
         struct A {
- 	    A(std::initializer_list<int> vals) : fVals(vals) {}
+            A(std::initializer_list<int> vals) : fVals(vals) {}
             std::vector<int> fVals;
         };
 
         struct B {
-	    B() = default;
-	    B(const A& in_A, const A& out_A) : fVal(42), fIn(in_A), fOut(out_A) {}
+            B() = delete;
+            B(const A& in_A, const A& out_A) : fVal(42), fIn(in_A), fOut(out_A) {}
             B(int val, const A& in_A, const A& out_A) : fVal(val), fIn(in_A), fOut(out_A) {}
             int fVal;
             A fIn, fOut;
@@ -452,7 +455,7 @@ class TestPYTHONIFY:
             b = B(17, val=23, out_A=(78,))
 
         with raises(TypeError):
-            b = B(17, out_A=(78,)) 
+            b = B(17, out_A=(78,))
 
       # global function with keywords
         callme = cppyy.gbl.KeyWords.callme
@@ -489,6 +492,46 @@ class TestPYTHONIFY:
 
         with raises(TypeError):
             c.callme(a=1, b=2)
+
+    def test19_keywords_and_defaults(self):
+        """Use of keyword arguments mixed with defaults"""
+
+        import cppyy
+
+        cppyy.cppdef("""namespace KeyWordsAndDefaults {
+        int foo(int a=10, int b=20, int c=5, int d=4) {
+            return a-b/c*d;
+        }
+
+        std::string bar(const std::string& a = "a", const std::string& b = "b") {
+            return a+b;
+        }
+
+        class MyClass {};
+
+        void foobar(const MyClass& m1 = MyClass(), const MyClass& m2 = MyClass()) {
+            /* empty */
+        } }""")
+
+        def pyfoo(a=10, b=20, c=5, d=4):
+            return a-b//c*d;
+
+        ns = cppyy.gbl.KeyWordsAndDefaults
+
+        assert ns.foo()                  == pyfoo()
+        assert ns.foo(a=100)             == pyfoo(a=100)
+        assert ns.foo(b=100)             == pyfoo(b=100)
+        assert ns.foo(a=100, b=200)      == pyfoo(a=100, b=200)
+        assert ns.foo(a=100, b=200, d=0) == pyfoo(a=100, b=200, d=0)
+        assert ns.foo(b=100, a=200)      == pyfoo(b=100, a=200)
+
+        with raises(TypeError):
+            ns.foo(1, 2, 3, 4, b=5)
+
+        assert ns.bar() == "ab"
+        assert ns.bar(b = " greeting") == "a greeting"
+
+        ns.foobar(m2 = ns.MyClass())
 
 
 class TestPYTHONIFY_UI:

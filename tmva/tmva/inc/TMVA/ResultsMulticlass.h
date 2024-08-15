@@ -5,10 +5,10 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : ResultsMulticlass                                                     *
- *                                             *
+ *                                                                                *
  *                                                                                *
  * Description:                                                                   *
- *      Base-class for result-vectors                                             *
+ *      Derived-class for result-vectors                                          *
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
@@ -25,7 +25,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (see tmva/doc/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                                         *
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_ResultsMulticlass
@@ -50,62 +50,58 @@
 
 namespace TMVA {
 
-   class MsgLogger;
+class MsgLogger;
 
-   class ResultsMulticlass : public Results, public IFitterTarget {
+class ResultsMulticlass : public Results, public IFitterTarget {
 
-   public:
+public:
+   ResultsMulticlass(const DataSetInfo *dsi, TString resultsName);
+   ~ResultsMulticlass();
 
-      ResultsMulticlass( const DataSetInfo* dsi, TString resultsName  );
-      ~ResultsMulticlass();
+   // setters
+   void SetValue(std::vector<Float_t> &value, Int_t ievt);
+   void Resize(Int_t entries) { fMultiClassValues.resize(entries); }
+   using TObject::Clear;
+   void Clear(Option_t *) override { fMultiClassValues.clear(); }
 
-      // setters
-      void     SetValue( std::vector<Float_t>& value, Int_t ievt );
-      void     Resize( Int_t entries )  { fMultiClassValues.resize( entries ); }
-      using TObject::Clear;
-      virtual void     Clear(Option_t *)  { fMultiClassValues.clear(); }
+   // getters
+   Long64_t GetSize() const { return fMultiClassValues.size(); }
+   const std::vector<Float_t> &operator[](Int_t ievt) const override { return fMultiClassValues.at(ievt); }
+   std::vector<std::vector<Float_t>> *GetValueVector() { return &fMultiClassValues; }
 
-      // getters
-      Long64_t GetSize() const        { return fMultiClassValues.size(); }
-      virtual const std::vector< Float_t >&  operator[] ( Int_t ievt ) const { return fMultiClassValues.at(ievt); }
-      std::vector<std::vector< Float_t> >* GetValueVector()  { return &fMultiClassValues; }
+   Types::EAnalysisType GetAnalysisType() override { return Types::kMulticlass; }
+   Float_t GetAchievableEff(UInt_t cls) { return fAchievableEff.at(cls); }
+   Float_t GetAchievablePur(UInt_t cls) { return fAchievablePur.at(cls); }
+   std::vector<Float_t> &GetAchievableEff() { return fAchievableEff; }
+   std::vector<Float_t> &GetAchievablePur() { return fAchievablePur; }
 
-      Types::EAnalysisType  GetAnalysisType() { return Types::kMulticlass; }
-      Float_t GetAchievableEff(UInt_t cls){return fAchievableEff.at(cls);}
-      Float_t GetAchievablePur(UInt_t cls){return fAchievablePur.at(cls);}
-      std::vector<Float_t>& GetAchievableEff(){return fAchievableEff;}
-      std::vector<Float_t>& GetAchievablePur(){return fAchievablePur;}
+   TMatrixD GetConfusionMatrix(Double_t effB);
 
-      TMatrixD GetConfusionMatrix(Double_t effB);
+   // histogramming
+   void CreateMulticlassPerformanceHistos(TString prefix);
+   void CreateMulticlassHistos(TString prefix, Int_t nbins, Int_t nbins_high);
 
-      // histogramming
-      void CreateMulticlassPerformanceHistos(TString prefix);
-      void     CreateMulticlassHistos( TString prefix, Int_t nbins, Int_t nbins_high);
+   Double_t EstimatorFunction(std::vector<Double_t> &) override;
+   std::vector<Double_t> GetBestMultiClassCuts(UInt_t targetClass);
 
-      Double_t EstimatorFunction( std::vector<Double_t> & );
-      std::vector<Double_t> GetBestMultiClassCuts(UInt_t targetClass);
+private:
+   mutable std::vector<std::vector<Float_t>> fMultiClassValues; ///< mva values (Results)
+   mutable MsgLogger *fLogger;                                  ///<! message logger
+   MsgLogger &Log() const { return *fLogger; }
+   UInt_t fClassToOptimize;
+   std::vector<Float_t> fAchievableEff;
+   std::vector<Float_t> fAchievablePur;
+   std::vector<std::vector<Double_t>> fBestCuts;
 
-   private:
+   // Temporary storage used during GetBestMultiClassCuts
+   std::vector<Float_t> fClassSumWeights;
+   std::vector<Float_t> fEventWeights;
+   std::vector<UInt_t> fEventClasses;
 
-      mutable std::vector<std::vector< Float_t> >  fMultiClassValues;        ///< mva values (Results)
-      mutable MsgLogger* fLogger;                                            ///<! message logger
-      MsgLogger& Log() const { return *fLogger; }
-      UInt_t fClassToOptimize;
-      std::vector<Float_t> fAchievableEff;
-      std::vector<Float_t> fAchievablePur;
-      std::vector<std::vector<Double_t> > fBestCuts;
+protected:
+   ClassDefOverride(ResultsMulticlass, 3);
+};
 
-      // Temporary storage used during GetBestMultiClassCuts
-      std::vector<Float_t> fClassSumWeights;
-      std::vector<Float_t> fEventWeights;
-      std::vector<UInt_t>  fEventClasses;
-
-   protected:
-
-       ClassDef(ResultsMulticlass,2);
-
-   };
-
-}
+} // namespace TMVA
 
 #endif

@@ -185,8 +185,12 @@ public:
 
    REveScene *GetWorld() const { return fWorld; }
 
+   REveViewer* GetDefaultViewer() const;
+
    REveViewer *SpawnNewViewer(const char *name, const char *title = "");
    REveScene  *SpawnNewScene (const char *name, const char *title = "");
+
+   void AllowMultipleRemoteConnections(bool loopBack = true, bool useAuthKey = true);
 
    void BeginChange();
    void EndChange();

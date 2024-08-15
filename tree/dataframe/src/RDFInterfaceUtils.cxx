@@ -171,7 +171,7 @@ TString ResolveAliases(const TString &expr, const ColumnNames_t &usedAliases,
    for (const auto &alias : usedAliases) {
       const auto &col = colRegister.ResolveAlias(alias);
       TPRegexp replacer("\\b" + EscapeDots(alias) + "\\b");
-      replacer.Substitute(out, col, "g");
+      replacer.Substitute(out, col.data(), "g");
    }
 
    return out;
@@ -486,26 +486,25 @@ ConvertRegexToColumns(const ColumnNames_t &colNames, std::string_view columnName
 void CheckForRedefinition(const std::string &where, std::string_view definedColView, const RColumnRegister &colRegister,
                           const ColumnNames_t &treeColumns, const ColumnNames_t &dataSourceColumns)
 {
-   const std::string definedCol(definedColView); // convert to std::string
 
-   std::string error;
-   if (colRegister.IsAlias(definedCol))
-      error = "An alias with that name, pointing to column \"" + colRegister.ResolveAlias(definedCol) +
+   std::string error{};
+   if (colRegister.IsAlias(definedColView))
+      error = "An alias with that name, pointing to column \"" + std::string(colRegister.ResolveAlias(definedColView)) +
               "\", already exists in this branch of the computation graph.";
-   else if (colRegister.IsDefineOrAlias(definedCol))
+   else if (colRegister.IsDefineOrAlias(definedColView))
       error = "A column with that name has already been Define'd. Use Redefine to force redefinition.";
-   // else, check if definedCol is in the list of tree branches. This is a bit better than interrogating the TTree
+   // else, check if definedColView is in the list of tree branches. This is a bit better than interrogating the TTree
    // directly because correct usage of GetBranch, FindBranch, GetLeaf and FindLeaf can be tricky; so let's assume we
    // got it right when we collected the list of available branches.
-   else if (std::find(treeColumns.begin(), treeColumns.end(), definedCol) != treeColumns.end())
+   else if (std::find(treeColumns.begin(), treeColumns.end(), definedColView) != treeColumns.end())
       error =
          "A branch with that name is already present in the input TTree/TChain. Use Redefine to force redefinition.";
-   else if (std::find(dataSourceColumns.begin(), dataSourceColumns.end(), definedCol) != dataSourceColumns.end())
+   else if (std::find(dataSourceColumns.begin(), dataSourceColumns.end(), definedColView) != dataSourceColumns.end())
       error =
          "A column with that name is already present in the input data source. Use Redefine to force redefinition.";
 
    if (!error.empty()) {
-      error = "RDataFrame::" + where + ": cannot define column \"" + definedCol + "\". " + error;
+      error = "RDataFrame::" + where + ": cannot define column \"" + std::string(definedColView) + "\". " + error;
       throw std::runtime_error(error);
    }
 }
@@ -514,29 +513,29 @@ void CheckForRedefinition(const std::string &where, std::string_view definedColV
 void CheckForDefinition(const std::string &where, std::string_view definedColView, const RColumnRegister &colRegister,
                         const ColumnNames_t &treeColumns, const ColumnNames_t &dataSourceColumns)
 {
-   const std::string definedCol(definedColView); // convert to std::string
-   std::string error;
+   std::string error{};
 
-   if (colRegister.IsAlias(definedCol)) {
-      error = "An alias with that name, pointing to column \"" + colRegister.ResolveAlias(definedCol) +
+   if (colRegister.IsAlias(definedColView)) {
+      error = "An alias with that name, pointing to column \"" + std::string(colRegister.ResolveAlias(definedColView)) +
               "\", already exists. Aliases cannot be Redefined or Varied.";
    }
 
    if (error.empty()) {
-      const bool isAlreadyDefined = colRegister.IsDefineOrAlias(definedCol);
+      const bool isAlreadyDefined = colRegister.IsDefineOrAlias(definedColView);
       // check if definedCol is in the list of tree branches. This is a bit better than interrogating the TTree
       // directly because correct usage of GetBranch, FindBranch, GetLeaf and FindLeaf can be tricky; so let's assume we
       // got it right when we collected the list of available branches.
-      const bool isABranch = std::find(treeColumns.begin(), treeColumns.end(), definedCol) != treeColumns.end();
+      const bool isABranch = std::find(treeColumns.begin(), treeColumns.end(), definedColView) != treeColumns.end();
       const bool isADSColumn =
-         std::find(dataSourceColumns.begin(), dataSourceColumns.end(), definedCol) != dataSourceColumns.end();
+         std::find(dataSourceColumns.begin(), dataSourceColumns.end(), definedColView) != dataSourceColumns.end();
 
       if (!isAlreadyDefined && !isABranch && !isADSColumn)
          error = "No column with that name was found in the dataset. Use Define to create a new column.";
    }
 
    if (!error.empty()) {
-      error = "RDataFrame::" + where + ": cannot redefine or vary column \"" + definedCol + "\". " + error;
+      error =
+         "RDataFrame::" + where + ": cannot redefine or vary column \"" + std::string(definedColView) + "\". " + error;
       throw std::runtime_error(error);
    }
 }
@@ -778,10 +777,14 @@ BookVariationJit(const std::vector<std::string> &colNames, std::string_view vari
    const auto funcName = DeclareFunction(parsedExpr.fExpr, parsedExpr.fVarNames, exprVarTypes);
    const auto type = RetTypeOfFunc(funcName);
 
-   if (type.rfind("ROOT::VecOps::RVec", 0) != 0)
+   if (type.rfind("ROOT::VecOps::RVec", 0) != 0) {
+      // Avoid leak
+      delete upcastNodeOnHeap;
+      upcastNodeOnHeap = nullptr;
       throw std::runtime_error(
          "Jitted Vary expressions must return an RVec object. The following expression returns a " + type +
          " instead:\n" + parsedExpr.fExpr);
+   }
 
    auto colRegisterCopy = new RColumnRegister(colRegister);
    const auto colRegisterAddr = PrettyPrintAddr(colRegisterCopy);

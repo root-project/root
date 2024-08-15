@@ -80,7 +80,7 @@ class RH2Painter extends RHistPainter {
       this.provideSpecialDrawArea(new_proj).then(() => { this.is_projection = new_proj; return this.redrawProjection(); });
    }
 
-   /** @summary Readraw projections */
+   /** @summary Redraw projections */
    redrawProjection(/* ii1, ii2, jj1, jj2 */) {
       // do nothing for the moment
       // if (!this.is_projection) return;
@@ -108,10 +108,10 @@ class RH2Painter extends RHistPainter {
          const kinds = ['X1', 'X2', 'X3', 'X5', 'X10', 'Y1', 'Y2', 'Y3', 'Y5', 'Y10', 'XY1', 'XY2', 'XY3', 'XY5', 'XY10'];
          if (kind) kinds.unshift('Off');
 
-         menu.add('sub:Projections', () => menu.input('Input projection kind X1 or XY2 or X3_Y4', kind, 'string').then(val => this.toggleProjection(val)));
+         menu.sub('Projections', () => menu.input('Input projection kind X1 or XY2 or X3_Y4', kind, 'string').then(val => this.toggleProjection(val)));
          for (let k = 0; k < kinds.length; ++k)
             menu.addchk(kind === kinds[k], kinds[k], kinds[k], arg => this.toggleProjection(arg));
-         menu.add('endsub:');
+         menu.endsub();
       }
 
       menu.add('Auto zoom-in', () => this.autoZoom());
@@ -183,7 +183,7 @@ class RH2Painter extends RHistPainter {
          for (let j = j1; j < j2; ++j)
             min = Math.min(min, histo.getBinContent(i+1, j+1));
       }
-      if (min > 0) return; // if all points positive, no chance for autoscale
+      if (min > 0) return; // if all points positive, no chance for auto-scale
 
       let ileft = i2, iright = i1, jleft = j2, jright = j1;
 
@@ -221,7 +221,7 @@ class RH2Painter extends RHistPainter {
 
    /** @summary Scan content of 2-dim histogram */
    scanContent(when_axis_changed) {
-      // no need to rescan histogram while result does not depend from axis selection
+      // no need to re-scan histogram while result does not depend from axis selection
       if (when_axis_changed && this.nbinsx && this.nbinsy) return;
 
       const histo = this.getHisto();
@@ -316,7 +316,7 @@ class RH2Painter extends RHistPainter {
       return res;
    }
 
-   /** @summary Fill statistic into statbox */
+   /** @summary Fill statistic into statistic box */
    fillStatistic(stat, dostat /*, dofit */) {
       const data = this.countStat(),
           print_name = Math.floor(dostat % 10),
@@ -517,7 +517,7 @@ class RH2Painter extends RHistPainter {
       return handle;
    }
 
-   /** @summary Create polybin */
+   /** @summary Create poly bin */
    createPolyBin() {
       // see how TH2Painter is implemented
       return '';
@@ -796,8 +796,6 @@ class RH2Painter extends RHistPainter {
       // limit filling factor, do not try to produce as many points as filled area;
       if (this.maxbin > 0.7) factor = 0.7/this.maxbin;
 
-      // let nlevels = Math.round(handle.max - handle.min);
-
       // now start build
       for (i = handle.i1; i < handle.i2; i += di) {
          for (j = handle.j1; j < handle.j2; j += dj) {
@@ -903,8 +901,6 @@ class RH2Painter extends RHistPainter {
             rect = pmain.getFrameRect(),
             funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y);
       let handle = null, pr = null;
-
-      // if (this.lineatt.empty()) this.lineatt.color = 'cyan';
 
       if (this.options.Scat)
          handle = this.drawBinsScatter();

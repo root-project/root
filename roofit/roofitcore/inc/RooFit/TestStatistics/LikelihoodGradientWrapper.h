@@ -13,9 +13,12 @@
 #ifndef ROOT_ROOFIT_TESTSTATISTICS_LikelihoodGradientWrapper
 #define ROOT_ROOFIT_TESTSTATISTICS_LikelihoodGradientWrapper
 
+#include "RooFit/TestStatistics/SharedOffset.h"
+
 #include <Fit/ParameterSettings.h>
 #include <Math/IFunctionfwd.h>
 #include "Math/MinimizerOptions.h"
+#include "Math/Util.h"
 
 #include <vector>
 #include <memory> // shared_ptr
@@ -33,16 +36,20 @@ struct WrapperCalculationCleanFlags;
 enum class LikelihoodGradientMode { multiprocess };
 
 class LikelihoodGradientWrapper {
-public:
+protected:
    LikelihoodGradientWrapper(std::shared_ptr<RooAbsL> likelihood,
                              std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean, std::size_t N_dim,
-                             RooMinimizer *minimizer);
+                             RooMinimizer *minimizer, SharedOffset offset);
+
+public:
    virtual ~LikelihoodGradientWrapper() = default;
-   virtual LikelihoodGradientWrapper *clone() const = 0;
+   LikelihoodGradientWrapper(const LikelihoodGradientWrapper &) = delete;
+   LikelihoodGradientWrapper &operator=(const LikelihoodGradientWrapper &) = delete;
 
    static std::unique_ptr<LikelihoodGradientWrapper>
    create(LikelihoodGradientMode likelihoodGradientMode, std::shared_ptr<RooAbsL> likelihood,
-          std::shared_ptr<WrapperCalculationCleanFlags> calculationIsClean, std::size_t nDim, RooMinimizer *minimizer);
+          std::shared_ptr<WrapperCalculationCleanFlags> calculationIsClean, std::size_t nDim, RooMinimizer *minimizer,
+          SharedOffset offset);
 
    virtual void fillGradient(double *grad) = 0;
    virtual void
@@ -82,6 +89,7 @@ protected:
    std::shared_ptr<RooAbsL> likelihood_;
    RooMinimizer *minimizer_;
    std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean_;
+   SharedOffset shared_offset_;
 };
 
 } // namespace TestStatistics

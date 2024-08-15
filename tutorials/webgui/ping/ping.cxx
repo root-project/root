@@ -9,7 +9,8 @@
 ///
 /// \author Sergey Linev
 
-#include <ROOT/RWebWindow.hxx>
+#include "ROOT/RWebWindow.hxx"
+#include "TBufferJSON.h"
 #include <iostream>
 #include <chrono>
 
@@ -33,7 +34,12 @@ void ProcessData(unsigned connid, const std::string &arg)
    } else if (arg == "first") {
       // first message to provide config
       firstmsg_tm = std::chrono::high_resolution_clock::now();
-      window->Send(connid, std::string("CLIENTS:") + std::to_string(num_clients));
+      std::vector<std::string> clients;
+      // for new clients request new connection URL
+      // use relative path ".." while connection will be requested from the window itself
+      for(int n = 1; n < num_clients; ++n)
+         clients.emplace_back(".." + window->GetUrl(false));
+      window->Send(connid, std::string("CLIENTS:") + TBufferJSON::ToJSON(&clients).Data());
    } else if (arg.find("SHOW:") == 0) {
       std::string msg = arg.substr(5);
       if (!batch_mode)
@@ -122,12 +128,15 @@ void ping(int nclients = 1, int test_mode = 0)
 
    // configure default html page
    // either HTML code can be specified or just name of file after 'file:' prefix
-   // Detect file location to specify full path to the
+   // Detect file location to specify full path to the HTML file
    std::string fname = __FILE__;
    auto pos = fname.find("ping.cxx");
-   if (pos > 0) { fname.resize(pos); fname.append("ping.html"); }
-           else fname = "ping.html";
-   window->SetDefaultPage(std::string("file:") + fname);
+   if (pos > 0)
+      fname.resize(pos);
+   else
+      fname = gROOT->GetTutorialsDir() + std::string("/webgui/ping/");;
+   fname.append("ping.html");
+   window->SetDefaultPage("file:" + fname);
 
    // configure window geometry
    window->SetGeometry(300, 500);

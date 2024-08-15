@@ -54,7 +54,7 @@
 #include "RooMultiVarGaussian.h"
 
 
-using namespace std;
+using std::cout, std::endl, std::ostream, std::string, std::pair, std::vector, std::setw;
 
 ClassImp(RooFitResult);
 
@@ -724,11 +724,11 @@ void RooFitResult::fillCorrMatrix()
   for (i = 1; i <= gMinuit->fNpar; ++i) {
     ndi = i*(i + 1) / 2;
     for (j = 1; j <= gMinuit->fNpar; ++j) {
-      m    = TMath::Max(i,j);
-      n    = TMath::Min(i,j);
+      m    = std::max(i,j);
+      n    = std::min(i,j);
       ndex = m*(m-1) / 2 + n;
       ndj  = j*(j + 1) / 2;
-      gMinuit->fMATUvline[j-1] = gMinuit->fVhmat[ndex-1] / TMath::Sqrt(TMath::Abs(gMinuit->fVhmat[ndi-1]*gMinuit->fVhmat[ndj-1]));
+      gMinuit->fMATUvline[j-1] = gMinuit->fVhmat[ndex-1] / std::sqrt(std::abs(gMinuit->fVhmat[ndi-1]*gMinuit->fVhmat[ndj-1]));
     }
 
     (*_GC)(i-1) = gMinuit->fGlobcc[i-1] ;

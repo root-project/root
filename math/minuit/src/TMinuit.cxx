@@ -11,6 +11,7 @@
 
 
 /*! \class TMinuit
+\see Minuit2 for a newer version of this package
 \ingroup MinuitOld
 
 Implementation in C++ of the Minuit package written by Fred James.
@@ -4929,18 +4930,16 @@ void TMinuit::mnline(Double_t *start, Double_t fstart, Double_t *step, Double_t 
 
 //                                               end of iteration
 //           stop because too many iterations
-   if (!l70 && !l80) {
+   if (!l70 && !l80 && ldebug) {
       cmess = " LINE SEARCH HAS EXHAUSTED THE LIMIT OF FUNCTION CALLS ";
-      if (ldebug) {
-         Printf(" MNLINE DEBUG: steps=");
-         for (kk = 1; kk <= fNpar; ++kk) {
-            Printf("  %12.4g",step[kk-1]);
-         }
+      Printf(" MNLINE DEBUG: steps=");
+      for (kk = 1; kk <= fNpar; ++kk) {
+        Printf("  %12.4g",step[kk-1]);
       }
    }
 //           stop because within tolerance
-   if (l70) cmess = " LINE SEARCH HAS ATTAINED TOLERANCE ";
-   if (l80) cmess = " STEP SIZE AT ARITHMETICALLY ALLOWED MINIMUM";
+   if (l70 && ldebug) cmess = " LINE SEARCH HAS ATTAINED TOLERANCE ";
+   if (l80 && ldebug) cmess = " STEP SIZE AT ARITHMETICALLY ALLOWED MINIMUM";
 
    fAmin = fvmin;
    for (i = 1; i <= fNpar; ++i) {
@@ -6599,10 +6598,12 @@ void TMinuit::mnrazz(Double_t ynew, Double_t *pnew, Double_t *y, Int_t &jh, Int_
 L40:
    return;
 L45:
-   Printf("  FUNCTION VALUE DOES NOT SEEM TO DEPEND ON ANY OF THE %d VARIABLE PARAMETERS.",fNpar);
-   Printf("          VERIFY THAT STEP SIZES ARE BIG ENOUGH AND CHECK FCN LOGIC.");
-   Printf(" *******************************************************************************");
-   Printf(" *******************************************************************************");
+   if (fISW[4] >= 0) {
+      Printf("  FUNCTION VALUE DOES NOT SEEM TO DEPEND ON ANY OF THE %d VARIABLE PARAMETERS.",fNpar);
+      Printf("          VERIFY THAT STEP SIZES ARE BIG ENOUGH AND CHECK FCN LOGIC.");
+      Printf(" *******************************************************************************");
+      Printf(" *******************************************************************************");
+   }
    goto L40;
 }
 

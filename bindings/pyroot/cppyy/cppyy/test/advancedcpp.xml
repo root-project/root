@@ -43,6 +43,7 @@
   <variable name="my_global_array" />
   <variable name="my_global_ptr" />
   <variable name="my_global_int_holders" />
+  <variable name="g_abstract_ptr" />
 
   <class name="ref_tester" />
   <class name="std::vector<ref_tester>" />

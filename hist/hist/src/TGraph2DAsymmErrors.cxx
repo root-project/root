@@ -232,6 +232,16 @@ TGraph2DAsymmErrors & TGraph2DAsymmErrors::operator=(const TGraph2DAsymmErrors &
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Add a 3D point with asymmetric errorbars to an existing graph
+
+void TGraph2DAsymmErrors::AddPointError(Double_t x, Double_t y, Double_t z, Double_t exl, Double_t exh, Double_t eyl,
+                                        Double_t eyh, Double_t ezl, Double_t ezh)
+{
+   AddPoint(x, y, z);
+   SetPointError(fNpoints - 1, exl, exh, eyl, eyh, ezl, ezh);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Returns the combined error along X at point i by computing the average
 /// of the lower and upper variance.
 

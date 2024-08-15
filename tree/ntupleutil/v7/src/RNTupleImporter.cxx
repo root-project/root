@@ -15,10 +15,10 @@
 
 #include <ROOT/RError.hxx>
 #include <ROOT/RField.hxx>
-#include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleImporter.hxx>
-#include <ROOT/RNTupleOptions.hxx>
 #include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleWriteOptions.hxx>
+#include <ROOT/RNTupleWriter.hxx>
 #include <ROOT/RPageSinkBuf.hxx>
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RPageStorageFile.hxx>
@@ -140,7 +140,6 @@ ROOT::Experimental::RNTupleImporter::Create(TTree *sourceTree, std::string_view 
 ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::InitDestination(std::string_view destFileName)
 {
    fDestFileName = destFileName;
-   fWriteOptions.SetCompression(kDefaultCompressionSettings);
    fDestFile = std::unique_ptr<TFile>(TFile::Open(fDestFileName.c_str(), "UPDATE"));
    if (!fDestFile || fDestFile->IsZombie()) {
       return R__FAIL("cannot open dest file " + std::string(fDestFileName));
@@ -324,7 +323,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
    for (auto &p : fLeafCountCollections) {
       // We want to capture this variable, which is not possible with a
       // structured binding in C++17. Explicitly defining a variable works.
-      auto &countLeafName = p.first;
+      auto countLeafName = p.first;
       auto &c = p.second;
       c.fCollectionModel->Freeze();
       c.fCollectionEntry = c.fCollectionModel->CreateBareEntry();
@@ -348,6 +347,12 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
                return c.fFieldName + "." + name;
          });
       }
+
+      if (fConvertDotsInBranchNames) {
+         // Replace any occurrenceof a dot ('.') in the count leaf name with an underscore.
+         std::replace(countLeafName.begin(), countLeafName.end(), '.', '_');
+      }
+
       // Add projected fields for count leaf
       auto projectedField =
          RFieldBase::Create(countLeafName, "ROOT::Experimental::RNTupleCardinality<std::uint32_t>").Unwrap();
@@ -356,6 +361,12 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
    }
 
    fModel->Freeze();
+   if (fFieldModifier) {
+      for (auto &field : fModel->GetFieldZero()) {
+         fFieldModifier(field);
+      }
+   }
+
    fEntry = fModel->CreateBareEntry();
    for (const auto &f : fImportFields) {
       if (f.fIsInUntypedCollection)

@@ -1,6 +1,9 @@
 #ifndef CPYCPPYY_EXECUTORS_H
 #define CPYCPPYY_EXECUTORS_H
 
+// Bindings
+#include "Dimensions.h"
+
 // Standard
 #include <string>
 
@@ -29,10 +32,11 @@ protected:
 };
 
 // create/destroy executor from fully qualified type (public API)
-CPYCPPYY_EXPORT Executor* CreateExecutor(const std::string& fullType);
+CPYCPPYY_EXPORT Executor* CreateExecutor(const std::string& fullType, cdims_t = 0);
 CPYCPPYY_EXPORT void DestroyExecutor(Executor* p);
-typedef Executor* (*ef_t) ();
+typedef Executor* (*ef_t) (cdims_t);
 CPYCPPYY_EXPORT bool RegisterExecutor(const std::string& name, ef_t fac);
+CPYCPPYY_EXPORT bool RegisterExecutorAlias(const std::string& name, const std::string& target);
 CPYCPPYY_EXPORT bool UnregisterExecutor(const std::string& name);
 
 // helper for the actual call

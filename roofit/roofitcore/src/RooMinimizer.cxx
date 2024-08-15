@@ -71,10 +71,9 @@ automatic PDF optimization.
 #include <iostream>
 #include <stdexcept> // logic_error
 
-using namespace std;
+using std::endl;
 
 ClassImp(RooMinimizer);
-;
 
 std::unique_ptr<ROOT::Fit::Fitter> RooMinimizer::_theFitter = {};
 
@@ -301,6 +300,18 @@ bool RooMinimizer::fitFcn() const
    return _theFitter->FitFCN(*_fcn->getMultiGenFcn());
 }
 
+void RooMinimizer::determineStatus(bool fitterReturnValue)
+{
+   // Minuit-given status:
+   _status = ((fitterReturnValue) ? _theFitter->Result().Status() : -1);
+
+   // RooFit-based additional failed state information:
+   if (evalCounter() <= _fcn->GetNumInvalidNLL()) {
+      coutE(Minimization) << "RooMinimizer: all function calls during minimization gave invalid NLL values!"
+                          << std::endl;
+   }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Minimise the function passed in the constructor.
 /// \param[in] type Type of fitter to use, e.g. "Minuit" "Minuit2". Passing an
@@ -330,7 +341,7 @@ int RooMinimizer::minimize(const char *type, const char *alg)
       auto ctx = makeEvalErrorContext();
 
       bool ret = fitFcn();
-      _status = ((ret) ? _theFitter->Result().Status() : -1);
+      determineStatus(ret);
    }
    profileStop();
    _fcn->BackProp(_theFitter->Result());
@@ -355,7 +366,7 @@ int RooMinimizer::migrad()
 
       _theFitter->Config().SetMinimizer(_cfg.minimizerType.c_str(), "migrad");
       bool ret = fitFcn();
-      _status = ((ret) ? _theFitter->Result().Status() : -1);
+      determineStatus(ret);
    }
    profileStop();
    _fcn->BackProp(_theFitter->Result());
@@ -385,7 +396,7 @@ int RooMinimizer::hesse()
 
          _theFitter->Config().SetMinimizer(_cfg.minimizerType.c_str());
          bool ret = _theFitter->CalculateHessErrors();
-         _status = ((ret) ? _theFitter->Result().Status() : -1);
+         determineStatus(ret);
       }
       profileStop();
       _fcn->BackProp(_theFitter->Result());
@@ -416,7 +427,7 @@ int RooMinimizer::minos()
 
          _theFitter->Config().SetMinimizer(_cfg.minimizerType.c_str());
          bool ret = _theFitter->CalculateMinosErrors();
-         _status = ((ret) ? _theFitter->Result().Status() : -1);
+         determineStatus(ret);
       }
 
       profileStop();
@@ -462,7 +473,7 @@ int RooMinimizer::minos(const RooArgSet &minosParamList)
 
             _theFitter->Config().SetMinimizer(_cfg.minimizerType.c_str());
             bool ret = _theFitter->CalculateMinosErrors();
-            _status = ((ret) ? _theFitter->Result().Status() : -1);
+            determineStatus(ret);
             // to avoid that following minimization computes automatically the Minos errors
             _theFitter->Config().SetMinosErrors(false);
          }
@@ -491,7 +502,7 @@ int RooMinimizer::seek()
 
       _theFitter->Config().SetMinimizer(_cfg.minimizerType.c_str(), "seek");
       bool ret = fitFcn();
-      _status = ((ret) ? _theFitter->Result().Status() : -1);
+      determineStatus(ret);
    }
    profileStop();
    _fcn->BackProp(_theFitter->Result());
@@ -516,7 +527,7 @@ int RooMinimizer::simplex()
 
       _theFitter->Config().SetMinimizer(_cfg.minimizerType.c_str(), "simplex");
       bool ret = fitFcn();
-      _status = ((ret) ? _theFitter->Result().Status() : -1);
+      determineStatus(ret);
    }
    profileStop();
    _fcn->BackProp(_theFitter->Result());
@@ -541,7 +552,7 @@ int RooMinimizer::improve()
 
       _theFitter->Config().SetMinimizer(_cfg.minimizerType.c_str(), "migradimproved");
       bool ret = fitFcn();
-      _status = ((ret) ? _theFitter->Result().Status() : -1);
+      determineStatus(ret);
    }
    profileStop();
    _fcn->BackProp(_theFitter->Result());
@@ -760,8 +771,7 @@ void RooMinimizer::addParamsToProcessTimer()
    }
    RooFit::MultiProcess::ProcessTimer::add_metadata(parameter_names);
 #else
-   coutI(Minimization) << "Not adding parameters to processtimer because multiprocessing "
-                       << "is not enabled." << std::endl;
+   coutI(Minimization) << "Not adding parameters to processtimer because multiprocessing is not enabled." << std::endl;
 #endif
 }
 
@@ -956,6 +966,10 @@ std::ofstream *RooMinimizer::logfile()
 double &RooMinimizer::maxFCN()
 {
    return _fcn->GetMaxFCN();
+}
+double &RooMinimizer::fcnOffset() const
+{
+   return _fcn->getOffset();
 }
 
 int RooMinimizer::Config::getDefaultWorkers()

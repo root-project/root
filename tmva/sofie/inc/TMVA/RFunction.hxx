@@ -47,12 +47,12 @@ public:
     virtual void Initialize() {};
     virtual void AddLayerNormalization(int, float, size_t, const std::string&,
                                        const std::string&, const std::string&, const std::string&) {};
-    void AddInputTensors(const std::vector<std::vector<std::size_t>>& fInputShape);
+    void AddInputTensors(const std::vector<std::vector<std::size_t>>& inputShapes);
+    void AddInputTensors(const std::vector<std::vector<Dim>>& inputShapes);
     std::shared_ptr<RModel> GetFunctionBlock() {
         return function_block;
     }
-
-    std::string GenerateModel(const std::string& filename, long read_pos=0, long block_size=1);
+    std::string GenerateModel(const std::string& filename, long read_pos = 0, long block_size = -1);
     std::string Generate(const std::vector<std::string>& inputPtrs);
     FunctionTarget GetFunctionTarget() {
         return fTarget;

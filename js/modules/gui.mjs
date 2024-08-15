@@ -1,22 +1,30 @@
 import { decodeUrl, settings, constants, gStyle, internals, browser, findFunction, parse, isFunc, isStr, isObject } from './core.mjs';
 import { select as d3_select } from './d3.mjs';
 import { HierarchyPainter } from './gui/HierarchyPainter.mjs';
-import { readSettings, readStyle } from './gui/utils.mjs';
+import { setStoragePrefix, readSettings, readStyle } from './gui/utils.mjs';
+import { createMenu, closeMenu } from './gui/menu.mjs';
 
 
 /** @summary Read style and settings from URL
   * @private */
 function readStyleFromURL(url) {
-   // first try to read settings from coockies
+   // first try to read settings from local storage
+   const d = decodeUrl(url),
+         prefix = d.get('storage_prefix');
+
+   if (isStr(prefix) && prefix)
+      setStoragePrefix(prefix);
+
    readSettings();
    readStyle();
 
-   const d = decodeUrl(url);
-
-   function get_bool(name, field) {
+   function get_bool(name, field, special) {
       if (d.has(name)) {
          const val = d.get(name);
-         settings[field] = (val !== '0') && (val !== 'false') && (val !== 'off');
+         if (special && (val === special))
+            settings[field] = special;
+         else
+            settings[field] = (val !== '0') && (val !== 'false') && (val !== 'off');
       }
    }
 
@@ -90,11 +98,16 @@ function readStyleFromURL(url) {
       settings.Latex = constants.Latex.fromString(latex);
 
    if (d.has('nomenu')) settings.ContextMenu = false;
-   if (d.has('noprogress')) settings.ProgressBox = false;
+   if (d.has('noprogress'))
+      settings.ProgressBox = false;
+   else
+      get_bool('progress', 'ProgressBox', 'modal');
+
    if (d.has('notouch')) browser.touches = false;
    if (d.has('adjframe')) settings.CanAdjustFrame = true;
 
-   if (d.has('toolbar')) {
+   const has_toolbar = d.has('toolbar');
+   if (has_toolbar) {
       const toolbar = d.get('toolbar', '');
       let val = null;
       if (toolbar.indexOf('popup') >= 0) val = 'popup';
@@ -133,15 +146,40 @@ function readStyleFromURL(url) {
          gStyle[field] = 0;
       else
          gStyle[field] = parseInt(val);
+      return gStyle[field] !== 0;
+   }
+   function get_float_style(name, field) {
+      if (!d.has(name)) return;
+      const val = d.get(name),
+            flt = Number.parseFloat(val);
+      if (Number.isFinite(flt))
+         gStyle[field] = flt;
    }
 
    if (d.has('histzero')) gStyle.fHistMinimumZero = true;
    if (d.has('histmargin')) gStyle.fHistTopMargin = parseFloat(d.get('histmargin'));
    get_int_style('optstat', 'fOptStat', 1111);
    get_int_style('optfit', 'fOptFit', 0);
-   get_int_style('optdate', 'fOptDate', 1);
-   get_int_style('optfile', 'fOptFile', 1);
+   const has_date = get_int_style('optdate', 'fOptDate', 1),
+         has_file = get_int_style('optfile', 'fOptFile', 1);
+   if ((has_date || has_file) && !has_toolbar)
+      settings.ToolBarVert = true;
+   get_float_style('datex', 'fDateX');
+   get_float_style('datey', 'fDateY');
+
    get_int_style('opttitle', 'fOptTitle', 1);
+   if (d.has('utc'))
+      settings.TimeZone = 'UTC';
+   if (d.has('cet'))
+      settings.TimeZone = 'Europe/Berlin';
+   else if (d.has('timezone')) {
+      settings.TimeZone = d.get('timezone');
+      if ((settings.TimeZone === 'default') || (settings.TimeZone === 'dflt'))
+         settings.TimeZone = 'Europe/Berlin';
+      else if (settings.TimeZone === 'local')
+         settings.TimeZone = '';
+   }
+
    gStyle.fStatFormat = d.get('statfmt', gStyle.fStatFormat);
    gStyle.fFitFormat = d.get('fitfmt', gStyle.fFitFormat);
 }
@@ -187,7 +225,7 @@ async function buildGUI(gui_element, gui_kind = '') {
       else {
          d3_select('html').style('height', '100%');
          d3_select('body').style('min-height', '100%').style('margin', 0).style('overflow', 'hidden');
-         myDiv.style('position', 'absolute').style('inset', '0px').style('padding', '1px');
+         myDiv.style('position', 'absolute').style('left', 0).style('top', 0).style('bottom', 0).style('right', 0).style('padding', '1px');
       }
    }
 
@@ -212,4 +250,4 @@ async function buildGUI(gui_element, gui_kind = '') {
    }).then(() => hpainter);
 }
 
-export { buildGUI, internals, readStyleFromURL, HierarchyPainter };
+export { buildGUI, internals, readStyleFromURL, HierarchyPainter, createMenu, closeMenu };

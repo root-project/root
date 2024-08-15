@@ -22,12 +22,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef __CINT__
 #include <setjmp.h>
-#else
-struct sigjmp_buf;
-struct jmp_buf;
-#endif
 
 #include <ROOT/RConfig.hxx>
 #include "DllImport.h"

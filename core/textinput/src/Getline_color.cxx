@@ -22,7 +22,7 @@
 #include "textinput/Range.h"
 #include "textinput/Text.h"
 
-using namespace std;
+using std::stack;
 using namespace textinput;
 
 namespace {

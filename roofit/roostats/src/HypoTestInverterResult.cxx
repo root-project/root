@@ -45,8 +45,6 @@ ClassImp(RooStats::HypoTestInverterResult);
 
 using namespace RooStats;
 using namespace RooFit;
-using namespace std;
-
 
 // initialize static value
 double HypoTestInverterResult::fgAsymptoticMaxSigma      = 5;
@@ -651,7 +649,7 @@ double HypoTestInverterResult::GetGraphX(const TGraph & graph, double y0, bool l
 
    ROOT::Math::BrentRootFinder brf;
    brf.SetFunction(f1d,xmin,xmax);
-   brf.SetNpx(TMath::Max(graph.GetN()*2,100) );
+   brf.SetNpx(std::max(graph.GetN()*2,100) );
 #ifdef DO_DEBUG
    std::cout << "findind root for " << xmin << " ,  "<< xmax << "f(x) : " << graph.Eval(xmin) << " , " << graph.Eval(0.5*(xmax+xmin))
              << " , " << graph.Eval(xmax) << " target " << y0 << std::endl;

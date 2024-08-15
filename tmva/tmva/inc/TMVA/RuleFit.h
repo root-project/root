@@ -170,7 +170,7 @@ namespace TMVA {
       const MethodBase                   *fMethodBase;      ///< pointer the method base which initialized this RuleFit instance
       Bool_t                              fVisHistsUseImp;  ///< if true, use importance as weight; else coef in vis hists
 
-      mutable MsgLogger*                  fLogger;   ///< message logger
+      mutable MsgLogger*                  fLogger;   ///<! message logger
       MsgLogger& Log() const { return *fLogger; }
 
       static const Int_t randSEED = 0; // set to 1 for debugging purposes or to zero for random seeds

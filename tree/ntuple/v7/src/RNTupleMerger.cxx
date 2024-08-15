@@ -14,17 +14,105 @@
  *************************************************************************/
 
 #include <ROOT/RError.hxx>
-#include <ROOT/RNTupleAnchor.hxx>
+#include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleMerger.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RPageStorageFile.hxx>
+#include <ROOT/RPageStorage.hxx>
+#include <ROOT/RClusterPool.hxx>
+#include <ROOT/RNTupleSerialize.hxx>
+#include <ROOT/RNTupleZip.hxx>
+#include <ROOT/TTaskGroup.hxx>
+#include <TROOT.h>
+#include <TFileMergeInfo.h>
+#include <TError.h>
+#include <TFile.h>
+#include <TKey.h>
+
+#include <deque>
 
 Long64_t ROOT::Experimental::RNTuple::Merge(TCollection *inputs, TFileMergeInfo *mergeInfo)
-{
-   if (inputs == nullptr || mergeInfo == nullptr) {
+// IMPORTANT: this function must not throw, as it is used in exception-unsafe code (TFileMerger).
+try {
+   // Check the inputs
+   if (!inputs || inputs->GetEntries() < 3 || !mergeInfo)
       return -1;
+
+   // Parse the input parameters
+   TIter itr(inputs);
+
+   // First entry is the RNTuple name
+   std::string ntupleName = std::string(itr()->GetName());
+
+   // Second entry is the output file
+   TFile *outFile = dynamic_cast<TFile *>(itr());
+   if (!outFile)
+      return -1;
+
+   // Check if the output file already has a key with that name
+   TKey *outKey = outFile->FindKey(ntupleName.c_str());
+   RNTuple *outNTuple = nullptr;
+   if (outKey) {
+      outNTuple = outKey->ReadObject<RNTuple>();
+      if (!outNTuple) {
+         Error("RNTuple::Merge", "Output file already has key, but not of type RNTuple!");
+         return -1;
+      }
+      // In principle, we should already be working on the RNTuple object from the output file, but just continue with
+      // pointer we just got.
    }
+
+   // The "fast" options is present if and only if we don't want to change compression.
+   const int compression =
+      mergeInfo->fOptions.Contains("fast") ? kUnknownCompressionSettings : outFile->GetCompressionSettings();
+
+   RNTupleWriteOptions writeOpts;
+   writeOpts.SetUseBufferedWrite(false);
+   if (compression != kUnknownCompressionSettings)
+      writeOpts.SetCompression(compression);
+   auto destination = std::make_unique<Internal::RPageSinkFile>(ntupleName, *outFile, writeOpts);
+
+   // If we already have an existing RNTuple, copy over its descriptor to support incremental merging
+   if (outNTuple) {
+      auto source = Internal::RPageSourceFile::CreateFromAnchor(*outNTuple);
+      source->Attach();
+      auto desc = source->GetSharedDescriptorGuard();
+      destination->InitFromDescriptor(desc.GetRef());
+   }
+
+   // The remaining entries are the input files
+   std::vector<std::unique_ptr<Internal::RPageSourceFile>> sources;
+   std::vector<Internal::RPageSource *> sourcePtrs;
+
+   while (const auto &pitr = itr()) {
+      TFile *inFile = dynamic_cast<TFile *>(pitr);
+      RNTuple *anchor = inFile ? inFile->Get<RNTuple>(ntupleName.c_str()) : nullptr;
+      if (!anchor)
+         return -1;
+      sources.push_back(Internal::RPageSourceFile::CreateFromAnchor(*anchor));
+   }
+
+   // Interface conversion
+   sourcePtrs.reserve(sources.size());
+   for (const auto &s : sources) {
+      sourcePtrs.push_back(s.get());
+   }
+
+   // Now merge
+   Internal::RNTupleMerger merger;
+   Internal::RNTupleMergeOptions options;
+   options.fCompressionSettings = compression;
+   merger.Merge(sourcePtrs, *destination, options);
+
+   // Provide the caller with a merged anchor object (even though we've already
+   // written it).
+   *this = *outFile->Get<RNTuple>(ntupleName.c_str());
+
+   return 0;
+} catch (const RException &ex) {
+   Error("RNTuple::Merge", "Exception thrown while merging: %s", ex.what());
    return -1;
 }
 
@@ -58,32 +146,32 @@ void ROOT::Experimental::Internal::RNTupleMerger::ValidateColumns(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::vector<ROOT::Experimental::Internal::RNTupleMerger::RColumnInfo>
-ROOT::Experimental::Internal::RNTupleMerger::CollectColumns(const RPageSource &source, bool firstSource)
+void ROOT::Experimental::Internal::RNTupleMerger::CollectColumns(const RNTupleDescriptor &descriptor,
+                                                                 std::vector<RColumnInfo> &columns)
 {
-   auto desc = source.GetSharedDescriptorGuard();
-   std::vector<RColumnInfo> columns;
    // Here we recursively find the columns and fill the RColumnInfo vector
-   AddColumnsFromField(columns, desc.GetRef(), desc->GetFieldZero());
+   AddColumnsFromField(columns, descriptor, descriptor.GetFieldZero());
    // Then we either build the internal map (first source) or validate the columns against it (remaning sources)
    // In either case, we also assign the output ids here
-   if (firstSource) {
+   if (fOutputIdMap.empty()) {
       BuildColumnIdMap(columns);
    } else {
       ValidateColumns(columns);
    }
-   return columns;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void ROOT::Experimental::Internal::RNTupleMerger::AddColumnsFromField(
-   std::vector<ROOT::Experimental::Internal::RNTupleMerger::RColumnInfo> &columns, const RNTupleDescriptor &desc,
-   const RFieldDescriptor &fieldDesc, const std::string &prefix)
+void ROOT::Experimental::Internal::RNTupleMerger::AddColumnsFromField(std::vector<RColumnInfo> &columns,
+                                                                      const RNTupleDescriptor &desc,
+                                                                      const RFieldDescriptor &fieldDesc,
+                                                                      const std::string &prefix)
 {
    for (const auto &field : desc.GetFieldIterable(fieldDesc)) {
       std::string name = prefix + field.GetFieldName() + ".";
       const std::string typeAndVersion = field.GetTypeName() + "." + std::to_string(field.GetTypeVersion());
-      for (const auto &column : desc.GetColumnIterable(field)) {
+      auto columnIter = desc.GetColumnIterable(field);
+      columns.reserve(columns.size() + columnIter.count());
+      for (const auto &column : columnIter) {
          columns.emplace_back(name + std::to_string(column.GetIndex()), typeAndVersion, column.GetPhysicalId(),
                               kInvalidDescriptorId);
       }
@@ -92,30 +180,53 @@ void ROOT::Experimental::Internal::RNTupleMerger::AddColumnsFromField(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *> sources, RPageSink &destination)
+void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *> sources, RPageSink &destination,
+                                                        const RNTupleMergeOptions &options)
 {
+   std::vector<RColumnInfo> columns;
+   RCluster::ColumnSet_t columnSet;
+
+   if (destination.IsInitialized()) {
+      CollectColumns(destination.GetDescriptor(), columns);
+   }
+
+   std::unique_ptr<RNTupleModel> model; // used to initialize the schema of the output RNTuple
+   std::optional<TTaskGroup> taskGroup;
+#ifdef R__USE_IMT
+   if (ROOT::IsImplicitMTEnabled())
+      taskGroup = TTaskGroup();
+#endif
+
    // Append the sources to the destination one-by-one
-   bool isFirstSource = true;
    for (const auto &source : sources) {
       source->Attach();
 
-      // Make sure the source contains events to be merged
-      if (source->GetNEntries() == 0) {
-         continue;
-      }
-
-      // Collect all the columns
-      // The column name : output column id map is only built once
-      auto columns = CollectColumns(*source, isFirstSource);
+      RClusterPool clusterPool{*source};
 
       // Get a handle on the descriptor (metadata)
       auto descriptor = source->GetSharedDescriptorGuard();
 
-      // Create sink from the input model of the very first input file
-      if (isFirstSource) {
-         auto model = descriptor->CreateModel();
+      // Collect all the columns
+      // The column name : output column id map is only built once
+      columns.clear(), columnSet.clear();
+      CollectColumns(descriptor.GetRef(), columns);
+      columnSet.reserve(columns.size());
+      for (const auto &column : columns)
+         columnSet.emplace(column.fColumnInputId);
+
+      // Create sink from the input model if not initialized
+      if (!destination.IsInitialized()) {
+         model = descriptor->CreateModel();
          destination.Init(*model.get());
-         isFirstSource = false;
+      }
+
+      for (const auto &extraTypeInfoDesc : descriptor->GetExtraTypeInfoIterable()) {
+         destination.UpdateExtraTypeInfo(extraTypeInfoDesc);
+      }
+
+      // Make sure the source contains events to be merged
+      if (source->GetNEntries() == 0) {
+         continue;
       }
 
       // Now loop over all clusters in this file
@@ -124,50 +235,136 @@ void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *>
       auto clusterId = descriptor->FindClusterId(0, 0);
 
       while (clusterId != ROOT::Experimental::kInvalidDescriptorId) {
-         auto &cluster = descriptor->GetClusterDescriptor(clusterId);
+         auto *cluster = clusterPool.GetCluster(clusterId, columnSet);
+         assert(cluster);
+         const auto &clusterDesc = descriptor->GetClusterDescriptor(clusterId);
+
+         // We use a std::deque so that references to the contained SealedPageSequence_t, and its iterators, are never
+         // invalidated.
+         std::deque<RPageStorage::SealedPageSequence_t> sealedPagesV;
+         std::vector<RPageStorage::RSealedPageGroup> sealedPageGroups;
+         std::vector<std::unique_ptr<unsigned char[]>> sealedPageBuffers;
 
          for (const auto &column : columns) {
 
             // See if this cluster contains this column
             // if not, there is nothing to read/do...
             auto columnId = column.fColumnInputId;
-            if (!cluster.ContainsColumn(columnId)) {
+            if (!clusterDesc.ContainsColumn(columnId)) {
                continue;
             }
 
+            const auto &columnDesc = descriptor->GetColumnDescriptor(columnId);
+            const auto colElement = RColumnElementBase::Generate(columnDesc.GetType());
+
             // Now get the pages for this column in this cluster
-            const auto &pages = cluster.GetPageRange(columnId);
-            size_t idx{0};
+            const auto &pages = clusterDesc.GetPageRange(columnId);
+
+            RPageStorage::SealedPageSequence_t sealedPages;
+            sealedPages.resize(pages.fPageInfos.size());
+
+            // Each column range potentially has a distinct compression settings
+            const auto colRangeCompressionSettings = clusterDesc.GetColumnRange(columnId).fCompressionSettings;
+            const bool needsCompressionChange = options.fCompressionSettings != kUnknownCompressionSettings &&
+                                                colRangeCompressionSettings != options.fCompressionSettings;
+
+            // If the column range is already uncompressed we don't need to allocate any new buffer, so we don't
+            // bother reserving memory for them.
+            size_t pageBufferBaseIdx = sealedPageBuffers.size();
+            if (colRangeCompressionSettings != 0)
+               sealedPageBuffers.resize(sealedPageBuffers.size() + pages.fPageInfos.size());
+
+            std::uint64_t pageIdx = 0;
 
             // Loop over the pages
             for (const auto &pageInfo : pages.fPageInfos) {
+               assert(pageIdx < sealedPages.size());
+               assert(sealedPageBuffers.size() == 0 || pageIdx < sealedPageBuffers.size());
 
-               // Each page contains N elements that we are going to read together
-               // LoadSealedPage reads packed/compressed bytes of a page into
-               // a memory buffer provided by a sealed page
-               RClusterIndex clusterIndex(clusterId, idx);
-               Internal::RPageStorage::RSealedPage sealedPage;
-               source->LoadSealedPage(columnId, clusterIndex, sealedPage);
+               ROnDiskPage::Key key{columnId, pageIdx};
+               auto onDiskPage = cluster->GetOnDiskPage(key);
 
-               // The way LoadSealedPage works might require a double call
-               // See the implementation. Here we do this in any case...
-               auto buffer = std::make_unique<unsigned char[]>(sealedPage.fSize);
-               sealedPage.fBuffer = buffer.get();
-               source->LoadSealedPage(columnId, clusterIndex, sealedPage);
+               const auto checksumSize = pageInfo.fHasChecksum * RPageStorage::kNBytesPageChecksum;
+               RPageStorage::RSealedPage &sealedPage = sealedPages[pageIdx];
+               sealedPage.SetNElements(pageInfo.fNElements);
+               sealedPage.SetHasChecksum(pageInfo.fHasChecksum);
+               sealedPage.SetBufferSize(pageInfo.fLocator.fBytesOnStorage + checksumSize);
+               sealedPage.SetBuffer(onDiskPage->GetAddress());
+               sealedPage.VerifyChecksumIfEnabled().ThrowOnError();
+               R__ASSERT(onDiskPage && (onDiskPage->GetSize() == sealedPage.GetBufferSize()));
 
-               // Now commit this page to the output
-               // Can we do this w/ a CommitSealedPageV
-               destination.CommitSealedPage(column.fColumnOutputId, sealedPage);
+               // Change compression if needed
+               if (needsCompressionChange) {
+                  auto taskFunc = [ // values in
+                                     pageIdx, colRangeCompressionSettings, pageBufferBaseIdx, checksumSize,
+                                     // const refs in
+                                     &colElement, &pageInfo, &options,
+                                     // refs in-out
+                                     &sealedPage, &sealedPageBuffers]() {
+                     // Step 1: prepare the source data.
+                     // Unzip the source buffer into the zip staging buffer. This is a memcpy if the source was
+                     // already uncompressed.
+                     // Note that the checksum, if present, is not zipped, so we only need to unzip
+                     // `sealedPage.GetDataSize()` bytes.
+                     const auto uncompressedSize = colElement->GetSize() * sealedPage.GetNElements();
+                     auto zipBuffer = std::make_unique<unsigned char[]>(uncompressedSize);
+                     RNTupleDecompressor::Unzip(sealedPage.GetBuffer(), sealedPage.GetDataSize(), uncompressedSize,
+                                                zipBuffer.get());
 
-               // Move on to the next index
-               idx += pageInfo.fNElements;
+                     // Step 2: prepare the destination buffer.
+                     if (uncompressedSize != sealedPage.GetDataSize()) {
+                        // source page is compressed
+                        R__ASSERT(colRangeCompressionSettings != 0);
+
+                        // We need to reallocate sealedPage's buffer because we are going to recompress the data
+                        // with a different algorithm/level. Since we don't know a priori how big that'll be, the
+                        // only safe bet is to allocate a buffer big enough to hold as many bytes as the uncompressed
+                        // data.
+                        R__ASSERT(sealedPage.GetDataSize() < uncompressedSize);
+                        auto &newBuf = sealedPageBuffers[pageBufferBaseIdx + pageIdx];
+                        newBuf = std::make_unique<unsigned char[]>(uncompressedSize + checksumSize);
+                        sealedPage.SetBuffer(newBuf.get());
+                     } else {
+                        // source page is uncompressed. We can reuse the sealedPage's buffer since it's big
+                        // enough.
+                        // Note that this does not necessarily mean that the column range's compressionSettings are 0,
+                        // as a page might have been stored uncompressed because it was not compressible with its
+                        // advertised compression settings.
+                     }
+
+                     const auto newNBytes =
+                        RNTupleCompressor::Zip(zipBuffer.get(), uncompressedSize, options.fCompressionSettings,
+                                               const_cast<void *>(sealedPage.GetBuffer()));
+                     sealedPage.SetBufferSize(newNBytes + checksumSize);
+                     if (pageInfo.fHasChecksum) {
+                        // Calculate new checksum (this must happen after setting the new buffer size!)
+                        sealedPage.ChecksumIfEnabled();
+                     }
+                  };
+
+                  if (taskGroup)
+                     taskGroup->Run(taskFunc);
+                  else
+                     taskFunc();
+               }
+
+               ++pageIdx;
 
             } // end of loop over pages
 
+            if (taskGroup)
+               taskGroup->Wait();
+            sealedPagesV.push_back(std::move(sealedPages));
+            sealedPageGroups.emplace_back(column.fColumnOutputId, sealedPagesV.back().cbegin(),
+                                          sealedPagesV.back().cend());
+
          } // end of loop over columns
 
+         // Now commit all pages to the output
+         destination.CommitSealedPageV(sealedPageGroups);
+
          // Commit the clusters
-         destination.CommitCluster(cluster.GetNEntries());
+         destination.CommitCluster(clusterDesc.GetNEntries());
 
          // Go to the next cluster
          clusterId = descriptor->FindNextClusterId(clusterId);

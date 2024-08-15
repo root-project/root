@@ -9,7 +9,7 @@ TEST(RNTupleZip, Basics)
    auto szZipped = compressor.Zip(data.data(), data.length(), 101);
    EXPECT_LT(szZipped, data.length());
    auto unzipBuffer = std::unique_ptr<char[]>(new char[data.length()]);
-   decompressor.Unzip(compressor.GetZipBuffer(), szZipped, data.length(), unzipBuffer.get());
+   RNTupleDecompressor::Unzip(compressor.GetZipBuffer(), szZipped, data.length(), unzipBuffer.get());
    EXPECT_EQ(data, std::string_view(unzipBuffer.get(), data.length()));
 
    // inplace decompression
@@ -81,7 +81,7 @@ TEST(RNTupleZip, Large)
       });
    EXPECT_LT(szZip, N);
    EXPECT_EQ(2, nWrites);
-   decompressor.Unzip(zipBuffer.get(), szZip, N, unzipBuffer.get());
+   RNTupleDecompressor::Unzip(zipBuffer.get(), szZip, N, unzipBuffer.get());
    EXPECT_EQ(data, std::string_view(unzipBuffer.get(), N));
 }
 
@@ -101,6 +101,6 @@ TEST(RNTupleZip, LargeWithOutputBuffer)
 
    szZip = compressor.Zip(data.data(), data.length(), 101, zipBuffer.get());
    EXPECT_LT(szZip, N);
-   decompressor.Unzip(zipBuffer.get(), szZip, N, unzipBuffer.get());
+   RNTupleDecompressor::Unzip(zipBuffer.get(), szZip, N, unzipBuffer.get());
    EXPECT_EQ(data, std::string_view(unzipBuffer.get(), N));
 }

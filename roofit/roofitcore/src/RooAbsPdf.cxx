@@ -127,11 +127,11 @@ the proxy holds a function, and will trigger an assert.
 ### Batched function evaluations (Advanced usage)
 
 To speed up computations with large numbers of data events in unbinned fits,
-it is beneficial to override `computeBatch()`. Like this, large spans of
+it is beneficial to override `doEval()`. Like this, large spans of
 computations can be done, without having to call `evaluate()` for each single data event.
-`computeBatch()` should execute the same computation as `evaluate()`, but it
+`doEval()` should execute the same computation as `evaluate()`, but it
 may choose an implementation that is capable of SIMD computations.
-If computeBatch is not implemented, the classic and slower `evaluate()` will be
+If doEval is not implemented, the classic and slower `evaluate()` will be
 called for each data event.
 */
 
@@ -212,7 +212,7 @@ inline double getLog(double prob, RooAbsReal const *caller)
 
 } // namespace
 
-using namespace std;
+using std::endl, std::string, std::ostream, std::vector, std::pair, std::make_pair;
 
 using RooHelpers::getColonSeparatedNameString;
 
@@ -445,7 +445,7 @@ const RooAbsReal* RooAbsPdf::getNormObj(const RooArgSet* nset, const RooArgSet* 
   // Check normalization is already stored
   CacheElem* cache = static_cast<CacheElem*>(_normMgr.getObj(nset,iset,nullptr,rangeName)) ;
   if (cache) {
-    return cache->_norm ;
+    return cache->_norm.get();
   }
 
   // If not create it now
@@ -459,8 +459,7 @@ const RooAbsReal* RooAbsPdf::getNormObj(const RooArgSet* nset, const RooArgSet* 
   RooAbsReal* norm = std::unique_ptr<RooAbsReal>{createIntegral(depList,*nset, *getIntegratorConfig(), RooNameReg::str(rangeName))}.release();
 
   // Store it in the cache
-  cache = new CacheElem(*norm) ;
-  _normMgr.setObj(nset,iset,cache,rangeName) ;
+  _normMgr.setObj(nset,iset,new CacheElem(*norm),rangeName) ;
 
   // And return the newly created integral
   return norm ;
@@ -487,8 +486,8 @@ bool RooAbsPdf::syncNormalization(const RooArgSet* nset, bool adjustProxies) con
   CacheElem* cache = static_cast<CacheElem*>(_normMgr.getObj(nset)) ;
   if (cache) {
 
-    bool nintChanged = (_norm!=cache->_norm) ;
-    _norm = cache->_norm ;
+    bool nintChanged = (_norm!=cache->_norm.get()) ;
+    _norm = cache->_norm.get();
 
     // In the past, this condition read `if (nintChanged && adjustProxies)`.
     // However, the cache checks if the nset was already cached **by content**,
@@ -683,7 +682,7 @@ void RooAbsPdf::getLogProbabilities(std::span<const double> pdfValues, double * 
 /// it is extendable by overloading `canBeExtended()`, and must
 /// implement the `expectedEvents()` function.
 ///
-/// \param[in] observed The number of observed events.
+/// \param[in] sumEntries The number of observed events.
 /// \param[in] nset The normalization set when asking the pdf for the expected
 ///            number of events.
 /// \param[in] observedSumW2 The number of observed events when weighting with
@@ -827,6 +826,7 @@ double RooAbsPdf::extendedTerm(RooAbsData const& data, bool weightSquared, bool 
  * <tr><th> Type of CmdArg    <th>    Effect on NLL
  * <tr><td> `ConditionalObservables(Args_t &&... argsOrArgSet)`  <td>  Do not normalize PDF over listed observables.
  *                                                 Arguments can either be multiple RooRealVar or a single RooArgSet containing them.
+ * <tr><td> `Extended(bool flag)`             <td> Add extended likelihood term, off by default.
  * <tr><td> `Range(const char* name)`         <td>  Fit only data inside range with given name. Multiple comma-separated range names can be specified.
  *                                                  In this case, the unnormalized PDF \f$f(x)\f$ is normalized by the integral over all ranges \f$r_i\f$:
  *                                                  \f[
@@ -853,18 +853,19 @@ double RooAbsPdf::extendedTerm(RooAbsData const& data, bool weightSquared, bool 
  * <tr><td> `EvalBackend(std::string const&)` <td> Choose a likelihood evaluation backend:
  *   <table>
  *   <tr><th> Backend <th> Description
- *   <tr><td> **legacy** - *default* <td> The original likelihood evaluation method.
- *                                        Evaluates the PDF for each single data entry at a time before summing the negative log probabilities.
- *                                        This is the default if `EvalBackend()` is not passed.
- *   <tr><td> **cpu** <td> New vectorized evaluation mode, using faster math functions and auto-vectorisation.
- *                         If all RooAbsArg objects in the model support it, likelihood computations are 2 to 10 times faster,
- *                         unless your dataset is so small that the vectorization is not worth it.
- *                         The relative difference of the single log-likelihoods w.r.t. the legacy mode is usually better than \f$10^{-12}\f$,
+ *   <tr><td> **cpu** - *default* <td> New vectorized evaluation mode, using faster math functions and auto-vectorisation.
+ *                         Since ROOT 6.23, this is the default if `EvalBackend()` is not passed, succeeding the **legacy** backend.
+ *                         If all RooAbsArg objects in the model support vectorized evaluation,
+ *                         likelihood computations are 2 to 10 times faster than with the **legacy** backend
+ *                         - unless your dataset is so small that the vectorization is not worth it.
+ *                         The relative difference of the single log-likelihoods with respect to the legacy mode is usually better than \f$10^{-12}\f$,
  *                         and for fit parameters it's usually better than \f$10^{-6}\f$. In past ROOT releases, this backend could be activated with the now deprecated `BatchMode()` option.
  *   <tr><td> **cuda** <td> Evaluate the likelihood on a GPU that supports CUDA.
  *                          This backend re-uses code from the **cpu** backend, but compiled in CUDA kernels.
  *                          Hence, the results are expected to be identical, modulo some numerical differences that can arise from the different order in which the GPU is summing the log probabilities.
  *                          This backend can drastically speed up the fit if all RooAbsArg object in the model support it.
+ *   <tr><td> **legacy** <td> The original likelihood evaluation method.
+ *                            Evaluates the PDF for each single data entry at a time before summing the negative log probabilities.
  *   <tr><td> **codegen** <td> **Experimental** - Generates and compiles minimal C++ code for the NLL on-the-fly and wraps it in the returned RooAbsReal.
  *                             Also generates and compiles the code for the gradient using Automatic Differentiation (AD) with [Clad](https://github.com/vgvassilev/clad).
  *                             This analytic gradient is passed to the minimizer, which can result in significant speedups for many-parameter fits,
@@ -1022,6 +1023,8 @@ std::unique_ptr<RooAbsReal> RooAbsPdf::createNLLImpl(RooAbsData &data, const Roo
  *             matrix calculated with the squared weights.
  * <tr><td> `AsymptoticError()`               <td> Use the asymptotically correct approach to estimate errors in the presence of weights.
  *                                                 This is slower but more accurate than `SumW2Error`. See also https://arxiv.org/abs/1911.01303).
+                                                   This option even correctly implements the case of extended likelihood fits
+                                                   (see this [writeup on extended weighted fits](https://root.cern/files/extended_weighted_fits.pdf) that complements the paper linked before).
  * <tr><td> `PrefitDataFraction(double fraction)`
  *                                            <td>  Runs a prefit on a small dataset of size fraction*(actual data size). This can speed up fits
  *                                                  by finding good starting values for the parameters for the actual fit.
@@ -2170,9 +2173,9 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
     // Obtain direct selection
     std::unique_ptr<RooArgSet> dirSelNodes;
     if (compSet) {
-      dirSelNodes.reset(static_cast<RooArgSet*>(branchNodeSet.selectCommon(*compSet)));
+      dirSelNodes = std::unique_ptr<RooArgSet>{branchNodeSet.selectCommon(*compSet)};
     } else {
-      dirSelNodes.reset(static_cast<RooArgSet*>(branchNodeSet.selectByName(compSpec)));
+      dirSelNodes = std::unique_ptr<RooArgSet>{branchNodeSet.selectByName(compSpec)};
     }
     if (!dirSelNodes->empty()) {
       coutI(Plotting) << "RooAbsPdf::plotOn(" << GetName() << ") directly selected PDF components: " << *dirSelNodes << endl ;
@@ -2317,7 +2320,7 @@ RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdA
   // Decode command line arguments
   std::unique_ptr<RooArgSet> params{getParameters(frame->getNormVars())} ;
   if(RooArgSet* requestedParams = pc.getSet("params")) {
-    params = std::unique_ptr<RooArgSet>{static_cast<RooArgSet*>(params->selectCommon(*requestedParams))};
+    params = std::unique_ptr<RooArgSet>{params->selectCommon(*requestedParams)};
   }
   paramOn(frame,*params,showc,label,xmin,xmax,ymax,formatCmd);
 
@@ -2429,12 +2432,10 @@ RooAbsPdf::CacheElem::~CacheElem()
   // Zero _norm pointer in RooAbsPdf if it is points to our cache payload
   if (_owner) {
     RooAbsPdf* pdfOwner = static_cast<RooAbsPdf*>(_owner) ;
-    if (pdfOwner->_norm == _norm) {
+    if (pdfOwner->_norm == _norm.get()) {
       pdfOwner->_norm = nullptr ;
     }
   }
-
-  delete _norm ;
 }
 
 
@@ -2445,20 +2446,7 @@ RooAbsPdf::CacheElem::~CacheElem()
 RooAbsPdf* RooAbsPdf::createProjection(const RooArgSet& iset)
 {
   // Construct name for new object
-  std::string name(GetName()) ;
-  name.append("_Proj[") ;
-  if (!iset.empty()) {
-    bool first = true;
-    for(auto const& arg : iset) {
-      if (first) {
-        first = false ;
-      } else {
-        name.append(",") ;
-      }
-      name.append(arg->GetName()) ;
-    }
-  }
-  name.append("]") ;
+  std::string name = std::string{GetName()} + "_Proj[" + RooHelpers::getColonSeparatedNameString(iset, ',') + "]";
 
   // Return projected p.d.f.
   return new RooProjectedPdf(name.c_str(),name.c_str(),*this,iset) ;
@@ -2662,14 +2650,7 @@ void RooAbsPdf::setGeneratorConfig()
   _specGeneratorConfig.reset();
 }
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-RooAbsPdf::GenSpec::~GenSpec()
-{
-  delete _genContext ;
-}
+RooAbsPdf::GenSpec::~GenSpec() = default;
 
 
 ////////////////////////////////////////////////////////////////////////////////

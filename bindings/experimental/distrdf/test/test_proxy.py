@@ -1,4 +1,8 @@
+from array import array
 import unittest
+import os
+
+import ROOT
 
 from DistRDF import Node
 from DistRDF import Proxy
@@ -211,3 +215,60 @@ class GetValueTests(unittest.TestCase):
         node.value = 5
 
         self.assertEqual(proxy.GetValue(), 5)
+
+class InternalDataFrameTests(unittest.TestCase):
+    """The HeadNode stores an internal RDataFrame for certain information"""
+
+    @classmethod
+    def setUpClass(cls):
+        """Create a dummy file to use for the RDataFrame constructor."""
+        cls.test_treename = "treename"
+        cls.test_filename = "test_distrdf_getcolumnnames.root"
+        cls.test_tree_entries = 1
+
+        with ROOT.TFile(cls.test_filename, "RECREATE") as f:
+            tree = ROOT.TTree(cls.test_treename, cls.test_treename)
+
+            x = array("f", [0])
+            tree.Branch("myColumn", x, "myColumn/F")
+
+            x[0] = 42
+            tree.Fill()
+
+            f.WriteObject(tree, cls.test_treename)
+
+    @classmethod
+    def tearDownClass(cls):
+        os.remove(cls.test_filename)
+
+    def test_getcolumnnames_from_strings(self):
+        hn = create_dummy_headnode(self.test_treename, self.test_filename)
+        proxy = Proxy.NodeProxy(hn)
+        cn_vec = proxy.GetColumnNames()
+        self.assertSequenceEqual(cn_vec, ["myColumn"])
+
+    def test_getcolumnnames_from_rdatasetspec(self):
+        spec = ROOT.RDF.Experimental.RDatasetSpec()
+        spec.AddSample(("", self.test_treename, self.test_filename))
+
+        hn = create_dummy_headnode(spec)
+        proxy = Proxy.NodeProxy(hn)
+        cn_vec = proxy.GetColumnNames()
+        self.assertSequenceEqual(cn_vec, ["myColumn"])
+
+    def test_getcolumnnames_after_define(self):
+        """
+        Check newly defined columns are available also locally.
+        """
+
+        node = create_dummy_headnode(1)
+        proxy = Proxy.NodeProxy(node)
+
+        cols_before = proxy.GetColumnNames()
+        self.assertSequenceEqual(cols_before, [])
+
+        proxy = proxy.Define("x", "42").Define("y", "43").Define("z", "44")
+
+        cols_after = proxy.GetColumnNames()
+
+        self.assertSequenceEqual(cols_after, ["x", "y", "z"])

@@ -533,7 +533,7 @@ graphics `graphs`: Use of **`TGraph`**, **`TGraphErrors`**, etc.
 Statistics functions `matrix`: Matrices (**`TMatrix`**) examples
 `mlp`: Neural networks with **`TMultiLayerPerceptron`** `net`: Network
 classes (client/server examples) `physics`: LorentzVectors, phase
-space `pyroot`: Python tutorials `pythia`: Example with `pythia6`
+space `pyroot`: Python tutorials `pythia`: Example with `pythia8`
 `quadp`: Quadratic Programming `smatrix`:
 Matrices with a templated package `spectrum`: Peak finder, background,
 deconvolutions `splot`: Example of the **`TSplot`** class

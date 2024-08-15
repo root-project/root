@@ -305,7 +305,7 @@ class Node {
             delete polygons[i].parent;
          }
 
-         // by difinition polygon should be COPLANAR for itself
+         // by definition polygon should be COPLANAR for itself
          if (i === 0)
             this.polygons.push(polygons[0]);
          else

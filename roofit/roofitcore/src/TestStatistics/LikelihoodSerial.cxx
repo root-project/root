@@ -13,11 +13,10 @@
 #include "LikelihoodSerial.h"
 
 #include <RooFit/TestStatistics/RooAbsL.h>
-#include <RooFit/TestStatistics/RooUnbinnedL.h>
-#include <RooFit/TestStatistics/RooBinnedL.h>
-#include <RooFit/TestStatistics/RooSubsidiaryL.h>
-#include <RooFit/TestStatistics/RooSumL.h>
 #include "RooRealVar.h"
+#include "RooNaNPacker.h"
+
+#include "TMath.h" // IsNaN
 
 namespace RooFit {
 namespace TestStatistics {
@@ -32,25 +31,12 @@ namespace TestStatistics {
  * likelihood object, or to use a higher level entry point like RooAbsPdf::fitTo() or RooAbsPdf::createNLL().
  */
 
-LikelihoodSerial::LikelihoodSerial(std::shared_ptr<RooAbsL> likelihood, std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean)
-   : LikelihoodWrapper(std::move(likelihood), std::move(calculation_is_clean))
+LikelihoodSerial::LikelihoodSerial(std::shared_ptr<RooAbsL> likelihood,
+                                   std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean,
+                                   SharedOffset offset)
+   : LikelihoodWrapper(std::move(likelihood), std::move(calculation_is_clean), std::move(offset))
 {
    initVars();
-   // determine likelihood type
-   if (dynamic_cast<RooUnbinnedL *>(likelihood_.get()) != nullptr) {
-      likelihood_type = LikelihoodType::unbinned;
-   } else if (dynamic_cast<RooBinnedL *>(likelihood_.get()) != nullptr) {
-      likelihood_type = LikelihoodType::binned;
-   } else if (dynamic_cast<RooSumL *>(likelihood_.get()) != nullptr) {
-      likelihood_type = LikelihoodType::sum;
-   } else if (dynamic_cast<RooSubsidiaryL *>(likelihood_.get()) != nullptr) {
-      likelihood_type = LikelihoodType::subsidiary;
-   } else {
-      throw std::logic_error("in LikelihoodSerial constructor: _likelihood is not of a valid subclass!");
-   }
-   // Note to future maintainers: take care when storing the minimizer_fcn pointer. The
-   // RooAbsMinimizerFcn subclasses may get cloned inside MINUIT, which means the pointer
-   // should also somehow be updated in this class.
 }
 
 /// \brief Helper function for the constructor.
@@ -76,24 +62,51 @@ void LikelihoodSerial::initVars()
    _saveVars.addClone(varList);
 }
 
-void LikelihoodSerial::evaluate() {
-   switch (likelihood_type) {
+void LikelihoodSerial::evaluate()
+{
+   if (do_offset_ && shared_offset_.offsets().empty()) {
+      calculate_offsets();
+   }
+
+   switch (likelihood_type_) {
    case LikelihoodType::unbinned:
    case LikelihoodType::binned: {
       result = likelihood_->evaluatePartition({0, 1}, 0, 0);
+      if (do_offset_) {
+         result -= shared_offset_.offsets()[0];
+      }
+      break;
+   }
+   case LikelihoodType::subsidiary: {
+      result = likelihood_->evaluatePartition({0, 1}, 0, 0);
+      if (do_offset_ && offsetting_mode_ == OffsettingMode::full) {
+         result -= shared_offset_.offsets()[0];
+      }
       break;
    }
    case LikelihoodType::sum: {
-      result = likelihood_->evaluatePartition({0, 1}, 0, likelihood_->getNComponents());
-      break;
-   }
-   default: {
-      throw std::logic_error("in LikelihoodSerial::evaluate_task: likelihood types other than binned, unbinned and simultaneous not yet implemented!");
+      result = ROOT::Math::KahanSum<double>();
+      RooNaNPacker packedNaN;
+      for (std::size_t comp_ix = 0; comp_ix < likelihood_->getNComponents(); ++comp_ix) {
+         auto component_result = likelihood_->evaluatePartition({0, 1}, comp_ix, comp_ix + 1);
+         packedNaN.accumulate(component_result.Sum());
+
+         if (do_offset_ && shared_offset_.offsets()[comp_ix] != ROOT::Math::KahanSum<double>(0, 0)) {
+            result += (component_result - shared_offset_.offsets()[comp_ix]);
+         } else {
+            result += component_result;
+         }
+      }
+      if (packedNaN.getPayload() != 0) {
+         result = ROOT::Math::KahanSum<double>(packedNaN.getNaNWithPayload());
+      }
       break;
    }
    }
 
-   result = applyOffsetting(result);
+   if (TMath::IsNaN(result.Sum())) {
+      RooAbsReal::logEvalError(nullptr, GetName().c_str(), "function value is NAN");
+   }
 }
 
 } // namespace TestStatistics

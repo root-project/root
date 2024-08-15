@@ -84,17 +84,17 @@ double RooLognormal::evaluate() const
 
 void RooLognormal::translate(RooFit::Detail::CodeSquashContext &ctx) const
 {
-   std::string funcName = _useStandardParametrization ? "logNormalEvaluateStandard" : "logNormalEvaluate";
-   ctx.addResult(this, ctx.buildCall("RooFit::Detail::EvaluateFuncs::" + funcName, x, k, m0));
+   std::string funcName = _useStandardParametrization ? "logNormalEvaluateStandard" : "logNormal";
+   ctx.addResult(this, ctx.buildCall("RooFit::Detail::MathFuncs::" + funcName, x, k, m0));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of Lognormal distribution.
-void RooLognormal::computeBatch(double *output, size_t nEvents, RooFit::Detail::DataMap const &dataMap) const
+void RooLognormal::doEval(RooFit::EvalContext &ctx) const
 {
    auto computer = _useStandardParametrization ? RooBatchCompute::LognormalStandard : RooBatchCompute::Lognormal;
-   RooBatchCompute::compute(dataMap.config(this), computer, output, nEvents,
-                            {dataMap.at(x), dataMap.at(m0), dataMap.at(k)});
+   RooBatchCompute::compute(ctx.config(this), computer, ctx.output(),
+                            {ctx.at(x), ctx.at(m0), ctx.at(k)});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -120,7 +120,7 @@ std::string RooLognormal::buildCallToAnalyticIntegral(int /*code*/, const char *
                                                       RooFit::Detail::CodeSquashContext &ctx) const
 {
    std::string funcName = _useStandardParametrization ? "logNormalIntegralStandard" : "logNormalIntegral";
-   return ctx.buildCall("RooFit::Detail::AnalyticalIntegrals::" + funcName, x.min(rangeName), x.max(rangeName), m0, k);
+   return ctx.buildCall("RooFit::Detail::MathFuncs::" + funcName, x.min(rangeName), x.max(rangeName), m0, k);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

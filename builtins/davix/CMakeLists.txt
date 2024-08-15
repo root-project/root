@@ -10,9 +10,9 @@ find_package(libuuid REQUIRED)
 find_package(LibXml2 REQUIRED)
 find_package(OpenSSL REQUIRED)
 
-set(DAVIX_VERSION "0.8.1")
+set(DAVIX_VERSION "0.8.6")
 set(DAVIX_URL "http://lcgpackages.web.cern.ch/lcgpackages/tarFiles/sources")
-set(DAVIX_URLHASH "SHA256=3f42f4eadaf560ab80984535ffa096d3e88287d631960b2193e84cf29a5fe3a6")
+set(DAVIX_URLHASH "SHA256=7383b6f6595c77a9dc8c03c5483c67dc32bd6d23751e956cf9c174768e7eeb5b")
 set(DAVIX_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/DAVIX-prefix)
 set(DAVIX_LIBNAME ${CMAKE_STATIC_LIBRARY_PREFIX}davix${CMAKE_STATIC_LIBRARY_SUFFIX})
 

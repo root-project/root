@@ -68,10 +68,10 @@ be larger than one.
 #define NaN numeric_limits<float>::quiet_NaN()
 #define IsNaN(a) TMath::IsNaN(a)
 
-ClassImp(RooStats::HypoTestResult); ;
+ClassImp(RooStats::HypoTestResult);
 
 using namespace RooStats;
-using namespace std;
+using std::numeric_limits, std::endl;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
@@ -310,7 +310,7 @@ double HypoTestResult::CLsError() const {
    double cl_b_err2 = pow(CLbError(),2);
    double cl_sb_err2 = pow(CLsplusbError(),2);
 
-   return TMath::Sqrt(cl_sb_err2 + cl_b_err2 * pow(CLs(),2))/CLb();
+   return std::sqrt(cl_sb_err2 + cl_b_err2 * pow(CLs(),2))/CLb();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -221,14 +221,12 @@ private:
    };
 
 protected:
-#ifndef __CINT__
    Rep_t          fRep;           //! String data
-#endif
 
    // Special concatenation constructor
    TString(const char *a1, Ssiz_t n1, const char *a2, Ssiz_t n2);
    void           AssertElement(Ssiz_t nc) const; // Index in range
-   void           Clobber(Ssiz_t nc);             // Remove old contents
+   Ssiz_t         Clobber(Ssiz_t nc);             // Remove old contents
    void           InitChar(char c);               // Initialize from char
 
    enum { kAlignment = 16 };
@@ -382,7 +380,7 @@ public:
    Ssiz_t       First(char c) const;
    Ssiz_t       First(const char *cs) const;
    void         Form(const char *fmt, ...)
-#if defined(__GNUC__) && !defined(__CINT__)
+#if defined(__GNUC__)
    __attribute__((format(printf, 2, 3)))   /* 1 is the this pointer */
 #endif
    ;
@@ -467,7 +465,7 @@ public:
    static TString ULLtoa (ULong64_t value, Int_t base);
    static TString BaseConvert(const TString& s_in, Int_t base_in, Int_t base_out);  // Converts string from base base_in to base base_out (supported bases 2-36)
    static TString Format(const char *fmt, ...)
-#if defined(__GNUC__) && !defined(__CINT__)
+#if defined(__GNUC__)
    __attribute__((format(printf, 1, 2)))
 #endif
    ;
@@ -498,12 +496,12 @@ inline UInt_t Hash(const TString *s) { return s->Hash(); }
        UInt_t Hash(const char *s);
 
 extern char *Form(const char *fmt, ...)      // format in circular buffer
-#if defined(__GNUC__) && !defined(__CINT__)
+#if defined(__GNUC__)
 __attribute__((format(printf, 1, 2)))
 #endif
 ;
 extern void  Printf(const char *fmt, ...)    // format and print
-#if defined(__GNUC__) && !defined(__CINT__)
+#if defined(__GNUC__)
 __attribute__((format(printf, 1, 2)))
 #endif
 ;
@@ -717,11 +715,9 @@ inline TString &TString::ReplaceAll(const char *s1,const char *s2)
 
 inline TString &TString::Swap(TString &other) {
    // Swap the contents of other and this without reallocation.
-#ifndef __CINT__
    Rep_t tmp = other.fRep;
    other.fRep = fRep;
    fRep = tmp;
-#endif
    return *this;
 }
 

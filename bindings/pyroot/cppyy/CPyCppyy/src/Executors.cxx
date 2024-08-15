@@ -15,11 +15,11 @@
 #include <sstream>
 #include <utility>
 #include <sys/types.h>
+#include <complex>
 
 
 //- data _____________________________________________________________________
 namespace CPyCppyy {
-    typedef Executor* (*ef_t) ();
     typedef std::map<std::string, ef_t> ExecFactories_t;
     static ExecFactories_t gExecFactories;
 
@@ -52,30 +52,30 @@ static inline rtype GILCall##tcode(                                          \
     Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, CPyCppyy::CallContext* ctxt)\
 {                                                                            \
     if (!ReleasesGIL(ctxt))                                                  \
-        return Cppyy::Call##tcode(method, self, ctxt->GetSize(), ctxt->GetArgs());\
+        return Cppyy::Call##tcode(method, self, ctxt->GetEncodedSize(), ctxt->GetArgs());\
     GILControl gc{};                                                         \
-    return Cppyy::Call##tcode(method, self, ctxt->GetSize(), ctxt->GetArgs());\
+    return Cppyy::Call##tcode(method, self, ctxt->GetEncodedSize(), ctxt->GetArgs());\
 }
 #else
 #define CPPYY_IMPL_GILCALL(rtype, tcode)                                     \
 static inline rtype GILCall##tcode(                                          \
     Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, CPyCppyy::CallContext* ctxt)\
 {                                                                            \
-    return Cppyy::Call##tcode(method, self, ctxt->GetSize(), ctxt->GetArgs());\
+    return Cppyy::Call##tcode(method, self, ctxt->GetEncodedSize(), ctxt->GetArgs());\
 }
 #endif
 
-CPPYY_IMPL_GILCALL(void,          V)
-CPPYY_IMPL_GILCALL(unsigned char, B)
-CPPYY_IMPL_GILCALL(char,          C)
-CPPYY_IMPL_GILCALL(short,         H)
-CPPYY_IMPL_GILCALL(Int_t,         I)
-CPPYY_IMPL_GILCALL(Long_t,        L)
-CPPYY_IMPL_GILCALL(Long64_t,      LL)
-CPPYY_IMPL_GILCALL(float,         F)
-CPPYY_IMPL_GILCALL(double,        D)
-CPPYY_IMPL_GILCALL(LongDouble_t,  LD)
-CPPYY_IMPL_GILCALL(void*,         R)
+CPPYY_IMPL_GILCALL(void,           V)
+CPPYY_IMPL_GILCALL(unsigned char,  B)
+CPPYY_IMPL_GILCALL(char,           C)
+CPPYY_IMPL_GILCALL(short,          H)
+CPPYY_IMPL_GILCALL(int,            I)
+CPPYY_IMPL_GILCALL(long,           L)
+CPPYY_IMPL_GILCALL(PY_LONG_LONG,   LL)
+CPPYY_IMPL_GILCALL(float,          F)
+CPPYY_IMPL_GILCALL(double,         D)
+CPPYY_IMPL_GILCALL(PY_LONG_DOUBLE, LD)
+CPPYY_IMPL_GILCALL(void*,          R)
 
 static inline Cppyy::TCppObject_t GILCallO(Cppyy::TCppMethod_t method,
     Cppyy::TCppObject_t self, CPyCppyy::CallContext* ctxt, Cppyy::TCppType_t klass)
@@ -83,10 +83,10 @@ static inline Cppyy::TCppObject_t GILCallO(Cppyy::TCppMethod_t method,
 #ifdef WITH_THREAD
     if (!ReleasesGIL(ctxt))
 #endif
-        return Cppyy::CallO(method, self, ctxt->GetSize(), ctxt->GetArgs(), klass);
+        return Cppyy::CallO(method, self, ctxt->GetEncodedSize(), ctxt->GetArgs(), klass);
 #ifdef WITH_THREAD
     GILControl gc{};
-    return Cppyy::CallO(method, self, ctxt->GetSize(), ctxt->GetArgs(), klass);
+    return Cppyy::CallO(method, self, ctxt->GetEncodedSize(), ctxt->GetArgs(), klass);
 #endif
 }
 
@@ -96,10 +96,10 @@ static inline Cppyy::TCppObject_t GILCallConstructor(
 #ifdef WITH_THREAD
     if (!ReleasesGIL(ctxt))
 #endif
-        return Cppyy::CallConstructor(method, klass, ctxt->GetSize(), ctxt->GetArgs());
+        return Cppyy::CallConstructor(method, klass, ctxt->GetEncodedSize(), ctxt->GetArgs());
 #ifdef WITH_THREAD
     GILControl gc{};
-    return Cppyy::CallConstructor(method, klass, ctxt->GetSize(), ctxt->GetArgs());
+    return Cppyy::CallConstructor(method, klass, ctxt->GetEncodedSize(), ctxt->GetArgs());
 #endif
 }
 
@@ -262,7 +262,7 @@ PyObject* CPyCppyy::LongExecutor::Execute(
     Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, CallContext* ctxt)
 {
 // execute <method> with argument <self, ctxt>, construct python long return value
-    return PyLong_FromLong((Long_t)GILCallL(method, self, ctxt));
+    return PyLong_FromLong((long)GILCallL(method, self, ctxt));
 }
 
 //----------------------------------------------------------------------------
@@ -270,7 +270,7 @@ PyObject* CPyCppyy::ULongExecutor::Execute(
     Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, CallContext* ctxt)
 {
 // execute <method> with argument <self, ctxt>, construct python unsigned long return value
-    return PyLong_FromUnsignedLong((ULong_t)GILCallLL(method, self, ctxt));
+    return PyLong_FromUnsignedLong((unsigned long)GILCallLL(method, self, ctxt));
 }
 
 //----------------------------------------------------------------------------
@@ -278,7 +278,7 @@ PyObject* CPyCppyy::LongLongExecutor::Execute(
     Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, CallContext* ctxt)
 {
 // execute <method> with argument <self, ctxt>, construct python long long return value
-    Long64_t result = GILCallLL(method, self, ctxt);
+    PY_LONG_LONG result = GILCallLL(method, self, ctxt);
     return PyLong_FromLongLong(result);
 }
 
@@ -287,7 +287,7 @@ PyObject* CPyCppyy::ULongLongExecutor::Execute(
     Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, CallContext* ctxt)
 {
 // execute <method> with argument <self, ctxt>, construct python unsigned long long return value
-    ULong64_t result = (ULong64_t)GILCallLL(method, self, ctxt);
+    PY_ULONG_LONG result = (PY_ULONG_LONG)GILCallLL(method, self, ctxt);
     return PyLong_FromUnsignedLongLong(result);
 }
 
@@ -352,22 +352,22 @@ PyObject* CPyCppyy::name##RefExecutor::Execute(                              \
     }                                                                        \
 }
 
-CPPYY_IMPL_REFEXEC(Bool,   bool,   Long_t,   CPyCppyy_PyBool_FromLong, PyLong_AsLong)
-CPPYY_IMPL_REFEXEC(Char,   char,   Long_t,   CPyCppyy_PyText_FromLong, PyLong_AsLong)
-CPPYY_IMPL_REFEXEC(UChar,  unsigned char,  ULong_t,  CPyCppyy_PyText_FromULong, PyLongOrInt_AsULong)
-CPPYY_IMPL_REFEXEC(Int8,   int8_t,  Long_t,  PyInt_FromLong, PyLong_AsLong)
-CPPYY_IMPL_REFEXEC(UInt8,  uint8_t, ULong_t, PyInt_FromLong, PyLongOrInt_AsULong)
-CPPYY_IMPL_REFEXEC(Short,  short,          Long_t,   PyInt_FromLong,     PyLong_AsLong)
-CPPYY_IMPL_REFEXEC(UShort, unsigned short, ULong_t,  PyInt_FromLong,     PyLongOrInt_AsULong)
-CPPYY_IMPL_REFEXEC(Int,    Int_t,    Long_t,   PyInt_FromLong,     PyLong_AsLong)
-CPPYY_IMPL_REFEXEC(UInt,   UInt_t,   ULong_t,  PyLong_FromUnsignedLong, PyLongOrInt_AsULong)
-CPPYY_IMPL_REFEXEC(Long,   Long_t,   Long_t,   PyLong_FromLong,    PyLong_AsLong)
-CPPYY_IMPL_REFEXEC(ULong,  ULong_t,  ULong_t,  PyLong_FromUnsignedLong, PyLongOrInt_AsULong)
-CPPYY_IMPL_REFEXEC(LongLong,  Long64_t,  Long64_t,   PyLong_FromLongLong,         PyLong_AsLongLong)
-CPPYY_IMPL_REFEXEC(ULongLong, ULong64_t, ULong64_t,  PyLong_FromUnsignedLongLong, PyLongOrInt_AsULong64)
-CPPYY_IMPL_REFEXEC(Float,  float,  double, PyFloat_FromDouble, PyFloat_AsDouble)
-CPPYY_IMPL_REFEXEC(Double, double, double, PyFloat_FromDouble, PyFloat_AsDouble)
-CPPYY_IMPL_REFEXEC(LongDouble, LongDouble_t, LongDouble_t, PyFloat_FromDouble, PyFloat_AsDouble)
+CPPYY_IMPL_REFEXEC(Bool,       bool,           long,           CPyCppyy_PyBool_FromLong,    PyLong_AsLong)
+CPPYY_IMPL_REFEXEC(Char,       char,           long,           CPyCppyy_PyText_FromLong,    PyLong_AsLong)
+CPPYY_IMPL_REFEXEC(UChar,      unsigned char,  unsigned long,  CPyCppyy_PyText_FromULong,   PyLongOrInt_AsULong)
+CPPYY_IMPL_REFEXEC(Int8,       int8_t,         long,           PyInt_FromLong,              PyLong_AsLong)
+CPPYY_IMPL_REFEXEC(UInt8,      uint8_t,        unsigned long,  PyInt_FromLong,              PyLongOrInt_AsULong)
+CPPYY_IMPL_REFEXEC(Short,      short,          long,           PyInt_FromLong,              PyLong_AsLong)
+CPPYY_IMPL_REFEXEC(UShort,     unsigned short, unsigned long,  PyInt_FromLong,              PyLongOrInt_AsULong)
+CPPYY_IMPL_REFEXEC(Int,        int,            long,           PyInt_FromLong,              PyLong_AsLong)
+CPPYY_IMPL_REFEXEC(UInt,       unsigned int,   unsigned long,  PyLong_FromUnsignedLong,     PyLongOrInt_AsULong)
+CPPYY_IMPL_REFEXEC(Long,       long,           long,           PyLong_FromLong,             PyLong_AsLong)
+CPPYY_IMPL_REFEXEC(ULong,      unsigned long,  unsigned long,  PyLong_FromUnsignedLong,     PyLongOrInt_AsULong)
+CPPYY_IMPL_REFEXEC(LongLong,   PY_LONG_LONG,   PY_LONG_LONG,   PyLong_FromLongLong,         PyLong_AsLongLong)
+CPPYY_IMPL_REFEXEC(ULongLong,  PY_ULONG_LONG,  PY_ULONG_LONG,  PyLong_FromUnsignedLongLong, PyLongOrInt_AsULong64)
+CPPYY_IMPL_REFEXEC(Float,      float,          double,         PyFloat_FromDouble,          PyFloat_AsDouble)
+CPPYY_IMPL_REFEXEC(Double,     double,         double,         PyFloat_FromDouble,          PyFloat_AsDouble)
+CPPYY_IMPL_REFEXEC(LongDouble, PY_LONG_DOUBLE, PY_LONG_DOUBLE, PyFloat_FromDouble,          PyFloat_AsDouble)
 
 template<typename T>
 static inline PyObject* PyComplex_FromComplex(const std::complex<T>& c) {
@@ -390,8 +390,9 @@ PyObject* CPyCppyy::STLStringRefExecutor::Execute(
 {
 // execute <method> with argument <self, ctxt>, return python string return value
     std::string* result = (std::string*)GILCallR(method, self, ctxt);
-    if (!fAssignable)
+    if (!fAssignable) {
         return CPyCppyy_PyText_FromStringAndSize(result->c_str(), result->size());
+    }
 
     *result = std::string(
         CPyCppyy_PyText_AsString(fAssignable), CPyCppyy_PyText_GET_SIZE(fAssignable));
@@ -408,6 +409,7 @@ PyObject* CPyCppyy::VoidExecutor::Execute(
 {
 // execute <method> with argument <self, ctxt>, return None
     GILCallV(method, self, ctxt);
+    if (PyErr_Occurred()) return nullptr;
     Py_RETURN_NONE;
 }
 
@@ -423,6 +425,20 @@ PyObject* CPyCppyy::CStringExecutor::Execute(
     }
 
     return CPyCppyy_PyText_FromString(result);
+}
+
+//----------------------------------------------------------------------------
+PyObject* CPyCppyy::CStringRefExecutor::Execute(
+    Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, CallContext* ctxt)
+{
+// execute <method> with argument <self, ctxt>, construct python string return value
+    char** result = (char**)GILCallR(method, self, ctxt);
+    if (!result || !*result) {
+        Py_INCREF(PyStrings::gEmptyString);
+        return PyStrings::gEmptyString;
+    }
+
+    return CPyCppyy_PyText_FromString(*result);
 }
 
 //----------------------------------------------------------------------------
@@ -464,7 +480,7 @@ PyObject* CPyCppyy::CString32Executor::Execute(
         char32_t w = U'\0';
         return PyUnicode_DecodeUTF32((const char*)&w, 0, nullptr, nullptr);
     }
- 
+
     return PyUnicode_DecodeUTF32((const char*)result,
         std::char_traits<char32_t>::length(result)*sizeof(char32_t), nullptr, nullptr);
 }
@@ -475,41 +491,43 @@ PyObject* CPyCppyy::VoidArrayExecutor::Execute(
     Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, CallContext* ctxt)
 {
 // execute <method> with argument <self, ctxt>, construct python long return value
-    Long_t* result = (Long_t*)GILCallR(method, self, ctxt);
+    intptr_t* result = (intptr_t*)GILCallR(method, self, ctxt);
     if (!result) {
         Py_INCREF(gNullPtrObject);
         return gNullPtrObject;
     }
-    return CreatePointerView(result);
+    return CreatePointerView(result, fShape);
 }
 
 //----------------------------------------------------------------------------
-#define CPPYY_IMPL_ARRAY_EXEC(name, type)                                    \
+#define CPPYY_IMPL_ARRAY_EXEC(name, type, suffix)                            \
 PyObject* CPyCppyy::name##ArrayExecutor::Execute(                            \
     Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, CallContext* ctxt) \
 {                                                                            \
-    return CreateLowLevelView((type*)GILCallR(method, self, ctxt));          \
+    return CreateLowLevelView##suffix((type*)GILCallR(method, self, ctxt), fShape);  \
 }
 
-CPPYY_IMPL_ARRAY_EXEC(Bool,     bool)
-CPPYY_IMPL_ARRAY_EXEC(UChar,    unsigned char)
+CPPYY_IMPL_ARRAY_EXEC(Bool,     bool,                    )
+CPPYY_IMPL_ARRAY_EXEC(UChar,    unsigned char,           )
 #if __cplusplus > 201402L
-CPPYY_IMPL_ARRAY_EXEC(Byte,     std::byte)
+CPPYY_IMPL_ARRAY_EXEC(Byte,     std::byte,               )
 #endif
-CPPYY_IMPL_ARRAY_EXEC(Short,    short)
-CPPYY_IMPL_ARRAY_EXEC(UShort,   unsigned short)
-CPPYY_IMPL_ARRAY_EXEC(Int,      int)
-CPPYY_IMPL_ARRAY_EXEC(UInt,     unsigned int)
-CPPYY_IMPL_ARRAY_EXEC(Long,     long)
-CPPYY_IMPL_ARRAY_EXEC(ULong,    unsigned long)
-CPPYY_IMPL_ARRAY_EXEC(LLong,    long long)
-CPPYY_IMPL_ARRAY_EXEC(ULLong,   unsigned long long)
-CPPYY_IMPL_ARRAY_EXEC(Float,    float)
-CPPYY_IMPL_ARRAY_EXEC(Double,   double)
-CPPYY_IMPL_ARRAY_EXEC(ComplexF, std::complex<float>)
-CPPYY_IMPL_ARRAY_EXEC(ComplexD, std::complex<double>)
-CPPYY_IMPL_ARRAY_EXEC(ComplexI, std::complex<int>)
-CPPYY_IMPL_ARRAY_EXEC(ComplexL, std::complex<long>)
+CPPYY_IMPL_ARRAY_EXEC(Int8,     int8_t,               _i8)
+CPPYY_IMPL_ARRAY_EXEC(UInt8,    uint8_t,              _i8)
+CPPYY_IMPL_ARRAY_EXEC(Short,    short,                   )
+CPPYY_IMPL_ARRAY_EXEC(UShort,   unsigned short,          )
+CPPYY_IMPL_ARRAY_EXEC(Int,      int,                     )
+CPPYY_IMPL_ARRAY_EXEC(UInt,     unsigned int,            )
+CPPYY_IMPL_ARRAY_EXEC(Long,     long,                    )
+CPPYY_IMPL_ARRAY_EXEC(ULong,    unsigned long,           )
+CPPYY_IMPL_ARRAY_EXEC(LLong,    long long,               )
+CPPYY_IMPL_ARRAY_EXEC(ULLong,   unsigned long long,      )
+CPPYY_IMPL_ARRAY_EXEC(Float,    float,                   )
+CPPYY_IMPL_ARRAY_EXEC(Double,   double,                  )
+CPPYY_IMPL_ARRAY_EXEC(ComplexF, std::complex<float>,     )
+CPPYY_IMPL_ARRAY_EXEC(ComplexD, std::complex<double>,    )
+CPPYY_IMPL_ARRAY_EXEC(ComplexI, std::complex<int>,       )
+CPPYY_IMPL_ARRAY_EXEC(ComplexL, std::complex<long>,      )
 
 
 //- special cases ------------------------------------------------------------
@@ -548,7 +566,7 @@ PyObject* CPyCppyy::STLStringExecutor::Execute(
 
     PyObject* pyresult =
         CPyCppyy_PyText_FromStringAndSize(result->c_str(), result->size());
-    ::operator delete(result); // calls Cppyy::CallO which calls ::operator new
+    delete result; // Cppyy::CallO allocates and constructs a string, so it must be properly destroyed
 
     return pyresult;
 }
@@ -566,7 +584,7 @@ PyObject* CPyCppyy::STLWStringExecutor::Execute(
     }
 
     PyObject* pyresult = PyUnicode_FromWideChar(result->c_str(), result->size());
-    ::operator delete(result); // calls Cppyy::CallO which calls ::operator new
+    delete result; // Cppyy::CallO allocates and constructs a string, so it must be properly destroyed
 
     return pyresult;
 }
@@ -605,7 +623,7 @@ PyObject* CPyCppyy::InstanceExecutor::Execute(
         return nullptr;
 
 // python ref counting will now control this object's life span; it will be
-// deleted b/c it is marked as a by-value object (unless C++ ownership is set)
+// deleted b/c it is marked as a by-value object owned by python (from fFlags)
     return pyobj;
 }
 
@@ -617,6 +635,21 @@ CPyCppyy::IteratorExecutor::IteratorExecutor(Cppyy::TCppType_t klass) :
     fFlags |= CPPInstance::kNoWrapConv;     // adds to flags from base class
 }
 
+//----------------------------------------------------------------------------
+PyObject* CPyCppyy::IteratorExecutor::Execute(
+    Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, CallContext* ctxt)
+{
+    PyObject* iter = this->InstanceExecutor::Execute(method, self, ctxt);
+    if (iter && ctxt->fPyContext) {
+    // set life line to tie iterator life time to the container (which may
+    // be a temporary)
+        std::ostringstream attr_name;
+        attr_name << "__" << (intptr_t)iter;
+        if (PyObject_SetAttrString(ctxt->fPyContext, (char*)attr_name.str().c_str(), iter))
+            PyErr_Clear();
+    }
+    return iter;
+}
 
 //----------------------------------------------------------------------------
 PyObject* CPyCppyy::InstanceRefExecutor::Execute(
@@ -722,8 +755,7 @@ PyObject* CPyCppyy::InstanceArrayExecutor::Execute(
 {
 // execute <method> with argument <self, ctxt>, construct TupleOfInstances from
 // return value
-    dim_t dims[] = {1, (dim_t)fArraySize};
-    return BindCppObjectArray((void*)GILCallR(method, self, ctxt), fClass, dims);
+    return BindCppObjectArray((void*)GILCallR(method, self, ctxt), fClass, {fSize});
 }
 
 //----------------------------------------------------------------------------
@@ -760,7 +792,7 @@ PyObject* CPyCppyy::FunctionPointerExecutor::Execute(
 }
 
 //- factories ----------------------------------------------------------------
-CPyCppyy::Executor* CPyCppyy::CreateExecutor(const std::string& fullType)
+CPyCppyy::Executor* CPyCppyy::CreateExecutor(const std::string& fullType, cdims_t dims)
 {
 // The matching of the fulltype to an executor factory goes through up to 4 levels:
 //   1) full, qualified match
@@ -773,7 +805,7 @@ CPyCppyy::Executor* CPyCppyy::CreateExecutor(const std::string& fullType)
 // an exactly matching executor is best
     ExecFactories_t::iterator h = gExecFactories.find(fullType);
     if (h != gExecFactories.end())
-        return (h->second)();
+        return (h->second)(dims);
 
 // resolve typedefs etc.
     const std::string& resolvedType = Cppyy::ResolveName(fullType);
@@ -782,18 +814,18 @@ CPyCppyy::Executor* CPyCppyy::CreateExecutor(const std::string& fullType)
     if (resolvedType != fullType) {
          h = gExecFactories.find(resolvedType);
          if (h != gExecFactories.end())
-              return (h->second)();
+              return (h->second)(dims);
     }
 
 //-- nothing? ok, collect information about the type and possible qualifiers/decorators
     bool isConst = strncmp(resolvedType.c_str(), "const", 5)  == 0;
-    const std::string& cpd = Utility::Compound(resolvedType);
+    const std::string& cpd = TypeManip::compound(resolvedType);
     std::string realType = TypeManip::clean_type(resolvedType, false);
 
 // accept unqualified type (as python does not know about qualifiers)
     h = gExecFactories.find(realType + cpd);
     if (h != gExecFactories.end())
-        return (h->second)();
+        return (h->second)(dims);
 
 // drop const, as that is mostly meaningless to python (with the exception
 // of c-strings, but those are specialized in the converter map)
@@ -801,20 +833,27 @@ CPyCppyy::Executor* CPyCppyy::CreateExecutor(const std::string& fullType)
         realType = TypeManip::remove_const(realType);
         h = gExecFactories.find(realType + cpd);
         if (h != gExecFactories.end())
-            return (h->second)();
+            return (h->second)(dims);
+    }
+
+// simple array types
+    if (!cpd.empty() && (std::string::size_type)std::count(cpd.begin(), cpd.end(), '*') == cpd.size()) {
+        h = gExecFactories.find(realType + " ptr");
+        if (h != gExecFactories.end())
+            return (h->second)((!dims || dims.ndim() < (dim_t)cpd.size()) ? dims_t(cpd.size()) : dims);
     }
 
 //-- still nothing? try pointer instead of array (for builtins)
     if (cpd == "[]") {
         h = gExecFactories.find(realType + "*");
         if (h != gExecFactories.end())
-            return (h->second)();           // TODO: use array size
+            return (h->second)(dims);
     }
 
 // C++ classes and special cases
     Executor* result = 0;
     if (Cppyy::TCppType_t klass = Cppyy::GetScope(realType)) {
-        if (resolvedType.find("iterator") != std::string::npos || gIteratorTypes.find(fullType) != gIteratorTypes.end()) {
+        if (Utility::IsSTLIterator(realType) || gIteratorTypes.find(fullType) != gIteratorTypes.end()) {
             if (cpd == "")
                 return new IteratorExecutor(klass);
         }
@@ -828,7 +867,7 @@ CPyCppyy::Executor* CPyCppyy::CreateExecutor(const std::string& fullType)
         else if (cpd == "*&")
             result = new InstancePtrRefExecutor(klass);
         else if (cpd == "[]") {
-            Py_ssize_t asize = Utility::ArraySize(resolvedType);
+            Py_ssize_t asize = TypeManip::array_size(resolvedType);
             if (0 < asize)
                 result = new InstanceArrayExecutor(klass, asize);
             else
@@ -846,12 +885,12 @@ CPyCppyy::Executor* CPyCppyy::CreateExecutor(const std::string& fullType)
             resolvedType.substr(0, pos1), resolvedType.substr(pos2+2, pos3-pos2-1));
     } else {
     // unknown: void* may work ("user knows best"), void will fail on use of return value
-        h = (cpd == "") ? gExecFactories.find("void") : gExecFactories.find("void*");
+        h = (cpd == "") ? gExecFactories.find("void") : gExecFactories.find("void ptr");
     }
 
     if (!result && h != gExecFactories.end())
     // executor factory available, use it to create executor
-        result = (h->second)();
+        result = (h->second)(dims);
 
    return result;                  // may still be null
 }
@@ -874,6 +913,23 @@ bool CPyCppyy::RegisterExecutor(const std::string& name, ef_t fac)
         return false;
 
     gExecFactories[name] = fac;
+    return true;
+}
+
+//----------------------------------------------------------------------------
+CPYCPPYY_EXPORT
+bool CPyCppyy::RegisterExecutorAlias(const std::string& name, const std::string& target)
+{
+// register a custom executor that is a reference to an existing converter
+    auto f = gExecFactories.find(name);
+    if (f != gExecFactories.end())
+        return false;
+
+    auto t = gExecFactories.find(target);
+    if (t == gExecFactories.end())
+        return false;
+
+    gExecFactories[name] = t->second;
     return true;
 }
 
@@ -903,7 +959,17 @@ namespace {
 
 using namespace CPyCppyy;
 
-#define WSTRING "basic_string<wchar_t,char_traits<wchar_t>,allocator<wchar_t> >"
+#define WSTRING1 "std::basic_string<wchar_t>"
+#define WSTRING2 "std::basic_string<wchar_t,std::char_traits<wchar_t>,std::allocator<wchar_t>>"
+
+//-- aliasing special case: C complex (is binary compatible with C++ std::complex)
+#ifndef _WIN32
+#define CCOMPLEX_D "_Complex double"
+#define CCOMPLEX_F "_Complex float"
+#else
+#define CCOMPLEX_D "_C_double_complex"
+#define CCOMPLEX_F "_C_float_complex"
+#endif
 
 struct InitExecFactories_t {
 public:
@@ -912,119 +978,133 @@ public:
         CPyCppyy::ExecFactories_t& gf = gExecFactories;
 
     // factories for built-ins
-        gf["bool"] =                        (ef_t)+[]() { static BoolExecutor e{};          return &e; };
-        gf["bool&"] =                       (ef_t)+[]() { return new BoolRefExecutor{}; };
-        gf["const bool&"] =                 (ef_t)+[]() { static BoolConstRefExecutor e{};  return &e; };
-        gf["char"] =                        (ef_t)+[]() { static CharExecutor e{};          return &e; };
+        gf["bool"] =                        (ef_t)+[](cdims_t) { static BoolExecutor e{};          return &e; };
+        gf["bool&"] =                       (ef_t)+[](cdims_t) { return new BoolRefExecutor{}; };
+        gf["const bool&"] =                 (ef_t)+[](cdims_t) { static BoolConstRefExecutor e{};  return &e; };
+        gf["char"] =                        (ef_t)+[](cdims_t) { static CharExecutor e{};          return &e; };
         gf["signed char"] =                 gf["char"];
-        gf["unsigned char"] =               (ef_t)+[]() { static UCharExecutor e{};         return &e; };
-        gf["char&"] =                       (ef_t)+[]() { return new CharRefExecutor{}; };
+        gf["unsigned char"] =               (ef_t)+[](cdims_t) { static UCharExecutor e{};         return &e; };
+        gf["char&"] =                       (ef_t)+[](cdims_t) { return new CharRefExecutor{}; };
         gf["signed char&"] =                gf["char&"];
-        gf["unsigned char&"] =              (ef_t)+[]() { return new UCharRefExecutor{}; };
-        gf["const char&"] =                 (ef_t)+[]() { static CharConstRefExecutor e{};  return &e; };
+        gf["unsigned char&"] =              (ef_t)+[](cdims_t) { return new UCharRefExecutor{}; };
+        gf["const char&"] =                 (ef_t)+[](cdims_t) { static CharConstRefExecutor e{};  return &e; };
         gf["const signed char&"] =          gf["const char&"];
-        gf["const unsigned char&"] =        (ef_t)+[]() { static UCharConstRefExecutor e{}; return &e; };
-        gf["wchar_t"] =                     (ef_t)+[]() { static WCharExecutor e{};         return &e; };
-        gf["char16_t"] =                    (ef_t)+[]() { static Char16Executor e{};        return &e; };
-        gf["char32_t"] =                    (ef_t)+[]() { static Char32Executor e{};        return &e; };
-        gf["int8_t"] =                      (ef_t)+[]() { static Int8Executor e{};          return &e; };
-        gf["int8_t&"] =                     (ef_t)+[]() { return new Int8RefExecutor{}; };
-        gf["const int8_t&"] =               (ef_t)+[]() { static Int8RefExecutor e{};       return &e; };
-        gf["uint8_t"] =                     (ef_t)+[]() { static UInt8Executor e{};         return &e; };
-        gf["uint8_t&"] =                    (ef_t)+[]() { return new UInt8RefExecutor{}; };
-        gf["const uint8_t&"] =              (ef_t)+[]() { static UInt8RefExecutor e{};      return &e; };
-        gf["short"] =                       (ef_t)+[]() { static ShortExecutor e{};         return &e; };
-        gf["short&"] =                      (ef_t)+[]() { return new ShortRefExecutor{}; };
-        gf["int"] =                         (ef_t)+[]() { static IntExecutor e{};           return &e; };
-        gf["int&"] =                        (ef_t)+[]() { return new IntRefExecutor{}; };
+        gf["const unsigned char&"] =        (ef_t)+[](cdims_t) { static UCharConstRefExecutor e{}; return &e; };
+        gf["wchar_t"] =                     (ef_t)+[](cdims_t) { static WCharExecutor e{};         return &e; };
+        gf["char16_t"] =                    (ef_t)+[](cdims_t) { static Char16Executor e{};        return &e; };
+        gf["char32_t"] =                    (ef_t)+[](cdims_t) { static Char32Executor e{};        return &e; };
+        gf["int8_t"] =                      (ef_t)+[](cdims_t) { static Int8Executor e{};          return &e; };
+        gf["int8_t&"] =                     (ef_t)+[](cdims_t) { return new Int8RefExecutor{}; };
+        gf["const int8_t&"] =               (ef_t)+[](cdims_t) { static Int8RefExecutor e{};       return &e; };
+        gf["uint8_t"] =                     (ef_t)+[](cdims_t) { static UInt8Executor e{};         return &e; };
+        gf["uint8_t&"] =                    (ef_t)+[](cdims_t) { return new UInt8RefExecutor{}; };
+        gf["const uint8_t&"] =              (ef_t)+[](cdims_t) { static UInt8RefExecutor e{};      return &e; };
+        gf["short"] =                       (ef_t)+[](cdims_t) { static ShortExecutor e{};         return &e; };
+        gf["short&"] =                      (ef_t)+[](cdims_t) { return new ShortRefExecutor{}; };
+        gf["int"] =                         (ef_t)+[](cdims_t) { static IntExecutor e{};           return &e; };
+        gf["int&"] =                        (ef_t)+[](cdims_t) { return new IntRefExecutor{}; };
         gf["unsigned short"] =              gf["int"];
-        gf["unsigned short&"] =             (ef_t)+[]() { return new UShortRefExecutor{}; };
-        gf["unsigned long"] =               (ef_t)+[]() { static ULongExecutor e{};         return &e; };
-        gf["unsigned long&"] =              (ef_t)+[]() { return new ULongRefExecutor{}; };
+        gf["unsigned short&"] =             (ef_t)+[](cdims_t) { return new UShortRefExecutor{}; };
+        gf["unsigned long"] =               (ef_t)+[](cdims_t) { static ULongExecutor e{};         return &e; };
+        gf["unsigned long&"] =              (ef_t)+[](cdims_t) { return new ULongRefExecutor{}; };
         gf["unsigned int"] =                gf["unsigned long"];
-        gf["unsigned int&"] =               (ef_t)+[]() { return new UIntRefExecutor{}; };
-        gf["long"] =                        (ef_t)+[]() { static LongExecutor e{};          return &e; };
-        gf["long&"] =                       (ef_t)+[]() { return new LongRefExecutor{}; };
-        gf["unsigned long"] =               (ef_t)+[]() { static ULongExecutor e{};         return &e; };
-        gf["unsigned long&"] =              (ef_t)+[]() { return new ULongRefExecutor{}; };
-        gf["long long"] =                   (ef_t)+[]() { static LongLongExecutor e{};      return &e; };
-        gf["long long&"] =                  (ef_t)+[]() { return new LongLongRefExecutor{}; };
-        gf["unsigned long long"] =          (ef_t)+[]() { static ULongLongExecutor e{};     return &e; };
-        gf["unsigned long long&"] =         (ef_t)+[]() { return new ULongLongRefExecutor{}; };
+        gf["unsigned int&"] =               (ef_t)+[](cdims_t) { return new UIntRefExecutor{}; };
+        gf["long"] =                        (ef_t)+[](cdims_t) { static LongExecutor e{};          return &e; };
+        gf["long&"] =                       (ef_t)+[](cdims_t) { return new LongRefExecutor{}; };
+        gf["unsigned long"] =               (ef_t)+[](cdims_t) { static ULongExecutor e{};         return &e; };
+        gf["unsigned long&"] =              (ef_t)+[](cdims_t) { return new ULongRefExecutor{}; };
+        gf["long long"] =                   (ef_t)+[](cdims_t) { static LongLongExecutor e{};      return &e; };
+        gf["long long&"] =                  (ef_t)+[](cdims_t) { return new LongLongRefExecutor{}; };
+        gf["unsigned long long"] =          (ef_t)+[](cdims_t) { static ULongLongExecutor e{};     return &e; };
+        gf["unsigned long long&"] =         (ef_t)+[](cdims_t) { return new ULongLongRefExecutor{}; };
 
-        gf["float"] =                       (ef_t)+[]() { static FloatExecutor e{};      return &e; };
-        gf["float&"] =                      (ef_t)+[]() { return new FloatRefExecutor{}; };
-        gf["double"] =                      (ef_t)+[]() { static DoubleExecutor e{};     return &e; };
-        gf["double&"] =                     (ef_t)+[]() { return new DoubleRefExecutor{}; };
-        gf["long double"] =                 (ef_t)+[]() { static LongDoubleExecutor e{}; return &e; }; // TODO: lost precision
-        gf["long double&"] =                (ef_t)+[]() { return new LongDoubleRefExecutor{}; };
-        gf["void"] =                        (ef_t)+[]() { static VoidExecutor e{};       return &e; };
+        gf["float"] =                       (ef_t)+[](cdims_t) { static FloatExecutor e{};      return &e; };
+        gf["float&"] =                      (ef_t)+[](cdims_t) { return new FloatRefExecutor{}; };
+        gf["double"] =                      (ef_t)+[](cdims_t) { static DoubleExecutor e{};     return &e; };
+        gf["double&"] =                     (ef_t)+[](cdims_t) { return new DoubleRefExecutor{}; };
+        gf["long double"] =                 (ef_t)+[](cdims_t) { static LongDoubleExecutor e{}; return &e; }; // TODO: lost precision
+        gf["long double&"] =                (ef_t)+[](cdims_t) { return new LongDoubleRefExecutor{}; };
+        gf["std::complex<double>"] =        (ef_t)+[](cdims_t) { static ComplexDExecutor e{};    return &e; };
+        gf["std::complex<double>&"] =       (ef_t)+[](cdims_t) { return new ComplexDRefExecutor{}; };
+        gf["void"] =                        (ef_t)+[](cdims_t) { static VoidExecutor e{};       return &e; };
 
     // pointer/array factories
-        gf["void*"] =                       (ef_t)+[]() { static VoidArrayExecutor e{};     return &e; };
-        gf["bool*"] =                       (ef_t)+[]() { static BoolArrayExecutor e{};     return &e; };
-        gf["unsigned char*"] =              (ef_t)+[]() { static UCharArrayExecutor e{};    return &e; };
-        gf["const unsigned char*"] =        gf["unsigned char*"];
+        gf["void ptr"] =                    (ef_t)+[](cdims_t d) { return new VoidArrayExecutor{d};     };
+        gf["bool ptr"] =                    (ef_t)+[](cdims_t d) { return new BoolArrayExecutor{d};     };
+        gf["unsigned char ptr"] =           (ef_t)+[](cdims_t d) { return new UCharArrayExecutor{d};    };
+        gf["const unsigned char ptr"] =     gf["unsigned char ptr"];
 #if __cplusplus > 201402L
-        gf["byte*"] =                       (ef_t)+[]() { static ByteArrayExecutor e{};    return &e; };
-        gf["const byte*"] =                 gf["byte*"];
+        gf["std::byte ptr"] =               (ef_t)+[](cdims_t d) { return new ByteArrayExecutor{d};     };
+        gf["const std::byte ptr"] =         gf["std::byte ptr"];
 #endif
-        gf["short*"] =                      (ef_t)+[]() { static ShortArrayExecutor e{};    return &e; };
-        gf["unsigned short*"] =             (ef_t)+[]() { static UShortArrayExecutor e{};   return &e; };
-        gf["int*"] =                        (ef_t)+[]() { static IntArrayExecutor e{};      return &e; };
-        gf["unsigned int*"] =               (ef_t)+[]() { static UIntArrayExecutor e{};     return &e; };
-        gf["long*"] =                       (ef_t)+[]() { static LongArrayExecutor e{};     return &e; };
-        gf["unsigned long*"] =              (ef_t)+[]() { static ULongArrayExecutor e{};    return &e; };
-        gf["long long*"] =                  (ef_t)+[]() { static LLongArrayExecutor e{};    return &e; };
-        gf["unsigned long long*"] =         (ef_t)+[]() { static ULLongArrayExecutor e{};   return &e; };
-        gf["float*"] =                      (ef_t)+[]() { static FloatArrayExecutor e{};    return &e; };
-        gf["double*"] =                     (ef_t)+[]() { static DoubleArrayExecutor e{};   return &e; };
-        gf["complex<float>*"] =             (ef_t)+[]() { static ComplexFArrayExecutor e{}; return &e; };
-        gf["complex<double>*"] =            (ef_t)+[]() { static ComplexDArrayExecutor e{}; return &e; };
-        gf["complex<int>*"] =               (ef_t)+[]() { static ComplexIArrayExecutor e{}; return &e; };
-        gf["complex<long>*"] =              (ef_t)+[]() { static ComplexLArrayExecutor e{}; return &e; };
+        gf["int8_t ptr"] =                  (ef_t)+[](cdims_t d) { return new Int8ArrayExecutor{d};    };
+        gf["uint8_t ptr"] =                 (ef_t)+[](cdims_t d) { return new UInt8ArrayExecutor{d};   };
+        gf["short ptr"] =                   (ef_t)+[](cdims_t d) { return new ShortArrayExecutor{d};    };
+        gf["unsigned short ptr"] =          (ef_t)+[](cdims_t d) { return new UShortArrayExecutor{d};   };
+        gf["int ptr"] =                     (ef_t)+[](cdims_t d) { return new IntArrayExecutor{d};      };
+        gf["unsigned int ptr"] =            (ef_t)+[](cdims_t d) { return new UIntArrayExecutor{d};     };
+        gf["long ptr"] =                    (ef_t)+[](cdims_t d) { return new LongArrayExecutor{d};     };
+        gf["unsigned long ptr"] =           (ef_t)+[](cdims_t d) { return new ULongArrayExecutor{d};    };
+        gf["long long ptr"] =               (ef_t)+[](cdims_t d) { return new LLongArrayExecutor{d};    };
+        gf["unsigned long long ptr"] =      (ef_t)+[](cdims_t d) { return new ULLongArrayExecutor{d};   };
+        gf["float ptr"] =                   (ef_t)+[](cdims_t d) { return new FloatArrayExecutor{d};    };
+        gf["double ptr"] =                  (ef_t)+[](cdims_t d) { return new DoubleArrayExecutor{d};   };
+        gf["std::complex<float> ptr"] =     (ef_t)+[](cdims_t d) { return new ComplexFArrayExecutor{d}; };
+        gf["std::complex<double> ptr"] =    (ef_t)+[](cdims_t d) { return new ComplexDArrayExecutor{d}; };
+        gf["std::complex<int> ptr"] =       (ef_t)+[](cdims_t d) { return new ComplexIArrayExecutor{d}; };
+        gf["std::complex<long> ptr"] =      (ef_t)+[](cdims_t d) { return new ComplexLArrayExecutor{d}; };
 
     // aliases
         gf["internal_enum_type_t"] =        gf["int"];
         gf["internal_enum_type_t&"] =       gf["int&"];
-        gf["internal_enum_type_t*"] =       gf["int*"];
+        gf["internal_enum_type_t ptr"] =    gf["int ptr"];
 #if __cplusplus > 201402L
-        gf["byte"] =                        gf["uint8_t"];
-        gf["byte&"] =                       gf["uint8_t&"];
-        gf["const byte&"] =                 gf["const uint8_t&"];
+        gf["std::byte"] =                   gf["uint8_t"];
+        gf["std::byte&"] =                  gf["uint8_t&"];
+        gf["const std::byte&"] =            gf["const uint8_t&"];
 #endif
-        gf["Long64_t"] =                    gf["long long"];
-        gf["Long64_t&"] =                   gf["long long&"];
-        gf["Long64_t*"] =                   gf["long long*"];
-        gf["ULong64_t"] =                   gf["unsigned long long"];
-        gf["ULong64_t&"] =                  gf["unsigned long long&"];
-        gf["ULong64_t*"] =                  gf["unsigned long long*"];
-        gf["Float16_t"] =                   gf["float"];
-        gf["Float16_t&"] =                  gf["float&"];
-        gf["Double32_t"] =                  gf["double"];
-        gf["Double32_t&"] =                 gf["double&"];
+        gf["std::int8_t"] =                 gf["int8_t"];
+        gf["std::int8_t&"] =                gf["int8_t&"];
+        gf["const std::int8_t&"] =          gf["const int8_t&"];
+        gf["std::int8_t ptr"] =             gf["int8_t ptr"];
+        gf["std::uint8_t"] =                gf["uint8_t"];
+        gf["std::uint8_t&"] =               gf["uint8_t&"];
+        gf["const std::uint8_t&"] =         gf["const uint8_t&"];
+        gf["std::uint8_t ptr"] =            gf["uint8_t ptr"];
+#ifdef _WIN32
+        gf["__int64"] =                     gf["long long"];
+        gf["__int64&"] =                    gf["long long&"];
+        gf["__int64 ptr"] =                 gf["long long ptr"];
+        gf["unsigned __int64"] =            gf["unsigned long long"];
+        gf["unsigned __int64&"] =           gf["unsigned long long&"];
+        gf["unsigned __int64 ptr"] =        gf["unsigned long long ptr"];
+#endif
+        gf[CCOMPLEX_D] =                    gf["std::complex<double>"];
+        gf[CCOMPLEX_D "&"] =                gf["std::complex<double>&"];
+        gf[CCOMPLEX_F " ptr"] =             gf["std::complex<float> ptr"];
+        gf[CCOMPLEX_D " ptr"] =             gf["std::complex<double> ptr"];
 
     // factories for special cases
-        gf["const char*"] =                 (ef_t)+[]() { static CStringExecutor e{};     return &e; };
+        gf["const char*"] =                 (ef_t)+[](cdims_t) { static CStringExecutor e{};     return &e; };
         gf["char*"] =                       gf["const char*"];
+        gf["const char*&"] =                (ef_t)+[](cdims_t) { static CStringRefExecutor e{};     return &e; };
+        gf["char*&"] =                      gf["const char*&"];
         gf["const signed char*"] =          gf["const char*"];
         gf["signed char*"] =                gf["char*"];
-        gf["wchar_t*"] =                    (ef_t)+[]() { static WCStringExecutor e{};    return &e;};
-        gf["char16_t*"] =                   (ef_t)+[]() { static CString16Executor e{};   return &e;};
-        gf["char32_t*"] =                   (ef_t)+[]() { static CString32Executor e{};   return &e;};
-        gf["std::string"] =                 (ef_t)+[]() { static STLStringExecutor e{};   return &e; };
+        gf["wchar_t*"] =                    (ef_t)+[](cdims_t) { static WCStringExecutor e{};    return &e;};
+        gf["char16_t*"] =                   (ef_t)+[](cdims_t) { static CString16Executor e{};   return &e;};
+        gf["char32_t*"] =                   (ef_t)+[](cdims_t) { static CString32Executor e{};   return &e;};
+        gf["std::string"] =                 (ef_t)+[](cdims_t) { static STLStringExecutor e{};   return &e; };
         gf["string"] =                      gf["std::string"];
-        gf["std::string&"] =                (ef_t)+[]() { return new STLStringRefExecutor{}; };
+        gf["std::string&"] =                (ef_t)+[](cdims_t) { return new STLStringRefExecutor{}; };
         gf["string&"] =                     gf["std::string&"];
-        gf["std::wstring"] =                (ef_t)+[]() { static STLWStringExecutor e{};  return &e; };
-        gf["std::" WSTRING] =               gf["std::wstring"];
-        gf[WSTRING] =                       gf["std::wstring"];
-        gf["complex<double>"] =             (ef_t)+[]() { static ComplexDExecutor e{};    return &e; };
-        gf["complex<double>&"] =            (ef_t)+[]() { return new ComplexDRefExecutor{}; };
-        gf["__init__"] =                    (ef_t)+[]() { static ConstructorExecutor e{}; return &e; };
-        gf["PyObject*"] =                   (ef_t)+[]() { static PyObjectExecutor e{};    return &e; };
+        gf["std::wstring"] =                (ef_t)+[](cdims_t) { static STLWStringExecutor e{};  return &e; };
+        gf[WSTRING1] =                      gf["std::wstring"];
+        gf[WSTRING2] =                      gf["std::wstring"];
+        gf["__init__"] =                    (ef_t)+[](cdims_t) { static ConstructorExecutor e{}; return &e; };
+        gf["PyObject*"] =                   (ef_t)+[](cdims_t) { static PyObjectExecutor e{};    return &e; };
         gf["_object*"] =                    gf["PyObject*"];
-        gf["FILE*"] =                       gf["void*"];
+        gf["FILE*"] =                       gf["void ptr"];
     }
 } initExecvFactories_;
 

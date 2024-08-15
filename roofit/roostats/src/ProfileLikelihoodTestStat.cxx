@@ -39,7 +39,7 @@ either use:
 
 #include "RooStats/RooStatsUtils.h"
 
-using namespace std;
+using std::cout, std::endl;
 
 bool RooStats::ProfileLikelihoodTestStat::fgAlwaysReuseNll = true ;
 

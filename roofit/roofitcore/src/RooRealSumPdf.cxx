@@ -59,7 +59,7 @@ to the fractions of the various functions. **This requires setting the last argu
 #include <memory>
 #include <stdexcept>
 
-using namespace std;
+using std::list, std::endl, std::ostream;
 
 ClassImp(RooRealSumPdf);
 
@@ -249,20 +249,22 @@ double RooRealSumPdf::evaluate() const
 }
 
 
-void RooRealSumPdf::computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const {
+void RooRealSumPdf::doEval(RooFit::EvalContext & ctx) const
+{
+  std::span<double> output = ctx.output();
+  std::size_t nEvents = output.size();
+
   // Do running sum of coef/func pairs, calculate lastCoef.
-  for (unsigned int j = 0; j < nEvents; ++j) {
-    output[j] = 0.0;
-  }
+  std::fill(output.begin(), output.end(), 0.);
 
   double sumCoeff = 0.;
   for (unsigned int i = 0; i < _funcList.size(); ++i) {
     const auto func = static_cast<RooAbsReal*>(&_funcList[i]);
     const auto coef = static_cast<RooAbsReal*>(i < _coefList.size() ? &_coefList[i] : nullptr);
-    const double coefVal = coef != nullptr ? dataMap.at(coef)[0] : (1. - sumCoeff);
+    const double coefVal = coef != nullptr ? ctx.at(coef)[0] : (1. - sumCoeff);
 
     if (func->isSelectedComp()) {
-      auto funcValues = dataMap.at(func);
+      auto funcValues = ctx.at(func);
       if(funcValues.size() == 1) {
         for (unsigned int j = 0; j < nEvents; ++j) {
           output[j] += funcValues[0] * coefVal;
@@ -277,7 +279,7 @@ void RooRealSumPdf::computeBatch(double* output, size_t nEvents, RooFit::Detail:
     // Warn about degeneration of last coefficient
     if (coef == nullptr && (coefVal < 0 || coefVal > 1.)) {
       if (!_haveWarned) {
-        coutW(Eval) << "RooRealSumPdf::computeBatch(" << GetName()
+        coutW(Eval) << "RooRealSumPdf::doEval(" << GetName()
             << ") WARNING: sum of FUNC coefficients not in range [0-1], value="
             << sumCoeff << ". This means that the PDF is not properly normalised. If the PDF was meant to be extended, provide as many coefficients as functions." << endl ;
         _haveWarned = true;
@@ -292,66 +294,45 @@ void RooRealSumPdf::computeBatch(double* output, size_t nEvents, RooFit::Detail:
   // Introduce floor if so requested
   if (_doFloor || _doFloorGlobal) {
     for (unsigned int j = 0; j < nEvents; ++j) {
-      output[j] += std::max(0., output[j]);
+      output[j] = std::max(0., output[j]);
     }
   }
 }
 
-void RooRealSumPdf::translateImpl(RooFit::Detail::CodeSquashContext &ctx, RooAbsArg const *klass,
-                                  RooArgList const &funcList, RooArgList const &coefList)
+std::string RooRealSumPdf::translateImpl(RooFit::Detail::CodeSquashContext &ctx, RooAbsArg const *klass,
+                                         RooArgList const &funcList, RooArgList const &coefList, bool normalize)
 {
    bool noLastCoeff = funcList.size() != coefList.size();
-   std::string sum;
-   std::string lastCoeff;
 
-   if (funcList.size() < 3) {
-      lastCoeff = "(1";
+   std::string const &funcName = ctx.buildArg(funcList);
+   std::string const &coeffName = ctx.buildArg(coefList);
+   std::string const &coeffSize = std::to_string(coefList.size());
 
-      std::size_t i;
-      for (i = 0; i < coefList.size(); ++i) {
-         auto coeff = ctx.getResult(coefList[i]);
-         sum += "(" + ctx.getResult(funcList[i]) + " * " + coeff + ") +";
-         if (noLastCoeff)
-            lastCoeff += " - " + coeff;
-      }
-      lastCoeff += ")";
+   std::string sum = ctx.getTmpVarName();
+   std::string coeffSum = ctx.getTmpVarName();
+   ctx.addToCodeBody(klass, "double " + sum + " = 0;\ndouble " + coeffSum + "= 0;\n");
 
-      if (noLastCoeff) {
-         sum += "(" + ctx.getResult(funcList[i]) + " * " + lastCoeff + ")";
-      } else {
-         sum.pop_back();
-      }
+   std::string iterator = "i_" + ctx.getTmpVarName();
+   std::string subscriptExpr = "[" + iterator + "]";
 
-   } else {
-      std::string const &funcName = ctx.buildArg(funcList);
-      std::string const &coeffName = ctx.buildArg(coefList);
-      std::string const &coeffSize = std::to_string(coefList.size());
-      std::string const &className = klass->GetName();
+   std::string code = "for(int " + iterator + " = 0; " + iterator + " < " + coeffSize + "; " + iterator + "++) {\n" +
+                      sum + " += " + funcName + subscriptExpr + " * " + coeffName + subscriptExpr + ";\n";
+   code += coeffSum + " += " + coeffName + subscriptExpr + ";\n";
+   code += "}\n";
 
-      sum = ctx.getTmpVarName();
-      lastCoeff = ctx.getTmpVarName();
-      ctx.addToCodeBody(klass, "double " + sum + " = 0, " + lastCoeff + "= 0;\n");
-
-      std::string iterator = "i_" + className;
-      std::string subscriptExpr = "[" + iterator + "]";
-
-      std::string code = "for(int " + iterator + " = 0; " + iterator + " < " + coeffSize + "; " + iterator + "++) {\n" +
-                         sum + " += " + funcName + subscriptExpr + " * " + coeffName + subscriptExpr + ";\n";
-      if (noLastCoeff)
-         code += lastCoeff + " += " + coeffName + subscriptExpr + ";\n";
-      code += "}\n";
-
-      if (noLastCoeff)
-         code += sum + " += " + funcName + "[" + coeffSize + "]" + " * (1 - " + lastCoeff + ");\n";
-      ctx.addToCodeBody(klass, code);
+   if (noLastCoeff) {
+      code += sum + " += " + funcName + "[" + coeffSize + "]" + " * (1 - " + coeffSum + ");\n";
+   } else if (normalize) {
+      code += sum + " /= " + coeffSum + ";\n";
    }
+   ctx.addToCodeBody(klass, code);
 
-   ctx.addResult(klass, sum);
+   return sum;
 }
 
 void RooRealSumPdf::translate(RooFit::Detail::CodeSquashContext &ctx) const
 {
-   translateImpl(ctx, this, _funcList, _coefList);
+   ctx.addResult(this, translateImpl(ctx, this, _funcList, _coefList));
 }
 
 bool RooRealSumPdf::checkObservables(RooAbsReal const& caller, RooArgSet const* nset,

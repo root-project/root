@@ -30,6 +30,57 @@ class RLogChannel;
 /// Log channel for RNTuple diagnostics.
 RLogChannel &NTupleLog();
 
+// clang-format off
+/**
+\class ROOT::Experimental::EColumnType
+\ingroup NTuple
+\brief The available trivial, native content types of a column
+
+More complex types, such as classes, get translated into columns of such simple types by the RField.
+When changed, remember to update
+  - RColumnElement::Generate()
+  - RColumnElement::GetTypeName()
+  - RColumnElement::GetValidBitRange()
+  - RColumnElement template specializations / packing & unpacking
+  - If necessary, endianess handling for the packing + unit test in ntuple_endian
+  - RNTupleSerializer::[Des|S]erializeColumnType
+*/
+// clang-format on
+enum class EColumnType {
+   kUnknown = 0,
+   // type for root columns of (nested) collections; offsets are relative to the current cluster
+   kIndex64,
+   kIndex32,
+   // 96 bit column that is a pair of a kIndex64 and a 32bit dispatch tag to a column ID;
+   // used to serialize std::variant.
+   kSwitch,
+   kByte,
+   kChar,
+   kBit,
+   kReal64,
+   kReal32,
+   kReal16,
+   kInt64,
+   kUInt64,
+   kInt32,
+   kUInt32,
+   kInt16,
+   kUInt16,
+   kInt8,
+   kUInt8,
+   kSplitIndex64,
+   kSplitIndex32,
+   kSplitReal64,
+   kSplitReal32,
+   kSplitInt64,
+   kSplitUInt64,
+   kSplitInt32,
+   kSplitUInt32,
+   kSplitInt16,
+   kSplitUInt16,
+   kMax,
+};
+
 /**
  * The fields in the ntuple model tree can carry different structural information about the type system.
  * Leaf fields contain just data, collection fields resolve to offset columns, record fields have no
@@ -40,7 +91,7 @@ enum ENTupleStructure {
    kCollection,
    kRecord,
    kVariant,
-   kReference, // unimplemented so far
+   kUnsplit,
    kInvalid,
 };
 
@@ -62,6 +113,8 @@ struct RClusterSize {
 };
 using ClusterSize_t = RClusterSize;
 constexpr ClusterSize_t kInvalidClusterIndex(std::uint64_t(-1));
+
+constexpr int kUnknownCompressionSettings = -1;
 
 /// Helper types to present an offset column as array of collection sizes.
 /// See RField<RNTupleCardinality<SizeT>> for details.
@@ -154,7 +207,7 @@ struct RNTupleLocator {
 
    /// Simple on-disk locators consisting of a 64-bit offset use variant type `uint64_t`; extended locators have
    /// `fPosition.index()` > 0
-   std::variant<std::uint64_t, std::string, RNTupleLocatorObject64> fPosition;
+   std::variant<std::uint64_t, std::string, RNTupleLocatorObject64> fPosition{};
    std::uint32_t fBytesOnStorage = 0;
    /// For non-disk locators, the value for the _Type_ field. This makes it possible to have different type values even
    /// if the payload structure is identical.
@@ -171,6 +224,15 @@ struct RNTupleLocator {
       return std::get<T>(fPosition);
    }
 };
+
+namespace Internal {
+template <typename T>
+auto MakeAliasedSharedPtr(T *rawPtr)
+{
+   const static std::shared_ptr<T> fgRawPtrCtrlBlock;
+   return std::shared_ptr<T>(fgRawPtrCtrlBlock, rawPtr);
+}
+} // namespace Internal
 
 } // namespace Experimental
 } // namespace ROOT

@@ -24,7 +24,7 @@ public:
    virtual std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>>) = 0;
    virtual std::vector<ETensorType> TypeInference(std::vector<ETensorType>) = 0;
    virtual void Initialize(RModel&) = 0;
-   virtual std::string Generate(std::string OpName) = 0;  //expect unique opname for each operator within the same RModel
+   virtual std::string Generate(std::string OpName) = 0;  //expect unique opName for each operator within the same RModel
    // generate initialization code
    virtual std::string GenerateInitCode() { return "";}
    // generate session data members specific to operator

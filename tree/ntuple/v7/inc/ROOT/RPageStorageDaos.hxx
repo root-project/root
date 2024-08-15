@@ -18,7 +18,7 @@
 
 #include <ROOT/RError.hxx>
 #include <ROOT/RPageStorage.hxx>
-#include <ROOT/RNTupleAnchor.hxx>
+#include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleSerialize.hxx>
 #include <ROOT/RNTupleZip.hxx>
 #include <string_view>
@@ -40,7 +40,6 @@ class RClusterPool;
 class RDaosPool;
 class RDaosContainer;
 class RPageAllocatorHeap;
-class RPagePool;
 enum EDaosLocatorFlags {
    // Indicates that the referenced page is "caged", i.e. it is stored in a larger blob that contains multiple pages.
    kCagedPage = 0x01,
@@ -122,13 +121,16 @@ private:
    uint32_t fCageSizeLimit{};
 
 protected:
+   using RPagePersistentSink::InitImpl;
    void InitImpl(unsigned char *serializedHeader, std::uint32_t length) final;
    RNTupleLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) final;
    RNTupleLocator
    CommitSealedPageImpl(DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) final;
-   std::vector<RNTupleLocator> CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges) final;
+   std::vector<RNTupleLocator>
+   CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges, const std::vector<bool> &mask) final;
    std::uint64_t CommitClusterImpl() final;
    RNTupleLocator CommitClusterGroupImpl(unsigned char *serializedPageList, std::uint32_t length) final;
+   using RPagePersistentSink::CommitDatasetImpl;
    void CommitDatasetImpl(unsigned char *serializedFooter, std::uint32_t length) final;
    void WriteNTupleHeader(const void *data, size_t nbytes, size_t lenHeader);
    void WriteNTupleFooter(const void *data, size_t nbytes, size_t lenFooter);
@@ -151,21 +153,9 @@ public:
 // clang-format on
 class RPageSourceDaos : public RPageSource {
 private:
-   /// Summarizes cluster-level information that are necessary to populate a certain page.
-   /// Used by PopulatePageFromCluster().
-   struct RClusterInfo {
-      DescriptorId_t fClusterId = 0;
-      /// Location of the page on disk
-      RClusterDescriptor::RPageRange::RPageInfoExtended fPageInfo;
-      /// The first element number of the page's column in the given cluster
-      std::uint64_t fColumnOffset = 0;
-   };
-
    ntuple_index_t fNTupleIndex{0};
 
-   /// Populated pages might be shared; the page pool might, at some point, be used by multiple page sources
-   std::shared_ptr<RPagePool> fPagePool;
-   /// The last cluster from which a page got populated.  Points into fClusterPool->fPool
+   /// The last cluster from which a page got loaded.  Points into fClusterPool->fPool
    RCluster *fCurrentCluster = nullptr;
    /// A container that stores object data (header/footer, pages, etc.)
    std::unique_ptr<RDaosContainer> fDaosContainer;
@@ -176,22 +166,19 @@ private:
 
    RNTupleDescriptorBuilder fDescriptorBuilder;
 
-   RPage PopulatePageFromCluster(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo,
-                                 ClusterSize_t::ValueType idxInCluster);
+   RPage LoadPageImpl(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo,
+                      ClusterSize_t::ValueType idxInCluster) final;
 
 protected:
+   void LoadStructureImpl() final {}
    RNTupleDescriptor AttachImpl() final;
-   void UnzipClusterImpl(RCluster *cluster) final;
+   /// The cloned page source creates a new connection to the pool/container.
+   std::unique_ptr<RPageSource> CloneImpl() const final;
 
 public:
    RPageSourceDaos(std::string_view ntupleName, std::string_view uri, const RNTupleReadOptions &options);
-   /// The cloned page source creates a new connection to the pool/container.
-   /// The meta-data (header and footer) is reread and parsed by the clone.
-   std::unique_ptr<RPageSource> Clone() const final;
    ~RPageSourceDaos() override;
 
-   RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex) final;
-   RPage PopulatePage(ColumnHandle_t columnHandle, RClusterIndex clusterIndex) final;
    void ReleasePage(RPage &page) final;
 
    void LoadSealedPage(DescriptorId_t physicalColumnId, RClusterIndex clusterIndex, RSealedPage &sealedPage) final;

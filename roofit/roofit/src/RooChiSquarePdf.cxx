@@ -21,8 +21,8 @@ Here we also implement the analytic integral.
 
 #include "TMath.h"
 
+#include <array>
 #include <cmath>
-using namespace std;
 
 ClassImp(RooChiSquarePdf);
 
@@ -55,17 +55,18 @@ RooChiSquarePdf::RooChiSquarePdf(const RooChiSquarePdf& other, const char* name)
 
 double RooChiSquarePdf::evaluate() const
 {
-  if(_x <= 0) return 0;
+   if (_x <= 0)
+      return 0;
 
-  return  pow(_x,(_ndof/2.)-1.) * exp(-_x/2.) / TMath::Gamma(_ndof/2.) / pow(2.,_ndof/2.);
+   return pow(_x, (_ndof / 2.) - 1.) * std::exp(-_x / 2.) / TMath::Gamma(_ndof / 2.) / std::pow(2., _ndof / 2.);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of ChiSquare distribution.
-void RooChiSquarePdf::computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+void RooChiSquarePdf::doEval(RooFit::EvalContext &ctx) const
 {
-  RooBatchCompute::ArgVector extraArgs{_ndof};
-  RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::ChiSquare, output, nEvents, {dataMap.at(_x)}, extraArgs);
+   std::array<double, 1> extraArgs{_ndof};
+   RooBatchCompute::compute(ctx.config(this), RooBatchCompute::ChiSquare, ctx.output(), {ctx.at(_x)}, extraArgs);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

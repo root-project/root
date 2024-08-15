@@ -39,4 +39,6 @@
   <function name="fragile::segfault" />
   <function name="fragile::sigabort" />
 
+  <function name="fragile::add42" />
+
 </lcgdict>

@@ -99,7 +99,7 @@ bool isCacheSet(std::string const& setName) {
 
 } // namespace
 
-using namespace std;
+using std::string, std::list, std::cout, std::endl, std::map, std::vector, std::ifstream, std::ofstream, std::fstream, std::make_unique;
 
 ClassImp(RooWorkspace);
 
@@ -212,8 +212,7 @@ RooWorkspace::RooWorkspace(const RooWorkspace& other) :
   // Copy named sets
   for (map<string,RooArgSet>::const_iterator iter3 = other._namedSets.begin() ; iter3 != other._namedSets.end() ; ++iter3) {
     // Make RooArgSet with equivalent content of this workspace
-    std::unique_ptr<RooArgSet> tmp{static_cast<RooArgSet*>(_allOwnedNodes.selectCommon(iter3->second))};
-    _namedSets[iter3->first].add(*tmp) ;
+    _namedSets[iter3->first].add(*std::unique_ptr<RooArgSet>{_allOwnedNodes.selectCommon(iter3->second)});
   }
 
   // Copy generic objects
@@ -1533,9 +1532,9 @@ bool RooWorkspace::CodeRepo::autoImportClass(TClass* tc, bool doReplace)
     return true ;
   }
 
-  // Require that class meets technical criteria to be persistable (i.e it has a default ctor)
-  // (We also need a default ctor of abstract classes, but cannot check that through is interface
-  //  as TClass::HasDefaultCtor only returns true for callable default ctors)
+  // Require that class meets technical criteria to be persistable (i.e it has a default constructor)
+  // (We also need a default constructor of abstract classes, but cannot check that through is interface
+  //  as TClass::HasDefaultCtor only returns true for callable default constructors)
   if (!(tc->Property() & kIsAbstract) && !tc->HasDefaultConstructor()) {
     oocoutW(_wspace,ObjectHandling) << "RooWorkspace::autoImportClass(" << _wspace->GetName() << ") WARNING cannot import class "
                 << tc->GetName() << " : it cannot be persisted because it doesn't have a default constructor. Please fix " << endl ;

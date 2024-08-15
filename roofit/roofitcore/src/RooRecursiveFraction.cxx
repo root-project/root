@@ -35,6 +35,8 @@ from a set of recursive fractions: for a given set of input fractions
 #include "RooArgSet.h"
 #include "RooMsgService.h"
 
+#include <RooFit/Detail/MathFuncs.h>
+
 ClassImp(RooRecursiveFraction);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -84,4 +86,9 @@ double RooRecursiveFraction::evaluate() const
   }
 
   return prod ;
+}
+
+void RooRecursiveFraction::translate(RooFit::Detail::CodeSquashContext &ctx) const
+{
+   ctx.addResult(this, ctx.buildCall("RooFit::Detail::MathFuncs::recursiveFraction", _list, _list.size()));
 }

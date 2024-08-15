@@ -97,18 +97,21 @@ public:
 
 
   Int_t getBin() const;
-  std::vector<Int_t> getBins(RooFit::Detail::DataMap const& dataMap) const;
+  std::vector<Int_t> getBins(RooFit::EvalContext & ctx) const;
 
   void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
   std::string
   buildCallToAnalyticIntegral(int code, const char *rangeName, RooFit::Detail::CodeSquashContext &ctx) const override;
+
+  RooArgSet const &variables() const { return _depList; }
+
 protected:
 
   bool importWorkspaceHook(RooWorkspace& ws) override ;
   bool areIdentical(const RooDataHist& dh1, const RooDataHist& dh2) ;
 
   double evaluate() const override;
-  void computeBatch(double* output, size_t size, RooFit::Detail::DataMap const&) const override;
+  void doEval(RooFit::EvalContext &) const override;
   friend class RooAbsCachedReal ;
 
   void ioStreamerPass2() override ;

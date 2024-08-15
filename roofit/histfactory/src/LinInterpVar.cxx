@@ -25,7 +25,7 @@
 
 #include "RooStats/HistFactory/LinInterpVar.h"
 
-using namespace std;
+using std::vector, std::endl;
 
 ClassImp(RooStats::HistFactory::LinInterpVar);
 

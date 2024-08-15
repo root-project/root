@@ -47,7 +47,7 @@ instantiate objects.
 #include <fstream>
 #include <mutex>
 
-using namespace std;
+using std::endl, std::vector, std::string;
 
 namespace {
 
@@ -383,7 +383,7 @@ std::string declareVarSpans(std::vector<std::string> const &alist)
    std::stringstream ss;
    for (std::size_t i = 0; i < alist.size(); ++i) {
       ss << "   "
-         << "std::span<const double> " << alist[i] << "Span = dataMap.at(" << alist[i] << ");\n";
+         << "std::span<const double> " << alist[i] << "Span = ctx.at(" << alist[i] << ");\n";
    }
    return ss.str();
 }
@@ -554,7 +554,7 @@ public:
 
   hf << R"(
   double evaluate() const override;
-  void computeBatch(double* output, std::size_t size, RooFit::Detail::DataMap const&) const override;
+  void doEval(RooFit::EvalContext &) const override;
   void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
 
 private:
@@ -664,12 +664,13 @@ CLASS_NAME::CLASS_NAME(const char *name, const char *title,
      << "   return CLASS_NAME_evaluate(" << listVars(alist) << "); " << endl
      << "}\n"
      << "\n"
-     << "void CLASS_NAME::computeBatch(double *output, std::size_t size, RooFit::Detail::DataMap const &dataMap) const " << endl
+     << "void CLASS_NAME::doEval(RooFit::EvalContext &ctx) const " << endl
      << "{ \n"
      << declareVarSpans(alist)
      << "\n"
-     << "   for (std::size_t i = 0; i < size; ++i) {\n"
-     << "      output[i] = CLASS_NAME_evaluate(" << getFromVarSpans(alist) << ");\n"
+     << "   std::size_t n = ctx.output().size();\n"
+     << "   for (std::size_t i = 0; i < n; ++i) {\n"
+     << "      ctx.output()[i] = CLASS_NAME_evaluate(" << getFromVarSpans(alist) << ");\n"
      << "   }\n"
      << "} \n";
 

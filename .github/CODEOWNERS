@@ -42,14 +42,17 @@ interpreter/cling/tools/packaging @vgvassilev
 /tree/readspeed/ @martamaja10
 /tree/ntuple/v7/ @jblomer
 /tree/ntupleutil/v7/ @jblomer
+/tutorials/sql/ @linev
 
 # Projects that span over several code modules:
-/bindings/r/ @omazapa
+/bindings/r/ @dpiparo
 /core/imt/ @dpiparo
 /core/multiproc/ @dpiparo
 /graf2d/cocoa/ @couet
 /graf3d/eve/ @osschar
 /graf3d/eve7/ @osschar @linev
+/tutorials/eve/ @osschar
+/tutorials/eve7/ @osschar @linev
 
 #different http/webgui components
 /net/http/ @linev
@@ -59,11 +62,17 @@ interpreter/cling/tools/packaging @vgvassilev
 /gui/webdisplay/ @linev
 /gui/cefdisplay/ @linev
 /gui/qt5webdisplay/ @linev
+/gui/qt6webdisplay/ @linev
 /gui/webgui6/ @linev
 /gui/fitpanelv7/ @linev
+/gui/browsable/ @bellenot @linev
 /gui/browserv7/ @bellenot @linev
 /gui/canvaspainter/ @dpiparo @linev
+/tree/webviewer/ @linev
+/geom/webviewer/ @linev
 /ui5/ @linev
+/tutorials/rcanvas/ @linev
+/tutorials/webgui/ @linev
 
 /cmake/ @bellenot
 *.cmake @bellenot

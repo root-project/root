@@ -55,13 +55,11 @@ template<class Element> class TMatrixTSparse;
 
 template<class Element> class TElementActionT {
 
-#ifndef __CINT__
 friend class TMatrixTBase  <Element>;
 friend class TMatrixT      <Element>;
 friend class TMatrixTSym   <Element>;
 friend class TMatrixTSparse<Element>;
 friend class TVectorT      <Element>;
-#endif
 
 protected:
    virtual ~TElementActionT() { }
@@ -85,13 +83,11 @@ private:
 
 template<class Element> class TElementPosActionT {
 
-#ifndef __CINT__
 friend class TMatrixTBase  <Element>;
 friend class TMatrixT      <Element>;
 friend class TMatrixTSym   <Element>;
 friend class TMatrixTSparse<Element>;
 friend class TVectorT      <Element>;
-#endif
 
 protected:
    mutable Int_t fI; // i position of element being passed to Operation()

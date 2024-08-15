@@ -1535,7 +1535,7 @@ bool TTreeCache::FillBuffer()
                   }
                }
 
-               if ((ntotCurrentBuf + len) > fBufferSizeMin) {
+               if (((Long64_t)ntotCurrentBuf + len) > fBufferSizeMin) {
                   // Humm ... we are going to go over the requested size.
                   if (clusterIterations > 0 && cursor[i].fLoadedOnce) {
                      // We already have a full cluster and now we would go over the requested
@@ -1544,15 +1544,15 @@ bool TTreeCache::FillBuffer()
                      if (showMore || gDebug > 5) {
                         Info(
                            "FillBuffer",
-                           "Breaking early because %d is greater than %d at cluster iteration %d will restart at %lld",
-                           (ntotCurrentBuf + len), fBufferSizeMin, clusterIterations, minEntry);
+                           "Breaking early because %lld is greater than %d at cluster iteration %d will restart at %lld",
+                           ((Long64_t)ntotCurrentBuf + len), fBufferSizeMin, clusterIterations, minEntry);
                      }
                      fEntryNext = minEntry;
                      filled = true;
                      break;
                   } else {
                      if (pass == kStart || !cursor[i].fLoadedOnce) {
-                        if ((ntotCurrentBuf + len) > 4 * fBufferSizeMin) {
+                        if (((Long64_t)ntotCurrentBuf + len) > 4LL * fBufferSizeMin) {
                            // Okay, so we have not even made one pass and we already have
                            // accumulated request for more than twice the memory size ...
                            // So stop for now, and will restart at the same point, hoping
@@ -1560,9 +1560,9 @@ bool TTreeCache::FillBuffer()
                            fEntryNext = maxReadEntry;
 
                            if (showMore || gDebug > 5) {
-                              Info("FillBuffer", "Breaking early because %d is greater than 4*%d at cluster iteration "
+                              Info("FillBuffer", "Breaking early because %lld is greater than 4*%d at cluster iteration "
                                                  "%d pass %d will restart at %lld",
-                                   (ntotCurrentBuf + len), fBufferSizeMin, clusterIterations, pass, fEntryNext);
+                                   ((Long64_t)ntotCurrentBuf + len), fBufferSizeMin, clusterIterations, pass, fEntryNext);
                            }
                            filled = true;
                            break;
@@ -1571,12 +1571,12 @@ bool TTreeCache::FillBuffer()
                         // We have made one pass through the branches and thus already
                         // requested one basket per branch, let's stop prefetching
                         // now.
-                        if ((ntotCurrentBuf + len) > 2 * fBufferSizeMin) {
+                        if (((Long64_t)ntotCurrentBuf + len) > 2LL * fBufferSizeMin) {
                            fEntryNext = maxReadEntry;
                            if (showMore || gDebug > 5) {
-                              Info("FillBuffer", "Breaking early because %d is greater than 2*%d at cluster iteration "
+                              Info("FillBuffer", "Breaking early because %lld is greater than 2*%d at cluster iteration "
                                                  "%d pass %d will restart at %lld",
-                                   (ntotCurrentBuf + len), fBufferSizeMin, clusterIterations, pass, fEntryNext);
+                                   ((Long64_t)ntotCurrentBuf + len), fBufferSizeMin, clusterIterations, pass, fEntryNext);
                            }
                            filled = true;
                            break;
@@ -1624,7 +1624,7 @@ bool TTreeCache::FillBuffer()
                   // Info("FillBuffer","maxCollectEntry incremented from %lld to %lld", maxReadEntry, entries[j+1]);
                   maxReadEntry = entries[j+1];
                }
-               if (ntotCurrentBuf > 4 * fBufferSizeMin) {
+               if (ntotCurrentBuf > 4LL * fBufferSizeMin) {
                   // Humm something wrong happened.
                   Warning("FillBuffer", "There is more data in this cluster (starting at entry %lld to %lld, "
                                         "current=%lld) than usual ... with %d %.3f%% of the branches we already have "
@@ -2064,12 +2064,13 @@ void TTreeCache::ResetCache()
 /// Change the underlying buffer size of the cache.
 /// If the change of size means some cache content is lost, or if the buffer
 /// is now larger, setup for a cache refill the next time there is a read
+/// Buffersize might be clamped, see TFileCacheRead::SetBufferSize
 /// Returns:
 ///  - 0 if the buffer content is still available
 ///  - 1 if some or all of the buffer content has been made unavailable
 ///  - -1 on error
 
-Int_t TTreeCache::SetBufferSize(Int_t buffersize)
+Int_t TTreeCache::SetBufferSize(Long64_t buffersize)
 {
    Int_t prevsize = GetBufferSize();
    Int_t res = TFileCacheRead::SetBufferSize(buffersize);

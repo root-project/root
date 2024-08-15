@@ -414,9 +414,8 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
          let idxBuff = eve_el.render_data.idxBuff;
          // let bin =  idxBuff[idx*2 + 1];
          let val = eve_el.render_data.nrmBuff[idx];
-         let caloData =  this.top_obj.scene.mgr.GetElement(eve_el.dataId);
          let slice = idxBuff[idx*2];
-         let sname = caloData.sliceInfos[slice].name;
+         let sname = "Slice " + slice;
 
          let vbuff =  eve_el.render_data.vtxBuff;
          let p = idx*12;
@@ -511,10 +510,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
 
          RC = rc;
          this.viewer = viewer;
-
-         RC.Cache.enabled = true;
-
-         this.tex_cache = new RC.TextureCache;
+         this.tex_cache = viewer.tex_cache;
 
          this.POINT_SIZE_FAC = 1;
          this.LINE_WIDTH_FAC = 1;
@@ -615,7 +611,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
          mat._color = color;
          mat._specular = new RC.Color(0.3, 0.4, 0.3); // this.ColorWhite;
          mat._shininess = 64;
-   
+
          if (opacity !== undefined && opacity < 1.0) {
             mat._opacity = opacity;
             mat._transparent = true;
@@ -628,7 +624,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
       }
 
       RcMakeZSprite(colIdx, sSize, nInstance, vbuff, instX, instY, textureName)
-      { 
+      {
          let col = RcCol(colIdx);
          sSize *= this.POINT_SIZE_FAC;
          let sm = new RC.ZSpriteBasicMaterial( {
@@ -660,7 +656,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
 
          return s;
       }
-      
+
       RcMakeStripes(geom, line_width, line_color)
       {
          // Setup width for SSAA, scaled down for picking and outline materials.
@@ -723,7 +719,12 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
 
       TestRnr(name, obj, rnr_data)
       {
-         if (obj && rnr_data && rnr_data.vtxBuff) return false;
+         if (obj && rnr_data && rnr_data.vtxBuff) {
+            return false;
+         }
+         console.log("test rnr failed for obj =  ", obj);
+         console.log("test rnr failed for rnr_data =  ", rnr_data);
+         console.log("test rnr failed for rnr_data vtcBuff =  ", rnr_data.vtxBuff);
 
          let cnt = this[name] || 0;
          if (cnt++ < 5) console.log(name, obj, rnr_data);
@@ -772,6 +773,15 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
          if (o3d.material) o3d.material.addMap(tex);
          if (o3d.pickingMaterial) o3d.pickingMaterial.addMap(tex);
          if (o3d.outlineMaterial) o3d.outlineMaterial.addMap(tex);
+      }
+
+      AddTextureToMaterialMap(o3d, tex)
+      {
+         if (o3d.material)
+         {
+            o3d.material.clearMaps();
+            o3d.material.addMap(tex);
+         }
       }
 
       //----------------------------------------------------------------------------
@@ -853,12 +863,48 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
 
          const geom = new RC.Geometry();
          geom.vertices = new RC.Float32Attribute(buf, 3);
- 
+
          const line = this.RcMakeStripes(geom, track_width, track_color);
          this.RcApplyStripesMaterials(track, line, 2);
          this.RcPickable(track, line);
 
          return line;
+      }
+
+      //==============================================================================
+      // makeZText
+      //==============================================================================
+
+      makeZText(el, rnr_data)
+      {
+         // if (this.TestRnr("jet", el, rnr_data)) return null;
+
+         let text = new RC.ZText({
+            text: el.fText,
+            xPos: el.fPosX,
+            yPos: el.fPosY,
+            fontSize: el.fFontSize,
+            mode: el.fMode,
+            fontHinting: el.fFontHinting,
+            color: RcCol(el.fTextColor),
+         });
+         let url_base = this.viewer.top_path + 'sdf-fonts/' + el.fFont;
+         this.tex_cache.deliver_font(url_base,
+            (texture, font_metrics) => {
+               text.setupFrameStuff((100 - el.fMainTransparency) / 100.0, el.fDrawFrame,
+                                    RcCol(el.fFillColor), el.fFillAlpha / 255.0,
+                                    RcCol(el.fLineColor), el.fLineAlpha / 255.0,
+                                    el.fExtraBorder, el.fLineWidth);
+               text.setTextureAndFont(texture, font_metrics);
+               if (el.fMode == 0) text.material.side = RC.FRONT_AND_BACK_SIDE;
+            },
+            (img) => RC.ZText.createDefaultTexture(img),
+            () => this.viewer.request_render()
+         );
+
+        text.position.copy(new RC.Vector3(el.fPosX, el.fPosY, el.fPosZ));
+        if (el.fPickable) this.RcPickable(el, text);
+        return text;
       }
 
       //==============================================================================
@@ -1070,11 +1116,72 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
       //==============================================================================
       // make Digits
       //==============================================================================
+      makeBoxSetInstanced(boxset, rnr_data)
+      {
+         // axis aligned box
+         let SN = boxset.N;
+         // console.log("SN", SN, "texture dim =", boxset.texX, boxset.texY);
+
+         let tex_insta_pos_shape = new RC.Texture(rnr_data.vtxBuff,
+            RC.Texture.WRAPPING.ClampToEdgeWrapping,
+            RC.Texture.WRAPPING.ClampToEdgeWrapping,
+            RC.Texture.FILTER.NearestFilter,
+            RC.Texture.FILTER.NearestFilter,
+            RC.Texture.FORMAT.RGBA32F, RC.Texture.FORMAT.RGBA, RC.Texture.TYPE.FLOAT,
+            boxset.texX, boxset.texY);
+
+         let shm = new RC.ZShapeBasicMaterial({
+            ShapeSize: [boxset.defWidth, boxset.defHeight, boxset.defDepth],
+            color: RcCol(boxset.fMainColor),
+            emissive: new RC.Color(0.07, 0.07, 0.06),
+            diffuse: new RC.Color(0, 0.6, 0.7),
+            alpha: 0.5 // AMT, what is this used for ?
+         });
+         if (boxset.instanceFlag == "ScalePerDigit")
+            shm.addSBFlag("SCALE_PER_INSTANCE");
+         else if(boxset.instanceFlag == "Mat4Trans")
+            shm.addSBFlag("MAT4_PER_INSTANCE");
+
+         if (boxset.fMainTransparency) {
+            shm.transparent = true;
+            shm.opacity = (100 - boxset.fMainTransparency) / 100.0;
+            shm.depthWrite = false; //? AMT what does that mean
+         }
+         shm.addInstanceData(tex_insta_pos_shape);
+         shm.instanceData[0].flipy = false;
+         let geo;
+         if (boxset.shapeType == 1) {
+            geo = RC.ZShape.makeHexagonGeometry();
+         }
+         else if (boxset.shapeType == 2) {
+            geo = RC.ZShape.makeConeGeometry(boxset.coneCap);
+         }
+         else {
+            geo = RC.ZShape.makeCubeGeometry();
+         }
+         let zshape = new RC.ZShape(geo, shm);
+         zshape.instanceCount = SN;
+         zshape.frustumCulled = false;
+         zshape.instanced = true;
+         zshape.material.normalFlat = true;
+
+         this.RcPickable(boxset, zshape);
+
+         return zshape;
+      }
 
       makeBoxSet(boxset, rnr_data)
       {
          if (this.TestRnr("boxset", boxset, rnr_data)) return null;
+         // use instancing if texture coordinates
+         if (boxset.instanced === true)
+            return this.makeBoxSetInstanced(boxset, rnr_data);
+         else
+            return this.makeFreeBoxSet(boxset, rnr_data);
+      }
 
+      makeFreeBoxSet(boxset, rnr_data)
+      {
          let vBuff;
          let idxBuff;
          let nVerticesPerDigit = 0;
@@ -1118,8 +1225,8 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
                let ro = i* 3 * 7 * 2;
                for (let j = 0; j < 7; ++j)
                {
-                  vBuff[ro + 21] = vBuff[ro];
-                  vBuff[ro + 22] = vBuff[ro+1];
+                  vBuff[ro + 21] = vBuff[ro]+ hexHeight;
+                  vBuff[ro + 22] = vBuff[ro+1]+ hexHeight;
                   vBuff[ro + 23] = vBuff[ro+2] + hexHeight;
                   ro += 3;
                }
@@ -1127,7 +1234,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
 
             let protoIdcs = [0,1,2, 0,2,3, 0,3,4, 0,4,5, 0,5,6, 0,6,1];
             let protoIdcs2 = [2,1,0,  3,2,0,  4,3, 0,   5,4,0,  6, 5, 0,  1, 6, 0];
-            let sideIdcs = [8,1,2,2,9,8,  9,2,3,3,10,9,  10,3,4,4,11,10,  
+            let sideIdcs = [8,1,2,2,9,8,  9,2,3,3,10,9,  10,3,4,4,11,10,
                             11,4,5,5,12,11,  5,6,13,5,13,12, 13,6,1,1,8,13 ];
             let idxBuffSize =  N_hex * (protoIdcs.length * 2 + sideIdcs.length);
             idxBuff = new Uint32Array(idxBuffSize);
@@ -1234,6 +1341,11 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
             mat.color = RcCol(boxset.fMainColor);
          }
 
+         if (boxset.fMainTransparency) {
+            mat.transparent = true;
+            mat.opacity = (100 - boxset.fMainTransparency) / 100.0;
+            mat.depthWrite = false;
+         }
          let mesh = new RC.Mesh(body, mat);
          this.RcPickable(boxset, mesh, false, boxset.fSecondarySelect ? BoxSetControl : EveElemControl);
 
@@ -1387,7 +1499,8 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
          let mop = 1 - egs.fMainTransparency/100;
 
          let mat = this.RcFancyMaterial(fcol, mop);
-         mat.side = RC.FRONT_AND_BACK_SIDE;
+         // mat.side = RC.FRONT_AND_BACK_SIDE;
+         mat.side = RC.FRONT_SIDE;
          mat.shininess = 50;
          mat.normalFlat = true;
 
@@ -1415,7 +1528,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
          let material = this.RcFlatMaterial(fcol, mop);
          material.side = RC.FRONT_AND_BACK_SIDE;
 
-         let line_mat = this.RcLineMaterial(fcol, mop);
+         let line_mat = this.RcLineMaterial(fcol);
 
          let meshes = [];
          for (let ib_pos = 0; ib_pos < ib_len;)

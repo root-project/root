@@ -22,105 +22,36 @@ namespace ROOT {
 namespace Internal {
 namespace RDF {
 
-RDefinesWithReaders::RDefinesWithReaders(std::shared_ptr<RDefineBase> define, unsigned int nSlots)
-   : fDefine(std::move(define)), fReadersPerVariation(nSlots)
+RColumnRegister::RColumnRegister(ROOT::Detail::RDF::RLoopManager *lm)
+   : fLoopManager(lm),
+     fVariations(std::make_shared<const VariationsMap_t>()),
+     fDefines(std::make_shared<const DefinesMap_t>()),
+     fAliases(std::make_shared<const AliasesMap_t>())
 {
-   assert(fDefine != nullptr);
-}
-
-RDefineReader &RDefinesWithReaders::GetReader(unsigned int slot, const std::string &variationName)
-{
-   auto &defineReaders = fReadersPerVariation[slot];
-
-   auto it = defineReaders.find(variationName);
-   if (it != defineReaders.end())
-      return *it->second;
-
-   auto *define = fDefine.get();
-   if (variationName != "nominal")
-      define = &define->GetVariedDefine(variationName);
-
-#if !defined(__clang__) && __GNUC__ >= 7 && __GNUC_MINOR__ >= 3
-   const auto insertion = defineReaders.insert({variationName, std::make_unique<RDefineReader>(slot, *define)});
-   return *insertion.first->second;
-#else
-   // gcc < 7.3 has issues with passing the non-movable std::pair temporary into the insert call
-   auto reader = std::make_unique<RDefineReader>(slot, *define);
-   auto &ret = *reader;
-   defineReaders[variationName] = std::move(reader);
-   return ret;
-#endif
-}
-
-RVariationsWithReaders::RVariationsWithReaders(std::shared_ptr<RVariationBase> variation, unsigned int nSlots)
-   : fVariation(std::move(variation)), fReadersPerVariation(nSlots)
-{
-   assert(fVariation != nullptr);
-}
-
-////////////////////////////////////////////////////////////////////////////
-/// Return a column reader for the given slot, column and variation.
-RVariationReader &
-RVariationsWithReaders::GetReader(unsigned int slot, const std::string &colName, const std::string &variationName)
-{
-   assert(IsStrInVec(variationName, fVariation->GetVariationNames()));
-   assert(IsStrInVec(colName, fVariation->GetColumnNames()));
-
-   auto &varReaders = fReadersPerVariation[slot];
-
-   auto it = varReaders.find(variationName);
-   if (it != varReaders.end())
-      return *it->second;
-
-#if !defined(__clang__) && __GNUC__ >= 7 && __GNUC_MINOR__ >= 3
-   const auto insertion =
-      varReaders.insert({variationName, std::make_unique<RVariationReader>(slot, colName, variationName, *fVariation)});
-   return *insertion.first->second;
-#else
-   // gcc < 7.3 has issues with passing the non-movable std::pair temporary into the insert call
-   auto reader = std::make_unique<RVariationReader>(slot, colName, variationName, *fVariation);
-   auto &ret = *reader;
-   varReaders[variationName] = std::move(reader);
-   return ret;
-#endif
-}
-
-RColumnRegister::RColumnRegister(std::shared_ptr<RDFDetail::RLoopManager> lm)
-   : fLoopManager(lm), fDefines(std::make_shared<DefinesMap_t>()),
-     fAliases(std::make_shared<std::unordered_map<std::string, std::string>>()),
-     fVariations(std::make_shared<VariationsMap_t>()), fColumnNames(std::make_shared<ColumnNames_t>())
-{
-}
-
-RColumnRegister::~RColumnRegister()
-{
-   // Explicitly empty the containers to decrement the reference count of the
-   // various shared_ptr's, which might cause destructors to be called. For
-   // this, we need the RLoopManager to stay around and we do not want to rely
-   // on the order during member destruction.
-   fAliases.reset();
-   fDefines.reset();
-   fVariations.reset();
-   fColumnNames.reset();
+   // TODO: The RLoopManager could be taken by reference.
+   // We cannot do it now because it would prevent RColumRegister from
+   // being copiable, and that is currently done.
+   assert(fLoopManager != nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Return the list of the names of defined columns (no aliases).
-ColumnNames_t RColumnRegister::BuildDefineNames() const
+std::vector<std::string_view> RColumnRegister::BuildDefineNames() const
 {
-   ColumnNames_t names;
+   std::vector<std::string_view> names;
    names.reserve(fDefines->size());
-   for (auto &kv : *fDefines) {
-      names.emplace_back(kv.first);
+   for (const auto &kv : *fDefines) {
+      names.push_back(kv.first);
    }
    return names;
 }
 
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Return the RDefine for the requested column name, or nullptr.
-RDFDetail::RDefineBase *RColumnRegister::GetDefine(const std::string &colName) const
+RDFDetail::RDefineBase *RColumnRegister::GetDefine(std::string_view colName) const
 {
-   auto it = fDefines->find(colName);
+   auto it = std::find_if(fDefines->begin(), fDefines->end(),
+                          [&colName](const DefinesMap_t::value_type &kv) { return kv.first == colName; });
    return it == fDefines->end() ? nullptr : &it->second->GetDefine();
 }
 
@@ -128,23 +59,36 @@ RDFDetail::RDefineBase *RColumnRegister::GetDefine(const std::string &colName) c
 /// \brief Check if the provided name is tracked in the names list
 bool RColumnRegister::IsDefineOrAlias(std::string_view name) const
 {
-   const auto ccolnamesEnd = fColumnNames->end();
-   return ccolnamesEnd != std::find(fColumnNames->begin(), ccolnamesEnd, name);
+   return IsDefine(name) || IsAlias(name);
 }
 
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Add a new defined column.
-/// Internally it recreates the map with the new column, and swaps it with the old one.
+/// Registers the pair (columnName, columnReader) with the current RDataFrame,
+/// then keeps a reference to the inserted objects to keep track of the
+/// available columns for this node. Internally it recreates the collection with
+/// the new column, and swaps it with the old one.
 void RColumnRegister::AddDefine(std::shared_ptr<RDFDetail::RDefineBase> define)
 {
+   const auto colIt = fLoopManager->GetColumnNamesCache().Insert(define->GetName());
+   auto insertion_defs = fLoopManager->GetUniqueDefinesWithReaders().insert(
+      {*colIt, std::make_unique<ROOT::Internal::RDF::RDefinesWithReaders>(define, fLoopManager->GetNSlots(),
+                                                                          fLoopManager->GetColumnNamesCache())});
+
    auto newDefines = std::make_shared<DefinesMap_t>(*fDefines);
-   const std::string &colName = define->GetName();
-
-   // this will assign over a pre-existing element in case this AddDefine is due to a Redefine
-   (*newDefines)[colName] = std::make_shared<RDefinesWithReaders>(define, fLoopManager->GetNSlots());
-
+   // Structured bindings cannot be used in lambda captures (until C++20)
+   // so we explicitly define variable names here
+   const auto &colAndDefIt = insertion_defs.first;
+   // If there is a Redefine, we need to reinsert the new pointer to the readers into the same element
+   if (auto previousDefIt =
+          std::find_if(newDefines->begin(), newDefines->end(),
+                       [&colAndDefIt](const DefinesMap_t::value_type &kv) { return kv.first == colAndDefIt->first; });
+       previousDefIt != newDefines->end()) {
+      previousDefIt->second = colAndDefIt->second.get();
+   } else {
+      newDefines->push_back({colAndDefIt->first, colAndDefIt->second.get()});
+   }
    fDefines = std::move(newDefines);
-   AddName(colName);
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -153,8 +97,15 @@ void RColumnRegister::AddVariation(std::shared_ptr<RVariationBase> variation)
 {
    auto newVariations = std::make_shared<VariationsMap_t>(*fVariations);
    const std::vector<std::string> &colNames = variation->GetColumnNames();
-   for (auto &colName : colNames)
-      newVariations->insert({colName, std::make_shared<RVariationsWithReaders>(variation, fLoopManager->GetNSlots())});
+
+   // Cache column names for this variation and store views for later use
+   for (const auto &colName : colNames) {
+      auto colIt = fLoopManager->GetColumnNamesCache().Insert(colName);
+      auto [colAndVariationsIt, _2] = fLoopManager->GetUniqueVariationsWithReaders().insert(
+         {*colIt, std::make_unique<ROOT::Internal::RDF::RVariationsWithReaders>(variation, fLoopManager->GetNSlots())});
+      newVariations->insert({colAndVariationsIt->first, colAndVariationsIt->second.get()});
+   }
+
    fVariations = std::move(newVariations);
 }
 
@@ -186,7 +137,7 @@ std::vector<std::string> RColumnRegister::GetVariationDeps(const std::string &co
 ///
 /// This list includes variations applied to the columns as well as variations applied to other
 /// columns on which the value of any of these columns depend (typically via Define expressions).
-std::vector<std::string> RColumnRegister::GetVariationDeps(const ColumnNames_t &columns) const
+std::vector<std::string> RColumnRegister::GetVariationDeps(const std::vector<std::string> &columns) const
 {
    // here we assume that columns do not contain aliases, they must have already been resolved
    std::set<std::string> variationNames;
@@ -197,7 +148,8 @@ std::vector<std::string> RColumnRegister::GetVariationDeps(const ColumnNames_t &
          variationNames.insert(var);
 
       // For Define'd columns, add the systematic variations they depend on to the set
-      auto defineIt = fDefines->find(col);
+      auto defineIt = std::find_if(fDefines->begin(), fDefines->end(),
+                                   [&col](const DefinesMap_t::value_type &kv) { return kv.first == col; });
       if (defineIt != fDefines->end()) {
          for (const auto &v : defineIt->second->GetDefine().GetVariations())
             variationNames.insert(v);
@@ -218,7 +170,7 @@ RColumnRegister::FindVariationAndReaders(const std::string &colName, const std::
       return nullptr;
    for (auto it = range.first; it != range.second; ++it) {
       if (IsStrInVec(variationName, it->second->GetVariation().GetVariationNames()))
-         return it->second.get();
+         return it->second;
    }
 
    return nullptr;
@@ -235,39 +187,46 @@ ROOT::RDF::RVariationsDescription RColumnRegister::BuildVariationsDescription() 
 }
 
 ////////////////////////////////////////////////////////////////////////////
-/// \brief Add a new name to the list returned by `GetNames` without booking a new column.
-///
-/// This is needed because we abuse fColumnNames to also keep track of the aliases defined
-/// in each branch of the computation graph.
-/// Internally it recreates the vector with the new name, and swaps it with the old one.
-void RColumnRegister::AddName(std::string_view name)
-{
-   const auto &names = *fColumnNames;
-   if (std::find(names.begin(), names.end(), name) != names.end())
-      return; // must be a Redefine of an existing column. Nothing to do.
-
-   auto newColsNames = std::make_shared<ColumnNames_t>(names);
-   newColsNames->emplace_back(std::string(name));
-   fColumnNames = newColsNames;
-}
-
-////////////////////////////////////////////////////////////////////////////
 /// \brief Add a new alias to the ledger.
+/// Registers the strings alias, colName with the current RDataFrame, then uses
+/// references to those string to create the new pair for the collection of
+/// aliases of this node.
 void RColumnRegister::AddAlias(std::string_view alias, std::string_view colName)
 {
    // at this point validation of alias and colName has already happened, we trust that
    // this is a new, valid alias.
-   auto newAliases = std::make_shared<std::unordered_map<std::string, std::string>>(*fAliases);
-   (*newAliases)[std::string(alias)] = ResolveAlias(colName);
+   auto &colNamesCache = fLoopManager->GetColumnNamesCache();
+   auto aliasIt = colNamesCache.Insert(std::string(alias));
+   auto colIt = colNamesCache.Insert(std::string(colName));
+
+   auto newAliases = std::make_shared<AliasesMap_t>(*fAliases);
+   // If an alias was already present we need to substitute it with the new one
+   if (auto previousAliasIt =
+          std::find_if(newAliases->begin(), newAliases->end(),
+                       [&aliasIt](const AliasesMap_t::value_type &kv) { return kv.first == *aliasIt; });
+       previousAliasIt != newAliases->end()) {
+      previousAliasIt->second = ResolveAlias(*colIt);
+   } else {
+      newAliases->push_back({*aliasIt, ResolveAlias(*colIt)});
+   }
+
    fAliases = std::move(newAliases);
-   AddName(alias);
 }
 
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Return true if the given column name is an existing alias.
-bool RColumnRegister::IsAlias(const std::string &name) const
+bool RColumnRegister::IsAlias(std::string_view name) const
 {
-   return fAliases->find(name) != fAliases->end();
+   return std::find_if(fAliases->begin(), fAliases->end(),
+                       [&name](const AliasesMap_t::value_type &kv) { return kv.first == name; }) != fAliases->end();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// \brief Return true if the given column name is an existing defined column.
+bool RColumnRegister::IsDefine(std::string_view name) const
+{
+   return std::find_if(fDefines->begin(), fDefines->end(),
+                       [&name](const DefinesMap_t::value_type &kv) { return kv.first == name; }) != fDefines->end();
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -275,19 +234,23 @@ bool RColumnRegister::IsAlias(const std::string &name) const
 /// Drills through multiple levels of aliasing if needed.
 /// Returns the input in case it's not an alias.
 /// Expands `#%var` to `R_rdf_sizeof_var` (the #%var columns are implicitly-defined aliases).
-std::string RColumnRegister::ResolveAlias(std::string_view alias) const
+std::string_view RColumnRegister::ResolveAlias(std::string_view alias) const
 {
-   std::string aliasStr{alias};
 
    // #var is an alias for R_rdf_sizeof_var
-   if (aliasStr.size() > 1 && aliasStr[0] == '#')
-      return "R_rdf_sizeof_" + aliasStr.substr(1);
+   if (alias.size() > 1 && alias[0] == '#') {
+      std::string sizeof_colname{"R_rdf_sizeof_"};
+      sizeof_colname.append(alias.substr(1));
+      auto colIt = fLoopManager->GetColumnNamesCache().Insert(sizeof_colname);
+      return *colIt;
+   }
 
-   auto it = fAliases->find(aliasStr);
-   if (it != fAliases->end())
+   if (auto it = std::find_if(fAliases->begin(), fAliases->end(),
+                              [&alias](const AliasesMap_t::value_type &kv) { return kv.first == alias; });
+       it != fAliases->end())
       return it->second;
 
-   return aliasStr; // not an alias, i.e. already resolved
+   return alias; // not an alias, i.e. already resolved
 }
 
 /// Return a RDefineReader or a RVariationReader, or nullptr if not available.
@@ -307,7 +270,8 @@ RDFDetail::RColumnReaderBase *RColumnRegister::GetReader(unsigned int slot, cons
    }
 
    // otherwise try defines
-   auto it = fDefines->find(colName);
+   auto it = std::find_if(fDefines->begin(), fDefines->end(),
+                          [&colName](const DefinesMap_t::value_type &kv) { return kv.first == colName; });
    if (it != fDefines->end()) {
       const auto &actualType = it->second->GetDefine().GetTypeId();
       CheckReaderTypeMatches(actualType, requestedType, colName);
@@ -320,3 +284,14 @@ RDFDetail::RColumnReaderBase *RColumnRegister::GetReader(unsigned int slot, cons
 } // namespace RDF
 } // namespace Internal
 } // namespace ROOT
+
+std::vector<std::string_view> ROOT::Internal::RDF::RColumnRegister::GenerateColumnNames() const
+{
+   std::vector<std::string_view> ret;
+   ret.reserve(fDefines->size() + fAliases->size());
+   for (const auto &kv : *fDefines)
+      ret.push_back(kv.first);
+   for (const auto &kv : *fAliases)
+      ret.push_back(kv.first);
+   return ret;
+}

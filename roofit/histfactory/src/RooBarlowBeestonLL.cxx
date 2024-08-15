@@ -39,7 +39,7 @@
 
 #include <TMath.h>
 
-using namespace std ;
+using std::runtime_error;
 
 ClassImp(RooStats::HistFactory::RooBarlowBeestonLL);
 
@@ -526,7 +526,7 @@ double RooStats::HistFactory::RooBarlowBeestonLL::evaluate() const
      throw runtime_error("BarlowBeestonLL::evaluate() : A < 0");
    }
 
-   gamma_hat_hat = ( -1*B + TMath::Sqrt(discrim) ) / (2*A);
+   gamma_hat_hat = ( -1*B + std::sqrt(discrim) ) / (2*A);
       }
 
       // If the quadratic term is 0, we simply

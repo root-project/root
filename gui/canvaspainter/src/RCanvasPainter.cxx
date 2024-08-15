@@ -717,9 +717,15 @@ bool RCanvasPainter::AddPanel(std::shared_ptr<ROOT::RWebWindow> win)
       return false;
    }
 
-   std::string addr = fWindow->GetRelativeAddr(win);
+   if (win->GetManager() != fWindow->GetManager()) {
+      R__LOG_ERROR(CanvasPainerLog()) << "Cannot embed window from other windows manager";
+      return false;
+   }
 
-   if (addr.length() == 0) {
+   // request URL only as for local connection - without full server
+   std::string addr = win->GetUrl(false);
+
+   if (addr.empty()) {
       R__LOG_ERROR(CanvasPainerLog()) << "Cannot attach panel to canvas";
       return false;
    }
@@ -728,6 +734,7 @@ bool RCanvasPainter::AddPanel(std::shared_ptr<ROOT::RWebWindow> win)
    // therefore handle may be removed later
 
    std::string cmd("ADDPANEL:");
+   cmd.append("..");
    cmd.append(addr);
 
    /// one could use async mode

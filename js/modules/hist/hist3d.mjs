@@ -1,9 +1,10 @@
-import { constants, isFunc, isStr, getDocument } from '../core.mjs';
+import { constants, isFunc, isStr, getDocument, isNodeJs } from '../core.mjs';
 import { rgb as d3_rgb } from '../d3.mjs';
 import { REVISION, DoubleSide, Object3D, Color, Vector2, Vector3, Matrix4, Line3,
          BufferGeometry, BufferAttribute, Mesh, MeshBasicMaterial, MeshLambertMaterial,
          LineSegments, LineDashedMaterial, LineBasicMaterial,
-         TextGeometry, Plane, Scene, PerspectiveCamera, OrthographicCamera, DirectionalLight, ShapeUtils } from '../three.mjs';
+         Plane, Scene, PerspectiveCamera, OrthographicCamera, DirectionalLight, ShapeUtils } from '../three.mjs';
+import { TextGeometry } from '../three_addons.mjs';
 import { assign3DHandler, disposeThreejsObject, createOrbitControl,
          createLineSegments, Box3D, getMaterialArgs,
          createRender3D, beforeRender3D, afterRender3D, getRender3DKind,
@@ -349,7 +350,7 @@ function setCameraPosition(fp, first_time) {
          fp.camera_Theta = pad.fTheta;
          max3dx = 3*Math.max(fp.size_x3d, fp.size_z3d);
          max3dy = 3*Math.max(fp.size_y3d, fp.size_z3d);
-         const phi = (270-pad.fPhi)/180*Math.PI, theta = (pad.fTheta-10)/180*Math.PI;
+         const phi = (270 - pad.fPhi)/180*Math.PI, theta = (pad.fTheta - 10)/180*Math.PI;
          fp.camera.position.set(max3dx*Math.cos(phi)*Math.cos(theta),
                                 max3dy*Math.sin(phi)*Math.cos(theta),
                                 fp.size_z3d + (kz-0.9)*(max3dx+max3dy)*Math.sin(theta));
@@ -370,7 +371,7 @@ function setCameraPosition(fp, first_time) {
          fp.camera.left = m - szy * screen_ratio / 2;
          fp.camera.right = m + szy * screen_ratio / 2;
       } else {
-         // screen heigher than actual geometry
+         // screen higher than actual geometry
          const m = (fp.camera.top + fp.camera.bottom) / 2;
          fp.camera.top = m + szx / screen_ratio / 2;
          fp.camera.bottom = m - szx / screen_ratio / 2;
@@ -378,6 +379,23 @@ function setCameraPosition(fp, first_time) {
     }
 
     fp.camera.updateProjectionMatrix();
+}
+
+function getCameraPosition(fp) {
+   const p = fp.camera.position, p0 = fp.lookat,
+         dist = p.distanceTo(p0),
+         dist_xy = Math.sqrt((p.x-p0.x)**2 + (p.y-p0.y)**2),
+         new_theta = Math.atan2((p.z - p0.z)/dist, dist_xy/dist) / Math.PI * 180,
+         new_phi = 270 - Math.atan2((p.y - p0.y)/dist_xy, (p.x - p0.x)/dist_xy)/ Math.PI * 180,
+         pad = fp.getPadPainter()?.getRootPad(true);
+
+   fp.camera_Phi = new_phi >= 360 ? new_phi - 360 : new_phi;
+   fp.camera_Theta = new_theta;
+
+   if (pad && Number.isFinite(fp.camera_Phi) && Number.isFinite(fp.camera_Theta)) {
+      pad.fPhi = fp.camera_Phi;
+      pad.fTheta = fp.camera_Theta;
+   }
 }
 
 function create3DControl(fp) {
@@ -547,7 +565,7 @@ function create3DScene(render3d, x3dscale, y3dscale, orthographic) {
       this.first_render_tm = 0;
       this.enable_highlight = false;
 
-      if (!this.isBatchMode() && this.webgl)
+      if (!this.isBatchMode() && this.webgl && !isNodeJs())
          create3DControl(this);
 
       return this;
@@ -607,7 +625,7 @@ function remove3DMeshes(painter) {
   * @param {number} tmout - specifies delay, after which actual rendering will be invoked
   * @desc Timeout used to avoid multiple rendering of the picture when several 3D drawings
   * superimposed with each other.
-  * If tmeout <= 0, rendering performed immediately
+  * If tmout <= 0, rendering performed immediately
   * If tmout === -1111, immediate rendering with SVG renderer is performed
   * @private */
 function render3D(tmout) {
@@ -661,7 +679,8 @@ function render3D(tmout) {
       this.enable_highlight = (this.first_render_tm < 1200) && this.isTooltipAllowed();
       if (this.first_render_tm > 500)
          console.log(`three.js r${REVISION}, first render tm = ${this.first_render_tm}`);
-   }
+   } else
+      getCameraPosition(this);
 
    if (this.processRender3D) {
       this.getPadPainter()?.painters?.forEach(objp => {
@@ -693,7 +712,7 @@ function resize3D() {
    return true;
 }
 
-/** @summary Hilight bin in frame painter 3D drawing
+/** @summary Highlight bin in frame painter 3D drawing
   * @private */
 function highlightBin3D(tip, selfmesh) {
    const want_remove = !tip || (tip.x1 === undefined) || !this.enable_highlight;
@@ -800,7 +819,7 @@ function set3DOptions(hopt) {
 /** @summary Draw axes in 3D mode
   * @private */
 function drawXYZ(toplevel, AxisPainter, opts) {
-   if (!opts) opts = {};
+   if (!opts) opts = { ndim: 2 };
 
    if (opts.drawany === false)
       opts.draw = false;
@@ -837,7 +856,6 @@ function drawXYZ(toplevel, AxisPainter, opts) {
    if (opts.use_y_for_z) {
       this.zmin = this.ymin; this.zmax = this.ymax;
       zmin = ymin; zmax = ymax; z_zoomed = y_zoomed;
-      // if (!z_zoomed && (this.hmin!==this.hmax)) { zmin = this.hmin; zmax = this.hmax; }
       ymin = 0; ymax = 1;
    }
 
@@ -849,7 +867,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
 
    this.x_handle = new AxisPainter(null, this.xaxis);
    if (opts.v7) {
-      this.x_handle.setPadName(this.getPadName());
+      this.x_handle.pad_name = this.pad_name;
       this.x_handle.snapid = this.snapid;
    }
    this.x_handle.configureAxis('xaxis', this.xmin, this.xmax, xmin, xmax, false, [grminx, grmaxx],
@@ -859,7 +877,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
 
    this.y_handle = new AxisPainter(null, this.yaxis);
    if (opts.v7) {
-      this.y_handle.setPadName(this.getPadName());
+      this.y_handle.pad_name = this.pad_name;
       this.y_handle.snapid = this.snapid;
    }
    this.y_handle.configureAxis('yaxis', this.ymin, this.ymax, ymin, ymax, false, [grminy, grmaxy],
@@ -869,13 +887,13 @@ function drawXYZ(toplevel, AxisPainter, opts) {
 
    this.z_handle = new AxisPainter(null, this.zaxis);
    if (opts.v7) {
-      this.z_handle.setPadName(this.getPadName());
+      this.z_handle.pad_name = this.pad_name;
       this.z_handle.snapid = this.snapid;
    }
-
    this.z_handle.configureAxis('zaxis', this.zmin, this.zmax, zmin, zmax, false, [grminz, grmaxz],
-                               { log: ((opts.use_y_for_z || (opts.ndim === 2)) ? pad?.fLogv : undefined) ?? pad?.fLogz ?? 0,
-                                  reverse: opts.reverse_z });
+                               { value_axis: (opts.ndim === 1) || (opts.ndim === 2),
+                                 log: ((opts.use_y_for_z || (opts.ndim === 2)) ? pad?.fLogv : undefined) ?? pad?.fLogz ?? 0,
+                                 reverse: opts.reverse_z });
    this.z_handle.assignFrameMembers(this, 'z');
    this.z_handle.extractDrawAttributes(scalingSize);
 
@@ -1427,7 +1445,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
 }
 
 
-/** @summary Converts 3D coordiante to the pad NDC
+/** @summary Converts 3D coordinate to the pad NDC
   * @private */
 function convert3DtoPadNDC(x, y, z) {
    x = this.x_handle.gr(x);
@@ -1506,18 +1524,21 @@ function drawBinsLego(painter, is_v7 = false) {
 
       if ((binz1 >= zmax) || (binz2 < zmin)) return false;
 
-      if (test_cutg && !test_cutg.IsInside(histo.fXaxis.GetBinCoord(ii + 0.5),
-                 histo.fYaxis.GetBinCoord(jj + 0.5))) return false;
+      if (test_cutg &&
+         !test_cutg.IsInside(histo.fXaxis.GetBinCoord(ii + 0.5), histo.fYaxis.GetBinCoord(jj + 0.5)))
+         return false;
 
       reduced = (binz2 === zmin) || (binz1 >= binz2);
 
-      if (!reduced || (level > 0)) return true;
+      if (!reduced || (level > 0))
+         return true;
 
-      if (basehisto) return false; // do not draw empty bins on top of other bins
+      if (basehisto)
+         return false; // do not draw empty bins on top of other bins
 
       if (painter.options.Zero || (axis_zmin > 0)) return true;
 
-      return painter._show_empty_bins;
+      return painter.options.ShowEmpty;
    };
 
    let levels = [axis_zmin, axis_zmax], palette = null;
@@ -1537,8 +1558,6 @@ function drawBinsLego(painter, is_v7 = false) {
          const cntr = painter.createContour(histo.fContour ? histo.fContour.length : 20, main.lego_zmin, main.lego_zmax);
          levels = cntr.arr;
          palette = painter.getHistPalette();
-         // axis_zmin = levels[0];
-         // axis_zmax = levels[levels.length-1];
       }
    }
 
@@ -1640,7 +1659,7 @@ function drawBinsLego(painter, is_v7 = false) {
                if (k % 6 === 0) {
                   nn += 3;
                   if (notop && (k === indicies.length - 12)) {
-                     k += 6; nn += 3; // jump over notop indexes
+                     k += 6; nn += 3; // jump over no-top indexes
                   }
                }
             }
@@ -1769,7 +1788,7 @@ function drawBinsLego(painter, is_v7 = false) {
                vvv = reduced ? rvertices : vertices;
 
          if (uselineindx) {
-            // array of indicies for the lines, to avoid duplication of points
+            // array of indices for the lines, to avoid duplication of points
             for (k = 0; k < seg.length; ++k) {
                // intersect_index[ii] = bin_index;
                lindicies[ii++] = ll/3 + seg[k];
@@ -1828,7 +1847,7 @@ function drawBinsError3D(painter, is_v7 = false) {
    const check_skip_min = () => {
        // return true if minimal histogram value should be skipped
        if (painter.options.Zero || (zmin > 0)) return false;
-       return !painter._show_empty_bins;
+       return !painter.options.ShowEmpty;
    };
 
     // loop over the points - first loop counts points, second fill arrays
@@ -1959,8 +1978,6 @@ function drawBinsSurf3D(painter, is_v7 = false) {
    const histo = painter.getHisto(),
          main = painter.getFramePainter(),
          axis_zmin = main.z_handle.getScaleMin(),
-         // axis_zmax = main.z_handle.getScaleMax();
-         // first adjust ranges
          main_grz = !main.logz ? main.grz : value => (value < axis_zmin) ? -0.1 : main.grz(value),
          main_grz_min = 0, main_grz_max = 2*main.size_z3d;
 

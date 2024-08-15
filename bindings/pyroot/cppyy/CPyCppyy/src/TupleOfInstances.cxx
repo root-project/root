@@ -16,7 +16,7 @@ typedef struct {
 } ia_iterobject;
 
 static PyObject* ia_iternext(ia_iterobject* ia) {
-    if (ia->ia_len != -1 && ia->ia_pos >= ia->ia_len) {
+    if (ia->ia_len != (Py_ssize_t)-1 && ia->ia_pos >= ia->ia_len) {
         ia->ia_pos = 0;      // debatable, but since the iterator is cached, this
         return nullptr;      //   allows for multiple conversions to e.g. a tuple
     } else if (ia->ia_stride == 0 && ia->ia_pos != 0) {
@@ -51,6 +51,36 @@ static PyGetSetDef ia_getset[] = {
     {(char*)nullptr, nullptr, nullptr, nullptr, nullptr}
 };
 
+
+static Py_ssize_t ia_length(ia_iterobject* ia)
+{
+    return ia->ia_len;
+}
+
+static PyObject* ia_subscript(ia_iterobject* ia, PyObject* pyidx)
+{
+// Subscripting the iterator allows direct access through indexing on arrays
+// that do not have a defined length. This way, the return from accessing such
+// an array as a data member can both be used in a loop and directly.
+    Py_ssize_t idx = PyInt_AsSsize_t(pyidx);
+    if (idx == (Py_ssize_t)-1 && PyErr_Occurred())
+        return nullptr;
+
+    if (ia->ia_len != (Py_ssize_t)-1 && (idx < 0 || ia->ia_len <= idx)) {
+        PyErr_SetString(PyExc_IndexError, "index out of range");
+        return nullptr;
+    }
+
+    return CPyCppyy::BindCppObjectNoCast(
+        (char*)ia->ia_array_start + ia->ia_pos*ia->ia_stride, ia->ia_klass);
+}
+
+static PyMappingMethods ia_as_mapping = {
+    (lenfunc)      ia_length,      // mp_length
+    (binaryfunc)   ia_subscript,   // mp_subscript
+    (objobjargproc)nullptr,        // mp_ass_subscript
+};
+
 } // unnamed namespace
 
 
@@ -62,7 +92,9 @@ PyTypeObject InstanceArrayIter_Type = {
     sizeof(ia_iterobject),        // tp_basicsize
     0,
     (destructor)PyObject_GC_Del,  // tp_dealloc
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0,
+    &ia_as_mapping,               // tp_as_mapping
+    0, 0, 0, 0, 0, 0,
     Py_TPFLAGS_DEFAULT |
         Py_TPFLAGS_HAVE_GC,       // tp_flags
     0,
@@ -70,9 +102,9 @@ PyTypeObject InstanceArrayIter_Type = {
     0, 0, 0,
     PyObject_SelfIter,            // tp_iter
     (iternextfunc)ia_iternext,    // tp_iternext
-    0, 0, ia_getset, 0, 0, 0, 0,
-    0,                   // tp_getset
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    0, 0,
+    ia_getset,                    // tp_getset
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 #if PY_VERSION_HEX >= 0x02030000
     , 0                           // tp_del
 #endif
@@ -82,15 +114,21 @@ PyTypeObject InstanceArrayIter_Type = {
 #if PY_VERSION_HEX >= 0x03040000
     , 0                           // tp_finalize
 #endif
+#if PY_VERSION_HEX >= 0x03080000
+    , 0                           // tp_vectorcall
+#endif
+#if PY_VERSION_HEX >= 0x030c0000
+    , 0                           // tp_watched
+#endif
 };
 
 
 //= support for C-style arrays of objects ====================================
 PyObject* TupleOfInstances_New(
-    Cppyy::TCppObject_t address, Cppyy::TCppType_t klass, dim_t ndims, dims_t dims)
+    Cppyy::TCppObject_t address, Cppyy::TCppType_t klass, cdims_t dims)
 {
 // recursively set up tuples of instances on all dimensions
-    if (ndims == -1 /* unknown shape */ || dims[0] == -1 /* unknown size */) {
+    if (dims.ndim() == UNKNOWN_SIZE || dims[0] == UNKNOWN_SIZE /* unknown shape or size */) {
     // no known length ... return an iterable object and let the user figure it out
         ia_iterobject* ia = PyObject_GC_New(ia_iterobject, &InstanceArrayIter_Type);
         if (!ia) return nullptr;
@@ -103,17 +141,17 @@ PyObject* TupleOfInstances_New(
 
         PyObject_GC_Track(ia);
         return (PyObject*)ia;
-    } else if (1 < ndims) {
+    } else if (1 < dims.ndim()) {
     // not the innermost dimension, descend one level
-        int nelems = (int)dims[0];
         size_t block_size = 0;
-        for (int i = 1; i < (int)ndims; ++i) block_size += (size_t)dims[i];
+        for (Py_ssize_t i = 1; i < dims.ndim(); ++i) block_size += (size_t)dims[i];
         block_size *= Cppyy::SizeOf(klass);
 
+        Py_ssize_t nelems = dims[0];
         PyObject* tup = PyTuple_New(nelems);
-        for (int i = 0; i < nelems; ++i) {
+        for (Py_ssize_t i = 0; i < nelems; ++i) {
             PyTuple_SetItem(tup, i, TupleOfInstances_New(
-                (char*)address + i*block_size, klass, ndims-1, dims+1));
+                (char*)address + i*block_size, klass, dims.sub()));
         }
         return tup;
     } else {
@@ -142,7 +180,6 @@ PyObject* TupleOfInstances_New(
         PyObject* args = PyTuple_New(1);
         Py_INCREF(tup); PyTuple_SET_ITEM(args, 0, tup);
         PyObject* arr = PyTuple_Type.tp_new(&TupleOfInstances_Type, args, nullptr);
-        if (PyErr_Occurred()) PyErr_Print();
 
         Py_DECREF(args);
         // tup ref eaten by SET_ITEM on args
@@ -161,10 +198,10 @@ PyTypeObject TupleOfInstances_Type = {
     0,                             // tp_basicsize
     0,                             // tp_itemsize
     0,                             // tp_dealloc
-    0,                             // tp_print
+    0,                             // tp_vectorcall_offset / tp_print
     0,                             // tp_getattr
     0,                             // tp_setattr
-    0,                             // tp_compare
+    0,                             // tp_as_async / tp_compare
     0,                             // tp_repr
     0,                             // tp_as_number
     0,                             // tp_as_sequence
@@ -210,6 +247,12 @@ PyTypeObject TupleOfInstances_Type = {
 #endif
 #if PY_VERSION_HEX >= 0x03040000
     , 0                            // tp_finalize
+#endif
+#if PY_VERSION_HEX >= 0x03080000
+    , 0                           // tp_vectorcall
+#endif
+#if PY_VERSION_HEX >= 0x030c0000
+    , 0                           // tp_watched
 #endif
 };
 

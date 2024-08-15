@@ -135,4 +135,8 @@ int destroy_handle(OpaqueHandle_t handle, intptr_t addr);
 void segfault();
 void sigabort();
 
+
+// for duplicate testing
+int add42(int i);
+
 } // namespace fragile

@@ -64,8 +64,11 @@ const Size_t kDefaultCanvasSize   = 20;
 ClassImpQ(TCanvas)
 
 
-auto GetNewCanvasName()
+TString GetNewCanvasName(const char *arg = nullptr)
 {
+   if (arg && *arg)
+      return arg;
+
    const char *defcanvas = gROOT->GetDefCanvasName();
    TString cdef = defcanvas;
 
@@ -176,7 +179,7 @@ TCanvas::TCanvas(Bool_t build) : TPad(), fDoubleBuffer(0)
    if (!build || TClass::IsCallingNew() != TClass::kRealNew) {
       Constructor();
    } else {
-      TString cdef = GetNewCanvasName();
+      auto cdef = GetNewCanvasName();
 
       Constructor(cdef.Data(), cdef.Data(), 1);
    }
@@ -247,7 +250,7 @@ TCanvas::TCanvas(const char *name, Int_t ww, Int_t wh, Int_t winid) : TPad(), fD
    if (!fCanvasImp) return;
 
    CreatePainter();
-   SetName(name);
+   fName = GetNewCanvasName(name); // avoid Modified() signal from SetName
    Build();
 }
 
@@ -347,7 +350,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t form)
 
    CreatePainter();
 
-   SetName(name);
+   fName = GetNewCanvasName(name); // avoid Modified() signal from SetName
    SetTitle(title); // requires fCanvasImp set
    Build();
 
@@ -433,7 +436,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t ww, Int_t w
 
    CreatePainter();
 
-   SetName(name);
+   fName = GetNewCanvasName(name); // avoid Modified() signal from SetName
    SetTitle(title); // requires fCanvasImp set
    Build();
 
@@ -520,7 +523,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t wtopx,
 
    CreatePainter();
 
-   SetName(name);
+   fName = GetNewCanvasName(name); // avoid Modified() signal from SetName
    SetTitle(title); // requires fCanvasImp set
    Build();
 
@@ -957,8 +960,7 @@ TObject *TCanvas::DrawClonePad()
    TIter next(GetListOfPrimitives());
    while (auto obj = next()) {
       pad->cd();
-      auto clone = obj->Clone();
-      pad->GetListOfPrimitives()->Add(clone, next.GetOption());
+      pad->Add(obj->Clone(), next.GetOption(), kFALSE); // do not issue modified for each object
    }
    pad->ResizePad();
    pad->Modified();
@@ -1513,9 +1515,9 @@ void TCanvas::ls(Option_t *option) const
 
 TCanvas *TCanvas::MakeDefCanvas()
 {
-   TString cdef = GetNewCanvasName();
+   auto cdef = GetNewCanvasName();
 
-   TCanvas *c = new TCanvas(cdef.Data(), cdef.Data(), 1);
+   auto c = new TCanvas(cdef.Data(), cdef.Data(), 1);
 
    ::Info("TCanvas::MakeDefCanvas"," created default TCanvas with name %s", cdef.Data());
    return c;
@@ -1819,31 +1821,29 @@ void TCanvas::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
 void TCanvas::SaveSource(const char *filename, Option_t * /*option*/)
 {
-   //    reset bit TClass::kClassSaved for all classes
-   TIter next(gROOT->GetListOfClasses());
-   TClass *cl;
-   while((cl = (TClass*)next())) {
-      cl->ResetBit(TClass::kClassSaved);
-   }
+   // Reset the ClassSaved status of all classes
+   gROOT->ResetClassSaved();
 
    char quote = '"';
-   std::ofstream out;
-   TString fname;
-   const char *cname = GetName();
+   TString cname0 = GetName();
    Bool_t invalid = kFALSE;
-   //    if filename is given, open this file, otherwise create a file
-   //    with a name equal to the canvasname.C
-   if (filename && (strlen(filename) > 0)) {
+
+   TString cname = cname0.Strip(TString::kBoth);
+   if (cname.IsNull()) {
+      invalid = kTRUE;
+      cname = "c1";
+   }
+
+   //  if filename is given, open this file, otherwise create a file
+   //  with a name equal to the canvasname.C
+   TString fname;
+   if (filename && *filename) {
       fname = filename;
    } else {
-      fname = cname;
-      fname = fname.Strip(TString::kBoth);
-      if (fname.IsNull()) {
-         invalid = kTRUE;
-         fname = "c1";
-      }
-      fname.Append(".C");
+      fname = cname + ".C";
    }
+
+   std::ofstream out;
    out.open(fname.Data(), std::ios::out);
    if (!out.good()) {
       Error("SaveSource", "Cannot open file: %s", fname.Data());
@@ -1935,7 +1935,7 @@ void TCanvas::SaveSource(const char *filename, Option_t * /*option*/)
 
    //   Now recursively scan all pads of this canvas
    cd();
-   if (invalid) SetName("c1");
+   if (invalid) fName = cname;
    TPad::SavePrimitive(out,"toplevel");
 
    //   Write canvas options related to pad editor
@@ -1943,17 +1943,14 @@ void TCanvas::SaveSource(const char *filename, Option_t * /*option*/)
    if (GetShowToolBar()) {
       out<<"   "<<GetName()<<"->ToggleToolBar();"<<std::endl;
    }
-   if (invalid) SetName(" ");
+   if (invalid) fName = cname0;
 
    out <<"}"<<std::endl;
    out.close();
    Info("SaveSource","C++ Macro file: %s has been generated", fname.Data());
 
-   //    reset bit TClass::kClassSaved for all classes
-   next.Reset();
-   while((cl = (TClass*)next())) {
-      cl->ResetBit(TClass::kClassSaved);
-   }
+   // Reset the ClassSaved status of all classes
+   gROOT->ResetClassSaved();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2048,16 +2045,13 @@ void TCanvas::SetFolder(Bool_t isfolder)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set canvas name. In case `name` is an empty string, a default name is set.
+/// Canvas automatically marked as modified when SetName method called
 
 void TCanvas::SetName(const char *name)
 {
-   if (name && *name)
-      fName = name;
-   else
-      fName = GetNewCanvasName();
+   fName = GetNewCanvasName(name);
 
-   if (gPad && TestBit(kMustCleanup))
-      gPad->Modified();
+   Modified();
 }
 
 
@@ -2257,7 +2251,19 @@ void TCanvas::Streamer(TBuffer &b)
                   delete colcur;
                }
                colors->Remove(colold);
-               if (root_colors) root_colors->AddAtAndExpand(colold, cn);
+               if (root_colors) {
+                  if (colcur) {
+                     root_colors->AddAtAndExpand(colold, cn);
+                  }
+                  else {
+                     // Copy to current session
+                     // do not use copy constructor which does not update highest color index
+                     [[maybe_unused]] TColor* const colnew = new TColor(cn, colold->GetRed(), colold->GetGreen(), colold->GetBlue(), colold->GetName(), colold->GetAlpha());
+                     delete colold;
+                     // No need to delete colnew, as the constructor adds it to global list of colors
+                     assert(root_colors->At(cn) == colnew);
+                  }
+               }
             }
          }
          //restore the palette if needed

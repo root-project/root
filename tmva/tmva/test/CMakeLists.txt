@@ -27,10 +27,12 @@ if(dataframe)
     # RReader
     ROOT_ADD_GTEST(rreader rreader.cxx LIBRARIES ROOTVecOps TMVA ROOTDataFrame)
     # Tree inference system and user interface
-    if(NOT MSVC OR llvm13_broken_tests)
-        ROOT_ADD_GTEST(branchlessForest branchlessForest.cxx LIBRARIES TMVA)
-        ROOT_ADD_GTEST(rbdt rbdt.cxx LIBRARIES ROOTVecOps TMVAUtils)
-    endif()
+    # Commented out right now because RBDT doesn't provide low-level interfaces
+    # since the sync with FastForest. Only the construction from XGBoost models
+    # is supported. If this feature becomes necessary to implement, one can
+    # resurrect these tests.
+    # ROOT_ADD_GTEST(branchlessForest branchlessForest.cxx LIBRARIES TMVA)
+    # ROOT_ADD_GTEST(rbdt rbdt.cxx LIBRARIES ROOTVecOps TMVAUtils)
 endif()
 
 if(dataframe)

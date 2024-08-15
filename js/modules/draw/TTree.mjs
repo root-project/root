@@ -13,60 +13,38 @@ import { drawPolyMarker3D } from '../draw/TPolyMarker3D.mjs';
 import { showProgress, registerForResize } from '../gui/utils.mjs';
 
 
-function treeShowProgress(handle, str) {
-   if (isBatchMode() || (typeof document === 'undefined')) return;
-
-   if (!str)
-      return showProgress();
-
-   const main_box = document.createElement('p'),
-         text_node = document.createTextNode(str);
-
-   main_box.appendChild(text_node);
-   main_box.title = 'Click on element to break';
-
-   main_box.onclick = () => {
-      if (!handle._break) handle._break = 0;
-
-      if (++handle._break < 3) {
-         main_box.title = 'Will break after next I/O operation';
-         text_node.nodeValue = 'Breaking ... ';
-         return;
-      }
-      if (isFunc(handle.Abort))
-         handle.Abort();
-      showProgress();
-   };
-
-   showProgress(main_box);
-}
-
-
 /** @summary Show TTree::Draw progress during processing
   * @private */
 TDrawSelector.prototype.ShowProgress = function(value) {
+   let msg, ret;
    if ((value === undefined) || !Number.isFinite(value))
-      return showProgress();
+      msg = ret = '';
+   else if (this._break) {
+      msg = 'Breaking ... ';
+      ret = 'break';
+   } else {
+      if (this.last_progress !== value) {
+         const diff = value - this.last_progress;
+         if (!this.aver_diff) this.aver_diff = diff;
+         this.aver_diff = diff * 0.3 + this.aver_diff * 0.7;
+      }
 
-   if (this.last_progress !== value) {
-      const diff = value - this.last_progress;
-      if (!this.aver_diff) this.aver_diff = diff;
-      this.aver_diff = diff * 0.3 + this.aver_diff * 0.7;
+      this.last_progress = value;
+
+      let ndig = 0;
+      if (this.aver_diff <= 0)
+         ndig = 0;
+      else if (this.aver_diff < 0.0001)
+         ndig = 3;
+      else if (this.aver_diff < 0.001)
+         ndig = 2;
+      else if (this.aver_diff < 0.01)
+         ndig = 1;
+      msg = `TTree draw ${(value * 100).toFixed(ndig)} % `;
    }
 
-   this.last_progress = value;
-
-   let ndig = 0;
-   if (this.aver_diff <= 0)
-      ndig = 0;
-   else if (this.aver_diff < 0.0001)
-      ndig = 3;
-   else if (this.aver_diff < 0.001)
-      ndig = 2;
-   else if (this.aver_diff < 0.01)
-      ndig = 1;
-
-   treeShowProgress(this, `TTree draw ${(value * 100).toFixed(ndig)} % `);
+   showProgress(msg, -1, () => { this._break = 1; });
+   return ret;
 };
 
 /** @summary Draw result of tree drawing
@@ -123,22 +101,25 @@ async function treeDrawProgress(obj, final) {
    // while TTree reading not synchronized with drawing,
    // next portion can appear before previous is drawn
    // critical is last drawing which should wait for previous one
-   // therefore last_pr is kept as inidication that promise is not yet processed
+   // therefore last_pr is kept as indication that promise is not yet processed
 
    if (!this.last_pr) this.last_pr = Promise.resolve(true);
 
-    return this.last_pr.then(() => {
-       if (this.obj_painter)
-          this.last_pr = this.obj_painter.redrawObject(obj).then(() => this.obj_painter);
-       else {
-          this.last_pr = drawTreeDrawResult(this.drawid, obj).then(p => {
-             this.obj_painter = p;
-             if (!final) this.last_pr = null;
-             return p; // return painter for histogram
-          });
-       }
+   return this.last_pr.then(() => {
+      if (this.obj_painter)
+         this.last_pr = this.obj_painter.redrawObject(obj).then(() => this.obj_painter);
+      else if (!obj) {
+         if (final) console.log('no result after tree drawing');
+         this.last_pr = false; // return false indicating no drawing is done
+      } else {
+         this.last_pr = drawTreeDrawResult(this.drawid, obj).then(p => {
+            this.obj_painter = p;
+            if (!final) this.last_pr = null;
+            return p; // return painter for histogram
+         });
+      }
 
-       return final ? this.last_pr : null;
+      return final ? this.last_pr : null;
    });
 }
 
@@ -261,7 +242,7 @@ function createTreePlayer(player) {
          if (!Number.isInteger(args.firstentry)) delete args.firstentry;
       }
 
-      /* if (args.drawopt) */ cleanup(this.drawid);
+      cleanup(this.drawid);
 
       args.drawid = this.drawid;
 
@@ -471,7 +452,7 @@ async function drawTree(dom, obj, opt) {
    let pr;
    if (args.expr === 'testio') {
       args.testio = true;
-      args.showProgress = msg => treeShowProgress(args, msg);
+      args.showProgress = msg => showProgress(msg, -1, () => { args._break = 1; });
       pr = treeIOTest(tree, args);
    } else if (args.expr || args.branch)
       pr = treeDraw(tree, args);

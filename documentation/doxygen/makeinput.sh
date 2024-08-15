@@ -48,7 +48,6 @@ echo "        ../../hist/                      \\" >> Doxyfile_INPUT
 echo "        ../../html/                      \\" >> Doxyfile_INPUT
 echo "        ../../io/doc/TFile               \\" >> Doxyfile_INPUT
 echo "        ../../io/dcache/                 \\" >> Doxyfile_INPUT
-echo "        ../../io/gfal/                   \\" >> Doxyfile_INPUT
 echo "        ../../io/io/                     \\" >> Doxyfile_INPUT
 echo "        ../../io/sql/                    \\" >> Doxyfile_INPUT
 echo "        ../../io/xml/                    \\" >> Doxyfile_INPUT
@@ -60,9 +59,7 @@ echo "        ../../net/doc/                   \\" >> Doxyfile_INPUT
 echo "        ../../net/auth/                  \\" >> Doxyfile_INPUT
 echo "        ../../net/davix/                 \\" >> Doxyfile_INPUT
 echo "        ../../net/http/                  \\" >> Doxyfile_INPUT
-echo "        ../../net/monalisa/              \\" >> Doxyfile_INPUT
 echo "        ../../net/net/                   \\" >> Doxyfile_INPUT
-echo "        ../../net/netx/                  \\" >> Doxyfile_INPUT
 echo "        ../../net/netxng/                \\" >> Doxyfile_INPUT
 echo "        ../../net/httpsniff/             \\" >> Doxyfile_INPUT
 echo "        ../../proof/                     \\" >> Doxyfile_INPUT

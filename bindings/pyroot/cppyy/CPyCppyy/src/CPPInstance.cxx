@@ -16,6 +16,11 @@
 #include <sstream>
 
 
+//- data _____________________________________________________________________
+namespace CPyCppyy {
+    extern PyObject* gNullPtrObject;
+}
+
 //______________________________________________________________________________
 //                          Python-side proxy objects
 //                          =========================
@@ -45,7 +50,7 @@ namespace {
 // extended data can slot in place of fObject for those use cases.
 
 struct ExtendedData {
-    ExtendedData() : fObject(nullptr), fSmartClass(nullptr), fTypeSize(0), fLastState(nullptr), fDispatchPtr(nullptr) {}
+    ExtendedData() : fObject(nullptr), fSmartClass(nullptr), fDispatchPtr(nullptr), fArraySize(0) {}
     ~ExtendedData() {
         for (auto& pc : fDatamemberCache)
             Py_XDECREF(pc.second);
@@ -56,25 +61,27 @@ struct ExtendedData {
 // in GetObjectRaw(), e.g. for ptr-ptr passing)
     void* fObject;
 
-// for smart pointer types
-    CPyCppyy::CPPSmartClass* fSmartClass;
-    size_t         fTypeSize;
-    void*          fLastState;
-
 // for caching expensive-to-create data member representations
     CPyCppyy::CI_DatamemberCache_t fDatamemberCache;
 
+// for smart pointer types
+    CPyCppyy::CPPSmartClass* fSmartClass;
+
 // for back-referencing from Python-derived instances
     CPyCppyy::DispatchPtr* fDispatchPtr;
+
+// for representing T* as a low-level array
+    Py_ssize_t fArraySize;
 };
 
 } // unnamed namespace
 
 #define EXT_OBJECT(pyobj)  ((ExtendedData*)((pyobj)->fObject))->fObject
+#define DATA_CACHE(pyobj)  ((ExtendedData*)((pyobj)->fObject))->fDatamemberCache
 #define SMART_CLS(pyobj)   ((ExtendedData*)((pyobj)->fObject))->fSmartClass
 #define SMART_TYPE(pyobj)  SMART_CLS(pyobj)->fCppType
 #define DISPATCHPTR(pyobj) ((ExtendedData*)((pyobj)->fObject))->fDispatchPtr
-#define DATA_CACHE(pyobj)  ((ExtendedData*)((pyobj)->fObject))->fDatamemberCache
+#define ARRAY_SIZE(pyobj)  ((ExtendedData*)((pyobj)->fObject))->fArraySize
 
 inline void CPyCppyy::CPPInstance::CreateExtension() {
     if (fFlags & kIsExtended)
@@ -97,12 +104,12 @@ void* CPyCppyy::CPPInstance::GetExtendedObject()
 
 
 //- public methods -----------------------------------------------------------
-CPyCppyy::CPPInstance* CPyCppyy::CPPInstance::Copy(void* cppinst)
+CPyCppyy::CPPInstance* CPyCppyy::CPPInstance::Copy(void* cppinst, PyTypeObject* target)
 {
 // create a fresh instance; args and kwds are not used by op_new (see below)
     PyObject* self = (PyObject*)this;
-    PyTypeObject* pytype = Py_TYPE(self);
-    PyObject* newinst = pytype->tp_new(pytype, nullptr, nullptr);
+    if (!target) target = Py_TYPE(self);
+    PyObject* newinst = target->tp_new(target, nullptr, nullptr);
 
 // set the C++ instance as given
     ((CPPInstance*)newinst)->fObject = cppinst;
@@ -207,13 +214,12 @@ void CPyCppyy::op_dealloc_nofree(CPPInstance* pyobj) {
     if (pyobj->fFlags & CPPInstance::kIsRegulated)
         MemoryRegulator::UnregisterPyObject(pyobj, (PyObject*)Py_TYPE((PyObject*)pyobj));
 
-    if (pyobj->fFlags & CPPInstance::kIsOwner) {
-       if (pyobj->fFlags & CPPInstance::kIsValue) {
-           Cppyy::CallDestructor(klass, cppobj);
-           Cppyy::Deallocate(klass, cppobj);
-       } else {
-           if (cppobj) Cppyy::Destruct(klass, cppobj);
-       }
+    if (cppobj && (pyobj->fFlags & CPPInstance::kIsOwner)) {
+        if (pyobj->fFlags & CPPInstance::kIsValue) {
+            Cppyy::CallDestructor(klass, cppobj);
+            Cppyy::Deallocate(klass, cppobj);
+        } else
+            Cppyy::Destruct(klass, cppobj);
     }
     cppobj = nullptr;
 
@@ -223,6 +229,13 @@ void CPyCppyy::op_dealloc_nofree(CPPInstance* pyobj) {
 
 
 namespace CPyCppyy {
+
+//----------------------------------------------------------------------------
+static int op_traverse(CPPInstance* /*pyobj*/, visitproc /*visit*/, void* /*arg*/)
+{
+    return 0;
+}
+
 
 //= CPyCppyy object proxy null-ness checking =================================
 static int op_nonzero(CPPInstance* self)
@@ -300,14 +313,104 @@ static PyObject* op_get_smartptr(CPPInstance* self)
     return CPyCppyy::BindCppObjectNoCast(self->GetSmartObject(), SMART_TYPE(self), CPPInstance::kNoWrapConv);
 }
 
+//= pointer-as-array support for legacy C code ===============================
+void CPyCppyy::CPPInstance::CastToArray(Py_ssize_t sz)
+{
+    CreateExtension();
+    fFlags |= kIsArray;
+    ARRAY_SIZE(this) = sz;
+}
+
+Py_ssize_t CPyCppyy::CPPInstance::ArrayLength() {
+    if (!(fFlags & kIsArray))
+        return -1;
+    return (Py_ssize_t)ARRAY_SIZE(this);
+}
+
+static PyObject* op_reshape(CPPInstance* self, PyObject* shape)
+{
+// Allow the user to fix up the actual (type-strided) size of the buffer.
+    if (!PyTuple_Check(shape) || PyTuple_GET_SIZE(shape) != 1) {
+        PyErr_SetString(PyExc_TypeError, "tuple object of size 1 expected");
+        return nullptr;
+    }
+
+    long sz = PyLong_AsLong(PyTuple_GET_ITEM(shape, 0));
+    if (sz <= 0) {
+        PyErr_SetString(PyExc_ValueError, "array length must be positive");
+        return nullptr;
+    }
+
+    self->CastToArray(sz);
+
+    Py_RETURN_NONE;
+}
+
+static PyObject* op_item(CPPInstance* self, Py_ssize_t idx)
+{
+// In C, it is common to represent an array of structs as a pointer to the first
+// object in the array. If the caller indexes a pointer to an object that does not
+// define indexing, then highly likely such C-style indexing is the goal. Just
+// like C, this is potentially unsafe, so caveat emptor.
+
+    if (!(self->fFlags & (CPPInstance::kIsReference | CPPInstance::kIsArray))) {
+        PyErr_Format(PyExc_TypeError, "%s object does not support indexing", Py_TYPE(self)->tp_name);
+        return nullptr;
+    }
+
+    if (idx < 0) {
+    // this is debatable, and probably should not care, but the use case is pretty
+    // circumscribed anyway, so might as well keep the functionality simple
+        PyErr_SetString(PyExc_IndexError, "negative indices not supported for array of structs");
+        return nullptr;
+    }
+
+    if (self->fFlags & CPPInstance::kIsArray) {
+        Py_ssize_t maxidx = ARRAY_SIZE(self);
+        if (0 <= maxidx && maxidx <= idx) {
+            PyErr_SetString(PyExc_IndexError, "index out of range");
+            return nullptr;
+        }
+    }
+
+    unsigned flags = 0; size_t sz = sizeof(void*);
+    if (self->fFlags & CPPInstance::kIsPtrPtr) {
+        flags = CPPInstance::kIsReference;
+    } else {
+        sz = Cppyy::SizeOf(((CPPClass*)Py_TYPE(self))->fCppType);
+    }
+
+    uintptr_t address = (uintptr_t)(flags ? self->GetObjectRaw() : self->GetObject());
+    void* indexed_obj = (void*)(address+(uintptr_t)(idx*sz));
+
+    return BindCppObjectNoCast(indexed_obj, ((CPPClass*)Py_TYPE(self))->fCppType, flags);
+}
+
+//- sequence methods --------------------------------------------------------
+static PySequenceMethods op_as_sequence = {
+    0,                             // sq_length
+    0,                             // sq_concat
+    0,                             // sq_repeat
+    (ssizeargfunc)op_item,         // sq_item
+    0,                             // sq_slice
+    0,                             // sq_ass_item
+    0,                             // sq_ass_slice
+    0,                             // sq_contains
+    0,                             // sq_inplace_concat
+    0,                             // sq_inplace_repeat
+};
+
 
 //----------------------------------------------------------------------------
 static PyMethodDef op_methods[] = {
-    {(char*)"__destruct__", (PyCFunction)op_destruct, METH_NOARGS, nullptr},
+    {(char*)"__destruct__", (PyCFunction)op_destruct, METH_NOARGS,
+      (char*)"call the C++ destructor"},
     {(char*)"__dispatch__", (PyCFunction)op_dispatch, METH_VARARGS,
       (char*)"dispatch to selected overload"},
     {(char*)"__smartptr__", (PyCFunction)op_get_smartptr, METH_NOARGS,
       (char*)"get associated smart pointer, if any"},
+    {(char*)"__reshape__",  (PyCFunction)op_reshape, METH_O,
+        (char*)"cast pointer to 1D array type"},
     {(char*)nullptr, nullptr, 0, nullptr}
 };
 
@@ -347,6 +450,21 @@ static int op_clear(CPPInstance* pyobj)
 static inline PyObject* eqneq_binop(CPPClass* klass, PyObject* self, PyObject* obj, int op)
 {
     using namespace Utility;
+
+// special case for C++11 style nullptr
+    if (obj == gNullPtrObject) {
+        void* rawcpp = ((CPPInstance*)self)->GetObjectRaw();
+        switch (op) {
+        case Py_EQ:
+            if (rawcpp == nullptr) Py_RETURN_TRUE;
+            Py_RETURN_FALSE;
+        case Py_NE:
+            if (rawcpp != nullptr) Py_RETURN_TRUE;
+            Py_RETURN_FALSE;
+        default:
+            return nullptr;       // not implemented
+        }
+    }
 
     if (!klass->fOperators)
         klass->fOperators = new PyOperators{};
@@ -397,37 +515,109 @@ static inline PyObject* eqneq_binop(CPPClass* klass, PyObject* self, PyObject* o
     Py_RETURN_TRUE;
 }
 
-static PyObject* op_richcompare(CPPInstance* self, PyObject* other, int op)
-{
-// Rich set of comparison objects; only equals and not-equals are defined.
-    if (op != Py_EQ && op != Py_NE) {
-        Py_INCREF(Py_NotImplemented);
-        return Py_NotImplemented;
+static inline void* cast_actual(void* obj) {
+    void* address = ((CPPInstance*)obj)->GetObject();
+    if (((CPPInstance*)obj)->fFlags & CPPInstance::kIsActual)
+        return address;
+
+    Cppyy::TCppType_t klass = ((CPPClass*)Py_TYPE((PyObject*)obj))->fCppType;
+    Cppyy::TCppType_t clActual = Cppyy::GetActualClass(klass, address);
+    if (clActual && clActual != klass) {
+        intptr_t offset = Cppyy::GetBaseOffset(
+             clActual, klass, address, -1 /* down-cast */, true /* report errors */);
+        if (offset != -1) address = (void*)((intptr_t)address + offset);
     }
 
-// special case for None to compare True to a null-pointer
-    if ((PyObject*)other == Py_None && !self->fObject) {
-        if (op == Py_EQ) { Py_RETURN_TRUE; }
+    return address;
+}
+
+
+#define CPYCPPYY_ORDERED_OPERATOR_STUB(op, ometh, label)                      \
+    if (!ometh) {                                                             \
+        PyCallable* pyfunc = Utility::FindBinaryOperator((PyObject*)self, other, #op);\
+        if (pyfunc)                                                           \
+            ometh = (PyObject*)CPPOverload_New(#label, pyfunc);               \
+        }                                                                     \
+    meth = ometh;
+
+static PyObject* op_richcompare(CPPInstance* self, PyObject* other, int op)
+{
+// Rich set of comparison objects; currently supported:
+//   == : Py_EQ
+//   != : Py_NE
+//
+//   <  : Py_LT
+//   <= : Py_LE
+//   >  : Py_GT
+//   >= : Py_GE
+//
+
+// associative comparison operators
+    if (op == Py_EQ || op == Py_NE) {
+    // special case for None to compare True to a null-pointer
+        if ((PyObject*)other == Py_None && !self->fObject) {
+            if (op == Py_EQ) { Py_RETURN_TRUE; }
+            Py_RETURN_FALSE;
+        }
+
+    // use C++-side operators if available
+        PyObject* result = eqneq_binop((CPPClass*)Py_TYPE(self), (PyObject*)self, other, op);
+        if (!result && CPPInstance_Check(other))
+            result = eqneq_binop((CPPClass*)Py_TYPE(other), other, (PyObject*)self, op);
+        if (result) return result;
+
+    // default behavior: type + held pointer value defines identity; if both are
+    // CPPInstance objects, perform an additional autocast if need be
+        bool bIsEq = false;
+
+        if ((Py_TYPE(self) == Py_TYPE(other) && \
+                self->GetObject() == ((CPPInstance*)other)->GetObject())) {
+        // direct match
+            bIsEq = true;
+        } else if (CPPInstance_Check(other)) {
+        // try auto-cast match
+            void* addr1 = cast_actual(self);
+            void* addr2 = cast_actual(other);
+            bIsEq = addr1 && addr2 && (addr1 == addr2);
+        }
+
+        if ((op == Py_EQ && bIsEq) || (op == Py_NE && !bIsEq))
+            Py_RETURN_TRUE;
+
         Py_RETURN_FALSE;
     }
 
-// use C++-side operators if available
-    PyObject* result = eqneq_binop((CPPClass*)Py_TYPE(self), (PyObject*)self, other, op);
-    if (!result && CPPInstance_Check(other))
-        result = eqneq_binop((CPPClass*)Py_TYPE(other), other, (PyObject*)self, op);
-    if (result) return result;
+// ordered comparison operators
+    else if (op == Py_LT || op == Py_LE || op == Py_GT || op == Py_GE) {
+        CPPClass* klass = (CPPClass*)Py_TYPE(self);
+        if (!klass->fOperators) klass->fOperators = new Utility::PyOperators{};
+        PyObject* meth = nullptr;
 
-// default behavior: type + held pointer value defines identity (covers if
-// other is not actually an CPPInstance, as ob_type will be unequal)
-    bool bIsEq = false;
-    if (Py_TYPE(self) == Py_TYPE(other) && \
-            self->GetObject() == ((CPPInstance*)other)->GetObject())
-        bIsEq = true;
+        switch (op) {
+        case Py_LT:
+            CPYCPPYY_ORDERED_OPERATOR_STUB(<,  klass->fOperators->fLt, __lt__)
+            break;
+        case Py_LE:
+            CPYCPPYY_ORDERED_OPERATOR_STUB(<=, klass->fOperators->fLe, __ge__)
+            break;
+        case Py_GT:
+            CPYCPPYY_ORDERED_OPERATOR_STUB(>,  klass->fOperators->fGt, __gt__)
+            break;
+        case Py_GE:
+            CPYCPPYY_ORDERED_OPERATOR_STUB(>=, klass->fOperators->fGe, __ge__)
+            break;
+        }
 
-    if ((op == Py_EQ && bIsEq) || (op == Py_NE && !bIsEq)) {
-        Py_RETURN_TRUE;
+        if (!meth) {
+            PyErr_SetString(PyExc_NotImplementedError, "");
+            return nullptr;
+        }
+
+        return PyObject_CallFunctionObjArgs(meth, (PyObject*)self, other, nullptr);
     }
-    Py_RETURN_FALSE;
+
+    Py_INCREF(Py_NotImplemented);
+    return Py_NotImplemented;
 }
 
 //----------------------------------------------------------------------------
@@ -436,11 +626,15 @@ static PyObject* op_repr(CPPInstance* self)
 // Build a representation string of the object proxy that shows the address
 // of the C++ object that is held, as well as its type.
     PyObject* pyclass = (PyObject*)Py_TYPE(self);
+    if (CPPScope_Check(pyclass) && (((CPPScope*)pyclass)->fFlags & CPPScope::kIsPython))
+        return PyBaseObject_Type.tp_repr((PyObject*)self);
     PyObject* modname = PyObject_GetAttr(pyclass, PyStrings::gModule);
 
     Cppyy::TCppType_t klass = self->ObjectIsA();
     std::string clName = klass ? Cppyy::GetFinalName(klass) : "<unknown>";
-    if (self->fFlags & CPPInstance::kIsReference)
+    if (self->fFlags & CPPInstance::kIsPtrPtr)
+        clName.append("**");
+    else if (self->fFlags & CPPInstance::kIsReference)
         clName.append("*");
 
     PyObject* repr = nullptr;
@@ -517,54 +711,155 @@ static PyObject* op_str_internal(PyObject* pyobj, PyObject* lshift, bool isBound
     static Cppyy::TCppScope_t sOStringStreamID = Cppyy::GetScope("std::ostringstream");
     std::ostringstream s;
     PyObject* pys = BindCppObjectNoCast(&s, sOStringStreamID);
+    Py_INCREF(pys);
+#if PY_VERSION_HEX >= 0x03000000
+// for py3 and later, a ref-count of 2 is okay to consider the object temporary, but
+// in this case, we can't lose our existing ostrinstring (otherwise, we'd have to peel
+// it out of the return value, if moves are used
+    Py_INCREF(pys);
+#endif
+
     PyObject* res;
     if (isBound) res = PyObject_CallFunctionObjArgs(lshift, pys, NULL);
     else res = PyObject_CallFunctionObjArgs(lshift, pys, pyobj, NULL);
+
     Py_DECREF(pys);
-    Py_DECREF(lshift);
+#if PY_VERSION_HEX >= 0x03000000
+    Py_DECREF(pys);
+#endif
+
     if (res) {
         Py_DECREF(res);
         return CPyCppyy_PyText_FromString(s.str().c_str());
     }
-    PyErr_Clear();
+
     return nullptr;
+}
+
+
+static inline bool ScopeFlagCheck(CPPInstance* self, CPPScope::EFlags flag) {
+    return ((CPPScope*)Py_TYPE((PyObject*)self))->fFlags & flag;
+}
+
+static inline void ScopeFlagSet(CPPInstance* self, CPPScope::EFlags flag) {
+    ((CPPScope*)Py_TYPE((PyObject*)self))->fFlags |= flag;
 }
 
 static PyObject* op_str(CPPInstance* self)
 {
-#ifndef _WIN64
-// Forward to C++ insertion operator if available, otherwise forward to repr.
-    PyObject* result = nullptr;
-    PyObject* pyobj = (PyObject*)self;
-    PyObject* lshift = PyObject_GetAttr(pyobj, PyStrings::gLShift);
-    if (lshift) result = op_str_internal(pyobj, lshift, true);
+// There are three possible options here:
+//   1. Available operator<< to convert through an ostringstream
+//   2. Cling's pretty printing
+//   3. Generic printing as done in op_repr
+//
+// Additionally, there may be a mapped __str__ from the C++ type defining `operator char*`
+// or `operator const char*`. Results are memoized for performance reasons.
 
-    if (!result) {
-        PyErr_Clear();
-        PyObject* pyclass = (PyObject*)Py_TYPE(pyobj);
-        lshift = PyObject_GetAttr(pyclass, PyStrings::gLShiftC);
-        if (!lshift) {
+// 0. Protect against trying to print a typed nullptr object through an insertion operator
+    if (!self->GetObject())
+        return op_repr(self);
+
+// 1. Available operator<< to convert through an ostringstream
+    if (!ScopeFlagCheck(self, CPPScope::kNoOSInsertion)) {
+        for (PyObject* pyname : {PyStrings::gLShift, PyStrings::gLShiftC, (PyObject*)0x01, (PyObject*)0x02}) {
+            if (pyname == PyStrings::gLShift && ScopeFlagCheck(self, CPPScope::kGblOSInsertion))
+                continue;
+
+            else if (pyname == (PyObject*)0x01) {
+            // normal lookup failed; attempt lazy install of global operator<<(ostream&, type&)
+                std::string rcname = Utility::ClassName((PyObject*)self);
+                Cppyy::TCppScope_t rnsID = Cppyy::GetScope(TypeManip::extract_namespace(rcname));
+                PyCallable* pyfunc = Utility::FindBinaryOperator("std::ostream", rcname, "<<", rnsID);
+                if (!pyfunc)
+                     continue;
+
+                Utility::AddToClass((PyObject*)Py_TYPE((PyObject*)self), "__lshiftc__", pyfunc);
+
+                pyname = PyStrings::gLShiftC;
+                ScopeFlagSet(self, CPPScope::kGblOSInsertion);
+
+            } else if (pyname == (PyObject*)0x02) {
+            // TODO: the only reason this still exists, is b/c friend functions are otherwise not found
+            // TODO: ToString() still leaks ...
+                const std::string& pretty = Cppyy::ToString(self->ObjectIsA(), self->GetObject());
+                if (!pretty.empty())
+                    return CPyCppyy_PyText_FromString(pretty.c_str());
+                continue;
+            }
+
+            PyObject* lshift = PyObject_GetAttr(
+                pyname == PyStrings::gLShift ? (PyObject*)self : (PyObject*)Py_TYPE((PyObject*)self), pyname);
+
+            if (lshift) {
+                PyObject* result = op_str_internal((PyObject*)self, lshift, pyname == PyStrings::gLShift);
+                Py_DECREF(lshift);
+                if (result)
+                    return result;
+            }
+
             PyErr_Clear();
-        // attempt lazy install of global operator<<(ostream&)
-            std::string rcname = Utility::ClassName(pyobj);
-            Cppyy::TCppScope_t rnsID = Cppyy::GetScope(TypeManip::extract_namespace(rcname));
-            PyCallable* pyfunc = Utility::FindBinaryOperator("std::ostream", rcname, "<<", rnsID);
-            if (pyfunc) {
-                Utility::AddToClass(pyclass, "__lshiftc__", pyfunc);
-                lshift = PyObject_GetAttr(pyclass, PyStrings::gLShiftC);
-            } else
-                PyType_Type.tp_setattro(pyclass, PyStrings::gLShiftC, Py_None);
-        } else if (lshift == Py_None) {
-            Py_DECREF(lshift);
-            lshift = nullptr;
         }
-        if (lshift) result = op_str_internal(pyobj, lshift, false);
+
+    // failed ostream printing; don't try again
+        ScopeFlagSet(self, CPPScope::kNoOSInsertion);
     }
 
-    if (result)
-        return result;
-#endif  //!_WIN64
+// 2. Cling's pretty printing (not done through backend for performance reasons)
+    if (!ScopeFlagCheck(self, CPPScope::kNoPrettyPrint)) {
+        static PyObject* printValue = nullptr;
+        if (!printValue) {
+            PyObject* gbl = PyDict_GetItemString(PySys_GetObject((char*)"modules"), "cppyy.gbl");
+            PyObject* cl  = PyObject_GetAttrString(gbl, (char*)"cling");
+            printValue    = PyObject_GetAttrString(cl,  (char*)"printValue");
+            Py_DECREF(cl);
+            // gbl is borrowed
+            if (printValue) {
+                Py_DECREF(printValue);           // make borrowed
+                if (!PyCallable_Check(printValue))
+                    printValue = nullptr;        // unusable ...
+            }
+            if (!printValue)      // unlikely
+                ScopeFlagSet(self, CPPScope::kNoPrettyPrint);
+        }
 
+        if (printValue) {
+        // as printValue only works well for templates taking pointer arguments, we'll
+        // have to force the issue by working with a by-ptr object
+            Cppyy::TCppObject_t cppobj = self->GetObjectRaw();
+            PyObject* byref = (PyObject*)self;
+            if (!(self->fFlags & CPPInstance::kIsReference)) {
+                byref = BindCppObjectNoCast((Cppyy::TCppObject_t)&cppobj,
+                    self->ObjectIsA(), CPPInstance::kIsReference | CPPInstance::kNoMemReg);
+            } else {
+                Py_INCREF(byref);
+            }
+
+        // explicit template lookup
+            PyObject* clName = CPyCppyy_PyText_FromString(Utility::ClassName((PyObject*)self).c_str());
+            PyObject* OL = PyObject_GetItem(printValue, clName);
+            Py_DECREF(clName);
+
+            PyObject* pretty = OL ? PyObject_CallFunctionObjArgs(OL, byref, nullptr) : nullptr;
+            Py_XDECREF(OL);
+            Py_DECREF(byref);
+
+            PyObject* result = nullptr;
+            if (pretty) {
+                const std::string& pv = *(std::string*)((CPPInstance*)pretty)->GetObject();
+                if (!pv.empty() && pv.find("@0x") == std::string::npos)
+                    result = CPyCppyy_PyText_FromString(pv.c_str());
+                Py_DECREF(pretty);
+                if (result) return result;
+            }
+
+            PyErr_Clear();
+        }
+
+    // if not available/specialized, don't try again
+        ScopeFlagSet(self, CPPScope::kNoPrettyPrint);
+    }
+
+// 3. Generic printing as done in op_repr
     return op_repr(self);
 }
 
@@ -600,6 +895,7 @@ static PyGetSetDef op_getset[] = {
 
 //= CPyCppyy type number stubs to allow dynamic overrides =====================
 #define CPYCPPYY_STUB_BODY(name, op)                                          \
+    bool previously_resolved_overload = (bool)meth;                           \
     if (!meth) {                                                              \
         PyErr_Clear();                                                        \
         PyCallable* pyfunc = Utility::FindBinaryOperator(left, right, #op);   \
@@ -610,8 +906,8 @@ static PyGetSetDef op_getset[] = {
         }                                                                     \
     }                                                                         \
     PyObject* res = PyObject_CallFunctionObjArgs(meth, cppobj, other, nullptr);\
-    if (!res) {                                                               \
-    /* try again, in case there is a better overload out there */             \
+    if (!res && previously_resolved_overload) {                               \
+    /* try again, in case (left, right) are different types than before */    \
         PyErr_Clear();                                                        \
         PyCallable* pyfunc = Utility::FindBinaryOperator(left, right, #op);   \
         if (pyfunc) ((CPPOverload*&)meth)->AdoptMethod(pyfunc);               \
@@ -664,7 +960,7 @@ static PyObject* op_##name##_stub(PyObject* pyobj)                            \
 /* placeholder to lazily install unary operators */                           \
     PyCallable* pyfunc = Utility::FindUnaryOperator((PyObject*)Py_TYPE(pyobj), #op);\
     if (pyfunc && Utility::AddToClass((PyObject*)Py_TYPE(pyobj), #label, pyfunc))\
-         return PyObject_CallMethod(pyobj, (char*)#label, nullptr);           \
+        return PyObject_CallMethod(pyobj, (char*)#label, nullptr);            \
     PyErr_SetString(PyExc_NotImplementedError, "");                           \
     return nullptr;                                                           \
 }
@@ -748,13 +1044,13 @@ PyTypeObject CPPInstance_Type = {
     sizeof(CPPInstance),           // tp_basicsize
     0,                             // tp_itemsize
     (destructor)op_dealloc,        // tp_dealloc
-    0,                             // tp_print
+    0,                             // tp_vectorcall_offset / tp_print
     0,                             // tp_getattr
     0,                             // tp_setattr
-    0,                             // tp_compare
+    0,                             // tp_as_async / tp_compare
     (reprfunc)op_repr,             // tp_repr
     &op_as_number,                 // tp_as_number
-    0,                             // tp_as_sequence
+    &op_as_sequence,               // tp_as_sequence
     0,                             // tp_as_mapping
     (hashfunc)op_hash,             // tp_hash
     0,                             // tp_call
@@ -764,9 +1060,10 @@ PyTypeObject CPPInstance_Type = {
     0,                             // tp_as_buffer
     Py_TPFLAGS_DEFAULT |
         Py_TPFLAGS_BASETYPE |
-        Py_TPFLAGS_CHECKTYPES,     // tp_flags
+        Py_TPFLAGS_CHECKTYPES |
+        Py_TPFLAGS_HAVE_GC,        // tp_flags
     (char*)"cppyy object proxy (internal)", // tp_doc
-    0,                             // tp_traverse
+    (traverseproc)op_traverse,     // tp_traverse
     (inquiry)op_clear,             // tp_clear
     (richcmpfunc)op_richcompare,   // tp_richcompare
     0,                             // tp_weaklistoffset
@@ -798,6 +1095,12 @@ PyTypeObject CPPInstance_Type = {
 #endif
 #if PY_VERSION_HEX >= 0x03040000
     , 0                            // tp_finalize
+#endif
+#if PY_VERSION_HEX >= 0x03080000
+    , 0                           // tp_vectorcall
+#endif
+#if PY_VERSION_HEX >= 0x030c0000
+    , 0                           // tp_watched
 #endif
 };
 

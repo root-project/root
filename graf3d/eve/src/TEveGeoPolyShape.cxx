@@ -51,7 +51,7 @@ TEveGeoPolyShape* TEveGeoPolyShape::Construct(TGeoCompositeShape *cshape, Int_t 
    TEvePad       pad;
    TEvePadHolder gpad(kFALSE, &pad);
    TGLScenePad   scene_pad(&pad);
-   pad.GetListOfPrimitives()->Add(cshape);
+   pad.Add(cshape);
    pad.SetViewer3D(&scene_pad);
 
    TEveGeoManagerHolder gmgr(TEveGeoShape::GetGeoMangeur(), n_seg);

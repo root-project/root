@@ -48,6 +48,7 @@ public:
       kServer,   ///< indicates that ROOT runs as server and just printouts window URL, browser should be started by the user
       kEmbedded, ///< window will be embedded into other, no extra browser need to be started
       kOff,      ///< disable web display, do not start any browser
+      kOn,       ///< web display enable, first try use embed displays like Qt or CEF, then native browsers and at the end default system browser
       kCustom    ///< custom web browser, execution string should be provided
    };
 
@@ -102,8 +103,10 @@ public:
    /// returns true if interactive browser window supposed to be started
    bool IsInteractiveBrowser() const
    {
-      return !IsHeadless() && ((GetBrowserKind() == kNative) || (GetBrowserKind() == kChrome) || (GetBrowserKind() == kEdge)
-                          || (GetBrowserKind() == kFirefox) || (GetBrowserKind() == kDefault) || (GetBrowserKind() == kCustom));
+      return !IsHeadless() &&
+             ((GetBrowserKind() == kOn) || (GetBrowserKind() == kNative) || (GetBrowserKind() == kChrome) ||
+              (GetBrowserKind() == kEdge) || (GetBrowserKind() == kFirefox) || (GetBrowserKind() == kDefault) ||
+              (GetBrowserKind() == kCustom));
    }
 
    /// returns true if local display like CEF or Qt5 QWebEngine should be used
@@ -115,7 +118,7 @@ public:
    /// returns true if browser supports headless mode
    bool IsSupportHeadless() const
    {
-      return (GetBrowserKind() == kNative) || (GetBrowserKind() == kDefault) ||
+      return (GetBrowserKind() == kNative) || (GetBrowserKind() == kDefault) || (GetBrowserKind() == kOn) ||
              (GetBrowserKind() == kChrome) || (GetBrowserKind() == kEdge) || (GetBrowserKind() == kFirefox) ||
              (GetBrowserKind() == kCEF) || (GetBrowserKind() == kQt5) || (GetBrowserKind() == kQt6);
    }

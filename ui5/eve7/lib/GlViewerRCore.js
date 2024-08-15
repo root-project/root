@@ -28,7 +28,8 @@ sap.ui.define([
 
          let jsrp = EVE.JSR.source_dir;
          // take out 'jsrootsys' and replace it with 'rootui5sys/eve7/'
-         this.eve_path = jsrp.substring(0, jsrp.length - 10) + 'rootui5sys/eve7/';
+         this.top_path = jsrp.substring(0, jsrp.length - 10);
+         this.eve_path = this.top_path + 'rootui5sys/eve7/';
 
          this._logLevel = 1; // 0 - error, 1 - warning, 2 - info, 3 - debug
 
@@ -39,6 +40,15 @@ sap.ui.define([
 
          this._selection_map = {};
          this._selection_list = [];
+
+         this.initialMouseX = 0;
+         this.initialMouseY = 0;
+         this.lastOffsetX = 0;
+         this.lastOffsetY = 0;
+         this.firstMouseDown = true;
+         this.scale = false;
+         this.pickedOverlayObj;
+         this.initialSize = 0;
       }
 
       init(controller)
@@ -68,22 +78,26 @@ sap.ui.define([
 
       bootstrap()
       {
-         this.creator = new EveElements(RC, this);
-         // this.creator.useIndexAsIs = EVE.JSR.decodeUrl().has('useindx');
-
          RC.GLManager.sCheckFrameBuffer = false;
          RC.Object3D.sDefaultPickable = false;
          RC.PickingShaderMaterial.DEFAULT_PICK_MODE = RC.PickingShaderMaterial.PICK_MODE.UINT;
 
          this.createRCoreRenderer();
+
+         this.creator = new EveElements(RC, this);
+         // this.creator.useIndexAsIs = EVE.JSR.decodeUrl().has('useindx');
+         if (this.RQ_Mode != "Direct") {
+            this.creator.SetupPointLineFacs(this.RQ_SSAA,
+                                            this.RQ_MarkerScale * this.canvas.pixelRatio,
+                                            this.RQ_LineScale   * this.canvas.pixelRatio);
+         }
+         this.updateViewerAttributes();
+
          this.controller.createScenes();
          this.controller.redrawScenes();
          this.setupEventHandlers();
 
          this.controller.glViewerInitDone();
-
-         let eveView = this.controller.mgr.GetElement(this.controller.eveViewerId);
-         if (eveView.AxesType > 0) this.makeAxis();
       }
 
       cleanup() {
@@ -103,6 +117,10 @@ sap.ui.define([
       get_top_scene()
       {
          return this.scene;
+      }
+      get_overlay_scene()
+      {
+         return this.overlay_scene;
       }
 
       //==============================================================================
@@ -128,12 +146,15 @@ sap.ui.define([
          this.renderer.addShaderLoaderUrls(this.eve_path + RC.REveShaderPath);
          this.renderer.pickObject3D = true;
 
+         RC.Cache.enabled = true;
+         this.tex_cache = new RC.TextureCache;
+
          // add dat GUI option to set background
          let eveView = this.controller.mgr.GetElement(this.controller.eveViewerId);
          if (eveView.BlackBg)
          {
-            this.fgCol =  new RC.Color(0,0,0);
-            this.bgCol = new RC.Color(1,1,1);
+            this.bgCol =  new RC.Color(0,0,0);
+            this.fgCol = new RC.Color(1,1,1);
          }
          else
          {
@@ -141,9 +162,10 @@ sap.ui.define([
             this.fgCol = new RC.Color(0,0,0);
          }
 
-
-         this.renderer.clearColor = '#' +  this.bgCol.getHexString() + '00';
+         // always use black clear color except in tone map
+         this.renderer.clearColor = "#00000000";
          this.scene = new RC.Scene();
+         this.overlay_scene = new RC.Scene();
 
          this.lights = new RC.Group;
          this.lights.name = "Light container";
@@ -159,7 +181,7 @@ sap.ui.define([
          // guides
          this.axis = new RC.Group();
          this.axis.name = "Axis";
-         this.scene.add(this.axis);
+         this.overlay_scene.add(this.axis);
 
          if (this.controller.isEveCameraPerspective())
          {
@@ -218,7 +240,7 @@ sap.ui.define([
 
          this.rot_center = new RC.Vector3(0,0,0);
 
-         this.rqt = new RC.RendeQuTor(this.renderer, this.scene, this.camera);
+         this.rqt = new RC.RendeQuTor(this.renderer, this.scene, this.camera, this.overlay_scene);
          if (this.RQ_Mode == "Direct")
          {
             this.rqt.initDirectToScreen();
@@ -226,16 +248,10 @@ sap.ui.define([
          else if (this.RQ_Mode == "Simple")
          {
             this.rqt.initSimple(this.RQ_SSAA);
-            this.creator.SetupPointLineFacs(this.RQ_SSAA,
-                                            this.RQ_MarkerScale * this.canvas.pixelRatio,
-                                            this.RQ_LineScale   * this.canvas.pixelRatio);
          }
          else
          {
             this.rqt.initFull(this.RQ_SSAA);
-            this.creator.SetupPointLineFacs(this.RQ_SSAA,
-                                            this.RQ_MarkerScale * this.canvas.pixelRatio,
-                                            this.RQ_LineScale   * this.canvas.pixelRatio);
          }
          this.rqt.updateViewport(w, h);
       }
@@ -304,6 +320,23 @@ sap.ui.define([
          dome.addEventListener('dblclick', function() {
             //if (glc.controller.dblclick_action == "Reset")
             glc.resetRenderer();
+         });
+
+         dome.addEventListener("mouseup", function() {
+            glc.handleOverlayMouseUp();
+         });
+
+         dome.addEventListener("mousedown", function(event) {
+            console.log("event mousedown", event);
+            if (event.button == 0 || event.button == 2)
+            {
+               glc.handleOverlayMouseDown(event);
+
+            }
+         });
+
+         dome.addEventListener("mousemove", function(event) {
+            glc.handleOverlayMouseMove(event);
          });
 
          // Key-handlers go on window ...
@@ -459,24 +492,24 @@ sap.ui.define([
          let eveView = this.controller.mgr.GetElement(this.controller.eveViewerId);
          if (eveView.BlackBg)
          {
-            this.fgCol = new RC.Color(1, 1, 1);//"#FFFFFF00";
-            this.bgCol = new RC.Color(0, 0, 0);
+            this.fgCol = this.creator.ColorWhite;
+            this.bgCol = this.creator.ColorBlack;
          }
          else
          {
-            this.bgCol =  new RC.Color(1, 1, 1);//"#FFFFFF00";
-            this.fgCol = new RC.Color(0,0,0);
+            this.bgCol = this.creator.ColorWhite;
+            this.fgCol = this.creator.ColorBlack;
          }
 
          this.axis.clear();
          if (eveView.AxesType > 0)
             this.makeAxis();
 
-       this.renderer.clearColor = '#' +  this.bgCol.getHexString() + '00';
          this.request_render();
       }
 
-      makeAxis() {
+      makeAxis()
+      {
          function formatFloat(val) {
             let lg = Math.log10(Math.abs(val));
             let fs = "undef";
@@ -507,11 +540,10 @@ sap.ui.define([
          bb.setFromObject(this.scene);
 
          let lines = [];
-         let test = ~bb.min.x;
          lines.push({ "p": new RC.Vector3(bb.min.x, 0, 0), "c": new RC.Color(1, 0, 0), "text": "X " + formatFloat(bb.min.x) });
          lines.push({ "p": new RC.Vector3(bb.max.x, 0, 0), "c": new RC.Color(1, 0, 0), "text": "X " + formatFloat(bb.max.x) });
-         lines.push({ "p": new RC.Vector3(0, bb.min.y, 0), "c":new RC.Color(0, 1, 0), "text": "Y " + formatFloat(bb.min.y) });
-         lines.push({ "p": new RC.Vector3(0, bb.max.y, 0), "c":new RC.Color(0, 1, 0), "text": "Y " + formatFloat(bb.max.y) });
+         lines.push({ "p": new RC.Vector3(0, bb.min.y, 0), "c": new RC.Color(0, 1, 0), "text": "Y " + formatFloat(bb.min.y) });
+         lines.push({ "p": new RC.Vector3(0, bb.max.y, 0), "c": new RC.Color(0, 1, 0), "text": "Y " + formatFloat(bb.max.y) });
          lines.push({ "p": new RC.Vector3(0, 0, bb.min.z), "c": new RC.Color(0, 0, 1), "text": "Z " + formatFloat(bb.min.z) });
          lines.push({ "p": new RC.Vector3(0, 0, bb.max.z), "c": new RC.Color(0, 0, 1), "text": "Z " + formatFloat(bb.max.z) });
 
@@ -524,43 +556,33 @@ sap.ui.define([
             this.axis.add(ss);
          }
 
-         let ag = this.axis;
-         let fgCol = this.fgCol;
-         const fontImgLoader = new RC.ImageLoader();
-         let tname = this.eve_path + "textures/font2.png";
-         fontImgLoader.load(tname, function (image) {
-            const fontTexture = new RC.Texture(
-               image,
-               RC.Texture.WRAPPING.ClampToEdgeWrapping,
-               RC.Texture.WRAPPING.ClampToEdgeWrapping,
-               RC.Texture.FILTER.NearestFilter,
-               RC.Texture.FILTER.NearestFilter,
-               RC.Texture.FORMAT.RGBA,
-               RC.Texture.FORMAT.RGBA,
-               RC.Texture.TYPE.UNSIGNED_BYTE,
-               128,
-               256
-            );
-
-            fontTexture._generateMipmaps = false;
-            for (const ax of lines) {
-               const text = new RC.Text2D(
-                  {
+         let url_base = this.eve_path + 'fonts/LiberationSans-Regular';
+         this.tex_cache.deliver_font(url_base,
+            (texture, font_metrics) => {
+               let diag = new RC.Vector3;
+               bb.getSize(diag);
+               diag = diag.length() / 40;
+               let ag = this.axis;
+               for (const ax of lines) {
+                  const text = new RC.ZText({
                      text: ax.text,
-                     fontTexture: fontTexture,
+                     fontTexture: texture,
                      xPos: 0,
                      yPos: 0,
-                     fontSize: 128,
-                     cellAspect: 8 / 16,
-                     mode: RC.TEXT2D_SPACE_WORLD
-                  }
-               );
-               text.position.copy(ax.p);
-               text.material.color = fgCol;
-               ag.add(text);
-            }
-         });
-      }
+                     fontSize: diag,
+                     mode: RC.TEXT2D_SPACE_WORLD,
+                     fontHinting: 1.0,
+                     color: this.fgCol,
+                     font: font_metrics,
+                  });
+                  text.position.copy(ax.p);
+                  text.material.side = RC.FRONT_AND_BACK_SIDE;
+                  ag.add(text);
+               }
+            },
+            (img) => RC.ZText.createDefaultTexture(img)
+         );
+      };
 
       //==============================================================================
 
@@ -631,9 +653,21 @@ sap.ui.define([
 
          this.rqt.render_main_and_blend_outline();
 
+         // XXXX here add rendering of overlay, e.g.:
+         if (this.rqt.queue.used_fail_count == 0 && this.overlay_scene.children.length > 0) {
+            this.rqt.render_overlay_and_blend_it();
+         }
+         // YYYY Or, it might be better to render overlay after the tone-mapping.
+         // Eventually, if only overlay changes, we don't need to render the base-scene but
+         // only overlay and re-merge them. Need to keep base textures alive in RendeQuTor.
+         // Note that rgt.render_end() releases all std textures.
+
          if (this.rqt.queue.used_fail_count == 0) {
+            // AMT: All render passess are drawn with the black bg
+            //      except of the tone map render pass
+            this.renderer.clearColor = '#' +  this.bgCol.getHexString() + '00';
             this.rqt.render_tone_map_to_screen();
-            // this.rqt.render_final_to_screen();
+            this.renderer.clearColor = "#00000000";
          }
 
          this.rqt.render_end();
@@ -657,6 +691,8 @@ sap.ui.define([
          this.rqt.pick_begin(x, y);
 
          let state = this.rqt.pick(x, y, detect_depth);
+
+         console.log("pick state", state);
 
          if (state.object === null) {
             this.rqt.pick_end();
@@ -685,9 +721,50 @@ sap.ui.define([
             ctrl_obj = ctrl_obj.parent;
 
          state.ctrl = ctrl_obj.get_ctrl(ctrl_obj, top_obj);
-
-         // console.log("pick result", state);
          return state;
+
+      }
+
+      render_for_Overlay_picking(x, y, detect_depth)
+      {
+         // console.log("RENDER FOR PICKING", this.scene, this.camera, this.canvas, this.renderer);
+
+         if (this.canvas.width <= 0 || this.canvas.height <= 0) return null;
+
+         this.rqt.pick_begin(x, y);
+
+         let state_overlay = this.rqt.pick_overlay(x, y, detect_depth);
+
+         console.log("Overlay pick state", state_overlay);
+
+         if (state_overlay.object === null) {
+            this.rqt.pick_end();
+            return null;
+         }
+
+         let top_obj = state_overlay.object;
+            while (top_obj.eve_el === undefined)
+               top_obj = top_obj.parent;
+
+            state_overlay.top_object = top_obj;
+            state_overlay.eve_el = top_obj.eve_el;
+
+            if (state_overlay.eve_el.fSecondarySelect)
+               this.rqt.pick_instance_overlay(state_overlay);
+
+            this.rqt.pick_end();
+
+            state_overlay.w = this.canvas.width;
+            state_overlay.h = this.canvas.height;
+            state_overlay.mouse = new RC.Vector2( ((x + 0.5) / state_overlay.w) * 2 - 1,
+                                         -((y + 0.5) / state_overlay.h) * 2 + 1 );
+
+            let ctrl_obj = state_overlay.object;
+            while (ctrl_obj.get_ctrl === undefined)
+               ctrl_obj = ctrl_obj.parent;
+
+            state_overlay.ctrl = ctrl_obj.get_ctrl(ctrl_obj, top_obj);
+            return state_overlay;
       }
 
       //==============================================================================
@@ -929,6 +1006,87 @@ sap.ui.define([
 
             this.controller.created_scenes[0].processElementSelected(null, [], event);
          }
+
+
+      }
+
+      handleOverlayMouseUp()
+      {
+         console.log("handleOverlayMouseUp");
+         if(this.firstMouseDown == false)
+         {
+            this.firstMouseDown = true;
+            //this.overlay_scene.children[0].children[0].setNewPositionOffset(this.lastOffsetX, this.lastOffsetY);
+            this.pickedOverlayObj.setNewPositionOffset(this.lastOffsetX, this.lastOffsetY);
+            this.lastOffsetX = 0;
+            this.lastOffsetY = 0;
+            this.initialMouseX = 0;
+            this.initialMouseY = 0;
+            this.scale = false;
+            this.initialSize = 0;
+            this.controls.enablePan = true;
+            this.controls.enableRotate = true;
+         }
+      }
+
+      handleOverlayMouseDown(event)
+      {
+         console.log("handleOverlayMouseDown");
+         let x = event.offsetX * this.canvas.pixelRatio;
+         let y = event.offsetY * this.canvas.pixelRatio;
+         let overlay_pstate = this.render_for_Overlay_picking(x, y, false);
+
+
+
+         if(this.firstMouseDown && overlay_pstate)
+         {
+             this.initialMouseX = x;
+             this.initialMouseY = y;
+             //let c = overlay_pstate.ctrl;
+             this.pickedOverlayObj = overlay_pstate.object;
+             this.firstMouseDown = false;
+
+             if(event.button == 2)
+             {
+               this.scale = true;
+               this.controls.enablePan = false;
+               //this.initialSize = this.overlay_scene.children[0].children[0].fontSize;
+               this.initialSize = this.pickedOverlayObj.fontSize;
+             }
+             else
+               this.controls.enableRotate = false;
+
+         }
+      }
+
+      handleOverlayMouseMove(event)
+      {
+         //console.log("handleOverlayMouseMove");
+
+         if(!this.firstMouseDown)
+         {
+            let x = event.offsetX * this.canvas.pixelRatio;
+            let y = event.offsetY * this.canvas.pixelRatio;
+
+            if(!this.scale)
+            {
+               this.lastOffsetX = (x - this.initialMouseX)/this.canvas.width;
+               this.lastOffsetY = (this.initialMouseY - y)/this.canvas.height;
+               //this.overlay_scene.children[0].children[0].setOffset([this.lastOffsetX, this.lastOffsetY]);
+               this.pickedOverlayObj.setOffset([this.lastOffsetX, this.lastOffsetY]);
+
+            }
+            else
+            {
+               //this.overlay_scene.children[0].children[0].fontSize = this.initialSize + (x - this.initialMouseX);
+               this.pickedOverlayObj.fontSize = this.initialSize + (x - this.initialMouseX);
+
+            }
+            this.render();
+
+
+
+         }
       }
 
       timeStampAttributesAndTextures() {
@@ -985,10 +1143,10 @@ sap.ui.define([
    }</script>
 </head>
 <body>
-   <form name="myform"> 
+   <form name="myform">
       <input type="text" id="filename" name="Filename" value="programs${extra}">
       <input type="button" onClick="save();" value="Save">
-   </form> 
+   </form>
    <pre> ${json} </pre>
 </body>
          </html>`);

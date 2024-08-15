@@ -2,6 +2,7 @@
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/RTrivialDS.hxx"
 #include "ROOT/TSeq.hxx"
+#include "Compression.h"
 #include "TFile.h"
 #include "TROOT.h"
 #include "TSystem.h"
@@ -10,10 +11,10 @@
 #include "gtest/gtest.h"
 #include <memory>
 #include <thread>
-using namespace ROOT;         // RDataFrame
-using namespace ROOT::RDF;    // RInterface
-using namespace ROOT::VecOps; // RVec
-using namespace ROOT::Detail::RDF;          // RLoopManager
+using namespace ROOT;              // RDataFrame
+using namespace ROOT::RDF;         // RInterface
+using namespace ROOT::VecOps;      // RVec
+using namespace ROOT::Detail::RDF; // RLoopManager
 
 /********* FIXTURES *********/
 // fixture that provides a RDF with no data-source and a single integer column "ans" with value 42
@@ -139,7 +140,7 @@ TEST_F(RDFSnapshot, Snapshot_aliases)
    const auto alias0 = "myalias0";
    const auto alias1 = "myalias1";
    auto tdfa = tdf.Alias(alias0, "ans");
-   auto tdfb = tdfa.Define("vec", [] { return RVec<int>{1,2,3}; }).Alias(alias1, "vec");
+   auto tdfb = tdfa.Define("vec", [] { return RVec<int>{1, 2, 3}; }).Alias(alias1, "vec");
    testing::internal::CaptureStderr();
    auto snap = tdfb.Snapshot<int, RVec<int>>("mytree", "Snapshot_aliases.root", {alias0, alias1});
    std::string err = testing::internal::GetCapturedStderr();
@@ -159,9 +160,7 @@ TEST_F(RDFSnapshot, Snapshot_nocolumnmatch)
 {
    const auto fname = "snapshotnocolumnmatch.root";
    RDataFrame d(1);
-   auto op = [&](){
-      d.Snapshot("t", fname, "x");
-   };
+   auto op = [&]() { d.Snapshot("t", fname, "x"); };
    EXPECT_ANY_THROW(op());
    gSystem->Unlink(fname);
 }
@@ -181,8 +180,7 @@ void TestSnapshotUpdate(RInterface<RLoopManager> &tdf, const std::string &outfil
    RSnapshotOptions opts;
    opts.fMode = "UPDATE";
    opts.fOverwriteIfExists = overwriteIfExists;
-   auto s2 = ROOT::RDataFrame(50ull).Define("x", [] { return 10; })
-                                    .Snapshot<int>(tree2, outfile, {"x"}, opts);
+   auto s2 = ROOT::RDataFrame(50ull).Define("x", [] { return 10; }).Snapshot<int>(tree2, outfile, {"x"}, opts);
 
    auto c2 = s2->Count();
    auto mean2 = s2->Mean<int>("x");
@@ -234,7 +232,8 @@ void test_snapshot_options(RInterface<RLoopManager> &tdf)
    opts.fCompressionLevel = 6;
 
    const auto outfile = "snapshot_test_opts.root";
-   for (auto algorithm : {ROOT::kZLIB, ROOT::kLZMA, ROOT::kLZ4, ROOT::kZSTD}) {
+   using RCAlgo = ROOT::RCompressionSetting::EAlgorithm;
+   for (auto algorithm : {RCAlgo::kZLIB, RCAlgo::kLZMA, RCAlgo::kLZ4, RCAlgo::kZSTD}) {
       opts.fCompressionAlgorithm = algorithm;
 
       auto s = tdf.Snapshot<int>("t", outfile, {"ans"}, opts);
@@ -376,8 +375,8 @@ void WriteColsWithCustomTitles(const std::string &tname, const std::string &fnam
    t.Write();
 }
 
-void CheckColsWithCustomTitles(unsigned long long int entry, int i, const RVec<int> &arrint,
-                               const RVec<int> &vararrint, float f)
+void CheckColsWithCustomTitles(unsigned long long int entry, int i, const RVec<int> &arrint, const RVec<int> &vararrint,
+                               float f)
 {
    if (entry == 0) {
       EXPECT_EQ(i, 1);
@@ -441,7 +440,7 @@ TEST(RDFSnapshotMore, ReadWriteStdVec)
    t.Write();
    f.Close();
 
-   auto outputChecker = [&treename](const char* filename){
+   auto outputChecker = [&treename](const char *filename) {
       // check snapshot output
       TFile f2(filename);
       TTreeReader r(treename, &f2);
@@ -672,8 +671,11 @@ TEST(RDFSnapshotMore, Lazy)
    gSystem->Unlink(fname0);
    RDataFrame d(1);
    auto v = 0U;
-   auto genf = [&v](){++v;return 42;};
-   RSnapshotOptions opts = {"RECREATE", ROOT::kZLIB, 0, 0, 99, true};
+   auto genf = [&v]() {
+      ++v;
+      return 42;
+   };
+   RSnapshotOptions opts = {"RECREATE", ROOT::RCompressionSetting::EAlgorithm::kZLIB, 0, 0, 99, true};
    auto ds = d.Define("c0", genf).Snapshot<int>(treename, fname0, {"c0"}, opts);
    EXPECT_EQ(v, 0U);
    EXPECT_TRUE(gSystem->AccessPathName(fname0)); // This returns FALSE if the file IS there
@@ -695,7 +697,7 @@ TEST(RDFSnapshotMore, LazyJitted)
    // make sure the file is not here beforehand
    gSystem->Unlink(fname);
    RDataFrame d(1);
-   RSnapshotOptions opts = {"RECREATE", ROOT::kZLIB, 0, 0, 99, true};
+   RSnapshotOptions opts = {"RECREATE", ROOT::RCompressionSetting::EAlgorithm::kZLIB, 0, 0, 99, true};
    auto ds = d.Alias("c0", "rdfentry_").Snapshot(treename, fname, {"c0"}, opts);
    EXPECT_TRUE(gSystem->AccessPathName(fname)); // This returns FALSE if the file IS there
    *ds;
@@ -834,16 +836,19 @@ TEST(RDFSnapshotMore, ForbiddenOutputFilename)
    // Compiled
    try {
       ROOT_EXPECT_SYSERROR(df.Snapshot<unsigned int>("t", out_fname, {"rdfslot_"}), "TFile::TFile",
-                        "file /definitely/not/a/valid/path/f.root can not be opened No such file or directory")
+                           "file /definitely/not/a/valid/path/f.root can not be opened No such file or directory")
    } catch (const std::runtime_error &e) {
       EXPECT_STREQ(e.what(), "Snapshot: could not create output file /definitely/not/a/valid/path/f.root");
    }
 
    // Jitted
    // If some other test case called EnableThreadSafety, the error printed here is of the form
-   // "SysError in <TFile::TFile>: file /definitely/not/a/valid/path/f.root can not be opened No such file or directory\nError in <TReentrantRWLock::WriteUnLock>: Write lock already released for 0x55f179989378\n"
-   // but the address printed changes every time
-   ROOT::TestSupport::CheckDiagsRAII diagRAII{kSysError, "TFile::TFile", "file /definitely/not/a/valid/path/f.root can not be opened No such file or directory"};
+   // "SysError in <TFile::TFile>: file /definitely/not/a/valid/path/f.root can not be opened No such file or
+   // directory\nError in <TReentrantRWLock::WriteUnLock>: Write lock already released for 0x55f179989378\n" but the
+   // address printed changes every time
+   ROOT::TestSupport::CheckDiagsRAII diagRAII{
+      kSysError, "TFile::TFile",
+      "file /definitely/not/a/valid/path/f.root can not be opened No such file or directory"};
    EXPECT_THROW(df.Snapshot("t", out_fname, {"rdfslot_"}), std::runtime_error);
 }
 
@@ -1201,7 +1206,6 @@ TEST(RDFSnapshotMore, JittedSnapshotAndAliasedColumns)
    gSystem->Unlink(fname2);
 }
 
-
 TEST(RDFSnapshotMore, LazyNotTriggeredMT)
 {
    ROOT::EnableImplicitMT(4);
@@ -1216,8 +1220,9 @@ TEST(RDFSnapshotMore, EmptyBuffersMT)
    const unsigned int nslots = std::min(4U, std::thread::hardware_concurrency());
    ROOT::EnableImplicitMT(nslots);
    ROOT::RDataFrame d(10);
-   auto dd = d.DefineSlot("x", [&](unsigned int s) { return s == nslots - 1 ? 0 : 1; })
-               .Filter([](int x) { return x == 0; }, {"x"}, "f");
+   auto dd = d.DefineSlot("x", [&](unsigned int s) {
+                 return s == nslots - 1 ? 0 : 1;
+              }).Filter([](int x) { return x == 0; }, {"x"}, "f");
    auto r = dd.Report();
    dd.Snapshot<int>(treename, fname, {"x"});
 
@@ -1265,11 +1270,14 @@ TEST(RDFSnapshotMore, ForbiddenOutputFilenameMT)
 
    // Jitted
    // the error printed here is
-   // "SysError in <TFile::TFile>: file /definitely/not/a/valid/path/f.root can not be opened No such file or directory\nError in <TReentrantRWLock::WriteUnLock>: Write lock already released for 0x55f179989378\n"
-   // but the address printed changes every time
+   // "SysError in <TFile::TFile>: file /definitely/not/a/valid/path/f.root can not be opened No such file or
+   // directory\nError in <TReentrantRWLock::WriteUnLock>: Write lock already released for 0x55f179989378\n" but the
+   // address printed changes every time
    ROOT::TestSupport::CheckDiagsRAII diagRAII;
-   diagRAII.requiredDiag(kSysError, "TFile::TFile", "file /definitely/not/a/valid/path/f.root can not be opened No such file or directory");
-   diagRAII.optionalDiag(kSysError, "TReentrantRWLock::WriteUnLock", "Write lock already released for", /*wholeStringNeedsToMatch=*/false);
+   diagRAII.requiredDiag(kSysError, "TFile::TFile",
+                         "file /definitely/not/a/valid/path/f.root can not be opened No such file or directory");
+   diagRAII.optionalDiag(kSysError, "TReentrantRWLock::WriteUnLock", "Write lock already released for",
+                         /*wholeStringNeedsToMatch=*/false);
    EXPECT_THROW(df.Snapshot("t", out_fname, {"rdfslot_"}), std::runtime_error);
 }
 
@@ -1355,4 +1363,3 @@ TEST(RDFSnapshotMore, ZeroOutputEntriesMT)
 }
 
 #endif // R__USE_IMT
-

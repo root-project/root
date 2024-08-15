@@ -17,16 +17,20 @@ public:
     void Set(Cppyy::TCppScope_t scope, Cppyy::TCppIndex_t idata);
     void Set(Cppyy::TCppScope_t scope, const std::string& name, void* address);
 
-    std::string GetName() { return CPyCppyy_PyText_AsString(fName); }
+    std::string GetName();
     void* GetAddress(CPPInstance* pyobj /* owner */);
 
 public:                 // public, as the python C-API works with C structs
     PyObject_HEAD
     intptr_t           fOffset;
-    Long_t             fFlags;
+    long               fFlags;
     Converter*         fConverter;
     Cppyy::TCppScope_t fEnclosingScope;
-    PyObject*          fName;
+    PyObject*          fDescription;
+    PyObject*          fDoc;
+
+    // TODO: data members should have a unique identifier, just like methods,
+    // so that reflection information can be recovered post-initialization
     std::string        fFullType;
 
 private:                // private, as the python C-API will handle creation

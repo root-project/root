@@ -193,7 +193,7 @@ namespace cling {
 
     // Disable suggestions for ROOT
     bool showSuggestions =
-        !llvm::StringRef(ClingStringify(CLING_VERSION)).startswith("ROOT");
+        !llvm::StringRef(ClingStringify(CLING_VERSION)).starts_with("ROOT");
 
     std::unique_ptr<InterpreterCallbacks> AutoLoadCB(
         new AutoloadCallback(&Interp, showSuggestions));
@@ -215,10 +215,26 @@ namespace cling {
     if (handleSimpleOptions(m_Opts))
       return;
 
-    m_LLVMContext.reset(new llvm::LLVMContext);
+    auto LLVMCtx = std::make_unique<llvm::LLVMContext>();
+    TSCtx = std::make_unique<llvm::orc::ThreadSafeContext>(std::move(LLVMCtx));
     m_IncrParser.reset(new IncrementalParser(this, llvmdir, moduleExtensions));
     if (!m_IncrParser->isValid(false))
       return;
+
+    // Load any requested plugins.
+    getCI()->LoadRequestedPlugins();
+
+    // Honor set of `-mllvm` options. This should happen AFTER plugins have been
+    // loaded!
+    if (!m_Opts.CompilerOpts.LLVMArgs.empty()) {
+      unsigned NumArgs = m_Opts.CompilerOpts.LLVMArgs.size();
+      auto Args = std::make_unique<const char*[]>(NumArgs + 2);
+      Args[0] = "cling (LLVM option parsing)";
+      for (unsigned i = 0; i != NumArgs; ++i)
+        Args[i + 1] = m_Opts.CompilerOpts.LLVMArgs[i].c_str();
+      Args[NumArgs + 1] = nullptr;
+      llvm::cl::ParseCommandLineOptions(NumArgs + 1, Args.get());
+    }
 
     // Initialize the opt level to what CodeGenOpts says.
     if (m_OptLevel == -1)
@@ -250,9 +266,6 @@ namespace cling {
 
     Sema& SemaRef = getSema();
     Preprocessor& PP = SemaRef.getPreprocessor();
-    // Enable incremental processing, which prevents the preprocessor destroying
-    // the lexer on EOF token.
-    PP.enableIncrementalProcessing();
 
     m_LookupHelper.reset(new LookupHelper(new Parser(PP, SemaRef,
                                                      /*SkipFunctionBodies*/false,
@@ -311,8 +324,7 @@ namespace cling {
       setupCallbacks(*this, parentInterp);
     }
 
-    llvm::SmallVector<llvm::StringRef, 6> Syms;
-    Initialize(noRuntime || m_Opts.NoRuntime, isInSyntaxOnlyMode(), Syms);
+    Initialize(noRuntime || m_Opts.NoRuntime, isInSyntaxOnlyMode());
 
     // Commit the transactions, now that gCling is set up. It is needed for
     // static initialization in these transactions through
@@ -320,27 +332,9 @@ namespace cling {
     for (auto&& I: IncrParserTransactions)
       m_IncrParser->commitTransaction(I);
 
-    // Now that the transactions have been commited, force symbol emission
-    // and overrides.
-    if (!isInSyntaxOnlyMode() && !m_Opts.CompilerOpts.CUDADevice) {
-      for (const llvm::StringRef& Sym : Syms) {
-        void* Addr = m_Executor->getPointerToGlobalFromJIT(Sym);
-#if defined(__linux__)
-        // We need to look for the mangled name of at_quick_exit on linux.
-        if (!Addr && Sym.equals("at_quick_exit"))
-          Addr = m_Executor->getPointerToGlobalFromJIT("_Z13at_quick_exitPFvvE");
-#endif
-        if (!Addr) {
-          cling::errs() << "Replaced symbol " << Sym << " cannot be found in JIT!\n";
-        } else {
-          m_Executor->replaceSymbol(Sym.str().c_str(), Addr);
-        }
-      }
-    }
-
     m_IncrParser->SetTransformers(parentInterp);
 
-    if (!m_LLVMContext) {
+    if (!TSCtx->getContext()) {
       // Never true, but don't tell the compiler.
       // Force symbols needed by runtime to be included in binaries.
       // Prevents stripping the symbol due to dead-code optimization.
@@ -407,8 +401,7 @@ namespace cling {
     m_IncrParser.reset(nullptr);
   }
 
-  Transaction* Interpreter::Initialize(bool NoRuntime, bool SyntaxOnly,
-                              llvm::SmallVectorImpl<llvm::StringRef>& Globals) {
+  Transaction* Interpreter::Initialize(bool NoRuntime, bool SyntaxOnly) {
     // The Initialize() function is called twice in CUDA mode. The first time
     // the host interpreter is initialized and the second time the device
     // interpreter is initialized. Without this if statement, a redefinition
@@ -505,7 +498,6 @@ namespace cling {
           << " { return __cxa_atexit((void(*)(void*))f, 0, __dso_handle); }\n";
       else
         Strm << ";\n";
-      Globals.push_back("at_quick_exit");
     }
 
 #if defined(_WIN32)
@@ -523,7 +515,6 @@ namespace cling {
                 " return f; }\n";
       else
         Strm << ";\n";
-    Globals.push_back("__dllonexit");
 #if !defined(_M_CEE_PURE)
     Strm << Linkage << " " << Spec << " int (*_onexit("
          << "int (" << Spec << " *f)()))()";
@@ -532,7 +523,6 @@ namespace cling {
               " return f; }\n";
     else
       Strm << ";\n";
-    Globals.push_back("_onexit");
 #endif
 #endif
 
@@ -1125,7 +1115,7 @@ namespace cling {
   }
 
   bool Interpreter::isUniqueName(llvm::StringRef name) {
-    return name.startswith(utils::Synthesize::UniquePrefix);
+    return name.starts_with(utils::Synthesize::UniquePrefix);
   }
 
   clang::SourceLocation Interpreter::getSourceLocation(bool skipWrapper) const {

@@ -113,7 +113,12 @@ public:
          if (gSystem->Load("libPyMVA") < 0) {
             throw std::runtime_error("RSofieReader: cannot use SOFIE with Keras since libPyMVA is missing");
          }
-         parserCode += "{\nTMVA::Experimental::SOFIE::RModel model = TMVA::Experimental::SOFIE::PyKeras::Parse(\"" + path + "\"); \n";
+         // assume batch size is first entry in first input !
+         std::string batch_size = "-1";
+         if (!inputShapes.empty() && ! inputShapes[0].empty())
+            batch_size = std::to_string(inputShapes[0][0]);
+         parserCode += "{\nTMVA::Experimental::SOFIE::RModel model = TMVA::Experimental::SOFIE::PyKeras::Parse(\"" + path +
+                       "\"," + batch_size + "); \n";
       }
       else if (type == kPt) {
          // use PyTorch direct parser

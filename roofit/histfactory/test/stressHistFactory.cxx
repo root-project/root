@@ -348,7 +348,7 @@ private:
 
          if (bAllowForError) {
             if (!TMath::AreEqualAbs(arg1->getVal(), arg2->getVal(),
-                                    TMath::Max(fTolerance, 0.1 * TMath::Min(arg1->getError(), arg2->getError())))) {
+                                    std::max(fTolerance, 0.1 * std::min(arg1->getError(), arg2->getError())))) {
                Warning("CompareParameters",
                        "parameters with name \"%s\" have different values: %.3f +/- %.3f vs %.3f +/- %.3f",
                        arg1->GetName(), arg1->getVal(), arg1->getError(), arg2->getVal(), arg2->getError());

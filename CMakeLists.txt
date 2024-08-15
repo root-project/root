@@ -53,6 +53,10 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
+# Set permissions for installed folders and subfolders that come from the source tree in case
+# the permissions in the source tree are wrong since the install command will preserve them
+set(DIR_PERMISSIONS DIRECTORY_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+
 # Before setting ROOTSYS, make sure that the environment isn't polluted by a different
 # ROOT build. This is significant e,g. for roottest, which will otherwise have libraries
 # of a different ROOT build available / visible / reachable.
@@ -96,15 +100,6 @@ else()
   set(NO_CONNECTION TRUE)
 endif()
 
-if(NO_CONNECTION)
-  if(clad AND fail-on-missing)
-    message(FATAL_ERROR "No internet connection. Please check your connection, or either disable the 'clad' option or the 'fail-on-missing' to automatically disable options requiring internet access")
-  elseif(clad)
-    message(STATUS "No internet connection, disabling the 'clad' option")
-  endif()
-  set(clad OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
-endif()
-
 #---Where to look first for cmake modules, before ${CMAKE_ROOT}/Modules/ is checked-------------
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules)
 
@@ -112,12 +107,20 @@ set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 #---Load some basic macros which are needed later for the confiuration and build----------------
-include(SearchRootCoreDeps)
 include(CheckCompiler)
 include(RootBuildOptions)
 include(RootMacros)
 include(CheckAssembler)
 include(CheckIntrinsics)
+
+if(clad AND NO_CONNECTION)
+  if(fail-on-missing)
+    message(FATAL_ERROR "No internet connection. Please check your connection, or either disable the 'clad' option or the 'fail-on-missing' to automatically disable options requiring internet access")
+  else()
+    message(STATUS "No internet connection, disabling the 'clad' option")
+    set(clad OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
+  endif()
+endif()
 
 # relatedrepo_GetClosestMatch(REPO_NAME <repo> ORIGIN_PREFIX <originp> UPSTREAM_PREFIX <upstreamp>
 #                             FETCHURL_VARIABLE <output_url> FETCHREF_VARIABLE <output_ref>)
@@ -286,6 +289,7 @@ if(asan)
   endforeach()
   #add_link_options() not available in our CMake version:
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${ASAN_EXTRA_SHARED_LINKER_FLAGS}")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${ASAN_EXTRA_EXE_LINKER_FLAGS}")
 endif()
 
 #---Enable CTest package -----------------------------------------------------------------------
@@ -537,10 +541,10 @@ else()
       etc/dictpch/allHeaders.h
       etc/dictpch/allLinkDefs.h
     COMMAND
-      ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.py
+      ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.py
       ${CMAKE_SOURCE_DIR} . ${pyroot_legacy} ${__cling_pch}
     COMMAND
-      ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ${PYTHON_EXECUTABLE}
+      ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ${Python3_EXECUTABLE}
       ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py etc/allDict.cxx.pch
       ${__allIncludes} -I${CMAKE_BINARY_DIR}/include -I${CMAKE_SOURCE_DIR}/core
     DEPENDS
@@ -577,24 +581,18 @@ if(runtime_cxxmodules)
   ROOT_GET_LIBRARY_OUTPUT_DIR(library_output_dir)
   get_property(modules_idx_deps GLOBAL PROPERTY modules_idx_deps_property)
   if(WIN32)
-    add_custom_command(OUTPUT ${library_output_dir}/modules.idx
-                       COMMAND ${CMAKE_COMMAND} -E remove -f modules.idx modules.timestamp
-                       COMMAND set PATH=${library_output_dir} &&
-                               set ROOTIGNOREPREFIX=1 && set ROOT_HIST=0 &&
-                               $<TARGET_FILE:root.exe> -l -q -b
-                       WORKING_DIRECTORY ${library_output_dir}
-                       DEPENDS $<TARGET_FILE:root.exe> Cling Hist Tree Gpad Graf HistPainter move_artifacts
-                               ${modules_idx_deps})
+    set(modules_idx_cmd COMMAND ${CMAKE_COMMAND} -E env PATH="${library_output_dir}\\\;%PATH%"
+                                ROOTIGNOREPREFIX=1 ROOT_HIST=0 $<TARGET_FILE:root.exe> -l -q -b)
   else()
-    add_custom_command(OUTPUT ${library_output_dir}/modules.idx
-                       COMMAND ${CMAKE_COMMAND} -E remove -f modules.idx modules.timestamp
-                       COMMAND ${ld_library_path}=${library_output_dir}:$ENV{${ld_library_path}}
-                               ROOTIGNOREPREFIX=1 ROOT_HIST=0
-                               $<TARGET_FILE:root.exe> -l -q -b
-                       WORKING_DIRECTORY ${library_output_dir}
-                       DEPENDS $<TARGET_FILE:root.exe> Cling Hist Tree Gpad Graf HistPainter move_artifacts
-                               ${modules_idx_deps})
+    set(modules_idx_cmd COMMAND ${ld_library_path}=${library_output_dir}:$ENV{${ld_library_path}}
+                                ROOTIGNOREPREFIX=1 ROOT_HIST=0 $<TARGET_FILE:root.exe> -l -q -b)
   endif()
+  add_custom_command(OUTPUT ${library_output_dir}/modules.idx
+                     COMMAND ${CMAKE_COMMAND} -E remove -f modules.idx modules.timestamp
+                     ${modules_idx_cmd}
+                     WORKING_DIRECTORY ${library_output_dir}
+                     DEPENDS $<TARGET_FILE:root.exe> Cling Hist Tree Gpad Graf HistPainter move_artifacts
+                             ${modules_idx_deps})
   add_custom_target(modules_idx ALL DEPENDS ${library_output_dir}/modules.idx)
   add_dependencies(modules_idx ${modules_idx_deps})
   set_property(TARGET modules_idx PROPERTY modules_idx_file ${library_output_dir}/modules.idx)
@@ -605,20 +603,16 @@ endif()
 add_custom_target(hsimple ALL DEPENDS tutorials/hsimple.root)
 add_dependencies(hsimple onepcm)
 if(WIN32)
-  add_custom_command(OUTPUT tutorials/hsimple.root
-                     COMMAND set PATH=${CMAKE_RUNTIME_OUTPUT_DIRECTORY} &&
-                             set ROOTIGNOREPREFIX=1 && set ROOT_HIST=0 &&
-                             $<TARGET_FILE:root.exe> -l -q -b -n -x hsimple.C -e return
-                     WORKING_DIRECTORY tutorials
-                     DEPENDS $<TARGET_FILE:root.exe> Cling Hist Tree Gpad Graf HistPainter move_artifacts)
+  set(hsimple_cmd COMMAND ${CMAKE_COMMAND} -E env PATH="${CMAKE_RUNTIME_OUTPUT_DIRECTORY}\\\;%PATH%"
+                          ROOTIGNOREPREFIX=1 ROOT_HIST=0 $<TARGET_FILE:root.exe> -l -q -b -n -x hsimple.C -e return)
 else()
-  add_custom_command(OUTPUT tutorials/hsimple.root
-                     COMMAND ${MODULES_ROOT_INCPATH} ${ld_library_path}=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}:$ENV{${ld_library_path}}
-                             ROOTIGNOREPREFIX=1 ROOT_HIST=0
-                             $<TARGET_FILE:root.exe> -l -q -b -n -x hsimple.C -e return
-                     WORKING_DIRECTORY tutorials
-                     DEPENDS $<TARGET_FILE:root.exe> Cling Hist Tree Gpad Graf HistPainter move_artifacts)
+  set(hsimple_cmd COMMAND ${MODULES_ROOT_INCPATH} ${ld_library_path}=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}:$ENV{${ld_library_path}}
+                          ROOTIGNOREPREFIX=1 ROOT_HIST=0 $<TARGET_FILE:root.exe> -l -q -b -n -x hsimple.C -e return)
 endif()
+add_custom_command(OUTPUT tutorials/hsimple.root
+                   ${hsimple_cmd}
+                   WORKING_DIRECTORY tutorials
+                   DEPENDS $<TARGET_FILE:root.exe> Cling Hist Tree Gpad Graf HistPainter move_artifacts)
 install(FILES ${CMAKE_BINARY_DIR}/tutorials/hsimple.root DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tests)
 
 if(runtime_cxxmodules)
@@ -627,12 +621,12 @@ endif()
 
 #---version--------------------------------------------------------------------------------------
 if(NOT WIN32)
-add_custom_target(version COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/build/unix/makeversion.py
+add_custom_target(version COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/build/unix/makeversion.py
                           WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 endif()
 
 #---distribution commands------------------------------------------------------------------------
-add_custom_target(distsrc COMMAND ${CMAKE_SOURCE_DIR}/build/unix/makedistsrc.sh "${ROOT_FULL_VERSION}" "${GIT_DESCRIBE_ALWAYS}" "${CMAKE_SOURCE_DIR}")
+add_custom_target(distsrc COMMAND ${CMAKE_SOURCE_DIR}/build/unix/makedistsrc.sh "${ROOT_FULL_VERSION}" "${CMAKE_SOURCE_DIR}")
 add_custom_target(dist COMMAND cpack --config CPackConfig.cmake)
 
 #---Configure and install various files neded later and for clients -----------------------------
@@ -653,26 +647,23 @@ if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_INSTALL_PREFIX)
     list(APPEND ETC_PATT_EXCL PATTERN RooFitHS3_wsfactoryexpressions.json EXCLUDE)
   endif()
   install(DIRECTORY etc/ DESTINATION ${CMAKE_INSTALL_SYSCONFDIR} USE_SOURCE_PERMISSIONS
+                         ${DIR_PERMISSIONS}
                          ${ETC_PATT_EXCL}
                          PATTERN "system.rootrc" EXCLUDE
                          PATTERN "system.rootauthrc" EXCLUDE
                          PATTERN "system.rootdaemonrc" EXCLUDE
                          PATTERN "root.mimes" EXCLUDE
                          PATTERN "*.in" EXCLUDE)
-  install(DIRECTORY fonts/  DESTINATION ${CMAKE_INSTALL_FONTDIR})
-  install(DIRECTORY icons/  DESTINATION ${CMAKE_INSTALL_ICONDIR})
-  install(DIRECTORY macros/ DESTINATION ${CMAKE_INSTALL_MACRODIR})
+  install(DIRECTORY fonts/  DESTINATION ${CMAKE_INSTALL_FONTDIR} ${DIR_PERMISSIONS})
+  install(DIRECTORY icons/  DESTINATION ${CMAKE_INSTALL_ICONDIR} ${DIR_PERMISSIONS})
+  install(DIRECTORY macros/ DESTINATION ${CMAKE_INSTALL_MACRODIR} ${DIR_PERMISSIONS})
   if(http)
-     install(DIRECTORY js/     DESTINATION ${CMAKE_INSTALL_JSROOTDIR})
+     install(DIRECTORY js/     DESTINATION ${CMAKE_INSTALL_JSROOTDIR} ${DIR_PERMISSIONS})
   endif()
   if(webgui)
-     install(DIRECTORY ui5/    DESTINATION ${CMAKE_INSTALL_OPENUI5DIR})
+     install(DIRECTORY ui5/    DESTINATION ${CMAKE_INSTALL_OPENUI5DIR} ${DIR_PERMISSIONS})
   endif()
-  if(xproofd AND xrootd AND ssl)
-     set(MAN_PATT_EXCL)
-  else()
-     set(MAN_PATT_EXCL PATTERN xproofd.1 EXCLUDE)
-  endif()
+  set(MAN_PATT_EXCL)
   if(NOT fortran OR NOT CMAKE_Fortran_COMPILER)
     list(APPEND MAN_PATT_EXCL PATTERN h2root.1 EXCLUDE)
     list(APPEND MAN_PATT_EXCL PATTERN g2root.1 EXCLUDE)
@@ -680,8 +671,8 @@ if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_INSTALL_PREFIX)
   if(NOT roofit)
     list(APPEND MAN_PATT_EXCL PATTERN prepareHistFactory.1 EXCLUDE)
   endif()
-  install(DIRECTORY man/    DESTINATION ${CMAKE_INSTALL_MANDIR} ${MAN_PATT_EXCL})
-  install(DIRECTORY tutorials/ DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tests)
+  install(DIRECTORY man/    DESTINATION ${CMAKE_INSTALL_MANDIR} ${DIR_PERMISSIONS} ${MAN_PATT_EXCL})
+  install(DIRECTORY tutorials/ DESTINATION ${CMAKE_INSTALL_TUTDIR} ${DIR_PERMISSIONS} COMPONENT tests)
   install(FILES
     cmake/modules/RootMacros.cmake
     cmake/modules/RootTestDriver.cmake
@@ -777,6 +768,10 @@ if(testing)
   endif()
 endif()
 
+if(LLVM_LINKER_IS_MOLD)
+  message(FATAL_ERROR "The mold linker is not supported by ROOT. Please use a different linker")
+endif()
+
 cmake_host_system_information(RESULT PROCESSOR QUERY PROCESSOR_DESCRIPTION)
 
 message(STATUS "ROOT Configuration \n
@@ -788,12 +783,29 @@ Build type:        ${CMAKE_BUILD_TYPE}
 Install path:      ${CMAKE_INSTALL_PREFIX}
 Compiler:          ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}
 C++ standard:      ${CMAKE_CXX_STANDARD}
-Compiler flags:
+Compiler flags:")
+if(MSVC)
+message(STATUS "
  - C:                         ${CMAKE_C_FLAGS}
- - C (built type specific):   ${CMAKE_C_FLAGS_${_BUILD_TYPE_UPPER}}
+ - C (build type specific):
+     Debug:                   ${CMAKE_C_FLAGS_DEBUG}
+     Release:                 ${CMAKE_C_FLAGS_RELEASE}
+     MinSizeRel:              ${CMAKE_C_FLAGS_MINSIZEREL}
+     RelWithDebInfo:          ${CMAKE_C_FLAGS_RELWITHDEBINFO}
  - C++:                       ${CMAKE_CXX_FLAGS}
- - C++ (built type specific): ${CMAKE_CXX_FLAGS_${_BUILD_TYPE_UPPER}}
-Linker flags:
+ - C++ (build type specific):
+     Debug:                   ${CMAKE_CXX_FLAGS_DEBUG}
+     Release:                 ${CMAKE_CXX_FLAGS_RELEASE}
+     MinSizeRel:              ${CMAKE_CXX_FLAGS_MINSIZEREL}
+     RelWithDebInfo:          ${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+else()
+message(STATUS "
+ - C:                         ${CMAKE_C_FLAGS}
+ - C (build type specific):   ${CMAKE_C_FLAGS_${_BUILD_TYPE_UPPER}}
+ - C++:                       ${CMAKE_CXX_FLAGS}
+ - C++ (build type specific): ${CMAKE_CXX_FLAGS_${_BUILD_TYPE_UPPER}}")
+endif()
+message(STATUS "Linker flags:
  - Executable:     ${CMAKE_EXE_LINKER_FLAGS}
  - Module:         ${CMAKE_MODULE_LINKER_FLAGS}
  - Shared:         ${CMAKE_SHARED_LINKER_FLAGS}\n")

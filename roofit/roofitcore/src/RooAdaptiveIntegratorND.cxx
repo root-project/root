@@ -38,10 +38,7 @@ Adaptive one-dimensional numerical integration algorithm.
 
 #include <cassert>
 
-
-
-using namespace std;
-
+using std::endl, std::string;
 
 // Register this class with RooNumIntConfig
 

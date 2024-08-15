@@ -69,8 +69,7 @@ The calculator can generate Asimov datasets from two kinds of PDFs:
 #include "TStopwatch.h"
 
 using namespace RooStats;
-using namespace std;
-
+using std::cout, std::endl, std::string, std::unique_ptr;
 
 ClassImp(RooStats::AsymptoticCalculator);
 

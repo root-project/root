@@ -33,7 +33,7 @@ part of the RooFit computation graph.
 
 #include <utility>
 
-using namespace std;
+using std::endl;
 using namespace RooFit;
 
 ClassImp(RooPolyFunc);
@@ -260,7 +260,7 @@ RooPolyFunc::taylorExpand(const char *name, const char *title, RooAbsReal &func,
       }
    }
 
-   // Figure out the observable values around which to exapnd
+   // Figure out the observable values around which to expand
    std::vector<double> obsValues;
    if (observableValues.empty()) {
       obsValues.reserve(observables.size());

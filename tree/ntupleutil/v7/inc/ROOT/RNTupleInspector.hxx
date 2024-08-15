@@ -1,4 +1,4 @@
-/// \file ROOT/RNTuplerInspector.hxx
+/// \file ROOT/RNTupleInspector.hxx
 /// \ingroup NTuple ROOT7
 /// \author Florine de Geus <florine.de.geus@cern.ch>
 /// \date 2023-01-09
@@ -17,7 +17,6 @@
 #define ROOT7_RNTupleInspector
 
 #include <ROOT/RError.hxx>
-#include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 
 #include <TFile.h>
@@ -25,12 +24,20 @@
 #include <THStack.h>
 
 #include <cstdlib>
+#include <iostream>
 #include <memory>
+#include <numeric>
 #include <regex>
 #include <vector>
 
 namespace ROOT {
 namespace Experimental {
+
+class RNTuple;
+
+namespace Internal {
+class RPageSource;
+} // namespace Internal
 
 enum class ENTupleInspectorPrintFormat { kTable, kCSV };
 enum class ENTupleInspectorHist { kCount, kNElems, kCompressedSize, kUncompressedSize };
@@ -56,8 +63,8 @@ using ROOT::Experimental::RNTuple;
 using ROOT::Experimental::RNTupleInspector;
 
 auto file = TFile::Open("data.rntuple");
-auto rntuple = file->Get<RNTuple>("NTupleName");
-auto inspector = RNTupleInspector::Create(rntuple).Unwrap();
+auto rntuple = std::unique_ptr<RNTuple>(file->Get<RNTuple>("NTupleName"));
+auto inspector = RNTupleInspector::Create(rntuple);
 
 std::cout << "The compression factor is " << inspector->GetCompressionFactor()
           << " using compression settings " << inspector->GetCompressionSettings()
@@ -94,12 +101,12 @@ public:
       std::uint64_t GetNPages() const { return fCompressedPageSizes.size(); }
       std::uint64_t GetCompressedSize() const
       {
-         return std::accumulate(fCompressedPageSizes.begin(), fCompressedPageSizes.end(), 0);
+         return std::accumulate(fCompressedPageSizes.begin(), fCompressedPageSizes.end(), static_cast<std::uint64_t>(0));
       }
       std::uint64_t GetUncompressedSize() const { return fElementSize * fNElements; }
       std::uint64_t GetElementSize() const { return fElementSize; }
       std::uint64_t GetNElements() const { return fNElements; }
-      EColumnType GetType() const { return fColumnDescriptor.GetModel().GetType(); }
+      EColumnType GetType() const { return fColumnDescriptor.GetType(); }
    };
 
    /////////////////////////////////////////////////////////////////////////////
@@ -131,8 +138,8 @@ private:
    std::uint64_t fCompressedSize = 0;
    std::uint64_t fUncompressedSize = 0;
 
-   std::map<int, RColumnInspector> fColumnInfo;
-   std::map<int, RFieldTreeInspector> fFieldTreeInfo;
+   std::unordered_map<int, RColumnInspector> fColumnInfo;
+   std::unordered_map<int, RFieldTreeInspector> fFieldTreeInfo;
 
    RNTupleInspector(std::unique_ptr<Internal::RPageSource> pageSource);
 
@@ -180,7 +187,7 @@ public:
    /// \note When this factory method is called, all required static information is collected from the RNTuple's fields
    /// and underlying columns are collected at ones. This means that when any inconsistencies are encountered (e.g.
    /// inconsistent compression across clusters), it will throw an error here.
-   static std::unique_ptr<RNTupleInspector> Create(RNTuple *sourceNTuple);
+   static std::unique_ptr<RNTupleInspector> Create(const RNTuple &sourceNTuple);
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Create a new RNTupleInspector.

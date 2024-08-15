@@ -47,6 +47,7 @@ sap.ui.define([
                                      TooltipIcon: chk_icon(true),
                                      AutoResizeIcon: chk_icon(true),
                                      HighlightPadIcon: chk_icon(false),
+                                     CanvasName: 'c1',
                                      StatusLbl1: '', StatusLbl2: '', StatusLbl3: '', StatusLbl4: '',
                                      Standalone: true, isRoot6: true, canResize: true, FixedSize: false });
          this.getView().setModel(model);
@@ -70,6 +71,7 @@ sap.ui.define([
             cp.removeGed = this.cleanupIfGed.bind(this);
             cp.hasGed = this.isGedEditor.bind(this);
 
+            cp.onCanvasUpdated = this.onCanvasUpdated.bind(this);
             cp.hasMenuBar = this.isMenuBarShow.bind(this);
             cp.actiavteMenuBar = this.toggleMenuBar.bind(this);
             cp.hasEventStatus = this.isStatusShown.bind(this);
@@ -111,6 +113,12 @@ sap.ui.define([
 
       isv7() {
          return this.getCanvasPainter()?.v7canvas;
+      },
+
+      onCanvasUpdated() {
+         const canv_name = this.getCanvasPainter()?.getCanvasName();
+         if (canv_name)
+            this.getView().getModel().setProperty('/CanvasName', canv_name);
       },
 
       executeObjectMethod(painter, method, menu_obj_id) {
@@ -278,7 +286,8 @@ sap.ui.define([
          let p = this.getCanvasPainter();
          if (!p) return;
 
-         let name = oEvent.getParameter('item').getText();
+         let name = oEvent.getParameter('item').getText(),
+             canname = this.getView().getModel().getProperty('/CanvasName');
 
          switch (name) {
             case 'Close canvas':
@@ -294,31 +303,31 @@ sap.ui.define([
             case 'Quit ROOT':
                p.sendWebsocket('QUIT');
                break;
-            case 'Canvas.png':
-            case 'Canvas.jpeg':
-            case 'Canvas.svg':
-               p.saveCanvasAsFile(name);
+            case canname + '.png':
+            case canname + '.jpeg':
+            case canname + '.svg':
+            case canname + '.webp':
+            case canname + '.pdf':
+                  p.saveCanvasAsFile(name);
                break;
-            case 'Canvas.root':
-            case 'Canvas.pdf':
-            case 'Canvas.ps':
-            case 'Canvas.C':
+            case canname + '.root':
+            case canname + '.C':
                p.sendSaveCommand(name);
                break;
             case 'Save as ...': {
-               let filters = ['Png files (*.png)', 'Jpeg files (*.jpeg)', 'SVG files (*.svg)', 'ROOT files (*.root)' ];
+               let filters = ['Png files (*.png)', 'Jpeg files (*.jpeg)', 'SVG files (*.svg)', 'PDF files (*.pdf)', 'WEBP files (*.webp)', 'ROOT files (*.root)' ];
                if (!p?.v7canvas)
-                  filters.push('PDF files (*.pdf)', 'C++ (*.cxx *.cpp *.c)');
+                  filters.push('C++ (*.cxx *.cpp *.c)');
 
                FileDialogController.SaveAs({
                   websocket: p._websocket,
-                  filename: 'Canvas.png',
+                  filename: canname + '.png',
                   title: 'Select file name to save canvas',
                   filter: 'Png files',
                   filters,
                   // working_path: '/Home',
                   onOk: fname => {
-                     if (fname.endsWith('.png') || fname.endsWith('.jpeg') || fname.endsWith('.svg'))
+                     if (fname.endsWith('.png') || fname.endsWith('.jpeg') || fname.endsWith('.svg') || fname.endsWith('.pdf') || fname.endsWith('.webp'))
                          p.saveCanvasAsFile(fname);
                      else
                          p.sendSaveCommand(fname);

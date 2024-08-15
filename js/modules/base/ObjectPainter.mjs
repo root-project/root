@@ -2,7 +2,7 @@ import { select as d3_select, pointer as d3_pointer } from '../d3.mjs';
 import { settings, constants, internals, isNodeJs, isBatchMode, getPromise, BIT,
          prROOT, clTObjString, clTAxis, isObject, isFunc, isStr, getDocument } from '../core.mjs';
 import { isPlainText, producePlainText, produceLatex, produceMathjax, typesetMathjax } from './latex.mjs';
-import { getElementRect, BasePainter, makeTranslate } from './BasePainter.mjs';
+import { getElementRect, BasePainter, makeTranslate, DrawOptions } from './BasePainter.mjs';
 import { TAttMarkerHandler } from './TAttMarkerHandler.mjs';
 import { TAttFillHandler } from './TAttFillHandler.mjs';
 import { TAttLineHandler } from './TAttLineHandler.mjs';
@@ -19,14 +19,21 @@ import { getRootColors } from './colors.mjs';
 class ObjectPainter extends BasePainter {
 
    /** @summary constructor
-     * @param {object|string} dom - dom element or identifier
+     * @param {object|string} dom - dom element or identifier or pad painter
      * @param {object} obj - object to draw
      * @param {string} [opt] - object draw options */
    constructor(dom, obj, opt) {
+      let pp = null;
+      if (isFunc(dom?.forEachPainterInPad) && (dom?.this_pad_name !== undefined)) {
+         pp = dom;
+         dom = pp.getDom();
+      }
+
       super(dom);
+
       // this.draw_g = undefined; // container for all drawn objects
       // this._main_painter = undefined;  // main painter in the correspondent pad
-      this.pad_name = dom ? this.selectCurrentPad() : ''; // name of pad where object is drawn
+      this.pad_name = pp?.this_pad_name ?? ''; // name of pad where object is drawn
       this.assignObject(obj);
       if (isStr(opt))
          this.options = { original: opt };
@@ -42,11 +49,13 @@ class ObjectPainter extends BasePainter {
    }
 
    /** @summary Assigns pad name where element will be drawn
-     * @desc Should happend before first draw of element is performed, only for special use case
-     * @param {string} [pad_name] - on which subpad element should be draw, if not specified - use current
-     * @protected */
+     * @desc Should happened before first draw of element is performed, only for special use case
+     * @param {string} [pad_name] - on which sub-pad element should be draw, if not specified - use current
+     * @protected
+     * @deprecated to be removed in v8 */
    setPadName(pad_name) {
-      this.pad_name = isStr(pad_name) ? pad_name : this.selectCurrentPad();
+      // console.warn('setPadName is deprecated, to be removed in v8');
+      this.pad_name = isStr(pad_name) ? pad_name : '';
    }
 
    /** @summary Returns pad name where object is drawn */
@@ -111,14 +120,17 @@ class ObjectPainter extends BasePainter {
      * @protected */
    matchObjectType(arg) {
       const clname = this.getClassName();
-      if (!arg || !clname) return false;
-      if (isStr(arg)) return arg === clname;
-      if (isStr(arg._typename)) return arg._typename === clname;
-      return clname.match(arg);
+      if (!arg || !clname)
+         return false;
+      if (isStr(arg))
+         return arg === clname;
+      if (isStr(arg._typename))
+         return arg._typename === clname;
+      return !!clname.match(arg);
    }
 
    /** @summary Change item name
-     * @desc When available, used for svg:title proprty
+     * @desc When available, used for svg:title property
      * @private */
    setItemName(name, opt, hpainter) {
       super.setItemName(name, opt, hpainter);
@@ -142,6 +154,13 @@ class ObjectPainter extends BasePainter {
       this.options_store = Object.assign({}, this.options);
    }
 
+   /** @summary Return dom argument for object drawing
+    * @desc Can be used to draw other objects on same pad / same dom element
+    * @protected */
+   getDrawDom() {
+      return this.getPadPainter() || this.getDom();
+   }
+
    /** @summary Return actual draw options as string
      * @param ignore_pad - do not include pad settings into histogram draw options
      * @desc if options are not modified - returns original string which was specified for object draw */
@@ -154,11 +173,14 @@ class ObjectPainter extends BasePainter {
          if (!this.options_store || pp?._interactively_changed)
             changed = true;
          else {
-            for (const k in this.options) {
-               if (this.options[k] !== this.options_store[k])
-                  changed = true;
+            for (const k in this.options_store) {
+               if (this.options[k] !== this.options_store[k]) {
+                  if ((k[0] !== '_') && (k[0] !== '$') && (k[0].toLowerCase() !== k[0]))
+                     changed = true;
                }
+            }
          }
+
          if (changed && isFunc(this.options.asString))
             return this.options.asString(this.isMainPainter(), ignore_pad ? null : pp?.getRootPad());
       }
@@ -213,8 +235,10 @@ class ObjectPainter extends BasePainter {
      * Such string typically used as object tooltip.
      * If result string larger than 20 symbols, it will be cutted. */
    getObjectHint() {
-      const hint = this.getItemName() || this.getObjectName() || this.getClassName() || '';
-      return (hint.length <= 20) ? hint : hint.slice(0, 17) + '...';
+      const iname = this.getItemName();
+      if (iname)
+         return (iname.length > 20) ? '...' + iname.slice(iname.length - 17) : iname;
+      return this.getObjectName() || this.getClassName() || '';
    }
 
    /** @summary returns color from current list of colors
@@ -286,6 +310,11 @@ class ObjectPainter extends BasePainter {
      * @protected */
    createG(frame_layer) {
       let layer;
+
+      if (frame_layer === 'frame2d') {
+         const fp = this.getFramePainter();
+         frame_layer = fp && !fp.mode3d;
+      }
 
       if (frame_layer) {
          const frame = this.getFrameSvg();
@@ -390,7 +419,20 @@ class ObjectPainter extends BasePainter {
       return !isObject(main) ? true : this._main_painter_id === main.getUniqueId(true);
    }
 
-   /** @summary Provides identifier on server for requested sublement */
+   /** @summary Return primary object
+     * @private */
+   getPrimary() {
+      let res = null;
+      if (this.isSecondary()) {
+         this.forEachPainter(p => {
+            if (this.isSecondary(p))
+               res = p;
+         });
+      }
+      return res;
+   }
+
+   /** @summary Provides identifier on server for requested sub-element */
    getSnapId(subelem) {
       if (!this.snapid)
          return '';
@@ -417,13 +459,11 @@ class ObjectPainter extends BasePainter {
    /** @summary Method selects current pad name
      * @param {string} [new_name] - when specified, new current pad name will be configured
      * @return {string} previous selected pad or actual pad when new_name not specified
-     * @private */
-   selectCurrentPad(new_name) {
-      const svg = this.getCanvSvg();
-      if (svg.empty()) return '';
-      const curr = svg.property('current_pad');
-      if (new_name !== undefined) svg.property('current_pad', new_name);
-      return curr;
+     * @private
+     * @deprecated to be removed in v8 */
+   selectCurrentPad() {
+      console.warn('selectCurrentPad is deprecated, will be removed in v8');
+      return '';
    }
 
    /** @summary returns pad painter
@@ -446,18 +486,22 @@ class ObjectPainter extends BasePainter {
      * Only can be used for painting in the pad, means CreateG() should be called without arguments
      * @param {boolean} isndc - if NDC coordinates will be used
      * @param {boolean} [noround] - if set, return coordinates will not be rounded
+     * @param {boolean} [use_frame_coordinates] - use frame coordinates even when drawing on the pad
      * @protected */
-   getAxisToSvgFunc(isndc, nornd) {
+   getAxisToSvgFunc(isndc, nornd, use_frame_coordinates) {
       const func = { isndc, nornd },
             use_frame = this.draw_g?.property('in_frame');
-      if (use_frame) func.main = this.getFramePainter();
+      if (use_frame || (use_frame_coordinates && !isndc))
+         func.main = this.getFramePainter();
       if (func.main?.grx && func.main?.gry) {
+         func.x0 = (use_frame_coordinates && !isndc) ? func.main.getFrameX() : 0;
+         func.y0 = (use_frame_coordinates && !isndc) ? func.main.getFrameY() : 0;
          if (nornd) {
-            func.x = function(x) { return this.main.grx(x); };
-            func.y = function(y) { return this.main.gry(y); };
+            func.x = function(x) { return this.x0 + this.main.grx(x); };
+            func.y = function(y) { return this.y0 + this.main.gry(y); };
          } else {
-            func.x = function(x) { return Math.round(this.main.grx(x)); };
-            func.y = function(y) { return Math.round(this.main.gry(y)); };
+            func.x = function(x) { return this.x0 + Math.round(this.main.grx(x)); };
+            func.y = function(y) { return this.y0 + Math.round(this.main.gry(y)); };
          }
       } else if (!use_frame) {
          const pp = this.getPadPainter();
@@ -496,7 +540,7 @@ class ObjectPainter extends BasePainter {
      * @param {number} value - axis value to convert.
      * @param {boolean} ndc - is value in NDC coordinates
      * @param {boolean} [noround] - skip rounding
-     * @return {number} value of requested coordiantes
+     * @return {number} value of requested coordinates
      * @protected */
    axisToSvg(axis, value, ndc, noround) {
       const func = this.getAxisToSvgFunc(ndc, noround);
@@ -506,9 +550,9 @@ class ObjectPainter extends BasePainter {
    /** @summary Converts pad SVG x or y coordinates into axis values.
      * @desc Reverse transformation for {@link ObjectPainter#axisToSvg}
      * @param {string} axis - name like 'x' or 'y'
-     * @param {number} coord - graphics coordiante.
+     * @param {number} coord - graphics coordinate.
      * @param {boolean} ndc - kind of return value
-     * @return {number} value of requested coordiantes
+     * @return {number} value of requested coordinates
      * @protected */
    svgToAxis(axis, coord, ndc) {
       const use_frame = this.draw_g?.property('in_frame');
@@ -556,7 +600,7 @@ class ObjectPainter extends BasePainter {
 
    /** @summary Returns painter for main object on the pad.
      * @desc Typically it is first histogram drawn on the pad and which draws frame axes
-     * But it also can be special usecase as TASImage or TGraphPolargram
+     * But it also can be special use-case as TASImage or TGraphPolargram
      * @param {boolean} [not_store] - if true, prevent temporary storage of main painter reference
      * @protected */
    getMainPainter(not_store) {
@@ -588,32 +632,30 @@ class ObjectPainter extends BasePainter {
    }
 
    /** @summary Add painter to pad list of painters
-     * @param {string} [pad_name] - optional pad name where painter should be add
-     * @desc Normally one should use {@link ensureTCanvas} to add painter to pad list of primitives
+     * @desc Normally called from {@link ensureTCanvas} function when new painter is created
      * @protected */
-   addToPadPrimitives(pad_name) {
-      if (pad_name !== undefined) this.setPadName(pad_name);
-      const pp = this.getPadPainter(pad_name); // important - pad_name must be here, otherwise PadPainter class confuses itself
+   addToPadPrimitives() {
+      const pp = this.getPadPainter();
 
-      if (!pp || (pp === this)) return false;
+      if (!pp || (pp === this))
+         return null;
 
       if (pp.painters.indexOf(this) < 0)
          pp.painters.push(this);
 
-      if (!this.rstyle && pp.next_rstyle)
-         this.rstyle = pp.next_rstyle;
-
-      return true;
+      return pp;
    }
 
    /** @summary Remove painter from pad list of painters
      * @protected */
    removeFromPadPrimitives() {
       const pp = this.getPadPainter();
-      if (!pp || (pp === this)) return false;
+      if (!pp || (pp === this))
+         return false;
 
       const k = pp.painters.indexOf(this);
-      if (k >= 0) pp.painters.splice(k, 1);
+      if (k >= 0)
+         pp.painters.splice(k, 1);
       return true;
    }
 
@@ -625,13 +667,17 @@ class ObjectPainter extends BasePainter {
      * @return {object} created handler
      * @protected */
    createAttMarker(args) {
-      if (!isObject(args))
+      if (args === undefined)
+         args = { attr: this.getObject() };
+      else if (!isObject(args))
          args = { std: true };
       else if (args.fMarkerColor !== undefined && args.fMarkerStyle !== undefined && args.fMarkerSize !== undefined)
          args = { attr: args, std: false };
 
-      if (args.std === undefined) args.std = true;
-      if (args.painter === undefined) args.painter = this;
+      if (args.std === undefined)
+         args.std = true;
+      if (args.painter === undefined)
+         args.painter = this;
 
       let handler = args.std ? this.markeratt : null;
 
@@ -640,7 +686,8 @@ class ObjectPainter extends BasePainter {
       else if (!handler.changed || args.force)
          handler.setArgs(args);
 
-      if (args.std) this.markeratt = handler;
+      if (args.std)
+         this.markeratt = handler;
       return handler;
    }
 
@@ -651,13 +698,17 @@ class ObjectPainter extends BasePainter {
      * @param {object} args - either TAttLine or see constructor arguments of {@link TAttLineHandler}
      * @protected */
    createAttLine(args) {
-      if (!isObject(args))
+      if (args === undefined)
+         args = { attr: this.getObject() };
+      else if (!isObject(args))
          args = { std: true };
       else if (args.fLineColor !== undefined && args.fLineStyle !== undefined && args.fLineWidth !== undefined)
          args = { attr: args, std: false };
 
-      if (args.std === undefined) args.std = true;
-      if (args.painter === undefined) args.painter = this;
+      if (args.std === undefined)
+         args.std = true;
+      if (args.painter === undefined)
+         args.painter = this;
 
       let handler = args.std ? this.lineatt : null;
 
@@ -666,7 +717,8 @@ class ObjectPainter extends BasePainter {
       else if (!handler.changed || args.force)
          handler.setArgs(args);
 
-      if (args.std) this.lineatt = handler;
+      if (args.std)
+         this.lineatt = handler;
       return handler;
    }
 
@@ -674,13 +726,17 @@ class ObjectPainter extends BasePainter {
      * @param {object} args - either TAttText or see constructor arguments of {@link TAttTextHandler}
      * @protected */
    createAttText(args) {
-      if (!isObject(args))
+      if (args === undefined)
+         args = { attr: this.getObject() };
+      else if (!isObject(args))
          args = { std: true };
       else if (args.fTextFont !== undefined && args.fTextSize !== undefined && args.fTextColor !== undefined)
          args = { attr: args, std: false };
 
-      if (args.std === undefined) args.std = true;
-      if (args.painter === undefined) args.painter = this;
+      if (args.std === undefined)
+         args.std = true;
+      if (args.painter === undefined)
+         args.painter = this;
 
       let handler = args.std ? this.textatt : null;
 
@@ -689,7 +745,8 @@ class ObjectPainter extends BasePainter {
       else if (!handler.changed || args.force)
          handler.setArgs(args);
 
-      if (args.std) this.textatt = handler;
+      if (args.std)
+         this.textatt = handler;
       return handler;
    }
 
@@ -698,7 +755,7 @@ class ObjectPainter extends BasePainter {
      * otherwise newly created patters will not be usable in the canvas
      * See {@link TAttFillHandler} for more info.
      * Instance assigned as this.fillatt data member, recognized by GED editors
-     * @param {object} args - for special cases one can specify TAttFill as args or number of parameters
+     * @param {object} [args] - for special cases one can specify TAttFill as args or number of parameters
      * @param {boolean} [args.std = true] - this is standard fill attribute for object and should be used as this.fillatt
      * @param {object} [args.attr = null] - object, derived from TAttFill
      * @param {number} [args.pattern = undefined] - integer index of fill pattern
@@ -708,24 +765,30 @@ class ObjectPainter extends BasePainter {
      * @return created handle
      * @protected */
    createAttFill(args) {
-      if (!isObject(args))
+      if (args === undefined)
+         args = { attr: this.getObject() };
+      else if (!isObject(args))
          args = { std: true };
       else if (args._typename && args.fFillColor !== undefined && args.fFillStyle !== undefined)
          args = { attr: args, std: false };
 
-      if (args.std === undefined) args.std = true;
+      if (args.std === undefined)
+         args.std = true;
+      if (args.painter === undefined)
+         args.painter = this;
 
       let handler = args.std ? this.fillatt : null;
 
-      if (!args.svg) args.svg = this.getCanvSvg();
-      if (args.painter === undefined) args.painter = this;
+      if (!args.svg)
+         args.svg = this.getCanvSvg();
 
       if (!handler)
          handler = new TAttFillHandler(args);
       else if (!handler.changed || args.force)
          handler.setArgs(args);
 
-      if (args.std) this.fillatt = handler;
+      if (args.std)
+         this.fillatt = handler;
       return handler;
    }
 
@@ -758,13 +821,16 @@ class ObjectPainter extends BasePainter {
          res = this.redraw(reason);
 
       return getPromise(res).then(() => {
+         if (arg === 'attribute')
+            return this.getPadPainter()?.redrawLegend();
+      }).then(() => {
          // inform GED that something changes
          const canp = this.getCanvPainter();
 
          if (isFunc(canp?.producePadEvent))
             canp.producePadEvent('redraw', this.getPadPainter(), this, null, subelem);
 
-         // inform server that drawopt changes
+         // inform server that draw options changes
          if (isFunc(canp?.processChanges))
             canp.processChanges(info, this, subelem);
 
@@ -827,7 +893,7 @@ class ObjectPainter extends BasePainter {
       if (p > 0) cl = cl.slice(p+2);
       const title = (cl && name) ? `${cl}:${name}` : (cl || name || 'object');
 
-      menu.add(`header:${title}`);
+      menu.header(title);
 
       const size0 = menu.size();
 
@@ -843,7 +909,7 @@ class ObjectPainter extends BasePainter {
    }
 
    /** @summary shows objects status
-     * @desc Either used canvas painter method or globaly assigned
+     * @desc Either used canvas painter method or globally assigned
      * When no parameters are specified, just basic object properties are shown
      * @private */
    showObjectStatus(name, title, info, info2) {
@@ -880,7 +946,7 @@ class ObjectPainter extends BasePainter {
      * @desc required before any text can be drawn
      * @param {number} font_face - font id as used in ROOT font attributes
      * @param {number} font_size - font size as used in ROOT font attributes
-     * @param {object} [draw_g] - element where text drawm, by default using main object <g> element
+     * @param {object} [draw_g] - element where text drawn, by default using main object <g> element
      * @param {number} [max_font_size] - maximal font size, used when text can be scaled
      * @protected */
    startTextDrawing(font_face, font_size, draw_g, max_font_size) {
@@ -1034,7 +1100,7 @@ class ObjectPainter extends BasePainter {
                dy = ((arg.align[1] === 'top') ? (arg.top_shift || 1) : (arg.align[1] === 'middle') ? (arg.mid_shift || 0.5) : 0) * arg.box.height;
             }
          } else if (arg.text_rect) {
-            // handle latext drawing
+            // handle latex drawing
             const box = arg.text_rect;
 
             scale = (f > 0) && (Math.abs(1-f) > 0.01) ? 1/f : 1;
@@ -1092,7 +1158,7 @@ class ObjectPainter extends BasePainter {
    /** @summary Post-process plain text drawing
      * @private */
    _postprocessDrawText(arg, txt_node) {
-      // complete rectangle with very rougth size estimations
+      // complete rectangle with very rough size estimations
       arg.box = !isNodeJs() && !settings.ApproxTextSize && !arg.fast
                  ? getElementRect(txt_node, 'bbox')
                  : (arg.text_rect || { height: arg.font_size * 1.2, width: arg.text.length * arg.font_size * arg.font.aver_width });
@@ -1126,7 +1192,7 @@ class ObjectPainter extends BasePainter {
      * @param {boolean} [arg.scale = true] - scale into draw box when width and height parameters are specified
      * @param {number} [arg.latex] - 0 - plain text, 1 - normal TLatex, 2 - math
      * @param {string} [arg.color=black] - text color
-     * @param {number} [arg.rotate] - rotaion angle
+     * @param {number} [arg.rotate] - rotation angle
      * @param {number} [arg.font_size] - fixed font size
      * @param {object} [arg.draw_g] - element where to place text, if not specified central draw_g container is used
      * @param {function} [arg.post_process] - optional function called when specified text is drawn
@@ -1267,11 +1333,11 @@ class ObjectPainter extends BasePainter {
    }
 
    /** @summary Configure user-defined context menu for the object
-     * @desc fillmenu_func will be called when context menu is actiavted
+     * @desc fillmenu_func will be called when context menu is activated
      * Arguments fillmenu_func are (menu,kind)
-     * First is menu object, second is object subelement like axis 'x' or 'y'
+     * First is menu object, second is object sub-element like axis 'x' or 'y'
      * Function should return promise with menu when items are filled
-     * @param {function} fillmenu_func - function to fill custom context menu for oabject */
+     * @param {function} fillmenu_func - function to fill custom context menu for object */
    configureUserContextMenu(fillmenu_func) {
       if (!fillmenu_func || !isFunc(fillmenu_func))
          delete this._userContextMenuFunc;
@@ -1346,7 +1412,7 @@ class ObjectPainter extends BasePainter {
 
          if (menu.exec_items?.length) {
             if (_menu.size() > 0)
-               _menu.add('separator');
+               _menu.separator();
 
             let lastclname;
 
@@ -1356,7 +1422,7 @@ class ObjectPainter extends BasePainter {
                item.$menu = menu;
 
                if (item.fClassName && lastclname && (lastclname !== item.fClassName)) {
-                  _menu.add('endsub:');
+                  _menu.endsub();
                   lastclname = '';
                }
                if (lastclname !== item.fClassName) {
@@ -1364,7 +1430,7 @@ class ObjectPainter extends BasePainter {
                   const p = lastclname.lastIndexOf('::'),
                         shortname = (p > 0) ? lastclname.slice(p+2) : lastclname;
 
-                  _menu.add('sub:' + shortname.replace(/[<>]/g, '_'));
+                  _menu.sub(shortname.replace(/[<>]/g, '_'));
                }
 
                if ((item.fChecked === undefined) || (item.fChecked < 0))
@@ -1373,7 +1439,7 @@ class ObjectPainter extends BasePainter {
                   _menu.addchk(item.fChecked, item.fName, n, DoExecMenu);
             }
 
-            if (lastclname) _menu.add('endsub:');
+            if (lastclname) _menu.endsub();
          }
 
          _resolveFunc(_menu);
@@ -1404,7 +1470,7 @@ class ObjectPainter extends BasePainter {
 
    /** @summary Configure user-defined tooltip handler
      * @desc Hook for the users to get tooltip information when mouse cursor moves over frame area
-     * Hanlder function will be called every time when new data is selected
+     * Handler function will be called every time when new data is selected
      * when mouse leave frame area, handler(null) will be called
      * @param {function} handler - function called when tooltip is produced
      * @param {number} [tmout = 100] - delay in ms before tooltip delivered */
@@ -1419,7 +1485,7 @@ class ObjectPainter extends BasePainter {
    }
 
     /** @summary Configure user-defined click handler
-      * @desc Function will be called every time when frame click was perfromed
+      * @desc Function will be called every time when frame click was performed
       * As argument, tooltip object with selected bins will be provided
       * If handler function returns true, default handling of click will be disabled
       * @param {function} handler - function called when mouse click is done */
@@ -1497,7 +1563,7 @@ class ObjectPainter extends BasePainter {
    }
 
    /** @summary Get tooltip for painter and specified event position
-     * @param {Object} evnt - object wiith clientX and clientY positions
+     * @param {Object} evnt - object with clientX and clientY positions
      * @private */
    getToolTip(evnt) {
       if ((evnt?.clientX === undefined) || (evnt?.clientY === undefined)) return null;
@@ -1667,10 +1733,11 @@ const EAxisBits = {
    kLabelsUp: BIT(21),
    kIsInteger: BIT(22),
    kMoreLogLabels: BIT(23),
-   kOppositeTitle: BIT(32) // atrificial bit, not possible to set in ROOT
-};
+   kOppositeTitle: BIT(32) // artificial bit, not possible to set in ROOT
+}, kAxisLabels = 'labels', kAxisNormal = 'normal', kAxisFunc = 'func', kAxisTime = 'time';
 
 
 export { getElementCanvPainter, getElementMainPainter, drawingJSON,
          selectActivePad, getActivePad, cleanup, resize,
-         ObjectPainter, drawRawText, EAxisBits };
+         ObjectPainter, DrawOptions, drawRawText,
+         EAxisBits, kAxisLabels, kAxisNormal, kAxisFunc, kAxisTime };

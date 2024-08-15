@@ -7,7 +7,7 @@ import { TAxisPainter } from '../gpad/TAxisPainter.mjs';
 import { createLineSegments, PointsCreator, Box3D } from '../base/base3d.mjs';
 import { THistPainter } from '../hist2d/THistPainter.mjs';
 import { assignFrame3DMethods } from './hist3d.mjs';
-import { proivdeEvalPar, getTF1Value } from './TF1Painter.mjs';
+import { proivdeEvalPar, getTF1Value } from '../base/func.mjs';
 
 
 /**
@@ -22,7 +22,7 @@ class TH3Painter extends THistPainter {
 
    /** @summary Scan TH3 histogram content */
    scanContent(when_axis_changed) {
-      // no need to rescan histogram while result does not depend from axis selection
+      // no need to re-scan histogram while result does not depend from axis selection
       if (when_axis_changed && this.nbinsx && this.nbinsy && this.nbinsz) return;
 
       const histo = this.getHisto();
@@ -200,8 +200,6 @@ class TH3Painter extends THistPainter {
             print_skew = Math.floor(dostat / 10000000) % 10,
             print_kurt = Math.floor(dostat / 100000000) % 10,
             data = this.countStat(undefined, (print_skew > 0) || (print_kurt > 0));
-            // print_under = Math.floor(dostat / 10000) % 10,
-            // print_over = Math.floor(dostat / 100000) % 10;
 
       stat.clearPave();
 
@@ -490,10 +488,7 @@ class TH3Painter extends THistPainter {
       if ((i2 <= i1) || (j2 <= j1) || (k2 <= k1))
          return false;
 
-      const scalex = (main.grx(histo.fXaxis.GetBinLowEdge(i2+1)) - main.grx(histo.fXaxis.GetBinLowEdge(i1+1))) / (i2-i1),
-            scaley = (main.gry(histo.fYaxis.GetBinLowEdge(j2+1)) - main.gry(histo.fYaxis.GetBinLowEdge(j1+1))) / (j2-j1),
-            scalez = (main.grz(histo.fZaxis.GetBinLowEdge(k2+1)) - main.grz(histo.fZaxis.GetBinLowEdge(k1+1))) / (k2-k1),
-            cols_size = {}, cols_sequence = {},
+      const cols_size = {}, cols_sequence = {},
             cntr = use_colors ? this.getContour() : null,
             palette = use_colors ? this.getHistPalette() : null;
       let nbins = 0, i, j, k, wei, bin_content, num_colors = 0, transfer = null;
@@ -572,12 +567,14 @@ class TH3Painter extends THistPainter {
             helper_positions[nseq] = new Float32Array(nbins * Box3D.Segments.length * 3);
       }
 
-      let binx, grx, biny, gry, binz, grz;
+      let grx1, grx2, gry1, gry2, grz1, grz2;
 
       for (i = i1; i < i2; ++i) {
-         binx = histo.fXaxis.GetBinCenter(i+1); grx = main.grx(binx);
+         grx1 = main.grx(histo.fXaxis.GetBinLowEdge(i+1));
+         grx2 = main.grx(histo.fXaxis.GetBinLowEdge(i+2));
          for (j = j1; j < j2; ++j) {
-            biny = histo.fYaxis.GetBinCenter(j+1); gry = main.gry(biny);
+            gry1 = main.gry(histo.fYaxis.GetBinLowEdge(j+1));
+            gry2 = main.gry(histo.fYaxis.GetBinLowEdge(j+2));
             for (k = k1; k < k2; ++k) {
                bin_content = histo.getBinContent(i+1, j+1, k+1);
                if (!this.options.GLColor && ((bin_content === 0) || (bin_content < this.gminbin))) continue;
@@ -596,7 +593,8 @@ class TH3Painter extends THistPainter {
 
                nbins = cols_nbins[nseq];
 
-               binz = histo.fZaxis.GetBinCenter(k+1); grz = main.grz(binz);
+               grz1 = main.grz(histo.fZaxis.GetBinLowEdge(k+1));
+               grz2 = main.grz(histo.fZaxis.GetBinLowEdge(k+2));
 
                // remember bin index for tooltip
                bin_tooltips[nseq][nbins] = histo.getBin(i+1, j+1, k+1);
@@ -606,9 +604,9 @@ class TH3Painter extends THistPainter {
 
                // Grab the coordinates and scale that are being assigned to each bin
                for (let vi = 0; vi < buffer_size; vi+=3, vvv+=3) {
-                  bin_v[vvv] = grx + single_bin_verts[vi]*scalex*wei;
-                  bin_v[vvv+1] = gry + single_bin_verts[vi+1]*scaley*wei;
-                  bin_v[vvv+2] = grz + single_bin_verts[vi+2]*scalez*wei;
+                  bin_v[vvv] = (grx2 + grx1) / 2 + single_bin_verts[vi] * (grx2 - grx1) * wei;
+                  bin_v[vvv+1] = (gry2 + gry1) / 2 + single_bin_verts[vi+1] * (gry2 - gry1) * wei;
+                  bin_v[vvv+2] = (grz2 + grz1) / 2 + single_bin_verts[vi+2] * (grz2 - grz1) * wei;
 
                   bin_n[vvv] = single_bin_norms[vi];
                   bin_n[vvv+1] = single_bin_norms[vi+1];
@@ -629,11 +627,11 @@ class TH3Painter extends THistPainter {
                   const helper_segments = Box3D.Segments,
                       helper_p = helper_positions[nseq];
                   vvv = nbins * helper_segments.length * 3;
-                  for (let n=0; n<helper_segments.length; ++n, vvv+=3) {
+                  for (let n = 0; n < helper_segments.length; ++n, vvv += 3) {
                      const vert = Box3D.Vertices[helper_segments[n]];
-                     helper_p[vvv] = grx + (vert.x-0.5)*scalex*wei;
-                     helper_p[vvv+1] = gry + (vert.y-0.5)*scaley*wei;
-                     helper_p[vvv+2] = grz + (vert.z-0.5)*scalez*wei;
+                     helper_p[vvv] = (grx2 + grx1) / 2 + (vert.x - 0.5) * (grx2 - grx1) * wei;
+                     helper_p[vvv+1] = (gry2 + gry1) / 2 + (vert.y - 0.5) * (gry2 - gry1) * wei;
+                     helper_p[vvv+2] = (grz2 + grz1) / 2 + (vert.z - 0.5) * (grz2 - grz1) * wei;
                   }
                }
 
@@ -646,7 +644,7 @@ class TH3Painter extends THistPainter {
          const nseq = cols_sequence[colindx],
                all_bins_buffgeom = new BufferGeometry(); // BufferGeometries that store geometry of all bins
 
-         // Create mesh from bin buffergeometry
+         // Create mesh from bin buffer geometry
          all_bins_buffgeom.setAttribute('position', new BufferAttribute(bin_verts[nseq], 3));
          all_bins_buffgeom.setAttribute('normal', new BufferAttribute(bin_norms[nseq], 3));
 
@@ -665,10 +663,7 @@ class TH3Painter extends THistPainter {
          combined_bins.bins = bin_tooltips[nseq];
          combined_bins.bins_faces = buffer_size/9;
          combined_bins.painter = this;
-
-         combined_bins.scalex = tipscale*scalex;
-         combined_bins.scaley = tipscale*scaley;
-         combined_bins.scalez = tipscale*scalez;
+         combined_bins.tipscale = tipscale;
          combined_bins.tip_color = (histo.fFillColor === 3) ? 0xFF0000 : 0x00FF00;
          combined_bins.get_weight = get_bin_weight;
 
@@ -680,15 +675,20 @@ class TH3Painter extends THistPainter {
                   histo = p.getHisto(),
                   main = p.getFramePainter(),
                   tip = p.get3DToolTip(this.bins[indx]),
-                  grx = main.grx(histo.fXaxis.GetBinCoord(tip.ix-0.5)),
-                  gry = main.gry(histo.fYaxis.GetBinCoord(tip.iy-0.5)),
-                  grz = main.grz(histo.fZaxis.GetBinCoord(tip.iz-0.5)),
-                  wei = this.get_weight(tip.value);
+                  grx1 = main.grx(histo.fXaxis.GetBinCoord(tip.ix-1)),
+                  grx2 = main.grx(histo.fXaxis.GetBinCoord(tip.ix)),
+                  gry1 = main.gry(histo.fYaxis.GetBinCoord(tip.iy-1)),
+                  gry2 = main.gry(histo.fYaxis.GetBinCoord(tip.iy)),
+                  grz1 = main.grz(histo.fZaxis.GetBinCoord(tip.iz-1)),
+                  grz2 = main.grz(histo.fZaxis.GetBinCoord(tip.iz)),
+                  wei2 = this.get_weight(tip.value) * this.tipscale;
 
-            tip.x1 = grx - this.scalex*wei; tip.x2 = grx + this.scalex*wei;
-            tip.y1 = gry - this.scaley*wei; tip.y2 = gry + this.scaley*wei;
-            tip.z1 = grz - this.scalez*wei; tip.z2 = grz + this.scalez*wei;
-
+            tip.x1 = (grx2 + grx1) / 2 - (grx2 - grx1) * wei2;
+            tip.x2 = (grx2 + grx1) / 2 + (grx2 - grx1) * wei2;
+            tip.y1 = (gry2 + gry1) / 2 - (gry2 - gry1) * wei2;
+            tip.y2 = (gry2 + gry1) / 2 + (gry2 - gry1) * wei2;
+            tip.z1 = (grz2 + grz1) / 2 - (grz2 - grz1) * wei2;
+            tip.z2 = (grz2 + grz1) / 2 + (grz2 - grz1) * wei2;
             tip.color = this.tip_color;
 
             return tip;
@@ -734,9 +734,11 @@ class TH3Painter extends THistPainter {
       }
 
       if (this.isMainPainter())
-        pr = pr.then(() => this.drawColorPalette(this.options.Zscale && (this._box_option === 12 || this._box_option === 13))).then(() => this.drawHistTitle());
+        pr = pr.then(() => this.drawColorPalette(this.options.Zscale && (this._box_option === 12 || this._box_option === 13)));
 
-      return pr.then(() => this.updateFunctions()).then(() => this);
+      return pr.then(() => this.updateFunctions())
+               .then(() => this.updateHistTitle())
+               .then(() => this);
    }
 
    /** @summary Fill pad toolbar with TH3-related functions */
@@ -778,7 +780,7 @@ class TH3Painter extends THistPainter {
                min = Math.min(min, histo.getBinContent(i+1, j+1, k+1));
          }
       }
-      if (min > 0) return; // if all points positive, no chance for autoscale
+      if (min > 0) return; // if all points positive, no chance for auto-scale
 
       let ileft = i2, iright = i1, jleft = j2, jright = j1, kleft = k2, kright = k1;
 

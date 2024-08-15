@@ -14,11 +14,6 @@ endif()
 # Test ROOT module
 ROOT_ADD_PYUNITTEST(pyroot_root_module root_module.py)
 
-# Test versions of Python dependencies
-if(NOT MSVC)
-    ROOT_ADD_PYUNITTEST(pyroot_dependency_versions dependency_versions.py)
-endif()
-
 # @pythonization decorator
 ROOT_ADD_PYUNITTEST(pyroot_pyz_decorator pythonization_decorator.py)
 
@@ -113,9 +108,7 @@ if (dataframe)
         ROOT_ADD_PYUNITTEST(pyroot_pyz_rdataframe_makenumpy rdataframe_makenumpy.py PYTHON_DEPS numpy)
     endif()
     if(NOT MSVC OR win_broken_tests OR CMAKE_CXX_STANDARD GREATER 14)
-        if(NOT MSVC OR llvm13_broken_tests)
-            ROOT_ADD_PYUNITTEST(pyroot_pyz_rdataframe_asnumpy rdataframe_asnumpy.py PYTHON_DEPS numpy)
-        endif()
+        ROOT_ADD_PYUNITTEST(pyroot_pyz_rdataframe_asnumpy rdataframe_asnumpy.py PYTHON_DEPS numpy)
         ROOT_ADD_PYUNITTEST(pyroot_pyz_rdataframe_histo_profile rdataframe_histo_profile.py)
     endif()
 endif()
@@ -127,7 +120,7 @@ endif()
 
 # SOFIE-GNN pythonizations
 if (tmva)
-    if(NOT MSVC OR CMAKE_SIZEOF_VOID_P EQUAL 4 OR win_broken_tests AND (PYTHON_VERSION_STRING VERSION_GREATER_EQUAL 3.8))
+    if(NOT MSVC OR CMAKE_SIZEOF_VOID_P EQUAL 4 OR win_broken_tests)
         find_python_module(sonnet QUIET)
         find_python_module(graph_nets QUIET)
         if (PY_SONNET_FOUND AND PY_GRAPH_NETS_FOUND)
@@ -201,3 +194,6 @@ ROOT_ADD_PYUNITTEST(pyroot_tcomplex tcomplex_operators.py)
 
 # rbatchgenerator tests
 ROOT_ADD_PYUNITTEST(batchgen rbatchgenerator_completeness.py PYTHON_DEPS numpy)
+
+# Tests with memory usage
+ROOT_ADD_PYUNITTEST(pyroot_memory memory.py)

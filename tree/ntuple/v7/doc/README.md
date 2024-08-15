@@ -62,3 +62,12 @@ At this point, the only provided backend stores the pages in ROOT files.
 RNTuples are further grouped into **clusters**, which are, like TTree clusters, self-contained blocks of
 consecutive entries.  Clusters provide a unit of writing and will provide the means for parallel writing of data
 in a future version of RNTuple.
+
+Related classes
+---------------
+
+\defgroup ROOT7 ROOT7 classes
+\brief Interfaces and classes designed for future ROOT version 7 (experimental!)
+
+\defgroup NTuple NTuple-related classes
+\brief tuple classes designed for future ROOT version 7  (experimental!)

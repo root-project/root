@@ -35,22 +35,23 @@ ClassImp(THStack);
     \ingroup Histograms
 The Histogram stack class
 
-A THStack is a collection of TH1 or TH2 histograms.
-Using THStack::Draw() the histogram collection is drawn in one go according
-to the drawing option.
+A THStack is a collection of TH1 or TH2 histograms. By using THStack::Draw(), the entire
+histogram collection is drawn at once according to the specified drawing option.
 
-THStack::Add() allows to add a new histogram to the list.
-The THStack does not own the objects in the list.
+THStack::Add() allows adding a new histogram to the list. Note that the THStack does not
+take ownership of the objects in the list.
 
 \anchor HS00
 ### Stack painting
 
-By default, histograms are shown stacked.
-  - the first histogram is paint
-  - then the sum of the first and second, etc
+By default, histograms are shown stacked:
+  - the first histogram is painted
+  - then the sum of the first and second histograms is painted, and so on
 
-The axis ranges are computed automatically along the X and Y axis in
-order to show the complete histogram collection.
+The axis ranges are computed automatically along the X and Y axes to display the complete
+histogram collection.
+
+Warning: Histogram bins with negative content may produce wrong plots.
 
 ### Stack's drawing options
 
@@ -140,7 +141,7 @@ THStack::THStack(const char *name, const char *title)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Creates a new THStack from a TH2 or TH3
+/// Creates a new THStack from a TH2 or TH3.
 /// It is filled with the 1D histograms from GetProjectionX or GetProjectionY
 /// for each bin of the histogram. It illustrates the differences and total
 /// sum along an axis.
@@ -156,7 +157,7 @@ THStack::THStack(const char *name, const char *title)
 /// - title: fTitle is set to title if given, otherwise to histo's title
 ///          with ", stack of <axis> projections" appended.
 /// - firstbin, lastbin:
-///          for each bin within [firstbin,lastbin] a stack entry is created.
+///          For each bin within [firstbin,lastbin] a stack entry is created.
 ///          See TH2::ProjectionX/Y for use overflow bins.
 ///          Defaults to "all bins but under- / overflow"
 /// - firstbin2, lastbin2:
@@ -317,20 +318,19 @@ THStack::THStack(TH1* hist, Option_t *axis /*="x"*/,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// THStack destructor
+/// THStack destructor.
 
 THStack::~THStack()
 {
-
    {
       R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfCleanups()->Remove(this);
    }
-   if (!fHists) return;
-
-   fHists->Clear("nodelete");
-   delete fHists;
-   fHists = nullptr;
+   if (fHists) {
+      fHists->Clear("nodelete");
+      delete fHists;
+      fHists = nullptr;
+   }
    if (fStack) {
       fStack->Delete();
       delete fStack;
@@ -348,15 +348,18 @@ THStack::THStack(const THStack &hstack) :
    fMaximum(hstack.fMaximum),
    fMinimum(hstack.fMinimum)
 {
-   if (hstack.GetHists()) {
-      TIter next(hstack.GetHists());
-      TH1 *h;
-      while ((h=(TH1*)next())) Add(h);
+   {
+      R__LOCKGUARD(gROOTMutex);
+      gROOT->GetListOfCleanups()->Add(this);
    }
+
+   TIter next(hstack.GetHists());
+   while (auto h = static_cast<TH1 *>(next()))
+      Add(h);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// add a new histogram to the list
+/// Add a new histogram to the list.
 /// Only 1-d and 2-d histograms currently supported.
 /// A drawing option may be specified
 
@@ -382,8 +385,8 @@ void THStack::Browse(TBrowser *b)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///  build sum of all histograms
-///  Build a separate list fStack containing the running sum of all histograms
+/// Build the sum of all histograms.
+/// Build a separate list fStack containing the running sum of all histograms
 
 void THStack::BuildStack()
 {
@@ -398,6 +401,9 @@ void THStack::BuildStack()
    fStack->Add(h);
    for (Int_t i=1;i<nhists;i++) {
       h = (TH1*)fHists->At(i)->Clone();
+      if (h->GetMinimum() < 0.) {
+         Warning("BuildStack","Histograms with a negative minimum may produce wrong plots");
+      }
       h->Add((TH1*)fStack->At(i-1));
       fStack->AddAt(h,i);
    }
@@ -405,8 +411,7 @@ void THStack::BuildStack()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute distance from point px,py to each graph
-///
+/// Compute distance from point px, py to each graph.
 
 Int_t THStack::DistancetoPrimitive(Int_t px, Int_t py)
 {
@@ -439,10 +444,10 @@ Int_t THStack::DistancetoPrimitive(Int_t px, Int_t py)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Draw this multihist with its current attributes.
+/// Draw this stack with its current attributes.
 ///
-///   Options to draw histograms  are described in THistPainter::Paint
-/// By default (if option "nostack" is not specified), histograms will be paint
+/// Options to draw histograms  are described in THistPainter::Paint
+/// By default (if the option "nostack" is not specified), histograms will be painted
 /// stacked on top of each other.
 
 void THStack::Draw(Option_t *option)
@@ -451,10 +456,10 @@ void THStack::Draw(Option_t *option)
    opt.ToLower();
    if (gPad) {
       if (!gPad->IsEditable()) gROOT->MakeDefCanvas();
-      if (!opt.Contains("same")) {
+      if (!opt.Contains("same") && !opt.Contains("pads")) {
          //the following statement is necessary in case one attempts to draw
          //a temporary histogram already in the current pad
-         if (TestBit(kCanDelete)) gPad->GetListOfPrimitives()->Remove(this);
+         if (TestBit(kCanDelete)) gPad->Remove(this);
          gPad->Clear();
       }
    }
@@ -462,10 +467,10 @@ void THStack::Draw(Option_t *option)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///    Returns a pointer to the histogram used to draw the axis
-///    Takes into account the two following cases.
-///       1- option 'A' was specified in THStack::Draw. Return fHistogram
-///       2- user had called TPad::DrawFrame. return pointer to hframe histogram
+/// Returns a pointer to the histogram used to draw the axis.
+/// Takes into account the two following cases:
+///   1- option 'A' was specified in THStack::Draw. Return fHistogram
+///   2- user had called TPad::DrawFrame. return pointer to hframe histogram
 ///
 /// IMPORTANT NOTES
 /// - You must call Draw before calling this function. The returned histogram
@@ -487,48 +492,50 @@ TH1 *THStack::GetHistogram() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///  returns the maximum of all added histograms smaller than maxval.
-///  returns the maximum of all histograms, smaller than maxval, if option "nostack".
+/// Returns the maximum of all added histograms smaller than maxval.
+/// Returns the maximum of all histograms, smaller than maxval, if option "nostack".
 
 Double_t THStack::GetMaximum(Option_t *option, Double_t maxval)
 {
    TString opt = option;
    opt.ToLower();
-   Bool_t lerr = kFALSE;
-   if (opt.Contains("e")) lerr = kTRUE;
-   Double_t them = 0, themax = -std::numeric_limits<Double_t>::max(), c1, e1;
+   Bool_t lerr = opt.Contains("e");
+   Double_t themax = -std::numeric_limits<Double_t>::max();
    if (!fHists) return 0;
    Int_t nhists = fHists->GetSize();
-   TH1 *h;
-   Int_t first,last;
+
+   auto check_error = [&themax](TH1 *h) {
+      Int_t first = h->GetXaxis()->GetFirst();
+      Int_t last  = h->GetXaxis()->GetLast();
+      for (Int_t j = first; j <= last; j++) {
+         Double_t e1 = h->GetBinError(j);
+         Double_t c1 = h->GetBinContent(j);
+         themax = TMath::Max(themax, c1 + e1);
+      }
+   };
 
    if (!opt.Contains("nostack")) {
       BuildStack();
-      h = (TH1*)fStack->At(nhists-1);
-      if (fHistogram) h->GetXaxis()->SetRange(fHistogram->GetXaxis()->GetFirst(),
-                                              fHistogram->GetXaxis()->GetLast());
+      auto h = (TH1 *)fStack->At(nhists - 1);
+      if (fHistogram)
+         h->GetXaxis()->SetRange(fHistogram->GetXaxis()->GetFirst(),
+                                 fHistogram->GetXaxis()->GetLast());
       themax = h->GetMaximum(maxval);
+      if (lerr)
+         check_error(h);
    } else {
-      for (Int_t i=0;i<nhists;i++) {
-         h = (TH1*)fHists->At(i);
-         if (fHistogram) h->GetXaxis()->SetRange(fHistogram->GetXaxis()->GetFirst(),
-                                                 fHistogram->GetXaxis()->GetLast());
-         them = h->GetMaximum(maxval);
-         if (fHistogram) h->GetXaxis()->SetRange(0,0);
-         if (them > themax) themax = them;
-      }
-   }
-
-   if (lerr) {
-      for (Int_t i=0;i<nhists;i++) {
-         h = (TH1*)fHists->At(i);
-         first = h->GetXaxis()->GetFirst();
-         last  = h->GetXaxis()->GetLast();
-         for (Int_t j=first; j<=last;j++) {
-            e1     = h->GetBinError(j);
-            c1     = h->GetBinContent(j);
-            themax = TMath::Max(themax,c1+e1);
-         }
+      for (Int_t i = 0; i < nhists; i++) {
+         auto h = (TH1 *)fHists->At(i);
+         if (fHistogram)
+            h->GetXaxis()->SetRange(fHistogram->GetXaxis()->GetFirst(),
+                                    fHistogram->GetXaxis()->GetLast());
+         Double_t them = h->GetMaximum(maxval);
+         if (them > themax)
+            themax = them;
+         if (lerr)
+            check_error(h);
+         if (fHistogram)
+            h->GetXaxis()->SetRange(0,0);
       }
    }
 
@@ -536,44 +543,49 @@ Double_t THStack::GetMaximum(Option_t *option, Double_t maxval)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///  Returns the minimum of all added histograms larger than minval.
-///  Returns the minimum of all histograms, larger than minval, if option "nostack".
+/// Returns the minimum of all added histograms larger than minval.
+/// Returns the minimum of all histograms, larger than minval, if option "nostack".
 
 Double_t THStack::GetMinimum(Option_t *option, Double_t minval)
 {
+   if (!fHists) return 0;
+
    TString opt = option;
    opt.ToLower();
-   Bool_t lerr = kFALSE;
-   if (opt.Contains("e")) lerr = kTRUE;
-   Double_t them = 0, themin = std::numeric_limits<Double_t>::max(), c1, e1;
-   if (!fHists) return 0;
+   Bool_t lerr = opt.Contains("e");
+   Bool_t logy = gPad ? gPad->GetLogy() : kFALSE;
+   Double_t themin = std::numeric_limits<Double_t>::max();
    Int_t nhists = fHists->GetSize();
-   Int_t first,last;
-   TH1 *h;
+
+   auto check_error = [logy, &themin](TH1 *h) {
+      Int_t first = h->GetXaxis()->GetFirst();
+      Int_t last  = h->GetXaxis()->GetLast();
+      for (Int_t j = first; j <= last; j++) {
+         Double_t e1 = h->GetBinError(j);
+         Double_t c1 = h->GetBinContent(j);
+         if (!logy || (c1 - e1 > 0))
+            themin = TMath::Min(themin, c1 - e1);
+      }
+   };
 
    if (!opt.Contains("nostack")) {
       BuildStack();
-      h = (TH1*)fStack->At(nhists-1);
+      auto h = (TH1*)fStack->At(nhists-1);
       themin = h->GetMinimum(minval);
+      if (themin <= 0 && logy)
+         themin = h->GetMinimum(0);
+      if (lerr)
+         check_error(h);
    } else {
-      for (Int_t i=0;i<nhists;i++) {
-         h = (TH1*)fHists->At(i);
-         them = h->GetMinimum(minval);
-         if (them <= 0 && gPad && gPad->GetLogy()) them = h->GetMinimum(0);
-         if (them < themin) themin = them;
-      }
-   }
-
-   if (lerr) {
-      for (Int_t i=0;i<nhists;i++) {
-         h = (TH1*)fHists->At(i);
-         first = h->GetXaxis()->GetFirst();
-         last  = h->GetXaxis()->GetLast();
-         for (Int_t j=first; j<=last;j++) {
-             e1     = h->GetBinError(j);
-             c1     = h->GetBinContent(j);
-             themin = TMath::Min(themin,c1-e1);
-         }
+      for (Int_t i = 0; i < nhists; i++) {
+         auto h = (TH1 *)fHists->At(i);
+         Double_t them = h->GetMinimum(minval);
+         if (them <= 0 && logy)
+            them = h->GetMinimum(0);
+         if (them < themin)
+            themin = them;
+         if (lerr)
+            check_error(h);
       }
    }
 
@@ -590,7 +602,7 @@ Int_t THStack::GetNhists() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return pointer to Stack. Build it if not yet done
+/// Return pointer to Stack. Build it if not yet done.
 
 TObjArray *THStack::GetStack()
 {
@@ -599,7 +611,7 @@ TObjArray *THStack::GetStack()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get x axis of the histogram used to draw the stack.
+/// Get the x-axis of the histogram used to draw the stack.
 ///
 /// IMPORTANT NOTE
 ///  You must call Draw before calling this function. The returned histogram
@@ -607,14 +619,12 @@ TObjArray *THStack::GetStack()
 
 TAxis *THStack::GetXaxis() const
 {
-   if (!gPad) return nullptr;
    TH1 *h = GetHistogram();
-   if (!h) return nullptr;
-   return h->GetXaxis();
+   return h ? h->GetXaxis() : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get y axis of the histogram used to draw the stack.
+/// Get the y-axis of the histogram used to draw the stack.
 ///
 /// IMPORTANT NOTE
 ///  You must call Draw before calling this function. The returned histogram
@@ -622,14 +632,12 @@ TAxis *THStack::GetXaxis() const
 
 TAxis *THStack::GetYaxis() const
 {
-   if (!gPad) return nullptr;
    TH1 *h = GetHistogram();
-   if (!h) return nullptr;
-   return h->GetYaxis();
+   return h ? h->GetYaxis() : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get z axis of the histogram used to draw the stack.
+/// Get the z-axis of the histogram used to draw the stack.
 ///
 /// IMPORTANT NOTE
 ///  You must call Draw before calling this function. The returned histogram
@@ -637,15 +645,15 @@ TAxis *THStack::GetYaxis() const
 
 TAxis *THStack::GetZaxis() const
 {
-   if (!gPad) return nullptr;
    TH1 *h = GetHistogram();
-   if (!h->IsA()->InheritsFrom(TH2::Class())) Warning("THStack","1D Histograms don't have a Z axis");
    if (!h) return nullptr;
+   if (h->GetDimension() == 1)
+      Warning("GetZaxis","1D Histograms don't have a Z axis");
    return h->GetZaxis();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// List histograms in the stack
+/// List histograms in the stack.
 
 void THStack::ls(Option_t *option) const
 {
@@ -681,7 +689,7 @@ Long64_t THStack::Merge(TCollection* li, TFileMergeInfo * /* info */)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// invalidate sum of histograms
+/// Note: this method invalidates the sum of histograms.
 
 void THStack::Modified()
 {
@@ -702,7 +710,7 @@ void THStack::Paint(Option_t *chopt)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create all additional objects and stack (if specified)
+/// Create all additional objects and stack (if specified).
 
 void THStack::BuildAndPaint(Option_t *choptin, Bool_t paint)
 {
@@ -723,19 +731,16 @@ void THStack::BuildAndPaint(Option_t *choptin, Bool_t paint)
       if (l3) memcpy(l3,"   ",3);
       TString ws = option;
       if (ws.IsWhitespace()) strncpy(option,"\0",1);
-      TH1* hAti;
-      TH1* hsAti;
       Int_t nhists = fHists->GetSize();
-      Int_t ic;
       gPad->IncrementPaletteColor(nhists, opt1);
-      for (Int_t i=0;i<nhists;i++) {
-         ic = gPad->NextPaletteColor();
-         hAti = (TH1F*)(fHists->At(i));
+      for (Int_t i = 0; i < nhists; i++) {
+         auto ic = gPad->NextPaletteColor();
+         auto hAti = static_cast<TH1 *>(fHists->At(i));
          if (l1) hAti->SetFillColor(ic);
          if (l2) hAti->SetLineColor(ic);
          if (l3) hAti->SetMarkerColor(ic);
          if (fStack) {
-            hsAti = (TH1*)fStack->At(i);
+            auto hsAti = static_cast<TH1 *>(fStack->At(i));
             if (l1) hsAti->SetFillColor(ic);
             if (l2) hsAti->SetLineColor(ic);
             if (l3) hsAti->SetMarkerColor(ic);
@@ -757,14 +762,17 @@ void THStack::BuildAndPaint(Option_t *choptin, Bool_t paint)
       opt.ReplaceAll("noclear","");
    }
    if (opt.Contains("pads")) {
+      if (!paint)
+         return;
+
       Int_t npads = fHists->GetSize();
       TVirtualPad *padsav = gPad;
       //if pad is not already divided into subpads, divide it
       Int_t nps = 0;
-      TObject *obj;
       TIter nextp(padsav->GetListOfPrimitives());
-      while ((obj = nextp())) {
-         if (obj->InheritsFrom(TVirtualPad::Class())) nps++;
+      while (auto obj = nextp()) {
+         if (obj->InheritsFrom(TVirtualPad::Class()))
+            nps++;
       }
       if (nps < npads) {
          padsav->Clear();
@@ -773,17 +781,18 @@ void THStack::BuildAndPaint(Option_t *choptin, Bool_t paint)
          Int_t ny = nx;
          if (((nx*ny)-nx) >= npads) ny--;
          padsav->Divide(nx,ny);
-
-         Int_t i = 0;
-         auto lnk = fHists->FirstLink();
-         while (lnk) {
-            i++;
-            padsav->cd(i);
-            lnk->GetObject()->Draw(lnk->GetOption());
-            lnk = lnk->Next();
-         }
-         padsav->cd();
       }
+
+      Int_t i = 1;
+      auto lnk = fHists->FirstLink();
+      while (lnk) {
+         auto subpad = padsav->GetPad(i++);
+         if (!subpad) break;
+         subpad->Clear();
+         subpad->Add(lnk->GetObject(), lnk->GetOption());
+         lnk = lnk->Next();
+      }
+      padsav->cd();
       return;
    }
 
@@ -995,17 +1004,13 @@ void THStack::BuildAndPaint(Option_t *choptin, Bool_t paint)
 
 void THStack::Print(Option_t *option) const
 {
-   TH1 *h;
-   if (fHists) {
-      TIter   next(fHists);
-      while ((h = (TH1*) next())) {
-         h->Print(option);
-      }
-   }
+   TIter   next(fHists);
+   while (auto h = next())
+      h->Print(option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Recursively remove object from the list of histograms
+/// Recursively remove the object `obj` from the list of histograms.
 
 void THStack::RecursiveRemove(TObject *obj)
 {
@@ -1015,7 +1020,7 @@ void THStack::RecursiveRemove(TObject *obj)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Save primitive as a C++ statement(s) on output stream out
+/// Save primitive as a C++ statement(s) on output stream out.
 
 void THStack::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
@@ -1084,7 +1089,7 @@ void THStack::SetMinimum(Double_t minimum)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get iterator over internal hists list.
+/// Get an iterator over internal hists list.
 TIter THStack::begin() const
 {
    return TIter(fHists);

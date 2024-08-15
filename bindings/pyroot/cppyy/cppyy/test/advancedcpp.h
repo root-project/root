@@ -2,7 +2,7 @@
 #include <ostream>
 #include <string>
 #include <vector>
-
+#include <cstdint>
 
 //===========================================================================
 #define DECLARE_DEFAULTERS(type, tname)                                     \
@@ -291,6 +291,8 @@ public:
     char gap[7];
 };
 extern some_int_holder my_global_int_holders[5];
+
+extern some_abstract_class* g_abstract_ptr;
 
 
 //===========================================================================

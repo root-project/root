@@ -11,7 +11,7 @@
 #include <ROOT/Browsable/RLevelIter.hxx>
 #include <ROOT/Browsable/RItem.hxx>
 
-#include <ROOT/RNTuple.hxx>
+#include <ROOT/RNTupleReader.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 
 #include "TClass.h"

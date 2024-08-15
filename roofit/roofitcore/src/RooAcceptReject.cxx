@@ -46,7 +46,7 @@ do not define internal methods
 
 #include <cassert>
 
-using namespace std;
+using std::endl, std::cerr;
 
 
 ////////////////////////////////////////////////////////////////////////////////

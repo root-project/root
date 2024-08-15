@@ -258,3 +258,143 @@ TEST(RNTuple, MissingViewNames)
       EXPECT_THAT(err.what(), testing::HasSubstr("no field named 'badC' in RNTuple 'myNTuple'"));
    }
 }
+
+TEST(RNTuple, ViewWithExternalAddress)
+{
+   FileRaii fileGuard("test_ntuple_viewexternal.root");
+
+   auto model = RNTupleModel::Create();
+   auto fieldPt = model->MakeField<float>("pt", 42.0);
+
+   {
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+
+   // Typed shared_ptr
+   auto data_1 = std::make_shared<float>();
+   auto view_1 = reader->GetView("pt", data_1);
+   view_1(0);
+   EXPECT_FLOAT_EQ(42.0, *data_1);
+
+   // Void shared_ptr
+   std::shared_ptr<void> data_2{new float()};
+   auto view_2 = reader->GetView("pt", data_2);
+   view_2(0);
+   EXPECT_FLOAT_EQ(42.0, *static_cast<float *>(data_2.get()));
+}
+
+TEST(RNTuple, BindEmplaceTyped)
+{
+   FileRaii fileGuard("test_ntuple_bindvalueemplacetyped.root");
+
+   auto model = RNTupleModel::Create();
+   auto fieldPt = model->MakeField<float>("pt");
+
+   {
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      *fieldPt = 11.f;
+      writer->Fill();
+      *fieldPt = 22.f;
+      writer->Fill();
+      *fieldPt = 33.f;
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+
+   // bind to shared_ptr
+   auto value1 = std::make_shared<float>();
+   auto view = reader->GetView<float>("pt", nullptr);
+   view.Bind(value1);
+   view(0);
+   EXPECT_FLOAT_EQ(11.f, *value1);
+
+   // bind to raw pointer
+   float value2;
+   view.BindRawPtr(&value2);
+   view(1);
+   EXPECT_FLOAT_EQ(22.f, value2);
+
+   // emplace new value
+   view.EmplaceNew();
+   EXPECT_FLOAT_EQ(33.f, view(2));
+   EXPECT_FLOAT_EQ(22.f, value2); // The previous value was not modified
+}
+
+TEST(RNTuple, BindEmplaceVoid)
+{
+   FileRaii fileGuard("test_ntuple_bindvalueemplacevoid.root");
+
+   auto model = RNTupleModel::Create();
+   auto fieldPt = model->MakeField<float>("pt");
+
+   {
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      *fieldPt = 11.f;
+      writer->Fill();
+      *fieldPt = 22.f;
+      writer->Fill();
+      *fieldPt = 33.f;
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+
+   // bind to shared_ptr
+   std::shared_ptr<void> value1{new float()};
+   auto view = reader->GetView<void>("pt", nullptr);
+   view.Bind(value1);
+   view(0);
+   EXPECT_FLOAT_EQ(11.f, *reinterpret_cast<float *>(value1.get()));
+
+   // bind to raw pointer
+   float value2;
+   view.BindRawPtr(&value2);
+   view(1);
+   EXPECT_FLOAT_EQ(22.f, value2);
+
+   // emplace new value
+   view.EmplaceNew();
+   view(2);
+   EXPECT_FLOAT_EQ(33.f, view.GetValue().GetRef<float>());
+   EXPECT_FLOAT_EQ(22.f, value2); // The previous value was not modified
+}
+
+TEST(RNTuple, ViewStandardIntegerTypes)
+{
+   FileRaii fileGuard("test_ntuple_viewstandardintegertypes.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto c = model->MakeField<char>("c", 'a');
+      auto uc = model->MakeField<unsigned char>("uc", 1);
+      auto s = model->MakeField<short>("s", 2);
+      auto us = model->MakeField<unsigned short>("us", 3);
+      auto i = model->MakeField<int>("i", 4);
+      auto ui = model->MakeField<unsigned int>("ui", 5);
+      auto l = model->MakeField<long>("l", 6);
+      auto ul = model->MakeField<unsigned long>("ul", 7);
+      auto ll = model->MakeField<long long>("ll", 8);
+      auto ull = model->MakeField<unsigned long long>("ull", 9);
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   ASSERT_EQ(1, reader->GetNEntries());
+
+   EXPECT_EQ('a', reader->GetView<char>("c")(0));
+   EXPECT_EQ(1, reader->GetView<unsigned char>("uc")(0));
+   EXPECT_EQ(2, reader->GetView<short>("s")(0));
+   EXPECT_EQ(3, reader->GetView<unsigned short>("us")(0));
+   EXPECT_EQ(4, reader->GetView<int>("i")(0));
+   EXPECT_EQ(5, reader->GetView<unsigned int>("ui")(0));
+   EXPECT_EQ(6, reader->GetView<long>("l")(0));
+   EXPECT_EQ(7, reader->GetView<unsigned long>("ul")(0));
+   EXPECT_EQ(8, reader->GetView<long long>("ll")(0));
+   EXPECT_EQ(9, reader->GetView<unsigned long long>("ull")(0));
+}

@@ -162,7 +162,6 @@ void testInterpolation() {
 
 }
 
-#ifndef __CINT__
 int main(int argc, char **argv)
 {
    using std::cerr;
@@ -206,4 +205,3 @@ int main(int argc, char **argv)
 
    return 0;
 }
-#endif

@@ -27,7 +27,7 @@ Represents the ratio of two RooAbsReal objects.
 #include <RooRealVar.h>
 #include <RooTrace.h>
 
-#include "RooFit/Detail/EvaluateFuncs.h"
+#include "RooFit/Detail/MathFuncs.h"
 
 #include <Riostream.h>
 
@@ -113,18 +113,18 @@ RooRatio::RooRatio(const RooRatio &other, const char *name)
 
 double RooRatio::evaluate() const
 {
-   return RooFit::Detail::EvaluateFuncs::ratioEvaluate(_numerator, _denominator);
+   return RooFit::Detail::MathFuncs::ratio(_numerator, _denominator);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate in batch mode.
-void RooRatio::computeBatch(double *output, size_t nEvents, RooFit::Detail::DataMap const &dataMap) const
+void RooRatio::doEval(RooFit::EvalContext &ctx) const
 {
-   RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::Ratio, output, nEvents,
-                            {dataMap.at(_numerator), dataMap.at(_denominator)});
+   RooBatchCompute::compute(ctx.config(this), RooBatchCompute::Ratio, ctx.output(),
+                            {ctx.at(_numerator), ctx.at(_denominator)});
 }
 
 void RooRatio::translate(RooFit::Detail::CodeSquashContext &ctx) const
 {
-   ctx.addResult(this, ctx.buildCall("RooFit::Detail::EvaluateFuncs::ratioEvaluate", _numerator, _denominator));
+   ctx.addResult(this, ctx.buildCall("RooFit::Detail::MathFuncs::ratio", _numerator, _denominator));
 }

@@ -40,7 +40,7 @@
 
 #include <string>
 
-using namespace std;
+using std::string;
 
 const Int_t kMaxLen = 1024;
 

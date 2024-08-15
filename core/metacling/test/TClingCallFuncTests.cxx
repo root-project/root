@@ -300,3 +300,27 @@ TEST(TClingCallFunc, ROOT_6523) {
     break;
   }
 }
+
+TEST(TClingCallFunc, GH_14405) {
+  gInterpreter->Declare(R"cpp(
+                          float testfunc(int a, int b, float c) {
+                            return a + b * c;
+                          }
+                          )cpp");
+
+  CallFuncRAII CfRAII("", "testfunc", "int, int, float");
+  CallFunc_t * cf = CfRAII.GetCF();
+  gInterpreter->CallFunc_SetArg(cf, 1);
+  gInterpreter->CallFunc_SetArg(cf, 2);
+  gInterpreter->CallFunc_SetArg(cf, 3.14f);
+  double result = gInterpreter->CallFunc_ExecDouble(cf, /*address=*/0);
+  EXPECT_NEAR(result, 7.28, /*abs_error=*/1e-6);
+
+  gInterpreter->CallFunc_ResetArg(cf);
+
+  gInterpreter->CallFunc_SetArg(cf, 1);
+  gInterpreter->CallFunc_SetArg(cf, 2);
+  gInterpreter->CallFunc_SetArg(cf, 3.14);
+  result = gInterpreter->CallFunc_ExecDouble(cf, /*address=*/0);
+  EXPECT_NEAR(result, 7.28, /*abs_error=*/1e-6);
+}

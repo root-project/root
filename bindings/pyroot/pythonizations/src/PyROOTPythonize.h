@@ -20,24 +20,14 @@ PyObject *AddCPPInstancePickling(PyObject *self, PyObject *args);
 
 PyObject *AddPrettyPrintingPyz(PyObject *self, PyObject *args);
 
-PyObject *AddBranchAttrSyntax(PyObject *self, PyObject *args);
+PyObject *GetBranchAttr(PyObject *self, PyObject *args);
 PyObject *BranchPyz(PyObject *self, PyObject *args);
-PyObject *SetBranchAddressPyz(PyObject *self, PyObject *args);
 
 PyObject *AddTClassDynamicCastPyz(PyObject *self, PyObject *args);
 
 PyObject *AddTObjectEqNePyz(PyObject *self, PyObject *args);
 
-PyObject *AsRVec(PyObject *self, PyObject *obj);
-PyObject *AsRTensor(PyObject *self, PyObject *obj);
-
 PyObject *CPPInstanceExpand(PyObject *self, PyObject *args);
-
-PyObject *GetEndianess(PyObject *self, PyObject *args);
-PyObject *GetDataPointer(PyObject *self, PyObject *args);
-PyObject *GetSizeOfType(PyObject *self, PyObject *args);
-
-PyObject *MakeNumpyDataFrameImpl(PyObject *self, PyObject *obj);
 
 } // namespace PyROOT
 

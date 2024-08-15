@@ -22,7 +22,6 @@
 // #include "Math/StaticCheck.h"
 // #endif
 
-//#ifndef __CINT__
 //#include <memory>
 
 #include "RtypesCore.h"
@@ -33,6 +32,10 @@ namespace ROOT {
 
 namespace Math {
 
+/**
+ * \defgroup ParamFunctor_int N-D parametric functions
+ * \brief Multi-dimensional parametric functions
+ */
 
 /** class defining the signature for multi-dim parametric functions
 
@@ -58,7 +61,6 @@ class ParamFunctionBase {
    @ingroup  ParamFunctor_int
 
 */
-#ifndef __CINT__
 
 template<class ParentFunctor, class Func >
 class ParamFunctorHandler : public ParentFunctor::Impl {
@@ -253,7 +255,6 @@ private :
 
 };
 
-#endif
 
 
 

@@ -59,11 +59,7 @@ public:
    ~TPyDispatcher();
 
 public:
-#ifndef __CINT__
    PyObject *DispatchVA(const char *format = 0, ...);
-#else
-   PyObject *DispatchVA(const char *format, ...);
-#endif
    PyObject *DispatchVA1(const char *clname, void *obj, const char *format, ...);
 
    // pre-defined dispatches, same as per TQObject::Emit(); note that

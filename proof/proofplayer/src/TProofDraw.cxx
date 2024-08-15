@@ -50,7 +50,7 @@ Implement Tree drawing using PROOF
 #include "TROOT.h"
 
 #include <algorithm>
-using namespace std;
+using std::vector;
 
 
 // Simple call to draw a canvas on the fly from applications loading

@@ -18,7 +18,7 @@
 #include "RooArgSet.h"
 #include "RooAbsArg.h"
 #include <iostream>
-using namespace std ;
+using std::ostream;
 
 /**
 \file RooArgProxy.cxx

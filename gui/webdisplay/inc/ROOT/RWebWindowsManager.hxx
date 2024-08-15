@@ -73,7 +73,7 @@ private:
 
    bool InformListener(const std::string &msg);
 
-   static std::string GenerateKey(int keylen = 8);
+   static std::string GenerateKey(int keylen = 32);
 
 public:
    RWebWindowsManager();
@@ -101,7 +101,12 @@ public:
    static void SetLoopbackMode(bool on = true);
    static bool IsLoopbackMode();
 
-   static void SetUseSessionKey(bool on = false);
+   static void SetUseSessionKey(bool on = true);
+   static void SetUseConnectionKey(bool on = true);
+
+   static void AddServerLocation(const std::string &server_prefix, const std::string &files_path);
+   static std::map<std::string, std::string> GetServerLocations();
+   static void ClearServerLocations();
 };
 
 } // namespace ROOT

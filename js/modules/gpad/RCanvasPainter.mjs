@@ -9,7 +9,6 @@ import { RAxisPainter } from './RAxisPainter.mjs';
 import { RFramePainter } from './RFramePainter.mjs';
 import { RPadPainter } from './RPadPainter.mjs';
 import { addDragHandler } from './TFramePainter.mjs';
-import { WebWindowHandle } from '../webwindow.mjs';
 
 
 /**
@@ -43,6 +42,12 @@ class RCanvasPainter extends RPadPainter {
       delete this._changed_layout;
 
       super.cleanup();
+   }
+
+   /** @summary Returns canvas name */
+   getCanvasName() {
+      const title = this.pad?.fTitle;
+      return (!title || !isStr(title)) ? 'rcanvas' : title.replace(/ /g, '_');
    }
 
    /** @summary Returns layout kind */
@@ -157,7 +162,7 @@ class RCanvasPainter extends RPadPainter {
 
    /** @summary Draw projection for specified histogram
      * @private */
-   async drawProjection(/* kind,hist,hopt */) {
+   async drawProjection(/* kind, hist, hopt */) {
       // dummy for the moment
       return false;
    }
@@ -174,9 +179,7 @@ class RCanvasPainter extends RPadPainter {
      * @desc Function should be used only from the func which supposed to be replaced by ui5
      * @private */
    testUI5() {
-      if (!this.use_openui) return false;
-      console.warn('full ui5 should be used - not loaded yet? Please check!!');
-      return true;
+      return this.use_openui ?? false;
    }
 
    /** @summary Show message
@@ -250,19 +253,19 @@ class RCanvasPainter extends RPadPainter {
          this._websocket._tmouts[name] = setTimeout(() => { delete this._websocket._tmouts[name]; }, tm);
    }
 
-   /** @summary Hanler for websocket open event
+   /** @summary Handler for websocket open event
      * @private */
    onWebsocketOpened(/* handle */) {
    }
 
-   /** @summary Hanler for websocket close event
+   /** @summary Handler for websocket close event
      * @private */
    onWebsocketClosed(/* handle */) {
       if (!this.embed_canvas)
          closeCurrentWindow();
    }
 
-   /** @summary Hanler for websocket message
+   /** @summary Handler for websocket message
      * @private */
    onWebsocketMsg(handle, msg) {
       // console.log('GET_MSG ' + msg.slice(0,30));
@@ -281,6 +284,7 @@ class RCanvasPainter extends RPadPainter {
                    this.resizeBrowser(snap.fWinSize[0], snap.fWinSize[1]);
              }).then(() => this.redrawPadSnap(snap))
              .then(() => {
+                 this.addPadInteractive();
                  handle.send(`SNAPDONE:${snapid}`); // send ready message back when drawing completed
                  this.confirmDraw();
               });
@@ -296,15 +300,15 @@ class RCanvasPainter extends RPadPainter {
              cmdid = msg.slice(0, p1),
              cmd = msg.slice(p1+1),
              reply = `REPLY:${cmdid}:`;
-         if ((cmd === 'SVG') || (cmd === 'PNG') || (cmd === 'JPEG')) {
+         if ((cmd === 'SVG') || (cmd === 'PNG') || (cmd === 'JPEG') || (cmd === 'WEBP') || (cmd === 'PDF')) {
             this.createImage(cmd.toLowerCase())
                 .then(res => handle.send(reply + res));
          } else if (cmd.indexOf('ADDPANEL:') === 0) {
-            const relative_path = cmd.slice(9);
             if (!isFunc(this.showUI5Panel))
                handle.send(reply + 'false');
              else {
-               const conn = new WebWindowHandle(handle.kind);
+               const window_path = cmd.slice(9),
+                     conn = handle.createNewInstance(window_path);
 
                // set interim receiver until first message arrives
                conn.setReceiver({
@@ -331,15 +335,8 @@ class RCanvasPainter extends RPadPainter {
 
                });
 
-               let addr = handle.href;
-               if (relative_path.indexOf('../') === 0) {
-                  const ddd = addr.lastIndexOf('/', addr.length-2);
-                  addr = addr.slice(0, ddd) + relative_path.slice(2);
-               } else
-                  addr += relative_path;
-
                // only when connection established, panel will be activated
-               conn.connect(addr);
+               conn.connect();
             }
          } else {
             console.log('Unrecognized command ' + cmd);
@@ -676,6 +673,7 @@ class RCanvasPainter extends RPadPainter {
       selectActivePad({ pp: painter, active: false });
 
       return painter.drawPrimitives().then(() => {
+         painter.addPadInteractive();
          painter.addPadButtons();
          painter.showPadButtons();
          return painter;

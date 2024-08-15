@@ -160,7 +160,7 @@ private:
   std::unique_ptr<RooAbsReal> specializeIntegral(RooAbsReal& orig, const char* targetRangeName) const ;
   std::unique_ptr<RooAbsReal> specializeRatio(RooFormulaVar& input, const char* targetRangeName) const ;
   double calculate(const RooProdPdf::CacheElem& cache, bool verbose=false) const ;
-  void calculateBatch(RooAbsArg const* caller, const RooProdPdf::CacheElem &cache, double* output, size_t nEvents, RooFit::Detail::DataMap const&) const;
+  void doEvalImpl(RooAbsArg const* caller, const RooProdPdf::CacheElem &cache, RooFit::EvalContext &) const;
 
 
   friend class RooProdGenContext ;

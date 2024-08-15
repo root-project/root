@@ -73,8 +73,8 @@ public:
 
   // Function evaluation
   double evaluate() const override ;
+  void doEval(RooFit::EvalContext &ctx) const override;
   void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
-  void computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const override;
 
   protected:
   // Post-processing of server redirection

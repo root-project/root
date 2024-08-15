@@ -34,7 +34,6 @@ RooArgusBG is a RooAbsPdf implementation describing the ARGUS background shape.
 #include "TMath.h"
 
 #include <cmath>
-using namespace std;
 
 ClassImp(RooArgusBG);
 
@@ -70,15 +69,15 @@ double RooArgusBG::evaluate() const {
   if(t >= 1) return 0;
 
   double u= 1 - t*t;
-  return m*TMath::Power(u,p)*exp(c*u) ;
+  return m*std::pow(u,p)*exp(c*u) ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooArgusBG::computeBatch(double *output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+void RooArgusBG::doEval(RooFit::EvalContext & ctx) const
 {
-  RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::ArgusBG, output, nEvents,
-          {dataMap.at(m), dataMap.at(m0), dataMap.at(c), dataMap.at(p)});
+  RooBatchCompute::compute(ctx.config(this), RooBatchCompute::ArgusBG, ctx.output(),
+          {ctx.at(m), ctx.at(m0), ctx.at(c), ctx.at(p)});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -102,13 +101,13 @@ double RooArgusBG::analyticalIntegral(Int_t code, const char* rangeName) const
   static const double pi = atan2(0.0,-1.0);
   double min = (m.min(rangeName) < m0) ? m.min(rangeName) : m0;
   double max = (m.max(rangeName) < m0) ? m.max(rangeName) : m0;
-  double f1 = (1.-TMath::Power(min/m0,2));
-  double f2 = (1.-TMath::Power(max/m0,2));
+  double f1 = (1.-std::pow(min/m0,2));
+  double f2 = (1.-std::pow(max/m0,2));
   double aLow;
   double aHigh;
   if ( c < 0. ) {
-    aLow  = -0.5*m0*m0*(exp(c*f1)*sqrt(f1)/c + 0.5/TMath::Power(-c,1.5)*sqrt(pi)*RooMath::erf(sqrt(-c*f1)));
-    aHigh = -0.5*m0*m0*(exp(c*f2)*sqrt(f2)/c + 0.5/TMath::Power(-c,1.5)*sqrt(pi)*RooMath::erf(sqrt(-c*f2)));
+    aLow  = -0.5*m0*m0*(exp(c*f1)*sqrt(f1)/c + 0.5/std::pow(-c,1.5)*sqrt(pi)*RooMath::erf(sqrt(-c*f1)));
+    aHigh = -0.5*m0*m0*(exp(c*f2)*sqrt(f2)/c + 0.5/std::pow(-c,1.5)*sqrt(pi)*RooMath::erf(sqrt(-c*f2)));
   } else if ( c == 0. ) {
     aLow  = -m0*m0/3.*f1*sqrt(f1);
     aHigh = -m0*m0/3.*f1*sqrt(f2);

@@ -35,9 +35,6 @@ namespace Internal {
 \class ROOT::Experimental::Internal::RPageSinkBuf
 \ingroup NTuple
 \brief Wrapper sink that coalesces cluster column page writes
-*
-* TODO(jblomer): The interplay of derived class and RPageSink is not yet optimally designed for page storage wrapper
-* classes like this one. Header and footer serialization, e.g., are done twice.  To be revised.
 */
 // clang-format on
 class RPageSinkBuf : public RPageSink {
@@ -129,6 +126,8 @@ private:
    std::unique_ptr<RNTupleModel> fInnerModel;
    /// Vector of buffered column pages. Indexed by column id.
    std::vector<RColumnBuf> fBufferedColumns;
+   /// Columns committed as suppressed are stored and passed to the inner sink at cluster commit
+   std::vector<ColumnHandle_t> fSuppressedColumns;
    DescriptorId_t fNFields = 0;
    DescriptorId_t fNColumns = 0;
 
@@ -144,15 +143,19 @@ public:
 
    ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) final;
 
-   void Init(RNTupleModel &model) final;
-   void UpdateSchema(const RNTupleModelChangeset &changeset, NTupleSize_t firstEntry) final;
+   const RNTupleDescriptor &GetDescriptor() const final;
 
+   void InitImpl(RNTupleModel &model) final;
+   void UpdateSchema(const RNTupleModelChangeset &changeset, NTupleSize_t firstEntry) final;
+   void UpdateExtraTypeInfo(const RExtraTypeInfoDescriptor &extraTypeInfo) final;
+
+   void CommitSuppressedColumn(ColumnHandle_t columnHandle) final;
    void CommitPage(ColumnHandle_t columnHandle, const RPage &page) final;
    void CommitSealedPage(DescriptorId_t physicalColumnId, const RSealedPage &sealedPage) final;
    void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup> ranges) final;
    std::uint64_t CommitCluster(NTupleSize_t nNewEntries) final;
    void CommitClusterGroup() final;
-   void CommitDataset() final;
+   void CommitDatasetImpl() final;
 
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final;
    void ReleasePage(RPage &page) final;

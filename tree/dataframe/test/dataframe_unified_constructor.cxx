@@ -1,8 +1,8 @@
 #include <TFile.h>
 #include <TTree.h>
 #include <ROOT/RDataFrame.hxx>
-#include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleModel.hxx>
+#include <ROOT/RNTupleWriter.hxx>
 
 #include <gtest/gtest.h>
 

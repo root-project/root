@@ -2822,12 +2822,12 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
    TClass *c1, *c2, *c3;
    UInt_t k = 0;      // will mark k-bit of TBits if the class is a base class
 
+   // Reset the ClassSaved status of all classes
+   gROOT->ResetClassSaved();
+
    TIter nextc1(gROOT->GetListOfClasses());
    //gROOT->GetListOfClasses()->ls();    // valid. test
    while((c1 = (TClass *)nextc1())) {
-
-      //   resets bit TClass::kClassSaved for all classes
-      c1->ResetBit(TClass::kClassSaved);
 
       TIter nextc2(gROOT->GetListOfClasses());
       while ((c2 = (TClass *)nextc2())) {
@@ -3082,11 +3082,8 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
    if (!opt.Contains("quiet"))
       printf(" C++ macro file %s has been generated\n", gSystem->BaseName(ff.Data()));
 
-   // reset bit TClass::kClassSaved for all classes
-   nextc1.Reset();
-   while((c1=(TClass*)nextc1())) {
-      c1->ResetBit(TClass::kClassSaved);
-   }
+   // Reset the ClassSaved status of all classes
+   gROOT->ResetClassSaved();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3342,11 +3339,11 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
    TClass *c1, *c2, *c3;
    UInt_t k = 0;      // will mark k-bit of TBits if the class is a base class
 
+   // Reset the ClassSaved status of all classes
+   gROOT->ResetClassSaved();
+
    TIter nextc1(gROOT->GetListOfClasses());
    while((c1 = (TClass *)nextc1())) {
-
-      //   resets bit TClass::kClassSaved for all classes
-      c1->ResetBit(TClass::kClassSaved);
 
       TIter nextc2(gROOT->GetListOfClasses());
       while ((c2 = (TClass *)nextc2())) {
@@ -3439,7 +3436,7 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
    out <<"// By ROOT version "<< gROOT->GetVersion() <<" on "<<t.AsSQLString()<< std::endl;
    out << std::endl;
 
-   out << "#if !defined( __CINT__) || defined (__MAKECINT__)" << std::endl << std::endl;
+   out << std::endl << std::endl;
 
    TIter nexti(ilist);
    while((inc = (TObjString *)nexti())) {
@@ -3453,7 +3450,7 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
       }
    }
    out << std::endl << "#include " << quote << "Riostream.h" << quote << std::endl;
-   out << std::endl << "#endif" << std::endl;
+   out << std::endl << std::endl;
    // deletes created ListOfIncludes
    gROOT->GetListOfSpecials()->Remove(ilist);
    ilist->Delete();
@@ -3597,11 +3594,8 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
    if (!opt.Contains("quiet"))
       printf(" C++ macro file %s has been generated\n", gSystem->BaseName(ff.Data()));
 
-   // reset bit TClass::kClassSaved for all classes
-   nextc1.Reset();
-   while((c1=(TClass*)nextc1())) {
-      c1->ResetBit(TClass::kClassSaved);
-   }
+   // Reset the ClassSaved status of all classes
+   gROOT->ResetClassSaved();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -376,32 +376,60 @@ int main( int argc, char **argv )
    if (maxopenedfiles > 0) {
       fileMerger.SetMaxOpenedFiles(maxopenedfiles);
    }
+   // The following section will collect all input filenames into a vector,
+   // including those listed within an indirect file.
+   // If any file can not be accessed, it will error out, unless skip_errors is true
+   std::vector<std::string> allSubfiles;
+   for (int a = ffirst; a < argc; ++a) {
+      if (a == outputPlace)
+         continue;
+      if (argv[a] && argv[a][0] == '@') {
+         std::ifstream indirect_file(argv[a] + 1);
+         if (!indirect_file.is_open()) {
+            std::cerr << "hadd could not open indirect file " << (argv[a] + 1) << std::endl;
+            if (!skip_errors)
+               return 1;
+         } else {
+            std::string line;
+            while (indirect_file) {
+               if( std::getline(indirect_file, line) && line.length() ) {
+                  if (gSystem->AccessPathName(line.c_str(), kReadPermission) == kTRUE) {
+                     std::cerr << "hadd could not validate the file name \"" << line << "\" within indirect file "
+                               << (argv[a] + 1) << std::endl;
+                     if (!skip_errors)
+                        return 1;
+                  } else
+                     allSubfiles.emplace_back(line);
+               }
+            }
+         }
+      } else {
+         const std::string line = argv[a];
+         if (gSystem->AccessPathName(line.c_str(), kReadPermission) == kTRUE) {
+            std::cerr << "hadd could not validate argument \"" << line << "\" as input file " << std::endl;
+            if (!skip_errors)
+               return 1;
+         } else
+            allSubfiles.emplace_back(line);
+      }
+   }
+   if (allSubfiles.empty()) {
+      std::cerr << "hadd could not find any valid input file " << std::endl;
+      return 1;
+   }
+   // The next snippet determines the output compression if unset
    if (newcomp == -1) {
       if (useFirstInputCompression || keepCompressionAsIs) {
          // grab from the first file.
-         TFile *firstInput = nullptr;
-         if (argv[ffirst] && argv[ffirst][0]=='@') {
-            std::ifstream indirect_file(argv[ffirst]+1);
-            if( ! indirect_file.is_open() ) {
-               std::cerr<< "hadd could not open indirect file " << (argv[ffirst]+1) << std::endl;
-               return 1;
-            }
-            std::string line;
-            while( indirect_file ){
-               if( std::getline(indirect_file, line) && line.length() ) {
-                  firstInput = TFile::Open(line.c_str());
-                  break;
-               }
-            }
-         } else {
-            firstInput = TFile::Open(argv[ffirst]);
-         }
+         TFile *firstInput = TFile::Open(allSubfiles.front().c_str());
          if (firstInput && !firstInput->IsZombie())
             newcomp = firstInput->GetCompressionSettings();
          else
-            newcomp = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault % 100;
+            newcomp = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault;
          delete firstInput;
-      } else newcomp = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault % 100; // default compression level.
+      } else {
+         newcomp = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault;
+      }
    }
    if (verbosity > 1) {
       if (keepCompressionAsIs && !reoptimize)
@@ -420,12 +448,11 @@ int main( int argc, char **argv )
       exit(1);
    }
 
-   auto filesToProcess = argc - ffirst;
-   auto step = (filesToProcess + nProcesses - 1) / nProcesses;
+   auto step = (allSubfiles.size() + nProcesses - 1) / nProcesses;
    if (multiproc && step < 3) {
       // At least 3 files per process
       step = 3;
-      nProcesses = (filesToProcess + step - 1) / step;
+      nProcesses = (allSubfiles.size() + step - 1) / step;
       std::cout << "Each process should handle at least 3 files for efficiency.";
       std::cout << " Setting the number of processes to: " << nProcesses << std::endl;
    }
@@ -441,7 +468,7 @@ int main( int argc, char **argv )
    if (multiproc) {
       auto uuid = TUUID();
       auto partialTail = uuid.AsString();
-      for (auto i = 0; (i * step) < filesToProcess; i++) {
+      for (auto i = 0; (i * step) < allSubfiles.size(); i++) {
          std::stringstream buffer;
          buffer << workingDir << "/partial" << i << "_" << partialTail << ".root";
          partialFiles.emplace_back(buffer.str());
@@ -454,8 +481,8 @@ int main( int argc, char **argv )
          merger.SetFastMethod(kFALSE);
       } else {
          if (!keepCompressionAsIs && merger.HasCompressionChange()) {
-            // Don't warn if the user any request re-optimization.
-            std::cout << "hadd Sources and Target have different compression levels" << std::endl;
+            // Don't warn if the user explicitly requested re-optimization.
+            std::cout << "hadd Sources and Target have different compression settings\n";
             std::cout << "hadd merging will be slower" << std::endl;
          }
       }
@@ -471,25 +498,12 @@ int main( int argc, char **argv )
    };
 
    auto sequentialMerge = [&](TFileMerger &merger, int start, int nFiles) {
-
-      for (auto i = start; i < (start + nFiles) && i < argc; i++) {
-         if (argv[i] && argv[i][0] == '@') {
-            std::ifstream indirect_file(argv[i] + 1);
-            if (!indirect_file.is_open()) {
-               std::cerr << "hadd could not open indirect file " << (argv[i] + 1) << std::endl;
-               return kFALSE;
-            }
-            while (indirect_file) {
-               std::string line;
-               if (std::getline(indirect_file, line) && line.length() && !merger.AddFile(line.c_str())) {
-                  return kFALSE;
-               }
-            }
-         } else if (!merger.AddFile(argv[i])) {
+      for (auto i = start; i < (start + nFiles) && i < static_cast<int>(allSubfiles.size()); i++) {
+         if (!merger.AddFile(allSubfiles[i].c_str())) {
             if (skip_errors) {
-               std::cerr << "hadd skipping file with error: " << argv[i] << std::endl;
+               std::cerr << "hadd skipping file with error: " << allSubfiles[i] << std::endl;
             } else {
-               std::cerr << "hadd exiting due to error in " << argv[i] << std::endl;
+               std::cerr << "hadd exiting due to error in " << allSubfiles[i] << std::endl;
                return kFALSE;
             }
          }
@@ -504,7 +518,7 @@ int main( int argc, char **argv )
       if (maxopenedfiles > 0) {
          mergerP.SetMaxOpenedFiles(maxopenedfiles / nProcesses);
       }
-      if (!mergerP.OutputFile(partialFiles[(start - ffirst) / step].c_str(), newcomp)) {
+      if (!mergerP.OutputFile(partialFiles[start / step].c_str(), newcomp)) {
          std::cerr << "hadd error opening target partial file" << std::endl;
          exit(1);
       }
@@ -523,7 +537,7 @@ int main( int argc, char **argv )
 #ifndef R__WIN32
    if (multiproc) {
       ROOT::TProcessExecutor p(nProcesses);
-      auto res = p.Map(parallelMerge, ROOT::TSeqI(ffirst, argc, step));
+      auto res = p.Map(parallelMerge, ROOT::TSeqI(0, allSubfiles.size(), step));
       status = std::accumulate(res.begin(), res.end(), 0U) == partialFiles.size();
       if (status) {
          status = reductionFunc();
@@ -536,22 +550,22 @@ int main( int argc, char **argv )
          }
       }
    } else {
-      status = sequentialMerge(fileMerger, ffirst, filesToProcess);
+      status = sequentialMerge(fileMerger, 0, allSubfiles.size());
    }
 #else
-   status = sequentialMerge(fileMerger, ffirst, filesToProcess);
+   status = sequentialMerge(fileMerger, 0, allSubfiles.size());
 #endif
 
    if (status) {
       if (verbosity == 1) {
-         std::cout << "hadd merged " << fileMerger.GetMergeList()->GetEntries() << " input files in " << targetname
-                   << ".\n";
+         std::cout << "hadd merged " << allSubfiles.size() << " (" << fileMerger.GetMergeList()->GetEntries()
+                   << ") input (partial) files into " << targetname << ".\n";
       }
       return 0;
    } else {
       if (verbosity == 1) {
-         std::cout << "hadd failure during the merge of " << fileMerger.GetMergeList()->GetEntries()
-                   << " input files in " << targetname << ".\n";
+         std::cout << "hadd failure during the merge of " << allSubfiles.size() << " ("
+                   << fileMerger.GetMergeList()->GetEntries() << ") input (partial) files into " << targetname << ".\n";
       }
       return 1;
    }

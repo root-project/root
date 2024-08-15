@@ -7,18 +7,18 @@
 #include <type_traits>
 #include <utility>
 
-template <typename PodT, typename NarrowT, ROOT::Experimental::EColumnType ColumnT>
+template <typename PodT, typename NarrowT, EColumnType ColumnT>
 struct Helper {
    using Pod_t = PodT;
    using Narrow_t = NarrowT;
-   static constexpr ROOT::Experimental::EColumnType kColumnType = ColumnT;
+   static constexpr EColumnType kColumnType = ColumnT;
 };
 
-template <typename NarrowT, ROOT::Experimental::EColumnType ColumnT>
-struct Helper<ROOT::Experimental::ClusterSize_t, NarrowT, ColumnT> {
+template <typename NarrowT, EColumnType ColumnT>
+struct Helper<ClusterSize_t, NarrowT, ColumnT> {
    using Pod_t = std::uint64_t;
    using Narrow_t = NarrowT;
-   static constexpr ROOT::Experimental::EColumnType kColumnType = ColumnT;
+   static constexpr EColumnType kColumnType = ColumnT;
 };
 
 template <typename HelperT>
@@ -39,27 +39,25 @@ public:
    using Helper_t = HelperT;
 };
 
-using PackingRealTypes = ::testing::Types<Helper<double, double, ROOT::Experimental::EColumnType::kSplitReal64>,
-                                          Helper<float, float, ROOT::Experimental::EColumnType::kSplitReal32>>;
+using PackingRealTypes =
+   ::testing::Types<Helper<double, double, EColumnType::kSplitReal64>, Helper<float, float, EColumnType::kSplitReal32>>;
 TYPED_TEST_SUITE(PackingReal, PackingRealTypes);
 
-using PackingIntTypes =
-   ::testing::Types<Helper<std::int64_t, std::int64_t, ROOT::Experimental::EColumnType::kSplitInt64>,
-                    Helper<std::uint64_t, std::uint64_t, ROOT::Experimental::EColumnType::kSplitUInt64>,
-                    Helper<std::int32_t, std::int32_t, ROOT::Experimental::EColumnType::kSplitInt32>,
-                    Helper<std::uint32_t, std::uint32_t, ROOT::Experimental::EColumnType::kSplitUInt32>,
-                    Helper<std::int16_t, std::int16_t, ROOT::Experimental::EColumnType::kSplitInt16>,
-                    Helper<std::uint16_t, std::uint16_t, ROOT::Experimental::EColumnType::kSplitUInt16>>;
+using PackingIntTypes = ::testing::Types<Helper<std::int64_t, std::int64_t, EColumnType::kSplitInt64>,
+                                         Helper<std::uint64_t, std::uint64_t, EColumnType::kSplitUInt64>,
+                                         Helper<std::int32_t, std::int32_t, EColumnType::kSplitInt32>,
+                                         Helper<std::uint32_t, std::uint32_t, EColumnType::kSplitUInt32>,
+                                         Helper<std::int16_t, std::int16_t, EColumnType::kSplitInt16>,
+                                         Helper<std::uint16_t, std::uint16_t, EColumnType::kSplitUInt16>>;
 TYPED_TEST_SUITE(PackingInt, PackingIntTypes);
 
-using PackingIndexTypes = ::testing::Types<
-   Helper<ROOT::Experimental::ClusterSize_t, std::uint32_t, ROOT::Experimental::EColumnType::kSplitIndex32>,
-   Helper<ROOT::Experimental::ClusterSize_t, std::uint64_t, ROOT::Experimental::EColumnType::kSplitIndex64>>;
+using PackingIndexTypes = ::testing::Types<Helper<ClusterSize_t, std::uint32_t, EColumnType::kSplitIndex32>,
+                                           Helper<ClusterSize_t, std::uint64_t, EColumnType::kSplitIndex64>>;
 TYPED_TEST_SUITE(PackingIndex, PackingIndexTypes);
 
 TEST(Packing, Bitfield)
 {
-   ROOT::Experimental::Internal::RColumnElement<bool, ROOT::Experimental::EColumnType::kBit> element;
+   RColumnElement<bool, EColumnType::kBit> element;
    element.Pack(nullptr, nullptr, 0);
    element.Unpack(nullptr, nullptr, 0);
 
@@ -92,42 +90,65 @@ TEST(Packing, Bitfield)
 
 TEST(Packing, HalfPrecisionFloat)
 {
-   ROOT::Experimental::Internal::RColumnElement<float, ROOT::Experimental::EColumnType::kReal16> element;
-   element.Pack(nullptr, nullptr, 0);
-   element.Unpack(nullptr, nullptr, 0);
+   RColumnElement<float, EColumnType::kReal16> element32_16;
+   RColumnElement<double, EColumnType::kReal16> element64_16;
+   element32_16.Pack(nullptr, nullptr, 0);
+   element32_16.Unpack(nullptr, nullptr, 0);
+   element64_16.Pack(nullptr, nullptr, 0);
+   element64_16.Unpack(nullptr, nullptr, 0);
 
-   float in = 3.14;
-   std::uint16_t b = 0;
-   element.Pack(&b, &in, 1);
-   EXPECT_EQ(0x4248, b); // Expected bit representation: 0b01000010 01001000
-   float out = 0.;
-   element.Unpack(&out, &b, 1);
-   EXPECT_FLOAT_EQ(3.140625, out);
+   float fin = 3.14;
+   unsigned char buf[2] = {0, 0};
+   element32_16.Pack(buf, &fin, 1);
+   // Expected bit representation: 0b01000010 01001000
+   EXPECT_EQ(0x48, buf[0]);
+   EXPECT_EQ(0x42, buf[1]);
+   float fout = 0.;
+   element32_16.Unpack(&fout, buf, 1);
+   EXPECT_FLOAT_EQ(3.140625, fout);
 
-   float in4[] = {0.1, 0.2, 0.3, 0.4};
-   std::uint64_t b4;
-   element.Pack(&b4, &in4, 4);
-   float out4[] = {0., 0., 0., 0.};
-   element.Unpack(&out4, &b4, 4);
-   EXPECT_FLOAT_EQ(0.099975586, out4[0]);
-   EXPECT_FLOAT_EQ(0.199951171, out4[1]);
-   EXPECT_FLOAT_EQ(0.300048828, out4[2]);
-   EXPECT_FLOAT_EQ(0.399902343, out4[3]);
+   buf[0] = buf[1] = 0;
+   double din = 3.14;
+   element64_16.Pack(buf, &din, 1);
+   // Expected bit representation: 0b01000010 01001000
+   EXPECT_EQ(0x48, buf[0]);
+   EXPECT_EQ(0x42, buf[1]);
+   double dout = 0.;
+   element64_16.Unpack(&dout, buf, 1);
+   EXPECT_FLOAT_EQ(3.140625, dout);
+
+   float fin4[] = {0.1, 0.2, 0.3, 0.4};
+   std::uint64_t b4 = 0;
+   element32_16.Pack(&b4, &fin4, 4);
+   float fout4[] = {0., 0., 0., 0.};
+   element32_16.Unpack(&fout4, &b4, 4);
+   EXPECT_FLOAT_EQ(0.099975586, fout4[0]);
+   EXPECT_FLOAT_EQ(0.199951171, fout4[1]);
+   EXPECT_FLOAT_EQ(0.300048828, fout4[2]);
+   EXPECT_FLOAT_EQ(0.399902343, fout4[3]);
+
+   double din4[] = {0.1, 0.2, 0.3, 0.4};
+   b4 = 0;
+   element64_16.Pack(&b4, &din4, 4);
+   double dout4[] = {0., 0., 0., 0.};
+   element64_16.Unpack(&dout4, &b4, 4);
+   EXPECT_FLOAT_EQ(0.099975586, dout4[0]);
+   EXPECT_FLOAT_EQ(0.199951171, dout4[1]);
+   EXPECT_FLOAT_EQ(0.300048828, dout4[2]);
+   EXPECT_FLOAT_EQ(0.399902343, dout4[3]);
 }
 
 TEST(Packing, RColumnSwitch)
 {
-   ROOT::Experimental::Internal::RColumnElement<ROOT::Experimental::RColumnSwitch,
-                                                ROOT::Experimental::EColumnType::kSwitch>
-      element;
+   RColumnElement<RColumnSwitch, EColumnType::kSwitch> element;
    element.Pack(nullptr, nullptr, 0);
    element.Unpack(nullptr, nullptr, 0);
 
-   ROOT::Experimental::RColumnSwitch s1(ClusterSize_t{0xaa}, 0x55);
-   std::pair<std::uint64_t, std::uint32_t> out;
-   element.Pack(&out, &s1, 1);
-   ROOT::Experimental::RColumnSwitch s2;
-   element.Unpack(&s2, &out, 1);
+   RColumnSwitch s1(ClusterSize_t{0xaa}, 0x55);
+   unsigned char out[12];
+   element.Pack(out, &s1, 1);
+   RColumnSwitch s2;
+   element.Unpack(&s2, out, 1);
    EXPECT_EQ(0xaa, s2.GetIndex());
    EXPECT_EQ(0x55, s2.GetTag());
 }
@@ -137,7 +158,7 @@ TYPED_TEST(PackingReal, SplitReal)
    using Pod_t = typename TestFixture::Helper_t::Pod_t;
    using Narrow_t = typename TestFixture::Helper_t::Narrow_t;
 
-   ROOT::Experimental::Internal::RColumnElement<Pod_t, TestFixture::Helper_t::kColumnType> element;
+   RColumnElement<Pod_t, TestFixture::Helper_t::kColumnType> element;
    element.Pack(nullptr, nullptr, 0);
    element.Unpack(nullptr, nullptr, 0);
 
@@ -162,13 +183,18 @@ TYPED_TEST(PackingInt, SplitInt)
    using Pod_t = typename TestFixture::Helper_t::Pod_t;
    using Narrow_t = typename TestFixture::Helper_t::Narrow_t;
 
-   ROOT::Experimental::Internal::RColumnElement<Pod_t, TestFixture::Helper_t::kColumnType> element;
+   RColumnElement<Pod_t, TestFixture::Helper_t::kColumnType> element;
    element.Pack(nullptr, nullptr, 0);
    element.Unpack(nullptr, nullptr, 0);
 
-   std::array<Pod_t, 9> mem{0, std::is_signed_v<Pod_t> ? -42 : 1, 42, std::numeric_limits<Narrow_t>::min(),
-                            std::numeric_limits<Narrow_t>::min() + 1, std::numeric_limits<Narrow_t>::min() + 2,
-                            std::numeric_limits<Narrow_t>::max(), std::numeric_limits<Narrow_t>::max() - 1,
+   std::array<Pod_t, 9> mem{0,
+                            std::is_signed_v<Pod_t> ? -42 : 1,
+                            42,
+                            std::numeric_limits<Narrow_t>::min(),
+                            std::numeric_limits<Narrow_t>::min() + 1,
+                            std::numeric_limits<Narrow_t>::min() + 2,
+                            std::numeric_limits<Narrow_t>::max(),
+                            std::numeric_limits<Narrow_t>::max() - 1,
                             std::numeric_limits<Narrow_t>::max() - 2};
    std::array<Pod_t, 9> packed;
    std::array<Pod_t, 9> cmp;
@@ -184,7 +210,7 @@ TYPED_TEST(PackingIndex, SplitIndex)
    using Pod_t = typename TestFixture::Helper_t::Pod_t;
    using Narrow_t = typename TestFixture::Helper_t::Narrow_t;
 
-   ROOT::Experimental::Internal::RColumnElement<ClusterSize_t, TestFixture::Helper_t::kColumnType> element;
+   RColumnElement<ClusterSize_t, TestFixture::Helper_t::kColumnType> element;
    element.Pack(nullptr, nullptr, 0);
    element.Unpack(nullptr, nullptr, 0);
 
@@ -200,11 +226,11 @@ TYPED_TEST(PackingIndex, SplitIndex)
 
 namespace {
 
-template <typename PodT, ROOT::Experimental::EColumnType ColumnT>
+template <typename PodT, EColumnType ColumnT>
 static void AddField(RNTupleModel &model, const std::string &fieldName)
 {
    auto fld = std::make_unique<RField<PodT>>(fieldName);
-   fld->SetColumnRepresentative({ColumnT});
+   fld->SetColumnRepresentatives({{ColumnT}});
    model.AddField(std::move(fld));
 }
 
@@ -218,17 +244,17 @@ TEST(Packing, OnDiskEncoding)
 
    auto model = RNTupleModel::Create();
 
-   AddField<std::int16_t, ROOT::Experimental::EColumnType::kSplitInt16>(*model, "int16");
-   AddField<std::int32_t, ROOT::Experimental::EColumnType::kSplitInt32>(*model, "int32");
-   AddField<std::int64_t, ROOT::Experimental::EColumnType::kSplitInt64>(*model, "int64");
-   AddField<std::uint16_t, ROOT::Experimental::EColumnType::kSplitUInt16>(*model, "uint16");
-   AddField<std::uint32_t, ROOT::Experimental::EColumnType::kSplitUInt32>(*model, "uint32");
-   AddField<std::uint64_t, ROOT::Experimental::EColumnType::kSplitUInt64>(*model, "uint64");
-   AddField<float, ROOT::Experimental::EColumnType::kSplitReal32>(*model, "float");
-   AddField<float, ROOT::Experimental::EColumnType::kReal16>(*model, "float16");
-   AddField<double, ROOT::Experimental::EColumnType::kSplitReal64>(*model, "double");
-   AddField<ClusterSize_t, ROOT::Experimental::EColumnType::kSplitIndex32>(*model, "index32");
-   AddField<ClusterSize_t, ROOT::Experimental::EColumnType::kSplitIndex64>(*model, "index64");
+   AddField<std::int16_t, EColumnType::kSplitInt16>(*model, "int16");
+   AddField<std::int32_t, EColumnType::kSplitInt32>(*model, "int32");
+   AddField<std::int64_t, EColumnType::kSplitInt64>(*model, "int64");
+   AddField<std::uint16_t, EColumnType::kSplitUInt16>(*model, "uint16");
+   AddField<std::uint32_t, EColumnType::kSplitUInt32>(*model, "uint32");
+   AddField<std::uint64_t, EColumnType::kSplitUInt64>(*model, "uint64");
+   AddField<float, EColumnType::kSplitReal32>(*model, "float");
+   AddField<float, EColumnType::kReal16>(*model, "float16");
+   AddField<double, EColumnType::kSplitReal64>(*model, "double");
+   AddField<ClusterSize_t, EColumnType::kSplitIndex32>(*model, "index32");
+   AddField<ClusterSize_t, EColumnType::kSplitIndex64>(*model, "index64");
    auto fldStr = std::make_unique<RField<std::string>>("str");
    model->AddField(std::move(fldStr));
    {
@@ -276,59 +302,59 @@ TEST(Packing, OnDiskEncoding)
 
    auto fnGetColumnId = [&source](const std::string &fieldName) {
       auto descGuard = source->GetSharedDescriptorGuard();
-      return descGuard->FindPhysicalColumnId(descGuard->FindFieldId(fieldName), 0);
+      return descGuard->FindPhysicalColumnId(descGuard->FindFieldId(fieldName), 0, 0);
    };
 
    source->LoadSealedPage(fnGetColumnId("int16"), RClusterIndex(0, 0), sealedPage);
    unsigned char expInt16[] = {0x02, 0x05, 0x00, 0x00};
-   EXPECT_EQ(memcmp(sealedPage.fBuffer, expInt16, sizeof(expInt16)), 0);
+   EXPECT_EQ(memcmp(sealedPage.GetBuffer(), expInt16, sizeof(expInt16)), 0);
 
    source->LoadSealedPage(fnGetColumnId("int32"), RClusterIndex(0, 0), sealedPage);
    unsigned char expInt32[] = {0x06, 0x0d, 0x04, 0x0c, 0x02, 0x0a, 0x00, 0x08};
-   EXPECT_EQ(memcmp(sealedPage.fBuffer, expInt32, sizeof(expInt32)), 0);
+   EXPECT_EQ(memcmp(sealedPage.GetBuffer(), expInt32, sizeof(expInt32)), 0);
 
    source->LoadSealedPage(fnGetColumnId("int64"), RClusterIndex(0, 0), sealedPage);
    unsigned char expInt64[] = {0x0e, 0x1d, 0x0c, 0x1c, 0x0a, 0x1a, 0x08, 0x18,
                                0x06, 0x16, 0x04, 0x14, 0x02, 0x12, 0x00, 0x10};
-   EXPECT_EQ(memcmp(sealedPage.fBuffer, expInt64, sizeof(expInt64)), 0);
+   EXPECT_EQ(memcmp(sealedPage.GetBuffer(), expInt64, sizeof(expInt64)), 0);
 
    source->LoadSealedPage(fnGetColumnId("uint16"), RClusterIndex(0, 0), sealedPage);
    unsigned char expUInt16[] = {0x01, 0x02, 0x00, 0x00};
-   EXPECT_EQ(memcmp(sealedPage.fBuffer, expUInt16, sizeof(expUInt16)), 0);
+   EXPECT_EQ(memcmp(sealedPage.GetBuffer(), expUInt16, sizeof(expUInt16)), 0);
 
    source->LoadSealedPage(fnGetColumnId("uint32"), RClusterIndex(0, 0), sealedPage);
    unsigned char expUInt32[] = {0x03, 0x07, 0x02, 0x06, 0x01, 0x05, 0x00, 0x04};
-   EXPECT_EQ(memcmp(sealedPage.fBuffer, expUInt32, sizeof(expUInt32)), 0);
+   EXPECT_EQ(memcmp(sealedPage.GetBuffer(), expUInt32, sizeof(expUInt32)), 0);
 
    source->LoadSealedPage(fnGetColumnId("uint64"), RClusterIndex(0, 0), sealedPage);
    unsigned char expUInt64[] = {0x07, 0x0f, 0x06, 0x0e, 0x05, 0x0d, 0x04, 0x0c,
                                 0x03, 0x0b, 0x02, 0x0a, 0x01, 0x09, 0x00, 0x08};
-   EXPECT_EQ(memcmp(sealedPage.fBuffer, expUInt64, sizeof(expUInt64)), 0);
+   EXPECT_EQ(memcmp(sealedPage.GetBuffer(), expUInt64, sizeof(expUInt64)), 0);
 
    source->LoadSealedPage(fnGetColumnId("float"), RClusterIndex(0, 0), sealedPage);
    unsigned char expFloat[] = {0x01, 0xff, 0x00, 0xff, 0x80, 0x7f, 0x3f, 0x3f};
-   EXPECT_EQ(memcmp(sealedPage.fBuffer, expFloat, sizeof(expFloat)), 0);
+   EXPECT_EQ(memcmp(sealedPage.GetBuffer(), expFloat, sizeof(expFloat)), 0);
 
    source->LoadSealedPage(fnGetColumnId("float16"), RClusterIndex(0, 0), sealedPage);
    unsigned char expFloat16[] = {0x00, 0x3c, 0x66, 0x2e};
-   EXPECT_EQ(memcmp(sealedPage.fBuffer, expFloat16, sizeof(expFloat16)), 0);
+   EXPECT_EQ(memcmp(sealedPage.GetBuffer(), expFloat16, sizeof(expFloat16)), 0);
 
    source->LoadSealedPage(fnGetColumnId("double"), RClusterIndex(0, 0), sealedPage);
    unsigned char expDouble[] = {0x01, 0xff, 0x00, 0xff, 0x00, 0xff, 0x00, 0xff,
                                 0x00, 0xff, 0x00, 0xff, 0xf0, 0xef, 0x3f, 0x7f};
-   EXPECT_EQ(memcmp(sealedPage.fBuffer, expDouble, sizeof(expDouble)), 0);
+   EXPECT_EQ(memcmp(sealedPage.GetBuffer(), expDouble, sizeof(expDouble)), 0);
 
    source->LoadSealedPage(fnGetColumnId("index32"), RClusterIndex(0, 0), sealedPage);
    unsigned char expIndex32[] = {0x01, 0x07, 0x15, 0x00, 0x61, 0x00, 0x02, 0x00};
-   EXPECT_EQ(memcmp(sealedPage.fBuffer, expIndex32, sizeof(expIndex32)), 0);
+   EXPECT_EQ(memcmp(sealedPage.GetBuffer(), expIndex32, sizeof(expIndex32)), 0);
 
    source->LoadSealedPage(fnGetColumnId("index64"), RClusterIndex(0, 0), sealedPage);
    unsigned char expIndex64[] = {0x00, 0x0D, 0x01, 0x00, 0x02, 0x00, 0x03, 0x00,
                                  0x04, 0x00, 0x05, 0x00, 0x06, 0x00, 0x07, 0x00};
-   EXPECT_EQ(memcmp(sealedPage.fBuffer, expIndex64, sizeof(expIndex64)), 0);
+   EXPECT_EQ(memcmp(sealedPage.GetBuffer(), expIndex64, sizeof(expIndex64)), 0);
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-   EXPECT_EQ(EColumnType::kIndex64, reader->GetModel().GetField("str").GetColumnRepresentative()[0]);
+   EXPECT_EQ(EColumnType::kIndex64, reader->GetModel().GetField("str").GetColumnRepresentatives()[0][0]);
    EXPECT_EQ(2u, reader->GetNEntries());
    auto viewStr = reader->GetView<std::string>("str");
    EXPECT_EQ(std::string("abc"), viewStr(0));

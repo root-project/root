@@ -20,6 +20,7 @@
 #include "llvm/IR/PassManager.h"
 #include "llvm/IR/Verifier.h"
 #include "llvm/Passes/PassBuilder.h"
+#include "llvm/Passes/PassPlugin.h"
 #include "llvm/Passes/StandardInstrumentations.h"
 #include "llvm/Target/TargetMachine.h"
 #include "llvm/Transforms/IPO.h"
@@ -53,7 +54,7 @@ namespace {
       if (!GV.hasName())
         return false;
 
-      if (GV.getName().startswith(".str"))
+      if (GV.getName().starts_with(".str"))
         return false;
 
       llvm::GlobalValue::LinkageTypes LT = GV.getLinkage();
@@ -137,7 +138,7 @@ namespace {
       if (GV.getLinkage() != llvm::GlobalValue::ExternalLinkage)
         return false;
 
-      if (GV.getName().startswith("_ZT")) {
+      if (GV.getName().starts_with("_ZT")) {
         // Currently, if Cling sees the "key function" of a virtual class, it
         // emits typeinfo and vtable variables in every transaction llvm::Module
         // that reference them. Turn them into weak linkage to avoid duplicate
@@ -398,6 +399,14 @@ void BackendPasses::CreatePasses(int OptLevel, llvm::ModulePassManager& MPM,
   PipelineTuningOptions PTO;
   std::optional<PGOOptions> PGOOpt;
   PassBuilder PB(&m_TM, PTO, PGOOpt, &PIC);
+
+  // Attempt to load pass plugins and register their callbacks with PB.
+  for (auto& PluginFN : m_CGOpts.PassPlugins) {
+    auto PassPlugin = PassPlugin::Load(PluginFN);
+    if (PassPlugin) {
+      PassPlugin->registerPassBuilderCallbacks(PB);
+    }
+  }
 
   if (!m_CGOpts.DisableLLVMPasses) {
     // Use the default pass pipeline. We also have to map our optimization

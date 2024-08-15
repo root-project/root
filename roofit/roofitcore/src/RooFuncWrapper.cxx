@@ -13,25 +13,35 @@
 #include <RooFuncWrapper.h>
 
 #include <RooAbsData.h>
+#include <RooFit/Detail/BatchModeDataHelpers.h>
+#include <RooFit/Detail/CodeSquashContext.h>
+#include <RooFit/Evaluator.h>
 #include <RooGlobalFunc.h>
+#include <RooHelpers.h>
 #include <RooMsgService.h>
 #include <RooRealVar.h>
-#include <RooHelpers.h>
-#include <RooFit/Detail/CodeSquashContext.h>
-#include "RooFit/Detail/BatchModeDataHelpers.h"
+#include <RooSimultaneous.h>
+#include "RooEvaluatorWrapper.h"
 
 #include <TROOT.h>
 #include <TSystem.h>
 
-RooFuncWrapper::RooFuncWrapper(const char *name, const char *title, RooAbsReal const &obj, RooArgSet const &normSet,
-                               const RooAbsData *data, RooSimultaneous const *simPdf, bool createGradient)
-   : RooAbsReal{name, title}, _params{"!params", "List of parameters", this}, _hasGradient{createGradient}
+#include <fstream>
+
+namespace RooFit {
+
+namespace Experimental {
+
+RooFuncWrapper::RooFuncWrapper(const char *name, const char *title, RooAbsReal &obj, const RooAbsData *data,
+                               RooSimultaneous const *simPdf, bool useEvaluator)
+   : RooAbsReal{name, title}, _params{"!params", "List of parameters", this}, _useEvaluator{useEvaluator}
 {
+   if (_useEvaluator) {
+      _absReal = std::make_unique<RooEvaluatorWrapper>(obj, const_cast<RooAbsData *>(data), false, "", simPdf, false);
+   }
+
    std::string func;
 
-   // Compile the computation graph for the norm set, such that we also get the
-   // integrals explicitly in the graph.
-   std::unique_ptr<RooAbsReal> pdf{RooFit::Detail::compileForNormSet(obj, normSet)};
    // Get the parameters.
    RooArgSet paramSet;
    obj.getParameters(data ? data->get() : nullptr, paramSet);
@@ -43,17 +53,21 @@ RooFuncWrapper::RooFuncWrapper(const char *name, const char *title, RooAbsReal c
    }
 
    // Load the parameters and observables.
-   loadParamsAndData(pdf.get(), floatingParamSet, data, simPdf);
+   loadParamsAndData(&obj, floatingParamSet, data, simPdf);
 
-   func = buildCode(*pdf);
+   func = buildCode(obj);
+
+   declareToInterpreter("#pragma cling optimize(2)");
 
    // Declare the function and create its derivative.
-   declareAndDiffFunction(func, createGradient);
+   _funcName = declareFunction(func);
+   _func = reinterpret_cast<Func>(gInterpreter->ProcessLine((_funcName + ";").c_str()));
 }
 
 RooFuncWrapper::RooFuncWrapper(const RooFuncWrapper &other, const char *name)
    : RooAbsReal(other, name),
      _params("!params", this, other._params),
+     _funcName(other._funcName),
      _func(other._func),
      _grad(other._grad),
      _hasGradient(other._hasGradient),
@@ -100,42 +114,39 @@ void RooFuncWrapper::loadParamsAndData(RooAbsArg const *head, RooArgSet const &p
    _gradientVarBuffer.resize(_params.size());
 
    if (head) {
-      _nodeOutputSizes =
-         RooFit::Detail::BatchModeDataHelpers::determineOutputSizes(*head, [&spans](RooFit::Detail::DataKey key) {
+      _nodeOutputSizes = RooFit::Detail::BatchModeDataHelpers::determineOutputSizes(
+         *head, [&spans](RooFit::Detail::DataKey key) -> int {
             auto found = spans.find(key);
-            return found != spans.end() ? found->second.size() : 0;
+            return found != spans.end() ? found->second.size() : -1;
          });
    }
 }
 
-void RooFuncWrapper::declareAndDiffFunction(std::string const &funcBody, bool createGradient)
+std::string RooFuncWrapper::declareFunction(std::string const &funcBody)
 {
    static int iFuncWrapper = 0;
-   _funcName = "roo_func_wrapper_" + std::to_string(iFuncWrapper++);
-
-   std::string gradName = _funcName + "_grad_0";
-   std::string requestName = _funcName + "_req";
-   std::string wrapperName = _funcName + "_derivativeWrapper";
-
-   gInterpreter->Declare("#pragma cling optimize(2)");
+   auto funcName = "roo_func_wrapper_" + std::to_string(iFuncWrapper++);
 
    // Declare the function
    std::stringstream bodyWithSigStrm;
-   bodyWithSigStrm << "double " << _funcName << "(double* params, double const* obs) {\n" << funcBody << "\n}";
-   bool comp = gInterpreter->Declare(bodyWithSigStrm.str().c_str());
-   if (!comp) {
+   bodyWithSigStrm << "double " << funcName << "(double* params, double const* obs, double const* xlArr) {\n"
+                   << funcBody << "\n}";
+   if (!declareToInterpreter(bodyWithSigStrm.str())) {
       std::stringstream errorMsg;
-      errorMsg << "Function " << _funcName << " could not be compiled. See above for details.";
-      coutE(InputArguments) << errorMsg.str() << std::endl;
+      errorMsg << "Function " << funcName << " could not be compiled. See above for details.";
+      oocoutE(nullptr, InputArguments) << errorMsg.str() << std::endl;
       throw std::runtime_error(errorMsg.str().c_str());
    }
-   _func = reinterpret_cast<Func>(gInterpreter->ProcessLine((_funcName + ";").c_str()));
+   return funcName;
+}
 
-   if (!createGradient)
-      return;
+void RooFuncWrapper::createGradient()
+{
+   std::string gradName = _funcName + "_grad_0";
+   std::string requestName = _funcName + "_req";
 
    // Calculate gradient
-   gInterpreter->ProcessLine("#include <Math/CladDerivator.h>");
+   declareToInterpreter("#include <Math/CladDerivator.h>\n");
    // disable clang-format for making the following code unreadable.
    // clang-format off
    std::stringstream requestFuncStrm;
@@ -145,25 +156,15 @@ void RooFuncWrapper::declareAndDiffFunction(std::string const &funcBody, bool cr
                       "}\n"
                       "#pragma clad OFF";
    // clang-format on
-   comp = gInterpreter->Declare(requestFuncStrm.str().c_str());
-   if (!comp) {
+   if (!declareToInterpreter(requestFuncStrm.str())) {
       std::stringstream errorMsg;
       errorMsg << "Function " << GetName() << " could not be differentiated. See above for details.";
-      coutE(InputArguments) << errorMsg.str() << std::endl;
+      oocoutE(nullptr, InputArguments) << errorMsg.str() << std::endl;
       throw std::runtime_error(errorMsg.str().c_str());
    }
 
-   // Build a wrapper over the derivative to hide clad specific types such as 'array_ref'.
-   // disable clang-format for making the following code unreadable.
-   // clang-format off
-   std::stringstream dWrapperStrm;
-   dWrapperStrm << "void " << wrapperName << "(double* params, double const* obs, double* out) {\n"
-                   "  clad::array_ref<double> cladOut(out, " << _params.size() << ");\n"
-                   "  " << gradName << "(params, obs, cladOut);\n"
-                   "}";
-   // clang-format on
-   gInterpreter->Declare(dWrapperStrm.str().c_str());
-   _grad = reinterpret_cast<Grad>(gInterpreter->ProcessLine((wrapperName + ";").c_str()));
+   _grad = reinterpret_cast<Grad>(gInterpreter->ProcessLine((gradName + ";").c_str()));
+   _hasGradient = true;
 }
 
 void RooFuncWrapper::gradient(double *out) const
@@ -171,7 +172,7 @@ void RooFuncWrapper::gradient(double *out) const
    updateGradientVarBuffer();
    std::fill(out, out + _params.size(), 0.0);
 
-   _grad(_gradientVarBuffer.data(), _observables.data(), out);
+   _grad(_gradientVarBuffer.data(), _observables.data(), _xlArr.data(), out);
 }
 
 void RooFuncWrapper::updateGradientVarBuffer() const
@@ -182,21 +183,23 @@ void RooFuncWrapper::updateGradientVarBuffer() const
 
 double RooFuncWrapper::evaluate() const
 {
+   if (_useEvaluator)
+      return _absReal->getVal();
    updateGradientVarBuffer();
 
-   return _func(_gradientVarBuffer.data(), _observables.data());
+   return _func(_gradientVarBuffer.data(), _observables.data(), _xlArr.data());
 }
 
 void RooFuncWrapper::gradient(const double *x, double *g) const
 {
    std::fill(g, g + _params.size(), 0.0);
 
-   _grad(const_cast<double *>(x), _observables.data(), g);
+   _grad(const_cast<double *>(x), _observables.data(), _xlArr.data(), g);
 }
 
 std::string RooFuncWrapper::buildCode(RooAbsReal const &head)
 {
-   RooFit::Detail::CodeSquashContext ctx(_nodeOutputSizes);
+   RooFit::Detail::CodeSquashContext ctx(_nodeOutputSizes, _xlArr, *this);
 
    // First update the result variable of params in the compute graph to in[<position>].
    int idx = 0;
@@ -221,14 +224,61 @@ std::string RooFuncWrapper::buildCode(RooAbsReal const &head)
    return ctx.assembleCode(ctx.getResult(head));
 }
 
-/// @brief Prints the squashed code body to console.
-void RooFuncWrapper::dumpCode()
+/// @brief Declare code to the interpreter and keep track of all declared code in this RooFuncWrapper.
+bool RooFuncWrapper::declareToInterpreter(std::string const &code)
 {
-   gInterpreter->ProcessLine(_funcName.c_str());
+   _allCode << code << std::endl;
+   return gInterpreter->Declare(code.c_str());
 }
 
-/// @brief Prints the derivative code body to console.
-void RooFuncWrapper::dumpGradient()
+/// @brief Dumps a macro "filename.C" that can be used to test and debug the generated code and gradient.
+void RooFuncWrapper::writeDebugMacro(std::string const &filename) const
 {
-   gInterpreter->ProcessLine((_funcName + "_grad_0").c_str());
+   std::ofstream outFile;
+   outFile.open(filename + ".C");
+   outFile << "#include <RooFit/Detail/MathFuncs.h>" << std::endl;
+   outFile << std::endl;
+   outFile << _allCode.str();
+   outFile << std::endl;
+
+   updateGradientVarBuffer();
+
+   auto writeVector = [&](std::string const &name, std::span<const double> vec) {
+      outFile << "std::vector<double> " << name << " = {";
+      for (std::size_t i = 0; i < vec.size(); ++i) {
+         if (i % 10 == 0)
+            outFile << "\n    ";
+         outFile << vec[i];
+         if (i < vec.size() - 1)
+            outFile << ", ";
+      }
+      outFile << "\n};\n";
+   };
+
+   outFile << "// clang-format off\n" << std::endl;
+   writeVector("parametersVec", _gradientVarBuffer);
+   outFile << std::endl;
+   writeVector("observablesVec", _observables);
+   outFile << std::endl;
+   writeVector("auxConstantsVec", _xlArr);
+   outFile << std::endl;
+   outFile << "// clang-format on\n" << std::endl;
+
+   outFile << R"(
+// To run as a ROOT macro
+void )" << filename
+           << R"(()
+{
+   std::vector<double> gradientVec(parametersVec.size());
+
+   )" << _funcName
+           << R"((parametersVec.data(), observablesVec.data(), auxConstantsVec.data());
+   )" << _funcName
+           << R"(_grad_0(parametersVec.data(), observablesVec.data(), auxConstantsVec.data(), gradientVec.data());
 }
+)";
+}
+
+} // namespace Experimental
+
+} // namespace RooFit

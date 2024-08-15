@@ -130,6 +130,9 @@ inline constexpr bool isMappable<FieldT, std::void_t<decltype(std::declval<Field
 \ingroup NTuple
 \brief An RNTupleView provides read-only access to a single field of the ntuple
 
+\tparam T The type of the object that will be read by the view
+\tparam UserProvidedAddress Whether the user provided an external memory location to read data into
+
 The view owns a field and its underlying columns in order to fill an ntuple value object with data. Data can be
 accessed by index. For top-level fields, the index refers to the entry number. Fields that are part of
 nested collections have global index numbers that are derived from their parent indexes.
@@ -137,7 +140,7 @@ nested collections have global index numbers that are derived from their parent 
 Fields of simple types with a Map() method will use that and thus expose zero-copy access.
 */
 // clang-format on
-template <typename T>
+template <typename T, bool UserProvidedAddress>
 class RNTupleView {
    friend class RNTupleReader;
    friend class RNTupleCollectionView;
@@ -150,14 +153,35 @@ private:
    /// Used as a Read() destination for fields that are not mappable
    RFieldBase::RValue fValue;
 
+   void SetupField(DescriptorId_t fieldId, Internal::RPageSource *pageSource)
+   {
+      fField.SetOnDiskId(fieldId);
+      Internal::CallConnectPageSourceOnField(fField, *pageSource);
+      if constexpr (!UserProvidedAddress) {
+         if ((fField.GetTraits() & RFieldBase::kTraitMappable) && fField.HasReadCallbacks())
+            throw RException(R__FAIL("view disallowed on field with mappable type and read callback"));
+      }
+   }
+
    RNTupleView(DescriptorId_t fieldId, Internal::RPageSource *pageSource)
       : fField(pageSource->GetSharedDescriptorGuard()->GetFieldDescriptor(fieldId).GetFieldName()),
         fValue(fField.CreateValue())
    {
-      fField.SetOnDiskId(fieldId);
-      Internal::CallConnectPageSourceOnField(fField, *pageSource);
-      if ((fField.GetTraits() & RFieldBase::kTraitMappable) && fField.HasReadCallbacks())
-         throw RException(R__FAIL("view disallowed on field with mappable type and read callback"));
+      SetupField(fieldId, pageSource);
+   }
+
+   RNTupleView(DescriptorId_t fieldId, Internal::RPageSource *pageSource, std::shared_ptr<T> objPtr)
+      : fField(pageSource->GetSharedDescriptorGuard()->GetFieldDescriptor(fieldId).GetFieldName()),
+        fValue(fField.BindValue(objPtr))
+   {
+      SetupField(fieldId, pageSource);
+   }
+
+   RNTupleView(DescriptorId_t fieldId, Internal::RPageSource *pageSource, T *rawPtr)
+      : fField(pageSource->GetSharedDescriptorGuard()->GetFieldDescriptor(fieldId).GetFieldName()),
+        fValue(fField.BindValue(Internal::MakeAliasedSharedPtr(rawPtr)))
+   {
+      SetupField(fieldId, pageSource);
    }
 
 public:
@@ -172,9 +196,9 @@ public:
 
    const T &operator()(NTupleSize_t globalIndex)
    {
-      if constexpr (Internal::isMappable<FieldT>)
+      if constexpr (Internal::isMappable<FieldT> && !UserProvidedAddress) {
          return *fField.Map(globalIndex);
-      else {
+      } else {
          fValue.Read(globalIndex);
          return fValue.GetRef<T>();
       }
@@ -182,9 +206,9 @@ public:
 
    const T &operator()(RClusterIndex clusterIndex)
    {
-      if constexpr (Internal::isMappable<FieldT>)
+      if constexpr (Internal::isMappable<FieldT> && !UserProvidedAddress) {
          return *fField.Map(clusterIndex);
-      else {
+      } else {
          fValue.Read(clusterIndex);
          return fValue.GetRef<T>();
       }
@@ -203,6 +227,36 @@ public:
    {
       return fField.MapV(clusterIndex, nItems);
    }
+
+   void Bind(std::shared_ptr<T> objPtr)
+   {
+      static_assert(
+         UserProvidedAddress,
+         "Only views which were created with an external memory location at construction time can be bound to a "
+         "different memory location afterwards. Call the RNTupleReader::GetView overload with a shared_ptr.");
+      fValue.Bind(objPtr);
+   }
+
+   void BindRawPtr(T *rawPtr)
+   {
+      static_assert(
+         UserProvidedAddress,
+         "Only views which were created with an external memory location at construction time can be bound to a "
+         "different memory location afterwards. Call the RNTupleReader::GetView overload with a shared_ptr.");
+      fValue.BindRawPtr(rawPtr);
+   }
+
+   void EmplaceNew()
+   {
+      // Let the user know they are misusing this function in case the field is
+      // mappable and they are providing an external address after construction.
+      // This would mean creating a new RValue member but not using it since
+      // reading would be done by RField::Map directly.
+      static_assert(!(Internal::isMappable<FieldT> && !UserProvidedAddress),
+                    "Cannot emplace a new value into a view of a mappable type, unless an external memory location is "
+                    "provided at construction time.");
+      fValue.EmplaceNew();
+   }
 };
 
 // clang-format off
@@ -215,8 +269,8 @@ Can be used to read individual fields whose type is unknown. The void view gives
 in addition to the field, so that the read object can be retrieved.
 */
 // clang-format on
-template <>
-class RNTupleView<void> {
+template <bool UserProvidedAddress>
+class RNTupleView<void, UserProvidedAddress> {
    friend class RNTupleReader;
    friend class RNTupleCollectionView;
 
@@ -229,11 +283,29 @@ private:
       return desc.GetFieldDescriptor(fieldId).CreateField(desc);
    }
 
-   RNTupleView(DescriptorId_t fieldId, Internal::RPageSource *pageSource)
-      : fField(CreateField(fieldId, pageSource->GetSharedDescriptorGuard().GetRef())), fValue(fField->CreateValue())
+   void SetupField(DescriptorId_t fieldId, Internal::RPageSource *pageSource)
    {
       fField->SetOnDiskId(fieldId);
       Internal::CallConnectPageSourceOnField(*fField, *pageSource);
+   }
+
+   RNTupleView(DescriptorId_t fieldId, Internal::RPageSource *pageSource)
+      : fField(CreateField(fieldId, pageSource->GetSharedDescriptorGuard().GetRef())), fValue(fField->CreateValue())
+   {
+      SetupField(fieldId, pageSource);
+   }
+
+   RNTupleView(DescriptorId_t fieldId, Internal::RPageSource *pageSource, std::shared_ptr<void> objPtr)
+      : fField(CreateField(fieldId, pageSource->GetSharedDescriptorGuard().GetRef())), fValue(fField->BindValue(objPtr))
+   {
+      SetupField(fieldId, pageSource);
+   }
+
+   RNTupleView(DescriptorId_t fieldId, Internal::RPageSource *pageSource, void *rawPtr)
+      : fField(CreateField(fieldId, pageSource->GetSharedDescriptorGuard().GetRef())),
+        fValue(fField->BindValue(Internal::MakeAliasedSharedPtr(rawPtr)))
+   {
+      SetupField(fieldId, pageSource);
    }
 
 public:
@@ -249,6 +321,26 @@ public:
 
    void operator()(NTupleSize_t globalIndex) { fValue.Read(globalIndex); }
    void operator()(RClusterIndex clusterIndex) { fValue.Read(clusterIndex); }
+
+   void Bind(std::shared_ptr<void> objPtr)
+   {
+      static_assert(
+         UserProvidedAddress,
+         "Only views which were created with an external memory location at construction time can be bound to a "
+         "different memory location afterwards. Call the RNTupleReader::GetView overload with a shared_ptr.");
+      fValue.Bind(objPtr);
+   }
+
+   void BindRawPtr(void *rawPtr)
+   {
+      static_assert(
+         UserProvidedAddress,
+         "Only views which were created with an external memory location at construction time can be bound to a "
+         "different memory location afterwards. Call the RNTupleReader::GetView overload with a shared_ptr.");
+      fValue.BindRawPtr(rawPtr);
+   }
+
+   void EmplaceNew() { fValue.EmplaceNew(); }
 };
 
 // clang-format off
@@ -258,7 +350,7 @@ public:
 \brief A view for a collection, that can itself generate new ntuple views for its nested fields.
 */
 // clang-format on
-class RNTupleCollectionView : public RNTupleView<ClusterSize_t> {
+class RNTupleCollectionView : public RNTupleView<ClusterSize_t, false> {
    friend class RNTupleReader;
 
 private:
@@ -266,7 +358,7 @@ private:
    DescriptorId_t fCollectionFieldId;
 
    RNTupleCollectionView(DescriptorId_t fieldId, Internal::RPageSource *source)
-      : RNTupleView<ClusterSize_t>(fieldId, source), fSource(source), fCollectionFieldId(fieldId)
+      : RNTupleView<ClusterSize_t, false>(fieldId, source), fSource(source), fCollectionFieldId(fieldId)
    {}
 
 public:
@@ -294,13 +386,14 @@ public:
 
    /// Raises an exception if there is no field with the given name.
    template <typename T>
-   RNTupleView<T> GetView(std::string_view fieldName) {
+   RNTupleView<T, false> GetView(std::string_view fieldName)
+   {
       auto fieldId = fSource->GetSharedDescriptorGuard()->FindFieldId(fieldName, fCollectionFieldId);
       if (fieldId == kInvalidDescriptorId) {
          throw RException(R__FAIL("no field named '" + std::string(fieldName) + "' in RNTuple '" +
                                   fSource->GetSharedDescriptorGuard()->GetName() + "'"));
       }
-      return RNTupleView<T>(fieldId, fSource);
+      return RNTupleView<T, false>(fieldId, fSource);
    }
    /// Raises an exception if there is no field with the given name.
    RNTupleCollectionView GetCollectionView(std::string_view fieldName)

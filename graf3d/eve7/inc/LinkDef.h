@@ -13,7 +13,7 @@
 // LinkDef.h - REve objects and services.
 //==============================================================================
 
-#ifdef __CINT__
+#ifdef __CLING__
 
 #pragma link off all globals;
 #pragma link off all classes;
@@ -219,6 +219,9 @@
 // REveJetCone
 #pragma link C++ class ROOT::Experimental::REveJetCone+;
 #pragma link C++ class ROOT::Experimental::REveJetConeProjected+;
+
+// REveText
+#pragma link C++ class ROOT::Experimental::REveText+;
 
 // Ellipse
 #pragma link C++ class ROOT::Experimental::REveEllipsoid+;

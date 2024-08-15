@@ -229,6 +229,10 @@ def RDataFrameAsNumpy(df, columns=None, exclude=None, lazy=False):
     result_ptrs = {}
     for column in columns:
         column_type = df.GetColumnType(column)
+        # bool columns should be taken as unsigned chars, because NumPy stores
+        # bools in bytes - different from the std::vector<bool> returned by the
+        # action, which might do some space optimization
+        column_type = "unsigned char" if column_type == "bool" else column_type
         result_ptrs[column] = df.Take[column_type](column)
 
     result = AsNumpyResult(result_ptrs, columns)
@@ -252,6 +256,7 @@ class AsNumpyResult(object):
         _result_ptrs (dict): results of the AsNumpy action. The key is the
             column name, the value is the result pointer for that column.
     """
+
     def __init__(self, result_ptrs, columns):
         """Constructs an AsNumpyResult object.
 
@@ -284,12 +289,12 @@ class AsNumpyResult(object):
             for column in self._columns:
                 cpp_reference = self._result_ptrs[column].GetValue()
                 if hasattr(cpp_reference, "__array_interface__"):
-                    tmp = numpy.asarray(cpp_reference) # This adopts the memory of the C++ object.
+                    tmp = numpy.asarray(cpp_reference)  # This adopts the memory of the C++ object.
                     self._py_arrays[column] = ndarray(tmp, self._result_ptrs[column])
                 else:
                     tmp = numpy.empty(len(cpp_reference), dtype=object)
                     for i, x in enumerate(cpp_reference):
-                        tmp[i] = x # This creates only the wrapping of the objects and does not copy.
+                        tmp[i] = x  # This creates only the wrapping of the objects and does not copy.
                     self._py_arrays[column] = ndarray(tmp, self._result_ptrs[column])
 
         return self._py_arrays
@@ -309,9 +314,11 @@ class AsNumpyResult(object):
         """
 
         if self._py_arrays is None or other._py_arrays is None:
-            raise RuntimeError("Merging instances of 'AsNumpyResult' failed because either of them didn't compute "
-                               "their result yet. Make sure to call the 'GetValue' method on both objects before "
-                               "trying to merge again.")
+            raise RuntimeError(
+                "Merging instances of 'AsNumpyResult' failed because either of them didn't compute "
+                "their result yet. Make sure to call the 'GetValue' method on both objects before "
+                "trying to merge again."
+            )
 
         try:
             import numpy
@@ -322,9 +329,7 @@ class AsNumpyResult(object):
             raise ValueError("The two dictionary of numpy arrays have different keys.")
 
         self._py_arrays = {
-            key: numpy.concatenate([self._py_arrays[key],
-                                    other._py_arrays[key]])
-            for key in self._py_arrays
+            key: numpy.concatenate([self._py_arrays[key], other._py_arrays[key]]) for key in self._py_arrays
         }
 
     def __getstate__(self):
@@ -344,30 +349,45 @@ class AsNumpyResult(object):
         self._py_arrays = state
 
 
+def _clone_asnumpyresult(res: AsNumpyResult) -> AsNumpyResult:
+    """
+    Clones the internal actions held by the input result and returns a new
+    result.
+    """
+    import ROOT
+    return AsNumpyResult(
+        {
+            col: ROOT.Internal.RDF.CloneResultAndAction(ptr)
+            for (col, ptr) in res._result_ptrs.items()
+        },
+        res._columns
+    )
+
+
 class HistoProfileWrapper(MethodTemplateWrapper):
-    '''
+    """
     Subclass of MethodTemplateWrapper that pythonizes HistoXD and ProfileXD
     method templates.
     It relies on the `_original_method` and `_extra_args` attributes of the
     superclass, to invoke the original implementation of the method template
     and get the model class, respectively.
-    '''
+    """
 
     def __call__(self, *args):
-        '''
+        """
         Pythonization of HistoXD and ProfileXD method templates.
         Checks whether the user made a call with a tuple as first argument; in
         that case, extracts the tuple items to construct a model object and
         calls the original implementation of the method with that object.
 
-	Args:
-	    args: arguments of a HistoXD or ProfileXD call.
+        Args:
+            args: arguments of a HistoXD or ProfileXD call.
 
         Returns:
             return value of the original HistoXD or ProfileXD implementations.
-        '''
+        """
 
-        model_class, = self._extra_args
+        (model_class,) = self._extra_args
 
         if args and isinstance(args[0], tuple):
             # Construct the model with the elements of the tuple
@@ -380,7 +400,7 @@ class HistoProfileWrapper(MethodTemplateWrapper):
             else:
                 # Covers the case of the overloads with only model passed
                 # as argument
-               res = self._original_method(model)
+                res = self._original_method(model)
         # If the first argument is not a tuple, nothing to do, just call
         # the original implementation
         else:
@@ -402,24 +422,88 @@ def pythonize_rdataframe(klass):
     # Replace the implementation of the following RDF methods
     # to convert a tuple argument into a model object
     methods_with_TModel = {
-            'Histo1D' : RDF.TH1DModel,
-            'Histo2D' : RDF.TH2DModel,
-            'Histo3D' : RDF.TH3DModel,
-            'Profile1D' : RDF.TProfile1DModel,
-            'Profile2D' : RDF.TProfile2DModel
-            }
+        "Histo1D": RDF.TH1DModel,
+        "Histo2D": RDF.TH2DModel,
+        "Histo3D": RDF.TH3DModel,
+        "Profile1D": RDF.TProfile1DModel,
+        "Profile2D": RDF.TProfile2DModel,
+    }
 
     for method_name, model_class in methods_with_TModel.items():
         # Replace the original implementation of the method
         # with an object that can handle template arguments
         # and stores a reference to such implementation
-        getter = MethodTemplateGetter(getattr(klass, method_name),
-                                      HistoProfileWrapper,
-                                      model_class)
+        getter = MethodTemplateGetter(getattr(klass, method_name), HistoProfileWrapper, model_class)
         setattr(klass, method_name, getter)
 
     klass._OriginalFilter = klass.Filter
     klass._OriginalDefine = klass.Define
     from ._rdf_pyz import _PyFilter, _PyDefine
+
     klass.Filter = _PyFilter
     klass.Define = _PyDefine
+
+
+def _make_name_rvec_pair(key, value):
+    import ROOT
+
+    # Get name of key
+    if not isinstance(key, str):
+        raise RuntimeError("Object not convertible: Dictionary key is not convertible to a string.")
+
+    # Convert value to RVec and attach to dictionary
+    pyvec = ROOT.VecOps.AsRVec(value)
+    if not pyvec:
+        raise RuntimeError("Object not convertible: Dictionary entry " + key + " is not convertible with AsRVec.")
+
+    # Add pairs of column name and associated RVec to signature
+    return ROOT.std.pair["std::string", type(pyvec)](key, ROOT.std.move(pyvec))
+
+
+# For references to keep alive the NumPy arrays that are read by
+# MakeNumpyDataFrame.
+_numpy_data = {}
+
+
+def _MakeNumpyDataFrame(np_dict):
+    r"""
+    Make an RDataFrame from a dictionary of numpy arrays
+
+    \param[in] self Always null, since this is a module function.
+    \param[in] pydata Dictionary with numpy arrays
+
+    This function takes a dictionary of numpy arrays and creates an RDataFrame
+    using the keys as column names and the numpy arrays as data.
+    """
+    import ROOT
+
+    if not isinstance(np_dict, dict):
+        raise RuntimeError("Object not convertible: Python object is not a dictionary.")
+
+    if len(np_dict) == 0:
+        raise RuntimeError("Object not convertible: Dictionary is empty.")
+
+    args = (_make_name_rvec_pair(key, value) for key, value in np_dict.items())
+
+    # How we keep the NumPy arrays around as long as the RDataSource is alive:
+    #
+    #  1. Cache a container with references to the NumPy arrays in a global
+    #     dictionary. Note that we use a copy of the original dict as the
+    #     container, because otherwise the caller of _MakeNumpyDataFrame can
+    #     invalidate our cache by mutating the np_dict after the call.
+    #
+    # 2. Together with the array data, store a deleter function to delete the
+    #    cache element in the cache itself.
+    #
+    # 3. The C++ side gets a reference to the deleter function via
+    #    std::function. Note that the C++ side can only get a non-owning
+    #    reference to the Python function, which is the reason why we have to
+    #    keep the deleter alive in the cache itself.
+    #
+    # 4. The RDataSource calls the deleter in its destructor.
+
+    np_dict_copy = dict(**np_dict)
+    key = id(np_dict_copy)
+    _numpy_data[key] = (lambda: _numpy_data.pop(key), np_dict_copy)
+    deleter = ROOT.std.function["void()"](_numpy_data[key][0])
+    return ROOT.Internal.RDF.MakeRVecDataFrame(deleter, *args)

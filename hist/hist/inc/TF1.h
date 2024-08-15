@@ -462,10 +462,13 @@ public:
    template <class T> T operator()(const T *x, const Double_t *params = nullptr);
    void     ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
    virtual void     FixParameter(Int_t ipar, Double_t value);
-   bool      IsVectorized()
+   /// Return true if function has data in fSave buffer
+   Bool_t HasSave() const { return !fSave.empty(); }
+   bool IsVectorized()
    {
       return (fType == EFType::kTemplVec) || (fType == EFType::kFormula && fFormula && fFormula->IsVectorized());
    }
+   /// Return the Chisquare after fitting. See ROOT::Fit::FitResult::Chi2()
    Double_t     GetChisquare() const
    {
       return fChisquare;

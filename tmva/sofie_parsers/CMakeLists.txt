@@ -49,6 +49,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofieParser
     src/ParseTanh.cxx
     src/ParseTranspose.cxx
     src/ParseErf.cxx
+    src/ParseRange.cxx
     src/ParseLayerNormalization.cxx
     src/ParseExpand.cxx
     src/ParseGather.cxx
@@ -59,6 +60,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofieParser
     src/ParseMatMul.cxx
     src/ParseComparision.cxx
     src/ParseEyeLike.cxx
+    src/ParseConstant.cxx
     ${PROTO_SRCS}
   LIBRARIES PUBLIC
     protobuf::libprotobuf

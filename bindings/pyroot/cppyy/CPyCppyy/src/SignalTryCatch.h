@@ -18,6 +18,13 @@
 #define NEED_SIGJMP 1
 #endif
 
+// By default, the ExceptionContext_t class is expected in the namespace
+// CppyyLegacy, If it is expected in no namespace, one can explicitly define
+// NO_CPPYY_LEGACY_NAMESPACE at build time (e.g. if one wants to use ROOT).
+
+#ifndef NO_CPPYY_LEGACY_NAMESPACE
+namespace CppyyLegacy {
+#endif
 struct ExceptionContext_t {
 #ifdef NEED_SIGJMP
     sigjmp_buf fBuf;
@@ -25,38 +32,45 @@ struct ExceptionContext_t {
     jmp_buf fBuf;
 #endif
 };
+#ifndef NO_CPPYY_LEGACY_NAMESPACE
+}
 
-#ifdef NEED_SIGJMP
-# define SETJMP(buf) sigsetjmp(buf,1)
+using CppyyExceptionContext_t = CppyyLegacy::ExceptionContext_t;
 #else
-# define SETJMP(buf) setjmp(buf)
+using CppyyExceptionContext_t = ExceptionContext_t;
 #endif
 
-#define RETRY \
+#ifdef NEED_SIGJMP
+# define CLING_EXCEPTION_SETJMP(buf) sigsetjmp(buf,1)
+#else
+# define CLING_EXCEPTION_SETJMP(buf) setjmp(buf)
+#endif
+
+#define CLING_EXCEPTION_RETRY \
     { \
-        static ExceptionContext_t R__curr, *R__old = gException; \
+        static CppyyExceptionContext_t R__curr, *R__old = gException; \
         int R__code; \
         gException = &R__curr; \
-        R__code = SETJMP(gException->fBuf); if (R__code) { }; {
+        R__code = CLING_EXCEPTION_SETJMP(gException->fBuf); if (R__code) { }; {
 
-#define TRY \
+#define CLING_EXCEPTION_TRY \
     { \
-        static ExceptionContext_t R__curr, *R__old = gException; \
+        static CppyyExceptionContext_t R__curr, *R__old = gException; \
         int R__code; \
         gException = &R__curr; \
-        if ((R__code = SETJMP(gException->fBuf)) == 0) {
+        if ((R__code = CLING_EXCEPTION_SETJMP(gException->fBuf)) == 0) {
 
-#define CATCH(n) \
+#define CLING_EXCEPTION_CATCH(n) \
             gException = R__old; \
         } else { \
             int n = R__code; \
             gException = R__old;
 
-#define ENDTRY \
+#define CLING_EXCEPTION_ENDTRY \
         } \
         gException = R__old; \
     }
 
-CPYCPPYY_IMPORT ExceptionContext_t *gException;
+CPYCPPYY_IMPORT CppyyExceptionContext_t *gException;
 
 #endif

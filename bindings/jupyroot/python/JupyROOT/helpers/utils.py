@@ -74,7 +74,7 @@ if (typeof requirejs !== 'undefined') {{
 
     // We are in jupyter notebooks, use require.js which should be configured already
     requirejs.config({{
-       paths: {{ 'JSRootCore' : [ 'build/jsroot', 'https://root.cern/js/7.4.3/build/jsroot', 'https://jsroot.gsi.de/7.4.3/build/jsroot' ] }}
+       paths: {{ 'JSRootCore' : [ 'build/jsroot', 'https://root.cern/js/7.7.2/build/jsroot', 'https://jsroot.gsi.de/7.7.2/build/jsroot' ] }}
     }})(['JSRootCore'],  function(Core) {{
        display_{jsDivId}(Core);
     }});
@@ -97,7 +97,7 @@ if (typeof requirejs !== 'undefined') {{
     // Try loading a local version of requirejs and fallback to cdn if not possible.
     script_load_{jsDivId}(base_url + 'static/build/jsroot.js', function(){{
         console.error('Fail to load JSROOT locally, please check your jupyter_notebook_config.py file');
-        script_load_{jsDivId}('https://root.cern/js/7.4.3/build/jsroot.js', function(){{
+        script_load_{jsDivId}('https://root.cern/js/7.7.2/build/jsroot.js', function(){{
             document.getElementById("{jsDivId}").innerHTML = "Failed to load JSROOT";
         }});
     }});
@@ -483,6 +483,7 @@ class NotebookDrawer(object):
         self.drawableObject = theObject
         self.isRCanvas = False
         self.isCanvas = False
+        self.drawableId = str(ROOT.AddressOf(theObject)[0])
         if hasattr(self.drawableObject,"ResolveSharedPtrs"):
             self.isRCanvas = True
         else:
@@ -576,7 +577,7 @@ class NotebookDrawer(object):
 
     def _getDrawId(self):
         if self.isCanvas:
-            return self.drawableObject.GetName()
+            return self.drawableObject.GetName() + self.drawableId
         if self.isRCanvas:
             return self.drawableObject.GetUID()
         # all other objects do not support update and can be ignored

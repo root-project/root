@@ -18,7 +18,7 @@
 #include <RooMsgService.h>
 #include <RooTrace.h>
 
-#include <RooFit/Detail/EvaluateFuncs.h>
+#include <RooFit/Detail/MathFuncs.h>
 #include <RooStats/HistFactory/FlexibleInterpVar.h>
 
 #include <Riostream.h>
@@ -207,8 +207,8 @@ double FlexibleInterpVar::evaluate() const
          code = 5;
       }
       double paramVal = static_cast<const RooAbsReal *>(&_paramList[i])->getVal();
-      total += RooFit::Detail::EvaluateFuncs::flexibleInterp(code, _low[i], _high[i], _interpBoundary, _nominal,
-                                                             paramVal, total);
+      total += RooFit::Detail::MathFuncs::flexibleInterpSingle(code, _low[i], _high[i], _interpBoundary, _nominal,
+                                                               paramVal, total);
    }
 
    if (total <= 0) {
@@ -222,31 +222,30 @@ void FlexibleInterpVar::translate(RooFit::Detail::CodeSquashContext &ctx) const
 {
    unsigned int n = _interpCode.size();
 
-   std::string resName = "total_" + ctx.getTmpVarName();
-   ctx.addToCodeBody(this, "double " + resName + " = " + std::to_string(_nominal) + ";\n");
-   std::string code;
-   for (std::size_t i = 0; i < n; ++i) {
-
-      int interpCode = _interpCode[i];
-      if (interpCode < 0 || interpCode > 4) {
-         coutE(InputArguments) << "FlexibleInterpVar::evaluate ERROR:  param " << i
-                               << " with unknown interpolation code" << std::endl;
-      }
-      // To get consistent codes with the PiecewiseInterpolation
-      if (interpCode == 4) {
-         interpCode = 5;
-      }
-      code += resName + " += " +
-              ctx.buildCall("RooFit::Detail::EvaluateFuncs::flexibleInterp", interpCode, _low[i], _high[i],
-                            _interpBoundary, _nominal, _paramList[i], resName) +
-              ";\n";
+   int interpCode = _interpCode[0];
+   if (interpCode < 0 || interpCode > 4) {
+      coutE(InputArguments) << "FlexibleInterpVar::evaluate ERROR:  param " << 0
+                            << " with unknown interpolation code" << std::endl;
    }
-   code += resName + " = " + resName + " <= 0 ? TMath::Limits<double>::Min() : " + resName + ";\n";
-   ctx.addToCodeBody(this, code);
+   // To get consistent codes with the PiecewiseInterpolation
+   if (interpCode == 4) {
+      interpCode = 5;
+   }
+
+   for (unsigned int i = 1; i < n; i++) {
+      if (_interpCode[i] != _interpCode[0]) {
+         coutE(InputArguments) << "FlexibleInterpVar::evaluate ERROR:  Code Squashing AD does not yet support having "
+                                  "different interpolation codes for the same class object "
+                               << std::endl;
+      }
+   }
+
+   std::string const &resName = ctx.buildCall("RooFit::Detail::MathFuncs::flexibleInterp", interpCode,
+                                              _paramList, n, _low, _high, _interpBoundary, _nominal, 1.0);
    ctx.addResult(this, resName);
 }
 
-void FlexibleInterpVar::computeBatch(double *output, size_t /*nEvents*/, RooFit::Detail::DataMap const &dataMap) const
+void FlexibleInterpVar::doEval(RooFit::EvalContext &ctx) const
 {
    double total(_nominal);
 
@@ -260,15 +259,15 @@ void FlexibleInterpVar::computeBatch(double *output, size_t /*nEvents*/, RooFit:
       if (code == 4) {
          code = 5;
       }
-      total += RooFit::Detail::EvaluateFuncs::flexibleInterp(code, _low[i], _high[i], _interpBoundary, _nominal,
-                                                             dataMap.at(&_paramList[i])[0], total);
+      total += RooFit::Detail::MathFuncs::flexibleInterpSingle(code, _low[i], _high[i], _interpBoundary, _nominal,
+                                                             ctx.at(&_paramList[i])[0], total);
    }
 
    if (total <= 0) {
       total = TMath::Limits<double>::Min();
    }
 
-   output[0] = total;
+   ctx.output()[0] = total;
 }
 
 void FlexibleInterpVar::printMultiline(std::ostream& os, Int_t contents,

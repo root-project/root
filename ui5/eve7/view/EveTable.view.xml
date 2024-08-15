@@ -17,17 +17,14 @@
     </Toolbar>
     <m:FlexBox direction="Column" height="100%">
     <layout:VerticalLayout id="header" width="100%" >
-      <m:Label text="Choose Collection:" />
-      <layout:HorizontalLayout id="gedHeader">
+      <layout:HorizontalLayout id="gedHeader" width="100%">
         <m:ComboBox id="ccombo" change="collectionChanged"
                     items="{
                            path: 'collections>/itemx'
                            }">
           <core:Item key="{collections>key}" text="{collections>text}" />
         </m:ComboBox>
-
-        <m:Label text="Edit table:" labelFor="toggleButtonId"/>
-        <m:Button icon="sap-icon://edit" id="toggleButtonId" press="toggleTableEdit" tooltip="toggle table edit"/>
+        <m:Button text="Edit Collection Columns" id="toggleButtonId" press="toggleTableEdit" tooltip="toggle column edit"/>
       </layout:HorizontalLayout  >
     </layout:VerticalLayout >
     <table:Table

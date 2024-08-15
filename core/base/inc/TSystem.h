@@ -22,13 +22,11 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef __CINT__
 #include <cstdio>
 #include <cctype>
 #include <fcntl.h>
 #ifndef _WIN32
 #include <unistd.h>
-#endif
 #endif
 
 #include "TNamed.h"
@@ -232,11 +230,7 @@ enum ESendRecvOptions {
    kDontBlock          // send/recv as much data as possible without blocking
 };
 
-#ifdef __CINT__
-typedef void *Func_t;
-#else
 typedef void (*Func_t)();
-#endif
 
 R__EXTERN const char  *gRootDir;
 R__EXTERN const char  *gProgName;
@@ -349,6 +343,7 @@ public:
    void                    SetErrorStr(const char *errstr);
    const char             *GetErrorStr() const { return GetLastErrorString(); }
    virtual const char     *GetError();
+   virtual Int_t           GetCryptoRandom(void *buf, Int_t len);
    void                    RemoveOnExit(TObject *obj);
    virtual const char     *HostName();
    virtual void            NotifyApplicationCreated();
@@ -422,7 +417,7 @@ public:
    Bool_t                  cd(const char *path) { return ChangeDirectory(path); }
    const char             *pwd() { return WorkingDirectory(); }
    virtual const char     *TempDirectory() const;
-   virtual FILE           *TempFileName(TString &base, const char *dir = nullptr);
+   virtual FILE           *TempFileName(TString &base, const char *dir = nullptr, const char *suffix = nullptr);
 
    //---- Paths & Files
    virtual const char     *BaseName(const char *pathname);

@@ -43,12 +43,17 @@ public:
         kIsException     = 0x0004,
         kIsSmart         = 0x0008,
         kIsPython        = 0x0010,
-        kIsInComplete    = 0x0020 };
+        kIsMultiCross    = 0x0020,
+        kIsInComplete    = 0x0040,
+        kNoImplicit      = 0x0080,
+        kNoOSInsertion   = 0x0100,
+        kGblOSInsertion  = 0x0200,
+        kNoPrettyPrint   = 0x0400 };
 
 public:
     PyHeapTypeObject  fType;
     Cppyy::TCppType_t fCppType;
-    int               fFlags;
+    uint32_t          fFlags;
     union {
         CppToPyMap_t*           fCppObjects;     // classes only
         std::vector<PyObject*>* fUsing;          // namespaces only
@@ -75,7 +80,11 @@ extern PyTypeObject CPPScope_Type;
 template<typename T>
 inline bool CPPScope_Check(T* object)
 {
-    return object && PyObject_TypeCheck(object, &CPPScope_Type);
+// Short-circuit the type check by checking tp_new which all generated subclasses
+// of CPPScope inherit.
+    return object && \
+        (Py_TYPE(object)->tp_new == CPPScope_Type.tp_new || \
+         PyObject_TypeCheck(object, &CPPScope_Type));
 }
 
 template<typename T>

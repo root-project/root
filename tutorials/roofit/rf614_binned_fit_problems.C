@@ -105,7 +105,7 @@ void rf614_binned_fit_problems()
 
    // Let's not look at another example: a power law \f[x^a\f].
    RooRealVar a{"a", "a", -0.3, -5.0, 5.0};
-   RooPower powerlaw{"powerlaw", "powerlaw", x, RooConst(1.0), a};
+   RooPowerSum powerlaw{"powerlaw", "powerlaw", x, RooConst(1.0), a};
    std::unique_ptr<RooAbsData> powerlawData{generateBinnedAsimov(powerlaw, x, 10000)};
 
    // Again, if you do a vanilla fit, you'll get a bias

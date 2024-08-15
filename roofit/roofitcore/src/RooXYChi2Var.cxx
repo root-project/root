@@ -44,7 +44,7 @@
 
 #include <stdexcept>
 
-using namespace std;
+using std::endl;
 
 ClassImp(RooXYChi2Var);
 

@@ -2062,7 +2062,7 @@ Double_t TMath::BetaCf(Double_t x, Double_t a, Double_t b)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Computes the probability density function of the Beta distribution
-/// (the distribution function is computed in BetaDistI).
+/// (the cumulative distribution function is computed in BetaDistI).
 /// The first argument is the point, where the function will be
 /// computed, second and third are the function parameters.
 /// Since the Beta distribution is bounded on both sides, it's often
@@ -2080,7 +2080,8 @@ Double_t TMath::BetaDist(Double_t x, Double_t p, Double_t q)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Computes the distribution function of the Beta distribution.
+/// Computes the cumulative distribution function of the Beta distribution,
+/// i.e. the lower tail integral of TMath::BetaDist
 /// The first argument is the point, where the function will be
 /// computed, second and third are the function parameters.
 /// Since the Beta distribution is bounded on both sides, it's often
@@ -2131,6 +2132,9 @@ Double_t TMath::Binomial(Int_t n,Int_t k)
 /// For _n_ larger than 12 BetaIncomplete is a much better way
 /// to evaluate the sum than would be the straightforward sum calculation
 /// for _n_ smaller than 12 either method is acceptable ("Numerical Recipes")
+///
+/// Note this function is not exactly implementing the cumulative or the complement of the cumulative of the
+/// Binomial distrinution. It is equivalent to ROOT::Math::binomial_cdf_c(k-1,p,n)
 ///
 /// \author Anna Kreshuk
 
@@ -2276,8 +2280,9 @@ Double_t TMath::FDist(Double_t F, Double_t N, Double_t M)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Calculates the cumulative distribution function of F-distribution,
-/// this function occurs in the statistical test of whether two observed
+/// Calculates the cumulative distribution function of F-distribution
+/// (see ROOT::Math::fdistribution_cdf).
+/// This function occurs in the statistical test of whether two observed
 /// samples have the same variance. For this test a certain statistic F,
 /// the ratio of observed dispersion of the first sample to that of the
 /// second sample, is calculated. N and M stand for numbers of degrees
@@ -2330,7 +2335,7 @@ Double_t TMath::FDistI(Double_t F, Double_t N, Double_t M)
 ///   gdist->SetLineColor(6);
 ///   TF1 *gdist4 = gdist->DrawCopy("LSAME");
 ///
-///   legend = new TLegend(0.15, 0.15, 0.5, 0.35);
+///   auto legend = new TLegend(0.15, 0.15, 0.5, 0.35);
 ///   legend->AddEntry(gdist1, "gamma = 0.5, mu = 0, beta = 1", "L");
 ///   legend->AddEntry(gdist2, "gamma = 1.0, mu = 0, beta = 1", "L");
 ///   legend->AddEntry(gdist3, "gamma = 2.0, mu = 0, beta = 1", "L");
@@ -2365,8 +2370,8 @@ Double_t TMath::LaplaceDist(Double_t x, Double_t alpha, Double_t beta)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Computes the distribution function of Laplace distribution
-/// at point x, with location parameter alpha and shape parameter beta.
+/// Computes the cumulative distribution function (lower tail integral)
+/// of Laplace distribution at point x, with location parameter alpha and shape parameter beta.
 /// By default, alpha=0, beta=1
 /// This distribution is known under different names, most common is
 /// double exponential distribution, but it also appears as
@@ -2420,7 +2425,7 @@ Double_t TMath::LaplaceDistI(Double_t x, Double_t alpha, Double_t beta)
 ///   logn->SetLineColor(6);
 ///   TF1 *logn4 = logn->DrawCopy("LSAME");
 ///
-///   legend = new TLegend(0.15, 0.15, 0.5, 0.35);
+///   auto legend = new TLegend(0.15, 0.15, 0.5, 0.35);
 ///   legend->AddEntry(logn1, "sigma = 0.5, theta = 0, m = 1", "L");
 ///   legend->AddEntry(logn2, "sigma = 1.0, theta = 0, m = 1", "L");
 ///   legend->AddEntry(logn3, "sigma = 2.0, theta = 0, m = 1", "L");
@@ -2634,6 +2639,7 @@ Double_t TMath::Student(Double_t T, Double_t ndf)
 /// not for the number of samples
 /// if x has Student's t-distribution, the function returns the probability of
 /// x being less than T.
+/// This is equivalent to ROOT::Math::tdistribution_cdf(T,ndf)
 ///
 /// \author Anna Kreshuk
 
@@ -2718,7 +2724,7 @@ Double_t TMath::StudentQuantile(Double_t p, Double_t ndf, Bool_t lower_tail)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns the value of the Vavilov density function
+/// Returns the value of the Vavilov probability density function
 ///
 /// \param[in] x      the point were the density function is evaluated
 /// \param[in] kappa  value of kappa (distribution parameter)
@@ -2734,6 +2740,9 @@ Double_t TMath::StudentQuantile(Double_t p, Double_t ndf, Bool_t lower_tail)
 /// density function computed numerically in an accurate way: our approximation
 /// shows a difference of less than 3% around the peak of the density function, slowly
 /// increasing going towards the extreme tails to the right and to the left"
+///
+/// For a more accurate implementation see the documentation in the Vavilov class and
+/// ROOT::Math::vavilov_accurate_pdf
 ///
 /// Begin_Macro
 /// {
@@ -2757,7 +2766,7 @@ Double_t TMath::StudentQuantile(Double_t p, Double_t ndf, Bool_t lower_tail)
 ///   vavilov->SetLineColor(6);
 ///   TF1 *vavilov4 = vavilov->DrawCopy("LSAME");
 ///
-///   legend = new TLegend(0.5, 0.65, 0.85, 0.85);
+///   auto legend = new TLegend(0.5, 0.65, 0.85, 0.85);
 ///   legend->AddEntry(vavilov1, "kappa = 0.5, beta2 = 0", "L");
 ///   legend->AddEntry(vavilov2, "kappa = 0.3, beta2 = 0", "L");
 ///   legend->AddEntry(vavilov3, "kappa = 0.2, beta2 = 0", "L");
@@ -2781,7 +2790,8 @@ Double_t TMath::Vavilov(Double_t x, Double_t kappa, Double_t beta2)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns the value of the Vavilov distribution function
+/// Returns the value of the Vavilov cumulative distribution function
+/// (lower tail integral of the probability distribution function)
 ///
 /// \param[in] x      the point were the density function is evaluated
 /// \param[in] kappa  value of kappa (distribution parameter)
@@ -2798,6 +2808,9 @@ Double_t TMath::Vavilov(Double_t x, Double_t kappa, Double_t beta2)
 /// density function computed numerically in an accurate way: our approximation
 /// shows a difference of less than 3% around the peak of the density function, slowly
 /// increasing going towards the extreme tails to the right and to the left"
+///
+/// For a more accurate implementation see the documentation of the Vavilov class and the cumulative
+/// ROOT::Math::vavilov_accurate_cdf
 
 Double_t TMath::VavilovI(Double_t x, Double_t kappa, Double_t beta2)
 {
@@ -2823,7 +2836,8 @@ Double_t TMath::VavilovI(Double_t x, Double_t kappa, Double_t beta2)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns the value of the Landau distribution function at point x.
+/// Returns the cumulative (lower tail integral) of the Landau distribution function at point x.
+/// (see ROOT::Math::landau_cdf)
 /// The algorithm was taken from the Cernlib function dislan(G110)
 /// Reference: K.S.Kolbig and B.Schorr, "A program package for the Landau
 /// distribution", Computer Phys.Comm., 31(1984), 97-111

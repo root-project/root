@@ -444,7 +444,6 @@ void  FullSearch()
 
 
 
-#ifndef __CINT__
 int main(int argc, char **argv)
 {
    using std::cout;
@@ -491,5 +490,3 @@ int main(int argc, char **argv)
    // FullSearch();
    return 0;
 }
-#endif
-

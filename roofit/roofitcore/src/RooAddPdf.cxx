@@ -397,7 +397,6 @@ void RooAddPdf::fixCoefRange(const char* rangeName)
 /// Retrieve cache element for the computation of the PDF normalisation.
 /// \param[in] nset Current normalisation set (integration over these variables yields 1).
 /// \param[in] iset Integration set. Variables to be integrated over (if integrations are performed).
-/// \param[in] rangeName Reference range for the integrals.
 ///
 /// If a cache element does not exist, create and fill it on the fly. The cache also contains
 /// - Supplemental normalization terms (in case not all added p.d.f.s have the same observables)
@@ -548,18 +547,20 @@ double RooAddPdf::getValV(const RooArgSet* normSet) const
 
 void RooAddPdf::translate(RooFit::Detail::CodeSquashContext &ctx) const
 {
-   RooRealSumPdf::translateImpl(ctx, this, _pdfList, _coefList);
+   ctx.addResult(this, RooRealSumPdf::translateImpl(ctx, this, _pdfList, _coefList, true));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute addition of PDFs in batches.
-void RooAddPdf::computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+void RooAddPdf::doEval(RooFit::EvalContext & ctx) const
 {
-  RooBatchCompute::Config config = dataMap.config(this);
+  std::span<double> output = ctx.output();
+
+  RooBatchCompute::Config config = ctx.config(this);
 
   _coefCache.resize(_pdfList.size());
   for(std::size_t i = 0; i < _coefList.size(); ++i) {
-    auto coefVals = dataMap.at(&_coefList[i]);
+    auto coefVals = ctx.at(&_coefList[i]);
     // We don't support per-event coefficients in this function. If the CPU
     // mode is used, we can just fall back to the RooAbsReal implementation.
     // With CUDA, we can't do that because the inputs might be on the device.
@@ -568,17 +569,17 @@ void RooAddPdf::computeBatch(double* output, size_t nEvents, RooFit::Detail::Dat
       if (config.useCuda()) {
         throw std::runtime_error("The RooAddPdf doesn't support per-event coefficients in CUDA mode yet!");
       }
-      RooAbsReal::computeBatch(output, nEvents, dataMap);
+      RooAbsReal::doEval(ctx);
       return;
     }
     _coefCache[i] = coefVals[0];
   }
 
-  RooBatchCompute::VarVector pdfs;
-  RooBatchCompute::ArgVector coefs;
+  std::vector<std::span<const double>> pdfs;
+  std::vector<double> coefs;
   AddCacheElem* cache = getProjCache(nullptr);
   // We don't sync the coefficient values from the _coefList to the _coefCache
-  // because we have already done it using the dataMap.
+  // because we have already done it using the ctx.
   updateCoefficients(*cache, nullptr, /*syncCoefValues=*/false);
 
   for (unsigned int pdfNo = 0; pdfNo < _pdfList.size(); ++pdfNo)
@@ -586,11 +587,11 @@ void RooAddPdf::computeBatch(double* output, size_t nEvents, RooFit::Detail::Dat
     auto pdf = static_cast<RooAbsPdf*>(&_pdfList[pdfNo]);
     if (pdf->isSelectedComp())
     {
-      pdfs.push_back(dataMap.at(pdf));
+      pdfs.push_back(ctx.at(pdf));
       coefs.push_back(_coefCache[pdfNo] / cache->suppNormVal(pdfNo) );
     }
   }
-  RooBatchCompute::compute(config, RooBatchCompute::AddPdf, output, nEvents, pdfs, coefs);
+  RooBatchCompute::compute(config, RooBatchCompute::AddPdf, output, pdfs, coefs);
 }
 
 
@@ -810,7 +811,7 @@ std::unique_ptr<RooAbsReal> RooAddPdf::createExpectedEventsFunc(const RooArgSet 
    if (!_allExtendable) {
       // If the _refCoefNorm is empty or it's equal to normSet anyway, this is not
       // a conditional pdf and we don't need to do any transformation. See also
-      // RooAddPdf::compleForNormSet() for more explanations on a similar logic.
+      // RooAddPdf::compileForNormSet() for more explanations on a similar logic.
       if (!_refCoefNorm.empty() && !nset->equals(_refCoefNorm)) {
          prodList.addOwned(std::unique_ptr<RooAbsReal>{createIntegral(*nset, _refCoefNorm)});
       }

@@ -4,7 +4,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '29/01/2024',
+version_date = '30/07/2024',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -34,9 +34,11 @@ if (_src && isStr(_src)) {
    const pos = _src.indexOf('modules/core.mjs');
    if (pos >= 0) {
       source_dir = _src.slice(0, pos);
-      console.log(`Set jsroot source_dir to ${source_dir}, ${version}`);
+      if (!nodejs)
+         console.log(`Set jsroot source_dir to ${source_dir}, ${version}`);
    } else {
-      console.log(`jsroot bundle, ${version}`);
+      if (!nodejs)
+         console.log(`jsroot bundle, ${version}`);
       internals.ignore_v6 = true;
    }
 }
@@ -116,7 +118,7 @@ const constants = {
       WebGL: 1,
       /** @summary Use WebGL rendering, but convert into svg image, not interactive */
       WebGLImage: 2,
-      /** @summary Use SVG rendering, slow, inprecise and not interactive, nor recommendet */
+      /** @summary Use SVG rendering, slow, imprecise and not interactive, not recommended */
       SVG: 3,
       fromString(s) {
          if ((s === 'webgl') || (s === 'gl')) return this.WebGL;
@@ -130,13 +132,13 @@ const constants = {
    Embed3D: {
       /** @summary Do not embed 3D drawing, use complete space */
       NoEmbed: -1,
-      /** @summary Default embeding mode - on Firefox and latest Chrome is real ```Embed```, on all other ```Overlay``` */
+      /** @summary Default embedding mode - on Firefox and latest Chrome is real ```Embed```, on all other ```Overlay``` */
       Default: 0,
-      /** @summary WebGL canvas not inserted into SVG, but just overlayed The only way how earlier Chrome browser can be used */
+      /** @summary WebGL canvas not inserted into SVG, but just overlay. The only way how old Chrome browser can be used */
       Overlay: 1,
       /** @summary Really embed WebGL Canvas into SVG */
       Embed: 2,
-      /** @summary Embeding, but when SVG rendering or SVG image converion is used */
+      /** @summary Embedding, but when SVG rendering or SVG image conversion is used */
       EmbedSVG: 3,
       /** @summary Convert string values into number  */
       fromString(s) {
@@ -205,17 +207,17 @@ settings = {
    ZoomWheel: !nodejs,
    /** @summary Zooming on touch devices */
    ZoomTouch: !nodejs,
-   /** @summary Enables move and resize of elements like statbox, title, pave, colz  */
+   /** @summary Enables move and resize of elements like statistic box, title, pave, colz  */
    MoveResize: !browser.touches && !nodejs,
-   /** @summary Configures keybord key press handling
-     * @desc Can be disabled to prevent keys heandling in complex HTML layouts
+   /** @summary Configures keyboard key press handling
+     * @desc Can be disabled to prevent keys handling in complex HTML layouts
      * @default true */
    HandleKeys: !nodejs,
    /** @summary enables drag and drop functionality */
    DragAndDrop: !nodejs,
    /** @summary Interactive dragging of TGraph points */
    DragGraphs: true,
-   /** @summary Show progress box */
+   /** @summary Show progress box, can be false, true or 'modal' */
    ProgressBox: !nodejs,
    /** @summary Show additional tool buttons on the canvas, false - disabled, true - enabled, 'popup' - only toggle button */
    ToolBar: nodejs ? false : 'popup',
@@ -234,7 +236,7 @@ settings = {
    /** @summary Automatically create stats box, default on */
    AutoStat: true,
    /** @summary Default frame position in NFC
-     * @deprecated Use gStyle.fPad[Left/Right/Top/Bottom]Margin values instead */
+     * @deprecated Use gStyle.fPad[Left/Right/Top/Bottom]Margin values instead, to be removed in v8 */
    FrameNDC: {},
    /** @summary size of pad, where many features will be deactivated like text draw or zooming  */
    SmallPad: { width: 150, height: 100 },
@@ -272,7 +274,7 @@ settings = {
      * @default true */
    UseStamp: true,
    /** @summary Maximal number of bytes ranges in http 'Range' header
-     * @desc Some http server has limitations for number of bytes rannges therefore let change maximal number via setting
+     * @desc Some http server has limitations for number of bytes ranges therefore let change maximal number via setting
      * @default 200 */
    MaxRanges: 200,
   /** @summary Configure xhr.withCredentials = true when submitting http requests from JSROOT */
@@ -290,7 +292,15 @@ settings = {
    /** @summary Strip axis labels trailing 0 or replace 10^0 by 1 */
    StripAxisLabels: true,
    /** @summary Draw TF1 by default as curve or line */
-   FuncAsCurve: false
+   FuncAsCurve: false,
+   /** @summary Time zone used for date/time display, local by default, can be 'UTC' or 'Europe/Berlin' or any other valid value */
+   TimeZone: '',
+   /** @summary Page URL which will be used to show item in new tab, jsroot main dir used by default */
+   NewTabUrl: '',
+   /** @summary Extra parameters which will be append to the url when item shown in new tab */
+   NewTabUrlPars: '',
+   /** @summary Export different settings in output URL */
+   NewTabUrlExportSettings: false
 },
 
 /** @namespace
@@ -399,6 +409,7 @@ gStyle = {
    fLegendFont: 42,
    fLegendTextSize: 0,
    fLegendFillColor: 0,
+   fLegendFillStyle: 1001,
    fHatchesLineWidth: 1,
    fHatchesSpacing: 1,
    fCandleWhiskerRange: 1.0,
@@ -452,11 +463,14 @@ async function injectCode(code) {
             return true;
       }
 
-      const promise = code.indexOf('JSROOT.require') >= 0 ? _ensureJSROOT() : Promise.resolve(true);
+      // try to detect if code includes import and must be treated as module
+      const is_v6 = code.indexOf('JSROOT.require') >= 0,
+            is_mjs = !is_v6 && (code.indexOf('import {') > 0) && (code.indexOf('} from \'') > 0),
+            promise = is_v6 ? _ensureJSROOT() : Promise.resolve(true);
 
       return promise.then(() => {
          const element = document.createElement('script');
-         element.setAttribute('type', 'text/javascript');
+         element.setAttribute('type', is_mjs ? 'module' : 'text/javascript');
          element.innerHTML = code;
          document.head.appendChild(element);
          return postponePromise(true, 10); // while onload event not fired, just postpone resolve
@@ -464,6 +478,17 @@ async function injectCode(code) {
    }
 
    return false;
+}
+
+/** @summary Load ES6 modules
+  * @param {String} arg - single URL or array of URLs
+  * @return {Promise} */
+async function loadModules(arg) {
+   if (isStr(arg))
+      arg = arg.split(';');
+   if (arg.length === 0)
+      return true;
+   return import(/* webpackIgnore: true */ arg.shift()).then(() => loadModules(arg));
 }
 
 /** @summary Load script or CSS file into the browser
@@ -937,7 +962,7 @@ function createHttpRequest(url, kind, user_accept_callback, user_reject_callback
                return this.error_callback(Error(`Fail to load url ${url}`), this.status);
 
          if (this.nodejs_checkzip && (this.getResponseHeader('content-encoding') === 'gzip')) {
-            // special handling of gzipped JSON objects in Node.js
+            // special handling of gzip JSON objects in Node.js
             return import('zlib').then(handle => {
                 const res = handle.unzipSync(Buffer.from(this.response)),
                       obj = JSON.parse(res); // zlib returns Buffer, use JSON to parse it
@@ -993,7 +1018,7 @@ function createHttpRequest(url, kind, user_accept_callback, user_reject_callback
    return use_promise ? Promise.resolve(xhr) : xhr;
 }
 
-/** @summary Submit asynchronoues http request
+/** @summary Submit asynchronous http request
   * @desc Following requests kind can be specified:
   *    - 'bin' - abstract binary data, result as string
   *    - 'buf' - abstract binary data, result as ArrayBuffer (default)
@@ -1003,7 +1028,7 @@ function createHttpRequest(url, kind, user_accept_callback, user_reject_callback
   *    - 'xml' - returns req.responseXML
   *    - 'head' - returns request itself, uses 'HEAD' request method
   *    - 'post' - creates post request, submits req.send(post_data)
-  *    - 'postbuf' - creates post request, expectes binary data as response
+  *    - 'postbuf' - creates post request, expects binary data as response
   * @param {string} url - URL for the request
   * @param {string} kind - kind of requested data
   * @param {string} [post_data] - data submitted with post kind of request
@@ -1033,13 +1058,13 @@ const prROOT = 'ROOT.', clTObject = 'TObject', clTNamed = 'TNamed', clTString = 
       clTText = 'TText', clTLatex = 'TLatex', clTMathText = 'TMathText', clTAnnotation = 'TAnnotation',
       clTColor = 'TColor', clTLine = 'TLine', clTBox = 'TBox', clTPolyLine = 'TPolyLine',
       clTPolyLine3D = 'TPolyLine3D', clTPolyMarker3D = 'TPolyMarker3D',
-      clTAttPad = 'TAttPad', clTPad = 'TPad', clTCanvas = 'TCanvas', clTAttCanvas = 'TAttCanvas',
+      clTAttPad = 'TAttPad', clTPad = 'TPad', clTCanvas = 'TCanvas', clTFrame = 'TFrame', clTAttCanvas = 'TAttCanvas',
       clTGaxis = 'TGaxis', clTAttAxis = 'TAttAxis', clTAxis = 'TAxis', clTStyle = 'TStyle',
       clTH1 = 'TH1', clTH1I = 'TH1I', clTH1D = 'TH1D', clTH2 = 'TH2', clTH2I = 'TH2I', clTH2F = 'TH2F', clTH3 = 'TH3',
       clTF1 = 'TF1', clTF2 = 'TF2', clTF3 = 'TF3', clTProfile = 'TProfile', clTProfile2D = 'TProfile2D', clTProfile3D = 'TProfile3D',
       clTGeoVolume = 'TGeoVolume', clTGeoNode = 'TGeoNode', clTGeoNodeMatrix = 'TGeoNodeMatrix',
-      nsREX = 'ROOT::Experimental::',
-      kNoZoom = -1111, kNoStats = BIT(9), kInspect = 'inspect';
+      nsREX = 'ROOT::Experimental::', nsSVG = 'http://www.w3.org/2000/svg',
+      kNoZoom = -1111, kNoStats = BIT(9), kInspect = 'inspect', kTitle = 'title';
 
 
 /** @summary Create some ROOT classes
@@ -1063,6 +1088,9 @@ function create(typename, target) {
       case clTList:
       case clTHashList:
          extend(obj, { name: typename, arr: [], opt: [] });
+         break;
+      case clTObjArray:
+         extend(obj, { name: typename, arr: [] });
          break;
       case clTAttAxis:
          extend(obj, { fNdivisions: 510, fAxisColor: 1,
@@ -1120,7 +1148,8 @@ function create(typename, target) {
          create(clTPave, obj);
          create(clTAttText, obj);
          extend(obj, { fColumnSeparation: 0, fEntrySeparation: 0.1, fMargin: 0.25, fNColumns: 1, fPrimitives: create(clTList), fName: clTPave,
-                       fBorderSize: gStyle.fLegendBorderSize, fTextFont: gStyle.fLegendFont, fTextSize: gStyle.fLegendTextSize, fFillColor: gStyle.fLegendFillColor });
+                       fBorderSize: gStyle.fLegendBorderSize, fTextFont: gStyle.fLegendFont, fTextSize: gStyle.fLegendTextSize,
+                       fFillColor: gStyle.fLegendFillColor, fFillStyle: gStyle.fLegendFillStyle });
          break;
       case clTPaletteAxis:
          create(clTPave, obj);
@@ -1507,7 +1536,10 @@ function getMethods(typename, obj) {
       m.AddText = function(txt) {
          const line = create(clTLatex);
          line.fTitle = txt;
-         line.fTextAlign = this.fTextAlign;
+         line.fTextAlign = 0;
+         line.fTextColor = 0;
+         line.fTextFont = 0;
+         line.fTextSize = 0;
          this.fLines.Add(line);
       };
       m.Clear = function() {
@@ -1703,6 +1735,9 @@ function getMethods(typename, obj) {
             if (!this.fArray) return 0;
             return this.fArray[bin]/this.fBinEntries[bin];
          };
+         m.getBinEntries = function(bin) {
+            return (bin < 0) || (bin >= this.fNcells) ? 0 : this.fBinEntries[bin];
+         };
       }
       m.getBinEffectiveEntries = function(bin) {
          if (bin < 0 || bin >= this.fNcells) return 0;
@@ -1821,7 +1856,7 @@ function isObject(arg) { return arg && typeof arg === 'object'; }
   * @private */
 function isFunc(arg) { return typeof arg === 'function'; }
 
-/** @summary Check if argument is a atring
+/** @summary Check if argument is a String
   * @private */
 function isStr(arg) { return typeof arg === 'string'; }
 
@@ -1863,13 +1898,13 @@ export { version_id, version_date, version, source_dir, isNodeJs, isBatchMode, s
          clTAttLine, clTAttFill, clTAttMarker, clTAttText,
          clTPave, clTPaveText, clTPavesText, clTPaveStats, clTPaveLabel, clTPaveClass, clTDiamond,
          clTLegend, clTLegendEntry, clTPaletteAxis, clTImagePalette, clTText, clTLatex, clTMathText, clTAnnotation, clTMultiGraph,
-         clTColor, clTLine, clTBox, clTPolyLine, clTPad, clTCanvas, clTAttCanvas, clTGaxis,
+         clTColor, clTLine, clTBox, clTPolyLine, clTPad, clTCanvas, clTFrame, clTAttCanvas, clTGaxis,
          clTAxis, clTStyle, clTH1, clTH1I, clTH1D, clTH2, clTH2I, clTH2F, clTH3, clTF1, clTF2, clTF3,
          clTProfile, clTProfile2D, clTProfile3D, clTHStack,
          clTGraph, clTGraph2DErrors, clTGraph2DAsymmErrors,
          clTGraphPolar, clTGraphPolargram, clTGraphTime, clTCutG,
-         clTPolyLine3D, clTPolyMarker3D, clTGeoVolume, clTGeoNode, clTGeoNodeMatrix, nsREX, kNoZoom, kNoStats, kInspect,
+         clTPolyLine3D, clTPolyMarker3D, clTGeoVolume, clTGeoNode, clTGeoNodeMatrix, nsREX, nsSVG, kNoZoom, kNoStats, kInspect, kTitle,
          isArrayProto, getDocument, BIT, clone, addMethods, parse, parseMulti, toJSON,
-         decodeUrl, findFunction, createHttpRequest, httpRequest, loadScript, injectCode,
+         decodeUrl, findFunction, createHttpRequest, httpRequest, loadModules, loadScript, injectCode,
          create, createHistogram, setHistogramTitle, createTPolyLine, createTGraph, createTHStack, createTMultiGraph,
          getMethods, registerMethods, isRootCollection, isObject, isFunc, isStr, isPromise, getPromise, postponePromise, _ensureJSROOT };

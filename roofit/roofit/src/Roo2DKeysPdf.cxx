@@ -31,7 +31,7 @@ Two-dimensional kernel estimation PDF.
 
 //#include <math.h>
 
-using namespace std;
+using std::cout, std::endl, std::ostream;
 
 ClassImp(Roo2DKeysPdf);
 
@@ -144,7 +144,7 @@ Int_t Roo2DKeysPdf::loadDataSet(RooDataSet& data, TString options)
     cout << "ERROR:  Roo2DKeysPdf::loadDataSet The input data set is empty.  Unable to begin generating the PDF" << endl;
     return 1;
   }
-  _n16       =  TMath::Power(_nEvents, -0.166666666); // = (4/[n(dim(R) + 2)])^1/(dim(R)+4); dim(R) = 2
+  _n16       =  std::pow(_nEvents, -1./6.); // = (4/[n(dim(R) + 2)])^1/(dim(R)+4); dim(R) = 2
 
   _lox       = x.min();
   _hix       = x.max();
@@ -316,11 +316,11 @@ Int_t Roo2DKeysPdf::calculateBandWidth(Int_t kernel)
   {
     cout << "Roo2DKeysPdf::calculateBandWidth Using an adaptive bandwidth (in general different for all events) [default]"<<endl;
     cout << "                                 scaled by a factor of "<<_widthScaleFactor<<endl;
-    double xnorm   = h * TMath::Power(_xSigma/sqrtSum, 1.5) * _widthScaleFactor;
-    double ynorm   = h * TMath::Power(_ySigma/sqrtSum, 1.5) * _widthScaleFactor;
+    double xnorm   = h * std::pow(_xSigma/sqrtSum, 1.5) * _widthScaleFactor;
+    double ynorm   = h * std::pow(_ySigma/sqrtSum, 1.5) * _widthScaleFactor;
     for(Int_t j=0;j<_nEvents;++j)
     {
-      double f_ti =  TMath::Power( g(_x[j], _x, hXSigma, _y[j], _y, hYSigma), -0.25 ) ;
+      double f_ti =  std::pow( g(_x[j], _x, hXSigma, _y[j], _y, hYSigma), -0.25 ) ;
       _hx[j] = xnorm * f_ti;
       _hy[j] = ynorm * f_ti;
       if(_hx[j]<xhmin) _hx[j] = xhmin;

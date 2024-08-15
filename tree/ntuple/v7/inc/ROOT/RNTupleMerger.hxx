@@ -20,6 +20,7 @@
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RPageStorage.hxx>
+#include <Compression.h>
 
 #include <memory>
 #include <string>
@@ -30,11 +31,19 @@ namespace ROOT {
 namespace Experimental {
 namespace Internal {
 
+struct RNTupleMergeOptions {
+   /// If `fCompressionSettings == kUnknownCompressionSettings` (the default), the merger will not change the
+   /// compression of any of its sources (fast merging). Otherwise, all sources will be converted to the specified
+   /// compression algorithm and level.
+   int fCompressionSettings = kUnknownCompressionSettings;
+};
+
 // clang-format off
 /**
  * \class ROOT::Experimental::Internal::RNTupleMerger
  * \ingroup NTuple
- * \brief Given a set of RPageSources merge them into an RPageSink
+ * \brief Given a set of RPageSources merge them into an RPageSink, optionally changing their compression.
+ *        This can also be used to change the compression of a single RNTuple by just passing a single source.
  */
 // clang-format on
 class RNTupleMerger {
@@ -67,14 +76,15 @@ private:
                             const RFieldDescriptor &fieldDesc, const std::string &prefix = "");
 
    /// Recursively collect all the columns for all the fields rooted at field zero
-   std::vector<RColumnInfo> CollectColumns(const RPageSource &source, bool firstSource);
+   void CollectColumns(const RNTupleDescriptor &descriptor, std::vector<RColumnInfo> &columns);
 
    // Internal map that holds column name, type, and type id : output ID information
    std::unordered_map<std::string, DescriptorId_t> fOutputIdMap;
 
 public:
    /// Merge a given set of sources into the destination
-   void Merge(std::span<RPageSource *> sources, RPageSink &destination);
+   void Merge(std::span<RPageSource *> sources, RPageSink &destination,
+              const RNTupleMergeOptions &options = RNTupleMergeOptions());
 
 }; // end of class RNTupleMerger
 

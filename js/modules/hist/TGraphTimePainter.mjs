@@ -1,6 +1,5 @@
 import { internals } from '../core.mjs';
-import { DrawOptions } from '../base/BasePainter.mjs';
-import { ObjectPainter } from '../base/ObjectPainter.mjs';
+import { ObjectPainter, DrawOptions } from '../base/ObjectPainter.mjs';
 import { TH1Painter } from '../hist2d/TH1Painter.mjs';
 import { draw } from '../draw.mjs';
 
@@ -47,7 +46,7 @@ class TGraphTimePainter extends ObjectPainter {
          return;
       }
 
-      return draw(this.getDom(), lst.arr[indx], lst.opt[indx]).then(p => {
+      return draw(this.getPadPainter(), lst.arr[indx], lst.opt[indx]).then(p => {
          if (p) {
             p.$grtimeid = this.selfid; // indicator that painter created by ourself
             p.$grstep = this.step; // remember step
@@ -79,7 +78,7 @@ class TGraphTimePainter extends ObjectPainter {
             return;
          }
 
-         // draw ptrimitives again
+         // draw primitives again
          this.drawPrimitives().then(() => {
             // clear primitives produced by previous drawing to avoid flicking
             pp.cleanPrimitives(p => { return (p.$grtimeid === this.selfid) && (p.$grstep !== this.step); });
@@ -110,7 +109,7 @@ class TGraphTimePainter extends ObjectPainter {
       }
    }
 
-   /** @ummary Start drawing of graph time */
+   /** @summary Start drawing of graph time */
    startDrawing() {
       this.step = 0;
 

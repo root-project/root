@@ -44,7 +44,7 @@ use a RooAcceptReject sampling technique.
 #include "TString.h"
 
 
-using namespace std;
+using std::endl, std::string, std::ostream;
 
 ClassImp(RooGenContext);
 
@@ -63,7 +63,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
               const RooDataSet *prototype, const RooArgSet* auxProto,
               bool verbose, const RooArgSet* forceDirect) :
   RooAbsGenContext(model,vars,prototype,auxProto,verbose),
-  _maxVar(nullptr), _updateFMaxPerEvent(0)
+  _updateFMaxPerEvent(0)
 {
   cxcoutI(Generation) << "RooGenContext::ctor() setting up event generator context for p.d.f. " << model.GetName()
          << " for generation of observable(s) " << vars ;
@@ -208,7 +208,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
    coutI(Generation) << "RooGenContext::ctor() no prototype data provided, all observables are generated with numerically and "
                << "model supports analytical maximum findin:, can provide analytical pdf maximum to numeric generator" << endl ;
    double maxVal = _pdfClone->maxVal(maxFindCode) / _pdfClone->getNorm(&_theEvent) ;
-   _maxVar = new RooRealVar("funcMax","function maximum",maxVal) ;
+   _maxVar = std::make_unique<RooRealVar>("funcMax","function maximum",maxVal) ;
    cxcoutD(Generation) << "RooGenContext::ctor() maximum value returned by RooAbsPdf::maxVal() is " << maxVal << endl ;
       }
     }
@@ -238,7 +238,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
                         << "model supports analytical maximum finding in the full phase space: "
                         << "can provide analytical pdf maximum to numeric generator" << endl ;
        double maxVal = _pdfClone->maxVal(maxFindCode) / _pdfClone->getNorm(&allVars);
-      _maxVar = new RooRealVar("funcMax", "function maximum", maxVal);
+      _maxVar = std::make_unique<RooRealVar>("funcMax", "function maximum", maxVal);
     } else {
       maxFindCode = _pdfClone->getMaxVal(_otherVars) ;
       if (maxFindCode != 0) {
@@ -249,7 +249,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
                            << "generator" << endl;
          cxcoutD(Generation) << "RooGenContext::ctor() maximum value must be reevaluated for each "
                              << "event with configuration code " << maxFindCode << endl ;
-         _maxVar = new RooRealVar("funcMax","function maximum",1) ;
+         _maxVar = std::make_unique<RooRealVar>("funcMax","function maximum",1) ;
       }
     }
 
@@ -267,20 +267,18 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
                << "of accept/reject observables plus prototype observables: " << otherAndProto << endl ;
 
    // Calculate maximum in other+proto space if there are any accept/reject generated observables
-   RooAbsNumGenerator* maxFinder = RooNumGenFactory::instance().createSampler(*_acceptRejectFunc,otherAndProto,RooArgSet(_protoVars),
-                                 *model.getGeneratorConfig(),_verbose) ;
+   std::unique_ptr<RooAbsNumGenerator> maxFinder{RooNumGenFactory::instance().createSampler(*_acceptRejectFunc,otherAndProto,RooArgSet(_protoVars),
+                                 *model.getGeneratorConfig(),_verbose)};
 //    RooAcceptReject maxFinder(*_acceptRejectFunc,otherAndProto,RooNumGenConfig::defaultConfig(),_verbose) ;
    double max = maxFinder->getFuncMax() ;
-   _maxVar = new RooRealVar("funcMax","function maximum",max) ;
+   _maxVar = std::make_unique<RooRealVar>("funcMax","function maximum",max) ;
 
    if (max==0) {
      oocoutE(nullptr, Generation) << "RooGenContext::ctor(" << model.GetName()
              << ") ERROR: generating conditional p.d.f. which requires prior knowledge of function maximum, "
              << "but chosen numeric generator (" << maxFinder->generatorName() << ") does not support maximum finding" << endl ;
-     delete maxFinder ;
      throw string("RooGenContext::ctor()") ;
    }
-   delete maxFinder ;
 
    cxcoutD(Generation) << "RooGenContext::ctor() maximum function value found through initial sampling is " << max << endl ;
       }
@@ -289,7 +287,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
   }
 
   if (_acceptRejectFunc && !_otherVars.empty()) {
-    _generator = RooNumGenFactory::instance().createSampler(*_acceptRejectFunc,_otherVars,RooArgSet(_protoVars),*model.getGeneratorConfig(),_verbose,_maxVar) ;
+    _generator = std::unique_ptr<RooAbsNumGenerator>{RooNumGenFactory::instance().createSampler(*_acceptRejectFunc,_otherVars,RooArgSet(_protoVars),*model.getGeneratorConfig(),_verbose,_maxVar.get())};
     cxcoutD(Generation) << "RooGenContext::ctor() creating MC sampling generator " << _generator->generatorName() << "  from function for observables " << _otherVars << endl ;
     //_generator= new RooAcceptReject(*_acceptRejectFunc,_otherVars,RooNumGenConfig::defaultConfig(),_verbose,_maxVar);
   } else {
@@ -299,18 +297,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
   _otherVars.add(_uniformVars);
 }
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor.
-
-RooGenContext::~RooGenContext()
-{
-  // Clean up our accept/reject generator
-  if (_generator) delete _generator;
-  if (_maxVar) delete _maxVar ;
-}
-
-
+RooGenContext::~RooGenContext() = default;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Attach the cloned model to the event buffer we will be filling.

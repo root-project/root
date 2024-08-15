@@ -56,7 +56,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTBrowserv7
     src/RBrowser.cxx
     src/RBrowserData.cxx
     src/RFileDialog.cxx
-    src//RWebBrowserImp.cxx
+    src/RWebBrowserImp.cxx
   LIBRARIES
     ROOTBrowserWidgets
   DEPENDENCIES

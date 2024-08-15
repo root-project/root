@@ -24,6 +24,8 @@
 #include "TMath.h"
 #include "TRandom.h"
 #include "TVirtualPad.h"
+#include "THashList.h"
+#include "TObjString.h"
 
 #include "HFitInterface.h"
 #include "Fit/DataRange.h"
@@ -195,12 +197,19 @@ void THnBase::Init(const char* name, const char* title,
                    Int_t chunkSize /*= 1024 * 16*/)
 {
    SetNameTitle(name, title);
-
+   if (!axes) {
+      ::Error("THnBase::Init", "Input parameter `axes` is null, no axes were provided at initialization");
+      return;
+   }
    TIter iAxis(axes);
    const TAxis* axis = nullptr;
    Int_t pos = 0;
    Int_t *nbins = new Int_t[axes->GetEntriesFast()];
    while ((axis = (TAxis*)iAxis())) {
+      if (!axis) {
+         ::Error("THnBase::Init", "Input parameter `axes` has a null element in the array, cannot create new axis");
+         continue;
+      }
       TAxis* reqaxis = new TAxis(*axis);
       if (!keepTargetAxis && axis->TestBit(TAxis::kAxisRange)) {
          Int_t binFirst = axis->GetFirst();
@@ -243,6 +252,10 @@ void THnBase::Init(const char* name, const char* title,
 TH1* THnBase::CreateHist(const char* name, const char* title,
                          const TObjArray* axes,
                          Bool_t keepTargetAxis ) const {
+   if (!axes) {
+      ::Error("THnBase::CreateHist", "Input parameter `axes` is null, no axes were provided at creation");
+      return nullptr;
+   }
    const int ndim = axes->GetSize();
 
    TH1* hist = nullptr;
@@ -261,6 +274,10 @@ TH1* THnBase::CreateHist(const char* name, const char* title,
    TAxis* hax[3] = {hist->GetXaxis(), hist->GetYaxis(), hist->GetZaxis()};
    for (Int_t d = 0; d < ndim; ++d) {
       TAxis* reqaxis = (TAxis*)(*axes)[d];
+      if (!reqaxis) {
+         ::Error("THnBase::CreateHist", "Input parameter `axes` has a null element in the position %d of the array, cannot create new axis", d);
+         continue;
+      }
       hax[d]->SetTitle(reqaxis->GetTitle());
       if (!keepTargetAxis && reqaxis->TestBit(TAxis::kAxisRange)) {
          // axis cannot extend to underflow/overflows (fix ROOT-8781)
@@ -282,6 +299,16 @@ TH1* THnBase::CreateHist(const char* name, const char* title,
             // uniform bins:
             hax[d]->Set(reqaxis->GetNbins(), reqaxis->GetXmin(), reqaxis->GetXmax());
          }
+         // Copy the axis labels if needed.
+         THashList* labels = reqaxis->GetLabels();
+         if (labels) {
+            TIter iL(labels);
+            Int_t i = 1;
+            while (auto lb = static_cast<TObjString *>(iL())) {
+               hax[d]->SetBinLabel(i,lb->String().Data());
+               i++;
+            }
+         }
       }
    }
 
@@ -296,6 +323,10 @@ TH1* THnBase::CreateHist(const char* name, const char* title,
 THnBase* THnBase::CreateHnAny(const char* name, const char* title,
                               const TH1* h, Bool_t sparse, Int_t chunkSize)
 {
+   if (!h) {
+      ::Error("THnBase::CreateHnAny", "Input parameter `h` is null, no histogram was provided upon creation");
+      return nullptr;
+   }
    // Get the dimension of the TH1
    int ndim = h->GetDimension();
 
@@ -318,7 +349,7 @@ THnBase* THnBase::CreateHnAny(const char* name, const char* title,
    // Create the corresponding THnSparse, depending on the storage
    // type of the TH1. The class name will be "TH??\0" where the first
    // ? is 1,2 or 3 and the second ? indicates the storage as C, S,
-   // I, F or D.
+   // I, L, F or D.
    THnBase* s = nullptr;
    const char* cname( h->ClassName() );
    if (cname[0] == 'T' && cname[1] == 'H'
@@ -338,6 +369,7 @@ break;
          case 'F': R__THNBCASE(F);
          case 'D': R__THNBCASE(D);
          case 'I': R__THNBCASE(I);
+         case 'L': R__THNBCASE(L);
          case 'S': R__THNBCASE(S);
          case 'C': R__THNBCASE(C);
       }
@@ -372,6 +404,10 @@ THnBase* THnBase::CreateHnAny(const char* name, const char* title,
                               const THnBase* hn, Bool_t sparse,
                               Int_t chunkSize /*= 1024 * 16*/)
 {
+   if (!hn) {
+      ::Error("THnBase::CreateHnAny", "Input parameter `hn` is null, no histogram was provided upon creation");
+      return nullptr;
+   }
    TClass* type = nullptr;
    if (hn->InheritsFrom(THnSparse::Class())) {
       if (sparse) type = hn->IsA();
@@ -399,11 +435,7 @@ THnBase* THnBase::CreateHnAny(const char* name, const char* title,
          else if (hn->InheritsFrom(THnC::Class())) bintype = 'C';
          else if (hn->InheritsFrom(THnS::Class())) bintype = 'S';
          else if (hn->InheritsFrom(THnI::Class())) bintype = 'I';
-         else if (hn->InheritsFrom(THnL::Class())) bintype = 'L';
-         else if (hn->InheritsFrom(THnL64::Class())) {
-            hn->Error("CreateHnAny", "Type THnSparse with Long64_t bins is not available!");
-            return nullptr;
-         }
+         else if (hn->InheritsFrom(THnL::Class()) || hn->InheritsFrom(THnL64::Class())) bintype = 'L';
          if (bintype) {
             type = TClass::GetClass(TString::Format("THnSparse%c", bintype));
          }
@@ -434,6 +466,10 @@ THnBase* THnBase::CreateHnAny(const char* name, const char* title,
 
 void THnBase::Add(const TH1* hist, Double_t c /*=1.*/)
 {
+   if (!hist) {
+      ::Error("THnBase::Add", "Input parameter `hist` is null, no histogram was provided");
+      return;
+   }
    Long64_t nbins = hist->GetNcells();
    int x[3] = {0,0,0};
    for (int i = 0; i < nbins; ++i) {
@@ -487,6 +523,29 @@ TFitResultPtr THnBase::Fit(TF1 *f ,Option_t *option ,Option_t *goption)
    ROOT::Math::MinimizerOptions minOption;
 
    return ROOT::Fit::FitObject(this, f , fitOption , minOption, goption, range);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// \brief THnBase::GetBinCenter
+/// \param idx an array of bin index in each dimension.
+/// \return vector of bin centers in each dimension; empty in case of error.
+/// \note Throws error if size is different from nDimensions.
+/// \sa GetAxis(dim)::GetBinCenter(idx) as an alternative
+std::vector<Double_t> THnBase::GetBinCenter(const std::vector<Int_t> &idx) const
+{
+   if (idx.size() != static_cast<decltype(idx.size())>(fNdimensions)) {
+      Error("THnBase::GetBinCenter",
+            "Mismatched number of dimensions %d with bin index vector size %zu, returning an empty vector.",
+            fNdimensions, idx.size());
+      return {};
+   }
+   std::vector<Double_t> centers(fNdimensions);
+   std::generate(centers.begin(), centers.end(), [i = 0, &idx, this]() mutable {
+      auto bincenter = GetAxis(i)->GetBinCenter(idx[i]);
+      i++;
+      return bincenter;
+   });
+   return centers;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -628,13 +687,13 @@ TObject* THnBase::ProjectionAny(Int_t ndim, const Int_t* dim,
    Int_t* bins  = new Int_t[ndim];
    Long64_t myLinBin = 0;
 
-   THnIter iter(this, kTRUE /*use axis range*/);
+   std::unique_ptr<ROOT::Internal::THnBaseBinIter> iter{CreateIter(true /*use axis range*/)};
 
-   while ((myLinBin = iter.Next()) >= 0) {
+   while ((myLinBin = iter->Next()) >= 0) {
       Double_t v = GetBinContent(myLinBin);
 
       for (Int_t d = 0; d < ndim; ++d) {
-         bins[d] = iter.GetCoord(dim[d]);
+         bins[d] = iter->GetCoord(dim[d]);
          if (!keepTargetAxis && GetAxis(dim[d])->TestBit(TAxis::kAxisRange)) {
             Int_t binOffset = GetAxis(dim[d])->GetFirst();
             // Don't subtract even more if underflow is alreday included:
@@ -679,7 +738,7 @@ TObject* THnBase::ProjectionAny(Int_t ndim, const Int_t* dim,
    if (wantNDim) {
       hn->SetEntries(fEntries);
    } else {
-      if (!iter.HaveSkippedBin()) {
+      if (!iter->HaveSkippedBin()) {
          hist->SetEntries(fEntries);
       } else {
          // re-compute the entries
@@ -719,8 +778,8 @@ void THnBase::Scale(Double_t c)
    // Scale the contents & errors
    Bool_t haveErrors = GetCalculateErrors();
    Long64_t i = 0;
-   THnIter iter(this);
-   while ((i = iter.Next()) >= 0) {
+   std::unique_ptr<ROOT::Internal::THnBaseBinIter> iter{CreateIter(false)};
+   while ((i = iter->Next()) >= 0) {
       // Get the content of the bin from the current histogram
       Double_t v = GetBinContent(i);
       SetBinContent(i, c * v);
@@ -759,9 +818,9 @@ void THnBase::AddInternal(const THnBase* h, Double_t c, Bool_t rebinned)
    Reserve(numTargetBins);
 
    Long64_t i = 0;
-   THnIter iter(h);
+   std::unique_ptr<ROOT::Internal::THnBaseBinIter> iter{h->CreateIter(false)};
    // Add to this whatever is found inside the other histogram
-   while ((i = iter.Next(coord)) >= 0) {
+   while ((i = iter->Next(coord)) >= 0) {
       // Get the content of the bin from the second histogram
       Double_t v = h->GetBinContent(i);
 
@@ -886,9 +945,9 @@ void THnBase::Multiply(const THnBase* h)
    // Now multiply the contents: in this case we have the intersection of the sets of bins
    Int_t* coord = new Int_t[fNdimensions];
    Long64_t i = 0;
-   THnIter iter(this);
+   std::unique_ptr<ROOT::Internal::THnBaseBinIter> iter{CreateIter(false)};
    // Add to this whatever is found inside the other histogram
-   while ((i = iter.Next(coord)) >= 0) {
+   while ((i = iter->Next(coord)) >= 0) {
       // Get the content of the bin from the current histogram
       Double_t v1 = GetBinContent(i);
       // Now look at the bin with the same coordinates in h
@@ -927,9 +986,9 @@ void THnBase::Multiply(TF1* f, Double_t c)
    if (wantErrors) Sumw2();
 
    Long64_t i = 0;
-   THnIter iter(this);
+   std::unique_ptr<ROOT::Internal::THnBaseBinIter> iter{CreateIter(false)};
    // Add to this whatever is found inside the other histogram
-   while ((i = iter.Next(coord)) >= 0) {
+   while ((i = iter->Next(coord)) >= 0) {
       Double_t value = GetBinContent(i);
 
       // Get the bin coordinates given an index array
@@ -980,9 +1039,9 @@ void THnBase::Divide(const THnBase *h)
    // Now divide the contents: also in this case we have the intersection of the sets of bins
    Int_t* coord = new Int_t[fNdimensions];
    Long64_t i = 0;
-   THnIter iter(this);
+   std::unique_ptr<ROOT::Internal::THnBaseBinIter> iter{CreateIter(false)};
    // Add to this whatever is found inside the other histogram
-   while ((i = iter.Next(coord)) >= 0) {
+   while ((i = iter->Next(coord)) >= 0) {
       // Get the content of the bin from the first histogram
       Double_t v1 = GetBinContent(i);
       // Now look at the bin with the same coordinates in h
@@ -1049,9 +1108,9 @@ void THnBase::Divide(const THnBase *h1, const THnBase *h2, Double_t c1, Double_t
    Bool_t didWarn = kFALSE;
 
    Long64_t i = 0;
-   THnIter iter(h1);
+   std::unique_ptr<ROOT::Internal::THnBaseBinIter> iter{h1->CreateIter(false)};
    // Add to this whatever is found inside the other histogram
-   while ((i = iter.Next(coord)) >= 0) {
+   while ((i = iter->Next(coord)) >= 0) {
       // Get the content of the bin from the first histogram
       Double_t v1 = h1->GetBinContent(i);
       // Now look at the bin with the same coordinates in h2
@@ -1236,8 +1295,8 @@ THnBase* THnBase::RebinBase(const Int_t* group) const
    Int_t* coord = new Int_t[fNdimensions];
 
    Long64_t i = 0;
-   THnIter iter(this);
-   while ((i = iter.Next(coord)) >= 0) {
+   std::unique_ptr<ROOT::Internal::THnBaseBinIter> iter{CreateIter(false)};
+   while ((i = iter->Next(coord)) >= 0) {
       Double_t v = GetBinContent(i);
       for (Int_t d = 0; d < ndim; ++d) {
          bins[d] = TMath::CeilNint( (double) coord[d]/group[d] );
@@ -1277,7 +1336,31 @@ void THnBase::ResetBase(Option_t * /*option = ""*/)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Calculate the integral of the histogram
+/// \brief Compute integral (sum of counts) of histogram in all dimensions
+/// \param respectAxisRange if false, count all bins including under/overflows,
+///                         if true, restrict sum to the user-set axis range
+/// \sa Projection(0)::Integral() as alternative
+/// \note this function is different from ComputeIntegral, that is a normalized
+/// cumulative sum
+Double_t THnBase::Integral(Bool_t respectAxisRange) const
+{
+   Long64_t myLinBin = 0;
+   std::unique_ptr<ROOT::Internal::THnBaseBinIter> iter{CreateIter(respectAxisRange)};
+   Double_t sum = 0.;
+   while ((myLinBin = iter->Next()) >= 0) {
+      sum += GetBinContent(myLinBin);
+   }
+   return sum;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///  Compute integral (normalized cumulative sum of bins) w/o under/overflows
+///  The result is stored in fIntegral and used by the GetRandom functions.
+///  This function is automatically called by GetRandom when the fIntegral
+///  array does not exist or when the number of entries in the histogram
+///  has changed since the previous call to GetRandom.
+///  The resulting integral is normalized to 1.
+///  \return 1 if success, 0 if integral is zero
 
 Double_t THnBase::ComputeIntegral()
 {
@@ -1300,8 +1383,8 @@ Double_t THnBase::ComputeIntegral()
    // fill integral array with contents of regular bins (non over/underflow)
    Int_t* coord = new Int_t[fNdimensions];
    Long64_t i = 0;
-   THnIter iter(this);
-   while ((i = iter.Next(coord)) >= 0) {
+   std::unique_ptr<ROOT::Internal::THnBaseBinIter> iter{CreateIter(false)};
+   while ((i = iter->Next(coord)) >= 0) {
       Double_t v = GetBinContent(i);
 
       // check whether the bin is regular
@@ -1313,7 +1396,7 @@ Double_t THnBase::ComputeIntegral()
          }
       }
 
-      // if outlayer, count it with zero weight
+      // if outlier, count it with zero weight
       if (!regularBin) v = 0.;
 
       fIntegral[i + 1] = fIntegral[i] + v;
@@ -1322,14 +1405,14 @@ Double_t THnBase::ComputeIntegral()
 
    // check sum of weights
    if (fIntegral[GetNbins()] == 0.) {
-      Error("ComputeIntegral", "No hits in regular bins (non over/underflow).");
+      Error("ComputeIntegral", "Integral = 0, no hits in histogram bins (excluding over/underflow).");
       fIntegral.clear();
       return 0.;
    }
 
    // normalize the integral array
    for (Long64_t j = 0; j <= GetNbins(); ++j)
-      fIntegral[j] = fIntegral[j] / fIntegral[GetNbins()];
+      fIntegral[j] /= fIntegral[GetNbins()];
 
    // set status to valid
    fIntegralStatus = kValidInt;
@@ -1415,12 +1498,13 @@ void THnBase::PrintEntries(Long64_t from /*=0*/, Long64_t howmany /*=-1*/,
       }
 
       for (Long64_t i = 0; i < howmany; ++i) {
-         if (!PrintBin(-1, bin, options))
+         if (!PrintBin(-1, bin, options) || !strchr(options, '0'))
             ++howmany;
-         // Advance to next bin:
+         // Advance to next bin in last dimension:
          ++bin[fNdimensions - 1];
+         // If overflow, fix it by adding to previous dimension
          for (Int_t dim = fNdimensions - 1; dim >= 0; --dim) {
-            if (bin[dim] >= nbins[dim]) {
+            if (bin[dim] >= nbins[dim] + 2) { // include under/overflow bins
                bin[dim] = 0;
                if (dim > 0) {
                   ++bin[dim - 1];

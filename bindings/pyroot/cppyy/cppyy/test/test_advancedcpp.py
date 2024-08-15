@@ -1,6 +1,6 @@
-import py, os, sys
-from pytest import raises
-from .support import setup_make, pylong, IS_WINDOWS
+import py
+from pytest import raises, skip
+from .support import setup_make, pylong, IS_WINDOWS, ispypy
 
 currpath = py.path.local(__file__).dirpath()
 test_dct = str(currpath.join("advancedcppDict"))
@@ -417,6 +417,13 @@ class TestADVANCEDCPP:
         assert cppyy.addressof(ptr) == 0
         pp.set_address_ptr_ref(ptr)
         assert cppyy.addressof(ptr) == 0x1234
+
+      # alternate path through static method handling, which does NOT
+      # provide 'pp' as argument (and thus need no removing)
+        sf = pp.set_address_ptr_ref
+        sf(ptr)
+        assert cppyy.addressof(ptr) == 0x1234
+
         pp.set_address_ptr_ptr(ptr)
         assert cppyy.addressof(ptr) == 0x4321
 
@@ -543,8 +550,10 @@ class TestADVANCEDCPP:
         assert isinstance(b.cycle(d), derived_class)
         assert isinstance(d.cycle(d), derived_class)
 
-        assert isinstance(b.clone(), base_class)      # TODO: clone() leaks
-        assert isinstance(d.clone(), derived_class)   # TODO: clone() leaks
+        base_class.clone.__creates__    = True
+        assert isinstance(b.clone(), base_class)
+        derived_class.clone.__creates__ = True
+        assert isinstance(d.clone(), derived_class)
 
         # special case when round-tripping through a void* ptr
         voidp = b.mask(d)
@@ -619,6 +628,9 @@ class TestADVANCEDCPP:
     def test17_assign_to_return_byref(self):
         """Test assignment to an instance returned by reference"""
 
+        if ispypy:
+            skip('segfaults in pypy')
+
         from cppyy import gbl
 
         a = gbl.std.vector(gbl.ref_tester)()
@@ -627,10 +639,9 @@ class TestADVANCEDCPP:
         assert len(a) == 1
         assert a[0].m_i == 42
 
-        # TODO:
-        # a[0] = gbl.ref_tester(33)
-        # assert len(a) == 1
-        # assert a[0].m_i == 33
+        a[0] = gbl.ref_tester(33)
+        assert len(a) == 1
+        assert a[0].m_i == 33
 
     def test18_math_converters(self):
         """Test operator int/long/double incl. typedef"""
@@ -684,14 +695,28 @@ class TestADVANCEDCPP:
         assert cppyy.gbl.my_global_string1 == "aap  noot  mies"
         assert cppyy.gbl.my_global_string2 == "zus jet teun"
         assert list(cppyy.gbl.my_global_string3) == ["aap", "noot", "mies"]
-        # TODO: currently fails b/c double** not understood as &double*
-        #assert cppyy.gbl.my_global_ptr[0] == 1234.
+        assert cppyy.gbl.my_global_ptr[0] == 1234.
 
         v = cppyy.gbl.my_global_int_holders
         assert len(v) == 5
         expected_vals = [13, 42, 88, -1, 17]
         for i in range(len(v)):
             assert v[i].m_val == expected_vals[i]
+
+        o = cppyy.gbl.some_concrete_class()
+        assert type(o) != type(cppyy.gbl.g_abstract_ptr)
+        cppyy.gbl.g_abstract_ptr = o
+        assert type(o) != type(cppyy.gbl.g_abstract_ptr)
+        assert cppyy.gbl.g_abstract_ptr == o
+        cppyy.gbl.g_abstract_ptr = cppyy.nullptr
+
+        cppyy.cppexec("std::vector<int>* gtestv1 = nullptr;")
+        pyv = cppyy.gbl.std.vector[int]()
+        cppyy.gbl.gtestv1 = pyv
+        cppyy.cppexec("auto* gtestv2 = gtestv1;")
+        pyv.push_back(42)
+        assert len(cppyy.gbl.gtestv1) == 1
+        assert len(cppyy.gbl.gtestv2) == 1
 
     def test22_exceptions(self):
         """Catching of C++ exceptions"""
@@ -768,17 +793,38 @@ class TestADVANCEDCPP:
                     (cppyy.gbl.Printable4,  "::operator<<(4)"),
                     (cppyy.gbl.Printable6,  "Printable6")]:
             assert str(tst[0]()) == tst[1]
-            assert '__lshiftc__' in tst[0].__dict__
-            assert tst[0].__lshiftc__
-            del tst[0].__lshiftc__
-            assert str(tst[0]()) == tst[1]
-            assert tst[0].__lshiftc__
-            s = cppyy.gbl.std.ostringstream()
-            tst[0].__lshiftc__(s, tst[0]())
-            assert s.str() == tst[1]
+            if '__lshiftc__' in tst[0].__dict__:
+              # only cached for global functions and in principle should
+              # not be needed anymore ...
+                assert tst[0].__lshiftc__
+                del tst[0].__lshiftc__
+                assert str(tst[0]()) == tst[1]
+                assert tst[0].__lshiftc__
+                s = cppyy.gbl.std.ostringstream()
+                tst[0].__lshiftc__(s, tst[0]())
+                assert s.str() == tst[1]
 
       # print through base class (used to fail with compilation error)
         assert str(cppyy.gbl.Printable5()) == "Ok."
+
+      # print through friend
+        cppyy.cppdef("""\
+        namespace PrintingNS {
+        class X {
+          friend std::ostream& operator<<(std::ostream& os, const X&) { return os << "X"; }
+        };
+
+        class Y {
+        };
+
+        std::ostream& operator<<(std::ostream& os, const Y&) { return os << "Y"; }
+        } """)
+
+        x = cppyy.gbl.PrintingNS.X()
+        assert str(x) == 'X'
+
+        y = cppyy.gbl.PrintingNS.Y()
+        assert str(y) == 'Y'
 
     def test26_using_directive(self):
         """Test using directive in namespaces"""
@@ -788,3 +834,127 @@ class TestADVANCEDCPP:
         assert cppyy.gbl.UserDirs.foo1() == cppyy.gbl.UsedSpace1.foo1()
         assert cppyy.gbl.UserDirs.bar()  == cppyy.gbl.UsedSpace2.bar()
         assert cppyy.gbl.UserDirs.foo2() == cppyy.gbl.UsedSpace1.inner.foo2()
+
+    def test27_shadowed_typedef(self):
+        """Test that typedefs are not shadowed"""
+
+        import cppyy
+
+        cppyy.cppdef("""
+        namespace ShadowedTypedef {
+        struct A {
+           typedef std::shared_ptr<A> Ptr;
+           typedef int Val;
+        };
+
+        struct B : public A {
+           typedef std::shared_ptr<B> Ptr;
+           typedef double Val;
+        };
+
+        struct C : public A {
+           /* empty */
+        }; }""")
+
+        ns = cppyy.gbl.ShadowedTypedef
+
+        ns.A.Ptr      # pull A::Ptr first
+        ns.A.Val      # id. A::Val
+        ns.B.Ptr      # used to be A.Ptr through python-side dict lookup
+        ns.B.Val      # id. B::Val
+        ns.C.Ptr      # is A.Ptr
+        ns.C.Val      # is A.Val
+
+        assert ns.A.Ptr == ns.A.Ptr
+        assert ns.B.Ptr == ns.B.Ptr
+        assert ns.A.Ptr != ns.B.Ptr
+        assert ns.A.Ptr == ns.C.Ptr
+        assert ns.A.Val == ns.C.Val
+
+        # TODO: currently only classes are checked; typedefs of builtin types are
+        # mapped through the type mapper and as such can be anything
+        #assert ns.A.Val != ns.B.Val
+        #assert type(ns.A.Val(1)) == int
+        #assert type(ns.B.Val(1)) == float
+
+    def test28_extern_C_in_namespace(self):
+        """Access to extern "C" declared functions in namespaces"""
+
+        import cppyy
+
+        cppyy.cppdef("""\
+        namespace extern_c_in_ns {
+        extern "C" int some_func_xc(void) { return 21; }
+        int some_func() { return some_func_xc(); }
+
+        namespace deeper {
+           extern "C" int some_other_func_xc(void) { return 42; }
+        } }""")
+
+        ns = cppyy.gbl.extern_c_in_ns
+
+        assert ns.some_func()    == 21
+        assert ns.some_func_xc() == 21
+
+        assert ns.deeper.some_other_func_xc() == 42
+
+    def test29_castcpp(self):
+        """Allow casting a Python class to a C++ one"""
+
+        import cppyy
+        import math
+
+        cppyy.cppdef("""\
+        namespace castcpp {
+        struct MyPoint {
+            double x, y;
+        };
+
+        double norm_cr(const MyPoint& p) {
+            return std::sqrt(p.x*p.x + p.y*p.y);
+        }
+
+        double norm_r(MyPoint& p) {
+            return std::sqrt(p.x*p.x + p.y*p.y);
+        }
+
+        double norm_m(MyPoint&& p) {
+            return std::sqrt(p.x*p.x + p.y*p.y);
+        }
+
+        double norm_v(MyPoint p) {
+            return std::sqrt(p.x*p.x + p.y*p.y);
+        }
+
+        double norm_p(MyPoint* p) {
+            return std::sqrt(p->x*p->x + p->y*p->y);
+        } }""")
+
+        ns = cppyy.gbl.castcpp
+
+        class MyPyPoint1:
+            def __init__(self, x, y):
+                self.x = x
+                self.y = y
+
+        class MyPyPoint2(MyPyPoint1):
+            def __cast_cpp__(self):
+                return ns.MyPoint(self.x, self.y)
+
+        class MyPyPoint3(MyPyPoint1):
+            def __cast_cpp__(self):
+                return (self.x, self.y)
+
+        p1 = MyPyPoint1(5, 10)
+        p2 = MyPyPoint2(p1.x, p1.y)
+        p3 = MyPyPoint3(p1.x, p1.y)
+        pynorm = math.sqrt(p2.x**2+p2.y**2)
+
+        for norm in [ns.norm_cr, ns.norm_r, ns.norm_v, ns.norm_p]:
+            with raises(TypeError):
+                norm(p1)
+
+            assert round(norm(p2) - pynorm, 8) == 0
+
+        for norm in [ns.norm_cr, ns.norm_m, ns.norm_v]:
+            assert round(norm(p3) - pynorm, 8) == 0

@@ -422,6 +422,7 @@ TGraph::TGraph(const TF1 *f, Option_t *option)
 /// `filename` is assumed to contain at least two columns of numbers.
 /// The string format is by default `"%lg %lg"`.
 /// This is a standard c formatting for `scanf()`.
+/// For example, set format to  `"%lg,%lg"` for a comma-separated file.
 ///
 /// If columns of numbers should be skipped, a `"%*lg"` or `"%*s"` for each column
 /// can be added,  e.g. `"%lg %*lg %lg"` would read x-values from the first and
@@ -553,6 +554,10 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *option)
       delete token ;
    }
    infile.close();
+   if (fNpoints == 0) {
+      Warning("TGraph", "No points were found in file %s with the specified input format %s", filename, format);
+      return;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -605,6 +610,23 @@ Double_t** TGraph::AllocateArrays(Int_t Narrays, Int_t arraySize)
    }
    fMaxSize = arraySize;
    return newarrays;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Performs the operation: `y = y + c1*f(x,y)`
+/// Errors are not recalculated.
+///
+/// \param f may be a 1-D function TF1 or 2-d function TF2
+/// \param c1 a scaling factor, 1 by default
+
+void TGraph::Add(TF1 *f, Double_t c1)
+{
+   if (fHistogram) SetBit(kResetHisto);
+
+   for (Int_t i = 0; i < fNpoints; i++) {
+      fY[i] += c1*f->Eval(fX[i], fY[i]);
+   }
+   if (gPad) gPad->Modified();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -823,13 +845,17 @@ void TGraph::Draw(Option_t *option)
       opt.Replace(pos, 1, "p");
    }
 
-   // If no option is specified, it is defined as "alp" in case there
-   // no current pad or if the current pad as no axis defined.
-   if (!option || !strlen(option)) {
+   // If no option is specified, it is defined as "alp" in case there is
+   // no current pad or if the current pad has no axis defined and if there is
+   // no default option set using TGraph::SetOption. If fOption is set using
+   // TGraph::SetOption, it is used as default option.
+   if ((!option || !strlen(option))) {
+      Option_t *topt = (!fOption.IsNull()) ? fOption.Data() : "alp";
       if (gPad) {
-         if (!gPad->GetListOfPrimitives()->FindObject("TFrame")) opt = "alp";
+         if (!gPad->GetListOfPrimitives()->FindObject("TFrame"))
+            opt = topt;
       } else {
-         opt = "alp";
+         opt = topt;
       }
    }
 
@@ -2148,10 +2174,10 @@ void TGraph::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
 TString TGraph::SaveArray(std::ostream &out, const char *suffix, Int_t frameNumber, Double_t *arr)
 {
-   const char *name = GetName();
-   if (!name || !*name)
+   TString name = gInterpreter->MapCppName(GetName());
+   if (name.IsNull())
       name = "Graph";
-   TString arrname = TString::Format("%s_%s%d", name, suffix, frameNumber);
+   TString arrname = TString::Format("%s_%s%d", name.Data(), suffix, frameNumber);
 
    out << "   Double_t " << arrname << "[" << fNpoints << "] = { ";
    for (Int_t i = 0; i < fNpoints-1; i++) {
@@ -2185,7 +2211,8 @@ void TGraph::SaveHistogramAndFunctions(std::ostream &out, const char *varname, I
       TString hname = fHistogram->GetName();
       fHistogram->SetName(TString::Format("Graph_%s%d", hname.Data(), frameNumber).Data());
       fHistogram->SavePrimitive(out, "nodraw");
-      out << "   "<<varname<<"->SetHistogram(" << fHistogram->GetName() << ");" << std::endl;
+      out << "   " <<varname << "->SetHistogram(" << gInterpreter->MapCppName(fHistogram->GetName()) << ");"
+          << std::endl;
       out << "   " << std::endl;
       fHistogram->SetName(hname.Data());
    }

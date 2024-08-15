@@ -53,7 +53,7 @@ http://wesnoth.repositoryhosting.com/trac/wesnoth_wesnoth/browser/trunk/include/
 
 #include "TError.h"
 
-using namespace std;
+using std::endl;
 
 ClassImp(RooNonCentralChiSquare);
 
@@ -136,7 +136,7 @@ double RooNonCentralChiSquare::evaluate() const
       double ithTerm = 0;
       double errorTol = fErrorTol;
       int MaxIters = fMaxIters;
-      int iDominant = (int) TMath::Floor(lambda/2);
+      int iDominant = (int) std::floor(lambda/2);
       //     cout <<"iDominant: " << iDominant << endl;
 
       // do 0th term last
@@ -210,7 +210,7 @@ double RooNonCentralChiSquare::analyticalIntegral(Int_t code, const char* rangeN
    double errorTol = fErrorTol; // for normalization allow slightly larger error
    int MaxIters = fMaxIters; // for normalization use more terms
 
-   int iDominant = (int) TMath::Floor(lambda/2);
+   int iDominant = (int) std::floor(lambda/2);
    //     cout <<"iDominant: " << iDominant << endl;
    //   iDominant=0;
    for(int i = iDominant; ; ++i){

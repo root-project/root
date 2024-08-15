@@ -378,13 +378,16 @@ TEST(RNTuple, StdSet)
 
       auto mySet3 = RFieldBase::Create("mySet3", "std::set<std::string>").Unwrap();
       auto mySet4 = RFieldBase::Create("mySet4", "std::set<std::set<char>>").Unwrap();
+      auto mySet5 = RFieldBase::Create("mySet5", "std::set<std::array<float, 3>>").Unwrap();
 
       model->AddField(std::move(mySet3));
       model->AddField(std::move(mySet4));
+      model->AddField(std::move(mySet5));
 
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "set_ntuple", fileGuard.GetPath());
       auto set_field3 = ntuple->GetModel().GetDefaultEntry().GetPtr<std::set<std::string>>("mySet3");
       auto set_field4 = ntuple->GetModel().GetDefaultEntry().GetPtr<std::set<std::set<char>>>("mySet4");
+      auto set_field5 = ntuple->GetModel().GetDefaultEntry().GetPtr<std::set<std::array<float, 3>>>("mySet5");
       for (int i = 0; i < 2; i++) {
          *set_field = {static_cast<float>(i), 3.14, 0.42};
          *set_field2 = {
@@ -392,6 +395,7 @@ TEST(RNTuple, StdSet)
             std::make_tuple(i + 1, static_cast<char>(i + 97), CustomStruct{2.f, {3.f, 4.f}, {{5.f}, {6.f}}, "bar"})};
          *set_field3 = {"Hello", "world!", std::to_string(i)};
          *set_field4 = {{static_cast<char>(i), 'a'}, {'r', 'o', 'o', 't'}, {'h', 'i'}};
+         *set_field5 = {{1.0f * (i + 1), 2.0f * (i + 1), 3.0f * (i + 1)}};
          ntuple->Fill();
       }
    }
@@ -403,6 +407,7 @@ TEST(RNTuple, StdSet)
    auto viewSet2 = ntuple->GetView<std::set<std::tuple<int, char, CustomStruct>>>("mySet2");
    auto viewSet3 = ntuple->GetView<std::set<std::string>>("mySet3");
    auto viewSet4 = ntuple->GetView<std::set<std::set<char>>>("mySet4");
+   auto viewSet5 = ntuple->GetView<std::set<std::array<float, 3>>>("mySet5");
    for (auto i : ntuple->GetEntryRange()) {
       EXPECT_EQ(std::set<float>({static_cast<float>(i), 3.14, 0.42}), viewSet(i));
 
@@ -413,6 +418,10 @@ TEST(RNTuple, StdSet)
 
       EXPECT_EQ(std::set<std::string>({"Hello", "world!", std::to_string(i)}), viewSet3(i));
       EXPECT_EQ(std::set<std::set<char>>({{static_cast<char>(i), 'a'}, {'r', 'o', 'o', 't'}, {'h', 'i'}}), viewSet4(i));
+
+      EXPECT_FLOAT_EQ(1.0f * (i + 1), viewSet5(i).begin()->at(0));
+      EXPECT_FLOAT_EQ(2.0f * (i + 1), viewSet5(i).begin()->at(1));
+      EXPECT_FLOAT_EQ(3.0f * (i + 1), viewSet5(i).begin()->at(2));
    }
 
    ntuple->LoadEntry(0);
@@ -667,27 +676,41 @@ TEST(RNTuple, StdUnorderedMap)
 
 TEST(RNTuple, Int64)
 {
-   auto field = RFieldBase::Create("test", "std::int64_t").Unwrap();
-   auto otherField = RFieldBase::Create("test", "std::uint64_t").Unwrap();
+   {
+      RField<std::int64_t> typedField("test");
+      EXPECT_EQ("std::int64_t", typedField.GetTypeName());
+      auto field = RFieldBase::Create("test", "std::int64_t").Unwrap();
+      EXPECT_EQ("std::int64_t", field->GetTypeName());
+      field = RFieldBase::Create("test", "int64_t").Unwrap();
+      EXPECT_EQ("std::int64_t", field->GetTypeName());
+   }
+   {
+      RField<std::uint64_t> typedField("test");
+      EXPECT_EQ("std::uint64_t", typedField.GetTypeName());
+      auto field = RFieldBase::Create("test", "std::uint64_t").Unwrap();
+      EXPECT_EQ("std::uint64_t", field->GetTypeName());
+      field = RFieldBase::Create("test", "uint64_t").Unwrap();
+      EXPECT_EQ("std::uint64_t", field->GetTypeName());
+   }
 
    FileRaii fileGuard("test_ntuple_int64.root");
 
    auto model = RNTupleModel::Create();
 
    auto f1 = std::make_unique<RField<std::int64_t>>("i1");
-   f1->SetColumnRepresentative({ROOT::Experimental::EColumnType::kInt64});
+   f1->SetColumnRepresentatives({{ROOT::Experimental::EColumnType::kInt64}});
    model->AddField(std::move(f1));
 
    auto f2 = std::make_unique<RField<std::int64_t>>("i2");
-   f2->SetColumnRepresentative({ROOT::Experimental::EColumnType::kSplitInt64});
+   f2->SetColumnRepresentatives({{ROOT::Experimental::EColumnType::kSplitInt64}});
    model->AddField(std::move(f2));
 
    auto f3 = std::make_unique<RField<std::uint64_t>>("i3");
-   f3->SetColumnRepresentative({ROOT::Experimental::EColumnType::kUInt64});
+   f3->SetColumnRepresentatives({{ROOT::Experimental::EColumnType::kUInt64}});
    model->AddField(std::move(f3));
 
    auto f4 = std::make_unique<RField<std::uint64_t>>("i4");
-   f4->SetColumnRepresentative({ROOT::Experimental::EColumnType::kSplitUInt64});
+   f4->SetColumnRepresentatives({{ROOT::Experimental::EColumnType::kSplitUInt64}});
    model->AddField(std::move(f4));
 
    {
@@ -703,13 +726,13 @@ TEST(RNTuple, Int64)
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    const auto &desc = reader->GetDescriptor();
    EXPECT_EQ(ROOT::Experimental::EColumnType::kInt64,
-             (*desc.GetColumnIterable(desc.FindFieldId("i1")).begin()).GetModel().GetType());
+             (*desc.GetColumnIterable(desc.FindFieldId("i1")).begin()).GetType());
    EXPECT_EQ(ROOT::Experimental::EColumnType::kSplitInt64,
-             (*desc.GetColumnIterable(desc.FindFieldId("i2")).begin()).GetModel().GetType());
+             (*desc.GetColumnIterable(desc.FindFieldId("i2")).begin()).GetType());
    EXPECT_EQ(ROOT::Experimental::EColumnType::kUInt64,
-             (*desc.GetColumnIterable(desc.FindFieldId("i3")).begin()).GetModel().GetType());
+             (*desc.GetColumnIterable(desc.FindFieldId("i3")).begin()).GetType());
    EXPECT_EQ(ROOT::Experimental::EColumnType::kSplitUInt64,
-             (*desc.GetColumnIterable(desc.FindFieldId("i4")).begin()).GetModel().GetType());
+             (*desc.GetColumnIterable(desc.FindFieldId("i4")).begin()).GetType());
    reader->LoadEntry(0);
    EXPECT_EQ(std::numeric_limits<std::int64_t>::max() - 137,
              *reader->GetModel().GetDefaultEntry().GetPtr<std::int64_t>("i1"));
@@ -723,27 +746,41 @@ TEST(RNTuple, Int64)
 
 TEST(RNTuple, Int32)
 {
-   auto field = RFieldBase::Create("test", "std::int32_t").Unwrap();
-   auto otherField = RFieldBase::Create("test", "std::uint32_t").Unwrap();
+   {
+      RField<std::int32_t> typedField("test");
+      EXPECT_EQ("std::int32_t", typedField.GetTypeName());
+      auto field = RFieldBase::Create("test", "std::int32_t").Unwrap();
+      EXPECT_EQ("std::int32_t", field->GetTypeName());
+      field = RFieldBase::Create("test", "int32_t").Unwrap();
+      EXPECT_EQ("std::int32_t", field->GetTypeName());
+   }
+   {
+      RField<std::uint32_t> typedField("test");
+      EXPECT_EQ("std::uint32_t", typedField.GetTypeName());
+      auto field = RFieldBase::Create("test", "std::uint32_t").Unwrap();
+      EXPECT_EQ("std::uint32_t", field->GetTypeName());
+      field = RFieldBase::Create("test", "uint32_t").Unwrap();
+      EXPECT_EQ("std::uint32_t", field->GetTypeName());
+   }
 
    FileRaii fileGuard("test_ntuple_int32.root");
 
    auto model = RNTupleModel::Create();
 
    auto f1 = std::make_unique<RField<std::int32_t>>("i1");
-   f1->SetColumnRepresentative({ROOT::Experimental::EColumnType::kInt32});
+   f1->SetColumnRepresentatives({{ROOT::Experimental::EColumnType::kInt32}});
    model->AddField(std::move(f1));
 
    auto f2 = std::make_unique<RField<std::int32_t>>("i2");
-   f2->SetColumnRepresentative({ROOT::Experimental::EColumnType::kSplitInt32});
+   f2->SetColumnRepresentatives({{ROOT::Experimental::EColumnType::kSplitInt32}});
    model->AddField(std::move(f2));
 
    auto f3 = std::make_unique<RField<std::uint32_t>>("i3");
-   f3->SetColumnRepresentative({ROOT::Experimental::EColumnType::kUInt32});
+   f3->SetColumnRepresentatives({{ROOT::Experimental::EColumnType::kUInt32}});
    model->AddField(std::move(f3));
 
    auto f4 = std::make_unique<RField<std::uint32_t>>("i4");
-   f4->SetColumnRepresentative({ROOT::Experimental::EColumnType::kSplitUInt32});
+   f4->SetColumnRepresentatives({{ROOT::Experimental::EColumnType::kSplitUInt32}});
    model->AddField(std::move(f4));
 
    {
@@ -759,13 +796,13 @@ TEST(RNTuple, Int32)
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    const auto &desc = reader->GetDescriptor();
    EXPECT_EQ(ROOT::Experimental::EColumnType::kInt32,
-             (*desc.GetColumnIterable(desc.FindFieldId("i1")).begin()).GetModel().GetType());
+             (*desc.GetColumnIterable(desc.FindFieldId("i1")).begin()).GetType());
    EXPECT_EQ(ROOT::Experimental::EColumnType::kSplitInt32,
-             (*desc.GetColumnIterable(desc.FindFieldId("i2")).begin()).GetModel().GetType());
+             (*desc.GetColumnIterable(desc.FindFieldId("i2")).begin()).GetType());
    EXPECT_EQ(ROOT::Experimental::EColumnType::kUInt32,
-             (*desc.GetColumnIterable(desc.FindFieldId("i3")).begin()).GetModel().GetType());
+             (*desc.GetColumnIterable(desc.FindFieldId("i3")).begin()).GetType());
    EXPECT_EQ(ROOT::Experimental::EColumnType::kSplitUInt32,
-             (*desc.GetColumnIterable(desc.FindFieldId("i4")).begin()).GetModel().GetType());
+             (*desc.GetColumnIterable(desc.FindFieldId("i4")).begin()).GetType());
    reader->LoadEntry(0);
    EXPECT_EQ(std::numeric_limits<std::int32_t>::max() - 137,
              *reader->GetModel().GetDefaultEntry().GetPtr<std::int32_t>("i1"));
@@ -779,29 +816,41 @@ TEST(RNTuple, Int32)
 
 TEST(RNTuple, Int16)
 {
-   auto field = RFieldBase::Create("test", "std::int16_t").Unwrap();
-   auto otherField = RFieldBase::Create("test", "std::uint16_t").Unwrap();
-   ASSERT_EQ("std::int16_t", RFieldBase::Create("myShort", "Short_t").Unwrap()->GetTypeName());
-   ASSERT_EQ("std::uint16_t", RFieldBase::Create("myUShort", "UShort_t").Unwrap()->GetTypeName());
+   {
+      RField<std::int16_t> typedField("test");
+      EXPECT_EQ("std::int16_t", typedField.GetTypeName());
+      auto field = RFieldBase::Create("test", "std::int16_t").Unwrap();
+      EXPECT_EQ("std::int16_t", field->GetTypeName());
+      field = RFieldBase::Create("test", "int16_t").Unwrap();
+      EXPECT_EQ("std::int16_t", field->GetTypeName());
+   }
+   {
+      RField<std::uint16_t> typedField("test");
+      EXPECT_EQ("std::uint16_t", typedField.GetTypeName());
+      auto field = RFieldBase::Create("test", "std::uint16_t").Unwrap();
+      EXPECT_EQ("std::uint16_t", field->GetTypeName());
+      field = RFieldBase::Create("test", "uint16_t").Unwrap();
+      EXPECT_EQ("std::uint16_t", field->GetTypeName());
+   }
 
    FileRaii fileGuard("test_ntuple_int16.root");
 
    auto model = RNTupleModel::Create();
 
    auto f1 = std::make_unique<RField<std::int16_t>>("i1");
-   f1->SetColumnRepresentative({ROOT::Experimental::EColumnType::kInt16});
+   f1->SetColumnRepresentatives({{ROOT::Experimental::EColumnType::kInt16}});
    model->AddField(std::move(f1));
 
    auto f2 = std::make_unique<RField<std::int16_t>>("i2");
-   f2->SetColumnRepresentative({ROOT::Experimental::EColumnType::kSplitInt16});
+   f2->SetColumnRepresentatives({{ROOT::Experimental::EColumnType::kSplitInt16}});
    model->AddField(std::move(f2));
 
    auto f3 = std::make_unique<RField<std::uint16_t>>("i3");
-   f3->SetColumnRepresentative({ROOT::Experimental::EColumnType::kUInt16});
+   f3->SetColumnRepresentatives({{ROOT::Experimental::EColumnType::kUInt16}});
    model->AddField(std::move(f3));
 
    auto f4 = std::make_unique<RField<std::uint16_t>>("i4");
-   f4->SetColumnRepresentative({ROOT::Experimental::EColumnType::kSplitUInt16});
+   f4->SetColumnRepresentatives({{ROOT::Experimental::EColumnType::kSplitUInt16}});
    model->AddField(std::move(f4));
 
    {
@@ -817,13 +866,13 @@ TEST(RNTuple, Int16)
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    const auto &desc = reader->GetDescriptor();
    EXPECT_EQ(ROOT::Experimental::EColumnType::kInt16,
-             (*desc.GetColumnIterable(desc.FindFieldId("i1")).begin()).GetModel().GetType());
+             (*desc.GetColumnIterable(desc.FindFieldId("i1")).begin()).GetType());
    EXPECT_EQ(ROOT::Experimental::EColumnType::kSplitInt16,
-             (*desc.GetColumnIterable(desc.FindFieldId("i2")).begin()).GetModel().GetType());
+             (*desc.GetColumnIterable(desc.FindFieldId("i2")).begin()).GetType());
    EXPECT_EQ(ROOT::Experimental::EColumnType::kUInt16,
-             (*desc.GetColumnIterable(desc.FindFieldId("i3")).begin()).GetModel().GetType());
+             (*desc.GetColumnIterable(desc.FindFieldId("i3")).begin()).GetType());
    EXPECT_EQ(ROOT::Experimental::EColumnType::kSplitUInt16,
-             (*desc.GetColumnIterable(desc.FindFieldId("i4")).begin()).GetModel().GetType());
+             (*desc.GetColumnIterable(desc.FindFieldId("i4")).begin()).GetType());
    reader->LoadEntry(0);
    EXPECT_EQ(std::numeric_limits<std::int16_t>::max() - 137,
              *reader->GetModel().GetDefaultEntry().GetPtr<std::int16_t>("i1"));
@@ -835,23 +884,38 @@ TEST(RNTuple, Int16)
              *reader->GetModel().GetDefaultEntry().GetPtr<std::uint16_t>("i4"));
 }
 
-TEST(RNTuple, Char)
+TEST(RNTuple, Int8_t)
 {
-   auto charField = RField<char>("myChar");
-   auto otherField = RFieldBase::Create("test", "char").Unwrap();
-   ASSERT_EQ("char", otherField->GetTypeName());
-
-   auto charTField = RField<Char_t>("myChar");
-   ASSERT_EQ("char", charTField.GetTypeName());
+   {
+      RField<std::int8_t> typedField("test");
+      EXPECT_EQ("std::int8_t", typedField.GetTypeName());
+      auto field = RFieldBase::Create("test", "std::int8_t").Unwrap();
+      EXPECT_EQ("std::int8_t", field->GetTypeName());
+      field = RFieldBase::Create("test", "int8_t").Unwrap();
+      EXPECT_EQ("std::int8_t", field->GetTypeName());
+   }
+   {
+      RField<std::uint8_t> typedField("test");
+      EXPECT_EQ("std::uint8_t", typedField.GetTypeName());
+      auto field = RFieldBase::Create("test", "std::uint8_t").Unwrap();
+      EXPECT_EQ("std::uint8_t", field->GetTypeName());
+      field = RFieldBase::Create("test", "uint8_t").Unwrap();
+      EXPECT_EQ("std::uint8_t", field->GetTypeName());
+   }
 }
 
 TEST(RNTuple, Byte)
 {
-   FileRaii fileGuard("ntuple_test_byte.root");
+   {
+      RField<std::byte> typedField("test");
+      EXPECT_EQ("std::byte", typedField.GetTypeName());
+      auto field = RFieldBase::Create("test", "std::byte").Unwrap();
+      EXPECT_EQ("std::byte", field->GetTypeName());
+      field = RFieldBase::Create("test", "byte").Unwrap();
+      EXPECT_EQ("std::byte", field->GetTypeName());
+   }
 
-   auto byteField = RField<std::byte>("myByte");
-   auto otherField = RFieldBase::Create("test", "std::byte").Unwrap();
-   ASSERT_EQ("std::byte", otherField->GetTypeName());
+   FileRaii fileGuard("ntuple_test_byte.root");
 
    {
       auto model = RNTupleModel::Create();
@@ -866,10 +930,124 @@ TEST(RNTuple, Byte)
    EXPECT_EQ(std::byte{137}, *reader->GetModel().GetDefaultEntry().GetPtr<std::byte>("b"));
 }
 
-TEST(RNTuple, Int8_t)
+TEST(RNTuple, Char)
 {
-   auto field = RField<std::int8_t>("myInt8");
-   auto otherField = RFieldBase::Create("test", "std::int8_t").Unwrap();
+   RField<char> typedField("test");
+   EXPECT_EQ("char", typedField.GetTypeName());
+   auto field = RFieldBase::Create("test", "char").Unwrap();
+   EXPECT_EQ("char", field->GetTypeName());
+   field = RFieldBase::Create("test", "Char_t").Unwrap();
+   EXPECT_EQ("char", field->GetTypeName());
+}
+
+TEST(RNTuple, SignedChar)
+{
+   RField<signed char> typedField("test");
+   EXPECT_EQ("std::int8_t", typedField.GetTypeName());
+   auto field = RFieldBase::Create("test", "signed char").Unwrap();
+   EXPECT_EQ("std::int8_t", field->GetTypeName());
+}
+
+TEST(RNTuple, UnsignedChar)
+{
+   RField<unsigned char> typedField("test");
+   EXPECT_EQ("std::uint8_t", typedField.GetTypeName());
+   auto field = RFieldBase::Create("test", "unsigned char").Unwrap();
+   EXPECT_EQ("std::uint8_t", field->GetTypeName());
+   field = RFieldBase::Create("test", "UChar_t").Unwrap();
+   EXPECT_EQ("std::uint8_t", field->GetTypeName());
+}
+
+TEST(RNTuple, Short)
+{
+   {
+      RField<short> typedField("test");
+      EXPECT_EQ("std::int16_t", typedField.GetTypeName());
+      auto field = RFieldBase::Create("test", "short").Unwrap();
+      EXPECT_EQ("std::int16_t", field->GetTypeName());
+      field = RFieldBase::Create("test", "Short_t").Unwrap();
+      EXPECT_EQ("std::int16_t", field->GetTypeName());
+   }
+   {
+      RField<unsigned short> typedField("test");
+      EXPECT_EQ("std::uint16_t", typedField.GetTypeName());
+      auto field = RFieldBase::Create("test", "unsigned short").Unwrap();
+      EXPECT_EQ("std::uint16_t", field->GetTypeName());
+      field = RFieldBase::Create("test", "UShort_t").Unwrap();
+      EXPECT_EQ("std::uint16_t", field->GetTypeName());
+   }
+}
+
+TEST(RNTuple, Int)
+{
+   {
+      RField<int> typedField("test");
+      EXPECT_EQ("std::int32_t", typedField.GetTypeName());
+      auto field = RFieldBase::Create("test", "int").Unwrap();
+      EXPECT_EQ("std::int32_t", field->GetTypeName());
+      field = RFieldBase::Create("test", "Int_t").Unwrap();
+      EXPECT_EQ("std::int32_t", field->GetTypeName());
+   }
+   {
+      RField<unsigned int> typedField("test");
+      EXPECT_EQ("std::uint32_t", typedField.GetTypeName());
+      auto field = RFieldBase::Create("test", "unsigned int").Unwrap();
+      EXPECT_EQ("std::uint32_t", field->GetTypeName());
+      field = RFieldBase::Create("test", "unsigned").Unwrap();
+      EXPECT_EQ("std::uint32_t", field->GetTypeName());
+      field = RFieldBase::Create("test", "UInt_t").Unwrap();
+      EXPECT_EQ("std::uint32_t", field->GetTypeName());
+   }
+}
+
+TEST(RNTuple, Long)
+{
+   {
+      std::string expectedType = "std::int64_t";
+      if (sizeof(long) == 4) {
+         expectedType = "std::int32_t";
+      }
+
+      RField<long> typedField("test");
+      EXPECT_EQ(expectedType, typedField.GetTypeName());
+      auto field = RFieldBase::Create("test", "long").Unwrap();
+      EXPECT_EQ(expectedType, field->GetTypeName());
+      field = RFieldBase::Create("test", "Long_t").Unwrap();
+      EXPECT_EQ(expectedType, field->GetTypeName());
+   }
+   {
+      std::string expectedType = "std::uint64_t";
+      if (sizeof(long) == 4) {
+         expectedType = "std::uint32_t";
+      }
+
+      RField<unsigned long> typedField("test");
+      EXPECT_EQ(expectedType, typedField.GetTypeName());
+      auto field = RFieldBase::Create("test", "unsigned long").Unwrap();
+      EXPECT_EQ(expectedType, field->GetTypeName());
+      field = RFieldBase::Create("test", "ULong_t").Unwrap();
+      EXPECT_EQ(expectedType, field->GetTypeName());
+   }
+}
+
+TEST(RNTuple, LongLong)
+{
+   {
+      RField<long long> typedField("test");
+      EXPECT_EQ("std::int64_t", typedField.GetTypeName());
+      auto field = RFieldBase::Create("test", "long long").Unwrap();
+      EXPECT_EQ("std::int64_t", field->GetTypeName());
+      field = RFieldBase::Create("test", "Long64_t").Unwrap();
+      EXPECT_EQ("std::int64_t", field->GetTypeName());
+   }
+   {
+      RField<unsigned long long> typedField("test");
+      EXPECT_EQ("std::uint64_t", typedField.GetTypeName());
+      auto field = RFieldBase::Create("test", "unsigned long long").Unwrap();
+      EXPECT_EQ("std::uint64_t", field->GetTypeName());
+      field = RFieldBase::Create("test", "ULong64_t").Unwrap();
+      EXPECT_EQ("std::uint64_t", field->GetTypeName());
+   }
 }
 
 TEST(RNTuple, Double)
@@ -879,11 +1057,11 @@ TEST(RNTuple, Double)
    auto model = RNTupleModel::Create();
 
    auto f1 = std::make_unique<RField<double>>("d1");
-   f1->SetColumnRepresentative({ROOT::Experimental::EColumnType::kReal64});
+   f1->SetColumnRepresentatives({{ROOT::Experimental::EColumnType::kReal64}});
    model->AddField(std::move(f1));
 
    auto f2 = std::make_unique<RField<double>>("d2");
-   f2->SetColumnRepresentative({ROOT::Experimental::EColumnType::kSplitReal64});
+   f2->SetColumnRepresentatives({{ROOT::Experimental::EColumnType::kSplitReal64}});
    model->AddField(std::move(f2));
 
    {
@@ -897,9 +1075,9 @@ TEST(RNTuple, Double)
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    const auto &desc = reader->GetDescriptor();
    EXPECT_EQ(ROOT::Experimental::EColumnType::kReal64,
-             (*desc.GetColumnIterable(desc.FindFieldId("d1")).begin()).GetModel().GetType());
+             (*desc.GetColumnIterable(desc.FindFieldId("d1")).begin()).GetType());
    EXPECT_EQ(ROOT::Experimental::EColumnType::kSplitReal64,
-             (*desc.GetColumnIterable(desc.FindFieldId("d2")).begin()).GetModel().GetType());
+             (*desc.GetColumnIterable(desc.FindFieldId("d2")).begin()).GetType());
    reader->LoadEntry(0);
    EXPECT_DOUBLE_EQ(1.0, *reader->GetModel().GetDefaultEntry().GetPtr<double>("d1"));
    EXPECT_DOUBLE_EQ(2.0, *reader->GetModel().GetDefaultEntry().GetPtr<double>("d2"));
@@ -912,11 +1090,11 @@ TEST(RNTuple, Float)
    auto model = RNTupleModel::Create();
 
    auto f1 = std::make_unique<RField<float>>("f1");
-   f1->SetColumnRepresentative({ROOT::Experimental::EColumnType::kReal32});
+   f1->SetColumnRepresentatives({{ROOT::Experimental::EColumnType::kReal32}});
    model->AddField(std::move(f1));
 
    auto f2 = std::make_unique<RField<float>>("f2");
-   f2->SetColumnRepresentative({ROOT::Experimental::EColumnType::kSplitReal32});
+   f2->SetColumnRepresentatives({{ROOT::Experimental::EColumnType::kSplitReal32}});
    model->AddField(std::move(f2));
 
    {
@@ -930,9 +1108,9 @@ TEST(RNTuple, Float)
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    const auto &desc = reader->GetDescriptor();
    EXPECT_EQ(ROOT::Experimental::EColumnType::kReal32,
-             (*desc.GetColumnIterable(desc.FindFieldId("f1")).begin()).GetModel().GetType());
+             (*desc.GetColumnIterable(desc.FindFieldId("f1")).begin()).GetType());
    EXPECT_EQ(ROOT::Experimental::EColumnType::kSplitReal32,
-             (*desc.GetColumnIterable(desc.FindFieldId("f2")).begin()).GetModel().GetType());
+             (*desc.GetColumnIterable(desc.FindFieldId("f2")).begin()).GetType());
    reader->LoadEntry(0);
    EXPECT_FLOAT_EQ(1.0, *reader->GetModel().GetDefaultEntry().GetPtr<float>("f1"));
    EXPECT_FLOAT_EQ(2.0, *reader->GetModel().GetDefaultEntry().GetPtr<float>("f2"));
@@ -1035,8 +1213,6 @@ static void AddUniquePtrField(RNTupleModel &model, const std::string &fieldName)
 
 TYPED_TEST(UniquePtr, Basics)
 {
-   using RUniquePtrField = ROOT::Experimental::RUniquePtrField;
-
    FileRaii fileGuard("test_ntuple_unique_ptr.root");
 
    {
@@ -1058,23 +1234,13 @@ TYPED_TEST(UniquePtr, Basics)
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
 
       if constexpr (std::is_same_v<typename TestFixture::Tag_t, RTagNullableFieldDefault>) {
-         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel().GetField("PBool")).IsDense());
-         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel().GetField("PCustomStruct")).IsSparse());
-         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel().GetField("PArray")).IsDense());
+         EXPECT_EQ(EColumnType::kSplitIndex64, writer->GetModel().GetField("PBool").GetColumnRepresentatives()[0][0]);
       }
       if constexpr (std::is_same_v<typename TestFixture::Tag_t, RTagNullableFieldSparse>) {
-         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel().GetField("PBool")).IsSparse());
-         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel().GetField("PCustomStruct")).IsSparse());
-         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel().GetField("PIOConstructor")).IsSparse());
-         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel().GetField("PPString")).IsSparse());
-         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel().GetField("PArray")).IsSparse());
+         EXPECT_EQ(EColumnType::kSplitIndex64, writer->GetModel().GetField("PBool").GetColumnRepresentatives()[0][0]);
       }
       if constexpr (std::is_same_v<typename TestFixture::Tag_t, RTagNullableFieldDense>) {
-         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel().GetField("PBool")).IsDense());
-         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel().GetField("PCustomStruct")).IsDense());
-         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel().GetField("PIOConstructor")).IsDense());
-         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel().GetField("PPString")).IsDense());
-         EXPECT_TRUE(dynamic_cast<const RUniquePtrField &>(writer->GetModel().GetField("PArray")).IsDense());
+         EXPECT_EQ(EColumnType::kBit, writer->GetModel().GetField("PBool").GetColumnRepresentatives()[0][0]);
       }
 
       auto pBool = writer->GetModel().GetDefaultEntry().GetPtr<std::unique_ptr<bool>>("PBool");
@@ -1166,6 +1332,135 @@ TYPED_TEST(UniquePtr, Basics)
    EXPECT_EQ(nullptr, pArray->get());
 }
 
+TEST(RNTuple, Optional)
+{
+   using CharArray3_t = std::array<char, 3>;
+   using CharArray4_t = std::array<char, 4>;
+   using Variant_t = std::variant<int, float>;
+   using Map_t = std::map<int, CustomStruct>;
+
+   EXPECT_EQ(sizeof(std::optional<char>), RField<std::optional<char>>("f").GetValueSize());
+   EXPECT_EQ(alignof(std::optional<char>), RField<std::optional<char>>("f").GetAlignment());
+   EXPECT_EQ(sizeof(std::optional<CharArray3_t>), RField<std::optional<CharArray3_t>>("f").GetValueSize());
+   EXPECT_EQ(alignof(std::optional<CharArray3_t>), RField<std::optional<CharArray3_t>>("f").GetAlignment());
+   EXPECT_EQ(sizeof(std::optional<CharArray4_t>), RField<std::optional<CharArray4_t>>("f").GetValueSize());
+   EXPECT_EQ(alignof(std::optional<CharArray4_t>), RField<std::optional<CharArray4_t>>("f").GetAlignment());
+   EXPECT_EQ(sizeof(std::optional<float>), RField<std::optional<float>>("f").GetValueSize());
+   EXPECT_EQ(alignof(std::optional<float>), RField<std::optional<float>>("f").GetAlignment());
+   EXPECT_EQ(sizeof(std::optional<double>), RField<std::optional<double>>("f").GetValueSize());
+   EXPECT_EQ(alignof(std::optional<double>), RField<std::optional<double>>("f").GetAlignment());
+   EXPECT_EQ(sizeof(std::optional<CustomStruct>), RField<std::optional<CustomStruct>>("f").GetValueSize());
+   EXPECT_EQ(alignof(std::optional<CustomStruct>), RField<std::optional<CustomStruct>>("f").GetAlignment());
+   EXPECT_EQ(sizeof(std::optional<Variant_t>), RField<std::optional<Variant_t>>("f").GetValueSize());
+   EXPECT_EQ(alignof(std::optional<Variant_t>), RField<std::optional<Variant_t>>("f").GetAlignment());
+   EXPECT_EQ(sizeof(std::optional<std::string>), RField<std::optional<std::string>>("f").GetValueSize());
+   EXPECT_EQ(alignof(std::optional<std::string>), RField<std::optional<std::string>>("f").GetAlignment());
+   EXPECT_EQ(sizeof(std::optional<Map_t>), RField<std::optional<Map_t>>("f").GetValueSize());
+   EXPECT_EQ(alignof(std::optional<Map_t>), RField<std::optional<Map_t>>("f").GetAlignment());
+
+   FileRaii fileGuard("test_ntuple_optional.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto pOptChar = model->MakeField<std::optional<char>>("oc");
+      auto pOptCharArr3 = model->MakeField<std::optional<CharArray3_t>>("oca3");
+      auto pOptCharArr4 = model->MakeField<std::optional<CharArray4_t>>("oca4");
+      auto pOptInt16 = model->MakeField<std::optional<std::int16_t>>("oi");
+      auto pOptFloat = model->MakeField<std::optional<float>>("of");
+      auto pOptDouble = model->MakeField<std::optional<double>>("od");
+      auto pOptVariant = model->MakeField<std::optional<Variant_t>>("ov");
+      auto pOptString = model->MakeField<std::optional<std::string>>("os");
+      auto pOptMap = model->MakeField<std::optional<Map_t>>("om");
+      model->AddField(RFieldBase::Create("ocs", "std::optional<CustomStruct>").Unwrap());
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+
+      const auto &defaultEntry = writer->GetModel().GetDefaultEntry();
+      auto pOptCustomStruct = defaultEntry.GetPtr<std::optional<CustomStruct>>("ocs");
+
+      writer->Fill();
+      *pOptChar = 'x';
+      *pOptCharArr3 = {'1', '2', '3'};
+      *pOptCharArr4 = {'1', '2', '3', '4'};
+      *pOptInt16 = 137;
+      *pOptFloat = 1.0;
+      *pOptDouble = 2.0;
+      *pOptVariant = float(3.0);
+      *pOptString = "xyz";
+      *pOptMap = {{137, CustomStruct()}};
+      *pOptCustomStruct = CustomStruct();
+      writer->Fill();
+      pOptChar->reset();
+      pOptCharArr3->reset();
+      pOptCharArr4->reset();
+      pOptInt16->reset();
+      pOptFloat->reset();
+      pOptDouble->reset();
+      pOptVariant->reset();
+      pOptString->reset();
+      pOptMap->reset();
+      pOptCustomStruct->reset();
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   EXPECT_EQ(3u, reader->GetNEntries());
+
+   const auto &defaultEntry = reader->GetModel().GetDefaultEntry();
+   auto pOptChar = defaultEntry.GetPtr<std::optional<char>>("oc");
+   auto pOptCharArr3 = defaultEntry.GetPtr<std::optional<CharArray3_t>>("oca3");
+   auto pOptCharArr4 = defaultEntry.GetPtr<std::optional<CharArray4_t>>("oca4");
+   auto pOptInt16 = defaultEntry.GetPtr<std::optional<std::int16_t>>("oi");
+   auto pOptFloat = defaultEntry.GetPtr<std::optional<float>>("of");
+   auto pOptDouble = defaultEntry.GetPtr<std::optional<double>>("od");
+   auto pOptVariant = defaultEntry.GetPtr<std::optional<Variant_t>>("ov");
+   auto pOptString = defaultEntry.GetPtr<std::optional<std::string>>("os");
+   auto pOptMap = defaultEntry.GetPtr<std::optional<Map_t>>("om");
+   auto pOptCustomStruct = defaultEntry.GetPtr<std::optional<CustomStruct>>("ocs");
+
+   reader->LoadEntry(0);
+
+   EXPECT_FALSE(*pOptChar);
+   EXPECT_FALSE(*pOptCharArr3);
+   EXPECT_FALSE(*pOptCharArr4);
+   EXPECT_FALSE(*pOptInt16);
+   EXPECT_FALSE(*pOptFloat);
+   EXPECT_FALSE(*pOptDouble);
+   EXPECT_FALSE(*pOptVariant);
+   EXPECT_FALSE(*pOptString);
+   EXPECT_FALSE(*pOptMap);
+   EXPECT_FALSE(*pOptCustomStruct);
+
+   reader->LoadEntry(1);
+
+   EXPECT_EQ('x', *pOptChar);
+   CharArray3_t expCharArr3{'1', '2', '3'};
+   EXPECT_EQ(expCharArr3, *pOptCharArr3);
+   CharArray4_t expCharArr4{'1', '2', '3', '4'};
+   EXPECT_EQ(expCharArr4, *pOptCharArr4);
+   EXPECT_EQ(137, *pOptInt16);
+   EXPECT_FLOAT_EQ(1.0, pOptFloat->value());
+   EXPECT_DOUBLE_EQ(2.0, pOptDouble->value());
+   EXPECT_FLOAT_EQ(3.0, std::get<1>(pOptVariant->value()));
+   EXPECT_STREQ("xyz", pOptString->value().c_str());
+   EXPECT_EQ(1u, pOptMap->value().size());
+   EXPECT_EQ(CustomStruct(), pOptMap->value().at(137));
+   EXPECT_EQ(CustomStruct(), *pOptCustomStruct);
+
+   reader->LoadEntry(2);
+
+   EXPECT_FALSE(*pOptChar);
+   EXPECT_FALSE(*pOptCharArr3);
+   EXPECT_FALSE(*pOptCharArr4);
+   EXPECT_FALSE(*pOptInt16);
+   EXPECT_FALSE(*pOptFloat);
+   EXPECT_FALSE(*pOptDouble);
+   EXPECT_FALSE(*pOptVariant);
+   EXPECT_FALSE(*pOptString);
+   EXPECT_FALSE(*pOptMap);
+   EXPECT_FALSE(*pOptCustomStruct);
+}
+
 TEST(RNTuple, UnsupportedStdTypes)
 {
    try {
@@ -1187,13 +1482,13 @@ TEST(RNTuple, Casting)
    FileRaii fileGuard("test_ntuple_casting.root");
 
    auto fldI1 = RFieldBase::Create("i1", "std::int32_t").Unwrap();
-   fldI1->SetColumnRepresentative({EColumnType::kInt32});
+   fldI1->SetColumnRepresentatives({{EColumnType::kInt32}});
    auto fldI2 = RFieldBase::Create("i2", "std::int32_t").Unwrap();
-   fldI2->SetColumnRepresentative({EColumnType::kSplitInt32});
+   fldI2->SetColumnRepresentatives({{EColumnType::kSplitInt32}});
    auto fldF = ROOT::Experimental::RFieldBase::Create("F", "float").Unwrap();
-   fldF->SetColumnRepresentative({EColumnType::kReal32});
+   fldF->SetColumnRepresentatives({{EColumnType::kReal32}});
    try {
-      fldF->SetColumnRepresentative({EColumnType::kBit});
+      fldF->SetColumnRepresentatives({{EColumnType::kBit}});
    } catch (const RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("invalid column representative"));
    }
@@ -1212,7 +1507,7 @@ TEST(RNTuple, Casting)
    try {
       auto model = RNTupleModel::Create();
       auto f = ROOT::Experimental::RFieldBase::Create("i1", "std::int32_t").Unwrap();
-      f->SetColumnRepresentative({EColumnType::kInt32});
+      f->SetColumnRepresentatives({{EColumnType::kInt32}});
       model->AddField(std::move(f));
       auto reader = RNTupleReader::Open(std::move(model), "ntuple", fileGuard.GetPath());
       FAIL() << "should not be able fix column representation when model is connected to a page source";
@@ -1247,12 +1542,12 @@ TEST(RNTuple, HalfPrecisionFloat)
    // TODO: Add std::float16 tests once available (from C++23)
    auto f1Fld = RFieldBase::Create("f1", "float").Unwrap();
    dynamic_cast<RField<float> *>(f1Fld.get())->SetHalfPrecision();
-   EXPECT_EQ(EColumnType::kReal16, f1Fld->GetColumnRepresentative()[0]);
+   EXPECT_EQ(EColumnType::kReal16, f1Fld->GetColumnRepresentatives()[0][0]);
    EXPECT_EQ("float", f1Fld->GetTypeName());
 
    auto fVecFld = RFieldBase::Create("fVec", "std::vector<float>").Unwrap();
    dynamic_cast<RField<float> *>(fVecFld->GetSubFields()[0])->SetHalfPrecision();
-   EXPECT_EQ(EColumnType::kReal16, fVecFld->GetSubFields()[0]->GetColumnRepresentative()[0]);
+   EXPECT_EQ(EColumnType::kReal16, fVecFld->GetSubFields()[0]->GetColumnRepresentatives()[0][0]);
 
    auto model = RNTupleModel::Create();
    model->AddField(std::move(f1Fld));
@@ -1276,7 +1571,7 @@ TEST(RNTuple, HalfPrecisionFloat)
    EXPECT_EQ(4, ROOT::Experimental::Internal::RColumnElementBase::Generate(EColumnType::kReal16)->GetSize());
 
    const auto &desc = reader->GetDescriptor();
-   EXPECT_EQ(EColumnType::kReal16, (*desc.GetColumnIterable(desc.FindFieldId("f1")).begin()).GetModel().GetType());
+   EXPECT_EQ(EColumnType::kReal16, (*desc.GetColumnIterable(desc.FindFieldId("f1")).begin()).GetType());
 
    auto f1 = reader->GetModel().GetDefaultEntry().GetPtr<float>("f1");
    auto fVec = reader->GetModel().GetDefaultEntry().GetPtr<std::vector<float>>("fVec");
@@ -1297,7 +1592,7 @@ TEST(RNTuple, Double32)
    FileRaii fileGuard("test_ntuple_double32.root");
 
    auto fldD1 = RFieldBase::Create("d1", "double").Unwrap();
-   fldD1->SetColumnRepresentative({EColumnType::kReal32});
+   fldD1->SetColumnRepresentatives({{EColumnType::kReal32}});
    auto fldD2 = RFieldBase::Create("d2", "Double32_t").Unwrap();
    EXPECT_EQ("Double32_t", fldD2->GetTypeAlias());
 
@@ -1330,9 +1625,9 @@ TEST(RNTuple, Double32)
    }
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-   EXPECT_EQ(EColumnType::kReal32, reader->GetModel().GetField("d1").GetColumnRepresentative()[0]);
+   EXPECT_EQ(EColumnType::kReal32, reader->GetModel().GetField("d1").GetColumnRepresentatives()[0][0]);
    EXPECT_EQ("", reader->GetModel().GetField("d1").GetTypeAlias());
-   EXPECT_EQ(EColumnType::kSplitReal32, reader->GetModel().GetField("d2").GetColumnRepresentative()[0]);
+   EXPECT_EQ(EColumnType::kSplitReal32, reader->GetModel().GetField("d2").GetColumnRepresentatives()[0][0]);
    EXPECT_EQ("Double32_t", reader->GetModel().GetField("d2").GetTypeAlias());
    auto d1 = reader->GetModel().GetDefaultEntry().GetPtr<double>("d1");
    auto d2 = reader->GetModel().GetDefaultEntry().GetPtr<double>("d2");
@@ -1445,7 +1740,7 @@ TEST(RNTuple, TClass)
          auto viewKlass = ntuple->GetView<DerivedA>("klass");
          FAIL() << "GetView<a_base_class_of_T> should throw";
       } catch (const RException& err) {
-         EXPECT_THAT(err.what(), testing::HasSubstr("No on-disk column information for field `klass.:_0.a`"));
+         EXPECT_THAT(err.what(), testing::HasSubstr("No on-disk field information for `klass.:_0.a`"));
       }
    }
 }
@@ -1761,12 +2056,13 @@ TEST(RNTuple, Traits)
    auto f9 = RField<std::array<std::string, 3>>("f");
    EXPECT_EQ(0, f9.GetTraits());
 
-   EXPECT_EQ(RFieldBase::kTraitTrivialType, RField<TrivialTraits>("f").GetTraits());
-   EXPECT_EQ(0, RField<TransientTraits>("f").GetTraits());
-   EXPECT_EQ(RFieldBase::kTraitTriviallyDestructible, RField<VariantTraits>("f").GetTraits());
-   EXPECT_EQ(0, RField<StringTraits>("f").GetTraits());
-   EXPECT_EQ(RFieldBase::kTraitTriviallyDestructible, RField<ConstructorTraits>("f").GetTraits());
-   EXPECT_EQ(RFieldBase::kTraitTriviallyConstructible, RField<DestructorTraits>("f").GetTraits());
+   int baseTraits = RFieldBase::kTraitTypeChecksum;
+   EXPECT_EQ(baseTraits | RFieldBase::kTraitTrivialType, RField<TrivialTraits>("f").GetTraits());
+   EXPECT_EQ(baseTraits, RField<TransientTraits>("f").GetTraits());
+   EXPECT_EQ(baseTraits | RFieldBase::kTraitTriviallyDestructible, RField<VariantTraits>("f").GetTraits());
+   EXPECT_EQ(baseTraits, RField<StringTraits>("f").GetTraits());
+   EXPECT_EQ(baseTraits | RFieldBase::kTraitTriviallyDestructible, RField<ConstructorTraits>("f").GetTraits());
+   EXPECT_EQ(baseTraits | RFieldBase::kTraitTriviallyConstructible, RField<DestructorTraits>("f").GetTraits());
 }
 
 TEST(RNTuple, TClassReadRules)
@@ -1790,6 +2086,8 @@ TEST(RNTuple, TClassReadRules)
    }
 
    auto ntuple = RNTupleReader::Open("f", fileGuard.GetPath());
+   EXPECT_EQ(TClass::GetClass("StructWithIORules")->GetCheckSum(),
+             ntuple->GetModel().GetField("klass").GetOnDiskTypeChecksum());
    EXPECT_EQ(20U, ntuple->GetNEntries());
    auto viewKlass = ntuple->GetView<StructWithIORules>("klass");
    for (auto i : ntuple->GetEntryRange()) {
@@ -1801,6 +2099,11 @@ TEST(RNTuple, TClassReadRules)
       EXPECT_EQ(fi + 1.0f, viewKlass(i).b);
       EXPECT_EQ(viewKlass(i).a + viewKlass(i).b, viewKlass(i).c);
       EXPECT_EQ("ROOT", viewKlass(i).s.str);
+
+      // The following member is set by a checksum based rule
+      EXPECT_FLOAT_EQ(42.0, viewKlass(i).checksumA);
+      // The following member is not touched by a rule due to a checksum mismatch
+      EXPECT_FLOAT_EQ(137.0, viewKlass(i).checksumB);
    }
 }
 
@@ -1809,13 +2112,13 @@ TEST(RNTuple, RColumnRepresentations)
    using RColumnRepresentations = ROOT::Experimental::RFieldBase::RColumnRepresentations;
    RColumnRepresentations colReps1;
    EXPECT_EQ(RFieldBase::ColumnRepresentation_t(), colReps1.GetSerializationDefault());
-   EXPECT_EQ(RColumnRepresentations::TypesList_t{RFieldBase::ColumnRepresentation_t()},
+   EXPECT_EQ(RColumnRepresentations::Selection_t{RFieldBase::ColumnRepresentation_t()},
              colReps1.GetDeserializationTypes());
 
    RColumnRepresentations colReps2({{EColumnType::kReal64}, {EColumnType::kSplitReal64}},
                                    {{EColumnType::kReal32}, {EColumnType::kReal16}});
    EXPECT_EQ(RFieldBase::ColumnRepresentation_t({EColumnType::kReal64}), colReps2.GetSerializationDefault());
-   EXPECT_EQ(RColumnRepresentations::TypesList_t(
+   EXPECT_EQ(RColumnRepresentations::Selection_t(
                 {{EColumnType::kReal64}, {EColumnType::kSplitReal64}, {EColumnType::kReal32}, {EColumnType::kReal16}}),
              colReps2.GetDeserializationTypes());
 }

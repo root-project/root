@@ -23,7 +23,7 @@
 #include <iostream>
 #include <cmath>
 
-using namespace std;
+using std::cout, std::endl, std::string, std::list;
 using namespace RooFit;
 
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*//

@@ -15,8 +15,10 @@
 #define RooFit_Detail_CodeSquashContext_h
 
 #include <RooAbsCollection.h>
-#include <RooFit/Detail/DataMap.h>
+#include <RooFit/EvalContext.h>
 #include <RooNumber.h>
+
+#include <ROOT/RSpan.hxx>
 
 #include <cstddef>
 #include <map>
@@ -30,14 +32,16 @@ class RooTemplateProxy;
 
 namespace RooFit {
 
+namespace Experimental {
+class RooFuncWrapper;
+}
+
 namespace Detail {
 
 /// @brief A class to maintain the context for squashing of RooFit models into code.
 class CodeSquashContext {
 public:
-   CodeSquashContext(std::map<RooFit::Detail::DataKey, std::size_t> const &outputSizes) : _nodeOutputSizes(outputSizes)
-   {
-   }
+   CodeSquashContext(std::map<RooFit::Detail::DataKey, std::size_t> const &outputSizes, std::vector<double> &xlarr, Experimental::RooFuncWrapper &wrapper);
 
    void addResult(RooAbsArg const *key, std::string const &value);
    void addResult(const char *key, std::string const &value);
@@ -101,12 +105,19 @@ public:
 
    std::unique_ptr<LoopScope> beginLoop(RooAbsArg const *in);
 
-   std::string getTmpVarName();
+   std::string getTmpVarName() const;
 
    std::string buildArg(RooAbsCollection const &x);
+
    std::string buildArg(std::span<const double> arr);
+   std::string buildArg(std::span<const int> arr) { return buildArgSpanImpl(arr); }
+
+   Experimental::RooFuncWrapper *_wrapper = nullptr;
 
 private:
+   template <class T>
+   std::string buildArgSpanImpl(std::span<const T> arr);
+
    bool isScopeIndependent(RooAbsArg const *in) const;
 
    void endLoop(LoopScope const &scope);
@@ -152,6 +163,9 @@ private:
       return buildArg(arg) + ", " + buildArgs(args...);
    }
 
+   template <class T>
+   std::string typeName() const;
+
    /// @brief Map of node names to their result strings.
    std::unordered_map<const TNamed *, std::string> _nodeNames;
    /// @brief Block of code that is placed before the rest of the function body.
@@ -165,7 +179,7 @@ private:
    /// @brief The current number of for loops the started.
    int _loopLevel = 0;
    /// @brief Index to get unique names for temporary variables.
-   int _tmpVarIdx = 0;
+   mutable int _tmpVarIdx = 0;
    /// @brief Keeps track of the position to go back and insert code to.
    int _scopePtr = -1;
    /// @brief Stores code that eventually gets injected into main code body.
@@ -173,7 +187,35 @@ private:
    std::string _tempScope;
    /// @brief A map to keep track of list names as assigned by addResult.
    std::unordered_map<RooFit::UniqueId<RooAbsCollection>::Value_t, std::string> listNames;
+   std::vector<double> &_xlArr;
 };
+
+template <>
+inline std::string CodeSquashContext::typeName<double>() const
+{
+   return "double";
+}
+template <>
+inline std::string CodeSquashContext::typeName<int>() const
+{
+   return "int";
+}
+
+template <class T>
+std::string CodeSquashContext::buildArgSpanImpl(std::span<const T> arr)
+{
+   unsigned int n = arr.size();
+   std::string arrName = getTmpVarName();
+   std::string arrDecl = typeName<T>() + " " + arrName + "[" + std::to_string(n) + "] = {";
+   for (unsigned int i = 0; i < n; i++) {
+      arrDecl += " " + std::to_string(arr[i]) + ",";
+   }
+   arrDecl.back() = '}';
+   arrDecl += ";\n";
+   addToCodeBody(arrDecl, true);
+
+   return arrName;
+}
 
 } // namespace Detail
 

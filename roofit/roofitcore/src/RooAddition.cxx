@@ -36,6 +36,7 @@ in the two sets.
 #include "RooNLLVarNew.h"
 #include "RooMsgService.h"
 #include "RooBatchCompute.h"
+#include "RooFuncWrapper.h"
 
 #ifdef ROOFIT_LEGACY_EVAL_BACKEND
 #include "RooNLLVar.h"
@@ -53,7 +54,6 @@ ClassImp(RooAddition);
 /// \param[in] name Name of the PDF
 /// \param[in] title Title
 /// \param[in] sumSet The value of the function will be the sum of the values in this set
-/// \param[in] takeOwnership If true, the RooAddition object will take ownership of the arguments in `sumSet`
 
 RooAddition::RooAddition(const char *name, const char *title, const RooArgList &sumSet)
    : RooAbsReal(name, title), _set("!set", "set of components", this), _cacheMgr(this, 10)
@@ -75,7 +75,6 @@ RooAddition::RooAddition(const char *name, const char *title, const RooArgList &
 /// \param[in] title Title
 /// \param[in] sumSet1 Left-hand element of the pair-wise products
 /// \param[in] sumSet2 Right-hand element of the pair-wise products
-/// \param[in] takeOwnership If true, the RooAddition object will take ownership of the arguments in the `sumSets`
 ///
 RooAddition::RooAddition(const char *name, const char *title, const RooArgList &sumSet1, const RooArgList &sumSet2)
    : RooAbsReal(name, title), _set("!set", "set of components", this), _cacheMgr(this, 10)
@@ -143,58 +142,50 @@ double RooAddition::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute addition of PDFs in batches.
-void RooAddition::computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+void RooAddition::doEval(RooFit::EvalContext &ctx) const
 {
-  RooBatchCompute::VarVector pdfs;
-  RooBatchCompute::ArgVector coefs;
-  pdfs.reserve(_set.size());
-  coefs.reserve(_set.size());
-  for (const auto arg : _set)
-  {
-    pdfs.push_back(dataMap.at(arg));
-    coefs.push_back(1.0);
-  }
-  RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::AddPdf, output, nEvents, pdfs, coefs);
+   std::vector<std::span<const double>> pdfs;
+   std::vector<double> coefs;
+   pdfs.reserve(_set.size());
+   coefs.reserve(_set.size());
+   for (const auto arg : _set) {
+      pdfs.push_back(ctx.at(arg));
+      coefs.push_back(1.0);
+   }
+   RooBatchCompute::compute(ctx.config(this), RooBatchCompute::AddPdf, ctx.output(), pdfs, coefs);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void RooAddition::translate(RooFit::Detail::CodeSquashContext &ctx) const
 {
-   // If the number of elements to sum is less than 3, just build a sum expression.
-   // else build a loop to sum over the values.
-   unsigned int eleSize = _set.size();
+   if (_set.empty()) {
+      ctx.addResult(this, "0.0");
+   }
    std::string result;
-   if (eleSize > 3) {
-      std::string className = GetName();
-      std::string varName = "elements" + className;
-      std::string sumName = "sum" + className;
-      std::string code;
-      std::string decl = "double " + varName + "[" + std::to_string(eleSize) + "]{";
-      int idx = 0;
-      for (RooAbsArg *it : _set) {
-         decl += ctx.getResult(*it) + ",";
-         ctx.addResult(it, varName + "[" + std::to_string(idx) + "]");
-         idx++;
+   if (_set.size() > 1)
+      result += "(";
+
+   std::size_t i = 0;
+   for (auto *component : static_range_cast<RooAbsReal *>(_set)) {
+
+      // if (dynamic_cast<RooNLLVarNew *>(component)) {
+      //    result += ctx.getResultFrom
+      // } else {
+      if (!dynamic_cast<RooNLLVarNew *>(component) || _set.size() == 1) {
+         result += ctx.getResult(*component);
+         ++i;
+         if (i < _set.size()) result += '+';
+         continue;
       }
-      decl.back() = '}';
-      code += decl + ";\n";
-
-      ctx.addToGlobalScope("double " + sumName + " = 0;\n");
-      std::string iterator = "i_" + className;
-      code += "for(int " + iterator + " = 0; " + iterator + " < " + std::to_string(eleSize) + "; " + iterator +
-              "++) {\n" + sumName + " += " + varName + "[" + iterator + "];\n}\n";
-      result = sumName;
-      ctx.addResult(this, result);
-
-      ctx.addToCodeBody(this, code);
+      auto &wrp = *ctx._wrapper;
+      auto funcName = wrp.declareFunction(wrp.buildCode(*component));
+      result += funcName + "(params, obs, xlArr)";
+      ++i;
+      if (i < _set.size()) result += '+';
    }
-
-   result = "(";
-   for (RooAbsArg *it : _set) {
-      result += ctx.getResult(*it) + '+';
-   }
-   result.back() = ')';
+   if (_set.size() > 1)
+      result += ')';
    ctx.addResult(this, result);
 }
 

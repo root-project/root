@@ -96,7 +96,7 @@ in your code instead of hardcoded color numbers, eg:
 Begin_Macro
 {
    TColorWheel *w = new TColorWheel();
-   cw = new TCanvas("cw","cw",0,0,400,400);
+   auto cw = new TCanvas("cw","cw",0,0,400,400);
    w->SetCanvas(cw);
    w->Draw();
 }

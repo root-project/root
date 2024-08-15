@@ -70,7 +70,7 @@ public:
    void CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, Double_t startz) const;
    void CheckOverlaps(const TGeoVolume *vol, Double_t ovlp = 0.1, Option_t *option = "");
    void CheckOverlapsBySampling(TGeoVolume *vol, Double_t ovlp = 0.1, Int_t npoints = 1000000) const;
-   void CheckPoint(Double_t x = 0, Double_t y = 0, Double_t z = 0, Option_t *option = "");
+   void CheckPoint(Double_t x = 0, Double_t y = 0, Double_t z = 0, Option_t *option = "", Double_t safety = 0.);
    void CheckShape(TGeoShape *shape, Int_t testNo, Int_t nsamples, Option_t *option);
    Double_t CheckVoxels(TGeoVolume *vol, TGeoVoxelFinder *voxels, Double_t *xyz, Int_t npoints);
    TH2F *LegoPlot(Int_t ntheta = 60, Double_t themin = 0., Double_t themax = 180., Int_t nphi = 90,

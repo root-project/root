@@ -10,7 +10,7 @@
 
 /** Memory pool for RooArgSet and RooDataSet.
  * \class MemPoolForRooSets
- * \ingroup roofitcore
+ * \ingroup Roofitcore
  * RooArgSet and RooDataSet were using a mempool that guarantees that allocating,
  * de-allocating and re-allocating a set does not yield the same pointer.
  * RooFit relies on this, unfortunately, because it compares the pointers of RooArgSets

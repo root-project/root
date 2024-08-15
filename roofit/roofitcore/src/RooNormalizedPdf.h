@@ -22,9 +22,8 @@ public:
       : _pdf("numerator", "numerator", this, pdf),
         _normIntegral(
            "denominator", "denominator", this,
-           *std::unique_ptr<RooAbsReal>{pdf.createIntegral(normSet, *pdf.getIntegratorConfig(), pdf.normRange())}
-               .release(),
-           true, false, true),
+           std::unique_ptr<RooAbsReal>{pdf.createIntegral(normSet, *pdf.getIntegratorConfig(), pdf.normRange())},
+           true, false),
         _normSet{normSet}
    {
       auto name = std::string(pdf.GetName()) + "_over_" + _normIntegral->GetName();
@@ -70,11 +69,11 @@ public:
    bool canComputeBatchWithCuda() const override { return true; }
 
 protected:
-   void computeBatch(double *output, size_t size, RooFit::Detail::DataMap const &) const override;
+   void doEval(RooFit::EvalContext &) const override;
    double evaluate() const override
    {
-      // Evaluate() should not be called in the BatchMode, but we still need it
-      // to support printing of the object.
+      // The evaluate() function should not be called in the BatchMode, but we
+      // still need it to support printing of the object.
       return getValV(nullptr);
    }
    double getValV(const RooArgSet * /*normSet*/) const override

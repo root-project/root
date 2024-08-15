@@ -17,7 +17,8 @@
 #include <fstream>
 #include <iomanip> // setw
 
-using namespace std;
+using std::list, std::string, std::invalid_argument, std::cout, std::endl, std::to_string, std::ios;
+namespace chrono = std::chrono; // alias
 
 namespace RooFit {
 namespace MultiProcess {
@@ -30,7 +31,7 @@ namespace MultiProcess {
  * timings to be written out in json format, one file for each process. Multiple overlapping
  * sections can be timed independently on the same process. It also allows for the timings
  * to be written out to json logfiles in a specified interval, for example every half hour.
- * 
+ *
  * Note that this class logs timings in milliseconds.
  */
 

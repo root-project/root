@@ -1,6 +1,79 @@
 # JSROOT changelog
 
 ## Changes in dev
+1. Let use custom time zone for time display, support '&utc' and '&cet' in URL parameters
+2. Support gStyle.fLegendFillStyle
+3. Let change histogram min/max values via context menu
+4. Support Z-scale zooming with TScatter
+5. Implement "haxis" draw option for histogram to draw only axes for hbar
+6. Implement "axisg" and "haxisg" to draw axes with grids
+7. Support TH1 marker, text and line drawing superimposed with "haxis"
+8. Support TBox and TLatex drawing on "frame", support drawing on swapped axes
+9. TProfile and TProfile2D projections https://github.com/root-project/root/issues/15851
+10. Draw total histogram from TEfficiency when draw option starts with 'b'
+11. Let redraw TEfficiency, THStack and TMultiGraph with different draw options via hist context menu
+12. Support 'pads' draw options for TMultiGraph, support context menu for it
+13. Let drop object on sub-pads
+14. Properly loads ES6 modules for web canvas
+15. Internals - do not select pad (aka gPad) for objects drawing, always use assigned pad painter
+16. Fix - properly save zoomed ranges in drawingJSON()
+17. Fix - properly redraw TMultuGraph
+18. Fix - show empty bin in TProfile2D if it has entries #316
+
+
+## Changes in 7.7.2
+1. Fix - hide empty title on the canvas
+2. Fix - properly handle zooming in THStack histogram
+3. Fix - always use 0 as minimum in THStack drawings
+4. Fix - always show all ticks for labeled axis
+5. Fix - draw TProfile2D bins content as text, not entries
+6. Fix - interactive zooming on log color palette
+7. Fix - keyboard handling while input dialog active
+8. Fix - legend entry with not configured fill attributes
+9. Fix - prevent that color palette exceed graphical range
+10. Fix - exponential log axis labels with kMoreLogLabels bit set
+
+
+## Changes in 7.7.1
+1. Fix - properly select TF1 range after zooming
+2. Fix - TH1 y-range selection
+3. Fix - add 'gl' and svg2pdf-related packages to dependencies in package.json
+
+
+## Changes in 7.7.0
+1. Let plot current time, file creation or modification time with `&optdate=[1,2,3]` URL parameters
+2. Let plot file name, full file name or item name with `&optfile=[1,2,3]` URL parameters
+3. Let define date and file name position with `&datex=0.03&datey=0.03` URL parameters
+4. Improve TRatioPlot axis and lines drawing
+5. Use localStorage to preserve custom settings and gStyle
+6. Let configure custom storage prefix with `&storage_prefix=name` URL #290
+7. Let customize URL for "Show in new tab" menu command
+8. Support both new and old TRatioPlot drawings
+10. Synchronize X/Y range selection with native ROOT
+11. Proper handle attributes from TH2Poly bins, support "p" for markers drawing
+12. Correctly scale size of axis ticks - take into account NDC axis length
+13. Set name and userData in geometry `build()` function #303
+14. Draw histogram title afterwards - place in front of stats box
+15. Upgrade three.js r158 -> r162, last with WebGL1 support
+16. Split extras into three_addons.mjs, provide jsroot geometry build without three.js
+17. Fix - correctly draw only grids with AXIG draw option
+18. Fix - log scales on TH3 drawings #306
+19. Fix - draw geometry top node volume if all childs not visible #308
+20. Fix - properly process 206 server response without Accept-Ranges header https://root-forum.cern.ch/t/59426/
+
+
+## Changes in 7.6.1
+1. Remove source_dir output in node.js #296
+2. Fully integrate svg2pdf.js into jsroot repo
+3. Fix - support plain TRI option for TGraph2D
+4. Fix - let read object from ROOT file with empty name
+5. Fix - graph drawing fix custom labels on X axis #297
+6. Fix - draw at least line for TGraphErrors ROOT-8131
+7. Fix - preserve attributes and draw options when call drawingJSON() #307
+8. Fix - menu for text align selection typo
+
+
+## Changes in 7.6.0
 1. Implement "tickz" draw option, used for color palette ticks
 2. Implement skewness and kurtosis calculations for histogram stats box
 3. Introduce "logv" draw option for `TH3`, configures logarithmic scale for box volume
@@ -18,12 +91,29 @@
 15. Support PDF creation using jsPDF and svg2pdf.js - in browser and node.js
 16. Implement custom fonts support in TWebCanvas
 17. List of ROOT/JSON files on server with `&dir=<path>` URL parameter #283
-18. Fix - do not add `THStack` and `TMultiGraph` to legend
-19. Fix - correctly use margin in `TPaveText` class
-20. Fix - correctly draw endcaps in legend errors
-21. Fix - vertical position of up elements like {M}^{2} in TLatex
-22. Fix - catch exception when evaluate faulty TF1
-23. Fix - let draw THStack with diff binning hists
+18. Load TGaxis function from the file #282
+19. Let display progress messages in modal element #285
+20. Fix - do not add `THStack` and `TMultiGraph` to legend
+21. Fix - correctly use margin in `TPaveText` class
+22. Fix - correctly draw endcaps in legend errors
+23. Fix - vertical position of up elements like {M}^{2} in TLatex
+24. Fix - let draw THStack with diff binning hists
+25. Fix - better tooltip name for the items
+26. Fix - better logy scale selection
+
+
+## Changes in 7.5.5
+1. Fix - abort tree draw operation faster
+2. Fix - support plain TRI option for TGraph2D
+3. Fix - use latest npm "gl" module
+
+
+## Changes in 7.5.4
+1. Fix - catch exception when parsing TF1 formula
+2. Fix - properly check THStack histograms axes when doing sum
+3. Fix - correctly handle negative offset on time axis
+4. Fix - do not use `inset` because of old Chrome browsers
+5. Fix - properly provide object hints
 
 
 ## Changes in 7.5.3

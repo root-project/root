@@ -36,7 +36,7 @@ ClassImp(RooMomentMorph);
 /// coverity[UNINIT_CTOR]
 
 RooMomentMorph::RooMomentMorph()
-  : _cacheMgr(this,10,true,true), _curNormSet(nullptr), _mref(nullptr), _M(nullptr), _useHorizMorph(true)
+  : _cacheMgr(this,10,true,true)
 {
 }
 
@@ -108,7 +108,6 @@ RooMomentMorph::RooMomentMorph(const char *name, const char *title, RooAbsReal &
 RooMomentMorph::RooMomentMorph(const RooMomentMorph &other, const char *name)
    : RooAbsPdf(other, name),
      _cacheMgr(other._cacheMgr, this),
-     _curNormSet(nullptr),
      m("m", this, other.m),
      _varList("varList", this, other._varList),
      _pdfList("pdfList", this, other._pdfList),
@@ -153,7 +152,7 @@ void RooMomentMorph::initialize()
   }
   for (Int_t i=1; i<_mref->GetNrows(); ++i) {
     for (Int_t j=1; j<_mref->GetNrows(); ++j) {
-      M(i,j) = TMath::Power(dm[i],(double)j);
+      M(i,j) = std::pow(dm[i],(double)j);
     }
   }
   (*_M) = M.Invert();
@@ -170,7 +169,7 @@ RooMomentMorph::CacheElem::CacheElem(std::unique_ptr<RooAbsPdf> && sumPdf,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooMomentMorph::CacheElem* RooMomentMorph::getCache(const RooArgSet* /*nset*/) const
+RooMomentMorph::CacheElem* RooMomentMorph::getCache(const RooArgSet* nset) const
 {
   if (auto* cache = static_cast<CacheElem*>(_cacheMgr.getObj(nullptr,static_cast<RooArgSet*>(nullptr)))) {
     return cache ;
@@ -287,6 +286,7 @@ RooMomentMorph::CacheElem* RooMomentMorph::getCache(const RooArgSet* /*nset*/) c
   else {
     theSumPdf = std::make_unique<RooAddPdf>(sumpdfName.c_str(),sumpdfName.c_str(),_pdfList,coefList);
   }
+  theSumPdf->fixCoefNormalization(*nset);
 
   // *** WVE this is important *** this declares that frac effectively depends on the morphing parameters
   // This will prevent the likelihood optimizers from erroneously declaring terms constant
@@ -319,10 +319,10 @@ RooMomentMorph::CacheElem::~CacheElem() = default;
 ////////////////////////////////////////////////////////////////////////////////
 /// Special version of getVal() overrides RooAbsReal::getVal() to save value of current normalization set
 
-double RooMomentMorph::getVal(const RooArgSet* set) const
+double RooMomentMorph::getValV(const RooArgSet* set) const
 {
   _curNormSet = set ? const_cast<RooArgSet*>(set) : const_cast<RooArgSet*>(static_cast<RooArgSet const*>(&_varList));
-  return RooAbsPdf::getVal(set) ;
+  return RooAbsPdf::getValV(set) ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -377,7 +377,7 @@ void RooMomentMorph::CacheElem::calculateFractions(const RooMomentMorph& self, b
   double sumposfrac=0.;
   for (Int_t i=0; i<nPdf; ++i) {
     double ffrac=0.;
-    for (Int_t j=0; j<nPdf; ++j) { ffrac += (*self._M)(j,i) * (j==0?1.:TMath::Power(dm,(double)j)); }
+    for (Int_t j=0; j<nPdf; ++j) { ffrac += (*self._M)(j,i) * (j==0?1.:std::pow(dm,(double)j)); }
     if (ffrac>=0) sumposfrac+=ffrac;
     // fractions for pdf
     const_cast<RooRealVar*>(frac(i))->setVal(ffrac);
@@ -396,7 +396,7 @@ void RooMomentMorph::CacheElem::calculateFractions(const RooMomentMorph& self, b
     break;
 
     case SineLinear:
-      mfrac = TMath::Sin( TMath::PiOver2()*mfrac ); // this gives a continuous differentiable transition between grid points.
+      mfrac = std::sin( TMath::PiOver2()*mfrac ); // this gives a continuous differentiable transition between grid points.
 
       // now fall through to Linear case
 

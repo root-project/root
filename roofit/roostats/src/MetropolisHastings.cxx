@@ -61,7 +61,7 @@ ClassImp(RooStats::MetropolisHastings);
 
 using namespace RooFit;
 using namespace RooStats;
-using namespace std;
+using std::endl;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -206,7 +206,7 @@ MarkovChain* MetropolisHastings::ConstructChain()
          if (fType == kRegular) {
             a *= xPD / xPrimePD;
          } else {
-            a += TMath::Log(xPrimePD) - TMath::Log(xPD);
+            a += std::log(xPrimePD) - TMath::Log(xPD);
          }
       }
 
@@ -261,7 +261,7 @@ bool MetropolisHastings::ShouldTakeStep(double a)
       //double rand = fGen.Uniform(1.0);
       double rand = RooRandom::uniform();
       if (fType == kLog) {
-         rand = TMath::Log(rand);
+         rand = std::log(rand);
          // kbelasco: should this be changed to just (-rand > a) for logical
          // consistency with below test when fType == kRegular?
          if (-1.0 * rand >= a) {
@@ -295,9 +295,9 @@ double MetropolisHastings::CalcNLL(double xL)
       }
    } else {
       if (fSign == kPositive) {
-         return -1.0 * TMath::Log(xL);
+         return -1.0 * std::log(xL);
       } else {
-         return -1.0 * TMath::Log(-xL);
+         return -1.0 * std::log(-xL);
       }
    }
 }
