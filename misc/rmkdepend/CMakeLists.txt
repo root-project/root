@@ -4,9 +4,12 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-if(CMAKE_Fortran_COMPILER)
-  add_subdirectory(minicern)
-endif()
-
-add_subdirectory(gdbPrinters)
-add_subdirectory(rmkdepend)
+ROOT_EXECUTABLE(rmkdepend
+  cppsetup.c
+  ifparser.c
+  include.c
+  main.c
+  mainroot.cxx
+  parse.c
+  pr.c
+)
