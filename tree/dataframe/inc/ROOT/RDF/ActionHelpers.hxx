@@ -22,7 +22,7 @@
 #include "Compression.h"
 #include <string_view>
 #include "ROOT/RVec.hxx"
-#include "ROOT/TBufferMerger.hxx" // for SnapshotHelper
+#include "ROOT/TBufferMerger.hxx" // for SnapshotTTreeHelper
 #include "ROOT/RDF/RCutFlowReport.hxx"
 #include "ROOT/RDF/RSampleInfo.hxx"
 #include "ROOT/RDF/Utils.hxx"
@@ -35,14 +35,14 @@
 #include "TClassRef.h"
 #include "TDirectory.h"
 #include "TError.h" // for R__ASSERT, Warning
-#include "TFile.h"  // for SnapshotHelper
+#include "TFile.h"  // for SnapshotTTreeHelper
 #include "TH1.h"
 #include "TGraph.h"
 #include "TGraphAsymmErrors.h"
 #include "TLeaf.h"
 #include "TObject.h"
 #include "TTree.h"
-#include "TTreeReader.h" // for SnapshotHelper
+#include "TTreeReader.h" // for SnapshotTTreeHelper
 #include "TStatistic.h"
 #include "ROOT/RDF/RActionImpl.hxx"
 #include "ROOT/RDF/RMergeableValue.hxx"
@@ -1397,7 +1397,7 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &i
    branchAddress = nullptr;
 }
 
-/// Helper function for SnapshotHelper and SnapshotHelperMT. It creates new branches for the output TTree of a
+/// Helper function for SnapshotTTreeHelper and SnapshotTTreeHelperMT. It creates new branches for the output TTree of a
 /// Snapshot. This overload is called for columns of type `RVec<T>`. For RDF, these can represent:
 /// 1. c-style arrays in ROOT files, so we are sure that there are input trees to which we can ask the correct branch
 /// title
@@ -1506,11 +1506,12 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &i
    }
 }
 
-void ValidateSnapshotOutput(const RSnapshotOptions &opts, const std::string &treeName, const std::string &fileName);
+void ValidateSnapshotTTreeOutput(const RSnapshotOptions &opts, const std::string &treeName,
+                                 const std::string &fileName);
 
 /// Helper object for a single-thread TTree-based Snapshot action
 template <typename... ColTypes>
-class R__CLING_PTRCHECK(off) SnapshotHelper : public RActionImpl<SnapshotHelper<ColTypes...>> {
+class R__CLING_PTRCHECK(off) SnapshotTTreeHelper : public RActionImpl<SnapshotTTreeHelper<ColTypes...>> {
    std::string fFileName;
    std::string fDirName;
    std::string fTreeName;
@@ -1529,9 +1530,9 @@ class R__CLING_PTRCHECK(off) SnapshotHelper : public RActionImpl<SnapshotHelper<
 
 public:
    using ColumnTypes_t = TypeList<ColTypes...>;
-   SnapshotHelper(std::string_view filename, std::string_view dirname, std::string_view treename,
-                  const ColumnNames_t &vbnames, const ColumnNames_t &bnames, const RSnapshotOptions &options,
-                  std::vector<bool> &&isDefine)
+   SnapshotTTreeHelper(std::string_view filename, std::string_view dirname, std::string_view treename,
+                       const ColumnNames_t &vbnames, const ColumnNames_t &bnames, const RSnapshotOptions &options,
+                       std::vector<bool> &&isDefine)
       : fFileName(filename),
         fDirName(dirname),
         fTreeName(treename),
@@ -1542,12 +1543,12 @@ public:
         fBranchAddresses(vbnames.size(), nullptr),
         fIsDefine(std::move(isDefine))
    {
-      ValidateSnapshotOutput(fOptions, fTreeName, fFileName);
+      ValidateSnapshotTTreeOutput(fOptions, fTreeName, fFileName);
    }
 
-   SnapshotHelper(const SnapshotHelper &) = delete;
-   SnapshotHelper(SnapshotHelper &&) = default;
-   ~SnapshotHelper()
+   SnapshotTTreeHelper(const SnapshotTTreeHelper &) = delete;
+   SnapshotTTreeHelper(SnapshotTTreeHelper &&) = default;
+   ~SnapshotTTreeHelper()
    {
       if (!fTreeName.empty() /*not moved from*/ && !fOutputFile /* did not run */ && fOptions.fLazy) {
          const auto fileOpenMode = [&]() {
@@ -1656,27 +1657,27 @@ public:
    }
 
    /**
-    * @brief Create a new SnapshotHelper with a different output file name
+    * @brief Create a new SnapshotTTreeHelper with a different output file name
     *
     * @param newName A type-erased string with the output file name
-    * @return SnapshotHelper
+    * @return SnapshotTTreeHelper
     *
     * This MakeNew implementation is tied to the cloning feature of actions
     * of the computation graph. In particular, cloning a Snapshot node usually
     * also involves changing the name of the output file, otherwise the cloned
     * Snapshot would overwrite the same file.
     */
-   SnapshotHelper MakeNew(void *newName, std::string_view /*variation*/ = "nominal")
+   SnapshotTTreeHelper MakeNew(void *newName, std::string_view /*variation*/ = "nominal")
    {
       const std::string finalName = *reinterpret_cast<const std::string *>(newName);
-      return SnapshotHelper{
+      return SnapshotTTreeHelper{
          finalName, fDirName, fTreeName, fInputBranchNames, fOutputBranchNames, fOptions, std::vector<bool>(fIsDefine)};
    }
 };
 
 /// Helper object for a multi-thread TTree-based Snapshot action
 template <typename... ColTypes>
-class R__CLING_PTRCHECK(off) SnapshotHelperMT : public RActionImpl<SnapshotHelperMT<ColTypes...>> {
+class R__CLING_PTRCHECK(off) SnapshotTTreeHelperMT : public RActionImpl<SnapshotTTreeHelperMT<ColTypes...>> {
    unsigned int fNSlots;
    std::unique_ptr<ROOT::TBufferMerger> fMerger; // must use a ptr because TBufferMerger is not movable
    std::vector<std::shared_ptr<ROOT::TBufferMergerFile>> fOutputFiles;
@@ -1698,9 +1699,9 @@ class R__CLING_PTRCHECK(off) SnapshotHelperMT : public RActionImpl<SnapshotHelpe
 
 public:
    using ColumnTypes_t = TypeList<ColTypes...>;
-   SnapshotHelperMT(const unsigned int nSlots, std::string_view filename, std::string_view dirname,
-                    std::string_view treename, const ColumnNames_t &vbnames, const ColumnNames_t &bnames,
-                    const RSnapshotOptions &options, std::vector<bool> &&isDefine)
+   SnapshotTTreeHelperMT(const unsigned int nSlots, std::string_view filename, std::string_view dirname,
+                         std::string_view treename, const ColumnNames_t &vbnames, const ColumnNames_t &bnames,
+                         const RSnapshotOptions &options, std::vector<bool> &&isDefine)
       : fNSlots(nSlots),
         fOutputFiles(fNSlots),
         fOutputTrees(fNSlots),
@@ -1717,11 +1718,11 @@ public:
         fOutputBranches(fNSlots),
         fIsDefine(std::move(isDefine))
    {
-      ValidateSnapshotOutput(fOptions, fTreeName, fFileName);
+      ValidateSnapshotTTreeOutput(fOptions, fTreeName, fFileName);
    }
-   SnapshotHelperMT(const SnapshotHelperMT &) = delete;
-   SnapshotHelperMT(SnapshotHelperMT &&) = default;
-   ~SnapshotHelperMT()
+   SnapshotTTreeHelperMT(const SnapshotTTreeHelperMT &) = delete;
+   SnapshotTTreeHelperMT(SnapshotTTreeHelperMT &&) = default;
+   ~SnapshotTTreeHelperMT()
    {
       if (!fTreeName.empty() /*not moved from*/ && fOptions.fLazy && !fOutputFiles.empty() &&
           std::all_of(fOutputFiles.begin(), fOutputFiles.end(), [](const auto &f) { return !f; }) /* never run */) {
@@ -1861,21 +1862,21 @@ public:
    }
 
    /**
-    * @brief Create a new SnapshotHelperMT with a different output file name
+    * @brief Create a new SnapshotTTreeHelperMT with a different output file name
     *
     * @param newName A type-erased string with the output file name
-    * @return SnapshotHelperMT
+    * @return SnapshotTTreeHelperMT
     *
     * This MakeNew implementation is tied to the cloning feature of actions
     * of the computation graph. In particular, cloning a Snapshot node usually
     * also involves changing the name of the output file, otherwise the cloned
     * Snapshot would overwrite the same file.
     */
-   SnapshotHelperMT MakeNew(void *newName, std::string_view /*variation*/ = "nominal")
+   SnapshotTTreeHelperMT MakeNew(void *newName, std::string_view /*variation*/ = "nominal")
    {
       const std::string finalName = *reinterpret_cast<const std::string *>(newName);
-      return SnapshotHelperMT{fNSlots,           finalName,          fDirName, fTreeName,
-                              fInputBranchNames, fOutputBranchNames, fOptions, std::vector<bool>(fIsDefine)};
+      return SnapshotTTreeHelperMT{fNSlots,           finalName,          fDirName, fTreeName,
+                                   fInputBranchNames, fOutputBranchNames, fOptions, std::vector<bool>(fIsDefine)};
    }
 };
 
