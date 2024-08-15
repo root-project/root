@@ -19,7 +19,7 @@ jobs:
           pip install github3.py
       - name: Download issue extraction script
         run: |
-          wget https://raw.githubusercontent.com/root-project/root/master/build/misc/get_solved_issues-github-actions.py
+          wget https://raw.githubusercontent.com/root-project/root/master/.ci/get_solved_issues-github-actions.py
       - name: Generate list of closed issues for release notes
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
