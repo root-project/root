@@ -78,10 +78,29 @@ public:
          fEntry(entry), fReader(&reader) {}
 
       /// Compare two iterators for equality.
-      bool operator==(const Iterator_t& lhs) const {
+      bool operator==(const Iterator_t &lhs) const
+      {
          // From C++14: value initialized (past-end) it compare equal.
-         if (!IsValid() && !lhs.IsValid()) return true;
-         return fEntry == lhs.fEntry && fReader == lhs.fReader;
+         if (!IsValid() && !lhs.IsValid())
+            return true;
+         // The iterators refer to different readers
+         if (fReader != lhs.fReader)
+            return false;
+         // #16249: range based loop and the tree has zero entries
+         // as well as analogous cases.
+         // Getting the number of events can have a cost, for example in
+         // case of chains of remote files accessible with high latency.
+         // However, it is reasonable to assume that if iterators are
+         // being compared is because an iteration is taking place,
+         // therefore such cost has to be paid anyway, it's just
+         // anticipated.
+         if (fReader->GetTree()->GetEntriesFast() == 0 && fEntry == 0 && !lhs.IsValid()) {
+            return true;
+         }
+         if (lhs.fReader->GetTree()->GetEntriesFast() == 0 && lhs.fEntry == 0 && !IsValid()) {
+            return true;
+         }
+         return fEntry == lhs.fEntry;
       }
 
       /// Compare two iterators for inequality.
@@ -241,7 +260,7 @@ public:
       return Iterator_t(*this, 0);
    }
    /// Return an iterator beyond the last TTree entry.
-   Iterator_t end() const { return Iterator_t(); }
+   Iterator_t end() { return Iterator_t(*this, -1); }
 
 protected:
    using NamedProxies_t = std::unordered_map<std::string, std::unique_ptr<ROOT::Internal::TNamedBranchProxy>>;

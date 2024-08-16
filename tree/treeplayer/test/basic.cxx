@@ -509,3 +509,23 @@ TEST(TTreeReaderBasic, DisappearingBranch)
    gSystem->Unlink("DisappearingBranch0.root");
    gSystem->Unlink("DisappearingBranch1.root");
 }
+
+// Issue #16249
+TEST(TTreeReaderBasic, ZeroEntriesTree)
+{
+   TTree t("t", "t");
+   TTreeReader tr(&t);
+   auto b = tr.begin();
+   auto e = tr.end();
+   auto n_iterations = 0;
+   for ([[maybe_unused]] auto &d : tr) {
+      ++n_iterations;
+   }
+   EXPECT_EQ(n_iterations, 0);
+   EXPECT_TRUE(b == e);
+   EXPECT_TRUE(b == b);
+   EXPECT_TRUE(e == e);
+   auto b_copy(b);
+   EXPECT_TRUE(b++ == e);
+   EXPECT_TRUE(++b_copy == e);
+}
