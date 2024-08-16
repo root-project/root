@@ -785,17 +785,10 @@ int TCling_GenerateDictionary(const std::vector<std::string> &classes,
          }
          fileContent += "#pragma link C++ class ";
          fileContent +=    *it + "+;\n" ;
-         fileContent += "#pragma link C++ class ";
-         if (iSTLType != sSTLTypes.end()) {
-            // STL class; we cannot (and don't need to) store iterators;
-            // their shadow and the compiler's version don't agree. So
-            // don't ask for the '+'
-            fileContent +=    *it + "::*;\n" ;
-         }
-         else {
+         if (iSTLType == sSTLTypes.end()) {
             // Not an STL class; we need to allow the I/O of contained
             // classes (now that we have a dictionary for them).
-            fileContent +=    *it + "::*+;\n" ;
+            fileContent += "#pragma link C++ class " + *it + "::*+;\n" ;
          }
       }
       fileContent += "#endif\n";
