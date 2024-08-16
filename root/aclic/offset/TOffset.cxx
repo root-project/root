@@ -356,6 +356,7 @@ class myProf :public TH1F {
 public:
 virtual ~myProf(){}
 TArrayD fArr;
+ClassDef(myProf, 1)
 };
 class myPro2  {
 
@@ -368,6 +369,7 @@ public:
   
 virtual ~myPro3(){}
 char fArr;
+ClassDef(myPro3, 1)
 };
 
 
