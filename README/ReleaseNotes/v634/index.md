@@ -30,7 +30,7 @@ The following people have contributed to this new version:
  Florine de Geus, CERN/University of Twente,\
  Andrei Gheata, CERN/EP-SFT,\
  Bernhard Manfred Gruber,\
- Enrico Guiraud,
+ Enrico Guiraud,\
  Jonas Hahnfeld, CERN/Goethe University Frankfurt,\
  Fernando Hueso Gonzalez, University of Valencia\
  Attila Krasznahorkay, CERN/EP-ADP-OS,\
@@ -46,7 +46,7 @@ The following people have contributed to this new version:
  Alja Mrak Tadel, UCSD/CMS,\
  Axel Naumann, CERN/EP-SFT,\
  Dante Niewenhuis, VU Amsterdam\
- Luis Antonio Obis Aparicio, University of Zaragoza,
+ Luis Antonio Obis Aparicio, University of Zaragoza,\
  Ianna Osborne, Princeton University,\
  Vincenzo Eduardo Padulano, CERN/EP-SFT,\
  Danilo Piparo, CERN/EP-SFT,\
@@ -55,17 +55,18 @@ The following people have contributed to this new version:
  Andrea Rizzi, University of Pisa,\
  Andre Sailer, CERN/EP-SFT,\
  Garima Singh, ETH,\
- Juraj Smiesko, CERN/RCS-PRJ-FC,
+ Juraj Smiesko, CERN/RCS-PRJ-FC,\
  Pavlo Svirin, National Technical University of Ukraine,\
- Maciej Szymanski, Argonne,\
+ Robin Syring, Leibniz University Hannover, CERN/EP-SFT,\
+  Maciej Szymanski, Argonne,\
  Christian Tacke, Darmstadt University,\
  Matevz Tadel, UCSD/CMS,\
  Alvaro Tolosa Delgado, CERN/RCS-PRJ-FC,\
  Devajith Valaparambil Sreeramaswamy, CERN/EP-SFT,\
  Peter Van Gemmeren, Argonne,\
  Vassil Vassilev, Princeton/CMS,\
- Wouter Verkerke, NIKHEF/ATLAS,
- Stefan Wunsch
+ Wouter Verkerke, NIKHEF/ATLAS,\
+ Stefan Wunsch\
 
 ## Deprecation and Removal
 
@@ -104,6 +105,9 @@ The following people have contributed to this new version:
 ### Miscellaneous
 
 * Setting `useHashMapForFind(true)` is not supported for RooArgLists anymore, since hash-assisted finding by name hash can be ambiguous: a RooArgList is allowed to have different elements with the same name. If you want to do fast lookups by name, convert your RooArgList to a RooArgSet.
+
+* The function `RooFit::bindFunction()` now supports arbitrary many input variables when binding a Python function.
+
 
 ## Graphics Backends
 
