@@ -83,9 +83,8 @@ private:
       std::size_t vec_size = vec.size();
       if(vec_size < max_vec_size) // Padding vector column to max_vec_size with fVecPadding
       {
-         ROOT::RVec<VecType> pad(max_vec_size - vec_size, fVecPadding);
          std::copy(vec.begin(), vec.end(), &fChunkTensor->GetData()[fOffset]);
-         std::copy(pad.begin(), pad.end(), &fChunkTensor->GetData()[fOffset+vec_size]);
+         std::fill(&fChunkTensor->GetData()[fOffset+vec_size], &fChunkTensor->GetData()[fOffset+max_vec_size], fVecPadding);
       }
       else // Copy only max_vec_size length from vector column
       {
@@ -187,9 +186,8 @@ private:
       std::size_t vec_size = vec.size();
       if(vec_size < max_vec_size) // Padding vector column to max_vec_size with fVecPadding
       {
-         ROOT::RVec<VecType> pad(max_vec_size - vec_size, fVecPadding);
          std::copy(vec.begin(), vec.end(), &fChunkTensor->GetData()[fOffset]);
-         std::copy(pad.begin(), pad.end(), &fChunkTensor->GetData()[fOffset+vec_size]);
+         std::fill(&fChunkTensor->GetData()[fOffset+vec_size], &fChunkTensor->GetData()[fOffset+max_vec_size], fVecPadding);
       }
       else // Copy only max_vec_size length from vector column
       {
