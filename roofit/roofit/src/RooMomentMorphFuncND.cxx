@@ -53,7 +53,7 @@ RooMomentMorphFuncND::RooMomentMorphFuncND() : _cacheMgr(this, 10, true, true), 
 
 //_____________________________________________________________________________
 RooMomentMorphFuncND::RooMomentMorphFuncND(const char *name, const char *title, const RooArgList &parList, const RooArgList &obsList,
-                       const Grid2 &referenceGrid, const Setting &setting)
+                       const Grid2 &referenceGrid, Setting setting)
    : RooMomentMorphFuncND::Base_t(name, title),
      _cacheMgr(this, 10, true, true),
      _parList("parList", "List of morph parameters", this),
