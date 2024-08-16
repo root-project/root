@@ -116,6 +116,10 @@ jobs:
     #     echo "PATH=$PATH:/usr/lib64/qt5/bin" >> $GITHUB_ENV
     #     source $GITHUB_ENV
 
+    - name: Install sudo
+      run: |
+        dnf install sudo -y
+
     - name: Install Qt
       uses: jurplel/install-qt-action@v4
       with:
