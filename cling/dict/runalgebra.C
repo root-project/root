@@ -91,7 +91,7 @@ namespace aux {
 
 #ifdef __MAKECINT__
 
-#pragma link C++ class aux::rtti< vec2< long double > >+;
+#pragma link C++ class aux::rtti< aux::vec2< long double > >+;
 
 #endif /* __MAKECINT__ */
 
@@ -154,7 +154,7 @@ namespace aux {
 
 #ifdef __MAKECINT__
 
-#pragma link C++ class aux::rtti< vec3< long double > >+;
+#pragma link C++ class aux::rtti< aux::vec3< long double > >+;
 
 #endif /* __MAKECINT__ */
 
@@ -217,7 +217,7 @@ namespace aux {
 
 #ifdef __MAKECINT__
 
-#pragma link C++ class aux::rtti< vec4< long double > >+;
+#pragma link C++ class aux::rtti< aux::vec4< long double > >+;
 
 #endif /* __MAKECINT__ */
 
@@ -278,7 +278,7 @@ namespace aux {
 
 #ifdef __MAKECINT__
 
-#pragma link C++ class aux::rtti< mat2< long double > >+;
+#pragma link C++ class aux::rtti< aux::mat2< long double > >+;
 
 #endif /* __MAKECINT__ */
 
@@ -337,7 +337,7 @@ namespace aux {
 
 #ifdef __MAKECINT__
 
-#pragma link C++ class aux::rtti< mat3< long double > >+;
+#pragma link C++ class aux::rtti< aux::mat3< long double > >+;
 
 #endif /* __MAKECINT__ */
 
@@ -396,7 +396,7 @@ namespace aux {
 
 #ifdef __MAKECINT__
 
-#pragma link C++ class aux::rtti< mat4< long double > >+;
+#pragma link C++ class aux::rtti< aux::mat4< long double > >+;
 
 #endif /* __MAKECINT__ */
 
@@ -541,7 +541,7 @@ namespace aux {
 
 #ifdef __MAKECINT__
 
-#pragma link C++ class aux::rtti< vec2< float > >+;
+#pragma link C++ class aux::rtti< aux::vec2< float > >+;
 
 #endif /* __MAKECINT__ */
 
@@ -604,7 +604,7 @@ namespace aux {
 
 #ifdef __MAKECINT__
 
-#pragma link C++ class aux::rtti< vec3< float > >+;
+#pragma link C++ class aux::rtti< aux::vec3< float > >+;
 
 #endif /* __MAKECINT__ */
 
@@ -667,7 +667,7 @@ namespace aux {
 
 #ifdef __MAKECINT__
 
-#pragma link C++ class aux::rtti< vec4< float > >+;
+#pragma link C++ class aux::rtti< aux::vec4< float > >+;
 
 #endif /* __MAKECINT__ */
 
@@ -728,7 +728,7 @@ namespace aux {
 
 #ifdef __MAKECINT__
 
-#pragma link C++ class aux::rtti< mat2< float > >+;
+#pragma link C++ class aux::rtti< aux::mat2< float > >+;
 
 #endif /* __MAKECINT__ */
 
@@ -787,7 +787,7 @@ namespace aux {
 
 #ifdef __MAKECINT__
 
-#pragma link C++ class aux::rtti< mat3< float > >+;
+#pragma link C++ class aux::rtti< aux::mat3< float > >+;
 
 #endif /* __MAKECINT__ */
 
@@ -846,7 +846,7 @@ namespace aux {
 
 #ifdef __MAKECINT__
 
-#pragma link C++ class aux::rtti< mat4< float > >+;
+#pragma link C++ class aux::rtti< aux::mat4< float > >+;
 
 #endif /* __MAKECINT__ */
 
@@ -991,7 +991,7 @@ namespace aux {
 
 #ifdef __MAKECINT__
 
-#pragma link C++ class aux::rtti< vec2< double > >+;
+#pragma link C++ class aux::rtti< aux::vec2< double > >+;
 
 #endif /* __MAKECINT__ */
 
@@ -1054,7 +1054,7 @@ namespace aux {
 
 #ifdef __MAKECINT__
 
-#pragma link C++ class aux::rtti< vec3< double > >+;
+#pragma link C++ class aux::rtti< aux::vec3< double > >+;
 
 #endif /* __MAKECINT__ */
 
@@ -1117,7 +1117,7 @@ namespace aux {
 
 #ifdef __MAKECINT__
 
-#pragma link C++ class aux::rtti< vec4< double > >+;
+#pragma link C++ class aux::rtti< aux::vec4< double > >+;
 
 #endif /* __MAKECINT__ */
 
@@ -1178,7 +1178,7 @@ namespace aux {
 
 #ifdef __MAKECINT__
 
-#pragma link C++ class aux::rtti< mat2< double > >+;
+#pragma link C++ class aux::rtti< aux::mat2< double > >+;
 
 #endif /* __MAKECINT__ */
 
@@ -1237,7 +1237,7 @@ namespace aux {
 
 #ifdef __MAKECINT__
 
-#pragma link C++ class aux::rtti< mat3< double > >+;
+#pragma link C++ class aux::rtti< aux::mat3< double > >+;
 
 #endif /* __MAKECINT__ */
 
@@ -1296,7 +1296,7 @@ namespace aux {
 
 #ifdef __MAKECINT__
 
-#pragma link C++ class aux::rtti< mat4< double > >+;
+#pragma link C++ class aux::rtti< aux::mat4< double > >+;
 
 #endif /* __MAKECINT__ */
 
@@ -1441,7 +1441,7 @@ namespace aux {
 
 #ifdef __MAKECINT__
 
-#pragma link C++ class aux::rtti< vec2< complex<float> > >+;
+#pragma link C++ class aux::rtti< aux::vec2< complex<float> > >+;
 
 #endif /* __MAKECINT__ */
 
@@ -1504,7 +1504,7 @@ namespace aux {
 
 #ifdef __MAKECINT__
 
-#pragma link C++ class aux::rtti< vec3< complex<float> > >+;
+#pragma link C++ class aux::rtti< aux::vec3< complex<float> > >+;
 
 #endif /* __MAKECINT__ */
 
@@ -1567,7 +1567,7 @@ namespace aux {
 
 #ifdef __MAKECINT__
 
-#pragma link C++ class aux::rtti< vec4< complex<float> > >+;
+#pragma link C++ class aux::rtti< aux::vec4< complex<float> > >+;
 
 #endif /* __MAKECINT__ */
 
@@ -1628,7 +1628,7 @@ namespace aux {
 
 #ifdef __MAKECINT__
 
-#pragma link C++ class aux::rtti< mat2< complex<float> > >+;
+#pragma link C++ class aux::rtti< aux::mat2< complex<float> > >+;
 
 #endif /* __MAKECINT__ */
 
@@ -1687,7 +1687,7 @@ namespace aux {
 
 #ifdef __MAKECINT__
 
-#pragma link C++ class aux::rtti< mat3< complex<float> > >+;
+#pragma link C++ class aux::rtti< aux::mat3< complex<float> > >+;
 
 #endif /* __MAKECINT__ */
 
@@ -1746,7 +1746,7 @@ namespace aux {
 
 #ifdef __MAKECINT__
 
-#pragma link C++ class aux::rtti< mat4< complex<float> > >+;
+#pragma link C++ class aux::rtti< aux::mat4< complex<float> > >+;
 
 #endif /* __MAKECINT__ */
 
@@ -1891,7 +1891,7 @@ namespace aux {
 
 #ifdef __MAKECINT__
 
-#pragma link C++ class aux::rtti< vec2< complex<double> > >+;
+#pragma link C++ class aux::rtti< aux::vec2< complex<double> > >+;
 
 #endif /* __MAKECINT__ */
 
@@ -1954,7 +1954,7 @@ namespace aux {
 
 #ifdef __MAKECINT__
 
-#pragma link C++ class aux::rtti< vec3< complex<double> > >+;
+#pragma link C++ class aux::rtti< aux::vec3< complex<double> > >+;
 
 #endif /* __MAKECINT__ */
 
@@ -2017,7 +2017,7 @@ namespace aux {
 
 #ifdef __MAKECINT__
 
-#pragma link C++ class aux::rtti< vec4< complex<double> > >+;
+#pragma link C++ class aux::rtti< aux::vec4< complex<double> > >+;
 
 #endif /* __MAKECINT__ */
 
@@ -2078,7 +2078,7 @@ namespace aux {
 
 #ifdef __MAKECINT__
 
-#pragma link C++ class aux::rtti< mat2< complex<double> > >+;
+#pragma link C++ class aux::rtti< aux::mat2< complex<double> > >+;
 
 #endif /* __MAKECINT__ */
 
@@ -2137,7 +2137,7 @@ namespace aux {
 
 #ifdef __MAKECINT__
 
-#pragma link C++ class aux::rtti< mat3< complex<double> > >+;
+#pragma link C++ class aux::rtti< aux::mat3< complex<double> > >+;
 
 #endif /* __MAKECINT__ */
 
@@ -2196,7 +2196,7 @@ namespace aux {
 
 #ifdef __MAKECINT__
 
-#pragma link C++ class aux::rtti< mat4< complex<double> > >+;
+#pragma link C++ class aux::rtti< aux::mat4< complex<double> > >+;
 
 #endif /* __MAKECINT__ */
 
@@ -2341,7 +2341,7 @@ namespace aux {
 
 #ifdef __MAKECINT__
 
-#pragma link C++ class aux::rtti< vec2< complex<long double> > >+;
+#pragma link C++ class aux::rtti< aux::vec2< complex<long double> > >+;
 
 #endif /* __MAKECINT__ */
 
@@ -2404,7 +2404,7 @@ namespace aux {
 
 #ifdef __MAKECINT__
 
-#pragma link C++ class aux::rtti< vec3< complex<long double> > >+;
+#pragma link C++ class aux::rtti< aux::vec3< complex<long double> > >+;
 
 #endif /* __MAKECINT__ */
 
@@ -2467,7 +2467,7 @@ namespace aux {
 
 #ifdef __MAKECINT__
 
-#pragma link C++ class aux::rtti< vec4< complex<long double> > >+;
+#pragma link C++ class aux::rtti< aux::vec4< complex<long double> > >+;
 
 #endif /* __MAKECINT__ */
 
@@ -2528,7 +2528,7 @@ namespace aux {
 
 #ifdef __MAKECINT__
 
-#pragma link C++ class aux::rtti< mat2< complex<long double> > >+;
+#pragma link C++ class aux::rtti< aux::mat2< complex<long double> > >+;
 
 #endif /* __MAKECINT__ */
 
@@ -2587,7 +2587,7 @@ namespace aux {
 
 #ifdef __MAKECINT__
 
-#pragma link C++ class aux::rtti< mat3< complex<long double> > >+;
+#pragma link C++ class aux::rtti< aux::mat3< complex<long double> > >+;
 
 #endif /* __MAKECINT__ */
 
@@ -2646,7 +2646,7 @@ namespace aux {
 
 #ifdef __MAKECINT__
 
-#pragma link C++ class aux::rtti< mat4< complex<long double> > >+;
+#pragma link C++ class aux::rtti< aux::mat4< complex<long double> > >+;
 
 #endif /* __MAKECINT__ */
 
