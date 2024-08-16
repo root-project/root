@@ -234,6 +234,7 @@ def FillColor(color):
 
     return RooFit._FillColor(_string_to_root_attribute(color, _color_map))
 
+
 # Copy the docstring from LineColor.
 FillColor.__doc__ = LineColor.__doc__
 
@@ -244,6 +245,7 @@ def MarkerColor(color):
     from cppyy.gbl import RooFit
 
     return RooFit._MarkerColor(_string_to_root_attribute(color, _color_map))
+
 
 # Copy the docstring from LineColor.
 MarkerColor.__doc__ = LineColor.__doc__
@@ -303,13 +305,48 @@ def DataError(etype):
     if isinstance(etype, str):
         try:
             import ROOT
+
             etype = getattr(ROOT.RooAbsData.ErrorType, etype)
         except AttributeError as error:
             raise ValueError(
-                'Unsupported error type type passed to DataError().'
+                "Unsupported error type type passed to DataError()."
                 + ' Supported decay types are : "Poisson", "SumW2", "Auto", "Expected", and None.'
             )
         except Exception as exception:
             raise exception
 
     return RooFit._DataError(etype)
+
+
+def bindFunction(name, func, *variables):
+    """
+    Wrap an arbitrary function defined in Python or C++.
+
+    Parameters:
+    - name (str): Name of the function.
+    - func (callable): Function that defines the function.
+    - variables (list): List of variables to be used in the function.
+
+    Returns:
+    - RooAbsReal wrapping the given function
+    """
+
+    import ROOT
+
+    if len(variables) <= 4:
+        # The C++ implementation supports up to 4 inputs.
+        return ROOT.RooFit._bindFunction(name, func, *variables)
+
+    class MyBinFunc(ROOT.RooPyBindFunction):
+        def __init__(self, name, title, *variables):
+            super(MyBinFunc, self).__init__(name, title, ROOT.RooArgList(*variables))
+
+        def evaluate(self):
+            return func(*(v.getVal() for v in self.varlist()))
+
+        def clone(self, newname=False):
+            cl = MyBinFunc(newname if newname else self.GetName(), self.GetTitle(), self.varlist())
+            ROOT.SetOwnership(cl, False)
+            return cl
+
+    return MyBinFunc(name, "", variables)
