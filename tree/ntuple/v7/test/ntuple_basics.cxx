@@ -336,6 +336,7 @@ TEST(RNTuple, ClusterEntriesAuto)
       options.SetCompression(0);
       options.SetEnablePageChecksums(false);
       options.SetApproxZippedClusterSize(5 * sizeof(float));
+      options.SetPageBufferBudget(1000 * 1000);
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), options);
       for (int i = 0; i < 100; i++) {
          ntuple->Fill();
@@ -361,6 +362,7 @@ TEST(RNTuple, ClusterEntriesAutoStatus)
       options.SetCompression(0);
       options.SetEnablePageChecksums(false);
       options.SetApproxZippedClusterSize(5 * sizeof(float));
+      options.SetPageBufferBudget(1000 * 1000);
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), options);
       auto entry = ntuple->CreateEntry();
       for (int i = 0; i < 100; i++) {
@@ -386,12 +388,11 @@ TEST(RNTuple, PageSize)
 
    {
       RNTupleWriteOptions opt;
-      opt.SetApproxUnzippedPageSize(200);
-      auto ntuple = RNTupleWriter::Recreate(
-         std::move(model), "ntuple", fileGuard.GetPath(), opt
-      );
+      opt.SetInitialNElementsPerPage(10);
+      opt.SetMaxUnzippedPageSize(200);
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), opt);
       for (int i = 0; i < 1000; i++) {
-         ntuple->Fill();
+         writer->Fill();
       }
    }
 

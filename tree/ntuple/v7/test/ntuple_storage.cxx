@@ -143,13 +143,18 @@ TEST(RNTuple, InvalidWriteOptions)
 {
    RNTupleWriteOptions options;
    try {
-      options.SetApproxUnzippedPageSize(0);
+      options.SetMaxUnzippedPageSize(0);
       FAIL() << "should not allow zero-sized page";
    } catch (const RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("page size"));
    }
-   options.SetApproxUnzippedPageSize(10);
-   options.SetApproxZippedClusterSize(50);
+   try {
+      options.SetInitialNElementsPerPage(0);
+      FAIL() << "should not allow zero initial number of elements per page";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("number of elements per page"));
+   }
+   options.SetMaxUnzippedPageSize(10);
    try {
       options.SetMaxUnzippedClusterSize(40);
       FAIL() << "should not allow undersized cluster";
@@ -167,19 +172,20 @@ TEST(RNTuple, InvalidWriteOptions)
    FileRaii fileGuard("test_ntuple_invalid_write_options.root");
    auto model = RNTupleModel::Create();
    model->MakeField<std::int16_t>("x");
-   options.SetApproxUnzippedPageSize(3);
+   options.SetMaxUnzippedPageSize(20);
    auto m2 = model->Clone();
    try {
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath(), options);
       FAIL() << "should not allow undersized pages";
    } catch (const RException &err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("page size too small"));
+      EXPECT_THAT(err.what(), testing::HasSubstr("initial number of elements per page"));
    }
-   options.SetApproxUnzippedPageSize(4);
+   options.SetApproxZippedClusterSize(10 * 1000 * 1000);
+   options.SetMaxUnzippedPageSize(options.GetInitialNElementsPerPage() * sizeof(std::int16_t));
    try {
       auto ntuple = RNTupleWriter::Recreate(std::move(m2), "ntpl", fileGuard.GetPath(), options);
    } catch (const RException &err) {
-      FAIL() << "pages size should be just large enough for 2 elements";
+      FAIL() << "pages size should be just large enough";
    }
 }
 
@@ -187,147 +193,34 @@ TEST(RNTuple, PageFilling)
 {
    FileRaii fileGuard("test_ntuple_page_filling.root");
 
+   // We want to reach the maximum page size but not overshoot
    {
       auto model = RNTupleModel::Create();
-      auto fldX = model->MakeField<std::int16_t>("x");
+      auto fldX = model->MakeField<float>("x");
+      auto fldY = model->MakeField<double>("y");
 
       RNTupleWriteOptions options;
-      // Exercises the page swapping algorithm with pages just big enough to hold 2 elements
-      options.SetApproxUnzippedPageSize(4);
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath(), options);
-      for (std::int16_t i = 0; i < 8; ++i) {
-         *fldX = i;
-         ntuple->Fill();
-         // Flush half-full pages
-         if (i == 2)
-            ntuple->CommitCluster();
-         // Flush just after automatic flush
-         if (i == 4)
-            ntuple->CommitCluster();
-      }
+      options.SetInitialNElementsPerPage(3);
+      options.SetMaxUnzippedPageSize(24);
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath(), options);
+      for (int i = 0; i < 6; ++i)
+         writer->Fill();
    }
 
-   auto ntuple = RNTupleReader::Open("ntpl", fileGuard.GetPath());
-   auto viewX = ntuple->GetView<std::int16_t>("x");
-   ASSERT_EQ(8u, ntuple->GetNEntries());
-   for (std::int16_t i = 0; i < 8; ++i)
-      EXPECT_EQ(i, viewX(i));
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   const auto &desc = reader->GetDescriptor();
+   EXPECT_EQ(1u, desc.GetNClusters());
+   const auto colIdX = desc.FindLogicalColumnId(desc.FindFieldId("x"), 0, 0);
+   const auto colIdY = desc.FindLogicalColumnId(desc.FindFieldId("y"), 0, 0);
 
-   const auto &desc = ntuple->GetDescriptor();
-   EXPECT_EQ(3u, desc.GetNClusters());
-   const auto &cd1 = desc.GetClusterDescriptor(desc.FindClusterId(0, 0));
-   const auto &pr1 = cd1.GetPageRange(0);
-   ASSERT_EQ(2u, pr1.fPageInfos.size());
-   EXPECT_EQ(2u, pr1.fPageInfos[0].fNElements);
-   EXPECT_EQ(1u, pr1.fPageInfos[1].fNElements);
-   const auto &cd2 = desc.GetClusterDescriptor(desc.FindNextClusterId(cd1.GetId()));
-   const auto &pr2 = cd2.GetPageRange(0);
-   ASSERT_EQ(1u, pr2.fPageInfos.size());
-   EXPECT_EQ(2u, pr2.fPageInfos[0].fNElements);
-   const auto &cd3 = desc.GetClusterDescriptor(desc.FindNextClusterId(cd2.GetId()));
-   const auto &pr3 = cd3.GetPageRange(0);
-   ASSERT_EQ(2u, pr3.fPageInfos.size());
-   EXPECT_EQ(2u, pr3.fPageInfos[0].fNElements);
-   EXPECT_EQ(1u, pr3.fPageInfos[1].fNElements);
-}
-
-TEST(RNTuple, PageFillingTail)
-{
-   FileRaii fileGuard("test_ntuple_page_filling_tail.root");
-
-   {
-      auto model = RNTupleModel::Create();
-      auto fldX = model->MakeField<std::int16_t>("x");
-
-      RNTupleWriteOptions options;
-      // Exercises the tail page optimization with pages to hold 4 elements
-      options.SetApproxUnzippedPageSize(8);
-      options.SetUseTailPageOptimization(true);
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath(), options);
-      for (std::int16_t i = 0; i < 16; ++i) {
-         *fldX = i;
-         ntuple->Fill();
-         // Trigger tail page optimization; the page has 4 + 1 elements
-         if (i == 4)
-            ntuple->CommitCluster();
-         // Trigger another tail page optimization: the first page in this cluster had 4 elements and was flushed
-         // automatically; the second page has 4 + 1 elements
-         if (i == 13)
-            ntuple->CommitCluster();
-      }
-   }
-
-   auto ntuple = RNTupleReader::Open("ntpl", fileGuard.GetPath());
-   auto viewX = ntuple->GetView<std::int16_t>("x");
-   ASSERT_EQ(16u, ntuple->GetNEntries());
-   for (std::int16_t i = 0; i < 16; ++i)
-      EXPECT_EQ(i, viewX(i));
-
-   const auto &desc = ntuple->GetDescriptor();
-   EXPECT_EQ(3u, desc.GetNClusters());
-   const auto &cd1 = desc.GetClusterDescriptor(desc.FindClusterId(0, 0));
-   const auto &pr1 = cd1.GetPageRange(0);
-   ASSERT_EQ(1u, pr1.fPageInfos.size());
-   EXPECT_EQ(5u, pr1.fPageInfos[0].fNElements);
-   const auto &cd2 = desc.GetClusterDescriptor(desc.FindNextClusterId(cd1.GetId()));
-   const auto &pr2 = cd2.GetPageRange(0);
-   ASSERT_EQ(2u, pr2.fPageInfos.size());
-   EXPECT_EQ(4u, pr2.fPageInfos[0].fNElements);
-   EXPECT_EQ(5u, pr2.fPageInfos[1].fNElements);
-   const auto &cd3 = desc.GetClusterDescriptor(desc.FindNextClusterId(cd2.GetId()));
-   const auto &pr3 = cd3.GetPageRange(0);
-   ASSERT_EQ(1u, pr3.fPageInfos.size());
-   EXPECT_EQ(2u, pr3.fPageInfos[0].fNElements);
-}
-
-TEST(RNTuple, PageFillingTailOff)
-{
-   FileRaii fileGuard("test_ntuple_page_filling_tail_off.root");
-
-   {
-      auto model = RNTupleModel::Create();
-      auto fldX = model->MakeField<std::int16_t>("x");
-
-      RNTupleWriteOptions options;
-      // Exercises the (disabled) tail page optimization with pages to hold 4 elements
-      options.SetApproxUnzippedPageSize(8);
-      options.SetUseTailPageOptimization(false);
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath(), options);
-      for (std::int16_t i = 0; i < 16; ++i) {
-         *fldX = i;
-         ntuple->Fill();
-         // Tail page optimization should not be active: the pages have 4 and 1 elements
-         if (i == 4)
-            ntuple->CommitCluster();
-         // Two pages of 4 elements and one undersized tail page with only 1 element
-         if (i == 13)
-            ntuple->CommitCluster();
-      }
-   }
-
-   auto ntuple = RNTupleReader::Open("ntpl", fileGuard.GetPath());
-   auto viewX = ntuple->GetView<std::int16_t>("x");
-   ASSERT_EQ(16u, ntuple->GetNEntries());
-   for (std::int16_t i = 0; i < 16; ++i)
-      EXPECT_EQ(i, viewX(i));
-
-   const auto &desc = ntuple->GetDescriptor();
-   EXPECT_EQ(3u, desc.GetNClusters());
-   const auto &cd1 = desc.GetClusterDescriptor(desc.FindClusterId(0, 0));
-   const auto &pr1 = cd1.GetPageRange(0);
-   ASSERT_EQ(2u, pr1.fPageInfos.size());
-   EXPECT_EQ(4u, pr1.fPageInfos[0].fNElements);
-   EXPECT_EQ(1u, pr1.fPageInfos[1].fNElements);
-   const auto &cd2 = desc.GetClusterDescriptor(desc.FindNextClusterId(cd1.GetId()));
-   const auto &pr2 = cd2.GetPageRange(0);
-   ASSERT_EQ(3u, pr2.fPageInfos.size());
-   EXPECT_EQ(4u, pr2.fPageInfos[0].fNElements);
-   EXPECT_EQ(4u, pr2.fPageInfos[1].fNElements);
-   EXPECT_EQ(1u, pr2.fPageInfos[2].fNElements);
-   const auto &cd3 = desc.GetClusterDescriptor(desc.FindNextClusterId(cd2.GetId()));
-   const auto &pr3 = cd3.GetPageRange(0);
-   ASSERT_EQ(1u, pr3.fPageInfos.size());
-   EXPECT_EQ(2u, pr3.fPageInfos[0].fNElements);
+   const auto &clusterDesc = desc.GetClusterDescriptor(desc.FindClusterId(0, 0));
+   const auto &prX = clusterDesc.GetPageRange(colIdX);
+   const auto &prY = clusterDesc.GetPageRange(colIdY);
+   ASSERT_EQ(1u, prX.fPageInfos.size());
+   EXPECT_EQ(6u, prX.fPageInfos[0].fNElements);
+   ASSERT_EQ(2u, prY.fPageInfos.size());
+   EXPECT_EQ(3u, prY.fPageInfos[0].fNElements);
+   EXPECT_EQ(3u, prY.fPageInfos[1].fNElements);
 }
 
 TEST(RNTuple, PageFillingString)
@@ -340,10 +233,10 @@ TEST(RNTuple, PageFillingString)
       auto fldX = model->MakeField<std::string>("x");
 
       RNTupleWriteOptions options;
-      options.SetApproxUnzippedPageSize(16);
-      options.SetUseTailPageOptimization(true);
+      options.SetInitialNElementsPerPage(1);
+      options.SetMaxUnzippedPageSize(16);
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath(), options);
-      // 1 page: 17 characters
+      // 2 page: 16 + 1 characters
       *fldX = "01234567890123456";
       ntuple->Fill();
       ntuple->CommitCluster();
@@ -375,8 +268,9 @@ TEST(RNTuple, PageFillingString)
    EXPECT_EQ(4u, desc.GetNClusters());
    const auto &cd1 = desc.GetClusterDescriptor(desc.FindClusterId(1, 0));
    const auto &pr1 = cd1.GetPageRange(1);
-   ASSERT_EQ(1u, pr1.fPageInfos.size());
-   EXPECT_EQ(17u, pr1.fPageInfos[0].fNElements);
+   ASSERT_EQ(2u, pr1.fPageInfos.size());
+   EXPECT_EQ(16u, pr1.fPageInfos[0].fNElements);
+   EXPECT_EQ(1u, pr1.fPageInfos[1].fNElements);
    const auto &cd2 = desc.GetClusterDescriptor(desc.FindNextClusterId(cd1.GetId()));
    const auto &pr2 = cd2.GetPageRange(1);
    ASSERT_EQ(1u, pr2.fPageInfos.size());
@@ -441,6 +335,7 @@ TEST(RPageSinkBuf, Basics)
    {
       RNTupleWriteOptions options;
       options.SetEnablePageChecksums(false); // disable same page merging
+      options.SetMaxUnzippedPageSize(32 * 1024);
       options.SetUseBufferedWrite(true);
       TestModel bufModel;
       // PageSinkBuf wraps a concrete page source
@@ -590,7 +485,8 @@ TEST(RPageSinkBuf, ParallelZipIMT)
          auto wrPt = model->MakeField<float>("pt", 42.0);
 
          RNTupleWriteOptions options;
-         options.SetApproxUnzippedPageSize(8);
+         options.SetInitialNElementsPerPage(1);
+         options.SetMaxUnzippedPageSize(8);
          options.SetUseBufferedWrite(true);
          auto writer =
             ROOT::Experimental::RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath(), options);
@@ -614,7 +510,8 @@ TEST(RPageSinkBuf, ParallelZipIMT)
 TEST(RPageSinkBuf, CommitSealedPageV)
 {
    RNTupleWriteOptions options;
-   options.SetApproxUnzippedPageSize(16);
+   options.SetInitialNElementsPerPage(1);
+   options.SetMaxUnzippedPageSize(16);
 
    {
       std::unique_ptr<RPageSink> sink(new RPageSinkMock(options));
@@ -784,7 +681,7 @@ TEST(RPageStorageFile, MultiKeyBlob_Pages)
    constexpr auto kMaxKeySize = 1024;
 
    auto optionsComp = RNTupleWriteOptions{};
-   optionsComp.SetApproxUnzippedPageSize(kMaxKeySize * 10);
+   optionsComp.SetMaxUnzippedPageSize(kMaxKeySize * 10);
    RNTupleWriteOptionsManip::SetMaxKeySize(optionsComp, kMaxKeySize);
    auto optionsUcmp = optionsComp.Clone();
    optionsUcmp->SetCompression(0);
@@ -858,7 +755,8 @@ TEST(RPageStorageFile, MultiKeyBlob_PageList)
    constexpr auto kMaxKeySize = 1024;
 
    auto optionsComp = RNTupleWriteOptions{};
-   optionsComp.SetApproxUnzippedPageSize(128);
+   optionsComp.SetInitialNElementsPerPage(16);
+   optionsComp.SetMaxUnzippedPageSize(128);
    RNTupleWriteOptionsManip::SetMaxKeySize(optionsComp, kMaxKeySize);
    auto optionsUcmp = optionsComp.Clone();
    optionsUcmp->SetCompression(0);

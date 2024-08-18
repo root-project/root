@@ -40,22 +40,15 @@ ROOT::Experimental::Internal::RColumn::~RColumn()
 void ROOT::Experimental::Internal::RColumn::ConnectPageSink(DescriptorId_t fieldId, RPageSink &pageSink,
                                                             NTupleSize_t firstElementIndex)
 {
-   fPageSink = &pageSink; // the page sink initializes fWritePage on AddColumn
+   if (pageSink.GetWriteOptions().GetInitialNElementsPerPage() * fElement->GetSize() >
+       pageSink.GetWriteOptions().GetMaxUnzippedPageSize()) {
+      throw RException(R__FAIL("initial number of elements per page too small"));
+   }
+
+   fPageSink = &pageSink;
    fFirstElementIndex = firstElementIndex;
    fHandleSink = fPageSink->AddColumn(fieldId, *this);
-   fApproxNElementsPerPage = fPageSink->GetWriteOptions().GetApproxUnzippedPageSize() / fElement->GetSize();
-   if (fApproxNElementsPerPage < 2)
-      throw RException(R__FAIL("page size too small for writing"));
-   // We now have 0 < fApproxNElementsPerPage / 2 < fApproxNElementsPerPage
-
-   if (pageSink.GetWriteOptions().GetUseTailPageOptimization()) {
-      // Allocate two pages that are larger by 50% to accomodate merging a small tail page.
-      fWritePage[0] = fPageSink->ReservePage(fHandleSink, fApproxNElementsPerPage + fApproxNElementsPerPage / 2);
-      fWritePage[1] = fPageSink->ReservePage(fHandleSink, fApproxNElementsPerPage + fApproxNElementsPerPage / 2);
-   } else {
-      // Allocate only a single page; small tail pages will not be merged.
-      fWritePage[0] = fPageSink->ReservePage(fHandleSink, fApproxNElementsPerPage);
-   }
+   fWritePage = fPageSink->ReservePage(fHandleSink, fPageSink->GetWriteOptions().GetInitialNElementsPerPage());
 }
 
 void ROOT::Experimental::Internal::RColumn::ConnectPageSource(DescriptorId_t fieldId, RPageSource &pageSource)
@@ -72,23 +65,12 @@ void ROOT::Experimental::Internal::RColumn::ConnectPageSource(DescriptorId_t fie
 
 void ROOT::Experimental::Internal::RColumn::Flush()
 {
-   auto otherIdx = 1 - fWritePageIdx;
-   if (fWritePage[fWritePageIdx].IsEmpty() && fWritePage[otherIdx].IsEmpty())
+   if (fWritePage.GetNElements() == 0)
       return;
 
-   if ((fWritePage[fWritePageIdx].GetNElements() < fApproxNElementsPerPage / 2) && !fWritePage[otherIdx].IsEmpty()) {
-      // Small tail page: merge with previously used page
-      auto &thisPage = fWritePage[fWritePageIdx];
-      R__ASSERT(fWritePage[otherIdx].GetMaxElements() >= fWritePage[otherIdx].GetNElements() + thisPage.GetNElements());
-      void *dst = fWritePage[otherIdx].GrowUnchecked(thisPage.GetNElements());
-      memcpy(dst, thisPage.GetBuffer(), thisPage.GetNBytes());
-      thisPage.Reset(0);
-      std::swap(fWritePageIdx, otherIdx);
-   }
-
-   R__ASSERT(fWritePage[otherIdx].IsEmpty());
-   fPageSink->CommitPage(fHandleSink, fWritePage[fWritePageIdx]);
-   fWritePage[fWritePageIdx].Reset(fNElements);
+   fPageSink->CommitPage(fHandleSink, fWritePage);
+   fWritePage = fPageSink->ReservePage(fHandleSink, fPageSink->GetWriteOptions().GetInitialNElementsPerPage());
+   fWritePage.Reset(fNElements);
 }
 
 void ROOT::Experimental::Internal::RColumn::CommitSuppressed()
