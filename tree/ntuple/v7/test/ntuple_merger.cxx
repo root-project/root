@@ -34,6 +34,7 @@ TEST(RPageStorage, ReadSealedPages)
    {
       RNTupleWriteOptions options;
       options.SetCompression(0);
+      options.SetMaxUnzippedPageSize(4096);
       auto writer = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath(), options);
       writer->Fill();
       writer->CommitCluster();

@@ -62,7 +62,7 @@ TEST(RNTuple, BulkView)
    auto eltsPerPage = 10'000;
    {
       RNTupleWriteOptions opt;
-      opt.SetApproxUnzippedPageSize(eltsPerPage * sizeof(float));
+      opt.SetMaxUnzippedPageSize(eltsPerPage * sizeof(float));
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "myNTuple",
          fileGuard.GetPath(), opt);
       for (int i = 0; i < 100'000; i++) {
@@ -101,7 +101,7 @@ TEST(RNTuple, BulkCollectionView)
    auto pageSize = 80 * 1024;
    {
       RNTupleWriteOptions opt;
-      opt.SetApproxUnzippedPageSize(pageSize);
+      opt.SetMaxUnzippedPageSize(pageSize);
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "myNTuple",
          fileGuard.GetPath(), opt);
       for (int i = 0; i < 100'000; i++) {

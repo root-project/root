@@ -49,19 +49,11 @@ private:
    RPageSource *fPageSource = nullptr;
    RPageStorage::ColumnHandle_t fHandleSink;
    RPageStorage::ColumnHandle_t fHandleSource;
-   /// A set of open pages into which new elements are being written. The pages are used
-   /// in rotation. If tail page optimization is enabled, they are 50% bigger than the target size
-   /// given by the write options. The current page is filled until the target size, but it is only
-   /// committed once the other write page is filled at least 50%. If a flush occurs earlier, a
-   /// slightly oversized, single page will be committed.
-   /// Without tail page optimization, only one page is allocated equal to the target size.
-   RPage fWritePage[2];
-   /// Index of the current write page
-   int fWritePageIdx = 0;
-   /// For writing, the targeted number of elements, given by `fApproxNElementsPerPage` (in the write options) and the
-   /// element size. We ensure this value to be >= 2 in Connect() so that we have meaningful "page full" and "page half
-   /// full" events when writing the page.
-   std::uint32_t fApproxNElementsPerPage = 0;
+   /// The page into which new elements are being written. The page will initially be small
+   /// (just enough to hold RNTupleWriteOptions::fInitialNElementsPerPage elements) and expand as needed and
+   /// as memory for page buffers is still available (RNTupleWriteOptions::fPageBufferBudget) or the maximum page
+   /// size is reached (RNTupleWriteOptions::fMaxUnzippedPageSize).
+   RPage fWritePage;
    /// The number of elements written resp. available in the column
    NTupleSize_t fNElements = 0;
    /// The currently mapped page for reading
@@ -82,37 +74,26 @@ private:
 
    RColumn(EColumnType type, std::uint32_t columnIndex, std::uint16_t representationIndex);
 
-   /// Used in Append() and AppendV() to handle the case when the main page reached the target size.
-   /// If tail page optimization is enabled, switch the pages; the other page has been flushed when
-   /// the main page reached 50%.
-   /// Without tail page optimization, flush the current page to make room for future writes.
+   /// Used when trying to append to a full write page. If possible, expand the page. Otherwise, flush and reset
+   /// to the minimal size.
    void HandleWritePageIfFull()
    {
-      if (R__likely(fWritePage[fWritePageIdx].GetNElements() < fApproxNElementsPerPage))
-         return;
-
-      auto otherIdx = 1 - fWritePageIdx; // == (fWritePageIdx + 1) % 2
-      if (fWritePage[otherIdx].IsNull()) {
-         // There is only this page; we have to flush it now to make room for future writes.
-         fPageSink->CommitPage(fHandleSink, fWritePage[fWritePageIdx]);
-         fWritePage[fWritePageIdx].Reset(fNElements);
-      } else {
-         fWritePageIdx = otherIdx;
-         R__ASSERT(fWritePage[fWritePageIdx].IsEmpty());
-         fWritePage[fWritePageIdx].Reset(fNElements);
+      // TODO(jblomer): take into account memory budget
+      auto newMaxElements = fWritePage.GetMaxElements() * 2;
+      if (newMaxElements * fElement->GetSize() > fPageSink->GetWriteOptions().GetMaxUnzippedPageSize()) {
+         newMaxElements = fPageSink->GetWriteOptions().GetMaxUnzippedPageSize() / fElement->GetSize();
       }
-   }
 
-   /// When the main write page surpasses the 50% fill level, the (full) shadow write page gets flushed
-   void FlushShadowWritePage()
-   {
-      auto otherIdx = 1 - fWritePageIdx;
-      if (fWritePage[otherIdx].IsEmpty())
-         return;
-      fPageSink->CommitPage(fHandleSink, fWritePage[otherIdx]);
-      // Mark the page as flushed; the rangeFirst is zero for now but will be reset to
-      // fNElements in SwapWritePagesIfFull() when the pages swap
-      fWritePage[otherIdx].Reset(0);
+      if (newMaxElements == fWritePage.GetMaxElements()) {
+         // Maximum page size reached, flush and reset
+         Flush();
+      } else {
+         auto expandedPage = fPageSink->ReservePage(fHandleSink, newMaxElements);
+         memcpy(expandedPage.GetBuffer(), fWritePage.GetBuffer(), fWritePage.GetNBytes());
+         expandedPage.Reset(fNElements);
+         expandedPage.GrowUnchecked(fWritePage.GetNElements());
+         fWritePage = std::move(expandedPage);
+      }
    }
 
 public:
@@ -137,46 +118,22 @@ public:
 
    void Append(const void *from)
    {
-      void *dst = fWritePage[fWritePageIdx].GrowUnchecked(1);
-
-      if (fWritePage[fWritePageIdx].GetNElements() == fApproxNElementsPerPage / 2) {
-         FlushShadowWritePage();
+      if (fWritePage.GetNElements() == fWritePage.GetMaxElements()) {
+         HandleWritePageIfFull();
       }
+
+      void *dst = fWritePage.GrowUnchecked(1);
 
       std::memcpy(dst, from, fElement->GetSize());
       fNElements++;
-
-      HandleWritePageIfFull();
    }
 
    void AppendV(const void *from, std::size_t count)
    {
-      // We might not have enough space in the current page. In this case, fall back to one by one filling.
-      if (fWritePage[fWritePageIdx].GetNElements() + count > fApproxNElementsPerPage) {
-         // TODO(jblomer): use (fewer) calls to AppendV to write the data page-by-page
-         for (unsigned i = 0; i < count; ++i) {
-            Append(static_cast<const unsigned char *>(from) + fElement->GetSize() * i);
-         }
-         return;
+      // TODO(jblomer): optimize
+      for (std::size_t i = 0; i < count; ++i) {
+         Append(static_cast<const unsigned char *>(from) + fElement->GetSize() * i);
       }
-
-      // The check for flushing the shadow page is more complicated than for the Append() case
-      // because we don't necessarily fill up to exactly fApproxNElementsPerPage / 2 elements;
-      // we might instead jump over the 50% fill level.
-      // This check should be done before calling `RPage::GrowUnchecked()` as the latter affects the return value of
-      // `RPage::GetNElements()`.
-      if ((fWritePage[fWritePageIdx].GetNElements() < fApproxNElementsPerPage / 2) &&
-          (fWritePage[fWritePageIdx].GetNElements() + count >= fApproxNElementsPerPage / 2)) {
-         FlushShadowWritePage();
-      }
-
-      void *dst = fWritePage[fWritePageIdx].GrowUnchecked(count);
-
-      std::memcpy(dst, from, fElement->GetSize() * count);
-      fNElements += count;
-
-      // Note that by the very first check in AppendV, we cannot have filled more than fApproxNElementsPerPage elements
-      HandleWritePageIfFull();
    }
 
    void Read(const NTupleSize_t globalIndex, void *to)

@@ -133,7 +133,8 @@ TEST(RNTuple, DISABLED_Limits_ManyPages)
       auto id = model->MakeField<int>("id");
       RNTupleWriteOptions options;
       // Two elements per page.
-      options.SetApproxUnzippedPageSize(8);
+      options.SetInitialNElementsPerPage(1);
+      options.SetMaxUnzippedPageSize(8);
 
       auto writer = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath(), options);
       for (int i = 0; i < NumEntries; i++) {
@@ -173,7 +174,8 @@ TEST(RNTuple, DISABLED_Limits_ManyPagesOneEntry)
       auto ids = model->MakeField<std::vector<int>>("ids");
       RNTupleWriteOptions options;
       // Four elements per page (must fit two 64-bit indices!)
-      options.SetApproxUnzippedPageSize(16);
+      options.SetInitialNElementsPerPage(1);
+      options.SetMaxUnzippedPageSize(16);
 
       auto writer = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath(), options);
       for (int i = 0; i < NumElements; i++) {
@@ -218,7 +220,7 @@ TEST(RNTuple, DISABLED_Limits_LargePage)
       static constexpr std::size_t Size = NumElements * sizeof(std::uint64_t);
       options.SetMaxUnzippedClusterSize(Size);
       options.SetApproxZippedClusterSize(Size);
-      options.SetApproxUnzippedPageSize(Size);
+      options.SetMaxUnzippedPageSize(Size);
       options.SetUseBufferedWrite(false);
 
       auto writer = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath(), options);
@@ -264,7 +266,7 @@ TEST(RNTuple, DISABLED_Limits_LargePageOneEntry)
       static constexpr std::size_t Size = NumElements * sizeof(int);
       options.SetMaxUnzippedClusterSize(Size);
       options.SetApproxZippedClusterSize(Size);
-      options.SetApproxUnzippedPageSize(Size);
+      options.SetMaxUnzippedPageSize(Size);
 
       auto writer = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath(), options);
       for (int i = 0; i < NumElements; i++) {
