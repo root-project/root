@@ -12,6 +12,20 @@
 ##
 ## We compare the approach of using the likelihood ratio trick to morphing.
 ##
+## An introduction of SBI can be found in https://arxiv.org/pdf/2010.06439.
+##
+## A short recap:
+## The idea of SBI is to fit a surrogate model to the data, in order to really
+## learn the likelihood function instead of calculating it. Therefore, a classifier is trained to discriminate between
+## samples from a target distribution (here the Gaussian) $$x\sim p(x|\theta)$$ and a reference distribution (here the Uniform)
+## $$x\sim p_{ref}(x|\theta)$$.
+##
+## The output of the classifier $$\hat{s}(\theta)$$ is a monotonic function of the likelihood ration and can be turned into an estimate of the likelihood ratio
+## via $$\hat{r}(\theta)=\frac{1-\hat{s}(\theta)}{\hat{s}(\theta)}.$$ 
+## This is called the likelihood ratio trick.
+##
+## In the end we compare the negative logarithmic likelihoods of the learned, morphed and analytical likelihood with minuit and as a plot.
+##
 ## \macro_image
 ## \macro_code
 ## \macro_output
@@ -56,14 +70,6 @@ def morphing(setting):
 
         # Add the pdf to the grid
         grid.addPdf(workspace[f"histpdf{i}"], i)
-
-    # Uncomment to see input plots
-    # frame1 = x_var.frame()
-    # for i in range(n_grid):
-    #    workspace[f"histpdf{i}"].plotOn(frame1)
-    # c0 = ROOT.TCanvas()
-    # frame1.Draw()
-    # input() # wait for user input to proceed
 
     # Create the morphing and add it to the workspace
     morph_func = ROOT.RooMomentMorphFuncND("morph_func", "morph_func", [mu_var], [x_var], grid, setting)
@@ -186,7 +192,7 @@ llhr_calc = ROOT.RooFormulaVar("llhr_calc", "x[0] / (x[0] + x[1])", [gauss, unif
 # Create the exact negative log likelihood functions for Gaussian model
 nll_gauss = gauss.createNLL(obs_data)
 
-# Create the NLL based on the template morphing pdf
+# Create the learned NLL based on the 
 nllr_learned = ROOT.RooFit.bindFunction("MyBinFunc", compute_log_likelihood_sum, mu_var)
 
 # Compute the morphed nll
@@ -194,36 +200,31 @@ morphing(ROOT.RooMomentMorphFuncND.Linear)
 nll_morph = workspace["morph"].createNLL(obs_data)
 
 # Plot the negative logarithmic summed likelihood
-c1 = ROOT.TCanvas()
-frame = mu_var.frame(Title="SBI vs. Morphing")
-nll_gauss.plotOn(frame, LineColor="g", ShiftToZero=True, Name="gauss")
-nllr_learned.plotOn(frame, LineColor="r", LineStyle="--", ShiftToZero=True, Name="learned")
-nll_morph.plotOn(frame, LineColor="c", ShiftToZero=True, Name="morphed")
-frame.Draw()
-
-# Create a legend and add entries
-legend = ROOT.TLegend(0.7, 0.7, 0.9, 0.9)  # Adjust coordinates as needed
-legend.AddEntry("gauss", "Gaussian", "l")
-legend.AddEntry("learned", "SBI", "l")
-legend.AddEntry("morphed", "Morphed", "l")
-legend.Draw()
+frame1 = mu_var.frame(Title="NLL of SBI vs. Morphing")
+nll_gauss.plotOn(frame1, LineColor="g", ShiftToZero=True, Name="gauss")
+nllr_learned.plotOn(frame1, LineColor="r", LineStyle="--", ShiftToZero=True, Name="learned")
+nll_morph.plotOn(frame1, LineColor="c", ShiftToZero=True, Name="morphed")
 
 # Plot the likelihood functions
-c2 = ROOT.TCanvas()
-frame_x = x_var.frame(Title="Learned vs analytical likelihhood function")
-llhr_learned.plotOn(frame_x, LineColor="r", LineStyle="--", Name="learned_ratio")
-llhr_calc.plotOn(frame_x, Name="exact")
-frame_x.Draw()
-# Create a legend and add entries
-legend_1 = ROOT.TLegend(0.7, 0.7, 0.9, 0.9)  # Adjust coordinates as needed
-legend_1.AddEntry("learned_ratio", "learned_ratio", "l")
-legend_1.AddEntry("exact", "exact", "l")
-legend_1.Draw()
+frame2 = x_var.frame(Title="Learned vs analytical likelihhood function")
+llhr_learned.plotOn(frame2, LineColor="r", LineStyle="--", Name="learned_ratio")
+llhr_calc.plotOn(frame2, LineColor="g", Name="exact")
 
+# Write the plots into one canvas
+c = ROOT.TCanvas("rf615_simulation_based_inference", "rf615_simulation_based_inference", 800, 400)
+c.Divide(2)
+c.cd(1)
+ROOT.gPad.SetLeftMargin(0.15)
+frame1.GetYaxis().SetTitleOffset(1.8)
+frame1.Draw()
+c.cd(2)
+ROOT.gPad.SetLeftMargin(0.15)
+frame2.GetYaxis().SetTitleOffset(1.8)
+frame2.Draw()
 
 # Compute the minimum via minuit and display the results
 for nll in [nll_gauss, nllr_learned, nll_morph]:
-    min = minimizer = ROOT.RooMinimizer(nll)
+    minimizer = ROOT.RooMinimizer(nll)
     minimizer.setErrorLevel(0.5)  # Adjust the error level in the minimization to work with likelihoods
     minimizer.setPrintLevel(-1)
     minimizer.minimize("Minuit2")
