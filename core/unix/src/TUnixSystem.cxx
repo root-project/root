@@ -4946,15 +4946,10 @@ static void GetDarwinCpuInfo(CpuInfo_t *cpuinfo, Int_t sampleTime)
 static void GetDarwinMemInfo(MemInfo_t *meminfo)
 {
    static Int_t pshift = 0;
-   static DIR *dirp;
-   vm_statistics_data_t vm_info;
-   mach_msg_type_number_t count;
-   kern_return_t kr;
-   struct dirent *dp;
-   Long64_t total, used, free, swap_total, swap_used;
 
-   count = HOST_VM_INFO_COUNT;
-   kr = host_statistics(mach_host_self(), HOST_VM_INFO, (host_info_t)&vm_info, &count);
+   mach_msg_type_number_t count = HOST_VM_INFO_COUNT;
+   vm_statistics_data_t vm_info;
+   kern_return_t kr = host_statistics(mach_host_self(), HOST_VM_INFO, (host_info_t)&vm_info, &count);
    if (kr != KERN_SUCCESS) {
       ::Error("TUnixSystem::GetDarwinMemInfo", "host_statistics: %s", mach_error_string(kr));
       return;
@@ -4964,19 +4959,13 @@ static void GetDarwinMemInfo(MemInfo_t *meminfo)
          pshift++;
    }
 
-   used =  (Long64_t)(vm_info.active_count + vm_info.inactive_count + vm_info.wire_count) << pshift;
-   free =  (Long64_t)(vm_info.free_count) << pshift;
-   total = (Long64_t)(vm_info.active_count + vm_info.inactive_count + vm_info.free_count + vm_info.wire_count) << pshift;
-
-   // Swap is available at same time as mem, so grab values here.
-   swap_used = vm_info.pageouts << pshift;
-
    // Figure out total swap. This adds up the size of the swapfiles */
-   dirp = opendir("/private/var/vm");
+   DIR *dirp = opendir("/private/var/vm");
    if (!dirp)
        return;
 
-   swap_total = 0;
+   Long64_t swap_total = 0;
+   struct dirent *dp;
    while ((dp = readdir(dirp)) != 0) {
       struct stat sb;
       char fname [MAXNAMLEN];
@@ -4990,12 +4979,21 @@ static void GetDarwinMemInfo(MemInfo_t *meminfo)
    }
    closedir(dirp);
 
+   Long64_t used =  (Long64_t)(vm_info.active_count + vm_info.inactive_count + vm_info.wire_count) << pshift;
+   Long64_t free =  (Long64_t)(vm_info.free_count) << pshift;
+   Long64_t total = (Long64_t)(vm_info.active_count + vm_info.inactive_count + vm_info.free_count + vm_info.wire_count) << pshift;
+   Long64_t avail = (Long64_t)(vm_info.inactive_count + vm_info.free_count) << pshift;
+
+   // Swap is available at same time as mem, so grab values here.
+   Long64_t swap_used = vm_info.pageouts << pshift;
+
    meminfo->fMemTotal  = (Int_t) (total >> 20);       // divide by 1024 * 1024
    meminfo->fMemUsed   = (Int_t) (used >> 20);
    meminfo->fMemFree   = (Int_t) (free >> 20);
    meminfo->fSwapTotal = (Int_t) (swap_total >> 20);
    meminfo->fSwapUsed  = (Int_t) (swap_used >> 20);
    meminfo->fSwapFree  = meminfo->fSwapTotal - meminfo->fSwapUsed;
+   meminfo->fMemAvailable = (Int_t)(avail >> 20);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
