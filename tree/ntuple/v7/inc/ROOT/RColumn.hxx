@@ -130,9 +130,22 @@ public:
 
    void AppendV(const void *from, std::size_t count)
    {
-      // TODO(jblomer): optimize
-      for (std::size_t i = 0; i < count; ++i) {
-         Append(static_cast<const unsigned char *>(from) + fElement->GetSize() * i);
+      auto src = reinterpret_cast<const unsigned char *>(from);
+      while (count > 0) {
+         std::size_t nElementsRemaining = fWritePage.GetMaxElements() - fWritePage.GetNElements();
+         if (nElementsRemaining == 0) {
+            HandleWritePageIfFull();
+            nElementsRemaining = fWritePage.GetMaxElements() - fWritePage.GetNElements();
+         }
+
+         assert(nElementsRemaining > 0);
+         auto nBatch = std::min(count, nElementsRemaining);
+
+         void *dst = fWritePage.GrowUnchecked(nBatch);
+         std::memcpy(dst, src, nBatch * fElement->GetSize());
+         src += nBatch * fElement->GetSize();
+         count -= nBatch;
+         fNElements += nBatch;
       }
    }
 
