@@ -154,7 +154,7 @@ add_library(${libname} SHARED ${cpp_sources})
 add_dependencies(${libname} ROOTPythonizationsPySources)
 
 # Set the suffix to '.so' and the prefix to 'lib'
-set_target_properties(${libname} PROPERTIES  ${ROOT_LIBRARY_PROPERTIES})
+set_target_properties(${libname} PROPERTIES ${ROOT_LIBRARY_PROPERTIES_NO_VERSION})
 if(MSVC)
   set_target_properties(${libname} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
   set_target_properties(${libname} PROPERTIES SUFFIX ".pyd")
