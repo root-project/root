@@ -141,6 +141,9 @@ float ComputeInvariantMass(RVecF pt, RVecF eta, RVecF phi, RVecF e)
 
 df = df.Define("m4l", "ComputeInvariantMass(goodlep_pt, goodlep_eta, goodlep_phi, goodlep_E)")
 
+# Save data for statistical analysis tutorial (rf618_mixture_models.py) 
+df.Snapshot("tree", ROOT.gROOT.GetTutorialDir().Data() + "/dataframe/df106_HiggsToFourLeptons.root", ["m4l", "sample_category", "weight"])
+
 # Book histograms for the four different samples: data, higgs, zz and other (this is specific to this particular analysis)
 histos = []
 for sample_category in ["data", "higgs", "zz", "other"]:
