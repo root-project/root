@@ -105,9 +105,9 @@ double ellipse_TGraph_chi2(const double *x)
   return v;
 }
 
-//
-// http://root.cern/root/html534/tutorials/fit/NumericalMinimization.C.html
-//
+///
+/// https://root.cern.ch/doc/master/NumericalMinimization_8C.html
+///
 ROOT::Math::Minimizer *ellipse_TGraph_minimize(TGraph *g)
 {
   if (!g) return nullptr; // just a precaution

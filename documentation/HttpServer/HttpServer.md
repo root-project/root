@@ -8,7 +8,7 @@ The idea of THttpServer is to provide remote http access to running ROOT applica
 
 ## Starting the HTTP server
 
-To start the http server, at any time, create an instance of the [THttpServer](https://root.cern/root/html/THttpServer.html) class like:
+To start the http server, at any time, create an instance of the [THttpServer](https://root.cern/doc/master/classTHttpServer.html) class like:
 
 ```cpp
 auto serv = new THttpServer("http:8080");

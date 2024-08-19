@@ -881,7 +881,7 @@ void TRootBrowser::InitPlugins(Option_t *opt)
          if (gSystem->Load("libGuiHtml") >= 0) {
             cmd.Form("new TGHtmlBrowser(\"%s\", gClient->GetRoot());",
                      gEnv->GetValue("Browser.StartUrl",
-                     "http://root.cern.ch/root/html/ClassIndex.html"));
+                     "https://root.cern.ch/doc/master/classes.html"));
             ExecPlugin("HTML", 0, cmd.Data(), 1);
             ++fNbInitPlugins;
          }

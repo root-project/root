@@ -3,7 +3,7 @@
 /// \notebook -nodraw
 /// Example on the usage of the multidimensional integration algorithm of MathMore
 /// Please refer to the web documentation for further details: 
-///      https://root.cern.ch/root/htmldoc/guides/users-guide/MathLibraries.html#numerical-integration
+///      https://root.cern/manual/math/#numerical-integration
 /// To execute the macro type the following:
 ///
 /// ~~~{.cpp}

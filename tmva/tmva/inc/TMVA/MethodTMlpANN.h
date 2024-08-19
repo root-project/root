@@ -10,8 +10,6 @@
  * Description:                                                                   *
  *      Implementation of interface for Root-integrated artificial neural         *
  *      network: TMultiLayerPerceptron, author: Christophe.Delaere@cern.ch        *
- *      for a manual, see                                                         *
- *      http://root.cern.ch/root/html/TMultiLayerPerceptron.html                  *
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *

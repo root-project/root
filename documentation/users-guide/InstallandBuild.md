@@ -304,7 +304,7 @@ Hist.Stats.KurtosisY       Kurtosis y
 
 
 See the reference guide documentation of **`THtml`** class at
-<http://root.cern.ch/root/htmldoc/THtml.html> for more details.
+<https://root.cern/doc/master/classTHtml.html> for more details.
 
 XHTML content charset (see
 <http://www.w3.org/TR/2002/REC-xhtml1-20020801>, default: ISO-8859-1) is

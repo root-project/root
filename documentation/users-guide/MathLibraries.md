@@ -147,7 +147,7 @@ In the namespace, **`TMath`**, a collection of free functions is provided for th
 -   geometrical functions.
 
 For more details, see the reference documentation of **`TMath`** at
-<http://root.cern.ch/root/htmldoc/TMath.html>.
+[<http://root.cern.ch/root/htmldoc/TMath.html>](https://root.cern/doc/master/namespaceTMath.html).
 
 
 ### Numerical Constants

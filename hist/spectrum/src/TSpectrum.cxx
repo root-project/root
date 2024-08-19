@@ -29,16 +29,6 @@
  2.  M.Morhac et al.: Efficient one- and two-dimensional Gold deconvolution and its application to gamma-ray spectra decomposition. Nuclear Instruments and Methods in Physics Research A 401 (1997) 385-408.
  3.  M.Morhac et al.: Identification of peaks in multidimensional coincidence gamma-ray spectra. Nuclear Instruments and Methods in Research Physics A 443(2000), 108-125.
 
- These NIM papers are also available as doc or ps files from:
-
- - [Spectrum.doc](https://root.cern/download/Spectrum.doc)
- - [SpectrumDec.ps.gz](https://root.cern/download/SpectrumDec.ps.gz)
- - [SpectrumSrc.ps.gz](https://root.cern/download/SpectrumSrc.ps.gz)
- - [SpectrumBck.ps.gz](https://root.cern/download/SpectrumBck.ps.gz)
-
- See also the
- [online documentation](https://root.cern/root/htmldoc/guides/spectrum/Spectrum.html) and
- [tutorials](https://root.cern/doc/master/group__tutorial__spectrum.html).
 */
 
 Int_t TSpectrum::fgIterations    = 3;
