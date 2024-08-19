@@ -153,7 +153,7 @@ The curious reader will have noticed that each entry in the context menu
 corresponds to a method of the class. Look for example to the menu named
 `TAxis::xaxis`. `xaxis` is the name of the object and **`TAxis`** the
 name of its class. If we look at the list of **`TAxis`** methods, for
-example in <http://root.cern.ch/root/htmldoc/TAxis.html>, we see the
+example in <https://root.cern/doc/master/classTAxis.html>, we see the
 methods `SetTimeDisplay()` and` UnZoom()`, which appear also in the
 context menu.
 
