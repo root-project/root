@@ -1001,3 +1001,11 @@ void ROOT::Experimental::Internal::RPagePersistentSink::EnableDefaultMetrics(con
       *fMetrics.MakeCounter<Detail::RNTupleTickCounter<Detail::RNTupleAtomicCounter> *>("timeCpuZip", "ns",
                                                                                         "CPU time spent compressing")});
 }
+
+ROOT::Experimental::Internal::RPage
+ROOT::Experimental::Internal::RPagePersistentSink::ReservePage(ColumnHandle_t columnHandle, std::size_t nElements)
+{
+   R__ASSERT(nElements > 0);
+   auto elementSize = columnHandle.fColumn->GetElement()->GetSize();
+   return fPageAllocator->NewPage(columnHandle.fPhysicalId, elementSize, nElements);
+}

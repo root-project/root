@@ -460,6 +460,8 @@ public:
    std::uint64_t CommitCluster(NTupleSize_t nEntries) final;
    void CommitClusterGroup() final;
    void CommitDatasetImpl() final;
+
+   RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final;
 }; // class RPagePersistentSink
 
 // clang-format off

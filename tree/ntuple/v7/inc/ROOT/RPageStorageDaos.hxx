@@ -100,8 +100,6 @@ Objects can correspond to pages or clusters of pages depending on the RNTuple-DA
 // clang-format on
 class RPageSinkDaos : public RPagePersistentSink {
 private:
-   std::unique_ptr<RPageAllocatorHeap> fPageAllocator;
-
    /// \brief Underlying DAOS container. An internal `std::shared_ptr` keep the pool connection alive.
    /// ISO C++ ensures the correct destruction order, i.e., `~RDaosContainer` is invoked first
    /// (which calls `daos_cont_close()`; the destructor for the `std::shared_ptr<RDaosPool>` is invoked
@@ -139,8 +137,6 @@ protected:
 public:
    RPageSinkDaos(std::string_view ntupleName, std::string_view uri, const RNTupleWriteOptions &options);
    ~RPageSinkDaos() override;
-
-   RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final;
 }; // class RPageSinkDaos
 
 // clang-format off

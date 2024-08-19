@@ -34,7 +34,6 @@ The RPageNullSink class is for internal testing only and can be used to measure 
 elements into pages, without actually writing them onto disk or even serializing the RNTuple headers and footers.
 */
 class RPageNullSink : public RPageSink {
-   RPageAllocatorHeap fPageAllocator{};
    DescriptorId_t fNColumns = 0;
    std::uint64_t fNBytesCurrentCluster = 0;
 
@@ -46,7 +45,7 @@ public:
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final
    {
       auto elementSize = columnHandle.fColumn->GetElement()->GetSize();
-      return fPageAllocator.NewPage(columnHandle.fPhysicalId, elementSize, nElements);
+      return fPageAllocator->NewPage(columnHandle.fPhysicalId, elementSize, nElements);
    }
 
    const RNTupleDescriptor &GetDescriptor() const final
