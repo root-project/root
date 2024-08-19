@@ -95,7 +95,8 @@ const char *String = "string";
 const char *CharStar = "CharStar";
 };
 
-TString TXMLSetup::fgNameSpaceBase = "http://root.cern/root/htmldoc/";
+const TString fgROOTDocNameSpaceBase = "https://root.cern.ch/doc/master/";
+TString TXMLSetup::fgNameSpaceBase = fgROOTDocNameSpaceBase;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// return default value for XML setup
@@ -226,9 +227,14 @@ const char *TXMLSetup::XmlClassNameSpaceRef(const TClass *cl)
 {
    TString clname = XmlConvertClassName(cl->GetName());
    fStrBuf = fgNameSpaceBase;
-   fStrBuf += clname;
-   if (fgNameSpaceBase == "http://root.cern/root/htmldoc/")
+   if (fgNameSpaceBase == fgROOTDocNameSpaceBase) {
+      fStrBuf += "class";
+      fStrBuf += clname;
       fStrBuf += ".html";
+   }
+   else {
+      fStrBuf += clname;
+   }
    return fStrBuf.Data();
 }
 
