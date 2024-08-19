@@ -46,6 +46,8 @@ protected:
    virtual void DeletePage(RPage &page) = 0;
 
 public:
+   virtual ~RPageAllocator() = default;
+
    /// Reserves memory large enough to hold nElements of the given size. The page is immediately tagged with
    /// a column id. Returns a default constructed page on out-of-memory condition.
    virtual RPage NewPage(ColumnId_t columnId, std::size_t elementSize, std::size_t nElements) = 0;
