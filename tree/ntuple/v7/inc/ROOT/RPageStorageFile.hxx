@@ -69,8 +69,6 @@ private:
       size_t fBytesPacked;
    };
 
-   std::unique_ptr<RPageAllocatorHeap> fPageAllocator;
-
    std::unique_ptr<RNTupleFileWriter> fWriter;
    /// Number of bytes committed to storage in the current cluster
    std::uint64_t fNBytesCurrentCluster = 0;
@@ -107,8 +105,6 @@ public:
    RPageSinkFile(RPageSinkFile &&) = default;
    RPageSinkFile &operator=(RPageSinkFile &&) = default;
    ~RPageSinkFile() override;
-
-   RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final;
 }; // class RPageSinkFile
 
 // clang-format off

@@ -282,9 +282,7 @@ std::uint32_t ROOT::Experimental::Internal::RDaosNTupleAnchor::GetSize()
 
 ROOT::Experimental::Internal::RPageSinkDaos::RPageSinkDaos(std::string_view ntupleName, std::string_view uri,
                                                            const RNTupleWriteOptions &options)
-   : RPagePersistentSink(ntupleName, options),
-     fPageAllocator(std::make_unique<Internal::RPageAllocatorHeap>()),
-     fURI(uri)
+   : RPagePersistentSink(ntupleName, options), fURI(uri)
 {
    static std::once_flag once;
    std::call_once(once, []() {
@@ -492,14 +490,6 @@ void ROOT::Experimental::Internal::RPageSinkDaos::WriteNTupleAnchor()
    fDaosContainer->WriteSingleAkey(
       buffer.get(), ntplSize, daos_obj_id_t{kOidLowMetadata, static_cast<decltype(daos_obj_id_t::hi)>(fNTupleIndex)},
       kDistributionKeyDefault, kAttributeKeyAnchor, kCidMetadata);
-}
-
-ROOT::Experimental::Internal::RPage
-ROOT::Experimental::Internal::RPageSinkDaos::ReservePage(ColumnHandle_t columnHandle, std::size_t nElements)
-{
-   R__ASSERT(nElements > 0);
-   auto elementSize = columnHandle.fColumn->GetElement()->GetSize();
-   return fPageAllocator->NewPage(columnHandle.fPhysicalId, elementSize, nElements);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
