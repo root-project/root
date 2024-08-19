@@ -177,6 +177,7 @@ if(NOT xrootd)
                   dataframe/df105_WBosonAnalysis.py
                   dataframe/df106_HiggsToFourLeptons.py
                   dataframe/df107_SingleTopAnalysis.py
+                  roofit/rf618_mixture_models.py # depends on df106_HiggsToFourLeptons.py
                   rcanvas/df104.py
                   rcanvas/df105.py
                   )
@@ -817,6 +818,7 @@ if(ROOT_pyroot_FOUND)
   set(pyroot-fit1-depends tutorial-pyroot-fillrandom-py)
   set(pyroot-na49view-depends tutorial-pyroot-geometry-py)
   set(roofit-rf503_wspaceread-depends tutorial-roofit-rf502_wspacewrite-py)
+  set(roofit-rf618_mixture_models-depends tutorial-dataframe-df106_HiggsToFourLeptons-py)
 
   # Avoid a race condition: make sure Python tutorial is run after C++ tutorial
   set(roofit-rf104_classfactory-depends tutorial-roofit-rf104_classfactory)

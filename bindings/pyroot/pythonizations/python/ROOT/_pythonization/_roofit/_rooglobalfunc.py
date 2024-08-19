@@ -333,11 +333,11 @@ def bindFunction(name, func, *variables):
 
     import ROOT
 
-    if len(variables) <= 4:
-        # The C++ implementation supports up to 4 inputs.
+    # use the c++ version if dealing with c++ function
+    if "cppyy" in repr(type(func)):
         return ROOT.RooFit._bindFunction(name, func, *variables)
 
-    class MyBinFunc(ROOT.RooPyBindFunction):
+    class MyBinFunc(ROOT.RooFit.Detail.RooPyBindFunction):
         def __init__(self, name, title, *variables):
             super(MyBinFunc, self).__init__(name, title, ROOT.RooArgList(*variables))
 
