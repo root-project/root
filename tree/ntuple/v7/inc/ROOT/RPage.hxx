@@ -120,6 +120,7 @@ public:
    ColumnId_t GetColumnId() const { return fColumnId; }
    /// The space taken by column elements in the buffer
    std::uint32_t GetNBytes() const { return fElementSize * fNElements; }
+   std::uint32_t GetElementSize() const { return fElementSize; }
    std::uint32_t GetNElements() const { return fNElements; }
    std::uint32_t GetMaxElements() const { return fMaxElements; }
    NTupleSize_t GetGlobalRangeFirst() const { return fRangeFirst; }
