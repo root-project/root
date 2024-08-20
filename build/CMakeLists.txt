@@ -13,6 +13,4 @@ if(WIN32)
   ROOT_EXECUTABLE(bindexplib
     win/bindexplib/bindexplib.cxx
   )
-  file(COPY win/w32pragma.h DESTINATION ${CMAKE_BINARY_DIR}/include/)
-  file(COPY win/sehmap.h DESTINATION ${CMAKE_BINARY_DIR}/include/)
 endif()
