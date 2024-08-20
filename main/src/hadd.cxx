@@ -16,6 +16,13 @@
   After that, the first sequence of positional arguments will be interpreted as the input files.
   If two sequences of positional arguments are separated by flags, hadd will emit an error and abort.
 
+  By default, any argument starting with `-` is interpreted as a flag. If you want to pass filenames
+  starting with `-` you need to pass them after `--`:
+  ```{.cpp}
+       hadd [flags] -- -file1 -file2 ...
+  ```
+  Note that in this case you need to pass ALL positional arguments after `--`.
+
   If a flag requires an argument, the argument can be specified in any of these ways:
 
      # All equally valid:
@@ -30,21 +37,27 @@
 
    The flags are as follows:
 
-  \param -a   Append to the output
-  \param -cachesize Resize the prefetching cache use to speed up I/O operations (use 0 to disable).
-  \param -d   Carry out the partial multiprocess execution in the specified directory
-  \param -dbg Enable verbosity. If -j was specified, do not not delete partial files stored inside working directory.
-  \param -experimental-io-features `<feature>` Enables the corresponding experimental feature for output trees. \see ROOT::Experimental::EIOFeatures
-  \param -f   Force overwriting of output file.
-  \param -f[0-9] Set target compression level. 0 = uncompressed, 9 = highly compressed. Default is 101 (kDefaultZLIB). You can also specify the full compression algorithm, e.g. -f505
-  \param -fk  Sets the target file to contain the baskets with the same compression as the input files (unless -O is specified). Compresses the meta data using the compression level specified in the first input or the compression setting after fk (for example 505 when using -fk505)
-  \param -ff  The compression level used is the one specified in the first input
-  \param -j   Parallelise the execution in `J` processes. If the number of processes is not specified, use the system maximum.
-  \param -k   Skip corrupt or non-existent files, do not exit
-  \param -n   Open at most `N` files at once (use 0 to request to use the system maximum)
-  \param -O   Re-optimize basket size when merging TTree 
-  \param -T   Do not merge Trees
-  \param -v   Explicitly set the verbosity level: 0 request no output, 99 is the default
+  \param -a                Append to the output
+  \param -cachesize <SIZE> Resize the prefetching cache use to speed up I/O operations (use 0 to disable).
+  \param -d <DIR>          Carry out the partial multiprocess execution in the specified directory
+  \param -dbg              Enable verbosity. If -j was specified, do not not delete partial files
+                           stored inside working directory.
+  \param -experimental-io-features <FEATURES> Enables the corresponding experimental feature for output trees.
+                                              \see ROOT::Experimental::EIOFeatures
+  \param -f            Force overwriting of output file.
+  \param -f[0-9]       Set target compression level. 0 = uncompressed, 9 = highly compressed. Default is 101
+                       (kDefaultZLIB). You can also specify the full compression algorithm, e.g. -f505.
+  \param -fk           Sets the target file to contain the baskets with the same compression as the input files
+                       (unless -O is specified). Compresses the meta data using the compression level specified 
+                       in the first input or the compression setting after fk (for example 505 when using -fk505)
+  \param -ff           The compression level used is the one specified in the first input
+  \param -j [N_JOBS]   Parallelise the execution in `J` processes. If the number of processes is not specified,
+                       use the system maximum.
+  \param -k            Skip corrupt or non-existent files, do not exit
+  \param -n <N_FILES>  Open at most `N` files at once (use 0 to request to use the system maximum)
+  \param -O            Re-optimize basket size when merging TTree 
+  \param -T            Do not merge Trees
+  \param -v [LEVEL]    Explicitly set the verbosity level: 0 request no output, 99 is the default
   \return hadd returns a status code: 0 if OK, 1 otherwise
 
   For example assume 3 files f1, f2, f3 containing histograms hn and Trees Tn
@@ -102,7 +115,7 @@
   \note By default histograms are added. However hadd does not support the case where
          histograms have their bit TH1::kIsAverage set.
 
-  \authors Rene Brun, Dirk Geppert, Sven A. Schmidt, Toby Burnett, G. Parolini
+  \authors Rene Brun, Dirk Geppert, Sven A. Schmidt, Toby Burnett
 */
 #include "Compression.h"
 #include "TClass.h"
@@ -170,6 +183,10 @@ struct HAddArgs {
 
    int fOutputArgIdx;
    int fFirstInputIdx;
+   // This is set to true if and only if the user passed `--`. In this special
+   // case, we must not stop parsing positional arguments even if we find one
+   // that starts with a `-`.
+   bool fNoFlagsAfterPositionalArguments;
 };
 
 enum class EFlagResult { kIgnored, kParsed, kErr };
@@ -444,13 +461,26 @@ static std::optional<HAddArgs> ParseArgs(int argc, char **argv)
       kParseStart,
       kParseFirstFlagGroup,
       kParseFirstPosArgGroup,
-      kParseSecondFlagGroup
+      kParseSecondFlagGroup,
    } parseState = kParseStart;
 
    for (int argIdx = 1; argIdx < argc; ++argIdx) {
       const char *argRaw = argv[argIdx];
       if (!*argRaw) continue;
-      if (argRaw[0] == '-' && argRaw[1] != '\0') {
+
+      if (!args.fNoFlagsAfterPositionalArguments && argRaw[0] == '-' && argRaw[1] != '\0') {
+         if (argRaw[1] == '-') {
+            // special case `--`: force parsing to consider all future args as positional arguments.
+            if (parseState > kParseFirstFlagGroup) {
+               Err() << "found `--`, but we've already parsed (or are still parsing) a sequence of positional arguments!"
+                  " This is not supported: you must have exactly one sequence of positional arguments, so if you"
+                  " need to use `--` make sure to pass *all* positional arguments after it.";
+               return {};
+            }
+            args.fNoFlagsAfterPositionalArguments = true;
+            continue;
+         }
+
          // parse flag
          parseState = (parseState == kParseFirstPosArgGroup) ? kParseSecondFlagGroup : kParseFirstFlagGroup;
 
@@ -499,8 +529,8 @@ static std::optional<HAddArgs> ParseArgs(int argc, char **argv)
          } else {
             Err() << "seen a positional argument '" << argRaw << "' after some flags."
                      " Positional arguments were already parsed at this point (from '" << argv[args.fOutputArgIdx]
-                     << "' onwards), so you cannot pass more."
-                     " Please regroup your positional arguments so that hadd works as you expect.\n"
+                     << "' onwards), and you can only have one sequence of them, so you cannot pass more."
+                     " Please group your positional arguments all together so that hadd works as you expect.\n"
                      "Cmdline: ";
             for (int i = 0; i < argc; ++i)
                std::cerr << argv[i] << " ";
@@ -589,7 +619,7 @@ int main(int argc, char **argv)
    // If any file can not be accessed, it will error out, unless args.fSkipErrors is true
    std::vector<std::string> allSubfiles;
    for (int a = args.fFirstInputIdx; a < argc; ++a) {
-      if (argv[a] && argv[a][0] == '-') {
+      if (!args.fNoFlagsAfterPositionalArguments && argv[a] && argv[a][0] == '-') {
          break;
       }
       if (argv[a] && argv[a][0] == '@') {
