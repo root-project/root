@@ -11,6 +11,6 @@
 
 if(WIN32)
   ROOT_EXECUTABLE(bindexplib
-    win/bindexplib/bindexplib.cxx
+    bindexplib/bindexplib.cxx
   )
 endif()
