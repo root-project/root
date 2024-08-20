@@ -403,7 +403,7 @@ foreach(opt afdsmgrd afs alien bonjour builtin_afterimage castor chirp cxx11 cxx
 endforeach()
 
 #---Deprecated options------------------------------------------------------------------------
-foreach(opt cxxmodules)
+foreach(opt cxxmodules html)
   if(${opt})
     message(DEPRECATION ">>> Option '${opt}' is deprecated and will be removed in the next release of ROOT. Please contact root-dev@cern.ch should you still need it.")
   endif()
