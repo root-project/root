@@ -140,7 +140,7 @@ public:
    RPageSinkBuf& operator=(RPageSinkBuf&&) = default;
    ~RPageSinkBuf() override;
 
-   ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) final;
+   ColumnHandle_t AddColumn(DescriptorId_t fieldId, RColumn &column) final;
 
    const RNTupleDescriptor &GetDescriptor() const final;
 

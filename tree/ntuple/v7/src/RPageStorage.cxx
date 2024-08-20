@@ -160,7 +160,7 @@ ROOT::Experimental::Internal::RPageSource::Create(std::string_view ntupleName, s
 }
 
 ROOT::Experimental::Internal::RPageStorage::ColumnHandle_t
-ROOT::Experimental::Internal::RPageSource::AddColumn(DescriptorId_t fieldId, const RColumn &column)
+ROOT::Experimental::Internal::RPageSource::AddColumn(DescriptorId_t fieldId, RColumn &column)
 {
    R__ASSERT(fieldId != kInvalidDescriptorId);
    auto physicalId =
@@ -623,7 +623,7 @@ ROOT::Experimental::Internal::RPagePersistentSink::RPagePersistentSink(std::stri
 ROOT::Experimental::Internal::RPagePersistentSink::~RPagePersistentSink() {}
 
 ROOT::Experimental::Internal::RPageStorage::ColumnHandle_t
-ROOT::Experimental::Internal::RPagePersistentSink::AddColumn(DescriptorId_t fieldId, const RColumn &column)
+ROOT::Experimental::Internal::RPagePersistentSink::AddColumn(DescriptorId_t fieldId, RColumn &column)
 {
    auto columnId = fDescriptorBuilder.GetDescriptor().GetNPhysicalColumns();
    RColumnDescriptorBuilder columnBuilder;

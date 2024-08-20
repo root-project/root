@@ -104,7 +104,7 @@ public:
    RPageSourceFriends(std::string_view ntupleName, std::span<std::unique_ptr<RPageSource>> sources);
    ~RPageSourceFriends() final;
 
-   ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) final;
+   ColumnHandle_t AddColumn(DescriptorId_t fieldId, RColumn &column) final;
    void DropColumn(ColumnHandle_t columnHandle) final;
 
    RPageRef LoadPage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex) final;

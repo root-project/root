@@ -71,7 +71,7 @@ public:
 
    const RNTupleDescriptor &GetDescriptor() const final { return fInnerSink->GetDescriptor(); }
 
-   ColumnHandle_t AddColumn(DescriptorId_t, const RColumn &) final { return {}; }
+   ColumnHandle_t AddColumn(DescriptorId_t, RColumn &) final { return {}; }
    void InitImpl(RNTupleModel &) final {}
    void UpdateSchema(const RNTupleModelChangeset &, NTupleSize_t) final
    {

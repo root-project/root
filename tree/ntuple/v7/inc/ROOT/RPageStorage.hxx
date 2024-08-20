@@ -169,7 +169,7 @@ public:
 
    struct RColumnHandle {
       DescriptorId_t fPhysicalId = kInvalidDescriptorId;
-      const RColumn *fColumn = nullptr;
+      RColumn *fColumn = nullptr;
 
       /// Returns true for a valid column handle; fColumn and fPhysicalId should always either both
       /// be valid or both be invalid.
@@ -180,7 +180,7 @@ public:
 
    /// Register a new column.  When reading, the column must exist in the ntuple on disk corresponding to the meta-data.
    /// When writing, every column can only be attached once.
-   virtual ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) = 0;
+   virtual ColumnHandle_t AddColumn(DescriptorId_t fieldId, RColumn &column) = 0;
    /// Unregisters a column.  A page source decreases the reference counter for the corresponding active column.
    /// For a page sink, dropping columns is currently a no-op.
    virtual void DropColumn(ColumnHandle_t columnHandle) = 0;
@@ -441,7 +441,7 @@ public:
    static std::unique_ptr<RPageSink> Create(std::string_view ntupleName, std::string_view location,
                                             const RNTupleWriteOptions &options = RNTupleWriteOptions());
 
-   ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) final;
+   ColumnHandle_t AddColumn(DescriptorId_t fieldId, RColumn &column) final;
 
    const RNTupleDescriptor &GetDescriptor() const final { return fDescriptorBuilder.GetDescriptor(); }
 
@@ -645,7 +645,7 @@ public:
       return RSharedDescriptorGuard(fDescriptor, fDescriptorLock);
    }
 
-   ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) override;
+   ColumnHandle_t AddColumn(DescriptorId_t fieldId, RColumn &column) override;
    void DropColumn(ColumnHandle_t columnHandle) override;
 
    /// Loads header and footer without decompressing or deserializing them. This can be used to asynchronously open
