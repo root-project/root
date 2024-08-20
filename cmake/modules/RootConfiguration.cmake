@@ -587,8 +587,8 @@ string(REGEX REPLACE "(^|[ ]*)-W[^ ]*" "" __cxxflags "${CMAKE_CXX_FLAGS}")
 string(REGEX REPLACE "(^|[ ]*)-W[^ ]*" "" __cflags "${CMAKE_C_FLAGS}")
 
 if(MSVC)
-  string(REPLACE "-I${CMAKE_SOURCE_DIR}/build/win" "" __cxxflags "${__cxxflags}")
-  string(REPLACE "-I${CMAKE_SOURCE_DIR}/build/win" "" __cflags "${__cflags}")
+  string(REPLACE "-I${CMAKE_SOURCE_DIR}/cmake/win" "" __cxxflags "${__cxxflags}")
+  string(REPLACE "-I${CMAKE_SOURCE_DIR}/cmake/win" "" __cflags "${__cflags}")
 endif()
 
 if (cxxmodules)
@@ -749,8 +749,8 @@ if(WIN32)
   configure_file(${CMAKE_SOURCE_DIR}/config/thisroot.ps1 ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.ps1 @ONLY)
   configure_file(${CMAKE_SOURCE_DIR}/config/root.rc.in ${CMAKE_BINARY_DIR}/etc/root.rc @ONLY)
   configure_file(${CMAKE_SOURCE_DIR}/config/root-manifest.xml.in ${CMAKE_BINARY_DIR}/etc/root-manifest.xml @ONLY)
-  install(FILES ${CMAKE_SOURCE_DIR}/build/win/w32pragma.h  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
-  install(FILES ${CMAKE_SOURCE_DIR}/build/win/sehmap.h  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
+  install(FILES ${CMAKE_SOURCE_DIR}/cmake/win/w32pragma.h  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
+  install(FILES ${CMAKE_SOURCE_DIR}/cmake/win/sehmap.h  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
 endif()
 
 #--Local root-configure
