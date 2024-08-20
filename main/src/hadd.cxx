@@ -2,7 +2,7 @@
   \file hadd.cxx
   \brief This program will merge compatible ROOT objects, such as histograms and Trees,
          from a list of root files and write them to a target root file.
-         In order for a ROOT object to be mergeable, it must implement TObject's Merge() function.
+         In order for a ROOT object to be mergeable, it must implement the Merge() function.
          In addition, some other non-TObjects are also mergeable (such as RNTuple).
          The target file is newly created and must not be identical to one of the source files.
 
