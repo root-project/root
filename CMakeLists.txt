@@ -619,6 +619,12 @@ if(runtime_cxxmodules)
   add_dependencies(hsimple modules_idx)
 endif()
 
+#---copy special headers required for building on Windows----------------------------------------
+if(WIN32)
+  file(COPY cmake/win/w32pragma.h DESTINATION ${CMAKE_BINARY_DIR}/include/)
+  file(COPY cmake/win/sehmap.h DESTINATION ${CMAKE_BINARY_DIR}/include/)
+endif()
+
 #---version--------------------------------------------------------------------------------------
 if(NOT WIN32)
 add_custom_target(version COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/build/unix/makeversion.py
