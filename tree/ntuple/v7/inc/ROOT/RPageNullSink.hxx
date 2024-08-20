@@ -40,7 +40,7 @@ class RPageNullSink : public RPageSink {
 public:
    RPageNullSink(std::string_view ntupleName, const RNTupleWriteOptions &options) : RPageSink(ntupleName, options) {}
 
-   ColumnHandle_t AddColumn(DescriptorId_t, const RColumn &column) final { return {fNColumns++, &column}; }
+   ColumnHandle_t AddColumn(DescriptorId_t, RColumn &column) final { return {fNColumns++, &column}; }
 
    const RNTupleDescriptor &GetDescriptor() const final
    {
