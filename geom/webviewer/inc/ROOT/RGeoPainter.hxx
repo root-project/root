@@ -29,8 +29,8 @@ public:
    ~RGeoPainter() override;
 
    void       AddSize3D(Int_t, Int_t, Int_t) override {}
-   TVirtualGeoTrack *AddTrack(Int_t, Int_t, TObject *) override { return nullptr; }
-   void       AddTrackPoint(Double_t *, Double_t *, Bool_t =kFALSE) override {}
+   TVirtualGeoTrack *AddTrack(Int_t, Int_t, TObject *) override;
+   void       AddTrackPoint(Double_t *, Double_t *, Bool_t =kFALSE) override;
    void       BombTranslation(const Double_t *, Double_t *) override {}
    void       CheckPoint(Double_t =0, Double_t =0, Double_t =0, Option_t * ="", Double_t = 0.) override {}
    void       CheckShape(TGeoShape *, Int_t, Int_t, Option_t *) override {}
