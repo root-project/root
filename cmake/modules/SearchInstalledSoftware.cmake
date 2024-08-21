@@ -13,6 +13,12 @@ include(FindPackageHandleStandardArgs)
 set(lcgpackages http://lcgpackages.web.cern.ch/lcgpackages/tarFiles/sources)
 string(REPLACE "-Werror " "" ROOT_EXTERNAL_CXX_FLAGS "${CMAKE_CXX_FLAGS} ")
 
+macro(find_package)
+  if(NOT "${ARGV0}" IN_LIST ROOT_BUILTINS)
+    _find_package(${ARGV})
+  endif()
+endmacro()
+
 #---On MacOSX, try to find frameworks after standard libraries or headers------------
 set(CMAKE_FIND_FRAMEWORK LAST)
 
@@ -1986,18 +1992,4 @@ endif()
 # Needed to run tests of the distributed RDataFrame module that use dask.
 if(test_distrdf_dask)
   find_package(Dask 2022.08.1 REQUIRED)
-endif()
-
-#------------------------------------------------------------------------------------
-# Modify find_package to ignore any ROOT builtins, such that the builtin LLVM
-# doesn't find and use system versions of the builtin dependencies. This is a
-# bit hacky, but fortunately this needs to be done only when builtins are used.
-#
-# See also discussion on GitHub: https://github.com/root-project/root/issues/8633
-if(ROOT_BUILTINS)
-  macro(find_package)
-    if(NOT "${ARGV0}" IN_LIST ROOT_BUILTINS)
-      _find_package(${ARGV})
-    endif()
-  endmacro()
 endif()
