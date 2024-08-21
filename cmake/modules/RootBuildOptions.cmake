@@ -132,6 +132,7 @@ ROOT_BUILD_OPTION(fortran OFF "Build Fortran components of ROOT")
 ROOT_BUILD_OPTION(gdml ON "Enable support for GDML (Geometry Description Markup Language)")
 ROOT_BUILD_OPTION(gnuinstall OFF "Perform installation following the GNU guidelines")
 ROOT_BUILD_OPTION(gviz OFF "Enable support for Graphviz (graph visualization software)")
+ROOT_BUILD_OPTION(html OFF "Build THtml, the legacy ROOT documentation system (deprecated)")
 ROOT_BUILD_OPTION(http ON "Enable support for HTTP server")
 ROOT_BUILD_OPTION(fcgi OFF "Enable FastCGI support in HTTP server")
 ROOT_BUILD_OPTION(imt ON "Enable support for implicit multi-threading via Intel® Thread Building Blocks (TBB)")
@@ -402,7 +403,7 @@ foreach(opt afdsmgrd afs alien bonjour builtin_afterimage castor chirp cxx11 cxx
 endforeach()
 
 #---Deprecated options------------------------------------------------------------------------
-foreach(opt cxxmodules)
+foreach(opt cxxmodules html)
   if(${opt})
     message(DEPRECATION ">>> Option '${opt}' is deprecated and will be removed in the next release of ROOT. Please contact root-dev@cern.ch should you still need it.")
   endif()
