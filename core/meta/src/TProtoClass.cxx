@@ -565,6 +565,14 @@ Int_t TProtoClass::DataMemberIndex(TClass * cl, const char * name)
    return -1;
 }
 ////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+/// \brief Find the requested TDataMember
+///
+/// \return the requested TDataMember if found
+///
+/// \param [in] cl TClass to search for the data member
+/// \param [in] index Numerical index of the object's data member
+/// \param [in] quiet Whether we should not warn about missing information (usually set to true for transient members)
 
 TDataMember * TProtoClass::FindDataMember(TClass * cl, Int_t index, bool quiet)
 {
