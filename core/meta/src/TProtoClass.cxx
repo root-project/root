@@ -461,8 +461,16 @@ TProtoClass::TProtoRealData::~TProtoRealData()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a TRealData from this, with its data member coming from dmClass.
+/// \brief Create a TRealData from this, with its data member coming from dmClass.
 /// find data member from protoclass
+///
+/// \return the created TRealData
+///
+/// \param [in] dmClass Class where the data member is declared
+/// \param [in] parent  Parent class
+/// \param [in] prevData the previous 'real' data member (might be part of another class)
+/// \param [in] prevLevel nesting level
+/// \param [in] quiet Whether we should not warn about missing information (usually set to true for transient members)
 
 TRealData* TProtoClass::TProtoRealData::CreateRealData(TClass* dmClass,
                                                        TClass* parent, TRealData *prevData, int prevLevel, bool quiet) const
