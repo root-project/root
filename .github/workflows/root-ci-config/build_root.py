@@ -58,7 +58,7 @@ def main():
 
     args = parse_args()
 
-    build_utils.log = build_utils.Tracer(args.image, args.dockeropts)
+    build_utils.log = build_utils.Tracer(args.platform, args.dockeropts)
 
     pull_request = args.head_ref and args.head_ref != args.base_ref
 
@@ -191,7 +191,6 @@ def parse_args():
     # true/false for boolean arguments instead.
     parser = argparse.ArgumentParser()
     parser.add_argument("--platform",                           help="Platform to build on")
-    parser.add_argument("--image",           default=None,      help="Container image, if any")
     parser.add_argument("--dockeropts",      default=None,      help="Extra docker options, if any")
     parser.add_argument("--incremental",     default="false",   help="Do incremental build")
     parser.add_argument("--buildtype",       default="Release", help="Release|Debug|RelWithDebInfo")

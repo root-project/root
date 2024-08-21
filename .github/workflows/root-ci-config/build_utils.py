@@ -74,9 +74,9 @@ class Tracer:
         if self.trace != "":
             if self.image:
                 print(f"""\
-Grab the image:
-$ docker run {' '.join(self.docker_opts)} -it {self.image}
-Then:
+# Grab the image and set up the python virtual environment:
+docker run {' '.join(self.docker_opts)} -it registry.cern.ch/root-ci/{self.image}:buildready
+if [ -d /py-venv/ROOT-CI/bin/ ]; then . /py-venv/ROOT-CI/bin/activate && echo PATH=$PATH >> $GITHUB_ENV; fi
 """)
             print(self.trace)
 
