@@ -190,7 +190,7 @@ struct MemInfo_t {
    MemInfo_t() : fMemTotal(0), fMemUsed(0), fMemFree(0), fMemAvailable(0), fMemCached(0), fMemBuffer(0), fMemShared(0),
                  fSwapTotal(0), fSwapUsed(0), fSwapFree(0), fSwapCached(0), fSReclaimable(0){ }
    virtual ~MemInfo_t() { }
-   ClassDef(MemInfo_t, 1); // Memory utilization information.
+   ClassDef(MemInfo_t, 2); // Memory utilization information.
 };
 
 struct ProcInfo_t {
