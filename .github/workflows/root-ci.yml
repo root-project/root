@@ -452,7 +452,6 @@ jobs:
         run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype       RelWithDebInfo
                     --platform        ${{ matrix.image }}
-                    --image           registry.cern.ch/root-ci/${{ matrix.image }}:buildready
                     --dockeropts      '--security-opt label=disable --rm'
                     --incremental     $INCREMENTAL
                     --base_ref        ${{ github.base_ref }}
