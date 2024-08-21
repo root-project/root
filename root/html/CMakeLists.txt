@@ -1,3 +1,7 @@
+if(NOT html)
+  return()
+endif()
+
 ROOTTEST_ADD_TEST(runClassInModule
                   MACRO runClassInModule.C
                   WILLFAIL

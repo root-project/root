@@ -1,5 +1,14 @@
 // Test for ROOT-8445
 int assertROOT8445() {
-  auto var = THtml::PathInfo_t::kDotFound;
+  struct Foo {
+    struct Bar {
+      enum Baz {
+        kOne,
+        kTwo,
+        kThree
+      };
+    };
+  };
+  auto var = Foo::Bar::kThree;
   return 0;
 }
