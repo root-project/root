@@ -23,6 +23,7 @@ private:
    float fepsilon = 1e-05;
    float fmomentum = 0.9;
    std::size_t ftraining_mode = 0;
+   bool fIsDynamic = false;
 
    std::string fNX;
    std::string fNScale;
@@ -31,12 +32,12 @@ private:
    std::string fNVar;
    std::string fNY;
 
-   std::vector<size_t> fShapeX;
-   std::vector<size_t> fShapeScale;
-   std::vector<size_t> fShapeB;
-   std::vector<size_t> fShapeMean;
-   std::vector<size_t> fShapeVar;
-   std::vector<size_t> fShapeY;
+   std::vector<Dim> fShapeX;
+   std::vector<Dim> fShapeScale;
+   std::vector<Dim> fShapeB;
+   std::vector<Dim> fShapeMean;
+   std::vector<Dim> fShapeVar;
+   std::vector<Dim> fShapeY;
 
    std::string fType;
 
@@ -105,30 +106,54 @@ public:
             std::runtime_error("TMVA SOFIE BatchNormalization op Input Tensor " + fNVar + " fnv is not found in model");
       }
 
-      fShapeX = model.GetTensorShape(fNX);
+      if (model.IsDynamicTensor(fNX) || model.IsInputTensor(fNX)) {
+         fShapeX = model.GetDynamicTensorShape(fNX);
+         fIsDynamic = true;
+      } else {
+         fShapeX = ConvertShapeToDim(model.GetTensorShape(fNX));
+      }
 
       if (fShapeX.size() <  2 || fShapeX.size() > 4) {
          throw
-            std::runtime_error("TMVA SOFIE BatchNormalization Op input tensor " + fNX + " fnx has wrong shape : " + ConvertShapeToString(fShapeX));
+            std::runtime_error("TMVA SOFIE BatchNormalization Op input tensor " + fNX + " fnx has wrong shape : " + ConvertDynamicShapeToString(fShapeX));
+      }
+      if (model.IsDynamicTensor(fNScale) || model.IsInputTensor(fNScale)) {
+         fShapeScale = model.GetDynamicTensorShape(fNScale);
+      } else {
+         fShapeScale = ConvertShapeToDim(model.GetTensorShape(fNScale));
       }
 
-      fShapeScale = model.GetTensorShape(fNScale);
-      fShapeB = model.GetTensorShape(fNB);
-      fShapeMean = model.GetTensorShape(fNMean);
-      fShapeVar = model.GetTensorShape(fNVar);
+      if (model.IsDynamicTensor(fNB) || model.IsInputTensor(fNB)) {
+         fShapeB = model.GetDynamicTensorShape(fNB);
+      } else {
+         fShapeB = ConvertShapeToDim(model.GetTensorShape(fNB));
+      }
+
+      if (model.IsDynamicTensor(fNMean) || model.IsInputTensor(fNMean)) {
+         fShapeMean = model.GetDynamicTensorShape(fNMean);
+      } else {
+         fShapeMean = ConvertShapeToDim(model.GetTensorShape(fNMean));
+      }
+
+      if (model.IsDynamicTensor(fNVar) || model.IsInputTensor(fNVar)) {
+         fShapeVar = model.GetDynamicTensorShape(fNVar);
+      } else {
+         fShapeVar = ConvertShapeToDim(model.GetTensorShape(fNVar));
+      }
+
       fShapeY = fShapeX;
       model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShapeY);
 
-      if (fShapeB.size() == 1) {
+      if (!fIsDynamic && fShapeB.size() == 1) {
       // Broadcast scale, bias, input_mean and input_var to shape_X
       auto original_B = model.GetInitializedTensorData(fNB);
       auto original_S = model.GetInitializedTensorData(fNScale);
       auto original_M = model.GetInitializedTensorData(fNMean);
       auto original_V = model.GetInitializedTensorData(fNVar);
-      size_t batchSize = fShapeX[0];
-      size_t channels = fShapeX[1];
-      size_t height = (fShapeX.size() > 2) ? fShapeX[2] : 1;
-      size_t width = (fShapeX.size() > 3) ? fShapeX[3] : 1;
+      size_t batchSize = fShapeX[0].dim;
+      size_t channels = fShapeX[1].dim;
+      size_t height = (fShapeX.size() > 2) ? fShapeX[2].dim : 1;
+      size_t width = (fShapeX.size() > 3) ? fShapeX[3].dim : 1;
       size_t n = batchSize * channels * height * width;
          if (fType == "float") {
             float *original_bias = static_cast<float*>(original_B.get());
@@ -170,10 +195,10 @@ public:
             model.UpdateInitializedTensor(fNScale, model.GetTensorType(fNScale), new_bias_shape, new_scale_ptr);
             model.UpdateInitializedTensor(fNMean, model.GetTensorType(fNMean), new_bias_shape, new_mean_ptr);
             model.UpdateInitializedTensor(fNVar, model.GetTensorType(fNVar), new_bias_shape, new_var_ptr);
-            fShapeB = model.GetTensorShape(fNB);
-            fShapeScale = model.GetTensorShape(fNScale);
-            fShapeMean = model.GetTensorShape(fNMean);
-            fShapeVar = model.GetTensorShape(fNVar);
+            fShapeB = model.GetDynamicTensorShape(fNB);
+            fShapeScale = model.GetDynamicTensorShape(fNScale);
+            fShapeMean = model.GetDynamicTensorShape(fNMean);
+            fShapeVar = model.GetDynamicTensorShape(fNVar);
          }
       }
    }
@@ -184,27 +209,88 @@ public:
       if (fShapeX.empty()){
          throw std::runtime_error("TMVA SOFIE Batch Normalization called to Generate without being initialized first");
       }
-
       std::stringstream out;
-      //// Batch Norm op
-      size_t batchSize = fShapeX[0];
-      size_t channels = fShapeX[1];
-      size_t height = (fShapeX.size() > 2) ? fShapeX[2] : 1;
-      size_t width = (fShapeX.size() > 3) ? fShapeX[3] : 1;
-      size_t n = batchSize * channels * height * width;
+
+      // Batch Norm op
+      auto n = ConvertDynamicShapeToLength(fShapeX);
+      if(fIsDynamic && fShapeB.size()==1) {
+        out << SP << "const size_t batchSize = " << fShapeX[0].param << ";\n";
+        out << SP << "const size_t channels = " << fShapeX[1].param << ";\n";
+        out << SP << "const size_t height = " << (fShapeX.size() > 2 ? fShapeX[2].param : std::to_string(1)) << ";\n";
+        out << SP << "const size_t width = " << (fShapeX.size() > 3 ? fShapeX[3].param : std::to_string(1)) << ";\n";
+        out << SP << "const size_t n = batchSize * channels * height * width;\n";
+
+        if (fType == "float") {
+            out << SP << "float *new_bias = new float[n];\n";
+            out << SP << "float *new_scale = new float[n];\n";
+            out << SP << "float *new_mean = new float[n];\n";
+            out << SP << "float *new_var = new float[n];\n";
+            
+            out << SP << "fTensor_" + fNMean + ".resize(n);\n";
+            out << SP << "tensor_" << fNMean << " = fTensor_" << fNMean << ".data();\n";
+            out << SP << "fTensor_" + fNB + ".resize(n);\n";
+            out << SP << "tensor_" << fNB << " = fTensor_" << fNB << ".data();\n";
+            out << SP << "fTensor_" + fNScale + ".resize(n);\n";
+            out << SP << "tensor_" << fNScale << " = fTensor_" << fNScale << ".data();\n";
+            out << SP << "fTensor_" + fNVar + ".resize(n);\n";
+            out << SP << "tensor_" << fNVar << " = fTensor_" << fNVar << ".data();\n";
+
+            out << SP << "for (size_t bs = 0; bs < batchSize; bs++) {\n";
+            out << SP << SP << "for (size_t ch = 0; ch < channels; ch++) {\n";
+            out << SP << SP << SP << "for (size_t h = 0; h < height; h++) {\n";
+            out << SP << SP << SP << SP << "for (size_t w = 0; w < width; w++) {\n";
+            out << SP << SP << SP << SP << SP << "new_bias[bs * channels * height * width + ch * height * width + h * width + w] = tensor_" << fNB << "[ch];\n";
+            out << SP << SP << SP << SP << SP << "new_scale[bs * channels * height * width + ch * height * width + h * width + w] = tensor_" << fNScale << "[ch];\n";
+            out << SP << SP << SP << SP << SP << "new_mean[bs * channels * height * width + ch * height * width + h * width + w] = tensor_" << fNMean << "[ch];\n";
+            out << SP << SP << SP << SP << SP << "new_var[bs * channels * height * width + ch * height * width + h * width + w] = tensor_" << fNVar << "[ch];\n";
+            out << SP << SP << SP << SP << "}\n";
+            out << SP << SP << SP << "}\n";
+            out << SP << SP << "}\n";
+            out << SP << "}\n";
+            out << SP << "size_t Batchoffset = channels * height * width;\n";
+            out << SP << "for (size_t bs = 1; bs < batchSize; bs++) {\n";
+            out << SP << SP << "std::copy(new_bias, new_bias + Batchoffset, new_bias + (bs * Batchoffset));\n";
+            out << SP << SP << "std::copy(new_scale, new_scale + Batchoffset, new_scale + (bs * Batchoffset));\n";
+            out << SP << SP << "std::copy(new_mean, new_mean + Batchoffset, new_mean + (bs * Batchoffset));\n";
+            out << SP << SP << "std::copy(new_var, new_var + Batchoffset, new_var + (bs * Batchoffset));\n";
+            out << SP << "}\n";
+ 
+            out << SP << "for (size_t i = 0; i < n; i++) {\n";
+            out << SP << SP << "new_var[i] = 1.0 / sqrt(new_var[i] + " + std::to_string(fepsilon) + ");\n";
+            out << SP << "}\n";
+
+            out << SP << "std::copy(new_bias, new_bias + n, tensor_" << fNB << ");\n";
+            out << SP << "std::copy(new_scale, new_scale + n, tensor_" << fNScale << ");\n";
+            out << SP << "std::copy(new_mean, new_mean + n, tensor_" << fNMean << ");\n";
+            out << SP << "std::copy(new_var, new_var + n, tensor_" << fNVar << ");\n";
+            out << SP << "delete[] new_bias;\n";
+            out << SP << "delete[] new_scale;\n";
+            out << SP << "delete[] new_mean;\n";
+            out << SP << "delete[] new_var;\n";
+        }
+      }
+      size_t batchSize = fShapeX[0].dim;
+      size_t channels = fShapeX[1].dim;
+      size_t height = (fShapeX.size() > 2) ? fShapeX[2].dim : 1;
+      size_t width = (fShapeX.size() > 3) ? fShapeX[3].dim : 1;
+      // size_t n = batchSize * channels * height * width;  
 
       //// copy X into Y
-      out << SP << "constexpr int " << OpName << "_N =" << batchSize * channels * height * width << ";\n";
+      if(fIsDynamic)
+         out << SP << "const int " << OpName << "_N = batchSize * channels * height * width;\n";
+      else
+         out << SP << "constexpr int " << OpName << "_N =" << batchSize * channels * height * width << ";\n";
       out << SP << "constexpr int "<<OpName<< "_incx = 1;\n";
       out << SP << "constexpr int "<<OpName<< "_incy = 1;\n";
+
       out << SP << "BLAS::scopy_(&" << OpName << "_N, " << "tensor_" << fNX << ", &" << OpName << "_incx," << "tensor_" << fNY << ", &" << OpName << "_incy);\n\n";
-
       //// blas saxpy (Y = -Bmean + Y)
-      out << SP << "float "<<OpName<< "_alpha = -1;\n";
-      out << SP << "BLAS::saxpy_(&" << OpName << "_N, &" << OpName << "_alpha, " << "tensor_" << fNMean << ", &" << OpName << "_incx,"
-         << "tensor_" << fNY <<", &" << OpName << "_incy);\n\n ";
 
-      //// Y *= scale*var
+      out << SP << "float "<<OpName<< "_alpha = -1;\n";
+      out << SP << SP << "BLAS::saxpy_(&" << OpName << "_N, &" << OpName << "_alpha, " << "tensor_" << fNMean << ", &" << OpName << "_incx,"
+         << "tensor_" << fNY <<", &" << OpName << "_incy);\n\n ";
+         
+      //// Y *= scale*var 
       out << SP << "for (size_t i = 0; i < " << n << "; i++) {\n";
       out << SP << SP << "tensor_" << fNY << "[i] *= tensor_" << fNScale << "[i] * tensor_" << fNVar << "[i]; \n";
       out << SP << "}\n";
@@ -215,6 +301,10 @@ public:
          << "tensor_" << fNY << ", &" << OpName << "_incy);\n\n";
 
       return out.str();
+   }
+
+   std::vector<std::string> GetStdLibs() override {
+         return { std::string("cmath") };
    }
 
    std::vector<std::string> GetBlasRoutines() { return { std::string("Copy"), std::string("Axpy") }; }
