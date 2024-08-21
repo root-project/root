@@ -585,8 +585,13 @@ set (long_running
      multicore/mp103*)
 file(GLOB long_running RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${long_running})
 #--List multithreaded tutorials to run them serially
-set (multithreaded
+set(NProcessors 4)
+set (multithreaded_all_cores
      dataframe/df10[2-7]*
+     rcanvas/df10*
+    )
+set (multithreaded
+     ${multithreaded_all_cores}
      multicore/mp103*
      tmva/TMVAMulticlass.C
      tmva/TMVA_CNN_Classification.C
@@ -596,6 +601,7 @@ set (multithreaded
      tmva/TMVA_Higgs_Classification.py
      tmva/TMVA_RNN_Classification.py
      )
+file(GLOB multithreaded_all_cores RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${multithreaded_all_cores})
 file(GLOB multithreaded RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${multithreaded})
 
 #---Loop over all tutorials and define the corresponding test---------
@@ -629,7 +635,16 @@ foreach(t ${tutorials})
   endif()
   if(${t} IN_LIST multithreaded)
     list(APPEND labels multithreaded)
+    # If this is not a TMVA tutorial, we want to limit the size of the thread 
+    # pool in case the tutorial invokes ROOT::EnableImplicitMT(), which by 
+    # default creates a thread pool of the size of the total number of cores.
+    if(${t} IN_LIST multithreaded_all_cores)
+      set(createThreadPool "-e \"ROOT::EnableImplicitMT(${NProcessors})\"")
+    endif()
+  else()
+    unset(createThreadPool)
   endif()
+
 
    # These tests on ARM64 need much more than 20 minutes - increase the timeout
    if(ROOT_ARCHITECTURE MATCHES arm64 OR ROOT_ARCHITECTURE MATCHES ppc64)
@@ -639,7 +654,7 @@ foreach(t ${tutorials})
    endif()
 
   ROOT_ADD_TEST(tutorial-${tname}
-                COMMAND ${ROOT_root_CMD} -b -l -q ${CMAKE_CURRENT_SOURCE_DIR}/${t}${${tname}-aclic}
+                COMMAND ${ROOT_root_CMD} -b -l -q ${createThreadPool} ${CMAKE_CURRENT_SOURCE_DIR}/${t}${${tname}-aclic}
                 PASSRC ${rc} FAILREGEX "Error in <" ": error:" "segmentation violation" "FROM HESSE     STATUS=FAILED"
                 LABELS ${labels}
                 DEPENDS tutorial-hsimple ${${tname}-depends}
@@ -650,7 +665,7 @@ foreach(t ${tutorials})
     # Makes sure that this doesn't run in parallel with other multithreaded tutorials, and that cmake doesn't start too
     # many other tests. That we use 4 processors is actually a lie, because IMT takes whatever it finds.
     # However, even this poor indication of MT behaviour is a good hint for cmake to reduce congestion.
-    set_tests_properties(tutorial-${tname} PROPERTIES RESOURCE_LOCK multithreaded PROCESSORS 4)
+    set_tests_properties(tutorial-${tname} PROPERTIES RESOURCE_LOCK multithreaded PROCESSORS ${NProcessors})
   endif()
 endforeach()
 
@@ -686,6 +701,8 @@ if(ROOT_pyroot_FOUND)
 
   # Copy .rootlogon.py file into the build directory. It disables graphics for the Python tutorials
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/.rootlogon.py ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
+  # Copy .enableImplicitMTWrapper.py file into the build directory. It can limit the size of the thread pool
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/.enableImplicitMTWrapper.py ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
 
   file(GLOB_RECURSE pytutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.py)
 
@@ -706,6 +723,7 @@ if(ROOT_pyroot_FOUND)
              sql/sqlfilldb.py       # same as the C++ case
              sql/sqlselect.py       # same as the C++ case
              launcher.py            # Not a tutorial
+             .enableImplicitMTWrapper.py # Not a tutorial
              )
 
   if(NOT dataframe
@@ -835,6 +853,16 @@ if(ROOT_pyroot_FOUND)
     endif()
     if(${t} IN_LIST multithreaded)
       list(APPEND labels multithreaded)
+      # If this is not a TMVA tutorial, we want to limit the size of the thread 
+      # pool in case the tutorial invokes ROOT::EnableImplicitMT(), which by 
+      # default creates a thread pool of the size of the total number of cores.
+      if(${t} IN_LIST multithreaded_all_cores)
+        set(setThreadPoolSize ".enableImplicitMTWrapper.py")
+        set(thisTestPoolSize ${NProcessors})
+      endif()
+    else()
+      unset(setThreadPoolSize)
+      unset(thisTestPoolSize)
     endif()
 
     string(REPLACE ".py" "" tname ${t})
@@ -860,7 +888,7 @@ if(ROOT_pyroot_FOUND)
     endforeach()
 
     ROOT_ADD_TEST(${tutorial_name}
-                COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/${t}
+                COMMAND ${Python3_EXECUTABLE} ${setThreadPoolSize} ${thisTestPoolSize} ${CMAKE_CURRENT_SOURCE_DIR}/${t}
                 PASSRC ${rc} FAILREGEX "Error in" ": error:" "segmentation violation"
                 LABELS ${labels}
                 DEPENDS ${${tname}-depends}
@@ -872,19 +900,19 @@ if(ROOT_pyroot_FOUND)
       # Makes sure that this doesn't run in parallel with other multithreaded tutorials, and that cmake doesn't start too
       # many other tests. That we use 4 processors is actually a lie, because IMT takes whatever it finds.
       # However, even this poor indication of MT behaviour is a good hint for cmake to reduce congestion.
-      set_tests_properties(${tutorial_name} PROPERTIES RESOURCE_LOCK multithreaded PROCESSORS 4)
+      set_tests_properties(${tutorial_name} PROPERTIES RESOURCE_LOCK multithreaded PROCESSORS ${NProcessors})
     endif()
 
     if(${t} IN_LIST distrdf_spark_tutorials)
       # Create a resource lock for the creation of a Spark cluster. This is also used in roottest.
       # Also signal 4 processors to cmake to give the tutorial some room (it uses 2 cores).
-      set_tests_properties(${tutorial_name} PROPERTIES RESOURCE_LOCK spark_resource_lock PROCESSORS 4)
+      set_tests_properties(${tutorial_name} PROPERTIES RESOURCE_LOCK spark_resource_lock PROCESSORS ${NProcessors})
     endif()
 
     if(${t} IN_LIST distrdf_dask_tutorials)
       # Create a resource lock for the creation of a Dask cluster. This is also used in roottest.
       # Also signal 4 processors to cmake to give the tutorial some room (it uses 2 cores).
-      set_tests_properties(${tutorial_name} PROPERTIES RESOURCE_LOCK dask_resource_lock PROCESSORS 4)
+      set_tests_properties(${tutorial_name} PROPERTIES RESOURCE_LOCK dask_resource_lock PROCESSORS ${NProcessors})
     endif()
 
   endforeach()
