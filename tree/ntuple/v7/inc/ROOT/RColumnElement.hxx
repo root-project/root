@@ -296,13 +296,13 @@ public:
    }
 
    /// If the on-storage layout and the in-memory layout differ, packing creates an on-disk page from an in-memory page
-   virtual void Pack(void *destination, void *source, std::size_t count) const
+   virtual void Pack(void *destination, const void *source, std::size_t count) const
    {
       std::memcpy(destination, source, count);
    }
 
    /// If the on-storage layout and the in-memory layout differ, unpacking creates a memory page from an on-storage page
-   virtual void Unpack(void *destination, void *source, std::size_t count) const
+   virtual void Unpack(void *destination, const void *source, std::size_t count) const
    {
       std::memcpy(destination, source, count);
    }
@@ -324,7 +324,7 @@ protected:
 public:
    static constexpr bool kIsMappable = (R__LITTLE_ENDIAN == 1);
 
-   void Pack(void *dst, void *src, std::size_t count) const final
+   void Pack(void *dst, const void *src, std::size_t count) const final
    {
 #if R__LITTLE_ENDIAN == 1
       RColumnElementBase::Pack(dst, src, count);
@@ -332,7 +332,7 @@ public:
       CopyBswap<sizeof(CppT)>(dst, src, count);
 #endif
    }
-   void Unpack(void *dst, void *src, std::size_t count) const final
+   void Unpack(void *dst, const void *src, std::size_t count) const final
    {
 #if R__LITTLE_ENDIAN == 1
       RColumnElementBase::Unpack(dst, src, count);
@@ -356,8 +356,11 @@ protected:
 public:
    static constexpr bool kIsMappable = false;
 
-   void Pack(void *dst, void *src, std::size_t count) const final { CastPack<NarrowT, CppT>(dst, src, count); }
-   void Unpack(void *dst, void *src, std::size_t count) const final { CastUnpack<CppT, NarrowT>(dst, src, count); }
+   void Pack(void *dst, const void *src, std::size_t count) const final { CastPack<NarrowT, CppT>(dst, src, count); }
+   void Unpack(void *dst, const void *src, std::size_t count) const final
+   {
+      CastUnpack<CppT, NarrowT>(dst, src, count);
+   }
 }; // class RColumnElementCastLE
 
 /**
@@ -375,8 +378,14 @@ protected:
 public:
    static constexpr bool kIsMappable = false;
 
-   void Pack(void *dst, void *src, std::size_t count) const final { CastSplitPack<NarrowT, CppT>(dst, src, count); }
-   void Unpack(void *dst, void *src, std::size_t count) const final { CastSplitUnpack<CppT, NarrowT>(dst, src, count); }
+   void Pack(void *dst, const void *src, std::size_t count) const final
+   {
+      CastSplitPack<NarrowT, CppT>(dst, src, count);
+   }
+   void Unpack(void *dst, const void *src, std::size_t count) const final
+   {
+      CastSplitUnpack<CppT, NarrowT>(dst, src, count);
+   }
 }; // class RColumnElementSplitLE
 
 /**
@@ -395,11 +404,11 @@ protected:
 public:
    static constexpr bool kIsMappable = false;
 
-   void Pack(void *dst, void *src, std::size_t count) const final
+   void Pack(void *dst, const void *src, std::size_t count) const final
    {
       CastDeltaSplitPack<NarrowT, CppT>(dst, src, count);
    }
-   void Unpack(void *dst, void *src, std::size_t count) const final
+   void Unpack(void *dst, const void *src, std::size_t count) const final
    {
       CastDeltaSplitUnpack<CppT, NarrowT>(dst, src, count);
    }
@@ -421,11 +430,11 @@ protected:
 public:
    static constexpr bool kIsMappable = false;
 
-   void Pack(void *dst, void *src, std::size_t count) const final
+   void Pack(void *dst, const void *src, std::size_t count) const final
    {
       CastZigzagSplitPack<NarrowT, CppT>(dst, src, count);
    }
-   void Unpack(void *dst, void *src, std::size_t count) const final
+   void Unpack(void *dst, const void *src, std::size_t count) const final
    {
       CastZigzagSplitUnpack<CppT, NarrowT>(dst, src, count);
    }
@@ -574,9 +583,9 @@ public:
    RColumnElement() : RColumnElementBase(kSize, kBitsOnStorage) {}
    bool IsMappable() const final { return kIsMappable; }
 
-   void Pack(void *dst, void *src, std::size_t count) const final
+   void Pack(void *dst, const void *src, std::size_t count) const final
    {
-      auto srcArray = reinterpret_cast<ROOT::Experimental::RColumnSwitch *>(src);
+      auto srcArray = reinterpret_cast<const ROOT::Experimental::RColumnSwitch *>(src);
       auto dstArray = reinterpret_cast<unsigned char *>(dst);
       for (std::size_t i = 0; i < count; ++i) {
          RSwitchElement element{srcArray[i].GetIndex(), srcArray[i].GetTag()};
@@ -588,9 +597,9 @@ public:
       }
    }
 
-   void Unpack(void *dst, void *src, std::size_t count) const final
+   void Unpack(void *dst, const void *src, std::size_t count) const final
    {
-      auto srcArray = reinterpret_cast<unsigned char *>(src);
+      auto srcArray = reinterpret_cast<const unsigned char *>(src);
       auto dstArray = reinterpret_cast<ROOT::Experimental::RColumnSwitch *>(dst);
       for (std::size_t i = 0; i < count; ++i) {
          RSwitchElement element;
@@ -613,8 +622,8 @@ public:
    RColumnElement() : RColumnElementBase(kSize, kBitsOnStorage) {}
    bool IsMappable() const final { return kIsMappable; }
 
-   void Pack(void *dst, void *src, std::size_t count) const final;
-   void Unpack(void *dst, void *src, std::size_t count) const final;
+   void Pack(void *dst, const void *src, std::size_t count) const final;
+   void Unpack(void *dst, const void *src, std::size_t count) const final;
 };
 
 template <>
@@ -626,9 +635,9 @@ public:
    RColumnElement() : RColumnElementBase(kSize, kBitsOnStorage) {}
    bool IsMappable() const final { return kIsMappable; }
 
-   void Pack(void *dst, void *src, std::size_t count) const final
+   void Pack(void *dst, const void *src, std::size_t count) const final
    {
-      float *floatArray = reinterpret_cast<float *>(src);
+      const float *floatArray = reinterpret_cast<const float *>(src);
       std::uint16_t *uint16Array = reinterpret_cast<std::uint16_t *>(dst);
 
       for (std::size_t i = 0; i < count; ++i) {
@@ -637,10 +646,10 @@ public:
       }
    }
 
-   void Unpack(void *dst, void *src, std::size_t count) const final
+   void Unpack(void *dst, const void *src, std::size_t count) const final
    {
       float *floatArray = reinterpret_cast<float *>(dst);
-      std::uint16_t *uint16Array = reinterpret_cast<std::uint16_t *>(src);
+      const std::uint16_t *uint16Array = reinterpret_cast<const std::uint16_t *>(src);
 
       for (std::size_t i = 0; i < count; ++i) {
          std::uint16_t val = uint16Array[i];
@@ -659,9 +668,9 @@ public:
    RColumnElement() : RColumnElementBase(kSize, kBitsOnStorage) {}
    bool IsMappable() const final { return kIsMappable; }
 
-   void Pack(void *dst, void *src, std::size_t count) const final
+   void Pack(void *dst, const void *src, std::size_t count) const final
    {
-      double *doubleArray = reinterpret_cast<double *>(src);
+      const double *doubleArray = reinterpret_cast<const double *>(src);
       std::uint16_t *uint16Array = reinterpret_cast<std::uint16_t *>(dst);
 
       for (std::size_t i = 0; i < count; ++i) {
@@ -670,10 +679,10 @@ public:
       }
    }
 
-   void Unpack(void *dst, void *src, std::size_t count) const final
+   void Unpack(void *dst, const void *src, std::size_t count) const final
    {
       double *doubleArray = reinterpret_cast<double *>(dst);
-      std::uint16_t *uint16Array = reinterpret_cast<std::uint16_t *>(src);
+      const std::uint16_t *uint16Array = reinterpret_cast<const std::uint16_t *>(src);
 
       for (std::size_t i = 0; i < count; ++i) {
          std::uint16_t val = uint16Array[i];
