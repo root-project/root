@@ -472,7 +472,7 @@ void TUnfoldDensity::RegularizeOneDistribution
    Int_t startBin=binning->GetStartBin();
    Int_t endBin=startBin+ binning->GetDistributionNumberOfBins();
    std::vector<Double_t> factor(endBin-startBin);
-   Int_t nbin=0;
+   [[maybe_unused]] Int_t nbin=0;
    for(Int_t bin=startBin;bin<endBin;bin++) {
       factor[bin-startBin]=GetDensityFactor(densityMode,bin);
       if(factor[bin-startBin] !=0.0) nbin++;
@@ -1697,7 +1697,6 @@ Double_t TUnfoldDensity::GetScanVariable
    }
    if(rhoi) {
       Double_t sum=0.0;
-      Double_t sumSquare=0.0;
       Double_t rhoMax=0.0;
       Int_t n=0;
       for(Int_t i=0;i<=rhoi->GetNbinsX()+1;i++) {
@@ -1705,7 +1704,6 @@ Double_t TUnfoldDensity::GetScanVariable
          if(c>=0.) {
             if(c>rhoMax) rhoMax=c;
             sum += c;
-            sumSquare += c*c;
             n ++;
          }
       }
