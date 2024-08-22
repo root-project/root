@@ -6,10 +6,6 @@
 
 # @author Jakob Blomer CERN
 
-if(NOT dataframe)
-  return()
-endif()
-
 ROOT_STANDARD_LIBRARY_PACKAGE(CustomStruct
                               NO_INSTALL_HEADERS
                               HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/CustomStruct.hxx
