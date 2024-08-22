@@ -135,9 +135,9 @@ std::string ROOT::Experimental::Internal::RColumnElementBase::GetTypeName(EColum
 }
 
 void ROOT::Experimental::Internal::RColumnElement<bool, ROOT::Experimental::EColumnType::kBit>::Pack(
-   void *dst, void *src, std::size_t count) const
+   void *dst, const void *src, std::size_t count) const
 {
-   bool *boolArray = reinterpret_cast<bool *>(src);
+   const bool *boolArray = reinterpret_cast<const bool *>(src);
    char *charArray = reinterpret_cast<char *>(dst);
    std::bitset<8> bitSet;
    std::size_t i = 0;
@@ -155,10 +155,10 @@ void ROOT::Experimental::Internal::RColumnElement<bool, ROOT::Experimental::ECol
 }
 
 void ROOT::Experimental::Internal::RColumnElement<bool, ROOT::Experimental::EColumnType::kBit>::Unpack(
-   void *dst, void *src, std::size_t count) const
+   void *dst, const void *src, std::size_t count) const
 {
    bool *boolArray = reinterpret_cast<bool *>(dst);
-   char *charArray = reinterpret_cast<char *>(src);
+   const char *charArray = reinterpret_cast<const char *>(src);
    std::bitset<8> bitSet;
    for (std::size_t i = 0; i < count; i += 8) {
       bitSet = charArray[i / 8];
