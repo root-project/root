@@ -133,6 +133,8 @@ public:
 /// Template specializations for C++ std::byte
 ////////////////////////////////////////////////////////////////////////////////
 
+extern template class RSimpleField<std::byte>;
+
 template <>
 class RField<std::byte> final : public RSimpleField<std::byte> {
 protected:

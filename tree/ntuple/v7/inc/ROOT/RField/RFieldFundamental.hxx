@@ -57,6 +57,8 @@ public:
 
 // bool and char are somewhat special, handle them first
 
+extern template class RSimpleField<bool>;
+
 template <>
 class RField<bool> final : public RSimpleField<bool> {
 protected:
@@ -76,6 +78,8 @@ public:
 
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
+
+extern template class RSimpleField<char>;
 
 template <>
 class RField<char> final : public RSimpleField<char> {
@@ -107,6 +111,8 @@ class RIntegralField {
    RIntegralField() = delete;
 };
 
+extern template class RSimpleField<std::int8_t>;
+
 template <>
 class RIntegralField<std::int8_t> : public RSimpleField<std::int8_t> {
 protected:
@@ -121,6 +127,8 @@ public:
 
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
+
+extern template class RSimpleField<std::uint8_t>;
 
 template <>
 class RIntegralField<std::uint8_t> : public RSimpleField<std::uint8_t> {
@@ -137,6 +145,8 @@ public:
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
+extern template class RSimpleField<std::int16_t>;
+
 template <>
 class RIntegralField<std::int16_t> : public RSimpleField<std::int16_t> {
 protected:
@@ -151,6 +161,8 @@ public:
 
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
+
+extern template class RSimpleField<std::uint16_t>;
 
 template <>
 class RIntegralField<std::uint16_t> : public RSimpleField<std::uint16_t> {
@@ -167,6 +179,8 @@ public:
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
+extern template class RSimpleField<std::int32_t>;
+
 template <>
 class RIntegralField<std::int32_t> : public RSimpleField<std::int32_t> {
 protected:
@@ -181,6 +195,8 @@ public:
 
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
+
+extern template class RSimpleField<std::uint32_t>;
 
 template <>
 class RIntegralField<std::uint32_t> : public RSimpleField<std::uint32_t> {
@@ -197,6 +213,8 @@ public:
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
+extern template class RSimpleField<std::int64_t>;
+
 template <>
 class RIntegralField<std::int64_t> : public RSimpleField<std::int64_t> {
 protected:
@@ -211,6 +229,8 @@ public:
 
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
+
+extern template class RSimpleField<std::uint64_t>;
 
 template <>
 class RIntegralField<std::uint64_t> : public RSimpleField<std::uint64_t> {
@@ -326,6 +346,8 @@ public:
 /// Template specializations for floating-point types
 ////////////////////////////////////////////////////////////////////////////////
 
+extern template class RSimpleField<float>;
+
 template <>
 class RField<float> final : public RSimpleField<float> {
 protected:
@@ -347,6 +369,8 @@ public:
 
    void SetHalfPrecision();
 };
+
+extern template class RSimpleField<double>;
 
 template <>
 class RField<double> final : public RSimpleField<double> {
@@ -370,7 +394,6 @@ public:
    // Set the column representation to 32 bit floating point and the type alias to Double32_t
    void SetDouble32();
 };
-
 } // namespace Experimental
 } // namespace ROOT
 
