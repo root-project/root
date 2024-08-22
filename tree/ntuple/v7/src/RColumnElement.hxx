@@ -708,15 +708,15 @@ public:
    void Pack(void *dst, const void *src, std::size_t count) const final
    {
       using namespace ROOT::Experimental::Internal::BitPacking;
-      
+
       R__ASSERT(GetPackedSize(count) == MinBufSize(count, fBitsOnStorage));
 
 #if R__LITTLE_ENDIAN == 0
       auto bswapped = std::make_unique<float[]>(count);
       CopyBswap<sizeof(float)>(bswapped.get(), src, count);
-      auto *srcLe = bswapped.get();
+      const auto *srcLe = bswapped.get();
 #else
-      auto *srcLe = src;
+      const auto *srcLe = reinterpret_cast<const float *>(src);
 #endif
       PackBits(dst, srcLe, count, sizeof(float), fBitsOnStorage);
    }
@@ -841,8 +841,8 @@ DECLARE_RCOLUMNELEMENT_SPEC(ROOT::Experimental::ClusterSize_t, EColumnType::kSpl
 DECLARE_RCOLUMNELEMENT_SPEC(ROOT::Experimental::ClusterSize_t, EColumnType::kSplitIndex32, 32,
                             RColumnElementDeltaSplitLE, <std::uint64_t, std::uint32_t>);
 
-void RColumnElement<bool, ROOT::Experimental::EColumnType::kBit>::Pack(void *dst, const void *src,
-                                                                       std::size_t count) const
+inline void
+RColumnElement<bool, ROOT::Experimental::EColumnType::kBit>::Pack(void *dst, const void *src, std::size_t count) const
 {
    const bool *boolArray = reinterpret_cast<const bool *>(src);
    char *charArray = reinterpret_cast<char *>(dst);
@@ -861,8 +861,8 @@ void RColumnElement<bool, ROOT::Experimental::EColumnType::kBit>::Pack(void *dst
    }
 }
 
-void RColumnElement<bool, ROOT::Experimental::EColumnType::kBit>::Unpack(void *dst, const void *src,
-                                                                         std::size_t count) const
+inline void
+RColumnElement<bool, ROOT::Experimental::EColumnType::kBit>::Unpack(void *dst, const void *src, std::size_t count) const
 {
    bool *boolArray = reinterpret_cast<bool *>(dst);
    const char *charArray = reinterpret_cast<const char *>(src);
