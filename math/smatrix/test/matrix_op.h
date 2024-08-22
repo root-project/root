@@ -70,7 +70,7 @@ void testVad(const V & v1, const V & v2, double & time, V & result) {
 template<class M>
 void testMad(const M & m1, const M & m2, double & time, M & result) {
    M mtmp = m2;
-   test::Timer t(time,"M+M ");;
+   test::Timer t(time,"M+M ");
    for (int l = 0; l < NLOOP; l++)
    {
       mtmp(0,0) = gV[l];
@@ -84,7 +84,7 @@ void testMad(const M & m1, const M & m2, double & time, M & result) {
 template<class V>
 void testVscale(const V & v1, double a, double & time, V & result) {
    V vtmp = v1;
-   test::Timer t(time,"a*V ");;
+   test::Timer t(time,"a*V ");
    for (int l = 0; l < NLOOP; l++)
    {
       vtmp[0] = gV[l];
@@ -97,7 +97,7 @@ void testVscale(const V & v1, double a, double & time, V & result) {
 template<class M>
 void testMscale(const M & m1, double a, double & time, M & result) {
    M mtmp = m1;
-   test::Timer t(time,"a*M ");;
+   test::Timer t(time,"a*M ");
    for (int l = 0; l < NLOOP; l++)
    {
       mtmp(0,0) = gV[l];
@@ -374,7 +374,7 @@ void  testInv_T2(const M & m,  double & time, M& result){
 template<class V>
 void testVad_T(const V & v1, const V & v2, double & time, V & result) {
    V vtmp = v2;
-   test::Timer t(time,"V+V ");;
+   test::Timer t(time,"V+V ");
    for (int l = 0; l < 10*NLOOP; l++)
    {
       vtmp[0] = gV[l];
@@ -386,7 +386,7 @@ void testVad_T(const V & v1, const V & v2, double & time, V & result) {
 template<class V>
 void testVscale_T(const V & v1, double a, double & time, V & result) {
    V vtmp = v1;
-   test::Timer t(time,"a*V ");;
+   test::Timer t(time,"a*V ");
    for (int l = 0; l < NLOOP; l++)
    {
       // result = a * v1;
@@ -413,7 +413,7 @@ void testATBA_T2(const A & a, const B & b, double & time, C & result) {
 template<class M>
 void testMscale_T(const M & m1, double a, double & time, M & result) {
    M mtmp = m1;
-   test::Timer t(time,"a*M ");;
+   test::Timer t(time,"a*M ");
    for (int l = 0; l < NLOOP; l++)
    {
       //result = a * m1;
@@ -483,7 +483,7 @@ void testMeq_C(const M & m, double & time, M & result) {
 template<class M>
 void testMad_C(const M & m1, const M & m2, double & time, M & result) {
    M mtmp = m2;
-   test::Timer t(time,"M+M ");;
+   test::Timer t(time,"M+M ");
    for (int l = 0; l < NLOOP; l++)
    {
       mtmp(1,1) = gV[l];
@@ -496,7 +496,7 @@ void testMad_C(const M & m1, const M & m2, double & time, M & result) {
 template<class M>
 void testMscale_C(const M & m1, double a, double & time, M & result) {
    M mtmp = m1;
-   test::Timer t(time,"a*M ");;
+   test::Timer t(time,"a*M ");
    for (int l = 0; l < NLOOP; l++)
    {
       mtmp(1,1) = gV[l];

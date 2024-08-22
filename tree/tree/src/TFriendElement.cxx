@@ -62,7 +62,7 @@ TFriendElement::TFriendElement(TTree *tree, const char *treename, const char *fi
       char *equal = strchr(temp,'=');
       if (!equal) {
          delete [] temp;
-         return;;
+         return;
       }
       *equal=0;
       fTreeName = equal+1;
@@ -99,7 +99,7 @@ TFriendElement::TFriendElement(TTree *tree, const char *treename, TFile *file)
       char *equal = strchr(temp,'=');
       if (!equal) {
          delete [] temp;
-         return;;
+         return;
       }
       *equal=0;
       fTreeName = equal+1;

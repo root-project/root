@@ -1003,7 +1003,7 @@ Bool_t TH1::Add(const TH1 *h1, Double_t c1)
 
    //   - Loop on bins (including underflows/overflows)
    Double_t factor = 1;
-   if (h1->GetNormFactor() != 0) factor = h1->GetNormFactor()/h1->GetSumOfWeights();;
+   if (h1->GetNormFactor() != 0) factor = h1->GetNormFactor()/h1->GetSumOfWeights();
    Double_t c1sq = c1 * c1;
    Double_t factsq = factor * factor;
 

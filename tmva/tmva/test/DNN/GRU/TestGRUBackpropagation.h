@@ -131,7 +131,7 @@ bool testGRUBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSize
    bool resetGateAfter = options[4];
 
    using Matrix_t   = typename Architecture::Matrix_t;
-   using Tensor_t   = typename Architecture::Tensor_t;;
+   using Tensor_t   = typename Architecture::Tensor_t;
    using GRULayer_t = TBasicGRULayer<Architecture>;
    using DenseLayer_t = TDenseLayer<Architecture>;
    using Net_t      = TDeepNet<Architecture>;

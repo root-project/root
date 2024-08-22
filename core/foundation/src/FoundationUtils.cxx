@@ -201,7 +201,7 @@ const std::string& GetEtcDir() {
 #endif
 
    const static std::string rootetcdir =
-      GetRootSys() + GetPathSeparator() + "etc" + GetPathSeparator();;
+      GetRootSys() + GetPathSeparator() + "etc" + GetPathSeparator();
    return rootetcdir;
 }
 
