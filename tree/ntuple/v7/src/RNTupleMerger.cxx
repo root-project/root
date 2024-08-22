@@ -133,6 +133,7 @@ try {
    return -1;
 }
 
+// Functor used to change the compression of a page to `options.fCompressionSettings`.
 struct RNTupleMerger::RChangeCompressionFunc {
    size_t pageIdx;
    size_t pageBufferBaseIdx;
@@ -168,7 +169,9 @@ struct RNTupleMerger::RChangeCompressionFunc {
 
 namespace {
 struct RDescriptorsComparison {
-   std::vector<const RFieldDescriptor *> fExtraDstFields, fExtraSrcFields, fCommonFields;
+   std::vector<const RFieldDescriptor *> fExtraDstFields;
+   std::vector<const RFieldDescriptor *> fExtraSrcFields;
+   std::vector<const RFieldDescriptor *> fCommonFields;
 };
 
 struct RColumnOutInfo {
@@ -176,7 +179,7 @@ struct RColumnOutInfo {
    EColumnType fColumnType;
 };
 
-// { fully.qualified.fieldName.colInputId => colOutputId }
+// { fully.qualified.fieldName.colInputId => colOutputInfo }
 using ColumnIdMap_t = std::unordered_map<std::string, RColumnOutInfo>;
 
 struct RColumnInfo {
@@ -249,7 +252,7 @@ CompareDescriptorStructure(const RNTupleDescriptor &dst, const RNTupleDescriptor
       }
 
       // Require that fields types match
-      // TODO: allow non-identical but compatible types
+      // TODO(gparolini): allow non-identical but compatible types
       const auto &srcTyName = field.fSrc->GetTypeName();
       const auto &dstTyName = field.fDst->GetTypeName();
       if (srcTyName != dstTyName) {
@@ -449,7 +452,15 @@ static void GenerateExtraDstColumns(size_t nClusterEntries, std::span<RColumnInf
 
       const auto structure = field->GetStructure();
 
-      // TODO: what about the other types?
+      if (structure == ENTupleStructure::kUnsplit) {
+         Warning("RNTuple::Merge",
+                 "Found a column associated to unsplit field %s. Merging unsplit fields is not supported, therefore "
+                 "this column will be skipped.",
+                 field->GetFieldName().c_str());
+         continue;
+      }
+
+      // NOTE: we cannot have a Record here because it has no associated columns.
       R__ASSERT(structure == ENTupleStructure::kCollection || structure == ENTupleStructure::kVariant ||
                 structure == ENTupleStructure::kLeaf);
 
@@ -458,15 +469,15 @@ static void GenerateExtraDstColumns(size_t nClusterEntries, std::span<RColumnInf
          (structure == ENTupleStructure::kCollection || field->GetNRepetitions() > 0) ? field->GetNRepetitions() : 1;
       const auto nElements = nClusterEntries * nRepetitions;
       const auto bytesOnStorage = colElement->GetPackedSize(nElements);
-      constexpr auto kPageSizeLimit = 64 * 1024; // TODO: make this an option
-      // TODO: consider coalescing the last page if its size is less than some threshold
+      constexpr auto kPageSizeLimit = 256 * 1024;
+      // TODO(gparolini): consider coalescing the last page if its size is less than some threshold
       const size_t nPages = bytesOnStorage / kPageSizeLimit + !!(bytesOnStorage % kPageSizeLimit);
       for (size_t i = 0; i < nPages; ++i) {
          const auto pageSize = (i < nPages - 1) ? kPageSizeLimit : bytesOnStorage - kPageSizeLimit * (nPages - 1);
          auto &buffer = sealedPageBuffers.emplace_back(new unsigned char[pageSize]);
 
          RPageStorage::RSealedPage sealedPage;
-         sealedPage.SetHasChecksum(false); // XXX: probably need an option to choose this
+         sealedPage.SetHasChecksum(true);
          sealedPage.SetNElements(nElements);
          sealedPage.SetBufferSize(pageSize);
          sealedPage.SetBuffer(buffer.get());
