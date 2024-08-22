@@ -1,10 +1,9 @@
 /**
   \file hadd.cxx
-  \brief This program will merge compatible ROOT objects, such as histograms and Trees,
+  \brief This program will merge compatible ROOT objects, such as histograms, Trees and RNTuples,
          from a list of root files and write them to a target root file.
          In order for a ROOT object to be mergeable, it must implement the Merge() function.
-         In addition, some other non-TObjects are also mergeable (such as RNTuple).
-         The target file is newly created and must not be identical to one of the source files.
+         The target file must not be identical to one of the source files.
 
   Syntax:
   ```{.cpp}
@@ -487,14 +486,14 @@ static std::optional<HAddArgs> ParseArgs(int argc, char **argv)
          const char *arg = argRaw + 1;
          bool validFlag = false;
 
-#define PARSE_FLAG(func, ...)                    \
-   do {                                          \
-      if (!validFlag) {                          \
-         const auto res = func(__VA_ARGS__);     \
-         if (res == EFlagResult::kErr)          \
-            return {};                           \
+#define PARSE_FLAG(func, ...)                     \
+   do {                                           \
+      if (!validFlag) {                           \
+         const auto res = func(__VA_ARGS__);      \
+         if (res == EFlagResult::kErr)            \
+            return {};                            \
          validFlag = res == EFlagResult::kParsed; \
-      }                                          \
+      }                                           \
    } while (0)
 
          PARSE_FLAG(FlagToggle, arg, "T", args.fNoTrees);
@@ -637,8 +636,13 @@ int main(int argc, char **argv)
                                << (argv[a] + 1) << std::endl;
                      if (!args.fSkipErrors)
                         return 1;
-                  } else
+                  } else if (line == targetname) {
+                     Err() << "file " << line << " cannot be both the target and an input!\n";
+                     if (!args.fSkipErrors)
+                        return 1;
+                  } else {
                      allSubfiles.emplace_back(line);
+                  }
                }
             }
          }
@@ -648,8 +652,13 @@ int main(int argc, char **argv)
             Err() << "could not validate argument \"" << line << "\" as input file " << std::endl;
             if (!args.fSkipErrors)
                return 1;
-         } else
+         } else if (line == targetname) {
+            Err() << "file " << line << " cannot be both the target and an input!\n";
+            if (!args.fSkipErrors)
+               return 1;
+         } else {
             allSubfiles.emplace_back(line);
+         }
       }
    }
    if (allSubfiles.empty()) {
