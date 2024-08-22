@@ -61,7 +61,7 @@ int testDerivation() {
   std::cout << "Result:       " << result << " +/- " << der->Error() << std::endl;
   std::cout << "Exact result: " << f1->Derivative(x0) << std::endl;
   std::cout << "EvalForward:  " << der->EvalForward(*f1, x0) << std::endl;
-  std::cout << "EvalBackward: " << der->EvalBackward(x0, step) << std::endl << std::endl;;
+  std::cout << "EvalBackward: " << der->EvalBackward(x0, step) << std::endl << std::endl;
   status += fabs(result-f1->Derivative(x0)) > ERRORLIMIT;
 
 

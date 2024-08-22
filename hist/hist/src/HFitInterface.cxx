@@ -528,7 +528,7 @@ BinData::ErrorType GetDataType(const TGraph * gr, DataOptions & fitOpt) {
       int i = 0;
       bool zeroError = true;
       while (i < gr->GetN() && zeroError) {
-         if (ey[i] > 0) zeroError = false;;
+         if (ey[i] > 0) zeroError = false;
          ++i;
       }
       if (zeroError) type = BinData::kNoError;

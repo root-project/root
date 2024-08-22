@@ -595,7 +595,7 @@ namespace RooStats {
       std::vector<std::string> sample_list;
 
       std::map< std::string, RooAbsReal*> sample_map = fChannelSampleFunctionMap[channel];
-      std::map< std::string, RooAbsReal*>::iterator itr = sample_map.begin();;
+      std::map< std::string, RooAbsReal*>::iterator itr = sample_map.begin();
       for( ; itr != sample_map.end(); ++itr) {
    sample_list.push_back( itr->first );
       }
@@ -964,7 +964,7 @@ namespace RooStats {
    // For gamma_stat_*, the sigma is named *_sigma
    std::string sigmaName;
    if( parameter.find("alpha_")!=std::string::npos ) {
-     sigmaName = "1";;
+     sigmaName = "1";
    }
    else if( parameter.find("gamma_stat_")!=std::string::npos ) {
      sigmaName = parameter + "_sigma";

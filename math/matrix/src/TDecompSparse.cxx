@@ -116,7 +116,7 @@ Int_t TDecompSparse::NonZerosUpperTriang(const TMatrixDSparse &a)
 {
    const Int_t  rowLwb   = a.GetRowLwb();
    const Int_t  colLwb   = a.GetColLwb();
-   const Int_t  nrows    = a.GetNrows();;
+   const Int_t  nrows    = a.GetNrows();
    const Int_t *pRowIndex = a.GetRowIndexArray();
    const Int_t *pColIndex = a.GetColIndexArray();
 
@@ -140,7 +140,7 @@ void TDecompSparse::CopyUpperTriang(const TMatrixDSparse &a,Double_t *b)
 {
    const Int_t     rowLwb    = a.GetRowLwb();
    const Int_t     colLwb    = a.GetColLwb();
-   const Int_t     nrows     = a.GetNrows();;
+   const Int_t     nrows     = a.GetNrows();
    const Int_t    *pRowIndex = a.GetRowIndexArray();
    const Int_t    *pColIndex = a.GetColIndexArray();
    const Double_t *pData     = a.GetMatrixArray();

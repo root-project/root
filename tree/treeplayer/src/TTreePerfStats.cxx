@@ -440,7 +440,7 @@ TTreePerfStats::BasketList_t TTreePerfStats::GetDuplicateBasketCache() const
          auto &info(fBasketsInfo[i][j]);
          if ((info.fLoaded + info.fLoadedMiss) > 1) {
             if (first) {
-               result.emplace_back(BasketList_t::value_type((TBranch*)branches->At(i), std::vector<size_t>(1)));;
+               result.emplace_back(BasketList_t::value_type((TBranch*)branches->At(i), std::vector<size_t>(1)));
                first = false;
             }
             auto &ref( result.back() );

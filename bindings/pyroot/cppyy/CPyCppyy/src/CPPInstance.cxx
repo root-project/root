@@ -441,7 +441,7 @@ static int op_clear(CPPInstance* pyobj)
 // Garbage collector clear of held python member objects; this is a good time
 // to safely remove this object from the memory regulator.
     if (pyobj->fFlags & CPPInstance::kIsRegulated)
-        MemoryRegulator::UnregisterPyObject(pyobj, (PyObject*)Py_TYPE((PyObject*)pyobj));;
+        MemoryRegulator::UnregisterPyObject(pyobj, (PyObject*)Py_TYPE((PyObject*)pyobj));
 
     return 0;
 }

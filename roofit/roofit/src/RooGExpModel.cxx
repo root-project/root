@@ -603,7 +603,7 @@ double RooGExpModel::calcCoshConv(double sign, double tau, double dgamma, double
     +tau2*(exp(sig*sig/(2*tau2*tau2)-sign*xp/tau2)
      *RooMath::erfc(sig/(root2*tau2)-sign*xp/(root2*sig))
      +sign*exp(sig*sig/(2*rtau*rtau)+xp/rtau)
-     *RooMath::erfc(sig/(root2*rtau)+xp/(root2*sig)))/(2*(tau2+sign*rtau));;
+     *RooMath::erfc(sig/(root2*rtau)+xp/(root2*sig)))/(2*(tau2+sign*rtau));
   return cFly;
 }
 */
@@ -638,7 +638,7 @@ double RooGExpModel::calcSinhConv(double sign, double sign1, double sign2, doubl
     +sign2*tau2*(exp(sig*sig/(2*tau2*tau2)-sign*xp/tau2)
      *RooMath::erfc(sig/(root2*tau2)-sign*xp/(root2*sig))
      +sign*exp(sig*sig/(2*rtau*rtau)+xp/rtau)
-     *RooMath::erfc(sig/(root2*rtau)+xp/(root2*sig)))/(2*(tau2+sign*rtau));;
+     *RooMath::erfc(sig/(root2*rtau)+xp/(root2*sig)))/(2*(tau2+sign*rtau));
   return cFly;
 }
 */

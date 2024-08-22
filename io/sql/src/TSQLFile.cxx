@@ -2632,7 +2632,7 @@ void TSQLFile::DirWriteHeader(TDirectory *dir)
 
    TDirectoryFile *fdir = dynamic_cast<TDirectoryFile *> (dir);
    TString timeC = fdir ? fdir->GetCreationDate().AsSQLString() : fDatimeC.AsSQLString();
-   TString timeM = fdir ? fdir->GetModificationDate().AsSQLString() : fDatimeM.AsSQLString();;
+   TString timeM = fdir ? fdir->GetModificationDate().AsSQLString() : fDatimeM.AsSQLString();
    if (TestBit(TFile::kReproducible))
       timeC = timeM = TDatime((UInt_t) 1).AsSQLString();
 

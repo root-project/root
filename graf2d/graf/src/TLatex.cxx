@@ -1593,7 +1593,7 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
          DrawLine(x+l2+ltip+2*l+fs1.Width(),y2-ltip,x+l2+2*l+2*ltip+fs1.Width(),y2,spec);
          DrawLine(x+l2+ltip+2*l+fs1.Width(),y2+ltip,x+l2+2*l+2*ltip+fs1.Width(),y2,spec);
       }
-      result.Set(fs1.Width()+3*l+2*ltip,fs1.Over(),fs1.Under()) ;;
+      result.Set(fs1.Width()+3*l+2*ltip,fs1.Over(),fs1.Under());
    }
    else if (opFrac>-1) { // \frac found
       if (opCurlyCurly==-1) { // }{ not found

@@ -988,7 +988,7 @@ TestDialog::TestDialog(const TGWindow *p, const TGWindow *main, UInt_t w,
    // make tab yellow
    Pixel_t yellow;
    fClient->GetColorByName("yellow", yellow);
-   TGTabElement *tabel = fTab->GetTabTab("Tab 3");;
+   TGTabElement *tabel = fTab->GetTabTab("Tab 3");
    tabel->ChangeBackground(yellow);
 
    //-------------- end embedded canvas demo

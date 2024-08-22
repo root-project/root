@@ -531,8 +531,8 @@ TEST(VecOps, InputOutput)
    const RVec<ULong64_t> ullref {1ULL, 2ULL, 3ULL};
    const RVec<UShort_t> usref {1, 2, 3};
    const RVec<UChar_t> ucref {1, 2, 3};
-   const RVec<Int_t> iref {1, 2, 3};;
-   const RVec<Long_t> lref {1UL, 2UL, 3UL};;
+   const RVec<Int_t> iref {1, 2, 3};
+   const RVec<Long_t> lref {1UL, 2UL, 3UL};
    const RVec<Long64_t> llref {1ULL, 2ULL, 3ULL};
    const RVec<Short_t> sref {1, 2, 3};
    const RVec<Char_t> cref {1, 2, 3};
@@ -825,15 +825,15 @@ TEST(VecOps, TakeN)
    auto res = Take(x,5,1);
    RVec<int> expected = {1,2,3,4,1};
    CheckEqual(res, expected); // Check the contents of the output vector are correct
-    
+
    res = Take(x,-5,1);
    expected = {1,1,2,3,4};
    CheckEqual(res, expected); // Check the contents of the output vector are correct
-    
+
    res = Take(x,-1,1);
    expected = {4};
    CheckEqual(res, expected); // Check the contents of the output vector are correct
-    
+
    res = Take(x,4,1);
    expected = {1,2,3,4};
    CheckEqual(res, expected); // Check the contents of the output vector are correct
@@ -874,7 +874,7 @@ TEST(VecOps, RangeBeginEndStride)
 {
     const RVecI ref{1, 3};
     CheckEqual(Range(1, 5, 2), ref);
-    
+
     CheckEqual(Range(-1, 8, 3), RVecI{-1, 2, 5});
     CheckEqual(Range(6, 1, -1), RVecI{6, 5, 4, 3, 2});
     CheckEqual(Range(-3, -9, -2), RVecI{-3, -5, -7});

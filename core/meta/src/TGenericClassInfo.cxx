@@ -448,7 +448,7 @@ namespace Internal {
       // Set the info for the CollectionProxy and take ownership of the object
       // being passed
 
-      delete fCollectionProxyInfo;;
+      delete fCollectionProxyInfo;
       fCollectionProxyInfo = info;
    }
 

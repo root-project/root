@@ -370,7 +370,7 @@ void RooStats::HistFactory::Measurement::PrintXML( std::string directory, std::s
     xml << "    <ParamSetting Const=\"True\">";
     for( unsigned int i = 0; i < fConstantParams.size(); ++i ) {
       if (i==0) xml << fConstantParams.at(i);
-      else      xml << " " << fConstantParams.at(i);;
+      else      xml << " " << fConstantParams.at(i);
     }
     xml << "</ParamSetting>" << std::endl;
   }

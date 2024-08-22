@@ -121,7 +121,7 @@ The global attributes change the default values for the next created legends.
 Text attributes can be also changed individually on each legend entry:
 ~~~ {.cpp}
    TLegendEntry *le = leg->AddEntry(h1,"Histogram filled with random numbers","f");
-   le->SetTextColor(kBlue);;
+   le->SetTextColor(kBlue);
 ~~~
 
 Note that the `TPad` class has a method to build automatically a legend

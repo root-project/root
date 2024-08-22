@@ -414,7 +414,7 @@ void  TMVA::MethodTMlpANN::ReadWeightsFromXML( void* wghtnode )
       }
       ch = gTools().GetNextChild(ch);
    }
-   fout.close();;
+   fout.close();
 
    // Here we create a dummy tree necessary to create a minimal NN
    // to be used for testing, evaluation and application

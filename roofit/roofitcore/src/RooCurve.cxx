@@ -304,7 +304,7 @@ void RooCurve::addPoints(const RooAbsFunc &func, double xlo, double xhi,
   }
 
   double dx= (xhi-xlo)/(minPoints-1.);
-  const double epsilon = (xhi - xlo) * relativeXEpsilon();;
+  const double epsilon = (xhi - xlo) * relativeXEpsilon();
   std::vector<double> yval(minPoints);
 
   // Get list of initial x values. If function provides sampling hint use that,
