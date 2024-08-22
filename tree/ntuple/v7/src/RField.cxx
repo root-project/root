@@ -1262,6 +1262,8 @@ ROOT::Experimental::RCardinalityField::As64Bit() const
 
 //------------------------------------------------------------------------------
 
+template class ROOT::Experimental::RSimpleField<char>;
+
 const ROOT::Experimental::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RField<char>::GetColumnRepresentations() const
 {
@@ -1275,6 +1277,8 @@ void ROOT::Experimental::RField<char>::AcceptVisitor(Detail::RFieldVisitor &visi
 }
 
 //------------------------------------------------------------------------------
+
+template class ROOT::Experimental::RSimpleField<std::byte>;
 
 const ROOT::Experimental::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RField<std::byte>::GetColumnRepresentations() const
@@ -1290,6 +1294,8 @@ void ROOT::Experimental::RField<std::byte>::AcceptVisitor(Detail::RFieldVisitor 
 
 //------------------------------------------------------------------------------
 
+template class ROOT::Experimental::RSimpleField<int8_t>;
+
 const ROOT::Experimental::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RIntegralField<std::int8_t>::GetColumnRepresentations() const
 {
@@ -1303,6 +1309,8 @@ void ROOT::Experimental::RIntegralField<std::int8_t>::AcceptVisitor(Detail::RFie
 }
 
 //------------------------------------------------------------------------------
+
+template class ROOT::Experimental::RSimpleField<uint8_t>;
 
 const ROOT::Experimental::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RIntegralField<std::uint8_t>::GetColumnRepresentations() const
@@ -1318,6 +1326,8 @@ void ROOT::Experimental::RIntegralField<std::uint8_t>::AcceptVisitor(Detail::RFi
 
 //------------------------------------------------------------------------------
 
+template class ROOT::Experimental::RSimpleField<bool>;
+
 const ROOT::Experimental::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RField<bool>::GetColumnRepresentations() const
 {
@@ -1331,6 +1341,8 @@ void ROOT::Experimental::RField<bool>::AcceptVisitor(Detail::RFieldVisitor &visi
 }
 
 //------------------------------------------------------------------------------
+
+template class ROOT::Experimental::RSimpleField<float>;
 
 const ROOT::Experimental::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RField<float>::GetColumnRepresentations() const
@@ -1351,6 +1363,8 @@ void ROOT::Experimental::RField<float>::SetHalfPrecision()
 }
 
 //------------------------------------------------------------------------------
+
+template class ROOT::Experimental::RSimpleField<double>;
 
 const ROOT::Experimental::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RField<double>::GetColumnRepresentations() const
@@ -1376,6 +1390,8 @@ void ROOT::Experimental::RField<double>::SetDouble32()
 
 //------------------------------------------------------------------------------
 
+template class ROOT::Experimental::RSimpleField<int16_t>;
+
 const ROOT::Experimental::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RIntegralField<std::int16_t>::GetColumnRepresentations() const
 {
@@ -1390,6 +1406,8 @@ void ROOT::Experimental::RIntegralField<std::int16_t>::AcceptVisitor(Detail::RFi
 }
 
 //------------------------------------------------------------------------------
+
+template class ROOT::Experimental::RSimpleField<uint16_t>;
 
 const ROOT::Experimental::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RIntegralField<std::uint16_t>::GetColumnRepresentations() const
@@ -1406,6 +1424,8 @@ void ROOT::Experimental::RIntegralField<std::uint16_t>::AcceptVisitor(Detail::RF
 
 //------------------------------------------------------------------------------
 
+template class ROOT::Experimental::RSimpleField<int32_t>;
+
 const ROOT::Experimental::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RIntegralField<std::int32_t>::GetColumnRepresentations() const
 {
@@ -1420,6 +1440,8 @@ void ROOT::Experimental::RIntegralField<std::int32_t>::AcceptVisitor(Detail::RFi
 }
 
 //------------------------------------------------------------------------------
+
+template class ROOT::Experimental::RSimpleField<uint32_t>;
 
 const ROOT::Experimental::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RIntegralField<std::uint32_t>::GetColumnRepresentations() const
@@ -1436,6 +1458,8 @@ void ROOT::Experimental::RIntegralField<std::uint32_t>::AcceptVisitor(Detail::RF
 
 //------------------------------------------------------------------------------
 
+template class ROOT::Experimental::RSimpleField<uint64_t>;
+
 const ROOT::Experimental::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RIntegralField<std::uint64_t>::GetColumnRepresentations() const
 {
@@ -1450,6 +1474,8 @@ void ROOT::Experimental::RIntegralField<std::uint64_t>::AcceptVisitor(Detail::RF
 }
 
 //------------------------------------------------------------------------------
+
+template class ROOT::Experimental::RSimpleField<int64_t>;
 
 const ROOT::Experimental::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RIntegralField<std::int64_t>::GetColumnRepresentations() const
