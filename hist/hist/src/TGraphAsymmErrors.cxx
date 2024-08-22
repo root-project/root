@@ -252,7 +252,7 @@ TGraphAsymmErrors::TGraphAsymmErrors(const TH1 *h)
       fEXlow[i]  = h->GetBinWidth(i+1)*gStyle->GetErrorX();
       fEXhigh[i] = fEXlow[i];
       fEYlow[i]  = h->GetBinErrorLow(i+1);
-      fEYhigh[i] = h->GetBinErrorUp(i+1);;
+      fEYhigh[i] = h->GetBinErrorUp(i+1);
    }
 }
 

@@ -134,7 +134,7 @@ void ping(int nclients = 1, int test_mode = 0)
    if (pos > 0)
       fname.resize(pos);
    else
-      fname = gROOT->GetTutorialsDir() + std::string("/webgui/ping/");;
+      fname = gROOT->GetTutorialsDir() + std::string("/webgui/ping/");
    fname.append("ping.html");
    window->SetDefaultPage("file:" + fname);
 

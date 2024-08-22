@@ -553,7 +553,7 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet&
          if (!impTree) {
             std::stringstream ss;
             ss << "RooDataSet::ctor(" << GetName() << ") ERROR file '" << fname
-               << "' does not contain a TTree named '" << tname << "'";;
+               << "' does not contain a TTree named '" << tname << "'";
             const std::string errMsg = ss.str();
             coutE(InputArguments) << errMsg << std::endl;
             throw std::invalid_argument(errMsg);
@@ -774,8 +774,8 @@ RooFit::OwningPtr<RooAbsData> RooDataSet::emptyClone(const char* newName, const 
    RooArgSet asymErrorSet;
 
    for(RooAbsArg *var : vars2) {
-      if(var->getAttribute("StoreError")) errorSet.add(*var);;
-      if(var->getAttribute("StoreAsymError")) asymErrorSet.add(*var);;
+      if(var->getAttribute("StoreError")) errorSet.add(*var);
+      if(var->getAttribute("StoreAsymError")) asymErrorSet.add(*var);
    }
 
    using namespace RooFit;

@@ -5442,7 +5442,7 @@ const char* TCling::GetTopLevelMacroName() const
 ///   std::cout << "  TCling::GetTopLevelMacroName() returns " <<
 ///      TCling::GetTopLevelMacroName() << std::endl;
 ///   std::cout << "  Now calling inclfile..." << std::endl;
-///   gInterpreter->ProcessLine(".x inclfile.C");;
+///   gInterpreter->ProcessLine(".x inclfile.C");
 ///   }
 /// ~~~
 /// Running mymacro.C will print:

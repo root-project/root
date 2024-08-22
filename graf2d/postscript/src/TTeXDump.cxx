@@ -525,7 +525,7 @@ void TTeXDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
 
 void TTeXDump::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
 {
-   Int_t  n = TMath::Abs(nn);;
+   Int_t  n = TMath::Abs(nn);
    Float_t x, y;
 
    if( n <= 1) {

@@ -526,7 +526,7 @@ void TStyle::BuildStyles()
 {
    TColor *col = new TColor(); // force the initialisation of fgPalette
    new TStyle("Plain",  "Plain Style (no colors/fill areas)");
-   new TStyle("Bold",   "Bold Style");;
+   new TStyle("Bold",   "Bold Style");
    new TStyle("Video",  "Style for video presentation histograms");
    new TStyle("Pub",    "Style for Publications");
    new TStyle("Classic","Classic Style");
