@@ -465,8 +465,8 @@ file(TO_NATIVE_PATH "${CMAKE_BINARY_DIR}/include/ROOT.modulemap" _to_native)
 add_custom_target(copymodulemap DEPENDS "${CMAKE_BINARY_DIR}/include/ROOT.modulemap")
 add_custom_command(
 		  OUTPUT "${CMAKE_BINARY_DIR}/include/ROOT.modulemap"
-                  DEPENDS build/unix/module.modulemap "${CMAKE_BINARY_DIR}/include/module.modulemap.extra"
-		  COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/build/unix/module.modulemap" "${CMAKE_BINARY_DIR}/include/ROOT.modulemap"
+                  DEPENDS cmake/unix/module.modulemap "${CMAKE_BINARY_DIR}/include/module.modulemap.extra"
+		  COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/cmake/unix/module.modulemap" "${CMAKE_BINARY_DIR}/include/ROOT.modulemap"
                   COMMAND ${_os_cat} "${_from_native}" >> "${_to_native}"
 )
 install(FILES "${CMAKE_BINARY_DIR}/include/ROOT.modulemap" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
@@ -542,7 +542,7 @@ else()
       etc/dictpch/allHeaders.h
       etc/dictpch/allLinkDefs.h
     COMMAND
-      ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.py
+      ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/cmake/unix/makepchinput.py
       ${CMAKE_SOURCE_DIR} . ${pyroot_legacy} ${__cling_pch}
     COMMAND
       ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ${Python3_EXECUTABLE}
@@ -550,7 +550,7 @@ else()
       ${__allIncludes} -I${CMAKE_BINARY_DIR}/include -I${CMAKE_SOURCE_DIR}/core
     DEPENDS
       rootcling ${__pch_dependencies} ${__pch_dictionaries}
-      ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.py
+      ${CMAKE_SOURCE_DIR}/cmake/unix/makepchinput.py
       ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py
   )
   add_custom_target(onepcm ALL DEPENDS etc/allDict.cxx.pch)
@@ -628,12 +628,12 @@ endif()
 
 #---version--------------------------------------------------------------------------------------
 if(NOT WIN32)
-add_custom_target(version COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/build/unix/makeversion.py
+add_custom_target(version COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/cmake/unix/makeversion.py
                           WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 endif()
 
 #---distribution commands------------------------------------------------------------------------
-add_custom_target(distsrc COMMAND ${CMAKE_SOURCE_DIR}/build/unix/makedistsrc.sh "${ROOT_FULL_VERSION}" "${CMAKE_SOURCE_DIR}")
+add_custom_target(distsrc COMMAND ${CMAKE_SOURCE_DIR}/cmake/unix/makedistsrc.sh "${ROOT_FULL_VERSION}" "${CMAKE_SOURCE_DIR}")
 add_custom_target(dist COMMAND cpack --config CPackConfig.cmake)
 
 #---Configure and install various files neded later and for clients -----------------------------

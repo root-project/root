@@ -722,7 +722,7 @@ else()
     string (REPLACE ";" " " ASAN_EXTRA_CXX_FLAGS_STR "${ASAN_EXTRA_CXX_FLAGS}")
     set(CMAKE_CXX_ACLIC_FLAGS "${CMAKE_CXX_ACLIC_FLAGS} ${ASAN_EXTRA_CXX_FLAGS_STR}")
   endif()
-  execute_process(COMMAND ${CMAKE_SOURCE_DIR}/build/unix/compiledata.sh
+  execute_process(COMMAND ${CMAKE_SOURCE_DIR}/cmake/unix/compiledata.sh
     ${CMAKE_BINARY_DIR}/ginclude/compiledata.h "${CMAKE_CXX_COMPILER}"
         "${CMAKE_CXX_FLAGS_RELEASE}" "${CMAKE_CXX_FLAGS_DEBUG}" "${CMAKE_CXX_ACLIC_FLAGS}"
         "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS}" "${CMAKE_EXE_LINKER_FLAGS}" "so"
