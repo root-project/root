@@ -74,11 +74,112 @@ if(MSVC)
    if(CMAKE_SIZEOF_VOID_P EQUAL 8)
      set_source_files_properties(TCling.cxx COMPILE_FLAGS $<$<CONFIG:Debug>:/bigobj>)
    endif()
+ endif()
+
+##### libCppInterOp ############################################################
+include(ExternalProject)
+
+# CppInterOp Libraries
+set(_cppinterop_build_type ${CMAKE_CFG_INTDIR})
+if(MSVC)
+  if (winrtdebug)
+    set(_cppinterop_build_type Debug)
+  else()
+    set(_cppinterop_build_type Release)
+  endif()
+endif(MSVC)
+if(NOT _cppinterop_build_type STREQUAL "" AND NOT _cppinterop_build_type STREQUAL ".")
+  set(EXTRA_BUILD_ARGS --config ${_cppinterop_build_type})
+endif()
+set(_CPPINTEROP_BUILD_PATH ${CMAKE_CURRENT_BINARY_DIR}/cppinterop-prefix/src/cppinterop-build/${_cppinterop_build_type}/)
+set(_CPPINTEROP_LIBRARY_PATH ${_CPPINTEROP_BUILD_PATH}/lib${LLVM_LIBDIR_SUFFIX})
+
+# build byproducts only needed by Ninja
+if("${CMAKE_GENERATOR}" STREQUAL "Ninja")
+  set(CPPINTEROP_BYPRODUCTS
+     ${_CPPINTEROP_LIBRARY_PATH}/${CMAKE_STATIC_LIBRARY_PREFIX}clangCppInterOp${CMAKE_STATIC_LIBRARY_SUFFIX}
+  )
 endif()
 
-add_dependencies(MetaCling CLING)
+if(APPLE)
+  set(_cppinterop_extra_cmake_args -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT})
+endif()
 
-##### libCling #############################################################
+if (CMAKE_CXX_STANDARD)
+  list(APPEND _cppinterop_extra_cmake_args -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD})
+endif(CMAKE_CXX_STANDARD)
+
+if (LLVM_FORCE_USE_OLD_TOOLCHAIN)
+  list(APPEND _cppinterop_extra_cmake_args -DLLVM_FORCE_USE_OLD_TOOLCHAIN=${LLVM_FORCE_USE_OLD_TOOLCHAIN})
+endif(LLVM_FORCE_USE_OLD_TOOLCHAIN)
+
+# Wrap download, configure and build steps in a script to log output
+set(_cppinterop_cmake_logging_settings
+  LOG_DOWNLOAD ON
+  LOG_CONFIGURE ON
+  LOG_BUILD ON
+  LOG_INSTALL ON
+)
+
+list(APPEND _cppinterop_cmake_logging_settings LOG_OUTPUT_ON_FAILURE ON)
+
+#list(APPEND _cppinterop_patches_list "patch1.patch" "patch2.patch")
+#set(_cppinterop_patch_command
+#      ${CMAKE_COMMAND} -E copy_directory
+#      ${CMAKE_SOURCE_DIR}/core/metacling/src/cppinterop/patches <SOURCE_DIR>
+#      && git checkout <SOURCE_DIR>
+#      && git apply --ignore-space-change --ignore-whitespace ${_cppinterop_patches_list}
+#      )
+
+ExternalProject_Add(
+  cppinterop
+  GIT_REPOSITORY https://github.com/vgvassilev/cppinterop.git
+  GIT_TAG support-recent-cling
+  UPDATE_COMMAND ""
+  PATCH_COMMAND ${_cppinterop_patch_command}
+  CMAKE_ARGS -G ${CMAKE_GENERATOR}
+             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+             -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+             -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
+             -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+             -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
+             -DLLVM_DIR=${LLVM_BINARY_DIR}/lib/cmake/llvm/
+             -DClang_DIR=${LLVM_BINARY_DIR}/tools/clang/lib/cmake/clang/
+             -DCling_DIR=${CMAKE_BINARY_DIR}/interpreter/cling/
+             -DCLANG_INCLUDE_DIRS=${CLANG_INCLUDE_DIRS}
+             -DUSE_CLING=ON
+             -DUSE_REPL=OFF
+             ${_cppinterop_extra_cmake_args}
+  BUILD_COMMAND ${CMAKE_COMMAND} --build . ${EXTRA_BUILD_ARGS}
+  BUILD_BYPRODUCTS ${CPPINTEROP_BYPRODUCTS}
+  INSTALL_COMMAND ""
+  ${_cppinterop_cmake_logging_settings}
+  # We need the target clangBasic to be built before building cppinterop.
+  # However, we support building prebuilt clang and adding clangBasic breaks
+  # this case. Delegate the dependency resolution to the clingInterpreter target
+  # (which will always depend on clangBasic).
+  DEPENDS clingInterpreter
+  )
+
+# Register cppinterop
+add_library(clangCppInterOp IMPORTED STATIC GLOBAL)
+add_dependencies(clangCppInterOp cppinterop)
+
+set_property(TARGET clangCppInterOp PROPERTY IMPORTED_LOCATION ${_CPPINTEROP_LIBRARY_PATH}/${CMAKE_STATIC_LIBRARY_PREFIX}clangCppInterOp${CMAKE_STATIC_LIBRARY_SUFFIX})
+set_property(TARGET clangCppInterOp PROPERTY IMPORTED_LOCATION ${_CPPINTEROP_LIBRARY_PATH}/${CMAKE_STATIC_LIBRARY_PREFIX}clangCppInterOp${CMAKE_STATIC_LIBRARY_SUFFIX})
+
+ExternalProject_Get_Property(cppinterop source_dir)
+set_target_properties(clangCppInterOp PROPERTIES
+  IMPORTED_LOCATION ${_CPPINTEROP_LIBRARY_PATH}/${CMAKE_STATIC_LIBRARY_PREFIX}clangCppInterOp${CMAKE_STATIC_LIBRARY_SUFFIX}
+  INTERFACE_INCLUDE_DIRECTORIES "${source_dir}/include/"
+)
+
+#####
+
+add_dependencies(MetaCling CLING clangCppInterOp)
+target_include_directories(MetaCling SYSTEM PUBLIC ${source_dir}/include/)
+
+##### libCling #################################################################
 
 if(NOT builtin_clang)
   set(prefixed_link_libraries)
@@ -115,7 +216,8 @@ ROOT_LINKER_LIBRARY(Cling
         $<TARGET_OBJECTS:ClingUtils>
         $<TARGET_OBJECTS:Dictgen>
         $<TARGET_OBJECTS:MetaCling>
-        LIBRARIES ${CLING_LIBRARIES} ${LINK_LIBS} ${CLING_PLUGIN_LINK_LIBS})
+        $<TARGET_OBJECTS:clangCppInterOp>
+        LIBRARIES  ${CLING_LIBRARIES} ${LINK_LIBS} ${CLING_PLUGIN_LINK_LIBS})
 
 # When these two link at the same time, they can exhaust the RAM on many machines, since they both link against llvm.
 add_dependencies(Cling rootcling_stage1)
