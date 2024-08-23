@@ -265,8 +265,7 @@ public:
       // +1 to go from 0-based indexing to 1-based number of items
       nItems = fReadPageRef.Get().GetGlobalRangeLast() - globalIndex + 1;
       return reinterpret_cast<CppT *>(static_cast<unsigned char *>(fReadPageRef.Get().GetBuffer()) +
-                                      (globalIndex - fReadPageRef.Get().GetGlobalRangeFirst()) *
-                                         RColumnElement<CppT>::kSize);
+                                      (globalIndex - fReadPageRef.Get().GetGlobalRangeFirst()) * sizeof(CppT));
    }
 
    template <typename CppT>
@@ -279,7 +278,7 @@ public:
       nItems = fReadPageRef.Get().GetClusterRangeLast() - clusterIndex.GetIndex() + 1;
       return reinterpret_cast<CppT *>(static_cast<unsigned char *>(fReadPageRef.Get().GetBuffer()) +
                                       (clusterIndex.GetIndex() - fReadPageRef.Get().GetClusterRangeFirst()) *
-                                         RColumnElement<CppT>::kSize);
+                                         sizeof(CppT));
    }
 
    NTupleSize_t GetGlobalIndex(RClusterIndex clusterIndex)
