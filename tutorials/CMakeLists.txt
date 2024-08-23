@@ -60,7 +60,7 @@ function(ROOT_ADD_TUTORIAL macrofile rc)
   string(REPLACE ".C" "" name ${macrofile})
   string(REPLACE "/" "-" name ${name})
   ROOT_ADD_TEST(tutorial-${name} COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/${macrofile}
-                PASSRC ${rc} FAILREGEX "Error in" "error:" LABELS tutorial)
+                PASSRC ${rc} FAILREGEX "Error in" "error:" "warning: Failed to call" LABELS tutorial)
 endfunction()
 
 #---Tutorials disabled depending on the build components-------------
@@ -608,9 +608,9 @@ file(GLOB multithreaded RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${multithreaded})
 
 #---Define the primordial tutorials-----------------------------------
 ROOT_ADD_TEST(tutorial-hsimple COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/hsimple.C
-                PASSRC 255 FAILREGEX "Error in" "error:" LABELS tutorial)
+                PASSRC 255 FAILREGEX "Error in" "error:" "warning: Failed to call" LABELS tutorial)
 ROOT_ADD_TEST(tutorial-geom-geometry COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/geom/geometry.C
-                FAILREGEX "Error in" "error:" LABELS tutorial)
+                FAILREGEX "Error in" "error:" "warning: Failed to call" LABELS tutorial)
 # define Python GNN parsing tutorial needed to run before
 if (PY_SONNET_FOUND AND PY_GRAPH_NETS_FOUND)
   ROOT_ADD_TEST(tutorial-tmva-TMVA_SOFIE_GNN_Parser COMMAND ${Python3_EXECUTABLE}
@@ -655,7 +655,7 @@ foreach(t ${tutorials})
 
   ROOT_ADD_TEST(tutorial-${tname}
                 COMMAND ${ROOT_root_CMD} -b -l -q ${createThreadPool} ${CMAKE_CURRENT_SOURCE_DIR}/${t}${${tname}-aclic}
-                PASSRC ${rc} FAILREGEX "Error in <" ": error:" "segmentation violation" "FROM HESSE     STATUS=FAILED"
+                PASSRC ${rc} FAILREGEX "Error in <" ": error:" "segmentation violation" "FROM HESSE     STATUS=FAILED" "warning: Failed to call"
                 LABELS ${labels}
                 DEPENDS tutorial-hsimple ${${tname}-depends}
                 ENVIRONMENT ${ROOT_environ}
@@ -689,7 +689,7 @@ foreach(t ${mpi_tutorials})
 
   ROOT_ADD_TEST(tutorial-${tname}
     COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 4 ${ROOT_root_CMD} -b -l -q ${CMAKE_CURRENT_SOURCE_DIR}/${t}${${tname}-aclic}
-                PASSRC ${rc} FAILREGEX "Error in <" ": error:" "segmentation violation" "FROM HESSE     STATUS=FAILED"
+                PASSRC ${rc} FAILREGEX "Error in <" ": error:" "segmentation violation" "FROM HESSE     STATUS=FAILED" "warning: Failed to call"
                 LABELS tutorial
                 DEPENDS tutorial-hsimple ${${tname}-depends}
                 ENVIRONMENT ${ROOT_environ}
