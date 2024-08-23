@@ -123,6 +123,10 @@ public:
    {
       return static_cast<std::size_t>(fElementSize) * static_cast<std::size_t>(fNElements);
    }
+   std::size_t GetCapacity() const
+   {
+      return static_cast<std::size_t>(fElementSize) * static_cast<std::size_t>(fMaxElements);
+   }
    std::uint32_t GetElementSize() const { return fElementSize; }
    std::uint32_t GetNElements() const { return fNElements; }
    std::uint32_t GetMaxElements() const { return fMaxElements; }
