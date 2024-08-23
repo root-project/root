@@ -17,7 +17,7 @@
 #define ROOT7_RColumn
 
 #include <ROOT/RConfig.hxx> // for R__likely
-#include <ROOT/RColumnElement.hxx>
+#include <ROOT/RColumnElementBase.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RPage.hxx>
 #include <ROOT/RPageStorage.hxx>
