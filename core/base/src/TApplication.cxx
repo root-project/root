@@ -1261,6 +1261,7 @@ void TApplication::Help(const char *line)
              "                         Specifying '::Member' is optional.");
       Printf("   .help edit          : show line editing shortcuts (or .?)");
       Printf("   .license            : show license");
+      Printf("   .libraries          : show loaded libraries");
       Printf("   .ls                 : list contents of current TDirectory");
       Printf("   .pwd                : show current TDirectory, pad and style");
       Printf("   .quit (or .exit)    : quit ROOT (long form of .q)");
@@ -1730,6 +1731,12 @@ Longptr_t TApplication::ProcessLine(const char *line, Bool_t sync, Int_t *err)
       gROOT->GetListOfClasses()->Delete();
       // fall through
 #endif
+   }
+
+   if (!strcmp(line, ".libraries")) {
+      // List the loaded libraries
+      gSystem->ListLibraries();
+      return 0;
    }
 
    if (sync)
