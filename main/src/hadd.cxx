@@ -133,6 +133,7 @@
 
 #include <climits>
 #include <cstdlib>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <optional>
@@ -636,7 +637,7 @@ int main(int argc, char **argv)
                                << (argv[a] + 1) << std::endl;
                      if (!args.fSkipErrors)
                         return 1;
-                  } else if (line == targetname) {
+                  } else if (std::filesystem::equivalent(line, targetname)) {
                      Err() << "file " << line << " cannot be both the target and an input!\n";
                      if (!args.fSkipErrors)
                         return 1;
@@ -652,7 +653,7 @@ int main(int argc, char **argv)
             Err() << "could not validate argument \"" << line << "\" as input file " << std::endl;
             if (!args.fSkipErrors)
                return 1;
-         } else if (line == targetname) {
+         } else if (std::filesystem::equivalent(line, targetname)) {
             Err() << "file " << line << " cannot be both the target and an input!\n";
             if (!args.fSkipErrors)
                return 1;
