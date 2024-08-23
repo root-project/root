@@ -31,8 +31,10 @@
 #include <Compression.h>
 #include <TError.h>
 
+#include <algorithm>
 #include <atomic>
 #include <cassert>
+#include <functional>
 #include <memory>
 #include <string_view>
 #include <unordered_map>
@@ -513,8 +515,79 @@ ROOT::Experimental::Internal::RPageSource::UnsealPage(const RSealedPage &sealedP
 
 //------------------------------------------------------------------------------
 
+bool ROOT::Experimental::Internal::RWritePageMemoryManager::TryEvict(std::size_t targetAvailableSize,
+                                                                     std::size_t pageSizeLimit)
+{
+   if (fMaxAllocatedBytes - fCurrentAllocatedBytes >= targetAvailableSize)
+      return true;
+
+   auto itr = fColumnsSortedByPageSize.begin();
+   while (itr != fColumnsSortedByPageSize.end()) {
+      if (itr->fCurrentPageSize <= pageSizeLimit)
+         break;
+      if (itr->fCurrentPageSize == itr->fInitialPageSize) {
+         ++itr;
+         continue;
+      }
+
+      // Flushing the current column will invalidate itr
+      auto itrFlush = itr++;
+
+      RColumnInfo next;
+      if (itr != fColumnsSortedByPageSize.end())
+         next = *itr;
+
+      itrFlush->fColumn->Flush();
+      if (fMaxAllocatedBytes - fCurrentAllocatedBytes >= targetAvailableSize)
+         break;
+
+      itr = (next.fColumn == nullptr) ? fColumnsSortedByPageSize.end() : fColumnsSortedByPageSize.find(next);
+   };
+
+   return (fMaxAllocatedBytes - fCurrentAllocatedBytes >= targetAvailableSize);
+}
+
+bool ROOT::Experimental::Internal::RWritePageMemoryManager::TryUpdate(RColumn &column, std::size_t newWritePageSize)
+{
+   const RColumnInfo key{&column, column.GetWritePageCapacity(), 0};
+   auto itr = fColumnsSortedByPageSize.find(key);
+   if (itr == fColumnsSortedByPageSize.end()) {
+      if (!TryEvict(newWritePageSize, 0))
+         return false;
+      fColumnsSortedByPageSize.insert({&column, newWritePageSize, newWritePageSize});
+      fCurrentAllocatedBytes += newWritePageSize;
+      return true;
+   }
+
+   RColumnInfo elem{*itr};
+   fColumnsSortedByPageSize.erase(itr);
+
+   assert(newWritePageSize >= elem.fInitialPageSize);
+   if (newWritePageSize <= elem.fCurrentPageSize) {
+      // Page got smaller
+      fCurrentAllocatedBytes -= elem.fCurrentPageSize - newWritePageSize;
+      elem.fCurrentPageSize = newWritePageSize;
+      fColumnsSortedByPageSize.insert(elem);
+      return true;
+   }
+
+   // Page got larger, we may need to make space available
+   const auto diffBytes = newWritePageSize - elem.fCurrentPageSize;
+   if (!TryEvict(diffBytes, elem.fCurrentPageSize)) {
+      // Don't change anything, let the calling column flush itself
+      fColumnsSortedByPageSize.insert(elem);
+      return false;
+   }
+   fCurrentAllocatedBytes += diffBytes;
+   elem.fCurrentPageSize = newWritePageSize;
+   fColumnsSortedByPageSize.insert(elem);
+   return true;
+}
+
+//------------------------------------------------------------------------------
+
 ROOT::Experimental::Internal::RPageSink::RPageSink(std::string_view name, const RNTupleWriteOptions &options)
-   : RPageStorage(name), fOptions(options.Clone())
+   : RPageStorage(name), fOptions(options.Clone()), fWritePageMemoryManager(options.GetPageBufferBudget())
 {
 }
 
@@ -586,7 +659,10 @@ ROOT::Experimental::Internal::RPage
 ROOT::Experimental::Internal::RPageSink::ReservePage(ColumnHandle_t columnHandle, std::size_t nElements)
 {
    R__ASSERT(nElements > 0);
-   auto elementSize = columnHandle.fColumn->GetElement()->GetSize();
+   const auto elementSize = columnHandle.fColumn->GetElement()->GetSize();
+   const auto nBytes = elementSize * nElements;
+   if (!fWritePageMemoryManager.TryUpdate(*columnHandle.fColumn, nBytes))
+      return RPage();
    return fPageAllocator->NewPage(columnHandle.fPhysicalId, elementSize, nElements);
 }
 

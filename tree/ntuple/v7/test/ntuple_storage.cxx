@@ -285,6 +285,173 @@ TEST(RNTuple, PageFillingString)
    EXPECT_EQ(10u, pr4.fPageInfos[1].fNElements);
 }
 
+TEST(RNTuple, WritePageBudgetLimit)
+{
+   FileRaii fileGuard("test_ntuple_write_page_budget_limit.root");
+
+   auto model = RNTupleModel::Create();
+   model->MakeField<float>("x");
+   model->Freeze();
+   auto modelClone = model->Clone();
+
+   RNTupleWriteOptions options;
+   options.SetUseBufferedWrite(false);
+   options.SetInitialNElementsPerPage(1);
+   options.SetPageBufferBudget(3);
+   try {
+      RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath(), options);
+      FAIL() << "too small page buffer budget should fail";
+   } catch (const RException &e) {
+      EXPECT_THAT(e.what(), testing::HasSubstr("page buffer memory budget too small"));
+   }
+
+   options.SetPageBufferBudget(4);
+   auto writer = RNTupleWriter::Recreate(std::move(modelClone), "ntpl", fileGuard.GetPath(), options);
+   auto ptrX = writer->GetModel().GetDefaultEntry().GetPtr<float>("x");
+   *ptrX = 137.0;
+   writer->Fill();
+   writer.reset();
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   auto viewX = reader->GetView<float>("x");
+   EXPECT_FLOAT_EQ(137., viewX(0));
+}
+
+TEST(RNTuple, WritePageBudget)
+{
+   FileRaii fileGuard("test_ntuple_write_page_budget.root");
+
+   auto model = RNTupleModel::Create();
+   auto ptrA = model->MakeField<std::vector<double>>("a");
+   auto ptrB = model->MakeField<std::vector<double>>("b");
+   auto ptrC = model->MakeField<std::vector<double>>("c");
+   auto ptrD = model->MakeField<std::vector<double>>("d");
+
+   RNTupleWriteOptions options;
+   options.SetUseBufferedWrite(false);
+   options.SetInitialNElementsPerPage(1);
+   options.SetPageBufferBudget(50 * 8);
+   auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath(), options);
+
+   *ptrC = std::vector<double>(20, 1.0);
+   writer->Fill();
+   // Page sizes (sum: 39):
+   //   a     -- 1
+   //   a._0  -- 1
+   //   b     -- 1
+   //   b._0  -- 1
+   //   c     -- 1
+   //   c._0  -- 32
+   //   d     -- 1
+   //   d._0  -- 1
+   ptrC->clear();
+   *ptrA = std::vector<double>(4, 2.0);
+   writer->Fill();
+   // Page sizes (sum: 47):
+   //   a     -- 2
+   //   a._0  -- 4
+   //   b     -- 2
+   //   b._0  -- 1
+   //   c     -- 2
+   //   c._0  -- 32
+   //   d     -- 2
+   //   d._0  -- 1
+   ptrA->clear();
+   *ptrB = std::vector<double>(40, 3.0);
+   *ptrD = std::vector<double>(5, 4.0);
+   writer->Fill();
+   // Page sizes (sum: 37):
+   //   a     -- 4
+   //   a._0  -- 4
+   //   b     -- 4
+   //   b._0  -- 8 <-- flushed at attempt to expand from 16 to 32
+   //   c     -- 4
+   //   c._0  -- 1 <-- flushed to make room for b._0
+   //   d     -- 4
+   //   d._0  -- 8
+   ptrB->clear();
+   *ptrD = std::vector<double>(34, 4.0);
+   *ptrC = std::vector<double>(4, 1.0);
+   writer->Fill();
+   // Page sizes (sum: 34):
+   //   a     -- 4
+   //   a._0  -- 4
+   //   b     -- 4
+   //   b._0  -- 8
+   //   c     -- 4
+   //   c._0  -- 4
+   //   d     -- 4
+   //   d._0  -- 2 <-- flushed twice at attempt to expand from 16 to 32
+   writer.reset();
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   auto viewA = reader->GetView<std::vector<double>>("a");
+   auto viewB = reader->GetView<std::vector<double>>("b");
+   auto viewC = reader->GetView<std::vector<double>>("c");
+   auto viewD = reader->GetView<std::vector<double>>("d");
+   EXPECT_EQ(20u, viewC(0).size());
+   EXPECT_EQ(0u, viewC(1).size());
+   EXPECT_EQ(0u, viewC(2).size());
+   EXPECT_EQ(4u, viewC(3).size());
+   EXPECT_EQ(0u, viewA(0).size());
+   EXPECT_EQ(4u, viewA(1).size());
+   EXPECT_EQ(0u, viewA(2).size());
+   EXPECT_EQ(0u, viewA(3).size());
+   EXPECT_EQ(0u, viewB(0).size());
+   EXPECT_EQ(0u, viewB(1).size());
+   EXPECT_EQ(40u, viewB(2).size());
+   EXPECT_EQ(0u, viewB(3).size());
+   EXPECT_EQ(0u, viewD(0).size());
+   EXPECT_EQ(0u, viewD(1).size());
+   EXPECT_EQ(5u, viewD(2).size());
+   EXPECT_EQ(34u, viewD(3).size());
+
+   const auto &desc = reader->GetDescriptor();
+   const auto fldIdA = desc.FindFieldId("a");
+   const auto fldIdB = desc.FindFieldId("b");
+   const auto fldIdC = desc.FindFieldId("c");
+   const auto fldIdD = desc.FindFieldId("d");
+   const auto colIdA = desc.FindLogicalColumnId(fldIdA, 0, 0);
+   const auto colIdB = desc.FindLogicalColumnId(fldIdB, 0, 0);
+   const auto colIdC = desc.FindLogicalColumnId(fldIdC, 0, 0);
+   const auto colIdD = desc.FindLogicalColumnId(fldIdD, 0, 0);
+   const auto colIdAD = desc.FindLogicalColumnId(desc.FindFieldId("_0", fldIdA), 0, 0);
+   const auto colIdBD = desc.FindLogicalColumnId(desc.FindFieldId("_0", fldIdB), 0, 0);
+   const auto colIdCD = desc.FindLogicalColumnId(desc.FindFieldId("_0", fldIdC), 0, 0);
+   const auto colIdDD = desc.FindLogicalColumnId(desc.FindFieldId("_0", fldIdD), 0, 0);
+
+   const auto &clusterDesc = desc.GetClusterDescriptor(0);
+   const auto &prA = clusterDesc.GetPageRange(colIdA);
+   const auto &prB = clusterDesc.GetPageRange(colIdB);
+   const auto &prC = clusterDesc.GetPageRange(colIdC);
+   const auto &prD = clusterDesc.GetPageRange(colIdD);
+   const auto &prAD = clusterDesc.GetPageRange(colIdAD);
+   const auto &prBD = clusterDesc.GetPageRange(colIdBD);
+   const auto &prCD = clusterDesc.GetPageRange(colIdCD);
+   const auto &prDD = clusterDesc.GetPageRange(colIdDD);
+
+   EXPECT_EQ(1u, prA.fPageInfos.size());
+   EXPECT_EQ(4u, prA.fPageInfos[0].fNElements);
+   EXPECT_EQ(1u, prB.fPageInfos.size());
+   EXPECT_EQ(4u, prB.fPageInfos[0].fNElements);
+   EXPECT_EQ(1u, prC.fPageInfos.size());
+   EXPECT_EQ(4u, prC.fPageInfos[0].fNElements);
+   EXPECT_EQ(1u, prD.fPageInfos.size());
+   EXPECT_EQ(4u, prD.fPageInfos[0].fNElements);
+   EXPECT_EQ(1u, prAD.fPageInfos.size());
+   EXPECT_EQ(4u, prAD.fPageInfos[0].fNElements);
+   EXPECT_EQ(2u, prBD.fPageInfos.size());
+   EXPECT_EQ(32u, prBD.fPageInfos[0].fNElements);
+   EXPECT_EQ(8u, prBD.fPageInfos[1].fNElements);
+   EXPECT_EQ(2u, prCD.fPageInfos.size());
+   EXPECT_EQ(20u, prCD.fPageInfos[0].fNElements);
+   EXPECT_EQ(4u, prCD.fPageInfos[1].fNElements);
+   EXPECT_EQ(3u, prDD.fPageInfos.size());
+   EXPECT_EQ(16u, prDD.fPageInfos[0].fNElements);
+   EXPECT_EQ(16u, prDD.fPageInfos[1].fNElements);
+   EXPECT_EQ(7u, prDD.fPageInfos[2].fNElements);
+}
+
 #ifdef R__HAS_DAVIX
 TEST(RNTuple, OpenHTTP)
 {
