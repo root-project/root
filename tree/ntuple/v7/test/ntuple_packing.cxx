@@ -57,32 +57,32 @@ TYPED_TEST_SUITE(PackingIndex, PackingIndexTypes);
 
 TEST(Packing, Bitfield)
 {
-   RColumnElement<bool, EColumnType::kBit> element;
-   element.Pack(nullptr, nullptr, 0);
-   element.Unpack(nullptr, nullptr, 0);
+   auto element = RColumnElementBase::Generate<bool>(EColumnType::kBit);
+   element->Pack(nullptr, nullptr, 0);
+   element->Unpack(nullptr, nullptr, 0);
 
    bool b = true;
    char c = 0;
-   element.Pack(&c, &b, 1);
+   element->Pack(&c, &b, 1);
    EXPECT_EQ(1, c);
    bool e = false;
-   element.Unpack(&e, &c, 1);
+   element->Unpack(&e, &c, 1);
    EXPECT_TRUE(e);
 
    bool b8[] = {true, false, true, false, false, true, false, true};
    c = 0;
-   element.Pack(&c, &b8, 8);
+   element->Pack(&c, &b8, 8);
    bool e8[] = {false, false, false, false, false, false, false, false};
-   element.Unpack(&e8, &c, 8);
+   element->Unpack(&e8, &c, 8);
    for (unsigned i = 0; i < 8; ++i) {
       EXPECT_EQ(b8[i], e8[i]);
    }
 
    bool b9[] = {true, false, true, false, false, true, false, true, true};
    char c2[2];
-   element.Pack(&c2, &b9, 9);
+   element->Pack(&c2, &b9, 9);
    bool e9[] = {false, false, false, false, false, false, false, false, false};
-   element.Unpack(&e9, &c2, 9);
+   element->Unpack(&e9, &c2, 9);
    for (unsigned i = 0; i < 9; ++i) {
       EXPECT_EQ(b9[i], e9[i]);
    }
@@ -90,38 +90,38 @@ TEST(Packing, Bitfield)
 
 TEST(Packing, HalfPrecisionFloat)
 {
-   RColumnElement<float, EColumnType::kReal16> element32_16;
-   RColumnElement<double, EColumnType::kReal16> element64_16;
-   element32_16.Pack(nullptr, nullptr, 0);
-   element32_16.Unpack(nullptr, nullptr, 0);
-   element64_16.Pack(nullptr, nullptr, 0);
-   element64_16.Unpack(nullptr, nullptr, 0);
+   auto element32_16 = RColumnElementBase::Generate<float>(EColumnType::kReal16);
+   auto element64_16 = RColumnElementBase::Generate<double>(EColumnType::kReal16);
+   element32_16->Pack(nullptr, nullptr, 0);
+   element32_16->Unpack(nullptr, nullptr, 0);
+   element64_16->Pack(nullptr, nullptr, 0);
+   element64_16->Unpack(nullptr, nullptr, 0);
 
    float fin = 3.14;
    unsigned char buf[2] = {0, 0};
-   element32_16.Pack(buf, &fin, 1);
+   element32_16->Pack(buf, &fin, 1);
    // Expected bit representation: 0b01000010 01001000
    EXPECT_EQ(0x48, buf[0]);
    EXPECT_EQ(0x42, buf[1]);
    float fout = 0.;
-   element32_16.Unpack(&fout, buf, 1);
+   element32_16->Unpack(&fout, buf, 1);
    EXPECT_FLOAT_EQ(3.140625, fout);
 
    buf[0] = buf[1] = 0;
    double din = 3.14;
-   element64_16.Pack(buf, &din, 1);
+   element64_16->Pack(buf, &din, 1);
    // Expected bit representation: 0b01000010 01001000
    EXPECT_EQ(0x48, buf[0]);
    EXPECT_EQ(0x42, buf[1]);
    double dout = 0.;
-   element64_16.Unpack(&dout, buf, 1);
+   element64_16->Unpack(&dout, buf, 1);
    EXPECT_FLOAT_EQ(3.140625, dout);
 
    float fin4[] = {0.1, 0.2, 0.3, 0.4};
    std::uint64_t b4 = 0;
-   element32_16.Pack(&b4, &fin4, 4);
+   element32_16->Pack(&b4, &fin4, 4);
    float fout4[] = {0., 0., 0., 0.};
-   element32_16.Unpack(&fout4, &b4, 4);
+   element32_16->Unpack(&fout4, &b4, 4);
    EXPECT_FLOAT_EQ(0.099975586, fout4[0]);
    EXPECT_FLOAT_EQ(0.199951171, fout4[1]);
    EXPECT_FLOAT_EQ(0.300048828, fout4[2]);
@@ -129,9 +129,9 @@ TEST(Packing, HalfPrecisionFloat)
 
    double din4[] = {0.1, 0.2, 0.3, 0.4};
    b4 = 0;
-   element64_16.Pack(&b4, &din4, 4);
+   element64_16->Pack(&b4, &din4, 4);
    double dout4[] = {0., 0., 0., 0.};
-   element64_16.Unpack(&dout4, &b4, 4);
+   element64_16->Unpack(&dout4, &b4, 4);
    EXPECT_FLOAT_EQ(0.099975586, dout4[0]);
    EXPECT_FLOAT_EQ(0.199951171, dout4[1]);
    EXPECT_FLOAT_EQ(0.300048828, dout4[2]);
@@ -140,15 +140,15 @@ TEST(Packing, HalfPrecisionFloat)
 
 TEST(Packing, RColumnSwitch)
 {
-   RColumnElement<RColumnSwitch, EColumnType::kSwitch> element;
-   element.Pack(nullptr, nullptr, 0);
-   element.Unpack(nullptr, nullptr, 0);
+   auto element = RColumnElementBase::Generate<RColumnSwitch>(EColumnType::kSwitch);
+   element->Pack(nullptr, nullptr, 0);
+   element->Unpack(nullptr, nullptr, 0);
 
    RColumnSwitch s1(ClusterSize_t{0xaa}, 0x55);
    unsigned char out[12];
-   element.Pack(out, &s1, 1);
+   element->Pack(out, &s1, 1);
    RColumnSwitch s2;
-   element.Unpack(&s2, out, 1);
+   element->Unpack(&s2, out, 1);
    EXPECT_EQ(0xaa, s2.GetIndex());
    EXPECT_EQ(0x55, s2.GetTag());
 }
@@ -158,9 +158,9 @@ TYPED_TEST(PackingReal, SplitReal)
    using Pod_t = typename TestFixture::Helper_t::Pod_t;
    using Narrow_t = typename TestFixture::Helper_t::Narrow_t;
 
-   RColumnElement<Pod_t, TestFixture::Helper_t::kColumnType> element;
-   element.Pack(nullptr, nullptr, 0);
-   element.Unpack(nullptr, nullptr, 0);
+   auto element = RColumnElementBase::Generate<Pod_t>(TestFixture::Helper_t::kColumnType);
+   element->Pack(nullptr, nullptr, 0);
+   element->Unpack(nullptr, nullptr, 0);
 
    std::array<Pod_t, 7> mem{0.0,
                             42.0,
@@ -172,8 +172,8 @@ TYPED_TEST(PackingReal, SplitReal)
    std::array<Pod_t, 7> packed;
    std::array<Pod_t, 7> cmp;
 
-   element.Pack(packed.data(), mem.data(), 7);
-   element.Unpack(cmp.data(), packed.data(), 7);
+   element->Pack(packed.data(), mem.data(), 7);
+   element->Unpack(cmp.data(), packed.data(), 7);
 
    EXPECT_EQ(mem, cmp);
 }
@@ -183,9 +183,9 @@ TYPED_TEST(PackingInt, SplitInt)
    using Pod_t = typename TestFixture::Helper_t::Pod_t;
    using Narrow_t = typename TestFixture::Helper_t::Narrow_t;
 
-   RColumnElement<Pod_t, TestFixture::Helper_t::kColumnType> element;
-   element.Pack(nullptr, nullptr, 0);
-   element.Unpack(nullptr, nullptr, 0);
+   auto element = RColumnElementBase::Generate<Pod_t>(TestFixture::Helper_t::kColumnType);
+   element->Pack(nullptr, nullptr, 0);
+   element->Unpack(nullptr, nullptr, 0);
 
    std::array<Pod_t, 9> mem{0,
                             std::is_signed_v<Pod_t> ? -42 : 1,
@@ -199,8 +199,8 @@ TYPED_TEST(PackingInt, SplitInt)
    std::array<Pod_t, 9> packed;
    std::array<Pod_t, 9> cmp;
 
-   element.Pack(packed.data(), mem.data(), 9);
-   element.Unpack(cmp.data(), packed.data(), 9);
+   element->Pack(packed.data(), mem.data(), 9);
+   element->Unpack(cmp.data(), packed.data(), 9);
 
    EXPECT_EQ(mem, cmp);
 }
@@ -210,16 +210,16 @@ TYPED_TEST(PackingIndex, SplitIndex)
    using Pod_t = typename TestFixture::Helper_t::Pod_t;
    using Narrow_t = typename TestFixture::Helper_t::Narrow_t;
 
-   RColumnElement<ClusterSize_t, TestFixture::Helper_t::kColumnType> element;
-   element.Pack(nullptr, nullptr, 0);
-   element.Unpack(nullptr, nullptr, 0);
+   auto element = RColumnElementBase::Generate<ClusterSize_t>(TestFixture::Helper_t::kColumnType);
+   element->Pack(nullptr, nullptr, 0);
+   element->Unpack(nullptr, nullptr, 0);
 
    std::array<Pod_t, 5> mem{0, 1, 1, 42, std::numeric_limits<Narrow_t>::max()};
    std::array<Pod_t, 5> packed;
    std::array<Pod_t, 5> cmp;
 
-   element.Pack(packed.data(), mem.data(), 5);
-   element.Unpack(cmp.data(), packed.data(), 5);
+   element->Pack(packed.data(), mem.data(), 5);
+   element->Unpack(cmp.data(), packed.data(), 5);
 
    EXPECT_EQ(mem, cmp);
 }
