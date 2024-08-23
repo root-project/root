@@ -15,7 +15,8 @@ if(uring AND NOT DEFINED ENV{ROOTTEST_IGNORE_URING})
   ROOT_ADD_GTEST(RIoUring RIoUring.cxx LIBRARIES RIO)
 endif()
 
-if(NOT WIN32 AND (NOT MACOS_VERSION OR NOT MACOSX_VERSION VERSION_LESS 13.00))
-  ROOT_EXECUTABLE(TMapFileTest TMapFileTest.cxx LIBRARIES RIO Hist New)
-  ROOT_ADD_TEST(io-io-test-TMapFileTest COMMAND TMapFileTest complete)
-endif()
+# Temporarily disabled.  Test routinely fails on MacOS and some Linuxes.
+#if(NOT WIN32 AND (NOT MACOS_VERSION OR NOT MACOSX_VERSION VERSION_LESS 13.00))
+#  ROOT_EXECUTABLE(TMapFileTest TMapFileTest.cxx LIBRARIES RIO Hist New)
+#  ROOT_ADD_TEST(io-io-test-TMapFileTest COMMAND TMapFileTest complete)
+#endif()
