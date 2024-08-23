@@ -17,3 +17,10 @@ endif()
 ROOTTEST_ADD_TEST(missingSymbol
                  MACRO missingSymbol.C
                  PASSREGEX "You are probably missing the definition of.*MissingSymbol.*")
+
+if (NOT MSVC)
+# ROOT-5843
+ROOTTEST_ADD_TEST(dotLibraries
+                  COMMAND root -b -q -l -e ".libraries"
+                  PASSREGEX "libRint")
+endif()
