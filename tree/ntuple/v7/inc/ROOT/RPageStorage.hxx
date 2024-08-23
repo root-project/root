@@ -36,6 +36,7 @@
 #include <functional>
 #include <memory>
 #include <mutex>
+#include <set>
 #include <shared_mutex>
 #include <unordered_set>
 #include <vector>
@@ -197,6 +198,54 @@ public:
 
 // clang-format off
 /**
+\class ROOT::Experimental::Internal::RWritePageMemoryManager
+\ingroup NTuple
+\brief Helper to maintain a memory budget for the write pages of a set of columns
+
+The memory manager keeps track of the sum of bytes used by the write pages of a set of columns.
+It will flush (and shrink) large pages of other columns on the attempt to expand a page.
+*/
+// clang-format on
+class RWritePageMemoryManager {
+private:
+   struct RColumnInfo {
+      RColumn *fColumn = nullptr;
+      std::size_t fCurrentPageSize = 0;
+      std::size_t fInitialPageSize = 0;
+
+      bool operator>(const RColumnInfo &other) const
+      {
+         // Make the sort order unique by adding the column pointer as a secondary key
+         if (fCurrentPageSize == other.fCurrentPageSize)
+            return fColumn > other.fColumn;
+         return fCurrentPageSize > other.fCurrentPageSize;
+      }
+   };
+
+   /// Sum of all the write page sizes (their capacity) of the columns in `fColumnsSortedByPageSize`
+   std::size_t fCurrentAllocatedBytes = 0;
+   /// Maximum allowed value for `fCurrentAllocatedBytes`, set from RNTupleWriteOptions::fPageBufferBudget
+   std::size_t fMaxAllocatedBytes = 0;
+   /// All columns that called `ReservePage()` (hence `TryUpdate()`) at least once,
+   /// sorted by their current write page size from large to small
+   std::set<RColumnInfo, std::greater<RColumnInfo>> fColumnsSortedByPageSize;
+
+   /// Flush columns in order of allocated write page size until the sum of all write page allocations
+   /// leaves space for at least targetAvailableSize bytes. Only use columns with a write page size larger
+   /// than pageSizeLimit.
+   bool TryEvict(std::size_t targetAvailableSize, std::size_t pageSizeLimit);
+
+public:
+   explicit RWritePageMemoryManager(std::size_t maxAllocatedBytes) : fMaxAllocatedBytes(maxAllocatedBytes) {}
+
+   /// Try to register the new write page size for the given column. Flush large columns to make space, if necessary.
+   /// If not enough space is available after all (sum of write pages would be larger than fMaxAllocatedBytes),
+   /// return false.
+   bool TryUpdate(RColumn &column, std::size_t newWritePageSize);
+};
+
+// clang-format off
+/**
 \class ROOT::Experimental::Internal::RPageSink
 \ingroup NTuple
 \brief Abstract interface to write data into an ntuple
@@ -251,6 +300,9 @@ private:
    bool fIsInitialized = false;
    std::vector<Callback_t> fOnDatasetCommitCallbacks;
    std::vector<unsigned char> fSealPageBuffer; ///< Used as destination buffer in the simple SealPage overload
+
+   /// Used in ReservePage to maintain the page buffer budget
+   RWritePageMemoryManager fWritePageMemoryManager;
 
 public:
    RPageSink(std::string_view ntupleName, const RNTupleWriteOptions &options);
