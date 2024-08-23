@@ -1,7 +1,7 @@
 #ifndef ROOT7_RNTuple_Test
 #define ROOT7_RNTuple_Test
 
-#include <ROOT/RColumnElement.hxx>
+#include <ROOT/RColumnElementBase.hxx>
 #include <ROOT/RError.hxx>
 #include <ROOT/RField.hxx>
 #include <ROOT/RFieldVisitor.hxx>

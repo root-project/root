@@ -13,7 +13,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <ROOT/RColumnElement.hxx>
+#include "ROOT/RColumn.hxx"
+#include <ROOT/RColumnElementBase.hxx>
+
+#include "RColumnElement.hxx"
 
 #include <algorithm>
 #include <bitset>
@@ -21,47 +24,6 @@
 #include <cstdint>
 #include <memory>
 #include <utility>
-
-template <>
-std::unique_ptr<ROOT::Experimental::Internal::RColumnElementBase>
-ROOT::Experimental::Internal::RColumnElementBase::Generate<void>(EColumnType type)
-{
-   switch (type) {
-   case EColumnType::kIndex64: return std::make_unique<RColumnElement<ClusterSize_t, EColumnType::kIndex64>>();
-   case EColumnType::kIndex32: return std::make_unique<RColumnElement<ClusterSize_t, EColumnType::kIndex32>>();
-   case EColumnType::kSwitch: return std::make_unique<RColumnElement<RColumnSwitch, EColumnType::kSwitch>>();
-   case EColumnType::kByte: return std::make_unique<RColumnElement<std::byte, EColumnType::kByte>>();
-   case EColumnType::kChar: return std::make_unique<RColumnElement<char, EColumnType::kChar>>();
-   case EColumnType::kBit: return std::make_unique<RColumnElement<bool, EColumnType::kBit>>();
-   case EColumnType::kReal64: return std::make_unique<RColumnElement<double, EColumnType::kReal64>>();
-   case EColumnType::kReal32: return std::make_unique<RColumnElement<float, EColumnType::kReal32>>();
-   // TODO: Change to std::float16_t in-memory type once available (from C++23).
-   case EColumnType::kReal16: return std::make_unique<RColumnElement<float, EColumnType::kReal16>>();
-   case EColumnType::kInt64: return std::make_unique<RColumnElement<std::int64_t, EColumnType::kInt64>>();
-   case EColumnType::kUInt64: return std::make_unique<RColumnElement<std::uint64_t, EColumnType::kUInt64>>();
-   case EColumnType::kInt32: return std::make_unique<RColumnElement<std::int32_t, EColumnType::kInt32>>();
-   case EColumnType::kUInt32: return std::make_unique<RColumnElement<std::uint32_t, EColumnType::kUInt32>>();
-   case EColumnType::kInt16: return std::make_unique<RColumnElement<std::int16_t, EColumnType::kInt16>>();
-   case EColumnType::kUInt16: return std::make_unique<RColumnElement<std::uint16_t, EColumnType::kUInt16>>();
-   case EColumnType::kInt8: return std::make_unique<RColumnElement<std::int8_t, EColumnType::kInt8>>();
-   case EColumnType::kUInt8: return std::make_unique<RColumnElement<std::uint8_t, EColumnType::kUInt8>>();
-   case EColumnType::kSplitIndex64:
-      return std::make_unique<RColumnElement<ClusterSize_t, EColumnType::kSplitIndex64>>();
-   case EColumnType::kSplitIndex32:
-      return std::make_unique<RColumnElement<ClusterSize_t, EColumnType::kSplitIndex32>>();
-   case EColumnType::kSplitReal64: return std::make_unique<RColumnElement<double, EColumnType::kSplitReal64>>();
-   case EColumnType::kSplitReal32: return std::make_unique<RColumnElement<float, EColumnType::kSplitReal32>>();
-   case EColumnType::kSplitInt64: return std::make_unique<RColumnElement<std::int64_t, EColumnType::kSplitInt64>>();
-   case EColumnType::kSplitUInt64: return std::make_unique<RColumnElement<std::uint64_t, EColumnType::kSplitUInt64>>();
-   case EColumnType::kSplitInt32: return std::make_unique<RColumnElement<std::int32_t, EColumnType::kSplitInt32>>();
-   case EColumnType::kSplitUInt32: return std::make_unique<RColumnElement<std::uint32_t, EColumnType::kSplitUInt32>>();
-   case EColumnType::kSplitInt16: return std::make_unique<RColumnElement<std::int16_t, EColumnType::kSplitInt16>>();
-   case EColumnType::kSplitUInt16: return std::make_unique<RColumnElement<std::uint16_t, EColumnType::kSplitUInt16>>();
-   default: assert(false);
-   }
-   // never here
-   return nullptr;
-}
 
 std::pair<std::uint16_t, std::uint16_t>
 ROOT::Experimental::Internal::RColumnElementBase::GetValidBitRange(EColumnType type)
@@ -134,36 +96,69 @@ std::string ROOT::Experimental::Internal::RColumnElementBase::GetTypeName(EColum
    }
 }
 
-void ROOT::Experimental::Internal::RColumnElement<bool, ROOT::Experimental::EColumnType::kBit>::Pack(
-   void *dst, const void *src, std::size_t count) const
+template <>
+std::unique_ptr<ROOT::Experimental::Internal::RColumnElementBase>
+ROOT::Experimental::Internal::RColumnElementBase::Generate<void>(EColumnType type)
 {
-   const bool *boolArray = reinterpret_cast<const bool *>(src);
-   char *charArray = reinterpret_cast<char *>(dst);
-   std::bitset<8> bitSet;
-   std::size_t i = 0;
-   for (; i < count; ++i) {
-      bitSet.set(i % 8, boolArray[i]);
-      if (i % 8 == 7) {
-         char packed = bitSet.to_ulong();
-         charArray[i / 8] = packed;
-      }
+   switch (type) {
+   case EColumnType::kIndex64: return std::make_unique<RColumnElement<ClusterSize_t, EColumnType::kIndex64>>();
+   case EColumnType::kIndex32: return std::make_unique<RColumnElement<ClusterSize_t, EColumnType::kIndex32>>();
+   case EColumnType::kSwitch: return std::make_unique<RColumnElement<RColumnSwitch, EColumnType::kSwitch>>();
+   case EColumnType::kByte: return std::make_unique<RColumnElement<std::byte, EColumnType::kByte>>();
+   case EColumnType::kChar: return std::make_unique<RColumnElement<char, EColumnType::kChar>>();
+   case EColumnType::kBit: return std::make_unique<RColumnElement<bool, EColumnType::kBit>>();
+   case EColumnType::kReal64: return std::make_unique<RColumnElement<double, EColumnType::kReal64>>();
+   case EColumnType::kReal32: return std::make_unique<RColumnElement<float, EColumnType::kReal32>>();
+   // TODO: Change to std::float16_t in-memory type once available (from C++23).
+   case EColumnType::kReal16: return std::make_unique<RColumnElement<float, EColumnType::kReal16>>();
+   case EColumnType::kInt64: return std::make_unique<RColumnElement<std::int64_t, EColumnType::kInt64>>();
+   case EColumnType::kUInt64: return std::make_unique<RColumnElement<std::uint64_t, EColumnType::kUInt64>>();
+   case EColumnType::kInt32: return std::make_unique<RColumnElement<std::int32_t, EColumnType::kInt32>>();
+   case EColumnType::kUInt32: return std::make_unique<RColumnElement<std::uint32_t, EColumnType::kUInt32>>();
+   case EColumnType::kInt16: return std::make_unique<RColumnElement<std::int16_t, EColumnType::kInt16>>();
+   case EColumnType::kUInt16: return std::make_unique<RColumnElement<std::uint16_t, EColumnType::kUInt16>>();
+   case EColumnType::kInt8: return std::make_unique<RColumnElement<std::int8_t, EColumnType::kInt8>>();
+   case EColumnType::kUInt8: return std::make_unique<RColumnElement<std::uint8_t, EColumnType::kUInt8>>();
+   case EColumnType::kSplitIndex64:
+      return std::make_unique<RColumnElement<ClusterSize_t, EColumnType::kSplitIndex64>>();
+   case EColumnType::kSplitIndex32:
+      return std::make_unique<RColumnElement<ClusterSize_t, EColumnType::kSplitIndex32>>();
+   case EColumnType::kSplitReal64: return std::make_unique<RColumnElement<double, EColumnType::kSplitReal64>>();
+   case EColumnType::kSplitReal32: return std::make_unique<RColumnElement<float, EColumnType::kSplitReal32>>();
+   case EColumnType::kSplitInt64: return std::make_unique<RColumnElement<std::int64_t, EColumnType::kSplitInt64>>();
+   case EColumnType::kSplitUInt64: return std::make_unique<RColumnElement<std::uint64_t, EColumnType::kSplitUInt64>>();
+   case EColumnType::kSplitInt32: return std::make_unique<RColumnElement<std::int32_t, EColumnType::kSplitInt32>>();
+   case EColumnType::kSplitUInt32: return std::make_unique<RColumnElement<std::uint32_t, EColumnType::kSplitUInt32>>();
+   case EColumnType::kSplitInt16: return std::make_unique<RColumnElement<std::int16_t, EColumnType::kSplitInt16>>();
+   case EColumnType::kSplitUInt16: return std::make_unique<RColumnElement<std::uint16_t, EColumnType::kSplitUInt16>>();
+   default: assert(false);
    }
-   if (i % 8 != 0) {
-      char packed = bitSet.to_ulong();
-      charArray[i / 8] = packed;
-   }
+   // never here
+   return nullptr;
 }
 
-void ROOT::Experimental::Internal::RColumnElement<bool, ROOT::Experimental::EColumnType::kBit>::Unpack(
-   void *dst, const void *src, std::size_t count) const
+std::unique_ptr<ROOT::Experimental::Internal::RColumnElementBase>
+ROOT::Experimental::Internal::GenerateColumnElement(EColumnCppType cppType, EColumnType type)
 {
-   bool *boolArray = reinterpret_cast<bool *>(dst);
-   const char *charArray = reinterpret_cast<const char *>(src);
-   std::bitset<8> bitSet;
-   for (std::size_t i = 0; i < count; i += 8) {
-      bitSet = charArray[i / 8];
-      for (std::size_t j = i; j < std::min(count, i + 8); ++j) {
-         boolArray[j] = bitSet[j % 8];
-      }
+   switch (cppType) {
+   case EColumnCppType::kChar: return GenerateColumnElementInternal<char>(type);
+   case EColumnCppType::kBool: return GenerateColumnElementInternal<bool>(type);
+   case EColumnCppType::kByte: return GenerateColumnElementInternal<std::byte>(type);
+   case EColumnCppType::kUint8: return GenerateColumnElementInternal<std::uint8_t>(type);
+   case EColumnCppType::kUint16: return GenerateColumnElementInternal<std::uint16_t>(type);
+   case EColumnCppType::kUint32: return GenerateColumnElementInternal<std::uint32_t>(type);
+   case EColumnCppType::kUint64: return GenerateColumnElementInternal<std::uint64_t>(type);
+   case EColumnCppType::kInt8: return GenerateColumnElementInternal<std::int8_t>(type);
+   case EColumnCppType::kInt16: return GenerateColumnElementInternal<std::int16_t>(type);
+   case EColumnCppType::kInt32: return GenerateColumnElementInternal<std::int32_t>(type);
+   case EColumnCppType::kInt64: return GenerateColumnElementInternal<std::int64_t>(type);
+   case EColumnCppType::kFloat: return GenerateColumnElementInternal<float>(type);
+   case EColumnCppType::kDouble32: return GenerateColumnElementInternal<Double32_t>(type);
+   case EColumnCppType::kDouble: return GenerateColumnElementInternal<double>(type);
+   case EColumnCppType::kClusterSize: return GenerateColumnElementInternal<ClusterSize_t>(type);
+   case EColumnCppType::kColumnSwitch: return GenerateColumnElementInternal<RColumnSwitch>(type);
+   default: R__ASSERT(!"Invalid column cpp type");
    }
+   // never here
+   return nullptr;
 }

@@ -1,6 +1,7 @@
 // Override endianness detection in RColumnElement.hxx; assume big-endian machine
 // These tests are simulating a big endian machine; we will turn them off on an actual big endian node.
 #define R__LITTLE_ENDIAN 0
+#include "../src/RColumnElement.hxx"
 
 #include "gtest/gtest.h"
 
@@ -22,7 +23,6 @@
 using ROOT::Experimental::EColumnType;
 using ROOT::Experimental::NTupleSize_t;
 using ROOT::Experimental::RNTupleDescriptor;
-using ROOT::Experimental::RNTupleLocator;
 using ROOT::Experimental::RNTupleModel;
 using ROOT::Experimental::Internal::RCluster;
 using ROOT::Experimental::Internal::RColumnElementBase;
@@ -112,7 +112,7 @@ TEST(RColumnElementEndian, ByteCopy)
 #ifndef R__BYTESWAP
    GTEST_SKIP() << "Skipping test on big endian node";
 #else
-   ROOT::Experimental::Internal::RColumnElement<float, EColumnType::kReal32> element;
+   RColumnElement<float, EColumnType::kReal32> element;
    EXPECT_EQ(element.IsMappable(), false);
 
    RPageSinkMock sink1(element);
@@ -137,7 +137,7 @@ TEST(RColumnElementEndian, Cast)
 #ifndef R__BYTESWAP
    GTEST_SKIP() << "Skipping test on big endian node";
 #else
-   ROOT::Experimental::Internal::RColumnElement<std::int64_t, EColumnType::kInt32> element;
+   RColumnElement<std::int64_t, EColumnType::kInt32> element;
    EXPECT_EQ(element.IsMappable(), false);
 
    RPageSinkMock sink1(element);
@@ -165,7 +165,7 @@ TEST(RColumnElementEndian, Split)
 #ifndef R__BYTESWAP
    GTEST_SKIP() << "Skipping test on big endian node";
 #else
-   ROOT::Experimental::Internal::RColumnElement<double, EColumnType::kSplitReal64> splitElement;
+   RColumnElement<double, EColumnType::kSplitReal64> splitElement;
 
    RPageSinkMock sink1(splitElement);
    unsigned char buf1[] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
@@ -191,7 +191,7 @@ TEST(RColumnElementEndian, DeltaSplit)
 #else
    using ClusterSize_t = ROOT::Experimental::ClusterSize_t;
 
-   ROOT::Experimental::Internal::RColumnElement<ClusterSize_t, EColumnType::kSplitIndex32> element;
+   RColumnElement<ClusterSize_t, EColumnType::kSplitIndex32> element;
    EXPECT_EQ(element.IsMappable(), false);
 
    RPageSinkMock sink1(element);

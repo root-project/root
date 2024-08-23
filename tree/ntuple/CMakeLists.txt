@@ -18,7 +18,7 @@ HEADERS
   ROOT/RCluster.hxx
   ROOT/RClusterPool.hxx
   ROOT/RColumn.hxx
-  ROOT/RColumnElement.hxx
+  ROOT/RColumnElementBase.hxx
   ROOT/REntry.hxx
   ROOT/RField.hxx
   ROOT/RFieldBase.hxx
