@@ -47,14 +47,14 @@
   \param -f[0-9]       Set target compression level. 0 = uncompressed, 9 = highly compressed. Default is 101
                        (kDefaultZLIB). You can also specify the full compression algorithm, e.g. -f505.
   \param -fk           Sets the target file to contain the baskets with the same compression as the input files
-                       (unless -O is specified). Compresses the meta data using the compression level specified 
+                       (unless -O is specified). Compresses the meta data using the compression level specified
                        in the first input or the compression setting after fk (for example 505 when using -fk505)
   \param -ff           The compression level used is the one specified in the first input
   \param -j [N_JOBS]   Parallelise the execution in `J` processes. If the number of processes is not specified,
                        use the system maximum.
   \param -k            Skip corrupt or non-existent files, do not exit
   \param -n <N_FILES>  Open at most `N` files at once (use 0 to request to use the system maximum)
-  \param -O            Re-optimize basket size when merging TTree 
+  \param -O            Re-optimize basket size when merging TTree
   \param -T            Do not merge Trees
   \param -v [LEVEL]    Explicitly set the verbosity level: 0 request no output, 99 is the default
   \return hadd returns a status code: 0 if OK, 1 otherwise
@@ -133,6 +133,7 @@
 
 #include <climits>
 #include <cstdlib>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <optional>
@@ -145,17 +146,20 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-inline std::ostream &Err() {
+inline std::ostream &Err()
+{
    std::cerr << "Error in <hadd>: ";
    return std::cerr;
 }
 
-inline std::ostream &Warn() {
+inline std::ostream &Warn()
+{
    std::cerr << "Warning in <hadd>: ";
    return std::cerr;
 }
 
-inline std::ostream &Info() {
+inline std::ostream &Info()
+{
    std::cerr << "Info in <hadd>: ";
    return std::cerr;
 }
@@ -234,22 +238,22 @@ static FlagConvResult<T> ConvertArg(const char *);
 template <>
 FlagConvResult<std::string> ConvertArg<std::string>(const char *arg)
 {
-   return { arg, EFlagResult::kParsed };
+   return {arg, EFlagResult::kParsed};
 }
 
 template <>
 FlagConvResult<IntFlag_t> ConvertArg<IntFlag_t>(const char *arg)
 {
    // Don't even try to parse arg if it doesn't look like a number.
-   if (!isdigit(*arg)) 
-      return { 0, EFlagResult::kIgnored };
+   if (!isdigit(*arg))
+      return {0, EFlagResult::kIgnored};
 
    auto intOpt = StrToUInt(arg);
    if (intOpt)
-      return { *intOpt, EFlagResult::kParsed };
+      return {*intOpt, EFlagResult::kParsed};
 
    Err() << "error parsing integer argument '" << arg << "'\n";
-   return { 0, EFlagResult::kErr };
+   return {0, EFlagResult::kErr};
 }
 
 template <>
@@ -263,7 +267,7 @@ FlagConvResult<ROOT::TIOFeatures> ConvertArg<ROOT::TIOFeatures>(const char *arg)
       if (!features.Set(item))
          Warn() << "ignoring unknown feature request: " << item << "\n";
    }
-   return { features, EFlagResult::kParsed };
+   return {features, EFlagResult::kParsed};
 }
 
 static FlagConvResult<IntFlag_t> ConvertNProcesses(const char *arg)
@@ -272,11 +276,11 @@ static FlagConvResult<IntFlag_t> ConvertNProcesses(const char *arg)
    if (np.fResult != EFlagResult::kParsed) {
       // By returning a non-nullopt, we enable multiprocessing.
       // Since 0 is not a valid number of processes, hadd will default to the number of cpus.
-      np = { 0, EFlagResult::kParsed };
+      np = {0, EFlagResult::kParsed};
    }
    if (np.fValue == 0) {
       Warn() << "the number of parallel processes passed after -j is invalid: " << arg
-                << ". We will use the system maximum.\n";
+             << ". We will use the system maximum.\n";
    }
    return np;
 }
@@ -288,28 +292,28 @@ static FlagConvResult<TString> ConvertCacheSize(const char *arg)
    auto parseResult = ROOT::FromHumanReadableSize(arg, size);
    if (parseResult == ROOT::EFromHumanReadableSize::kParseFail) {
       Err() << "could not parse the cache size passed after -cachesize: '" << arg << "'\n";
-      return { "", EFlagResult::kErr };
+      return {"", EFlagResult::kErr};
    } else if (parseResult == ROOT::EFromHumanReadableSize::kOverflow) {
       double m;
       const char *munit = nullptr;
       ROOT::ToHumanReadableSize(INT_MAX, false, &m, &munit);
-      Warn() << "the cache size passed after -cachesize is too large: " << arg << " is greater than " << m
-                << munit << ". We will use the maximum value.\n";
-      return { std::to_string(m) + munit, EFlagResult::kParsed };
+      Warn() << "the cache size passed after -cachesize is too large: " << arg << " is greater than " << m << munit
+             << ". We will use the maximum value.\n";
+      return {std::to_string(m) + munit, EFlagResult::kParsed};
    } else {
       cacheSize = "cachesize=";
       cacheSize.Append(arg);
    }
-   return { cacheSize, EFlagResult::kParsed };
+   return {cacheSize, EFlagResult::kParsed};
 }
 
 // Parses a flag that is followed by an argument of type T.
 // If `defaultVal` is provided, the following argument is optional and will be set to `defaultVal` if missing.
 // `conv` is used to convert the argument from string to its type T.
 template <typename T>
-static EFlagResult FlagArg(int argc, char **argv, int &argIdxInOut, const char *flagStr, std::optional<T> &flagOut,
-                           std::optional<T> defaultVal = std::nullopt,
-                           FlagConvResult<T> (*conv)(const char *) = ConvertArg<T>)
+static EFlagResult
+FlagArg(int argc, char **argv, int &argIdxInOut, const char *flagStr, std::optional<T> &flagOut,
+        std::optional<T> defaultVal = std::nullopt, FlagConvResult<T> (*conv)(const char *) = ConvertArg<T>)
 {
    int argIdx = argIdxInOut;
    const char *arg = argv[argIdx] + 1;
@@ -359,13 +363,14 @@ static EFlagResult FlagArg(int argc, char **argv, int &argIdxInOut, const char *
 
 static bool ValidCompressionSettings(int compSettings)
 {
-   // Must be a number between 0 and 509 (with a 0 in the middle) 
+   // Must be a number between 0 and 509 (with a 0 in the middle)
    if (compSettings == 0)
       return true;
    // We also accept [1-9] as aliases of [101-109], but it's discouraged.
    if (compSettings >= 1 && compSettings <= 9) {
-      Warn() << "interpreting " << compSettings << " as " << 100 + compSettings << "."
-         " This behavior is deprecated, please use the full compression settings.\n";
+      Warn() << "interpreting " << compSettings << " as " << 100 + compSettings
+             << "."
+                " This behavior is deprecated, please use the full compression settings.\n";
       return true;
    }
    return (compSettings >= 100 && compSettings <= 509) && ((compSettings / 10) % 10 == 0);
@@ -418,7 +423,7 @@ static EFlagResult FlagF(const char *arg, HAddArgs &args)
          if (isdigit(cur[0])) {
             if (args.fUseFirstInputCompression) {
                Err() << "cannot specify both -ff and -f[0-9]. Either use the first input compression or "
-                            "specify it.\n";
+                        "specify it.\n";
                return EFlagResult::kErr;
             } else if (!args.fCompressionSettings) {
                if (auto compLv = StrToUInt(cur)) {
@@ -465,15 +470,17 @@ static std::optional<HAddArgs> ParseArgs(int argc, char **argv)
 
    for (int argIdx = 1; argIdx < argc; ++argIdx) {
       const char *argRaw = argv[argIdx];
-      if (!*argRaw) continue;
+      if (!*argRaw)
+         continue;
 
       if (!args.fNoFlagsAfterPositionalArguments && argRaw[0] == '-' && argRaw[1] != '\0') {
          if (argRaw[1] == '-') {
             // special case `--`: force parsing to consider all future args as positional arguments.
             if (parseState > kParseFirstFlagGroup) {
-               Err() << "found `--`, but we've already parsed (or are still parsing) a sequence of positional arguments!"
-                  " This is not supported: you must have exactly one sequence of positional arguments, so if you"
-                  " need to use `--` make sure to pass *all* positional arguments after it.";
+               Err()
+                  << "found `--`, but we've already parsed (or are still parsing) a sequence of positional arguments!"
+                     " This is not supported: you must have exactly one sequence of positional arguments, so if you"
+                     " need to use `--` make sure to pass *all* positional arguments after it.";
                return {};
             }
             args.fNoFlagsAfterPositionalArguments = true;
@@ -502,11 +509,11 @@ static std::optional<HAddArgs> ParseArgs(int argc, char **argv)
          PARSE_FLAG(FlagToggle, arg, "O", args.fReoptimize);
          PARSE_FLAG(FlagToggle, arg, "dbg", args.fDebug);
          PARSE_FLAG(FlagArg, argc, argv, argIdx, "d", args.fWorkingDir);
-         PARSE_FLAG(FlagArg, argc, argv, argIdx, "j", args.fNProcesses, { 0 }, ConvertNProcesses);
+         PARSE_FLAG(FlagArg, argc, argv, argIdx, "j", args.fNProcesses, {0}, ConvertNProcesses);
          PARSE_FLAG(FlagArg, argc, argv, argIdx, "cachesize", args.fCacheSize, {}, ConvertCacheSize);
          PARSE_FLAG(FlagArg, argc, argv, argIdx, "experimental-io-features", args.fFeatures);
          PARSE_FLAG(FlagArg, argc, argv, argIdx, "n", args.fMaxOpenedFiles);
-         PARSE_FLAG(FlagArg, argc, argv, argIdx, "v", args.fVerbosity, { 99 });
+         PARSE_FLAG(FlagArg, argc, argv, argIdx, "v", args.fVerbosity, {99});
          PARSE_FLAG(FlagF, arg, args);
 
 #undef PARSE_FLAG
@@ -526,9 +533,11 @@ static std::optional<HAddArgs> ParseArgs(int argc, char **argv)
                args.fFirstInputIdx = argIdx;
             }
          } else {
-            Err() << "seen a positional argument '" << argRaw << "' after some flags."
-                     " Positional arguments were already parsed at this point (from '" << argv[args.fOutputArgIdx]
-                     << "' onwards), and you can only have one sequence of them, so you cannot pass more."
+            Err() << "seen a positional argument '" << argRaw
+                  << "' after some flags."
+                     " Positional arguments were already parsed at this point (from '"
+                  << argv[args.fOutputArgIdx]
+                  << "' onwards), and you can only have one sequence of them, so you cannot pass more."
                      " Please group your positional arguments all together so that hadd works as you expect.\n"
                      "Cmdline: ";
             for (int i = 0; i < argc; ++i)
@@ -633,10 +642,10 @@ int main(int argc, char **argv)
                if (std::getline(indirect_file, line) && line.length()) {
                   if (gSystem->AccessPathName(line.c_str(), kReadPermission) == kTRUE) {
                      Err() << "could not validate the file name \"" << line << "\" within indirect file "
-                               << (argv[a] + 1) << std::endl;
+                           << (argv[a] + 1) << std::endl;
                      if (!args.fSkipErrors)
                         return 1;
-                  } else if (line == targetname) {
+                  } else if (std::filesystem::exists(targetname) && std::filesystem::equivalent(line, targetname)) {
                      Err() << "file " << line << " cannot be both the target and an input!\n";
                      if (!args.fSkipErrors)
                         return 1;
@@ -652,7 +661,7 @@ int main(int argc, char **argv)
             Err() << "could not validate argument \"" << line << "\" as input file " << std::endl;
             if (!args.fSkipErrors)
                return 1;
-         } else if (line == targetname) {
+         } else if (std::filesystem::exists(targetname) && std::filesystem::equivalent(line, targetname)) {
             Err() << "file " << line << " cannot be both the target and an input!\n";
             if (!args.fSkipErrors)
                return 1;
@@ -705,7 +714,8 @@ int main(int argc, char **argv)
       step = 3;
       nProcesses = (allSubfiles.size() + step - 1) / step;
       Info() << "each process should handle at least 3 files for efficiency."
-         " Setting the number of processes to: " << nProcesses << std::endl;
+                " Setting the number of processes to: "
+             << nProcesses << std::endl;
    }
    if (nProcesses == 1)
       multiproc = kFALSE;
@@ -810,13 +820,13 @@ int main(int argc, char **argv)
    if (status) {
       if (verbosity == 1) {
          Info() << "merged " << allSubfiles.size() << " (" << fileMerger.GetMergeList()->GetEntries()
-                   << ") input (partial) files into " << targetname << ".\n";
+                << ") input (partial) files into " << targetname << ".\n";
       }
       return 0;
    } else {
       if (verbosity == 1) {
          Err() << "failure during the merge of " << allSubfiles.size() << " ("
-                   << fileMerger.GetMergeList()->GetEntries() << ") input (partial) files into " << targetname << ".\n";
+               << fileMerger.GetMergeList()->GetEntries() << ") input (partial) files into " << targetname << ".\n";
       }
       return 1;
    }
