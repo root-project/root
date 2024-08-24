@@ -65,11 +65,6 @@ protected:
    /// Memory limit for committing a cluster: with very high compression ratio, we need a limit
    /// on how large the I/O buffer can grow during writing.
    std::size_t fMaxUnzippedClusterSize = 512 * 1024 * 1024;
-   /// Should be just large enough so that the compression ratio does not benefit much more from larger pages.
-   /// Unless the cluster is too small to contain a sufficiently large page, pages are
-   /// fApproxUnzippedPageSize in size. If tail page optimization is enabled, the last page in a cluster is
-   /// between fApproxUnzippedPageSize/2 and fApproxUnzippedPageSize * 1.5 in size.
-   std::size_t fApproxUnzippedPageSize = 64 * 1024;
    /// Initially, columns start with a page large enough to hold the given number of elements. The initial
    /// page size is the given number of elements multiplied by the column's element size.
    /// If more elements are needed, pages are increased up until the byte limit given by fMaxUnzippedPageSize
@@ -120,9 +115,6 @@ public:
 
    std::size_t GetMaxUnzippedClusterSize() const { return fMaxUnzippedClusterSize; }
    void SetMaxUnzippedClusterSize(std::size_t val);
-
-   std::size_t GetApproxUnzippedPageSize() const { return fApproxUnzippedPageSize; }
-   void SetApproxUnzippedPageSize(std::size_t val);
 
    std::size_t GetInitialNElementsPerPage() const { return fInitialNElementsPerPage; }
    void SetInitialNElementsPerPage(std::size_t val);

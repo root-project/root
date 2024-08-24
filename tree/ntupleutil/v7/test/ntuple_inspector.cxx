@@ -534,7 +534,8 @@ TEST(RNTupleInspector, PageSizeDistribution)
 
       auto writeOptions = RNTupleWriteOptions();
       writeOptions.SetCompression(505);
-      writeOptions.SetApproxUnzippedPageSize(64);
+      writeOptions.SetInitialNElementsPerPage(1);
+      writeOptions.SetMaxUnzippedPageSize(64);
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), writeOptions);
 
       for (unsigned i = 0; i < 100; ++i) {

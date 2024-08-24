@@ -62,12 +62,6 @@ void ROOT::Experimental::RNTupleWriteOptions::SetMaxUnzippedClusterSize(std::siz
    fMaxUnzippedClusterSize = val;
 }
 
-void ROOT::Experimental::RNTupleWriteOptions::SetApproxUnzippedPageSize(std::size_t val)
-{
-   // TODO(jblomer): remove option
-   fApproxUnzippedPageSize = val;
-}
-
 void ROOT::Experimental::RNTupleWriteOptions::SetInitialNElementsPerPage(std::size_t val)
 {
    EnsureValidTunables(fApproxZippedClusterSize, fMaxUnzippedClusterSize, val, fMaxUnzippedPageSize);
