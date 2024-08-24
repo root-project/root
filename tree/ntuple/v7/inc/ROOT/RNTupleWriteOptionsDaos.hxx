@@ -35,10 +35,9 @@ namespace Experimental {
 // clang-format on
 class RNTupleWriteOptionsDaos : public RNTupleWriteOptions {
    std::string fObjectClass{"SX"};
-   /// The maximum cage size is set to the equivalent of 16 uncompressed pages - 1MiB by default. Empirically, such a
-   /// cage size yields acceptable results in throughput and page granularity for most use cases. A `fMaxCageSize` of 0
-   /// disables the caging mechanism.
-   uint32_t fMaxCageSize = 16 * RNTupleWriteOptions::fApproxUnzippedPageSize;
+   /// The maximum cage size is set to the equivalent of 16 uncompressed pages - 16MiB by default.
+   /// A `fMaxCageSize` of 0 disables the caging mechanism.
+   uint32_t fMaxCageSize = 16 * RNTupleWriteOptions::fMaxUnzippedPageSize;
 
 public:
    ~RNTupleWriteOptionsDaos() override = default;
