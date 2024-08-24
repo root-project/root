@@ -70,9 +70,6 @@ protected:
    /// fApproxUnzippedPageSize in size. If tail page optimization is enabled, the last page in a cluster is
    /// between fApproxUnzippedPageSize/2 and fApproxUnzippedPageSize * 1.5 in size.
    std::size_t fApproxUnzippedPageSize = 64 * 1024;
-   /// Whether to optimize tail pages to avoid an undersized last page per cluster (see above). Increases the
-   /// required memory by a factor 3x.
-   bool fUseTailPageOptimization = true;
    /// Initially, columns start with a page large enough to hold the given number of elements. The initial
    /// page size is the given number of elements multiplied by the column's element size.
    /// If more elements are needed, pages are increased up until the byte limit given by fMaxUnzippedPageSize
@@ -126,9 +123,6 @@ public:
 
    std::size_t GetApproxUnzippedPageSize() const { return fApproxUnzippedPageSize; }
    void SetApproxUnzippedPageSize(std::size_t val);
-
-   bool GetUseTailPageOptimization() const { return fUseTailPageOptimization; }
-   void SetUseTailPageOptimization(bool val) { fUseTailPageOptimization = val; }
 
    std::size_t GetInitialNElementsPerPage() const { return fInitialNElementsPerPage; }
    void SetInitialNElementsPerPage(std::size_t val);
