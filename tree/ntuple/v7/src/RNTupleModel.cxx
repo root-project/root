@@ -465,28 +465,25 @@ void ROOT::Experimental::RNTupleModel::SetDescription(std::string_view descripti
 std::size_t ROOT::Experimental::RNTupleModel::EstimateWriteMemoryUsage(const RNTupleWriteOptions &options) const
 {
    std::size_t bytes = 0;
+   std::size_t minPageBufferSize = 0;
 
-   // First estimate the write pages per column. Do not bother with computing the number of elements first, just take
-   // the value as set in the options.
-   std::size_t pageBufferPerColumn = options.GetApproxUnzippedPageSize();
-   if (options.GetUseTailPageOptimization()) {
-      // For tail page optimization, RColumn::ConnectPageSink allocates two pages that are larger by 50% to accomodate
-      // merging a small tail page.
-      pageBufferPerColumn *= 3;
-   }
-
+   // Start with the size of the page buffers used to fill a persistent sink
    std::size_t nColumns = 0;
    for (auto &&field : *fFieldZero) {
       for (const auto &r : field.GetColumnRepresentatives()) {
          nColumns += r.size();
+         for (auto columnType : r) {
+            minPageBufferSize +=
+               options.GetInitialNElementsPerPage() * Internal::RColumnElementBase::Generate(columnType)->GetSize();
+         }
       }
    }
-   const std::size_t pageBuffersPerModel = nColumns * pageBufferPerColumn;
-   bytes += pageBuffersPerModel;
+   bytes = std::min(options.GetPageBufferBudget(), nColumns * options.GetMaxUnzippedPageSize());
 
-   // If using buffered writing with RPageSinkBuf, we create a clone of the model and keep at least the compressed pages in memory.
+   // If using buffered writing with RPageSinkBuf, we create a clone of the model and keep at least
+   // the compressed pages in memory.
    if (options.GetUseBufferedWrite()) {
-      bytes += pageBuffersPerModel;
+      bytes += minPageBufferSize;
       // Use the target cluster size as an estimate for all compressed pages combined.
       bytes += options.GetApproxZippedClusterSize();
       int compression = options.GetCompression();
