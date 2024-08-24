@@ -108,24 +108,24 @@ jobs:
         curl -L https://github.com/doxygen/doxygen/releases/download/Release_1_10_0/doxygen-1.10.0.linux.bin.tar.gz | tar -xz -C ${{ github.workspace }}/doxygen/ --strip-components=1
         echo PATH=$PATH:${{ github.workspace }}/doxygen/bin >> $GITHUB_ENV
 
-    # - name: Install qhelpgenerator
-    #   run: |
-    #     dnf update -y
-    #     dnf upgrade -y
-    #     dnf install -y qt5-qttools qt5-qtbase-devel qt5-qtbase-gui
-    #     echo "PATH=$PATH:/usr/lib64/qt5/bin" >> $GITHUB_ENV
-    #     source $GITHUB_ENV
-
-    - name: Install sudo
+    - name: Install qhelpgenerator
       run: |
-        dnf install sudo -y
+        dnf update -y
+        dnf upgrade -y
+        dnf install -y qt5-qttools qt5-qtbase-devel qt5-qtbase-gui
+        echo "PATH=$PATH:/usr/lib64/qt5/bin" >> $GITHUB_ENV
+        source $GITHUB_ENV
 
-    - name: Install Qt
-      uses: jurplel/install-qt-action@v4
-      with:
-        version: '5.15.2'
-        tools: 'all'
-        setup-python: 'false'
+    # - name: Install sudo
+    #   run: |
+    #     dnf install sudo -y
+
+    # - name: Install Qt
+    #   uses: jurplel/install-qt-action@v4
+    #   with:
+    #     version: '5.15.2'
+    #     tools: 'all'
+    #     setup-python: 'false'
 
     - name: Apply option overrides
       if: ${{ github.event_name != 'schedule' }}
