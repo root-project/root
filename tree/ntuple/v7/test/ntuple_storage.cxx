@@ -399,7 +399,9 @@ TEST(RNTuple, OpenHTTP)
 {
    std::unique_ptr<TFile> file(TFile::Open("http://root.cern/files/tutorials/ntpl004_dimuon_v1rc2.root"));
    auto Events = std::unique_ptr<RNTuple>(file->Get<RNTuple>("Events"));
-   auto reader = RNTupleReader::Open(*Events);
+   auto model = RNTupleModel::Create();
+   model->MakeField<ROOT::Experimental::RNTupleCardinality<std::uint32_t>>("nMuon");
+   auto reader = RNTupleReader::Open(std::move(model), *Events);
    reader->LoadEntry(0);
 }
 #endif
