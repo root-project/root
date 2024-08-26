@@ -113,11 +113,12 @@ jobs:
         dnf update -y
         dnf upgrade -y
         dnf install -y qt5-doctools
+        echo $PATH
 
-    - name: Verify qhelpgenerator-qt5 installation
-      run: |
-        which qhelpgenerator
-        qhelpgenerator --version
+    # - name: Verify qhelpgenerator-qt5 installation
+    #   run: |
+    #     which qhelpgenerator-qt5
+    #     qhelpgenerator-qt5 --version
       
     - name: Apply option overrides
       if: ${{ github.event_name != 'schedule' }}
