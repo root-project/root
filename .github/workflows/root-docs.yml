@@ -113,6 +113,7 @@ jobs:
         dnf update -y
         dnf upgrade -y
         dnf install -y qt5-qttools qt5-qtbase-devel qt5-qtbase-gui
+        export PATH=$PATH:${{ github.workspace }}/doxygen/bin >> $GITHUB_ENV
 
     - name: Verify qhelpgenerator installation
       run: |
