@@ -116,8 +116,8 @@ jobs:
 
     - name: Verify qhelpgenerator-qt5 installation
       run: |
-        which qhelpgenerator
-        qhelpgenerator --version
+        which qt5-qhelpgenerator
+        qt5-qhelpgenerator --version
       
     - name: Apply option overrides
       if: ${{ github.event_name != 'schedule' }}
