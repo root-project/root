@@ -113,7 +113,7 @@ jobs:
         dnf update -y
         dnf upgrade -y
         dnf install -y qt5-doctools
-        ls /usr/bin/qhelp*
+        which qhelpgenerator-qt5
         echo $PATH
 
     # - name: Verify qhelpgenerator-qt5 installation
