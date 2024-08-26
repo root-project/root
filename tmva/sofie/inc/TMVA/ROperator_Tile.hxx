@@ -17,8 +17,8 @@ class ROperator_Tile final : public ROperator
 
 private:
 
-   std::string fNInput;
    std::string fNRepeats;
+   std::string fNInput;
    std::string fNY;
    std::vector<size_t>fShapeInput;
    std::vector<size_t> fShapeY;
@@ -80,7 +80,7 @@ public:
             throw std::runtime_error("TMVA SOFIE Tile Op called to Generate without being initialized first");
       }
 
-      size_t input_length = ConvertShapeToLength(fShapeInput);
+      //size_t input_length = ConvertShapeToLength(fShapeInput);
       size_t output_length = ConvertShapeToLength(fShapeY);
 
 

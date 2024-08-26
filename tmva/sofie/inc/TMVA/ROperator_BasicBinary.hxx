@@ -20,30 +20,35 @@ template <typename T>
 struct BinaryOperatorTrait<T, Add> {
    static const std::string Name() { return "Add"; }
    static std::string Op(const std::string & t1, const std::string t2) { return t1 + " + " + t2; }
+   static T Func(T t1, T t2) {return  t1 + t2;}
 };
 
 template <typename T>
 struct BinaryOperatorTrait<T, Sub> {
    static const std::string Name() { return "Sub"; }
    static std::string Op(const std::string & t1, const std::string t2) { return t1 + " - " + t2; }
+   static T Func (T t1, T t2) { return t1 - t2;}
 };
 
 template <typename T>
 struct BinaryOperatorTrait<T, Mul> {
    static const std::string Name() { return "Mul"; }
    static std::string Op(const std::string & t1, const std::string t2) { return t1 + " * " + t2; }
+   static T Func (T t1, T t2) { return  t1 * t2;}
 };
 
 template <typename T>
 struct BinaryOperatorTrait<T, Div> {
    static const std::string Name() { return "Div"; }
    static std::string Op(const std::string & t1, const std::string t2) { return t1 + " / " + t2; }
+   static T Func (T t1, T t2) { return t1/t2;}
 };
 
 template <typename T>
 struct BinaryOperatorTrait<T, Pow> {
    static const std::string Name() { return "Pow"; }
    static std::string Op(const std::string & t1, const std::string t2) { return "std::pow(" + t1 + "," + t2 + ")"; }
+   static T Func (T t1, T t2) { return std::pow(t1,t2);}
 };
 
 template <typename T>
@@ -155,7 +160,22 @@ public:
       } else {
          fShapeY = fShapeA;
       }
-      model.AddIntermediateTensor(fNY, model.GetTensorType(fNA), fShapeY);
+      // check case of constant  output (if all inputs are defined)
+      if (model.IsInitializedTensor(fNA) && model.IsInitializedTensor(fNB)) {
+         auto dataA = static_cast<T *>(model.GetInitializedTensorData(fNA).get());
+         auto dataB = static_cast<T *>(model.GetInitializedTensorData(fNB).get());
+         std::vector<T> dataY(ConvertShapeToLength(fShapeY));
+         for (size_t i = 0; i < dataY.size(); i++)
+            dataY[i] = BinaryOperatorTrait<T,Op>::Func(dataA[i], dataB[i]);
+         model.AddConstantTensor<T>(fNY, fShapeY, dataY.data());
+         fIsOutputConstant = true;
+         if (model.Verbose())
+            std::cout << "Binary op ---> " << fNY << "  " << ConvertShapeToString(fShapeY) << " : "
+               << ConvertValuesToString(dataY) << std::endl;
+      }
+      else {
+        model.AddIntermediateTensor(fNY, model.GetTensorType(fNA), fShapeY);
+      }
    }
 
    std::string GenerateInitCode() override {
@@ -164,6 +184,9 @@ public:
    }
 
    std::string Generate(std::string OpName) override {
+
+      if (fIsOutputConstant) return "";
+
       OpName = "op_" + OpName;
 
       if (fShapeY.empty()) {

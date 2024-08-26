@@ -76,6 +76,9 @@ public:
          }
       }
       // Output shape
+      if (model.Verbose())
+         std::cout << "Gather: q and r " << q << " " << r << " shape indices " << ConvertShapeToString(fShapeIndices) << std::endl;
+
       if (fShapeY.empty()) {
          fShapeY.resize(q + r - 1);
          if (fAttrAxis > 0) {
@@ -89,14 +92,38 @@ public:
          // Copy shape of X[axis + 1, ..., axis + r) to shape of Y[axis + q, ... q + r - 1)
          std::copy(fShapeX.begin() + fAttrAxis + 1, fShapeX.end(), fShapeY.begin() + fAttrAxis + q);
       }
-      // Add output tensor
-      model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShapeY);
-      fType = ConvertTypeToString(model.GetTensorType(fNX));
+      // case input is known (type is an integer) and input indices is a scalar
+      if (model.IsInitializedTensor(fNX) && q == 0 && r == 1) {
+         if (model.GetTensorType(fNX) == ETensorType::INT64) {
+            auto inputData = static_cast<int64_t*>(model.GetInitializedTensorData(fNX).get());
+            // if q =0 and r = 1 output length = 1 (it is a scalar)
+            std::vector<int64_t> outputData(ConvertShapeToLength(fShapeY));
+            outputData[0] = inputData[indicesData[0]];
+            model.AddConstantTensor(fNY, fShapeY, outputData.data());
+            if (model.Verbose())
+               std::cout << "Gather: output is a constant tensor " << fNY << " with shape " << ConvertShapeToString(fShapeY)
+                   << " and values " << ConvertValuesToString(outputData) << std::endl;
+            fIsOutputConstant = true;
+         }
+      }
+      if (!fIsOutputConstant) {
+         // Add output tensor
+         model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShapeY);
+         fType = ConvertTypeToString(model.GetTensorType(fNX));
+         if (model.Verbose())
+               std::cout << "Gather: output is  " << fNY << " with shape " << ConvertShapeToString(fShapeY)
+                  << std::endl;
+      }
    }
 
    std::string Generate(std::string OpName) {
+      if (fIsOutputConstant) {
+         // no code to generate here for constant output. Tensor output is defined in Session constructor
+         return "//---------------------------------------\n";
+      }
       OpName = "op_" + OpName;
       std::stringstream out;
+      out << "//--------- Gather operator \n";
       // The shape of the output is q + r - 1
       size_t r = fShapeX.size();
       // Indices of shape q
@@ -120,6 +147,8 @@ public:
          out << SP << "for (size_t " << index << " = 0; " << index << " < " << fShapeY[j] << "; " << index << "++) {\n";
       }
       // for i_0, i_1, ..., i_{q - 1}
+      if (q == 0)
+         out << SP << SP << "{\n";  // add a scope for local variables
       for (size_t i = 0; i < q; i++) {
          std::string index = "i_" + std::to_string(i);
          out << SP << SP << "for (size_t " << index << " = " << 0 << "; " << index << " < " << fShapeIndices[i] << "; " << index << "++) {\n";
@@ -162,6 +191,8 @@ public:
          out << SP << SP << SP << "}\n";
       }
       // end loops i_0, i_1, ..., i_{q - 1}
+      if (q == 0)
+         out << SP << SP << "}\n";  // end of scope for q = 0
       for (size_t i = 0; i < q; i++) {
          out << SP << SP << "}\n";
       }

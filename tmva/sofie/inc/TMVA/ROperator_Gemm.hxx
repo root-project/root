@@ -70,11 +70,11 @@ namespace SOFIE{
       template <typename U>
       std::vector<std::vector<U>> DoShapeInference(const std::vector<std::vector<U>> & input){
          if (input.size() > 3) throw std::runtime_error("TMVA SOFIE Gemm Op Shape Inference only need 2 or 3 input tensor");
-         for (auto& i: input){
+         //for (auto& i: input){
             //if (i.size() > 2){
             //   throw std::runtime_error("TMVA SOFIE Gemm Op Shape Inference only accept input tensor with 2 dimensions");
            // }
-         }
+         //}
          std::vector<std::vector<U>> ret;
          if (input.size() == 3){
             ret.push_back(input[2]);   //shape of C is shape of Y
@@ -127,13 +127,15 @@ namespace SOFIE{
          if (model.IsDynamicTensor(fNA) || model.IsInputTensor(fNA) ) {
             fShapeA = model.GetDynamicTensorShape(fNA);
             fIsDynamic = true;
-         }
-         else {
+         } else {
             auto shapeA_int = model.GetTensorShape(fNA);
-            // don't think this is needed?
-            if (shapeA_int.size() == 1)
-               shapeA_int = {1,shapeA_int[0]};
             fShapeA = ConvertShapeToDim(shapeA_int);
+         }
+         // case A is of dim1 we prepend a 1 but we need to remove later
+         bool appendOne = false;
+         if (fShapeA.size() == 1) {
+            fShapeA.insert(fShapeA.begin(), Dim(1));
+            appendOne = true;
          }
 
          if (model.IsDynamicTensor(fNB) || model.IsInputTensor(fNB)) {
@@ -213,10 +215,26 @@ namespace SOFIE{
             }
          }
 
+         if (appendOne) {
+            // remove appended value of 1
+            if (fIsDynamic)
+               fShapeY.erase(fShapeY.begin());
+            else
+               shapeY.erase(shapeY.begin());
+         }
+
          if (!fIsDynamic)
             model.AddIntermediateTensor(fNY, model.GetTensorType(fNA), shapeY);
          else
             model.AddDynamicTensor(fNY, model.GetTensorType(fNA), fShapeY);
+
+         if (model.Verbose()){
+            std::cout << "Gemm (or MatMul) " << " ---> " << fNY << " shape ";
+            if (fIsDynamic)
+               std::cout << ConvertDynamicShapeToString(fShapeY) << std::endl;
+            else
+               std::cout << ConvertShapeToString(shapeY) << std::endl;
+         }
 
          model.AddNeededStdLib("algorithm");
 

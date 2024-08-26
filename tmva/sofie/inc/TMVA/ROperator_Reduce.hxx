@@ -107,6 +107,9 @@ public:
       // find shape of Y and add it in the list of intermediate tensors
       fShapeY = ShapeInference({fShapeX})[0];
       model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShapeY);
+      if (model.Verbose()){
+         std::cout << Name() << " : " << fNX << " -> " << fNY << " shape " << ConvertShapeToString(fShapeY) << std::endl;
+      }
    }
 
    std::string Generate(std::string OpName){

@@ -86,6 +86,7 @@ public:
    void OutputGenerated(std::string filename = "", bool append = false);
    void SetFilename(std::string filename) { fName = filename; }
    std::string GetFilename() { return fName; }
+   const std::string & GetName() const { return fName;}
 };
 
 enum class GraphType { INVALID = 0, GNN = 1, GraphIndependent = 2 };

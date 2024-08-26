@@ -35,6 +35,10 @@ private:
    // Type of the tensors
    std::unordered_map<std::string, ETensorType> fTensorTypeMap;
 
+   // all model inputs
+   std::map<std::string, int> allInputs;
+
+
 public:
    // Register an ONNX operator
    void RegisterOperator(const std::string &name, ParserFuncSignature func);
@@ -58,10 +62,15 @@ public:
    std::unique_ptr<ROperator> ParseOperator(const size_t /*index*/, const onnx::GraphProto & /*graphproto*/,
                                             const std::vector<size_t> & /*nodes*/);
 
+   // parse the ONNX graph
+   void ParseONNXGraph(RModel & model, const onnx::GraphProto & g, std::string  name = "");
+
 public:
+
    RModelParser_ONNX() noexcept;
 
    RModel Parse(std::string filename, bool verbose = false);
+
 
    ~RModelParser_ONNX();
 };

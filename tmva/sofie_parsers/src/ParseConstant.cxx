@@ -52,6 +52,7 @@ ParserFuncSignature ParseConstant = [](RModelParser_ONNX &parser, const onnx::No
             // need to use raw_data() to get the tensor values
          case ETensorType::INT64: {
             std::vector<int64_t> values(length);
+            // case empty shape with length=1 represents scalars
             auto raw_data_ptr = reinterpret_cast<int64_t *>(const_cast<char *>(t.raw_data().c_str()));
             std::memcpy(values.data(), raw_data_ptr, length * sizeof(int64_t));
             op.reset(new ROperator_Constant<int64_t>("int64_t", values, shape, input_name, output_name));

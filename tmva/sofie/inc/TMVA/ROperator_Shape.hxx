@@ -44,10 +44,10 @@ public:
 
    void Initialize(RModel& model){
       if (model.CheckIfTensorAlreadyExist(fNX) == false){   //input must be a graph input, or already initialized intermediate tensor
-         throw std::runtime_error("TMVA SOFIE Shape Op Input Tensor is not found in model");
+         throw std::runtime_error("TMVA SOFIE Shape Op Input Tensor " + fNX + " is not found in model");
       }
       fShape = model.GetTensorShape(fNX);
-      size_t length = ConvertShapeToLength(fShape);
+      size_t length = fShape.size();  // this the size of shape not length of tensor
       fStart = std::max(fStart,(int) -length);
       fStart = std::min(fStart,(int) length);
       if (fStart < 0) fStart += length;
@@ -63,9 +63,17 @@ public:
          auto shape_values = std::vector<int64_t>(fShape.begin()+fStart, fShape.begin() + fEnd );
          std::memcpy(data.get(), (void*) shape_values.data(), length * sizeof(int64_t));
          model.AddConstantTensor(fNY, ETensorType::INT64, fOutput_shape, data);
+         if (model.Verbose()) {
+            std::cout << "Output of Shape is constant tensor with shape " << ConvertShapeToString(fOutput_shape) << " and values ";
+            for (size_t i = 0; i < shape_values.size(); i++)
+               std::cout << shape_values[i] << "  ";
+            std::cout << std::endl;
+         }
       }
       else
          model.AddIntermediateTensor(fNY, ETensorType::INT64, fOutput_shape);
+
+
    }
 
    std::string Generate(std::string OpName){

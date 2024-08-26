@@ -20,31 +20,31 @@ struct ComparisionTrait{};
 template <typename T>
 struct ComparisionTrait<T, Eq> {
    static const std::string Name() { return "Equal"; }
-   static std::string Op(const std::string & t1, const std::string t2) { return t1 + "==" +  t2 + "? true : false "; }
+   static std::string Op(const std::string & t1, const std::string t2) { return t1 + " == " +  t2 + " ? true : false "; }
 };
 
 template <typename T>
 struct ComparisionTrait<T, Less> {
    static const std::string Name() { return "Less"; }
-   static std::string Op(const std::string & t1, const std::string t2) { return t1 + "<" + t2 + "? true : false "; }
+   static std::string Op(const std::string & t1, const std::string t2) { return t1 + " < " + t2 + " ? true : false "; }
 };
 
 template <typename T>
 struct ComparisionTrait<T, LessEq> {
    static const std::string Name() { return "LessOrEqual"; }
-   static std::string Op(const std::string & t1, const std::string t2) { return t1 + "<=" +  t2 + "? true : false ";  }
+   static std::string Op(const std::string & t1, const std::string t2) { return t1 + " <= " +  t2 + " ? true : false ";  }
 };
 
 template <typename T>
 struct ComparisionTrait<T, Greater> {
    static const std::string Name() { return "Greater"; }
-   static std::string Op(const std::string & t1, const std::string t2) { return  t1 + ">" +  t2 + "? true : false "; }
+   static std::string Op(const std::string & t1, const std::string t2) { return  t1 + " > " +  t2 + " ? true : false "; }
 };
 
 template <typename T>
 struct ComparisionTrait<T, GreaterEq> {
    static const std::string Name() { return "GreaterOrEqual"; }
-   static std::string Op(const std::string & t1, const std::string t2) { return t1 + ">=" +  t2 + "? true : false " ; }
+   static std::string Op(const std::string & t1, const std::string t2) { return t1 + " >= " +  t2 + " ? true : false " ; }
 };
 
 template<typename T, EComparisionOperator Op>
@@ -59,12 +59,14 @@ private:
    std::vector<size_t> fShapeY;
    std::string fNBroadcastedX1;
    std::string fNBroadcastedX2;
+   ETensorType fTensorType1 = ETensorType::UNDEFINED;
+   ETensorType fTensorType2 = ETensorType::UNDEFINED;
    bool fBroadcast = false;
 
 
 public:
    ROperator_Comparision(){}
-   ROperator_Comparision(std::string nameX1, std::string nameX2, std::string nameY):
+   ROperator_Comparision(const std::string & nameX1, const std::string & nameX2, const std::string & nameY):
       fNX1(UTILITY::Clean_name(nameX1)), fNX2(UTILITY::Clean_name(nameX2)), fNY(UTILITY::Clean_name(nameY)){}
 
    // type of output given input
@@ -88,6 +90,8 @@ public:
       }
       fShapeX1 = model.GetTensorShape(fNX1);
       fShapeX2 = model.GetTensorShape(fNX2);
+      fTensorType1 = model.GetTensorType(fNX1);
+      fTensorType2 = model.GetTensorType(fNX2);
       bool broadcast = !UTILITY::AreSameShape(fShapeX1, fShapeX2);
       if (broadcast) {
          // Y is the common shape of A and B
@@ -99,8 +103,8 @@ public:
             if (model.IsInitializedTensor(fNX1)) {
                auto data = model.GetInitializedTensorData(fNX1);
                std::shared_ptr<void> broadcastedData(
-                  UTILITY::UnidirectionalBroadcast<float>(static_cast<float *>(data.get()), fShapeX1, fShapeY),
-                  std::default_delete<float[]>());
+                  UTILITY::UnidirectionalBroadcast<T>(static_cast<T *>(data.get()), fShapeX1, fShapeY),
+                  std::default_delete<T[]>());
                // Update the data and the shape of A
                model.UpdateInitializedTensor(fNX1, model.GetTensorType(fNX1), fShapeY, broadcastedData);
                fShapeX1 = fShapeY;
@@ -115,8 +119,8 @@ public:
             if (model.IsInitializedTensor(fNX2)) {
                auto data = model.GetInitializedTensorData(fNX2);
                std::shared_ptr<void> broadcastedData(
-                  UTILITY::UnidirectionalBroadcast<float>(static_cast<float *>(data.get()), fShapeX2, fShapeY),
-                  std::default_delete<float[]>());
+                  UTILITY::UnidirectionalBroadcast<T>(static_cast<T *>(data.get()), fShapeX2, fShapeY),
+                  std::default_delete<T[]>());
                // Update the data and the shape of B
                model.UpdateInitializedTensor(fNX2, model.GetTensorType(fNX2), fShapeY, broadcastedData);
                fShapeX2 = fShapeY;
@@ -143,18 +147,20 @@ public:
       size_t length = ConvertShapeToLength(fShapeY);
       // Broadcast A if it's uninitialized
       if (!fNBroadcastedX1.empty()) {
+         std::string type1 = ConvertTypeToString(fTensorType1);
          out << SP << "// Broadcasting uninitialized tensor " << fNX1 << "\n";
          out << SP << "{\n";
-         out << SP << SP << "float* data = TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<float>(tensor_" << fNX1 << ", " << ConvertShapeToString(fShapeX1) << ", " << ConvertShapeToString(fShapeY) << ");\n";
+         out << SP << SP << type1 << "* data = TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<" << type1 << ">(tensor_" << fNX1 << ", " << ConvertShapeToString(fShapeX1) << ", " << ConvertShapeToString(fShapeY) << ");\n";
          out << SP << SP << "std::copy(data, data + " << length << ", tensor_" << fNBroadcastedX1 << ");\n";
          out << SP << SP << "delete[] data;\n";
          out << SP << "}\n";
       }
       // Broadcast B if it's uninitialized
       if (!fNBroadcastedX2.empty()) {
+         std::string type2 = ConvertTypeToString(fTensorType2);
          out << SP << "// Broadcasting uninitialized tensor " << fNX2 << "\n";
          out << SP << "{\n";
-         out << SP << SP << "float* data = TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<float>(tensor_" << fNX2 << ", " << ConvertShapeToString(fShapeX2) << ", " << ConvertShapeToString(fShapeY) << ");\n";
+         out << SP << SP << type2 << "* data = TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<" << type2 << ">(tensor_" << fNX2 << ", " << ConvertShapeToString(fShapeX2) << ", " << ConvertShapeToString(fShapeY) << ");\n";
          out << SP << SP << "std::copy(data, data + " << length << ", tensor_" << fNBroadcastedX2 << ");\n";
          out << SP << SP << "delete[] data;\n";
          out << SP << "}\n";
