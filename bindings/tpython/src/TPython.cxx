@@ -40,22 +40,23 @@
 /// ~~~{.cpp}
 ///  $ root -l
 ///  // Execute a string of python code.
-///  root [0] TPython::Exec( "print(\'Hello World!\')" );
+///  root [0] TPython::Exec( R"(print("Hello World!"))" );
 ///  Hello World!
 ///
 ///  // Create a TNamed on the python side, and transfer it back and forth.
 ///  // Note the required explicit (void*) cast!
-///  root [1] TPython::Exec("ROOT.TPython.Result().voidPtrVal = ROOT.TNamed(\"hello\", \"\")");
-///  root [2] auto *n = static_cast<TNamed *>(TPython::Result().voidPtrVal);
-///  root [3] TPython::Bind(n, "n");
-///  root [4] TPython::Exec("ROOT.TPython.Result().voidPtrVal = n");
-///  root [5] (n == TPython::Result().voidPtrVal)
-///  (int)1
+///  root [1] TPyResult res1;
+///  root [2] TPython::Exec(R"(ROOT.TPyBuffer().Set( ROOT.TNamed("hello", "") ))", &res1);
+///  root [3] TPython::Bind(res1.Get<TNamed *>(), "n");
+///  root [4] TPyResult res2;
+///  root [5] TPython::Exec("ROOT.TPyBuffer().Set(n)", &res2);
+///  root [6] (res1.Get<TNamed *>() == res.Get<TNamed *>())
+///  (bool) true
 ///
 ///  // Variables can cross-over by using TPython::Result().
-///  root [6] TPython::Exec("ROOT.TPython.Result().longVal = 1 + 1");
-///  root [7] TPython::Result().longVal
-///  (int)2
+///  root [6] TPython::Exec("ROOT.TPyBuffer().Set(1 + 1)", &res1);
+///  root [7] res1.Get<Long_t>()
+///  (long) 2
 /// ~~~
 ///
 /// And with a python file `MyPyClass.py` like this:
@@ -137,7 +138,14 @@ PyObject *nameStr()
 }
 } // namespace PyStrings
 
+
 } // namespace
+
+TPyResult &TPyBuffer() {
+   static TPyResult result;
+   return result;
+}
+
 
 //- static public members ----------------------------------------------------
 /// Initialization method: setup the python interpreter and load the
@@ -377,20 +385,48 @@ void TPython::ExecScript(const char *name, int argc, const char **argv)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Execute a python statement (e.g. "import ROOT").
+/// Executes a Python command within the current Python environment.
+///
+/// This function initializes the Python environment if it is not already
+/// initialized. It then executes the specified Python command string using the
+/// Python C API. The function is thread-safe due to the use of a mutex and
+/// because of the Python global interpreter lock.
+///
+/// In the Python command, you can change the value of a special TPyResult
+/// object returned by TPyBuffer(). If the Python command is successful and the
+/// optional result parameter is non-zero, the result parameter will be
+/// synchronized with the TPyBuffer(). Like this, you can pass information from
+/// Python back to C++.
+///
+/// \param cmd The Python command to be executed as a string.
+/// \param result Optional pointer to a TPyResult object that can be used to
+///               transfer results from Python to C++.
+/// \return bool Returns `true` if the command was successfully executed,
+///              otherwise returns `false`.
 
-Bool_t TPython::Exec(const char *cmd)
+Bool_t TPython::Exec(const char *cmd, TPyResult *result)
 {
+   static std::mutex mtx;
+   std::lock_guard<std::mutex> lock(mtx);
+
    // setup
    if (!Initialize())
       return kFALSE;
 
-   // execute the command
-   PyObject *result = PyRun_String(const_cast<char *>(cmd), Py_file_input, gMainDict, gMainDict);
+   // Reset the output struct
+   TPyBuffer() = TPyResult{};
 
-   // test for error
-   if (result) {
-      Py_DECREF(result);
+   // execute the command
+   PyObject *pyObjectResult = PyRun_String(const_cast<char *>(cmd), Py_file_input, gMainDict, gMainDict);
+
+   // test for error: if there is a returned PyObject, there was no error
+   if (pyObjectResult) {
+      Py_DECREF(pyObjectResult);
+
+      if(result) {
+         *result = TPyBuffer();
+      }
+
       return kTRUE;
    }
 
@@ -405,7 +441,7 @@ Bool_t TPython::Exec(const char *cmd)
 /// type (implicit casting will work), or in a pointer to a ROOT object (explicit
 /// casting to a void* is required).
 ///
-/// \deprecated Use TPython::Exec() In combination with TPython::Result() instead.
+/// \deprecated Use TPython::Exec() In combination with TPyResult instead.
 
 const TPyReturn TPython::Eval(const char *expr)
 {
@@ -573,13 +609,4 @@ PyObject *TPython::CPPInstance_FromVoidPtr(void *addr, const char *classname, Bo
    // perform cast (the call will check TClass and addr, and set python errors)
    // give ownership, for ref-counting, to the python side, if so requested
    return CPyCppyy::Instance_FromVoidPtr(addr, classname, python_owns);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Result buffer for the communication between the Python and C++
-/// interpreters.
-
-TPython::TPyResult &TPython::Result() {
-   static TPyResult result;
-   return result;
 }
