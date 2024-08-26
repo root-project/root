@@ -112,12 +112,12 @@ jobs:
       run: |
         dnf update -y
         dnf upgrade -y
-        dnf install -y qt5-qttools qt5-qtbase-devel qt5-qtbase-gui qt5-qhelpgenerator
+        dnf install -y qt5-doctools
 
     - name: Verify qhelpgenerator-qt5 installation
       run: |
-        which qt5-qhelpgenerator
-        qt5-qhelpgenerator --version
+        which qhelpgenerator-qt5
+        qhelpgenerator-qt5 --version
       
     - name: Apply option overrides
       if: ${{ github.event_name != 'schedule' }}
