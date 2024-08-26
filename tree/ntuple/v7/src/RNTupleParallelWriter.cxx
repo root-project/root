@@ -105,11 +105,6 @@ public:
       throw RException(R__FAIL("should never commit dataset via RPageSynchronizingSink"));
    }
 
-   RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final
-   {
-      return fInnerSink->ReservePage(columnHandle, nElements);
-   }
-
    RSinkGuard GetSinkGuard() final { return RSinkGuard(fMutex); }
 };
 

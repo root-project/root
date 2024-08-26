@@ -321,7 +321,7 @@ public:
 
    /// Get a new, empty page for the given column that can be filled with up to nElements;
    /// nElements must be larger than zero.
-   virtual RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) = 0;
+   virtual RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements);
 
    /// An RAII wrapper used to synchronize a page sink. See GetSinkGuard().
    class RSinkGuard {
@@ -460,8 +460,6 @@ public:
    std::uint64_t CommitCluster(NTupleSize_t nEntries) final;
    void CommitClusterGroup() final;
    void CommitDatasetImpl() final;
-
-   RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final;
 }; // class RPagePersistentSink
 
 // clang-format off

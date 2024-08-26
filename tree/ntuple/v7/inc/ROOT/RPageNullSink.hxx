@@ -42,12 +42,6 @@ public:
 
    ColumnHandle_t AddColumn(DescriptorId_t, const RColumn &column) final { return {fNColumns++, &column}; }
 
-   RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final
-   {
-      auto elementSize = columnHandle.fColumn->GetElement()->GetSize();
-      return fPageAllocator->NewPage(columnHandle.fPhysicalId, elementSize, nElements);
-   }
-
    const RNTupleDescriptor &GetDescriptor() const final
    {
       static RNTupleDescriptor descriptor;

@@ -50,12 +50,6 @@ protected:
    void CommitClusterGroup() final {}
    void CommitDatasetImpl() final {}
 
-   RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final
-   {
-      auto elementSize = columnHandle.fColumn->GetElement()->GetSize();
-      return fPageAllocator->NewPage(columnHandle.fPhysicalId, elementSize, nElements);
-   }
-
 public:
    RPageSinkMock(const ROOT::Experimental::RNTupleWriteOptions &options) : RPageSink("test", options) {}
 };
