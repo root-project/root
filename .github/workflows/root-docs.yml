@@ -153,7 +153,6 @@ jobs:
       run: ".github/workflows/root-ci-config/build_root.py
                         --buildtype       Release
                         --platform        alma9
-                        --image           registry.cern.ch/root-ci/alma9:buildready
                         --dockeropts      '--security-opt label=disable --rm'
                         --incremental     $INCREMENTAL
                         --base_ref        ${{ github.base_ref }}
