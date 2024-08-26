@@ -208,7 +208,7 @@ struct RNTupleLocator {
    /// Simple on-disk locators consisting of a 64-bit offset use variant type `uint64_t`; extended locators have
    /// `fPosition.index()` > 0
    std::variant<std::uint64_t, std::string, RNTupleLocatorObject64> fPosition{};
-   std::uint32_t fBytesOnStorage = 0;
+   std::uint64_t fBytesOnStorage = 0;
    /// For non-disk locators, the value for the _Type_ field. This makes it possible to have different type values even
    /// if the payload structure is identical.
    ELocatorType fType = kTypeFile;

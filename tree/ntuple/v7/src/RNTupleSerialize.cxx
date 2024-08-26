@@ -414,7 +414,9 @@ std::uint32_t SerializeLocatorPayloadObject64(const ROOT::Experimental::RNTupleL
 void DeserializeLocatorPayloadObject64(const unsigned char *buffer, ROOT::Experimental::RNTupleLocator &locator)
 {
    auto &data = locator.fPosition.emplace<ROOT::Experimental::RNTupleLocatorObject64>();
-   RNTupleSerializer::DeserializeUInt32(buffer, locator.fBytesOnStorage);
+   std::uint32_t size;
+   RNTupleSerializer::DeserializeUInt32(buffer, size);
+   locator.fBytesOnStorage = size;
    RNTupleSerializer::DeserializeUInt64(buffer + sizeof(std::uint32_t), data.fLocation);
 }
 
