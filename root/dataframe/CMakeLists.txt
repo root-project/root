@@ -11,6 +11,10 @@ endif()
 
 set(DFLIBRARIES Core RIO Hist Tree MathCore TreePlayer ROOTDataFrame ROOTVecOps)
 
+if(ROOT_root7_FOUND)
+  list(APPEND DFLIBRARIES ROOTNTuple)
+endif()
+
 # ROOT-9975
 ROOTTEST_ADD_TEST(test_ROOT9975
                   COPY_TO_BUILDDIR ROOT9975.root
