@@ -46,16 +46,28 @@ public:
          throw std::runtime_error("TMVA SOFIE Split Op Input Tensor is not found in model");
       }
       auto inputShape = model.GetTensorShape(fNX);
-      std::cout << "Split - input shape " << ConvertShapeToString(inputShape) << std::endl;
-      // support now splitting only of 1D tensors and assuming tensor is splittable in equal parts
-      int splitAxis = 0;   // assume split with zero axis
+
+      // support now splitting only of 1D tensors and assuming tensor can be  split in equal parts
+      //int splitAxis = 0;   // assume split with zero axis
       int nsplit = fNYs.size();
-      std::cout << "nsplit is " << nsplit << std::endl;
+      // support now only 1D tensor
+      if (inputShape.size() > 1)
+         throw std::runtime_error("TMVA SOFIE Split Op supports now only 1D tensors");
+      // support only equal splits
+      if (inputShape[0] % nsplit != 0)
+         throw std::runtime_error("TMVA SOFIE Split Op does not support splitting of " + ConvertShapeToString(inputShape)
+            + " into " + std::to_string(nsplit));
+
       for (size_t i = 0; i < fNYs.size(); i++) {
-         std::vector<size_t> outputShape = { inputShape[0]/nsplit };  // assume 1D tensor
-         std::cout << "Split - output shape " << ConvertShapeToString(outputShape) << std::endl;
+         std::vector<size_t> outputShape = { inputShape[0]/nsplit };
          model.AddIntermediateTensor(fNYs[i], model.GetTensorType(fNX), outputShape);
          fOutputShapes.push_back(outputShape);  // need for generating code
+      }
+      if (model.Verbose()) {
+         std::cout << "Split - input shape " << ConvertShapeToString(inputShape) << " --> ";
+         for (auto & s : fOutputShapes)
+            std::cout << ConvertShapeToString(s) << "  ";
+         std::cout << std::endl;
       }
    }
 
@@ -78,7 +90,6 @@ public:
       return out.str();
    }
 
-   std::vector<std::string> GetStdLibs() { return { std::string("cmath") };}
 };
 
 }//SOFIE

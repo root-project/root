@@ -51,6 +51,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
    TMVA/ROperator_Range.hxx
    TMVA/ROperator_TopK.hxx
    TMVA/ROperator_Tile.hxx
+   TMVA/ROperator_Split.hxx
    TMVA/SOFIE_common.hxx
    TMVA/SOFIEHelpers.hxx
 

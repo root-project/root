@@ -28,16 +28,23 @@ std::unique_ptr<ROperator> ParseComparision(RModelParser_ONNX &parser, const onn
       }
    }
 
-   std::unique_ptr<ROperator> op;
+
    std::string output_name = nodeproto.output(0);
 
+   std::unique_ptr<ROperator> op;
    switch (input_type) {
    case ETensorType::FLOAT:
       op.reset(new ROperator_Comparision<float, Op>(nodeproto.input(0), nodeproto.input(1), output_name));
       break;
+   case ETensorType::INT64:
+      op.reset(new ROperator_Comparision<int64_t, Op>(nodeproto.input(0), nodeproto.input(1), output_name));
+      break;
+   case ETensorType::INT32:
+      op.reset(new ROperator_Comparision<int32_t, Op>(nodeproto.input(0), nodeproto.input(1), output_name));
+      break;
    default:
       throw std::runtime_error("TMVA::SOFIE - Unsupported - Comparision Operator does not yet support input type " +
-                               std::to_string(static_cast<int>(input_type)));
+                               ConvertTypeToString(input_type));
    }
 
    // Infer the output type

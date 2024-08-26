@@ -7,7 +7,6 @@ namespace Experimental {
 namespace SOFIE {
 
 ParserFuncSignature ParseCast = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
-   ETensorType input_type;
    auto input_name = nodeproto.input(0);
    if (!parser.IsRegisteredTensorType(input_name)) {
       throw std::runtime_error("TMVA::SOFIE ONNX Parser Cast op has input tensor" + input_name +
