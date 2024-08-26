@@ -583,6 +583,14 @@ void ROOT::Experimental::Internal::RPageSink::CommitDataset()
    CommitDatasetImpl();
 }
 
+ROOT::Experimental::Internal::RPage
+ROOT::Experimental::Internal::RPageSink::ReservePage(ColumnHandle_t columnHandle, std::size_t nElements)
+{
+   R__ASSERT(nElements > 0);
+   auto elementSize = columnHandle.fColumn->GetElement()->GetSize();
+   return fPageAllocator->NewPage(columnHandle.fPhysicalId, elementSize, nElements);
+}
+
 //------------------------------------------------------------------------------
 
 std::unique_ptr<ROOT::Experimental::Internal::RPageSink>
@@ -1000,12 +1008,4 @@ void ROOT::Experimental::Internal::RPagePersistentSink::EnableDefaultMetrics(con
                                                                                         "CPU time spent writing"),
       *fMetrics.MakeCounter<Detail::RNTupleTickCounter<Detail::RNTupleAtomicCounter> *>("timeCpuZip", "ns",
                                                                                         "CPU time spent compressing")});
-}
-
-ROOT::Experimental::Internal::RPage
-ROOT::Experimental::Internal::RPagePersistentSink::ReservePage(ColumnHandle_t columnHandle, std::size_t nElements)
-{
-   R__ASSERT(nElements > 0);
-   auto elementSize = columnHandle.fColumn->GetElement()->GetSize();
-   return fPageAllocator->NewPage(columnHandle.fPhysicalId, elementSize, nElements);
 }
