@@ -14,6 +14,7 @@ namespace SOFIE{
 
 enum ReshapeOpMode { Reshape, Flatten, Squeeze, Unsqueeze };
 
+
 class ROperator_Reshape final : public ROperator
 {
 
@@ -32,6 +33,14 @@ private:
    std::vector<int64_t> fAttrAxes;         // axes attributes (provided for all version of Squeeze/Unsqueeze)
 
 public:
+
+   std::string Name() const {
+      if (fOpMode == Reshape) return "Reshape";
+      if (fOpMode == Flatten) return "Flatten";
+      if (fOpMode == Squeeze) return "Squeeze";
+      if (fOpMode == Unsqueeze) return "Unsqueeze";
+      return "";
+   }
 
    ROperator_Reshape(){}
    ROperator_Reshape(ReshapeOpMode opMode, int attr_value, std::string nameData, std::string nameShape, std::string nameOutput)
@@ -126,15 +135,18 @@ public:
          assert(input.size() == 2);
          auto output_shape = input[0];
          auto &axes = input[1];
-         if (axes[0] > 0) { // positive axis start from beginning
-            for (auto & i : axes)
+         // output rank
+         int64_t r = input[0].size() + axes.size();
+         //std::cout << " Unsqueeze - inputs " << ConvertShapeToString(input[0])  << " axes " << ConvertShapeToString(input[1]) << std::endl;
+         for (auto & a : axes) {
+            int64_t i = static_cast<int64_t>(a);
+            if ( i < -r  || i > r - 1 )
+               throw std::runtime_error("TMVA Unsqueeze Op - axes input is not in correct range");
+            if (i >= 0)
                output_shape.insert(output_shape.begin() + i, 1);
-         } else {
-            //negative axes
-            for (auto &i : axes) {
-               assert(i < 0);
-               output_shape.insert(output_shape.begin() + (output_shape.size() + i - 1), 1);
-            }
+            else
+               //negative axes
+               output_shape.insert(output_shape.end() + i + 1, 1);
          }
          ret.push_back(output_shape);
       }
@@ -176,15 +188,31 @@ public:
       } else {
          throw std::runtime_error("TMVA Reshape Op : Invalid Input/Attribute data");
       }
-      model.AddIntermediateTensor(fNOutput, model.GetTensorType(fNData), fShapeOutput);
+      // check if output is constant or not
+      if (model.IsInitializedTensor(fNData) && model.GetTensorType(fNData) == ETensorType::INT64) {
+         fIsOutputConstant = true;
+         auto inputData = static_cast<int64_t*>(model.GetInitializedTensorData(fNData).get());
+         if (ConvertShapeToLength(fShapeInput) != ConvertShapeToLength(fShapeOutput))
+            throw std::runtime_error("TMVA Reshape Op : Invalid Input/Output lengths");
+         model.AddConstantTensor<int64_t>(fNOutput, fShapeOutput, inputData);
+         if (model.Verbose())
+            std::cout << " Output of " << Name() << " operator is constant " << ConvertShapeToString(fShapeOutput)  << " : " <<
+            ConvertValuesToString(ConvertShapeToLength(fShapeOutput), inputData) << std::endl;
+      } else {
+         model.AddIntermediateTensor(fNOutput, model.GetTensorType(fNData), fShapeOutput);
+         if (model.Verbose()) std::cout << " Output of " << Name() << " operator is   " << ConvertShapeToString(fShapeOutput)  << std::endl;
+      }
    }
 
    std::string Generate(std::string OpName)
    {
+      if (fIsOutputConstant) return "";  //no op for constant tensors
+
       OpName = "op_" + OpName;
-      if (fShapeInput.empty() || fShapeOutput.empty()) {
-         throw std::runtime_error("TMVA SOFIE Reshape Op called to Generate without being initialized first");
-      }
+      // shape can be empties for scalar tensors
+      //if (fShapeInput.empty() || fShapeOutput.empty()) {
+      //   throw std::runtime_error("TMVA SOFIE Reshape Op called to Generate without being initialized first");
+      //}
 
       // output of reshape is same as input
       size_t length = ConvertShapeToLength(fShapeOutput);
