@@ -109,10 +109,6 @@ if (CMAKE_CXX_STANDARD)
   list(APPEND _cppinterop_extra_cmake_args -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD})
 endif(CMAKE_CXX_STANDARD)
 
-if (LLVM_FORCE_USE_OLD_TOOLCHAIN)
-  list(APPEND _cppinterop_extra_cmake_args -DLLVM_FORCE_USE_OLD_TOOLCHAIN=${LLVM_FORCE_USE_OLD_TOOLCHAIN})
-endif(LLVM_FORCE_USE_OLD_TOOLCHAIN)
-
 # Wrap download, configure and build steps in a script to log output
 set(_cppinterop_cmake_logging_settings
   LOG_DOWNLOAD ON
