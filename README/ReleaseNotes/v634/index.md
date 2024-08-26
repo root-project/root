@@ -167,12 +167,12 @@ Example:
 std::string stringVal = static_cast<const char*>(TPython::Eval("'done'"));
 std::cout << stringVal << std::endl;
 
-// Now, with TPython::Exec(). The TPyBuffer() instance wil be synchronized with
-// the optional second result parameter for TPython::Exec().
+// Now, with TPython::Exec(). You can set `_anyresult` to whatever std::any you want.
+// It will be swapped into the return variabe in the end.
 
-TPyResult res;
-TPython::Exec("ROOT.TPyBuffer().Set('done')", &res);
-std::cout << res.Get<std::string>() << std::endl;
+std::any result;
+TPython::Exec("_anyresult = ROOT.std.make_any['std::string']('done')", &result);
+std::cout << std::any_cast<std::string>(result) << std::endl;
 ```
 
 ## Language Bindings

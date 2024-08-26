@@ -28,45 +28,18 @@
 
 #include "ROOT/RConfig.hxx" // R__DEPRECATED
 
-#include <type_traits>
+#include <any>
+#include <cstdint>
 
-class TPyResult {
+namespace ROOT {
+namespace Internal {
 
-public:
-   template<class T>
-   T Get() const {
-      static_assert(std::is_pointer<T>::value, "Expected a pointer");
-      return static_cast<T>(fVoidPtr);
-   }
+// Internal helper for PyROOT to swap with an object is at a specific address.
+template<class T>
+inline void SwapWithObjAtAddr(T &a, std::intptr_t b) { std::swap(a, *reinterpret_cast<T*>(b)); }
 
-   void Set(std::string val) { fString = std::move(val); }
-   void Set(Double_t val) { fDouble = val; }
-   void Set(Long_t val) { fLong = val; }
-   void Set(ULong_t val) { fUnsignedLong = val; }
-   void Set(Char_t val) { fChar = val; }
-   void Set(void *val) { fVoidPtr = val; }
-
-private:
-   std::string fString;
-   Double_t fDouble;
-   Long_t fLong;
-   ULong_t fUnsignedLong;
-   Char_t fChar;
-   void *fVoidPtr = nullptr;
-};
-
-template<> inline std::string TPyResult::Get<std::string>() const { return fString; }
-template<> inline Double_t TPyResult::Get<Double_t>() const { return fDouble; }
-template<> inline Long_t TPyResult::Get<Long_t>() const { return fLong; }
-template<> inline ULong_t TPyResult::Get<ULong_t>() const { return fUnsignedLong; }
-template<> inline Char_t TPyResult::Get<Char_t>() const { return fChar; }
-
-////////////////////////////////////////////////////////////////////////////////
-/// Get result buffer for the communication between the Python and C++
-/// interpreters. Meant to be used in the Python code passed to
-/// TPython::Exec().
-
-TPyResult &TPyBuffer();
+}
+}
 
 class TPython {
 
@@ -84,10 +57,10 @@ public:
    static void ExecScript(const char *name, int argc = 0, const char **argv = nullptr);
 
    // execute a python statement (e.g. "import ROOT" )
-   static Bool_t Exec(const char *cmd, TPyResult *result = nullptr);
+   static Bool_t Exec(const char *cmd, std::any *result = nullptr, std::string const& resultName="_anyresult");
 
    // evaluate a python expression (e.g. "1+1")
-   static const TPyReturn Eval(const char *expr) R__DEPRECATED(6,36, "Use TPython::Exec() In combination with TPython::Result() instead.");
+   static const TPyReturn Eval(const char *expr) R__DEPRECATED(6,36, "Use TPython::Exec() with an std::any output parameter instead.");
 
    // bind a ROOT object with, at the python side, the name "label"
    static Bool_t Bind(TObject *object, const char *label);
@@ -110,7 +83,6 @@ public:
    static PyObject *CPPInstance_FromVoidPtr(void *addr, const char *classname, Bool_t python_owns = kFALSE);
 
    virtual ~TPython() {}
-
    ClassDef(TPython, 0) // Access to the python interpreter
 };
 
