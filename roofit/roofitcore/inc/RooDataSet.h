@@ -30,38 +30,8 @@ class TDirectory;
 
 #include <list>
 
-
-//#define USEMEMPOOLFORDATASET
-
-// In the past, a custom memory pool was used for RooDataSet objects on the
-// heap. This memoy pool guaranteed that no memory addresses were reused for
-// different RooDataSets, making it possible to uniquely identify manually
-// allocated RooDataSets by their memory address.
-//
-// However, the memoy pool for RooArgSets caused unexpected memory usage
-// increases, even if no memory leaks were present [1]. It was suspected that
-// the memory allocation pattern with the memory pool might cause some heap
-// fragmentation, which did not happen when the standard allocator was used.
-//
-// To solve that problem, the memory pool was disabled. It is not clear what
-// RooFit code actually relied on the unique memory addresses, but an
-// alternative mechanism to uniquely identify RooDataSet objects was
-// implemented for these usecases (see RooAbsData::uniqueId()) [2].
-//
-// [1] https://github.com/root-project/root/issues/8323
-// [2] https://github.com/root-project/root/pull/8324
-
-template <class RooSet_t, size_t>
-class MemPoolForRooSets;
-
 class RooDataSet : public RooAbsData, public RooDirItem {
 public:
-
-#ifdef USEMEMPOOLFORDATASET
-  void* operator new (size_t bytes);
-  void operator delete (void *ptr);
-#endif
-
 
   // Constructors, factory methods etc.
   RooDataSet() ;
@@ -165,10 +135,6 @@ private:
   void loadValuesFromSlices(RooCategory &indexCat, std::map<std::string, RooAbsData *> const &slices,
                             const char *rangeName, RooFormulaVar const *cutVar, const char *cutSpec);
 
-#ifdef USEMEMPOOLFORDATASET
-  typedef MemPoolForRooSets<RooDataSet, 5*150> MemPool; ///< 150 = about 100kb
-  static MemPool * memPool();
-#endif
   unsigned short _errorMsgCount{0}; ///<! Counter to silence error messages when filling dataset.
   bool _doWeightErrorCheck{true};   ///<! When adding events with weights, check that weights can actually be stored.
 
