@@ -21,9 +21,11 @@
 #include "TClassRef.h"
 #include "TObject.h"
 
-// Standard
-#include <stdio.h>
 #include <Riostream.h>
+
+// Standard
+#include <sstream>
+#include <stdio.h>
 #include <string>
 
 /// \class TPython
@@ -40,20 +42,22 @@
 /// ~~~{.cpp}
 ///  $ root -l
 ///  // Execute a string of python code.
-///  root [0] TPython::Exec( "print(\'Hello World!\')" );
+///  root [0] TPython::Exec( "print('Hello World!')" );
 ///  Hello World!
 ///
-///  // Create a TBrowser on the python side, and transfer it back and forth.
-///  // Note the required explicit (void*) cast!
-///  root [1] TBrowser* b = (void*)TPython::Eval( "ROOT.TBrowser()" );
-///  root [2] TPython::Bind( b, "b" );
-///  root [3] b == (void*) TPython::Eval( "b" )
-///  (int)1
+///  // Create a TNamed on the python side, and transfer it back and forth.
+///  root [1] std::any res1;
+///  root [2] TPython::Exec("_anyresult = ROOT.std.make_any['TNamed']('hello', '')", &res1);
+///  root [3] TPython::Bind(&std::any_cast<TNamed&>(res1), "n");
+///  root [4] std::any res2;
+///  root [5] TPython::Exec("_anyresult = ROOT.std.make_any['TNamed*', 'TNamed*'](n)", &res2);
+///  root [6] (&std::any_cast<TNamed&>(res1) == std::any_cast<TNamed*>(res2))
+///  (bool) true
 ///
-///  // Builtin variables can cross-over by using implicit casts.
-///  root [4] int i = TPython::Eval( "1 + 1" );
-///  root [5] i
-///  (int)2
+///  // Variables can cross-over by using an `std::any` with a specific name.
+///  root [6] TPython::Exec("_anyresult = ROOT.std.make_any['Int_t'](1 + 1)", &res1);
+///  root [7] std::any_cast<int>(res1)
+///  (int) 2
 /// ~~~
 ///
 /// And with a python file `MyPyClass.py` like this:
@@ -375,20 +379,47 @@ void TPython::ExecScript(const char *name, int argc, const char **argv)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Execute a python statement (e.g. "import ROOT").
+/// Executes a Python command within the current Python environment.
+///
+/// This function initializes the Python environment if it is not already
+/// initialized. It then executes the specified Python command string using the
+/// Python C API.
+///
+/// In the Python command, you can change the value of a special TPyResult
+/// object returned by TPyBuffer(). If the optional result parameter is
+/// non-zero, the result parameter will be swapped with a std::any variable on
+/// the Python side. You need to define this variable yourself, and it needs to
+/// be of type std::any and its name needs to be `"_anyresult"` by default.
+/// Like this, you can pass information from Python back to C++.
+///
+/// \param cmd The Python command to be executed as a string.
+/// \param result Optional pointer to a std::any object that can be used to
+///               transfer results from Python to C++.
+/// \param resultName Name of the Python variable that is swapped over to the std::any result.
+///                   The default value is `"_anyresult"`.
+/// \return bool Returns `true` if the command was successfully executed,
+///              otherwise returns `false`.
 
-Bool_t TPython::Exec(const char *cmd)
+Bool_t TPython::Exec(const char *cmd, std::any *result, std::string const &resultName)
 {
    // setup
    if (!Initialize())
       return kFALSE;
 
+   std::stringstream command;
+   // Add the actual command
+   command << cmd;
+   // Swap the std::any with the one in the C++ world if required
+   if(result) {
+      command << "; ROOT.Internal.SwapWithObjAtAddr['std::any'](" << resultName << ", " << reinterpret_cast<std::intptr_t>(result) << ")";
+   }
+
    // execute the command
-   PyObject *result = PyRun_String(const_cast<char *>(cmd), Py_file_input, gMainDict, gMainDict);
+   PyObject *pyObjectResult = PyRun_String(const_cast<char *>(command.str().c_str()), Py_file_input, gMainDict, gMainDict);
 
    // test for error
-   if (result) {
-      Py_DECREF(result);
+   if (pyObjectResult) {
+      Py_DECREF(pyObjectResult);
       return kTRUE;
    }
 
@@ -402,6 +433,8 @@ Bool_t TPython::Exec(const char *cmd)
 /// Caution: do not hold on to the return value: either store it in a builtin
 /// type (implicit casting will work), or in a pointer to a ROOT object (explicit
 /// casting to a void* is required).
+///
+/// \deprecated Use TPython::Exec() with an std::any output parameter instead.
 
 const TPyReturn TPython::Eval(const char *expr)
 {

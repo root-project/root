@@ -26,6 +26,21 @@
 // ROOT
 #include "TObject.h"
 
+#include "ROOT/RConfig.hxx" // R__DEPRECATED
+
+#include <any>
+#include <cstdint>
+
+namespace ROOT {
+namespace Internal {
+
+// Internal helper for PyROOT to swap with an object is at a specific address.
+template<class T>
+inline void SwapWithObjAtAddr(T &a, std::intptr_t b) { std::swap(a, *reinterpret_cast<T*>(b)); }
+
+}
+}
+
 class TPython {
 
 private:
@@ -42,10 +57,10 @@ public:
    static void ExecScript(const char *name, int argc = 0, const char **argv = nullptr);
 
    // execute a python statement (e.g. "import ROOT" )
-   static Bool_t Exec(const char *cmd);
+   static Bool_t Exec(const char *cmd, std::any *result = nullptr, std::string const& resultName="_anyresult");
 
    // evaluate a python expression (e.g. "1+1")
-   static const TPyReturn Eval(const char *expr);
+   static const TPyReturn Eval(const char *expr) R__DEPRECATED(6,36, "Use TPython::Exec() with an std::any output parameter instead.");
 
    // bind a ROOT object with, at the python side, the name "label"
    static Bool_t Bind(TObject *object, const char *label);
