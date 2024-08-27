@@ -212,6 +212,7 @@ public:
 
   std::vector<std::unique_ptr<const RooAbsBinning>> const& getBinnings() const { return _lvbins; }
 
+  int arraySize()   const { return _arrSize; }  
   double const* weightArray()   const { return _wgt; }
   double const* wgtErrLoArray() const { return _errLo; }
   double const* wgtErrHiArray() const { return _errHi; }
