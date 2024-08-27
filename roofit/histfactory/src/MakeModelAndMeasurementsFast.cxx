@@ -268,6 +268,26 @@ RooStats::HistFactory::MakeModelAndMeasurementFast(RooStats::HistFactory::Measur
 
 
 ///////////////////////////////////////////////
+void RooStats::HistFactory::FitModelAndPlot(const std::string &MeasurementName,
+                                            const std::string &FileNamePrefix,
+                                            std::string data_name,
+                                            RooWorkspace &ws) {
+
+  // Create a new table and output file
+  std::unique_ptr<TFile> outFile;
+  std::ofstream tableFile;
+
+  tableFile.open(FileNamePrefix + "_results.table",
+                 std::ios::out | std::ios::app);
+
+  tableFile << " " << MeasurementName << " &";
+
+  FitModelAndPlot(MeasurementName, FileNamePrefix, ws, "combined", data_name,
+                  *outFile, tableFile);
+
+  tableFile << " \\\\ \n";
+}
+
 void RooStats::HistFactory::FitModelAndPlot(const std::string &MeasurementName, const std::string &FileNamePrefix,
                                             RooWorkspace &combined, std::string channel, std::string data_name,
                                             TFile &outFile, std::ostream &tableStream)
