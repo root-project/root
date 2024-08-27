@@ -982,7 +982,9 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
          auto &output = elem["axes"].set_seq();
          for (auto *obs : static_range_cast<RooRealVar *>(*varSet)) {
             auto &out = output.append_child().set_map();
-            out["name"] << obs->GetName();
+            std::string name = obs->GetName();
+            RooJSONFactoryWSTool::testValidName(name, false);
+            out["name"] << name;
             writeAxis(out, *obs);
          }
          observablesWritten = true;
