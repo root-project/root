@@ -337,7 +337,7 @@ TEST(RNTuple, SerializeFeatureFlags)
 
 TEST(RNTuple, SerializeLocator)
 {
-   unsigned char buffer[16];
+   unsigned char buffer[20];
    RNTupleLocator locator;
    locator.fPosition = 1U;
    locator.fBytesOnStorage = 2;
@@ -382,6 +382,15 @@ TEST(RNTuple, SerializeLocator)
    EXPECT_EQ(locator.fReserved, 0x5a);
    EXPECT_EQ(1337U, locator.GetPosition<RNTupleLocatorObject64>().fLocation);
 
+   locator.fBytesOnStorage = static_cast<std::uint64_t>(std::numeric_limits<std::uint32_t>::max()) + 1;
+   EXPECT_EQ(20u, RNTupleSerializer::SerializeLocator(locator, buffer));
+   locator = RNTupleLocator{};
+   EXPECT_EQ(20u, RNTupleSerializer::DeserializeLocator(buffer, 20, locator).Unwrap());
+   EXPECT_EQ(locator.fType, RNTupleLocator::kTypeDAOS);
+   EXPECT_EQ(locator.fBytesOnStorage, static_cast<std::uint64_t>(std::numeric_limits<std::uint32_t>::max()) + 1);
+   EXPECT_EQ(locator.fReserved, 0x5a);
+   EXPECT_EQ(1337U, locator.GetPosition<RNTupleLocatorObject64>().fLocation);
+
    std::int32_t *head = reinterpret_cast<std::int32_t *>(buffer);
 #ifndef R__BYTESWAP
    // on big endian system
@@ -390,7 +399,7 @@ TEST(RNTuple, SerializeLocator)
    *head = (0x3 << 24) | *head;
 #endif
    try {
-      RNTupleSerializer::DeserializeLocator(buffer, 16, locator).Unwrap();
+      RNTupleSerializer::DeserializeLocator(buffer, 20, locator).Unwrap();
       FAIL() << "unsupported locator type should throw";
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("unsupported locator type"));
