@@ -198,7 +198,6 @@ struct RNTupleLocator {
    /// `doc/specifications.md` for details
    enum ELocatorType : std::uint8_t {
       kTypeFile = 0x00,
-      kTypeURI = 0x01,
       kTypeDAOS = 0x02,
 
       kLastSerializableType = 0x7f,
