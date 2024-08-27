@@ -121,62 +121,7 @@ using std::endl, std::string, std::map, std::list, std::ifstream, std::ofstream,
 
 ClassImp(RooDataSet);
 
-#ifndef USEMEMPOOLFORDATASET
 void RooDataSet::cleanup() {}
-#else
-
-#include "MemPoolForRooSets.h"
-
-RooDataSet::MemPool* RooDataSet::memPool() {
-  RooSentinel::activate();
-  static auto * memPool = new RooDataSet::MemPool();
-  return memPool;
-}
-
-void RooDataSet::cleanup() {
-  auto pool = memPool();
-  pool->teardown();
-
-  //The pool will have to leak if it's not empty at this point.
-  if (pool->empty())
-    delete pool;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Overloaded new operator guarantees that all RooDataSets allocated with new
-/// have a unique address, a property that is exploited in several places
-/// in roofit to quickly index contents on normalization set pointers.
-/// The memory pool only allocates space for the class itself. The elements
-/// stored in the set are stored outside the pool.
-
-void* RooDataSet::operator new (size_t bytes)
-{
-  //This will fail if a derived class uses this operator
-  assert(sizeof(RooDataSet) == bytes);
-
-  return memPool()->allocate(bytes);
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Memory is owned by pool, we need to do nothing to release it
-
-void RooDataSet::operator delete (void* ptr)
-{
-  // Decrease use count in pool that ptr is on
-  if (memPool()->deallocate(ptr))
-    return;
-
-  std::cerr << __func__ << " " << ptr << " is not in any of the pools." << std::endl;
-
-  // Not part of any pool; use global op delete:
-  ::operator delete(ptr);
-}
-
-#endif
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for persistence
