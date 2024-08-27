@@ -66,9 +66,6 @@ parallelized calculation of test statistics.
 
 using std::endl, std::ostream;
 
-ClassImp(RooAbsOptTestStatistic);
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a test statistic, and optimise its calculation.
 /// \param[in] name Name of the instance.

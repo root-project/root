@@ -1,45 +1,15 @@
-/*****************************************************************************
- * Project: RooFit                                                           *
- * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsOptGoodnessOfFit.h,v 1.15 2007/05/11 09:11:30 verkerke Exp $
- * Authors:                                                                  *
- *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
- *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
- *                                                                           *
- * Copyright (c) 2000-2005, Regents of the University of California          *
- *                          and Stanford University. All rights reserved.    *
- *                                                                           *
- * Redistribution and use in source and binary forms,                        *
- * with or without modification, are permitted according to the terms        *
- * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
- *****************************************************************************/
+/*
+ * Project: RooFit
+ *
+ * Copyright (c) 2024, CERN
+ *
+ * Redistribution and use in source and binary forms,
+ * with or without modification, are permitted according to the terms
+ * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
+ */
+
 #ifndef ROO_ABS_OPT_TEST_STATISTIC
 #define ROO_ABS_OPT_TEST_STATISTIC
-
-// We can't print deprecation warnings when including headers in cling, because
-// this will be done automatically anyway.
-#ifdef __CLING__
-#ifndef ROOFIT_BUILDS_ITSELF
-// These warnings should only be suppressed when building ROOT itself!
-#warning "Including RooAbsOptTestStatistic.h is deprecated, and this header will be removed in ROOT v6.34: it is an implementation detail that should not be part of the public user interface"
-#else
-// If we are builting RooFit itself, this will serve as a reminder to actually
-// remove this deprecate public header. Here is now this needs to be done:
-//    1. Move this header file from inc/ to src/
-//    2. Remove the LinkDef entry, ClassDefOverride, and ClassImpl macros for
-//       this class
-//    3. If there are are tests using this class in the test/ directory, change
-//       the include to use a relative path the moved header file in the src/
-//       directory, e.g. #include <RemovedInterface.h> becomes #include
-//       "../src/RemovedInterface.h"
-//    4. Remove this ifndef-else-endif block from the header
-//    5. Remove the deprecation warning at the end of the class declaration
-#include <RVersion.h>
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6, 34, 00)
-#error "Please remove this deprecated public interface."
-#endif
-#endif
-#endif
 
 #include "RooAbsTestStatistic.h"
 #include "RooSetProxy.h"
@@ -116,12 +86,6 @@ protected:
   RooAbsData* _origData = nullptr;  ///< Original data
   bool      _optimized = false; ///<!
   double      _integrateBinsPrecision{-1.}; // Precision for finer sampling of bins.
-
-  ClassDefOverride(RooAbsOptTestStatistic,0) // Abstract base class for optimized test statistics
-#ifndef ROOFIT_BUILDS_ITSELF
-} R__DEPRECATED(6,34, "RooAbsOptTestStatistic is a RooFit implementation detail that should not be instantiated in user code.");
-#else
 };
-#endif
 
 #endif

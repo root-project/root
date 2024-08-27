@@ -2942,8 +2942,3 @@ void RooWorkspace::RecursiveRemove(TObject *removedObj)
 
    _eocache.RecursiveRemove(removedObj); // RooExpensiveObjectCache
 }
-
-TIterator *RooWorkspace::componentIterator() const
-{
-   return new RooLinkedListIter(_allOwnedNodes.makeLegacyIterator());
-}

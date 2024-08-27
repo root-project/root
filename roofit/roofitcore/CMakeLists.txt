@@ -17,12 +17,7 @@ endif()
 
 if(roofit_legacy_eval_backend)
   set(LegacyEvalBackendHeaders
-    RooAbsOptTestStatistic.h
-    RooAbsTestStatistic.h
-    RooChi2Var.h
-    RooNLLVar.h
     RooRealMPFE.h
-    RooXYChi2Var.h
   )
 
   set(LegacyEvalBackendSources
@@ -494,10 +489,6 @@ endif()
 if(fftw3)
   target_compile_definitions(RooFitCore PUBLIC ROOFIT_MATH_FFTW3)
 endif()
-
-# To avoid deprecation warnings when including old test statistics headers.
-# RooFit has to include them to build the documentation.
-target_compile_definitions(RooFitCore PUBLIC ROOFIT_BUILDS_ITSELF)
 
 target_include_directories(RooFitCore PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/res>)
 

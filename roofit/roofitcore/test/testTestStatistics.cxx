@@ -13,7 +13,7 @@
 #include <RooHistFunc.h>
 #include <RooHistPdf.h>
 #ifdef ROOFIT_LEGACY_EVAL_BACKEND
-#include <RooNLLVar.h>
+#include "../src/RooNLLVar.h"
 #endif
 #include <RooPlot.h>
 #include <RooPolyVar.h>

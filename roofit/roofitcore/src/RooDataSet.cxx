@@ -575,19 +575,6 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet&
    }
 }
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor of an empty data set from a RooArgSet defining the dimensions
-/// of the data space.
-/// \deprecated Use the more explicit `RooDataSet(name, title, vars, RooFit::WeightVar(wgtVarName))`.
-
-RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet& vars, const char* wgtVarName)
-  : RooDataSet(name,title,vars, RooFit::WeightVar(wgtVarName))
-{
-}
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor of a data set from (part of) an existing data
 /// set. The dimensions of the data set are defined by the 'vars'
@@ -662,73 +649,6 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, RooDataSet *dset
 RooDataSet::RooDataSet(RooStringView name, RooStringView title, RooDataSet *dset,
              const RooArgSet& vars, const RooFormulaVar& cutVar, const char* wgtVarName)
   : RooDataSet{name, title, dset, vars, cutVar.expression(), wgtVarName} {}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor of a data set from (part of) an ROOT TTree. The dimensions
-/// of the data set are defined by the 'vars' RooArgSet. For each dimension
-/// specified, the TTree must have a branch with the same name. For category
-/// branches, this branch should contain the numeric index value. Real dimensions
-/// can be constructed from either 'double' or 'Float_t' tree branches. In the
-/// latter case, an automatic conversion is applied.
-///
-/// The 'cutVar' formula variable
-/// is used to select the subset of data points to be copied.
-/// For subsets without selection on the data points, or involving cuts
-/// operating exclusively and directly on the data set dimensions, the equivalent
-/// constructor with a string based cut expression is recommended.
-
-RooDataSet::RooDataSet(RooStringView name, RooStringView title, TTree *theTree,
-    const RooArgSet& vars, const RooFormulaVar& cutVar, const char* wgtVarName)
-  : RooDataSet{name, title, theTree, vars, cutVar.expression(), wgtVarName} {}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor of a data set from (part of) a ROOT TTree.
-///
-/// \param[in] name Name of this dataset.
-/// \param[in] title Title for e.g. plotting.
-/// \param[in] theTree Tree to be imported.
-/// \param[in] vars Defines the columns of the data set. For each dimension
-/// specified, the TTree must have a branch with the same name. For category
-/// branches, this branch should contain the numeric index value. Real dimensions
-/// can be constructed from either 'double' or 'Float_t' tree branches. In the
-/// latter case, an automatic conversion is applied.
-/// \param[in] cuts Optional RooFormula expression to select the subset of the data points
-/// to be imported. The cut expression can refer to any variable in `vars`.
-/// \warning The expression only evaluates variables that are also in `vars`.
-/// Passing e.g.
-/// ```
-/// RooDataSet("data", "data", tree, RooArgSet(x), "x>y")
-/// ```
-/// Will load `x` from the tree, but leave `y` at an undefined value.
-/// If other expressions are needed, such as intermediate formula objects, use
-/// RooDataSet::RooDataSet(const char*,const char*,TTree*,const RooArgSet&,const RooFormulaVar&,const char*)
-/// \param[in] wgtVarName Name of the variable in `vars` that represents an event weight.
-RooDataSet::RooDataSet(RooStringView name, RooStringView title, TTree* theTree,
-    const RooArgSet& vars, const char* cuts, const char* wgtVarName) :
-  RooAbsData(name,title,vars)
-{
-  // Create tree version of datastore
-  auto tstore = std::make_unique<RooTreeDataStore>(name,title,_vars,*theTree,cuts,wgtVarName);
-
-  // Convert to vector datastore if needed
-  if (defaultStorageType==Tree) {
-    _dstore = std::move(tstore);
-  } else if (defaultStorageType==Vector) {
-    _dstore = std::make_unique<RooVectorDataStore>(name,title,_vars,wgtVarName);
-    static_cast<RooVectorDataStore&>(*_dstore).append(*tstore) ;
-  }
-
-  appendToDir(this,true) ;
-
-  initialize(wgtVarName) ;
-  TRACE_CREATE;
-}
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
