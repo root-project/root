@@ -33,6 +33,7 @@ class CompilerInstance;
 
 namespace cling {
 
+class ClingMMapper;
 class IncrementalExecutor;
 class Transaction;
 
@@ -59,6 +60,7 @@ public:
                  const clang::CompilerInstance &CI,
                  std::unique_ptr<llvm::orc::ExecutorProcessControl> EPC,
                  llvm::Error &Err, void *ExtraLibHandle, bool Verbose);
+  ~IncrementalJIT();
 
   /// Register a DefinitionGenerator to dynamically provide symbols for
   /// generated code that are not already available within the process.
@@ -102,6 +104,7 @@ public:
   llvm::TargetMachine &getTargetMachine() { return *TM; }
 
 private:
+  std::unique_ptr<ClingMMapper> m_MMapper;
   std::unique_ptr<llvm::orc::LLJIT> Jit;
   llvm::orc::SymbolMap m_InjectedSymbols;
   SharedAtomicFlag SkipHostProcessLookup;
