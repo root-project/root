@@ -66,6 +66,25 @@ tool = ROOT.RooJSONFactoryWSTool(ws)
 tool.exportJSON("myjson.json")
 ~~~
 
+Analogously, in C++, you can do
+
+~~~ {.cxx}
+#include "RooFitHS3/RooJSONFactoryWSTool.h"
+// ...
+RooWorkspace ws("ws");
+RooJSONFactoryWSTool tool(ws);
+tool.importJSON("myjson.json");
+~~~
+
+and
+
+~~~ {.cxx}
+#include "RooFitHS3/RooJSONFactoryWSTool.h"
+// ...
+RooJSONFactoryWSTool tool(ws);
+tool.exportJSON("myjson.json");
+~~~
+
 For more details, consult the tutorial <a href="rf515__hfJSON_8py.html">rf515_hfJSON</a>.
 
 In order to import and export YML files, `ROOT` needs to be compiled
