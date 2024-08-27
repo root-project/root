@@ -395,7 +395,7 @@ void RModelParser_ONNX::ParseONNXGraph(RModel & rmodel, const onnx::GraphProto &
       std::vector<Dim> fShape;
       bool existParam = false;
       if (!valueinfoproto.type().tensor_type().has_shape())
-         throw std::runtime_error("TMVA::SOFIE datanode with no shape restrictions is not supported yet");
+         throw std::runtime_error("TMVA::SOFIE data node with no shape restrictions is not supported yet");
       for (int j = 0; j < valueinfoproto.type().tensor_type().shape().dim_size(); j++) {
          Dim dim;
          if (valueinfoproto.type().tensor_type().shape().dim(j).value_case() ==
