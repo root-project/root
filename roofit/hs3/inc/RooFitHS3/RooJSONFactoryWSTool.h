@@ -38,6 +38,7 @@ class ModelConfig;
 class RooJSONFactoryWSTool {
 public:
    static constexpr bool useListsInsteadOfDicts = true;
+   static bool allowExportInvalidNames;
 
    struct CombinedData {
       std::string name;
@@ -49,6 +50,8 @@ public:
    ~RooJSONFactoryWSTool();
 
    static std::string name(const RooFit::Detail::JSONNode &n);
+   static bool isValidName(const std::string &str);
+   static bool testValidName(const std::string &str, bool forcError);
 
    static RooFit::Detail::JSONNode &appendNamedChild(RooFit::Detail::JSONNode &node, std::string const &name);
    static RooFit::Detail::JSONNode const *findNamedChild(RooFit::Detail::JSONNode const &node, std::string const &name);
