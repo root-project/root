@@ -155,6 +155,24 @@ If the type doesn't match, you now get a clear error instead of garbage values.
 ```txt
 Error in <TTree::SetBranchAddress>: The pointer type given "Double_t" (8) does not correspond to the type needed "Float_t" (5) by the branch: a
 Status = -2
+
+### Deprecation of `TPython::Eval()`
+
+The `TPython::Eval()` method is deprecated and scheduled for removal in ROOT 6.36.
+Its implementation was fragile, and the same functionality can be achieved with `TPython::Exec()`, using a C++ variable that is known to the ROOT interpreter for crossing over from Python to C++.
+
+Example:
+```c++
+// Before, with TPython::Eval()
+std::string stringVal = static_cast<const char*>(TPython::Eval("'done'"));
+std::cout << stringVal << std::endl;
+
+// Now, with TPython::Exec(). You can set `_anyresult` to whatever std::any you want.
+// It will be swapped into the return variabe in the end.
+
+std::any result;
+TPython::Exec("_anyresult = ROOT.std.make_any['std::string']('done')", &result);
+std::cout << std::any_cast<std::string>(result) << std::endl;
 ```
 
 ## Language Bindings
