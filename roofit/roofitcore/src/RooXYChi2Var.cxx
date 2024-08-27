@@ -42,12 +42,7 @@
 #include "RooRealBinding.h"
 #include "RooNumIntFactory.h"
 
-#include <stdexcept>
-
 using std::endl;
-
-ClassImp(RooXYChi2Var);
-
 
 namespace {
   RooAbsTestStatistic::Configuration makeRooAbsTestStatisticCfg() {
@@ -231,7 +226,7 @@ double RooXYChi2Var::xErrorContribution(double ydata) const
       // Calculate slope
       double slope = (fxmax-fxmin)/(2*xerr/100.) ;
 
-//       cout << "xerrHi = " << xerrHi << " xerrLo = " << xerrLo << " slope = " << slope << endl ;
+//       cout << "xerrHi = " << xerrHi << " xerrLo = " << xerrLo << " slope = " << slope << std::endl ;
 
       // Asymmetric X error, decide which one to use
       if ((ydata>cxval && fxmax>fxmin) || (ydata<=cxval && fxmax<=fxmin)) {
@@ -262,7 +257,7 @@ double RooXYChi2Var::xErrorContribution(double ydata) const
 //       cout << var << " " ;
 //       var->Print() ;
 
-//       cout << var->GetName() << " xerr = " << xerr << " slope = " << slope << endl ;
+//       cout << var->GetName() << " xerr = " << xerr << " slope = " << slope << std::endl ;
 
       // Symmetric X error
       ret += pow(xerr*slope,2) ;
@@ -357,12 +352,12 @@ double RooXYChi2Var::evaluatePartition(std::size_t firstEvent, std::size_t lastE
     // Add contributions due to error in x coordinates
     double eIntX2 = _integrate ? 0 : xErrorContribution(ydata) ;
 
-//     cout << "fy = " << yfunc << " eExt = " << eExt << " eInt = " << eInt << " eIntX2 = " << eIntX2 << endl ;
+//     cout << "fy = " << yfunc << " eExt = " << eExt << " eInt = " << eInt << " eIntX2 = " << eIntX2 << std::endl ;
 
     // Return 0 if eInt=0, special handling in MINUIT will follow
     if (eInt==0.) {
       coutE(Eval) << "RooXYChi2Var::RooXYChi2Var(" << GetName() << ") INFINITY ERROR: data point " << i
-        << " has zero error, but function is not zero (f=" << yfunc << ")" << endl ;
+        << " has zero error, but function is not zero (f=" << yfunc << ")" << std::endl ;
       return 0 ;
     }
 

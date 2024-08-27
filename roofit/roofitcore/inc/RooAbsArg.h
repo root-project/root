@@ -131,41 +131,6 @@ public:
   /// interfaces are usually available.
   /// @{
 
-  /// Retrieve a client iterator.
-  inline TIterator* clientIterator() const
-  R__DEPRECATED(6,34, "Use clients() and begin(), end() or range-based loops.") {
-    // Return iterator over all client RooAbsArgs
-    return makeLegacyIterator(_clientList);
-  }
-  inline TIterator* valueClientIterator() const
-  R__DEPRECATED(6,34, "Use valueClients() and begin(), end() or range-based loops.") {
-    // Return iterator over all shape client RooAbsArgs
-    return makeLegacyIterator(_clientListValue);
-  }
-  inline TIterator* shapeClientIterator() const
-  R__DEPRECATED(6,34, "Use shapeClients() and begin(), end() or range-based loops.") {
-    // Return iterator over all shape client RooAbsArgs
-    return makeLegacyIterator(_clientListShape);
-  }
-  inline TIterator* serverIterator() const
-  R__DEPRECATED(6,34, "Use servers() and begin(), end() or range-based loops.") {
-    // Return iterator over all server RooAbsArgs
-    return makeLegacyIterator(_serverList);
-  }
-
-  inline RooFIter valueClientMIterator() const
-  R__DEPRECATED(6,34, "Use valueClients() and begin(), end() or range-based loops.") {
-    return RooFIter(std::unique_ptr<RefCountListLegacyIterator_t>(makeLegacyIterator(_clientListValue)));
-  }
-  inline RooFIter shapeClientMIterator() const
-  R__DEPRECATED(6,34, "Use shapeClients() and begin(), end() or range-based loops.") {
-    return RooFIter(std::unique_ptr<RefCountListLegacyIterator_t>(makeLegacyIterator(_clientListShape)));
-  }
-  inline RooFIter serverMIterator() const
-  R__DEPRECATED(6,34, "Use servers() and begin(), end() or range-based loops.") {
-    return RooFIter(std::unique_ptr<RefCountListLegacyIterator_t>(makeLegacyIterator(_serverList)));
-  }
-
   // --- Obsolete functions for backward compatibility
   RooFit::OwningPtr<RooArgSet> getDependents(const RooArgSet& set) const;
   RooFit::OwningPtr<RooArgSet> getDependents(const RooAbsData* set) const;

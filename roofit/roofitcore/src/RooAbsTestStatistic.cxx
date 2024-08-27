@@ -56,9 +56,6 @@ combined in the main thread.
 
 using std::endl, std::ostream;
 
-ClassImp(RooAbsTestStatistic);
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a test statistic from the given function and the data.
 /// \param[in] name Name of the test statistic

@@ -29,7 +29,7 @@
 #include <RooDataHist.h>
 #include <RooRealSumPdf.h>
 #ifdef ROOFIT_LEGACY_EVAL_BACKEND
-#include <RooNLLVar.h>
+#include "../../src/RooNLLVar.h"
 #endif
 #include <RooRealVar.h>
 

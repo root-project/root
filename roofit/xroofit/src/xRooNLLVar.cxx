@@ -23,7 +23,7 @@ This xRooNLLVar object has several special methods, e.g. for fitting and toy dat
 #define protected public
 #endif
 #include "RooFitResult.h"
-#include "RooNLLVar.h"
+#include "../../roofitcore/src/RooNLLVar.h"
 #ifdef protected
 #undef protected
 #endif

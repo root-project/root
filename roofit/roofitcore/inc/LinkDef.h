@@ -336,11 +336,4 @@
 #pragma link C++ class RooBinSamplingPdf+;
 #pragma link C++ class RooBinWidthFunction+;
 
-// Classes for legacy evaluation backend
-#pragma link C++ class RooAbsOptTestStatistic+ ;
-#pragma link C++ class RooAbsTestStatistic+ ;
-#pragma link C++ class RooChi2Var+ ;
-#pragma link C++ class RooNLLVar+ ;
-#pragma link C++ class RooXYChi2Var+ ;
-
 #endif
