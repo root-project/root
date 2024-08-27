@@ -17,7 +17,7 @@
 #include <RooMinimizer.h>
 #include <RooFitResult.h>
 #ifdef ROOFIT_LEGACY_EVAL_BACKEND
-#include <RooNLLVar.h>
+#include "../../src/RooNLLVar.h"
 #endif
 #include "RooDataHist.h" // complete type in Binned test
 #include "RooCategory.h" // complete type in MultiBinnedConstraint test

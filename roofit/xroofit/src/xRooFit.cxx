@@ -52,7 +52,7 @@
 #include "TGraphErrors.h"
 #include "TLegend.h"
 #include "TKey.h"
-#include "RooAbsTestStatistic.h"
+#include "../../roofitcore/src/RooAbsTestStatistic.h"
 #include "TPRegexp.h"
 #include "RooStringVar.h"
 
