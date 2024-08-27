@@ -39,7 +39,7 @@ using namespace llvm;
 using namespace llvm::jitlink;
 using namespace llvm::orc;
 
-namespace {
+namespace cling {
 
   class ClingMMapper final : public SectionMemoryManager::MemoryMapper {
   public:
@@ -68,7 +68,9 @@ namespace {
     }
   };
 
-  ClingMMapper MMapperInstance;
+}
+
+namespace {
 
   // A memory manager for Cling that reserves memory for code and data sections
   // to keep them contiguous for the emission of one module. This is required
@@ -131,7 +133,7 @@ namespace {
     AllocInfo m_RWData;
 
   public:
-    ClingMemoryManager() : Super(&MMapperInstance) {}
+    ClingMemoryManager(cling::ClingMMapper& MMapper) : Super(&MMapper) {}
 
     uint8_t* allocateCodeSection(uintptr_t Size, unsigned Alignment,
                                  unsigned SectionID,
@@ -558,7 +560,10 @@ IncrementalJIT::IncrementalJIT(
       return ObjLinkingLayer;
     }
 
-    auto GetMemMgr = []() { return std::make_unique<ClingMemoryManager>(); };
+    m_MMapper = std::make_unique<ClingMMapper>();
+    auto GetMemMgr = [this]() {
+      return std::make_unique<ClingMemoryManager>(*m_MMapper);
+    };
     auto Layer =
         std::make_unique<RTDyldObjectLinkingLayer>(ES, std::move(GetMemMgr));
 
@@ -667,6 +672,8 @@ IncrementalJIT::IncrementalJIT(
   };
   Jit->getExecutionSession().setErrorReporter(ErrorReporter);
 }
+
+IncrementalJIT::~IncrementalJIT() = default;
 
 std::unique_ptr<llvm::orc::DefinitionGenerator> IncrementalJIT::getGenerator() {
   return std::make_unique<DelegateGenerator>(
