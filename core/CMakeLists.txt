@@ -112,12 +112,7 @@ target_compile_definitions(Core PRIVATE
  )
 
 if (runtime_cxxmodules)
-  if(APPLE)
-    list(APPEND core_implicit_modules "-mByproduct" "Darwin")
-  endif()
-  if(MSVC)
-    list(APPEND core_implicit_modules "-mByproduct" "services")
-  endif()
+  list(APPEND core_implicit_modules "-mSystemByproducts")
   # Force generation of _Builtin_intrinsics from Core.
   list(APPEND core_implicit_modules "-m" "_Builtin_intrinsics" "-mByproduct" "_Builtin_intrinsics")
   list(APPEND core_implicit_modules "-mByproduct" "ROOT_Foundation_Stage1_NoRTTI")

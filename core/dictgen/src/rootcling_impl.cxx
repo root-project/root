@@ -3543,6 +3543,9 @@ public:
    }
 };
 
+static llvm::cl::opt<bool> gOptSystemModuleByproducts("mSystemByproducts", llvm::cl::Hidden,
+                                                      llvm::cl::desc("Allow implicit build of system modules."),
+                                                      llvm::cl::cat(gRootclingOptions));
 static llvm::cl::list<std::string>
 gOptModuleByproducts("mByproduct", llvm::cl::ZeroOrMore,
                      llvm::cl::Hidden,
@@ -3616,9 +3619,19 @@ public:
       // an error because rootcling is not able to generate the corresponding
       // dictionary.
       // If we build a I/O requiring module implicitly we should display
-      // an error unless the -mByproduct was specified.
-      bool isByproductModule
-         = module && std::find(gOptModuleByproducts.begin(), gOptModuleByproducts.end(), moduleName) != gOptModuleByproducts.end();
+      // an error unless -mSystemByproducts or -mByproduct were specified.
+      bool isByproductModule = false;
+      if (module) {
+         // -mSystemByproducts allows implicit building of any system module.
+         if (module->IsSystem && gOptSystemModuleByproducts) {
+            isByproductModule = true;
+         }
+         // -mByproduct lists concrete module names that are allowed.
+         if (std::find(gOptModuleByproducts.begin(), gOptModuleByproducts.end(), moduleName) !=
+             gOptModuleByproducts.end()) {
+            isByproductModule = true;
+         }
+      }
       if (!isByproductModule)
          fChild->HandleDiagnostic(DiagLevel, Info);
 
