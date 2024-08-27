@@ -25,10 +25,23 @@ std::vector<size_t> ConvertShapeToInt(std::vector<Dim> shape){
    std::vector<size_t> ret_shape(shape.size());
    for (size_t i =0; i < shape.size(); i++){
       if (shape[i].isParam) {
-         ret_shape.clear();
-         break;
+         // try converting to integer in case string is a number >=0
+         int val = -1;
+         try {
+            val = std::stoi(shape[i].param);
+            if (val >= 0) ret_shape[i] = static_cast<size_t>(val);
+            else {
+               ret_shape.clear();
+               break;
+            }
+         }
+         catch (const std::invalid_argument& ) {
+            ret_shape.clear();
+            break;
+         }
+      } else {
+         ret_shape[i] = shape[i].dim;
       }
-      ret_shape[i] = shape[i].dim;
    }
    return ret_shape;
 }

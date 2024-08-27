@@ -306,7 +306,7 @@ void RModel::Initialize(const std::map<std::string, size_t> & inputParams, bool 
    for (auto &input : originalInputTensorInfos) {
       if (verbose) std::cout << "looking at the tensor " << input.first << std::endl;
       // if a parameter (e.g. batch_size) is specified use for converting parametric shape in defined one
-       if (!inputParams.empty()) {
+      if (!inputParams.empty()) {
          for (auto &d : input.second.shape) {
             if (d.isParam) {
                std::string pname = d.param;
@@ -322,6 +322,9 @@ void RModel::Initialize(const std::map<std::string, size_t> & inputParams, bool 
       }
       // see if shape now is fully defined
       auto shape = ConvertShapeToInt(input.second.shape);
+      if (verbose)
+         std::cout << "converting input shape for " << input.first << " " << ConvertShapeToString(shape) << " from "
+            << ConvertDynamicShapeToString(input.second.shape) << std::endl;
       if (!shape.empty()) {
          // case shape is defined (not parametric) we add the tensor in the fReadyInputTensorInfos map and
          // we remove the tensor from the fInputTensorInfo where th eold parametric shape was stored
