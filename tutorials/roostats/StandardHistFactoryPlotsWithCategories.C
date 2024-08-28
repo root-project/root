@@ -206,9 +206,9 @@ void StandardHistFactoryPlotsWithCategories(const char *infile = "", const char 
 
          obs = ((RooRealVar *)obstmp->first());
 
-         TIter it = mc->GetNuisanceParameters()->createIterator();
-         RooRealVar *var = NULL;
-         while (nPlots < nPlotsMax && (var = (RooRealVar *)it.Next())) {
+         for (auto *var : static_range_cast<RooRealVar*>(*mc->GetNuisanceParameters())) {
+            if (nPlots == nPlotsMax) break;
+
             TCanvas *c2 = new TCanvas("c2");
             RooPlot *frame = obs->frame();
             frame->SetName(Form("frame%d", nPlots));
