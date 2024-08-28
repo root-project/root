@@ -89,7 +89,32 @@ void hf001_example() {
   // meas.PrintXML( "xmlFromCCode", meas.GetOutputFilePrefix() );
 
   // Now, do the measurement
-  MakeModelAndMeasurementFast( meas );
+  std::unique_ptr<RooWorkspace> ws{MakeModelAndMeasurementFast(meas)};
+
+  RooStats::ModelConfig *modelConfig = static_cast<RooStats::ModelConfig*>(ws->obj("ModelConfig"));
 
 
+  // Get probability density function and parameters list from model 
+  RooAbsPdf *pdf = modelConfig->GetPdf();
+  RooArgSet globalObservables{*modelConfig->GetGlobalObservables()};
+
+  /*
+  parameters in globalObservables:
+
+  nominalLumi
+  nom_alpha_syst1 -> was set as constant in the beginning
+  nom_alpha_syst2
+  nom_alpha_syst3
+  nom_gamma_stat_channel1_bin_0
+  nom_gamma_stat_channel1_bin_1
+
+  */
+
+  // Perform the fit
+  using namespace RooFit;
+  std::unique_ptr<RooFitResult> result{
+      pdf->fitTo(*ws->data("obsData"), Save(), PrintLevel(-1), GlobalObservables(globalObservables))
+  };
+
+  result->Print();
 }
