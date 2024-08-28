@@ -21,11 +21,11 @@ here = pathlib.Path(__file__).parent.resolve()
 # Get the long description from the README file
 long_description = (here / "README.md").read_text(encoding="utf-8")
 
-# SOURCE_DIR = os.getcwd()
+SOURCE_DIR = os.getcwd()
 BUILD_DIR = tempfile.mkdtemp()
 INSTALL_DIR = tempfile.mkdtemp()
 
-SOURCE_DIR = os.path.join(os.sep, *"host/home/vpadulan/Programs/rootproject/rootsrc".split("/"))
+# SOURCE_DIR = os.path.join(os.sep, *"host/home/vpadulan/Programs/rootproject/rootsrc".split("/"))
 # BUILD_DIR = os.path.join(os.sep, *"host/home/vpadulan/Programs/rootproject/pip-tests/build".split("/"))
 # INSTALL_DIR = os.path.join(os.sep, *"host/home/vpadulan/Programs/rootproject/pip-tests/install".split("/"))
 
