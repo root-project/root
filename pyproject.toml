@@ -1,5 +1,5 @@
 [build-system]
-requires = ["cmake", "setuptools", "wheel", "ninja", "numpy"]
+requires = ["cmake", "setuptools<72", "wheel", "ninja", "numpy"]
 
 [project]
 name = "ROOT"
