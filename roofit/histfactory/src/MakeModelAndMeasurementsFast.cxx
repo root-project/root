@@ -32,6 +32,7 @@
 #include <fstream>
 #include <sstream>
 
+static void formatFrameForLikelihoodImpl(RooPlot* frame, std::string YTitle);
 
 /** ********************************************************************************************
   \ingroup HistFactory
@@ -266,8 +267,9 @@ RooStats::HistFactory::MakeModelAndMeasurementFast(RooStats::HistFactory::Measur
   return RooFit::makeOwningPtr(std::move(ws));
 }
 
-
 ///////////////////////////////////////////////
+/// \deprecated Will be removed in ROOT 6.36. Please write your own plotting code inspired by the hf001 tutorial.
+
 void RooStats::HistFactory::FitModelAndPlot(const std::string &MeasurementName, const std::string &FileNamePrefix,
                                             RooWorkspace &combined, std::string channel, std::string data_name,
                                             TFile &outFile, std::ostream &tableStream)
@@ -407,6 +409,8 @@ void RooStats::HistFactory::FitModelAndPlot(const std::string &MeasurementName, 
 }
 
 
+/// \deprecated Will be removed in ROOT 6.36. Please write your own plotting code inspired by the hf001 tutorial.
+
 void RooStats::HistFactory::FitModel(RooWorkspace * combined, std::string data_name )
 {
    using namespace RooFit;
@@ -435,9 +439,7 @@ void RooStats::HistFactory::FitModel(RooWorkspace * combined, std::string data_n
 
   }
 
-
-void RooStats::HistFactory::FormatFrameForLikelihood(RooPlot* frame, std::string /*XTitle*/,
-                       std::string YTitle)
+void formatFrameForLikelihoodImpl(RooPlot* frame, std::string YTitle)
 {
    using namespace RooFit;
 
@@ -468,4 +470,12 @@ void RooStats::HistFactory::FormatFrameForLikelihood(RooPlot* frame, std::string
     frame->addObject(line);
     frame->addObject(line90);
     frame->addObject(line95);
+}
+
+/// \deprecated Will be removed in ROOT 6.36. Please write your own plotting code inspired by the hf001 tutorial.
+
+void RooStats::HistFactory::FormatFrameForLikelihood(RooPlot* frame, std::string /*XTitle*/,
+                       std::string YTitle)
+{
+   formatFrameForLikelihoodImpl(frame, YTitle);
 }
