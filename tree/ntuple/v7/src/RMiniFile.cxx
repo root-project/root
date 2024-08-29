@@ -215,8 +215,8 @@ struct RTFKey {
    RTFKey(std::uint64_t seekKey, std::uint64_t seekPdir, const RTFString &clName, const RTFString &objName,
           const RTFString &titleName, std::size_t szObjInMem, std::size_t szObjOnDisk = 0)
    {
-      R__ASSERT(szObjInMem < std::numeric_limits<std::int32_t>::max());
-      R__ASSERT(szObjOnDisk < std::numeric_limits<std::int32_t>::max());
+      R__ASSERT(szObjInMem <= std::numeric_limits<std::uint32_t>::max());
+      R__ASSERT(szObjOnDisk <= std::numeric_limits<std::uint32_t>::max());
       fObjLen = szObjInMem;
       if ((seekKey > static_cast<unsigned int>(std::numeric_limits<std::int32_t>::max())) ||
           (seekPdir > static_cast<unsigned int>(std::numeric_limits<std::int32_t>::max()))) {
@@ -1209,6 +1209,10 @@ std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::WriteBlob(const v
 
    const std::uint64_t maxKeySize = fNTupleAnchor.fMaxKeySize;
    R__ASSERT(maxKeySize > 0);
+   // We don't need the object length except for seeing compression ratios in TFile::Map()
+   // Make sure that the on-disk object length fits into the TKey header.
+   if (static_cast<std::uint64_t>(len) > static_cast<std::uint64_t>(std::numeric_limits<std::uint32_t>::max()))
+      len = nbytes;
 
    if (nbytes <= maxKeySize) {
       // Fast path: only write 1 key.
