@@ -89,13 +89,13 @@ public:
    struct RSealedPage {
    private:
       const void *fBuffer = nullptr;
-      std::uint32_t fBufferSize = 0; ///< Size of the page payload and the trailing checksum (if available)
+      std::size_t fBufferSize = 0; ///< Size of the page payload and the trailing checksum (if available)
       std::uint32_t fNElements = 0;
       bool fHasChecksum = false; ///< If set, the last 8 bytes of the buffer are the xxhash of the rest of the buffer
 
    public:
       RSealedPage() = default;
-      RSealedPage(const void *buffer, std::uint32_t bufferSize, std::uint32_t nElements, bool hasChecksum = false)
+      RSealedPage(const void *buffer, std::size_t bufferSize, std::uint32_t nElements, bool hasChecksum = false)
          : fBuffer(buffer), fBufferSize(bufferSize), fNElements(nElements), fHasChecksum(hasChecksum)
       {
       }
@@ -107,13 +107,13 @@ public:
       const void *GetBuffer() const { return fBuffer; }
       void SetBuffer(const void *buffer) { fBuffer = buffer; }
 
-      std::uint32_t GetDataSize() const
+      std::size_t GetDataSize() const
       {
          assert(fBufferSize >= fHasChecksum * kNBytesPageChecksum);
          return fBufferSize - fHasChecksum * kNBytesPageChecksum;
       }
-      std::uint32_t GetBufferSize() const { return fBufferSize; }
-      void SetBufferSize(std::uint32_t bufferSize) { fBufferSize = bufferSize; }
+      std::size_t GetBufferSize() const { return fBufferSize; }
+      void SetBufferSize(std::size_t bufferSize) { fBufferSize = bufferSize; }
 
       std::uint32_t GetNElements() const { return fNElements; }
       void SetNElements(std::uint32_t nElements) { fNElements = nElements; }
