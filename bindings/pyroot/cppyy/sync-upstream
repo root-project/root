@@ -41,7 +41,6 @@ mv cppyy_CMakeLists.txt cppyy/CMakeLists.txt
 
 # Apply patches (they were created with git format-patch -1 HEAD)
 # Alternatively, one can also use "git am" to create individual commits
-git apply patches/CPyCppyy-Disable-initializer-style-construction.patch
 git apply patches/CPyCppyy-Adapt-to-no-std-in-ROOT.patch
 git apply patches/CPyCppyy-Always-convert-returned-std-string.patch
 git apply patches/CPyCppyy-Disable-implicit-conversion-to-smart-ptr.patch

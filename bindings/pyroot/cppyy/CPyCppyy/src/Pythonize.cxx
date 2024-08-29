@@ -1720,8 +1720,6 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
     }
 #endif
 
-    // This pythonization is disabled for ROOT because it is a bit buggy
-#if 0
     if (Cppyy::IsAggregate(((CPPClass*)pyclass)->fCppType) && name.compare(0, 5, "std::", 5) != 0) {
     // create a pseudo-constructor to allow initializer-style object creation
         Cppyy::TCppType_t kls = ((CPPClass*)pyclass)->fCppType;
@@ -1789,7 +1787,6 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
             }
         }
     }
-#endif
 
 
 //- class name based pythonization -------------------------------------------
