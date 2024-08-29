@@ -434,7 +434,10 @@ def rebase(directory: str, repository:str, base_ref: str, head_ref: str, head_sh
         git config user.name 'ROOT Continous Integration'
 
         git fetch {repository} {branch}
-        git checkout {head_ref}
+        git checkout {head_ref} -f
+        git status
+        git diff
+        git reset --hard
         git rebase {base_ref}
     """)
 
