@@ -58,6 +58,7 @@ from ._roosimultaneous import RooSimultaneous
 from ._roosimwstool import RooSimWSTool
 from ._rooworkspace import RooWorkspace
 from ._roovectordatastore import RooVectorDataStore
+from ._roostats import SPlot
 
 
 # list of python classes that are used to pythonize RooFit classes
@@ -89,6 +90,7 @@ python_classes = [
     RooSimWSTool,
     RooWorkspace,
     RooVectorDataStore,
+    SPlot
 ]
 
 # list of python functions that are used to pythonize RooGlobalFunc function in RooFit

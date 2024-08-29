@@ -42,6 +42,7 @@ if(roofit)
         ROOT/_pythonization/_roofit/_roorealvar.py
         ROOT/_pythonization/_roofit/_roosimultaneous.py
         ROOT/_pythonization/_roofit/_roosimwstool.py
+        ROOT/_pythonization/_roofit/_roostats.py
         ROOT/_pythonization/_roofit/_roovectordatastore.py
         ROOT/_pythonization/_roofit/_rooworkspace.py
         ROOT/_pythonization/_roofit/_utils.py)
