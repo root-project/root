@@ -72,6 +72,7 @@ jobs:
       PLATFORM: alma9
       DOC_DIR: rootdoc
       DOC_LOCATION: /github/home
+      PR_NUMBER: ${{ github.event.pull_request.number }}
 
     permissions:
       contents: read
