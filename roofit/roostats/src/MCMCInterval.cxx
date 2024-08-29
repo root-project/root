@@ -295,14 +295,14 @@ void MCMCInterval::CreateKeysPdf()
       fProduct = nullptr;
       return;
    }
+   
+   std::unique_ptr<RooAbsData> chain{fChain->GetAsConstDataSet()->reduce(SelectVars(fParameters), EventRange(fNumBurnInSteps, fChain->Size()))};
 
-   std::unique_ptr<RooDataSet> chain{fChain->GetAsDataSet(SelectVars(fParameters),
-         EventRange(fNumBurnInSteps, fChain->Size()))};
    RooArgList* paramsList = new RooArgList();
    for (Int_t i = 0; i < fDimension; i++)
       paramsList->add(*fAxes[i]);
 
-   fKeysPdf = new RooNDKeysPdf("keysPDF", "Keys PDF", *paramsList, *chain, "a");
+   fKeysPdf = new RooNDKeysPdf("keysPDF", "Keys PDF", *paramsList, static_cast<RooDataSet&>(*chain), "a");
    fCutoffVar = new RooRealVar("cutoff", "cutoff", 0);
    fHeaviside = new Heaviside("heaviside", "Heaviside", *fKeysPdf, *fCutoffVar);
    fProduct = new RooProduct("product", "Keys PDF & Heaviside Product",
@@ -449,8 +449,8 @@ void MCMCInterval::CreateDataHist()
       return;
    }
 
-   fDataHist = std::unique_ptr<RooDataHist>{fChain->GetAsDataHist(SelectVars(fParameters),
-         EventRange(fNumBurnInSteps, fChain->Size()))}.release();
+   std::unique_ptr<RooAbsData> data{fChain->GetAsConstDataSet()->reduce(SelectVars(fParameters), EventRange(fNumBurnInSteps, fChain->Size()))};
+   fDataHist = static_cast<RooDataSet &>(*data).binnedClone();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

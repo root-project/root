@@ -139,6 +139,9 @@ RooFit::OwningPtr<RooDataSet> MarkovChain::GetAsDataSet(RooArgSet* whichVars) co
    return RooFit::makeOwningPtr<RooDataSet>(std::unique_ptr<RooAbsData>{fChain->reduce(args)});
 }
 
+/// \deprecated Will be removed in ROOT 6.36. Please implement this functionality by calling RooAbsData::reduce on the Markov Chain's RooDataSet*
+/// (obtained using MarkovChain::GetAsConstDataSet)
+
 RooFit::OwningPtr<RooDataSet> MarkovChain::GetAsDataSet(const RooCmdArg &arg1, const RooCmdArg &arg2,
                                                         const RooCmdArg &arg3, const RooCmdArg &arg4,
                                                         const RooCmdArg &arg5, const RooCmdArg &arg6,
@@ -162,6 +165,9 @@ RooFit::OwningPtr<RooDataHist> MarkovChain::GetAsDataHist(RooArgSet* whichVars) 
    std::unique_ptr<RooAbsData> data{fChain->reduce(args)};
    return RooFit::makeOwningPtr(std::unique_ptr<RooDataHist>{static_cast<RooDataSet&>(*data).binnedClone()});
 }
+
+/// \deprecated Will be removed in ROOT 6.36. Please implement this functionality by calling RooAbsData::reduce on the Markov Chain's RooDataSet*
+/// (obtained using MarkovChain::GetAsConstDataSet), and then obtaining its binned clone.
 
 RooFit::OwningPtr<RooDataHist> MarkovChain::GetAsDataHist(const RooCmdArg &arg1, const RooCmdArg &arg2,
                                                           const RooCmdArg &arg3, const RooCmdArg &arg4,

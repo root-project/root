@@ -233,7 +233,7 @@ public:
 
   void initialize(const char* binningName=nullptr,bool fillTree=true) ;
   std::unique_ptr<RooAbsData> reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange=nullptr,
-                  std::size_t nStart=0, std::size_t nStop=std::numeric_limits<std::size_t>::max()) override;
+                  std::size_t nStart=0, std::size_t nStop=std::numeric_limits<std::size_t>::max()) const override;
   double interpolateDim(int iDim, double xval, size_t centralIdx, int intOrder, bool correctForBinSize, bool cdfBoundaries) ;
   const std::vector<double>& calculatePartialBinVolume(const RooArgSet& dimSet) const ;
   void checkBinBounds() const;

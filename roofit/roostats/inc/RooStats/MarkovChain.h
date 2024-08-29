@@ -20,6 +20,9 @@
 #include "RooDataSet.h"
 #include "RooDataHist.h"
 #include "THnSparse.h"
+
+#include <ROOT/RConfig.hxx> // for the R__DEPRECATED macro
+
 //#include "RooArgSet.h"
 //#include "RooMsgService.h"
 //#include "RooRealVar.h"
@@ -68,11 +71,13 @@ namespace RooStats {
 
       /// Get a clone of the markov chain on which this interval is based
       /// as a RooDataSet.  You own the returned RooDataSet*
+      /// \deprecated Will be removed in ROOT 6.36.
       virtual RooFit::OwningPtr<RooDataSet> GetAsDataSet(const RooCmdArg& arg1,
                                        const RooCmdArg& arg2={}, const RooCmdArg& arg3={},
                                        const RooCmdArg& arg4={}, const RooCmdArg& arg5={},
                                        const RooCmdArg& arg6={}, const RooCmdArg& arg7={},
                                        const RooCmdArg& arg8={} ) const;
+      R__DEPRECATED(6,36, "This functionality can be implemented by calling RooAbsData::reduce on the Markov Chain's RooDataSet* (obtained using MarkovChain::GetAsConstDataSet)")
 
       virtual const RooDataSet* GetAsConstDataSet() const { return fChain; }
 
@@ -84,12 +89,14 @@ namespace RooStats {
 
       /// Get a clone of the markov chain on which this interval is based
       /// as a RooDataHist.  You own the returned RooDataHist*
+      /// \deprecated Will be removed in ROOT 6.36.
       virtual RooFit::OwningPtr<RooDataHist> GetAsDataHist(const RooCmdArg & arg1,
                                          const RooCmdArg& arg2={}, const RooCmdArg& arg3={},
                                          const RooCmdArg& arg4={}, const RooCmdArg& arg5={},
                                          const RooCmdArg& arg6={}, const RooCmdArg& arg7={},
                                          const RooCmdArg& arg8={} ) const;
-
+      R__DEPRECATED(6,36, "This functionality can be implemented by calling RooAbsData::reduce on the Markov Chain's RooDataSet* (obtained using MarkovChain::GetAsConstDataSet) and then obtaining its binned clone.")
+      
       /// Get a clone of the markov chain on which this interval is based
       /// as a sparse histogram.  You own the returned THnSparse*
       virtual THnSparse* GetAsSparseHist(RooAbsCollection* whichVars = nullptr) const;
