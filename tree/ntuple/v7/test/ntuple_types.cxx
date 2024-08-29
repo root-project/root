@@ -831,6 +831,66 @@ TEST(RNTuple, StdMultiMap)
    }
 }
 
+TEST(RNTuple, StdUnorderedMultiMap)
+{
+   auto field = RField<std::unordered_multimap<char, int64_t>>("mapField");
+   EXPECT_STREQ("std::unordered_multimap<char,std::int64_t>", field.GetTypeName().c_str());
+   auto otherField = RFieldBase::Create("test", "std::unordered_multimap<char, int64_t>").Unwrap();
+   EXPECT_STREQ(field.GetTypeName().c_str(), otherField->GetTypeName().c_str());
+   EXPECT_EQ((sizeof(std::unordered_multimap<char, int64_t>)), field.GetValueSize());
+   EXPECT_EQ((sizeof(std::unordered_multimap<char, int64_t>)), otherField->GetValueSize());
+   EXPECT_EQ((alignof(std::unordered_multimap<char, int64_t>)), field.GetAlignment());
+   // For type-erased map fields, we use `alignof(std::map<std::max_align_t, std::max_align_t>)` to map the alignment,
+   // so the actual alignment may be smaller.
+   EXPECT_LE((alignof(std::unordered_multimap<char, int64_t>)), otherField->GetAlignment());
+   // The assumption is that the alignment of inner items does not matter. If at any point there is a mismatch, this
+   // test should fail.
+   EXPECT_EQ((alignof(std::unordered_multimap<char, char>)), otherField->GetAlignment());
+
+   FileRaii fileGuard("test_ntuple_rfield_stdmultimap.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto map_field =
+         model->MakeField<std::unordered_multimap<std::string, float>>({"myMap", "string to float unordered_multimap"});
+
+      auto myMap2 = RFieldBase::Create("myMap2", "std::unordered_multimap<int, CustomStruct>").Unwrap();
+
+      model->AddField(std::move(myMap2));
+
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "map_ntuple", fileGuard.GetPath());
+      auto map_field2 =
+         ntuple->GetModel().GetDefaultEntry().GetPtr<std::unordered_multimap<int, CustomStruct>>("myMap2");
+      for (int i = 0; i < 2; i++) {
+         *map_field = {{"foo", static_cast<float>(i + 0.1)},
+                       {"bar", static_cast<float>(i * 0.2)},
+                       {"bar", static_cast<float>(i * 0.2)},
+                       {"baz", static_cast<float>(i * 0.3)}};
+         *map_field2 = {{i, CustomStruct{6.f, {7.f, 8.f}, {{9.f}, {10.f}}, "foo"}},
+                        {i, CustomStruct{6.f, {7.f, 8.f}, {{9.f}, {10.f}}, "foo"}},
+                        {i + 1, CustomStruct{3.f, {4.f, 5.f}, {{1.f}, {2.f}}, "baz"}}};
+         ntuple->Fill();
+      }
+   }
+
+   auto ntuple = RNTupleReader::Open("map_ntuple", fileGuard.GetPath());
+   EXPECT_EQ(2, ntuple->GetNEntries());
+
+   auto viewMap = ntuple->GetView<std::unordered_multimap<std::string, float>>("myMap");
+   auto viewMap2 = ntuple->GetView<std::unordered_multimap<int, CustomStruct>>("myMap2");
+   for (auto i : ntuple->GetEntryRange()) {
+      std::unordered_multimap<std::string, float> map1{{"foo", static_cast<float>(i + 0.1)},
+                                                       {"bar", static_cast<float>(i * 0.2)},
+                                                       {"bar", static_cast<float>(i * 0.2)},
+                                                       {"baz", static_cast<float>(i * 0.3)}};
+      EXPECT_EQ(map1, viewMap(i));
+
+      std::unordered_multimap<int, CustomStruct> map2{{i, CustomStruct{6.f, {7.f, 8.f}, {{9.f}, {10.f}}, "foo"}},
+                                                      {i, CustomStruct{6.f, {7.f, 8.f}, {{9.f}, {10.f}}, "foo"}},
+                                                      {i + 1, CustomStruct{3.f, {4.f, 5.f}, {{1.f}, {2.f}}, "baz"}}};
+      EXPECT_EQ(map2, viewMap2(i));
+   }
+}
+
 TEST(RNTuple, Int64)
 {
    {

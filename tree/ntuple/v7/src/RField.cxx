@@ -196,6 +196,8 @@ std::string GetNormalizedTypeName(const std::string &typeName)
       normalizedType = "std::" + normalizedType;
    if (normalizedType.substr(0, 9) == "multimap<")
       normalizedType = "std::" + normalizedType;
+   if (normalizedType.substr(0, 19) == "unordered_multimap<")
+      normalizedType = "std::" + normalizedType;
    if (normalizedType.substr(0, 7) == "atomic<")
       normalizedType = "std::" + normalizedType;
 
@@ -827,6 +829,20 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
 
       result = std::make_unique<RMapField>(fieldName, "std::multimap<" + keyTypeName + "," + valueTypeName + ">",
                                            std::move(itemField));
+   } else if (canonicalType.substr(0, 24) == "std::unordered_multimap<") {
+      auto innerTypes = TokenizeTypeList(canonicalType.substr(24, canonicalType.length() - 25));
+      if (innerTypes.size() != 2)
+         return R__FORWARD_RESULT(fnFail("the type list for std::unordered_multimap must have exactly two elements"));
+
+      auto itemField = Create("_0", "std::pair<" + innerTypes[0] + "," + innerTypes[1] + ">").Unwrap();
+
+      // We use the type names of subfields of the newly created item fields to create the map's type name to ensure
+      // the inner type names are properly normalized.
+      auto keyTypeName = itemField->GetSubFields()[0]->GetTypeName();
+      auto valueTypeName = itemField->GetSubFields()[1]->GetTypeName();
+
+      result = std::make_unique<RMapField>(
+         fieldName, "std::unordered_multimap<" + keyTypeName + "," + valueTypeName + ">", std::move(itemField));
    } else if (canonicalType.substr(0, 12) == "std::atomic<") {
       std::string itemTypeName = canonicalType.substr(12, canonicalType.length() - 13);
       auto itemField = Create("_0", itemTypeName).Unwrap();
