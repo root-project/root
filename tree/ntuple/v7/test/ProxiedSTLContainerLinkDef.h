@@ -36,4 +36,8 @@
 #pragma link C++ class std::unordered_map<int, CustomStruct>+;
 #pragma link C++ class std::unordered_map<float, std::vector<bool>>+;
 
+#pragma link C++ class std::multimap<char, std::int64_t>+;
+#pragma link C++ class std::multimap<std::string, float>+;
+#pragma link C++ class std::multimap<int, CustomStruct>+;
+
 #endif
