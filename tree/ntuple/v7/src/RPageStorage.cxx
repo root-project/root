@@ -551,8 +551,7 @@ ROOT::Experimental::Internal::RPageSink::SealPage(const RSealPageConfig &config)
 
    R__ASSERT(isAdoptedBuffer);
 
-   RSealedPage sealedPage{pageBuf, static_cast<std::uint32_t>(nBytesZipped + nBytesChecksum),
-                          config.fPage->GetNElements(), config.fWriteChecksum};
+   RSealedPage sealedPage{pageBuf, nBytesZipped + nBytesChecksum, config.fPage->GetNElements(), config.fWriteChecksum};
    sealedPage.ChecksumIfEnabled();
 
    return sealedPage;
