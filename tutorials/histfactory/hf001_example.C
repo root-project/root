@@ -91,10 +91,9 @@ void hf001_example() {
   // Now, do the measurement
   std::unique_ptr<RooWorkspace> ws{MakeModelAndMeasurementFast(meas)};
 
-  RooStats::ModelConfig *modelConfig = static_cast<RooStats::ModelConfig*>(ws->obj("ModelConfig"));
+  RooStats::ModelConfig *modelConfig = static_cast<RooStats::ModelConfig *>(ws->obj("ModelConfig"));
 
-
-  // Get probability density function and parameters list from model 
+  // Get probability density function and parameters list from model
   RooAbsPdf *pdf = modelConfig->GetPdf();
   RooArgSet globalObservables{*modelConfig->GetGlobalObservables()};
 
@@ -113,8 +112,7 @@ void hf001_example() {
   // Perform the fit
   using namespace RooFit;
   std::unique_ptr<RooFitResult> result{
-      pdf->fitTo(*ws->data("obsData"), Save(), PrintLevel(-1), GlobalObservables(globalObservables))
-  };
+     pdf->fitTo(*ws->data("obsData"), Save(), PrintLevel(-1), GlobalObservables(globalObservables))};
 
   result->Print();
 }
