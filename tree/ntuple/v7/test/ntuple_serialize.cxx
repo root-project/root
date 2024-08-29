@@ -3,6 +3,8 @@
 #include <Byteswap.h>
 #include <TVirtualStreamerInfo.h>
 
+#include <limits>
+
 TEST(RNTuple, SerializeInt)
 {
    std::int32_t value;
@@ -344,13 +346,6 @@ TEST(RNTuple, SerializeLocator)
 
    EXPECT_EQ(12u, RNTupleSerializer::SerializeLocator(locator, nullptr));
    EXPECT_EQ(12u, RNTupleSerializer::SerializeLocator(locator, buffer));
-   locator.fBytesOnStorage = static_cast<std::uint32_t>(-1);
-   try {
-      RNTupleSerializer::SerializeLocator(locator, buffer);
-      FAIL() << "too big locator should throw";
-   } catch (const RException& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("too large"));
-   }
 
    locator = RNTupleLocator{};
    try {
@@ -368,6 +363,17 @@ TEST(RNTuple, SerializeLocator)
    EXPECT_EQ(12u, RNTupleSerializer::DeserializeLocator(buffer, 12, locator).Unwrap());
    EXPECT_EQ(1u, locator.GetPosition<std::uint64_t>());
    EXPECT_EQ(2u, locator.fBytesOnStorage);
+   EXPECT_EQ(RNTupleLocator::kTypeFile, locator.fType);
+
+   locator.fBytesOnStorage = std::numeric_limits<std::int32_t>::max();
+   EXPECT_EQ(12u, RNTupleSerializer::SerializeLocator(locator, buffer));
+   EXPECT_EQ(12u, RNTupleSerializer::DeserializeLocator(buffer, 12, locator).Unwrap());
+   EXPECT_EQ(std::numeric_limits<std::int32_t>::max(), locator.fBytesOnStorage);
+   locator.fBytesOnStorage = static_cast<std::uint64_t>(std::numeric_limits<std::int32_t>::max()) + 1;
+   EXPECT_EQ(20u, RNTupleSerializer::SerializeLocator(locator, buffer));
+   EXPECT_EQ(20u, RNTupleSerializer::DeserializeLocator(buffer, 20, locator).Unwrap());
+   EXPECT_EQ(static_cast<std::uint64_t>(std::numeric_limits<std::int32_t>::max()) + 1, locator.fBytesOnStorage);
+   EXPECT_EQ(1u, locator.GetPosition<std::uint64_t>());
    EXPECT_EQ(RNTupleLocator::kTypeFile, locator.fType);
 
    locator.fType = RNTupleLocator::kTypeDAOS;
