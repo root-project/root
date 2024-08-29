@@ -914,7 +914,7 @@ RooDataHist::RooDataHist(const RooDataHist& other, const char* newname) :
 /// Implementation of RooAbsData virtual method that drives the RooAbsData::reduce() methods
 
 std::unique_ptr<RooAbsData> RooDataHist::reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange,
-    std::size_t nStart, std::size_t nStop)
+    std::size_t nStart, std::size_t nStop) const
 {
   checkInit() ;
   RooArgSet myVarSubset;
