@@ -333,3 +333,34 @@ struct ClassIsAggregate {
       EXPECT_TRUE(prop & clPropRef) << "Error checking property for class " << clName;
    }
 }
+
+// #12108
+TEST_F(TClingTests, constexprFunctionReturn)
+{
+   gInterpreter->Declare(R"cpp(
+namespace issue_12108{
+
+template <typename T> struct ValueAndPushforward {
+  T value;
+};
+
+constexpr ValueAndPushforward<double> Ln10_pushforward() {
+    return {2.3025850929940459};
+}
+
+ValueAndPushforward<double> Ln10_pushforwardNoconstexpr() {
+    return {2.3025850929940459};
+}
+
+auto val1 = Ln10_pushforwardNoconstexpr();
+auto val2 = Ln10_pushforward();
+
+}
+   )cpp");
+
+   auto val1 = *(double *)(uintptr_t)gInterpreter->ProcessLine("&issue_12108::val1.value;");
+   auto val2 = *(double *)(uintptr_t)gInterpreter->ProcessLine("&issue_12108::val2.value;");
+
+   EXPECT_DOUBLE_EQ(2.3025850929940459, val1);
+   EXPECT_DOUBLE_EQ(2.3025850929940459, val2);
+}
