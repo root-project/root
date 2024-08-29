@@ -1,5 +1,7 @@
 #include "ntuple_test.hxx"
 
+#include <limits>
+
 // This test aims to exercise some limits of RNTuple that are expected to be upper bounds for realistic applications.
 // The theoretical limits may be higher: for example, the specification supports up to 4B clusters per group, but the
 // expectation is less than 10k. For good measure, we test up to 100k clusters per group below.
@@ -201,20 +203,23 @@ TEST(RNTuple, DISABLED_Limits_ManyPagesOneEntry)
 
 TEST(RNTuple, DISABLED_Limits_LargePage)
 {
-   // Writing and reading one page with 100M elements takes around 3.5s and seems to have linear complexity (200M
-   // elements take 7s, 400M elements take 13.5s).
+   // Writing and reading one page with 600M elements takes around 18s and seems to have linear complexity
+   // (900M elements take 27s)
    FileRaii fileGuard("test_ntuple_limits_largePage.root");
 
-   static constexpr int NumElements = 100'000'000;
+   // clang-format off
+   static constexpr int NumElements = 600'000'000;
+   // clang-format on
 
    {
       auto model = RNTupleModel::Create();
-      auto id = model->MakeField<int>("id");
+      auto id = model->MakeField<std::uint64_t>("id");
       RNTupleWriteOptions options;
-      static constexpr std::size_t Size = NumElements * sizeof(int);
+      static constexpr std::size_t Size = NumElements * sizeof(std::uint64_t);
       options.SetMaxUnzippedClusterSize(Size);
       options.SetApproxZippedClusterSize(Size);
       options.SetApproxUnzippedPageSize(Size);
+      options.SetUseBufferedWrite(false);
 
       auto writer = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath(), options);
       for (int i = 0; i < NumElements; i++) {
@@ -223,7 +228,9 @@ TEST(RNTuple, DISABLED_Limits_LargePage)
       }
    }
 
-   auto reader = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
+   RNTupleReadOptions options;
+   options.SetClusterCache(RNTupleReadOptions::EClusterCache::kOff);
+   auto reader = RNTupleReader::Open("myNTuple", fileGuard.GetPath(), options);
    const auto &descriptor = reader->GetDescriptor();
    const auto &model = reader->GetModel();
    auto fieldId = descriptor.FindFieldId("id");
@@ -232,8 +239,10 @@ TEST(RNTuple, DISABLED_Limits_LargePage)
    EXPECT_EQ(reader->GetNEntries(), NumElements);
    EXPECT_EQ(descriptor.GetNClusters(), 1);
    EXPECT_EQ(descriptor.GetClusterDescriptor(0).GetPageRange(columnId).fPageInfos.size(), 1);
+   EXPECT_GT(descriptor.GetClusterDescriptor(0).GetPageRange(columnId).fPageInfos[0].fLocator.fBytesOnStorage,
+             static_cast<std::uint64_t>(std::numeric_limits<std::uint32_t>::max()));
 
-   auto id = model.GetDefaultEntry().GetPtr<int>("id");
+   auto id = model.GetDefaultEntry().GetPtr<std::uint64_t>("id");
    for (int i = 0; i < NumElements; i++) {
       reader->LoadEntry(i);
       EXPECT_EQ(*id, i);
