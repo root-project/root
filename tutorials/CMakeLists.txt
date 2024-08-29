@@ -63,6 +63,9 @@ function(ROOT_ADD_TUTORIAL macrofile rc)
                 PASSRC ${rc} FAILREGEX "Error in" "error:" "warning: Failed to call" LABELS tutorial)
 endfunction()
 
+#---Tutorials that need substantial network to work------------------
+set(need_network dataframe/df027_SQliteDependencyOverVersion.C)
+
 #---Tutorials disabled depending on the build components-------------
 
 if(NOT clad)
@@ -645,6 +648,9 @@ foreach(t ${tutorials})
     unset(createThreadPool)
   endif()
 
+  if(${t} IN_LIST need_network)
+    list(APPEND labels needs_network)
+  endif()
 
    # These tests on ARM64 need much more than 20 minutes - increase the timeout
    if(ROOT_ARCHITECTURE MATCHES arm64 OR ROOT_ARCHITECTURE MATCHES ppc64)
