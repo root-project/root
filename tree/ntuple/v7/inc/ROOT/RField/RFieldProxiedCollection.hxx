@@ -381,6 +381,32 @@ public:
    size_t GetAlignment() const final { return std::alignment_of<ContainerT>(); }
 };
 
+template <typename KeyT, typename ValueT>
+class RField<std::unordered_multimap<KeyT, ValueT>> final : public RMapField {
+   using ContainerT = typename std::unordered_multimap<KeyT, ValueT>;
+
+protected:
+   void ConstructValue(void *where) const final { new (where) ContainerT(); }
+   std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RTypedDeleter<ContainerT>>(); }
+
+public:
+   static std::string TypeName()
+   {
+      return "std::unordered_multimap<" + RField<KeyT>::TypeName() + "," + RField<ValueT>::TypeName() + ">";
+   }
+
+   explicit RField(std::string_view name)
+      : RMapField(name, TypeName(), std::make_unique<RField<std::pair<KeyT, ValueT>>>("_0"))
+   {
+   }
+   RField(RField &&other) = default;
+   RField &operator=(RField &&other) = default;
+   ~RField() override = default;
+
+   size_t GetValueSize() const final { return sizeof(ContainerT); }
+   size_t GetAlignment() const final { return std::alignment_of<ContainerT>(); }
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Template specializations for C++ std::[unordered_]set
 ////////////////////////////////////////////////////////////////////////////////
