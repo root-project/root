@@ -111,6 +111,7 @@ The [TUnfold package](https://www.desy.de/~sschmitt/tunfold.html) inside ROOT is
 
 * The function `RooFit::bindFunction()` now supports arbitrary many input variables when binding a Python function.
 
+* The `ExportOnly()` attribute of the `RooStats::HistFactory::Measurement` object is now switched on by default, and the associated getter and setter functions are deprecated. They will be removed in ROOT 6.36. If you want to fit the model as well instead of just exporting it to a RooWorkspace, please do so with your own code as demonstrated in the `hf001` tutorial.
 
 ## Graphics Backends
 
