@@ -275,8 +275,6 @@ public:
          meas.AddConstantParam("gamma_stat_channel1_bin_1");
       }
 
-      meas.SetExportOnly(true);
-
       meas.SetLumi(1.0);
       meas.SetLumiRelErr(0.10);
 
