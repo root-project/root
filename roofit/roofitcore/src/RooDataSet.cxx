@@ -682,7 +682,7 @@ void RooDataSet::initialize(const char* wgtVarName)
 /// Implementation of RooAbsData virtual method that drives the RooAbsData::reduce() methods
 
 std::unique_ptr<RooAbsData> RooDataSet::reduceEng(const RooArgSet &varSubset, const RooFormulaVar *cutVar,
-                                                  const char *cutRange, std::size_t nStart, std::size_t nStop)
+                                                  const char *cutRange, std::size_t nStart, std::size_t nStop) const
 {
    checkInit();
    RooArgSet tmp(varSubset);
