@@ -139,8 +139,8 @@ namespace RooStats {
    bool IsNLLOffset();
 
    /// function that clones a workspace, copying all needed components and discarding all others
-   RooWorkspace* MakeCleanWorkspace(RooWorkspace *oldWS, const char *newName, bool copySnapshots,
-                                    const char *mcname, const char *newmcname);
+   RooWorkspace* MakeReducedWorkspace(RooWorkspace *oldWS, const char *newName, bool copySnapshots,
+                                    const char *mcname, const char *newmcname, bool copyData=true);
 
 }
 
