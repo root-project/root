@@ -81,9 +81,6 @@ protected:
    bool fUseDirectIO = false;
    /// Whether to use implicit multi-threading to compress pages. Only has an effect if buffered writing is turned on.
    EImplicitMT fUseImplicitMT = EImplicitMT::kDefault;
-   /// If set, 64bit index columns are replaced by 32bit index columns. This limits the cluster size to 512MB
-   /// but it can result in smaller file sizes for data sets with many collections and lz4 or no compression.
-   bool fHasSmallClusters = false;
    /// If set, checksums will be calculated and written for every page.
    bool fEnablePageChecksums = true;
    /// Specifies the max size of a payload storeable into a single TKey. When writing an RNTuple to a ROOT file,
@@ -126,9 +123,6 @@ public:
 
    EImplicitMT GetUseImplicitMT() const { return fUseImplicitMT; }
    void SetUseImplicitMT(EImplicitMT val) { fUseImplicitMT = val; }
-
-   bool GetHasSmallClusters() const { return fHasSmallClusters; }
-   void SetHasSmallClusters(bool val) { fHasSmallClusters = val; }
 
    bool GetEnablePageChecksums() const { return fEnablePageChecksums; }
    /// Note that turning off page checksums will also turn off the same page merging optimization (see tuning.md)
