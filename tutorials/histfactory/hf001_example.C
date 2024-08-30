@@ -1,7 +1,8 @@
 /// \file
 /// \ingroup tutorial_histfactory
-/// A ROOT script demonstrating  an example of writing a HistFactory  model using c++ only.
+/// A ROOT script demonstrating  an example of writing and fitting a HistFactory model using c++ only.
 ///
+/// \macro_image
 /// \macro_code
 /// \macro_output
 ///
