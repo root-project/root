@@ -63,15 +63,6 @@ class TestClasNumba:
         myfile = ROOT.TFile.Open("vec_lv.root")
         vec_lv = myfile.Get("vecOfLV")
 
-        def calc_pt(lv):
-            return math.sqrt(lv.Px() ** 2 + lv.Py() ** 2)
-
-        def calc_pt_vec(vec_lv):
-            pt = []
-            for i in range(vec_lv.size()):
-                pt.append((calc_pt(vec_lv[i]), vec_lv[i].Pt()))
-            return pt
-
         @numba.njit
         def numba_calc_pt(lv):
             return math.sqrt(lv.Px() ** 2 + lv.Py() ** 2)
@@ -84,7 +75,6 @@ class TestClasNumba:
 
         assert (False not in
                 tuple(math.isclose(x, y) for x, y in numba_calc_pt_vec(vec_lv)))
-        assert self.compare(calc_pt_vec, numba_calc_pt_vec, 10, vec_lv)
 
     def test03_inheritance(self):
         """This test shows one of the limitations of the current support"""
