@@ -254,6 +254,10 @@ class NodeProxy(Proxy):
     def GetColumnNames(self):
         """Forward call to the internal RDataFrame object"""
         return self.proxied_node.get_head()._localdf.GetColumnNames()
+    
+    def GetColumnType(self, column):
+        """Forward call to the internal RDataFrame object"""
+        return self.proxied_node.get_head()._localdf.GetColumnType(column)
 
     def _create_new_op(self, *args, **kwargs):
         """
