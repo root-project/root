@@ -89,10 +89,8 @@ RooMPSentinel& RooMPSentinel::instance() {
 }
 
 
-using std::cout, std::endl, std::string, std::ostringstream, std::list, std::pair;
+using std::cout, std::endl, std::string, std::ostringstream, std::list;
 using namespace RooFit;
-
-ClassImp(RooRealMPFE);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -327,7 +325,7 @@ void RooRealMPFE::serverLoop()
        printStream(oss2,kName|kClassName|kArgs,kInline);
        objidstr = oss2.str();
      }
-     std::map<const RooAbsArg*,pair<string,list<EvalError> > >::const_iterator iter = evalErrorIter();
+     std::map<const RooAbsArg*,std::pair<string,list<EvalError> > >::const_iterator iter = evalErrorIter();
      const RooAbsArg* ptr = nullptr;
      for (int i = 0; i < numEvalErrorItems(); ++i) {
        list<EvalError>::const_iterator iter2 = iter->second.second.begin();

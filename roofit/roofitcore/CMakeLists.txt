@@ -16,10 +16,6 @@ if(roofit_multiprocess)
 endif()
 
 if(roofit_legacy_eval_backend)
-  set(LegacyEvalBackendHeaders
-    RooRealMPFE.h
-  )
-
   set(LegacyEvalBackendSources
     src/BidirMMapPipe.cxx
     src/BidirMMapPipe.h
@@ -239,7 +235,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooWorkspace.h
     RooWorkspaceHandle.h
     RooWrapperPdf.h
-    ${LegacyEvalBackendHeaders}
   SOURCES
     src/BatchModeDataHelpers.cxx
     src/ConstraintHelpers.cxx
