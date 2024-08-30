@@ -1152,18 +1152,6 @@ void ROOT::Experimental::RFieldBase::AutoAdjustColumnTypes(const RNTupleWriteOpt
       SetColumnRepresentatives({rep});
    }
 
-   if (options.GetHasSmallClusters()) {
-      ColumnRepresentation_t rep = GetColumnRepresentations().GetSerializationDefault();
-      for (auto &colType : rep) {
-         switch (colType) {
-         case EColumnType::kSplitIndex64: colType = EColumnType::kSplitIndex32; break;
-         case EColumnType::kIndex64: colType = EColumnType::kIndex32; break;
-         default: break;
-         }
-      }
-      SetColumnRepresentatives({rep});
-   }
-
    if (fTypeAlias == "Double32_t")
       SetColumnRepresentatives({{EColumnType::kSplitReal32}});
 }
