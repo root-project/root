@@ -1,4 +1,4 @@
-# RNTuple Reference Specifications 0.2.6.0
+# RNTuple Reference Specifications 0.2.7.0
 
 **Note:** This is work in progress. The RNTuple specification is not yet finalized.
 
@@ -156,9 +156,6 @@ _Compression settings_: A 32bit integer containing both a compression algorithm 
 The compression settings are encoded according to this formula: $settings = algorithm * 100 + level$.
 See Compression.[h/cxx] for details and available algorithms.
 
-The meta-data envelope defines additional basic types (see below).
-
-
 ### Feature Flags
 
 Feature flags are 64bit integers where every bit represents a certain forward-incompatible feature that is used
@@ -300,7 +297,6 @@ The following envelope types exist
 | Header            | 0x01 | RNTuple schema: field and column types                            |
 | Footer            | 0x02 | Description of clusters, location of user meta-data               |
 | Page list         | 0x03 | Location of data pages                                            |
-| User meta-data    | 0x04 | Key-value pairs of additional information about the data          |
 
 Envelopes have the following format
 
@@ -593,7 +589,6 @@ The footer envelope has the following structure:
 - Schema extension record frame
 - List frame of column group record frames
 - List frame of cluster group record frames
-- List frame of meta-data block envelope links
 
 The header checksum can be used to cross-check that header and footer belong together.
 The meaning of the feature flags is the same as for the header.
@@ -785,47 +780,6 @@ from the corresponding columns of the primary column representation.
 In every cluster, every field has exactly one primary column representation.
 All other representations must be suppressed.
 Note that the primary column representation can change from cluster to cluster.
-
-
-### User Meta-data Envelope
-
-User-defined meta-data can be attached to an ntuple.
-These meta-data are key-value pairs.
-The key is a string.
-The value can be of type integer, double, string, or a list thereof.
-
-Keys are scoped with the different namespace parts separated by a dot (`.`).
-The `ROOT.` namespace prefix is reserved for the ROOT internal meta-data.
-Meta-data are versioned: the same key can appear multiple times with different values.
-This is interpreted as different versions of the meta-data.
-
-The meta-data envelope consists of a single collection frame with an item for every key-value pair.
-Every key-value pair is a record frame with the following contents:
-
-- Type: 32bit integer
-- String: key
-
-Followed by the value.
-The format of the value depends on the type, which can be one of the following list
-
-| Type |  Contents                                |
-|------|------------------------------------------|
-| 0x01 | 64bit integer                            |
-| 0x02 | bool (stored as 8bit integer)            |
-| 0x03 | IEEE-754 double precision floating point |
-| 0x04 | String                                   |
-
-If the most significant bit of the type is set (i.e., the type has a negative value),
-the value is a list of the type given by the absolute value of the type field.
-The list is stored as a list frame.
-
-Future versions of the file format may introduce additional meta-data types
-without setting a feature flag.
-Old readers need to ignore these key-value pairs.
-
-Key versioning starts with zero.
-The version is given by the order of serialization within a meta-data envelope
-and by the order of meta-data envelope links in the footer.
 
 ## Mapping of C++ Types to Fields and Columns
 
