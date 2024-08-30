@@ -121,9 +121,9 @@ jobs:
         with:
           ref: ${{ inputs.ref_name }}
 
-      - name: Install chrome
-        run: |
-          brew install --cask google-chrome
+      # - name: Install chrome
+      #   run: |
+      #     brew install --cask google-chrome
 
       - name: Apply option overrides from matrix for this job for non-release builds
         if: ${{ github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' && matrix.overrides != NaN }}
@@ -419,14 +419,14 @@ jobs:
         with:
           ref: ${{ inputs.ref_name }}
       
-      - name: Install chrome
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y wget gnupg
-          wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
-          sudo sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list'
-          sudo apt-get update
-          sudo apt-get install -y google-chrome-stable
+      # - name: Install chrome
+      #   run: |
+      #     sudo apt-get update
+      #     sudo apt-get install -y wget gnupg
+      #     wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+      #     sudo sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list'
+      #     sudo apt-get update
+      #     sudo apt-get install -y google-chrome-stable
 
       - name: Dump GitHub context
         env:
