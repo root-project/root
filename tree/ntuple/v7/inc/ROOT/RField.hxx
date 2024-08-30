@@ -288,7 +288,6 @@ protected:
    void CommitClusterImpl() final;
 
 public:
-   static std::string TypeName() { return ""; }
    RCollectionField(std::string_view name, std::shared_ptr<RNTupleCollectionWriter> collectionWriter,
                     std::unique_ptr<RFieldZero> collectionParent);
    RCollectionField(RCollectionField &&other) = default;
