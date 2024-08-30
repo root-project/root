@@ -171,7 +171,6 @@
 #pragma link C++ class RooRealBinding+ ;
 #pragma link C++ class RooRealConstant+ ;
 #pragma link C++ class RooRealIntegral+ ;
-#pragma link C++ class RooRealMPFE+ ;
 #pragma link C++ class RooRealProxy+;
 #pragma read sourceClass="RooRealProxy" targetClass="RooTemplateProxy<RooAbsReal>";
 #pragma link C++ class RooTemplateProxy<RooAbsPdf>+;

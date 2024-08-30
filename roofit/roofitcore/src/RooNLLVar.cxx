@@ -39,7 +39,7 @@ In extended mode, a
 #include <RooMsgService.h>
 #include <RooNaNPacker.h>
 #include <RooProdPdf.h>
-#include <RooRealMPFE.h>
+#include "RooRealMPFE.h"
 #include <RooRealSumPdf.h>
 #include <RooRealVar.h>
 
