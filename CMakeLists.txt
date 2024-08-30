@@ -374,47 +374,6 @@ add_custom_target(gitinfotxt
 )
 install(FILES ${CMAKE_BINARY_DIR}/etc/gitinfo.txt DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
 
-#---CXX MODULES-----------------------------------------------------------------------------------
-if(cxxmodules)
-  # Copy-pasted from HandleLLVMOptions.cmake, please keep up to date.
-  set(OLD_CMAKE_REQUIRED_FLAGS ${CMAKE_REQUIRED_FLAGS})
-  set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -fmodules -fcxx-modules")
-  # Check that we can build code with modules enabled, and that repeatedly
-  # including <cassert> still manages to respect NDEBUG properly.
-  CHECK_CXX_SOURCE_COMPILES("#undef NDEBUG
-                             #include <cassert>
-                             #define NDEBUG
-                             #include <cassert>
-                             int main() { assert(this code is not compiled); }"
-                             CXX_SUPPORTS_MODULES)
-  set(CMAKE_REQUIRED_FLAGS ${OLD_CMAKE_REQUIRED_FLAGS})
-  if(NOT CXX_SUPPORTS_MODULES)
-    message(FATAL_ERROR "cxxmodules is not supported by this compiler")
-  endif()
-
-  set(ROOT_CXXMODULES_COMMONFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -fmodules -fmodules-cache-path=${CMAKE_BINARY_DIR}/include/pcms/ -Xclang -fno-validate-pch -fno-autolink -fdiagnostics-show-note-include-stack")
-
-  # FIXME: We should remove this once libc++ supports -fmodules-local-submodule-visibility.
-  if (APPLE)
-    # FIXME: TGLIncludes and alike depend on glew.h doing special preprocessor
-    # trickery to override the contents of system's OpenGL.
-    # On OSX #include TGLIncludes.h will trigger the creation of the system
-    # OpenGL.pcm. Once it is built, glew cannot use preprocessor trickery to 'fix'
-    # the translation units which it needs to 'rewrite'. The translation units
-    # which need glew support are in graf3d. However, depending on the modulemap
-    # organization we could request it implicitly (eg. one big module for ROOT).
-    # In these cases we need to 'prepend' this include path to the compiler in order
-    # for glew.h to it its trick.
-    set(ROOT_CXXMODULES_COMMONFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -isystem ${CMAKE_SOURCE_DIR}/graf3d/glew/isystem")
-  endif()
-
-  # These vars are useful when we want to compile things without cxxmodules.
-  set(ROOT_CXXMODULES_CXXFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -fcxx-modules -Xclang -fmodules-local-submodule-visibility -Wno-module-import-in-extern-c" CACHE STRING "Useful to filter out the modules-related cxxflags.")
-  set(ROOT_CXXMODULES_CFLAGS "${ROOT_CXXMODULES_COMMONFLAGS}" CACHE STRING "Useful to filter out the modules-related cflags.")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${ROOT_CXXMODULES_CFLAGS}")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ROOT_CXXMODULES_CXXFLAGS}")
-endif(cxxmodules)
-
 #---Recurse into the given subdirectories.  This does not actually cause another cmake executable
 #  to run. The same process will walk through the project's entire directory structure.
 add_subdirectory (core)
@@ -489,14 +448,7 @@ configure_file("${CMAKE_BINARY_DIR}/include/module.modulemap.extra.tmp"
 set(ROOT_CXXMODULES_WRITE_TO_CURRENT_DIR ON)
 
 set (CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS}")
-if(cxxmodules)
-  # rootcling uses our internal version of clang. Passing the modules flags here
-  # would allow rootcling to find module files built by the external compiler
-  # (eg. $CXX or $CC). This, in turn, would cause problems if we are using
-  # different clang version (even different commit revision) as the modules files
-  # are not guaranteed to be compatible among clang revisions.
-  string(REPLACE "${ROOT_CXXMODULES_CXXFLAGS}" "" CMAKE_CXX_FLAGS_SEPARATE ${CMAKE_CXX_FLAGS_SEPARATE})
-endif(cxxmodules)
+
 string(REGEX REPLACE "[ ]-" ";-" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
 if(MSVC)
   string(REPLACE "-Zc:__cplusplus" "" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
