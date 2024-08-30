@@ -1570,11 +1570,6 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeFooter(void *buffer,
    }
    pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
 
-   // So far no support for meta-data
-   frame = pos;
-   pos += SerializeListFramePreamble(0, *where);
-   pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
-
    std::uint32_t size = pos - base;
    size += SerializeEnvelopePostscript(base, size);
    return size;
@@ -1716,15 +1711,6 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeFooter(const void *b
          .NClusters(clusterGroup.fNClusters);
       descBuilder.AddClusterGroup(clusterGroupBuilder.MoveDescriptor().Unwrap());
    }
-   bytes = frame + frameSize;
-
-   std::uint32_t nMDBlocks;
-   frame = bytes;
-   result = DeserializeFrameHeader(bytes, fnBufSizeLeft(), frameSize, nMDBlocks);
-   if (!result)
-      return R__FORWARD_ERROR(result);
-   if (nMDBlocks > 0)
-      R__LOG_WARNING(NTupleLog()) << "meta-data blocks are still unsupported";
    bytes = frame + frameSize;
 
    return RResult<void>::Success();
