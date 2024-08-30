@@ -85,8 +85,6 @@ public:
   RooRealMPFE* _updateMaster ; ///<! Update master
   mutable bool _retrieveDispatched ; ///<!
   mutable double _evalCarry; ///<!
-
-  ClassDefOverride(RooRealMPFE,2) // Multi-process front-end for parallel calculation of a real valued function
 };
 
 #endif
