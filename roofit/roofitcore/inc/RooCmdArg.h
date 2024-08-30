@@ -39,6 +39,29 @@ public:
             const char* s1=nullptr, const char* s2=nullptr,
             const TObject* o1=nullptr, const TObject* o2=nullptr, const RooCmdArg* ca=nullptr, const char* s3=nullptr,
             const RooArgSet* c1=nullptr, const RooArgSet* c2=nullptr) ;
+    RooCmdArg(const char* name,
+            Int_t i1, Int_t i2,
+	    double d1, double d2,
+	    const char* s1, const char* s2,
+            const TObject* o1, const TObject* o2, const RooCmdArg* ca, const char* s3,
+            const RooArgSet& c1, const RooArgSet* c2=nullptr) :
+      RooCmdArg(name,i1,i2,d1,d2,s1,s2,o1,o2,ca,s3,&c1,c2) {}
+    RooCmdArg(const char* name,
+            Int_t i1, Int_t i2,
+	    double d1, double d2,
+	    const char* s1, const char* s2,
+            const TObject* o1, const TObject* o2, const RooCmdArg* ca, const char* s3,
+            const RooArgSet& c1, const RooArgSet& c2) :
+      RooCmdArg(name,i1,i2,d1,d2,s1,s2,o1,o2,ca,s3,&c1,&c2) {}
+    RooCmdArg(const char* name,
+            Int_t i1, Int_t i2,
+	    double d1, double d2,
+	    const char* s1, const char* s2,
+            const TObject* o1, const TObject* o2, const RooCmdArg* ca, const char* s3,
+            const RooArgSet* c1, const RooArgSet& c2) :
+      RooCmdArg(name,i1,i2,d1,d2,s1,s2,o1,o2,ca,s3,c1,&c2) {}  
+
+  
   RooCmdArg(const RooCmdArg& other) ;
   RooCmdArg& operator=(const RooCmdArg& other) ;
   void addArg(const RooCmdArg& arg) ;
