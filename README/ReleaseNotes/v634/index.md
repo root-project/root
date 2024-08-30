@@ -72,7 +72,19 @@ The following people have contributed to this new version:
 
 * The `RooAbsReal::plotSliceOn()` function that was deprecated since at least ROOT 6 was removed. Use `plotOn(frame,Slice(...))` instead.
 * The `RooTemplateProxy` constructors that take a `proxyOwnsArg` parameter to manually pass ownership are deprecated and replaced by a new constructor that takes ownership via `std::unique_ptr<T>`. They will be removed in ROOT 6.36.
-* The `RooStats::MarkovChain::GetAsDataSet` and `RooStats::MarkovChain::GetAsDataHist` functions are deprecated and will be removed in ROOT 6.36. The same functionality can be implemented by calling `RooAbsData::reduce` on the Markov Chain's `RooDataSet*` (obtained using `MarkovChain::GetAsConstDataSet`) and then obtaining it's binned clone(for `RooDataHist`).
+* The `RooStats::MarkovChain::GetAsDataSet` and `RooStats::MarkovChain::GetAsDataHist` functions are deprecated and will be removed in ROOT 6.36. The same functionality can be implemented by calling `RooAbsData::reduce` on the Markov Chain's `RooDataSet*` (obtained using `MarkovChain::GetAsConstDataSet`) and then obtaining its binned clone(for `RooDataHist`).
+
+  An example in Python would be:
+
+  ```py
+  mcInt = mc.GetInterval() # Obtain the MCMCInterval from a configured MCMCCalculator
+  mkc = mcInt.GetChain() # Obtain the MarkovChain
+  mkcData = mkc.GetAsConstDataSet()
+  mcIntParams = mcInt.GetParameters()
+
+  chainDataset = mkcData.reduce(SelectVars=mcIntParams, EventRange=(mcInt.GetNumBurnInSteps(), mkc.Size()))
+  chainDataHist = chainDataset.binnedClone()
+  ```
 
 ## Core Libraries
 
