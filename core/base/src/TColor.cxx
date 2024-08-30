@@ -63,6 +63,7 @@ The color creation and management class.
   - [Basic colors](\ref C01)
   - [The color wheel](\ref C02)
   - [Bright and dark colors](\ref C03)
+  - [Accessible Color Schemes](\ref C031)
   - [Gray scale view of of canvas with colors](\ref C04)
   - [Color palettes](\ref C05)
   - [High quality predefined palettes](\ref C06)
@@ -193,6 +194,25 @@ boxes (see TWbox, TPave, TPaveText, TPaveLabel, etc).
       Int_t dark   = TColor::GetColorDark(color_index);
       Int_t bright = TColor::GetColorBright(color_index);
    ~~~
+
+\anchor C031
+## Accessible Color Schemes
+Choosing an appropriate color scheme is essential for making results easy to understand and
+interpret. Factors like colorblindness and converting colors to grayscale for publications
+can impact accessibility. Furthermore, results should be aesthetically pleasing. The following
+three color schemes, recommended by M. Petroff in [arXiv:2107.02270v2](https://arxiv.org/pdf/2107.02270)
+and available on [GitHub](https://github.com/mpetroff/accessible-color-cycles)
+under the MIT License, meet these criteria.
+
+These three color schemes are available as color sets with 6, 8, and 10 colors, named
+`kP[6, 8, 10]ColorName`. For example, `kP6Red` represents the red color within the P6 color scheme.
+
+Begin_Macro
+../../../tutorials/graphics/accessiblecolorschemes.C
+End_Macro
+
+The example thstackcolorscheme.C illustrates how to use these color schemes in THStack drawings.
+It also demonstrates that they are effective in grayscale.
 
 \anchor C04
 ## Grayscale view of of canvas with colors
@@ -1051,6 +1071,7 @@ TColor::TColor(): TNamed()
 ////////////////////////////////////////////////////////////////////////////////
 /// Normal color constructor. Initialize a color structure.
 /// Compute the RGB and HLS color components.
+/// The color title is set to its hexadecimal value.
 
 TColor::TColor(Int_t color, Float_t r, Float_t g, Float_t b, const char *name,
                Float_t a)
@@ -1090,6 +1111,7 @@ TColor::TColor(Int_t color, Float_t r, Float_t g, Float_t b, const char *name,
    SetRGB(r, g, b);
    fAlpha = a;
    gDefinedColors++;
+   SetTitle(AsHexString());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1216,6 +1238,37 @@ void TColor::InitializeColors()
       new TColor(19,.95,.95,.95,"grey19");
       new TColor(50, 0.83,0.35,0.33);
 
+      new TColor(kGrape,    111./255.,  45./255., 168./255., "kGrape");
+      new TColor(kBrown,    165./255.,  42./255.,  42./255., "kBrown");
+      new TColor(kAsh,      178./255., 190./255., 181./255., "kAsh");
+
+      new TColor(kP6Blue,    87./255., 144./255., 252./255., "kP6Blue");
+      new TColor(kP6Yellow, 248./255., 156./255.,  32./255., "kP6Yellow");
+      new TColor(kP6Red,    228./255.,  37./255.,  54./255., "kP6Red");
+      new TColor(kP6Grape,  150./255.,  74./255., 139./255., "kP6Grape");
+      new TColor(kP6Gray,   156./255., 156./255., 161./255., "kP6Gray");
+      new TColor(kP6Violet, 112./255.,  33./255., 221./255., "kP6Violet");
+
+      new TColor(kP8Blue,    24./255.,  69./255., 251./255., "kP8Blue");
+      new TColor(kP8Orange,        1.,  94./255.,   2./255., "kP8Orange");
+      new TColor(kP8Red,    201./255.,  31./255.,  22./255., "kP8Red");
+      new TColor(kP8Pink,   200./255.,  73./255., 169./255., "kP8Pink");
+      new TColor(kP8Green,  173./255., 173./255., 125./255., "kP8Green");
+      new TColor(kP8Cyan,   134./255., 200./255., 221./255., "kP8Cyan");
+      new TColor(kP8Azure,   87./255., 141./255., 255./255., "kP8Azure");
+      new TColor(kP8Gray,   101./255.,  99./255., 100./255., "kP8Gray");
+
+      new TColor(kP10Blue,    63./255., 144./255., 218./255., "kP10Blue");
+      new TColor(kP10Yellow,        1., 169./255.,  14./255., "kP10Yellow");
+      new TColor(kP10Red,    189./255.,  31./255.,   1./255., "kP10Red");
+      new TColor(kP10Gray,   148./255., 164./255., 162./255., "kP10Gray");
+      new TColor(kP10Violet, 131./255.,  45./255., 182./255., "kP10Violet");
+      new TColor(kP10Brown,  169./255., 107./255.,  89./255., "kP10Brown");
+      new TColor(kP10Orange, 231./255.,  99./255.,        0., "kP10Orange");
+      new TColor(kP10Green,  185./255., 172./255., 112./255., "kP10Green");
+      new TColor(kP10Ash,    113./255., 117./255., 129./255., "kP10Ash");
+      new TColor(kP10Cyan,   146./255., 218./255., 221./255., "kP10Cyan");
+
       // Initialize the Pretty Palette Spectrum Violet->Red
       //   The color model used here is based on the HLS model which
       //   is much more suitable for creating palettes than RGB.
@@ -1332,7 +1385,6 @@ void TColor::CreateColorsCircle(Int_t offset, const char *name, UChar_t *rgb)
       TColor *color = gROOT->GetColor(colorn);
       if (!color) {
          color = new TColor(colorn,rgb[3*n]/255.,rgb[3*n+1]/255.,rgb[3*n+2]/255.);
-         color->SetTitle(color->AsHexString());
          if      (n>10) colorname.Form("%s+%d",name,n-10);
          else if (n<10) colorname.Form("%s-%d",name,10-n);
          else           colorname.Form("%s",name);
@@ -1352,7 +1404,6 @@ void TColor::CreateColorsRectangle(Int_t offset, const char *name, UChar_t *rgb)
       TColor *color = gROOT->GetColor(colorn);
       if (!color) {
          color = new TColor(colorn,rgb[3*n]/255.,rgb[3*n+1]/255.,rgb[3*n+2]/255.);
-         color->SetTitle(color->AsHexString());
          if      (n>9) colorname.Form("%s+%d",name,n-9);
          else if (n<9) colorname.Form("%s-%d",name,9-n);
          else          colorname.Form("%s",name);
