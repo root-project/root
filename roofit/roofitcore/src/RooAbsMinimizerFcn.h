@@ -16,8 +16,6 @@
 #define ROO_ABS_MINIMIZER_FCN
 
 #include "Math/IFunction.h"
-#include "Fit/ParameterSettings.h"
-#include "Fit/FitResult.h"
 
 #include "TMatrixDSym.h"
 
@@ -25,8 +23,6 @@
 #include "RooArgList.h"
 #include "RooMinimizer.h"
 #include "RooRealVar.h"
-
-#include <Fit/Fitter.h>
 
 #include <iostream>
 #include <fstream>
