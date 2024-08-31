@@ -31,6 +31,7 @@
 #include <cstddef>
 #include <iostream>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <type_traits>
 #include <typeinfo>
@@ -272,8 +273,24 @@ public:
 /// The collection field is only used for writing; when reading, untyped collections are projected to an std::vector
 class RCollectionField final : public ROOT::Experimental::RFieldBase {
 private:
-   /// Save the link to the collection ntuple in order to reset the offset counter when committing the cluster
-   std::shared_ptr<RNTupleCollectionWriter> fCollectionWriter;
+   class RCollectionWriterDeleter : public RDeleter {
+   private:
+      const RCollectionField *fField;
+
+   public:
+      explicit RCollectionWriterDeleter(const RCollectionField *field) : fField(field) {}
+      void operator()(void *objPtr, bool dtorOnly) final;
+   };
+
+   ClusterSize_t fNWritten;
+   /// Every field instance has a unique ID. It is stored in the entry of collection writers created from this field.
+   /// This allows to check that only a collection writer the comes from the very field is used when writing data.
+   /// In order to distinguish the model id from regular model IDs, fModelID will have the highest bit set.
+   std::uint64_t fModelId = 0;
+   /// Remembers all collection writers that the field created, so that they can be
+   /// disabled on destruction. Needs to be mutable because `ConstructValue()` and GetDeleter() are const
+   mutable std::unordered_set<RNTupleCollectionWriter *> fCreatedWriters;
+   mutable std::mutex fMutexCreatedWriters;
 
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
@@ -283,22 +300,25 @@ protected:
    void GenerateColumns(const RNTupleDescriptor &desc) final;
 
    void ConstructValue(void *where) const final;
-   std::unique_ptr<RDeleter> GetDeleter() const final;
+   std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RCollectionWriterDeleter>(this); }
 
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
 
    void CommitClusterImpl() final;
 
+   void OnConnectPageSink() final;
+
 public:
-   RCollectionField(std::string_view name, std::shared_ptr<RNTupleCollectionWriter> collectionWriter,
-                    std::unique_ptr<RFieldZero> collectionParent);
-   RCollectionField(RCollectionField &&other) = default;
-   RCollectionField &operator=(RCollectionField &&other) = default;
-   ~RCollectionField() override = default;
+   RCollectionField(std::string_view name, std::unique_ptr<RFieldZero> collectionParent);
+   RCollectionField(RCollectionField &&other) = delete;
+   RCollectionField &operator=(RCollectionField &&other) = delete;
+   ~RCollectionField() override;
 
    std::size_t GetValueSize() const final;
    std::size_t GetAlignment() const final;
+
+   std::uint64_t GetModelId() const { return fModelId; }
 };
 
 /// An artificial field that transforms an RNTuple column that contains the offset of collections into

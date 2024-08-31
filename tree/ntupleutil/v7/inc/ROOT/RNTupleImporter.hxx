@@ -182,7 +182,6 @@ private:
       RImportLeafCountCollection &operator=(RImportLeafCountCollection &&other) = default;
       std::unique_ptr<RNTupleModel> fCollectionModel;             ///< The model for the collection itself
       std::shared_ptr<RNTupleCollectionWriter> fCollectionWriter; ///< Used to fill the collection elements per event
-      std::unique_ptr<REntry> fCollectionEntry; ///< Keeps the memory location of the collection members
       /// The number of elements for the collection for a particular event. Used as a destination for SetBranchAddress()
       /// of the count leaf
       std::unique_ptr<Int_t> fCountVal;

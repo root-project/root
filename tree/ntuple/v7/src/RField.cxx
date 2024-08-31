@@ -3898,14 +3898,23 @@ void ROOT::Experimental::RTupleField::RTupleDeleter::operator()(void *objPtr, bo
 //------------------------------------------------------------------------------
 
 ROOT::Experimental::RCollectionField::RCollectionField(std::string_view name,
-                                                       std::shared_ptr<RNTupleCollectionWriter> collectionWriter,
                                                        std::unique_ptr<RFieldZero> collectionParent)
-   : RFieldBase(name, "", ENTupleStructure::kCollection, false /* isSimple */), fCollectionWriter(collectionWriter)
+   : RFieldBase(name, "", ENTupleStructure::kCollection, false /* isSimple */), fNWritten(0)
 {
+   static std::atomic<std::uint64_t> gModelId = 0;
+   fModelId = ++gModelId | static_cast<std::uint64_t>(1) << 63;
+
    const std::size_t N = collectionParent->fSubFields.size();
    for (std::size_t i = 0; i < N; ++i) {
       Attach(std::move(collectionParent->fSubFields[i]));
    }
+}
+
+ROOT::Experimental::RCollectionField::~RCollectionField()
+{
+   const std::lock_guard<std::mutex> lock(fMutexCreatedWriters);
+   for (auto writer : fCreatedWriters)
+      writer->fEnvironmentState = RNTupleCollectionWriter::EEnvironmentState::kOrphaned;
 }
 
 const ROOT::Experimental::RFieldBase::RColumnRepresentations &
@@ -3934,17 +3943,43 @@ ROOT::Experimental::RCollectionField::CloneImpl(std::string_view newName) const
    for (auto &f : fSubFields) {
       parent->Attach(f->Clone(f->GetFieldName()));
    }
-   return std::make_unique<RCollectionField>(newName, fCollectionWriter, std::move(parent));
+   return std::make_unique<RCollectionField>(newName, std::move(parent));
 }
 
 void ROOT::Experimental::RCollectionField::ConstructValue(void *where) const
 {
-   new (where) RNTupleCollectionWriter(nullptr);
+   REntry entry(fModelId);
+   for (const auto &f : fSubFields) {
+      entry.AddValue(f->BindValue(nullptr));
+   }
+   new (where) RNTupleCollectionWriter(std::move(entry));
+   auto writer = static_cast<RNTupleCollectionWriter *>(where);
+
+   if (GetState() == EState::kConnectedToSink)
+      writer->fEnvironmentState = RNTupleCollectionWriter::EEnvironmentState::kConnectedToSink;
+
+   const std::lock_guard<std::mutex> lock(fMutexCreatedWriters);
+   fCreatedWriters.insert(writer);
 }
 
-std::unique_ptr<ROOT::Experimental::RFieldBase::RDeleter> ROOT::Experimental::RCollectionField::GetDeleter() const
+void ROOT::Experimental::RCollectionField::RCollectionWriterDeleter::operator()(void *objPtr, bool dtorOnly)
 {
-   return std::make_unique<RTypedDeleter<RNTupleCollectionWriter>>();
+   auto writer = static_cast<RNTupleCollectionWriter *>(objPtr);
+   if (writer->fEnvironmentState != RNTupleCollectionWriter::EEnvironmentState::kOrphaned) {
+      R__ASSERT(writer->GetEntry().GetModelId() == fField->fModelId);
+      // The fField pointer is still valid, i.e.: not destructed
+      const std::lock_guard<std::mutex> lock(fField->fMutexCreatedWriters);
+      fField->fCreatedWriters.erase(writer);
+   }
+   std::destroy_at(writer);
+   RDeleter::operator()(objPtr, dtorOnly);
+}
+
+void ROOT::Experimental::RCollectionField::OnConnectPageSink()
+{
+   const std::lock_guard<std::mutex> lock(fMutexCreatedWriters);
+   for (auto writer : fCreatedWriters)
+      writer->fEnvironmentState = RNTupleCollectionWriter::EEnvironmentState::kConnectedToSink;
 }
 
 std::size_t ROOT::Experimental::RCollectionField::GetValueSize() const
@@ -3959,12 +3994,17 @@ std::size_t ROOT::Experimental::RCollectionField::GetAlignment() const
 
 std::size_t ROOT::Experimental::RCollectionField::AppendImpl(const void *from)
 {
-   // RCollectionFields are almost simple, but they return the bytes written by their subfields as accumulated by the
-   // RNTupleCollectionWriter.
-   std::size_t bytesWritten = fCollectionWriter->fBytesWritten;
-   fCollectionWriter->fBytesWritten = 0;
+   const auto writer = static_cast<const RNTupleCollectionWriter *>(from);
+   if (writer->GetEntry().GetModelId() != fModelId) {
+      throw RException(R__FAIL("invalid attempt to use collection writer from another collection field"));
+   }
 
-   fPrincipalColumn->Append(from);
+   // RCollectionFields return the bytes written by their subfields as accumulated by the RNTupleCollectionWriter
+   std::size_t bytesWritten = writer->fBytesWritten;
+   fNWritten += writer->fNElements;
+   writer->Reset();
+
+   fPrincipalColumn->Append(&fNWritten);
    return bytesWritten + fPrincipalColumn->GetElement()->GetPackedSize();
 }
 
@@ -3975,7 +4015,7 @@ void ROOT::Experimental::RCollectionField::ReadGlobalImpl(NTupleSize_t, void *)
 
 void ROOT::Experimental::RCollectionField::CommitClusterImpl()
 {
-   *fCollectionWriter->GetOffsetPtr() = 0;
+   fNWritten = 0;
 }
 
 //------------------------------------------------------------------------------

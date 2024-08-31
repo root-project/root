@@ -325,15 +325,8 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
       // structured binding in C++17. Explicitly defining a variable works.
       auto countLeafName = p.first;
       auto &c = p.second;
-      c.fCollectionModel->Freeze();
-      c.fCollectionEntry = c.fCollectionModel->CreateBareEntry();
-      for (auto idx : c.fImportFieldIndexes) {
-         const auto name = fImportFields[idx].fField->GetFieldName();
-         const auto buffer = fImportFields[idx].fFieldBuffer;
-         c.fCollectionEntry->BindRawPtr(name, buffer);
-      }
       c.fFieldName = "_collection" + std::to_string(iLeafCountCollection);
-      c.fCollectionWriter = fModel->MakeCollection(c.fFieldName, std::move(c.fCollectionModel));
+      fModel->MakeCollection(c.fFieldName, std::move(c.fCollectionModel));
       // Add projected fields for all leaf count arrays
       for (auto idx : c.fImportFieldIndexes) {
          const auto name = fImportFields[idx].fField->GetFieldName();
@@ -373,8 +366,15 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
          continue;
       fEntry->BindRawPtr(f.fField->GetFieldName(), f.fFieldBuffer);
    }
-   for (const auto &[_, c] : fLeafCountCollections) {
-      fEntry->BindRawPtr<void>(c.fFieldName, c.fCollectionWriter->GetOffsetPtr());
+   for (auto &[_, c] : fLeafCountCollections) {
+      fEntry->EmplaceNewValue(c.fFieldName);
+      c.fCollectionWriter = fEntry->GetPtr<RNTupleCollectionWriter>(c.fFieldName);
+      auto &entry = c.fCollectionWriter->GetEntry();
+      for (auto idx : c.fImportFieldIndexes) {
+         const auto name = fImportFields[idx].fField->GetFieldName();
+         const auto buffer = fImportFields[idx].fFieldBuffer;
+         entry.BindRawPtr(name, buffer);
+      }
    }
 
    if (!fIsQuiet)
@@ -421,7 +421,7 @@ void ROOT::Experimental::RNTupleImporter::Import()
                if (!result)
                   throw RException(R__FORWARD_ERROR(result));
             }
-            c.fCollectionWriter->Fill(*c.fCollectionEntry);
+            c.fCollectionWriter->Fill();
          }
          for (auto &t : c.fTransformations)
             t->ResetEntry();

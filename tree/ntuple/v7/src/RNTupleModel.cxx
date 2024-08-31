@@ -346,19 +346,36 @@ ROOT::Experimental::RNTupleModel::MakeCollection(std::string_view fieldName,
    if (!collectionModel) {
       throw RException(R__FAIL("null collectionModel"));
    }
+   if (!collectionModel->GetProjectedFields().IsEmpty()) {
+      throw RException(R__FAIL("collection models with projected fields are not supported"));
+   }
 
-   auto rawCollectionWriter = new RNTupleCollectionWriter(std::move(collectionModel->fDefaultEntry));
-   auto collectionWriter = std::shared_ptr<RNTupleCollectionWriter>(rawCollectionWriter);
-
-   auto field = std::make_unique<RCollectionField>(fieldName, collectionWriter, std::move(collectionModel->fFieldZero));
+   auto field = std::make_unique<RCollectionField>(fieldName, std::move(collectionModel->fFieldZero));
    field->SetDescription(collectionModel->GetDescription());
 
-   if (fDefaultEntry)
-      fDefaultEntry->AddValue(field->BindValue(std::shared_ptr<void>(collectionWriter->GetOffsetPtr(), [](void *) {})));
+   std::shared_ptr<RNTupleCollectionWriter> writer;
+   if (!fDefaultEntry) {
+      if (collectionModel->fDefaultEntry) {
+         throw RException(
+            R__FAIL("adding a collection model with a default entry to a bare parent model is unsupported"));
+      }
+   } else {
+      auto value = field->CreateValue();
+      writer = value.GetPtr<RNTupleCollectionWriter>();
+
+      if (collectionModel->fDefaultEntry) {
+         auto &writerEntry = writer->GetEntry();
+         for (const auto &v : *collectionModel->fDefaultEntry) {
+            writerEntry.BindValue(v.GetField().GetFieldName(), v.GetPtr<void>());
+         }
+      }
+
+      fDefaultEntry->AddValue(std::move(value));
+   }
 
    fFieldNames.insert(field->GetFieldName());
    fFieldZero->Attach(std::move(field));
-   return collectionWriter;
+   return writer;
 }
 
 ROOT::Experimental::RFieldZero &ROOT::Experimental::RNTupleModel::GetFieldZero()

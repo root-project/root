@@ -26,6 +26,7 @@
 #include <iterator>
 #include <memory>
 #include <type_traits>
+#include <typeinfo>
 #include <utility>
 #include <vector>
 #include <unordered_map>
@@ -48,6 +49,7 @@ that are associated to values are managed.
 */
 // clang-format on
 class REntry {
+   friend class RCollectionField;
    friend class RNTupleCollectionWriter;
    friend class RNTupleModel;
    friend class RNTupleReader;
@@ -127,7 +129,13 @@ private:
    template <typename T>
    void EnsureMatchingType(RFieldToken token [[maybe_unused]]) const
    {
-      if constexpr (!std::is_void_v<T>) {
+      if constexpr (std::is_same_v<T, RNTupleCollectionWriter>) {
+         const auto &v = fValues[token.fIndex];
+         if (!dynamic_cast<const RCollectionField *>(&v.GetField())) {
+            throw RException(R__FAIL("type mismatch for field " + v.GetField().GetFieldName() + ": " +
+                                     v.GetField().GetTypeName() + " vs. RNTupleCollectionWriter"));
+         }
+      } else if constexpr (!std::is_void_v<T>) {
          const auto &v = fValues[token.fIndex];
          if (v.GetField().GetTypeName() != RField<T>::TypeName()) {
             throw RException(R__FAIL("type mismatch for field " + v.GetField().GetFieldName() + ": " +
