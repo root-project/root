@@ -347,7 +347,8 @@ ROOT::Experimental::RNTupleModel::MakeCollection(std::string_view fieldName,
       throw RException(R__FAIL("null collectionModel"));
    }
 
-   auto collectionWriter = std::make_shared<RNTupleCollectionWriter>(std::move(collectionModel->fDefaultEntry));
+   auto rawCollectionWriter = new RNTupleCollectionWriter(std::move(collectionModel->fDefaultEntry));
+   auto collectionWriter = std::shared_ptr<RNTupleCollectionWriter>(rawCollectionWriter);
 
    auto field = std::make_unique<RCollectionField>(fieldName, collectionWriter, std::move(collectionModel->fFieldZero));
    field->SetDescription(collectionModel->GetDescription());

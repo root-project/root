@@ -39,17 +39,20 @@ namespace Experimental {
 // clang-format on
 class RNTupleCollectionWriter {
    friend class RCollectionField;
+   friend class RNTupleModel; // TODO(jblomer) remove me
 
 private:
    std::size_t fBytesWritten = 0;
    ClusterSize_t fOffset;
    std::unique_ptr<REntry> fDefaultEntry;
 
-public:
+   // Constructed by RCollectionField::ConstructValue
    explicit RNTupleCollectionWriter(std::unique_ptr<REntry> defaultEntry)
       : fOffset(0), fDefaultEntry(std::move(defaultEntry))
    {
    }
+
+public:
    RNTupleCollectionWriter(const RNTupleCollectionWriter &) = delete;
    RNTupleCollectionWriter &operator=(const RNTupleCollectionWriter &) = delete;
    ~RNTupleCollectionWriter() = default;
