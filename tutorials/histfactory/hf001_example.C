@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_histfactory
-/// A ROOT script demonstrating  an example of writing and fitting a HistFactory model using c++ only.
+/// A ROOT script demonstrating  an example of writing and fitting a HistFactory model using C++ only.
 ///
 /// \macro_image
 /// \macro_code
@@ -43,7 +43,6 @@ void hf001_example() {
 
   meas.SetLumi( 1.0 );
   meas.SetLumiRelErr( 0.10 );
-  meas.SetExportOnly( true );
   meas.SetBinHigh( 2 );
 
   // Create a channel
@@ -122,13 +121,13 @@ void hf001_example() {
    std::unique_ptr<RooAbsReal> profile{nll->createProfile(*poi)};
 
    // frame for future plot
-   std::unique_ptr<RooPlot> frame{poi->frame()};
+   RooPlot *frame = poi->frame();
 
    frame->SetTitle("");
    frame->GetYaxis()->SetTitle("-log likelihood");
    frame->GetXaxis()->SetTitle(poi->GetTitle());
 
-   TCanvas profileLikelihoodCanvas{"combined", "",800,600};
+   TCanvas *profileLikelihoodCanvas = new TCanvas{"combined", "",800,600};
    
    double xmin = poi->getMin();
    double xmax = poi->getMax();
@@ -142,20 +141,16 @@ void hf001_example() {
    frame->addObject(line90);
    frame->addObject(line95);
    
-   nll->plotOn(frame.get(), ShiftToZero(), LineColor(kRed), LineStyle(kDashed));
-   profile->plotOn(frame.get());
+   nll->plotOn(frame, ShiftToZero(), LineColor(kRed), LineStyle(kDashed));
+   profile->plotOn(frame);
 
    frame->SetMinimum(0);
    frame->SetMaximum(2.);
 
    frame->Draw();
 
-   // Save drawed picture as PNG file
-   std::string profilePlotName = "LikelihoodCurve.png";
-   profileLikelihoodCanvas.SaveAs( profilePlotName.c_str() );
-
    // Create new file to save likelihood graph and fit results
-   std::string outputFileName = std::string(meas.GetName()) + "_combined.root";
+   std::string outputFileName = std::string(meas.GetName()) + "_combined.root"; // In this tutorials output file will have name "meas_combined.root"
    std::unique_ptr<TFile> outFile = std::make_unique<TFile>(outputFileName.c_str(), "recreate");
    TDirectory* internal_dir = outFile->mkdir("FitSummary");
    internal_dir->cd();  
