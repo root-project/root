@@ -700,3 +700,58 @@ INSTANTIATE_TEST_SUITE_P(RooNLLVarBinnedL, OffsetBinTest,
                             ss << (std::get<5>(paramInfo.param) ? "BinnedL" : "");
                             return ss.str();
                          });
+
+// Test if the data can be correctly reset for both individual and simultaneous
+// pdfs.
+TEST(NLL, SetData)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace workspace;
+   workspace.factory("Gaussian::pdf_1(x[-10, 10], mu[0, -10, 10], sigma[1, 0.1, 10])");
+   workspace.factory("SIMUL::pdf(index_cat[A=0], A=pdf_1)");
+
+   RooAbsPdf &pdf1 = *workspace.pdf("pdf_1");
+   RooAbsPdf &pdf = *workspace.pdf("pdf");
+   RooRealVar &x = *workspace.var("x");
+   RooAbsCategory &cat = *workspace.cat("index_cat");
+
+   {
+      // Build simple single-entry datasets so that it's easy to know the
+      // reference result.
+      const double xa = 0.0;
+      const double xb = 1.0;
+
+      RooDataSet data1a{"data_1_a", "data_1_a", {x, cat}};
+      x.setVal(xa);
+      data1a.add({x, cat});
+      workspace.import(data1a);
+
+      RooDataSet data1b{"data_1_b", "data_1_b", {x, cat}};
+      x.setVal(xb);
+      data1b.add({x, cat});
+      workspace.import(data1b);
+   }
+   RooAbsData &data1a = *workspace.data("data_1_a");
+   RooAbsData &data1b = *workspace.data("data_1_b");
+
+   std::unique_ptr<RooAbsReal> nll1{pdf1.createNLL(data1a)};
+   std::unique_ptr<RooAbsReal> nllSim{pdf.createNLL(data1a)};
+
+   double val1A = nll1->getVal();
+   double valSimA = nllSim->getVal();
+
+   nll1->setData(data1b);
+   nllSim->setData(data1b);
+
+   double val1B = nll1->getVal();
+   double valSimB = nllSim->getVal();
+
+   // Make sure the combined and single channel pdfs give consistent results.
+   EXPECT_DOUBLE_EQ(val1A, valSimA);
+   EXPECT_DOUBLE_EQ(val1B, valSimB);
+
+   // The dataset was built in such a way that the updated NLL is shifted by
+   // 0.5, so this is what we analytically expect.
+   EXPECT_DOUBLE_EQ(valSimB, valSimA + 0.5);
+}
