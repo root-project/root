@@ -148,8 +148,10 @@ public:
    int evalCounter() const;
    void zeroEvalCount();
 
-   ROOT::Fit::Fitter *fitter();
-   const ROOT::Fit::Fitter *fitter() const;
+   /// Return underlying ROOT fitter object
+   inline ROOT::Fit::Fitter *fitter() { return _theFitter.get(); }
+   /// Return underlying ROOT fitter object
+   inline const ROOT::Fit::Fitter *fitter() const { return _theFitter.get(); }
 
    ROOT::Math::IMultiGenFunction *getMultiGenFcn() const;
 
@@ -173,13 +175,20 @@ private:
    double &maxFCN();
    double &fcnOffset() const;
 
-   bool fitFcn() const;
-
    // constructor helper functions
    void initMinimizerFirstPart();
    void initMinimizerFcnDependentPart(double defaultErrorLevel);
 
    void determineStatus(bool fitterReturnValue);
+
+   // Some private functions to interact with the ROOT::Math::Fitter. This
+   // makes it clearer to the reader of the code which part of the Fitter
+   // interface is actually used by the RooMinimizer.
+   inline ROOT::Math::Minimizer *getMinimizer() const { return _theFitter->GetMinimizer(); }
+   inline ROOT::Fit::FitConfig &getConfig() const { return _theFitter->Config(); }
+   inline const ROOT::Fit::FitResult &getResult() const { return _theFitter->Result(); }
+
+   int exec(std::string const &algoName, std::string const &statusName);
 
    int _status = -99;
    bool _profileStart = false;

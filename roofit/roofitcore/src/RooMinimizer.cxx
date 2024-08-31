@@ -108,7 +108,7 @@ RooMinimizer::RooMinimizer(RooAbsReal &function, Config const &cfg) : _cfg(cfg)
          RooFit::MultiProcess::Config::setTimingAnalysis(_cfg.timingAnalysis);
 
          _fcn = std::make_unique<RooFit::TestStatistics::MinuitFcnGrad>(
-            nll_real->getRooAbsL(), this, _theFitter->Config().ParamsSettings(),
+            nll_real->getRooAbsL(), this, getConfig().ParamsSettings(),
             RooFit::TestStatistics::LikelihoodMode{
                static_cast<RooFit::TestStatistics::LikelihoodMode>(int(_cfg.enableParallelDescent))},
             RooFit::TestStatistics::LikelihoodGradientMode::multiprocess);
@@ -147,7 +147,7 @@ void RooMinimizer::initMinimizerFirstPart()
    setMinimizerType("");
 
    _theFitter = std::make_unique<ROOT::Fit::Fitter>();
-   _theFitter->Config().SetMinimizer(_cfg.minimizerType.c_str());
+   getConfig().SetMinimizer(_cfg.minimizerType.c_str());
    setEps(1.0); // default tolerance
 }
 
@@ -155,8 +155,8 @@ void RooMinimizer::initMinimizerFirstPart()
 void RooMinimizer::initMinimizerFcnDependentPart(double defaultErrorLevel)
 {
    // default max number of calls
-   _theFitter->Config().MinimizerOptions().SetMaxIterations(500 * _fcn->getNDim());
-   _theFitter->Config().MinimizerOptions().SetMaxFunctionCalls(500 * _fcn->getNDim());
+   getConfig().MinimizerOptions().SetMaxIterations(500 * _fcn->getNDim());
+   getConfig().MinimizerOptions().SetMaxFunctionCalls(500 * _fcn->getNDim());
 
    // Shut up for now
    setPrintLevel(-1);
@@ -165,14 +165,10 @@ void RooMinimizer::initMinimizerFcnDependentPart(double defaultErrorLevel)
    setErrorLevel(defaultErrorLevel);
 
    // Declare our parameters to MINUIT
-   _fcn->Synchronize(_theFitter->Config().ParamsSettings());
+   _fcn->Synchronize(getConfig().ParamsSettings());
 
    // Now set default verbosity
-   if (RooMsgService::instance().silentMode()) {
-      setPrintLevel(-1);
-   } else {
-      setPrintLevel(1);
-   }
+   setPrintLevel(RooMsgService::instance().silentMode() ? -1 : 1);
 
    // Set user defined and default _fcn config
    setLogFile(_cfg.logf);
@@ -196,7 +192,7 @@ RooMinimizer::~RooMinimizer() = default;
 
 void RooMinimizer::setStrategy(int istrat)
 {
-   _theFitter->Config().MinimizerOptions().SetStrategy(istrat);
+   getConfig().MinimizerOptions().SetStrategy(istrat);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -205,7 +201,7 @@ void RooMinimizer::setStrategy(int istrat)
 
 void RooMinimizer::setMaxIterations(int n)
 {
-   _theFitter->Config().MinimizerOptions().SetMaxIterations(n);
+   getConfig().MinimizerOptions().SetMaxIterations(n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -214,7 +210,7 @@ void RooMinimizer::setMaxIterations(int n)
 
 void RooMinimizer::setMaxFunctionCalls(int n)
 {
-   _theFitter->Config().MinimizerOptions().SetMaxFunctionCalls(n);
+   getConfig().MinimizerOptions().SetMaxFunctionCalls(n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -225,7 +221,7 @@ void RooMinimizer::setMaxFunctionCalls(int n)
 
 void RooMinimizer::setErrorLevel(double level)
 {
-   _theFitter->Config().MinimizerOptions().SetErrorDef(level);
+   getConfig().MinimizerOptions().SetErrorDef(level);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -233,7 +229,7 @@ void RooMinimizer::setErrorLevel(double level)
 
 void RooMinimizer::setEps(double eps)
 {
-   _theFitter->Config().MinimizerOptions().SetTolerance(eps);
+   getConfig().MinimizerOptions().SetTolerance(eps);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -266,31 +262,10 @@ void RooMinimizer::setMinimizerType(std::string const &type)
    }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Return underlying ROOT fitter object
-
-ROOT::Fit::Fitter *RooMinimizer::fitter()
-{
-   return _theFitter.get();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return underlying ROOT fitter object
-
-ROOT::Fit::Fitter const *RooMinimizer::fitter() const
-{
-   return _theFitter.get();
-}
-
-bool RooMinimizer::fitFcn() const
-{
-   return _theFitter->FitFCN(*_fcn->getMultiGenFcn());
-}
-
 void RooMinimizer::determineStatus(bool fitterReturnValue)
 {
    // Minuit-given status:
-   _status = ((fitterReturnValue) ? _theFitter->Result().Status() : -1);
+   _status = ((fitterReturnValue) ? getResult().Status() : -1);
 
    // RooFit-based additional failed state information:
    if (evalCounter() <= _fcn->GetNumInvalidNLL()) {
@@ -318,20 +293,20 @@ int RooMinimizer::minimize(const char *type, const char *alg)
                              "ProcessTimer.");
 #endif
    }
-   _fcn->Synchronize(_theFitter->Config().ParamsSettings());
+   _fcn->Synchronize(getConfig().ParamsSettings());
 
    setMinimizerType(type);
-   _theFitter->Config().SetMinimizer(_cfg.minimizerType.c_str(), alg);
+   getConfig().SetMinimizer(_cfg.minimizerType.c_str(), alg);
 
    profileStart();
    {
       auto ctx = makeEvalErrorContext();
 
-      bool ret = fitFcn();
+      bool ret = _theFitter->FitFCN(*_fcn->getMultiGenFcn());
       determineStatus(ret);
    }
    profileStop();
-   _fcn->BackProp(_theFitter->Result());
+   _fcn->BackProp(getResult());
 
    saveStatus("MINIMIZE", _status);
 
@@ -346,19 +321,35 @@ int RooMinimizer::minimize(const char *type, const char *alg)
 
 int RooMinimizer::migrad()
 {
-   _fcn->Synchronize(_theFitter->Config().ParamsSettings());
+   return exec("migrad", "MIGRAD");
+}
+
+int RooMinimizer::exec(std::string const &algoName, std::string const &statusName)
+{
+   _fcn->Synchronize(getConfig().ParamsSettings());
    profileStart();
    {
       auto ctx = makeEvalErrorContext();
 
-      _theFitter->Config().SetMinimizer(_cfg.minimizerType.c_str(), "migrad");
-      bool ret = fitFcn();
+      bool ret = false;
+      if (algoName == "hesse") {
+         // HESSE has a special entry point in the ROOT::Math::Fitter
+         getConfig().SetMinimizer(_cfg.minimizerType.c_str());
+         ret = _theFitter->CalculateHessErrors();
+      } else if (algoName == "minos") {
+         // MINOS has a special entry point in the ROOT::Math::Fitter
+         getConfig().SetMinimizer(_cfg.minimizerType.c_str());
+         ret = _theFitter->CalculateMinosErrors();
+      } else {
+         getConfig().SetMinimizer(_cfg.minimizerType.c_str(), algoName.c_str());
+         ret = _theFitter->FitFCN(*_fcn->getMultiGenFcn());
+      }
       determineStatus(ret);
    }
    profileStop();
-   _fcn->BackProp(_theFitter->Result());
+   _fcn->BackProp(getResult());
 
-   saveStatus("MIGRAD", _status);
+   saveStatus(statusName.c_str(), _status);
 
    return _status;
 }
@@ -371,27 +362,13 @@ int RooMinimizer::migrad()
 
 int RooMinimizer::hesse()
 {
-   if (_theFitter->GetMinimizer() == nullptr) {
+   if (getMinimizer() == nullptr) {
       coutW(Minimization) << "RooMinimizer::hesse: Error, run Migrad before Hesse!" << std::endl;
       _status = -1;
-   } else {
-
-      _fcn->Synchronize(_theFitter->Config().ParamsSettings());
-      profileStart();
-      {
-         auto ctx = makeEvalErrorContext();
-
-         _theFitter->Config().SetMinimizer(_cfg.minimizerType.c_str());
-         bool ret = _theFitter->CalculateHessErrors();
-         determineStatus(ret);
-      }
-      profileStop();
-      _fcn->BackProp(_theFitter->Result());
-
-      saveStatus("HESSE", _status);
+      return _status;
    }
 
-   return _status;
+   return exec("hesse", "HESSE");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -402,28 +379,13 @@ int RooMinimizer::hesse()
 
 int RooMinimizer::minos()
 {
-   if (_theFitter->GetMinimizer() == nullptr) {
+   if (getMinimizer() == nullptr) {
       coutW(Minimization) << "RooMinimizer::minos: Error, run Migrad before Minos!" << std::endl;
       _status = -1;
-   } else {
-
-      _fcn->Synchronize(_theFitter->Config().ParamsSettings());
-      profileStart();
-      {
-         auto ctx = makeEvalErrorContext();
-
-         _theFitter->Config().SetMinimizer(_cfg.minimizerType.c_str());
-         bool ret = _theFitter->CalculateMinosErrors();
-         determineStatus(ret);
-      }
-
-      profileStop();
-      _fcn->BackProp(_theFitter->Result());
-
-      saveStatus("MINOS", _status);
+      return _status;
    }
 
-   return _status;
+   return exec("minos", "MINOS");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -434,12 +396,12 @@ int RooMinimizer::minos()
 
 int RooMinimizer::minos(const RooArgSet &minosParamList)
 {
-   if (_theFitter->GetMinimizer() == nullptr) {
+   if (getMinimizer() == nullptr) {
       coutW(Minimization) << "RooMinimizer::minos: Error, run Migrad before Minos!" << std::endl;
       _status = -1;
    } else if (!minosParamList.empty()) {
 
-      _fcn->Synchronize(_theFitter->Config().ParamsSettings());
+      _fcn->Synchronize(getConfig().ParamsSettings());
       profileStart();
       {
          auto ctx = makeEvalErrorContext();
@@ -456,17 +418,17 @@ int RooMinimizer::minos(const RooArgSet &minosParamList)
 
          if (!paramInd.empty()) {
             // set the parameter indices
-            _theFitter->Config().SetMinosErrors(paramInd);
+            getConfig().SetMinosErrors(paramInd);
 
-            _theFitter->Config().SetMinimizer(_cfg.minimizerType.c_str());
+            getConfig().SetMinimizer(_cfg.minimizerType.c_str());
             bool ret = _theFitter->CalculateMinosErrors();
             determineStatus(ret);
             // to avoid that following minimization computes automatically the Minos errors
-            _theFitter->Config().SetMinosErrors(false);
+            getConfig().SetMinosErrors(false);
          }
       }
       profileStop();
-      _fcn->BackProp(_theFitter->Result());
+      _fcn->BackProp(getResult());
 
       saveStatus("MINOS", _status);
    }
@@ -482,21 +444,7 @@ int RooMinimizer::minos(const RooArgSet &minosParamList)
 
 int RooMinimizer::seek()
 {
-   _fcn->Synchronize(_theFitter->Config().ParamsSettings());
-   profileStart();
-   {
-      auto ctx = makeEvalErrorContext();
-
-      _theFitter->Config().SetMinimizer(_cfg.minimizerType.c_str(), "seek");
-      bool ret = fitFcn();
-      determineStatus(ret);
-   }
-   profileStop();
-   _fcn->BackProp(_theFitter->Result());
-
-   saveStatus("SEEK", _status);
-
-   return _status;
+   return exec("seek", "SEEK");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -507,21 +455,7 @@ int RooMinimizer::seek()
 
 int RooMinimizer::simplex()
 {
-   _fcn->Synchronize(_theFitter->Config().ParamsSettings());
-   profileStart();
-   {
-      auto ctx = makeEvalErrorContext();
-
-      _theFitter->Config().SetMinimizer(_cfg.minimizerType.c_str(), "simplex");
-      bool ret = fitFcn();
-      determineStatus(ret);
-   }
-   profileStop();
-   _fcn->BackProp(_theFitter->Result());
-
-   saveStatus("SIMPLEX", _status);
-
-   return _status;
+   return exec("simplex", "SIMPLEX");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -532,21 +466,7 @@ int RooMinimizer::simplex()
 
 int RooMinimizer::improve()
 {
-   _fcn->Synchronize(_theFitter->Config().ParamsSettings());
-   profileStart();
-   {
-      auto ctx = makeEvalErrorContext();
-
-      _theFitter->Config().SetMinimizer(_cfg.minimizerType.c_str(), "migradimproved");
-      bool ret = fitFcn();
-      determineStatus(ret);
-   }
-   profileStop();
-   _fcn->BackProp(_theFitter->Result());
-
-   saveStatus("IMPROVE", _status);
-
-   return _status;
+   return exec("migradimproved", "IMPROVE");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -554,7 +474,7 @@ int RooMinimizer::improve()
 
 void RooMinimizer::setPrintLevel(int newLevel)
 {
-   _theFitter->Config().MinimizerOptions().SetPrintLevel(newLevel + 1);
+   getConfig().MinimizerOptions().SetPrintLevel(newLevel + 1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -562,7 +482,7 @@ void RooMinimizer::setPrintLevel(int newLevel)
 
 int RooMinimizer::getPrintLevel()
 {
-   return _theFitter->Config().MinimizerOptions().PrintLevel() + 1;
+   return getConfig().MinimizerOptions().PrintLevel() + 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -584,7 +504,7 @@ void RooMinimizer::optimizeConst(int flag)
 
 RooFit::OwningPtr<RooFitResult> RooMinimizer::save(const char *userName, const char *userTitle)
 {
-   if (_theFitter->GetMinimizer() == nullptr) {
+   if (getMinimizer() == nullptr) {
       coutW(Minimization) << "RooMinimizer::save: Error, run minimization before!" << std::endl;
       return nullptr;
    }
@@ -617,19 +537,20 @@ RooFit::OwningPtr<RooFitResult> RooMinimizer::save(const char *userName, const c
    removeOffset = -_fcn->getOffset();
 
    fitRes->setStatus(_status);
-   fitRes->setCovQual(_theFitter->GetMinimizer()->CovMatrixStatus());
-   fitRes->setMinNLL(_theFitter->Result().MinFcnValue() + removeOffset);
-   fitRes->setEDM(_theFitter->Result().Edm());
+   fitRes->setCovQual(getMinimizer()->CovMatrixStatus());
+   fitRes->setMinNLL(getResult().MinFcnValue() + removeOffset);
+   fitRes->setEDM(getResult().Edm());
    fitRes->setFinalParList(saveFloatFinalList);
    if (!_extV) {
+      const std::size_t nParams = getResult().Parameters().size();
       std::vector<double> globalCC;
-      TMatrixDSym corrs(_theFitter->Result().Parameters().size());
-      TMatrixDSym covs(_theFitter->Result().Parameters().size());
-      for (std::size_t ic = 0; ic < _theFitter->Result().Parameters().size(); ic++) {
-         globalCC.push_back(_theFitter->Result().GlobalCC(ic));
-         for (std::size_t ii = 0; ii < _theFitter->Result().Parameters().size(); ii++) {
-            corrs(ic, ii) = _theFitter->Result().Correlation(ic, ii);
-            covs(ic, ii) = _theFitter->Result().CovMatrix(ic, ii);
+      TMatrixDSym corrs(nParams);
+      TMatrixDSym covs(nParams);
+      for (std::size_t ic = 0; ic < nParams; ic++) {
+         globalCC.push_back(getResult().GlobalCC(ic));
+         for (std::size_t ii = 0; ii < nParams; ii++) {
+            corrs(ic, ii) = getResult().Correlation(ic, ii);
+            covs(ic, ii) = getResult().CovMatrix(ic, ii);
          }
       }
       fitRes->fillCorrMatrix(globalCC, corrs, covs);
@@ -689,13 +610,13 @@ RooPlot *RooMinimizer::contour(RooRealVar &var1, RooRealVar &var2, double n1, do
 
    // check first if a inimizer is available. If not means
    // the minimization is not done , so do it
-   if (_theFitter->GetMinimizer() == nullptr) {
+   if (getMinimizer() == nullptr) {
       coutW(Minimization) << "RooMinimizer::contour: Error, run Migrad before contours!" << std::endl;
       return frame;
    }
 
    // remember our original value of ERRDEF
-   double errdef = _theFitter->GetMinimizer()->ErrorDef();
+   double errdef = getMinimizer()->ErrorDef();
 
    double n[6];
    n[0] = n1;
@@ -709,12 +630,12 @@ RooPlot *RooMinimizer::contour(RooRealVar &var1, RooRealVar &var2, double n1, do
       if (n[ic] > 0) {
 
          // set the value corresponding to an n1-sigma contour
-         _theFitter->GetMinimizer()->SetErrorDef(n[ic] * n[ic] * errdef);
+         getMinimizer()->SetErrorDef(n[ic] * n[ic] * errdef);
 
          // calculate and draw the contour
          std::vector<double> xcoor(npoints + 1);
          std::vector<double> ycoor(npoints + 1);
-         bool ret = _theFitter->GetMinimizer()->Contour(index1, index2, npoints, xcoor.data(), ycoor.data());
+         bool ret = getMinimizer()->Contour(index1, index2, npoints, xcoor.data(), ycoor.data());
 
          if (!ret) {
             coutE(Minimization) << "RooMinimizer::contour(" << GetName()
@@ -734,7 +655,7 @@ RooPlot *RooMinimizer::contour(RooRealVar &var1, RooRealVar &var2, double n1, do
    }
 
    // restore the original ERRDEF
-   _theFitter->GetMinimizer()->SetErrorDef(errdef);
+   getMinimizer()->SetErrorDef(errdef);
 
    // restore parameter values
    params->assign(paramSave);
@@ -791,7 +712,7 @@ void RooMinimizer::profileStop()
 
 ROOT::Math::IMultiGenFunction *RooMinimizer::getMultiGenFcn() const
 {
-   auto *fitterFcn = fitter()->GetFCN();
+   auto *fitterFcn = _theFitter->GetFCN();
    return fitterFcn ? fitterFcn : _fcn->getMultiGenFcn();
 }
 
@@ -816,17 +737,17 @@ RooFit::OwningPtr<RooFitResult> RooMinimizer::lastMinuitFit(const RooArgList &va
    // Import the results of the last fit performed, interpreting
    // the fit parameters as the given varList of parameters.
 
-   if (_theFitter == nullptr || _theFitter->GetMinimizer() == nullptr) {
+   if (_theFitter == nullptr || getMinimizer() == nullptr) {
       oocoutE(nullptr, InputArguments) << "RooMinimizer::save: Error, run minimization before!" << std::endl;
       return nullptr;
    }
 
    // Verify length of supplied varList
-   if (!varList.empty() && varList.size() != _theFitter->Result().NTotalParameters()) {
+   if (!varList.empty() && varList.size() != getResult().NTotalParameters()) {
       oocoutE(nullptr, InputArguments)
          << "RooMinimizer::lastMinuitFit: ERROR: supplied variable list must be either empty " << std::endl
          << "                             or match the number of variables of the last fit ("
-         << _theFitter->Result().NTotalParameters() << ")" << std::endl;
+         << getResult().NTotalParameters() << ")" << std::endl;
       return nullptr;
    }
 
@@ -847,15 +768,15 @@ RooFit::OwningPtr<RooFitResult> RooMinimizer::lastMinuitFit(const RooArgList &va
    RooArgList floatPars("floatPars");
 
    unsigned int i;
-   for (i = 0; i < _theFitter->Result().NTotalParameters(); ++i) {
+   for (i = 0; i < getResult().NTotalParameters(); ++i) {
 
-      TString varName(_theFitter->Result().GetParameterName(i));
-      bool isConst(_theFitter->Result().IsParameterFixed(i));
+      TString varName(getResult().GetParameterName(i));
+      bool isConst(getResult().IsParameterFixed(i));
 
-      double xlo = _theFitter->Config().ParSettings(i).LowerLimit();
-      double xhi = _theFitter->Config().ParSettings(i).UpperLimit();
-      double xerr = _theFitter->Result().Error(i);
-      double xval = _theFitter->Result().Value(i);
+      double xlo = getConfig().ParSettings(i).LowerLimit();
+      double xhi = getConfig().ParSettings(i).UpperLimit();
+      double xerr = getResult().Error(i);
+      double xval = getResult().Value(i);
 
       std::unique_ptr<RooRealVar> var;
       if (varList.empty()) {
@@ -892,18 +813,19 @@ RooFit::OwningPtr<RooFitResult> RooMinimizer::lastMinuitFit(const RooArgList &va
    res->setConstParList(constPars);
    res->setInitParList(floatPars);
    res->setFinalParList(floatPars);
-   res->setMinNLL(_theFitter->Result().MinFcnValue());
-   res->setEDM(_theFitter->Result().Edm());
-   res->setCovQual(_theFitter->GetMinimizer()->CovMatrixStatus());
-   res->setStatus(_theFitter->Result().Status());
+   res->setMinNLL(getResult().MinFcnValue());
+   res->setEDM(getResult().Edm());
+   res->setCovQual(getMinimizer()->CovMatrixStatus());
+   res->setStatus(getResult().Status());
    std::vector<double> globalCC;
-   TMatrixDSym corrs(_theFitter->Result().Parameters().size());
-   TMatrixDSym covs(_theFitter->Result().Parameters().size());
-   for (unsigned int ic = 0; ic < _theFitter->Result().Parameters().size(); ic++) {
-      globalCC.push_back(_theFitter->Result().GlobalCC(ic));
-      for (unsigned int ii = 0; ii < _theFitter->Result().Parameters().size(); ii++) {
-         corrs(ic, ii) = _theFitter->Result().Correlation(ic, ii);
-         covs(ic, ii) = _theFitter->Result().CovMatrix(ic, ii);
+   const std::size_t nParams = getResult().Parameters().size();
+   TMatrixDSym corrs(nParams);
+   TMatrixDSym covs(nParams);
+   for (unsigned int ic = 0; ic < nParams; ic++) {
+      globalCC.push_back(getResult().GlobalCC(ic));
+      for (unsigned int ii = 0; ii < nParams; ii++) {
+         corrs(ic, ii) = getResult().Correlation(ic, ii);
+         covs(ic, ii) = getResult().CovMatrix(ic, ii);
       }
    }
    res->fillCorrMatrix(globalCC, corrs, covs);

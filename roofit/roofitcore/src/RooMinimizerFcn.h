@@ -16,8 +16,6 @@
 #define ROO_MINIMIZER_FCN
 
 #include "Math/IFunction.h"
-#include "Fit/ParameterSettings.h"
-#include "Fit/FitResult.h"
 
 #include "RooAbsReal.h"
 #include "RooArgList.h"
@@ -26,10 +24,6 @@
 #include <vector>
 
 #include "RooAbsMinimizerFcn.h"
-
-template <typename T>
-class TMatrixTSym;
-using TMatrixDSym = TMatrixTSym<double>;
 
 // forward declaration
 class RooMinimizer;
