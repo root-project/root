@@ -57,7 +57,7 @@ public:
    double &getOffset() const { return _funcOffset; }
 
    /// Put Minuit results back into RooFit objects.
-   void BackProp(const ROOT::Fit::FitResult &results);
+   void BackProp();
 
    /// RooMinimizer sometimes needs the name of the minimized function. Implement this in the derived class.
    virtual std::string getFunctionName() const = 0;

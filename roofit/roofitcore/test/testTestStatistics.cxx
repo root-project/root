@@ -24,8 +24,6 @@
 #include <RooSimultaneous.h>
 #include <RooWorkspace.h>
 
-#include <ROOT/TestSupport.hxx>
-
 #include <TMath.h>
 
 #include "gtest_wrapper.h"
@@ -293,14 +291,7 @@ TEST_P(TestStatisticTest, EmptyData)
    std::unique_ptr<RooDataSet> data{model.generate(x, 0)};
    std::unique_ptr<RooDataHist> dataHist{data->binnedClone()};
 
-   {
-      // We expect errors in the Hessian calculation because the likelihood is
-      // constant.
-      ROOT::TestSupport::CheckDiagsRAII checkDiag;
-      checkDiag.requiredDiag(kWarning, "ROOT::Math::Fitter::CalculateHessErrors", "Error when calculating Hessian");
-
-      model.fitTo(*data, _evalBackend, RooFit::PrintLevel(-1));
-   }
+   model.fitTo(*data, _evalBackend, RooFit::PrintLevel(-1));
 
    EXPECT_EQ(mean.getVal(), meanOrigVal) << "Fitting an empty RooDataSet changed \"mean\" value!";
    EXPECT_EQ(sigma.getVal(), sigmaOrigVal) << "Fitting an empty RooDataSet changed \"sigma\" value!";
@@ -311,14 +302,7 @@ TEST_P(TestStatisticTest, EmptyData)
    mean.setError(0.0);
    sigma.setError(0.0);
 
-   {
-      // We expect errors in the Hessian calculation because the likelihood is
-      // constant (same as above for the RooDataSet).
-      ROOT::TestSupport::CheckDiagsRAII checkDiag;
-      checkDiag.requiredDiag(kWarning, "ROOT::Math::Fitter::CalculateHessErrors", "Error when calculating Hessian");
-
-      model.fitTo(*dataHist, _evalBackend, RooFit::PrintLevel(-1));
-   }
+   model.fitTo(*dataHist, _evalBackend, RooFit::PrintLevel(-1));
 
    EXPECT_EQ(mean.getVal(), meanOrigVal) << "Fitting an empty RooDataSet changed \"mean\" value!";
    EXPECT_EQ(sigma.getVal(), sigmaOrigVal) << "Fitting an empty RooDataSet changed \"sigma\" value!";
