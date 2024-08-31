@@ -394,9 +394,13 @@ void RooStats::HistFactory::FitModelAndPlot(const std::string &MeasurementName, 
 
   for(int i=0; i<curve_N; i++){
     double f=curve_x[i];
-    poi->setVal(f);
-    x_arr[i]=f;
-    y_arr_nll[i]=nll->getVal();
+    // The RooCurve alo evaluates points that are outside the definition range,
+    // but they are invalid and we don't want to have them on the graph.
+    if(poi->inRange(f, nullptr)) {
+      poi->setVal(f);
+      x_arr[i]=f;
+      y_arr_nll[i]=nll->getVal();
+    }
   }
 
   TGraph g{curve_N, x_arr.data(), y_arr_nll.data()};
