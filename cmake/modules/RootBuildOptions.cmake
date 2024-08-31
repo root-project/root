@@ -169,7 +169,7 @@ ROOT_BUILD_OPTION(tmva-gpu OFF "Build TMVA with GPU support for deep learning (r
 ROOT_BUILD_OPTION(tmva-sofie OFF "Build TMVA with support for sofie - fast inference code generation (requires protobuf 3)")
 ROOT_BUILD_OPTION(tmva-pymva ON "Enable support for Python in TMVA (requires numpy)")
 ROOT_BUILD_OPTION(tmva-rmva OFF "Enable support for R in TMVA")
-ROOT_BUILD_OPTION(spectrum ON "Enable support for TSpectrum")
+ROOT_BUILD_OPTION(spectrum OFF "Enable support for TSpectrum")
 ROOT_BUILD_OPTION(unfold OFF "Enable the unfold package [GPL]")
 ROOT_BUILD_OPTION(unuran OFF "Enable support for UNURAN (package for generating non-uniform random numbers) [GPL]")
 ROOT_BUILD_OPTION(uring OFF "Enable support for io_uring (requires liburing and Linux kernel >= 5.1)")
