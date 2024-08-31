@@ -295,7 +295,6 @@ TEST(RooNaNPacker, FitAddPdf_DegenerateCoeff)
    for (auto tryRecover : std::initializer_list<double>{0., 10.}) {
       params.assign(evilValues);
 
-      RooMinimizer::cleanup();
       RooMinimizer minim(*nll);
       minim.setRecoverFromNaNStrength(tryRecover);
       minim.setPrintLevel(-1);

@@ -71,20 +71,7 @@ automatic PDF optimization.
 #include <iostream>
 #include <stdexcept> // logic_error
 
-using std::endl;
-
 ClassImp(RooMinimizer);
-
-std::unique_ptr<ROOT::Fit::Fitter> RooMinimizer::_theFitter = {};
-
-////////////////////////////////////////////////////////////////////////////////
-/// Cleanup method called by atexit handler installed by RooSentinel
-/// to delete all global heap objects when the program is terminated
-
-void RooMinimizer::cleanup()
-{
-   _theFitter.reset();
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct MINUIT interface to given function. Function can be anything,
@@ -385,7 +372,7 @@ int RooMinimizer::migrad()
 int RooMinimizer::hesse()
 {
    if (_theFitter->GetMinimizer() == nullptr) {
-      coutW(Minimization) << "RooMinimizer::hesse: Error, run Migrad before Hesse!" << endl;
+      coutW(Minimization) << "RooMinimizer::hesse: Error, run Migrad before Hesse!" << std::endl;
       _status = -1;
    } else {
 
@@ -416,7 +403,7 @@ int RooMinimizer::hesse()
 int RooMinimizer::minos()
 {
    if (_theFitter->GetMinimizer() == nullptr) {
-      coutW(Minimization) << "RooMinimizer::minos: Error, run Migrad before Minos!" << endl;
+      coutW(Minimization) << "RooMinimizer::minos: Error, run Migrad before Minos!" << std::endl;
       _status = -1;
    } else {
 
@@ -448,7 +435,7 @@ int RooMinimizer::minos()
 int RooMinimizer::minos(const RooArgSet &minosParamList)
 {
    if (_theFitter->GetMinimizer() == nullptr) {
-      coutW(Minimization) << "RooMinimizer::minos: Error, run Migrad before Minos!" << endl;
+      coutW(Minimization) << "RooMinimizer::minos: Error, run Migrad before Minos!" << std::endl;
       _status = -1;
    } else if (!minosParamList.empty()) {
 
@@ -598,7 +585,7 @@ void RooMinimizer::optimizeConst(int flag)
 RooFit::OwningPtr<RooFitResult> RooMinimizer::save(const char *userName, const char *userTitle)
 {
    if (_theFitter->GetMinimizer() == nullptr) {
-      coutW(Minimization) << "RooMinimizer::save: Error, run minimization before!" << endl;
+      coutW(Minimization) << "RooMinimizer::save: Error, run minimization before!" << std::endl;
       return nullptr;
    }
 
@@ -682,14 +669,14 @@ RooPlot *RooMinimizer::contour(RooRealVar &var1, RooRealVar &var2, double n1, do
    int index1 = _fcn->GetFloatParamList()->index(&var1);
    if (index1 < 0) {
       coutE(Minimization) << "RooMinimizer::contour(" << GetName() << ") ERROR: " << var1.GetName()
-                          << " is not a floating parameter of " << _fcn->getFunctionName() << endl;
+                          << " is not a floating parameter of " << _fcn->getFunctionName() << std::endl;
       return nullptr;
    }
 
    int index2 = _fcn->GetFloatParamList()->index(&var2);
    if (index2 < 0) {
       coutE(Minimization) << "RooMinimizer::contour(" << GetName() << ") ERROR: " << var2.GetName()
-                          << " is not a floating parameter of PDF " << _fcn->getFunctionName() << endl;
+                          << " is not a floating parameter of PDF " << _fcn->getFunctionName() << std::endl;
       return nullptr;
    }
 
@@ -703,7 +690,7 @@ RooPlot *RooMinimizer::contour(RooRealVar &var1, RooRealVar &var2, double n1, do
    // check first if a inimizer is available. If not means
    // the minimization is not done , so do it
    if (_theFitter->GetMinimizer() == nullptr) {
-      coutW(Minimization) << "RooMinimizer::contour: Error, run Migrad before contours!" << endl;
+      coutW(Minimization) << "RooMinimizer::contour: Error, run Migrad before contours!" << std::endl;
       return frame;
    }
 
@@ -731,7 +718,7 @@ RooPlot *RooMinimizer::contour(RooRealVar &var1, RooRealVar &var2, double n1, do
 
          if (!ret) {
             coutE(Minimization) << "RooMinimizer::contour(" << GetName()
-                                << ") ERROR: MINUIT did not return a contour graph for n=" << n[ic] << endl;
+                                << ") ERROR: MINUIT did not return a contour graph for n=" << n[ic] << std::endl;
          } else {
             xcoor[npoints] = xcoor[0];
             ycoor[npoints] = ycoor[0];
@@ -830,16 +817,16 @@ RooFit::OwningPtr<RooFitResult> RooMinimizer::lastMinuitFit(const RooArgList &va
    // the fit parameters as the given varList of parameters.
 
    if (_theFitter == nullptr || _theFitter->GetMinimizer() == nullptr) {
-      oocoutE(nullptr, InputArguments) << "RooMinimizer::save: Error, run minimization before!" << endl;
+      oocoutE(nullptr, InputArguments) << "RooMinimizer::save: Error, run minimization before!" << std::endl;
       return nullptr;
    }
 
    // Verify length of supplied varList
    if (!varList.empty() && varList.size() != _theFitter->Result().NTotalParameters()) {
       oocoutE(nullptr, InputArguments)
-         << "RooMinimizer::lastMinuitFit: ERROR: supplied variable list must be either empty " << endl
+         << "RooMinimizer::lastMinuitFit: ERROR: supplied variable list must be either empty " << std::endl
          << "                             or match the number of variables of the last fit ("
-         << _theFitter->Result().NTotalParameters() << ")" << endl;
+         << _theFitter->Result().NTotalParameters() << ")" << std::endl;
       return nullptr;
    }
 
@@ -847,7 +834,7 @@ RooFit::OwningPtr<RooFitResult> RooMinimizer::lastMinuitFit(const RooArgList &va
    for (RooAbsArg *arg : varList) {
       if (!dynamic_cast<RooRealVar *>(arg)) {
          oocoutE(nullptr, InputArguments) << "RooMinimizer::lastMinuitFit: ERROR: variable '" << arg->GetName()
-                                          << "' is not of type RooRealVar" << endl;
+                                          << "' is not of type RooRealVar" << std::endl;
          return nullptr;
       }
    }
@@ -890,7 +877,7 @@ RooFit::OwningPtr<RooFitResult> RooMinimizer::lastMinuitFit(const RooArgList &va
 
          if (varName.CompareTo(var->GetName())) {
             oocoutI(nullptr, Eval) << "RooMinimizer::lastMinuitFit: fit parameter '" << varName
-                                   << "' stored in variable '" << var->GetName() << "'" << endl;
+                                   << "' stored in variable '" << var->GetName() << "'" << std::endl;
          }
       }
 

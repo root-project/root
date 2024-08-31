@@ -101,8 +101,6 @@ class LikelihoodGradientJobTest : public ::testing::TestWithParam<std::tuple<std
       RooRandom::randomGenerator()->SetSeed(seed);
    }
 
-   void TearDown() override { RooMinimizer::cleanup(); }
-
 protected:
    std::size_t NWorkers = 0;
    std::size_t seed = 0;
@@ -615,9 +613,6 @@ class LikelihoodGradientJobErrorTest
          RooFit::MultiProcess::Config::LikelihoodJob::automaticNEventTasks;
       RooFit::MultiProcess::Config::LikelihoodJob::defaultNComponentTasks =
          RooFit::MultiProcess::Config::LikelihoodJob::automaticNComponentTasks;
-
-      // cleanup to make sure JobManager is shut down after any test
-      RooMinimizer::cleanup();
    }
 
 protected:
@@ -797,9 +792,6 @@ class LikelihoodGradientJobBinnedErrorTest : public ::testing::TestWithParam<std
          RooFit::MultiProcess::Config::LikelihoodJob::automaticNEventTasks;
       RooFit::MultiProcess::Config::LikelihoodJob::defaultNComponentTasks =
          RooFit::MultiProcess::Config::LikelihoodJob::automaticNComponentTasks;
-
-      // cleanup to make sure JobManager is shut down after any test
-      RooMinimizer::cleanup();
    }
 
 protected:
