@@ -346,18 +346,20 @@ void RooAbsMinimizerFcn::SetPdfParamErr(int index, double loVal, double hiVal)
 }
 
 /// Transfer MINUIT fit results back into RooFit objects.
-void RooAbsMinimizerFcn::BackProp(const ROOT::Fit::FitResult &results)
+void RooAbsMinimizerFcn::BackProp()
 {
+   auto const &results = _context->fitter()->Result();
+
    for (unsigned int index = 0; index < _nDim; index++) {
-      double value = results.Value(index);
+      double value = results.fParams[index];
       SetPdfParamVal(index, value);
 
       // Set the parabolic error
-      double err = results.Error(index);
+      double err = results.fErrors[index];
       SetPdfParamErr(index, err);
 
-      double eminus = results.LowerError(index);
-      double eplus = results.UpperError(index);
+      double eminus = results.lowerError(index);
+      double eplus = results.upperError(index);
 
       if (eplus > 0 || eminus < 0) {
          // Store the asymmetric error, if it is available

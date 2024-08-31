@@ -21,12 +21,13 @@
 #include <RooFit/TestStatistics/LikelihoodWrapper.h>
 #include <RooFit/TestStatistics/LikelihoodGradientWrapper.h>
 
-#include <Fit/Fitter.h>
 #include <TStopwatch.h>
 #include <TMatrixDSymfwd.h>
 
+#include <Fit/FitConfig.h>
+
 #include <fstream>
-#include <memory> // shared_ptr, unique_ptr
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -47,6 +48,36 @@ class LikelihoodGradientJob;
 
 class RooMinimizer : public TObject {
 public:
+   // Internal struct for the temporary fit result.
+   struct FitResult {
+
+      FitResult() = default;
+      FitResult(const ROOT::Fit::FitConfig &fconfig);
+
+      double error(unsigned int i) const { return (i < fErrors.size()) ? fErrors[i] : 0; }
+      double lowerError(unsigned int i) const;
+      double upperError(unsigned int i) const;
+
+      double Edm() const { return fEdm; }
+      bool IsValid() const { return fValid; }
+      int Status() const { return fStatus; }
+
+      bool isParameterFixed(unsigned int ipar) const;
+
+      bool fValid = false;                       ///< flag for indicating valid fit
+      int fStatus = -1;                          ///< minimizer status code
+      int fCovStatus = -1;                       ///< covariance matrix status code
+      double fVal = 0;                           ///< minimum function value
+      double fEdm = -1;                          ///< expected distance from minimum
+      std::map<unsigned int, bool> fFixedParams; ///< list of fixed parameters
+      std::vector<double> fParams;               ///< parameter values. Size is total number of parameters
+      std::vector<double> fErrors;               ///< errors
+      std::vector<double> fCovMatrix; ///< covariance matrix (size is npar*(npar+1)/2) where npar is total parameters
+      std::vector<double> fGlobalCC;  ///< global Correlation coefficient
+      std::map<unsigned int, std::pair<double, double>> fMinosErrors; ///< map contains the two Minos errors
+      std::string fMinimType;                                         ///< string indicating type of minimizer
+   };
+
    /// Config argument to RooMinimizer constructor.
    struct Config {
 
@@ -77,6 +108,24 @@ public:
       bool profile = false;        // local config
       bool timingAnalysis = false; // local config
       std::string minimizerType;   // local config
+   };
+
+   // For backwards compatibility with when the RooMinimizer used the ROOT::Math::Fitter.
+   class FitterInterface {
+   public:
+      FitterInterface(ROOT::Fit::FitConfig *config, ROOT::Math::Minimizer *minimizer, FitResult const *result)
+         : _config{config}, _minimizer{minimizer}, _result{result}
+      {
+      }
+
+      ROOT::Fit::FitConfig &Config() const { return *_config; }
+      ROOT::Math::Minimizer *GetMinimizer() const { return _minimizer; }
+      const FitResult &Result() const { return *_result; }
+
+   private:
+      ROOT::Fit::FitConfig *_config = nullptr;
+      ROOT::Math::Minimizer *_minimizer = nullptr;
+      FitResult const *_result = nullptr;
    };
 
    explicit RooMinimizer(RooAbsReal &function, Config const &cfg = {});
@@ -147,9 +196,7 @@ public:
    void zeroEvalCount();
 
    /// Return underlying ROOT fitter object
-   inline ROOT::Fit::Fitter *fitter() { return _theFitter.get(); }
-   /// Return underlying ROOT fitter object
-   inline const ROOT::Fit::Fitter *fitter() const { return _theFitter.get(); }
+   inline auto fitter() { return std::make_unique<FitterInterface>(&_config, _minimizer.get(), _result.get()); }
 
    ROOT::Math::IMultiGenFunction *getMultiGenFcn() const;
 
@@ -179,35 +226,38 @@ private:
 
    void determineStatus(bool fitterReturnValue);
 
-   // Some private functions to interact with the ROOT::Math::Fitter. This
-   // makes it clearer to the reader of the code which part of the Fitter
-   // interface is actually used by the RooMinimizer.
-   inline ROOT::Math::Minimizer *getMinimizer() const { return _theFitter->GetMinimizer(); }
-   inline ROOT::Fit::FitConfig &getConfig() const { return _theFitter->Config(); }
-   inline const ROOT::Fit::FitResult &getResult() const { return _theFitter->Result(); }
-
    int exec(std::string const &algoName, std::string const &statusName);
 
+   bool fitFCN(const ROOT::Math::IMultiGenFunction &fcn);
+
+   bool calculateHessErrors();
+   bool calculateMinosErrors();
+
+   void initMinimizer();
+   void updateFitConfig();
+   bool updateMinimizerOptions(bool canDifferentMinim = true);
+
+   void fillResult(bool isValid);
+   bool update(bool isValid);
+
+   void fillCorrMatrix(RooFitResult &fitRes);
+   void updateErrors();
+
+   ROOT::Fit::FitConfig _config;                      ///< fitter configuration (options and parameter settings)
+   std::unique_ptr<FitResult> _result;                ///<! pointer to the object containing the result of the fit
+   std::unique_ptr<ROOT::Math::Minimizer> _minimizer; ///<! pointer to used minimizer
    int _status = -99;
    bool _profileStart = false;
    bool _loggingToDataSet = false;
-
    TStopwatch _timer;
    TStopwatch _cumulTimer;
-
    std::unique_ptr<TMatrixDSym> _extV;
-
    std::unique_ptr<RooAbsMinimizerFcn> _fcn;
-
-   std::unique_ptr<ROOT::Fit::Fitter> _theFitter;
-
    std::vector<std::pair<std::string, int>> _statusHistory;
-
    std::unique_ptr<RooDataSet> _logDataSet;
-
    RooMinimizer::Config _cfg; // local config object
 
-   ClassDefOverride(RooMinimizer, 0) // RooFit interface to ROOT::Fit::Fitter
+   ClassDefOverride(RooMinimizer, 0) // RooFit interface to ROOT::Math::Minimizer
 };
 
 #endif
