@@ -132,14 +132,13 @@ public:
    /// \see RooMinimizer::setLoggingToDataSet(bool).
    RooDataSet *getLogDataSet() const { return _logDataSet.get(); }
 
-   static int getPrintLevel();
+   int getPrintLevel();
 
    void setMinimizerType(std::string const &type);
    std::string const &minimizerType() const { return _cfg.minimizerType; }
 
-   static void cleanup();
-   static RooFit::OwningPtr<RooFitResult> lastMinuitFit();
-   static RooFit::OwningPtr<RooFitResult> lastMinuitFit(const RooArgList &varList);
+   RooFit::OwningPtr<RooFitResult> lastMinuitFit();
+   RooFit::OwningPtr<RooFitResult> lastMinuitFit(const RooArgList &varList);
 
    void saveStatus(const char *label, int status) { _statusHistory.emplace_back(label, status); }
 
@@ -193,7 +192,7 @@ private:
 
    std::unique_ptr<RooAbsMinimizerFcn> _fcn;
 
-   static std::unique_ptr<ROOT::Fit::Fitter> _theFitter;
+   std::unique_ptr<ROOT::Fit::Fitter> _theFitter;
 
    std::vector<std::pair<std::string, int>> _statusHistory;
 
