@@ -1191,6 +1191,8 @@ void ROOT::Experimental::RFieldBase::ConnectPageSink(Internal::RPageSink &pageSi
          [this](Internal::RPageSink &sink) { sink.UpdateExtraTypeInfo(GetExtraTypeInfo()); });
    }
 
+   OnConnectPageSink();
+
    fState = EState::kConnectedToSink;
 }
 
