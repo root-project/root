@@ -277,10 +277,13 @@ private:
 
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
+
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumns() final;
    void GenerateColumns(const RNTupleDescriptor &desc) final;
-   void ConstructValue(void *) const final {}
+
+   void ConstructValue(void *where) const final;
+   std::unique_ptr<RDeleter> GetDeleter() const final;
 
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
@@ -294,8 +297,8 @@ public:
    RCollectionField &operator=(RCollectionField &&other) = default;
    ~RCollectionField() override = default;
 
-   size_t GetValueSize() const final { return sizeof(ClusterSize_t); }
-   size_t GetAlignment() const final { return alignof(ClusterSize_t); }
+   std::size_t GetValueSize() const final;
+   std::size_t GetAlignment() const final;
 };
 
 /// An artificial field that transforms an RNTuple column that contains the offset of collections into

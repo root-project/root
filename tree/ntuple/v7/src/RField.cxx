@@ -3935,6 +3935,26 @@ ROOT::Experimental::RCollectionField::CloneImpl(std::string_view newName) const
    return std::make_unique<RCollectionField>(newName, fCollectionWriter, std::move(parent));
 }
 
+void ROOT::Experimental::RCollectionField::ConstructValue(void *where) const
+{
+   new (where) RNTupleCollectionWriter(nullptr);
+}
+
+std::unique_ptr<ROOT::Experimental::RFieldBase::RDeleter> ROOT::Experimental::RCollectionField::GetDeleter() const
+{
+   return std::make_unique<RTypedDeleter<RNTupleCollectionWriter>>();
+}
+
+std::size_t ROOT::Experimental::RCollectionField::GetValueSize() const
+{
+   return sizeof(RNTupleCollectionWriter);
+}
+
+std::size_t ROOT::Experimental::RCollectionField::GetAlignment() const
+{
+   return alignof(RNTupleCollectionWriter);
+}
+
 std::size_t ROOT::Experimental::RCollectionField::AppendImpl(const void *from)
 {
    // RCollectionFields are almost simple, but they return the bytes written by their subfields as accumulated by the
