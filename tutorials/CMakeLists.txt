@@ -722,7 +722,6 @@ if(ROOT_pyroot_FOUND)
              pyroot/parse_CSV_file_with_TTree_ReadStream.py # not a tutorial
              pyroot/numberEntry.py  # requires GUI
              legacy/pyroot/*py      # legacy ...
-             histfactory/example.py # not a tutorial
              histfactory/makeQuickModel.py # not a tutorial
              eve/lineset.py         # requires GUI
              sql/sqlcreatedb.py     # same as the C++ case

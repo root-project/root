@@ -35,6 +35,7 @@ The following people have contributed to this new version:
  Fernando Hueso Gonzalez, University of Valencia\
  Attila Krasznahorkay, CERN/EP-ADP-OS,\
  Wim Lavrijsen, LBL,\
+ Valerii Kholoimov, National University of Kyiv/IRIS-HEP, \
  Dennis Klein, GSI,\
  Christoph Langenbruch, Heidelberg University/LHCb,\
  Sergey Linev, GSI,\
@@ -58,7 +59,7 @@ The following people have contributed to this new version:
  Juraj Smiesko, CERN/RCS-PRJ-FC,\
  Pavlo Svirin, National Technical University of Ukraine,\
  Robin Syring, Leibniz University Hannover, CERN/EP-SFT,\
-  Maciej Szymanski, Argonne,\
+ Maciej Szymanski, Argonne,\
  Christian Tacke, Darmstadt University,\
  Matevz Tadel, UCSD/CMS,\
  Alvaro Tolosa Delgado, CERN/RCS-PRJ-FC,\
