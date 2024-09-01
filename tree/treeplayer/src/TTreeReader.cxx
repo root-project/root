@@ -253,10 +253,6 @@ TTreeReader::~TTreeReader()
    if (fTree && fNotify.IsLinked())
       fNotify.RemoveLink(*fTree);
 
-   // Need to clear the map of proxies before deleting the director otherwise
-   // they will have a dangling pointer.
-   fProxies.clear();
-
    if (fEntryStatus != kEntryNoTree && !TestBit(kBitIsExternalTree)) {
       // a plain TTree is automatically added to the current directory,
       // do not delete it here
