@@ -479,6 +479,7 @@ void ROOT::Internal::TTreeReaderArrayBase::CreateProxy()
          for(auto fe : TRangeDynCast<TFriendElement>( fTreeReader->GetTree()->GetTree()->GetListOfFriends())) {
             if (branch->GetTree() == fe->GetTree()) {
                index = current;
+               break;
             }
             ++current;
          }
