@@ -35,8 +35,8 @@ protected:
       TTree t("t3", "t3");
       float arr[4];
       t.Branch("arr", arr, "arr[4]/F");
-      for (auto i : ROOT::TSeqU(4)) {
-         for (auto j : ROOT::TSeqU(4)) {
+      for (auto i : ROOT::TSeqU(kSizeSmall)) {
+         for (auto j : ROOT::TSeqU(kSizeSmall)) {
             arr[j] = i + j;
          }
          t.Fill();
@@ -221,15 +221,15 @@ TEST_F(RDFAndFriends, FriendAliasMT)
    ROOT::EnableImplicitMT(4u);
    TFile f1(kFile1);
    auto t1 = f1.Get<TTree>("t");
-   TFile f2(kFile4);
-   auto t2 = f2.Get<TTree>("t");
+   TFile f2(kFile2);
+   auto t2 = f2.Get<TTree>("t2");
    t1->AddFriend(t2, "myfriend");
    ROOT::RDataFrame d(*t1);
    auto x = d.Min<int>("x");
-   auto t = d.Take<int>("myfriend.x");
+   auto t = d.Take<int>("myfriend.y");
    EXPECT_EQ(*x, 1);
    for (auto v : t)
-      EXPECT_EQ(v, 4);
+      EXPECT_EQ(v, 2);
    ROOT::DisableImplicitMT();
 }
 
