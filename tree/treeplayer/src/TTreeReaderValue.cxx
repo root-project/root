@@ -607,11 +607,9 @@ void ROOT::Internal::TTreeReaderValueBase::CreateProxy() {
          // It is in a friend, let's find the 'index' in the list of friend ...
          int index = -1;
          int current = 0;
-         TFriendElement *fe_found = nullptr;
          for(auto fe : TRangeDynCast<TFriendElement>( fTreeReader->GetTree()->GetTree()->GetListOfFriends())) {
             if (branch->GetTree() == fe->GetTree()) {
                index = current;
-               fe_found = fe;
                break;
             }
             ++current;
