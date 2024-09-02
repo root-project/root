@@ -51,6 +51,7 @@ template<typename T, EComparisionOperator Op>
 class ROperator_Comparision final : public ROperator{
 private:
 
+   bool fIsModelOutput = false;
    std::string fNX1;
    std::string fNX2;
    std::string fNY;
@@ -134,6 +135,11 @@ public:
          fShapeY = fShapeX1;
       }
       model.AddIntermediateTensor(fNY, ETensorType::BOOL , fShapeY);
+      // check if this is not output operators to add a specific line for definining the tensor_xxx variable
+      const auto & outputTensorNames = model.GetOutputTensorNames();
+      fIsModelOutput = false;
+      if (std::find(outputTensorNames.begin(), outputTensorNames.end(), fNY) != outputTensorNames.end())
+         fIsModelOutput = true;
    }
 
    std::string Generate(std::string OpName) override {
@@ -171,6 +177,9 @@ public:
       out << SP << "for (size_t id = 0; id < " << length << " ; id++){\n";
       out << SP << SP << "fTensor_" << fNY << "[id] = " << ComparisionTrait<T,Op>::Op( "tensor_" + nameX1 + "[id]" , "tensor_" + nameX2 + "[id]") <<  " ;\n";
       out << SP << "}\n";
+      // since output is a boolean need to add the tensor_xxx variable since it is not defined as a pointer to a boolean std::vector
+      if (!fIsModelOutput)
+         out << SP << "const std::vector<bool> & tensor_" << fNY << " = fTensor_" << fNY << ";\n";
 
       return out.str();
    }
