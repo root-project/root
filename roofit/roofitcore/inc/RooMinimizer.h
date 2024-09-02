@@ -77,8 +77,6 @@ public:
       bool profile = false;        // local config
       bool timingAnalysis = false; // local config
       std::string minimizerType;   // local config
-   private:
-      int getDefaultWorkers();
    };
 
    explicit RooMinimizer(RooAbsReal &function, Config const &cfg = {});
