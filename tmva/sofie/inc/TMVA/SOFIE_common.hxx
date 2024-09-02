@@ -111,7 +111,7 @@ public:
    std::shared_ptr<void> const &sharedptr() const { return fData; }
    // query if tensor comes from a Constant operator
    bool IsConstantTensor() const { return fConstant;}
-   // query if tensor needs to be written in a weight file
+   // query if tensor needs to be written in a weight file. Constant tensors are not written in a file
    bool IsWeightTensor() const { return !fConstant && !fIsNotWritable;}
 
    void SetNotWritable() { fIsNotWritable = true;}

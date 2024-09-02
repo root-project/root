@@ -179,6 +179,8 @@
                      size_t inputLength = ConvertShapeToLength(inputShape);
                      std::copy(inputData, inputData + inputLength, outputData.begin() + offset );
                      offset += inputLength;
+                     // data do not need to be written as a weight
+                     model.SetNotWritableInitializedTensor(input);
                   }
                   model.AddConstantTensor<int64_t>(fOutput, outputShape, outputData.data());
                   if (model.Verbose()) {

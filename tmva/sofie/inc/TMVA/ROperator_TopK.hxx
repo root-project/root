@@ -72,6 +72,7 @@ public:
       auto fShapeK = model.GetTensorShape(fNK);
       auto kptr = static_cast<int64_t *>(model.GetInitializedTensorData(fNK).get());
       fK = *kptr;
+      model.SetNotWritableInitializedTensor(fNK);
       fAttrAxis = fAttrAxis < 0 ? fShapeX.size() + fAttrAxis : fAttrAxis;
       if(static_cast<size_t>(fAttrAxis) >=  fShapeX.size()){
          throw
@@ -137,6 +138,7 @@ public:
       // for(int i=0;i<length;i++){
       //    if(i==groupSize)dim=0;
       // }
+      out << SP << "{\n"; // to define a separate scope for the operator code
       out<<SP<<"size_t itr = 0, p = 0;\n";
       out<<SP<<"std::vector<std::vector<std::pair<float,int>>>groupElements;\n";
       out<<SP<<"for (size_t i = 0; i < "<<length<<"; i++) {\n";
@@ -168,7 +170,7 @@ public:
          out<<SP<<SP<<SP<<"groupElements.clear();\n";
       out<<SP<<SP<<"}\n";//end if
       out<<SP<<"\n}\n"; // end for
-
+      out << SP << "}\n"; // end operator scope
       return out.str();
    }
 };

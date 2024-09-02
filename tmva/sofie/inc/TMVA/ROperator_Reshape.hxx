@@ -20,6 +20,7 @@ class ROperator_Reshape final : public ROperator
 
 private:
 
+   bool fVerbose = false;
    ReshapeOpMode fOpMode = Reshape;   // type of Reshape operator
 
    int fAllowZero = 0; // (for Reshape) zero in tensor shape makes output shape equal to input tensor shape
@@ -78,17 +79,25 @@ public:
          size_t output_length = ConvertShapeToLength(output_shape);
          // (input_length == output_length) is the easy case : (2,3,4) -> (2,12)
          if (input_length != output_length) {
-            if (output_shape.size() > 1 && ((output_length == 0 && fAllowZero == 0) || output_length > INT64_MAX)) {
-               // in this case value 0 in shape are automatically corrected
+            if ((output_length == 0 && fAllowZero == 0) || output_length > INT64_MAX) {
+               // in this case value 0 or -1 in shape are automatically corrected
+               bool replacementDone = false;
                for (size_t i = 0; i < output_shape.size(); i++) {
                   if (output_shape[i] == 0 || output_shape[i] == static_cast<size_t>(-1)) {
+                     if (replacementDone) {
+                        throw std::runtime_error("TMVA Reshape Op : output shape has multiple negative or zero values");
+                     }
                      auto tmp = output_shape;
                      tmp.erase(tmp.begin() + i);
                      auto tmp_length = ConvertShapeToLength(tmp);
+                     //if (model.Verbose())
                      output_shape[i] = input_length / tmp_length;
-                     break;
+                     replacementDone = true;
                   }
                }
+               if (fVerbose)
+                  std::cout << "Reshape: correct output shape from " << ConvertShapeToString(input[1])
+                        << " to " << ConvertShapeToString(output_shape) << std::endl;
             }
             if (ConvertShapeToLength(output_shape) != input_length) {
                throw std::runtime_error("TMVA Reshape Op : Invalid  shapes : " + ConvertShapeToString(input_shape) +
@@ -155,7 +164,7 @@ public:
 
    void Initialize(RModel &model)
    {
-
+      fVerbose = model.Verbose();
       if (model.CheckIfTensorAlreadyExist(fNData) == false) {
           // input must be a graph input, or already initialized intermediate tensor
          throw std::runtime_error("TMVA Reshape Op Input Tensor " + fNData + "  is not found in model");
@@ -195,12 +204,15 @@ public:
          if (ConvertShapeToLength(fShapeInput) != ConvertShapeToLength(fShapeOutput))
             throw std::runtime_error("TMVA Reshape Op : Invalid Input/Output lengths");
          model.AddConstantTensor<int64_t>(fNOutput, fShapeOutput, inputData);
-         if (model.Verbose())
-            std::cout << " Output of " << Name() << " operator is constant " << ConvertShapeToString(fShapeOutput)  << " : " <<
+         if (model.Verbose()) {
+            std::cout << Name() << " : " << fNData << " " << ConvertShapeToString(fShapeInput) << " -->  " << fNOutput << " (constant) " << ConvertShapeToString(fShapeOutput)  << " : " <<
             ConvertValuesToString(ConvertShapeToLength(fShapeOutput), inputData) << std::endl;
+         }
       } else {
+         // non-constant case
          model.AddIntermediateTensor(fNOutput, model.GetTensorType(fNData), fShapeOutput);
-         if (model.Verbose()) std::cout << " Output of " << Name() << " operator is   " << ConvertShapeToString(fShapeOutput)  << std::endl;
+         if (model.Verbose())
+            std::cout << Name() << " : " << fNData << " " << ConvertShapeToString(fShapeInput) << " -->  "<< fNOutput << "  " << ConvertShapeToString(fShapeOutput)  << std::endl;
       }
    }
 

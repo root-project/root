@@ -383,7 +383,7 @@ void RModel::InitializeSubGraph(std::shared_ptr<RModel>  graph) {
    graph->fIsSubGraph = true;
 
    graph->Initialize(fBatchSize, fVerbose);
-   // set the sme options as parent model
+   // set the same options as parent model
    graph->fWeightFile = fWeightFile;
    graph->fUseWeightFile = fUseWeightFile;
    graph->fUseSession = fUseSession;

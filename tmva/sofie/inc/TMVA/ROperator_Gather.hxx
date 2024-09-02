@@ -27,7 +27,7 @@ private:
    std::vector<size_t> fShapeIndices;
    std::vector<size_t> fShapeY;
 
-   std::vector<int64_t> fIndices;
+   std::vector<int64_t> fIndices;  // indices vector in case they are known at initialization
 
    std::string fType;
 
@@ -51,29 +51,30 @@ public:
          throw std::runtime_error("TMVA SOFIE Gather Op Input Tensor " + fNX + " is not found in model");
       }
       fShapeX = model.GetTensorShape(fNX);
-      if (!model.IsInitializedTensor(fNIndices)) {
-         throw
-            std::runtime_error("TMVA::SOFIE - Tensor " + fNIndices + " is not initialized.");
-      }
-      int64_t* indicesData = static_cast<int64_t*>(model.GetInitializedTensorData(fNIndices).get());
-      //flag index tensor as not writable
-      model.SetNotWritableInitializedTensor(fNIndices);
       fShapeIndices = model.GetTensorShape(fNIndices);
       size_t q = fShapeIndices.size();
       // Axis in range [0, r) where r=rank(X)
       size_t r = fShapeX.size();
-      // Set the axis
+       // Set the axis
       if (fAttrAxis < 0) {
          fAttrAxis = fAttrAxis + int64_t(r);
       }
-      // Indices of size q
       // empty fShapeIndices is a scalar value for the indices
       size_t indicesLength = ConvertShapeToLength(fShapeIndices);
-      fIndices = std::vector<int64_t>(indicesData, indicesData + indicesLength);
-      for (size_t i = 0; i < indicesLength; i++) {
-         if (fIndices[i] < 0) {
-            fIndices[i] += fShapeX[fAttrAxis];
+
+      // case indices tensor is initialized
+      if (model.IsInitializedTensor(fNIndices)) {
+         int64_t* indicesData = static_cast<int64_t*>(model.GetInitializedTensorData(fNIndices).get());
+         //flag index tensor as not writable (not sure this is needed since index tensor might be used in generated code)
+         model.SetNotWritableInitializedTensor(fNIndices);
+         // update indices data in case of negative dim values
+         for (size_t i = 0; i < indicesLength; i++) {
+            if (indicesData[i] < 0) {
+               indicesData[i] += fShapeX[fAttrAxis];
+            }
          }
+         // Save in a vector gather Indices of size q
+         fIndices = std::vector<int64_t>(indicesData, indicesData + indicesLength);
       }
       // Output shape
       if (model.Verbose())
@@ -93,16 +94,16 @@ public:
          std::copy(fShapeX.begin() + fAttrAxis + 1, fShapeX.end(), fShapeY.begin() + fAttrAxis + q);
       }
       // case input is known (type is an integer) and input indices is a scalar
-      if (model.IsInitializedTensor(fNX) && q == 0 && r == 1) {
+      if (model.IsInitializedTensor(fNX) && q == 0 && r == 1 && fIndices.size() > 0) {
          if (model.GetTensorType(fNX) == ETensorType::INT64) {
             auto inputData = static_cast<int64_t*>(model.GetInitializedTensorData(fNX).get());
             // if q =0 and r = 1 output length = 1 (it is a scalar)
             std::vector<int64_t> outputData(ConvertShapeToLength(fShapeY));
-            outputData[0] = inputData[indicesData[0]];
+            outputData[0] = inputData[fIndices[0]];
             model.AddConstantTensor(fNY, fShapeY, outputData.data());
             if (model.Verbose())
-               std::cout << "Gather: output is a constant tensor " << fNY << " with shape " << ConvertShapeToString(fShapeY)
-                   << " and values " << ConvertValuesToString(outputData) << std::endl;
+               std::cout << "Gather: " << fNX << " " << ConvertShapeToString(fShapeX) << " -> " << fNY << " with shape " << ConvertShapeToString(fShapeY)
+                   << " and values " << ConvertValuesToString(outputData) << " (constant) " << std::endl;
             fIsOutputConstant = true;
          }
       }
@@ -111,7 +112,7 @@ public:
          model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShapeY);
          fType = ConvertTypeToString(model.GetTensorType(fNX));
          if (model.Verbose())
-               std::cout << "Gather: output is  " << fNY << " with shape " << ConvertShapeToString(fShapeY)
+               std::cout <<  "Gather: " << fNX << " " << ConvertShapeToString(fShapeX) << " -> " << fNY << " with shape " << ConvertShapeToString(fShapeY)
                   << std::endl;
       }
    }
@@ -132,12 +133,18 @@ public:
       std::vector<size_t> stridesX = UTILITY::ComputeStrideFromShape(fShapeX);
       std::vector<size_t> stridesY = UTILITY::ComputeStrideFromShape(fShapeY);
       std::vector<size_t> stridesIndices = UTILITY::ComputeStrideFromShape(fShapeIndices);
-      // Indices vector
-      out << SP << "std::vector<int64_t> " << OpName << "_indices = {";
-      size_t indicesLength = ConvertShapeToLength(fShapeIndices);
-      for (size_t i = 0; i < indicesLength; i++) {
-         out << fIndices[i] << (i + 1 < indicesLength? ", " : "};\n");
+
+      // case fIndices is not known we need to correct for negative axis indices at run-time
+      if (fIndices.empty()) {
+         size_t indicesLength = ConvertShapeToLength(fShapeIndices);
+         out << SP << "// correct in case of negative gather indices\n";
+         out << SP << "for (size_t i = 0; i < " << indicesLength << "; i++){\n";
+         out << SP << SP << "if (tensor_" << fNIndices << "[i] < 0)\n";
+         out << SP << SP << SP <<  "tensor_" << fNIndices << "[i] += " << fShapeX[fAttrAxis] << ";\n";
+         out << SP << "}\n";
       }
+
+
       // Fill the output Y[j_0, j_1, ..., j_{axis - 1}, i_0, i_1, ..., i_{q - 1}, j_{axis + 1}, ..., j_{r - 1}]
       // [0 ... axis) [axis ... axis + q) [axis + q ... q + r - 1)
       // iterate in [0 ... axis) [0 ... q) [axis ... r - 1)
@@ -175,7 +182,7 @@ public:
          out << SP << SP << SP << "i_index += i_" + std::to_string(i) + " * " << stridesIndices[i] << ";\n";
       }
       // K
-      out << SP << SP << SP << "size_t k = static_cast<size_t>(" << OpName << "_indices[i_index]" << ");\n";
+      out << SP << SP << SP << "size_t k = static_cast<size_t>(" << "tensor_" << fNIndices << "[i_index]" << ");\n";
       // Input
       out << SP << SP << SP << "size_t x_index = k * " << stridesX[fAttrAxis] << ";\n";
       for (size_t j = 0; j < size_t(fAttrAxis); j++) {
