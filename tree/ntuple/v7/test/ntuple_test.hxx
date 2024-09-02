@@ -67,6 +67,7 @@ using RColumnDescriptorBuilder = ROOT::Experimental::Internal::RColumnDescriptor
 template <typename T, EColumnType C>
 using RColumnElement = ROOT::Experimental::Internal::RColumnElement<T, C>;
 using RColumnSwitch = ROOT::Experimental::RColumnSwitch;
+using ROOT::Experimental::RCollectionField;
 using ROOT::Experimental::Internal::RExtraTypeInfoDescriptorBuilder;
 using RFieldDescriptorBuilder = ROOT::Experimental::Internal::RFieldDescriptorBuilder;
 using RException = ROOT::Experimental::RException;
@@ -81,6 +82,7 @@ using RNTuple = ROOT::Experimental::RNTuple;
 using RNTupleAtomicCounter = ROOT::Experimental::Detail::RNTupleAtomicCounter;
 using RNTupleAtomicTimer = ROOT::Experimental::Detail::RNTupleAtomicTimer;
 using RNTupleCalcPerf = ROOT::Experimental::Detail::RNTupleCalcPerf;
+using ROOT::Experimental::RNTupleCollectionWriter;
 using RNTupleCompressor = ROOT::Experimental::Internal::RNTupleCompressor;
 using RNTupleDecompressor = ROOT::Experimental::Internal::RNTupleDecompressor;
 using RNTupleDescriptor = ROOT::Experimental::RNTupleDescriptor;
