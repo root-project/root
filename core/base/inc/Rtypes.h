@@ -65,10 +65,10 @@ enum ESysConstants {
 enum EColor { kWhite   =0,   kBlack    =1,   kGray   =920,
               kRed     =632, kGreen    =416, kBlue   =600, kYellow =400, kMagenta =616, kCyan    =432,
               kOrange  =800, kSpring   =820, kTeal   =840, kAzure  =860, kViolet  =880, kPink    =900,
-              kGrape   =106, kBrown    =107, kAsh    =108,
-              kP6Blue  =100, kP6Yellow =101, kP6Red  =102, kP6Grape=103, kP6Gray   =104, kP6Violet=105,
-              kP8Blue  =111, kP8Orange =112, kP8Red  =113, kP8Pink =114, kP8Green  =115, kP8Cyan  =116, kP8Azure  =117, kP8Gray  =118,
-              kP10Blue =120, kP10Yellow=121, kP10Red =122, kP10Gray=123, kP10Violet=124, kP10Brown=125, kP10Orange=126, kP10Green=127, kP10Ash=128, kP10Cyan=129
+              kGrape   =111, kBrown    =112, kAsh    =113,
+              kP6Blue  =120, kP6Yellow =121, kP6Red  =122, kP6Grape=123, kP6Gray   =124, kP6Violet=125,
+              kP8Blue  =130, kP8Orange =131, kP8Red  =132, kP8Pink =133, kP8Green  =134, kP8Cyan  =135, kP8Azure  =136, kP8Gray  =137,
+              kP10Blue =140, kP10Yellow=141, kP10Red =142, kP10Gray=143, kP10Violet=144, kP10Brown=145, kP10Orange=146, kP10Green=147, kP10Ash=148, kP10Cyan=149
             };
 
 // There is several streamer concepts.
