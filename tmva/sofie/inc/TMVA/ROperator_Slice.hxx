@@ -193,6 +193,7 @@ public:
           strides[i] = strides[i+1]*fShapeInput[i+1];
       }
 
+      out << SP << "{\n"; // define operator scope
       out << SP << "size_t iOut = 0;\n";
       std::string MSP = SP;
       for (size_t idim = 0; idim < ndim; idim++) {
@@ -210,6 +211,7 @@ public:
           MSP = MSP.replace(0,SP.length(),"");
           out << MSP << "}\n";
       }
+      out << SP << "}\n"; // end operator scope
 
       return out.str();
    }
