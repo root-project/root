@@ -153,7 +153,6 @@ ROOT::Experimental::Internal::GenerateColumnElement(EColumnCppType cppType, ECol
    case EColumnCppType::kInt32: return GenerateColumnElementInternal<std::int32_t>(type);
    case EColumnCppType::kInt64: return GenerateColumnElementInternal<std::int64_t>(type);
    case EColumnCppType::kFloat: return GenerateColumnElementInternal<float>(type);
-   case EColumnCppType::kDouble32: return GenerateColumnElementInternal<Double32_t>(type);
    case EColumnCppType::kDouble: return GenerateColumnElementInternal<double>(type);
    case EColumnCppType::kClusterSize: return GenerateColumnElementInternal<ClusterSize_t>(type);
    case EColumnCppType::kColumnSwitch: return GenerateColumnElementInternal<RColumnSwitch>(type);
