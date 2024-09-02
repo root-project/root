@@ -7,7 +7,6 @@
 // definitions are implementation details and should not be exposed to a public interface.
 
 #include <ROOT/RColumnElementBase.hxx>
-#include <ROOT/EExecutionPolicy.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RConfig.hxx>
 #include <Byteswap.h>
@@ -228,12 +227,13 @@ inline void CastZigzagSplitUnpack(void *destination, const void *source, std::si
 namespace {
 
 using ROOT::Experimental::EColumnType;
+using ROOT::Experimental::Internal::RColumnElementBase;
 
 template <typename CppT, EColumnType>
 class RColumnElement;
 
 template <typename CppT>
-std::unique_ptr<ROOT::Experimental::Internal::RColumnElementBase> GenerateColumnElementInternal(EColumnType type)
+std::unique_ptr<RColumnElementBase> GenerateColumnElementInternal(EColumnType type)
 {
    switch (type) {
    case EColumnType::kIndex64: return std::make_unique<RColumnElement<CppT, EColumnType::kIndex64>>();
@@ -274,12 +274,9 @@ std::unique_ptr<ROOT::Experimental::Internal::RColumnElementBase> GenerateColumn
  * The implementation of `Pack` and `Unpack` takes care of byteswap if the memory page is big-endian.
  */
 template <typename CppT>
-class RColumnElementLE : public ROOT::Experimental::Internal::RColumnElementBase {
+class RColumnElementLE : public RColumnElementBase {
 protected:
-   explicit RColumnElementLE(std::size_t size, std::size_t bitsOnStorage)
-      : ROOT::Experimental::Internal::RColumnElementBase(size, bitsOnStorage)
-   {
-   }
+   explicit RColumnElementLE(std::size_t size, std::size_t bitsOnStorage) : RColumnElementBase(size, bitsOnStorage) {}
 
 public:
    static constexpr bool kIsMappable = (R__LITTLE_ENDIAN == 1);
@@ -287,7 +284,7 @@ public:
    void Pack(void *dst, const void *src, std::size_t count) const final
    {
 #if R__LITTLE_ENDIAN == 1
-      ROOT::Experimental::Internal::RColumnElementBase::Pack(dst, src, count);
+      RColumnElementBase::Pack(dst, src, count);
 #else
       CopyBswap<sizeof(CppT)>(dst, src, count);
 #endif
@@ -295,7 +292,7 @@ public:
    void Unpack(void *dst, const void *src, std::size_t count) const final
    {
 #if R__LITTLE_ENDIAN == 1
-      ROOT::Experimental::Internal::RColumnElementBase::Unpack(dst, src, count);
+      RColumnElementBase::Unpack(dst, src, count);
 #else
       CopyBswap<sizeof(CppT)>(dst, src, count);
 #endif
@@ -307,10 +304,9 @@ public:
  * such as 64bit in-memory offsets to Index32 columns.
  */
 template <typename CppT, typename NarrowT>
-class RColumnElementCastLE : public ROOT::Experimental::Internal::RColumnElementBase {
+class RColumnElementCastLE : public RColumnElementBase {
 protected:
-   explicit RColumnElementCastLE(std::size_t size, std::size_t bitsOnStorage)
-      : ROOT::Experimental::Internal::RColumnElementBase(size, bitsOnStorage)
+   explicit RColumnElementCastLE(std::size_t size, std::size_t bitsOnStorage) : RColumnElementBase(size, bitsOnStorage)
    {
    }
 
@@ -330,10 +326,9 @@ public:
  * As part of the splitting, can also narrow down the type to NarrowT.
  */
 template <typename CppT, typename NarrowT>
-class RColumnElementSplitLE : public ROOT::Experimental::Internal::RColumnElementBase {
+class RColumnElementSplitLE : public RColumnElementBase {
 protected:
-   explicit RColumnElementSplitLE(std::size_t size, std::size_t bitsOnStorage)
-      : ROOT::Experimental::Internal::RColumnElementBase(size, bitsOnStorage)
+   explicit RColumnElementSplitLE(std::size_t size, std::size_t bitsOnStorage) : RColumnElementBase(size, bitsOnStorage)
    {
    }
 
@@ -356,10 +351,10 @@ public:
  * As part of the encoding, can also narrow down the type to NarrowT.
  */
 template <typename CppT, typename NarrowT>
-class RColumnElementDeltaSplitLE : public ROOT::Experimental::Internal::RColumnElementBase {
+class RColumnElementDeltaSplitLE : public RColumnElementBase {
 protected:
    explicit RColumnElementDeltaSplitLE(std::size_t size, std::size_t bitsOnStorage)
-      : ROOT::Experimental::Internal::RColumnElementBase(size, bitsOnStorage)
+      : RColumnElementBase(size, bitsOnStorage)
    {
    }
 
@@ -382,10 +377,10 @@ public:
  * The NarrowT target type should be an signed integer, which can be smaller than the CppT source type.
  */
 template <typename CppT, typename NarrowT>
-class RColumnElementZigzagSplitLE : public ROOT::Experimental::Internal::RColumnElementBase {
+class RColumnElementZigzagSplitLE : public RColumnElementBase {
 protected:
    explicit RColumnElementZigzagSplitLE(std::size_t size, std::size_t bitsOnStorage)
-      : ROOT::Experimental::Internal::RColumnElementBase(size, bitsOnStorage)
+      : RColumnElementBase(size, bitsOnStorage)
    {
    }
 
@@ -411,9 +406,9 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 
 template <typename CppT, EColumnType ColumnT = EColumnType::kUnknown>
-class RColumnElement : public ROOT::Experimental::Internal::RColumnElementBase {
+class RColumnElement : public RColumnElementBase {
 public:
-   RColumnElement() : ROOT::Experimental::Internal::RColumnElementBase(sizeof(CppT))
+   RColumnElement() : RColumnElementBase(sizeof(CppT))
    {
       throw ROOT::Experimental::RException(
          R__FAIL(std::string("internal error: no column mapping for this C++ type: ") + typeid(CppT).name() + " --> " +
@@ -422,110 +417,108 @@ public:
 };
 
 template <>
-class RColumnElement<bool, EColumnType::kUnknown> : public ROOT::Experimental::Internal::RColumnElementBase {
+class RColumnElement<bool, EColumnType::kUnknown> : public RColumnElementBase {
 public:
    static constexpr std::size_t kSize = sizeof(bool);
-   RColumnElement() : ROOT::Experimental::Internal::RColumnElementBase(kSize) {}
+   RColumnElement() : RColumnElementBase(kSize) {}
 };
 
 template <>
-class RColumnElement<std::byte, EColumnType::kUnknown> : public ROOT::Experimental::Internal::RColumnElementBase {
+class RColumnElement<std::byte, EColumnType::kUnknown> : public RColumnElementBase {
 public:
    static constexpr std::size_t kSize = sizeof(std::byte);
-   RColumnElement() : ROOT::Experimental::Internal::RColumnElementBase(kSize) {}
+   RColumnElement() : RColumnElementBase(kSize) {}
 };
 
 template <>
-class RColumnElement<char, EColumnType::kUnknown> : public ROOT::Experimental::Internal::RColumnElementBase {
+class RColumnElement<char, EColumnType::kUnknown> : public RColumnElementBase {
 public:
    static constexpr std::size_t kSize = sizeof(char);
-   RColumnElement() : ROOT::Experimental::Internal::RColumnElementBase(kSize) {}
+   RColumnElement() : RColumnElementBase(kSize) {}
 };
 
 template <>
-class RColumnElement<std::int8_t, EColumnType::kUnknown> : public ROOT::Experimental::Internal::RColumnElementBase {
+class RColumnElement<std::int8_t, EColumnType::kUnknown> : public RColumnElementBase {
 public:
    static constexpr std::size_t kSize = sizeof(std::int8_t);
-   RColumnElement() : ROOT::Experimental::Internal::RColumnElementBase(kSize) {}
+   RColumnElement() : RColumnElementBase(kSize) {}
 };
 
 template <>
-class RColumnElement<std::uint8_t, EColumnType::kUnknown> : public ROOT::Experimental::Internal::RColumnElementBase {
+class RColumnElement<std::uint8_t, EColumnType::kUnknown> : public RColumnElementBase {
 public:
    static constexpr std::size_t kSize = sizeof(std::uint8_t);
-   RColumnElement() : ROOT::Experimental::Internal::RColumnElementBase(kSize) {}
+   RColumnElement() : RColumnElementBase(kSize) {}
 };
 
 template <>
-class RColumnElement<std::int16_t, EColumnType::kUnknown> : public ROOT::Experimental::Internal::RColumnElementBase {
+class RColumnElement<std::int16_t, EColumnType::kUnknown> : public RColumnElementBase {
 public:
    static constexpr std::size_t kSize = sizeof(std::int16_t);
-   RColumnElement() : ROOT::Experimental::Internal::RColumnElementBase(kSize) {}
+   RColumnElement() : RColumnElementBase(kSize) {}
 };
 
 template <>
-class RColumnElement<std::uint16_t, EColumnType::kUnknown> : public ROOT::Experimental::Internal::RColumnElementBase {
+class RColumnElement<std::uint16_t, EColumnType::kUnknown> : public RColumnElementBase {
 public:
    static constexpr std::size_t kSize = sizeof(std::uint16_t);
-   RColumnElement() : ROOT::Experimental::Internal::RColumnElementBase(kSize) {}
+   RColumnElement() : RColumnElementBase(kSize) {}
 };
 
 template <>
-class RColumnElement<std::int32_t, EColumnType::kUnknown> : public ROOT::Experimental::Internal::RColumnElementBase {
+class RColumnElement<std::int32_t, EColumnType::kUnknown> : public RColumnElementBase {
 public:
    static constexpr std::size_t kSize = sizeof(std::int32_t);
-   RColumnElement() : ROOT::Experimental::Internal::RColumnElementBase(kSize) {}
+   RColumnElement() : RColumnElementBase(kSize) {}
 };
 
 template <>
-class RColumnElement<std::uint32_t, EColumnType::kUnknown> : public ROOT::Experimental::Internal::RColumnElementBase {
+class RColumnElement<std::uint32_t, EColumnType::kUnknown> : public RColumnElementBase {
 public:
    static constexpr std::size_t kSize = sizeof(std::uint32_t);
-   RColumnElement() : ROOT::Experimental::Internal::RColumnElementBase(kSize) {}
+   RColumnElement() : RColumnElementBase(kSize) {}
 };
 
 template <>
-class RColumnElement<std::int64_t, EColumnType::kUnknown> : public ROOT::Experimental::Internal::RColumnElementBase {
+class RColumnElement<std::int64_t, EColumnType::kUnknown> : public RColumnElementBase {
 public:
    static constexpr std::size_t kSize = sizeof(std::int64_t);
-   RColumnElement() : ROOT::Experimental::Internal::RColumnElementBase(kSize) {}
+   RColumnElement() : RColumnElementBase(kSize) {}
 };
 
 template <>
-class RColumnElement<std::uint64_t, EColumnType::kUnknown> : public ROOT::Experimental::Internal::RColumnElementBase {
+class RColumnElement<std::uint64_t, EColumnType::kUnknown> : public RColumnElementBase {
 public:
    static constexpr std::size_t kSize = sizeof(std::uint64_t);
-   RColumnElement() : ROOT::Experimental::Internal::RColumnElementBase(kSize) {}
+   RColumnElement() : RColumnElementBase(kSize) {}
 };
 
 template <>
-class RColumnElement<float, EColumnType::kUnknown> : public ROOT::Experimental::Internal::RColumnElementBase {
+class RColumnElement<float, EColumnType::kUnknown> : public RColumnElementBase {
 public:
    static constexpr std::size_t kSize = sizeof(float);
-   RColumnElement() : ROOT::Experimental::Internal::RColumnElementBase(kSize) {}
+   RColumnElement() : RColumnElementBase(kSize) {}
 };
 
 template <>
-class RColumnElement<double, EColumnType::kUnknown> : public ROOT::Experimental::Internal::RColumnElementBase {
+class RColumnElement<double, EColumnType::kUnknown> : public RColumnElementBase {
 public:
    static constexpr std::size_t kSize = sizeof(double);
-   RColumnElement() : ROOT::Experimental::Internal::RColumnElementBase(kSize) {}
+   RColumnElement() : RColumnElementBase(kSize) {}
 };
 
 template <>
-class RColumnElement<ROOT::Experimental::ClusterSize_t, EColumnType::kUnknown>
-   : public ROOT::Experimental::Internal::RColumnElementBase {
+class RColumnElement<ROOT::Experimental::ClusterSize_t, EColumnType::kUnknown> : public RColumnElementBase {
 public:
    static constexpr std::size_t kSize = sizeof(ROOT::Experimental::ClusterSize_t);
-   RColumnElement() : ROOT::Experimental::Internal::RColumnElementBase(kSize) {}
+   RColumnElement() : RColumnElementBase(kSize) {}
 };
 
 template <>
-class RColumnElement<ROOT::Experimental::RColumnSwitch, EColumnType::kUnknown>
-   : public ROOT::Experimental::Internal::RColumnElementBase {
+class RColumnElement<ROOT::Experimental::RColumnSwitch, EColumnType::kUnknown> : public RColumnElementBase {
 public:
    static constexpr std::size_t kSize = sizeof(ROOT::Experimental::RColumnSwitch);
-   RColumnElement() : ROOT::Experimental::Internal::RColumnElementBase(kSize) {}
+   RColumnElement() : RColumnElementBase(kSize) {}
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -534,8 +527,7 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 
 template <>
-class RColumnElement<ROOT::Experimental::RColumnSwitch, EColumnType::kSwitch>
-   : public ROOT::Experimental::Internal::RColumnElementBase {
+class RColumnElement<ROOT::Experimental::RColumnSwitch, EColumnType::kSwitch> : public RColumnElementBase {
 private:
    struct RSwitchElement {
       std::uint64_t fIndex;
@@ -546,7 +538,7 @@ public:
    static constexpr bool kIsMappable = false;
    static constexpr std::size_t kSize = sizeof(ROOT::Experimental::RColumnSwitch);
    static constexpr std::size_t kBitsOnStorage = 96;
-   RColumnElement() : ROOT::Experimental::Internal::RColumnElementBase(kSize, kBitsOnStorage) {}
+   RColumnElement() : RColumnElementBase(kSize, kBitsOnStorage) {}
    bool IsMappable() const final { return kIsMappable; }
 
    void Pack(void *dst, const void *src, std::size_t count) const final
@@ -581,12 +573,12 @@ public:
 };
 
 template <>
-class RColumnElement<bool, EColumnType::kBit> : public ROOT::Experimental::Internal::RColumnElementBase {
+class RColumnElement<bool, EColumnType::kBit> : public RColumnElementBase {
 public:
    static constexpr bool kIsMappable = false;
    static constexpr std::size_t kSize = sizeof(bool);
    static constexpr std::size_t kBitsOnStorage = 1;
-   RColumnElement() : ROOT::Experimental::Internal::RColumnElementBase(kSize, kBitsOnStorage) {}
+   RColumnElement() : RColumnElementBase(kSize, kBitsOnStorage) {}
    bool IsMappable() const final { return kIsMappable; }
 
    void Pack(void *dst, const void *src, std::size_t count) const final;
@@ -594,12 +586,12 @@ public:
 };
 
 template <>
-class RColumnElement<float, EColumnType::kReal16> : public ROOT::Experimental::Internal::RColumnElementBase {
+class RColumnElement<float, EColumnType::kReal16> : public RColumnElementBase {
 public:
    static constexpr bool kIsMappable = false;
    static constexpr std::size_t kSize = sizeof(float);
    static constexpr std::size_t kBitsOnStorage = 16;
-   RColumnElement() : ROOT::Experimental::Internal::RColumnElementBase(kSize, kBitsOnStorage) {}
+   RColumnElement() : RColumnElementBase(kSize, kBitsOnStorage) {}
    bool IsMappable() const final { return kIsMappable; }
 
    void Pack(void *dst, const void *src, std::size_t count) const final
@@ -627,12 +619,12 @@ public:
 };
 
 template <>
-class RColumnElement<double, EColumnType::kReal16> : public ROOT::Experimental::Internal::RColumnElementBase {
+class RColumnElement<double, EColumnType::kReal16> : public RColumnElementBase {
 public:
    static constexpr bool kIsMappable = false;
    static constexpr std::size_t kSize = sizeof(double);
    static constexpr std::size_t kBitsOnStorage = 16;
-   RColumnElement() : ROOT::Experimental::Internal::RColumnElementBase(kSize, kBitsOnStorage) {}
+   RColumnElement() : RColumnElementBase(kSize, kBitsOnStorage) {}
    bool IsMappable() const final { return kIsMappable; }
 
    void Pack(void *dst, const void *src, std::size_t count) const final
@@ -679,12 +671,12 @@ public:
    public:                                                                    \
       __RCOLUMNELEMENT_SPEC_BODY(CppT, BaseT, BitsOnStorage)                  \
    }
-#define DECLARE_RCOLUMNELEMENT_SPEC_SIMPLE(CppT, ColumnT, BitsOnStorage)                                \
-   template <>                                                                                          \
-   class RColumnElement<CppT, ColumnT> : public ROOT::Experimental::Internal::RColumnElementBase {      \
-   public:                                                                                              \
-      static constexpr bool kIsMappable = true;                                                         \
-      __RCOLUMNELEMENT_SPEC_BODY(CppT, ROOT::Experimental::Internal::RColumnElementBase, BitsOnStorage) \
+#define DECLARE_RCOLUMNELEMENT_SPEC_SIMPLE(CppT, ColumnT, BitsOnStorage)  \
+   template <>                                                            \
+   class RColumnElement<CppT, ColumnT> : public RColumnElementBase {      \
+   public:                                                                \
+      static constexpr bool kIsMappable = true;                           \
+      __RCOLUMNELEMENT_SPEC_BODY(CppT, RColumnElementBase, BitsOnStorage) \
    }
 
 DECLARE_RCOLUMNELEMENT_SPEC_SIMPLE(std::byte, EColumnType::kByte, 8);

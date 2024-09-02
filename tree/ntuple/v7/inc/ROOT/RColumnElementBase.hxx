@@ -114,7 +114,6 @@ enum class EColumnCppType {
    kInt32,
    kInt64,
    kFloat,
-   kDouble32,
    kDouble,
    kClusterSize,
    kColumnSwitch,
@@ -151,14 +150,10 @@ std::unique_ptr<RColumnElementBase> RColumnElementBase::Generate(EColumnType typ
       return GenerateColumnElement(EColumnCppType::kFloat, type);
    else if constexpr (std::is_same_v<CppT, double>)
       return GenerateColumnElement(EColumnCppType::kDouble, type);
-   else if constexpr (std::is_same_v<CppT, Double32_t>)
-      return GenerateColumnElement(EColumnCppType::kDouble32, type);
    else if constexpr (std::is_same_v<CppT, ClusterSize_t>)
       return GenerateColumnElement(EColumnCppType::kClusterSize, type);
    else if constexpr (std::is_same_v<CppT, RColumnSwitch>)
       return GenerateColumnElement(EColumnCppType::kColumnSwitch, type);
-   else if constexpr (std::is_same_v<CppT, void>)
-      return Generate<void>(type);
    else
       static_assert(!sizeof(CppT), "Unsupported Cpp type");
 }
