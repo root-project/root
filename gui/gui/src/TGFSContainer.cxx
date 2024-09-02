@@ -465,7 +465,7 @@ void TGFileItem::SetDNDData(TDNDData *data)
 {
    if (fDNDData.fDataLength > 0)
       free(fDNDData.fData);
-   fDNDData.fData = calloc(sizeof(unsigned char), data->fDataLength);
+   fDNDData.fData = calloc(data->fDataLength, sizeof(unsigned char));
    if (fDNDData.fData)
       memcpy(fDNDData.fData, data->fData, data->fDataLength);
    fDNDData.fDataLength = data->fDataLength;
