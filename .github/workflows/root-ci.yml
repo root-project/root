@@ -240,6 +240,10 @@ jobs:
             config: Debug
           - event_name: push
             config: Debug
+          # This is this platform is subject to timeouts when building from
+          # scratch.
+          - target_arch: x86
+            config: Debug 
 
     name: Windows 10 ${{ matrix.target_arch }} ${{ matrix.config }}
 
