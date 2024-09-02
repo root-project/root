@@ -121,9 +121,17 @@ jobs:
         with:
           ref: ${{ inputs.ref_name }}
 
-      # - name: Install chrome
-      #   run: |
-      #     brew install --cask google-chrome
+      - name: Install Homebrew
+        run: |
+            /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        
+      - name: Verify Installation
+        run: |
+            brew --version
+
+      - name: Install chrome
+        run: |
+          brew install --cask google-chrome
 
       - name: Apply option overrides from matrix for this job for non-release builds
         if: ${{ github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' && matrix.overrides != NaN }}
@@ -428,11 +436,11 @@ jobs:
       #     apt-get update
       #     apt-get install -y google-chrome-stable
 
-      - name: Install chrome
-        uses: browser-actions/setup-chrome@v1
-        with:
-          chrome-version: 120
-          install-dependencies: true
+      # - name: Install chrome
+      #   uses: browser-actions/setup-chrome@v1
+      #   with:
+      #     chrome-version: 120
+      #     install-dependencies: true
 
       - name: Dump GitHub context
         env:
