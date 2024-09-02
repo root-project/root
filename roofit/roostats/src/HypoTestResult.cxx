@@ -127,13 +127,7 @@ HypoTestResult::HypoTestResult(const HypoTestResult& other) :
 
 HypoTestResult::~HypoTestResult()
 {
-   if( fNullDistr ) delete fNullDistr;
-   if( fAltDistr ) delete fAltDistr;
 
-   if( fNullDetailedOutput ) delete fNullDetailedOutput;
-   if( fAltDetailedOutput ) delete fAltDetailedOutput;
-
-   if( fAllTestStatisticsData ) delete fAllTestStatisticsData;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -149,12 +143,13 @@ HypoTestResult & HypoTestResult::operator=(const HypoTestResult& other) {
    fAlternatePValueError = other.fAlternatePValueError;
    fTestStatisticData = other.fTestStatisticData;
 
-   if( fAllTestStatisticsData ) delete fAllTestStatisticsData;
+
    fAllTestStatisticsData = nullptr;
-   if( fNullDistr ) { delete fNullDistr; fNullDistr = nullptr; }
-   if( fAltDistr ) { delete fAltDistr; fAltDistr = nullptr; }
-   if( fNullDetailedOutput ) { delete fNullDetailedOutput; fNullDetailedOutput = nullptr; }
-   if( fAltDetailedOutput ) { delete fAltDetailedOutput;  fAltDetailedOutput = nullptr; }
+   fNullDistr = nullptr;
+   fAltDistr = nullptr;
+   fNullDetailedOutput = nullptr;
+   fAltDetailedOutput = nullptr;
+
    fFitInfo = nullptr;
 
    fPValueIsRightTail =  other.GetPValueIsRightTail();
@@ -174,25 +169,25 @@ void HypoTestResult::Append(const HypoTestResult* other) {
    if (fNullDistr) {
       fNullDistr->Add(other->GetNullDistribution());
    } else if (other->GetNullDistribution()) {
-      fNullDistr = new SamplingDistribution(*other->GetNullDistribution());
+      fNullDistr = std::make_unique<SamplingDistribution>(*other->GetNullDistribution());
    }
 
    if (fAltDistr) {
       fAltDistr->Add(other->GetAltDistribution());
    } else if (other->GetAltDistribution()) {
-      fAltDistr = new SamplingDistribution(*other->GetAltDistribution());
+      fAltDistr = std::make_unique<SamplingDistribution>(*other->GetAltDistribution());
    }
 
    if( fNullDetailedOutput ) {
       if( other->GetNullDetailedOutput() ) fNullDetailedOutput->append( *other->GetNullDetailedOutput() );
    }else{
-      if( other->GetNullDetailedOutput() ) fNullDetailedOutput = new RooDataSet( *other->GetNullDetailedOutput() );
+      if( other->GetNullDetailedOutput() ) fNullDetailedOutput = std::make_unique<RooDataSet>( *other->GetNullDetailedOutput() );
    }
 
    if( fAltDetailedOutput ) {
       if( other->GetAltDetailedOutput() ) fAltDetailedOutput->append( *other->GetAltDetailedOutput() );
    }else{
-      if( other->GetAltDetailedOutput() ) fAltDetailedOutput = new RooDataSet( *other->GetAltDetailedOutput() );
+      if( other->GetAltDetailedOutput() ) fAltDetailedOutput = std::make_unique<RooDataSet>( *other->GetAltDetailedOutput() );
    }
 
    if( fFitInfo ) {
@@ -204,22 +199,22 @@ void HypoTestResult::Append(const HypoTestResult* other) {
    // if no data is present use the other HypoTestResult's data
    if(IsNaN(fTestStatisticData)) fTestStatisticData = other->GetTestStatisticData();
 
-   UpdatePValue(fNullDistr, fNullPValue, fNullPValueError, true);
-   UpdatePValue(fAltDistr, fAlternatePValue, fAlternatePValueError, false);
+   UpdatePValue(fNullDistr.get(), fNullPValue, fNullPValueError, true);
+   UpdatePValue(fAltDistr.get(), fAlternatePValue, fAlternatePValueError, false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void HypoTestResult::SetAltDistribution(SamplingDistribution *alt) {
-   fAltDistr = alt;
-   UpdatePValue(fAltDistr, fAlternatePValue, fAlternatePValueError, false);
+   fAltDistr.reset(alt);
+   UpdatePValue(fAltDistr.get(), fAlternatePValue, fAlternatePValueError, false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void HypoTestResult::SetNullDistribution(SamplingDistribution *null) {
-   fNullDistr = null;
-   UpdatePValue(fNullDistr, fNullPValue, fNullPValueError, true);
+   fNullDistr.reset(null);
+   UpdatePValue(fNullDistr.get(), fNullPValue, fNullPValueError, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -227,18 +222,14 @@ void HypoTestResult::SetNullDistribution(SamplingDistribution *null) {
 void HypoTestResult::SetTestStatisticData(const double tsd) {
    fTestStatisticData = tsd;
 
-   UpdatePValue(fNullDistr, fNullPValue, fNullPValueError, true);
-   UpdatePValue(fAltDistr, fAlternatePValue, fAlternatePValueError, false);
+   UpdatePValue(fNullDistr.get(), fNullPValue, fNullPValueError, true);
+   UpdatePValue(fAltDistr.get(), fAlternatePValue, fAlternatePValueError, false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void HypoTestResult::SetAllTestStatisticsData(const RooArgList* tsd) {
-   if (fAllTestStatisticsData) {
-      delete fAllTestStatisticsData;
-      fAllTestStatisticsData = nullptr;
-   }
-   if (tsd) fAllTestStatisticsData = static_cast<const RooArgList*>(tsd->snapshot());
+   if (tsd) fAllTestStatisticsData.reset(static_cast<const RooArgList*>(tsd->snapshot()));
 
    if( fAllTestStatisticsData  &&  !fAllTestStatisticsData->empty() ) {
       RooRealVar* firstTS = static_cast<RooRealVar*>(fAllTestStatisticsData->at(0));
@@ -251,8 +242,8 @@ void HypoTestResult::SetAllTestStatisticsData(const RooArgList* tsd) {
 void HypoTestResult::SetPValueIsRightTail(bool pr) {
    fPValueIsRightTail = pr;
 
-   UpdatePValue(fNullDistr, fNullPValue, fNullPValueError, true);
-   UpdatePValue(fAltDistr, fAlternatePValue, fAlternatePValueError, false);
+   UpdatePValue(fNullDistr.get(), fNullPValue, fNullPValueError, true);
+   UpdatePValue(fAltDistr.get(), fAlternatePValue, fAlternatePValueError, false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -32,6 +32,13 @@ namespace RooStats {
       /// constructor from name, null and alternate p values
       HypoTestResult(const char* name, double nullp, double altp);
 
+      /// clone method, required since some data members cannot rely on the streamers to copy them
+      TObject* Clone(const char* newname = nullptr) const override {
+         auto out = new HypoTestResult(*this);
+         if(newname && strlen(newname)) out->SetName(newname);
+         return out;
+      }
+
       /// destructor
       ~HypoTestResult() override;
 
@@ -67,13 +74,13 @@ namespace RooStats {
       /// familiar name for the Null p-value in terms of 1-sided Gaussian significance
       virtual double Significance() const {return RooStats::PValueToSignificance( NullPValue() ); }
 
-      SamplingDistribution* GetNullDistribution(void) const { return fNullDistr; }
-      SamplingDistribution* GetAltDistribution(void) const { return fAltDistr; }
-      RooDataSet* GetNullDetailedOutput(void) const { return fNullDetailedOutput; }
-      RooDataSet* GetAltDetailedOutput(void) const { return fAltDetailedOutput; }
+      SamplingDistribution* GetNullDistribution(void) const { return fNullDistr.get(); }
+      SamplingDistribution* GetAltDistribution(void) const { return fAltDistr.get(); }
+      RooDataSet* GetNullDetailedOutput(void) const { return fNullDetailedOutput.get(); }
+      RooDataSet* GetAltDetailedOutput(void) const { return fAltDetailedOutput.get(); }
       RooDataSet* GetFitInfo() const { return fFitInfo.get(); }
       double GetTestStatisticData(void) const { return fTestStatisticData; }
-      const RooArgList* GetAllTestStatisticsData(void) const { return fAllTestStatisticsData; }
+      const RooArgList* GetAllTestStatisticsData(void) const { return fAllTestStatisticsData.get(); }
       bool HasTestStatisticData(void) const;
 
       void SetNullPValue(double pvalue) { fNullPValue = pvalue; }
@@ -82,8 +89,8 @@ namespace RooStats {
       void SetAltPValueError(double err) { fAlternatePValueError = err; }
       void SetAltDistribution(SamplingDistribution *alt);
       void SetNullDistribution(SamplingDistribution *null);
-      void SetAltDetailedOutput(RooDataSet* d) { fAltDetailedOutput = d; }
-      void SetNullDetailedOutput(RooDataSet* d) { fNullDetailedOutput = d; }
+      void SetAltDetailedOutput(RooDataSet* d) { fAltDetailedOutput.reset(d); }
+      void SetNullDetailedOutput(RooDataSet* d) { fNullDetailedOutput.reset(d); }
       void SetFitInfo(RooDataSet* d) { fFitInfo.reset(d); }
       void SetTestStatisticData(const double tsd);
       void SetAllTestStatisticsData(const RooArgList* tsd);
@@ -123,16 +130,16 @@ namespace RooStats {
       mutable double fNullPValueError;        ///< error of p-value for the null hypothesis (small number means disfavoured)
       mutable double fAlternatePValueError;   ///< error of p-value for the alternate hypothesis (small number means disfavoured)
       double fTestStatisticData;              ///< result of the test statistic evaluated on data
-      const RooArgList* fAllTestStatisticsData; ///< for the case of multiple test statistics, holds all the results
-      SamplingDistribution *fNullDistr;
-      SamplingDistribution *fAltDistr;
-      RooDataSet* fNullDetailedOutput;
-      RooDataSet* fAltDetailedOutput;
+      std::unique_ptr<const RooArgList> fAllTestStatisticsData; ///< for the case of multiple test statistics, holds all the results
+      std::unique_ptr<SamplingDistribution> fNullDistr;
+      std::unique_ptr<SamplingDistribution> fAltDistr;
+      std::unique_ptr<RooDataSet> fNullDetailedOutput;
+      std::unique_ptr<RooDataSet> fAltDetailedOutput;
       std::unique_ptr<RooDataSet> fFitInfo;
       bool fPValueIsRightTail;
       bool fBackgroundIsAlt;
 
-      ClassDefOverride(HypoTestResult,4)  // Base class to represent results of a hypothesis test
+      ClassDefOverride(HypoTestResult,5)  // Base class to represent results of a hypothesis test
 
    };
 }
