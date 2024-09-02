@@ -881,15 +881,6 @@ double &RooMinimizer::fcnOffset() const
    return _fcn->getOffset();
 }
 
-int RooMinimizer::Config::getDefaultWorkers()
-{
-#ifdef ROOFIT_MULTIPROCESS
-   return RooFit::MultiProcess::Config::getDefaultNWorkers();
-#else
-   return 0;
-#endif
-}
-
 std::unique_ptr<RooAbsReal::EvalErrorContext> RooMinimizer::makeEvalErrorContext() const
 {
    RooAbsReal::clearEvalErrorLog();
