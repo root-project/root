@@ -37,7 +37,7 @@ void MakeRCanvasJS(const char *MacroName, const char *IN, const char *OutDir, bo
 
    // Build the html file inlining the json picture
    FILE *fh = fopen(TString::Format("%s/macros/%s.html",OutDir,IN), "w");
-   fprintf(fh,"<div id=\"draw_json_%s\" style=\"width:700px; height:500px\"></div>\n", IN);
+   fprintf(fh,"<div id=\"draw_json_%s\" style=\"position: relative; width: 700px; height: 500px;\"></div>\n", IN);
    fprintf(fh,"<script type=\"module\">\n");
    fprintf(fh,"   import { settings, parse, draw } from './js/modules/main.mjs';\n");
    fprintf(fh,"   settings.HandleKeys = false;\n");
