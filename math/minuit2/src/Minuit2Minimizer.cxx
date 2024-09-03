@@ -84,13 +84,13 @@ void RestoreGlobalPrintLevel(int) {}
 #endif
 
 Minuit2Minimizer::Minuit2Minimizer(ROOT::Minuit2::EMinimizerType type)
-   : Minimizer(), fDim(0), fMinimizer(nullptr), fMinuitFCN(nullptr), fMinimum(nullptr)
+   : fDim(0), fMinimizer(nullptr), fMinuitFCN(nullptr), fMinimum(nullptr)
 {
    // Default constructor implementation depending on minimizer type
    SetMinimizerType(type);
 }
 
-Minuit2Minimizer::Minuit2Minimizer(const char *type) : Minimizer(), fDim(0), fMinimizer(nullptr), fMinuitFCN(nullptr), fMinimum(nullptr)
+Minuit2Minimizer::Minuit2Minimizer(const char *type) : fDim(0), fMinimizer(nullptr), fMinuitFCN(nullptr), fMinimum(nullptr)
 {
    // constructor from a string
 

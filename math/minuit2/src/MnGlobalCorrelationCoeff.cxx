@@ -16,7 +16,7 @@ namespace ROOT {
 namespace Minuit2 {
 
 MnGlobalCorrelationCoeff::MnGlobalCorrelationCoeff(const MnAlgebraicSymMatrix &cov)
-   : fGlobalCC(std::vector<double>()), fValid(true)
+   : fValid(true)
 {
    // constructor: calculate global correlation given a symmetric matrix
    MnPrint print("MnGlobalCorrelationCoeff");

@@ -79,7 +79,7 @@ private:
 ClassImp(TFoamSampler);
 
 
-TFoamSampler::TFoamSampler() : ROOT::Math::DistSampler(),
+TFoamSampler::TFoamSampler() :
 //    fOneDim(false)
 //    fDiscrete(false),
 //    fHasMode(false), fHasArea(false),

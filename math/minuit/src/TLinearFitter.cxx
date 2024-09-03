@@ -226,22 +226,6 @@ fitters and doesn't require to set the initial values of parameters.
 ///run the function StoreData(kFALSE) after constructor
 
 TLinearFitter::TLinearFitter() :
-TVirtualFitter(),
-   fParams(),
-   fParCovar(),
-   fTValues(),
-   fDesign(),
-   fDesignTemp(),
-   fDesignTemp2(),
-   fDesignTemp3(),
-   fAtb(),
-   fAtbTemp(),
-   fAtbTemp2(),
-   fAtbTemp3(),
-   fFunctions(),
-   fY(),
-   fX(),
-   fE(),
    fVal()
 {
    fChisquare =0;
