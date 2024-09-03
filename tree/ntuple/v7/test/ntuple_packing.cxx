@@ -509,8 +509,7 @@ TEST(Packing, Real32Trunc)
    // Exhaustively test, for all valid bit widths, packing and unpacking of 0 to N random floats.
    std::uniform_real_distribution<float> dist(-1000000, 1000000);
    const auto &[minBits, maxBits] = RColumnElementBase::GetValidBitRange(EColumnType::kReal32Trunc);
-   for (int bitWidth = minBits; bitWidth <= maxBits; ++bitWidth)
-   {
+   for (int bitWidth = minBits; bitWidth <= maxBits; ++bitWidth) {
       RColumnElement<float, EColumnType::kReal32Trunc> element;
       element.SetBitsOnStorage(bitWidth);
 
