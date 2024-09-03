@@ -56,7 +56,7 @@ ROOT::Experimental::Internal::RColumnElementBase::GetValidBitRange(EColumnType t
    case EColumnType::kSplitUInt32: return std::make_pair(32, 32);
    case EColumnType::kSplitInt16: return std::make_pair(16, 16);
    case EColumnType::kSplitUInt16: return std::make_pair(16, 16);
-   case EColumnType::kReal32Trunc: return std::make_pair(kReal32TruncBitsMin, kReal32TruncBitsMax);
+   case EColumnType::kReal32Trunc: return std::make_pair(10, 31);
    default: assert(false);
    }
    // never here
@@ -168,8 +168,8 @@ ROOT::Experimental::Internal::GenerateColumnElement(EColumnCppType cppType, ECol
 void ROOT::Experimental::Internal::BitPacking::PackBits(void *dst, const void *src, std::size_t count,
                                                         std::size_t sizeofSrc, std::size_t nDstBits)
 {
-   R__ASSERT(sizeofSrc <= sizeof(Word_t));
-   R__ASSERT(0 < nDstBits && nDstBits <= sizeofSrc * 8);
+   assert(sizeofSrc <= sizeof(Word_t));
+   assert(0 < nDstBits && nDstBits <= sizeofSrc * 8);
 
    const unsigned char *srcArray = reinterpret_cast<const unsigned char *>(src);
    Word_t *dstArray = reinterpret_cast<Word_t *>(dst);
@@ -224,8 +224,8 @@ void ROOT::Experimental::Internal::BitPacking::PackBits(void *dst, const void *s
 void ROOT::Experimental::Internal::BitPacking::UnpackBits(void *dst, const void *src, std::size_t count,
                                                           std::size_t sizeofDst, std::size_t nSrcBits)
 {
-   R__ASSERT(sizeofDst <= sizeof(Word_t));
-   R__ASSERT(0 < nSrcBits && nSrcBits <= sizeofDst * 8);
+   assert(sizeofDst <= sizeof(Word_t));
+   assert(0 < nSrcBits && nSrcBits <= sizeofDst * 8);
 
    unsigned char *dstArray = reinterpret_cast<unsigned char *>(dst);
    const Word_t *srcArray = reinterpret_cast<const Word_t *>(src);
@@ -234,7 +234,7 @@ void ROOT::Experimental::Internal::BitPacking::UnpackBits(void *dst, const void 
    // bit offset of the next packed item inside the currently loaded word
    int offInWord = 0;
    std::size_t dstIdx = 0;
-   std::uint32_t prevWordAccum = 0;
+   Word_t prevWordLsb = 0;
    std::size_t remBytesToLoad = (count * nSrcBits + 7) / 8;
    for (std::size_t i = 0; i < nWordsToLoad; ++i) {
       assert(dstIdx < count);
@@ -252,10 +252,9 @@ void ROOT::Experimental::Internal::BitPacking::UnpackBits(void *dst, const void 
       if (offInWord < 0) {
          std::size_t nMsb = nSrcBits + offInWord;
          std::uint32_t msb = packedBytes << (8 * sizeofDst - nMsb);
-         std::uint32_t packedWord = msb | prevWordAccum;
-         prevWordAccum = 0;
+         Word_t packedWord = msb | prevWordLsb;
+         prevWordLsb = 0;
          memcpy(dstArray + dstIdx * sizeofDst, &packedWord, sizeofDst);
-         ByteSwapIfNecessary(dst[dstIdx]);
          ++dstIdx;
          offInWord = nMsb;
       }
@@ -268,7 +267,7 @@ void ROOT::Experimental::Internal::BitPacking::UnpackBits(void *dst, const void 
             assert(offInWord <= static_cast<int>(kBitsPerWord));
             std::size_t nLsbNext = kBitsPerWord - offInWord;
             if (nLsbNext)
-               prevWordAccum = (packedBytes >> offInWord) << (8 * sizeofDst - nSrcBits);
+               prevWordLsb = (packedBytes >> offInWord) << (8 * sizeofDst - nSrcBits);
             offInWord -= kBitsPerWord;
             break;
          }
@@ -278,12 +277,11 @@ void ROOT::Experimental::Internal::BitPacking::UnpackBits(void *dst, const void 
          packedWord >>= offInWord;
          packedWord <<= 8 * sizeofDst - nSrcBits;
          memcpy(dstArray + dstIdx * sizeofDst, &packedWord, sizeofDst);
-         ByteSwapIfNecessary(dst[dstIdx]);
          ++dstIdx;
          offInWord += nSrcBits;
       }
    }
 
-   assert(prevWordAccum == 0);
+   assert(prevWordLsb == 0);
    assert(dstIdx == count);
 }

@@ -83,9 +83,10 @@ public:
       return false;
    }
 
-   virtual void SetBitsOnStorage(std::size_t)
+   virtual void SetBitsOnStorage(std::size_t bitsOnStorage)
    {
-      throw RException(R__FAIL(std::string("internal error: cannot change bit width of this column type")));
+      if (bitsOnStorage != fBitsOnStorage)
+         throw RException(R__FAIL(std::string("internal error: cannot change bit width of this column type")));
    }
 
    /// If the on-storage layout and the in-memory layout differ, packing creates an on-disk page from an in-memory page

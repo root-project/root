@@ -28,9 +28,7 @@
 #include <memory>
 #include <utility>
 
-namespace ROOT {
-namespace Experimental {
-namespace Internal {
+namespace ROOT::Experimental::Internal {
 
 // clang-format off
 /**
@@ -42,7 +40,6 @@ namespace Internal {
 class RColumn {
 private:
    EColumnType fType;
-   std::uint16_t fBitsOnStorage = 0;
    /// Columns belonging to the same field are distinguished by their order.  E.g. for an std::string field, there is
    /// the offset column with index 0 and the character value column with index 1.
    std::uint32_t fIndex;
@@ -355,7 +352,11 @@ public:
    NTupleSize_t GetNElements() const { return fNElements; }
    RColumnElementBase *GetElement() const { return fElement.get(); }
    EColumnType GetType() const { return fType; }
-   std::uint16_t GetBitsOnStorage() const { return fBitsOnStorage; }
+   std::uint16_t GetBitsOnStorage() const
+   {
+      assert(fElement);
+      return fElement->GetBitsOnStorage();
+   }
    std::uint32_t GetIndex() const { return fIndex; }
    std::uint16_t GetRepresentationIndex() const { return fRepresentationIndex; }
    ColumnId_t GetColumnIdSource() const { return fColumnIdSource; }
@@ -365,15 +366,9 @@ public:
    RPageStorage::ColumnHandle_t GetHandleSource() const { return fHandleSource; }
    RPageStorage::ColumnHandle_t GetHandleSink() const { return fHandleSink; }
 
-   void SetBitsOnStorage(std::size_t bits)
-   {
-      fElement->SetBitsOnStorage(bits);
-      fBitsOnStorage = bits;
-   }
+   void SetBitsOnStorage(std::size_t bits) { fElement->SetBitsOnStorage(bits); }
 }; // class RColumn
 
-} // namespace Internal
-} // namespace Experimental
-} // namespace ROOT
+} // namespace ROOT::Experimental::Internal
 
 #endif
