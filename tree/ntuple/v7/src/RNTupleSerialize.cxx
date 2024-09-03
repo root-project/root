@@ -18,6 +18,7 @@
 #include <ROOT/RError.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleSerialize.hxx>
+#include <ROOT/RNTupleUtil.hxx>
 
 #include <RVersion.h>
 #include <TBufferFile.h>
@@ -25,7 +26,6 @@
 #include <TList.h>
 #include <TStreamerInfo.h>
 #include <TVirtualStreamerInfo.h>
-#include "ROOT/RNTupleUtil.hxx"
 #include <xxhash.h>
 
 #include <cassert>

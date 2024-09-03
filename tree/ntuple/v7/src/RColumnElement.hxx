@@ -45,7 +45,8 @@ void PackBits(void *dst, const void *src, std::size_t count, std::size_t sizeofS
 
 /// Undoes the effect of `PackBits`. The bits that were truncated in the packed representation
 /// are filled with zeroes.
-/// `src` and `dst` must be at least `MinBufSize(count, nDstBits)` bytes long.
+/// `src` must be at least `MinBufSize(count, nDstBits)` bytes long.
+/// `dst` must be at least `count * sizeofDst` bytes long.
 void UnpackBits(void *dst, const void *src, std::size_t count, std::size_t sizeofDst, std::size_t nSrcBits);
 
 } // namespace ROOT::Experimental::Internal::BitPacking
@@ -694,12 +695,15 @@ public:
    static constexpr bool kIsMappable = false;
    static constexpr std::size_t kSize = sizeof(float);
 
-   RColumnElement() : RColumnElementBase(kSize, ROOT::Experimental::kReal32TruncBitsMax) {}
+   // NOTE: setting bitsOnStorage == 0 by default. This is an invalid value that helps us
+   // catch misusages where RColumnElement is used without having explicitly set its bit width
+   // (which should never happen).
+   RColumnElement() : RColumnElementBase(kSize, 0) {}
 
    void SetBitsOnStorage(std::size_t bitsOnStorage) final
    {
-      namespace REx = ROOT::Experimental;
-      R__ASSERT(bitsOnStorage >= REx::kReal32TruncBitsMin && bitsOnStorage <= REx::kReal32TruncBitsMax);
+      const auto &[minBits, maxBits] = GetValidBitRange(EColumnType::kReal32Trunc);
+      R__ASSERT(bitsOnStorage >= minBits && bitsOnStorage <= maxBits);
       fBitsOnStorage = bitsOnStorage;
    }
 

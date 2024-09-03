@@ -528,8 +528,7 @@ Zigzag + split
 not cluster-wise.
 
 The "Real32Trunc" type column is a variable-sized floating point column with lower precision than `Real32` and `SplitReal32`.
-It is a IEEE-754 single precision float with some of the mantissa's least significant bits truncated. The amount of truncated bits
-is fixed per-cluster.
+It is a IEEE-754 single precision float with some of the mantissa's least significant bits truncated.
 
 Future versions of the file format may introduce additional column types
 without changing the minimum version of the header.
