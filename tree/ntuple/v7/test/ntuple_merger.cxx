@@ -146,7 +146,7 @@ TEST(RNTupleMerger, MergeSymmetric)
       }
       {
          auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuard3.GetPath(), RNTupleWriteOptions());
-         opts.fMergingMode = ENTupleMergingMode::kFilter;
+         opts.fMergingMode = ENTupleMergingMode::kStrict;
          auto res = merger.Merge(sourcePtrs, *destination, opts);
          EXPECT_TRUE(bool(res));
       }
