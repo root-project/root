@@ -492,9 +492,8 @@ TF1::TF1():
    SetFillStyle(0);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// F1 constructor using a formula definition
+/// TF1 constructor using a formula definition
 ///
 /// See TFormula constructor for explanation of the formula syntax.
 ///
