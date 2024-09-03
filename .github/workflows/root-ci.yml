@@ -434,24 +434,24 @@ jobs:
       - name: Install Google Chrome
         run: |
           if [[ "${{ matrix.image }}" == "fedora39" ]]; then
-            sudo dnf install -y dnf-plugins-core
-            sudo dnf install fedora-workstation-repositories -y
-            sudo dnf config-manager --set-enabled google-chrome
-            sudo dnf install google-chrome-stable -y
-          elif [[ "${{ matrix.image }}" == "alma8" ]] || [[ "${{ matrix.image }}" == "alma9" ]]; then
-            sudo dnf install -y wget
+            dnf install -y dnf-plugins-core
+            dnf install fedora-workstation-repositories -y
+            dnf config-manager --set-enabled google-chrome
+            dnf install google-chrome-stable -y
+          elif [[ "${{ matrix.image }}" == "alma8" ]] || [[ "${{ matrix.image }}" == "alma9" ]] || [[ "${{ matrix.image }}" == "alma9-clang" ]]; then
+            dnf install -y wget
             wget https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm
-            sudo dnf install -y ./google-chrome-stable_current_x86_64.rpm
+            dnf install -y ./google-chrome-stable_current_x86_64.rpm
           elif [[ "${{ matrix.image }}" == "ubuntu20" ]] || [[ "${{ matrix.image }}" == "ubuntu22" ]] || [[ "${{ matrix.image }}" == "ubuntu2404" ]]; then
-            sudo apt update
-            sudo apt install -y wget
+            apt update
+            apt install -y wget
             wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-            sudo apt install -y ./google-chrome-stable_current_amd64.deb
+            apt install -y ./google-chrome-stable_current_amd64.deb
           elif [[ "${{ matrix.image }}" == "debian125" ]]; then
-            sudo apt update
-            sudo apt install -y wget
+            apt update
+            apt install -y wget
             wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-            sudo apt install -y ./google-chrome-stable_current_amd64.deb
+            apt install -y ./google-chrome-stable_current_amd64.deb
           fi
 
       - name: Dump GitHub context
