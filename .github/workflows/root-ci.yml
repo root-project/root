@@ -432,6 +432,7 @@ jobs:
           ref: ${{ inputs.ref_name }}
       
       - name: Install Google Chrome
+        shell: bash
         run: |
           if [[ "${{ matrix.image }}" == "fedora39" ]]; then
             dnf install -y dnf-plugins-core
