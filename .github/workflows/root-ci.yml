@@ -121,17 +121,21 @@ jobs:
         with:
           ref: ${{ inputs.ref_name }}
 
-      - name: Install Homebrew
-        run: |
-            sudo /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+      # TODO: Install chrome
+      # Latest error: sudo: a terminal is required to read the password; either use the -S option to read from standard input or configure an askpass helper
+      # sudo: a password is required
+      # Error: Process completed with exit code 1.
+      # - name: Install Homebrew
+      #   run: |
+      #       sudo /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
         
-      - name: Verify Installation
-        run: |
-            brew --version
+      # - name: Verify Installation
+      #   run: |
+      #       brew --version
 
-      - name: Install chrome
-        run: |
-          brew install --cask google-chrome
+      # - name: Install chrome
+      #   run: |
+      #     brew install --cask google-chrome
 
       - name: Apply option overrides from matrix for this job for non-release builds
         if: ${{ github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' && matrix.overrides != NaN }}
@@ -427,20 +431,27 @@ jobs:
         with:
           ref: ${{ inputs.ref_name }}
       
-      # - name: Install chrome
-      #   run: |
-      #     apt-get update
-      #     apt-get install -y wget gnupg
-      #     wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
-      #     sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list'
-      #     apt-get update
-      #     apt-get install -y google-chrome-stable
-
-      # - name: Install chrome
-      #   uses: browser-actions/setup-chrome@v1
-      #   with:
-      #     chrome-version: 120
-      #     install-dependencies: true
+      - name: Install Google Chrome
+        run: |
+          if [[ "${{ matrix.image }}" == "fedora39" ]]; then
+            sudo dnf install fedora-workstation-repositories -y
+            sudo dnf config-manager --set-enabled google-chrome
+            sudo dnf install google-chrome-stable -y
+          elif [[ "${{ matrix.image }}" == "alma8" ]] || [[ "${{ matrix.image }}" == "alma9" ]]; then
+            sudo dnf install -y wget
+            wget https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm
+            sudo dnf install -y ./google-chrome-stable_current_x86_64.rpm
+          elif [[ "${{ matrix.image }}" == "ubuntu20" ]] || [[ "${{ matrix.image }}" == "ubuntu22" ]] || [[ "${{ matrix.image }}" == "ubuntu2404" ]]; then
+            sudo apt update
+            sudo apt install -y wget
+            wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+            sudo apt install -y ./google-chrome-stable_current_amd64.deb
+          elif [[ "${{ matrix.image }}" == "debian125" ]]; then
+            sudo apt update
+            sudo apt install -y wget
+            wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+            sudo apt install -y ./google-chrome-stable_current_amd64.deb
+          fi
 
       - name: Dump GitHub context
         env:
