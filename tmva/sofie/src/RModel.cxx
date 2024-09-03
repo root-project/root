@@ -615,19 +615,18 @@ void RModel::GenerateOutput() {
       fGC += "});\n";
       fGC += SP + "return ret;\n";
    }
-   fGC += "}\n";
+   fGC += "}\n";  // end of infer function scope
 }
 
 void RModel::GenerateSessionCode()
 {
 
-   if (!fIsGNNComponent) {
-      if (fUseSession) {
-         if (!fIsSubGraph)
-            fGC += "struct Session {\n";
-         else
-            fGC += "struct Session_" + fName + " {\n";
-      }
+   // define the Session struct (for GNN this is generated in RModel_GNN)
+   if (fUseSession && !fIsGNNComponent) {
+      if (!fIsSubGraph)
+         fGC += "struct Session {\n";
+      else
+         fGC += "struct Session_" + fName + " {\n";
    }
 
    GenerateInitializedTensorInfo();
@@ -695,8 +694,9 @@ void RModel::GenerateSessionCode()
 
    GenerateOutput();
 
-   if (fUseSession) {
-      fGC += "};\n";
+   // end of session
+   if (fUseSession && !fIsGNNComponent) {
+      fGC += "};   // end of Session\n";
    }
 }
 

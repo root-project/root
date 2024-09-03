@@ -139,7 +139,7 @@ def add_weights(gin, weights, function_target):
         shape_as_list = i.shape.as_list()
         for j in shape_as_list:
             shape.push_back(j)
-        model_block.GetFunctionBlock().AddInitializedTensor['float'](i.name, gbl_namespace.TMVA.Experimental.SOFIE.ETensorType.FLOAT, shape, i.numpy())
+        model_block.GetFunctionBlock().AddInitializedTensor['float'](i.name, shape, i.numpy())
 
 def add_aggregate_function(gin, reducer, relation):
     """
