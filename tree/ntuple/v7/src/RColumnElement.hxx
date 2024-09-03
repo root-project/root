@@ -716,6 +716,8 @@ public:
       R__ASSERT(GetPackedSize(count) == MinBufSize(count, fBitsOnStorage));
 
 #if R__LITTLE_ENDIAN == 0
+      // TODO(gparolini): to avoid this extra allocation we might want to perform byte swapping
+      // directly in the Pack/UnpackBits functions.
       auto bswapped = std::make_unique<float[]>(count);
       CopyBswap<sizeof(float)>(bswapped.get(), src, count);
       const auto *srcLe = bswapped.get();
