@@ -658,6 +658,11 @@ public:
       fNormalized = flag;
       Update();
    }
+   inline void SetNdim(Int_t ndim)
+   {
+      fNdim = ndim;
+      Update();
+   }
    virtual void     SetNpx(Int_t npx = 100); // *MENU*
    virtual void     SetParameter(Int_t param, Double_t value)
    {
@@ -786,6 +791,14 @@ namespace ROOT {
             f->SetTitle(title);
          }
       };
+
+      inline void
+      EvalParMultiDim(TF1 *func, Double_t *out, const Double_t *x, std::size_t size, std::size_t rows, Double_t *params)
+      {
+         for (size_t i = 0; i < rows; i++) {
+            out[i] = func->EvalPar(x + i * size, params);
+         }
+      }
    }
 }
 
