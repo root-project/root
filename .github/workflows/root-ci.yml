@@ -434,6 +434,7 @@ jobs:
       - name: Install Google Chrome
         run: |
           if [[ "${{ matrix.image }}" == "fedora39" ]]; then
+            sudo dnf install -y dnf-plugins-core
             sudo dnf install fedora-workstation-repositories -y
             sudo dnf config-manager --set-enabled google-chrome
             sudo dnf install google-chrome-stable -y
