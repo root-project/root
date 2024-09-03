@@ -153,35 +153,6 @@ public:
    }
 };
 
-constexpr std::int32_t ChecksumRNTupleClass()
-{
-   const char ident[] = "ROOT::Experimental::RNTuple"
-                        "fVersionEpoch"
-                        "unsigned short"
-                        "fVersionMajor"
-                        "unsigned short"
-                        "fVersionMinor"
-                        "unsigned short"
-                        "fVersionPatch"
-                        "unsigned short"
-                        "fSeekHeader"
-                        "unsigned long"
-                        "fNBytesHeader"
-                        "unsigned long"
-                        "fLenHeader"
-                        "unsigned long"
-                        "fSeekFooter"
-                        "unsigned long"
-                        "fNBytesFooter"
-                        "unsigned long"
-                        "fLenFooter"
-                        "unsigned long";
-   std::int32_t id = 0;
-   for (unsigned i = 0; i < (sizeof(ident) - 1); i++)
-      id = static_cast<std::int32_t>(static_cast<std::int64_t>(id) * 3 + ident[i]);
-   return id;
-}
-
 #pragma pack(push, 1)
 /// A name (type, identifies, ...) in the TFile binary format
 struct RTFString {
