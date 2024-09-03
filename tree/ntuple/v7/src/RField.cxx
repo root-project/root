@@ -4000,12 +4000,12 @@ std::size_t ROOT::Experimental::RCollectionField::AppendImpl(const void *from)
    }
 
    // RCollectionFields return the bytes written by their subfields as accumulated by the RNTupleCollectionWriter
-   std::size_t bytesWritten = writer->fBytesWritten;
+   std::size_t nBytesWritten = writer->fNBytesWritten;
    fNWritten += writer->fNElements;
    writer->Reset();
 
    fPrincipalColumn->Append(&fNWritten);
-   return bytesWritten + fPrincipalColumn->GetElement()->GetPackedSize();
+   return nBytesWritten + fPrincipalColumn->GetElement()->GetPackedSize();
 }
 
 void ROOT::Experimental::RCollectionField::ReadGlobalImpl(NTupleSize_t, void *)

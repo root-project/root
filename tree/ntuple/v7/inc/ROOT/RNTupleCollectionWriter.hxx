@@ -33,7 +33,7 @@ namespace Experimental {
 /**
 \class ROOT::Experimental::RNTupleCollectionWriter
 \ingroup NTuple
-\brief A special type only prodcued by the collection field and used for writing untyped collections
+\brief A special type only produced by the collection field and used for writing untyped collections
 
 This class is tightly coupled to the RCollectionField. It fills the sub fields of the collection fields one-by-one.
 An instance can only be used with the exact RCollectionField that created it. Upon creation, the entry values need
@@ -50,8 +50,8 @@ private:
       kOrphaned,        // the collection field that created the writer is destructed
    };
 
-   // fBytesWriten and fElements are reset to zero by RCollectionField::Append and thus need to be mutable
-   mutable std::size_t fBytesWritten = 0;
+   // fNBytesWritten and fNElements are reset to zero by RCollectionField::Append and thus need to be mutable
+   mutable std::size_t fNBytesWritten = 0;
    mutable ClusterSize_t fNElements;
    /// The collection writer depends on the RCollectionField from which it was created. Filling collection elements
    /// only works when the collection field is connected to a page sink, and as long as the collection field is alive.
@@ -68,7 +68,7 @@ private:
    // Called by the RCollectionField after append
    void Reset() const
    {
-      fBytesWritten = 0;
+      fNBytesWritten = 0;
       fNElements = 0;
    }
 
@@ -84,10 +84,10 @@ public:
       if (fEnvironmentState != EEnvironmentState::kConnectedToSink) {
          throw RException(R__FAIL("invalid attempt to fill an untyped collection element without a valid field"));
       }
-      const std::size_t bytesWritten = fEntry.Append();
-      fBytesWritten += bytesWritten;
+      const std::size_t nBytesWritten = fEntry.Append();
+      fNBytesWritten += nBytesWritten;
       fNElements++;
-      return bytesWritten;
+      return nBytesWritten;
    }
 
    const REntry &GetEntry() const { return fEntry; }
