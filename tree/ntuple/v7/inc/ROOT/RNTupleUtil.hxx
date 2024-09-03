@@ -30,10 +30,6 @@ class RLogChannel;
 /// Log channel for RNTuple diagnostics.
 RLogChannel &NTupleLog();
 
-inline constexpr auto kReal32TruncBitsMin = 10;
-inline constexpr auto kReal32TruncBitsMax = 31;
-inline constexpr auto kReal32TruncBitsRangeLen = kReal32TruncBitsMax - kReal32TruncBitsMin;
-
 // clang-format off
 /**
 \class ROOT::Experimental::EColumnType

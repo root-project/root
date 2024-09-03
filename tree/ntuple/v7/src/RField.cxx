@@ -1443,10 +1443,10 @@ void ROOT::Experimental::RField<float>::SetHalfPrecision()
 
 void ROOT::Experimental::RField<float>::SetTruncated(std::size_t nBits)
 {
-   if (nBits < kReal32TruncBitsMin || nBits > kReal32TruncBitsMax) {
+   const auto &[minBits, maxBits] = Internal::RColumnElementBase::GetValidBitRange(EColumnType::kReal32Trunc);
+   if (nBits < minBits || nBits > maxBits) {
       throw RException(R__FAIL("SetTruncated() argument nBits = " + std::to_string(nBits) + " is out of valid range [" +
-                               std::to_string(kReal32TruncBitsMin) + ", " + std::to_string(kReal32TruncBitsMax) +
-                               "])"));
+                               std::to_string(minBits) + ", " + std::to_string(maxBits) + "])"));
    }
    SetColumnRepresentatives({{EColumnType::kReal32Trunc}});
    fBitWidth = nBits;
