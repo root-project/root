@@ -864,7 +864,7 @@ Double_t TH2Poly::GetBinError(Int_t bin) const
 /// it should be the size of the bin list
 Int_t  TH2Poly::GetNumberOfBins() const {
    Int_t nbins =  fNcells-kNOverflow;
-   if (nbins != fBins->GetSize())
+   if (nbins != (fBins ? fBins->GetSize() : 0))
       Fatal("GetNumberOfBins","Object has an invalid number of bins");
    return nbins;
 }
