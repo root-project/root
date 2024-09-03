@@ -213,3 +213,27 @@ TEST(RColumnElementEndian, DeltaSplit)
                        32));
 #endif
 }
+
+TEST(RColumnElementEndian, Real32Trunc)
+{
+#ifndef R__BYTESWAP
+   GTEST_SKIP() << "Skipping test on big endian node";
+#else
+   RColumnElement<float, EColumnType::kReal32Trunc> element;
+   element.SetBitsOnStorage(12);
+
+   RPageSinkMock sink1(element);
+   unsigned char buf1[] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+                           0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f};
+   RPage page1(0, buf1, nullptr, sizeof(float), 4);
+   page1.GrowUnchecked(4);
+   sink1.CommitPage(RPageStorage::ColumnHandle_t{}, page1);
+
+   EXPECT_EQ(0, memcmp(sink1.GetPages()[0].GetBuffer(), "\x00\x00\x04\x80\x00\x0c", 6));
+
+   RPageSourceMock source1(sink1.GetPages(), element);
+   auto page2Ref = source1.LoadPage(RPageStorage::ColumnHandle_t{}, NTupleSize_t{0});
+   EXPECT_EQ(
+      0, memcmp(page2Ref.Get().GetBuffer(), "\x00\x00\x00\x00\x04\x00\x00\x00\x08\x00\x00\x00\x0c\x00\x00\x00", 16));
+#endif
+}
