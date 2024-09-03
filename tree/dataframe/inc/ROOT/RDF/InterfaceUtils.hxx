@@ -265,14 +265,10 @@ BuildAction(const ColumnNames_t &colNames, const std::shared_ptr<SnapshotHelperA
    const auto &outputColNames = snapHelperArgs->fOutputColNames;
    const auto &options = snapHelperArgs->fOptions;
 
-   auto makeIsDefine = [&] {
-      auto sz = sizeof...(ColTypes);
-      std::vector<bool> isDef(sz);
-      for (auto i = 0u; i < sz; ++i)
-         isDef[i] = colRegister.IsDefineOrAlias(colNames[i]);
-      return isDef;
-   };
-   std::vector<bool> isDefine = makeIsDefine();
+   auto sz = sizeof...(ColTypes);
+   std::vector<bool> isDefine(sz);
+   for (auto i = 0u; i < sz; ++i)
+      isDefine[i] = colRegister.IsDefineOrAlias(colNames[i]);
 
    std::unique_ptr<RActionBase> actionPtr;
    if (!ROOT::IsImplicitMTEnabled()) {
