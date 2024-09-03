@@ -231,16 +231,6 @@ jobs:
         name: rootdoc.tar.xz
         path: ${{env.DOC_LOCATION}}/${{env.DOC_DIR}}.tar.xz
 
-    - name: Download tar.gz
-      uses: actions/download-artifact@v3
-      with:
-          name: rootdoc.tar.gz
-
-    - name: Download tar.xz
-      uses: actions/download-artifact@v3
-      with:
-        name: rootdoc.tar.xz
-        
     # Install AWS CLI before syncing to S3
     - name: Install AWS CLI
       run: |
