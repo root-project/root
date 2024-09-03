@@ -73,17 +73,6 @@ void TMVA_SOFIE_Keras(const char * modelFile = nullptr, bool printModelInfo = tr
     std::cout<<"\n\n";
     model.PrintIntermediateTensors();
 
-    //Checking if tensor already exist in model
-    std::cout<<"\n\nTensor \"dense2bias0\" already exist: "<<std::boolalpha<<model.CheckIfTensorAlreadyExist("dense2bias0")<<"\n\n";
-    std::vector<size_t> tensorShape = model.GetTensorShape("dense2bias0");
-    std::cout<<"Shape of tensor \"dense2bias0\": ";
-    for(auto& it:tensorShape){
-        std::cout<<it<<",";
-    }
-    std::cout<<"\n\nData type of tensor \"dense2bias0\": ";
-    SOFIE::ETensorType tensorType = model.GetTensorType("dense2bias0");
-    std::cout<<SOFIE::ConvertTypeToString(tensorType);
-
     //Printing generated inference code
     std::cout<<"\n\n";
     model.PrintGenerated();
