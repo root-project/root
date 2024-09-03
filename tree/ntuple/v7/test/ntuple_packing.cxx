@@ -505,4 +505,35 @@ TEST(Packing, Real32Trunc)
             break;
       }
    }
+
+   // Exhaustively test, for all valid bit widths, packing and unpacking of 0 to N random floats.
+   std::uniform_real_distribution<float> dist(-1000000, 1000000);
+   const auto &[minBits, maxBits] = RColumnElementBase::GetValidBitRange(EColumnType::kReal32Trunc);
+   for (int bitWidth = minBits; bitWidth <= maxBits; ++bitWidth)
+   {
+      RColumnElement<float, EColumnType::kReal32Trunc> element;
+      element.SetBitsOnStorage(bitWidth);
+
+      std::default_random_engine rng(bitWidth);
+      constexpr auto N = 2000;
+      float inputs[N];
+      for (int i = 0; i < N; ++i) {
+         inputs[i] = dist(rng);
+      }
+
+      auto packed = std::make_unique<std::uint8_t[]>(BitPacking::MinBufSize(N, bitWidth));
+
+      float outputs[N];
+      for (int i = 0; i < N; ++i) {
+         element.Pack(packed.get(), inputs, i);
+         element.Unpack(outputs, packed.get(), i);
+         for (int j = 0; j < i; ++j) {
+            int exponent;
+            std::frexp(inputs[j], &exponent);
+            const int scale = std::pow(2, exponent);
+            const float maxErr = scale * std::pow(2.f, 10 - bitWidth);
+            EXPECT_NEAR(outputs[j], inputs[j], maxErr);
+         }
+      }
+   }
 }
