@@ -2,7 +2,8 @@
 /// \ingroup NTuple ROOT7
 /// \author Jakob Blomer <jblomer@cern.ch>, Max Orok <maxwellorok@gmail.com>, Alaettin Serhan Mete <amete@anl.gov>,
 /// Giacomo Parolini <giacomo.parolini@cern.ch>
-/// \date 2020-07-08 \warning This is part of the ROOT 7 prototype! It will
+/// \date 2020-07-08
+/// \warning This is part of the ROOT 7 prototype! It will
 /// change without notice. It might trigger earthquakes. Feedback is welcome!
 
 /*************************************************************************
@@ -32,8 +33,9 @@
 #include <TFile.h>
 #include <TKey.h>
 
-#include <deque>
 #include <algorithm>
+#include <deque>
+#include <inttypes.h> // for PRIu64
 #include <optional>
 #include <unordered_map>
 #include <vector>
@@ -119,9 +121,9 @@ try {
 
    // Now merge
    RNTupleMerger merger;
-   RNTupleMergeOptions options;
-   options.fCompressionSettings = compression;
-   merger.Merge(sourcePtrs, *destination, options).ThrowOnError();
+   RNTupleMergeOptions mergerOpts;
+   mergerOpts.fCompressionSettings = compression;
+   merger.Merge(sourcePtrs, *destination, mergerOpts).ThrowOnError();
 
    // Provide the caller with a merged anchor object (even though we've already
    // written it).
@@ -162,6 +164,7 @@ struct RNTupleMerger::RChangeCompressionFunc {
       sealConf.fPage = &page;
       sealConf.fBuffer = buffer.get();
       sealConf.fCompressionSetting = options.fCompressionSettings;
+      sealConf.fWriteChecksum = sealedPage.GetHasChecksum();
       auto resealedPage = RPageSink::SealPage(sealConf);
       sealedPage = resealedPage;
    }
@@ -183,6 +186,9 @@ struct RColumnOutInfo {
 using ColumnIdMap_t = std::unordered_map<std::string, RColumnOutInfo>;
 
 struct RColumnInfo {
+   // This column name is built as a dot-separated concatenation of the ancestry of
+   // the columns' parent fields' names plus the index of the column itself.
+   // e.g. "Muon.pt.x._0"
    std::string fColumnName;
    DescriptorId_t fInputId;
    DescriptorId_t fOutputId;
@@ -229,22 +235,25 @@ CompareDescriptorStructure(const RNTupleDescriptor &dst, const RNTupleDescriptor
 
    // Check compatibility of common fields
    for (const auto &field : commonFields) {
-      const auto &srcFdName = field.fSrc->GetFieldName();
+      // NOTE: field.fSrc and field.fDst have the same name by construction
+      const auto &fieldName = field.fSrc->GetFieldName();
 
       // Require that fields are both projected or both not projected
       bool projCompatible = field.fSrc->IsProjectedField() == field.fDst->IsProjectedField();
       if (!projCompatible) {
          std::stringstream ss;
-         ss << "Field `" << srcFdName << "` is incompatible with previously-seen field with that name because the "
+         ss << "Field `" << fieldName << "` is incompatible with previously-seen field with that name because the "
             << (field.fSrc->IsProjectedField() ? "new" : "old") << " one is projected and the other isn't";
          errors.push_back(ss.str());
       } else if (field.fSrc->IsProjectedField()) {
          // if both fields are projected, verify that they point to the same real field
+         // FIXME: we cannot compare the ids as they belong to different RNTuples.
+         // Check the real field's FQ name instead.
          const auto srcId = field.fSrc->GetProjectionSourceId();
          const auto dstId = field.fDst->GetProjectionSourceId();
          if (srcId != dstId) {
             std::stringstream ss;
-            ss << "Field `" << srcFdName
+            ss << "Field `" << fieldName
                << "` is projected to a different field than a previously-seen field with the same name (old: " << dstId
                << ", new: " << srcId << ")";
             errors.push_back(ss.str());
@@ -257,7 +266,7 @@ CompareDescriptorStructure(const RNTupleDescriptor &dst, const RNTupleDescriptor
       const auto &dstTyName = field.fDst->GetTypeName();
       if (srcTyName != dstTyName) {
          std::stringstream ss;
-         ss << "Field `" << srcFdName
+         ss << "Field `" << fieldName
             << "` has a type incompatible with a previously-seen field with the same name: (old: " << dstTyName
             << ", new: " << srcTyName << ")";
          errors.push_back(ss.str());
@@ -287,6 +296,9 @@ CompareDescriptorStructure(const RNTupleDescriptor &dst, const RNTupleDescriptor
    for (const auto &err : errors)
       errMsg += std::string("\n  * ") + err;
 
+   if (!errMsg.empty())
+      errMsg = errMsg.substr(1); // strip initial newline
+
    if (errMsg.length())
       return R__FAIL(errMsg);
 
@@ -299,7 +311,8 @@ CompareDescriptorStructure(const RNTupleDescriptor &dst, const RNTupleDescriptor
 }
 
 // Applies late model extension to `destination`, adding all `newFields` to it.
-static void ExtendDestinationModel(std::span<const RFieldDescriptor *> newFields, RPageSink &destination,
+static void ExtendDestinationModel(std::span<const RFieldDescriptor *> newFields,
+                                   const RNTupleDescriptor &srcDescriptor, RPageSink &destination,
                                    RNTupleModel &dstModel, NTupleSize_t nDstEntries)
 {
    assert(newFields.size() > 0); // no point in calling this with 0 new cols
@@ -314,12 +327,12 @@ static void ExtendDestinationModel(std::span<const RFieldDescriptor *> newFields
    msg += std::accumulate(newFields.begin(), newFields.end(), std::string{}, [](const auto &acc, const auto *field) {
       return acc + (acc.length() ? ", " : "") + '`' + field->GetFieldName() + '`';
    });
-   Info("RNTuple::Merge", "%s: adding %s to the destination model (entry #%lu).", msg.c_str(),
+   Info("RNTuple::Merge", "%s: adding %s to the destination model (entry #%" PRIu64 ").", msg.c_str(),
         (newFields.size() > 1 ? "them" : "it"), nDstEntries);
 
    changeset.fAddedFields.reserve(newFields.size());
    for (const auto *fieldDesc : newFields) {
-      auto field = fieldDesc->CreateField(destination.GetDescriptor());
+      auto field = fieldDesc->CreateField(srcDescriptor);
       if (fieldDesc->IsProjectedField())
          changeset.fAddedProjectedFields.emplace_back(field.get());
       else
@@ -438,6 +451,7 @@ static void GenerateExtraDstColumns(size_t nClusterEntries, std::span<RColumnInf
       // and can be skipped.
       const RFieldDescriptor *field = column.fParentField;
       bool skipColumn = false;
+      auto nRepetitions = std::max<std::uint64_t>(field->GetNRepetitions(), 1);
       for (auto parentId = field->GetParentId(); parentId != kInvalidDescriptorId;) {
          const RFieldDescriptor &parent = srcDescriptor.GetFieldDescriptor(parentId);
          if (parent.GetStructure() == ENTupleStructure::kCollection ||
@@ -445,6 +459,7 @@ static void GenerateExtraDstColumns(size_t nClusterEntries, std::span<RColumnInf
             skipColumn = true;
             break;
          }
+         nRepetitions *= std::max<std::uint64_t>(parent.GetNRepetitions(), 1);
          parentId = parent.GetParentId();
       }
       if (skipColumn)
@@ -453,10 +468,11 @@ static void GenerateExtraDstColumns(size_t nClusterEntries, std::span<RColumnInf
       const auto structure = field->GetStructure();
 
       if (structure == ENTupleStructure::kUnsplit) {
-         Warning("RNTuple::Merge",
-                 "Found a column associated to unsplit field %s. Merging unsplit fields is not supported, therefore "
-                 "this column will be skipped.",
-                 field->GetFieldName().c_str());
+         Fatal(
+            "RNTuple::Merge",
+            "Destination RNTuple contains an Unsplit field (%s) that is not present in one of the sources. "
+            "Creating a default value for an Unsplit field is ill-defined, therefore the merging process will abort.",
+            field->GetFieldName().c_str());
          continue;
       }
 
@@ -465,8 +481,6 @@ static void GenerateExtraDstColumns(size_t nClusterEntries, std::span<RColumnInf
                 structure == ENTupleStructure::kLeaf);
 
       const auto colElement = RColumnElementBase::Generate(columnDesc.GetType());
-      const auto nRepetitions =
-         (structure == ENTupleStructure::kCollection || field->GetNRepetitions() > 0) ? field->GetNRepetitions() : 1;
       const auto nElements = nClusterEntries * nRepetitions;
       const auto bytesOnStorage = colElement->GetPackedSize(nElements);
       constexpr auto kPageSizeLimit = 256 * 1024;
@@ -521,8 +535,7 @@ static void MergeSourceClusters(RPageSink &destination, RPageSource &source, NTu
    while (clusterId != kInvalidDescriptorId) {
       const auto &clusterDesc = srcDescriptor.GetClusterDescriptor(clusterId);
       const auto nClusterEntries = clusterDesc.GetNEntries();
-      if (nClusterEntries == 0)
-         continue;
+      R__ASSERT(nClusterEntries > 0);
 
       // We use a std::deque so that references to the contained SealedPageSequence_t, and its iterators, are
       // never invalidated.
@@ -665,6 +678,7 @@ RNTupleMerger::Merge(std::span<RPageSource *> sources, RPageSink &destination, c
       auto descCmp = descCmpRes.Unwrap();
 
       // If the current source is missing some fields and we're not in Union mode, error
+      // (if we are in Union mode, MergeSourceClusters will fill the missing fields with default values).
       if (options.fMergingMode != ENTupleMergingMode::kUnion && !descCmp.fExtraDstFields.empty()) {
          std::string msg = "Source RNTuple is missing the following fields:";
          for (const auto *field : descCmp.fExtraDstFields) {
@@ -677,7 +691,7 @@ RNTupleMerger::Merge(std::span<RPageSource *> sources, RPageSink &destination, c
       if (descCmp.fExtraSrcFields.size()) {
          if (options.fMergingMode == ENTupleMergingMode::kUnion) {
             // late model extension for all fExtraSrcFields in Union mode
-            ExtendDestinationModel(descCmp.fExtraSrcFields, destination, *model, nDstEntries);
+            ExtendDestinationModel(descCmp.fExtraSrcFields, srcDescriptor.GetRef(), destination, *model, nDstEntries);
             descCmp.fCommonFields.insert(descCmp.fCommonFields.end(), descCmp.fExtraSrcFields.begin(),
                                          descCmp.fExtraSrcFields.end());
          } else if (options.fMergingMode == ENTupleMergingMode::kStrict) {
