@@ -38,10 +38,6 @@ private:
 };
 
 MnUserTransformation::MnUserTransformation(const std::vector<double> &par, const std::vector<double> &err)
-   : fPrecision(MnMachinePrecision()), fParameters(std::vector<MinuitParameter>()),
-     fExtOfInt(std::vector<unsigned int>()), fDoubleLimTrafo(SinParameterTransformation()),
-     fUpperLimTrafo(SqrtUpParameterTransformation()), fLowerLimTrafo(SqrtLowParameterTransformation()),
-     fCache(std::vector<double>())
 {
    // constructor from a vector of parameter values and a vector of errors (step  sizes)
    // class has as data member the transformation objects (all of the types),
