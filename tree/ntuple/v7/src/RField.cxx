@@ -1134,7 +1134,8 @@ ROOT::Experimental::RFieldBase::EnsureCompatibleColumnTypes(const RNTupleDescrip
       columnTypeNames += std::string("`") + Internal::RColumnElementBase::GetTypeName(t) + "`";
    }
    throw RException(R__FAIL("On-disk column types {" + columnTypeNames + "} for field `" + GetQualifiedFieldName() +
-                            "` cannot be matched (representation index: " + std::to_string(representationIndex) + ")"));
+                            "` cannot be matched to its in-memory type `" + GetTypeName() + "` " +
+                            "(representation index: " + std::to_string(representationIndex) + ")"));
 }
 
 size_t ROOT::Experimental::RFieldBase::AddReadCallback(ReadCallback_t func)
@@ -1387,7 +1388,21 @@ template class ROOT::Experimental::RSimpleField<bool>;
 const ROOT::Experimental::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RField<bool>::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kBit}}, {});
+   static RColumnRepresentations representations({{EColumnType::kBit}}, {{EColumnType::kChar},
+                                                                         {EColumnType::kInt8},
+                                                                         {EColumnType::kUInt8},
+                                                                         {EColumnType::kInt16},
+                                                                         {EColumnType::kUInt16},
+                                                                         {EColumnType::kInt32},
+                                                                         {EColumnType::kUInt32},
+                                                                         {EColumnType::kInt64},
+                                                                         {EColumnType::kUInt64},
+                                                                         {EColumnType::kSplitInt16},
+                                                                         {EColumnType::kSplitUInt16},
+                                                                         {EColumnType::kSplitInt32},
+                                                                         {EColumnType::kSplitUInt32},
+                                                                         {EColumnType::kSplitInt64},
+                                                                         {EColumnType::kSplitUInt64}});
    return representations;
 }
 
