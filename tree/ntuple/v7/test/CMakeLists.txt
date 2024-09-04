@@ -21,6 +21,7 @@ endif()
 
 ROOT_ADD_GTEST(ntuple_basics ntuple_basics.cxx LIBRARIES ROOTNTuple CustomStruct)
 ROOT_ADD_GTEST(ntuple_bulk ntuple_bulk.cxx LIBRARIES ROOTNTuple CustomStruct)
+ROOT_ADD_GTEST(ntuple_cast ntuple_cast.cxx LIBRARIES ROOTNTuple)
 ROOT_ADD_GTEST(ntuple_checksum ntuple_checksum.cxx ntuple_test.cxx LIBRARIES ROOTNTuple)
 ROOT_ADD_GTEST(ntuple_cluster ntuple_cluster.cxx LIBRARIES ROOTNTuple)
 ROOT_ADD_GTEST(ntuple_compat ntuple_compat.cxx RXTuple.cxx LIBRARIES ROOTNTuple xxHash::xxHash)

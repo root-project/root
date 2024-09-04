@@ -411,6 +411,64 @@ public:
    }
 }; // class RColumnElementDeltaSplitLE
 
+/// Reading of unsplit integer columns to boolean
+template <typename CppIntT>
+class RColumnElementBoolAsUnsplitInt : public RColumnElementBase {
+protected:
+   explicit RColumnElementBoolAsUnsplitInt(std::size_t size, std::size_t bitsOnStorage)
+      : RColumnElementBase(size, bitsOnStorage)
+   {
+   }
+
+public:
+   static constexpr bool kIsMappable = false;
+
+   // No support for writing an integer into a boolean
+   void Pack(void *, const void *, std::size_t) const final { R__ASSERT(false); }
+
+   void Unpack(void *dst, const void *src, std::size_t count) const final
+   {
+      auto *boolArray = reinterpret_cast<bool *>(dst);
+      auto *intArray = reinterpret_cast<const CppIntT *>(src);
+      for (std::size_t i = 0; i < count; ++i) {
+         boolArray[i] = intArray[i] != 0;
+      }
+   }
+}; // class RColumnElementBoolAsUnsplitInt
+
+/// Reading of split integer columns to boolean
+template <typename CppIntT>
+class RColumnElementBoolAsSplitInt : public RColumnElementBase {
+protected:
+   explicit RColumnElementBoolAsSplitInt(std::size_t size, std::size_t bitsOnStorage)
+      : RColumnElementBase(size, bitsOnStorage)
+   {
+   }
+
+public:
+   static constexpr bool kIsMappable = false;
+
+   // No support for writing an integer into a boolean
+   void Pack(void *, const void *, std::size_t) const final { R__ASSERT(false); }
+
+   void Unpack(void *dst, const void *src, std::size_t count) const final
+   {
+      constexpr std::size_t N = sizeof(CppIntT);
+      auto *boolArray = reinterpret_cast<bool *>(dst);
+      auto *splitArray = reinterpret_cast<const char *>(src);
+      for (std::size_t i = 0; i < count; ++i) {
+         boolArray[i] = false;
+         for (std::size_t b = 0; b < N; ++b) {
+            if (splitArray[b * count + i] == 0)
+               continue;
+
+            boolArray[i] = true;
+            break;
+         }
+      }
+   }
+}; // RColumnElementBoolAsSplitInt
+
 /**
  * Base class for zigzag + split columns (signed integer columns) whose on-storage representation is little-endian.
  * The implementation of `Pack` and `Unpack` takes care of splitting and, if necessary, byteswap.
@@ -935,6 +993,22 @@ class RColumnElement<double, EColumnType::kReal32Quant> : public RColumnElementQ
       static constexpr bool kIsMappable = true;                           \
       __RCOLUMNELEMENT_SPEC_BODY(CppT, RColumnElementBase, BitsOnStorage) \
    }
+
+DECLARE_RCOLUMNELEMENT_SPEC(bool, EColumnType::kChar, 8, RColumnElementBoolAsUnsplitInt, <char>);
+DECLARE_RCOLUMNELEMENT_SPEC(bool, EColumnType::kInt8, 8, RColumnElementBoolAsUnsplitInt, <std::int8_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(bool, EColumnType::kUInt8, 8, RColumnElementBoolAsUnsplitInt, <std::uint8_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(bool, EColumnType::kInt16, 16, RColumnElementBoolAsUnsplitInt, <std::int16_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(bool, EColumnType::kUInt16, 16, RColumnElementBoolAsUnsplitInt, <std::uint16_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(bool, EColumnType::kInt32, 32, RColumnElementBoolAsUnsplitInt, <std::int32_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(bool, EColumnType::kUInt32, 32, RColumnElementBoolAsUnsplitInt, <std::uint32_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(bool, EColumnType::kInt64, 64, RColumnElementBoolAsUnsplitInt, <std::int64_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(bool, EColumnType::kUInt64, 64, RColumnElementBoolAsUnsplitInt, <std::uint64_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(bool, EColumnType::kSplitInt16, 16, RColumnElementBoolAsSplitInt, <std::int16_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(bool, EColumnType::kSplitUInt16, 16, RColumnElementBoolAsSplitInt, <std::uint16_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(bool, EColumnType::kSplitInt32, 32, RColumnElementBoolAsSplitInt, <std::int32_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(bool, EColumnType::kSplitUInt32, 32, RColumnElementBoolAsSplitInt, <std::uint32_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(bool, EColumnType::kSplitInt64, 64, RColumnElementBoolAsSplitInt, <std::int64_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(bool, EColumnType::kSplitUInt64, 64, RColumnElementBoolAsSplitInt, <std::uint64_t>);
 
 DECLARE_RCOLUMNELEMENT_SPEC_SIMPLE(std::byte, EColumnType::kByte, 8);
 
