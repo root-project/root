@@ -530,7 +530,7 @@ TEST(RModel, CUSTOM_OP)
     PyRun_String("outputName = model.get_layer(index=len(model.layers)-2).output.name",Py_single_input,fGlobalNS,fLocalNS);
     PyObject *pOutputName = PyDict_GetItemString(fLocalNS, "outputName");
     std::string outputName = TMVA::PyMethodBase::PyStringAsString(pOutputName);
-     TMVA::Experimental:: RSofieReader r;
+    TMVA::Experimental:: RSofieReader r;
     r.AddCustomOperator(/*OpName*/ "Scale_by_2",
                         /*input tensor names where to insert custom op */std::string("{\"" + outputName + "\"}"),
                         /*output tensor names*/"{\"Scale2Output\"}",
