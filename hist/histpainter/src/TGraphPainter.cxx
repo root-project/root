@@ -2481,6 +2481,12 @@ void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
    if (strstr(option,"-N")) xrevlog = kTRUE; // along X
    if (strstr(option,"-M")) yrevlog = kTRUE; // along Y
 
+   // special flags to turn off error bar drawing in case the marker cover it
+   Bool_t DrawXLeft  = kTRUE;
+   Bool_t DrawXRight = kTRUE;
+   Bool_t DrawYUp    = kTRUE;
+   Bool_t DrawYLow   = kTRUE;
+
    if (option3) {
       xline.resize(2*theNpoints);
       yline.resize(2*theNpoints);
@@ -2565,6 +2571,8 @@ void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
          xl2 = gPad->XtoPad(theX[i] - exl);
          xr1 = x + s2x*cx;
          xr2 = gPad->XtoPad(theX[i] + exh);
+         if (xl1 < xl2) DrawXLeft  = kFALSE;
+         if (xr1 > xr2) DrawXRight = kFALSE;
       }
 
       if (yrevlog) {
@@ -2581,6 +2589,8 @@ void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
          yup2  = gPad->YtoPad(theY[i] + eyh);
          ylow1 = y - s2y*cy;
          ylow2 = gPad->YtoPad(theY[i] - eyl);
+         if (yup2 < yup1)   DrawYUp  = kFALSE;
+         if (ylow2 > ylow1) DrawYLow = kFALSE;
       }
       yup  = yup2;
       ylow = ylow2;
@@ -2619,23 +2629,23 @@ void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
 
       if (exl != 0. || exh != 0.) {
          if (arrowOpt) {
-            if (exl != 0. && xl1 > xl2) arrow.PaintArrow(xl1,y,xl2,y,asize,arrowOpt);
-            if (exh != 0. && xr1 < xr2) arrow.PaintArrow(xr1,y,xr2,y,asize,arrowOpt);
+            if (exl != 0. && DrawXLeft)  arrow.PaintArrow(xl1,y,xl2,y,asize,arrowOpt);
+            if (exh != 0. && DrawXRight) arrow.PaintArrow(xr1,y,xr2,y,asize,arrowOpt);
          } else {
             if (!brackets) {
-               if (exl != 0. && xl1 > xl2) gPad->PaintLine(xl1,y,xl2,y);
-               if (exh != 0. && xr1 < xr2) gPad->PaintLine(xr1,y,xr2,y);
+               if (exl != 0. && DrawXLeft)  gPad->PaintLine(xl1,y,xl2,y);
+               if (exh != 0. && DrawXRight) gPad->PaintLine(xr1,y,xr2,y);
             }
             if (endLines) {
                if (braticks) {
-                  if (exl != 0. && xl1 > xl2) {
+                  if (exl != 0. && DrawXLeft) {
                      xb[0] = xl2+tx; yb[0] = y-ty;
                      xb[1] = xl2;    yb[1] = y-ty;
                      xb[2] = xl2;    yb[2] = y+ty;
                      xb[3] = xl2+tx; yb[3] = y+ty;
                      gPad->PaintPolyLine(4, xb, yb);
                   }
-                  if (exh != 0. && xr1 < xr2) {
+                  if (exh != 0. && DrawXRight) {
                      xb[0] = xr2-tx; yb[0] = y-ty;
                      xb[1] = xr2;    yb[1] = y-ty;
                      xb[2] = xr2;    yb[2] = y+ty;
@@ -2643,8 +2653,8 @@ void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
                      gPad->PaintPolyLine(4, xb, yb);
                   }
                } else {
-                  if (xl1 > xl2) gPad->PaintLine(xl2,y-ty,xl2,y+ty);
-                  if (xr1 < xr2) gPad->PaintLine(xr2,y-ty,xr2,y+ty);
+                  if (DrawXLeft)  gPad->PaintLine(xl2,y-ty,xl2,y+ty);
+                  if (DrawXRight) gPad->PaintLine(xr2,y-ty,xr2,y+ty);
                }
             }
          }
@@ -2652,29 +2662,29 @@ void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
 
       if (eyl != 0. || eyh != 0.) {
          if (arrowOpt) {
-            if (eyh != 0. && yup1 < yup2) {
+            if (eyh != 0. && DrawYUp) {
                if (yup2  == yup) arrow.PaintArrow(x,yup1,x,yup2,asize,arrowOpt);
                else              gPad->PaintLine(x,yup1,x,yup2);
             }
-            if (eyl != 0. && ylow1 > ylow2) {
+            if (eyl != 0. && DrawYLow) {
                if (ylow2 == ylow) arrow.PaintArrow(x,ylow1,x,ylow2,asize,arrowOpt);
                else               gPad->PaintLine(x,ylow1,x,ylow2);
             }
          } else {
             if (!brackets) {
-               if (eyh != 0. && yup1  < yup2)  gPad->PaintLine(x,yup1,x,yup2);
-               if (eyl != 0. && ylow1 > ylow2) gPad->PaintLine(x,ylow1,x,ylow2);
+               if (eyh != 0. && DrawYUp)  gPad->PaintLine(x,yup1,x,yup2);
+               if (eyl != 0. && DrawYLow) gPad->PaintLine(x,ylow1,x,ylow2);
             }
             if (endLines) {
                if (braticks) {
-                  if (eyh != 0. && yup2  == yup && yup1  < yup2) {
+                  if (eyh != 0. && yup2  == yup && DrawYUp) {
                      xb[0] = x-tx; yb[0] = yup2-ty;
                      xb[1] = x-tx; yb[1] = yup2;
                      xb[2] = x+tx; yb[2] = yup2;
                      xb[3] = x+tx; yb[3] = yup2-ty;
                      gPad->PaintPolyLine(4, xb, yb);
                   }
-                  if (eyl != 0. && ylow2 == ylow && ylow1 > ylow2) {
+                  if (eyl != 0. && ylow2 == ylow && DrawYLow) {
                      xb[0] = x-tx; yb[0] = ylow2+ty;
                      xb[1] = x-tx; yb[1] = ylow2;
                      xb[2] = x+tx; yb[2] = ylow2;
@@ -2682,8 +2692,8 @@ void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
                      gPad->PaintPolyLine(4, xb, yb);
                   }
                } else {
-                   if (eyh != 0. && yup2  == yup  && yup1  < yup2)  gPad->PaintLine(x-tx,yup2,x+tx,yup2);
-                   if (eyl != 0. && ylow2 == ylow && ylow1 > ylow2) gPad->PaintLine(x-tx,ylow2,x+tx,ylow2);
+                   if (eyh != 0. && yup2  == yup  && DrawYUp)  gPad->PaintLine(x-tx,yup2,x+tx,yup2);
+                   if (eyl != 0. && ylow2 == ylow && DrawYLow) gPad->PaintLine(x-tx,ylow2,x+tx,ylow2);
                }
             }
          }
@@ -3228,6 +3238,12 @@ void TGraphPainter::PaintGraphBentErrors(TGraph *theGraph, Option_t *option)
    if (strstr(option,"-N")) xrevlog = kTRUE; // along X
    if (strstr(option,"-M")) yrevlog = kTRUE; // along Y
 
+   // special flags to turn off error bar drawing in case the marker cover it
+   Bool_t DrawXLeft  = kTRUE;
+   Bool_t DrawXRight = kTRUE;
+   Bool_t DrawYUp    = kTRUE;
+   Bool_t DrawYLow   = kTRUE;
+
    if (option3) {
       xline.resize(2*theNpoints);
       yline.resize(2*theNpoints);
@@ -3323,6 +3339,8 @@ void TGraphPainter::PaintGraphBentErrors(TGraph *theGraph, Option_t *option)
          xl2 = gPad->XtoPad(theX[i] - exl);
          xr1 = x + s2x*cx;
          xr2 = gPad->XtoPad(theX[i] + exh);
+         if (xl1 < xl2) DrawXLeft  = kFALSE;
+         if (xr1 > xr2) DrawXRight = kFALSE;
       }
 
       if (yrevlog) {
@@ -3345,6 +3363,8 @@ void TGraphPainter::PaintGraphBentErrors(TGraph *theGraph, Option_t *option)
          yup2  = gPad->YtoPad(theY[i] + eyh);
          ylow1 = y - s2y*cy;
          ylow2 = gPad->YtoPad(theY[i] - eyl);
+         if (yup2 < yup1)   DrawYUp  = kFALSE;
+         if (ylow2 > ylow1) DrawYLow = kFALSE;
       }
       yup  = yup2;
       ylow = ylow2;
@@ -3386,23 +3406,23 @@ void TGraphPainter::PaintGraphBentErrors(TGraph *theGraph, Option_t *option)
 
       if (exl != 0. || exh != 0.) {
          if (arrowOpt) {
-            if (exl != 0. && xl1 > xl2) arrow.PaintArrow(xl1,y,xl2,bxl,asize,arrowOpt);
-            if (exh != 0. && xr1 < xr2) arrow.PaintArrow(xr1,y,xr2,bxh,asize,arrowOpt);
+            if (exl != 0. && DrawXLeft)  arrow.PaintArrow(xl1,y,xl2,bxl,asize,arrowOpt);
+            if (exh != 0. && DrawXRight) arrow.PaintArrow(xr1,y,xr2,bxh,asize,arrowOpt);
          } else {
             if (!brackets) {
-               if (exl != 0. && xl1 > xl2) gPad->PaintLine(xl1,y,xl2,bxl);
-               if (exh != 0. && xr1 < xr2) gPad->PaintLine(xr1,y,xr2,bxh);
+               if (exl != 0. && DrawXLeft)  gPad->PaintLine(xl1,y,xl2,bxl);
+               if (exh != 0. && DrawXRight) gPad->PaintLine(xr1,y,xr2,bxh);
             }
             if (endLines) {
                if (braticks) {
-                  if (exl != 0. && xl1 > xl2) {
+                  if (exl != 0. && DrawXLeft) {
                      xb[0] = xl2+tx; yb[0] = bxl-ty;
                      xb[1] = xl2;    yb[1] = bxl-ty;
                      xb[2] = xl2;    yb[2] = bxl+ty;
                      xb[3] = xl2+tx; yb[3] = bxl+ty;
                      gPad->PaintPolyLine(4, xb, yb);
                   }
-                  if (exh != 0. && xr1 < xr2) {
+                  if (exh != 0. && DrawXRight) {
                      xb[0] = xr2-tx; yb[0] = bxh-ty;
                      xb[1] = xr2;    yb[1] = bxh-ty;
                      xb[2] = xr2;    yb[2] = bxh+ty;
@@ -3410,8 +3430,8 @@ void TGraphPainter::PaintGraphBentErrors(TGraph *theGraph, Option_t *option)
                      gPad->PaintPolyLine(4, xb, yb);
                   }
                } else {
-                  if (xl1 > xl2) gPad->PaintLine(xl2,bxl-ty,xl2,bxl+ty);
-                  if (xr1 < xr2) gPad->PaintLine(xr2,bxh-ty,xr2,bxh+ty);
+                  if (DrawXLeft)  gPad->PaintLine(xl2,bxl-ty,xl2,bxl+ty);
+                  if (DrawXRight) gPad->PaintLine(xr2,bxh-ty,xr2,bxh+ty);
                }
             }
          }
@@ -3419,29 +3439,29 @@ void TGraphPainter::PaintGraphBentErrors(TGraph *theGraph, Option_t *option)
 
       if (eyl != 0. || eyh != 0.) {
          if (arrowOpt) {
-            if (eyh != 0. && yup1 < yup2) {
+            if (eyh != 0. && DrawYUp) {
                if (yup2  == yup) arrow.PaintArrow(x,yup1,byh,yup2,asize,arrowOpt);
                else              gPad->PaintLine(x,yup1,byh,yup2);
             }
-            if (eyl != 0. && ylow1 > ylow2) {
+            if (eyl != 0. && DrawYLow) {
                if (ylow2 == ylow) arrow.PaintArrow(x,ylow1,byl,ylow2,asize,arrowOpt);
                else               gPad->PaintLine(x,ylow1,byl,ylow2);
             }
          } else {
             if (!brackets) {
-               if (eyh != 0. && yup1  < yup2) gPad->PaintLine(x,yup1,byh,yup2);
-               if (eyl != 0. && ylow1 > ylow2) gPad->PaintLine(x,ylow1,byl,ylow2);
+               if (eyh != 0. && DrawYUp)  gPad->PaintLine(x,yup1,byh,yup2);
+               if (eyl != 0. && DrawYLow) gPad->PaintLine(x,ylow1,byl,ylow2);
             }
             if (endLines) {
                if (braticks) {
-                  if (eyh != 0. && yup2  == yup && yup1 < yup2) {
+                  if (eyh != 0. && yup2  == yup && DrawYUp) {
                      xb[0] = byh-tx; yb[0] = yup2-ty;
                      xb[1] = byh-tx; yb[1] = yup2;
                      xb[2] = byh+tx; yb[2] = yup2;
                      xb[3] = byh+tx; yb[3] = yup2-ty;
                      gPad->PaintPolyLine(4, xb, yb);
                   }
-                  if (eyl != 0. && ylow2 == ylow && ylow1 > ylow2) {
+                  if (eyl != 0. && ylow2 == ylow && DrawYLow) {
                      xb[0] = byl-tx; yb[0] = ylow2+ty;
                      xb[1] = byl-tx; yb[1] = ylow2;
                      xb[2] = byl+tx; yb[2] = ylow2;
@@ -3449,8 +3469,8 @@ void TGraphPainter::PaintGraphBentErrors(TGraph *theGraph, Option_t *option)
                      gPad->PaintPolyLine(4, xb, yb);
                   }
                } else {
-                  if (eyh != 0. && yup2  == yup  && yup1  < yup2)  gPad->PaintLine(byh-tx,yup2,byh+tx,yup2);
-                  if (eyl != 0. && ylow2 == ylow && ylow1 > ylow2) gPad->PaintLine(byl-tx,ylow2,byl+tx,ylow2);
+                  if (eyh != 0. && yup2  == yup  && DrawYUp)  gPad->PaintLine(byh-tx,yup2,byh+tx,yup2);
+                  if (eyl != 0. && ylow2 == ylow && DrawYLow) gPad->PaintLine(byl-tx,ylow2,byl+tx,ylow2);
                }
             }
          }
@@ -3528,6 +3548,12 @@ void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
    Bool_t yrevlog = kFALSE;
    if (strstr(option,"-N")) xrevlog = kTRUE; // along X
    if (strstr(option,"-M")) yrevlog = kTRUE; // along Y
+
+   // special flags to turn off error bar drawing in case the marker cover it
+   Bool_t DrawXLeft  = kTRUE;
+   Bool_t DrawXRight = kTRUE;
+   Bool_t DrawYUp    = kTRUE;
+   Bool_t DrawYLow   = kTRUE;
 
    if (option3) {
       xline.resize(2*theNpoints);
@@ -3612,6 +3638,8 @@ void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
          xl2 = gPad->XtoPad(theX[i] - ex);
          xr1 = x + s2x*cx;
          xr2 = gPad->XtoPad(theX[i] + ex);
+         if (xl1 < xl2) DrawXLeft  = kFALSE;
+         if (xr1 > xr2) DrawXRight = kFALSE;
       }
 
       if (yrevlog) {
@@ -3628,6 +3656,8 @@ void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
          yup2 = gPad->YtoPad(theY[i] + ey);
          ylow1 = y - s2y*cy;
          ylow2 = gPad->YtoPad(theY[i] - ey);
+         if (yup2 < yup1)   DrawYUp  = kFALSE;
+         if (ylow2 > ylow1) DrawYLow = kFALSE;
       }
       yup  = yup2;
       ylow = ylow2;
@@ -3666,23 +3696,23 @@ void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
 
       if (ex != 0.) {
          if (arrowOpt) {
-            if (xl1 > xl2) arrow.PaintArrow(xl1,y,xl2,y,asize,arrowOpt);
-            if (xr1 < xr2) arrow.PaintArrow(xr1,y,xr2,y,asize,arrowOpt);
+            if (DrawXLeft)  arrow.PaintArrow(xl1,y,xl2,y,asize,arrowOpt);
+            if (DrawXRight) arrow.PaintArrow(xr1,y,xr2,y,asize,arrowOpt);
          } else {
             if (!brackets) {
-               if (xl1 > xl2) gPad->PaintLine(xl1,y,xl2,y);
-               if (xr1 < xr2) gPad->PaintLine(xr1,y,xr2,y);
+               if (DrawXLeft)  gPad->PaintLine(xl1,y,xl2,y);
+               if (DrawXRight) gPad->PaintLine(xr1,y,xr2,y);
             }
             if (endLines) {
                if (braticks) {
-                  if (xl1 > xl2) {
+                  if (DrawXLeft) {
                      xb[0] = xl2+tx; yb[0] = y-ty;
                      xb[1] = xl2;    yb[1] = y-ty;
                      xb[2] = xl2;    yb[2] = y+ty;
                      xb[3] = xl2+tx; yb[3] = y+ty;
                      gPad->PaintPolyLine(4, xb, yb);
                   }
-                  if (xr1 < xr2) {
+                  if (DrawXRight) {
                      xb[0] = xr2-tx; yb[0] = y-ty;
                      xb[1] = xr2;    yb[1] = y-ty;
                      xb[2] = xr2;    yb[2] = y+ty;
@@ -3690,8 +3720,8 @@ void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
                      gPad->PaintPolyLine(4, xb, yb);
                   }
                } else {
-                  if (xl1 > xl2) gPad->PaintLine(xl2,y-ty,xl2,y+ty);
-                  if (xr1 < xr2) gPad->PaintLine(xr2,y-ty,xr2,y+ty);
+                  if (DrawXLeft)  gPad->PaintLine(xl2,y-ty,xl2,y+ty);
+                  if (DrawXRight) gPad->PaintLine(xr2,y-ty,xr2,y+ty);
                }
             }
          }
@@ -3699,29 +3729,29 @@ void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
 
       if (ey != 0.) {
          if (arrowOpt) {
-            if (yup2 > yup1) {
+            if (DrawYUp) {
                if (yup2  == yup) arrow.PaintArrow(x,yup1,x,yup2,asize,arrowOpt);
                else              gPad->PaintLine(x,yup1,x,yup2);
             }
-            if (ylow2 < ylow1) {
+            if (DrawYLow) {
                if (ylow2 == ylow) arrow.PaintArrow(x,ylow1,x,ylow2,asize,arrowOpt);
                else               gPad->PaintLine(x,ylow1,x,ylow2);
             }
          } else {
             if (!brackets) {
-               if (yup2 > yup1)   gPad->PaintLine(x,yup1,x,yup2);
-               if (ylow2 < ylow1) gPad->PaintLine(x,ylow1,x,ylow2);
+               if (DrawYUp)  gPad->PaintLine(x,yup1,x,yup2);
+               if (DrawYLow) gPad->PaintLine(x,ylow1,x,ylow2);
             }
             if (endLines) {
                if (braticks) {
-                  if (yup2  == yup && yup2 > yup1) {
+                  if (yup2  == yup && DrawYUp) {
                      xb[0] = x-tx; yb[0] = yup2-ty;
                      xb[1] = x-tx; yb[1] = yup2;
                      xb[2] = x+tx; yb[2] = yup2;
                      xb[3] = x+tx; yb[3] = yup2-ty;
                      gPad->PaintPolyLine(4, xb, yb);
                   }
-                  if (ylow2 == ylow && ylow2 < ylow1) {
+                  if (ylow2 == ylow && DrawYLow) {
                      xb[0] = x-tx; yb[0] = ylow2+ty;
                      xb[1] = x-tx; yb[1] = ylow2;
                      xb[2] = x+tx; yb[2] = ylow2;
@@ -3729,8 +3759,8 @@ void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
                      gPad->PaintPolyLine(4, xb, yb);
                   }
                 } else {
-                  if (yup2  == yup  && yup2  > yup1)  gPad->PaintLine(x-tx,yup2,x+tx,yup2);
-                  if (ylow2 == ylow && ylow2 < ylow1) gPad->PaintLine(x-tx,ylow2,x+tx,ylow2);
+                  if (yup2  == yup  && DrawYUp)  gPad->PaintLine(x-tx,yup2,x+tx,yup2);
+                  if (ylow2 == ylow && DrawYLow) gPad->PaintLine(x-tx,ylow2,x+tx,ylow2);
                }
             }
          }
