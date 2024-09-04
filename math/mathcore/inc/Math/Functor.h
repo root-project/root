@@ -67,6 +67,10 @@ public:
    // for multi-dimensional functions
    unsigned int NDim() const override { return fDim; }
 
+   bool VanishingSecondDerivative(int i, int j) const override { return fVanishSecondDerivFunc ? fVanishSecondDerivFunc(i, j) : false; }
+
+   void SetVanishingSecondDerivativeFunc(std::function<bool(int, int)> func) { fVanishSecondDerivFunc = std::move(func); }
+
 private :
 
    inline double DoEval (const double * x) const override {
@@ -75,6 +79,7 @@ private :
 
    unsigned int fDim;
    std::function<double(double const *)> fFunc;
+   std::function<bool(int, int)> fVanishSecondDerivFunc;
 };
 
 /**
@@ -222,6 +227,10 @@ public:
       fGradFunc(x, g);
    }
 
+   bool VanishingSecondDerivative(int i, int j) const override { return fVanishSecondDerivFunc ? fVanishSecondDerivFunc(i, j) : false; }
+
+   void SetVanishingSecondDerivativeFunc(std::function<bool(int, int)> func) { fVanishSecondDerivFunc = std::move(func); }
+
 private :
 
    inline double DoEval (const double * x) const override {
@@ -244,6 +253,7 @@ private :
    std::function<double(const double *)> fFunc;
    std::function<double(double const *, unsigned int)> fDerivFunc;
    std::function<void(const double *, double*)> fGradFunc;
+   std::function<bool(int, int)> fVanishSecondDerivFunc;
 };
 
 

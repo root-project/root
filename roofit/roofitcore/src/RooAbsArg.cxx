@@ -75,8 +75,8 @@ for single nodes.
 #include <RooArgSet.h>
 #include <RooConstVar.h>
 #include <RooExpensiveObjectCache.h>
+#include <RooFit/VariableGroups.h>
 #include <RooHelpers.h>
-#include "RooFitImplHelpers.h"
 #include <RooListProxy.h>
 #include <RooMsgService.h>
 #include <RooRealIntegral.h>
@@ -86,6 +86,8 @@ for single nodes.
 #include <RooTreeDataStore.h>
 #include <RooVectorDataStore.h>
 #include <RooWorkspace.h>
+
+#include "RooFitImplHelpers.h"
 
 #include <TBuffer.h>
 #include <TClass.h>
@@ -2528,4 +2530,20 @@ void RooAbsArg::setDataToken(std::size_t index)
       throw std::runtime_error(errMsg.str());
    }
    _dataToken = index;
+}
+
+void RooAbsArg::fillVariableGroups(RooFit::VariableGroups &out) const
+{
+   // Get the set of nodes in the computation graph. Do the detour via
+   // RooArgList to avoid deduplication done after adding each element.
+   RooArgSet serverSet;
+   RooArgList serverList;
+   treeNodeServerList(&serverList, nullptr, /*branches*/ false, /*leaves*/ true, /*valueOnly*/ false,
+                           /*recurseFundamental*/ true);
+   serverSet.add(serverList.begin(), serverList.end());
+
+   for (RooAbsArg const *arg : serverSet) {
+      out.groups[arg->namePtr()].push_back(out.currentIndex);
+   }
+   out.currentIndex++;
 }

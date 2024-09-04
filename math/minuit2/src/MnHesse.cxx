@@ -338,14 +338,17 @@ MinimumState ComputeNumerical(const MnFcn &mfcn, const MinimumState &st, const M
          if ((i + 1) == j || in == startParIndexOffDiagonal)
             x(i) += dirin(i);
 
-         x(j) += dirin(j);
-
-         double fs1 = mfcnCaller(x);
-         if(!doCentralFD) {
+         if(mfcn.Fcn().VanishingSecondDerivative(i, j)) {
+            vhmat(i, j) = 0.;
+         } else if(!doCentralFD) {
+            x(j) += dirin(j);
+            double fs1 = mfcnCaller(x);
             double elem = (fs1 + amin - yy(i) - yy(j)) / (dirin(i) * dirin(j));
             vhmat(i, j) = elem;
             x(j) -= dirin(j);
          } else {
+            x(j) += dirin(j);
+            double fs1 = mfcnCaller(x);
             // three more function evaluations required for central fd
             x(i) -= dirin(i);
             x(i) -= dirin(i);

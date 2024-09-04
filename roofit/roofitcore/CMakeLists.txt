@@ -136,6 +136,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooFit/TestStatistics/RooUnbinnedL.h
     RooFit/TestStatistics/SharedOffset.h
     RooFit/TestStatistics/buildLikelihood.h
+    RooFit/VariableGroups.h
     RooFitLegacy/RooCatTypeLegacy.h
     RooFitLegacy/RooCategorySharedProperties.h
     RooFitLegacy/RooTreeData.h

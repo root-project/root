@@ -136,4 +136,9 @@ bool RooEvaluatorWrapper::setData(RooAbsData &data, bool /*cloneData*/)
    return true;
 }
 
+void RooEvaluatorWrapper::fillVariableGroups(RooFit::VariableGroups &out) const
+{
+   _topNode->fillVariableGroups(out);
+}
+
 /// \endcond
