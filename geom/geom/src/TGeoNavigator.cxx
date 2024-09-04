@@ -1656,13 +1656,12 @@ Double_t TGeoNavigator::Safety(Bool_t inside)
       return fSafety;
    }
    Double_t point[3];
-   Double_t safpar = TGeoShape::Big();
+   Double_t safpar = TGeoShape::Big(); // safety from parallel world
    if (!inside)
       fSafety = TGeoShape::Big();
+
    // Check if parallel navigation is enabled
-   if (fGeometry->IsParallelWorldNav()) {
-      safpar = fGeometry->GetParallelWorld()->Safety(fPoint);
-   }
+   const bool have_PW = fGeometry->IsParallelWorldNav();
 
    if (fIsOutside) {
       fSafety = fGeometry->GetTopVolume()->GetShape()->Safety(fPoint, kFALSE);
@@ -1670,6 +1669,11 @@ Double_t TGeoNavigator::Safety(Bool_t inside)
          fSafety = 0;
          fIsOnBoundary = kTRUE;
          return fSafety;
+      }
+
+      // cross-check against the parallel world safety, using fSafety as limit
+      if (have_PW) {
+         safpar = fGeometry->GetParallelWorld()->Safety(fPoint, fSafety);
       }
       return TMath::Min(fSafety, safpar);
    }
@@ -1689,6 +1693,10 @@ Double_t TGeoNavigator::Safety(Bool_t inside)
    }
 
    //---> Check against the parallel geometry safety
+   // cross-check against the parallel world safety, using fSafety as limit
+   if (have_PW) {
+      safpar = fGeometry->GetParallelWorld()->Safety(fPoint, fSafety);
+   }
    if (safpar < fSafety)
       fSafety = safpar;
 
