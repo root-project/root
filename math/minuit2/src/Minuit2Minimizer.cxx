@@ -381,6 +381,7 @@ void Minuit2Minimizer::SetFunction(const ROOT::Math::IMultiGenFunction &func)
          auto lambdaGrad = [&gradFunc](double const *params, double *grad) { return gradFunc.Gradient(params, grad); };
          adapter->SetGradientFunction(lambdaGrad);
       }
+      adapter->SetVanishingSecondDerivativeFunc([&func](int i, int j) { return func.VanishingSecondDerivative(i, j); });
       fMinuitFCN = std::move(adapter);
       return;
    }

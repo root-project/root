@@ -50,11 +50,14 @@ public:
 
    RooArgSet freezeDisconnectedParameters() const override;
 
+   bool vanishingSecondDerivative(int i, int j) const;
+
 private:
    RooAbsReal *_funct = nullptr;
    std::unique_ptr<ROOT::Math::IBaseFunctionMultiDim> _multiGenFcn;
    mutable std::vector<double> _gradientOutput;
    mutable std::vector<double> _hessianOutput;
+   std::vector<int> _secondDerivMask;
 };
 
 #endif
