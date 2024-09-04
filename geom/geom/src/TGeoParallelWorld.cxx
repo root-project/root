@@ -266,6 +266,11 @@ TGeoParallelWorld::FindNextBoundary(Double_t point[3], Double_t dir[3], Double_t
       // loop over daughters
       for (i = 0; i < nd; i++) {
          current = fVolume->GetNode(i);
+         pnode = (TGeoPhysicalNode *)fPhysical->At(i);
+         if (pnode->IsMatchingState(nav)) {
+            step = TGeoShape::Big();
+            return nullptr;
+         }
          // validate only within stepmax
          if (voxels->IsSafeVoxel(point, i, stepmax))
             continue;
@@ -365,14 +370,17 @@ Double_t TGeoParallelWorld::Safety(Double_t point[3], Double_t safmax)
          dxyz += dxyz2 * dxyz2;
       if (dxyz >= safe * safe)
          continue;
+
       pnode = (TGeoPhysicalNode *)fPhysical->At(id);
       // Return if inside the current node
-      if (pnode->IsMatchingState(nav))
+      if (pnode->IsMatchingState(nav)) {
          return TGeoShape::Big();
+      }
+
       current = fVolume->GetNode(id);
       current->MasterToLocal(point, local);
       // Safety to current node
-      safnext = current->Safety(local, kFALSE);
+      safnext = current->GetVolume()->GetShape()->Safety(local, kFALSE);
       if (safnext < tolerance)
          return 0.;
       if (safnext < safe)
