@@ -2258,9 +2258,10 @@ void TGeoVoxelFinder::SortAll(Option_t *)
    delete[] extra_right;
 
    if ((!fPriority[0]) && (!fPriority[1]) && (!fPriority[2])) {
-      SetInvalid();
-      if (nd > 1)
+      if (nd > 1) {
+         SetInvalid();
          Error("SortAll", "Volume %s: Cannot make slices on any axis", fVolume->GetName());
+      }
    }
 }
 
