@@ -54,9 +54,11 @@ using RooListProxy = RooCollectionProxy<RooArgList>;
 class RooExpensiveObjectCache ;
 class RooWorkspace ;
 namespace RooFit {
+
 namespace Detail {
 class CodeSquashContext;
 }
+struct VariableGroups;
 }
 
 class RooRefArray : public TObjArray {
@@ -270,7 +272,7 @@ public:
   bool recursiveCheckObservables(const RooArgSet* nset) const ;
   RooFit::OwningPtr<RooArgSet> getComponents() const ;
 
-
+  virtual void fillVariableGroups(RooFit::VariableGroups &out) const;
 
   void attachArgs(const RooAbsCollection &set);
   void attachDataSet(const RooAbsData &set);

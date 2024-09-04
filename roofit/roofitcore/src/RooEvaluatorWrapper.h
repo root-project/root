@@ -61,6 +61,8 @@ public:
    /// The RooFit::Evaluator is dealing with constant terms itself.
    void constOptimizeTestStatistic(ConstOpCode /*opcode*/, bool /*doAlsoTrackingOpt*/) override {}
 
+   void fillVariableGroups(RooFit::VariableGroups &out) const override;
+
 protected:
    double evaluate() const override;
 

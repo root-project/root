@@ -44,9 +44,12 @@ public:
    double operator()(const double *x) const;
    void evaluateGradient(const double *x, double *out) const;
 
+   bool vanishingSecondDerivative(int i, int j) const;
+
 private:
    RooAbsReal *_funct;
    std::unique_ptr<ROOT::Math::IBaseFunctionMultiDim> _multiGenFcn;
+   std::vector<int> _secondDerivMask;
 };
 
 #endif
