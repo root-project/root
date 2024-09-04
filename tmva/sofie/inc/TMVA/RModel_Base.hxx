@@ -78,7 +78,10 @@ public:
          fNeededStdLib.insert(libname);
       }
    }
-   void AddNeededCustomHeader(std::string filename) { fCustomOpHeaders.insert(filename); }
+   void AddNeededCustomHeader(std::string filename)
+   {
+       fCustomOpHeaders.insert(filename);
+   }
    void GenerateHeaderInfo(std::string &hgname);
    void PrintGenerated() { std::cout << fGC; }
 

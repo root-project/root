@@ -13,7 +13,7 @@ namespace SOFIE{
 
 template<typename T>
 class ROperator_Custom final : public ROperator
-{   
+{
 
 private:
     std::string fOpName;
@@ -42,7 +42,7 @@ public:
     void Initialize(RModel& model){
       model.AddNeededCustomHeader(fHeaderName);
       for(auto& it:fInputNames){
-        if (model.CheckIfTensorAlreadyExist(it) == false){  
+        if (model.CheckIfTensorAlreadyExist(it) == false){
          throw std::runtime_error("TMVA SOFIE Custom " + fOpName + " Op Input Tensor " + it + " is not found in model");
         }
       }
@@ -55,6 +55,13 @@ public:
         model.AddIntermediateTensor(fOutputNames[i], ETensorType::FLOAT, fOutputShapes[i]);
       }
       model.UpdateOutputTensorList(fInputNames, fOutputNames);
+      if (model.Verbose()) {
+         std::cout << "Custom operator using " << fHeaderName;
+         for (auto & i : fInputNames) std::cout << " " << i;
+         std::cout << " ---> ";
+         for (auto & i : fOutputNames) std::cout << " " << i;
+         std::cout << "\n";
+      }
    }
 
     std::string Generate(std::string OpName){
@@ -65,7 +72,7 @@ public:
       for(long unsigned int i = 0; i<fInputNames.size(); ++i){
         args+="fTensor_"+fInputNames[i]+",";
       }
-      
+
       for(long unsigned int i = 0; i<fOutputNames.size(); ++i){
         args+="fTensor_"+fOutputNames[i]+",";
       }
