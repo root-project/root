@@ -297,3 +297,10 @@ std::list<double>* RooAddition::plotSamplingHint(RooAbsRealLValue& obs, double x
 {
   return RooRealSumPdf::plotSamplingHint(_set, obs, xlo, xhi);
 }
+
+void RooAddition::fillVariableGroups(RooFit::VariableGroups &out) const
+{
+   for (RooAbsArg *arg : _set) {
+      arg->fillVariableGroups(out);
+   }
+}
