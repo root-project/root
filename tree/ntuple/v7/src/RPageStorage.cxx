@@ -25,7 +25,7 @@
 #include <ROOT/RPageSinkBuf.hxx>
 #include <ROOT/RPageStorageFile.hxx>
 #ifdef R__ENABLE_DAOS
-# include <ROOT/RPageStorageDaos.hxx>
+#include <ROOT/RPageStorageDaos.hxx>
 #endif
 
 #include <Compression.h>
@@ -450,7 +450,7 @@ void ROOT::Experimental::Internal::RPageSource::EnableDefaultMetrics(const std::
                if (const auto szReadOverhead = metrics.GetLocalCounter("szReadOverhead")) {
                   if (auto payload = szReadPayload->GetValueAsInt()) {
                      // r/(r+o) = 1/((r+o)/r) = 1/(1 + o/r)
-                     return {true, 1./(1. + (1. * szReadOverhead->GetValueAsInt()) / payload)};
+                     return {true, 1. / (1. + (1. * szReadOverhead->GetValueAsInt()) / payload)};
                   }
                }
             }
@@ -474,6 +474,13 @@ ROOT::Experimental::RResult<ROOT::Experimental::Internal::RPage>
 ROOT::Experimental::Internal::RPageSource::UnsealPage(const RSealedPage &sealedPage, const RColumnElementBase &element,
                                                       DescriptorId_t physicalColumnId)
 {
+   return UnsealPage(sealedPage, element, physicalColumnId, *fPageAllocator);
+}
+
+ROOT::Experimental::RResult<ROOT::Experimental::Internal::RPage>
+ROOT::Experimental::Internal::RPageSource::UnsealPage(const RSealedPage &sealedPage, const RColumnElementBase &element,
+                                                      DescriptorId_t physicalColumnId, RPageAllocator &pageAlloc)
+{
    // Unsealing a page zero is a no-op.  `RPageRange::ExtendToFitColumnRange()` guarantees that the page zero buffer is
    // large enough to hold `sealedPage.fNElements`
    if (sealedPage.GetBuffer() == RPage::GetPageZeroBuffer()) {
@@ -487,7 +494,7 @@ ROOT::Experimental::Internal::RPageSource::UnsealPage(const RSealedPage &sealedP
       return R__FORWARD_ERROR(rv);
 
    const auto bytesPacked = element.GetPackedSize(sealedPage.GetNElements());
-   auto page = fPageAllocator->NewPage(physicalColumnId, element.GetSize(), sealedPage.GetNElements());
+   auto page = pageAlloc.NewPage(physicalColumnId, element.GetSize(), sealedPage.GetNElements());
    if (sealedPage.GetDataSize() != bytesPacked) {
       RNTupleDecompressor::Unzip(sealedPage.GetBuffer(), sealedPage.GetDataSize(), bytesPacked, page.GetBuffer());
    } else {
@@ -498,7 +505,7 @@ ROOT::Experimental::Internal::RPageSource::UnsealPage(const RSealedPage &sealedP
    }
 
    if (!element.IsMappable()) {
-      auto tmp = fPageAllocator->NewPage(physicalColumnId, element.GetSize(), sealedPage.GetNElements());
+      auto tmp = pageAlloc.NewPage(physicalColumnId, element.GetSize(), sealedPage.GetNElements());
       element.Unpack(tmp.GetBuffer(), page.GetBuffer(), sealedPage.GetNElements());
       page = std::move(tmp);
    }
