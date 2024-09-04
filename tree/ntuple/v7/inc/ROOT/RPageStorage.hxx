@@ -50,7 +50,6 @@ namespace Internal {
 class RColumn;
 class RColumnElementBase;
 class RNTupleCompressor;
-class RNTupleMerger;
 struct RNTupleModelChangeset;
 class RPageAllocator;
 
@@ -273,23 +272,6 @@ public:
    };
 
 protected:
-   friend class Internal::RNTupleMerger;
-
-   /// Parameters for the SealPage() method
-   struct RSealPageConfig {
-      const RPage *fPage = nullptr;                 ///< Input page to be sealed
-      const RColumnElementBase *fElement = nullptr; ///< Corresponds to the page's elements, for size calculation etc.
-      int fCompressionSetting = 0;                  ///< Compression algorithm and level to apply
-      /// Adds a 8 byte little-endian xxhash3 checksum to the page payload. The buffer has to be large enough to
-      /// to store the additional 8 bytes.
-      bool fWriteChecksum = true;
-      /// If false, the output buffer must not point to the input page buffer, which would otherwise be an option
-      /// if the page is mappable and should not be compressed
-      bool fAllowAlias = false;
-      /// Location for sealed output. The memory buffer has to be large enough.
-      void *fBuffer = nullptr;
-   };
-
    std::unique_ptr<RNTupleWriteOptions> fOptions;
 
    /// Helper to zip pages and header/footer; includes a 16MB (kMAXZIPBUF) zip buffer.
@@ -303,9 +285,6 @@ protected:
    /// of fCompressor.  Thus, the buffer pointed to by the RSealedPage should never be freed.
    /// Usage of this method requires construction of fCompressor.
    RSealedPage SealPage(const RPage &page, const RColumnElementBase &element);
-
-   /// Seal a page using the provided info.
-   static RSealedPage SealPage(const RSealPageConfig &config);
 
 private:
    /// Flag if sink was initialized
@@ -352,6 +331,24 @@ protected:
    virtual void CommitDatasetImpl() = 0;
 
 public:
+   /// Parameters for the SealPage() method
+   struct RSealPageConfig {
+      const RPage *fPage = nullptr;                 ///< Input page to be sealed
+      const RColumnElementBase *fElement = nullptr; ///< Corresponds to the page's elements, for size calculation etc.
+      int fCompressionSetting = 0;                  ///< Compression algorithm and level to apply
+      /// Adds a 8 byte little-endian xxhash3 checksum to the page payload. The buffer has to be large enough to
+      /// to store the additional 8 bytes.
+      bool fWriteChecksum = true;
+      /// If false, the output buffer must not point to the input page buffer, which would otherwise be an option
+      /// if the page is mappable and should not be compressed
+      bool fAllowAlias = false;
+      /// Location for sealed output. The memory buffer has to be large enough.
+      void *fBuffer = nullptr;
+   };
+
+   /// Seal a page using the provided info.
+   static RSealedPage SealPage(const RSealPageConfig &config);
+
    /// Incorporate incremental changes to the model into the ntuple descriptor. This happens, e.g. if new fields were
    /// added after the initial call to `RPageSink::Init(RNTupleModel &)`.
    /// `firstEntry` specifies the global index for the first stored element in the added columns.
@@ -707,6 +704,13 @@ public:
    /// it's own connection to the underlying storage (e.g., file descriptor, XRootD handle, etc.)
    std::unique_ptr<RPageSource> Clone() const;
 
+   /// Helper for unstreaming a page. This is commonly used in derived, concrete page sources.  The implementation
+   /// currently always makes a memory copy, even if the sealed page is uncompressed and in the final memory layout.
+   /// The optimization of directly mapping pages is left to the concrete page source implementations.
+   RResult<RPage>
+   static UnsealPage(const RSealedPage &sealedPage, const RColumnElementBase &element, DescriptorId_t physicalColumnId,
+                     RPageAllocator &pageAlloc);
+
    EPageStorageType GetType() final { return EPageStorageType::kSource; }
    const RNTupleReadOptions &GetReadOptions() const { return fOptions; }
 
@@ -754,12 +758,6 @@ public:
    virtual void
    LoadSealedPage(DescriptorId_t physicalColumnId, RClusterIndex clusterIndex, RSealedPage &sealedPage) = 0;
 
-   /// Helper for unstreaming a page. This is commonly used in derived, concrete page sources.  The implementation
-   /// currently always makes a memory copy, even if the sealed page is uncompressed and in the final memory layout.
-   /// The optimization of directly mapping pages is left to the concrete page source implementations.
-   RResult<RPage>
-   UnsealPage(const RSealedPage &sealedPage, const RColumnElementBase &element, DescriptorId_t physicalColumnId);
-
    /// Populates all the pages of the given cluster ids and columns; it is possible that some columns do not
    /// contain any pages.  The page source may load more columns than the minimal necessary set from `columns`.
    /// To indicate which columns have been loaded, `LoadClusters()`` must mark them with `SetColumnAvailable()`.
@@ -775,6 +773,11 @@ public:
    /// actual implementation will only run if a task scheduler is set. In practice, a task scheduler is set
    /// if implicit multi-threading is turned on.
    void UnzipCluster(RCluster *cluster);
+
+   // TODO(gparolini): for symmetry with SealPage(), we should either make this private or SealPage() public.
+   RResult<RPage>
+   UnsealPage(const RSealedPage &sealedPage, const RColumnElementBase &element, DescriptorId_t physicalColumnId);
+
 }; // class RPageSource
 
 } // namespace Internal

@@ -20,9 +20,11 @@
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RPageStorage.hxx>
+#include <ROOT/TTaskGroup.hxx>
 #include <Compression.h>
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -47,6 +49,12 @@ enum class ENTupleMergeErrBehavior {
    kSkip
 };
 
+struct RColumnInfo;
+struct RNTupleMergeData;
+struct RSealedPageMergeData;
+
+class RClusterPool;
+
 struct RNTupleMergeOptions {
    /// If `fCompressionSettings == kUnknownCompressionSettings` (the default), the merger will not change the
    /// compression of any of its sources (fast merging). Otherwise, all sources will be converted to the specified
@@ -67,12 +75,22 @@ struct RNTupleMergeOptions {
  */
 // clang-format on
 class RNTupleMerger final {
-public:
-   struct RChangeCompressionFunc;
+   std::unique_ptr<RPageAllocator> fPageAlloc;
+   std::optional<TTaskGroup> fTaskGroup;
 
-   /// Merge a given set of sources into the destination
+   void MergeCommonColumns(RClusterPool &clusterPool, DescriptorId_t clusterId, std::span<RColumnInfo> commonColumns,
+                           RCluster::ColumnSet_t commonColumnSet, RSealedPageMergeData &sealedPageData,
+                           const RNTupleMergeData &mergeData);
+
+   void MergeSourceClusters(RPageSource &source, std::span<RColumnInfo> commonColumns,
+                            std::span<RColumnInfo> extraDstColumns, RNTupleMergeData &mergeData);
+
+public:
+   RNTupleMerger();
+   
+   /// Merge a given set of sources into the destination.
    RResult<void> Merge(std::span<RPageSource *> sources, RPageSink &destination,
-                       const RNTupleMergeOptions &options = RNTupleMergeOptions()) const;
+                       const RNTupleMergeOptions &mergeOpts = RNTupleMergeOptions());
 
 }; // end of class RNTupleMerger
 
