@@ -127,6 +127,11 @@ public:
    virtual bool HasHessian() const { return false; }
 
    virtual bool HasG2() const { return false; }
+
+   /// Indicate whether a given second order derivative with respect to
+   /// parameters i and j is always zero. This can help to avoid
+   /// expensive function calls in Hessian evaluations.
+   virtual bool VanishingSecondDerivative(int /*i*/, int /*j*/) const { return false; }
 };
 
 } // namespace ROOT::Minuit2
