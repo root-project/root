@@ -3666,28 +3666,32 @@ void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
 
       if (ex != 0.) {
          if (arrowOpt) {
-            arrow.PaintArrow(xl1,y,xl2,y,asize,arrowOpt);
-            arrow.PaintArrow(xr1,y,xr2,y,asize,arrowOpt);
+            if (xl1 > xl2) arrow.PaintArrow(xl1,y,xl2,y,asize,arrowOpt);
+            if (xr1 < xr2) arrow.PaintArrow(xr1,y,xr2,y,asize,arrowOpt);
          } else {
             if (!brackets) {
-               gPad->PaintLine(xl1,y,xl2,y);
-               gPad->PaintLine(xr1,y,xr2,y);
+               if (xl1 > xl2) gPad->PaintLine(xl1,y,xl2,y);
+               if (xr1 < xr2) gPad->PaintLine(xr1,y,xr2,y);
             }
             if (endLines) {
                if (braticks) {
-                  xb[0] = xl2+tx; yb[0] = y-ty;
-                  xb[1] = xl2;    yb[1] = y-ty;
-                  xb[2] = xl2;    yb[2] = y+ty;
-                  xb[3] = xl2+tx; yb[3] = y+ty;
-                  gPad->PaintPolyLine(4, xb, yb);
-                  xb[0] = xr2-tx; yb[0] = y-ty;
-                  xb[1] = xr2;    yb[1] = y-ty;
-                  xb[2] = xr2;    yb[2] = y+ty;
-                  xb[3] = xr2-tx; yb[3] = y+ty;
-                  gPad->PaintPolyLine(4, xb, yb);
+                  if (xl1 > xl2) {
+                     xb[0] = xl2+tx; yb[0] = y-ty;
+                     xb[1] = xl2;    yb[1] = y-ty;
+                     xb[2] = xl2;    yb[2] = y+ty;
+                     xb[3] = xl2+tx; yb[3] = y+ty;
+                     gPad->PaintPolyLine(4, xb, yb);
+                  }
+                  if (xr1 < xr2) {
+                     xb[0] = xr2-tx; yb[0] = y-ty;
+                     xb[1] = xr2;    yb[1] = y-ty;
+                     xb[2] = xr2;    yb[2] = y+ty;
+                     xb[3] = xr2-tx; yb[3] = y+ty;
+                     gPad->PaintPolyLine(4, xb, yb);
+                  }
                } else {
-                  gPad->PaintLine(xl2,y-ty,xl2,y+ty);
-                  gPad->PaintLine(xr2,y-ty,xr2,y+ty);
+                  if (xl1 > xl2) gPad->PaintLine(xl2,y-ty,xl2,y+ty);
+                  if (xr1 < xr2) gPad->PaintLine(xr2,y-ty,xr2,y+ty);
                }
             }
          }
