@@ -682,14 +682,13 @@ void TText::ls(Option_t *) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Paint this text with its current attributes.
+/// Paint this text with its current attributes on the pad
 
-void TText::Paint(Option_t *)
+void TText::PaintOn(TVirtualPad *pad, Option_t *)
 {
-   if (!gPad) return;
    TAttText::Modify();  //Change text attributes only if necessary
-   if (TestBit(kTextNDC)) gPad->PaintTextNDC(fX,fY,GetTitle());
-   else                   gPad->PaintText(gPad->XtoPad(fX),gPad->YtoPad(fY),GetTitle());
+   if (TestBit(kTextNDC)) pad->PaintTextNDC(fX, fY, GetTitle());
+   else                   pad->PaintText(pad->XtoPad(fX), pad->YtoPad(fY), GetTitle());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -780,6 +779,42 @@ void TText::PaintTextNDC(Double_t u, Double_t v, const wchar_t *text)
 {
    TAttText::Modify();  //Change text attributes only if necessary
    if (gPad) gPad->PaintTextNDC(u,v,text);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this text with new coordinates.
+
+void TText::PaintTextOn(TVirtualPad *pad, Double_t x, Double_t y, const char *text)
+{
+   TAttText::Modify();  //Change text attributes only if necessary
+   pad->PaintText(x,y,text);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this text with new coordinates.
+
+void TText::PaintTextOn(TVirtualPad *pad, Double_t x, Double_t y, const wchar_t *text)
+{
+   TAttText::Modify();  //Change text attributes only if necessary
+   pad->PaintText(x,y,text);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this text with new coordinates in NDC.
+
+void TText::PaintTextNDCOn(TVirtualPad *pad, Double_t u, Double_t v, const char *text)
+{
+   TAttText::Modify();  //Change text attributes only if necessary
+   pad->PaintTextNDC(u,v,text);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this text with new coordinates in NDC.
+
+void TText::PaintTextNDCOn(TVirtualPad *pad, Double_t u, Double_t v, const wchar_t *text)
+{
+   TAttText::Modify();  //Change text attributes only if necessary
+   pad->PaintTextNDC(u,v,text);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

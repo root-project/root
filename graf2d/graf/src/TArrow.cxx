@@ -152,21 +152,22 @@ TArrow *TArrow::DrawArrow(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Paint this arrow with its current attributes.
+/// Paint this arrow with its current attributes on the pad
 
-void TArrow::Paint(Option_t *option)
+void TArrow::PaintOn(TVirtualPad *pad, Option_t *option)
 {
-   if (!gPad) return;
    Option_t *opt;
    if (option && strlen(option)) opt = option;
-   else                          opt = (char*)GetOption();
+   else                          opt = (Option_t *)GetOption();
    if (TestBit(kLineNDC))
-      PaintArrow(gPad->GetX1() + fX1 * (gPad->GetX2() - gPad->GetX1()),
-                 gPad->GetY1() + fY1 * (gPad->GetY2() - gPad->GetY1()),
-                 gPad->GetX1() + fX2 * (gPad->GetX2() - gPad->GetX1()),
-                 gPad->GetY1() + fY2 * (gPad->GetY2() - gPad->GetY1()), fArrowSize, opt);
+      PaintArrowOn(pad,
+                   pad->GetX1() + fX1 * (pad->GetX2() - pad->GetX1()),
+                   pad->GetY1() + fY1 * (pad->GetY2() - pad->GetY1()),
+                   pad->GetX1() + fX2 * (pad->GetX2() - pad->GetX1()),
+                   pad->GetY1() + fY2 * (pad->GetY2() - pad->GetY1()),
+                   fArrowSize, opt);
    else
-      PaintArrow(gPad->XtoPad(fX1), gPad->YtoPad(fY1), gPad->XtoPad(fX2), gPad->YtoPad(fY2), fArrowSize, opt);
+      PaintArrowOn(pad, pad->XtoPad(fX1), pad->YtoPad(fY1), pad->XtoPad(fX2), pad->YtoPad(fY2), fArrowSize, opt);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -175,12 +176,22 @@ void TArrow::Paint(Option_t *option)
 void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
                         Float_t arrowsize, Option_t *option)
 {
-   if (!gPad) return;
+   if (gPad)
+      PaintArrowOn(gPad, x1, y1, x2, y2, arrowsize, option);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this arrow with new coordinates.
+
+void TArrow::PaintArrowOn(TVirtualPad *pad, Double_t x1, Double_t y1, Double_t x2, Double_t y2,
+                          Float_t arrowsize, Option_t *option)
+{
+
    // Compute the gPad coordinates in TRUE normalized space (NDC)
-   Int_t iw = gPad->GetWw();
-   Int_t ih = gPad->GetWh();
+   Int_t iw = pad->GetWw();
+   Int_t ih = pad->GetWh();
    Double_t x1p,y1p,x2p,y2p;
-   gPad->GetPadPar(x1p,y1p,x2p,y2p);
+   pad->GetPadPar(x1p,y1p,x2p,y2p);
    Int_t ix1 = (Int_t)(iw*x1p);
    Int_t iy1 = (Int_t)(ih*y1p);
    Int_t ix2 = (Int_t)(iw*x2p);
@@ -205,7 +216,7 @@ void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
 
    // Ratios to convert user space in TRUE normalized space (NDC)
    Double_t rx1,ry1,rx2,ry2;
-   gPad->GetRange(rx1,ry1,rx2,ry2);
+   pad->GetRange(rx1,ry1,rx2,ry2);
    Double_t rx = (x2ndc-x1ndc)/(rx2-rx1);
    Double_t ry = (y2ndc-y1ndc)/(ry2-ry1);
 
@@ -236,7 +247,7 @@ void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
          x1ar[i] = (1/rx)*(x1ar[i]-x1ndc)+rx1;
          y1ar[i] = (1/ry)*(y1ar[i]-y1ndc)+ry1;
       }
-      gPad->PaintLine(x1ar[0],y1ar[0],x1ar[1],y1ar[1]);
+      pad->PaintLine(x1ar[0],y1ar[0],x1ar[1],y1ar[1]);
       opt(0) = ' ';
    }
    if (opt.EndsWith("-|")) {
@@ -250,7 +261,7 @@ void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
          x2ar[i] = (1/rx)*(x2ar[i]-x1ndc)+rx1;
          y2ar[i] = (1/ry)*(y2ar[i]-y1ndc)+ry1;
       }
-      gPad->PaintLine(x2ar[0],y2ar[0],x2ar[1],y2ar[1]);
+      pad->PaintLine(x2ar[0],y2ar[0],x2ar[1],y2ar[1]);
       opt(opt.Length()-1) = ' ';
    }
 
@@ -281,7 +292,7 @@ void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
    y1n = (1/ry)*(y1n-y1ndc)+ry1;
    x2n = (1/rx)*(x2n-x1ndc)+rx1;
    y2n = (1/ry)*(y2n-y1ndc)+ry1;
-   gPad->PaintLine(x1n,y1n,x2n,y2n);
+   pad->PaintLine(x1n,y1n,x2n,y2n);
 
    // Draw the arrow's head(s)
    if (opt.Contains(">")) {
@@ -305,13 +316,13 @@ void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
          if (gVirtualX) gVirtualX->SetLineStyle(1);
          if (gVirtualPS) gVirtualPS->SetLineStyle(1);
          if (GetFillColor()) {
-            gPad->PaintFillArea(3,x2ar,y2ar);
-            gPad->PaintPolyLine(4,x2ar,y2ar);
+            pad->PaintFillArea(3,x2ar,y2ar);
+            pad->PaintPolyLine(4,x2ar,y2ar);
          } else {
-            gPad->PaintPolyLine(4,x2ar,y2ar);
+            pad->PaintPolyLine(4,x2ar,y2ar);
          }
       } else {
-         gPad->PaintPolyLine(3,x2ar,y2ar);
+         pad->PaintPolyLine(3,x2ar,y2ar);
       }
    }
 
@@ -335,13 +346,13 @@ void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
          if (gVirtualX) gVirtualX->SetLineStyle(1);
          if (gVirtualPS) gVirtualPS->SetLineStyle(1);
          if (GetFillColor()) {
-            gPad->PaintFillArea(3,x1ar,y1ar);
-            gPad->PaintPolyLine(4,x1ar,y1ar);
+            pad->PaintFillArea(3,x1ar,y1ar);
+            pad->PaintPolyLine(4,x1ar,y1ar);
          } else {
-            gPad->PaintPolyLine(4,x1ar,y1ar);
+            pad->PaintPolyLine(4,x1ar,y1ar);
          }
       } else {
-         gPad->PaintPolyLine(3,x1ar,y1ar);
+         pad->PaintPolyLine(3,x1ar,y1ar);
       }
    }
 }
@@ -352,11 +363,22 @@ void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
 void TArrow::PaintArrowNDC(Double_t u1, Double_t v1,Double_t u2 ,Double_t v2,
                            Float_t arrowsize, Option_t *option)
 {
-   if (!gPad) return;
-   PaintArrow(gPad->GetX1() + u1 * (gPad->GetX2() - gPad->GetX1()),
-              gPad->GetY1() + v1 * (gPad->GetY2() - gPad->GetY1()),
-              gPad->GetX1() + u2 * (gPad->GetX2() - gPad->GetX1()),
-              gPad->GetY1() + v2 * (gPad->GetY2() - gPad->GetY1()), arrowsize, option);
+   if (gPad)
+      PaintArrowNDCOn(gPad, u1, v1, u2, v2, arrowsize, option);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this arrow with new coordinates in NDC on specified pad
+
+void TArrow::PaintArrowNDCOn(TVirtualPad *pad, Double_t u1, Double_t v1,Double_t u2 ,Double_t v2,
+                             Float_t arrowsize, Option_t *option)
+{
+   PaintArrowOn(pad,
+                pad->GetX1() + u1 * (pad->GetX2() - pad->GetX1()),
+                pad->GetY1() + v1 * (pad->GetY2() - pad->GetY1()),
+                pad->GetX1() + u2 * (pad->GetX2() - pad->GetX1()),
+                pad->GetY1() + v2 * (pad->GetY2() - pad->GetY1()),
+                arrowsize, option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

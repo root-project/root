@@ -55,8 +55,9 @@ public:
    virtual void  HideToolTip(Int_t event);
    virtual Int_t IsInside(Double_t x, Double_t y) const;
    void          ls(Option_t *option="") const override;
-   void          Paint(Option_t *option="") override;
+   void          PaintOn(TVirtualPad *pad, Option_t *option="") override;
    virtual void  PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t *option="");
+   virtual void  PaintBoxOn(TVirtualPad *pad, Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t *option="");
    void          Print(Option_t *option="") const override;
    void          SavePrimitive(std::ostream &out, Option_t *option = "") override;
    virtual void  SetX1(Double_t x1) {fX1=x1;}

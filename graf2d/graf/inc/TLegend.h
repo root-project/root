@@ -53,9 +53,10 @@ public:
    Int_t           GetNRows() const;
    virtual void    InsertEntry( const char* objectName = "",const char* label = "",
                              Option_t* option = "lpf" ); // *MENU*
-   void            Paint( Option_t* option = "" ) override;
+   void            PaintOn(TVirtualPad *pad, Option_t *option = "") override;
    virtual void    PaintPrimitives();
-   void            Print( Option_t* option = "" ) const override;
+   virtual void    PaintPrimitivesOn(TVirtualPad *pad);
+   void            Print(Option_t* option = "") const override;
    void            RecursiveRemove(TObject *obj) override;
    void            SavePrimitive(std::ostream &out, Option_t *option  = "") override;
    void            SetDefaults() { fEntrySeparation = 0.1f; fMargin = 0.25f; fNColumns = 1; fColumnSeparation = 0.0f; }

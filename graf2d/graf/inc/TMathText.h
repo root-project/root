@@ -24,14 +24,17 @@ protected:
    TMathTextRenderer *fRenderer{nullptr}; //!TMathText Painter
    TMathText &operator=(const TMathText &);
 
-   void Render(const Double_t x, const Double_t y,
+   void Render(TVirtualPad *pad,
+               const Double_t x, const Double_t y,
                const Double_t size, const Double_t angle,
                const Char_t *t, const Int_t length);
-   void GetSize(Double_t &x0, Double_t &y0,
+   void GetSize(TVirtualPad *pad,
+                Double_t &x0, Double_t &y0,
                 Double_t &x1, Double_t &y1,
                 const Double_t size, const Double_t angle,
                 const Char_t *t, const Int_t length);
-   void GetAlignPoint(Double_t &x0, Double_t &y0,
+   void GetAlignPoint(TVirtualPad *pad,
+                      Double_t &x0, Double_t &y0,
                       const Double_t size, const Double_t angle,
                       const Char_t *t, const Int_t length,
                       const Short_t align);
@@ -48,8 +51,9 @@ public:
    void GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle = kFALSE) override;
    Double_t GetXsize();
    Double_t GetYsize();
-   void Paint(Option_t *option = "") override;
+   void PaintOn(TVirtualPad *pad, Option_t *option = "") override;
    virtual void PaintMathText(Double_t x, Double_t y, Double_t angle, Double_t size, const char *text);
+   virtual void PaintMathTextOn(TVirtualPad *pad, Double_t x, Double_t y, Double_t angle, Double_t size, const char *text);
    void SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
    ClassDefOverride(TMathText,2) //TeX mathematical formula

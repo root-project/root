@@ -51,8 +51,9 @@ public:
    virtual Int_t    GetSize() const;
    virtual void     InsertLine(); // *MENU*
    virtual void     InsertText(const char *label); // *MENU*
-   void             Paint(Option_t *option="") override;
+   void             PaintOn(TVirtualPad *pad, Option_t *option="") override;
    virtual void     PaintPrimitives(Int_t mode);
+   virtual void     PaintPrimitivesOn(TVirtualPad *pad, Int_t mode);
    void             Print(Option_t *option="") const override;
    virtual void     ReadFile(const char *filename, Option_t *option="", Int_t nlines=50, Int_t fromline=0); // *MENU*
    virtual void     SaveLines(std::ostream &out, const char *name, Bool_t saved);

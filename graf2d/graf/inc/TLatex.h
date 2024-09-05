@@ -71,17 +71,22 @@ protected:
    TLatex& operator=(const TLatex&);
 
    //Text analysis and painting
-   TLatexFormSize Analyse(Double_t x, Double_t y, const TextSpec_t &spec, const Char_t *t,Int_t length);
-   TLatexFormSize Anal1(const TextSpec_t &spec, const Char_t *t,Int_t length);
+   TLatexFormSize Analyse(TVirtualPad *pad, Double_t x, Double_t y, const TextSpec_t &spec, const Char_t *t,Int_t length);
+   TLatexFormSize Anal1(TVirtualPad *pad, const TextSpec_t &spec, const Char_t *t,Int_t length);
 
-   void DrawPolyLine(Int_t npoints, Double_t *xx, Double_t *yy, const TextSpec_t &spec, Double_t scale_width = 0.);
-   void DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2, const TextSpec_t &spec);
-   void DrawCircle(Double_t x1, Double_t y1, Double_t r, const TextSpec_t &spec);
-   void DrawParenthesis(Double_t x1, Double_t y1, Double_t r1, Double_t r2, Double_t phimin, Double_t phimax, const TextSpec_t &spec);
+   void DrawPolyLine(TVirtualPad *pad, Int_t npoints, Double_t *xx, Double_t *yy, const TextSpec_t &spec, Double_t scale_width = 0.);
+   void DrawLine(TVirtualPad *pad, Double_t x1, Double_t y1, Double_t x2, Double_t y2, const TextSpec_t &spec);
+   void DrawCircle(TVirtualPad *pad, Double_t x1, Double_t y1, Double_t r, const TextSpec_t &spec);
+   void DrawParenthesis(TVirtualPad *pad, Double_t x1, Double_t y1, Double_t r1, Double_t r2, Double_t phimin, Double_t phimax, const TextSpec_t &spec);
 
-   TLatexFormSize FirstParse(Double_t angle, Double_t size, const Char_t *text);
+   TLatexFormSize FirstParse(TVirtualPad *pad, Double_t angle, Double_t size, const Char_t *text);
 
-   Int_t PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size, const char *text);
+   Int_t PaintLatex1(TVirtualPad *pad, Double_t x, Double_t y, Double_t angle, Double_t size, const char *text);
+
+   Double_t         GetHeightOf(TVirtualPad *pad) const;
+   Double_t         GetXsizeOn(TVirtualPad *pad);
+   Double_t         GetYsizeOn(TVirtualPad *pad);
+   void             GetBoundingBoxOn(TVirtualPad *pad, UInt_t &w, UInt_t &h, Bool_t angle = kFALSE);
 
    void Savefs(TLatexFormSize *fs);
    TLatexFormSize Readfs();
@@ -108,8 +113,9 @@ public:
    Double_t         GetXsize();
    Double_t         GetYsize();
    void             GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle = kFALSE) override;
-   void             Paint(Option_t *option="") override;
+   void             PaintOn(TVirtualPad *pad, Option_t *option="") override;
    virtual void     PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, const char *text);
+   virtual void     PaintLatexOn(TVirtualPad *pad, Double_t x, Double_t y, Double_t angle, Double_t size, const char *text);
 
    void             SavePrimitive(std::ostream &out, Option_t *option = "") override;
    virtual void     SetIndiceSize(Double_t factorSize);

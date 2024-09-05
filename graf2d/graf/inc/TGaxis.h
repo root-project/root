@@ -91,10 +91,13 @@ public:
    Float_t             GetTickSize() const     {return fTickSize;}
    virtual void        ImportAxisAttributes(TAxis *axis);
    void                LabelsLimits(const char *label, Int_t &first, Int_t &last);
-   void                Paint(Option_t *chopt="") override;
+   void                PaintOn(TVirtualPad *pad, Option_t *option="") override;
    virtual void        PaintAxis(Double_t xmin,Double_t ymin,Double_t xmax,Double_t ymax,
                                  Double_t &wmin,Double_t &wmax,Int_t &ndiv, Option_t *chopt="",
                                  Double_t gridlength = 0, Bool_t drawGridOnly = kFALSE);
+   virtual void        PaintAxisOn(TVirtualPad *pad, Double_t xmin,Double_t ymin,Double_t xmax,Double_t ymax,
+                                   Double_t &wmin,Double_t &wmax,Int_t &ndiv, Option_t *chopt="",
+                                   Double_t gridlength = 0, Bool_t drawGridOnly = kFALSE);
    virtual void        Rotate(Double_t X,  Double_t Y,  Double_t CFI, Double_t SFI
                              ,Double_t XT, Double_t YT, Double_t &U,   Double_t &V);
    void                ResetLabelAttributes(TLatex* t);

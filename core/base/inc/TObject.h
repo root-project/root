@@ -32,6 +32,7 @@ class TBuffer;
 class TObjArray;
 class TMethod;
 class TTimer;
+class TVirtualPad;
 
 namespace ROOT {
 namespace Internal {
@@ -155,6 +156,7 @@ public:
    virtual Bool_t      Notify();
    virtual void        ls(Option_t *option="") const;
    virtual void        Paint(Option_t *option="");
+   virtual void        PaintOn(TVirtualPad *pad, Option_t *option="");
    virtual void        Pop();
    virtual void        Print(Option_t *option="") const;
    virtual Int_t       Read(const char *name);
