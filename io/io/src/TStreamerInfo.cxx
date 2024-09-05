@@ -643,9 +643,15 @@ void TStreamerInfo::Build(Bool_t isTransient)
          if (dm->IsEnum()) {
             if (auto enumdesc = TEnum::GetEnum(dm->GetFullTypeName(), TEnum::kNone))
             {
-               // NOTE: We might simplify this by having the dm->fDataType being 'correct'.
-               // If we do we need to also make sure to update the old type accordingly
-               element->SetNewType(enumdesc->GetUnderlyingType());
+               // When introducing support for non-default sized enum, it was
+               // decided to keep the file format unchanged and to always
+               // store the enum constant as an int.
+               auto memType = enumdesc->GetUnderlyingType();
+               if (TDataType::GetDataType(memType)->Size() > 4) // 4 is the onfile space for an Int_t.
+                  Warning(
+                     "Build",
+                     "The underlying type (%s) for the enum %s is larger than 4 bytes and may result in data loss.",
+                     TDataType::GetTypeName(memType), dm->GetFullTypeName());
                element->SetType(TStreamerInfo::kInt);
             }
          }
@@ -2319,13 +2325,6 @@ void TStreamerInfo::BuildOld()
             } else {
                // All the values of EDataType have the same semantic in EReadWrite
                newType = (EReadWrite)theType->GetType();
-            }
-            if (dm->IsEnum()) {
-               if (auto enumdesc = TEnum::GetEnum(dm->GetFullTypeName(), TEnum::kNone))
-               {
-                  // NOTE: We might simplify this by having the dm->fDataType being 'correct'.
-                  newType = enumdesc->GetUnderlyingType();
-               }
             }
             if ((newType == ::kChar_t) && dmIsPtr && !isArray && !hasCount) {
                newType = ::kCharStar;
