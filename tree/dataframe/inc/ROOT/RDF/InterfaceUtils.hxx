@@ -31,6 +31,10 @@
 #include <TH1.h>
 #include <TROOT.h> // IsImplicitMTEnabled
 
+#ifdef ROOT_RDF_CUDA
+#include <ROOT/RDF/CUDAFillHelper.hxx>
+#endif
+
 #include <deque>
 #include <functional>
 #include <map>
@@ -48,11 +52,11 @@ namespace Detail {
 namespace RDF {
 class RNodeBase;
 }
-}
+} // namespace Detail
 namespace RDF {
 template <typename T>
 class RResultPtr;
-template<typename T, typename V>
+template <typename T, typename V>
 class RInterface;
 using RNode = RInterface<::ROOT::Detail::RDF::RNodeBase, void>;
 class RDataSource;
@@ -125,15 +129,33 @@ struct HistoUtils<T, false> {
    static bool HasAxisLimits(T &) { return true; }
 };
 
+
 // Generic filling (covers Histo2D, Histo3D, HistoND, Profile1D and Profile2D actions, with and without weights)
 template <typename... ColTypes, typename ActionTag, typename ActionResultType, typename PrevNodeType>
 std::unique_ptr<RActionBase>
 BuildAction(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &h, const unsigned int nSlots,
             std::shared_ptr<PrevNodeType> prevNode, ActionTag, const RColumnRegister &colRegister)
 {
+#ifdef ROOT_RDF_CUDA
+   // Avoid compilation errors for custom objects for which the dimension is unknown, like CustomFiller in
+   // tree/dataframe/test/datagframe_helpers.cxx
+   if constexpr (std::is_same<ActionTag, ActionTags::Histo2D>::value ||
+                 std::is_same<ActionTag, ActionTags::Histo3D>::value) {
+      if (getenv("CUDA_HIST")) {
+         using Helper_t = ROOT::Experimental::CUDAFillHelper<ActionResultType>;
+         using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
+         return std::make_unique<Action_t>(Helper_t(h, nSlots), bl, std::move(prevNode), colRegister);
+      }
+   }
+
    using Helper_t = FillHelper<ActionResultType>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
    return std::make_unique<Action_t>(Helper_t(h, nSlots), bl, std::move(prevNode), colRegister);
+#else
+   using Helper_t = FillHelper<ActionResultType>;
+   using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
+   return std::make_unique<Action_t>(Helper_t(h, nSlots), bl, std::move(prevNode), colRegister);
+#endif
 }
 
 // Histo1D filling (must handle the special case of distinguishing FillHelper and BufferedFillHelper
@@ -144,7 +166,15 @@ BuildAction(const ColumnNames_t &bl, const std::shared_ptr<::TH1D> &h, const uns
 {
    auto hasAxisLimits = HistoUtils<::TH1D>::HasAxisLimits(*h);
 
-   if (hasAxisLimits || !IsImplicitMTEnabled()) {
+#ifdef ROOT_RDF_CUDA
+   if (getenv("CUDA_HIST")) {
+      using Helper_t = ROOT::Experimental::CUDAFillHelper<::TH1D>;
+      using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
+      return std::make_unique<Action_t>(Helper_t(h, nSlots), bl, std::move(prevNode), colRegister);
+   } else
+#endif
+
+      if (hasAxisLimits || !IsImplicitMTEnabled()) {
       using Helper_t = FillHelper<::TH1D>;
       using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
       return std::make_unique<Action_t>(Helper_t(h, nSlots), bl, std::move(prevNode), colRegister);
