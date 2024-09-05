@@ -24,10 +24,21 @@ static const size_t errorCodeSmallBuffer = (size_t)-70;
 
 void R__zipZSTD(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep)
 {
+
+    if (*tgtsize <= 0) {
+       return;
+    }
+
+    if (*srcsize > 0xffffff || *srcsize < 0) {
+       return;
+    }
+
     using Ctx_ptr = std::unique_ptr<ZSTD_CCtx, decltype(&ZSTD_freeCCtx)>;
     Ctx_ptr fCtx{ZSTD_createCCtx(), &ZSTD_freeCCtx};
 
     *irep = 0;
+
+    if (cxlevel > 9) cxlevel = 9;
 
     size_t retval = ZSTD_compressCCtx(fCtx.get(),
                                         &tgt[kHeaderSize], static_cast<size_t>(*tgtsize - kHeaderSize),
