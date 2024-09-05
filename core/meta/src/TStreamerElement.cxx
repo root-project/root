@@ -1075,7 +1075,13 @@ void TStreamerLoop::Init(TVirtualStreamerInfo *directive)
 
 const char *TStreamerLoop::GetInclude() const
 {
-   IncludeNameBuffer().Form("<%s>","TString.h"); //to be generalized
+   TClass *cl = GetClassPointer();
+   if (cl && cl->HasInterpreterInfo()) {
+      IncludeNameBuffer().Form("\"%s\"",cl->GetDeclFileName());
+   } else {
+      std::string shortname( TClassEdit::ShortType( GetTypeName(), 1 ) );
+      IncludeNameBuffer().Form("\"%s.h\"",shortname.c_str());
+   }
    return IncludeNameBuffer();
 }
 
