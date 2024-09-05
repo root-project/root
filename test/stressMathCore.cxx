@@ -10,7 +10,7 @@
 //         pdf, cdf and quantiles. cdf are estimated directly and compared with calculated integral from pdf
 //     - physics vectors (2D, 3D and 4D) including I/O for every type and for both double and Double32_t
 //     - SMatrix and SVectors including I/O for double and Double32_t types
-//     - I/O of complex objects which dictionary has been generated using CINT (default) or Reflex
+//     - I/O of complex objects which dictionary has been generated using rootcling
 //           TrackD and TrackD32 which contain  physics vectors of double and Double32_t
 //           TrackErrD and TrackErrD32 which contain physics vectors and an SMatrix of double and Double32_t
 //           VecTrackD which contains an std::vector<TrackD>
@@ -30,30 +30,13 @@
 //    > ./stressMathMore
 //
 // to run inside ROOT using ACliC
-//  for using CINT you need first to have the library libTrackMathCoreDict.so
+//  for using CLING you need first to have the library libTrackMathCoreDict.so
 //   (type:  make libTrackMathCoreDict.so to make it)
 //
 //   root> gSystem->Load("libMathCore");
 //   root> gSystem->Load("libTree");
 //   root> gSystem->Load("libHist");
 //   root> .x stressMathCore.cxx+
-//
-
-// for using Reflex dictionaries you need first to have the library libTrackMathCoreRflx.so
-//   (type:  make libTrackMathCoreRflx.so to make it)
-//
-//   root> gSystem->Load("libMathCore");
-//   root> gSystem->Load("libTree");
-//   root> gSystem->Load("libHist");
-//   root> gSystem->Load("libReflex");
-//   root> gSystem->SetIncludePath("-DUSE_REFLEX");
-//   root> .x stressMathCore.cxx+
-//
-//
-
-
-#ifndef __CINT__
-
 
 #include "Math/DistFuncMathCore.h"
 //#define USE_MATHMORE
@@ -91,9 +74,6 @@ R__ADD_INCLUDE_PATH($ROOTSYS/test)
 #include "Math/GenVector/RotationZ.h" // Workaround to autoload libGenVector ROOT-7056
 
 using namespace ROOT::Math;
-
-#endif
-
 
 //#define DEBUG
 
@@ -154,7 +134,6 @@ int compare( std::string name, double v1, double v2, double scale = 2.0) {
    return iret;
 }
 
-#ifndef __CINT__
 
 
 // trait class  for distinguishing the number of parameters for the various functions
@@ -813,18 +792,14 @@ public:
       }
    }
 
-
-
-   typedef std::vector<double>::const_iterator DataIt;
-
    // test methods
    template <class V>
    void testCreate( std::vector<V > & dataV) {
       Timer tim;
-      DataIt x = dataX.begin();
-      DataIt y = dataY.begin();
-      DataIt z = dataZ.begin();
-      DataIt t = dataE.begin();
+      auto x = dataX.begin();
+      auto y = dataY.begin();
+      auto z = dataZ.begin();
+      auto t = dataE.begin();
       while (x != dataX.end() ) {
          dataV.push_back(VecOp<V,Dim>::Create(x,y,z,t) );
          assert(int(dataV.size()) <= nGen);
@@ -835,10 +810,10 @@ public:
    template <class V>
    void testCreateAndSet( std::vector<V > & dataV) {
       Timer tim;
-      DataIt x = dataX.begin();
-      DataIt y = dataY.begin();
-      DataIt z = dataZ.begin();
-      DataIt t = dataE.begin();
+      auto x = dataX.begin();
+      auto y = dataY.begin();
+      auto z = dataZ.begin();
+      auto t = dataE.begin();
       while (x != dataX.end() ) {
          V  v;
          VecOp<V,Dim>::Set( v, x,y,z,t);
@@ -1489,7 +1464,7 @@ int testCompositeObj(int ngen) {
    std::cout << "\tTest of a Composite Object (containing Vector's and Matrices)\n";
    std::cout <<"******************************************************************************\n";
 
-   std::cout << "Test Using CINT library\n\n";
+   std::cout << "Test Using the Cling interpreter\n\n";
 
    // put path relative to LD_LIBRARY_PATH
 
@@ -1524,26 +1499,10 @@ int testCompositeObj(int ngen) {
 }
 
 
-#endif // endif ifndef __CINT__
-
 
 int stressMathCore(double nscale = 1) {
 
    int iret = 0;
-
-#ifdef __CINT__
-   std::cout << "Test must be run in compile mode - use ACLIC to compile!!" << std::endl;
-
-
-   gSystem->Load("libMathCore");
-   gSystem->Load("libTree");
-   gROOT->ProcessLine(".L stressMathCore.cxx++");
-   return stressMathCore();
-#endif
-//    iret |= gSystem->Load("libMathCore");
-//    iret |= gSystem->Load("libMathMore");
-//    if (iret !=0) return iret;
-
 
    TBenchmark bm;
    bm.Start("stressMathCore");
@@ -1581,8 +1540,6 @@ int stressMathCore(double nscale = 1) {
    if (iret !=0) std::cerr << "stressMathCore Test Failed !!" << std::endl;
    return iret;
 }
-
-
 
 int main(int argc,const char *argv[]) {
    std::string inclRootSys = ("-I" + TROOT::GetRootSys() + "/test").Data();

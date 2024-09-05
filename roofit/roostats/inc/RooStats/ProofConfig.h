@@ -60,7 +60,7 @@ class ProofConfig {
             fLite = true;
 
 
-            // get the default value of the machine - use CINT interface until we have a poper PROOF interface that we can call
+            // get the default value of the machine - use interpreter interface until we have a proper PROOF interface that we can call
             int nMaxWorkers = gROOT->ProcessLineFast("TProofLite::GetNumberOfWorkers()");
 
             if (nExperiments == 0) {
