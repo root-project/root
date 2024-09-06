@@ -64,6 +64,8 @@ struct RNTupleMergeOptions {
    ENTupleMergingMode fMergingMode = ENTupleMergingMode::kFilter;
    /// Determines how the Merge function behaves upon merging errors
    ENTupleMergeErrBehavior fErrBehavior = ENTupleMergeErrBehavior::kAbort;
+   /// If true, the merger will emit further diagnostics and information.
+   bool fExtraVerbose = false;
 };
 
 // clang-format off
