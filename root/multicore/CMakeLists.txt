@@ -56,7 +56,7 @@ else()
   set(PROCESSOREXECUTORH1TEST_EXE_COMPILE_FLAGS "-I${ROOTSYS}/tutorials/legacy/multicore")
 endif()
 
-if(NOT MSVC)
+if(NOT MSVC AND NOT dev)
 
   ROOTTEST_GENERATE_EXECUTABLE(processExecutorH1Test tProcessExecutorH1Test.cpp COMPILE_FLAGS ${PROCESSOREXECUTORH1TEST_EXE_COMPILE_FLAGS} LIBRARIES ROOT::MultiProc ROOT::Core ROOT::Net ROOT::TreePlayer ROOT::Tree ROOT::RIO ROOT::Hist ROOT::Gpad ROOT::Graf)
 
