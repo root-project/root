@@ -131,9 +131,10 @@ private:
    {
       if constexpr (std::is_same_v<T, RNTupleCollectionWriter>) {
          const auto &v = fValues[token.fIndex];
-         if (!dynamic_cast<const RCollectionField *>(&v.GetField())) {
+         const auto &field = v.GetField();
+         if (typeid(field) != typeid(const RCollectionField &)) {
             throw RException(R__FAIL("type mismatch for field " + v.GetField().GetFieldName() + ": " +
-                                     v.GetField().GetTypeName() + " vs. RNTupleCollectionWriter"));
+                                     field.GetTypeName() + " vs. RNTupleCollectionWriter"));
          }
       } else if constexpr (!std::is_void_v<T>) {
          const auto &v = fValues[token.fIndex];
