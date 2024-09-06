@@ -226,7 +226,7 @@ public:
    /// Write into a reserved record; the caller is responsible for making sure that the written byte range is in the
    /// previously reserved key.
    void WriteIntoReservedBlob(const void *buffer, size_t nbytes, std::int64_t offset);
-   /// Ensures that the pass streamer info is written to the file
+   /// Ensures that the streamer info records passed as argument are written to the file
    void UpdateStreamerInfos(const RNTupleSerializer::StreamerInfoMap_t &streamerInfos);
    /// Writes the RNTuple key to the file so that the header and footer keys can be found
    void Commit();
