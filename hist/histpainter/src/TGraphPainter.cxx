@@ -2481,12 +2481,6 @@ void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
    if (strstr(option,"-N")) xrevlog = kTRUE; // along X
    if (strstr(option,"-M")) yrevlog = kTRUE; // along Y
 
-   // special flags to turn off error bar drawing in case the marker cover it
-   Bool_t DrawXLeft  = kTRUE;
-   Bool_t DrawXRight = kTRUE;
-   Bool_t DrawYUp    = kTRUE;
-   Bool_t DrawYLow   = kTRUE;
-
    if (option3) {
       xline.resize(2*theNpoints);
       yline.resize(2*theNpoints);
@@ -2532,9 +2526,15 @@ void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
 
    gPad->SetBit(TGraph::kClipFrame, theGraph->TestBit(TGraph::kClipFrame));
 
+   // special flags to turn off error bar drawing in case the marker cover it
+   Bool_t DrawXLeft, DrawXRight, DrawYUp, DrawYLow;
    // loop over all the graph points
    Double_t x, y, exl, exh, eyl, eyh, xl1, xl2, xr1, xr2, yup, yup1, yup2, ylow, ylow1, ylow2;
    for (Int_t i=0;i<theNpoints;i++) {
+      DrawXLeft  = kTRUE;
+      DrawXRight = kTRUE;
+      DrawYUp    = kTRUE;
+      DrawYLow   = kTRUE;
       x  = gPad->XtoPad(theX[i]);
       y  = gPad->YtoPad(theY[i]);
 
@@ -3238,12 +3238,6 @@ void TGraphPainter::PaintGraphBentErrors(TGraph *theGraph, Option_t *option)
    if (strstr(option,"-N")) xrevlog = kTRUE; // along X
    if (strstr(option,"-M")) yrevlog = kTRUE; // along Y
 
-   // special flags to turn off error bar drawing in case the marker cover it
-   Bool_t DrawXLeft  = kTRUE;
-   Bool_t DrawXRight = kTRUE;
-   Bool_t DrawYUp    = kTRUE;
-   Bool_t DrawYLow   = kTRUE;
-
    if (option3) {
       xline.resize(2*theNpoints);
       yline.resize(2*theNpoints);
@@ -3289,10 +3283,16 @@ void TGraphPainter::PaintGraphBentErrors(TGraph *theGraph, Option_t *option)
 
    gPad->SetBit(TGraph::kClipFrame, theGraph->TestBit(TGraph::kClipFrame));
 
+   // special flags to turn off error bar drawing in case the marker cover it
+   Bool_t DrawXLeft, DrawXRight, DrawYUp, DrawYLow;
    // loop over all the graph points
    Double_t x, y, exl, exh, eyl, eyh, xl1, xl2, xr1, xr2, yup, yup1, yup2, ylow, ylow1, ylow2;
    Double_t bxl, bxh, byl, byh, bs;
    for (Int_t i=0;i<theNpoints;i++) {
+      DrawXLeft  = kTRUE;
+      DrawXRight = kTRUE;
+      DrawYUp    = kTRUE;
+      DrawYLow   = kTRUE;
       x   = gPad->XtoPad(theX[i]);
       y   = gPad->YtoPad(theY[i]);
       bxl = gPad->YtoPad(theY[i]+theEXlowd[i]);
@@ -3549,12 +3549,6 @@ void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
    if (strstr(option,"-N")) xrevlog = kTRUE; // along X
    if (strstr(option,"-M")) yrevlog = kTRUE; // along Y
 
-   // special flags to turn off error bar drawing in case the marker cover it
-   Bool_t DrawXLeft  = kTRUE;
-   Bool_t DrawXRight = kTRUE;
-   Bool_t DrawYUp    = kTRUE;
-   Bool_t DrawYLow   = kTRUE;
-
    if (option3) {
       xline.resize(2*theNpoints);
       yline.resize(2*theNpoints);
@@ -3601,9 +3595,15 @@ void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
 
    gPad->SetBit(TGraph::kClipFrame, theGraph->TestBit(TGraph::kClipFrame));
 
+   // special flags to turn off error bar drawing in case the marker cover it
+   Bool_t DrawXLeft, DrawXRight, DrawYUp, DrawYLow;
    // loop over all the graph points
    Double_t x, y, ex, ey, xl1, xl2, xr1, xr2, yup, yup1, yup2, ylow, ylow1, ylow2;
    for (Int_t i=0;i<theNpoints;i++) {
+      DrawXLeft  = kTRUE;
+      DrawXRight = kTRUE;
+      DrawYUp    = kTRUE;
+      DrawYLow   = kTRUE;
       x  = gPad->XtoPad(theX[i]);
       y  = gPad->YtoPad(theY[i]);
 
