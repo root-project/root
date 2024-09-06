@@ -401,7 +401,7 @@ void RNTupleMerger::MergeCommonColumns(RClusterPool &clusterPool, DescriptorId_t
       const bool needsCompressionChange = mergeData.fMergeOpts.fCompressionSettings != kUnknownCompressionSettings &&
                                           colRangeCompressionSettings != mergeData.fMergeOpts.fCompressionSettings;
 
-      if (needsCompressionChange)
+      if (needsCompressionChange && mergeData.fMergeOpts.fExtraVerbose)
          Info("RNTuple::Merge", "Column %s: changing source compression from %d to %d", column.fColumnName.c_str(),
               colRangeCompressionSettings, mergeData.fMergeOpts.fCompressionSettings);
 
