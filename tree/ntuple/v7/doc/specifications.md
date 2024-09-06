@@ -233,7 +233,7 @@ In this case, the locator should be interpreted like a frame, i.e. size indicate
 _Offset_:
 For on-disk / in-file locators, the 64bit byte offset of the referenced byte range counted from the start of the file.
 
-For non-disk locators, i.e. `T` == 1, the locator format is as follows
+For non-standard locators, i.e. `T` == 1, the locator format is as follows
 
 ```
  0                   1                   2                   3
@@ -266,10 +266,10 @@ followed by a locator.
 
 ### Well-known Payload Formats
 
-This section describes the well-known payload formats used in non-disk locators.
+This section describes the well-known payload formats used in non-standard locators.
 Note that locators having a different value for _Type_ may share a given payload format (see the table above).
 
-- _Large_: Like the standard on-disk locator but with a 64bit offset
+- _Large_: Like the standard on-disk locator but with a 64bit size
 ```
  0                   1                   2                   3
  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
