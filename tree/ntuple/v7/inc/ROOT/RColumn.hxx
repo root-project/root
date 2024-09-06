@@ -134,6 +134,7 @@ public:
    void AppendV(const void *from, std::size_t count)
    {
       auto src = reinterpret_cast<const unsigned char *>(from);
+      // TODO(jblomer): A future optimization should grow the page in one go, up to the maximum unzipped page size
       while (count > 0) {
          std::size_t nElementsRemaining = fWritePage.GetMaxElements() - fWritePage.GetNElements();
          if (nElementsRemaining == 0) {
