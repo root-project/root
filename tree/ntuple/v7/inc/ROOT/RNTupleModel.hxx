@@ -239,6 +239,7 @@ public:
 
    /// Creates a new field given a `name` or `{name, description}` pair and a
    /// corresponding value that is managed by a shared pointer.
+   /// The returned pointer is empty for bare models.
    ///
    /// **Example: create some fields and fill an %RNTuple**
    /// ~~~ {.cpp}
@@ -315,7 +316,7 @@ public:
 
    /// Ingests a model for a sub collection and attaches it to the current model
    ///
-   /// Throws an exception if collectionModel is null.
+   /// Throws an exception if collectionModel is null. The returned pointer is empty for bare models.
    std::shared_ptr<RNTupleCollectionWriter>
    MakeCollection(std::string_view fieldName, std::unique_ptr<RNTupleModel> collectionModel);
 
