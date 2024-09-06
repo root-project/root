@@ -12,6 +12,7 @@
 
 #include "gtest/gtest.h"
 #include "ROOT/TestSupport.hxx"
+#include "ROOT/InternalTreeUtils.hxx" // GetFileNamesFromTree
 #include <cstdlib>
 #include <memory>
 
@@ -489,6 +490,10 @@ TEST(TTreeReaderBasic, DisappearingBranch)
 
    TChain c("t");
    c.Add("DisappearingBranch*.root");
+   diags.requiredDiag(kError, "TBranchProxy::Setup()",
+                      "Branch 'col1' is not available from tree 't' in file '" +
+                         ROOT::Internal::TreeUtils::GetFileNamesFromTree(c)[1] + "'.");
+
    TTreeReader r(&c);
    TTreeReaderValue<int> rv(r, "col1");
    r.Next();
