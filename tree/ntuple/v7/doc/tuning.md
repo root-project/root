@@ -48,7 +48,7 @@ Note that the total amount of memory consumed for writing is usually larger than
 For instance, if buffered writing is used (the default), additional memory is required.
 Use RNTupleModel::EstimateWriteMemoryUsage() for the total estimated memory use for writing.
 
-The default values are tuned for a total write memory of around 1 GB per writer resp. fill context.
+The default values are tuned for a total write memory of around 300 MB per writer resp. fill context.
 In order to decrease the memory consumption,
 users should decrease the target cluster size before tuning more intricate memory settings.
 
