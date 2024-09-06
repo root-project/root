@@ -1101,6 +1101,9 @@ ROOT::Experimental::Internal::RNTupleDescriptorBuilder::BuildStreamerInfos() con
    for (const auto &extraTypeInfo : desc.GetExtraTypeInfoIterable()) {
       if (extraTypeInfo.GetContentId() != EExtraTypeInfoIds::kStreamerInfo)
          continue;
+      // Ideally, we would avoid deserializing the streamer info records of the unsplit fields that we just serialized.
+      // However, this happens only once at the end of writing and only when unsplit fields are used, so the
+      // preference here is for code simplicity.
       streamerInfoMap.merge(RNTupleSerializer::DeserializeStreamerInfos(extraTypeInfo.GetContent()).Unwrap());
    }
 
