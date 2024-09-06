@@ -71,7 +71,7 @@ inline void tobuf(char *&buf, UShort_t x)
 # else
    // To work around a stupid optimization bug in MSVC++ 6.0
    const UShort_t *intermediary = &x;
-   char *sw = (char *) intermediary;
+   const char *sw = (const char *) intermediary;
    buf[0] = sw[1];
    buf[1] = sw[0];
 # endif
@@ -89,7 +89,7 @@ inline void tobuf(char *&buf, UInt_t x)
 # else
    // To work around a stupid optimization bug in MSVC++ 6.0
    const UInt_t *intermediary = &x;
-   char *sw = (char *)intermediary;
+   const char *sw = (const char *)intermediary;
    buf[0] = sw[3];
    buf[1] = sw[2];
    buf[2] = sw[1];
@@ -106,7 +106,7 @@ inline void tobuf(char *&buf, ULong_t x)
 #ifdef R__BYTESWAP
    // To work around a stupid optimization bug in MSVC++ 6.0
    const ULong_t *intermediary = &x;
-   char *sw = (char *)intermediary;
+   const char *sw = (const char *)intermediary;
    if (sizeof(ULong_t) == 8) {
       buf[0] = sw[7];
       buf[1] = sw[6];
@@ -145,7 +145,7 @@ inline void tobuf(char *&buf, Long_t x)
 #ifdef R__BYTESWAP
    // To work around a stupid optimization bug in MSVC++ 6.0
    const Long_t *intermediary = &x;
-   char *sw = (char *)intermediary;
+   const char *sw = (const char *)intermediary;
    if (sizeof(Long_t) == 8) {
       buf[0] = sw[7];
       buf[1] = sw[6];
@@ -201,7 +201,7 @@ inline void tobuf(char *&buf, ULong64_t x)
 # else
    // To work around a stupid optimization bug in MSVC++ 6.0
    const ULong64_t *intermediary = &x;
-   char *sw = (char *)intermediary;
+   const char *sw = (const char *)intermediary;
    buf[0] = sw[7];
    buf[1] = sw[6];
    buf[2] = sw[5];
