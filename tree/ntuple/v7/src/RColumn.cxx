@@ -42,7 +42,7 @@ void ROOT::Experimental::Internal::RColumn::ConnectPageSink(DescriptorId_t field
 {
    if (pageSink.GetWriteOptions().GetInitialNElementsPerPage() * fElement->GetSize() >
        pageSink.GetWriteOptions().GetMaxUnzippedPageSize()) {
-      throw RException(R__FAIL("initial number of elements per page too small"));
+      throw RException(R__FAIL("maximum page size to small for the initial number of elements per page"));
    }
 
    fPageSink = &pageSink;
