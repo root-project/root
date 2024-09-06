@@ -137,7 +137,8 @@ public:
    std::uint32_t GetColumnCardinality() const { return fColumnCardinality; }
    std::optional<std::uint32_t> GetTypeChecksum() const { return fTypeChecksum; }
    bool IsProjectedField() const { return fProjectionSourceId != kInvalidDescriptorId; }
-   /// Tells if the field describes a user-defined class with a dictionary.
+   /// Tells if the field describes a user-defined class rather than a fundamental type, a collection, or one of the
+   /// natively supported stdlib classes.
    /// The dictionary does not need to be available for this method.
    bool IsCustomClass() const;
 };
@@ -1435,7 +1436,7 @@ public:
    /// annotated as begin part of the header extension.
    void BeginHeaderExtension();
 
-   /// Get the streamer info records for custom classes. Currently requires the corresponding dictionaires to be loaded.
+   /// Get the streamer info records for custom classes. Currently requires the corresponding dictionaries to be loaded.
    RNTupleSerializer::StreamerInfoMap_t BuildStreamerInfos() const;
 };
 
