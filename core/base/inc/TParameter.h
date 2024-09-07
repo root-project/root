@@ -116,7 +116,7 @@ public:
 
    virtual Int_t Merge(TCollection *in);
 
-   ClassDefOverride(TParameter,2)  //Named templated parameter type
+   ClassDefInlineOverride(TParameter,2)  //Named templated parameter type
 };
 
 template <class AParamType>
@@ -182,16 +182,5 @@ inline Int_t TParameter<Bool_t>::Merge(TCollection *in)
 
    return n;
 }
-
-// FIXME: Remove once we implement https://sft.its.cern.ch/jira/browse/ROOT-6284
-// When building with -fmodules, it instantiates all pending instantiations,
-// instead of delaying them until the end of the translation unit.
-// We 'got away with' probably because the use and the definition of the
-// explicit specialization do not occur in the same TU.
-//
-// In case we are building with -fmodules, we need to forward declare the
-// specialization in order to compile the dictionary G__Core.cxx.
-template <> void TParameter<Long64_t>::Streamer(TBuffer &R__b);
-template<> TClass *TParameter<Long64_t>::Class();
 
 #endif
