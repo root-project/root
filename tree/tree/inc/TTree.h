@@ -462,7 +462,47 @@ public:
    TDirectory             *GetDirectory() const { return fDirectory; }
    virtual Long64_t        GetEntries() const   { return fEntries; }
    virtual Long64_t        GetEntries(const char *selection);
-   virtual Long64_t        GetEntriesFast() const   { return fEntries; }
+   /// Return a number greater or equal to the total number of entries in the
+   /// dataset.
+   ///
+   /// \note If you are interested in the total number of entries in a TChain,
+   ///       this function will give that number once the last file of the chain
+   ///       is opened. In general, using this instead of GetEntries will avoid
+   ///       opening all files in the chain which could be very costly for very
+   ///       large number of files stored at a remote location.
+   ///
+   /// The logic depends on whether the dataset is a TTree or a TChain. In the
+   /// first case, it simply returns the total number of entries in the tree. In
+   /// the latter case, it depends on which point of the processing of the chain
+   /// this function is called. During most of the chain processing, this
+   /// function will return TTree::kMaxEntries. When the chain arrives at the
+   /// last file, then the function will return the accumulated total number of
+   /// entries in the whole chain. A notable use case where this function
+   /// becomes quite useful is when writing the following for loop to traverse
+   /// the entries in the dataset:
+   ///
+   /// \code{.cpp}
+   /// for(Long64_t ievent = 0; ievent < dataset.GetEntriesFast(); ievent++) {
+   ///    // Do something with the event in the dataset
+   /// }
+   /// \endcode
+   ///
+   /// In the example above, independently on whether the dataset is a TTree or
+   /// a TChain, the GetEntriesFast call will provide the correct stopping
+   /// condition for the loop (i.e. the total number of entries). In the TChain
+   /// case, calling GetEntries instead would open all the files in the chain
+   /// upfront which could be costly.
+   ///
+   /// The functionality offered by this method can also be seen when used in
+   /// conjunction with LoadTree. For a call like <tt> LoadTree(ievent) </tt>,
+   /// the condition <tt> ievent < dataset.GetEntriesFast() </tt> is only
+   /// satisfied if \p ievent is strictly smaller than the total number of
+   /// entries in the dataset. In fact, even when the dataset is a TChain, the
+   /// first time LoadTree is called with an entry number that belongs to the
+   /// last file of the chain, this will update the internal data member of the
+   /// class so that the next call to GetEntriesFast returns the total number
+   /// of entries in the dataset.
+   virtual Long64_t        GetEntriesFast() const { return fEntries; }
    virtual Long64_t        GetEntriesFriend() const;
    virtual Long64_t        GetEstimate() const { return fEstimate; }
    virtual Int_t           GetEntry(Long64_t entry, Int_t getall = 0);
