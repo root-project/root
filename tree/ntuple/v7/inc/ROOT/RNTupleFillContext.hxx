@@ -112,6 +112,9 @@ public:
          CommitCluster();
       return status.GetLastEntrySize();
    }
+   /// Flush column data, preparing for CommitCluster or to reduce memory usage. This will trigger compression of pages,
+   /// but not actually write to storage.
+   void FlushColumns();
    /// Ensure that the data from the so far seen Fill calls has been written to storage
    void CommitCluster();
 

@@ -39,7 +39,8 @@ struct RFieldCallbackInjector;
 struct RFieldRepresentationModifier;
 class RPageSink;
 class RPageSource;
-// TODO(jblomer): find a better way to not have these three methods in the RFieldBase public API
+// TODO(jblomer): find a better way to not have these four methods in the RFieldBase public API
+void CallFlushColumnsOnField(RFieldBase &);
 void CallCommitClusterOnField(RFieldBase &);
 void CallConnectPageSinkOnField(RFieldBase &, RPageSink &, NTupleSize_t firstEntry = 0);
 void CallConnectPageSourceOnField(RFieldBase &, RPageSource &);
@@ -68,6 +69,7 @@ class RFieldBase {
    friend class ROOT::Experimental::RCollectionField;                  // to move the fields from the collection model
    friend struct ROOT::Experimental::Internal::RFieldCallbackInjector; // used for unit tests
    friend struct ROOT::Experimental::Internal::RFieldRepresentationModifier; // used for unit tests
+   friend void Internal::CallFlushColumnsOnField(RFieldBase &);
    friend void Internal::CallCommitClusterOnField(RFieldBase &);
    friend void Internal::CallConnectPageSinkOnField(RFieldBase &, Internal::RPageSink &, NTupleSize_t);
    friend void Internal::CallConnectPageSourceOnField(RFieldBase &, Internal::RPageSource &);
@@ -331,6 +333,8 @@ private:
    /// field with type `std::array<std::array<float, 4>, 2>`, this function returns 8 for the inner-most field.
    NTupleSize_t EntryToColumnElementIndex(NTupleSize_t globalIndex) const;
 
+   /// Flushes data from active columns
+   void FlushColumns();
    /// Flushes data from active columns to disk and calls CommitClusterImpl
    void CommitCluster();
    /// Fields and their columns live in the void until connected to a physical page storage.  Only once connected, data

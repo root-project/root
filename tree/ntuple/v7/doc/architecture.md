@@ -335,9 +335,9 @@ The caller has to ensure that the lifetime of the object lasts during the I/O op
 An RNTuple writer that is constructed without a `TFile` object (`RNTupleWriter::Recreate()`) assumes exclusive access to the underlying file.
 An RNTuple writer that uses a `TFile` for writing (`RNTupleWriter::Append()`) assumes that the `TFile` object outlives the writer's lifetime.
 The serial writer assumes exclusive access to the underlying file during construction, destruction and `Fill()` as well as `CommitCluster()`.
-For `FillNoCommit()`, the sequential writer assumes exclusive access only if buffered writing is turned off.
+For `FlushColumns()` and `FillNoCommit()`, the sequential writer assumes exclusive access only if buffered writing is turned off.
 The parallel writer assumes exclusive access to the underlying file during all operations on the writer (e.g. construction and destruction) and all operations on any created fill context (e.g. `Fill()` and `CommitCluster()`).
-A notable exception is `FillNoCommit()` which is guaranteed to never access the underlying `TFile` during parallel writing (which is always buffered).
+Notable exceptions are `FlushColumns()` and `FillNoCommit()` which are guaranteed to never access the underlying `TFile` during parallel writing (which is always buffered).
 
 A `TFile` does not take ownership of any `RNTuple` objects.
 
