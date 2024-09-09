@@ -59,19 +59,6 @@ TUnuran::~TUnuran()
    if (fUdistr != nullptr) unur_distr_free(fUdistr);
 }
 
-//private (no impl.)
-TUnuran::TUnuran(const TUnuran &)
-{
-   // Implementation of copy constructor.
-}
-
-TUnuran & TUnuran::operator = (const TUnuran &rhs)
-{
-   // Implementation of assignment operator.
-   if (this == &rhs) return *this;  // time saving self-test
-   return *this;
-}
-
 bool  TUnuran::Init(const std::string & dist, const std::string & method)
 {
    // initialize with a string
