@@ -44,9 +44,9 @@ ROOT::Experimental::RNTupleFillContext::RNTupleFillContext(std::unique_ptr<RNTup
 ROOT::Experimental::RNTupleFillContext::~RNTupleFillContext()
 {
    try {
-      CommitCluster();
+      FlushCluster();
    } catch (const RException &err) {
-      R__LOG_ERROR(NTupleLog()) << "failure committing ntuple: " << err.GetError().GetReport();
+      R__LOG_ERROR(NTupleLog()) << "failure flushing cluster: " << err.GetError().GetReport();
    }
 }
 
@@ -57,24 +57,24 @@ void ROOT::Experimental::RNTupleFillContext::FlushColumns()
    }
 }
 
-void ROOT::Experimental::RNTupleFillContext::CommitCluster()
+void ROOT::Experimental::RNTupleFillContext::FlushCluster()
 {
-   if (fNEntries == fLastCommitted) {
+   if (fNEntries == fLastFlushed) {
       return;
    }
    for (auto &field : fModel->GetFieldZero()) {
       Internal::CallCommitClusterOnField(field);
    }
-   auto nEntriesInCluster = fNEntries - fLastCommitted;
-   fNBytesCommitted += fSink->CommitCluster(nEntriesInCluster);
+   auto nEntriesInCluster = fNEntries - fLastFlushed;
+   fNBytesFlushed += fSink->CommitCluster(nEntriesInCluster);
    fNBytesFilled += fUnzippedClusterSize;
 
    // Cap the compression factor at 1000 to prevent overflow of fUnzippedClusterSizeEst
    const float compressionFactor =
-      std::min(1000.f, static_cast<float>(fNBytesFilled) / static_cast<float>(fNBytesCommitted));
+      std::min(1000.f, static_cast<float>(fNBytesFilled) / static_cast<float>(fNBytesFlushed));
    fUnzippedClusterSizeEst =
       compressionFactor * static_cast<float>(fSink->GetWriteOptions().GetApproxZippedClusterSize());
 
-   fLastCommitted = fNEntries;
+   fLastFlushed = fNEntries;
    fUnzippedClusterSize = 0;
 }

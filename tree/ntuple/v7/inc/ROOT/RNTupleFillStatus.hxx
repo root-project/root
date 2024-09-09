@@ -29,8 +29,8 @@ namespace Experimental {
 \ingroup NTuple
 \brief A status object after filling an entry
 
-After passing an instance to RNTupleWriter::FillNoCommit or RNTupleFillContext::FillNoCommit, the caller must check
-ShouldCommitCluster and call RNTupleWriter::CommitCluster or RNTupleFillContext::CommitCluster if necessary.
+After passing an instance to RNTupleWriter::FillNoFlush or RNTupleFillContext::FillNoFlush, the caller must check
+ShouldFlushCluster and call RNTupleWriter::FlushCluster or RNTupleFillContext::FlushCluster if necessary.
 */
 // clang-format on
 class RNTupleFillStatus {
@@ -38,22 +38,22 @@ class RNTupleFillStatus {
 
 private:
    /// Number of entries written into the current cluster
-   NTupleSize_t fNEntriesSinceLastCommit = 0;
+   NTupleSize_t fNEntriesSinceLastFlush = 0;
    /// Number of bytes written into the current cluster
    std::size_t fUnzippedClusterSize = 0;
    /// Number of bytes written for the last entry
    std::size_t fLastEntrySize = 0;
-   bool fShouldCommitCluster = false;
+   bool fShouldFlushCluster = false;
 
 public:
    /// Return the number of entries written into the current cluster.
-   NTupleSize_t GetNEntries() const { return fNEntriesSinceLastCommit; }
+   NTupleSize_t GetNEntries() const { return fNEntriesSinceLastFlush; }
    /// Return the number of bytes written into the current cluster.
    std::size_t GetUnzippedClusterSize() const { return fUnzippedClusterSize; }
    /// Return the number of bytes for the last entry.
    std::size_t GetLastEntrySize() const { return fLastEntrySize; }
-   /// Return true if the caller should call CommitCluster.
-   bool ShouldCommitCluster() const { return fShouldCommitCluster; }
+   /// Return true if the caller should call FlushCluster.
+   bool ShouldFlushCluster() const { return fShouldFlushCluster; }
 }; // class RNTupleFillContext
 
 } // namespace Experimental

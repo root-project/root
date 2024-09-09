@@ -17,17 +17,17 @@ TEST(RNTupleParallelWriter, Basics)
       // Fill one entry per context and commit a cluster each.
       *pt1 = 1.0;
       c1->Fill(*e1);
-      c1->CommitCluster();
+      c1->FlushCluster();
 
       *pt2 = 2.0;
       c2->Fill(*e2);
-      c2->CommitCluster();
+      c2->FlushCluster();
 
       // The two contexts should act independently.
       EXPECT_EQ(c1->GetNEntries(), 1);
       EXPECT_EQ(c2->GetNEntries(), 1);
-      EXPECT_EQ(c1->GetLastCommitted(), 1);
-      EXPECT_EQ(c2->GetLastCommitted(), 1);
+      EXPECT_EQ(c1->GetLastFlushed(), 1);
+      EXPECT_EQ(c2->GetLastFlushed(), 1);
 
       // Fill another entry per context without explicitly committing a cluster.
       *pt1 = 3.0;
