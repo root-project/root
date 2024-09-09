@@ -509,6 +509,14 @@ ROOT::Experimental::Internal::RPageSource::UnsealPage(const RSealedPage &sealedP
 
 //------------------------------------------------------------------------------
 
+bool ROOT::Experimental::Internal::RWritePageMemoryManager::RColumnInfo::operator>(const RColumnInfo &other) const
+{
+   // Make the sort order unique by adding the physical on-disk column id as a secondary key
+   if (fCurrentPageSize == other.fCurrentPageSize)
+      return fColumn->GetOnDiskId() > other.fColumn->GetOnDiskId();
+   return fCurrentPageSize > other.fCurrentPageSize;
+}
+
 bool ROOT::Experimental::Internal::RWritePageMemoryManager::TryEvict(std::size_t targetAvailableSize,
                                                                      std::size_t pageSizeLimit)
 {
