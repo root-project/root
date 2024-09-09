@@ -61,12 +61,11 @@ namespace Math {
       GSLInterpolator(const Interpolation::Type type, const std::vector<double> & x, const std::vector<double> & y );
       virtual ~GSLInterpolator();
 
-   private:
-      // usually copying is non trivial, so we make this unaccessible
-      GSLInterpolator(const GSLInterpolator &);
-      GSLInterpolator & operator = (const GSLInterpolator &);
-
-   public:
+      // usually copying is non trivial, so we make delete this
+      GSLInterpolator(const GSLInterpolator &) = delete;
+      GSLInterpolator & operator = (const GSLInterpolator &) = delete;
+      GSLInterpolator(GSLInterpolator &&) = delete;
+      GSLInterpolator & operator = (GSLInterpolator &&) = delete;
 
       bool Init(unsigned int ndata, const double *x, const double *y);
 

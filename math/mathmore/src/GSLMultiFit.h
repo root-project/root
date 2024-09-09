@@ -84,24 +84,11 @@ public:
 #endif
    }
 
-private:
-   // usually copying is non trivial, so we make this unaccessible
-
-   /**
-      Copy constructor
-   */
-   GSLMultiFit(const GSLMultiFit &) {}
-
-   /**
-      Assignment operator
-   */
-   GSLMultiFit & operator = (const GSLMultiFit & rhs)  {
-      if (this == &rhs) return *this;  // time saving self-test
-      return *this;
-   }
-
-
-public:
+   // usually copying is non trivial, so we delete this
+   GSLMultiFit(const GSLMultiFit &) = delete;
+   GSLMultiFit & operator = (const GSLMultiFit & rhs) = delete;
+   GSLMultiFit(GSLMultiFit &&) = delete;
+   GSLMultiFit & operator = (GSLMultiFit && rhs) = delete;
 
    /// create the minimizer from the type and size of number of fitting points and number of parameters
    void CreateSolver(unsigned int npoints, unsigned int npar) {

@@ -69,20 +69,6 @@ public:
    */
    ~Minuit2Minimizer() override;
 
-private:
-   // usually copying is non trivial, so we make this unaccessible
-
-   /**
-      Copy constructor
-   */
-   Minuit2Minimizer(const Minuit2Minimizer &);
-
-   /**
-      Assignment operator
-   */
-   Minuit2Minimizer &operator=(const Minuit2Minimizer &rhs);
-
-public:
    // clear resources (parameters) for consecutives minimizations
    void Clear() override;
 

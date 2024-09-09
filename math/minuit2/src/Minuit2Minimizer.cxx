@@ -153,19 +153,6 @@ Minuit2Minimizer::~Minuit2Minimizer()
       delete fMinimum;
 }
 
-Minuit2Minimizer::Minuit2Minimizer(const Minuit2Minimizer &) : ROOT::Math::Minimizer()
-{
-   // Implementation of copy constructor.
-}
-
-Minuit2Minimizer &Minuit2Minimizer::operator=(const Minuit2Minimizer &rhs)
-{
-   // Implementation of assignment operator.
-   if (this == &rhs)
-      return *this; // time saving self-test
-   return *this;
-}
-
 void Minuit2Minimizer::Clear()
 {
    // delete the state in case of consecutive minimizations

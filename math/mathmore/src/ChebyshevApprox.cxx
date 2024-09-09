@@ -79,19 +79,6 @@ fOrder(n) , fSeries(nullptr), fFunction(nullptr)
    fSeries = new GSLChebSeries(n);
 }
 
-ChebyshevApprox::ChebyshevApprox(const ChebyshevApprox & /*cheb */ )
-{
-   // cannot copy series because don't know original function
-}
-
-ChebyshevApprox & ChebyshevApprox::operator = (const ChebyshevApprox &rhs)
-{
-   // dummy assignment
-   if (this == &rhs) return *this;  // time saving self-test
-
-   return *this;
-}
-
 void ChebyshevApprox::Initialize( GSLFuncPointer f, void * params, double a, double b) {
    // initialize by passing a function and interval [a,b]
    // delete previous existing function pointer
