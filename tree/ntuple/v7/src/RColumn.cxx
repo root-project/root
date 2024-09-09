@@ -48,6 +48,7 @@ void ROOT::Experimental::Internal::RColumn::ConnectPageSink(DescriptorId_t field
    fPageSink = &pageSink;
    fFirstElementIndex = firstElementIndex;
    fHandleSink = fPageSink->AddColumn(fieldId, *this);
+   fOnDiskId = fPageSink->GetColumnId(fHandleSink);
    fWritePage = fPageSink->ReservePage(fHandleSink, fPageSink->GetWriteOptions().GetInitialNElementsPerPage());
    if (fWritePage.IsNull())
       throw RException(R__FAIL("page buffer memory budget too small"));
@@ -58,10 +59,10 @@ void ROOT::Experimental::Internal::RColumn::ConnectPageSource(DescriptorId_t fie
    fPageSource = &pageSource;
    fHandleSource = fPageSource->AddColumn(fieldId, *this);
    fNElements = fPageSource->GetNElements(fHandleSource);
-   fColumnIdSource = fPageSource->GetColumnId(fHandleSource);
+   fOnDiskId = fPageSource->GetColumnId(fHandleSource);
    {
       auto descriptorGuard = fPageSource->GetSharedDescriptorGuard();
-      fFirstElementIndex = descriptorGuard->GetColumnDescriptor(fColumnIdSource).GetFirstElementIndex();
+      fFirstElementIndex = descriptorGuard->GetColumnDescriptor(fOnDiskId).GetFirstElementIndex();
    }
 }
 

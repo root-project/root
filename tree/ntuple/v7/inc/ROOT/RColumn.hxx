@@ -58,8 +58,8 @@ private:
    NTupleSize_t fNElements = 0;
    /// The currently mapped page for reading
    RPageRef fReadPageRef;
-   /// The column id is used to find matching pages with content when reading
-   ColumnId_t fColumnIdSource = kInvalidColumnId;
+   /// The column id in the column descriptor, once connected to a sink or source
+   DescriptorId_t fOnDiskId = kInvalidDescriptorId;
    /// Global index of the first element in this column; usually == 0, unless it is a deferred column
    NTupleSize_t fFirstElementIndex = 0;
    /// Used to pack and unpack pages on writing/reading
@@ -335,7 +335,7 @@ public:
    }
    std::uint32_t GetIndex() const { return fIndex; }
    std::uint16_t GetRepresentationIndex() const { return fRepresentationIndex; }
-   ColumnId_t GetColumnIdSource() const { return fColumnIdSource; }
+   DescriptorId_t GetOnDiskId() const { return fOnDiskId; }
    NTupleSize_t GetFirstElementIndex() const { return fFirstElementIndex; }
    RPageSource *GetPageSource() const { return fPageSource; }
    RPageSink *GetPageSink() const { return fPageSink; }
