@@ -519,7 +519,7 @@ int RooMinimizer::simplex()
    profileStop();
    _fcn->BackProp(_theFitter->Result());
 
-   saveStatus("SEEK", _status);
+   saveStatus("SIMPLEX", _status);
 
    return _status;
 }
