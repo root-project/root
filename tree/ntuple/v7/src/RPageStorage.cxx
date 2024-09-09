@@ -221,12 +221,6 @@ ROOT::Experimental::NTupleSize_t ROOT::Experimental::Internal::RPageSource::GetN
    return GetSharedDescriptorGuard()->GetNElements(columnHandle.fPhysicalId);
 }
 
-ROOT::Experimental::ColumnId_t ROOT::Experimental::Internal::RPageSource::GetColumnId(ColumnHandle_t columnHandle)
-{
-   // TODO(jblomer) distinguish trees
-   return columnHandle.fPhysicalId;
-}
-
 void ROOT::Experimental::Internal::RPageSource::UnzipCluster(RCluster *cluster)
 {
    if (fTaskScheduler)
