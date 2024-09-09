@@ -541,12 +541,14 @@ bool ROOT::Experimental::Internal::RWritePageMemoryManager::TryEvict(std::size_t
 
       itrFlush->fColumn->Flush();
       if (fMaxAllocatedBytes - fCurrentAllocatedBytes >= targetAvailableSize)
-         break;
+         return true;
 
-      itr = (next.fColumn == nullptr) ? fColumnsSortedByPageSize.end() : fColumnsSortedByPageSize.find(next);
+      if (next.fColumn == nullptr)
+         return false;
+      itr = fColumnsSortedByPageSize.find(next);
    };
 
-   return (fMaxAllocatedBytes - fCurrentAllocatedBytes >= targetAvailableSize);
+   return false;
 }
 
 bool ROOT::Experimental::Internal::RWritePageMemoryManager::TryUpdate(RColumn &column, std::size_t newWritePageSize)
@@ -562,10 +564,14 @@ bool ROOT::Experimental::Internal::RWritePageMemoryManager::TryUpdate(RColumn &c
    }
 
    RColumnInfo elem{*itr};
+   assert(newWritePageSize >= elem.fInitialPageSize);
+
+   if (newWritePageSize == elem.fCurrentPageSize)
+      return true;
+
    fColumnsSortedByPageSize.erase(itr);
 
-   assert(newWritePageSize >= elem.fInitialPageSize);
-   if (newWritePageSize <= elem.fCurrentPageSize) {
+   if (newWritePageSize < elem.fCurrentPageSize) {
       // Page got smaller
       fCurrentAllocatedBytes -= elem.fCurrentPageSize - newWritePageSize;
       elem.fCurrentPageSize = newWritePageSize;
@@ -577,6 +583,7 @@ bool ROOT::Experimental::Internal::RWritePageMemoryManager::TryUpdate(RColumn &c
    const auto diffBytes = newWritePageSize - elem.fCurrentPageSize;
    if (!TryEvict(diffBytes, elem.fCurrentPageSize)) {
       // Don't change anything, let the calling column flush itself
+      // TODO(jblomer): we may consider skipping the column in TryEvict and thus avoiding erase+insert
       fColumnsSortedByPageSize.insert(elem);
       return false;
    }
