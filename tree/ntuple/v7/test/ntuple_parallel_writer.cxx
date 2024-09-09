@@ -104,3 +104,38 @@ TEST(RNTupleParallelWriter, Options)
       EXPECT_THAT(err.what(), testing::HasSubstr("parallel writing requires buffering"));
    }
 }
+
+TEST(RNTupleFillContext, FlushColumns)
+{
+   FileRaii fileGuard("test_ntuple_context_flush.root");
+
+   {
+      auto model = RNTupleModel::CreateBare();
+      model->MakeField<float>("pt");
+
+      auto writer = RNTupleParallelWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
+
+      auto c = writer->CreateFillContext();
+      auto e = c->CreateEntry();
+      auto pt = e->GetPtr<float>("pt");
+
+      *pt = 1.0;
+      c->Fill(*e);
+
+      c->FlushColumns();
+
+      *pt = 2.0;
+      c->Fill(*e);
+   }
+
+   // If FlushColumns() worked, there will be two pages with one element each.
+   auto reader = RNTupleReader::Open("f", fileGuard.GetPath());
+   const auto &descriptor = reader->GetDescriptor();
+
+   auto fieldId = descriptor.FindFieldId("pt");
+   auto columnId = descriptor.FindPhysicalColumnId(fieldId, 0, 0);
+   auto &pageInfos = descriptor.GetClusterDescriptor(0).GetPageRange(columnId).fPageInfos;
+   ASSERT_EQ(pageInfos.size(), 2);
+   EXPECT_EQ(pageInfos[0].fNElements, 1);
+   EXPECT_EQ(pageInfos[1].fNElements, 1);
+}

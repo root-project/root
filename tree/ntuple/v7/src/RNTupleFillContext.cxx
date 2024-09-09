@@ -50,6 +50,13 @@ ROOT::Experimental::RNTupleFillContext::~RNTupleFillContext()
    }
 }
 
+void ROOT::Experimental::RNTupleFillContext::FlushColumns()
+{
+   for (auto &field : fModel->GetFieldZero()) {
+      Internal::CallFlushColumnsOnField(field);
+   }
+}
+
 void ROOT::Experimental::RNTupleFillContext::CommitCluster()
 {
    if (fNEntries == fLastCommitted) {

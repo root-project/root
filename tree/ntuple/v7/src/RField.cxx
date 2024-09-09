@@ -409,6 +409,10 @@ public:
 
 } // anonymous namespace
 
+void ROOT::Experimental::Internal::CallFlushColumnsOnField(RFieldBase &field)
+{
+   field.FlushColumns();
+}
 void ROOT::Experimental::Internal::CallCommitClusterOnField(RFieldBase &field)
 {
    field.CommitCluster();
@@ -1023,6 +1027,18 @@ std::vector<const ROOT::Experimental::RFieldBase *> ROOT::Experimental::RFieldBa
       result.emplace_back(f.get());
    }
    return result;
+}
+
+void ROOT::Experimental::RFieldBase::FlushColumns()
+{
+   if (!fAvailableColumns.empty()) {
+      const auto activeRepresentationIndex = fPrincipalColumn->GetRepresentationIndex();
+      for (auto &column : fAvailableColumns) {
+         if (column->GetRepresentationIndex() == activeRepresentationIndex) {
+            column->Flush();
+         }
+      }
+   }
 }
 
 void ROOT::Experimental::RFieldBase::CommitCluster()

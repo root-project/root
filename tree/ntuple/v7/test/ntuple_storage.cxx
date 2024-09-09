@@ -285,6 +285,37 @@ TEST(RNTuple, PageFillingString)
    EXPECT_EQ(10u, pr4.fPageInfos[1].fNElements);
 }
 
+TEST(RNTuple, FlushColumns)
+{
+   FileRaii fileGuard("test_ntuple_flush.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto pt = model->MakeField<float>("pt");
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
+
+      *pt = 1.0;
+      writer->Fill();
+
+      writer->FlushColumns();
+
+      *pt = 2.0;
+      writer->Fill();
+   }
+
+   // If FlushColumns() worked, there will be two pages with one element each.
+   auto reader = RNTupleReader::Open("f", fileGuard.GetPath());
+   const auto &descriptor = reader->GetDescriptor();
+
+   auto fieldId = descriptor.FindFieldId("pt");
+   auto columnId = descriptor.FindPhysicalColumnId(fieldId, 0, 0);
+   auto &pageInfos = descriptor.GetClusterDescriptor(0).GetPageRange(columnId).fPageInfos;
+   ASSERT_EQ(pageInfos.size(), 2);
+   EXPECT_EQ(pageInfos[0].fNElements, 1);
+   EXPECT_EQ(pageInfos[1].fNElements, 1);
+}
+
 TEST(RNTuple, WritePageBudgetLimit)
 {
    FileRaii fileGuard("test_ntuple_write_page_budget_limit.root");
