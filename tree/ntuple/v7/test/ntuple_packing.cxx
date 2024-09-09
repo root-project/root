@@ -7,6 +7,15 @@
 #include <type_traits>
 #include <utility>
 
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+// Silence spurious warnings such as:
+// ‘void* memcpy(void*, const void*, size_t)’ forming offset [1, 7] is out of the bounds [0, 1] of object ‘c’ with type
+// ‘char’
+#pragma GCC diagnostic ignored "-Warray-bounds"
+#pragma GCC diagnostic ignored "-Wstringop-overflow"
+#endif
+
 template <typename PodT, typename NarrowT, EColumnType ColumnT>
 struct Helper {
    using Pod_t = PodT;
@@ -360,3 +369,7 @@ TEST(Packing, OnDiskEncoding)
    EXPECT_EQ(std::string("abc"), viewStr(0));
    EXPECT_EQ(std::string("de"), viewStr(1));
 }
+
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
