@@ -70,48 +70,6 @@ public:
    {
    }
 
-   // constructs from gradient FCN
-
-   /// construct from FCNGradientBase + std::vector for parameters and errors
-   MnMigrad(const FCNGradientBase &fcn, std::span<const double> par, std::span<const double> err,
-            unsigned int stra = 1)
-      : MnApplication(fcn, MnUserParameterState(par, err), MnStrategy(stra)), fMinimizer(VariableMetricMinimizer())
-   {
-   }
-
-   /// construct from FCNGradientBase + std::vector for parameters and covariance
-   MnMigrad(const FCNGradientBase &fcn, std::span<const double> par, unsigned int nrow,
-            std::span<const double> cov, unsigned int stra = 1)
-      : MnApplication(fcn, MnUserParameterState(par, cov, nrow), MnStrategy(stra)),
-        fMinimizer(VariableMetricMinimizer())
-   {
-   }
-
-   /// construct from FCNGradientBase + std::vector for parameters and MnUserCovariance
-   MnMigrad(const FCNGradientBase &fcn, std::span<const double> par, const MnUserCovariance &cov,
-            unsigned int stra = 1)
-      : MnApplication(fcn, MnUserParameterState(par, cov), MnStrategy(stra)), fMinimizer(VariableMetricMinimizer())
-   {
-   }
-
-   /// construct from FCNGradientBase + MnUserParameters
-   MnMigrad(const FCNGradientBase &fcn, const MnUserParameters &par, unsigned int stra = 1)
-      : MnApplication(fcn, MnUserParameterState(par), MnStrategy(stra)), fMinimizer(VariableMetricMinimizer())
-   {
-   }
-
-   /// construct from FCNGradientBase + MnUserParameters + MnUserCovariance
-   MnMigrad(const FCNGradientBase &fcn, const MnUserParameters &par, const MnUserCovariance &cov, unsigned int stra = 1)
-      : MnApplication(fcn, MnUserParameterState(par, cov), MnStrategy(stra)), fMinimizer(VariableMetricMinimizer())
-   {
-   }
-
-   /// construct from FCNGradientBase + MnUserParameterState + MnStrategy
-   MnMigrad(const FCNGradientBase &fcn, const MnUserParameterState &par, const MnStrategy &str)
-      : MnApplication(fcn, MnUserParameterState(par), str), fMinimizer(VariableMetricMinimizer())
-   {
-   }
-
    ~MnMigrad() override {}
 
    /// Copy constructor, copy shares the reference to the same FCNBase in MnApplication

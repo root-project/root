@@ -17,14 +17,14 @@ namespace ROOT {
 
 namespace Minuit2 {
 
-class FCNGradientBase;
+class FCNBase;
 class MnUserTransformation;
 
 
 class AnalyticalGradientCalculator : public GradientCalculator {
 
 public:
-   AnalyticalGradientCalculator(const FCNGradientBase &fcn, const MnUserTransformation &state)
+   AnalyticalGradientCalculator(const FCNBase &fcn, const MnUserTransformation &state)
       : fGradFunc(fcn), fTransformation(state)
    {
    }
@@ -46,7 +46,7 @@ public:
    virtual bool CanComputeHessian() const;
 
 protected:
-   const FCNGradientBase &fGradFunc;
+   const FCNBase &fGradFunc;
    const MnUserTransformation &fTransformation;
 };
 
