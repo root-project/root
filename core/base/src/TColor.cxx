@@ -1238,6 +1238,7 @@ void TColor::InitializeColors()
       new TColor(19,.95,.95,.95,"grey19");
       new TColor(50, 0.83,0.35,0.33);
 
+      // define the Petroff color schemes
       new TColor(kGrape,    111./255.,  45./255., 168./255., "kGrape");
       new TColor(kBrown,    165./255.,  42./255.,  42./255., "kBrown");
       new TColor(kAsh,      178./255., 190./255., 181./255., "kAsh");
