@@ -10,7 +10,7 @@
 #ifndef ROOT_Minuit2_FumiliFCNBase
 #define ROOT_Minuit2_FumiliFCNBase
 
-#include "Minuit2/FCNGradientBase.h"
+#include "Minuit2/FCNBase.h"
 #include <cassert>
 #include <vector>
 
@@ -43,7 +43,7 @@ section 5
 
  */
 
-class FumiliFCNBase : public FCNGradientBase {
+class FumiliFCNBase : public FCNBase {
 
 public:
    /**
@@ -52,6 +52,8 @@ public:
    */
 
    FumiliFCNBase() : fNumberOfParameters(0), fValue(0) {}
+
+   bool HasGradient() const override { return true; }
 
    /**
 

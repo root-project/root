@@ -549,16 +549,8 @@ bool Minuit2Minimizer::Minimize()
 
    const ROOT::Minuit2::MnStrategy strategy = customizedStrategy(strategyLevel, fOptions);
 
-   const ROOT::Minuit2::FCNGradientBase *gradFCN = dynamic_cast<const ROOT::Minuit2::FCNGradientBase *>(fMinuitFCN);
-   if (gradFCN != nullptr) {
-      // use gradient
-      // SetPrintLevel(3);
-      ROOT::Minuit2::FunctionMinimum min = GetMinimizer()->Minimize(*gradFCN, fState, strategy, maxfcn, tol);
-      fMinimum = new ROOT::Minuit2::FunctionMinimum(min);
-   } else {
-      ROOT::Minuit2::FunctionMinimum min = GetMinimizer()->Minimize(*GetFCN(), fState, strategy, maxfcn, tol);
-      fMinimum = new ROOT::Minuit2::FunctionMinimum(min);
-   }
+   ROOT::Minuit2::FunctionMinimum min = GetMinimizer()->Minimize(*fMinuitFCN, fState, strategy, maxfcn, tol);
+   fMinimum = new ROOT::Minuit2::FunctionMinimum(min);
 
    // check if Hesse needs to be run. We do it when is requested (IsValidError() == true , set by SetParabError(true) in fitConfig)
    // (IsValidError() means the flag to get correct error from the Minimizer is set (Minimizer::SetValidError())
