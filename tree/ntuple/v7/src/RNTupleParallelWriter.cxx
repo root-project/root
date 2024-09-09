@@ -35,7 +35,6 @@ using ROOT::Experimental::Internal::RColumn;
 using ROOT::Experimental::Internal::RNTupleModelChangeset;
 using ROOT::Experimental::Internal::RPage;
 using ROOT::Experimental::Internal::RPageSink;
-using ROOT::Experimental::Internal::RWritePageMemoryManager;
 
 /// An internal RPageSink that enables multiple RNTupleFillContext to write into a single common RPageSink.
 ///
