@@ -110,6 +110,9 @@ public:
    /// Fill an entry into this ntuple, but don't commit the cluster. The calling code must pass an RNTupleFillStatus
    /// and check RNTupleFillStatus::ShouldCommitCluster.
    void FillNoCommit(REntry &entry, RNTupleFillStatus &status) { fFillContext.FillNoCommit(entry, status); }
+   /// Flush column data, preparing for CommitCluster or to reduce memory usage. This will trigger compression of pages,
+   /// but not actually write to storage (unless buffered writing is turned off).
+   void FlushColumns() { fFillContext.FlushColumns(); }
    /// Ensure that the data from the so far seen Fill calls has been written to storage
    void CommitCluster(bool commitClusterGroup = false)
    {
