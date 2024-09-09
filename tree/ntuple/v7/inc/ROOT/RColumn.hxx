@@ -97,6 +97,8 @@ private:
             fWritePage = std::move(expandedPage);
          }
       }
+
+      assert(fWritePage.GetNElements() < fWritePage.GetMaxElements());
    }
 
 public:
