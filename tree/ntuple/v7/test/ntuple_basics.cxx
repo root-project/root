@@ -355,7 +355,7 @@ TEST(RNTuple, ClusterEntriesAutoStatus)
       auto model = RNTupleModel::CreateBare();
       auto field = model->MakeField<float>({"pt", "transverse momentum"}, 42.0);
 
-      int CommitClusterCalled = 0;
+      int FlushClusterCalled = 0;
       RNTupleFillStatus status;
 
       RNTupleWriteOptions options;
@@ -366,13 +366,13 @@ TEST(RNTuple, ClusterEntriesAutoStatus)
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), options);
       auto entry = ntuple->CreateEntry();
       for (int i = 0; i < 100; i++) {
-         ntuple->FillNoCommit(*entry, status);
-         if (status.ShouldCommitCluster()) {
-            ntuple->CommitCluster();
-            CommitClusterCalled++;
+         ntuple->FillNoFlush(*entry, status);
+         if (status.ShouldFlushCluster()) {
+            ntuple->FlushCluster();
+            FlushClusterCalled++;
          }
       }
-      EXPECT_EQ(20, CommitClusterCalled);
+      EXPECT_EQ(20, FlushClusterCalled);
    }
 
    auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());

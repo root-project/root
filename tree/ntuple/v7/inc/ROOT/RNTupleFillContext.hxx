@@ -44,7 +44,7 @@ class RPageSink;
 An output cluster can be filled with entries. The caller has to make sure that the data that gets filled into a cluster
 is not modified for the time of the Fill() call. The fill call serializes the C++ object into the column format and
 writes data into the corresponding column page buffers.  Writing of the buffers to storage is deferred and can be
-triggered by CommitCluster() or by destructing the context.  On I/O errors, an exception is thrown.
+triggered by FlushCluster() or by destructing the context.  On I/O errors, an exception is thrown.
 
 Instances of this class are not meant to be used in isolation and can be created from an RNTupleParallelWriter. For
 sequential writing, please refer to RNTupleWriter.
@@ -61,12 +61,12 @@ private:
 
    Detail::RNTupleMetrics fMetrics;
 
-   NTupleSize_t fLastCommitted = 0;
+   NTupleSize_t fLastFlushed = 0;
    NTupleSize_t fNEntries = 0;
    /// Keeps track of the number of bytes written into the current cluster
    std::size_t fUnzippedClusterSize = 0;
    /// The total number of bytes written to storage (i.e., after compression)
-   std::uint64_t fNBytesCommitted = 0;
+   std::uint64_t fNBytesFlushed = 0;
    /// The total number of bytes filled into all the so far committed clusters,
    /// i.e. the uncompressed size of the written clusters
    std::uint64_t fNBytesFilled = 0;
@@ -83,10 +83,10 @@ public:
    ~RNTupleFillContext();
 
    /// Fill an entry into this context, but don't commit the cluster. The calling code must pass an RNTupleFillStatus
-   /// and check RNTupleFillStatus::ShouldCommitCluster.
+   /// and check RNTupleFillStatus::ShouldFlushCluster.
    ///
    /// This method will perform a light check whether the entry comes from the context's own model.
-   void FillNoCommit(REntry &entry, RNTupleFillStatus &status)
+   void FillNoFlush(REntry &entry, RNTupleFillStatus &status)
    {
       if (R__unlikely(entry.GetModelId() != fModel->GetModelId()))
          throw RException(R__FAIL("mismatch between entry and model"));
@@ -95,10 +95,10 @@ public:
       fUnzippedClusterSize += bytesWritten;
       fNEntries++;
 
-      status.fNEntriesSinceLastCommit = fNEntries - fLastCommitted;
+      status.fNEntriesSinceLastFlush = fNEntries - fLastFlushed;
       status.fUnzippedClusterSize = fUnzippedClusterSize;
       status.fLastEntrySize = bytesWritten;
-      status.fShouldCommitCluster =
+      status.fShouldFlushCluster =
          (fUnzippedClusterSize >= fMaxUnzippedClusterSize) || (fUnzippedClusterSize >= fUnzippedClusterSizeEst);
    }
    /// Fill an entry into this context.  This method will perform a light check whether the entry comes from the
@@ -107,21 +107,21 @@ public:
    std::size_t Fill(REntry &entry)
    {
       RNTupleFillStatus status;
-      FillNoCommit(entry, status);
-      if (status.ShouldCommitCluster())
-         CommitCluster();
+      FillNoFlush(entry, status);
+      if (status.ShouldFlushCluster())
+         FlushCluster();
       return status.GetLastEntrySize();
    }
    /// Flush column data, preparing for CommitCluster or to reduce memory usage. This will trigger compression of pages,
    /// but not actually write to storage.
    void FlushColumns();
-   /// Ensure that the data from the so far seen Fill calls has been written to storage
-   void CommitCluster();
+   /// Flush so far filled entries to storage
+   void FlushCluster();
 
    std::unique_ptr<REntry> CreateEntry() { return fModel->CreateEntry(); }
 
-   /// Return the entry number that was last committed in a cluster.
-   NTupleSize_t GetLastCommitted() const { return fLastCommitted; }
+   /// Return the entry number that was last flushed in a cluster.
+   NTupleSize_t GetLastFlushed() const { return fLastFlushed; }
    /// Return the number of entries filled so far.
    NTupleSize_t GetNEntries() const { return fNEntries; }
 
