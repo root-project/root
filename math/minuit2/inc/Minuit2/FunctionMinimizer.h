@@ -21,7 +21,6 @@ namespace ROOT {
 namespace Minuit2 {
 
 class FCNBase;
-class FCNGradientBase;
 class FunctionMinimum;
 
 //_____________________________________________________________________________________
@@ -43,18 +42,8 @@ public:
    virtual FunctionMinimum Minimize(const FCNBase &, std::span<const double> par, std::span<const double> err,
                                     unsigned int strategy, unsigned int maxfcn, double toler) const = 0;
 
-   // starting values for parameters and errors and FCN with Gradient
-   virtual FunctionMinimum Minimize(const FCNGradientBase &, std::span<const double> par,
-                                    std::span<const double> err, unsigned int strategy, unsigned int maxfcn,
-                                    double toler) const = 0;
-
    // starting values for parameters and covariance matrix
    virtual FunctionMinimum Minimize(const FCNBase &, std::span<const double> par, unsigned int nrow,
-                                    std::span<const double> cov, unsigned int strategy, unsigned int maxfcn,
-                                    double toler) const = 0;
-
-   // starting values for parameters and covariance matrix and FCN with Gradient
-   virtual FunctionMinimum Minimize(const FCNGradientBase &, std::span<const double> par, unsigned int nrow,
                                     std::span<const double> cov, unsigned int strategy, unsigned int maxfcn,
                                     double toler) const = 0;
 };

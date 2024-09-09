@@ -16,7 +16,7 @@ namespace ROOT {
 
 namespace Minuit2 {
 
-class FCNGradientBase;
+class FCNBase;
 class MnUserTransformation;
 
 /// Similar to the AnalyticalGradientCalculator, the ExternalInternalGradientCalculator
@@ -30,7 +30,7 @@ class MnUserTransformation;
 class ExternalInternalGradientCalculator : public AnalyticalGradientCalculator {
 
 public:
-   ExternalInternalGradientCalculator(const FCNGradientBase &fcn, const MnUserTransformation &trafo)
+   ExternalInternalGradientCalculator(const FCNBase &fcn, const MnUserTransformation &trafo)
       : AnalyticalGradientCalculator(fcn, trafo)
    {
    }

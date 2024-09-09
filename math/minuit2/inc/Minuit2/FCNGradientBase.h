@@ -12,8 +12,6 @@
 
 #include "Minuit2/FCNBase.h"
 
-#include <vector>
-
 namespace ROOT {
 
 namespace Minuit2 {
@@ -25,37 +23,9 @@ namespace Minuit2 {
     input Parameter vector.
  */
 
-enum class GradientParameterSpace {
-  External, Internal
-};
-
 class FCNGradientBase : public FCNBase {
-
 public:
-   ~FCNGradientBase() override {}
-
-   virtual std::vector<double> Gradient(std::span<const double> ) const = 0;
-   virtual std::vector<double> GradientWithPrevResult(std::span<const double> parameters, double * /*previous_grad*/,
-                                                      double * /*previous_g2*/, double * /*previous_gstep*/) const
-   {
-      return Gradient(parameters);
-   };
-
-   virtual GradientParameterSpace gradParameterSpace() const {
-      return GradientParameterSpace::External;
-   };
-
-   /// return second derivatives (diagonal of the Hessian matrix)
-   virtual std::vector<double> G2(std::span<const double> ) const { return std::vector<double>();}
-
-   /// return Hessian
-   virtual std::vector<double> Hessian(std::span<const double> ) const { return std::vector<double>();}
-
-   virtual bool HasHessian() const { return false; }
-
-   virtual bool HasG2() const { return false; }
-
-
+   bool HasGradient() const final { return true; }
 };
 
 } // namespace Minuit2

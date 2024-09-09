@@ -46,14 +46,7 @@ public:
    FunctionMinimum Minimize(const FCNBase &, std::span<const double>, std::span<const double>,
                                     unsigned int stra = 1, unsigned int maxfcn = 0, double toler = 0.1) const override;
 
-   FunctionMinimum Minimize(const FCNGradientBase &, std::span<const double>, std::span<const double>,
-                                    unsigned int stra = 1, unsigned int maxfcn = 0, double toler = 0.1) const override;
-
    FunctionMinimum Minimize(const FCNBase &, std::span<const double>, unsigned int,
-                                    std::span<const double>, unsigned int stra = 1, unsigned int maxfcn = 0,
-                                    double toler = 0.1) const override;
-
-   FunctionMinimum Minimize(const FCNGradientBase &, std::span<const double>, unsigned int,
                                     std::span<const double>, unsigned int stra = 1, unsigned int maxfcn = 0,
                                     double toler = 0.1) const override;
 
@@ -61,19 +54,10 @@ public:
    virtual FunctionMinimum Minimize(const FCNBase &, const MnUserParameters &, const MnStrategy &,
                                     unsigned int maxfcn = 0, double toler = 0.1) const;
 
-   virtual FunctionMinimum Minimize(const FCNGradientBase &, const MnUserParameters &, const MnStrategy &,
-                                    unsigned int maxfcn = 0, double toler = 0.1) const;
-
    virtual FunctionMinimum Minimize(const FCNBase &, const MnUserParameters &, const MnUserCovariance &,
                                     const MnStrategy &, unsigned int maxfcn = 0, double toler = 0.1) const;
 
-   virtual FunctionMinimum Minimize(const FCNGradientBase &, const MnUserParameters &, const MnUserCovariance &,
-                                    const MnStrategy &, unsigned int maxfcn = 0, double toler = 0.1) const;
-
    virtual FunctionMinimum Minimize(const FCNBase &, const MnUserParameterState &, const MnStrategy &,
-                                    unsigned int maxfcn = 0, double toler = 0.1) const;
-
-   virtual FunctionMinimum Minimize(const FCNGradientBase &, const MnUserParameterState &, const MnStrategy &,
                                     unsigned int maxfcn = 0, double toler = 0.1) const;
 
    // for Fumili

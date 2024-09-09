@@ -8,7 +8,7 @@
  **********************************************************************/
 
 #include "Minuit2/AnalyticalGradientCalculator.h"
-#include "Minuit2/FCNGradientBase.h"
+#include "Minuit2/FCNBase.h"
 #include "Minuit2/MnUserTransformation.h"
 #include "Minuit2/FunctionGradient.h"
 #include "Minuit2/MinimumParameters.h"

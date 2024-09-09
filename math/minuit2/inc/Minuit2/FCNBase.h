@@ -32,6 +32,10 @@ namespace Minuit2 {
   \ingroup Math
 */
 
+enum class GradientParameterSpace {
+  External, Internal
+};
+
 //______________________________________________________________________________
 /**
 
@@ -47,7 +51,6 @@ Interface (abstract class) defining the function to be minimized, which has to b
 class FCNBase : public GenericFunction {
 
 public:
-   ~FCNBase() override {}
 
    /**
 
@@ -106,6 +109,29 @@ public:
        Re-implement this function if needed.
    */
    virtual void SetErrorDef(double){};
+
+   virtual bool HasGradient() const { return false; }
+
+   virtual std::vector<double> Gradient(std::span<const double> ) const { return {}; }
+   virtual std::vector<double> GradientWithPrevResult(std::span<const double> parameters, double * /*previous_grad*/,
+                                                      double * /*previous_g2*/, double * /*previous_gstep*/) const
+   {
+      return Gradient(parameters);
+   };
+
+   virtual GradientParameterSpace gradParameterSpace() const {
+      return GradientParameterSpace::External;
+   };
+
+   /// return second derivatives (diagonal of the Hessian matrix)
+   virtual std::vector<double> G2(std::span<const double> ) const { return {};}
+
+   /// return Hessian
+   virtual std::vector<double> Hessian(std::span<const double> ) const { return {};}
+
+   virtual bool HasHessian() const { return false; }
+
+   virtual bool HasG2() const { return false; }
 };
 
 } // namespace Minuit2

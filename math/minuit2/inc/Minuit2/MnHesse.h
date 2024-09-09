@@ -30,7 +30,6 @@ class MinimumState;
 class MnMachinePrecision;
 class MnFcn;
 class FunctionMinimum;
-class FCNGradientBase;
 
 //_______________________________________________________________________
 /**
@@ -97,8 +96,8 @@ private:
    /// internal function to compute the Hessian using numerical derivative computation
    MinimumState ComputeNumerical(const MnFcn &, const MinimumState &, const MnUserTransformation &, unsigned int maxcalls) const;
 
-   /// internal function to compute the Hessian using an analytical computation or externally provided in the FCNGradientBase class
-   MinimumState ComputeAnalytical(const FCNGradientBase &, const MinimumState &, const MnUserTransformation &) const;
+   /// internal function to compute the Hessian using an analytical computation or externally provided in the FCNBase class
+   MinimumState ComputeAnalytical(const FCNBase &, const MinimumState &, const MnUserTransformation &) const;
 
    MnStrategy fStrategy;
 };

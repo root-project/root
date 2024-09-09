@@ -11,7 +11,6 @@
 #include "Minuit2/MnUserParameterState.h"
 #include "Minuit2/MnUserFcn.h"
 #include "Minuit2/FCNBase.h"
-#include "Minuit2/FCNGradientBase.h"
 #include "Minuit2/MnPosDef.h"
 #include "Minuit2/HessianGradientCalculator.h"
 #include "Minuit2/Numerical2PGradientCalculator.h"
@@ -75,10 +74,9 @@ MnHesse::operator()(const FCNBase &fcn, const MnUserParameterState &state, unsig
    double amin = mfcn(x);
    MinimumParameters par(x, amin);
    // check if we can use analytical gradient
-   auto * gradFCN = dynamic_cast<const FCNGradientBase *>(&(fcn));
-   if (gradFCN) {
+   if (fcn.HasGradient()) {
       // no need to compute gradient here
-      MinimumState tmp = ComputeAnalytical(*gradFCN, MinimumState(par, MinimumError(MnAlgebraicSymMatrix(n), 1.), FunctionGradient(n),
+      MinimumState tmp = ComputeAnalytical(fcn, MinimumState(par, MinimumError(MnAlgebraicSymMatrix(n), 1.), FunctionGradient(n),
         state.Edm(), state.NFcn()), state.Trafo());
       return MnUserParameterState(tmp, fcn.Up(), state.Trafo());
    }
@@ -106,15 +104,14 @@ MinimumState MnHesse::operator()(const MnFcn &mfcn, const MinimumState &st, cons
    // check first if we have an analytical gradient
    if (st.Gradient().IsAnalytical()) {
       // check if we can compute analytical Hessian
-      auto * gradFCN = dynamic_cast<const FCNGradientBase *>(&(mfcn.Fcn()));
-      if (gradFCN && gradFCN->HasHessian()) {
-         return ComputeAnalytical(*gradFCN, st, trafo);
+      if (mfcn.Fcn().HasGradient() && mfcn.Fcn().HasHessian()) {
+         return ComputeAnalytical(mfcn.Fcn(), st, trafo);
       }
    }
    // case of numerical computation or only analytical first derivatives
    return ComputeNumerical(mfcn, st, trafo, maxcalls);
 }
-MinimumState MnHesse::ComputeAnalytical(const FCNGradientBase & fcn, const MinimumState &st, const MnUserTransformation &trafo) const
+MinimumState MnHesse::ComputeAnalytical(const FCNBase & fcn, const MinimumState &st, const MnUserTransformation &trafo) const
 {
    unsigned int n = st.Parameters().Vec().size();
    MnAlgebraicSymMatrix vhmat(n);

@@ -10,7 +10,7 @@
 #ifndef ROOT_Minuit2_FCNGradAdapter
 #define ROOT_Minuit2_FCNGradAdapter
 
-#include "Minuit2/FCNGradientBase.h"
+#include "Minuit2/FCNBase.h"
 #include "Minuit2/MnPrint.h"
 
 #include <vector>
@@ -32,12 +32,14 @@ template wrapped class for adapting to FCNBase signature a IGradFunction
 */
 
 template <class Function>
-class FCNGradAdapter : public FCNGradientBase {
+class FCNGradAdapter : public FCNBase {
 
 public:
    FCNGradAdapter(const Function &f, double up = 1.) : fFunc(f), fUp(up), fGrad(std::vector<double>(fFunc.NDim())) {}
 
    ~FCNGradAdapter() override {}
+
+   bool HasGradient() const override { return true; }
 
    double operator()(std::span<const double> v) const override { return fFunc.operator()(&v[0]); }
    double operator()(const double *v) const { return fFunc.operator()(v); }
