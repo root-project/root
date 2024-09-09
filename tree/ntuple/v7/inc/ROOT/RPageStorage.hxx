@@ -214,13 +214,7 @@ private:
       std::size_t fCurrentPageSize = 0;
       std::size_t fInitialPageSize = 0;
 
-      bool operator>(const RColumnInfo &other) const
-      {
-         // Make the sort order unique by adding the column pointer as a secondary key
-         if (fCurrentPageSize == other.fCurrentPageSize)
-            return fColumn > other.fColumn;
-         return fCurrentPageSize > other.fCurrentPageSize;
-      }
+      bool operator>(const RColumnInfo &other) const;
    };
 
    /// Sum of all the write page sizes (their capacity) of the columns in `fColumnsSortedByPageSize`
