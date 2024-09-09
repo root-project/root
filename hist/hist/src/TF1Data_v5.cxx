@@ -19,11 +19,11 @@ ClassImp(ROOT::v5::TF1Data);
 namespace ROOT {
 
    namespace v5 {
-      
+
 ////////////////////////////////////////////////////////////////////////////////
 /// F1 default constructor.
 
-TF1Data::TF1Data(): ROOT::v5::TFormula(), TAttLine(), TAttFill(), TAttMarker()
+TF1Data::TF1Data()
 {
    fXmin      = 0;
    fXmax      = 0;
@@ -62,7 +62,7 @@ void TF1Data::Streamer(TBuffer &b)
       UInt_t R__s, R__c;
       Version_t v = b.ReadVersion(&R__s, &R__c);
       Streamer(b, v, R__s, R__c, nullptr);
-   
+
    } else {
       // this will be needed if we want to write in old format
       //Int_t saved = 0;
@@ -150,4 +150,3 @@ void TF1Data::Streamer(TBuffer &b, Int_t v, UInt_t R__s, UInt_t R__c, const TCla
 
    }  // end namespace v5
 }   // end namespace ROOT
-      

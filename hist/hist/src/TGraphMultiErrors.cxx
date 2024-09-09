@@ -64,7 +64,7 @@ End_Macro
 /// TGraphMultiErrors default constructor.
 
 TGraphMultiErrors::TGraphMultiErrors()
-   : TGraph(), fNYErrors(0), fSumErrorsMode(TGraphMultiErrors::kOnlyFirst), fExL(nullptr), fExH(nullptr)
+   : fNYErrors(0), fSumErrorsMode(TGraphMultiErrors::kOnlyFirst), fExL(nullptr), fExH(nullptr)
 {
 }
 
@@ -422,7 +422,7 @@ TGraphMultiErrors::TGraphMultiErrors(const Char_t *name, const Char_t *title, In
 
 TGraphMultiErrors::TGraphMultiErrors(const TVectorF &tvX, const TVectorF &tvY, const TVectorF &tvExL,
                                      const TVectorF &tvExH, const TVectorF &tvEyL, const TVectorF &tvEyH, Int_t m)
-   : TGraph(), fNYErrors(1), fSumErrorsMode(m)
+   : fNYErrors(1), fSumErrorsMode(m)
 {
    fNpoints = TMath::Min(tvX.GetNrows(), tvY.GetNrows());
 
@@ -461,7 +461,7 @@ TGraphMultiErrors::TGraphMultiErrors(const TVectorF &tvX, const TVectorF &tvY, c
 
 TGraphMultiErrors::TGraphMultiErrors(const TVectorD &tvX, const TVectorD &tvY, const TVectorD &tvExL,
                                      const TVectorD &tvExH, const TVectorD &tvEyL, const TVectorD &tvEyH, Int_t m)
-   : TGraph(), fNYErrors(1), fSumErrorsMode(m)
+   : fNYErrors(1), fSumErrorsMode(m)
 {
    fNpoints = TMath::Min(tvX.GetNrows(), tvY.GetNrows());
 
@@ -499,7 +499,7 @@ TGraphMultiErrors::TGraphMultiErrors(const TVectorD &tvX, const TVectorD &tvY, c
 
 TGraphMultiErrors::TGraphMultiErrors(Int_t ne, const TVectorF &tvX, const TVectorF &tvY, const TVectorF &tvExL,
                                      const TVectorF &tvExH, const TVectorF *tvEyL, const TVectorF *tvEyH, Int_t m)
-   : TGraph(), fNYErrors(ne), fSumErrorsMode(m)
+   : fNYErrors(ne), fSumErrorsMode(m)
 {
    fNpoints = TMath::Min(tvX.GetNrows(), tvY.GetNrows());
 
@@ -538,7 +538,7 @@ TGraphMultiErrors::TGraphMultiErrors(Int_t ne, const TVectorF &tvX, const TVecto
 
 TGraphMultiErrors::TGraphMultiErrors(Int_t ne, const TVectorD &tvX, const TVectorD &tvY, const TVectorD &tvExL,
                                      const TVectorD &tvExH, const TVectorD *tvEyL, const TVectorD *tvEyH, Int_t m)
-   : TGraph(), fNYErrors(ne), fSumErrorsMode(m)
+   : fNYErrors(ne), fSumErrorsMode(m)
 {
    fNpoints = TMath::Min(tvX.GetNrows(), tvY.GetNrows());
 

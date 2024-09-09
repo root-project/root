@@ -58,7 +58,7 @@ ClassImp(THbookTree);
 ////////////////////////////////////////////////////////////////////////////////
 ///default constructor
 
-THbookTree::THbookTree(): TTree()
+THbookTree::THbookTree()
 {
    fID   = 0;
    fType = 0;

@@ -69,9 +69,7 @@ End_Macro
 ////////////////////////////////////////////////////////////////////////////////
 /// TGraphAsymmErrors default constructor.
 
-TGraphAsymmErrors::TGraphAsymmErrors(): TGraph()
-{
-}
+TGraphAsymmErrors::TGraphAsymmErrors() {}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -187,7 +185,6 @@ TGraphAsymmErrors::TGraphAsymmErrors(Int_t n, const Double_t *x, const Double_t 
 /// in vx and vy.
 
 TGraphAsymmErrors::TGraphAsymmErrors(const TVectorF  &vx, const TVectorF  &vy, const TVectorF  &vexl, const TVectorF  &vexh, const TVectorF  &veyl, const TVectorF  &veyh)
-                  :TGraph()
 {
    fNpoints = TMath::Min(vx.GetNrows(), vy.GetNrows());
    if (!TGraph::CtorAllocate()) return;
@@ -217,7 +214,6 @@ TGraphAsymmErrors::TGraphAsymmErrors(const TVectorF  &vx, const TVectorF  &vy, c
 /// in vx and vy.
 
 TGraphAsymmErrors::TGraphAsymmErrors(const TVectorD &vx, const TVectorD &vy, const TVectorD &vexl, const TVectorD &vexh, const TVectorD &veyl, const TVectorD &veyh)
-                  :TGraph()
 {
    fNpoints = TMath::Min(vx.GetNrows(), vy.GetNrows());
    if (!TGraph::CtorAllocate()) return;

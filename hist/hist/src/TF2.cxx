@@ -80,7 +80,7 @@ See TF1 class for the list of functions formats
 ////////////////////////////////////////////////////////////////////////////////
 /// TF2 default constructor
 
-TF2::TF2(): TF1(),fYmin(0),fYmax(0),fNpy(100)
+TF2::TF2(): fYmin(0),fYmax(0),fNpy(100)
 {
 }
 

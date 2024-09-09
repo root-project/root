@@ -252,7 +252,7 @@ ClassImp(THbookFile);
 ////////////////////////////////////////////////////////////////////////////////
 ///the constructor
 
-THbookFile::THbookFile() : TNamed(),fLun(0),fLrecl(0)
+THbookFile::THbookFile() : fLun(0),fLrecl(0)
 {
    fList = new TList();
    fKeys = new TList();

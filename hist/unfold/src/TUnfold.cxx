@@ -147,34 +147,34 @@ void TUnfold::InitTUnfold(void)
    fXToHist.Set(0);
    fHistToX.Set(0);
    fSumOverY.Set(0);
-   fA = 0;
-   fL = 0;
-   fVyy = 0;
-   fY = 0;
-   fX0 = 0;
+   fA = nullptr;
+   fL = nullptr;
+   fVyy = nullptr;
+   fY = nullptr;
+   fX0 = nullptr;
    fTauSquared = 0.0;
    fBiasScale = 0.0;
    fConstraint = kEConstraintNone;
    fRegMode = kRegModeNone;
    // output
-   fX = 0;
-   fVyyInv = 0;
-   fVxx = 0;
-   fVxxInv = 0;
-   fAx = 0;
+   fX = nullptr;
+   fVyyInv = nullptr;
+   fVxx = nullptr;
+   fVxxInv = nullptr;
+   fAx = nullptr;
    fChi2A = 0.0;
    fLXsquared = 0.0;
    fRhoMax = 999.0;
    fRhoAvg = -1.0;
    fNdf = 0;
-   fDXDAM[0] = 0;
-   fDXDAZ[0] = 0;
-   fDXDAM[1] = 0;
-   fDXDAZ[1] = 0;
-   fDXDtauSquared = 0;
-   fDXDY = 0;
-   fEinv = 0;
-   fE = 0;
+   fDXDAM[0] = nullptr;
+   fDXDAZ[0] = nullptr;
+   fDXDAM[1] = nullptr;
+   fDXDAZ[1] = nullptr;
+   fDXDtauSquared = nullptr;
+   fDXDY = nullptr;
+   fEinv = nullptr;
+   fE = nullptr;
    fEpsMatrix=1.E-13;
    fIgnoredBins=0;
 }
@@ -281,7 +281,7 @@ Double_t TUnfold::DoUnfold(void)
 
    // get pseudo-inverse matrix Vyyinv and NDF
    if(!fVyyInv) {
-      GetInputInverseEmatrix(0);
+      GetInputInverseEmatrix(nullptr);
       if(fConstraint != kEConstraintNone) {
 	fNdf--;
       }
@@ -421,7 +421,7 @@ Double_t TUnfold::DoUnfold(void)
    // get error matrix on x
    //   fDXDY * Vyy * fDXDY#
    TMatrixDSparse *fDXDYVyy = MultiplyMSparseMSparse(fDXDY,fVyy);
-   fVxx = MultiplyMSparseMSparseTranspVector(fDXDYVyy,fDXDY,0);
+   fVxx = MultiplyMSparseMSparseTranspVector(fDXDYVyy,fDXDY,nullptr);
 
    DeleteMatrix(&fDXDYVyy);
 
@@ -491,7 +491,7 @@ Double_t TUnfold::DoUnfold(void)
    if(fConstraint != kEConstraintNone) {
       // add correction to fDXDAM[0]
       TMatrixDSparse *temp1=MultiplyMSparseMSparseTranspVector
-         (Eepsilon,Eepsilon,0);
+         (Eepsilon,Eepsilon,nullptr);
       AddMSparse(fDXDAM[0], -one_over_epsEeps,temp1);
       DeleteMatrix(&temp1);
       // add correction to fDXDAZ[0]
@@ -1022,7 +1022,7 @@ TMatrixDSparse *TUnfold::InvertMSparseSymmPos
    if(nError>0) {
       Fatal("InvertMSparseSymmPos",
             "Matrix has %d negative elements on the diagonal", nError);
-      return 0;
+      return nullptr;
    }
 
    // reorder matrix such that the largest block of zeros is swapped
@@ -1315,7 +1315,7 @@ TMatrixDSparse *TUnfold::InvertMSparseSymmPos
       }
       if(minusBD2inv && F) {
          TMatrixDSparse *minusBD2invBt=
-            MultiplyMSparseMSparseTranspVector(minusBD2inv,B,0);
+            MultiplyMSparseMSparseTranspVector(minusBD2inv,B,nullptr);
          AddMSparse(F,1.,minusBD2invBt);
          DeleteMatrix(&minusBD2invBt);
       }
@@ -1598,7 +1598,7 @@ TMatrixDSparse *TUnfold::InvertMSparseSymmPos
 
    TMatrixDSparse *r=(rNumEl>=0) ?
       CreateSparseMatrix(A->GetNrows(),A->GetNrows(),rNumEl,
-                         rEl_row,rEl_col,rEl_data) : 0;
+                         rEl_row,rEl_col,rEl_data) : nullptr;
    delete [] rEl_data;
    delete [] rEl_col;
    delete [] rEl_row;
@@ -2864,7 +2864,7 @@ Int_t TUnfold::ScanLcurve(Int_t nPoint,
   //       lCurve logTauX logTauY
 
   Int_t bestChoice=-1;
-  if(curve.size()>0) {
+  if(!curve.empty()) {
     Double_t *x=new Double_t[curve.size()];
     Double_t *y=new Double_t[curve.size()];
     Double_t *logT=new Double_t[curve.size()];

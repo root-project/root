@@ -47,7 +47,7 @@ See examples of various axis representations drawn by class TGaxis.
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
 
-TAxis::TAxis(): TNamed(), TAttAxis()
+TAxis::TAxis()
 {
    fNbins   = 1;
    fXmin    = 0;
@@ -64,7 +64,7 @@ TAxis::TAxis(): TNamed(), TAttAxis()
 ////////////////////////////////////////////////////////////////////////////////
 /// Axis constructor for axis with fix bin size
 
-TAxis::TAxis(Int_t nbins,Double_t xlow,Double_t xup): TNamed(), TAttAxis()
+TAxis::TAxis(Int_t nbins,Double_t xlow,Double_t xup)
 {
    fParent  = nullptr;
    fLabels  = nullptr;
@@ -75,7 +75,7 @@ TAxis::TAxis(Int_t nbins,Double_t xlow,Double_t xup): TNamed(), TAttAxis()
 ////////////////////////////////////////////////////////////////////////////////
 /// Axis constructor for variable bin size
 
-TAxis::TAxis(Int_t nbins,const Double_t *xbins): TNamed(), TAttAxis()
+TAxis::TAxis(Int_t nbins,const Double_t *xbins)
 {
    fParent  = nullptr;
    fLabels  = nullptr;

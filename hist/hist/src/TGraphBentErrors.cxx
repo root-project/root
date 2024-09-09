@@ -59,7 +59,7 @@ End_Macro
 ////////////////////////////////////////////////////////////////////////////////
 /// TGraphBentErrors default constructor.
 
-TGraphBentErrors::TGraphBentErrors(): TGraph()
+TGraphBentErrors::TGraphBentErrors()
 {
    if (!CtorAllocate()) return;
 }

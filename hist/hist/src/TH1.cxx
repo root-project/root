@@ -612,7 +612,7 @@ ClassImp(TH1);
 ////////////////////////////////////////////////////////////////////////////////
 /// Histogram default constructor.
 
-TH1::TH1(): TNamed(), TAttLine(), TAttFill(), TAttMarker()
+TH1::TH1()
 {
    fDirectory     = nullptr;
    fFunctions     = new TList;
@@ -695,7 +695,7 @@ TH1::~TH1()
 
 
 TH1::TH1(const char *name,const char *title,Int_t nbins,Double_t xlow,Double_t xup)
-    :TNamed(name,title), TAttLine(), TAttFill(), TAttMarker()
+    :TNamed(name,title)
 {
    Build();
    if (nbins <= 0) {Warning("TH1","nbins is <=0 - set to nbins = 1"); nbins = 1; }
@@ -717,7 +717,7 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,Double_t xlow,Double_t x
 ///            This is an array of type float and size nbins+1
 
 TH1::TH1(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
-    :TNamed(name,title), TAttLine(), TAttFill(), TAttMarker()
+    :TNamed(name,title)
 {
    Build();
    if (nbins <= 0) {Warning("TH1","nbins is <=0 - set to nbins = 1"); nbins = 1; }
@@ -739,7 +739,7 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
 ///            This is an array of type double and size nbins+1
 
 TH1::TH1(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
-    :TNamed(name,title), TAttLine(), TAttFill(), TAttMarker()
+    :TNamed(name,title)
 {
    Build();
    if (nbins <= 0) {Warning("TH1","nbins is <=0 - set to nbins = 1"); nbins = 1; }
@@ -9463,7 +9463,7 @@ ClassImp(TH1C);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TH1C::TH1C(): TH1(), TArrayC()
+TH1C::TH1C()
 {
    fDimension = 1;
    SetBinsLength(3);
@@ -9649,7 +9649,7 @@ ClassImp(TH1S);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TH1S::TH1S(): TH1(), TArrayS()
+TH1S::TH1S()
 {
    fDimension = 1;
    SetBinsLength(3);
@@ -9836,7 +9836,7 @@ ClassImp(TH1I);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TH1I::TH1I(): TH1(), TArrayI()
+TH1I::TH1I()
 {
    fDimension = 1;
    SetBinsLength(3);
@@ -10024,7 +10024,7 @@ ClassImp(TH1L);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TH1L::TH1L(): TH1(), TArrayL64()
+TH1L::TH1L()
 {
    fDimension = 1;
    SetBinsLength(3);
@@ -10211,7 +10211,7 @@ ClassImp(TH1F);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TH1F::TH1F(): TH1(), TArrayF()
+TH1F::TH1F()
 {
    fDimension = 1;
    SetBinsLength(3);
@@ -10392,7 +10392,7 @@ ClassImp(TH1D);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TH1D::TH1D(): TH1(), TArrayD()
+TH1D::TH1D()
 {
    fDimension = 1;
    SetBinsLength(3);

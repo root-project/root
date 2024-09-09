@@ -133,7 +133,7 @@ The FORMULA class (ROOT version 5)
 ////////////////////////////////////////////////////////////////////////////////
 /// Formula default constructor.
 
-TFormula::TFormula(): TNamed()
+TFormula::TFormula()
 {
    fNdim   = 0;
    fNpar   = 0;

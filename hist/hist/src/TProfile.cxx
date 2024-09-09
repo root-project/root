@@ -89,7 +89,7 @@ ClassImp(TProfile);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for Profile histograms
 
-TProfile::TProfile() : TH1D()
+TProfile::TProfile()
 {
    BuildOptions(0,0,"");
 }

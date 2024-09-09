@@ -88,7 +88,7 @@ void TF1Convolution::InitializeDataMembers(TF1* function1, TF1* function2, Bool_
       fFunction2 = std::make_unique<TF1>();
       function2->Copy(*fFunction2);
    }
-   if (fFunction1.get() == nullptr|| fFunction2.get() == nullptr)
+   if (fFunction1 == nullptr|| fFunction2 == nullptr)
       Fatal("InitializeDataMembers","Invalid functions - Abort");
 
    // Set kNotGlobal bit

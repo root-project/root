@@ -487,7 +487,6 @@ TF1 *TF1::fgCurrent = nullptr;
 /// TF1 default constructor.
 
 TF1::TF1():
-   TNamed(), TAttLine(), TAttFill(), TAttMarker(),
    fXmin(0), fXmax(0), fNpar(0), fNdim(0), fType(EFType::kFormula)
 {
    SetFillStyle(0);
@@ -509,7 +508,7 @@ TF1::TF1():
 /// titles for the X and Y axis respectively.
 
 TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EAddToList addToGlobList, bool vectorize) :
-   TNamed(name, formula), TAttLine(), TAttFill(), TAttMarker(), fType(EFType::kFormula)
+   TNamed(name, formula),  fType(EFType::kFormula)
 {
    if (xmin < xmax) {
       fXmin = xmin;
