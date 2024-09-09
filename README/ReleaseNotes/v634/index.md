@@ -116,6 +116,10 @@ The [TUnfold package](https://www.desy.de/~sschmitt/tunfold.html) inside ROOT is
 
 ## Math Libraries
 
+### Usage of `std::span<const double>` in Minuit 2 interfaces
+
+To avoid forcing the user to do manual memory allocations via `std::vector`, the interfaces of Minuit 2 function adapter classes like `ROOT::Minuit2::FCNBase` or `ROOT::Minuit2::FCNGradientBase` were changed to accept `std::span<const double>` arguments instead of `std::vector<double> const&`.
+This should have minimal impact on users, since one should usuall use Minuit 2 via the `ROOT::Math::Minimizer` interface, which is unchanged.
 
 ## RooFit Libraries
 
