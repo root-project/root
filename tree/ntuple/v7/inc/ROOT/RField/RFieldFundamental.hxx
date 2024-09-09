@@ -375,6 +375,9 @@ public:
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 
    void SetHalfPrecision();
+   /// Set the precision of this field to `nBits`. The remaining (32 - `nBits`) bits will be truncated
+   /// from the number's mantissa. `nBits` must be $10 <= nBits <= 31$ (this means that at least 1 bit
+   /// of mantissa is always preserved). Note that this effectively rounds the number towards 0.
    void SetTruncated(std::size_t nBits);
 };
 
