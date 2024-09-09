@@ -185,6 +185,7 @@ public:
    /// Unregisters a column.  A page source decreases the reference counter for the corresponding active column.
    /// For a page sink, dropping columns is currently a no-op.
    virtual void DropColumn(ColumnHandle_t columnHandle) = 0;
+   ColumnId_t GetColumnId(ColumnHandle_t columnHandle) const { return columnHandle.fPhysicalId; }
 
    /// Returns the default metrics object.  Subclasses might alternatively provide their own metrics object by
    /// overriding this.
@@ -709,7 +710,6 @@ public:
    void Attach();
    NTupleSize_t GetNEntries();
    NTupleSize_t GetNElements(ColumnHandle_t columnHandle);
-   ColumnId_t GetColumnId(ColumnHandle_t columnHandle);
 
    /// Promise to only read from the given entry range. If set, prevents the cluster pool from reading-ahead beyond
    /// the given range. The range needs to be within `[0, GetNEntries())`.
