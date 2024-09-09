@@ -3,6 +3,25 @@
 #include <cstdint>
 #include <utility>
 
+TEST(RNTuple, TypeCastInvalid)
+{
+   FileRaii fileGuard("test_ntuple_type_cast_invalid.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      model->MakeField<float>("x");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+   }
+
+   auto castModelInvalid = RNTupleModel::Create();
+   castModelInvalid->MakeField<int>("x");
+   EXPECT_THROW(RNTupleReader::Open(std::move(castModelInvalid), "ntpl", fileGuard.GetPath()), RException);
+
+   auto castModel = RNTupleModel::Create();
+   castModel->MakeField<double>("x");
+   EXPECT_NO_THROW(RNTupleReader::Open(std::move(castModel), "ntpl", fileGuard.GetPath()));
+}
+
 TEST(RNTuple, TypeCastBool)
 {
    FileRaii fileGuard("test_ntuple_type_cast_bool.root");
