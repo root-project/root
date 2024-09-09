@@ -120,39 +120,17 @@ class Minimizer {
 
 public:
 
-   /**
-      Default constructor
-   */
-   Minimizer () :
-      fValidError(false),
-      fStatus(-1)
-   {}
+   /// Default constructor.
+   Minimizer () {}
 
-   /**
-      Destructor (no operations)
-   */
+   /// Destructor (no operations).
    virtual ~Minimizer ()  {}
 
-
-
-
-private:
-   // usually copying is non trivial, so we make this unaccessible
-
-   /**
-      Copy constructor
-   */
-   Minimizer(const Minimizer &) {}
-
-   /**
-      Assignment operator
-   */
-   Minimizer & operator = (const Minimizer & rhs)  {
-      if (this == &rhs) return *this;  // time saving self-test
-      return *this;
-   }
-
-public:
+   // usually copying is non trivial, so we delete this
+   Minimizer(Minimizer const&) = delete;
+   Minimizer &operator=(Minimizer const&) = delete;
+   Minimizer(Minimizer &&) = delete;
+   Minimizer &operator=(Minimizer &&) = delete;
 
    /// reset for consecutive minimization - implement if needed
    virtual void Clear() {}
@@ -381,16 +359,11 @@ public:
 
 protected:
 
-
-//private:
-
-
    // keep protected to be accessible by the derived classes
 
-
-   bool fValidError;            ///< flag to control if errors have been validated (Hesse has been run in case of Minuit)
+   bool fValidError = false;    ///< flag to control if errors have been validated (Hesse has been run in case of Minuit)
    MinimizerOptions fOptions;   ///< minimizer options
-   int fStatus;                 ///< status of minimizer
+   int fStatus = -1;            ///< status of minimizer
 };
 
    } // end namespace Math

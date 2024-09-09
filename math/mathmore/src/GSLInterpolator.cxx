@@ -119,19 +119,5 @@ GSLInterpolator::~GSLInterpolator()
    if (fAccel != nullptr) gsl_interp_accel_free( fAccel);
 }
 
-GSLInterpolator::GSLInterpolator(const GSLInterpolator &)
-{
-   // dummy copy ctr
-}
-
-GSLInterpolator & GSLInterpolator::operator = (const GSLInterpolator &rhs)
-{
-   // dummy assignment operator
-   if (this == &rhs) return *this;  // time saving self-test
-
-   return *this;
-}
-
-
 } // namespace Math
 } // namespace ROOT
