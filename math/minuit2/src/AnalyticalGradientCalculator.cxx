@@ -59,12 +59,6 @@ FunctionGradient AnalyticalGradientCalculator::operator()(const MinimumParameter
    return (*this)(par);
 }
 
-bool AnalyticalGradientCalculator::CheckGradient() const
-{
-   // check to be sure FCN implements analytical gradient
-   return fGradFunc.CheckGradient();
-}
-
 // G2 can be computed directly without Hessian or via the Hessian
 bool AnalyticalGradientCalculator::CanComputeG2() const {
    return fGradFunc.HasG2() || fGradFunc.HasHessian();

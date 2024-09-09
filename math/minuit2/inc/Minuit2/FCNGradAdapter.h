@@ -55,9 +55,6 @@ public:
       fFunc.GradientWithPrevResult(&v[0], &fGrad[0], previous_grad, previous_g2, previous_gstep);
       return fGrad;
    }
-   // forward interface
-   // virtual double operator()(int npar, double* params,int iflag = 4) const;
-   bool CheckGradient() const override { return false; }
 
    GradientParameterSpace gradParameterSpace() const override {
       if (fFunc.returnsInMinuit2ParameterSpace()) {

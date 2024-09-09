@@ -41,8 +41,6 @@ public:
    /// compute second derivatives (diagonal of Hessian)
    bool G2(const MinimumParameters &, MnAlgebraicVector &) const override;
 
-   virtual bool CheckGradient() const;
-
    virtual bool CanComputeG2() const;
 
    virtual bool CanComputeHessian() const;
