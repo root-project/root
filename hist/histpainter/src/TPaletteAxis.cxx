@@ -116,7 +116,7 @@ End_Macro
 ////////////////////////////////////////////////////////////////////////////////
 /// Palette default constructor.
 
-TPaletteAxis::TPaletteAxis(): TPave()
+TPaletteAxis::TPaletteAxis()
 {
    fH = nullptr;
    SetName("");

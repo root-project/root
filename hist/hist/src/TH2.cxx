@@ -2861,7 +2861,7 @@ ClassImp(TH2C);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TH2C::TH2C(): TH2(), TArrayC()
+TH2C::TH2C()
 {
    SetBinsLength(9);
    if (fgDefaultSumw2) Sumw2();
@@ -2871,9 +2871,7 @@ TH2C::TH2C(): TH2(), TArrayC()
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
 
-TH2C::~TH2C()
-{
-}
+TH2C::~TH2C() {}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3125,7 +3123,7 @@ ClassImp(TH2S);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TH2S::TH2S(): TH2(), TArrayS()
+TH2S::TH2S()
 {
    SetBinsLength(9);
    if (fgDefaultSumw2) Sumw2();
@@ -3389,7 +3387,7 @@ ClassImp(TH2I);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TH2I::TH2I(): TH2(), TArrayI()
+TH2I::TH2I()
 {
    SetBinsLength(9);
    if (fgDefaultSumw2) Sumw2();
@@ -3618,7 +3616,7 @@ ClassImp(TH2L);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TH2L::TH2L(): TH2(), TArrayL64()
+TH2L::TH2L()
 {
    SetBinsLength(9);
    if (fgDefaultSumw2) Sumw2();
@@ -3847,7 +3845,7 @@ ClassImp(TH2F);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TH2F::TH2F(): TH2(), TArrayF()
+TH2F::TH2F()
 {
    SetBinsLength(9);
    if (fgDefaultSumw2) Sumw2();
@@ -4119,7 +4117,7 @@ ClassImp(TH2D);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TH2D::TH2D(): TH2(), TArrayD()
+TH2D::TH2D()
 {
    SetBinsLength(9);
    if (fgDefaultSumw2) Sumw2();
