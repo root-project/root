@@ -78,7 +78,7 @@ protected:
    /// If set manually, the size needs to be large enough to hold all initial page buffers.
    /// The total amount of memory for writing is larger, e.g. for the additional compressed buffers etc.
    /// Use RNTupleModel::EstimateWriteMemoryUsage() for the total estimated memory use for writing.
-   /// The default values are tuned for a total write memory of around 1GB per fill context.
+   /// The default values are tuned for a total write memory of around 300 MB per fill context.
    std::size_t fPageBufferBudget = 0;
    /// Whether to use buffered writing (with RPageSinkBuf). This buffers compressed pages in memory, reorders them
    /// to keep pages of the same column adjacent, and coalesces the writes when committing a cluster.
