@@ -318,12 +318,6 @@ elseif(APPLE)
   set(x11_defvalue OFF)
 endif()
 
-# Current limitations for modules:
-#---Modules are disabled on aarch64 platform (due ODR violations)
-if(CMAKE_SYSTEM_PROCESSOR MATCHES aarch64)
-  set(runtime_cxxmodules_defvalue OFF)
-endif()
-
 # builtin_openssl is only supported on macOS
 if(builtin_openssl AND NOT APPLE)
     message(FATAL_ERROR ">>> Option 'builtin_openssl' is only supported on macOS.")
