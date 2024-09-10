@@ -493,3 +493,35 @@ TEST(RNTuple, ModelExtensionComplex)
    // thus we expect the checksums to be bitwise identical
    EXPECT_EQ(chksumRead, chksumWrite);
 }
+
+TEST(RNTuple, ModelExtensionNullableField)
+{
+   FileRaii fileGuard("test_ntuple_modelext_nullablefield.root");
+
+   {
+      auto writer = RNTupleWriter::Recreate(RNTupleModel::Create(), "ntpl", fileGuard.GetPath());
+      writer->Fill();
+
+      auto modelUpdater = writer->CreateModelUpdater();
+      modelUpdater->BeginUpdate();
+      auto fieldA = std::make_unique<RField<std::optional<float>>>("A");
+      modelUpdater->AddField(std::move(fieldA));
+      modelUpdater->CommitUpdate();
+
+      auto ptrA = writer->GetModel().GetDefaultEntry().GetPtr<std::optional<float>>("A");
+
+      *ptrA = 1.0;
+      writer->Fill();
+
+      ptrA->reset();
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   EXPECT_EQ(3u, reader->GetNEntries());
+   auto viewA = reader->GetView<std::optional<float>>("A");
+
+   EXPECT_FALSE(viewA(0).has_value());
+   EXPECT_FLOAT_EQ(1.0, viewA(1).value());
+   EXPECT_FALSE(viewA(2).has_value());
+}
