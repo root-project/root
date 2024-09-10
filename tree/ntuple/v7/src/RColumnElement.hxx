@@ -769,15 +769,15 @@ using Quantized_t = std::uint32_t;
 
 /// Converts the array `src` of `count` floating point numbers into an array of their quantized representations.
 /// Each element of `src` is assumed to be in the inclusive range [min, max].
-/// The quantized representation will consist of unsigned integers of at most `nQuantBits`, with `8 <= nQuantBits <=
-/// 32`. The unused bits are kept in the LSB of the quantized integers, to allow for easy bit packing of those integers
-/// via BitPacking::PackBits().
+/// The quantized representation will consist of unsigned integers of at most `nQuantBits` (with `nQuantBits <= 8 *
+/// sizeof(Quantized_t)`). The unused bits are kept in the LSB of the quantized integers, to allow for easy bit packing
+/// of those integers via BitPacking::PackBits().
 template <typename T>
 void QuantizeReals(Quantized_t *dst, const T *src, std::size_t count, double min, double max, std::size_t nQuantBits)
 {
    static_assert(std::is_floating_point_v<T>);
    static_assert(sizeof(T) <= sizeof(double));
-   R__ASSERT(nQuantBits >= 8 && nQuantBits <= 8 * sizeof(Quantized_t));
+   assert(1 <= nQuantBits && nQuantBits <= 8 * sizeof(Quantized_t));
 
    const std::size_t quantMax = (1ull << nQuantBits) - 1;
    const double scale = quantMax / (max - min);
@@ -805,7 +805,7 @@ void UnquantizeReals(T *dst, const Quantized_t *src, std::size_t count, double m
 {
    static_assert(std::is_floating_point_v<T>);
    static_assert(sizeof(T) <= sizeof(double));
-   R__ASSERT(nQuantBits >= 8 && nQuantBits <= 8 * sizeof(Quantized_t));
+   assert(1 <= nQuantBits && nQuantBits <= 8 * sizeof(Quantized_t));
 
    const std::size_t quantMax = (1ull << nQuantBits) - 1;
    const double scale = (max - min) / quantMax;
