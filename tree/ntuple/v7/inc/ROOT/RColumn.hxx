@@ -333,7 +333,7 @@ public:
       assert(fElement);
       return fElement->GetBitsOnStorage();
    }
-   std::pair<double, double> GetValueRange() const
+   std::optional<std::pair<double, double>> GetValueRange() const
    {
       assert(fElement);
       return fElement->GetValueRange();

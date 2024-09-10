@@ -288,4 +288,3 @@ void ROOT::Experimental::Internal::BitPacking::UnpackBits(void *dst, const void 
    assert(prevWordLsb == 0);
    assert(dstIdx == count);
 }
-
