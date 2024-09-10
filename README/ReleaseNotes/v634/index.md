@@ -71,21 +71,9 @@ The following people have contributed to this new version:
 
 ## Deprecation and Removal
 
-* The `RooAbsReal::plotSliceOn()` function that was deprecated since at least ROOT 6 was removed. Use `plotOn(frame,Slice(...))` instead.
-* The `RooTemplateProxy` constructors that take a `proxyOwnsArg` parameter to manually pass ownership are deprecated and replaced by a new constructor that takes ownership via `std::unique_ptr<T>`. They will be removed in ROOT 6.36.
-* The `RooStats::MarkovChain::GetAsDataSet` and `RooStats::MarkovChain::GetAsDataHist` functions are deprecated and will be removed in ROOT 6.36. The same functionality can be implemented by calling `RooAbsData::reduce` on the Markov Chain's `RooDataSet*` (obtained using `MarkovChain::GetAsConstDataSet`) and then obtaining its binned clone(for `RooDataHist`).
-
-  An example in Python would be:
-
-  ```py
-  mcInt = mc.GetInterval() # Obtain the MCMCInterval from a configured MCMCCalculator
-  mkc = mcInt.GetChain() # Obtain the MarkovChain
-  mkcData = mkc.GetAsConstDataSet()
-  mcIntParams = mcInt.GetParameters()
-
-  chainDataset = mkcData.reduce(SelectVars=mcIntParams, EventRange=(mcInt.GetNumBurnInSteps(), mkc.Size()))
-  chainDataHist = chainDataset.binnedClone()
-  ```
+- The `RooAbsReal::plotSliceOn()` function that was deprecated since at least ROOT 6 was removed. Use `plotOn(frame,Slice(...))` instead.
+- The `RooTemplateProxy` constructors that take a `proxyOwnsArg` parameter to manually pass ownership are deprecated and replaced by a new constructor that takes ownership via `std::unique_ptr<T>`. They will be removed in ROOT 6.36.
+- Several RooFit legacy functions are deprecated and will be removed in ROOT 6.36 (see section "RooFit libraries")
 
 ## Core Libraries
 
@@ -119,7 +107,7 @@ The [TUnfold package](https://www.desy.de/~sschmitt/tunfold.html) inside ROOT is
 ### Usage of `std::span<const double>` in Minuit 2 interfaces
 
 To avoid forcing the user to do manual memory allocations via `std::vector`, the interfaces of Minuit 2 function adapter classes like `ROOT::Minuit2::FCNBase` or `ROOT::Minuit2::FCNGradientBase` were changed to accept `std::span<const double>` arguments instead of `std::vector<double> const&`.
-This should have minimal impact on users, since one should usuall use Minuit 2 via the `ROOT::Math::Minimizer` interface, which is unchanged.
+This should have minimal impact on users, since one should usual use Minuit 2 via the `ROOT::Math::Minimizer` interface, which is unchanged.
 
 ## RooFit Libraries
 
@@ -130,6 +118,30 @@ This should have minimal impact on users, since one should usuall use Minuit 2 v
 * The function `RooFit::bindFunction()` now supports arbitrary many input variables when binding a Python function.
 
 * The `ExportOnly()` attribute of the `RooStats::HistFactory::Measurement` object is now switched on by default, and the associated getter and setter functions are deprecated. They will be removed in ROOT 6.36. If you want to fit the model as well instead of just exporting it to a RooWorkspace, please do so with your own code as demonstrated in the `hf001` tutorial.
+
+### Deprecations
+
+* The `RooStats::MarkovChain::GetAsDataSet` and `RooStats::MarkovChain::GetAsDataHist` functions are deprecated and will be removed in ROOT 6.36. The same functionality can be implemented by calling `RooAbsData::reduce` on the Markov Chain's `RooDataSet*` (obtained using `MarkovChain::GetAsConstDataSet`) and then obtaining its binned clone(for `RooDataHist`).
+
+  An example in Python would be:
+
+  ```py
+  mcInt = mc.GetInterval() # Obtain the MCMCInterval from a configured MCMCCalculator
+  mkc = mcInt.GetChain() # Obtain the MarkovChain
+  mkcData = mkc.GetAsConstDataSet()
+  mcIntParams = mcInt.GetParameters()
+
+  chainDataset = mkcData.reduce(SelectVars=mcIntParams, EventRange=(mcInt.GetNumBurnInSteps(), mkc.Size()))
+  chainDataHist = chainDataset.binnedClone()
+  ```
+
+* The following methods related to the RooAbsArg interface are deprecated and will be removed in ROOT 6.36.
+They should be replaced with the suitable alternatives interfaces:
+
+    - `RooAbsArg::getDependents()`: use `getObservables()`
+    - `RooAbsArg::dependentOverlaps()`: use `observableOverlaps()`
+    - `RooAbsArg::checkDependents()`: use `checkObservables()`
+    - `RooAbsArg::recursiveCheckDependents()`: use `recursiveCheckObservables()`
 
 ## Graphics Backends
 
@@ -174,6 +186,7 @@ If the type doesn't match, you now get a clear error instead of garbage values.
 ```txt
 Error in <TTree::SetBranchAddress>: The pointer type given "Double_t" (8) does not correspond to the type needed "Float_t" (5) by the branch: a
 Status = -2
+```
 
 ### Deprecation of `TPython::Eval()`
 
@@ -187,7 +200,7 @@ std::string stringVal = static_cast<const char*>(TPython::Eval("'done'"));
 std::cout << stringVal << std::endl;
 
 // Now, with TPython::Exec(). You can set `_anyresult` to whatever std::any you want.
-// It will be swapped into the return variabe in the end.
+// It will be swapped into the return variable in the end.
 
 std::any result;
 TPython::Exec("_anyresult = ROOT.std.make_any['std::string']('done')", &result);

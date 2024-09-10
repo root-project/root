@@ -29,6 +29,8 @@
 #include <TObjArray.h>
 #include <TRefArray.h>
 
+#include <ROOT/RConfig.hxx> // for the R__DEPRECATED macro
+
 #include <deque>
 #include <iostream>
 #include <map>
@@ -132,16 +134,23 @@ public:
   /// @{
 
   // --- Obsolete functions for backward compatibility
+  R__DEPRECATED(6,36, "Use getObservables().")
   RooFit::OwningPtr<RooArgSet> getDependents(const RooArgSet& set) const;
+  R__DEPRECATED(6,36, "Use getObservables().")
   RooFit::OwningPtr<RooArgSet> getDependents(const RooAbsData* set) const;
+  R__DEPRECATED(6,36, "Use getObservables().")
   RooFit::OwningPtr<RooArgSet> getDependents(const RooArgSet* depList) const;
   /// \deprecated Use observableOverlaps()
+  R__DEPRECATED(6,36, "Use observableOverlaps().")
   inline bool dependentOverlaps(const RooAbsData* dset, const RooAbsArg& testArg) const { return observableOverlaps(dset,testArg) ; }
   /// \deprecated Use observableOverlaps()
+  R__DEPRECATED(6,36, "Use observableOverlaps().")
   inline bool dependentOverlaps(const RooArgSet* depList, const RooAbsArg& testArg) const { return observableOverlaps(depList, testArg) ; }
   /// \deprecated Use checkObservables()
+  R__DEPRECATED(6,36, "Use checkObservables().")
   inline bool checkDependents(const RooArgSet* nset) const { return checkObservables(nset) ; }
   /// \deprecated Use recursiveCheckObservables()
+  R__DEPRECATED(6,36, "Use recursiveCheckObservables().")
   inline bool recursiveCheckDependents(const RooArgSet* nset) const { return recursiveCheckObservables(nset) ; }
   // --- End obsolete functions for backward compatibility
   /// @}
