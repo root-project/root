@@ -31,7 +31,7 @@ ROOT::Experimental::RNTupleFillContext::RNTupleFillContext(std::unique_ptr<RNTup
    : fSink(std::move(sink)), fModel(std::move(model)), fMetrics("RNTupleFillContext")
 {
    fModel->Freeze();
-   fSink->Init(*fModel.get());
+   fSink->Init(*fModel);
    fMetrics.ObserveMetrics(fSink->GetMetrics());
 
    const auto &writeOpts = fSink->GetWriteOptions();

@@ -155,7 +155,13 @@ class RColumnDescriptor {
 
 public:
    struct RValueRange {
-      double fMin, fMax;
+      double fMin = 0, fMax = 0;
+
+      RValueRange() = default;
+      RValueRange(double min, double max) : fMin(min), fMax(max) {}
+      RValueRange(std::pair<double, double> range) : fMin(range.first), fMax(range.second) {}
+
+      bool operator==(RValueRange other) const { return fMin == other.fMin && fMax == other.fMax; }
    };
 
 private:
@@ -1070,7 +1076,12 @@ public:
    }
    RColumnDescriptorBuilder &ValueRange(double min, double max)
    {
-      fColumn.fValueRange = { min, max };
+      fColumn.fValueRange = {min, max};
+      return *this;
+   }
+   RColumnDescriptorBuilder &ValueRange(std::optional<RColumnDescriptor::RValueRange> valueRange)
+   {
+      fColumn.fValueRange = valueRange;
       return *this;
    }
    DescriptorId_t GetFieldId() const { return fColumn.fFieldId; }

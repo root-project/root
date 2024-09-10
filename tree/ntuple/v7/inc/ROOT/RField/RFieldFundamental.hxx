@@ -351,12 +351,16 @@ extern template class RSimpleField<float>;
 template <>
 class RField<float> final : public RSimpleField<float> {
    std::size_t fBitWidth = sizeof(float) * 8;
+   double fValueMin = std::numeric_limits<float>::min();
+   double fValueMax = std::numeric_limits<float>::max();
 
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
    {
       auto cloned = std::make_unique<RField<float>>(newName);
       cloned->fBitWidth = fBitWidth;
+      cloned->fValueMin = fValueMin;
+      cloned->fValueMax = fValueMax;
       return cloned;
    }
 
@@ -374,11 +378,20 @@ public:
 
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 
+   /// Sets this field to use a half precision representation, occupying half as much storage space (16 bits) on disk.
+   /// This is mutually exclusive with `SetTruncated` and `SetQuantized`.
    void SetHalfPrecision();
    /// Set the precision of this field to `nBits`. The remaining (32 - `nBits`) bits will be truncated
    /// from the number's mantissa. `nBits` must be $10 <= nBits <= 31$ (this means that at least 1 bit
    /// of mantissa is always preserved). Note that this effectively rounds the number towards 0.
+   /// This is mutually exclusive with `SetHalfPrecision` and `SetQuantized`.
+   /// \note Calling `SetTruncated(16)` effectively makes this field a `bfloat16` on disk.
    void SetTruncated(std::size_t nBits);
+   /// Sets this field to use a quantized integer representation using `nBits` per value.
+   /// This call promises that this field will only contain values contained in `[minValue, maxValue]` inclusive.
+   /// If a value outside this range is assigned to this field, the behavior is undefined.
+   /// This is mutually exclusive with `SetTruncated` and `SetHalfPrecision`.
+   void SetQuantized(float minValue, float maxValue, std::size_t nBits);
 };
 
 extern template class RSimpleField<double>;

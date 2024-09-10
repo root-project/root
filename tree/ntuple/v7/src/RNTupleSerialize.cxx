@@ -1451,6 +1451,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeSchemaDescription(co
       columnBuilder.LogicalColumnId(aliasColumnIdRangeBegin + i).PhysicalColumnId(physicalId).FieldId(fieldId);
       const auto &physicalColumnDesc = descBuilder.GetDescriptor().GetColumnDescriptor(physicalId);
       columnBuilder.BitsOnStorage(physicalColumnDesc.GetBitsOnStorage());
+      columnBuilder.ValueRange(physicalColumnDesc.GetValueRange());
       columnBuilder.Type(physicalColumnDesc.GetType());
       columnBuilder.RepresentationIndex(physicalColumnDesc.GetRepresentationIndex());
       columnBuilder.Index(fnNextColumnIndex(columnBuilder.GetFieldId(), columnBuilder.GetRepresentationIndex()));

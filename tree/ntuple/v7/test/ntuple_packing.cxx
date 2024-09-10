@@ -254,6 +254,15 @@ static void AddReal32TruncField(RNTupleModel &model, const std::string &fieldNam
    model.AddField(std::move(fld));
 }
 
+static void
+AddReal32QuantField(RNTupleModel &model, const std::string &fieldName, std::size_t nBits, double min, double max)
+{
+   auto fld = std::make_unique<RField<float>>(fieldName);
+   fld->SetColumnRepresentatives({{EColumnType::kReal32Quant}});
+   fld->SetQuantized(min, max, nBits);
+   model.AddField(std::move(fld));
+}
+
 TEST(Packing, OnDiskEncoding)
 {
    FileRaii fileGuard("test_ntuple_packing_ondiskencoding.root");
@@ -274,6 +283,7 @@ TEST(Packing, OnDiskEncoding)
    AddField<ClusterSize_t, EColumnType::kSplitIndex32>(*model, "index32");
    AddField<ClusterSize_t, EColumnType::kSplitIndex64>(*model, "index64");
    AddReal32TruncField(*model, "float32Trunc", 11);
+   AddReal32QuantField(*model, "float32Quant", 7, 0.0, 1.0);
    auto fldStr = std::make_unique<RField<std::string>>("str");
    model->AddField(std::move(fldStr));
    {
@@ -294,6 +304,7 @@ TEST(Packing, OnDiskEncoding)
       *e->GetPtr<ClusterSize_t>("index32") = 39916801;          // 0x0261 1501
       *e->GetPtr<ClusterSize_t>("index64") = 0x0706050403020100L;
       *e->GetPtr<float>("float32Trunc") = -3.75f; // 1 10000000 11100000000000000000000 == 0xC0700000
+      *e->GetPtr<float>("float32Quant") = 0.69f; // quantized to 87 == 0b1010111
       e->GetPtr<std::string>("str")->assign("abc");
 
       writer->Fill(*e);
@@ -310,6 +321,7 @@ TEST(Packing, OnDiskEncoding)
       *e->GetPtr<ClusterSize_t>("index32") = 39916808;                   // d(previous) == 7
       *e->GetPtr<ClusterSize_t>("index64") = 0x070605040302010DL;        // d(previous) == 13
       *e->GetPtr<float>("float32Trunc") = 1.875f; // 0 01111111 11100000000000000000000 == 0x3ff00000
+      *e->GetPtr<float>("float32Quant") = 0.875f; // quantized to 111: 0b1101111
       e->GetPtr<std::string>("str")->assign("de");
 
       writer->Fill(*e);
@@ -379,6 +391,11 @@ TEST(Packing, OnDiskEncoding)
    unsigned char expF32Trunc[] = {0x03, 0xFE, 0x0F};
    EXPECT_EQ(memcmp(sealedPage.GetBuffer(), expF32Trunc, sizeof(expF32Trunc)), 0);
 
+   source->LoadSealedPage(fnGetColumnId("float32Quant"), RClusterIndex(0, 0), sealedPage);
+   // Two tightly packed 7bit quantized ints: 0b1101111 + 0b1010111 = 0b11011111010111 = 0x37d7
+   unsigned char expF32Quant[] = {0xd7, 0x37};
+   EXPECT_EQ(memcmp(sealedPage.GetBuffer(), expF32Quant, sizeof(expF32Quant)), 0);
+
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    EXPECT_EQ(EColumnType::kIndex64, reader->GetModel().GetField("str").GetColumnRepresentatives()[0][0]);
    EXPECT_EQ(2u, reader->GetNEntries());
@@ -388,6 +405,9 @@ TEST(Packing, OnDiskEncoding)
    auto viewFtrunc = reader->GetView<float>("float32Trunc");
    EXPECT_EQ(-3.5f, viewFtrunc(0));
    EXPECT_EQ(1.75f, viewFtrunc(1));
+   auto viewFquant = reader->GetView<float>("float32Quant");
+   EXPECT_NEAR(0.69, viewFquant(0), 0.005f);
+   EXPECT_NEAR(0.875f, viewFquant(1), 0.005f);
 }
 
 TEST(Packing, Real32Trunc)
