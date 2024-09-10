@@ -69,9 +69,13 @@ public:
 
   RooAbsPdf const& pdf() const;
 
+  RooCustomizer(const RooCustomizer &) = delete;
+  RooCustomizer &operator=(const RooCustomizer &) = delete;
+  RooCustomizer(RooCustomizer &&) = delete;
+  RooCustomizer &operator=(RooCustomizer &&) = delete;
+
 protected:
 
-  RooCustomizer(const RooCustomizer&) ;
   void initialize() ;
 
   RooAbsArg* doBuild(const char* masterCatState, bool verbose) ;
