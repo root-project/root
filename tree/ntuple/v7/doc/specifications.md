@@ -856,8 +856,8 @@ Such cases are marked as `R` in the table.
 | Real16        |      |           |      |        |         |         |          |         |          |         |          |   W   |   W    |
 | (Split)Real32 |      |           |      |        |         |         |          |         |          |         |          |   W*  |   W    |
 | (Split)Real64 |      |           |      |        |         |         |          |         |          |         |          |       |   W*   |
-| Real32Trunc   |      |           |      |        |         |         |          |         |          |         |          |   W*  |        |
-| Real32Quant   |      |           |      |        |         |         |          |         |          |         |          |   W*  |        |
+| Real32Trunc   |      |           |      |        |         |         |          |         |          |         |          |   W   |        |
+| Real32Quant   |      |           |      |        |         |         |          |         |          |         |          |   W   |   W    |
 
 Possibly available `const` and `volatile` qualifiers of the C++ types are ignored for serialization.
 The default column for serialization is denoted with an asterix.
