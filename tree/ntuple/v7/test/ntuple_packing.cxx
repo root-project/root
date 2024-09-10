@@ -553,17 +553,31 @@ TEST(Packing, RealQuantize)
 {
    using namespace Quantize;
 
-   float fs[5] = {1.f, 2.f, 3.f, 4.f, 5.f};
-   Quantized_t qs[5];
-   QuantizeReals(qs, fs, 5, 1., 5., 16);
+   {
+      float fs[5] = {1.f, 2.f, 3.f, 4.f, 5.f};
+      Quantized_t qs[5];
+      QuantizeReals(qs, fs, 5, 1., 5., 16);
 
-   float fuqs[5];
-   UnquantizeReals(fuqs, qs, 5, 1., 5., 16);
-   EXPECT_NEAR(fuqs[0], 1.f, 0.001f);
-   EXPECT_NEAR(fuqs[1], 2.f, 0.001f);
-   EXPECT_NEAR(fuqs[2], 3.f, 0.001f);
-   EXPECT_NEAR(fuqs[3], 4.f, 0.001f);
-   EXPECT_NEAR(fuqs[4], 5.f, 0.001f);
+      float fuqs[5];
+      UnquantizeReals(fuqs, qs, 5, 1., 5., 16);
+      EXPECT_NEAR(fuqs[0], 1.f, 0.001f);
+      EXPECT_NEAR(fuqs[1], 2.f, 0.001f);
+      EXPECT_NEAR(fuqs[2], 3.f, 0.001f);
+      EXPECT_NEAR(fuqs[3], 4.f, 0.001f);
+      EXPECT_NEAR(fuqs[4], 5.f, 0.001f);
+   }
+
+   {
+      float fs[3] = {0.5f, 1.f, 1.5f};
+      Quantized_t qs[3];
+      QuantizeReals(qs, fs, 3, 0.5f, 1.5f, 3);
+
+      float fuqs[3];
+      UnquantizeReals(fuqs, qs, 3, 0.5f, 1.5f, 3);
+      EXPECT_FLOAT_EQ(fuqs[0], 0.5f);
+      EXPECT_NEAR(fuqs[1], 1.f, 0.1f);
+      EXPECT_FLOAT_EQ(fuqs[2], 1.5f);
+   }
 
    {
       std::default_random_engine rng{42};
@@ -605,6 +619,69 @@ TEST(Packing, RealQuantize)
 
       for (int i = 0; i < N; ++i)
          EXPECT_NEAR(inputs.get()[i], unquant.get()[i], 0.01);
+   }
+}
+
+TEST(Packing, Real32Quant)
+{
+   namespace BitPacking = ROOT::Experimental::Internal::BitPacking;
+   {
+      constexpr auto kBitsOnStorage = 10;
+      RColumnElement<float, EColumnType::kReal32Quant> element;
+      element.SetBitsOnStorage(kBitsOnStorage);
+      element.Pack(nullptr, nullptr, 0);
+      element.Unpack(nullptr, nullptr, 0);
+      element.SetValueRange(-5.f, 5.f);
+
+      float f1 = 3.5f;
+      unsigned char out[8];
+      element.Pack(out, &f1, 1);
+
+      float f2;
+      element.Unpack(&f2, out, 1);
+      EXPECT_NEAR(f2, 3.5f, 0.01f);
+
+      float f[7] = {-4.5f, -3.f, -2.55f, 0.f, 1.f, 3.f, 5.f};
+      unsigned char out2[BitPacking::MinBufSize(7, kBitsOnStorage)];
+      element.Pack(out2, f, 7);
+
+      float fout[7];
+      element.Unpack(fout, out2, 7);
+      for (int i = 0; i < 7; ++i)
+         EXPECT_NEAR(fout[i], f[i], 0.01f);
+   }
+
+   {
+      constexpr auto kBitsOnStorage = 1;
+      RColumnElement<float, EColumnType::kReal32Quant> element;
+      element.SetBitsOnStorage(kBitsOnStorage);
+      element.SetValueRange(-10.f, 10.f);
+
+      float f1 = -10.f;
+      unsigned char out[1];
+      element.Pack(out, &f1, 1);
+      float f2;
+      element.Unpack(&f2, out, 1);
+      EXPECT_EQ(f2, -10.f);
+
+      f1 = 10.f;
+      element.Pack(out, &f1, 1);
+      element.Unpack(&f2, out, 1);
+      EXPECT_EQ(f2, 10.f);
+   }
+
+   {
+      constexpr auto kBitsOnStorage = 32;
+      RColumnElement<float, EColumnType::kReal32Quant> element;
+      element.SetBitsOnStorage(kBitsOnStorage);
+      element.SetValueRange(-10.f, 10.f);
+
+      float f1 = -5.f;
+      unsigned char out[1];
+      element.Pack(out, &f1, 1);
+      float f2;
+      element.Unpack(&f2, out, 1);
+      EXPECT_FLOAT_EQ(f2, -5.f);
    }
 }
 
