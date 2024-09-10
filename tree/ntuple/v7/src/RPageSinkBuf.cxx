@@ -141,10 +141,8 @@ void ROOT::Experimental::Internal::RPageSinkBuf::CommitPage(ColumnHandle_t colum
    auto colId = columnHandle.fPhysicalId;
    const auto &element = *columnHandle.fColumn->GetElement();
 
-   // Safety: References are guaranteed to be valid until the
-   // element is destroyed. In other words, all buffered page elements are
-   // valid until the return value of DrainBufferedPages() goes out of scope in
-   // CommitCluster().
+   // Safety: References are guaranteed to be valid until the element is destroyed. In other words, all buffered page
+   // elements are valid until DropBufferedPages().
    auto &zipItem = fBufferedColumns.at(colId).BufferPage(columnHandle);
    zipItem.AllocateSealedPageBuf(page.GetNBytes() + GetWriteOptions().GetEnablePageChecksums() * kNBytesPageChecksum);
    R__ASSERT(zipItem.fBuf);
