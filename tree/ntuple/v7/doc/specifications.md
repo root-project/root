@@ -1,4 +1,4 @@
-# RNTuple Reference Specifications 0.2.9.0
+# RNTuple Reference Specifications 0.2.10.0
 
 **Note:** This is work in progress. The RNTuple specification is not yet finalized.
 
@@ -918,13 +918,9 @@ Within the repetition blocks, bits are stored in little-endian order, i.e. the l
 
 A unique pointer and an optional type have the same on disk representation.
 They are represented as a collection of `T`s of zero or one elements.
-A collection parent field has a single subfield named `_0` for `T`, where `T` must have RNTuple I/O support.
+The collection parent field has a principal column of type `(Split)Index[64|32]`.
+It has a single subfield named `_0` for `T`, where `T` must have RNTuple I/O support.
 Note that RNTuple does not support polymorphism, so the type `T` is expected to be `T` and not a child class of `T`.
-
-By default, the parent field has a principal column of type `(Split)Index[64|32]`.
-This is called sparse representation.
-The alternative, dense representation uses a `Bit` column to mask non-existing instances of the subfield.
-In this second case, a default-constructed `T` (or, if applicable, a `T` constructed by the ROOT I/O constructor) is stored on disk for the non-existing instances.
 
 #### std::set\<T\>, std::unordered_set\<T\>, std::multiset\<T\>, std::unordered_multiset\<T\>
 
