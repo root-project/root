@@ -304,7 +304,7 @@ TEST(Packing, OnDiskEncoding)
       *e->GetPtr<ClusterSize_t>("index32") = 39916801;          // 0x0261 1501
       *e->GetPtr<ClusterSize_t>("index64") = 0x0706050403020100L;
       *e->GetPtr<float>("float32Trunc") = -3.75f; // 1 10000000 11100000000000000000000 == 0xC0700000
-      *e->GetPtr<float>("float32Quant") = 0.69f; // quantized to 87 == 0b1010111
+      *e->GetPtr<float>("float32Quant") = 0.69f; // quantized to 88 == 0b1011000
       e->GetPtr<std::string>("str")->assign("abc");
 
       writer->Fill(*e);
@@ -392,8 +392,8 @@ TEST(Packing, OnDiskEncoding)
    EXPECT_EQ(memcmp(sealedPage.GetBuffer(), expF32Trunc, sizeof(expF32Trunc)), 0);
 
    source->LoadSealedPage(fnGetColumnId("float32Quant"), RClusterIndex(0, 0), sealedPage);
-   // Two tightly packed 7bit quantized ints: 0b1101111 + 0b1010111 = 0b11011111010111 = 0x37d7
-   unsigned char expF32Quant[] = {0xd7, 0x37};
+   // Two tightly packed 7bit quantized ints: 0b1101111 + 0b1011000 = 0b11011111011000 = 0x37d8
+   unsigned char expF32Quant[] = {0xd8, 0x37};
    EXPECT_EQ(memcmp(sealedPage.GetBuffer(), expF32Quant, sizeof(expF32Quant)), 0);
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
