@@ -63,6 +63,18 @@ ValAndError getValAndError(RooArgSet const &parsFinal, const char *name)
    return {var.getVal(), var.getError()};
 };
 
+std::vector<double> getParamVals(RooAbsMinimizerFcn &fcn)
+{
+   std::vector<double> values;
+   values.reserve(fcn.GetFloatParamList()->size());
+
+   for (auto *par : static_range_cast<RooRealVar *>(*fcn.GetFloatParamList())) {
+      values.push_back(par->getVal());
+   }
+
+   return values;
+}
+
 } // namespace
 
 using RooFit::TestStatistics::LikelihoodWrapper;
@@ -991,13 +1003,10 @@ TEST(MinuitFcnGrad, DISABLED_CompareToRooMinimizerFcn)
       RooFit::TestStatistics::LikelihoodGradientMode::multiprocess);
    RooMinimizerFcn vanilla_fcn(nll_vanilla.get(), &m_vanilla);
 
-   EXPECT_EQ(vanilla_fcn(vanilla_fcn.getParameterValues().data()),
-             modularL_fcn(modularL_fcn.getParameterValues().data()));
+   EXPECT_EQ(vanilla_fcn(getParamVals(vanilla_fcn).data()), modularL_fcn(getParamVals(modularL_fcn).data()));
    // let's also check with absolutely certain same parameter values, both of them
-   EXPECT_EQ(vanilla_fcn(vanilla_fcn.getParameterValues().data()),
-             modularL_fcn(vanilla_fcn.getParameterValues().data()));
-   EXPECT_EQ(vanilla_fcn(modularL_fcn.getParameterValues().data()),
-             modularL_fcn(modularL_fcn.getParameterValues().data()));
+   EXPECT_EQ(vanilla_fcn(getParamVals(vanilla_fcn).data()), modularL_fcn(getParamVals(vanilla_fcn).data()));
+   EXPECT_EQ(vanilla_fcn(getParamVals(modularL_fcn).data()), modularL_fcn(getParamVals(modularL_fcn).data()));
 
    // reset static variables to automatic
    RooFit::MultiProcess::Config::LikelihoodJob::defaultNEventTasks =
