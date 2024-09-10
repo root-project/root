@@ -373,7 +373,7 @@ protected:
    /// principal column corresponds to the field type. For collection fields except fixed-sized arrays,
    /// the main column is the offset field.  Class fields have no column of their own.
    /// When reading, points to any column of the column team of the active representation. Usually, this is just
-   /// the first column, except for the nullable field.
+   /// the first column.
    /// When writing, points to the first column index of the currently active (not suppressed) column representation.
    Internal::RColumn *fPrincipalColumn = nullptr;
    /// Some fields have a second column in its column representation. In this case, fAuxiliaryColumn points into

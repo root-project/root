@@ -3498,120 +3498,42 @@ ROOT::Experimental::RNullableField::RNullableField(std::string_view fieldName, s
 const ROOT::Experimental::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RNullableField::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kSplitIndex64},
-                                                  {EColumnType::kIndex64},
-                                                  {EColumnType::kSplitIndex32},
-                                                  {EColumnType::kIndex32},
-                                                  {EColumnType::kBit}},
-                                                 {});
+   static RColumnRepresentations representations(
+      {{EColumnType::kSplitIndex64}, {EColumnType::kIndex64}, {EColumnType::kSplitIndex32}, {EColumnType::kIndex32}},
+      {});
    return representations;
 }
 
 void ROOT::Experimental::RNullableField::GenerateColumns()
 {
-   const auto r = GetColumnRepresentatives();
-   const auto N = r.size();
-   fAvailableColumns.reserve(N);
-   for (std::uint16_t i = 0; i < N; ++i) {
-      if (r[i][0] == EColumnType::kBit) {
-         if (!fDefaultItemValue)
-            fDefaultItemValue = std::make_unique<RValue>(fSubFields[0]->CreateValue());
-         fAvailableColumns.emplace_back(Internal::RColumn::Create<bool>(EColumnType::kBit, 0, i));
-      } else {
-         fAvailableColumns.emplace_back(Internal::RColumn::Create<ClusterSize_t>(r[i][0], 0, i));
-      }
-   }
-   fPrincipalColumn = fAvailableColumns[0].get();
+   GenerateColumnsImpl<ClusterSize_t>();
 }
 
 void ROOT::Experimental::RNullableField::GenerateColumns(const RNTupleDescriptor &desc)
 {
-   std::uint16_t representationIndex = 0;
-   do {
-      const auto &onDiskTypes = EnsureCompatibleColumnTypes(desc, representationIndex);
-      if (onDiskTypes.empty())
-         break;
-
-      if (onDiskTypes[0] == EColumnType::kBit) {
-         fAvailableColumns.emplace_back(Internal::RColumn::Create<bool>(EColumnType::kBit, 0, representationIndex));
-      } else {
-         fAvailableColumns.emplace_back(
-            Internal::RColumn::Create<ClusterSize_t>(onDiskTypes[0], 0, representationIndex));
-      }
-      fColumnRepresentatives.emplace_back(onDiskTypes);
-
-      representationIndex++;
-   } while (true);
-   fPrincipalColumn = fAvailableColumns[0].get();
+   GenerateColumnsImpl<ClusterSize_t>(desc);
 }
 
 std::size_t ROOT::Experimental::RNullableField::AppendNull()
 {
-   if (fPrincipalColumn->GetType() == EColumnType::kBit) {
-      bool mask = false;
-      fPrincipalColumn->Append(&mask);
-      return 1 + CallAppendOn(*fSubFields[0], fDefaultItemValue->GetPtr<void>().get());
-   } else {
-      fPrincipalColumn->Append(&fNWritten);
-      return sizeof(ClusterSize_t);
-   }
+   fPrincipalColumn->Append(&fNWritten);
+   return sizeof(ClusterSize_t);
 }
 
 std::size_t ROOT::Experimental::RNullableField::AppendValue(const void *from)
 {
    auto nbytesItem = CallAppendOn(*fSubFields[0], from);
-   if (fPrincipalColumn->GetType() == EColumnType::kBit) {
-      bool mask = true;
-      fPrincipalColumn->Append(&mask);
-      return 1 + nbytesItem;
-   } else {
-      fNWritten++;
-      fPrincipalColumn->Append(&fNWritten);
-      return sizeof(ClusterSize_t) + nbytesItem;
-   }
+   fNWritten++;
+   fPrincipalColumn->Append(&fNWritten);
+   return sizeof(ClusterSize_t) + nbytesItem;
 }
 
 ROOT::Experimental::RClusterIndex ROOT::Experimental::RNullableField::GetItemIndex(NTupleSize_t globalIndex)
 {
-   // We ensure first that the principle column points to the non-suppressed column and
-   // that it has the correct page mapped
-   if (!fPrincipalColumn->ReadPageContains(globalIndex) && !fPrincipalColumn->TryMapPage(globalIndex)) {
-      for (const auto &c : fAvailableColumns) {
-         if (!c->TryMapPage(globalIndex))
-            continue;
-
-         fPrincipalColumn = c.get();
-         break;
-      }
-      R__ASSERT(fPrincipalColumn->ReadPageContains(globalIndex));
-   }
-
-   RClusterIndex nullIndex;
-   if (fPrincipalColumn->GetType() == EColumnType::kBit) {
-      const bool isValidItem = *fPrincipalColumn->Map<bool>(globalIndex);
-      return isValidItem ? fPrincipalColumn->GetClusterIndex(globalIndex) : nullIndex;
-   } else {
-      RClusterIndex collectionStart;
-      ClusterSize_t collectionSize;
-      fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &collectionSize);
-      return (collectionSize == 0) ? nullIndex : collectionStart;
-   }
-}
-
-void ROOT::Experimental::RNullableField::ReadInClusterImpl(RClusterIndex clusterIndex, void *to)
-{
-   if ((fAvailableColumns.size() > 1) && !fPrincipalColumn->TryMapPage(clusterIndex)) {
-      for (const auto &c : fAvailableColumns) {
-         if (!c->TryMapPage(clusterIndex))
-            continue;
-
-         fPrincipalColumn = c.get();
-         break;
-      }
-      R__ASSERT(fPrincipalColumn->ReadPageContains(clusterIndex));
-   }
-
-   ReadGlobalImpl(fPrincipalColumn->GetGlobalIndex(clusterIndex), to);
+   RClusterIndex collectionStart;
+   ClusterSize_t collectionSize;
+   fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &collectionSize);
+   return (collectionSize == 0) ? RClusterIndex() : collectionStart;
 }
 
 void ROOT::Experimental::RNullableField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
