@@ -162,15 +162,9 @@ public:
 /// The field for values that may or may not be present in an entry. Parent class for unique pointer field and
 /// optional field. A nullable field cannot be instantiated itself but only its descendants.
 /// The RNullableField takes care of the on-disk representation. Child classes are responsible for the in-memory
-/// representation.  The on-disk representation can be "dense" or "sparse". Dense nullable fields have a bitmask
-/// (true: item available, false: item missing) and serialize a default-constructed item for missing items.
-/// Sparse nullable fields use a (Split)Index[64|32] column to point to the available items.
-/// By default, items whose size is smaller or equal to 4 bytes (size of (Split)Index32 column element) are stored
-/// densely.
+/// representation.  Nullable fields use a (Split)Index[64|32] column to point to the available items.
 class RNullableField : public RFieldBase {
-   /// For a dense nullable field, used to write a default-constructed item for missing ones.
-   std::unique_ptr<RValue> fDefaultItemValue;
-   /// For a sparse nullable field, the number of written non-null items in this cluster
+   /// The number of written non-null items in this cluster
    ClusterSize_t fNWritten{0};
 
 protected:
@@ -182,10 +176,6 @@ protected:
    std::size_t AppendValue(const void *from);
    void CommitClusterImpl() final { fNWritten = 0; }
 
-   // The default implementation that translates the request into a call to ReadGlobalImpl() cannot be used
-   // because we don't team up the columns of the different column representations for this field.
-   void ReadInClusterImpl(RClusterIndex clusterIndex, void *to) final;
-
    /// Given the index of the nullable field, returns the corresponding global index of the subfield or,
    /// if it is null, returns kInvalidClusterIndex
    RClusterIndex GetItemIndex(NTupleSize_t globalIndex);
@@ -196,9 +186,6 @@ public:
    RNullableField(RNullableField &&other) = default;
    RNullableField &operator=(RNullableField &&other) = default;
    ~RNullableField() override = default;
-
-   void SetDense() { SetColumnRepresentatives({{EColumnType::kBit}}); }
-   void SetSparse() { SetColumnRepresentatives({{EColumnType::kSplitIndex64}}); }
 
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
