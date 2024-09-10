@@ -80,8 +80,6 @@ public:
 
    void setOptimizeConst(Int_t flag);
 
-   std::vector<double> getParameterValues() const;
-
    bool SetPdfParamVal(int index, double value) const;
 
    /// Enable or disable offsetting on the function to be minimized, which enhances numerical precision.

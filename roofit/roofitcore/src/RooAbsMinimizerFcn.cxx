@@ -543,17 +543,3 @@ void RooAbsMinimizerFcn::optimizeConstantTerms(bool constStatChange, bool constV
       setOptimizeConstOnFunction(RooAbsArg::ValueChange, true);
    }
 }
-
-std::vector<double> RooAbsMinimizerFcn::getParameterValues() const
-{
-   // TODO: make a cache for this somewhere so it doesn't have to be recreated on each call
-   std::vector<double> values;
-   values.reserve(_nDim);
-
-   for (std::size_t index = 0; index < _nDim; ++index) {
-      RooRealVar *par = static_cast<RooRealVar *>(_floatParamList->at(index));
-      values.push_back(par->getVal());
-   }
-
-   return values;
-}
