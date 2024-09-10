@@ -350,13 +350,12 @@ public:
 
 static bool UseJITLink(const Triple& TT) {
   bool jitLink = false;
-  // Default to JITLink on macOS and RISC-V, as done in (recent) LLVM by
-  // LLJITBuilderState::prepareForConstruction.
-  if (TT.getArch() == Triple::riscv64 ||
-      (TT.isOSBinFormatMachO() &&
-       (TT.getArch() == Triple::aarch64 || TT.getArch() == Triple::x86_64)) ||
-      (TT.isOSBinFormatELF() && TT.getArch() == Triple::ppc64le)) {
-    jitLink = true;
+  switch (TT.getArch()) {
+    case Triple::riscv64: jitLink = true; break;
+    case Triple::aarch64: jitLink = !TT.isOSBinFormatCOFF(); break;
+    case Triple::x86_64: jitLink = !TT.isOSBinFormatCOFF(); break;
+    case Triple::ppc64le: jitLink = TT.isOSBinFormatELF(); break;
+    default: break;
   }
   // Finally, honor the user's choice by setting an environment variable.
   if (const char* clingJitLink = std::getenv("CLING_JITLINK")) {
@@ -398,12 +397,13 @@ CreateTargetMachine(const clang::CompilerInstance& CI, bool JITLink) {
     // Set up the TargetMachine as otherwise done by
     // LLJITBuilderState::prepareForConstruction.
     JTMB.setRelocationModel(Reloc::PIC_);
-    // Set the small code except for macOS on AArch64 - it results in relocation
-    // targets that are out-of-range.
-    // TODO: Investigate / report upstream and re-evaluate after a future LLVM
-    // upgrade.
-    if (!(TT.isOSBinFormatMachO() && TT.getArch() == Triple::aarch64))
-      JTMB.setCodeModel(CodeModel::Small);
+    // However, do not change the code model: While the small code model would
+    // be enough if we created a new JITDylib per Module, Cling adds multiple
+    // modules to the same library. This causes problems because weak symbols
+    // are merged and may end up more than 2 GB apart. This is especially
+    // visible for DW.ref.__gxx_personality_v0 related to exception handling.
+    // TODO: Investigate if we can use one JITDylib per Module as recommended
+    // by upstream.
   }
 
   return cantFail(JTMB.createTargetMachine());
