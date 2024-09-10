@@ -2061,16 +2061,16 @@ Int_t TColor::GetColorByName(const char *colorname)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Static function: Returns the bright color number corresponding to n
-/// If the TColor object does not exist, it is created.
-/// The convention is that the bright color nb = n+150
+/// If the TColor object does not exist, it is created at a free color index.
 
 Int_t TColor::GetColorBright(Int_t n)
 {
    if (n < 0) return -1;
 
    // Get list of all defined colors
-   TObjArray *colors = (TObjArray*) gROOT->GetListOfColors();
+   auto colors = (TObjArray*) gROOT->GetListOfColors();
    Int_t ncolors = colors->GetSize();
+
    // Get existing color at index n
    TColor *color = nullptr;
    if (n < ncolors) color = (TColor*)colors->At(n);
@@ -2080,29 +2080,31 @@ Int_t TColor::GetColorBright(Int_t n)
    Float_t r,g,b;
    HLStoRGB(color->GetHue(), 1.2f*color->GetLight(), color->GetSaturation(), r, g, b);
 
-   //Build the bright color (unless the slot nb is already used)
-   Int_t nb = n+150;
-   TColor *colorb = nullptr;
-   if (nb < ncolors) colorb = (TColor*)colors->At(nb);
-   if (colorb) return nb;
-   colorb = new TColor(nb,r,g,b);
-   colorb->SetName(TString::Format("%s_bright",color->GetName()).Data());
+   // check if the dark color already exist
+   TString nameb = TString::Format("%s_bright",color->GetName()).Data();
+   if (GetColorByName(nameb.Data())>=0) return color->GetNumber();
+
+   //Build the bright color
+   Int_t nb = GetFirstFreeColorIndex();
+   auto colorb = new TColor(nb,r,g,b);
+   colorb->SetName(nameb.Data());
+   colorb->SetTitle(colorb->AsHexString());
    colors->AddAtAndExpand(colorb,nb);
    return nb;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Static function: Returns the dark color number corresponding to n
-/// If the TColor object does not exist, it is created.
-/// The convention is that the dark color nd = n+100
+/// If the TColor object does not exist, it is created at a free color index.
 
 Int_t TColor::GetColorDark(Int_t n)
 {
    if (n < 0) return -1;
 
    // Get list of all defined colors
-   TObjArray *colors = (TObjArray*) gROOT->GetListOfColors();
+   auto colors = (TObjArray*) gROOT->GetListOfColors();
    Int_t ncolors = colors->GetSize();
+
    // Get existing color at index n
    TColor *color = nullptr;
    if (n < ncolors) color = (TColor*)colors->At(n);
@@ -2112,13 +2114,15 @@ Int_t TColor::GetColorDark(Int_t n)
    Float_t r,g,b;
    HLStoRGB(color->GetHue(), 0.7f*color->GetLight(), color->GetSaturation(), r, g, b);
 
-   //Build the dark color (unless the slot nd is already used)
-   Int_t nd = n+100;
-   TColor *colord = nullptr;
-   if (nd < ncolors) colord = (TColor*)colors->At(nd);
-   if (colord) return nd;
-   colord = new TColor(nd,r,g,b);
-   colord->SetName(TString::Format("%s_dark",color->GetName()).Data());
+   // check if the dark color already exist
+   TString named = TString::Format("%s_dark",color->GetName()).Data();
+   if (GetColorByName(named.Data())>=0) return color->GetNumber();
+
+   //Build the dark color
+   Int_t nd = GetFirstFreeColorIndex();
+   auto colord = new TColor(nd,r,g,b);
+   colord->SetName(named.Data());
+   colord->SetTitle(colord->AsHexString());
    colors->AddAtAndExpand(colord,nd);
    return nd;
 }
@@ -2309,8 +2313,9 @@ Int_t TColor::GetRadialGradient(Double_t radius, const std::vector<Int_t> &color
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Static function: Returns a free color index which can be used to define
-/// a user custom color.
+/// Static function: Returns the free color index greater than the highest defined color
+/// index. All the color indices after this index are also free. It can be used to
+/// define a user custom color.
 ///
 /// ~~~ {.cpp}
 ///   Int_t ci = TColor::GetFreeColorIndex();
@@ -2320,6 +2325,27 @@ Int_t TColor::GetRadialGradient(Double_t radius, const std::vector<Int_t> &color
 Int_t TColor::GetFreeColorIndex()
 {
    return gHighestColorIndex+1;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Static function: Returns the first free color greater in the list of colors.
+/// index. It can be used to define a user custom color.
+///
+/// ~~~ {.cpp}
+///   Int_t ci = TColor::GetFirstFreeColorIndex();
+///   auto color = new TColor(ci, 0.1, 0.2, 0.3);
+/// ~~~
+
+Int_t TColor::GetFirstFreeColorIndex()
+{
+   TObjArray *colors = (TObjArray*) gROOT->GetListOfColors();
+   const Int_t ncolors = colors->GetSize();
+   TColor *color = nullptr;
+   for (Int_t i = kP10Cyan+1; i<ncolors; i++) {
+      color = (TColor*)colors->At(i);
+      if (!color) return i;
+   }
+   return -1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

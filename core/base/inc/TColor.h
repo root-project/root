@@ -90,6 +90,7 @@ public:
    static Int_t   GetColorTransparent(Int_t color, Float_t a);
    static Int_t   GetColorByName(const char *colorname);
    static Int_t   GetFreeColorIndex();
+   static Int_t   GetFirstFreeColorIndex();
    static const TArrayI& GetPalette();
    static Int_t   GetLinearGradient(Double_t angle, const std::vector<Int_t> &colors, const std::vector<Double_t> &positions = {});
    static Int_t   GetRadialGradient(Double_t r, const std::vector<Int_t> &colors, const std::vector<Double_t> &positions = {});
