@@ -404,7 +404,6 @@ The flags field can have any of the following bits set:
 | 0x01     | Repetitive field, i.e. for every entry $n$ copies of the field are stored  |
 | 0x02     | Projected field                                                            |
 | 0x04     | Has ROOT type checksum as reported by TClass                               |
-| 0x08     | Field with a range of possible values                                      |
 
 If `flag==0x01` (_repetitive field_) is set, the field represents a fixed-size array.
 Another (sub) field with `Parent Field ID` equal to the ID of this field
@@ -419,9 +418,6 @@ these columns are alias columns to physical columns attached to the source field
 If `flag==0x04` (_type checksum_) is set, the field metadata contain the checksum of the ROOT streamer info.
 This checksum is only used for I/O rules in order to find types that are identified by checksum.
 
-If `flag==0x08` (_field with range_) is set, the field metadata contain the range of valid values
-for this field (used e.g. for quantized real values, see Column Description section).
-
 Depending on the flags, the following optional values follow:
 
 ```
@@ -435,14 +431,6 @@ Depending on the flags, the following optional values follow:
 +             Source Field ID (if flag 0x02 is set)             +
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 +          ROOT Streamer Checksum (if flag 0x04 is set)         +
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                                                               |
-+                Min value(if flag 0x08 is set)                 +
-|                                                               |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                                                               |
-+                Max value(if flag 0x08 is set)                 +
-|                                                               |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ```
 
@@ -470,6 +458,14 @@ Top-level fields have their own field ID set as parent ID.
 +                            Field ID                           +
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |             Flags             |      Representation Index     |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                                                               |
++                Min value(if flag 0x10 is set)                 +
+|                                                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                                                               |
++                Max value(if flag 0x10 is set)                 +
+|                                                               |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ```
 
@@ -556,6 +552,7 @@ The flags field can have one of the following bits set
 | Bit      | Meaning                                                           |
 |----------|-------------------------------------------------------------------|
 | 0x08     | Deferred column: index of first element in the column is not zero |
+| 0x10     | Column with a range of possible values                            |
 
 If flag 0x08 (deferred column) is set, the index of the first element in this column is not zero, which happens if the column is added at a later point during write.
 In this case, an additional 64bit integer containing the first element index follows the flags field.
@@ -563,6 +560,9 @@ Compliant implementations should yield synthetic data pages made up of 0x00 byte
 This results in zero-initialized values in the aforementioned range for fields of any supported C++ type, including `std::variant<Ts...>` and collections such as `std::vector<T>`.
 The leading zero pages of deferred columns are _not_ part of the page list, i.e. they have no page locator.
 In practice, deferred columns only appear in the schema extension record frame (see Section Footer Envelope).
+
+If flag 0x10 (column with range) is set, the column metadata contains the range of valid values
+for this column (used e.g. for quantized real values).
 
 If the index of the first element is negative (sign bit set), the column is deferred _and_ suppressed.
 In this case, no (synthetic) pages exist up to and including the cluster of the first element index.
