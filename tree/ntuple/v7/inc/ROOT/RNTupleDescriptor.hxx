@@ -71,11 +71,6 @@ class RFieldDescriptor {
    friend class Internal::RNTupleDescriptorBuilder;
    friend class Internal::RFieldDescriptorBuilder;
 
-public:
-   struct RValueRange {
-      double fMin, fMax;
-   };
-
 private:
    DescriptorId_t fFieldId = kInvalidDescriptorId;
    /// The version of the C++-type-to-column translation mechanics
@@ -110,8 +105,6 @@ private:
    /// For custom classes, we store the ROOT TClass reported checksum to facilitate the use of I/O rules that
    /// identify types by their checksum
    std::optional<std::uint32_t> fTypeChecksum;
-   /// Optional value range (used e.g. by quantized real fields)
-   std::optional<RValueRange> fValueRange;
 
 public:
    RFieldDescriptor() = default;
@@ -147,7 +140,6 @@ public:
    /// natively supported stdlib classes.
    /// The dictionary does not need to be available for this method.
    bool IsCustomClass() const;
-   std::optional<RValueRange> GetValueRange() const { return fValueRange; }
 };
 
 // clang-format off
@@ -160,6 +152,11 @@ public:
 class RColumnDescriptor {
    friend class Internal::RColumnDescriptorBuilder;
    friend class Internal::RNTupleDescriptorBuilder;
+
+public:
+   struct RValueRange {
+      double fMin, fMax;
+   };
 
 private:
    /// The actual column identifier, which is the link to the corresponding field
@@ -182,6 +179,8 @@ private:
    std::uint16_t fBitsOnStorage = 0;
    /// The on-disk column type
    EColumnType fType = EColumnType::kUnknown;
+   /// Optional value range (used e.g. by quantized real fields)
+   std::optional<RValueRange> fValueRange;
 
 public:
    RColumnDescriptor() = default;
@@ -202,6 +201,7 @@ public:
    std::uint64_t GetFirstElementIndex() const { return std::abs(fFirstElementIndex); }
    std::uint16_t GetBitsOnStorage() const { return fBitsOnStorage; }
    EColumnType GetType() const { return fType; }
+   std::optional<RValueRange> GetValueRange() const { return fValueRange; }
    bool IsAliasColumn() const { return fPhysicalColumnId != fLogicalColumnId; }
    bool IsDeferredColumn() const { return fFirstElementIndex != 0; }
    bool IsSuppressedDeferredColumn() const { return fFirstElementIndex < 0; }
@@ -1068,6 +1068,11 @@ public:
       fColumn.fRepresentationIndex = representationIndex;
       return *this;
    }
+   RColumnDescriptorBuilder &ValueRange(double min, double max)
+   {
+      fColumn.fValueRange = { min, max };
+      return *this;
+   }
    DescriptorId_t GetFieldId() const { return fColumn.fFieldId; }
    DescriptorId_t GetRepresentationIndex() const { return fColumn.fRepresentationIndex; }
    /// Attempt to make a column descriptor. This may fail if the column
@@ -1166,11 +1171,6 @@ public:
    RFieldDescriptorBuilder &TypeChecksum(const std::optional<std::uint32_t> typeChecksum)
    {
       fField.fTypeChecksum = typeChecksum;
-      return *this;
-   }
-   RFieldDescriptorBuilder &ValueRange(const std::optional<RFieldDescriptor::RValueRange> valueRange)
-   {
-      fField.fValueRange = valueRange;
       return *this;
    }
    DescriptorId_t GetParentId() const { return fField.fParentId; }
