@@ -2044,19 +2044,19 @@ Int_t TColor::GetColor(Int_t r, Int_t g, Int_t b, Float_t a)
 Int_t TColor::GetColorByName(const char *colorname)
 {
    TObjArray *colors = (TObjArray*) gROOT->GetListOfColors();
-   const Int_t ncolors = colors->GetSize();
-   TColor *color = nullptr;
-   TString colname;
-
-   for (Int_t i = 0; i<ncolors; i++) {
-      color = (TColor*)colors->At(i);
-      if (color) {
-         colname = color->GetName();
-         if (!colname.CompareTo(colorname)) return i;
-      }
-   }
-
-   return -1;
+//    const Int_t ncolors = colors->GetSize();
+//    TColor *color = nullptr;
+//    TString colname;
+//
+//    for (Int_t i = 0; i<ncolors; i++) {
+//       color = (TColor*)colors->At(i);
+//       if (color) {
+//          colname = color->GetName();
+//          if (!colname.CompareTo(colorname)) return i;
+//       }
+//    }
+   if (auto color = static_cast<TColor *>(colors->FindObject(colorname))) return color->GetNumber();
+   else return -1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2116,10 +2116,11 @@ Int_t TColor::GetColorDark(Int_t n)
 
    // check if the dark color already exist
    TString named = TString::Format("%s_dark",color->GetName()).Data();
-   if (GetColorByName(named.Data())>=0) return color->GetNumber();
+   if (GetColorByName(named.Data())>=0) {printf("%d found\n",color->GetNumber());return color->GetNumber();}
 
    //Build the dark color
    Int_t nd = GetFirstFreeColorIndex();
+
    auto colord = new TColor(nd,r,g,b);
    colord->SetName(named.Data());
    colord->SetTitle(colord->AsHexString());
