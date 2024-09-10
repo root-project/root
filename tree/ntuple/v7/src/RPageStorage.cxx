@@ -723,6 +723,7 @@ ROOT::Experimental::Internal::RPagePersistentSink::AddColumn(DescriptorId_t fiel
       .PhysicalColumnId(columnId)
       .FieldId(fieldId)
       .BitsOnStorage(column.GetBitsOnStorage())
+      .ValueRange(column.GetValueRange())
       .Type(column.GetType())
       .Index(column.GetIndex())
       .RepresentationIndex(column.GetRepresentationIndex())
@@ -760,6 +761,7 @@ void ROOT::Experimental::Internal::RPagePersistentSink::UpdateSchema(const RNTup
             .PhysicalColumnId(source.GetLogicalId())
             .FieldId(fieldId)
             .BitsOnStorage(source.GetBitsOnStorage())
+            .ValueRange(source.GetValueRange())
             .Type(source.GetType())
             .Index(source.GetIndex())
             .RepresentationIndex(source.GetRepresentationIndex());

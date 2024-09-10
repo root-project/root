@@ -56,6 +56,7 @@ void ROOT::Experimental::Internal::RPageSourceFriends::AddVirtualField(const RNT
          .PhysicalColumnId(physicalId)
          .FieldId(virtualFieldId)
          .BitsOnStorage(c.GetBitsOnStorage())
+         .ValueRange(c.GetValueRange())
          .Type(c.GetType())
          .Index(c.GetIndex())
          .RepresentationIndex(c.GetRepresentationIndex());

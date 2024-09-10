@@ -1403,8 +1403,12 @@ template class ROOT::Experimental::RSimpleField<float>;
 const ROOT::Experimental::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RField<float>::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations(
-      {{EColumnType::kSplitReal32}, {EColumnType::kReal32}, {EColumnType::kReal16}, {EColumnType::kReal32Trunc}}, {});
+   static RColumnRepresentations representations({{EColumnType::kSplitReal32},
+                                                  {EColumnType::kReal32},
+                                                  {EColumnType::kReal16},
+                                                  {EColumnType::kReal32Trunc},
+                                                  {EColumnType::kReal32Quant}},
+                                                 {});
    return representations;
 }
 
@@ -1417,6 +1421,9 @@ void ROOT::Experimental::RField<float>::GenerateColumns()
       auto &column = fAvailableColumns.emplace_back(Internal::RColumn::Create<float>(r[i][0], 0, i));
       if (r[i][0] == EColumnType::kReal32Trunc) {
          column->SetBitsOnStorage(fBitWidth);
+      } else if (r[i][0] == EColumnType::kReal32Quant) {
+         column->SetBitsOnStorage(fBitWidth);
+         column->SetValueRange(fValueMin, fValueMax);
       }
    }
    fPrincipalColumn = fAvailableColumns[0].get();
@@ -1436,6 +1443,13 @@ void ROOT::Experimental::RField<float>::GenerateColumns(const RNTupleDescriptor 
          const auto &fdesc = desc.GetFieldDescriptor(GetOnDiskId());
          const auto &coldesc = desc.GetColumnDescriptor(fdesc.GetLogicalColumnIds()[0]);
          column->SetBitsOnStorage(coldesc.GetBitsOnStorage());
+      } else if (onDiskTypes[0] == EColumnType::kReal32Quant) {
+         const auto &fdesc = desc.GetFieldDescriptor(GetOnDiskId());
+         const auto &coldesc = desc.GetColumnDescriptor(fdesc.GetLogicalColumnIds()[0]);
+         assert(coldesc.GetValueRange().has_value());
+         const auto [valMin, valMax] = *coldesc.GetValueRange();
+         column->SetBitsOnStorage(coldesc.GetBitsOnStorage());
+         column->SetValueRange(valMin, valMax);
       }
       fColumnRepresentatives.emplace_back(onDiskTypes);
       if (representationIndex > 0) {
@@ -1466,6 +1480,19 @@ void ROOT::Experimental::RField<float>::SetTruncated(std::size_t nBits)
    }
    SetColumnRepresentatives({{EColumnType::kReal32Trunc}});
    fBitWidth = nBits;
+}
+
+void ROOT::Experimental::RField<float>::SetQuantized(float minValue, float maxValue, std::size_t nBits)
+{
+   const auto &[minBits, maxBits] = Internal::RColumnElementBase::GetValidBitRange(EColumnType::kReal32Quant);
+   if (nBits < minBits || nBits > maxBits) {
+      throw RException(R__FAIL("SetQuantized() argument nBits = " + std::to_string(nBits) + " is out of valid range [" +
+                               std::to_string(minBits) + ", " + std::to_string(maxBits) + "])"));
+   }
+   SetColumnRepresentatives({{EColumnType::kReal32Quant}});
+   fBitWidth = nBits;
+   fValueMin = minValue;
+   fValueMax = maxValue;
 }
 
 //------------------------------------------------------------------------------
