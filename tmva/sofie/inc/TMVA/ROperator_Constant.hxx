@@ -87,10 +87,13 @@ public:
       // but keep its initialization in the generated code. The values might also be needed in initializing the
       // following operators using as input Constant or ConstantOfShape
        // resize fValues to shape length
-      model.AddConstantTensor(fNY, fShape, fValues.data());
-      if (model.Verbose())
+      model.AddConstantTensor(fNY, fShape, fValues);
+      if (model.Verbose()) {
          std::cout << "adding constant tensor " << fNY << " with shape " << ConvertShapeToString(fShape)
-         << " and values " << ConvertValuesToString(length, fValues.data()) << std::endl;
+         << " and values [";
+         for (auto v : fValues) std::cout << " " << v;
+         std::cout << "]" << std::endl;
+      }
    }
 
    std::string Generate(std::string /* OpName */){

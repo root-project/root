@@ -135,41 +135,76 @@ public:
 
       std::stringstream out;
       out << "\n//----  operator " << Name() << "  " << OpName << "\n";
-      // reset output tensors
-      if (fReduceOpMode == ReduceProd)
-         out << SP << "fTensor_" << fNY << ".assign(" << outputLength << ",1);\n";
-      else
-         out << SP << "fTensor_" << fNY << ".assign(" << outputLength << ",0);\n";
-
-      out << SP << "for (size_t i = 0; i < " << inputLength << "; i++) {\n";
-
-      size_t dim = fShapeX.size();   // this is the input dimension (e.g. 2, 3 or 4 or more)
-
-      // here we find output index
-      out << SP << SP << "size_t outputIndex = 0;\n";
-      for (size_t k = 0; k < dim; k++) {
+      // check where is reduced axes are last one. In this case we can do a faster implementation
+      bool reduceLastDims = true;
+      int kmin = fShapeX.size()-fAttrAxes.size();
+      for (int k = fShapeX.size()-1; k >= kmin; k--) {
+         // if k is not a reduced axis is not last ones
          if (std::find(fAttrAxes.begin(), fAttrAxes.end(), k) == fAttrAxes.end()) {
-            // do for not reducing axes
-            out << SP << SP << "size_t i_" << k << " = i / " << inputStrides[k] << " % " << fShapeX[k] << ";\n";
-            out << SP << SP << "outputIndex += i_" << k << " * " << outputStrides[k] << ";\n";
+            reduceLastDims = false;
+            break;
          }
       }
-      // now compute reduction
-      out << SP << SP << "// compute reduction....\n";
-      if (fReduceOpMode == ReduceProd)
-         out << SP << SP << "tensor_" << fNY << "[outputIndex] *= tensor_" << fNX << "[i];\n";
-      else if (fReduceOpMode == ReduceSum || fReduceOpMode == ReduceMean)
-         out << SP << SP << "tensor_" << fNY << "[outputIndex] += tensor_" << fNX << "[i];\n";
-      else if(fReduceOpMode == ReduceSumsquare){
-         out << SP << SP << "tensor_" << fNY << "[outputIndex] += tensor_" << fNX << "[i] * tensor_" << fNX << "[i];\n";
-      }
-      out << SP << "}\n";  // end loop on input elements
-      //normalize for reduced mean
-      if(fReduceOpMode == ReduceMean){
-         size_t reducedLength = inputLength/outputLength;
+      size_t reducedLength = inputLength / outputLength;
+      if (reduceLastDims) {
+         // new faster implementation using a single loop
          out << SP << "for (size_t i = 0; i < " << outputLength << "; i++) {\n";
-         out << SP << SP << "tensor_" << fNY << "[i] /= static_cast<float>(" << reducedLength << ");\n";
-         out << SP  << "}\n";
+         std::string startingValue = (fReduceOpMode == ReduceProd) ? "1" : "0";
+         out << SP << SP << ConvertTypeToString(GetTemplatedType<T>(T())) << " reducedValue = " << startingValue << ";\n";
+         // loop on reduced axis
+         out << SP << SP << "for (size_t j = 0; j < " << reducedLength << "; j++) {\n";
+         if (fReduceOpMode == ReduceProd)
+            out << SP << SP << SP << "reducedValue *= tensor_" << fNX << "[i * " << reducedLength << " + j];\n";
+         else if (fReduceOpMode == ReduceSum || fReduceOpMode == ReduceMean)
+            out << SP << SP << SP << "reducedValue *= tensor_" << fNX << "[i * " << reducedLength << " + j];\n";
+         else if(fReduceOpMode == ReduceSumsquare)
+            out << SP << SP << SP << "reducedValue *= tensor_" << fNX << "[i * " << reducedLength << " + j] * tensor_"
+                                    << fNX << "[i * " << reducedLength << " + j];\n";
+         out << SP << SP << "}\n"; // end j loop
+         if(fReduceOpMode == ReduceMean)
+            out << SP << SP << "reducedValue /= static_cast<float>(" << reducedLength << ");\n";
+         out << SP << SP << "tensor_" << fNY << "[i] = reducedValue;\n";
+         out << SP << "}\n"; // end i loop
+      } else
+      { // standard case
+
+         // reset output tensors
+         if (fReduceOpMode == ReduceProd)
+            out << SP << "fTensor_" << fNY << ".assign(" << outputLength << ",1);\n";
+         else
+            out << SP << "fTensor_" << fNY << ".assign(" << outputLength << ",0);\n";
+
+         out << SP << "for (size_t i = 0; i < " << inputLength << "; i++) {\n";
+
+         size_t dim = fShapeX.size(); // this is the input dimension (e.g. 2, 3 or 4 or more)
+
+         // here we find output index
+         out << SP << SP << "size_t outputIndex = 0;\n";
+         for (size_t k = 0; k < dim; k++) {
+            if (std::find(fAttrAxes.begin(), fAttrAxes.end(), k) == fAttrAxes.end()) {
+               // do for not reducing axes
+               out << SP << SP << "size_t i_" << k << " = i / " << inputStrides[k] << " % " << fShapeX[k] << ";\n";
+               out << SP << SP << "outputIndex += i_" << k << " * " << outputStrides[k] << ";\n";
+            }
+         }
+         // now compute reduction
+         out << SP << SP << "// compute reduction....\n";
+         if (fReduceOpMode == ReduceProd)
+            out << SP << SP << "tensor_" << fNY << "[outputIndex] *= tensor_" << fNX << "[i];\n";
+         else if (fReduceOpMode == ReduceSum || fReduceOpMode == ReduceMean)
+            out << SP << SP << "tensor_" << fNY << "[outputIndex] += tensor_" << fNX << "[i];\n";
+         else if (fReduceOpMode == ReduceSumsquare) {
+            out << SP << SP << "tensor_" << fNY << "[outputIndex] += tensor_" << fNX << "[i] * tensor_" << fNX
+                << "[i];\n";
+         }
+         out << SP << "}\n"; // end loop on input elements
+         // normalize for reduced mean
+         if (fReduceOpMode == ReduceMean) {
+            size_t reducedLength = inputLength / outputLength;
+            out << SP << "for (size_t i = 0; i < " << outputLength << "; i++) {\n";
+            out << SP << SP << "tensor_" << fNY << "[i] /= static_cast<float>(" << reducedLength << ");\n";
+            out << SP << "}\n";
+         }
       }
 
       return out.str();

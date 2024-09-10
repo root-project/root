@@ -81,6 +81,15 @@ public:
       std::memcpy(data_ptr.get(), (void*) data, length * sizeof(T));
       AddConstantTensor(name, GetTemplatedType<T>(T()), shape, data_ptr);
    }
+   // for boolean can be more convenient passing an std::vector
+   template<class T>
+   void AddConstantTensor(const std::string & name, const std::vector<size_t> & shape, const std::vector<T> & data) {
+      size_t length = data.size();
+      std::shared_ptr<void> data_ptr(malloc(length * sizeof(T)), free);
+      std::copy(data.begin(), data.end(), (T*) data_ptr.get());
+      //std::memcpy(data_ptr.get(), (void*) data, length * sizeof(T));
+      AddConstantTensor(name, GetTemplatedType<T>(T()), shape, data_ptr);
+   }
 
    template <typename T>
    void AddInitializedTensor(const std::string & tensor_name, const std::vector<std::size_t> & shape, T *raw_data)

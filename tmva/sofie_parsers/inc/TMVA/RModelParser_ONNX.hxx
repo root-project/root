@@ -29,6 +29,7 @@ public:
    struct OperatorsMapImpl;
 
 private:
+
    bool fVerbose = false;
    // Registered operators
    std::unique_ptr<OperatorsMapImpl> fOperatorsMapImpl;
@@ -54,6 +55,11 @@ public:
 
    // Check if the type of the tensor is registered
    bool IsRegisteredTensorType(const std::string & /*name*/);
+
+   // check verbosity
+   bool Verbose() const {
+      return fVerbose;
+   }
 
    // Get the type of the tensor
    ETensorType GetTensorType(const std::string &name);

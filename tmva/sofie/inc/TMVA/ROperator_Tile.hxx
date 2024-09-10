@@ -81,12 +81,57 @@ public:
       }
 
       //size_t input_length = ConvertShapeToLength(fShapeInput);
-      size_t output_length = ConvertShapeToLength(fShapeY);
+      //size_t output_length = ConvertShapeToLength(fShapeY);
 
 
       std::stringstream out;
+      std::string input = "tensor_" + fNInput;
+      std::string output = "tensor_" + fNY;
       out << "///-------- Tile operator\n";
       out << "{\n"; // add scope to re-use same names
+      out << "std::vector<int> input_shape = " << ConvertShapeToString(fShapeInput) << ";\n";
+      std::vector<size_t> repeats = fShapeY;
+      for (size_t i = 0; i < repeats.size(); i++)
+         repeats[i] /= fShapeInput[i];
+
+      out << "std::vector<int> repeats = " << ConvertShapeToString(repeats) << ";\n";
+      out << "int inputLength = " << ConvertShapeToLength(fShapeInput) << ";\n";
+      out << "int s = 1;\n";
+      // loop from inverse dim order
+      out << "for (int i = " << fShapeInput.size()-1 << "; i >=0; i--) {\n";
+      out << SP << "int r = repeats[i];\n";
+      // exclude case where repeats=1 apart first one
+      out << SP << "if (r == 1 && i < " << fShapeInput.size()-1 <<  ") continue;\n";
+      out << SP << "int i_offset = 0, o_offset = 0;\n";
+      out << SP << "s = s * input_shape[i];\n";
+      // case we have first copy
+      out << SP << "if (i == " << fShapeInput.size()-1 <<  ") {\n";
+      out << SP << SP <<  "for (int j = 0; j < inputLength/s ; j++) {\n";
+      out << SP << SP << SP << "for (int k = 0; k < r ; k++) {\n";
+      out << SP << SP << SP << SP << "std::copy(" << input << "+ i_offset, "
+                                    << input << "+ i_offset + s, " << output << "+ o_offset);\n";
+      out << SP << SP << SP << SP << "o_offset += s;\n";
+      out << SP << SP << SP << "}\n"; // end k loop
+      out << SP << SP << SP << "i_offset += s;\n";
+      out << SP << SP << "}\n"; // end j loop
+      out << SP << "} else {\n";  // second copy we do from output to output
+      // and we need to loop on j from reverse order to avoir re-writing in output tensor
+      out << SP << SP << "for (int j = inputLength/s - 1 ; j>=0; j--) {\n";
+      out << SP << SP << SP << "o_offset = j*s*r;\n";
+      out << SP << SP << SP << "i_offset = j*s;\n";
+      out << SP << SP << SP << "for (int k = 0; k < r ; k++) {\n";
+      out << SP << SP << SP << SP << "std::copy(" << output << "+ i_offset, "
+                                    << output << "+ i_offset + s, " << output << "+ o_offset);\n";
+      out << SP << SP << SP << SP << "o_offset += s;\n";
+      out << SP << SP << SP << "}\n"; // end k loop
+      out << SP << SP << "}\n"; // end j loop
+      out << SP << "}\n"; // end if
+      out << SP << "s *= r;\n";
+      out << SP << "inputLength *= r;\n";
+      out << "}\n"; // end i loop
+
+#if 0 // old inefficient implementation
+
       out << "std::vector<size_t> input_shape = " << ConvertShapeToString(fShapeInput) << ";\n";
       out << "std::vector<size_t> output_shape = " << ConvertShapeToString(fShapeY) << ";\n";
       out << "std::vector<size_t> indices(input_shape.size(), 0);\n";
@@ -106,7 +151,8 @@ public:
       out << SP<<"}\n";
       out << "}\n";
       out << "}\n";
-
+#endif
+      out << "}\n";  // end of scope
       return out.str();
    }
 };
