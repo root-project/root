@@ -857,7 +857,8 @@ public:
    void Pack(void *dst, const void *src, std::size_t count) const final
    {
       auto quantized = std::make_unique<Quantize::Quantized_t[]>(count);
-      const auto [min, max] = fValueRange;
+      assert(fValueRange);
+      const auto [min, max] = *fValueRange;
       Quantize::QuantizeReals(quantized.get(), reinterpret_cast<const float *>(src), count, min, max, fBitsOnStorage);
       ROOT::Experimental::Internal::BitPacking::PackBits(dst, quantized.get(), count, sizeof(Quantize::Quantized_t),
                                                          fBitsOnStorage);
@@ -866,7 +867,8 @@ public:
    void Unpack(void *dst, const void *src, std::size_t count) const final
    {
       auto quantized = std::make_unique<Quantize::Quantized_t[]>(count);
-      const auto [min, max] = fValueRange;
+      assert(fValueRange);
+      const auto [min, max] = *fValueRange;
       ROOT::Experimental::Internal::BitPacking::UnpackBits(quantized.get(), src, count, sizeof(Quantize::Quantized_t),
                                                            fBitsOnStorage);
       Quantize::UnquantizeReals(reinterpret_cast<float *>(dst), quantized.get(), count, min, max, fBitsOnStorage);

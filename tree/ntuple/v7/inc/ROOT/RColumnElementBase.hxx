@@ -28,6 +28,7 @@
 #include <cstddef> // for std::byte
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
 #include <type_traits>
 #include <typeinfo>
@@ -55,7 +56,7 @@ protected:
    std::size_t fSize;
    std::size_t fBitsOnStorage;
    /// This is only meaningful for column elements that support it (e.g. Real32Quant)
-   std::pair<double, double> fValueRange = {0, 0};
+   std::optional<std::pair<double, double>> fValueRange = std::nullopt;
 
    explicit RColumnElementBase(std::size_t size, std::size_t bitsOnStorage = 0)
       : fSize(size), fBitsOnStorage(bitsOnStorage ? bitsOnStorage : 8 * size)
@@ -110,7 +111,7 @@ public:
 
    std::size_t GetSize() const { return fSize; }
    std::size_t GetBitsOnStorage() const { return fBitsOnStorage; }
-   std::pair<double, double> GetValueRange() const { return fValueRange; }
+   std::optional<std::pair<double, double>> GetValueRange() const { return fValueRange; }
    std::size_t GetPackedSize(std::size_t nElements = 1U) const { return (nElements * fBitsOnStorage + 7) / 8; }
 }; // class RColumnElementBase
 

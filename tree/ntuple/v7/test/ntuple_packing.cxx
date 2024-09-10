@@ -304,7 +304,7 @@ TEST(Packing, OnDiskEncoding)
       *e->GetPtr<ClusterSize_t>("index32") = 39916801;          // 0x0261 1501
       *e->GetPtr<ClusterSize_t>("index64") = 0x0706050403020100L;
       *e->GetPtr<float>("float32Trunc") = -3.75f; // 1 10000000 11100000000000000000000 == 0xC0700000
-      *e->GetPtr<float>("float32Quant") = 0.69f; // quantized to 88 == 0b1011000
+      *e->GetPtr<float>("float32Quant") = 0.69f;  // quantized to 88 == 0b1011000
       e->GetPtr<std::string>("str")->assign("abc");
 
       writer->Fill(*e);
@@ -649,9 +649,9 @@ TEST(Packing, Real32Quant)
       constexpr auto kBitsOnStorage = 10;
       RColumnElement<float, EColumnType::kReal32Quant> element;
       element.SetBitsOnStorage(kBitsOnStorage);
+      element.SetValueRange(-5.f, 5.f);
       element.Pack(nullptr, nullptr, 0);
       element.Unpack(nullptr, nullptr, 0);
-      element.SetValueRange(-5.f, 5.f);
 
       float f1 = 3.5f;
       unsigned char out[8];
