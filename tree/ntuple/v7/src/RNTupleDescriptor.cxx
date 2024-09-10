@@ -129,7 +129,8 @@ bool ROOT::Experimental::RColumnDescriptor::operator==(const RColumnDescriptor &
 {
    return fLogicalColumnId == other.fLogicalColumnId && fPhysicalColumnId == other.fPhysicalColumnId &&
           fBitsOnStorage == other.fBitsOnStorage && fType == other.fType && fFieldId == other.fFieldId &&
-          fIndex == other.fIndex && fRepresentationIndex == other.fRepresentationIndex;
+          fIndex == other.fIndex && fRepresentationIndex == other.fRepresentationIndex &&
+          fValueRange == other.fValueRange;
 }
 
 ROOT::Experimental::RColumnDescriptor ROOT::Experimental::RColumnDescriptor::Clone() const
@@ -143,6 +144,7 @@ ROOT::Experimental::RColumnDescriptor ROOT::Experimental::RColumnDescriptor::Clo
    clone.fIndex = fIndex;
    clone.fFirstElementIndex = fFirstElementIndex;
    clone.fRepresentationIndex = fRepresentationIndex;
+   clone.fValueRange = fValueRange;
    return clone;
 }
 

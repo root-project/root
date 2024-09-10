@@ -302,6 +302,7 @@ std::unique_ptr<RColumnElementBase> GenerateColumnElementInternal(EColumnType ty
    case EColumnType::kSplitInt16: return std::make_unique<RColumnElement<CppT, EColumnType::kSplitInt16>>();
    case EColumnType::kSplitUInt16: return std::make_unique<RColumnElement<CppT, EColumnType::kSplitUInt16>>();
    case EColumnType::kReal32Trunc: return std::make_unique<RColumnElement<CppT, EColumnType::kReal32Trunc>>();
+   case EColumnType::kReal32Quant: return std::make_unique<RColumnElement<CppT, EColumnType::kReal32Quant>>();
    default: R__ASSERT(false);
    }
    // never here
@@ -831,9 +832,6 @@ template <typename T>
 class RColumnElementQuantized : public RColumnElementBase {
    static_assert(std::is_floating_point_v<T>);
 
-   double fMin = std::numeric_limits<double>::min();
-   double fMax = std::numeric_limits<double>::max();
-
 public:
    static constexpr bool kIsMappable = false;
    static constexpr std::size_t kSize = sizeof(T);
@@ -849,8 +847,9 @@ public:
 
    void SetValueRange(double min, double max) final
    {
-      fMin = min;
-      fMax = max;
+      R__ASSERT(min >= std::numeric_limits<T>::lowest());
+      R__ASSERT(max <= std::numeric_limits<T>::max());
+      fValueRange = {min, max};
    }
 
    bool IsMappable() const final { return kIsMappable; }
@@ -858,7 +857,8 @@ public:
    void Pack(void *dst, const void *src, std::size_t count) const final
    {
       auto quantized = std::make_unique<Quantize::Quantized_t[]>(count);
-      Quantize::QuantizeReals(quantized.get(), reinterpret_cast<const float *>(src), count, fMin, fMax, fBitsOnStorage);
+      const auto [min, max] = fValueRange;
+      Quantize::QuantizeReals(quantized.get(), reinterpret_cast<const float *>(src), count, min, max, fBitsOnStorage);
       ROOT::Experimental::Internal::BitPacking::PackBits(dst, quantized.get(), count, sizeof(Quantize::Quantized_t),
                                                          fBitsOnStorage);
    }
@@ -866,9 +866,10 @@ public:
    void Unpack(void *dst, const void *src, std::size_t count) const final
    {
       auto quantized = std::make_unique<Quantize::Quantized_t[]>(count);
+      const auto [min, max] = fValueRange;
       ROOT::Experimental::Internal::BitPacking::UnpackBits(quantized.get(), src, count, sizeof(Quantize::Quantized_t),
                                                            fBitsOnStorage);
-      Quantize::UnquantizeReals(reinterpret_cast<float *>(dst), quantized.get(), count, fMin, fMax, fBitsOnStorage);
+      Quantize::UnquantizeReals(reinterpret_cast<float *>(dst), quantized.get(), count, min, max, fBitsOnStorage);
    }
 };
 

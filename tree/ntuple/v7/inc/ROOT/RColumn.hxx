@@ -333,6 +333,11 @@ public:
       assert(fElement);
       return fElement->GetBitsOnStorage();
    }
+   std::pair<double, double> GetValueRange() const
+   {
+      assert(fElement);
+      return fElement->GetValueRange();
+   }
    std::uint32_t GetIndex() const { return fIndex; }
    std::uint16_t GetRepresentationIndex() const { return fRepresentationIndex; }
    DescriptorId_t GetOnDiskId() const { return fOnDiskId; }
@@ -344,6 +349,7 @@ public:
 
    void SetBitsOnStorage(std::size_t bits) { fElement->SetBitsOnStorage(bits); }
    std::size_t GetWritePageCapacity() const { return fWritePage.GetCapacity(); }
+   void SetValueRange(double min, double max) { fElement->SetValueRange(min, max); }
 }; // class RColumn
 
 } // namespace ROOT::Experimental::Internal
