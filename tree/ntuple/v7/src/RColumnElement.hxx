@@ -788,7 +788,7 @@ void QuantizeReals(Quantized_t *dst, const T *src, std::size_t count, double min
       T elem = src[i];
       assert(min <= elem && elem <= max);
       double e = (elem - min) * scale;
-      Quantized_t q = static_cast<Quantized_t>(e);
+      Quantized_t q = static_cast<Quantized_t>(e + 0.5);
       ByteSwapIfNecessary(q);
 
       // double-check we actually used at most `nQuantBits`
