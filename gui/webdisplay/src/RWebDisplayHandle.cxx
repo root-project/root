@@ -477,11 +477,11 @@ RWebDisplayHandle::ChromeCreator::ChromeCreator(bool _edge) : BrowserCreator(tru
 #endif
    if (use_normal) {
       // old browser with standard headless mode
-      fBatchExec = gEnv->GetValue((fEnvPrefix + "Batch").c_str(), "$prog --headless --no-sandbox --no-zygote --disable-extensions --disable-gpu --disable-audio-output $geometry $url");
+      fBatchExec = gEnv->GetValue((fEnvPrefix + "Batch").c_str(), "$prog --headless --no-sandbox --no-zygote --disable-extensions --disable-gpu --disable-audio-output $geometry $url >/dev/null 2>/dev/null");
       fHeadlessExec = gEnv->GetValue((fEnvPrefix + "Headless").c_str(), "$prog --headless --no-sandbox --no-zygote --disable-extensions --disable-gpu --disable-audio-output $geometry \'$url\' --dump-dom >/dev/null &");
    } else {
       // newer version with headless=new mode
-      fBatchExec = gEnv->GetValue((fEnvPrefix + "Batch").c_str(), "$prog --headless=new --no-sandbox --no-zygote --disable-extensions --disable-gpu --disable-audio-output $geometry $url");
+      fBatchExec = gEnv->GetValue((fEnvPrefix + "Batch").c_str(), "$prog --headless=new --no-sandbox --no-zygote --disable-extensions --disable-gpu --disable-audio-output $geometry $url >/dev/null 2>/dev/null");
       fHeadlessExec = gEnv->GetValue((fEnvPrefix + "Headless").c_str(), "$prog --headless=new --no-sandbox --no-zygote --disable-extensions --disable-gpu --disable-audio-output $geometry \'$url\' &");
    }
    fExec = gEnv->GetValue((fEnvPrefix + "Interactive").c_str(), "$prog $geometry --new-window --app=\'$url\' >/dev/null 2>/dev/null &");
@@ -575,7 +575,7 @@ RWebDisplayHandle::FirefoxCreator::FirefoxCreator() : BrowserCreator(true)
    fHeadlessExec = gEnv->GetValue("WebGui.FirefoxHeadless", "$prog -headless -no-remote $profile $url &");
    fExec = gEnv->GetValue("WebGui.FirefoxInteractive", "$prog -no-remote $profile $geometry $url &");
 #else
-   fBatchExec = gEnv->GetValue("WebGui.FirefoxBatch", "$prog --headless --private-window -no-remote $profile $url");
+   fBatchExec = gEnv->GetValue("WebGui.FirefoxBatch", "$prog --headless --private-window -no-remote $profile $url >/dev/null 2>/dev/null");
    fHeadlessExec = gEnv->GetValue("WebGui.FirefoxHeadless", "fork:--headless --private-window -no-remote $profile $url");
    fExec = gEnv->GetValue("WebGui.FirefoxInteractive", "$rootetcdir/runfirefox.sh $cleanup_profile $prog -no-remote $profile $geometry -url \'$url\' &");
 #endif
