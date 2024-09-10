@@ -57,7 +57,7 @@ ROOT::Experimental::Internal::RColumnElementBase::GetValidBitRange(EColumnType t
    case EColumnType::kSplitInt16: return std::make_pair(16, 16);
    case EColumnType::kSplitUInt16: return std::make_pair(16, 16);
    case EColumnType::kReal32Trunc: return std::make_pair(10, 31);
-   case EColumnType::kReal32Quant: return std::make_pair(8, 32);
+   case EColumnType::kReal32Quant: return std::make_pair(1, 32);
    default: assert(false);
    }
    // never here

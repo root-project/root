@@ -520,7 +520,7 @@ The column type and bits on storage integers can have one of the following value
 | 0x1C |   16 | SplitInt16   | Like Int16 but in split + zigzag encoding                                                     |
 | 0x15 |   16 | SplitUInt16  | Like UInt16 but in split encoding                                                             |
 | 0x1D |10-31 | Real32Trunc  | IEEE-754 single precision float with truncated mantissa                                       |
-| 0x1E | 8-32 | Real32Quant  | Real value contained in a specified range with an underlying quantized integer representation |
+| 0x1E | 1-32 | Real32Quant  | Real value contained in a specified range with an underlying quantized integer representation |
 
 The "split encoding" columns apply a byte transformation encoding to all pages of that column
 and in addition, depending on the column type, delta or zigzag encoding:
