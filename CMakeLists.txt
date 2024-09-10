@@ -4,11 +4,7 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-if(APPLE)
-  cmake_minimum_required(VERSION 3.19 FATAL_ERROR)
-else()
-  cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
-endif()
+cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 
 if(WIN32)
   # Set CMP0091 (MSVC runtime library flags are selected by an abstraction) to OLD
