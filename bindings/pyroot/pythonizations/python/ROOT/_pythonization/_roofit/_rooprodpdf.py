@@ -30,6 +30,8 @@ class RooProdPdf(object):
     \endcode
     """
 
+    __cpp_name__ = 'RooProdPdf'
+
     @cpp_signature(
         "RooProdPdf(const char* name, const char* title, const RooArgSet& fullPdfSet,"
         "    const RooCmdArg& arg1            , const RooCmdArg& arg2={},"

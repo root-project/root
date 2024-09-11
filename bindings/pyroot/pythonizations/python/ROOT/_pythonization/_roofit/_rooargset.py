@@ -17,6 +17,9 @@ import operator
 
 
 class RooArgSet(RooAbsCollection):
+
+    __cpp_name__ = 'RooArgSet'
+
     def __init__(self, *args, **kwargs):
         """Pythonization of RooArgSet constructor to support implicit
         conversion from Python sets.

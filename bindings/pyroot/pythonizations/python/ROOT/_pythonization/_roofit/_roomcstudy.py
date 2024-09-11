@@ -27,6 +27,8 @@ class RooMCStudy(object):
     \endcode
     """
 
+    __cpp_name__ = 'RooMCStudy'
+    
     @cpp_signature(
         "RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,"
         "    const RooCmdArg& arg1={}, const RooCmdArg& arg2={},"

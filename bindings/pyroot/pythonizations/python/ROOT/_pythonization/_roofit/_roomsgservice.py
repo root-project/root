@@ -26,6 +26,8 @@ class RooMsgService(object):
     ROOT.RooMsgService.instance().addStream(ROOT.RooFit.DEBUG, Topic = ROOT.RooFit.Tracing, ClassName = "RooGaussian")
     \endcode"""
 
+    __cpp_name__ = 'RooMsgService'
+
     @cpp_signature(
         "Int_t RooMsgService::addStream(RooFit::MsgLevel level, const RooCmdArg& arg1={}, const RooCmdArg& arg2={}, const RooCmdArg& arg3={},"
         "    const RooCmdArg& arg4={}, const RooCmdArg& arg5={}, const RooCmdArg& arg6={});"

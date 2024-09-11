@@ -11,6 +11,9 @@
 
 
 class RooVectorDataStore(object):
+
+    __cpp_name__ = 'RooVectorDataStore'
+
     def to_numpy(self, copy=True):
         import numpy as np
 

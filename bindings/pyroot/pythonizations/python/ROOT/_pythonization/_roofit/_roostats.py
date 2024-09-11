@@ -27,6 +27,8 @@ class SPlot(object):
     RooStats.SPlot(data, Strategy = 0)
     \endcode"""
 
+    __cpp_name__ = 'RooStats::SPlot'
+
     @cpp_signature(
         "SPlot::SPlot(const char* name, const char* title, RooDataSet& data, RooAbsPdf* pdf,"
         "        const RooArgList &yieldsList, const RooArgSet &projDeps,"
