@@ -29,6 +29,8 @@ class RooAbsReal(object):
     \endcode
     """
 
+    __cpp_name__ = 'RooAbsReal'
+
     @cpp_signature(
         "RooPlot* RooAbsReal::plotOn(RooPlot* frame,"
         "    const RooCmdArg& arg1={}, const RooCmdArg& arg2={},"
