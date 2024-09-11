@@ -24,6 +24,7 @@
 
 #include <iostream>
 #include <sstream> // class ostringstream
+#include "llvm/ADT/StringExtras.h"
 
 #include "SelectionRules.h"
 

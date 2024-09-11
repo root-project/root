@@ -20,6 +20,6 @@ set_property(GLOBAL APPEND PROPERTY ROOT_EXPORTED_TARGETS ${library})
 add_library(ROOT::${library} ALIAS ${library})
 
 # Now sanitize executables that are not created with ROOT_EXECUTABLE():
-set_property(TARGET llvm-tblgen clang-tblgen
-  APPEND PROPERTY LINK_LIBRARIES ${library})
-add_dependencies(llvm-tblgen ROOTStaticSanitizerConfig)
+foreach(target llvm-min-tblgen llvm-tblgen clang-tblgen)
+  target_link_libraries(${target} PRIVATE ${library})
+endforeach()

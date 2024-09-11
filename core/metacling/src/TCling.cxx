@@ -3236,8 +3236,8 @@ Bool_t TCling::IsLoaded(const char* filename) const
                            clang::SourceLocation(),
                            /*isAngled*/ false,
                            /*FromDir*/ nullptr, CurDir,
-                           clang::ArrayRef<std::pair<const clang::FileEntry *,
-                           const clang::DirectoryEntry *>>(),
+                           clang::ArrayRef<std::pair<clang::OptionalFileEntryRef,
+                           clang::DirectoryEntryRef>>(),
                            /*SearchPath*/ nullptr,
                            /*RelativePath*/ nullptr,
                            /*RequestingModule*/ nullptr,
@@ -7034,6 +7034,7 @@ static std::string GetClassSharedLibsForModule(const char *cls, cling::LookupHel
             case TemplateArgument::Integral:
             case TemplateArgument::Pack:
             case TemplateArgument::NullPtr:
+            case TemplateArgument::StructuralValue:
             case TemplateArgument::Expression:
             case TemplateArgument::Template:
             case TemplateArgument::TemplateExpansion: return;
@@ -8723,7 +8724,7 @@ void TCling::SetDeclAttr(DeclId_t declId, const char* attribute)
 {
    Decl* decl = static_cast<Decl*>(const_cast<void*>(declId));
    ASTContext &C = decl->getASTContext();
-   decl->addAttr(AnnotateAttr::CreateImplicit(C, attribute));
+   decl->addAttr(AnnotateAttr::CreateImplicit(C, attribute, nullptr, 0));
 }
 
 //______________________________________________________________________________
@@ -8902,7 +8903,7 @@ Long_t TCling::FuncTempInfo_Property(FuncTempInfo_t *ft_info) const
       if (md->isVirtual()) {
          property |= kIsVirtual;
       }
-      if (md->isPure()) {
+      if (md->isPureVirtual()) {
          property |= kIsPureVirtual;
       }
       if (const clang::CXXConstructorDecl *cd =

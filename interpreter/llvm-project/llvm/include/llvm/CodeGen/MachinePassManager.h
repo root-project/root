@@ -37,6 +37,22 @@ class MachineFunction;
 
 extern template class AnalysisManager<MachineFunction>;
 
+/// Like \c AnalysisKey, but only for machine passes.
+struct alignas(8) MachinePassKey {};
+
+/// A CRTP mix-in that provides informational APIs needed for machine passes.
+///
+/// This provides some boilerplate for types that are machine passes. It
+/// automatically mixes in \c PassInfoMixin.
+template <typename DerivedT>
+struct MachinePassInfoMixin : public PassInfoMixin<DerivedT> {
+  static MachinePassKey *ID() {
+    static_assert(std::is_base_of<MachinePassInfoMixin, DerivedT>::value,
+                  "Must pass the derived type as the template argument!");
+    return &DerivedT::Key;
+  }
+};
+
 /// An AnalysisManager<MachineFunction> that also exposes IR analysis results.
 class MachineFunctionAnalysisManager : public AnalysisManager<MachineFunction> {
 public:
@@ -134,8 +150,7 @@ class MachineFunctionPassManager
   using Base = PassManager<MachineFunction, MachineFunctionAnalysisManager>;
 
 public:
-  MachineFunctionPassManager(bool DebugLogging = false,
-                             bool RequireCodeGenSCCOrder = false,
+  MachineFunctionPassManager(bool RequireCodeGenSCCOrder = false,
                              bool VerifyMachineFunction = false)
       : RequireCodeGenSCCOrder(RequireCodeGenSCCOrder),
         VerifyMachineFunction(VerifyMachineFunction) {}

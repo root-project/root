@@ -357,6 +357,8 @@ public:
 
 class BinaryWriter : public Writer {
 private:
+  const uint8_t GapFill;
+  const uint64_t PadTo;
   std::unique_ptr<BinarySectionWriter> SecWriter;
 
   uint64_t TotalSize = 0;
@@ -365,7 +367,8 @@ public:
   ~BinaryWriter() {}
   Error finalize() override;
   Error write() override;
-  BinaryWriter(Object &Obj, raw_ostream &Out) : Writer(Obj, Out) {}
+  BinaryWriter(Object &Obj, raw_ostream &Out, const CommonConfig &Config)
+      : Writer(Obj, Out), GapFill(Config.GapFill), PadTo(Config.PadTo) {}
 };
 
 class IHexWriter : public Writer {
@@ -432,6 +435,8 @@ public:
   virtual bool hasContents() const { return false; }
   // Notify the section that it is subject to removal.
   virtual void onRemove();
+
+  virtual void restoreSymTabLink(SymbolTableSection &) {}
 };
 
 class Segment {
@@ -483,6 +488,7 @@ class Section : public SectionBase {
 
   ArrayRef<uint8_t> Contents;
   SectionBase *LinkSection = nullptr;
+  bool HasSymTabLink = false;
 
 public:
   explicit Section(ArrayRef<uint8_t> Data) : Contents(Data) {}
@@ -497,6 +503,7 @@ public:
   bool hasContents() const override {
     return Type != ELF::SHT_NOBITS && Type != ELF::SHT_NULL;
   }
+  void restoreSymTabLink(SymbolTableSection &SymTab) override;
 };
 
 class OwnedDataSection : public SectionBase {
@@ -691,6 +698,7 @@ protected:
   std::vector<std::unique_ptr<Symbol>> Symbols;
   StringTableSection *SymbolNames = nullptr;
   SectionIndexSection *SectionIndexTable = nullptr;
+  bool IndicesChanged = false;
 
   using SymPtr = std::unique_ptr<Symbol>;
 
@@ -703,6 +711,7 @@ public:
   void prepareForLayout();
   // An 'empty' symbol table still contains a null symbol.
   bool empty() const { return Symbols.size() == 1; }
+  bool indicesChanged() const { return IndicesChanged; }
   void setShndxTable(SectionIndexSection *ShndxTable) {
     SectionIndexTable = ShndxTable;
   }

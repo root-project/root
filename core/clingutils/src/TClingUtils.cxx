@@ -3094,7 +3094,7 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
 
    if (!prefix_changed && !mightHaveChanged) return originalType;
    if (prefix) {
-      instanceType = Ctx.getElaboratedType(clang::ETK_None,prefix,instanceType);
+      instanceType = Ctx.getElaboratedType(clang::ElaboratedTypeKeyword::None, prefix, instanceType);
       instanceType = Ctx.getQualifiedType(instanceType,prefix_qualifiers);
    }
    return instanceType;
@@ -3388,7 +3388,7 @@ std::string ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
          = HdrSearch.LookupFile(llvm::sys::path::filename(headerFE->getName()),
                                 SourceLocation(),
                                 true /*isAngled*/, nullptr/*FromDir*/, foundDir,
-                                ArrayRef<std::pair<const FileEntry *, const DirectoryEntry *>>(),
+                                ArrayRef<std::pair<OptionalFileEntryRef, DirectoryEntryRef>>(),
                                 nullptr/*Searchpath*/, nullptr/*RelPath*/,
                                 nullptr/*SuggestedModule*/, nullptr/*RequestingModule*/,
                                 nullptr/*IsMapped*/, nullptr /*IsFrameworkFound*/,
@@ -3448,7 +3448,7 @@ std::string ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
       ConstSearchDirIterator* FoundDir = nullptr;
       FELong = HdrSearch.LookupFile(trailingPart, SourceLocation(),
                                     true /*isAngled*/, nullptr/*FromDir*/, FoundDir,
-                                    ArrayRef<std::pair<const FileEntry *, const DirectoryEntry *>>(),
+                                    ArrayRef<std::pair<OptionalFileEntryRef, DirectoryEntryRef>>(),
                                     nullptr/*Searchpath*/, nullptr/*RelPath*/,
                                     nullptr/*SuggestedModule*/, nullptr/*RequestingModule*/,
                                     nullptr/*IsMapped*/, nullptr /*IsFrameworkFound*/);
@@ -3474,7 +3474,7 @@ std::string ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
       // (or are we back to the previously found spelling, which is fine, too)
       if (HdrSearch.LookupFile(trailingPart, SourceLocation(),
                                true /*isAngled*/, nullptr/*FromDir*/, FoundDir,
-                               ArrayRef<std::pair<const FileEntry *, const DirectoryEntry *>>(),
+                               ArrayRef<std::pair<OptionalFileEntryRef, DirectoryEntryRef>>(),
                                nullptr/*Searchpath*/, nullptr/*RelPath*/,
                                nullptr/*SuggestedModule*/, nullptr/*RequestingModule*/,
                                nullptr/*IsMapped*/, nullptr /*IsFrameworkFound*/) == FELong) {
@@ -4007,7 +4007,7 @@ static void KeepNParams(clang::QualType& normalizedType,
    // Here we have (prefix_changed==true || mightHaveChanged), in both case
    // we need to reconstruct the type.
    if (prefix) {
-      normalizedType = astCtxt.getElaboratedType(clang::ETK_None,prefix,normalizedType);
+      normalizedType = astCtxt.getElaboratedType(clang::ElaboratedTypeKeyword::None, prefix, normalizedType);
       normalizedType = astCtxt.getQualifiedType(normalizedType,prefix_qualifiers);
    }
 
@@ -4633,7 +4633,8 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
       clang::NestedNameSpecifier *scope = ReSubstTemplateArgNNS(Ctxt,etype->getQualifier(),instance);
       clang::QualType subTy = ReSubstTemplateArg(clang::QualType(etype->getNamedType().getTypePtr(),0),instance);
 
-      if (scope) subTy = Ctxt.getElaboratedType(clang::ETK_None,scope,subTy);
+      if (scope)
+         subTy = Ctxt.getElaboratedType(clang::ElaboratedTypeKeyword::None, scope, subTy);
       subTy = Ctxt.getQualifiedType(subTy,scope_qualifiers);
       return subTy;
    }

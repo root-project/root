@@ -1082,7 +1082,7 @@ bool LinkdefReader::Parse(SelectionRules &sr, llvm::StringRef code, const std::v
    clang::Token tok;
    do {
       PP.Lex(tok);
-   } while (tok.isNot(clang::tok::eof));
+   } while (tok.isNot(clang::tok::annot_repl_input_end));
 
    fSelectionRules = nullptr;
    return 0 == DClient.getNumErrors();
