@@ -717,7 +717,7 @@ The cluster summary record frame contains the entry range of a cluster:
 
 If flag 0x01 (sharded cluster) is set,
 an additional 32bit integer containing the column group ID follows the flags field.
-If flags is zero, the cluster stores the event range of _all_ the original columns
+If flags is zero, the cluster stores the entry range of _all_ the original columns
 _including_ the columns from extension headers.
 
 The order of the cluster summaries defines the cluster IDs,
@@ -764,7 +764,7 @@ For typical page sizes, that should be < 1 per mille.
 
 Note that we do not need to store the uncompressed size of the page
 because the uncompressed size is given by the number of elements in the page and the element size.
-We do need, however, the per-column and per-cluster element offset in order to read a certain event range
+We do need, however, the per-column and per-cluster element offset in order to read a certain entry range
 without inspecting the meta-data of all the previous clusters.
 
 The hierarchical structure of the frames in the page list envelope is as follows:
