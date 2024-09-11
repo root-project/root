@@ -12,6 +12,9 @@
 
 
 class RooJSONFactoryWSTool(object):
+
+    __cpp_name__ = 'RooJSONFactoryWSTool'
+
     @classmethod
     def gendoc(cls):
         """Generate the importer and exporter documentation."""
