@@ -11,9 +11,10 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm-dwarfdump.h"
+#include "llvm/ADT/MapVector.h"
 #include "llvm/ADT/STLExtras.h"
+#include "llvm/ADT/SmallSet.h"
 #include "llvm/ADT/StringSet.h"
-#include "llvm/ADT/Triple.h"
 #include "llvm/DebugInfo/DIContext.h"
 #include "llvm/DebugInfo/DWARF/DWARFAcceleratorTable.h"
 #include "llvm/DebugInfo/DWARF/DWARFCompileUnit.h"
@@ -26,6 +27,7 @@
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/Format.h"
+#include "llvm/Support/FormatVariadic.h"
 #include "llvm/Support/InitLLVM.h"
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/Path.h"
@@ -34,6 +36,7 @@
 #include "llvm/Support/ToolOutputFile.h"
 #include "llvm/Support/WithColor.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/TargetParser/Triple.h"
 #include <cstdlib>
 
 using namespace llvm;
@@ -171,9 +174,20 @@ static list<std::string>
          value_desc("name"), cat(DwarfDumpCategory));
 static alias FindAlias("f", desc("Alias for --find."), aliasopt(Find),
                        cl::NotHidden);
+static opt<bool> FindAllApple(
+    "find-all-apple",
+    desc("Print every debug information entry in the accelerator tables."),
+    cat(DwarfDumpCategory));
 static opt<bool> IgnoreCase("ignore-case",
                             desc("Ignore case distinctions when using --name."),
                             value_desc("i"), cat(DwarfDumpCategory));
+static opt<bool> DumpNonSkeleton(
+    "dwo",
+    desc("Dump the non skeleton DIE in the .dwo or .dwp file after dumping the "
+         "skeleton DIE from the main executable. This allows dumping the .dwo "
+         "files with resolved addresses."),
+    value_desc("d"), cat(DwarfDumpCategory));
+
 static alias IgnoreCaseAlias("i", desc("Alias for --ignore-case."),
                              aliasopt(IgnoreCase), cl::NotHidden);
 static list<std::string> Name(
@@ -308,6 +322,7 @@ static DIDumpOptions getDumpOpts(DWARFContext &C) {
   DumpOpts.ShowForm = ShowForm;
   DumpOpts.SummarizeTypes = SummarizeTypes;
   DumpOpts.Verbose = Verbose;
+  DumpOpts.DumpNonSkeleton = DumpNonSkeleton;
   DumpOpts.RecoverableErrorHandler = C.getRecoverableErrorHandler();
   // In -verify mode, print DIEs without children in error messages.
   if (Verify) {
@@ -330,10 +345,10 @@ static bool filterArch(ObjectFile &Obj) {
     return true;
 
   if (auto *MachO = dyn_cast<MachOObjectFile>(&Obj)) {
-    for (auto Arch : ArchFilters) {
+    for (const StringRef Arch : ArchFilters) {
       // Match architecture number.
       unsigned Value;
-      if (!StringRef(Arch).getAsInteger(0, Value))
+      if (!Arch.getAsInteger(0, Value))
         if (Value == getCPUType(*MachO))
           return true;
 
@@ -383,15 +398,27 @@ static void filterByName(
     const StringSet<> &Names, DWARFContext::unit_iterator_range CUs,
     raw_ostream &OS,
     std::function<StringRef(uint64_t RegNum, bool IsEH)> GetNameForDWARFReg) {
-  for (const auto &CU : CUs)
-    for (const auto &Entry : CU->dies()) {
-      DWARFDie Die = {CU.get(), &Entry};
+  auto filterDieNames = [&](DWARFUnit *Unit) {
+    for (const auto &Entry : Unit->dies()) {
+      DWARFDie Die = {Unit, &Entry};
       if (const char *Name = Die.getName(DINameKind::ShortName))
         if (filterByName(Names, Die, Name, OS, GetNameForDWARFReg))
           continue;
       if (const char *Name = Die.getName(DINameKind::LinkageName))
         filterByName(Names, Die, Name, OS, GetNameForDWARFReg);
     }
+  };
+  for (const auto &CU : CUs) {
+    filterDieNames(CU.get());
+    if (DumpNonSkeleton) {
+      // If we have split DWARF, then recurse down into the .dwo files as well.
+      DWARFDie CUDie = CU->getUnitDIE(false);
+      DWARFDie CUNonSkeletonDie = CU->getNonSkeletonUnitDIE(false);
+      // If we have a DWO file, we need to search it as well
+      if (CUNonSkeletonDie && CUDie != CUNonSkeletonDie)
+        filterDieNames(CUNonSkeletonDie.getDwarfUnit());
+    }
+  }
 }
 
 static void getDies(DWARFContext &DICtx, const AppleAcceleratorTable &Accel,
@@ -453,6 +480,37 @@ static void filterByAccelName(
     Die.dump(OS, 0, DumpOpts);
 }
 
+/// Print all DIEs in apple accelerator tables
+static void findAllApple(
+    DWARFContext &DICtx, raw_ostream &OS,
+    std::function<StringRef(uint64_t RegNum, bool IsEH)> GetNameForDWARFReg) {
+  MapVector<StringRef, llvm::SmallSet<DWARFDie, 2>> NameToDies;
+
+  auto PushDIEs = [&](const AppleAcceleratorTable &Accel) {
+    for (const auto &Entry : Accel.entries()) {
+      if (std::optional<uint64_t> Off = Entry.BaseEntry.getDIESectionOffset()) {
+        std::optional<StringRef> MaybeName = Entry.readName();
+        DWARFDie Die = DICtx.getDIEForOffset(*Off);
+        if (Die && MaybeName)
+          NameToDies[*MaybeName].insert(Die);
+      }
+    }
+  };
+
+  PushDIEs(DICtx.getAppleNames());
+  PushDIEs(DICtx.getAppleNamespaces());
+  PushDIEs(DICtx.getAppleTypes());
+
+  DIDumpOptions DumpOpts = getDumpOpts(DICtx);
+  DumpOpts.GetNameForDWARFReg = GetNameForDWARFReg;
+  for (const auto &[Name, Dies] : NameToDies) {
+    OS << llvm::formatv("\nApple accelerator entries with name = \"{0}\":\n",
+                        Name);
+    for (DWARFDie Die : Dies)
+      Die.dump(OS, 0, DumpOpts);
+  }
+}
+
 /// Handle the --lookup option and dump the DIEs and line info for the given
 /// address.
 /// TODO: specified Address for --lookup option could relate for several
@@ -461,7 +519,7 @@ static void filterByAccelName(
 /// information or probably display all matched entries, or something else...
 static bool lookup(ObjectFile &Obj, DWARFContext &DICtx, uint64_t Address,
                    raw_ostream &OS) {
-  auto DIEsForAddr = DICtx.getDIEsForAddress(Lookup);
+  auto DIEsForAddr = DICtx.getDIEsForAddress(Lookup, DumpNonSkeleton);
 
   if (!DIEsForAddr)
     return false;
@@ -611,7 +669,7 @@ static bool dumpObjectFile(ObjectFile &Obj, DWARFContext &DICtx,
   // Handle the --name option.
   if (!Name.empty()) {
     StringSet<> Names;
-    for (auto name : Name)
+    for (const auto &name : Name)
       Names.insert((IgnoreCase && !UseRegex) ? StringRef(name).lower() : name);
 
     filterByName(Names, DICtx.normal_units(), OS, GetRegName);
@@ -622,6 +680,12 @@ static bool dumpObjectFile(ObjectFile &Obj, DWARFContext &DICtx,
   // Handle the --find option and lower it to --debug-info=<offset>.
   if (!Find.empty()) {
     filterByAccelName(Find, DICtx, OS, GetRegName);
+    return true;
+  }
+
+  // Handle the --find-all-apple option and lower it to --debug-info=<offset>.
+  if (FindAllApple) {
+    findAllApple(DICtx, OS, GetRegName);
     return true;
   }
 
@@ -654,7 +718,7 @@ static bool handleArchive(StringRef Filename, Archive &Arch,
                           HandlerFn HandleObj, raw_ostream &OS) {
   bool Result = true;
   Error Err = Error::success();
-  for (auto Child : Arch.children(Err)) {
+  for (const auto &Child : Arch.children(Err)) {
     auto BuffOrErr = Child.getMemoryBufferRef();
     error(Filename, BuffOrErr.takeError());
     auto NameOrErr = Child.getName();
@@ -782,7 +846,7 @@ int main(int argc, char **argv) {
 
   // Unless dumping a specific DIE, default to --show-children.
   if (!ShowChildren && !Verify && !OffsetRequested && Name.empty() &&
-      Find.empty())
+      Find.empty() && !FindAllApple)
     ShowChildren = true;
 
   // Defaults to a.out if no filenames specified.
@@ -804,19 +868,19 @@ int main(int argc, char **argv) {
 
   bool Success = true;
   if (Verify) {
-    for (auto Object : Objects)
+    for (StringRef Object : Objects)
       Success &= handleFile(Object, verifyObjectFile, OutputFile.os());
   } else if (Statistics) {
-    for (auto Object : Objects)
+    for (StringRef Object : Objects)
       Success &= handleFile(Object, collectStatsForObjectFile, OutputFile.os());
   } else if (ShowSectionSizes) {
-    for (auto Object : Objects)
+    for (StringRef Object : Objects)
       Success &= handleFile(Object, collectObjectSectionSizes, OutputFile.os());
   } else if (ShowSources) {
-    for (auto Object : Objects)
+    for (StringRef Object : Objects)
       Success &= handleFile(Object, collectObjectSources, OutputFile.os());
   } else {
-    for (auto Object : Objects)
+    for (StringRef Object : Objects)
       Success &= handleFile(Object, dumpObjectFile, OutputFile.os());
   }
 

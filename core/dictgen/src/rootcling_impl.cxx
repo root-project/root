@@ -298,7 +298,7 @@ static void AnnotateFieldDecl(clang::FieldDecl &decl,
             // before persisting the ProtoClasses in the root pcms.
             // BEGIN ROOT PCMS
             if (name == propNames::comment) {
-               decl.addAttr(clang::AnnotateAttr::CreateImplicit(C, value));
+               decl.addAttr(clang::AnnotateAttr::CreateImplicit(C, value, nullptr, 0));
             }
             // END ROOT PCMS
 
@@ -308,7 +308,7 @@ static void AnnotateFieldDecl(clang::FieldDecl &decl,
                // This next line is here to use the root pcms. Indeed we need to annotate the AST
                // before persisting the ProtoClasses in the root pcms.
                // BEGIN ROOT PCMS
-               decl.addAttr(clang::AnnotateAttr::CreateImplicit(C, "!"));
+               decl.addAttr(clang::AnnotateAttr::CreateImplicit(C, "!", nullptr, 0));
                // END ROOT PCMS
                // The rest of the lines are not changed to leave in place the system which
                // works with bulk header parsing on library load.
@@ -316,8 +316,7 @@ static void AnnotateFieldDecl(clang::FieldDecl &decl,
                userDefinedProperty = name + propNames::separator + value;
             }
             ROOT::TMetaUtils::Info(nullptr, "%s %s\n", varName.c_str(), userDefinedProperty.c_str());
-            decl.addAttr(clang::AnnotateAttr::CreateImplicit(C, userDefinedProperty));
-
+            decl.addAttr(clang::AnnotateAttr::CreateImplicit(C, userDefinedProperty, nullptr, 0));
          }
       }
    }
@@ -362,7 +361,7 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
          const std::string &value = attr.second;
          userDefinedProperty = name + ROOT::TMetaUtils::propNames::separator + value;
          if (genreflex::verbose) std::cout << " * " << userDefinedProperty << std::endl;
-         CXXRD.addAttr(AnnotateAttr::CreateImplicit(C, userDefinedProperty));
+         CXXRD.addAttr(AnnotateAttr::CreateImplicit(C, userDefinedProperty, nullptr, 0));
       }
    }
 
@@ -389,14 +388,14 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
          if (comment.size()) {
             // The ClassDef annotation is for the class itself
             if (isClassDefMacro) {
-               CXXRD.addAttr(AnnotateAttr::CreateImplicit(C, comment.str()));
+               CXXRD.addAttr(AnnotateAttr::CreateImplicit(C, comment.str(), nullptr, 0));
             } else if (!isGenreflex) {
                // Here we check if we are in presence of a selection file so that
                // the comment does not ends up as a decoration in the AST,
                // Nevertheless, w/o PCMS this has no effect, since the headers
                // are parsed at runtime and the information in the AST dumped by
                // rootcling is not relevant.
-               (*I)->addAttr(AnnotateAttr::CreateImplicit(C, comment.str()));
+               (*I)->addAttr(AnnotateAttr::CreateImplicit(C, comment.str(), nullptr, 0));
             }
          }
          // Match decls with sel rules if we are in presence of a selection file
@@ -3909,7 +3908,7 @@ static bool ModuleContainsHeaders(TModuleGenerator &modGen, clang::HeaderSearch 
                header, clang::SourceLocation(),
                /*isAngled*/ false,
                /*FromDir*/ 0, CurDir,
-               clang::ArrayRef<std::pair<const clang::FileEntry *, const clang::DirectoryEntry *>>(),
+               clang::ArrayRef<std::pair<clang::OptionalFileEntryRef, clang::DirectoryEntryRef>>(),
                /*SearchPath*/ 0,
                /*RelativePath*/ 0,
                /*RequestingModule*/ 0, &SuggestedModule,
