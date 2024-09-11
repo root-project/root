@@ -10,7 +10,6 @@
 #include "IncrementalParser.h"
 
 #include "ASTTransformer.h"
-#include "AutoSynthesizer.h"
 #include "CheckEmptyTransactionTransformer.h"
 #include "ClingPragmas.h"
 #include "DeclCollector.h"
@@ -1023,7 +1022,6 @@ namespace cling {
     // Register the AST Transformers
     typedef std::unique_ptr<ASTTransformer> ASTTPtr_t;
     std::vector<ASTTPtr_t> ASTTransformers;
-    ASTTransformers.emplace_back(new AutoSynthesizer(TheSema));
     ASTTransformers.emplace_back(new EvaluateTSynthesizer(TheSema));
     if (hasCodeGenerator() && !m_Interpreter->getOptions().NoRuntime) {
       // Don't protect against crashes if we cannot run anything.

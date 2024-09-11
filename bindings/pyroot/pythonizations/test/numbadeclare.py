@@ -95,7 +95,7 @@ class NumbaDeclareSimple(unittest.TestCase):
         @ROOT.Numba.Declare(["float"], "float")
         def fn12(x):
             return 2.0 * x
-        ROOT.gInterpreter.ProcessLine("y12 = Numba::fn12(42.0);")
+        ROOT.gInterpreter.ProcessLine("auto y12 = Numba::fn12(42.0);")
         self.assertEqual(fn12(42.0), ROOT.y12)
 
     # Test RDataFrame integration
