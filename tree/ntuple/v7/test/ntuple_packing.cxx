@@ -703,6 +703,51 @@ TEST(Packing, Real32Quant)
       element.Unpack(&f2, out, 1);
       EXPECT_FLOAT_EQ(f2, -5.f);
    }
+
+   // Exhaustively test, for all valid bit widths, packing and unpacking of 0 to N random floats.
+   constexpr double kMin = -1000, kMax = 1000;
+   std::uniform_real_distribution<float> dist(kMin, kMax);
+   const auto &[minBits, maxBits] = RColumnElementBase::GetValidBitRange(EColumnType::kReal32Quant);
+   for (int bitWidth = minBits; bitWidth <= maxBits; ++bitWidth) {
+      SCOPED_TRACE(std::string("At bitWidth = ") + std::to_string(bitWidth));
+
+      RColumnElement<float, EColumnType::kReal32Quant> element;
+      element.SetBitsOnStorage(bitWidth);
+      element.SetValueRange(kMin, kMax);
+
+      std::default_random_engine rng(bitWidth);
+      constexpr auto N = 2000;
+      float inputs[N];
+      for (int i = 0; i < N; ++i) {
+         inputs[i] = dist(rng);
+      }
+
+      auto packed = std::make_unique<std::uint8_t[]>(BitPacking::MinBufSize(N, bitWidth));
+      float outputs[N];
+
+      if (bitWidth == 1) {
+         for (int i = 0; i < N; ++i) {
+            element.Pack(packed.get(), inputs, i);
+            element.Unpack(outputs, packed.get(), i);
+            for (int j = 0; j < i; ++j) {
+               if (inputs[j] < (kMax + kMin) * 0.5)
+                  EXPECT_FLOAT_EQ(outputs[j], kMin);
+               else
+                  EXPECT_FLOAT_EQ(outputs[j], kMax);
+            }
+         }
+      } else {
+         const auto k = 0.5 * (kMax - kMin) / ((1ull << bitWidth) - 1) + kMin;
+         for (int i = 0; i < N; ++i) {
+            element.Pack(packed.get(), inputs, i);
+            element.Unpack(outputs, packed.get(), i);
+            for (int j = 0; j < i; ++j) {
+               const float maxErr = std::abs(k) + std::abs(inputs[i]);
+               EXPECT_NEAR(outputs[j], inputs[j], maxErr);
+            }
+         }
+      }
+   }
 }
 
 #if defined(__GNUC__)
