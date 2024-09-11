@@ -4,6 +4,8 @@
 #include "TInterpreter.h"
 #include "TROOT.h"
 #include "TSystem.h"
+#include "TMethod.h"
+#include "TMethodArg.h"
 
 #include "gmock/gmock.h"
 
@@ -363,4 +365,14 @@ auto val2 = Ln10_pushforward();
 
    EXPECT_DOUBLE_EQ(2.3025850929940459, val1);
    EXPECT_DOUBLE_EQ(2.3025850929940459, val2);
+}
+
+// https://github.com/root-project/root/issues/7955
+TEST(ClingAST, Issue7955) 
+{
+  auto cls = TClass::GetClass("std::vector<int>");
+  auto meth = cls->GetMethodWithPrototype("operator[]","int",true, ROOT::kConversionMatch);
+  auto args = meth->GetListOfMethodArgs();
+  auto methArg = dynamic_cast<TMethodArg*>(args->First());
+  EXPECT_STREQ(methArg->GetTypeName(), "vector<int>::size_type");
 }
