@@ -207,13 +207,85 @@ void RooCmdArg::setSet(Int_t idx,const RooArgSet& set)
     _c[idx].add(set) ;
 }
 
+namespace {
+  // Helper function to print the contents of a RooArgSet
+  template<class CollType> std::string printColl(const CollType& argSet) {
+    if (argSet.size() == 0) {
+      return "0";
+    }
+    
+    std::stringstream ss;
+    ss << "{";
+    bool first = true;
+    for(auto* obj:argSet){
+      if (!first) {
+	ss << ", ";
+      }
+      ss << "\"" << obj->GetName() << "\"";
+      first = false;
+    }
+    ss << "}";
+    return ss.str();
+  }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Print contents
-void RooCmdArg::Print(const char*) const {
-  std::cout << GetName()
-      << ":\ndoubles\t" << _d[0] << " " << _d[1]
-      << "\nints\t" << _i[0] << " " << _i[1]
-      << "\nstrings\t" << _s[0] << " " << _s[1] << " " << _s[2]
-      << "\nobjects\t" << _o[0] << " " << _o[1] << std::endl;
+// Print contents
+void RooCmdArg::Print(const char* opts) const {
+  TString o(opts);
+  if(o.Contains("v")){
+    std::cout << "RooCmdArg(\"" << GetName() << "\", "  << _i[0];
+    if (_i[1] != 0 || _d[0] != 0 || _d[1] != 0 || !_s[0].empty() || !_s[1].empty() || _o[0] || _o[1] || _argList.GetSize() > 0 || !_s[2].empty() || _c) {    
+      std::cout << ", " << _i[1];
+      if ( _d[0] != 0 || _d[1] != 0 || !_s[0].empty() || !_s[1].empty() || _o[0] || _o[1] || _argList.GetSize() > 0 || !_s[2].empty() || _c) {    	
+	std::cout << ", " << _d[0];
+	if ( _d[1] != 0 || !_s[0].empty() || !_s[1].empty() || _o[0] || _o[1] || _argList.GetSize() > 0 || !_s[2].empty() || _c) {    	  
+	  std::cout << ", " << _d[1];
+	  if (!_s[0].empty() || !_s[1].empty() || _o[0] || _o[1] || _argList.GetSize() > 0 || !_s[2].empty() || _c) {
+	    std::cout << ", " << (_s[0].size() ? "\"" + _s[0] + "\"" : "\"\"");
+	    if (!_s[1].empty() || _o[0] || _o[1] || _argList.GetSize() > 0 || !_s[2].empty() || _c) {
+	      std::cout << ", " << (_s[1].size() ? "\"" + _s[1] + "\"" : "\"\"");
+	      if (_o[0] || _o[1] || _argList.GetSize() > 0 || !_s[2].empty() || _c) {
+		std::cout << ", " << (_o[0] ? "\"" + std::string(_o[0]->GetName()) + "\"" : "0");
+		if (_o[1] || _argList.GetSize() > 0 || !_s[2].empty() || _c) {
+		  std::cout << ", " << (_o[1] ? "\"" + std::string(_o[1]->GetName()) + "\"" : "0");
+		  if (_argList.GetSize() > 0 || !_s[2].empty() || _c) {
+		    std::cout << ", ";
+		    if(_argList.GetSize() > 0){
+		      std::cout << "{\n";
+		      for (int i = 0; i < _argList.GetSize(); ++i) {
+			auto* cmdArg = dynamic_cast<RooCmdArg*>(_argList.At(i));
+			if (cmdArg) {
+			  cmdArg->Print(opts);
+			}
+		      }
+		      std::cout << "}" << std::endl;
+		    } else {
+		      std::cout << 0;
+		    }
+		    if (!_s[2].empty() || _c) {
+		      std::cout << ", " << (_s[2].size() ? "\"" + _s[2] + "\"" : "\"\"");
+		      if (_c) {
+			std::cout << ", " << printColl(_c[0]);
+			if(_c[1].size() > 0){
+			  std::cout << ", " << printColl(_c[1]);
+			}
+		      }
+		    }
+		  }
+		}
+	      }
+	    }
+	  }
+	}
+      }
+    }
+    std::cout << ")" << std::endl;
+  } else {
+    std::cout << GetName()
+	      << ":\ndoubles\t" << _d[0] << " " << _d[1]
+	      << "\nints\t" << _i[0] << " " << _i[1]
+	      << "\nstrings\t" << _s[0] << " " << _s[1] << " " << _s[2]
+	      << "\nobjects\t" << _o[0] << " " << _o[1] << std::endl;
+  }
 }
