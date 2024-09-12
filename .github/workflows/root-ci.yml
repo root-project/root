@@ -441,6 +441,8 @@ jobs:
             dnf install -y chromium
           elif [[ "${{ matrix.image }}" == "ubuntu20" ]] || [[ "${{ matrix.image }}" == "ubuntu22" ]] || [[ "${{ matrix.image }}" == "ubuntu2404" ]]; then
             apt update
+            apt install -y snapd   # Install snapd first
+            systemctl start snapd  # Ensure snapd is running
             snap install chromium
           elif [[ "${{ matrix.image }}" == "debian125" ]]; then
             apt update
