@@ -138,6 +138,42 @@ static std::vector<WebFont_t> gWebFonts;
 std::string TWebCanvas::gCustomScripts = {};
 std::vector<std::string> TWebCanvas::gCustomClasses = {};
 
+UInt_t TWebCanvas::gBatchImageMode = 0;
+std::string TWebCanvas::gBatchFormat;
+std::vector<std::string> TWebCanvas::gBatchFiles;
+std::vector<std::string> TWebCanvas::gBatchJsons;
+std::vector<int> TWebCanvas::gBatchWidths;
+std::vector<int> TWebCanvas::gBatchHeights;
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+/// Configure batch image mode for web graphics.
+/// Allows to process many images with single headless browser invocation and increase performance of image production.
+/// When many canvases are stored as image in difference places, they first collected in batch and then processed when at least `n`
+/// images are prepared. Only then headless browser invoked and create all these images at once.
+/// This allows to significantly increase performance of image production in web mode
+
+void TWebCanvas::BatchImageMode(UInt_t n)
+{
+   gBatchImageMode = n;
+   if (gBatchImageMode <= gBatchJsons.size())
+      FlushBatchImages();
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+/// Flush batch images
+
+void TWebCanvas::FlushBatchImages()
+{
+   if (gBatchJsons.size() > 0)
+      ROOT::RWebDisplayHandle::ProduceImages(gBatchFormat, gBatchFiles, gBatchJsons, gBatchWidths, gBatchHeights);
+
+   gBatchFormat.clear();
+   gBatchFiles.clear();
+   gBatchJsons.clear();
+   gBatchWidths.clear();
+   gBatchHeights.clear();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 
@@ -178,7 +214,7 @@ TWebCanvas::~TWebCanvas()
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
-/// Add font to static list of fonts upported by the canvas
+/// Add font to static list of fonts supported by the canvas
 /// Name specifies name of the font, second is font file with .ttf or .woff2 extension
 /// Only True Type Fonts (ttf) are supported by PDF
 /// Returns font index which can be used in
@@ -2413,6 +2449,8 @@ bool TWebCanvas::ProduceImage(TPad *pad, const char *fileName, Int_t width, Int_
    if (!json.Length())
       return false;
 
+   std::string fmt = ROOT::RWebDisplayHandle::GetImageFormat(fileName);
+
    if (!width && !height) {
       if ((pad->GetCanvas() == pad) || (pad->IsA() == TCanvas::Class())) {
          width = pad->GetWw();
@@ -2423,7 +2461,21 @@ bool TWebCanvas::ProduceImage(TPad *pad, const char *fileName, Int_t width, Int_
       }
    }
 
-   return ROOT::RWebDisplayHandle::ProduceImage(fileName, json.Data(), width, height);
+   if (!gBatchImageMode || fmt == "pdf" || fmt == "json" || fmt == "shot.png")
+      return ROOT::RWebDisplayHandle::ProduceImage(fileName, json.Data(), width, height);
+
+   if (!gBatchFormat.empty() && (gBatchFormat != fmt))
+      FlushBatchImages();
+
+   gBatchFormat = fmt;
+   gBatchFiles.emplace_back(fileName);
+   gBatchJsons.emplace_back(json);
+   gBatchWidths.emplace_back(width);
+   gBatchHeights.emplace_back(height);
+   if (gBatchJsons.size() >= gBatchImageMode)
+      FlushBatchImages();
+
+   return true;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -2441,7 +2493,7 @@ bool TWebCanvas::ProduceImages(std::vector<TPad *> pads, const char *filename, I
    std::vector<std::string> jsons;
    std::vector<Int_t> widths, heights;
 
-   bool isMultiPdf = (strstr(filename, ".pdf") || strstr(filename, ".PDF")) && strstr(filename, "%");
+   bool isMultiPdf = (ROOT::RWebDisplayHandle::GetImageFormat(filename) == "pdf") && strstr(filename, "%");
    bool is_multipdf_ok = true;
 
    for (unsigned n = 0; n < pads.size(); ++n) {
@@ -2748,3 +2800,4 @@ TCanvasImp *TWebCanvas::NewCanvas(TCanvas *c, const char *name, Int_t x, Int_t y
 
    return imp;
 }
+
