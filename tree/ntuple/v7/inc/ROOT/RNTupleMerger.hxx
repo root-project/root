@@ -89,7 +89,7 @@ class RNTupleMerger final {
 
 public:
    RNTupleMerger();
-   
+
    /// Merge a given set of sources into the destination.
    RResult<void> Merge(std::span<RPageSource *> sources, RPageSink &destination,
                        const RNTupleMergeOptions &mergeOpts = RNTupleMergeOptions());
