@@ -1,4 +1,4 @@
-import { gStyle, settings, constants, clTAxis, clTGaxis, isFunc } from '../core.mjs';
+import { gStyle, settings, constants, clTAxis, clTGaxis, isFunc, isStr } from '../core.mjs';
 import { select as d3_select, drag as d3_drag, timeFormat as d3_timeFormat, utcFormat as d3_utcFormat,
          scaleTime as d3_scaleTime, scaleSymlog as d3_scaleSymlog,
          scaleLog as d3_scaleLog, scaleLinear as d3_scaleLinear } from '../d3.mjs';
@@ -584,6 +584,15 @@ class TAxisPainter extends ObjectPainter {
       return this.func?.domain()[1] ?? 0;
    }
 
+   /** @summary Return true if labels may be removed while they are not fit to graphical range */
+   cutLabels() {
+      if (!settings.CutAxisLabels)
+         return false;
+      if (isStr(settings.CutAxisLabels))
+         return settings.CutAxisLabels.indexOf(this.name) >= 0;
+      return this.vertical; // cut vertical axis by default
+   }
+
    /** @summary Provide label for axis value */
    formatLabels(d) {
       const a = this.getObject();
@@ -690,15 +699,14 @@ class TAxisPainter extends ObjectPainter {
       this.ndig = 0;
 
       // at the moment when drawing labels, we can try to find most optimal text representation for them
-
       if (((this.kind === kAxisNormal) || (this.kind === kAxisFunc)) && !this.log && (handle.major.length > 0)) {
          let maxorder = 0, minorder = 0, exclorder3 = false;
 
-         if (!optionNoexp) {
+         if (!optionNoexp && !this.cutLabels()) {
             const maxtick = Math.max(Math.abs(handle.major[0]), Math.abs(handle.major[handle.major.length-1])),
-                mintick = Math.min(Math.abs(handle.major[0]), Math.abs(handle.major[handle.major.length-1])),
-                ord1 = (maxtick > 0) ? Math.round(Math.log10(maxtick)/3)*3 : 0,
-                ord2 = (mintick > 0) ? Math.round(Math.log10(mintick)/3)*3 : 0;
+                  mintick = Math.min(Math.abs(handle.major[0]), Math.abs(handle.major[handle.major.length-1])),
+                  ord1 = (maxtick > 0) ? Math.round(Math.log10(maxtick)/3)*3 : 0,
+                  ord2 = (mintick > 0) ? Math.round(Math.log10(mintick)/3)*3 : 0;
 
              exclorder3 = (maxtick < 2e4); // do not show 10^3 for values below 20000
 
@@ -709,10 +717,9 @@ class TAxisPainter extends ObjectPainter {
          }
 
          // now try to find best combination of order and ndig for labels
-
          let bestorder = 0, bestndig = this.ndig, bestlen = 1e10;
 
-         for (let order = minorder; order <= maxorder; order+=3) {
+         for (let order = minorder; order <= maxorder; order += 3) {
             if (exclorder3 && (order === 3)) continue;
             this.order = order;
             this.ndig = 0;
@@ -1064,6 +1071,11 @@ class TAxisPainter extends ObjectPainter {
                arg.x = fix_coord;
                arg.y = pos;
                arg.align = rotate_lbls ? ((side < 0) ? 23 : 20) : ((side < 0) ? 12 : 32);
+
+               if (this.cutLabels()) {
+                  const gap = labelsFont.size * (rotate_lbls ? 1.5 : 0.6);
+                  if ((pos < gap) || (pos > h - gap)) continue;
+               }
             } else {
                arg.x = pos;
                arg.y = fix_coord;
@@ -1073,6 +1085,11 @@ class TAxisPainter extends ObjectPainter {
                   arg.y += labelsFont.size;
                } else if (arg.align % 10 === 3)
                   arg.y -= labelsFont.size*0.1; // font takes 10% more by top align
+
+               if (this.cutLabels()) {
+                  const gap = labelsFont.size * (rotate_lbls ? 0.4 : 1.5);
+                  if ((pos < gap) || (pos > w - gap)) continue;
+               }
             }
 
             if (rotate_lbls)
@@ -1081,7 +1098,8 @@ class TAxisPainter extends ObjectPainter {
                arg.rotate = -mod.fTextAngle;
 
             // only for major text drawing scale factor need to be checked
-            if (lcnt === 0) arg.post_process = process_drawtext_ready;
+            if (lcnt === 0)
+               arg.post_process = process_drawtext_ready;
 
             this.drawText(arg);
 
@@ -1116,6 +1134,8 @@ class TAxisPainter extends ObjectPainter {
                             draw_g: label_g[lcnt] });
          }
       }
+
+      this._maxlbllen = maxtextlen; // for internal use in palette painter
 
       // first complete major labels drawing
       return this.finishTextDrawing(label_g[0], true).then(() => {
@@ -1290,7 +1310,8 @@ class TAxisPainter extends ObjectPainter {
 
       let title_shift_x = 0, title_shift_y = 0, title_g = null, labelsMaxWidth = 0;
       // draw labels (sometime on both sides)
-      const pr = (disable_axis_drawing || this.optionUnlab)
+      const labelSize = Math.max(this.labelsFont.size, 5),
+            pr = (disable_axis_drawing || this.optionUnlab)
                 ? Promise.resolve(0)
                 : this.drawLabels(axis_g, axis, w, h, handle, side, this.labelsFont, this.labelsOffset, this.ticksSize, ticksPlusMinus, max_text_width, frame_ygap);
 
@@ -1298,8 +1319,7 @@ class TAxisPainter extends ObjectPainter {
          labelsMaxWidth = maxw;
 
          if (settings.Zooming && !this.disable_zooming && !this.isBatchMode()) {
-            const labelSize = Math.max(this.labelsFont.size, 5),
-                  r = axis_g.append('svg:rect')
+            const r = axis_g.append('svg:rect')
                             .attr('class', 'axis_zoom')
                             .style('opacity', '0')
                             .style('cursor', 'crosshair');
@@ -1365,8 +1385,8 @@ class TAxisPainter extends ObjectPainter {
          return this.finishTextDrawing(title_g);
       }).then(() => {
          if (title_g) {
-            if (!this.titleOffset && this.vertical && labelsMaxWidth)
-               title_shift_x = Math.round(-side * (labelsMaxWidth + 0.7*this.offsetScaling*this.titleSize));
+            if (!this.titleOffset && this.vertical)
+               title_shift_x = Math.round(-side * ((labelsMaxWidth || labelSize) + 0.7*this.offsetScaling*this.titleSize));
             makeTranslate(title_g, title_shift_x, title_shift_y);
             title_g.property('shift_x', title_shift_x)
                    .property('shift_y', title_shift_y);

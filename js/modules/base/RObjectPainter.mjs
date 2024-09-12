@@ -1,6 +1,7 @@
-import { isStr, isFunc, nsREX } from '../core.mjs';
+import { isStr, isFunc, nsREX, settings, isNodeJs, isBatchMode } from '../core.mjs';
 import { FontHandler } from './FontHandler.mjs';
 import { ObjectPainter } from './ObjectPainter.mjs';
+import { color as d3_color } from '../d3.mjs';
 
 
 const kNormal = 1, /* kLessTraffic = 2, */ kOffline = 3;
@@ -167,6 +168,15 @@ class RObjectPainter extends ObjectPainter {
              if (pal) val = pal.getColorOrdinal(ordinal);
          }
       }
+
+      // to make colors similar in node and in pupperteer
+      if ((val[0] === '#') && (isNodeJs() || (isBatchMode() && settings.ApproxTextSize))) {
+         const col = d3_color(val);
+         if (col.opacity !== 1)
+            col.opacity = col.opacity.toFixed(2);
+         return col.formatRgb();
+      }
+
       return val;
    }
 
@@ -218,8 +228,10 @@ class RObjectPainter extends ObjectPainter {
 
       const color = this.v7EvalColor(prefix + 'color', 'black'),
             width = this.v7EvalAttr(prefix + 'width', 1),
-            style = this.v7EvalAttr(prefix + 'style', 1),
-            pattern = this.v7EvalAttr(prefix + 'pattern');
+            style = this.v7EvalAttr(prefix + 'style', 1);
+      let pattern = this.v7EvalAttr(prefix + 'pattern');
+      if (pattern && isNodeJs())
+         pattern = pattern.split(',').join(', ');
 
       this.createAttLine({ color, width, style, pattern });
 

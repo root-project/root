@@ -1,5 +1,6 @@
 import { internals } from '../core.mjs';
-import { ObjectPainter, DrawOptions } from '../base/ObjectPainter.mjs';
+import { DrawOptions } from '../base/BasePainter.mjs';
+import { ObjectPainter } from '../base/ObjectPainter.mjs';
 import { TH1Painter } from '../hist2d/TH1Painter.mjs';
 import { draw } from '../draw.mjs';
 

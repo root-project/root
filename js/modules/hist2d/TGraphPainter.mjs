@@ -360,7 +360,7 @@ class TGraphPainter extends ObjectPainter {
 
    /** @summary Check if user range can be un-zommed
      * @desc Used when graph points covers larger range than provided histogram */
-   unzoomUserRange(dox, doy /*, doz */) {
+   unzoomUserRange(dox, doy /* , doz */) {
       const graph = this.getGraph();
       if (this._own_histogram || !graph) return false;
 
@@ -771,21 +771,21 @@ class TGraphPainter extends ObjectPainter {
 
          if (!this.isBatchMode() && settings.Tooltip && main_block) {
             visible.append('svg:path')
+                   .attr('d', d => `M${d.grx0},${d.gry0}h${d.grx2-d.grx0}v${d.gry2-d.gry0}h${d.grx0-d.grx2}z`)
                    .style('fill', 'none')
-                   .style('pointer-events', 'visibleFill')
-                   .attr('d', d => `M${d.grx0},${d.gry0}h${d.grx2-d.grx0}v${d.gry2-d.gry0}h${d.grx0-d.grx2}z`);
+                   .style('pointer-events', 'visibleFill');
          }
 
          visible.append('svg:path')
-             .call(lineatt.func)
-             .style('fill', 'none')
-             .attr('d', d => {
-                d.error = true;
-                return ((d.exlow > 0) ? mainLine(d.grx0+lw, d.grdx0) + vleft : '') +
-                       ((d.exhigh > 0) ? mainLine(d.grx2-lw, d.grdx2) + vright : '') +
-                       ((d.eylow > 0) ? mainLine(d.grdy0, d.gry0-lw) + hbottom : '') +
-                       ((d.eyhigh > 0) ? mainLine(d.grdy2, d.gry2+lw) + htop : '');
-              });
+                .attr('d', d => {
+                   d.error = true;
+                   return ((d.exlow > 0) ? mainLine(d.grx0+lw, d.grdx0) + vleft : '') +
+                          ((d.exhigh > 0) ? mainLine(d.grx2-lw, d.grdx2) + vright : '') +
+                          ((d.eylow > 0) ? mainLine(d.grdy0, d.gry0-lw) + hbottom : '') +
+                          ((d.eyhigh > 0) ? mainLine(d.grdy2, d.gry2+lw) + htop : '');
+                })
+                .style('fill', 'none')
+                .call(lineatt.func);
       }
 
       if (options.Mark) {

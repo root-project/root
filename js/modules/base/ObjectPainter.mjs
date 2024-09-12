@@ -1,8 +1,8 @@
 import { select as d3_select, pointer as d3_pointer } from '../d3.mjs';
 import { settings, constants, internals, isNodeJs, isBatchMode, getPromise, BIT,
          prROOT, clTObjString, clTAxis, isObject, isFunc, isStr, getDocument } from '../core.mjs';
-import { isPlainText, producePlainText, produceLatex, produceMathjax, typesetMathjax } from './latex.mjs';
-import { getElementRect, BasePainter, makeTranslate, DrawOptions } from './BasePainter.mjs';
+import { isPlainText, producePlainText, produceLatex, produceMathjax, typesetMathjax, approximateLabelWidth } from './latex.mjs';
+import { getElementRect, BasePainter, makeTranslate } from './BasePainter.mjs';
 import { TAttMarkerHandler } from './TAttMarkerHandler.mjs';
 import { TAttFillHandler } from './TAttFillHandler.mjs';
 import { TAttLineHandler } from './TAttLineHandler.mjs';
@@ -224,7 +224,7 @@ class ObjectPainter extends BasePainter {
      * @param {object} obj - object with new data
      * @param {string} [opt] - option which will be used for redrawing
      * @protected */
-   updateObject(obj /*, opt */) {
+   updateObject(obj /* , opt */) {
       if (!this.matchObjectType(obj)) return false;
       Object.assign(this.getObject(), obj);
       return true;
@@ -1010,7 +1010,7 @@ class ObjectPainter extends BasePainter {
             max_sz = draw_g.property('max_font_size');
       let font_size = font.size, any_text = false, only_text = true;
 
-      if ((f > 0) && ((f < 0.9) || (f > 1)))
+      if ((f > 0) && ((f < 0.95) || (f > 1.05)))
          font.size = Math.max(1, Math.floor(font.size / f));
 
       if (max_sz && (font.size > max_sz))
@@ -1091,8 +1091,8 @@ class ObjectPainter extends BasePainter {
                if (arg.align[1] === 'top')
                   txt.attr('dy', '.8em');
                else if (arg.align[1] === 'middle') {
-                  if (isNodeJs()) txt.attr('dy', '.4em');
-                             else txt.attr('dominant-baseline', 'middle');
+                  // if (isNodeJs()) txt.attr('dy', '.4em'); else // old workaround for node.js
+                  txt.attr('dominant-baseline', 'middle');
                }
             } else {
                txt.attr('text-anchor', 'start');
@@ -1161,7 +1161,7 @@ class ObjectPainter extends BasePainter {
       // complete rectangle with very rough size estimations
       arg.box = !isNodeJs() && !settings.ApproxTextSize && !arg.fast
                  ? getElementRect(txt_node, 'bbox')
-                 : (arg.text_rect || { height: arg.font_size * 1.2, width: arg.text.length * arg.font_size * arg.font.aver_width });
+                 : (arg.text_rect || { height: Math.round(1.15 * arg.font_size), width: approximateLabelWidth(arg.text, arg.font, arg.font_size) });
 
       txt_node.attr('visibility', 'hidden'); // hide elements until text drawing is finished
 
@@ -1739,5 +1739,5 @@ const EAxisBits = {
 
 export { getElementCanvPainter, getElementMainPainter, drawingJSON,
          selectActivePad, getActivePad, cleanup, resize,
-         ObjectPainter, DrawOptions, drawRawText,
+         ObjectPainter, drawRawText,
          EAxisBits, kAxisLabels, kAxisNormal, kAxisFunc, kAxisTime };

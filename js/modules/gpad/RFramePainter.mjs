@@ -2,7 +2,7 @@ import { gStyle, settings, create, isFunc, isStr, clTAxis, nsREX } from '../core
 import { pointer as d3_pointer } from '../d3.mjs';
 import { getSvgLineStyle } from '../base/TAttLineHandler.mjs';
 import { makeTranslate } from '../base/BasePainter.mjs';
-import { TAxisPainter } from './TAxisPainter.mjs';
+import { EAxisBits, TAxisPainter } from './TAxisPainter.mjs';
 import { RAxisPainter } from './RAxisPainter.mjs';
 import { FrameInteractive, getEarthProjectionFunc } from './TFramePainter.mjs';
 import { RObjectPainter } from '../base/RObjectPainter.mjs';
@@ -58,7 +58,7 @@ class RFramePainter extends RObjectPainter {
 
    /** @summary Update graphical attributes */
    updateAttributes(force) {
-      if ((this.fX1NDC === undefined) || (force && !this.modified_NDC)) {
+      if ((this.fX1NDC === undefined) || (force && !this.$modifiedNDC)) {
          const rect = this.getPadPainter().getPadRect();
          this.fX1NDC = this.v7EvalLength('margins_left', rect.width, gStyle.fPadLeftMargin) / rect.width;
          this.fY1NDC = this.v7EvalLength('margins_bottom', rect.height, gStyle.fPadBottomMargin) / rect.height;
@@ -1055,13 +1055,21 @@ class RFramePainter extends RObjectPainter {
    }
 
    /** @summary Fill context menu */
-   fillContextMenu(menu, kind /* , obj */) {
+   fillContextMenu(menu, kind, obj) {
       if (kind === 'pal') kind = 'z';
 
       if ((kind === 'x') || (kind === 'y') || (kind === 'x2') || (kind === 'y2')) {
-         const handle = this[kind+'_handle'];
+         const handle = this[kind+'_handle'],
+               faxis = obj || this[kind+'axis'];
          if (!handle) return false;
-         menu.header(kind.toUpperCase() + ' axis');
+         menu.header(`${kind.toUpperCase()} axis`);
+
+         if (isFunc(faxis?.TestBit)) {
+            const main = this.getMainPainter(true);
+            menu.addTAxisMenu(EAxisBits, main || this, faxis, kind);
+            return true;
+         }
+
          return handle.fillAxisContextMenu(menu, kind);
       }
 

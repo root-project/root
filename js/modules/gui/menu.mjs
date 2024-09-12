@@ -816,6 +816,11 @@ class JSRootMenu {
       this.endsub();
       this.addPaletteMenu(settings.Palette, pal => { settings.Palette = pal; });
       this.addchk(settings.AutoStat, 'Auto stat box', flag => { settings.AutoStat = flag; });
+      this.sub('Axis');
+      this.addchk(settings.StripAxisLabels, 'Strip labels', flag => { settings.StripAxisLabels = flag; }, 'Provide shorter labels like 10^0 -> 1');
+      this.addchk(settings.CutAxisLabels, 'Cut labels', flag => { settings.CutAxisLabels = flag; }, 'Remove labels which may exceed graphical range');
+      this.add(`Tilt angle ${settings.AxisTiltAngle}`, () => this.input('Axis tilt angle', settings.AxisTiltAngle, 'int', 0, 180).then(val => { settings.AxisTiltAngle = val; }));
+      this.endsub();
       this.addSelectMenu('Latex', ['Off', 'Symbols', 'Normal', 'MathJax', 'Force MathJax'], settings.Latex, value => { settings.Latex = value; });
       this.addSelectMenu('3D rendering', ['Default', 'WebGL', 'Image'], settings.Render3D, value => { settings.Render3D = value; });
       this.addSelectMenu('WebGL embeding', ['Default', 'Overlay', 'Embed'], settings.Embed3D, value => { settings.Embed3D = value; });

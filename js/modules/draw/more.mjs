@@ -80,14 +80,14 @@ async function drawText() {
          this.moveEnd = function(not_changed) {
             if (not_changed) return;
             const text = this.getObject();
-            let x = this.svgToAxis('x', this.pos_x + this.pos_dx, this.isndc),
-                y = this.svgToAxis('y', this.pos_y + this.pos_dy, this.isndc);
+            let fx = this.svgToAxis('x', this.pos_x + this.pos_dx, this.isndc),
+                fy = this.svgToAxis('y', this.pos_y + this.pos_dy, this.isndc);
             if (this.swap_xy)
-               [x, y] = [y, x];
+               [fx, fy] = [fy, fx];
 
-            text.fX = x;
-            text.fY = y;
-            this.submitCanvExec(`SetX(${x});;SetY(${y});;`);
+            text.fX = fx;
+            text.fY = fy;
+            this.submitCanvExec(`SetX(${fx});;SetY(${fy});;`);
          };
       }
 
@@ -263,13 +263,19 @@ function drawMarker() {
 
    this.isndc = marker.TestBit(kMarkerNDC);
 
+   const use_frame = this.isndc ? false : new DrawOptions(this.getDrawOpt()).check('FRAME'),
+         swap_xy = use_frame && this.getFramePainter()?.swap_xy;
+
    this.createAttMarker({ attr: marker });
 
-   this.createG();
+   this.createG(use_frame ? 'frame2d' : undefined);
 
-   const x = this.axisToSvg('x', marker.fX, this.isndc),
-         y = this.axisToSvg('y', marker.fY, this.isndc),
-         path = this.markeratt.create(x, y);
+   let x = this.axisToSvg('x', marker.fX, this.isndc),
+       y = this.axisToSvg('y', marker.fY, this.isndc);
+   if (swap_xy)
+      [x, y] = [y, x];
+
+   const path = this.markeratt.create(x, y);
 
    if (path) {
       this.draw_g.append('svg:path')
@@ -292,9 +298,13 @@ function drawMarker() {
    this.moveEnd = function(not_changed) {
       if (not_changed) return;
       const marker = this.getObject();
-      marker.fX = this.svgToAxis('x', this.axisToSvg('x', marker.fX, this.isndc) + this.dx, this.isndc);
-      marker.fY = this.svgToAxis('y', this.axisToSvg('y', marker.fY, this.isndc) + this.dy, this.isndc);
-      this.submitCanvExec(`SetX(${marker.fX});;SetY(${marker.fY});;Notify();;`);
+      let fx = this.svgToAxis('x', this.axisToSvg('x', marker.fX, this.isndc) + this.dx, this.isndc),
+          fy = this.svgToAxis('y', this.axisToSvg('y', marker.fY, this.isndc) + this.dy, this.isndc);
+      if (swap_xy)
+         [fx, fy] = [fy, fx];
+      marker.fX = fx;
+      marker.fY = fy;
+      this.submitCanvExec(`SetX(${fx});;SetY(${fy});;Notify();;`);
       this.redraw();
    };
 }

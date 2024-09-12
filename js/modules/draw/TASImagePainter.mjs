@@ -1,7 +1,8 @@
 import { create, settings, isNodeJs, isStr, btoa_func, clTAxis, clTPaletteAxis, clTImagePalette, getDocument } from '../core.mjs';
-import { toHex } from '../base/colors.mjs';
+import { toColor } from '../base/colors.mjs';
 import { assignContextMenu } from '../gui/menu.mjs';
-import { ObjectPainter, DrawOptions } from '../base/ObjectPainter.mjs';
+import { DrawOptions } from '../base/BasePainter.mjs';
+import { ObjectPainter } from '../base/ObjectPainter.mjs';
 import { TPavePainter } from '../hist/TPavePainter.mjs';
 import { ensureTCanvas } from '../gpad/TCanvasPainter.mjs';
 
@@ -76,9 +77,10 @@ class TASImagePainter extends ObjectPainter {
          rgba: this.rgba,
          getLevels() { return this.arr; },
          getPaletteColor(pal, zval) {
-            if (!this.arr || !this.rgba) return 'white';
+            if (!this.arr || !this.rgba)
+               return 'white';
             const indx = Math.round((zval - this.arr[0]) / (this.arr[this.arr.length-1] - this.arr[0]) * (this.rgba.length-4)/4) * 4;
-            return '#' + toHex(this.rgba[indx], 1) + toHex(this.rgba[indx+1], 1) + toHex(this.rgba[indx+2], 1) + toHex(this.rgba[indx+3], 1);
+            return toColor(this.rgba[indx]/255, this.rgba[indx+1]/255, this.rgba[indx+2]/255, this.rgba[indx+3]/255);
          }
       };
       for (let k = 0; k < 200; k++)

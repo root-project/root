@@ -1,6 +1,6 @@
 import { gStyle, isObject, isStr } from '../core.mjs';
 import { color as d3_color, rgb as d3_rgb, select as d3_select } from '../d3.mjs';
-import { getColor, findColor, clTLinearGradient, clTRadialGradient, toHex } from './colors.mjs';
+import { getColor, findColor, clTLinearGradient, clTRadialGradient, toColor } from './colors.mjs';
 
 
 /**
@@ -428,7 +428,7 @@ class TAttFillHandler {
             }
             for (let n = 0; n < this.gradient.fColorPositions.length; ++n) {
                const pos = this.gradient.fColorPositions[n],
-                     col = '#' + toHex(this.gradient.fColors[n*4]) + toHex(this.gradient.fColors[n*4+1]) + toHex(this.gradient.fColors[n*4+2]);
+                     col = toColor(this.gradient.fColors[n*4], this.gradient.fColors[n*4+1], this.gradient.fColors[n*4+2]);
                grad.append('svg:stop').attr('offset', `${Math.round(pos*100)}%`)
                                       .attr('stop-color', col)
                                       .attr('stop-opacity', `${Math.round(this.gradient.fColors[n*4+3]*100)}%`);

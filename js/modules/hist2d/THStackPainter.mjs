@@ -1,6 +1,7 @@
 import { clone, create, createHistogram, setHistogramTitle, BIT,
          gStyle, clTH1I, clTH2, clTH2I, clTObjArray, kNoZoom, kNoStats } from '../core.mjs';
-import { ObjectPainter, DrawOptions, EAxisBits } from '../base/ObjectPainter.mjs';
+import { DrawOptions } from '../base/BasePainter.mjs';
+import { ObjectPainter, EAxisBits } from '../base/ObjectPainter.mjs';
 import { TH1Painter } from './TH1Painter.mjs';
 import { TH2Painter } from './TH2Painter.mjs';
 import { ensureTCanvas } from '../gpad/TCanvasPainter.mjs';
@@ -232,7 +233,7 @@ class THStackPainter extends ObjectPainter {
          });
       }
 
-      // special handling of stacked histograms - set $baseh object for correct drawing
+      // special handling of stacked histograms
       // also used to provide tooltips
       if ((rindx > 0) && !this.options.nostack)
          hist.$baseh = hlst.arr[rindx - 1];
@@ -282,7 +283,7 @@ class THStackPainter extends ObjectPainter {
       if (d.check('STACK')) this.options.nostack = false;
       this.options.same = d.check('SAME');
 
-      d.check('NOCLEAR'); // ignore noclear option
+      d.check('NOCLEAR'); // ignore option
 
       ['PFC', 'PLC', 'PMC'].forEach(f => { if (d.check(f)) this.options.auto += ' ' + f; });
 
@@ -342,7 +343,7 @@ class THStackPainter extends ObjectPainter {
       return histo;
    }
 
-   /** @summary Update thstack object */
+   /** @summary Update THStack object */
    updateObject(obj) {
       if (!this.matchObjectType(obj)) return false;
 
@@ -431,7 +432,7 @@ class THStackPainter extends ObjectPainter {
       });
    }
 
-   /** @summary Fill hstack context menu */
+   /** @summary Fill THStack context menu */
    fillContextMenuItems(menu) {
       menu.addRedrawMenu(this);
       if (!this.options.pads) {
@@ -507,7 +508,7 @@ class THStackPainter extends ObjectPainter {
             pr = this.drawHist(this.getDrawDom(), stack.fHistogram, this.options.hopt + mm.hopt).then(subp => {
                this.firstpainter = subp;
                subp.$stack_hist = true;
-               subp.setSecondaryId(this, 'hist'); // mark hist painter as created by hstack
+               subp.setSecondaryId(this, 'hist'); // mark hist painter as created by THStack
             });
          }
       }

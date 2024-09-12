@@ -185,7 +185,7 @@ function addDragHandler(_painter, arg) {
                arg.obj.fX2NDC = (newx + newwidth) / rect.width;
                arg.obj.fY1NDC = 1 - (newy + newheight) / rect.height;
                arg.obj.fY2NDC = 1 - newy / rect.height;
-               arg.obj.modified_NDC = true; // indicate that NDC was interactively changed, block in updated
+               arg.obj.$modifiedNDC = true; // indicate that NDC was interactively changed, block in updated
             } else if (isFunc(arg.move_resize))
                arg.move_resize(newx, newy, newwidth, newheight);
 
@@ -2301,7 +2301,7 @@ class TFramePainter extends ObjectPainter {
           pad = pp?.getRootPad(true),
           tframe = this.getObject();
 
-      if ((this.fX1NDC === undefined) || (force && !this.modified_NDC)) {
+      if ((this.fX1NDC === undefined) || (force && !this.$modifiedNDC)) {
          if (!pad) {
             this.fX1NDC = gStyle.fPadLeftMargin;
             this.fX2NDC = 1 - gStyle.fPadRightMargin;
@@ -2582,7 +2582,8 @@ class TFramePainter extends ObjectPainter {
 
          menu.sub('Range');
          menu.add('Zoom', () => {
-            let min = this[`zoom_${kind}min`] ?? this[`${kind}min`], max = this[`zoom_${kind}max`] ?? this[`${kind}max`];
+            let min = this[`zoom_${kind}min`] ?? this[`${kind}min`],
+                max = this[`zoom_${kind}max`] ?? this[`${kind}max`];
             if (min === max) {
                min = this[`${kind}min`];
                max = this[`${kind}max`];

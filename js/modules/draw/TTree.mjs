@@ -43,7 +43,7 @@ TDrawSelector.prototype.ShowProgress = function(value) {
       msg = `TTree draw ${(value * 100).toFixed(ndig)} % `;
    }
 
-   showProgress(msg, -1, () => { this._break = 1; });
+   showProgress(msg, 0, () => { this._break = 1; });
    return ret;
 };
 
