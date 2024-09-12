@@ -112,9 +112,14 @@ public:
 
    static bool CanProduceImages(const std::string &browser = "");
 
+   static std::string GetImageFormat(const std::string &fname);
+
    static bool ProduceImage(const std::string &fname, const std::string &json, int width = 800, int height = 600, const char *batch_file = nullptr);
 
    static bool ProduceImages(const std::string &fname, const std::vector<std::string> &jsons, const std::vector<int> &widths, const std::vector<int> &heights, const char *batch_file = nullptr);
+
+   static bool ProduceImages(const std::string &fmt, const std::vector<std::string> &fnames, const std::vector<std::string> &jsons, const std::vector<int> &widths, const std::vector<int> &heights, const char *batch_file = nullptr);
+
 };
 
 } // namespace ROOT
