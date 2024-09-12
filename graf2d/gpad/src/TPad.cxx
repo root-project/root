@@ -3670,7 +3670,7 @@ void TPad::PaintBorder(Color_t color, Bool_t tops)
    Short_t px1,py1,px2,py2;
    Double_t xl, xt, yl, yt;
 
-   // GetDarkColor() and GetLightColor() use GetFillColor()
+   // GetColorDark() and GetColorBright() use GetFillColor()
    Color_t oldcolor = GetFillColor();
    SetFillColor(color);
    TAttFill::Modify();

@@ -2068,17 +2068,22 @@ Int_t TColor::GetColorBright(Int_t n)
    if (n < ncolors) color = (TColor*)colors->At(n);
    if (!color) return -1;
 
+   // check if the bright color already exists, if yes return it
+   TString nameb = TString::Format("%s_bright",color->GetName()).Data();
+   Int_t nb = GetColorByName(nameb.Data());
+   TColor *colorb = nullptr;
+   if (nb >= 0) {
+      colorb = (TColor*)colors->At(nb);
+      return colorb->GetNumber();
+   }
+
    //Get the rgb of the new bright color corresponding to color n
    Float_t r,g,b;
    HLStoRGB(color->GetHue(), 1.2f*color->GetLight(), color->GetSaturation(), r, g, b);
 
-   // check if the dark color already exist
-   TString nameb = TString::Format("%s_bright",color->GetName()).Data();
-   if (GetColorByName(nameb.Data())>=0) return color->GetNumber();
-
    //Build the bright color
-   Int_t nb = GetFirstFreeColorIndex();
-   auto colorb = new TColor(nb,r,g,b);
+   nb = GetFirstFreeColorIndex();
+   colorb = new TColor(nb,r,g,b);
    colorb->SetName(nameb.Data());
    colorb->SetTitle(colorb->AsHexString());
    colors->AddAtAndExpand(colorb,nb);
@@ -2102,18 +2107,22 @@ Int_t TColor::GetColorDark(Int_t n)
    if (n < ncolors) color = (TColor*)colors->At(n);
    if (!color) return -1;
 
+   // check if the dark color already exists, if yes return it
+   TString named = TString::Format("%s_dark",color->GetName()).Data();
+   Int_t nd = GetColorByName(named.Data());
+   TColor *colord = nullptr;
+   if (nd >= 0) {
+      colord = (TColor*)colors->At(nd);
+      return colord->GetNumber();
+   }
+
    //Get the rgb of the new dark color corresponding to color n
    Float_t r,g,b;
    HLStoRGB(color->GetHue(), 0.7f*color->GetLight(), color->GetSaturation(), r, g, b);
 
-   // check if the dark color already exist
-   TString named = TString::Format("%s_dark",color->GetName()).Data();
-   if (GetColorByName(named.Data())>=0) return color->GetNumber();
-
    //Build the dark color
-   Int_t nd = GetFirstFreeColorIndex();
-
-   auto colord = new TColor(nd,r,g,b);
+   nd = GetFirstFreeColorIndex();
+   colord = new TColor(nd,r,g,b);
    colord->SetName(named.Data());
    colord->SetTitle(colord->AsHexString());
    colors->AddAtAndExpand(colord,nd);
