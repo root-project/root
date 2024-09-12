@@ -478,14 +478,14 @@ class TH1Painter extends THistPainter {
          this.draw_g.append('svg:path')
              .attr('d', barsl)
              .call(this.fillatt.func)
-             .style('fill', d3_rgb(this.fillatt.color).brighter(0.5).formatHex());
+             .style('fill', d3_rgb(this.fillatt.color).brighter(0.5).formatRgb());
       }
 
       if (barsr) {
          this.draw_g.append('svg:path')
                .attr('d', barsr)
                .call(this.fillatt.func)
-               .style('fill', d3_rgb(this.fillatt.color).darker(0.5).formatHex());
+               .style('fill', d3_rgb(this.fillatt.color).darker(0.5).formatRgb());
       }
 
       if (show_text)

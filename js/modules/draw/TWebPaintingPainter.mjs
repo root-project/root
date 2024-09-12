@@ -25,22 +25,25 @@ class TWebPaintingPainter extends ObjectPainter {
 
       const arr = obj.fOper.split(';'),
       check_attributes = kind => {
-         if (kind === lastkind) return;
+         if (kind === lastkind)
+            return this;
 
          if (lastpath) {
             lastpath.attr('d', d); // flush previous
             d = ''; lastpath = null; lastkind = 'none';
          }
 
-         if (!kind) return;
+         if (!kind)
+            return this;
 
          lastkind = kind;
-         lastpath = this.draw_g.append('svg:path');
+         lastpath = this.draw_g.append('svg:path').attr('d', ''); // placeholder for 'd' to have it always in front
          switch (kind) {
             case 'f': lastpath.call(this.fillatt.func); break;
             case 'l': lastpath.call(this.lineatt.func).style('fill', 'none'); break;
             case 'm': lastpath.call(this.markeratt.func); break;
          }
+         return this;
       }, read_attr = (str, names) => {
          let lastp = 0;
          const obj = { _typename: 'any' };
@@ -155,7 +158,7 @@ class TWebPaintingPainter extends ObjectPainter {
 
       this.createG();
 
-      return process(-1).then(() => { check_attributes(); return this; });
+      return process(-1).then(() => check_attributes());
    }
 
    static async draw(dom, obj) {

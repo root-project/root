@@ -764,7 +764,7 @@ class TCanvasPainter extends TPadPainter {
    }
 
    /** @summary produce JSON for TCanvas, which can be used to display canvas once again */
-   produceJSON() {
+   produceJSON(spacing) {
       const canv = this.getObject(),
             fill0 = (canv.fFillStyle === 0),
             axes = [], hists = [];
@@ -817,7 +817,7 @@ class TCanvasPainter extends TPadPainter {
       // const fp = this.getFramePainter();
       // fp?.setRootPadRange(this.getRootPad());
 
-      const res = toJSON(canv);
+      const res = toJSON(canv, spacing);
 
       if (fill0) canv.fFillStyle = 0;
 
@@ -860,10 +860,19 @@ class TCanvasPainter extends TPadPainter {
       const painter = new TCanvasPainter(dom, can);
       painter.checkSpecialsInPrimitives(can, true);
 
-      if (!nocanvas && can.fCw && can.fCh && !painter.isBatchMode()) {
-         const rect0 = painter.selectDom().node().getBoundingClientRect();
-         if (!rect0.height && (rect0.width > 0.1*can.fCw)) {
-            painter.selectDom().style('width', can.fCw+'px').style('height', can.fCh+'px');
+      if (!nocanvas && can.fCw && can.fCh) {
+         const d = painter.selectDom();
+         let apply_size = false;
+         if (!painter.isBatchMode()) {
+            const rect0 = d.node().getBoundingClientRect();
+            apply_size = !rect0.height && (rect0.width > 0.1*can.fCw);
+         } else {
+            const arg = d.property('_batch_use_canvsize');
+            apply_size = arg || (arg === undefined);
+         }
+         if (apply_size) {
+            d.style('width', can.fCw + 'px').style('height', can.fCh + 'px')
+              .attr('width', can.fCw).attr('height', can.fCh);
             painter._fixed_size = true;
          }
       }
@@ -930,7 +939,7 @@ async function ensureTCanvas(painter, frame_kind) {
 
 /** @summary draw TPad snapshot from TWebCanvas
   * @private */
-async function drawTPadSnapshot(dom, snap /*, opt */) {
+async function drawTPadSnapshot(dom, snap /* , opt */) {
    const can = create(clTCanvas),
          painter = new TCanvasPainter(dom, can);
    painter.normal_canvas = false;

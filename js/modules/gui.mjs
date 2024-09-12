@@ -1,4 +1,5 @@
-import { decodeUrl, settings, constants, gStyle, internals, browser, findFunction, parse, isFunc, isStr, isObject } from './core.mjs';
+import { decodeUrl, settings, constants, gStyle, internals, browser,
+         findFunction, parse, isFunc, isStr, isObject, isBatchMode, setBatchMode } from './core.mjs';
 import { select as d3_select } from './d3.mjs';
 import { HierarchyPainter } from './gui/HierarchyPainter.mjs';
 import { setStoragePrefix, readSettings, readStyle } from './gui/utils.mjs';
@@ -38,9 +39,17 @@ function readStyleFromURL(url) {
       }
    }
 
+   const b = d.get('batch');
+   if (b !== undefined) {
+      setBatchMode(d !== 'off');
+      if (b === 'png')
+         internals.batch_png = true;
+   }
+
    get_bool('lastcycle', 'OnlyLastCycle');
    get_bool('usestamp', 'UseStamp');
    get_bool('dark', 'DarkMode');
+   get_bool('approx_text_size', 'ApproxTextSize');
 
    let mr = d.get('maxranges');
    if (mr) {
@@ -200,7 +209,14 @@ async function buildGUI(gui_element, gui_kind = '') {
 
    myDiv.html(''); // clear element
 
-   const d = decodeUrl();
+   const d = decodeUrl(), getSize = name => {
+      const res = d.has(name) ? d.get(name).split('x') : [];
+      if (res.length !== 2)
+         return null;
+      res[0] = parseInt(res[0]);
+      res[1] = parseInt(res[1]);
+      return res[0] > 0 && res[1] > 0 ? res : null;
+   };
    let online = (gui_kind === 'online'), nobrowser = false, drawing = false;
 
    if (gui_kind === 'draw')
@@ -213,25 +229,30 @@ async function buildGUI(gui_element, gui_kind = '') {
 
    readStyleFromURL();
 
-   if (nobrowser) {
-      let guisize = d.get('divsize');
-      if (guisize) {
-         guisize = guisize.split('x');
-         if (guisize.length !== 2) guisize = null;
-      }
+   if (isBatchMode())
+      nobrowser = true;
 
-      if (guisize)
-         myDiv.style('position', 'relative').style('width', guisize[0] + 'px').style('height', guisize[1] + 'px');
-      else {
-         d3_select('html').style('height', '100%');
-         d3_select('body').style('min-height', '100%').style('margin', 0).style('overflow', 'hidden');
-         myDiv.style('position', 'absolute').style('left', 0).style('top', 0).style('bottom', 0).style('right', 0).style('padding', '1px');
-      }
+   const divsize = getSize('divsize'), canvsize = getSize('canvsize'), smallpad = getSize('smallpad');
+   if (divsize)
+      myDiv.style('position', 'relative').style('width', divsize[0] + 'px').style('height', divsize[1] + 'px');
+   else if (!isBatchMode()) {
+      d3_select('html').style('height', '100%');
+      d3_select('body').style('min-height', '100%').style('margin', 0).style('overflow', 'hidden');
+      myDiv.style('position', 'absolute').style('left', 0).style('top', 0).style('bottom', 0).style('right', 0).style('padding', '1px');
+   }
+   if (canvsize) {
+      settings.CanvasWidth = canvsize[0];
+      settings.CanvasHeight = canvsize[1];
+   }
+   if (smallpad) {
+      settings.SmallPad.width = smallpad[0];
+      settings.SmallPad.height = smallpad[1];
    }
 
    const hpainter = new HierarchyPainter('root', null);
    if (online) hpainter.is_online = drawing ? 'draw' : 'online';
-   if (drawing) hpainter.exclude_browser = true;
+   if (drawing || isBatchMode())
+      hpainter.exclude_browser = true;
    hpainter.start_without_browser = nobrowser;
 
    return hpainter.startGUI(myDiv).then(() => {

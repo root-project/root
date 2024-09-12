@@ -478,7 +478,7 @@ class Triangles3DHandler {
 
 
 /** @summary Build 3d surface
-  * @desc Make it indepependent from three.js to be able reuse it for 2d case
+  * @desc Make it independent from three.js to be able reuse it for 2d case
   * @private */
 function buildSurf3D(histo, handle, ilevels, meshFunc, linesFunc) {
    const main_grz = handle.grz,
@@ -841,7 +841,7 @@ class TH2Painter extends THistPainter {
          for (let j = j1; j < j2; ++j)
             min = Math.min(min, histo.getBinContent(i + 1, j + 1));
       }
-      if (min > 0) return; // if all points positive, no chance for autoscale
+      if (min > 0) return; // if all points positive, no chance for auto-scale
 
       let ileft = i2, iright = i1, jleft = j2, jright = j1;
 
@@ -1058,7 +1058,6 @@ class TH2Painter extends THistPainter {
                   stat_sumy1 += yy * zz;
                   stat_sumx2 += xx**2 * zz;
                   stat_sumy2 += yy**2 * zz;
-                  // stat_sumxy += xx * yy * zz;
                }
             }
          }
@@ -1071,7 +1070,6 @@ class TH2Painter extends THistPainter {
          stat_sumx2 = histo.fTsumwx2;
          stat_sumy1 = histo.fTsumwy;
          stat_sumy2 = histo.fTsumwy2;
-         // stat_sumxy = histo.fTsumwxy;
       }
 
       if (Math.abs(stat_sum0) > 1e-300) {
@@ -1202,10 +1200,11 @@ class TH2Painter extends THistPainter {
             entries = [],
             show_empty = this.options.ShowEmpty,
             can_merge_x = (handle.xbar2 === 1) && (handle.xbar1 === 0),
-            can_merge_y = (handle.ybar2 === 1) && (handle.ybar1 === 0);
+            can_merge_y = (handle.ybar2 === 1) && (handle.ybar1 === 0),
+            colindx0 = cntr.getPaletteIndex(palette, 0);
 
       let dx, dy, x1, y2, binz, is_zero, colindx, last_entry = null,
-          skip_zero = !this.options.Zero;
+          skip_zero = !this.options.Zero, skip_bin;
 
       const test_cutg = this.options.cutg,
             flush_last_entry = () => {
@@ -1214,12 +1213,12 @@ class TH2Painter extends THistPainter {
       };
 
       // check in the beginning if zero can be skipped
-      if (!skip_zero && !show_empty && (cntr.getPaletteIndex(palette, 0) === null))
+      if (!skip_zero && !show_empty && (colindx0 === null))
          skip_zero = true;
 
       // special check for TProfile2D - empty bin with no entries shown
       if (skip_zero && (histo?._typename === clTProfile2D))
-         skip_zero = 0;
+         skip_zero = 1;
 
       // now start build
       for (let i = handle.i1; i < handle.i2; ++i) {
@@ -1235,7 +1234,9 @@ class TH2Painter extends THistPainter {
             binz = histo.getBinContent(i + 1, j + 1);
             is_zero = (binz === 0);
 
-            if ((is_zero && skip_zero) || (test_cutg && !test_cutg.IsInside(histo.fXaxis.GetBinCoord(i + 0.5), histo.fYaxis.GetBinCoord(j + 0.5)))) {
+            skip_bin = is_zero && ((skip_zero === 1) ? !histo.getBinEntries(i + 1, j + 1) : skip_zero);
+
+            if (skip_bin || (test_cutg && !test_cutg.IsInside(histo.fXaxis.GetBinCoord(i + 0.5), histo.fYaxis.GetBinCoord(j + 0.5)))) {
                if (last_entry)
                   flush_last_entry();
                continue;
@@ -1243,8 +1244,8 @@ class TH2Painter extends THistPainter {
                colindx = cntr.getPaletteIndex(palette, binz);
 
             if (colindx === null) {
-               if ((is_zero && show_empty) || ((skip_zero === 0) && histo.getBinEntries(i+1, j+1)))
-                  colindx = 0;
+               if (is_zero && (show_empty || (skip_zero === 1)))
+                  colindx = colindx0 || 0;
                else {
                    if (last_entry)
                      flush_last_entry();
@@ -1777,7 +1778,7 @@ class TH2Painter extends THistPainter {
                   text = `#splitline{${text}}{#pm${lble}}`;
             }
 
-            if (rotate /* || (histo.fMarkerSize !== 1) */) {
+            if (rotate) {
                x = Math.round(handle.grx[i] + binw*0.5);
                y = Math.round(handle.gry[j+1] + binh*(0.5 + text_offset));
                width = height = 0;
@@ -1962,14 +1963,14 @@ class TH2Painter extends THistPainter {
          this.draw_g.append('svg:path')
                     .attr('d', btn1)
                     .call(this.fillatt.func)
-                    .style('fill', d3_rgb(this.fillatt.color).brighter(0.5).formatHex());
+                    .style('fill', d3_rgb(this.fillatt.color).brighter(0.5).formatRgb());
       }
 
       if (btn2) {
          this.draw_g.append('svg:path')
                     .attr('d', btn2)
                     .call(this.fillatt.func)
-                    .style('fill', !this.fillatt.hasColor() ? 'red' : d3_rgb(this.fillatt.color).darker(0.5).formatHex());
+                    .style('fill', !this.fillatt.hasColor() ? 'red' : d3_rgb(this.fillatt.color).darker(0.5).formatRgb());
       }
 
       if (cross) {
@@ -2162,14 +2163,11 @@ class TH2Painter extends THistPainter {
          cmarkers += swapXY ? attrcmarkers.create(y, x) : attrcmarkers.create(x, y);
       };
 
-      // if ((histo.fFillStyle === 0) && (histo.fFillColor > 0) && (!this.fillatt || this.fillatt.empty()))
-      //     this.createAttFill({ color: this.getColor(histo.fFillColor), pattern: 1001 });
-
       if (histo.fMarkerColor === 1) histo.fMarkerColor = histo.fLineColor;
 
       handle.candle = []; // array of drawn points
 
-      // Determining the quantiles
+      // Determining the quintiles
       const wRange = gStyle.fCandleWhiskerRange, bRange = gStyle.fCandleBoxRange,
             prob = [(wRange >= 1) ? 1e-15 : 0.5 - wRange/2.0,
                      (bRange >= 1) ? 1E-14 : 0.5 - bRange/2.0,

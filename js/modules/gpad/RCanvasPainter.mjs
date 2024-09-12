@@ -3,6 +3,7 @@ import { select as d3_select, rgb as d3_rgb } from '../d3.mjs';
 import { closeCurrentWindow, showProgress, loadOpenui5, ToolbarIcons, getColorExec } from '../gui/utils.mjs';
 import { GridDisplay, getHPainter } from '../gui/display.mjs';
 import { makeTranslate } from '../base/BasePainter.mjs';
+import { convertColor } from '../base/colors.mjs';
 import { selectActivePad, cleanup, resize, EAxisBits } from '../base/ObjectPainter.mjs';
 import { RObjectPainter } from '../base/RObjectPainter.mjs';
 import { RAxisPainter } from './RAxisPainter.mjs';
@@ -661,7 +662,7 @@ class RCanvasPainter extends RPadPainter {
    }
 
    /** @summary draw RCanvas object */
-   static async draw(dom, can /*, opt */) {
+   static async draw(dom, can /* , opt */) {
       const nocanvas = !can;
       if (nocanvas)
          can = create(`${nsREX}RCanvas`);
@@ -685,7 +686,7 @@ class RCanvasPainter extends RPadPainter {
 
 /** @summary draw RPadSnapshot object
   * @private */
-function drawRPadSnapshot(dom, snap /*, opt */) {
+function drawRPadSnapshot(dom, snap /* , opt */) {
    const painter = new RCanvasPainter(dom, null);
    painter.normal_canvas = false;
    painter.batch_mode = isBatchMode();
@@ -763,12 +764,13 @@ function drawRFrameTitle(reason, drag) {
    );
 }
 
-/// /////////////////////////////////////////////////////////////////////////////////////////
+// ==========================================================
 
 registerMethods(`${nsREX}RPalette`, {
 
    extractRColor(rcolor) {
-     return rcolor.fColor || 'black';
+      const col = rcolor.fColor || 'black';
+      return convertColor(col);
    },
 
    getColor(indx) {
@@ -809,20 +811,20 @@ registerMethods(`${nsREX}RPalette`, {
 
    calcColor(value, entry1, entry2) {
       const dist = entry2.fOrdinal - entry1.fOrdinal,
-          r1 = entry2.fOrdinal - value,
-          r2 = value - entry1.fOrdinal;
+            r1 = entry2.fOrdinal - value,
+            r2 = value - entry1.fOrdinal;
 
       if (!this.fInterpolate || (dist <= 0))
-         return (r1 < r2) ? entry2.fColor : entry1.fColor;
+         return convertColor((r1 < r2) ? entry2.fColor : entry1.fColor);
 
       // interpolate
       const col1 = d3_rgb(this.extractRColor(entry1.fColor)),
-          col2 = d3_rgb(this.extractRColor(entry2.fColor)),
-          color = d3_rgb(Math.round((col1.r*r1 + col2.r*r2)/dist),
-                         Math.round((col1.g*r1 + col2.g*r2)/dist),
-                         Math.round((col1.b*r1 + col2.b*r2)/dist));
+            col2 = d3_rgb(this.extractRColor(entry2.fColor)),
+            color = d3_rgb(Math.round((col1.r*r1 + col2.r*r2)/dist),
+                           Math.round((col1.g*r1 + col2.g*r2)/dist),
+                           Math.round((col1.b*r1 + col2.b*r2)/dist));
 
-      return color.toString();
+      return color.formatRgb();
    },
 
    createPaletteColors(len) {

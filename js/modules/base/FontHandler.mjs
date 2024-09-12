@@ -80,7 +80,6 @@ class FontHandler {
          defs = svg.insert('svg:defs', ':first-child').attr('class', 'canvas_defs');
       const entry = defs.selectChild('.' + clname);
       if (entry.empty()) {
-         console.log('Adding style entry for class', clname);
          defs.append('style')
                .attr('class', clname)
                .property('$fonthandler', this)
@@ -95,7 +94,7 @@ class FontHandler {
 
       selection.attr('font-family', this.name)
                .attr('font-size', this.size)
-               .attr('xml:space', 'preserve')
+               .attr(':xml:space', 'preserve')
                .attr('font-weight', this.weight || null)
                .attr('font-style', this.style || null);
    }
@@ -127,7 +126,7 @@ class FontHandler {
    clearFont(selection) {
       selection.attr('font-family', null)
                .attr('font-size', null)
-               .attr('xml:space', null)
+               .attr(':xml:space', null)
                .attr('font-weight', null)
                .attr('font-style', null);
    }

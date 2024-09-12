@@ -5,7 +5,7 @@ import { gStyle, settings, constants, browser, internals, BIT,
 import { select as d3_select, rgb as d3_rgb } from '../d3.mjs';
 import { ColorPalette, adoptRootColors, getColorPalette, getGrayColors, extendRootColors,
          getRGBfromTColor, decodeWebCanvasColors } from '../base/colors.mjs';
-import { getElementRect, getAbsPosInCanvas, DrawOptions, compressSVG, makeTranslate,
+import { prSVG, prJSON, getElementRect, getAbsPosInCanvas, DrawOptions, compressSVG, makeTranslate,
          getTDatime, convertDate, svgToImage } from '../base/BasePainter.mjs';
 import { ObjectPainter, selectActivePad, getActivePad } from '../base/ObjectPainter.mjs';
 import { TAttLineHandler } from '../base/TAttLineHandler.mjs';
@@ -919,10 +919,10 @@ class TPadPainter extends ObjectPainter {
 
             svg_border1.attr('d', this.pad.fBorderMode > 0 ? side1 : side2)
                        .call(this.fillatt.func)
-                       .style('fill', d3_rgb(this.fillatt.color).brighter(0.5).formatHex());
+                       .style('fill', d3_rgb(this.fillatt.color).brighter(0.5).formatRgb());
             svg_border2.attr('d', this.pad.fBorderMode > 0 ? side2 : side1)
                        .call(this.fillatt.func)
-                       .style('fill', d3_rgb(this.fillatt.color).darker(0.5).formatHex());
+                       .style('fill', d3_rgb(this.fillatt.color).darker(0.5).formatRgb());
          } else {
             svg_border1.remove();
             svg_border2.remove();
@@ -1341,6 +1341,11 @@ class TPadPainter extends ObjectPainter {
       const fname = this.this_pad_name || (this.iscan ? 'canvas' : 'pad');
       menu.sub('Save as');
       ['svg', 'png', 'jpeg', 'pdf', 'webp'].forEach(fmt => menu.add(`${fname}.${fmt}`, () => this.saveAs(fmt, this.iscan, `${fname}.${fmt}`)));
+      if (this.iscan) {
+         menu.separator();
+         menu.add(`${fname}.json`, () => this.saveAs('json', true, `${fname}.json`), 'Produce JSON with line spacing');
+         menu.add(`${fname}0.json`, () => this.saveAs('json', false, `${fname}0.json`), 'Produce JSON without line spacing');
+      }
       menu.endsub();
 
       return true;
@@ -1516,7 +1521,7 @@ class TPadPainter extends ObjectPainter {
          this.checkSpecialsInPrimitives(obj);
 
       const fp = this.getFramePainter();
-      if (fp) fp.updateAttributes(!fp.modified_NDC);
+      if (fp) fp.updateAttributes(!fp.$modifiedNDC);
 
       if (!obj.fPrimitives) return false;
 
@@ -2228,8 +2233,10 @@ class TPadPainter extends ObjectPainter {
             }
             if (res)
               this.getCanvPainter()?.sendWebsocket(`SAVE:${filename}:${res}`);
-         } else
-            saveFile(filename, (kind !== 'svg') ? imgdata : 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(imgdata));
+         } else {
+            const prefix = (kind === 'svg') ? prSVG : (kind === 'json' ? prJSON : '');
+            saveFile(filename, prefix ? prefix + encodeURIComponent(imgdata) : imgdata);
+         }
       });
    }
 
@@ -2247,6 +2254,9 @@ class TPadPainter extends ObjectPainter {
    /** @summary Produce image for the pad
      * @return {Promise} with created image */
    async produceImage(full_canvas, file_format) {
+      if (file_format === 'json')
+         return isFunc(this.produceJSON) ? this.produceJSON(full_canvas ? 2 : 0) : '';
+
       const use_frame = (full_canvas === 'frame'),
             elem = use_frame ? this.getFrameSvg(this.this_pad_name) : (full_canvas ? this.getCanvSvg() : this.svg_this_pad()),
             painter = (full_canvas && !use_frame) ? this.getCanvPainter() : this,
@@ -2284,15 +2294,23 @@ class TPadPainter extends ObjectPainter {
             btns.remove();
          }
 
-         const main = pp.getFramePainter();
-         if (!isFunc(main?.render3D) || !isFunc(main?.access3dKind)) return;
+         const fp = pp.getFramePainter();
+         if (!isFunc(fp?.access3dKind)) return;
 
-         const can3d = main.access3dKind();
+         const can3d = fp.access3dKind();
          if ((can3d !== constants.Embed3D.Overlay) && (can3d !== constants.Embed3D.Embed)) return;
 
-         const sz2 = main.getSizeFor3d(constants.Embed3D.Embed), // get size and position of DOM element as it will be embed
+         let main, canvas;
+         if (isFunc(fp.render3D)) {
+            main = fp;
+            canvas = fp.renderer?.domElement;
+         } else {
+            main = fp.getMainPainter();
+            canvas = main?._renderer?.domElement;
+         }
+         if (!isFunc(main?.render3D) || !isObject(canvas)) return;
 
-         canvas = main.renderer.domElement;
+         const sz2 = fp.getSizeFor3d(constants.Embed3D.Embed); // get size and position of DOM element as it will be embed
          main.render3D(0); // WebGL clears buffers, therefore we should render scene and convert immediately
          const dataUrl = canvas.toDataURL('image/png');
 

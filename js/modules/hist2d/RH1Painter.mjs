@@ -149,7 +149,7 @@ class RH1Painter extends RHistPainter {
    }
 
    /** @summary Fill statistic */
-   fillStatistic(stat, dostat/*, dofit */) {
+   fillStatistic(stat, dostat /* , dofit */) {
       const histo = this.getHisto(),
           data = this.countStat(),
           print_name = dostat % 10,
@@ -263,21 +263,21 @@ class RH1Painter extends RHistPainter {
          this.draw_g.append('svg:path')
                .attr('d', barsl)
                .call(this.fillatt.func)
-               .style('fill', d3_rgb(this.fillatt.color).brighter(0.5).formatHex());
+               .style('fill', d3_rgb(this.fillatt.color).brighter(0.5).formatRgb());
       }
 
       if (barsr) {
          this.draw_g.append('svg:path')
                .attr('d', barsr)
                .call(this.fillatt.func)
-               .style('fill', d3_rgb(this.fillatt.color).darker(0.5).formatHex());
+               .style('fill', d3_rgb(this.fillatt.color).darker(0.5).formatRgb());
        }
 
        return true;
    }
 
    /** @summary Draw histogram as filled errors */
-   async drawFilledErrors(handle, funcs /*, width, height */) {
+   async drawFilledErrors(handle, funcs /* , width, height */) {
       this.createG(true);
 
       const left = handle.i1, right = handle.i2, di = handle.stepi,
