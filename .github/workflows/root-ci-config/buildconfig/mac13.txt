@@ -28,5 +28,6 @@ pgsql=OFF
 pythia8=OFF
 test_distrdf_dask=ON
 test_distrdf_pyspark=ON
-tmva-sofie=ON
+tmva=OFF
+tmva-sofie=OFF
 x11=OFF
