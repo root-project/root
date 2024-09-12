@@ -431,22 +431,46 @@ jobs:
         with:
           ref: ${{ inputs.ref_name }}
       
-      - name: Install Chromium
+      # - name: Install Chromium
+      #   shell: bash
+      #   run: |
+      #     if [[ "${{ matrix.image }}" == "fedora39" ]]; then
+      #       dnf install -y chromium
+      #     elif [[ "${{ matrix.image }}" == "alma8" ]] || [[ "${{ matrix.image }}" == "alma9" ]] || [[ "${{ matrix.image }}" == "alma9-clang" ]]; then
+      #       dnf install -y epel-release
+      #       dnf install -y chromium
+      #     elif [[ "${{ matrix.image }}" == "ubuntu20" ]] || [[ "${{ matrix.image }}" == "ubuntu22" ]] || [[ "${{ matrix.image }}" == "ubuntu2404" ]]; then
+      #       apt update
+      #       apt install -y snapd   # Install snapd first
+      #       systemctl start snapd  # Ensure snapd is running
+      #       snap install chromium
+      #     elif [[ "${{ matrix.image }}" == "debian125" ]]; then
+      #       apt update
+      #       apt install -y chromium
+      #     fi
+
+      - name: Install Google Chrome
         shell: bash
         run: |
           if [[ "${{ matrix.image }}" == "fedora39" ]]; then
-            dnf install -y chromium
+            dnf install -y dnf-plugins-core
+            dnf install fedora-workstation-repositories -y
+            dnf config-manager --set-enabled google-chrome
+            dnf install google-chrome-stable -y
           elif [[ "${{ matrix.image }}" == "alma8" ]] || [[ "${{ matrix.image }}" == "alma9" ]] || [[ "${{ matrix.image }}" == "alma9-clang" ]]; then
-            dnf install -y epel-release
-            dnf install -y chromium
+            dnf install -y wget
+            wget https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm
+            dnf install -y ./google-chrome-stable_current_x86_64.rpm
           elif [[ "${{ matrix.image }}" == "ubuntu20" ]] || [[ "${{ matrix.image }}" == "ubuntu22" ]] || [[ "${{ matrix.image }}" == "ubuntu2404" ]]; then
             apt update
-            apt install -y snapd   # Install snapd first
-            systemctl start snapd  # Ensure snapd is running
-            snap install chromium
+            apt install -y wget
+            wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+            apt install -y ./google-chrome-stable_current_amd64.deb
           elif [[ "${{ matrix.image }}" == "debian125" ]]; then
             apt update
-            apt install -y chromium
+            apt install -y wget
+            wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+            apt install -y ./google-chrome-stable_current_amd64.deb
           fi
 
       - name: Dump GitHub context
