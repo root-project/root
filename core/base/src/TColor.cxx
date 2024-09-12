@@ -1850,21 +1850,27 @@ void TColor::SetRGB(Float_t r, Float_t g, Float_t b)
    // now define associated colors for WBOX shading
    Float_t dr, dg, db, lr, lg, lb;
 
+   // Get list of all defined colors
+   auto colors = (TObjArray*) gROOT->GetListOfColors();
+
    // set dark color
-   HLStoRGB(fHue, 0.7f*fLight, fSaturation, dr, dg, db);
-   TColor *dark = gROOT->GetColor(100+fNumber);
-   if (dark) {
-      if (nplanes > 8) dark->SetRGB(dr, dg, db);
-      else             dark->SetRGB(0.3f,0.3f,0.3f);
+   Int_t nd = GetColorByName(TString::Format("%s_dark",GetName()).Data());
+   if (nd >= 0) {
+      HLStoRGB(fHue, 0.7f*fLight, fSaturation, dr, dg, db);
+      TColor *colord = (TColor*)colors->At(nd);
+      if (nplanes > 8) colord->SetRGB(dr, dg, db);
+      else             colord->SetRGB(0.3f,0.3f,0.3f);
    }
 
-   // set light color
-   HLStoRGB(fHue, 1.2f*fLight, fSaturation, lr, lg, lb);
-   TColor *light = gROOT->GetColor(150+fNumber);
-   if (light) {
-      if (nplanes > 8) light->SetRGB(lr, lg, lb);
-      else             light->SetRGB(0.8f,0.8f,0.8f);
+   // set bright color
+   Int_t nb = GetColorByName(TString::Format("%s_bright",GetName()).Data());
+   if (nb >= 0) {
+      HLStoRGB(fHue, 1.2f*fLight, fSaturation, lr, lg, lb);
+      TColor *colorb = (TColor*)colors->At(nb);
+      if (nplanes > 8) colorb->SetRGB(lr, lg, lb);
+      else             colorb->SetRGB(0.8f,0.8f,0.8f);
    }
+
    gDefinedColors++;
 }
 
