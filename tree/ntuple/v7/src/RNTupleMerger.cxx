@@ -271,15 +271,13 @@ CompareDescriptorStructure(const RNTupleDescriptor &dst, const RNTupleDescriptor
          errors.push_back(ss.str());
       } else if (field.fSrc->IsProjectedField()) {
          // if both fields are projected, verify that they point to the same real field
-         // FIXME: we cannot compare the ids as they belong to different RNTuples.
-         // Check the real field's FQ name instead.
-         const auto srcId = field.fSrc->GetProjectionSourceId();
-         const auto dstId = field.fDst->GetProjectionSourceId();
-         if (srcId != dstId) {
+         const auto srcName = src.GetQualifiedFieldName(field.fSrc->GetProjectionSourceId());
+         const auto dstName = dst.GetQualifiedFieldName(field.fDst->GetProjectionSourceId());
+         if (srcName != dstName) {
             std::stringstream ss;
             ss << "Field `" << fieldName
-               << "` is projected to a different field than a previously-seen field with the same name (old: " << dstId
-               << ", new: " << srcId << ")";
+               << "` is projected to a different field than a previously-seen field with the same name (old: " << dstName
+               << ", new: " << srcName << ")";
             errors.push_back(ss.str());
          }
       }
@@ -331,6 +329,9 @@ CompareDescriptorStructure(const RNTupleDescriptor &dst, const RNTupleDescriptor
       res.fCommonFields.emplace_back(srcField);
    }
 
+   // TODO(gparolini): we should exhaustively check the field tree rather than just the top level fields,
+   // in case the user forgets to change the version number on one field.
+
    return RResult(res);
 }
 
@@ -377,8 +378,9 @@ void RNTupleMerger::MergeCommonColumns(RClusterPool &clusterPool, DescriptorId_t
       return;
 
    const RCluster *cluster = clusterPool.GetCluster(clusterId, commonColumnSet);
-   if (!cluster)
-      return;
+   // we expect the cluster pool to contain the requested set of columns, since they were
+   // validated by CompareDescriptorStructures().
+   assert(cluster);
 
    const auto &clusterDesc = mergeData.fSrcDescriptor->GetClusterDescriptor(clusterId);
 
@@ -466,10 +468,14 @@ static void GenerateExtraDstColumns(size_t nClusterEntries, std::span<RColumnInf
    for (const auto &column : extraDstColumns) {
       const auto &columnId = column.fInputId;
       const auto &columnDesc = mergeData.fDstDescriptor.GetColumnDescriptor(columnId);
+      const RFieldDescriptor *field = column.fParentField;
+
+      // Skip all auxiliary columns
+      if (field->GetLogicalColumnIds()[0] != columnId)
+         continue;
 
       // Check if this column is a child of a Collection or a Variant. If so, it has no data
       // and can be skipped.
-      const RFieldDescriptor *field = column.fParentField;
       bool skipColumn = false;
       auto nRepetitions = std::max<std::uint64_t>(field->GetNRepetitions(), 1);
       for (auto parentId = field->GetParentId(); parentId != kInvalidDescriptorId;) {
