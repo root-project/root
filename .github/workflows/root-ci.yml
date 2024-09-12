@@ -441,7 +441,7 @@ jobs:
             dnf install -y chromium
           elif [[ "${{ matrix.image }}" == "ubuntu20" ]] || [[ "${{ matrix.image }}" == "ubuntu22" ]] || [[ "${{ matrix.image }}" == "ubuntu2404" ]]; then
             apt update
-            apt install -y chromium-browser
+            snap install chromium
           elif [[ "${{ matrix.image }}" == "debian125" ]]; then
             apt update
             apt install -y chromium
