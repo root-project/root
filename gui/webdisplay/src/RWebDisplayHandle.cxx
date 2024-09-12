@@ -899,8 +899,38 @@ bool RWebDisplayHandle::CanProduceImages(const std::string &browser)
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+/// Detect image format
+std::string RWebDisplayHandle::GetImageFormat(const std::string &fname)
+{
+   std::string _fname = fname;
+   std::transform(_fname.begin(), _fname.end(), _fname.begin(), ::tolower);
+   auto EndsWith = [&_fname](const std::string &suffix) {
+      return (_fname.length() > suffix.length()) ? (0 == _fname.compare(_fname.length() - suffix.length(), suffix.length(), suffix)) : false;
+   };
+
+   if (EndsWith(".pdf"))
+      return "pdf"s;
+   if (EndsWith(".json"))
+      return "json"s;
+   if (EndsWith(".svg"))
+      return "svg"s;
+   if (EndsWith("shot.png"))
+      return "shot.png"s;
+   if (EndsWith(".png"))
+      return "png"s;
+   if (EndsWith(".jpg") || EndsWith(".jpeg"))
+      return "jpeg"s;
+   if (EndsWith(".webp"))
+      return "webp"s;
+
+   return ""s;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Produce image file using JSON data as source
 /// Invokes JSROOT drawing functionality in headless browser - Google Chrome or Mozilla Firefox
+
 bool RWebDisplayHandle::ProduceImage(const std::string &fname, const std::string &json, int width, int height, const char *batch_file)
 {
    return ProduceImages(fname, {json}, {width}, {height}, batch_file);
@@ -909,20 +939,16 @@ bool RWebDisplayHandle::ProduceImage(const std::string &fname, const std::string
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Produce image file(s) using JSON data as source
 /// Invokes JSROOT drawing functionality in headless browser - Google Chrome or Mozilla Firefox
+
 bool RWebDisplayHandle::ProduceImages(const std::string &fname, const std::vector<std::string> &jsons, const std::vector<int> &widths, const std::vector<int> &heights, const char *batch_file)
 {
-   if (jsons.empty())
-      return false;
-
-   auto EndsWith = [&fname](const std::string &suffix) {
-      std::string _fname = fname;
-      std::transform(_fname.begin(), _fname.end(), _fname.begin(), ::tolower);
-      return (_fname.length() > suffix.length()) ? (0 == _fname.compare(_fname.length() - suffix.length(), suffix.length(), suffix)) : false;
-   };
+   auto fmt = GetImageFormat(fname);
 
    std::vector<std::string> fnames;
 
-   if (!EndsWith(".pdf")) {
+   if (fmt == "pdf") {
+      fnames.emplace_back(fname);
+   } else {
       std::string farg = fname;
 
       bool has_quialifier = farg.find("%") != std::string::npos;
@@ -942,13 +968,31 @@ bool RWebDisplayHandle::ProduceImages(const std::string &fname, const std::vecto
       }
    }
 
-   if (EndsWith(".json")) {
+   return ProduceImages(fmt, fnames, jsons, widths, heights, batch_file);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+/// Produce image file(s) using JSON data as source
+/// Invokes JSROOT drawing functionality in headless browser - Google Chrome or Mozilla Firefox
+
+bool RWebDisplayHandle::ProduceImages(const std::string &fmt, const std::vector<std::string> &fnames, const std::vector<std::string> &jsons, const std::vector<int> &widths, const std::vector<int> &heights, const char *batch_file)
+{
+   if (jsons.empty() || fnames.empty())
+      return false;
+
+   if (fmt == "json") {
       for (unsigned n = 0; n < jsons.size(); ++n) {
          std::ofstream ofs(fnames[n]);
          ofs << jsons[n];
       }
       return true;
    }
+
+   std::string fdebug;
+   if (fnames.size() == 1)
+      fdebug  = fnames[0];
+   else
+      fdebug = TBufferJSON::ToJSON(&fnames, TBufferJSON::kNoSpaces);
 
    const char *jsrootsys = gSystem->Getenv("JSROOTSYS");
    TString jsrootsysdflt;
@@ -972,17 +1016,17 @@ bool RWebDisplayHandle::ProduceImages(const std::string &fname, const std::vecto
 
    std::string draw_kind;
 
-   if (EndsWith(".pdf"))
+   if (fmt == "pdf")
       draw_kind = "draw"; // not a JSROOT drawing but Chrome capability to create PDF out of HTML page is used
-   else if (EndsWith("shot.png") && (jsons.size() == 1))
+   else if ((fmt == "shot.png") && (jsons.size() == 1))
       draw_kind = isChromeBased ? "draw" : "png"; // using screenshot
-   else if (EndsWith(".svg"))
+   else if (fmt == "svg")
       draw_kind = "svg";
-   else if (EndsWith(".png"))
+   else if (fmt == "png")
       draw_kind = "png";
-   else if (EndsWith(".jpg") || EndsWith(".jpeg"))
+   else if (fmt == "jpeg")
       draw_kind = "jpeg";
-   else if (EndsWith(".webp"))
+   else if (fmt == "webp")
       draw_kind = "webp";
    else
       return false;
@@ -1066,7 +1110,7 @@ try_again:
       tmp_name.Clear();
       html_name.Clear();
 
-      R__LOG_DEBUG(0, WebGUILog()) << "Using file content_len " << filecont.length() << " to produce batch images " << fname;
+      R__LOG_DEBUG(0, WebGUILog()) << "Using file content_len " << filecont.length() << " to produce batch images ";
 
    } else {
       tmp_name = "canvasbody";
@@ -1104,7 +1148,7 @@ try_again:
       args.SetUrl("file://"s + gSystem->UnixPathName(html_name.Data()));
       args.SetPageContent(""s);
 
-      R__LOG_DEBUG(0, WebGUILog()) << "Using " << html_name << " content_len " << filecont.length() << " to produce batch images " << fname;
+      R__LOG_DEBUG(0, WebGUILog()) << "Using " << html_name << " content_len " << filecont.length() << " to produce batch images " << fdebug;
    }
 
    TString wait_file_name;
@@ -1116,13 +1160,13 @@ try_again:
 
    if (draw_kind == "draw") {
 
-      TString tgtfilename = fname.c_str();
+      TString tgtfilename = fnames[0].c_str();
       if (!gSystem->IsAbsoluteFileName(tgtfilename.Data()))
          gSystem->PrependPathName(gSystem->WorkingDirectory(), tgtfilename);
 
       wait_file_name = tgtfilename;
 
-      if (EndsWith(".pdf"))
+      if (fmt == "pdf")
          args.SetExtraArgs("--print-to-pdf-no-header --print-to-pdf="s + gSystem->UnixPathName(tgtfilename.Data()));
       else
          args.SetExtraArgs("--screenshot="s + gSystem->UnixPathName(tgtfilename.Data()));
@@ -1147,7 +1191,7 @@ try_again:
    auto handle = RWebDisplayHandle::Display(args);
 
    if (!handle) {
-      R__LOG_DEBUG(0, WebGUILog()) << "Cannot start " << args.GetBrowserName() << " to produce image " << fname;
+      R__LOG_DEBUG(0, WebGUILog()) << "Cannot start " << args.GetBrowserName() << " to produce image " << fdebug;
       return false;
    }
 
@@ -1160,7 +1204,7 @@ try_again:
    }
 
    if (!wait_file_name.IsNull() && gSystem->AccessPathName(wait_file_name.Data())) {
-      R__LOG_ERROR(WebGUILog()) << "Fail to produce image " << fname;
+      R__LOG_ERROR(WebGUILog()) << "Fail to produce image " << fdebug;
       return false;
    }
 
@@ -1224,14 +1268,11 @@ try_again:
             }
          }
       }
-   } else if (EndsWith(".pdf")) {
-      ::Info("ProduceImages", "PDF file %s with %d pages has been created", fname.c_str(), (int) jsons.size());
+   } else if (fmt == "pdf") {
+      ::Info("ProduceImages", "PDF file %s with %d pages has been created", fnames[0].c_str(), (int) jsons.size());
    }
 
-   if (fnames.size() == 1)
-      R__LOG_DEBUG(0, WebGUILog()) << "Create file " << fnames[0];
-   else
-      R__LOG_DEBUG(0, WebGUILog()) << "Create files " << TBufferJSON::ToJSON(&fnames, TBufferJSON::kNoSpaces);
+   R__LOG_DEBUG(0, WebGUILog()) << "Create " << (fnames.size() > 1 ? "files " : "file ") << fdebug;
 
    return true;
 }
