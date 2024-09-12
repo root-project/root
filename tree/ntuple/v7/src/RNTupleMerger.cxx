@@ -508,15 +508,13 @@ static void GenerateExtraDstColumns(size_t nClusterEntries, std::span<RColumnInf
       const size_t nPages = bytesOnStorage / kPageSizeLimit + !!(bytesOnStorage % kPageSizeLimit);
       for (size_t i = 0; i < nPages; ++i) {
          const auto pageSize = (i < nPages - 1) ? kPageSizeLimit : bytesOnStorage - kPageSizeLimit * (nPages - 1);
-         auto &buffer = sealedPageData.fBuffers.emplace_back(new unsigned char[pageSize]);
+         const auto checksumSize = RPageStorage::kNBytesPageChecksum;
+         const auto bufSize = pageSize + checksumSize;
+         auto &buffer = sealedPageData.fBuffers.emplace_back(new unsigned char[bufSize]);
 
-         RPageStorage::RSealedPage sealedPage;
-         sealedPage.SetHasChecksum(true);
-         sealedPage.SetNElements(nElements);
-         sealedPage.SetBufferSize(pageSize);
-         sealedPage.SetBuffer(buffer.get());
-
+         RPageStorage::RSealedPage sealedPage{buffer.get(), bufSize, static_cast<std::uint32_t>(nElements), true};
          memset(buffer.get(), 0, pageSize);
+         sealedPage.ChecksumIfEnabled();
 
          sealedPageData.fPagesV.push_back({sealedPage});
       }
