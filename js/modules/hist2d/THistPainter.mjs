@@ -2,7 +2,8 @@ import { gStyle, BIT, settings, constants, create, isObject, isFunc, isStr, getP
          clTList, clTPaveText, clTPaveStats, clTPaletteAxis, clTProfile, clTProfile2D, clTProfile3D, clTPad,
          clTAxis, clTF1, clTF2, kNoZoom, clTCutG, kNoStats, kTitle } from '../core.mjs';
 import { getColor, getColorPalette } from '../base/colors.mjs';
-import { ObjectPainter, DrawOptions, EAxisBits, kAxisTime, kAxisLabels } from '../base/ObjectPainter.mjs';
+import { DrawOptions } from '../base/BasePainter.mjs';
+import { ObjectPainter, EAxisBits, kAxisTime, kAxisLabels } from '../base/ObjectPainter.mjs';
 import { TPavePainter } from '../hist/TPavePainter.mjs';
 import { ensureTCanvas } from '../gpad/TCanvasPainter.mjs';
 
@@ -696,10 +697,12 @@ class HistContour {
    /** @summary Get index based on z value */
    getContourIndex(zc) {
       // bins less than zmin not drawn
-      if (zc < this.colzmin) return this.below_min_indx;
+      if (zc < this.colzmin)
+         return this.below_min_indx;
 
       // if bin content exactly zmin, draw it when col0 specified or when content is positive
-      if (zc === this.colzmin) return this.exact_min_indx;
+      if (zc === this.colzmin)
+         return this.exact_min_indx;
 
       if (!this.custom)
          return Math.floor(0.01+(zc-this.colzmin)*(this.arr.length-1)/(this.colzmax-this.colzmin));
@@ -2118,10 +2121,10 @@ class THistPainter extends ObjectPainter {
          pal.$can_move = true;
          pal.$generated = true;
 
-         if (!this.options.Zvert)
-            Object.assign(pal, { fX1NDC: gStyle.fPadLeftMargin, fX2NDC: 1 - gStyle.fPadRightMargin, fY1NDC: 1.005 - gStyle.fPadTopMargin, fY2NDC: 1.045 - gStyle.fPadTopMargin });
-         else
+         if (this.options.Zvert)
             Object.assign(pal, { fX1NDC: 1.005 - gStyle.fPadRightMargin, fX2NDC: 1.045 - gStyle.fPadRightMargin, fY1NDC: gStyle.fPadBottomMargin, fY2NDC: 1 - gStyle.fPadTopMargin });
+         else
+            Object.assign(pal, { fX1NDC: gStyle.fPadLeftMargin, fX2NDC: 1 - gStyle.fPadRightMargin, fY1NDC: 1.005 - gStyle.fPadTopMargin, fY2NDC: 1.045 - gStyle.fPadTopMargin });
 
          Object.assign(pal.fAxis, { fChopt: '+', fLineSyle: 1, fLineWidth: 1, fTextAngle: 0, fTextAlign: 11 });
 
@@ -2169,7 +2172,7 @@ class THistPainter extends ObjectPainter {
 
             pal.fX1NDC = fp.fX1NDC;
             pal.fX2NDC = fp.fX2NDC;
-            if (pal.fY2NDC > (fp.fY1NDC + fp.fY2NDC)*0.5) {
+            if (pal.fY2NDC > (fp.fY1NDC + fp.fY2NDC) * 0.5) {
                pal.fY2NDC = fp.fY2NDC + 0.005 + (pal.fY2NDC - pal.fY1NDC);
                pal.fY1NDC = fp.fY2NDC + 0.005;
             } else {
@@ -2219,11 +2222,13 @@ class THistPainter extends ObjectPainter {
                   need_redraw = true;
                   fp.fX2NDC = pal.fX1NDC - 0.01;
 
-                  if (fp.fX1NDC > fp.fX2NDC - 0.1) fp.fX1NDC = Math.max(0, fp.fX2NDC - 0.1);
+                  if (fp.fX1NDC > fp.fX2NDC - 0.1)
+                     fp.fX1NDC = Math.max(0, fp.fX2NDC - 0.1);
                 } else if ((pal.fX2NDC < 0.5) && (fp.fX1NDC < pal.fX2NDC)) {
                   need_redraw = true;
                   fp.fX1NDC = pal.fX2NDC + 0.05;
-                  if (fp.fX2NDC < fp.fX1NDC + 0.1) fp.fX2NDC = Math.min(1, fp.fX1NDC + 0.1);
+                  if (fp.fX2NDC < fp.fX1NDC + 0.1)
+                     fp.fX2NDC = Math.min(1, fp.fX1NDC + 0.1);
                 }
                 if (need_redraw && pad) {
                    pad.fLeftMargin = fp.fX1NDC;
@@ -2233,11 +2238,13 @@ class THistPainter extends ObjectPainter {
                if ((pal.fY1NDC > 0.5) && (fp.fY2NDC > pal.fY1NDC)) {
                   need_redraw = true;
                   fp.fY2NDC = pal.fY1NDC - 0.01;
-                  if (fp.fY1NDC > fp.fY2NDC - 0.1) fp.fY1NDC = Math.max(0, fp.fXYNDC - 0.1);
+                  if (fp.fY1NDC > fp.fY2NDC - 0.1)
+                     fp.fY1NDC = Math.max(0, fp.fXYNDC - 0.1);
                } else if ((pal.fY2NDC < 0.5) && (fp.fY1NDC < pal.fY2NDC)) {
                   need_redraw = true;
                   fp.fY1NDC = pal.fY2NDC + 0.05;
-                  if (fp.fXYNDC < fp.fY1NDC + 0.1) fp.fY2NDC = Math.min(1, fp.fY1NDC + 0.1);
+                  if (fp.fXYNDC < fp.fY1NDC + 0.1)
+                     fp.fY2NDC = Math.min(1, fp.fY1NDC + 0.1);
                }
                if (need_redraw && pad) {
                   pad.fTopMargin = fp.fY1NDC;

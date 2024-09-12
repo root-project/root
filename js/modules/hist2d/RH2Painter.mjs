@@ -317,7 +317,7 @@ class RH2Painter extends RHistPainter {
    }
 
    /** @summary Fill statistic into statistic box */
-   fillStatistic(stat, dostat /*, dofit */) {
+   fillStatistic(stat, dostat /* , dofit */) {
       const data = this.countStat(),
           print_name = Math.floor(dostat % 10),
           print_entries = Math.floor(dostat / 10) % 10,
@@ -433,8 +433,8 @@ class RH2Painter extends RHistPainter {
          if (entry) {
             this.draw_g
                 .append('svg:path')
-                .style('fill', handle.palette.getColor(colindx))
-                .attr('d', entry.path);
+                .attr('d', entry.path)
+                .style('fill', handle.palette.getColor(colindx));
          }
       });
 
@@ -729,14 +729,14 @@ class RH2Painter extends RHistPainter {
          this.draw_g.append('svg:path')
                     .attr('d', btn1)
                     .call(this.fillatt.func)
-                    .style('fill', d3_rgb(this.fillatt.color).brighter(0.5).formatHex());
+                    .style('fill', d3_rgb(this.fillatt.color).brighter(0.5).formatRgb());
       }
 
       if (btn2) {
          this.draw_g.append('svg:path')
                     .attr('d', btn2)
                     .call(this.fillatt.func)
-                    .style('fill', !this.fillatt.hasColor() ? 'red' : d3_rgb(this.fillatt.color).darker(0.5).formatHex());
+                    .style('fill', !this.fillatt.hasColor() ? 'red' : d3_rgb(this.fillatt.color).darker(0.5).formatRgb());
       }
 
       if (cross) {
@@ -1146,8 +1146,8 @@ class RH2Painter extends RHistPainter {
                              FrontBox: false, BackBox: false };
 
          const kind = painter.v7EvalAttr('kind', ''),
-             sub = painter.v7EvalAttr('sub', 0),
-             o = painter.options;
+               sub = painter.v7EvalAttr('sub', 0),
+               o = painter.options;
 
          o.Text = painter.v7EvalAttr('drawtext', false);
 

@@ -1,16 +1,16 @@
-import { version, gStyle, httpRequest, create, createHttpRequest, loadScript, decodeUrl,
-         source_dir, settings, internals, browser, findFunction,
+import { version, gStyle, httpRequest, create, createHttpRequest, loadScript, loadModules, decodeUrl,
+         source_dir, settings, internals, browser, findFunction, toJSON,
          isArrayProto, isRootCollection, isBatchMode, isNodeJs, isObject, isFunc, isStr, _ensureJSROOT,
          prROOT, clTList, clTMap, clTObjString, clTKey, clTFile, clTText, clTLatex, clTColor, clTStyle, kInspect, isPromise } from '../core.mjs';
 import { select as d3_select } from '../d3.mjs';
 import { openFile, kBaseClass, clTStreamerInfoList, clTDirectory, clTDirectoryFile, nameStreamerInfo, addUserStreamer } from '../io.mjs';
 import { getRGBfromTColor } from '../base/colors.mjs';
-import { BasePainter, getElementRect, _loadJSDOM, getTDatime, convertDate } from '../base/BasePainter.mjs';
+import { prJSON, BasePainter, getElementRect, _loadJSDOM, getTDatime, convertDate } from '../base/BasePainter.mjs';
 import { getElementMainPainter, getElementCanvPainter, cleanup, ObjectPainter } from '../base/ObjectPainter.mjs';
 import { createMenu } from './menu.mjs';
 import { getDrawSettings, getDrawHandle, canDrawHandle, addDrawFunc, draw, redraw } from '../draw.mjs';
 import { BatchDisplay, GridDisplay, TabsDisplay, FlexibleDisplay, BrowserLayout, getHPainter, setHPainter } from './display.mjs';
-import { showProgress, ToolbarIcons, registerForResize, injectStyle } from './utils.mjs';
+import { showProgress, ToolbarIcons, registerForResize, injectStyle, saveFile } from './utils.mjs';
 
 
 const kTopFolder = 'TopFolder';
@@ -677,7 +677,6 @@ function parseAsArray(val) {
          case '"': ndouble++; break;
          case '[': nbr++; break;
          case ']': if (indx < val.length - 1) { nbr--; break; }
-         // eslint-disable-next-line no-fallthrough
          case ',':
             if (nbr === 0) {
                let sub = val.substring(last, indx).trim();
@@ -1412,6 +1411,12 @@ class HierarchyPainter extends BasePainter {
       d3btns.append('a').attr('class', 'h_button').text('collapse all')
             .attr('title', 'collapse all items in the browser').on('click', () => this.toggleOpenState(false));
 
+      if (isFunc(this.storeAsJson)) {
+         d3btns.append('text').text(' | ');
+         d3btns.append('a').attr('class', 'h_button').text('json')
+               .attr('title', 'dump to json file').on('click', () => this.storeAsJson());
+      }
+
       if (isFunc(this.removeInspector)) {
          d3btns.append('text').text(' | ');
          d3btns.append('a').attr('class', 'h_button').text('remove')
@@ -2127,7 +2132,7 @@ class HierarchyPainter extends BasePainter {
 
    /** @summary Enable drag of the element
      * @private  */
-   enableDrag(d3elem /*, itemname */) {
+   enableDrag(d3elem /* , itemname */) {
       d3elem.attr('draggable', 'true').on('dragstart', function(ev) {
          const itemname = this.parentNode.parentNode.getAttribute('item');
          ev.dataTransfer.setData('item', itemname);
@@ -2464,7 +2469,10 @@ class HierarchyPainter extends BasePainter {
             }
          }
 
-         return Promise.all(promises);
+         return Promise.all(promises).then(() => {
+            if (mdi?.createFinalBatchFrame && isBatchMode() && !isNodeJs())
+               mdi.createFinalBatchFrame();
+         });
       });
    }
 
@@ -2794,7 +2802,7 @@ class HierarchyPainter extends BasePainter {
    async listServerDir(dirname) {
       return httpRequest(dirname, 'text').then(res => {
          if (!res) return false;
-         const h = { _name: 'Files', _kind: kTopFolder, _childs: [], _isopen: true };
+         const h = { _name: 'Files', _kind: kTopFolder, _childs: [], _isopen: true }, fmap = {};
          let p = 0;
          while (p < res.length) {
             p = res.indexOf('a href="', p+1);
@@ -2805,6 +2813,10 @@ class HierarchyPainter extends BasePainter {
 
             const fname = res.slice(p, p2);
             p = p2 + 1;
+
+            if (fmap[fname]) continue;
+            fmap[fname] = true;
+
             if ((fname.lastIndexOf('.root') === fname.length - 5) && (fname.length > 5)) {
                h._childs.push({
                   _name: fname, _title: dirname + fname, _url: dirname + fname, _kind: kindTFile,
@@ -3310,7 +3322,9 @@ class HierarchyPainter extends BasePainter {
       if (!document.getElementById(this.disp_frameid))
          return null;
 
-      if ((this.disp_kind.indexOf('flex') === 0) || (this.disp_kind.indexOf('coll') === 0))
+      if (isBatchMode())
+         this.disp = new BatchDisplay(settings.CanvasWidth, settings.CanvasHeight);
+      else if ((this.disp_kind.indexOf('flex') === 0) || (this.disp_kind.indexOf('coll') === 0))
          this.disp = new FlexibleDisplay(this.disp_frameid);
       else if (this.disp_kind === 'tabs')
          this.disp = new TabsDisplay(this.disp_frameid);
@@ -3358,7 +3372,7 @@ class HierarchyPainter extends BasePainter {
          obj = obj[handle?.draw_field];
 
       let isany = false;
-      mdi.forEachPainter((p /*, frame */) => {
+      mdi.forEachPainter((p /* , frame */) => {
          if ((p === painter) || (p.getItemName() !== painter.getItemName())) return;
 
          // do not activate frame when doing update
@@ -3379,6 +3393,9 @@ class HierarchyPainter extends BasePainter {
    async loadScripts(scripts, modules, use_inject) {
       if (!scripts?.length && !modules?.length)
          return true;
+
+      if (use_inject && scripts.indexOf('.mjs') > 0)
+         return loadModules(scripts.split(';'));
 
       if (use_inject && !globalThis.JSROOT) {
          globalThis.JSROOT = {
@@ -3479,7 +3496,6 @@ class HierarchyPainter extends BasePainter {
           browser_kind = getOption('browser'),
           browser_configured = !!browser_kind;
 
-
       if (monitor === null)
          monitor = 0;
       else if (monitor === '')
@@ -3506,16 +3522,18 @@ class HierarchyPainter extends BasePainter {
       if (title && (typeof document !== 'undefined'))
          document.title = title;
 
-      if (expanditems.length === 0 && (getOption('expand') === '')) expanditems.push('');
+      if (expanditems.length === 0 && (getOption('expand') === ''))
+         expanditems.push('');
 
       if (filesdir) {
-         for (let i = 0; i < filesarr.length; ++i) filesarr[i] = filesdir + filesarr[i];
-         for (let i = 0; i < jsonarr.length; ++i) jsonarr[i] = filesdir + jsonarr[i];
+         for (let i = 0; i < filesarr.length; ++i)
+            filesarr[i] = filesdir + filesarr[i];
+         for (let i = 0; i < jsonarr.length; ++i)
+            jsonarr[i] = filesdir + jsonarr[i];
       }
 
-      if ((itemsarr.length === 0) && getOption('item') === '') itemsarr.push('');
-
-      if ((jsonarr.length === 1) && (itemsarr.length === 0) && (expanditems.length === 0)) itemsarr.push('');
+      if ((itemsarr.length === 0) && ((getOption('item') === '') || ((jsonarr.length === 1) && (expanditems.length === 0))))
+         itemsarr.push('');
 
       if (!this.disp_kind) {
          if (isStr(layout) && layout)
@@ -3555,7 +3573,8 @@ class HierarchyPainter extends BasePainter {
       if (getOption('nofloat') !== null)
          this.float_browser_disabled = true;
 
-      if (this.start_without_browser) browser_kind = '';
+      if (this.start_without_browser)
+         browser_kind = '';
 
       this._topname = getOption('topname');
 
@@ -3892,7 +3911,6 @@ class HierarchyPainter extends BasePainter {
 } // class HierarchyPainter
 
 
-
 /** @summary Show object in inspector for provided object
   * @protected */
 ObjectPainter.prototype.showInspector = function(opt, obj) {
@@ -3972,6 +3990,14 @@ async function drawInspector(dom, obj, opt) {
       painter.removeInspector = function() {
          this.selectDom().remove();
       };
+
+      if (!browser.qt5 && !browser.qt6 && !browser.cef3) {
+         painter.storeAsJson = function() {
+            const json = toJSON(obj, 2),
+                  fname = obj.fName || 'file';
+            saveFile(`${fname}.json`, prJSON + encodeURIComponent(json));
+         };
+      }
    }
 
    painter.fill_context = function(menu, hitem) {
@@ -4003,6 +4029,5 @@ async function drawInspector(dom, obj, opt) {
 
 internals.drawInspector = drawInspector;
 
-export { getHPainter, HierarchyPainter,
-         drawInspector, drawStreamerInfo, drawList, markAsStreamerInfo,
+export { HierarchyPainter, drawInspector, drawStreamerInfo, drawList, markAsStreamerInfo,
          folderHierarchy, taskHierarchy, listHierarchy, objectHierarchy, keysHierarchy };

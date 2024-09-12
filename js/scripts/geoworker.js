@@ -1,8 +1,8 @@
 
 let THREE,  ClonedNodes, createFrustum;
 
-import('../modules/three.mjs').then(handle => {
-   THREE = handle;
+import('../modules/base/base3d.mjs').then(handle => {
+   THREE = handle.THREE;
    if (console) console.log(`geoworker started three.js r${THREE.REVISION}`);
 });
 

@@ -1,12 +1,7 @@
-import { DoubleSide, FrontSide, Object3D, Box3, Mesh, InstancedMesh, Vector2, Vector3, Matrix4,
-         MeshLambertMaterial, MeshBasicMaterial, MeshStandardMaterial, MeshNormalMaterial,
-         MeshPhysicalMaterial, MeshPhongMaterial, MeshDepthMaterial, MeshMatcapMaterial, MeshToonMaterial,
-         Color, PerspectiveCamera, Frustum, Raycaster,
-         ShapeUtils, BufferGeometry, BufferAttribute } from '../three.mjs';
 import { isObject, isFunc, BIT } from '../core.mjs';
+import { THREE } from '../base/base3d.mjs';
 import { createBufferGeometry, createNormal,
          Vertex as CsgVertex, Geometry as CsgGeometry, Polygon as CsgPolygon } from './csg.mjs';
-
 
 const cfg = {
    GradPerSegm: 6,       // grad per segment in cylinder/spherical symmetry shapes
@@ -171,11 +166,11 @@ function checkDuplicates(parent, chlds) {
 /** @summary Create normal to plane, defined with three points
   * @private */
 function produceNormal(x1, y1, z1, x2, y2, z2, x3, y3, z3) {
-   const pA = new Vector3(x1, y1, z1),
-       pB = new Vector3(x2, y2, z2),
-       pC = new Vector3(x3, y3, z3),
-       cb = new Vector3(),
-       ab = new Vector3();
+   const pA = new THREE.Vector3(x1, y1, z1),
+         pB = new THREE.Vector3(x2, y2, z2),
+         pC = new THREE.Vector3(x3, y3, z3),
+         cb = new THREE.Vector3(),
+         ab = new THREE.Vector3();
 
    cb.subVectors(pC, pB);
    ab.subVectors(pA, pB);
@@ -314,11 +309,11 @@ class GeometryCreator {
    /** @summary Calculate normal */
    calcNormal() {
       if (!this.cb) {
-         this.pA = new Vector3();
-         this.pB = new Vector3();
-         this.pC = new Vector3();
-         this.cb = new Vector3();
-         this.ab = new Vector3();
+         this.pA = new THREE.Vector3();
+         this.pB = new THREE.Vector3();
+         this.pC = new THREE.Vector3();
+         this.cb = new THREE.Vector3();
+         this.ab = new THREE.Vector3();
       }
 
       this.pA.fromArray(this.pos, this.indx - 9);
@@ -388,9 +383,9 @@ class GeometryCreator {
       if (this.nfaces !== this.indx/9)
          console.error(`Mismatch with created ${this.nfaces} and filled ${this.indx/9} number of faces`);
 
-      const geometry = new BufferGeometry();
-      geometry.setAttribute('position', new BufferAttribute(this.pos, 3));
-      geometry.setAttribute('normal', new BufferAttribute(this.norm, 3));
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute('position', new THREE.BufferAttribute(this.pos, 3));
+      geometry.setAttribute('normal', new THREE.BufferAttribute(this.norm, 3));
       return geometry;
    }
 
@@ -511,11 +506,11 @@ class PolygonsCreator {
    /** @summary Calculate normal */
    calcNormal() {
       if (!this.cb) {
-         this.pA = new Vector3();
-         this.pB = new Vector3();
-         this.pC = new Vector3();
-         this.cb = new Vector3();
-         this.ab = new Vector3();
+         this.pA = new THREE.Vector3();
+         this.pB = new THREE.Vector3();
+         this.pC = new THREE.Vector3();
+         this.cb = new THREE.Vector3();
+         this.ab = new THREE.Vector3();
       }
 
       this.pA.set(this.v1.x, this.v1.y, this.v1.z);
@@ -718,9 +713,9 @@ function createArb8Buffer(shape, faces_limit) {
       if ((i1 >= 0) && (i4 >= 0) && faces_limit) {
          // try to identify two faces with same normal - very useful if one can create face4
          if (n === 0)
-            norm = new Vector3(0, 0, 1);
+            norm = new THREE.Vector3(0, 0, 1);
          else if (n === 30)
-            norm = new Vector3(0, 0, -1);
+            norm = new THREE.Vector3(0, 0, -1);
          else {
             const norm1 = produceNormal(vertices[i1], vertices[i1+1], vertices[i1+2],
                                       vertices[i2], vertices[i2+1], vertices[i2+2],
@@ -1107,9 +1102,9 @@ function createTorusBuffer(shape, faces_limit) {
 
    const creator = faces_limit ? new PolygonsCreator() : new GeometryCreator(numfaces),
          // use vectors for normals calculation
-         p1 = new Vector3(), p2 = new Vector3(), p3 = new Vector3(), p4 = new Vector3(),
-         n1 = new Vector3(), n2 = new Vector3(), n3 = new Vector3(), n4 = new Vector3(),
-         center1 = new Vector3(), center2 = new Vector3();
+         p1 = new THREE.Vector3(), p2 = new THREE.Vector3(), p3 = new THREE.Vector3(), p4 = new THREE.Vector3(),
+         n1 = new THREE.Vector3(), n2 = new THREE.Vector3(), n3 = new THREE.Vector3(), n4 = new THREE.Vector3(),
+         center1 = new THREE.Vector3(), center2 = new THREE.Vector3();
 
    for (let side = 0; side < 2; ++side) {
       if ((side > 0) && (shape.fRmin <= 0)) break;
@@ -1219,9 +1214,9 @@ function createPolygonBuffer(shape, faces_limit) {
 
          if (pnts !== null) {
             if (side === 0)
-               pnts.push(new Vector2(factor*rad, layerz));
+               pnts.push(new THREE.Vector2(factor*rad, layerz));
              else if (rad < shape.fRmax[layer])
-               pnts.unshift(new Vector2(factor*rad, layerz));
+               pnts.unshift(new THREE.Vector2(factor*rad, layerz));
          }
       }
    }
@@ -1245,7 +1240,7 @@ function createPolygonBuffer(shape, faces_limit) {
       } else {
          // let three.js calculate our faces
          // console.log(`triangulate polygon ${shape.fShapeId}`);
-         cut_faces = ShapeUtils.triangulateShape(pnts, []);
+         cut_faces = THREE.ShapeUtils.triangulateShape(pnts, []);
       }
       numfaces += cut_faces.length*2;
    }
@@ -1343,14 +1338,15 @@ function createPolygonBuffer(shape, faces_limit) {
 function createXtruBuffer(shape, faces_limit) {
    let nfaces = (shape.fNz-1) * shape.fNvert * 2;
 
-   if (faces_limit < 0) return nfaces + shape.fNvert*3;
+   if (faces_limit < 0)
+      return nfaces + shape.fNvert*3;
 
    // create points
    const pnts = [];
    for (let vert = 0; vert < shape.fNvert; ++vert)
-      pnts.push(new Vector2(shape.fX[vert], shape.fY[vert]));
+      pnts.push(new THREE.Vector2(shape.fX[vert], shape.fY[vert]));
 
-   let faces = ShapeUtils.triangulateShape(pnts, []);
+   let faces = THREE.ShapeUtils.triangulateShape(pnts, []);
    if (faces.length < pnts.length-2) {
       geoWarn(`Problem with XTRU shape ${shape.fName} with ${pnts.length} vertices`);
       faces = [];
@@ -1602,7 +1598,6 @@ function createMatrix(matrix) {
       case 'TGeoScale': scale = matrix.fScale; break;
       case 'TGeoGenTrans':
          scale = matrix.fScale; // no break, translation and rotation follows
-      // eslint-disable-next-line no-fallthrough
       case 'TGeoCombiTrans':
          translation = matrix.fTranslation;
          if (matrix.fRotation) rotation = matrix.fRotation.fRotationMatrix;
@@ -1620,7 +1615,7 @@ function createMatrix(matrix) {
 
    if (!translation && !rotation && !scale) return null;
 
-   const res = new Matrix4();
+   const res = new THREE.Matrix4();
 
    if (rotation) {
       res.set(rotation[0], rotation[1], rotation[2], 0,
@@ -1633,7 +1628,7 @@ function createMatrix(matrix) {
       res.setPosition(translation[0], translation[1], translation[2]);
 
    if (scale)
-      res.scale(new Vector3(scale[0], scale[1], scale[2]));
+      res.scale(new THREE.Vector3(scale[0], scale[1], scale[2]));
 
    return res;
 }
@@ -1647,7 +1642,7 @@ function getNodeMatrix(kind, node) {
    if (kind === kindEve) {
       // special handling for EVE nodes
 
-      matrix = new Matrix4();
+      matrix = new THREE.Matrix4();
 
       if (node.fTrans) {
          matrix.set(node.fTrans[0], node.fTrans[4], node.fTrans[8], 0,
@@ -1678,7 +1673,7 @@ function getNodeMatrix(kind, node) {
         case 'TGeoPatternParaZ': {
            const _shift = node.fFinder.fStart + (node.fIndex + 0.5) * node.fFinder.fStep;
 
-           matrix = new Matrix4();
+           matrix = new THREE.Matrix4();
 
            switch (node.fFinder._typename[node.fFinder._typename.length-1]) {
               case 'X': matrix.setPosition(_shift, 0, 0); break;
@@ -1692,7 +1687,7 @@ function getNodeMatrix(kind, node) {
            const phi = (Math.PI/180)*(node.fFinder.fStart+(node.fIndex+0.5)*node.fFinder.fStep),
                _cos = Math.cos(phi), _sin = Math.sin(phi);
 
-           matrix = new Matrix4();
+           matrix = new THREE.Matrix4();
 
            matrix.set(_cos, -_sin, 0, 0,
                       _sin, _cos, 0, 0,
@@ -1703,12 +1698,12 @@ function getNodeMatrix(kind, node) {
 
         case 'TGeoPatternCylR':
             // seems to be, require no transformation
-            matrix = new Matrix4();
+            matrix = new THREE.Matrix4();
             break;
 
         case 'TGeoPatternTrapZ': {
            const dz = node.fFinder.fStart + (node.fIndex+0.5)*node.fFinder.fStep;
-           matrix = new Matrix4();
+           matrix = new THREE.Matrix4();
            matrix.setPosition(node.fFinder.fTxz*dz, node.fFinder.fTyz*dz, dz);
            break;
         }
@@ -1768,7 +1763,7 @@ function geomBoundingBox(geom) {
       polygons = geom.polygons;
 
    if (polygons !== null) {
-      const box = new Box3();
+      const box = new THREE.Box3();
       for (let n = 0; n < polygons.length; ++n) {
          const polygon = polygons[n], nvert = polygon.vertices.length;
          for (let k = 0; k < nvert; ++k)
@@ -1789,8 +1784,8 @@ function geomBoundingBox(geom) {
 function createHalfSpace(shape, geom) {
    if (!shape?.fN || !shape?.fP) return null;
 
-   const vertex = new Vector3(shape.fP[0], shape.fP[1], shape.fP[2]),
-       normal = new Vector3(shape.fN[0], shape.fN[1], shape.fN[2]);
+   const vertex = new THREE.Vector3(shape.fP[0], shape.fP[1], shape.fP[2]),
+         normal = new THREE.Vector3(shape.fN[0], shape.fN[1], shape.fN[2]);
 
    normal.normalize();
 
@@ -1798,19 +1793,19 @@ function createHalfSpace(shape, geom) {
    if (geom) {
       // using real size of other geometry, we probably improve precision
       const box = geomBoundingBox(geom);
-      if (box) sz = box.getSize(new Vector3()).length() * 1000;
+      if (box) sz = box.getSize(new THREE.Vector3()).length() * 1000;
    }
 
-   const v0 = new Vector3(-sz, -sz/2, 0),
-       v1 = new Vector3(0, sz, 0),
-       v2 = new Vector3(sz, -sz/2, 0),
-       v3 = new Vector3(0, 0, -sz),
-       geometry = new BufferGeometry(),
-       positions = new Float32Array([v0.x, v0.y, v0.z, v2.x, v2.y, v2.z, v1.x, v1.y, v1.z,
+   const v0 = new THREE.Vector3(-sz, -sz/2, 0),
+         v1 = new THREE.Vector3(0, sz, 0),
+         v2 = new THREE.Vector3(sz, -sz/2, 0),
+         v3 = new THREE.Vector3(0, 0, -sz),
+         geometry = new THREE.BufferGeometry(),
+         positions = new Float32Array([v0.x, v0.y, v0.z, v2.x, v2.y, v2.z, v1.x, v1.y, v1.z,
                                       v0.x, v0.y, v0.z, v1.x, v1.y, v1.z, v3.x, v3.y, v3.z,
                                       v1.x, v1.y, v1.z, v2.x, v2.y, v2.z, v3.x, v3.y, v3.z,
                                       v2.x, v2.y, v2.z, v0.x, v0.y, v0.z, v3.x, v3.y, v3.z]);
-   geometry.setAttribute('position', new BufferAttribute(positions, 3));
+   geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
    geometry.computeVertexNormals();
 
    geometry.lookAt(normal);
@@ -1996,8 +1991,7 @@ function createGeometry(shape, limit) {
          }
          case clTGeoHalfSpace:
             if (limit < 0) return 1; // half space if just plane used in composite
-            // no break here - warning should appear
-         // eslint-disable-next-line no-fallthrough
+            // no break here - warning may appear
          default:
             geoWarn(`unsupported shape type ${shape._typename}`);
       }
@@ -2049,9 +2043,9 @@ function makeEveGeometry(rd) {
    if (rd.idxBuff.length !== nVert)
       throw Error('Expect single list of triangles in index buffer.');
 
-   const body = new BufferGeometry();
-   body.setAttribute('position', new BufferAttribute(rd.vtxBuff, 3));
-   body.setIndex(new BufferAttribute(rd.idxBuff, 1));
+   const body = new THREE.BufferGeometry();
+   body.setAttribute('position', new THREE.BufferAttribute(rd.vtxBuff, 3));
+   body.setIndex(new THREE.BufferAttribute(rd.idxBuff, 1));
    body.computeVertexNormals();
 
    return body;
@@ -2062,9 +2056,9 @@ function makeEveGeometry(rd) {
 function makeViewerGeometry(rd) {
    const vtxBuff = new Float32Array(rd.raw.buffer, 0, rd.raw.buffer.byteLength/4),
 
-    body = new BufferGeometry();
-   body.setAttribute('position', new BufferAttribute(vtxBuff, 3));
-   body.setIndex(new BufferAttribute(new Uint32Array(rd.idx), 1));
+   body = new THREE.BufferGeometry();
+   body.setAttribute('position', new THREE.BufferAttribute(vtxBuff, 3));
+   body.setIndex(new THREE.BufferAttribute(new Uint32Array(rd.idx), 1));
    body.computeVertexNormals();
    return body;
 }
@@ -2138,7 +2132,6 @@ function provideObjectInfo(obj) {
       case clTGeoBBox: break;
       case clTGeoPara: info.push(`Alpha=${shape.fAlpha} Phi=${shape.fPhi} Theta=${shape.fTheta}`); break;
       case clTGeoTrd2: info.push(`Dy1=${conv(shape.fDy1)} Dy2=${conv(shape.fDy1)}`); // no break
-      // eslint-disable-next-line no-fallthrough
       case clTGeoTrd1: info.push(`Dx1=${conv(shape.fDx1)} Dx2=${conv(shape.fDx1)}`); break;
       case clTGeoArb8: break;
       case clTGeoTrap: break;
@@ -2150,8 +2143,7 @@ function provideObjectInfo(obj) {
          break;
       case clTGeoConeSeg:
          info.push(`Phi1=${shape.fPhi1} Phi2=${shape.fPhi2}`);
-         // no break;
-      // eslint-disable-next-line no-fallthrough
+         // intentional no break;
       case clTGeoCone:
          info.push(`Rmin1=${conv(shape.fRmin1)} Rmax1=${conv(shape.fRmax1)}`,
                    `Rmin2=${conv(shape.fRmin2)} Rmax2=${conv(shape.fRmax2)}`);
@@ -2159,8 +2151,7 @@ function provideObjectInfo(obj) {
       case clTGeoCtub:
       case clTGeoTubeSeg:
          info.push(`Phi1=${shape.fPhi1} Phi2=${shape.fPhi2}`);
-         // no break
-      // eslint-disable-next-line no-fallthrough
+         // intentional no break
       case clTGeoEltu:
       case clTGeoTube:
          info.push(`Rmin=${conv(shape.fRmin)} Rmax=${conv(shape.fRmax)}`);
@@ -2195,7 +2186,7 @@ function provideObjectInfo(obj) {
 /** @summary Creates projection matrix for the camera
   * @private */
 function createProjectionMatrix(camera) {
-   const cameraProjectionMatrix = new Matrix4();
+   const cameraProjectionMatrix = new THREE.Matrix4();
 
    camera.updateMatrixWorld();
 
@@ -2210,10 +2201,10 @@ function createProjectionMatrix(camera) {
 function createFrustum(source) {
    if (!source) return null;
 
-   if (source instanceof PerspectiveCamera)
+   if (source instanceof THREE.PerspectiveCamera)
       source = createProjectionMatrix(source);
 
-   const frustum = new Frustum();
+   const frustum = new THREE.Frustum();
    frustum.setFromProjectionMatrix(source);
 
    frustum.corners = new Float32Array([
@@ -2228,7 +2219,7 @@ function createFrustum(source) {
        0, 0, 0 // also check center of the shape
    ]);
 
-   frustum.test = new Vector3(0, 0, 0);
+   frustum.test = new THREE.Vector3(0, 0, 0);
 
    frustum.CheckShape = function(matrix, shape) {
       const pnt = this.test, len = this.corners.length, corners = this.corners;
@@ -2283,41 +2274,41 @@ function createMaterial(cfg, args0) {
 
    args.wireframe = cfg.wireframe ?? false;
    if (!args.color) args.color = 'red';
-   args.side = FrontSide;
+   args.side = THREE.FrontSide;
    args.transparent = args.opacity < 1;
    args.depthWrite = args.opactity === 1;
 
    let material;
 
    if (cfg.material_kind === 'basic')
-      material = new MeshBasicMaterial(args);
+      material = new THREE.MeshBasicMaterial(args);
     else if (cfg.material_kind === 'depth') {
       delete args.color;
-      material = new MeshDepthMaterial(args);
+      material = new THREE.MeshDepthMaterial(args);
    } else if (cfg.material_kind === 'toon')
-      material = new MeshToonMaterial(args);
+      material = new THREE.MeshToonMaterial(args);
     else if (cfg.material_kind === 'matcap') {
       delete args.wireframe;
-      material = new MeshMatcapMaterial(args);
+      material = new THREE.MeshMatcapMaterial(args);
    } else if (cfg.material_kind === 'standard') {
       args.metalness = cfg.metalness ?? 0.5;
       args.roughness = cfg.roughness ?? 0.1;
-      material = new MeshStandardMaterial(args);
+      material = new THREE.MeshStandardMaterial(args);
    } else if (cfg.material_kind === 'normal') {
       delete args.color;
-      material = new MeshNormalMaterial(args);
+      material = new THREE.MeshNormalMaterial(args);
    } else if (cfg.material_kind === 'physical') {
       args.metalness = cfg.metalness ?? 0.5;
       args.roughness = cfg.roughness ?? 0.1;
       args.reflectivity = cfg.reflectivity ?? 0.5;
       args.emissive = args.color;
-      material = new MeshPhysicalMaterial(args);
+      material = new THREE.MeshPhysicalMaterial(args);
    } else if (cfg.material_kind === 'phong') {
       args.shininess = cfg.shininess ?? 0.9;
-      material = new MeshPhongMaterial(args);
+      material = new THREE.MeshPhongMaterial(args);
    } else {
       args.vertexColors = false;
-      material = new MeshLambertMaterial(args);
+      material = new THREE.MeshLambertMaterial(args);
    }
 
    if ((material.flatShading !== undefined) && (cfg.flatShading !== undefined))
@@ -2786,7 +2777,7 @@ class ClonedNodes {
 
          if (arg.domatrix) {
             arg.matrices = [];
-            arg.mpool = [new Matrix4()]; // pool of Matrix objects to avoid permanent creation
+            arg.mpool = [new THREE.Matrix4()]; // pool of Matrix objects to avoid permanent creation
             arg.getmatrix = function() { return this.matrices[this.last]; };
          }
 
@@ -2813,9 +2804,9 @@ class ClonedNodes {
 
       if (arg.domatrix) {
          if (!arg.mpool[arg.last+1])
-            arg.mpool[arg.last+1] = new Matrix4();
+            arg.mpool[arg.last+1] = new THREE.Matrix4();
 
-         const prnt = (arg.last > 0) ? arg.matrices[arg.last-1] : new Matrix4();
+         const prnt = (arg.last > 0) ? arg.matrices[arg.last-1] : new THREE.Matrix4();
          if (node.matrix) {
             arg.matrices[arg.last] = arg.mpool[arg.last].fromArray(prnt.elements);
             arg.matrices[arg.last].multiply(arg.mpool[arg.last+1].fromArray(node.matrix));
@@ -2893,7 +2884,7 @@ class ClonedNodes {
       // if (!this.toplevel || (this.nodes.length === 1) || (res.node.kind === 1)) res.name = '';
 
       if (withmatrix) {
-         res.matrix = new Matrix4();
+         res.matrix = new THREE.Matrix4();
          if (res.node.matrix) res.matrix.fromArray(res.node.matrix);
       }
 
@@ -2918,7 +2909,7 @@ class ClonedNodes {
             }
 
             if (withmatrix && res.node.matrix)
-               res.matrix.multiply(new Matrix4().fromArray(res.node.matrix));
+               res.matrix.multiply(new THREE.Matrix4().fromArray(res.node.matrix));
          }
       }
 
@@ -3066,7 +3057,7 @@ class ClonedNodes {
       if (clone.kind === kindShape) {
          const prop = { name: clone.name, nname: clone.name, shape: null, material: null, chlds: null },
              opacity = entry.opacity || 1, col = entry.color || '#0000FF';
-         prop.fillcolor = new Color(col[0] === '#' ? col : `rgb(${col})`);
+         prop.fillcolor = new THREE.Color(col[0] === '#' ? col : `rgb(${col})`);
          prop.material = createMaterial(this._cfg, { opacity, color: prop.fillcolor });
          return prop;
       }
@@ -3087,7 +3078,7 @@ class ClonedNodes {
 
          if (visible) {
             const opacity = Math.min(1, node.fRGBA[3]);
-            prop.fillcolor = new Color(node.fRGBA[0], node.fRGBA[1], node.fRGBA[2]);
+            prop.fillcolor = new THREE.Color(node.fRGBA[0], node.fRGBA[1], node.fRGBA[2]);
             prop.material = createMaterial(this._cfg, { opacity, color: prop.fillcolor });
          }
 
@@ -3173,7 +3164,7 @@ class ClonedNodes {
 
          if (!force) return null;
 
-         obj3d = new Object3D();
+         obj3d = new THREE.Object3D();
 
          if (this._cfg?.set_names)
             obj3d.name = this.getNodeName(node.id);
@@ -3182,7 +3173,7 @@ class ClonedNodes {
             obj3d.userData = this.origin[node.id];
 
          if (node.abs_matrix) {
-            obj3d.absMatrix = new Matrix4();
+            obj3d.absMatrix = new THREE.Matrix4();
             obj3d.absMatrix.fromArray(node.matrix);
          } else if (node.matrix) {
             obj3d.matrix.fromArray(node.matrix);
@@ -3257,11 +3248,11 @@ class ClonedNodes {
 
       prop.material.wireframe = ctrl.wireframe;
 
-      prop.material.side = ctrl.doubleside ? DoubleSide : FrontSide;
+      prop.material.side = ctrl.doubleside ? THREE.DoubleSide : THREE.FrontSide;
 
       let mesh;
       if (matrix.determinant() > -0.9)
-         mesh = new Mesh(shape.geom, prop.material);
+         mesh = new THREE.Mesh(shape.geom, prop.material);
        else
          mesh = createFlippedMesh(shape, prop.material);
 
@@ -3311,7 +3302,7 @@ class ClonedNodes {
          const entry = draw_nodes[n];
          if (entry.done) continue;
 
-         /// shape can be provided with entry itself
+         // shape can be provided with entry itself
          const shape = entry.server_shape || build_shapes[entry.shapeid];
          if (!shape || !shape.ready) {
             console.warn(`Problem with shape id ${entry.shapeid} when building`);
@@ -3351,7 +3342,7 @@ class ClonedNodes {
 
             prop.material.wireframe = ctrl.wireframe;
 
-            prop.material.side = ctrl.doubleside ? DoubleSide : FrontSide;
+            prop.material.side = ctrl.doubleside ? THREE.DoubleSide : THREE.FrontSide;
 
             if (instance.entries.length === 1)
                this.createEntryMesh(ctrl, toplevel, entry0, shape, colors);
@@ -3373,7 +3364,7 @@ class ClonedNodes {
                });
 
                if (arr1.length > 0) {
-                  const mesh1 = new InstancedMesh(shape.geom, prop.material, arr1.length);
+                  const mesh1 = new THREE.InstancedMesh(shape.geom, prop.material, arr1.length);
 
                   mesh1.stacks = stacks1;
                   arr1.forEach((matrix, i) => mesh1.setMatrixAt(i, matrix));
@@ -3399,10 +3390,10 @@ class ClonedNodes {
                   if (shape.geomZ === undefined)
                      shape.geomZ = createFlippedGeom(shape.geom);
 
-                  const mesh2 = new InstancedMesh(shape.geomZ, prop.material, arr2.length);
+                  const mesh2 = new THREE.InstancedMesh(shape.geomZ, prop.material, arr2.length);
 
                   mesh2.stacks = stacks2;
-                  const m = new Matrix4().makeScale(1, 1, -1);
+                  const m = new THREE.Matrix4().makeScale(1, 1, -1);
                   arr2.forEach((matrix, i) => {
                      mesh2.setMatrixAt(i, matrix.multiply(m));
                   });
@@ -3810,9 +3801,9 @@ function createFlippedGeom(geom) {
       shift+=3; if (shift===6) shift=-3; // values 0,3,-3
    }
 
-   const geomZ = new BufferGeometry();
-   geomZ.setAttribute('position', new BufferAttribute(newpos, 3));
-   geomZ.setAttribute('normal', new BufferAttribute(newnorm, 3));
+   const geomZ = new THREE.BufferGeometry();
+   geomZ.setAttribute('position', new THREE.BufferAttribute(newpos, 3));
+   geomZ.setAttribute('normal', new THREE.BufferAttribute(newnorm, 3));
 
    return geomZ;
 }
@@ -3828,8 +3819,8 @@ function createFlippedMesh(shape, material) {
    if (shape.geomZ === undefined)
       shape.geomZ = createFlippedGeom(shape.geom);
 
-   const mesh = new Mesh(shape.geomZ, material);
-   mesh.scale.copy(new Vector3(1, 1, -1));
+   const mesh = new THREE.Mesh(shape.geomZ, material);
+   mesh.scale.copy(new THREE.Vector3(1, 1, -1));
    mesh.updateMatrix();
 
    mesh._flippedMesh = true;
@@ -3843,10 +3834,10 @@ function createFlippedMesh(shape, material) {
 function getBoundingBox(node, box3, local_coordinates) {
    if (!node?.geometry) return box3;
 
-   if (!box3) box3 = new Box3().makeEmpty();
+   if (!box3) box3 = new THREE.Box3().makeEmpty();
 
    if (node.isInstancedMesh) {
-      const m = new Matrix4(), b = new Box3().makeEmpty();
+      const m = new THREE.Matrix4(), b = new THREE.Box3().makeEmpty();
 
       node.geometry.computeBoundingBox();
 
@@ -3860,7 +3851,7 @@ function getBoundingBox(node, box3, local_coordinates) {
 
    if (!local_coordinates) node.updateWorldMatrix(false, false);
 
-   const v1 = new Vector3(), attribute = node.geometry.attributes?.position;
+   const v1 = new THREE.Vector3(), attribute = node.geometry.attributes?.position;
 
    if (attribute !== undefined) {
       for (let i = 0, l = attribute.count; i < l; i++) {
@@ -3895,7 +3886,7 @@ function cleanupShape(shape) {
   * @param origin - camera position used to provide sorting
   * @param method - name of sorting method like 'pnt', 'ray', 'size', 'dflt'  */
 function produceRenderOrder(toplevel, origin, method, clones) {
-   const raycast = new Raycaster();
+   const raycast = new THREE.Raycaster();
 
    function setdefaults(top) {
       if (!top) return;
@@ -3937,7 +3928,7 @@ function produceRenderOrder(toplevel, origin, method, clones) {
          return false;
       }
 
-      const tmp_vect = new Vector3();
+      const tmp_vect = new THREE.Vector3();
 
       // first calculate distance to the camera
       // it gives preliminary order of volumes
@@ -3949,7 +3940,7 @@ function produceRenderOrder(toplevel, origin, method, clones) {
             mesh.$jsroot_box3 = box3 = getBoundingBox(mesh);
 
          if (method === 'size') {
-            const sz = box3.getSize(new Vector3());
+            const sz = box3.getSize(new THREE.Vector3());
             mesh.$jsroot_distance = sz.x*sz.y*sz.z;
             continue;
          }
@@ -3960,7 +3951,7 @@ function produceRenderOrder(toplevel, origin, method, clones) {
          }
 
          let dist = Math.min(origin.distanceTo(box3.min), origin.distanceTo(box3.max));
-         const pnt = new Vector3(box3.min.x, box3.min.y, box3.max.z);
+         const pnt = new THREE.Vector3(box3.min.x, box3.min.y, box3.max.z);
 
          dist = Math.min(dist, origin.distanceTo(pnt));
          pnt.set(box3.min.x, box3.max.y, box3.min.z);
@@ -4014,7 +4005,7 @@ function produceRenderOrder(toplevel, origin, method, clones) {
 
                const pos = mesh.geometry.attributes.position.array;
 
-               direction = new Vector3((pos[0]+pos[3]+pos[6])/3, (pos[1]+pos[4]+pos[7])/3, (pos[2]+pos[5]+pos[8])/3);
+               direction = new THREE.Vector3((pos[0]+pos[3]+pos[6])/3, (pos[1]+pos[4]+pos[7])/3, (pos[2]+pos[5]+pos[8])/3);
 
                direction.applyMatrix4(mesh.matrixWorld);
             }

@@ -1,5 +1,6 @@
 import { create, createHistogram, clTH1I, clTH2I, clTObjString, clTHashList, kNoZoom, kNoStats, BIT } from '../core.mjs';
-import { ObjectPainter, DrawOptions } from '../base/ObjectPainter.mjs';
+import { DrawOptions } from '../base/BasePainter.mjs';
+import { ObjectPainter } from '../base/ObjectPainter.mjs';
 import { FunctionsHandler } from './THistPainter.mjs';
 import { TH1Painter, PadDrawOptions } from './TH1Painter.mjs';
 import { TGraphPainter } from './TGraphPainter.mjs';
@@ -25,13 +26,13 @@ class TMultiGraphPainter extends ObjectPainter {
       this.painters = []; // keep painters to be able update objects
    }
 
-   /** @summary Cleanup multigraph painter */
+   /** @summary Cleanup TMultiGraph painter */
    cleanup() {
       this.painters = [];
       super.cleanup();
    }
 
-   /** @summary Update multigraph object */
+   /** @summary Update TMultiGraph object */
    updateObject(obj) {
       if (!this.matchObjectType(obj))
          return false;
@@ -62,7 +63,7 @@ class TMultiGraphPainter extends ObjectPainter {
       return isany;
    }
 
-   /** @summary Redraw multigraph
+   /** @summary Redraw TMultiGraph
      * @desc may redraw histogram which was used to draw axes
      * @return {Promise} for ready */
     async redraw(reason) {
@@ -92,11 +93,6 @@ class TMultiGraphPainter extends ObjectPainter {
       if (pad) {
          logx = pad.fLogx;
          logy = pad.fLogv ?? pad.fLogy;
-         // rw.xmin = pad.fUxmin;
-         // rw.xmax = pad.fUxmax;
-         // rw.ymin = pad.fUymin;
-         // rw.ymax = pad.fUymax;
-         // rw.first = false;
       }
 
       // ignore existing histogram in 3d case
@@ -235,7 +231,7 @@ class TMultiGraphPainter extends ObjectPainter {
    }
 
    /** @summary Draw graph  */
-   async drawGraph(dom, gr, opt /*, pos3d */) {
+   async drawGraph(dom, gr, opt /* , pos3d */) {
       return TGraphPainter.draw(dom, gr, opt);
    }
 
@@ -283,12 +279,12 @@ class TMultiGraphPainter extends ObjectPainter {
       });
    }
 
-   /** @summary Fill multigraph context menu */
+   /** @summary Fill TMultiGraph context menu */
    fillContextMenuItems(menu) {
       menu.addRedrawMenu(this);
    }
 
-   /** @summary Redraw multigraph object using provided option
+   /** @summary Redraw TMultiGraph object using provided option
      * @private */
    async redrawWith(opt, skip_cleanup) {
       if (!skip_cleanup) {

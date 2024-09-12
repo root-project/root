@@ -1,6 +1,6 @@
-/// CSG library for THREE.js
+// CSG library for THREE.js
 
-import { BufferGeometry, BufferAttribute, Mesh } from '../three.mjs';
+import { THREE } from '../base/base3d.mjs';
 
 const EPSILON = 1e-5,
       COPLANAR = 0,
@@ -195,7 +195,7 @@ class Polygon {
    }
 
    flip() {
-      /// normal is not changed, only sign variable
+      // normal is not changed, only sign variable
       // this.normal.multiplyScalar( -1 );
       // this.w *= -1;
 
@@ -453,9 +453,9 @@ function createBufferGeometry(polygons) {
       }
    }
 
-   const geometry = new BufferGeometry();
-   geometry.setAttribute('position', new BufferAttribute(positions_buf, 3));
-   geometry.setAttribute('normal', new BufferAttribute(normals_buf, 3));
+   const geometry = new THREE.BufferGeometry();
+   geometry.setAttribute('position', new THREE.BufferAttribute(positions_buf, 3));
+   geometry.setAttribute('normal', new THREE.BufferAttribute(normals_buf, 3));
 
    // geometry.computeVertexNormals();
    return geometry;
@@ -467,7 +467,7 @@ class Geometry {
    constructor(geometry, transfer_matrix, nodeid, flippedMesh) {
       // Convert BufferGeometry to ThreeBSP
 
-      if (geometry instanceof Mesh) {
+      if (geometry instanceof THREE.Mesh) {
          // #todo: add hierarchy support
          geometry.updateMatrix();
          transfer_matrix = this.matrix = geometry.matrix.clone();
@@ -476,7 +476,7 @@ class Geometry {
          this.tree = geometry;
          this.matrix = null; // new Matrix4;
          return this;
-      } else if (geometry instanceof BufferGeometry) {
+      } else if (geometry instanceof THREE.BufferGeometry) {
          const pos_buf = geometry.getAttribute('position').array,
                norm_buf = geometry.getAttribute('normal').array,
                polygons = [];
@@ -541,21 +541,21 @@ class Geometry {
 
          vertex = geometry.vertices[face.a];
          if (useVertexNormals) normal = face.vertexNormals[0];
-         // uvs = faceVertexUvs ? new Vector2( faceVertexUvs[0].x, faceVertexUvs[0].y ) : null;
+         // uvs = faceVertexUvs ? new THREE.Vector2( faceVertexUvs[0].x, faceVertexUvs[0].y ) : null;
          vertex = new Vertex(vertex.x, vertex.y, vertex.z, normal.x, normal.y, normal.z /* face.normal, uvs */);
          if (transfer_matrix) vertex.applyMatrix4(transfer_matrix);
          polygon.vertices.push(vertex);
 
          vertex = geometry.vertices[face.b];
          if (useVertexNormals) normal = face.vertexNormals[1];
-         // uvs = faceVertexUvs ? new Vector2( faceVertexUvs[1].x, faceVertexUvs[1].y ) : null;
+         // uvs = faceVertexUvs ? new THREE.Vector2( faceVertexUvs[1].x, faceVertexUvs[1].y ) : null;
          vertex = new Vertex(vertex.x, vertex.y, vertex.z, normal.x, normal.y, normal.z /* face.normal, uvs */);
          if (transfer_matrix) vertex.applyMatrix4(transfer_matrix);
          polygon.vertices.push(vertex);
 
          vertex = geometry.vertices[face.c];
          if (useVertexNormals) normal = face.vertexNormals[2];
-         // uvs = faceVertexUvs ? new Vector2( faceVertexUvs[2].x, faceVertexUvs[2].y ) : null;
+         // uvs = faceVertexUvs ? new THREE.Vector2( faceVertexUvs[2].x, faceVertexUvs[2].y ) : null;
          vertex = new Vertex(vertex.x, vertex.y, vertex.z, normal.x, normal.y, normal.z /* face.normal, uvs */);
          if (transfer_matrix) vertex.applyMatrix4(transfer_matrix);
          polygon.vertices.push(vertex);
@@ -765,7 +765,7 @@ class Geometry {
 
    toMesh(material) {
       const geometry = this.toBufferGeometry(),
-            mesh = new Mesh(geometry, material);
+            mesh = new THREE.Mesh(geometry, material);
 
       if (this.matrix) {
          mesh.position.setFromMatrixPosition(this.matrix);
