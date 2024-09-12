@@ -118,6 +118,15 @@ namespace cling {
     llvm::LineEditor LE("cling", histfilePath);
     std::string Input;
     std::string Prompt("[cling]$ ");
+
+    if (const char* HistSizeEnvvar = std::getenv("CLING_HISTSIZE")) {
+      const size_t HistSize = std::strtoull(HistSizeEnvvar, nullptr, 0);
+
+      // std::strtoull() returns 0 if the parsing fails.
+      // zero HistSize will disable history logging to file.
+      LE.setHistorySize(HistSize);
+    }
+
     LE.setPrompt(Prompt);
 
     LE.setListCompleter(ClingListCompleter(m_MetaProcessor->getInterpreter()));
