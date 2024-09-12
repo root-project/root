@@ -274,3 +274,48 @@ TEST_F(TClingTests, ROOT10499) {
    EXPECT_EQ((void*)&errno, (void*)gInterpreter->Calc("&errno"));
 #endif
 }
+
+// #15511
+TEST_F(TClingTests, ManyConstConstructors)
+{
+   std::vector<int> constructors;
+   std::ostringstream declareConstructors;
+   declareConstructors << "namespace issue_15511 { auto constructors = "
+                       << "reinterpret_cast<std::vector<int> *>(" << reinterpret_cast<uintptr_t>(&constructors)
+                       << "); }";
+   gInterpreter->Declare(declareConstructors.str().c_str());
+
+   gInterpreter->Declare(R"cpp(
+namespace issue_15511 {
+struct Constructor {
+  Constructor(int value) { constructors->push_back(value); }
+};
+
+const Constructor c0(0);
+const Constructor c1(1);
+const Constructor c2(2);
+const Constructor c3(3);
+const Constructor c4(4);
+const Constructor c5(5);
+const Constructor c6(6);
+const Constructor c7(7);
+const Constructor c8(8);
+const Constructor c9(9);
+const Constructor c10(10);
+const Constructor c11(11);
+const Constructor c12(12);
+const Constructor c13(13);
+const Constructor c14(14);
+const Constructor c15(15);
+const Constructor c16(16);
+const Constructor c17(17);
+const Constructor c18(18);
+const Constructor c19(19);
+}
+   )cpp");
+
+   ASSERT_EQ(constructors.size(), 20);
+   for (int i = 0; i < 20; i++) {
+      EXPECT_EQ(constructors[i], i);
+   }
+}
