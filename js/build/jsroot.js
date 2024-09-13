@@ -11,7 +11,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '12/09/2024',
+version_date = '13/09/2024',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -60640,1590 +60640,6562 @@ function changeObjectMember(painter, member, val, is_color) {
       obj[member] = val;
 }
 
-const kToFront = '__front__', sDfltName = 'root_ctx_menu', sDfltDlg = '_dialog',
-      sSub = 'sub:', sEndsub = 'endsub:', sSeparator = 'separator', sHeader = 'header:';
+const clTStreamerElement = 'TStreamerElement', clTStreamerObject = 'TStreamerObject',
+      clTStreamerSTL = 'TStreamerSTL', clTStreamerInfoList = 'TStreamerInfoList',
+      clTDirectory = 'TDirectory', clTDirectoryFile = 'TDirectoryFile',
+      clTQObject = 'TQObject', clTBasket = 'TBasket', clTDatime = 'TDatime',
+      nameStreamerInfo = 'StreamerInfo',
 
-/**
- * @summary Abstract class for creating context menu
- *
- * @desc Use {@link createMenu} to create instance of the menu
- * @private
- */
+      kChar = 1, kShort = 2, kInt = 3, kLong = 4, kFloat = 5, kCounter = 6,
+      kCharStar = 7, kDouble = 8, kDouble32 = 9, kLegacyChar = 10,
+      kUChar = 11, kUShort = 12, kUInt = 13, kULong = 14, kBits = 15,
+      kLong64 = 16, kULong64 = 17, kBool = 18, kFloat16 = 19,
 
-class JSRootMenu {
+      kBase = 0, kOffsetL = 20, kOffsetP = 40,
+      kObject = 61, kAny = 62, kObjectp = 63, kObjectP = 64, kTString = 65,
+      kTObject = 66, kTNamed = 67, kAnyp = 68, kAnyP = 69,
 
-   constructor(painter, menuname, show_event) {
-      this.painter = painter;
-      this.menuname = menuname;
-      if (isObject(show_event) && (show_event.clientX !== undefined) && (show_event.clientY !== undefined))
-         this.show_evnt = { clientX: show_event.clientX, clientY: show_event.clientY, skip_close: show_event.skip_close };
+      /* kAnyPnoVT: 70, */
+      kSTLp = 71,
+      /* kSkip = 100, kSkipL = 120, kSkipP = 140, kConv = 200, kConvL = 220, kConvP = 240, */
 
-      this.remove_handler = () => this.remove();
-      this.element = null;
-      this.cnt = 0;
-   }
+      kSTL = 300, /* kSTLstring = 365, */
 
-   native() { return false; }
+      kStreamer = 500, kStreamLoop = 501,
 
-   async load() { return this; }
+      kMapOffset = 2, kByteCountMask = 0x40000000, kNewClassTag = 0xFFFFFFFF, kClassMask = 0x80000000,
 
-   /** @summary Returns object with mouse event position when context menu was activated
-     * @desc Return object will have members 'clientX' and 'clientY' */
-   getEventPosition() { return this.show_evnt; }
+      // constants of bits in version
+      kStreamedMemberWise = BIT(14),
 
-   add(/* name, arg, func, title */) {
-      throw Error('add() method has to be implemented in the menu');
-   }
+      // constants used for coding type of STL container
+      kNotSTL = 0, kSTLvector = 1, kSTLlist = 2, kSTLdeque = 3, kSTLmap = 4, kSTLmultimap = 5,
+      kSTLset = 6, kSTLmultiset = 7, kSTLbitset = 8,
+      // kSTLforwardlist = 9, kSTLunorderedset = 10, kSTLunorderedmultiset = 11, kSTLunorderedmap = 12,
+      // kSTLunorderedmultimap = 13, kSTLend = 14
 
-   /** @summary Returns menu size */
-   size() { return this.cnt; }
+      kBaseClass = 'BASE',
 
-   /** @summary Close and remove menu */
-   remove() {
-      if (!this.element)
-         return;
+      // name of base IO types
+      BasicTypeNames = [kBaseClass, 'char', 'short', 'int', 'long', 'float', 'int', 'const char*', 'double', 'Double32_t',
+                        'char', 'unsigned  char', 'unsigned short', 'unsigned', 'unsigned long', 'unsigned', 'Long64_t', 'ULong64_t', 'bool', 'Float16_t'],
 
-      if (this.show_evnt?.skip_close) {
-         this.show_evnt.skip_close = 0;
-         return;
+      // names of STL containers
+      StlNames = ['', 'vector', 'list', 'deque', 'map', 'multimap', 'set', 'multiset', 'bitset'],
+
+      // TObject bits
+      kIsReferenced = BIT(4), kHasUUID = BIT(5),
+
+
+/** @summary Custom streamers for root classes
+  * @desc map of user-streamer function like func(buf,obj)
+  * or alias (classname) which can be used to read that function
+  * or list of read functions
+  * @private */
+CustomStreamers = {
+   TObject(buf, obj) {
+      obj.fUniqueID = buf.ntou4();
+      obj.fBits = buf.ntou4();
+      if (obj.fBits & kIsReferenced) buf.ntou2(); // skip pid
+   },
+
+   TNamed: [{
+      basename: clTObject, base: 1, func(buf, obj) {
+         if (!obj._typename) obj._typename = clTNamed;
+         buf.classStreamer(obj, clTObject);
+      }
+     },
+     { name: 'fName', func(buf, obj) { obj.fName = buf.readTString(); } },
+     { name: 'fTitle', func(buf, obj) { obj.fTitle = buf.readTString(); } }
+   ],
+
+   TObjString: [{
+      basename: clTObject, base: 1, func(buf, obj) {
+         if (!obj._typename) obj._typename = clTObjString;
+         buf.classStreamer(obj, clTObject);
+      }
+     },
+     { name: 'fString', func(buf, obj) { obj.fString = buf.readTString(); } }
+   ],
+
+   TClonesArray(buf, list) {
+      if (!list._typename) list._typename = clTClonesArray;
+      list.$kind = clTClonesArray;
+      list.name = '';
+      const ver = buf.last_read_version;
+      if (ver > 2) buf.classStreamer(list, clTObject);
+      if (ver > 1) list.name = buf.readTString();
+      let classv = buf.readTString(), clv = 0;
+      const pos = classv.lastIndexOf(';');
+
+      if (pos > 0) {
+         clv = Number.parseInt(classv.slice(pos + 1));
+         classv = classv.slice(0, pos);
       }
 
-      this.element.remove();
-      this.element = null;
-      if (isFunc(this.resolveFunc)) {
-         const func = this.resolveFunc;
-         delete this.resolveFunc;
-         func();
+      let nobjects = buf.ntou4();
+      if (nobjects < 0) nobjects = -nobjects;  // for backward compatibility
+
+      list.arr = new Array(nobjects);
+      list.fLast = nobjects - 1;
+      list.fLowerBound = buf.ntou4();
+
+      let streamer = buf.fFile.getStreamer(classv, { val: clv });
+      streamer = buf.fFile.getSplittedStreamer(streamer);
+
+      if (!streamer)
+         console.log(`Cannot get member-wise streamer for ${classv}:${clv}`);
+      else {
+         // create objects
+         for (let n = 0; n < nobjects; ++n)
+            list.arr[n] = { _typename: classv };
+
+         // call streamer for all objects member-wise
+         for (let k = 0; k < streamer.length; ++k) {
+            for (let n = 0; n < nobjects; ++n)
+               streamer[k].func(buf, list.arr[n]);
+         }
       }
-      document.body.removeEventListener('click', this.remove_handler);
-   }
+   },
 
-   show(/* event */) {
-      throw Error('show() method has to be implemented in the menu class');
-   }
+   TMap(buf, map) {
+      if (!map._typename) map._typename = clTMap;
+      map.name = '';
+      map.arr = [];
+      const ver = buf.last_read_version;
+      if (ver > 2) buf.classStreamer(map, clTObject);
+      if (ver > 1) map.name = buf.readTString();
 
-   /** @summary Add checked menu item
-     * @param {boolean} flag - flag
-     * @param {string} name - item name
-     * @param {function} func - func called when item is selected
-     * @param {string} [title] - optional title */
-   addchk(flag, name, arg, func, title) {
-      let handler = func;
-      if (isFunc(arg)) {
-         title = func;
-         func = arg;
-         handler = res => func(res === '1');
-         arg = flag ? '0' : '1';
+      const nobjects = buf.ntou4();
+      // create objects
+      for (let n = 0; n < nobjects; ++n) {
+         const obj = { _typename: 'TPair' };
+         obj.first = buf.readObjectAny();
+         obj.second = buf.readObjectAny();
+         if (obj.first) map.arr.push(obj);
       }
-      this.add((flag ? 'chk:' : 'unk:') + name, arg, handler, title);
-   }
+   },
 
-   /** @summary Add sub-menu */
-   sub(name, arg, func, title) {
-      this.add(sSub + name, arg, func, title);
-   }
+   TTreeIndex(buf, obj) {
+      const ver = buf.last_read_version;
+      obj._typename = 'TTreeIndex';
+      buf.classStreamer(obj, 'TVirtualIndex');
+      obj.fMajorName = buf.readTString();
+      obj.fMinorName = buf.readTString();
+      obj.fN = buf.ntoi8();
+      obj.fIndexValues = buf.readFastArray(obj.fN, kLong64);
+      if (ver > 1) obj.fIndexValuesMinor = buf.readFastArray(obj.fN, kLong64);
+      obj.fIndex = buf.readFastArray(obj.fN, kLong64);
+   },
 
-   /** @summary Mark end of submenu */
-   endsub() {
-      this.add(sEndsub);
-   }
+   TRefArray(buf, obj) {
+      obj._typename = 'TRefArray';
+      buf.classStreamer(obj, clTObject);
+      obj.name = buf.readTString();
+      const nobj = buf.ntoi4();
+      obj.fLast = nobj - 1;
+      obj.fLowerBound = buf.ntoi4();
+      /* const pidf = */ buf.ntou2();
+      obj.fUIDs = buf.readFastArray(nobj, kUInt);
+   },
 
-   /** @summary Add separator */
-   separator() {
-      this.add(sSeparator);
-   }
+   TCanvas(buf, obj) {
+      obj._typename = clTCanvas;
+      buf.classStreamer(obj, clTPad);
+      obj.fDISPLAY = buf.readTString();
+      obj.fDoubleBuffer = buf.ntoi4();
+      obj.fRetained = (buf.ntou1() !== 0);
+      obj.fXsizeUser = buf.ntoi4();
+      obj.fYsizeUser = buf.ntoi4();
+      obj.fXsizeReal = buf.ntoi4();
+      obj.fYsizeReal = buf.ntoi4();
+      obj.fWindowTopX = buf.ntoi4();
+      obj.fWindowTopY = buf.ntoi4();
+      obj.fWindowWidth = buf.ntoi4();
+      obj.fWindowHeight = buf.ntoi4();
+      obj.fCw = buf.ntou4();
+      obj.fCh = buf.ntou4();
+      obj.fCatt = buf.classStreamer({}, clTAttCanvas);
+      buf.ntou1(); // ignore b << TestBit(kMoveOpaque);
+      buf.ntou1(); // ignore b << TestBit(kResizeOpaque);
+      obj.fHighLightColor = buf.ntoi2();
+      obj.fBatch = (buf.ntou1() !== 0);
+      buf.ntou1();   // ignore b << TestBit(kShowEventStatus);
+      buf.ntou1();   // ignore b << TestBit(kAutoExec);
+      buf.ntou1();   // ignore b << TestBit(kMenuBar);
+   },
 
-   /** @summary Add menu header - must be first entry */
-   header(name) {
-      this.add(sHeader + name);
-   }
+   TObjArray(buf, list) {
+      if (!list._typename) list._typename = clTObjArray;
+      list.$kind = clTObjArray;
+      list.name = '';
+      const ver = buf.last_read_version;
+      if (ver > 2)
+         buf.classStreamer(list, clTObject);
+      if (ver > 1)
+         list.name = buf.readTString();
+      const nobjects = buf.ntou4();
+      let i = 0;
+      list.arr = new Array(nobjects);
+      list.fLast = nobjects - 1;
+      list.fLowerBound = buf.ntou4();
+      while (i < nobjects)
+         list.arr[i++] = buf.readObjectAny();
+   },
 
-   /** @summary Add draw sub-menu with draw options
-     * @protected */
-   addDrawMenu(top_name, opts, call_back, title) {
-      if (!opts || !opts.length)
-         return;
+   TPolyMarker3D(buf, marker) {
+      const ver = buf.last_read_version;
+      buf.classStreamer(marker, clTObject);
+      buf.classStreamer(marker, clTAttMarker);
+      marker.fN = buf.ntoi4();
+      marker.fP = buf.readFastArray(marker.fN * 3, kFloat);
+      marker.fOption = buf.readTString();
+      marker.fName = (ver > 1) ? buf.readTString() : clTPolyMarker3D;
+   },
 
-      let without_sub = false;
-      if (top_name.indexOf('nosub:') === 0) {
-         without_sub = true;
-         top_name = top_name.slice(6);
+   TPolyLine3D(buf, obj) {
+      buf.classStreamer(obj, clTObject);
+      buf.classStreamer(obj, clTAttLine);
+      obj.fN = buf.ntoi4();
+      obj.fP = buf.readFastArray(obj.fN * 3, kFloat);
+      obj.fOption = buf.readTString();
+   },
+
+   TStreamerInfo(buf, obj) {
+      buf.classStreamer(obj, clTNamed);
+      obj.fCheckSum = buf.ntou4();
+      obj.fClassVersion = buf.ntou4();
+      obj.fElements = buf.readObjectAny();
+   },
+
+   TStreamerElement(buf, element) {
+      const ver = buf.last_read_version;
+      buf.classStreamer(element, clTNamed);
+      element.fType = buf.ntou4();
+      element.fSize = buf.ntou4();
+      element.fArrayLength = buf.ntou4();
+      element.fArrayDim = buf.ntou4();
+      element.fMaxIndex = buf.readFastArray((ver === 1) ? buf.ntou4() : 5, kUInt);
+      element.fTypeName = buf.readTString();
+
+      if ((element.fType === kUChar) && ((element.fTypeName === 'Bool_t') || (element.fTypeName === 'bool')))
+         element.fType = kBool;
+
+      element.fXmin = element.fXmax = element.fFactor = 0;
+      if (ver === 3) {
+         element.fXmin = buf.ntod();
+         element.fXmax = buf.ntod();
+         element.fFactor = buf.ntod();
+      } else if ((ver > 3) && (element.fBits & BIT(6))) { // kHasRange
+         let p1 = element.fTitle.indexOf('[');
+         if ((p1 >= 0) && (element.fType > kOffsetP))
+            p1 = element.fTitle.indexOf('[', p1 + 1);
+         const p2 = element.fTitle.indexOf(']', p1 + 1);
+
+         if ((p1 >= 0) && (p2 >= p1 + 2)) {
+            const arr = element.fTitle.slice(p1+1, p2).split(',');
+            let nbits = 32;
+            if (!arr || arr.length < 2)
+               throw new Error(`Problem to decode range setting from streamer element title ${element.fTitle}`);
+
+            if (arr.length === 3) nbits = parseInt(arr[2]);
+            if (!Number.isInteger(nbits) || (nbits < 2) || (nbits > 32)) nbits = 32;
+
+            const parse_range = val => {
+               if (!val) return 0;
+               if (val.indexOf('pi') < 0) return parseFloat(val);
+               val = val.trim();
+               let sign = 1;
+               if (val[0] === '-') { sign = -1; val = val.slice(1); }
+               switch (val) {
+                  case '2pi':
+                  case '2*pi':
+                  case 'twopi': return sign * 2 * Math.PI;
+                  case 'pi/2': return sign * Math.PI / 2;
+                  case 'pi/4': return sign * Math.PI / 4;
+               }
+               return sign * Math.PI;
+            };
+
+            element.fXmin = parse_range(arr[0]);
+            element.fXmax = parse_range(arr[1]);
+
+            // avoid usage of 1 << nbits, while only works up to 32 bits
+            const bigint = ((nbits >= 0) && (nbits < 32)) ? Math.pow(2, nbits) : 0xffffffff;
+            if (element.fXmin < element.fXmax)
+               element.fFactor = bigint / (element.fXmax - element.fXmin);
+            else if (nbits < 15)
+               element.fXmin = nbits;
+         }
       }
+   },
 
-      if (opts.length === 1) {
-         if (opts[0] === kInspect)
-            top_name = top_name.replace('Draw', 'Inspect');
-         this.add(top_name, opts[0], call_back);
-         return;
+   TStreamerBase(buf, elem) {
+      const ver = buf.last_read_version;
+      buf.classStreamer(elem, clTStreamerElement);
+      if (ver > 2) elem.fBaseVersion = buf.ntou4();
+   },
+
+   TStreamerSTL(buf, elem) {
+      buf.classStreamer(elem, clTStreamerElement);
+      elem.fSTLtype = buf.ntou4();
+      elem.fCtype = buf.ntou4();
+
+      if ((elem.fSTLtype === kSTLmultimap) &&
+         ((elem.fTypeName.indexOf('std::set') === 0) ||
+            (elem.fTypeName.indexOf('set') === 0))) elem.fSTLtype = kSTLset;
+
+      if ((elem.fSTLtype === kSTLset) &&
+         ((elem.fTypeName.indexOf('std::multimap') === 0) ||
+            (elem.fTypeName.indexOf('multimap') === 0))) elem.fSTLtype = kSTLmultimap;
+   },
+
+   TStreamerSTLstring(buf, elem) {
+      if (buf.last_read_version > 0)
+         buf.classStreamer(elem, clTStreamerSTL);
+   },
+
+   TList(buf, obj) {
+      // stream all objects in the list from the I/O buffer
+      if (!obj._typename) obj._typename = this.typename;
+      obj.$kind = clTList; // all derived classes will be marked as well
+      if (buf.last_read_version > 3) {
+         buf.classStreamer(obj, clTObject);
+         obj.name = buf.readTString();
+         const nobjects = buf.ntou4();
+         obj.arr = new Array(nobjects);
+         obj.opt = new Array(nobjects);
+         for (let i = 0; i < nobjects; ++i) {
+            obj.arr[i] = buf.readObjectAny();
+            obj.opt[i] = buf.readTString();
+         }
+      } else {
+         obj.name = '';
+         obj.arr = [];
+         obj.opt = [];
       }
+   },
 
-      const used = {};
+   THashList: clTList,
 
-      if (!without_sub)
-         this.sub(top_name, opts[0], call_back, title);
+   TStreamerLoop(buf, elem) {
+      if (buf.last_read_version > 1) {
+         buf.classStreamer(elem, clTStreamerElement);
+         elem.fCountVersion = buf.ntou4();
+         elem.fCountName = buf.readTString();
+         elem.fCountClass = buf.readTString();
+      }
+   },
 
-      if ((opts.indexOf('') >= 0) && (!without_sub || opts[0]))
-         this.add(this._use_plain_text ? '<dflt>' : '&lt;dflt&gt;', '', call_back);
+   TStreamerBasicPointer: 'TStreamerLoop',
 
-      for (let i = 0; i < opts.length; ++i) {
-         let name = opts[i];
-         if (!name || used[name])
-            continue;
-         used[name] = true;
+   TStreamerObject(buf, elem) {
+      if (buf.last_read_version > 1)
+         buf.classStreamer(elem, clTStreamerElement);
+   },
 
-         const group = [];
-         if (opts.length > 5) {
-            // check if there are similar options, which can be grouped again
-            for (let i2 = i + 1; i2 < opts.length; ++i2) {
-               if (opts[i2] && !used[opts[i2]] && (opts[i2].indexOf(name) === 0))
-                  group.push(opts[i2]);
-               else if (name.length < 4)
-                  break;
+   TStreamerBasicType: clTStreamerObject,
+   TStreamerObjectAny: clTStreamerObject,
+   TStreamerString: clTStreamerObject,
+   TStreamerObjectPointer: clTStreamerObject,
+
+   TStreamerObjectAnyPointer(buf, elem) {
+      if (buf.last_read_version > 0)
+         buf.classStreamer(elem, clTStreamerElement);
+   },
+
+   TTree: {
+      name: '$file',
+      func(buf, obj) { obj.$kind = 'TTree'; obj.$file = buf.fFile; }
+   },
+
+   RooRealVar(buf, obj) {
+      const v = buf.last_read_version;
+      buf.classStreamer(obj, 'RooAbsRealLValue');
+      if (v === 1) { buf.ntod(); buf.ntod(); buf.ntoi4(); } // skip fitMin, fitMax, fitBins
+      obj._error = buf.ntod();
+      obj._asymErrLo = buf.ntod();
+      obj._asymErrHi = buf.ntod();
+      if (v >= 2) obj._binning = buf.readObjectAny();
+      if (v === 3) obj._sharedProp = buf.readObjectAny();
+      if (v >= 4) obj._sharedProp = buf.classStreamer({}, 'RooRealVarSharedProperties');
+   },
+
+   RooAbsBinning(buf, obj) {
+      buf.classStreamer(obj, (buf.last_read_version === 1) ? clTObject : clTNamed);
+      buf.classStreamer(obj, 'RooPrintable');
+   },
+
+   RooCategory(buf, obj) {
+      const v = buf.last_read_version;
+      buf.classStreamer(obj, 'RooAbsCategoryLValue');
+      obj._sharedProp = (v === 1) ? buf.readObjectAny() : buf.classStreamer({}, 'RooCategorySharedProperties');
+   },
+
+   'RooWorkspace::CodeRepo': (buf /* , obj */) => {
+      const sz = (buf.last_read_version === 2) ? 3 : 2;
+      for (let i = 0; i < sz; ++i) {
+         let cnt = buf.ntoi4() * ((i === 0) ? 4 : 3);
+         while (cnt--) buf.readTString();
+      }
+   },
+
+   RooLinkedList(buf, obj) {
+      const v = buf.last_read_version;
+      buf.classStreamer(obj, clTObject);
+      let size = buf.ntoi4();
+      obj.arr = create$1(clTList);
+      while (size--)
+         obj.arr.Add(buf.readObjectAny());
+      if (v > 1) obj._name = buf.readTString();
+   },
+
+   TImagePalette: [
+      {
+         basename: clTObject, base: 1, func(buf, obj) {
+            if (!obj._typename) obj._typename = clTImagePalette;
+            buf.classStreamer(obj, clTObject);
+         }
+      },
+      { name: 'fNumPoints', func(buf, obj) { obj.fNumPoints = buf.ntou4(); } },
+      { name: 'fPoints', func(buf, obj) { obj.fPoints = buf.readFastArray(obj.fNumPoints, kDouble); } },
+      { name: 'fColorRed', func(buf, obj) { obj.fColorRed = buf.readFastArray(obj.fNumPoints, kUShort); } },
+      { name: 'fColorGreen', func(buf, obj) { obj.fColorGreen = buf.readFastArray(obj.fNumPoints, kUShort); } },
+      { name: 'fColorBlue', func(buf, obj) { obj.fColorBlue = buf.readFastArray(obj.fNumPoints, kUShort); } },
+      { name: 'fColorAlpha', func(buf, obj) { obj.fColorAlpha = buf.readFastArray(obj.fNumPoints, kUShort); } }
+   ],
+
+   TAttImage: [
+      { name: 'fImageQuality', func(buf, obj) { obj.fImageQuality = buf.ntoi4(); } },
+      { name: 'fImageCompression', func(buf, obj) { obj.fImageCompression = buf.ntou4(); } },
+      { name: 'fConstRatio', func(buf, obj) { obj.fConstRatio = (buf.ntou1() !== 0); } },
+      { name: 'fPalette', func(buf, obj) { obj.fPalette = buf.classStreamer({}, clTImagePalette); } }
+   ],
+
+   TASImage(buf, obj) {
+      if ((buf.last_read_version === 1) && (buf.fFile.fVersion > 0) && (buf.fFile.fVersion < 50000))
+         return console.warn('old TASImage version - not yet supported');
+
+      buf.classStreamer(obj, clTNamed);
+
+      if (buf.ntou1() !== 0) {
+         const size = buf.ntoi4();
+         obj.fPngBuf = buf.readFastArray(size, kUChar);
+      } else {
+         buf.classStreamer(obj, 'TAttImage');
+         obj.fWidth = buf.ntoi4();
+         obj.fHeight = buf.ntoi4();
+         obj.fImgBuf = buf.readFastArray(obj.fWidth * obj.fHeight, kDouble);
+      }
+   },
+
+   TMaterial(buf, obj) {
+      const v = buf.last_read_version;
+      buf.classStreamer(obj, clTNamed);
+      obj.fNumber = buf.ntoi4();
+      obj.fA = buf.ntof();
+      obj.fZ = buf.ntof();
+      obj.fDensity = buf.ntof();
+      if (v > 2) {
+         buf.classStreamer(obj, clTAttFill);
+         obj.fRadLength = buf.ntof();
+         obj.fInterLength = buf.ntof();
+      } else
+         obj.fRadLength = obj.fInterLength = 0;
+   },
+
+   TMixture(buf, obj) {
+      buf.classStreamer(obj, 'TMaterial');
+      obj.fNmixt = buf.ntoi4();
+      obj.fAmixt = buf.readFastArray(buf.ntoi4(), kFloat);
+      obj.fZmixt = buf.readFastArray(buf.ntoi4(), kFloat);
+      obj.fWmixt = buf.readFastArray(buf.ntoi4(), kFloat);
+   },
+
+   TVirtualPerfStats: clTObject, // use directly TObject streamer
+
+   TMethodCall: clTObject
+};
+
+
+/** @summary Add custom streamer
+  * @public */
+function addUserStreamer(type, user_streamer) {
+   CustomStreamers[type] = user_streamer;
+}
+
+/** @summary these are streamers which do not handle version regularly
+  * @desc used for special classes like TRef or TBasket
+  * @private */
+const DirectStreamers = {
+   // do nothing for these classes
+   TQObject() {},
+   TGraphStruct() {},
+   TGraphNode() {},
+   TGraphEdge() {},
+
+   TDatime(buf, obj) {
+      obj.fDatime = buf.ntou4();
+   },
+
+   TKey(buf, key) {
+      key.fNbytes = buf.ntoi4();
+      key.fVersion = buf.ntoi2();
+      key.fObjlen = buf.ntou4();
+      key.fDatime = buf.classStreamer({}, clTDatime);
+      key.fKeylen = buf.ntou2();
+      key.fCycle = buf.ntou2();
+      if (key.fVersion > 1000) {
+         key.fSeekKey = buf.ntou8();
+         buf.shift(8); // skip seekPdir
+      } else {
+         key.fSeekKey = buf.ntou4();
+         buf.shift(4); // skip seekPdir
+      }
+      key.fClassName = buf.readTString();
+      key.fName = buf.readTString();
+      key.fTitle = buf.readTString();
+   },
+
+   TDirectory(buf, dir) {
+      const version = buf.ntou2();
+      dir.fDatimeC = buf.classStreamer({}, clTDatime);
+      dir.fDatimeM = buf.classStreamer({}, clTDatime);
+      dir.fNbytesKeys = buf.ntou4();
+      dir.fNbytesName = buf.ntou4();
+      dir.fSeekDir = (version > 1000) ? buf.ntou8() : buf.ntou4();
+      dir.fSeekParent = (version > 1000) ? buf.ntou8() : buf.ntou4();
+      dir.fSeekKeys = (version > 1000) ? buf.ntou8() : buf.ntou4();
+      // if ((version % 1000) > 2) buf.shift(18); // skip fUUID
+   },
+
+   TBasket(buf, obj) {
+      buf.classStreamer(obj, clTKey);
+      const ver = buf.readVersion();
+      obj.fBufferSize = buf.ntoi4();
+      obj.fNevBufSize = buf.ntoi4();
+      obj.fNevBuf = buf.ntoi4();
+      obj.fLast = buf.ntoi4();
+      if (obj.fLast > obj.fBufferSize) obj.fBufferSize = obj.fLast;
+      const flag = buf.ntoi1();
+
+      if (flag === 0) return;
+
+      if ((flag % 10) !== 2) {
+         if (obj.fNevBuf) {
+            obj.fEntryOffset = buf.readFastArray(buf.ntoi4(), kInt);
+            if ((flag > 20) && (flag < 40)) {
+               for (let i = 0, kDisplacementMask = 0xFF000000; i < obj.fNevBuf; ++i)
+                  obj.fEntryOffset[i] &= ~kDisplacementMask;
             }
          }
 
-         if (without_sub)
-            name = top_name + ' ' + name;
-
-         if (group.length > 0) {
-            this.sub(name, opts[i], call_back);
-            group.forEach(sub => {
-               this.add(sub, sub, call_back);
-               used[sub] = true;
-            });
-            this.endsub();
-         } else if (name === kInspect) {
-            this.sub(name, opts[i], call_back, 'Inspect object content');
-            for (let k = 0; k < 10; ++k)
-               this.add(k.toString(), kInspect + k, call_back, `Inspect object and expand to level ${k}`);
-            this.endsub();
-         } else
-            this.add(name, opts[i], call_back);
+         if (flag > 40)
+            obj.fDisplacement = buf.readFastArray(buf.ntoi4(), kInt);
       }
-      if (!without_sub) {
-         this.add('<input>', () => {
-            const opt = isFunc(this.painter?.getDrawOpt) ? this.painter.getDrawOpt() : opts[0];
-            this.input('Provide draw option', opt, 'text').then(call_back);
-         }, 'Enter draw option in dialog');
-         this.endsub();
+
+      if ((flag === 1) || (flag > 10)) {
+         // here is reading of raw data
+         const sz = (ver.val <= 1) ? buf.ntoi4() : obj.fLast;
+
+         if (sz > obj.fKeylen) {
+            // buffer includes again complete TKey data - exclude it
+            const blob = buf.extract([buf.o + obj.fKeylen, sz - obj.fKeylen]);
+            obj.fBufferRef = new TBuffer(blob, 0, buf.fFile, sz - obj.fKeylen);
+            obj.fBufferRef.fTagOffset = obj.fKeylen;
+         }
+
+         buf.shift(sz);
+      }
+   },
+
+   TRef(buf, obj) {
+      buf.classStreamer(obj, clTObject);
+      if (obj.fBits & kHasUUID)
+         obj.fUUID = buf.readTString();
+      else
+         obj.fPID = buf.ntou2();
+   },
+
+   'TMatrixTSym<float>': (buf, obj) => {
+      buf.classStreamer(obj, 'TMatrixTBase<float>');
+      obj.fElements = new Float32Array(obj.fNelems);
+      const arr = buf.readFastArray((obj.fNrows * (obj.fNcols + 1)) / 2, kFloat);
+      for (let i = 0, cnt = 0; i < obj.fNrows; ++i) {
+         for (let j = i; j < obj.fNcols; ++j)
+            obj.fElements[j * obj.fNcols + i] = obj.fElements[i * obj.fNcols + j] = arr[cnt++];
+      }
+   },
+
+   'TMatrixTSym<double>': (buf, obj) => {
+      buf.classStreamer(obj, 'TMatrixTBase<double>');
+      obj.fElements = new Float64Array(obj.fNelems);
+      const arr = buf.readFastArray((obj.fNrows * (obj.fNcols + 1)) / 2, kDouble);
+      for (let i = 0, cnt = 0; i < obj.fNrows; ++i) {
+         for (let j = i; j < obj.fNcols; ++j)
+            obj.fElements[j * obj.fNcols + i] = obj.fElements[i * obj.fNcols + j] = arr[cnt++];
+      }
+   }
+};
+
+
+/** @summary Returns type id by its name
+  * @private */
+function getTypeId(typname, norecursion) {
+   switch (typname) {
+      case 'bool':
+      case 'Bool_t': return kBool;
+      case 'char':
+      case 'signed char':
+      case 'Char_t': return kChar;
+      case 'Color_t':
+      case 'Style_t':
+      case 'Width_t':
+      case 'short':
+      case 'Short_t': return kShort;
+      case 'int':
+      case 'EErrorType':
+      case 'Int_t': return kInt;
+      case 'long':
+      case 'Long_t': return kLong;
+      case 'float':
+      case 'Float_t': return kFloat;
+      case 'double':
+      case 'Double_t': return kDouble;
+      case 'unsigned char':
+      case 'UChar_t': return kUChar;
+      case 'unsigned short':
+      case 'UShort_t': return kUShort;
+      case 'unsigned':
+      case 'unsigned int':
+      case 'UInt_t': return kUInt;
+      case 'unsigned long':
+      case 'ULong_t': return kULong;
+      case 'int64_t':
+      case 'long long':
+      case 'Long64_t': return kLong64;
+      case 'uint64_t':
+      case 'unsigned long long':
+      case 'ULong64_t': return kULong64;
+      case 'Double32_t': return kDouble32;
+      case 'Float16_t': return kFloat16;
+      case 'char*':
+      case 'const char*':
+      case 'const Char_t*': return kCharStar;
+   }
+
+   if (!norecursion) {
+      const replace = CustomStreamers[typname];
+      if (isStr(replace)) return getTypeId(replace, true);
+   }
+
+   return -1;
+}
+
+/** @summary create element of the streamer
+  * @private  */
+function createStreamerElement(name, typename, file) {
+   const elem = {
+      _typename: clTStreamerElement, fName: name, fTypeName: typename,
+      fType: 0, fSize: 0, fArrayLength: 0, fArrayDim: 0, fMaxIndex: [0, 0, 0, 0, 0],
+      fXmin: 0, fXmax: 0, fFactor: 0
+   };
+
+   if (isStr(typename)) {
+      elem.fType = getTypeId(typename);
+      if ((elem.fType < 0) && file && file.fBasicTypes[typename])
+         elem.fType = file.fBasicTypes[typename];
+   } else {
+      elem.fType = typename;
+      typename = elem.fTypeName = BasicTypeNames[elem.fType] || 'int';
+   }
+
+   if (elem.fType > 0) return elem; // basic type
+
+   // check if there are STL containers
+   const pos = typename.indexOf('<');
+   let stltype = kNotSTL;
+   if ((pos > 0) && (typename.indexOf('>') > pos + 2)) {
+      for (let stl = 1; stl < StlNames.length; ++stl) {
+         if (typename.slice(0, pos) === StlNames[stl]) {
+            stltype = stl; break;
+         }
       }
    }
 
-   /** @summary Add redraw menu for the painter
-     * @protected */
-   addRedrawMenu(painter) {
-      if (!painter || !isFunc(painter.redrawWith) || !isFunc(painter.getSupportedDrawOptions))
+   if (stltype !== kNotSTL) {
+      elem._typename = clTStreamerSTL;
+      elem.fType = kStreamer;
+      elem.fSTLtype = stltype;
+      elem.fCtype = 0;
+      return elem;
+   }
+
+   const isptr = (typename.lastIndexOf('*') === typename.length - 1);
+
+   if (isptr)
+      elem.fTypeName = typename = typename.slice(0, typename.length - 1);
+
+   if (getArrayKind(typename) === 0) {
+      elem.fType = kTString;
+      return elem;
+   }
+
+   elem.fType = isptr ? kAnyP : kAny;
+
+   return elem;
+}
+
+
+/** @summary Function creates streamer for std::pair object
+  * @private */
+function getPairStreamer(si, typname, file) {
+   if (!si) {
+      if (typname.indexOf('pair') !== 0) return null;
+
+      si = file.findStreamerInfo(typname);
+
+      if (!si) {
+         let p1 = typname.indexOf('<');
+         const p2 = typname.lastIndexOf('>');
+         function GetNextName() {
+            let res = '', p = p1 + 1, cnt = 0;
+            while ((p < p2) && (cnt >= 0)) {
+               switch (typname[p]) {
+                  case '<': cnt++; break;
+                  case ',': if (cnt === 0) cnt--; break;
+                  case '>': cnt--; break;
+               }
+               if (cnt >= 0) res += typname[p];
+               p++;
+            }
+            p1 = p - 1;
+            return res.trim();
+         }
+         si = { _typename: 'TStreamerInfo', fVersion: 1, fName: typname, fElements: create$1(clTList) };
+         si.fElements.Add(createStreamerElement('first', GetNextName(), file));
+         si.fElements.Add(createStreamerElement('second', GetNextName(), file));
+      }
+   }
+
+   const streamer = file.getStreamer(typname, null, si);
+   if (!streamer) return null;
+
+   if (streamer.length !== 2) {
+      console.error(`Streamer for pair class contains ${streamer.length} elements`);
+      return null;
+   }
+
+   for (let nn = 0; nn < 2; ++nn) {
+      if (streamer[nn].readelem && !streamer[nn].pair_name) {
+         streamer[nn].pair_name = (nn === 0) ? 'first' : 'second';
+         streamer[nn].func = function(buf, obj) {
+            obj[this.pair_name] = this.readelem(buf);
+         };
+      }
+   }
+
+   return streamer;
+}
+
+
+/** @summary create member entry for streamer element
+  * @desc used for reading of data
+  * @private */
+function createMemberStreamer(element, file) {
+   const member = {
+      name: element.fName, type: element.fType,
+      fArrayLength: element.fArrayLength,
+      fArrayDim: element.fArrayDim,
+      fMaxIndex: element.fMaxIndex
+   };
+
+   if (element.fTypeName === kBaseClass) {
+      if (getArrayKind(member.name) > 0) {
+         // this is workaround for arrays as base class
+         // we create 'fArray' member, which read as any other data member
+         member.name = 'fArray';
+         member.type = kAny;
+      } else {
+         // create streamer for base class
+         member.type = kBase;
+         // this.getStreamer(element.fName);
+      }
+   }
+
+   switch (member.type) {
+      case kBase:
+         member.base = element.fBaseVersion; // indicate base class
+         member.basename = element.fName; // keep class name
+         member.func = function(buf, obj) { buf.classStreamer(obj, this.basename); };
+         break;
+      case kShort:
+         member.func = function(buf, obj) { obj[this.name] = buf.ntoi2(); }; break;
+      case kInt:
+      case kCounter:
+         member.func = function(buf, obj) { obj[this.name] = buf.ntoi4(); }; break;
+      case kLong:
+      case kLong64:
+         member.func = function(buf, obj) { obj[this.name] = buf.ntoi8(); }; break;
+      case kDouble:
+         member.func = function(buf, obj) { obj[this.name] = buf.ntod(); }; break;
+      case kFloat:
+         member.func = function(buf, obj) { obj[this.name] = buf.ntof(); }; break;
+      case kLegacyChar:
+      case kUChar:
+         member.func = function(buf, obj) { obj[this.name] = buf.ntou1(); }; break;
+      case kUShort:
+         member.func = function(buf, obj) { obj[this.name] = buf.ntou2(); }; break;
+      case kBits:
+      case kUInt:
+         member.func = function(buf, obj) { obj[this.name] = buf.ntou4(); }; break;
+      case kULong64:
+      case kULong:
+         member.func = function(buf, obj) { obj[this.name] = buf.ntou8(); }; break;
+      case kBool:
+         member.func = function(buf, obj) { obj[this.name] = buf.ntou1() !== 0; }; break;
+      case kOffsetL + kBool:
+      case kOffsetL + kInt:
+      case kOffsetL + kCounter:
+      case kOffsetL + kDouble:
+      case kOffsetL + kUChar:
+      case kOffsetL + kShort:
+      case kOffsetL + kUShort:
+      case kOffsetL + kBits:
+      case kOffsetL + kUInt:
+      case kOffsetL + kULong:
+      case kOffsetL + kULong64:
+      case kOffsetL + kLong:
+      case kOffsetL + kLong64:
+      case kOffsetL + kFloat:
+         if (element.fArrayDim < 2) {
+            member.arrlength = element.fArrayLength;
+            member.func = function(buf, obj) {
+               obj[this.name] = buf.readFastArray(this.arrlength, this.type - kOffsetL);
+            };
+         } else {
+            member.arrlength = element.fMaxIndex[element.fArrayDim - 1];
+            member.minus1 = true;
+            member.func = function(buf, obj) {
+               obj[this.name] = buf.readNdimArray(this, (buf, handle) =>
+                  buf.readFastArray(handle.arrlength, handle.type - kOffsetL));
+            };
+         }
+         break;
+      case kOffsetL + kChar:
+         if (element.fArrayDim < 2) {
+            member.arrlength = element.fArrayLength;
+            member.func = function(buf, obj) {
+               obj[this.name] = buf.readFastString(this.arrlength);
+            };
+         } else {
+            member.minus1 = true; // one dimension used for char*
+            member.arrlength = element.fMaxIndex[element.fArrayDim - 1];
+            member.func = function(buf, obj) {
+               obj[this.name] = buf.readNdimArray(this, (buf, handle) =>
+                  buf.readFastString(handle.arrlength));
+            };
+         }
+         break;
+      case kOffsetP + kBool:
+      case kOffsetP + kInt:
+      case kOffsetP + kDouble:
+      case kOffsetP + kUChar:
+      case kOffsetP + kShort:
+      case kOffsetP + kUShort:
+      case kOffsetP + kBits:
+      case kOffsetP + kUInt:
+      case kOffsetP + kULong:
+      case kOffsetP + kULong64:
+      case kOffsetP + kLong:
+      case kOffsetP + kLong64:
+      case kOffsetP + kFloat:
+         member.cntname = element.fCountName;
+         member.func = function(buf, obj) {
+            obj[this.name] = (buf.ntou1() === 1) ? buf.readFastArray(obj[this.cntname], this.type - kOffsetP) : [];
+         };
+         break;
+      case kOffsetP + kChar:
+         member.cntname = element.fCountName;
+         member.func = function(buf, obj) {
+            obj[this.name] = (buf.ntou1() === 1) ? buf.readFastString(obj[this.cntname]) : null;
+         };
+         break;
+      case kDouble32:
+      case kOffsetL + kDouble32:
+      case kOffsetP + kDouble32:
+         member.double32 = true;
+      case kFloat16:
+      case kOffsetL + kFloat16:
+      case kOffsetP + kFloat16:
+         if (element.fFactor !== 0) {
+            member.factor = 1 / element.fFactor;
+            member.min = element.fXmin;
+            member.read = function(buf) { return buf.ntou4() * this.factor + this.min; };
+         } else
+            if ((element.fXmin === 0) && member.double32)
+               member.read = function(buf) { return buf.ntof(); };
+            else {
+               member.nbits = Math.round(element.fXmin);
+               if (member.nbits === 0) member.nbits = 12;
+               member.dv = new DataView(new ArrayBuffer(8), 0); // used to cast from uint32 to float32
+               member.read = function(buf) {
+                  const theExp = buf.ntou1(), theMan = buf.ntou2();
+                  this.dv.setUint32(0, (theExp << 23) | ((theMan & ((1 << (this.nbits + 1)) - 1)) << (23 - this.nbits)));
+                  return ((1 << (this.nbits + 1) & theMan) ? -1 : 1) * this.dv.getFloat32(0);
+               };
+            }
+
+         member.readarr = function(buf, len) {
+            const arr = this.double32 ? new Float64Array(len) : new Float32Array(len);
+            for (let n = 0; n < len; ++n) arr[n] = this.read(buf);
+            return arr;
+         };
+
+         if (member.type < kOffsetL)
+            member.func = function(buf, obj) { obj[this.name] = this.read(buf); };
+         else
+            if (member.type > kOffsetP) {
+               member.cntname = element.fCountName;
+               member.func = function(buf, obj) {
+                  obj[this.name] = (buf.ntou1() === 1) ? this.readarr(buf, obj[this.cntname]) : null;
+               };
+            } else
+               if (element.fArrayDim < 2) {
+                  member.arrlength = element.fArrayLength;
+                  member.func = function(buf, obj) { obj[this.name] = this.readarr(buf, this.arrlength); };
+               } else {
+                  member.arrlength = element.fMaxIndex[element.fArrayDim - 1];
+                  member.minus1 = true;
+                  member.func = function(buf, obj) {
+                     obj[this.name] = buf.readNdimArray(this, (buf, handle) => handle.readarr(buf, handle.arrlength));
+                  };
+               }
+         break;
+
+      case kAnyP:
+      case kObjectP:
+         member.func = function(buf, obj) {
+            obj[this.name] = buf.readNdimArray(this, buf => buf.readObjectAny());
+         };
+         break;
+
+      case kAny:
+      case kAnyp:
+      case kObjectp:
+      case kObject: {
+         let classname = (element.fTypeName === kBaseClass) ? element.fName : element.fTypeName;
+         if (classname[classname.length - 1] === '*')
+            classname = classname.slice(0, classname.length - 1);
+
+         const arrkind = getArrayKind(classname);
+
+         if (arrkind > 0) {
+            member.arrkind = arrkind;
+            member.func = function(buf, obj) { obj[this.name] = buf.readFastArray(buf.ntou4(), this.arrkind); };
+         } else if (arrkind === 0)
+            member.func = function(buf, obj) { obj[this.name] = buf.readTString(); };
+         else {
+            member.classname = classname;
+
+            if (element.fArrayLength > 1) {
+               member.func = function(buf, obj) {
+                  obj[this.name] = buf.readNdimArray(this, (buf, handle) => buf.classStreamer({}, handle.classname));
+               };
+            } else {
+               member.func = function(buf, obj) {
+                  obj[this.name] = buf.classStreamer({}, this.classname);
+               };
+            }
+         }
+         break;
+      }
+      case kOffsetL + kObject:
+      case kOffsetL + kAny:
+      case kOffsetL + kAnyp:
+      case kOffsetL + kObjectp: {
+         let classname = element.fTypeName;
+         if (classname[classname.length - 1] === '*')
+            classname = classname.slice(0, classname.length - 1);
+
+         member.arrkind = getArrayKind(classname);
+         if (member.arrkind < 0) member.classname = classname;
+         member.func = function(buf, obj) {
+            obj[this.name] = buf.readNdimArray(this, (buf, handle) => {
+               if (handle.arrkind > 0) return buf.readFastArray(buf.ntou4(), handle.arrkind);
+               if (handle.arrkind === 0) return buf.readTString();
+               return buf.classStreamer({}, handle.classname);
+            });
+         };
+         break;
+      }
+      case kChar:
+         member.func = function(buf, obj) { obj[this.name] = buf.ntoi1(); }; break;
+      case kCharStar:
+         member.func = function(buf, obj) {
+            const len = buf.ntoi4();
+            obj[this.name] = buf.substring(buf.o, buf.o + len);
+            buf.o += len;
+         };
+         break;
+      case kTString:
+         member.func = function(buf, obj) { obj[this.name] = buf.readTString(); };
+         break;
+      case kTObject:
+      case kTNamed:
+         member.typename = element.fTypeName;
+         member.func = function(buf, obj) { obj[this.name] = buf.classStreamer({}, this.typename); };
+         break;
+      case kOffsetL + kTString:
+      case kOffsetL + kTObject:
+      case kOffsetL + kTNamed:
+         member.typename = element.fTypeName;
+         member.func = function(buf, obj) {
+            const ver = buf.readVersion();
+            obj[this.name] = buf.readNdimArray(this, (buf, handle) => {
+               if (handle.typename === clTString) return buf.readTString();
+               return buf.classStreamer({}, handle.typename);
+            });
+            buf.checkByteCount(ver, this.typename + '[]');
+         };
+         break;
+      case kStreamLoop:
+      case kOffsetL + kStreamLoop:
+         member.typename = element.fTypeName;
+         member.cntname = element.fCountName;
+
+         if (member.typename.lastIndexOf('**') > 0) {
+            member.typename = member.typename.slice(0, member.typename.lastIndexOf('**'));
+            member.isptrptr = true;
+         } else {
+            member.typename = member.typename.slice(0, member.typename.lastIndexOf('*'));
+            member.isptrptr = false;
+         }
+
+         if (member.isptrptr)
+            member.readitem = function(buf) { return buf.readObjectAny(); };
+         else {
+            member.arrkind = getArrayKind(member.typename);
+            if (member.arrkind > 0)
+               member.readitem = function(buf) { return buf.readFastArray(buf.ntou4(), this.arrkind); };
+            else if (member.arrkind === 0)
+               member.readitem = function(buf) { return buf.readTString(); };
+            else
+               member.readitem = function(buf) { return buf.classStreamer({}, this.typename); };
+         }
+
+         if (member.readitem !== undefined) {
+            member.read_loop = function(buf, cnt) {
+               return buf.readNdimArray(this, (buf2, member2) => {
+                  const itemarr = new Array(cnt);
+                  for (let i = 0; i < cnt; ++i)
+                     itemarr[i] = member2.readitem(buf2);
+                  return itemarr;
+               });
+            };
+
+            member.func = function(buf, obj) {
+               const ver = buf.readVersion(),
+                     res = this.read_loop(buf, obj[this.cntname]);
+               obj[this.name] = buf.checkByteCount(ver, this.typename) ? res : null;
+            };
+            member.branch_func = function(buf, obj) {
+               // this is special functions, used by branch in the STL container
+               const ver = buf.readVersion(), sz0 = obj[this.stl_size], res = new Array(sz0);
+
+               for (let loop0 = 0; loop0 < sz0; ++loop0) {
+                  const cnt = obj[this.cntname][loop0];
+                  res[loop0] = this.read_loop(buf, cnt);
+               }
+               obj[this.name] = buf.checkByteCount(ver, this.typename) ? res : null;
+            };
+
+            member.objs_branch_func = function(buf, obj) {
+               // special function when branch read as part of complete object
+               // objects already preallocated and only appropriate member must be set
+               // see code in JSRoot.tree.js for reference
+
+               const ver = buf.readVersion(),
+                     arr = obj[this.name0]; // objects array where reading is done
+
+               for (let loop0 = 0; loop0 < arr.length; ++loop0) {
+                  const obj1 = this.get(arr, loop0), cnt = obj1[this.cntname];
+                  obj1[this.name] = this.read_loop(buf, cnt);
+               }
+
+               buf.checkByteCount(ver, this.typename);
+            };
+         } else {
+            console.error(`fail to provide function for ${element.fName} (${element.fTypeName})  typ = ${element.fType}`);
+            member.func = function(buf, obj) {
+               const ver = buf.readVersion();
+               buf.checkByteCount(ver);
+               obj[this.name] = null;
+            };
+         }
+
+         break;
+
+      case kStreamer: {
+         member.typename = element.fTypeName;
+
+         const stl = (element.fSTLtype || 0) % 40;
+         if ((element._typename === 'TStreamerSTLstring') ||
+            (member.typename === 'string') || (member.typename === 'string*'))
+            member.readelem = buf => buf.readTString();
+         else if ((stl === kSTLvector) || (stl === kSTLlist) ||
+                    (stl === kSTLdeque) || (stl === kSTLset) || (stl === kSTLmultiset)) {
+            const p1 = member.typename.indexOf('<'),
+                  p2 = member.typename.lastIndexOf('>');
+
+            member.conttype = member.typename.slice(p1 + 1, p2).trim();
+            member.typeid = getTypeId(member.conttype);
+            if ((member.typeid < 0) && file.fBasicTypes[member.conttype]) {
+               member.typeid = file.fBasicTypes[member.conttype];
+               console.log(`!!! Reuse basic type ${member.conttype} from file streamer infos`);
+            }
+
+            // check
+            if (element.fCtype && (element.fCtype < 20) && (element.fCtype !== member.typeid)) {
+               console.warn(`Contained type ${member.conttype} not recognized as basic type ${element.fCtype} FORCE`);
+               member.typeid = element.fCtype;
+            }
+
+            if (member.typeid > 0) {
+               member.readelem = function(buf) {
+                  return buf.readFastArray(buf.ntoi4(), this.typeid);
+               };
+            } else {
+               member.isptr = false;
+
+               if (member.conttype.lastIndexOf('*') === member.conttype.length - 1) {
+                  member.isptr = true;
+                  member.conttype = member.conttype.slice(0, member.conttype.length - 1);
+               }
+
+               if (element.fCtype === kObjectp) member.isptr = true;
+
+               member.arrkind = getArrayKind(member.conttype);
+
+               member.readelem = readVectorElement;
+
+               if (!member.isptr && (member.arrkind < 0)) {
+                  const subelem = createStreamerElement('temp', member.conttype);
+                  if (subelem.fType === kStreamer) {
+                     subelem.$fictional = true;
+                     member.submember = createMemberStreamer(subelem, file);
+                  }
+               }
+            }
+         } else if ((stl === kSTLmap) || (stl === kSTLmultimap)) {
+            const p1 = member.typename.indexOf('<'),
+                  p2 = member.typename.lastIndexOf('>');
+
+            member.pairtype = 'pair<' + member.typename.slice(p1 + 1, p2) + '>';
+
+            // remember found streamer info from the file -
+            // most probably it is the only one which should be used
+            member.si = file.findStreamerInfo(member.pairtype);
+
+            member.streamer = getPairStreamer(member.si, member.pairtype, file);
+
+            if (!member.streamer || (member.streamer.length !== 2)) {
+               console.error(`Fail to build streamer for pair ${member.pairtype}`);
+               delete member.streamer;
+            }
+
+            if (member.streamer) member.readelem = readMapElement;
+         } else if (stl === kSTLbitset)
+            member.readelem = (buf /* , obj */) => buf.readFastArray(buf.ntou4(), kBool);
+
+         if (!member.readelem) {
+            console.error(`failed to create streamer for element ${member.typename} ${member.name} element ${element._typename} STL type ${element.fSTLtype}`);
+            member.func = function(buf, obj) {
+               const ver = buf.readVersion();
+               buf.checkByteCount(ver);
+               obj[this.name] = null;
+            };
+         } else
+            if (!element.$fictional) {
+               member.read_version = function(buf, cnt) {
+                  if (cnt === 0) return null;
+                  const ver = buf.readVersion();
+                  this.member_wise = ((ver.val & kStreamedMemberWise) !== 0);
+
+                  this.stl_version = undefined;
+                  if (this.member_wise) {
+                     ver.val = ver.val & ~kStreamedMemberWise;
+                     this.stl_version = { val: buf.ntoi2() };
+                     if (this.stl_version.val <= 0) this.stl_version.checksum = buf.ntou4();
+                  }
+                  return ver;
+               };
+
+               member.func = function(buf, obj) {
+                  const ver = this.read_version(buf);
+
+                  let res = buf.readNdimArray(this, (buf2, member2) => member2.readelem(buf2));
+
+                  if (!buf.checkByteCount(ver, this.typename)) res = null;
+                  obj[this.name] = res;
+               };
+
+               member.branch_func = function(buf, obj) {
+                  // special function to read data from STL branch
+                  const cnt = obj[this.stl_size],
+                        ver = this.read_version(buf, cnt),
+                        arr = new Array(cnt);
+
+                  for (let n = 0; n < cnt; ++n)
+                     arr[n] = buf.readNdimArray(this, (buf2, member2) => member2.readelem(buf2));
+
+                  if (ver) buf.checkByteCount(ver, `branch ${this.typename}`);
+
+                  obj[this.name] = arr;
+               };
+               member.split_func = function(buf, arr, n) {
+                  // function to read array from member-wise streaming
+                  const ver = this.read_version(buf);
+                  for (let i = 0; i < n; ++i)
+                     arr[i][this.name] = buf.readNdimArray(this, (buf2, member2) => member2.readelem(buf2));
+                  buf.checkByteCount(ver, this.typename);
+               };
+               member.objs_branch_func = function(buf, obj) {
+                  // special function when branch read as part of complete object
+                  // objects already preallocated and only appropriate member must be set
+                  // see code in JSRoot.tree.js for reference
+
+                  const arr = obj[this.name0], // objects array where reading is done
+                        ver = this.read_version(buf, arr.length);
+
+                  for (let n = 0; n < arr.length; ++n) {
+                     const obj1 = this.get(arr, n);
+                     obj1[this.name] = buf.readNdimArray(this, (buf2, member2) => member2.readelem(buf2));
+                  }
+
+                  if (ver) buf.checkByteCount(ver, `branch ${this.typename}`);
+               };
+            }
+         break;
+      }
+
+      default:
+         console.error(`fail to provide function for ${element.fName} (${element.fTypeName})  typ = ${element.fType}`);
+
+         member.func = function(/* buf, obj */) {};  // do nothing, fix in the future
+   }
+
+   return member;
+}
+
+
+/** @summary Analyze and returns arrays kind
+  * @return 0 if TString (or equivalent), positive value - some basic type, -1 - any other kind
+  * @private */
+function getArrayKind(type_name) {
+   if ((type_name === clTString) || (type_name === 'string') ||
+      (CustomStreamers[type_name] === clTString)) return 0;
+   if ((type_name.length < 7) || (type_name.indexOf('TArray') !== 0)) return -1;
+   if (type_name.length === 7) {
+      switch (type_name[6]) {
+         case 'I': return kInt;
+         case 'D': return kDouble;
+         case 'F': return kFloat;
+         case 'S': return kShort;
+         case 'C': return kChar;
+         case 'L': return kLong;
+         default: return -1;
+      }
+   }
+
+   return type_name === 'TArrayL64' ? kLong64 : -1;
+}
+
+/** @summary Let directly assign methods when doing I/O
+  * @private */
+function addClassMethods(clname, streamer) {
+   if (streamer === null) return streamer;
+
+   const methods = getMethods(clname);
+
+   if (methods) {
+      for (const key in methods) {
+         if (isFunc(methods[key]) || (key.indexOf('_') === 0))
+            streamer.push({ name: key, method: methods[key], func(_buf, obj) { obj[this.name] = this.method; } });
+      }
+   }
+
+   return streamer;
+}
+
+
+/* Copyright (C) 1999 Masanao Izumo <iz@onicos.co.jp>
+ * Version: 1.0.0.1
+ * LastModified: Dec 25 1999
+ * original: http://www.onicos.com/staff/iz/amuse/javascript/expert/inflate.txt
+ */
+
+/* constant parameters */
+const zip_WSIZE = 32768,       // Sliding Window size
+
+/* constant tables (inflate) */
+zip_MASK_BITS = [
+   0x0000,
+   0x0001, 0x0003, 0x0007, 0x000f, 0x001f, 0x003f, 0x007f, 0x00ff,
+   0x01ff, 0x03ff, 0x07ff, 0x0fff, 0x1fff, 0x3fff, 0x7fff, 0xffff],
+
+// Tables for deflate from PKZIP's appnote.txt.
+   zip_cplens = [ // Copy lengths for literal codes 257..285
+   3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 19, 23, 27, 31,
+   35, 43, 51, 59, 67, 83, 99, 115, 131, 163, 195, 227, 258, 0, 0],
+
+/* note: see note #13 above about the 258 in this list. */
+   zip_cplext = [ // Extra bits for literal codes 257..285
+   0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2,
+   3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0, 99, 99], // 99==invalid
+
+   zip_cpdist = [ // Copy offsets for distance codes 0..29
+   1, 2, 3, 4, 5, 7, 9, 13, 17, 25, 33, 49, 65, 97, 129, 193,
+   257, 385, 513, 769, 1025, 1537, 2049, 3073, 4097, 6145,
+   8193, 12289, 16385, 24577],
+
+   zip_cpdext = [ // Extra bits for distance codes
+   0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6,
+   7, 7, 8, 8, 9, 9, 10, 10, 11, 11,
+   12, 12, 13, 13],
+
+   zip_border = [  // Order of the bit length code lengths
+   16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15];
+
+function ZIP_inflate(arr, tgt) {
+   /* variables (inflate) */
+   const zip_slide = new Array(2 * zip_WSIZE),
+         zip_inflate_data = arr,
+         zip_inflate_datalen = arr.byteLength;
+   let zip_wp = 0,                // current position in slide
+       zip_fixed_tl = null,      // inflate static
+       zip_fixed_td,             // inflate static
+       zip_fixed_bl, zip_fixed_bd,   // inflate static
+       zip_bit_buf = 0,            // bit buffer
+       zip_bit_len = 0,           // bits in bit buffer
+       zip_method = -1,
+       zip_eof = false,
+       zip_copy_leng = 0,
+       zip_copy_dist = 0,
+       zip_tl = null, zip_td,    // literal/length and distance decoder tables
+       zip_bl, zip_bd,           // number of bits decoded by tl and td
+       zip_inflate_pos = 0;
+
+   function zip_NEEDBITS(n) {
+      while (zip_bit_len < n) {
+         if (zip_inflate_pos < zip_inflate_datalen)
+            zip_bit_buf |= zip_inflate_data[zip_inflate_pos++] << zip_bit_len;
+         zip_bit_len += 8;
+      }
+   }
+
+   function zip_GETBITS(n) {
+      return zip_bit_buf & zip_MASK_BITS[n];
+   }
+
+   function zip_DUMPBITS(n) {
+      zip_bit_buf >>= n;
+      zip_bit_len -= n;
+   }
+
+   /* objects (inflate) */
+   function zip_HuftBuild(b,     // code lengths in bits (all assumed <= BMAX)
+                          n,     // number of codes (assumed <= N_MAX)
+                          s,     // number of simple-valued codes (0..s-1)
+                          d,     // list of base values for non-simple codes
+                          e,     // list of extra bits for non-simple codes
+                          mm) {  // maximum lookup bits
+      const res = {
+         status: 0,    // 0: success, 1: incomplete table, 2: bad input
+         root: null,   // (zip_HuftList) starting table
+         m: 0          // maximum lookup bits, returns actual
+      },
+      BMAX = 16,      // maximum bit length of any code
+      N_MAX = 288,    // maximum number of codes in any set
+      c = Array(BMAX+1).fill(0),  // bit length count table
+      lx = Array(BMAX+1).fill(0), // stack of bits per table
+      u = Array(BMAX).fill(null), // zip_HuftNode[BMAX][]  table stack
+      v = Array(N_MAX).fill(0), // values in order of bit length
+      x = Array(BMAX+1).fill(0), // bit offsets, then code stack
+      r = { e: 0, b: 0, n: 0, t: null }, // new zip_HuftNode(), // table entry for structure assignment
+      el = (n > 256) ? b[256] : BMAX; // set length of EOB code, if any
+      let rr = null, // temporary variable, use in assignment
+          a,         // counter for codes of length k
+          f,         // i repeats in table every f entries
+          h,         // table level
+          j,         // counter
+          k,         // number of bits in current code
+          p = b,     // pointer into c[], b[], or v[]
+          pidx = 0,  // index of p
+          q,         // (zip_HuftNode) points to current table
+          w,
+          xp,        // pointer into x or c
+          y,         // number of dummy codes added
+          z,         // number of entries in current table
+          o,
+          tail = null,   // (zip_HuftList)
+          i = n;         // counter, current code
+
+      // Generate counts for each bit length
+      do
+         c[p[pidx++]]++; // assume all entries <= BMAX
+      while (--i > 0);
+
+      if (c[0] === n)    // null input--all zero length codes
+         return res;
+
+      // Find minimum and maximum length, bound *m by those
+      for (j = 1; j <= BMAX; ++j)
+         if (c[j] !== 0) break;
+
+      k = j;         // minimum code length
+      if (mm < j)
+         mm = j;
+      for (i = BMAX; i !== 0; --i)
+         if (c[i] !== 0) break;
+
+      const g = i;         // maximum code length
+      if (mm > i)
+         mm = i;
+
+      // Adjust last length count to fill out codes, if needed
+      for (y = 1 << j; j < i; ++j, y <<= 1) {
+         if ((y -= c[j]) < 0) {
+            res.status = 2;  // bad input: more codes than bits
+            res.m = mm;
+            return res;
+         }
+      }
+      if ((y -= c[i]) < 0) {
+         res.status = 2;
+         res.m = mm;
+         return res;
+      }
+      c[i] += y;
+
+      // Generate starting offsets into the value table for each length
+      x[1] = j = 0;
+      p = c;
+      pidx = 1;
+      xp = 2;
+      while (--i > 0)    // note that i == g from above
+         x[xp++] = (j += p[pidx++]);
+
+      // Make a table of values in order of bit lengths
+      p = b; pidx = 0;
+      i = 0;
+      do {
+         if ((j = p[pidx++]) !== 0)
+            v[x[j]++] = i;
+      } while (++i < n);
+      n = x[g];         // set n to length of v
+
+      // Generate the Huffman codes and for each, make the table entries
+      x[0] = i = 0;     // first Huffman code is zero
+      p = v; pidx = 0;     // grab values in bit order
+      h = -1;        // no tables yet--level -1
+      w = lx[0] = 0;    // no bits decoded yet
+      q = null;         // ditto
+      z = 0;         // ditto
+
+      // go through the bit lengths (k already is bits in shortest code)
+      for (; k <= g; ++k) {
+         a = c[k];
+         while (a-- > 0) {
+            // here i is the Huffman code of length k bits for value p[pidx]
+            // make tables up to required level
+            while (k > w + lx[1 + h]) {
+               w += lx[1 + h++]; // add bits already decoded
+
+               // compute minimum size table less than or equal to *m bits
+               z = (z = g - w) > mm ? mm : z; // upper limit
+               if ((f = 1 << (j = k - w)) > a + 1) { // try a k-w bit table
+                  // too few codes for k-w bit table
+                  f -= a + 1; // deduct codes from patterns left
+                  xp = k;
+                  while (++j < z) { // try smaller tables up to z bits
+                     if ((f <<= 1) <= c[++xp])
+                        break;   // enough codes to use up j bits
+                     f -= c[xp];   // else deduct codes from patterns
+                  }
+               }
+               if (w + j > el && w < el)
+                  j = el - w; // make EOB code end at table
+               z = 1 << j;   // table entries for j-bit table
+               lx[1 + h] = j; // set table size in stack
+
+               // allocate and link in new table
+               q = new Array(z);
+               for (o = 0; o < z; ++o)
+                  q[o] = { e: 0, b: 0, n: 0, t: null }; // new zip_HuftNode
+
+               if (tail === null)
+                  tail = res.root = { next: null, list: null }; // new zip_HuftList();
+               else
+                  tail = tail.next = { next: null, list: null }; // new zip_HuftList();
+               tail.next = null;
+               tail.list = q;
+               u[h] = q;  // table starts after link
+
+               /* connect to last table, if there is one */
+               if (h > 0) {
+                  x[h] = i;      // save pattern for backing up
+                  r.b = lx[h];   // bits to dump before this table
+                  r.e = 16 + j;  // bits in this table
+                  r.t = q;    // pointer to this table
+                  j = (i & ((1 << w) - 1)) >> (w - lx[h]);
+                  rr = u[h-1][j];
+                  rr.e = r.e;
+                  rr.b = r.b;
+                  rr.n = r.n;
+                  rr.t = r.t;
+               }
+            }
+
+            // set up table entry in r
+            r.b = k - w;
+            if (pidx >= n)
+               r.e = 99;     // out of values--invalid code
+            else if (p[pidx] < s) {
+               r.e = (p[pidx] < 256 ? 16 : 15); // 256 is end-of-block code
+               r.n = p[pidx++]; // simple code is just the value
+            } else {
+               r.e = e[p[pidx] - s];  // non-simple--look up in lists
+               r.n = d[p[pidx++] - s];
+            }
+
+            // fill code-like entries with r //
+            f = 1 << (k - w);
+            for (j = i >> w; j < z; j += f) {
+               rr = q[j];
+               rr.e = r.e;
+               rr.b = r.b;
+               rr.n = r.n;
+               rr.t = r.t;
+            }
+
+            // backwards increment the k-bit code i
+            for (j = 1 << (k - 1); (i & j) !== 0; j >>= 1)
+               i ^= j;
+            i ^= j;
+
+            // backup over finished tables
+            while ((i & ((1 << w) - 1)) !== x[h])
+               w -= lx[h--];      // don't need to update q
+         }
+      }
+
+      /* return actual size of base table */
+      res.m = lx[1];
+
+      /* Return true (1) if we were given an incomplete table */
+      res.status = ((y !== 0 && g !== 1) ? 1 : 0);
+
+      return res;
+   }
+
+   /* routines (inflate) */
+
+   function zip_inflate_codes(buff, off, size) {
+      if (size === 0) return 0;
+
+      /* inflate (decompress) the codes in a deflated (compressed) block.
+         Return an error code or zero if it all goes ok. */
+
+      let e,     // table entry flag/number of extra bits
+          t,     // (zip_HuftNode) pointer to table entry
+          n = 0;
+
+      // inflate the coded data
+      for (;;) {        // do until end of block
+         zip_NEEDBITS(zip_bl);
+         t = zip_tl.list[zip_GETBITS(zip_bl)];
+         e = t.e;
+         while (e > 16) {
+            if (e === 99)
+               return -1;
+            zip_DUMPBITS(t.b);
+            e -= 16;
+            zip_NEEDBITS(e);
+            t = t.t[zip_GETBITS(e)];
+            e = t.e;
+         }
+         zip_DUMPBITS(t.b);
+
+         if (e === 16) {     // then it's a literal
+            zip_wp &= zip_WSIZE - 1;
+            buff[off + n++] = zip_slide[zip_wp++] = t.n;
+            if (n === size)
+               return size;
+            continue;
+         }
+
+         // exit if end of block
+         if (e === 15)
+            break;
+
+         // it's an EOB or a length
+
+         // get length of block to copy
+         zip_NEEDBITS(e);
+         zip_copy_leng = t.n + zip_GETBITS(e);
+         zip_DUMPBITS(e);
+
+         // decode distance of block to copy
+         zip_NEEDBITS(zip_bd);
+         t = zip_td.list[zip_GETBITS(zip_bd)];
+         e = t.e;
+
+         while (e > 16) {
+            if (e === 99)
+               return -1;
+            zip_DUMPBITS(t.b);
+            e -= 16;
+            zip_NEEDBITS(e);
+            t = t.t[zip_GETBITS(e)];
+            e = t.e;
+         }
+         zip_DUMPBITS(t.b);
+         zip_NEEDBITS(e);
+         zip_copy_dist = zip_wp - t.n - zip_GETBITS(e);
+         zip_DUMPBITS(e);
+
+         // do the copy
+         while (zip_copy_leng > 0 && n < size) {
+            --zip_copy_leng;
+            zip_copy_dist &= zip_WSIZE - 1;
+            zip_wp &= zip_WSIZE - 1;
+            buff[off + n++] = zip_slide[zip_wp++] = zip_slide[zip_copy_dist++];
+         }
+
+         if (n === size)
+            return size;
+      }
+
+      zip_method = -1; // done
+      return n;
+   }
+
+   function zip_inflate_stored(buff, off, size) {
+      /* 'decompress' an inflated type 0 (stored) block. */
+
+      // go to byte boundary
+      let n = zip_bit_len & 7;
+      zip_DUMPBITS(n);
+
+      // get the length and its complement
+      zip_NEEDBITS(16);
+      n = zip_GETBITS(16);
+      zip_DUMPBITS(16);
+      zip_NEEDBITS(16);
+      if (n !== ((~zip_bit_buf) & 0xffff))
+         return -1;        // error in compressed data
+      zip_DUMPBITS(16);
+
+      // read and output the compressed data
+      zip_copy_leng = n;
+
+      n = 0;
+      while (zip_copy_leng > 0 && n < size) {
+         --zip_copy_leng;
+         zip_wp &= zip_WSIZE - 1;
+         zip_NEEDBITS(8);
+         buff[off + n++] = zip_slide[zip_wp++] = zip_GETBITS(8);
+         zip_DUMPBITS(8);
+      }
+
+      if (zip_copy_leng === 0)
+         zip_method = -1; // done
+      return n;
+   }
+
+   function zip_inflate_fixed(buff, off, size) {
+      /* decompress an inflated type 1 (fixed Huffman codes) block.  We should
+         either replace this with a custom decoder, or at least pre-compute the
+         Huffman tables. */
+
+      // if first time, set up tables for fixed blocks
+      if (zip_fixed_tl === null) {
+         // literal table
+         const l = Array(288).fill(8, 0, 144).fill(9, 144, 256).fill(7, 256, 280).fill(8, 280, 288);
+         // make a complete, but wrong code set
+         zip_fixed_bl = 7;
+
+         let h = zip_HuftBuild(l, 288, 257, zip_cplens, zip_cplext, zip_fixed_bl);
+         if (h.status !== 0)
+            throw new Error('HufBuild error: ' + h.status);
+         zip_fixed_tl = h.root;
+         zip_fixed_bl = h.m;
+
+         // distance table
+         l.fill(5, 0, 30); // make an incomplete code set
+         zip_fixed_bd = 5;
+
+         h = zip_HuftBuild(l, 30, 0, zip_cpdist, zip_cpdext, zip_fixed_bd);
+         if (h.status > 1) {
+            zip_fixed_tl = null;
+            throw new Error('HufBuild error: '+h.status);
+         }
+         zip_fixed_td = h.root;
+         zip_fixed_bd = h.m;
+      }
+
+      zip_tl = zip_fixed_tl;
+      zip_td = zip_fixed_td;
+      zip_bl = zip_fixed_bl;
+      zip_bd = zip_fixed_bd;
+      return zip_inflate_codes(buff, off, size);
+   }
+
+   function zip_inflate_dynamic(buff, off, size) {
+      // decompress an inflated type 2 (dynamic Huffman codes) block.
+      let i, j,  // temporary variables
+          l,     // last length
+          t,     // (zip_HuftNode) literal/length code table
+          h;     // (zip_HuftBuild)
+      const ll = new Array(286+30).fill(0); // literal/length and distance code lengths
+
+      // read in table lengths
+      zip_NEEDBITS(5);
+      const nl = 257 + zip_GETBITS(5);   // number of literal/length codes
+      zip_DUMPBITS(5);
+      zip_NEEDBITS(5);
+      const nd = 1 + zip_GETBITS(5);  // number of distance codes
+      zip_DUMPBITS(5);
+      zip_NEEDBITS(4);
+      const nb = 4 + zip_GETBITS(4);  // number of bit length codes
+      zip_DUMPBITS(4);
+      if (nl > 286 || nd > 30)
+         return -1;     // bad lengths
+
+      // read in bit-length-code lengths
+      for (j = 0; j < nb; ++j) {
+         zip_NEEDBITS(3);
+         ll[zip_border[j]] = zip_GETBITS(3);
+         zip_DUMPBITS(3);
+      }
+      for (; j < 19; ++j)
+         ll[zip_border[j]] = 0;
+
+      // build decoding table for trees--single level, 7 bit lookup
+      zip_bl = 7;
+      h = zip_HuftBuild(ll, 19, 19, null, null, zip_bl);
+      if (h.status !== 0)
+         return -1;  // incomplete code set
+
+      zip_tl = h.root;
+      zip_bl = h.m;
+
+      // read in literal and distance code lengths
+      const n = nl + nd;   // number of lengths to get
+      i = l = 0;
+      while (i < n) {
+         zip_NEEDBITS(zip_bl);
+         t = zip_tl.list[zip_GETBITS(zip_bl)];
+         j = t.b;
+         zip_DUMPBITS(j);
+         j = t.n;
+         if (j < 16) // length of code in bits (0..15)
+            ll[i++] = l = j; // save last length in l
+         else if (j === 16) {   // repeat last length 3 to 6 times
+            zip_NEEDBITS(2);
+            j = 3 + zip_GETBITS(2);
+            zip_DUMPBITS(2);
+            if (i + j > n)
+               return -1;
+            while (j-- > 0)
+               ll[i++] = l;
+         } else if (j === 17) { // 3 to 10 zero length codes
+            zip_NEEDBITS(3);
+            j = 3 + zip_GETBITS(3);
+            zip_DUMPBITS(3);
+            if (i + j > n)
+               return -1;
+            while (j-- > 0)
+               ll[i++] = 0;
+            l = 0;
+         } else {    // j == 18: 11 to 138 zero length codes
+            zip_NEEDBITS(7);
+            j = 11 + zip_GETBITS(7);
+            zip_DUMPBITS(7);
+            if (i + j > n)
+               return -1;
+            while (j-- > 0)
+               ll[i++] = 0;
+            l = 0;
+         }
+      }
+
+      // build the decoding tables for literal/length and distance codes
+      zip_bl = 9; // zip_lbits;
+      h = zip_HuftBuild(ll, nl, 257, zip_cplens, zip_cplext, zip_bl);
+      if (zip_bl === 0)  // no literals or lengths
+         h.status = 1;
+      if (h.status !== 0)
+         return -1;     // incomplete code set
+      zip_tl = h.root;
+      zip_bl = h.m;
+
+      for (i = 0; i < nd; ++i)
+         ll[i] = ll[i + nl];
+      zip_bd = 6; // zip_dbits;
+      h = zip_HuftBuild(ll, nd, 0, zip_cpdist, zip_cpdext, zip_bd);
+      zip_td = h.root;
+      zip_bd = h.m;
+
+      // incomplete distance tree
+      if ((zip_bd === 0 && nl > 257) || (h.status !== 0))   // lengths but no distances
+         return -1;
+
+      // decompress until an end-of-block code
+      return zip_inflate_codes(buff, off, size);
+   }
+
+   function zip_inflate_internal(buff, off, size) {
+      // decompress an inflated entry
+      let n = 0, i;
+
+      while (n < size) {
+         if (zip_eof && zip_method === -1)
+            return n;
+
+         if (zip_copy_leng > 0) {
+            if (zip_method !== 0 /* zip_STORED_BLOCK */) {
+               // STATIC_TREES or DYN_TREES
+               while (zip_copy_leng > 0 && n < size) {
+                  --zip_copy_leng;
+                  zip_copy_dist &= zip_WSIZE - 1;
+                  zip_wp &= zip_WSIZE - 1;
+                  buff[off + n++] = zip_slide[zip_wp++] =
+                  zip_slide[zip_copy_dist++];
+               }
+            } else {
+               while (zip_copy_leng > 0 && n < size) {
+                  --zip_copy_leng;
+                  zip_wp &= zip_WSIZE - 1;
+                  zip_NEEDBITS(8);
+                  buff[off + n++] = zip_slide[zip_wp++] = zip_GETBITS(8);
+                  zip_DUMPBITS(8);
+               }
+               if (zip_copy_leng === 0)
+                  zip_method = -1; // done
+            }
+            if (n === size)
+               return n;
+         }
+
+         if (zip_method === -1) {
+            if (zip_eof)
+               break;
+
+            // read in last block bit
+            zip_NEEDBITS(1);
+            if (zip_GETBITS(1) !== 0)
+               zip_eof = true;
+            zip_DUMPBITS(1);
+
+            // read in block type
+            zip_NEEDBITS(2);
+            zip_method = zip_GETBITS(2);
+            zip_DUMPBITS(2);
+            zip_tl = null;
+            zip_copy_leng = 0;
+         }
+
+         switch (zip_method) {
+            case 0: // zip_STORED_BLOCK
+               i = zip_inflate_stored(buff, off + n, size - n);
+               break;
+
+            case 1: // zip_STATIC_TREES
+               if (zip_tl !== null)
+                  i = zip_inflate_codes(buff, off + n, size - n);
+               else
+                  i = zip_inflate_fixed(buff, off + n, size - n);
+               break;
+
+            case 2: // zip_DYN_TREES
+               if (zip_tl !== null)
+                  i = zip_inflate_codes(buff, off + n, size - n);
+               else
+                  i = zip_inflate_dynamic(buff, off + n, size - n);
+               break;
+
+            default: // error
+               i = -1;
+               break;
+         }
+
+         if (i === -1)
+            return zip_eof ? 0 : -1;
+         n += i;
+      }
+      return n;
+   }
+
+   let i, cnt = 0;
+   while ((i = zip_inflate_internal(tgt, cnt, Math.min(1024, tgt.byteLength-cnt))) > 0)
+      cnt += i;
+
+   return cnt;
+} // function ZIP_inflate
+
+/**
+ * https://github.com/pierrec/node-lz4/blob/master/lib/binding.js
+ *
+ * LZ4 based compression and decompression
+ * Copyright (c) 2014 Pierre Curto
+ * MIT Licensed
+ */
+
+/**
+ * Decode a block. Assumptions: input contains all sequences of a
+ * chunk, output is large enough to receive the decoded data.
+ * If the output buffer is too small, an error will be thrown.
+ * If the returned value is negative, an error occurred at the returned offset.
+ *
+ * @param input {Buffer} input data
+ * @param output {Buffer} output data
+ * @return {Number} number of decoded bytes
+ * @private */
+function LZ4_uncompress(input, output, sIdx, eIdx) {
+   sIdx = sIdx || 0;
+   eIdx = eIdx || (input.length - sIdx);
+   // Process each sequence in the incoming data
+   let j = 0;
+   for (let i = sIdx, n = eIdx; i < n;) {
+      const token = input[i++];
+
+      // Literals
+      let literals_length = (token >> 4);
+      if (literals_length > 0) {
+         // length of literals
+         let l = literals_length + 240;
+         while (l === 255) {
+            l = input[i++];
+            literals_length += l;
+         }
+
+         // Copy the literals
+         const end = i + literals_length;
+         while (i < end) output[j++] = input[i++];
+
+         // End of buffer?
+         if (i === n) return j;
+      }
+
+      // Match copy
+      // 2 bytes offset (little endian)
+      const offset = input[i++] | (input[i++] << 8);
+
+      // 0 is an invalid offset value
+      if (offset === 0 || offset > j) return -(i-2);
+
+      // length of match copy
+      let match_length = (token & 0xf),
+          l = match_length + 240;
+      while (l === 255) {
+         l = input[i++];
+         match_length += l;
+      }
+
+      // Copy the match
+      let pos = j - offset; // position of the match copy in the current output
+      const end = j + match_length + 4; // minmatch = 4;
+      while (j < end) output[j++] = output[pos++];
+   }
+
+   return j;
+}
+
+
+/** @summary Reads header envelope, determines zipped size and unzip content
+  * @return {Promise} with unzipped content
+  * @private */
+async function R__unzip(arr, tgtsize, noalert, src_shift) {
+   const HDRSIZE = 9, totallen = arr.byteLength,
+         checkChar = (o, symb) => { return String.fromCharCode(arr.getUint8(o)) === symb; },
+         getCode = o => arr.getUint8(o);
+
+   let curr = src_shift || 0, fullres = 0, tgtbuf = null;
+
+   const nextPortion = () => {
+      while (fullres < tgtsize) {
+         let fmt = 'unknown', off = 0, CHKSUM = 0;
+
+         if (curr + HDRSIZE >= totallen) {
+            if (!noalert) console.error('Error R__unzip: header size exceeds buffer size');
+            return Promise.resolve(null);
+         }
+
+         if (checkChar(curr, 'Z') && checkChar(curr+1, 'L') && getCode(curr + 2) === 8) { fmt = 'new'; off = 2; } else
+         if (checkChar(curr, 'C') && checkChar(curr+1, 'S') && getCode(curr + 2) === 8) { fmt = 'old'; off = 0; } else
+         if (checkChar(curr, 'X') && checkChar(curr+1, 'Z') && getCode(curr + 2) === 0) { fmt = 'LZMA'; off = 0; } else
+         if (checkChar(curr, 'Z') && checkChar(curr+1, 'S') && getCode(curr + 2) === 1) fmt = 'ZSTD'; else
+         if (checkChar(curr, 'L') && checkChar(curr+1, '4')) { fmt = 'LZ4'; off = 0; CHKSUM = 8; }
+
+         /*   C H E C K   H E A D E R   */
+         if ((fmt !== 'new') && (fmt !== 'old') && (fmt !== 'LZ4') && (fmt !== 'ZSTD') && (fmt !== 'LZMA')) {
+            if (!noalert) console.error(`R__unzip: ${fmt} format is not supported!`);
+            return Promise.resolve(null);
+         }
+
+         const srcsize = HDRSIZE + ((getCode(curr + 3) & 0xff) | ((getCode(curr + 4) & 0xff) << 8) | ((getCode(curr + 5) & 0xff) << 16)),
+               uint8arr = new Uint8Array(arr.buffer, arr.byteOffset + curr + HDRSIZE + off + CHKSUM, Math.min(arr.byteLength - curr - HDRSIZE - off - CHKSUM, srcsize - HDRSIZE - CHKSUM));
+
+         if (!tgtbuf) tgtbuf = new ArrayBuffer(tgtsize);
+         const tgt8arr = new Uint8Array(tgtbuf, fullres);
+
+         if (fmt === 'ZSTD') {
+            let promise;
+            if (internals._ZstdStream)
+               promise = Promise.resolve(internals._ZstdStream);
+            else if (internals._ZstdInit !== undefined)
+               promise = new Promise(resolveFunc => { internals._ZstdInit.push(resolveFunc); });
+            else {
+               internals._ZstdInit = [];
+               promise = (isNodeJs() ? Promise.resolve().then(function () { return _rollup_plugin_ignore_empty_module_placeholder$1; }) : Promise.resolve().then(function () { return _rollup_plugin_ignore_empty_module_placeholder$1; }))
+                   .then(({ ZstdInit }) => ZstdInit())
+                   .then(({ ZstdStream }) => {
+                     internals._ZstdStream = ZstdStream;
+                     internals._ZstdInit.forEach(func => func(ZstdStream));
+                     delete internals._ZstdInit;
+                     return ZstdStream;
+                  });
+            }
+
+            return promise.then(ZstdStream => {
+               const data2 = ZstdStream.decompress(uint8arr),
+                     reslen = data2.length;
+
+               for (let i = 0; i < reslen; ++i)
+                   tgt8arr[i] = data2[i];
+
+               fullres += reslen;
+               curr += srcsize;
+               return nextPortion();
+            });
+         } else if (fmt === 'LZMA') {
+            return Promise.resolve().then(function () { return _rollup_plugin_ignore_empty_module_placeholder$1; }).then(lzma => {
+               const expected_len = (getCode(curr + 6) & 0xff) | ((getCode(curr + 7) & 0xff) << 8) | ((getCode(curr + 8) & 0xff) << 16),
+                     reslen = lzma.decompress(uint8arr, tgt8arr, expected_len);
+               fullres += reslen;
+               curr += srcsize;
+               return nextPortion();
+            });
+         }
+
+         const reslen = (fmt === 'LZ4') ? LZ4_uncompress(uint8arr, tgt8arr) : ZIP_inflate(uint8arr, tgt8arr);
+
+         if (reslen <= 0) break;
+         fullres += reslen;
+         curr += srcsize;
+      }
+
+      if (fullres !== tgtsize) {
+         if (!noalert) console.error(`R__unzip: fail to unzip data expects ${tgtsize}, got ${fullres}`);
+         return Promise.resolve(null);
+      }
+
+      return Promise.resolve(new DataView(tgtbuf));
+   };
+
+   return nextPortion();
+}
+
+
+/**
+  * @summary Buffer object to read data from TFile
+  *
+  * @private
+  */
+
+class TBuffer {
+
+   constructor(arr, pos, file, length) {
+      this._typename = 'TBuffer';
+      this.arr = arr;
+      this.o = pos || 0;
+      this.fFile = file;
+      this.length = length || (arr ? arr.byteLength : 0); // use size of array view, blob buffer can be much bigger
+      this.clearObjectMap();
+      this.fTagOffset = 0;
+      this.last_read_version = 0;
+   }
+
+   /** @summary locate position in the buffer  */
+   locate(pos) { this.o = pos; }
+
+   /** @summary shift position in the buffer  */
+   shift(cnt) { this.o += cnt; }
+
+   /** @summary Returns remaining place in the buffer */
+   remain() { return this.length - this.o; }
+
+   /** @summary Get mapped object with provided tag */
+   getMappedObject(tag) { return this.fObjectMap[tag]; }
+
+   /** @summary Map object */
+   mapObject(tag, obj) { if (obj !== null) this.fObjectMap[tag] = obj; }
+
+   /** @summary Map class */
+   mapClass(tag, classname) { this.fClassMap[tag] = classname; }
+
+   /** @summary Get mapped class with provided tag */
+   getMappedClass(tag) { return (tag in this.fClassMap) ? this.fClassMap[tag] : -1; }
+
+   /** @summary Clear objects map */
+   clearObjectMap() {
+      this.fObjectMap = {};
+      this.fClassMap = {};
+      this.fObjectMap[0] = null;
+      this.fDisplacement = 0;
+   }
+
+   /** @summary  read class version from I/O buffer */
+   readVersion() {
+      const ver = {}, bytecnt = this.ntou4(); // byte count
+
+      if (bytecnt & kByteCountMask)
+         ver.bytecnt = bytecnt - kByteCountMask - 2; // one can check between Read version and end of streamer
+      else
+         this.o -= 4; // rollback read bytes, this is old buffer without byte count
+
+      this.last_read_version = ver.val = this.ntoi2();
+      this.last_read_checksum = 0;
+      ver.off = this.o;
+
+      if ((ver.val <= 0) && ver.bytecnt && (ver.bytecnt >= 4)) {
+         ver.checksum = this.ntou4();
+         if (!this.fFile.findStreamerInfo(undefined, undefined, ver.checksum)) {
+            // console.error(`Fail to find streamer info with check sum ${ver.checksum} version ${ver.val}`);
+            this.o -= 4; // not found checksum in the list
+            delete ver.checksum; // remove checksum
+         } else
+            this.last_read_checksum = ver.checksum;
+      }
+      return ver;
+   }
+
+   /** @summary Check bytecount after object streaming */
+   checkByteCount(ver, where) {
+      if ((ver.bytecnt !== undefined) && (ver.off + ver.bytecnt !== this.o)) {
+         if (where)
+            console.log(`Missmatch in ${where} bytecount expected = ${ver.bytecnt}  got = ${this.o - ver.off}`);
+         this.o = ver.off + ver.bytecnt;
          return false;
-
-      const opts = painter.getSupportedDrawOptions();
-
-      this.addDrawMenu(`Draw ${painter.getClassName()} with`, opts, arg => {
-         if ((arg.indexOf(kInspect) === 0) && isFunc(painter.showInspector))
-            return painter.showInspector(arg);
-
-         painter.redrawWith(arg);
-      });
+      }
       return true;
    }
 
-   /** @summary Add color selection menu entries
-     * @protected */
-   addColorMenu(name, value, set_func, fill_kind) {
-      if (value === undefined) return;
-      const useid = !isStr(value);
-      this.sub('' + name, () => {
-         this.input('Enter color ' + (useid ? '(only id number)' : '(name or id)'), value, useid ? 'int' : 'text', useid ? 0 : undefined, useid ? 9999 : undefined).then(col => {
-            const id = parseInt(col);
-            if (Number.isInteger(id) && getColor(id))
-               col = getColor(id);
-             else
-               if (useid) return;
+   /** @summary Read TString object (or equivalent)
+     * @desc std::string uses similar binary format */
+   readTString() {
+      let len = this.ntou1();
+      // large strings
+      if (len === 255) len = this.ntou4();
+      if (len === 0) return '';
 
-            set_func(useid ? id : col);
-         });
-      });
+      const pos = this.o;
+      this.o += len;
 
-      for (let ncolumn = 0; ncolumn < 5; ++ncolumn) {
-         this.add('column:');
-
-         for (let nrow = 0; nrow < 10; nrow++) {
-            let n = ncolumn*10 + nrow;
-            if (!useid) --n; // use -1 as none color
-
-            let col = (n < 0) ? 'none' : getColor(n);
-            if ((n === 0) && (fill_kind === 1)) col = 'none';
-            const lbl = (n <= 0) || (col[0] !== '#') ? col : `col ${n}`,
-                  fill = (n === 1) ? 'white' : 'black',
-                  stroke = (n === 1) ? 'red' : 'black',
-                  rect = (value === (useid ? n : col)) ? `<rect width="50" height="18" style="fill:none;stroke-width:3px;stroke:${stroke}"></rect>` : '',
-                  svg = `<svg width="50" height="18" style="margin:0px;background-color:${col}">${rect}<text x="4" y="12" style='font-size:12px' fill="${fill}">${lbl}</text></svg>`;
-
-            this.add(svg, (useid ? n : col), res => set_func(useid ? parseInt(res) : res), 'Select color ' + col);
-         }
-
-         this.add('endcolumn:');
-         if (!this.native()) break;
-      }
-
-      this.endsub();
+      return (this.codeAt(pos) === 0) ? '' : this.substring(pos, pos + len);
    }
 
-   /** @summary Add size selection menu entries
-     * @protected */
-   addSizeMenu(name, min, max, step, size_value, set_func, title) {
-      if (size_value === undefined) return;
+    /** @summary read Char_t array as string
+      * @desc string either contains all symbols or until 0 symbol */
+   readFastString(n) {
+      let res = '', code, closed = false;
+      for (let i = 0; (n < 0) || (i < n); ++i) {
+         code = this.ntou1();
+         if (code === 0) { closed = true; if (n < 0) break; }
+         if (!closed) res += String.fromCharCode(code);
+      }
 
-      let values = [], miss_current = false;
-      if (isObject(step)) {
-         values = step; step = 1;
+      return res;
+   }
+
+   /** @summary read uint8_t */
+   ntou1() { return this.arr.getUint8(this.o++); }
+
+   /** @summary read uint16_t */
+   ntou2() {
+      const o = this.o; this.o += 2;
+      return this.arr.getUint16(o);
+   }
+
+   /** @summary read uint32_t */
+   ntou4() {
+      const o = this.o; this.o += 4;
+      return this.arr.getUint32(o);
+   }
+
+   /** @summary read uint64_t */
+   ntou8() {
+      const high = this.arr.getUint32(this.o); this.o += 4;
+      const low = this.arr.getUint32(this.o); this.o += 4;
+      return (high < 0x200000) ? (high * 0x100000000 + low) : (BigInt(high) * BigInt(0x100000000) + BigInt(low));
+   }
+
+   /** @summary read int8_t */
+   ntoi1() { return this.arr.getInt8(this.o++); }
+
+   /** @summary read int16_t */
+   ntoi2() {
+      const o = this.o; this.o += 2;
+      return this.arr.getInt16(o);
+   }
+
+   /** @summary read int32_t */
+   ntoi4() {
+      const o = this.o; this.o += 4;
+      return this.arr.getInt32(o);
+   }
+
+   /** @summary read int64_t */
+   ntoi8() {
+      const high = this.arr.getUint32(this.o); this.o += 4;
+      const low = this.arr.getUint32(this.o); this.o += 4;
+      if (high < 0x80000000)
+         return (high < 0x200000) ? (high * 0x100000000 + low) : (BigInt(high) * BigInt(0x100000000) + BigInt(low));
+      return (~high < 0x200000) ? (-1 - ((~high) * 0x100000000 + ~low)) : (BigInt(-1) - (BigInt(~high) * BigInt(0x100000000) + BigInt(~low)));
+   }
+
+   /** @summary read float */
+   ntof() {
+      const o = this.o; this.o += 4;
+      return this.arr.getFloat32(o);
+   }
+
+   /** @summary read double */
+   ntod() {
+      const o = this.o; this.o += 8;
+      return this.arr.getFloat64(o);
+   }
+
+   /** @summary Reads array of n values from the I/O buffer */
+   readFastArray(n, array_type) {
+      let array, i = 0, o = this.o;
+      const view = this.arr;
+      switch (array_type) {
+         case kDouble:
+            array = new Float64Array(n);
+            for (; i < n; ++i, o += 8)
+               array[i] = view.getFloat64(o);
+            break;
+         case kFloat:
+            array = new Float32Array(n);
+            for (; i < n; ++i, o += 4)
+               array[i] = view.getFloat32(o);
+            break;
+         case kLong:
+         case kLong64:
+            array = new Array(n);
+            for (; i < n; ++i)
+               array[i] = this.ntoi8();
+            return array; // exit here to avoid conflicts
+         case kULong:
+         case kULong64:
+            array = new Array(n);
+            for (; i < n; ++i)
+               array[i] = this.ntou8();
+            return array; // exit here to avoid conflicts
+         case kInt:
+         case kCounter:
+            array = new Int32Array(n);
+            for (; i < n; ++i, o += 4)
+               array[i] = view.getInt32(o);
+            break;
+         case kShort:
+            array = new Int16Array(n);
+            for (; i < n; ++i, o += 2)
+               array[i] = view.getInt16(o);
+            break;
+         case kUShort:
+            array = new Uint16Array(n);
+            for (; i < n; ++i, o += 2)
+               array[i] = view.getUint16(o);
+            break;
+         case kChar:
+            array = new Int8Array(n);
+            for (; i < n; ++i)
+               array[i] = view.getInt8(o++);
+            break;
+         case kBool:
+         case kUChar:
+            array = new Uint8Array(n);
+            for (; i < n; ++i)
+               array[i] = view.getUint8(o++);
+            break;
+         case kTString:
+            array = new Array(n);
+            for (; i < n; ++i)
+               array[i] = this.readTString();
+            return array; // exit here to avoid conflicts
+         case kDouble32:
+            throw new Error('kDouble32 should not be used in readFastArray');
+         case kFloat16:
+            throw new Error('kFloat16 should not be used in readFastArray');
+         // case kBits:
+         // case kUInt:
+         default:
+            array = new Uint32Array(n);
+            for (; i < n; ++i, o += 4)
+               array[i] = view.getUint32(o);
+            break;
+      }
+
+      this.o = o;
+      return array;
+   }
+
+   /** @summary Check if provided regions can be extracted from the buffer */
+   canExtract(place) {
+      for (let n = 0; n < place.length; n += 2)
+         if (place[n] + place[n + 1] > this.length) return false;
+      return true;
+   }
+
+   /** @summary Extract area */
+   extract(place) {
+      if (!this.arr || !this.arr.buffer || !this.canExtract(place)) return null;
+      if (place.length === 2) return new DataView(this.arr.buffer, this.arr.byteOffset + place[0], place[1]);
+
+      const res = new Array(place.length / 2);
+      for (let n = 0; n < place.length; n += 2)
+         res[n / 2] = new DataView(this.arr.buffer, this.arr.byteOffset + place[n], place[n + 1]);
+
+      return res; // return array of buffers
+   }
+
+   /** @summary Get code at buffer position */
+   codeAt(pos) {
+      return this.arr.getUint8(pos);
+   }
+
+   /** @summary Get part of buffer as string */
+   substring(beg, end) {
+      let res = '';
+      for (let n = beg; n < end; ++n)
+         res += String.fromCharCode(this.arr.getUint8(n));
+      return res;
+   }
+
+   /** @summary Read buffer as N-dim array */
+   readNdimArray(handle, func) {
+      let ndim = handle.fArrayDim, maxindx = handle.fMaxIndex, res;
+      if ((ndim < 1) && (handle.fArrayLength > 0)) { ndim = 1; maxindx = [handle.fArrayLength]; }
+      if (handle.minus1) --ndim;
+
+      if (ndim < 1) return func(this, handle);
+
+      if (ndim === 1) {
+         res = new Array(maxindx[0]);
+         for (let n = 0; n < maxindx[0]; ++n)
+            res[n] = func(this, handle);
+      } else if (ndim === 2) {
+         res = new Array(maxindx[0]);
+         for (let n = 0; n < maxindx[0]; ++n) {
+            const res2 = new Array(maxindx[1]);
+            for (let k = 0; k < maxindx[1]; ++k)
+               res2[k] = func(this, handle);
+            res[n] = res2;
+         }
       } else {
-         for (let sz = min; sz <= max; sz += step)
-            values.push(sz);
-      }
-
-      const match = v => Math.abs(v-size_value) < (max - min)*1e-5,
-            conv = (v, more) => {
-               if ((v === size_value) && miss_current) more = true;
-               if (step >= 1) return v.toFixed(0);
-               if (step >= 0.1) return v.toFixed(more ? 2 : 1);
-               return v.toFixed(more ? 4 : 2);
-           };
-
-      if (values.findIndex(match) < 0) {
-         miss_current = true;
-         values.push(size_value);
-         values = values.sort((a, b) => a > b);
-      }
-
-      this.sub('' + name, () => this.input('Enter value of ' + name, conv(size_value, true), (step >= 1) ? 'int' : 'float').then(set_func), title);
-      values.forEach(v => this.addchk(match(v), conv(v), v, res => set_func((step >= 1) ? Number.parseInt(res) : Number.parseFloat(res))));
-      this.endsub();
-   }
-
-   /** @summary Add palette menu entries
-     * @protected */
-   addPaletteMenu(curr, set_func) {
-      const add = (id, name, title, more) => {
-         if (!name)
-            name = `pal ${id}`;
-         else if (!title)
-            title = name;
-         if (title) title += `, code ${id}`;
-         this.addchk((id === curr) || more, '<nobr>' + name + '</nobr>', id, set_func, title || name);
-      };
-
-      this.sub('Palette', () => this.input('Enter palette code [1..113]', curr, 'int', 1, 113).then(set_func));
-
-      this.add('column:');
-
-      add(57, 'Bird', 'Default color palette', (curr > 113));
-      add(55, 'Rainbow');
-      add(51, 'Deep Sea');
-      add(52, 'Grayscale', 'New gray scale');
-      add(1, '', 'Old gray scale', (curr > 0) && (curr < 10));
-      add(50, 'ROOT 5', 'Default color palette in ROOT 5', (curr >= 10) && (curr < 51));
-      add(53, '', 'Dark body radiator');
-      add(54, '', 'Two-color hue');
-      add(56, '', 'Inverted dark body radiator');
-      add(58, 'Cubehelix');
-      add(59, '', 'Green Red Violet');
-      add(60, '', 'Blue Red Yellow');
-      add(61, 'Ocean');
-
-      this.add('endcolumn:');
-
-      if (!this.native())
-         return this.endsub();
-
-      this.add('column:');
-
-      add(62, '', 'Color Printable On Grey');
-      add(63, 'Alpine');
-      add(64, 'Aquamarine');
-      add(65, 'Army');
-      add(66, 'Atlantic');
-      add(67, 'Aurora');
-      add(68, 'Avocado');
-      add(69, 'Beach');
-      add(70, 'Black Body');
-      add(71, '', 'Blue Green Yellow');
-      add(72, 'Brown Cyan');
-      add(73, 'CMYK');
-      add(74, 'Candy');
-
-      this.add('endcolumn:');
-      this.add('column:');
-
-      add(75, 'Cherry');
-      add(76, 'Coffee');
-      add(77, '', 'Dark Rain Bow');
-      add(78, '', 'Dark Terrain');
-      add(79, 'Fall');
-      add(80, 'Fruit Punch');
-      add(81, 'Fuchsia');
-      add(82, 'Grey Yellow');
-      add(83, '', 'Green Brown Terrain');
-      add(84, 'Green Pink');
-      add(85, 'Island');
-      add(86, 'Lake');
-      add(87, '', 'Light Temperature');
-
-      this.add('endcolumn:');
-      this.add('column:');
-
-      add(88, '', 'Light Terrain');
-      add(89, 'Mint');
-      add(90, 'Neon');
-      add(91, 'Pastel');
-      add(92, 'Pearl');
-      add(93, 'Pigeon');
-      add(94, 'Plum');
-      add(95, 'Red Blue');
-      add(96, 'Rose');
-      add(97, 'Rust');
-      add(98, '', 'Sandy Terrain');
-      add(99, 'Sienna');
-      add(100, 'Solar');
-
-      this.add('endcolumn:');
-      this.add('column:');
-
-      add(101, '', 'South West');
-      add(102, '', 'Starry Night');
-      add(103, '', 'Sunset');
-      add(104, '', 'Temperature Map');
-      add(105, '', 'Thermometer');
-      add(106, 'Valentine');
-      add(107, '', 'Visible Spectrum');
-      add(108, '', 'Water Melon');
-      add(109, 'Cool');
-      add(110, 'Copper');
-      add(111, '', 'Gist Earth');
-      add(112, 'Viridis');
-      add(113, 'Cividis');
-
-      this.add('endcolumn:');
-
-      this.endsub();
-   }
-
-   /** @summary Add rebin menu entries
-     * @protected */
-   addRebinMenu(rebin_func) {
-      this.sub('Rebin', () => this.input('Enter rebin value', 2, 'int', 2).then(rebin_func));
-      for (let sz = 2; sz <= 7; sz++)
-         this.add(sz.toString(), sz, res => rebin_func(parseInt(res)));
-      this.endsub();
-   }
-
-   /** @summary Add selection menu entries
-     * @param {String} name - name of submenu
-     * @param {Array} values - array of string entries used as list for selection
-     * @param {String|Number} value - currently elected value, either name or index
-     * @param {Function} set_func - function called when item selected, either name or index depending from value parameter
-     * @param {String} [title] - optional title for menu items
-     * @protected */
-   addSelectMenu(name, values, value, set_func, title) {
-      const use_number = (typeof value === 'number');
-      this.sub('' + name, undefined, undefined, title);
-      for (let n = 0; n < values.length; ++n)
-         this.addchk(use_number ? (n === value) : (values[n] === value), values[n], use_number ? n : values[n], res => set_func(use_number ? Number.parseInt(res) : res));
-      this.endsub();
-   }
-
-   /** @summary Add RColor selection menu entries
-     * @protected */
-   addRColorMenu(name, value, set_func) {
-      // if (value === undefined) return;
-      const colors = ['default', 'black', 'white', 'red', 'green', 'blue', 'yellow', 'magenta', 'cyan'];
-
-      this.sub('' + name, () => {
-         this.input('Enter color name - empty string will reset color', value).then(set_func);
-      });
-      let fillcol = 'black';
-      for (let n = 0; n < colors.length; ++n) {
-         const coltxt = colors[n];
-         let match = false, bkgr = '';
-         if (n > 0) {
-            bkgr = 'background-color:' + coltxt;
-            fillcol = (coltxt === 'white') ? 'black' : 'white';
-
-            if (isStr(value) && value && (value !== 'auto') && (value[0] !== '['))
-               match = (rgb(value).toString() === rgb(coltxt).toString());
-         } else
-            match = !value;
-
-         const svg = `<svg width='100' height='18' style='margin:0px;${bkgr}'><text x='4' y='12' style='font-size:12px' fill='${fillcol}'>${coltxt}</text></svg>`;
-         this.addchk(match, svg, coltxt, res => set_func(res === 'default' ? null : res));
-      }
-      this.endsub();
-   }
-
-   /** @summary Add items to change RAttrText
-     * @protected */
-   addRAttrTextItems(fontHandler, opts, set_func) {
-      if (!opts) opts = {};
-      this.addRColorMenu('color', fontHandler.color, value => set_func({ name: 'color', value }));
-      if (fontHandler.scaled)
-         this.addSizeMenu('size', 0.01, 0.10, 0.01, fontHandler.size /fontHandler.scale, value => set_func({ name: 'size', value }));
-      else
-         this.addSizeMenu('size', 6, 20, 2, fontHandler.size, value => set_func({ name: 'size', value }));
-
-      this.addSelectMenu('family', ['Arial', 'Times New Roman', 'Courier New', 'Symbol'], fontHandler.name, value => set_func({ name: 'font_family', value }));
-
-      this.addSelectMenu('style', ['normal', 'italic', 'oblique'], fontHandler.style || 'normal', res => set_func({ name: 'font_style', value: res === 'normal' ? null : res }));
-
-      this.addSelectMenu('weight', ['normal', 'lighter', 'bold', 'bolder'], fontHandler.weight || 'normal', res => set_func({ name: 'font_weight', value: res === 'normal' ? null : res }));
-
-      if (!opts.noalign)
-         this.add('align');
-      if (!opts.noangle)
-         this.add('angle');
-   }
-
-   /** @summary Add line style menu
-     * @private */
-   addLineStyleMenu(name, value, set_func) {
-      this.sub(''+name, () => this.input('Enter line style id (1-solid)', value, 'int', 1, 11).then(val => {
-         if (getSvgLineStyle(val)) set_func(val);
-      }));
-      for (let n = 1; n < 11; ++n) {
-         const dash = getSvgLineStyle(n),
-             svg = `<svg width='100' height='14'><text x='2' y='13' style='font-size:12px'>${n}</text><line x1='30' y1='7' x2='100' y2='7' stroke='black' stroke-width='3' stroke-dasharray='${dash}'></line></svg>`;
-
-         this.addchk((value === n), svg, n, arg => set_func(parseInt(arg)));
-      }
-      this.endsub();
-   }
-
-   /** @summary Add fill style menu
-     * @private */
-   addFillStyleMenu(name, value, color_index, painter, set_func) {
-      this.sub('' + name, () => {
-         this.input('Enter fill style id (1001-solid, 3000..3010)', value, 'int', 0, 4000).then(id => {
-            if ((id >= 0) && (id <= 4000)) set_func(id);
-         });
-      });
-
-      const supported = [1, 1001, 3001, 3002, 3003, 3004, 3005, 3006, 3007, 3010, 3021, 3022];
-
-      for (let n = 0; n < supported.length; ++n) {
-         let svg = supported[n];
-         if (painter) {
-            const sample = painter.createAttFill({ std: false, pattern: supported[n], color: color_index || 1 });
-            svg = `<svg width='100' height='18'><text x='1' y='12' style='font-size:12px'>${supported[n].toString()}</text><rect x='40' y='0' width='60' height='18' stroke='none' fill='${sample.getFillColor()}'></rect></svg>`;
-         }
-         this.addchk(value === supported[n], svg, supported[n], arg => set_func(parseInt(arg)));
-      }
-      this.endsub();
-   }
-
-   /** @summary Add font selection menu
-     * @private */
-   addFontMenu(name, value, set_func) {
-      const prec = value && Number.isInteger(value) ? value % 10 : 2;
-
-      this.sub('' + name, () => {
-         this.input('Enter font id from [0..20]', Math.floor(value/10), 'int', 0, 20).then(id => {
-            if ((id >= 0) && (id <= 20)) set_func(id*10 + prec);
-         });
-      });
-
-      this.add('column:');
-
-      const doc = getDocument();
-
-      for (let n = 1; n < 20; ++n) {
-         const id = n*10 + prec,
-               handler = new FontHandler(id, 14),
-               txt = select(doc.createElementNS(nsSVG, 'text'));
-         let fullname = handler.getFontName(), qual = '';
-         if (handler.weight) { qual += 'b'; fullname += ' ' + handler.weight; }
-         if (handler.style) { qual += handler.style[0]; fullname += ' ' + handler.style; }
-         if (qual) qual = ' ' + qual;
-         txt.attr('x', 1).attr('y', 15).text(fullname.split(' ')[0] + qual);
-         handler.setFont(txt);
-
-         const rect = (value !== id) ? '' : '<rect width=\'90\' height=\'18\' style=\'fill:none;stroke:black\'></rect>',
-             svg = `<svg width='90' height='18'>${txt.node().outerHTML}${rect}</svg>`;
-         this.add(svg, id, arg => set_func(parseInt(arg)), `${id}: ${fullname}`);
-
-         if (n === 10) {
-            this.add('endcolumn:');
-            this.add('column:');
-         }
-      }
-
-      this.add('endcolumn:');
-      this.endsub();
-   }
-
-   /** @summary Add align selection menu
-     * @private */
-   addAlignMenu(name, value, set_func) {
-      this.sub(name, () => {
-         this.input('Enter align like 12 or 31', value).then(arg => {
-            const id = parseInt(arg);
-            if ((id < 11) || (id > 33)) return;
-            const h = Math.floor(id/10), v = id % 10;
-            if ((h > 0) && (h < 4) && (v > 0) && (v < 4)) set_func(id);
-         });
-      });
-
-      const hnames = ['left', 'middle', 'right'], vnames = ['bottom', 'centered', 'top'];
-      for (let h = 1; h < 4; ++h) {
-         for (let v = 1; v < 4; ++v)
-            this.addchk(h*10+v === value, `${h*10+v}: ${hnames[h-1]} ${vnames[v-1]}`, h*10+v, arg => set_func(parseInt(arg)));
-      }
-
-      this.endsub();
-   }
-
-   /** @summary Fill context menu for graphical attributes in painter
-     * @desc this method used to fill entries for different attributes of the object
-     * like TAttFill, TAttLine, TAttText
-     * There is special handling for the frame where attributes handled by the pad
-     * @private */
-   addAttributesMenu(painter, preffix) {
-      const is_frame = painter === painter.getFramePainter(),
-            pp = is_frame ? painter.getPadPainter() : null,
-            redraw_arg = !preffix && !is_frame ? 'attribute' : true;
-      if (!preffix) preffix = '';
-
-      if (painter.lineatt?.used) {
-         this.sub(`${preffix}Line att`);
-         this.addSizeMenu('width', 1, 10, 1, painter.lineatt.width, arg => {
-            painter.lineatt.change(undefined, arg);
-            changeObjectMember(painter, 'fLineWidth', arg);
-            if (pp) changeObjectMember(pp, 'fFrameLineWidth', arg);
-            painter.interactiveRedraw(redraw_arg, `exec:SetLineWidth(${arg})`);
-         });
-         this.addColorMenu('color', painter.lineatt.color, arg => {
-            painter.lineatt.change(arg);
-            changeObjectMember(painter, 'fLineColor', arg, true);
-            if (pp) changeObjectMember(pp, 'fFrameLineColor', arg, true);
-            painter.interactiveRedraw(redraw_arg, getColorExec(arg, 'SetLineColor'));
-         });
-         this.addLineStyleMenu('style', painter.lineatt.style, id => {
-            painter.lineatt.change(undefined, undefined, id);
-            changeObjectMember(painter, 'fLineStyle', id);
-            if (pp) changeObjectMember(pp, 'fFrameLineStyle', id);
-            painter.interactiveRedraw(redraw_arg, `exec:SetLineStyle(${id})`);
-         });
-         this.endsub();
-
-         if (!is_frame && painter.lineatt?.excl_side) {
-            this.sub('Exclusion');
-            this.sub('side');
-            for (let side = -1; side <= 1; ++side) {
-               this.addchk((painter.lineatt.excl_side === side), side, side,
-                  arg => { painter.lineatt.changeExcl(parseInt(arg)); painter.interactiveRedraw(); });
+         const indx = new Array(ndim).fill(0), arr = new Array(ndim);
+         for (let k = 0; k < ndim; ++k)
+            arr[k] = [];
+         res = arr[0];
+         while (indx[0] < maxindx[0]) {
+            let k = ndim - 1;
+            arr[k].push(func(this, handle));
+            ++indx[k];
+            while ((indx[k] === maxindx[k]) && (k > 0)) {
+               indx[k] = 0;
+               arr[k - 1].push(arr[k]);
+               arr[k] = [];
+               ++indx[--k];
             }
-            this.endsub();
-
-            this.addSizeMenu('width', 10, 100, 10, painter.lineatt.excl_width,
-               arg => { painter.lineatt.changeExcl(undefined, arg); painter.interactiveRedraw(); });
-
-            this.endsub();
          }
       }
 
-      if (painter.fillatt?.used) {
-         this.sub(`${preffix}Fill att`);
-         this.addColorMenu('color', painter.fillatt.colorindx, arg => {
-            painter.fillatt.change(arg, undefined, painter.getCanvSvg());
-            changeObjectMember(painter, 'fFillColor', arg, true);
-            if (pp) changeObjectMember(pp, 'fFrameFillColor', arg, true);
-            painter.interactiveRedraw(redraw_arg, getColorExec(arg, 'SetFillColor'));
-         }, painter.fillatt.kind);
-         this.addFillStyleMenu('style', painter.fillatt.pattern, painter.fillatt.colorindx, painter, id => {
-            painter.fillatt.change(undefined, id, painter.getCanvSvg());
-            changeObjectMember(painter, 'fFillStyle', id);
-            if (pp) changeObjectMember(pp, 'fFrameFillStyle', id);
-            painter.interactiveRedraw(redraw_arg, `exec:SetFillStyle(${id})`);
-         });
-         this.endsub();
-      }
-
-      if (painter.markeratt?.used) {
-         this.sub(`${preffix}Marker att`);
-         this.addColorMenu('color', painter.markeratt.color, arg => {
-            changeObjectMember(painter, 'fMarkerColor', arg, true);
-            painter.markeratt.change(arg);
-            painter.interactiveRedraw(redraw_arg, getColorExec(arg, 'SetMarkerColor'));
-         });
-         this.addSizeMenu('size', 0.5, 6, 0.5, painter.markeratt.size, arg => {
-            changeObjectMember(painter, 'fMarkerSize', arg);
-            painter.markeratt.change(undefined, undefined, arg);
-            painter.interactiveRedraw(redraw_arg, `exec:SetMarkerSize(${arg})`);
-         });
-
-         this.sub('style');
-         const supported = [1, 2, 3, 4, 5, 6, 7, 8, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34];
-
-         for (let n = 0; n < supported.length; ++n) {
-            const clone = new TAttMarkerHandler({ style: supported[n], color: painter.markeratt.color, size: 1.7 }),
-                svg = `<svg width='60' height='18'><text x='1' y='12' style='font-size:12px'>${supported[n].toString()}</text><path stroke='black' fill='${clone.fill?'black':'none'}' d='${clone.create(40, 8)}'></path></svg>`;
-
-            this.addchk(painter.markeratt.style === supported[n], svg, supported[n],
-               arg => { painter.markeratt.change(undefined, parseInt(arg)); painter.interactiveRedraw(redraw_arg, `exec:SetMarkerStyle(${arg})`); });
-         }
-         this.endsub();
-         this.endsub();
-      }
-
-      if (painter.textatt?.used) {
-         this.sub(`${preffix}Text att`);
-
-         this.addFontMenu('font', painter.textatt.font, arg => {
-            changeObjectMember(painter, 'fTextFont', arg);
-            painter.textatt.change(arg);
-            painter.interactiveRedraw(true, `exec:SetTextFont(${arg})`);
-         });
-
-         const rel = painter.textatt.size < 1.0;
-
-         this.addSizeMenu('size', rel ? 0.03 : 6, rel ? 0.20 : 26, rel ? 0.01 : 2, painter.textatt.size, arg => {
-            changeObjectMember(painter, 'fTextSize', arg);
-            painter.textatt.change(undefined, arg);
-            painter.interactiveRedraw(true, `exec:SetTextSize(${arg})`);
-         });
-
-         this.addColorMenu('color', painter.textatt.color, arg => {
-            changeObjectMember(painter, 'fTextColor', arg, true);
-            painter.textatt.change(undefined, undefined, arg);
-            painter.interactiveRedraw(true, getColorExec(arg, 'SetTextColor'));
-         });
-
-         this.addAlignMenu('align', painter.textatt.align, arg => {
-            changeObjectMember(painter, 'fTextAlign', arg);
-            painter.textatt.change(undefined, undefined, undefined, arg);
-            painter.interactiveRedraw(true, `exec:SetTextAlign(${arg})`);
-         });
-
-         if (painter.textatt.can_rotate) {
-            this.addSizeMenu('angle', -180, 180, 45, painter.textatt.angle, arg => {
-               changeObjectMember(painter, 'fTextAngle', arg);
-               painter.textatt.change(undefined, undefined, undefined, undefined, arg);
-               painter.interactiveRedraw(true, `exec:SetTextAngle(${arg})`);
-            });
-         }
-
-         this.endsub();
-      }
+      return res;
    }
 
-   /** @summary Fill context menu for axis
-     * @private */
-   addTAxisMenu(EAxisBits, painter, faxis, kind) {
-      const is_gaxis = faxis._typename === clTGaxis;
-
-      this.add('Divisions', () => this.input('Set Ndivisions', faxis.fNdivisions, 'int', 0).then(val => {
-         faxis.fNdivisions = val; painter.interactiveRedraw('pad', `exec:SetNdivisions(${val})`, kind);
-      }));
-
-      this.sub('Labels');
-      this.addchk(faxis.TestBit(EAxisBits.kCenterLabels), 'Center',
-            arg => { faxis.InvertBit(EAxisBits.kCenterLabels); painter.interactiveRedraw('pad', `exec:CenterLabels(${arg})`, kind); });
-      this.addchk(faxis.TestBit(EAxisBits.kLabelsVert), 'Rotate',
-            arg => { faxis.InvertBit(EAxisBits.kLabelsVert); painter.interactiveRedraw('pad', `exec:SetBit(TAxis::kLabelsVert,${arg})`, kind); });
-      this.addColorMenu('Color', faxis.fLabelColor,
-            arg => { faxis.fLabelColor = arg; painter.interactiveRedraw('pad', getColorExec(arg, 'SetLabelColor'), kind); });
-      this.addSizeMenu('Offset', -0.02, 0.1, 0.01, faxis.fLabelOffset,
-            arg => { faxis.fLabelOffset = arg; painter.interactiveRedraw('pad', `exec:SetLabelOffset(${arg})`, kind); });
-      let a = faxis.fLabelSize >= 1;
-      this.addSizeMenu('Size', a ? 2 : 0.02, a ? 30 : 0.11, a ? 2 : 0.01, faxis.fLabelSize,
-            arg => { faxis.fLabelSize = arg; painter.interactiveRedraw('pad', `exec:SetLabelSize(${arg})`, kind); });
-      this.endsub();
-      this.sub('Title');
-      this.add('SetTitle', () => {
-         this.input('Enter axis title', faxis.fTitle).then(t => {
-            faxis.fTitle = t;
-            painter.interactiveRedraw('pad', `exec:SetTitle("${t}")`, kind);
-         });
-      });
-      this.addchk(faxis.TestBit(EAxisBits.kCenterTitle), 'Center',
-            arg => { faxis.InvertBit(EAxisBits.kCenterTitle); painter.interactiveRedraw('pad', `exec:CenterTitle(${arg})`, kind); });
-      this.addchk(faxis.TestBit(EAxisBits.kOppositeTitle), 'Opposite',
-             () => { faxis.InvertBit(EAxisBits.kOppositeTitle); painter.redrawPad(); });
-      this.addchk(faxis.TestBit(EAxisBits.kRotateTitle), 'Rotate',
-            arg => { faxis.InvertBit(EAxisBits.kRotateTitle); painter.interactiveRedraw('pad', is_gaxis ? `exec:SetBit(TAxis::kRotateTitle, ${arg})` : `exec:RotateTitle(${arg})`, kind); });
-      if (is_gaxis) {
-         this.addColorMenu('Color', faxis.fTextColor,
-               arg => { faxis.fTextColor = arg; painter.interactiveRedraw('pad', getColorExec(arg, 'SetTitleColor'), kind); });
-      } else {
-         this.addColorMenu('Color', faxis.fTitleColor,
-               arg => { faxis.fTitleColor = arg; painter.interactiveRedraw('pad', getColorExec(arg, 'SetTitleColor'), kind); });
+   /** @summary read TKey data */
+   readTKey(key) {
+      if (!key) key = {};
+      this.classStreamer(key, clTKey);
+      const name = key.fName.replace(/['"]/g, '');
+      if (name !== key.fName) {
+         key.fRealName = key.fName;
+         key.fName = name;
       }
-      this.addSizeMenu('Offset', 0, 3, 0.2, faxis.fTitleOffset,
-                      arg => { faxis.fTitleOffset = arg; painter.interactiveRedraw('pad', `exec:SetTitleOffset(${arg})`, kind); });
-      a = faxis.fTitleSize >= 1;
-      this.addSizeMenu('Size', a ? 2 : 0.02, a ? 30 : 0.11, a ? 2 : 0.01, faxis.fTitleSize,
-                      arg => { faxis.fTitleSize = arg; painter.interactiveRedraw('pad', `exec:SetTitleSize(${arg})`, kind); });
-      this.endsub();
-      this.sub('Ticks');
-      if (is_gaxis) {
-         this.addColorMenu('Color', faxis.fLineColor,
-                  arg => { faxis.fLineColor = arg; painter.interactiveRedraw('pad', getColorExec(arg, 'SetLineColor'), kind); });
-         this.addSizeMenu('Size', -0.05, 0.055, 0.01, faxis.fTickSize,
-                  arg => { faxis.fTickSize = arg; painter.interactiveRedraw('pad', `exec:SetTickLength(${arg})`, kind); });
-      } else {
-         this.addColorMenu('Color', faxis.fAxisColor,
-                  arg => { faxis.fAxisColor = arg; painter.interactiveRedraw('pad', getColorExec(arg, 'SetAxisColor'), kind); });
-         this.addSizeMenu('Size', -0.05, 0.055, 0.01, faxis.fTickLength,
-                  arg => { faxis.fTickLength = arg; painter.interactiveRedraw('pad', `exec:SetTickLength(${arg})`, kind); });
-      }
-      this.endsub();
-
-      if (is_gaxis) {
-         this.add('Options', () => this.input('Enter TGaxis options like +L or -G', faxis.fChopt, 'string').then(arg => {
-             faxis.fChopt = arg; painter.interactiveRedraw('pad', `exec:SetOption("${arg}")`, kind);
-         }));
-      }
+      return key;
    }
 
-   /** @summary Fill menu to edit settings properties
-     * @private */
-   addSettingsMenu(with_hierarchy, alone, handle_func) {
-      if (alone)
-         this.header('Settings');
+   /** @summary reading basket data
+     * @desc this is remaining part of TBasket streamer to decode fEntryOffset
+     * after unzipping of the TBasket data */
+   readBasketEntryOffset(basket, offset) {
+      this.locate(basket.fLast - offset);
+
+      if (this.remain() <= 0) {
+         if (!basket.fEntryOffset && (basket.fNevBuf <= 1)) basket.fEntryOffset = [basket.fKeylen];
+         if (!basket.fEntryOffset) console.warn(`No fEntryOffset when expected for basket with ${basket.fNevBuf} entries`);
+         return;
+      }
+
+      const nentries = this.ntoi4();
+      // there is error in file=reco_103.root&item=Events;2/PCaloHits_g4SimHits_EcalHitsEE_Sim.&opt=dump;num:10;first:101
+      // it is workaround, but normally I/O should fail here
+      if ((nentries < 0) || (nentries > this.remain() * 4)) {
+         console.error(`Error when reading entries offset from basket fNevBuf ${basket.fNevBuf} remains ${this.remain()} want to read ${nentries}`);
+         if (basket.fNevBuf <= 1) basket.fEntryOffset = [basket.fKeylen];
+         return;
+      }
+
+      basket.fEntryOffset = this.readFastArray(nentries, kInt);
+      if (!basket.fEntryOffset) basket.fEntryOffset = [basket.fKeylen];
+
+      if (this.remain() > 0)
+         basket.fDisplacement = this.readFastArray(this.ntoi4(), kInt);
       else
-         this.sub('Settings');
+         basket.fDisplacement = undefined;
+   }
 
-      this.sub('Files');
+   /** @summary read class definition from I/O buffer */
+   readClass() {
+      const classInfo = { name: -1 }, bcnt = this.ntou4(), startpos = this.o;
+      let tag;
 
-      if (with_hierarchy) {
-         this.addchk(settings.OnlyLastCycle, 'Last cycle', flag => {
-            settings.OnlyLastCycle = flag;
-            if (handle_func) handle_func('refresh');
-         });
+      if (!(bcnt & kByteCountMask) || (bcnt === kNewClassTag))
+         tag = bcnt;
+      else
+         tag = this.ntou4();
 
-         this.addchk(!settings.SkipStreamerInfos, 'Streamer infos', flag => {
-            settings.SkipStreamerInfos = !flag;
-            if (handle_func) handle_func('refresh');
-         });
+      if (!(tag & kClassMask)) {
+         classInfo.objtag = tag + this.fDisplacement; // indicate that we have deal with objects tag
+         return classInfo;
+      }
+      if (tag === kNewClassTag) {
+         // got a new class description followed by a new object
+         classInfo.name = this.readFastString(-1);
+
+         if (this.getMappedClass(this.fTagOffset + startpos + kMapOffset) === -1)
+            this.mapClass(this.fTagOffset + startpos + kMapOffset, classInfo.name);
+      } else {
+         // got a tag to an already seen class
+         const clTag = (tag & ~kClassMask) + this.fDisplacement;
+         classInfo.name = this.getMappedClass(clTag);
+
+         if (classInfo.name === -1)
+            console.error(`Did not found class with tag ${clTag}`);
       }
 
-      this.addchk(settings.UseStamp, 'Use stamp arg', flag => { settings.UseStamp = flag; });
-      this.addSizeMenu('Max ranges', 1, 1000, [1, 10, 20, 50, 200, 1000], settings.MaxRanges, value => { settings.MaxRanges = value; }, 'Maximal number of ranges in single http request');
+      return classInfo;
+   }
 
-      this.addchk(settings.HandleWrongHttpResponse, 'Handle wrong http response', flag => { settings.HandleWrongHttpResponse = flag; });
-      this.addchk(settings.WithCredentials, 'With credentials', flag => { settings.WithCredentials = flag; }, 'Submit http request with user credentials');
+   /** @summary Read any object from buffer data */
+   readObjectAny() {
+      const objtag = this.fTagOffset + this.o + kMapOffset,
+            clRef = this.readClass();
 
-      this.endsub();
+      // class identified as object and should be handled so
+      if ('objtag' in clRef)
+         return this.getMappedObject(clRef.objtag);
 
-      this.sub('Toolbar');
-      this.addchk(settings.ToolBar === false, 'Off', flag => { settings.ToolBar = !flag; });
-      this.addchk(settings.ToolBar === true, 'On', flag => { settings.ToolBar = flag; });
-      this.addchk(settings.ToolBar === 'popup', 'Popup', flag => { settings.ToolBar = flag ? 'popup' : false; });
-      this.separator();
-      this.addchk(settings.ToolBarSide === 'left', 'Left side', flag => { settings.ToolBarSide = flag ? 'left' : 'right'; });
-      this.addchk(settings.ToolBarVert, 'Vertical', flag => { settings.ToolBarVert = flag; });
-      this.endsub();
+      if (clRef.name === -1) return null;
 
-      this.sub('Interactive');
-      this.addchk(settings.Tooltip, 'Tooltip', flag => { settings.Tooltip = flag; });
-      this.addchk(settings.ContextMenu, 'Context menus', flag => { settings.ContextMenu = flag; });
-      this.sub('Zooming');
-      this.addchk(settings.Zooming, 'Global', flag => { settings.Zooming = flag; });
-      this.addchk(settings.ZoomMouse, 'Mouse', flag => { settings.ZoomMouse = flag; });
-      this.addchk(settings.ZoomWheel, 'Wheel', flag => { settings.ZoomWheel = flag; });
-      this.addchk(settings.ZoomTouch, 'Touch', flag => { settings.ZoomTouch = flag; });
-      this.endsub();
-      this.addchk(settings.HandleKeys, 'Keypress handling', flag => { settings.HandleKeys = flag; });
-      this.addchk(settings.MoveResize, 'Move and resize', flag => { settings.MoveResize = flag; });
-      this.addchk(settings.DragAndDrop, 'Drag and drop', flag => { settings.DragAndDrop = flag; });
-      this.addchk(settings.DragGraphs, 'Drag graph points', flag => { settings.DragGraphs = flag; });
-      this.addSelectMenu('Progress box', ['off', 'on', 'modal'], isStr(settings.ProgressBox) ? settings.ProgressBox : (settings.ProgressBox ? 'on' : 'off'), value => {
-         settings.ProgressBox = (value === 'off') ? false : (value === ' on' ? true : value);
-      });
-      this.endsub();
+      const arrkind = getArrayKind(clRef.name);
+      let obj;
 
-      this.sub('Drawing');
-      this.addSelectMenu('Optimize', ['None', 'Smart', 'Always'], settings.OptimizeDraw, value => { settings.OptimizeDraw = value; }, 'Histogram drawing optimization');
-      this.sub('SmallPad', undefined, undefined, 'Minimal pad size drawn normally');
-      this.add(`width ${settings.SmallPad?.width ?? 0}px`, () => this.input('Small pad width', settings.SmallPad?.width, 'int', 1, 1000).then(val => { settings.SmallPad.width = val; }));
-      this.add(`height ${settings.SmallPad?.height ?? 0}px`, () => this.input('Small pad height', settings.SmallPad?.height, 'int', 1, 800).then(val => { settings.SmallPad.height = val; }));
-      this.add('disable', () => { settings.SmallPad = { width: 0, height: 0 }; }, 'disable small pad drawing optimization');
-      this.add('default', () => { settings.SmallPad = { width: 150, height: 100 }; }, 'Set to default 150x100 dimension');
-      this.endsub();
-      this.addPaletteMenu(settings.Palette, pal => { settings.Palette = pal; });
-      this.addchk(settings.AutoStat, 'Auto stat box', flag => { settings.AutoStat = flag; });
-      this.sub('Axis');
-      this.addchk(settings.StripAxisLabels, 'Strip labels', flag => { settings.StripAxisLabels = flag; }, 'Provide shorter labels like 10^0 -> 1');
-      this.addchk(settings.CutAxisLabels, 'Cut labels', flag => { settings.CutAxisLabels = flag; }, 'Remove labels which may exceed graphical range');
-      this.add(`Tilt angle ${settings.AxisTiltAngle}`, () => this.input('Axis tilt angle', settings.AxisTiltAngle, 'int', 0, 180).then(val => { settings.AxisTiltAngle = val; }));
-      this.endsub();
-      this.addSelectMenu('Latex', ['Off', 'Symbols', 'Normal', 'MathJax', 'Force MathJax'], settings.Latex, value => { settings.Latex = value; });
-      this.addSelectMenu('3D rendering', ['Default', 'WebGL', 'Image'], settings.Render3D, value => { settings.Render3D = value; });
-      this.addSelectMenu('WebGL embeding', ['Default', 'Overlay', 'Embed'], settings.Embed3D, value => { settings.Embed3D = value; });
-      this.endsub();
-
-      this.sub('Geometry');
-      this.add('Grad per segment:  ' + settings.GeoGradPerSegm, () => this.input('Grad per segment in geometry', settings.GeoGradPerSegm, 'int', 1, 60).then(val => { settings.GeoGradPerSegm = val; }));
-      this.addchk(settings.GeoCompressComp, 'Compress composites', flag => { settings.GeoCompressComp = flag; });
-      this.endsub();
-
-      if (with_hierarchy) {
-         this.sub('Browser');
-         this.add('Hierarchy limit:  ' + settings.HierarchyLimit, () => this.input('Max number of items in hierarchy', settings.HierarchyLimit, 'int', 10, 100000).then(val => {
-            settings.HierarchyLimit = val;
-            if (handle_func) handle_func('refresh');
-         }));
-         this.add('Browser width:  ' + settings.BrowserWidth, () => this.input('Browser width in px', settings.BrowserWidth, 'int', 50, 2000).then(val => {
-            settings.BrowserWidth = val;
-            if (handle_func) handle_func('width');
-         }));
-         this.endsub();
+      if (arrkind === 0)
+         obj = this.readTString();
+      else if (arrkind > 0) {
+         // reading array, can map array only afterwards
+         obj = this.readFastArray(this.ntou4(), arrkind);
+         this.mapObject(objtag, obj);
+      } else {
+         // reading normal object, should map before to
+         obj = {};
+         this.mapObject(objtag, obj);
+         this.classStreamer(obj, clRef.name);
       }
 
-      this.add('Dark mode: ' + (settings.DarkMode ? 'On' : 'Off'), () => {
-         settings.DarkMode = !settings.DarkMode;
-         if (handle_func) handle_func('dark');
-      });
-
-      const setStyleField = arg => { gStyle[arg.slice(1)] = parseInt(arg[0]); },
-            addStyleIntField = (name, field, arr) => {
-         this.sub('' + name);
-         const curr = gStyle[field] >= arr.length ? 1 : gStyle[field];
-         for (let v = 0; v < arr.length; ++v)
-            this.addchk(curr === v, arr[v], `${v}${field}`, setStyleField);
-         this.endsub();
-      };
-
-      this.sub('gStyle');
-
-      this.sub('Canvas');
-      this.addColorMenu('Color', gStyle.fCanvasColor, col => { gStyle.fCanvasColor = col; });
-      addStyleIntField('Draw date', 'fOptDate', ['Off', 'Current time', 'File create time', 'File modify time']);
-      this.add(`Time zone: ${settings.TimeZone}`, () => this.input('Input time zone like UTC. empty string - local timezone', settings.TimeZone, 'string').then(val => { settings.TimeZone = val; }));
-      addStyleIntField('Draw file', 'fOptFile', ['Off', 'File name', 'Full file URL', 'Item name']);
-      this.addSizeMenu('Date X', 0.01, 0.1, 0.01, gStyle.fDateX, x => { gStyle.fDateX = x; }, 'configure gStyle.fDateX for date/item name drawings');
-      this.addSizeMenu('Date Y', 0.01, 0.1, 0.01, gStyle.fDateY, y => { gStyle.fDateY = y; }, 'configure gStyle.fDateY for date/item name drawings');
-      this.endsub();
-
-      this.sub('Pad');
-      this.addColorMenu('Color', gStyle.fPadColor, col => { gStyle.fPadColor = col; });
-      this.sub('Grid');
-      this.addchk(gStyle.fPadGridX, 'X', flag => { gStyle.fPadGridX = flag; });
-      this.addchk(gStyle.fPadGridY, 'Y', flag => { gStyle.fPadGridY = flag; });
-      this.addColorMenu('Color', gStyle.fGridColor, col => { gStyle.fGridColor = col; });
-      this.addSizeMenu('Width', 1, 10, 1, gStyle.fGridWidth, w => { gStyle.fGridWidth = w; });
-      this.addLineStyleMenu('Style', gStyle.fGridStyle, st => { gStyle.fGridStyle = st; });
-      this.endsub();
-      addStyleIntField('Ticks X', 'fPadTickX', ['normal', 'ticks on both sides', 'labels on both sides']);
-      addStyleIntField('Ticks Y', 'fPadTickY', ['normal', 'ticks on both sides', 'labels on both sides']);
-      addStyleIntField('Log X', 'fOptLogx', ['off', 'on', 'log 2']);
-      addStyleIntField('Log Y', 'fOptLogy', ['off', 'on', 'log 2']);
-      addStyleIntField('Log Z', 'fOptLogz', ['off', 'on', 'log 2']);
-      this.endsub();
-
-      this.sub('Frame');
-      this.addColorMenu('Fill color', gStyle.fFrameFillColor, col => { gStyle.fFrameFillColor = col; });
-      this.addFillStyleMenu('Fill style', gStyle.fFrameFillStyle, gStyle.fFrameFillColor, null, id => { gStyle.fFrameFillStyle = id; });
-      this.addColorMenu('Line color', gStyle.fFrameLineColor, col => { gStyle.fFrameLineColor = col; });
-      this.addSizeMenu('Line width', 1, 10, 1, gStyle.fFrameLineWidth, w => { gStyle.fFrameLineWidth = w; });
-      this.addLineStyleMenu('Line style', gStyle.fFrameLineStyle, st => { gStyle.fFrameLineStyle = st; });
-      this.addSizeMenu('Border size', 0, 10, 1, gStyle.fFrameBorderSize, sz => { gStyle.fFrameBorderSize = sz; });
-      // fFrameBorderMode: 0,
-      this.sub('Margins');
-      this.addSizeMenu('Bottom', 0, 0.5, 0.05, gStyle.fPadBottomMargin, v => { gStyle.fPadBottomMargin = v; });
-      this.addSizeMenu('Top', 0, 0.5, 0.05, gStyle.fPadTopMargin, v => { gStyle.fPadTopMargin = v; });
-      this.addSizeMenu('Left', 0, 0.5, 0.05, gStyle.fPadLeftMargin, v => { gStyle.fPadLeftMargin = v; });
-      this.addSizeMenu('Right', 0, 0.5, 0.05, gStyle.fPadRightMargin, v => { gStyle.fPadRightMargin = v; });
-      this.endsub();
-      this.endsub();
-
-      this.sub('Title');
-      this.addColorMenu('Fill color', gStyle.fTitleColor, col => { gStyle.fTitleColor = col; });
-      this.addFillStyleMenu('Fill style', gStyle.fTitleStyle, gStyle.fTitleColor, null, id => { gStyle.fTitleStyle = id; });
-      this.addColorMenu('Text color', gStyle.fTitleTextColor, col => { gStyle.fTitleTextColor = col; });
-      this.addSizeMenu('Border size', 0, 10, 1, gStyle.fTitleBorderSize, sz => { gStyle.fTitleBorderSize = sz; });
-      this.addSizeMenu('Font size', 0.01, 0.1, 0.01, gStyle.fTitleFontSize, sz => { gStyle.fTitleFontSize = sz; });
-      this.addFontMenu('Font', gStyle.fTitleFont, fnt => { gStyle.fTitleFont = fnt; });
-      this.addSizeMenu('X: ' + gStyle.fTitleX.toFixed(2), 0.0, 1.0, 0.1, gStyle.fTitleX, v => { gStyle.fTitleX = v; });
-      this.addSizeMenu('Y: ' + gStyle.fTitleY.toFixed(2), 0.0, 1.0, 0.1, gStyle.fTitleY, v => { gStyle.fTitleY = v; });
-      this.addSizeMenu('W: ' + gStyle.fTitleW.toFixed(2), 0.0, 1.0, 0.1, gStyle.fTitleW, v => { gStyle.fTitleW = v; });
-      this.addSizeMenu('H: ' + gStyle.fTitleH.toFixed(2), 0.0, 1.0, 0.1, gStyle.fTitleH, v => { gStyle.fTitleH = v; });
-      this.endsub();
-
-      this.sub('Stat box');
-      this.addColorMenu('Fill color', gStyle.fStatColor, col => { gStyle.fStatColor = col; });
-      this.addFillStyleMenu('Fill style', gStyle.fStatStyle, gStyle.fStatColor, null, id => { gStyle.fStatStyle = id; });
-      this.addColorMenu('Text color', gStyle.fStatTextColor, col => { gStyle.fStatTextColor = col; });
-      this.addSizeMenu('Border size', 0, 10, 1, gStyle.fStatBorderSize, sz => { gStyle.fStatBorderSize = sz; });
-      this.addSizeMenu('Font size', 0, 30, 5, gStyle.fStatFontSize, sz => { gStyle.fStatFontSize = sz; });
-      this.addFontMenu('Font', gStyle.fStatFont, fnt => { gStyle.fStatFont = fnt; });
-      this.add('Stat format', () => this.input('Stat format', gStyle.fStatFormat).then(fmt => { gStyle.fStatFormat = fmt; }));
-      this.addSizeMenu('X: ' + gStyle.fStatX.toFixed(2), 0.2, 1.0, 0.1, gStyle.fStatX, v => { gStyle.fStatX = v; });
-      this.addSizeMenu('Y: ' + gStyle.fStatY.toFixed(2), 0.2, 1.0, 0.1, gStyle.fStatY, v => { gStyle.fStatY = v; });
-      this.addSizeMenu('Width: ' + gStyle.fStatW.toFixed(2), 0.1, 1.0, 0.1, gStyle.fStatW, v => { gStyle.fStatW = v; });
-      this.addSizeMenu('Height: ' + gStyle.fStatH.toFixed(2), 0.1, 1.0, 0.1, gStyle.fStatH, v => { gStyle.fStatH = v; });
-      this.endsub();
-
-      this.sub('Legend');
-      this.addColorMenu('Fill color', gStyle.fLegendFillColor, col => { gStyle.fLegendFillColor = col; });
-      this.addFillStyleMenu('Fill style', gStyle.fLegendFillStyle, gStyle.fLegendFillColor, null, id => { gStyle.fLegendFillStyle = id; });
-      this.addSizeMenu('Border size', 0, 10, 1, gStyle.fLegendBorderSize, sz => { gStyle.fLegendBorderSize = sz; });
-      this.addFontMenu('Font', gStyle.fLegendFont, fnt => { gStyle.fLegendFont = fnt; });
-      this.addSizeMenu('Text size', 0, 0.1, 0.01, gStyle.fLegendTextSize, v => { gStyle.fLegendTextSize = v; }, 'legend text size, when 0 - auto adjustment is used');
-      this.endsub();
-
-      this.sub('Histogram');
-      this.addchk(gStyle.fOptTitle === 1, 'Hist title', flag => { gStyle.fOptTitle = flag ? 1 : 0; });
-      this.addchk(gStyle.fOrthoCamera, 'Orthographic camera', flag => { gStyle.fOrthoCamera = flag; });
-      this.addchk(gStyle.fHistMinimumZero, 'Base0', flag => { gStyle.fHistMinimumZero = flag; }, 'when true, BAR and LEGO drawing using base = 0');
-      this.add('Text format', () => this.input('Paint text format', gStyle.fPaintTextFormat).then(fmt => { gStyle.fPaintTextFormat = fmt; }));
-      this.add('Time offset', () => this.input('Time offset in seconds, default is 788918400 for 1/1/1995', gStyle.fTimeOffset, 'int').then(ofset => { gStyle.fTimeOffset = ofset; }));
-      this.addSizeMenu('ErrorX: ' + gStyle.fErrorX.toFixed(2), 0.0, 1.0, 0.1, gStyle.fErrorX, v => { gStyle.fErrorX = v; });
-      this.addSizeMenu('End error', 0, 12, 1, gStyle.fEndErrorSize, v => { gStyle.fEndErrorSize = v; }, 'size in pixels of end error for E1 draw options, gStyle.fEndErrorSize');
-      this.addSizeMenu('Top margin', 0.0, 0.5, 0.05, gStyle.fHistTopMargin, v => { gStyle.fHistTopMargin = v; }, 'Margin between histogram top and frame top');
-      this.addColorMenu('Fill color', gStyle.fHistFillColor, col => { gStyle.fHistFillColor = col; });
-      this.addFillStyleMenu('Fill style', gStyle.fHistFillStyle, gStyle.fHistFillColor, null, id => { gStyle.fHistFillStyle = id; });
-      this.addColorMenu('Line color', gStyle.fHistLineColor, col => { gStyle.fHistLineColor = col; });
-      this.addSizeMenu('Line width', 1, 10, 1, gStyle.fHistLineWidth, w => { gStyle.fHistLineWidth = w; });
-      this.addLineStyleMenu('Line style', gStyle.fHistLineStyle, st => { gStyle.fHistLineStyle = st; });
-      this.endsub();
-
-      this.separator();
-      this.sub('Predefined');
-      ['Modern', 'Plain', 'Bold'].forEach(name => this.addchk((gStyle.fName === name), name, name, selectgStyle));
-      this.endsub();
-
-      this.endsub(); // gStyle
-
-      this.separator();
-
-      this.add('Save settings', () => {
-         const promise = readSettings(true) ? Promise.resolve(true) : this.confirm('Save settings', 'Pressing OK one agreess that JSROOT will store settings in browser local storage');
-         promise.then(res => { if (res) { saveSettings(); saveStyle(); } });
-      }, 'Store settings and gStyle in browser local storage');
-      this.add('Delete settings', () => { saveSettings(-1); saveStyle(-1); }, 'Delete settings and gStyle from browser local storage');
-
-      if (!alone) this.endsub();
+      return obj;
    }
 
-   /** @summary Run modal dialog
-     * @return {Promise} with html element inside dialog
-     * @private */
-   async runModal() {
-      throw Error('runModal() must be reimplemented');
-   }
+   /** @summary Invoke streamer for specified class  */
+   classStreamer(obj, classname) {
+      if (obj._typename === undefined) obj._typename = classname;
 
-   /** @summary Show modal info dialog
-     * @param {String} title - title
-     * @param {String} message - message
-     * @protected */
-   info(title, message) {
-      return this.runModal(title, `<p>${message}</p>`, { height: 120, width: 400, resizable: true });
-   }
-
-   /** @summary Show confirm dialog
-     * @param {String} title - title
-     * @param {String} message - message
-     * @return {Promise} with true when 'Ok' pressed or false when 'Cancel' pressed
-     * @protected */
-   async confirm(title, message) {
-      return this.runModal(title, message, { btns: true, height: 120, width: 400 }).then(elem => { return !!elem; });
-   }
-
-   /** @summary Input value
-     * @return {Promise} with input value
-     * @param {string} title - input dialog title
-     * @param value - initial value
-     * @param {string} [kind] - use 'text' (default), 'number', 'float' or 'int'
-     * @protected */
-   async input(title, value, kind, min, max) {
-      if (!kind) kind = 'text';
-      const inp_type = (kind === 'int') ? 'number' : 'text';
-      let ranges = '';
-      if ((value === undefined) || (value === null)) value = '';
-      if (kind === 'int') {
-          if (min !== undefined) ranges += ` min="${min}"`;
-          if (max !== undefined) ranges += ` max="${max}"`;
-       }
-
-      const main_content =
-         '<form><fieldset style="padding:0; border:0">'+
-            `<input type="${inp_type}" value="${value}" ${ranges} style="width:98%;display:block" class="jsroot_dlginp"/>`+
-         '</fieldset></form>';
-
-      return new Promise(resolveFunc => {
-         this.runModal(title, main_content, { btns: true, height: 150, width: 400 }).then(element => {
-            if (!element) return;
-            let val = element.querySelector('.jsroot_dlginp').value;
-            if (kind === 'float') {
-               val = Number.parseFloat(val);
-               if (Number.isFinite(val))
-                  resolveFunc(val);
-            } else if (kind === 'int') {
-               val = parseInt(val);
-               if (Number.isInteger(val))
-                  resolveFunc(val);
-            } else
-               resolveFunc(val);
-         });
-      });
-   }
-
-   /** @summary Let input arguments from the method
-     * @return {Promise} with method argument */
-   async showMethodArgsDialog(method) {
-      const dlg_id = this.menuname + sDfltDlg;
-      let main_content = '<form> <fieldset style="padding:0; border:0">';
-
-      for (let n = 0; n < method.fArgs.length; ++n) {
-         const arg = method.fArgs[n];
-         arg.fValue = arg.fDefault;
-         if (arg.fValue === '""') arg.fValue = '';
-         main_content += `<label for="${dlg_id}_inp${n}">${arg.fName}</label>
-                          <input type='text' tabindex="${n+1}" id="${dlg_id}_inp${n}" value="${arg.fValue}" style="width:100%;display:block"/>`;
+      const direct = DirectStreamers[classname];
+      if (direct) {
+         direct(this, obj);
+         return obj;
       }
 
-      main_content += '</fieldset></form>';
+      const ver = this.readVersion(),
+            streamer = this.fFile.getStreamer(classname, ver);
 
-      return new Promise(resolveFunc => {
-         this.runModal(method.fClassName + '::' + method.fName, main_content, { btns: true, height: 100 + method.fArgs.length*60, width: 400, resizable: true }).then(element => {
-            if (!element) return;
-            let args = '';
+      if (streamer !== null) {
+         const len = streamer.length;
+         for (let n = 0; n < len; ++n)
+            streamer[n].func(this, obj);
+      } else {
+         // just skip bytes belonging to not-recognized object
+         // console.warn(`skip object ${classname}`);
+         addMethods(obj);
+      }
 
-            for (let k = 0; k < method.fArgs.length; ++k) {
-               const arg = method.fArgs[k];
-               let value = element.querySelector(`#${dlg_id}_inp${k}`).value;
-               if (value === '') value = arg.fDefault;
-               if ((arg.fTitle === 'Option_t*') || (arg.fTitle === 'const char*')) {
-                  // check quotes,
-                  // TODO: need to make more precise checking of escape characters
-                  if (!value) value = '""';
-                  if (value[0] !== '"') value = '"' + value;
-                  if (value[value.length-1] !== '"') value += '"';
-               }
+      this.checkByteCount(ver, classname);
 
-               args += (k > 0 ? ',' : '') + value;
-            }
-
-            resolveFunc(args);
-         });
-      });
+      return obj;
    }
 
-   /** @summary Let input arguments from the Command
-     * @return {Promise} with command argument */
-   async showCommandArgsDialog(cmdname, args) {
-      const dlg_id = this.menuname + sDfltDlg;
-      let main_content = '<form> <fieldset style="padding:0; border:0">';
+} // class TBuffer
 
-      for (let n = 0; n < args.length; ++n) {
-         main_content += `<label for="${dlg_id}_inp${n}">arg${n+1}</label>`+
-                         `<input type='text' id="${dlg_id}_inp${n}" value="${args[n]}" style="width:100%;display:block"/>`;
-     }
-
-      main_content += '</fieldset></form>';
-
-      return new Promise(resolveFunc => {
-         this.runModal('Arguments for command ' + cmdname, main_content, { btns: true, height: 110 + args.length*60, width: 400, resizable: true }).then(element => {
-            if (!element)
-               return resolveFunc(null);
-
-            const resargs = [];
-            for (let k = 0; k < args.length; ++k)
-               resargs.push(element.querySelector(`#${dlg_id}_inp${k}`).value);
-            resolveFunc(resargs);
-         });
-      });
-   }
-
-} // class JSRootMenu
+// ==============================================================================
 
 /**
- * @summary Context menu class using plain HTML/JavaScript
- *
- * @desc Use {@link createMenu} to create instance of the menu
- * based on {@link https://github.com/L1quidH2O/ContextMenu.js}
- * @private
- */
+  * @summary A class that reads a TDirectory from a buffer.
+  *
+  * @private
+  */
 
-class StandaloneMenu extends JSRootMenu {
+class TDirectory {
 
-   constructor(painter, menuname, show_event) {
-      super(painter, menuname, show_event);
-
-      this.code = [];
-      this._use_plain_text = true;
-      this.stack = [this.code];
+   /** @summary constructor */
+   constructor(file, dirname, cycle) {
+      this.fFile = file;
+      this._typename = clTDirectory;
+      this.dir_name = dirname;
+      this.dir_cycle = cycle;
+      this.fKeys = [];
    }
 
-   native() { return true; }
+   /** @summary retrieve a key by its name and cycle in the list of keys */
+   getKey(keyname, cycle, only_direct) {
+      if (typeof cycle !== 'number') cycle = -1;
+      let bestkey = null;
+      for (let i = 0; i < this.fKeys.length; ++i) {
+         const key = this.fKeys[i];
+         if (!key || (key.fName !== keyname)) continue;
+         if (key.fCycle === cycle) { bestkey = key; break; }
+         if ((cycle < 0) && (!bestkey || (key.fCycle > bestkey.fCycle))) bestkey = key;
+      }
+      if (bestkey)
+         return only_direct ? bestkey : Promise.resolve(bestkey);
 
-   /** @summary Load required modules, noop for that menu class */
-   async load() { return this; }
+      let pos = keyname.lastIndexOf('/');
+      // try to handle situation when object name contains slashed (bad practice anyway)
+      while (pos > 0) {
+         const dirname = keyname.slice(0, pos),
+               subname = keyname.slice(pos+1),
+               dirkey = this.getKey(dirname, undefined, true);
 
-   /** @summary Add menu item
-     * @param {string} name - item name
-     * @param {function} func - func called when item is selected */
-   add(name, arg, func, title) {
-      let curr = this.stack[this.stack.length-1];
+         if (dirkey && !only_direct && (dirkey.fClassName.indexOf(clTDirectory) === 0)) {
+            return this.fFile.readObject(this.dir_name + '/' + dirname, 1)
+                             .then(newdir => newdir.getKey(subname, cycle));
+         }
 
-      if (name === sSeparator)
-         return curr.push({ divider: true });
-
-      if (name.indexOf(sHeader) === 0)
-         return curr.push({ text: name.slice(sHeader.length), header: true });
-
-      if (name === sEndsub) {
-         this.stack.pop();
-         curr = this.stack[this.stack.length-1];
-         if (curr[curr.length-1].sub.length === 0)
-            curr[curr.length-1].sub = undefined;
-         return;
+         pos = keyname.lastIndexOf('/', pos-1);
       }
 
-      if (name === 'endcolumn:')
-         return this.stack.pop();
-
-
-      if (isFunc(arg)) { title = func; func = arg; arg = name; }
-
-      const elem = {};
-      curr.push(elem);
-
-      if (name === 'column:') {
-         elem.column = true;
-         elem.sub = [];
-         this.stack.push(elem.sub);
-         return;
-      }
-
-      if (name.indexOf(sSub) === 0) {
-         name = name.slice(4);
-         elem.sub = [];
-         this.stack.push(elem.sub);
-      }
-
-      if (name.indexOf('chk:') === 0) {
-         elem.checked = true;
-         name = name.slice(4);
-      } else if (name.indexOf('unk:') === 0) {
-         elem.checked = false;
-         name = name.slice(4);
-      }
-
-      elem.text = name;
-      elem.title = title;
-      elem.arg = arg;
-      elem.func = func;
+      return only_direct ? null : Promise.reject(Error(`Key not found ${keyname}`));
    }
 
-   /** @summary Returns size of main menu */
-   size() { return this.code.length; }
+   /** @summary Read object from the directory
+     * @param {string} name - object name
+     * @param {number} [cycle] - cycle number
+     * @return {Promise} with read object */
+   readObject(obj_name, cycle) {
+      return this.fFile.readObject(this.dir_name + '/' + obj_name, cycle);
+   }
 
-   /** @summary Build HTML elements of the menu
-     * @private */
-   _buildContextmenu(menu, left, top, loc) {
-      const doc = getDocument(),
-            outer = doc.createElement('div'),
-            container_style =
-         'position: absolute; top: 0; user-select: none; z-index: 100000; background-color: rgb(250, 250, 250); margin: 0; padding: 0px; width: auto;'+
-         'min-width: 100px; box-shadow: 0px 0px 10px rgb(0, 0, 0, 0.2); border: 3px solid rgb(215, 215, 215); font-family: Arial, helvetica, sans-serif, serif;'+
-         'font-size: 13px; color: rgb(0, 0, 0, 0.8); line-height: 15px;';
+   /** @summary Read list of keys in directory
+     * @return {Promise} with TDirectory object */
+   async readKeys(objbuf) {
+      objbuf.classStreamer(this, clTDirectory);
 
-      // if loc !== doc.body then its a submenu, so it needs to have position: relative;
-      if (loc === doc.body) {
-         // delete all elements with className jsroot_ctxt_container
-         const deleteElems = doc.getElementsByClassName('jsroot_ctxt_container');
-         while (deleteElems.length > 0)
-            deleteElems[0].parentNode.removeChild(deleteElems[0]);
+      if ((this.fSeekKeys <= 0) || (this.fNbytesKeys <= 0))
+         return this;
 
-         outer.className = 'jsroot_ctxt_container';
-         outer.style = container_style;
-         outer.style.position = 'fixed';
-         outer.style.left = left + 'px';
-         outer.style.top = top + 'px';
-      } else if ((left < 0) && (top === left)) {
-         // column
-         outer.className = 'jsroot_ctxt_column';
-         outer.style.float = 'left';
-         outer.style.width = (100/-left).toFixed(1) + '%';
-      } else {
-         outer.className = 'jsroot_ctxt_container';
-         outer.style = container_style;
-         outer.style.left = -loc.offsetLeft + loc.offsetWidth + 'px';
-      }
+      return this.fFile.readBuffer([this.fSeekKeys, this.fNbytesKeys]).then(blob => {
+         // Read keys of the top directory
 
-      let need_check_area = false, ncols = 0;
-      menu.forEach(d => {
-         if (d.checked) need_check_area = true;
-         if (d.column) ncols++;
+         const buf = new TBuffer(blob, 0, this.fFile);
+
+         buf.readTKey();
+         const nkeys = buf.ntoi4();
+
+         for (let i = 0; i < nkeys; ++i)
+            this.fKeys.push(buf.readTKey());
+
+         this.fFile.fDirectories.push(this);
+
+         return this;
       });
+   }
 
-      menu.forEach(d => {
-         if (ncols > 0) {
-            outer.style.display = 'flex';
-            if (d.column) this._buildContextmenu(d.sub, -ncols, -ncols, outer);
-            return;
+} // class TDirectory
+
+/**
+  * @summary Interface to read objects from ROOT files
+  *
+  * @desc Use {@link openFile} to create instance of the class
+  */
+
+class TFile {
+
+   constructor(url) {
+      this._typename = clTFile;
+      this.fEND = 0;
+      this.fFullURL = url;
+      this.fURL = url;
+      // when disabled ('+' at the end of file name), complete file content read with single operation
+      this.fAcceptRanges = true;
+      // use additional time stamp parameter for file name to avoid browser caching problem
+      this.fUseStampPar = settings.UseStamp ? 'stamp=' + (new Date()).getTime() : false;
+      this.fFileContent = null; // this can be full or partial content of the file (if ranges are not supported or if 1K header read from file)
+      // stored as TBuffer instance
+      this.fMaxRanges = settings.MaxRanges || 200; // maximal number of file ranges requested at once
+      this.fDirectories = [];
+      this.fKeys = [];
+      this.fSeekInfo = 0;
+      this.fNbytesInfo = 0;
+      this.fTagOffset = 0;
+      this.fStreamers = 0;
+      this.fStreamerInfos = null;
+      this.fFileName = '';
+      this.fStreamers = [];
+      this.fBasicTypes = {}; // custom basic types, in most case enumerations
+
+      if (!isStr(this.fURL)) return this;
+
+      if (this.fURL[this.fURL.length - 1] === '+') {
+         this.fURL = this.fURL.slice(0, this.fURL.length - 1);
+         this.fAcceptRanges = false;
+      }
+
+      if (this.fURL[this.fURL.length - 1] === '^') {
+         this.fURL = this.fURL.slice(0, this.fURL.length - 1);
+         this.fSkipHeadRequest = true;
+      }
+
+      if (this.fURL[this.fURL.length - 1] === '-') {
+         this.fURL = this.fURL.slice(0, this.fURL.length - 1);
+         this.fUseStampPar = false;
+      }
+
+      if (this.fURL.indexOf('file://') === 0) {
+         this.fUseStampPar = false;
+         this.fAcceptRanges = false;
+      }
+
+      const pos = Math.max(this.fURL.lastIndexOf('/'), this.fURL.lastIndexOf('\\'));
+      this.fFileName = pos >= 0 ? this.fURL.slice(pos + 1) : this.fURL;
+   }
+
+   /** @summary Assign BufferArray with file contentOpen file
+     * @private */
+   assignFileContent(bufArray) {
+      this.fFileContent = new TBuffer(new DataView(bufArray));
+      this.fAcceptRanges = false;
+      this.fUseStampPar = false;
+      this.fEND = this.fFileContent.length;
+   }
+
+   /** @summary Actual file open
+     * @return {Promise} when file keys are read
+     * @private */
+   async _open() { return this.readKeys(); }
+
+   /** @summary read buffer(s) from the file
+    * @return {Promise} with read buffers
+    * @private */
+   async readBuffer(place, filename, progress_callback) {
+      if ((this.fFileContent !== null) && !filename && (!this.fAcceptRanges || this.fFileContent.canExtract(place)))
+         return this.fFileContent.extract(place);
+
+      let resolveFunc, rejectFunc;
+
+      const file = this, first_block = (place[0] === 0) && (place.length === 2),
+            blobs = [], // array of requested segments
+            promise = new Promise((resolve, reject) => { resolveFunc = resolve; rejectFunc = reject; });
+
+      let fileurl = file.fURL,
+          first = 0, last = 0,
+          // eslint-disable-next-line prefer-const
+          read_callback, first_req,
+          first_block_retry = false;
+
+      if (isStr(filename) && filename) {
+         const pos = fileurl.lastIndexOf('/');
+         fileurl = (pos < 0) ? filename : fileurl.slice(0, pos + 1) + filename;
+      }
+
+      function send_new_request(increment) {
+         if (increment) {
+            first = last;
+            last = Math.min(first + file.fMaxRanges * 2, place.length);
+            if (first >= place.length) return resolveFunc(blobs);
          }
 
-         if (d.divider) {
-            const hr = doc.createElement('hr');
-            hr.style = 'width: 85%; margin: 3px auto; border: 1px solid rgb(0, 0, 0, 0.15)';
-            outer.appendChild(hr);
-            return;
+         let fullurl = fileurl, ranges = 'bytes', totalsz = 0;
+         // try to avoid browser caching by adding stamp parameter to URL
+         if (file.fUseStampPar)
+            fullurl += ((fullurl.indexOf('?') < 0) ? '?' : '&') + file.fUseStampPar;
+
+         for (let n = first; n < last; n += 2) {
+            ranges += (n > first ? ',' : '=') + `${place[n]}-${place[n]+place[n+1]-1}`;
+            totalsz += place[n + 1]; // accumulated total size
          }
+         if (last - first > 2)
+            totalsz += (last - first) * 60; // for multi-range ~100 bytes/per request
 
-         const item = doc.createElement('div');
-         item.style.position = 'relative';
-         outer.appendChild(item);
+         // when read first block, allow to read more - maybe ranges are not supported and full file content will be returned
+         if (file.fAcceptRanges && first_block)
+            totalsz = Math.max(totalsz, 1e7);
 
-         if (d.header) {
-            item.style = 'background-color: lightblue; padding: 3px 7px; font-weight: bold; border-bottom: 1px;';
-            item.innerHTML = d.text;
-            return;
-         }
-
-         const hovArea = doc.createElement('div');
-         hovArea.style.width = '100%';
-         hovArea.style.height = '100%';
-         hovArea.style.display = 'flex';
-         hovArea.style.justifyContent = 'space-between';
-         hovArea.style.cursor = 'pointer';
-         if (d.title) hovArea.setAttribute('title', d.title);
-
-         item.appendChild(hovArea);
-         if (!d.text) d.text = 'item';
-
-         const text = doc.createElement('div');
-         text.style = 'margin: 0; padding: 3px 7px; pointer-events: none; white-space: nowrap';
-
-         if (d.text.indexOf('<svg') >= 0) {
-            if (need_check_area) {
-               text.style.display = 'flex';
-
-               const chk = doc.createElement('span');
-               chk.innerHTML = d.checked ? '\u2713' : '';
-               chk.style.display = 'inline-block';
-               chk.style.width = '1em';
-               text.appendChild(chk);
-
-               const sub = doc.createElement('div');
-               sub.innerHTML = d.text;
-               text.appendChild(sub);
-            } else
-               text.innerHTML = d.text;
-         } else {
-            if (need_check_area) {
-               const chk = doc.createElement('span');
-               chk.innerHTML = d.checked ? '\u2713' : '';
-               chk.style.display = 'inline-block';
-               chk.style.width = '1em';
-               text.appendChild(chk);
+         return createHttpRequest(fullurl, 'buf', read_callback, undefined, true).then(xhr => {
+            if (file.fAcceptRanges) {
+               xhr.setRequestHeader('Range', ranges);
+               xhr.expected_size = Math.max(Math.round(1.1 * totalsz), totalsz + 200); // 200 if offset for the potential gzip
             }
 
-            const sub = doc.createElement('span');
-            if (d.text.indexOf('<nobr>') === 0)
-               sub.textContent = d.text.slice(6, d.text.length-7);
-            else
-               sub.textContent = d.text;
-            text.appendChild(sub);
-         }
+            if (isFunc(progress_callback) && isFunc(xhr.addEventListener)) {
+               let sum1 = 0, sum2 = 0, sum_total = 0;
+               for (let n = 1; n < place.length; n += 2) {
+                  sum_total += place[n];
+                  if (n < first) sum1 += place[n];
+                  if (n < last) sum2 += place[n];
+               }
+               if (!sum_total) sum_total = 1;
 
-         hovArea.appendChild(text);
-
-         function changeFocus(item, on) {
-            if (on) {
-               item.classList.add('jsroot_ctxt_focus');
-               item.style['background-color'] = 'rgb(220, 220, 220)';
-            } else if (item.classList.contains('jsroot_ctxt_focus')) {
-               item.style['background-color'] = null;
-               item.classList.remove('jsroot_ctxt_focus');
-               item.querySelector('.jsroot_ctxt_container')?.remove();
-            }
-         }
-
-         if (d.extraText || d.sub) {
-            const extraText = doc.createElement('span');
-            extraText.className = 'jsroot_ctxt_extraText';
-            extraText.style = 'margin: 0; padding: 3px 7px; color: rgb(0, 0, 0, 0.6);';
-            extraText.textContent = d.sub ? '\u25B6' : d.extraText;
-            hovArea.appendChild(extraText);
-
-            if (d.sub && browser.touches) {
-               extraText.addEventListener('click', evnt => {
-                  evnt.preventDefault();
-                  evnt.stopPropagation();
-                  const was_active = item.parentNode.querySelector('.jsroot_ctxt_focus');
-
-                  if (was_active)
-                     changeFocus(was_active, false);
-
-                  if (item !== was_active) {
-                     changeFocus(item, true);
-                     this._buildContextmenu(d.sub, 0, 0, item);
+               const progress_offest = sum1 / sum_total, progress_this = (sum2 - sum1) / sum_total;
+               xhr.addEventListener('progress', oEvent => {
+                  if (oEvent.lengthComputable) {
+                     if (progress_callback(progress_offest + progress_this * oEvent.loaded / oEvent.total) === 'break')
+                        xhr.abort();
+                  }
+               });
+            } else if (first_block_retry && isFunc(xhr.addEventListener)) {
+               xhr.addEventListener('progress', oEvent => {
+                  if (!oEvent.total)
+                     console.warn('Fail to get file size information');
+                  else if (oEvent.total > 5e7) {
+                     console.error(`Try to load very large file ${oEvent.total} at once - abort`);
+                     xhr.abort();
                   }
                });
             }
+
+            first_req = first_block ? xhr : null;
+            xhr.send(null);
+         });
+      }
+
+      read_callback = function(res) {
+         if (!res && first_block) {
+            // if fail to read file with stamp parameter, try once again without it
+            if (file.fUseStampPar) {
+               file.fUseStampPar = false;
+               return send_new_request();
+            }
+            if (file.fAcceptRanges) {
+               file.fAcceptRanges = false;
+               first_block_retry = true;
+               return send_new_request();
+            }
          }
 
-         if (!browser.touches) {
-            hovArea.addEventListener('mouseenter', () => {
-               if (this.prevHovArea)
-                  this.prevHovArea.style['background-color'] = null;
-               hovArea.style['background-color'] = 'rgb(235, 235, 235)';
-               this.prevHovArea = hovArea;
+         if (res && first_req) {
+            // special workaround for servers like cernbox blocking access to some response headers
+            // as result, it is not possible to parse multipart responses
+            if (file.fAcceptRanges && (first_req.status === 206) && (res?.byteLength === place[1]) && !first_req.getResponseHeader('Content-Range') && (file.fMaxRanges > 1)) {
+               console.warn('Server response with 206 code but browser does not provide access to Content-Range header - setting fMaxRanges = 1, consider to load full file with "filename.root+" argument or adjust server configurations');
+               file.fMaxRanges = 1;
+            }
 
-               outer.childNodes.forEach(chld => changeFocus(chld, false));
+            // workaround for simpleHTTP
+            const kind = browser.isFirefox ? first_req.getResponseHeader('Server') : '';
+            if (isStr(kind) && kind.indexOf('SimpleHTTP') === 0) {
+               file.fMaxRanges = 1;
+               file.fUseStampPar = false;
+            }
+         }
 
-               if (d.sub) {
-                  changeFocus(item, true);
-                  this._buildContextmenu(d.sub, 0, 0, item);
+         if (res && first_block && !file.fFileContent) {
+            // special case - keep content of first request (could be complete file) in memory
+            file.fFileContent = new TBuffer(isStr(res) ? res : new DataView(res));
+
+            if (!file.fAcceptRanges)
+               file.fEND = file.fFileContent.length;
+
+            return resolveFunc(file.fFileContent.extract(place));
+         }
+
+         if (!res) {
+            if ((first === 0) && (last > 2) && (file.fMaxRanges > 1)) {
+               // server return no response with multi request - try to decrease ranges count or fail
+
+               if (last / 2 > 200)
+                  file.fMaxRanges = 200;
+               else if (last / 2 > 50)
+                  file.fMaxRanges = 50;
+               else if (last / 2 > 20)
+                  file.fMaxRanges = 20;
+               else if (last / 2 > 5)
+                  file.fMaxRanges = 5;
+               else
+                  file.fMaxRanges = 1;
+               last = Math.min(last, file.fMaxRanges * 2);
+               // console.log(`Change maxranges to ${file.fMaxRanges} last ${last}`);
+               return send_new_request();
+            }
+
+            return rejectFunc(Error('Fail to read with several ranges'));
+         }
+
+         // if only single segment requested, return result as is
+         if (last - first === 2) {
+            const b = new DataView(res);
+            if (place.length === 2) return resolveFunc(b);
+            blobs.push(b);
+            return send_new_request(true);
+         }
+
+         // object to access response data
+         const hdr = this.getResponseHeader('Content-Type'),
+               ismulti = isStr(hdr) && (hdr.indexOf('multipart') >= 0),
+               view = new DataView(res);
+
+         if (!ismulti) {
+            // server may returns simple buffer, which combines all segments together
+
+            const hdr_range = this.getResponseHeader('Content-Range');
+            let segm_start = 0, segm_last = -1;
+
+            if (isStr(hdr_range) && hdr_range.indexOf('bytes') >= 0) {
+               const parts = hdr_range.slice(hdr_range.indexOf('bytes') + 6).split(/[\s-/]+/);
+               if (parts.length === 3) {
+                  segm_start = Number.parseInt(parts[0]);
+                  segm_last = Number.parseInt(parts[1]);
+                  if (!Number.isInteger(segm_start) || !Number.isInteger(segm_last) || (segm_start > segm_last)) {
+                     segm_start = 0; segm_last = -1;
+                  }
+               }
+            }
+
+            let canbe_single_segment = (segm_start <= segm_last);
+            for (let n = first; n < last; n += 2) {
+               if ((place[n] < segm_start) || (place[n] + place[n + 1] - 1 > segm_last))
+                  canbe_single_segment = false;
+            }
+
+            if (canbe_single_segment) {
+               for (let n = first; n < last; n += 2)
+                  blobs.push(new DataView(res, place[n] - segm_start, place[n + 1]));
+               return send_new_request(true);
+            }
+
+            if ((file.fMaxRanges === 1) || (first !== 0))
+               return rejectFunc(Error('Server returns normal response when multipart was requested, disable multirange support'));
+
+            file.fMaxRanges = 1;
+            last = Math.min(last, file.fMaxRanges * 2);
+
+            return send_new_request();
+         }
+
+         // multipart messages requires special handling
+
+         const indx = hdr.indexOf('boundary=');
+         let boundary = '', n = first, o = 0;
+         if (indx > 0) {
+            boundary = hdr.slice(indx + 9);
+            if ((boundary[0] === '"') && (boundary[boundary.length - 1] === '"'))
+               boundary = boundary.slice(1, boundary.length - 1);
+            boundary = '--' + boundary;
+         } else
+            console.error('Did not found boundary id in the response header');
+
+         while (n < last) {
+            let code1, code2 = view.getUint8(o), nline = 0, line = '',
+               finish_header = false, segm_start = 0, segm_last = -1;
+
+            while ((o < view.byteLength - 1) && !finish_header && (nline < 5)) {
+               code1 = code2;
+               code2 = view.getUint8(o + 1);
+
+               if (((code1 === 13) && (code2 === 10)) || (code1 === 10)) {
+                  if ((line.length > 2) && (line.slice(0, 2) === '--') && (line !== boundary))
+                     return rejectFunc(Error(`Decode multipart message, expect boundary ${boundary} got ${line}`));
+
+                  line = line.toLowerCase();
+
+                  if ((line.indexOf('content-range') >= 0) && (line.indexOf('bytes') > 0)) {
+                     const parts = line.slice(line.indexOf('bytes') + 6).split(/[\s-/]+/);
+                     if (parts.length === 3) {
+                        segm_start = Number.parseInt(parts[0]);
+                        segm_last = Number.parseInt(parts[1]);
+                        if (!Number.isInteger(segm_start) || !Number.isInteger(segm_last) || (segm_start > segm_last)) {
+                           segm_start = 0; segm_last = -1;
+                        }
+                     } else
+                        console.error(`Fail to decode content-range ${line} ${parts}`);
+                  }
+
+                  if ((nline > 1) && (line.length === 0)) finish_header = true;
+
+                  nline++; line = '';
+                  if (code1 !== 10) {
+                     o++; code2 = view.getUint8(o + 1);
+                  }
+               } else
+                  line += String.fromCharCode(code1);
+               o++;
+            }
+
+            if (!finish_header)
+               return rejectFunc(Error('Cannot decode header in multipart message'));
+
+            if (segm_start > segm_last) {
+               // fall-back solution, believe that segments same as requested
+               blobs.push(new DataView(res, o, place[n + 1]));
+               o += place[n + 1];
+               n += 2;
+            } else {
+               while ((n < last) && (place[n] >= segm_start) && (place[n] + place[n + 1] - 1 <= segm_last)) {
+                  blobs.push(new DataView(res, o + place[n] - segm_start, place[n + 1]));
+                  n += 2;
+               }
+
+               o += (segm_last - segm_start + 1);
+            }
+         }
+
+         send_new_request(true);
+      };
+
+      return send_new_request(true).then(() => promise);
+   }
+
+   /** @summary Returns file name */
+   getFileName() { return this.fFileName; }
+
+   /** @summary Get directory with given name and cycle
+    * @desc Function only can be used for already read directories, which are preserved in the memory
+    * @private */
+   getDir(dirname, cycle) {
+      if ((cycle === undefined) && isStr(dirname)) {
+         const pos = dirname.lastIndexOf(';');
+         if (pos > 0) {
+            cycle = Number.parseInt(dirname.slice(pos + 1));
+            dirname = dirname.slice(0, pos);
+         }
+      }
+
+      for (let j = 0; j < this.fDirectories.length; ++j) {
+         const dir = this.fDirectories[j];
+         if (dir.dir_name !== dirname) continue;
+         if ((cycle !== undefined) && (dir.dir_cycle !== cycle)) continue;
+         return dir;
+      }
+      return null;
+   }
+
+   /** @summary Retrieve a key by its name and cycle in the list of keys
+    * @desc If only_direct not specified, returns Promise while key keys must be read first from the directory
+    * @private */
+   getKey(keyname, cycle, only_direct) {
+      if (typeof cycle !== 'number') cycle = -1;
+      let bestkey = null;
+      for (let i = 0; i < this.fKeys.length; ++i) {
+         const key = this.fKeys[i];
+         if (!key || (key.fName !== keyname)) continue;
+         if (key.fCycle === cycle) { bestkey = key; break; }
+         if ((cycle < 0) && (!bestkey || (key.fCycle > bestkey.fCycle))) bestkey = key;
+      }
+      if (bestkey)
+         return only_direct ? bestkey : Promise.resolve(bestkey);
+
+      let pos = keyname.lastIndexOf('/');
+      // try to handle situation when object name contains slashes (bad practice anyway)
+      while (pos > 0) {
+         const dirname = keyname.slice(0, pos),
+               subname = keyname.slice(pos + 1),
+               dir = this.getDir(dirname);
+
+         if (dir) return dir.getKey(subname, cycle, only_direct);
+
+         const dirkey = this.getKey(dirname, undefined, true);
+         if (dirkey && !only_direct && (dirkey.fClassName.indexOf(clTDirectory) === 0))
+            return this.readObject(dirname).then(newdir => newdir.getKey(subname, cycle));
+
+         pos = keyname.lastIndexOf('/', pos - 1);
+      }
+
+      return only_direct ? null : Promise.reject(Error(`Key not found ${keyname}`));
+   }
+
+   /** @summary Read and inflate object buffer described by its key
+    * @private */
+   async readObjBuffer(key) {
+      return this.readBuffer([key.fSeekKey + key.fKeylen, key.fNbytes - key.fKeylen]).then(blob1 => {
+         if (key.fObjlen <= key.fNbytes - key.fKeylen) {
+            const buf = new TBuffer(blob1, 0, this);
+            buf.fTagOffset = key.fKeylen;
+            return buf;
+         }
+
+         return R__unzip(blob1, key.fObjlen).then(objbuf => {
+            if (!objbuf)
+               return Promise.reject(Error(`Fail to UNZIP buffer for ${key.fName}`));
+
+            const buf = new TBuffer(objbuf, 0, this);
+            buf.fTagOffset = key.fKeylen;
+            return buf;
+         });
+      });
+   }
+
+   /** @summary Read any object from a root file
+     * @desc One could specify cycle number in the object name or as separate argument
+     * @param {string} obj_name - name of object, may include cycle number like 'hpxpy;1'
+     * @param {number} [cycle] - cycle number, also can be included in obj_name
+     * @return {Promise} promise with object read
+     * @example
+     * import { openFile } from 'https://root.cern/js/latest/modules/io.mjs';
+     * let f = await openFile('https://root.cern/js/files/hsimple.root');
+     * let obj = await f.readObject('hpxpy;1');
+     * console.log(`Read object of type ${obj._typename}`); */
+   async readObject(obj_name, cycle, only_dir) {
+      const pos = obj_name.lastIndexOf(';');
+      if (pos >= 0) {
+         cycle = Number.parseInt(obj_name.slice(pos + 1));
+         obj_name = obj_name.slice(0, pos);
+      }
+
+      if (typeof cycle !== 'number') cycle = -1;
+      // remove leading slashes
+      while (obj_name.length && (obj_name[0] === '/')) obj_name = obj_name.slice(1);
+
+      // one uses Promises while in some cases we need to
+      // read sub-directory to get list of keys
+      // in such situation calls are asynchronous
+      return this.getKey(obj_name, cycle).then(key => {
+         if ((obj_name === nameStreamerInfo) && (key.fClassName === clTList))
+            return this.fStreamerInfos;
+
+         let isdir = false;
+
+         if ((key.fClassName === clTDirectory || key.fClassName === clTDirectoryFile)) {
+            const dir = this.getDir(obj_name, cycle);
+            if (dir) return dir;
+            isdir = true;
+         }
+
+         if (!isdir && only_dir)
+            return Promise.reject(Error(`Key ${obj_name} is not directory}`));
+
+         return this.readObjBuffer(key).then(buf => {
+            if (isdir) {
+               const dir = new TDirectory(this, obj_name, cycle);
+               dir.fTitle = key.fTitle;
+               return dir.readKeys(buf);
+            }
+
+            const obj = {};
+            buf.mapObject(1, obj); // tag object itself with id == 1
+            buf.classStreamer(obj, key.fClassName);
+
+            if ((key.fClassName === clTF1) || (key.fClassName === clTF2))
+               return this._readFormulas(obj);
+
+            return obj;
+         });
+      });
+   }
+
+   /** @summary read formulas from the file and add them to TF1/TF2 objects
+     * @private */
+   async _readFormulas(tf1) {
+      const arr = [];
+      for (let indx = 0; indx < this.fKeys.length; ++indx) {
+         if (this.fKeys[indx].fClassName === 'TFormula')
+            arr.push(this.readObject(this.fKeys[indx].fName, this.fKeys[indx].fCycle));
+      }
+
+      return Promise.all(arr).then(formulas => {
+         formulas.forEach(obj => tf1.addFormula(obj));
+         return tf1;
+      });
+   }
+
+   /** @summary extract streamer infos from the buffer
+     * @private */
+   extractStreamerInfos(buf) {
+      if (!buf) return;
+
+      const lst = {};
+      buf.mapObject(1, lst);
+
+      try {
+         buf.classStreamer(lst, clTList);
+      } catch (err) {
+          console.error('Fail extract streamer infos', err);
+          return;
+      }
+
+      lst._typename = clTStreamerInfoList;
+
+      this.fStreamerInfos = lst;
+
+      if (isFunc(internals.addStreamerInfosForPainter))
+         internals.addStreamerInfosForPainter(lst);
+
+      for (let k = 0; k < lst.arr.length; ++k) {
+         const si = lst.arr[k];
+         if (!si.fElements) continue;
+         for (let l = 0; l < si.fElements.arr.length; ++l) {
+            const elem = si.fElements.arr[l];
+            if (!elem.fTypeName || !elem.fType) continue;
+
+            let typ = elem.fType, typname = elem.fTypeName;
+
+            if (typ >= 60) {
+               if ((typ === kStreamer) && (elem._typename === clTStreamerSTL) && elem.fSTLtype && elem.fCtype && (elem.fCtype < 20)) {
+                  const prefix = (StlNames[elem.fSTLtype] || 'undef') + '<';
+                  if ((typname.indexOf(prefix) === 0) && (typname[typname.length - 1] === '>')) {
+                     typ = elem.fCtype;
+                     typname = typname.slice(prefix.length, typname.length - 1).trim();
+
+                     if ((elem.fSTLtype === kSTLmap) || (elem.fSTLtype === kSTLmultimap)) {
+                        if (typname.indexOf(',') > 0)
+                           typname = typname.slice(0, typname.indexOf(',')).trim();
+                        else
+                           continue;
+                     }
+                  }
+               }
+               if (typ >= 60) continue;
+            } else {
+               if ((typ > 20) && (typname[typname.length - 1] === '*')) typname = typname.slice(0, typname.length - 1);
+               typ = typ % 20;
+            }
+
+            const kind = getTypeId(typname);
+            if (kind === typ) continue;
+
+            if ((typ === kBits) && (kind === kUInt)) continue;
+            if ((typ === kCounter) && (kind === kInt)) continue;
+
+            if (typname && typ && (this.fBasicTypes[typname] !== typ))
+               this.fBasicTypes[typname] = typ;
+         }
+      }
+   }
+
+   /** @summary Read file keys
+     * @private */
+   async readKeys() {
+      // with the first readbuffer we read bigger amount to create header cache
+      return this.readBuffer([0, 400]).then(blob => {
+         const buf = new TBuffer(blob, 0, this);
+         if (buf.substring(0, 4) !== 'root')
+            return Promise.reject(Error(`Not a ROOT file ${this.fURL}`));
+
+         buf.shift(4);
+
+         this.fVersion = buf.ntou4();
+         this.fBEGIN = buf.ntou4();
+         if (this.fVersion < 1000000) { // small file
+            this.fEND = buf.ntou4();
+            this.fSeekFree = buf.ntou4();
+            this.fNbytesFree = buf.ntou4();
+            buf.shift(4); // const nfree = buf.ntoi4();
+            this.fNbytesName = buf.ntou4();
+            this.fUnits = buf.ntou1();
+            this.fCompress = buf.ntou4();
+            this.fSeekInfo = buf.ntou4();
+            this.fNbytesInfo = buf.ntou4();
+         } else { // new format to support large files
+            this.fEND = buf.ntou8();
+            this.fSeekFree = buf.ntou8();
+            this.fNbytesFree = buf.ntou4();
+            buf.shift(4); // const nfree = buf.ntou4();
+            this.fNbytesName = buf.ntou4();
+            this.fUnits = buf.ntou1();
+            this.fCompress = buf.ntou4();
+            this.fSeekInfo = buf.ntou8();
+            this.fNbytesInfo = buf.ntou4();
+         }
+
+         // empty file
+         if (!this.fSeekInfo || !this.fNbytesInfo)
+            return Promise.reject(Error(`File ${this.fURL} does not provide streamer infos`));
+
+         // extra check to prevent reading of corrupted data
+         if (!this.fNbytesName || this.fNbytesName > 100000)
+            return Promise.reject(Error(`Cannot read directory info of the file ${this.fURL}`));
+
+         // *-*-------------Read directory info
+         let nbytes = this.fNbytesName + 22;
+         nbytes += 4;  // fDatimeC.Sizeof();
+         nbytes += 4;  // fDatimeM.Sizeof();
+         nbytes += 18; // fUUID.Sizeof();
+         // assume that the file may be above 2 Gbytes if file version is > 4
+         if (this.fVersion >= 40000) nbytes += 12;
+
+         // this part typically read from the header, no need to optimize
+         return this.readBuffer([this.fBEGIN, Math.max(300, nbytes)]);
+      }).then(blob3 => {
+         const buf3 = new TBuffer(blob3, 0, this);
+
+         // keep only title from TKey data
+         this.fTitle = buf3.readTKey().fTitle;
+
+         buf3.locate(this.fNbytesName);
+
+         // we read TDirectory part of TFile
+         buf3.classStreamer(this, clTDirectory);
+
+         if (!this.fSeekKeys)
+            return Promise.reject(Error(`Empty keys list in ${this.fURL}`));
+
+         // read with same request keys and streamer infos
+         return this.readBuffer([this.fSeekKeys, this.fNbytesKeys, this.fSeekInfo, this.fNbytesInfo]);
+      }).then(blobs => {
+         const buf4 = new TBuffer(blobs[0], 0, this);
+
+         buf4.readTKey(); //
+         const nkeys = buf4.ntoi4();
+         for (let i = 0; i < nkeys; ++i)
+            this.fKeys.push(buf4.readTKey());
+
+         const buf5 = new TBuffer(blobs[1], 0, this),
+               si_key = buf5.readTKey();
+         if (!si_key)
+            return Promise.reject(Error(`Fail to read StreamerInfo data in ${this.fURL}`));
+
+         this.fKeys.push(si_key);
+         return this.readObjBuffer(si_key);
+      }).then(blob6 => {
+          this.extractStreamerInfos(blob6);
+          return this;
+      });
+   }
+
+   /** @summary Read the directory content from  a root file
+     * @desc If directory was already read - return previously read object
+     * Same functionality as {@link TFile#readObject}
+     * @param {string} dir_name - directory name
+     * @param {number} [cycle] - directory cycle
+     * @return {Promise} - promise with read directory */
+   async readDirectory(dir_name, cycle) {
+      return this.readObject(dir_name, cycle, true);
+   }
+
+   /** @summary Search streamer info
+     * @param {string} clanme - class name
+     * @param {number} [clversion] - class version
+     * @param {number} [checksum] - streamer info checksum, have to match when specified
+     * @private */
+   findStreamerInfo(clname, clversion, checksum) {
+      if (!this.fStreamerInfos) return null;
+
+      const arr = this.fStreamerInfos.arr, len = arr.length;
+
+      if (checksum !== undefined) {
+         let cache = this.fStreamerInfos.cache;
+         if (!cache) cache = this.fStreamerInfos.cache = {};
+         let si = cache[checksum];
+         if (si !== undefined) return si;
+
+         for (let i = 0; i < len; ++i) {
+            si = arr[i];
+            if (si.fCheckSum === checksum) {
+               cache[checksum] = si;
+               return si;
+            }
+         }
+         cache[checksum] = null; // checksum did not found, do not try again
+      } else {
+         for (let i = 0; i < len; ++i) {
+            const si = arr[i];
+            if ((si.fName === clname) && ((si.fClassVersion === clversion) || (clversion === undefined))) return si;
+         }
+      }
+
+      return null;
+   }
+
+   /** @summary Returns streamer for the class 'clname',
+     * @desc From the list of streamers or generate it from the streamer infos and add it to the list
+     * @private */
+   getStreamer(clname, ver, s_i) {
+      // these are special cases, which are handled separately
+      if (clname === clTQObject || clname === clTBasket) return null;
+
+      let streamer, fullname = clname;
+
+      if (ver) {
+         fullname += (ver.checksum ? `$chksum${ver.checksum}` : `$ver${ver.val}`);
+         streamer = this.fStreamers[fullname];
+         if (streamer !== undefined) return streamer;
+      }
+
+      const custom = CustomStreamers[clname];
+
+      // one can define in the user streamers just aliases
+      if (isStr(custom))
+         return this.getStreamer(custom, ver, s_i);
+
+      // streamer is just separate function
+      if (isFunc(custom)) {
+         streamer = [{ typename: clname, func: custom }];
+         return addClassMethods(clname, streamer);
+      }
+
+      streamer = [];
+
+      if (isObject(custom)) {
+         if (!custom.name && !custom.func) return custom;
+         streamer.push(custom); // special read entry, add in the beginning of streamer
+      }
+
+      // check element in streamer infos, one can have special cases
+      if (!s_i) s_i = this.findStreamerInfo(clname, ver.val, ver.checksum);
+
+      if (!s_i) {
+         delete this.fStreamers[fullname];
+         if (!ver.nowarning)
+            console.warn(`Not found streamer for ${clname} ver ${ver.val} checksum ${ver.checksum} full ${fullname}`);
+         return null;
+      }
+
+      // special handling for TStyle which has duplicated member name fLineStyle
+      if ((s_i.fName === clTStyle) && s_i.fElements) {
+         s_i.fElements.arr.forEach(elem => {
+            if (elem.fName === 'fLineStyle') elem.fName = 'fLineStyles'; // like in ROOT JSON now
+         });
+      }
+
+      // for each entry in streamer info produce member function
+      if (s_i.fElements) {
+         for (let j = 0; j < s_i.fElements.arr.length; ++j)
+            streamer.push(createMemberStreamer(s_i.fElements.arr[j], this));
+      }
+
+      this.fStreamers[fullname] = streamer;
+
+      return addClassMethods(clname, streamer);
+   }
+
+   /** @summary Here we produce list of members, resolving all base classes
+     * @private */
+   getSplittedStreamer(streamer, tgt) {
+      if (!streamer) return tgt;
+
+      if (!tgt) tgt = [];
+
+      for (let n = 0; n < streamer.length; ++n) {
+         const elem = streamer[n];
+
+         if (elem.base === undefined) {
+            tgt.push(elem);
+            continue;
+         }
+
+         if (elem.basename === clTObject) {
+            tgt.push({
+               func(buf, obj) {
+                  buf.ntoi2(); // read version, why it here??
+                  obj.fUniqueID = buf.ntou4();
+                  obj.fBits = buf.ntou4();
+                  if (obj.fBits & kIsReferenced) buf.ntou2(); // skip pid
                }
             });
+            continue;
          }
 
-         if (d.func) {
-            item.addEventListener('click', evnt => {
-               const func = this.painter ? d.func.bind(this.painter) : d.func;
-               func(d.arg);
-               evnt.stopPropagation();
-               this.remove();
-            });
+         const ver = { val: elem.base };
+
+         if (ver.val === 4294967295) {
+            // this is -1 and indicates foreign class, need more workarounds
+            ver.val = 1; // need to search version 1 - that happens when several versions of foreign class exists ???
          }
-      });
 
-      loc.appendChild(outer);
+         const parent = this.getStreamer(elem.basename, ver);
+         if (parent) this.getSplittedStreamer(parent, tgt);
+      }
 
-      const docWidth = doc.documentElement.clientWidth, docHeight = doc.documentElement.clientHeight;
+      return tgt;
+   }
 
-      // Now determine where the contextmenu will be
-      if (loc === doc.body) {
-         if (left + outer.offsetWidth > docWidth) {
-            // Does sub-contextmenu overflow window width?
-            outer.style.left = (docWidth - outer.offsetWidth) + 'px';
-         }
-         if (outer.offsetHeight > docHeight) {
-            // is the contextmenu height larger than the window height?
-            outer.style.top = 0;
-            outer.style.overflowY = 'scroll';
-            outer.style.overflowX = 'hidden';
-            outer.style.height = docHeight + 'px';
-         } else if (top + outer.offsetHeight > docHeight) {
-            // Does contextmenu overflow window height?
-            outer.style.top = (docHeight - outer.offsetHeight) + 'px';
-         }
-      } else if (outer.className !== 'jsroot_ctxt_column') {
-         // if its sub-contextmenu
-         const dimensionsLoc = loc.getBoundingClientRect(), dimensionsOuter = outer.getBoundingClientRect();
+   /** @summary Fully cleanup TFile data
+     * @private */
+   delete() {
+      this.fDirectories = null;
+      this.fKeys = null;
+      this.fStreamers = null;
+      this.fSeekInfo = 0;
+      this.fNbytesInfo = 0;
+      this.fTagOffset = 0;
+   }
 
-         // Does sub-contextmenu overflow window width?
-         if (dimensionsOuter.left + dimensionsOuter.width > docWidth)
-            outer.style.left = (-loc.offsetLeft - dimensionsOuter.width) + 'px';
+} // class TFile
 
+/** @summary Function to read vector element in the streamer
+  * @private */
+function readVectorElement(buf) {
+   if (this.member_wise) {
+      const n = buf.ntou4(), ver = this.stl_version;
+      let streamer = null;
 
-         if (dimensionsOuter.height > docHeight) {
-            // is the sub-contextmenu height larger than the window height?
-            outer.style.top = -dimensionsOuter.top + 'px';
-            outer.style.overflowY = 'scroll';
-            outer.style.overflowX = 'hidden';
-            outer.style.height = docHeight + 'px';
-         } else if (dimensionsOuter.height < docHeight && dimensionsOuter.height > docHeight / 2) {
-            // is the sub-contextmenu height smaller than the window height AND larger than half of window height?
-            if (dimensionsOuter.top - docHeight / 2 >= 0) { // If sub-contextmenu is closer to bottom of the screen
-               outer.style.top = (-dimensionsOuter.top - dimensionsOuter.height + docHeight) + 'px';
-            } else { // If sub-contextmenu is closer to top of the screen
-               outer.style.top = (-dimensionsOuter.top) + 'px';
+      if (n === 0) return []; // for empty vector no need to search split streamers
+
+      if (n > 1000000)
+         throw new Error(`member-wise streaming of ${this.conttype} num ${n} member ${this.name}`);
+
+      if ((ver.val === this.member_ver) && (ver.checksum === this.member_checksum))
+         streamer = this.member_streamer;
+      else {
+         streamer = buf.fFile.getStreamer(this.conttype, ver);
+
+         this.member_streamer = streamer = buf.fFile.getSplittedStreamer(streamer);
+         this.member_ver = ver.val;
+         this.member_checksum = ver.checksum;
+      }
+
+      const res = new Array(n);
+      let i, k, member;
+
+      for (i = 0; i < n; ++i)
+         res[i] = { _typename: this.conttype }; // create objects
+      if (!streamer)
+         console.error(`Fail to create split streamer for ${this.conttype} need to read ${n} objects version ${ver}`);
+      else {
+         for (k = 0; k < streamer.length; ++k) {
+            member = streamer[k];
+            if (member.split_func)
+               member.split_func(buf, res, n);
+            else {
+               for (i = 0; i < n; ++i)
+                  member.func(buf, res[i]);
             }
-         } else if (dimensionsOuter.top + dimensionsOuter.height > docHeight) {
-            // Does sub-contextmenu overflow window height?
-            outer.style.top = (-dimensionsOuter.height + dimensionsLoc.height) + 'px';
          }
       }
-      return outer;
+      return res;
    }
 
-   /** @summary Show standalone menu */
-   async show(event) {
-      this.remove();
+   const n = buf.ntou4(), res = new Array(n);
+   let i = 0;
 
-      if (!event && this.show_evnt) event = this.show_evnt;
-
-      const doc = getDocument(),
-            woffset = typeof window === 'undefined' ? { x: 0, y: 0 } : { x: window.scrollX, y: window.scrollY };
-
-      doc.body.addEventListener('click', this.remove_handler);
-
-      const oldmenu = doc.getElementById(this.menuname);
-      if (oldmenu) oldmenu.remove();
-
-      this.element = this._buildContextmenu(this.code, (event?.clientX || 0) + woffset.x, (event?.clientY || 0) + woffset.y, doc.body);
-
-      this.element.setAttribute('id', this.menuname);
-
-      return this;
+   if (n > 200000) {
+      console.error(`vector streaming for ${this.conttype} at ${n}`);
+      return res;
    }
 
-   /** @summary Run modal elements with standalone code */
-   createModal(title, main_content, args) {
-      if (!args) args = {};
+   if (this.arrkind > 0)
+      while (i < n) res[i++] = buf.readFastArray(buf.ntou4(), this.arrkind);
+   else if (this.arrkind === 0)
+      while (i < n) res[i++] = buf.readTString();
+   else if (this.isptr)
+      while (i < n) res[i++] = buf.readObjectAny();
+   else if (this.submember)
+      while (i < n) res[i++] = this.submember.readelem(buf);
+   else
+      while (i < n) res[i++] = buf.classStreamer({}, this.conttype);
 
-      if (!args.Ok) args.Ok = 'Ok';
+   return res;
+}
 
-      const modal = { args }, dlg_id = (this?.menuname ?? sDfltName) + sDfltDlg;
-      select(`#${dlg_id}`).remove();
-      select(`#${dlg_id}_block`).remove();
 
-      const w = Math.min(args.width || 450, Math.round(0.9*browser.screenWidth));
-      modal.block = select('body').append('div')
-                                   .attr('id', `${dlg_id}_block`)
-                                   .attr('class', 'jsroot_dialog_block')
-                                   .attr('style', 'z-index: 100000; position: absolute; left: 0px; top: 0px; bottom: 0px; right: 0px; opacity: 0.2; background-color: white');
-      modal.element = select('body')
-                      .append('div')
-                      .attr('id', dlg_id)
-                      .attr('class', 'jsroot_dialog')
-                      .style('position', 'absolute')
-                      .style('width', `${w}px`)
-                      .style('left', '50%')
-                      .style('top', '50%')
-                      .style('z-index', 100001)
-                      .attr('tabindex', '0')
-                      .html(
-         '<div style=\'position: relative; left: -50%; top: -50%; border: solid green 3px; padding: 5px; display: flex; flex-flow: column; background-color: white\'>'+
-           `<div style='flex: 0 1 auto; padding: 5px'>${title}</div>`+
-           `<div class='jsroot_dialog_content' style='flex: 1 1 auto; padding: 5px'>${main_content}</div>`+
-           '<div class=\'jsroot_dialog_footer\' style=\'flex: 0 1 auto; padding: 5px\'>'+
-              `<button class='jsroot_dialog_button' style='float: right; width: fit-content; margin-right: 1em'>${args.Ok}</button>`+
-              (args.btns ? '<button class=\'jsroot_dialog_button\' style=\'float: right; width: fit-content; margin-right: 1em\'>Cancel</button>' : '') +
-         '</div></div>');
+/** @summary Function used in streamer to read std::map object
+  * @private */
+function readMapElement(buf) {
+   let streamer = this.streamer;
 
-      modal.done = function(res) {
-         if (this._done) return;
-         this._done = true;
-         if (isFunc(this.call_back))
-            this.call_back(res);
-         this.element.remove();
-         this.block.remove();
-      };
+   if (this.member_wise) {
+      // when member-wise streaming is used, version is written
+      const ver = this.stl_version;
 
-      modal.setContent = function(content, btn_text) {
-         if (!this._done) {
-            this.element.select('.jsroot_dialog_content').html(content);
-            if (btn_text) {
-               this.args.Ok = btn_text;
-               this.element.select('.jsroot_dialog_button').text(btn_text);
+      if (this.si) {
+         const si = buf.fFile.findStreamerInfo(this.pairtype, ver.val, ver.checksum);
+
+         if (this.si !== si) {
+            streamer = getPairStreamer(si, this.pairtype, buf.fFile);
+            if (!streamer || streamer.length !== 2) {
+               console.log(`Fail to produce streamer for ${this.pairtype}`);
+               return null;
             }
          }
-      };
-
-      modal.element.on('keyup', evnt => {
-         if ((evnt.code === 'Enter') || (evnt.code === 'Escape')) {
-            evnt.preventDefault();
-            evnt.stopPropagation();
-            modal.done(evnt.code === 'Enter' ? modal.element.node() : null);
-         }
-      });
-      modal.element.on('keydown', evnt => {
-         if ((evnt.code === 'Enter') || (evnt.code === 'Escape')) {
-            evnt.preventDefault();
-            evnt.stopPropagation();
-         }
-      });
-      modal.element.selectAll('.jsroot_dialog_button').on('click', evnt => {
-         modal.done(args.btns && (select(evnt.target).text() === args.Ok) ? modal.element.node() : null);
-      });
-
-      let f = modal.element.select('.jsroot_dialog_content').select('input');
-      if (f.empty()) f = modal.element.select('.jsroot_dialog_footer').select('button');
-      if (!f.empty()) f.node().focus();
-      return modal;
+      }
    }
 
-   /** @summary Run modal elements with standalone code */
-   async runModal(title, main_content, args) {
-      const modal = this.createModal(title, main_content, args);
-      return new Promise(resolveFunc => {
-         modal.call_back = resolveFunc;
+   const n = buf.ntoi4(), res = new Array(n);
+
+   // no extra data written for empty map
+   if (n === 0)
+      return res;
+
+   if (this.member_wise && (buf.remain() >= 6)) {
+      if (buf.ntoi2() === kStreamedMemberWise)
+         buf.shift(4); // skip checksum
+      else
+         buf.shift(-2); // rewind
+   }
+
+   for (let i = 0; i < n; ++i) {
+      res[i] = { _typename: this.pairtype };
+      streamer[0].func(buf, res[i]);
+      if (!this.member_wise) streamer[1].func(buf, res[i]);
+   }
+
+   // due-to member-wise streaming second element read after first is completed
+   if (this.member_wise) {
+      if (buf.remain() >= 6) {
+         if (buf.ntoi2() === kStreamedMemberWise)
+            buf.shift(4);  // skip checksum
+         else
+            buf.shift(-2);  // rewind
+      }
+      for (let i = 0; i < n; ++i)
+         streamer[1].func(buf, res[i]);
+   }
+
+   return res;
+}
+
+// =============================================================
+
+/**
+  * @summary Interface to read local file in the browser
+  *
+  * @hideconstructor
+  * @desc Use {@link openFile} to create instance of the class
+  * @private
+  */
+
+class TLocalFile extends TFile {
+
+   constructor(file) {
+      super(null);
+      this.fUseStampPar = false;
+      this.fLocalFile = file;
+      this.fEND = file.size;
+      this.fFullURL = file.name;
+      this.fURL = file.name;
+      this.fFileName = file.name;
+   }
+
+   /** @summary Open local file
+     * @return {Promise} after file keys are read */
+   async _open() { return this.readKeys(); }
+
+   /** @summary read buffer from local file
+     * @return {Promise} with read data */
+   async readBuffer(place, filename /* , progress_callback */) {
+      const file = this.fLocalFile;
+
+      return new Promise((resolve, reject) => {
+         if (filename)
+            return reject(Error(`Cannot access other local file ${filename}`));
+
+         const reader = new FileReader(), blobs = [];
+         let cnt = 0;
+
+         reader.onload = function(evnt) {
+            const res = new DataView(evnt.target.result);
+            if (place.length === 2) return resolve(res);
+
+            blobs.push(res);
+            cnt += 2;
+            if (cnt >= place.length) return resolve(blobs);
+            reader.readAsArrayBuffer(file.slice(place[cnt], place[cnt] + place[cnt + 1]));
+         };
+
+         reader.readAsArrayBuffer(file.slice(place[0], place[0] + place[1]));
       });
    }
 
-} // class StandaloneMenu
+} // class TLocalFile
+
+/**
+  * @summary Interface to read file in node.js
+  *
+  * @hideconstructor
+  * @desc Use {@link openFile} to create instance of the class
+  * @private
+  */
+
+class TNodejsFile extends TFile {
+
+   constructor(filename) {
+      super(null);
+      this.fUseStampPar = false;
+      this.fEND = 0;
+      this.fFullURL = filename;
+      this.fURL = filename;
+      this.fFileName = filename;
+   }
+
+   /** @summary Open file in node.js
+     * @return {Promise} after file keys are read */
+   async _open() {
+      return Promise.resolve().then(function () { return _rollup_plugin_ignore_empty_module_placeholder$1; }).then(fs => {
+         this.fs = fs;
+
+         return new Promise((resolve, reject) =>
+
+            this.fs.open(this.fFileName, 'r', (status, fd) => {
+               if (status) {
+                  console.log(status.message);
+                  return reject(Error(`Not possible to open ${this.fFileName} inside node.js`));
+               }
+               const stats = this.fs.fstatSync(fd);
+               this.fEND = stats.size;
+               this.fd = fd;
+               this.readKeys().then(resolve).catch(reject);
+            })
+         );
+      });
+   }
+
+   /** @summary Read buffer from node.js file
+     * @return {Promise} with requested blocks */
+   async readBuffer(place, filename /* , progress_callback */) {
+      return new Promise((resolve, reject) => {
+         if (filename)
+            return reject(Error(`Cannot access other local file ${filename}`));
+
+         if (!this.fs || !this.fd)
+            return reject(Error(`File is not opened ${this.fFileName}`));
+
+         const blobs = [];
+         let cnt = 0;
+
+         const readfunc = (_err, _bytesRead, buf) => {
+            const res = new DataView(buf.buffer, buf.byteOffset, place[cnt + 1]);
+            if (place.length === 2) return resolve(res);
+            blobs.push(res);
+            cnt += 2;
+            if (cnt >= place.length) return resolve(blobs);
+            this.fs.read(this.fd, Buffer.alloc(place[cnt + 1]), 0, place[cnt + 1], place[cnt], readfunc);
+         };
+
+         this.fs.read(this.fd, Buffer.alloc(place[1]), 0, place[1], place[0], readfunc);
+      });
+   }
+
+} // class TNodejsFile
+
+/**
+  * @summary Proxy to read file content
+  *
+  * @desc Should implement following methods:
+  *
+  * - openFile() - return Promise with true when file can be open normally
+  * - getFileName() - returns string with file name
+  * - getFileSize() - returns size of file
+  * - readBuffer(pos, len) - return promise with DataView for requested position and length
+  *
+  * @private
+  */
+
+class FileProxy {
+
+   async openFile() { return false; }
+   getFileName() { return ''; }
+   getFileSize() { return 0; }
+   async readBuffer(/* pos, sz */) { return null; }
+
+} // class FileProxy
+
+/**
+  * @summary File to use file context via FileProxy
+  *
+  * @hideconstructor
+  * @desc Use {@link openFile} to create instance of the class, providing FileProxy as argument
+  * @private
+  */
+
+class TProxyFile extends TFile {
+
+   constructor(proxy) {
+      super(null);
+      this.fUseStampPar = false;
+      this.proxy = proxy;
+   }
+
+   /** @summary Open file
+     * @return {Promise} after file keys are read */
+   async _open() {
+      return this.proxy.openFile().then(res => {
+         if (!res) return false;
+         this.fEND = this.proxy.getFileSize();
+         this.fFullURL = this.fURL = this.fFileName = this.proxy.getFileName();
+         if (isStr(this.fFileName)) {
+            const p = this.fFileName.lastIndexOf('/');
+            if ((p > 0) && (p < this.fFileName.length - 4))
+               this.fFileName = this.fFileName.slice(p+1);
+         }
+         return this.readKeys();
+      });
+   }
+
+   /** @summary Read buffer from FileProxy
+     * @return {Promise} with requested blocks */
+   async readBuffer(place, filename /* , progress_callback */) {
+      if (filename)
+         return Promise.reject(Error(`Cannot access other file ${filename}`));
+
+      if (!this.proxy)
+         return Promise.reject(Error(`File is not opened ${this.fFileName}`));
+
+      if (place.length === 2)
+         return this.proxy.readBuffer(place[0], place[1]);
+
+      const arr = [];
+      for (let k = 0; k < place.length; k+=2)
+         arr.push(this.proxy.readBuffer(place[k], place[k+1]));
+      return Promise.all(arr);
+   }
+
+} // class TProxyFile
 
 
-/** @summary Create JSROOT menu
-  * @desc See {@link JSRootMenu} class for detailed list of methods
-  * @param {object} [evnt] - event object like mouse context menu event
-  * @param {object} [handler] - object with handling function, in this case one not need to bind function
-  * @param {string} [menuname] - optional menu name
+/** @summary Open ROOT file for reading
+  * @desc Generic method to open ROOT file for reading
+  * Following kind of arguments can be provided:
+  *  - string with file URL (see example). In node.js environment local file like 'file://hsimple.root' can be specified
+  *  - [File]{@link https://developer.mozilla.org/en-US/docs/Web/API/File} instance which let read local files from browser
+  *  - [ArrayBuffer]{@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer} instance with complete file content
+  *  - [FileProxy]{@link FileProxy} let access arbitrary files via tiny proxy API
+  * @param {string|object} arg - argument for file open like url, see details
+  * @return {object} - Promise with {@link TFile} instance when file is opened
   * @example
-  * import { createMenu } from 'https://root.cern/js/latest/modules/gui/menu.mjs';
-  * let menu = await createMenu());
-  * menu.add('First', () => console.log('Click first'));
-  * let flag = true;
-  * menu.addchk(flag, 'Checked', arg => console.log(`Now flag is ${arg}`));
-  * menu.show(); */
-function createMenu(evnt, handler, menuname) {
-   const menu = new StandaloneMenu(handler, menuname || sDfltName, evnt);
-   return menu.load();
-}
+  *
+  * import { openFile } from 'https://root.cern/js/latest/modules/io.mjs';
+  * let f = await openFile('https://root.cern/js/files/hsimple.root');
+  * console.log(`Open file ${f.getFileName()}`); */
+function openFile(arg) {
+   let file;
 
-/** @summary Close previously created and shown JSROOT menu
-  * @param {string} [menuname] - optional menu name */
-function closeMenu(menuname) {
-   const element = getDocument().getElementById(menuname || sDfltName);
-   element?.remove();
-   return !!element;
-}
-
-/** @summary Returns true if menu or modal dialog present
-  * @private */
-function hasMenu(menuname) {
-   const doc = getDocument();
-   if (doc.getElementById(menuname || sDfltName))
-      return true;
-   if (doc.getElementById((menuname || sDfltName) + sDfltDlg))
-      return true;
-   return false;
-}
-
-/** @summary Fill and show context menu for painter object
-  * @private */
-function showPainterMenu(evnt, painter, kind) {
-   if (isFunc(evnt.stopPropagation)) {
-      evnt.stopPropagation(); // disable main context menu
-      evnt.preventDefault();  // disable browser context menu
+   if (isNodeJs() && isStr(arg)) {
+      if (arg.indexOf('file://') === 0)
+         file = new TNodejsFile(arg.slice(7));
+      else if (arg.indexOf('http') !== 0)
+         file = new TNodejsFile(arg);
    }
 
-   createMenu(evnt, painter).then(menu => {
-      painter.fillContextMenu(menu);
-      if ((kind === kToFront) && isFunc(painter.bringToFront)) {
-         menu.add('Bring to front', () => painter.bringToFront(true));
-         kind = undefined;
+   if (!file && isObject(arg) && (arg instanceof FileProxy))
+      file = new TProxyFile(arg);
+
+   if (!file && isObject(arg) && (arg instanceof ArrayBuffer)) {
+      file = new TFile('localfile.root');
+      file.assignFileContent(arg);
+   }
+
+   if (!file && isObject(arg) && arg.size && arg.name)
+      file = new TLocalFile(arg);
+
+   if (!file)
+      file = new TFile(arg);
+
+   return file._open();
+}
+
+// special way to assign methods when streaming objects
+addClassMethods(clTNamed, CustomStreamers[clTNamed]);
+addClassMethods(clTObjString, CustomStreamers[clTObjString]);
+
+// branch types
+const kLeafNode = 0, kBaseClassNode = 1, kObjectNode = 2, kClonesNode = 3,
+      kSTLNode = 4, kClonesMemberNode = 31, kSTLMemberNode = 41,
+      // branch bits
+      // kDoNotProcess = BIT(10), // Active bit for branches
+      // kIsClone = BIT(11), // to indicate a TBranchClones
+      // kBranchObject = BIT(12), // branch is a TObject*
+      // kBranchAny = BIT(17), // branch is an object*
+      // kAutoDelete = BIT(15),
+      kDoNotUseBufferMap = BIT(22), // If set, at least one of the entry in the branch will use the buffer's map of classname and objects.
+      clTBranchElement = 'TBranchElement', clTBranchFunc = 'TBranchFunc';
+
+/**
+ * @summary Class to read data from TTree
+ *
+ * @desc Instance of TSelector can be used to access TTree data
+ */
+
+class TSelector {
+
+   /** @summary constructor */
+   constructor() {
+      this._branches = []; // list of branches to read
+      this._names = []; // list of member names for each branch in tgtobj
+      this._directs = []; // indication if only branch without any children should be read
+      this._break = 0;
+      this.tgtobj = {};
+   }
+
+   /** @summary Add branch to the selector
+    * @desc Either branch name or branch itself should be specified
+    * Second parameter defines member name in the tgtobj
+    * If selector.addBranch('px', 'read_px') is called,
+    * branch will be read into selector.tgtobj.read_px member
+    * If second parameter not specified, branch name (here 'px') will be used
+    * If branch object specified as first parameter and second parameter missing,
+    * then member like 'br0', 'br1' and so on will be assigned
+    * @param {string|Object} branch - name of branch (or branch object itself}
+    * @param {string} [name] - member name in tgtobj where data will be read
+    * @param {boolean} [direct] - if only branch without any children should be read */
+   addBranch(branch, name, direct) {
+      if (!name)
+         name = isStr(branch) ? branch : `br${this._branches.length}`;
+      this._branches.push(branch);
+      this._names.push(name);
+      this._directs.push(direct);
+      return this._branches.length - 1;
+   }
+
+   /** @summary returns number of branches used in selector */
+   numBranches() { return this._branches.length; }
+
+   /** @summary returns branch by index used in selector */
+   getBranch(indx) { return this._branches[indx]; }
+
+   /** @summary returns index of branch
+     * @private */
+   indexOfBranch(branch) { return this._branches.indexOf(branch); }
+
+   /** @summary returns name of branch
+     * @private */
+   nameOfBranch(indx) { return this._names[indx]; }
+
+   /** @summary function called during TTree processing
+    * @abstract
+    * @param {number} progress - current value between 0 and 1 */
+   ShowProgress(/* progress */) {}
+
+   /** @summary call this function to abort processing */
+   Abort() { this._break = -1111; }
+
+   /** @summary function called before start processing
+    * @abstract
+    * @param {object} tree - tree object */
+   Begin(/* tree */) {}
+
+   /** @summary function called when next entry extracted from the tree
+    * @abstract
+    * @param {number} entry - read entry number */
+   Process(/* entry */) {}
+
+   /** @summary function called at the very end of processing
+    * @abstract
+    * @param {boolean} res - true if all data were correctly processed */
+   Terminate(/* res */) {}
+
+} // class TSelector
+
+// =================================================================
+
+/** @summary Checks array kind
+  * @desc return 0 when not array
+  * 1 - when arbitrary array
+  * 2 - when plain (1-dim) array with same-type content
+  * @private */
+function checkArrayPrototype(arr, check_content) {
+   if (!isObject(arr)) return 0;
+
+   const arr_kind = isArrayProto(Object.prototype.toString.apply(arr));
+   if (!check_content || (arr_kind !== 1)) return arr_kind;
+
+   let typ, plain = true;
+   for (let k = 0; k < arr.length; ++k) {
+      const sub = typeof arr[k];
+      if (!typ) typ = sub;
+      if (sub !== typ) { plain = false; break; }
+      if (isObject(sub) && checkArrayPrototype(arr[k])) { plain = false; break; }
+   }
+
+   return plain ? 2 : 1;
+}
+
+/**
+ * @summary Class to iterate over array elements
+ *
+ * @private
+ */
+
+class ArrayIterator {
+
+   /** @summary constructor */
+   constructor(arr, select, tgtobj) {
+      this.object = arr;
+      this.value = 0; // value always used in iterator
+      this.arr = []; // all arrays
+      this.indx = []; // all indexes
+      this.cnt = -1; // current index counter
+      this.tgtobj = tgtobj;
+
+      if (isObject(select))
+         this.select = select; // remember indexes for selection
+      else
+         this.select = []; // empty array, undefined for each dimension means iterate over all indexes
+   }
+
+   /** @summary next element */
+   next() {
+      let obj, typ, cnt = this.cnt;
+
+      if (cnt >= 0) {
+         if (++this.fastindx < this.fastlimit) {
+            this.value = this.fastarr[this.fastindx];
+            return true;
+         }
+
+         while (--cnt >= 0) {
+            if ((this.select[cnt] === undefined) && (++this.indx[cnt] < this.arr[cnt].length))
+               break;
+         }
+         if (cnt < 0) return false;
       }
-      return painter.fillObjectExecMenu(menu, kind);
-   }).then(menu => menu.show());
-}
 
-/** @summary Internal method to implement modal progress
-  * @private */
-internals._modalProgress = function(msg, click_handle) {
-   if (!msg || !isStr(msg)) {
-      internals.modal?.done();
-      delete internals.modal;
-      return;
+      while (true) {
+         obj = (cnt < 0) ? this.object : (this.arr[cnt])[this.indx[cnt]];
+
+         typ = obj ? typeof obj : 'any';
+
+         if (typ === 'object') {
+            if (obj._typename !== undefined) {
+               if (isRootCollection(obj)) {
+                  obj = obj.arr;
+                  typ = 'array';
+               } else
+                  typ = 'any';
+            } else if (Number.isInteger(obj.length) && (checkArrayPrototype(obj) > 0))
+               typ = 'array';
+            else
+               typ = 'any';
+         }
+
+         if (this.select[cnt + 1] === '$self$') {
+            this.value = obj;
+            this.fastindx = this.fastlimit = 0;
+            this.cnt = cnt + 1;
+            return true;
+         }
+
+         if ((typ === 'any') && isStr(this.select[cnt + 1])) {
+            // this is extraction of the member from arbitrary class
+            this.arr[++cnt] = obj;
+            this.indx[cnt] = this.select[cnt]; // use member name as index
+            continue;
+         }
+
+         if ((typ === 'array') && ((obj.length > 0) || (this.select[cnt + 1] === '$size$'))) {
+            this.arr[++cnt] = obj;
+            switch (this.select[cnt]) {
+               case undefined: this.indx[cnt] = 0; break;
+               case '$last$': this.indx[cnt] = obj.length - 1; break;
+               case '$size$':
+                  this.value = obj.length;
+                  this.fastindx = this.fastlimit = 0;
+                  this.cnt = cnt;
+                  return true;
+               default:
+                  if (Number.isInteger(this.select[cnt])) {
+                     this.indx[cnt] = this.select[cnt];
+                     if (this.indx[cnt] < 0) this.indx[cnt] = obj.length - 1;
+                  } else {
+                     // this is compile variable as array index - can be any expression
+                     this.select[cnt].produce(this.tgtobj);
+                     this.indx[cnt] = Math.round(this.select[cnt].get(0));
+                  }
+            }
+         } else {
+            if (cnt < 0) return false;
+
+            this.value = obj;
+            if (this.select[cnt] === undefined) {
+               this.fastarr = this.arr[cnt];
+               this.fastindx = this.indx[cnt];
+               this.fastlimit = this.fastarr.length;
+            } else
+               this.fastindx = this.fastlimit = 0; // no any iteration on that level
+
+            this.cnt = cnt;
+            return true;
+         }
+      }
+
+      // unreachable code
+      // return false;
    }
 
-   if (!internals.modal)
-      internals.modal = StandaloneMenu.prototype.createModal('Progress', msg);
+   /** @summary reset iterator */
+   reset() {
+      this.arr = [];
+      this.indx = [];
+      delete this.fastarr;
+      this.cnt = -1;
+      this.value = 0;
+   }
 
-   internals.modal.setContent(msg, click_handle ? 'Abort' : 'Ok');
+} // class ArrayIterator
 
-   internals.modal.call_back = click_handle;
-};
 
-/** @summary Assign handler for context menu for painter draw element
+/** @summary return class name of the object, stored in the branch
   * @private */
-function assignContextMenu(painter, kind) {
-   if (!painter?.isBatchMode() && painter?.draw_g)
-      painter.draw_g.on('contextmenu', settings.ContextMenu ? evnt => showPainterMenu(evnt, painter, kind) : null);
+function getBranchObjectClass(branch, tree, with_clones = false, with_leafs = false) {
+   if (!branch || (branch._typename !== clTBranchElement)) return '';
+
+   if ((branch.fType === kLeafNode) && (branch.fID === -2) && (branch.fStreamerType === -1)) {
+      // object where all sub-branches will be collected
+      return branch.fClassName;
+   }
+
+   if (with_clones && branch.fClonesName && ((branch.fType === kClonesNode) || (branch.fType === kSTLNode)))
+      return branch.fClonesName;
+
+   const s_elem = findBrachStreamerElement(branch, tree.$file);
+   if ((branch.fType === kBaseClassNode) && s_elem && (s_elem.fTypeName === kBaseClass))
+      return s_elem.fName;
+
+   if (branch.fType === kObjectNode) {
+      if (s_elem && ((s_elem.fType === kObject) || (s_elem.fType === kAny)))
+         return s_elem.fTypeName;
+      return clTObject;
+   }
+
+   if ((branch.fType === kLeafNode) && s_elem && with_leafs) {
+      if ((s_elem.fType === kObject) || (s_elem.fType === kAny)) return s_elem.fTypeName;
+      if (s_elem.fType === kObjectp) return s_elem.fTypeName.slice(0, s_elem.fTypeName.length - 1);
+   }
+
+   return '';
 }
+
+
+/** @summary Get branch with specified id
+  * @desc All sub-branches checked as well
+  * @return {Object} branch
+  * @private */
+function getTreeBranch(tree, id) {
+   if (!Number.isInteger(id)) return;
+   let res, seq = 0;
+   function scan(obj) {
+      obj?.fBranches?.arr.forEach(br => {
+         if (seq++ === id) res = br;
+         if (!res) scan(br);
+      });
+   }
+
+   scan(tree);
+   return res;
+}
+
+
+/** @summary Special branch search
+  * @desc Name can include extra part, which will be returned in the result
+  * @param {string} name - name of the branch
+  * @return {Object} with 'branch' and 'rest' members
+  * @private */
+function findBranchComplex(tree, name, lst = undefined, only_search = false) {
+   let top_search = false, search = name, res = null;
+
+   if (!lst) {
+      top_search = true;
+      lst = tree.fBranches;
+      const pos = search.indexOf('[');
+      if (pos > 0) search = search.slice(0, pos);
+   }
+
+   if (!lst || (lst.arr.length === 0)) return null;
+
+   for (let n = 0; n < lst.arr.length; ++n) {
+      let brname = lst.arr[n].fName;
+      if (brname[brname.length - 1] === ']')
+         brname = brname.slice(0, brname.indexOf('['));
+
+      // special case when branch name includes STL map name
+      if ((search.indexOf(brname) !== 0) && (brname.indexOf('<') > 0)) {
+         const p1 = brname.indexOf('<'), p2 = brname.lastIndexOf('>');
+         brname = brname.slice(0, p1) + brname.slice(p2 + 1);
+      }
+
+      if (brname === search) { res = { branch: lst.arr[n], rest: '' }; break; }
+
+      if (search.indexOf(brname) !== 0) continue;
+
+      // this is a case when branch name is in the begin of the search string
+
+      // check where point is
+      let pnt = brname.length;
+      if (brname[pnt - 1] === '.') pnt--;
+      if (search[pnt] !== '.') continue;
+
+      res = findBranchComplex(tree, search, lst.arr[n].fBranches);
+      if (!res) res = findBranchComplex(tree, search.slice(pnt + 1), lst.arr[n].fBranches);
+
+      if (!res) res = { branch: lst.arr[n], rest: search.slice(pnt) };
+
+      break;
+   }
+
+   if (top_search && !only_search && !res && (search.indexOf('br_') === 0)) {
+      let p = 3;
+      while ((p < search.length) && (search[p] >= '0') && (search[p] <= '9')) ++p;
+      const br = (p > 3) ? getTreeBranch(tree, parseInt(search.slice(3, p))) : null;
+      if (br) res = { branch: br, rest: search.slice(p) };
+   }
+
+   if (!top_search || !res) return res;
+
+   if (name.length > search.length) res.rest += name.slice(search.length);
+
+   return res;
+}
+
+
+/** @summary Search branch with specified name
+  * @param {string} name - name of the branch
+  * @return {Object} found branch
+  * @private */
+function findBranch(tree, name) {
+   const res = findBranchComplex(tree, name, tree.fBranches, true);
+   return (!res || res.rest) ? null : res.branch;
+}
+
+
+/** summary Returns number of branches in the TTree
+  * desc Checks also sub-branches in the branches
+  * return {number} number of branches
+  * private
+function getNumBranches(tree) {
+   function count(obj) {
+      if (!obj?.fBranches) return 0;
+      let nchld = 0;
+      obj.fBranches.arr.forEach(sub => { nchld += count(sub); });
+      return obj.fBranches.arr.length + nchld;
+   }
+
+   return count(tree);
+}
+*/
+
+/**
+ * @summary object with single variable in TTree::Draw expression
+ *
+ * @private
+ */
+
+class TDrawVariable {
+
+   /** @summary constructor */
+   constructor(globals) {
+      this.globals = globals;
+
+      this.code = '';
+      this.brindex = []; // index of used branches from selector
+      this.branches = []; // names of branches in target object
+      this.brarray = []; // array specifier for each branch
+      this.func = null; // generic function for variable calculation
+
+      this.kind = undefined;
+      this.buf = []; // buffer accumulates temporary values
+   }
+
+   /** @summary Parse variable
+     * @desc when only_branch specified, its placed in the front of the expression */
+   parse(tree, selector, code, only_branch, branch_mode) {
+      const is_start_symbol = symb => {
+         if ((symb >= 'A') && (symb <= 'Z')) return true;
+         if ((symb >= 'a') && (symb <= 'z')) return true;
+         return (symb === '_');
+      }, is_next_symbol = symb => {
+         if (is_start_symbol(symb)) return true;
+         if ((symb >= '0') && (symb <= '9')) return true;
+         return false;
+      };
+
+      if (!code) code = ''; // should be empty string at least
+
+      this.code = (only_branch?.fName ?? '') + code;
+
+      let pos = 0, pos2 = 0, br = null;
+      while ((pos < code.length) || only_branch) {
+         let arriter = [];
+
+         if (only_branch) {
+            br = only_branch;
+            only_branch = undefined;
+         } else {
+            // first try to find branch
+            pos2 = pos;
+            while ((pos2 < code.length) && (is_next_symbol(code[pos2]) || code[pos2] === '.')) pos2++;
+            if (code[pos2] === '$') {
+               let repl = '';
+               switch (code.slice(pos, pos2)) {
+                  case 'LocalEntry':
+                  case 'Entry': repl = 'arg.$globals.entry'; break;
+                  case 'Entries': repl = 'arg.$globals.entries'; break;
+               }
+               if (repl) {
+                  code = code.slice(0, pos) + repl + code.slice(pos2 + 1);
+                  pos = pos + repl.length;
+                  continue;
+               }
+            }
+
+            br = findBranchComplex(tree, code.slice(pos, pos2));
+            if (!br) { pos = pos2 + 1; continue; }
+
+            // when full id includes branch name, replace only part of extracted expression
+            if (br.branch && (br.rest !== undefined)) {
+               pos2 -= br.rest.length;
+               branch_mode = undefined; // maybe selection of the sub-object done
+               br = br.branch;
+            }
+
+            // when code ends with the point - means object itself will be accessed
+            // sometime branch name itself ends with the point
+            if ((pos2 >= code.length - 1) && (code[code.length - 1] === '.')) {
+               arriter.push('$self$');
+               pos2 = code.length;
+            }
+         }
+
+         // now extract all levels of iterators
+         while (pos2 < code.length) {
+            if ((code[pos2] === '@') && (code.slice(pos2, pos2 + 5) === '@size') && (arriter.length === 0)) {
+               pos2 += 5;
+               branch_mode = true;
+               break;
+            }
+
+            if (code[pos2] === '.') {
+               // this is object member
+               const prev = ++pos2;
+
+               if ((code[prev] === '@') && (code.slice(prev, prev + 5) === '@size')) {
+                  arriter.push('$size$');
+                  pos2 += 5;
+                  break;
+               }
+
+               if (!is_start_symbol(code[prev])) {
+                  arriter.push('$self$'); // last point means extraction of object itself
+                  break;
+               }
+
+               while ((pos2 < code.length) && is_next_symbol(code[pos2])) pos2++;
+
+               // this is looks like function call - do not need to extract member with
+               if (code[pos2] === '(') { pos2 = prev - 1; break; }
+
+               // this is selection of member, but probably we need to activate iterator for ROOT collection
+               if (arriter.length === 0) {
+                  // TODO: if selected member is simple data type - no need to make other checks - just break here
+                  if ((br.fType === kClonesNode) || (br.fType === kSTLNode))
+                     arriter.push(undefined);
+                  else {
+                     const objclass = getBranchObjectClass(br, tree, false, true);
+                     if (objclass && isRootCollection(null, objclass))
+                        arriter.push(undefined);
+                  }
+               }
+               arriter.push(code.slice(prev, pos2));
+               continue;
+            }
+
+            if (code[pos2] !== '[') break;
+
+            // simple []
+            if (code[pos2 + 1] === ']') { arriter.push(undefined); pos2 += 2; continue; }
+
+            const prev = pos2++;
+            let cnt = 0;
+            while ((pos2 < code.length) && ((code[pos2] !== ']') || (cnt > 0))) {
+               if (code[pos2] === '[') cnt++; else if (code[pos2] === ']') cnt--;
+               pos2++;
+            }
+            const sub = code.slice(prev + 1, pos2);
+            switch (sub) {
+               case '':
+               case '$all$': arriter.push(undefined); break;
+               case '$last$': arriter.push('$last$'); break;
+               case '$size$': arriter.push('$size$'); break;
+               case '$first$': arriter.push(0); break;
+               default:
+                  if (Number.isInteger(parseInt(sub)))
+                     arriter.push(parseInt(sub));
+                  else {
+                     // try to compile code as draw variable
+                     const subvar = new TDrawVariable(this.globals);
+                     if (!subvar.parse(tree, selector, sub)) return false;
+                     arriter.push(subvar);
+                  }
+            }
+            pos2++;
+         }
+
+         if (arriter.length === 0)
+            arriter = undefined;
+         else if ((arriter.length === 1) && (arriter[0] === undefined))
+            arriter = true;
+
+         let indx = selector.indexOfBranch(br);
+         if (indx < 0) indx = selector.addBranch(br, undefined, branch_mode);
+
+         branch_mode = undefined;
+
+         this.brindex.push(indx);
+         this.branches.push(selector.nameOfBranch(indx));
+         this.brarray.push(arriter);
+
+         // this is simple case of direct usage of the branch
+         if ((pos === 0) && (pos2 === code.length) && (this.branches.length === 1)) {
+            this.direct_branch = true; // remember that branch read as is
+            return true;
+         }
+
+         const replace = 'arg.var' + (this.branches.length - 1);
+         code = code.slice(0, pos) + replace + code.slice(pos2);
+         pos = pos + replace.length;
+      }
+
+      // support usage of some standard TMath functions
+      code = code.replace(/TMath::Exp\(/g, 'Math.exp(')
+                 .replace(/TMath::Abs\(/g, 'Math.abs(')
+                 .replace(/TMath::Prob\(/g, 'arg.$math.Prob(')
+                 .replace(/TMath::Gaus\(/g, 'arg.$math.Gaus(');
+
+      this.func = new Function('arg', `return (${code})`);
+
+      return true;
+   }
+
+   /** @summary Check if it is dummy variable */
+   is_dummy() { return (this.branches.length === 0) && !this.func; }
+
+   /** @summary Produce variable
+     * @desc after reading tree branches into the object, calculate variable value */
+   produce(obj) {
+      this.length = 1;
+      this.isarray = false;
+
+      if (this.is_dummy()) {
+         this.value = 1; // used as dummy weight variable
+         this.kind = 'number';
+         return;
+      }
+
+      const arg = { $globals: this.globals, $math: jsroot_math }, arrs = [];
+      let usearrlen = -1;
+      for (let n = 0; n < this.branches.length; ++n) {
+         const name = `var${n}`;
+         arg[name] = obj[this.branches[n]];
+
+         // try to check if branch is array and need to be iterated
+         if (this.brarray[n] === undefined)
+            this.brarray[n] = (checkArrayPrototype(arg[name]) > 0) || isRootCollection(arg[name]);
+
+         // no array - no pain
+         if (this.brarray[n] === false) continue;
+
+         // check if array can be used as is - one dimension and normal values
+         if ((this.brarray[n] === true) && (checkArrayPrototype(arg[name], true) === 2)) {
+            // plain array, can be used as is
+            arrs[n] = arg[name];
+         } else {
+            const iter = new ArrayIterator(arg[name], this.brarray[n], obj);
+            arrs[n] = [];
+            while (iter.next()) arrs[n].push(iter.value);
+         }
+         if ((usearrlen < 0) || (usearrlen < arrs[n].length)) usearrlen = arrs[n].length;
+      }
+
+      if (usearrlen < 0) {
+         this.value = this.direct_branch ? arg.var0 : this.func(arg);
+         if (!this.kind) this.kind = typeof this.value;
+         return;
+      }
+
+      if (usearrlen === 0) {
+         // empty array - no any histogram should be filled
+         this.length = 0;
+         this.value = 0;
+         return;
+      }
+
+      this.length = usearrlen;
+      this.isarray = true;
+
+      if (this.direct_branch)
+         this.value = arrs[0]; // just use array
+      else {
+         this.value = new Array(usearrlen);
+
+         for (let k = 0; k < usearrlen; ++k) {
+            for (let n = 0; n < this.branches.length; ++n) {
+               if (arrs[n])
+                  arg[`var${n}`] = arrs[n][k];
+            }
+            this.value[k] = this.func(arg);
+         }
+      }
+
+      if (!this.kind) this.kind = typeof this.value[0];
+   }
+
+   /** @summary Get variable */
+   get(indx) { return this.isarray ? this.value[indx] : this.value; }
+
+   /** @summary Append array to the buffer */
+   appendArray(tgtarr) { this.buf = this.buf.concat(tgtarr[this.branches[0]]); }
+
+} // class TDrawVariable
+
+
+/**
+ * @summary Selector class for TTree::Draw function
+ *
+ * @private
+ */
+
+class TDrawSelector extends TSelector {
+
+   /** @summary constructor */
+   constructor() {
+      super();
+
+      this.ndim = 0;
+      this.vars = []; // array of expression variables
+      this.cut = null; // cut variable
+      this.hist = null;
+      this.histo_drawopt = '';
+      this.hist_name = '$htemp';
+      this.hist_title = 'Result of TTree::Draw';
+      this.graph = false;
+      this.hist_args = []; // arguments for histogram creation
+      this.arr_limit = 1000;  // number of accumulated items before create histogram
+      this.htype = 'F';
+      this.monitoring = 0;
+      this.globals = {}; // object with global parameters, which could be used in any draw expression
+      this.last_progress = 0;
+      this.aver_diff = 0;
+   }
+
+   /** @summary Set draw selector callbacks */
+   setCallback(result_callback, progress_callback) {
+      this.result_callback = result_callback;
+      this.progress_callback = progress_callback;
+   }
+
+   /** @summary Parse parameters */
+   parseParameters(tree, args, expr) {
+      if (!expr || !isStr(expr)) return '';
+
+      // parse parameters which defined at the end as expression;par1name:par1value;par2name:par2value
+      let pos = expr.lastIndexOf(';');
+      while (pos >= 0) {
+         let parname = expr.slice(pos + 1), parvalue;
+         expr = expr.slice(0, pos);
+         pos = expr.lastIndexOf(';');
+
+         const separ = parname.indexOf(':');
+         if (separ > 0) { parvalue = parname.slice(separ + 1); parname = parname.slice(0, separ); }
+
+         let intvalue = parseInt(parvalue);
+         if (!parvalue || !Number.isInteger(intvalue)) intvalue = undefined;
+
+         switch (parname) {
+            case 'num':
+            case 'entries':
+            case 'numentries':
+               if (parvalue === 'all')
+                  args.numentries = tree.fEntries;
+               else if (parvalue === 'half')
+                  args.numentries = Math.round(tree.fEntries / 2);
+               else if (intvalue !== undefined)
+                  args.numentries = intvalue;
+               break;
+            case 'first':
+               if (intvalue !== undefined) args.firstentry = intvalue;
+               break;
+            case 'mon':
+            case 'monitor':
+               args.monitoring = (intvalue !== undefined) ? intvalue : 5000;
+               break;
+            case 'player':
+               args.player = true;
+               break;
+            case 'dump':
+               args.dump = true;
+               break;
+            case 'maxseg':
+            case 'maxrange':
+               if (intvalue) tree.$file.fMaxRanges = intvalue;
+               break;
+            case 'accum':
+               if (intvalue) this.arr_limit = intvalue;
+               break;
+            case 'htype':
+               if (parvalue && (parvalue.length === 1)) {
+                  this.htype = parvalue.toUpperCase();
+                  if (['C', 'S', 'I', 'F', 'L', 'D'].indexOf(this.htype) < 0)
+                     this.htype = 'F';
+               }
+               break;
+            case 'hbins':
+               this.hist_nbins = parseInt(parvalue);
+               if (!Number.isInteger(this.hist_nbins) || (this.hist_nbins <= 3))
+                  delete this.hist_nbins;
+               else
+                  this.want_hist = true;
+               break;
+            case 'drawopt':
+               args.drawopt = parvalue;
+               break;
+            case 'graph':
+               args.graph = intvalue || true;
+               break;
+         }
+      }
+
+      pos = expr.lastIndexOf('>>');
+      if (pos >= 0) {
+         let harg = expr.slice(pos + 2).trim();
+         expr = expr.slice(0, pos).trim();
+         pos = harg.indexOf('(');
+         if (pos > 0) {
+            this.hist_name = harg.slice(0, pos);
+            harg = harg.slice(pos);
+         }
+         if (harg === 'dump')
+            args.dump = true;
+         else if (harg.indexOf('Graph') === 0)
+            args.graph = true;
+         else if (pos < 0) {
+            this.want_hist = true;
+            this.hist_name = harg;
+         } else if ((harg[0] === '(') && (harg[harg.length - 1] === ')')) {
+            this.want_hist = true;
+            harg = harg.slice(1, harg.length - 1).split(',');
+            let isok = true;
+            for (let n = 0; n < harg.length; ++n) {
+               harg[n] = (n % 3 === 0) ? parseInt(harg[n]) : parseFloat(harg[n]);
+               if (!Number.isFinite(harg[n])) isok = false;
+            }
+            if (isok) this.hist_args = harg;
+         }
+      }
+
+      if (args.dump) {
+         this.dump_values = true;
+         args.reallocate_objects = true;
+         if (args.numentries === undefined) args.numentries = 10;
+      }
+
+      return expr;
+   }
+
+   /** @summary Parse draw expression */
+   parseDrawExpression(tree, args) {
+      // parse complete expression
+      let expr = this.parseParameters(tree, args, args.expr), cut = '';
+
+      // parse option for histogram creation
+      this.hist_title = `drawing '${expr}' from ${tree.fName}`;
+
+      let pos = 0;
+      if (args.cut)
+         cut = args.cut;
+      else {
+         pos = expr.replace(/TMath::/g, 'TMath__').lastIndexOf('::'); // avoid confusion due-to :: in the namespace
+         if (pos > 0) {
+            cut = expr.slice(pos + 2).trim();
+            expr = expr.slice(0, pos).trim();
+         }
+      }
+
+      args.parse_expr = expr;
+      args.parse_cut = cut;
+
+      // let names = expr.split(':'); // to allow usage of ? operator, we need to handle : as well
+      const names = [];
+      let nbr1 = 0, nbr2 = 0, prev = 0;
+      for (pos = 0; pos < expr.length; ++pos) {
+         switch (expr[pos]) {
+            case '(': nbr1++; break;
+            case ')': nbr1--; break;
+            case '[': nbr2++; break;
+            case ']': nbr2--; break;
+            case ':':
+               if (expr[pos + 1] === ':') { pos++; continue; }
+               if (!nbr1 && !nbr2 && (pos > prev)) names.push(expr.slice(prev, pos));
+               prev = pos + 1;
+               break;
+         }
+      }
+      if (!nbr1 && !nbr2 && (pos > prev)) names.push(expr.slice(prev, pos));
+
+      if ((names.length < 1) || (names.length > 3)) return false;
+
+      this.ndim = names.length;
+
+      let is_direct = !cut;
+
+      for (let n = 0; n < this.ndim; ++n) {
+         this.vars[n] = new TDrawVariable(this.globals);
+         if (!this.vars[n].parse(tree, this, names[n])) return false;
+         if (!this.vars[n].direct_branch) is_direct = false;
+      }
+
+      this.cut = new TDrawVariable(this.globals);
+      if (cut)
+         if (!this.cut.parse(tree, this, cut)) return false;
+
+      if (!this.numBranches()) {
+         console.warn('no any branch is selected');
+         return false;
+      }
+
+      if (is_direct) this.ProcessArrays = this.ProcessArraysFunc;
+
+      this.monitoring = args.monitoring;
+
+      // force TPolyMarker3D drawing for 3D case
+      if ((this.ndim === 3) && !this.want_hist && !args.dump)
+         args.graph = true;
+
+      this.graph = args.graph;
+
+      if (args.drawopt !== undefined)
+         this.histo_drawopt = args.drawopt;
+      else
+         this.histo_drawopt = (this.ndim === 2) ? 'col' : '';
+
+      return true;
+   }
+
+   /** @summary Draw only specified branch */
+   drawOnlyBranch(tree, branch, expr, args) {
+      this.ndim = 1;
+
+      if (expr.indexOf('dump') === 0) expr = ';' + expr;
+
+      expr = this.parseParameters(tree, args, expr);
+
+      this.monitoring = args.monitoring;
+
+      if (args.dump) {
+         this.dump_values = true;
+         args.reallocate_objects = true;
+      }
+
+      if (this.dump_values) {
+         this.hist = []; // array of dump objects
+
+         this.leaf = args.leaf;
+
+         // branch object remains, therefore we need to copy fields to see them all
+         this.copy_fields = ((args.branch.fLeaves && (args.branch.fLeaves.arr.length > 1)) ||
+            (args.branch.fBranches && (args.branch.fBranches.arr.length > 0))) && !args.leaf;
+
+         this.addBranch(branch, 'br0', args.direct_branch); // add branch
+
+         this.Process = this.ProcessDump;
+
+         return true;
+      }
+
+      this.vars[0] = new TDrawVariable(this.globals);
+      if (!this.vars[0].parse(tree, this, expr, branch, args.direct_branch)) return false;
+      this.hist_title = `drawing branch ${branch.fName} ${expr?' expr:'+expr:''} from ${tree.fName}`;
+
+      this.cut = new TDrawVariable(this.globals);
+
+      if (this.vars[0].direct_branch) this.ProcessArrays = this.ProcessArraysFunc;
+
+      return true;
+   }
+
+   /** @summary Begin processing */
+   Begin(tree) {
+      this.globals.entries = tree.fEntries;
+
+      if (this.monitoring)
+         this.lasttm = new Date().getTime();
+   }
+
+   /** @summary Show progress */
+   ShowProgress(/* value */) {}
+
+   /** @summary Get bins for bits histogram */
+   getBitsBins(nbits, res) {
+      res.nbins = res.max = nbits;
+      res.fLabels = create$1(clTHashList);
+      for (let k = 0; k < nbits; ++k) {
+         const s = create$1(clTObjString);
+         s.fString = k.toString();
+         s.fUniqueID = k + 1;
+         res.fLabels.Add(s);
+      }
+      return res;
+   }
+
+   /** @summary Get min.max bins */
+   getMinMaxBins(axisid, nbins) {
+      const res = { min: 0, max: 0, nbins, k: 1, fLabels: null, title: '' };
+      if (axisid >= this.ndim) return res;
+
+      const arr = this.vars[axisid].buf;
+
+      res.title = this.vars[axisid].code || '';
+
+      if (this.vars[axisid].kind === 'object') {
+         // this is any object type
+         let typename, similar = true, maxbits = 8;
+         for (let k = 0; k < arr.length; ++k) {
+            if (!arr[k]) continue;
+            if (!typename) typename = arr[k]._typename;
+            if (typename !== arr[k]._typename) similar = false; // check all object types
+            if (arr[k].fNbits) maxbits = Math.max(maxbits, arr[k].fNbits + 1);
+         }
+
+         if (typename && similar) {
+            if ((typename === 'TBits') && (axisid === 0)) {
+               this.fill1DHistogram = this.fillTBitsHistogram;
+               if (maxbits % 8) maxbits = (maxbits & 0xfff0) + 8;
+
+               if ((this.hist_name === 'bits') && (this.hist_args.length === 1) && this.hist_args[0])
+                  maxbits = this.hist_args[0];
+
+               return this.getBitsBins(maxbits, res);
+            }
+         }
+      }
+
+      if (this.vars[axisid].kind === 'string') {
+         res.lbls = []; // all labels
+
+         for (let k = 0; k < arr.length; ++k) {
+            if (res.lbls.indexOf(arr[k]) < 0)
+               res.lbls.push(arr[k]);
+         }
+
+         res.lbls.sort();
+         res.max = res.nbins = res.lbls.length;
+
+         res.fLabels = create$1(clTHashList);
+         for (let k = 0; k < res.lbls.length; ++k) {
+            const s = create$1(clTObjString);
+            s.fString = res.lbls[k];
+            s.fUniqueID = k + 1;
+            if (s.fString === '') s.fString = '<empty>';
+            res.fLabels.Add(s);
+         }
+      } else if ((axisid === 0) && (this.hist_name === 'bits') && (this.hist_args.length <= 1)) {
+         this.fill1DHistogram = this.FillBitsHistogram;
+         return this.getBitsBins(this.hist_args[0] || 32, res);
+      } else if (axisid * 3 + 2 < this.hist_args.length) {
+         res.nbins = this.hist_args[axisid * 3];
+         res.min = this.hist_args[axisid * 3 + 1];
+         res.max = this.hist_args[axisid * 3 + 2];
+      } else {
+         let is_any = false;
+         for (let i = 1; i < arr.length; ++i) {
+            const v = arr[i];
+            if (!Number.isFinite(v)) continue;
+            if (is_any) {
+               res.min = Math.min(res.min, v);
+               res.max = Math.max(res.max, v);
+            } else {
+               res.min = res.max = v;
+               is_any = true;
+            }
+         }
+         if (!is_any) { res.min = 0; res.max = 1; }
+
+         if (this.hist_nbins)
+            nbins = res.nbins = this.hist_nbins;
+
+         res.isinteger = (Math.round(res.min) === res.min) && (Math.round(res.max) === res.max);
+         if (res.isinteger) {
+            for (let k = 0; k < arr.length; ++k)
+               if (arr[k] !== Math.round(arr[k])) { res.isinteger = false; break; }
+         }
+
+         if (res.isinteger) {
+            res.min = Math.round(res.min);
+            res.max = Math.round(res.max);
+            if (res.max - res.min < nbins * 5) {
+               res.min -= 1;
+               res.max += 2;
+               res.nbins = Math.round(res.max - res.min);
+            } else {
+               const range = (res.max - res.min + 2);
+               let step = Math.floor(range / nbins);
+               while (step * nbins < range) step++;
+               res.max = res.min + nbins * step;
+            }
+         } else if (res.min >= res.max) {
+            res.max = res.min;
+            if (Math.abs(res.min) < 100) { res.min -= 1; res.max += 1; } else
+               if (res.min > 0) { res.min *= 0.9; res.max *= 1.1; } else { res.min *= 1.1; res.max *= 0.9; }
+         } else
+            res.max += (res.max - res.min) / res.nbins;
+      }
+
+      res.k = res.nbins / (res.max - res.min);
+
+      res.GetBin = function(value) {
+         const bin = this.lbls?.indexOf(value) ?? Number.isFinite(value) ? Math.floor((value - this.min) * this.k) : this.nbins + 1;
+         return bin < 0 ? 0 : ((bin > this.nbins) ? this.nbins + 1 : bin + 1);
+      };
+
+      return res;
+   }
+
+   /** @summary Create histogram which matches value in dimensions */
+   createHistogram(nbins, set_hist = false) {
+      if (!nbins) nbins = 20;
+
+      const x = this.getMinMaxBins(0, nbins),
+            y = this.getMinMaxBins(1, nbins),
+            z = this.getMinMaxBins(2, nbins);
+      let hist = null;
+
+      switch (this.ndim) {
+         case 1: hist = createHistogram(clTH1 + this.htype, x.nbins); break;
+         case 2: hist = createHistogram(clTH2 + this.htype, x.nbins, y.nbins); break;
+         case 3: hist = createHistogram(clTH3 + this.htype, x.nbins, y.nbins, z.nbins); break;
+      }
+
+      hist.fXaxis.fTitle = x.title;
+      hist.fXaxis.fXmin = x.min;
+      hist.fXaxis.fXmax = x.max;
+      hist.fXaxis.fLabels = x.fLabels;
+
+      if (this.ndim > 1) hist.fYaxis.fTitle = y.title;
+      hist.fYaxis.fXmin = y.min;
+      hist.fYaxis.fXmax = y.max;
+      hist.fYaxis.fLabels = y.fLabels;
+
+      if (this.ndim > 2) hist.fZaxis.fTitle = z.title;
+      hist.fZaxis.fXmin = z.min;
+      hist.fZaxis.fXmax = z.max;
+      hist.fZaxis.fLabels = z.fLabels;
+
+      hist.fName = this.hist_name;
+      hist.fTitle = this.hist_title;
+      hist.fOption = this.histo_drawopt;
+      hist.$custom_stat = (this.hist_name === '$htemp') ? 111110 : 111111;
+
+      if (set_hist) {
+         this.hist = hist;
+         this.x = x;
+         this.y = y;
+         this.z = z;
+      } else
+         hist.fBits = hist.fBits | kNoStats;
+
+      return hist;
+   }
+
+   /** @summary Create output object - histogram, graph, dump array */
+   createOutputObject() {
+      if (this.hist || !this.vars[0].buf) return;
+
+      if (this.dump_values) {
+         // just create array where dumped values will be collected
+         this.hist = [];
+
+         // reassign fill method
+         this.fill1DHistogram = this.fill2DHistogram = this.fill3DHistogram = this.dumpValues;
+      } else if (this.graph) {
+         const N = this.vars[0].buf.length;
+         let res = null;
+
+         if (this.ndim === 1) {
+            // A 1-dimensional graph will just have the x axis as an index
+            res = createTGraph(N, Array.from(Array(N).keys()), this.vars[0].buf);
+            res.fName = 'Graph';
+            res.fTitle = this.hist_title;
+         } else if (this.ndim === 2) {
+            res = createTGraph(N, this.vars[0].buf, this.vars[1].buf);
+            res.fName = 'Graph';
+            res.fTitle = this.hist_title;
+            delete this.vars[1].buf;
+         } else if (this.ndim === 3) {
+            res = create$1(clTPolyMarker3D);
+            res.fN = N;
+            res.fLastPoint = N - 1;
+            const arr = new Array(N*3);
+            for (let k = 0; k< N; ++k) {
+               arr[k*3] = this.vars[0].buf[k];
+               arr[k*3+1] = this.vars[1].buf[k];
+               arr[k*3+2] = this.vars[2].buf[k];
+            }
+            res.fP = arr;
+            res.$hist = this.createHistogram(10);
+            delete this.vars[1].buf;
+            delete this.vars[2].buf;
+            res.fName = 'Points';
+         }
+
+         this.hist = res;
+      } else {
+         const nbins = [200, 50, 20];
+         this.createHistogram(nbins[this.ndim], true);
+      }
+
+      const var0 = this.vars[0].buf, cut = this.cut.buf, len = var0.length;
+
+      if (!this.graph) {
+         switch (this.ndim) {
+            case 1: {
+               for (let n = 0; n < len; ++n)
+                  this.fill1DHistogram(var0[n], cut ? cut[n] : 1);
+               break;
+            }
+            case 2: {
+               const var1 = this.vars[1].buf;
+               for (let n = 0; n < len; ++n)
+                  this.fill2DHistogram(var0[n], var1[n], cut ? cut[n] : 1);
+               delete this.vars[1].buf;
+               break;
+            }
+            case 3: {
+               const var1 = this.vars[1].buf, var2 = this.vars[2].buf;
+               for (let n = 0; n < len; ++n)
+                  this.fill3DHistogram(var0[n], var1[n], var2[n], cut ? cut[n] : 1);
+               delete this.vars[1].buf;
+               delete this.vars[2].buf;
+               break;
+            }
+         }
+      }
+
+      delete this.vars[0].buf;
+      delete this.cut.buf;
+   }
+
+   /** @summary Fill TBits histogram */
+   fillTBitsHistogram(xvalue, weight) {
+      if (!weight || !xvalue || !xvalue.fNbits || !xvalue.fAllBits) return;
+
+      const sz = Math.min(xvalue.fNbits + 1, xvalue.fNbytes * 8);
+
+      for (let bit = 0, mask = 1, b = 0; bit < sz; ++bit) {
+         if (xvalue.fAllBits[b] && mask) {
+            if (bit <= this.x.nbins)
+               this.hist.fArray[bit + 1] += weight;
+            else
+               this.hist.fArray[this.x.nbins + 1] += weight;
+         }
+
+         mask *= 2;
+         if (mask >= 0x100) { mask = 1; ++b; }
+      }
+   }
+
+   /** @summary Fill bits histogram */
+   FillBitsHistogram(xvalue, weight) {
+      if (!weight) return;
+
+      for (let bit = 0, mask = 1; bit < this.x.nbins; ++bit) {
+         if (xvalue & mask) this.hist.fArray[bit + 1] += weight;
+         mask *= 2;
+      }
+   }
+
+   /** @summary Fill 1D histogram */
+   fill1DHistogram(xvalue, weight) {
+      const bin = this.x.GetBin(xvalue);
+      this.hist.fArray[bin] += weight;
+
+      if (!this.x.lbls && Number.isFinite(xvalue)) {
+         this.hist.fTsumw += weight;
+         this.hist.fTsumwx += weight * xvalue;
+         this.hist.fTsumwx2 += weight * xvalue * xvalue;
+      }
+   }
+
+   /** @summary Fill 2D histogram */
+   fill2DHistogram(xvalue, yvalue, weight) {
+      const xbin = this.x.GetBin(xvalue),
+            ybin = this.y.GetBin(yvalue);
+
+      this.hist.fArray[xbin + (this.x.nbins + 2) * ybin] += weight;
+      if (!this.x.lbls && !this.y.lbls && Number.isFinite(xvalue) && Number.isFinite(yvalue)) {
+         this.hist.fTsumw += weight;
+         this.hist.fTsumwx += weight * xvalue;
+         this.hist.fTsumwy += weight * yvalue;
+         this.hist.fTsumwx2 += weight * xvalue * xvalue;
+         this.hist.fTsumwxy += weight * xvalue * yvalue;
+         this.hist.fTsumwy2 += weight * yvalue * yvalue;
+      }
+   }
+
+   /** @summary Fill 3D histogram */
+   fill3DHistogram(xvalue, yvalue, zvalue, weight) {
+      const xbin = this.x.GetBin(xvalue),
+            ybin = this.y.GetBin(yvalue),
+            zbin = this.z.GetBin(zvalue);
+
+      this.hist.fArray[xbin + (this.x.nbins + 2) * (ybin + (this.y.nbins + 2) * zbin)] += weight;
+      if (!this.x.lbls && !this.y.lbls && !this.z.lbls && Number.isFinite(xvalue) && Number.isFinite(yvalue) && Number.isFinite(zvalue)) {
+         this.hist.fTsumw += weight;
+         this.hist.fTsumwx += weight * xvalue;
+         this.hist.fTsumwy += weight * yvalue;
+         this.hist.fTsumwz += weight * zvalue;
+         this.hist.fTsumwx2 += weight * xvalue * xvalue;
+         this.hist.fTsumwy2 += weight * yvalue * yvalue;
+         this.hist.fTsumwz2 += weight * zvalue * zvalue;
+         this.hist.fTsumwxy += weight * xvalue * yvalue;
+         this.hist.fTsumwxz += weight * xvalue * zvalue;
+         this.hist.fTsumwyz += weight * yvalue * zvalue;
+      }
+   }
+
+   /** @summary Dump values */
+   dumpValues(v1, v2, v3, v4) {
+      let obj;
+      switch (this.ndim) {
+         case 1: obj = { x: v1, weight: v2 }; break;
+         case 2: obj = { x: v1, y: v2, weight: v3 }; break;
+         case 3: obj = { x: v1, y: v2, z: v3, weight: v4 }; break;
+      }
+
+      if (this.cut.is_dummy()) {
+         if (this.ndim === 1)
+            obj = v1;
+         else
+            delete obj.weight;
+      }
+
+      this.hist.push(obj);
+   }
+
+    /** @summary function used when all branches can be read as array
+      * @desc most typical usage - histogram filling of single branch */
+   ProcessArraysFunc(/* entry */) {
+      if (this.arr_limit || this.graph) {
+         const var0 = this.vars[0],
+               var1 = this.vars[1],
+               var2 = this.vars[2],
+               len = this.tgtarr.br0.length;
+         if ((var0.buf.length === 0) && (len >= this.arr_limit) && !this.graph) {
+            // special use case - first array large enough to create histogram directly base on it
+            var0.buf = this.tgtarr.br0;
+            if (var1) var1.buf = this.tgtarr.br1;
+            if (var2) var2.buf = this.tgtarr.br2;
+         } else {
+            for (let k = 0; k < len; ++k) {
+               var0.buf.push(this.tgtarr.br0[k]);
+               if (var1) var1.buf.push(this.tgtarr.br1[k]);
+               if (var2) var2.buf.push(this.tgtarr.br2[k]);
+            }
+         }
+         var0.kind = 'number';
+         if (var1) var1.kind = 'number';
+         if (var2) var2.kind = 'number';
+         this.cut.buf = null; // do not create buffer for cuts
+         if (!this.graph && (var0.buf.length >= this.arr_limit)) {
+            this.createOutputObject();
+            this.arr_limit = 0;
+         }
+      } else {
+         const br0 = this.tgtarr.br0, len = br0.length;
+         switch (this.ndim) {
+            case 1: {
+               for (let k = 0; k < len; ++k)
+                  this.fill1DHistogram(br0[k], 1);
+               break;
+            }
+            case 2: {
+               const br1 = this.tgtarr.br1;
+               for (let k = 0; k < len; ++k)
+                  this.fill2DHistogram(br0[k], br1[k], 1);
+               break;
+            }
+            case 3: {
+               const br1 = this.tgtarr.br1, br2 = this.tgtarr.br2;
+               for (let k = 0; k < len; ++k)
+                  this.fill3DHistogram(br0[k], br1[k], br2[k], 1);
+               break;
+            }
+         }
+      }
+   }
+
+   /** @summary simple dump of the branch - no need to analyze something */
+   ProcessDump(/* entry */) {
+      const res = this.leaf ? this.tgtobj.br0[this.leaf] : this.tgtobj.br0;
+
+      if (res && this.copy_fields) {
+         if (checkArrayPrototype(res) === 0)
+            this.hist.push(Object.assign({}, res));
+         else
+            this.hist.push(res);
+      } else
+         this.hist.push(res);
+   }
+
+   /** @summary Normal TSelector Process handler */
+   Process(entry) {
+      this.globals.entry = entry; // can be used in any expression
+
+      this.cut.produce(this.tgtobj);
+      if (!this.dump_values && !this.cut.value) return;
+
+      for (let n = 0; n < this.ndim; ++n)
+         this.vars[n].produce(this.tgtobj);
+
+      const var0 = this.vars[0], var1 = this.vars[1], var2 = this.vars[2], cut = this.cut;
+
+      if (this.graph || this.arr_limit) {
+         switch (this.ndim) {
+            case 1:
+               for (let n0 = 0; n0 < var0.length; ++n0) {
+                  var0.buf.push(var0.get(n0));
+                  cut.buf?.push(cut.value);
+               }
+               break;
+            case 2:
+               for (let n0 = 0; n0 < var0.length; ++n0) {
+                  for (let n1 = 0; n1 < var1.length; ++n1) {
+                     var0.buf.push(var0.get(n0));
+                     var1.buf.push(var1.get(n1));
+                     cut.buf?.push(cut.value);
+                  }
+               }
+               break;
+            case 3:
+               for (let n0 = 0; n0 < var0.length; ++n0) {
+                  for (let n1 = 0; n1 < var1.length; ++n1) {
+                     for (let n2 = 0; n2 < var2.length; ++n2) {
+                        var0.buf.push(var0.get(n0));
+                        var1.buf.push(var1.get(n1));
+                        var2.buf.push(var2.get(n2));
+                        cut.buf?.push(cut.value);
+                     }
+                  }
+               }
+               break;
+         }
+         if (!this.graph && (var0.buf.length >= this.arr_limit)) {
+            this.createOutputObject();
+            this.arr_limit = 0;
+         }
+      } else if (this.hist) {
+         switch (this.ndim) {
+            case 1:
+               for (let n0 = 0; n0 < var0.length; ++n0)
+                  this.fill1DHistogram(var0.get(n0), cut.value);
+               break;
+            case 2:
+               for (let n0 = 0; n0 < var0.length; ++n0) {
+                  for (let n1 = 0; n1 < var1.length; ++n1)
+                     this.fill2DHistogram(var0.get(n0), var1.get(n1), cut.value);
+               }
+               break;
+            case 3:
+               for (let n0 = 0; n0 < var0.length; ++n0) {
+                  for (let n1 = 0; n1 < var1.length; ++n1) {
+                     for (let n2 = 0; n2 < var2.length; ++n2)
+                        this.fill3DHistogram(var0.get(n0), var1.get(n1), var2.get(n2), cut.value);
+                  }
+               }
+               break;
+         }
+      }
+
+      if (this.monitoring && this.hist && !this.dump_values) {
+         const now = new Date().getTime();
+         if (now - this.lasttm > this.monitoring) {
+            this.lasttm = now;
+            if (isFunc(this.progress_callback))
+               this.progress_callback(this.hist);
+         }
+      }
+   }
+
+   /** @summary Normal TSelector Terminate handler */
+   Terminate(res) {
+      if (res && !this.hist)
+         this.createOutputObject();
+
+      this.ShowProgress();
+
+      if (isFunc(this.result_callback))
+         this.result_callback(this.hist);
+   }
+
+} // class TDrawSelector
+
+
+/** @summary return TStreamerElement associated with the branch - if any
+  * @desc unfortunately, branch.fID is not number of element in streamer info
+  * @private */
+function findBrachStreamerElement(branch, file) {
+   if (!branch || !file || (branch._typename !== clTBranchElement) || (branch.fID < 0) || (branch.fStreamerType < 0)) return null;
+
+   const s_i = file.findStreamerInfo(branch.fClassName, branch.fClassVersion, branch.fCheckSum),
+         arr = (s_i && s_i.fElements) ? s_i.fElements.arr : null;
+   if (!arr) return null;
+
+   let match_name = branch.fName,
+      pos = match_name.indexOf('[');
+   if (pos > 0) match_name = match_name.slice(0, pos);
+   pos = match_name.lastIndexOf('.');
+   if (pos > 0) match_name = match_name.slice(pos + 1);
+
+   function match_elem(elem) {
+      if (!elem) return false;
+      if (elem.fName !== match_name) return false;
+      if (elem.fType === branch.fStreamerType) return true;
+      if ((elem.fType === kBool) && (branch.fStreamerType === kUChar)) return true;
+      if (((branch.fStreamerType === kSTL) || (branch.fStreamerType === kSTL + kOffsetL) ||
+           (branch.fStreamerType === kSTLp) || (branch.fStreamerType === kSTLp + kOffsetL)) &&
+          (elem.fType === kStreamer)) return true;
+      console.warn(`Should match element ${elem.fType} with branch ${branch.fStreamerType}`);
+      return false;
+   }
+
+   // first check branch fID - in many cases gut guess
+   if (match_elem(arr[branch.fID]))
+      return arr[branch.fID];
+
+   for (let k = 0; k < arr.length; ++k) {
+      if ((k !== branch.fID) && match_elem(arr[k]))
+         return arr[k];
+   }
+
+   console.error(`Did not found/match element for branch ${branch.fName} class ${branch.fClassName}`);
+
+   return null;
+}
+
+/** @summary return type name of given member in the class
+  * @private */
+function defineMemberTypeName(file, parent_class, member_name) {
+   const s_i = file.findStreamerInfo(parent_class),
+         arr = s_i?.fElements?.arr;
+   if (!arr) return '';
+
+   let elem = null;
+   for (let k = 0; k < arr.length; ++k) {
+      if (arr[k].fTypeName === kBaseClass) {
+         const res = defineMemberTypeName(file, arr[k].fName, member_name);
+         if (res) return res;
+      } else
+         if (arr[k].fName === member_name) { elem = arr[k]; break; }
+   }
+
+   if (!elem) return '';
+
+   let clname = elem.fTypeName;
+   if (clname[clname.length - 1] === '*')
+      clname = clname.slice(0, clname.length - 1);
+
+   return clname;
+}
+
+/** @summary create fast list to assign all methods to the object
+  * @private */
+function makeMethodsList(typename) {
+   const methods = getMethods(typename),
+   res = {
+      names: [],
+      values: [],
+      Create() {
+         const obj = {};
+         for (let n = 0; n < this.names.length; ++n)
+            obj[this.names[n]] = this.values[n];
+         return obj;
+      }
+   };
+
+   res.names.push('_typename');
+   res.values.push(typename);
+   for (const key in methods) {
+      res.names.push(key);
+      res.values.push(methods[key]);
+   }
+   return res;
+}
+
+/** @summary try to define classname for the branch member, scanning list of branches
+  * @private */
+function detectBranchMemberClass(brlst, prefix, start) {
+   let clname = '';
+   for (let kk = (start || 0); kk < brlst.arr.length; ++kk) {
+      if ((brlst.arr[kk].fName.indexOf(prefix) === 0) && brlst.arr[kk].fClassName)
+         clname = brlst.arr[kk].fClassName;
+   }
+   return clname;
+}
+
+/** @summary Process selector for the tree
+  * @desc function similar to the TTree::Process
+  * @param {object} tree - instance of TTree class
+  * @param {object} selector - instance of {@link TSelector} class
+  * @param {object} [args] - different arguments
+  * @param {number} [args.firstentry] - first entry to process, 0 when not specified
+  * @param {number} [args.numentries] - number of entries to process, all when not specified
+  * @return {Promise} with TSelector instance */
+async function treeProcess(tree, selector, args) {
+   if (!args) args = {};
+
+   if (!selector || !tree.$file || !selector.numBranches()) {
+      selector?.Terminate(false);
+      return Promise.reject(Error('required parameter missing for TTree::Process'));
+   }
+
+   // central handle with all information required for reading
+   const handle = {
+      tree, // keep tree reference
+      file: tree.$file, // keep file reference
+      selector, // reference on selector
+      arr: [], // list of branches
+      curr: -1,  // current entry ID
+      current_entry: -1, // current processed entry
+      simple_read: true, // all baskets in all used branches are in sync,
+      process_arrays: true // one can process all branches as arrays
+   }, createLeafElem = (leaf, name) => {
+      // function creates TStreamerElement which corresponds to the elementary leaf
+      let datakind = 0;
+      switch (leaf._typename) {
+         case 'TLeafF': datakind = kFloat; break;
+         case 'TLeafD': datakind = kDouble; break;
+         case 'TLeafO': datakind = kBool; break;
+         case 'TLeafB': datakind = leaf.fIsUnsigned ? kUChar : kChar; break;
+         case 'TLeafS': datakind = leaf.fIsUnsigned ? kUShort : kShort; break;
+         case 'TLeafI': datakind = leaf.fIsUnsigned ? kUInt : kInt; break;
+         case 'TLeafL': datakind = leaf.fIsUnsigned ? kULong64 : kLong64; break;
+         case 'TLeafC': datakind = kTString; break;
+         default: return null;
+      }
+      const elem = createStreamerElement(name || leaf.fName, datakind);
+      if (leaf.fLen > 1) {
+         elem.fType += kOffsetL;
+         elem.fArrayLength = leaf.fLen;
+      }
+      return elem;
+   }, findInHandle = branch => {
+      for (let k = 0; k < handle.arr.length; ++k) {
+         if (handle.arr[k].branch === branch)
+             return handle.arr[k];
+      }
+      return null;
+   };
+
+   let namecnt = 0;
+
+   function AddBranchForReading(branch, target_object, target_name, read_mode) {
+      // central method to add branch for reading
+      // read_mode == true - read only this branch
+      // read_mode == '$child$' is just member of object from for STL or clonesarray
+      // read_mode == '<any class name>' is sub-object from STL or clonesarray, happens when such new object need to be created
+      // read_mode == '.member_name' select only reading of member_name instead of complete object
+
+      if (isStr(branch))
+         branch = findBranch(handle.tree, branch);
+
+      if (!branch) { console.error('Did not found branch'); return null; }
+
+      let item = findInHandle(branch);
+
+      if (item) {
+         console.error(`Branch ${branch.fName} already configured for reading`);
+         if (item.tgt !== target_object) console.error('Target object differs');
+         return null;
+      }
+
+      if (!branch.fEntries) {
+         console.warn(`Branch ${branch.fName} does not have entries`);
+         return null;
+      }
+
+      // console.log(`Add branch ${branch.fName}`);
+
+      item = {
+         branch,
+         tgt: target_object, // used target object - can be differ for object members
+         name: target_name,
+         index: -1, // index in the list of read branches
+         member: null, // member to read branch
+         type: 0, // keep type identifier
+         curr_entry: -1, // last processed entry
+         raw: null, // raw buffer for reading
+         basket: null, // current basket object
+         curr_basket: 0,  // number of basket used for processing
+         read_entry: -1,  // last entry which is already read
+         staged_entry: -1, // entry which is staged for reading
+         first_readentry: -1, // first entry to read
+         staged_basket: 0,  // last basket staged for reading
+         numentries: branch.fEntries,
+         numbaskets: branch.fWriteBasket, // number of baskets which can be read from the file
+         counters: null, // branch indexes used as counters
+         ascounter: [], // list of other branches using that branch as counter
+         baskets: [], // array for read baskets,
+         staged_prev: 0, // entry limit of previous I/O request
+         staged_now: 0, // entry limit of current I/O request
+         progress_showtm: 0, // last time when progress was showed
+         getBasketEntry(k) {
+            if (!this.branch || (k > this.branch.fMaxBaskets)) return 0;
+            const res = (k < this.branch.fMaxBaskets) ? this.branch.fBasketEntry[k] : 0;
+            if (res) return res;
+            const bskt = (k > 0) ? this.branch.fBaskets.arr[k - 1] : null;
+            return bskt ? (this.branch.fBasketEntry[k - 1] + bskt.fNevBuf) : 0;
+         },
+         getTarget(tgtobj) {
+            // returns target object which should be used for the branch reading
+            if (!this.tgt) return tgtobj;
+            for (let k = 0; k < this.tgt.length; ++k) {
+               const sub = this.tgt[k];
+               if (!tgtobj[sub.name]) tgtobj[sub.name] = sub.lst.Create();
+               tgtobj = tgtobj[sub.name];
+            }
+            return tgtobj;
+         },
+         getEntry(entry) {
+            // This should be equivalent to TBranch::GetEntry() method
+            const shift = entry - this.first_entry;
+            let off;
+            if (!this.branch.TestBit(kDoNotUseBufferMap))
+               this.raw.clearObjectMap();
+            if (this.basket.fEntryOffset) {
+               off = this.basket.fEntryOffset[shift];
+               if (this.basket.fDisplacement)
+                  this.raw.fDisplacement = this.basket.fDisplacement[shift];
+            } else
+               off = this.basket.fKeylen + this.basket.fNevBufSize * shift;
+            this.raw.locate(off - this.raw.raw_shift);
+
+            // this.member.func(this.raw, this.getTarget(tgtobj));
+         }
+      };
+
+      // last basket can be stored directly with the branch
+      while (item.getBasketEntry(item.numbaskets + 1)) item.numbaskets++;
+
+      // check all counters if we
+      const nb_leaves = branch.fLeaves?.arr?.length ?? 0,
+            leaf = (nb_leaves > 0) ? branch.fLeaves.arr[0] : null,
+            is_brelem = (branch._typename === clTBranchElement);
+      let elem = null, // TStreamerElement used to create reader
+          member = null, // member for actual reading of the branch
+          child_scan = 0, // scan child branches after main branch is appended
+          item_cnt = null, item_cnt2 = null, object_class = '';
+
+      if (branch.fBranchCount) {
+         item_cnt = findInHandle(branch.fBranchCount);
+
+         if (!item_cnt)
+            item_cnt = AddBranchForReading(branch.fBranchCount, target_object, '$counter' + namecnt++, true);
+
+         if (!item_cnt) { console.error(`Cannot add counter branch ${branch.fBranchCount.fName}`); return null; }
+
+         let BranchCount2 = branch.fBranchCount2;
+
+         if (!BranchCount2 && (branch.fBranchCount.fStreamerType === kSTL) &&
+            ((branch.fStreamerType === kStreamLoop) || (branch.fStreamerType === kOffsetL + kStreamLoop))) {
+            // special case when count member from kStreamLoop not assigned as fBranchCount2
+            const elemd = findBrachStreamerElement(branch, handle.file),
+                  arrd = branch.fBranchCount.fBranches.arr;
+
+            if (elemd?.fCountName && arrd) {
+               for (let k = 0; k < arrd.length; ++k) {
+                  if (arrd[k].fName === branch.fBranchCount.fName + '.' + elemd.fCountName) {
+                     BranchCount2 = arrd[k];
+                     break;
+                  }
+               }
+            }
+
+            if (!BranchCount2) console.error('Did not found branch for second counter of kStreamLoop element');
+         }
+
+         if (BranchCount2) {
+            item_cnt2 = findInHandle(BranchCount2);
+
+            if (!item_cnt2) item_cnt2 = AddBranchForReading(BranchCount2, target_object, '$counter' + namecnt++, true);
+
+            if (!item_cnt2) { console.error(`Cannot add counter branch2 ${BranchCount2.fName}`); return null; }
+         }
+      } else if (nb_leaves === 1 && leaf && leaf.fLeafCount) {
+         const br_cnt = findBranch(handle.tree, leaf.fLeafCount.fName);
+
+         if (br_cnt) {
+            item_cnt = findInHandle(br_cnt);
+
+            if (!item_cnt) item_cnt = AddBranchForReading(br_cnt, target_object, '$counter' + namecnt++, true);
+
+            if (!item_cnt) { console.error(`Cannot add counter branch ${br_cnt.fName}`); return null; }
+         }
+      }
+
+      function ScanBranches(lst, master_target, chld_kind) {
+         if (!lst || !lst.arr.length) return true;
+
+         let match_prefix = branch.fName;
+         if (match_prefix[match_prefix.length - 1] === '.') match_prefix = match_prefix.slice(0, match_prefix.length - 1);
+         if (isStr(read_mode) && (read_mode[0] === '.')) match_prefix += read_mode;
+         match_prefix += '.';
+
+         for (let k = 0; k < lst.arr.length; ++k) {
+            const br = lst.arr[k];
+            if ((chld_kind > 0) && (br.fType !== chld_kind)) continue;
+
+            if (br.fType === kBaseClassNode) {
+               if (!ScanBranches(br.fBranches, master_target, chld_kind)) return false;
+               continue;
+            }
+
+            const elem = findBrachStreamerElement(br, handle.file);
+            if (elem?.fTypeName === kBaseClass) {
+               // if branch is data of base class, map it to original target
+               if (br.fTotBytes && !AddBranchForReading(br, target_object, target_name, read_mode)) return false;
+               if (!ScanBranches(br.fBranches, master_target, chld_kind)) return false;
+               continue;
+            }
+
+            let subname = br.fName, chld_direct = 1;
+
+            if (br.fName.indexOf(match_prefix) === 0)
+               subname = subname.slice(match_prefix.length);
+            else if (chld_kind > 0)
+               continue; // for defined children names prefix must be present
+
+            let p = subname.indexOf('[');
+            if (p > 0) subname = subname.slice(0, p);
+            p = subname.indexOf('<');
+            if (p > 0) subname = subname.slice(0, p);
+
+            if (chld_kind > 0) {
+               chld_direct = '$child$';
+               const pp = subname.indexOf('.');
+               if (pp > 0) chld_direct = detectBranchMemberClass(lst, branch.fName + '.' + subname.slice(0, pp + 1), k) || clTObject;
+            }
+
+            if (!AddBranchForReading(br, master_target, subname, chld_direct)) return false;
+         }
+
+         return true;
+      }
+
+      if (branch._typename === 'TBranchObject') {
+         member = {
+            name: target_name,
+            typename: branch.fClassName,
+            virtual: leaf.fVirtual,
+            func(buf, obj) {
+               let clname = this.typename;
+               if (this.virtual) clname = buf.readFastString(buf.ntou1() + 1);
+               obj[this.name] = buf.classStreamer({}, clname);
+            }
+         };
+      } else if ((branch.fType === kClonesNode) || (branch.fType === kSTLNode)) {
+         elem = createStreamerElement(target_name, kInt);
+
+         if (!read_mode || (isStr(read_mode) && (read_mode[0] === '.')) || (read_mode === 1)) {
+            handle.process_arrays = false;
+
+            member = {
+               name: target_name,
+               conttype: branch.fClonesName || clTObject,
+               reallocate: args.reallocate_objects,
+               func(buf, obj) {
+                  const size = buf.ntoi4();
+                  let n = 0, arr = obj[this.name];
+                  if (!arr || this.reallocate)
+                     arr = obj[this.name] = new Array(size);
+                  else {
+                     n = arr.length;
+                     arr.length = size; // reallocate array
+                  }
+
+                  while (n < size) arr[n++] = this.methods.Create(); // create new objects
+               }
+            };
+
+            if (isStr(read_mode) && (read_mode[0] === '.')) {
+               member.conttype = detectBranchMemberClass(branch.fBranches, branch.fName + read_mode);
+               if (!member.conttype) {
+                  console.error(`Cannot select object ${read_mode} in the branch ${branch.fName}`);
+                  return null;
+               }
+            }
+
+            member.methods = makeMethodsList(member.conttype);
+
+            child_scan = (branch.fType === kClonesNode) ? kClonesMemberNode : kSTLMemberNode;
+         }
+      } else if ((object_class = getBranchObjectClass(branch, handle.tree))) {
+         if (read_mode === true) {
+            console.warn(`Object branch ${object_class} can not have data to be read directly`);
+            return null;
+         }
+
+         handle.process_arrays = false;
+
+         const newtgt = new Array(target_object ? (target_object.length + 1) : 1);
+         for (let l = 0; l < newtgt.length - 1; ++l)
+            newtgt[l] = target_object[l];
+         newtgt[newtgt.length - 1] = { name: target_name, lst: makeMethodsList(object_class) };
+
+         if (!ScanBranches(branch.fBranches, newtgt, 0)) return null;
+
+         return item; // this kind of branch does not have baskets and not need to be read
+      } else if (is_brelem && (nb_leaves === 1) && (leaf.fName === branch.fName) && (branch.fID === -1)) {
+         elem = createStreamerElement(target_name, branch.fClassName);
+
+         if (elem.fType === kAny) {
+            const streamer = handle.file.getStreamer(branch.fClassName, { val: branch.fClassVersion, checksum: branch.fCheckSum });
+            if (!streamer) {
+               elem = null;
+               console.warn('not found streamer!');
+             } else {
+               member = {
+                  name: target_name,
+                  typename: branch.fClassName,
+                  streamer,
+                  func(buf, obj) {
+                     const res = { _typename: this.typename };
+                     for (let n = 0; n < this.streamer.length; ++n)
+                        this.streamer[n].func(buf, res);
+                     obj[this.name] = res;
+                  }
+               };
+            }
+         }
+
+         // elem.fType = kAnyP;
+
+         // only STL containers here
+         // if (!elem.fSTLtype) elem = null;
+      } else if (is_brelem && (nb_leaves <= 1)) {
+         elem = findBrachStreamerElement(branch, handle.file);
+
+         // this is basic type - can try to solve problem differently
+         if (!elem && branch.fStreamerType && (branch.fStreamerType < 20))
+            elem = createStreamerElement(target_name, branch.fStreamerType);
+      } else if (nb_leaves === 1) {
+         // no special constrains for the leaf names
+
+         elem = createLeafElem(leaf, target_name);
+      } else if ((branch._typename === 'TBranch') && (nb_leaves > 1)) {
+         // branch with many elementary leaves
+
+         const leaves = new Array(nb_leaves);
+         let isok = true;
+         for (let l = 0; l < nb_leaves; ++l) {
+            leaves[l] = createMemberStreamer(createLeafElem(branch.fLeaves.arr[l]), handle.file);
+            if (!leaves[l]) isok = false;
+         }
+
+         if (isok) {
+            member = {
+               name: target_name,
+               leaves,
+               func(buf, obj) {
+                  let tgt = obj[this.name], l = 0;
+                  if (!tgt) obj[this.name] = tgt = {};
+                  while (l < this.leaves.length)
+                     this.leaves[l++].func(buf, tgt);
+               }
+            };
+         }
+      }
+
+      if (!elem && !member) {
+         console.warn(`Not supported branch ${branch.fName} type ${branch._typename}`);
+         return null;
+      }
+
+      if (!member) {
+         member = createMemberStreamer(elem, handle.file);
+
+         if ((member.base !== undefined) && member.basename) {
+            // when element represent base class, we need handling which differ from normal IO
+            member.func = function(buf, obj) {
+               if (!obj[this.name]) obj[this.name] = { _typename: this.basename };
+               buf.classStreamer(obj[this.name], this.basename);
+            };
+         }
+      }
+
+      if (item_cnt && isStr(read_mode)) {
+         member.name0 = item_cnt.name;
+
+         const snames = target_name.split('.');
+
+         if (snames.length === 1) {
+            // no point in the name - just plain array of objects
+            member.get = (arr, n) => arr[n];
+         } else if (read_mode === '$child$') {
+            console.error(`target name ${target_name} contains point, but suppose to be direct child`);
+            return null;
+         } else if (snames.length === 2) {
+            target_name = member.name = snames[1];
+            member.name1 = snames[0];
+            member.subtype1 = read_mode;
+            member.methods1 = makeMethodsList(member.subtype1);
+            member.get = function(arr, n) {
+               let obj1 = arr[n][this.name1];
+               if (!obj1) obj1 = arr[n][this.name1] = this.methods1.Create();
+               return obj1;
+            };
+         } else {
+            // very complex task - we need to reconstruct several embedded members with their types
+            // try our best - but not all data types can be reconstructed correctly
+            // while classname is not enough - there can be different versions
+
+            if (!branch.fParentName) {
+               console.error(`Not possible to provide more than 2 parts in the target name ${target_name}`);
+               return null;
+            }
+
+            target_name = member.name = snames.pop(); // use last element
+            member.snames = snames; // remember all sub-names
+            member.smethods = []; // and special handles to create missing objects
+
+            let parent_class = branch.fParentName; // unfortunately, without version
+
+            for (let k = 0; k < snames.length; ++k) {
+               const chld_class = defineMemberTypeName(handle.file, parent_class, snames[k]);
+               member.smethods[k] = makeMethodsList(chld_class || 'AbstractClass');
+               parent_class = chld_class;
+            }
+            member.get = function(arr, n) {
+               let obj1 = arr[n][this.snames[0]];
+               if (!obj1) obj1 = arr[n][this.snames[0]] = this.smethods[0].Create();
+               for (let k = 1; k < this.snames.length; ++k) {
+                  let obj2 = obj1[this.snames[k]];
+                  if (!obj2) obj2 = obj1[this.snames[k]] = this.smethods[k].Create();
+                  obj1 = obj2;
+               }
+               return obj1;
+            };
+         }
+
+         // case when target is sub-object and need to be created before
+
+         if (member.objs_branch_func) {
+            // STL branch provides special function for the reading
+            member.func = member.objs_branch_func;
+         } else {
+            member.func0 = member.func;
+
+            member.func = function(buf, obj) {
+               const arr = obj[this.name0]; // objects array where reading is done
+               let n = 0;
+               while (n < arr.length)
+                  this.func0(buf, this.get(arr, n++)); // read all individual object with standard functions
+            };
+         }
+      } else if (item_cnt) {
+         handle.process_arrays = false;
+
+         if ((elem.fType === kDouble32) || (elem.fType === kFloat16)) {
+            // special handling for compressed floats
+
+            member.stl_size = item_cnt.name;
+            member.func = function(buf, obj) {
+               obj[this.name] = this.readarr(buf, obj[this.stl_size]);
+            };
+         } else if (((elem.fType === kOffsetP + kDouble32) || (elem.fType === kOffsetP + kFloat16)) && branch.fBranchCount2) {
+            // special handling for variable arrays of compressed floats in branch - not tested
+
+            member.stl_size = item_cnt.name;
+            member.arr_size = item_cnt2.name;
+            member.func = function(buf, obj) {
+               const sz0 = obj[this.stl_size], sz1 = obj[this.arr_size], arr = new Array(sz0);
+               for (let n = 0; n < sz0; ++n)
+                  arr[n] = (buf.ntou1() === 1) ? this.readarr(buf, sz1[n]) : [];
+               obj[this.name] = arr;
+            };
+         } else if (((elem.fType > 0) && (elem.fType < kOffsetL)) || (elem.fType === kTString) ||
+                    (((elem.fType > kOffsetP) && (elem.fType < kOffsetP + kOffsetL)) && branch.fBranchCount2)) {
+            // special handling of simple arrays
+            member = {
+               name: target_name,
+               stl_size: item_cnt.name,
+               type: elem.fType,
+               func(buf, obj) {
+                  obj[this.name] = buf.readFastArray(obj[this.stl_size], this.type);
+               }
+            };
+
+            if (branch.fBranchCount2) {
+               member.type -= kOffsetP;
+               member.arr_size = item_cnt2.name;
+               member.func = function(buf, obj) {
+                  const sz0 = obj[this.stl_size], sz1 = obj[this.arr_size], arr = new Array(sz0);
+                  for (let n = 0; n < sz0; ++n)
+                     arr[n] = (buf.ntou1() === 1) ? buf.readFastArray(sz1[n], this.type) : [];
+                  obj[this.name] = arr;
+               };
+            }
+         } else if ((elem.fType > kOffsetP) && (elem.fType < kOffsetP + kOffsetL) && member.cntname)
+            member.cntname = item_cnt.name;
+         else if (elem.fType === kStreamer) {
+            // with streamers one need to extend existing array
+
+            if (item_cnt2)
+               throw new Error('Second branch counter not supported yet with kStreamer');
+
+            // function provided by normal I/O
+            member.func = member.branch_func;
+            member.stl_size = item_cnt.name;
+         } else if ((elem.fType === kStreamLoop) || (elem.fType === kOffsetL + kStreamLoop)) {
+            if (item_cnt2) {
+               // special solution for kStreamLoop
+               member.stl_size = item_cnt.name;
+               member.cntname = item_cnt2.name;
+               member.func = member.branch_func; // this is special function, provided by base I/O
+            } else
+               member.cntname = item_cnt.name;
+         } else {
+            member.name = '$stl_member';
+
+            let loop_size_name;
+            if (item_cnt2) {
+               if (member.cntname) {
+                  loop_size_name = item_cnt2.name;
+                  member.cntname = '$loop_size';
+               } else
+                  throw new Error('Second branch counter not used - very BAD');
+            }
+
+            const stlmember = {
+               name: target_name,
+               stl_size: item_cnt.name,
+               loop_size: loop_size_name,
+               member0: member,
+               func(buf, obj) {
+                  const cnt = obj[this.stl_size], arr = new Array(cnt);
+                  for (let n = 0; n < cnt; ++n) {
+                     if (this.loop_size) obj.$loop_size = obj[this.loop_size][n];
+                     this.member0.func(buf, obj);
+                     arr[n] = obj.$stl_member;
+                  }
+                  delete obj.$stl_member;
+                  delete obj.$loop_size;
+                  obj[this.name] = arr;
+               }
+            };
+
+            member = stlmember;
+         }
+      } // if (item_cnt)
+
+      // set name used to store result
+      member.name = target_name;
+
+      item.member = member; // member for reading
+      if (elem) item.type = elem.fType;
+      item.index = handle.arr.length; // index in the global list of branches
+
+      if (item_cnt) {
+         item.counters = [item_cnt.index];
+         item_cnt.ascounter.push(item.index);
+
+         if (item_cnt2) {
+            item.counters.push(item_cnt2.index);
+            item_cnt2.ascounter.push(item.index);
+         }
+      }
+
+      handle.arr.push(item);
+
+      // now one should add all other child branches
+      if (child_scan)
+         if (!ScanBranches(branch.fBranches, target_object, child_scan)) return null;
+
+      return item;
+   }
+
+   // main loop to add all branches from selector for reading
+   for (let nn = 0; nn < selector.numBranches(); ++nn) {
+      const item = AddBranchForReading(selector.getBranch(nn), undefined, selector.nameOfBranch(nn), selector._directs[nn]);
+
+      if (!item) {
+         selector.Terminate(false);
+         return Promise.reject(Error(`Fail to add branch ${selector.nameOfBranch(nn)}`));
+      }
+   }
+
+   // check if simple reading can be performed and there are direct data in branch
+
+   for (let h = 1; (h < handle.arr.length) && handle.simple_read; ++h) {
+      const item = handle.arr[h], item0 = handle.arr[0];
+
+      if ((item.numentries !== item0.numentries) || (item.numbaskets !== item0.numbaskets)) handle.simple_read = false;
+      for (let n = 0; n < item.numbaskets; ++n) {
+         if (item.getBasketEntry(n) !== item0.getBasketEntry(n))
+            handle.simple_read = false;
+      }
+   }
+
+   // now calculate entries range
+
+   handle.firstentry = handle.lastentry = 0;
+   for (let nn = 0; nn < handle.arr.length; ++nn) {
+      const branch = handle.arr[nn].branch,
+            e1 = branch.fFirstEntry ?? (branch.fBasketBytes[0] ? branch.fBasketEntry[0] : 0);
+      handle.firstentry = Math.max(handle.firstentry, e1);
+      handle.lastentry = (nn === 0) ? (e1 + branch.fEntries) : Math.min(handle.lastentry, e1 + branch.fEntries);
+   }
+
+   if (handle.firstentry >= handle.lastentry) {
+      selector.Terminate(false);
+      return Promise.reject(Error('No any common events for selected branches'));
+   }
+
+   handle.process_min = handle.firstentry;
+   handle.process_max = handle.lastentry;
+
+   let resolveFunc, rejectFunc; // Promise methods
+
+   if (Number.isInteger(args.firstentry) && (args.firstentry > handle.firstentry) && (args.firstentry < handle.lastentry))
+      handle.process_min = args.firstentry;
+
+   handle.current_entry = handle.staged_now = handle.process_min;
+
+   if (Number.isInteger(args.numentries) && (args.numentries > 0)) {
+      const max = handle.process_min + args.numentries;
+      if (max < handle.process_max) handle.process_max = max;
+   }
+
+   if (isFunc(selector.ProcessArrays) && handle.simple_read) {
+      // this is indication that selector can process arrays of values
+      // only strictly-matched tree structure can be used for that
+
+      for (let k = 0; k < handle.arr.length; ++k) {
+         const elem = handle.arr[k];
+         if ((elem.type <= 0) || (elem.type >= kOffsetL) || (elem.type === kCharStar))
+            handle.process_arrays = false;
+      }
+
+      if (handle.process_arrays) {
+         // create other members for fast processing
+
+         selector.tgtarr = {}; // object with arrays
+
+         for (let nn = 0; nn < handle.arr.length; ++nn) {
+            const item = handle.arr[nn],
+                  elem = createStreamerElement(item.name, item.type);
+
+            elem.fType = item.type + kOffsetL;
+            elem.fArrayLength = 10;
+            elem.fArrayDim = 1;
+            elem.fMaxIndex[0] = 10; // 10 if artificial number, will be replaced during reading
+
+            item.arrmember = createMemberStreamer(elem, handle.file);
+         }
+      }
+   } else
+      handle.process_arrays = false;
+
+   /** read basket with tree data, selecting different files */
+   function ReadBaskets(bitems) {
+      function ExtractPlaces() {
+         // extract places to read and define file name
+
+         const places = [];
+         let filename = '';
+
+         for (let n = 0; n < bitems.length; ++n) {
+            if (bitems[n].done) continue;
+
+            const branch = bitems[n].branch;
+
+            if (places.length === 0)
+               filename = branch.fFileName;
+            else if (filename !== branch.fFileName)
+               continue;
+
+            bitems[n].selected = true; // mark which item was selected for reading
+
+            places.push(branch.fBasketSeek[bitems[n].basket], branch.fBasketBytes[bitems[n].basket]);
+         }
+
+         return places.length > 0 ? { places, filename } : null;
+      }
+
+      function ReadProgress(value) {
+         if ((handle.staged_prev === handle.staged_now) ||
+            (handle.process_max <= handle.process_min)) return;
+
+         const tm = new Date().getTime();
+         if (tm - handle.progress_showtm < 500) return; // no need to show very often
+         handle.progress_showtm = tm;
+
+         const portion = (handle.staged_prev + value * (handle.staged_now - handle.staged_prev)) /
+                         (handle.process_max - handle.process_min);
+        return handle.selector.ShowProgress(portion);
+      }
+
+      function ProcessBlobs(blobs, places) {
+         if (!blobs || ((places.length > 2) && (blobs.length * 2 !== places.length)))
+            return Promise.resolve(null);
+
+         if (places.length === 2) blobs = [blobs];
+
+         function DoProcessing(k) {
+            for (; k < bitems.length; ++k) {
+               if (!bitems[k].selected) continue;
+
+               bitems[k].selected = false;
+               bitems[k].done = true;
+
+               const blob = blobs.shift();
+               let buf = new TBuffer(blob, 0, handle.file);
+               const basket = buf.classStreamer({}, clTBasket);
+
+               if (basket.fNbytes !== bitems[k].branch.fBasketBytes[bitems[k].basket])
+                  console.error(`mismatch in read basket sizes ${basket.fNbytes} != ${bitems[k].branch.fBasketBytes[bitems[k].basket]}`);
+
+               // items[k].obj = basket; // keep basket object itself if necessary
+
+               bitems[k].bskt_obj = basket; // only number of entries in the basket are relevant for the moment
+
+               if (basket.fKeylen + basket.fObjlen === basket.fNbytes) {
+                  // use data from original blob
+                  buf.raw_shift = 0;
+
+                  bitems[k].raw = buf; // here already unpacked buffer
+
+                 if (bitems[k].branch.fEntryOffsetLen > 0)
+                     buf.readBasketEntryOffset(basket, buf.raw_shift);
+
+                 continue;
+               }
+
+               // unpack data and create new blob
+               return R__unzip(blob, basket.fObjlen, false, buf.o).then(objblob => {
+                  if (objblob) {
+                     buf = new TBuffer(objblob, 0, handle.file);
+                     buf.raw_shift = basket.fKeylen;
+                     buf.fTagOffset = basket.fKeylen;
+                  } else
+                     throw new Error('FAIL TO UNPACK');
+
+                  bitems[k].raw = buf; // here already unpacked buffer
+
+                  if (bitems[k].branch.fEntryOffsetLen > 0)
+                     buf.readBasketEntryOffset(basket, buf.raw_shift);
+
+                  return DoProcessing(k+1);  // continue processing
+               });
+            }
+
+            const req = ExtractPlaces();
+            if (req)
+               return handle.file.readBuffer(req.places, req.filename, ReadProgress).then(blobs => ProcessBlobs(blobs)).catch(() => { return null; });
+
+            return Promise.resolve(bitems);
+          }
+
+          return DoProcessing(0);
+      }
+
+      const req = ExtractPlaces();
+
+      // extract places where to read
+      if (req)
+         return handle.file.readBuffer(req.places, req.filename, ReadProgress).then(blobs => ProcessBlobs(blobs, req.places)).catch(() => { return null; });
+
+      return Promise.resolve(null);
+   }
+
+   function ReadNextBaskets() {
+      const bitems = [];
+      let totalsz = 0, isany = true, is_direct = false, min_staged = handle.process_max;
+
+      while ((totalsz < 1e6) && isany) {
+         isany = false;
+         // very important, loop over branches in reverse order
+         // let check counter branch after reading of normal branch is prepared
+         for (let n = handle.arr.length - 1; n >= 0; --n) {
+            const elem = handle.arr[n];
+
+            while (elem.staged_basket < elem.numbaskets) {
+               const k = elem.staged_basket++;
+
+               // no need to read more baskets, process_max is not included
+               if (elem.getBasketEntry(k) >= handle.process_max) break;
+
+               // check which baskets need to be read
+               if (elem.first_readentry < 0) {
+                  const lmt = elem.getBasketEntry(k + 1),
+                        not_needed = (lmt <= handle.process_min);
+
+                  // for (let d=0;d<elem.ascounter.length;++d) {
+                  //    let dep = handle.arr[elem.ascounter[d]]; // dependent element
+                  //    if (dep.first_readentry < lmt) not_needed = false; // check that counter provide required data
+                  // }
+
+                  if (not_needed) continue; // if that basket not required, check next
+
+                  elem.curr_basket = k; // basket where reading will start
+
+                  elem.first_readentry = elem.getBasketEntry(k); // remember which entry will be read first
+               }
+
+               // check if basket already loaded in the branch
+
+               const bitem = {
+                  id: n, // to find which element we are reading
+                  branch: elem.branch,
+                  basket: k,
+                  raw: null // here should be result
+               }, bskt = elem.branch.fBaskets.arr[k];
+               if (bskt) {
+                  bitem.raw = bskt.fBufferRef;
+                  if (bitem.raw)
+                     bitem.raw.locate(0); // reset pointer - same branch may be read several times
+                  else
+                     bitem.raw = new TBuffer(null, 0, handle.file); // create dummy buffer - basket has no data
+                  bitem.raw.raw_shift = bskt.fKeylen;
+
+                  if (bskt.fBufferRef && (elem.branch.fEntryOffsetLen > 0))
+                     bitem.raw.readBasketEntryOffset(bskt, bitem.raw.raw_shift);
+
+                  bitem.bskt_obj = bskt;
+                  is_direct = true;
+                  elem.baskets[k] = bitem;
+               } else {
+                  bitems.push(bitem);
+                  totalsz += elem.branch.fBasketBytes[k];
+                  isany = true;
+               }
+
+               elem.staged_entry = elem.getBasketEntry(k + 1);
+
+               min_staged = Math.min(min_staged, elem.staged_entry);
+
+               break;
+            }
+         }
+      }
+
+      if ((totalsz === 0) && !is_direct) {
+         handle.selector.Terminate(true);
+         return resolveFunc(handle.selector);
+      }
+
+      handle.staged_prev = handle.staged_now;
+      handle.staged_now = min_staged;
+
+      let portion = 0;
+      if (handle.process_max > handle.process_min)
+         portion = (handle.staged_prev - handle.process_min) / (handle.process_max - handle.process_min);
+
+      if (handle.selector.ShowProgress(portion) === 'break') {
+         handle.selector.Terminate(true);
+         return resolveFunc(handle.selector);
+      }
+
+      handle.progress_showtm = new Date().getTime();
+
+      if (totalsz > 0)
+         return ReadBaskets(bitems).then(ProcessBaskets);
+
+      if (is_direct) return ProcessBaskets([]); // directly process baskets
+
+      throw new Error('No any data is requested - never come here');
+   }
+
+   function ProcessBaskets(bitems) {
+      // this is call-back when next baskets are read
+
+      if ((handle.selector._break !== 0) || (bitems === null)) {
+         handle.selector.Terminate(false);
+         return resolveFunc(handle.selector);
+      }
+
+      // redistribute read baskets over branches
+      for (let n = 0; n < bitems.length; ++n)
+         handle.arr[bitems[n].id].baskets[bitems[n].basket] = bitems[n];
+
+      // now process baskets
+
+      let isanyprocessed = false;
+
+      while (true) {
+         let loopentries = 100000000, n, elem;
+
+         // first loop used to check if all required data exists
+         for (n = 0; n < handle.arr.length; ++n) {
+            elem = handle.arr[n];
+
+            if (!elem.raw || !elem.basket || (elem.first_entry + elem.basket.fNevBuf <= handle.current_entry)) {
+               delete elem.raw;
+               delete elem.basket;
+
+               if ((elem.curr_basket >= elem.numbaskets)) {
+                  if (n === 0) {
+                     handle.selector.Terminate(true);
+                     return resolveFunc(handle.selector);
+                  }
+                  continue; // ignore non-master branch
+               }
+
+               // this is single response from the tree, includes branch, bakset number, raw data
+               const bitem = elem.baskets[elem.curr_basket];
+
+               // basket not read
+               if (!bitem) {
+                  // no data, but no any event processed - problem
+                  if (!isanyprocessed) {
+                     handle.selector.Terminate(false);
+                     return rejectFunc(Error(`no data for ${elem.branch.fName} basket ${elem.curr_basket}`));
+                  }
+
+                  // try to read next portion of tree data
+                  return ReadNextBaskets();
+               }
+
+               elem.raw = bitem.raw;
+               elem.basket = bitem.bskt_obj;
+               // elem.nev = bitem.fNevBuf; // number of entries in raw buffer
+               elem.first_entry = elem.getBasketEntry(bitem.basket);
+
+               bitem.raw = null; // remove reference on raw buffer
+               bitem.branch = null; // remove reference on the branch
+               bitem.bskt_obj = null; // remove reference on the branch
+               elem.baskets[elem.curr_basket++] = undefined; // remove from array
+            }
+
+            // define how much entries can be processed before next raw buffer will be finished
+            loopentries = Math.min(loopentries, elem.first_entry + elem.basket.fNevBuf - handle.current_entry);
+         }
+
+         // second loop extracts all required data
+
+         // do not read too much
+         if (handle.current_entry + loopentries > handle.process_max)
+            loopentries = handle.process_max - handle.current_entry;
+
+         if (handle.process_arrays && (loopentries > 1)) {
+            // special case - read all data from baskets as arrays
+
+            for (n = 0; n < handle.arr.length; ++n) {
+               elem = handle.arr[n];
+
+               elem.getEntry(handle.current_entry);
+
+               elem.arrmember.arrlength = loopentries;
+               elem.arrmember.func(elem.raw, handle.selector.tgtarr);
+
+               elem.raw = null;
+            }
+
+            handle.selector.ProcessArrays(handle.current_entry);
+
+            handle.current_entry += loopentries;
+
+            isanyprocessed = true;
+         } else {
+            // main processing loop
+            while (loopentries--) {
+               for (n = 0; n < handle.arr.length; ++n) {
+                  elem = handle.arr[n];
+
+                  // locate buffer offset at proper place
+                  elem.getEntry(handle.current_entry);
+
+                  elem.member.func(elem.raw, elem.getTarget(handle.selector.tgtobj));
+               }
+
+               handle.selector.Process(handle.current_entry);
+
+               handle.current_entry++;
+
+               isanyprocessed = true;
+            }
+         }
+
+         if (handle.current_entry >= handle.process_max) {
+            handle.selector.Terminate(true);
+            return resolveFunc(handle.selector);
+         }
+      }
+   }
+
+   return new Promise((resolve, reject) => {
+      resolveFunc = resolve;
+      rejectFunc = reject;
+
+      // call begin before first entry is read
+      handle.selector.Begin(tree);
+
+      ReadNextBaskets();
+   });
+}
+
+/** @summary implementation of TTree::Draw
+  * @param {object|string} args - different setting or simply draw expression
+  * @param {string} args.expr - draw expression
+  * @param {string} [args.cut=undefined]   - cut expression (also can be part of 'expr' after '::')
+  * @param {string} [args.drawopt=undefined] - draw options for result histogram
+  * @param {number} [args.firstentry=0] - first entry to process
+  * @param {number} [args.numentries=undefined] - number of entries to process, all by default
+  * @param {object} [args.branch=undefined] - TBranch object from TTree itself for the direct drawing
+  * @param {function} [args.progress=undefined] - function called during histogram accumulation with obj argument
+  * @return {Promise} with produced object  */
+async function treeDraw(tree, args) {
+   if (isStr(args)) args = { expr: args };
+
+   if (!isStr(args.expr)) args.expr = '';
+
+   const selector = new TDrawSelector();
+
+   if (args.branch) {
+      if (!selector.drawOnlyBranch(tree, args.branch, args.expr, args))
+        return Promise.reject(Error(`Fail to create draw expression ${args.expr} for branch ${args.branch.fName}`));
+   } else {
+      if (!selector.parseDrawExpression(tree, args))
+          return Promise.reject(Error(`Fail to create draw expression ${args.expr}`));
+   }
+
+   selector.setCallback(null, args.progress);
+
+   return treeProcess(tree, selector, args).then(() => selector.hist);
+}
+
+/** @summary Performs generic I/O test for all branches in the TTree
+  * @desc Used when 'testio' draw option for TTree is specified
+  * @private */
+function treeIOTest(tree, args) {
+   const branches = [], names = [], nchilds = [];
+
+   function collectBranches(obj, prntname = '') {
+      if (!obj?.fBranches) return 0;
+
+      let cnt = 0;
+
+      for (let n = 0; n < obj.fBranches.arr.length; ++n) {
+         const br = obj.fBranches.arr[n],
+               name = (prntname ? prntname + '/' : '') + br.fName;
+         branches.push(br);
+         names.push(name);
+         nchilds.push(0);
+         const pos = nchilds.length - 1;
+         cnt += (br.fLeaves?.arr?.length ?? 0);
+         const nchld = collectBranches(br, name);
+
+         cnt += nchld;
+         nchilds[pos] = nchld;
+      }
+      return cnt;
+   }
+
+   const numleaves = collectBranches(tree);
+   let selector;
+
+   names.push(`Total are ${branches.length} branches with ${numleaves} leaves`);
+
+   function testBranch(nbr) {
+      if (nbr >= branches.length)
+         return Promise.resolve(true);
+
+      if (selector?._break || args._break)
+         return Promise.resolve(true);
+
+      selector = new TSelector();
+
+      selector.addBranch(branches[nbr], 'br0');
+
+      selector.Process = function() {
+         if (this.tgtobj.br0 === undefined)
+            this.fail = true;
+      };
+
+      selector.Terminate = function(res) {
+         if (!isStr(res))
+            res = (!res || this.fails) ? 'FAIL' : 'ok';
+
+         names[nbr] = res + ' ' + names[nbr];
+      };
+
+      const br = branches[nbr],
+            object_class = getBranchObjectClass(br, tree),
+            num = br.fEntries,
+            skip_branch = object_class ? (nchilds[nbr] > 100) : !br.fLeaves?.arr?.length;
+
+      if (skip_branch || (num <= 0))
+         return testBranch(nbr+1);
+
+      const drawargs = { numentries: 10 },
+            first = br.fFirstEntry || 0,
+            last = br.fEntryNumber || (first + num);
+
+      if (num < drawargs.numentries)
+         drawargs.numentries = num;
+      else
+         drawargs.firstentry = first + Math.round((last - first - drawargs.numentries) * Math.random()); // select randomly
+
+      // keep console output for debug purposes
+      console.log(`test branch ${br.fName} first ${drawargs.firstentry || 0} num ${drawargs.numentries}`);
+
+      if (isFunc(args.showProgress))
+         args.showProgress(`br ${nbr}/${branches.length} ${br.fName}`);
+
+      return treeProcess(tree, selector, drawargs).then(() => testBranch(nbr+1));
+   }
+
+   return testBranch(0).then(() => {
+      if (isFunc(args.showProgress))
+         args.showProgress();
+
+      return names;
+   });
+}
+
+/** @summary Create hierarchy of TTree object
+  * @private */
+function treeHierarchy(node, obj) {
+   function createBranchItem(node, branch, tree, parent_branch) {
+      if (!node || !branch) return false;
+
+      const nb_branches = branch.fBranches?.arr?.length ?? 0,
+            nb_leaves = branch.fLeaves?.arr?.length ?? 0;
+
+      function ClearName(arg) {
+         const pos = arg.indexOf('[');
+         if (pos > 0) arg = arg.slice(0, pos);
+         if (parent_branch && arg.indexOf(parent_branch.fName) === 0) {
+            arg = arg.slice(parent_branch.fName.length);
+            if (arg[0] === '.') arg = arg.slice(1);
+         }
+         return arg;
+      }
+
+      branch.$tree = tree; // keep tree pointer, later do it more smart
+
+      const subitem = {
+         _name: ClearName(branch.fName),
+         _kind: prROOT + branch._typename,
+         _title: branch.fTitle,
+         _obj: branch
+      };
+
+      if (!node._childs) node._childs = [];
+
+      node._childs.push(subitem);
+
+      if (branch._typename === clTBranchElement)
+         subitem._title += ` from ${branch.fClassName};${branch.fClassVersion}`;
+
+      if (nb_branches > 0) {
+         subitem._more = true;
+         subitem._expand = function(bnode, bobj) {
+            // really create all sub-branch items
+            if (!bobj) return false;
+
+            if (!bnode._childs) bnode._childs = [];
+
+            if ((bobj.fLeaves?.arr?.length === 1) &&
+                ((bobj.fType === kClonesNode) || (bobj.fType === kSTLNode))) {
+                 bobj.fLeaves.arr[0].$branch = bobj;
+                 bnode._childs.push({
+                    _name: '@size',
+                    _title: 'container size',
+                    _kind: prROOT + 'TLeafElement',
+                    _icon: 'img_leaf',
+                    _obj: bobj.fLeaves.arr[0],
+                    _more: false
+                 });
+              }
+
+            for (let i = 0; i < bobj.fBranches.arr.length; ++i)
+               createBranchItem(bnode, bobj.fBranches.arr[i], bobj.$tree, bobj);
+
+            const object_class = getBranchObjectClass(bobj, bobj.$tree, true),
+                  methods = object_class ? getMethods(object_class) : null;
+
+            if (methods && (bobj.fBranches.arr.length > 0)) {
+               for (const key in methods) {
+                  if (!isFunc(methods[key])) continue;
+                  const s = methods[key].toString();
+                  if ((s.indexOf('return') > 0) && (s.indexOf('function ()') === 0)) {
+                     bnode._childs.push({
+                        _name: key+'()',
+                        _title: `function ${key} of class ${object_class}`,
+                        _kind: prROOT + clTBranchFunc, // fictional class, only for drawing
+                        _obj: { _typename: clTBranchFunc, branch: bobj, func: key },
+                        _more: false
+                     });
+                  }
+               }
+            }
+
+            return true;
+         };
+         return true;
+      } else if (nb_leaves === 1) {
+         subitem._icon = 'img_leaf';
+         subitem._more = false;
+      } else if (nb_leaves > 1) {
+         subitem._childs = [];
+         for (let j = 0; j < nb_leaves; ++j) {
+            branch.fLeaves.arr[j].$branch = branch; // keep branch pointer for drawing
+            const leafitem = {
+               _name: ClearName(branch.fLeaves.arr[j].fName),
+               _kind: prROOT + branch.fLeaves.arr[j]._typename,
+               _obj: branch.fLeaves.arr[j]
+            };
+            subitem._childs.push(leafitem);
+         }
+      }
+
+      return true;
+   }
+
+   // protect against corrupted TTree objects
+   if (obj.fBranches === undefined)
+      return false;
+
+   node._childs = [];
+   node._tree = obj;  // set reference, will be used later by TTree::Draw
+
+   for (let i = 0; i < obj.fBranches.arr?.length; ++i)
+      createBranchItem(node, obj.fBranches.arr[i], obj);
+
+   return true;
+}
+
+var tree = /*#__PURE__*/Object.freeze({
+__proto__: null,
+TDrawSelector: TDrawSelector,
+TDrawVariable: TDrawVariable,
+TSelector: TSelector,
+clTBranchFunc: clTBranchFunc,
+kClonesNode: kClonesNode,
+kSTLNode: kSTLNode,
+treeDraw: treeDraw,
+treeHierarchy: treeHierarchy,
+treeIOTest: treeIOTest,
+treeProcess: treeProcess
+});
 
 /** @summary Return time offset value for given TAxis object
   * @private */
@@ -71045,6 +76017,2314 @@ class TPadPainter extends ObjectPainter {
 
 } // class TPadPainter
 
+async function import_more() { return Promise.resolve().then(function () { return more; }); }
+
+async function import_canvas() { return Promise.resolve().then(function () { return TCanvasPainter$1; }); }
+
+async function import_tree() { return Promise.resolve().then(function () { return TTree; }); }
+
+async function import_h() { return Promise.resolve().then(function () { return HierarchyPainter$1; }); }
+
+async function import_geo() {
+   return Promise.resolve().then(function () { return TGeoPainter$1; }).then(geo => {
+      const handle = getDrawHandle(prROOT + 'TGeoVolumeAssembly');
+      if (handle) handle.icon = 'img_geoassembly';
+      return geo;
+   });
+}
+
+const clTGraph2D = 'TGraph2D', clTH2Poly = 'TH2Poly', clTEllipse = 'TEllipse',
+      clTSpline3 = 'TSpline3', clTTree = 'TTree', clTCanvasWebSnapshot = 'TCanvasWebSnapshot',
+      fPrimitives = 'fPrimitives', fFunctions = 'fFunctions',
+
+/** @summary list of registered draw functions
+  * @private */
+drawFuncs = { lst: [
+   { name: clTCanvas, icon: 'img_canvas', class: () => import_canvas().then(h => h.TCanvasPainter), opt: ';grid;gridx;gridy;tick;tickx;ticky;log;logx;logy;logz', expand_item: fPrimitives, noappend: true },
+   { name: clTPad, icon: 'img_canvas', func: TPadPainter.draw, opt: ';grid;gridx;gridy;tick;tickx;ticky;log;logx;logy;logz', expand_item: fPrimitives, noappend: true },
+   { name: 'TSlider', icon: 'img_canvas', func: TPadPainter.draw },
+   { name: clTButton, icon: 'img_canvas', func: TPadPainter.draw },
+   { name: clTFrame, icon: 'img_frame', draw: () => import_canvas().then(h => h.drawTFrame) },
+   { name: clTPave, icon: 'img_pavetext', class: () => Promise.resolve().then(function () { return TPavePainter$1; }).then(h => h.TPavePainter) },
+   { name: clTPaveText, sameas: clTPave },
+   { name: clTPavesText, sameas: clTPave },
+   { name: clTPaveStats, sameas: clTPave },
+   { name: clTPaveLabel, sameas: clTPave },
+   { name: clTPaveClass, sameas: clTPave },
+   { name: clTDiamond, sameas: clTPave },
+   { name: clTLegend, icon: 'img_pavelabel', sameas: clTPave },
+   { name: clTPaletteAxis, icon: 'img_colz', sameas: clTPave },
+   { name: clTLatex, icon: 'img_text', draw: () => import_more().then(h => h.drawText), direct: true },
+   { name: clTMathText, sameas: clTLatex },
+   { name: clTText, sameas: clTLatex },
+   { name: clTAnnotation, sameas: clTLatex },
+   { name: /^TH1/, icon: 'img_histo1d', class: () => Promise.resolve().then(function () { return TH1Painter$1; }).then(h => h.TH1Painter), opt: ';hist;P;P0;E;E1;E2;E3;E4;E1X0;L;LF2;C;B;B1;A;TEXT;LEGO;same', ctrl: 'l', expand_item: fFunctions, for_derived: true },
+   { name: clTProfile, icon: 'img_profile', class: () => Promise.resolve().then(function () { return TH1Painter$1; }).then(h => h.TH1Painter), opt: ';E0;E1;E2;p;AH;hist;projx;projxb;projxc=e;projxw', expand_item: fFunctions },
+   { name: clTH2Poly, icon: 'img_histo2d', class: () => Promise.resolve().then(function () { return TH2Painter$1; }).then(h => h.TH2Painter), opt: ';COL;COL0;COLZ;LCOL;LCOL0;LCOLZ;LEGO;TEXT;same', expand_item: 'fBins', theonly: true },
+   { name: 'TProfile2Poly', sameas: clTH2Poly },
+   { name: 'TH2PolyBin', icon: 'img_histo2d', draw_field: 'fPoly', draw_field_opt: 'L' },
+   { name: /^TH2/, icon: 'img_histo2d', class: () => Promise.resolve().then(function () { return TH2Painter$1; }).then(h => h.TH2Painter), opt: ';COL;COLZ;COL0;COL1;COL0Z;COL1Z;COLA;BOX;BOX1;PROJ;PROJX1;PROJX2;PROJX3;PROJY1;PROJY2;PROJY3;PROJXY1;PROJXY2;PROJXY3;SCAT;TEXT;TEXTE;TEXTE0;CANDLE;CANDLE1;CANDLE2;CANDLE3;CANDLE4;CANDLE5;CANDLE6;CANDLEY1;CANDLEY2;CANDLEY3;CANDLEY4;CANDLEY5;CANDLEY6;VIOLIN;VIOLIN1;VIOLIN2;VIOLINY1;VIOLINY2;CONT;CONT1;CONT2;CONT3;CONT4;ARR;SURF;SURF1;SURF2;SURF4;SURF6;E;A;LEGO;LEGO0;LEGO1;LEGO2;LEGO3;LEGO4;same', ctrl: 'lego', expand_item: fFunctions, for_derived: true },
+   { name: clTProfile2D, sameas: clTH2, opt2: ';projxyb;projxyc=e;projxyw' },
+   { name: /^TH3/, icon: 'img_histo3d', class: () => Promise.resolve().then(function () { return TH3Painter$1; }).then(h => h.TH3Painter), opt: ';SCAT;BOX;BOX2;BOX3;GLBOX1;GLBOX2;GLCOL', expand_item: fFunctions, for_derived: true },
+   { name: clTProfile3D, sameas: clTH3 },
+   { name: clTHStack, icon: 'img_histo1d', class: () => Promise.resolve().then(function () { return THStackPainter$1; }).then(h => h.THStackPainter), expand_item: 'fHists', opt: 'NOSTACK;HIST;COL;LEGO;E;PFC;PLC;PADS' },
+   { name: clTPolyMarker3D, icon: 'img_histo3d', draw: () => Promise.resolve().then(function () { return draw3d; }).then(h => h.drawPolyMarker3D), direct: true, frame: '3d' },
+   { name: clTPolyLine3D, icon: 'img_graph', draw: () => Promise.resolve().then(function () { return draw3d; }).then(h => h.drawPolyLine3D), direct: true, frame: '3d' },
+   { name: 'TGraphStruct' },
+   { name: 'TGraphNode' },
+   { name: 'TGraphEdge' },
+   { name: clTGraphTime, icon: 'img_graph', class: () => Promise.resolve().then(function () { return TGraphTimePainter$1; }).then(h => h.TGraphTimePainter), opt: 'once;repeat;first', theonly: true },
+   { name: clTGraph2D, icon: 'img_graph', class: () => Promise.resolve().then(function () { return TGraph2DPainter$1; }).then(h => h.TGraph2DPainter), opt: ';P;PCOL', theonly: true },
+   { name: clTGraph2DErrors, sameas: clTGraph2D, opt: ';P;PCOL;ERR', theonly: true },
+   { name: clTGraph2DAsymmErrors, sameas: clTGraph2D, opt: ';P;PCOL;ERR', theonly: true },
+   { name: clTGraphPolargram, icon: 'img_graph', class: () => Promise.resolve().then(function () { return TGraphPolarPainter$1; }).then(h => h.TGraphPolargramPainter), theonly: true },
+   { name: clTGraphPolar, icon: 'img_graph', class: () => Promise.resolve().then(function () { return TGraphPolarPainter$1; }).then(h => h.TGraphPolarPainter), opt: ';F;L;P;PE', theonly: true },
+   { name: /^TGraph/, icon: 'img_graph', class: () => Promise.resolve().then(function () { return TGraphPainter$2; }).then(h => h.TGraphPainter), opt: ';L;P' },
+   { name: 'TEfficiency', icon: 'img_graph', class: () => Promise.resolve().then(function () { return TEfficiencyPainter$1; }).then(h => h.TEfficiencyPainter), opt: ';AP;A4P;B' },
+   { name: clTCutG, sameas: clTGraph },
+   { name: /^RooHist/, sameas: clTGraph },
+   { name: /^RooCurve/, sameas: clTGraph },
+   { name: 'TScatter', icon: 'img_graph', class: () => Promise.resolve().then(function () { return TScatterPainter$1; }).then(h => h.TScatterPainter), opt: ';A' },
+   { name: 'RooPlot', icon: 'img_canvas', func: drawRooPlot },
+   { name: 'TRatioPlot', icon: 'img_mgraph', class: () => Promise.resolve().then(function () { return TRatioPlotPainter$1; }).then(h => h.TRatioPlotPainter), opt: '' },
+   { name: clTMultiGraph, icon: 'img_mgraph', class: () => Promise.resolve().then(function () { return TMultiGraphPainter$1; }).then(h => h.TMultiGraphPainter), opt: ';ac;l;p;3d;pads', expand_item: 'fGraphs' },
+   { name: clTStreamerInfoList, icon: 'img_question', draw: () => import_h().then(h => h.drawStreamerInfo) },
+   { name: 'TWebPainting', icon: 'img_graph', class: () => Promise.resolve().then(function () { return TWebPaintingPainter$1; }).then(h => h.TWebPaintingPainter) },
+   { name: clTCanvasWebSnapshot, icon: 'img_canvas', draw: () => import_canvas().then(h => h.drawTPadSnapshot) },
+   { name: 'TPadWebSnapshot', sameas: clTCanvasWebSnapshot },
+   { name: 'kind:Text', icon: 'img_text', func: drawRawText },
+   { name: clTObjString, icon: 'img_text', func: drawRawText },
+   { name: clTF1, icon: 'img_tf1', class: () => Promise.resolve().then(function () { return TF1Painter$1; }).then(h => h.TF1Painter), opt: ';L;C;FC;FL' },
+   { name: clTF2, icon: 'img_tf2', class: () => Promise.resolve().then(function () { return TF2Painter$1; }).then(h => h.TF2Painter), opt: ';BOX;ARR;SURF;SURF1;SURF2;SURF4;SURF6;LEGO;LEGO0;LEGO1;LEGO2;LEGO3;LEGO4;same' },
+   { name: clTF3, icon: 'img_histo3d', class: () => Promise.resolve().then(function () { return TF3Painter$1; }).then(h => h.TF3Painter), opt: ';SURF' },
+   { name: clTSpline3, icon: 'img_tf1', class: () => Promise.resolve().then(function () { return TSplinePainter$1; }).then(h => h.TSplinePainter) },
+   { name: 'TSpline5', sameas: clTSpline3 },
+   { name: clTEllipse, icon: 'img_graph', draw: () => import_more().then(h => h.drawEllipse), direct: true },
+   { name: 'TArc', sameas: clTEllipse },
+   { name: 'TCrown', sameas: clTEllipse },
+   { name: 'TPie', icon: 'img_graph', draw: () => import_more().then(h => h.drawPie), direct: true },
+   { name: 'TPieSlice', icon: 'img_graph', dummy: true },
+   { name: 'TExec', icon: 'img_graph', dummy: true },
+   { name: clTLine, icon: 'img_graph', class: () => Promise.resolve().then(function () { return TLinePainter$1; }).then(h => h.TLinePainter) },
+   { name: 'TArrow', icon: 'img_graph', class: () => Promise.resolve().then(function () { return TArrowPainter$1; }).then(h => h.TArrowPainter) },
+   { name: clTPolyLine, icon: 'img_graph', class: () => Promise.resolve().then(function () { return TPolyLinePainter$1; }).then(h => h.TPolyLinePainter), opt: ';F' },
+   { name: 'TCurlyLine', sameas: clTPolyLine },
+   { name: 'TCurlyArc', sameas: clTPolyLine },
+   { name: 'TParallelCoord', icon: 'img_graph', dummy: true },
+   { name: clTGaxis, icon: 'img_graph', class: () => Promise.resolve().then(function () { return TGaxisPainter$1; }).then(h => h.TGaxisPainter) },
+   { name: clTBox, icon: 'img_graph', class: () => Promise.resolve().then(function () { return TBoxPainter$1; }).then(h => h.TBoxPainter), opt: ';L' },
+   { name: 'TWbox', sameas: clTBox },
+   { name: 'TSliderBox', sameas: clTBox },
+   { name: 'TMarker', icon: 'img_graph', draw: () => import_more().then(h => h.drawMarker), direct: true },
+   { name: 'TPolyMarker', icon: 'img_graph', draw: () => import_more().then(h => h.drawPolyMarker), direct: true },
+   { name: 'TASImage', icon: 'img_mgraph', class: () => Promise.resolve().then(function () { return TASImagePainter$1; }).then(h => h.TASImagePainter), opt: ';z' },
+   { name: 'TJSImage', icon: 'img_mgraph', draw: () => import_more().then(h => h.drawJSImage), opt: ';scale;center' },
+   { name: clTGeoVolume, icon: 'img_histo3d', class: () => import_geo().then(h => h.TGeoPainter), get_expand: () => import_geo().then(h => h.expandGeoObject), opt: ';more;all;count;projx;projz;wire;no_screen;dflt', ctrl: 'dflt' },
+   { name: 'TEveGeoShapeExtract', sameas: clTGeoVolume, opt: ';more;all;count;projx;projz;wire;dflt' },
+   { name: nsREX+'REveGeoShapeExtract', sameas: clTGeoVolume, opt: ';more;all;count;projx;projz;wire;dflt' },
+   { name: 'TGeoOverlap', sameas: clTGeoVolume, opt: ';more;all;count;projx;projz;wire;dflt', dflt: 'dflt', ctrl: 'expand' },
+   { name: 'TGeoManager', sameas: clTGeoVolume, opt: ';more;all;count;projx;projz;wire;tracks;no_screen;dflt', dflt: 'expand', ctrl: 'dflt', noappend: true, exapnd_after_draw: true },
+   { name: 'TGeoVolumeAssembly', sameas: clTGeoVolume, /* icon: 'img_geoassembly', */ opt: ';more;all;count' },
+   { name: /^TGeo/, class: () => import_geo().then(h => h.TGeoPainter), get_expand: () => import_geo().then(h => h.expandGeoObject), opt: ';more;all;axis;compa;count;projx;projz;wire;no_screen;dflt', dflt: 'dflt', ctrl: 'expand' },
+   { name: 'TAxis3D', icon: 'img_graph', draw: () => import_geo().then(h => h.drawAxis3D), direct: true },
+   // these are not draw functions, but provide extra info about correspondent classes
+   { name: 'kind:Command', icon: 'img_execute', execute: true },
+   { name: 'TFolder', icon: 'img_folder', icon2: 'img_folderopen', noinspect: true, get_expand: () => import_h().then(h => h.folderHierarchy) },
+   { name: 'TTask', icon: 'img_task', get_expand: () => import_h().then(h => h.taskHierarchy), for_derived: true },
+   { name: clTTree, icon: 'img_tree', get_expand: () => Promise.resolve().then(function () { return tree; }).then(h => h.treeHierarchy), draw: () => import_tree().then(h => h.drawTree), dflt: 'expand', opt: 'player;testio', shift: kInspect },
+   { name: 'TNtuple', sameas: clTTree },
+   { name: 'TNtupleD', sameas: clTTree },
+   { name: clTBranchFunc, icon: 'img_leaf_method', draw: () => import_tree().then(h => h.drawTree), opt: ';dump', noinspect: true },
+   { name: /^TBranch/, icon: 'img_branch', draw: () => import_tree().then(h => h.drawTree), dflt: 'expand', opt: ';dump', ctrl: 'dump', shift: kInspect, ignore_online: true, always_draw: true },
+   { name: /^TLeaf/, icon: 'img_leaf', noexpand: true, draw: () => import_tree().then(h => h.drawTree), opt: ';dump', ctrl: 'dump', ignore_online: true, always_draw: true },
+   { name: clTList, icon: 'img_list', draw: () => import_h().then(h => h.drawList), get_expand: () => import_h().then(h => h.listHierarchy), dflt: 'expand' },
+   { name: clTHashList, sameas: clTList },
+   { name: clTObjArray, sameas: clTList },
+   { name: clTClonesArray, sameas: clTList },
+   { name: clTMap, sameas: clTList },
+   { name: clTColor, icon: 'img_color' },
+   { name: clTFile, icon: 'img_file', noinspect: true },
+   { name: 'TMemFile', icon: 'img_file', noinspect: true },
+   { name: clTStyle, icon: 'img_question', noexpand: true },
+   { name: 'Session', icon: 'img_globe' },
+   { name: 'kind:TopFolder', icon: 'img_base' },
+   { name: 'kind:Folder', icon: 'img_folder', icon2: 'img_folderopen', noinspect: true },
+   { name: nsREX+'RCanvas', icon: 'img_canvas', class: () => init_v7().then(h => h.RCanvasPainter), opt: '', expand_item: fPrimitives },
+   { name: nsREX+'RCanvasDisplayItem', icon: 'img_canvas', draw: () => init_v7().then(h => h.drawRPadSnapshot), opt: '', expand_item: fPrimitives },
+   { name: nsREX+'RHist1Drawable', icon: 'img_histo1d', class: () => init_v7('rh1').then(h => h.RH1Painter), opt: '' },
+   { name: nsREX+'RHist2Drawable', icon: 'img_histo2d', class: () => init_v7('rh2').then(h => h.RH2Painter), opt: '' },
+   { name: nsREX+'RHist3Drawable', icon: 'img_histo3d', class: () => init_v7('rh3').then(h => h.RH3Painter), opt: '' },
+   { name: nsREX+'RHistDisplayItem', icon: 'img_histo1d', draw: () => init_v7('rh3').then(h => h.drawHistDisplayItem), opt: '' },
+   { name: nsREX+'RText', icon: 'img_text', draw: () => init_v7('more').then(h => h.drawText), opt: '', direct: 'v7', csstype: 'text' },
+   { name: nsREX+'RFrameTitle', icon: 'img_text', draw: () => init_v7().then(h => h.drawRFrameTitle), opt: '', direct: 'v7', csstype: 'title' },
+   { name: nsREX+'RPaletteDrawable', icon: 'img_text', class: () => init_v7('more').then(h => h.RPalettePainter), opt: '' },
+   { name: nsREX+'RDisplayHistStat', icon: 'img_pavetext', class: () => init_v7('pave').then(h => h.RHistStatsPainter), opt: '' },
+   { name: nsREX+'RLine', icon: 'img_graph', draw: () => init_v7('more').then(h => h.drawLine), opt: '', direct: 'v7', csstype: 'line' },
+   { name: nsREX+'RBox', icon: 'img_graph', draw: () => init_v7('more').then(h => h.drawBox), opt: '', direct: 'v7', csstype: 'box' },
+   { name: nsREX+'RMarker', icon: 'img_graph', draw: () => init_v7('more').then(h => h.drawMarker), opt: '', direct: 'v7', csstype: 'marker' },
+   { name: nsREX+'RPave', icon: 'img_pavetext', class: () => init_v7('pave').then(h => h.RPavePainter), opt: '' },
+   { name: nsREX+'RLegend', icon: 'img_graph', class: () => init_v7('pave').then(h => h.RLegendPainter), opt: '' },
+   { name: nsREX+'RPaveText', icon: 'img_pavetext', class: () => init_v7('pave').then(h => h.RPaveTextPainter), opt: '' },
+   { name: nsREX+'RFrame', icon: 'img_frame', draw: () => init_v7().then(h => h.drawRFrame), opt: '' },
+   { name: nsREX+'RFont', icon: 'img_text', draw: () => init_v7().then(h => h.drawRFont), opt: '', direct: 'v7', csstype: 'font' },
+   { name: nsREX+'RAxisDrawable', icon: 'img_frame', draw: () => init_v7().then(h => h.drawRAxis), opt: '' }
+], cache: {} };
+
+
+/** @summary Register draw function for the class
+  * @desc List of supported draw options could be provided, separated  with ';'
+  * @param {object} args - arguments
+  * @param {string|regexp} args.name - class name or regexp pattern
+  * @param {function} [args.func] - draw function
+  * @param {function} [args.draw] - async function to load draw function
+  * @param {function} [args.class] - async function to load painter class with static draw function
+  * @param {boolean} [args.direct] - if true, function is just Redraw() method of ObjectPainter
+  * @param {string} [args.opt] - list of supported draw options (separated with semicolon) like 'col;scat;'
+  * @param {string} [args.icon] - icon name shown for the class in hierarchy browser
+  * @param {string} [args.draw_field] - draw only data member from object, like fHistogram
+  * @protected */
+function addDrawFunc(args) {
+   drawFuncs.lst.push(args);
+   return args;
+}
+
+/** @summary return draw handle for specified item kind
+  * @desc kind could be ROOT.TH1I for ROOT classes or just
+  * kind string like 'Command' or 'Text'
+  * selector can be used to search for draw handle with specified option (string)
+  * or just sequence id
+  * @private */
+function getDrawHandle(kind, selector) {
+   if (!isStr(kind)) return null;
+   if (selector === '') selector = null;
+
+   let first = null;
+
+   if ((selector === null) && (kind in drawFuncs.cache))
+      return drawFuncs.cache[kind];
+
+   const search = (kind.indexOf(prROOT) === 0) ? kind.slice(5) : `kind:${kind}`;
+   let counter = 0;
+   for (let i = 0; i < drawFuncs.lst.length; ++i) {
+      const h = drawFuncs.lst[i];
+      if (isStr(h.name)) {
+         if (h.name !== search) continue;
+      } else if (!search.match(h.name))
+         continue;
+
+      if (h.sameas) {
+         const hs = getDrawHandle(prROOT + h.sameas, selector);
+         if (hs) {
+            for (const key in hs) {
+               if (h[key] === undefined)
+                  h[key] = hs[key];
+            }
+            delete h.sameas;
+         }
+         return h;
+      }
+
+      if ((selector === null) || (selector === undefined)) {
+         // store found handle in cache, can reuse later
+         if (!(kind in drawFuncs.cache))
+            drawFuncs.cache[kind] = h;
+         return h;
+      } else if (isStr(selector)) {
+         if (!first) first = h;
+         // if draw option specified, check it present in the list
+
+         if (selector === '::expand') {
+            if (('expand' in h) || ('expand_item' in h)) return h;
+         } else if ('opt' in h) {
+            const opts = h.opt.split(';');
+            for (let j = 0; j < opts.length; ++j) {
+               if (opts[j].toLowerCase() === selector.toLowerCase())
+                  return h;
+            }
+         }
+      } else if (selector === counter)
+         return h;
+      ++counter;
+   }
+
+   return first;
+}
+
+/** @summary Returns true if handle can be potentially drawn
+  * @private */
+function canDrawHandle(h) {
+   if (isStr(h))
+      h = getDrawHandle(h);
+   if (!isObject(h)) return false;
+   return h.func || h.class || h.draw || h.draw_field;
+}
+
+/** @summary Provide draw settings for specified class or kind
+  * @private */
+function getDrawSettings(kind, selector) {
+   const res = { opts: null, inspect: false, expand: false, draw: false, handle: null };
+   if (!isStr(kind)) return res;
+   let isany = false, noinspect = false, canexpand = false;
+   if (!isStr(selector)) selector = '';
+
+   for (let cnt = 0; cnt < 1000; ++cnt) {
+      const h = getDrawHandle(kind, cnt);
+      if (!h) break;
+      if (!res.handle) res.handle = h;
+      if (h.noinspect) noinspect = true;
+      if (h.noappend) res.noappend = true;
+      if (h.expand || h.get_expand || h.expand_item || h.can_expand) canexpand = true;
+      if (!h.func && !h.class && !h.draw) break;
+      isany = true;
+      if (h.opt === undefined) continue;
+      let opt = h.opt;
+      if (isStr(h.opt2)) opt += h.opt2;
+      const opts = opt.split(';');
+      for (let i = 0; i < opts.length; ++i) {
+         opts[i] = opts[i].toLowerCase();
+         if (opts[i].indexOf('same') === 0) {
+            res.has_same = true;
+            if (selector.indexOf('nosame') >= 0) continue;
+         }
+
+         if (res.opts === null) res.opts = [];
+         if (res.opts.indexOf(opts[i]) < 0) res.opts.push(opts[i]);
+      }
+      if (h.theonly) break;
+   }
+
+   if (selector.indexOf('noinspect') >= 0) noinspect = true;
+
+   if (isany && (res.opts === null)) res.opts = [''];
+
+   // if no any handle found, let inspect ROOT-based objects
+   if (!isany && (kind.indexOf(prROOT) === 0) && !noinspect) res.opts = [];
+
+   if (!noinspect && res.opts)
+      res.opts.push(kInspect);
+
+   res.inspect = !noinspect;
+   res.expand = canexpand;
+   res.draw = !!res.opts;
+
+   return res;
+}
+
+/** @summary Set default draw option for provided class
+  * @example
+  import { setDefaultDrawOpt } from 'https://root.cern/js/latest/modules/draw.mjs';
+  setDefaultDrawOpt('TH1', 'text');
+  setDefaultDrawOpt('TH2', 'col');  */
+function setDefaultDrawOpt(classname, opt) {
+   if (!classname)
+      return;
+   if ((opt === undefined) && isStr(classname) && (classname.indexOf(':') > 0)) {
+      // special usage to set list of options like TH2:lego2;TH3:glbox2
+      opt.split(';').forEach(part => {
+         const arr = part.split(':');
+         if (arr.length >= 1)
+            setDefaultDrawOpt(arr[0], arr[1] || '');
+      });
+   } else {
+      const handle = getDrawHandle(prROOT + classname, 0);
+      if (handle)
+         handle.dflt = opt;
+   }
+}
+
+/** @summary Draw object in specified HTML element with given draw options.
+  * @param {string|object} dom - id of div element to draw or directly DOMElement
+  * @param {object} obj - object to draw, object type should be registered before with {@link addDrawFunc}
+  * @param {string} opt - draw options separated by space, comma or semicolon
+  * @return {Promise} with painter object
+  * @public
+  * @desc An extensive list of support draw options can be found on [examples page]{@link https://root.cern/js/latest/examples.htm}
+  * @example
+  * import { openFile } from 'https://root.cern/js/latest/modules/io.mjs';
+  * import { draw } from 'https://root.cern/js/latest/modules/draw.mjs';
+  * let file = await openFile('https://root.cern/js/files/hsimple.root');
+  * let obj = await file.readObject('hpxpy;1');
+  * await draw('drawing', obj, 'colz;logx;gridx;gridy'); */
+async function draw(dom, obj, opt) {
+   if (!isObject(obj))
+      return Promise.reject(Error('not an object in draw call'));
+
+   if (isStr(opt) && (opt.indexOf(kInspect) === 0))
+      return import_h().then(h => h.drawInspector(dom, obj, opt));
+
+   let handle, type_info;
+   if ('_typename' in obj) {
+      type_info = 'type ' + obj._typename;
+      handle = getDrawHandle(prROOT + obj._typename, opt);
+   } else if ('_kind' in obj) {
+      type_info = 'kind ' + obj._kind;
+      handle = getDrawHandle(obj._kind, opt);
+   } else
+      return import_h().then(h => h.drawInspector(dom, obj, opt));
+
+   // this is case of unsupported class, close it normally
+   if (!handle)
+      return Promise.reject(Error(`Object of ${type_info} cannot be shown with draw`));
+
+   if (handle.dummy)
+      return null;
+
+   if (handle.draw_field && obj[handle.draw_field])
+      return draw(dom, obj[handle.draw_field], opt || handle.draw_field_opt);
+
+   if (!canDrawHandle(handle)) {
+      if (opt && (opt.indexOf('same') >= 0)) {
+         const main_painter = getElementMainPainter(dom);
+
+         if (isFunc(main_painter?.performDrop))
+            return main_painter.performDrop(obj, '', null, opt);
+      }
+
+      return Promise.reject(Error(`Function not specified to draw object ${type_info}`));
+   }
+
+   function performDraw() {
+      let promise, painter;
+      if (handle.direct === 'v7') {
+         promise = Promise.resolve().then(function () { return RCanvasPainter$1; }).then(v7h => {
+            painter = new v7h.RObjectPainter(dom, obj, opt, handle.csstype);
+            painter.redraw = handle.func;
+            return v7h.ensureRCanvas(painter, handle.frame || false);
+         }).then(() => painter.redraw());
+      } else if (handle.direct) {
+         painter = new ObjectPainter(dom, obj, opt);
+         painter.redraw = handle.func;
+         promise = import_canvas().then(v6h => v6h.ensureTCanvas(painter, handle.frame || false))
+                                  .then(() => painter.redraw());
+      } else
+         promise = getPromise(handle.func(dom, obj, opt));
+
+      return promise.then(p => {
+         if (!painter)
+            painter = p;
+         if (painter === false)
+            return null;
+         if (!painter)
+             throw Error(`Fail to draw object ${type_info}`);
+         if (isObject(painter) && !painter.options)
+            painter.options = { original: opt || '' }; // keep original draw options
+         return painter;
+      });
+   }
+
+   if (isFunc(handle.func))
+      return performDraw();
+
+   let promise;
+
+   if (isFunc(handle.class)) {
+      // class coded as async function which returns class handle
+      // simple extract class and access class.draw method
+      promise = handle.class().then(cl => { handle.func = cl.draw; });
+   } else if (isFunc(handle.draw)) {
+      // draw function without special class
+      promise = handle.draw().then(h => { handle.func = h; });
+   } else if (!handle.func || !isStr(handle.func))
+      return Promise.reject(Error(`Draw function or class not specified to draw ${type_info}`));
+   else {
+      let func = findFunction(handle.func);
+      if (isFunc(func)) {
+         handle.func = func;
+         return performDraw();
+      }
+      let modules = null;
+      if (isStr(handle.script)) {
+         if (handle.script.indexOf('modules:') === 0)
+            modules = handle.script.slice(8);
+         else if (handle.script.indexOf('.mjs') > 0)
+            modules = handle.script;
+      }
+
+      if (!modules && !handle.prereq && !handle.script)
+         return Promise.reject(Error(`Prerequicities to load ${handle.func} are not specified`));
+
+      let init_promise = Promise.resolve(true);
+      if (modules)
+         init_promise = loadModules(modules);
+      else if (!internals.ignore_v6) {
+         init_promise = _ensureJSROOT().then(v6 => {
+            const pr = handle.prereq ? v6.require(handle.prereq) : Promise.resolve(true);
+            return pr.then(() => {
+               if (handle.script)
+                  return loadScript(handle.script);
+            }).then(() => v6._complete_loading());
+         });
+      }
+
+      promise = init_promise.then(() => {
+         func = findFunction(handle.func);
+         if (!isFunc(func))
+            return Promise.reject(Error(`Fail to find function ${handle.func} after loading ${handle.prereq || handle.script}`));
+
+         handle.func = func;
+      });
+   }
+
+   return promise.then(() => performDraw());
+}
+
+/** @summary Redraw object in specified HTML element with given draw options.
+  * @param {string|object} dom - id of div element to draw or directly DOMElement
+  * @param {object} obj - object to draw, object type should be registered before with {@link addDrawFunc}
+  * @param {string} opt - draw options
+  * @return {Promise} with painter object
+  * @desc If drawing was not done before, it will be performed with {@link draw}.
+  * Otherwise drawing content will be updated
+  * @public
+  * @example
+  * import { openFile } from 'https://root.cern/js/latest/modules/io.mjs';
+  * import { draw, redraw } from 'https://root.cern/js/latest/modules/draw.mjs';
+  * let file = await openFile('https://root.cern/js/files/hsimple.root');
+  * let obj = await file.readObject('hpxpy;1');
+  * await draw('drawing', obj, 'colz');
+  * let cnt = 0;
+  * setInterval(() => {
+  *    obj.fTitle = `Next iteration ${cnt++}`;
+  *    redraw('drawing', obj, 'colz');
+  * }, 1000); */
+async function redraw(dom, obj, opt) {
+   if (!isObject(obj))
+      return Promise.reject(Error('not an object in redraw'));
+
+   const can_painter = getElementCanvPainter(dom);
+   let handle, res_painter = null, redraw_res;
+   if (obj._typename)
+      handle = getDrawHandle(prROOT + obj._typename);
+   if (handle?.draw_field && obj[handle.draw_field])
+      obj = obj[handle.draw_field];
+
+   if (can_painter) {
+      if (can_painter.matchObjectType(obj._typename)) {
+         redraw_res = can_painter.redrawObject(obj, opt);
+         if (redraw_res) res_painter = can_painter;
+      } else {
+         for (let i = 0; i < can_painter.painters.length; ++i) {
+            const painter = can_painter.painters[i];
+            if (painter.matchObjectType(obj._typename)) {
+               redraw_res = painter.redrawObject(obj, opt);
+               if (redraw_res) {
+                  res_painter = painter;
+                  break;
+               }
+            }
+         }
+      }
+   } else {
+      const top = new BasePainter(dom).getTopPainter();
+      // base painter do not have this method, if it there use it
+      // it can be object painter here or can be specially introduce method to handling redraw!
+      if (isFunc(top?.redrawObject)) {
+         redraw_res = top.redrawObject(obj, opt);
+         if (redraw_res) res_painter = top;
+      }
+   }
+
+   if (res_painter)
+      return getPromise(redraw_res).then(() => res_painter);
+
+   cleanup(dom);
+
+   return draw(dom, obj, opt);
+}
+
+/** @summary Scan streamer infos for derived classes
+  * @desc Assign draw functions for such derived classes
+  * @private */
+function addStreamerInfosForPainter(lst) {
+   if (!lst) return;
+
+   const basics = [clTObject, clTNamed, clTString, 'TCollection', clTAttLine, clTAttFill, clTAttMarker, clTAttText];
+
+   function checkBaseClasses(si, lvl) {
+      const element = si.fElements?.arr[0];
+      if ((element?.fTypeName !== kBaseClass) || (lvl > 4))
+         return null;
+      // exclude very basic classes
+      if (basics.indexOf(element.fName) >= 0)
+         return null;
+
+      let handle = getDrawHandle(prROOT + element.fName);
+      if (handle && !handle.for_derived)
+            handle = null;
+
+      // now try find that base class of base in the list
+      if (handle === null) {
+         for (let k = 0; k < lst.arr.length; ++k) {
+            if (lst.arr[k].fName === element.fName) {
+               handle = checkBaseClasses(lst.arr[k], lvl + 1);
+               break;
+            }
+         }
+      }
+
+      return handle?.for_derived ? handle : null;
+   }
+
+   lst.arr.forEach(si => {
+      if (getDrawHandle(prROOT + si.fName) !== null) return;
+
+      const handle = checkBaseClasses(si, 0);
+      if (handle) {
+         const newhandle = Object.assign({}, handle);
+         delete newhandle.for_derived; // should we disable?
+         newhandle.name = si.fName;
+         addDrawFunc(newhandle);
+      }
+   });
+}
+
+/** @summary Create SVG/PNG/JPEG image for provided object.
+  * @desc Function especially useful in Node.js environment to generate images for
+  * supported ROOT classes, but also can be used from web browser
+  * @param {object} args - function settings
+  * @param {object} args.object - object for the drawing
+  * @param {string} [args.format = 'svg'] - image format like 'svg' (default), 'png' or 'jpeg'
+  * @param {string} [args.option = ''] - draw options
+  * @param {number} [args.width = 1200] - image width
+  * @param {number} [args.height = 800] - image height
+  * @param {boolean} [args.as_buffer = false] - returns image as Buffer instance, can store directly to file
+  * @param {boolean} [args.use_canvas_size = false] - if configured used size stored in TCanvas object
+  * @return {Promise} with image code - svg as is, png/jpeg as base64 string or buffer (if as_buffer) specified
+  * @example
+  * // how makeImage can be used in node.js
+  * import { openFile, makeImage } from 'jsroot';
+  * let file = await openFile('https://root.cern/js/files/hsimple.root');
+  * let object = await file.readObject('hpxpy;1');
+  * let png64 = await makeImage({ format: 'png', object, option: 'colz', width: 1200, height: 800 });
+  * let pngbuf = await makeImage({ format: 'png', as_buffer: true, object, option: 'colz', width: 1200, height: 800 }); */
+async function makeImage(args) {
+   if (!args) args = {};
+
+   if (!isObject(args.object))
+      return Promise.reject(Error('No object specified to generate SVG'));
+   if (!args.format)
+      args.format = 'svg';
+   if (!args.width)
+      args.width = settings.CanvasWidth;
+   if (!args.height)
+      args.height = settings.CanvasHeight;
+
+   async function build(main) {
+      main.attr('width', args.width).attr('height', args.height)
+          .style('width', args.width + 'px').style('height', args.height + 'px')
+          .property('_batch_use_canvsize', args.use_canvas_size ?? false)
+          .property('_batch_mode', true)
+          .property('_batch_format', args.format !== 'svg' ? args.format : null);
+
+      function complete(res) {
+         cleanup(main.node());
+         main.remove();
+         return res;
+      }
+
+      return draw(main.node(), args.object, args.option || '').then(() => {
+         if (args.format !== 'svg') {
+            const only_img = main.select('svg').selectChild('image');
+            if (!only_img.empty()) {
+               const href = only_img.attr('href');
+
+               if (args.as_buffer) {
+                  const p = href.indexOf('base64,'),
+                        str = atob_func(href.slice(p + 7)),
+                        buf = new ArrayBuffer(str.length),
+                        bufView = new Uint8Array(buf);
+                  for (let i = 0; i < str.length; i++)
+                     bufView[i] = str.charCodeAt(i);
+                  return isNodeJs() ? Buffer.from(buf) : buf;
+               }
+               return href;
+            }
+         }
+
+         const mainsvg = main.select('svg');
+
+         mainsvg.attr('xmlns', nsSVG)
+                .attr('style', null).attr('class', null).attr('x', null).attr('y', null);
+
+         if (!mainsvg.attr('width') && !mainsvg.attr('height'))
+            mainsvg.attr('width', args.width).attr('height', args.height);
+
+         function clear_element() {
+            const elem = select(this);
+            if (elem.style('display') === 'none') elem.remove();
+         }
+
+         main.selectAll('g.root_frame').each(clear_element);
+         main.selectAll('svg').each(clear_element);
+
+         let svg;
+         if (args.format === 'pdf')
+            svg = { node: mainsvg.node(), width: args.width, height: args.height, can_modify: true };
+         else {
+            svg = compressSVG(main.html());
+            if (args.format === 'svg')
+               return complete(svg);
+         }
+
+         return svgToImage(svg, args.format, args.as_buffer).then(complete);
+      });
+   }
+
+   return isNodeJs()
+          ? _loadJSDOM().then(handle => build(handle.body.append('div')))
+          : build(select('body').append('div').style('display', 'none'));
+}
+
+
+/** @summary Create SVG image for provided object.
+  * @desc Function especially useful in Node.js environment to generate images for
+  * supported ROOT classes
+  * @param {object} args - function settings
+  * @param {object} args.object - object for the drawing
+  * @param {string} [args.option] - draw options
+  * @param {number} [args.width = 1200] - image width
+  * @param {number} [args.height = 800] - image height
+  * @param {boolean} [args.use_canvas_size = false] - if configured used size stored in TCanvas object
+  * @return {Promise} with svg code
+  * @example
+  * // how makeSVG can be used in node.js
+  * import { openFile, makeSVG } from 'jsroot';
+  * let file = await openFile('https://root.cern/js/files/hsimple.root');
+  * let object = await file.readObject('hpxpy;1');
+  * let svg = await makeSVG({ object, option: 'lego2,pal50', width: 1200, height: 800 }); */
+async function makeSVG(args) {
+   if (!args) args = {};
+   args.format = 'svg';
+   return makeImage(args);
+}
+
+internals.addDrawFunc = addDrawFunc;
+
+function assignPadPainterDraw(PadPainterClass) {
+   PadPainterClass.prototype.drawObject = draw;
+   PadPainterClass.prototype.getObjectDrawSettings = getDrawSettings;
+}
+
+// only now one can draw primitives in the canvas
+assignPadPainterDraw(TPadPainter);
+
+// load v7 only by demand
+async function init_v7(arg) {
+   return Promise.resolve().then(function () { return RCanvasPainter$1; }).then(h => {
+      // only now one can draw primitives in the canvas
+      assignPadPainterDraw(h.RPadPainter);
+      switch (arg) {
+         case 'more': return Promise.resolve().then(function () { return v7more; });
+         case 'pave': return Promise.resolve().then(function () { return RPavePainter$1; });
+         case 'rh1': return Promise.resolve().then(function () { return RH1Painter$1; });
+         case 'rh2': return Promise.resolve().then(function () { return RH2Painter$1; });
+         case 'rh3': return Promise.resolve().then(function () { return RH3Painter$1; });
+      }
+      return h;
+   });
+}
+
+
+// to avoid cross-dependency between io.mjs and draw.mjs
+internals.addStreamerInfosForPainter = addStreamerInfosForPainter;
+
+/** @summary Draw TRooPlot
+  * @private */
+async function drawRooPlot(dom, plot) {
+   return draw(dom, plot._hist, 'hist').then(async hp => {
+      const arr = [];
+      for (let i = 0; i < plot._items.arr.length; ++i)
+         arr.push(draw(dom, plot._items.arr[i], plot._items.opt[i]));
+      return Promise.all(arr).then(() => hp);
+   });
+}
+
+const kToFront = '__front__', sDfltName = 'root_ctx_menu', sDfltDlg = '_dialog',
+      sSub = 'sub:', sEndsub = 'endsub:', sSeparator = 'separator', sHeader = 'header:';
+
+/**
+ * @summary Abstract class for creating context menu
+ *
+ * @desc Use {@link createMenu} to create instance of the menu
+ * @private
+ */
+
+class JSRootMenu {
+
+   constructor(painter, menuname, show_event) {
+      this.painter = painter;
+      this.menuname = menuname;
+      if (isObject(show_event) && (show_event.clientX !== undefined) && (show_event.clientY !== undefined))
+         this.show_evnt = { clientX: show_event.clientX, clientY: show_event.clientY, skip_close: show_event.skip_close };
+
+      this.remove_handler = () => this.remove();
+      this.element = null;
+      this.cnt = 0;
+   }
+
+   native() { return false; }
+
+   async load() { return this; }
+
+   /** @summary Returns object with mouse event position when context menu was activated
+     * @desc Return object will have members 'clientX' and 'clientY' */
+   getEventPosition() { return this.show_evnt; }
+
+   add(/* name, arg, func, title */) {
+      throw Error('add() method has to be implemented in the menu');
+   }
+
+   /** @summary Returns menu size */
+   size() { return this.cnt; }
+
+   /** @summary Close and remove menu */
+   remove() {
+      if (!this.element)
+         return;
+
+      if (this.show_evnt?.skip_close) {
+         this.show_evnt.skip_close = 0;
+         return;
+      }
+
+      this.element.remove();
+      this.element = null;
+      if (isFunc(this.resolveFunc)) {
+         const func = this.resolveFunc;
+         delete this.resolveFunc;
+         func();
+      }
+      document.body.removeEventListener('click', this.remove_handler);
+   }
+
+   show(/* event */) {
+      throw Error('show() method has to be implemented in the menu class');
+   }
+
+   /** @summary Add checked menu item
+     * @param {boolean} flag - flag
+     * @param {string} name - item name
+     * @param {function} func - func called when item is selected
+     * @param {string} [title] - optional title */
+   addchk(flag, name, arg, func, title) {
+      let handler = func;
+      if (isFunc(arg)) {
+         title = func;
+         func = arg;
+         handler = res => func(res === '1');
+         arg = flag ? '0' : '1';
+      }
+      this.add((flag ? 'chk:' : 'unk:') + name, arg, handler, title);
+   }
+
+   /** @summary Add sub-menu */
+   sub(name, arg, func, title) {
+      this.add(sSub + name, arg, func, title);
+   }
+
+   /** @summary Mark end of submenu */
+   endsub() {
+      this.add(sEndsub);
+   }
+
+   /** @summary Add separator */
+   separator() {
+      this.add(sSeparator);
+   }
+
+   /** @summary Add menu header - must be first entry */
+   header(name) {
+      this.add(sHeader + name);
+   }
+
+   /** @summary Add draw sub-menu with draw options
+     * @protected */
+   addDrawMenu(top_name, opts, call_back, title) {
+      if (!opts || !opts.length)
+         return;
+
+      let without_sub = false;
+      if (top_name.indexOf('nosub:') === 0) {
+         without_sub = true;
+         top_name = top_name.slice(6);
+      }
+
+      if (opts.length === 1) {
+         if (opts[0] === kInspect)
+            top_name = top_name.replace('Draw', 'Inspect');
+         this.add(top_name, opts[0], call_back);
+         return;
+      }
+
+      const used = {};
+
+      if (!without_sub)
+         this.sub(top_name, opts[0], call_back, title);
+
+      if ((opts.indexOf('') >= 0) && (!without_sub || opts[0]))
+         this.add(this._use_plain_text ? '<dflt>' : '&lt;dflt&gt;', '', call_back);
+
+      for (let i = 0; i < opts.length; ++i) {
+         let name = opts[i];
+         if (!name || used[name])
+            continue;
+         used[name] = true;
+
+         const group = [];
+         if (opts.length > 5) {
+            // check if there are similar options, which can be grouped again
+            for (let i2 = i + 1; i2 < opts.length; ++i2) {
+               if (opts[i2] && !used[opts[i2]] && (opts[i2].indexOf(name) === 0))
+                  group.push(opts[i2]);
+               else if (name.length < 4)
+                  break;
+            }
+         }
+
+         if (without_sub)
+            name = top_name + ' ' + name;
+
+         if (group.length > 0) {
+            this.sub(name, opts[i], call_back);
+            group.forEach(sub => {
+               this.add(sub, sub, call_back);
+               used[sub] = true;
+            });
+            this.endsub();
+         } else if (name === kInspect) {
+            this.sub(name, opts[i], call_back, 'Inspect object content');
+            for (let k = 0; k < 10; ++k)
+               this.add(k.toString(), kInspect + k, call_back, `Inspect object and expand to level ${k}`);
+            this.endsub();
+         } else
+            this.add(name, opts[i], call_back);
+      }
+      if (!without_sub) {
+         this.add('<input>', () => {
+            const opt = isFunc(this.painter?.getDrawOpt) ? this.painter.getDrawOpt() : opts[0];
+            this.input('Provide draw option', opt, 'text').then(call_back);
+         }, 'Enter draw option in dialog');
+         this.endsub();
+      }
+   }
+
+   /** @summary Add redraw menu for the painter
+     * @protected */
+   addRedrawMenu(painter) {
+      if (!painter || !isFunc(painter.redrawWith) || !isFunc(painter.getSupportedDrawOptions))
+         return false;
+
+      const opts = painter.getSupportedDrawOptions();
+
+      this.addDrawMenu(`Draw ${painter.getClassName()} with`, opts, arg => {
+         if ((arg.indexOf(kInspect) === 0) && isFunc(painter.showInspector))
+            return painter.showInspector(arg);
+
+         painter.redrawWith(arg);
+      });
+      return true;
+   }
+
+   /** @summary Add color selection menu entries
+     * @protected */
+   addColorMenu(name, value, set_func, fill_kind) {
+      if (value === undefined) return;
+      const useid = !isStr(value);
+      this.sub('' + name, () => {
+         this.input('Enter color ' + (useid ? '(only id number)' : '(name or id)'), value, useid ? 'int' : 'text', useid ? 0 : undefined, useid ? 9999 : undefined).then(col => {
+            const id = parseInt(col);
+            if (Number.isInteger(id) && getColor(id))
+               col = getColor(id);
+             else
+               if (useid) return;
+
+            set_func(useid ? id : col);
+         });
+      });
+
+      for (let ncolumn = 0; ncolumn < 5; ++ncolumn) {
+         this.add('column:');
+
+         for (let nrow = 0; nrow < 10; nrow++) {
+            let n = ncolumn*10 + nrow;
+            if (!useid) --n; // use -1 as none color
+
+            let col = (n < 0) ? 'none' : getColor(n);
+            if ((n === 0) && (fill_kind === 1)) col = 'none';
+            const lbl = (n <= 0) || (col[0] !== '#') ? col : `col ${n}`,
+                  fill = (n === 1) ? 'white' : 'black',
+                  stroke = (n === 1) ? 'red' : 'black',
+                  rect = (value === (useid ? n : col)) ? `<rect width="50" height="18" style="fill:none;stroke-width:3px;stroke:${stroke}"></rect>` : '',
+                  svg = `<svg width="50" height="18" style="margin:0px;background-color:${col}">${rect}<text x="4" y="12" style='font-size:12px' fill="${fill}">${lbl}</text></svg>`;
+
+            this.add(svg, (useid ? n : col), res => set_func(useid ? parseInt(res) : res), 'Select color ' + col);
+         }
+
+         this.add('endcolumn:');
+         if (!this.native()) break;
+      }
+
+      this.endsub();
+   }
+
+   /** @summary Add size selection menu entries
+     * @protected */
+   addSizeMenu(name, min, max, step, size_value, set_func, title) {
+      if (size_value === undefined) return;
+
+      let values = [], miss_current = false;
+      if (isObject(step)) {
+         values = step; step = 1;
+      } else {
+         for (let sz = min; sz <= max; sz += step)
+            values.push(sz);
+      }
+
+      const match = v => Math.abs(v-size_value) < (max - min)*1e-5,
+            conv = (v, more) => {
+               if ((v === size_value) && miss_current) more = true;
+               if (step >= 1) return v.toFixed(0);
+               if (step >= 0.1) return v.toFixed(more ? 2 : 1);
+               return v.toFixed(more ? 4 : 2);
+           };
+
+      if (values.findIndex(match) < 0) {
+         miss_current = true;
+         values.push(size_value);
+         values = values.sort((a, b) => a > b);
+      }
+
+      this.sub('' + name, () => this.input('Enter value of ' + name, conv(size_value, true), (step >= 1) ? 'int' : 'float').then(set_func), title);
+      values.forEach(v => this.addchk(match(v), conv(v), v, res => set_func((step >= 1) ? Number.parseInt(res) : Number.parseFloat(res))));
+      this.endsub();
+   }
+
+   /** @summary Add palette menu entries
+     * @protected */
+   addPaletteMenu(curr, set_func) {
+      const add = (id, name, title, more) => {
+         if (!name)
+            name = `pal ${id}`;
+         else if (!title)
+            title = name;
+         if (title) title += `, code ${id}`;
+         this.addchk((id === curr) || more, '<nobr>' + name + '</nobr>', id, set_func, title || name);
+      };
+
+      this.sub('Palette', () => this.input('Enter palette code [1..113]', curr, 'int', 1, 113).then(set_func));
+
+      this.add('column:');
+
+      add(57, 'Bird', 'Default color palette', (curr > 113));
+      add(55, 'Rainbow');
+      add(51, 'Deep Sea');
+      add(52, 'Grayscale', 'New gray scale');
+      add(1, '', 'Old gray scale', (curr > 0) && (curr < 10));
+      add(50, 'ROOT 5', 'Default color palette in ROOT 5', (curr >= 10) && (curr < 51));
+      add(53, '', 'Dark body radiator');
+      add(54, '', 'Two-color hue');
+      add(56, '', 'Inverted dark body radiator');
+      add(58, 'Cubehelix');
+      add(59, '', 'Green Red Violet');
+      add(60, '', 'Blue Red Yellow');
+      add(61, 'Ocean');
+
+      this.add('endcolumn:');
+
+      if (!this.native())
+         return this.endsub();
+
+      this.add('column:');
+
+      add(62, '', 'Color Printable On Grey');
+      add(63, 'Alpine');
+      add(64, 'Aquamarine');
+      add(65, 'Army');
+      add(66, 'Atlantic');
+      add(67, 'Aurora');
+      add(68, 'Avocado');
+      add(69, 'Beach');
+      add(70, 'Black Body');
+      add(71, '', 'Blue Green Yellow');
+      add(72, 'Brown Cyan');
+      add(73, 'CMYK');
+      add(74, 'Candy');
+
+      this.add('endcolumn:');
+      this.add('column:');
+
+      add(75, 'Cherry');
+      add(76, 'Coffee');
+      add(77, '', 'Dark Rain Bow');
+      add(78, '', 'Dark Terrain');
+      add(79, 'Fall');
+      add(80, 'Fruit Punch');
+      add(81, 'Fuchsia');
+      add(82, 'Grey Yellow');
+      add(83, '', 'Green Brown Terrain');
+      add(84, 'Green Pink');
+      add(85, 'Island');
+      add(86, 'Lake');
+      add(87, '', 'Light Temperature');
+
+      this.add('endcolumn:');
+      this.add('column:');
+
+      add(88, '', 'Light Terrain');
+      add(89, 'Mint');
+      add(90, 'Neon');
+      add(91, 'Pastel');
+      add(92, 'Pearl');
+      add(93, 'Pigeon');
+      add(94, 'Plum');
+      add(95, 'Red Blue');
+      add(96, 'Rose');
+      add(97, 'Rust');
+      add(98, '', 'Sandy Terrain');
+      add(99, 'Sienna');
+      add(100, 'Solar');
+
+      this.add('endcolumn:');
+      this.add('column:');
+
+      add(101, '', 'South West');
+      add(102, '', 'Starry Night');
+      add(103, '', 'Sunset');
+      add(104, '', 'Temperature Map');
+      add(105, '', 'Thermometer');
+      add(106, 'Valentine');
+      add(107, '', 'Visible Spectrum');
+      add(108, '', 'Water Melon');
+      add(109, 'Cool');
+      add(110, 'Copper');
+      add(111, '', 'Gist Earth');
+      add(112, 'Viridis');
+      add(113, 'Cividis');
+
+      this.add('endcolumn:');
+
+      this.endsub();
+   }
+
+   /** @summary Add rebin menu entries
+     * @protected */
+   addRebinMenu(rebin_func) {
+      this.sub('Rebin', () => this.input('Enter rebin value', 2, 'int', 2).then(rebin_func));
+      for (let sz = 2; sz <= 7; sz++)
+         this.add(sz.toString(), sz, res => rebin_func(parseInt(res)));
+      this.endsub();
+   }
+
+   /** @summary Add selection menu entries
+     * @param {String} name - name of submenu
+     * @param {Array} values - array of string entries used as list for selection
+     * @param {String|Number} value - currently elected value, either name or index
+     * @param {Function} set_func - function called when item selected, either name or index depending from value parameter
+     * @param {String} [title] - optional title for menu items
+     * @protected */
+   addSelectMenu(name, values, value, set_func, title) {
+      const use_number = (typeof value === 'number');
+      this.sub('' + name, undefined, undefined, title);
+      for (let n = 0; n < values.length; ++n)
+         this.addchk(use_number ? (n === value) : (values[n] === value), values[n], use_number ? n : values[n], res => set_func(use_number ? Number.parseInt(res) : res));
+      this.endsub();
+   }
+
+   /** @summary Add RColor selection menu entries
+     * @protected */
+   addRColorMenu(name, value, set_func) {
+      // if (value === undefined) return;
+      const colors = ['default', 'black', 'white', 'red', 'green', 'blue', 'yellow', 'magenta', 'cyan'];
+
+      this.sub('' + name, () => {
+         this.input('Enter color name - empty string will reset color', value).then(set_func);
+      });
+      let fillcol = 'black';
+      for (let n = 0; n < colors.length; ++n) {
+         const coltxt = colors[n];
+         let match = false, bkgr = '';
+         if (n > 0) {
+            bkgr = 'background-color:' + coltxt;
+            fillcol = (coltxt === 'white') ? 'black' : 'white';
+
+            if (isStr(value) && value && (value !== 'auto') && (value[0] !== '['))
+               match = (rgb(value).toString() === rgb(coltxt).toString());
+         } else
+            match = !value;
+
+         const svg = `<svg width='100' height='18' style='margin:0px;${bkgr}'><text x='4' y='12' style='font-size:12px' fill='${fillcol}'>${coltxt}</text></svg>`;
+         this.addchk(match, svg, coltxt, res => set_func(res === 'default' ? null : res));
+      }
+      this.endsub();
+   }
+
+   /** @summary Add items to change RAttrText
+     * @protected */
+   addRAttrTextItems(fontHandler, opts, set_func) {
+      if (!opts) opts = {};
+      this.addRColorMenu('color', fontHandler.color, value => set_func({ name: 'color', value }));
+      if (fontHandler.scaled)
+         this.addSizeMenu('size', 0.01, 0.10, 0.01, fontHandler.size /fontHandler.scale, value => set_func({ name: 'size', value }));
+      else
+         this.addSizeMenu('size', 6, 20, 2, fontHandler.size, value => set_func({ name: 'size', value }));
+
+      this.addSelectMenu('family', ['Arial', 'Times New Roman', 'Courier New', 'Symbol'], fontHandler.name, value => set_func({ name: 'font_family', value }));
+
+      this.addSelectMenu('style', ['normal', 'italic', 'oblique'], fontHandler.style || 'normal', res => set_func({ name: 'font_style', value: res === 'normal' ? null : res }));
+
+      this.addSelectMenu('weight', ['normal', 'lighter', 'bold', 'bolder'], fontHandler.weight || 'normal', res => set_func({ name: 'font_weight', value: res === 'normal' ? null : res }));
+
+      if (!opts.noalign)
+         this.add('align');
+      if (!opts.noangle)
+         this.add('angle');
+   }
+
+   /** @summary Add line style menu
+     * @private */
+   addLineStyleMenu(name, value, set_func) {
+      this.sub(''+name, () => this.input('Enter line style id (1-solid)', value, 'int', 1, 11).then(val => {
+         if (getSvgLineStyle(val)) set_func(val);
+      }));
+      for (let n = 1; n < 11; ++n) {
+         const dash = getSvgLineStyle(n),
+             svg = `<svg width='100' height='14'><text x='2' y='13' style='font-size:12px'>${n}</text><line x1='30' y1='7' x2='100' y2='7' stroke='black' stroke-width='3' stroke-dasharray='${dash}'></line></svg>`;
+
+         this.addchk((value === n), svg, n, arg => set_func(parseInt(arg)));
+      }
+      this.endsub();
+   }
+
+   /** @summary Add fill style menu
+     * @private */
+   addFillStyleMenu(name, value, color_index, painter, set_func) {
+      this.sub('' + name, () => {
+         this.input('Enter fill style id (1001-solid, 3000..3010)', value, 'int', 0, 4000).then(id => {
+            if ((id >= 0) && (id <= 4000)) set_func(id);
+         });
+      });
+
+      const supported = [1, 1001, 3001, 3002, 3003, 3004, 3005, 3006, 3007, 3010, 3021, 3022];
+
+      for (let n = 0; n < supported.length; ++n) {
+         let svg = supported[n];
+         if (painter) {
+            const sample = painter.createAttFill({ std: false, pattern: supported[n], color: color_index || 1 });
+            svg = `<svg width='100' height='18'><text x='1' y='12' style='font-size:12px'>${supported[n].toString()}</text><rect x='40' y='0' width='60' height='18' stroke='none' fill='${sample.getFillColor()}'></rect></svg>`;
+         }
+         this.addchk(value === supported[n], svg, supported[n], arg => set_func(parseInt(arg)));
+      }
+      this.endsub();
+   }
+
+   /** @summary Add font selection menu
+     * @private */
+   addFontMenu(name, value, set_func) {
+      const prec = value && Number.isInteger(value) ? value % 10 : 2;
+
+      this.sub('' + name, () => {
+         this.input('Enter font id from [0..20]', Math.floor(value/10), 'int', 0, 20).then(id => {
+            if ((id >= 0) && (id <= 20)) set_func(id*10 + prec);
+         });
+      });
+
+      this.add('column:');
+
+      const doc = getDocument();
+
+      for (let n = 1; n < 20; ++n) {
+         const id = n*10 + prec,
+               handler = new FontHandler(id, 14),
+               txt = select(doc.createElementNS(nsSVG, 'text'));
+         let fullname = handler.getFontName(), qual = '';
+         if (handler.weight) { qual += 'b'; fullname += ' ' + handler.weight; }
+         if (handler.style) { qual += handler.style[0]; fullname += ' ' + handler.style; }
+         if (qual) qual = ' ' + qual;
+         txt.attr('x', 1).attr('y', 15).text(fullname.split(' ')[0] + qual);
+         handler.setFont(txt);
+
+         const rect = (value !== id) ? '' : '<rect width=\'90\' height=\'18\' style=\'fill:none;stroke:black\'></rect>',
+             svg = `<svg width='90' height='18'>${txt.node().outerHTML}${rect}</svg>`;
+         this.add(svg, id, arg => set_func(parseInt(arg)), `${id}: ${fullname}`);
+
+         if (n === 10) {
+            this.add('endcolumn:');
+            this.add('column:');
+         }
+      }
+
+      this.add('endcolumn:');
+      this.endsub();
+   }
+
+   /** @summary Add align selection menu
+     * @private */
+   addAlignMenu(name, value, set_func) {
+      this.sub(name, () => {
+         this.input('Enter align like 12 or 31', value).then(arg => {
+            const id = parseInt(arg);
+            if ((id < 11) || (id > 33)) return;
+            const h = Math.floor(id/10), v = id % 10;
+            if ((h > 0) && (h < 4) && (v > 0) && (v < 4)) set_func(id);
+         });
+      });
+
+      const hnames = ['left', 'middle', 'right'], vnames = ['bottom', 'centered', 'top'];
+      for (let h = 1; h < 4; ++h) {
+         for (let v = 1; v < 4; ++v)
+            this.addchk(h*10+v === value, `${h*10+v}: ${hnames[h-1]} ${vnames[v-1]}`, h*10+v, arg => set_func(parseInt(arg)));
+      }
+
+      this.endsub();
+   }
+
+   /** @summary Fill context menu for graphical attributes in painter
+     * @desc this method used to fill entries for different attributes of the object
+     * like TAttFill, TAttLine, TAttText
+     * There is special handling for the frame where attributes handled by the pad
+     * @private */
+   addAttributesMenu(painter, preffix) {
+      const is_frame = painter === painter.getFramePainter(),
+            pp = is_frame ? painter.getPadPainter() : null,
+            redraw_arg = !preffix && !is_frame ? 'attribute' : true;
+      if (!preffix) preffix = '';
+
+      if (painter.lineatt?.used) {
+         this.sub(`${preffix}Line att`);
+         this.addSizeMenu('width', 1, 10, 1, painter.lineatt.width, arg => {
+            painter.lineatt.change(undefined, arg);
+            changeObjectMember(painter, 'fLineWidth', arg);
+            if (pp) changeObjectMember(pp, 'fFrameLineWidth', arg);
+            painter.interactiveRedraw(redraw_arg, `exec:SetLineWidth(${arg})`);
+         });
+         this.addColorMenu('color', painter.lineatt.color, arg => {
+            painter.lineatt.change(arg);
+            changeObjectMember(painter, 'fLineColor', arg, true);
+            if (pp) changeObjectMember(pp, 'fFrameLineColor', arg, true);
+            painter.interactiveRedraw(redraw_arg, getColorExec(arg, 'SetLineColor'));
+         });
+         this.addLineStyleMenu('style', painter.lineatt.style, id => {
+            painter.lineatt.change(undefined, undefined, id);
+            changeObjectMember(painter, 'fLineStyle', id);
+            if (pp) changeObjectMember(pp, 'fFrameLineStyle', id);
+            painter.interactiveRedraw(redraw_arg, `exec:SetLineStyle(${id})`);
+         });
+         this.endsub();
+
+         if (!is_frame && painter.lineatt?.excl_side) {
+            this.sub('Exclusion');
+            this.sub('side');
+            for (let side = -1; side <= 1; ++side) {
+               this.addchk((painter.lineatt.excl_side === side), side, side,
+                  arg => { painter.lineatt.changeExcl(parseInt(arg)); painter.interactiveRedraw(); });
+            }
+            this.endsub();
+
+            this.addSizeMenu('width', 10, 100, 10, painter.lineatt.excl_width,
+               arg => { painter.lineatt.changeExcl(undefined, arg); painter.interactiveRedraw(); });
+
+            this.endsub();
+         }
+      }
+
+      if (painter.fillatt?.used) {
+         this.sub(`${preffix}Fill att`);
+         this.addColorMenu('color', painter.fillatt.colorindx, arg => {
+            painter.fillatt.change(arg, undefined, painter.getCanvSvg());
+            changeObjectMember(painter, 'fFillColor', arg, true);
+            if (pp) changeObjectMember(pp, 'fFrameFillColor', arg, true);
+            painter.interactiveRedraw(redraw_arg, getColorExec(arg, 'SetFillColor'));
+         }, painter.fillatt.kind);
+         this.addFillStyleMenu('style', painter.fillatt.pattern, painter.fillatt.colorindx, painter, id => {
+            painter.fillatt.change(undefined, id, painter.getCanvSvg());
+            changeObjectMember(painter, 'fFillStyle', id);
+            if (pp) changeObjectMember(pp, 'fFrameFillStyle', id);
+            painter.interactiveRedraw(redraw_arg, `exec:SetFillStyle(${id})`);
+         });
+         this.endsub();
+      }
+
+      if (painter.markeratt?.used) {
+         this.sub(`${preffix}Marker att`);
+         this.addColorMenu('color', painter.markeratt.color, arg => {
+            changeObjectMember(painter, 'fMarkerColor', arg, true);
+            painter.markeratt.change(arg);
+            painter.interactiveRedraw(redraw_arg, getColorExec(arg, 'SetMarkerColor'));
+         });
+         this.addSizeMenu('size', 0.5, 6, 0.5, painter.markeratt.size, arg => {
+            changeObjectMember(painter, 'fMarkerSize', arg);
+            painter.markeratt.change(undefined, undefined, arg);
+            painter.interactiveRedraw(redraw_arg, `exec:SetMarkerSize(${arg})`);
+         });
+
+         this.sub('style');
+         const supported = [1, 2, 3, 4, 5, 6, 7, 8, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34];
+
+         for (let n = 0; n < supported.length; ++n) {
+            const clone = new TAttMarkerHandler({ style: supported[n], color: painter.markeratt.color, size: 1.7 }),
+                svg = `<svg width='60' height='18'><text x='1' y='12' style='font-size:12px'>${supported[n].toString()}</text><path stroke='black' fill='${clone.fill?'black':'none'}' d='${clone.create(40, 8)}'></path></svg>`;
+
+            this.addchk(painter.markeratt.style === supported[n], svg, supported[n],
+               arg => { painter.markeratt.change(undefined, parseInt(arg)); painter.interactiveRedraw(redraw_arg, `exec:SetMarkerStyle(${arg})`); });
+         }
+         this.endsub();
+         this.endsub();
+      }
+
+      if (painter.textatt?.used) {
+         this.sub(`${preffix}Text att`);
+
+         this.addFontMenu('font', painter.textatt.font, arg => {
+            changeObjectMember(painter, 'fTextFont', arg);
+            painter.textatt.change(arg);
+            painter.interactiveRedraw(true, `exec:SetTextFont(${arg})`);
+         });
+
+         const rel = painter.textatt.size < 1.0;
+
+         this.addSizeMenu('size', rel ? 0.03 : 6, rel ? 0.20 : 26, rel ? 0.01 : 2, painter.textatt.size, arg => {
+            changeObjectMember(painter, 'fTextSize', arg);
+            painter.textatt.change(undefined, arg);
+            painter.interactiveRedraw(true, `exec:SetTextSize(${arg})`);
+         });
+
+         this.addColorMenu('color', painter.textatt.color, arg => {
+            changeObjectMember(painter, 'fTextColor', arg, true);
+            painter.textatt.change(undefined, undefined, arg);
+            painter.interactiveRedraw(true, getColorExec(arg, 'SetTextColor'));
+         });
+
+         this.addAlignMenu('align', painter.textatt.align, arg => {
+            changeObjectMember(painter, 'fTextAlign', arg);
+            painter.textatt.change(undefined, undefined, undefined, arg);
+            painter.interactiveRedraw(true, `exec:SetTextAlign(${arg})`);
+         });
+
+         if (painter.textatt.can_rotate) {
+            this.addSizeMenu('angle', -180, 180, 45, painter.textatt.angle, arg => {
+               changeObjectMember(painter, 'fTextAngle', arg);
+               painter.textatt.change(undefined, undefined, undefined, undefined, arg);
+               painter.interactiveRedraw(true, `exec:SetTextAngle(${arg})`);
+            });
+         }
+
+         this.endsub();
+      }
+   }
+
+   /** @summary Fill context menu for axis
+     * @private */
+   addTAxisMenu(EAxisBits, painter, faxis, kind) {
+      const is_gaxis = faxis._typename === clTGaxis;
+
+      this.add('Divisions', () => this.input('Set Ndivisions', faxis.fNdivisions, 'int', 0).then(val => {
+         faxis.fNdivisions = val; painter.interactiveRedraw('pad', `exec:SetNdivisions(${val})`, kind);
+      }));
+
+      this.sub('Labels');
+      this.addchk(faxis.TestBit(EAxisBits.kCenterLabels), 'Center',
+            arg => { faxis.InvertBit(EAxisBits.kCenterLabels); painter.interactiveRedraw('pad', `exec:CenterLabels(${arg})`, kind); });
+      this.addchk(faxis.TestBit(EAxisBits.kLabelsVert), 'Rotate',
+            arg => { faxis.InvertBit(EAxisBits.kLabelsVert); painter.interactiveRedraw('pad', `exec:SetBit(TAxis::kLabelsVert,${arg})`, kind); });
+      this.addColorMenu('Color', faxis.fLabelColor,
+            arg => { faxis.fLabelColor = arg; painter.interactiveRedraw('pad', getColorExec(arg, 'SetLabelColor'), kind); });
+      this.addSizeMenu('Offset', -0.02, 0.1, 0.01, faxis.fLabelOffset,
+            arg => { faxis.fLabelOffset = arg; painter.interactiveRedraw('pad', `exec:SetLabelOffset(${arg})`, kind); });
+      let a = faxis.fLabelSize >= 1;
+      this.addSizeMenu('Size', a ? 2 : 0.02, a ? 30 : 0.11, a ? 2 : 0.01, faxis.fLabelSize,
+            arg => { faxis.fLabelSize = arg; painter.interactiveRedraw('pad', `exec:SetLabelSize(${arg})`, kind); });
+      this.endsub();
+      this.sub('Title');
+      this.add('SetTitle', () => {
+         this.input('Enter axis title', faxis.fTitle).then(t => {
+            faxis.fTitle = t;
+            painter.interactiveRedraw('pad', `exec:SetTitle("${t}")`, kind);
+         });
+      });
+      this.addchk(faxis.TestBit(EAxisBits.kCenterTitle), 'Center',
+            arg => { faxis.InvertBit(EAxisBits.kCenterTitle); painter.interactiveRedraw('pad', `exec:CenterTitle(${arg})`, kind); });
+      this.addchk(faxis.TestBit(EAxisBits.kOppositeTitle), 'Opposite',
+             () => { faxis.InvertBit(EAxisBits.kOppositeTitle); painter.redrawPad(); });
+      this.addchk(faxis.TestBit(EAxisBits.kRotateTitle), 'Rotate',
+            arg => { faxis.InvertBit(EAxisBits.kRotateTitle); painter.interactiveRedraw('pad', is_gaxis ? `exec:SetBit(TAxis::kRotateTitle, ${arg})` : `exec:RotateTitle(${arg})`, kind); });
+      if (is_gaxis) {
+         this.addColorMenu('Color', faxis.fTextColor,
+               arg => { faxis.fTextColor = arg; painter.interactiveRedraw('pad', getColorExec(arg, 'SetTitleColor'), kind); });
+      } else {
+         this.addColorMenu('Color', faxis.fTitleColor,
+               arg => { faxis.fTitleColor = arg; painter.interactiveRedraw('pad', getColorExec(arg, 'SetTitleColor'), kind); });
+      }
+      this.addSizeMenu('Offset', 0, 3, 0.2, faxis.fTitleOffset,
+                      arg => { faxis.fTitleOffset = arg; painter.interactiveRedraw('pad', `exec:SetTitleOffset(${arg})`, kind); });
+      a = faxis.fTitleSize >= 1;
+      this.addSizeMenu('Size', a ? 2 : 0.02, a ? 30 : 0.11, a ? 2 : 0.01, faxis.fTitleSize,
+                      arg => { faxis.fTitleSize = arg; painter.interactiveRedraw('pad', `exec:SetTitleSize(${arg})`, kind); });
+      this.endsub();
+      this.sub('Ticks');
+      if (is_gaxis) {
+         this.addColorMenu('Color', faxis.fLineColor,
+                  arg => { faxis.fLineColor = arg; painter.interactiveRedraw('pad', getColorExec(arg, 'SetLineColor'), kind); });
+         this.addSizeMenu('Size', -0.05, 0.055, 0.01, faxis.fTickSize,
+                  arg => { faxis.fTickSize = arg; painter.interactiveRedraw('pad', `exec:SetTickLength(${arg})`, kind); });
+      } else {
+         this.addColorMenu('Color', faxis.fAxisColor,
+                  arg => { faxis.fAxisColor = arg; painter.interactiveRedraw('pad', getColorExec(arg, 'SetAxisColor'), kind); });
+         this.addSizeMenu('Size', -0.05, 0.055, 0.01, faxis.fTickLength,
+                  arg => { faxis.fTickLength = arg; painter.interactiveRedraw('pad', `exec:SetTickLength(${arg})`, kind); });
+      }
+      this.endsub();
+
+      if (is_gaxis) {
+         this.add('Options', () => this.input('Enter TGaxis options like +L or -G', faxis.fChopt, 'string').then(arg => {
+             faxis.fChopt = arg; painter.interactiveRedraw('pad', `exec:SetOption("${arg}")`, kind);
+         }));
+      }
+   }
+
+   /** @summary Fill menu to edit settings properties
+     * @private */
+   addSettingsMenu(with_hierarchy, alone, handle_func) {
+      if (alone)
+         this.header('Settings');
+      else
+         this.sub('Settings');
+
+      this.sub('Files');
+
+      if (with_hierarchy) {
+         this.addchk(settings.OnlyLastCycle, 'Last cycle', flag => {
+            settings.OnlyLastCycle = flag;
+            if (handle_func) handle_func('refresh');
+         });
+
+         this.addchk(!settings.SkipStreamerInfos, 'Streamer infos', flag => {
+            settings.SkipStreamerInfos = !flag;
+            if (handle_func) handle_func('refresh');
+         });
+      }
+
+      this.addchk(settings.UseStamp, 'Use stamp arg', flag => { settings.UseStamp = flag; });
+      this.addSizeMenu('Max ranges', 1, 1000, [1, 10, 20, 50, 200, 1000], settings.MaxRanges, value => { settings.MaxRanges = value; }, 'Maximal number of ranges in single http request');
+
+      this.addchk(settings.HandleWrongHttpResponse, 'Handle wrong http response', flag => { settings.HandleWrongHttpResponse = flag; });
+      this.addchk(settings.WithCredentials, 'With credentials', flag => { settings.WithCredentials = flag; }, 'Submit http request with user credentials');
+
+      this.endsub();
+
+      this.sub('Toolbar');
+      this.addchk(settings.ToolBar === false, 'Off', flag => { settings.ToolBar = !flag; });
+      this.addchk(settings.ToolBar === true, 'On', flag => { settings.ToolBar = flag; });
+      this.addchk(settings.ToolBar === 'popup', 'Popup', flag => { settings.ToolBar = flag ? 'popup' : false; });
+      this.separator();
+      this.addchk(settings.ToolBarSide === 'left', 'Left side', flag => { settings.ToolBarSide = flag ? 'left' : 'right'; });
+      this.addchk(settings.ToolBarVert, 'Vertical', flag => { settings.ToolBarVert = flag; });
+      this.endsub();
+
+      this.sub('Interactive');
+      this.addchk(settings.Tooltip, 'Tooltip', flag => { settings.Tooltip = flag; });
+      this.addchk(settings.ContextMenu, 'Context menus', flag => { settings.ContextMenu = flag; });
+      this.sub('Zooming');
+      this.addchk(settings.Zooming, 'Global', flag => { settings.Zooming = flag; });
+      this.addchk(settings.ZoomMouse, 'Mouse', flag => { settings.ZoomMouse = flag; });
+      this.addchk(settings.ZoomWheel, 'Wheel', flag => { settings.ZoomWheel = flag; });
+      this.addchk(settings.ZoomTouch, 'Touch', flag => { settings.ZoomTouch = flag; });
+      this.endsub();
+      this.addchk(settings.HandleKeys, 'Keypress handling', flag => { settings.HandleKeys = flag; });
+      this.addchk(settings.MoveResize, 'Move and resize', flag => { settings.MoveResize = flag; });
+      this.addchk(settings.DragAndDrop, 'Drag and drop', flag => { settings.DragAndDrop = flag; });
+      this.addchk(settings.DragGraphs, 'Drag graph points', flag => { settings.DragGraphs = flag; });
+      this.addSelectMenu('Progress box', ['off', 'on', 'modal'], isStr(settings.ProgressBox) ? settings.ProgressBox : (settings.ProgressBox ? 'on' : 'off'), value => {
+         settings.ProgressBox = (value === 'off') ? false : (value === ' on' ? true : value);
+      });
+      this.endsub();
+
+      this.sub('Drawing');
+      this.addSelectMenu('Optimize', ['None', 'Smart', 'Always'], settings.OptimizeDraw, value => { settings.OptimizeDraw = value; }, 'Histogram drawing optimization');
+      this.sub('SmallPad', undefined, undefined, 'Minimal pad size drawn normally');
+      this.add(`width ${settings.SmallPad?.width ?? 0}px`, () => this.input('Small pad width', settings.SmallPad?.width, 'int', 1, 1000).then(val => { settings.SmallPad.width = val; }));
+      this.add(`height ${settings.SmallPad?.height ?? 0}px`, () => this.input('Small pad height', settings.SmallPad?.height, 'int', 1, 800).then(val => { settings.SmallPad.height = val; }));
+      this.add('disable', () => { settings.SmallPad = { width: 0, height: 0 }; }, 'disable small pad drawing optimization');
+      this.add('default', () => { settings.SmallPad = { width: 150, height: 100 }; }, 'Set to default 150x100 dimension');
+      this.endsub();
+      this.addPaletteMenu(settings.Palette, pal => { settings.Palette = pal; });
+      this.addchk(settings.AutoStat, 'Auto stat box', flag => { settings.AutoStat = flag; });
+      this.sub('Axis');
+      this.addchk(settings.StripAxisLabels, 'Strip labels', flag => { settings.StripAxisLabels = flag; }, 'Provide shorter labels like 10^0 -> 1');
+      this.addchk(settings.CutAxisLabels, 'Cut labels', flag => { settings.CutAxisLabels = flag; }, 'Remove labels which may exceed graphical range');
+      this.add(`Tilt angle ${settings.AxisTiltAngle}`, () => this.input('Axis tilt angle', settings.AxisTiltAngle, 'int', 0, 180).then(val => { settings.AxisTiltAngle = val; }));
+      this.endsub();
+      this.addSelectMenu('Latex', ['Off', 'Symbols', 'Normal', 'MathJax', 'Force MathJax'], settings.Latex, value => { settings.Latex = value; });
+      this.addSelectMenu('3D rendering', ['Default', 'WebGL', 'Image'], settings.Render3D, value => { settings.Render3D = value; });
+      this.addSelectMenu('WebGL embeding', ['Default', 'Overlay', 'Embed'], settings.Embed3D, value => { settings.Embed3D = value; });
+      this.add('Default options', () => this.input('List of options like TH2:lego2;TH3:glbox2', settings._dflt_drawopt || '').then(v => { settings._dflt_drawopt = v; setDefaultDrawOpt(v); }), 'Configure custom default draw options for some classes');
+      this.endsub();
+
+      this.sub('Geometry');
+      this.add('Grad per segment:  ' + settings.GeoGradPerSegm, () => this.input('Grad per segment in geometry', settings.GeoGradPerSegm, 'int', 1, 60).then(val => { settings.GeoGradPerSegm = val; }));
+      this.addchk(settings.GeoCompressComp, 'Compress composites', flag => { settings.GeoCompressComp = flag; });
+      this.endsub();
+
+      if (with_hierarchy) {
+         this.sub('Browser');
+         this.add('Hierarchy limit:  ' + settings.HierarchyLimit, () => this.input('Max number of items in hierarchy', settings.HierarchyLimit, 'int', 10, 100000).then(val => {
+            settings.HierarchyLimit = val;
+            if (handle_func) handle_func('refresh');
+         }));
+         this.add('Browser width:  ' + settings.BrowserWidth, () => this.input('Browser width in px', settings.BrowserWidth, 'int', 50, 2000).then(val => {
+            settings.BrowserWidth = val;
+            if (handle_func) handle_func('width');
+         }));
+         this.endsub();
+      }
+
+      this.add('Dark mode: ' + (settings.DarkMode ? 'On' : 'Off'), () => {
+         settings.DarkMode = !settings.DarkMode;
+         if (handle_func) handle_func('dark');
+      });
+
+      const setStyleField = arg => { gStyle[arg.slice(1)] = parseInt(arg[0]); },
+            addStyleIntField = (name, field, arr) => {
+         this.sub('' + name);
+         const curr = gStyle[field] >= arr.length ? 1 : gStyle[field];
+         for (let v = 0; v < arr.length; ++v)
+            this.addchk(curr === v, arr[v], `${v}${field}`, setStyleField);
+         this.endsub();
+      };
+
+      this.sub('gStyle');
+
+      this.sub('Canvas');
+      this.addColorMenu('Color', gStyle.fCanvasColor, col => { gStyle.fCanvasColor = col; });
+      addStyleIntField('Draw date', 'fOptDate', ['Off', 'Current time', 'File create time', 'File modify time']);
+      this.add(`Time zone: ${settings.TimeZone}`, () => this.input('Input time zone like UTC. empty string - local timezone', settings.TimeZone, 'string').then(val => { settings.TimeZone = val; }));
+      addStyleIntField('Draw file', 'fOptFile', ['Off', 'File name', 'Full file URL', 'Item name']);
+      this.addSizeMenu('Date X', 0.01, 0.1, 0.01, gStyle.fDateX, x => { gStyle.fDateX = x; }, 'configure gStyle.fDateX for date/item name drawings');
+      this.addSizeMenu('Date Y', 0.01, 0.1, 0.01, gStyle.fDateY, y => { gStyle.fDateY = y; }, 'configure gStyle.fDateY for date/item name drawings');
+      this.endsub();
+
+      this.sub('Pad');
+      this.addColorMenu('Color', gStyle.fPadColor, col => { gStyle.fPadColor = col; });
+      this.sub('Grid');
+      this.addchk(gStyle.fPadGridX, 'X', flag => { gStyle.fPadGridX = flag; });
+      this.addchk(gStyle.fPadGridY, 'Y', flag => { gStyle.fPadGridY = flag; });
+      this.addColorMenu('Color', gStyle.fGridColor, col => { gStyle.fGridColor = col; });
+      this.addSizeMenu('Width', 1, 10, 1, gStyle.fGridWidth, w => { gStyle.fGridWidth = w; });
+      this.addLineStyleMenu('Style', gStyle.fGridStyle, st => { gStyle.fGridStyle = st; });
+      this.endsub();
+      addStyleIntField('Ticks X', 'fPadTickX', ['normal', 'ticks on both sides', 'labels on both sides']);
+      addStyleIntField('Ticks Y', 'fPadTickY', ['normal', 'ticks on both sides', 'labels on both sides']);
+      addStyleIntField('Log X', 'fOptLogx', ['off', 'on', 'log 2']);
+      addStyleIntField('Log Y', 'fOptLogy', ['off', 'on', 'log 2']);
+      addStyleIntField('Log Z', 'fOptLogz', ['off', 'on', 'log 2']);
+      this.endsub();
+
+      this.sub('Frame');
+      this.addColorMenu('Fill color', gStyle.fFrameFillColor, col => { gStyle.fFrameFillColor = col; });
+      this.addFillStyleMenu('Fill style', gStyle.fFrameFillStyle, gStyle.fFrameFillColor, null, id => { gStyle.fFrameFillStyle = id; });
+      this.addColorMenu('Line color', gStyle.fFrameLineColor, col => { gStyle.fFrameLineColor = col; });
+      this.addSizeMenu('Line width', 1, 10, 1, gStyle.fFrameLineWidth, w => { gStyle.fFrameLineWidth = w; });
+      this.addLineStyleMenu('Line style', gStyle.fFrameLineStyle, st => { gStyle.fFrameLineStyle = st; });
+      this.addSizeMenu('Border size', 0, 10, 1, gStyle.fFrameBorderSize, sz => { gStyle.fFrameBorderSize = sz; });
+      // fFrameBorderMode: 0,
+      this.sub('Margins');
+      this.addSizeMenu('Bottom', 0, 0.5, 0.05, gStyle.fPadBottomMargin, v => { gStyle.fPadBottomMargin = v; });
+      this.addSizeMenu('Top', 0, 0.5, 0.05, gStyle.fPadTopMargin, v => { gStyle.fPadTopMargin = v; });
+      this.addSizeMenu('Left', 0, 0.5, 0.05, gStyle.fPadLeftMargin, v => { gStyle.fPadLeftMargin = v; });
+      this.addSizeMenu('Right', 0, 0.5, 0.05, gStyle.fPadRightMargin, v => { gStyle.fPadRightMargin = v; });
+      this.endsub();
+      this.endsub();
+
+      this.sub('Title');
+      this.addColorMenu('Fill color', gStyle.fTitleColor, col => { gStyle.fTitleColor = col; });
+      this.addFillStyleMenu('Fill style', gStyle.fTitleStyle, gStyle.fTitleColor, null, id => { gStyle.fTitleStyle = id; });
+      this.addColorMenu('Text color', gStyle.fTitleTextColor, col => { gStyle.fTitleTextColor = col; });
+      this.addSizeMenu('Border size', 0, 10, 1, gStyle.fTitleBorderSize, sz => { gStyle.fTitleBorderSize = sz; });
+      this.addSizeMenu('Font size', 0.01, 0.1, 0.01, gStyle.fTitleFontSize, sz => { gStyle.fTitleFontSize = sz; });
+      this.addFontMenu('Font', gStyle.fTitleFont, fnt => { gStyle.fTitleFont = fnt; });
+      this.addSizeMenu('X: ' + gStyle.fTitleX.toFixed(2), 0.0, 1.0, 0.1, gStyle.fTitleX, v => { gStyle.fTitleX = v; });
+      this.addSizeMenu('Y: ' + gStyle.fTitleY.toFixed(2), 0.0, 1.0, 0.1, gStyle.fTitleY, v => { gStyle.fTitleY = v; });
+      this.addSizeMenu('W: ' + gStyle.fTitleW.toFixed(2), 0.0, 1.0, 0.1, gStyle.fTitleW, v => { gStyle.fTitleW = v; });
+      this.addSizeMenu('H: ' + gStyle.fTitleH.toFixed(2), 0.0, 1.0, 0.1, gStyle.fTitleH, v => { gStyle.fTitleH = v; });
+      this.endsub();
+
+      this.sub('Stat box');
+      this.addColorMenu('Fill color', gStyle.fStatColor, col => { gStyle.fStatColor = col; });
+      this.addFillStyleMenu('Fill style', gStyle.fStatStyle, gStyle.fStatColor, null, id => { gStyle.fStatStyle = id; });
+      this.addColorMenu('Text color', gStyle.fStatTextColor, col => { gStyle.fStatTextColor = col; });
+      this.addSizeMenu('Border size', 0, 10, 1, gStyle.fStatBorderSize, sz => { gStyle.fStatBorderSize = sz; });
+      this.addSizeMenu('Font size', 0, 30, 5, gStyle.fStatFontSize, sz => { gStyle.fStatFontSize = sz; });
+      this.addFontMenu('Font', gStyle.fStatFont, fnt => { gStyle.fStatFont = fnt; });
+      this.add('Stat format', () => this.input('Stat format', gStyle.fStatFormat).then(fmt => { gStyle.fStatFormat = fmt; }));
+      this.addSizeMenu('X: ' + gStyle.fStatX.toFixed(2), 0.2, 1.0, 0.1, gStyle.fStatX, v => { gStyle.fStatX = v; });
+      this.addSizeMenu('Y: ' + gStyle.fStatY.toFixed(2), 0.2, 1.0, 0.1, gStyle.fStatY, v => { gStyle.fStatY = v; });
+      this.addSizeMenu('Width: ' + gStyle.fStatW.toFixed(2), 0.1, 1.0, 0.1, gStyle.fStatW, v => { gStyle.fStatW = v; });
+      this.addSizeMenu('Height: ' + gStyle.fStatH.toFixed(2), 0.1, 1.0, 0.1, gStyle.fStatH, v => { gStyle.fStatH = v; });
+      this.endsub();
+
+      this.sub('Legend');
+      this.addColorMenu('Fill color', gStyle.fLegendFillColor, col => { gStyle.fLegendFillColor = col; });
+      this.addFillStyleMenu('Fill style', gStyle.fLegendFillStyle, gStyle.fLegendFillColor, null, id => { gStyle.fLegendFillStyle = id; });
+      this.addSizeMenu('Border size', 0, 10, 1, gStyle.fLegendBorderSize, sz => { gStyle.fLegendBorderSize = sz; });
+      this.addFontMenu('Font', gStyle.fLegendFont, fnt => { gStyle.fLegendFont = fnt; });
+      this.addSizeMenu('Text size', 0, 0.1, 0.01, gStyle.fLegendTextSize, v => { gStyle.fLegendTextSize = v; }, 'legend text size, when 0 - auto adjustment is used');
+      this.endsub();
+
+      this.sub('Histogram');
+      this.addchk(gStyle.fOptTitle === 1, 'Hist title', flag => { gStyle.fOptTitle = flag ? 1 : 0; });
+      this.addchk(gStyle.fOrthoCamera, 'Orthographic camera', flag => { gStyle.fOrthoCamera = flag; });
+      this.addchk(gStyle.fHistMinimumZero, 'Base0', flag => { gStyle.fHistMinimumZero = flag; }, 'when true, BAR and LEGO drawing using base = 0');
+      this.add('Text format', () => this.input('Paint text format', gStyle.fPaintTextFormat).then(fmt => { gStyle.fPaintTextFormat = fmt; }));
+      this.add('Time offset', () => this.input('Time offset in seconds, default is 788918400 for 1/1/1995', gStyle.fTimeOffset, 'int').then(ofset => { gStyle.fTimeOffset = ofset; }));
+      this.addSizeMenu('ErrorX: ' + gStyle.fErrorX.toFixed(2), 0.0, 1.0, 0.1, gStyle.fErrorX, v => { gStyle.fErrorX = v; });
+      this.addSizeMenu('End error', 0, 12, 1, gStyle.fEndErrorSize, v => { gStyle.fEndErrorSize = v; }, 'size in pixels of end error for E1 draw options, gStyle.fEndErrorSize');
+      this.addSizeMenu('Top margin', 0.0, 0.5, 0.05, gStyle.fHistTopMargin, v => { gStyle.fHistTopMargin = v; }, 'Margin between histogram top and frame top');
+      this.addColorMenu('Fill color', gStyle.fHistFillColor, col => { gStyle.fHistFillColor = col; });
+      this.addFillStyleMenu('Fill style', gStyle.fHistFillStyle, gStyle.fHistFillColor, null, id => { gStyle.fHistFillStyle = id; });
+      this.addColorMenu('Line color', gStyle.fHistLineColor, col => { gStyle.fHistLineColor = col; });
+      this.addSizeMenu('Line width', 1, 10, 1, gStyle.fHistLineWidth, w => { gStyle.fHistLineWidth = w; });
+      this.addLineStyleMenu('Line style', gStyle.fHistLineStyle, st => { gStyle.fHistLineStyle = st; });
+      this.endsub();
+
+      this.separator();
+      this.sub('Predefined');
+      ['Modern', 'Plain', 'Bold'].forEach(name => this.addchk((gStyle.fName === name), name, name, selectgStyle));
+      this.endsub();
+
+      this.endsub(); // gStyle
+
+      this.separator();
+
+      this.add('Save settings', () => {
+         const promise = readSettings(true) ? Promise.resolve(true) : this.confirm('Save settings', 'Pressing OK one agreess that JSROOT will store settings in browser local storage');
+         promise.then(res => { if (res) { saveSettings(); saveStyle(); } });
+      }, 'Store settings and gStyle in browser local storage');
+      this.add('Delete settings', () => { saveSettings(-1); saveStyle(-1); }, 'Delete settings and gStyle from browser local storage');
+
+      if (!alone) this.endsub();
+   }
+
+   /** @summary Run modal dialog
+     * @return {Promise} with html element inside dialog
+     * @private */
+   async runModal() {
+      throw Error('runModal() must be reimplemented');
+   }
+
+   /** @summary Show modal info dialog
+     * @param {String} title - title
+     * @param {String} message - message
+     * @protected */
+   info(title, message) {
+      return this.runModal(title, `<p>${message}</p>`, { height: 120, width: 400, resizable: true });
+   }
+
+   /** @summary Show confirm dialog
+     * @param {String} title - title
+     * @param {String} message - message
+     * @return {Promise} with true when 'Ok' pressed or false when 'Cancel' pressed
+     * @protected */
+   async confirm(title, message) {
+      return this.runModal(title, message, { btns: true, height: 120, width: 400 }).then(elem => { return !!elem; });
+   }
+
+   /** @summary Input value
+     * @return {Promise} with input value
+     * @param {string} title - input dialog title
+     * @param value - initial value
+     * @param {string} [kind] - use 'text' (default), 'number', 'float' or 'int'
+     * @protected */
+   async input(title, value, kind, min, max) {
+      if (!kind) kind = 'text';
+      const inp_type = (kind === 'int') ? 'number' : 'text';
+      let ranges = '';
+      if ((value === undefined) || (value === null)) value = '';
+      if (kind === 'int') {
+          if (min !== undefined) ranges += ` min="${min}"`;
+          if (max !== undefined) ranges += ` max="${max}"`;
+       }
+
+      const main_content =
+         '<form><fieldset style="padding:0; border:0">'+
+            `<input type="${inp_type}" value="${value}" ${ranges} style="width:98%;display:block" class="jsroot_dlginp"/>`+
+         '</fieldset></form>';
+
+      return new Promise(resolveFunc => {
+         this.runModal(title, main_content, { btns: true, height: 150, width: 400 }).then(element => {
+            if (!element) return;
+            let val = element.querySelector('.jsroot_dlginp').value;
+            if (kind === 'float') {
+               val = Number.parseFloat(val);
+               if (Number.isFinite(val))
+                  resolveFunc(val);
+            } else if (kind === 'int') {
+               val = parseInt(val);
+               if (Number.isInteger(val))
+                  resolveFunc(val);
+            } else
+               resolveFunc(val);
+         });
+      });
+   }
+
+   /** @summary Let input arguments from the method
+     * @return {Promise} with method argument */
+   async showMethodArgsDialog(method) {
+      const dlg_id = this.menuname + sDfltDlg;
+      let main_content = '<form> <fieldset style="padding:0; border:0">';
+
+      for (let n = 0; n < method.fArgs.length; ++n) {
+         const arg = method.fArgs[n];
+         arg.fValue = arg.fDefault;
+         if (arg.fValue === '""') arg.fValue = '';
+         main_content += `<label for="${dlg_id}_inp${n}">${arg.fName}</label>
+                          <input type='text' tabindex="${n+1}" id="${dlg_id}_inp${n}" value="${arg.fValue}" style="width:100%;display:block"/>`;
+      }
+
+      main_content += '</fieldset></form>';
+
+      return new Promise(resolveFunc => {
+         this.runModal(method.fClassName + '::' + method.fName, main_content, { btns: true, height: 100 + method.fArgs.length*60, width: 400, resizable: true }).then(element => {
+            if (!element) return;
+            let args = '';
+
+            for (let k = 0; k < method.fArgs.length; ++k) {
+               const arg = method.fArgs[k];
+               let value = element.querySelector(`#${dlg_id}_inp${k}`).value;
+               if (value === '') value = arg.fDefault;
+               if ((arg.fTitle === 'Option_t*') || (arg.fTitle === 'const char*')) {
+                  // check quotes,
+                  // TODO: need to make more precise checking of escape characters
+                  if (!value) value = '""';
+                  if (value[0] !== '"') value = '"' + value;
+                  if (value[value.length-1] !== '"') value += '"';
+               }
+
+               args += (k > 0 ? ',' : '') + value;
+            }
+
+            resolveFunc(args);
+         });
+      });
+   }
+
+   /** @summary Let input arguments from the Command
+     * @return {Promise} with command argument */
+   async showCommandArgsDialog(cmdname, args) {
+      const dlg_id = this.menuname + sDfltDlg;
+      let main_content = '<form> <fieldset style="padding:0; border:0">';
+
+      for (let n = 0; n < args.length; ++n) {
+         main_content += `<label for="${dlg_id}_inp${n}">arg${n+1}</label>`+
+                         `<input type='text' id="${dlg_id}_inp${n}" value="${args[n]}" style="width:100%;display:block"/>`;
+     }
+
+      main_content += '</fieldset></form>';
+
+      return new Promise(resolveFunc => {
+         this.runModal('Arguments for command ' + cmdname, main_content, { btns: true, height: 110 + args.length*60, width: 400, resizable: true }).then(element => {
+            if (!element)
+               return resolveFunc(null);
+
+            const resargs = [];
+            for (let k = 0; k < args.length; ++k)
+               resargs.push(element.querySelector(`#${dlg_id}_inp${k}`).value);
+            resolveFunc(resargs);
+         });
+      });
+   }
+
+} // class JSRootMenu
+
+/**
+ * @summary Context menu class using plain HTML/JavaScript
+ *
+ * @desc Use {@link createMenu} to create instance of the menu
+ * based on {@link https://github.com/L1quidH2O/ContextMenu.js}
+ * @private
+ */
+
+class StandaloneMenu extends JSRootMenu {
+
+   constructor(painter, menuname, show_event) {
+      super(painter, menuname, show_event);
+
+      this.code = [];
+      this._use_plain_text = true;
+      this.stack = [this.code];
+   }
+
+   native() { return true; }
+
+   /** @summary Load required modules, noop for that menu class */
+   async load() { return this; }
+
+   /** @summary Add menu item
+     * @param {string} name - item name
+     * @param {function} func - func called when item is selected */
+   add(name, arg, func, title) {
+      let curr = this.stack[this.stack.length-1];
+
+      if (name === sSeparator)
+         return curr.push({ divider: true });
+
+      if (name.indexOf(sHeader) === 0)
+         return curr.push({ text: name.slice(sHeader.length), header: true });
+
+      if (name === sEndsub) {
+         this.stack.pop();
+         curr = this.stack[this.stack.length-1];
+         if (curr[curr.length-1].sub.length === 0)
+            curr[curr.length-1].sub = undefined;
+         return;
+      }
+
+      if (name === 'endcolumn:')
+         return this.stack.pop();
+
+
+      if (isFunc(arg)) { title = func; func = arg; arg = name; }
+
+      const elem = {};
+      curr.push(elem);
+
+      if (name === 'column:') {
+         elem.column = true;
+         elem.sub = [];
+         this.stack.push(elem.sub);
+         return;
+      }
+
+      if (name.indexOf(sSub) === 0) {
+         name = name.slice(4);
+         elem.sub = [];
+         this.stack.push(elem.sub);
+      }
+
+      if (name.indexOf('chk:') === 0) {
+         elem.checked = true;
+         name = name.slice(4);
+      } else if (name.indexOf('unk:') === 0) {
+         elem.checked = false;
+         name = name.slice(4);
+      }
+
+      elem.text = name;
+      elem.title = title;
+      elem.arg = arg;
+      elem.func = func;
+   }
+
+   /** @summary Returns size of main menu */
+   size() { return this.code.length; }
+
+   /** @summary Build HTML elements of the menu
+     * @private */
+   _buildContextmenu(menu, left, top, loc) {
+      const doc = getDocument(),
+            outer = doc.createElement('div'),
+            container_style =
+         'position: absolute; top: 0; user-select: none; z-index: 100000; background-color: rgb(250, 250, 250); margin: 0; padding: 0px; width: auto;'+
+         'min-width: 100px; box-shadow: 0px 0px 10px rgb(0, 0, 0, 0.2); border: 3px solid rgb(215, 215, 215); font-family: Arial, helvetica, sans-serif, serif;'+
+         'font-size: 13px; color: rgb(0, 0, 0, 0.8); line-height: 15px;';
+
+      // if loc !== doc.body then its a submenu, so it needs to have position: relative;
+      if (loc === doc.body) {
+         // delete all elements with className jsroot_ctxt_container
+         const deleteElems = doc.getElementsByClassName('jsroot_ctxt_container');
+         while (deleteElems.length > 0)
+            deleteElems[0].parentNode.removeChild(deleteElems[0]);
+
+         outer.className = 'jsroot_ctxt_container';
+         outer.style = container_style;
+         outer.style.position = 'fixed';
+         outer.style.left = left + 'px';
+         outer.style.top = top + 'px';
+      } else if ((left < 0) && (top === left)) {
+         // column
+         outer.className = 'jsroot_ctxt_column';
+         outer.style.float = 'left';
+         outer.style.width = (100/-left).toFixed(1) + '%';
+      } else {
+         outer.className = 'jsroot_ctxt_container';
+         outer.style = container_style;
+         outer.style.left = -loc.offsetLeft + loc.offsetWidth + 'px';
+      }
+
+      let need_check_area = false, ncols = 0;
+      menu.forEach(d => {
+         if (d.checked) need_check_area = true;
+         if (d.column) ncols++;
+      });
+
+      menu.forEach(d => {
+         if (ncols > 0) {
+            outer.style.display = 'flex';
+            if (d.column) this._buildContextmenu(d.sub, -ncols, -ncols, outer);
+            return;
+         }
+
+         if (d.divider) {
+            const hr = doc.createElement('hr');
+            hr.style = 'width: 85%; margin: 3px auto; border: 1px solid rgb(0, 0, 0, 0.15)';
+            outer.appendChild(hr);
+            return;
+         }
+
+         const item = doc.createElement('div');
+         item.style.position = 'relative';
+         outer.appendChild(item);
+
+         if (d.header) {
+            item.style = 'background-color: lightblue; padding: 3px 7px; font-weight: bold; border-bottom: 1px;';
+            item.innerHTML = d.text;
+            return;
+         }
+
+         const hovArea = doc.createElement('div');
+         hovArea.style.width = '100%';
+         hovArea.style.height = '100%';
+         hovArea.style.display = 'flex';
+         hovArea.style.justifyContent = 'space-between';
+         hovArea.style.cursor = 'pointer';
+         if (d.title) hovArea.setAttribute('title', d.title);
+
+         item.appendChild(hovArea);
+         if (!d.text) d.text = 'item';
+
+         const text = doc.createElement('div');
+         text.style = 'margin: 0; padding: 3px 7px; pointer-events: none; white-space: nowrap';
+
+         if (d.text.indexOf('<svg') >= 0) {
+            if (need_check_area) {
+               text.style.display = 'flex';
+
+               const chk = doc.createElement('span');
+               chk.innerHTML = d.checked ? '\u2713' : '';
+               chk.style.display = 'inline-block';
+               chk.style.width = '1em';
+               text.appendChild(chk);
+
+               const sub = doc.createElement('div');
+               sub.innerHTML = d.text;
+               text.appendChild(sub);
+            } else
+               text.innerHTML = d.text;
+         } else {
+            if (need_check_area) {
+               const chk = doc.createElement('span');
+               chk.innerHTML = d.checked ? '\u2713' : '';
+               chk.style.display = 'inline-block';
+               chk.style.width = '1em';
+               text.appendChild(chk);
+            }
+
+            const sub = doc.createElement('span');
+            if (d.text.indexOf('<nobr>') === 0)
+               sub.textContent = d.text.slice(6, d.text.length-7);
+            else
+               sub.textContent = d.text;
+            text.appendChild(sub);
+         }
+
+         hovArea.appendChild(text);
+
+         function changeFocus(item, on) {
+            if (on) {
+               item.classList.add('jsroot_ctxt_focus');
+               item.style['background-color'] = 'rgb(220, 220, 220)';
+            } else if (item.classList.contains('jsroot_ctxt_focus')) {
+               item.style['background-color'] = null;
+               item.classList.remove('jsroot_ctxt_focus');
+               item.querySelector('.jsroot_ctxt_container')?.remove();
+            }
+         }
+
+         if (d.extraText || d.sub) {
+            const extraText = doc.createElement('span');
+            extraText.className = 'jsroot_ctxt_extraText';
+            extraText.style = 'margin: 0; padding: 3px 7px; color: rgb(0, 0, 0, 0.6);';
+            extraText.textContent = d.sub ? '\u25B6' : d.extraText;
+            hovArea.appendChild(extraText);
+
+            if (d.sub && browser.touches) {
+               extraText.addEventListener('click', evnt => {
+                  evnt.preventDefault();
+                  evnt.stopPropagation();
+                  const was_active = item.parentNode.querySelector('.jsroot_ctxt_focus');
+
+                  if (was_active)
+                     changeFocus(was_active, false);
+
+                  if (item !== was_active) {
+                     changeFocus(item, true);
+                     this._buildContextmenu(d.sub, 0, 0, item);
+                  }
+               });
+            }
+         }
+
+         if (!browser.touches) {
+            hovArea.addEventListener('mouseenter', () => {
+               if (this.prevHovArea)
+                  this.prevHovArea.style['background-color'] = null;
+               hovArea.style['background-color'] = 'rgb(235, 235, 235)';
+               this.prevHovArea = hovArea;
+
+               outer.childNodes.forEach(chld => changeFocus(chld, false));
+
+               if (d.sub) {
+                  changeFocus(item, true);
+                  this._buildContextmenu(d.sub, 0, 0, item);
+               }
+            });
+         }
+
+         if (d.func) {
+            item.addEventListener('click', evnt => {
+               const func = this.painter ? d.func.bind(this.painter) : d.func;
+               func(d.arg);
+               evnt.stopPropagation();
+               this.remove();
+            });
+         }
+      });
+
+      loc.appendChild(outer);
+
+      const docWidth = doc.documentElement.clientWidth, docHeight = doc.documentElement.clientHeight;
+
+      // Now determine where the contextmenu will be
+      if (loc === doc.body) {
+         if (left + outer.offsetWidth > docWidth) {
+            // Does sub-contextmenu overflow window width?
+            outer.style.left = (docWidth - outer.offsetWidth) + 'px';
+         }
+         if (outer.offsetHeight > docHeight) {
+            // is the contextmenu height larger than the window height?
+            outer.style.top = 0;
+            outer.style.overflowY = 'scroll';
+            outer.style.overflowX = 'hidden';
+            outer.style.height = docHeight + 'px';
+         } else if (top + outer.offsetHeight > docHeight) {
+            // Does contextmenu overflow window height?
+            outer.style.top = (docHeight - outer.offsetHeight) + 'px';
+         }
+      } else if (outer.className !== 'jsroot_ctxt_column') {
+         // if its sub-contextmenu
+         const dimensionsLoc = loc.getBoundingClientRect(), dimensionsOuter = outer.getBoundingClientRect();
+
+         // Does sub-contextmenu overflow window width?
+         if (dimensionsOuter.left + dimensionsOuter.width > docWidth)
+            outer.style.left = (-loc.offsetLeft - dimensionsOuter.width) + 'px';
+
+
+         if (dimensionsOuter.height > docHeight) {
+            // is the sub-contextmenu height larger than the window height?
+            outer.style.top = -dimensionsOuter.top + 'px';
+            outer.style.overflowY = 'scroll';
+            outer.style.overflowX = 'hidden';
+            outer.style.height = docHeight + 'px';
+         } else if (dimensionsOuter.height < docHeight && dimensionsOuter.height > docHeight / 2) {
+            // is the sub-contextmenu height smaller than the window height AND larger than half of window height?
+            if (dimensionsOuter.top - docHeight / 2 >= 0) { // If sub-contextmenu is closer to bottom of the screen
+               outer.style.top = (-dimensionsOuter.top - dimensionsOuter.height + docHeight) + 'px';
+            } else { // If sub-contextmenu is closer to top of the screen
+               outer.style.top = (-dimensionsOuter.top) + 'px';
+            }
+         } else if (dimensionsOuter.top + dimensionsOuter.height > docHeight) {
+            // Does sub-contextmenu overflow window height?
+            outer.style.top = (-dimensionsOuter.height + dimensionsLoc.height) + 'px';
+         }
+      }
+      return outer;
+   }
+
+   /** @summary Show standalone menu */
+   async show(event) {
+      this.remove();
+
+      if (!event && this.show_evnt) event = this.show_evnt;
+
+      const doc = getDocument(),
+            woffset = typeof window === 'undefined' ? { x: 0, y: 0 } : { x: window.scrollX, y: window.scrollY };
+
+      doc.body.addEventListener('click', this.remove_handler);
+
+      const oldmenu = doc.getElementById(this.menuname);
+      if (oldmenu) oldmenu.remove();
+
+      this.element = this._buildContextmenu(this.code, (event?.clientX || 0) + woffset.x, (event?.clientY || 0) + woffset.y, doc.body);
+
+      this.element.setAttribute('id', this.menuname);
+
+      return this;
+   }
+
+   /** @summary Run modal elements with standalone code */
+   createModal(title, main_content, args) {
+      if (!args) args = {};
+
+      if (!args.Ok) args.Ok = 'Ok';
+
+      const modal = { args }, dlg_id = (this?.menuname ?? sDfltName) + sDfltDlg;
+      select(`#${dlg_id}`).remove();
+      select(`#${dlg_id}_block`).remove();
+
+      const w = Math.min(args.width || 450, Math.round(0.9*browser.screenWidth));
+      modal.block = select('body').append('div')
+                                   .attr('id', `${dlg_id}_block`)
+                                   .attr('class', 'jsroot_dialog_block')
+                                   .attr('style', 'z-index: 100000; position: absolute; left: 0px; top: 0px; bottom: 0px; right: 0px; opacity: 0.2; background-color: white');
+      modal.element = select('body')
+                      .append('div')
+                      .attr('id', dlg_id)
+                      .attr('class', 'jsroot_dialog')
+                      .style('position', 'absolute')
+                      .style('width', `${w}px`)
+                      .style('left', '50%')
+                      .style('top', '50%')
+                      .style('z-index', 100001)
+                      .attr('tabindex', '0')
+                      .html(
+         '<div style=\'position: relative; left: -50%; top: -50%; border: solid green 3px; padding: 5px; display: flex; flex-flow: column; background-color: white\'>'+
+           `<div style='flex: 0 1 auto; padding: 5px'>${title}</div>`+
+           `<div class='jsroot_dialog_content' style='flex: 1 1 auto; padding: 5px'>${main_content}</div>`+
+           '<div class=\'jsroot_dialog_footer\' style=\'flex: 0 1 auto; padding: 5px\'>'+
+              `<button class='jsroot_dialog_button' style='float: right; width: fit-content; margin-right: 1em'>${args.Ok}</button>`+
+              (args.btns ? '<button class=\'jsroot_dialog_button\' style=\'float: right; width: fit-content; margin-right: 1em\'>Cancel</button>' : '') +
+         '</div></div>');
+
+      modal.done = function(res) {
+         if (this._done) return;
+         this._done = true;
+         if (isFunc(this.call_back))
+            this.call_back(res);
+         this.element.remove();
+         this.block.remove();
+      };
+
+      modal.setContent = function(content, btn_text) {
+         if (!this._done) {
+            this.element.select('.jsroot_dialog_content').html(content);
+            if (btn_text) {
+               this.args.Ok = btn_text;
+               this.element.select('.jsroot_dialog_button').text(btn_text);
+            }
+         }
+      };
+
+      modal.element.on('keyup', evnt => {
+         if ((evnt.code === 'Enter') || (evnt.code === 'Escape')) {
+            evnt.preventDefault();
+            evnt.stopPropagation();
+            modal.done(evnt.code === 'Enter' ? modal.element.node() : null);
+         }
+      });
+      modal.element.on('keydown', evnt => {
+         if ((evnt.code === 'Enter') || (evnt.code === 'Escape')) {
+            evnt.preventDefault();
+            evnt.stopPropagation();
+         }
+      });
+      modal.element.selectAll('.jsroot_dialog_button').on('click', evnt => {
+         modal.done(args.btns && (select(evnt.target).text() === args.Ok) ? modal.element.node() : null);
+      });
+
+      let f = modal.element.select('.jsroot_dialog_content').select('input');
+      if (f.empty()) f = modal.element.select('.jsroot_dialog_footer').select('button');
+      if (!f.empty()) f.node().focus();
+      return modal;
+   }
+
+   /** @summary Run modal elements with standalone code */
+   async runModal(title, main_content, args) {
+      const modal = this.createModal(title, main_content, args);
+      return new Promise(resolveFunc => {
+         modal.call_back = resolveFunc;
+      });
+   }
+
+} // class StandaloneMenu
+
+
+/** @summary Create JSROOT menu
+  * @desc See {@link JSRootMenu} class for detailed list of methods
+  * @param {object} [evnt] - event object like mouse context menu event
+  * @param {object} [handler] - object with handling function, in this case one not need to bind function
+  * @param {string} [menuname] - optional menu name
+  * @example
+  * import { createMenu } from 'https://root.cern/js/latest/modules/gui/menu.mjs';
+  * let menu = await createMenu());
+  * menu.add('First', () => console.log('Click first'));
+  * let flag = true;
+  * menu.addchk(flag, 'Checked', arg => console.log(`Now flag is ${arg}`));
+  * menu.show(); */
+function createMenu(evnt, handler, menuname) {
+   const menu = new StandaloneMenu(handler, menuname || sDfltName, evnt);
+   return menu.load();
+}
+
+/** @summary Close previously created and shown JSROOT menu
+  * @param {string} [menuname] - optional menu name */
+function closeMenu(menuname) {
+   const element = getDocument().getElementById(menuname || sDfltName);
+   element?.remove();
+   return !!element;
+}
+
+/** @summary Returns true if menu or modal dialog present
+  * @private */
+function hasMenu(menuname) {
+   const doc = getDocument();
+   if (doc.getElementById(menuname || sDfltName))
+      return true;
+   if (doc.getElementById((menuname || sDfltName) + sDfltDlg))
+      return true;
+   return false;
+}
+
+/** @summary Fill and show context menu for painter object
+  * @private */
+function showPainterMenu(evnt, painter, kind) {
+   if (isFunc(evnt.stopPropagation)) {
+      evnt.stopPropagation(); // disable main context menu
+      evnt.preventDefault();  // disable browser context menu
+   }
+
+   createMenu(evnt, painter).then(menu => {
+      painter.fillContextMenu(menu);
+      if ((kind === kToFront) && isFunc(painter.bringToFront)) {
+         menu.add('Bring to front', () => painter.bringToFront(true));
+         kind = undefined;
+      }
+      return painter.fillObjectExecMenu(menu, kind);
+   }).then(menu => menu.show());
+}
+
+/** @summary Internal method to implement modal progress
+  * @private */
+internals._modalProgress = function(msg, click_handle) {
+   if (!msg || !isStr(msg)) {
+      internals.modal?.done();
+      delete internals.modal;
+      return;
+   }
+
+   if (!internals.modal)
+      internals.modal = StandaloneMenu.prototype.createModal('Progress', msg);
+
+   internals.modal.setContent(msg, click_handle ? 'Abort' : 'Ok');
+
+   internals.modal.call_back = click_handle;
+};
+
+/** @summary Assign handler for context menu for painter draw element
+  * @private */
+function assignContextMenu(painter, kind) {
+   if (!painter?.isBatchMode() && painter?.draw_g)
+      painter.draw_g.on('contextmenu', settings.ContextMenu ? evnt => showPainterMenu(evnt, painter, kind) : null);
+}
+
 const kShowEventStatus = BIT(15),
      // kAutoExec = BIT(16),
       kMenuBar = BIT(17),
@@ -71407,6 +78687,11 @@ class TCanvasPainter extends TPadPainter {
                 if (ranges) ranges = ':' + ranges;
                 handle.send(`READY6:${version}${ranges}`); // send ready message back when drawing completed
                 this.confirmDraw();
+             }).catch(err => {
+               if (isFunc(this.showConsoleError))
+                  this.showConsoleError(err);
+               else
+                  console.log(err);
              });
       } else if (msg.slice(0, 5) === 'MENU:') {
          // this is menu with exact identifier for object
@@ -76049,7 +83334,7 @@ function buildHist2dContour(histo, handle, levels, palette, contour_func) {
          for (k = 0; k < 4; k++)
             ir[k] = LevelSearch(zc[k]);
 
-         if ((ir[0] !== ir[1]) || (ir[1] !== ir[2]) || (ir[2] !== ir[3]) || (ir[3] !== ir[0])) { // deepscan-disable-line
+         if ((ir[0] !== ir[1]) || (ir[1] !== ir[2]) || (ir[2] !== ir[3]) || (ir[3] !== ir[0])) {
             x[3] = x[0] = (arrx[i] + arrx[i+1])/2;
             x[2] = x[1] = (arrx[i+1] + arrx[i+2])/2;
 
@@ -76341,7 +83626,7 @@ class Triangles3DHandler {
 
                // check if any(contours for given level exists
                if (((side1 > 0) || (side2 > 0) || (side3 > 0)) &&
-                   ((side1 !== side2) || (side2 !== side3) || (side3 !== side1))) // deepscan-disable-line
+                   ((side1 !== side2) || (side2 !== side3) || (side3 !== side1)))
                       ++ngridsegments;
 
                continue;
@@ -87360,7 +94645,7 @@ class ClonedNodes {
                   issimple = (clone.matrix[k] === ((k === 5) || (k === 10) || (k === 15) ? 1 : 0));
                if (issimple) delete clone.matrix;
             }
-            if (clone.matrix && (kind === kindEve))  // deepscan-disable-line INSUFFICIENT_NULL_CHECK
+            if (clone.matrix && (kind === kindEve))
                clone.abs_matrix = true;
          }
          if (shape) {
@@ -91539,7 +98824,7 @@ function expandGeoObject(parent, obj) {
    }
 
    if (!subnodes && (shape?._typename === clTGeoCompositeShape) && shape?.fNode) {
-      if (!parent._childs) { // deepscan-disable-line
+      if (!parent._childs) {
          createItem(parent, shape.fNode.fLeft, 'Left');
          createItem(parent, shape.fNode.fRight, 'Right');
       }
@@ -97241,7275 +104526,6 @@ expandGeoObject: expandGeoObject,
 produceRenderOrder: produceRenderOrder
 });
 
-const clTStreamerElement = 'TStreamerElement', clTStreamerObject = 'TStreamerObject',
-      clTStreamerSTL = 'TStreamerSTL', clTStreamerInfoList = 'TStreamerInfoList',
-      clTDirectory = 'TDirectory', clTDirectoryFile = 'TDirectoryFile',
-      clTQObject = 'TQObject', clTBasket = 'TBasket', clTDatime = 'TDatime',
-      nameStreamerInfo = 'StreamerInfo',
-
-      kChar = 1, kShort = 2, kInt = 3, kLong = 4, kFloat = 5, kCounter = 6,
-      kCharStar = 7, kDouble = 8, kDouble32 = 9, kLegacyChar = 10,
-      kUChar = 11, kUShort = 12, kUInt = 13, kULong = 14, kBits = 15,
-      kLong64 = 16, kULong64 = 17, kBool = 18, kFloat16 = 19,
-
-      kBase = 0, kOffsetL = 20, kOffsetP = 40,
-      kObject = 61, kAny = 62, kObjectp = 63, kObjectP = 64, kTString = 65,
-      kTObject = 66, kTNamed = 67, kAnyp = 68, kAnyP = 69,
-
-      /* kAnyPnoVT: 70, */
-      kSTLp = 71,
-      /* kSkip = 100, kSkipL = 120, kSkipP = 140, kConv = 200, kConvL = 220, kConvP = 240, */
-
-      kSTL = 300, /* kSTLstring = 365, */
-
-      kStreamer = 500, kStreamLoop = 501,
-
-      kMapOffset = 2, kByteCountMask = 0x40000000, kNewClassTag = 0xFFFFFFFF, kClassMask = 0x80000000,
-
-      // constants of bits in version
-      kStreamedMemberWise = BIT(14),
-
-      // constants used for coding type of STL container
-      kNotSTL = 0, kSTLvector = 1, kSTLlist = 2, kSTLdeque = 3, kSTLmap = 4, kSTLmultimap = 5,
-      kSTLset = 6, kSTLmultiset = 7, kSTLbitset = 8,
-      // kSTLforwardlist = 9, kSTLunorderedset = 10, kSTLunorderedmultiset = 11, kSTLunorderedmap = 12,
-      // kSTLunorderedmultimap = 13, kSTLend = 14
-
-      kBaseClass = 'BASE',
-
-      // name of base IO types
-      BasicTypeNames = [kBaseClass, 'char', 'short', 'int', 'long', 'float', 'int', 'const char*', 'double', 'Double32_t',
-                        'char', 'unsigned  char', 'unsigned short', 'unsigned', 'unsigned long', 'unsigned', 'Long64_t', 'ULong64_t', 'bool', 'Float16_t'],
-
-      // names of STL containers
-      StlNames = ['', 'vector', 'list', 'deque', 'map', 'multimap', 'set', 'multiset', 'bitset'],
-
-      // TObject bits
-      kIsReferenced = BIT(4), kHasUUID = BIT(5),
-
-
-/** @summary Custom streamers for root classes
-  * @desc map of user-streamer function like func(buf,obj)
-  * or alias (classname) which can be used to read that function
-  * or list of read functions
-  * @private */
-CustomStreamers = {
-   TObject(buf, obj) {
-      obj.fUniqueID = buf.ntou4();
-      obj.fBits = buf.ntou4();
-      if (obj.fBits & kIsReferenced) buf.ntou2(); // skip pid
-   },
-
-   TNamed: [{
-      basename: clTObject, base: 1, func(buf, obj) {
-         if (!obj._typename) obj._typename = clTNamed;
-         buf.classStreamer(obj, clTObject);
-      }
-     },
-     { name: 'fName', func(buf, obj) { obj.fName = buf.readTString(); } },
-     { name: 'fTitle', func(buf, obj) { obj.fTitle = buf.readTString(); } }
-   ],
-
-   TObjString: [{
-      basename: clTObject, base: 1, func(buf, obj) {
-         if (!obj._typename) obj._typename = clTObjString;
-         buf.classStreamer(obj, clTObject);
-      }
-     },
-     { name: 'fString', func(buf, obj) { obj.fString = buf.readTString(); } }
-   ],
-
-   TClonesArray(buf, list) {
-      if (!list._typename) list._typename = clTClonesArray;
-      list.$kind = clTClonesArray;
-      list.name = '';
-      const ver = buf.last_read_version;
-      if (ver > 2) buf.classStreamer(list, clTObject);
-      if (ver > 1) list.name = buf.readTString();
-      let classv = buf.readTString(), clv = 0;
-      const pos = classv.lastIndexOf(';');
-
-      if (pos > 0) {
-         clv = Number.parseInt(classv.slice(pos + 1));
-         classv = classv.slice(0, pos);
-      }
-
-      let nobjects = buf.ntou4();
-      if (nobjects < 0) nobjects = -nobjects;  // for backward compatibility
-
-      list.arr = new Array(nobjects);
-      list.fLast = nobjects - 1;
-      list.fLowerBound = buf.ntou4();
-
-      let streamer = buf.fFile.getStreamer(classv, { val: clv });
-      streamer = buf.fFile.getSplittedStreamer(streamer);
-
-      if (!streamer)
-         console.log(`Cannot get member-wise streamer for ${classv}:${clv}`);
-      else {
-         // create objects
-         for (let n = 0; n < nobjects; ++n)
-            list.arr[n] = { _typename: classv };
-
-         // call streamer for all objects member-wise
-         for (let k = 0; k < streamer.length; ++k) {
-            for (let n = 0; n < nobjects; ++n)
-               streamer[k].func(buf, list.arr[n]);
-         }
-      }
-   },
-
-   TMap(buf, map) {
-      if (!map._typename) map._typename = clTMap;
-      map.name = '';
-      map.arr = [];
-      const ver = buf.last_read_version;
-      if (ver > 2) buf.classStreamer(map, clTObject);
-      if (ver > 1) map.name = buf.readTString();
-
-      const nobjects = buf.ntou4();
-      // create objects
-      for (let n = 0; n < nobjects; ++n) {
-         const obj = { _typename: 'TPair' };
-         obj.first = buf.readObjectAny();
-         obj.second = buf.readObjectAny();
-         if (obj.first) map.arr.push(obj);
-      }
-   },
-
-   TTreeIndex(buf, obj) {
-      const ver = buf.last_read_version;
-      obj._typename = 'TTreeIndex';
-      buf.classStreamer(obj, 'TVirtualIndex');
-      obj.fMajorName = buf.readTString();
-      obj.fMinorName = buf.readTString();
-      obj.fN = buf.ntoi8();
-      obj.fIndexValues = buf.readFastArray(obj.fN, kLong64);
-      if (ver > 1) obj.fIndexValuesMinor = buf.readFastArray(obj.fN, kLong64);
-      obj.fIndex = buf.readFastArray(obj.fN, kLong64);
-   },
-
-   TRefArray(buf, obj) {
-      obj._typename = 'TRefArray';
-      buf.classStreamer(obj, clTObject);
-      obj.name = buf.readTString();
-      const nobj = buf.ntoi4();
-      obj.fLast = nobj - 1;
-      obj.fLowerBound = buf.ntoi4();
-      /* const pidf = */ buf.ntou2();
-      obj.fUIDs = buf.readFastArray(nobj, kUInt);
-   },
-
-   TCanvas(buf, obj) {
-      obj._typename = clTCanvas;
-      buf.classStreamer(obj, clTPad);
-      obj.fDISPLAY = buf.readTString();
-      obj.fDoubleBuffer = buf.ntoi4();
-      obj.fRetained = (buf.ntou1() !== 0);
-      obj.fXsizeUser = buf.ntoi4();
-      obj.fYsizeUser = buf.ntoi4();
-      obj.fXsizeReal = buf.ntoi4();
-      obj.fYsizeReal = buf.ntoi4();
-      obj.fWindowTopX = buf.ntoi4();
-      obj.fWindowTopY = buf.ntoi4();
-      obj.fWindowWidth = buf.ntoi4();
-      obj.fWindowHeight = buf.ntoi4();
-      obj.fCw = buf.ntou4();
-      obj.fCh = buf.ntou4();
-      obj.fCatt = buf.classStreamer({}, clTAttCanvas);
-      buf.ntou1(); // ignore b << TestBit(kMoveOpaque);
-      buf.ntou1(); // ignore b << TestBit(kResizeOpaque);
-      obj.fHighLightColor = buf.ntoi2();
-      obj.fBatch = (buf.ntou1() !== 0);
-      buf.ntou1();   // ignore b << TestBit(kShowEventStatus);
-      buf.ntou1();   // ignore b << TestBit(kAutoExec);
-      buf.ntou1();   // ignore b << TestBit(kMenuBar);
-   },
-
-   TObjArray(buf, list) {
-      if (!list._typename) list._typename = clTObjArray;
-      list.$kind = clTObjArray;
-      list.name = '';
-      const ver = buf.last_read_version;
-      if (ver > 2)
-         buf.classStreamer(list, clTObject);
-      if (ver > 1)
-         list.name = buf.readTString();
-      const nobjects = buf.ntou4();
-      let i = 0;
-      list.arr = new Array(nobjects);
-      list.fLast = nobjects - 1;
-      list.fLowerBound = buf.ntou4();
-      while (i < nobjects)
-         list.arr[i++] = buf.readObjectAny();
-   },
-
-   TPolyMarker3D(buf, marker) {
-      const ver = buf.last_read_version;
-      buf.classStreamer(marker, clTObject);
-      buf.classStreamer(marker, clTAttMarker);
-      marker.fN = buf.ntoi4();
-      marker.fP = buf.readFastArray(marker.fN * 3, kFloat);
-      marker.fOption = buf.readTString();
-      marker.fName = (ver > 1) ? buf.readTString() : clTPolyMarker3D;
-   },
-
-   TPolyLine3D(buf, obj) {
-      buf.classStreamer(obj, clTObject);
-      buf.classStreamer(obj, clTAttLine);
-      obj.fN = buf.ntoi4();
-      obj.fP = buf.readFastArray(obj.fN * 3, kFloat);
-      obj.fOption = buf.readTString();
-   },
-
-   TStreamerInfo(buf, obj) {
-      buf.classStreamer(obj, clTNamed);
-      obj.fCheckSum = buf.ntou4();
-      obj.fClassVersion = buf.ntou4();
-      obj.fElements = buf.readObjectAny();
-   },
-
-   TStreamerElement(buf, element) {
-      const ver = buf.last_read_version;
-      buf.classStreamer(element, clTNamed);
-      element.fType = buf.ntou4();
-      element.fSize = buf.ntou4();
-      element.fArrayLength = buf.ntou4();
-      element.fArrayDim = buf.ntou4();
-      element.fMaxIndex = buf.readFastArray((ver === 1) ? buf.ntou4() : 5, kUInt);
-      element.fTypeName = buf.readTString();
-
-      if ((element.fType === kUChar) && ((element.fTypeName === 'Bool_t') || (element.fTypeName === 'bool')))
-         element.fType = kBool;
-
-      element.fXmin = element.fXmax = element.fFactor = 0;
-      if (ver === 3) {
-         element.fXmin = buf.ntod();
-         element.fXmax = buf.ntod();
-         element.fFactor = buf.ntod();
-      } else if ((ver > 3) && (element.fBits & BIT(6))) { // kHasRange
-         let p1 = element.fTitle.indexOf('[');
-         if ((p1 >= 0) && (element.fType > kOffsetP))
-            p1 = element.fTitle.indexOf('[', p1 + 1);
-         const p2 = element.fTitle.indexOf(']', p1 + 1);
-
-         if ((p1 >= 0) && (p2 >= p1 + 2)) {
-            const arr = element.fTitle.slice(p1+1, p2).split(',');
-            let nbits = 32;
-            if (!arr || arr.length < 2)
-               throw new Error(`Problem to decode range setting from streamer element title ${element.fTitle}`);
-
-            if (arr.length === 3) nbits = parseInt(arr[2]);
-            if (!Number.isInteger(nbits) || (nbits < 2) || (nbits > 32)) nbits = 32;
-
-            const parse_range = val => {
-               if (!val) return 0;
-               if (val.indexOf('pi') < 0) return parseFloat(val);
-               val = val.trim();
-               let sign = 1;
-               if (val[0] === '-') { sign = -1; val = val.slice(1); }
-               switch (val) {
-                  case '2pi':
-                  case '2*pi':
-                  case 'twopi': return sign * 2 * Math.PI;
-                  case 'pi/2': return sign * Math.PI / 2;
-                  case 'pi/4': return sign * Math.PI / 4;
-               }
-               return sign * Math.PI;
-            };
-
-            element.fXmin = parse_range(arr[0]);
-            element.fXmax = parse_range(arr[1]);
-
-            // avoid usage of 1 << nbits, while only works up to 32 bits
-            const bigint = ((nbits >= 0) && (nbits < 32)) ? Math.pow(2, nbits) : 0xffffffff;
-            if (element.fXmin < element.fXmax)
-               element.fFactor = bigint / (element.fXmax - element.fXmin);
-            else if (nbits < 15)
-               element.fXmin = nbits;
-         }
-      }
-   },
-
-   TStreamerBase(buf, elem) {
-      const ver = buf.last_read_version;
-      buf.classStreamer(elem, clTStreamerElement);
-      if (ver > 2) elem.fBaseVersion = buf.ntou4();
-   },
-
-   TStreamerSTL(buf, elem) {
-      buf.classStreamer(elem, clTStreamerElement);
-      elem.fSTLtype = buf.ntou4();
-      elem.fCtype = buf.ntou4();
-
-      if ((elem.fSTLtype === kSTLmultimap) &&
-         ((elem.fTypeName.indexOf('std::set') === 0) ||
-            (elem.fTypeName.indexOf('set') === 0))) elem.fSTLtype = kSTLset;
-
-      if ((elem.fSTLtype === kSTLset) &&
-         ((elem.fTypeName.indexOf('std::multimap') === 0) ||
-            (elem.fTypeName.indexOf('multimap') === 0))) elem.fSTLtype = kSTLmultimap;
-   },
-
-   TStreamerSTLstring(buf, elem) {
-      if (buf.last_read_version > 0)
-         buf.classStreamer(elem, clTStreamerSTL);
-   },
-
-   TList(buf, obj) {
-      // stream all objects in the list from the I/O buffer
-      if (!obj._typename) obj._typename = this.typename;
-      obj.$kind = clTList; // all derived classes will be marked as well
-      if (buf.last_read_version > 3) {
-         buf.classStreamer(obj, clTObject);
-         obj.name = buf.readTString();
-         const nobjects = buf.ntou4();
-         obj.arr = new Array(nobjects);
-         obj.opt = new Array(nobjects);
-         for (let i = 0; i < nobjects; ++i) {
-            obj.arr[i] = buf.readObjectAny();
-            obj.opt[i] = buf.readTString();
-         }
-      } else {
-         obj.name = '';
-         obj.arr = [];
-         obj.opt = [];
-      }
-   },
-
-   THashList: clTList,
-
-   TStreamerLoop(buf, elem) {
-      if (buf.last_read_version > 1) {
-         buf.classStreamer(elem, clTStreamerElement);
-         elem.fCountVersion = buf.ntou4();
-         elem.fCountName = buf.readTString();
-         elem.fCountClass = buf.readTString();
-      }
-   },
-
-   TStreamerBasicPointer: 'TStreamerLoop',
-
-   TStreamerObject(buf, elem) {
-      if (buf.last_read_version > 1)
-         buf.classStreamer(elem, clTStreamerElement);
-   },
-
-   TStreamerBasicType: clTStreamerObject,
-   TStreamerObjectAny: clTStreamerObject,
-   TStreamerString: clTStreamerObject,
-   TStreamerObjectPointer: clTStreamerObject,
-
-   TStreamerObjectAnyPointer(buf, elem) {
-      if (buf.last_read_version > 0)
-         buf.classStreamer(elem, clTStreamerElement);
-   },
-
-   TTree: {
-      name: '$file',
-      func(buf, obj) { obj.$kind = 'TTree'; obj.$file = buf.fFile; }
-   },
-
-   RooRealVar(buf, obj) {
-      const v = buf.last_read_version;
-      buf.classStreamer(obj, 'RooAbsRealLValue');
-      if (v === 1) { buf.ntod(); buf.ntod(); buf.ntoi4(); } // skip fitMin, fitMax, fitBins
-      obj._error = buf.ntod();
-      obj._asymErrLo = buf.ntod();
-      obj._asymErrHi = buf.ntod();
-      if (v >= 2) obj._binning = buf.readObjectAny();
-      if (v === 3) obj._sharedProp = buf.readObjectAny();
-      if (v >= 4) obj._sharedProp = buf.classStreamer({}, 'RooRealVarSharedProperties');
-   },
-
-   RooAbsBinning(buf, obj) {
-      buf.classStreamer(obj, (buf.last_read_version === 1) ? clTObject : clTNamed);
-      buf.classStreamer(obj, 'RooPrintable');
-   },
-
-   RooCategory(buf, obj) {
-      const v = buf.last_read_version;
-      buf.classStreamer(obj, 'RooAbsCategoryLValue');
-      obj._sharedProp = (v === 1) ? buf.readObjectAny() : buf.classStreamer({}, 'RooCategorySharedProperties');
-   },
-
-   'RooWorkspace::CodeRepo': (buf /* , obj */) => {
-      const sz = (buf.last_read_version === 2) ? 3 : 2;
-      for (let i = 0; i < sz; ++i) {
-         let cnt = buf.ntoi4() * ((i === 0) ? 4 : 3);
-         while (cnt--) buf.readTString();
-      }
-   },
-
-   RooLinkedList(buf, obj) {
-      const v = buf.last_read_version;
-      buf.classStreamer(obj, clTObject);
-      let size = buf.ntoi4();
-      obj.arr = create$1(clTList);
-      while (size--)
-         obj.arr.Add(buf.readObjectAny());
-      if (v > 1) obj._name = buf.readTString();
-   },
-
-   TImagePalette: [
-      {
-         basename: clTObject, base: 1, func(buf, obj) {
-            if (!obj._typename) obj._typename = clTImagePalette;
-            buf.classStreamer(obj, clTObject);
-         }
-      },
-      { name: 'fNumPoints', func(buf, obj) { obj.fNumPoints = buf.ntou4(); } },
-      { name: 'fPoints', func(buf, obj) { obj.fPoints = buf.readFastArray(obj.fNumPoints, kDouble); } },
-      { name: 'fColorRed', func(buf, obj) { obj.fColorRed = buf.readFastArray(obj.fNumPoints, kUShort); } },
-      { name: 'fColorGreen', func(buf, obj) { obj.fColorGreen = buf.readFastArray(obj.fNumPoints, kUShort); } },
-      { name: 'fColorBlue', func(buf, obj) { obj.fColorBlue = buf.readFastArray(obj.fNumPoints, kUShort); } },
-      { name: 'fColorAlpha', func(buf, obj) { obj.fColorAlpha = buf.readFastArray(obj.fNumPoints, kUShort); } }
-   ],
-
-   TAttImage: [
-      { name: 'fImageQuality', func(buf, obj) { obj.fImageQuality = buf.ntoi4(); } },
-      { name: 'fImageCompression', func(buf, obj) { obj.fImageCompression = buf.ntou4(); } },
-      { name: 'fConstRatio', func(buf, obj) { obj.fConstRatio = (buf.ntou1() !== 0); } },
-      { name: 'fPalette', func(buf, obj) { obj.fPalette = buf.classStreamer({}, clTImagePalette); } }
-   ],
-
-   TASImage(buf, obj) {
-      if ((buf.last_read_version === 1) && (buf.fFile.fVersion > 0) && (buf.fFile.fVersion < 50000))
-         return console.warn('old TASImage version - not yet supported');
-
-      buf.classStreamer(obj, clTNamed);
-
-      if (buf.ntou1() !== 0) {
-         const size = buf.ntoi4();
-         obj.fPngBuf = buf.readFastArray(size, kUChar);
-      } else {
-         buf.classStreamer(obj, 'TAttImage');
-         obj.fWidth = buf.ntoi4();
-         obj.fHeight = buf.ntoi4();
-         obj.fImgBuf = buf.readFastArray(obj.fWidth * obj.fHeight, kDouble);
-      }
-   },
-
-   TMaterial(buf, obj) {
-      const v = buf.last_read_version;
-      buf.classStreamer(obj, clTNamed);
-      obj.fNumber = buf.ntoi4();
-      obj.fA = buf.ntof();
-      obj.fZ = buf.ntof();
-      obj.fDensity = buf.ntof();
-      if (v > 2) {
-         buf.classStreamer(obj, clTAttFill);
-         obj.fRadLength = buf.ntof();
-         obj.fInterLength = buf.ntof();
-      } else
-         obj.fRadLength = obj.fInterLength = 0;
-   },
-
-   TMixture(buf, obj) {
-      buf.classStreamer(obj, 'TMaterial');
-      obj.fNmixt = buf.ntoi4();
-      obj.fAmixt = buf.readFastArray(buf.ntoi4(), kFloat);
-      obj.fZmixt = buf.readFastArray(buf.ntoi4(), kFloat);
-      obj.fWmixt = buf.readFastArray(buf.ntoi4(), kFloat);
-   },
-
-   TVirtualPerfStats: clTObject, // use directly TObject streamer
-
-   TMethodCall: clTObject
-};
-
-
-/** @summary Add custom streamer
-  * @public */
-function addUserStreamer(type, user_streamer) {
-   CustomStreamers[type] = user_streamer;
-}
-
-/** @summary these are streamers which do not handle version regularly
-  * @desc used for special classes like TRef or TBasket
-  * @private */
-const DirectStreamers = {
-   // do nothing for these classes
-   TQObject() {},
-   TGraphStruct() {},
-   TGraphNode() {},
-   TGraphEdge() {},
-
-   TDatime(buf, obj) {
-      obj.fDatime = buf.ntou4();
-   },
-
-   TKey(buf, key) {
-      key.fNbytes = buf.ntoi4();
-      key.fVersion = buf.ntoi2();
-      key.fObjlen = buf.ntou4();
-      key.fDatime = buf.classStreamer({}, clTDatime);
-      key.fKeylen = buf.ntou2();
-      key.fCycle = buf.ntou2();
-      if (key.fVersion > 1000) {
-         key.fSeekKey = buf.ntou8();
-         buf.shift(8); // skip seekPdir
-      } else {
-         key.fSeekKey = buf.ntou4();
-         buf.shift(4); // skip seekPdir
-      }
-      key.fClassName = buf.readTString();
-      key.fName = buf.readTString();
-      key.fTitle = buf.readTString();
-   },
-
-   TDirectory(buf, dir) {
-      const version = buf.ntou2();
-      dir.fDatimeC = buf.classStreamer({}, clTDatime);
-      dir.fDatimeM = buf.classStreamer({}, clTDatime);
-      dir.fNbytesKeys = buf.ntou4();
-      dir.fNbytesName = buf.ntou4();
-      dir.fSeekDir = (version > 1000) ? buf.ntou8() : buf.ntou4();
-      dir.fSeekParent = (version > 1000) ? buf.ntou8() : buf.ntou4();
-      dir.fSeekKeys = (version > 1000) ? buf.ntou8() : buf.ntou4();
-      // if ((version % 1000) > 2) buf.shift(18); // skip fUUID
-   },
-
-   TBasket(buf, obj) {
-      buf.classStreamer(obj, clTKey);
-      const ver = buf.readVersion();
-      obj.fBufferSize = buf.ntoi4();
-      obj.fNevBufSize = buf.ntoi4();
-      obj.fNevBuf = buf.ntoi4();
-      obj.fLast = buf.ntoi4();
-      if (obj.fLast > obj.fBufferSize) obj.fBufferSize = obj.fLast;
-      const flag = buf.ntoi1();
-
-      if (flag === 0) return;
-
-      if ((flag % 10) !== 2) {
-         if (obj.fNevBuf) {
-            obj.fEntryOffset = buf.readFastArray(buf.ntoi4(), kInt);
-            if ((flag > 20) && (flag < 40)) {
-               for (let i = 0, kDisplacementMask = 0xFF000000; i < obj.fNevBuf; ++i)
-                  obj.fEntryOffset[i] &= ~kDisplacementMask;
-            }
-         }
-
-         if (flag > 40)
-            obj.fDisplacement = buf.readFastArray(buf.ntoi4(), kInt);
-      }
-
-      if ((flag === 1) || (flag > 10)) {
-         // here is reading of raw data
-         const sz = (ver.val <= 1) ? buf.ntoi4() : obj.fLast;
-
-         if (sz > obj.fKeylen) {
-            // buffer includes again complete TKey data - exclude it
-            const blob = buf.extract([buf.o + obj.fKeylen, sz - obj.fKeylen]);
-            obj.fBufferRef = new TBuffer(blob, 0, buf.fFile, sz - obj.fKeylen);
-            obj.fBufferRef.fTagOffset = obj.fKeylen;
-         }
-
-         buf.shift(sz);
-      }
-   },
-
-   TRef(buf, obj) {
-      buf.classStreamer(obj, clTObject);
-      if (obj.fBits & kHasUUID)
-         obj.fUUID = buf.readTString();
-      else
-         obj.fPID = buf.ntou2();
-   },
-
-   'TMatrixTSym<float>': (buf, obj) => {
-      buf.classStreamer(obj, 'TMatrixTBase<float>');
-      obj.fElements = new Float32Array(obj.fNelems);
-      const arr = buf.readFastArray((obj.fNrows * (obj.fNcols + 1)) / 2, kFloat);
-      for (let i = 0, cnt = 0; i < obj.fNrows; ++i) {
-         for (let j = i; j < obj.fNcols; ++j)
-            obj.fElements[j * obj.fNcols + i] = obj.fElements[i * obj.fNcols + j] = arr[cnt++];
-      }
-   },
-
-   'TMatrixTSym<double>': (buf, obj) => {
-      buf.classStreamer(obj, 'TMatrixTBase<double>');
-      obj.fElements = new Float64Array(obj.fNelems);
-      const arr = buf.readFastArray((obj.fNrows * (obj.fNcols + 1)) / 2, kDouble);
-      for (let i = 0, cnt = 0; i < obj.fNrows; ++i) {
-         for (let j = i; j < obj.fNcols; ++j)
-            obj.fElements[j * obj.fNcols + i] = obj.fElements[i * obj.fNcols + j] = arr[cnt++];
-      }
-   }
-};
-
-
-/** @summary Returns type id by its name
-  * @private */
-function getTypeId(typname, norecursion) {
-   switch (typname) {
-      case 'bool':
-      case 'Bool_t': return kBool;
-      case 'char':
-      case 'signed char':
-      case 'Char_t': return kChar;
-      case 'Color_t':
-      case 'Style_t':
-      case 'Width_t':
-      case 'short':
-      case 'Short_t': return kShort;
-      case 'int':
-      case 'EErrorType':
-      case 'Int_t': return kInt;
-      case 'long':
-      case 'Long_t': return kLong;
-      case 'float':
-      case 'Float_t': return kFloat;
-      case 'double':
-      case 'Double_t': return kDouble;
-      case 'unsigned char':
-      case 'UChar_t': return kUChar;
-      case 'unsigned short':
-      case 'UShort_t': return kUShort;
-      case 'unsigned':
-      case 'unsigned int':
-      case 'UInt_t': return kUInt;
-      case 'unsigned long':
-      case 'ULong_t': return kULong;
-      case 'int64_t':
-      case 'long long':
-      case 'Long64_t': return kLong64;
-      case 'uint64_t':
-      case 'unsigned long long':
-      case 'ULong64_t': return kULong64;
-      case 'Double32_t': return kDouble32;
-      case 'Float16_t': return kFloat16;
-      case 'char*':
-      case 'const char*':
-      case 'const Char_t*': return kCharStar;
-   }
-
-   if (!norecursion) {
-      const replace = CustomStreamers[typname];
-      if (isStr(replace)) return getTypeId(replace, true);
-   }
-
-   return -1;
-}
-
-/** @summary create element of the streamer
-  * @private  */
-function createStreamerElement(name, typename, file) {
-   const elem = {
-      _typename: clTStreamerElement, fName: name, fTypeName: typename,
-      fType: 0, fSize: 0, fArrayLength: 0, fArrayDim: 0, fMaxIndex: [0, 0, 0, 0, 0],
-      fXmin: 0, fXmax: 0, fFactor: 0
-   };
-
-   if (isStr(typename)) {
-      elem.fType = getTypeId(typename);
-      if ((elem.fType < 0) && file && file.fBasicTypes[typename])
-         elem.fType = file.fBasicTypes[typename];
-   } else {
-      elem.fType = typename;
-      typename = elem.fTypeName = BasicTypeNames[elem.fType] || 'int';
-   }
-
-   if (elem.fType > 0) return elem; // basic type
-
-   // check if there are STL containers
-   const pos = typename.indexOf('<');
-   let stltype = kNotSTL;
-   if ((pos > 0) && (typename.indexOf('>') > pos + 2)) {
-      for (let stl = 1; stl < StlNames.length; ++stl) {
-         if (typename.slice(0, pos) === StlNames[stl]) {
-            stltype = stl; break;
-         }
-      }
-   }
-
-   if (stltype !== kNotSTL) {
-      elem._typename = clTStreamerSTL;
-      elem.fType = kStreamer;
-      elem.fSTLtype = stltype;
-      elem.fCtype = 0;
-      return elem;
-   }
-
-   const isptr = (typename.lastIndexOf('*') === typename.length - 1);
-
-   if (isptr)
-      elem.fTypeName = typename = typename.slice(0, typename.length - 1);
-
-   if (getArrayKind(typename) === 0) {
-      elem.fType = kTString;
-      return elem;
-   }
-
-   elem.fType = isptr ? kAnyP : kAny;
-
-   return elem;
-}
-
-
-/** @summary Function creates streamer for std::pair object
-  * @private */
-function getPairStreamer(si, typname, file) {
-   if (!si) {
-      if (typname.indexOf('pair') !== 0) return null;
-
-      si = file.findStreamerInfo(typname);
-
-      if (!si) {
-         let p1 = typname.indexOf('<');
-         const p2 = typname.lastIndexOf('>');
-         function GetNextName() {
-            let res = '', p = p1 + 1, cnt = 0;
-            while ((p < p2) && (cnt >= 0)) {
-               switch (typname[p]) {
-                  case '<': cnt++; break;
-                  case ',': if (cnt === 0) cnt--; break;
-                  case '>': cnt--; break;
-               }
-               if (cnt >= 0) res += typname[p];
-               p++;
-            }
-            p1 = p - 1;
-            return res.trim();
-         }
-         si = { _typename: 'TStreamerInfo', fVersion: 1, fName: typname, fElements: create$1(clTList) };
-         si.fElements.Add(createStreamerElement('first', GetNextName(), file));
-         si.fElements.Add(createStreamerElement('second', GetNextName(), file));
-      }
-   }
-
-   const streamer = file.getStreamer(typname, null, si);
-   if (!streamer) return null;
-
-   if (streamer.length !== 2) {
-      console.error(`Streamer for pair class contains ${streamer.length} elements`);
-      return null;
-   }
-
-   for (let nn = 0; nn < 2; ++nn) {
-      if (streamer[nn].readelem && !streamer[nn].pair_name) {
-         streamer[nn].pair_name = (nn === 0) ? 'first' : 'second';
-         streamer[nn].func = function(buf, obj) {
-            obj[this.pair_name] = this.readelem(buf);
-         };
-      }
-   }
-
-   return streamer;
-}
-
-
-/** @summary create member entry for streamer element
-  * @desc used for reading of data
-  * @private */
-function createMemberStreamer(element, file) {
-   const member = {
-      name: element.fName, type: element.fType,
-      fArrayLength: element.fArrayLength,
-      fArrayDim: element.fArrayDim,
-      fMaxIndex: element.fMaxIndex
-   };
-
-   if (element.fTypeName === kBaseClass) {
-      if (getArrayKind(member.name) > 0) {
-         // this is workaround for arrays as base class
-         // we create 'fArray' member, which read as any other data member
-         member.name = 'fArray';
-         member.type = kAny;
-      } else {
-         // create streamer for base class
-         member.type = kBase;
-         // this.getStreamer(element.fName);
-      }
-   }
-
-   switch (member.type) {
-      case kBase:
-         member.base = element.fBaseVersion; // indicate base class
-         member.basename = element.fName; // keep class name
-         member.func = function(buf, obj) { buf.classStreamer(obj, this.basename); };
-         break;
-      case kShort:
-         member.func = function(buf, obj) { obj[this.name] = buf.ntoi2(); }; break;
-      case kInt:
-      case kCounter:
-         member.func = function(buf, obj) { obj[this.name] = buf.ntoi4(); }; break;
-      case kLong:
-      case kLong64:
-         member.func = function(buf, obj) { obj[this.name] = buf.ntoi8(); }; break;
-      case kDouble:
-         member.func = function(buf, obj) { obj[this.name] = buf.ntod(); }; break;
-      case kFloat:
-         member.func = function(buf, obj) { obj[this.name] = buf.ntof(); }; break;
-      case kLegacyChar:
-      case kUChar:
-         member.func = function(buf, obj) { obj[this.name] = buf.ntou1(); }; break;
-      case kUShort:
-         member.func = function(buf, obj) { obj[this.name] = buf.ntou2(); }; break;
-      case kBits:
-      case kUInt:
-         member.func = function(buf, obj) { obj[this.name] = buf.ntou4(); }; break;
-      case kULong64:
-      case kULong:
-         member.func = function(buf, obj) { obj[this.name] = buf.ntou8(); }; break;
-      case kBool:
-         member.func = function(buf, obj) { obj[this.name] = buf.ntou1() !== 0; }; break;
-      case kOffsetL + kBool:
-      case kOffsetL + kInt:
-      case kOffsetL + kCounter:
-      case kOffsetL + kDouble:
-      case kOffsetL + kUChar:
-      case kOffsetL + kShort:
-      case kOffsetL + kUShort:
-      case kOffsetL + kBits:
-      case kOffsetL + kUInt:
-      case kOffsetL + kULong:
-      case kOffsetL + kULong64:
-      case kOffsetL + kLong:
-      case kOffsetL + kLong64:
-      case kOffsetL + kFloat:
-         if (element.fArrayDim < 2) {
-            member.arrlength = element.fArrayLength;
-            member.func = function(buf, obj) {
-               obj[this.name] = buf.readFastArray(this.arrlength, this.type - kOffsetL);
-            };
-         } else {
-            member.arrlength = element.fMaxIndex[element.fArrayDim - 1];
-            member.minus1 = true;
-            member.func = function(buf, obj) {
-               obj[this.name] = buf.readNdimArray(this, (buf, handle) =>
-                  buf.readFastArray(handle.arrlength, handle.type - kOffsetL));
-            };
-         }
-         break;
-      case kOffsetL + kChar:
-         if (element.fArrayDim < 2) {
-            member.arrlength = element.fArrayLength;
-            member.func = function(buf, obj) {
-               obj[this.name] = buf.readFastString(this.arrlength);
-            };
-         } else {
-            member.minus1 = true; // one dimension used for char*
-            member.arrlength = element.fMaxIndex[element.fArrayDim - 1];
-            member.func = function(buf, obj) {
-               obj[this.name] = buf.readNdimArray(this, (buf, handle) =>
-                  buf.readFastString(handle.arrlength));
-            };
-         }
-         break;
-      case kOffsetP + kBool:
-      case kOffsetP + kInt:
-      case kOffsetP + kDouble:
-      case kOffsetP + kUChar:
-      case kOffsetP + kShort:
-      case kOffsetP + kUShort:
-      case kOffsetP + kBits:
-      case kOffsetP + kUInt:
-      case kOffsetP + kULong:
-      case kOffsetP + kULong64:
-      case kOffsetP + kLong:
-      case kOffsetP + kLong64:
-      case kOffsetP + kFloat:
-         member.cntname = element.fCountName;
-         member.func = function(buf, obj) {
-            obj[this.name] = (buf.ntou1() === 1) ? buf.readFastArray(obj[this.cntname], this.type - kOffsetP) : [];
-         };
-         break;
-      case kOffsetP + kChar:
-         member.cntname = element.fCountName;
-         member.func = function(buf, obj) {
-            obj[this.name] = (buf.ntou1() === 1) ? buf.readFastString(obj[this.cntname]) : null;
-         };
-         break;
-      case kDouble32:
-      case kOffsetL + kDouble32:
-      case kOffsetP + kDouble32:
-         member.double32 = true;
-      case kFloat16:
-      case kOffsetL + kFloat16:
-      case kOffsetP + kFloat16:
-         if (element.fFactor !== 0) {
-            member.factor = 1 / element.fFactor;
-            member.min = element.fXmin;
-            member.read = function(buf) { return buf.ntou4() * this.factor + this.min; };
-         } else
-            if ((element.fXmin === 0) && member.double32)
-               member.read = function(buf) { return buf.ntof(); };
-            else {
-               member.nbits = Math.round(element.fXmin);
-               if (member.nbits === 0) member.nbits = 12;
-               member.dv = new DataView(new ArrayBuffer(8), 0); // used to cast from uint32 to float32
-               member.read = function(buf) {
-                  const theExp = buf.ntou1(), theMan = buf.ntou2();
-                  this.dv.setUint32(0, (theExp << 23) | ((theMan & ((1 << (this.nbits + 1)) - 1)) << (23 - this.nbits)));
-                  return ((1 << (this.nbits + 1) & theMan) ? -1 : 1) * this.dv.getFloat32(0);
-               };
-            }
-
-         member.readarr = function(buf, len) {
-            const arr = this.double32 ? new Float64Array(len) : new Float32Array(len);
-            for (let n = 0; n < len; ++n) arr[n] = this.read(buf);
-            return arr;
-         };
-
-         if (member.type < kOffsetL)
-            member.func = function(buf, obj) { obj[this.name] = this.read(buf); };
-         else
-            if (member.type > kOffsetP) {
-               member.cntname = element.fCountName;
-               member.func = function(buf, obj) {
-                  obj[this.name] = (buf.ntou1() === 1) ? this.readarr(buf, obj[this.cntname]) : null;
-               };
-            } else
-               if (element.fArrayDim < 2) {
-                  member.arrlength = element.fArrayLength;
-                  member.func = function(buf, obj) { obj[this.name] = this.readarr(buf, this.arrlength); };
-               } else {
-                  member.arrlength = element.fMaxIndex[element.fArrayDim - 1];
-                  member.minus1 = true;
-                  member.func = function(buf, obj) {
-                     obj[this.name] = buf.readNdimArray(this, (buf, handle) => handle.readarr(buf, handle.arrlength));
-                  };
-               }
-         break;
-
-      case kAnyP:
-      case kObjectP:
-         member.func = function(buf, obj) {
-            obj[this.name] = buf.readNdimArray(this, buf => buf.readObjectAny());
-         };
-         break;
-
-      case kAny:
-      case kAnyp:
-      case kObjectp:
-      case kObject: {
-         let classname = (element.fTypeName === kBaseClass) ? element.fName : element.fTypeName;
-         if (classname[classname.length - 1] === '*')
-            classname = classname.slice(0, classname.length - 1);
-
-         const arrkind = getArrayKind(classname);
-
-         if (arrkind > 0) {
-            member.arrkind = arrkind;
-            member.func = function(buf, obj) { obj[this.name] = buf.readFastArray(buf.ntou4(), this.arrkind); };
-         } else if (arrkind === 0)
-            member.func = function(buf, obj) { obj[this.name] = buf.readTString(); };
-         else {
-            member.classname = classname;
-
-            if (element.fArrayLength > 1) {
-               member.func = function(buf, obj) {
-                  obj[this.name] = buf.readNdimArray(this, (buf, handle) => buf.classStreamer({}, handle.classname));
-               };
-            } else {
-               member.func = function(buf, obj) {
-                  obj[this.name] = buf.classStreamer({}, this.classname);
-               };
-            }
-         }
-         break;
-      }
-      case kOffsetL + kObject:
-      case kOffsetL + kAny:
-      case kOffsetL + kAnyp:
-      case kOffsetL + kObjectp: {
-         let classname = element.fTypeName;
-         if (classname[classname.length - 1] === '*')
-            classname = classname.slice(0, classname.length - 1);
-
-         member.arrkind = getArrayKind(classname);
-         if (member.arrkind < 0) member.classname = classname;
-         member.func = function(buf, obj) {
-            obj[this.name] = buf.readNdimArray(this, (buf, handle) => {
-               if (handle.arrkind > 0) return buf.readFastArray(buf.ntou4(), handle.arrkind);
-               if (handle.arrkind === 0) return buf.readTString();
-               return buf.classStreamer({}, handle.classname);
-            });
-         };
-         break;
-      }
-      case kChar:
-         member.func = function(buf, obj) { obj[this.name] = buf.ntoi1(); }; break;
-      case kCharStar:
-         member.func = function(buf, obj) {
-            const len = buf.ntoi4();
-            obj[this.name] = buf.substring(buf.o, buf.o + len);
-            buf.o += len;
-         };
-         break;
-      case kTString:
-         member.func = function(buf, obj) { obj[this.name] = buf.readTString(); };
-         break;
-      case kTObject:
-      case kTNamed:
-         member.typename = element.fTypeName;
-         member.func = function(buf, obj) { obj[this.name] = buf.classStreamer({}, this.typename); };
-         break;
-      case kOffsetL + kTString:
-      case kOffsetL + kTObject:
-      case kOffsetL + kTNamed:
-         member.typename = element.fTypeName;
-         member.func = function(buf, obj) {
-            const ver = buf.readVersion();
-            obj[this.name] = buf.readNdimArray(this, (buf, handle) => {
-               if (handle.typename === clTString) return buf.readTString();
-               return buf.classStreamer({}, handle.typename);
-            });
-            buf.checkByteCount(ver, this.typename + '[]');
-         };
-         break;
-      case kStreamLoop:
-      case kOffsetL + kStreamLoop:
-         member.typename = element.fTypeName;
-         member.cntname = element.fCountName;
-
-         if (member.typename.lastIndexOf('**') > 0) {
-            member.typename = member.typename.slice(0, member.typename.lastIndexOf('**'));
-            member.isptrptr = true;
-         } else {
-            member.typename = member.typename.slice(0, member.typename.lastIndexOf('*'));
-            member.isptrptr = false;
-         }
-
-         if (member.isptrptr)
-            member.readitem = function(buf) { return buf.readObjectAny(); };
-         else {
-            member.arrkind = getArrayKind(member.typename);
-            if (member.arrkind > 0)
-               member.readitem = function(buf) { return buf.readFastArray(buf.ntou4(), this.arrkind); };
-            else if (member.arrkind === 0)
-               member.readitem = function(buf) { return buf.readTString(); };
-            else
-               member.readitem = function(buf) { return buf.classStreamer({}, this.typename); };
-         }
-
-         if (member.readitem !== undefined) {
-            member.read_loop = function(buf, cnt) {
-               return buf.readNdimArray(this, (buf2, member2) => {
-                  const itemarr = new Array(cnt);
-                  for (let i = 0; i < cnt; ++i)
-                     itemarr[i] = member2.readitem(buf2);
-                  return itemarr;
-               });
-            };
-
-            member.func = function(buf, obj) {
-               const ver = buf.readVersion(),
-                     res = this.read_loop(buf, obj[this.cntname]);
-               obj[this.name] = buf.checkByteCount(ver, this.typename) ? res : null;
-            };
-            member.branch_func = function(buf, obj) {
-               // this is special functions, used by branch in the STL container
-               const ver = buf.readVersion(), sz0 = obj[this.stl_size], res = new Array(sz0);
-
-               for (let loop0 = 0; loop0 < sz0; ++loop0) {
-                  const cnt = obj[this.cntname][loop0];
-                  res[loop0] = this.read_loop(buf, cnt);
-               }
-               obj[this.name] = buf.checkByteCount(ver, this.typename) ? res : null;
-            };
-
-            member.objs_branch_func = function(buf, obj) {
-               // special function when branch read as part of complete object
-               // objects already preallocated and only appropriate member must be set
-               // see code in JSRoot.tree.js for reference
-
-               const ver = buf.readVersion(),
-                     arr = obj[this.name0]; // objects array where reading is done
-
-               for (let loop0 = 0; loop0 < arr.length; ++loop0) {
-                  const obj1 = this.get(arr, loop0), cnt = obj1[this.cntname];
-                  obj1[this.name] = this.read_loop(buf, cnt);
-               }
-
-               buf.checkByteCount(ver, this.typename);
-            };
-         } else {
-            console.error(`fail to provide function for ${element.fName} (${element.fTypeName})  typ = ${element.fType}`);
-            member.func = function(buf, obj) {
-               const ver = buf.readVersion();
-               buf.checkByteCount(ver);
-               obj[this.name] = null;
-            };
-         }
-
-         break;
-
-      case kStreamer: {
-         member.typename = element.fTypeName;
-
-         const stl = (element.fSTLtype || 0) % 40;
-         if ((element._typename === 'TStreamerSTLstring') ||
-            (member.typename === 'string') || (member.typename === 'string*'))
-            member.readelem = buf => buf.readTString();
-         else if ((stl === kSTLvector) || (stl === kSTLlist) ||
-                    (stl === kSTLdeque) || (stl === kSTLset) || (stl === kSTLmultiset)) {
-            const p1 = member.typename.indexOf('<'),
-                  p2 = member.typename.lastIndexOf('>');
-
-            member.conttype = member.typename.slice(p1 + 1, p2).trim();
-            member.typeid = getTypeId(member.conttype);
-            if ((member.typeid < 0) && file.fBasicTypes[member.conttype]) {
-               member.typeid = file.fBasicTypes[member.conttype];
-               console.log(`!!! Reuse basic type ${member.conttype} from file streamer infos`);
-            }
-
-            // check
-            if (element.fCtype && (element.fCtype < 20) && (element.fCtype !== member.typeid)) {
-               console.warn(`Contained type ${member.conttype} not recognized as basic type ${element.fCtype} FORCE`);
-               member.typeid = element.fCtype;
-            }
-
-            if (member.typeid > 0) {
-               member.readelem = function(buf) {
-                  return buf.readFastArray(buf.ntoi4(), this.typeid);
-               };
-            } else {
-               member.isptr = false;
-
-               if (member.conttype.lastIndexOf('*') === member.conttype.length - 1) {
-                  member.isptr = true;
-                  member.conttype = member.conttype.slice(0, member.conttype.length - 1);
-               }
-
-               if (element.fCtype === kObjectp) member.isptr = true;
-
-               member.arrkind = getArrayKind(member.conttype);
-
-               member.readelem = readVectorElement;
-
-               if (!member.isptr && (member.arrkind < 0)) {
-                  const subelem = createStreamerElement('temp', member.conttype);
-                  if (subelem.fType === kStreamer) {
-                     subelem.$fictional = true;
-                     member.submember = createMemberStreamer(subelem, file);
-                  }
-               }
-            }
-         } else if ((stl === kSTLmap) || (stl === kSTLmultimap)) {
-            const p1 = member.typename.indexOf('<'),
-                  p2 = member.typename.lastIndexOf('>');
-
-            member.pairtype = 'pair<' + member.typename.slice(p1 + 1, p2) + '>';
-
-            // remember found streamer info from the file -
-            // most probably it is the only one which should be used
-            member.si = file.findStreamerInfo(member.pairtype);
-
-            member.streamer = getPairStreamer(member.si, member.pairtype, file);
-
-            if (!member.streamer || (member.streamer.length !== 2)) {
-               console.error(`Fail to build streamer for pair ${member.pairtype}`);
-               delete member.streamer;
-            }
-
-            if (member.streamer) member.readelem = readMapElement;
-         } else if (stl === kSTLbitset)
-            member.readelem = (buf /* , obj */) => buf.readFastArray(buf.ntou4(), kBool);
-
-         if (!member.readelem) {
-            console.error(`failed to create streamer for element ${member.typename} ${member.name} element ${element._typename} STL type ${element.fSTLtype}`);
-            member.func = function(buf, obj) {
-               const ver = buf.readVersion();
-               buf.checkByteCount(ver);
-               obj[this.name] = null;
-            };
-         } else
-            if (!element.$fictional) {
-               member.read_version = function(buf, cnt) {
-                  if (cnt === 0) return null;
-                  const ver = buf.readVersion();
-                  this.member_wise = ((ver.val & kStreamedMemberWise) !== 0);
-
-                  this.stl_version = undefined;
-                  if (this.member_wise) {
-                     ver.val = ver.val & ~kStreamedMemberWise;
-                     this.stl_version = { val: buf.ntoi2() };
-                     if (this.stl_version.val <= 0) this.stl_version.checksum = buf.ntou4();
-                  }
-                  return ver;
-               };
-
-               member.func = function(buf, obj) {
-                  const ver = this.read_version(buf);
-
-                  let res = buf.readNdimArray(this, (buf2, member2) => member2.readelem(buf2));
-
-                  if (!buf.checkByteCount(ver, this.typename)) res = null;
-                  obj[this.name] = res;
-               };
-
-               member.branch_func = function(buf, obj) {
-                  // special function to read data from STL branch
-                  const cnt = obj[this.stl_size],
-                        ver = this.read_version(buf, cnt),
-                        arr = new Array(cnt);
-
-                  for (let n = 0; n < cnt; ++n)
-                     arr[n] = buf.readNdimArray(this, (buf2, member2) => member2.readelem(buf2));
-
-                  if (ver) buf.checkByteCount(ver, `branch ${this.typename}`);
-
-                  obj[this.name] = arr;
-               };
-               member.split_func = function(buf, arr, n) {
-                  // function to read array from member-wise streaming
-                  const ver = this.read_version(buf);
-                  for (let i = 0; i < n; ++i)
-                     arr[i][this.name] = buf.readNdimArray(this, (buf2, member2) => member2.readelem(buf2));
-                  buf.checkByteCount(ver, this.typename);
-               };
-               member.objs_branch_func = function(buf, obj) {
-                  // special function when branch read as part of complete object
-                  // objects already preallocated and only appropriate member must be set
-                  // see code in JSRoot.tree.js for reference
-
-                  const arr = obj[this.name0], // objects array where reading is done
-                        ver = this.read_version(buf, arr.length);
-
-                  for (let n = 0; n < arr.length; ++n) {
-                     const obj1 = this.get(arr, n);
-                     obj1[this.name] = buf.readNdimArray(this, (buf2, member2) => member2.readelem(buf2));
-                  }
-
-                  if (ver) buf.checkByteCount(ver, `branch ${this.typename}`);
-               };
-            }
-         break;
-      }
-
-      default:
-         console.error(`fail to provide function for ${element.fName} (${element.fTypeName})  typ = ${element.fType}`);
-
-         member.func = function(/* buf, obj */) {};  // do nothing, fix in the future
-   }
-
-   return member;
-}
-
-
-/** @summary Analyze and returns arrays kind
-  * @return 0 if TString (or equivalent), positive value - some basic type, -1 - any other kind
-  * @private */
-function getArrayKind(type_name) {
-   if ((type_name === clTString) || (type_name === 'string') ||
-      (CustomStreamers[type_name] === clTString)) return 0;
-   if ((type_name.length < 7) || (type_name.indexOf('TArray') !== 0)) return -1;
-   if (type_name.length === 7) {
-      switch (type_name[6]) {
-         case 'I': return kInt;
-         case 'D': return kDouble;
-         case 'F': return kFloat;
-         case 'S': return kShort;
-         case 'C': return kChar;
-         case 'L': return kLong;
-         default: return -1;
-      }
-   }
-
-   return type_name === 'TArrayL64' ? kLong64 : -1;
-}
-
-/** @summary Let directly assign methods when doing I/O
-  * @private */
-function addClassMethods(clname, streamer) {
-   if (streamer === null) return streamer;
-
-   const methods = getMethods(clname);
-
-   if (methods) {
-      for (const key in methods) {
-         if (isFunc(methods[key]) || (key.indexOf('_') === 0))
-            streamer.push({ name: key, method: methods[key], func(_buf, obj) { obj[this.name] = this.method; } });
-      }
-   }
-
-   return streamer;
-}
-
-
-/* Copyright (C) 1999 Masanao Izumo <iz@onicos.co.jp>
- * Version: 1.0.0.1
- * LastModified: Dec 25 1999
- * original: http://www.onicos.com/staff/iz/amuse/javascript/expert/inflate.txt
- */
-
-/* constant parameters */
-const zip_WSIZE = 32768,       // Sliding Window size
-
-/* constant tables (inflate) */
-zip_MASK_BITS = [
-   0x0000,
-   0x0001, 0x0003, 0x0007, 0x000f, 0x001f, 0x003f, 0x007f, 0x00ff,
-   0x01ff, 0x03ff, 0x07ff, 0x0fff, 0x1fff, 0x3fff, 0x7fff, 0xffff],
-
-// Tables for deflate from PKZIP's appnote.txt.
-   zip_cplens = [ // Copy lengths for literal codes 257..285
-   3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 19, 23, 27, 31,
-   35, 43, 51, 59, 67, 83, 99, 115, 131, 163, 195, 227, 258, 0, 0],
-
-/* note: see note #13 above about the 258 in this list. */
-   zip_cplext = [ // Extra bits for literal codes 257..285
-   0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2,
-   3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0, 99, 99], // 99==invalid
-
-   zip_cpdist = [ // Copy offsets for distance codes 0..29
-   1, 2, 3, 4, 5, 7, 9, 13, 17, 25, 33, 49, 65, 97, 129, 193,
-   257, 385, 513, 769, 1025, 1537, 2049, 3073, 4097, 6145,
-   8193, 12289, 16385, 24577],
-
-   zip_cpdext = [ // Extra bits for distance codes
-   0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6,
-   7, 7, 8, 8, 9, 9, 10, 10, 11, 11,
-   12, 12, 13, 13],
-
-   zip_border = [  // Order of the bit length code lengths
-   16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15];
-
-function ZIP_inflate(arr, tgt) {
-   /* variables (inflate) */
-   const zip_slide = new Array(2 * zip_WSIZE),
-         zip_inflate_data = arr,
-         zip_inflate_datalen = arr.byteLength;
-   let zip_wp = 0,                // current position in slide
-       zip_fixed_tl = null,      // inflate static
-       zip_fixed_td,             // inflate static
-       zip_fixed_bl, zip_fixed_bd,   // inflate static
-       zip_bit_buf = 0,            // bit buffer
-       zip_bit_len = 0,           // bits in bit buffer
-       zip_method = -1,
-       zip_eof = false,
-       zip_copy_leng = 0,
-       zip_copy_dist = 0,
-       zip_tl = null, zip_td,    // literal/length and distance decoder tables
-       zip_bl, zip_bd,           // number of bits decoded by tl and td
-       zip_inflate_pos = 0;
-
-   function zip_NEEDBITS(n) {
-      while (zip_bit_len < n) {
-         if (zip_inflate_pos < zip_inflate_datalen)
-            zip_bit_buf |= zip_inflate_data[zip_inflate_pos++] << zip_bit_len;
-         zip_bit_len += 8;
-      }
-   }
-
-   function zip_GETBITS(n) {
-      return zip_bit_buf & zip_MASK_BITS[n];
-   }
-
-   function zip_DUMPBITS(n) {
-      zip_bit_buf >>= n;
-      zip_bit_len -= n;
-   }
-
-   /* objects (inflate) */
-   function zip_HuftBuild(b,     // code lengths in bits (all assumed <= BMAX)
-                          n,     // number of codes (assumed <= N_MAX)
-                          s,     // number of simple-valued codes (0..s-1)
-                          d,     // list of base values for non-simple codes
-                          e,     // list of extra bits for non-simple codes
-                          mm) {  // maximum lookup bits
-      const res = {
-         status: 0,    // 0: success, 1: incomplete table, 2: bad input
-         root: null,   // (zip_HuftList) starting table
-         m: 0          // maximum lookup bits, returns actual
-      },
-      BMAX = 16,      // maximum bit length of any code
-      N_MAX = 288,    // maximum number of codes in any set
-      c = Array(BMAX+1).fill(0),  // bit length count table
-      lx = Array(BMAX+1).fill(0), // stack of bits per table
-      u = Array(BMAX).fill(null), // zip_HuftNode[BMAX][]  table stack
-      v = Array(N_MAX).fill(0), // values in order of bit length
-      x = Array(BMAX+1).fill(0), // bit offsets, then code stack
-      r = { e: 0, b: 0, n: 0, t: null }, // new zip_HuftNode(), // table entry for structure assignment
-      el = (n > 256) ? b[256] : BMAX; // set length of EOB code, if any
-      let rr = null, // temporary variable, use in assignment
-          a,         // counter for codes of length k
-          f,         // i repeats in table every f entries
-          h,         // table level
-          j,         // counter
-          k,         // number of bits in current code
-          p = b,     // pointer into c[], b[], or v[]
-          pidx = 0,  // index of p
-          q,         // (zip_HuftNode) points to current table
-          w,
-          xp,        // pointer into x or c
-          y,         // number of dummy codes added
-          z,         // number of entries in current table
-          o,
-          tail = null,   // (zip_HuftList)
-          i = n;         // counter, current code
-
-      // Generate counts for each bit length
-      do
-         c[p[pidx++]]++; // assume all entries <= BMAX
-      while (--i > 0);
-
-      if (c[0] === n)    // null input--all zero length codes
-         return res;
-
-      // Find minimum and maximum length, bound *m by those
-      for (j = 1; j <= BMAX; ++j)
-         if (c[j] !== 0) break;
-
-      k = j;         // minimum code length
-      if (mm < j)
-         mm = j;
-      for (i = BMAX; i !== 0; --i)
-         if (c[i] !== 0) break;
-
-      const g = i;         // maximum code length
-      if (mm > i)
-         mm = i;
-
-      // Adjust last length count to fill out codes, if needed
-      for (y = 1 << j; j < i; ++j, y <<= 1) {
-         if ((y -= c[j]) < 0) {
-            res.status = 2;  // bad input: more codes than bits
-            res.m = mm;
-            return res;
-         }
-      }
-      if ((y -= c[i]) < 0) {
-         res.status = 2;
-         res.m = mm;
-         return res;
-      }
-      c[i] += y;
-
-      // Generate starting offsets into the value table for each length
-      x[1] = j = 0;
-      p = c;
-      pidx = 1;
-      xp = 2;
-      while (--i > 0)    // note that i == g from above
-         x[xp++] = (j += p[pidx++]);
-
-      // Make a table of values in order of bit lengths
-      p = b; pidx = 0;
-      i = 0;
-      do {
-         if ((j = p[pidx++]) !== 0)
-            v[x[j]++] = i;
-      } while (++i < n);
-      n = x[g];         // set n to length of v
-
-      // Generate the Huffman codes and for each, make the table entries
-      x[0] = i = 0;     // first Huffman code is zero
-      p = v; pidx = 0;     // grab values in bit order
-      h = -1;        // no tables yet--level -1
-      w = lx[0] = 0;    // no bits decoded yet
-      q = null;         // ditto
-      z = 0;         // ditto
-
-      // go through the bit lengths (k already is bits in shortest code)
-      for (; k <= g; ++k) {
-         a = c[k];
-         while (a-- > 0) {
-            // here i is the Huffman code of length k bits for value p[pidx]
-            // make tables up to required level
-            while (k > w + lx[1 + h]) {
-               w += lx[1 + h++]; // add bits already decoded
-
-               // compute minimum size table less than or equal to *m bits
-               z = (z = g - w) > mm ? mm : z; // upper limit
-               if ((f = 1 << (j = k - w)) > a + 1) { // try a k-w bit table
-                  // too few codes for k-w bit table
-                  f -= a + 1; // deduct codes from patterns left
-                  xp = k;
-                  while (++j < z) { // try smaller tables up to z bits
-                     if ((f <<= 1) <= c[++xp])
-                        break;   // enough codes to use up j bits
-                     f -= c[xp];   // else deduct codes from patterns
-                  }
-               }
-               if (w + j > el && w < el)
-                  j = el - w; // make EOB code end at table
-               z = 1 << j;   // table entries for j-bit table
-               lx[1 + h] = j; // set table size in stack
-
-               // allocate and link in new table
-               q = new Array(z);
-               for (o = 0; o < z; ++o)
-                  q[o] = { e: 0, b: 0, n: 0, t: null }; // new zip_HuftNode
-
-               if (tail === null)
-                  tail = res.root = { next: null, list: null }; // new zip_HuftList();
-               else
-                  tail = tail.next = { next: null, list: null }; // new zip_HuftList();
-               tail.next = null;
-               tail.list = q;
-               u[h] = q;  // table starts after link
-
-               /* connect to last table, if there is one */
-               if (h > 0) {
-                  x[h] = i;      // save pattern for backing up
-                  r.b = lx[h];   // bits to dump before this table
-                  r.e = 16 + j;  // bits in this table
-                  r.t = q;    // pointer to this table
-                  j = (i & ((1 << w) - 1)) >> (w - lx[h]);
-                  rr = u[h-1][j];
-                  rr.e = r.e;
-                  rr.b = r.b;
-                  rr.n = r.n;
-                  rr.t = r.t;
-               }
-            }
-
-            // set up table entry in r
-            r.b = k - w;
-            if (pidx >= n)
-               r.e = 99;     // out of values--invalid code
-            else if (p[pidx] < s) {
-               r.e = (p[pidx] < 256 ? 16 : 15); // 256 is end-of-block code
-               r.n = p[pidx++]; // simple code is just the value
-            } else {
-               r.e = e[p[pidx] - s];  // non-simple--look up in lists
-               r.n = d[p[pidx++] - s];
-            }
-
-            // fill code-like entries with r //
-            f = 1 << (k - w);
-            for (j = i >> w; j < z; j += f) {
-               rr = q[j];
-               rr.e = r.e;
-               rr.b = r.b;
-               rr.n = r.n;
-               rr.t = r.t;
-            }
-
-            // backwards increment the k-bit code i
-            for (j = 1 << (k - 1); (i & j) !== 0; j >>= 1)
-               i ^= j;
-            i ^= j;
-
-            // backup over finished tables
-            while ((i & ((1 << w) - 1)) !== x[h])
-               w -= lx[h--];      // don't need to update q
-         }
-      }
-
-      /* return actual size of base table */
-      res.m = lx[1];
-
-      /* Return true (1) if we were given an incomplete table */
-      res.status = ((y !== 0 && g !== 1) ? 1 : 0);
-
-      return res;
-   }
-
-   /* routines (inflate) */
-
-   function zip_inflate_codes(buff, off, size) {
-      if (size === 0) return 0;
-
-      /* inflate (decompress) the codes in a deflated (compressed) block.
-         Return an error code or zero if it all goes ok. */
-
-      let e,     // table entry flag/number of extra bits
-          t,     // (zip_HuftNode) pointer to table entry
-          n = 0;
-
-      // inflate the coded data
-      for (;;) {        // do until end of block
-         zip_NEEDBITS(zip_bl);
-         t = zip_tl.list[zip_GETBITS(zip_bl)];
-         e = t.e;
-         while (e > 16) {
-            if (e === 99)
-               return -1;
-            zip_DUMPBITS(t.b);
-            e -= 16;
-            zip_NEEDBITS(e);
-            t = t.t[zip_GETBITS(e)];
-            e = t.e;
-         }
-         zip_DUMPBITS(t.b);
-
-         if (e === 16) {     // then it's a literal
-            zip_wp &= zip_WSIZE - 1;
-            buff[off + n++] = zip_slide[zip_wp++] = t.n;
-            if (n === size)
-               return size;
-            continue;
-         }
-
-         // exit if end of block
-         if (e === 15)
-            break;
-
-         // it's an EOB or a length
-
-         // get length of block to copy
-         zip_NEEDBITS(e);
-         zip_copy_leng = t.n + zip_GETBITS(e);
-         zip_DUMPBITS(e);
-
-         // decode distance of block to copy
-         zip_NEEDBITS(zip_bd);
-         t = zip_td.list[zip_GETBITS(zip_bd)];
-         e = t.e;
-
-         while (e > 16) {
-            if (e === 99)
-               return -1;
-            zip_DUMPBITS(t.b);
-            e -= 16;
-            zip_NEEDBITS(e);
-            t = t.t[zip_GETBITS(e)];
-            e = t.e;
-         }
-         zip_DUMPBITS(t.b);
-         zip_NEEDBITS(e);
-         zip_copy_dist = zip_wp - t.n - zip_GETBITS(e);
-         zip_DUMPBITS(e);
-
-         // do the copy
-         while (zip_copy_leng > 0 && n < size) {
-            --zip_copy_leng;
-            zip_copy_dist &= zip_WSIZE - 1;
-            zip_wp &= zip_WSIZE - 1;
-            buff[off + n++] = zip_slide[zip_wp++] = zip_slide[zip_copy_dist++];
-         }
-
-         if (n === size)
-            return size;
-      }
-
-      zip_method = -1; // done
-      return n;
-   }
-
-   function zip_inflate_stored(buff, off, size) {
-      /* 'decompress' an inflated type 0 (stored) block. */
-
-      // go to byte boundary
-      let n = zip_bit_len & 7;
-      zip_DUMPBITS(n);
-
-      // get the length and its complement
-      zip_NEEDBITS(16);
-      n = zip_GETBITS(16);
-      zip_DUMPBITS(16);
-      zip_NEEDBITS(16);
-      if (n !== ((~zip_bit_buf) & 0xffff))
-         return -1;        // error in compressed data
-      zip_DUMPBITS(16);
-
-      // read and output the compressed data
-      zip_copy_leng = n;
-
-      n = 0;
-      while (zip_copy_leng > 0 && n < size) {
-         --zip_copy_leng;
-         zip_wp &= zip_WSIZE - 1;
-         zip_NEEDBITS(8);
-         buff[off + n++] = zip_slide[zip_wp++] = zip_GETBITS(8);
-         zip_DUMPBITS(8);
-      }
-
-      if (zip_copy_leng === 0)
-         zip_method = -1; // done
-      return n;
-   }
-
-   function zip_inflate_fixed(buff, off, size) {
-      /* decompress an inflated type 1 (fixed Huffman codes) block.  We should
-         either replace this with a custom decoder, or at least pre-compute the
-         Huffman tables. */
-
-      // if first time, set up tables for fixed blocks
-      if (zip_fixed_tl === null) {
-         // literal table
-         const l = Array(288).fill(8, 0, 144).fill(9, 144, 256).fill(7, 256, 280).fill(8, 280, 288);
-         // make a complete, but wrong code set
-         zip_fixed_bl = 7;
-
-         let h = zip_HuftBuild(l, 288, 257, zip_cplens, zip_cplext, zip_fixed_bl);
-         if (h.status !== 0)
-            throw new Error('HufBuild error: ' + h.status);
-         zip_fixed_tl = h.root;
-         zip_fixed_bl = h.m;
-
-         // distance table
-         l.fill(5, 0, 30); // make an incomplete code set
-         zip_fixed_bd = 5;
-
-         h = zip_HuftBuild(l, 30, 0, zip_cpdist, zip_cpdext, zip_fixed_bd);
-         if (h.status > 1) {
-            zip_fixed_tl = null;
-            throw new Error('HufBuild error: '+h.status);
-         }
-         zip_fixed_td = h.root;
-         zip_fixed_bd = h.m;
-      }
-
-      zip_tl = zip_fixed_tl;
-      zip_td = zip_fixed_td;
-      zip_bl = zip_fixed_bl;
-      zip_bd = zip_fixed_bd;
-      return zip_inflate_codes(buff, off, size);
-   }
-
-   function zip_inflate_dynamic(buff, off, size) {
-      // decompress an inflated type 2 (dynamic Huffman codes) block.
-      let i, j,  // temporary variables
-          l,     // last length
-          t,     // (zip_HuftNode) literal/length code table
-          h;     // (zip_HuftBuild)
-      const ll = new Array(286+30).fill(0); // literal/length and distance code lengths
-
-      // read in table lengths
-      zip_NEEDBITS(5);
-      const nl = 257 + zip_GETBITS(5);   // number of literal/length codes
-      zip_DUMPBITS(5);
-      zip_NEEDBITS(5);
-      const nd = 1 + zip_GETBITS(5);  // number of distance codes
-      zip_DUMPBITS(5);
-      zip_NEEDBITS(4);
-      const nb = 4 + zip_GETBITS(4);  // number of bit length codes
-      zip_DUMPBITS(4);
-      if (nl > 286 || nd > 30)
-         return -1;     // bad lengths
-
-      // read in bit-length-code lengths
-      for (j = 0; j < nb; ++j) {
-         zip_NEEDBITS(3);
-         ll[zip_border[j]] = zip_GETBITS(3);
-         zip_DUMPBITS(3);
-      }
-      for (; j < 19; ++j)
-         ll[zip_border[j]] = 0;
-
-      // build decoding table for trees--single level, 7 bit lookup
-      zip_bl = 7;
-      h = zip_HuftBuild(ll, 19, 19, null, null, zip_bl);
-      if (h.status !== 0)
-         return -1;  // incomplete code set
-
-      zip_tl = h.root;
-      zip_bl = h.m;
-
-      // read in literal and distance code lengths
-      const n = nl + nd;   // number of lengths to get
-      i = l = 0;
-      while (i < n) {
-         zip_NEEDBITS(zip_bl);
-         t = zip_tl.list[zip_GETBITS(zip_bl)];
-         j = t.b;
-         zip_DUMPBITS(j);
-         j = t.n;
-         if (j < 16) // length of code in bits (0..15)
-            ll[i++] = l = j; // save last length in l
-         else if (j === 16) {   // repeat last length 3 to 6 times
-            zip_NEEDBITS(2);
-            j = 3 + zip_GETBITS(2);
-            zip_DUMPBITS(2);
-            if (i + j > n)
-               return -1;
-            while (j-- > 0)
-               ll[i++] = l;
-         } else if (j === 17) { // 3 to 10 zero length codes
-            zip_NEEDBITS(3);
-            j = 3 + zip_GETBITS(3);
-            zip_DUMPBITS(3);
-            if (i + j > n)
-               return -1;
-            while (j-- > 0)
-               ll[i++] = 0;
-            l = 0;
-         } else {    // j == 18: 11 to 138 zero length codes
-            zip_NEEDBITS(7);
-            j = 11 + zip_GETBITS(7);
-            zip_DUMPBITS(7);
-            if (i + j > n)
-               return -1;
-            while (j-- > 0)
-               ll[i++] = 0;
-            l = 0;
-         }
-      }
-
-      // build the decoding tables for literal/length and distance codes
-      zip_bl = 9; // zip_lbits;
-      h = zip_HuftBuild(ll, nl, 257, zip_cplens, zip_cplext, zip_bl);
-      if (zip_bl === 0)  // no literals or lengths
-         h.status = 1;
-      if (h.status !== 0)
-         return -1;     // incomplete code set
-      zip_tl = h.root;
-      zip_bl = h.m;
-
-      for (i = 0; i < nd; ++i)
-         ll[i] = ll[i + nl];
-      zip_bd = 6; // zip_dbits;
-      h = zip_HuftBuild(ll, nd, 0, zip_cpdist, zip_cpdext, zip_bd);
-      zip_td = h.root;
-      zip_bd = h.m;
-
-      // incomplete distance tree
-      if ((zip_bd === 0 && nl > 257) || (h.status !== 0))   // lengths but no distances
-         return -1;
-
-      // decompress until an end-of-block code
-      return zip_inflate_codes(buff, off, size);
-   }
-
-   function zip_inflate_internal(buff, off, size) {
-      // decompress an inflated entry
-      let n = 0, i;
-
-      while (n < size) {
-         if (zip_eof && zip_method === -1)
-            return n;
-
-         if (zip_copy_leng > 0) {
-            if (zip_method !== 0 /* zip_STORED_BLOCK */) {
-               // STATIC_TREES or DYN_TREES
-               while (zip_copy_leng > 0 && n < size) {
-                  --zip_copy_leng;
-                  zip_copy_dist &= zip_WSIZE - 1;
-                  zip_wp &= zip_WSIZE - 1;
-                  buff[off + n++] = zip_slide[zip_wp++] =
-                  zip_slide[zip_copy_dist++];
-               }
-            } else {
-               while (zip_copy_leng > 0 && n < size) {
-                  --zip_copy_leng;
-                  zip_wp &= zip_WSIZE - 1;
-                  zip_NEEDBITS(8);
-                  buff[off + n++] = zip_slide[zip_wp++] = zip_GETBITS(8);
-                  zip_DUMPBITS(8);
-               }
-               if (zip_copy_leng === 0)
-                  zip_method = -1; // done
-            }
-            if (n === size)
-               return n;
-         }
-
-         if (zip_method === -1) {
-            if (zip_eof)
-               break;
-
-            // read in last block bit
-            zip_NEEDBITS(1);
-            if (zip_GETBITS(1) !== 0)
-               zip_eof = true;
-            zip_DUMPBITS(1);
-
-            // read in block type
-            zip_NEEDBITS(2);
-            zip_method = zip_GETBITS(2);
-            zip_DUMPBITS(2);
-            zip_tl = null;
-            zip_copy_leng = 0;
-         }
-
-         switch (zip_method) {
-            case 0: // zip_STORED_BLOCK
-               i = zip_inflate_stored(buff, off + n, size - n);
-               break;
-
-            case 1: // zip_STATIC_TREES
-               if (zip_tl !== null)
-                  i = zip_inflate_codes(buff, off + n, size - n);
-               else
-                  i = zip_inflate_fixed(buff, off + n, size - n);
-               break;
-
-            case 2: // zip_DYN_TREES
-               if (zip_tl !== null)
-                  i = zip_inflate_codes(buff, off + n, size - n);
-               else
-                  i = zip_inflate_dynamic(buff, off + n, size - n);
-               break;
-
-            default: // error
-               i = -1;
-               break;
-         }
-
-         if (i === -1)
-            return zip_eof ? 0 : -1;
-         n += i;
-      }
-      return n;
-   }
-
-   let i, cnt = 0;
-   while ((i = zip_inflate_internal(tgt, cnt, Math.min(1024, tgt.byteLength-cnt))) > 0)
-      cnt += i;
-
-   return cnt;
-} // function ZIP_inflate
-
-/**
- * https://github.com/pierrec/node-lz4/blob/master/lib/binding.js
- *
- * LZ4 based compression and decompression
- * Copyright (c) 2014 Pierre Curto
- * MIT Licensed
- */
-
-/**
- * Decode a block. Assumptions: input contains all sequences of a
- * chunk, output is large enough to receive the decoded data.
- * If the output buffer is too small, an error will be thrown.
- * If the returned value is negative, an error occurred at the returned offset.
- *
- * @param input {Buffer} input data
- * @param output {Buffer} output data
- * @return {Number} number of decoded bytes
- * @private */
-function LZ4_uncompress(input, output, sIdx, eIdx) {
-   sIdx = sIdx || 0;
-   eIdx = eIdx || (input.length - sIdx);
-   // Process each sequence in the incoming data
-   let j = 0;
-   for (let i = sIdx, n = eIdx; i < n;) {
-      const token = input[i++];
-
-      // Literals
-      let literals_length = (token >> 4);
-      if (literals_length > 0) {
-         // length of literals
-         let l = literals_length + 240;
-         while (l === 255) {
-            l = input[i++];
-            literals_length += l;
-         }
-
-         // Copy the literals
-         const end = i + literals_length;
-         while (i < end) output[j++] = input[i++];
-
-         // End of buffer?
-         if (i === n) return j;
-      }
-
-      // Match copy
-      // 2 bytes offset (little endian)
-      const offset = input[i++] | (input[i++] << 8);
-
-      // 0 is an invalid offset value
-      if (offset === 0 || offset > j) return -(i-2);
-
-      // length of match copy
-      let match_length = (token & 0xf),
-          l = match_length + 240;
-      while (l === 255) {
-         l = input[i++];
-         match_length += l;
-      }
-
-      // Copy the match
-      let pos = j - offset; // position of the match copy in the current output
-      const end = j + match_length + 4; // minmatch = 4;
-      while (j < end) output[j++] = output[pos++];
-   }
-
-   return j;
-}
-
-
-/** @summary Reads header envelope, determines zipped size and unzip content
-  * @return {Promise} with unzipped content
-  * @private */
-async function R__unzip(arr, tgtsize, noalert, src_shift) {
-   const HDRSIZE = 9, totallen = arr.byteLength,
-         checkChar = (o, symb) => { return String.fromCharCode(arr.getUint8(o)) === symb; },
-         getCode = o => arr.getUint8(o);
-
-   let curr = src_shift || 0, fullres = 0, tgtbuf = null;
-
-   const nextPortion = () => {
-      while (fullres < tgtsize) {
-         let fmt = 'unknown', off = 0, CHKSUM = 0;
-
-         if (curr + HDRSIZE >= totallen) {
-            if (!noalert) console.error('Error R__unzip: header size exceeds buffer size');
-            return Promise.resolve(null);
-         }
-
-         if (checkChar(curr, 'Z') && checkChar(curr+1, 'L') && getCode(curr + 2) === 8) { fmt = 'new'; off = 2; } else
-         if (checkChar(curr, 'C') && checkChar(curr+1, 'S') && getCode(curr + 2) === 8) { fmt = 'old'; off = 0; } else
-         if (checkChar(curr, 'X') && checkChar(curr+1, 'Z') && getCode(curr + 2) === 0) { fmt = 'LZMA'; off = 0; } else
-         if (checkChar(curr, 'Z') && checkChar(curr+1, 'S') && getCode(curr + 2) === 1) fmt = 'ZSTD'; else
-         if (checkChar(curr, 'L') && checkChar(curr+1, '4')) { fmt = 'LZ4'; off = 0; CHKSUM = 8; }
-
-         /*   C H E C K   H E A D E R   */
-         if ((fmt !== 'new') && (fmt !== 'old') && (fmt !== 'LZ4') && (fmt !== 'ZSTD') && (fmt !== 'LZMA')) {
-            if (!noalert) console.error(`R__unzip: ${fmt} format is not supported!`);
-            return Promise.resolve(null);
-         }
-
-         const srcsize = HDRSIZE + ((getCode(curr + 3) & 0xff) | ((getCode(curr + 4) & 0xff) << 8) | ((getCode(curr + 5) & 0xff) << 16)),
-               uint8arr = new Uint8Array(arr.buffer, arr.byteOffset + curr + HDRSIZE + off + CHKSUM, Math.min(arr.byteLength - curr - HDRSIZE - off - CHKSUM, srcsize - HDRSIZE - CHKSUM));
-
-         if (!tgtbuf) tgtbuf = new ArrayBuffer(tgtsize);
-         const tgt8arr = new Uint8Array(tgtbuf, fullres);
-
-         if (fmt === 'ZSTD') {
-            let promise;
-            if (internals._ZstdStream)
-               promise = Promise.resolve(internals._ZstdStream);
-            else if (internals._ZstdInit !== undefined)
-               promise = new Promise(resolveFunc => { internals._ZstdInit.push(resolveFunc); });
-            else {
-               internals._ZstdInit = [];
-               promise = (isNodeJs() ? Promise.resolve().then(function () { return _rollup_plugin_ignore_empty_module_placeholder$1; }) : Promise.resolve().then(function () { return _rollup_plugin_ignore_empty_module_placeholder$1; }))
-                   .then(({ ZstdInit }) => ZstdInit())
-                   .then(({ ZstdStream }) => {
-                     internals._ZstdStream = ZstdStream;
-                     internals._ZstdInit.forEach(func => func(ZstdStream));
-                     delete internals._ZstdInit;
-                     return ZstdStream;
-                  });
-            }
-
-            return promise.then(ZstdStream => {
-               const data2 = ZstdStream.decompress(uint8arr),
-                     reslen = data2.length;
-
-               for (let i = 0; i < reslen; ++i)
-                   tgt8arr[i] = data2[i];
-
-               fullres += reslen;
-               curr += srcsize;
-               return nextPortion();
-            });
-         } else if (fmt === 'LZMA') {
-            return Promise.resolve().then(function () { return _rollup_plugin_ignore_empty_module_placeholder$1; }).then(lzma => {
-               const expected_len = (getCode(curr + 6) & 0xff) | ((getCode(curr + 7) & 0xff) << 8) | ((getCode(curr + 8) & 0xff) << 16),
-                     reslen = lzma.decompress(uint8arr, tgt8arr, expected_len);
-               fullres += reslen;
-               curr += srcsize;
-               return nextPortion();
-            });
-         }
-
-         const reslen = (fmt === 'LZ4') ? LZ4_uncompress(uint8arr, tgt8arr) : ZIP_inflate(uint8arr, tgt8arr);
-
-         if (reslen <= 0) break;
-         fullres += reslen;
-         curr += srcsize;
-      }
-
-      if (fullres !== tgtsize) {
-         if (!noalert) console.error(`R__unzip: fail to unzip data expects ${tgtsize}, got ${fullres}`);
-         return Promise.resolve(null);
-      }
-
-      return Promise.resolve(new DataView(tgtbuf));
-   };
-
-   return nextPortion();
-}
-
-
-/**
-  * @summary Buffer object to read data from TFile
-  *
-  * @private
-  */
-
-class TBuffer {
-
-   constructor(arr, pos, file, length) {
-      this._typename = 'TBuffer';
-      this.arr = arr;
-      this.o = pos || 0;
-      this.fFile = file;
-      this.length = length || (arr ? arr.byteLength : 0); // use size of array view, blob buffer can be much bigger
-      this.clearObjectMap();
-      this.fTagOffset = 0;
-      this.last_read_version = 0;
-   }
-
-   /** @summary locate position in the buffer  */
-   locate(pos) { this.o = pos; }
-
-   /** @summary shift position in the buffer  */
-   shift(cnt) { this.o += cnt; }
-
-   /** @summary Returns remaining place in the buffer */
-   remain() { return this.length - this.o; }
-
-   /** @summary Get mapped object with provided tag */
-   getMappedObject(tag) { return this.fObjectMap[tag]; }
-
-   /** @summary Map object */
-   mapObject(tag, obj) { if (obj !== null) this.fObjectMap[tag] = obj; }
-
-   /** @summary Map class */
-   mapClass(tag, classname) { this.fClassMap[tag] = classname; }
-
-   /** @summary Get mapped class with provided tag */
-   getMappedClass(tag) { return (tag in this.fClassMap) ? this.fClassMap[tag] : -1; }
-
-   /** @summary Clear objects map */
-   clearObjectMap() {
-      this.fObjectMap = {};
-      this.fClassMap = {};
-      this.fObjectMap[0] = null;
-      this.fDisplacement = 0;
-   }
-
-   /** @summary  read class version from I/O buffer */
-   readVersion() {
-      const ver = {}, bytecnt = this.ntou4(); // byte count
-
-      if (bytecnt & kByteCountMask)
-         ver.bytecnt = bytecnt - kByteCountMask - 2; // one can check between Read version and end of streamer
-      else
-         this.o -= 4; // rollback read bytes, this is old buffer without byte count
-
-      this.last_read_version = ver.val = this.ntoi2();
-      this.last_read_checksum = 0;
-      ver.off = this.o;
-
-      if ((ver.val <= 0) && ver.bytecnt && (ver.bytecnt >= 4)) {
-         ver.checksum = this.ntou4();
-         if (!this.fFile.findStreamerInfo(undefined, undefined, ver.checksum)) {
-            // console.error(`Fail to find streamer info with check sum ${ver.checksum} version ${ver.val}`);
-            this.o -= 4; // not found checksum in the list
-            delete ver.checksum; // remove checksum
-         } else
-            this.last_read_checksum = ver.checksum;
-      }
-      return ver;
-   }
-
-   /** @summary Check bytecount after object streaming */
-   checkByteCount(ver, where) {
-      if ((ver.bytecnt !== undefined) && (ver.off + ver.bytecnt !== this.o)) {
-         if (where)
-            console.log(`Missmatch in ${where} bytecount expected = ${ver.bytecnt}  got = ${this.o - ver.off}`);
-         this.o = ver.off + ver.bytecnt;
-         return false;
-      }
-      return true;
-   }
-
-   /** @summary Read TString object (or equivalent)
-     * @desc std::string uses similar binary format */
-   readTString() {
-      let len = this.ntou1();
-      // large strings
-      if (len === 255) len = this.ntou4();
-      if (len === 0) return '';
-
-      const pos = this.o;
-      this.o += len;
-
-      return (this.codeAt(pos) === 0) ? '' : this.substring(pos, pos + len);
-   }
-
-    /** @summary read Char_t array as string
-      * @desc string either contains all symbols or until 0 symbol */
-   readFastString(n) {
-      let res = '', code, closed = false;
-      for (let i = 0; (n < 0) || (i < n); ++i) {
-         code = this.ntou1();
-         if (code === 0) { closed = true; if (n < 0) break; }
-         if (!closed) res += String.fromCharCode(code);
-      }
-
-      return res;
-   }
-
-   /** @summary read uint8_t */
-   ntou1() { return this.arr.getUint8(this.o++); }
-
-   /** @summary read uint16_t */
-   ntou2() {
-      const o = this.o; this.o += 2;
-      return this.arr.getUint16(o);
-   }
-
-   /** @summary read uint32_t */
-   ntou4() {
-      const o = this.o; this.o += 4;
-      return this.arr.getUint32(o);
-   }
-
-   /** @summary read uint64_t */
-   ntou8() {
-      const high = this.arr.getUint32(this.o); this.o += 4;
-      const low = this.arr.getUint32(this.o); this.o += 4;
-      return (high < 0x200000) ? (high * 0x100000000 + low) : (BigInt(high) * BigInt(0x100000000) + BigInt(low));
-   }
-
-   /** @summary read int8_t */
-   ntoi1() { return this.arr.getInt8(this.o++); }
-
-   /** @summary read int16_t */
-   ntoi2() {
-      const o = this.o; this.o += 2;
-      return this.arr.getInt16(o);
-   }
-
-   /** @summary read int32_t */
-   ntoi4() {
-      const o = this.o; this.o += 4;
-      return this.arr.getInt32(o);
-   }
-
-   /** @summary read int64_t */
-   ntoi8() {
-      const high = this.arr.getUint32(this.o); this.o += 4;
-      const low = this.arr.getUint32(this.o); this.o += 4;
-      if (high < 0x80000000)
-         return (high < 0x200000) ? (high * 0x100000000 + low) : (BigInt(high) * BigInt(0x100000000) + BigInt(low));
-      return (~high < 0x200000) ? (-1 - ((~high) * 0x100000000 + ~low)) : (BigInt(-1) - (BigInt(~high) * BigInt(0x100000000) + BigInt(~low)));
-   }
-
-   /** @summary read float */
-   ntof() {
-      const o = this.o; this.o += 4;
-      return this.arr.getFloat32(o);
-   }
-
-   /** @summary read double */
-   ntod() {
-      const o = this.o; this.o += 8;
-      return this.arr.getFloat64(o);
-   }
-
-   /** @summary Reads array of n values from the I/O buffer */
-   readFastArray(n, array_type) {
-      let array, i = 0, o = this.o;
-      const view = this.arr;
-      switch (array_type) {
-         case kDouble:
-            array = new Float64Array(n);
-            for (; i < n; ++i, o += 8)
-               array[i] = view.getFloat64(o);
-            break;
-         case kFloat:
-            array = new Float32Array(n);
-            for (; i < n; ++i, o += 4)
-               array[i] = view.getFloat32(o);
-            break;
-         case kLong:
-         case kLong64:
-            array = new Array(n);
-            for (; i < n; ++i)
-               array[i] = this.ntoi8();
-            return array; // exit here to avoid conflicts
-         case kULong:
-         case kULong64:
-            array = new Array(n);
-            for (; i < n; ++i)
-               array[i] = this.ntou8();
-            return array; // exit here to avoid conflicts
-         case kInt:
-         case kCounter:
-            array = new Int32Array(n);
-            for (; i < n; ++i, o += 4)
-               array[i] = view.getInt32(o);
-            break;
-         case kShort:
-            array = new Int16Array(n);
-            for (; i < n; ++i, o += 2)
-               array[i] = view.getInt16(o);
-            break;
-         case kUShort:
-            array = new Uint16Array(n);
-            for (; i < n; ++i, o += 2)
-               array[i] = view.getUint16(o);
-            break;
-         case kChar:
-            array = new Int8Array(n);
-            for (; i < n; ++i)
-               array[i] = view.getInt8(o++);
-            break;
-         case kBool:
-         case kUChar:
-            array = new Uint8Array(n);
-            for (; i < n; ++i)
-               array[i] = view.getUint8(o++);
-            break;
-         case kTString:
-            array = new Array(n);
-            for (; i < n; ++i)
-               array[i] = this.readTString();
-            return array; // exit here to avoid conflicts
-         case kDouble32:
-            throw new Error('kDouble32 should not be used in readFastArray');
-         case kFloat16:
-            throw new Error('kFloat16 should not be used in readFastArray');
-         // case kBits:
-         // case kUInt:
-         default:
-            array = new Uint32Array(n);
-            for (; i < n; ++i, o += 4)
-               array[i] = view.getUint32(o);
-            break;
-      }
-
-      this.o = o;
-      return array;
-   }
-
-   /** @summary Check if provided regions can be extracted from the buffer */
-   canExtract(place) {
-      for (let n = 0; n < place.length; n += 2)
-         if (place[n] + place[n + 1] > this.length) return false;
-      return true;
-   }
-
-   /** @summary Extract area */
-   extract(place) {
-      if (!this.arr || !this.arr.buffer || !this.canExtract(place)) return null;
-      if (place.length === 2) return new DataView(this.arr.buffer, this.arr.byteOffset + place[0], place[1]);
-
-      const res = new Array(place.length / 2);
-      for (let n = 0; n < place.length; n += 2)
-         res[n / 2] = new DataView(this.arr.buffer, this.arr.byteOffset + place[n], place[n + 1]);
-
-      return res; // return array of buffers
-   }
-
-   /** @summary Get code at buffer position */
-   codeAt(pos) {
-      return this.arr.getUint8(pos);
-   }
-
-   /** @summary Get part of buffer as string */
-   substring(beg, end) {
-      let res = '';
-      for (let n = beg; n < end; ++n)
-         res += String.fromCharCode(this.arr.getUint8(n));
-      return res;
-   }
-
-   /** @summary Read buffer as N-dim array */
-   readNdimArray(handle, func) {
-      let ndim = handle.fArrayDim, maxindx = handle.fMaxIndex, res;
-      if ((ndim < 1) && (handle.fArrayLength > 0)) { ndim = 1; maxindx = [handle.fArrayLength]; }
-      if (handle.minus1) --ndim;
-
-      if (ndim < 1) return func(this, handle);
-
-      if (ndim === 1) {
-         res = new Array(maxindx[0]);
-         for (let n = 0; n < maxindx[0]; ++n)
-            res[n] = func(this, handle);
-      } else if (ndim === 2) {
-         res = new Array(maxindx[0]);
-         for (let n = 0; n < maxindx[0]; ++n) {
-            const res2 = new Array(maxindx[1]);
-            for (let k = 0; k < maxindx[1]; ++k)
-               res2[k] = func(this, handle);
-            res[n] = res2;
-         }
-      } else {
-         const indx = new Array(ndim).fill(0), arr = new Array(ndim);
-         for (let k = 0; k < ndim; ++k)
-            arr[k] = [];
-         res = arr[0];
-         while (indx[0] < maxindx[0]) {
-            let k = ndim - 1;
-            arr[k].push(func(this, handle));
-            ++indx[k];
-            while ((indx[k] === maxindx[k]) && (k > 0)) {
-               indx[k] = 0;
-               arr[k - 1].push(arr[k]);
-               arr[k] = [];
-               ++indx[--k];
-            }
-         }
-      }
-
-      return res;
-   }
-
-   /** @summary read TKey data */
-   readTKey(key) {
-      if (!key) key = {};
-      this.classStreamer(key, clTKey);
-      const name = key.fName.replace(/['"]/g, '');
-      if (name !== key.fName) {
-         key.fRealName = key.fName;
-         key.fName = name;
-      }
-      return key;
-   }
-
-   /** @summary reading basket data
-     * @desc this is remaining part of TBasket streamer to decode fEntryOffset
-     * after unzipping of the TBasket data */
-   readBasketEntryOffset(basket, offset) {
-      this.locate(basket.fLast - offset);
-
-      if (this.remain() <= 0) {
-         if (!basket.fEntryOffset && (basket.fNevBuf <= 1)) basket.fEntryOffset = [basket.fKeylen];
-         if (!basket.fEntryOffset) console.warn(`No fEntryOffset when expected for basket with ${basket.fNevBuf} entries`);
-         return;
-      }
-
-      const nentries = this.ntoi4();
-      // there is error in file=reco_103.root&item=Events;2/PCaloHits_g4SimHits_EcalHitsEE_Sim.&opt=dump;num:10;first:101
-      // it is workaround, but normally I/O should fail here
-      if ((nentries < 0) || (nentries > this.remain() * 4)) {
-         console.error(`Error when reading entries offset from basket fNevBuf ${basket.fNevBuf} remains ${this.remain()} want to read ${nentries}`);
-         if (basket.fNevBuf <= 1) basket.fEntryOffset = [basket.fKeylen];
-         return;
-      }
-
-      basket.fEntryOffset = this.readFastArray(nentries, kInt);
-      if (!basket.fEntryOffset) basket.fEntryOffset = [basket.fKeylen];
-
-      if (this.remain() > 0)
-         basket.fDisplacement = this.readFastArray(this.ntoi4(), kInt);
-      else
-         basket.fDisplacement = undefined;
-   }
-
-   /** @summary read class definition from I/O buffer */
-   readClass() {
-      const classInfo = { name: -1 }, bcnt = this.ntou4(), startpos = this.o;
-      let tag;
-
-      if (!(bcnt & kByteCountMask) || (bcnt === kNewClassTag))
-         tag = bcnt;
-      else
-         tag = this.ntou4();
-
-      if (!(tag & kClassMask)) {
-         classInfo.objtag = tag + this.fDisplacement; // indicate that we have deal with objects tag
-         return classInfo;
-      }
-      if (tag === kNewClassTag) {
-         // got a new class description followed by a new object
-         classInfo.name = this.readFastString(-1);
-
-         if (this.getMappedClass(this.fTagOffset + startpos + kMapOffset) === -1)
-            this.mapClass(this.fTagOffset + startpos + kMapOffset, classInfo.name);
-      } else {
-         // got a tag to an already seen class
-         const clTag = (tag & ~kClassMask) + this.fDisplacement;
-         classInfo.name = this.getMappedClass(clTag);
-
-         if (classInfo.name === -1)
-            console.error(`Did not found class with tag ${clTag}`);
-      }
-
-      return classInfo;
-   }
-
-   /** @summary Read any object from buffer data */
-   readObjectAny() {
-      const objtag = this.fTagOffset + this.o + kMapOffset,
-            clRef = this.readClass();
-
-      // class identified as object and should be handled so
-      if ('objtag' in clRef)
-         return this.getMappedObject(clRef.objtag);
-
-      if (clRef.name === -1) return null;
-
-      const arrkind = getArrayKind(clRef.name);
-      let obj;
-
-      if (arrkind === 0)
-         obj = this.readTString();
-      else if (arrkind > 0) {
-         // reading array, can map array only afterwards
-         obj = this.readFastArray(this.ntou4(), arrkind);
-         this.mapObject(objtag, obj);
-      } else {
-         // reading normal object, should map before to
-         obj = {};
-         this.mapObject(objtag, obj);
-         this.classStreamer(obj, clRef.name);
-      }
-
-      return obj;
-   }
-
-   /** @summary Invoke streamer for specified class  */
-   classStreamer(obj, classname) {
-      if (obj._typename === undefined) obj._typename = classname;
-
-      const direct = DirectStreamers[classname];
-      if (direct) {
-         direct(this, obj);
-         return obj;
-      }
-
-      const ver = this.readVersion(),
-            streamer = this.fFile.getStreamer(classname, ver);
-
-      if (streamer !== null) {
-         const len = streamer.length;
-         for (let n = 0; n < len; ++n)
-            streamer[n].func(this, obj);
-      } else {
-         // just skip bytes belonging to not-recognized object
-         // console.warn(`skip object ${classname}`);
-         addMethods(obj);
-      }
-
-      this.checkByteCount(ver, classname);
-
-      return obj;
-   }
-
-} // class TBuffer
-
-// ==============================================================================
-
-/**
-  * @summary A class that reads a TDirectory from a buffer.
-  *
-  * @private
-  */
-
-class TDirectory {
-
-   /** @summary constructor */
-   constructor(file, dirname, cycle) {
-      this.fFile = file;
-      this._typename = clTDirectory;
-      this.dir_name = dirname;
-      this.dir_cycle = cycle;
-      this.fKeys = [];
-   }
-
-   /** @summary retrieve a key by its name and cycle in the list of keys */
-   getKey(keyname, cycle, only_direct) {
-      if (typeof cycle !== 'number') cycle = -1;
-      let bestkey = null;
-      for (let i = 0; i < this.fKeys.length; ++i) {
-         const key = this.fKeys[i];
-         if (!key || (key.fName !== keyname)) continue;
-         if (key.fCycle === cycle) { bestkey = key; break; }
-         if ((cycle < 0) && (!bestkey || (key.fCycle > bestkey.fCycle))) bestkey = key;
-      }
-      if (bestkey)
-         return only_direct ? bestkey : Promise.resolve(bestkey);
-
-      let pos = keyname.lastIndexOf('/');
-      // try to handle situation when object name contains slashed (bad practice anyway)
-      while (pos > 0) {
-         const dirname = keyname.slice(0, pos),
-               subname = keyname.slice(pos+1),
-               dirkey = this.getKey(dirname, undefined, true);
-
-         if (dirkey && !only_direct && (dirkey.fClassName.indexOf(clTDirectory) === 0)) {
-            return this.fFile.readObject(this.dir_name + '/' + dirname, 1)
-                             .then(newdir => newdir.getKey(subname, cycle));
-         }
-
-         pos = keyname.lastIndexOf('/', pos-1);
-      }
-
-      return only_direct ? null : Promise.reject(Error(`Key not found ${keyname}`));
-   }
-
-   /** @summary Read object from the directory
-     * @param {string} name - object name
-     * @param {number} [cycle] - cycle number
-     * @return {Promise} with read object */
-   readObject(obj_name, cycle) {
-      return this.fFile.readObject(this.dir_name + '/' + obj_name, cycle);
-   }
-
-   /** @summary Read list of keys in directory
-     * @return {Promise} with TDirectory object */
-   async readKeys(objbuf) {
-      objbuf.classStreamer(this, clTDirectory);
-
-      if ((this.fSeekKeys <= 0) || (this.fNbytesKeys <= 0))
-         return this;
-
-      return this.fFile.readBuffer([this.fSeekKeys, this.fNbytesKeys]).then(blob => {
-         // Read keys of the top directory
-
-         const buf = new TBuffer(blob, 0, this.fFile);
-
-         buf.readTKey();
-         const nkeys = buf.ntoi4();
-
-         for (let i = 0; i < nkeys; ++i)
-            this.fKeys.push(buf.readTKey());
-
-         this.fFile.fDirectories.push(this);
-
-         return this;
-      });
-   }
-
-} // class TDirectory
-
-/**
-  * @summary Interface to read objects from ROOT files
-  *
-  * @desc Use {@link openFile} to create instance of the class
-  */
-
-class TFile {
-
-   constructor(url) {
-      this._typename = clTFile;
-      this.fEND = 0;
-      this.fFullURL = url;
-      this.fURL = url;
-      // when disabled ('+' at the end of file name), complete file content read with single operation
-      this.fAcceptRanges = true;
-      // use additional time stamp parameter for file name to avoid browser caching problem
-      this.fUseStampPar = settings.UseStamp ? 'stamp=' + (new Date()).getTime() : false;
-      this.fFileContent = null; // this can be full or partial content of the file (if ranges are not supported or if 1K header read from file)
-      // stored as TBuffer instance
-      this.fMaxRanges = settings.MaxRanges || 200; // maximal number of file ranges requested at once
-      this.fDirectories = [];
-      this.fKeys = [];
-      this.fSeekInfo = 0;
-      this.fNbytesInfo = 0;
-      this.fTagOffset = 0;
-      this.fStreamers = 0;
-      this.fStreamerInfos = null;
-      this.fFileName = '';
-      this.fStreamers = [];
-      this.fBasicTypes = {}; // custom basic types, in most case enumerations
-
-      if (!isStr(this.fURL)) return this;
-
-      if (this.fURL[this.fURL.length - 1] === '+') {
-         this.fURL = this.fURL.slice(0, this.fURL.length - 1);
-         this.fAcceptRanges = false;
-      }
-
-      if (this.fURL[this.fURL.length - 1] === '^') {
-         this.fURL = this.fURL.slice(0, this.fURL.length - 1);
-         this.fSkipHeadRequest = true;
-      }
-
-      if (this.fURL[this.fURL.length - 1] === '-') {
-         this.fURL = this.fURL.slice(0, this.fURL.length - 1);
-         this.fUseStampPar = false;
-      }
-
-      if (this.fURL.indexOf('file://') === 0) {
-         this.fUseStampPar = false;
-         this.fAcceptRanges = false;
-      }
-
-      const pos = Math.max(this.fURL.lastIndexOf('/'), this.fURL.lastIndexOf('\\'));
-      this.fFileName = pos >= 0 ? this.fURL.slice(pos + 1) : this.fURL;
-   }
-
-   /** @summary Assign BufferArray with file contentOpen file
-     * @private */
-   assignFileContent(bufArray) {
-      this.fFileContent = new TBuffer(new DataView(bufArray));
-      this.fAcceptRanges = false;
-      this.fUseStampPar = false;
-      this.fEND = this.fFileContent.length;
-   }
-
-   /** @summary Actual file open
-     * @return {Promise} when file keys are read
-     * @private */
-   async _open() { return this.readKeys(); }
-
-   /** @summary read buffer(s) from the file
-    * @return {Promise} with read buffers
-    * @private */
-   async readBuffer(place, filename, progress_callback) {
-      if ((this.fFileContent !== null) && !filename && (!this.fAcceptRanges || this.fFileContent.canExtract(place)))
-         return this.fFileContent.extract(place);
-
-      let resolveFunc, rejectFunc;
-
-      const file = this, first_block = (place[0] === 0) && (place.length === 2),
-            blobs = [], // array of requested segments
-            promise = new Promise((resolve, reject) => { resolveFunc = resolve; rejectFunc = reject; });
-
-      let fileurl = file.fURL,
-          first = 0, last = 0,
-          // eslint-disable-next-line prefer-const
-          read_callback, first_req,
-          first_block_retry = false;
-
-      if (isStr(filename) && filename) {
-         const pos = fileurl.lastIndexOf('/');
-         fileurl = (pos < 0) ? filename : fileurl.slice(0, pos + 1) + filename;
-      }
-
-      function send_new_request(increment) {
-         if (increment) {
-            first = last;
-            last = Math.min(first + file.fMaxRanges * 2, place.length);
-            if (first >= place.length) return resolveFunc(blobs);
-         }
-
-         let fullurl = fileurl, ranges = 'bytes', totalsz = 0;
-         // try to avoid browser caching by adding stamp parameter to URL
-         if (file.fUseStampPar)
-            fullurl += ((fullurl.indexOf('?') < 0) ? '?' : '&') + file.fUseStampPar;
-
-         for (let n = first; n < last; n += 2) {
-            ranges += (n > first ? ',' : '=') + `${place[n]}-${place[n]+place[n+1]-1}`;
-            totalsz += place[n + 1]; // accumulated total size
-         }
-         if (last - first > 2)
-            totalsz += (last - first) * 60; // for multi-range ~100 bytes/per request
-
-         // when read first block, allow to read more - maybe ranges are not supported and full file content will be returned
-         if (file.fAcceptRanges && first_block)
-            totalsz = Math.max(totalsz, 1e7);
-
-         return createHttpRequest(fullurl, 'buf', read_callback, undefined, true).then(xhr => {
-            if (file.fAcceptRanges) {
-               xhr.setRequestHeader('Range', ranges);
-               xhr.expected_size = Math.max(Math.round(1.1 * totalsz), totalsz + 200); // 200 if offset for the potential gzip
-            }
-
-            if (isFunc(progress_callback) && isFunc(xhr.addEventListener)) {
-               let sum1 = 0, sum2 = 0, sum_total = 0;
-               for (let n = 1; n < place.length; n += 2) {
-                  sum_total += place[n];
-                  if (n < first) sum1 += place[n];
-                  if (n < last) sum2 += place[n];
-               }
-               if (!sum_total) sum_total = 1;
-
-               const progress_offest = sum1 / sum_total, progress_this = (sum2 - sum1) / sum_total;
-               xhr.addEventListener('progress', oEvent => {
-                  if (oEvent.lengthComputable) {
-                     if (progress_callback(progress_offest + progress_this * oEvent.loaded / oEvent.total) === 'break')
-                        xhr.abort();
-                  }
-               });
-            } else if (first_block_retry && isFunc(xhr.addEventListener)) {
-               xhr.addEventListener('progress', oEvent => {
-                  if (!oEvent.total)
-                     console.warn('Fail to get file size information');
-                  else if (oEvent.total > 5e7) {
-                     console.error(`Try to load very large file ${oEvent.total} at once - abort`);
-                     xhr.abort();
-                  }
-               });
-            }
-
-            first_req = first_block ? xhr : null;
-            xhr.send(null);
-         });
-      }
-
-      read_callback = function(res) {
-         if (!res && first_block) {
-            // if fail to read file with stamp parameter, try once again without it
-            if (file.fUseStampPar) {
-               file.fUseStampPar = false;
-               return send_new_request();
-            }
-            if (file.fAcceptRanges) {
-               file.fAcceptRanges = false;
-               first_block_retry = true;
-               return send_new_request();
-            }
-         }
-
-         if (res && first_req) {
-            // special workaround for servers like cernbox blocking access to some response headers
-            // as result, it is not possible to parse multipart responses
-            if (file.fAcceptRanges && (first_req.status === 206) && (res?.byteLength === place[1]) && !first_req.getResponseHeader('Content-Range') && (file.fMaxRanges > 1)) {
-               console.warn('Server response with 206 code but browser does not provide access to Content-Range header - setting fMaxRanges = 1, consider to load full file with "filename.root+" argument or adjust server configurations');
-               file.fMaxRanges = 1;
-            }
-
-            // workaround for simpleHTTP
-            const kind = browser.isFirefox ? first_req.getResponseHeader('Server') : '';
-            if (isStr(kind) && kind.indexOf('SimpleHTTP') === 0) {
-               file.fMaxRanges = 1;
-               file.fUseStampPar = false;
-            }
-         }
-
-         if (res && first_block && !file.fFileContent) {
-            // special case - keep content of first request (could be complete file) in memory
-            file.fFileContent = new TBuffer(isStr(res) ? res : new DataView(res));
-
-            if (!file.fAcceptRanges)
-               file.fEND = file.fFileContent.length;
-
-            return resolveFunc(file.fFileContent.extract(place));
-         }
-
-         if (!res) {
-            if ((first === 0) && (last > 2) && (file.fMaxRanges > 1)) {
-               // server return no response with multi request - try to decrease ranges count or fail
-
-               if (last / 2 > 200)
-                  file.fMaxRanges = 200;
-               else if (last / 2 > 50)
-                  file.fMaxRanges = 50;
-               else if (last / 2 > 20)
-                  file.fMaxRanges = 20;
-               else if (last / 2 > 5)
-                  file.fMaxRanges = 5;
-               else
-                  file.fMaxRanges = 1;
-               last = Math.min(last, file.fMaxRanges * 2);
-               // console.log(`Change maxranges to ${file.fMaxRanges} last ${last}`);
-               return send_new_request();
-            }
-
-            return rejectFunc(Error('Fail to read with several ranges'));
-         }
-
-         // if only single segment requested, return result as is
-         if (last - first === 2) {
-            const b = new DataView(res);
-            if (place.length === 2) return resolveFunc(b);
-            blobs.push(b);
-            return send_new_request(true);
-         }
-
-         // object to access response data
-         const hdr = this.getResponseHeader('Content-Type'),
-               ismulti = isStr(hdr) && (hdr.indexOf('multipart') >= 0),
-               view = new DataView(res);
-
-         if (!ismulti) {
-            // server may returns simple buffer, which combines all segments together
-
-            const hdr_range = this.getResponseHeader('Content-Range');
-            let segm_start = 0, segm_last = -1;
-
-            if (isStr(hdr_range) && hdr_range.indexOf('bytes') >= 0) {
-               const parts = hdr_range.slice(hdr_range.indexOf('bytes') + 6).split(/[\s-/]+/);
-               if (parts.length === 3) {
-                  segm_start = Number.parseInt(parts[0]);
-                  segm_last = Number.parseInt(parts[1]);
-                  if (!Number.isInteger(segm_start) || !Number.isInteger(segm_last) || (segm_start > segm_last)) {
-                     segm_start = 0; segm_last = -1;
-                  }
-               }
-            }
-
-            let canbe_single_segment = (segm_start <= segm_last);
-            for (let n = first; n < last; n += 2) {
-               if ((place[n] < segm_start) || (place[n] + place[n + 1] - 1 > segm_last))
-                  canbe_single_segment = false;
-            }
-
-            if (canbe_single_segment) {
-               for (let n = first; n < last; n += 2)
-                  blobs.push(new DataView(res, place[n] - segm_start, place[n + 1]));
-               return send_new_request(true);
-            }
-
-            if ((file.fMaxRanges === 1) || (first !== 0))
-               return rejectFunc(Error('Server returns normal response when multipart was requested, disable multirange support'));
-
-            file.fMaxRanges = 1;
-            last = Math.min(last, file.fMaxRanges * 2);
-
-            return send_new_request();
-         }
-
-         // multipart messages requires special handling
-
-         const indx = hdr.indexOf('boundary=');
-         let boundary = '', n = first, o = 0;
-         if (indx > 0) {
-            boundary = hdr.slice(indx + 9);
-            if ((boundary[0] === '"') && (boundary[boundary.length - 1] === '"'))
-               boundary = boundary.slice(1, boundary.length - 1);
-            boundary = '--' + boundary;
-         } else
-            console.error('Did not found boundary id in the response header');
-
-         while (n < last) {
-            let code1, code2 = view.getUint8(o), nline = 0, line = '',
-               finish_header = false, segm_start = 0, segm_last = -1;
-
-            while ((o < view.byteLength - 1) && !finish_header && (nline < 5)) {
-               code1 = code2;
-               code2 = view.getUint8(o + 1);
-
-               if (((code1 === 13) && (code2 === 10)) || (code1 === 10)) {
-                  if ((line.length > 2) && (line.slice(0, 2) === '--') && (line !== boundary))
-                     return rejectFunc(Error(`Decode multipart message, expect boundary ${boundary} got ${line}`));
-
-                  line = line.toLowerCase();
-
-                  if ((line.indexOf('content-range') >= 0) && (line.indexOf('bytes') > 0)) {
-                     const parts = line.slice(line.indexOf('bytes') + 6).split(/[\s-/]+/);
-                     if (parts.length === 3) {
-                        segm_start = Number.parseInt(parts[0]);
-                        segm_last = Number.parseInt(parts[1]);
-                        if (!Number.isInteger(segm_start) || !Number.isInteger(segm_last) || (segm_start > segm_last)) {
-                           segm_start = 0; segm_last = -1;
-                        }
-                     } else
-                        console.error(`Fail to decode content-range ${line} ${parts}`);
-                  }
-
-                  if ((nline > 1) && (line.length === 0)) finish_header = true;
-
-                  nline++; line = '';
-                  if (code1 !== 10) {
-                     o++; code2 = view.getUint8(o + 1);
-                  }
-               } else
-                  line += String.fromCharCode(code1);
-               o++;
-            }
-
-            if (!finish_header)
-               return rejectFunc(Error('Cannot decode header in multipart message'));
-
-            if (segm_start > segm_last) {
-               // fall-back solution, believe that segments same as requested
-               blobs.push(new DataView(res, o, place[n + 1]));
-               o += place[n + 1];
-               n += 2;
-            } else {
-               while ((n < last) && (place[n] >= segm_start) && (place[n] + place[n + 1] - 1 <= segm_last)) {
-                  blobs.push(new DataView(res, o + place[n] - segm_start, place[n + 1]));
-                  n += 2;
-               }
-
-               o += (segm_last - segm_start + 1);
-            }
-         }
-
-         send_new_request(true);
-      };
-
-      return send_new_request(true).then(() => promise);
-   }
-
-   /** @summary Returns file name */
-   getFileName() { return this.fFileName; }
-
-   /** @summary Get directory with given name and cycle
-    * @desc Function only can be used for already read directories, which are preserved in the memory
-    * @private */
-   getDir(dirname, cycle) {
-      if ((cycle === undefined) && isStr(dirname)) {
-         const pos = dirname.lastIndexOf(';');
-         if (pos > 0) {
-            cycle = Number.parseInt(dirname.slice(pos + 1));
-            dirname = dirname.slice(0, pos);
-         }
-      }
-
-      for (let j = 0; j < this.fDirectories.length; ++j) {
-         const dir = this.fDirectories[j];
-         if (dir.dir_name !== dirname) continue;
-         if ((cycle !== undefined) && (dir.dir_cycle !== cycle)) continue;
-         return dir;
-      }
-      return null;
-   }
-
-   /** @summary Retrieve a key by its name and cycle in the list of keys
-    * @desc If only_direct not specified, returns Promise while key keys must be read first from the directory
-    * @private */
-   getKey(keyname, cycle, only_direct) {
-      if (typeof cycle !== 'number') cycle = -1;
-      let bestkey = null;
-      for (let i = 0; i < this.fKeys.length; ++i) {
-         const key = this.fKeys[i];
-         if (!key || (key.fName !== keyname)) continue;
-         if (key.fCycle === cycle) { bestkey = key; break; }
-         if ((cycle < 0) && (!bestkey || (key.fCycle > bestkey.fCycle))) bestkey = key;
-      }
-      if (bestkey)
-         return only_direct ? bestkey : Promise.resolve(bestkey);
-
-      let pos = keyname.lastIndexOf('/');
-      // try to handle situation when object name contains slashes (bad practice anyway)
-      while (pos > 0) {
-         const dirname = keyname.slice(0, pos),
-               subname = keyname.slice(pos + 1),
-               dir = this.getDir(dirname);
-
-         if (dir) return dir.getKey(subname, cycle, only_direct);
-
-         const dirkey = this.getKey(dirname, undefined, true);
-         if (dirkey && !only_direct && (dirkey.fClassName.indexOf(clTDirectory) === 0))
-            return this.readObject(dirname).then(newdir => newdir.getKey(subname, cycle));
-
-         pos = keyname.lastIndexOf('/', pos - 1);
-      }
-
-      return only_direct ? null : Promise.reject(Error(`Key not found ${keyname}`));
-   }
-
-   /** @summary Read and inflate object buffer described by its key
-    * @private */
-   async readObjBuffer(key) {
-      return this.readBuffer([key.fSeekKey + key.fKeylen, key.fNbytes - key.fKeylen]).then(blob1 => {
-         if (key.fObjlen <= key.fNbytes - key.fKeylen) {
-            const buf = new TBuffer(blob1, 0, this);
-            buf.fTagOffset = key.fKeylen;
-            return buf;
-         }
-
-         return R__unzip(blob1, key.fObjlen).then(objbuf => {
-            if (!objbuf)
-               return Promise.reject(Error(`Fail to UNZIP buffer for ${key.fName}`));
-
-            const buf = new TBuffer(objbuf, 0, this);
-            buf.fTagOffset = key.fKeylen;
-            return buf;
-         });
-      });
-   }
-
-   /** @summary Read any object from a root file
-     * @desc One could specify cycle number in the object name or as separate argument
-     * @param {string} obj_name - name of object, may include cycle number like 'hpxpy;1'
-     * @param {number} [cycle] - cycle number, also can be included in obj_name
-     * @return {Promise} promise with object read
-     * @example
-     * import { openFile } from 'https://root.cern/js/latest/modules/io.mjs';
-     * let f = await openFile('https://root.cern/js/files/hsimple.root');
-     * let obj = await f.readObject('hpxpy;1');
-     * console.log(`Read object of type ${obj._typename}`); */
-   async readObject(obj_name, cycle, only_dir) {
-      const pos = obj_name.lastIndexOf(';');
-      if (pos >= 0) {
-         cycle = Number.parseInt(obj_name.slice(pos + 1));
-         obj_name = obj_name.slice(0, pos);
-      }
-
-      if (typeof cycle !== 'number') cycle = -1;
-      // remove leading slashes
-      while (obj_name.length && (obj_name[0] === '/')) obj_name = obj_name.slice(1);
-
-      // one uses Promises while in some cases we need to
-      // read sub-directory to get list of keys
-      // in such situation calls are asynchronous
-      return this.getKey(obj_name, cycle).then(key => {
-         if ((obj_name === nameStreamerInfo) && (key.fClassName === clTList))
-            return this.fStreamerInfos;
-
-         let isdir = false;
-
-         if ((key.fClassName === clTDirectory || key.fClassName === clTDirectoryFile)) {
-            const dir = this.getDir(obj_name, cycle);
-            if (dir) return dir;
-            isdir = true;
-         }
-
-         if (!isdir && only_dir)
-            return Promise.reject(Error(`Key ${obj_name} is not directory}`));
-
-         return this.readObjBuffer(key).then(buf => {
-            if (isdir) {
-               const dir = new TDirectory(this, obj_name, cycle);
-               dir.fTitle = key.fTitle;
-               return dir.readKeys(buf);
-            }
-
-            const obj = {};
-            buf.mapObject(1, obj); // tag object itself with id == 1
-            buf.classStreamer(obj, key.fClassName);
-
-            if ((key.fClassName === clTF1) || (key.fClassName === clTF2))
-               return this._readFormulas(obj);
-
-            return obj;
-         });
-      });
-   }
-
-   /** @summary read formulas from the file and add them to TF1/TF2 objects
-     * @private */
-   async _readFormulas(tf1) {
-      const arr = [];
-      for (let indx = 0; indx < this.fKeys.length; ++indx) {
-         if (this.fKeys[indx].fClassName === 'TFormula')
-            arr.push(this.readObject(this.fKeys[indx].fName, this.fKeys[indx].fCycle));
-      }
-
-      return Promise.all(arr).then(formulas => {
-         formulas.forEach(obj => tf1.addFormula(obj));
-         return tf1;
-      });
-   }
-
-   /** @summary extract streamer infos from the buffer
-     * @private */
-   extractStreamerInfos(buf) {
-      if (!buf) return;
-
-      const lst = {};
-      buf.mapObject(1, lst);
-
-      try {
-         buf.classStreamer(lst, clTList);
-      } catch (err) {
-          console.error('Fail extract streamer infos', err);
-          return;
-      }
-
-      lst._typename = clTStreamerInfoList;
-
-      this.fStreamerInfos = lst;
-
-      if (isFunc(internals.addStreamerInfosForPainter))
-         internals.addStreamerInfosForPainter(lst);
-
-      for (let k = 0; k < lst.arr.length; ++k) {
-         const si = lst.arr[k];
-         if (!si.fElements) continue;
-         for (let l = 0; l < si.fElements.arr.length; ++l) {
-            const elem = si.fElements.arr[l];
-            if (!elem.fTypeName || !elem.fType) continue;
-
-            let typ = elem.fType, typname = elem.fTypeName;
-
-            if (typ >= 60) {
-               if ((typ === kStreamer) && (elem._typename === clTStreamerSTL) && elem.fSTLtype && elem.fCtype && (elem.fCtype < 20)) {
-                  const prefix = (StlNames[elem.fSTLtype] || 'undef') + '<';
-                  if ((typname.indexOf(prefix) === 0) && (typname[typname.length - 1] === '>')) {
-                     typ = elem.fCtype;
-                     typname = typname.slice(prefix.length, typname.length - 1).trim();
-
-                     if ((elem.fSTLtype === kSTLmap) || (elem.fSTLtype === kSTLmultimap)) {
-                        if (typname.indexOf(',') > 0)
-                           typname = typname.slice(0, typname.indexOf(',')).trim();
-                        else
-                           continue;
-                     }
-                  }
-               }
-               if (typ >= 60) continue;
-            } else {
-               if ((typ > 20) && (typname[typname.length - 1] === '*')) typname = typname.slice(0, typname.length - 1);
-               typ = typ % 20;
-            }
-
-            const kind = getTypeId(typname);
-            if (kind === typ) continue;
-
-            if ((typ === kBits) && (kind === kUInt)) continue;
-            if ((typ === kCounter) && (kind === kInt)) continue;
-
-            if (typname && typ && (this.fBasicTypes[typname] !== typ))
-               this.fBasicTypes[typname] = typ;
-         }
-      }
-   }
-
-   /** @summary Read file keys
-     * @private */
-   async readKeys() {
-      // with the first readbuffer we read bigger amount to create header cache
-      return this.readBuffer([0, 400]).then(blob => {
-         const buf = new TBuffer(blob, 0, this);
-         if (buf.substring(0, 4) !== 'root')
-            return Promise.reject(Error(`Not a ROOT file ${this.fURL}`));
-
-         buf.shift(4);
-
-         this.fVersion = buf.ntou4();
-         this.fBEGIN = buf.ntou4();
-         if (this.fVersion < 1000000) { // small file
-            this.fEND = buf.ntou4();
-            this.fSeekFree = buf.ntou4();
-            this.fNbytesFree = buf.ntou4();
-            buf.shift(4); // const nfree = buf.ntoi4();
-            this.fNbytesName = buf.ntou4();
-            this.fUnits = buf.ntou1();
-            this.fCompress = buf.ntou4();
-            this.fSeekInfo = buf.ntou4();
-            this.fNbytesInfo = buf.ntou4();
-         } else { // new format to support large files
-            this.fEND = buf.ntou8();
-            this.fSeekFree = buf.ntou8();
-            this.fNbytesFree = buf.ntou4();
-            buf.shift(4); // const nfree = buf.ntou4();
-            this.fNbytesName = buf.ntou4();
-            this.fUnits = buf.ntou1();
-            this.fCompress = buf.ntou4();
-            this.fSeekInfo = buf.ntou8();
-            this.fNbytesInfo = buf.ntou4();
-         }
-
-         // empty file
-         if (!this.fSeekInfo || !this.fNbytesInfo)
-            return Promise.reject(Error(`File ${this.fURL} does not provide streamer infos`));
-
-         // extra check to prevent reading of corrupted data
-         if (!this.fNbytesName || this.fNbytesName > 100000)
-            return Promise.reject(Error(`Cannot read directory info of the file ${this.fURL}`));
-
-         // *-*-------------Read directory info
-         let nbytes = this.fNbytesName + 22;
-         nbytes += 4;  // fDatimeC.Sizeof();
-         nbytes += 4;  // fDatimeM.Sizeof();
-         nbytes += 18; // fUUID.Sizeof();
-         // assume that the file may be above 2 Gbytes if file version is > 4
-         if (this.fVersion >= 40000) nbytes += 12;
-
-         // this part typically read from the header, no need to optimize
-         return this.readBuffer([this.fBEGIN, Math.max(300, nbytes)]);
-      }).then(blob3 => {
-         const buf3 = new TBuffer(blob3, 0, this);
-
-         // keep only title from TKey data
-         this.fTitle = buf3.readTKey().fTitle;
-
-         buf3.locate(this.fNbytesName);
-
-         // we read TDirectory part of TFile
-         buf3.classStreamer(this, clTDirectory);
-
-         if (!this.fSeekKeys)
-            return Promise.reject(Error(`Empty keys list in ${this.fURL}`));
-
-         // read with same request keys and streamer infos
-         return this.readBuffer([this.fSeekKeys, this.fNbytesKeys, this.fSeekInfo, this.fNbytesInfo]);
-      }).then(blobs => {
-         const buf4 = new TBuffer(blobs[0], 0, this);
-
-         buf4.readTKey(); //
-         const nkeys = buf4.ntoi4();
-         for (let i = 0; i < nkeys; ++i)
-            this.fKeys.push(buf4.readTKey());
-
-         const buf5 = new TBuffer(blobs[1], 0, this),
-               si_key = buf5.readTKey();
-         if (!si_key)
-            return Promise.reject(Error(`Fail to read StreamerInfo data in ${this.fURL}`));
-
-         this.fKeys.push(si_key);
-         return this.readObjBuffer(si_key);
-      }).then(blob6 => {
-          this.extractStreamerInfos(blob6);
-          return this;
-      });
-   }
-
-   /** @summary Read the directory content from  a root file
-     * @desc If directory was already read - return previously read object
-     * Same functionality as {@link TFile#readObject}
-     * @param {string} dir_name - directory name
-     * @param {number} [cycle] - directory cycle
-     * @return {Promise} - promise with read directory */
-   async readDirectory(dir_name, cycle) {
-      return this.readObject(dir_name, cycle, true);
-   }
-
-   /** @summary Search streamer info
-     * @param {string} clanme - class name
-     * @param {number} [clversion] - class version
-     * @param {number} [checksum] - streamer info checksum, have to match when specified
-     * @private */
-   findStreamerInfo(clname, clversion, checksum) {
-      if (!this.fStreamerInfos) return null;
-
-      const arr = this.fStreamerInfos.arr, len = arr.length;
-
-      if (checksum !== undefined) {
-         let cache = this.fStreamerInfos.cache;
-         if (!cache) cache = this.fStreamerInfos.cache = {};
-         let si = cache[checksum];
-         if (si !== undefined) return si;
-
-         for (let i = 0; i < len; ++i) {
-            si = arr[i];
-            if (si.fCheckSum === checksum) {
-               cache[checksum] = si;
-               return si;
-            }
-         }
-         cache[checksum] = null; // checksum did not found, do not try again
-      } else {
-         for (let i = 0; i < len; ++i) {
-            const si = arr[i];
-            if ((si.fName === clname) && ((si.fClassVersion === clversion) || (clversion === undefined))) return si;
-         }
-      }
-
-      return null;
-   }
-
-   /** @summary Returns streamer for the class 'clname',
-     * @desc From the list of streamers or generate it from the streamer infos and add it to the list
-     * @private */
-   getStreamer(clname, ver, s_i) {
-      // these are special cases, which are handled separately
-      if (clname === clTQObject || clname === clTBasket) return null;
-
-      let streamer, fullname = clname;
-
-      if (ver) {
-         fullname += (ver.checksum ? `$chksum${ver.checksum}` : `$ver${ver.val}`);
-         streamer = this.fStreamers[fullname];
-         if (streamer !== undefined) return streamer;
-      }
-
-      const custom = CustomStreamers[clname];
-
-      // one can define in the user streamers just aliases
-      if (isStr(custom))
-         return this.getStreamer(custom, ver, s_i);
-
-      // streamer is just separate function
-      if (isFunc(custom)) {
-         streamer = [{ typename: clname, func: custom }];
-         return addClassMethods(clname, streamer);
-      }
-
-      streamer = [];
-
-      if (isObject(custom)) {
-         if (!custom.name && !custom.func) return custom;
-         streamer.push(custom); // special read entry, add in the beginning of streamer
-      }
-
-      // check element in streamer infos, one can have special cases
-      if (!s_i) s_i = this.findStreamerInfo(clname, ver.val, ver.checksum);
-
-      if (!s_i) {
-         delete this.fStreamers[fullname];
-         if (!ver.nowarning)
-            console.warn(`Not found streamer for ${clname} ver ${ver.val} checksum ${ver.checksum} full ${fullname}`);
-         return null;
-      }
-
-      // special handling for TStyle which has duplicated member name fLineStyle
-      if ((s_i.fName === clTStyle) && s_i.fElements) {
-         s_i.fElements.arr.forEach(elem => {
-            if (elem.fName === 'fLineStyle') elem.fName = 'fLineStyles'; // like in ROOT JSON now
-         });
-      }
-
-      // for each entry in streamer info produce member function
-      if (s_i.fElements) {
-         for (let j = 0; j < s_i.fElements.arr.length; ++j)
-            streamer.push(createMemberStreamer(s_i.fElements.arr[j], this));
-      }
-
-      this.fStreamers[fullname] = streamer;
-
-      return addClassMethods(clname, streamer);
-   }
-
-   /** @summary Here we produce list of members, resolving all base classes
-     * @private */
-   getSplittedStreamer(streamer, tgt) {
-      if (!streamer) return tgt;
-
-      if (!tgt) tgt = [];
-
-      for (let n = 0; n < streamer.length; ++n) {
-         const elem = streamer[n];
-
-         if (elem.base === undefined) {
-            tgt.push(elem);
-            continue;
-         }
-
-         if (elem.basename === clTObject) {
-            tgt.push({
-               func(buf, obj) {
-                  buf.ntoi2(); // read version, why it here??
-                  obj.fUniqueID = buf.ntou4();
-                  obj.fBits = buf.ntou4();
-                  if (obj.fBits & kIsReferenced) buf.ntou2(); // skip pid
-               }
-            });
-            continue;
-         }
-
-         const ver = { val: elem.base };
-
-         if (ver.val === 4294967295) {
-            // this is -1 and indicates foreign class, need more workarounds
-            ver.val = 1; // need to search version 1 - that happens when several versions of foreign class exists ???
-         }
-
-         const parent = this.getStreamer(elem.basename, ver);
-         if (parent) this.getSplittedStreamer(parent, tgt);
-      }
-
-      return tgt;
-   }
-
-   /** @summary Fully cleanup TFile data
-     * @private */
-   delete() {
-      this.fDirectories = null;
-      this.fKeys = null;
-      this.fStreamers = null;
-      this.fSeekInfo = 0;
-      this.fNbytesInfo = 0;
-      this.fTagOffset = 0;
-   }
-
-} // class TFile
-
-/** @summary Function to read vector element in the streamer
-  * @private */
-function readVectorElement(buf) {
-   if (this.member_wise) {
-      const n = buf.ntou4(), ver = this.stl_version;
-      let streamer = null;
-
-      if (n === 0) return []; // for empty vector no need to search split streamers
-
-      if (n > 1000000)
-         throw new Error(`member-wise streaming of ${this.conttype} num ${n} member ${this.name}`);
-
-      if ((ver.val === this.member_ver) && (ver.checksum === this.member_checksum))
-         streamer = this.member_streamer;
-      else {
-         streamer = buf.fFile.getStreamer(this.conttype, ver);
-
-         this.member_streamer = streamer = buf.fFile.getSplittedStreamer(streamer);
-         this.member_ver = ver.val;
-         this.member_checksum = ver.checksum;
-      }
-
-      const res = new Array(n);
-      let i, k, member;
-
-      for (i = 0; i < n; ++i)
-         res[i] = { _typename: this.conttype }; // create objects
-      if (!streamer)
-         console.error(`Fail to create split streamer for ${this.conttype} need to read ${n} objects version ${ver}`);
-      else {
-         for (k = 0; k < streamer.length; ++k) {
-            member = streamer[k];
-            if (member.split_func)
-               member.split_func(buf, res, n);
-            else {
-               for (i = 0; i < n; ++i)
-                  member.func(buf, res[i]);
-            }
-         }
-      }
-      return res;
-   }
-
-   const n = buf.ntou4(), res = new Array(n);
-   let i = 0;
-
-   if (n > 200000) {
-      console.error(`vector streaming for ${this.conttype} at ${n}`);
-      return res;
-   }
-
-   if (this.arrkind > 0)
-      while (i < n) res[i++] = buf.readFastArray(buf.ntou4(), this.arrkind);
-   else if (this.arrkind === 0)
-      while (i < n) res[i++] = buf.readTString();
-   else if (this.isptr)
-      while (i < n) res[i++] = buf.readObjectAny();
-   else if (this.submember)
-      while (i < n) res[i++] = this.submember.readelem(buf);
-   else
-      while (i < n) res[i++] = buf.classStreamer({}, this.conttype);
-
-   return res;
-}
-
-
-/** @summary Function used in streamer to read std::map object
-  * @private */
-function readMapElement(buf) {
-   let streamer = this.streamer;
-
-   if (this.member_wise) {
-      // when member-wise streaming is used, version is written
-      const ver = this.stl_version;
-
-      if (this.si) {
-         const si = buf.fFile.findStreamerInfo(this.pairtype, ver.val, ver.checksum);
-
-         if (this.si !== si) {
-            streamer = getPairStreamer(si, this.pairtype, buf.fFile);
-            if (!streamer || streamer.length !== 2) {
-               console.log(`Fail to produce streamer for ${this.pairtype}`);
-               return null;
-            }
-         }
-      }
-   }
-
-   const n = buf.ntoi4(), res = new Array(n);
-
-   // no extra data written for empty map
-   if (n === 0)
-      return res;
-
-   if (this.member_wise && (buf.remain() >= 6)) {
-      if (buf.ntoi2() === kStreamedMemberWise)
-         buf.shift(4); // skip checksum
-      else
-         buf.shift(-2); // rewind
-   }
-
-   for (let i = 0; i < n; ++i) {
-      res[i] = { _typename: this.pairtype };
-      streamer[0].func(buf, res[i]);
-      if (!this.member_wise) streamer[1].func(buf, res[i]);
-   }
-
-   // due-to member-wise streaming second element read after first is completed
-   if (this.member_wise) {
-      if (buf.remain() >= 6) {
-         if (buf.ntoi2() === kStreamedMemberWise)
-            buf.shift(4);  // skip checksum
-         else
-            buf.shift(-2);  // rewind
-      }
-      for (let i = 0; i < n; ++i)
-         streamer[1].func(buf, res[i]);
-   }
-
-   return res;
-}
-
-// =============================================================
-
-/**
-  * @summary Interface to read local file in the browser
-  *
-  * @hideconstructor
-  * @desc Use {@link openFile} to create instance of the class
-  * @private
-  */
-
-class TLocalFile extends TFile {
-
-   constructor(file) {
-      super(null);
-      this.fUseStampPar = false;
-      this.fLocalFile = file;
-      this.fEND = file.size;
-      this.fFullURL = file.name;
-      this.fURL = file.name;
-      this.fFileName = file.name;
-   }
-
-   /** @summary Open local file
-     * @return {Promise} after file keys are read */
-   async _open() { return this.readKeys(); }
-
-   /** @summary read buffer from local file
-     * @return {Promise} with read data */
-   async readBuffer(place, filename /* , progress_callback */) {
-      const file = this.fLocalFile;
-
-      return new Promise((resolve, reject) => {
-         if (filename)
-            return reject(Error(`Cannot access other local file ${filename}`));
-
-         const reader = new FileReader(), blobs = [];
-         let cnt = 0;
-
-         reader.onload = function(evnt) {
-            const res = new DataView(evnt.target.result);
-            if (place.length === 2) return resolve(res);
-
-            blobs.push(res);
-            cnt += 2;
-            if (cnt >= place.length) return resolve(blobs);
-            reader.readAsArrayBuffer(file.slice(place[cnt], place[cnt] + place[cnt + 1]));
-         };
-
-         reader.readAsArrayBuffer(file.slice(place[0], place[0] + place[1]));
-      });
-   }
-
-} // class TLocalFile
-
-/**
-  * @summary Interface to read file in node.js
-  *
-  * @hideconstructor
-  * @desc Use {@link openFile} to create instance of the class
-  * @private
-  */
-
-class TNodejsFile extends TFile {
-
-   constructor(filename) {
-      super(null);
-      this.fUseStampPar = false;
-      this.fEND = 0;
-      this.fFullURL = filename;
-      this.fURL = filename;
-      this.fFileName = filename;
-   }
-
-   /** @summary Open file in node.js
-     * @return {Promise} after file keys are read */
-   async _open() {
-      return Promise.resolve().then(function () { return _rollup_plugin_ignore_empty_module_placeholder$1; }).then(fs => {
-         this.fs = fs;
-
-         return new Promise((resolve, reject) =>
-
-            this.fs.open(this.fFileName, 'r', (status, fd) => {
-               if (status) {
-                  console.log(status.message);
-                  return reject(Error(`Not possible to open ${this.fFileName} inside node.js`));
-               }
-               const stats = this.fs.fstatSync(fd);
-               this.fEND = stats.size;
-               this.fd = fd;
-               this.readKeys().then(resolve).catch(reject);
-            })
-         );
-      });
-   }
-
-   /** @summary Read buffer from node.js file
-     * @return {Promise} with requested blocks */
-   async readBuffer(place, filename /* , progress_callback */) {
-      return new Promise((resolve, reject) => {
-         if (filename)
-            return reject(Error(`Cannot access other local file ${filename}`));
-
-         if (!this.fs || !this.fd)
-            return reject(Error(`File is not opened ${this.fFileName}`));
-
-         const blobs = [];
-         let cnt = 0;
-
-         const readfunc = (_err, _bytesRead, buf) => {
-            const res = new DataView(buf.buffer, buf.byteOffset, place[cnt + 1]);
-            if (place.length === 2) return resolve(res);
-            blobs.push(res);
-            cnt += 2;
-            if (cnt >= place.length) return resolve(blobs);
-            this.fs.read(this.fd, Buffer.alloc(place[cnt + 1]), 0, place[cnt + 1], place[cnt], readfunc);
-         };
-
-         this.fs.read(this.fd, Buffer.alloc(place[1]), 0, place[1], place[0], readfunc);
-      });
-   }
-
-} // class TNodejsFile
-
-/**
-  * @summary Proxy to read file content
-  *
-  * @desc Should implement following methods:
-  *
-  * - openFile() - return Promise with true when file can be open normally
-  * - getFileName() - returns string with file name
-  * - getFileSize() - returns size of file
-  * - readBuffer(pos, len) - return promise with DataView for requested position and length
-  *
-  * @private
-  */
-
-class FileProxy {
-
-   async openFile() { return false; }
-   getFileName() { return ''; }
-   getFileSize() { return 0; }
-   async readBuffer(/* pos, sz */) { return null; }
-
-} // class FileProxy
-
-/**
-  * @summary File to use file context via FileProxy
-  *
-  * @hideconstructor
-  * @desc Use {@link openFile} to create instance of the class, providing FileProxy as argument
-  * @private
-  */
-
-class TProxyFile extends TFile {
-
-   constructor(proxy) {
-      super(null);
-      this.fUseStampPar = false;
-      this.proxy = proxy;
-   }
-
-   /** @summary Open file
-     * @return {Promise} after file keys are read */
-   async _open() {
-      return this.proxy.openFile().then(res => {
-         if (!res) return false;
-         this.fEND = this.proxy.getFileSize();
-         this.fFullURL = this.fURL = this.fFileName = this.proxy.getFileName();
-         if (isStr(this.fFileName)) {
-            const p = this.fFileName.lastIndexOf('/');
-            if ((p > 0) && (p < this.fFileName.length - 4))
-               this.fFileName = this.fFileName.slice(p+1);
-         }
-         return this.readKeys();
-      });
-   }
-
-   /** @summary Read buffer from FileProxy
-     * @return {Promise} with requested blocks */
-   async readBuffer(place, filename /* , progress_callback */) {
-      if (filename)
-         return Promise.reject(Error(`Cannot access other file ${filename}`));
-
-      if (!this.proxy)
-         return Promise.reject(Error(`File is not opened ${this.fFileName}`));
-
-      if (place.length === 2)
-         return this.proxy.readBuffer(place[0], place[1]);
-
-      const arr = [];
-      for (let k = 0; k < place.length; k+=2)
-         arr.push(this.proxy.readBuffer(place[k], place[k+1]));
-      return Promise.all(arr);
-   }
-
-} // class TProxyFile
-
-
-/** @summary Open ROOT file for reading
-  * @desc Generic method to open ROOT file for reading
-  * Following kind of arguments can be provided:
-  *  - string with file URL (see example). In node.js environment local file like 'file://hsimple.root' can be specified
-  *  - [File]{@link https://developer.mozilla.org/en-US/docs/Web/API/File} instance which let read local files from browser
-  *  - [ArrayBuffer]{@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer} instance with complete file content
-  *  - [FileProxy]{@link FileProxy} let access arbitrary files via tiny proxy API
-  * @param {string|object} arg - argument for file open like url, see details
-  * @return {object} - Promise with {@link TFile} instance when file is opened
-  * @example
-  *
-  * import { openFile } from 'https://root.cern/js/latest/modules/io.mjs';
-  * let f = await openFile('https://root.cern/js/files/hsimple.root');
-  * console.log(`Open file ${f.getFileName()}`); */
-function openFile(arg) {
-   let file;
-
-   if (isNodeJs() && isStr(arg)) {
-      if (arg.indexOf('file://') === 0)
-         file = new TNodejsFile(arg.slice(7));
-      else if (arg.indexOf('http') !== 0)
-         file = new TNodejsFile(arg);
-   }
-
-   if (!file && isObject(arg) && (arg instanceof FileProxy))
-      file = new TProxyFile(arg);
-
-   if (!file && isObject(arg) && (arg instanceof ArrayBuffer)) {
-      file = new TFile('localfile.root');
-      file.assignFileContent(arg);
-   }
-
-   if (!file && isObject(arg) && arg.size && arg.name)
-      file = new TLocalFile(arg);
-
-   if (!file)
-      file = new TFile(arg);
-
-   return file._open();
-}
-
-// special way to assign methods when streaming objects
-addClassMethods(clTNamed, CustomStreamers[clTNamed]);
-addClassMethods(clTObjString, CustomStreamers[clTObjString]);
-
-// branch types
-const kLeafNode = 0, kBaseClassNode = 1, kObjectNode = 2, kClonesNode = 3,
-      kSTLNode = 4, kClonesMemberNode = 31, kSTLMemberNode = 41,
-      // branch bits
-      // kDoNotProcess = BIT(10), // Active bit for branches
-      // kIsClone = BIT(11), // to indicate a TBranchClones
-      // kBranchObject = BIT(12), // branch is a TObject*
-      // kBranchAny = BIT(17), // branch is an object*
-      // kAutoDelete = BIT(15),
-      kDoNotUseBufferMap = BIT(22), // If set, at least one of the entry in the branch will use the buffer's map of classname and objects.
-      clTBranchElement = 'TBranchElement', clTBranchFunc = 'TBranchFunc';
-
-/**
- * @summary Class to read data from TTree
- *
- * @desc Instance of TSelector can be used to access TTree data
- */
-
-class TSelector {
-
-   /** @summary constructor */
-   constructor() {
-      this._branches = []; // list of branches to read
-      this._names = []; // list of member names for each branch in tgtobj
-      this._directs = []; // indication if only branch without any children should be read
-      this._break = 0;
-      this.tgtobj = {};
-   }
-
-   /** @summary Add branch to the selector
-    * @desc Either branch name or branch itself should be specified
-    * Second parameter defines member name in the tgtobj
-    * If selector.addBranch('px', 'read_px') is called,
-    * branch will be read into selector.tgtobj.read_px member
-    * If second parameter not specified, branch name (here 'px') will be used
-    * If branch object specified as first parameter and second parameter missing,
-    * then member like 'br0', 'br1' and so on will be assigned
-    * @param {string|Object} branch - name of branch (or branch object itself}
-    * @param {string} [name] - member name in tgtobj where data will be read
-    * @param {boolean} [direct] - if only branch without any children should be read */
-   addBranch(branch, name, direct) {
-      if (!name)
-         name = isStr(branch) ? branch : `br${this._branches.length}`;
-      this._branches.push(branch);
-      this._names.push(name);
-      this._directs.push(direct);
-      return this._branches.length - 1;
-   }
-
-   /** @summary returns number of branches used in selector */
-   numBranches() { return this._branches.length; }
-
-   /** @summary returns branch by index used in selector */
-   getBranch(indx) { return this._branches[indx]; }
-
-   /** @summary returns index of branch
-     * @private */
-   indexOfBranch(branch) { return this._branches.indexOf(branch); }
-
-   /** @summary returns name of branch
-     * @private */
-   nameOfBranch(indx) { return this._names[indx]; }
-
-   /** @summary function called during TTree processing
-    * @abstract
-    * @param {number} progress - current value between 0 and 1 */
-   ShowProgress(/* progress */) {}
-
-   /** @summary call this function to abort processing */
-   Abort() { this._break = -1111; }
-
-   /** @summary function called before start processing
-    * @abstract
-    * @param {object} tree - tree object */
-   Begin(/* tree */) {}
-
-   /** @summary function called when next entry extracted from the tree
-    * @abstract
-    * @param {number} entry - read entry number */
-   Process(/* entry */) {}
-
-   /** @summary function called at the very end of processing
-    * @abstract
-    * @param {boolean} res - true if all data were correctly processed */
-   Terminate(/* res */) {}
-
-} // class TSelector
-
-// =================================================================
-
-/** @summary Checks array kind
-  * @desc return 0 when not array
-  * 1 - when arbitrary array
-  * 2 - when plain (1-dim) array with same-type content
-  * @private */
-function checkArrayPrototype(arr, check_content) {
-   if (!isObject(arr)) return 0;
-
-   const arr_kind = isArrayProto(Object.prototype.toString.apply(arr));
-   if (!check_content || (arr_kind !== 1)) return arr_kind;
-
-   let typ, plain = true;
-   for (let k = 0; k < arr.length; ++k) {
-      const sub = typeof arr[k];
-      if (!typ) typ = sub;
-      if (sub !== typ) { plain = false; break; }
-      if (isObject(sub) && checkArrayPrototype(arr[k])) { plain = false; break; }
-   }
-
-   return plain ? 2 : 1;
-}
-
-/**
- * @summary Class to iterate over array elements
- *
- * @private
- */
-
-class ArrayIterator {
-
-   /** @summary constructor */
-   constructor(arr, select, tgtobj) {
-      this.object = arr;
-      this.value = 0; // value always used in iterator
-      this.arr = []; // all arrays
-      this.indx = []; // all indexes
-      this.cnt = -1; // current index counter
-      this.tgtobj = tgtobj;
-
-      if (isObject(select))
-         this.select = select; // remember indexes for selection
-      else
-         this.select = []; // empty array, undefined for each dimension means iterate over all indexes
-   }
-
-   /** @summary next element */
-   next() {
-      let obj, typ, cnt = this.cnt;
-
-      if (cnt >= 0) {
-         if (++this.fastindx < this.fastlimit) {
-            this.value = this.fastarr[this.fastindx];
-            return true;
-         }
-
-         while (--cnt >= 0) {
-            if ((this.select[cnt] === undefined) && (++this.indx[cnt] < this.arr[cnt].length))
-               break;
-         }
-         if (cnt < 0) return false;
-      }
-
-      while (true) {
-         obj = (cnt < 0) ? this.object : (this.arr[cnt])[this.indx[cnt]];
-
-         typ = obj ? typeof obj : 'any';
-
-         if (typ === 'object') {
-            if (obj._typename !== undefined) {
-               if (isRootCollection(obj)) {
-                  obj = obj.arr;
-                  typ = 'array';
-               } else
-                  typ = 'any';
-            } else if (Number.isInteger(obj.length) && (checkArrayPrototype(obj) > 0))
-               typ = 'array';
-            else
-               typ = 'any';
-         }
-
-         if (this.select[cnt + 1] === '$self$') {
-            this.value = obj;
-            this.fastindx = this.fastlimit = 0;
-            this.cnt = cnt + 1;
-            return true;
-         }
-
-         if ((typ === 'any') && isStr(this.select[cnt + 1])) {
-            // this is extraction of the member from arbitrary class
-            this.arr[++cnt] = obj;
-            this.indx[cnt] = this.select[cnt]; // use member name as index
-            continue;
-         }
-
-         if ((typ === 'array') && ((obj.length > 0) || (this.select[cnt + 1] === '$size$'))) {
-            this.arr[++cnt] = obj;
-            switch (this.select[cnt]) {
-               case undefined: this.indx[cnt] = 0; break;
-               case '$last$': this.indx[cnt] = obj.length - 1; break;
-               case '$size$':
-                  this.value = obj.length;
-                  this.fastindx = this.fastlimit = 0;
-                  this.cnt = cnt;
-                  return true;
-               default:
-                  if (Number.isInteger(this.select[cnt])) {
-                     this.indx[cnt] = this.select[cnt];
-                     if (this.indx[cnt] < 0) this.indx[cnt] = obj.length - 1;
-                  } else {
-                     // this is compile variable as array index - can be any expression
-                     this.select[cnt].produce(this.tgtobj);
-                     this.indx[cnt] = Math.round(this.select[cnt].get(0));
-                  }
-            }
-         } else {
-            if (cnt < 0) return false;
-
-            this.value = obj;
-            if (this.select[cnt] === undefined) {
-               this.fastarr = this.arr[cnt];
-               this.fastindx = this.indx[cnt];
-               this.fastlimit = this.fastarr.length;
-            } else
-               this.fastindx = this.fastlimit = 0; // no any iteration on that level
-
-            this.cnt = cnt;
-            return true;
-         }
-      }
-
-      // unreachable code
-      // return false;
-   }
-
-   /** @summary reset iterator */
-   reset() {
-      this.arr = [];
-      this.indx = [];
-      delete this.fastarr;
-      this.cnt = -1;
-      this.value = 0;
-   }
-
-} // class ArrayIterator
-
-
-/** @summary return class name of the object, stored in the branch
-  * @private */
-function getBranchObjectClass(branch, tree, with_clones = false, with_leafs = false) {
-   if (!branch || (branch._typename !== clTBranchElement)) return '';
-
-   if ((branch.fType === kLeafNode) && (branch.fID === -2) && (branch.fStreamerType === -1)) {
-      // object where all sub-branches will be collected
-      return branch.fClassName;
-   }
-
-   if (with_clones && branch.fClonesName && ((branch.fType === kClonesNode) || (branch.fType === kSTLNode)))
-      return branch.fClonesName;
-
-   const s_elem = findBrachStreamerElement(branch, tree.$file);
-   if ((branch.fType === kBaseClassNode) && s_elem && (s_elem.fTypeName === kBaseClass))
-      return s_elem.fName;
-
-   if (branch.fType === kObjectNode) {
-      if (s_elem && ((s_elem.fType === kObject) || (s_elem.fType === kAny)))
-         return s_elem.fTypeName;
-      return clTObject;
-   }
-
-   if ((branch.fType === kLeafNode) && s_elem && with_leafs) {
-      if ((s_elem.fType === kObject) || (s_elem.fType === kAny)) return s_elem.fTypeName;
-      if (s_elem.fType === kObjectp) return s_elem.fTypeName.slice(0, s_elem.fTypeName.length - 1);
-   }
-
-   return '';
-}
-
-
-/** @summary Get branch with specified id
-  * @desc All sub-branches checked as well
-  * @return {Object} branch
-  * @private */
-function getTreeBranch(tree, id) {
-   if (!Number.isInteger(id)) return;
-   let res, seq = 0;
-   function scan(obj) {
-      obj?.fBranches?.arr.forEach(br => {
-         if (seq++ === id) res = br;
-         if (!res) scan(br);
-      });
-   }
-
-   scan(tree);
-   return res;
-}
-
-
-/** @summary Special branch search
-  * @desc Name can include extra part, which will be returned in the result
-  * @param {string} name - name of the branch
-  * @return {Object} with 'branch' and 'rest' members
-  * @private */
-function findBranchComplex(tree, name, lst = undefined, only_search = false) {
-   let top_search = false, search = name, res = null;
-
-   if (!lst) {
-      top_search = true;
-      lst = tree.fBranches;
-      const pos = search.indexOf('[');
-      if (pos > 0) search = search.slice(0, pos);
-   }
-
-   if (!lst || (lst.arr.length === 0)) return null;
-
-   for (let n = 0; n < lst.arr.length; ++n) {
-      let brname = lst.arr[n].fName;
-      if (brname[brname.length - 1] === ']')
-         brname = brname.slice(0, brname.indexOf('['));
-
-      // special case when branch name includes STL map name
-      if ((search.indexOf(brname) !== 0) && (brname.indexOf('<') > 0)) {
-         const p1 = brname.indexOf('<'), p2 = brname.lastIndexOf('>');
-         brname = brname.slice(0, p1) + brname.slice(p2 + 1);
-      }
-
-      if (brname === search) { res = { branch: lst.arr[n], rest: '' }; break; }
-
-      if (search.indexOf(brname) !== 0) continue;
-
-      // this is a case when branch name is in the begin of the search string
-
-      // check where point is
-      let pnt = brname.length;
-      if (brname[pnt - 1] === '.') pnt--;
-      if (search[pnt] !== '.') continue;
-
-      res = findBranchComplex(tree, search, lst.arr[n].fBranches);
-      if (!res) res = findBranchComplex(tree, search.slice(pnt + 1), lst.arr[n].fBranches);
-
-      if (!res) res = { branch: lst.arr[n], rest: search.slice(pnt) };
-
-      break;
-   }
-
-   if (top_search && !only_search && !res && (search.indexOf('br_') === 0)) {
-      let p = 3;
-      while ((p < search.length) && (search[p] >= '0') && (search[p] <= '9')) ++p;
-      const br = (p > 3) ? getTreeBranch(tree, parseInt(search.slice(3, p))) : null;
-      if (br) res = { branch: br, rest: search.slice(p) };
-   }
-
-   if (!top_search || !res) return res;
-
-   if (name.length > search.length) res.rest += name.slice(search.length);
-
-   return res;
-}
-
-
-/** @summary Search branch with specified name
-  * @param {string} name - name of the branch
-  * @return {Object} found branch
-  * @private */
-function findBranch(tree, name) {
-   const res = findBranchComplex(tree, name, tree.fBranches, true);
-   return (!res || res.rest) ? null : res.branch;
-}
-
-
-/** summary Returns number of branches in the TTree
-  * desc Checks also sub-branches in the branches
-  * return {number} number of branches
-  * private
-function getNumBranches(tree) {
-   function count(obj) {
-      if (!obj?.fBranches) return 0;
-      let nchld = 0;
-      obj.fBranches.arr.forEach(sub => { nchld += count(sub); });
-      return obj.fBranches.arr.length + nchld;
-   }
-
-   return count(tree);
-}
-*/
-
-/**
- * @summary object with single variable in TTree::Draw expression
- *
- * @private
- */
-
-class TDrawVariable {
-
-   /** @summary constructor */
-   constructor(globals) {
-      this.globals = globals;
-
-      this.code = '';
-      this.brindex = []; // index of used branches from selector
-      this.branches = []; // names of branches in target object
-      this.brarray = []; // array specifier for each branch
-      this.func = null; // generic function for variable calculation
-
-      this.kind = undefined;
-      this.buf = []; // buffer accumulates temporary values
-   }
-
-   /** @summary Parse variable
-     * @desc when only_branch specified, its placed in the front of the expression */
-   parse(tree, selector, code, only_branch, branch_mode) {
-      const is_start_symbol = symb => {
-         if ((symb >= 'A') && (symb <= 'Z')) return true;
-         if ((symb >= 'a') && (symb <= 'z')) return true;
-         return (symb === '_');
-      }, is_next_symbol = symb => {
-         if (is_start_symbol(symb)) return true;
-         if ((symb >= '0') && (symb <= '9')) return true;
-         return false;
-      };
-
-      if (!code) code = ''; // should be empty string at least
-
-      this.code = (only_branch?.fName ?? '') + code;
-
-      let pos = 0, pos2 = 0, br = null;
-      while ((pos < code.length) || only_branch) {
-         let arriter = [];
-
-         if (only_branch) {
-            br = only_branch;
-            only_branch = undefined;
-         } else {
-            // first try to find branch
-            pos2 = pos;
-            while ((pos2 < code.length) && (is_next_symbol(code[pos2]) || code[pos2] === '.')) pos2++;
-            if (code[pos2] === '$') {
-               let repl = '';
-               switch (code.slice(pos, pos2)) {
-                  case 'LocalEntry':
-                  case 'Entry': repl = 'arg.$globals.entry'; break;
-                  case 'Entries': repl = 'arg.$globals.entries'; break;
-               }
-               if (repl) {
-                  code = code.slice(0, pos) + repl + code.slice(pos2 + 1);
-                  pos = pos + repl.length;
-                  continue;
-               }
-            }
-
-            br = findBranchComplex(tree, code.slice(pos, pos2));
-            if (!br) { pos = pos2 + 1; continue; }
-
-            // when full id includes branch name, replace only part of extracted expression
-            if (br.branch && (br.rest !== undefined)) {
-               pos2 -= br.rest.length;
-               branch_mode = undefined; // maybe selection of the sub-object done
-               br = br.branch;
-            }
-
-            // when code ends with the point - means object itself will be accessed
-            // sometime branch name itself ends with the point
-            if ((pos2 >= code.length - 1) && (code[code.length - 1] === '.')) {
-               arriter.push('$self$');
-               pos2 = code.length;
-            }
-         }
-
-         // now extract all levels of iterators
-         while (pos2 < code.length) {
-            if ((code[pos2] === '@') && (code.slice(pos2, pos2 + 5) === '@size') && (arriter.length === 0)) {
-               pos2 += 5;
-               branch_mode = true;
-               break;
-            }
-
-            if (code[pos2] === '.') {
-               // this is object member
-               const prev = ++pos2;
-
-               if ((code[prev] === '@') && (code.slice(prev, prev + 5) === '@size')) {
-                  arriter.push('$size$');
-                  pos2 += 5;
-                  break;
-               }
-
-               if (!is_start_symbol(code[prev])) {
-                  arriter.push('$self$'); // last point means extraction of object itself
-                  break;
-               }
-
-               while ((pos2 < code.length) && is_next_symbol(code[pos2])) pos2++;
-
-               // this is looks like function call - do not need to extract member with
-               if (code[pos2] === '(') { pos2 = prev - 1; break; }
-
-               // this is selection of member, but probably we need to activate iterator for ROOT collection
-               if (arriter.length === 0) {
-                  // TODO: if selected member is simple data type - no need to make other checks - just break here
-                  if ((br.fType === kClonesNode) || (br.fType === kSTLNode))
-                     arriter.push(undefined);
-                  else {
-                     const objclass = getBranchObjectClass(br, tree, false, true);
-                     if (objclass && isRootCollection(null, objclass))
-                        arriter.push(undefined);
-                  }
-               }
-               arriter.push(code.slice(prev, pos2));
-               continue;
-            }
-
-            if (code[pos2] !== '[') break;
-
-            // simple []
-            if (code[pos2 + 1] === ']') { arriter.push(undefined); pos2 += 2; continue; }
-
-            const prev = pos2++;
-            let cnt = 0;
-            while ((pos2 < code.length) && ((code[pos2] !== ']') || (cnt > 0))) {
-               if (code[pos2] === '[') cnt++; else if (code[pos2] === ']') cnt--;
-               pos2++;
-            }
-            const sub = code.slice(prev + 1, pos2);
-            switch (sub) {
-               case '':
-               case '$all$': arriter.push(undefined); break;
-               case '$last$': arriter.push('$last$'); break;
-               case '$size$': arriter.push('$size$'); break;
-               case '$first$': arriter.push(0); break;
-               default:
-                  if (Number.isInteger(parseInt(sub)))
-                     arriter.push(parseInt(sub));
-                  else {
-                     // try to compile code as draw variable
-                     const subvar = new TDrawVariable(this.globals);
-                     if (!subvar.parse(tree, selector, sub)) return false;
-                     arriter.push(subvar);
-                  }
-            }
-            pos2++;
-         }
-
-         if (arriter.length === 0)
-            arriter = undefined;
-         else if ((arriter.length === 1) && (arriter[0] === undefined))
-            arriter = true;
-
-         let indx = selector.indexOfBranch(br);
-         if (indx < 0) indx = selector.addBranch(br, undefined, branch_mode);
-
-         branch_mode = undefined;
-
-         this.brindex.push(indx);
-         this.branches.push(selector.nameOfBranch(indx));
-         this.brarray.push(arriter);
-
-         // this is simple case of direct usage of the branch
-         if ((pos === 0) && (pos2 === code.length) && (this.branches.length === 1)) {
-            this.direct_branch = true; // remember that branch read as is
-            return true;
-         }
-
-         const replace = 'arg.var' + (this.branches.length - 1);
-         code = code.slice(0, pos) + replace + code.slice(pos2);
-         pos = pos + replace.length;
-      }
-
-      // support usage of some standard TMath functions
-      code = code.replace(/TMath::Exp\(/g, 'Math.exp(')
-                 .replace(/TMath::Abs\(/g, 'Math.abs(')
-                 .replace(/TMath::Prob\(/g, 'arg.$math.Prob(')
-                 .replace(/TMath::Gaus\(/g, 'arg.$math.Gaus(');
-
-      this.func = new Function('arg', `return (${code})`);
-
-      return true;
-   }
-
-   /** @summary Check if it is dummy variable */
-   is_dummy() { return (this.branches.length === 0) && !this.func; }
-
-   /** @summary Produce variable
-     * @desc after reading tree branches into the object, calculate variable value */
-   produce(obj) {
-      this.length = 1;
-      this.isarray = false;
-
-      if (this.is_dummy()) {
-         this.value = 1; // used as dummy weight variable
-         this.kind = 'number';
-         return;
-      }
-
-      const arg = { $globals: this.globals, $math: jsroot_math }, arrs = [];
-      let usearrlen = -1;
-      for (let n = 0; n < this.branches.length; ++n) {
-         const name = `var${n}`;
-         arg[name] = obj[this.branches[n]];
-
-         // try to check if branch is array and need to be iterated
-         if (this.brarray[n] === undefined)
-            this.brarray[n] = (checkArrayPrototype(arg[name]) > 0) || isRootCollection(arg[name]);
-
-         // no array - no pain
-         if (this.brarray[n] === false) continue;
-
-         // check if array can be used as is - one dimension and normal values
-         if ((this.brarray[n] === true) && (checkArrayPrototype(arg[name], true) === 2)) {
-            // plain array, can be used as is
-            arrs[n] = arg[name];
-         } else {
-            const iter = new ArrayIterator(arg[name], this.brarray[n], obj);
-            arrs[n] = [];
-            while (iter.next()) arrs[n].push(iter.value);
-         }
-         if ((usearrlen < 0) || (usearrlen < arrs[n].length)) usearrlen = arrs[n].length;
-      }
-
-      if (usearrlen < 0) {
-         this.value = this.direct_branch ? arg.var0 : this.func(arg);
-         if (!this.kind) this.kind = typeof this.value;
-         return;
-      }
-
-      if (usearrlen === 0) {
-         // empty array - no any histogram should be filled
-         this.length = 0;
-         this.value = 0;
-         return;
-      }
-
-      this.length = usearrlen;
-      this.isarray = true;
-
-      if (this.direct_branch)
-         this.value = arrs[0]; // just use array
-      else {
-         this.value = new Array(usearrlen);
-
-         for (let k = 0; k < usearrlen; ++k) {
-            for (let n = 0; n < this.branches.length; ++n) {
-               if (arrs[n])
-                  arg[`var${n}`] = arrs[n][k];
-            }
-            this.value[k] = this.func(arg);
-         }
-      }
-
-      if (!this.kind) this.kind = typeof this.value[0];
-   }
-
-   /** @summary Get variable */
-   get(indx) { return this.isarray ? this.value[indx] : this.value; }
-
-   /** @summary Append array to the buffer */
-   appendArray(tgtarr) { this.buf = this.buf.concat(tgtarr[this.branches[0]]); }
-
-} // class TDrawVariable
-
-
-/**
- * @summary Selector class for TTree::Draw function
- *
- * @private
- */
-
-class TDrawSelector extends TSelector {
-
-   /** @summary constructor */
-   constructor() {
-      super();
-
-      this.ndim = 0;
-      this.vars = []; // array of expression variables
-      this.cut = null; // cut variable
-      this.hist = null;
-      this.histo_drawopt = '';
-      this.hist_name = '$htemp';
-      this.hist_title = 'Result of TTree::Draw';
-      this.graph = false;
-      this.hist_args = []; // arguments for histogram creation
-      this.arr_limit = 1000;  // number of accumulated items before create histogram
-      this.htype = 'F';
-      this.monitoring = 0;
-      this.globals = {}; // object with global parameters, which could be used in any draw expression
-      this.last_progress = 0;
-      this.aver_diff = 0;
-   }
-
-   /** @summary Set draw selector callbacks */
-   setCallback(result_callback, progress_callback) {
-      this.result_callback = result_callback;
-      this.progress_callback = progress_callback;
-   }
-
-   /** @summary Parse parameters */
-   parseParameters(tree, args, expr) {
-      if (!expr || !isStr(expr)) return '';
-
-      // parse parameters which defined at the end as expression;par1name:par1value;par2name:par2value
-      let pos = expr.lastIndexOf(';');
-      while (pos >= 0) {
-         let parname = expr.slice(pos + 1), parvalue;
-         expr = expr.slice(0, pos);
-         pos = expr.lastIndexOf(';');
-
-         const separ = parname.indexOf(':');
-         if (separ > 0) { parvalue = parname.slice(separ + 1); parname = parname.slice(0, separ); }
-
-         let intvalue = parseInt(parvalue);
-         if (!parvalue || !Number.isInteger(intvalue)) intvalue = undefined;
-
-         switch (parname) {
-            case 'num':
-            case 'entries':
-            case 'numentries':
-               if (parvalue === 'all')
-                  args.numentries = tree.fEntries;
-               else if (parvalue === 'half')
-                  args.numentries = Math.round(tree.fEntries / 2);
-               else if (intvalue !== undefined)
-                  args.numentries = intvalue;
-               break;
-            case 'first':
-               if (intvalue !== undefined) args.firstentry = intvalue;
-               break;
-            case 'mon':
-            case 'monitor':
-               args.monitoring = (intvalue !== undefined) ? intvalue : 5000;
-               break;
-            case 'player':
-               args.player = true;
-               break;
-            case 'dump':
-               args.dump = true;
-               break;
-            case 'maxseg':
-            case 'maxrange':
-               if (intvalue) tree.$file.fMaxRanges = intvalue;
-               break;
-            case 'accum':
-               if (intvalue) this.arr_limit = intvalue;
-               break;
-            case 'htype':
-               if (parvalue && (parvalue.length === 1)) {
-                  this.htype = parvalue.toUpperCase();
-                  if (['C', 'S', 'I', 'F', 'L', 'D'].indexOf(this.htype) < 0)
-                     this.htype = 'F';
-               }
-               break;
-            case 'hbins':
-               this.hist_nbins = parseInt(parvalue);
-               if (!Number.isInteger(this.hist_nbins) || (this.hist_nbins <= 3))
-                  delete this.hist_nbins;
-               else
-                  this.want_hist = true;
-               break;
-            case 'drawopt':
-               args.drawopt = parvalue;
-               break;
-            case 'graph':
-               args.graph = intvalue || true;
-               break;
-         }
-      }
-
-      pos = expr.lastIndexOf('>>');
-      if (pos >= 0) {
-         let harg = expr.slice(pos + 2).trim();
-         expr = expr.slice(0, pos).trim();
-         pos = harg.indexOf('(');
-         if (pos > 0) {
-            this.hist_name = harg.slice(0, pos);
-            harg = harg.slice(pos);
-         }
-         if (harg === 'dump')
-            args.dump = true;
-         else if (harg.indexOf('Graph') === 0)
-            args.graph = true;
-         else if (pos < 0) {
-            this.want_hist = true;
-            this.hist_name = harg;
-         } else if ((harg[0] === '(') && (harg[harg.length - 1] === ')')) {
-            this.want_hist = true;
-            harg = harg.slice(1, harg.length - 1).split(',');
-            let isok = true;
-            for (let n = 0; n < harg.length; ++n) {
-               harg[n] = (n % 3 === 0) ? parseInt(harg[n]) : parseFloat(harg[n]);
-               if (!Number.isFinite(harg[n])) isok = false;
-            }
-            if (isok) this.hist_args = harg;
-         }
-      }
-
-      if (args.dump) {
-         this.dump_values = true;
-         args.reallocate_objects = true;
-         if (args.numentries === undefined) args.numentries = 10;
-      }
-
-      return expr;
-   }
-
-   /** @summary Parse draw expression */
-   parseDrawExpression(tree, args) {
-      // parse complete expression
-      let expr = this.parseParameters(tree, args, args.expr), cut = '';
-
-      // parse option for histogram creation
-      this.hist_title = `drawing '${expr}' from ${tree.fName}`;
-
-      let pos = 0;
-      if (args.cut)
-         cut = args.cut;
-      else {
-         pos = expr.replace(/TMath::/g, 'TMath__').lastIndexOf('::'); // avoid confusion due-to :: in the namespace
-         if (pos > 0) {
-            cut = expr.slice(pos + 2).trim();
-            expr = expr.slice(0, pos).trim();
-         }
-      }
-
-      args.parse_expr = expr;
-      args.parse_cut = cut;
-
-      // let names = expr.split(':'); // to allow usage of ? operator, we need to handle : as well
-      const names = [];
-      let nbr1 = 0, nbr2 = 0, prev = 0;
-      for (pos = 0; pos < expr.length; ++pos) {
-         switch (expr[pos]) {
-            case '(': nbr1++; break;
-            case ')': nbr1--; break;
-            case '[': nbr2++; break;
-            case ']': nbr2--; break;
-            case ':':
-               if (expr[pos + 1] === ':') { pos++; continue; }
-               if (!nbr1 && !nbr2 && (pos > prev)) names.push(expr.slice(prev, pos));
-               prev = pos + 1;
-               break;
-         }
-      }
-      if (!nbr1 && !nbr2 && (pos > prev)) names.push(expr.slice(prev, pos));
-
-      if ((names.length < 1) || (names.length > 3)) return false;
-
-      this.ndim = names.length;
-
-      let is_direct = !cut;
-
-      for (let n = 0; n < this.ndim; ++n) {
-         this.vars[n] = new TDrawVariable(this.globals);
-         if (!this.vars[n].parse(tree, this, names[n])) return false;
-         if (!this.vars[n].direct_branch) is_direct = false;
-      }
-
-      this.cut = new TDrawVariable(this.globals);
-      if (cut)
-         if (!this.cut.parse(tree, this, cut)) return false;
-
-      if (!this.numBranches()) {
-         console.warn('no any branch is selected');
-         return false;
-      }
-
-      if (is_direct) this.ProcessArrays = this.ProcessArraysFunc;
-
-      this.monitoring = args.monitoring;
-
-      // force TPolyMarker3D drawing for 3D case
-      if ((this.ndim === 3) && !this.want_hist && !args.dump)
-         args.graph = true;
-
-      this.graph = args.graph;
-
-      if (args.drawopt !== undefined)
-         this.histo_drawopt = args.drawopt;
-      else
-         this.histo_drawopt = (this.ndim === 2) ? 'col' : '';
-
-      return true;
-   }
-
-   /** @summary Draw only specified branch */
-   drawOnlyBranch(tree, branch, expr, args) {
-      this.ndim = 1;
-
-      if (expr.indexOf('dump') === 0) expr = ';' + expr;
-
-      expr = this.parseParameters(tree, args, expr);
-
-      this.monitoring = args.monitoring;
-
-      if (args.dump) {
-         this.dump_values = true;
-         args.reallocate_objects = true;
-      }
-
-      if (this.dump_values) {
-         this.hist = []; // array of dump objects
-
-         this.leaf = args.leaf;
-
-         // branch object remains, therefore we need to copy fields to see them all
-         this.copy_fields = ((args.branch.fLeaves && (args.branch.fLeaves.arr.length > 1)) ||
-            (args.branch.fBranches && (args.branch.fBranches.arr.length > 0))) && !args.leaf;
-
-         this.addBranch(branch, 'br0', args.direct_branch); // add branch
-
-         this.Process = this.ProcessDump;
-
-         return true;
-      }
-
-      this.vars[0] = new TDrawVariable(this.globals);
-      if (!this.vars[0].parse(tree, this, expr, branch, args.direct_branch)) return false;
-      this.hist_title = `drawing branch ${branch.fName} ${expr?' expr:'+expr:''} from ${tree.fName}`;
-
-      this.cut = new TDrawVariable(this.globals);
-
-      if (this.vars[0].direct_branch) this.ProcessArrays = this.ProcessArraysFunc;
-
-      return true;
-   }
-
-   /** @summary Begin processing */
-   Begin(tree) {
-      this.globals.entries = tree.fEntries;
-
-      if (this.monitoring)
-         this.lasttm = new Date().getTime();
-   }
-
-   /** @summary Show progress */
-   ShowProgress(/* value */) {}
-
-   /** @summary Get bins for bits histogram */
-   getBitsBins(nbits, res) {
-      res.nbins = res.max = nbits;
-      res.fLabels = create$1(clTHashList);
-      for (let k = 0; k < nbits; ++k) {
-         const s = create$1(clTObjString);
-         s.fString = k.toString();
-         s.fUniqueID = k + 1;
-         res.fLabels.Add(s);
-      }
-      return res;
-   }
-
-   /** @summary Get min.max bins */
-   getMinMaxBins(axisid, nbins) {
-      const res = { min: 0, max: 0, nbins, k: 1, fLabels: null, title: '' };
-      if (axisid >= this.ndim) return res;
-
-      const arr = this.vars[axisid].buf;
-
-      res.title = this.vars[axisid].code || '';
-
-      if (this.vars[axisid].kind === 'object') {
-         // this is any object type
-         let typename, similar = true, maxbits = 8;
-         for (let k = 0; k < arr.length; ++k) {
-            if (!arr[k]) continue;
-            if (!typename) typename = arr[k]._typename;
-            if (typename !== arr[k]._typename) similar = false; // check all object types
-            if (arr[k].fNbits) maxbits = Math.max(maxbits, arr[k].fNbits + 1);
-         }
-
-         if (typename && similar) {
-            if ((typename === 'TBits') && (axisid === 0)) {
-               this.fill1DHistogram = this.fillTBitsHistogram;
-               if (maxbits % 8) maxbits = (maxbits & 0xfff0) + 8;
-
-               if ((this.hist_name === 'bits') && (this.hist_args.length === 1) && this.hist_args[0])
-                  maxbits = this.hist_args[0];
-
-               return this.getBitsBins(maxbits, res);
-            }
-         }
-      }
-
-      if (this.vars[axisid].kind === 'string') {
-         res.lbls = []; // all labels
-
-         for (let k = 0; k < arr.length; ++k) {
-            if (res.lbls.indexOf(arr[k]) < 0)
-               res.lbls.push(arr[k]);
-         }
-
-         res.lbls.sort();
-         res.max = res.nbins = res.lbls.length;
-
-         res.fLabels = create$1(clTHashList);
-         for (let k = 0; k < res.lbls.length; ++k) {
-            const s = create$1(clTObjString);
-            s.fString = res.lbls[k];
-            s.fUniqueID = k + 1;
-            if (s.fString === '') s.fString = '<empty>';
-            res.fLabels.Add(s);
-         }
-      } else if ((axisid === 0) && (this.hist_name === 'bits') && (this.hist_args.length <= 1)) {
-         this.fill1DHistogram = this.FillBitsHistogram;
-         return this.getBitsBins(this.hist_args[0] || 32, res);
-      } else if (axisid * 3 + 2 < this.hist_args.length) {
-         res.nbins = this.hist_args[axisid * 3];
-         res.min = this.hist_args[axisid * 3 + 1];
-         res.max = this.hist_args[axisid * 3 + 2];
-      } else {
-         let is_any = false;
-         for (let i = 1; i < arr.length; ++i) {
-            const v = arr[i];
-            if (!Number.isFinite(v)) continue;
-            if (is_any) {
-               res.min = Math.min(res.min, v);
-               res.max = Math.max(res.max, v);
-            } else {
-               res.min = res.max = v;
-               is_any = true;
-            }
-         }
-         if (!is_any) { res.min = 0; res.max = 1; }
-
-         if (this.hist_nbins)
-            nbins = res.nbins = this.hist_nbins;
-
-         res.isinteger = (Math.round(res.min) === res.min) && (Math.round(res.max) === res.max);
-         if (res.isinteger) {
-            for (let k = 0; k < arr.length; ++k)
-               if (arr[k] !== Math.round(arr[k])) { res.isinteger = false; break; }
-         }
-
-         if (res.isinteger) {
-            res.min = Math.round(res.min);
-            res.max = Math.round(res.max);
-            if (res.max - res.min < nbins * 5) {
-               res.min -= 1;
-               res.max += 2;
-               res.nbins = Math.round(res.max - res.min);
-            } else {
-               const range = (res.max - res.min + 2);
-               let step = Math.floor(range / nbins);
-               while (step * nbins < range) step++;
-               res.max = res.min + nbins * step;
-            }
-         } else if (res.min >= res.max) {
-            res.max = res.min;
-            if (Math.abs(res.min) < 100) { res.min -= 1; res.max += 1; } else
-               if (res.min > 0) { res.min *= 0.9; res.max *= 1.1; } else { res.min *= 1.1; res.max *= 0.9; }
-         } else
-            res.max += (res.max - res.min) / res.nbins;
-      }
-
-      res.k = res.nbins / (res.max - res.min);
-
-      res.GetBin = function(value) {
-         const bin = this.lbls?.indexOf(value) ?? Number.isFinite(value) ? Math.floor((value - this.min) * this.k) : this.nbins + 1;
-         return bin < 0 ? 0 : ((bin > this.nbins) ? this.nbins + 1 : bin + 1);
-      };
-
-      return res;
-   }
-
-   /** @summary Create histogram which matches value in dimensions */
-   createHistogram(nbins, set_hist = false) {
-      if (!nbins) nbins = 20;
-
-      const x = this.getMinMaxBins(0, nbins),
-            y = this.getMinMaxBins(1, nbins),
-            z = this.getMinMaxBins(2, nbins);
-      let hist = null;
-
-      switch (this.ndim) {
-         case 1: hist = createHistogram(clTH1 + this.htype, x.nbins); break;
-         case 2: hist = createHistogram(clTH2 + this.htype, x.nbins, y.nbins); break;
-         case 3: hist = createHistogram(clTH3 + this.htype, x.nbins, y.nbins, z.nbins); break;
-      }
-
-      hist.fXaxis.fTitle = x.title;
-      hist.fXaxis.fXmin = x.min;
-      hist.fXaxis.fXmax = x.max;
-      hist.fXaxis.fLabels = x.fLabels;
-
-      if (this.ndim > 1) hist.fYaxis.fTitle = y.title;
-      hist.fYaxis.fXmin = y.min;
-      hist.fYaxis.fXmax = y.max;
-      hist.fYaxis.fLabels = y.fLabels;
-
-      if (this.ndim > 2) hist.fZaxis.fTitle = z.title;
-      hist.fZaxis.fXmin = z.min;
-      hist.fZaxis.fXmax = z.max;
-      hist.fZaxis.fLabels = z.fLabels;
-
-      hist.fName = this.hist_name;
-      hist.fTitle = this.hist_title;
-      hist.fOption = this.histo_drawopt;
-      hist.$custom_stat = (this.hist_name === '$htemp') ? 111110 : 111111;
-
-      if (set_hist) {
-         this.hist = hist;
-         this.x = x;
-         this.y = y;
-         this.z = z;
-      } else
-         hist.fBits = hist.fBits | kNoStats;
-
-      return hist;
-   }
-
-   /** @summary Create output object - histogram, graph, dump array */
-   createOutputObject() {
-      if (this.hist || !this.vars[0].buf) return;
-
-      if (this.dump_values) {
-         // just create array where dumped values will be collected
-         this.hist = [];
-
-         // reassign fill method
-         this.fill1DHistogram = this.fill2DHistogram = this.fill3DHistogram = this.dumpValues;
-      } else if (this.graph) {
-         const N = this.vars[0].buf.length;
-         let res = null;
-
-         if (this.ndim === 1) {
-            // A 1-dimensional graph will just have the x axis as an index
-            res = createTGraph(N, Array.from(Array(N).keys()), this.vars[0].buf);
-            res.fName = 'Graph';
-            res.fTitle = this.hist_title;
-         } else if (this.ndim === 2) {
-            res = createTGraph(N, this.vars[0].buf, this.vars[1].buf);
-            res.fName = 'Graph';
-            res.fTitle = this.hist_title;
-            delete this.vars[1].buf;
-         } else if (this.ndim === 3) {
-            res = create$1(clTPolyMarker3D);
-            res.fN = N;
-            res.fLastPoint = N - 1;
-            const arr = new Array(N*3);
-            for (let k = 0; k< N; ++k) {
-               arr[k*3] = this.vars[0].buf[k];
-               arr[k*3+1] = this.vars[1].buf[k];
-               arr[k*3+2] = this.vars[2].buf[k];
-            }
-            res.fP = arr;
-            res.$hist = this.createHistogram(10);
-            delete this.vars[1].buf;
-            delete this.vars[2].buf;
-            res.fName = 'Points';
-         }
-
-         this.hist = res;
-      } else {
-         const nbins = [200, 50, 20];
-         this.createHistogram(nbins[this.ndim], true);
-      }
-
-      const var0 = this.vars[0].buf, cut = this.cut.buf, len = var0.length;
-
-      if (!this.graph) {
-         switch (this.ndim) {
-            case 1: {
-               for (let n = 0; n < len; ++n)
-                  this.fill1DHistogram(var0[n], cut ? cut[n] : 1);
-               break;
-            }
-            case 2: {
-               const var1 = this.vars[1].buf;
-               for (let n = 0; n < len; ++n)
-                  this.fill2DHistogram(var0[n], var1[n], cut ? cut[n] : 1);
-               delete this.vars[1].buf;
-               break;
-            }
-            case 3: {
-               const var1 = this.vars[1].buf, var2 = this.vars[2].buf;
-               for (let n = 0; n < len; ++n)
-                  this.fill3DHistogram(var0[n], var1[n], var2[n], cut ? cut[n] : 1);
-               delete this.vars[1].buf;
-               delete this.vars[2].buf;
-               break;
-            }
-         }
-      }
-
-      delete this.vars[0].buf;
-      delete this.cut.buf;
-   }
-
-   /** @summary Fill TBits histogram */
-   fillTBitsHistogram(xvalue, weight) {
-      if (!weight || !xvalue || !xvalue.fNbits || !xvalue.fAllBits) return;
-
-      const sz = Math.min(xvalue.fNbits + 1, xvalue.fNbytes * 8);
-
-      for (let bit = 0, mask = 1, b = 0; bit < sz; ++bit) {
-         if (xvalue.fAllBits[b] && mask) {
-            if (bit <= this.x.nbins)
-               this.hist.fArray[bit + 1] += weight;
-            else
-               this.hist.fArray[this.x.nbins + 1] += weight;
-         }
-
-         mask *= 2;
-         if (mask >= 0x100) { mask = 1; ++b; }
-      }
-   }
-
-   /** @summary Fill bits histogram */
-   FillBitsHistogram(xvalue, weight) {
-      if (!weight) return;
-
-      for (let bit = 0, mask = 1; bit < this.x.nbins; ++bit) {
-         if (xvalue & mask) this.hist.fArray[bit + 1] += weight;
-         mask *= 2;
-      }
-   }
-
-   /** @summary Fill 1D histogram */
-   fill1DHistogram(xvalue, weight) {
-      const bin = this.x.GetBin(xvalue);
-      this.hist.fArray[bin] += weight;
-
-      if (!this.x.lbls && Number.isFinite(xvalue)) {
-         this.hist.fTsumw += weight;
-         this.hist.fTsumwx += weight * xvalue;
-         this.hist.fTsumwx2 += weight * xvalue * xvalue;
-      }
-   }
-
-   /** @summary Fill 2D histogram */
-   fill2DHistogram(xvalue, yvalue, weight) {
-      const xbin = this.x.GetBin(xvalue),
-            ybin = this.y.GetBin(yvalue);
-
-      this.hist.fArray[xbin + (this.x.nbins + 2) * ybin] += weight;
-      if (!this.x.lbls && !this.y.lbls && Number.isFinite(xvalue) && Number.isFinite(yvalue)) {
-         this.hist.fTsumw += weight;
-         this.hist.fTsumwx += weight * xvalue;
-         this.hist.fTsumwy += weight * yvalue;
-         this.hist.fTsumwx2 += weight * xvalue * xvalue;
-         this.hist.fTsumwxy += weight * xvalue * yvalue;
-         this.hist.fTsumwy2 += weight * yvalue * yvalue;
-      }
-   }
-
-   /** @summary Fill 3D histogram */
-   fill3DHistogram(xvalue, yvalue, zvalue, weight) {
-      const xbin = this.x.GetBin(xvalue),
-            ybin = this.y.GetBin(yvalue),
-            zbin = this.z.GetBin(zvalue);
-
-      this.hist.fArray[xbin + (this.x.nbins + 2) * (ybin + (this.y.nbins + 2) * zbin)] += weight;
-      if (!this.x.lbls && !this.y.lbls && !this.z.lbls && Number.isFinite(xvalue) && Number.isFinite(yvalue) && Number.isFinite(zvalue)) {
-         this.hist.fTsumw += weight;
-         this.hist.fTsumwx += weight * xvalue;
-         this.hist.fTsumwy += weight * yvalue;
-         this.hist.fTsumwz += weight * zvalue;
-         this.hist.fTsumwx2 += weight * xvalue * xvalue;
-         this.hist.fTsumwy2 += weight * yvalue * yvalue;
-         this.hist.fTsumwz2 += weight * zvalue * zvalue;
-         this.hist.fTsumwxy += weight * xvalue * yvalue;
-         this.hist.fTsumwxz += weight * xvalue * zvalue;
-         this.hist.fTsumwyz += weight * yvalue * zvalue;
-      }
-   }
-
-   /** @summary Dump values */
-   dumpValues(v1, v2, v3, v4) {
-      let obj;
-      switch (this.ndim) {
-         case 1: obj = { x: v1, weight: v2 }; break;
-         case 2: obj = { x: v1, y: v2, weight: v3 }; break;
-         case 3: obj = { x: v1, y: v2, z: v3, weight: v4 }; break;
-      }
-
-      if (this.cut.is_dummy()) {
-         if (this.ndim === 1)
-            obj = v1;
-         else
-            delete obj.weight;
-      }
-
-      this.hist.push(obj);
-   }
-
-    /** @summary function used when all branches can be read as array
-      * @desc most typical usage - histogram filling of single branch */
-   ProcessArraysFunc(/* entry */) {
-      if (this.arr_limit || this.graph) {
-         const var0 = this.vars[0],
-               var1 = this.vars[1],
-               var2 = this.vars[2],
-               len = this.tgtarr.br0.length;
-         if ((var0.buf.length === 0) && (len >= this.arr_limit) && !this.graph) {
-            // special use case - first array large enough to create histogram directly base on it
-            var0.buf = this.tgtarr.br0;
-            if (var1) var1.buf = this.tgtarr.br1;
-            if (var2) var2.buf = this.tgtarr.br2;
-         } else {
-            for (let k = 0; k < len; ++k) {
-               var0.buf.push(this.tgtarr.br0[k]);
-               if (var1) var1.buf.push(this.tgtarr.br1[k]);
-               if (var2) var2.buf.push(this.tgtarr.br2[k]);
-            }
-         }
-         var0.kind = 'number';
-         if (var1) var1.kind = 'number';
-         if (var2) var2.kind = 'number';
-         this.cut.buf = null; // do not create buffer for cuts
-         if (!this.graph && (var0.buf.length >= this.arr_limit)) {
-            this.createOutputObject();
-            this.arr_limit = 0;
-         }
-      } else {
-         const br0 = this.tgtarr.br0, len = br0.length;
-         switch (this.ndim) {
-            case 1: {
-               for (let k = 0; k < len; ++k)
-                  this.fill1DHistogram(br0[k], 1);
-               break;
-            }
-            case 2: {
-               const br1 = this.tgtarr.br1;
-               for (let k = 0; k < len; ++k)
-                  this.fill2DHistogram(br0[k], br1[k], 1);
-               break;
-            }
-            case 3: {
-               const br1 = this.tgtarr.br1, br2 = this.tgtarr.br2;
-               for (let k = 0; k < len; ++k)
-                  this.fill3DHistogram(br0[k], br1[k], br2[k], 1);
-               break;
-            }
-         }
-      }
-   }
-
-   /** @summary simple dump of the branch - no need to analyze something */
-   ProcessDump(/* entry */) {
-      const res = this.leaf ? this.tgtobj.br0[this.leaf] : this.tgtobj.br0;
-
-      if (res && this.copy_fields) {
-         if (checkArrayPrototype(res) === 0)
-            this.hist.push(Object.assign({}, res));
-         else
-            this.hist.push(res);
-      } else
-         this.hist.push(res);
-   }
-
-   /** @summary Normal TSelector Process handler */
-   Process(entry) {
-      this.globals.entry = entry; // can be used in any expression
-
-      this.cut.produce(this.tgtobj);
-      if (!this.dump_values && !this.cut.value) return;
-
-      for (let n = 0; n < this.ndim; ++n)
-         this.vars[n].produce(this.tgtobj);
-
-      const var0 = this.vars[0], var1 = this.vars[1], var2 = this.vars[2], cut = this.cut;
-
-      if (this.graph || this.arr_limit) {
-         switch (this.ndim) {
-            case 1:
-               for (let n0 = 0; n0 < var0.length; ++n0) {
-                  var0.buf.push(var0.get(n0));
-                  cut.buf?.push(cut.value);
-               }
-               break;
-            case 2:
-               for (let n0 = 0; n0 < var0.length; ++n0) {
-                  for (let n1 = 0; n1 < var1.length; ++n1) {
-                     var0.buf.push(var0.get(n0));
-                     var1.buf.push(var1.get(n1));
-                     cut.buf?.push(cut.value);
-                  }
-               }
-               break;
-            case 3:
-               for (let n0 = 0; n0 < var0.length; ++n0) {
-                  for (let n1 = 0; n1 < var1.length; ++n1) {
-                     for (let n2 = 0; n2 < var2.length; ++n2) {
-                        var0.buf.push(var0.get(n0));
-                        var1.buf.push(var1.get(n1));
-                        var2.buf.push(var2.get(n2));
-                        cut.buf?.push(cut.value);
-                     }
-                  }
-               }
-               break;
-         }
-         if (!this.graph && (var0.buf.length >= this.arr_limit)) {
-            this.createOutputObject();
-            this.arr_limit = 0;
-         }
-      } else if (this.hist) {
-         switch (this.ndim) {
-            case 1:
-               for (let n0 = 0; n0 < var0.length; ++n0)
-                  this.fill1DHistogram(var0.get(n0), cut.value);
-               break;
-            case 2:
-               for (let n0 = 0; n0 < var0.length; ++n0) {
-                  for (let n1 = 0; n1 < var1.length; ++n1)
-                     this.fill2DHistogram(var0.get(n0), var1.get(n1), cut.value);
-               }
-               break;
-            case 3:
-               for (let n0 = 0; n0 < var0.length; ++n0) {
-                  for (let n1 = 0; n1 < var1.length; ++n1) {
-                     for (let n2 = 0; n2 < var2.length; ++n2)
-                        this.fill3DHistogram(var0.get(n0), var1.get(n1), var2.get(n2), cut.value);
-                  }
-               }
-               break;
-         }
-      }
-
-      if (this.monitoring && this.hist && !this.dump_values) {
-         const now = new Date().getTime();
-         if (now - this.lasttm > this.monitoring) {
-            this.lasttm = now;
-            if (isFunc(this.progress_callback))
-               this.progress_callback(this.hist);
-         }
-      }
-   }
-
-   /** @summary Normal TSelector Terminate handler */
-   Terminate(res) {
-      if (res && !this.hist)
-         this.createOutputObject();
-
-      this.ShowProgress();
-
-      if (isFunc(this.result_callback))
-         this.result_callback(this.hist);
-   }
-
-} // class TDrawSelector
-
-
-/** @summary return TStreamerElement associated with the branch - if any
-  * @desc unfortunately, branch.fID is not number of element in streamer info
-  * @private */
-function findBrachStreamerElement(branch, file) {
-   if (!branch || !file || (branch._typename !== clTBranchElement) || (branch.fID < 0) || (branch.fStreamerType < 0)) return null;
-
-   const s_i = file.findStreamerInfo(branch.fClassName, branch.fClassVersion, branch.fCheckSum),
-         arr = (s_i && s_i.fElements) ? s_i.fElements.arr : null;
-   if (!arr) return null;
-
-   let match_name = branch.fName,
-      pos = match_name.indexOf('[');
-   if (pos > 0) match_name = match_name.slice(0, pos);
-   pos = match_name.lastIndexOf('.');
-   if (pos > 0) match_name = match_name.slice(pos + 1);
-
-   function match_elem(elem) {
-      if (!elem) return false;
-      if (elem.fName !== match_name) return false;
-      if (elem.fType === branch.fStreamerType) return true;
-      if ((elem.fType === kBool) && (branch.fStreamerType === kUChar)) return true;
-      if (((branch.fStreamerType === kSTL) || (branch.fStreamerType === kSTL + kOffsetL) ||
-           (branch.fStreamerType === kSTLp) || (branch.fStreamerType === kSTLp + kOffsetL)) &&
-          (elem.fType === kStreamer)) return true;
-      console.warn(`Should match element ${elem.fType} with branch ${branch.fStreamerType}`);
-      return false;
-   }
-
-   // first check branch fID - in many cases gut guess
-   if (match_elem(arr[branch.fID]))
-      return arr[branch.fID];
-
-   for (let k = 0; k < arr.length; ++k) {
-      if ((k !== branch.fID) && match_elem(arr[k]))
-         return arr[k];
-   }
-
-   console.error(`Did not found/match element for branch ${branch.fName} class ${branch.fClassName}`);
-
-   return null;
-}
-
-/** @summary return type name of given member in the class
-  * @private */
-function defineMemberTypeName(file, parent_class, member_name) {
-   const s_i = file.findStreamerInfo(parent_class),
-         arr = s_i?.fElements?.arr;
-   if (!arr) return '';
-
-   let elem = null;
-   for (let k = 0; k < arr.length; ++k) {
-      if (arr[k].fTypeName === kBaseClass) {
-         const res = defineMemberTypeName(file, arr[k].fName, member_name);
-         if (res) return res;
-      } else
-         if (arr[k].fName === member_name) { elem = arr[k]; break; }
-   }
-
-   if (!elem) return '';
-
-   let clname = elem.fTypeName;
-   if (clname[clname.length - 1] === '*')
-      clname = clname.slice(0, clname.length - 1);
-
-   return clname;
-}
-
-/** @summary create fast list to assign all methods to the object
-  * @private */
-function makeMethodsList(typename) {
-   const methods = getMethods(typename),
-   res = {
-      names: [],
-      values: [],
-      Create() {
-         const obj = {};
-         for (let n = 0; n < this.names.length; ++n)
-            obj[this.names[n]] = this.values[n];
-         return obj;
-      }
-   };
-
-   res.names.push('_typename');
-   res.values.push(typename);
-   for (const key in methods) {
-      res.names.push(key);
-      res.values.push(methods[key]);
-   }
-   return res;
-}
-
-/** @summary try to define classname for the branch member, scanning list of branches
-  * @private */
-function detectBranchMemberClass(brlst, prefix, start) {
-   let clname = '';
-   for (let kk = (start || 0); kk < brlst.arr.length; ++kk) {
-      if ((brlst.arr[kk].fName.indexOf(prefix) === 0) && brlst.arr[kk].fClassName)
-         clname = brlst.arr[kk].fClassName;
-   }
-   return clname;
-}
-
-/** @summary Process selector for the tree
-  * @desc function similar to the TTree::Process
-  * @param {object} tree - instance of TTree class
-  * @param {object} selector - instance of {@link TSelector} class
-  * @param {object} [args] - different arguments
-  * @param {number} [args.firstentry] - first entry to process, 0 when not specified
-  * @param {number} [args.numentries] - number of entries to process, all when not specified
-  * @return {Promise} with TSelector instance */
-async function treeProcess(tree, selector, args) {
-   if (!args) args = {};
-
-   if (!selector || !tree.$file || !selector.numBranches()) {
-      selector?.Terminate(false);
-      return Promise.reject(Error('required parameter missing for TTree::Process'));
-   }
-
-   // central handle with all information required for reading
-   const handle = {
-      tree, // keep tree reference
-      file: tree.$file, // keep file reference
-      selector, // reference on selector
-      arr: [], // list of branches
-      curr: -1,  // current entry ID
-      current_entry: -1, // current processed entry
-      simple_read: true, // all baskets in all used branches are in sync,
-      process_arrays: true // one can process all branches as arrays
-   }, createLeafElem = (leaf, name) => {
-      // function creates TStreamerElement which corresponds to the elementary leaf
-      let datakind = 0;
-      switch (leaf._typename) {
-         case 'TLeafF': datakind = kFloat; break;
-         case 'TLeafD': datakind = kDouble; break;
-         case 'TLeafO': datakind = kBool; break;
-         case 'TLeafB': datakind = leaf.fIsUnsigned ? kUChar : kChar; break;
-         case 'TLeafS': datakind = leaf.fIsUnsigned ? kUShort : kShort; break;
-         case 'TLeafI': datakind = leaf.fIsUnsigned ? kUInt : kInt; break;
-         case 'TLeafL': datakind = leaf.fIsUnsigned ? kULong64 : kLong64; break;
-         case 'TLeafC': datakind = kTString; break;
-         default: return null;
-      }
-      const elem = createStreamerElement(name || leaf.fName, datakind);
-      if (leaf.fLen > 1) {
-         elem.fType += kOffsetL;
-         elem.fArrayLength = leaf.fLen;
-      }
-      return elem;
-   }, findInHandle = branch => {
-      for (let k = 0; k < handle.arr.length; ++k) {
-         if (handle.arr[k].branch === branch)
-             return handle.arr[k];
-      }
-      return null;
-   };
-
-   let namecnt = 0;
-
-   function AddBranchForReading(branch, target_object, target_name, read_mode) {
-      // central method to add branch for reading
-      // read_mode == true - read only this branch
-      // read_mode == '$child$' is just member of object from for STL or clonesarray
-      // read_mode == '<any class name>' is sub-object from STL or clonesarray, happens when such new object need to be created
-      // read_mode == '.member_name' select only reading of member_name instead of complete object
-
-      if (isStr(branch))
-         branch = findBranch(handle.tree, branch);
-
-      if (!branch) { console.error('Did not found branch'); return null; }
-
-      let item = findInHandle(branch);
-
-      if (item) {
-         console.error(`Branch ${branch.fName} already configured for reading`);
-         if (item.tgt !== target_object) console.error('Target object differs');
-         return null;
-      }
-
-      if (!branch.fEntries) {
-         console.warn(`Branch ${branch.fName} does not have entries`);
-         return null;
-      }
-
-      // console.log(`Add branch ${branch.fName}`);
-
-      item = {
-         branch,
-         tgt: target_object, // used target object - can be differ for object members
-         name: target_name,
-         index: -1, // index in the list of read branches
-         member: null, // member to read branch
-         type: 0, // keep type identifier
-         curr_entry: -1, // last processed entry
-         raw: null, // raw buffer for reading
-         basket: null, // current basket object
-         curr_basket: 0,  // number of basket used for processing
-         read_entry: -1,  // last entry which is already read
-         staged_entry: -1, // entry which is staged for reading
-         first_readentry: -1, // first entry to read
-         staged_basket: 0,  // last basket staged for reading
-         numentries: branch.fEntries,
-         numbaskets: branch.fWriteBasket, // number of baskets which can be read from the file
-         counters: null, // branch indexes used as counters
-         ascounter: [], // list of other branches using that branch as counter
-         baskets: [], // array for read baskets,
-         staged_prev: 0, // entry limit of previous I/O request
-         staged_now: 0, // entry limit of current I/O request
-         progress_showtm: 0, // last time when progress was showed
-         getBasketEntry(k) {
-            if (!this.branch || (k > this.branch.fMaxBaskets)) return 0;
-            const res = (k < this.branch.fMaxBaskets) ? this.branch.fBasketEntry[k] : 0;
-            if (res) return res;
-            const bskt = (k > 0) ? this.branch.fBaskets.arr[k - 1] : null;
-            return bskt ? (this.branch.fBasketEntry[k - 1] + bskt.fNevBuf) : 0;
-         },
-         getTarget(tgtobj) {
-            // returns target object which should be used for the branch reading
-            if (!this.tgt) return tgtobj;
-            for (let k = 0; k < this.tgt.length; ++k) {
-               const sub = this.tgt[k];
-               if (!tgtobj[sub.name]) tgtobj[sub.name] = sub.lst.Create();
-               tgtobj = tgtobj[sub.name];
-            }
-            return tgtobj;
-         },
-         getEntry(entry) {
-            // This should be equivalent to TBranch::GetEntry() method
-            const shift = entry - this.first_entry;
-            let off;
-            if (!this.branch.TestBit(kDoNotUseBufferMap))
-               this.raw.clearObjectMap();
-            if (this.basket.fEntryOffset) {
-               off = this.basket.fEntryOffset[shift];
-               if (this.basket.fDisplacement)
-                  this.raw.fDisplacement = this.basket.fDisplacement[shift];
-            } else
-               off = this.basket.fKeylen + this.basket.fNevBufSize * shift;
-            this.raw.locate(off - this.raw.raw_shift);
-
-            // this.member.func(this.raw, this.getTarget(tgtobj));
-         }
-      };
-
-      // last basket can be stored directly with the branch
-      while (item.getBasketEntry(item.numbaskets + 1)) item.numbaskets++;
-
-      // check all counters if we
-      const nb_leaves = branch.fLeaves?.arr?.length ?? 0,
-            leaf = (nb_leaves > 0) ? branch.fLeaves.arr[0] : null,
-            is_brelem = (branch._typename === clTBranchElement);
-      let elem = null, // TStreamerElement used to create reader
-          member = null, // member for actual reading of the branch
-          child_scan = 0, // scan child branches after main branch is appended
-          item_cnt = null, item_cnt2 = null, object_class = '';
-
-      if (branch.fBranchCount) {
-         item_cnt = findInHandle(branch.fBranchCount);
-
-         if (!item_cnt)
-            item_cnt = AddBranchForReading(branch.fBranchCount, target_object, '$counter' + namecnt++, true);
-
-         if (!item_cnt) { console.error(`Cannot add counter branch ${branch.fBranchCount.fName}`); return null; }
-
-         let BranchCount2 = branch.fBranchCount2;
-
-         if (!BranchCount2 && (branch.fBranchCount.fStreamerType === kSTL) &&
-            ((branch.fStreamerType === kStreamLoop) || (branch.fStreamerType === kOffsetL + kStreamLoop))) {
-            // special case when count member from kStreamLoop not assigned as fBranchCount2
-            const elemd = findBrachStreamerElement(branch, handle.file),
-                  arrd = branch.fBranchCount.fBranches.arr;
-
-            if (elemd?.fCountName && arrd) {
-               for (let k = 0; k < arrd.length; ++k) {
-                  if (arrd[k].fName === branch.fBranchCount.fName + '.' + elemd.fCountName) {
-                     BranchCount2 = arrd[k];
-                     break;
-                  }
-               }
-            }
-
-            if (!BranchCount2) console.error('Did not found branch for second counter of kStreamLoop element');
-         }
-
-         if (BranchCount2) {
-            item_cnt2 = findInHandle(BranchCount2);
-
-            if (!item_cnt2) item_cnt2 = AddBranchForReading(BranchCount2, target_object, '$counter' + namecnt++, true);
-
-            if (!item_cnt2) { console.error(`Cannot add counter branch2 ${BranchCount2.fName}`); return null; }
-         }
-      } else if (nb_leaves === 1 && leaf && leaf.fLeafCount) {
-         const br_cnt = findBranch(handle.tree, leaf.fLeafCount.fName);
-
-         if (br_cnt) {
-            item_cnt = findInHandle(br_cnt);
-
-            if (!item_cnt) item_cnt = AddBranchForReading(br_cnt, target_object, '$counter' + namecnt++, true);
-
-            if (!item_cnt) { console.error(`Cannot add counter branch ${br_cnt.fName}`); return null; }
-         }
-      }
-
-      function ScanBranches(lst, master_target, chld_kind) {
-         if (!lst || !lst.arr.length) return true;
-
-         let match_prefix = branch.fName;
-         if (match_prefix[match_prefix.length - 1] === '.') match_prefix = match_prefix.slice(0, match_prefix.length - 1);
-         if (isStr(read_mode) && (read_mode[0] === '.')) match_prefix += read_mode;
-         match_prefix += '.';
-
-         for (let k = 0; k < lst.arr.length; ++k) {
-            const br = lst.arr[k];
-            if ((chld_kind > 0) && (br.fType !== chld_kind)) continue;
-
-            if (br.fType === kBaseClassNode) {
-               if (!ScanBranches(br.fBranches, master_target, chld_kind)) return false;
-               continue;
-            }
-
-            const elem = findBrachStreamerElement(br, handle.file);
-            if (elem?.fTypeName === kBaseClass) {
-               // if branch is data of base class, map it to original target
-               if (br.fTotBytes && !AddBranchForReading(br, target_object, target_name, read_mode)) return false;
-               if (!ScanBranches(br.fBranches, master_target, chld_kind)) return false;
-               continue;
-            }
-
-            let subname = br.fName, chld_direct = 1;
-
-            if (br.fName.indexOf(match_prefix) === 0)
-               subname = subname.slice(match_prefix.length);
-            else if (chld_kind > 0)
-               continue; // for defined children names prefix must be present
-
-            let p = subname.indexOf('[');
-            if (p > 0) subname = subname.slice(0, p);
-            p = subname.indexOf('<');
-            if (p > 0) subname = subname.slice(0, p);
-
-            if (chld_kind > 0) {
-               chld_direct = '$child$';
-               const pp = subname.indexOf('.');
-               if (pp > 0) chld_direct = detectBranchMemberClass(lst, branch.fName + '.' + subname.slice(0, pp + 1), k) || clTObject;
-            }
-
-            if (!AddBranchForReading(br, master_target, subname, chld_direct)) return false;
-         }
-
-         return true;
-      }
-
-      if (branch._typename === 'TBranchObject') {
-         member = {
-            name: target_name,
-            typename: branch.fClassName,
-            virtual: leaf.fVirtual,
-            func(buf, obj) {
-               let clname = this.typename;
-               if (this.virtual) clname = buf.readFastString(buf.ntou1() + 1);
-               obj[this.name] = buf.classStreamer({}, clname);
-            }
-         };
-      } else if ((branch.fType === kClonesNode) || (branch.fType === kSTLNode)) {
-         elem = createStreamerElement(target_name, kInt);
-
-         if (!read_mode || (isStr(read_mode) && (read_mode[0] === '.')) || (read_mode === 1)) {
-            handle.process_arrays = false;
-
-            member = {
-               name: target_name,
-               conttype: branch.fClonesName || clTObject,
-               reallocate: args.reallocate_objects,
-               func(buf, obj) {
-                  const size = buf.ntoi4();
-                  let n = 0, arr = obj[this.name];
-                  if (!arr || this.reallocate)
-                     arr = obj[this.name] = new Array(size);
-                  else {
-                     n = arr.length;
-                     arr.length = size; // reallocate array
-                  }
-
-                  while (n < size) arr[n++] = this.methods.Create(); // create new objects
-               }
-            };
-
-            if (isStr(read_mode) && (read_mode[0] === '.')) {
-               member.conttype = detectBranchMemberClass(branch.fBranches, branch.fName + read_mode);
-               if (!member.conttype) {
-                  console.error(`Cannot select object ${read_mode} in the branch ${branch.fName}`);
-                  return null;
-               }
-            }
-
-            member.methods = makeMethodsList(member.conttype);
-
-            child_scan = (branch.fType === kClonesNode) ? kClonesMemberNode : kSTLMemberNode;
-         }
-      } else if ((object_class = getBranchObjectClass(branch, handle.tree))) {
-         if (read_mode === true) {
-            console.warn(`Object branch ${object_class} can not have data to be read directly`);
-            return null;
-         }
-
-         handle.process_arrays = false;
-
-         const newtgt = new Array(target_object ? (target_object.length + 1) : 1);
-         for (let l = 0; l < newtgt.length - 1; ++l)
-            newtgt[l] = target_object[l];
-         newtgt[newtgt.length - 1] = { name: target_name, lst: makeMethodsList(object_class) };
-
-         if (!ScanBranches(branch.fBranches, newtgt, 0)) return null;
-
-         return item; // this kind of branch does not have baskets and not need to be read
-      } else if (is_brelem && (nb_leaves === 1) && (leaf.fName === branch.fName) && (branch.fID === -1)) {
-         elem = createStreamerElement(target_name, branch.fClassName);
-
-         if (elem.fType === kAny) {
-            const streamer = handle.file.getStreamer(branch.fClassName, { val: branch.fClassVersion, checksum: branch.fCheckSum });
-            if (!streamer) {
-               elem = null;
-               console.warn('not found streamer!');
-             } else {
-               member = {
-                  name: target_name,
-                  typename: branch.fClassName,
-                  streamer,
-                  func(buf, obj) {
-                     const res = { _typename: this.typename };
-                     for (let n = 0; n < this.streamer.length; ++n)
-                        this.streamer[n].func(buf, res);
-                     obj[this.name] = res;
-                  }
-               };
-            }
-         }
-
-         // elem.fType = kAnyP;
-
-         // only STL containers here
-         // if (!elem.fSTLtype) elem = null;
-      } else if (is_brelem && (nb_leaves <= 1)) {
-         elem = findBrachStreamerElement(branch, handle.file);
-
-         // this is basic type - can try to solve problem differently
-         if (!elem && branch.fStreamerType && (branch.fStreamerType < 20))
-            elem = createStreamerElement(target_name, branch.fStreamerType);
-      } else if (nb_leaves === 1) {
-         // no special constrains for the leaf names
-
-         elem = createLeafElem(leaf, target_name);
-      } else if ((branch._typename === 'TBranch') && (nb_leaves > 1)) {
-         // branch with many elementary leaves
-
-         const leaves = new Array(nb_leaves);
-         let isok = true;
-         for (let l = 0; l < nb_leaves; ++l) {
-            leaves[l] = createMemberStreamer(createLeafElem(branch.fLeaves.arr[l]), handle.file);
-            if (!leaves[l]) isok = false;
-         }
-
-         if (isok) {
-            member = {
-               name: target_name,
-               leaves,
-               func(buf, obj) {
-                  let tgt = obj[this.name], l = 0;
-                  if (!tgt) obj[this.name] = tgt = {};
-                  while (l < this.leaves.length)
-                     this.leaves[l++].func(buf, tgt);
-               }
-            };
-         }
-      }
-
-      if (!elem && !member) {
-         console.warn(`Not supported branch ${branch.fName} type ${branch._typename}`);
-         return null;
-      }
-
-      if (!member) {
-         member = createMemberStreamer(elem, handle.file);
-
-         if ((member.base !== undefined) && member.basename) {
-            // when element represent base class, we need handling which differ from normal IO
-            member.func = function(buf, obj) {
-               if (!obj[this.name]) obj[this.name] = { _typename: this.basename };
-               buf.classStreamer(obj[this.name], this.basename);
-            };
-         }
-      }
-
-      if (item_cnt && isStr(read_mode)) {
-         member.name0 = item_cnt.name;
-
-         const snames = target_name.split('.');
-
-         if (snames.length === 1) {
-            // no point in the name - just plain array of objects
-            member.get = (arr, n) => arr[n];
-         } else if (read_mode === '$child$') {
-            console.error(`target name ${target_name} contains point, but suppose to be direct child`);
-            return null;
-         } else if (snames.length === 2) {
-            target_name = member.name = snames[1];
-            member.name1 = snames[0];
-            member.subtype1 = read_mode;
-            member.methods1 = makeMethodsList(member.subtype1);
-            member.get = function(arr, n) {
-               let obj1 = arr[n][this.name1];
-               if (!obj1) obj1 = arr[n][this.name1] = this.methods1.Create();
-               return obj1;
-            };
-         } else {
-            // very complex task - we need to reconstruct several embedded members with their types
-            // try our best - but not all data types can be reconstructed correctly
-            // while classname is not enough - there can be different versions
-
-            if (!branch.fParentName) {
-               console.error(`Not possible to provide more than 2 parts in the target name ${target_name}`);
-               return null;
-            }
-
-            target_name = member.name = snames.pop(); // use last element
-            member.snames = snames; // remember all sub-names
-            member.smethods = []; // and special handles to create missing objects
-
-            let parent_class = branch.fParentName; // unfortunately, without version
-
-            for (let k = 0; k < snames.length; ++k) {
-               const chld_class = defineMemberTypeName(handle.file, parent_class, snames[k]);
-               member.smethods[k] = makeMethodsList(chld_class || 'AbstractClass');
-               parent_class = chld_class;
-            }
-            member.get = function(arr, n) {
-               let obj1 = arr[n][this.snames[0]];
-               if (!obj1) obj1 = arr[n][this.snames[0]] = this.smethods[0].Create();
-               for (let k = 1; k < this.snames.length; ++k) {
-                  let obj2 = obj1[this.snames[k]];
-                  if (!obj2) obj2 = obj1[this.snames[k]] = this.smethods[k].Create();
-                  obj1 = obj2;
-               }
-               return obj1;
-            };
-         }
-
-         // case when target is sub-object and need to be created before
-
-         if (member.objs_branch_func) {
-            // STL branch provides special function for the reading
-            member.func = member.objs_branch_func;
-         } else {
-            member.func0 = member.func;
-
-            member.func = function(buf, obj) {
-               const arr = obj[this.name0]; // objects array where reading is done
-               let n = 0;
-               while (n < arr.length)
-                  this.func0(buf, this.get(arr, n++)); // read all individual object with standard functions
-            };
-         }
-      } else if (item_cnt) {
-         handle.process_arrays = false;
-
-         if ((elem.fType === kDouble32) || (elem.fType === kFloat16)) {
-            // special handling for compressed floats
-
-            member.stl_size = item_cnt.name;
-            member.func = function(buf, obj) {
-               obj[this.name] = this.readarr(buf, obj[this.stl_size]);
-            };
-         } else if (((elem.fType === kOffsetP + kDouble32) || (elem.fType === kOffsetP + kFloat16)) && branch.fBranchCount2) {
-            // special handling for variable arrays of compressed floats in branch - not tested
-
-            member.stl_size = item_cnt.name;
-            member.arr_size = item_cnt2.name;
-            member.func = function(buf, obj) {
-               const sz0 = obj[this.stl_size], sz1 = obj[this.arr_size], arr = new Array(sz0);
-               for (let n = 0; n < sz0; ++n)
-                  arr[n] = (buf.ntou1() === 1) ? this.readarr(buf, sz1[n]) : [];
-               obj[this.name] = arr;
-            };
-         } else if (((elem.fType > 0) && (elem.fType < kOffsetL)) || (elem.fType === kTString) ||
-                    (((elem.fType > kOffsetP) && (elem.fType < kOffsetP + kOffsetL)) && branch.fBranchCount2)) {
-            // special handling of simple arrays
-            member = {
-               name: target_name,
-               stl_size: item_cnt.name,
-               type: elem.fType,
-               func(buf, obj) {
-                  obj[this.name] = buf.readFastArray(obj[this.stl_size], this.type);
-               }
-            };
-
-            if (branch.fBranchCount2) {
-               member.type -= kOffsetP;
-               member.arr_size = item_cnt2.name;
-               member.func = function(buf, obj) {
-                  const sz0 = obj[this.stl_size], sz1 = obj[this.arr_size], arr = new Array(sz0);
-                  for (let n = 0; n < sz0; ++n)
-                     arr[n] = (buf.ntou1() === 1) ? buf.readFastArray(sz1[n], this.type) : [];
-                  obj[this.name] = arr;
-               };
-            }
-         } else if ((elem.fType > kOffsetP) && (elem.fType < kOffsetP + kOffsetL) && member.cntname)
-            member.cntname = item_cnt.name;
-         else if (elem.fType === kStreamer) {
-            // with streamers one need to extend existing array
-
-            if (item_cnt2)
-               throw new Error('Second branch counter not supported yet with kStreamer');
-
-            // function provided by normal I/O
-            member.func = member.branch_func;
-            member.stl_size = item_cnt.name;
-         } else if ((elem.fType === kStreamLoop) || (elem.fType === kOffsetL + kStreamLoop)) {
-            if (item_cnt2) {
-               // special solution for kStreamLoop
-               member.stl_size = item_cnt.name;
-               member.cntname = item_cnt2.name;
-               member.func = member.branch_func; // this is special function, provided by base I/O
-            } else
-               member.cntname = item_cnt.name;
-         } else {
-            member.name = '$stl_member';
-
-            let loop_size_name;
-            if (item_cnt2) {
-               if (member.cntname) {
-                  loop_size_name = item_cnt2.name;
-                  member.cntname = '$loop_size';
-               } else
-                  throw new Error('Second branch counter not used - very BAD');
-            }
-
-            const stlmember = {
-               name: target_name,
-               stl_size: item_cnt.name,
-               loop_size: loop_size_name,
-               member0: member,
-               func(buf, obj) {
-                  const cnt = obj[this.stl_size], arr = new Array(cnt);
-                  for (let n = 0; n < cnt; ++n) {
-                     if (this.loop_size) obj.$loop_size = obj[this.loop_size][n];
-                     this.member0.func(buf, obj);
-                     arr[n] = obj.$stl_member;
-                  }
-                  delete obj.$stl_member;
-                  delete obj.$loop_size;
-                  obj[this.name] = arr;
-               }
-            };
-
-            member = stlmember;
-         }
-      } // if (item_cnt)
-
-      // set name used to store result
-      member.name = target_name;
-
-      item.member = member; // member for reading
-      if (elem) item.type = elem.fType;
-      item.index = handle.arr.length; // index in the global list of branches
-
-      if (item_cnt) {
-         item.counters = [item_cnt.index];
-         item_cnt.ascounter.push(item.index);
-
-         if (item_cnt2) {
-            item.counters.push(item_cnt2.index);
-            item_cnt2.ascounter.push(item.index);
-         }
-      }
-
-      handle.arr.push(item);
-
-      // now one should add all other child branches
-      if (child_scan)
-         if (!ScanBranches(branch.fBranches, target_object, child_scan)) return null;
-
-      return item;
-   }
-
-   // main loop to add all branches from selector for reading
-   for (let nn = 0; nn < selector.numBranches(); ++nn) {
-      const item = AddBranchForReading(selector.getBranch(nn), undefined, selector.nameOfBranch(nn), selector._directs[nn]);
-
-      if (!item) {
-         selector.Terminate(false);
-         return Promise.reject(Error(`Fail to add branch ${selector.nameOfBranch(nn)}`));
-      }
-   }
-
-   // check if simple reading can be performed and there are direct data in branch
-
-   for (let h = 1; (h < handle.arr.length) && handle.simple_read; ++h) {
-      const item = handle.arr[h], item0 = handle.arr[0];
-
-      if ((item.numentries !== item0.numentries) || (item.numbaskets !== item0.numbaskets)) handle.simple_read = false;
-      for (let n = 0; n < item.numbaskets; ++n) {
-         if (item.getBasketEntry(n) !== item0.getBasketEntry(n))
-            handle.simple_read = false;
-      }
-   }
-
-   // now calculate entries range
-
-   handle.firstentry = handle.lastentry = 0;
-   for (let nn = 0; nn < handle.arr.length; ++nn) {
-      const branch = handle.arr[nn].branch,
-            e1 = branch.fFirstEntry ?? (branch.fBasketBytes[0] ? branch.fBasketEntry[0] : 0);
-      handle.firstentry = Math.max(handle.firstentry, e1);
-      handle.lastentry = (nn === 0) ? (e1 + branch.fEntries) : Math.min(handle.lastentry, e1 + branch.fEntries);
-   }
-
-   if (handle.firstentry >= handle.lastentry) {
-      selector.Terminate(false);
-      return Promise.reject(Error('No any common events for selected branches'));
-   }
-
-   handle.process_min = handle.firstentry;
-   handle.process_max = handle.lastentry;
-
-   let resolveFunc, rejectFunc; // Promise methods
-
-   if (Number.isInteger(args.firstentry) && (args.firstentry > handle.firstentry) && (args.firstentry < handle.lastentry))
-      handle.process_min = args.firstentry;
-
-   handle.current_entry = handle.staged_now = handle.process_min;
-
-   if (Number.isInteger(args.numentries) && (args.numentries > 0)) {
-      const max = handle.process_min + args.numentries;
-      if (max < handle.process_max) handle.process_max = max;
-   }
-
-   if (isFunc(selector.ProcessArrays) && handle.simple_read) {
-      // this is indication that selector can process arrays of values
-      // only strictly-matched tree structure can be used for that
-
-      for (let k = 0; k < handle.arr.length; ++k) {
-         const elem = handle.arr[k];
-         if ((elem.type <= 0) || (elem.type >= kOffsetL) || (elem.type === kCharStar))
-            handle.process_arrays = false;
-      }
-
-      if (handle.process_arrays) {
-         // create other members for fast processing
-
-         selector.tgtarr = {}; // object with arrays
-
-         for (let nn = 0; nn < handle.arr.length; ++nn) {
-            const item = handle.arr[nn],
-                  elem = createStreamerElement(item.name, item.type);
-
-            elem.fType = item.type + kOffsetL;
-            elem.fArrayLength = 10;
-            elem.fArrayDim = 1;
-            elem.fMaxIndex[0] = 10; // 10 if artificial number, will be replaced during reading
-
-            item.arrmember = createMemberStreamer(elem, handle.file);
-         }
-      }
-   } else
-      handle.process_arrays = false;
-
-   /** read basket with tree data, selecting different files */
-   function ReadBaskets(bitems) {
-      function ExtractPlaces() {
-         // extract places to read and define file name
-
-         const places = [];
-         let filename = '';
-
-         for (let n = 0; n < bitems.length; ++n) {
-            if (bitems[n].done) continue;
-
-            const branch = bitems[n].branch;
-
-            if (places.length === 0)
-               filename = branch.fFileName;
-            else if (filename !== branch.fFileName)
-               continue;
-
-            bitems[n].selected = true; // mark which item was selected for reading
-
-            places.push(branch.fBasketSeek[bitems[n].basket], branch.fBasketBytes[bitems[n].basket]);
-         }
-
-         return places.length > 0 ? { places, filename } : null;
-      }
-
-      function ReadProgress(value) {
-         if ((handle.staged_prev === handle.staged_now) ||
-            (handle.process_max <= handle.process_min)) return;
-
-         const tm = new Date().getTime();
-         if (tm - handle.progress_showtm < 500) return; // no need to show very often
-         handle.progress_showtm = tm;
-
-         const portion = (handle.staged_prev + value * (handle.staged_now - handle.staged_prev)) /
-                         (handle.process_max - handle.process_min);
-        return handle.selector.ShowProgress(portion);
-      }
-
-      function ProcessBlobs(blobs, places) {
-         if (!blobs || ((places.length > 2) && (blobs.length * 2 !== places.length)))
-            return Promise.resolve(null);
-
-         if (places.length === 2) blobs = [blobs];
-
-         function DoProcessing(k) {
-            for (; k < bitems.length; ++k) {
-               if (!bitems[k].selected) continue;
-
-               bitems[k].selected = false;
-               bitems[k].done = true;
-
-               const blob = blobs.shift();
-               let buf = new TBuffer(blob, 0, handle.file);
-               const basket = buf.classStreamer({}, clTBasket);
-
-               if (basket.fNbytes !== bitems[k].branch.fBasketBytes[bitems[k].basket])
-                  console.error(`mismatch in read basket sizes ${basket.fNbytes} != ${bitems[k].branch.fBasketBytes[bitems[k].basket]}`);
-
-               // items[k].obj = basket; // keep basket object itself if necessary
-
-               bitems[k].bskt_obj = basket; // only number of entries in the basket are relevant for the moment
-
-               if (basket.fKeylen + basket.fObjlen === basket.fNbytes) {
-                  // use data from original blob
-                  buf.raw_shift = 0;
-
-                  bitems[k].raw = buf; // here already unpacked buffer
-
-                 if (bitems[k].branch.fEntryOffsetLen > 0)
-                     buf.readBasketEntryOffset(basket, buf.raw_shift);
-
-                 continue;
-               }
-
-               // unpack data and create new blob
-               return R__unzip(blob, basket.fObjlen, false, buf.o).then(objblob => {
-                  if (objblob) {
-                     buf = new TBuffer(objblob, 0, handle.file);
-                     buf.raw_shift = basket.fKeylen;
-                     buf.fTagOffset = basket.fKeylen;
-                  } else
-                     throw new Error('FAIL TO UNPACK');
-
-                  bitems[k].raw = buf; // here already unpacked buffer
-
-                  if (bitems[k].branch.fEntryOffsetLen > 0)
-                     buf.readBasketEntryOffset(basket, buf.raw_shift);
-
-                  return DoProcessing(k+1);  // continue processing
-               });
-            }
-
-            const req = ExtractPlaces();
-            if (req)
-               return handle.file.readBuffer(req.places, req.filename, ReadProgress).then(blobs => ProcessBlobs(blobs)).catch(() => { return null; });
-
-            return Promise.resolve(bitems);
-          }
-
-          return DoProcessing(0);
-      }
-
-      const req = ExtractPlaces();
-
-      // extract places where to read
-      if (req)
-         return handle.file.readBuffer(req.places, req.filename, ReadProgress).then(blobs => ProcessBlobs(blobs, req.places)).catch(() => { return null; });
-
-      return Promise.resolve(null);
-   }
-
-   function ReadNextBaskets() {
-      const bitems = [];
-      let totalsz = 0, isany = true, is_direct = false, min_staged = handle.process_max;
-
-      while ((totalsz < 1e6) && isany) {
-         isany = false;
-         // very important, loop over branches in reverse order
-         // let check counter branch after reading of normal branch is prepared
-         for (let n = handle.arr.length - 1; n >= 0; --n) {
-            const elem = handle.arr[n];
-
-            while (elem.staged_basket < elem.numbaskets) {
-               const k = elem.staged_basket++;
-
-               // no need to read more baskets, process_max is not included
-               if (elem.getBasketEntry(k) >= handle.process_max) break;
-
-               // check which baskets need to be read
-               if (elem.first_readentry < 0) {
-                  const lmt = elem.getBasketEntry(k + 1),
-                        not_needed = (lmt <= handle.process_min);
-
-                  // for (let d=0;d<elem.ascounter.length;++d) {
-                  //    let dep = handle.arr[elem.ascounter[d]]; // dependent element
-                  //    if (dep.first_readentry < lmt) not_needed = false; // check that counter provide required data
-                  // }
-
-                  if (not_needed) continue; // if that basket not required, check next
-
-                  elem.curr_basket = k; // basket where reading will start
-
-                  elem.first_readentry = elem.getBasketEntry(k); // remember which entry will be read first
-               }
-
-               // check if basket already loaded in the branch
-
-               const bitem = {
-                  id: n, // to find which element we are reading
-                  branch: elem.branch,
-                  basket: k,
-                  raw: null // here should be result
-               }, bskt = elem.branch.fBaskets.arr[k];
-               if (bskt) {
-                  bitem.raw = bskt.fBufferRef;
-                  if (bitem.raw)
-                     bitem.raw.locate(0); // reset pointer - same branch may be read several times
-                  else
-                     bitem.raw = new TBuffer(null, 0, handle.file); // create dummy buffer - basket has no data
-                  bitem.raw.raw_shift = bskt.fKeylen;
-
-                  if (bskt.fBufferRef && (elem.branch.fEntryOffsetLen > 0))
-                     bitem.raw.readBasketEntryOffset(bskt, bitem.raw.raw_shift);
-
-                  bitem.bskt_obj = bskt;
-                  is_direct = true;
-                  elem.baskets[k] = bitem;
-               } else {
-                  bitems.push(bitem);
-                  totalsz += elem.branch.fBasketBytes[k];
-                  isany = true;
-               }
-
-               elem.staged_entry = elem.getBasketEntry(k + 1);
-
-               min_staged = Math.min(min_staged, elem.staged_entry);
-
-               break;
-            }
-         }
-      }
-
-      if ((totalsz === 0) && !is_direct) {
-         handle.selector.Terminate(true);
-         return resolveFunc(handle.selector);
-      }
-
-      handle.staged_prev = handle.staged_now;
-      handle.staged_now = min_staged;
-
-      let portion = 0;
-      if (handle.process_max > handle.process_min)
-         portion = (handle.staged_prev - handle.process_min) / (handle.process_max - handle.process_min);
-
-      if (handle.selector.ShowProgress(portion) === 'break') {
-         handle.selector.Terminate(true);
-         return resolveFunc(handle.selector);
-      }
-
-      handle.progress_showtm = new Date().getTime();
-
-      if (totalsz > 0)
-         return ReadBaskets(bitems).then(ProcessBaskets);
-
-      if (is_direct) return ProcessBaskets([]); // directly process baskets
-
-      throw new Error('No any data is requested - never come here');
-   }
-
-   function ProcessBaskets(bitems) {
-      // this is call-back when next baskets are read
-
-      if ((handle.selector._break !== 0) || (bitems === null)) {
-         handle.selector.Terminate(false);
-         return resolveFunc(handle.selector);
-      }
-
-      // redistribute read baskets over branches
-      for (let n = 0; n < bitems.length; ++n)
-         handle.arr[bitems[n].id].baskets[bitems[n].basket] = bitems[n];
-
-      // now process baskets
-
-      let isanyprocessed = false;
-
-      while (true) {
-         let loopentries = 100000000, n, elem;
-
-         // first loop used to check if all required data exists
-         for (n = 0; n < handle.arr.length; ++n) {
-            elem = handle.arr[n];
-
-            if (!elem.raw || !elem.basket || (elem.first_entry + elem.basket.fNevBuf <= handle.current_entry)) {
-               delete elem.raw;
-               delete elem.basket;
-
-               if ((elem.curr_basket >= elem.numbaskets)) {
-                  if (n === 0) {
-                     handle.selector.Terminate(true);
-                     return resolveFunc(handle.selector);
-                  }
-                  continue; // ignore non-master branch
-               }
-
-               // this is single response from the tree, includes branch, bakset number, raw data
-               const bitem = elem.baskets[elem.curr_basket];
-
-               // basket not read
-               if (!bitem) {
-                  // no data, but no any event processed - problem
-                  if (!isanyprocessed) {
-                     handle.selector.Terminate(false);
-                     return rejectFunc(Error(`no data for ${elem.branch.fName} basket ${elem.curr_basket}`));
-                  }
-
-                  // try to read next portion of tree data
-                  return ReadNextBaskets();
-               }
-
-               elem.raw = bitem.raw;
-               elem.basket = bitem.bskt_obj;
-               // elem.nev = bitem.fNevBuf; // number of entries in raw buffer
-               elem.first_entry = elem.getBasketEntry(bitem.basket);
-
-               bitem.raw = null; // remove reference on raw buffer
-               bitem.branch = null; // remove reference on the branch
-               bitem.bskt_obj = null; // remove reference on the branch
-               elem.baskets[elem.curr_basket++] = undefined; // remove from array
-            }
-
-            // define how much entries can be processed before next raw buffer will be finished
-            loopentries = Math.min(loopentries, elem.first_entry + elem.basket.fNevBuf - handle.current_entry);
-         }
-
-         // second loop extracts all required data
-
-         // do not read too much
-         if (handle.current_entry + loopentries > handle.process_max)
-            loopentries = handle.process_max - handle.current_entry;
-
-         if (handle.process_arrays && (loopentries > 1)) {
-            // special case - read all data from baskets as arrays
-
-            for (n = 0; n < handle.arr.length; ++n) {
-               elem = handle.arr[n];
-
-               elem.getEntry(handle.current_entry);
-
-               elem.arrmember.arrlength = loopentries;
-               elem.arrmember.func(elem.raw, handle.selector.tgtarr);
-
-               elem.raw = null;
-            }
-
-            handle.selector.ProcessArrays(handle.current_entry);
-
-            handle.current_entry += loopentries;
-
-            isanyprocessed = true;
-         } else {
-            // main processing loop
-            while (loopentries--) {
-               for (n = 0; n < handle.arr.length; ++n) {
-                  elem = handle.arr[n];
-
-                  // locate buffer offset at proper place
-                  elem.getEntry(handle.current_entry);
-
-                  elem.member.func(elem.raw, elem.getTarget(handle.selector.tgtobj));
-               }
-
-               handle.selector.Process(handle.current_entry);
-
-               handle.current_entry++;
-
-               isanyprocessed = true;
-            }
-         }
-
-         if (handle.current_entry >= handle.process_max) {
-            handle.selector.Terminate(true);
-            return resolveFunc(handle.selector);
-         }
-      }
-   }
-
-   return new Promise((resolve, reject) => {
-      resolveFunc = resolve;
-      rejectFunc = reject;
-
-      // call begin before first entry is read
-      handle.selector.Begin(tree);
-
-      ReadNextBaskets();
-   });
-}
-
-/** @summary implementation of TTree::Draw
-  * @param {object|string} args - different setting or simply draw expression
-  * @param {string} args.expr - draw expression
-  * @param {string} [args.cut=undefined]   - cut expression (also can be part of 'expr' after '::')
-  * @param {string} [args.drawopt=undefined] - draw options for result histogram
-  * @param {number} [args.firstentry=0] - first entry to process
-  * @param {number} [args.numentries=undefined] - number of entries to process, all by default
-  * @param {object} [args.branch=undefined] - TBranch object from TTree itself for the direct drawing
-  * @param {function} [args.progress=undefined] - function called during histogram accumulation with obj argument
-  * @return {Promise} with produced object  */
-async function treeDraw(tree, args) {
-   if (isStr(args)) args = { expr: args };
-
-   if (!isStr(args.expr)) args.expr = '';
-
-   const selector = new TDrawSelector();
-
-   if (args.branch) {
-      if (!selector.drawOnlyBranch(tree, args.branch, args.expr, args))
-        return Promise.reject(Error(`Fail to create draw expression ${args.expr} for branch ${args.branch.fName}`));
-   } else {
-      if (!selector.parseDrawExpression(tree, args))
-          return Promise.reject(Error(`Fail to create draw expression ${args.expr}`));
-   }
-
-   selector.setCallback(null, args.progress);
-
-   return treeProcess(tree, selector, args).then(() => selector.hist);
-}
-
-/** @summary Performs generic I/O test for all branches in the TTree
-  * @desc Used when 'testio' draw option for TTree is specified
-  * @private */
-function treeIOTest(tree, args) {
-   const branches = [], names = [], nchilds = [];
-
-   function collectBranches(obj, prntname = '') {
-      if (!obj?.fBranches) return 0;
-
-      let cnt = 0;
-
-      for (let n = 0; n < obj.fBranches.arr.length; ++n) {
-         const br = obj.fBranches.arr[n],
-               name = (prntname ? prntname + '/' : '') + br.fName;
-         branches.push(br);
-         names.push(name);
-         nchilds.push(0);
-         const pos = nchilds.length - 1;
-         cnt += (br.fLeaves?.arr?.length ?? 0);
-         const nchld = collectBranches(br, name);
-
-         cnt += nchld;
-         nchilds[pos] = nchld;
-      }
-      return cnt;
-   }
-
-   const numleaves = collectBranches(tree);
-   let selector;
-
-   names.push(`Total are ${branches.length} branches with ${numleaves} leaves`);
-
-   function testBranch(nbr) {
-      if (nbr >= branches.length)
-         return Promise.resolve(true);
-
-      if (selector?._break || args._break)
-         return Promise.resolve(true);
-
-      selector = new TSelector();
-
-      selector.addBranch(branches[nbr], 'br0');
-
-      selector.Process = function() {
-         if (this.tgtobj.br0 === undefined)
-            this.fail = true;
-      };
-
-      selector.Terminate = function(res) {
-         if (!isStr(res))
-            res = (!res || this.fails) ? 'FAIL' : 'ok';
-
-         names[nbr] = res + ' ' + names[nbr];
-      };
-
-      const br = branches[nbr],
-            object_class = getBranchObjectClass(br, tree),
-            num = br.fEntries,
-            skip_branch = object_class ? (nchilds[nbr] > 100) : !br.fLeaves?.arr?.length;
-
-      if (skip_branch || (num <= 0))
-         return testBranch(nbr+1);
-
-      const drawargs = { numentries: 10 },
-            first = br.fFirstEntry || 0,
-            last = br.fEntryNumber || (first + num);
-
-      if (num < drawargs.numentries)
-         drawargs.numentries = num;
-      else
-         drawargs.firstentry = first + Math.round((last - first - drawargs.numentries) * Math.random()); // select randomly
-
-      // keep console output for debug purposes
-      console.log(`test branch ${br.fName} first ${drawargs.firstentry || 0} num ${drawargs.numentries}`);
-
-      if (isFunc(args.showProgress))
-         args.showProgress(`br ${nbr}/${branches.length} ${br.fName}`);
-
-      return treeProcess(tree, selector, drawargs).then(() => testBranch(nbr+1));
-   }
-
-   return testBranch(0).then(() => {
-      if (isFunc(args.showProgress))
-         args.showProgress();
-
-      return names;
-   });
-}
-
-/** @summary Create hierarchy of TTree object
-  * @private */
-function treeHierarchy(node, obj) {
-   function createBranchItem(node, branch, tree, parent_branch) {
-      if (!node || !branch) return false;
-
-      const nb_branches = branch.fBranches?.arr?.length ?? 0,
-            nb_leaves = branch.fLeaves?.arr?.length ?? 0;
-
-      function ClearName(arg) {
-         const pos = arg.indexOf('[');
-         if (pos > 0) arg = arg.slice(0, pos);
-         if (parent_branch && arg.indexOf(parent_branch.fName) === 0) {
-            arg = arg.slice(parent_branch.fName.length);
-            if (arg[0] === '.') arg = arg.slice(1);
-         }
-         return arg;
-      }
-
-      branch.$tree = tree; // keep tree pointer, later do it more smart
-
-      const subitem = {
-         _name: ClearName(branch.fName),
-         _kind: prROOT + branch._typename,
-         _title: branch.fTitle,
-         _obj: branch
-      };
-
-      if (!node._childs) node._childs = [];
-
-      node._childs.push(subitem);
-
-      if (branch._typename === clTBranchElement)
-         subitem._title += ` from ${branch.fClassName};${branch.fClassVersion}`;
-
-      if (nb_branches > 0) {
-         subitem._more = true;
-         subitem._expand = function(bnode, bobj) {
-            // really create all sub-branch items
-            if (!bobj) return false;
-
-            if (!bnode._childs) bnode._childs = [];
-
-            if ((bobj.fLeaves?.arr?.length === 1) &&
-                ((bobj.fType === kClonesNode) || (bobj.fType === kSTLNode))) {
-                 bobj.fLeaves.arr[0].$branch = bobj;
-                 bnode._childs.push({
-                    _name: '@size',
-                    _title: 'container size',
-                    _kind: prROOT + 'TLeafElement',
-                    _icon: 'img_leaf',
-                    _obj: bobj.fLeaves.arr[0],
-                    _more: false
-                 });
-              }
-
-            for (let i = 0; i < bobj.fBranches.arr.length; ++i)
-               createBranchItem(bnode, bobj.fBranches.arr[i], bobj.$tree, bobj);
-
-            const object_class = getBranchObjectClass(bobj, bobj.$tree, true),
-                  methods = object_class ? getMethods(object_class) : null;
-
-            if (methods && (bobj.fBranches.arr.length > 0)) {
-               for (const key in methods) {
-                  if (!isFunc(methods[key])) continue;
-                  const s = methods[key].toString();
-                  if ((s.indexOf('return') > 0) && (s.indexOf('function ()') === 0)) {
-                     bnode._childs.push({
-                        _name: key+'()',
-                        _title: `function ${key} of class ${object_class}`,
-                        _kind: prROOT + clTBranchFunc, // fictional class, only for drawing
-                        _obj: { _typename: clTBranchFunc, branch: bobj, func: key },
-                        _more: false
-                     });
-                  }
-               }
-            }
-
-            return true;
-         };
-         return true;
-      } else if (nb_leaves === 1) {
-         subitem._icon = 'img_leaf';
-         subitem._more = false;
-      } else if (nb_leaves > 1) {
-         subitem._childs = [];
-         for (let j = 0; j < nb_leaves; ++j) {
-            branch.fLeaves.arr[j].$branch = branch; // keep branch pointer for drawing
-            const leafitem = {
-               _name: ClearName(branch.fLeaves.arr[j].fName),
-               _kind: prROOT + branch.fLeaves.arr[j]._typename,
-               _obj: branch.fLeaves.arr[j]
-            };
-            subitem._childs.push(leafitem);
-         }
-      }
-
-      return true;
-   }
-
-   // protect against corrupted TTree objects
-   if (obj.fBranches === undefined)
-      return false;
-
-   node._childs = [];
-   node._tree = obj;  // set reference, will be used later by TTree::Draw
-
-   for (let i = 0; i < obj.fBranches.arr?.length; ++i)
-      createBranchItem(node, obj.fBranches.arr[i], obj);
-
-   return true;
-}
-
-var tree = /*#__PURE__*/Object.freeze({
-__proto__: null,
-TDrawSelector: TDrawSelector,
-TDrawVariable: TDrawVariable,
-TSelector: TSelector,
-clTBranchFunc: clTBranchFunc,
-kClonesNode: kClonesNode,
-kSTLNode: kSTLNode,
-treeDraw: treeDraw,
-treeHierarchy: treeHierarchy,
-treeIOTest: treeIOTest,
-treeProcess: treeProcess
-});
-
-async function import_more() { return Promise.resolve().then(function () { return more; }); }
-
-async function import_canvas() { return Promise.resolve().then(function () { return TCanvasPainter$1; }); }
-
-async function import_tree() { return Promise.resolve().then(function () { return TTree; }); }
-
-async function import_h() { return Promise.resolve().then(function () { return HierarchyPainter$1; }); }
-
-async function import_geo() {
-   return Promise.resolve().then(function () { return TGeoPainter$1; }).then(geo => {
-      const handle = getDrawHandle(prROOT + 'TGeoVolumeAssembly');
-      if (handle) handle.icon = 'img_geoassembly';
-      return geo;
-   });
-}
-
-const clTGraph2D = 'TGraph2D', clTH2Poly = 'TH2Poly', clTEllipse = 'TEllipse',
-      clTSpline3 = 'TSpline3', clTTree = 'TTree', clTCanvasWebSnapshot = 'TCanvasWebSnapshot',
-      fPrimitives = 'fPrimitives', fFunctions = 'fFunctions',
-
-/** @summary list of registered draw functions
-  * @private */
-drawFuncs = { lst: [
-   { name: clTCanvas, icon: 'img_canvas', class: () => import_canvas().then(h => h.TCanvasPainter), opt: ';grid;gridx;gridy;tick;tickx;ticky;log;logx;logy;logz', expand_item: fPrimitives, noappend: true },
-   { name: clTPad, icon: 'img_canvas', func: TPadPainter.draw, opt: ';grid;gridx;gridy;tick;tickx;ticky;log;logx;logy;logz', expand_item: fPrimitives, noappend: true },
-   { name: 'TSlider', icon: 'img_canvas', func: TPadPainter.draw },
-   { name: clTButton, icon: 'img_canvas', func: TPadPainter.draw },
-   { name: clTFrame, icon: 'img_frame', draw: () => import_canvas().then(h => h.drawTFrame) },
-   { name: clTPave, icon: 'img_pavetext', class: () => Promise.resolve().then(function () { return TPavePainter$1; }).then(h => h.TPavePainter) },
-   { name: clTPaveText, sameas: clTPave },
-   { name: clTPavesText, sameas: clTPave },
-   { name: clTPaveStats, sameas: clTPave },
-   { name: clTPaveLabel, sameas: clTPave },
-   { name: clTPaveClass, sameas: clTPave },
-   { name: clTDiamond, sameas: clTPave },
-   { name: clTLegend, icon: 'img_pavelabel', sameas: clTPave },
-   { name: clTPaletteAxis, icon: 'img_colz', sameas: clTPave },
-   { name: clTLatex, icon: 'img_text', draw: () => import_more().then(h => h.drawText), direct: true },
-   { name: clTMathText, sameas: clTLatex },
-   { name: clTText, sameas: clTLatex },
-   { name: clTAnnotation, sameas: clTLatex },
-   { name: /^TH1/, icon: 'img_histo1d', class: () => Promise.resolve().then(function () { return TH1Painter$1; }).then(h => h.TH1Painter), opt: ';hist;P;P0;E;E1;E2;E3;E4;E1X0;L;LF2;C;B;B1;A;TEXT;LEGO;same', ctrl: 'l', expand_item: fFunctions, for_derived: true },
-   { name: clTProfile, icon: 'img_profile', class: () => Promise.resolve().then(function () { return TH1Painter$1; }).then(h => h.TH1Painter), opt: ';E0;E1;E2;p;AH;hist;projx;projxb;projxc=e;projxw', expand_item: fFunctions },
-   { name: clTH2Poly, icon: 'img_histo2d', class: () => Promise.resolve().then(function () { return TH2Painter$1; }).then(h => h.TH2Painter), opt: ';COL;COL0;COLZ;LCOL;LCOL0;LCOLZ;LEGO;TEXT;same', expand_item: 'fBins', theonly: true },
-   { name: 'TProfile2Poly', sameas: clTH2Poly },
-   { name: 'TH2PolyBin', icon: 'img_histo2d', draw_field: 'fPoly', draw_field_opt: 'L' },
-   { name: /^TH2/, icon: 'img_histo2d', class: () => Promise.resolve().then(function () { return TH2Painter$1; }).then(h => h.TH2Painter), opt: ';COL;COLZ;COL0;COL1;COL0Z;COL1Z;COLA;BOX;BOX1;PROJ;PROJX1;PROJX2;PROJX3;PROJY1;PROJY2;PROJY3;PROJXY1;PROJXY2;PROJXY3;SCAT;TEXT;TEXTE;TEXTE0;CANDLE;CANDLE1;CANDLE2;CANDLE3;CANDLE4;CANDLE5;CANDLE6;CANDLEY1;CANDLEY2;CANDLEY3;CANDLEY4;CANDLEY5;CANDLEY6;VIOLIN;VIOLIN1;VIOLIN2;VIOLINY1;VIOLINY2;CONT;CONT1;CONT2;CONT3;CONT4;ARR;SURF;SURF1;SURF2;SURF4;SURF6;E;A;LEGO;LEGO0;LEGO1;LEGO2;LEGO3;LEGO4;same', ctrl: 'lego', expand_item: fFunctions, for_derived: true },
-   { name: clTProfile2D, sameas: clTH2, opt2: ';projxyb;projxyc=e;projxyw' },
-   { name: /^TH3/, icon: 'img_histo3d', class: () => Promise.resolve().then(function () { return TH3Painter$1; }).then(h => h.TH3Painter), opt: ';SCAT;BOX;BOX2;BOX3;GLBOX1;GLBOX2;GLCOL', expand_item: fFunctions, for_derived: true },
-   { name: clTProfile3D, sameas: clTH3 },
-   { name: clTHStack, icon: 'img_histo1d', class: () => Promise.resolve().then(function () { return THStackPainter$1; }).then(h => h.THStackPainter), expand_item: 'fHists', opt: 'NOSTACK;HIST;COL;LEGO;E;PFC;PLC;PADS' },
-   { name: clTPolyMarker3D, icon: 'img_histo3d', draw: () => Promise.resolve().then(function () { return draw3d; }).then(h => h.drawPolyMarker3D), direct: true, frame: '3d' },
-   { name: clTPolyLine3D, icon: 'img_graph', draw: () => Promise.resolve().then(function () { return draw3d; }).then(h => h.drawPolyLine3D), direct: true, frame: '3d' },
-   { name: 'TGraphStruct' },
-   { name: 'TGraphNode' },
-   { name: 'TGraphEdge' },
-   { name: clTGraphTime, icon: 'img_graph', class: () => Promise.resolve().then(function () { return TGraphTimePainter$1; }).then(h => h.TGraphTimePainter), opt: 'once;repeat;first', theonly: true },
-   { name: clTGraph2D, icon: 'img_graph', class: () => Promise.resolve().then(function () { return TGraph2DPainter$1; }).then(h => h.TGraph2DPainter), opt: ';P;PCOL', theonly: true },
-   { name: clTGraph2DErrors, sameas: clTGraph2D, opt: ';P;PCOL;ERR', theonly: true },
-   { name: clTGraph2DAsymmErrors, sameas: clTGraph2D, opt: ';P;PCOL;ERR', theonly: true },
-   { name: clTGraphPolargram, icon: 'img_graph', class: () => Promise.resolve().then(function () { return TGraphPolarPainter$1; }).then(h => h.TGraphPolargramPainter), theonly: true },
-   { name: clTGraphPolar, icon: 'img_graph', class: () => Promise.resolve().then(function () { return TGraphPolarPainter$1; }).then(h => h.TGraphPolarPainter), opt: ';F;L;P;PE', theonly: true },
-   { name: /^TGraph/, icon: 'img_graph', class: () => Promise.resolve().then(function () { return TGraphPainter$2; }).then(h => h.TGraphPainter), opt: ';L;P' },
-   { name: 'TEfficiency', icon: 'img_graph', class: () => Promise.resolve().then(function () { return TEfficiencyPainter$1; }).then(h => h.TEfficiencyPainter), opt: ';AP;A4P;B' },
-   { name: clTCutG, sameas: clTGraph },
-   { name: /^RooHist/, sameas: clTGraph },
-   { name: /^RooCurve/, sameas: clTGraph },
-   { name: 'TScatter', icon: 'img_graph', class: () => Promise.resolve().then(function () { return TScatterPainter$1; }).then(h => h.TScatterPainter), opt: ';A' },
-   { name: 'RooPlot', icon: 'img_canvas', func: drawRooPlot },
-   { name: 'TRatioPlot', icon: 'img_mgraph', class: () => Promise.resolve().then(function () { return TRatioPlotPainter$1; }).then(h => h.TRatioPlotPainter), opt: '' },
-   { name: clTMultiGraph, icon: 'img_mgraph', class: () => Promise.resolve().then(function () { return TMultiGraphPainter$1; }).then(h => h.TMultiGraphPainter), opt: ';ac;l;p;3d;pads', expand_item: 'fGraphs' },
-   { name: clTStreamerInfoList, icon: 'img_question', draw: () => import_h().then(h => h.drawStreamerInfo) },
-   { name: 'TWebPainting', icon: 'img_graph', class: () => Promise.resolve().then(function () { return TWebPaintingPainter$1; }).then(h => h.TWebPaintingPainter) },
-   { name: clTCanvasWebSnapshot, icon: 'img_canvas', draw: () => import_canvas().then(h => h.drawTPadSnapshot) },
-   { name: 'TPadWebSnapshot', sameas: clTCanvasWebSnapshot },
-   { name: 'kind:Text', icon: 'img_text', func: drawRawText },
-   { name: clTObjString, icon: 'img_text', func: drawRawText },
-   { name: clTF1, icon: 'img_tf1', class: () => Promise.resolve().then(function () { return TF1Painter$1; }).then(h => h.TF1Painter), opt: ';L;C;FC;FL' },
-   { name: clTF2, icon: 'img_tf2', class: () => Promise.resolve().then(function () { return TF2Painter$1; }).then(h => h.TF2Painter), opt: ';BOX;ARR;SURF;SURF1;SURF2;SURF4;SURF6;LEGO;LEGO0;LEGO1;LEGO2;LEGO3;LEGO4;same' },
-   { name: clTF3, icon: 'img_histo3d', class: () => Promise.resolve().then(function () { return TF3Painter$1; }).then(h => h.TF3Painter), opt: ';SURF' },
-   { name: clTSpline3, icon: 'img_tf1', class: () => Promise.resolve().then(function () { return TSplinePainter$1; }).then(h => h.TSplinePainter) },
-   { name: 'TSpline5', sameas: clTSpline3 },
-   { name: clTEllipse, icon: 'img_graph', draw: () => import_more().then(h => h.drawEllipse), direct: true },
-   { name: 'TArc', sameas: clTEllipse },
-   { name: 'TCrown', sameas: clTEllipse },
-   { name: 'TPie', icon: 'img_graph', draw: () => import_more().then(h => h.drawPie), direct: true },
-   { name: 'TPieSlice', icon: 'img_graph', dummy: true },
-   { name: 'TExec', icon: 'img_graph', dummy: true },
-   { name: clTLine, icon: 'img_graph', class: () => Promise.resolve().then(function () { return TLinePainter$1; }).then(h => h.TLinePainter) },
-   { name: 'TArrow', icon: 'img_graph', class: () => Promise.resolve().then(function () { return TArrowPainter$1; }).then(h => h.TArrowPainter) },
-   { name: clTPolyLine, icon: 'img_graph', class: () => Promise.resolve().then(function () { return TPolyLinePainter$1; }).then(h => h.TPolyLinePainter), opt: ';F' },
-   { name: 'TCurlyLine', sameas: clTPolyLine },
-   { name: 'TCurlyArc', sameas: clTPolyLine },
-   { name: 'TParallelCoord', icon: 'img_graph', dummy: true },
-   { name: clTGaxis, icon: 'img_graph', class: () => Promise.resolve().then(function () { return TGaxisPainter$1; }).then(h => h.TGaxisPainter) },
-   { name: clTBox, icon: 'img_graph', class: () => Promise.resolve().then(function () { return TBoxPainter$1; }).then(h => h.TBoxPainter), opt: ';L' },
-   { name: 'TWbox', sameas: clTBox },
-   { name: 'TSliderBox', sameas: clTBox },
-   { name: 'TMarker', icon: 'img_graph', draw: () => import_more().then(h => h.drawMarker), direct: true },
-   { name: 'TPolyMarker', icon: 'img_graph', draw: () => import_more().then(h => h.drawPolyMarker), direct: true },
-   { name: 'TASImage', icon: 'img_mgraph', class: () => Promise.resolve().then(function () { return TASImagePainter$1; }).then(h => h.TASImagePainter), opt: ';z' },
-   { name: 'TJSImage', icon: 'img_mgraph', draw: () => import_more().then(h => h.drawJSImage), opt: ';scale;center' },
-   { name: clTGeoVolume, icon: 'img_histo3d', class: () => import_geo().then(h => h.TGeoPainter), get_expand: () => import_geo().then(h => h.expandGeoObject), opt: ';more;all;count;projx;projz;wire;no_screen;dflt', ctrl: 'dflt' },
-   { name: 'TEveGeoShapeExtract', sameas: clTGeoVolume, opt: ';more;all;count;projx;projz;wire;dflt' },
-   { name: nsREX+'REveGeoShapeExtract', sameas: clTGeoVolume, opt: ';more;all;count;projx;projz;wire;dflt' },
-   { name: 'TGeoOverlap', sameas: clTGeoVolume, opt: ';more;all;count;projx;projz;wire;dflt', dflt: 'dflt', ctrl: 'expand' },
-   { name: 'TGeoManager', sameas: clTGeoVolume, opt: ';more;all;count;projx;projz;wire;tracks;no_screen;dflt', dflt: 'expand', ctrl: 'dflt', noappend: true, exapnd_after_draw: true },
-   { name: 'TGeoVolumeAssembly', sameas: clTGeoVolume, /* icon: 'img_geoassembly', */ opt: ';more;all;count' },
-   { name: /^TGeo/, class: () => import_geo().then(h => h.TGeoPainter), get_expand: () => import_geo().then(h => h.expandGeoObject), opt: ';more;all;axis;compa;count;projx;projz;wire;no_screen;dflt', dflt: 'dflt', ctrl: 'expand' },
-   { name: 'TAxis3D', icon: 'img_graph', draw: () => import_geo().then(h => h.drawAxis3D), direct: true },
-   // these are not draw functions, but provide extra info about correspondent classes
-   { name: 'kind:Command', icon: 'img_execute', execute: true },
-   { name: 'TFolder', icon: 'img_folder', icon2: 'img_folderopen', noinspect: true, get_expand: () => import_h().then(h => h.folderHierarchy) },
-   { name: 'TTask', icon: 'img_task', get_expand: () => import_h().then(h => h.taskHierarchy), for_derived: true },
-   { name: clTTree, icon: 'img_tree', get_expand: () => Promise.resolve().then(function () { return tree; }).then(h => h.treeHierarchy), draw: () => import_tree().then(h => h.drawTree), dflt: 'expand', opt: 'player;testio', shift: kInspect },
-   { name: 'TNtuple', sameas: clTTree },
-   { name: 'TNtupleD', sameas: clTTree },
-   { name: clTBranchFunc, icon: 'img_leaf_method', draw: () => import_tree().then(h => h.drawTree), opt: ';dump', noinspect: true },
-   { name: /^TBranch/, icon: 'img_branch', draw: () => import_tree().then(h => h.drawTree), dflt: 'expand', opt: ';dump', ctrl: 'dump', shift: kInspect, ignore_online: true, always_draw: true },
-   { name: /^TLeaf/, icon: 'img_leaf', noexpand: true, draw: () => import_tree().then(h => h.drawTree), opt: ';dump', ctrl: 'dump', ignore_online: true, always_draw: true },
-   { name: clTList, icon: 'img_list', draw: () => import_h().then(h => h.drawList), get_expand: () => import_h().then(h => h.listHierarchy), dflt: 'expand' },
-   { name: clTHashList, sameas: clTList },
-   { name: clTObjArray, sameas: clTList },
-   { name: clTClonesArray, sameas: clTList },
-   { name: clTMap, sameas: clTList },
-   { name: clTColor, icon: 'img_color' },
-   { name: clTFile, icon: 'img_file', noinspect: true },
-   { name: 'TMemFile', icon: 'img_file', noinspect: true },
-   { name: clTStyle, icon: 'img_question', noexpand: true },
-   { name: 'Session', icon: 'img_globe' },
-   { name: 'kind:TopFolder', icon: 'img_base' },
-   { name: 'kind:Folder', icon: 'img_folder', icon2: 'img_folderopen', noinspect: true },
-   { name: nsREX+'RCanvas', icon: 'img_canvas', class: () => init_v7().then(h => h.RCanvasPainter), opt: '', expand_item: fPrimitives },
-   { name: nsREX+'RCanvasDisplayItem', icon: 'img_canvas', draw: () => init_v7().then(h => h.drawRPadSnapshot), opt: '', expand_item: fPrimitives },
-   { name: nsREX+'RHist1Drawable', icon: 'img_histo1d', class: () => init_v7('rh1').then(h => h.RH1Painter), opt: '' },
-   { name: nsREX+'RHist2Drawable', icon: 'img_histo2d', class: () => init_v7('rh2').then(h => h.RH2Painter), opt: '' },
-   { name: nsREX+'RHist3Drawable', icon: 'img_histo3d', class: () => init_v7('rh3').then(h => h.RH3Painter), opt: '' },
-   { name: nsREX+'RHistDisplayItem', icon: 'img_histo1d', draw: () => init_v7('rh3').then(h => h.drawHistDisplayItem), opt: '' },
-   { name: nsREX+'RText', icon: 'img_text', draw: () => init_v7('more').then(h => h.drawText), opt: '', direct: 'v7', csstype: 'text' },
-   { name: nsREX+'RFrameTitle', icon: 'img_text', draw: () => init_v7().then(h => h.drawRFrameTitle), opt: '', direct: 'v7', csstype: 'title' },
-   { name: nsREX+'RPaletteDrawable', icon: 'img_text', class: () => init_v7('more').then(h => h.RPalettePainter), opt: '' },
-   { name: nsREX+'RDisplayHistStat', icon: 'img_pavetext', class: () => init_v7('pave').then(h => h.RHistStatsPainter), opt: '' },
-   { name: nsREX+'RLine', icon: 'img_graph', draw: () => init_v7('more').then(h => h.drawLine), opt: '', direct: 'v7', csstype: 'line' },
-   { name: nsREX+'RBox', icon: 'img_graph', draw: () => init_v7('more').then(h => h.drawBox), opt: '', direct: 'v7', csstype: 'box' },
-   { name: nsREX+'RMarker', icon: 'img_graph', draw: () => init_v7('more').then(h => h.drawMarker), opt: '', direct: 'v7', csstype: 'marker' },
-   { name: nsREX+'RPave', icon: 'img_pavetext', class: () => init_v7('pave').then(h => h.RPavePainter), opt: '' },
-   { name: nsREX+'RLegend', icon: 'img_graph', class: () => init_v7('pave').then(h => h.RLegendPainter), opt: '' },
-   { name: nsREX+'RPaveText', icon: 'img_pavetext', class: () => init_v7('pave').then(h => h.RPaveTextPainter), opt: '' },
-   { name: nsREX+'RFrame', icon: 'img_frame', draw: () => init_v7().then(h => h.drawRFrame), opt: '' },
-   { name: nsREX+'RFont', icon: 'img_text', draw: () => init_v7().then(h => h.drawRFont), opt: '', direct: 'v7', csstype: 'font' },
-   { name: nsREX+'RAxisDrawable', icon: 'img_frame', draw: () => init_v7().then(h => h.drawRAxis), opt: '' }
-], cache: {} };
-
-
-/** @summary Register draw function for the class
-  * @desc List of supported draw options could be provided, separated  with ';'
-  * @param {object} args - arguments
-  * @param {string|regexp} args.name - class name or regexp pattern
-  * @param {function} [args.func] - draw function
-  * @param {function} [args.draw] - async function to load draw function
-  * @param {function} [args.class] - async function to load painter class with static draw function
-  * @param {boolean} [args.direct] - if true, function is just Redraw() method of ObjectPainter
-  * @param {string} [args.opt] - list of supported draw options (separated with semicolon) like 'col;scat;'
-  * @param {string} [args.icon] - icon name shown for the class in hierarchy browser
-  * @param {string} [args.draw_field] - draw only data member from object, like fHistogram
-  * @protected */
-function addDrawFunc(args) {
-   drawFuncs.lst.push(args);
-   return args;
-}
-
-/** @summary return draw handle for specified item kind
-  * @desc kind could be ROOT.TH1I for ROOT classes or just
-  * kind string like 'Command' or 'Text'
-  * selector can be used to search for draw handle with specified option (string)
-  * or just sequence id
-  * @private */
-function getDrawHandle(kind, selector) {
-   if (!isStr(kind)) return null;
-   if (selector === '') selector = null;
-
-   let first = null;
-
-   if ((selector === null) && (kind in drawFuncs.cache))
-      return drawFuncs.cache[kind];
-
-   const search = (kind.indexOf(prROOT) === 0) ? kind.slice(5) : `kind:${kind}`;
-   let counter = 0;
-   for (let i = 0; i < drawFuncs.lst.length; ++i) {
-      const h = drawFuncs.lst[i];
-      if (isStr(h.name)) {
-         if (h.name !== search) continue;
-      } else if (!search.match(h.name))
-         continue;
-
-      if (h.sameas) {
-         const hs = getDrawHandle(prROOT + h.sameas, selector);
-         if (hs) {
-            for (const key in hs) {
-               if (h[key] === undefined)
-                  h[key] = hs[key];
-            }
-            delete h.sameas;
-         }
-         return h;
-      }
-
-      if ((selector === null) || (selector === undefined)) {
-         // store found handle in cache, can reuse later
-         if (!(kind in drawFuncs.cache))
-            drawFuncs.cache[kind] = h;
-         return h;
-      } else if (isStr(selector)) {
-         if (!first) first = h;
-         // if draw option specified, check it present in the list
-
-         if (selector === '::expand') {
-            if (('expand' in h) || ('expand_item' in h)) return h;
-         } else if ('opt' in h) {
-            const opts = h.opt.split(';');
-            for (let j = 0; j < opts.length; ++j) {
-               if (opts[j].toLowerCase() === selector.toLowerCase())
-                  return h;
-            }
-         }
-      } else if (selector === counter)
-         return h;
-      ++counter;
-   }
-
-   return first;
-}
-
-/** @summary Returns true if handle can be potentially drawn
-  * @private */
-function canDrawHandle(h) {
-   if (isStr(h))
-      h = getDrawHandle(h);
-   if (!isObject(h)) return false;
-   return h.func || h.class || h.draw || h.draw_field;
-}
-
-/** @summary Provide draw settings for specified class or kind
-  * @private */
-function getDrawSettings(kind, selector) {
-   const res = { opts: null, inspect: false, expand: false, draw: false, handle: null };
-   if (!isStr(kind)) return res;
-   let isany = false, noinspect = false, canexpand = false;
-   if (!isStr(selector)) selector = '';
-
-   for (let cnt = 0; cnt < 1000; ++cnt) {
-      const h = getDrawHandle(kind, cnt);
-      if (!h) break;
-      if (!res.handle) res.handle = h;
-      if (h.noinspect) noinspect = true;
-      if (h.noappend) res.noappend = true;
-      if (h.expand || h.get_expand || h.expand_item || h.can_expand) canexpand = true;
-      if (!h.func && !h.class && !h.draw) break;
-      isany = true;
-      if (h.opt === undefined) continue;
-      let opt = h.opt;
-      if (isStr(h.opt2)) opt += h.opt2;
-      const opts = opt.split(';');
-      for (let i = 0; i < opts.length; ++i) {
-         opts[i] = opts[i].toLowerCase();
-         if (opts[i].indexOf('same') === 0) {
-            res.has_same = true;
-            if (selector.indexOf('nosame') >= 0) continue;
-         }
-
-         if (res.opts === null) res.opts = [];
-         if (res.opts.indexOf(opts[i]) < 0) res.opts.push(opts[i]);
-      }
-      if (h.theonly) break;
-   }
-
-   if (selector.indexOf('noinspect') >= 0) noinspect = true;
-
-   if (isany && (res.opts === null)) res.opts = [''];
-
-   // if no any handle found, let inspect ROOT-based objects
-   if (!isany && (kind.indexOf(prROOT) === 0) && !noinspect) res.opts = [];
-
-   if (!noinspect && res.opts)
-      res.opts.push(kInspect);
-
-   res.inspect = !noinspect;
-   res.expand = canexpand;
-   res.draw = !!res.opts;
-
-   return res;
-}
-
-/** @summary Set default draw option for provided class
-  * @example
-  import { setDefaultDrawOpt } from 'https://root.cern/js/latest/modules/draw.mjs';
-  setDefaultDrawOpt('TH1', 'text');
-  setDefaultDrawOpt('TH2', 'col');  */
-function setDefaultDrawOpt(classname, opt) {
-   const handle = getDrawHandle(prROOT + classname, 0);
-   if (handle)
-      handle.dflt = opt;
-}
-
-/** @summary Draw object in specified HTML element with given draw options.
-  * @param {string|object} dom - id of div element to draw or directly DOMElement
-  * @param {object} obj - object to draw, object type should be registered before with {@link addDrawFunc}
-  * @param {string} opt - draw options separated by space, comma or semicolon
-  * @return {Promise} with painter object
-  * @public
-  * @desc An extensive list of support draw options can be found on [examples page]{@link https://root.cern/js/latest/examples.htm}
-  * @example
-  * import { openFile } from 'https://root.cern/js/latest/modules/io.mjs';
-  * import { draw } from 'https://root.cern/js/latest/modules/draw.mjs';
-  * let file = await openFile('https://root.cern/js/files/hsimple.root');
-  * let obj = await file.readObject('hpxpy;1');
-  * await draw('drawing', obj, 'colz;logx;gridx;gridy'); */
-async function draw(dom, obj, opt) {
-   if (!isObject(obj))
-      return Promise.reject(Error('not an object in draw call'));
-
-   if (isStr(opt) && (opt.indexOf(kInspect) === 0))
-      return import_h().then(h => h.drawInspector(dom, obj, opt));
-
-   let handle, type_info;
-   if ('_typename' in obj) {
-      type_info = 'type ' + obj._typename;
-      handle = getDrawHandle(prROOT + obj._typename, opt);
-   } else if ('_kind' in obj) {
-      type_info = 'kind ' + obj._kind;
-      handle = getDrawHandle(obj._kind, opt);
-   } else
-      return import_h().then(h => h.drawInspector(dom, obj, opt));
-
-   // this is case of unsupported class, close it normally
-   if (!handle)
-      return Promise.reject(Error(`Object of ${type_info} cannot be shown with draw`));
-
-   if (handle.dummy)
-      return null;
-
-   if (handle.draw_field && obj[handle.draw_field])
-      return draw(dom, obj[handle.draw_field], opt || handle.draw_field_opt);
-
-   if (!canDrawHandle(handle)) {
-      if (opt && (opt.indexOf('same') >= 0)) {
-         const main_painter = getElementMainPainter(dom);
-
-         if (isFunc(main_painter?.performDrop))
-            return main_painter.performDrop(obj, '', null, opt);
-      }
-
-      return Promise.reject(Error(`Function not specified to draw object ${type_info}`));
-   }
-
-   function performDraw() {
-      let promise, painter;
-      if (handle.direct === 'v7') {
-         promise = Promise.resolve().then(function () { return RCanvasPainter$1; }).then(v7h => {
-            painter = new v7h.RObjectPainter(dom, obj, opt, handle.csstype);
-            painter.redraw = handle.func;
-            return v7h.ensureRCanvas(painter, handle.frame || false);
-         }).then(() => painter.redraw());
-      } else if (handle.direct) {
-         painter = new ObjectPainter(dom, obj, opt);
-         painter.redraw = handle.func;
-         promise = import_canvas().then(v6h => v6h.ensureTCanvas(painter, handle.frame || false))
-                                  .then(() => painter.redraw());
-      } else
-         promise = getPromise(handle.func(dom, obj, opt));
-
-      return promise.then(p => {
-         if (!painter)
-            painter = p;
-         if (painter === false)
-            return null;
-         if (!painter)
-             throw Error(`Fail to draw object ${type_info}`);
-         if (isObject(painter) && !painter.options)
-            painter.options = { original: opt || '' }; // keep original draw options
-         return painter;
-      });
-   }
-
-   if (isFunc(handle.func))
-      return performDraw();
-
-   let promise;
-
-   if (isFunc(handle.class)) {
-      // class coded as async function which returns class handle
-      // simple extract class and access class.draw method
-      promise = handle.class().then(cl => { handle.func = cl.draw; });
-   } else if (isFunc(handle.draw)) {
-      // draw function without special class
-      promise = handle.draw().then(h => { handle.func = h; });
-   } else if (!handle.func || !isStr(handle.func))
-      return Promise.reject(Error(`Draw function or class not specified to draw ${type_info}`));
-   else {
-      let func = findFunction(handle.func);
-      if (isFunc(func)) {
-         handle.func = func;
-         return performDraw();
-      }
-      let modules = null;
-      if (isStr(handle.script)) {
-         if (handle.script.indexOf('modules:') === 0)
-            modules = handle.script.slice(8);
-         else if (handle.script.indexOf('.mjs') > 0)
-            modules = handle.script;
-      }
-
-      if (!modules && !handle.prereq && !handle.script)
-         return Promise.reject(Error(`Prerequicities to load ${handle.func} are not specified`));
-
-      let init_promise = Promise.resolve(true);
-      if (modules)
-         init_promise = loadModules(modules);
-      else if (!internals.ignore_v6) {
-         init_promise = _ensureJSROOT().then(v6 => {
-            const pr = handle.prereq ? v6.require(handle.prereq) : Promise.resolve(true);
-            return pr.then(() => {
-               if (handle.script)
-                  return loadScript(handle.script);
-            }).then(() => v6._complete_loading());
-         });
-      }
-
-      promise = init_promise.then(() => {
-         func = findFunction(handle.func);
-         if (!isFunc(func))
-            return Promise.reject(Error(`Fail to find function ${handle.func} after loading ${handle.prereq || handle.script}`));
-
-         handle.func = func;
-      });
-   }
-
-   return promise.then(() => performDraw());
-}
-
-/** @summary Redraw object in specified HTML element with given draw options.
-  * @param {string|object} dom - id of div element to draw or directly DOMElement
-  * @param {object} obj - object to draw, object type should be registered before with {@link addDrawFunc}
-  * @param {string} opt - draw options
-  * @return {Promise} with painter object
-  * @desc If drawing was not done before, it will be performed with {@link draw}.
-  * Otherwise drawing content will be updated
-  * @public
-  * @example
-  * import { openFile } from 'https://root.cern/js/latest/modules/io.mjs';
-  * import { draw, redraw } from 'https://root.cern/js/latest/modules/draw.mjs';
-  * let file = await openFile('https://root.cern/js/files/hsimple.root');
-  * let obj = await file.readObject('hpxpy;1');
-  * await draw('drawing', obj, 'colz');
-  * let cnt = 0;
-  * setInterval(() => {
-  *    obj.fTitle = `Next iteration ${cnt++}`;
-  *    redraw('drawing', obj, 'colz');
-  * }, 1000); */
-async function redraw(dom, obj, opt) {
-   if (!isObject(obj))
-      return Promise.reject(Error('not an object in redraw'));
-
-   const can_painter = getElementCanvPainter(dom);
-   let handle, res_painter = null, redraw_res;
-   if (obj._typename)
-      handle = getDrawHandle(prROOT + obj._typename);
-   if (handle?.draw_field && obj[handle.draw_field])
-      obj = obj[handle.draw_field];
-
-   if (can_painter) {
-      if (can_painter.matchObjectType(obj._typename)) {
-         redraw_res = can_painter.redrawObject(obj, opt);
-         if (redraw_res) res_painter = can_painter;
-      } else {
-         for (let i = 0; i < can_painter.painters.length; ++i) {
-            const painter = can_painter.painters[i];
-            if (painter.matchObjectType(obj._typename)) {
-               redraw_res = painter.redrawObject(obj, opt);
-               if (redraw_res) {
-                  res_painter = painter;
-                  break;
-               }
-            }
-         }
-      }
-   } else {
-      const top = new BasePainter(dom).getTopPainter();
-      // base painter do not have this method, if it there use it
-      // it can be object painter here or can be specially introduce method to handling redraw!
-      if (isFunc(top?.redrawObject)) {
-         redraw_res = top.redrawObject(obj, opt);
-         if (redraw_res) res_painter = top;
-      }
-   }
-
-   if (res_painter)
-      return getPromise(redraw_res).then(() => res_painter);
-
-   cleanup(dom);
-
-   return draw(dom, obj, opt);
-}
-
-/** @summary Scan streamer infos for derived classes
-  * @desc Assign draw functions for such derived classes
-  * @private */
-function addStreamerInfosForPainter(lst) {
-   if (!lst) return;
-
-   const basics = [clTObject, clTNamed, clTString, 'TCollection', clTAttLine, clTAttFill, clTAttMarker, clTAttText];
-
-   function checkBaseClasses(si, lvl) {
-      const element = si.fElements?.arr[0];
-      if ((element?.fTypeName !== kBaseClass) || (lvl > 4))
-         return null;
-      // exclude very basic classes
-      if (basics.indexOf(element.fName) >= 0)
-         return null;
-
-      let handle = getDrawHandle(prROOT + element.fName);
-      if (handle && !handle.for_derived)
-            handle = null;
-
-      // now try find that base class of base in the list
-      if (handle === null) {
-         for (let k = 0; k < lst.arr.length; ++k) {
-            if (lst.arr[k].fName === element.fName) {
-               handle = checkBaseClasses(lst.arr[k], lvl + 1);
-               break;
-            }
-         }
-      }
-
-      return handle?.for_derived ? handle : null;
-   }
-
-   lst.arr.forEach(si => {
-      if (getDrawHandle(prROOT + si.fName) !== null) return;
-
-      const handle = checkBaseClasses(si, 0);
-      if (handle) {
-         const newhandle = Object.assign({}, handle);
-         delete newhandle.for_derived; // should we disable?
-         newhandle.name = si.fName;
-         addDrawFunc(newhandle);
-      }
-   });
-}
-
-/** @summary Create SVG/PNG/JPEG image for provided object.
-  * @desc Function especially useful in Node.js environment to generate images for
-  * supported ROOT classes, but also can be used from web browser
-  * @param {object} args - function settings
-  * @param {object} args.object - object for the drawing
-  * @param {string} [args.format = 'svg'] - image format like 'svg' (default), 'png' or 'jpeg'
-  * @param {string} [args.option = ''] - draw options
-  * @param {number} [args.width = 1200] - image width
-  * @param {number} [args.height = 800] - image height
-  * @param {boolean} [args.as_buffer = false] - returns image as Buffer instance, can store directly to file
-  * @param {boolean} [args.use_canvas_size = false] - if configured used size stored in TCanvas object
-  * @return {Promise} with image code - svg as is, png/jpeg as base64 string or buffer (if as_buffer) specified
-  * @example
-  * // how makeImage can be used in node.js
-  * import { openFile, makeImage } from 'jsroot';
-  * let file = await openFile('https://root.cern/js/files/hsimple.root');
-  * let object = await file.readObject('hpxpy;1');
-  * let png64 = await makeImage({ format: 'png', object, option: 'colz', width: 1200, height: 800 });
-  * let pngbuf = await makeImage({ format: 'png', as_buffer: true, object, option: 'colz', width: 1200, height: 800 }); */
-async function makeImage(args) {
-   if (!args) args = {};
-
-   if (!isObject(args.object))
-      return Promise.reject(Error('No object specified to generate SVG'));
-   if (!args.format)
-      args.format = 'svg';
-   if (!args.width)
-      args.width = settings.CanvasWidth;
-   if (!args.height)
-      args.height = settings.CanvasHeight;
-
-   async function build(main) {
-      main.attr('width', args.width).attr('height', args.height)
-          .style('width', args.width + 'px').style('height', args.height + 'px')
-          .property('_batch_use_canvsize', args.use_canvas_size ?? false)
-          .property('_batch_mode', true)
-          .property('_batch_format', args.format !== 'svg' ? args.format : null);
-
-      function complete(res) {
-         cleanup(main.node());
-         main.remove();
-         return res;
-      }
-
-      return draw(main.node(), args.object, args.option || '').then(() => {
-         if (args.format !== 'svg') {
-            const only_img = main.select('svg').selectChild('image');
-            if (!only_img.empty()) {
-               const href = only_img.attr('href');
-
-               if (args.as_buffer) {
-                  const p = href.indexOf('base64,'),
-                        str = atob_func(href.slice(p + 7)),
-                        buf = new ArrayBuffer(str.length),
-                        bufView = new Uint8Array(buf);
-                  for (let i = 0; i < str.length; i++)
-                     bufView[i] = str.charCodeAt(i);
-                  return isNodeJs() ? Buffer.from(buf) : buf;
-               }
-               return href;
-            }
-         }
-
-         const mainsvg = main.select('svg');
-
-         mainsvg.attr('xmlns', nsSVG)
-                .attr('style', null).attr('class', null).attr('x', null).attr('y', null);
-
-         if (!mainsvg.attr('width') && !mainsvg.attr('height'))
-            mainsvg.attr('width', args.width).attr('height', args.height);
-
-         function clear_element() {
-            const elem = select(this);
-            if (elem.style('display') === 'none') elem.remove();
-         }
-
-         main.selectAll('g.root_frame').each(clear_element);
-         main.selectAll('svg').each(clear_element);
-
-         let svg;
-         if (args.format === 'pdf')
-            svg = { node: mainsvg.node(), width: args.width, height: args.height, can_modify: true };
-         else {
-            svg = compressSVG(main.html());
-            if (args.format === 'svg')
-               return complete(svg);
-         }
-
-         return svgToImage(svg, args.format, args.as_buffer).then(complete);
-      });
-   }
-
-   return isNodeJs()
-          ? _loadJSDOM().then(handle => build(handle.body.append('div')))
-          : build(select('body').append('div').style('display', 'none'));
-}
-
-
-/** @summary Create SVG image for provided object.
-  * @desc Function especially useful in Node.js environment to generate images for
-  * supported ROOT classes
-  * @param {object} args - function settings
-  * @param {object} args.object - object for the drawing
-  * @param {string} [args.option] - draw options
-  * @param {number} [args.width = 1200] - image width
-  * @param {number} [args.height = 800] - image height
-  * @param {boolean} [args.use_canvas_size = false] - if configured used size stored in TCanvas object
-  * @return {Promise} with svg code
-  * @example
-  * // how makeSVG can be used in node.js
-  * import { openFile, makeSVG } from 'jsroot';
-  * let file = await openFile('https://root.cern/js/files/hsimple.root');
-  * let object = await file.readObject('hpxpy;1');
-  * let svg = await makeSVG({ object, option: 'lego2,pal50', width: 1200, height: 800 }); */
-async function makeSVG(args) {
-   if (!args) args = {};
-   args.format = 'svg';
-   return makeImage(args);
-}
-
-internals.addDrawFunc = addDrawFunc;
-
-function assignPadPainterDraw(PadPainterClass) {
-   PadPainterClass.prototype.drawObject = (...args) =>
-      draw(...args).catch(err => { console.log(`Error ${err?.message ?? err}  at ${err?.stack ?? 'uncknown place'}`); return null; });
-   PadPainterClass.prototype.getObjectDrawSettings = getDrawSettings;
-}
-
-// only now one can draw primitives in the canvas
-assignPadPainterDraw(TPadPainter);
-
-// load v7 only by demand
-async function init_v7(arg) {
-   return Promise.resolve().then(function () { return RCanvasPainter$1; }).then(h => {
-      // only now one can draw primitives in the canvas
-      assignPadPainterDraw(h.RPadPainter);
-      switch (arg) {
-         case 'more': return Promise.resolve().then(function () { return v7more; });
-         case 'pave': return Promise.resolve().then(function () { return RPavePainter$1; });
-         case 'rh1': return Promise.resolve().then(function () { return RH1Painter$1; });
-         case 'rh2': return Promise.resolve().then(function () { return RH2Painter$1; });
-         case 'rh3': return Promise.resolve().then(function () { return RH3Painter$1; });
-      }
-      return h;
-   });
-}
-
-
-// to avoid cross-dependency between io.mjs and draw.mjs
-internals.addStreamerInfosForPainter = addStreamerInfosForPainter;
-
-/** @summary Draw TRooPlot
-  * @private */
-async function drawRooPlot(dom, plot) {
-   return draw(dom, plot._hist, 'hist').then(async hp => {
-      const arr = [];
-      for (let i = 0; i < plot._items.arr.length; ++i)
-         arr.push(draw(dom, plot._items.arr[i], plot._items.opt[i]));
-      return Promise.all(arr).then(() => hp);
-   });
-}
-
 const kTopFolder = 'TopFolder';
 
 function injectHStyle(node) {
@@ -107026,7 +107042,7 @@ class HierarchyPainter extends BasePainter {
             hitem = d.last;
          }
 
-         if (hitem) { // deepscan-disable-line
+         if (hitem) {
             // check that item is visible (opened), otherwise should enable parent
 
             let prnt = hitem._parent;
@@ -108548,7 +108564,9 @@ function readStyleFromURL(url) {
    if (isStr(prefix) && prefix)
       setStoragePrefix(prefix);
 
-   readSettings();
+   if (readSettings())
+      setDefaultDrawOpt(settings._dflt_drawopt);
+
    readStyle();
 
    function get_bool(name, field, special) {
@@ -112820,7 +112838,7 @@ class TGraphDelaunay {
                      continue; // goto L50;
                   }
 
-                  if (skip_this_triangle) break; // deepscan-disable-line
+                  if (skip_this_triangle) break;
 
                   /* Error("Interpolate", "Should not get to here"); */
                   // may as well soldier on
@@ -112858,7 +112876,7 @@ class TGraphDelaunay {
                         // vector (dx3,dy3) is expressible as a sum of the other two vectors
                         // with positive coefficients -> i.e. it lies between the other two vectors
                         if (l === 1) {
-                           f = m; o1 = p; o2 = n; // deepscan-disable-line
+                           f = m; o1 = p; o2 = n;
                         } else if (l === 2) {
                            f = p; o1 = n; o2 = m;
                         } else {
@@ -112977,7 +112995,7 @@ class TGraphDelaunay {
             }
          }
       }
-      if (shouldbein) // deepscan-disable-line
+      if (shouldbein)
          console.error(`Interpolate Point outside hull when expected inside: this point could be dodgy ${xx}  ${yy} ${ntris_tried}`);
       return thevalue;
    }
@@ -122236,7 +122254,12 @@ class RCanvasPainter extends RPadPainter {
                  this.addPadInteractive();
                  handle.send(`SNAPDONE:${snapid}`); // send ready message back when drawing completed
                  this.confirmDraw();
-              });
+             }).catch(err => {
+               if (isFunc(this.showConsoleError))
+                  this.showConsoleError(err);
+               else
+                  console.log(err);
+             });
       } else if (msg.slice(0, 4) === 'JSON') {
          const obj = parse(msg.slice(4));
          // console.log('get JSON ', msg.length-4, obj._typename);
