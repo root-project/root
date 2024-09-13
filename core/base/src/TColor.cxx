@@ -182,18 +182,15 @@ simplest is to define an other white color not attached to the color index 0:
 
 \anchor C03
 ## Bright and dark colors
-The dark and bright color are used to give 3-D effects when drawing various
-boxes (see TWbox, TPave, TPaveText, TPaveLabel, etc).
+Dark and bright colors are used to add 3D effects to graphical objects like
+TWbox, TPave, TPaveText, TPaveLabel, etc. and in colored lego plots.
 
-  - The dark colors have an index = color_index+100
-  - The bright colors have an index = color_index+150
-  - Two static functions return the bright and dark color number
-    corresponding to a color index. If the bright or dark color does not
-    exist, they are created:
-   ~~~ {.cpp}
-      Int_t dark   = TColor::GetColorDark(color_index);
-      Int_t bright = TColor::GetColorBright(color_index);
-   ~~~
+Two static functions are available that return the bright or dark color number corresponding
+to a given color index. If these variants don't already exist, they are created as needed:
+~~~ {.cpp}
+   Int_t dark   = TColor::GetColorDark(color_index);
+   Int_t bright = TColor::GetColorBright(color_index);
+~~~
 
 \anchor C031
 ## Accessible Color Schemes
@@ -1821,8 +1818,34 @@ void TColor::RGB2HLS(Int_t r, Int_t g, Int_t b, Int_t &h, Int_t &l, Int_t &s)
    s = (Int_t) (satur * 255.0f);
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// Initialize this color and its associated colors.
+/// Set the color name and change also the name of the "dark" and "bright" associated
+/// colors if they exist.
+
+void TColor::SetName(const char* name)
+{
+   Int_t nd = GetColorByName(TString::Format("%s_dark",fName.Data()).Data());
+   Int_t nb = GetColorByName(TString::Format("%s_bright",fName.Data()).Data());
+
+   fName = name;
+
+   auto colors = (TObjArray*) gROOT->GetListOfColors();
+
+   if (nd >= 0) {
+      TColor *colord = (TColor*)colors->At(nd);
+      colord->TNamed::SetName(TString::Format("%s_dark",fName.Data()).Data());
+   }
+
+   if (nb >= 0) {
+      TColor *colorb = (TColor*)colors->At(nb);
+      colorb->TNamed::SetName(TString::Format("%s_bright",fName.Data()).Data());
+   }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize this color and its "dark" and "bright" associated colors.
 
 void TColor::SetRGB(Float_t r, Float_t g, Float_t b)
 {
@@ -1845,12 +1868,10 @@ void TColor::SetRGB(Float_t r, Float_t g, Float_t b)
 #endif
       Allocate();
 
-   if (fNumber > 50) return;
-
-   // now define associated colors for WBOX shading
+   // change the dark and bright associated colors if they exist
    Float_t dr, dg, db, lr, lg, lb;
 
-   // Get list of all defined colors
+   // get the list of all defined colors
    auto colors = (TObjArray*) gROOT->GetListOfColors();
 
    // set dark color
@@ -1860,6 +1881,7 @@ void TColor::SetRGB(Float_t r, Float_t g, Float_t b)
       TColor *colord = (TColor*)colors->At(nd);
       if (nplanes > 8) colord->SetRGB(dr, dg, db);
       else             colord->SetRGB(0.3f,0.3f,0.3f);
+      colord->SetTitle(colord->AsHexString());
    }
 
    // set bright color
@@ -1869,6 +1891,7 @@ void TColor::SetRGB(Float_t r, Float_t g, Float_t b)
       TColor *colorb = (TColor*)colors->At(nb);
       if (nplanes > 8) colorb->SetRGB(lr, lg, lb);
       else             colorb->SetRGB(0.8f,0.8f,0.8f);
+      colorb->SetTitle(colorb->AsHexString());
    }
 
    gDefinedColors++;
@@ -1880,7 +1903,6 @@ void TColor::SetRGB(Float_t r, Float_t g, Float_t b)
 void TColor::Allocate()
 {
    if (gVirtualX && !gROOT->IsBatch())
-
       gVirtualX->SetRGB(fNumber, GetRed(), GetGreen(), GetBlue());
 }
 
