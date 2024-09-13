@@ -249,7 +249,7 @@ RWebDisplayHandle::BrowserCreator::Display(const RWebDisplayArgs &args)
    std::string tmpfile;
 
    // these are secret parameters, hide them in temp file
-   if ((url.find("token=") || url.find("key=")) && !args.IsBatchMode() && !args.IsHeadless()) {
+   if (((url.find("token=") != std::string::npos) || (url.find("key=") != std::string::npos)) && !args.IsBatchMode() && !args.IsHeadless()) {
       TString filebase = "root_start_";
 
       auto f = gSystem->TempFileName(filebase, nullptr, ".html");
