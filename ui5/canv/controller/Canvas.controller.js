@@ -49,7 +49,8 @@ sap.ui.define([
                                      HighlightPadIcon: chk_icon(false),
                                      CanvasName: 'c1',
                                      StatusLbl1: '', StatusLbl2: '', StatusLbl3: '', StatusLbl4: '',
-                                     Standalone: true, isRoot6: true, canResize: true, FixedSize: false });
+                                     Standalone: true, isRoot6: true, canResize: true, FixedSize: false,
+                                     ErrorVisible: false, ErrorTooltip: 'Error in JavaScript code' });
          this.getView().setModel(model);
 
          let cp = this.getView().getViewData()?.canvas_painter;
@@ -84,6 +85,8 @@ sap.ui.define([
             cp.drawInUI5ProjectionArea = this.drawInProjectionArea.bind(this);
 
             cp.showUI5Panel = this.showLeftArea.bind(this);
+
+            cp.showConsoleError = this.showConsoleError.bind(this);
 
             if (cp.v7canvas) model.setProperty('/isRoot6', false);
 
@@ -747,6 +750,17 @@ sap.ui.define([
             url = 'https://root.cern/about/';
          if (url)
             this.getCanvasPainter()?.sendWebsocket('SHOWURL:' + url);
+      },
+
+      showConsoleError(err) {
+         this.getView().getModel().setProperty('/ErrorVisible', true);
+         this.err_message = err?.message ?? 'Abstract error';
+         this.getView().getModel().setProperty('/ErrorTooltip', 'Err: ' + this.err_message);
+         this.err_stack = err?.stack ?? err ?? 'Abstract stack';
+      },
+
+      onShowConsoleErrors() {
+         MessageToast.show(`Error: ${this.err_message}\n${this.err_stack}`, { width: '80%', duration: 10000 });
       },
 
       showMessage(msg) {
