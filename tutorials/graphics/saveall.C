@@ -1,7 +1,8 @@
 /// \file
 /// \ingroup tutorial_graphics
 /// \notebook
-/// This macro creates 100 canvases and store them in different images files using TCanvas::SaveAll() method
+/// Creates many canvases and save as images or pdf.
+/// This macro creates 100 canvases and store them in different images files using TCanvas::SaveAll() method.
 /// Demonstrated how different output format can be used in batch mode.
 ///
 /// \macro_code
