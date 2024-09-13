@@ -114,6 +114,8 @@ protected:
    PadClickedSignal_t fPadDblClickedSignal; ///<! signal emitted when simple mouse click performed on the pad
    ObjectSelectSignal_t fObjSelectSignal; ///<! signal emitted when new object selected in the pad
 
+   std::vector<std::unique_ptr<ROOT::RWebDisplayHandle>> fHelpHandles; ///<! array of handles for help widgets
+
    static std::string gCustomScripts;     ///<! custom JavaScript code or URL on JavaScript files to load before start drawing
    static std::vector<std::string> gCustomClasses;  ///<! list of custom classes, which can be delivered as is to client
 

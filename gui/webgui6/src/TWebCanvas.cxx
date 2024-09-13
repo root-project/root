@@ -2139,6 +2139,14 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
          }
       }
 
+   } else if (arg.compare(0, 8, "SHOWURL:") == 0) {
+
+      ROOT::RWebDisplayArgs args;
+      args.SetUrl(arg.substr(8));
+      args.SetStandalone(false);
+
+      fHelpHandles.emplace_back(ROOT::RWebDisplayHandle::Display(args));
+
    } else if (arg == "INTERRUPT"s) {
 
       gROOT->SetInterrupt();
