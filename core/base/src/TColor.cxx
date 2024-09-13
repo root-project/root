@@ -202,7 +202,8 @@ and available on [GitHub](https://github.com/mpetroff/accessible-color-cycles)
 under the MIT License, meet these criteria.
 
 These three color schemes are available as color sets with 6, 8, and 10 colors, named
-`kP[6, 8, 10]ColorName`. For example, `kP6Red` represents the red color within the P6 color scheme.
+`kP[6, 8, 10]ColorName`. For example, `kP6Red` represents the red color within the P6 color scheme
+(`P` for Petroff or Preferred).
 
 Begin_Macro
 ../../../tutorials/graphics/accessiblecolorschemes.C
