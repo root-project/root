@@ -2531,7 +2531,7 @@ class HierarchyPainter extends BasePainter {
             hitem = d.last;
          }
 
-         if (hitem) { // deepscan-disable-line
+         if (hitem) {
             // check that item is visible (opened), otherwise should enable parent
 
             let prnt = hitem._parent;

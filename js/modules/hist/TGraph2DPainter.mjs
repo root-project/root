@@ -641,7 +641,7 @@ class TGraphDelaunay {
                      continue; // goto L50;
                   }
 
-                  if (skip_this_triangle) break; // deepscan-disable-line
+                  if (skip_this_triangle) break;
 
                   /* Error("Interpolate", "Should not get to here"); */
                   // may as well soldier on
@@ -679,7 +679,7 @@ class TGraphDelaunay {
                         // vector (dx3,dy3) is expressible as a sum of the other two vectors
                         // with positive coefficients -> i.e. it lies between the other two vectors
                         if (l === 1) {
-                           f = m; o1 = p; o2 = n; // deepscan-disable-line
+                           f = m; o1 = p; o2 = n;
                         } else if (l === 2) {
                            f = p; o1 = n; o2 = m;
                         } else {
@@ -798,7 +798,7 @@ class TGraphDelaunay {
             }
          }
       }
-      if (shouldbein) // deepscan-disable-line
+      if (shouldbein)
          console.error(`Interpolate Point outside hull when expected inside: this point could be dodgy ${xx}  ${yy} ${ntris_tried}`);
       return thevalue;
    }

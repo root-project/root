@@ -4,6 +4,7 @@ import { prSVG, BasePainter } from '../base/BasePainter.mjs';
 import { resize } from '../base/ObjectPainter.mjs';
 import { getRootColors } from '../base/colors.mjs';
 
+
 /** @summary Display progress message in the left bottom corner.
   * @desc Previous message will be overwritten
   * if no argument specified, any shown messages will be removed

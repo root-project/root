@@ -368,6 +368,11 @@ class TCanvasPainter extends TPadPainter {
                 if (ranges) ranges = ':' + ranges;
                 handle.send(`READY6:${version}${ranges}`); // send ready message back when drawing completed
                 this.confirmDraw();
+             }).catch(err => {
+               if (isFunc(this.showConsoleError))
+                  this.showConsoleError(err);
+               else
+                  console.log(err);
              });
       } else if (msg.slice(0, 5) === 'MENU:') {
          // this is menu with exact identifier for object

@@ -2518,7 +2518,7 @@ class ClonedNodes {
                   issimple = (clone.matrix[k] === ((k === 5) || (k === 10) || (k === 15) ? 1 : 0));
                if (issimple) delete clone.matrix;
             }
-            if (clone.matrix && (kind === kindEve))  // deepscan-disable-line INSUFFICIENT_NULL_CHECK
+            if (clone.matrix && (kind === kindEve))
                clone.abs_matrix = true;
          }
          if (shape) {

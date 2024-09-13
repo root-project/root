@@ -5,6 +5,7 @@ import { getColor } from '../base/colors.mjs';
 import { TAttMarkerHandler } from '../base/TAttMarkerHandler.mjs';
 import { getSvgLineStyle } from '../base/TAttLineHandler.mjs';
 import { FontHandler } from '../base/FontHandler.mjs';
+import { setDefaultDrawOpt } from '../draw.mjs';
 
 
 const kToFront = '__front__', sDfltName = 'root_ctx_menu', sDfltDlg = '_dialog',
@@ -824,6 +825,7 @@ class JSRootMenu {
       this.addSelectMenu('Latex', ['Off', 'Symbols', 'Normal', 'MathJax', 'Force MathJax'], settings.Latex, value => { settings.Latex = value; });
       this.addSelectMenu('3D rendering', ['Default', 'WebGL', 'Image'], settings.Render3D, value => { settings.Render3D = value; });
       this.addSelectMenu('WebGL embeding', ['Default', 'Overlay', 'Embed'], settings.Embed3D, value => { settings.Embed3D = value; });
+      this.add('Default options', () => this.input('List of options like TH2:lego2;TH3:glbox2', settings._dflt_drawopt || '').then(v => { settings._dflt_drawopt = v; setDefaultDrawOpt(v); }), 'Configure custom default draw options for some classes');
       this.endsub();
 
       this.sub('Geometry');

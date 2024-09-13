@@ -3,6 +3,7 @@ import { decodeUrl, settings, constants, gStyle, internals, browser,
 import { select as d3_select } from './d3.mjs';
 import { HierarchyPainter } from './gui/HierarchyPainter.mjs';
 import { setStoragePrefix, readSettings, readStyle } from './gui/utils.mjs';
+import { setDefaultDrawOpt } from './draw.mjs';
 import { createMenu, closeMenu } from './gui/menu.mjs';
 
 
@@ -16,7 +17,9 @@ function readStyleFromURL(url) {
    if (isStr(prefix) && prefix)
       setStoragePrefix(prefix);
 
-   readSettings();
+   if (readSettings())
+      setDefaultDrawOpt(settings._dflt_drawopt);
+
    readStyle();
 
    function get_bool(name, field, special) {

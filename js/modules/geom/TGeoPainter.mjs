@@ -230,7 +230,7 @@ function expandGeoObject(parent, obj) {
    }
 
    if (!subnodes && (shape?._typename === clTGeoCompositeShape) && shape?.fNode) {
-      if (!parent._childs) { // deepscan-disable-line
+      if (!parent._childs) {
          createItem(parent, shape.fNode.fLeft, 'Left');
          createItem(parent, shape.fNode.fRight, 'Right');
       }

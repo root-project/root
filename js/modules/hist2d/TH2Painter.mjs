@@ -96,7 +96,7 @@ function buildHist2dContour(histo, handle, levels, palette, contour_func) {
          for (k = 0; k < 4; k++)
             ir[k] = LevelSearch(zc[k]);
 
-         if ((ir[0] !== ir[1]) || (ir[1] !== ir[2]) || (ir[2] !== ir[3]) || (ir[3] !== ir[0])) { // deepscan-disable-line
+         if ((ir[0] !== ir[1]) || (ir[1] !== ir[2]) || (ir[2] !== ir[3]) || (ir[3] !== ir[0])) {
             x[3] = x[0] = (arrx[i] + arrx[i+1])/2;
             x[2] = x[1] = (arrx[i+1] + arrx[i+2])/2;
 
@@ -390,7 +390,7 @@ class Triangles3DHandler {
 
                // check if any(contours for given level exists
                if (((side1 > 0) || (side2 > 0) || (side3 > 0)) &&
-                   ((side1 !== side2) || (side2 !== side3) || (side3 !== side1))) // deepscan-disable-line
+                   ((side1 !== side2) || (side2 !== side3) || (side3 !== side1)))
                       ++ngridsegments;
 
                continue;
