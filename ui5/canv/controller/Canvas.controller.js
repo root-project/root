@@ -8,6 +8,7 @@ sap.ui.define([
    'sap/m/List',
    'sap/m/InputListItem',
    'sap/m/Input',
+   'sap/m/Text',
    'sap/m/Button',
    'sap/m/ButtonType',
    'sap/ui/layout/SplitterLayoutData',
@@ -22,6 +23,7 @@ sap.ui.define([
              List,
              InputListItem,
              Input,
+             Text,
              Button,
              ButtonType,
              SplitterLayoutData,
@@ -754,13 +756,24 @@ sap.ui.define([
 
       showConsoleError(err) {
          this.getView().getModel().setProperty('/ErrorVisible', true);
-         this.err_message = err?.message ?? 'Abstract error';
-         this.getView().getModel().setProperty('/ErrorTooltip', 'Err: ' + this.err_message);
+         this.err_message = err?.message ?? '';
+         this.getView().getModel().setProperty('/ErrorTooltip', 'Err: ' + (this.err_message || 'unknown'));
          this.err_stack = err?.stack ?? err ?? 'Abstract stack';
       },
 
       onShowConsoleErrors() {
-         MessageToast.show(`Error: ${this.err_message}\n${this.err_stack}`, { width: '80%', duration: 10000 });
+         const errDialog = new Dialog({
+            title: 'JavaScript Error: ' + this.err_message,
+            type: 'Message',
+            state: 'Warning',
+            content: new Text({ text: this.err_stack }),
+            endButton: new Button({
+              text: 'Ok',
+              press: () => { errDialog.close(); errDialog.destroy(); }
+            })
+         });
+
+         errDialog.open();
       },
 
       showMessage(msg) {
