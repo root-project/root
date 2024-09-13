@@ -1832,11 +1832,18 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
       // create ROOT, PDF, ... files using native ROOT functionality
       Canvas()->Print(arg.c_str() + 8);
 
-   } else if (arg.compare(0, 9, "OPTIONS6:") == 0) {
+   } else if (arg.compare(0, 8, "GETMENU:") == 0) {
 
-      if (is_main_connection && !IsReadOnly())
-         if (DecodePadOptions(arg.substr(9), true))
-            CheckCanvasModified();
+      TObject *obj = FindPrimitive(arg.substr(8));
+      if (!obj)
+         obj = Canvas();
+
+      TWebMenuItems items(arg.c_str() + 8);
+      items.PopulateObjectMenu(obj, obj->IsA());
+      std::string buf = "MENU:";
+      buf.append(TBufferJSON::ToJSON(&items, 103).Data());
+
+      AddSendQueue(connid, buf);
 
    } else if (arg.compare(0, 11, "STATUSBITS:") == 0) {
 
@@ -1844,7 +1851,9 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
          AssignStatusBits(std::stoul(arg.substr(11)));
          if (fUpdatedSignal) fUpdatedSignal(); // invoke signal
       }
+
    } else if (arg.compare(0, 10, "HIGHLIGHT:") == 0) {
+
       if (is_main_connection) {
          auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(arg.substr(10));
          if (!arr || (arr->size() != 4)) {
@@ -1860,9 +1869,22 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
             }
          }
       }
+
    } else if (ROOT::RWebWindow::IsFileDialogMessage(arg)) {
 
       ROOT::RWebWindow::EmbedFileDialog(fWindow, connid, arg);
+
+   } else if (IsReadOnly() || !is_main_connection) {
+
+      ///////////////////////////////////////////////////////////////////////////////////////
+      // all following messages are not allowed in readonly mode or for secondary connections
+
+      return kFALSE;
+
+   } else if (arg.compare(0, 9, "OPTIONS6:") == 0) {
+
+      if (DecodePadOptions(arg.substr(9), true))
+         CheckCanvasModified();
 
    } else if (arg == "FITPANEL"s) {
 
@@ -1873,22 +1895,17 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
          if (hist) break;
       }
 
-      TString cmd = TString::Format("auto panel = std::make_shared<ROOT::Experimental::RFitPanel>(\"FitPanel\");"
-                                    "panel->AssignCanvas(\"%s\");"
-                                    "panel->AssignHistogram((TH1 *)0x%zx);"
-                                    "panel->Show();"
-                                    "panel->ClearOnClose(panel);", Canvas()->GetName(), (size_t) hist);
+      auto cmd = TString::Format("auto panel = std::make_shared<ROOT::Experimental::RFitPanel>(\"FitPanel\");"
+                                 "panel->AssignCanvas(\"%s\");"
+                                 "panel->AssignHistogram((TH1 *)0x%zx);"
+                                 "panel->Show();"
+                                 "panel->ClearOnClose(panel);", Canvas()->GetName(), (size_t) hist);
 
       gROOT->ProcessLine(cmd.Data());
 
    } else if (arg == "START_BROWSER"s) {
 
       gROOT->ProcessLine("new TBrowser;");
-
-   } else if (IsReadOnly()) {
-
-      // all following messages are not allowed in readonly mode
-      return kFALSE;
 
    } else if (arg.compare(0, 6, "EVENT:") == 0) {
       auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(arg.substr(6));
@@ -1914,39 +1931,23 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
          }
       }
 
-   } else if (arg.compare(0, 8, "GETMENU:") == 0) {
-
-      TObject *obj = FindPrimitive(arg.substr(8));
-      if (!obj)
-         obj = Canvas();
-
-      TWebMenuItems items(arg.c_str() + 8);
-      items.PopulateObjectMenu(obj, obj->IsA());
-      std::string buf = "MENU:";
-      buf.append(TBufferJSON::ToJSON(&items, 103).Data());
-
-      AddSendQueue(connid, buf);
-
    } else if (arg.compare(0, 8, "PRIMIT6:") == 0) {
 
-      if (IsFirstConn(connid) && !IsReadOnly()) { // only first connection can modify object
+      auto opt = TBufferJSON::FromJSON<TWebObjectOptions>(arg.c_str() + 8);
 
-         auto opt = TBufferJSON::FromJSON<TWebObjectOptions>(arg.c_str() + 8);
+      if (opt) {
+         TPad *modpad = ProcessObjectOptions(*opt, nullptr);
 
-         if (opt) {
-            TPad *modpad = ProcessObjectOptions(*opt, nullptr);
-
-            // indicate that pad was modified
-            if (modpad)
-               modpad->Modified();
-         }
+         // indicate that pad was modified
+         if (modpad)
+            modpad->Modified();
       }
 
    } else if (arg.compare(0, 11, "PADCLICKED:") == 0) {
 
       auto click = TBufferJSON::FromJSON<TWebPadClick>(arg.c_str() + 11);
 
-      if (click && IsFirstConn(connid) && !IsReadOnly()) {
+      if (click) {
 
          TPad *pad = dynamic_cast<TPad *>(FindPrimitive(click->padid));
 
@@ -1993,7 +1994,7 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
      auto buf = arg.substr(8);
      auto pos = buf.find(":");
 
-     if ((pos > 0) && IsFirstConn(connid) && !IsReadOnly()) { // only first client can execute commands
+     if ((pos > 0) && (pos != std::string::npos)) {
         auto sid = buf.substr(0, pos);
         buf.erase(0, pos + 1);
 
@@ -2025,7 +2026,7 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
 
       auto pos = buf.find(":");
 
-      if ((pos > 0) && IsFirstConn(connid) && !IsReadOnly()) {
+      if (pos > 0) {
          // only first client can execute commands
          reply = buf.substr(0, pos);
          buf.erase(0, pos + 1);
@@ -2099,6 +2100,7 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
       }
 
    } else if (arg.compare(0, 8, "DRAWOPT:") == 0) {
+
       auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(arg.substr(8));
       if (arr && arr->size() == 2) {
          TObjLink *objlnk = nullptr;
@@ -2106,7 +2108,9 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
          if (objlnk)
             objlnk->SetOption(arr->at(1).c_str());
       }
+
    } else if (arg.compare(0, 8, "RESIZED:") == 0) {
+
       auto arr = TBufferJSON::FromJSON<std::vector<int>>(arg.substr(8));
       if (arr && arr->size() == 7) {
          // set members directly to avoid redrawing of the client again
@@ -2116,7 +2120,9 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
          arr->resize(4);
          SetWindowGeometry(*arr);
       }
+
    } else if (arg.compare(0, 7, "POPOBJ:") == 0) {
+
       auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(arg.substr(7));
       if (arr && arr->size() == 2) {
          TPad *pad = dynamic_cast<TPad *>(FindPrimitive(arr->at(0)));
@@ -2132,11 +2138,16 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
                }
          }
       }
+
    } else if (arg == "INTERRUPT"s) {
+
       gROOT->SetInterrupt();
+
    } else {
+
       // unknown message, probably should be processed by other implementation
       return kFALSE;
+
    }
 
    return kTRUE;
