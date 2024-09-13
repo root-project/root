@@ -99,7 +99,18 @@
                </menu>
             </MenuButton>
             <ToolbarSpacer />
-            <Button text="Help" type="Transparent"/>
+            <MenuButton text="Help" type="Transparent">
+               <menu>
+                  <Menu itemSelected="onHelpMenuAction">
+                     <items>
+                        <MenuItem text="ROOT"/>
+                        <MenuItem text="Canvas"/>
+                        <MenuItem text="Tutorials"/>
+                        <MenuItem text="About" startsSection="true"/>
+                     </items>
+                  </Menu>
+               </menu>
+            </MenuButton>
          </OverflowToolbar>
       </customHeader>
       <subHeader>

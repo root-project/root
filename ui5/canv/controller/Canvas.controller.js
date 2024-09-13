@@ -731,7 +731,22 @@ sap.ui.define([
          } else if (name == 'Start browser') {
             this.getCanvasPainter()?.sendWebsocket('START_BROWSER');
          }
+      },
 
+      onHelpMenuAction(oEvent) {
+         const item = oEvent.getParameter('item'),
+               name = item.getText();
+         let url = '';
+         if (name === 'ROOT')
+            url = 'https://root.cern';
+         else if (name === 'Canvas')
+            url = this.isv7() ? 'https://root.cern/doc/master/classROOT_1_1Experimental_1_1RCanvas.html' : 'https://root.cern/doc/master/classTCanvas.html';
+         else if (name === 'Tutorials')
+            url = this.isv7() ? 'https://root.cern/doc/master/group__tutorial__rcanvas.html' : 'https://root.cern/doc/master/group__tutorial__graphics.html';
+         else if (name === 'About')
+            url = 'https://root.cern/about/';
+         if (url)
+            this.getCanvasPainter()?.sendWebsocket('SHOWURL:' + url);
       },
 
       showMessage(msg) {
