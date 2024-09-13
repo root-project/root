@@ -55,8 +55,8 @@ void FillTree(const char *filename, const char *treeName, int nevents = 0)
    // mark a heap object appearing by chance on the stack.
    // This is not a problem with a clear solution and in fact the whole heap detection system relies on UB,
    // so for now we are forced to work around the bug rather than fixing it.
-   auto t = std::make_unique<TTree>(treeName, treeName);
    auto f = std::make_unique<TFile>(filename, "RECREATE");
+   auto t = std::make_unique<TTree>(treeName, treeName);
    t->SetAutoFlush(1); // yes, one event per cluster: to make MT more meaningful
    double b1;
    int b2;
@@ -77,7 +77,6 @@ void FillTree(const char *filename, const char *treeName, int nevents = 0)
       t->Fill();
    }
    t->Write();
-   f->Close();
 }
 
 TEST_P(RDFSimpleTests, CreateEmpty)
