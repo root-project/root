@@ -1857,6 +1857,7 @@ void TColor::SetRGB(Float_t r, Float_t g, Float_t b)
    if (fRed < 0) return;
 
    RGBtoHLS(r, g, b, fHue, fLight, fSaturation);
+   SetTitle(AsHexString());
 
    Int_t nplanes = 16;
    if (gVirtualX) gVirtualX->GetPlanes(nplanes);
