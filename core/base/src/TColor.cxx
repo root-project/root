@@ -2098,6 +2098,10 @@ Int_t TColor::GetColorBright(Int_t n)
    if (n < ncolors) color = (TColor*)colors->At(n);
    if (!color) return -1;
 
+   // in case color is not named, assign a unique name.
+   if (strlen(color->GetName()) == 0)
+      color->SetName(TString::Format("Color%d",n).Data());
+
    // check if the bright color already exists, if yes return it
    TString nameb = TString::Format("%s_bright",color->GetName()).Data();
    Int_t nb = GetColorByName(nameb.Data());
@@ -2136,6 +2140,10 @@ Int_t TColor::GetColorDark(Int_t n)
    TColor *color = nullptr;
    if (n < ncolors) color = (TColor*)colors->At(n);
    if (!color) return -1;
+
+   // in case color is not named, assign a unique name.
+   if (strlen(color->GetName()) == 0)
+      color->SetName(TString::Format("Color%d",n).Data());
 
    // check if the dark color already exists, if yes return it
    TString named = TString::Format("%s_dark",color->GetName()).Data();
