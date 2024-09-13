@@ -288,7 +288,12 @@ class RCanvasPainter extends RPadPainter {
                  this.addPadInteractive();
                  handle.send(`SNAPDONE:${snapid}`); // send ready message back when drawing completed
                  this.confirmDraw();
-              });
+             }).catch(err => {
+               if (isFunc(this.showConsoleError))
+                  this.showConsoleError(err);
+               else
+                  console.log(err);
+             });
       } else if (msg.slice(0, 4) === 'JSON') {
          const obj = parse(msg.slice(4));
          // console.log('get JSON ', msg.length-4, obj._typename);
