@@ -1,6 +1,7 @@
 #include "TUnfoldIterativeEM.h"
 #include "TUnfoldBinning.h"
 #include <TVectorD.h>
+#include <TGraph.h>
 
 ClassImp(TUnfoldIterativeEM)
 
