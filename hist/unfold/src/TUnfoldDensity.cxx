@@ -153,6 +153,7 @@ final choice of tau should sit right in the minimum</li>
 */
 
 #include "TUnfoldDensity.h"
+#include <TGraph.h>
 #include <TMath.h>
 #include <TVectorD.h>
 #include <TObjString.h>
