@@ -459,11 +459,10 @@ public:
       for (std::size_t i = 0; i < count; ++i) {
          boolArray[i] = false;
          for (std::size_t b = 0; b < N; ++b) {
-            if (splitArray[b * count + i] == 0)
-               continue;
-
-            boolArray[i] = true;
-            break;
+            if (splitArray[b * count + i]) {
+               boolArray[i] = true;
+               break;
+            }
          }
       }
    }
