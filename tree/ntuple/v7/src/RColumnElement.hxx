@@ -423,7 +423,7 @@ protected:
 public:
    static constexpr bool kIsMappable = false;
 
-   // No support for writing an integer into a boolean
+   // We don't implement Pack() because integers must not be written to disk as booleans
    void Pack(void *, const void *, std::size_t) const final { R__ASSERT(false); }
 
    void Unpack(void *dst, const void *src, std::size_t count) const final
