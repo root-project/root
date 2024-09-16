@@ -72,7 +72,7 @@ int main()
       VariableMetricMinimizer fMinimizer;
 
       // Minimize
-      FunctionMinimum min = fMinimizer.Minimize(fFCN, init_par, init_err);
+      FunctionMinimum min = fMinimizer.Minimize(fFCN, {init_par, init_err});
 
       // output
       std::cout << "minimum: " << min << std::endl;

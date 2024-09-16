@@ -74,6 +74,7 @@ The following people have contributed to this new version:
 - The `RooAbsReal::plotSliceOn()` function that was deprecated since at least ROOT 6 was removed. Use `plotOn(frame,Slice(...))` instead.
 - The `RooTemplateProxy` constructors that take a `proxyOwnsArg` parameter to manually pass ownership are deprecated and replaced by a new constructor that takes ownership via `std::unique_ptr<T>`. They will be removed in ROOT 6.36.
 - Several RooFit legacy functions are deprecated and will be removed in ROOT 6.36 (see section "RooFit libraries")
+- Multiple overloads of internal Minuit 2 constructors and functions have been removed. If your code fails to compile, you can easily change to another overload that takes a `MnUserParameterState`, which is a change backwards compatible with older ROOT versions.
 
 ## Core Libraries
 

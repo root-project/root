@@ -27,34 +27,6 @@ namespace ROOT {
 
 namespace Minuit2 {
 
-MnUserParameterState MnHesse::operator()(const FCNBase &fcn, std::span<const double> par,
-                                         std::span<const double> err, unsigned int maxcalls) const
-{
-   // interface from vector of params and errors
-   return (*this)(fcn, MnUserParameterState(par, err), maxcalls);
-}
-
-MnUserParameterState MnHesse::operator()(const FCNBase &fcn, std::span<const double> par, unsigned int nrow,
-                                         std::span<const double> cov, unsigned int maxcalls) const
-{
-   // interface from vector of params and covariance
-   return (*this)(fcn, MnUserParameterState(par, cov, nrow), maxcalls);
-}
-
-MnUserParameterState MnHesse::operator()(const FCNBase &fcn, std::span<const double> par,
-                                         const MnUserCovariance &cov, unsigned int maxcalls) const
-{
-   // interface from vector of params and covariance
-   return (*this)(fcn, MnUserParameterState(par, cov), maxcalls);
-}
-
-MnUserParameterState MnHesse::operator()(const FCNBase &fcn, const MnUserParameters &par, const MnUserCovariance &cov,
-                                         unsigned int maxcalls) const
-{
-   // interface from MnUserParameters and MnUserCovariance
-   return (*this)(fcn, MnUserParameterState(par, cov), maxcalls);
-}
-
 MnUserParameterState
 MnHesse::operator()(const FCNBase &fcn, const MnUserParameterState &state, unsigned int maxcalls) const
 {

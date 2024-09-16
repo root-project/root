@@ -33,31 +33,6 @@ class FCNBase;
 class MnScan : public MnApplication {
 
 public:
-   /// construct from FCNBase + std::vector for parameters and errors
-   MnScan(const FCNBase &fcn, std::span<const double> par, std::span<const double> err, unsigned int stra = 1)
-      : MnApplication(fcn, MnUserParameterState(par, err), MnStrategy(stra)), fMinimizer(ScanMinimizer())
-   {
-   }
-
-   /// construct from FCNBase + std::vector for parameters and covariance
-   MnScan(const FCNBase &fcn, std::span<const double> par, unsigned int nrow, std::span<const double> cov,
-          unsigned int stra = 1)
-      : MnApplication(fcn, MnUserParameterState(par, cov, nrow), MnStrategy(stra)), fMinimizer(ScanMinimizer())
-   {
-   }
-
-   /// construct from FCNBase + std::vector for parameters and MnUserCovariance
-   MnScan(const FCNBase &fcn, std::span<const double> par, const MnUserCovariance &cov, unsigned int stra = 1)
-      : MnApplication(fcn, MnUserParameterState(par, cov), MnStrategy(stra)), fMinimizer(ScanMinimizer())
-   {
-   }
-
-   /// construct from FCNBase + MnUserParameters + MnUserCovariance
-   MnScan(const FCNBase &fcn, const MnUserParameters &par, const MnUserCovariance &cov, unsigned int stra = 1)
-      : MnApplication(fcn, MnUserParameterState(par, cov), MnStrategy(stra)), fMinimizer(ScanMinimizer())
-   {
-   }
-
    /// construct from FCNBase + MnUserParameterState + MnStrategy
    MnScan(const FCNBase &fcn, const MnUserParameterState &par, const MnStrategy &str = MnStrategy{})
       : MnApplication(fcn, MnUserParameterState(par), str), fMinimizer(ScanMinimizer())
@@ -78,7 +53,6 @@ public:
 private:
    ScanMinimizer fMinimizer;
 
-private:
    /// forbidden assignment (const FCNBase& = )
    MnScan &operator=(const MnScan &) { return *this; }
 };

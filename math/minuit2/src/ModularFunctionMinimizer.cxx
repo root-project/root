@@ -31,39 +31,6 @@ namespace ROOT {
 
 namespace Minuit2 {
 
-FunctionMinimum ModularFunctionMinimizer::Minimize(const FCNBase &fcn, std::span<const double> par,
-                                                   std::span<const double> err, unsigned int stra,
-                                                   unsigned int maxfcn, double toler) const
-{
-   // minimize from FCNBase and std::vector of double's for parameter values and errors (step sizes)
-   MnUserParameterState st(par, err);
-   MnStrategy strategy(stra);
-   return Minimize(fcn, st, strategy, maxfcn, toler);
-}
-
-// move nrow before cov to avoid ambiguities when using default parameters
-FunctionMinimum ModularFunctionMinimizer::Minimize(const FCNBase &fcn, std::span<const double> par,
-                                                   unsigned int nrow, std::span<const double> cov, unsigned int stra,
-                                                   unsigned int maxfcn, double toler) const
-{
-   // minimize from FCNBase using std::vector for parameter error and
-   // an std::vector of size n*(n+1)/2 for the covariance matrix  and n (rank of cov matrix)
-
-   MnUserParameterState st(par, cov, nrow);
-   MnStrategy strategy(stra);
-   return Minimize(fcn, st, strategy, maxfcn, toler);
-}
-
-FunctionMinimum ModularFunctionMinimizer::Minimize(const FCNBase &fcn, const MnUserParameters &upar,
-                                                   const MnUserCovariance &cov, const MnStrategy &strategy,
-                                                   unsigned int maxfcn, double toler) const
-{
-   // minimize from FCNBase and MnUserParameters and MnUserCovariance objects
-
-   MnUserParameterState st(upar, cov);
-   return Minimize(fcn, st, strategy, maxfcn, toler);
-}
-
 FunctionMinimum ModularFunctionMinimizer::Minimize(const FCNBase &fcn, const MnUserParameterState &st,
                                                    const MnStrategy &strategy, unsigned int maxfcn, double toler) const
 {

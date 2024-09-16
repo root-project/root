@@ -31,8 +31,6 @@ public:
    {
    }
 
-   ~ContoursError() {}
-
    ContoursError(const ContoursError &cont)
       : fParX(cont.fParX), fParY(cont.fParY), fPoints(cont.fPoints), fXMinos(cont.fXMinos), fYMinos(cont.fYMinos),
         fNFcn(cont.fNFcn)

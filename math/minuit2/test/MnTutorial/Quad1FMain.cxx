@@ -36,7 +36,7 @@ int main()
          std::vector<double> par(1, 1.);
          std::vector<double> err(1, 0.1);
          VariableMetricMinimizer mini;
-         FunctionMinimum min = mini.Minimize(fcn, par, err);
+         FunctionMinimum min = mini.Minimize(fcn, {par, err});
          std::cout << "min= " << min << std::endl;
       }
       {
@@ -45,7 +45,7 @@ int main()
          std::vector<double> par(1, 1.);
          std::vector<double> err(1, 0.1);
          VariableMetricMinimizer mini;
-         FunctionMinimum min = mini.Minimize(fcn, par, err);
+         FunctionMinimum min = mini.Minimize(fcn, {par, err});
          MnMinos Minos(fcn, min);
          std::pair<double, double> e0 = Minos(0);
          std::cout << "par0: " << min.UserState().Value(unsigned(0)) << " " << e0.first << " " << e0.second
