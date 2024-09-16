@@ -33,6 +33,10 @@ namespace ROOT {
 /// if returns true, normal show procedure will not be invoked
 using WebWindowShowCallback_t = std::function<bool(RWebWindow &, const RWebDisplayArgs &)>;
 
+/// function signature for callback when RWebWindow destroyed
+using WebWindowDeleteCallback_t = std::function<void(RWebWindow &)>;
+
+
 class RWebWindowsManager {
 
    friend class RWebWindow;
@@ -50,6 +54,7 @@ private:
    bool fExternalProcessEvents{false};    ///<! indicate that there are external process events engine
    std::unique_ptr<TExec> fAssgnExec;     ///<! special exec to assign thread id via ProcessEvents
    WebWindowShowCallback_t fShowCallback; ///<! function called for each RWebWindow::Show call
+   WebWindowDeleteCallback_t fDeleteCallback; ///<! function called when RWebWindow is destroyed
 
    /// Returns true if http server use special thread for requests processing (default off)
    bool IsUseHttpThread() const { return fUseHttpThrd; }
@@ -88,6 +93,9 @@ public:
 
    /// Assign show callback which can catch window showing, used by RBrowser
    void SetShowCallback(WebWindowShowCallback_t func) { fShowCallback = func; }
+
+   /// Assign show callback which can catch window showing, used by RBrowser
+   void SetDeleteCallback(WebWindowDeleteCallback_t func) { fDeleteCallback = func; }
 
    static std::shared_ptr<RWebWindowsManager> &Instance();
 
