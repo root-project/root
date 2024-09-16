@@ -512,7 +512,7 @@ template <typename T>
 struct RVecInlineStorageSize {
 private:
 #ifdef R__HAS_HARDWARE_INTERFERENCE_SIZE
-   constexpr std::size_t cacheLineSize = std::hardware_destructive_interference_size;
+   static constexpr std::size_t cacheLineSize = std::hardware_destructive_interference_size;
 #else
    // safe bet: assume the typical 64 bytes
    static constexpr std::size_t cacheLineSize = 64;
