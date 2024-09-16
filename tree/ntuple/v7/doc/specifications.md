@@ -314,6 +314,7 @@ The following envelope types exist
 
 | Type              |  ID  | Contents                                                          |
 |-------------------|------|-------------------------------------------------------------------|
+| _reserved_        | 0x00 | unused and reserved
 | Header            | 0x01 | RNTuple schema: field and column types                            |
 | Footer            | 0x02 | Description of clusters, location of user meta-data               |
 | Page list         | 0x03 | Location of data pages                                            |
