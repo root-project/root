@@ -50,8 +50,6 @@ void RosenBrock(Int_t &, Double_t *, Double_t &f, Double_t *par, Int_t /*iflag*/
 class RosenBrockFunction : public ROOT::Math::IMultiGenFunction {
 
 public:
-   ~RosenBrockFunction() override {}
-
    unsigned int NDim() const override { return 2; }
 
    ROOT::Math::IMultiGenFunction *Clone() const override { return new RosenBrockFunction(); }

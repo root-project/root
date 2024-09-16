@@ -48,12 +48,6 @@ MnUserParameterState MnHesse::operator()(const FCNBase &fcn, std::span<const dou
    return (*this)(fcn, MnUserParameterState(par, cov), maxcalls);
 }
 
-MnUserParameterState MnHesse::operator()(const FCNBase &fcn, const MnUserParameters &par, unsigned int maxcalls) const
-{
-   // interface from MnUserParameters
-   return (*this)(fcn, MnUserParameterState(par), maxcalls);
-}
-
 MnUserParameterState MnHesse::operator()(const FCNBase &fcn, const MnUserParameters &par, const MnUserCovariance &cov,
                                          unsigned int maxcalls) const
 {

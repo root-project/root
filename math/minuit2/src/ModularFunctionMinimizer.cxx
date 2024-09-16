@@ -31,8 +31,6 @@ namespace ROOT {
 
 namespace Minuit2 {
 
-// #include "Minuit2/MnUserParametersPrint.h"
-
 FunctionMinimum ModularFunctionMinimizer::Minimize(const FCNBase &fcn, std::span<const double> par,
                                                    std::span<const double> err, unsigned int stra,
                                                    unsigned int maxfcn, double toler) const
@@ -53,15 +51,6 @@ FunctionMinimum ModularFunctionMinimizer::Minimize(const FCNBase &fcn, std::span
 
    MnUserParameterState st(par, cov, nrow);
    MnStrategy strategy(stra);
-   return Minimize(fcn, st, strategy, maxfcn, toler);
-}
-
-FunctionMinimum ModularFunctionMinimizer::Minimize(const FCNBase &fcn, const MnUserParameters &upar,
-                                                   const MnStrategy &strategy, unsigned int maxfcn, double toler) const
-{
-   // minimize from FCNBase and MnUserParameters object
-
-   MnUserParameterState st(upar);
    return Minimize(fcn, st, strategy, maxfcn, toler);
 }
 
