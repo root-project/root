@@ -52,12 +52,6 @@ public:
    {
    }
 
-   /// construct from FCNBase + MnUserParameters
-   MnScan(const FCNBase &fcn, const MnUserParameters &par, unsigned int stra = 1)
-      : MnApplication(fcn, MnUserParameterState(par), MnStrategy(stra)), fMinimizer(ScanMinimizer())
-   {
-   }
-
    /// construct from FCNBase + MnUserParameters + MnUserCovariance
    MnScan(const FCNBase &fcn, const MnUserParameters &par, const MnUserCovariance &cov, unsigned int stra = 1)
       : MnApplication(fcn, MnUserParameterState(par, cov), MnStrategy(stra)), fMinimizer(ScanMinimizer())
@@ -65,7 +59,7 @@ public:
    }
 
    /// construct from FCNBase + MnUserParameterState + MnStrategy
-   MnScan(const FCNBase &fcn, const MnUserParameterState &par, const MnStrategy &str)
+   MnScan(const FCNBase &fcn, const MnUserParameterState &par, const MnStrategy &str = MnStrategy{})
       : MnApplication(fcn, MnUserParameterState(par), str), fMinimizer(ScanMinimizer())
    {
    }
@@ -74,8 +68,6 @@ public:
       : MnApplication(migr.Fcnbase(), migr.State(), migr.Strategy(), migr.NumOfCalls()), fMinimizer(migr.fMinimizer)
    {
    }
-
-   ~MnScan() override {}
 
    ModularFunctionMinimizer &Minimizer() override { return fMinimizer; }
    const ModularFunctionMinimizer &Minimizer() const override { return fMinimizer; }

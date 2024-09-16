@@ -40,8 +40,6 @@ class FumiliFCNBase;
 class ModularFunctionMinimizer : public FunctionMinimizer {
 
 public:
-   ~ModularFunctionMinimizer() override {}
-
    // inherited interface
    FunctionMinimum Minimize(const FCNBase &, std::span<const double>, std::span<const double>,
                                     unsigned int stra = 1, unsigned int maxfcn = 0, double toler = 0.1) const override;
@@ -51,9 +49,6 @@ public:
                                     double toler = 0.1) const override;
 
    // extension
-   virtual FunctionMinimum Minimize(const FCNBase &, const MnUserParameters &, const MnStrategy &,
-                                    unsigned int maxfcn = 0, double toler = 0.1) const;
-
    virtual FunctionMinimum Minimize(const FCNBase &, const MnUserParameters &, const MnUserCovariance &,
                                     const MnStrategy &, unsigned int maxfcn = 0, double toler = 0.1) const;
 
