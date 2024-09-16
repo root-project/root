@@ -675,6 +675,9 @@ void RWebWindowsManager::Unregister(RWebWindow &win)
 {
    if (win.fWSHandler)
       fServer->UnregisterWS(win.fWSHandler);
+
+   if (fDeleteCallback)
+      fDeleteCallback(win);
 }
 
 //////////////////////////////////////////////////////////////////////////
