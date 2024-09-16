@@ -165,11 +165,7 @@ That means that readers need to continue reading feature flags as long as their 
 
 Readers should gracefully abort reading when they encounter unknown bits set.
 
-The following feature bits are defined:
-
-| Bit                                | Feature              |
------------------------------------- |----------------------|
-| 137 (0x09 of the 3rd feature int)  | Reserved for testing |
+At the moment, there are no feature flag bits defined.
 
 
 ## Frames
