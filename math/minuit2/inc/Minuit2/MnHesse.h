@@ -50,24 +50,6 @@ public:
    /// conctructor with specific strategy
    MnHesse(const MnStrategy &stra) : fStrategy(stra) {}
 
-   ///
-   /// low-level API
-   ///
-   /// FCN + parameters + errors
-   MnUserParameterState operator()(const FCNBase &, std::span<const double>, std::span<const double>,
-                                   unsigned int maxcalls = 0) const;
-   /// FCN + parameters + covariance
-   MnUserParameterState operator()(const FCNBase &, std::span<const double>, unsigned int nrow,
-                                   std::span<const double>, unsigned int maxcalls = 0) const;
-   /// FCN + parameters + MnUserCovariance
-   MnUserParameterState
-   operator()(const FCNBase &, std::span<const double>, const MnUserCovariance &, unsigned int maxcalls = 0) const;
-   ///
-   /// high-level API
-   ///
-   /// FCN + MnUserParameters + MnUserCovariance
-   MnUserParameterState
-   operator()(const FCNBase &, const MnUserParameters &, const MnUserCovariance &, unsigned int maxcalls = 0) const;
    /// FCN + MnUserParameterState
    MnUserParameterState operator()(const FCNBase &, const MnUserParameterState &, unsigned int maxcalls = 0) const;
    ///

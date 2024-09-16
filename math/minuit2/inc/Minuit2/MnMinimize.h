@@ -30,31 +30,6 @@ class FCNBase;
 class MnMinimize : public MnApplication {
 
 public:
-   /// construct from FCNBase + std::vector for parameters and errors
-   MnMinimize(const FCNBase &fcn, std::span<const double> par, std::span<const double> err, unsigned int stra = 1)
-      : MnApplication(fcn, {par, err}, MnStrategy(stra)), fMinimizer(CombinedMinimizer())
-   {
-   }
-
-   /// construct from FCNBase + std::vector for parameters and covariance
-   MnMinimize(const FCNBase &fcn, std::span<const double> par, unsigned int nrow, std::span<const double> cov,
-              unsigned int stra = 1)
-      : MnApplication(fcn, {par, cov, nrow}, MnStrategy(stra)), fMinimizer(CombinedMinimizer())
-   {
-   }
-
-   /// construct from FCNBase + std::vector for parameters and MnUserCovariance
-   MnMinimize(const FCNBase &fcn, std::span<const double> par, const MnUserCovariance &cov, unsigned int stra = 1)
-      : MnApplication(fcn, {par, cov}, MnStrategy(stra)), fMinimizer(CombinedMinimizer())
-   {
-   }
-
-   /// construct from FCNBase + MnUserParameters + MnUserCovariance
-   MnMinimize(const FCNBase &fcn, const MnUserParameters &par, const MnUserCovariance &cov, unsigned int stra = 1)
-      : MnApplication(fcn, {par, cov}, MnStrategy(stra)), fMinimizer(CombinedMinimizer())
-   {
-   }
-
    /// construct from FCNBase + MnUserParameterState + MnStrategy
    MnMinimize(const FCNBase &fcn, const MnUserParameterState &par, const MnStrategy &str = MnStrategy{1})
       : MnApplication(fcn, {par}, str), fMinimizer(CombinedMinimizer())

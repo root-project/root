@@ -152,7 +152,7 @@ int main()
       if (!min.IsValid()) {
          // try with higher strategy
          std::cout << "FM is invalid, try with strategy = 2." << std::endl;
-         MnMigrad migrad2(fFCN, upar, 2);
+         MnMigrad migrad2(fFCN, upar, MnStrategy{2});
          min = migrad2();
       }
       std::cout << "minimum: " << min << std::endl;
@@ -172,7 +172,7 @@ int main()
       if (!min.IsValid()) {
          // try with higher strategy
          std::cout << "FM is invalid, try with strategy = 2." << std::endl;
-         MnMigrad migrad2(fFCN, upar, 2);
+         MnMigrad migrad2(fFCN, upar, MnStrategy{2});
          min = migrad2();
       }
       std::cout << "minimum: " << min << std::endl;
@@ -193,9 +193,9 @@ int main()
       SimplexMinimizer simplex;
 
       std::cout << "start simplex" << std::endl;
-      FunctionMinimum min = simplex.Minimize(chi2, par, err);
+      FunctionMinimum min = simplex.Minimize(chi2, {par, err});
       std::cout << "minimum: " << min << std::endl;
-      FunctionMinimum min2 = simplex.Minimize(mlh, par, err);
+      FunctionMinimum min2 = simplex.Minimize(mlh, {par, err});
       std::cout << "minimum: " << min2 << std::endl;
    }
    return 0;
