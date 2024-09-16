@@ -708,7 +708,7 @@ std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, const Ro
    // Lambda function to create the correct constraint term for a PDF. In old
    // RooFit, we use this PDF itself as the argument, for the new BatchMode
    // we're passing a clone.
-   auto createConstr = [&](bool removeConstraintsFromPdf = false) -> std::unique_ptr<RooAbsReal> {
+   auto createConstr = [&]() -> std::unique_ptr<RooAbsReal> {
       return createConstraintTerm(baseName + "_constr",                    // name
                                   pdf,                                     // pdf
                                   data,                                    // data
@@ -716,8 +716,7 @@ std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, const Ro
                                   pc.getSet("extCons"),                    // ExternalConstraints RooCmdArg
                                   pc.getSet("glObs"),                      // GlobalObservables RooCmdArg
                                   pc.getString("globstag", nullptr, true), // GlobalObservablesTag RooCmdArg
-                                  takeGlobalObservablesFromData,           // From GlobalObservablesSource RooCmdArg
-                                  removeConstraintsFromPdf);
+                                  takeGlobalObservablesFromData);          // From GlobalObservablesSource RooCmdArg
    };
 
    auto evalBackend = static_cast<RooFit::EvalBackend::Value>(pc.getInt("EvalBackend"));

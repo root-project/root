@@ -19,6 +19,6 @@ std::unique_ptr<RooAbsReal> createConstraintTerm(std::string const &name, RooAbs
                                                  RooArgSet const *constrainedParameters,
                                                  RooArgSet const *externalConstraints,
                                                  RooArgSet const *globalObservables, const char *globalObservablesTag,
-                                                 bool takeGlobalObservablesFromData, bool removeConstraintsFromPdf);
+                                                 bool takeGlobalObservablesFromData);
 
 #endif

@@ -2560,7 +2560,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsPdf::createScanCdf(const RooArgSet& iset, co
 /// and returns a RooArgSet with all those terms.
 
 RooArgSet* RooAbsPdf::getAllConstraints(const RooArgSet& observables, RooArgSet& constrainedParams,
-                                        bool stripDisconnected, bool removeConstraintsFromPdf) const
+                                        bool stripDisconnected) const
 {
   RooArgSet* ret = new RooArgSet("AllConstraints") ;
 
@@ -2569,7 +2569,7 @@ RooArgSet* RooAbsPdf::getAllConstraints(const RooArgSet& observables, RooArgSet&
     auto pdf = dynamic_cast<const RooAbsPdf*>(arg) ;
     if (pdf && !ret->find(pdf->GetName())) {
       std::unique_ptr<RooArgSet> compRet(
-              pdf->getConstraints(observables,constrainedParams,stripDisconnected,removeConstraintsFromPdf));
+              pdf->getConstraints(observables,constrainedParams,stripDisconnected));
       if (compRet) {
         ret->add(*compRet,false) ;
       }
