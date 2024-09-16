@@ -38,35 +38,6 @@ also used by MnMinos and MnContours;
 class MnFumiliMinimize : public MnApplication {
 
 public:
-   /// construct from FumiliFCNBase + std::vector for parameters and errors
-   MnFumiliMinimize(const FumiliFCNBase &fcn, std::span<const double> par, std::span<const double> err,
-                    unsigned int stra = 1)
-      : MnApplication(fcn, MnUserParameterState(par, err), MnStrategy(stra)), fMinimizer(FumiliMinimizer()), fFCN(fcn)
-   {
-   }
-
-   /// construct from FumiliFCNBase + std::vector for parameters and covariance
-   MnFumiliMinimize(const FumiliFCNBase &fcn, std::span<const double> par, unsigned int nrow,
-                    std::span<const double> cov, unsigned int stra = 1)
-      : MnApplication(fcn, MnUserParameterState(par, cov, nrow), MnStrategy(stra)), fMinimizer(FumiliMinimizer()),
-        fFCN(fcn)
-   {
-   }
-
-   /// construct from FumiliFCNBase + std::vector for parameters and MnUserCovariance
-   MnFumiliMinimize(const FumiliFCNBase &fcn, std::span<const double> par, const MnUserCovariance &cov,
-                    unsigned int stra = 1)
-      : MnApplication(fcn, MnUserParameterState(par, cov), MnStrategy(stra)), fMinimizer(FumiliMinimizer()), fFCN(fcn)
-   {
-   }
-
-   /// construct from FumiliFCNBase + MnUserParameters + MnUserCovariance
-   MnFumiliMinimize(const FumiliFCNBase &fcn, const MnUserParameters &par, const MnUserCovariance &cov,
-                    unsigned int stra = 1)
-      : MnApplication(fcn, MnUserParameterState(par, cov), MnStrategy(stra)), fMinimizer(FumiliMinimizer()), fFCN(fcn)
-   {
-   }
-
    /// construct from FumiliFCNBase + MnUserParameterState + MnStrategy
    MnFumiliMinimize(const FumiliFCNBase &fcn, const MnUserParameterState &par, const MnStrategy &str = MnStrategy{1})
       : MnApplication(fcn, MnUserParameterState(par), str), fMinimizer(FumiliMinimizer()), fFCN(fcn)

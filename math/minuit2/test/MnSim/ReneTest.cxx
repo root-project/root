@@ -190,7 +190,7 @@ int main()
    {
       std::vector<double> params(6, 1.);
       std::vector<double> Error(6, 1.);
-      MnScan scan(fFCN, params, Error);
+      MnScan scan(fFCN, {params, Error});
       std::cout << "scan parameters: " << scan.Parameters() << std::endl;
       MnPlot plot;
       for (unsigned int i = 0; i < upar.VariableParameters(); i++) {
@@ -204,7 +204,7 @@ int main()
    {
       std::vector<double> params(6, 1.);
       std::vector<double> Error(6, 1.);
-      MnScan scan(fFCN, params, Error);
+      MnScan scan(fFCN, {params, Error});
       std::cout << "scan parameters: " << scan.Parameters() << std::endl;
       FunctionMinimum min2 = scan();
       //     std::cout<<min2<<std::endl;

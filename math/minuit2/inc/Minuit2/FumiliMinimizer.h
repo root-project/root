@@ -60,8 +60,6 @@ public:
 
    FumiliMinimizer() : fMinSeedGen(MnSeedGenerator()), fMinBuilder(FumiliBuilder()) {}
 
-   ~FumiliMinimizer() override {}
-
    /**
 
       Accessor to the seed generator of the minimizer.

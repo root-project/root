@@ -114,7 +114,7 @@ int doFit(int ndim, int ndata)
    VariableMetricMinimizer fMinimizer;
 
    // Minimize
-   FunctionMinimum min = fMinimizer.Minimize(fcn, init_par, init_err);
+   FunctionMinimum min = fMinimizer.Minimize(fcn, {init_par, init_err});
 
    // output
    std::cout << "minimum: " << min << std::endl;

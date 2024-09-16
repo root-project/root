@@ -29,7 +29,7 @@ namespace Minuit2 {
 class MnUserCovariance {
 
 public:
-   MnUserCovariance() : fData(std::vector<double>()), fNRow(0) {}
+   MnUserCovariance() = default;
 
    // safe constructor using std::vector
    MnUserCovariance(std::span<const double> data, unsigned int nrow) : fData(data.begin(), data.end()), fNRow(nrow)
@@ -44,19 +44,6 @@ public:
    }
 
    MnUserCovariance(unsigned int n) : fData(std::vector<double>(n * (n + 1) / 2, 0.)), fNRow(n) {}
-
-   ~MnUserCovariance() {}
-
-   MnUserCovariance(const MnUserCovariance &cov) : fData(cov.fData), fNRow(cov.fNRow) {}
-
-   MnUserCovariance &operator=(const MnUserCovariance &cov)
-   {
-      if (this != &cov) {
-         fData = cov.fData;
-         fNRow = cov.fNRow;
-      }
-      return *this;
-   }
 
    double operator()(unsigned int row, unsigned int col) const
    {
@@ -91,7 +78,7 @@ public:
 
 private:
    std::vector<double> fData;
-   unsigned int fNRow;
+   unsigned int fNRow = 0;
 };
 
 } // namespace Minuit2
