@@ -60,12 +60,6 @@ public:
    {
    }
 
-   /// construct from FumiliFCNBase + MnUserParameters
-   MnFumiliMinimize(const FumiliFCNBase &fcn, const MnUserParameters &par, unsigned int stra = 1)
-      : MnApplication(fcn, MnUserParameterState(par), MnStrategy(stra)), fMinimizer(FumiliMinimizer()), fFCN(fcn)
-   {
-   }
-
    /// construct from FumiliFCNBase + MnUserParameters + MnUserCovariance
    MnFumiliMinimize(const FumiliFCNBase &fcn, const MnUserParameters &par, const MnUserCovariance &cov,
                     unsigned int stra = 1)
@@ -74,7 +68,7 @@ public:
    }
 
    /// construct from FumiliFCNBase + MnUserParameterState + MnStrategy
-   MnFumiliMinimize(const FumiliFCNBase &fcn, const MnUserParameterState &par, const MnStrategy &str)
+   MnFumiliMinimize(const FumiliFCNBase &fcn, const MnUserParameterState &par, const MnStrategy &str = MnStrategy{1})
       : MnApplication(fcn, MnUserParameterState(par), str), fMinimizer(FumiliMinimizer()), fFCN(fcn)
    {
    }
@@ -84,8 +78,6 @@ public:
         fFCN(migr.Fcnbase())
    {
    }
-
-   ~MnFumiliMinimize() override {}
 
    FumiliMinimizer &Minimizer() override { return fMinimizer; }
    const FumiliMinimizer &Minimizer() const override { return fMinimizer; }
