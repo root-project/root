@@ -166,8 +166,7 @@ public:
   }
 
   // Constraint management
-  virtual RooArgSet* getConstraints(const RooArgSet& /*observables*/, RooArgSet& /*constrainedParams*/,
-                                    bool /*stripDisconnected*/) const
+  virtual RooArgSet* getConstraints(const RooArgSet& /*observables*/, RooArgSet const& /*constrainedParams*/, RooArgSet& /*pdfParams*/) const
   {
     // Interface to retrieve constraint terms on this pdf. Default implementation returns null
     return nullptr ;
