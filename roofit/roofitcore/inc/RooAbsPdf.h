@@ -167,13 +167,13 @@ public:
 
   // Constraint management
   virtual RooArgSet* getConstraints(const RooArgSet& /*observables*/, RooArgSet& /*constrainedParams*/,
-                                    bool /*stripDisconnected*/, bool /*removeConstraintsFromPdf*/=false) const
+                                    bool /*stripDisconnected*/) const
   {
     // Interface to retrieve constraint terms on this pdf. Default implementation returns null
     return nullptr ;
   }
   RooArgSet* getAllConstraints(const RooArgSet& observables, RooArgSet& constrainedParams,
-                               bool stripDisconnected=true, bool removeConstraintsFromPdf=false) const ;
+                               bool stripDisconnected=true) const ;
 
   // Project p.d.f into lower dimensional p.d.f
   virtual RooAbsPdf* createProjection(const RooArgSet& iset) ;
