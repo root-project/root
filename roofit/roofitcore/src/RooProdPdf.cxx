@@ -1958,13 +1958,12 @@ bool sortedNamePtrsOverlap(std::vector<TNamed const*> const& ptrsA, std::vector<
 /// The observables set is required to distinguish unambiguously p.d.f in terms
 /// of observables and parameters, which are not constraints, and p.d.fs in terms
 /// of parameters only, which can serve as constraints p.d.f.s
+/// The pdfParams output parameter communicates to the caller which parameter
+/// are used in the pdfs that are not constraints.
 
-RooArgSet* RooProdPdf::getConstraints(const RooArgSet& observables, RooArgSet& constrainedParams,
-                                      bool stripDisconnected) const
+RooArgSet* RooProdPdf::getConstraints(const RooArgSet& observables, RooArgSet const& constrainedParams, RooArgSet &pdfParams) const
 {
-  RooArgSet constraints ;
-  RooArgSet pdfParams;
-  RooArgSet conParams;
+  auto constraints = new RooArgSet{"constraints"};
 
   // For the optimized implementation of checking if two collections overlap by name.
   auto observablesNamePtrs = sortedNamePtrs(observables);
@@ -1999,8 +1998,7 @@ RooArgSet* RooProdPdf::getConstraints(const RooArgSet& observables, RooArgSet& c
                      sortedNamePtrsOverlap(tmpNamePtrs, constrainedParamsNamePtrs);
     }
     if (isConstraint) {
-      constraints.add(*pdf) ;
-      conParams.add(tmp,true) ;
+      constraints->add(*pdf) ;
     } else {
       // We only want to add parameter, not observables. Since a call like
       // `pdf->getParameters(&observables)` would be expensive, we take the set
@@ -2012,26 +2010,7 @@ RooArgSet* RooProdPdf::getConstraints(const RooArgSet& observables, RooArgSet& c
     }
   }
 
-  // Strip any constraints that are completely decoupled from the other product terms
-  RooArgSet* finalConstraints = new RooArgSet("constraints") ;
-  for(auto * pdf : static_range_cast<RooAbsPdf*>(constraints)) {
-    if (pdf->dependsOnValue(pdfParams) || !stripDisconnected) {
-      finalConstraints->add(*pdf) ;
-    } else {
-      coutI(Minimization) << "RooProdPdf::getConstraints(" << GetName() << ") omitting term " << pdf->GetName()
-           << " as constraint term as it does not share any parameters with the other pdfs in product. "
-           << "To force inclusion in likelihood, add an explicit Constrain() argument for the target parameter" << endl ;
-    }
-  }
-
-  // Now remove from constrainedParams all parameters that occur exclusively in constraint term and not in regular pdf term
-
-  RooArgSet cexl;
-  conParams.selectCommon(constrainedParams, cexl);
-  cexl.remove(pdfParams,true,true) ;
-  constrainedParams.remove(cexl,true,true) ;
-
-  return finalConstraints ;
+  return constraints;
 }
 
 
