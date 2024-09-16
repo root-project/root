@@ -41,7 +41,7 @@ class RBrowserTCanvasWidget : public RBrowserWidget {
          return false;
 
       auto c = gROOT->GetListOfCanvases()->FindObject(fCanvasName.Data());
-      if (c && fCanvas == c)
+      if (c && (fCanvas == c))
          return true;
 
       fCanvas = nullptr;
@@ -265,6 +265,11 @@ public:
    {
       if (CheckCanvasPointer() && fCanvas->IsModified())
          fCanvas->UpdateAsync();
+   }
+
+   bool IsValid() override
+   {
+      return CheckCanvasPointer();
    }
 
 };

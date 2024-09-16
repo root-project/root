@@ -65,6 +65,8 @@ public:
    std::string SendWidgetTitle();
 
    virtual void CheckModified() {}
+
+   virtual bool IsValid() { return true; }
 };
 
 class RBrowserWidgetProvider {
