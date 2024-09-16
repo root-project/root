@@ -884,9 +884,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             this.websocket.send("WIDGET_SELECTED:" + item.getKey());
       },
 
-      doCloseTabItem(item) {
+      doCloseTabItem(item, skip_send) {
          let oTabContainer = this.byId("tabContainer");
-         if (item.getKey())
+         if (item.getKey() && !skip_send)
             this.websocket.send("CLOSE_TAB:" + item.getKey());
          // force connection to close
          item._jsroot_conn?.close(true);
@@ -1182,6 +1182,12 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          case "SELECT_WIDGET":
            this.findTab(msg, true); // set active
            break;
+         case "CLOSE_WIDGETS":
+            JSON.parse(msg).forEach(name => {
+               let tab = this.findTab(name);
+               if (tab) this.doCloseTabItem(tab, true);
+            });
+            break;
          case "BREPL":   // browser reply
             if (this.model) {
                let bresp = JSON.parse(msg);
