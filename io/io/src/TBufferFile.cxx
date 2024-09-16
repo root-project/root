@@ -439,8 +439,8 @@ Int_t TBufferFile::CheckByteCount(UInt_t startpos, UInt_t bcnt, const char *clas
 void TBufferFile::ReadFloat16(Float_t *f, TStreamerElement *elem)
 {
    // The parameter should be const, however we have not yet decided how to
-   // transition the signature since the function is virtual.  This insures
-   // that the function does not inadvertently use non-const part of
+   // transition the signature since the function is virtual.  This ensures
+   // that the function does not inadvertently use non-const parts of
    // TStreamerElement.
    const TStreamerElement *ele = elem;
 
@@ -461,8 +461,8 @@ void TBufferFile::ReadFloat16(Float_t *f, TStreamerElement *elem)
 void TBufferFile::ReadDouble32(Double_t *d, TStreamerElement *elem)
 {
    // The parameter should be const, however we have not yet decided how to
-   // transition the signature since the function is virtual.  This insures
-   // that the function does not inadvertently use non-const part of
+   // transition the signature since the function is virtual.  This ensures
+   // that the function does not inadvertently use non-const parts of
    // TStreamerElement.
    const TStreamerElement *ele = elem;
 
@@ -609,8 +609,8 @@ void TBufferFile::ReadWithNbits(Double_t *ptr, Int_t nbits)
 void TBufferFile::WriteFloat16(Float_t *f, TStreamerElement *elem)
 {
    // The parameter should be const, however we have not yet decided how to
-   // transition the signature since the function is virtual.  This insures
-   // that the function does not inadvertently use non-const part of
+   // transition the signature since the function is virtual.  This ensures
+   // that the function does not inadvertently use non-const parts of
    // TStreamerElement.
    const TStreamerElement *ele = elem;
 
@@ -678,8 +678,8 @@ void TBufferFile::WriteFloat16(Float_t *f, TStreamerElement *elem)
 void TBufferFile::WriteDouble32(Double_t *d, TStreamerElement *elem)
 {
    // The parameter should be const, however we have not yet decided how to
-   // transition the signature since the function is virtual.  This insures
-   // that the function does not inadvertently use non-const part of
+   // transition the signature since the function is virtual.  This ensures
+   // that the function does not inadvertently use non-const parts of
    // TStreamerElement.
    const TStreamerElement *ele = elem;
 
@@ -1446,8 +1446,8 @@ void TBufferFile::ReadFastArrayFloat16(Float_t *f, Int_t n, TStreamerElement *el
    if (n <= 0 || 3*n > fBufSize) return;
 
    // The parameter should be const, however we have not yet decided how to
-   // transition the signature since the function is virtual.  This insures
-   // that the function does not inadvertently use non-const part of
+   // transition the signature since the function is virtual.  This ensures
+   // that the function does not inadvertently use non-const parts of
    // TStreamerElement.
    const TStreamerElement *ele = elem;
 
@@ -1532,8 +1532,8 @@ void TBufferFile::ReadFastArrayWithNbits(Float_t *ptr, Int_t n, Int_t nbits)
 void TBufferFile::ReadFastArrayDouble32(Double_t *d, Int_t n, TStreamerElement *elem)
 {
    // The parameter should be const, however we have not yet decided how to
-   // transition the signature since the function is virtual.  This insures
-   // that the function does not inadvertently use non-const part of
+   // transition the signature since the function is virtual.  This ensures
+   // that the function does not inadvertently use non-const parts of
    // TStreamerElement.
    const TStreamerElement *ele = elem;
    if (n <= 0 || 3*n > fBufSize) return;
@@ -2267,8 +2267,8 @@ void TBufferFile::WriteFastArrayFloat16(const Float_t *f, Long64_t n, TStreamerE
    if (n == 0) return;
 
    // The parameter should be const, however we have not yet decided how to
-   // transition the signature since the function is virtual.  This insures
-   // that the function does not inadvertently use non-const part of
+   // transition the signature since the function is virtual.  This ensures
+   // that the function does not inadvertently use non-const parts of
    // TStreamerElement.
    const TStreamerElement *ele = elem;
 
@@ -2333,8 +2333,8 @@ void TBufferFile::WriteFastArrayDouble32(const Double_t *d, Long64_t n, TStreame
    if (n == 0) return;
 
    // The parameter should be const, however we have not yet decided how to
-   // transition the signature since the function is virtual.  This insures
-   // that the function does not inadvertently use non-const part of
+   // transition the signature since the function is virtual.  This ensures
+   // that the function does not inadvertently use non-const parts of
    // TStreamerElement.
    const TStreamerElement *ele = elem;
 
