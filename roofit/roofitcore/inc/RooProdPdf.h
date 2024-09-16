@@ -76,7 +76,7 @@ public:
 
   // Constraint management
   RooArgSet* getConstraints(const RooArgSet& observables, RooArgSet& constrainedParams,
-                            bool stripDisconnected, bool removeConstraintsFromPdf=false) const override ;
+                            bool stripDisconnected) const override ;
 
   std::list<double>* plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const override ;
   std::list<double>* binBoundaries(RooAbsRealLValue& /*obs*/, double /*xlo*/, double /*xhi*/) const override ;

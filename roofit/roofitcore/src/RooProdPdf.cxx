@@ -1960,7 +1960,7 @@ bool sortedNamePtrsOverlap(std::vector<TNamed const*> const& ptrsA, std::vector<
 /// of parameters only, which can serve as constraints p.d.f.s
 
 RooArgSet* RooProdPdf::getConstraints(const RooArgSet& observables, RooArgSet& constrainedParams,
-                                      bool stripDisconnected, bool removeConstraintsFromPdf) const
+                                      bool stripDisconnected) const
 {
   RooArgSet constraints ;
   RooArgSet pdfParams;
@@ -2010,11 +2010,6 @@ RooArgSet* RooProdPdf::getConstraints(const RooArgSet& observables, RooArgSet& c
       tmp.remove(observables, /*silent=*/false, /*matchByNameOnly=*/true);
       pdfParams.add(tmp,true) ;
     }
-  }
-
-  // Remove the constraints now from the PDF if the caller requested it
-  if(removeConstraintsFromPdf) {
-    const_cast<RooProdPdf*>(this)->removePdfs(constraints);
   }
 
   // Strip any constraints that are completely decoupled from the other product terms
