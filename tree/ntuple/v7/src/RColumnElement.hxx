@@ -856,6 +856,7 @@ public:
 
    void Pack(void *dst, const void *src, std::size_t count) const final
    {
+      // TODO(gparolini): see if we can avoid this allocation
       auto quantized = std::make_unique<Quantize::Quantized_t[]>(count);
       assert(fValueRange);
       const auto [min, max] = *fValueRange;
@@ -866,6 +867,7 @@ public:
 
    void Unpack(void *dst, const void *src, std::size_t count) const final
    {
+      // TODO(gparolini): see if we can avoid this allocation
       auto quantized = std::make_unique<Quantize::Quantized_t[]>(count);
       assert(fValueRange);
       const auto [min, max] = *fValueRange;

@@ -460,11 +460,15 @@ Top-level fields have their own field ID set as parent ID.
 |             Flags             |      Representation Index     |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |                                                               |
-+                Min value(if flag 0x10 is set)                 +
++           First element index (if flag 0x08 is set)           +
 |                                                               |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |                                                               |
-+                Max value(if flag 0x10 is set)                 +
++                Min value (if flag 0x10 is set)                +
+|                                                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                                                               |
++                Max value (if flag 0x10 is set)                +
 |                                                               |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ```
@@ -539,8 +543,7 @@ The "Real32Trunc" type column is a variable-sized floating point column with low
 It is a IEEE-754 single precision float with some of the mantissa's least significant bits truncated.
 
 The "Real32Quant" type column is a variable-sized real column that is internally represented as an integer within
-a specified range of values.
-The min and max values of the range is specified in its parent field metadata (see the Field Description section).
+a specified range of values. For this column type, flag 0x10 (column with range) is always set (see paragraphs below).
 
 Future versions of the file format may introduce additional column types
 without changing the minimum version of the header or introducing a feature flag.
@@ -555,14 +558,14 @@ The flags field can have one of the following bits set
 | 0x10     | Column with a range of possible values                            |
 
 If flag 0x08 (deferred column) is set, the index of the first element in this column is not zero, which happens if the column is added at a later point during write.
-In this case, an additional 64bit integer containing the first element index follows the flags field.
+In this case, an additional 64bit integer containing the first element index follows the representation index field.
 Compliant implementations should yield synthetic data pages made up of 0x00 bytes when trying to read back elements in the range $[0, firstElementIndex-1]$.
 This results in zero-initialized values in the aforementioned range for fields of any supported C++ type, including `std::variant<Ts...>` and collections such as `std::vector<T>`.
 The leading zero pages of deferred columns are _not_ part of the page list, i.e. they have no page locator.
 In practice, deferred columns only appear in the schema extension record frame (see Section Footer Envelope).
 
-If flag 0x10 (column with range) is set, the column metadata contains the range of valid values
-for this column (used e.g. for quantized real values).
+If flag 0x10 (column with range) is set, the column metadata contains the inclusive range of valid values
+for this column (used e.g. for quantized real values). The range is represented as a min and a max value, specified as IEEE 754 little-endian double precision floats.
 
 If the index of the first element is negative (sign bit set), the column is deferred _and_ suppressed.
 In this case, no (synthetic) pages exist up to and including the cluster of the first element index.
