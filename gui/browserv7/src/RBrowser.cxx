@@ -896,6 +896,7 @@ void RBrowser::ProcessMsg(unsigned connid, const std::string &arg0)
             if ((arr->size() == 6) && (arr->at(5) == "RUN")) {
                ProcessSaveFile(editor->fFileName, editor->fContent);
                ProcessRunMacro(editor->fFileName);
+               CheckWidgtesModified();
             }
          }
       }
