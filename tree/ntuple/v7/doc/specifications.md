@@ -9,7 +9,7 @@ It uses the following scheme: EPOCH.MAJOR.MINOR.PATCH
 
 _Epoch_: an increment of the epoch indicates backwards-incompatible changes.
 The RNTuple pre-release has epoch 0.
-The fist public release will get epoch 1.
+The first public release will get epoch 1.
 There is currently no further epoch foreseen.
 
 _Major_: an increment of the major version indicates forward-incompatible changes.
@@ -170,7 +170,7 @@ At the moment, there are no feature flag bits defined.
 
 ## Frames
 
-RNTuple envelopes can store records and lists of basic types and other records or lists by means of **frames**.
+RNTuple envelopes can store records and lists of basic types and other records by means of **frames**.
 
 A frame has the following format
 ```
@@ -187,7 +187,7 @@ A frame has the following format
 |                              ...                              |
 ```
 
-_Size_: The absolute value gives the size in bytes of the frame and the payload.
+_Size_: The absolute value gives the (uncompressed) size in bytes of the frame and the payload.
 
 _T(ype)_: Can be either 0 for a **record frame** or 1 for a **list frame**.
 The type should be interpreted as the sign bit of the size, i.e. negative sizes indicate list frames.
@@ -341,7 +341,7 @@ Envelopes have the following format
 _Envelope type ID_: As specified in the table above,
 encoded in the least significant 16 bits of the first 64bit integer
 
-_Envelope length: Uncompressed size of the envelope,
+_Envelope length_: Uncompressed size of the envelope,
 encoded in the 48 most significant bits of the first 64bit integer
 
 _XxHash-3_: Checksum of the envelope and the payload bytes together
@@ -395,7 +395,7 @@ The structural role of the field can have one of the following values:
 | 0x03     | The field is the parent of a variant                                     |
 | 0x04     | The field represents an unsplit object serialized with the ROOT streamer |
 
-The flags field can have one of the following bits set:
+The flags field can have any of the following bits set:
 
 | Bit      | Meaning                                                                    |
 |----------|----------------------------------------------------------------------------|
@@ -404,7 +404,7 @@ The flags field can have one of the following bits set:
 | 0x04     | Has ROOT type checksum as reported by TClass                               |
 
 If `flag==0x01` (_repetitive field_) is set, the field represents a fixed-size array.
-Typically, another (sub) field with `Parent Field ID` equal to the ID of this field
+Another (sub) field with `Parent Field ID` equal to the ID of this field
 is expected to be found, representing the array content
 (see Section "Mapping of C++ Types to Fields and Columns").
 
@@ -528,7 +528,7 @@ The "Real32Trunc" type column is a variable-sized floating point column with low
 It is a IEEE-754 single precision float with some of the mantissa's least significant bits truncated.
 
 Future versions of the file format may introduce additional column types
-without changing the minimum version of the header.
+without changing the minimum version of the header or introducing a feature flag.
 Old readers need to ignore these columns and fields constructed from such columns.
 Old readers can, however, figure out the number of elements stored in such unknown columns.
 
@@ -982,6 +982,7 @@ The on-disk representation is similar to a `std::vector<T>` where `T` is the val
 
 A field whose type is `ROOT::Experimental::RNTupleCardinality<SizeT>` is associated to a single column of type (Split)Index32 or (Split)Index64.
 This field presents the offsets in the index column as lengths that correspond to the cardinality of the pointed-to collection.
+It is meant to be used as a projected field and only for reading the size of a collection.
 
 The value for the $i$-th element is computed by subtracting the $(i-1)$-th value from the $i$-th value in the index column.
 If $i == 0$, i.e. it falls on the start of a cluster, the $(i-1)$-th value in the index column is assumed to be 0, e.g. given the index column values `[1, 1, 3]`, the values yielded by `RNTupleCardinality` shall be `[1, 0, 2]`.
@@ -991,7 +992,7 @@ The valid types are `std::uint32_t` and `std::uint64_t`.
 
 ### Unsplit types
 
-A field with the structural role 0x05 ("unsplit") represents an object serialized by the ROOT streamer in unsplit mode.
+A field with the structural role 0x04 ("unsplit") represents an object serialized by the ROOT streamer in unsplit mode.
 It can have any type supported by TClass (even types that are not available in the native RNTuple type system).
 The first (principal) column is of type [Split]Index[32|64].
 The second column is of type Byte.
