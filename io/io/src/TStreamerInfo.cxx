@@ -535,8 +535,10 @@ void TStreamerInfo::Build(Bool_t isTransient)
             element = new TStreamerSTLstring(dmName, dmTitle, offset, dmFull, dmIsPtr);
          } else if (dm->IsSTLContainer()) {
             TVirtualCollectionProxy *proxy = TClass::GetClass(dmType /* the underlying type */)->GetCollectionProxy();
-            if (proxy) element = new TStreamerSTL(dmName, dmTitle, offset, dmFull, *proxy, dmIsPtr);
-            else element = new TStreamerSTL(dmName, dmTitle, offset, dmFull, dmFull, dmIsPtr);
+            if (proxy)
+               element = new TStreamerSTL(dmName, dmTitle, offset, dmFull, *proxy, dmIsPtr);
+            else
+               element = new TStreamerSTL(dmName, dmTitle, offset, dmFull, dmFull, dmIsPtr);
             bool hasCustomAlloc = proxy ? proxy->GetProperties() & TVirtualCollectionProxy::kCustomAlloc : kFALSE;
             if (((TStreamerSTL*)element)->GetSTLtype() != ROOT::kSTLvector || hasCustomAlloc) {
                auto printErrorMsg = [&](const char* category)
