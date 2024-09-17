@@ -256,9 +256,27 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             })
          }));
 
+         // ignore first resize
+         this._columnResized = -1;
+
          // catch re-rendering of the table to assign handlers
          t.addEventDelegate({
-            onAfterRendering() { this.assignRowHandlers(); }
+            onAfterRendering() {
+               this.assignRowHandlers();
+               if (this._columnResized < 1) return;
+               this._columnResized = 0;
+               let fullsz = 4;
+
+               t.getColumns().forEach(col => {
+                  if (col.getVisible()) fullsz += 4 + col.$().width();
+               });
+               this.getView().byId('masterPage').getParent().removeStyleClass('masterExpanded');
+               this.getView().byId('SplitAppBrowser').getAggregation('_navMaster').setWidth(fullsz + 'px');
+            }
+         }, this);
+
+         t.attachEvent("columnResize", {}, evnt => {
+            this._columnResized++;
          }, this);
       },
 
@@ -991,11 +1009,16 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       onExpandMaster() {
-         const master = this.getView().byId('masterPage').getParent();
-         master.toggleStyleClass('masterExpanded');
-         const expanded = master.hasStyleClass('masterExpanded');
-         const btn = this.getView().byId('expandMaster');
-         btn.setIcon(expanded ? "sap-icon://close-command-field" : "sap-icon://open-command-field");
+         const aggr = this.getView().byId('SplitAppBrowser').getAggregation('_navMaster');
+         if (aggr.getWidth()) {
+            aggr.setWidth('');
+         } else {
+            const master = this.getView().byId('masterPage').getParent();
+            master.toggleStyleClass('masterExpanded');
+            const expanded = master.hasStyleClass('masterExpanded');
+            const btn = this.getView().byId('expandMaster');
+            btn.setIcon(expanded ? "sap-icon://close-command-field" : "sap-icon://open-command-field");
+         }
       },
 
       /* ========================================== */
