@@ -162,7 +162,7 @@ See Compression.[h/cxx] for details and available algorithms.
 
 Feature flags are 64bit integers where every bit represents a certain forward-incompatible feature that is used
 in the binary format of the RNTuple at hand (see Versioning Notes).
-The most significant bit is used to indicate that there are more than 63 features to specify.
+The most significant bit is used to indicate that one or more flags is active with a bit higher than 63.
 That means that readers need to continue reading feature flags as long as their signed integer value is negative.
 
 Readers should gracefully abort reading when they encounter unknown bits set.
