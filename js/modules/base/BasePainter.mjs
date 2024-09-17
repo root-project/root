@@ -81,32 +81,49 @@ function getAbsPosInCanvas(sel, pos) {
   * @param {boolean} [ret_fmt] - when true returns array with value and actual format like ['0.1','6.4f']
   * @return {string|Array} - converted value or array with value and actual format
   * @private */
-function floatToString(value, fmt, ret_fmt) {
-   if (!fmt) fmt = '6.4g';
+function floatToString(value, fmt, ret_fmt, significance) {
+   if (!fmt)
+      fmt = '6.4g';
+   else if (fmt === 'g')
+      fmt = '8.6g';
+   else if (fmt === 'c')
+      fmt = '8.6c';
 
    fmt = fmt.trim();
    const len = fmt.length;
    if (len < 2)
       return ret_fmt ? [value.toFixed(4), '6.4f'] : value.toFixed(4);
-   const last = fmt[len-1];
+   const kind = fmt[len-1].toLowerCase();
    fmt = fmt.slice(0, len-1);
    let isexp, prec = fmt.indexOf('.');
    prec = (prec < 0) ? 4 : parseInt(fmt.slice(prec+1));
    if (!Number.isInteger(prec) || (prec <= 0)) prec = 4;
 
-   let significance = false;
-   if ((last === 'e') || (last === 'E')) isexp = true; else
-   if (last === 'Q') { isexp = true; significance = true; } else
-   if ((last === 'f') || (last === 'F')) isexp = false; else
-   if (last === 'W') { isexp = false; significance = true; } else
-   if ((last === 'g') || (last === 'G')) {
-      const se = floatToString(value, fmt+'Q', true);
-      let sg = floatToString(value, fmt+'W', true);
-      if (se[0].length < sg[0].length) sg = se;
-      return ret_fmt ? sg : sg[0];
-   } else {
-      isexp = false;
-      prec = 4;
+   switch (kind) {
+      case 'e':
+         isexp = true;
+         break;
+      case 'f':
+         isexp = false;
+         break;
+      case 'c':
+      case 'g': {
+         const se = floatToString(value, fmt+'e', true, true);
+         let sg = floatToString(value, fmt+'f', true, true);
+         const pnt = sg[0].indexOf('.');
+         if ((kind === 'c') && (pnt > 0)) {
+            let len = sg[0].length;
+            while ((len > pnt) && (sg[0][len-1] === '0'))
+               len--;
+            if (len === pnt) len--;
+            sg[0] = sg[0].slice(0, len);
+         }
+         if (se[0].length < sg[0].length) sg = se;
+         return ret_fmt ? sg : sg[0];
+      }
+      default:
+         isexp = false;
+         prec = 4;
    }
 
    if (isexp) {
@@ -115,7 +132,7 @@ function floatToString(value, fmt, ret_fmt) {
       if (prec < 0) prec = 0;
 
       const se = value.toExponential(prec);
-      return ret_fmt ? [se, `5.${prec}e`] : se;
+      return ret_fmt ? [se, `${prec+2}.${prec}e`] : se;
    }
 
    let sg = value.toFixed(prec);
@@ -142,7 +159,7 @@ function floatToString(value, fmt, ret_fmt) {
       }
    }
 
-   return ret_fmt ? [sg, '5.'+prec+'f'] : sg;
+   return ret_fmt ? [sg, `${prec+2}.${prec}f`] : sg;
 }
 
 
