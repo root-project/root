@@ -310,29 +310,33 @@ add_custom_command(OUTPUT ${stamp_file}
                    COMMAND ${CMAKE_COMMAND} -E touch ${stamp_file}
                    COMMENT "Copying directories such as etc, icons, fonts, js, ui5, etc. to build area")
 
+
+#---Copy files to the build area at build time---------------------------------
+set(directories_to_copy etc test icons fonts macros tutorials)
 if(http)
-set(jsroot_files js/*)
+  list(APPEND directories_to_copy js)
 endif()
 if(webgui)
-set(openui5_files ui5/*)
+  list(APPEND directories_to_copy ui5)
 endif()
 
-#---Copy files to the build area, with dependency---------------------------------
-file(GLOB_RECURSE artifact_files RELATIVE ${CMAKE_SOURCE_DIR} tutorials/* etc/* test/* icons/* fonts/* macros/* ${jsroot_files} ${openui5_files})
-set(artifact_files_builddir)
-foreach(artifact_file ${artifact_files})
-  # Filter out hsimple.root; someone might have created it in the src dir, and the hsimple.root
-  # target below will interfere.
-  if (NOT (artifact_file STREQUAL "tutorials/hsimple.root"))
-    add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/${artifact_file}
-      COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/${artifact_file} ${CMAKE_BINARY_DIR}/${artifact_file}
-      COMMENT "Copying ${CMAKE_SOURCE_DIR}/${artifact_file}"
-      DEPENDS ${CMAKE_SOURCE_DIR}/${artifact_file})
-    list(APPEND artifact_files_builddir ${CMAKE_BINARY_DIR}/${artifact_file})
-  endif()
-endforeach()
-add_custom_target(move_artifacts DEPENDS ${stamp_file} ${artifact_files_builddir})
+foreach(dir_to_copy ${directories_to_copy})
+  # For target dependencies:
+  file(GLOB_RECURSE artifacts_in ${dir_to_copy}/*)
+  set(artifacts_out ${artifacts_in})
+  list(TRANSFORM artifacts_out REPLACE ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
+  list(APPEND all_artifacts ${artifacts_out})
 
+  add_custom_command(OUTPUT ${artifacts_out}
+      COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/${dir_to_copy} ${CMAKE_BINARY_DIR}/${dir_to_copy}
+      COMMENT "Copy ${dir_to_copy}"
+      DEPENDS ${artifacts_in})
+endforeach()
+
+add_custom_target(move_artifacts DEPENDS ${stamp_file} ${all_artifacts})
+
+
+#---Add the main sources ---------------------------------
 add_subdirectory (interpreter)
 
 # Update etc/gitinfo.txt for every build.
