@@ -26,7 +26,7 @@
 //- data and local helpers ---------------------------------------------------
 namespace CPyCppyy {
     extern PyObject* gThisModule;
-    extern std::map<std::string, std::vector<PyObject*>> gPythonizations;
+    std::map<std::string, std::vector<PyObject*>> &pythonizations();
 }
 
 namespace {
@@ -1964,9 +1964,10 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
 // the global ones (the idea is to allow writing a pythonizor that see all classes)
     bool pstatus = true;
     std::string outer_scope = TypeManip::extract_namespace(name);
+    auto &pyzMap = pythonizations();
     if (!outer_scope.empty()) {
-        auto p = gPythonizations.find(outer_scope);
-        if (p != gPythonizations.end()) {
+        auto p = pyzMap.find(outer_scope);
+        if (p != pyzMap.end()) {
             PyObject* subname = CPyCppyy_PyText_FromString(
                 name.substr(outer_scope.size()+2, std::string::npos).c_str());
             pstatus = run_pythonizors(pyclass, subname, p->second);
@@ -1975,8 +1976,8 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
     }
 
     if (pstatus) {
-        auto p = gPythonizations.find("");
-        if (p != gPythonizations.end())
+        auto p = pyzMap.find("");
+        if (p != pyzMap.end())
             pstatus = run_pythonizors(pyclass, pyname, p->second);
     }
 
