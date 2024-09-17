@@ -246,7 +246,6 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
          }
 
          RImportField f;
-         f.fIsClass = isClass;
          auto fieldOrError = RFieldBase::Create(fieldName, fieldType);
          if (!fieldOrError)
             return R__FORWARD_ERROR(fieldOrError);
