@@ -142,7 +142,6 @@ private:
       std::unique_ptr<RFieldBase::RValue> fValue; ///< Set if a value is generated, only for transformed fields
       void *fFieldBuffer = nullptr; ///< Usually points to the corresponding RImportBranch::fBranchBuffer but not always
       bool fIsInUntypedCollection = false; ///< Sub-fields of untyped collections (leaf count arrays in the input)
-      bool fIsClass = false; ///< Field imported from a branch with stramer info (e.g., STL, user-defined class)
    };
 
    /// Base class to perform data transformations from TTree branches to RNTuple fields if necessary
