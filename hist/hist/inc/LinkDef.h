@@ -24,7 +24,7 @@
 #pragma link C++ class ROOT::v5::TFormulaPrimitive+;
 #pragma link C++ class TFractionFitter+;
 #pragma link C++ class TFitResult+;
-#pragma link C++ class TFitResultPtr+;
+#pragma link C++ class TFitResultPtr-;
 #pragma link C++ class TF1NormSum+;
 #pragma link C++ class TF1Convolution+;
 #pragma link C++ class TF1-;

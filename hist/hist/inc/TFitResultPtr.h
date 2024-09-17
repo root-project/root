@@ -56,8 +56,9 @@ private:
 
    int fStatus;                            ///< fit status code
    std::shared_ptr<TFitResult>  fPointer;  ///<! Smart Pointer to TFitResult class
+   TFitResult * fSavedPointer = nullptr;   /// Persistent pointer to TFitResult class
 
-   ClassDef(TFitResultPtr,2)  //indirection to TFitResult
+   ClassDef(TFitResultPtr,3)  //indirection to TFitResult
 };
 
 namespace cling {
