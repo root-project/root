@@ -21,22 +21,22 @@ void task1(int i)
 // Test TPython::Exec from multiple threads.
 TEST(TPython, ExecMultithreading)
 {
-   std::size_t nThreads = 100;
+   int nThreads = 100;
 
    // Concurrently append to this array
    TPython::Exec("arr = []");
 
    std::vector<std::thread> threads;
-   for (std::size_t i = 0; i < nThreads; i++) {
+   for (int i = 0; i < nThreads; i++) {
       threads.emplace_back(task1, i);
    }
 
-   for (std::size_t i = 0; i < threads.size(); i++) {
+   for (int i = 0; i < threads.size(); i++) {
       threads[i].join();
    }
 
    // In the end, let's check if the size is correct.
    std::any len;
-   TPython::Exec("_anyresult = ROOT.std.make_any['std::size_t'](len(arr))", &len);
-   EXPECT_EQ(std::any_cast<std::size_t>(len), nThreads);
+   TPython::Exec("_anyresult = ROOT.std.make_any['int'](len(arr))", &len);
+   EXPECT_EQ(std::any_cast<int>(len), nThreads);
 }
