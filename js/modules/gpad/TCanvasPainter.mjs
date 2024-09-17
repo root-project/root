@@ -619,6 +619,19 @@ class TCanvasPainter extends TPadPainter {
       return true;
    }
 
+   /** @summary Send command to start fit panel code on the server
+     * @private */
+   startFitPanel() {
+      if (!this._websocket)
+         return false;
+
+      const new_conn = this._websocket.createChannel();
+
+      this.sendWebsocket('FITPANEL:' + new_conn.getChannelId());
+
+      return new_conn;
+   }
+
    /** @summary Complete handling of online canvas drawing
      * @private */
    completeCanvasSnapDrawing() {

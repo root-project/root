@@ -11,7 +11,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '13/09/2024',
+version_date = '17/09/2024',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -10163,32 +10163,49 @@ function getAbsPosInCanvas(sel, pos) {
   * @param {boolean} [ret_fmt] - when true returns array with value and actual format like ['0.1','6.4f']
   * @return {string|Array} - converted value or array with value and actual format
   * @private */
-function floatToString(value, fmt, ret_fmt) {
-   if (!fmt) fmt = '6.4g';
+function floatToString(value, fmt, ret_fmt, significance) {
+   if (!fmt)
+      fmt = '6.4g';
+   else if (fmt === 'g')
+      fmt = '8.6g';
+   else if (fmt === 'c')
+      fmt = '8.6c';
 
    fmt = fmt.trim();
    const len = fmt.length;
    if (len < 2)
       return ret_fmt ? [value.toFixed(4), '6.4f'] : value.toFixed(4);
-   const last = fmt[len-1];
+   const kind = fmt[len-1].toLowerCase();
    fmt = fmt.slice(0, len-1);
    let isexp, prec = fmt.indexOf('.');
    prec = (prec < 0) ? 4 : parseInt(fmt.slice(prec+1));
    if (!Number.isInteger(prec) || (prec <= 0)) prec = 4;
 
-   let significance = false;
-   if ((last === 'e') || (last === 'E')) isexp = true; else
-   if (last === 'Q') { isexp = true; significance = true; } else
-   if ((last === 'f') || (last === 'F')) isexp = false; else
-   if (last === 'W') { isexp = false; significance = true; } else
-   if ((last === 'g') || (last === 'G')) {
-      const se = floatToString(value, fmt+'Q', true);
-      let sg = floatToString(value, fmt+'W', true);
-      if (se[0].length < sg[0].length) sg = se;
-      return ret_fmt ? sg : sg[0];
-   } else {
-      isexp = false;
-      prec = 4;
+   switch (kind) {
+      case 'e':
+         isexp = true;
+         break;
+      case 'f':
+         isexp = false;
+         break;
+      case 'c':
+      case 'g': {
+         const se = floatToString(value, fmt+'e', true, true);
+         let sg = floatToString(value, fmt+'f', true, true);
+         const pnt = sg[0].indexOf('.');
+         if ((kind === 'c') && (pnt > 0)) {
+            let len = sg[0].length;
+            while ((len > pnt) && (sg[0][len-1] === '0'))
+               len--;
+            if (len === pnt) len--;
+            sg[0] = sg[0].slice(0, len);
+         }
+         if (se[0].length < sg[0].length) sg = se;
+         return ret_fmt ? sg : sg[0];
+      }
+      default:
+         isexp = false;
+         prec = 4;
    }
 
    if (isexp) {
@@ -10197,7 +10214,7 @@ function floatToString(value, fmt, ret_fmt) {
       if (prec < 0) prec = 0;
 
       const se = value.toExponential(prec);
-      return ret_fmt ? [se, `5.${prec}e`] : se;
+      return ret_fmt ? [se, `${prec+2}.${prec}e`] : se;
    }
 
    let sg = value.toFixed(prec);
@@ -10224,7 +10241,7 @@ function floatToString(value, fmt, ret_fmt) {
       }
    }
 
-   return ret_fmt ? [sg, '5.'+prec+'f'] : sg;
+   return ret_fmt ? [sg, `${prec+2}.${prec}f`] : sg;
 }
 
 
@@ -67374,7 +67391,7 @@ const AxisPainterMethods = {
          return res;
       }
 
-      return floatToString(val, fmt || gStyle.fStatFormat);
+      return floatToString(val, fmt || 'c');
    },
 
    /** @summary Provide label for exponential form */
@@ -67677,7 +67694,6 @@ class TAxisPainter extends ObjectPainter {
        else
          this.func = linear().domain([smin, smax]);
 
-
       if (this.vertical ^ this.reverse) {
          const d = range[0]; range[0] = range[1]; range[1] = d;
       }
@@ -67700,10 +67716,10 @@ class TAxisPainter extends ObjectPainter {
       if (this.is_gaxis)
          ndiv = axis.fNdiv;
       else if (axis) {
-          if (!axis.fNdivisions)
-             ndiv = 0;
-          else
-             ndiv = Math.max(axis.fNdivisions, 4);
+         if (!axis.fNdivisions)
+            ndiv = 0;
+         else
+            ndiv = Math.max(axis.fNdivisions, 4);
       }
 
       this.nticks = ndiv % 100;
@@ -78936,6 +78952,19 @@ class TCanvasPainter extends TPadPainter {
          case 'ToolTips': this.setTooltipAllowed(on); break;
       }
       return true;
+   }
+
+   /** @summary Send command to start fit panel code on the server
+     * @private */
+   startFitPanel() {
+      if (!this._websocket)
+         return false;
+
+      const new_conn = this._websocket.createChannel();
+
+      this.sendWebsocket('FITPANEL:' + new_conn.getChannelId());
+
+      return new_conn;
    }
 
    /** @summary Complete handling of online canvas drawing
@@ -104526,7 +104555,7 @@ expandGeoObject: expandGeoObject,
 produceRenderOrder: produceRenderOrder
 });
 
-const kTopFolder = 'TopFolder';
+const kTopFolder = 'TopFolder', kExpand = 'expand', kPM = 'plusminus';
 
 function injectHStyle(node) {
    function img(name, sz, fmt, code) {
@@ -105134,7 +105163,7 @@ function markAsStreamerInfo(h, item, obj) {
 /** @summary Create hierarchy for object inspector
   * @private */
 function createInspectorContent(obj) {
-   const h = { _name: 'Object', _title: '', _click_action: 'expand', _nosimple: false, _do_context: true };
+   const h = { _name: 'Object', _title: '', _click_action: kExpand, _nosimple: false, _do_context: true };
 
    if (isStr(obj.fName) && obj.fName)
       h._name = obj.fName;
@@ -105717,11 +105746,13 @@ class HierarchyPainter extends BasePainter {
       const d3line = d3cont.append('div').attr('class', 'h_line');
 
       // build indent
-      let prnt = isroot ? null : hitem._parent;
+      let prnt = isroot ? null : hitem._parent, upcnt = 1;
       while (prnt && (prnt !== this.h)) {
-         d3line.insert('div', ':first-child')
-               .attr('class', this.isLastSibling(prnt) ? 'img_empty' : 'img_line');
-         prnt = prnt._parent;
+         const is_last = this.isLastSibling(prnt),
+               d3icon = d3line.insert('div', ':first-child').attr('class', is_last ? 'img_empty' : 'img_line');
+         if (!is_last)
+            d3icon.style('cursor', 'pointer').property('upcnt', upcnt).on('click', function(evnt) { h.tree_click(evnt, this, 'parentminus'); });
+         prnt = prnt._parent; upcnt++;
       }
 
       let icon_class = '', plusminus = false;
@@ -105738,7 +105769,7 @@ class HierarchyPainter extends BasePainter {
          if (break_list || this.isLastSibling(hitem)) icon_class += 'bottom';
          const d3icon = d3line.append('div').attr('class', icon_class);
          if (plusminus)
-            d3icon.style('cursor', 'pointer').on('click', function(evnt) { h.tree_click(evnt, this, 'plusminus'); });
+            d3icon.style('cursor', 'pointer').on('click', function(evnt) { h.tree_click(evnt, this, kPM); });
       }
 
       // make node icons
@@ -106051,11 +106082,21 @@ class HierarchyPainter extends BasePainter {
    tree_click(evnt, node, place) {
       if (!node) return;
 
-      const d3cont = select(node.parentNode.parentNode),
+      let d3cont = select(node.parentNode.parentNode),
           itemname = d3cont.attr('item'),
           hitem = itemname ? this.findItem(itemname) : null;
 
       if (!hitem) return;
+
+      if (place === 'parentminus') {
+         let upcnt = select(node).property('upcnt') || 1;
+         while (upcnt-- > 0)
+            hitem = hitem?._parent;
+         if (!hitem) return;
+         itemname = this.itemFullName(hitem);
+         d3cont = select(hitem?._d3cont || null);
+         place = kPM;
+      }
 
       if (hitem._break_point) {
          // special case of more item
@@ -106066,7 +106107,7 @@ class HierarchyPainter extends BasePainter {
          this.addItemHtml(hitem, d3cont, 'update');
 
          const prnt = hitem._parent, indx = prnt._childs.indexOf(hitem),
-             d3chlds = select(d3cont.node().parentNode);
+               d3chlds = select(d3cont.node().parentNode);
 
          if (indx < 0) return console.error('internal error');
 
@@ -106103,13 +106144,12 @@ class HierarchyPainter extends BasePainter {
       }
 
       // special feature - all items with '_expand' function are not drawn by click
-      if ((place === 'item') && ('_expand' in hitem) && !evnt.ctrlKey && !evnt.shiftKey) place = 'plusminus';
+      if ((place === 'item') && ('_expand' in hitem) && !evnt.ctrlKey && !evnt.shiftKey) place = kPM;
 
       // special case - one should expand item
-      if (((place === 'plusminus') && !('_childs' in hitem) && hitem._more) ||
-          ((place === 'item') && (dflt === 'expand')))
+      if (((place === kPM) && !('_childs' in hitem) && hitem._more) ||
+          ((place === 'item') && (dflt === kExpand)))
          return this.expandItem(itemname, d3cont);
-
 
       if (place === 'item') {
          if (hitem._player)
@@ -106123,7 +106163,7 @@ class HierarchyPainter extends BasePainter {
 
          if (handle?.ignore_online && this.isOnlineItem(hitem)) return;
 
-         const dflt_expand = (this.default_by_click === 'expand');
+         const dflt_expand = (this.default_by_click === kExpand);
          let can_draw = hitem._can_draw,
              can_expand = hitem._more,
              drawopt = '';
@@ -106154,7 +106194,7 @@ class HierarchyPainter extends BasePainter {
          if (can_draw && can_expand && !drawopt) {
             // if default action specified as expand, disable drawing
             // if already displayed, try to expand
-            if (dflt_expand || (handle?.dflt === 'expand') || (handle?.exapnd_after_draw && this.isItemDisplayed(itemname))) can_draw = false;
+            if (dflt_expand || (handle?.dflt === kExpand) || (handle?.exapnd_after_draw && this.isItemDisplayed(itemname))) can_draw = false;
          }
 
          if (can_draw && !drawopt)
@@ -106596,7 +106636,7 @@ class HierarchyPainter extends BasePainter {
                handle = obj._typename ? getDrawHandle(prROOT + obj._typename) : null;
             }
 
-            if (use_dflt_opt && !drawopt && handle?.dflt && (handle.dflt !== 'expand'))
+            if (use_dflt_opt && !drawopt && handle?.dflt && (handle.dflt !== kExpand))
                drawopt = handle.dflt;
 
             if (dom) {
@@ -107331,7 +107371,7 @@ class HierarchyPainter extends BasePainter {
             if ((fname.lastIndexOf('.root') === fname.length - 5) && (fname.length > 5)) {
                h._childs.push({
                   _name: fname, _title: dirname + fname, _url: dirname + fname, _kind: kindTFile,
-                  _click_action: 'expand', _more: true, _obj: {},
+                  _click_action: kExpand, _more: true, _obj: {},
                   _expand: item => {
                      return openFile(item._url).then(file => {
                         if (!file) return false;
@@ -108486,7 +108526,7 @@ async function drawInspector(dom, obj, opt) {
       return painter;
    }
 
-   painter.default_by_click = 'expand'; // default action
+   painter.default_by_click = kExpand; // default action
    painter.with_icons = false;
    painter._inspector = true; // keep
    let expand_level = 0;

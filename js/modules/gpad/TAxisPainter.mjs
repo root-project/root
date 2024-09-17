@@ -184,7 +184,7 @@ const AxisPainterMethods = {
          return res;
       }
 
-      return floatToString(val, fmt || gStyle.fStatFormat);
+      return floatToString(val, fmt || 'c');
    },
 
    /** @summary Provide label for exponential form */
@@ -487,7 +487,6 @@ class TAxisPainter extends ObjectPainter {
        else
          this.func = d3_scaleLinear().domain([smin, smax]);
 
-
       if (this.vertical ^ this.reverse) {
          const d = range[0]; range[0] = range[1]; range[1] = d;
       }
@@ -510,10 +509,10 @@ class TAxisPainter extends ObjectPainter {
       if (this.is_gaxis)
          ndiv = axis.fNdiv;
       else if (axis) {
-          if (!axis.fNdivisions)
-             ndiv = 0;
-          else
-             ndiv = Math.max(axis.fNdivisions, 4);
+         if (!axis.fNdivisions)
+            ndiv = 0;
+         else
+            ndiv = Math.max(axis.fNdivisions, 4);
       }
 
       this.nticks = ndiv % 100;
