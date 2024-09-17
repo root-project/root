@@ -215,7 +215,10 @@ Bool_t TPython::Initialize()
    if (!gMainDict) {
       // retrieve the main dictionary
       gMainDict = PyModule_GetDict(PyImport_AddModule(const_cast<char *>("__main__")));
-      Py_INCREF(gMainDict);
+      // The gMainDict is borrowed, i.e. we are not calling Py_INCREF(gMainDict).
+      // Like this, we avoid unexpectedly affecting how long __main__ is kept
+      // alive. The gMainDict is only used in Exec(), ExecScript(), and Eval(),
+      // which should not be called after __main__ is garbage collected anyway.
    }
 
    // python side class construction, managed by ROOT
