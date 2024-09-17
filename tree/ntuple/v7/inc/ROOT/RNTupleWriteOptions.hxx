@@ -72,7 +72,7 @@ protected:
    /// The total write buffer limit needs to be large enough to hold the initial pages of all columns.
    std::size_t fInitialNElementsPerPage = 64;
    /// Pages can grow only to the given limit in bytes.
-   std::size_t fMaxUnzippedPageSize = 1024 * 1024;
+   std::size_t fMaxUnzippedPageSize = 128 * 1024;
    /// The maximum size that the sum of all page buffers used for writing into a persistent sink are allowed to use.
    /// If set to zero, RNTuple will auto-adjust the budget based on the value of fApproxZippedClusterSize.
    /// If set manually, the size needs to be large enough to hold all initial page buffers.

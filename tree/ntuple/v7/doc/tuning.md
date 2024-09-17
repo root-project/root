@@ -30,7 +30,7 @@ Page Sizes
 Pages contain consecutive elements of a certain column.
 They are the unit of compression and of addressability on storage.
 RNTuple puts a configurable maximum uncompressed size for pages.
-This limit is by default set to 1 MiB.
+This limit is by default set to 128 KiB, to avoid cache trashing.
 When the limit is reached, a page will be flushed to disk.
 
 In addition, RNTuple maintains a memory budget for the combined allocated size of the pages that are currently filled.
