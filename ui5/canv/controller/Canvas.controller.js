@@ -407,7 +407,14 @@ sap.ui.define([
       showLeftArea(panel_name, panel_handle) {
          let split = this.getView().byId('MainAreaSplitter'),
              model = this.getView().getModel(),
-             curr = model.getProperty('/LeftArea');
+             curr = model.getProperty('/LeftArea'),
+             is_fit = (panel_name === 'FitPanel'),
+             canvp = this.getCanvasPainter();
+
+         if (is_fit && !canvp?.startFitPanel) {
+            panel_name = '';
+            is_fit = false;
+         }
 
          if (!split || (!curr && !panel_name) || (curr === panel_name))
             return Promise.resolve(null);
@@ -421,7 +428,6 @@ sap.ui.define([
             split.removeContentArea(split.getContentAreas()[0]);
          }
 
-         let canvp = this.getCanvasPainter();
          if (canvp) canvp.enforceCanvasSize = true;
 
          if (!panel_name)
@@ -429,9 +435,11 @@ sap.ui.define([
 
          let viewName = panel_name;
 
-         if (panel_name == 'FitPanel')
+         if (is_fit) {
             viewName = 'rootui5.fitpanel.view.FitPanel';
-         else if (panel_name.indexOf('.') < 0)
+            // send panel command and return new channel
+            panel_handle = canvp.startFitPanel();
+         } else if (panel_name.indexOf('.') < 0)
             viewName = 'rootui5.canv.view.' + panel_name;
 
          let viewData = canvp.getUi5PanelData(panel_name);
@@ -448,7 +456,6 @@ sap.ui.define([
              layoutData: new SplitterLayoutData({ resizable: true, size: Math.round(w*0.25) + 'px' }),
              height: (panel_name == 'Panel') ? '100%' : undefined
          }).then(oView => {
-
             // workaround, while CanvasPanel.onBeforeRendering called too late
             can_elem.getController().preserveCanvasContent();
 
@@ -727,12 +734,8 @@ sap.ui.define([
              name = item.getText();
 
          if (name == 'Fit panel') {
-            if (this.isv7()) {
-               let curr = this.getView().getModel().getProperty('/LeftArea');
-               this.showLeftArea(curr == 'FitPanel' ? '' : 'FitPanel');
-            } else {
-               this.getCanvasPainter()?.sendWebsocket('FITPANEL');
-            }
+            let curr = this.getView().getModel().getProperty('/LeftArea');
+            this.showLeftArea(curr == 'FitPanel' ? '' : 'FitPanel');
          } else if (name == 'Start browser') {
             this.getCanvasPainter()?.sendWebsocket('START_BROWSER');
          }
