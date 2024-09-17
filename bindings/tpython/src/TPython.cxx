@@ -117,29 +117,6 @@ private:
    PyObject *fObj = nullptr;
 };
 
-namespace PyStrings {
-PyObject *basesStr()
-{
-   static CachedPyString wrapper{"__bases__"};
-   return wrapper.obj();
-}
-PyObject *cppNameStr()
-{
-   static CachedPyString wrapper{"__cpp_name__"};
-   return wrapper.obj();
-}
-PyObject *moduleStr()
-{
-   static CachedPyString wrapper{"__module__"};
-   return wrapper.obj();
-}
-PyObject *nameStr()
-{
-   static CachedPyString wrapper{"__name__"};
-   return wrapper.obj();
-}
-} // namespace PyStrings
-
 PyThreadState *mainThreadState;
 
 // To acquire the GIL as described here:
@@ -276,6 +253,10 @@ Bool_t TPython::Import(const char *mod_name)
    PyObject *mod = PyImport_GetModule(modNameObj);
    PyObject *dct = PyModule_GetDict(mod);
 
+   CachedPyString basesStr{"__bases__"};
+   CachedPyString cppNameStr{"__cpp_name__"};
+   CachedPyString nameStr{"__name__"};
+
    // create Cling classes for all new python classes
    PyObject *values = PyDict_Values(dct);
    for (int i = 0; i < PyList_GET_SIZE(values); ++i) {
@@ -283,11 +264,11 @@ Bool_t TPython::Import(const char *mod_name)
       Py_INCREF(value);
 
       // collect classes
-      if (PyType_Check(value) || PyObject_HasAttr(value, PyStrings::basesStr())) {
+      if (PyType_Check(value) || PyObject_HasAttr(value, basesStr.obj())) {
          // get full class name (including module)
-         PyObject *pyClName = PyObject_GetAttr(value, PyStrings::cppNameStr());
+         PyObject *pyClName = PyObject_GetAttr(value, cppNameStr.obj());
          if (!pyClName) {
-            pyClName = PyObject_GetAttr(value, PyStrings::nameStr());
+            pyClName = PyObject_GetAttr(value, nameStr.obj());
          }
 
          if (PyErr_Occurred())
@@ -346,6 +327,10 @@ void TPython::LoadMacro(const char *name)
    // obtain new __main__ contents
    PyObject *current = PyDict_Values(gMainDict);
 
+   CachedPyString basesStr{"__bases__"};
+   CachedPyString moduleStr{"__module__"};
+   CachedPyString nameStr{"__name__"};
+
    // create Cling classes for all new python classes
    for (int i = 0; i < PyList_GET_SIZE(current); ++i) {
       PyObject *value = PyList_GET_ITEM(current, i);
@@ -353,10 +338,10 @@ void TPython::LoadMacro(const char *name)
 
       if (!PySequence_Contains(old, value)) {
          // collect classes
-         if (PyType_Check(value) || PyObject_HasAttr(value, PyStrings::basesStr())) {
+         if (PyType_Check(value) || PyObject_HasAttr(value, basesStr.obj())) {
             // get full class name (including module)
-            PyObject *pyModName = PyObject_GetAttr(value, PyStrings::moduleStr());
-            PyObject *pyClName = PyObject_GetAttr(value, PyStrings::nameStr());
+            PyObject *pyModName = PyObject_GetAttr(value, moduleStr.obj());
+            PyObject *pyClName = PyObject_GetAttr(value, nameStr.obj());
 
             if (PyErr_Occurred())
                PyErr_Clear();
@@ -502,9 +487,12 @@ const TPyReturn TPython::Eval(const char *expr)
    // explicit conversion for python type required
    PyObject *pyclass = PyObject_GetAttrString(result, const_cast<char *>("__class__"));
    if (pyclass != 0) {
+      CachedPyString moduleStr{"__module__"};
+      CachedPyString nameStr{"__name__"};
+
       // retrieve class name and the module in which it resides
-      PyObject *name = PyObject_GetAttr(pyclass, PyStrings::nameStr());
-      PyObject *module = PyObject_GetAttr(pyclass, PyStrings::moduleStr());
+      PyObject *name = PyObject_GetAttr(pyclass, nameStr.obj());
+      PyObject *module = PyObject_GetAttr(pyclass, moduleStr.obj());
 
       // concat name
       std::string qname = std::string(PyUnicode_AsUTF8(module)) + '.' + PyUnicode_AsUTF8(name);
