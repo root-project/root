@@ -20,7 +20,8 @@ auto win = ROOT::RWebWindow::Create();
 // set HTML page which is showed when window displayed
 win->SetDefaultPage("file:page.html"); // set
 
-// allow unlimitted user connections to the window (default only 1)
+// allow unlimited user connections to the window (default only 1)
+ROOT::RWebWindowsManager::SetSingleConnMode(false);
 win->SetConnLimit(0);
 
 // configure predefined geometry

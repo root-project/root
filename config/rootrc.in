@@ -255,6 +255,8 @@ WebGui.HttpBind:
 WebGui.HttpLoopback:        yes
 # Require unique single-time token (key) for connecting with widget (default - yes)
 WebGui.OnetimeKey:          yes
+# Only single connection allowed to any web widget
+WebGui.SingleConnMode:      yes
 # Use https protocol for the http server (default - no)
 WebGui.UseHttps:            no
 WebGui.ServerCert:          rootserver.pem
