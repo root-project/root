@@ -1922,7 +1922,9 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
       if (DecodePadOptions(arg.substr(9), true))
          CheckCanvasModified();
 
-   } else if (arg == "FITPANEL"s) {
+   } else if (arg.compare(0, 9, "FITPANEL:") == 0) {
+
+      std::string chid = arg.substr(9);
 
       TH1 *hist = nullptr;
       TIter iter(Canvas()->GetListOfPrimitives());
@@ -1934,11 +1936,11 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
       auto cmd = TString::Format("auto panel = std::make_shared<ROOT::Experimental::RFitPanel>(\"FitPanel\");"
                                  "panel->AssignCanvas(\"%s\");"
                                  "panel->AssignHistogram((TH1 *)0x%zx);"
-                                 "panel->Show();"
-                                 "panel->ClearOnClose(panel);", Canvas()->GetName(), (size_t) hist);
-
+                                 "auto wptr = (std::shared_ptr<ROOT::RWebWindow>*)0x%zx;"
+                                 "panel->Show({*wptr, %u, %s});"
+                                 "panel->ClearOnClose(panel);",
+                                 Canvas()->GetName(), (size_t) hist, (size_t) &fWindow, connid, chid.c_str());
       gROOT->ProcessLine(cmd.Data());
-
    } else if (arg == "START_BROWSER"s) {
 
       gROOT->ProcessLine("new TBrowser;");

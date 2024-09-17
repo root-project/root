@@ -10,14 +10,17 @@ sap.ui.define([
       //   onPanelReceive: function(msg, offset) {},
       //   onPanelExit: function(),
 
-
       onInit: function() {
          let data = this.getView().getViewData();
 
          this.websocket = data?.handle;
          if (this.websocket) {
-            this.websocket.setReceiver(this); // redirect websocket handling on controller itself
-            this.websocket.send("PANEL_READY"); // confirm panel creation, only then GUI can send commands
+            // redirect websocket handling on controller itself
+            this.websocket.setReceiver(this);
+            // confirm panel creation, only then GUI can send commands
+            // only done for standalone socket - otherwise connection already established
+            if (!this.websocket.master)
+               this.websocket.send("PANEL_READY");
          }
 
          // assign several core methods which are used like: parse, toJSON, source_dir
