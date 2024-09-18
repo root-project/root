@@ -22,12 +22,14 @@ ROOT_LINKER_LIBRARY(ROOTBrowserTCanvasWidget
      WebGui6
 )
 
-ROOT_LINKER_LIBRARY(ROOTBrowserRCanvasWidget
-     src/RBrowserRCanvasWidget.cxx
-  DEPENDENCIES
-     ROOTBrowserWidgets
-     ROOTGpadv7
+if(root7)
+  ROOT_LINKER_LIBRARY(ROOTBrowserRCanvasWidget
+       src/RBrowserRCanvasWidget.cxx
+    DEPENDENCIES
+       ROOTBrowserWidgets
+       ROOTGpadv7
 )
+endif()
 
 ROOT_LINKER_LIBRARY(ROOTBrowserGeomWidget
      src/RBrowserGeomWidget.cxx
