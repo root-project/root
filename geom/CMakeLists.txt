@@ -22,7 +22,7 @@ if(vecgeom)
   add_subdirectory(vecgeom)
 endif()
 
-if(webgui AND root7)
+if(webgui)
   add_subdirectory(webviewer)
 endif()
 
