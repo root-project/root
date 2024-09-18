@@ -45,6 +45,7 @@
 #include <memory>
 #include <string>
 #include <string_view>
+#include <unordered_set>
 #include <utility>
 #include <variant>
 
@@ -194,6 +195,37 @@ void ROOT::Experimental::RClassField::ReadInClusterImpl(RClusterIndex clusterInd
 {
    for (unsigned i = 0; i < fSubFields.size(); i++) {
       CallReadOn(*fSubFields[i], clusterIndex, static_cast<unsigned char *>(to) + fSubFieldsInfo[i].fOffset);
+   }
+}
+
+void ROOT::Experimental::RClassField::BeforeConnectPageSource(Internal::RPageSource &pageSource)
+{
+   if (GetOnDiskId() == kInvalidDescriptorId) {
+      return;
+   }
+   // Gather all known sub fields in the descriptor.
+   std::unordered_set<std::string> knownSubFields;
+   {
+      const auto descriptorGuard = pageSource.GetSharedDescriptorGuard();
+      const RNTupleDescriptor &desc = descriptorGuard.GetRef();
+      const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
+      // Check that we have the same type; only then we perform automatic schema evolution.
+      // TODO: should this throw? Right now, we allow reading back a field hierarchy with a different type as long as
+      // all columns match...
+      if (GetTypeName() != fieldDesc.GetTypeName())
+         return;
+
+      for (auto linkId : fieldDesc.GetLinkIds()) {
+         const auto &subFieldDesc = desc.GetFieldDescriptor(linkId);
+         knownSubFields.insert(subFieldDesc.GetFieldName());
+      }
+   }
+
+   // Iterate over all sub fields in memory and mark those as missing that are not in the descriptor.
+   for (auto &field : fSubFields) {
+      if (knownSubFields.count(field->GetFieldName()) == 0) {
+         field->SetArtificial();
+      }
    }
 }
 

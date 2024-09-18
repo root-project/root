@@ -32,6 +32,7 @@
 namespace ROOT {
 namespace Experimental {
 
+class RClassField;
 class RFieldBase;
 class RNTupleJoinProcessor;
 
@@ -67,6 +68,7 @@ This is and can only be partially enforced through C++.
 */
 // clang-format on
 class RFieldBase {
+   friend class ROOT::Experimental::RClassField;                             // to mark members as artificial
    friend class ROOT::Experimental::RNTupleJoinProcessor;                    // needs ConstuctValue
    friend struct ROOT::Experimental::Internal::RFieldCallbackInjector;       // used for unit tests
    friend struct ROOT::Experimental::Internal::RFieldRepresentationModifier; // used for unit tests
@@ -176,6 +178,8 @@ private:
    std::size_t fNRepetitions;
    /// A field qualifies as simple if it is both mappable and has no post-read callback
    bool fIsSimple;
+   /// A field that is artificial, ie missing on disk
+   bool fIsArtificial = false;
    /// When the columns are connected to a page source or page sink, the field represents a field id in the
    /// corresponding RNTuple descriptor. This on-disk ID is set in RPageSink::Create() for writing and by
    /// RFieldDescriptor::CreateField() when recreating a field / model from the stored descriptor.
@@ -214,6 +218,14 @@ private:
    /// calling this function. For sub fields, a field ID may or may not be set. If the field ID is unset, it will be
    /// determined using the page source descriptor, based on the parent field ID and the sub field name.
    void ConnectPageSource(Internal::RPageSource &pageSource);
+
+   void SetArtificial()
+   {
+      fIsArtificial = true;
+      for (auto &field : fSubFields) {
+         field->SetArtificial();
+      }
+   }
 
 protected:
    /// Input parameter to ReadBulk() and ReadBulkImpl(). See RBulk class for more information
@@ -364,13 +376,19 @@ protected:
    /// to a single column and has no read callback.
    void Read(NTupleSize_t globalIndex, void *to)
    {
-      if (fIsSimple)
-         return (void)fPrincipalColumn->Read(globalIndex, to);
+      if (fIsSimple) {
+         if (!fIsArtificial) {
+            fPrincipalColumn->Read(globalIndex, to);
+         }
+         return;
+      }
 
-      if (fTraits & kTraitMappable)
-         fPrincipalColumn->Read(globalIndex, to);
-      else
-         ReadGlobalImpl(globalIndex, to);
+      if (!fIsArtificial) {
+         if (fTraits & kTraitMappable)
+            fPrincipalColumn->Read(globalIndex, to);
+         else
+            ReadGlobalImpl(globalIndex, to);
+      }
       if (R__unlikely(!fReadCallbacks.empty()))
          InvokeReadCallbacks(to);
    }
@@ -380,13 +398,19 @@ protected:
    /// to a single column and has no read callback.
    void Read(RClusterIndex clusterIndex, void *to)
    {
-      if (fIsSimple)
-         return (void)fPrincipalColumn->Read(clusterIndex, to);
+      if (fIsSimple) {
+         if (!fIsArtificial) {
+            fPrincipalColumn->Read(clusterIndex, to);
+         }
+         return;
+      }
 
-      if (fTraits & kTraitMappable)
-         fPrincipalColumn->Read(clusterIndex, to);
-      else
-         ReadInClusterImpl(clusterIndex, to);
+      if (!fIsArtificial) {
+         if (fTraits & kTraitMappable)
+            fPrincipalColumn->Read(clusterIndex, to);
+         else
+            ReadInClusterImpl(clusterIndex, to);
+      }
       if (R__unlikely(!fReadCallbacks.empty()))
          InvokeReadCallbacks(to);
    }
@@ -429,6 +453,9 @@ protected:
 
    /// Add a new subfield to the list of nested fields
    void Attach(std::unique_ptr<RFieldBase> child);
+
+   /// Called by `ConnectPageSource()` before connecting; derived classes may override this as appropriate
+   virtual void BeforeConnectPageSource(Internal::RPageSource &) {}
 
    /// Called by `ConnectPageSource()` once connected; derived classes may override this as appropriate
    virtual void OnConnectPageSource() {}
@@ -520,6 +547,7 @@ public:
    std::vector<RFieldBase *> GetSubFields();
    std::vector<const RFieldBase *> GetSubFields() const;
    bool IsSimple() const { return fIsSimple; }
+   bool IsArtificial() const { return fIsArtificial; }
    /// Get the field's description
    const std::string &GetDescription() const { return fDescription; }
    void SetDescription(std::string_view description);

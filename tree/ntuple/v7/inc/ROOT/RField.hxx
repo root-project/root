@@ -140,6 +140,7 @@ protected:
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
    void ReadInClusterImpl(RClusterIndex clusterIndex, void *to) final;
+   void BeforeConnectPageSource(Internal::RPageSource &pageSource) final;
    void OnConnectPageSource() final;
 
 public:
