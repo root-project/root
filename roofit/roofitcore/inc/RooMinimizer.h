@@ -39,7 +39,6 @@ class RooArgList;
 class RooRealVar;
 class RooArgSet;
 class RooPlot;
-class RooDataSet;
 namespace RooFit {
 namespace TestStatistics {
 class LikelihoodGradientJob;
@@ -167,17 +166,6 @@ public:
                     double n4 = 0.0, double n5 = 0.0, double n6 = 0.0, unsigned int npoints = 50);
 
    void setProfile(bool flag = true) { _cfg.profile = flag; }
-   /// Enable or disable the logging of function evaluations to a RooDataSet.
-   /// \see RooMinimizer::getLogDataSet().
-   /// param[in] flag Boolean flag to disable or enable the functionality.
-   void setLoggingToDataSet(bool flag = true) { _loggingToDataSet = flag; }
-
-   /// If logging of function evaluations to a RooDataSet is enabled, returns a
-   /// pointer to a dataset with one row per evaluation of the RooAbsReal passed
-   /// to the minimizer. As columns, there are all floating parameters and the
-   /// values they had for that evaluation.
-   /// \see RooMinimizer::setLoggingToDataSet(bool).
-   RooDataSet *getLogDataSet() const { return _logDataSet.get(); }
 
    int getPrintLevel();
 
@@ -247,13 +235,11 @@ private:
    std::unique_ptr<ROOT::Math::Minimizer> _minimizer; ///<! pointer to used minimizer
    int _status = -99;
    bool _profileStart = false;
-   bool _loggingToDataSet = false;
    TStopwatch _timer;
    TStopwatch _cumulTimer;
    std::unique_ptr<TMatrixDSym> _extV;
    std::unique_ptr<RooAbsMinimizerFcn> _fcn;
    std::vector<std::pair<std::string, int>> _statusHistory;
-   std::unique_ptr<RooDataSet> _logDataSet;
    RooMinimizer::Config _cfg; // local config object
 
    ClassDefOverride(RooMinimizer, 0) // RooFit interface to ROOT::Math::Minimizer
