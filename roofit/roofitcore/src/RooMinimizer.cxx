@@ -748,35 +748,12 @@ void RooMinimizer::applyCovarianceMatrix(TMatrixDSym const &V)
 
 RooFit::OwningPtr<RooFitResult> RooMinimizer::lastMinuitFit()
 {
-   return RooMinimizer::lastMinuitFit({});
-}
-
-RooFit::OwningPtr<RooFitResult> RooMinimizer::lastMinuitFit(const RooArgList &varList)
-{
    // Import the results of the last fit performed, interpreting
    // the fit parameters as the given varList of parameters.
 
    if (_minimizer == nullptr) {
       oocoutE(nullptr, InputArguments) << "RooMinimizer::save: Error, run minimization before!" << std::endl;
       return nullptr;
-   }
-
-   // Verify length of supplied varList
-   if (!varList.empty() && varList.size() != _fcn->getNDim()) {
-      oocoutE(nullptr, InputArguments)
-         << "RooMinimizer::lastMinuitFit: ERROR: supplied variable list must be either empty " << std::endl
-         << "                             or match the number of variables of the last fit (" << _fcn->getNDim() << ")"
-         << std::endl;
-      return nullptr;
-   }
-
-   // Verify that all members of varList are of type RooRealVar
-   for (RooAbsArg *arg : varList) {
-      if (!dynamic_cast<RooRealVar *>(arg)) {
-         oocoutE(nullptr, InputArguments) << "RooMinimizer::lastMinuitFit: ERROR: variable '" << arg->GetName()
-                                          << "' is not of type RooRealVar" << std::endl;
-         return nullptr;
-      }
    }
 
    auto res = std::make_unique<RooFitResult>("lastMinuitFit", "Last MINUIT fit");
@@ -797,28 +774,13 @@ RooFit::OwningPtr<RooFitResult> RooMinimizer::lastMinuitFit(const RooArgList &va
       double xval = _result->fParams[i];
 
       std::unique_ptr<RooRealVar> var;
-      if (varList.empty()) {
 
-         if ((xlo < xhi) && !isConst) {
-            var = std::make_unique<RooRealVar>(varName, varName, xval, xlo, xhi);
-         } else {
-            var = std::make_unique<RooRealVar>(varName, varName, xval);
-         }
-         var->setConstant(isConst);
+      if ((xlo < xhi) && !isConst) {
+         var = std::make_unique<RooRealVar>(varName, varName, xval, xlo, xhi);
       } else {
-
-         var.reset(static_cast<RooRealVar *>(varList.at(i)->Clone()));
-         var->setConstant(isConst);
-         var->setVal(xval);
-         if (xlo < xhi) {
-            var->setRange(xlo, xhi);
-         }
-
-         if (varName.CompareTo(var->GetName())) {
-            oocoutI(nullptr, Eval) << "RooMinimizer::lastMinuitFit: fit parameter '" << varName
-                                   << "' stored in variable '" << var->GetName() << "'" << std::endl;
-         }
+         var = std::make_unique<RooRealVar>(varName, varName, xval);
       }
+      var->setConstant(isConst);
 
       if (isConst) {
          constPars.addOwned(std::move(var));

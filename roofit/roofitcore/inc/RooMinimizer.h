@@ -185,7 +185,6 @@ public:
    std::string const &minimizerType() const { return _cfg.minimizerType; }
 
    RooFit::OwningPtr<RooFitResult> lastMinuitFit();
-   RooFit::OwningPtr<RooFitResult> lastMinuitFit(const RooArgList &varList);
 
    void saveStatus(const char *label, int status) { _statusHistory.emplace_back(label, status); }
 
