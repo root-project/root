@@ -1723,7 +1723,10 @@ TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset,
    const char *t = trueType;
    if (!t || !*t) t = typeName;
 
-   fTypeName = TClassEdit::ShortType(fTypeName,TClassEdit::kDropStlDefault).c_str();
+   std::string answer;
+   TClassEdit::TSplitType arglist(t, TClassEdit::kDropStlDefault);
+   arglist.ShortType(answer, TClassEdit::kDropStlDefault);
+   fTypeName = answer;
 
    if (name==typeName /* intentional pointer comparison */
        || strcmp(name,typeName)==0) {
@@ -1731,56 +1734,32 @@ TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset,
       fName = fTypeName;
    }
 
-   Int_t nch = strlen(t);
-   char *s = new char[nch+1];
-   strlcpy(s,t,nch+1);
-   char *sopen  = strchr(s,'<');
-   if (sopen == nullptr) {
-      Fatal("TStreamerSTL","For %s, the type name (%s) is seemingly not a template (template argument not found)", name, s);
+   if (arglist.fElements.size() < 2) {
+      Fatal("TStreamerSTL","For %s, the type name (%s) is seemingly not a template (template argument not found)", name, t);
       return;
    }
-   *sopen  = 0; sopen++;
-   // We are looking for the first arguments of the STL container, because
-   // this arguments can be a templates we need to count the < and >
-   char* current=sopen;
-   for(int count = 0; *current!='\0'; current++) {
-      if (*current=='<') count++;
-      if (*current=='>') {
-         if (count==0) break;
-         count--;
-      }
-      if (*current==',' && count==0) break;
+
+   const std::string& inside_type = arglist.fElements[1];
+   std::string inside = (inside_type.find("const ")==0) ? inside_type.substr(6) : inside_type;
+
+   // Let's treat the unique_ptr case
+   bool nameChanged = false;
+   std::string intype = TClassEdit::GetNameForIO(inside, TClassEdit::EModType::kNone, &nameChanged);
+
+   bool isPointer = nameChanged; // unique_ptr is considered a pointer
+   // The incoming name is normalized (it comes from splitting the name of a TClass),
+   // so all we need to do is drop the last trailing star (if any) and record that information.
+   while (!nameChanged && intype[intype.length()-1] == '*') {
+      isPointer = true;
+      intype.pop_back();
    }
-   char *sclose = current; *sclose = 0; sclose--;
-   char *sconst = strstr(sopen,"const ");
-   char *sbracket = strstr(sopen,"<");
-   if (sconst && (sbracket==nullptr || sconst < sbracket)) {
-      // the string "const" may be part of the classname!
-      char *pconst = sconst-1;
-      if (*pconst == ' ' || *pconst == '<' || *pconst == '*' || *pconst == '\0') sopen = sconst + 5;
-   }
-   fSTLtype = TClassEdit::STLKind(s);
+
+   fSTLtype = TClassEdit::STLKind(arglist.fElements[0]);
    fCtype   = 0;
-   if (fSTLtype == ROOT::kNotSTL) { delete [] s; return;}
+   if (fSTLtype == ROOT::kNotSTL) { return; }
    if (dmPointer) fSTLtype += TVirtualStreamerInfo::kOffsetP;
 
-   // find STL contained type
-   while (*sopen==' ') sopen++;
-   Bool_t isPointer = kFALSE;
-   // Find stars outside of any template definitions in the
-   // first template argument.
-   char *star = strrchr(sopen,'>');
-   if (star) star = strchr(star,'*');
-   else star = strchr(sopen,'*');
-   if (star) {
-      isPointer = kTRUE;
-      *star = 0;
-      sclose = star - 1;
-   }
-   while (*sclose == ' ') {*sclose = 0; sclose--;}
-
-
-   TDataType *dt = (TDataType*)gROOT->GetListOfTypes()->FindObject(sopen);
+   TDataType *dt = (TDataType*)gROOT->GetListOfTypes()->FindObject(intype.c_str());
    if (fSTLtype == ROOT::kSTLbitset) {
       // Nothing to check
    } else if (dt) {
@@ -1788,28 +1767,28 @@ TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset,
       if (isPointer) fCtype += TVirtualStreamerInfo::kOffsetP;
    } else {
      // this could also be a nested enums ... which should work ... be let's see.
-      TClass *cl = TClass::GetClass(sopen);
+      TClass *cl = TClass::GetClass(intype.c_str());
       if (cl) {
          if (isPointer) fCtype = TVirtualStreamerInfo::kObjectp;
          else           fCtype = TVirtualStreamerInfo::kObject;
       } else {
-         if (gCling->ClassInfo_IsEnum(sopen)) {
+         if (gCling->ClassInfo_IsEnum(intype.c_str())) {
             if (isPointer) fCtype += TVirtualStreamerInfo::kOffsetP;
          } else {
-            if(strcmp(sopen,"string")) {
+            if (intype != "string") {
                // This case can happens when 'this' is a TStreamerElement for
                // a STL container containing something for which we do not have
                // a TVirtualStreamerInfo (This happens in particular is the collection
                // objects themselves are always empty) and we do not have the
                // dictionary/shared library for the container.
                if (GetClassPointer() && GetClassPointer()->IsLoaded()) {
-                  Warning("TStreamerSTL","For %s we could not find any information about the type %s %d %s",fTypeName.Data(),sopen,fSTLtype,s);
+                  Warning("TStreamerSTL", "For %s we could not find any information about the type %s %d %s",
+                          fTypeName.Data(), arglist.fElements[1].c_str(), fSTLtype, arglist.fElements[0].c_str());
                }
             }
          }
       }
    }
-   delete [] s;
 
    if (TStreamerSTL::IsaPointer()) fType = TVirtualStreamerInfo::kSTLp;
 }

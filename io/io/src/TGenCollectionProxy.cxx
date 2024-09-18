@@ -326,7 +326,7 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type, Bool_t silent,
 
    // Let's treat the unique_ptr case
    bool nameChanged = false;
-   std::string intype = TClassEdit::GetNameForIO(inside.c_str(), TClassEdit::EModType::kNone, &nameChanged);
+   std::string intype = TClassEdit::GetNameForIO(inside, TClassEdit::EModType::kNone, &nameChanged);
 
    bool isPointer = nameChanged; // unique_ptr is considered a pointer
    // The incoming name is normalized (it comes from splitting the name of a TClass),
