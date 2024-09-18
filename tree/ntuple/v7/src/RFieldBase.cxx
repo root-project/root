@@ -946,6 +946,8 @@ void ROOT::Experimental::RFieldBase::ConnectPageSource(Internal::RPageSource &pa
    if (!fDescription.empty())
       throw RException(R__FAIL("setting description only valid when connecting to a page sink"));
 
+   BeforeConnectPageSource(pageSource);
+
    for (auto &f : fSubFields) {
       if (f->GetOnDiskId() == kInvalidDescriptorId) {
          f->SetOnDiskId(pageSource.GetSharedDescriptorGuard()->FindFieldId(f->GetFieldName(), GetOnDiskId()));
@@ -953,7 +955,8 @@ void ROOT::Experimental::RFieldBase::ConnectPageSource(Internal::RPageSource &pa
       f->ConnectPageSource(pageSource);
    }
 
-   {
+   // TODO: Do we need to set fColumnRepresentatives?
+   if (!fIsArtificial) {
       const auto descriptorGuard = pageSource.GetSharedDescriptorGuard();
       const RNTupleDescriptor &desc = descriptorGuard.GetRef();
       GenerateColumns(desc);
