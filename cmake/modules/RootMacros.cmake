@@ -1816,13 +1816,14 @@ endfunction()
 #                        [INCLUDE_DIRS label1 label2...] -- Extra target include directories
 #                        [REPEATS number] -- Repeats testsuite `number` times, stopping at the first failure.
 #                        [FAILREGEX ...] Fail test if this regex matches.
+#                        [ENVIRONMENT var1=val1 var2=val2 ...
 # Creates a new googletest exectuable, and registers it as a test.
 #----------------------------------------------------------------------------
 function(ROOT_ADD_GTEST test_suite)
   cmake_parse_arguments(ARG
     "WILLFAIL"
     "TIMEOUT;REPEATS;FAILREGEX"
-    "COPY_TO_BUILDDIR;LIBRARIES;LABELS;INCLUDE_DIRS" ${ARGN})
+    "COPY_TO_BUILDDIR;LIBRARIES;LABELS;INCLUDE_DIRS;ENVIRONMENT" ${ARGN})
 
   ROOT_GET_SOURCES(source_files . ${ARG_UNPARSED_ARGUMENTS})
   # Note we cannot use ROOT_EXECUTABLE without user-specified set of LIBRARIES to link with.
@@ -1870,6 +1871,7 @@ function(ROOT_ADD_GTEST test_suite)
     TIMEOUT "${ARG_TIMEOUT}"
     LABELS "${ARG_LABELS}"
     FAILREGEX "${ARG_FAILREGEX}"
+    ENVIRONMENT "${ARG_ENVIRONMENT}"
   )
 endfunction()
 
