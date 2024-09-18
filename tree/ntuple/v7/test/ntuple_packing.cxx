@@ -672,6 +672,24 @@ TEST(Packing, Real32Quant)
    }
 
    {
+      RColumnElement<float, EColumnType::kReal32Quant> element;
+      element.SetBitsOnStorage(20);
+      element.SetValueRange(-10.f, 10.f);
+
+      float f[5] = { 3.4f, 5.f, -6.f, 10.f, -10.f };
+      unsigned char out[BitPacking::MinBufSize(std::size(f), 20)];
+      element.Pack(out, f, std::size(f));
+      float f2[std::size(f)];
+      element.Unpack(&f2, out, std::size(f));
+      for (size_t i = 0; i < std::size(f); ++i)
+         EXPECT_NEAR(f[i], f2[i], 0.01f);
+
+      f[3] = 11.f;
+      // should throw out of range
+      EXPECT_THROW(element.Pack(out, f, std::size(f)), RException);
+   }
+
+   {
       constexpr auto kBitsOnStorage = 1;
       RColumnElement<float, EColumnType::kReal32Quant> element;
       element.SetBitsOnStorage(kBitsOnStorage);
