@@ -13,6 +13,8 @@
 
 #include <RooFit/Detail/CodeSquashContext.h>
 
+#include "RooFuncWrapper.h"
+
 #include "RooFitImplHelpers.h"
 
 #include <algorithm>
@@ -196,7 +198,7 @@ std::string CodeSquashContext::getTmpVarName() const
 /// @param valueToSave The actual string value to save as a temporary.
 void CodeSquashContext::addResult(RooAbsArg const *in, std::string const &valueToSave)
 {
-   //std::string savedName = RooFit::Detail::makeValidVarName(in->GetName());
+   // std::string savedName = RooFit::Detail::makeValidVarName(in->GetName());
    std::string savedName = getTmpVarName();
 
    // Only save values if they contain operations.
@@ -261,6 +263,13 @@ std::string CodeSquashContext::buildArg(std::span<const double> arr)
 bool CodeSquashContext::isScopeIndependent(RooAbsArg const *in) const
 {
    return !in->isReducerNode() && outputSize(in->namePtr()) == 1;
+}
+
+/// @brief Register a function that is only know to the interpreter to the context.
+/// This is useful to dump the standalone C++ code for the computation graph.
+void CodeSquashContext::collectFunction(std::string const &name)
+{
+   _wrapper->collectFunction(name);
 }
 
 } // namespace Detail

@@ -205,5 +205,7 @@ void RooGenericPdf::writeToStream(ostream& os, bool compact) const
 void RooGenericPdf::translate(RooFit::Detail::CodeSquashContext &ctx) const
 {
    getVal(); // to trigger the creation of the TFormula
-   ctx.addResult(this, ctx.buildCall(_formula->getTFormula()->GetUniqueFuncName().Data(), _actualVars));
+   std::string funcName = _formula->getTFormula()->GetUniqueFuncName().Data();
+   ctx.collectFunction(funcName);
+   ctx.addResult(this, ctx.buildCall(funcName, _actualVars));
 }

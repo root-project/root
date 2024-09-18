@@ -61,6 +61,8 @@ public:
    void writeDebugMacro(std::string const &) const;
 
    std::string declareFunction(std::string const &funcBody);
+   void collectFunction(std::string const &funcName) { _collectedFunctions.emplace_back(funcName); }
+   std::vector<std::string> const &collectedFunctions() { return _collectedFunctions; }
 
    std::string buildCode(RooAbsReal const &head);
 
@@ -74,8 +76,6 @@ private:
                           RooSimultaneous const *simPdf);
 
    void buildFuncAndGradFunctors();
-
-   bool declareToInterpreter(std::string const &code);
 
    using Func = double (*)(double *, double const *, double const *);
    using Grad = void (*)(double *, double const *, double const *, double *);
@@ -98,7 +98,7 @@ private:
    std::map<RooFit::Detail::DataKey, ObsInfo> _obsInfos;
    std::map<RooFit::Detail::DataKey, std::size_t> _nodeOutputSizes;
    std::vector<double> _xlArr;
-   std::stringstream _allCode;
+   std::vector<std::string> _collectedFunctions;
 };
 
 } // namespace Experimental
