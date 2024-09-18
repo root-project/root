@@ -73,6 +73,20 @@ void EvaluateIntImpl(const char *expression, int *value)
          return;                                 \
       EXPECT_EQ(expected, _value);               \
    } while (0)
+
+void ProcessLineImpl(const char *line)
+{
+   TInterpreter::EErrorCode error = TInterpreter::kNoError;
+   gInterpreter->ProcessLine(line, &error);
+   ASSERT_EQ(error, TInterpreter::kNoError);
+}
+
+#define ProcessLine(line)                     \
+   do {                                       \
+      ProcessLineImpl(line);                  \
+      if (::testing::Test::HasFatalFailure()) \
+         return;                              \
+   } while (0)
 } // namespace
 
 TEST(RNTupleEvolution, RemovedMember)
@@ -99,9 +113,9 @@ struct RemovedMember {
 
       void *ptr = writer->GetModel().GetDefaultEntry().GetPtr<void>("f").get();
       DeclarePointer("RemovedMember", "ptrRemovedMember", ptr);
-      ASSERT_TRUE(gInterpreter->ProcessLine("ptrRemovedMember->fInt1 = 71;"));
-      ASSERT_TRUE(gInterpreter->ProcessLine("ptrRemovedMember->fInt2 = 82;"));
-      ASSERT_TRUE(gInterpreter->ProcessLine("ptrRemovedMember->fInt3 = 93;"));
+      ProcessLine("ptrRemovedMember->fInt1 = 71;");
+      ProcessLine("ptrRemovedMember->fInt2 = 82;");
+      ProcessLine("ptrRemovedMember->fInt3 = 93;");
       writer->Fill();
 
       // Reset / close the writer and flush the file.
@@ -155,9 +169,9 @@ struct ReorderedMembers {
 
       void *ptr = writer->GetModel().GetDefaultEntry().GetPtr<void>("f").get();
       DeclarePointer("ReorderedMembers", "ptrReorderedMembers", ptr);
-      ASSERT_TRUE(gInterpreter->ProcessLine("ptrReorderedMembers->fInt1 = 71;"));
-      ASSERT_TRUE(gInterpreter->ProcessLine("ptrReorderedMembers->fInt2 = 82;"));
-      ASSERT_TRUE(gInterpreter->ProcessLine("ptrReorderedMembers->fInt3 = 93;"));
+      ProcessLine("ptrReorderedMembers->fInt1 = 71;");
+      ProcessLine("ptrReorderedMembers->fInt2 = 82;");
+      ProcessLine("ptrReorderedMembers->fInt3 = 93;");
       writer->Fill();
 
       // Reset / close the writer and flush the file.
@@ -217,9 +231,9 @@ struct RemovedBaseDerived : public RemovedBaseIntermediate {
 
       void *ptr = writer->GetModel().GetDefaultEntry().GetPtr<void>("f").get();
       DeclarePointer("RemovedBaseDerived", "ptrRemovedBaseDerived", ptr);
-      ASSERT_TRUE(gInterpreter->ProcessLine("ptrRemovedBaseDerived->fBase = 71;"));
-      ASSERT_TRUE(gInterpreter->ProcessLine("ptrRemovedBaseDerived->fIntermediate = 82;"));
-      ASSERT_TRUE(gInterpreter->ProcessLine("ptrRemovedBaseDerived->fDerived = 93;"));
+      ProcessLine("ptrRemovedBaseDerived->fBase = 71;");
+      ProcessLine("ptrRemovedBaseDerived->fIntermediate = 82;");
+      ProcessLine("ptrRemovedBaseDerived->fDerived = 93;");
       writer->Fill();
 
       // Reset / close the writer and flush the file.
