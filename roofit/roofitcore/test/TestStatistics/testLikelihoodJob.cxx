@@ -556,6 +556,9 @@ class LikelihoodJobSplitStrategies : public LikelihoodJobSimBinnedConstrainedTes
 
 #ifdef ROOFIT_LEGACY_EVAL_BACKEND
 TEST_P(LikelihoodJobSplitStrategies, SimBinnedConstrainedAndOffset)
+#else
+TEST_P(LikelihoodJobSplitStrategies, DISABLED_SimBinnedConstrainedAndOffset)
+#endif
 {
    // Based on ConstrainedAndOffset, this test tests different parallelization strategies
 
@@ -617,7 +620,6 @@ TEST_P(LikelihoodJobSplitStrategies, SimBinnedConstrainedAndOffset)
    RooFit::MultiProcess::Config::LikelihoodJob::defaultNComponentTasks =
       RooFit::MultiProcess::Config::LikelihoodJob::automaticNComponentTasks;
 }
-#endif // ROOFIT_LEGACY_EVAL_BACKEND
 
 INSTANTIATE_TEST_SUITE_P(SplitStrategies, LikelihoodJobSplitStrategies,
                          testing::Combine(
