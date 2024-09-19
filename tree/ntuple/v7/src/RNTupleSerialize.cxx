@@ -20,6 +20,8 @@
 #include <ROOT/RNTupleSerialize.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 
+#include "RColumnElement.hxx"
+
 #include <RVersion.h>
 #include <TBufferFile.h>
 #include <TClass.h>
@@ -709,6 +711,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeColumnType(ROOT::Exper
    case EColumnType::kSplitUInt16: return SerializeUInt16(0x15, buffer);
    case EColumnType::kReal32Trunc: return SerializeUInt16(0x1D, buffer);
    case EColumnType::kReal32Quant: return SerializeUInt16(0x1E, buffer);
+   case kTestFutureType: return SerializeUInt16(0x99, buffer);
    default: throw RException(R__FAIL("ROOT bug: unexpected column type"));
    }
 }
@@ -722,6 +725,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeColumnType(const voi
    auto result = DeserializeUInt16(buffer, onDiskType);
 
    switch (onDiskType) {
+   case 0x00: return R__FAIL("unexpected on-disk column type");
    case 0x01: type = EColumnType::kIndex64; break;
    case 0x02: type = EColumnType::kIndex32; break;
    case 0x03: type = EColumnType::kSwitch; break;
@@ -751,7 +755,11 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeColumnType(const voi
    case 0x15: type = EColumnType::kSplitUInt16; break;
    case 0x1D: type = EColumnType::kReal32Trunc; break;
    case 0x1E: type = EColumnType::kReal32Quant; break;
-   default: return R__FAIL("unexpected on-disk column type");
+   // case 0x99 => kTestFutureType missing on purpose
+   default:
+      // may be a column type introduced by a future version
+      type = EColumnType::kUnknown;
+      break;
    }
    return result;
 }

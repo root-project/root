@@ -132,6 +132,13 @@ enum class EColumnCppType {
    kDouble,
    kClusterSize,
    kColumnSwitch,
+   kMax
+};
+
+inline constexpr EColumnCppType kTestFutureColumn = static_cast<EColumnCppType>((int)EColumnCppType::kMax + 1);
+
+struct RTestFutureColumn {
+   int dummy;
 };
 
 std::unique_ptr<RColumnElementBase> GenerateColumnElement(EColumnCppType cppType, EColumnType colType);
@@ -169,6 +176,8 @@ std::unique_ptr<RColumnElementBase> RColumnElementBase::Generate(EColumnType typ
       return GenerateColumnElement(EColumnCppType::kClusterSize, type);
    else if constexpr (std::is_same_v<CppT, RColumnSwitch>)
       return GenerateColumnElement(EColumnCppType::kColumnSwitch, type);
+   else if constexpr (std::is_same_v<CppT, RTestFutureColumn>)
+      return GenerateColumnElement(kTestFutureColumn, type);
    else
       static_assert(!sizeof(CppT), "Unsupported Cpp type");
 }
