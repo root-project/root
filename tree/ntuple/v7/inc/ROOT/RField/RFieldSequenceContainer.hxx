@@ -253,7 +253,9 @@ private:
    std::unique_ptr<RDeleter> fItemDeleter;
 
 protected:
-   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
+   RVectorField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField, bool isUntyped);
+
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const override;
 
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumns() final;
@@ -285,6 +287,22 @@ public:
    {
       fPrincipalColumn->GetCollectionInfo(clusterIndex, collectionStart, size);
    }
+};
+
+/// The same memory and on-disk layout than an std::vector but without an assigned type name.
+/// Analogous to the RRecordField acting as an untyped class, this field is an untyped sequence collection.
+class RSequenceCollectionField final : public RVectorField {
+protected:
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
+
+public:
+   RSequenceCollectionField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField)
+      : RVectorField(fieldName, std::move(itemField), true)
+   {
+   }
+   RSequenceCollectionField(RSequenceCollectionField &&other) = default;
+   RSequenceCollectionField &operator=(RSequenceCollectionField &&other) = default;
+   ~RSequenceCollectionField() override = default;
 };
 
 template <typename ItemT>
