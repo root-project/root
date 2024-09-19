@@ -403,12 +403,27 @@ sap.ui.define([
             this.activateGed(this.getCanvasPainter());
       },
 
+      resizeBrowser(canvp, delta_w) {
+         if (canvp?.resizeBrowser && !canvp?.embed_canvas && typeof window !== 'undefined') {
+            const wbig = window.outerWidth,
+                  hbig = window.outerHeight;
+
+            if (wbig && hbig)
+               canvp.resizeBrowser(Math.max(100, wbig + delta_w), hbig);
+         }
+      },
+
       /** @summary Load custom panel in canvas left area */
       showLeftArea(panel_name, panel_handle) {
          let split = this.getView().byId('MainAreaSplitter'),
              model = this.getView().getModel(),
              curr = model.getProperty('/LeftArea'),
              is_fit = (panel_name === 'FitPanel'),
+             is_ged = (panel_name === 'Ged'),
+             is_flex = is_fit || is_ged ? 1 : 0,
+             was_fit = (curr === 'FitPanel'),
+             was_ged = (curr === 'Ged'),
+             was_flex = was_fit || was_ged ? 1 : 0,
              canvp = this.getCanvasPainter();
 
          if (is_fit && !canvp?.startFitPanel) {
@@ -419,16 +434,22 @@ sap.ui.define([
          if (!split || (!curr && !panel_name) || (curr === panel_name))
             return Promise.resolve(null);
 
+         const adjust_window_width = is_flex ^ was_flex;
+
          model.setProperty('/LeftArea', panel_name);
-         model.setProperty('/GedIcon', chk_icon(panel_name == 'Ged'));
+         model.setProperty('/GedIcon', chk_icon(is_ged));
 
          // first need to remove existing
          if (curr) {
             this.cleanupIfGed();
-            split.removeContentArea(split.getContentAreas()[0]);
+            let area = split.getContentAreas()[0];
+            if (adjust_window_width && !panel_name)
+               this.resizeBrowser(canvp, -1*(area.$().width() + 16));
+            split.removeContentArea(area);
          }
 
-         if (canvp) canvp.enforceCanvasSize = true;
+         if (canvp)
+            canvp.enforceCanvasSize = true;
 
          if (!panel_name)
             return Promise.resolve(null);
@@ -442,18 +463,21 @@ sap.ui.define([
          } else if (panel_name.indexOf('.') < 0)
             viewName = 'rootui5.canv.view.' + panel_name;
 
+         let panel_width = Math.max(250, Math.round(0.25 * this.getView().$().width()));
+
+         if (adjust_window_width)
+            this.resizeBrowser(canvp, panel_width + 16);
+
          let viewData = canvp.getUi5PanelData(panel_name);
          viewData.masterPanel = this;
          viewData.handle = panel_handle;
 
          let can_elem = this.getView().byId('MainPanel');
 
-         let w = this.getView().$().width();
-
          return XMLView.create({
              viewName,
              viewData,
-             layoutData: new SplitterLayoutData({ resizable: true, size: Math.round(w*0.25) + 'px' }),
+             layoutData: new SplitterLayoutData({ resizable: true, size: panel_width + 'px' }),
              height: (panel_name == 'Panel') ? '100%' : undefined
          }).then(oView => {
             // workaround, while CanvasPanel.onBeforeRendering called too late
@@ -461,7 +485,7 @@ sap.ui.define([
 
             split.insertContentArea(oView, 0);
 
-            if (panel_name === 'Ged') {
+            if (is_ged) {
                let ged = oView.getController();
                if (ged && (typeof canvp?.registerForPadEvents == 'function')) {
                   canvp.registerForPadEvents(ged.padEventsReceiver.bind(ged));
@@ -595,7 +619,10 @@ sap.ui.define([
       },
 
       toggleToolBar(new_state) {
-         if (new_state === undefined) new_state = !this.getView().getModel().getProperty('/ToolbarIcon');
+         if (new_state === undefined)
+            new_state = this.getView().getModel().getProperty('/ToolbarIcon') === chk_icon(false);
+
+         console.log("new state", new_state);
 
          this._Page.setShowSubHeader(new_state);
 
