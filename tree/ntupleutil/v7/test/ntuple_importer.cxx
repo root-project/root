@@ -224,7 +224,7 @@ TEST(RNTupleImporter, ConvertDotsInBranchNames)
    EXPECT_EQ(42, *reader->GetModel().GetDefaultEntry().GetPtr<std::int32_t>("a_a"));
 
    auto viewMuon = reader->GetCollectionView("_collection0");
-   auto viewMuonPt = viewMuon.GetView<float>("muon_pt");
+   auto viewMuonPt = viewMuon.GetView<float>("_0.muon_pt");
    EXPECT_EQ(1, viewMuon(0));
    EXPECT_FLOAT_EQ(3.14, viewMuonPt(0));
 }
@@ -437,10 +437,10 @@ TEST(RNTupleImporter, LeafCountArray)
    EXPECT_EQ(2, viewMiddle(0));
    EXPECT_EQ(3, viewEnd(0));
    auto viewJets = reader->GetCollectionView("_collection0");
-   auto viewJetPt = viewJets.GetView<float>("jet_pt");
-   auto viewJetEta = viewJets.GetView<float>("jet_eta");
+   auto viewJetPt = viewJets.GetView<float>("_0.jet_pt");
+   auto viewJetEta = viewJets.GetView<float>("_0.jet_eta");
    auto viewMuons = reader->GetCollectionView("_collection1");
-   auto viewMuonPt = viewMuons.GetView<float>("muon_pt");
+   auto viewMuonPt = viewMuons.GetView<float>("_0.muon_pt");
    auto viewProjectedNjets = reader->GetView<ROOT::Experimental::RNTupleCardinality<std::uint32_t>>("njets");
    auto viewProjectedJetPt = reader->GetView<ROOT::RVec<float>>("jet_pt");
    auto viewProjectedJetEta = reader->GetView<ROOT::RVec<float>>("jet_eta");
