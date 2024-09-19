@@ -15,6 +15,11 @@ class RFunction_Update;
 class RFunction_Aggregate;
 
 struct GNN_Init {
+
+   // Explicitly define default constructor so cppyy doesn't attempt
+   // aggregate initialization.
+   GNN_Init() {}
+
    // update blocks
    std::unique_ptr<RFunction_Update> edges_update_block;
    std::unique_ptr<RFunction_Update> nodes_update_block;
