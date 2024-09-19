@@ -580,6 +580,8 @@ sap.ui.define([
          this.getView().getModel().setProperty('/StatusIcon', chk_icon(new_state));
 
          if (this.isStatusShown() != new_state) {
+            // restore size after next resize
+            this.getView().byId('MainPanel')?.getController().rememberAreaSize();
             this._Page.setShowFooter(new_state);
             const canvp = this.getCanvasPainter();
             canvp?.processChanges('sbits', canvp);
@@ -589,6 +591,8 @@ sap.ui.define([
       toggleToolBar(new_state) {
          if (new_state === undefined)
             new_state = this.getView().getModel().getProperty('/ToolbarIcon') === chk_icon(false);
+
+         this.getView().byId('MainPanel')?.getController().rememberAreaSize();
 
          this._Page.setShowSubHeader(new_state);
 
