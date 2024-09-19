@@ -11,6 +11,7 @@
 #define CLING_VALUE_EXTRACTION_SYNTHESIZER_H
 
 #include "ASTTransformer.h"
+#include "cling/Interpreter/Interpreter.h"
 
 namespace clang {
   class ASTContext;
@@ -47,6 +48,8 @@ namespace cling {
 
     bool m_isChildInterpreter;
 
+    cling::Interpreter* m_Interpreter;
+
 public:
     ///\ brief Constructs the return synthesizer.
     ///
@@ -54,13 +57,11 @@ public:
     ///\param[in] isChildInterpreter - flag to control if it is called
     /// from a child or parent Interpreter
     ///
-    ValueExtractionSynthesizer(clang::Sema* S, bool isChildInterpreter);
+    ValueExtractionSynthesizer(clang::Sema* S, cling::Interpreter* m_Interpreter, bool isChildInterpreter);
 
     virtual ~ValueExtractionSynthesizer();
 
     Result Transform(clang::Decl* D) override;
-
-  private:
 
     ///\brief
     /// Here we don't want to depend on the JIT runFunction, because of its
@@ -88,6 +89,7 @@ public:
     ///
     clang::Expr* SynthesizeSVRInit(clang::Expr* E);
 
+  private:
     // Find and cache cling::runtime::gCling, setValueNoAlloc,
     // setValueWithAlloc on first request.
     bool FindAndCacheRuntimeDecls(clang::Expr*);

@@ -1038,6 +1038,16 @@ namespace cling {
     }
   }
 
+  void IncrementalParser::SetSynthesizer(bool isChildInterpreter) {
+    // Add transformers to the IncrementalParser, which owns them
+    Sema* TheSema = &m_CI->getSema();
+    // if the interpreter compiles ptx code, some transformers should not be
+    // used
+    bool isCUDADevice = m_Interpreter->getOptions().CompilerOpts.CUDADevice;
+    if (!m_Interpreter->getOptions().NoRuntime && !isCUDADevice)
+      synthesizer.reset(new ValueExtractionSynthesizer(TheSema, m_Interpreter, isChildInterpreter));
+  }
+
   void IncrementalParser::SetTransformers(bool isChildInterpreter) {
     // Add transformers to the IncrementalParser, which owns them
     Sema* TheSema = &m_CI->getSema();
@@ -1064,13 +1074,13 @@ namespace cling {
 
     typedef std::unique_ptr<WrapperTransformer> WTPtr_t;
     std::vector<WTPtr_t> WrapperTransformers;
-    if (!m_Interpreter->getOptions().NoRuntime && !isCUDADevice)
-      WrapperTransformers.emplace_back(new ValuePrinterSynthesizer(TheSema));
-    WrapperTransformers.emplace_back(new DeclExtractor(TheSema));
-    if (!m_Interpreter->getOptions().NoRuntime && !isCUDADevice)
-      WrapperTransformers.emplace_back(new ValueExtractionSynthesizer(TheSema,
-                                                           isChildInterpreter));
-    WrapperTransformers.emplace_back(new CheckEmptyTransactionTransformer(TheSema));
+    // if (!m_Interpreter->getOptions().NoRuntime && !isCUDADevice)
+    //   WrapperTransformers.emplace_back(new ValuePrinterSynthesizer(TheSema));
+    // WrapperTransformers.emplace_back(new DeclExtractor(TheSema));
+    // if (!m_Interpreter->getOptions().NoRuntime && !isCUDADevice)
+    //   WrapperTransformers.emplace_back(new ValueExtractionSynthesizer(TheSema,
+    //                                                        isChildInterpreter));
+    // WrapperTransformers.emplace_back(new CheckEmptyTransactionTransformer(TheSema));
 
     m_Consumer->SetTransformers(std::move(ASTTransformers),
                                 std::move(WrapperTransformers));

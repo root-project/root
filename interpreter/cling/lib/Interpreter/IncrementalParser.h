@@ -10,6 +10,8 @@
 #ifndef CLING_INCREMENTAL_PARSER_H
 #define CLING_INCREMENTAL_PARSER_H
 
+#include "ValueExtractionSynthesizer.h"
+
 #include "clang/Basic/SourceLocation.h"
 
 #include "llvm/ADT/PointerIntPair.h"
@@ -61,6 +63,8 @@ namespace cling {
 
     // compiler instance.
     std::unique_ptr<clang::CompilerInstance> m_CI;
+
+    std::unique_ptr<ValueExtractionSynthesizer> synthesizer;
 
     // parser (incremental)
     std::unique_ptr<clang::Parser> m_Parser;
@@ -235,6 +239,10 @@ namespace cling {
     ///\param[in] T - the transaction for which to run the initializers.
     ///
     bool runStaticInitOnTransaction(Transaction* T) const;
+
+    void SetSynthesizer(bool isChildInterpreter);
+
+    ValueExtractionSynthesizer* GetSynthesizer() const { return synthesizer.get(); }
 
     ///\brief Add the trnasformers to the Incremental Parser.
     ///
