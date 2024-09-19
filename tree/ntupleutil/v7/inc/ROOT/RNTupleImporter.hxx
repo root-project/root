@@ -154,7 +154,6 @@ private:
       }
       virtual ~RImportTransformation() = default;
       virtual RResult<void> Transform(const RImportBranch &branch, RImportField &field) = 0;
-      virtual void ResetEntry() = 0; // called at the end of an entry
    };
 
    /// When the schema is set up and the import started, it needs to be reset before the next Import() call
@@ -197,18 +196,6 @@ private:
       RCStringTransformation(std::size_t b, std::size_t f) : RImportTransformation(b, f) {}
       ~RCStringTransformation() override = default;
       RResult<void> Transform(const RImportBranch &branch, RImportField &field) final;
-      void ResetEntry() final {}
-   };
-
-   /// When writing the elements of a leaf count array, moves the data from the input array one-by-one
-   /// to the memory locations of the fields of the corresponding untyped collection.
-   /// TODO(jblomer): write arrays as a whole to RNTuple
-   struct RLeafArrayTransformation : public RImportTransformation {
-      std::int64_t fNum = 0;
-      RLeafArrayTransformation(std::size_t b, std::size_t f) : RImportTransformation(b, f) {}
-      ~RLeafArrayTransformation() override = default;
-      RResult<void> Transform(const RImportBranch &branch, RImportField &field) final;
-      void ResetEntry() final { fNum = 0; }
    };
 
    RNTupleImporter() = default;
