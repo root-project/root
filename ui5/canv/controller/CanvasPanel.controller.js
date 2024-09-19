@@ -19,7 +19,8 @@ sap.ui.define([
 
       rememberAreaSize() {
          this._prev_w = this.getView().$().width();
-         this._prev_w = this.getView().$().height();
+         this._prev_h = this.getView().$().height();
+         this.invokeResizeTimeout(100); // we expect some changes, at the same time ignore resize
       },
 
       onBeforeRendering() {
@@ -53,6 +54,9 @@ sap.ui.define([
             clearTimeout(this.resize_tmout);
             delete this.resize_tmout;
          }
+
+         if (this.canvas_painter)
+            this.canvas_painter._ignore_resize = true; // ignore possible resize events
 
          this.resize_tmout = setTimeout(() => this.onResizeTimeout(), tmout);
       },
@@ -89,6 +93,9 @@ sap.ui.define([
          if (!this.hasValidSize())
             return this.invokeResizeTimeout(5000); // very rare check if something changed
 
+         if (this.canvas_painter)
+            this.canvas_painter._ignore_resize = false;
+
          let check_resize = true;
 
          if (this._has_after_rendering) {
@@ -114,7 +121,6 @@ sap.ui.define([
             if (this.canvas_painter) {
                this.canvas_painter.setDom(dom.lastChild);
                this.canvas_painter.setPadName('');
-               this.canvas_painter._ignore_resize = false;
             }
 
             if (this.canvas_painter?._window_handle) {
@@ -125,14 +131,14 @@ sap.ui.define([
 
          if (check_resize) {
             if (this._prev_w && this._prev_h) {
-               const w = this.getView().$().width(),
-                     h = this.getView().$().height();
-
+               const dw = this._prev_w - this.getView().$().width(),
+                     dh = this._prev_h - this.getView().$().height();
                delete this._prev_w;
                delete this._prev_h;
-
-               this.resizeBrowser(this._prev_w - w, this._prev_h - h);
+               if (this.resizeBrowser(dw, dh))
+                  return this.invokeResizeTimeout(100);
             }
+
             this.canvas_painter?.checkCanvasResize();
          }
       },
@@ -145,8 +151,10 @@ sap.ui.define([
          const wbig = window.outerWidth,
                hbig = window.outerHeight;
 
-         if (wbig && hbig && (delta_w || delta_h))
+         if (wbig && hbig && (delta_w || delta_h)) {
             this.canvas_painter.resizeBrowser(Math.max(100, wbig + delta_w), Math.max(100, hbig + delta_h));
+            return true;
+         }
       },
 
       onInit() {
