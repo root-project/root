@@ -2584,8 +2584,9 @@ void ROOT::Experimental::RRecordField::AcceptVisitor(Detail::RFieldVisitor &visi
 
 //------------------------------------------------------------------------------
 
-ROOT::Experimental::RVectorField::RVectorField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField)
-   : ROOT::Experimental::RFieldBase(fieldName, "std::vector<" + itemField->GetTypeName() + ">",
+ROOT::Experimental::RVectorField::RVectorField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField,
+                                               bool isUntyped)
+   : ROOT::Experimental::RFieldBase(fieldName, isUntyped ? "" : "std::vector<" + itemField->GetTypeName() + ">",
                                     ENTupleStructure::kCollection, false /* isSimple */),
      fItemSize(itemField->GetValueSize()),
      fNWritten(0)
@@ -2593,6 +2594,11 @@ ROOT::Experimental::RVectorField::RVectorField(std::string_view fieldName, std::
    if (!(itemField->GetTraits() & kTraitTriviallyDestructible))
       fItemDeleter = GetDeleterOf(*itemField);
    Attach(std::move(itemField));
+}
+
+ROOT::Experimental::RVectorField::RVectorField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField)
+   : RVectorField(fieldName, std::move(itemField), false)
+{
 }
 
 std::unique_ptr<ROOT::Experimental::RFieldBase>
@@ -2718,6 +2724,15 @@ ROOT::Experimental::RVectorField::SplitValue(const RValue &value) const
 void ROOT::Experimental::RVectorField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitVectorField(*this);
+}
+
+//------------------------------------------------------------------------------
+
+std::unique_ptr<ROOT::Experimental::RFieldBase>
+ROOT::Experimental::RSequenceCollectionField::CloneImpl(std::string_view newName) const
+{
+   auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetFieldName());
+   return std::make_unique<RSequenceCollectionField>(newName, std::move(newItemField));
 }
 
 //------------------------------------------------------------------------------
