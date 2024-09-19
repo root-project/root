@@ -333,45 +333,55 @@ TEST(RNTupleShow, Objects)
 
 TEST(RNTupleShow, Collections)
 {
+   using ROOT::Experimental::RRecordField;
+   using ROOT::Experimental::RSequenceCollectionField;
+
    std::string rootFileName{"test_ntuple_show_collection.root"};
    std::string ntupleName{"Collections"};
    FileRaii fileGuard(rootFileName);
    {
+      struct MyStruct {
+         int myInt;
+         float myFloat;
+      };
+
       auto model = RNTupleModel::Create();
-      auto collection_model = RNTupleModel::Create();
-      auto int_field = collection_model->MakeField<int>("myInt");
-      auto float_field = collection_model->MakeField<float>("myFloat");
-      auto collection = model->MakeCollection("collection", std::move(collection_model));
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), ntupleName, rootFileName);
-      *int_field = 0;
-      *float_field = 10.0;
-      collection->Fill();
-      *int_field = 1;
-      *float_field = 20.0;
-      collection->Fill();
-      ntuple->Fill();
+      std::vector<std::unique_ptr<RFieldBase>> leafFields;
+      leafFields.emplace_back(std::make_unique<RField<int>>("myInt"));
+      leafFields.emplace_back(std::make_unique<RField<float>>("myFloat"));
+      auto recordField = std::make_unique<RRecordField>("_0", leafFields);
+      auto collectionField = std::make_unique<RSequenceCollectionField>("myCollection", std::move(recordField));
+      model->AddField(std::move(collectionField));
+      model->Freeze();
+
+      auto v = std::static_pointer_cast<std::vector<MyStruct>>(model->GetDefaultEntry().GetPtr<void>("myCollection"));
+      auto writer = RNTupleWriter::Recreate(std::move(model), ntupleName, rootFileName);
+
+      v->emplace_back(MyStruct({1, 10.0}));
+      v->emplace_back(MyStruct({2, 20.0}));
+      writer->Fill();
    }
 
-   auto ntuple = RNTupleReader::Open(ntupleName, rootFileName);
+   auto reader = RNTupleReader::Open(ntupleName, rootFileName);
    std::ostringstream osData;
-   ntuple->Show(0, osData);
+   reader->Show(0, osData);
    // clang-format off
    std::string outputData{ std::string("")
       + "{\n"
-      + "  \"collection\": [{\"myInt\": 0, \"myFloat\": 10}, {\"myInt\": 1, \"myFloat\": 20}]\n"
+      + "  \"myCollection\": [{\"myInt\": 1, \"myFloat\": 10}, {\"myInt\": 2, \"myFloat\": 20}]\n"
       + "}\n" };
    // clang-format on
    EXPECT_EQ(outputData, osData.str());
 
    std::ostringstream osFields;
-   ntuple->PrintInfo(ROOT::Experimental::ENTupleInfo::kSummary, osFields);
+   reader->PrintInfo(ROOT::Experimental::ENTupleInfo::kSummary, osFields);
    // clang-format off
    std::string outputFields{ std::string("")
       + "************************************ NTUPLE ************************************\n"
       + "* N-Tuple : Collections                                                        *\n"
       + "* Entries : 1                                                                  *\n"
       + "********************************************************************************\n"
-      + "* Field 1           : collection (std::vector<>)                               *\n"
+      + "* Field 1           : myCollection                                             *\n"
       + "*   Field 1.1       : _0                                                       *\n"
       + "*     Field 1.1.1   : myInt (std::int32_t)                                     *\n"
       + "*     Field 1.1.2   : myFloat (float)                                          *\n"
