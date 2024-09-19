@@ -26,6 +26,7 @@
 #include "TBaseClass.h"
 #include "TDataMember.h"
 #include "TDataType.h"
+#include "TEnum.h"
 #include "TRealData.h"
 #include "ThreadLocalStorage.h"
 #include "TList.h"
@@ -1685,7 +1686,7 @@ ClassImp(TStreamerSTL);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.
 
-TStreamerSTL::TStreamerSTL() : fSTLtype(0),fCtype(0)
+TStreamerSTL::TStreamerSTL() : fSTLtype(0), fCtype(0)
 {
 }
 
@@ -1696,7 +1697,10 @@ TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset,
                            const char *typeName, const TVirtualCollectionProxy &proxy, Bool_t dmPointer)
         : TStreamerElement(name,title,offset,ROOT::kSTLany,typeName)
 {
-   fTypeName = TClassEdit::ShortType(fTypeName,TClassEdit::kDropStlDefault).c_str();
+   std::string answer;
+   TClassEdit::TSplitType arglist(fTypeName, TClassEdit::kDropStlDefault);
+   arglist.ShortType(answer, TClassEdit::kDropStlDefault);
+   fTypeName = answer;
 
   if (name==typeName /* intentional pointer comparison */
       || strcmp(name,typeName)==0) {
@@ -1716,6 +1720,10 @@ TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset,
    } else {
       fCtype = proxy.GetType();
       if (proxy.HasPointers()) fCtype += TVirtualStreamerInfo::kOffsetP;
+      auto enumdesc = TEnum::GetEnum(arglist.fElements[1].c_str());
+      if (enumdesc || gCling->ClassInfo_IsEnum(arglist.fElements[1].c_str())) {
+         fCtype = enumdesc ? enumdesc->GetUnderlyingType() : 3;
+      }
    }
    if (TStreamerSTL::IsaPointer()) {
       fType = TVirtualStreamerInfo::kSTLp;
@@ -1781,8 +1789,11 @@ TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset,
          if (isPointer) fCtype = TVirtualStreamerInfo::kObjectp;
          else           fCtype = TVirtualStreamerInfo::kObject;
       } else {
-         if (gCling->ClassInfo_IsEnum(intype.c_str())) {
-            if (isPointer) fCtype += TVirtualStreamerInfo::kOffsetP;
+         auto enumdesc = TEnum::GetEnum(intype.c_str());
+         if (enumdesc || gCling->ClassInfo_IsEnum(intype.c_str())) {
+            fCtype = enumdesc ? enumdesc->GetUnderlyingType() : 3;
+            if (isPointer)
+               fCtype += TVirtualStreamerInfo::kOffsetP;
          } else {
             if (intype != "string") {
                // This case can happens when 'this' is a TStreamerElement for
@@ -1852,6 +1863,41 @@ Bool_t TStreamerSTL::IsBase() const
    if (strcmp(ts.Data(),GetTypeNameBasic())==0) return kTRUE;
    return kFALSE;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns a pointer to the TClass of this element.
+
+TClass *TStreamerSTL::GetClassPointer() const
+{
+   if (fClassObject!=(TClass*)(-1))
+      return fClassObject;
+
+   bool quiet = (fType == TVirtualStreamerInfo::kArtificial);
+
+   TString className(ExtractClassName(fTypeName));
+   TClass *cl = TClass::GetClass(className, kTRUE, quiet);
+
+   auto proxy = cl->GetCollectionProxy();
+   if (fNewClass && proxy->GetValueClass() == nullptr) {
+      // Collection of numerical type, let check if it is an enum.
+      TClassEdit::TSplitType arglist(fTypeName, TClassEdit::kDropStlDefault);
+      if ( arglist.fElements[1].size() >= 2 ) {
+         auto enumdesc = TEnum::GetEnum(arglist.fElements[1].c_str());
+         if (enumdesc || gCling->ClassInfo_IsEnum(arglist.fElements[1].c_str())) {
+            if (fNewClass == nullptr) {
+               ((TStreamerElement*)this)->fNewClass = cl;
+               if (proxy->HasPointers())
+                  cl = TClass::GetClass("vector<Int_t*>");
+               else
+                  cl = TClass::GetClass("vector<Int_t>");
+            }
+         }
+      }
+   }
+   ((TStreamerElement*)this)->fClassObject = cl;
+   return fClassObject;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns size of STL container in bytes.
 
