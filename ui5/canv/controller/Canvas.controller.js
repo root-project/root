@@ -126,7 +126,9 @@ sap.ui.define([
          }
 
          if (method.fName == 'FitPanel') {
-            this.showLeftArea('FitPanel');
+            const canvp = this.getCanvasPainter();
+            if (canvp?.startFitPanel)
+               canvp.startFitPanel(true);
             return true;
          }
 
@@ -136,7 +138,6 @@ sap.ui.define([
          }
 
          return false; // not processed
-
       },
 
       /** @summary function used to activate GED in full canvas */

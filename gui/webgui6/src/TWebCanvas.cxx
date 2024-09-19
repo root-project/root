@@ -1933,13 +1933,19 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
          if (hist) break;
       }
 
+      TString showcmd;
+      if (chid == "standalone")
+         showcmd = "panel->Show()";
+      else
+         showcmd = TString::Format("auto wptr = (std::shared_ptr<ROOT::RWebWindow>*)0x%zx;"
+                                   "panel->Show({*wptr, %u, %s})",
+                                   (size_t) &fWindow, connid, chid.c_str());
+
       auto cmd = TString::Format("auto panel = std::make_shared<ROOT::Experimental::RFitPanel>(\"FitPanel\");"
                                  "panel->AssignCanvas(\"%s\");"
                                  "panel->AssignHistogram((TH1 *)0x%zx);"
-                                 "auto wptr = (std::shared_ptr<ROOT::RWebWindow>*)0x%zx;"
-                                 "panel->Show({*wptr, %u, %s});"
-                                 "panel->ClearOnClose(panel);",
-                                 Canvas()->GetName(), (size_t) hist, (size_t) &fWindow, connid, chid.c_str());
+                                 "%s;panel->ClearOnClose(panel);",
+                                 Canvas()->GetName(), (size_t) hist, showcmd.Data());
       gROOT->ProcessLine(cmd.Data());
    } else if (arg == "START_BROWSER"s) {
 
