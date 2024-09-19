@@ -466,9 +466,12 @@ void TStreamerElement::ls(Option_t *) const
       sequenceType.Prepend(" (");
       sequenceType += ") ";
    }
-   printf("  %-14s %-15s offset=%3d type=%2d %s%-20s\n",
-          temp.Data(),GetFullName(),fOffset,fType,sequenceType.Data(),
-          GetTitle());
+   printf("  %-14s %-15s offset=%3d type=%2d",
+          temp.Data(),GetFullName(),fOffset,fType);
+   if (fType != fNewType && fNewType != TVirtualStreamerInfo::kUnset)
+      printf(" newtype=%2d", fNewType);
+   printf(" %s%-20s\n",
+          sequenceType.Data(), GetTitle());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1883,9 +1886,12 @@ void TStreamerSTL::ls(Option_t *) const
       sequenceType.Prepend(" (");
       sequenceType += ") ";
    }
-   printf("  %-14s %-15s offset=%3d type=%2d %s,stl=%d, ctype=%d, %-20s\n",
-          GetTypeName(),name.Data(),fOffset,fType,sequenceType.Data(),
-          fSTLtype,fCtype,GetTitle());
+   printf("  %-14s %-15s offset=%3d type=%2d",
+          GetTypeName(), name.Data(), fOffset, fType);
+   if (fType != fNewType && fNewType != TVirtualStreamerInfo::kUnset)
+      printf(" newtype=%2d", fNewType);
+   printf(" stl=%d ctype=%d %s%-20s\n",
+          fSTLtype, fCtype, sequenceType.Data(), GetTitle());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
