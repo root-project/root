@@ -427,6 +427,7 @@ class TAxisPainter extends ObjectPainter {
       this.vertical = vertical;
       this.log = opts.log || 0;
       this.minposbin = opts.minposbin;
+      this.ignore_labels = opts.ignore_labels;
       this.noexp_changed = opts.noexp_changed;
       this.symlog = opts.symlog || false;
       this.reverse = opts.reverse || false;
@@ -444,7 +445,7 @@ class TAxisPainter extends ObjectPainter {
       } else if (opts.axis_func)
          this.kind = kAxisFunc;
       else
-         this.kind = !axis.fLabels ? kAxisNormal : kAxisLabels;
+         this.kind = !axis.fLabels || this.ignore_labels ? kAxisNormal : kAxisLabels;
 
       if (this.kind === kAxisTime)
          this.func = d3_scaleTime().domain([this.convertDate(smin), this.convertDate(smax)]);
@@ -557,7 +558,7 @@ class TAxisPainter extends ObjectPainter {
 
          this.regular_labels = true;
 
-         if (axis && axis.fNbins && axis.fLabels) {
+         if (axis?.fNbins && axis?.fLabels) {
             if ((axis.fNbins !== Math.round(axis.fXmax - axis.fXmin)) ||
                 (axis.fXmin !== 0) || (axis.fXmax !== axis.fNbins))
                this.regular_labels = false;
@@ -600,10 +601,12 @@ class TAxisPainter extends ObjectPainter {
          indx = Math.round((indx - a.fXmin)/(a.fXmax - a.fXmin) * a.fNbins);
       else
          indx = Math.floor(indx);
-      if ((indx < 0) || (indx >= a.fNbins)) return null;
-      for (let i = 0; i < a.fLabels.arr.length; ++i) {
-         const tstr = a.fLabels.arr[i];
-         if (tstr.fUniqueID === indx+1) return tstr.fString;
+      if ((indx < 0) || (indx >= a.fNbins))
+         return null;
+      const arr = a.fLabels.arr;
+      for (let i = 0; i < arr.length; ++i) {
+         if (arr[i].fUniqueID === indx+1)
+            return arr[i].fString;
       }
       return null;
    }
@@ -1324,7 +1327,7 @@ class TAxisPainter extends ObjectPainter {
                             .style('cursor', 'crosshair');
 
             if (this.vertical) {
-               const rw = (labelsMaxWidth || 2*labelSize) + 3;
+               const rw = Math.max(labelsMaxWidth, 2*labelSize) + 3;
                r.attr('x', (side > 0) ? -rw : 0).attr('y', 0)
                 .attr('width', rw).attr('height', h);
             } else {

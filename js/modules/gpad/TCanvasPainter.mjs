@@ -621,13 +621,13 @@ class TCanvasPainter extends TPadPainter {
 
    /** @summary Send command to start fit panel code on the server
      * @private */
-   startFitPanel() {
+   startFitPanel(standalone) {
       if (!this._websocket)
          return false;
 
-      const new_conn = this._websocket.createChannel();
+      const new_conn = standalone ? null : this._websocket.createChannel();
 
-      this.sendWebsocket('FITPANEL:' + new_conn.getChannelId());
+      this.sendWebsocket('FITPANEL:' + (standalone ? 'standalone' : new_conn.getChannelId()));
 
       return new_conn;
    }

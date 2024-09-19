@@ -312,6 +312,11 @@ class TGraphPainter extends ObjectPainter {
       let uxmin = xmin - dx, uxmax = xmax + dx,
           minimum = ymin - dy, maximum = ymax + dy;
 
+      if ((ymin > 0) && (minimum <= 0))
+         minimum = (1 - margin) * ymin;
+      if ((ymax < 0) && (maximum >= 0))
+         maximum = (1 - margin) * ymax;
+
       if (!this._not_adjust_hrange) {
          const pad_logx = this.getPadPainter()?.getPadLog('x');
 
@@ -337,7 +342,10 @@ class TGraphPainter extends ObjectPainter {
 
       if (graph.fMinimum !== kNoZoom) minimum = ymin = graph.fMinimum;
       if (graph.fMaximum !== kNoZoom) maximum = graph.fMaximum;
-      if ((minimum < 0) && (ymin >= 0)) minimum = (1 - margin)*ymin;
+      if ((minimum < 0) && (ymin >= 0))
+         minimum = (1 - margin)*ymin;
+      if ((ymax < 0) && (maximum >= 0))
+         maximum = (1 - margin) * ymax;
 
       setHistogramTitle(histo, this.getObject().fTitle);
 
@@ -521,6 +529,9 @@ class TGraphPainter extends ObjectPainter {
       if (!graph?.fNpoints) return;
 
       let excl_width = 0, drawbins = null;
+      // if markers or errors drawn - no need handle events for line drawing
+      // this improves interactivity like zooming around graph points
+      const line_events_handling = !this.isBatchMode() && (options.Line || options.Errors) ? 'none' : null;
 
       if (main_block && lineatt.excl_side) {
          excl_width = lineatt.excl_width;
@@ -584,7 +595,9 @@ class TGraphPainter extends ObjectPainter {
          if (excl_width)
              this.appendExclusion(false, path, drawbins, excl_width);
 
-         const elem = draw_g.append('svg:path').attr('d', path + close_symbol);
+         const elem = draw_g.append('svg:path')
+                            .attr('d', path + close_symbol)
+                            .style('pointer-events', line_events_handling);
          if (options.Line)
             elem.call(lineatt.func);
 
@@ -615,7 +628,8 @@ class TGraphPainter extends ObjectPainter {
          draw_g.append('svg:path')
                .attr('d', path)
                .call(lineatt.func)
-               .style('fill', 'none');
+               .style('fill', 'none')
+               .style('pointer-events', line_events_handling);
          if (main_block)
             this.draw_kind = 'lines'; // handled same way as lines
       }

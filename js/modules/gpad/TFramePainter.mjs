@@ -1942,6 +1942,7 @@ class TFramePainter extends ObjectPainter {
       this.x_handle.configureAxis('xaxis', this.xmin, this.xmax, this.scale_xmin, this.scale_xmax, this.swap_xy, this.swap_xy ? [0, h] : [0, w],
                                       { reverse: this.reverse_x,
                                         log: this.swap_xy ? pad_logy : pad_logx,
+                                        ignore_labels: this.x_ignore_labels,
                                         noexp_changed: this.x_noexp_changed,
                                         symlog: this.swap_xy ? opts.symlog_y : opts.symlog_x,
                                         logcheckmin: this.swap_xy,
@@ -1956,6 +1957,7 @@ class TFramePainter extends ObjectPainter {
                                       { value_axis: opts.ndim === 1,
                                         reverse: this.reverse_y,
                                         log: this.swap_xy ? pad_logx : pad_logy,
+                                        ignore_labels: this.y_ignore_labels,
                                         noexp_changed: this.y_noexp_changed,
                                         symlog: this.swap_xy ? opts.symlog_x : opts.symlog_y,
                                         logcheckmin: (opts.ndim < 2) || this.swap_xy,
@@ -2015,6 +2017,7 @@ class TFramePainter extends ObjectPainter {
          this.x2_handle.configureAxis('x2axis', this.x2min, this.x2max, this.scale_x2min, this.scale_x2max, this.swap_xy, this.swap_xy ? [0, h] : [0, w],
                                          { reverse: this.reverse_x2,
                                            log: this.swap_xy ? pad.fLogy : pad.fLogx,
+                                           ignore_labels: this.x2_ignore_labels,
                                            noexp_changed: this.x2_noexp_changed,
                                            logcheckmin: this.swap_xy,
                                            logminfactor: logminfactorX });
@@ -2029,6 +2032,7 @@ class TFramePainter extends ObjectPainter {
          this.y2_handle.configureAxis('y2axis', this.y2min, this.y2max, this.scale_y2min, this.scale_y2max, !this.swap_xy, this.swap_xy ? [0, w] : [0, h],
                                          { reverse: this.reverse_y2,
                                            log: this.swap_xy ? pad.fLogx : pad.fLogy,
+                                           ignore_labels: this.y2_ignore_labels,
                                            noexp_changed: this.y2_noexp_changed,
                                            logcheckmin: (opts.ndim < 2) || this.swap_xy,
                                            log_min_nz: opts.ymin_nz && (opts.ymin_nz < this.y2max) ? 0.5 * opts.ymin_nz : 0,
@@ -2647,18 +2651,7 @@ class TFramePainter extends ObjectPainter {
          if ((kind === 'z') && isFunc(main?.fillPaletteMenu))
             main.fillPaletteMenu(menu, !is_pal);
 
-         if ((handle?.kind === kAxisLabels) && (faxis.fNbins > 20)) {
-            menu.add('Find label', () => menu.input('Label id').then(id => {
-               if (!id) return;
-               for (let bin = 0; bin < faxis.fNbins; ++bin) {
-                  const lbl = handle.formatLabels(bin);
-                  if (lbl === id)
-                     return this.zoom(kind, Math.max(0, bin - 4), Math.min(faxis.fNbins, bin+5));
-                }
-            }));
-         }
-
-         menu.addTAxisMenu(EAxisBits, main || this, faxis, kind);
+         menu.addTAxisMenu(EAxisBits, main || this, faxis, kind, handle, this);
          return true;
       }
 

@@ -5,6 +5,7 @@ import { getColor } from '../base/colors.mjs';
 import { TAttMarkerHandler } from '../base/TAttMarkerHandler.mjs';
 import { getSvgLineStyle } from '../base/TAttLineHandler.mjs';
 import { FontHandler } from '../base/FontHandler.mjs';
+import { kAxisLabels } from '../base/ObjectPainter.mjs';
 import { setDefaultDrawOpt } from '../draw.mjs';
 
 
@@ -683,7 +684,7 @@ class JSRootMenu {
 
    /** @summary Fill context menu for axis
      * @private */
-   addTAxisMenu(EAxisBits, painter, faxis, kind) {
+   addTAxisMenu(EAxisBits, painter, faxis, kind, axis_painter, frame_painter) {
       const is_gaxis = faxis._typename === clTGaxis;
 
       this.add('Divisions', () => this.input('Set Ndivisions', faxis.fNdivisions, 'int', 0).then(val => {
@@ -702,7 +703,26 @@ class JSRootMenu {
       let a = faxis.fLabelSize >= 1;
       this.addSizeMenu('Size', a ? 2 : 0.02, a ? 30 : 0.11, a ? 2 : 0.01, faxis.fLabelSize,
             arg => { faxis.fLabelSize = arg; painter.interactiveRedraw('pad', `exec:SetLabelSize(${arg})`, kind); });
+
+      if (frame_painter && (axis_painter?.kind === kAxisLabels) && (faxis.fNbins > 20)) {
+         this.add('Find label', () => this.input('Label id').then(id => {
+            if (!id) return;
+            for (let bin = 0; bin < faxis.fNbins; ++bin) {
+               const lbl = axis_painter.formatLabels(bin);
+               if (lbl === id)
+                  return frame_painter.zoomSingle(kind, Math.max(0, bin - 4), Math.min(faxis.fNbins, bin + 5));
+            }
+         }), 'Zoom into region around specific label');
+      }
+      if (frame_painter && faxis.fLabels) {
+         const ignore = `${kind}_ignore_labels`;
+         this.addchk(!frame_painter[ignore], 'Custom', flag => {
+            frame_painter[ignore] = !flag;
+            painter.interactiveRedraw('pad');
+         }, `Use of custom labels in axis ${kind}`);
+      }
       this.endsub();
+
       this.sub('Title');
       this.add('SetTitle', () => {
          this.input('Enter axis title', faxis.fTitle).then(t => {
@@ -729,6 +749,7 @@ class JSRootMenu {
       this.addSizeMenu('Size', a ? 2 : 0.02, a ? 30 : 0.11, a ? 2 : 0.01, faxis.fTitleSize,
                       arg => { faxis.fTitleSize = arg; painter.interactiveRedraw('pad', `exec:SetTitleSize(${arg})`, kind); });
       this.endsub();
+
       this.sub('Ticks');
       if (is_gaxis) {
          this.addColorMenu('Color', faxis.fLineColor,

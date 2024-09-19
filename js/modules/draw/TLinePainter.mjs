@@ -70,11 +70,13 @@ class TLinePainter extends ObjectPainter {
 
       this.isndc = line.TestBit(kLineNDC);
 
-      this.use_frame = this.isndc ? false : new DrawOptions(this.getDrawOpt()).check('FRAME');
+      const use_frame = this.isndc ? false : new DrawOptions(this.getDrawOpt()).check('FRAME');
 
-      this.swap_xy = this.use_frame && this.getFramePainter()?.swap_xy;
+      this.createG(use_frame ? 'frame2d' : undefined);
 
-      const func = this.getAxisToSvgFunc(this.isndc, true, true);
+      this.swap_xy = use_frame && this.getFramePainter()?.swap_xy;
+
+      const func = this.getAxisToSvgFunc(this.isndc, true);
 
       this.x1 = func.x(line.fX1);
       this.y1 = func.y(line.fY1);
@@ -98,8 +100,6 @@ class TLinePainter extends ObjectPainter {
 
    /** @summary Redraw line */
    redraw() {
-      this.createG(this.use_frame ? 'frame2d' : undefined);
-
       this.prepareDraw();
 
       const elem = this.draw_g.append('svg:path')

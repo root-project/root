@@ -11,7 +11,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '17/09/2024',
+version_date = '19/09/2024',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -67634,6 +67634,7 @@ class TAxisPainter extends ObjectPainter {
       this.vertical = vertical;
       this.log = opts.log || 0;
       this.minposbin = opts.minposbin;
+      this.ignore_labels = opts.ignore_labels;
       this.noexp_changed = opts.noexp_changed;
       this.symlog = opts.symlog || false;
       this.reverse = opts.reverse || false;
@@ -67651,7 +67652,7 @@ class TAxisPainter extends ObjectPainter {
       } else if (opts.axis_func)
          this.kind = kAxisFunc;
       else
-         this.kind = !axis.fLabels ? kAxisNormal : kAxisLabels;
+         this.kind = !axis.fLabels || this.ignore_labels ? kAxisNormal : kAxisLabels;
 
       if (this.kind === kAxisTime)
          this.func = time().domain([this.convertDate(smin), this.convertDate(smax)]);
@@ -67764,7 +67765,7 @@ class TAxisPainter extends ObjectPainter {
 
          this.regular_labels = true;
 
-         if (axis && axis.fNbins && axis.fLabels) {
+         if (axis?.fNbins && axis?.fLabels) {
             if ((axis.fNbins !== Math.round(axis.fXmax - axis.fXmin)) ||
                 (axis.fXmin !== 0) || (axis.fXmax !== axis.fNbins))
                this.regular_labels = false;
@@ -67807,10 +67808,12 @@ class TAxisPainter extends ObjectPainter {
          indx = Math.round((indx - a.fXmin)/(a.fXmax - a.fXmin) * a.fNbins);
       else
          indx = Math.floor(indx);
-      if ((indx < 0) || (indx >= a.fNbins)) return null;
-      for (let i = 0; i < a.fLabels.arr.length; ++i) {
-         const tstr = a.fLabels.arr[i];
-         if (tstr.fUniqueID === indx+1) return tstr.fString;
+      if ((indx < 0) || (indx >= a.fNbins))
+         return null;
+      const arr = a.fLabels.arr;
+      for (let i = 0; i < arr.length; ++i) {
+         if (arr[i].fUniqueID === indx+1)
+            return arr[i].fString;
       }
       return null;
    }
@@ -68531,7 +68534,7 @@ class TAxisPainter extends ObjectPainter {
                             .style('cursor', 'crosshair');
 
             if (this.vertical) {
-               const rw = (labelsMaxWidth || 2*labelSize) + 3;
+               const rw = Math.max(labelsMaxWidth, 2*labelSize) + 3;
                r.attr('x', (side > 0) ? -rw : 0).attr('y', 0)
                 .attr('width', rw).attr('height', h);
             } else {
@@ -70537,6 +70540,7 @@ class TFramePainter extends ObjectPainter {
       this.x_handle.configureAxis('xaxis', this.xmin, this.xmax, this.scale_xmin, this.scale_xmax, this.swap_xy, this.swap_xy ? [0, h] : [0, w],
                                       { reverse: this.reverse_x,
                                         log: this.swap_xy ? pad_logy : pad_logx,
+                                        ignore_labels: this.x_ignore_labels,
                                         noexp_changed: this.x_noexp_changed,
                                         symlog: this.swap_xy ? opts.symlog_y : opts.symlog_x,
                                         logcheckmin: this.swap_xy,
@@ -70551,6 +70555,7 @@ class TFramePainter extends ObjectPainter {
                                       { value_axis: opts.ndim === 1,
                                         reverse: this.reverse_y,
                                         log: this.swap_xy ? pad_logx : pad_logy,
+                                        ignore_labels: this.y_ignore_labels,
                                         noexp_changed: this.y_noexp_changed,
                                         symlog: this.swap_xy ? opts.symlog_x : opts.symlog_y,
                                         logcheckmin: (opts.ndim < 2) || this.swap_xy,
@@ -70610,6 +70615,7 @@ class TFramePainter extends ObjectPainter {
          this.x2_handle.configureAxis('x2axis', this.x2min, this.x2max, this.scale_x2min, this.scale_x2max, this.swap_xy, this.swap_xy ? [0, h] : [0, w],
                                          { reverse: this.reverse_x2,
                                            log: this.swap_xy ? pad.fLogy : pad.fLogx,
+                                           ignore_labels: this.x2_ignore_labels,
                                            noexp_changed: this.x2_noexp_changed,
                                            logcheckmin: this.swap_xy,
                                            logminfactor: logminfactorX });
@@ -70624,6 +70630,7 @@ class TFramePainter extends ObjectPainter {
          this.y2_handle.configureAxis('y2axis', this.y2min, this.y2max, this.scale_y2min, this.scale_y2max, !this.swap_xy, this.swap_xy ? [0, w] : [0, h],
                                          { reverse: this.reverse_y2,
                                            log: this.swap_xy ? pad.fLogx : pad.fLogy,
+                                           ignore_labels: this.y2_ignore_labels,
                                            noexp_changed: this.y2_noexp_changed,
                                            logcheckmin: (opts.ndim < 2) || this.swap_xy,
                                            log_min_nz: opts.ymin_nz && (opts.ymin_nz < this.y2max) ? 0.5 * opts.ymin_nz : 0,
@@ -71242,18 +71249,7 @@ class TFramePainter extends ObjectPainter {
          if ((kind === 'z') && isFunc(main?.fillPaletteMenu))
             main.fillPaletteMenu(menu, !is_pal);
 
-         if ((handle?.kind === kAxisLabels) && (faxis.fNbins > 20)) {
-            menu.add('Find label', () => menu.input('Label id').then(id => {
-               if (!id) return;
-               for (let bin = 0; bin < faxis.fNbins; ++bin) {
-                  const lbl = handle.formatLabels(bin);
-                  if (lbl === id)
-                     return this.zoom(kind, Math.max(0, bin - 4), Math.min(faxis.fNbins, bin+5));
-                }
-            }));
-         }
-
-         menu.addTAxisMenu(EAxisBits, main || this, faxis, kind);
+         menu.addTAxisMenu(EAxisBits, main || this, faxis, kind, handle, this);
          return true;
       }
 
@@ -77430,7 +77426,7 @@ class JSRootMenu {
 
    /** @summary Fill context menu for axis
      * @private */
-   addTAxisMenu(EAxisBits, painter, faxis, kind) {
+   addTAxisMenu(EAxisBits, painter, faxis, kind, axis_painter, frame_painter) {
       const is_gaxis = faxis._typename === clTGaxis;
 
       this.add('Divisions', () => this.input('Set Ndivisions', faxis.fNdivisions, 'int', 0).then(val => {
@@ -77449,7 +77445,26 @@ class JSRootMenu {
       let a = faxis.fLabelSize >= 1;
       this.addSizeMenu('Size', a ? 2 : 0.02, a ? 30 : 0.11, a ? 2 : 0.01, faxis.fLabelSize,
             arg => { faxis.fLabelSize = arg; painter.interactiveRedraw('pad', `exec:SetLabelSize(${arg})`, kind); });
+
+      if (frame_painter && (axis_painter?.kind === kAxisLabels) && (faxis.fNbins > 20)) {
+         this.add('Find label', () => this.input('Label id').then(id => {
+            if (!id) return;
+            for (let bin = 0; bin < faxis.fNbins; ++bin) {
+               const lbl = axis_painter.formatLabels(bin);
+               if (lbl === id)
+                  return frame_painter.zoomSingle(kind, Math.max(0, bin - 4), Math.min(faxis.fNbins, bin + 5));
+            }
+         }), 'Zoom into region around specific label');
+      }
+      if (frame_painter && faxis.fLabels) {
+         const ignore = `${kind}_ignore_labels`;
+         this.addchk(!frame_painter[ignore], 'Custom', flag => {
+            frame_painter[ignore] = !flag;
+            painter.interactiveRedraw('pad');
+         }, `Use of custom labels in axis ${kind}`);
+      }
       this.endsub();
+
       this.sub('Title');
       this.add('SetTitle', () => {
          this.input('Enter axis title', faxis.fTitle).then(t => {
@@ -77476,6 +77491,7 @@ class JSRootMenu {
       this.addSizeMenu('Size', a ? 2 : 0.02, a ? 30 : 0.11, a ? 2 : 0.01, faxis.fTitleSize,
                       arg => { faxis.fTitleSize = arg; painter.interactiveRedraw('pad', `exec:SetTitleSize(${arg})`, kind); });
       this.endsub();
+
       this.sub('Ticks');
       if (is_gaxis) {
          this.addColorMenu('Color', faxis.fLineColor,
@@ -78956,13 +78972,13 @@ class TCanvasPainter extends TPadPainter {
 
    /** @summary Send command to start fit panel code on the server
      * @private */
-   startFitPanel() {
+   startFitPanel(standalone) {
       if (!this._websocket)
          return false;
 
-      const new_conn = this._websocket.createChannel();
+      const new_conn = standalone ? null : this._websocket.createChannel();
 
-      this.sendWebsocket('FITPANEL:' + new_conn.getChannelId());
+      this.sendWebsocket('FITPANEL:' + (standalone ? 'standalone' : new_conn.getChannelId()));
 
       return new_conn;
    }
@@ -109554,6 +109570,11 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
       let uxmin = xmin - dx, uxmax = xmax + dx,
           minimum = ymin - dy, maximum = ymax + dy;
 
+      if ((ymin > 0) && (minimum <= 0))
+         minimum = (1 - margin) * ymin;
+      if ((ymax < 0) && (maximum >= 0))
+         maximum = (1 - margin) * ymax;
+
       if (!this._not_adjust_hrange) {
          const pad_logx = this.getPadPainter()?.getPadLog('x');
 
@@ -109579,7 +109600,10 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
 
       if (graph.fMinimum !== kNoZoom) minimum = ymin = graph.fMinimum;
       if (graph.fMaximum !== kNoZoom) maximum = graph.fMaximum;
-      if ((minimum < 0) && (ymin >= 0)) minimum = (1 - margin)*ymin;
+      if ((minimum < 0) && (ymin >= 0))
+         minimum = (1 - margin)*ymin;
+      if ((ymax < 0) && (maximum >= 0))
+         maximum = (1 - margin) * ymax;
 
       setHistogramTitle(histo, this.getObject().fTitle);
 
@@ -109763,6 +109787,9 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
       if (!graph?.fNpoints) return;
 
       let excl_width = 0, drawbins = null;
+      // if markers or errors drawn - no need handle events for line drawing
+      // this improves interactivity like zooming around graph points
+      const line_events_handling = !this.isBatchMode() && (options.Line || options.Errors) ? 'none' : null;
 
       if (main_block && lineatt.excl_side) {
          excl_width = lineatt.excl_width;
@@ -109826,7 +109853,9 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
          if (excl_width)
              this.appendExclusion(false, path, drawbins, excl_width);
 
-         const elem = draw_g.append('svg:path').attr('d', path + close_symbol);
+         const elem = draw_g.append('svg:path')
+                            .attr('d', path + close_symbol)
+                            .style('pointer-events', line_events_handling);
          if (options.Line)
             elem.call(lineatt.func);
 
@@ -109857,7 +109886,8 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
          draw_g.append('svg:path')
                .attr('d', path)
                .call(lineatt.func)
-               .style('fill', 'none');
+               .style('fill', 'none')
+               .style('pointer-events', line_events_handling);
          if (main_block)
             this.draw_kind = 'lines'; // handled same way as lines
       }
@@ -114966,11 +114996,13 @@ class TLinePainter extends ObjectPainter {
 
       this.isndc = line.TestBit(kLineNDC);
 
-      this.use_frame = this.isndc ? false : new DrawOptions(this.getDrawOpt()).check('FRAME');
+      const use_frame = this.isndc ? false : new DrawOptions(this.getDrawOpt()).check('FRAME');
 
-      this.swap_xy = this.use_frame && this.getFramePainter()?.swap_xy;
+      this.createG(use_frame ? 'frame2d' : undefined);
 
-      const func = this.getAxisToSvgFunc(this.isndc, true, true);
+      this.swap_xy = use_frame && this.getFramePainter()?.swap_xy;
+
+      const func = this.getAxisToSvgFunc(this.isndc, true);
 
       this.x1 = func.x(line.fX1);
       this.y1 = func.y(line.fY1);
@@ -114994,8 +115026,6 @@ class TLinePainter extends ObjectPainter {
 
    /** @summary Redraw line */
    redraw() {
-      this.createG(this.use_frame ? 'frame2d' : undefined);
-
       this.prepareDraw();
 
       const elem = this.draw_g.append('svg:path')
