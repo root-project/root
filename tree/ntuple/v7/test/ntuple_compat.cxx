@@ -5,6 +5,10 @@
 #include "ROOT/EExecutionPolicy.hxx"
 #include "RXTuple.hxx"
 #include <gtest/gtest.h>
+#include <memory>
+#include <cstdio>
+
+#include "../src/RColumnElement.hxx"
 
 TEST(RNTupleCompat, Epoch)
 {
@@ -65,7 +69,7 @@ TEST(RNTupleCompat, FeatureFlag)
    }
 }
 
-TEST(RNTupleCompat, FwdCompat_FutureNTuple)
+TEST(RNTupleCompat, FwdCompat_FutureNTupleAnchor)
 {
    using ROOT::Experimental::RXTuple;
 
@@ -222,4 +226,49 @@ TEST(RNTupleCompat, NTupleV4)
       EXPECT_EQ(ntuple.GetVersionMajor(), 2);
       EXPECT_EQ(ntuple.GetMaxKeySize(), 0);
    }
+}
+
+template <>
+class ROOT::Experimental::RField<ROOT::Experimental::Internal::RTestFutureColumn> final
+   : public RSimpleField<ROOT::Experimental::Internal::RTestFutureColumn> {
+protected:
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
+   {
+      return std::make_unique<RField>(newName);
+   }
+   const RColumnRepresentations &GetColumnRepresentations() const final
+   {
+      static const RColumnRepresentations representations{{{kTestFutureType}}, {}};
+      return representations;
+   }
+
+public:
+   static std::string TypeName() { return "FutureColumn"; }
+   explicit RField(std::string_view name) : RSimpleField(name, TypeName()) {}
+   RField(RField &&other) = default;
+   RField &operator=(RField &&other) = default;
+   ~RField() override = default;
+};
+
+TEST(RNTupleCompat, FutureColumnType)
+{
+   // Write a RNTuple containing a field with an unknown column type and verify we can
+   // read back the ntuple and its descriptor.
+
+   FileRaii fileGuard("test_ntuple_compat_future_col_type.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto col = model->MakeField<ROOT::Experimental::Internal::RTestFutureColumn>("futureColumn");
+      auto writeOpts = RNTupleWriteOptions();
+      writeOpts.SetCompression(0);
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath(), writeOpts);
+      col->dummy = 0x42424242;
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   const auto &desc = reader->GetDescriptor();
+   const auto &fdesc = desc.GetFieldDescriptor(desc.FindFieldId("futureColumn"));
+   const auto &cdesc = desc.GetColumnDescriptor(fdesc.GetLogicalColumnIds()[0]);
+   EXPECT_EQ(cdesc.GetType(), EColumnType::kUnknown);
 }

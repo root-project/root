@@ -267,6 +267,9 @@ namespace {
 using ROOT::Experimental::EColumnType;
 using ROOT::Experimental::Internal::RColumnElementBase;
 
+// testing value for an unknown future column type
+inline constexpr EColumnType kTestFutureType = static_cast<EColumnType>(int(EColumnType::kMax) + 1);
+
 template <typename CppT, EColumnType>
 class RColumnElement;
 
@@ -303,6 +306,7 @@ std::unique_ptr<RColumnElementBase> GenerateColumnElementInternal(EColumnType ty
    case EColumnType::kSplitUInt16: return std::make_unique<RColumnElement<CppT, EColumnType::kSplitUInt16>>();
    case EColumnType::kReal32Trunc: return std::make_unique<RColumnElement<CppT, EColumnType::kReal32Trunc>>();
    case EColumnType::kReal32Quant: return std::make_unique<RColumnElement<CppT, EColumnType::kReal32Quant>>();
+   case kTestFutureType: return std::make_unique<RColumnElement<CppT, kTestFutureType>>();
    default: R__ASSERT(false);
    }
    // never here
@@ -1087,6 +1091,20 @@ DECLARE_RCOLUMNELEMENT_SPEC(ROOT::Experimental::ClusterSize_t, EColumnType::kSpl
                             RColumnElementDeltaSplitLE, <std::uint64_t, std::uint64_t>);
 DECLARE_RCOLUMNELEMENT_SPEC(ROOT::Experimental::ClusterSize_t, EColumnType::kSplitIndex32, 32,
                             RColumnElementDeltaSplitLE, <std::uint64_t, std::uint32_t>);
+
+template <>
+class RColumnElement<ROOT::Experimental::Internal::RTestFutureColumn, kTestFutureType> final
+   : public RColumnElementBase {
+public:
+   static constexpr bool kIsMappable = false;
+   static constexpr std::size_t kSize = sizeof(ROOT::Experimental::Internal::RTestFutureColumn);
+   static constexpr std::size_t kBitsOnStorage = kSize * 8;
+   RColumnElement() : RColumnElementBase(kSize, kBitsOnStorage) {}
+
+   bool IsMappable() const { return kIsMappable; }
+   void Pack(void *, const void *, std::size_t) const {}
+   void Unpack(void *, const void *, std::size_t) const {}
+};
 
 inline void
 RColumnElement<bool, ROOT::Experimental::EColumnType::kBit>::Pack(void *dst, const void *src, std::size_t count) const

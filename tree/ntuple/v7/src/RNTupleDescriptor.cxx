@@ -824,14 +824,19 @@ ROOT::Experimental::Internal::RColumnDescriptorBuilder::MakeDescriptor() const
       return R__FAIL("invalid logical column id");
    if (fColumn.GetPhysicalId() == kInvalidDescriptorId)
       return R__FAIL("invalid physical column id");
-   if (fColumn.GetType() == EColumnType::kUnknown)
-      return R__FAIL("invalid column model");
    if (fColumn.GetFieldId() == kInvalidDescriptorId)
       return R__FAIL("invalid field id, dangling column");
 
-   const auto [minBits, maxBits] = RColumnElementBase::GetValidBitRange(fColumn.GetType());
-   if (fColumn.GetBitsOnStorage() < minBits || fColumn.GetBitsOnStorage() > maxBits)
-      return R__FAIL("invalid column bit width");
+   // NOTE: if the column type is unknown we don't want to fail, as we might be reading an RNTuple
+   // created with a future version of ROOT. In this case we just skip the valid bit range check,
+   // as we have no idea what the valid range is.
+   // In general, reading the metadata of an unknown column is fine, it becomes an error only when
+   // we try to read the actual data contained in it.
+   if (fColumn.GetType() != EColumnType::kUnknown) {
+      const auto [minBits, maxBits] = RColumnElementBase::GetValidBitRange(fColumn.GetType());
+      if (fColumn.GetBitsOnStorage() < minBits || fColumn.GetBitsOnStorage() > maxBits)
+         return R__FAIL("invalid column bit width");
+   }
 
    return fColumn.Clone();
 }
