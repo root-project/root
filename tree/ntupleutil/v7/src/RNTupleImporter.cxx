@@ -76,16 +76,6 @@ ROOT::Experimental::RNTupleImporter::RCStringTransformation::Transform(const RIm
    return RResult<void>::Success();
 }
 
-ROOT::Experimental::RResult<void>
-ROOT::Experimental::RNTupleImporter::RLeafArrayTransformation::Transform(const RImportBranch &branch,
-                                                                         RImportField &field)
-{
-   auto valueSize = field.fField->GetValueSize();
-   memcpy(field.fFieldBuffer, branch.fBranchBuffer.get() + (fNum * valueSize), valueSize);
-   fNum++;
-   return RResult<void>::Success();
-}
-
 std::unique_ptr<ROOT::Experimental::RNTupleImporter>
 ROOT::Experimental::RNTupleImporter::Create(std::string_view sourceFileName, std::string_view treeName,
                                             std::string_view destFileName)
@@ -429,7 +419,6 @@ void ROOT::Experimental::RNTupleImporter::Import()
          auto result = t->Transform(fImportBranches[t->fImportBranchIdx], fImportFields[t->fImportFieldIdx]);
          if (!result)
             throw RException(R__FORWARD_ERROR(result));
-         t->ResetEntry();
       }
 
       ntplWriter->Fill(*fEntry);
