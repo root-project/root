@@ -960,26 +960,24 @@ bool TClingLookupHelper__ExistingTypeCheck(const std::string &tname,
    if (lastPos != inner)   // Main switch: case 1 - scoped enum, case 2 global enum
    {
       // We have a scope
-      // All of this C gymnastic is to avoid allocations on the heap
       const auto enName = lastPos;
       const auto scopeNameSize = ((Long64_t)lastPos - (Long64_t)inner) / sizeof(decltype(*lastPos)) - 2;
-      char *scopeName = new char[scopeNameSize + 1];
-      strncpy(scopeName, inner, scopeNameSize);
-      scopeName[scopeNameSize] = '\0';
+      std::string scopeName{inner, scopeNameSize};
       // Check if the scope is in the list of classes
-      if (auto scope = static_cast<TClass *>(gROOT->GetListOfClasses()->FindObject(scopeName))) {
+      if (auto scope = static_cast<TClass *>(gROOT->GetListOfClasses()->FindObject(scopeName.c_str()))) {
          auto enumTable = dynamic_cast<const THashList *>(scope->GetListOfEnums(false));
-         if (enumTable && enumTable->THashList::FindObject(enName)) { delete [] scopeName; return true; }
+         if (enumTable && enumTable->THashList::FindObject(enName))
+            return true;
       }
       // It may still be in one of the loaded protoclasses
-      else if (auto scope = static_cast<TProtoClass *>(gClassTable->GetProtoNorm(scopeName))) {
+      else if (auto scope = static_cast<TProtoClass *>(gClassTable->GetProtoNorm(scopeName.c_str()))) {
          auto listOfEnums = scope->GetListOfEnums();
          if (listOfEnums) { // it could be null: no enumerators in the protoclass
             auto enumTable = dynamic_cast<const THashList *>(listOfEnums);
-            if (enumTable && enumTable->THashList::FindObject(enName)) { delete [] scopeName; return true; }
+            if (enumTable && enumTable->THashList::FindObject(enName))
+               return true;
          }
       }
-      delete [] scopeName;
    } else
    {
       // We don't have any scope: this could only be a global enum
