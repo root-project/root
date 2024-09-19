@@ -31,11 +31,11 @@ elseif(MSVC)
   math(EXPR VC_MINOR "${MSVC_VERSION} % 100")
 
   #---Select compiler flags----------------------------------------------------------------
-  set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-MD -O2 -Ob1 -Z7 -DNDEBUG")
+  set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-MD -O2 -Ob2 -Z7 -DNDEBUG")
   set(CMAKE_CXX_FLAGS_MINSIZEREL     "-MD -O1 -Ob1 -DNDEBUG")
   set(CMAKE_CXX_FLAGS_RELEASE        "-MD -O2 -Ob2 -DNDEBUG")
   set(CMAKE_CXX_FLAGS_DEBUG          "-MDd -Od -Ob0 -Z7")
-  set(CMAKE_C_FLAGS_RELWITHDEBINFO   "-MD -O2 -Ob1 -Z7 -DNDEBUG")
+  set(CMAKE_C_FLAGS_RELWITHDEBINFO   "-MD -O2 -Ob2 -Z7 -DNDEBUG")
   set(CMAKE_C_FLAGS_MINSIZEREL       "-MD -O1 -Ob1 -DNDEBUG")
   set(CMAKE_C_FLAGS_RELEASE          "-MD -O2 -Ob2 -DNDEBUG")
   set(CMAKE_C_FLAGS_DEBUG            "-MDd -Od -Ob0 -Z7")
