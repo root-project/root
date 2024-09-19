@@ -100,6 +100,8 @@ public:
    size_t GetValueSize() const final { return fSize; }
    size_t GetAlignment() const final { return fMaxAlignment; }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+
+   const std::vector<std::size_t> &GetOffsets() const { return fOffsets; }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
