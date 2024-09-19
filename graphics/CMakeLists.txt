@@ -1,5 +1,5 @@
 # TODO: massive failures hit on Linux, untested on Windows
-if (CMAKE_SYSTEM_NAME MATCHES Darwin)
+if (CMAKE_SYSTEM_NAME MATCHES Darwin AND MACOSX_VERSION VERSION_LESS 14.0 AND MACOSX_VERSION VERSION_GREATER_EQUAL 15.0)
 
 # Folders for generated files
 set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR})
