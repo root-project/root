@@ -1025,6 +1025,14 @@ It can have any type supported by TClass (even types that are not available in t
 The first (principal) column is of type [Split]Index[32|64].
 The second column is of type Byte.
 
+
+### Untyped collections and records
+
+Untyped collections and records are fields with a collection or record role and an empty type name.
+Only top-level fields as well as direct subfields of untyped files may be untyped.
+Except for the empty type name, untyped collections have the same on-disk representation than std::vector
+and untyped records have the same on-disk representation than a user-defined class.
+
 ## Limits
 
 This section summarizes key design limits of RNTuple data sets.
