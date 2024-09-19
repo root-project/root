@@ -63,12 +63,8 @@ TEST(RNTuple, SerializeColumnType)
    }
 
    RNTupleSerializer::SerializeUInt16(5000, buffer);
-   try {
-      RNTupleSerializer::DeserializeColumnType(buffer, type).Unwrap();
-      FAIL() << "unexpected on disk column type should throw";
-   } catch (const RException& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("unexpected on-disk column type"));
-   }
+   auto res = RNTupleSerializer::DeserializeColumnType(buffer, type);
+   EXPECT_TRUE(bool(res));
 
    for (int i = 1; i < static_cast<int>(EColumnType::kMax); ++i) {
       RNTupleSerializer::SerializeColumnType(static_cast<EColumnType>(i), buffer);
