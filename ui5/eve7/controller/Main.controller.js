@@ -331,7 +331,7 @@ sap.ui.define(['sap/ui/core/Component',
             bar.removeContent(bar.getContent().length - 1);
 
          var bb = new sap.m.Button({
-            type: sap.m.ButtonType.Default,
+            type: MobileLibrary.ButtonType.Default,
             text: "Back",
             enabled: true,
             press: function () {
