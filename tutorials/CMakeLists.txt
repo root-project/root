@@ -272,6 +272,9 @@ set(gui_veto fit/fitpanel_playback.C
              tree/tvdemo.C
              eve/*.C
              webgui/panel/server.cxx webgui/webwindow/server.cxx)
+if (NOT webgui)
+  list(APPEND gui_veto graphics/save_batch.C rcanvas/df104.py rcanvas/df105.py)
+endif()
 
 if (NOT ROOT_tmva_FOUND)
   list(APPEND tmva_veto tmva/*.C tmva/*.py tmva/envelope/*.C tmva/keras/*.C tmva/keras/*.py tmva/pytorch/*.py )
