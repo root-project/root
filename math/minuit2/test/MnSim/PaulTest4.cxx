@@ -53,9 +53,7 @@ public:
    {
    }
 
-   ~PowerLawChi2FCN() override {}
-
-   double operator()(std::span<const double> par) const override
+   double operator()(std::vector<double> const &par) const override
    {
       assert(par.size() == 2);
       PowerLawFunc pl(par[0], par[1]);
@@ -84,9 +82,7 @@ public:
    {
    }
 
-   ~PowerLawLogLikeFCN() override {}
-
-   double operator()(std::span<const double> par) const override
+   double operator()(std::vector<double> const &par) const override
    {
       assert(par.size() == 2);
       PowerLawFunc pl(par[0], par[1]);

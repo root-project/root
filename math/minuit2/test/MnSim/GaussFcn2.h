@@ -29,12 +29,11 @@ public:
    {
       Init();
    }
-   ~GaussFcn2() override {}
 
    virtual void Init();
 
    double Up() const override { return 1.; }
-   double operator()(std::span<const double>) const override;
+   double operator()(std::vector<double> const &) const override;
    double ErrorDef() const override { return Up(); }
 
    std::vector<double> Measurements() const { return fMeasurements; }

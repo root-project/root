@@ -41,17 +41,17 @@ public:
 
    bool HasGradient() const override { return true; }
 
-   double operator()(std::span<const double> v) const override { return fFunc.operator()(&v[0]); }
+   double operator()(std::vector<double> const& v) const override { return fFunc.operator()(&v[0]); }
    double operator()(const double *v) const { return fFunc.operator()(v); }
 
    double Up() const override { return fUp; }
 
-   std::vector<double> Gradient(std::span<const double> v) const override
+   std::vector<double> Gradient(std::vector<double> const& v) const override
    {
       fFunc.Gradient(&v[0], &fGrad[0]);
       return fGrad;
    }
-   std::vector<double> GradientWithPrevResult(std::span<const double> v, double *previous_grad, double *previous_g2,
+   std::vector<double> GradientWithPrevResult(std::vector<double> const& v, double *previous_grad, double *previous_g2,
                                               double *previous_gstep) const override
    {
       fFunc.GradientWithPrevResult(&v[0], &fGrad[0], previous_grad, previous_g2, previous_gstep);
@@ -67,7 +67,7 @@ public:
    }
 
    /// return second derivatives (diagonal of the Hessian matrix)
-   std::vector<double> G2(std::span<const double>  x) const override {
+   std::vector<double> G2(std::vector<double> const&  x) const override {
       if (fG2Func)
          return fG2Func(x);
       if (fHessianFunc) {
@@ -88,7 +88,7 @@ public:
    }
 
    /// compute Hessian. Return Hessian as a std::vector of size(n*n)
-   std::vector<double> Hessian(std::span<const double>  x ) const override {
+   std::vector<double> Hessian(std::vector<double> const&  x ) const override {
       unsigned int n = fFunc.NDim();
       if (fHessianFunc) {
          if (fHessian.empty() ) fHessian.resize(n * n);
@@ -126,8 +126,8 @@ private:
    mutable std::vector<double> fHessian;
    mutable std::vector<double> fG2Vec;
 
-   std::function<std::vector<double>(std::span<const double> )> fG2Func;
-   mutable std::function<bool(std::span<const double> , double *)> fHessianFunc;
+   std::function<std::vector<double>(std::vector<double> const& )> fG2Func;
+   mutable std::function<bool(std::vector<double> const& , double *)> fHessianFunc;
 };
 
 } // end namespace Minuit2

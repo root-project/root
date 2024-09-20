@@ -49,7 +49,7 @@ public:
 
    */
 
-   virtual double operator()(std::span<const double> x) const = 0;
+   virtual double operator()(std::vector<double> const& x) const = 0;
 };
 
 } // namespace Minuit2
