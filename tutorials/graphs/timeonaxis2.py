@@ -2,14 +2,12 @@
 ## \ingroup tutorial_graphs
 ## \notebook
 ##
-## This script shows how to divide a canvas
-## into adjacent subpads and put on axis labels on the top and right side
-## of their pads.
+## Defines a time offset like 2003, January 1st.
 ##
 ## \macro_image
 ## \macro_code
 ##
-## \author Rene Brun
+## \author Olivier Couet
 ## \translator P. P.
 
 
@@ -17,9 +15,10 @@ import ROOT
 import ctypes
 
 #classes
-TH2F = ROOT.TH2F
 TCanvas = ROOT.TCanvas
 TH1F = ROOT.TH1F
+TDatime = ROOT.TDatime
+TRandom = ROOT.TRandom
 TGraph = ROOT.TGraph
 TLatex = ROOT.TLatex
 
@@ -67,40 +66,48 @@ gBenchmark = ROOT.gBenchmark
 gROOT = ROOT.gROOT
 
 
+# TCanvas
+def timeonaxis2() :
 
-# void
-def zones() :
-
-   gStyle.SetOptStat(0)
-
-   global c1
-   c1 = TCanvas("c1", "multipads", 900, 700)
-   c1.Divide(2, 2, 0, 0)
-
-   global h1, h2, h3, h4
-   h1 = TH2F("h1", "test1", 10, 0, 1, 20, 0, 20)
-   h2 = TH2F("h2", "test2", 10, 0, 1, 20, 0, 100)
-   h3 = TH2F("h3", "test3", 10, 0, 1, 20, -1, 1)
-   h4 = TH2F("h4", "test4", 10, 0, 1, 20, 0, 1000)
+   global ct2
+   ct2 = TCanvas("ct2", "ct2", 10, 10, 700, 500)
    
-   c1.cd(1)
-   gPad.SetTickx(2)
+   global T0
+   T0 = TDatime(2003, 1, 1, 0, 0, 0)
+   X0 = T0.Convert()
+
+   gStyle.SetTimeOffset(X0)
+   
+   # Define the lowest histogram limit as 2002, September 23rd
+   global T1
+   T1 = TDatime(2002, 9, 23, 0, 0, 0)
+   X1 = T1.Convert() - X0
+   
+   # Define the highest histogram limit as 2003, March 7th
+   global T2
+   T2 = TDatime(2003, 3, 7, 0, 0, 0)
+   X2 = T2.Convert(1) - X0
+   
+   global h1
+   h1 = TH1F("h1", "test", 100, X1, X2)
+   
+   global r
+   r = TRandom()
+   #   for (Int_t i = 0; i < 30000; i++) {
+   for i in range(0, 30000, 1):
+      noise = r.Gaus(0.5 * (X1 + X2), 0.1 * (X2 - X1))
+      h1.Fill(noise)
+      
+   
+   h1.GetXaxis().SetTimeDisplay(1)
+   h1.GetXaxis().SetLabelSize(0.03)
+   h1.GetXaxis().SetTimeFormat("%Y/%m/%d")
+
    h1.Draw()
-   
-   c1.cd(2)
-   gPad.SetTickx(2)
-   gPad.SetTicky(2)
-   h2.GetYaxis().SetLabelOffset(0.01)
-   h2.Draw()
-   
-   c1.cd(3)
-   h3.Draw()
-   
-   c1.cd(4)
-   gPad.SetTicky(2)
-   h4.Draw()
+
+   return ct2 # TCanvas
    
 
 
 if __name__ == "__main__":
-   zones()
+   timeonaxis2()

@@ -2,12 +2,12 @@
 ## \ingroup tutorial_graphs
 ## \notebook -js
 ##
-## Bents error bars.
+## Draws a graph with error bars.
 ##
 ## \macro_image
 ## \macro_code
 ##
-## \author Olivier Couet
+## \author Rene Brun
 ## \translator P. P.
 
 
@@ -15,8 +15,7 @@ import ROOT
 import ctypes
 
 #classes
-TGraphBentErrors = ROOT.TGraphBentErrors
-
+TGraphErrors = ROOT.TGraphErrors
 TCanvas = ROOT.TCanvas
 TH1F = ROOT.TH1F
 TGraph = ROOT.TGraph
@@ -68,43 +67,37 @@ gROOT = ROOT.gROOT
 
 
 # void
-def bent() :
+def gerrors() :
 
+   global c1
+   c1 = TCanvas("c1", "A Simple Graph with error bars", 200, 10, 700, 500)
+   
+   c1.SetGrid()
+   c1.GetFrame().SetBorderSize(12)
+   
    n = 10
-
    x = [ -0.22, 0.05, 0.25, 0.35, 0.5, 0.61, 0.7, 0.85, 0.89, 0.95 ]
    y = [ 1, 2.9, 5.6, 7.4, 9, 9.6, 8.7, 6.3, 4.5, 1 ]
-   exl = [ .05, .1, .07, .07, .04, .05, .06, .07, .08, .05 ]
-   eyl = [ .8, .7, .6, .5, .4, .4, .5, .6, .7, .8 ]
-   exh = [ .02, .08, .05, .05, .03, .03, .04, .05, .06, .03 ]
-   eyh = [ .6, .5, .4, .3, .2, .2, .3, .4, .5, .6 ]
-   exld = [ .0, .0, .0, .0, .0, .0, .0, .0, .0, .0 ]
-   eyld = [ .0, .0, .05, .0, .0, .0, .0, .0, .0, .0 ]
-   exhd = [ .0, .0, .0, .0, .0, .0, .0, .0, .0, .0 ]
-   eyhd = [ .0, .0, .0, .0, .0, .0, .0, .0, .05, .0 ]
-   #to c-types
-   #x, y, exl, eyl, exh, eyh, exld, eyld, exhd, eyhd = map( to_c, [
-   #x, y, exl, eyl, exh, eyh, exld, eyld, exhd, eyhd ]
-   #)
+   ex = [ .05, .1, .07, .07, .04, .05, .06, .07, .08, .05 ]
+   ey = [ .8, .7, .6, .5, .4, .4, .5, .6, .7, .8 ]
+   # to c-types
    x = to_c( x )
    y = to_c( y )
-   exl = to_c( exl )
-   eyl = to_c( eyl )
-   exh = to_c( exh )
-   eyh = to_c( eyh )
-   exld = to_c( exld )
-   eyld = to_c( eyld )
-   exhd = to_c( exhd )
-   eyhd = to_c( eyhd )
+   ex = to_c( ex )
+   ey = to_c( ey )
 
    global gr
-   gr = TGraphBentErrors(n, x, y, exl, exh, eyl, eyh, exld, exhd, eyld, eyhd)
-   gr.SetTitle("TGraphBentErrors Example")
+   gr = TGraphErrors(n, x, y, ex, ey)
+
+   gr.SetTitle("TGraphErrors Example")
    gr.SetMarkerColor(4)
    gr.SetMarkerStyle(21)
+
    gr.Draw("ALP")
+   
+   c1.Update()
    
 
 
 if __name__ == "__main__":
-   bent()
+   gerrors()

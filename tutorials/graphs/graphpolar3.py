@@ -2,14 +2,12 @@
 ## \ingroup tutorial_graphs
 ## \notebook
 ##
-## This script shows how to divide a canvas
-## into adjacent subpads and put on axis labels on the top and right side
-## of their pads.
+## This script creates and draws a polar graph with PI axis using a TF1-class.
 ##
 ## \macro_image
 ## \macro_code
 ##
-## \author Rene Brun
+## \author Olivier Couet
 ## \translator P. P.
 
 
@@ -17,8 +15,11 @@ import ROOT
 import ctypes
 
 #classes
-TH2F = ROOT.TH2F
 TCanvas = ROOT.TCanvas
+TMath = ROOT.TMath
+TF1 = ROOT.TF1
+TGraphPolar = ROOT.TGraphPolar
+
 TH1F = ROOT.TH1F
 TGraph = ROOT.TGraph
 TLatex = ROOT.TLatex
@@ -69,38 +70,35 @@ gROOT = ROOT.gROOT
 
 
 # void
-def zones() :
+def graphpolar3() :
 
-   gStyle.SetOptStat(0)
+   global CPol
+   CPol = TCanvas("CPol", "TGraphPolar Examples", 500, 500)
+   
+   rmin = 0. # Double_t
+   rmax = TMath.Pi() * 2
+   r = [ Double_t() for _ in range(1000) ]
+   theta = [ Double_t() for _ in range(1000) ]
+   
 
-   global c1
-   c1 = TCanvas("c1", "multipads", 900, 700)
-   c1.Divide(2, 2, 0, 0)
+   global fp1
+   fp1 = TF1("fplot", "cos(x)", rmin, rmax)
+   #   for (Int_t ipt = 0; ipt < 1000; ipt++) {
+   for ipt in range(0, 1000, 1):
+      r[ipt] = ipt * (rmax - rmin) / 1000 + rmin
+      theta[ipt] = fp1.Eval(r[ipt])
+      
+   
 
-   global h1, h2, h3, h4
-   h1 = TH2F("h1", "test1", 10, 0, 1, 20, 0, 20)
-   h2 = TH2F("h2", "test2", 10, 0, 1, 20, 0, 100)
-   h3 = TH2F("h3", "test3", 10, 0, 1, 20, -1, 1)
-   h4 = TH2F("h4", "test4", 10, 0, 1, 20, 0, 1000)
-   
-   c1.cd(1)
-   gPad.SetTickx(2)
-   h1.Draw()
-   
-   c1.cd(2)
-   gPad.SetTickx(2)
-   gPad.SetTicky(2)
-   h2.GetYaxis().SetLabelOffset(0.01)
-   h2.Draw()
-   
-   c1.cd(3)
-   h3.Draw()
-   
-   c1.cd(4)
-   gPad.SetTicky(2)
-   h4.Draw()
+   global grP1
+   r = to_c( r )
+   theta = to_c( theta )
+   grP1 = TGraphPolar(1000, r, theta)
+   grP1.SetTitle("")
+   grP1.SetLineColor(2)
+   grP1.Draw("AOL")
    
 
 
 if __name__ == "__main__":
-   zones()
+   graphpolar3()
