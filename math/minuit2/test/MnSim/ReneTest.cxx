@@ -28,9 +28,7 @@ class ReneFcn : public FCNBase {
 public:
    ReneFcn(std::span<const double> meas) : fMeasurements(meas.begin(), meas.end()) {}
 
-   ~ReneFcn() override {}
-
-   double operator()(std::span<const double> par) const override
+   double operator()(std::vector<double> const &par) const override
    {
       double a = par[2];
       double b = par[1];

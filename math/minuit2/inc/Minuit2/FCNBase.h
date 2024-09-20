@@ -74,7 +74,7 @@ public:
 
    */
 
-   double operator()(std::span<const double> v) const override = 0;
+   double operator()(std::vector<double> const &v) const override = 0;
 
    /**
 
@@ -112,8 +112,8 @@ public:
 
    virtual bool HasGradient() const { return false; }
 
-   virtual std::vector<double> Gradient(std::span<const double> ) const { return {}; }
-   virtual std::vector<double> GradientWithPrevResult(std::span<const double> parameters, double * /*previous_grad*/,
+   virtual std::vector<double> Gradient(std::vector<double> const&) const { return {}; }
+   virtual std::vector<double> GradientWithPrevResult(std::vector<double> const& parameters, double * /*previous_grad*/,
                                                       double * /*previous_g2*/, double * /*previous_gstep*/) const
    {
       return Gradient(parameters);
@@ -124,10 +124,10 @@ public:
    };
 
    /// return second derivatives (diagonal of the Hessian matrix)
-   virtual std::vector<double> G2(std::span<const double> ) const { return {};}
+   virtual std::vector<double> G2(std::vector<double> const&) const { return {};}
 
    /// return Hessian
-   virtual std::vector<double> Hessian(std::span<const double> ) const { return {};}
+   virtual std::vector<double> Hessian(std::vector<double> const&) const { return {};}
 
    virtual bool HasHessian() const { return false; }
 

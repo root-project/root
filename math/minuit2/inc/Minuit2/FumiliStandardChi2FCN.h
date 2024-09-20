@@ -122,8 +122,6 @@ public:
       }
    }
 
-   ~FumiliStandardChi2FCN() override {}
-
    /**
 
    Evaluates the model function for the different measurement points and
@@ -141,7 +139,7 @@ public:
 
    */
 
-   std::vector<double> Elements(std::span<const double> par) const override;
+   std::vector<double> Elements(std::vector<double> const &par) const override;
 
    /**
 
@@ -176,7 +174,7 @@ public:
 
    **/
 
-   void EvaluateAll(std::span<const double> par) override;
+   void EvaluateAll(std::vector<double> const &par) override;
 
 private:
    std::vector<double> fMeasurements;

@@ -65,8 +65,6 @@ public:
 
    ParametricFunction(int nparams) : par(nparams) {}
 
-   ~ParametricFunction() override {}
-
    /**
 
    Sets the parameters of the ParametricFunction.
@@ -75,7 +73,7 @@ public:
 
    */
 
-   virtual void SetParameters(std::span<const double> params) const
+   virtual void SetParameters(std::vector<double> const& params) const
    {
 
       assert(params.size() == par.size());
@@ -115,7 +113,7 @@ public:
 
    */
 
-   double operator()(std::span<const double> x) const override = 0;
+   double operator()(std::vector<double> const& x) const override = 0;
 
    /**
 
@@ -134,7 +132,7 @@ public:
 
    */
 
-   virtual double operator()(std::span<const double> x, std::span<const double> params) const
+   virtual double operator()(std::vector<double> const& x, std::vector<double> const& params) const
    {
       SetParameters(params);
       return operator()(x);
@@ -153,7 +151,7 @@ public:
 
    */
 
-   virtual std::vector<double> GetGradient(std::span<const double> x) const;
+   virtual std::vector<double> GetGradient(std::vector<double> const& x) const;
 
 protected:
    /**
