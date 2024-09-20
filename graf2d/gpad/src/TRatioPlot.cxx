@@ -241,6 +241,42 @@ TRatioPlot::TRatioPlot(THStack *st, TH1 *h2, Option_t *option) : TRatioPlot()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Constructor which accepts a `THStack` and a histogram. Converts the
+/// stack to a regular sum of its containing histograms for processing.
+///
+/// \param h1 The other histogram
+/// \param st The THStack object
+/// \param option Steers the calculation of the lower plot
+
+TRatioPlot::TRatioPlot(TH1 *h1, THStack *st, Option_t *option) : TRatioPlot()
+{
+   if (!st || !h1) {
+      Warning("TRatioPlot", "Need a histogram and a stack");
+      return;
+   }
+
+   TList *stackHists = st->GetHists();
+
+   if (stackHists->GetSize() == 0) {
+      Warning("TRatioPlot", "Stack does not have histograms");
+      return;
+   }
+
+   auto tmpHist = static_cast<TH1 *>(stackHists->At(0)->Clone());
+   tmpHist->Reset();
+
+   for (int i = 0; i < stackHists->GetSize(); ++i) {
+      tmpHist->Add(static_cast<TH1 *>(stackHists->At(i)));
+   }
+
+   fHistDrawProxy = st;
+   fHistDrawProxyStack = kTRUE;
+
+   Init(h1, tmpHist, option);
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Constructor for one histogram and a fit.
 ///
 /// \param h1 The histogram
