@@ -216,8 +216,7 @@ public:
       const auto d2 = fLastPWSaftyPnt[2] - cpoint[2];
       const auto d_sq = d0 * d0 + d1 * d1 + d2 * d2;
       // if we have moved too much return -1 as "invalid"
-      static constexpr double factor = 1.; // factor between 0 and 1 that "invalidates cache"
-      if (d_sq >= factor * (fLastPWSafety * fLastPWSafety)) {
+      if (d_sq >= (fLastPWSafety * fLastPWSafety)) {
          return -1.;
       }
       // or return a reasonable cache estimate for safety
