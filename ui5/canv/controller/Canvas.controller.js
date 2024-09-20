@@ -10,7 +10,7 @@ sap.ui.define([
    'sap/m/Input',
    'sap/m/Text',
    'sap/m/Button',
-   'sap/m/ButtonType',
+   'sap/m/library',
    'sap/ui/layout/SplitterLayoutData',
    'rootui5/browser/controller/FileDialog.controller'
 ], function (Controller,
@@ -24,7 +24,7 @@ sap.ui.define([
              Input,
              Text,
              Button,
-             ButtonType,
+             mLibrary,
              SplitterLayoutData,
              FileDialogController) {
    "use strict";
@@ -632,7 +632,7 @@ sap.ui.define([
                title: 'Divide canvas',
                content: new Input({ placeholder: 'input N or NxM', value: '{/divideArg}' }),
                beginButton: new Button({
-                  type: ButtonType.Emphasized,
+                  type: mLibrary.ButtonType.Emphasized,
                   text: 'OK',
                   press: () => {
                      let arg = this.getView().getModel().getProperty('/divideArg');

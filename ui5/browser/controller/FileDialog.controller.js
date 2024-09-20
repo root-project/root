@@ -4,9 +4,9 @@ sap.ui.define(['rootui5/panel/Controller',
                'sap/m/Link',
                'sap/m/Text',
                'sap/m/Button',
-               'sap/m/ButtonType',
+               'sap/m/library',
                'sap/m/Dialog'
-],function(GuiPanelController, JSONModel, Fragment, Link, Text, Button, ButtonType, Dialog) {
+],function(GuiPanelController, JSONModel, Fragment, Link, Text, Button, mLibrary, Dialog) {
 
    'use strict';
 
@@ -347,7 +347,7 @@ sap.ui.define(['rootui5/panel/Controller',
             }),
             endButton: new Button({
                text: 'Ok',
-               type: ButtonType.Emphasized,
+               type: mLibrary.ButtonType.Emphasized,
                press: () => {
                   oWarnDlg.close();
                   this.websocket.send('DLG_CONFIRM_SELECT');
