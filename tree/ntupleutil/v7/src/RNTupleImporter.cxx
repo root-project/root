@@ -53,7 +53,7 @@ public:
       // Report if more than 50MB (compressed) where written since the last status update
       if (nbytesWritten < fNbytesNext)
          return;
-      std::cout << "Wrote " << nbytesWritten / 1000 / 1000 << "MB, " << neventsWritten << " entries" << std::endl;
+      std::cout << "Wrote " << nbytesWritten / 1000 / 1000 << "MB, " << neventsWritten << " entries\n";
       fNbytesNext += gUpdateFrequencyBytes;
       if (nbytesWritten > fNbytesNext) {
          // If we already passed the next threshold, increase by a sensible amount.
@@ -63,7 +63,7 @@ public:
 
    void Finish(std::uint64_t nbytesWritten, std::uint64_t neventsWritten) final
    {
-      std::cout << "Done, wrote " << nbytesWritten / 1000 / 1000 << "MB, " << neventsWritten << " entries" << std::endl;
+      std::cout << "Done, wrote " << nbytesWritten / 1000 / 1000 << "MB, " << neventsWritten << " entries\n";
    }
 };
 
@@ -141,10 +141,10 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::InitDesti
 void ROOT::Experimental::RNTupleImporter::ReportSchema()
 {
    for (const auto &f : fImportFields) {
-      std::cout << "Importing '" << f.fField->GetFieldName() << "' [" << f.fField->GetTypeName() << ']' << std::endl;
+      std::cout << "Importing '" << f.fField->GetFieldName() << "' [" << f.fField->GetTypeName() << "]\n";
    }
    for (const auto &f : fModel->GetProjectedFields().GetFieldZero()->GetSubFields()) {
-      std::cout << "Importing (projected) '" << f->GetFieldName() << "' [" << f->GetTypeName() << ']' << std::endl;
+      std::cout << "Importing (projected) '" << f->GetFieldName() << "' [" << f->GetTypeName() << "]\n";
    }
 }
 
