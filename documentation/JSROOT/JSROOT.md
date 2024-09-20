@@ -17,8 +17,6 @@ When required, there are following alternatives to install JSROOT on other web s
    - use [npm](https://npmjs.com/package/jsroot) package manager and invoke `npm install jsroot`
    - clone master branch from [repository](https://github.com/root-project/jsroot/)
 
-To use ROOT files with ZSTD compression, one have to copy https://root.cern/js/zstd/zstd-codec.min.js file to "zstd" subfolder in the same directory where jsroot itself is installed. If jsroot url is "https://server/sub/jsroot/", one should copy codec file into "https://server/sub/zstd/" subfolder. It is not required when JSROOT used with node.js
-
 
 ## Drawing objects in JSROOT
 
@@ -28,7 +26,6 @@ To automate files loading and objects drawing, one can provide number of URL par
 
 - file - name of the file, which will be automatically open with page loading
 - files - array of file names for loading
-- localfile - automatically activate dialog for selecting local ROOT files
 - json - name of JSON file with stored ROOT object like histogram or canvas
 - item - item name to be displayed
 - opt - drawing option for the item
@@ -37,28 +34,36 @@ To automate files loading and objects drawing, one can provide number of URL par
 - expand - item name(s) to be expanded in the hierarchy browser
 - focus - item name to be focused on in the hierarchy browser
 - title - set browser title
-- layout - can be 'simple', 'flex', 'collapsible', 'tabs', 'gridNxM', 'horizNMK', 'vertNMK'
+- dir - list files in directory on http server, see https://github.com/root-project/jsroot/issues/283
+- layout - can be 'simple', 'flex', 'tabs', 'gridNxM', 'horizNMK', 'vertNMK'
 - browser - layout of the browser 'fix' (default), 'float', 'no' (hidden), 'off' (fully disabled)
 - nobrowser - do not display file browser (same as browser=no)
 - float - display floating browser (same as browser=float)
 - status - configure status line 'no' (default), 'off' (completely disable), 'size'
-- load - name of extra JavaScript to load
+- inject - name of extra JavaScript to load, see several examples in demo/ subdir
 - optimize - drawing optimization 0:off, 1:only large histograms (default), 2:always
-- paltte - id of default color palette, 51..121 - new ROOT6 palette  (default 57)
+- palette - id of default color palette, 51..121 - new ROOT6 palette  (default 57)
 - interactive - enable/disable interactive functions 0 - disable all, 1 - enable all
 - noselect - hide file-selection part in the browser (only when file name is specified)
 - mathjax - use MathJax for latex output
 - latex - 'off', 'symbols', 'normal', 'mathjax', 'alwaysmath' control of TLatex processor
 - style - name of TStyle object to define global JSROOT style
 - toolbar - show canvas tool buttons 'off', 'on' and 'popup', 'left' or 'right' for position, 'vert' for vertical
-- divsize - fixed size in pixels for main div element like &dvisize=700x400
+- divsize - fixed size in pixels for main div element like &dvisize=1500x800
+- canvsize - default canvas size in pixels like &canvsize=1200x800
 - optstat -  settings for stat box, default 1111 (see TStyle::SetOptStat)
 - optfit - fit parameters settings for stat box, default 0 (see TStyle::SetOptFit)
 - statfmt - formatting for float values in stat box, default 6.4g (see TStyle::SetStatFormat)
 - fitfmt - formatting for fit values in stat box, default 5.4g (see TStyle::SetFitFormat)
-- nomenu - disable content menu
+- optdate - plot specified date on the canvas, 1 - current time, 2 - file creation date, 3 - file modification date
+- utc - select timeZone to 'UTC'
+- datex     - X position of date
+- datey     - Y position of date
+- optfile - plot file name on the canvas, 1 - file name, 2 - full file URL, 3 - object item name
+- opttitle - disable/enable drawing of object title in the canvas
+- nomenu - disable context menu
 - notouch - disable touch events handling
-- noprogress - do not show progress messages like scripts loading
+- progress - switch progress display mode between 'off', 'on' and 'modal'
 
 
 For instance:
@@ -71,6 +76,7 @@ Following layouts are supported:
 
   - simple - available space used for single object (default)
   - [flex](https://root.cern/js/latest/api.htm#url_syntax_flexible_layout) - creates as many frames as necessary, each can be individually moved/enlarged
+  - [tabs](https://root.cern/js/latest/api.htm#url_syntax_tabs_layout) - tabs for each object drawing
   - [gridNxM](https://root.cern/js/latest/api.htm#url_syntax_grid_layout) - fixed-size grid with NxM frames
   - vertN - N frames sorted in vertical direction (like gridi1xN)
   - horizN - N frames sorted in horizontal direction (like gridiNx1)
@@ -348,9 +354,10 @@ Following draw options could be specified (separated by semicolon or ';'):
    - ssao - enable Smooth Lighting Shader (or Screen Space Ambient Occlusion)
    - wire - instead of filled surfaces only wireframe will be drawn
    - vislvlN - maximal hierarchy depth of visible nodes (like vislvl6)
-   - more  - show 2 times more volumes as usual (normally ~2000 volumes or ~100000 elementary faces are shown)
-   - more3 - show 3 times more volumes as usual
+   - moreN - show N times more volumes as usual (normally ~10000 nodes and ~200000 elementary faces are shown)
    - all - try to display all geometry volumes (may lead to browser hanging)
+   - maxnodesN - configure maximal number of rendered nodes (like maxnodes100K)
+   - maxfacesN - configure maximal number of rendered faces (like maxfaces3M)
    - highlight - force highlighting of selected volume, normally activated for moderate-size geometries
    - nohighlight - disable volumes highlighting (can be activated via context menu)
    - hscene - enable highlight of extra objects like tracks or hits
@@ -469,7 +476,7 @@ To enable CORS on Apache web server, hosting ROOT files, one should add followin
          Header set Access-Control-Allow-Origin "*"
          Header set Access-Control-Allow-Headers "range"
          Header set Access-Control-Expose-Headers "content-range,content-length,accept-ranges"
-         Header set Access-Control-Allow-Methods "HEAD,GET"
+         Header set Access-Control-Allow-Methods "GET"
       </FilesMatch>
     </IfModule>
 
@@ -501,12 +508,6 @@ JSROOT can read files from local file system using HTML5 FileReader functionalit
 Main limitation here - user should interactively select files for reading.
 There is button __"..."__ on the main JSROOT page, which starts file selection dialog.
 If valid ROOT file is selected, JSROOT will be able to normally read content of such file.
-
-One could try to invoke such dialog with "localfile" parameter in URL string:
-
-   - <https://root.cern/js/latest/?localfile>
-
-It could happen, that due to security limitations automatic popup will be blocked.
 
 
 ## JSROOT with THttpServer
@@ -548,12 +549,12 @@ which is capable to convert any (beside TTree) ROOT object into JSON. Any ROOT a
 create JSON files for selected objects and write such files in a directory,
 which can be accessed via web server. Then one can use JSROOT to read such files and display objects in a web browser.
 
-There is a demonstration page showing such functionality: <https://root.cern/js/latest/demo/demo.htm>.
+There is a demonstration page showing such functionality: <https://root.cern/js/latest/demo/update_draw.htm>.
 This demo page reads in cycle 20 json files and displays them.
 
 If one has a web server which already provides such JSON file, one could specify the URL to this file like:
 
-<https://root.cern/js/latest/demo/demo.htm?addr=../httpserver.C/Canvases/c1/root.json.gz>
+<https://root.cern/js/latest/demo/update_draw.htm?addr=../httpserver.C/Canvases/c1/root.json.gz>
 
 Here the same problem with [Cross-Origin Request](https://developer.mozilla.org/en/http_access_control) can appear. If the web server configuration cannot be changed, just copy JSROOT to the web server itself.
 
@@ -604,7 +605,7 @@ When JSROOT is used with THttpServer, the address looks like:
 <script type='module'>
    import { httpRequest, draw } from 'http://your_root_server:8080/jsrootsys/modules/main.mjs';
    let obj = await httpRequest('http://your_root_server:8080/Objects/hist/root.json','object');
-   await draw("drawing", obj, "hist");
+   await draw('drawing', obj, 'hist');
 </script>
 ```
 
@@ -622,8 +623,8 @@ One also can load some special components directly like:
    h.setDisplay("simple", "myMainDiv");
 
    // open file and display element
-   await h.openRootFile("../../files/hsimple.root");
-   await h.display("hpxpy;1","colz");
+   await h.openRootFile('../../files/hsimple.root');
+   await h.display('hpxpy;1","colz');
 </script>
 ```
 
@@ -633,7 +634,7 @@ to change stat format using to display value in stats box:
 
 ```javascript
 import { gStyle } from 'https://root.cern/js/latest/modules/main.mjs';
-gStyle.fStatFormat = "7.5g";
+gStyle.fStatFormat = '7.5g';
 ```
 
 There is also `settings` object which contains all other JSROOT settings. For instance,
@@ -641,8 +642,8 @@ one can configure custom format for different axes:
 
 ```javascript
 import { settings } from 'https://root.cern/js/latest/modules/main.mjs';
-settings.XValuesFormat = "4.2g";
-settings.YValuesFormat = "6.1f";
+settings.XValuesFormat = '4.2g';
+settings.YValuesFormat = '6.1f';
 ```
 
 One also can use `build/jsroot.js` bundle to load all functionality at one and access it via `JSROOT` global handle:
@@ -652,7 +653,7 @@ One also can use `build/jsroot.js` bundle to load all functionality at one and a
 <script>
    // getting json string from somewhere
    let obj = JSROOT.parse(root_json);
-   JSROOT.draw("plain", obj, "colz");
+   JSROOT.draw('plain', obj, 'colz');
 </script>
 ```
 
@@ -676,7 +677,7 @@ For instance to receive object from a THttpServer server one could do:
 ```javascript
 import { httpRequest } from 'https://root.cern/js/latest/modules/main.mjs';
 let obj = await httpRequest("http://your_root_server:8080/Canvases/c1/root.json", "object")
-console.log('Read object of type ', obj._typename);
+console.log('Read object of type', obj._typename);
 ```
 
 Function returns Promise, which provides parsed object (or Error in case of failure).
@@ -742,7 +743,7 @@ resize("drawing");
  As second argument one could specify exact size for draw elements like:
 
 ```javascript
-resize("drawing", { width: 500, height: 200 } );
+resize("drawing", { width: 500, height: 200 });
 ```
 
 To correctly cleanup JSROOT drawings from HTML element, one should call:
@@ -765,7 +766,7 @@ let filename = "https://root.cern/js/files/hsimple.root";
 let file = await openFile(filename);
 let obj = await file.readObject("hpxpy;1");
 await draw("drawing", obj, "colz");
-console.log("drawing completed");
+console.log('drawing completed');
 ```
 
 Here is [running example](https://root.cern/js/latest/api.htm#custom_html_read_root_file) and [source code](https://github.com/root-project/jsroot/blob/master/demo/read_file.htm)
@@ -811,7 +812,7 @@ selector.Process = function() {
 }
 
 selector.Terminate = function(res) {
-   if (!res || (cnt===0)) return;
+   if (!res || (cnt === 0)) return;
    let meanpx = sumpx/cnt, meanpy = sumpy/cnt;
    console.log(`Results meanpx = ${meanpx} meanpy = ${meanpy}`);
 }
@@ -867,6 +868,13 @@ produceRenderOrder(scene, camera.position, 'box');
 Following methods can be applied: "box", "pnt", "size", "ray" and "dflt". See more info in draw options description for TGeo classes.
 
 Here is [running example](https://root.cern/js/latest/api.htm#custom_html_geometry) and [source code](https://github.com/root-project/jsroot/blob/master/demo/tgeo_build.htm).
+
+
+### Custom user class
+
+There is [code example](https://github.com/root-project/jsroot/tree/master/demo/custom) how custom user class can be implemented.
+It shows usage of different draw options for the class and ability to access sub-elements of the object using specialized `expand` function.
+
 
 
 ### Use with Node.js
@@ -941,7 +949,7 @@ JSROOT provides `loadOpenui5` function to load supported OpenUI5:
 </script>
 ```
 
-JSROOT uses <https://openui5.hana.ondemand.com> when no other source is specified.
+JSROOT uses <https://openui5.hana.ondemand.com/1.128.0/> when no other source is specified.
 
 There are small details when using OpenUI5 with THttpServer. First of all, location of JSROOT modules should be specified
 as `/jsrootsys/modules/main.mjs`. And then trying to access files from local disk, one should specify `/currentdir/` folder:
