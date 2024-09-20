@@ -961,7 +961,7 @@ bool TClingLookupHelper__ExistingTypeCheck(const std::string &tname,
    {
       // We have a scope
       const auto enName = lastPos;
-      const auto scopeNameSize = ((Long64_t)lastPos - (Long64_t)inner) / sizeof(decltype(*lastPos)) - 2;
+      const auto scopeNameSize = (lastPos - inner) / sizeof(decltype(*lastPos)) - 2;
       std::string scopeName{inner, scopeNameSize};
       // Check if the scope is in the list of classes
       if (auto scope = static_cast<TClass *>(gROOT->GetListOfClasses()->FindObject(scopeName.c_str()))) {

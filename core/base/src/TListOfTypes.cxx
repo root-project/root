@@ -62,7 +62,7 @@ static bool NameExistsElsewhere(const char* name){
    if (lastPos != nullptr) {
       // We have a scope
       const auto enName = lastPos + 1;
-      const auto scopeNameSize = ((Long64_t)lastPos - (Long64_t)name) / sizeof(decltype(*lastPos)) - 1;
+      const size_t scopeNameSize = (lastPos - name) / sizeof(decltype(*lastPos)) - 1;
       std::string scopeName{name, scopeNameSize};
       // We have now an enum name and a scope name
       // We look first in the classes

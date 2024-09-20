@@ -297,7 +297,7 @@ TEnum *TEnum::GetEnum(const char *enumName, ESearchAction sa)
    if (lastPos != enumName) {
       // We have a scope
       const auto enName = lastPos;
-      const auto scopeNameSize = ((Long64_t)lastPos - (Long64_t)enumName) / sizeof(decltype(*lastPos)) - 2;
+      const auto scopeNameSize = (lastPos - enumName) / sizeof(decltype(*lastPos)) - 2;
       std::string scopeName{enumName, scopeNameSize};
       // Three levels of search
       theEnum = searchEnum(scopeName.c_str(), enName, kNone);
