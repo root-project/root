@@ -242,6 +242,8 @@ jobs:
             config: Debug
           - event_name: push
             config: Debug
+          - event_name: workflow_dispatch
+            config: Debug
 
     name: Windows 10 ${{ matrix.target_arch }} ${{ matrix.config }}
 
