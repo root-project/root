@@ -30,7 +30,7 @@
 27. Internals - upgrade to eslint 9
 28. Internals - do not select pad (aka gPad) for objects drawing, always use assigned pad painter
 29. Fix - properly save zoomed ranges in drawingJSON()
-30. Fix - properly redraw TMultuGraph
+30. Fix - properly redraw TMultiGraph
 31. Fix - show empty bin in TProfile2D if it has entries #316
 32. Fix - saving embed TGeo in TCanvas into image
 
