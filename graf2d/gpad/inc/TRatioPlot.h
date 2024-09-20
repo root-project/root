@@ -162,6 +162,8 @@ public:
 
    TRatioPlot(THStack* st, TH1* h2, Option_t *option = "pois");
 
+   TRatioPlot(TH1* h1, THStack* st, Option_t *option = "pois");
+
    TRatioPlot(TH1* h1, Option_t *option = "", TFitResult *fitres = nullptr);
 
    void SetH1DrawOpt(Option_t *opt);
