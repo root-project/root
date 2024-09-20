@@ -100,9 +100,6 @@ jobs:
           - platform: mac13   
             arch: ARM64
             overrides: ["LLVM_ENABLE_ASSERTIONS=On"]
-          - platform: mac14
-            arch: X64
-            overrides: ["LLVM_ENABLE_ASSERTIONS=On"]
 
     runs-on: # Using '[self-hosted, ..., ...]' does not work for some reason :)
       - self-hosted
