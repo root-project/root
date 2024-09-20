@@ -71,6 +71,11 @@ sap.ui.define([
 
         attachSelectionChanged: function() {
            // dummy for compatibility with newest 1.70.0 version
+        },
+
+        getNodeByIndex: function(indx) {
+            // required by openui5 from versions ~1.100.0
+            return this.getModel().getNodeByIndex(indx);
         }
 
     });
