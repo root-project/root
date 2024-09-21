@@ -799,4 +799,17 @@ intervals
 * [[ROOT-8238](https://its.cern.ch/jira/browse/ROOT-8238)] - TPrincipal tries to make histograms with nbin=0
 * [[ROOT-8519](https://its.cern.ch/jira/browse/ROOT-8519)] - Bug when use simple math functions in TTree::SetAlias()
 
+## Release 6.32.06
+
+Published on September 22, 2024
+
+### Items addressed in this release
+
+This is the first ROOT release supporting macOS 15 Sequoia.
+
+* [[#15178](https://github.com/root-project/root/issues/15178)] - ROOT generates CMake warnings when building from the tarball
+* [[#16219](https://github.com/root-project/root/issues/16219)] - Module map on the new XCode version for macos15-beta
+* [[#16249](https://github.com/root-project/root/issues/16249)] - Iterating with a range for does one extra iteration
+* [[ROOT-10902](https://its.cern.ch/jira/browse/ROOT-10902)] - SMatrix read from TTree contains all zeroes
+
 ## HEAD of the v6-32-00-patches branch
