@@ -49,6 +49,8 @@ private:
    Double_t fPoint[3];           //! current point
    Double_t fDirection[3];       //! current direction
    Double_t fLastPoint[3];       //! last point for which safety was computed
+   Double_t fLastPWSaftyPnt[3];  //! last point for which parallel world safety was "evaluated"
+   Double_t fLastPWSafety{-1};   //! last safety returned from parallel world (negative if invalid)
    Int_t fThreadId;              //! thread id for this navigator
    Int_t fLevel;                 //! current geometry level;
    Int_t fNmany;                 //! number of overlapping nodes on current branch
@@ -80,6 +82,8 @@ private:
    TGeoHMatrix *fGlobalMatrix;   //! current pointer to cached global matrix
    TGeoHMatrix *fDivMatrix;      //! current local matrix of the selected division cell
    TString fPath;                //! path to current node
+
+   static Bool_t fgUsePWSafetyCaching; //! global mode is caching enabled for parallel world safety calls
 
 public:
    TGeoNavigator();
@@ -198,6 +202,34 @@ public:
       fLastPoint[0] = x;
       fLastPoint[1] = y, fLastPoint[2] = z;
    }
+
+   // Check if we have a cached safety value from parallel world, and if this can still be used.
+   // Return negative value if no cache available.
+   Double_t GetPWSafetyEstimateFromCache(Double_t cpoint[3]) const
+   {
+      // disregard too small or invalid safeties
+      if (fLastPWSafety < TGeoShape::Tolerance()) {
+         return -1.;
+      }
+      const auto d0 = fLastPWSaftyPnt[0] - cpoint[0];
+      const auto d1 = fLastPWSaftyPnt[1] - cpoint[1];
+      const auto d2 = fLastPWSaftyPnt[2] - cpoint[2];
+      const auto d_sq = d0 * d0 + d1 * d1 + d2 * d2;
+      // if we have moved too much return -1 as "invalid"
+      if (d_sq >= (fLastPWSafety * fLastPWSafety)) {
+         return -1.;
+      }
+      // or return a reasonable cache estimate for safety
+      return fLastPWSafety - std::sqrt(d_sq);
+   }
+
+   // Wrapper for getting the safety from the parallel world.
+   // Takes care of caching mechanics and talking to the Safety function of parallel world.
+   Double_t GetPWSafety(Double_t cpoint[3], Double_t saf_max);
+
+   // enable/disable parallel world safety caching
+   static void SetPWSafetyCaching(Bool_t b) { fgUsePWSafetyCaching = b; }
+   static Bool_t IsPWSafetyCaching() { return fgUsePWSafetyCaching; }
 
    //--- point/vector reference frame conversion
    void LocalToMaster(const Double_t *local, Double_t *master) const { fCache->LocalToMaster(local, master); }
