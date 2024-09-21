@@ -47,6 +47,8 @@ static Double_t gTolerance = TGeoShape::Tolerance();
 const char *kGeoOutsidePath = " ";
 const Int_t kN3 = 3 * sizeof(Double_t);
 
+Bool_t TGeoNavigator::fgUsePWSafetyCaching = kFALSE;
+
 ClassImp(TGeoNavigator);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -56,6 +58,7 @@ TGeoNavigator::TGeoNavigator()
    : fStep(0.),
      fSafety(0.),
      fLastSafety(0.),
+     fLastPWSafety(-1.),
      fThreadId(0),
      fLevel(0),
      fNmany(0),
@@ -107,6 +110,7 @@ TGeoNavigator::TGeoNavigator(TGeoManager *geom)
    : fStep(0.),
      fSafety(0.),
      fLastSafety(0.),
+     fLastPWSafety(-1.),
      fThreadId(0),
      fLevel(0),
      fNmany(0),
@@ -1645,6 +1649,39 @@ void TGeoNavigator::ResetState()
    fIsStepEntering = fIsStepExiting = kFALSE;
 }
 
+//////////////////////////////////////////////////////////////////////////////////
+/// Wrapper for getting the safety from the parallel world. Takes care of
+/// caching mechanics + talking to the parallel world.
+
+double TGeoNavigator::GetPWSafety(Double_t cpoint[3], Double_t saf_max)
+{
+   if (!IsPWSafetyCaching()) {
+      return fGeometry->GetParallelWorld()->Safety(cpoint, saf_max);
+   }
+   const auto cached = GetPWSafetyEstimateFromCache(cpoint);
+   if (cached > 0) {
+      // if cache is valid, just use it
+      return cached;
+   }
+   // otherwise we need to evaluate it and update the cache
+   // we evaluate this with saf_max = infinity to get the best
+   // possible safety value
+   auto pw = fGeometry->GetParallelWorld();
+   const auto newsafety = pw->Safety(cpoint /*saf_max*/);
+
+   // we need to be a bit careful: A returned safety value of TGeoShape::Big()
+   // is not the actual safety and should not be cached
+   if (newsafety < TGeoShape::Big()) {
+      fLastPWSafety = newsafety;
+      fLastPWSaftyPnt[0] = cpoint[0];
+      fLastPWSaftyPnt[1] = cpoint[1];
+      fLastPWSaftyPnt[2] = cpoint[2];
+   } else {
+      fLastPWSafety = -1;
+   }
+   return newsafety;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute safe distance from the current point. This represent the distance
 /// from POINT to the closest boundary.
@@ -1673,7 +1710,7 @@ Double_t TGeoNavigator::Safety(Bool_t inside)
 
       // cross-check against the parallel world safety, using fSafety as limit
       if (have_PW) {
-         safpar = fGeometry->GetParallelWorld()->Safety(fPoint, fSafety);
+         safpar = GetPWSafety(fPoint, fSafety);
       }
       return TMath::Min(fSafety, safpar);
    }
@@ -1695,7 +1732,7 @@ Double_t TGeoNavigator::Safety(Bool_t inside)
    //---> Check against the parallel geometry safety
    // cross-check against the parallel world safety, using fSafety as limit
    if (have_PW) {
-      safpar = fGeometry->GetParallelWorld()->Safety(fPoint, fSafety);
+      safpar = GetPWSafety(fPoint, fSafety);
    }
    if (safpar < fSafety)
       fSafety = safpar;
