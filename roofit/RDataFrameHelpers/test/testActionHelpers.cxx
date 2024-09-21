@@ -188,3 +188,29 @@ TEST(RooAbsDataHelper, SkipEventsOutOfRange)
    RooMsgService::instance().getStream(0).addTopic(RooFit::DataHandling);
    RooMsgService::instance().getStream(1).addTopic(RooFit::DataHandling);
 }
+
+TEST(RooAbsDataHelper, ColumnsOfOtherTypes)
+{
+
+   RooRealVar x("x", "x", 0);
+   RooRealVar y("y", "y", 0);
+   RooRealVar z("z", "z", 0);
+
+   RooDataSetHelper dsHelper{"dataset", "Title of dataset", RooArgSet{x, y, z}};
+
+   constexpr auto nEvents{10};
+   ROOT::RDataFrame df{nEvents};
+   auto dfWithCols =
+      df.Define("x", []() { return std::int32_t{1}; }).Define("y", []() { return std::uint32_t{2}; }).Define("z", []() {
+         return 3.f;
+      });
+
+   // The RooAbsDataHelper should be able to work with column types that can be cast to double
+   auto rooDataSet = dfWithCols.Book<std::int32_t, std::uint32_t, float>(std::move(dsHelper), {"x", "y", "z"});
+
+   // Simple checks, just to check that the dataset was filled.
+   ASSERT_EQ(rooDataSet->numEntries(), nEvents);
+   ASSERT_NEAR(rooDataSet->mean(x), 1, 1E-9);
+   ASSERT_NEAR(rooDataSet->mean(y), 2, 1E-9);
+   ASSERT_NEAR(rooDataSet->mean(z), 3, 1E-9);
+}
