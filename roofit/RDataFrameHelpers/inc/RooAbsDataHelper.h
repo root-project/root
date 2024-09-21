@@ -76,7 +76,7 @@ public:
    void Exec(unsigned int slot, ColumnTypes... values)
    {
       auto &vector = _events[slot];
-      for (auto &&val : {values...}) {
+      for (auto &&val : {static_cast<double>(values)...}) {
          vector.push_back(val);
       }
 
