@@ -34,16 +34,15 @@ else()
   set(runtimedir ${CMAKE_INSTALL_PYTHONDIR})
 endif()
 
+set(ROOT_LIBRARY_PROPERTIES_NO_VERSION ${ROOT_LIBRARY_PROPERTIES_NO_VERSION}
+    SUFFIX ${libsuffix}
+    PREFIX ${libprefix} )
 if(soversion)
-  set(ROOT_LIBRARY_PROPERTIES ${ROOT_LIBRARY_PROPERTIES}
+  set(ROOT_LIBRARY_PROPERTIES ${ROOT_LIBRARY_PROPERTIES} ${ROOT_LIBRARY_PROPERTIES_NO_VERSION}
       VERSION ${ROOT_VERSION}
-      SOVERSION ${ROOT_MAJOR_VERSION}.${ROOT_MINOR_VERSION}
-      SUFFIX ${libsuffix}
-      PREFIX ${libprefix} )
+      SOVERSION ${ROOT_MAJOR_VERSION}.${ROOT_MINOR_VERSION} )
 else()
-  set(ROOT_LIBRARY_PROPERTIES ${ROOT_LIBRARY_PROPERTIES}
-      SUFFIX ${libsuffix}
-      PREFIX ${libprefix}
+  set(ROOT_LIBRARY_PROPERTIES ${ROOT_LIBRARY_PROPERTIES} ${ROOT_LIBRARY_PROPERTIES_NO_VERSION}
       IMPORT_PREFIX ${libprefix} )
 endif()
 
@@ -1837,6 +1836,9 @@ function(ROOT_ADD_GTEST test_suite)
   if(TARGET ROOT::TestSupport)
     target_link_libraries(${test_suite} ROOT::TestSupport)
   else()
+    # Since we don't inherit the linkage against gtest from ROOT::TestSupport,
+    # we need to link against gtest here.
+    target_link_libraries(${test_suite} gtest)
     message(WARNING "ROOT_ADD_GTEST(${test_suite} ...): The target ROOT::TestSupport is missing. It looks like the test is declared against a ROOT build that is configured with -Dtesting=OFF.
             If this test sends warning or error messages, this will go unnoticed.")
   endif()

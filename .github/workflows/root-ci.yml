@@ -100,12 +100,14 @@ jobs:
             arch: ARM64
             overrides: ["LLVM_ENABLE_ASSERTIONS=On", "builtin_zlib=ON"]
           - platform: mac14
+            arch: X64
+            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
+          - platform: mac15
             arch: ARM64
             overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
-          # Disable mac-beta builds until the issue with the new modules map is fixed 
-          # - platform: mac-beta
-          #   arch: ARM64
-          #   overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
+          - platform: mac-beta
+            arch: ARM64
+            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
 
     runs-on: # Using '[self-hosted, ..., ...]' does not work for some reason :)
       - self-hosted
@@ -118,6 +120,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref_name }}
 
       - name: Apply option overrides from matrix for this job for non-release builds
         if: ${{ github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' && matrix.overrides != NaN }}
@@ -238,6 +242,8 @@ jobs:
             config: Debug
           - event_name: push
             config: Debug
+          - event_name: workflow_dispatch
+            config: Debug
 
     name: Windows 10 ${{ matrix.target_arch }} ${{ matrix.config }}
 
@@ -250,6 +256,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref_name }}
 
       - name: Pull Request Build
         if: github.event_name == 'pull_request'
@@ -386,6 +394,8 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref_name }}
 
       - name: Dump GitHub context
         env:

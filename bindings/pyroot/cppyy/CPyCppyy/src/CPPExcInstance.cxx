@@ -247,11 +247,7 @@ PyTypeObject CPPExcInstance_Type = {
         Py_TPFLAGS_BASETYPE |
         Py_TPFLAGS_BASE_EXC_SUBCLASS |
         Py_TPFLAGS_HAVE_GC |
-        Py_TPFLAGS_CHECKTYPES
-#if PY_VERSION_HEX >= 0x03120000
-        | Py_TPFLAGS_MANAGED_DICT
-#endif
-        ,                          // tp_flags
+        Py_TPFLAGS_CHECKTYPES,     // tp_flags
     (char*)"cppyy exception object proxy (internal)", // tp_doc
     (traverseproc)ep_traverse,     // tp_traverse
     (inquiry)ep_clear,             // tp_clear
