@@ -84,32 +84,26 @@ TEST(TTreeReaderLeafs, LeafListCaseA) {
    EXPECT_EQ(Bool, *trBool);
 }
 
-
-
-std::unique_ptr<TTree> CreateTree() {
+std::unique_ptr<TTree> CreateTree()
+{
    TInterpreter::EErrorCode error = TInterpreter::kNoError;
    gInterpreter->ProcessLine("#include \"data.h\"", &error);
    if (error != TInterpreter::kNoError)
       return {};
 
    Data data;
+   data.Init();
+   auto &vecDataMember = data.GetVecMember();
    auto tree = std::make_unique<TTree>("T", "test tree");
    tree->Branch("Data", &data);
-   data.fArray = new double[4]{12., 13., 14., 15.};
-   data.fSize = 4;
-   data.fUArray = new float[2]{42., 43.};
-   data.fUSize = 2;
-   data.fVec = { 17., 18., 19., 20., 21., 22.};
-   data.fDouble32 = 17.;
-   data.fFloat16 = 44.;
    tree->Fill();
 
-   data.fVec.clear();
-   data.fVec.resize(3210, 1001.f); // ROOT-8747
+   vecDataMember.clear();
+   vecDataMember.resize(3210, 1001.f); // ROOT-8747
    tree->Fill();
 
-   data.fVec.clear();
-   data.fVec.resize(2, 42.f); // ROOT-8747
+   vecDataMember.clear();
+   vecDataMember.resize(2, 42.f); // ROOT-8747
    tree->Fill();
 
    tree->ResetBranchAddresses();
