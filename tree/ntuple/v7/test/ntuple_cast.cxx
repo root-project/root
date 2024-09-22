@@ -22,6 +22,30 @@ TEST(RNTuple, TypeCastInvalid)
    EXPECT_NO_THROW(RNTupleReader::Open(std::move(castModel), "ntpl", fileGuard.GetPath()));
 }
 
+TEST(RNTuple, TypeCastInCollection)
+{
+   FileRaii fileGuard("test_ntuple_type_cast_in_collection.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto ptrVInt8 = model->MakeField<std::vector<std::int8_t>>("vint8");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      ptrVInt8->push_back(1);
+      ptrVInt8->push_back(0);
+      ptrVInt8->push_back(-128);
+      writer->Fill();
+   }
+
+   auto castModel = RNTupleModel::Create();
+   auto ptrVInt8 = castModel->MakeField<std::vector<bool>>("vint8");
+   auto reader = RNTupleReader::Open(std::move(castModel), "ntpl", fileGuard.GetPath());
+   reader->LoadEntry(0);
+   EXPECT_EQ(3u, ptrVInt8->size());
+   EXPECT_TRUE(ptrVInt8->at(0));
+   EXPECT_FALSE(ptrVInt8->at(1));
+   EXPECT_TRUE(ptrVInt8->at(2));
+}
+
 TEST(RNTuple, TypeCastBool)
 {
    FileRaii fileGuard("test_ntuple_type_cast_bool.root");
