@@ -31,7 +31,7 @@ TEST(TPython, ExecMultithreading)
       threads.emplace_back(task1, i);
    }
 
-   for (int i = 0; i < threads.size(); i++) {
+   for (decltype(threads.size()) i = 0; i < threads.size(); i++) {
       threads[i].join();
    }
 
