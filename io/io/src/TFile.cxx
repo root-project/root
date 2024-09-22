@@ -4112,12 +4112,16 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
          if (len > 0) {
             std::string xurl(len, 0);
             if (getxattr(fileurl.GetFile(), "eos.url.xroot", &xurl[0], len) == len) {
-               if ((f = TFile::Open(xurl.c_str(), options, ftitle, compress, netopt))) {
-                  if (!f->IsZombie()) {
-                     return f;
-                  } else {
-                     delete f;
-                     f = nullptr;
+               // Sometimes the `getxattr` call may return an invalid URL due
+               // to the POSIX attribute not being yet completely filled by EOS
+               if (xurl.find(fileurl.GetFile()) != std::string::npos) {
+                  if ((f = TFile::Open(xurl.c_str(), options, ftitle, compress, netopt))) {
+                     if (!f->IsZombie()) {
+                        return f;
+                     } else {
+                        delete f;
+                        f = nullptr;
+                     }
                   }
                }
             }
