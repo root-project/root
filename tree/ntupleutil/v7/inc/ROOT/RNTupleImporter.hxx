@@ -178,7 +178,9 @@ private:
       RImportLeafCountCollection &operator=(const RImportLeafCountCollection &other) = delete;
       RImportLeafCountCollection &operator=(RImportLeafCountCollection &&other) = default;
       std::string fFieldName; ///< name of the untyped collection, e.g. `_collection0`, `_collection1`, etc.
-      Int_t fMaxLength = 0;   ///< Stores count leaf GetMaximum() to create large enough buffers for the array leafs
+      /// Stores count leaf GetMaximum() to create large enough buffers for the array leafs.
+      /// Uses Int_t because that is the return type if TLeaf::GetMaximum().
+      Int_t fMaxLength = 0;
       /// The number of elements for the collection for a particular event. Used as a destination for SetBranchAddress()
       /// of the count leaf
       std::unique_ptr<Int_t> fCountVal;
