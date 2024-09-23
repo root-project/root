@@ -1030,8 +1030,8 @@ The second column is of type Byte.
 
 Untyped collections and records are fields with a collection or record role and an empty type name.
 Only top-level fields as well as direct subfields of untyped files may be untyped.
-Except for the empty type name, untyped collections have the same on-disk representation than std::vector
-and untyped records have the same on-disk representation than a user-defined class.
+Except for the empty type name, untyped collections have the same on-disk representation as std::vector
+and untyped records have the same on-disk representation as a user-defined class.
 
 ## Limits
 
