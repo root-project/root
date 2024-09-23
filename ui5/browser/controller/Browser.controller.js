@@ -268,7 +268,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                t.getColumns().forEach(col => {
                   if (col.getVisible()) fullsz += 4 + col.$().width();
                });
-               this.getView().byId('masterPage').getParent().removeStyleClass('masterExpanded');
+               // this.getView().byId('masterPage').getParent().removeStyleClass('masterExpanded');
                this.getView().byId('SplitAppBrowser').getAggregation('_navMaster').setWidth(fullsz + 'px');
             }
          }, this);
@@ -1007,16 +1007,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       onExpandMaster() {
-         const aggr = this.getView().byId('SplitAppBrowser').getAggregation('_navMaster');
-         if (aggr.getWidth()) {
-            aggr.setWidth('');
-         } else {
-            const master = this.getView().byId('masterPage').getParent();
-            master.toggleStyleClass('masterExpanded');
-            const expanded = master.hasStyleClass('masterExpanded');
-            const btn = this.getView().byId('expandMaster');
-            btn.setIcon(expanded ? "sap-icon://close-command-field" : "sap-icon://open-command-field");
-         }
+         // when button pressed - remove exact width value to let rule it via the style
+         this.getView().byId('SplitAppBrowser').getAggregation('_navMaster').setWidth('');
+         const master = this.getView().byId('masterPage').getParent();
+         master.toggleStyleClass('masterExpanded');
+         const expanded = master.hasStyleClass('masterExpanded');
+         const btn = this.getView().byId('expandMaster');
+         btn.setIcon(expanded ? "sap-icon://close-command-field" : "sap-icon://open-command-field");
       },
 
       /* ========================================== */
