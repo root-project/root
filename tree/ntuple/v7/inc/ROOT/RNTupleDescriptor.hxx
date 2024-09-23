@@ -53,7 +53,6 @@ class RColumnElementBase;
 
 namespace Internal {
 class RColumnDescriptorBuilder;
-class RColumnGroupDescriptorBuilder;
 class RClusterDescriptorBuilder;
 class RClusterGroupDescriptorBuilder;
 class RExtraTypeInfoDescriptorBuilder;
@@ -198,41 +197,6 @@ public:
    bool IsAliasColumn() const { return fPhysicalColumnId != fLogicalColumnId; }
    bool IsDeferredColumn() const { return fFirstElementIndex != 0; }
    bool IsSuppressedDeferredColumn() const { return fFirstElementIndex < 0; }
-};
-
-// clang-format off
-/**
-\class ROOT::Experimental::RColumnGroupDescriptor
-\ingroup NTuple
-\brief Meta-data for a sets of columns; non-trivial column groups are used for sharded clusters
-
-Clusters can span a subset of columns. Such subsets are described as a column group. An empty column group
-is used to denote the column group of all the columns. Every ntuple has at least one column group.
-*/
-// clang-format on
-class RColumnGroupDescriptor {
-   friend class Internal::RColumnGroupDescriptorBuilder;
-
-private:
-   DescriptorId_t fColumnGroupId = kInvalidDescriptorId;
-   std::unordered_set<DescriptorId_t> fPhysicalColumnIds;
-
-public:
-   RColumnGroupDescriptor() = default;
-   RColumnGroupDescriptor(const RColumnGroupDescriptor &other) = delete;
-   RColumnGroupDescriptor &operator=(const RColumnGroupDescriptor &other) = delete;
-   RColumnGroupDescriptor(RColumnGroupDescriptor &&other) = default;
-   RColumnGroupDescriptor &operator=(RColumnGroupDescriptor &&other) = default;
-
-   bool operator==(const RColumnGroupDescriptor &other) const;
-
-   DescriptorId_t GetId() const { return fColumnGroupId; }
-   const std::unordered_set<DescriptorId_t> &GetPhysicalColumnIds() const { return fPhysicalColumnIds; }
-   bool Contains(DescriptorId_t physicalId) const
-   {
-      return fPhysicalColumnIds.empty() || fPhysicalColumnIds.count(physicalId) > 0;
-   }
-   bool HasAllColumns() const { return fPhysicalColumnIds.empty(); }
 };
 
 // clang-format off
@@ -1316,30 +1280,6 @@ public:
    }
 
    RResult<RClusterGroupDescriptor> MoveDescriptor();
-};
-
-// clang-format off
-/**
-\class ROOT::Experimental::Internal::RColumnGroupDescriptorBuilder
-\ingroup NTuple
-\brief A helper class for piece-wise construction of an RColumnGroupDescriptor
-*/
-// clang-format on
-class RColumnGroupDescriptorBuilder {
-private:
-   RColumnGroupDescriptor fColumnGroup;
-
-public:
-   RColumnGroupDescriptorBuilder() = default;
-
-   RColumnGroupDescriptorBuilder &ColumnGroupId(DescriptorId_t columnGroupId)
-   {
-      fColumnGroup.fColumnGroupId = columnGroupId;
-      return *this;
-   }
-   void AddColumn(DescriptorId_t physicalId) { fColumnGroup.fPhysicalColumnIds.insert(physicalId); }
-
-   RResult<RColumnGroupDescriptor> MoveDescriptor();
 };
 
 // clang-format off
