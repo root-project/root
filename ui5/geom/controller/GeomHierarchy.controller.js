@@ -463,7 +463,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             this.selectedStack = this.getStackByPath(this.fullModel, path);
       },
 
-      /** @summary Show special message insted of nodes hierarchy */
+      /** @summary Show special message instead of nodes hierarchy */
       showTextInBrowser(text) {
          let br = this.byId("treeTable");
          br.collapseAll();
