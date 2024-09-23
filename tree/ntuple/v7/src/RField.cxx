@@ -946,6 +946,11 @@ void ROOT::Experimental::RFieldBase::ReadGlobalImpl(ROOT::Experimental::NTupleSi
    R__ASSERT(false);
 }
 
+void ROOT::Experimental::RFieldBase::ReadInClusterImpl(RClusterIndex clusterIndex, void *to)
+{
+   ReadGlobalImpl(fPrincipalColumn->GetGlobalIndex(clusterIndex), to);
+}
+
 std::size_t ROOT::Experimental::RFieldBase::ReadBulkImpl(const RBulkSpec &bulkSpec)
 {
    const auto valueSize = GetValueSize();
@@ -1068,6 +1073,59 @@ void ROOT::Experimental::RFieldBase::SetOnDiskId(DescriptorId_t id)
    if (fState != EState::kUnconnected)
       throw RException(R__FAIL("cannot set field ID once field is connected"));
    fOnDiskId = id;
+}
+
+/// Write the given value into columns. The value object has to be of the same type as the field.
+/// Returns the number of uncompressed bytes written.
+std::size_t ROOT::Experimental::RFieldBase::Append(const void *from)
+{
+   if (~fTraits & kTraitMappable)
+      return AppendImpl(from);
+
+   fPrincipalColumn->Append(from);
+   return fPrincipalColumn->GetElement()->GetPackedSize();
+}
+
+ROOT::Experimental::RFieldBase::RBulk ROOT::Experimental::RFieldBase::CreateBulk()
+{
+   return RBulk(this);
+}
+
+ROOT::Experimental::RFieldBase::RValue ROOT::Experimental::RFieldBase::BindValue(std::shared_ptr<void> objPtr)
+{
+   return RValue(this, objPtr);
+}
+
+std::size_t ROOT::Experimental::RFieldBase::ReadBulk(const RBulkSpec &bulkSpec)
+{
+   if (fIsSimple) {
+      /// For simple types, ignore the mask and memcopy the values into the destination
+      fPrincipalColumn->ReadV(bulkSpec.fFirstIndex, bulkSpec.fCount, bulkSpec.fValues);
+      std::fill(bulkSpec.fMaskAvail, bulkSpec.fMaskAvail + bulkSpec.fCount, true);
+      return RBulkSpec::kAllSet;
+   }
+
+   return ReadBulkImpl(bulkSpec);
+}
+
+ROOT::Experimental::RFieldBase::RSchemaIterator ROOT::Experimental::RFieldBase::begin()
+{
+   return fSubFields.empty() ? RSchemaIterator(this, -1) : RSchemaIterator(fSubFields[0].get(), 0);
+}
+
+ROOT::Experimental::RFieldBase::RSchemaIterator ROOT::Experimental::RFieldBase::end()
+{
+   return RSchemaIterator(this, -1);
+}
+
+ROOT::Experimental::RFieldBase::RConstSchemaIterator ROOT::Experimental::RFieldBase::cbegin() const
+{
+   return fSubFields.empty() ? RConstSchemaIterator(this, -1) : RConstSchemaIterator(fSubFields[0].get(), 0);
+}
+
+ROOT::Experimental::RFieldBase::RConstSchemaIterator ROOT::Experimental::RFieldBase::cend() const
+{
+   return RConstSchemaIterator(this, -1);
 }
 
 ROOT::Experimental::RFieldBase::RColumnRepresentations::Selection_t
