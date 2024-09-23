@@ -684,7 +684,7 @@ Followed by the page list envelope link.
 
 To compute the minimum entry number, take first entry number from all clusters in the cluster group,
 and take the minimum among these numbers.
-The entry span is the number of entries that are (partially for sharded clusters) covered by this cluster group.
+The entry span is the number of entries that are covered by this cluster group.
 The entry range allows for finding the right page list for random access requests to entries.
 The number of clusters information allows for using consistent cluster IDs even if cluster groups are accessed non-sequentially.
 
@@ -709,18 +709,18 @@ The cluster summary record frame contains the entry range of a cluster:
 |                                                               |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |                       Number of Entries                       |
-+                                                       +-+-+-+-+
-|                                                       | Flags |
++                                               +-+-+-+-+-+-+-+-+
+|                                               |     Flags     |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ```
 
-If flag 0x01 (sharded cluster) is set,
-an additional 32bit integer containing the column group ID follows the flags field.
-If flags is zero, the cluster stores the entry range of _all_ the original columns
-_including_ the columns from extension headers.
-
 The order of the cluster summaries defines the cluster IDs,
 starting from the first cluster ID of the cluster group that corresponds to the page list.
+
+Flag 0x01 is reserved for a future specification version that will support sharded clusters.
+The future use of sharded clusters will break forward compatibility and thus introduce a corresponding feature flag.
+For now, readers should abort when this flag is set.
+Other flags should be ignored.
 
 #### Page Locations
 
@@ -1019,7 +1019,7 @@ The limits refer to a single RNTuple and do not consider combinations/joins such
 | Maximum number of cluster groups               | 4B (foreseen: <10k)          | List frame limits                                      |
 | Maximum number of clusters per group           | 4B (foreseen: <10k)          | List frame limits, cluster group summary encoding      |
 | Maximum number of pages per cluster per column | 4B                           | List frame limits                                      |
-| Maximum number of entries per cluster          | 2^60                         | Cluster summary encoding                               |
+| Maximum number of entries per cluster          | 2^56                         | Cluster summary encoding                               |
 | Maximum string length (meta-data)              | 4GB                          | String encoding                                        |
 | Maximum RBlob size                             | 128 PiB                      | 1GiB / 8B * 1GiB (with maxKeySize=1GiB, offsetSize=8B) |
 
