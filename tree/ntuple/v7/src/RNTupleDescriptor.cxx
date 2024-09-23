@@ -534,13 +534,6 @@ std::unique_ptr<ROOT::Experimental::RNTupleDescriptor> ROOT::Experimental::RNTup
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool ROOT::Experimental::RColumnGroupDescriptor::operator==(const RColumnGroupDescriptor &other) const
-{
-   return fColumnGroupId == other.fColumnGroupId && fPhysicalColumnIds == other.fPhysicalColumnIds;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 bool ROOT::Experimental::RClusterGroupDescriptor::operator==(const RClusterGroupDescriptor &other) const
 {
    return fClusterGroupId == other.fClusterGroupId && fClusterIds == other.fClusterIds &&
@@ -740,18 +733,6 @@ ROOT::Experimental::Internal::RClusterGroupDescriptorBuilder::MoveDescriptor()
       return R__FAIL("unset cluster group ID");
    RClusterGroupDescriptor result;
    std::swap(result, fClusterGroup);
-   return result;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-ROOT::Experimental::RResult<ROOT::Experimental::RColumnGroupDescriptor>
-ROOT::Experimental::Internal::RColumnGroupDescriptorBuilder::MoveDescriptor()
-{
-   if (fColumnGroup.fColumnGroupId == kInvalidDescriptorId)
-      return R__FAIL("unset column group ID");
-   RColumnGroupDescriptor result;
-   std::swap(result, fColumnGroup);
    return result;
 }
 
