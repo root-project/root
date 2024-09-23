@@ -1485,87 +1485,9 @@ ROOT::Experimental::RField<float>::GetColumnRepresentations() const
    return representations;
 }
 
-void ROOT::Experimental::RField<float>::GenerateColumns()
-{
-   const auto r = GetColumnRepresentatives();
-   const auto n = r.size();
-   fAvailableColumns.reserve(n);
-   for (std::uint16_t i = 0; i < n; ++i) {
-      auto &column = fAvailableColumns.emplace_back(Internal::RColumn::Create<float>(r[i][0], 0, i));
-      if (r[i][0] == EColumnType::kReal32Trunc) {
-         column->SetBitsOnStorage(fBitWidth);
-      } else if (r[i][0] == EColumnType::kReal32Quant) {
-         column->SetBitsOnStorage(fBitWidth);
-         column->SetValueRange(fValueMin, fValueMax);
-      }
-   }
-   fPrincipalColumn = fAvailableColumns[0].get();
-}
-
-void ROOT::Experimental::RField<float>::GenerateColumns(const RNTupleDescriptor &desc)
-{
-   std::uint16_t representationIndex = 0;
-   do {
-      const auto &onDiskTypes = EnsureCompatibleColumnTypes(desc, representationIndex);
-      if (onDiskTypes.empty())
-         break;
-
-      auto &column =
-         fAvailableColumns.emplace_back(Internal::RColumn::Create<float>(onDiskTypes[0], 0, representationIndex));
-      if (onDiskTypes[0] == EColumnType::kReal32Trunc) {
-         const auto &fdesc = desc.GetFieldDescriptor(GetOnDiskId());
-         const auto &coldesc = desc.GetColumnDescriptor(fdesc.GetLogicalColumnIds()[0]);
-         column->SetBitsOnStorage(coldesc.GetBitsOnStorage());
-      } else if (onDiskTypes[0] == EColumnType::kReal32Quant) {
-         const auto &fdesc = desc.GetFieldDescriptor(GetOnDiskId());
-         const auto &coldesc = desc.GetColumnDescriptor(fdesc.GetLogicalColumnIds()[0]);
-         assert(coldesc.GetValueRange().has_value());
-         const auto [valMin, valMax] = *coldesc.GetValueRange();
-         column->SetBitsOnStorage(coldesc.GetBitsOnStorage());
-         column->SetValueRange(valMin, valMax);
-      }
-      fColumnRepresentatives.emplace_back(onDiskTypes);
-      if (representationIndex > 0) {
-         fAvailableColumns[0]->MergeTeams(*fAvailableColumns[representationIndex]);
-      }
-
-      representationIndex++;
-   } while (true);
-   fPrincipalColumn = fAvailableColumns[0].get();
-}
-
 void ROOT::Experimental::RField<float>::AcceptVisitor(Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitFloatField(*this);
-}
-
-void ROOT::Experimental::RField<float>::SetHalfPrecision()
-{
-   SetColumnRepresentatives({{EColumnType::kReal16}});
-}
-
-void ROOT::Experimental::RField<float>::SetTruncated(std::size_t nBits)
-{
-   const auto &[minBits, maxBits] = Internal::RColumnElementBase::GetValidBitRange(EColumnType::kReal32Trunc);
-   if (nBits < minBits || nBits > maxBits) {
-      throw RException(R__FAIL("SetTruncated() argument nBits = " + std::to_string(nBits) + " is out of valid range [" +
-                               std::to_string(minBits) + ", " + std::to_string(maxBits) + "])"));
-   }
-   SetColumnRepresentatives({{EColumnType::kReal32Trunc}});
-   fBitWidth = nBits;
-}
-
-void ROOT::Experimental::RField<float>::SetQuantized(float minValue, float maxValue, std::size_t nBits)
-{
-   const auto &[minBits, maxBits] = Internal::RColumnElementBase::GetValidBitRange(EColumnType::kReal32Quant);
-   if (nBits < minBits || nBits > maxBits) {
-      throw RException(R__FAIL("SetQuantized() argument nBits = " + std::to_string(nBits) + " is out of valid range [" +
-                               std::to_string(minBits) + ", " + std::to_string(maxBits) + "])"));
-   }
-   SetColumnRepresentatives({{EColumnType::kReal32Quant}});
-   fBitWidth = nBits;
-   fValueMin = minValue;
-   fValueMax = maxValue;
 }
 
 //------------------------------------------------------------------------------
@@ -1579,7 +1501,8 @@ ROOT::Experimental::RField<double>::GetColumnRepresentations() const
                                                   {EColumnType::kReal64},
                                                   {EColumnType::kSplitReal32},
                                                   {EColumnType::kReal32},
-                                                  {EColumnType::kReal16}},
+                                                  {EColumnType::kReal16},
+                                                  {EColumnType::kReal32Quant}},
                                                  {});
    return representations;
 }
