@@ -289,7 +289,7 @@ public:
    }
 };
 
-/// The same memory and on-disk layout than an std::vector but without an assigned type name.
+/// The same memory and on-disk layout as an std::vector but without an assigned type name.
 /// Analogous to the RRecordField acting as an untyped class, this field is an untyped sequence collection.
 class RSequenceCollectionField final : public RVectorField {
 protected:
