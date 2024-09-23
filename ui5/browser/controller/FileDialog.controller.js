@@ -175,7 +175,7 @@ sap.ui.define(['rootui5/panel/Controller',
          return false;
       },
 
-      /** @summary When selected file extenstion changed */
+      /** @summary When selected file extension changed */
       onFileExtChanged() {
 
          let extName = this.oModel.getProperty('/fileExt');
@@ -443,7 +443,7 @@ sap.ui.define(['rootui5/panel/Controller',
             this.dialog.open();
 
             if (this._init_msg) {
-               // probably never happens here, but keep it for completnece
+               // probably never happens here, but keep it for completeness
                this.processInitMsg(this._init_msg);
                delete this._init_msg;
             }

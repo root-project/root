@@ -645,7 +645,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             }
       },
 
-      /** @summary Retuns current selected tab, instance of TabContainerItem */
+      /** @summary Returns current selected tab, instance of TabContainerItem */
       getSelectedTab() {
          let oTabContainer = this.byId("tabContainer");
          let items = oTabContainer.getItems();
@@ -654,7 +654,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                return items[i];
       },
 
-      /** @summary Retuns code editor from the tab */
+      /** @summary Returns code editor from the tab */
       getCodeEditor(tab) {
          let items = tab ? tab.getContent() : [];
          for (let n = 0; n < items.length; ++n)
