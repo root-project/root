@@ -439,9 +439,10 @@ TEST(RNTuple, SerializeClusterSummary)
 {
    RNTupleSerializer::RClusterSummary summary;
    summary.fFirstEntry = 42;
-   summary.fNEntries = 137;
+   summary.fNEntries = (static_cast<std::uint64_t>(1) << 56) - 1;
+   summary.fFlags = 0x02;
 
-   unsigned char buffer[28];
+   unsigned char buffer[24];
    ASSERT_EQ(24u, RNTupleSerializer::SerializeClusterSummary(summary, nullptr));
    EXPECT_EQ(24u, RNTupleSerializer::SerializeClusterSummary(summary, buffer));
    RNTupleSerializer::RClusterSummary reco;
@@ -454,21 +455,26 @@ TEST(RNTuple, SerializeClusterSummary)
    EXPECT_EQ(24u, RNTupleSerializer::DeserializeClusterSummary(buffer, 24, reco).Unwrap());
    EXPECT_EQ(summary.fFirstEntry, reco.fFirstEntry);
    EXPECT_EQ(summary.fNEntries, reco.fNEntries);
+   EXPECT_EQ(summary.fFlags, reco.fFlags);
    EXPECT_EQ(summary.fColumnGroupID, reco.fColumnGroupID);
 
-   summary.fColumnGroupID = 13;
-   ASSERT_EQ(28u, RNTupleSerializer::SerializeClusterSummary(summary, nullptr));
-   EXPECT_EQ(28u, RNTupleSerializer::SerializeClusterSummary(summary, buffer));
+   summary.fFlags |= 0x01;
+   EXPECT_EQ(24u, RNTupleSerializer::SerializeClusterSummary(summary, buffer));
    try {
-      RNTupleSerializer::DeserializeClusterSummary(buffer, 27, reco).Unwrap();
-      FAIL() << "too short cluster summary should fail";
+      RNTupleSerializer::DeserializeClusterSummary(buffer, 24, reco).Unwrap();
+      FAIL() << "sharded cluster flag should fail";
    } catch (const RException& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
+      EXPECT_THAT(err.what(), testing::HasSubstr("sharded"));
    }
-   EXPECT_EQ(28u, RNTupleSerializer::DeserializeClusterSummary(buffer, 28, reco).Unwrap());
-   EXPECT_EQ(summary.fFirstEntry, reco.fFirstEntry);
-   EXPECT_EQ(summary.fNEntries, reco.fNEntries);
-   EXPECT_EQ(summary.fColumnGroupID, reco.fColumnGroupID);
+
+   summary.fFlags = 0;
+   summary.fNEntries++;
+   try {
+      RNTupleSerializer::SerializeClusterSummary(summary, buffer);
+      FAIL() << "overesized cluster should fail";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("exceed"));
+   }
 }
 
 TEST(RNTuple, SerializeClusterGroup)
