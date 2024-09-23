@@ -675,6 +675,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       onExpandMaster() {
+         this.byId('geomViewerApp').getAggregation('_navMaster').setWidth('');
+
          const master = this.getView().byId('geomHierarchy').getParent();
          master.toggleStyleClass('masterExpanded');
          const expanded = master.hasStyleClass('masterExpanded');
