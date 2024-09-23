@@ -1145,7 +1145,6 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeClusterSummary(const
 
    clusterSummary.fNEntries = nEntries;
    clusterSummary.fFlags = flags;
-   clusterSummary.fColumnGroupID = -1;
 
    return frameSize;
 }
@@ -1512,7 +1511,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializePageList(void *buffer,
    pos += SerializeListFramePreamble(nClusters, *where);
    for (auto clusterId : physClusterIDs) {
       const auto &clusterDesc = desc.GetClusterDescriptor(context.GetMemClusterId(clusterId));
-      RClusterSummary summary{clusterDesc.GetFirstEntryIndex(), clusterDesc.GetNEntries(), 0, -1};
+      RClusterSummary summary{clusterDesc.GetFirstEntryIndex(), clusterDesc.GetNEntries(), 0};
       pos += SerializeClusterSummary(summary, *where);
    }
    pos += SerializeFramePostscript(buffer ? clusterSummaryFrame : nullptr, pos - clusterSummaryFrame);
@@ -1794,8 +1793,6 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializePageList(const void 
       if (!result)
          return R__FORWARD_ERROR(result);
       bytes += result.Unwrap();
-      if (clusterSummary.fColumnGroupID >= 0)
-         return R__FAIL("sharded clusters are still unsupported");
 
       RClusterDescriptorBuilder builder;
       builder.ClusterId(clusterId).FirstEntryIndex(clusterSummary.fFirstEntry).NEntries(clusterSummary.fNEntries);

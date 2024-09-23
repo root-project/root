@@ -456,7 +456,6 @@ TEST(RNTuple, SerializeClusterSummary)
    EXPECT_EQ(summary.fFirstEntry, reco.fFirstEntry);
    EXPECT_EQ(summary.fNEntries, reco.fNEntries);
    EXPECT_EQ(summary.fFlags, reco.fFlags);
-   EXPECT_EQ(summary.fColumnGroupID, reco.fColumnGroupID);
 
    summary.fFlags |= 0x01;
    EXPECT_EQ(24u, RNTupleSerializer::SerializeClusterSummary(summary, buffer));
