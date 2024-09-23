@@ -1,4 +1,4 @@
-# RNTuple Reference Specifications 0.2.11.0
+# RNTuple Reference Specifications 0.2.12.0
 
 **Note:** This is work in progress. The RNTuple specification is not yet finalized.
 
@@ -864,7 +864,7 @@ Such cases are marked as `R` in the table.
 | Real16        |      |           |      |        |         |         |          |         |          |         |          |   W   |   W    |
 | (Split)Real32 |      |           |      |        |         |         |          |         |          |         |          |   W*  |   W    |
 | (Split)Real64 |      |           |      |        |         |         |          |         |          |         |          |       |   W*   |
-| Real32Trunc   |      |           |      |        |         |         |          |         |          |         |          |   W   |        |
+| Real32Trunc   |      |           |      |        |         |         |          |         |          |         |          |   W   |   W    |
 | Real32Quant   |      |           |      |        |         |         |          |         |          |         |          |   W   |   W    |
 
 Possibly available `const` and `volatile` qualifiers of the C++ types are ignored for serialization.
