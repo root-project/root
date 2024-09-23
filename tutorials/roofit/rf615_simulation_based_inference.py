@@ -41,6 +41,12 @@ from sklearn.neural_network import MLPClassifier
 # The samples used for training the classifier in this tutorial / rescale for more accuracy
 n_samples = 1000
 
+# Kills warning messages 
+ROOT.RooMsgService.instance().setGlobalKillBelow(ROOT.RooFit.WARNING)
+
+# Might be to drastic
+ROOT.RooMsgService.instance().setGlobalKillBelow(ROOT.RooFit.FATAL)
+
 
 # Morphing as a baseline
 def morphing(setting):
@@ -55,8 +61,8 @@ def morphing(setting):
     for i in range(n_grid):
         # Define the sampled gausians
         mu_help = ROOT.RooRealVar(f"mu{i}", f"mu{i}", i)
-        help = ROOT.RooGaussian(f"g{i}", f"g{i}", x_var, mu_help, sigma_var)
-        workspace.Import(help)
+        help = ROOT.RooGaussian(f"g{i}", f"g{i}", x_var, mu_help, sigma)
+        workspace.Import(help, Silence=True)
 
         # Fill the histograms
         hist = workspace[f"g{i}"].generateBinned([x_var], n_samples)
@@ -66,7 +72,7 @@ def morphing(setting):
             hist.add(hist.get(i_bin), 1.0)
 
         # Add the pdf to the workspace
-        workspace.Import(ROOT.RooHistPdf(f"histpdf{i}", f"histpdf{i}", [x_var], hist, 1))
+        workspace.Import(ROOT.RooHistPdf(f"histpdf{i}", f"histpdf{i}", [x_var], hist, 1), Silence=True)
 
         # Add the pdf to the grid
         grid.addPdf(workspace[f"histpdf{i}"], i)
@@ -74,7 +80,7 @@ def morphing(setting):
     # Create the morphing and add it to the workspace
     morph_func = ROOT.RooMomentMorphFuncND("morph_func", "morph_func", [mu_var], [x_var], grid, setting)
     morph = ROOT.RooWrapperPdf("morph", "morph", morph_func, True)
-    workspace.Import(morph)
+    workspace.Import(morph, Silence=True)
 
 
 # Class used in this case to demonstrate the use of SBI in Root
@@ -128,32 +134,25 @@ n_samples_train = n_samples * 5
 
 
 # Define the "observed" data in a workspace
-def build_ws(mu_observed):
-    x_var = ROOT.RooRealVar("x", "x", -5, 15)
-    mu_var = ROOT.RooRealVar("mu", "mu", mu_observed, 0, 4)
-    sigma_var = ROOT.RooRealVar("sigma", "sigma", 1.5)
-    gauss = ROOT.RooGaussian("gauss", "gauss", x_var, mu_var, sigma_var)
-    uniform = ROOT.RooUniform("uniform", "uniform", x_var)
-    obs_data = gauss.generate(x_var, n_samples)
-    obs_data.SetName("obs_data")
-
+def build_ws(mu_observed, sigma):
     # using a workspace for easier processing inside the class
     workspace = ROOT.RooWorkspace()
-    workspace.Import(x_var)
-    workspace.Import(mu_var)
-    workspace.Import(gauss)
-    workspace.Import(uniform)
-    workspace.Import(obs_data)
+    workspace.factory(f"Gaussian::gauss(x[-5,15], mu[0,4], {sigma})")
+    workspace.factory("Uniform::uniform(x)")
+    workspace.Print("v")
+    obs_data = workspace["gauss"].generate(workspace["x"], n_samples)
+    obs_data.SetName("obs_data")
+    workspace.Import(obs_data, Silence=True)
 
     return workspace
 
 
 # The "observed" data
 mu_observed = 2.5
-workspace = build_ws(mu_observed)
+sigma=1.5
+workspace = build_ws(mu_observed, sigma)
 x_var = workspace["x"]
 mu_var = workspace["mu"]
-sigma_var = workspace["sigma"]
 gauss = workspace["gauss"]
 uniform = workspace["uniform"]
 obs_data = workspace["obs_data"]

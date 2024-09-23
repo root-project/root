@@ -25,6 +25,13 @@ import numpy as np
 n_samples = 1000
 
 
+# Kills warning messages 
+ROOT.RooMsgService.instance().setGlobalKillBelow(ROOT.RooFit.WARNING)
+
+# Might be to drastic
+ROOT.RooMsgService.instance().setGlobalKillBelow(ROOT.RooFit.FATAL)
+
+
 # morphing as a baseline
 def morphing(setting):
     # set up a frame for plotting
@@ -40,7 +47,7 @@ def morphing(setting):
 
     for i in parampoints:
         # Create the sampled Gaussian
-        workspace.factory("Gaussian::g{i}(x, mu{i}[{i}], sigma)".format(i=i))
+        workspace.factory(f"Gaussian::g{i}(x, mu{i}[{i}], {sigma})".format(i=i))
 
         # Fill the histograms
         hist = workspace[f"g{i}"].generateBinned([x_var], n_samples)
@@ -61,7 +68,7 @@ def morphing(setting):
     morph_func = ROOT.RooMomentMorphFuncND("morph_func", "morph_func", [mu_var], [x_var], grid, setting)
 
     # Normalizes the morphed object to be a pdf, set it false to prevent warning messages and gain computational speed up
-    # morph_func.setPdfMode()
+    morph_func.setPdfMode()
 
     # Creating the morphed pdf
     morph = ROOT.RooWrapperPdf("morph", "morph", morph_func, True)
@@ -72,17 +79,18 @@ def morphing(setting):
 
 
 # Define the "observed" data in a workspade
-def build_ws(mu_observed):
+def build_ws(mu_observed, sigma):
     ws = ROOT.RooWorkspace()
-    ws.factory('Gaussian::gauss(x[-5,15], mu[{mu_observed},0,4], sigma[1.5])'.format(mu_observed=mu_observed))
+    ws.factory(f'Gaussian::gauss(x[-5,15], mu[{mu_observed},0,4], {sigma})'.format(mu_observed=mu_observed))
 
     return ws
 
 # The "observed" data
 mu_observed = 2.5
-workspace = build_ws(mu_observed)
-x_var = workspace.var("x")
-mu_var = workspace.var("mu")
+sigma = 1.5
+workspace = build_ws(mu_observed, sigma)
+x_var = workspace["x"]
+mu_var = workspace["mu"]
 gauss = workspace.pdf("gauss")
 obs_data = gauss.generate(x_var,n_samples)
 

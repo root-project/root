@@ -33,6 +33,12 @@ import numpy as np
 from sklearn.neural_network import MLPClassifier
 import itertools
 
+# Kills warning messages 
+ROOT.RooMsgService.instance().setGlobalKillBelow(ROOT.RooFit.WARNING)
+
+# Might be to drastic
+ROOT.RooMsgService.instance().setGlobalKillBelow(ROOT.RooFit.FATAL)
+
 n_samples_morph = 1000  # Number of samples for morphing
 n_bins = 4  # Number of 'sampled' Gaussians
 n_samples_train = n_samples_morph * n_bins  # To have a fair comparison
@@ -193,7 +199,6 @@ def build_ws(mu_observed):
 
 # Build the workspace and extract variables
 ws = build_ws(mu_observed)
-ws.Print()
 
 
 # Export the varibles from ws
@@ -260,7 +265,7 @@ nllr_learned = ROOT.RooFit.bindFunction("MyBinFunc", compute_log_likelihood_sum,
 # Plot the learned and analytical summed negativelogarithmic likelihood
 frame1 = mu_vars[0].frame(
     Title="Negative logarithmic Likelihood",
-    Range=(mu_vars[0].getMin(), mu_vars[0].getMax()),
+    Range=(mu_observed[0]-0.5, mu_observed[0]+0.5),
 )
 nll_gauss.plotOn(frame1, ShiftToZero=True, LineColor="g", Name="gauss")
 nll_morph.plotOn(frame1, ShiftToZero=True, LineColor="c", Name="morph")
