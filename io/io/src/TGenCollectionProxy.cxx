@@ -330,10 +330,10 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type, Bool_t silent,
    bool isPointer = false;
    // The incoming name is normalized (it comes from splitting the name of a TClass),
    // so all we need to do is drop the last trailing star (if any) and record that information.
-   if (intype[intype.length()-1] == '*') {
+   if (intype.back() == '*') {
       isPointer = true;
       intype.pop_back();
-      if (intype[intype.length()-1] == '*') {
+      if (intype.back() == '*') {
          // The value is a pointer to a pointer
          if (!silent)
             Warning("TGenCollectionProxy::Value::Value", "I/O not supported for collection of pointer to pointer: %s", inside_type.c_str());

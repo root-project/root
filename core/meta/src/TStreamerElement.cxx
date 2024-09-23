@@ -1748,7 +1748,7 @@ TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset,
    bool isPointer = false;
    // The incoming name is normalized (it comes from splitting the name of a TClass),
    // so all we need to do is drop the last trailing star (if any) and record that information.
-   while (intype[intype.length()-1] == '*') {
+   while (intype.back() == '*') {
       isPointer = true;
       intype.pop_back();
    }
