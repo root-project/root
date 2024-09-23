@@ -93,7 +93,7 @@ ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplD
          collectionField->SetOnDiskId(fFieldId);
          return collectionField;
       } else {
-         throw RException(R__FAIL("unsupported untyped field for field \"" + GetFieldName() + "\""));
+         throw RException(R__FAIL("unsupported untyped field structure for field \"" + GetFieldName() + "\""));
       }
    }
 
