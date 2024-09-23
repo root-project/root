@@ -346,72 +346,160 @@ public:
 /// Template specializations for floating-point types
 ////////////////////////////////////////////////////////////////////////////////
 
+extern template class RSimpleField<double>;
 extern template class RSimpleField<float>;
 
-template <>
-class RField<float> final : public RSimpleField<float> {
-   std::size_t fBitWidth = sizeof(float) * 8;
-   double fValueMin = std::numeric_limits<float>::min();
-   double fValueMax = std::numeric_limits<float>::max();
+template <typename T>
+class RFloatField : public RSimpleField<T> {
+   using Base = RSimpleField<T>;
+
+   using Base::fAvailableColumns;
+   using Base::fColumnRepresentatives;
+   using Base::fPrincipalColumn;
+
+   std::size_t fBitWidth = sizeof(T) * 8;
+   double fValueMin = std::numeric_limits<T>::min();
+   double fValueMax = std::numeric_limits<T>::max();
 
 protected:
-   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
+   void OnClone(RFloatField<T> &cloned) const
    {
-      auto cloned = std::make_unique<RField<float>>(newName);
-      cloned->fBitWidth = fBitWidth;
-      cloned->fValueMin = fValueMin;
-      cloned->fValueMax = fValueMax;
-      return cloned;
+      cloned.fBitWidth = fBitWidth;
+      cloned.fValueMin = fValueMin;
+      cloned.fValueMax = fValueMax;
    }
 
-   const RColumnRepresentations &GetColumnRepresentations() const final;
+   void GenerateColumns() final
+   {
+      const auto r = Base::GetColumnRepresentatives();
+      const auto n = r.size();
+      fAvailableColumns.reserve(n);
+      for (std::uint16_t i = 0; i < n; ++i) {
+         auto &column = fAvailableColumns.emplace_back(Internal::RColumn::Create<T>(r[i][0], 0, i));
+         if (r[i][0] == EColumnType::kReal32Trunc) {
+            column->SetBitsOnStorage(fBitWidth);
+         } else if (r[i][0] == EColumnType::kReal32Quant) {
+            column->SetBitsOnStorage(fBitWidth);
+            column->SetValueRange(fValueMin, fValueMax);
+         }
+      }
+      fPrincipalColumn = fAvailableColumns[0].get();
+   }
 
-   void GenerateColumns() final;
-   void GenerateColumns(const RNTupleDescriptor &desc) final;
+   void GenerateColumns(const RNTupleDescriptor &desc) final
+   {
+      std::uint16_t representationIndex = 0;
+      do {
+         const auto &onDiskTypes = Base::EnsureCompatibleColumnTypes(desc, representationIndex);
+         if (onDiskTypes.empty())
+            break;
+
+         auto &column =
+            fAvailableColumns.emplace_back(Internal::RColumn::Create<T>(onDiskTypes[0], 0, representationIndex));
+         if (onDiskTypes[0] == EColumnType::kReal32Trunc) {
+            const auto &fdesc = desc.GetFieldDescriptor(Base::GetOnDiskId());
+            const auto &coldesc = desc.GetColumnDescriptor(fdesc.GetLogicalColumnIds()[0]);
+            column->SetBitsOnStorage(coldesc.GetBitsOnStorage());
+         } else if (onDiskTypes[0] == EColumnType::kReal32Quant) {
+            const auto &fdesc = desc.GetFieldDescriptor(Base::GetOnDiskId());
+            const auto &coldesc = desc.GetColumnDescriptor(fdesc.GetLogicalColumnIds()[0]);
+            assert(coldesc.GetValueRange().has_value());
+            const auto [valMin, valMax] = *coldesc.GetValueRange();
+            column->SetBitsOnStorage(coldesc.GetBitsOnStorage());
+            column->SetValueRange(valMin, valMax);
+         }
+         fColumnRepresentatives.emplace_back(onDiskTypes);
+         if (representationIndex > 0) {
+            fAvailableColumns[0]->MergeTeams(*fAvailableColumns[representationIndex]);
+         }
+
+         representationIndex++;
+      } while (true);
+      fPrincipalColumn = fAvailableColumns[0].get();
+   }
+
+   ~RFloatField() override = default;
 
 public:
-   static std::string TypeName() { return "float"; }
-   explicit RField(std::string_view name) : RSimpleField(name, TypeName()) {}
-   RField(RField &&other) = default;
-   RField &operator=(RField &&other) = default;
-   ~RField() override = default;
+   using Base::SetColumnRepresentatives;
 
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   RFloatField(std::string_view name, std::string_view typeName) : RSimpleField<T>(name, typeName) {}
+   RFloatField(RFloatField &&other) = default;
+   RFloatField &operator=(RFloatField &&other) = default;
 
-   /// Sets this field to use a half precision representation, occupying half as much storage space (16 bits) on disk.
+   /// Sets this field to use a half precision representation, occupying half as much storage space (16 bits:
+   /// 1 sign bit, 5 exponent bits, 10 mantissa bits) on disk.
    /// This is mutually exclusive with `SetTruncated` and `SetQuantized`.
-   void SetHalfPrecision();
-   /// Set the precision of this field to `nBits`. The remaining (32 - `nBits`) bits will be truncated
+   void SetHalfPrecision() { SetColumnRepresentatives({{EColumnType::kReal16}}); }
+
+   /// Set the precision of this field to `nBits`. The remaining (sizeof(T)*8 - `nBits`) bits will be truncated
    /// from the number's mantissa. `nBits` must be $10 <= nBits <= 31$ (this means that at least 1 bit
    /// of mantissa is always preserved). Note that this effectively rounds the number towards 0.
-   /// This is mutually exclusive with `SetHalfPrecision` and `SetQuantized`.
-   /// \note Calling `SetTruncated(16)` effectively makes this field a `bfloat16` on disk.
-   void SetTruncated(std::size_t nBits);
+   void SetTruncated(std::size_t nBits)
+   {
+      const auto &[minBits, maxBits] = Internal::RColumnElementBase::GetValidBitRange(EColumnType::kReal32Trunc);
+      if (nBits < minBits || nBits > maxBits) {
+         throw RException(R__FAIL("SetTruncated() argument nBits = " + std::to_string(nBits) +
+                                  " is out of valid range [" + std::to_string(minBits) + ", " +
+                                  std::to_string(maxBits) + "])"));
+      }
+      SetColumnRepresentatives({{EColumnType::kReal32Trunc}});
+      fBitWidth = nBits;
+   }
+
    /// Sets this field to use a quantized integer representation using `nBits` per value.
    /// This call promises that this field will only contain values contained in `[minValue, maxValue]` inclusive.
    /// If a value outside this range is assigned to this field, the behavior is undefined.
    /// This is mutually exclusive with `SetTruncated` and `SetHalfPrecision`.
-   void SetQuantized(float minValue, float maxValue, std::size_t nBits);
+   void SetQuantized(double minValue, double maxValue, std::size_t nBits)
+   {
+      const auto &[minBits, maxBits] = Internal::RColumnElementBase::GetValidBitRange(EColumnType::kReal32Quant);
+      if (nBits < minBits || nBits > maxBits) {
+         throw RException(R__FAIL("SetQuantized() argument nBits = " + std::to_string(nBits) +
+                                  " is out of valid range [" + std::to_string(minBits) + ", " +
+                                  std::to_string(maxBits) + "])"));
+      }
+      SetColumnRepresentatives({{EColumnType::kReal32Quant}});
+      fBitWidth = nBits;
+      fValueMin = minValue;
+      fValueMax = maxValue;
+   }
 };
 
-extern template class RSimpleField<double>;
-
 template <>
-class RField<double> final : public RSimpleField<double> {
-protected:
+class RField<float> final : public RFloatField<float> {
+   const RColumnRepresentations &GetColumnRepresentations() const final;
+
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
    {
-      return std::make_unique<RField>(newName);
+      auto cloned = std::make_unique<RField>(newName);
+      OnClone(*cloned);
+      return cloned;
    }
 
+public:
+   static std::string TypeName() { return "float"; }
+
+   explicit RField(std::string_view name) : RFloatField<float>(name, TypeName()) {}
+
+   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+};
+
+template <>
+class RField<double> final : public RFloatField<double> {
    const RColumnRepresentations &GetColumnRepresentations() const final;
+
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
+   {
+      auto cloned = std::make_unique<RField>(newName);
+      OnClone(*cloned);
+      return cloned;
+   }
 
 public:
    static std::string TypeName() { return "double"; }
-   explicit RField(std::string_view name) : RSimpleField(name, TypeName()) {}
-   RField(RField &&other) = default;
-   RField &operator=(RField &&other) = default;
-   ~RField() override = default;
+
+   explicit RField(std::string_view name) : RFloatField<double>(name, TypeName()) {}
 
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 
