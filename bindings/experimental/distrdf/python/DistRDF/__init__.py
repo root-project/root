@@ -161,6 +161,20 @@ def VariationsFor(actionproxy: ResultPtrProxy) -> ResultMapProxy:
     # similar to resPtr.fActionPtr->MakeVariedAction()
     return actionproxy.create_variations()
 
+def RDataFrame(*args, **kwargs):
+    """
+    Create a common constructor of RDataFrame that needs backend="dask" or  backend="spark" argument.
+    """
+    
+    backend = kwargs.pop("backend")
+        
+    if backend == "dask":
+        import DistRDF.Backends.Dask
+        return DistRDF.Backends.Dask.RDataFrame
+
+    elif backend == "spark":
+        import DistRDF.Backends.Spark
+        return DistRDF.Backends.Spark.RDataFrame
 
 def create_distributed_module(parentmodule):
     """
@@ -189,5 +203,6 @@ def create_distributed_module(parentmodule):
     distributed.DistributeFiles = DistributeFiles
     distributed.DistributeSharedLibs = DistributeSharedLibs
     distributed.DeclareCppCode = DeclareCppCode
+    distributed.RDataFrame = RDataFrame
     
     return distributed
