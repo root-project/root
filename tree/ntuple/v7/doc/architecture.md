@@ -450,6 +450,47 @@ Every fill context prepares a set of entire clusters in the final on-disk layout
 When a fill context flushes data,
 a brief serialization point handles the RNTuple meta-data updates and the reservation of disk space to write into.
 
+Low precision float types
+--------------------------
+RNTuple supports encoding floating point types with a lower precision when writing them to disk. This encoding is specified by the
+user per field and it is independent on the in-memory type used for that field (meaning both a `RField<double>` or `RField<float>` can 
+be mapped to e.g. a low-precision 16 bit float). 
+
+RNTuple supports the following encodings (all mutually exclusive):
+
+- **Real16**/**SplitReal16**: IEEE-754 half precision float. Set by calling `RField::SetHalfPrecision()`;
+- **Real32Trunc**: floating point with less than 32 bits of precision (truncated mantissa). 
+  Set by calling `RField::SetTruncated(n)`, with $10 <= n <= 31$ equal to the total number of bits used on disk.
+  Note that `SetTruncated(16)` makes this effectively a `bfloat16` on disk;
+- **Real32Quant**: floating point with a normalized/quantized integer representation on disk using a user-specified number of bits.
+  Set by calling `RField::SetQuantized(min, max, nBits)`, where $1 <= nBits <= 32$. 
+  This representation will map the floating point value `min` to 0, `max` to the highest representable integer with `nBits` and any
+  value in between will be a linear interpolation of the two. It is up to the user to ensure that only values between `min` and `max`
+  are stored in this field. The current RNTuple implementation will throw an exception if that is not the case when writing the values to disk.
+
+In addition to these encodings, a user may call `RField<double>::SetDouble32()` to set the column representation of a `double` field to 
+a 32-bit floating point value. The default behavior of `Float16_t` can be emulated by calling `RField::SetTruncated(21)` (which will truncate
+a single precision float's mantissa to 12 bits).
+
+Here is an example on how a user may dynamically decide how to quantize a floating point field to get the most precision out of a fixed bit width:
+```c++
+auto model = RNTupleModel::Create();
+auto field = std::make_unique<RField<float>>("f");
+// assuming we have an array of floats stored in `myFloats`:
+auto [minV, maxV] = std::minmax_element(myFloats.begin(), myFloats.end());
+constexpr auto nBits = 24;
+field->SetQuantized(*minV, *maxV, nBits);
+model->AddField(std::move(field));
+auto f = model->GetDefaultEntry().GetPtr<float>("f");
+
+// Now we can write our floats.
+auto writer = RNTupleWriter::Recreate(std::move(model), "myNtuple", "myFile.root");
+for (float val : myFloats) {
+  *f = val;
+  writer->Fill();
+}
+```
+
 Relationship to other ROOT components
 -------------------------------------
 
