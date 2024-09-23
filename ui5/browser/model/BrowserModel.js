@@ -139,7 +139,7 @@ sap.ui.define([
          return { n: name.slice(0, p1), i: indx };
       },
 
-      /** @summary Get node by path which is array of strings, optionally includes indicies */
+      /** @summary Get node by path which is array of strings, optionally includes indices */
       getNodeByPath(path) {
          let curr = this.h;
          if (!path || (path.length == 0)) return curr;
@@ -187,7 +187,7 @@ sap.ui.define([
 
             if (!curr.childs) {
                // request childs for current element
-               // TODO: we do not know child index, but simply can suply search child as argument
+               // TODO: we do not know child index, but simply can supply search child as argument
                if (!this.fullModel && curr.nchilds && (curr.nchilds > 0)) {
                   curr.expanded = true;
                   this.reset_nodes = true;
@@ -274,7 +274,7 @@ sap.ui.define([
             reverse: this.reverseOrder || false,
             hidden: this.showHidden ? true : false,
             lastcycle: this.onlyLastCycle ?? 0,
-            reload: force_reload ? true : false,  // rescan items by server even when path was not changed
+            reload: force_reload ? true : false,  // re-scan items by server even when path was not changed
             regex
          };
          this._websocket.send('BRREQ:' + JSON.stringify(request));
@@ -404,8 +404,8 @@ sap.ui.define([
 
       /** @summary main  method to create flat list of nodes - only whose which are specified in selection
         * @desc following arguments:
-        *    args.begin     - first visisble element from flat list
-        *    args.end       - first not-visisble element
+        *    args.begin     - first visible element from flat list
+        *    args.end       - first none-visible element
         *    args.threshold - extra elements (before/after) which probably should be prefetched
         * @return holder object with all existing nodes */
       buildFlatNodes(args) {
