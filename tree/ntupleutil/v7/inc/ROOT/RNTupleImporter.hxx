@@ -169,7 +169,7 @@ private:
       ~RImportGuard() { fImporter.ResetSchema(); }
    };
 
-   /// Leaf count arrays require special treatment. They are translated into untyped vectors of untyped records.
+   /// Leaf count arrays require special treatment. They are translated into untyped collections of untyped records.
    /// This class does the bookkeeping of the sub-schema for these collections.
    struct RImportLeafCountCollection {
       RImportLeafCountCollection() = default;
