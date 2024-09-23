@@ -75,7 +75,8 @@ ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplD
    }
 
    if (GetTypeName().empty()) {
-      if (GetStructure() == ENTupleStructure::kRecord) {
+      switch (GetStructure()) {
+      case ENTupleStructure::kRecord: {
          std::vector<std::unique_ptr<RFieldBase>> memberFields;
          for (auto id : fLinkIds) {
             const auto &memberDesc = ntplDesc.GetFieldDescriptor(id);
@@ -84,7 +85,8 @@ ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplD
          auto recordField = std::make_unique<RRecordField>(GetFieldName(), memberFields);
          recordField->SetOnDiskId(fFieldId);
          return recordField;
-      } else if (GetStructure() == ENTupleStructure::kCollection) {
+      }
+      case ENTupleStructure::kCollection: {
          if (fLinkIds.size() != 1) {
             throw RException(R__FAIL("unsupported untyped collection for field \"" + GetFieldName() + "\""));
          }
@@ -92,8 +94,8 @@ ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplD
          auto collectionField = std::make_unique<RSequenceCollectionField>(GetFieldName(), std::move(itemField));
          collectionField->SetOnDiskId(fFieldId);
          return collectionField;
-      } else {
-         throw RException(R__FAIL("unsupported untyped field structure for field \"" + GetFieldName() + "\""));
+      }
+      default: throw RException(R__FAIL("unsupported untyped field structure for field \"" + GetFieldName() + "\""));
       }
    }
 
