@@ -87,6 +87,7 @@ public:
    struct RClusterSummary {
       std::uint64_t fFirstEntry = 0;
       std::uint64_t fNEntries = 0;
+      std::uint8_t fFlags = 0;
       /// -1 for "all columns"
       std::int32_t fColumnGroupID = -1;
    };

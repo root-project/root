@@ -1096,6 +1096,10 @@ std::uint32_t
 ROOT::Experimental::Internal::RNTupleSerializer::SerializeClusterSummary(const RClusterSummary &clusterSummary,
                                                                          void *buffer)
 {
+   if (clusterSummary.fNEntries >= (static_cast<std::uint64_t>(1) << 56)) {
+      throw RException(R__FAIL("number of entries in cluster exceeds maximum of 2^56"));
+   }
+
    auto base = reinterpret_cast<unsigned char *>(buffer);
    auto pos = base;
    void **where = (buffer == nullptr) ? &buffer : reinterpret_cast<void **>(&pos);
@@ -1103,12 +1107,10 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeClusterSummary(const R
    auto frame = pos;
    pos += SerializeRecordFramePreamble(*where);
    pos += SerializeUInt64(clusterSummary.fFirstEntry, *where);
-   if (clusterSummary.fColumnGroupID >= 0) {
-      pos += SerializeInt64(-static_cast<int64_t>(clusterSummary.fNEntries), *where);
-      pos += SerializeUInt32(clusterSummary.fColumnGroupID, *where);
-   } else {
-      pos += SerializeInt64(static_cast<int64_t>(clusterSummary.fNEntries), *where);
-   }
+   const std::uint64_t nEntriesAndFlags =
+      (static_cast<std::uint64_t>(clusterSummary.fFlags) << 56) | clusterSummary.fNEntries;
+   pos += SerializeUInt64(nEntriesAndFlags, *where);
+
    auto size = pos - frame;
    pos += SerializeFramePostscript(frame, size);
    return size;
@@ -1131,20 +1133,19 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeClusterSummary(const
       return R__FAIL("too short cluster summary");
 
    bytes += DeserializeUInt64(bytes, clusterSummary.fFirstEntry);
-   std::int64_t nEntries;
-   bytes += DeserializeInt64(bytes, nEntries);
+   std::uint64_t nEntriesAndFlags;
+   bytes += DeserializeUInt64(bytes, nEntriesAndFlags);
 
-   if (nEntries < 0) {
-      if (fnFrameSizeLeft() < sizeof(std::uint32_t))
-         return R__FAIL("too short cluster summary");
-      clusterSummary.fNEntries = -nEntries;
-      std::uint32_t columnGroupID;
-      bytes += DeserializeUInt32(bytes, columnGroupID);
-      clusterSummary.fColumnGroupID = columnGroupID;
-   } else {
-      clusterSummary.fNEntries = nEntries;
-      clusterSummary.fColumnGroupID = -1;
+   const std::uint64_t nEntries = (nEntriesAndFlags << 8) >> 8;
+   const std::uint8_t flags = nEntriesAndFlags >> 56;
+
+   if (flags & 0x01) {
+      return R__FAIL("sharded cluster flag set in cluster summary; sharded clusters are currently unsupported.");
    }
+
+   clusterSummary.fNEntries = nEntries;
+   clusterSummary.fFlags = flags;
+   clusterSummary.fColumnGroupID = -1;
 
    return frameSize;
 }
@@ -1511,7 +1512,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializePageList(void *buffer,
    pos += SerializeListFramePreamble(nClusters, *where);
    for (auto clusterId : physClusterIDs) {
       const auto &clusterDesc = desc.GetClusterDescriptor(context.GetMemClusterId(clusterId));
-      RClusterSummary summary{clusterDesc.GetFirstEntryIndex(), clusterDesc.GetNEntries(), -1};
+      RClusterSummary summary{clusterDesc.GetFirstEntryIndex(), clusterDesc.GetNEntries(), 0, -1};
       pos += SerializeClusterSummary(summary, *where);
    }
    pos += SerializeFramePostscript(buffer ? clusterSummaryFrame : nullptr, pos - clusterSummaryFrame);
