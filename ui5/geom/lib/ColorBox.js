@@ -14,7 +14,7 @@ sap.ui.define([
       },
 
       // the part creating the HTML:
-      renderer : function(oRm, oControl) { // static function, so use the given "oControl" instance instead of "this" in the renderer function
+      renderer(oRm, oControl) { // static function, so use the given "oControl" instance instead of "this" in the renderer function
          // if (!oControl.getVisible()) return;
 
          if (!oControl.getColor() || (oControl.getColor() == '#fff')) return;
@@ -31,7 +31,7 @@ sap.ui.define([
 
 /*
       // an event handler:
-      onclick : function(evt) {   // is called when the Control's area is clicked - no further event registration required
+      onclick(evt) {   // is called when the Control's area is clicked - no further event registration required
          sap.ui.require([
             'sap/ui/unified/ColorPickerPopover'
          ], function (ColorPickerPopover) {
@@ -45,8 +45,8 @@ sap.ui.define([
          }.bind(this));
       },
 
-      handleChange: function (oEvent) {
-         var newColor = oEvent.getParameter("colorString");
+      handleChange(oEvent) {
+         let newColor = oEvent.getParameter("colorString");
          this.setColor(newColor);
          // TODO: fire a "change" event, in case the application needs to react explicitly when the color has changed
          // but when the color is bound via data binding, it will be updated also without this event
