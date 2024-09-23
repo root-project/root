@@ -51,6 +51,11 @@ private:
    void
    ParseTreeFilename(const char *name, TString &filename, TString &treename, TString &query, TString &suffix) const;
 
+   struct TLoadTreeOptions {
+      bool fDisableCache = false;
+   };
+   Long64_t LoadTreeWithOptions(Long64_t entry, const TLoadTreeOptions &options);
+
 protected:
    void InvalidateCurrentTree();
    void ReleaseChainProof();
