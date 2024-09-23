@@ -2747,7 +2747,7 @@ static TConfiguredAction GetConvertCollectionReadActionFrom(Int_t newtype, TConf
    return TConfiguredAction();
 }
 
-// Used in to implement the kSTL cases
+// Used AddReadAction in to implement the kSTL cases
 // Not to be confused with GetCollectionReadConvertAction
 // nor with GetConvertCollectionReadActionFrom (used to implement this function)
 template <typename Looper>
