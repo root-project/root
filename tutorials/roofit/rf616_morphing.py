@@ -25,6 +25,10 @@ import numpy as np
 n_samples = 1000
 
 
+# Kills warning messages
+ROOT.RooMsgService.instance().setGlobalKillBelow(ROOT.RooFit.WARNING)
+
+
 # morphing as a baseline
 def morphing(setting):
     # set up a frame for plotting
@@ -40,11 +44,10 @@ def morphing(setting):
 
     for i in parampoints:
         # Create the sampled Gaussian
-        workspace.factory("Gaussian::g{i}(x, mu{i}[{i}], sigma)".format(i=i))
+        workspace.factory(f"Gaussian::g{i}(x, mu{i}[{i}], {sigma})".format(i=i))
 
         # Fill the histograms
-        hist = workspace[f"g{i}"].generateBinned([x_var], n_samples)
-
+        hist = workspace[f"g{i}"].generateBinned([x_var], n_samples * 100)
         # Make sure that every bin is filled and we don't get zero probability
         for i_bin in range(hist.numEntries()):
             hist.add(hist.get(i_bin), 1.0)
@@ -61,7 +64,7 @@ def morphing(setting):
     morph_func = ROOT.RooMomentMorphFuncND("morph_func", "morph_func", [mu_var], [x_var], grid, setting)
 
     # Normalizes the morphed object to be a pdf, set it false to prevent warning messages and gain computational speed up
-    # morph_func.setPdfMode()
+    morph_func.setPdfMode()
 
     # Creating the morphed pdf
     morph = ROOT.RooWrapperPdf("morph", "morph", morph_func, True)
@@ -72,19 +75,21 @@ def morphing(setting):
 
 
 # Define the "observed" data in a workspade
-def build_ws(mu_observed):
+def build_ws(mu_observed, sigma):
     ws = ROOT.RooWorkspace()
-    ws.factory('Gaussian::gauss(x[-5,15], mu[{mu_observed},0,4], sigma[1.5])'.format(mu_observed=mu_observed))
+    ws.factory(f"Gaussian::gauss(x[-5,15], mu[{mu_observed},0,4], {sigma})".format(mu_observed=mu_observed))
 
     return ws
 
+
 # The "observed" data
 mu_observed = 2.5
-workspace = build_ws(mu_observed)
-x_var = workspace.var("x")
-mu_var = workspace.var("mu")
+sigma = 1.5
+workspace = build_ws(mu_observed, sigma)
+x_var = workspace["x"]
+mu_var = workspace["mu"]
 gauss = workspace.pdf("gauss")
-obs_data = gauss.generate(x_var,n_samples)
+obs_data = gauss.generate(x_var, n_samples)
 
 
 # Create the exact negative log likelihood functions for Gaussian model
@@ -92,7 +97,9 @@ nll_gauss = gauss.createNLL(obs_data)
 
 # Compute the morphed nll
 frame1 = morphing(ROOT.RooMomentMorphFuncND.Linear)
-nll_morph = workspace["morph"].createNLL(obs_data)
+
+# TODO: Fix RooAddPdf::fixCoefNormalization(nset) warnings with new CPU backend
+nll_morph = workspace["morph"].createNLL(obs_data, EvalBackend="legacy")
 
 # Plot the negative logarithmic summed likelihood
 frame2 = mu_var.frame(Title="Negative log Likelihood")
@@ -109,7 +116,6 @@ c.cd(2)
 ROOT.gPad.SetLeftMargin(0.15)
 frame2.GetYaxis().SetTitleOffset(1.8)
 frame2.Draw()
-
 
 
 # Compute the minimum via minuit and display the results
