@@ -21,7 +21,7 @@
 ## $$x\sim p_{ref}(x|\theta)$$.
 ##
 ## The output of the classifier $$\hat{s}(\theta)$$ is a monotonic function of the likelihood ration and can be turned into an estimate of the likelihood ratio
-## via $$\hat{r}(\theta)=\frac{1-\hat{s}(\theta)}{\hat{s}(\theta)}.$$ 
+## via $$\hat{r}(\theta)=\frac{1-\hat{s}(\theta)}{\hat{s}(\theta)}.$$
 ## This is called the likelihood ratio trick.
 ##
 ## In the end we compare the negative logarithmic likelihoods of the learned, morphed and analytical likelihood with minuit and as a plot.
@@ -41,6 +41,9 @@ from sklearn.neural_network import MLPClassifier
 # The samples used for training the classifier in this tutorial / rescale for more accuracy
 n_samples = 1000
 
+# Kills warning messages
+ROOT.RooMsgService.instance().setGlobalKillBelow(ROOT.RooFit.WARNING)
+
 
 # Morphing as a baseline
 def morphing(setting):
@@ -55,8 +58,8 @@ def morphing(setting):
     for i in range(n_grid):
         # Define the sampled gausians
         mu_help = ROOT.RooRealVar(f"mu{i}", f"mu{i}", i)
-        help = ROOT.RooGaussian(f"g{i}", f"g{i}", x_var, mu_help, sigma_var)
-        workspace.Import(help)
+        help = ROOT.RooGaussian(f"g{i}", f"g{i}", x_var, mu_help, sigma)
+        workspace.Import(help, Silence=True)
 
         # Fill the histograms
         hist = workspace[f"g{i}"].generateBinned([x_var], n_samples)
@@ -66,7 +69,7 @@ def morphing(setting):
             hist.add(hist.get(i_bin), 1.0)
 
         # Add the pdf to the workspace
-        workspace.Import(ROOT.RooHistPdf(f"histpdf{i}", f"histpdf{i}", [x_var], hist, 1))
+        workspace.Import(ROOT.RooHistPdf(f"histpdf{i}", f"histpdf{i}", [x_var], hist, 1), Silence=True)
 
         # Add the pdf to the grid
         grid.addPdf(workspace[f"histpdf{i}"], i)
@@ -74,7 +77,7 @@ def morphing(setting):
     # Create the morphing and add it to the workspace
     morph_func = ROOT.RooMomentMorphFuncND("morph_func", "morph_func", [mu_var], [x_var], grid, setting)
     morph = ROOT.RooWrapperPdf("morph", "morph", morph_func, True)
-    workspace.Import(morph)
+    workspace.Import(morph, Silence=True)
 
 
 # Class used in this case to demonstrate the use of SBI in Root
@@ -128,32 +131,25 @@ n_samples_train = n_samples * 5
 
 
 # Define the "observed" data in a workspace
-def build_ws(mu_observed):
-    x_var = ROOT.RooRealVar("x", "x", -5, 15)
-    mu_var = ROOT.RooRealVar("mu", "mu", mu_observed, 0, 4)
-    sigma_var = ROOT.RooRealVar("sigma", "sigma", 1.5)
-    gauss = ROOT.RooGaussian("gauss", "gauss", x_var, mu_var, sigma_var)
-    uniform = ROOT.RooUniform("uniform", "uniform", x_var)
-    obs_data = gauss.generate(x_var, n_samples)
-    obs_data.SetName("obs_data")
-
+def build_ws(mu_observed, sigma):
     # using a workspace for easier processing inside the class
     workspace = ROOT.RooWorkspace()
-    workspace.Import(x_var)
-    workspace.Import(mu_var)
-    workspace.Import(gauss)
-    workspace.Import(uniform)
-    workspace.Import(obs_data)
+    workspace.factory(f"Gaussian::gauss(x[-5,15], mu[0,4], {sigma})")
+    workspace.factory("Uniform::uniform(x)")
+    workspace.Print("v")
+    obs_data = workspace["gauss"].generate(workspace["x"], n_samples)
+    obs_data.SetName("obs_data")
+    workspace.Import(obs_data, Silence=True)
 
     return workspace
 
 
 # The "observed" data
 mu_observed = 2.5
-workspace = build_ws(mu_observed)
+sigma = 1.5
+workspace = build_ws(mu_observed, sigma)
 x_var = workspace["x"]
 mu_var = workspace["mu"]
-sigma_var = workspace["sigma"]
 gauss = workspace["gauss"]
 uniform = workspace["uniform"]
 obs_data = workspace["obs_data"]
@@ -192,7 +188,7 @@ llhr_calc = ROOT.RooFormulaVar("llhr_calc", "x[0] / (x[0] + x[1])", [gauss, unif
 # Create the exact negative log likelihood functions for Gaussian model
 nll_gauss = gauss.createNLL(obs_data)
 
-# Create the learned NLL based on the 
+# Create the learned NLL based on the
 nllr_learned = ROOT.RooFit.bindFunction("MyBinFunc", compute_log_likelihood_sum, mu_var)
 
 # Compute the morphed nll
@@ -200,10 +196,12 @@ morphing(ROOT.RooMomentMorphFuncND.Linear)
 nll_morph = workspace["morph"].createNLL(obs_data)
 
 # Plot the negative logarithmic summed likelihood
-frame1 = mu_var.frame(Title="NLL of SBI vs. Morphing")
+frame1 = mu_var.frame(Title="NLL of SBI vs. Morphing", Range=(1.5, 2.5))
 nll_gauss.plotOn(frame1, LineColor="g", ShiftToZero=True, Name="gauss")
 nllr_learned.plotOn(frame1, LineColor="r", LineStyle="--", ShiftToZero=True, Name="learned")
+ROOT.RooAbsReal.setEvalErrorLoggingMode(ROOT.RooAbsReal.Ignore)  # Silence some warnings
 nll_morph.plotOn(frame1, LineColor="c", ShiftToZero=True, Name="morphed")
+ROOT.RooAbsReal.setEvalErrorLoggingMode(ROOT.RooAbsReal.PrintErrors)
 
 # Plot the likelihood functions
 frame2 = x_var.frame(Title="Learned vs analytical likelihhood function")

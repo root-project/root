@@ -33,6 +33,9 @@ import numpy as np
 from sklearn.neural_network import MLPClassifier
 import itertools
 
+# Kills warning messages
+ROOT.RooMsgService.instance().setGlobalKillBelow(ROOT.RooFit.WARNING)
+
 n_samples_morph = 1000  # Number of samples for morphing
 n_bins = 4  # Number of 'sampled' Gaussians
 n_samples_train = n_samples_morph * n_bins  # To have a fair comparison
@@ -42,7 +45,7 @@ n_samples_train = n_samples_morph * n_bins  # To have a fair comparison
 def morphing(setting, n_dimensions):
     # Define binning for morphing
 
-    binning = [ROOT.RooBinning(n_bins, 0.0, n_bins-1.0) for dim in range(n_dimensions)]
+    binning = [ROOT.RooBinning(n_bins, 0.0, n_bins - 1.0) for dim in range(n_dimensions)]
     grid = ROOT.RooMomentMorphFuncND.Grid(*binning)
 
     # Set bins for each x variable
@@ -55,7 +58,7 @@ def morphing(setting, n_dimensions):
     # Create a product of Gaussians for all dimensions
     gaussians = []
     for j in range(n_dimensions):
-        gaussian = ROOT.RooGaussian(f"gdim{j}", f"gdim{j}", x_vars[j], mu_helps[j], sigma_vars[j])
+        gaussian = ROOT.RooGaussian(f"gdim{j}", f"gdim{j}", x_vars[j], mu_helps[j], sigmas[j])
         gaussians.append(gaussian)
 
     # Create a product PDF for the multidimensional Gaussian
@@ -82,7 +85,7 @@ def morphing(setting, n_dimensions):
 
     # Create the morphing function and add it to the ws
     morph_func = ROOT.RooMomentMorphFuncND("morph_func", "morph_func", [*mu_vars], [*x_vars], grid, setting)
-    morph_func.setPdfMode(False)  # Normalizes the pdf, set true for debugging
+    morph_func.setPdfMode(True)
     morph = ROOT.RooWrapperPdf("morph", "morph", morph_func, True)
 
     ws.Import(morph)
@@ -99,6 +102,7 @@ def morphing(setting, n_dimensions):
 
 # Define the observed mean values for the Gaussian distributions
 mu_observed = [2.5, 2.0]
+sigmas = [1.5, 1.5]
 
 
 # Class used in this case to demonstrate the use of SBI in Root
@@ -164,11 +168,7 @@ def build_ws(mu_observed):
     n_vars = len(mu_observed)
     x_vars = [ROOT.RooRealVar(f"x{i}", f"x{i}", -2, 6) for i in range(n_vars)]
     mu_vars = [ROOT.RooRealVar(f"mu{i}", f"mu{i}", mu_observed[i], 0, 4) for i in range(n_vars)]
-    sigma_vars = [ROOT.RooRealVar(f"sigma{i}", f"sigma{i}", 1.5) for i in range(n_vars)]
-    # Create Gaussian and uniform PDFs for each variable
-    gaussians = [
-        ROOT.RooGaussian(f"gauss{i}", f"gauss{i}", x_vars[i], mu_vars[i], sigma_vars[i]) for i in range(n_vars)
-    ]
+    gaussians = [ROOT.RooGaussian(f"gauss{i}", f"gauss{i}", x_vars[i], mu_vars[i], sigmas[i]) for i in range(n_vars)]
     uniforms = [ROOT.RooUniform(f"uniform{i}", f"uniform{i}", x_vars[i]) for i in range(n_vars)]
     uniforms_help = [ROOT.RooUniform(f"uniformh{i}", f"uniformh{i}", mu_vars[i]) for i in range(n_vars)]
     # Create multi-dimensional PDFs
@@ -182,7 +182,6 @@ def build_ws(mu_observed):
     ws = ROOT.RooWorkspace()
     ws.Import(x_vars)
     ws.Import(mu_vars)
-    ws.Import(sigma_vars)
     ws.Import(gauss)
     ws.Import(uniform)
     ws.Import(uniform_help)
@@ -193,19 +192,18 @@ def build_ws(mu_observed):
 
 # Build the workspace and extract variables
 ws = build_ws(mu_observed)
-ws.Print()
 
 
 # Export the varibles from ws
 x_vars = [ws[f"x{i}"] for i in range(len(mu_observed))]
 mu_vars = [ws[f"mu{i}"] for i in range(len(mu_observed))]
-sigma_vars = [ws[f"sigma{i}"] for i in range(len(mu_observed))]
 
 # Do the morphing
 morphing(ROOT.RooMomentMorphFuncND.Linear, len(mu_observed))
 
 # Calculate the nll for the moprhed distribution
-nll_morph = ws["morph"].createNLL(ws["obs_data"])
+# TODO: Fix RooAddPdf::fixCoefNormalization(nset) warnings with new CPU backend
+nll_morph = ws["morph"].createNLL(ws["obs_data"], EvalBackend="legacy")
 
 # Initialize the SBI model
 model = SBI(ws, len(mu_observed))
@@ -260,10 +258,12 @@ nllr_learned = ROOT.RooFit.bindFunction("MyBinFunc", compute_log_likelihood_sum,
 # Plot the learned and analytical summed negativelogarithmic likelihood
 frame1 = mu_vars[0].frame(
     Title="Negative logarithmic Likelihood",
-    Range=(mu_vars[0].getMin(), mu_vars[0].getMax()),
+    Range=(mu_observed[0] - 1, mu_observed[0] + 1),
 )
 nll_gauss.plotOn(frame1, ShiftToZero=True, LineColor="g", Name="gauss")
+ROOT.RooAbsReal.setEvalErrorLoggingMode(ROOT.RooAbsReal.Ignore)  # Silence some warnings
 nll_morph.plotOn(frame1, ShiftToZero=True, LineColor="c", Name="morph")
+ROOT.RooAbsReal.setEvalErrorLoggingMode(ROOT.RooAbsReal.PrintErrors)
 nllr_learned.plotOn(frame1, LineColor="r", ShiftToZero=True, LineStyle="--", Name="learned")
 
 
