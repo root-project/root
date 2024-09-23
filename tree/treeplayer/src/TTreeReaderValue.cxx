@@ -554,8 +554,9 @@ void ROOT::Internal::TTreeReaderValueBase::CreateProxy() {
       auto dictAsClass = dynamic_cast<TClass*>(fDict);
       auto branchActualTypeAsClass = dynamic_cast<TClass*>(branchActualType);
       auto inheritance = dictAsClass && branchActualTypeAsClass && branchActualTypeAsClass->InheritsFrom(dictAsClass);
+      bool typeinfoMatch = dictAsClass && dictAsClass->GetTypeInfo() && dictAsClass->GetTypeInfo() == branchActualTypeAsClass->GetTypeInfo();
 
-      if (fDict != branchActualType && !inheritance) {
+      if (!inheritance && !typeinfoMatch && fDict != branchActualType) {
          TDataType *dictdt = dynamic_cast<TDataType*>(fDict);
          TDataType *actualdt = dynamic_cast<TDataType*>(branchActualType);
          TEnum *dictenum = dynamic_cast<TEnum*>(fDict);
