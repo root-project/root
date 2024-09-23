@@ -247,11 +247,13 @@ TEST(TClassEdit, SplitFuncErrors)
 // ROOT-9926
 TEST(TClassEdit, GetNameForIO)
 {
-   const std::vector<std::pair<std::string, std::string>> names{{"T", "unique_ptr<const T>"},
-                                                                {"T", "unique_ptr<const T*>"},
-                                                                {"T", "unique_ptr<const T* const*>"},
-                                                                {"T", "unique_ptr<T * const>"},
-                                                                {"T", "unique_ptr<T * const**const**&* const>"}};
+   const std::vector<std::pair<std::string, std::string>> names{{"T*", "unique_ptr<const T>"},
+                                                                {"T*", "unique_ptr<const T*>"},
+                                                                {"T*", "unique_ptr<const T* const*>"},
+                                                                {"T*", "unique_ptr<T * const>"},
+                                                                {"T*", "unique_ptr<T * const**const**&* const>"},
+                                                                {"vector<T*>", "vector<unique_ptr<T>>"},
+                                                                {"vector<const T*>", "vector<unique_ptr<const T>>"}};
    for (auto &&namesp : names) {
       EXPECT_EQ(namesp.first, TClassEdit::GetNameForIO(namesp.second.c_str()))
          << "Failure in transforming typename " << namesp.first << " into " << namesp.second;

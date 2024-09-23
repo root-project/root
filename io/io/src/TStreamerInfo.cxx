@@ -437,10 +437,11 @@ void TStreamerInfo::Build(Bool_t isTransient)
       bool nameChanged;
       trueTypeNameBuf = typeNameBuf = TClassEdit::GetNameForIO(dmFull, TClassEdit::EModType::kNone, &nameChanged);
       if (nameChanged) {
-         if (TClassEdit::IsUniquePtr(dmFull)) {
+         if (trueTypeNameBuf.back() == '*') {
             dmIsPtr = true;
+            typeNameBuf.pop_back();
+            while(typeNameBuf.back() == '*') typeNameBuf.pop_back();
          }
-         while(typeNameBuf.back() == '*') typeNameBuf.pop_back();
          dmFull = trueTypeNameBuf.c_str();
          dmType = typeNameBuf.c_str();
       }
@@ -2044,7 +2045,7 @@ void TStreamerInfo::BuildOld()
 
       TDataMember* dm = 0;
 
-      std::string typeNameBuf;
+      std::string typeNameBuf;  // Keep underlying buffer alive until actually used.
       const char* dmType = nullptr;
       Bool_t dmIsPtr = false;
       TDataType* dt(nullptr);
@@ -2082,7 +2083,11 @@ void TStreamerInfo::BuildOld()
             Bool_t nameChanged;
             typeNameBuf = TClassEdit::GetNameForIO(dmType, TClassEdit::EModType::kNone, &nameChanged);
             if (nameChanged) {
-               dmIsPtr = TClassEdit::IsUniquePtr(dmType);
+               if (typeNameBuf.back() == '*') {
+                  dmIsPtr = true;
+                  typeNameBuf.pop_back();
+                  while(typeNameBuf.back() == '*') typeNameBuf.pop_back();
+               }
                dmType = typeNameBuf.c_str();
             }
             if ((isStdArray = TClassEdit::IsStdArray(dmType))){ // We tackle the std array case
