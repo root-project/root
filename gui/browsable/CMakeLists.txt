@@ -84,12 +84,14 @@ ROOT_LINKER_LIBRARY(ROOTBranchBrowseProvider
 
 # provider for browsing of TGeo class
 
-ROOT_LINKER_LIBRARY(ROOTGeoBrowseProvider
-     src/TGeoBrowseProvider.cxx
-  DEPENDENCIES
-     ROOTBrowsable
-     Geom
-)
+if(geom)
+  ROOT_LINKER_LIBRARY(ROOTGeoBrowseProvider
+       src/TGeoBrowseProvider.cxx
+    DEPENDENCIES
+       ROOTBrowsable
+       Geom
+  )
+endif()
 
 # provider for drawing of TLeaf on TCanvas
 
