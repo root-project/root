@@ -1,7 +1,7 @@
 int checkNameForIO()
 {
    using M = vector<pair<string, string>>;
-   M names = {{"unique_ptr<T>", "T"},
+   M names = {{"unique_ptr<T>", "T*"},
              {"vector<unique_ptr<T>>", "vector<T*>"},
              {"list<vector<unique_ptr<T>>>", "list<vector<T*> >"},
              {"A<unique_ptr<T>>", "A<unique_ptr<T> >"},
