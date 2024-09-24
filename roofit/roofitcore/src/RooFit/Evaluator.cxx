@@ -332,7 +332,7 @@ void Evaluator::updateOutputSizes()
 Evaluator::~Evaluator()
 {
    for (auto &info : _nodes) {
-      if(!info.isVariable) {
+      if (!info.isVariable) {
          info.absArg->resetDataToken();
       }
    }
@@ -341,8 +341,6 @@ Evaluator::~Evaluator()
 void Evaluator::computeCPUNode(const RooAbsArg *node, NodeInfo &info)
 {
    using namespace Detail;
-
-   auto nodeAbsReal = static_cast<RooAbsReal const *>(node);
 
    const std::size_t nOut = info.outputSize;
 
@@ -372,7 +370,17 @@ void Evaluator::computeCPUNode(const RooAbsArg *node, NodeInfo &info)
    if (nOut > 1) {
       _evalContextCPU.enableVectorBuffers(true);
    }
-   nodeAbsReal->doEval(_evalContextCPU);
+   if (info.isCategory) {
+      auto nodeAbsCategory = static_cast<RooAbsCategory const *>(node);
+      if (nOut == 1) {
+         buffer[0] = nodeAbsCategory->getCurrentIndex();
+      } else {
+         throw std::runtime_error("RooFit::Evaluator - non-scalar category values are not supported!");
+      }
+   } else {
+      auto nodeAbsReal = static_cast<RooAbsReal const *>(node);
+      nodeAbsReal->doEval(_evalContextCPU);
+   }
    _evalContextCPU.resetVectorBuffers();
    _evalContextCPU.enableVectorBuffers(false);
    if (info.copyAfterEvaluation) {
