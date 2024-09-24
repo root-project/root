@@ -231,17 +231,19 @@ public:
 /// Template specializations for C++ std::vector
 ////////////////////////////////////////////////////////////////////////////////
 
-/// The generic field for a (nested) std::vector<Type> except for std::vector<bool>
-class RVectorField : public RFieldBase {
+/// The RSequenceCollectionField has not type name and, analogous to the RRecordField acting as an untyped class,
+/// this field is an untyped sequence collection.
+/// It provides the basis for the RVectorField and thus has the same memory and on-disk layout as an std::vector.
+class RSequenceCollectionField : public RFieldBase {
 private:
-   class RVectorDeleter : public RDeleter {
+   class RSequenceCollectionDeleter : public RDeleter {
    private:
       std::size_t fItemSize = 0;
       std::unique_ptr<RDeleter> fItemDeleter;
 
    public:
-      RVectorDeleter() = default;
-      RVectorDeleter(std::size_t itemSize, std::unique_ptr<RDeleter> itemDeleter)
+      RSequenceCollectionDeleter() = default;
+      RSequenceCollectionDeleter(std::size_t itemSize, std::unique_ptr<RDeleter> itemDeleter)
          : fItemSize(itemSize), fItemDeleter(std::move(itemDeleter))
       {
       }
@@ -253,7 +255,7 @@ private:
    std::unique_ptr<RDeleter> fItemDeleter;
 
 protected:
-   RVectorField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField, bool isUntyped);
+   RSequenceCollectionField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField, bool isUntyped);
 
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const override;
 
@@ -270,10 +272,10 @@ protected:
    void CommitClusterImpl() final { fNWritten = 0; }
 
 public:
-   RVectorField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField);
-   RVectorField(RVectorField &&other) = default;
-   RVectorField &operator=(RVectorField &&other) = default;
-   ~RVectorField() override = default;
+   RSequenceCollectionField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField);
+   RSequenceCollectionField(RSequenceCollectionField &&other) = default;
+   RSequenceCollectionField &operator=(RSequenceCollectionField &&other) = default;
+   ~RSequenceCollectionField() override = default;
 
    std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetValueSize() const override { return sizeof(std::vector<char>); }
@@ -289,20 +291,19 @@ public:
    }
 };
 
-/// The same memory and on-disk layout as an std::vector but without an assigned type name.
-/// Analogous to the RRecordField acting as an untyped class, this field is an untyped sequence collection.
-class RSequenceCollectionField final : public RVectorField {
+/// The generic field for a (nested) std::vector<Type> except for std::vector<bool>
+class RVectorField : public RSequenceCollectionField {
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
 
 public:
-   RSequenceCollectionField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField)
-      : RVectorField(fieldName, std::move(itemField), true)
+   RVectorField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField)
+      : RSequenceCollectionField(fieldName, std::move(itemField), false)
    {
    }
-   RSequenceCollectionField(RSequenceCollectionField &&other) = default;
-   RSequenceCollectionField &operator=(RSequenceCollectionField &&other) = default;
-   ~RSequenceCollectionField() override = default;
+   RVectorField(RVectorField &&other) = default;
+   RVectorField &operator=(RVectorField &&other) = default;
+   ~RVectorField() override = default;
 };
 
 template <typename ItemT>
