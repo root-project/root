@@ -124,6 +124,10 @@ if(MACOSX_VERSION VERSION_EQUAL 10.13)
    list(APPEND dataframe_veto dataframe/df103_NanoAODHiggsAnalysis.*)
 endif()
 
+if(NOT geom)
+  set(geom_veto geom/*.C)
+endif()
+
 if(NOT ROOT_proof_FOUND)
    set(proof_veto roostats/StandardFrequentistDiscovery.C)
 endif()
@@ -453,6 +457,7 @@ set(all_veto hsimple.C
              ${tbb_veto}
              ${imt_veto}
              ${classic_veto}
+             ${geom_veto}
              ${pythia_veto}
              ${vecgeom_veto}
              ${root7_veto}
@@ -622,8 +627,10 @@ file(GLOB multithreaded RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${multithreaded})
 #---Define the primordial tutorials-----------------------------------
 ROOT_ADD_TEST(tutorial-hsimple COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/hsimple.C
                 PASSRC 255 FAILREGEX "Error in" "error:" "warning: Failed to call" LABELS tutorial)
-ROOT_ADD_TEST(tutorial-geom-geometry COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/geom/geometry.C
+if(ROOT_geom_FOUND)
+  ROOT_ADD_TEST(tutorial-geom-geometry COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/geom/geometry.C
                 FAILREGEX "Error in" "error:" "warning: Failed to call" LABELS tutorial)
+endif()
 # define Python GNN parsing tutorial needed to run before
 if (PY_SONNET_FOUND AND PY_GRAPH_NETS_FOUND)
   ROOT_ADD_TEST(tutorial-tmva-TMVA_SOFIE_GNN_Parser COMMAND ${Python3_EXECUTABLE}
@@ -808,6 +815,10 @@ if(ROOT_pyroot_FOUND)
   endif()
   # disable PyTorch model file used by TMVA_CNN_Classification.C
   list(APPEND pyveto tmva/PyTorch_Generate_CNN_Model.py)
+
+  if(NOT ROOT_geom_FOUND)
+    list(APPEND pyveto pyroot/geometry.py)
+  endif()
 
   # Now glob all vetos for pyroot
   file(GLOB pyveto RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${pyveto})
