@@ -73,7 +73,7 @@ public:
    virtual void VisitUInt16Field(const RIntegralField<std::uint16_t> &field) { VisitField(field); }
    virtual void VisitUInt32Field(const RIntegralField<std::uint32_t> &field) { VisitField(field); }
    virtual void VisitUInt64Field(const RIntegralField<std::uint64_t> &field) { VisitField(field); }
-   virtual void VisitVectorField(const RVectorField &field) { VisitField(field); }
+   virtual void VisitSequenceCollectionField(const RSequenceCollectionField &field) { VisitField(field); }
    virtual void VisitVectorBoolField(const RField<std::vector<bool>> &field) { VisitField(field); }
    virtual void VisitRVecField(const RRVecField &field) { VisitField(field); }
 }; // class RFieldVisitor
@@ -227,7 +227,7 @@ public:
    void VisitUnsplitField(const RUnsplitField &field) final;
    void VisitRecordField(const RRecordField &field) final;
    void VisitProxiedCollectionField(const RProxiedCollectionField &field) final;
-   void VisitVectorField(const RVectorField &field) final;
+   void VisitSequenceCollectionField(const RSequenceCollectionField &field) final;
    void VisitVectorBoolField(const RField<std::vector<bool>> &field) final;
    void VisitRVecField(const RRVecField &field) final;
    void VisitBitsetField(const RBitsetField &field) final;

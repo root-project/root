@@ -2584,8 +2584,9 @@ void ROOT::Experimental::RRecordField::AcceptVisitor(Detail::RFieldVisitor &visi
 
 //------------------------------------------------------------------------------
 
-ROOT::Experimental::RVectorField::RVectorField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField,
-                                               bool isUntyped)
+ROOT::Experimental::RSequenceCollectionField::RSequenceCollectionField(std::string_view fieldName,
+                                                                       std::unique_ptr<RFieldBase> itemField,
+                                                                       bool isUntyped)
    : ROOT::Experimental::RFieldBase(fieldName, isUntyped ? "" : "std::vector<" + itemField->GetTypeName() + ">",
                                     ENTupleStructure::kCollection, false /* isSimple */),
      fItemSize(itemField->GetValueSize()),
@@ -2596,19 +2597,20 @@ ROOT::Experimental::RVectorField::RVectorField(std::string_view fieldName, std::
    Attach(std::move(itemField));
 }
 
-ROOT::Experimental::RVectorField::RVectorField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField)
-   : RVectorField(fieldName, std::move(itemField), false)
+ROOT::Experimental::RSequenceCollectionField::RSequenceCollectionField(std::string_view fieldName,
+                                                                       std::unique_ptr<RFieldBase> itemField)
+   : RSequenceCollectionField(fieldName, std::move(itemField), true)
 {
 }
 
 std::unique_ptr<ROOT::Experimental::RFieldBase>
-ROOT::Experimental::RVectorField::CloneImpl(std::string_view newName) const
+ROOT::Experimental::RSequenceCollectionField::CloneImpl(std::string_view newName) const
 {
    auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetFieldName());
-   return std::make_unique<RVectorField>(newName, std::move(newItemField));
+   return std::make_unique<RSequenceCollectionField>(newName, std::move(newItemField));
 }
 
-std::size_t ROOT::Experimental::RVectorField::AppendImpl(const void *from)
+std::size_t ROOT::Experimental::RSequenceCollectionField::AppendImpl(const void *from)
 {
    auto typedValue = static_cast<const std::vector<char> *>(from);
    R__ASSERT((typedValue->size() % fItemSize) == 0);
@@ -2629,7 +2631,7 @@ std::size_t ROOT::Experimental::RVectorField::AppendImpl(const void *from)
    return nbytes + fPrincipalColumn->GetElement()->GetPackedSize();
 }
 
-void ROOT::Experimental::RVectorField::ReadGlobalImpl(NTupleSize_t globalIndex, void *to)
+void ROOT::Experimental::RSequenceCollectionField::ReadGlobalImpl(NTupleSize_t globalIndex, void *to)
 {
    auto typedValue = static_cast<std::vector<char> *>(to);
 
@@ -2667,7 +2669,7 @@ void ROOT::Experimental::RVectorField::ReadGlobalImpl(NTupleSize_t globalIndex, 
 }
 
 const ROOT::Experimental::RFieldBase::RColumnRepresentations &
-ROOT::Experimental::RVectorField::GetColumnRepresentations() const
+ROOT::Experimental::RSequenceCollectionField::GetColumnRepresentations() const
 {
    static RColumnRepresentations representations(
       {{EColumnType::kSplitIndex64}, {EColumnType::kIndex64}, {EColumnType::kSplitIndex32}, {EColumnType::kIndex32}},
@@ -2675,17 +2677,17 @@ ROOT::Experimental::RVectorField::GetColumnRepresentations() const
    return representations;
 }
 
-void ROOT::Experimental::RVectorField::GenerateColumns()
+void ROOT::Experimental::RSequenceCollectionField::GenerateColumns()
 {
    GenerateColumnsImpl<ClusterSize_t>();
 }
 
-void ROOT::Experimental::RVectorField::GenerateColumns(const RNTupleDescriptor &desc)
+void ROOT::Experimental::RSequenceCollectionField::GenerateColumns(const RNTupleDescriptor &desc)
 {
    GenerateColumnsImpl<ClusterSize_t>(desc);
 }
 
-void ROOT::Experimental::RVectorField::RVectorDeleter::operator()(void *objPtr, bool dtorOnly)
+void ROOT::Experimental::RSequenceCollectionField::RSequenceCollectionDeleter::operator()(void *objPtr, bool dtorOnly)
 {
    auto vecPtr = static_cast<std::vector<char> *>(objPtr);
    if (fItemDeleter) {
@@ -2699,15 +2701,16 @@ void ROOT::Experimental::RVectorField::RVectorDeleter::operator()(void *objPtr, 
    RDeleter::operator()(objPtr, dtorOnly);
 }
 
-std::unique_ptr<ROOT::Experimental::RFieldBase::RDeleter> ROOT::Experimental::RVectorField::GetDeleter() const
+std::unique_ptr<ROOT::Experimental::RFieldBase::RDeleter>
+ROOT::Experimental::RSequenceCollectionField::GetDeleter() const
 {
    if (fItemDeleter)
-      return std::make_unique<RVectorDeleter>(fItemSize, GetDeleterOf(*fSubFields[0]));
-   return std::make_unique<RVectorDeleter>();
+      return std::make_unique<RSequenceCollectionDeleter>(fItemSize, GetDeleterOf(*fSubFields[0]));
+   return std::make_unique<RSequenceCollectionDeleter>();
 }
 
 std::vector<ROOT::Experimental::RFieldBase::RValue>
-ROOT::Experimental::RVectorField::SplitValue(const RValue &value) const
+ROOT::Experimental::RSequenceCollectionField::SplitValue(const RValue &value) const
 {
    auto vec = value.GetPtr<std::vector<char>>();
    R__ASSERT((vec->size() % fItemSize) == 0);
@@ -2721,18 +2724,18 @@ ROOT::Experimental::RVectorField::SplitValue(const RValue &value) const
    return result;
 }
 
-void ROOT::Experimental::RVectorField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+void ROOT::Experimental::RSequenceCollectionField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
 {
-   visitor.VisitVectorField(*this);
+   visitor.VisitSequenceCollectionField(*this);
 }
 
 //------------------------------------------------------------------------------
 
 std::unique_ptr<ROOT::Experimental::RFieldBase>
-ROOT::Experimental::RSequenceCollectionField::CloneImpl(std::string_view newName) const
+ROOT::Experimental::RVectorField::CloneImpl(std::string_view newName) const
 {
    auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetFieldName());
-   return std::make_unique<RSequenceCollectionField>(newName, std::move(newItemField));
+   return std::make_unique<RVectorField>(newName, std::move(newItemField));
 }
 
 //------------------------------------------------------------------------------
