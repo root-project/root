@@ -818,7 +818,6 @@ int UnquantizeReals(T *dst, const Quantized_t *src, std::size_t count, double mi
 
    const std::size_t quantMax = (1ull << nQuantBits) - 1;
    const double scale = (max - min) / quantMax;
-   const double bias = min * quantMax / (max - min);
    const std::size_t unusedBits = sizeof(Quantized_t) * 8 - nQuantBits;
 
    int nOutOfRange = 0;
@@ -831,7 +830,7 @@ int UnquantizeReals(T *dst, const Quantized_t *src, std::size_t count, double mi
       ByteSwapIfNecessary(elem);
 
       const double fq = static_cast<double>(elem);
-      const double e = (fq + bias) * scale;
+      const double e = fq * scale + min;
       dst[i] = static_cast<T>(e);
 
       nOutOfRange += !(min <= dst[i] && dst[i] <= max);
