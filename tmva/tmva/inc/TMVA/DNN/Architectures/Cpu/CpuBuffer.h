@@ -64,7 +64,8 @@ public:
     TCpuBuffer & operator=(const TCpuBuffer  &) = default;
     TCpuBuffer & operator=(      TCpuBuffer &&) = default;
 
-    operator AFloat * () const {return (* fBuffer) + fOffset;}
+    inline operator AFloat * () const { return data(); }
+    AFloat * data() const {return (* fBuffer) + fOffset;}
 
     class FakeIteratorBegin{
     private:

@@ -110,7 +110,7 @@ TCudaTensor<AFloat>::TCudaTensor(const AFloat * host_data, const std::vector<siz
    //    }
    // }
 
-   cudaMemcpy(fElementBuffer, host_data, fSize * sizeof(AFloat),
+   cudaMemcpy(fElementBuffer.data(), host_data, fSize * sizeof(AFloat),
               cudaMemcpyHostToDevice);
 
    // no need to initialize cuda. Done in the other constructor that is called before
@@ -191,7 +191,7 @@ TCudaTensor<AFloat>::operator TMatrixT<AFloat>() const
 
      // This assume that tensor D1, D2, D3,D4 is converted in   D1 , D2*D3*D4
      TMatrixT<AFloat> hostMatrix( GetNrows(), GetNcols() );
-     cudaMemcpy(hostMatrix.GetMatrixArray(), fElementBuffer, fSize * sizeof(AFloat),
+     cudaMemcpy(hostMatrix.GetMatrixArray(), fElementBuffer.data(), fSize * sizeof(AFloat),
            cudaMemcpyDeviceToHost);
      return hostMatrix;
 
@@ -199,7 +199,7 @@ TCudaTensor<AFloat>::operator TMatrixT<AFloat>() const
    // else in case of column major tensor we need to transpose(this is what is done in TCudaMatrix)
    // Here we assume that D1, D2, D3 is converted in   a matrix  (D3, D1*D2)
    TMatrixT<AFloat> hostMatrix( GetNcols(), GetNrows() );
-   cudaMemcpy(hostMatrix.GetMatrixArray(), fElementBuffer, fSize * sizeof(AFloat),
+   cudaMemcpy(hostMatrix.GetMatrixArray(), fElementBuffer.data(), fSize * sizeof(AFloat),
               cudaMemcpyDeviceToHost);
    return hostMatrix.T();  // return transpose matrix
 
@@ -399,7 +399,7 @@ void TCudaTensor<AFloat>::Print(const char * name, bool truncate) const
    if (n > 10 && truncate) n = 10;
    std::cout << "Data : { ";
    for (size_t i = 0; i < n; ++i ) {
-      AFloat * elementPointer = fElementBuffer + i;
+      AFloat * elementPointer = fElementBuffer.data() + i;
       std::cout << AFloat( TCudaDeviceReference<AFloat>(elementPointer) );
       if (i < n-1) std::cout << " , ";
    }
