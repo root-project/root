@@ -135,10 +135,11 @@ enum class EColumnCppType {
    kMax
 };
 
-inline constexpr EColumnCppType kTestFutureColumn = static_cast<EColumnCppType>((int)EColumnCppType::kMax + 1);
+inline constexpr EColumnCppType kTestFutureColumn =
+   static_cast<EColumnCppType>(std::numeric_limits<std::underlying_type_t<EColumnCppType>>::max() - 1);
 
 struct RTestFutureColumn {
-   int dummy;
+   std::uint32_t dummy;
 };
 
 std::unique_ptr<RColumnElementBase> GenerateColumnElement(EColumnCppType cppType, EColumnType colType);
