@@ -87,7 +87,7 @@ public:
       kIgnoreTObjectStreamer  = TVirtualStreamerInfo::kIgnoreTObjectStreamer
    };
 
-// clang format off
+   /// clang-format off
    /// EReadWrite Enumerator
    /// | Enum Constant | Description   |
    /// |-------------|--------------------|
@@ -132,7 +132,7 @@ public:
       kNeedObjectForVirtualBaseClass = 99997,
       kMissing     = 99999
    };
-// clang format off
+   /// clang-format off
 
    TVirtualStreamerInfo();
    TVirtualStreamerInfo(TClass * /*cl*/);
