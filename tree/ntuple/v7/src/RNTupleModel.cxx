@@ -423,9 +423,6 @@ std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RNTupleModel::Cr
 
 ROOT::Experimental::REntry::RFieldToken ROOT::Experimental::RNTupleModel::GetToken(std::string_view fieldName) const
 {
-   if (!IsFrozen())
-      throw RException(R__FAIL("invalid attempt to get field token of unfrozen model"));
-
    const auto &topLevelFields = fFieldZero->GetSubFields();
    auto it = std::find_if(topLevelFields.begin(), topLevelFields.end(),
                           [&fieldName](const RFieldBase *f) { return f->GetFieldName() == fieldName; });
