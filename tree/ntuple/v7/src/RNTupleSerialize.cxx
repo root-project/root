@@ -711,8 +711,10 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeColumnType(ROOT::Exper
    case EColumnType::kSplitUInt16: return SerializeUInt16(0x15, buffer);
    case EColumnType::kReal32Trunc: return SerializeUInt16(0x1D, buffer);
    case EColumnType::kReal32Quant: return SerializeUInt16(0x1E, buffer);
-   case kTestFutureType: return SerializeUInt16(0x99, buffer);
-   default: throw RException(R__FAIL("ROOT bug: unexpected column type"));
+   default:
+      if (type == kTestFutureType)
+         return SerializeUInt16(0x99, buffer);
+      throw RException(R__FAIL("ROOT bug: unexpected column type"));
    }
 }
 

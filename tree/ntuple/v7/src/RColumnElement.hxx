@@ -268,7 +268,8 @@ using ROOT::Experimental::EColumnType;
 using ROOT::Experimental::Internal::RColumnElementBase;
 
 // testing value for an unknown future column type
-inline constexpr EColumnType kTestFutureType = static_cast<EColumnType>(int(EColumnType::kMax) + 1);
+inline constexpr EColumnType kTestFutureType =
+   static_cast<EColumnType>(std::numeric_limits<std::underlying_type_t<EColumnType>>::max() - 1);
 
 template <typename CppT, EColumnType>
 class RColumnElement;
@@ -306,8 +307,10 @@ std::unique_ptr<RColumnElementBase> GenerateColumnElementInternal(EColumnType ty
    case EColumnType::kSplitUInt16: return std::make_unique<RColumnElement<CppT, EColumnType::kSplitUInt16>>();
    case EColumnType::kReal32Trunc: return std::make_unique<RColumnElement<CppT, EColumnType::kReal32Trunc>>();
    case EColumnType::kReal32Quant: return std::make_unique<RColumnElement<CppT, EColumnType::kReal32Quant>>();
-   case kTestFutureType: return std::make_unique<RColumnElement<CppT, kTestFutureType>>();
-   default: R__ASSERT(false);
+   default:
+      if (type == kTestFutureType)
+         return std::make_unique<RColumnElement<CppT, kTestFutureType>>();
+      R__ASSERT(false);
    }
    // never here
    return nullptr;
