@@ -422,3 +422,16 @@ TEST_F(TClingTests, RefreshNSShadowing)
    gInterpreter->Declare("namespace std { namespace Detail {} }; auto c = TClass::GetClass(\"Detail\");");
    gInterpreter->ProcessLine("namespace Detail {}");
 }
+
+// #8367
+TEST_F(TClingTests, UndeclaredIdentifierCrash)
+{
+   auto expectedError = R"(error: use of undeclared identifier 'i'
+ for(i=0; i < 0;); // the second usage of `i` was enough to get a segfault
+          ^
+)";
+   using namespace ROOT::TestSupport;
+   CheckDiagsRAII diagRAII;
+   diagRAII.requiredDiag(kError, "cling", expectedError, false);
+   gInterpreter->ProcessLine("for(i=0; i < 0;); // the second usage of `i` was enough to get a segfault");
+}
