@@ -1,4 +1,4 @@
-# RNTuple Reference Specifications 0.2.10.0
+# RNTuple Reference Specifications 0.2.11.0
 
 **Note:** This is work in progress. The RNTuple specification is not yet finalized.
 
