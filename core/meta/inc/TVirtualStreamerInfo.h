@@ -110,6 +110,9 @@ public:
    /// | kTObject    | TObject, special case |
    /// | kTNamed     | TNamed , special case |
    /// | kCache      | Cache the value in memory than is not part of the object but is accessible via a SchemaRule |
+   /// | kNoType     | Indicator that we don't know the current type because the member does not exist in memory |
+   /// | kUnsupportedConversion | The member type onfile and in memory can not be converted |
+   /// | kUnset      | default value |
    enum EReadWrite {
       kBase        =  0,  kOffsetL = 20,  kOffsetP = 40,  kCounter =  6,  kCharStar = 7,
       kChar        =  1,  kShort   =  2,  kInt     =  3,  kLong    =  4,  kFloat    = 5,
@@ -130,7 +133,10 @@ public:
       kCacheNew    = 1001,
       kCacheDelete = 1002,
       kNeedObjectForVirtualBaseClass = 99997,
-      kMissing     = 99999
+      kMissing     = 99999,
+      kNoType      = -1,   /// Type corresponding to a 'missing' data member (with kMissing offset)
+      kUnsupportedConversion = -2,
+      kUnset       = -3
    };
    /// clang-format off
 
