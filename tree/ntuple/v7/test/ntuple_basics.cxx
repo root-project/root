@@ -603,7 +603,13 @@ TEST(RNTuple, ModelId)
    EXPECT_TRUE(m1->IsFrozen());
    EXPECT_EQ(id, m1->GetModelId());
 
+   // At this point, m1 is frozen while m2 is not.
+   auto m1c = m1->Clone();
+   EXPECT_TRUE(m1c->IsFrozen());
+   EXPECT_NE(m1->GetModelId(), m1c->GetModelId());
+
    auto m2c = m2->Clone();
+   EXPECT_FALSE(m2c->IsFrozen());
    EXPECT_NE(m2->GetModelId(), m2c->GetModelId());
 }
 
