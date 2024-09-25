@@ -845,7 +845,7 @@ std::string JitBuildAction(const ColumnNames_t &cols, std::shared_ptr<RDFDetail:
    const std::string actionTypeNameBase = actionTypeName.substr(actionTypeName.rfind(':') + 1);
 
    // retrieve type of result of the action as a string
-   const auto helperArgTypeName = TypeID2TypeName(helperArgType);
+   const auto helperArgTypeName = ROOT::Internal::GetDemangledTypeName(helperArgType);
    if (helperArgTypeName.empty()) {
       ThrowJitBuildActionHelperTypeError(actionTypeNameBase, helperArgType);
    }
