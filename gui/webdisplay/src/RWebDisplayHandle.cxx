@@ -756,7 +756,8 @@ std::unique_ptr<RWebDisplayHandle> RWebDisplayHandle::Display(const RWebDisplayA
          return handle;
    }
 
-   if ((handleAsLocal && has_qt5web) || (args.GetBrowserKind() == RWebDisplayArgs::kQt5)) {
+   // qt5 uses older chromium therefore do not invoke by default
+   if (has_qt5web && (args.GetBrowserKind() == RWebDisplayArgs::kQt5)) {
       if (try_creator(FindCreator("qt5", "libROOTQt5WebDisplay")))
          return handle;
    }
