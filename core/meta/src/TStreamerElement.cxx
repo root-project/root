@@ -195,9 +195,10 @@ ClassImp(TStreamerElement);
 
 TStreamerElement::TStreamerElement()
 {
-   fType        = 0;
+   // clang-format off
+   fType        = TVirtualStreamerInfo::kUnset;
    fSize        = 0;
-   fNewType     = 0;
+   fNewType     = TVirtualStreamerInfo::kUnset;
    fArrayDim    = 0;
    fArrayLength = 0;
    fStreamer    = nullptr;
@@ -208,6 +209,7 @@ TStreamerElement::TStreamerElement()
    fFactor      = 0;
    fXmin        = 0;
    fXmax        = 0;
+   // clang-format on
    for (Int_t i=0;i<5;i++) fMaxIndex[i] = 0;
 }
 
