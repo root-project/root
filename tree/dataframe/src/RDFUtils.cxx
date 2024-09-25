@@ -96,6 +96,8 @@ const std::type_info &TypeName2TypeID(const std::string &name)
 /// An empty string is returned in case of failure
 /// References and pointers are not supported since those cannot be stored in
 /// columns.
+/// Note that this function will take a lock and may be a potential source of
+/// contention in multithreaded execution.
 std::string TypeID2TypeName(const std::type_info &id)
 {
    if (auto c = TClass::GetClass(id)) {
@@ -384,12 +386,9 @@ unsigned int GetColumnWidth(const std::vector<std::string>& names, const unsigne
 void CheckReaderTypeMatches(const std::type_info &colType, const std::type_info &requestedType,
                             const std::string &colName)
 {
-   bool explicitlySupported = false;
    // We want to explicitly support the reading of bools as unsigned char, as
    // this is quite common to circumvent the std::vector<bool> specialization.
-   if (TypeID2TypeName(colType) == "bool" && TypeID2TypeName(requestedType) == "unsigned char") {
-      explicitlySupported = true;
-   }
+   const bool explicitlySupported = (colType == typeid(bool) && requestedType == typeid(unsigned char)) ? true : false;
 
    // Here we compare names and not typeinfos since they may come from two different contexts: a compiled
    // and a jitted one.
