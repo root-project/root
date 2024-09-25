@@ -46,6 +46,9 @@ public:
   std::unique_ptr<RooAbsArg> compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext & ctx) const override;
 
   void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
+
+  void fillVariableGroups(RooFit::VariableGroups &out) const override;
+
 protected:
 
   RooListProxy _set1 ;    ///< Set of constraint terms

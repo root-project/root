@@ -50,6 +50,8 @@ public:
    // forward interface
    // virtual double operator()(int npar, double* params,int iflag = 4) const;
 
+   bool VanishingSecondDerivative(int i, int j) const { return fFunc.VanishingSecondDerivative(i, j); }
+
 private:
    const Function &fFunc;
    double fUp;
