@@ -6644,9 +6644,13 @@ void TCling::RefreshClassInfo(TClass *cl, const clang::NamedDecl *def, bool alia
          cl->ResetCaches();
          TClass::RemoveClassDeclId(cci->GetDeclId());
          if (def) {
-            // It's a tag decl, not a namespace decl.
-            cci->Init(*cci->GetType());
-            TClass::AddClassToDeclIdMap(cci->GetDeclId(), cl);
+            if (cci->GetType()) {
+               // It's a tag decl, not a namespace decl.
+               cci->Init(*cci->GetType());
+               TClass::AddClassToDeclIdMap(cci->GetDeclId(), cl);
+            } else {
+               Error("RefreshClassInfo", "Should not need to update the classInfo a non type decl: %s", oldDef->getNameAsString().c_str());
+            }
          }
       }
    } else if (!cl->TestBit(TClass::kLoading) && !cl->fHasRootPcmInfo) {
