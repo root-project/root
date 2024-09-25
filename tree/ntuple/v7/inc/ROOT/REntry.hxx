@@ -62,13 +62,15 @@ public:
       friend class RNTupleModel;
 
       std::size_t fIndex;     ///< the index in fValues that belongs to the top-level field
-      std::uint64_t fModelId; ///< Safety check to prevent tokens from other models being used
-      RFieldToken(std::size_t index, std::uint64_t modelId) : fIndex(index), fModelId(modelId) {}
+      std::uint64_t fSchemaId; ///< Safety check to prevent tokens from other models being used
+      RFieldToken(std::size_t index, std::uint64_t schemaId) : fIndex(index), fSchemaId(schemaId) {}
    };
 
 private:
-   /// The entry must be linked to a specific model (or one if its clones), identified by a model ID
+   /// The entry must be linked to a specific model, identified by a model ID
    std::uint64_t fModelId = 0;
+   /// The entry and its tokens are also linked to a specific schema, identified by a schema ID
+   std::uint64_t fSchemaId = 0;
    /// Corresponds to the top-level fields of the linked model
    std::vector<RFieldBase::RValue> fValues;
    /// For fast lookup of token IDs given a top-level field name
@@ -77,7 +79,7 @@ private:
    // Creation of entries is done by the RNTupleModel class
 
    REntry() = default;
-   explicit REntry(std::uint64_t modelId) : fModelId(modelId) {}
+   explicit REntry(std::uint64_t modelId, std::uint64_t schemaId) : fModelId(modelId), fSchemaId(schemaId) {}
 
    void AddValue(RFieldBase::RValue &&value)
    {
@@ -118,9 +120,9 @@ private:
 
    void EnsureMatchingModel(RFieldToken token) const
    {
-      if (fModelId != token.fModelId) {
+      if (fSchemaId != token.fSchemaId) {
          throw RException(R__FAIL("invalid token for this entry, "
-                                  "make sure to use a token from the same model as this entry."));
+                                  "make sure to use a token from a model with the same schema as this entry."));
       }
    }
 
@@ -152,7 +154,7 @@ public:
       if (it == fFieldName2Token.end()) {
          throw RException(R__FAIL("invalid field name: " + std::string(fieldName)));
       }
-      return RFieldToken(it->second, fModelId);
+      return RFieldToken(it->second, fSchemaId);
    }
 
    void EmplaceNewValue(RFieldToken token)
@@ -206,6 +208,7 @@ public:
    }
 
    std::uint64_t GetModelId() const { return fModelId; }
+   std::uint64_t GetSchemaId() const { return fSchemaId; }
 
    ConstIterator_t begin() const { return fValues.cbegin(); }
    ConstIterator_t end() const { return fValues.cend(); }

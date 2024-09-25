@@ -252,7 +252,7 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel>
 ROOT::Experimental::RNTupleModel::Create(std::unique_ptr<RFieldZero> fieldZero)
 {
    auto model = CreateBare(std::move(fieldZero));
-   model->fDefaultEntry = std::unique_ptr<REntry>(new REntry(model->fModelId));
+   model->fDefaultEntry = std::unique_ptr<REntry>(new REntry(model->fModelId, model->fSchemaId));
    return model;
 }
 
@@ -273,7 +273,7 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleMod
    cloneModel->fDescription = fDescription;
    cloneModel->fProjectedFields = fProjectedFields->Clone(cloneModel.get());
    if (fDefaultEntry) {
-      cloneModel->fDefaultEntry = std::unique_ptr<REntry>(new REntry(cloneModel->fModelId));
+      cloneModel->fDefaultEntry = std::unique_ptr<REntry>(new REntry(cloneModel->fModelId, cloneModel->fSchemaId));
       for (const auto &f : cloneModel->fFieldZero->GetSubFields()) {
          cloneModel->fDefaultEntry->AddValue(f->CreateValue());
       }
@@ -402,7 +402,7 @@ std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RNTupleModel::Cr
    if (!IsFrozen())
       throw RException(R__FAIL("invalid attempt to create entry of unfrozen model"));
 
-   auto entry = std::unique_ptr<REntry>(new REntry(fModelId));
+   auto entry = std::unique_ptr<REntry>(new REntry(fModelId, fSchemaId));
    for (const auto &f : fFieldZero->GetSubFields()) {
       entry->AddValue(f->CreateValue());
    }
@@ -414,7 +414,7 @@ std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RNTupleModel::Cr
    if (!IsFrozen())
       throw RException(R__FAIL("invalid attempt to create entry of unfrozen model"));
 
-   auto entry = std::unique_ptr<REntry>(new REntry(fModelId));
+   auto entry = std::unique_ptr<REntry>(new REntry(fModelId, fSchemaId));
    for (const auto &f : fFieldZero->GetSubFields()) {
       entry->AddValue(f->BindValue(nullptr));
    }
@@ -433,7 +433,7 @@ ROOT::Experimental::REntry::RFieldToken ROOT::Experimental::RNTupleModel::GetTok
    if (it == topLevelFields.end()) {
       throw RException(R__FAIL("invalid field name: " + std::string(fieldName)));
    }
-   return REntry::RFieldToken(std::distance(topLevelFields.begin(), it), fModelId);
+   return REntry::RFieldToken(std::distance(topLevelFields.begin(), it), fSchemaId);
 }
 
 ROOT::Experimental::RFieldBase::RBulk ROOT::Experimental::RNTupleModel::CreateBulk(std::string_view fieldName) const
@@ -454,8 +454,10 @@ void ROOT::Experimental::RNTupleModel::Unfreeze()
 
    fModelId = GetNewModelId();
    fSchemaId = fModelId;
-   if (fDefaultEntry)
+   if (fDefaultEntry) {
       fDefaultEntry->fModelId = fModelId;
+      fDefaultEntry->fSchemaId = fSchemaId;
+   }
    fIsFrozen = false;
 }
 
