@@ -861,6 +861,11 @@ TEST(REntry, Basics)
    EXPECT_EQ(ptrPt.get(), e->GetPtr<void>(model->GetToken("pt")).get());
    EXPECT_EQ(ptrPt.get(), e->GetPtr<void>(model->GetDefaultEntry().GetToken("pt")).get());
 
+   // Using tokens across frozen clones works
+   auto clone = model->Clone();
+   EXPECT_EQ(ptrPt.get(), e->GetPtr<void>(clone->GetToken("pt")).get());
+   EXPECT_EQ(ptrPt.get(), e->GetPtr<void>(clone->GetDefaultEntry().GetToken("pt")).get());
+
    // Tokens from a new model are incompatible
    auto model2 = RNTupleModel::Create();
    model2->MakeField<float>("pt");
