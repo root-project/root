@@ -227,7 +227,7 @@ void ROOT::Experimental::RNTupleModel::EnsureNotBare() const
 }
 
 ROOT::Experimental::RNTupleModel::RNTupleModel(std::unique_ptr<RFieldZero> fieldZero)
-   : fFieldZero(std::move(fieldZero)), fModelId(GetNewModelId())
+   : fFieldZero(std::move(fieldZero)), fModelId(GetNewModelId()), fSchemaId(fModelId)
 {}
 
 std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleModel::CreateBare()
@@ -261,6 +261,13 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleMod
    auto cloneModel = std::unique_ptr<RNTupleModel>(
       new RNTupleModel(std::unique_ptr<RFieldZero>(static_cast<RFieldZero *>(fFieldZero->Clone("").release()))));
    cloneModel->fModelId = GetNewModelId();
+   // For a frozen model, we can keep the schema id because adding new fields is forbidden. It is reset in Unfreeze()
+   // if called by the user.
+   if (fIsFrozen) {
+      cloneModel->fSchemaId = fSchemaId;
+   } else {
+      cloneModel->fSchemaId = cloneModel->fModelId;
+   }
    cloneModel->fIsFrozen = fIsFrozen;
    cloneModel->fFieldNames = fFieldNames;
    cloneModel->fDescription = fDescription;
@@ -446,6 +453,7 @@ void ROOT::Experimental::RNTupleModel::Unfreeze()
       return;
 
    fModelId = GetNewModelId();
+   fSchemaId = fModelId;
    if (fDefaultEntry)
       fDefaultEntry->fModelId = fModelId;
    fIsFrozen = false;
