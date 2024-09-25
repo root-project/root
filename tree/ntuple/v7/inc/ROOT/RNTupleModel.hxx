@@ -207,6 +207,8 @@ private:
    /// Every model has a unique ID to distinguish it from other models. Entries are linked to models via the ID.
    /// Cloned models get a new model ID.
    std::uint64_t fModelId = 0;
+   /// Models have a separate schema ID to remember that the clone of a frozen model still has the same schema.
+   std::uint64_t fSchemaId = 0;
    /// Changed by Freeze() / Unfreeze() and by the RUpdater.
    bool fIsFrozen = false;
 
@@ -312,6 +314,7 @@ public:
    bool IsFrozen() const { return fIsFrozen; }
    bool IsBare() const { return !fDefaultEntry; }
    std::uint64_t GetModelId() const { return fModelId; }
+   std::uint64_t GetSchemaId() const { return fSchemaId; }
 
    /// Ingests a model for a sub collection and attaches it to the current model
    ///
