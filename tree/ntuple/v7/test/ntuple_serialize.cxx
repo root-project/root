@@ -65,6 +65,7 @@ TEST(RNTuple, SerializeColumnType)
    RNTupleSerializer::SerializeUInt16(5000, buffer);
    auto res = RNTupleSerializer::DeserializeColumnType(buffer, type);
    EXPECT_TRUE(bool(res));
+   EXPECT_EQ(type, EColumnType::kUnknown);
 
    for (int i = 1; i < static_cast<int>(EColumnType::kMax); ++i) {
       RNTupleSerializer::SerializeColumnType(static_cast<EColumnType>(i), buffer);

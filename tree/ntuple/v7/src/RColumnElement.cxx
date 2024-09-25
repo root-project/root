@@ -58,8 +58,10 @@ ROOT::Experimental::Internal::RColumnElementBase::GetValidBitRange(EColumnType t
    case EColumnType::kSplitUInt16: return std::make_pair(16, 16);
    case EColumnType::kReal32Trunc: return std::make_pair(10, 31);
    case EColumnType::kReal32Quant: return std::make_pair(1, 32);
-   case kTestFutureType: return std::make_pair(32, 32);
-   default: assert(false);
+   default:
+      if (type == kTestFutureType)
+         return std::make_pair(32, 32);
+      assert(false);
    }
    // never here
    return std::make_pair(0, 0);
@@ -97,8 +99,10 @@ std::string ROOT::Experimental::Internal::RColumnElementBase::GetTypeName(EColum
    case EColumnType::kSplitUInt16: return "SplitUInt16";
    case EColumnType::kReal32Trunc: return "Real32Trunc";
    case EColumnType::kReal32Quant: return "Real32Quant";
-   case kTestFutureType: return "TestFutureType";
-   default: return "UNKNOWN";
+   default:
+      if (type == kTestFutureType)
+         return "TestFutureType";
+      return "UNKNOWN";
    }
 }
 
@@ -139,8 +143,10 @@ ROOT::Experimental::Internal::RColumnElementBase::Generate<void>(EColumnType typ
    case EColumnType::kSplitUInt16: return std::make_unique<RColumnElement<std::uint16_t, EColumnType::kSplitUInt16>>();
    case EColumnType::kReal32Trunc: return std::make_unique<RColumnElement<float, EColumnType::kReal32Trunc>>();
    case EColumnType::kReal32Quant: return std::make_unique<RColumnElement<float, EColumnType::kReal32Quant>>();
-   case kTestFutureType: return std::make_unique<RColumnElement<Internal::RTestFutureColumn, kTestFutureType>>();
-   default: assert(false);
+   default:
+      if (type == kTestFutureType)
+         return std::make_unique<RColumnElement<Internal::RTestFutureColumn, kTestFutureType>>();
+      assert(false);
    }
    // never here
    return nullptr;
@@ -165,8 +171,10 @@ ROOT::Experimental::Internal::GenerateColumnElement(EColumnCppType cppType, ECol
    case EColumnCppType::kDouble: return GenerateColumnElementInternal<double>(type);
    case EColumnCppType::kClusterSize: return GenerateColumnElementInternal<ClusterSize_t>(type);
    case EColumnCppType::kColumnSwitch: return GenerateColumnElementInternal<RColumnSwitch>(type);
-   case kTestFutureColumn: return GenerateColumnElementInternal<RTestFutureColumn>(type);
-   default: R__ASSERT(!"Invalid column cpp type");
+   default:
+      if (cppType == kTestFutureColumn)
+         return GenerateColumnElementInternal<RTestFutureColumn>(type);
+      R__ASSERT(!"Invalid column cpp type");
    }
    // never here
    return nullptr;
