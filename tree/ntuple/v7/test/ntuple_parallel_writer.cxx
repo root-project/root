@@ -80,6 +80,20 @@ TEST(RNTupleParallelWriter, Basics)
    }
 }
 
+TEST(RNTupleParallelWriter, Tokens)
+{
+   FileRaii fileGuard("test_ntuple_parallel_tokens.root");
+
+   auto model = RNTupleModel::CreateBare();
+   model->MakeField<float>("pt");
+   auto token = model->GetToken("pt");
+
+   auto writer = RNTupleParallelWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
+   auto context = writer->CreateFillContext();
+   auto entry = context->CreateEntry();
+   auto pt = entry->GetPtr<float>(token);
+}
+
 TEST(RNTupleParallelWriter, Staged)
 {
    FileRaii fileGuard("test_ntuple_parallel_staged.root");
