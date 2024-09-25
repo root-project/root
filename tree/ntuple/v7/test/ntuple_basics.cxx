@@ -861,7 +861,11 @@ TEST(REntry, Basics)
    EXPECT_EQ(ptrPt.get(), e->GetPtr<void>(model->GetToken("pt")).get());
    EXPECT_EQ(ptrPt.get(), e->GetPtr<void>(model->GetDefaultEntry().GetToken("pt")).get());
 
-   auto model2 = model->Clone();
+   // Tokens from a new model are incompatible
+   auto model2 = RNTupleModel::Create();
+   model2->MakeField<float>("pt");
+   model2->Freeze();
+   EXPECT_THROW(e->GetPtr<void>(model2->GetToken("pt")), ROOT::Experimental::RException);
    EXPECT_THROW(e->GetPtr<void>(model2->GetDefaultEntry().GetToken("pt")), ROOT::Experimental::RException);
    std::shared_ptr<double> ptrDouble;
    EXPECT_THROW(e->BindValue("pt", ptrDouble), ROOT::Experimental::RException);
