@@ -580,6 +580,7 @@ TEST(RNTuple, ModelId)
    auto m2 = RNTupleModel::Create();
    EXPECT_FALSE(m1->IsFrozen());
    EXPECT_NE(m1->GetModelId(), m2->GetModelId());
+   EXPECT_NE(m1->GetSchemaId(), m2->GetSchemaId());
 
    m1->Freeze();
    EXPECT_TRUE(m1->IsFrozen());
@@ -607,10 +608,19 @@ TEST(RNTuple, ModelId)
    auto m1c = m1->Clone();
    EXPECT_TRUE(m1c->IsFrozen());
    EXPECT_NE(m1->GetModelId(), m1c->GetModelId());
+   EXPECT_EQ(m1->GetSchemaId(), m1c->GetSchemaId());
 
    auto m2c = m2->Clone();
    EXPECT_FALSE(m2c->IsFrozen());
    EXPECT_NE(m2->GetModelId(), m2c->GetModelId());
+   EXPECT_NE(m2->GetSchemaId(), m2c->GetSchemaId());
+
+   // Now unfreeze the cloned model again and it should get new ids.
+   id = m1c->GetModelId();
+   m1c->Unfreeze();
+   EXPECT_FALSE(m1c->IsFrozen());
+   EXPECT_NE(m1c->GetModelId(), id);
+   EXPECT_NE(m1c->GetSchemaId(), m1->GetSchemaId());
 }
 
 TEST(RNTuple, Entry)
