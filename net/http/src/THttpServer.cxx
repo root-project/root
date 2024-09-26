@@ -185,7 +185,9 @@ THttpServer::THttpServer(const char *engine) : TNamed("http", "ROOT http server"
 
    AddLocation("jsrootsys/", fJSROOTSYS.Data());
 
-   if (!basic_sniffer) {
+   if (basic_sniffer) {
+      AddLocation("rootsys_fonts/", TString::Format("%s/fonts", TROOT::GetDataDir().Data()));
+   } else {
       AddLocation("currentdir/", ".");
       AddLocation("rootsys/", TROOT::GetRootSys());
    }
