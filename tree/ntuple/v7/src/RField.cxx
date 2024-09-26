@@ -1222,6 +1222,9 @@ void ROOT::Experimental::RFieldBase::AutoAdjustColumnTypes(const RNTupleWriteOpt
          case EColumnType::kSplitInt64: colType = EColumnType::kInt64; break;
          case EColumnType::kSplitInt32: colType = EColumnType::kInt32; break;
          case EColumnType::kSplitInt16: colType = EColumnType::kInt16; break;
+         case EColumnType::kSplitUInt64: colType = EColumnType::kUInt64; break;
+         case EColumnType::kSplitUInt32: colType = EColumnType::kUInt32; break;
+         case EColumnType::kSplitUInt16: colType = EColumnType::kUInt16; break;
          default: break;
          }
       }
