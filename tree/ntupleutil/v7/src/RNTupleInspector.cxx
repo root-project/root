@@ -41,6 +41,9 @@ ROOT::Experimental::RNTupleInspector::RNTupleInspector(
    CollectFieldTreeInfo(fDescriptor->GetFieldZeroId());
 }
 
+// NOTE: outlined to avoid including RPageStorage in the header
+ROOT::Experimental::RNTupleInspector::~RNTupleInspector() = default;
+
 void ROOT::Experimental::RNTupleInspector::CollectColumnInfo()
 {
    fCompressedSize = 0;
