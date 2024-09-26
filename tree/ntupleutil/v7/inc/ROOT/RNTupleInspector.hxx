@@ -175,7 +175,7 @@ public:
    RNTupleInspector &operator=(const RNTupleInspector &other) = delete;
    RNTupleInspector(RNTupleInspector &&other) = delete;
    RNTupleInspector &operator=(RNTupleInspector &&other) = delete;
-   ~RNTupleInspector() = default;
+   ~RNTupleInspector();
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Create a new RNTupleInspector.
