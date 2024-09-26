@@ -340,7 +340,7 @@ if(${compression_default} STREQUAL "zlib")
          if(CMAKE_SYSTEM_PROCESSOR MATCHES aarch64)
             ROOTTEST_ADD_TEST(simple-lz4-compr-level9
                           PRECMD ${ROOT_hadd_CMD} -f409 hsimple409.root hsimple.root
-                          COMMAND ${ROOT_root_CMD} -q -l -b "${CMAKE_CURRENT_SOURCE_DIR}/testSimpleFile.C(\"hsimple409.root\",25000,409,516975,5)"
+                          COMMAND ${ROOT_root_CMD} -q -l -b "${CMAKE_CURRENT_SOURCE_DIR}/testSimpleFile.C(\"hsimple409.root\",25000,409,516975,30)"
                           DEPENDS roottest-root-io-filemerger-hsimple)
          else()
             ROOTTEST_ADD_TEST(simple-lz4-compr-level9
