@@ -21,7 +21,7 @@
 ## $$x\sim p_{ref}(x|\theta)$$.
 ##
 ## The output of the classifier $$\hat{s}(\theta)$$ is a monotonic function of the likelihood ration and can be turned into an estimate of the likelihood ratio
-## via $$\hat{r}(\theta)=\frac{1-\hat{s}(\theta)}{\hat{s}(\theta)}.$$ 
+## via $$\hat{r}(\theta)=\frac{1-\hat{s}(\theta)}{\hat{s}(\theta)}.$$
 ## This is called the likelihood ratio trick.
 ##
 ## In the end we compare the negative logarithmic likelihoods of the learned, morphed and analytical likelihood with minuit and as a plot.
@@ -41,11 +41,8 @@ from sklearn.neural_network import MLPClassifier
 # The samples used for training the classifier in this tutorial / rescale for more accuracy
 n_samples = 1000
 
-# Kills warning messages 
+# Kills warning messages
 ROOT.RooMsgService.instance().setGlobalKillBelow(ROOT.RooFit.WARNING)
-
-# Might be to drastic
-ROOT.RooMsgService.instance().setGlobalKillBelow(ROOT.RooFit.FATAL)
 
 
 # Morphing as a baseline
@@ -149,7 +146,7 @@ def build_ws(mu_observed, sigma):
 
 # The "observed" data
 mu_observed = 2.5
-sigma=1.5
+sigma = 1.5
 workspace = build_ws(mu_observed, sigma)
 x_var = workspace["x"]
 mu_var = workspace["mu"]
@@ -191,7 +188,7 @@ llhr_calc = ROOT.RooFormulaVar("llhr_calc", "x[0] / (x[0] + x[1])", [gauss, unif
 # Create the exact negative log likelihood functions for Gaussian model
 nll_gauss = gauss.createNLL(obs_data)
 
-# Create the learned NLL based on the 
+# Create the learned NLL based on the
 nllr_learned = ROOT.RooFit.bindFunction("MyBinFunc", compute_log_likelihood_sum, mu_var)
 
 # Compute the morphed nll
@@ -199,10 +196,12 @@ morphing(ROOT.RooMomentMorphFuncND.Linear)
 nll_morph = workspace["morph"].createNLL(obs_data)
 
 # Plot the negative logarithmic summed likelihood
-frame1 = mu_var.frame(Title="NLL of SBI vs. Morphing")
+frame1 = mu_var.frame(Title="NLL of SBI vs. Morphing", Range=(1.5, 2.5))
 nll_gauss.plotOn(frame1, LineColor="g", ShiftToZero=True, Name="gauss")
 nllr_learned.plotOn(frame1, LineColor="r", LineStyle="--", ShiftToZero=True, Name="learned")
+ROOT.RooAbsReal.setEvalErrorLoggingMode(ROOT.RooAbsReal.Ignore)  # Silence some warnings
 nll_morph.plotOn(frame1, LineColor="c", ShiftToZero=True, Name="morphed")
+ROOT.RooAbsReal.setEvalErrorLoggingMode(ROOT.RooAbsReal.PrintErrors)
 
 # Plot the likelihood functions
 frame2 = x_var.frame(Title="Learned vs analytical likelihhood function")

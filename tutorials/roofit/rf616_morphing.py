@@ -25,11 +25,8 @@ import numpy as np
 n_samples = 1000
 
 
-# Kills warning messages 
+# Kills warning messages
 ROOT.RooMsgService.instance().setGlobalKillBelow(ROOT.RooFit.WARNING)
-
-# Might be to drastic
-ROOT.RooMsgService.instance().setGlobalKillBelow(ROOT.RooFit.FATAL)
 
 
 # morphing as a baseline
@@ -50,8 +47,7 @@ def morphing(setting):
         workspace.factory(f"Gaussian::g{i}(x, mu{i}[{i}], {sigma})".format(i=i))
 
         # Fill the histograms
-        hist = workspace[f"g{i}"].generateBinned([x_var], n_samples)
-
+        hist = workspace[f"g{i}"].generateBinned([x_var], n_samples * 100)
         # Make sure that every bin is filled and we don't get zero probability
         for i_bin in range(hist.numEntries()):
             hist.add(hist.get(i_bin), 1.0)
@@ -81,9 +77,10 @@ def morphing(setting):
 # Define the "observed" data in a workspade
 def build_ws(mu_observed, sigma):
     ws = ROOT.RooWorkspace()
-    ws.factory(f'Gaussian::gauss(x[-5,15], mu[{mu_observed},0,4], {sigma})'.format(mu_observed=mu_observed))
+    ws.factory(f"Gaussian::gauss(x[-5,15], mu[{mu_observed},0,4], {sigma})".format(mu_observed=mu_observed))
 
     return ws
+
 
 # The "observed" data
 mu_observed = 2.5
@@ -92,7 +89,7 @@ workspace = build_ws(mu_observed, sigma)
 x_var = workspace["x"]
 mu_var = workspace["mu"]
 gauss = workspace.pdf("gauss")
-obs_data = gauss.generate(x_var,n_samples)
+obs_data = gauss.generate(x_var, n_samples)
 
 
 # Create the exact negative log likelihood functions for Gaussian model
@@ -100,7 +97,9 @@ nll_gauss = gauss.createNLL(obs_data)
 
 # Compute the morphed nll
 frame1 = morphing(ROOT.RooMomentMorphFuncND.Linear)
-nll_morph = workspace["morph"].createNLL(obs_data)
+
+# TODO: Fix RooAddPdf::fixCoefNormalization(nset) warnings with new CPU backend
+nll_morph = workspace["morph"].createNLL(obs_data, EvalBackend="legacy")
 
 # Plot the negative logarithmic summed likelihood
 frame2 = mu_var.frame(Title="Negative log Likelihood")
@@ -117,7 +116,6 @@ c.cd(2)
 ROOT.gPad.SetLeftMargin(0.15)
 frame2.GetYaxis().SetTitleOffset(1.8)
 frame2.Draw()
-
 
 
 # Compute the minimum via minuit and display the results

@@ -33,10 +33,7 @@ using namespace RooFit;
 const int n_samples = 1000;
 
 // Kills warning massages
-// RooMsgService::instance().setGlobalKillBelow(RooFit::WARNING);
-
-// Might be a bit to srastic to kill all messages 
-RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
+RooMsgService::instance().setGlobalKillBelow(RooFit::WARNING);
 
 // Define the morphing routine
 RooPlot *perform_morphing(RooWorkspace &ws, RooMomentMorphFuncND::Setting setting, double sigma)
@@ -66,7 +63,7 @@ RooPlot *perform_morphing(RooWorkspace &ws, RooMomentMorphFuncND::Setting settin
         ws.import(help, Silence(true));
 
         // Fill the histograms use a unique pointer to prevent memory leaks
-        std::unique_ptr<RooDataHist> hist1{dynamic_cast<RooDataHist *>(ws.pdf(Form("g%d", i))->generateBinned(*x_var, n_samples))};
+        std::unique_ptr<RooDataHist> hist1{dynamic_cast<RooDataHist *>(ws.pdf(Form("g%d", i))->generateBinned(*x_var, 100*n_samples))};
 
         // Add the value 1 to each bin
         for (int i_bin = 0; i_bin < hist1->numEntries(); ++i_bin)
@@ -105,7 +102,7 @@ RooPlot *perform_morphing(RooWorkspace &ws, RooMomentMorphFuncND::Setting settin
 std::unique_ptr<RooWorkspace> build_ws(double mu_observed, double sigma)
 {   
     auto ws = std::make_unique<RooWorkspace>();
-    ws -> factory(Form("Gaussian::gauss(x[-5,15],mu[%f,0,4], sigma[%f])", mu_observed, sigma));
+    ws -> factory(Form("Gaussian::gauss(x[-5,15],mu[%f,0,4], %f)", mu_observed, sigma));
     return ws;
 }
 
@@ -132,7 +129,8 @@ void rf616_morphing()
     RooAbsReal *nll_gauss = gauss->createNLL(*obs_data);
 
     // Create the morphed negative log likelihood function
-    RooAbsReal *nll_morph = ws->pdf("morph")->createNLL(*obs_data);
+    // TODO: Fix RooAddPdf::fixCoefNormalization(nset) warnings with new CPU backend
+    RooAbsReal *nll_morph = ws->pdf("morph")->createNLL(*obs_data, RooFit::EvalBackend("legacy"));
 
     // Plot the negative logarithmic summed likelihood
     RooPlot *frame2 = mu_var->frame(Title("Negative log Likelihood"));
