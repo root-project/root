@@ -48,22 +48,18 @@ namespace RDF {
 /// exception is thrown.
 /// References and pointers are not supported since those cannot be stored in
 /// columns.
+/// Note that this function will take a lock and may be a potential source of
+/// contention in multithreaded execution.
 const std::type_info &TypeName2TypeID(const std::string &name)
 {
-   if (auto c = TClass::GetClass(name.c_str())) {
-      if (!c->GetTypeInfo()) {
-         std::string msg("Cannot extract type_info of type ");
-         msg += name;
-         msg += ".";
-         throw std::runtime_error(msg);
-      }
-      return *c->GetTypeInfo();
-   } else if (name == "char" || name == "Char_t")
+   if (name == "float" || name == "Float_t")
+      return typeid(float);
+   else if (name == "int" || name == "Int_t")
+      return typeid(int);
+   else if (name == "char" || name == "Char_t")
       return typeid(char);
    else if (name == "unsigned char" || name == "UChar_t")
       return typeid(unsigned char);
-   else if (name == "int" || name == "Int_t")
-      return typeid(int);
    else if (name == "unsigned int" || name == "UInt_t")
       return typeid(unsigned int);
    else if (name == "short" || name == "Short_t")
@@ -76,15 +72,21 @@ const std::type_info &TypeName2TypeID(const std::string &name)
       return typeid(unsigned long);
    else if (name == "double" || name == "Double_t")
       return typeid(double);
-   else if (name == "float" || name == "Float_t")
-      return typeid(float);
    else if (name == "long long" || name == "long long int" || name == "Long64_t")
       return typeid(Long64_t);
    else if (name == "unsigned long long" || name == "unsigned long long int" || name == "ULong64_t")
       return typeid(ULong64_t);
    else if (name == "bool" || name == "Bool_t")
       return typeid(bool);
-   else {
+   else if (auto c = TClass::GetClass(name.c_str())) {
+      if (!c->GetTypeInfo()) {
+         std::string msg("Cannot extract type_info of type ");
+         msg += name;
+         msg += ".";
+         throw std::runtime_error(msg);
+      }
+      return *c->GetTypeInfo();
+   } else {
       std::string msg("Cannot extract type_info of type ");
       msg += name;
       msg += ".";
@@ -100,14 +102,14 @@ const std::type_info &TypeName2TypeID(const std::string &name)
 /// contention in multithreaded execution.
 std::string TypeID2TypeName(const std::type_info &id)
 {
-   if (auto c = TClass::GetClass(id)) {
-      return c->GetName();
-   } else if (id == typeid(char))
+   if (id == typeid(float))
+      return "float";
+   else if (id == typeid(int))
+      return "int";
+   else if (id == typeid(char))
       return "char";
    else if (id == typeid(unsigned char))
       return "unsigned char";
-   else if (id == typeid(int))
-      return "int";
    else if (id == typeid(unsigned int))
       return "unsigned int";
    else if (id == typeid(short))
@@ -120,14 +122,14 @@ std::string TypeID2TypeName(const std::type_info &id)
       return "unsigned long";
    else if (id == typeid(double))
       return "double";
-   else if (id == typeid(float))
-      return "float";
    else if (id == typeid(Long64_t))
       return "Long64_t";
    else if (id == typeid(ULong64_t))
       return "ULong64_t";
    else if (id == typeid(bool))
       return "bool";
+   else if (auto c = TClass::GetClass(id))
+      return c->GetName();
    else
       return "";
 }
