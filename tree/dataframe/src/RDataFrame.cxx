@@ -456,6 +456,40 @@ executed at the moment they are called, but they are **lazy**, i.e. delayed unti
 accessed through the smart pointer. At that time, the event loop is triggered and *all* results are produced
 simultaneously.
 
+For yet another example of the difference between the correct and incorrect running of the event-loop, see the following
+two code snippets. We assume our ROOT file has branches a, b and c.
+
+The correct way - the dataset is only processed once.
+~~~{.cpp}
+ROOT::RDataFrame df_correct(treename, filename);
+
+h_a = df_correct.Histo1D("a")
+h_b = df_correct.Histo1D("b")
+h_c = df_correct.Histo1D("c")
+
+h_a_val = h_a.GetValue()
+h_b_val = h_b.GetValue()
+h_c_val = h_c.GetValue()
+
+std::cout << "How many times was the dataset processed? " << df_wrong.GetNRuns() << " times." << std::endl; // The answer will be - 1 time.
+~~~
+
+An incorrect way - the dataset is processed three times.
+~~~{.cpp}
+ROOT::RDataFrame df_incorrect(treename, filename);
+
+auto h_a = df_incorrect.Histo1D("a");
+auto h_a_val = h_a.GetValue();
+
+auto h_b = df_incorrect.Histo1D("b");
+auto h_b_val = h_b.GetValue();
+
+auto h_c = df_incorrect.Histo1D("c");
+auto h_c_val = h_c.GetValue();
+
+std::cout << "How many times was the dataset processed? " << df_wrong.GetNRuns() << " times." << std::endl; // TThe answer will be - 3 times.
+~~~
+
 It is therefore good practice to declare all your transformations and actions *before* accessing their results, allowing
 RDataFrame to run the loop once and produce all results in one go.
 
