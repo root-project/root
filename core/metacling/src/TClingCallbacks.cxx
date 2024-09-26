@@ -395,18 +395,6 @@ bool TClingCallbacks::LookupObject(LookupResult &R, Scope *S) {
    if (tryFindROOTSpecialInternal(R, S))
       return true;
 
-   // For backward-compatibility with CINT we must support stmts like:
-   // x = 4; y = new MyClass();
-   // I.e we should "inject" a C++11 auto keyword in front of "x" and "y"
-   // This has to have higher precedence than the dynamic scopes. It is claimed
-   // that if one assigns to a name and the lookup of that name fails if *must*
-   // auto keyword must be injected and the stmt evaluation must not be delayed
-   // until runtime.
-   // For now supported only at the prompt.
-   if (tryInjectImplicitAutoKeyword(R, S)) {
-      return true;
-   }
-
    if (fIsAutoLoadingRecursively)
       return false;
 
@@ -924,87 +912,6 @@ bool TClingCallbacks::shouldResolveAtRuntime(LookupResult& R, Scope* S) {
    }
 
    return false;
-}
-
-bool TClingCallbacks::tryInjectImplicitAutoKeyword(LookupResult &R, Scope *S) {
-   if (!fROOTSpecialNamespace) {
-      // init error or rootcling
-      return false;
-   }
-
-   // Should be disabled with the dynamic scopes.
-   if (m_IsRuntime)
-      return false;
-
-   if (R.isForRedeclaration())
-      return false;
-
-   if (R.getLookupKind() != Sema::LookupOrdinaryName)
-      return false;
-
-   if (!isa<FunctionDecl>(R.getSema().CurContext))
-      return false;
-
-   {
-      // ROOT-8538: only top-most (function-level) scope is supported.
-      DeclContext* ScopeDC = S->getEntity();
-      if (!ScopeDC || !llvm::isa<FunctionDecl>(ScopeDC))
-         return false;
-
-      // Make sure that the failed lookup comes the prompt. Currently, we
-      // support only the prompt.
-      Scope* FnScope = S->getFnParent();
-      if (!FnScope)
-         return false;
-      auto FD = dyn_cast_or_null<FunctionDecl>(FnScope->getEntity());
-      if (!FD || !utils::Analyze::IsWrapper(FD))
-         return false;
-   }
-
-   Sema& SemaRef = R.getSema();
-   ASTContext& C = SemaRef.getASTContext();
-   DeclContext* DC = SemaRef.CurContext;
-   assert(DC && "Must not be null.");
-
-
-   Preprocessor& PP = R.getSema().getPreprocessor();
-   //Preprocessor::CleanupAndRestoreCacheRAII cleanupRAII(PP);
-   //PP.EnableBacktrackAtThisPos();
-   if (PP.LookAhead(0).isNot(tok::equal)) {
-      //PP.Backtrack();
-      return false;
-   }
-   //PP.CommitBacktrackedTokens();
-   //cleanupRAII.pop();
-   DeclarationName Name = R.getLookupName();
-   IdentifierInfo* II = Name.getAsIdentifierInfo();
-   SourceLocation Loc = R.getNameLoc();
-   VarDecl* Result = VarDecl::Create(C, DC, Loc, Loc, II,
-                                     C.getAutoType(QualType(),
-                                                   clang::AutoTypeKeyword::Auto,
-                                                   /*IsDependent*/false),
-                                     /*TypeSourceInfo*/nullptr, SC_None);
-
-   if (!Result) {
-      ROOT::TMetaUtils::Error("TClingCallbacks::tryInjectImplicitAutoKeyword",
-                              "Cannot create VarDecl");
-      return false;
-   }
-
-   // Annotate the decl to give a hint in cling.
-   // FIXME: We should move this in cling, when we implement turning it on
-   // and off.
-   Result->addAttr(AnnotateAttr::CreateImplicit(C, "__Auto", nullptr, 0));
-
-   R.addDecl(Result);
-
-   // Raise a warning when trying to use implicit auto injection feature.
-   SemaRef.getDiagnostics().setSeverity(diag::warn_deprecated_message, diag::Severity::Warning, SourceLocation());
-   SemaRef.Diag(Loc, diag::warn_deprecated_message)
-      << "declaration without the 'auto' keyword" << DC << Loc << FixItHint::CreateInsertion(Loc, "auto ");
-
-   // Say that we can handle the situation. Clang should try to recover
-   return true;
 }
 
 void TClingCallbacks::Initialize() {
