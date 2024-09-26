@@ -1596,7 +1596,7 @@ void RWebWindow::SubmitData(unsigned connid, bool txt, std::string &&data, int c
 
    for (auto &conn : arr) {
 
-      if (fProtocolCnt >= 0)
+      if ((fProtocolCnt >= 0) && (chid > 0))
          if (!fProtocolConnId || (conn->fConnId == fProtocolConnId)) {
             fProtocolConnId = conn->fConnId; // remember connection
             std::string fname = fProtocolPrefix;
