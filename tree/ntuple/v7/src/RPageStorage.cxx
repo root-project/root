@@ -494,7 +494,7 @@ ROOT::Experimental::Internal::RPageSource::UnsealPage(const RSealedPage &sealedP
       return R__FORWARD_ERROR(rv);
 
    const auto bytesPacked = element.GetPackedSize(sealedPage.GetNElements());
-   auto page = pageAlloc.NewPage(physicalColumnId, element.GetSize(), sealedPage.GetNElements());
+   auto page = pageAlloc.NewPage(physicalColumnId, element.GetPackedSize(), sealedPage.GetNElements());
    if (sealedPage.GetDataSize() != bytesPacked) {
       RNTupleDecompressor::Unzip(sealedPage.GetBuffer(), sealedPage.GetDataSize(), bytesPacked, page.GetBuffer());
    } else {
