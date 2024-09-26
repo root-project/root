@@ -12,3 +12,9 @@ ROOTTEST_ADD_TEST(assertmyfun
 ROOTTEST_ADD_TEST(assertROOT7027
                   MACRO assertROOT7027.C
                   OUTREF assertROOT7027.ref)
+
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    ROOTTEST_ADD_TEST(addIncludePath
+                      MACRO addIncludePath.C
+                      COPY_TO_BUILDDIR addIncludePathTest.C addIncludePathGCCMajor.C)
+endif()
