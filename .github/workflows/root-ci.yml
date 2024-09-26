@@ -236,17 +236,17 @@ jobs:
         # by the fact that event_name is a string, but we need an array. So
         # we construct a JSON string that we can then convert into an array.
         event_name: ${{ fromJSON(format('["{0}"]', github.event_name)) }}
-        config: ["Debug", "Release"]
+        config: ["RelWithDebInfo", "Release"]
         target_arch: [x64, x86]
         exclude:
           - event_name: pull_request
-            config: Debug
+            config: RelWithDebInfo
           - event_name: push
-            config: Debug
+            config: RelWithDebInfo
           # This is this platform is subject to timeouts when building from
           # scratch.
-          - target_arch: x86
-            config: Debug 
+          #- target_arch: x86
+          #  config: RelWithDebInfo
 
     name: Windows 10 ${{ matrix.target_arch }} ${{ matrix.config }}
 
