@@ -39,6 +39,8 @@ public:
   /// \return The line, or std::optional<std::string>() on EOF.
   std::optional<std::string> readLine() const;
 
+  void setHistorySize(int size);
+
   void saveHistory();
   void loadHistory();
 

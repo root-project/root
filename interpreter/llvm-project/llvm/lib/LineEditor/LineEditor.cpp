@@ -234,6 +234,11 @@ LineEditor::~LineEditor() {
   ::fwrite("\n", 1, 1, Data->Out);
 }
 
+void LineEditor::setHistorySize(int size) {
+  HistEvent HE;
+  ::history(Data->Hist, &HE, H_SETSIZE, size);
+}
+
 void LineEditor::saveHistory() {
   if (!HistoryPath.empty()) {
     HistEvent HE;
