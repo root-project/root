@@ -421,6 +421,11 @@ jobs:
         PYTHONUNBUFFERED: true
 
     steps:
+      - name: ccache info
+        run: |
+          ccache -p || true
+          ccache -s || true
+
       - name: Set up Python Virtual Env
         # if the `if` expr is false, `if` still has exit code 0.
         # if the `if` block is entered, the block's exit code becomes the exit
@@ -537,6 +542,11 @@ jobs:
           name: Binaries ${{ matrix.image }} ${{ matrix.property }}
           path: /github/home/ROOT-CI/packages/root_v*
           if-no-files-found: error
+
+      - name: ccache info (post)
+        run: |
+          ccache -p || true
+          ccache -s || true
 
   event_file:
     # For any event that is not a PR, the CI will always run. In PRs, the CI
