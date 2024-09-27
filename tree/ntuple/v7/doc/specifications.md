@@ -850,7 +850,7 @@ Such cases are marked as `R` in the table.
 |               |                                                  Fundamental C++ Type                                                     ||
 | Column Type   | bool | std::byte | char | int8_t | uint8_t | int16_t | uint16_t | int32_t | uint32_t | int64_t | uint64_t | float | double |
 |---------------|:----:|:---------:|:----:|:------:|:-------:|:-------:|:--------:|:-------:|:--------:|:-------:|:--------:|:-----:|:------:|
-| Bit           |  W*  |           |      |        |         |         |          |         |          |         |          |       |        |
+| Bit           |  W*  |           |  R   |   R    |    R    |    R    |    R     |    R    |    R     |    R    |    R     |       |        |
 | Byte          |      |     W*    |      |        |         |         |          |         |          |         |          |       |        |
 | Char          |  R   |           |  W*  |        |         |         |          |         |          |         |          |       |        |
 | Int8          |  R   |           |      |   W*   |    R    |         |          |         |          |         |          |       |        |

@@ -286,3 +286,219 @@ TEST(RNTuple, TypeCastReal)
    EXPECT_FLOAT_EQ(*ptrDoubleQuant, 0.113);
    EXPECT_FLOAT_EQ(*ptrDouble32, -11.043);
 }
+
+TEST(RNTuple, TypeCastChar)
+{
+   FileRaii fileGuard("test_ntuple_type_cast_char.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto ptrBool = model->MakeField<bool>("bool");
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      *ptrBool = true;
+      writer->Fill();
+      *ptrBool = false;
+      writer->Fill();
+   }
+
+   auto castModel = RNTupleModel::Create();
+   auto ptrBool = castModel->MakeField<char>("bool");
+   auto reader = RNTupleReader::Open(std::move(castModel), "ntpl", fileGuard.GetPath());
+   reader->LoadEntry(0);
+   EXPECT_EQ(static_cast<char>(1), *ptrBool);
+   reader->LoadEntry(1);
+   EXPECT_EQ(static_cast<char>(0), *ptrBool);
+}
+
+TEST(RNTuple, TypeCastInt8)
+{
+   FileRaii fileGuard("test_ntuple_type_cast_Int8.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto ptrBool = model->MakeField<bool>("bool");
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      *ptrBool = true;
+      writer->Fill();
+      *ptrBool = false;
+      writer->Fill();
+   }
+
+   auto castModel = RNTupleModel::Create();
+   auto ptrBool = castModel->MakeField<std::int8_t>("bool");
+   auto reader = RNTupleReader::Open(std::move(castModel), "ntpl", fileGuard.GetPath());
+   reader->LoadEntry(0);
+   EXPECT_EQ(1, *ptrBool);
+   reader->LoadEntry(1);
+   EXPECT_EQ(0, *ptrBool);
+}
+
+TEST(RNTuple, TypeCastUInt8)
+{
+   FileRaii fileGuard("test_ntuple_type_cast_UInt8.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto ptrBool = model->MakeField<bool>("bool");
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      *ptrBool = true;
+      writer->Fill();
+      *ptrBool = false;
+      writer->Fill();
+   }
+
+   auto castModel = RNTupleModel::Create();
+   auto ptrBool = castModel->MakeField<std::uint8_t>("bool");
+   auto reader = RNTupleReader::Open(std::move(castModel), "ntpl", fileGuard.GetPath());
+   reader->LoadEntry(0);
+   EXPECT_EQ(1u, *ptrBool);
+   reader->LoadEntry(1);
+   EXPECT_EQ(0u, *ptrBool);
+}
+
+TEST(RNTuple, TypeCastInt16)
+{
+   FileRaii fileGuard("test_ntuple_type_cast_Int16.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto ptrBool = model->MakeField<bool>("bool");
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      *ptrBool = true;
+      writer->Fill();
+      *ptrBool = false;
+      writer->Fill();
+   }
+
+   auto castModel = RNTupleModel::Create();
+   auto ptrBool = castModel->MakeField<std::int16_t>("bool");
+   auto reader = RNTupleReader::Open(std::move(castModel), "ntpl", fileGuard.GetPath());
+   reader->LoadEntry(0);
+   EXPECT_EQ(1, *ptrBool);
+   reader->LoadEntry(1);
+   EXPECT_EQ(0, *ptrBool);
+}
+
+TEST(RNTuple, TypeCastUInt16)
+{
+   FileRaii fileGuard("test_ntuple_type_cast_UInt16.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto ptrBool = model->MakeField<bool>("bool");
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      *ptrBool = true;
+      writer->Fill();
+      *ptrBool = false;
+      writer->Fill();
+   }
+
+   auto castModel = RNTupleModel::Create();
+   auto ptrBool = castModel->MakeField<std::uint16_t>("bool");
+   auto reader = RNTupleReader::Open(std::move(castModel), "ntpl", fileGuard.GetPath());
+   reader->LoadEntry(0);
+   EXPECT_EQ(1u, *ptrBool);
+   reader->LoadEntry(1);
+   EXPECT_EQ(0u, *ptrBool);
+}
+
+TEST(RNTuple, TypeCastInt32)
+{
+   FileRaii fileGuard("test_ntuple_type_cast_Int32.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto ptrBool = model->MakeField<bool>("bool");
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      *ptrBool = true;
+      writer->Fill();
+      *ptrBool = false;
+      writer->Fill();
+   }
+
+   auto castModel = RNTupleModel::Create();
+   auto ptrBool = castModel->MakeField<std::int32_t>("bool");
+   auto reader = RNTupleReader::Open(std::move(castModel), "ntpl", fileGuard.GetPath());
+   reader->LoadEntry(0);
+   EXPECT_EQ(1, *ptrBool);
+   reader->LoadEntry(1);
+   EXPECT_EQ(0, *ptrBool);
+}
+
+TEST(RNTuple, TypeCastUInt32)
+{
+   FileRaii fileGuard("test_ntuple_type_cast_UInt32.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto ptrBool = model->MakeField<bool>("bool");
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      *ptrBool = true;
+      writer->Fill();
+      *ptrBool = false;
+      writer->Fill();
+   }
+
+   auto castModel = RNTupleModel::Create();
+   auto ptrBool = castModel->MakeField<std::uint32_t>("bool");
+   auto reader = RNTupleReader::Open(std::move(castModel), "ntpl", fileGuard.GetPath());
+   reader->LoadEntry(0);
+   EXPECT_EQ(1u, *ptrBool);
+   reader->LoadEntry(1);
+   EXPECT_EQ(0u, *ptrBool);
+}
+
+TEST(RNTuple, TypeCastInt64)
+{
+   FileRaii fileGuard("test_ntuple_type_cast_Int64.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto ptrBool = model->MakeField<bool>("bool");
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      *ptrBool = true;
+      writer->Fill();
+      *ptrBool = false;
+      writer->Fill();
+   }
+
+   auto castModel = RNTupleModel::Create();
+   auto ptrBool = castModel->MakeField<std::int64_t>("bool");
+   auto reader = RNTupleReader::Open(std::move(castModel), "ntpl", fileGuard.GetPath());
+   reader->LoadEntry(0);
+   EXPECT_EQ(1, *ptrBool);
+   reader->LoadEntry(1);
+   EXPECT_EQ(0, *ptrBool);
+}
+
+TEST(RNTuple, TypeCastUInt64)
+{
+   FileRaii fileGuard("test_ntuple_type_cast_UInt64.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto ptrBool = model->MakeField<bool>("bool");
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      *ptrBool = true;
+      writer->Fill();
+      *ptrBool = false;
+      writer->Fill();
+   }
+
+   auto castModel = RNTupleModel::Create();
+   auto ptrBool = castModel->MakeField<std::uint64_t>("bool");
+   auto reader = RNTupleReader::Open(std::move(castModel), "ntpl", fileGuard.GetPath());
+   reader->LoadEntry(0);
+   EXPECT_EQ(1u, *ptrBool);
+   reader->LoadEntry(1);
+   EXPECT_EQ(0u, *ptrBool);
+}
