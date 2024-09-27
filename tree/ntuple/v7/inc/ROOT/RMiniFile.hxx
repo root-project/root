@@ -123,11 +123,10 @@ private:
       /// is shorter than 255 characters, we should need at most ~600 bytes. However, the header also needs to be
       /// aligned to kBlockAlign...
       static constexpr std::size_t kHeaderBlockSize = 4096;
-      /// Testing suggests that 4MiB gives best performance at a reasonable memory consumption.
-      static constexpr std::size_t kBlockSize = 4 * 1024 * 1024;
 
       // fHeaderBlock and fBlock are raw pointers because we have to manually call operator new and delete.
       unsigned char *fHeaderBlock = nullptr;
+      std::size_t fBlockSize = 0;
       std::uint64_t fBlockOffset = 0;
       unsigned char *fBlock = nullptr;
 
@@ -149,7 +148,7 @@ private:
       RFileSimple &operator=(RFileSimple &&other) = delete;
       ~RFileSimple();
 
-      void AllocateBuffers();
+      void AllocateBuffers(std::size_t bufferSize);
       void Flush();
 
       /// Writes bytes in the open stream, either at fFilePos or at the given offset
