@@ -17,42 +17,18 @@
 
 #include <ROOT/RFieldBase.hxx>
 
-ROOT::Experimental::NTupleSize_t ROOT::Experimental::RNTupleProcessor::ConnectNTuple(const RNTupleSourceSpec &ntuple)
+std::unique_ptr<ROOT::Experimental::RNTupleProcessor>
+ROOT::Experimental::RNTupleProcessor::CreateChain(const std::vector<RNTupleSourceSpec> &ntuples,
+                                                  std::unique_ptr<RNTupleModel> model)
 {
-   for (auto &fieldContext : fFieldContexts) {
-      fieldContext.ResetConcreteField();
-   }
-   fPageSource = Internal::RPageSource::Create(ntuple.fName, ntuple.fLocation);
-   fPageSource->Attach();
-   ConnectFields();
-   return fPageSource->GetNEntries();
+   return std::unique_ptr<RNTupleChainProcessor>(new RNTupleChainProcessor(ntuples, std::move(model)));
 }
 
-void ROOT::Experimental::RNTupleProcessor::ConnectFields()
-{
-   auto desc = fPageSource->GetSharedDescriptorGuard();
+//------------------------------------------------------------------------------
 
-   for (auto &fieldContext : fFieldContexts) {
-      auto fieldId = desc->FindFieldId(fieldContext.GetProtoField().GetFieldName());
-      if (fieldId == kInvalidDescriptorId) {
-         throw RException(
-            R__FAIL("field \"" + fieldContext.GetProtoField().GetFieldName() + "\" not found in current RNTuple"));
-      }
-
-      fieldContext.SetConcreteField();
-      fieldContext.fConcreteField->SetOnDiskId(desc->FindFieldId(fieldContext.GetProtoField().GetFieldName()));
-      Internal::CallConnectPageSourceOnField(*fieldContext.fConcreteField, *fPageSource);
-
-      auto valuePtr = fEntry->GetPtr<void>(fieldContext.fToken);
-      auto value = fieldContext.fConcreteField->CreateValue();
-      value.Bind(valuePtr);
-      fEntry->UpdateValue(fieldContext.fToken, value);
-   }
-}
-
-ROOT::Experimental::RNTupleProcessor::RNTupleProcessor(const std::vector<RNTupleSourceSpec> &ntuples,
-                                                       std::unique_ptr<RNTupleModel> model)
-   : fNTuples(ntuples)
+ROOT::Experimental::RNTupleChainProcessor::RNTupleChainProcessor(const std::vector<RNTupleSourceSpec> &ntuples,
+                                                                 std::unique_ptr<RNTupleModel> model)
+   : RNTupleProcessor(ntuples)
 {
    if (fNTuples.empty())
       throw RException(R__FAIL("at least one RNTuple must be provided"));
@@ -86,4 +62,58 @@ ROOT::Experimental::RNTupleProcessor::RNTupleProcessor(const std::vector<RNTuple
    }
 
    ConnectFields();
+}
+
+ROOT::Experimental::NTupleSize_t
+ROOT::Experimental::RNTupleChainProcessor::ConnectNTuple(const RNTupleSourceSpec &ntuple)
+{
+   for (auto &fieldContext : fFieldContexts) {
+      fieldContext.ResetConcreteField();
+   }
+   fPageSource = Internal::RPageSource::Create(ntuple.fName, ntuple.fLocation);
+   fPageSource->Attach();
+   ConnectFields();
+   return fPageSource->GetNEntries();
+}
+
+void ROOT::Experimental::RNTupleChainProcessor::ConnectFields()
+{
+   auto desc = fPageSource->GetSharedDescriptorGuard();
+
+   for (auto &fieldContext : fFieldContexts) {
+      auto fieldId = desc->FindFieldId(fieldContext.GetProtoField().GetFieldName());
+      if (fieldId == kInvalidDescriptorId) {
+         throw RException(
+            R__FAIL("field \"" + fieldContext.GetProtoField().GetFieldName() + "\" not found in current RNTuple"));
+      }
+
+      fieldContext.SetConcreteField();
+      fieldContext.fConcreteField->SetOnDiskId(desc->FindFieldId(fieldContext.GetProtoField().GetFieldName()));
+      Internal::CallConnectPageSourceOnField(*fieldContext.fConcreteField, *fPageSource);
+
+      auto valuePtr = fEntry->GetPtr<void>(fieldContext.fToken);
+      auto value = fieldContext.fConcreteField->CreateValue();
+      value.Bind(valuePtr);
+      fEntry->UpdateValue(fieldContext.fToken, value);
+   }
+}
+
+ROOT::Experimental::NTupleSize_t ROOT::Experimental::RNTupleChainProcessor::Advance()
+{
+   ++fNEntriesProcessed;
+
+   if (++fLocalEntryNumber >= fPageSource->GetNEntries()) {
+      do {
+         if (++fCurrentNTupleNumber >= fNTuples.size()) {
+            return kInvalidNTupleIndex;
+         }
+         // Skip over empty ntuples we might encounter.
+      } while (ConnectNTuple(fNTuples.at(fCurrentNTupleNumber)) == 0);
+
+      fLocalEntryNumber = 0;
+   }
+
+   fEntry->Read(fLocalEntryNumber);
+
+   return fNEntriesProcessed;
 }
