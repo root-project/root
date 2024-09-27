@@ -15,7 +15,9 @@
 # them through rootcling_impl.
 
 # This directory contains files that include llvm, which can give warnings.
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error")
+if(NOT MSVC)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error")
+endif()
 
 ROOT_OBJECT_LIBRARY(Dictgen
   BaseSelectionRule.cxx
