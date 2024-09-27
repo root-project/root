@@ -91,7 +91,7 @@ ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplD
             throw RException(R__FAIL("unsupported untyped collection for field \"" + GetFieldName() + "\""));
          }
          auto itemField = ntplDesc.GetFieldDescriptor(fLinkIds[0]).CreateField(ntplDesc);
-         auto collectionField = std::make_unique<RSequenceCollectionField>(GetFieldName(), std::move(itemField));
+         auto collectionField = RVectorField::CreateUntyped(GetFieldName(), std::move(itemField));
          collectionField->SetOnDiskId(fFieldId);
          return collectionField;
       }

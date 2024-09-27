@@ -397,7 +397,7 @@ void ROOT::Experimental::RPrintValueVisitor::VisitProxiedCollectionField(const R
    PrintCollection(field);
 }
 
-void ROOT::Experimental::RPrintValueVisitor::VisitSequenceCollectionField(const RSequenceCollectionField &field)
+void ROOT::Experimental::RPrintValueVisitor::VisitVectorField(const RVectorField &field)
 {
    PrintCollection(field);
 }
