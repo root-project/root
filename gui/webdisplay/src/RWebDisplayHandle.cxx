@@ -1059,7 +1059,7 @@ bool RWebDisplayHandle::ProduceImages(const std::vector<std::string> &fnames, co
          return false;
       }
       use_browser_draw = true;
-      jsonkind = "1111"; // special mark in canv_batch.htm
+      jsonkind = "2222"; // special mark in canv_batch.htm
    } else {
       draw_kinds = fmts;
       jsonkind = TBufferJSON::ToJSON(&draw_kinds, TBufferJSON::kNoSpaces);
@@ -1180,7 +1180,7 @@ try_again:
       R__LOG_DEBUG(0, WebGUILog()) << "Using " << html_name << " content_len " << filecont.length() << " to produce batch images " << fdebug;
    }
 
-   TString wait_file_name;
+   TString wait_file_name, tgtfilename;
 
    args.SetStandalone(true);
    args.SetHeadless(true);
@@ -1189,7 +1189,7 @@ try_again:
 
    if (use_browser_draw) {
 
-      TString tgtfilename = fnames[0].c_str();
+      tgtfilename = fnames[0].c_str();
       if (!gSystem->IsAbsoluteFileName(tgtfilename.Data()))
          gSystem->PrependPathName(gSystem->WorkingDirectory(), tgtfilename);
 
@@ -1197,8 +1197,11 @@ try_again:
 
       if (fmts[0] == "s.pdf")
          args.SetExtraArgs("--print-to-pdf-no-header --print-to-pdf="s + gSystem->UnixPathName(tgtfilename.Data()));
-      else
-         args.SetExtraArgs("--screenshot"s + (isFirefox ? " " : "=") + gSystem->UnixPathName(tgtfilename.Data()));
+      else if (isFirefox) {
+         args.SetExtraArgs("--screenshot"); // firefox does not let specify output image file
+         wait_file_name = "screenshot.png";
+      } else
+         args.SetExtraArgs("--screenshot="s + gSystem->UnixPathName(tgtfilename.Data()));
 
       // remove target image file - we use it as detection when chrome is ready
       gSystem->Unlink(tgtfilename.Data());
@@ -1240,8 +1243,11 @@ try_again:
    if (use_browser_draw) {
       if (fmts[0] == "s.pdf")
          ::Info("ProduceImages", "PDF file %s with %d pages has been created", fnames[0].c_str(), (int) jsons.size());
-      else
+      else {
+         if (isFirefox)
+            gSystem->Rename("screenshot.png", fnames[0].c_str());
          ::Info("ProduceImages", "PNG file %s with %d pages has been created", fnames[0].c_str(), (int) jsons.size());
+      }
    } else {
       auto dumpcont = handle->GetContent();
 
