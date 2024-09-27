@@ -42,7 +42,8 @@
       dom.style.padding = '0';
       dom.style.width = globalThis.main_widths[i] + 'px';
       dom.style.height = globalThis.main_heights[i] + 'px';
-      if (i > 0) dom.style['page-break-before'] = 'always';
+      if (i > 0)
+         dom.style['page-break-before'] = (globalThis.main_kinds === 1111) ? 'avoid' : 'always';
       dom.style['page-break-inside'] = 'avoid';
       document.body.append(dom);
       doms.push(dom);
@@ -60,7 +61,7 @@
    // complete drawings
    Promise.all(promises).then(arr => {
       // as result, got array of painters
-      if (globalThis.main_kinds == 1111)
+      if ((globalThis.main_kinds == 1111) || (globalThis.main_kinds == 2222))
          return complete();
 
       let promises2 = [];
