@@ -1349,7 +1349,7 @@ class RPadPainter extends RObjectPainter {
 
    /** @summary Produce image for the pad
      * @return {Promise} with created image */
-   async produceImage(full_canvas, file_format) {
+   async produceImage(full_canvas, file_format, args) {
       const use_frame = (full_canvas === 'frame'),
             elem = use_frame ? this.getFrameSvg(this.this_pad_name) : (full_canvas ? this.getCanvSvg() : this.svg_this_pad()),
             painter = (full_canvas && !use_frame) ? this.getCanvPainter() : this,
@@ -1435,7 +1435,7 @@ class RPadPainter extends RObjectPainter {
          ? { node: elem.node(), width, height, reset_tranform: use_frame }
          : compressSVG(`<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">${elem.node().innerHTML}</svg>`);
 
-      return svgToImage(arg, file_format).then(res => {
+      return svgToImage(arg, file_format, args).then(res => {
          for (let k = 0; k < items.length; ++k) {
             const item = items[k];
 

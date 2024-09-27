@@ -4,7 +4,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '20/09/2024',
+version_date = '27/09/2024',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -235,6 +235,8 @@ settings = {
    CanAdjustFrame: false,
    /** @summary calculation of text size consumes time and can be skipped to improve performance (but with side effects on text adjustments) */
    ApproxTextSize: false,
+   /** @summary Load symbol.ttf font to display greek labels. By default font file not loaded and unicode is used */
+   LoadSymbolTtf: false,
    /** @summary Histogram drawing optimization: 0 - disabled, 1 - only for large (>5000 1d bins, >50 2d bins) histograms, 2 - always */
    OptimizeDraw: 1,
    /** @summary Automatically create stats box, default on */
@@ -266,7 +268,7 @@ settings = {
    YValuesFormat: undefined,
    /** @summary custom format for all Z values, when not specified {@link gStyle.fStatFormat} is used */
    ZValuesFormat: undefined,
-   /** @summary Let detect and solve problem when browser returns wrong content-length parameter
+   /** @summary Let detect and solve problem when server returns wrong Content-Length header
      * @desc See [jsroot#189]{@link https://github.com/root-project/jsroot/issues/189} for more info
      * Can be enabled by adding 'wrong_http_response' parameter to URL when using JSROOT UI
      * @default false */

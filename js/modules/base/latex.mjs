@@ -1,6 +1,6 @@
 import { loadScript, settings, isNodeJs, isStr, source_dir, browser } from '../core.mjs';
 import { getElementRect, _loadJSDOM, makeTranslate } from './BasePainter.mjs';
-import { FontHandler } from './FontHandler.mjs';
+import { FontHandler, kSymbol, kWingdings, kTimes } from './FontHandler.mjs';
 
 
 const symbols_map = {
@@ -318,6 +318,11 @@ function remapSymbolTtfCode(code) {
          }
          if (++cnt > 54 + 82) break;
       }
+      for (let k = 0; k < symbolsMap.length; ++k) {
+         const code = symbolsMap[k];
+         if (code)
+            symbolsPdfMap[code] = k + 33;
+      }
    }
    return symbolsPdfMap[code] ?? code;
 }
@@ -327,6 +332,18 @@ function remapSymbolTtfCode(code) {
  * @desc Used in PDF generation where greek symbols are not available
  * @private */
 function replaceSymbolsInTextNode(node) {
+   if (node.$text && node.$font) {
+      node.$originalHTML = node.innerHTML;
+      node.$originalFont = node.getAttribute('font-family');
+
+      node.innerHTML = node.$text;
+      if (settings.LoadSymbolTtf)
+         node.setAttribute('font-family', node.$font.isSymbol);
+      else
+         node.setAttribute('font-family', (node.$font.isSymbol === kWingdings) ? 'zapfdingbats' : 'symbol');
+      return node.$font.isSymbol;
+   }
+
    if (node.childNodes.length !== 1)
       return false;
    const txt = node.textContent;
@@ -337,7 +354,7 @@ function replaceSymbolsInTextNode(node) {
       const code = txt.charCodeAt(i),
             newcode = remapSymbolTtfCode(code);
       if (code !== newcode) {
-         new_html += txt.slice(lasti+1, i) + '<tspan font-family="symbol" font-style="normal" font-weight="normal">'+String.fromCharCode(newcode)+'</tspan>';
+         new_html += txt.slice(lasti+1, i) + `<tspan font-family="${settings.LoadSymbolTtf ? kSymbol : 'symbol'}" font-style="normal" font-weight="normal">${String.fromCharCode(newcode)} </tspan>`;
          lasti = i;
       }
    }
@@ -349,12 +366,16 @@ function replaceSymbolsInTextNode(node) {
       new_html += txt.slice(lasti+1, txt.length);
 
    node.$originalHTML = node.innerHTML;
+   node.$originalFont = node.getAttribute('font-family');
    node.innerHTML = new_html;
-   return true;
+   return kSymbol;
 }
 
-function replaceSymbols(s, kind) {
-   const m = (kind === 'Wingdings') ? wingdingsMap : symbolsMap;
+
+/** @summary Replace codes from symbols.ttf into normal font - when symbols.ttf cannot be used
+  * @private */
+function replaceSymbols(s, name) {
+   const m = name === kWingdings ? wingdingsMap : symbolsMap;
    let res = '';
    for (let k = 0; k < s.length; ++k) {
       const code = s.charCodeAt(k),
@@ -370,9 +391,11 @@ function producePlainText(painter, txt_node, arg) {
    arg.plain = true;
    if (arg.simple_latex)
       arg.text = translateLaTeX(arg.text); // replace latex symbols
-   if (arg.font && arg.font.isSymbol)
+   if (arg.font?.isSymbol) {
       txt_node.text(replaceSymbols(arg.text, arg.font.isSymbol));
-   else
+      txt_node.property('$text', arg.text);
+      txt_node.property('$font', arg.font)
+   } else
       txt_node.text(arg.text);
 }
 
@@ -557,9 +580,11 @@ function parseLatex(node, arg, label, curr) {
             if (curr.fisze !== curr.font.size)
                elem.attr('font-size', Math.round(curr.fsize));
 
-            if (curr.font && curr.font.isSymbol)
+            if (curr.font?.isSymbol) {
                elem.text(replaceSymbols(s, curr.font.isSymbol));
-            else
+               elem.property('$text', s);
+               elem.property('$font', curr.font)
+            } else
                elem.text(s);
 
             const rect = !isNodeJs() && !settings.ApproxTextSize && !arg.fast
@@ -901,6 +926,12 @@ function parseLatex(node, arg, label, curr) {
             subpos.color = curr.painter.getColor(foundarg);
          else if (found.name === '#font[') {
             subpos.font = new FontHandler(foundarg);
+            // here symbols embedding not works, use replacement
+            if ((subpos.font.name === kSymbol) && !subpos.font.isSymbol) {
+               subpos.font.isSymbol = kSymbol;
+               subpos.font.name = kTimes;
+            }
+            subpos.font.setUseFullStyle(true); // while embedding - need to enforce full style
             subpos.ufont = true; // mark that custom font is applied
          } else
             subpos.fsize *= foundarg;
