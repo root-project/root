@@ -67,8 +67,24 @@
 
       for(let i = 0; i < arr.length; ++i) {
          let painter = arr[i],
-             pr2 = painter.produceImage(true, globalThis.main_kinds[i]);
-         promises2.push(pr2);
+             kind = globalThis.main_kinds[i];
+         if ((kind === 'pdf') && (i < arr.length - 1) && !globalThis.main_kinds[i+1]) {
+            // this is handling of multi-pdf
+
+            let args = { as_doc: true }, cnt = i;
+            function appendPage() {
+               cnt++;
+               if (arr[cnt] && !globalThis.main_kinds[cnt])
+                  return arr[cnt].produceImage(true, 'pdf', args).then(appendPage);
+               return args.doc?.output('dataurlstring');
+            }
+
+            promises2.push(painter.produceImage(true, 'pdf', args).then(appendPage));
+            // skip all other pages which will be included into the multiPDF
+            while (arr[i+1] && !globalThis.main_kinds[i+1]) i++;
+         } else {
+            promises2.push(painter.produceImage(true, kind));
+         }
       }
 
       return Promise.all(promises2).then(arr2 => {
