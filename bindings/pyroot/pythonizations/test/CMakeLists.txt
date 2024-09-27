@@ -192,5 +192,8 @@ endif()
 # TComplex pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_tcomplex tcomplex_operators.py)
 
+# rbatchgenerator tests
+ROOT_ADD_PYUNITTEST(batchgen rbatchgenerator_completeness.py PYTHON_DEPS numpy)
+
 # Tests with memory usage
 ROOT_ADD_PYUNITTEST(pyroot_memory memory.py)
