@@ -901,6 +901,9 @@ bool RWebDisplayHandle::CanProduceImages(const std::string &browser)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Detect image format
+/// There is special handling of ".screenshot.pdf" and ".screenshot.png" extensions
+/// Creation of such files relies on headless browser functionality and fully supported only by Chrome browser
+
 std::string RWebDisplayHandle::GetImageFormat(const std::string &fname)
 {
    std::string _fname = fname;
@@ -909,14 +912,16 @@ std::string RWebDisplayHandle::GetImageFormat(const std::string &fname)
       return (_fname.length() > suffix.length()) ? (0 == _fname.compare(_fname.length() - suffix.length(), suffix.length(), suffix)) : false;
    };
 
+   if (EndsWith(".screenshot.pdf"))
+      return "s.pdf"s;
    if (EndsWith(".pdf"))
       return "pdf"s;
    if (EndsWith(".json"))
       return "json"s;
    if (EndsWith(".svg"))
       return "svg"s;
-   if (EndsWith("shot.png"))
-      return "shot.png"s;
+   if (EndsWith(".screenshot.png"))
+      return "s.png"s;
    if (EndsWith(".png"))
       return "png"s;
    if (EndsWith(".jpg") || EndsWith(".jpeg"))
@@ -947,7 +952,7 @@ bool RWebDisplayHandle::ProduceImages(const std::string &fname, const std::vecto
 
    std::vector<std::string> fnames;
 
-   if (fmt == "pdf") {
+   if (fmt == "s.pdf") {
       fnames.emplace_back(fname);
    } else {
       std::string farg = fname;
@@ -1017,10 +1022,12 @@ bool RWebDisplayHandle::ProduceImages(const std::string &fmt, const std::vector<
 
    std::string draw_kind;
 
-   if (fmt == "pdf")
+   if (fmt == "s.pdf")
       draw_kind = "draw"; // not a JSROOT drawing but Chrome capability to create PDF out of HTML page is used
-   else if ((fmt == "shot.png") && (jsons.size() == 1))
+   else if (fmt == "s.png")
       draw_kind = isChromeBased ? "draw" : "png"; // using screenshot
+   else if (fmt == "pdf")
+      draw_kind = "pdf";
    else if (fmt == "svg")
       draw_kind = "svg";
    else if (fmt == "png")
@@ -1082,7 +1089,7 @@ bool RWebDisplayHandle::ProduceImages(const std::string &fmt, const std::vector<
    TString dump_name;
    if (draw_kind == "draw") {
       if (!isChromeBased) {
-         R__LOG_ERROR(WebGUILog()) << "Creation of PDF files supported only by Chrome-based browser";
+         R__LOG_ERROR(WebGUILog()) << "Direct creation of PDF files supported only by Chrome-based browser";
          return false;
       }
    } else if (isChromeBased || isFirefox) {
@@ -1167,7 +1174,7 @@ try_again:
 
       wait_file_name = tgtfilename;
 
-      if (fmt == "pdf")
+      if (fmt == "s.pdf")
          args.SetExtraArgs("--print-to-pdf-no-header --print-to-pdf="s + gSystem->UnixPathName(tgtfilename.Data()));
       else
          args.SetExtraArgs("--screenshot="s + gSystem->UnixPathName(tgtfilename.Data()));
@@ -1269,7 +1276,7 @@ try_again:
             }
          }
       }
-   } else if (fmt == "pdf") {
+   } else if (fmt == "s.pdf") {
       ::Info("ProduceImages", "PDF file %s with %d pages has been created", fnames[0].c_str(), (int) jsons.size());
    }
 

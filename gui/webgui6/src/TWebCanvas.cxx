@@ -2488,7 +2488,7 @@ bool TWebCanvas::ProduceImage(TPad *pad, const char *fileName, Int_t width, Int_
       }
    }
 
-   if (!gBatchImageMode || fmt == "pdf" || fmt == "json" || fmt == "shot.png")
+   if (!gBatchImageMode || fmt == "s.pdf" || fmt == "json" || fmt == "s.png")
       return ROOT::RWebDisplayHandle::ProduceImage(fileName, json.Data(), width, height);
 
    if (!gBatchFormat.empty() && (gBatchFormat != fmt))
@@ -2520,9 +2520,6 @@ bool TWebCanvas::ProduceImages(std::vector<TPad *> pads, const char *filename, I
    std::vector<std::string> jsons;
    std::vector<Int_t> widths, heights;
 
-   bool isMultiPdf = (ROOT::RWebDisplayHandle::GetImageFormat(filename) == "pdf") && strstr(filename, "%");
-   bool is_multipdf_ok = true;
-
    for (unsigned n = 0; n < pads.size(); ++n) {
       auto pad = pads[n];
 
@@ -2542,19 +2539,10 @@ bool TWebCanvas::ProduceImages(std::vector<TPad *> pads, const char *filename, I
          }
       }
 
-      if (isMultiPdf) {
-         TString pdfname = TString::Format(filename, (int)n);
-         if (!ROOT::RWebDisplayHandle::ProduceImage(pdfname.Data(), json.Data(), w, h))
-            is_multipdf_ok = false;
-      } else {
-         jsons.emplace_back(json.Data());
-         widths.emplace_back(w);
-         heights.emplace_back(h);
-      }
+      jsons.emplace_back(json.Data());
+      widths.emplace_back(w);
+      heights.emplace_back(h);
    }
-
-   if (isMultiPdf)
-      return is_multipdf_ok;
 
    return ROOT::RWebDisplayHandle::ProduceImages(filename, jsons, widths, heights);
 }
