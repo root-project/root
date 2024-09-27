@@ -16,7 +16,7 @@
 </body>
 
 <script id="data">
-   globalThis.main_kind = "$draw_kind";
+   globalThis.main_kinds = $draw_kind;
    globalThis.main_widths = $draw_widths;
    globalThis.main_heights = $draw_heights;
    globalThis.main_objects = $draw_objects;
@@ -60,14 +60,14 @@
    // complete drawings
    Promise.all(promises).then(arr => {
       // as result, got array of painters
-      if (globalThis.main_kind == 'draw')
+      if (globalThis.main_kinds == 1111)
          return complete();
 
       let promises2 = [];
 
       for(let i = 0; i < arr.length; ++i) {
          let painter = arr[i],
-             pr2 = painter.produceImage(true, globalThis.main_kind);
+             pr2 = painter.produceImage(true, globalThis.main_kinds[i]);
          promises2.push(pr2);
       }
 
@@ -77,7 +77,7 @@
          for(let i = 0; i < arr2.length; ++i) {
             let res = arr2[i], elem = doms[i];
             elem.removeAttribute('style');
-            if (globalThis.main_kind == 'svg') {
+            if (globalThis.main_kinds[i] == 'svg') {
                elem.innerHTML = res;
             } else {
                elem.innerHTML = '';

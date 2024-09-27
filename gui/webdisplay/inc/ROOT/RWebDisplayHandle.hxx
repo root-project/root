@@ -118,7 +118,9 @@ public:
 
    static bool ProduceImages(const std::string &fname, const std::vector<std::string> &jsons, const std::vector<int> &widths, const std::vector<int> &heights, const char *batch_file = nullptr);
 
-   static bool ProduceImages(const std::string &fmt, const std::vector<std::string> &fnames, const std::vector<std::string> &jsons, const std::vector<int> &widths, const std::vector<int> &heights, const char *batch_file = nullptr);
+   static std::vector<std::string> ProduceImagesNames(const std::string &fname, unsigned nfiles = 1);
+
+   static bool ProduceImages(const std::vector<std::string> &fnames, const std::vector<std::string> &jsons, const std::vector<int> &widths, const std::vector<int> &heights, const char *batch_file = nullptr);
 
 };
 

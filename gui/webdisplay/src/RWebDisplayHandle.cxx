@@ -942,57 +942,79 @@ bool RWebDisplayHandle::ProduceImage(const std::string &fname, const std::string
    return ProduceImages(fname, {json}, {width}, {height}, batch_file);
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// Produce image file(s) using JSON data as source
-/// Invokes JSROOT drawing functionality in headless browser - Google Chrome or Mozilla Firefox
 
-bool RWebDisplayHandle::ProduceImages(const std::string &fname, const std::vector<std::string> &jsons, const std::vector<int> &widths, const std::vector<int> &heights, const char *batch_file)
+///////////////////////////////////////////////////////////////////////////////////////////////////
+/// Produce vector of file names for specified file pattern
+/// Depending from supported file forma
+
+std::vector<std::string> RWebDisplayHandle::ProduceImagesNames(const std::string &fname, unsigned nfiles)
 {
    auto fmt = GetImageFormat(fname);
 
    std::vector<std::string> fnames;
 
-   if (fmt == "s.pdf") {
+   if ((fmt == "s.pdf") || (fmt == "s.png")) {
       fnames.emplace_back(fname);
    } else {
       std::string farg = fname;
 
       bool has_quialifier = farg.find("%") != std::string::npos;
 
-      if (!has_quialifier && (jsons.size() > 1)) {
+      if (!has_quialifier && (nfiles > 1) && (fmt != "pdf")) {
          farg.insert(farg.rfind("."), "%d");
          has_quialifier = true;
       }
 
-      for (unsigned n = 0; n < jsons.size(); n++) {
-         if (has_quialifier) {
+      for (unsigned n = 0; n < nfiles; n++) {
+         if(has_quialifier) {
             auto expand_name = TString::Format(farg.c_str(), (int) n);
             fnames.emplace_back(expand_name.Data());
-         } else {
-            fnames.emplace_back(farg);
-         }
+         } else if (n > 0)
+            fnames.emplace_back(""); // empty name is multiPdf
+         else
+            fnames.emplace_back(fname);
       }
    }
 
-   return ProduceImages(fmt, fnames, jsons, widths, heights, batch_file);
+   return fnames;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+/// Produce image file(s) using JSON data as source
+/// Invokes JSROOT drawing functionality in headless browser - Google Chrome or Mozilla Firefox
+
+bool RWebDisplayHandle::ProduceImages(const std::string &fname, const std::vector<std::string> &jsons, const std::vector<int> &widths, const std::vector<int> &heights, const char *batch_file)
+{
+    return ProduceImages(ProduceImagesNames(fname, jsons.size()), jsons, widths, heights, batch_file);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Produce image file(s) using JSON data as source
 /// Invokes JSROOT drawing functionality in headless browser - Google Chrome or Mozilla Firefox
 
-bool RWebDisplayHandle::ProduceImages(const std::string &fmt, const std::vector<std::string> &fnames, const std::vector<std::string> &jsons, const std::vector<int> &widths, const std::vector<int> &heights, const char *batch_file)
+bool RWebDisplayHandle::ProduceImages(const std::vector<std::string> &fnames, const std::vector<std::string> &jsons, const std::vector<int> &widths, const std::vector<int> &heights, const char *batch_file)
 {
-   if (jsons.empty() || fnames.empty())
+   if (fnames.empty() || jsons.empty())
       return false;
 
-   if (fmt == "json") {
-      for (unsigned n = 0; n < jsons.size(); ++n) {
+   std::vector<std::string> fmts;
+   for (auto& fname : fnames)
+      fmts.emplace_back(GetImageFormat(fname));
+
+   bool is_any_image = false;
+
+   for (unsigned n = 0; (n < fmts.size()) && (n < jsons.size()); n++) {
+      if (fmts[n] == "json") {
          std::ofstream ofs(fnames[n]);
          ofs << jsons[n];
-      }
-      return true;
+         fmts[n].clear();
+      } else if (!fmts[n].empty())
+         is_any_image = true;
    }
+
+   if (!is_any_image)
+      return true;
 
    std::string fdebug;
    if (fnames.size() == 1)
@@ -1020,24 +1042,28 @@ bool RWebDisplayHandle::ProduceImages(const std::string &fmt, const std::vector<
    auto isChromeBased = (args.GetBrowserKind() == RWebDisplayArgs::kChrome) || (args.GetBrowserKind() == RWebDisplayArgs::kEdge),
         isFirefox = args.GetBrowserKind() == RWebDisplayArgs::kFirefox;
 
-   std::string draw_kind;
+   std::vector<std::string> draw_kinds;
+   bool use_browser_draw = false;
+   TString jsonkind;
 
-   if (fmt == "s.pdf")
-      draw_kind = "draw"; // not a JSROOT drawing but Chrome capability to create PDF out of HTML page is used
-   else if (fmt == "s.png")
-      draw_kind = isChromeBased ? "draw" : "png"; // using screenshot
-   else if (fmt == "pdf")
-      draw_kind = "pdf";
-   else if (fmt == "svg")
-      draw_kind = "svg";
-   else if (fmt == "png")
-      draw_kind = "png";
-   else if (fmt == "jpeg")
-      draw_kind = "jpeg";
-   else if (fmt == "webp")
-      draw_kind = "webp";
-   else
-      return false;
+   if (fmts[0] == "s.png") {
+      if (!isChromeBased && !isFirefox) {
+         R__LOG_ERROR(WebGUILog()) << "Direct png image creation supported only by Chrome and Firefox browsers";
+         return false;
+      }
+      use_browser_draw = true;
+      jsonkind = "1111"; // special mark in canv_batch.htm
+   } else if (fmts[0] == "s.pdf") {
+      if (!isChromeBased) {
+         R__LOG_ERROR(WebGUILog()) << "Direct creation of PDF files supported only by Chrome-based browser";
+         return false;
+      }
+      use_browser_draw = true;
+      jsonkind = "1111"; // special mark in canv_batch.htm
+   } else {
+      draw_kinds = fmts;
+      jsonkind = TBufferJSON::ToJSON(&draw_kinds, TBufferJSON::kNoSpaces);
+   }
 
    if (!batch_file || !*batch_file)
       batch_file = "/js/files/canv_batch.htm";
@@ -1081,18 +1107,13 @@ bool RWebDisplayHandle::ProduceImages(const std::string &fmt, const std::vector<
    filecont = std::regex_replace(filecont, std::regex("\\$page_width"), std::to_string(max_width + 2*page_margin) + "px");
    filecont = std::regex_replace(filecont, std::regex("\\$page_height"), std::to_string(max_height + 2*page_margin) + "px");
 
-   filecont = std::regex_replace(filecont, std::regex("\\$draw_kind"), draw_kind);
+   filecont = std::regex_replace(filecont, std::regex("\\$draw_kind"), jsonkind.Data());
    filecont = std::regex_replace(filecont, std::regex("\\$draw_widths"), jsonw.Data());
    filecont = std::regex_replace(filecont, std::regex("\\$draw_heights"), jsonh.Data());
    filecont = std::regex_replace(filecont, std::regex("\\$draw_objects"), mains);
 
    TString dump_name;
-   if (draw_kind == "draw") {
-      if (!isChromeBased) {
-         R__LOG_ERROR(WebGUILog()) << "Direct creation of PDF files supported only by Chrome-based browser";
-         return false;
-      }
-   } else if (isChromeBased || isFirefox) {
+   if (!use_browser_draw && (isChromeBased || isFirefox)) {
       dump_name = "canvasdump";
       FILE *df = gSystem->TempFileName(dump_name);
       if (!df) {
@@ -1166,7 +1187,7 @@ try_again:
    args.SetBatchMode(true);
    args.SetSize(widths[0], heights[0]);
 
-   if (draw_kind == "draw") {
+   if (use_browser_draw) {
 
       TString tgtfilename = fnames[0].c_str();
       if (!gSystem->IsAbsoluteFileName(tgtfilename.Data()))
@@ -1174,10 +1195,10 @@ try_again:
 
       wait_file_name = tgtfilename;
 
-      if (fmt == "s.pdf")
+      if (fmts[0] == "s.pdf")
          args.SetExtraArgs("--print-to-pdf-no-header --print-to-pdf="s + gSystem->UnixPathName(tgtfilename.Data()));
       else
-         args.SetExtraArgs("--screenshot="s + gSystem->UnixPathName(tgtfilename.Data()));
+         args.SetExtraArgs("--screenshot"s + (isFirefox ? " " : "=") + gSystem->UnixPathName(tgtfilename.Data()));
 
       // remove target image file - we use it as detection when chrome is ready
       gSystem->Unlink(tgtfilename.Data());
@@ -1216,8 +1237,12 @@ try_again:
       return false;
    }
 
-   if (draw_kind != "draw") {
-
+   if (use_browser_draw) {
+      if (fmts[0] == "s.pdf")
+         ::Info("ProduceImages", "PDF file %s with %d pages has been created", fnames[0].c_str(), (int) jsons.size());
+      else
+         ::Info("ProduceImages", "PNG file %s with %d pages has been created", fnames[0].c_str(), (int) jsons.size());
+   } else {
       auto dumpcont = handle->GetContent();
 
       if ((dumpcont.length() > 20) && (dumpcont.length() < 60) && !chrome_tmp_workaround && isChromeBased) {
@@ -1232,43 +1257,37 @@ try_again:
          return false;
       }
 
-      if (draw_kind == "svg") {
+      std::string::size_type p = 0;
 
-         std::string::size_type p = 0;
-
-         for (auto & fn : fnames) {
+      for (unsigned n = 0; n < fmts.size(); n++) {
+         if (fmts[n].empty())
+            continue;
+         if (fmts[n] == "svg") {
             auto p1 = dumpcont.find("<svg", p);
             auto p2 = dumpcont.find("</svg></div>", p1 + 4);
             p = p2 + 6;
-            std::ofstream ofs(fn);
+            std::ofstream ofs(fnames[n]);
             if ((p1 != std::string::npos) && (p2 != std::string::npos) && (p1 < p2)) {
                ofs << dumpcont.substr(p1, p2-p1+6);
-               ::Info("ProduceImages", "SVG file %s size %d bytes has been created", fn.c_str(), (int) (p2-p1+6));
+               ::Info("ProduceImages", "SVG file %s size %d bytes has been created", fnames[n].c_str(), (int) (p2-p1+6));
             } else {
                R__LOG_ERROR(WebGUILog()) << "Fail to extract SVG from HTML dump " << dump_name;
                ofs << "Failure!!!\n" << dumpcont;
                return false;
             }
-         }
-      } else {
-
-         std::string::size_type p = 0;
-
-         for (auto &fn : fnames) {
-
+         } else {
             auto p1 = dumpcont.find(";base64,", p);
             auto p2 = dumpcont.find("></div>", p1 + 4);
             p = p2 + 5;
 
             if ((p1 != std::string::npos) && (p2 != std::string::npos) && (p1 < p2)) {
-
                auto base64 = dumpcont.substr(p1+8, p2-p1-9);
                auto binary = TBase64::Decode(base64.c_str());
 
-               std::ofstream ofs(fn, std::ios::binary);
+               std::ofstream ofs(fnames[n], std::ios::binary);
                ofs.write(binary.Data(), binary.Length());
 
-               ::Info("ProduceImages", "Image file %s size %d bytes has been created", fn.c_str(), (int) binary.Length());
+               ::Info("ProduceImages", "Image file %s size %d bytes has been created", fnames[n].c_str(), (int) binary.Length());
             } else {
                R__LOG_ERROR(WebGUILog()) << "Fail to extract image from dump HTML code " << dump_name;
 
@@ -1276,8 +1295,6 @@ try_again:
             }
          }
       }
-   } else if (fmt == "s.pdf") {
-      ::Info("ProduceImages", "PDF file %s with %d pages has been created", fnames[0].c_str(), (int) jsons.size());
    }
 
    R__LOG_DEBUG(0, WebGUILog()) << "Create " << (fnames.size() > 1 ? "files " : "file ") << fdebug;

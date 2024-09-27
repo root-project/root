@@ -120,7 +120,6 @@ protected:
    static std::vector<std::string> gCustomClasses;  ///<! list of custom classes, which can be delivered as is to client
 
    static UInt_t gBatchImageMode;           ///<! configured batch size
-   static std::string gBatchFormat;    ///<! images format for batch job
    static std::vector<std::string> gBatchFiles; ///<! file names for batch job
    static std::vector<std::string> gBatchJsons; ///<! converted jsons batch job
    static std::vector<int> gBatchWidths;   ///<! batch job widths
@@ -181,7 +180,7 @@ protected:
 
    static std::string ProcessCustomScripts(bool batch);
 
-   static void FlushBatchImages();
+   static bool FlushBatchImages();
 
 public:
    TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height, Bool_t readonly = kTRUE);
