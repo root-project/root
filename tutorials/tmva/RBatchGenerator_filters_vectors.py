@@ -15,17 +15,20 @@ file_name = (
 chunk_size = 50  # Defines the size of the chunks
 batch_size = 5  # Defines the size of the returned batches
 
-# Define filters as strings
-filters = ["f1 > 30", "f2 < 70", "f3 == true"]
+rdataframe = ROOT.RDataFrame(tree_name, file_name)
+
+# Define filters, filters must be named
+filteredrdf = rdataframe.Filter("f1 > 30", "first_filter")\
+                .Filter("f2 < 70", "second_filter")\
+                .Filter("f3==true", "third_filter")
+
 max_vec_sizes = {"f4": 3, "f5": 2, "f6": 1}
 
 ds_train, ds_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
-    tree_name,
-    file_name,
+    filteredrdf,
     batch_size,
     chunk_size,
     validation_split=0.3,
-    filters=filters,
     max_vec_sizes=max_vec_sizes,
     shuffle=True,
 )

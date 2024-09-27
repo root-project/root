@@ -458,9 +458,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVAUtils
   TMVA/RInferenceUtils.hxx
   TMVA/RBDT.hxx
   TMVA/RSofieReader.hxx
-  TMVA/RBatchGenerator.hxx
-  TMVA/RBatchLoader.hxx
-  TMVA/RChunkLoader.hxx
+  TMVA/BatchGenerator/RBatchGenerator.hxx
+  TMVA/BatchGenerator/RBatchLoader.hxx
+  TMVA/BatchGenerator/RChunkLoader.hxx
 
   SOURCES
 

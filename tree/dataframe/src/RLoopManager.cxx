@@ -1160,6 +1160,12 @@ void RLoopManager::SetEmptyEntryRange(std::pair<ULong64_t, ULong64_t> &&newRange
    fEmptyEntryRange = std::move(newRange);
 }
 
+void RLoopManager::ChangeBeginAndEndEntries(Long64_t begin, Long64_t end)
+{
+   fBeginEntry = begin;
+   fEndEntry = end;
+}
+
 /**
  * \brief Helper function to open a file (or the first file from a glob).
  * This function is used at construction time of an RDataFrame, to check the
