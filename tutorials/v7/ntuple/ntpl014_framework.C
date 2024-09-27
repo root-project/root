@@ -13,6 +13,12 @@
 /// (for example, Outputters are agnostic of the data written, which is encapsulated in std::vector<DataProduct>), but
 /// are not meant for production usage!
 ///
+/// Also note that this tutorial uses std::thread and std::mutex directly instead of a task scheduling library such as
+/// Threading Building Blocks (TBB). For that reason, turning on ROOT's implicit multithreading (IMT) would not be very
+/// efficient with the simplified code in this tutorial because a thread blocking to acquire a std::mutex cannot "help"
+/// the other thread that is currently in the critical section by executing its tasks. If that is wanted, the framework
+/// should use synchronization methods provided by TBB directly (which goes beyond the scope of this tutorial).
+///
 /// \macro_code
 ///
 /// \date September 2024
@@ -151,7 +157,9 @@ public:
 };
 
 // A SerializingOutputter uses a sequential RNTupleWriter to append an RNTuple to a TFile and a std::mutex to
-// synchronize multiple threads.
+// synchronize multiple threads. Note that ROOT's implicit multithreading would not be very efficient with this
+// implementation because a thread blocking to acquire a std::mutex cannot "help" the other thread that is currently
+// in the critical section by executing its tasks. See also the note at the top of the file.
 class SerializingOutputter final : public Outputter {
    FileService &fFileService;
    std::unique_ptr<RNTupleWriter> fWriter;
