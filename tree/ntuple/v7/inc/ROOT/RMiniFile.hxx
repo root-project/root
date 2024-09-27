@@ -127,9 +127,9 @@ private:
       static constexpr std::size_t kBlockSize = 4 * 1024 * 1024;
 
       // fHeaderBlock and fBlock are raw pointers because we have to manually call operator new and delete.
-      unsigned char *fHeaderBlock;
+      unsigned char *fHeaderBlock = nullptr;
       std::uint64_t fBlockOffset = 0;
-      unsigned char *fBlock;
+      unsigned char *fBlock = nullptr;
 
       /// For the simplest cases, a C file stream can be used for writing
       FILE *fFile = nullptr;
@@ -149,6 +149,7 @@ private:
       RFileSimple &operator=(RFileSimple &&other) = delete;
       ~RFileSimple();
 
+      void AllocateBuffers();
       void Flush();
 
       /// Writes bytes in the open stream, either at fFilePos or at the given offset

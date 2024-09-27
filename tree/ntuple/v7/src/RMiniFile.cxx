@@ -873,7 +873,9 @@ void ROOT::Experimental::Internal::RMiniFileReader::ReadBuffer(void *buffer, siz
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ROOT::Experimental::Internal::RNTupleFileWriter::RFileSimple::RFileSimple()
+ROOT::Experimental::Internal::RNTupleFileWriter::RFileSimple::RFileSimple() = default;
+
+void ROOT::Experimental::Internal::RNTupleFileWriter::RFileSimple::AllocateBuffers()
 {
    static_assert(kHeaderBlockSize % kBlockAlign == 0, "invalid header block size");
    static_assert(kBlockSize % kBlockAlign == 0, "invalid block size");
@@ -890,8 +892,10 @@ ROOT::Experimental::Internal::RNTupleFileWriter::RFileSimple::~RFileSimple()
       fclose(fFile);
 
    std::align_val_t blockAlign{kBlockAlign};
-   ::operator delete[](fHeaderBlock, blockAlign);
-   ::operator delete[](fBlock, blockAlign);
+   if (fHeaderBlock)
+      ::operator delete[](fHeaderBlock, blockAlign);
+   if (fBlock)
+      ::operator delete[](fBlock, blockAlign);
 }
 
 namespace {
@@ -1114,6 +1118,7 @@ ROOT::Experimental::Internal::RNTupleFileWriter::Recreate(std::string_view ntupl
    auto writer = std::unique_ptr<RNTupleFileWriter>(new RNTupleFileWriter(ntupleName, options.GetMaxKeySize()));
    writer->fFileSimple.fFile = fileStream;
    writer->fFileSimple.fDirectIO = options.GetUseDirectIO();
+   writer->fFileSimple.AllocateBuffers();
    writer->fFileName = fileName;
 
    int defaultCompression = options.GetCompression();
