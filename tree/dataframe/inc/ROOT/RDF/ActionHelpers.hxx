@@ -1672,7 +1672,7 @@ public:
    SnapshotHelperMT(SnapshotHelperMT &&) = default;
    ~SnapshotHelperMT()
    {
-      if (!fTreeName.empty() /*not moved from*/ && fOptions.fLazy &&
+      if (!fTreeName.empty() /*not moved from*/ && fOptions.fLazy && !fOutputFiles.empty() &&
           std::all_of(fOutputFiles.begin(), fOutputFiles.end(), [](const auto &f) { return !f; }) /* never run */)
          Warning("Snapshot", "A lazy Snapshot action was booked but never triggered.");
    }
