@@ -1213,6 +1213,14 @@ TEST(RDFSnapshotMore, LazyNotTriggeredMT)
    ROOT::DisableImplicitMT();
 }
 
+TEST(RDFSnapshotMore, LazyTriggeredMT)
+{
+   TIMTEnabler _(4);
+   auto fname = "LazyTriggeredMT.root";
+   ROOT_EXPECT_NODIAG(*ReturnLazySnapshot(fname));
+   gSystem->Unlink(fname);
+}
+
 TEST(RDFSnapshotMore, EmptyBuffersMT)
 {
    const auto fname = "emptybuffersmt.root";
