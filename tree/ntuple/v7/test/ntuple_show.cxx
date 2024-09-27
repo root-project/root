@@ -334,7 +334,7 @@ TEST(RNTupleShow, Objects)
 TEST(RNTupleShow, Collections)
 {
    using ROOT::Experimental::RRecordField;
-   using ROOT::Experimental::RSequenceCollectionField;
+   using ROOT::Experimental::RVectorField;
 
    std::string rootFileName{"test_ntuple_show_collection.root"};
    std::string ntupleName{"Collections"};
@@ -350,7 +350,7 @@ TEST(RNTupleShow, Collections)
       leafFields.emplace_back(std::make_unique<RField<int>>("myInt"));
       leafFields.emplace_back(std::make_unique<RField<float>>("myFloat"));
       auto recordField = std::make_unique<RRecordField>("_0", leafFields);
-      auto collectionField = std::make_unique<RSequenceCollectionField>("myCollection", std::move(recordField));
+      auto collectionField = RVectorField::CreateUntyped("myCollection", std::move(recordField));
       model->AddField(std::move(collectionField));
       model->Freeze();
 
