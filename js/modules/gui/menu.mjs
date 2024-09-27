@@ -4,9 +4,8 @@ import { selectgStyle, saveSettings, readSettings, saveStyle, getColorExec, chan
 import { getColor } from '../base/colors.mjs';
 import { TAttMarkerHandler } from '../base/TAttMarkerHandler.mjs';
 import { getSvgLineStyle } from '../base/TAttLineHandler.mjs';
-import { FontHandler } from '../base/FontHandler.mjs';
+import { FontHandler, kArial } from '../base/FontHandler.mjs';
 import { kAxisLabels } from '../base/ObjectPainter.mjs';
-import { setDefaultDrawOpt } from '../draw.mjs';
 
 
 const kToFront = '__front__', sDfltName = 'root_ctx_menu', sDfltDlg = '_dialog',
@@ -438,7 +437,7 @@ class JSRootMenu {
       else
          this.addSizeMenu('size', 6, 20, 2, fontHandler.size, value => set_func({ name: 'size', value }));
 
-      this.addSelectMenu('family', ['Arial', 'Times New Roman', 'Courier New', 'Symbol'], fontHandler.name, value => set_func({ name: 'font_family', value }));
+      this.addSelectMenu('family', [kArial, 'Times New Roman', 'Courier New', 'Symbol'], fontHandler.name, value => set_func({ name: 'font_family', value }));
 
       this.addSelectMenu('style', ['normal', 'italic', 'oblique'], fontHandler.style || 'normal', res => set_func({ name: 'font_style', value: res === 'normal' ? null : res }));
 
@@ -796,7 +795,7 @@ class JSRootMenu {
       this.addchk(settings.UseStamp, 'Use stamp arg', flag => { settings.UseStamp = flag; });
       this.addSizeMenu('Max ranges', 1, 1000, [1, 10, 20, 50, 200, 1000], settings.MaxRanges, value => { settings.MaxRanges = value; }, 'Maximal number of ranges in single http request');
 
-      this.addchk(settings.HandleWrongHttpResponse, 'Handle wrong http response', flag => { settings.HandleWrongHttpResponse = flag; });
+      this.addchk(settings.HandleWrongHttpResponse, 'Handle wrong http response', flag => { settings.HandleWrongHttpResponse = flag; }, 'Let detect and solve problem when server returns wrong Content-Length header, see https://github.com/root-project/jsroot/issues/189');
       this.addchk(settings.WithCredentials, 'With credentials', flag => { settings.WithCredentials = flag; }, 'Submit http request with user credentials');
 
       this.endsub();
@@ -838,6 +837,8 @@ class JSRootMenu {
       this.endsub();
       this.addPaletteMenu(settings.Palette, pal => { settings.Palette = pal; });
       this.addchk(settings.AutoStat, 'Auto stat box', flag => { settings.AutoStat = flag; });
+      this.addchk(settings.LoadSymbolTtf, 'Load symbol.ttf', flag => { settings.LoadSymbolTtf = flag; }, 'Use symbol.ttf font file to render greek symbols, also used in PDF');
+
       this.sub('Axis');
       this.addchk(settings.StripAxisLabels, 'Strip labels', flag => { settings.StripAxisLabels = flag; }, 'Provide shorter labels like 10^0 -> 1');
       this.addchk(settings.CutAxisLabels, 'Cut labels', flag => { settings.CutAxisLabels = flag; }, 'Remove labels which may exceed graphical range');
@@ -846,7 +847,8 @@ class JSRootMenu {
       this.addSelectMenu('Latex', ['Off', 'Symbols', 'Normal', 'MathJax', 'Force MathJax'], settings.Latex, value => { settings.Latex = value; });
       this.addSelectMenu('3D rendering', ['Default', 'WebGL', 'Image'], settings.Render3D, value => { settings.Render3D = value; });
       this.addSelectMenu('WebGL embeding', ['Default', 'Overlay', 'Embed'], settings.Embed3D, value => { settings.Embed3D = value; });
-      this.add('Default options', () => this.input('List of options like TH2:lego2;TH3:glbox2', settings._dflt_drawopt || '').then(v => { settings._dflt_drawopt = v; setDefaultDrawOpt(v); }), 'Configure custom default draw options for some classes');
+      if (internals.setDefaultDrawOpt)
+         this.add('Default options', () => this.input('List of options like TH2:lego2;TH3:glbox2', settings._dflt_drawopt || '').then(v => { settings._dflt_drawopt = v; internals.setDefaultDrawOpt(v); }), 'Configure custom default draw options for some classes');
       this.endsub();
 
       this.sub('Geometry');

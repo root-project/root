@@ -26,13 +26,16 @@
 23. Let configure default draw options via context menu, they can be preserved in the local storage
 24. Let save canvas as JSON file from context menu, object as JSON from inspector
 25. Upgrade three.js r162 -> r168, use r162 only in node.js because of "gl" module
-26. Create unified svg2pdf/jspdf ES6 module, works both in browsers and node.js
-27. Internals - upgrade to eslint 9
-28. Internals - do not select pad (aka gPad) for objects drawing, always use assigned pad painter
-29. Fix - properly save zoomed ranges in drawingJSON()
-30. Fix - properly redraw TMultiGraph
-31. Fix - show empty bin in TProfile2D if it has entries #316
-32. Fix - saving embed TGeo in TCanvas into image
+26. Create unified svg2pdf/jspdf ES6 modules, integrate in jsroot builds
+27. Let create multipage PDF document - in TWebCanvas batch mode
+28. Internals - upgrade to eslint 9
+29. Internals - do not select pad (aka gPad) for objects drawing, always use assigned pad painter
+30. Fix - properly save zoomed ranges in drawingJSON()
+31. Fix - properly redraw TMultiGraph
+32. Fix - show empty bin in TProfile2D if it has entries #316
+33. Fix - saving embed TGeo in TCanvas into image
+34. Fix - unzooming on log scale was extending range forevever
+35. Fix - correct `#font[id]` handling in latex
 
 
 ## Changes in 7.7.3

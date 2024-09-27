@@ -59,11 +59,10 @@ async function drawText() {
       fact = 0.8;
    }
 
-   this.startTextDrawing(this.textatt.font, this.textatt.getSize(w, h, fact, 0.05));
-
-   this.drawText(arg);
-
-   return this.finishTextDrawing().then(() => {
+   return this.startTextDrawingAsync(this.textatt.font, this.textatt.getSize(w, h, fact, 0.05))
+              .then(() => this.drawText(arg))
+              .then(() => this.finishTextDrawing())
+              .then(() => {
       if (this.isBatchMode()) return this;
 
       this.pos_dx = this.pos_dy = 0;

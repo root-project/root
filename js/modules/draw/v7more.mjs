@@ -19,11 +19,10 @@ function drawText() {
 
    this.createG(clipping ? 'main_layer' : (onframe ? 'upper_layer' : false));
 
-   this.startTextDrawing(textFont, 'font');
-
-   this.drawText({ x: p.x, y: p.y, text: text.fText, latex: 1 });
-
-   return this.finishTextDrawing();
+   return this.startTextDrawingAsync(textFont, 'font').then(() => {
+      this.drawText({ x: p.x, y: p.y, text: text.fText, latex: 1 });
+      return this.finishTextDrawing();
+   });
 }
 
 /** @summary draw RLine object

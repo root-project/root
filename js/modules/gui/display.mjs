@@ -1244,7 +1244,7 @@ class BatchDisplay extends MDIDisplay {
       main.selectAll('svg').each(clear_element);
 
       if (internals.batch_png) {
-         return svgToImage(compressSVG(main.html()), 'png', false).then(href => {
+         return svgToImage(compressSVG(main.html()), 'png').then(href => {
             d3_select(this.frames[id]).text('png:' + href);
          });
       }
