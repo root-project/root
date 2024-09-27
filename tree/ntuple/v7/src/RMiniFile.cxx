@@ -875,15 +875,18 @@ void ROOT::Experimental::Internal::RMiniFileReader::ReadBuffer(void *buffer, siz
 
 ROOT::Experimental::Internal::RNTupleFileWriter::RFileSimple::RFileSimple() = default;
 
-void ROOT::Experimental::Internal::RNTupleFileWriter::RFileSimple::AllocateBuffers()
+void ROOT::Experimental::Internal::RNTupleFileWriter::RFileSimple::AllocateBuffers(std::size_t bufferSize)
 {
    static_assert(kHeaderBlockSize % kBlockAlign == 0, "invalid header block size");
-   static_assert(kBlockSize % kBlockAlign == 0, "invalid block size");
+   if (bufferSize % kBlockAlign != 0)
+      throw RException(R__FAIL("Buffer size not a multiple of alignment: " + std::to_string(bufferSize)));
+   fBlockSize = bufferSize;
+
    std::align_val_t blockAlign{kBlockAlign};
    fHeaderBlock = static_cast<unsigned char *>(::operator new[](kHeaderBlockSize, blockAlign));
    memset(fHeaderBlock, 0, kHeaderBlockSize);
-   fBlock = static_cast<unsigned char *>(::operator new[](kBlockSize, blockAlign));
-   memset(fBlock, 0, kBlockSize);
+   fBlock = static_cast<unsigned char *>(::operator new[](fBlockSize, blockAlign));
+   memset(fBlock, 0, fBlockSize);
 }
 
 ROOT::Experimental::Internal::RNTupleFileWriter::RFileSimple::~RFileSimple()
@@ -926,12 +929,12 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::RFileSimple::Flush()
       throw RException(R__FAIL(std::string("Seek failed: ") + strerror(errno)));
 
    std::size_t lastBlockSize = fFilePos - fBlockOffset;
-   R__ASSERT(lastBlockSize <= kBlockSize);
+   R__ASSERT(lastBlockSize <= fBlockSize);
    if (fDirectIO) {
       // Round up to a multiple of kBlockAlign.
       lastBlockSize += kBlockAlign - 1;
       lastBlockSize = (lastBlockSize / kBlockAlign) * kBlockAlign;
-      R__ASSERT(lastBlockSize <= kBlockSize);
+      R__ASSERT(lastBlockSize <= fBlockSize);
    }
    retval = fwrite(fBlock, 1, lastBlockSize, fFile);
    if (retval != lastBlockSize)
@@ -974,7 +977,7 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::RFileSimple::Write(const v
    R__ASSERT(fFilePos >= fBlockOffset);
 
    while (nbytes > 0) {
-      std::uint64_t posInBlock = fFilePos % kBlockSize;
+      std::uint64_t posInBlock = fFilePos % fBlockSize;
       std::uint64_t blockOffset = fFilePos - posInBlock;
       if (blockOffset != fBlockOffset) {
          // Write the block.
@@ -982,18 +985,18 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::RFileSimple::Write(const v
          if (retval)
             throw RException(R__FAIL(std::string("Seek failed: ") + strerror(errno)));
 
-         retval = fwrite(fBlock, 1, kBlockSize, fFile);
-         if (retval != kBlockSize)
+         retval = fwrite(fBlock, 1, fBlockSize, fFile);
+         if (retval != fBlockSize)
             throw RException(R__FAIL(std::string("write failed: ") + strerror(errno)));
 
          // Null the buffer contents for good measure.
-         memset(fBlock, 0, kBlockSize);
+         memset(fBlock, 0, fBlockSize);
       }
 
       fBlockOffset = blockOffset;
       std::size_t blockSize = nbytes;
-      if (blockSize > kBlockSize - posInBlock) {
-         blockSize = kBlockSize - posInBlock;
+      if (blockSize > fBlockSize - posInBlock) {
+         blockSize = fBlockSize - posInBlock;
       }
       memcpy(fBlock + posInBlock, buffer, blockSize);
       buffer = static_cast<const unsigned char *>(buffer) + blockSize;
@@ -1118,7 +1121,7 @@ ROOT::Experimental::Internal::RNTupleFileWriter::Recreate(std::string_view ntupl
    auto writer = std::unique_ptr<RNTupleFileWriter>(new RNTupleFileWriter(ntupleName, options.GetMaxKeySize()));
    writer->fFileSimple.fFile = fileStream;
    writer->fFileSimple.fDirectIO = options.GetUseDirectIO();
-   writer->fFileSimple.AllocateBuffers();
+   writer->fFileSimple.AllocateBuffers(options.GetWriteBufferSize());
    writer->fFileName = fileName;
 
    int defaultCompression = options.GetCompression();

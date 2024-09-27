@@ -86,6 +86,9 @@ protected:
    /// Whether to use Direct I/O for writing. Note that this introduces alignment requirements that may very between
    /// filesystems and platforms.
    bool fUseDirectIO = false;
+   /// Buffer size to use for writing to files, must be a multiple of 4096 bytes. Testing suggests that 4MiB gives best
+   /// performance (with Direct I/O) at a reasonable memory consumption.
+   std::size_t fWriteBufferSize = 4 * 1024 * 1024;
    /// Whether to use implicit multi-threading to compress pages. Only has an effect if buffered writing is turned on.
    EImplicitMT fUseImplicitMT = EImplicitMT::kDefault;
    /// If set, checksums will be calculated and written for every page.
@@ -126,6 +129,9 @@ public:
 
    bool GetUseDirectIO() const { return fUseDirectIO; }
    void SetUseDirectIO(bool val) { fUseDirectIO = val; }
+
+   std::size_t GetWriteBufferSize() const { return fWriteBufferSize; }
+   void SetWriteBufferSize(std::size_t val) { fWriteBufferSize = val; }
 
    EImplicitMT GetUseImplicitMT() const { return fUseImplicitMT; }
    void SetUseImplicitMT(EImplicitMT val) { fUseImplicitMT = val; }
