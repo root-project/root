@@ -139,7 +139,6 @@ std::string TWebCanvas::gCustomScripts = {};
 std::vector<std::string> TWebCanvas::gCustomClasses = {};
 
 UInt_t TWebCanvas::gBatchImageMode = 0;
-std::string TWebCanvas::gBatchFormat;
 std::vector<std::string> TWebCanvas::gBatchFiles;
 std::vector<std::string> TWebCanvas::gBatchJsons;
 std::vector<int> TWebCanvas::gBatchWidths;
@@ -162,16 +161,19 @@ void TWebCanvas::BatchImageMode(UInt_t n)
 //////////////////////////////////////////////////////////////////////////////////////////////////
 /// Flush batch images
 
-void TWebCanvas::FlushBatchImages()
+bool TWebCanvas::FlushBatchImages()
 {
-   if (gBatchJsons.size() > 0)
-      ROOT::RWebDisplayHandle::ProduceImages(gBatchFormat, gBatchFiles, gBatchJsons, gBatchWidths, gBatchHeights);
+   bool res = true;
 
-   gBatchFormat.clear();
+   if (gBatchJsons.size() > 0)
+      res = ROOT::RWebDisplayHandle::ProduceImages(gBatchFiles, gBatchJsons, gBatchWidths, gBatchHeights);
+
    gBatchFiles.clear();
    gBatchJsons.clear();
    gBatchWidths.clear();
    gBatchHeights.clear();
+
+   return res;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2488,21 +2490,17 @@ bool TWebCanvas::ProduceImage(TPad *pad, const char *fileName, Int_t width, Int_
       }
    }
 
-   if (!gBatchImageMode || fmt == "s.pdf" || fmt == "json" || fmt == "s.png")
+   if (!gBatchImageMode || (fmt == "s.pdf") || (fmt == "json") || (fmt == "s.png"))
       return ROOT::RWebDisplayHandle::ProduceImage(fileName, json.Data(), width, height);
 
-   if (!gBatchFormat.empty() && (gBatchFormat != fmt))
-      FlushBatchImages();
-
-   gBatchFormat = fmt;
    gBatchFiles.emplace_back(fileName);
    gBatchJsons.emplace_back(json);
    gBatchWidths.emplace_back(width);
    gBatchHeights.emplace_back(height);
-   if (gBatchJsons.size() >= gBatchImageMode)
-      FlushBatchImages();
+   if (gBatchJsons.size() < gBatchImageMode)
+      return true;
 
-   return true;
+   return FlushBatchImages();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -2544,7 +2542,21 @@ bool TWebCanvas::ProduceImages(std::vector<TPad *> pads, const char *filename, I
       heights.emplace_back(h);
    }
 
-   return ROOT::RWebDisplayHandle::ProduceImages(filename, jsons, widths, heights);
+   std::string fmt = ROOT::RWebDisplayHandle::GetImageFormat(filename);
+
+   if (!gBatchImageMode || (fmt == "json") || (fmt == "s.png") || (fmt == "s.pdf"))
+      return ROOT::RWebDisplayHandle::ProduceImages(filename, jsons, widths, heights);
+
+   auto fnames = ROOT::RWebDisplayHandle::ProduceImagesNames(filename, jsons.size());
+
+   gBatchFiles.insert(gBatchFiles.end(), fnames.begin(), fnames.end());
+   gBatchJsons.insert(gBatchJsons.end(), jsons.begin(), jsons.end());
+   gBatchWidths.insert(gBatchWidths.end(), widths.begin(), widths.end());
+   gBatchHeights.insert(gBatchHeights.end(), heights.begin(), heights.end());
+   if (gBatchJsons.size() < gBatchImageMode)
+      return true;
+
+   return FlushBatchImages();
 }
 
 
