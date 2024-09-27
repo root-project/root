@@ -409,3 +409,16 @@ const Constructor c19(19);
       EXPECT_EQ(constructors[i], i);
    }
 }
+
+// #8828
+TEST_F(TClingTests, RefreshNSShadowing)
+{
+   // These two lines would make the test fail because of two reasons:
+   // - An assertion failure "Assertion failed: (detail::isPresent(Val) && "dyn_cast on a non-existent value"), function dyn_cast, file Casting.h, line 662."
+   // - An error "Error in <TInterpreter::RefreshClassInfo>: Should not need to update the classInfo a non type decl: Detail"
+   // This is why there is no check performed.
+   ROOT::TestSupport::CheckDiagsRAII diags;
+   diags.requiredDiag(kError, "TInterpreter::RefreshClassInfo", "Should not need to update the classInfo a non type decl: Detail");
+   gInterpreter->Declare("namespace std { namespace Detail {} }; auto c = TClass::GetClass(\"Detail\");");
+   gInterpreter->ProcessLine("namespace Detail {}");
+}
