@@ -239,15 +239,15 @@ class Polygon {
 
          ((this.nsign * polygon.nsign * this.normal.dot(polygon.normal) > 0) ? coplanar_front : coplanar_back).push(polygon);
 
-       else if (classification === FRONT)
+      else if (classification === FRONT)
 
          front.push(polygon);
 
-       else if (classification === BACK)
+      else if (classification === BACK)
 
          back.push(polygon);
 
-       else {
+      else {
          const vertice_count = polygon.vertices.length,
                nnx = this.normal.x,
                nny = this.normal.y,
@@ -408,15 +408,15 @@ class Node {
 
       if (this.front) front = this.front.clipPolygons(front);
       if (this.back) back = this.back.clipPolygons(back);
-      else back = [];
+                else back = [];
 
       return front.concat(back);
    }
 
    clipTo(node) {
       this.polygons = node.clipPolygons(this.polygons);
-      if (this.front) this.front.clipTo(node);
-      if (this.back) this.back.clipTo(node);
+      this.front?.clipTo(node);
+      this.back?.clipTo(node);
    }
 
  } // class Node

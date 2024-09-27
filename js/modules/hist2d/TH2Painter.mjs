@@ -1693,7 +1693,7 @@ class TH2Painter extends THistPainter {
          } // loop over bins
       }
 
-      let pr = Promise.resolve(true);
+      let pr = Promise.resolve();
 
       if (textbins.length > 0) {
          const color = this.getColor(histo.fMarkerColor),
@@ -1701,35 +1701,35 @@ class TH2Painter extends THistPainter {
                text_g = this.draw_g.append('svg:g').attr('class', 'th2poly_text'),
                text_size = ((histo.fMarkerSize !== 1) && rotate) ? Math.round(0.02*h*histo.fMarkerSize) : 12;
 
-         this.startTextDrawing(42, text_size, text_g, text_size);
+         pr = this.startTextDrawingAsync(42, text_size, text_g, text_size).then(() => {
+            for (i = 0; i < textbins.length; ++i) {
+               const textbin = textbins[i];
 
-         for (i = 0; i < textbins.length; ++i) {
-            const textbin = textbins[i];
+               bin = textbin.bin;
 
-            bin = textbin.bin;
+               if (textbin.sum > 0) {
+                  textbin.midx = Math.round(textbin.sumx / textbin.sum);
+                  textbin.midy = Math.round(textbin.sumy / textbin.sum);
+               } else {
+                  textbin.midx = Math.round(funcs.grx((bin.fXmin + bin.fXmax)/2));
+                  textbin.midy = Math.round(funcs.gry((bin.fYmin + bin.fYmax)/2));
+               }
 
-            if (textbin.sum > 0) {
-               textbin.midx = Math.round(textbin.sumx / textbin.sum);
-               textbin.midy = Math.round(textbin.sumy / textbin.sum);
-            } else {
-               textbin.midx = Math.round(funcs.grx((bin.fXmin + bin.fXmax)/2));
-               textbin.midy = Math.round(funcs.gry((bin.fYmin + bin.fYmax)/2));
+               let text;
+
+               if (!this.options.TextKind)
+                  text = (Math.round(bin.fContent) === bin.fContent) ? bin.fContent.toString() : floatToString(bin.fContent, gStyle.fPaintTextFormat);
+               else {
+                  text = bin.fPoly?.fName;
+                  if (!text || (text === 'Graph'))
+                     text = bin.fNumber.toString();
+               }
+
+               this.drawText({ align: 22, x: textbin.midx, y: textbin.midy, rotate, text, color, latex: 0, draw_g: text_g });
             }
 
-            let text;
-
-            if (!this.options.TextKind)
-               text = (Math.round(bin.fContent) === bin.fContent) ? bin.fContent.toString() : floatToString(bin.fContent, gStyle.fPaintTextFormat);
-             else {
-               text = bin.fPoly?.fName;
-               if (!text || (text === 'Graph'))
-                  text = bin.fNumber.toString();
-            }
-
-            this.drawText({ align: 22, x: textbin.midx, y: textbin.midy, rotate, text, color, latex: 0, draw_g: text_g });
-         }
-
-         pr = this.finishTextDrawing(text_g, true);
+            return this.finishTextDrawing(text_g, true);
+         });
       }
 
       return pr.then(() => { return { poly: true }; });
@@ -1743,59 +1743,56 @@ class TH2Painter extends THistPainter {
             rotate = -1*this.options.TextAngle,
             draw_g = this.draw_g.append('svg:g').attr('class', 'th2_text'),
             show_err = (this.options.TextKind === 'E'),
-            latex = (show_err && !this.options.TextLine) ? 1 : 0;
-      let x, y, width, height,
-          text_size = 20, text_offset = 0;
+            latex = (show_err && !this.options.TextLine) ? 1 : 0,
+            text_offset = histo.fBarOffset*1e-3,
+            text_size = ((histo.fMarkerSize === 1) || !rotate) ? 20 : Math.round(0.02*histo.fMarkerSize*this.getFramePainter().getFrameHeight());
 
       if (!handle) handle = this.prepareDraw({ rounding: false });
 
-      if ((histo.fMarkerSize !== 1) && rotate)
-         text_size = Math.round(0.02*histo.fMarkerSize*this.getFramePainter().getFrameHeight());
+      return this.startTextDrawingAsync(42, text_size, draw_g, text_size).then(() => {
+         for (let i = handle.i1; i < handle.i2; ++i) {
+            const binw = handle.grx[i+1] - handle.grx[i];
+            for (let j = handle.j1; j < handle.j2; ++j) {
+               const binz = histo.getBinContent(i + 1, j + 1);
+               if ((binz === 0) && !this.options.ShowEmpty) continue;
 
-      if (histo.fBarOffset !== 0) text_offset = histo.fBarOffset*1e-3;
+               if (test_cutg && !test_cutg.IsInside(histo.fXaxis.GetBinCoord(i + 0.5),
+                        histo.fYaxis.GetBinCoord(j + 0.5))) continue;
 
-      this.startTextDrawing(42, text_size, draw_g, text_size);
+               const binh = handle.gry[j] - handle.gry[j+1];
 
-      for (let i = handle.i1; i < handle.i2; ++i) {
-         const binw = handle.grx[i+1] - handle.grx[i];
-         for (let j = handle.j1; j < handle.j2; ++j) {
-            const binz = histo.getBinContent(i+1, j+1);
-            if ((binz === 0) && !this.options.ShowEmpty) continue;
+               let text = (binz === Math.round(binz)) ? binz.toString() : floatToString(binz, gStyle.fPaintTextFormat);
 
-            if (test_cutg && !test_cutg.IsInside(histo.fXaxis.GetBinCoord(i + 0.5),
-                     histo.fYaxis.GetBinCoord(j + 0.5))) continue;
+               if (show_err) {
+                  const errz = histo.getBinError(histo.getBin(i+1, j+1)),
+                     lble = (errz === Math.round(errz)) ? errz.toString() : floatToString(errz, gStyle.fPaintTextFormat);
+                  if (this.options.TextLine)
+                     text += '\xB1' + lble;
+                  else
+                     text = `#splitline{${text}}{#pm${lble}}`;
+               }
 
-            const binh = handle.gry[j] - handle.gry[j+1];
+               let x, y, width, height;
 
-            let text = (binz === Math.round(binz)) ? binz.toString() : floatToString(binz, gStyle.fPaintTextFormat);
+               if (rotate) {
+                  x = Math.round(handle.grx[i] + binw*0.5);
+                  y = Math.round(handle.gry[j+1] + binh*(0.5 + text_offset));
+                  width = height = 0;
+               } else {
+                  x = Math.round(handle.grx[i] + binw*0.1);
+                  y = Math.round(handle.gry[j+1] + binh*(0.1 + text_offset));
+                  width = Math.round(binw*0.8);
+                  height = Math.round(binh*0.8);
+               }
 
-            if (show_err) {
-               const errz = histo.getBinError(histo.getBin(i+1, j+1)),
-                   lble = (errz === Math.round(errz)) ? errz.toString() : floatToString(errz, gStyle.fPaintTextFormat);
-               if (this.options.TextLine)
-                  text += '\xB1' + lble;
-               else
-                  text = `#splitline{${text}}{#pm${lble}}`;
+               this.drawText({ align: 22, x, y, width, height, rotate, text, color, latex, draw_g });
             }
-
-            if (rotate) {
-               x = Math.round(handle.grx[i] + binw*0.5);
-               y = Math.round(handle.gry[j+1] + binh*(0.5 + text_offset));
-               width = height = 0;
-            } else {
-               x = Math.round(handle.grx[i] + binw*0.1);
-               y = Math.round(handle.gry[j+1] + binh*(0.1 + text_offset));
-               width = Math.round(binw*0.8);
-               height = Math.round(binh*0.8);
-            }
-
-            this.drawText({ align: 22, x, y, width, height, rotate, text, color, latex, draw_g });
          }
-      }
 
-      handle.hide_only_zeros = true; // text drawing suppress only zeros
+         handle.hide_only_zeros = true; // text drawing suppress only zeros
 
-      return this.finishTextDrawing(draw_g, true).then(() => handle);
+         return this.finishTextDrawing(draw_g, true);
+      }).then(() => handle);
    }
 
    /** @summary Draw TH2 bins as arrows */
@@ -2634,7 +2631,7 @@ class TH2Painter extends THistPainter {
    }
 
    /** @summary Draw TH2 in circular mode */
-   drawBinsCircular() {
+   async drawBinsCircular() {
       this.getFrameSvg().style('display', 'none');
       this._hide_frame = true;
 
@@ -2660,74 +2657,74 @@ class TH2Painter extends THistPainter {
 
       const nbins = Math.min(this.nbinsx, this.nbinsy);
 
-      this.startTextDrawing(42, text_size, this.draw_g);
+      return this.startTextDrawingAsync(42, text_size, this.draw_g).then(() => {
+         const pnts = [];
 
-      const pnts = [];
+         for (let n = 0; n < nbins; n++) {
+            const a = (0.5 - n/nbins)*Math.PI*2,
+                  cx = Math.round((0.9*rect.width/2 - 2*circle_size) * Math.cos(a)),
+                  cy = Math.round((0.9*rect.height/2 - 2*circle_size) * Math.sin(a)),
+                  x = Math.round(0.9*rect.width/2 * Math.cos(a)),
+                  y = Math.round(0.9*rect.height/2 * Math.sin(a)),
+                  color = palette?.calcColor(n, nbins) ?? 'black';
+            let rotate = Math.round(a/Math.PI*180), align = 12;
 
-      for (let n = 0; n < nbins; n++) {
-         const a = (0.5 - n/nbins)*Math.PI*2,
-               cx = Math.round((0.9*rect.width/2 - 2*circle_size) * Math.cos(a)),
-               cy = Math.round((0.9*rect.height/2 - 2*circle_size) * Math.sin(a)),
-               x = Math.round(0.9*rect.width/2 * Math.cos(a)),
-               y = Math.round(0.9*rect.height/2 * Math.sin(a)),
-               color = palette?.calcColor(n, nbins) ?? 'black';
-         let rotate = Math.round(a/Math.PI*180), align = 12;
+            pnts.push({ x: cx, y: cy, a, color }); // remember points coordinates
 
-         pnts.push({ x: cx, y: cy, a, color }); // remember points coordinates
+            if ((rotate < -90) || (rotate > 90)) { rotate += 180; align = 32; }
 
-         if ((rotate < -90) || (rotate > 90)) { rotate += 180; align = 32; }
+            const s2 = Math.round(text_size/2), s1 = 2*s2;
 
-         const s2 = Math.round(text_size/2), s1 = 2*s2;
+            this.draw_g.append('path')
+                     .attr('d', `M${cx-s2},${cy} a${s2},${s2},0,1,0,${s1},0a${s2},${s2},0,1,0,${-s1},0z`)
+                     .style('stroke', color)
+                     .style('fill', 'none');
 
-         this.draw_g.append('path')
-                    .attr('d', `M${cx-s2},${cy} a${s2},${s2},0,1,0,${s1},0a${s2},${s2},0,1,0,${-s1},0z`)
-                    .style('stroke', color)
-                    .style('fill', 'none');
+            this.drawText({ align, rotate, x, y, text: getBinLabel(n) });
+         }
 
-         this.drawText({ align, rotate, x, y, text: getBinLabel(n) });
-      }
+         const max_width = circle_size/2;
+         let max_value = 0, min_value = 0;
+         if (this.options.Circular > 11) {
+            for (let i = 0; i < nbins - 1; ++i) {
+               for (let j = i+1; j < nbins; ++j) {
+               const cont = hist.getBinContent(i+1, j+1);
+               if (cont > 0) {
+                  max_value = Math.max(max_value, cont);
+                  if (!min_value || (cont < min_value)) min_value = cont;
+               }
+               }
+            }
+         }
 
-      const max_width = circle_size/2;
-      let max_value = 0, min_value = 0;
-      if (this.options.Circular > 11) {
-         for (let i = 0; i < nbins - 1; ++i) {
+         for (let i = 0; i < nbins-1; ++i) {
+            const pi = pnts[i];
+            let path = '';
+
             for (let j = i+1; j < nbins; ++j) {
-              const cont = hist.getBinContent(i+1, j+1);
-              if (cont > 0) {
-                 max_value = Math.max(max_value, cont);
-                 if (!min_value || (cont < min_value)) min_value = cont;
-              }
+               const cont = hist.getBinContent(i+1, j+1);
+               if (cont <= 0) continue;
+
+               const pj = pnts[j],
+                  a = (pi.a + pj.a)/2,
+                  qr = 0.5*(1-Math.abs(pi.a - pj.a)/Math.PI), // how far Q point will be away from center
+                  qx = Math.round(qr*rect.width/2 * Math.cos(a)),
+                  qy = Math.round(qr*rect.height/2 * Math.sin(a));
+
+               path += `M${pi.x},${pi.y}Q${qx},${qy},${pj.x},${pj.y}`;
+
+               if ((this.options.Circular > 11) && (max_value > min_value)) {
+                  const width = Math.round((cont - min_value) / (max_value - min_value) * (max_width - 1) + 1);
+                  this.draw_g.append('path').attr('d', path).style('stroke', pi.color).style('stroke-width', width).style('fill', 'none');
+                  path = '';
+               }
             }
+            if (path)
+               this.draw_g.append('path').attr('d', path).style('stroke', pi.color).style('fill', 'none');
          }
-      }
 
-      for (let i = 0; i < nbins-1; ++i) {
-         const pi = pnts[i];
-         let path = '';
-
-         for (let j = i+1; j < nbins; ++j) {
-            const cont = hist.getBinContent(i+1, j+1);
-            if (cont <= 0) continue;
-
-            const pj = pnts[j],
-                a = (pi.a + pj.a)/2,
-                qr = 0.5*(1-Math.abs(pi.a - pj.a)/Math.PI), // how far Q point will be away from center
-                qx = Math.round(qr*rect.width/2 * Math.cos(a)),
-                qy = Math.round(qr*rect.height/2 * Math.sin(a));
-
-            path += `M${pi.x},${pi.y}Q${qx},${qy},${pj.x},${pj.y}`;
-
-            if ((this.options.Circular > 11) && (max_value > min_value)) {
-               const width = Math.round((cont - min_value) / (max_value - min_value) * (max_width - 1) + 1);
-               this.draw_g.append('path').attr('d', path).style('stroke', pi.color).style('stroke-width', width).style('fill', 'none');
-               path = '';
-            }
-         }
-         if (path)
-            this.draw_g.append('path').attr('d', path).style('stroke', pi.color).style('fill', 'none');
-      }
-
-      return this.finishTextDrawing();
+         return this.finishTextDrawing();
+      });
    }
 
    /** @summary Draw histogram bins as chord diagram */

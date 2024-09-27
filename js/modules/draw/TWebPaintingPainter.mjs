@@ -120,30 +120,31 @@ class TWebPaintingPainter extends ObjectPainter {
 
                      const height = (attr.fTextSize > 1) ? attr.fTextSize : this.getPadPainter().getPadHeight() * attr.fTextSize,
                            group = this.draw_g.append('svg:g');
-                     let angle = attr.fTextAngle,
-                         txt = arr[k].slice(1);
 
-                     if (angle >= 360) angle -= Math.floor(angle/360) * 360;
+                     return this.startTextDrawingAsync(attr.fTextFont, height, group).then(() => {
+                        let text = arr[k].slice(1),
+                            angle = attr.fTextAngle;
+                        if (angle >= 360)
+                           angle -= Math.floor(angle/360) * 360;
 
-                     this.startTextDrawing(attr.fTextFont, height, group);
+                        if (oper === 'h') {
+                           let res = '';
+                           for (n = 0; n < text.length; n += 2)
+                              res += String.fromCharCode(parseInt(text.slice(n, n+2), 16));
+                           text = res;
+                        }
 
-                     if (oper === 'h') {
-                        let res = '';
-                        for (n = 0; n < txt.length; n += 2)
-                           res += String.fromCharCode(parseInt(txt.slice(n, n+2), 16));
-                        txt = res;
-                     }
+                        // todo - correct support of angle
+                        this.drawText({ align: attr.fTextAlign,
+                                        x: func.x(obj.fBuf[indx++]),
+                                        y: func.y(obj.fBuf[indx++]),
+                                        rotate: -angle,
+                                        text,
+                                        color: getColor(attr.fTextColor),
+                                        latex: 0, draw_g: group });
 
-                     // todo - correct support of angle
-                     this.drawText({ align: attr.fTextAlign,
-                                     x: func.x(obj.fBuf[indx++]),
-                                     y: func.y(obj.fBuf[indx++]),
-                                     rotate: -angle,
-                                     text: txt,
-                                     color: getColor(attr.fTextColor),
-                                     latex: 0, draw_g: group });
-
-                     return this.finishTextDrawing(group).then(() => process(k));
+                        return this.finishTextDrawing(group);
+                     }).then(() => process(k));
                   }
                   continue;
                }

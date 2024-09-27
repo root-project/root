@@ -14,6 +14,7 @@ import { clTBranchFunc } from './tree.mjs';
 import { BasePainter, compressSVG, svgToImage, _loadJSDOM } from './base/BasePainter.mjs';
 import { ObjectPainter, cleanup, drawRawText, getElementCanvPainter, getElementMainPainter } from './base/ObjectPainter.mjs';
 import { TPadPainter, clTButton } from './gpad/TPadPainter.mjs';
+import { makePDF } from './base/makepdf.mjs';
 
 
 async function import_more() { return import('./draw/more.mjs'); }
@@ -665,7 +666,7 @@ async function makeImage(args) {
                return complete(svg);
          }
 
-         return svgToImage(svg, args.format, args.as_buffer).then(complete);
+         return svgToImage(svg, args.format, args).then(complete);
       });
    }
 
@@ -697,8 +698,6 @@ async function makeSVG(args) {
    return makeImage(args);
 }
 
-internals.addDrawFunc = addDrawFunc;
-
 function assignPadPainterDraw(PadPainterClass) {
    PadPainterClass.prototype.drawObject = draw;
    PadPainterClass.prototype.getObjectDrawSettings = getDrawSettings;
@@ -724,8 +723,9 @@ async function init_v7(arg) {
 }
 
 
-// to avoid cross-dependency between io.mjs and draw.mjs
-internals.addStreamerInfosForPainter = addStreamerInfosForPainter;
+// to avoid cross-dependency between modules
+Object.assign(internals, { addStreamerInfosForPainter, addDrawFunc, setDefaultDrawOpt, makePDF });
+
 
 /** @summary Draw TRooPlot
   * @private */

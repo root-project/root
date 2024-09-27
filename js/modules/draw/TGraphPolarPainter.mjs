@@ -134,8 +134,9 @@ class TGraphPolargramPainter extends ObjectPainter {
    }
 
    /** @summary Redraw polargram */
-   redraw() {
-      if (!this.isMainPainter()) return;
+   async redraw() {
+      if (!this.isMainPainter())
+         return;
 
       const polar = this.getObject(),
             rect = this.getPadPainter().getFrameRect();
@@ -156,8 +157,12 @@ class TGraphPolargramPainter extends ObjectPainter {
       this.r = scaleLinear().domain([this.scale_rmin, this.scale_rmax]).range([0, this.szx]);
       this.angle = polar.fAxisAngle || 0;
 
-      const ticks = this.r.ticks(5);
-      let nminor = Math.floor((polar.fNdivRad % 10000) / 100);
+      const ticks = this.r.ticks(5),
+            fontsize = Math.round(polar.fPolarTextSize * this.szy * 2);
+      let nminor = Math.floor((polar.fNdivRad % 10000) / 100),
+          nmajor = polar.fNdivPol % 100;
+      if (nmajor !== 3)
+         nmajor = 8;
 
       this.createAttLine({ attr: polar });
       if (!this.gridatt) this.gridatt = this.createAttLine({ color: polar.fLineColor, style: 2, width: 1, std: false });
@@ -184,47 +189,44 @@ class TGraphPolargramPainter extends ObjectPainter {
          exclude_last = true;
       }
 
-      this.startTextDrawing(polar.fRadialLabelFont, Math.round(polar.fRadialTextSize * this.szy * 2));
+      return this.startTextDrawingAsync(polar.fRadialLabelFont, Math.round(polar.fRadialTextSize * this.szy * 2)).then(() => {
+         for (let n = 0; n < ticks.length; ++n) {
+            let rx = this.r(ticks[n]), ry = rx/this.szx*this.szy;
+            this.draw_g.append('ellipse')
+               .attr('cx', 0)
+               .attr('cy', 0)
+               .attr('rx', Math.round(rx))
+               .attr('ry', Math.round(ry))
+               .style('fill', 'none')
+               .call(this.lineatt.func);
 
-      for (let n = 0; n < ticks.length; ++n) {
-         let rx = this.r(ticks[n]), ry = rx/this.szx*this.szy;
-         this.draw_g.append('ellipse')
-             .attr('cx', 0)
-             .attr('cy', 0)
-             .attr('rx', Math.round(rx))
-             .attr('ry', Math.round(ry))
-             .style('fill', 'none')
-             .call(this.lineatt.func);
+            if ((n < ticks.length-1) || !exclude_last) {
+               this.drawText({ align: 23, x: Math.round(rx), y: Math.round(polar.fRadialTextSize * this.szy * 0.5),
+                              text: this.format(ticks[n]), color: this.getColor(polar.fRadialLabelColor), latex: 0 });
+            }
 
-         if ((n < ticks.length-1) || !exclude_last) {
-            this.drawText({ align: 23, x: Math.round(rx), y: Math.round(polar.fRadialTextSize * this.szy * 0.5),
-                            text: this.format(ticks[n]), color: this.getColor(polar.fRadialLabelColor), latex: 0 });
-         }
-
-         if ((nminor>1) && ((n < ticks.length-1) || !exclude_last)) {
-            const dr = (ticks[1] - ticks[0]) / nminor;
-            for (let nn = 1; nn < nminor; ++nn) {
-               const gridr = ticks[n] + dr*nn;
-               if (gridr > this.scale_rmax) break;
-               rx = this.r(gridr); ry = rx/this.szx*this.szy;
-               this.draw_g.append('ellipse')
-                   .attr('cx', 0)
-                   .attr('cy', 0)
-                   .attr('rx', Math.round(rx))
-                   .attr('ry', Math.round(ry))
-                   .style('fill', 'none')
-                   .call(this.gridatt.func);
+            if ((nminor>1) && ((n < ticks.length-1) || !exclude_last)) {
+               const dr = (ticks[1] - ticks[0]) / nminor;
+               for (let nn = 1; nn < nminor; ++nn) {
+                  const gridr = ticks[n] + dr*nn;
+                  if (gridr > this.scale_rmax) break;
+                  rx = this.r(gridr); ry = rx/this.szx*this.szy;
+                  this.draw_g.append('ellipse')
+                     .attr('cx', 0)
+                     .attr('cy', 0)
+                     .attr('rx', Math.round(rx))
+                     .attr('ry', Math.round(ry))
+                     .style('fill', 'none')
+                     .call(this.gridatt.func);
+               }
             }
          }
-      }
 
-      let nmajor = polar.fNdivPol % 100;
-      if ((nmajor !== 8) && (nmajor !== 3)) nmajor = 8;
 
-      return this.finishTextDrawing().then(() => {
-         const fontsize = Math.round(polar.fPolarTextSize * this.szy * 2);
-         this.startTextDrawing(polar.fPolarLabelFont, fontsize);
-
+         return this.finishTextDrawing();
+      }).then(() => {
+         return this.startTextDrawingAsync(polar.fPolarLabelFont, fontsize);
+      }).then(() => {
          lbls = (nmajor === 8) ? ['0', '#frac{#pi}{4}', '#frac{#pi}{2}', '#frac{3#pi}{4}', '#pi', '#frac{5#pi}{4}', '#frac{3#pi}{2}', '#frac{7#pi}{4}'] : ['0', '#frac{2#pi}{3}', '#frac{4#pi}{3}'];
          const aligns = [12, 11, 21, 31, 32, 33, 23, 13];
 

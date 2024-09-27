@@ -1340,7 +1340,9 @@ class TPadPainter extends ObjectPainter {
 
       const fname = this.this_pad_name || (this.iscan ? 'canvas' : 'pad');
       menu.sub('Save as');
-      ['svg', 'png', 'jpeg', 'pdf', 'webp'].forEach(fmt => menu.add(`${fname}.${fmt}`, () => this.saveAs(fmt, this.iscan, `${fname}.${fmt}`)));
+      const fmts = ['svg', 'png', 'jpeg', 'webp'];
+      if (internals.makePDF) fmts.push('pdf');
+      fmts.forEach(fmt => menu.add(`${fname}.${fmt}`, () => this.saveAs(fmt, this.iscan, `${fname}.${fmt}`)));
       if (this.iscan) {
          menu.separator();
          menu.add(`${fname}.json`, () => this.saveAs('json', true, `${fname}.json`), 'Produce JSON with line spacing');
@@ -2253,7 +2255,7 @@ class TPadPainter extends ObjectPainter {
 
    /** @summary Produce image for the pad
      * @return {Promise} with created image */
-   async produceImage(full_canvas, file_format) {
+   async produceImage(full_canvas, file_format, args) {
       if (file_format === 'json')
          return isFunc(this.produceJSON) ? this.produceJSON(full_canvas ? 2 : 0) : '';
 
@@ -2347,7 +2349,7 @@ class TPadPainter extends ObjectPainter {
          ? { node: elem.node(), width, height, reset_tranform: use_frame }
          : compressSVG(`<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">${elem.node().innerHTML}</svg>`);
 
-      return svgToImage(arg, file_format).then(res => {
+      return svgToImage(arg, file_format, args).then(res => {
          // reactivate border
          active_pp?.drawActiveBorder(null, true);
 

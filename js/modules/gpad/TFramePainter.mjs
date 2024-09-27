@@ -1,4 +1,4 @@
-import { gStyle, settings, isFunc, isStr, postponePromise, browser, clTAxis, kNoZoom } from '../core.mjs';
+import { gStyle, settings, internals, isFunc, isStr, postponePromise, browser, clTAxis, kNoZoom } from '../core.mjs';
 import { select as d3_select, pointer as d3_pointer, pointers as d3_pointers, drag as d3_drag } from '../d3.mjs';
 import { getElementRect, getAbsPosInCanvas, makeTranslate, addHighlightStyle } from '../base/BasePainter.mjs';
 import { getActivePad, ObjectPainter, EAxisBits, kAxisLabels } from '../base/ObjectPainter.mjs';
@@ -1945,7 +1945,7 @@ class TFramePainter extends ObjectPainter {
                                         ignore_labels: this.x_ignore_labels,
                                         noexp_changed: this.x_noexp_changed,
                                         symlog: this.swap_xy ? opts.symlog_y : opts.symlog_x,
-                                        logcheckmin: this.swap_xy,
+                                        logcheckmin: (opts.ndim > 1) || !this.swap_xy,
                                         logminfactor: logminfactorX });
 
       this.x_handle.assignFrameMembers(this, 'x');
@@ -1960,8 +1960,8 @@ class TFramePainter extends ObjectPainter {
                                         ignore_labels: this.y_ignore_labels,
                                         noexp_changed: this.y_noexp_changed,
                                         symlog: this.swap_xy ? opts.symlog_x : opts.symlog_y,
-                                        logcheckmin: (opts.ndim < 2) || this.swap_xy,
                                         log_min_nz: opts.ymin_nz && (opts.ymin_nz <= this.ymax) ? 0.5*opts.ymin_nz : 0,
+                                        logcheckmin: (opts.ndim > 1) || this.swap_xy,
                                         logminfactor: logminfactorY });
 
       this.y_handle.assignFrameMembers(this, 'y');
@@ -2019,7 +2019,7 @@ class TFramePainter extends ObjectPainter {
                                            log: this.swap_xy ? pad.fLogy : pad.fLogx,
                                            ignore_labels: this.x2_ignore_labels,
                                            noexp_changed: this.x2_noexp_changed,
-                                           logcheckmin: this.swap_xy,
+                                           logcheckmin: (opts.ndim > 1) || !this.swap_xy,
                                            logminfactor: logminfactorX });
 
          this.x2_handle.assignFrameMembers(this, 'x2');
@@ -2034,7 +2034,7 @@ class TFramePainter extends ObjectPainter {
                                            log: this.swap_xy ? pad.fLogx : pad.fLogy,
                                            ignore_labels: this.y2_ignore_labels,
                                            noexp_changed: this.y2_noexp_changed,
-                                           logcheckmin: (opts.ndim < 2) || this.swap_xy,
+                                           logcheckmin: (opts.ndim > 1) || this.swap_xy,
                                            log_min_nz: opts.ymin_nz && (opts.ymin_nz < this.y2max) ? 0.5 * opts.ymin_nz : 0,
                                            logminfactor: logminfactorY });
 
@@ -2697,7 +2697,9 @@ class TFramePainter extends ObjectPainter {
       menu.separator();
 
       menu.sub('Save as');
-      ['svg', 'png', 'jpeg', 'pdf', 'webp'].forEach(fmt => menu.add(`frame.${fmt}`, () => pp.saveAs(fmt, 'frame', `frame.${fmt}`)));
+      const fmts = ['svg', 'png', 'jpeg', 'webp'];
+      if (internals.makePDF) fmts.push('pdf');
+      fmts.forEach(fmt => menu.add(`frame.${fmt}`, () => pp.saveAs(fmt, 'frame', `frame.${fmt}`)));
       menu.endsub();
 
       return true;
@@ -2775,6 +2777,7 @@ class TFramePainter extends ObjectPainter {
 
       if (zoom_x) {
          let cnt = 0;
+         xmin = this.x_handle?.checkZoomMin(xmin) ?? xmin;
          if (xmin <= this.xmin) { xmin = this.xmin; cnt++; }
          if (xmax >= this.xmax) { xmax = this.xmax; cnt++; }
          if (cnt === 2) { zoom_x = false; unzoom_x = true; }
@@ -2783,11 +2786,8 @@ class TFramePainter extends ObjectPainter {
 
       if (zoom_y) {
          let cnt = 0;
-         if ((ymin <= this.ymin) || (!this.ymin && this.logy &&
-              ((!this.y_handle?.log_min_nz && ymin < logminfactorY*this.ymax) || (ymin < this.y_handle?.log_min_nz)))) {
-                 ymin = this.ymin;
-                 cnt++;
-              }
+         ymin = this.y_handle?.checkZoomMin(ymin) ?? ymin;
+         if (ymin <= this.ymin) { ymin = this.ymin; cnt++; }
          if (ymax >= this.ymax) { ymax = this.ymax; cnt++; }
          if ((cnt === 2) && (this.scales_ndim !== 1)) {
             zoom_y = false;
@@ -2798,6 +2798,7 @@ class TFramePainter extends ObjectPainter {
 
       if (zoom_z) {
          let cnt = 0;
+         zmin = this.z_handle?.checkZoomMin(zmin) ?? zmin;
          if (zmin <= this.zmin) { zmin = this.zmin; cnt++; }
          if (zmax >= this.zmax) { zmax = this.zmax; cnt++; }
          if ((cnt === 2) && (this.scales_ndim > 2)) { zoom_z = false; unzoom_z = true; }
@@ -2884,19 +2885,20 @@ class TFramePainter extends ObjectPainter {
      * @param {Boolean} [interactive] - if change was performed interactively
      * @protected */
    async zoomSingle(name, vmin, vmax, interactive) {
-      if (!this[`${name}_handle`] && (name !== 'z'))
+      const handle = this[`${name}_handle`];
+      if (!handle && (name !== 'z'))
          return false;
 
       let zoom_v = (vmin !== vmax), unzoom_v = false;
 
       if (zoom_v) {
          let cnt = 0;
+         vmin = handle?.checkZoomMin(vmin) ?? vmin;
          if (vmin <= this[name+'min']) { vmin = this[name+'min']; cnt++; }
          if (vmax >= this[name+'max']) { vmax = this[name+'max']; cnt++; }
          if (cnt === 2) { zoom_v = false; unzoom_v = true; }
       } else
          unzoom_v = (vmin === vmax) && (vmin === 0);
-
 
       let changed = false;
 

@@ -850,7 +850,7 @@ class ObjectPainter extends BasePainter {
      * @private */
    executeMenuCommand(method) {
       if (method.fName === 'Inspect')
-         // primitve inspector, keep it here
+         // primitive inspector, keep it here
          return this.showInspector();
 
       return false;
@@ -949,11 +949,14 @@ class ObjectPainter extends BasePainter {
      * @param {object} [draw_g] - element where text drawn, by default using main object <g> element
      * @param {number} [max_font_size] - maximal font size, used when text can be scaled
      * @protected */
-   startTextDrawing(font_face, font_size, draw_g, max_font_size) {
+   startTextDrawing(font_face, font_size, draw_g, max_font_size, can_async) {
       if (!draw_g) draw_g = this.draw_g;
-      if (!draw_g || draw_g.empty()) return;
+      if (!draw_g || draw_g.empty())
+         return false;
 
       const font = (font_size === 'font') ? font_face : new FontHandler(font_face, font_size);
+      if (can_async && font.needLoad())
+         return font;
 
       font.setPainter(this); // may be required when custom font is used
 
@@ -969,6 +972,23 @@ class ObjectPainter extends BasePainter {
 
       if (draw_g.property('_fast_drawing'))
          draw_g.property('_font_too_small', (max_font_size && (max_font_size < 5)) || (font.size < 4));
+
+      return true;
+   }
+
+   /** @summary Start async text drawing
+    * @return {Promise} for loading of font if necessary
+    * @private */
+   async startTextDrawingAsync(font_face, font_size, draw_g, max_font_size) {
+      const font = this.startTextDrawing(font_face, font_size, draw_g, max_font_size, true);
+      if ((font === true) || (font === false))
+         return font;
+      return font.load().then(res => {
+         if (!res)
+            return false;
+
+         return this.startTextDrawing(font, 'font', draw_g, max_font_size);
+      });
    }
 
    /** @summary Apply scaling factor to all drawn text in the <g> element
@@ -1279,12 +1299,12 @@ class ObjectPainter extends BasePainter {
 
          arg.simple_latex = arg.latex && (settings.Latex === cl.Symbols);
 
-         if (!arg.plain || arg.simple_latex || (arg.font && arg.font.isSymbol)) {
+         if (!arg.plain || arg.simple_latex || arg.font?.isSymbol) {
             if (arg.simple_latex || isPlainText(arg.text) || arg.plain) {
                arg.simple_latex = true;
                producePlainText(this, arg.txt_node, arg);
             } else {
-               arg.txt_node.remove(); // just remove text node,
+               arg.txt_node.remove(); // just remove text node
                delete arg.txt_node;
                arg.txt_g = arg.draw_g.append('svg:g');
                produceLatex(this, arg.txt_g, arg);

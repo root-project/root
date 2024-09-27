@@ -143,7 +143,7 @@ async function loadOpenui5(args) {
    }
 
    const openui5_sources = [];
-   let openui5_dflt = 'https://openui5.hana.ondemand.com/1.128.0/',
+   let openui5_dflt = 'https://openui5.hana.ondemand.com/' + (browser.qt5 ? '1.108.35/' : '1.128.0/'),
        openui5_root = rootui5sys ? rootui5sys + 'distribution/' : '';
 
    if (isStr(args.openui5src)) {
@@ -157,7 +157,7 @@ async function loadOpenui5(args) {
    } else if (args.ui5dbg)
       openui5_root = ''; // exclude ROOT version in debug mode
 
-   if (openui5_root && (openui5_sources.indexOf(openui5_root) < 0))
+   if (openui5_root && (openui5_sources.indexOf(openui5_root) < 0) && !browser.qt5)
       openui5_sources.push(openui5_root);
    if (openui5_dflt && (openui5_sources.indexOf(openui5_dflt) < 0))
       openui5_sources.push(openui5_dflt);
