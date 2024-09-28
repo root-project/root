@@ -47,6 +47,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofieParser
     src/ParseSlice.cxx
     src/ParseSoftmax.cxx
     src/ParseTanh.cxx
+    src/ParseSin.cxx
+    src/ParseCos.cxx
     src/ParseTranspose.cxx
     src/ParseErf.cxx
     src/ParseRange.cxx
