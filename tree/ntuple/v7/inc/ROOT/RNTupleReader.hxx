@@ -288,6 +288,12 @@ public:
    }
 
    template <typename T>
+   RNTupleView<T> GetView(std::string_view fieldName, T *rawPtr)
+   {
+      return GetView<T>(RetrieveFieldId(fieldName), rawPtr);
+   }
+
+   template <typename T>
    RNTupleView<T> GetView(DescriptorId_t fieldId)
    {
       return RNTupleView<T>(RNTupleView<T>::CreateField(fieldId, fSource.get()));
@@ -297,6 +303,12 @@ public:
    RNTupleView<T> GetView(DescriptorId_t fieldId, std::shared_ptr<T> objPtr)
    {
       return RNTupleView<T>(RNTupleView<T>::CreateField(fieldId, fSource.get()), objPtr);
+   }
+
+   template <typename T>
+   RNTupleView<T> GetView(DescriptorId_t fieldId, T *rawPtr)
+   {
+      return RNTupleView<T>(RNTupleView<T>::CreateField(fieldId, fSource.get()), rawPtr);
    }
 
    /// Raises an exception if:
