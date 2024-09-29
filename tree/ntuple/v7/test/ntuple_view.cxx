@@ -53,6 +53,27 @@ TEST(RNTuple, View)
    EXPECT_EQ(3, n);
 }
 
+TEST(RNTuple, DirectAccessView)
+{
+   FileRaii fileGuard("test_ntuple_direct_access_view.root");
+
+   auto model = RNTupleModel::Create();
+   auto fieldPt = model->MakeField<float>("pt", 42.0);
+   {
+      RNTupleWriteOptions opt;
+      auto writer = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath(), opt);
+      writer->Fill();
+      writer->CommitCluster();
+      *fieldPt = 137.0;
+      writer->Fill();
+   }
+   auto reader = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
+   auto viewPt = reader->GetDirectAccessView<float>("pt");
+
+   EXPECT_FLOAT_EQ(42.0, viewPt(0));
+   EXPECT_FLOAT_EQ(137.0, viewPt(1));
+}
+
 TEST(RNTuple, Composable)
 {
    FileRaii fileGuard("test_ntuple_composable.root");
