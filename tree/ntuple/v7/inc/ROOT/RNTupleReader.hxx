@@ -276,27 +276,27 @@ public:
    /// }
    /// ~~~
    template <typename T>
-   RNTupleView<T, false> GetView(std::string_view fieldName)
+   RNTupleView<T> GetView(std::string_view fieldName)
    {
       return GetView<T>(RetrieveFieldId(fieldName));
    }
 
    template <typename T>
-   RNTupleView<T, true> GetView(std::string_view fieldName, std::shared_ptr<T> objPtr)
+   RNTupleView<T> GetView(std::string_view fieldName, std::shared_ptr<T> objPtr)
    {
       return GetView<T>(RetrieveFieldId(fieldName), objPtr);
    }
 
    template <typename T>
-   RNTupleView<T, false> GetView(DescriptorId_t fieldId)
+   RNTupleView<T> GetView(DescriptorId_t fieldId)
    {
-      return RNTupleView<T, false>(fieldId, fSource.get());
+      return RNTupleView<T>(RNTupleView<T>::CreateField(fieldId, fSource.get()));
    }
 
    template <typename T>
-   RNTupleView<T, true> GetView(DescriptorId_t fieldId, std::shared_ptr<T> objPtr)
+   RNTupleView<T> GetView(DescriptorId_t fieldId, std::shared_ptr<T> objPtr)
    {
-      return RNTupleView<T, true>(fieldId, fSource.get(), objPtr);
+      return RNTupleView<T>(RNTupleView<T>::CreateField(fieldId, fSource.get()), objPtr);
    }
 
    /// Raises an exception if:
@@ -314,7 +314,7 @@ public:
 
    RNTupleCollectionView GetCollectionView(DescriptorId_t fieldId)
    {
-      return RNTupleCollectionView(fieldId, fSource.get());
+      return RNTupleCollectionView::Create(fieldId, fSource.get());
    }
 
    RIterator begin() { return RIterator(0); }
