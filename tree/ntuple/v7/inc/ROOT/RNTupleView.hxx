@@ -257,6 +257,51 @@ public:
 
 // clang-format off
 /**
+\class ROOT::Experimental::RNTupleDirectAccessView
+\ingroup NTuple
+\brief A view variant that provides direct access to the I/O buffers. Only works for mappable fields.
+*/
+// clang-format on
+template <typename T>
+class RNTupleDirectAccessView {
+   friend class RNTupleReader;
+   friend class RNTupleCollectionView;
+
+protected:
+   RField<T> fField;
+
+   static RField<T> CreateField(DescriptorId_t fieldId, Internal::RPageSource *pageSource)
+   {
+      const auto &desc = pageSource->GetSharedDescriptorGuard().GetRef();
+      const auto &fieldDesc = desc.GetFieldDescriptor(fieldId);
+      if (fieldDesc.GetTypeName() != RField<T>::TypeName()) {
+         throw RException(R__FAIL("type mismatch for field " + fieldDesc.GetFieldName() + ": " +
+                                  fieldDesc.GetTypeName() + " vs. " + RField<T>::TypeName()));
+      }
+      RField<T> field(fieldDesc.GetFieldName());
+      field.SetOnDiskId(fieldId);
+      Internal::CallConnectPageSourceOnField(field, *pageSource);
+      return field;
+   }
+
+   RNTupleDirectAccessView(RField<T> field) : fField(std::move(field)) {}
+
+public:
+   RNTupleDirectAccessView(const RNTupleDirectAccessView &other) = delete;
+   RNTupleDirectAccessView(RNTupleDirectAccessView &&other) = default;
+   RNTupleDirectAccessView &operator=(const RNTupleDirectAccessView &other) = delete;
+   RNTupleDirectAccessView &operator=(RNTupleDirectAccessView &&other) = default;
+   ~RNTupleDirectAccessView() = default;
+
+   const RFieldBase &GetField() const { return fField; }
+   RNTupleGlobalRange GetFieldRange() const { return RNTupleGlobalRange(0, fField.GetNElements()); }
+
+   const T &operator()(NTupleSize_t globalIndex) { return *fField.Map(globalIndex); }
+   const T &operator()(RClusterIndex clusterIndex) { return *fField.Map(clusterIndex); }
+};
+
+// clang-format off
+/**
 \class ROOT::Experimental::RNTupleCollectionView
 \ingroup NTuple
 \brief A view for a collection, that can itself generate new ntuple views for its nested fields.
@@ -352,9 +397,6 @@ public:
       return size;
    }
 };
-
-// TODO(jblomer): A similar class, RNTupleDirectAccessView, to use the I/O buffers through RField<T>::Map(V)
-// for mappable fields.
 
 } // namespace Experimental
 } // namespace ROOT

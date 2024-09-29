@@ -311,6 +311,18 @@ public:
       return RNTupleView<T>(RNTupleView<T>::CreateField(fieldId, fSource.get()), rawPtr);
    }
 
+   template <typename T>
+   RNTupleDirectAccessView<T> GetDirectAccessView(std::string_view fieldName)
+   {
+      return GetDirectAccessView<T>(RetrieveFieldId(fieldName));
+   }
+
+   template <typename T>
+   RNTupleDirectAccessView<T> GetDirectAccessView(DescriptorId_t fieldId)
+   {
+      return RNTupleDirectAccessView<T>(RNTupleDirectAccessView<T>::CreateField(fieldId, fSource.get()));
+   }
+
    /// Raises an exception if:
    /// * there is no field with the given name or,
    /// * the field is not a collection
