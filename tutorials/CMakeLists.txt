@@ -792,6 +792,10 @@ if(ROOT_pyroot_FOUND)
     list(APPEND pyveto tmva/keras/MultiClassKeras.py)
   endif()
 
+  if (PY_KERAS_FOUND)
+    set (tmva-TMVA_SOFIE_RDataFrame-py-depends tutorial-tmva-TMVA_SOFIE_Keras_HiggsModel)
+  endif()
+
   if(NOT PY_TORCH_FOUND)
     file(GLOB tmva_veto_py RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} tmva/pytorch/*.py)
     list(APPEND pyveto ${tmva_veto_py})
