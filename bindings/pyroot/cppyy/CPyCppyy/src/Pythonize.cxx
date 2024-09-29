@@ -1931,7 +1931,8 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, Cppyy::TCppScope_t scope)
     }
 #endif
 
-    if (Cppyy::IsAggregate(((CPPClass*)pyclass)->fCppType) && name.compare(0, 5, "std::", 5) != 0) {
+    if (Cppyy::IsAggregate(((CPPClass*)pyclass)->fCppType) && name.compare(0, 5, "std::", 5) != 0 &&
+        name.compare(0, 6, "tuple<", 6) != 0) {
     // create a pseudo-constructor to allow initializer-style object creation
         Cppyy::TCppScope_t kls = ((CPPClass*)pyclass)->fCppType;
         std::vector<Cppyy::TCppScope_t> datamems;
