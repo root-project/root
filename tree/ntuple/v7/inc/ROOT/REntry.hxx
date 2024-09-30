@@ -61,9 +61,12 @@ public:
       friend class REntry;
       friend class RNTupleModel;
 
-      std::size_t fIndex;     ///< the index in fValues that belongs to the top-level field
-      std::uint64_t fSchemaId; ///< Safety check to prevent tokens from other models being used
+      std::size_t fIndex = 0;                      ///< the index in fValues that belongs to the top-level field
+      std::uint64_t fSchemaId = std::uint64_t(-1); ///< Safety check to prevent tokens from other models being used
       RFieldToken(std::size_t index, std::uint64_t schemaId) : fIndex(index), fSchemaId(schemaId) {}
+
+   public:
+      RFieldToken() = default; // The default constructed token cannot be used by any entry
    };
 
 private:
