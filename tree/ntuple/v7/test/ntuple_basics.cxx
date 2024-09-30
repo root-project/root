@@ -875,6 +875,10 @@ TEST(REntry, Basics)
    std::shared_ptr<double> ptrDouble;
    EXPECT_THROW(e->BindValue("pt", ptrDouble), ROOT::Experimental::RException);
 
+   // Default constructed tokens cannot be used
+   ROOT::Experimental::REntry::RFieldToken token;
+   EXPECT_THROW(e->GetPtr<void>(token), ROOT::Experimental::RException);
+
    float pt;
    e->BindRawPtr("pt", &pt);
    EXPECT_EQ(&pt, e->GetPtr<void>("pt").get());
