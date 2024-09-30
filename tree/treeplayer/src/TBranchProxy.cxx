@@ -165,13 +165,30 @@ static std::string GetFriendBranchName(TTree* directorTree, TBranch* branch, con
 /// Constructor taking the branch name, possibly of a friended tree.
 /// Used by TTreeReaderValue in place of TFriendProxy.
 
-ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, const char* branchname, TBranch* branch, const char* membername) :
-   fDirector(boss), fInitialized(false), fIsMember(membername != nullptr && membername[0]), fIsClone(false), fIsaPointer(false),
-   fHasLeafCount(false), fBranchName(GetFriendBranchName(boss->GetTree(), branch, branchname)), fParent(nullptr), fDataMember(membername),
-   fClassName(""), fClass(nullptr), fElement(nullptr), fMemberOffset(0), fOffset(0), fArrayLength(1),
-   fBranch(nullptr), fBranchCount(nullptr),
-   fNotify(this),
-   fRead(-1), fWhere(nullptr),fCollection(nullptr)
+ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector *boss, const char *branchname, TBranch *branch,
+                                         const char *membername, bool suppressMissingBranchError)
+   : fDirector(boss),
+     fInitialized(false),
+     fIsMember(membername != nullptr && membername[0]),
+     fIsClone(false),
+     fIsaPointer(false),
+     fHasLeafCount(false),
+     fSuppressMissingBranchError(suppressMissingBranchError),
+     fBranchName(GetFriendBranchName(boss->GetTree(), branch, branchname)),
+     fParent(nullptr),
+     fDataMember(membername),
+     fClassName(""),
+     fClass(nullptr),
+     fElement(nullptr),
+     fMemberOffset(0),
+     fOffset(0),
+     fArrayLength(1),
+     fBranch(nullptr),
+     fBranchCount(nullptr),
+     fNotify(this),
+     fRead(-1),
+     fWhere(nullptr),
+     fCollection(nullptr)
 {
    // Constructor.
 
@@ -302,7 +319,7 @@ bool ROOT::Detail::TBranchProxy::Setup()
       // its mother's name
       fBranch = fDirector->GetTree()->GetBranch(fBranchName.Data());
       if (!fBranch) {
-         if (!AreThereSubBranches(fBranchName.View(), *fDirector->GetTree())) {
+         if (!fSuppressMissingBranchError && !AreThereSubBranches(fBranchName.View(), *fDirector->GetTree())) {
             // The next error refers specifically to the situation where the branch identified by fBranchName
             // is not present and that is not expected. An example is when traversing a chain of files, the branch
             // is missing from the file that we are switching into.

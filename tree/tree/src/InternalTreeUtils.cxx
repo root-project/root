@@ -398,9 +398,13 @@ std::vector<std::unique_ptr<TChain>> MakeFriends(const ROOT::TreeUtils::RFriendI
 
       const auto &treeIndex = finfo.fTreeIndexInfos[i];
       if (treeIndex) {
-         auto *copyOfIndex = static_cast<TVirtualIndex *>(treeIndex->Clone());
-         copyOfIndex->SetTree(frChain.get());
-         frChain->SetTreeIndex(copyOfIndex);
+         // The call to TChain::BuildIndex does much more than just copying
+         // the indices that may have been already present in the trees of the
+         // chain. Notably, it calls `LoadTree` for every tree in the chain
+         // making sure that all branches, indices and relationships are
+         // properly set. In order to avoid unexpected behaviours, we always
+         // let the task-local friend chain rebuild its index.
+         frChain->BuildIndex(treeIndex->GetMajorName(), treeIndex->GetMinorName());
       }
 
       friends.emplace_back(std::move(frChain));

@@ -469,8 +469,8 @@ TEST(TTreeReaderBasic, InfLoop)
 // ROOT-10019
 TEST(TTreeReaderBasic, DisappearingBranch)
 {
-   ROOT::TestSupport::CheckDiagsRAII diags{ kError, "TTreeReader::SetEntryBase()", "There was an error while notifying the proxies." };
-   diags.requiredDiag(kWarning, "TTreeReader::SetEntryBase()", "Unexpected error '-6' in TChain::LoadTree");
+   ROOT::TestSupport::CheckDiagsRAII diags{kError, "TTreeReader::SetEntryBase()",
+                                           "There was an error while notifying the proxies."};
 
    auto createFile = [](const char *fileName, int ncols) {
       // auto r = ROOT::RDataFrame(1).Define("col0",[](){return 0;}).Snapshot<int>("t","f1.root",{"col0"});

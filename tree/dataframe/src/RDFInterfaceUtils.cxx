@@ -534,8 +534,12 @@ void CheckForDefinition(const std::string &where, std::string_view definedColVie
    }
 
    if (!error.empty()) {
-      error =
-         "RDataFrame::" + where + ": cannot redefine or vary column \"" + std::string(definedColView) + "\". " + error;
+      if (where == "DefaultValueFor")
+         error = "RDataFrame::" + where + ": cannot provide default values for column \"" +
+                 std::string(definedColView) + "\". " + error;
+      else
+         error = "RDataFrame::" + where + ": cannot redefine or vary column \"" + std::string(definedColView) + "\". " +
+                 error;
       throw std::runtime_error(error);
    }
 }
@@ -546,10 +550,22 @@ void CheckForNoVariations(const std::string &where, std::string_view definedColV
    const std::string definedCol(definedColView);
    const auto &variationDeps = colRegister.GetVariationDeps(definedCol);
    if (!variationDeps.empty()) {
-      const std::string error =
-         "RDataFrame::" + where + ": cannot redefine column \"" + definedCol +
-         "\". The column depends on one or more systematic variations and re-defining varied columns is not supported.";
-      throw std::runtime_error(error);
+      if (where == "Redefine") {
+         const std::string error = "RDataFrame::" + where + ": cannot redefine column \"" + definedCol +
+                                   "\". The column depends on one or more systematic variations and re-defining varied "
+                                   "columns is not supported.";
+         throw std::runtime_error(error);
+      } else if (where == "DefaultValueFor") {
+         const std::string error = "RDataFrame::" + where + ": cannot provide a default value for column \"" +
+                                   definedCol +
+                                   "\". The column depends on one or more systematic variations and it should not be "
+                                   "possible to have missing values in varied columns.";
+         throw std::runtime_error(error);
+      } else {
+         const std::string error =
+            "RDataFrame::" + where + ": this operation cannot work with columns that depend on systematic variations.";
+         throw std::runtime_error(error);
+      }
    }
 }
 
@@ -907,16 +923,27 @@ ColumnNames_t GetValidatedColumnNames(RLoopManager &lm, const unsigned int nColu
    }
 
    // Complain if there are still unknown columns at this point
-   const auto unknownColumns = FindUnknownColumns(selectedColumns, lm.GetBranchNames(), colRegister,
-                                                  ds ? ds->GetColumnNames() : ColumnNames_t{});
+   auto unknownColumns = FindUnknownColumns(selectedColumns, lm.GetBranchNames(), colRegister,
+                                            ds ? ds->GetColumnNames() : ColumnNames_t{});
 
    if (!unknownColumns.empty()) {
-      using namespace std::string_literals;
-      std::string errMsg = "Unknown column"s + (unknownColumns.size() > 1 ? "s: " : ": ");
-      for (auto &unknownColumn : unknownColumns)
-         errMsg += '"' + unknownColumn + "\", ";
-      errMsg.resize(errMsg.size() - 2); // remove last ", "
-      throw std::runtime_error(errMsg);
+      // Some columns are still unknown, we need to understand if the error
+      // should be printed or if the user requested to explicitly disable it.
+      // Look for a possible overlap between the unknown columns and the
+      // columns we should ignore for the purpose of the following exception
+      std::set<std::string> intersection;
+      auto colsToIgnore = lm.GetSuppressErrorsForMissingBranches();
+      std::sort(unknownColumns.begin(), unknownColumns.end());
+      std::sort(colsToIgnore.begin(), colsToIgnore.end());
+      std::set_intersection(unknownColumns.begin(), unknownColumns.end(), colsToIgnore.begin(), colsToIgnore.end(),
+                            std::inserter(intersection, intersection.begin()));
+      if (intersection.empty()) {
+         std::string errMsg = std::string("Unknown column") + (unknownColumns.size() > 1 ? "s: " : ": ");
+         for (auto &unknownColumn : unknownColumns)
+            errMsg += '"' + unknownColumn + "\", ";
+         errMsg.resize(errMsg.size() - 2); // remove last ", "
+         throw std::runtime_error(errMsg);
+      }
    }
 
    return selectedColumns;

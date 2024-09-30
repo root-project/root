@@ -62,6 +62,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     ROOT/RDF/RNewSampleNotifier.hxx
     ROOT/RDF/RSampleInfo.hxx
     ROOT/RDF/RDefineBase.hxx
+    ROOT/RDF/RDefaultValueFor.hxx
     ROOT/RDF/RDefine.hxx
     ROOT/RDF/RDefinePerSample.hxx
     ROOT/RDF/RDefineReader.hxx
@@ -87,6 +88,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     ROOT/RDF/RRange.hxx
     ROOT/RDF/RResultMap.hxx
     ROOT/RDF/RSample.hxx
+    ROOT/RDF/RFilterWithMissingValues.hxx
     ROOT/RDF/RTreeColumnReader.hxx
     ROOT/RDF/RVariation.hxx
     ROOT/RDF/RVariationBase.hxx

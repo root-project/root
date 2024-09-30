@@ -40,8 +40,8 @@ Base class of TTreeReaderArray.
    protected:
       void *UntypedAt(std::size_t idx) const { return fImpl->At(GetProxy(), idx); }
       void CreateProxy() override;
-      bool GetBranchAndLeaf(TBranch* &branch, TLeaf* &myLeaf,
-                            TDictionary* &branchActualType);
+      bool GetBranchAndLeaf(TBranch *&branch, TLeaf *&myLeaf, TDictionary *&branchActualType,
+                            bool suppressErrorsForMissingBranch = false);
       void SetImpl(TBranch* branch, TLeaf* myLeaf);
       const char* GetBranchContentDataType(TBranch* branch,
                                            TString& contentTypeName,

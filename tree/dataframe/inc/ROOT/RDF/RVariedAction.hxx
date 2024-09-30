@@ -140,11 +140,24 @@ public:
       std::for_each(fHelpers.begin(), fHelpers.end(), [=](Helper &h) { h.InitTask(r, slot); });
    }
 
-   template <typename... ColTypes, std::size_t... S>
-   void
-   CallExec(unsigned int slot, unsigned int varIdx, Long64_t entry, TypeList<ColTypes...>, std::index_sequence<S...>)
+   template <typename ColType>
+   auto GetValueChecked(unsigned int slot, unsigned int varIdx, std::size_t readerIdx, Long64_t entry) -> ColType &
    {
-      fHelpers[varIdx].Exec(slot, fInputValues[slot][varIdx][S]->template Get<ColTypes>(entry)...);
+      if (auto *val = fInputValues[slot][varIdx][readerIdx]->template TryGet<ColType>(entry))
+         return *val;
+
+      throw std::out_of_range{"RDataFrame: Varied action (" + fHelpers[0].GetActionName() +
+                              ") could not retrieve value for column '" + fColumnNames[readerIdx] + "' for entry " +
+                              std::to_string(entry) +
+                              ". You can use the DefaultValueFor operation to provide a default value, or "
+                              "FilterAvailable/FilterMissing to discard/keep entries with missing values instead."};
+   }
+
+   template <typename... ColTypes, std::size_t... ReaderIdxs>
+   void CallExec(unsigned int slot, unsigned int varIdx, Long64_t entry, TypeList<ColTypes...>,
+                 std::index_sequence<ReaderIdxs...>)
+   {
+      fHelpers[varIdx].Exec(slot, GetValueChecked<ColTypes>(slot, varIdx, ReaderIdxs, entry)...);
       (void)entry;
    }
 

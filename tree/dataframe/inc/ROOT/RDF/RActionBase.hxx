@@ -42,11 +42,11 @@ protected:
    /// A raw pointer to the RLoopManager at the root of this functional graph.
    /// Never null: children nodes have shared ownership of parent nodes in the graph.
    RLoopManager *fLoopManager;
+   const ColumnNames_t fColumnNames;
 
 private:
    const unsigned int fNSlots; ///< Number of thread slots used by this node.
    bool fHasRun = false;
-   const ColumnNames_t fColumnNames;
    /// List of systematic variations that affect the result of this action ("nominal" excluded).
    std::vector<std::string> fVariations;
 

@@ -1,8 +1,9 @@
 // @(#)root/tree:$Id$
 // Author: Axel Naumann, 2010-08-02
+// Author: Vincenzo Eduardo Padulano CERN 09/2024
 
 /*************************************************************************
- * Copyright (C) 1995-2013, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2024, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -38,6 +39,7 @@ class TFileCollection;
 namespace ROOT {
 namespace Internal {
    class TBranchProxyDirector;
+   class TFriendProxy;
 }
 }
 
@@ -148,26 +150,29 @@ public:
    typedef Iterator_t iterator;
 
    enum EEntryStatus {
-      kEntryValid = 0, ///< data read okay
-      kEntryNotLoaded, ///< no entry has been loaded yet
-      kEntryNoTree, ///< the tree does not exist
-      kEntryNotFound, ///< the tree entry number does not exist
-      kEntryChainSetupError, ///< problem in accessing a chain element, e.g. file without the tree
-      kEntryChainFileError, ///< problem in opening a chain's file
-      kEntryDictionaryError, ///< problem reading dictionary info from tree
-      kEntryBeyondEnd, ///< last entry loop has reached its end
-      kEntryBadReader, ///< One of the readers was not successfully initialized.
-      kEntryUnknownError ///< LoadTree return less than -4, likely a 'newer' error code.
+      kEntryValid = 0,                 ///< data read okay
+      kEntryNotLoaded,                 ///< no entry has been loaded yet
+      kEntryNoTree,                    ///< the tree does not exist
+      kEntryNotFound,                  ///< the tree entry number does not exist
+      kEntryChainSetupError,           ///< problem in accessing a chain element, e.g. file without the tree
+      kEntryChainFileError,            ///< problem in opening a chain's file
+      kEntryDictionaryError,           ///< problem reading dictionary info from tree
+      kEntryBeyondEnd,                 ///< last entry loop has reached its end
+      kEntryBadReader,                 ///< One of the readers was not successfully initialized.
+      kIndexedFriendNoMatch,           ///< A friend with TTreeIndex doesn't have an entry for this index
+      kMissingBranchWhenSwitchingTree, ///< A branch was not found when switching to the next TTree in the chain
+      kEntryUnknownError               ///< LoadTree return less than -6, likely a 'newer' error code.
    };
 
    enum ELoadTreeStatus {
-      kNoTree = 0,       ///< default state, no TTree is connected (formerly 'Zombie' state)
-      kLoadTreeNone,     ///< Notify has not been called yet.
-      kInternalLoadTree, ///< Notify/LoadTree was last called from SetEntryBase
-      kExternalLoadTree  ///< User code called LoadTree directly.
+      kNoTree = 0,           ///< default state, no TTree is connected (formerly 'Zombie' state)
+      kLoadTreeNone,         ///< Notify has not been called yet.
+      kInternalLoadTree,     ///< Notify/LoadTree was last called from SetEntryBase
+      kExternalLoadTree,     ///< User code called LoadTree directly.
+      kMissingBranchFromTree ///< Missing expected branch when loading new tree
    };
 
-   static constexpr const char * const fgEntryStatusText[kEntryUnknownError + 1] = {
+   static constexpr const char *const fgEntryStatusText[kEntryUnknownError + 1] = {
       "valid entry",
       "the tree does not exist",
       "the tree entry number does not exist",
@@ -176,12 +181,14 @@ public:
       "problem reading dictionary info from tree",
       "last entry loop has reached its end",
       "one of the readers was not successfully initialized",
-      "LoadTree return less than -4, likely a 'newer' error code"
-   };
+      "A friend with TTreeIndex doesn't have an entry for this index",
+      "A branch was not found when switching to the next TTree in the chain",
+      "LoadTree return less than -6, likely a 'newer' error code"};
 
    TTreeReader();
 
-   TTreeReader(TTree *tree, TEntryList *entryList = nullptr, bool warnAboutLongerFriends = true);
+   TTreeReader(TTree *tree, TEntryList *entryList = nullptr, bool warnAboutLongerFriends = true,
+               const std::vector<std::string> &suppressErrorsForMissingBranches = {});
    TTreeReader(const char* keyname, TDirectory* dir, TEntryList* entryList = nullptr);
    TTreeReader(const char *keyname, TEntryList *entryList = nullptr) : TTreeReader(keyname, nullptr, entryList) {}
 
@@ -271,7 +278,7 @@ protected:
       return fProxies.end() != proxyIt ? proxyIt->second.get() : nullptr;
    }
 
-   void AddProxy(ROOT::Internal::TNamedBranchProxy *p)
+   void AddProxy(std::unique_ptr<ROOT::Internal::TNamedBranchProxy> p)
    {
       auto bpName = p->GetName();
 #ifndef NDEBUG
@@ -281,8 +288,10 @@ protected:
       }
 #endif
 
-      fProxies[bpName].reset(p);
+      fProxies[bpName] = std::move(p);
    }
+
+   ROOT::Internal::TFriendProxy &AddFriendProxy(std::size_t friendIdx);
 
    bool RegisterValueReader(ROOT::Internal::TTreeReaderValueBase* reader);
    void DeregisterValueReader(ROOT::Internal::TTreeReaderValueBase* reader);
@@ -313,7 +322,8 @@ private:
    /// TTree and TChain will notify this object upon LoadTree, leading to a call to TTreeReader::Notify().
    TNotifyLink<TTreeReader> fNotify;
    std::unique_ptr<ROOT::Internal::TBranchProxyDirector> fDirector{nullptr}; ///< proxying director
-   std::deque<std::unique_ptr<ROOT::Internal::TFriendProxy>> fFriendProxies; ///< proxying for friend TTrees
+   /// Proxies to friend trees, created in TTreeReader[Value,Array]::CreateProxy
+   std::vector<std::unique_ptr<ROOT::Internal::TFriendProxy>> fFriendProxies;
    std::deque<ROOT::Internal::TTreeReaderValueBase*> fValues; ///< readers that use our director
    NamedProxies_t fProxies; ///< attached ROOT::TNamedBranchProxies; owned
 
@@ -334,6 +344,11 @@ private:
    // alignment.
    bool fWarnAboutLongerFriends{true};
    void WarnIfFriendsHaveMoreEntries();
+
+   // List of branches for which we want to suppress the printed error about
+   // missing branch when switching to a new tree
+   std::vector<std::string> fSuppressErrorsForMissingBranches{};
+   std::vector<std::string> fMissingProxies{};
 
    friend class ROOT::Internal::TTreeReaderValueBase;
    friend class ROOT::Internal::TTreeReaderArrayBase;
