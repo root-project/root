@@ -903,6 +903,7 @@ function parseLatex(node, arg, label, curr) {
             subpos.color = curr.painter.getColor(foundarg);
          else if (found.name === '#font[') {
             subpos.font = new FontHandler(foundarg);
+            subpos.font.setUseFullStyle(true); // while embedding - need to enforce full style
             subpos.ufont = true; // mark that custom font is applied
          } else
             subpos.fsize *= foundarg;

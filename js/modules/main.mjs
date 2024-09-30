@@ -27,7 +27,7 @@ export { openFile, FileProxy } from './io.mjs';
 
 export * from './gui/display.mjs';
 
-export { HierarchyPainter, getHPainter } from './gui/HierarchyPainter.mjs';
+export { HierarchyPainter } from './gui/HierarchyPainter.mjs';
 
 export { readStyleFromURL, buildGUI } from './gui.mjs';
 

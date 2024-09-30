@@ -1266,7 +1266,7 @@ class TAxisPainter extends ObjectPainter {
                             .style('cursor', 'crosshair');
 
             if (this.vertical) {
-               const rw = (labelsMaxWidth || 2*labelSize) + 3;
+               const rw = Math.max(labelsMaxWidth, 2*labelSize) + 3;
                r.attr('x', (side > 0) ? -rw : 0).attr('y', 0)
                 .attr('width', rw).attr('height', h);
             } else {
