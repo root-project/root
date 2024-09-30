@@ -87,7 +87,7 @@ public:
       kIgnoreTObjectStreamer  = TVirtualStreamerInfo::kIgnoreTObjectStreamer
    };
 
-   /// clang-format off
+   // clang-format off
    /// EReadWrite Enumerator
    /// | Enum Constant | Description   |
    /// |-------------|--------------------|
@@ -138,7 +138,7 @@ public:
       kUnsupportedConversion = -2,
       kUnset       = -3
    };
-   /// clang-format off
+   // clang-format off
 
    TVirtualStreamerInfo();
    TVirtualStreamerInfo(TClass * /*cl*/);
