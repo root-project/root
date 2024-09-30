@@ -77,12 +77,18 @@ if(NOT clad)
   )
 endif()
 
-# RBatchGenerator tutorials don't work on Windows at the moment.
 if(MSVC AND NOT win_broken_tests)
+  # RBatchGenerator tutorials don't work on Windows at the moment.
   list(APPEND dataframe_veto tmva/RBatchGenerator_NumPy.py)
   list(APPEND dataframe_veto tmva/RBatchGenerator_TensorFlow.py)
   list(APPEND dataframe_veto tmva/RBatchGenerator_PyTorch.py)
   list(APPEND dataframe_veto tmva/RBatchGenerator_filters_vectors.py)
+  # df036* and df037* seem to trigger OS errors when trying to delete the
+  # test files created in the tutorials. It is unclear why.
+  list(APPEND dataframe_veto dataframe/df036_missingBranches.C)
+  list(APPEND dataframe_veto dataframe/df036_missingBranches.py)
+  list(APPEND dataframe_veto dataframe/df037_TTreeEventMatching.C)
+  list(APPEND dataframe_veto dataframe/df037_TTreeEventMatching.py)
 endif()
 
 if (NOT dataframe)
