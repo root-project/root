@@ -40,6 +40,17 @@ ROOT::Experimental::RLogChannel &ROOT::Detail::RDF::RDFLogChannel()
    return c;
 }
 
+namespace {
+using TypeInfoRef = std::reference_wrapper<const std::type_info>;
+struct TypeInfoRefHash {
+   std::size_t operator()(TypeInfoRef id) const { return id.get().hash_code(); }
+};
+
+struct TypeInfoRefEqualComp {
+   bool operator()(TypeInfoRef left, TypeInfoRef right) const { return left.get() == right.get(); }
+};
+} // namespace
+
 namespace ROOT {
 namespace Internal {
 namespace RDF {
@@ -50,46 +61,53 @@ namespace RDF {
 /// columns.
 const std::type_info &TypeName2TypeID(const std::string &name)
 {
+
+   const static std::unordered_map<std::string, TypeInfoRef> typeName2TypeIDMap{
+      {"char", typeid(char)},
+      {"Char_t", typeid(char)},
+      {"unsigned char", typeid(unsigned char)},
+      {"UChar_t", typeid(unsigned char)},
+      {"int", typeid(int)},
+      {"Int_t", typeid(int)},
+      {"unsigned", typeid(unsigned int)},
+      {"unsigned int", typeid(unsigned int)},
+      {"UInt_t", typeid(unsigned int)},
+      {"short", typeid(short)},
+      {"short int", typeid(short)},
+      {"Short_t", typeid(short)},
+      {"unsigned short", typeid(unsigned short)},
+      {"unsigned short int", typeid(unsigned short)},
+      {"UShort_t", typeid(unsigned short)},
+      {"long", typeid(long)},
+      {"long int", typeid(long)},
+      {"Long_t", typeid(long)},
+      {"unsigned long", typeid(unsigned long)},
+      {"unsigned long int", typeid(unsigned long)},
+      {"ULong_t", typeid(unsigned long)},
+      {"double", typeid(double)},
+      {"Double_t", typeid(double)},
+      {"float", typeid(float)},
+      {"Float_t", typeid(float)},
+      {"long long", typeid(long long)},
+      {"long long int", typeid(long long)},
+      {"Long64_t", typeid(long long)},
+      {"unsigned long long", typeid(unsigned long long)},
+      {"unsigned long long int", typeid(unsigned long long)},
+      {"ULong64_t", typeid(unsigned long long)},
+      {"bool", typeid(bool)},
+      {"Bool_t", typeid(bool)}};
+
+   if (auto it = typeName2TypeIDMap.find(name); it != typeName2TypeIDMap.end())
+      return it->second.get();
+
    if (auto c = TClass::GetClass(name.c_str())) {
       if (!c->GetTypeInfo()) {
-         std::string msg("Cannot extract type_info of type ");
-         msg += name;
-         msg += ".";
-         throw std::runtime_error(msg);
+         throw std::runtime_error("Cannot extract type_info of type " + name + ".");
       }
       return *c->GetTypeInfo();
-   } else if (name == "char" || name == "Char_t")
-      return typeid(char);
-   else if (name == "unsigned char" || name == "UChar_t")
-      return typeid(unsigned char);
-   else if (name == "int" || name == "Int_t")
-      return typeid(int);
-   else if (name == "unsigned int" || name == "UInt_t")
-      return typeid(unsigned int);
-   else if (name == "short" || name == "Short_t")
-      return typeid(short);
-   else if (name == "unsigned short" || name == "UShort_t")
-      return typeid(unsigned short);
-   else if (name == "long" || name == "Long_t")
-      return typeid(long);
-   else if (name == "unsigned long" || name == "ULong_t")
-      return typeid(unsigned long);
-   else if (name == "double" || name == "Double_t")
-      return typeid(double);
-   else if (name == "float" || name == "Float_t")
-      return typeid(float);
-   else if (name == "long long" || name == "long long int" || name == "Long64_t")
-      return typeid(Long64_t);
-   else if (name == "unsigned long long" || name == "unsigned long long int" || name == "ULong64_t")
-      return typeid(ULong64_t);
-   else if (name == "bool" || name == "Bool_t")
-      return typeid(bool);
-   else {
-      std::string msg("Cannot extract type_info of type ");
-      msg += name;
-      msg += ".";
-      throw std::runtime_error(msg);
    }
+
+   throw std::runtime_error("Cannot extract type_info of type " + name + ".");
 }
 
 /// Returns the name of a type starting from its type_info
@@ -100,36 +118,23 @@ const std::type_info &TypeName2TypeID(const std::string &name)
 /// contention in multithreaded execution.
 std::string TypeID2TypeName(const std::type_info &id)
 {
+   const static std::unordered_map<TypeInfoRef, std::string, TypeInfoRefHash, TypeInfoRefEqualComp> typeID2TypeNameMap{
+      {typeid(char), "char"},         {typeid(unsigned char), "unsigned char"},
+      {typeid(int), "int"},           {typeid(unsigned int), "unsigned int"},
+      {typeid(short), "short"},       {typeid(unsigned short), "unsigned short"},
+      {typeid(long), "long"},         {typeid(unsigned long), "unsigned long"},
+      {typeid(double), "double"},     {typeid(float), "float"},
+      {typeid(Long64_t), "Long64_t"}, {typeid(ULong64_t), "ULong64_t"},
+      {typeid(bool), "bool"}};
+
+   if (auto it = typeID2TypeNameMap.find(id); it != typeID2TypeNameMap.end())
+      return it->second;
+
    if (auto c = TClass::GetClass(id)) {
       return c->GetName();
-   } else if (id == typeid(char))
-      return "char";
-   else if (id == typeid(unsigned char))
-      return "unsigned char";
-   else if (id == typeid(int))
-      return "int";
-   else if (id == typeid(unsigned int))
-      return "unsigned int";
-   else if (id == typeid(short))
-      return "short";
-   else if (id == typeid(unsigned short))
-      return "unsigned short";
-   else if (id == typeid(long))
-      return "long";
-   else if (id == typeid(unsigned long))
-      return "unsigned long";
-   else if (id == typeid(double))
-      return "double";
-   else if (id == typeid(float))
-      return "float";
-   else if (id == typeid(Long64_t))
-      return "Long64_t";
-   else if (id == typeid(ULong64_t))
-      return "ULong64_t";
-   else if (id == typeid(bool))
-      return "bool";
-   else
-      return "";
+   }
+
+   return "";
 }
 
 std::string ComposeRVecTypeName(const std::string &valueType)
@@ -253,32 +258,43 @@ std::string ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, R
 /// Return a space ' ' in case no match was found.
 char TypeName2ROOTTypeName(const std::string &b)
 {
-   if (b == "Char_t" || b == "char")
-      return 'B';
-   if (b == "UChar_t" || b == "unsigned char")
-      return 'b';
-   if (b == "Short_t" || b == "short" || b == "short int")
-      return 'S';
-   if (b == "UShort_t" || b == "unsigned short" || b == "unsigned short int")
-      return 's';
-   if (b == "Int_t" || b == "int")
-      return 'I';
-   if (b == "UInt_t" || b == "unsigned" || b == "unsigned int")
-      return 'i';
-   if (b == "Float_t" || b == "float")
-      return 'F';
-   if (b == "Double_t" || b == "double")
-      return 'D';
-   if (b == "Long64_t" || b == "long long" || b == "long long int")
-      return 'L';
-   if (b == "ULong64_t" || b == "unsigned long long" || b == "unsigned long long int")
-      return 'l';
-   if (b == "Long_t" || b == "long" || b == "long int")
-      return 'G';
-   if (b == "ULong_t" || b == "unsigned long" || b == "unsigned long int")
-      return 'g';
-   if (b == "Bool_t" || b == "bool")
-      return 'O';
+   const static std::unordered_map<std::string, char> typeName2ROOTTypeNameMap{{"char", 'B'},
+                                                                               {"Char_t", 'B'},
+                                                                               {"unsigned char", 'b'},
+                                                                               {"UChar_t", 'b'},
+                                                                               {"int", 'I'},
+                                                                               {"Int_t", 'I'},
+                                                                               {"unsigned", 'i'},
+                                                                               {"unsigned int", 'i'},
+                                                                               {"UInt_t", 'i'},
+                                                                               {"short", 'S'},
+                                                                               {"short int", 'S'},
+                                                                               {"Short_t", 'S'},
+                                                                               {"unsigned short", 's'},
+                                                                               {"unsigned short int", 's'},
+                                                                               {"UShort_t", 's'},
+                                                                               {"long", 'G'},
+                                                                               {"long int", 'G'},
+                                                                               {"Long_t", 'G'},
+                                                                               {"unsigned long", 'g'},
+                                                                               {"unsigned long int", 'g'},
+                                                                               {"ULong_t", 'g'},
+                                                                               {"double", 'D'},
+                                                                               {"Double_t", 'D'},
+                                                                               {"float", 'F'},
+                                                                               {"Float_t", 'F'},
+                                                                               {"long long", 'L'},
+                                                                               {"long long int", 'L'},
+                                                                               {"Long64_t", 'L'},
+                                                                               {"unsigned long long", 'l'},
+                                                                               {"unsigned long long int", 'l'},
+                                                                               {"ULong64_t", 'l'},
+                                                                               {"bool", 'O'},
+                                                                               {"Bool_t", 'O'}};
+
+   if (auto it = typeName2ROOTTypeNameMap.find(b); it != typeName2ROOTTypeNameMap.end())
+      return it->second;
+
    return ' ';
 }
 
