@@ -1610,7 +1610,7 @@ class TH2Painter extends THistPainter {
                if (draw_colors && (colindx !== null))
                   item.style('fill', this._color_palette.getColor(colindx));
                else if (draw_fill)
-                  item.call('fill', this.createAttFill(gr).func);
+                  item.call(this.createAttFill(gr).func);
                else
                   item.style('fill', 'none');
                if (draw_lines)

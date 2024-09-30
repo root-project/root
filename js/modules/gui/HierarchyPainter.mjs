@@ -2760,7 +2760,7 @@ class HierarchyPainter extends BasePainter {
    async listServerDir(dirname) {
       return httpRequest(dirname, 'text').then(res => {
          if (!res) return false;
-         const h = { _name: 'Files', _kind: kTopFolder, _childs: [], _isopen: true };
+         const h = { _name: 'Files', _kind: kTopFolder, _childs: [], _isopen: true }, fmap = {};
          let p = 0;
          while (p < res.length) {
             p = res.indexOf('a href="', p+1);
@@ -2771,6 +2771,10 @@ class HierarchyPainter extends BasePainter {
 
             const fname = res.slice(p, p2);
             p = p2 + 1;
+
+            if (fmap[fname]) continue;
+            fmap[fname] = true;
+
             if ((fname.lastIndexOf('.root') === fname.length - 5) && (fname.length > 5)) {
                h._childs.push({
                   _name: fname, _title: dirname + fname, _url: dirname + fname, _kind: kindTFile,
