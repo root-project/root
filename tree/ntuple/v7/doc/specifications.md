@@ -589,7 +589,8 @@ The first 32bit integer references the physical column ID.
 The second 32bit integer references the associated "projected" field.
 A projected field is a field using alias columns to present available data by an alternative C++ type.
 The ID of the alias column itself is given implicitly by the serialization order.
-In particular, alias columns have larger IDs than physical columns.
+In particular, alias columns have larger IDs than physical columns in the same schema description block
+(see comment in Section "Schema Extension Record Frame").
 In the footer and page list envelopes, only physical column IDs must be referenced.
 
 
@@ -651,10 +652,14 @@ The schema extension record frame contains an additional schema description that
  - List frame: list of alias column record frames
  - List frame: list of extra type information
 
-
-In general, a schema extension is optional and thus this record frame might be empty.
+In general, a schema extension is optional, and thus this record frame might be empty.
 The interpretation of the information contained therein should be identical as if it was found directly at the end of the header.
 This is necessary when fields have been added during writing.
+
+Note that the field IDs and column IDs given by the serialization order
+should continue from the largest IDs found in the header.
+For the column IDs,
+the order is physical columns (header), alias columns (header), physical columns (footer), alias columns (footer).
 
 #### Column Group Record Frame
 The column group record frame is used to set IDs for certain subsets of column IDs.
