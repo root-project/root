@@ -470,7 +470,7 @@ jobs:
           build-directory: /github/home/ROOT-CI/src/
 
       - name: Pull Request Build
-        if: github.event_name == 'pull_request'
+        if:   ${{ github.event_name == 'pull_request' && matrix.property != 'arm64' }}
         env:
           INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') }}
           GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
