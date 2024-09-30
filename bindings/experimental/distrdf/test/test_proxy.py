@@ -272,3 +272,11 @@ class InternalDataFrameTests(unittest.TestCase):
         cols_after = proxy.GetColumnNames()
 
         self.assertSequenceEqual(cols_after, ["x", "y", "z"])
+        
+    def test_get_column_type(self):
+        
+        hn = create_dummy_headnode(self.test_treename, self.test_filename)
+        proxy = Proxy.NodeProxy(hn)
+        column_type = proxy.GetColumnType("myColumn")
+        self.assertSequenceEqual(column_type, "Float_t")
+    
