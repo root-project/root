@@ -95,8 +95,9 @@ def main():
         macos_version_tuple = platform.mac_ver()
         macos_version = macos_version_tuple[0]
         macos_version_prefix = f'{macos_version}/'
+    platform_machine = platform.machine()
 
-    obj_prefix = f'{args.platform}/{macos_version_prefix}{args.base_ref}/{args.buildtype}/{options_hash}'
+    obj_prefix = f'{args.platform}/{macos_version_prefix}{args.base_ref}/{args.buildtype}_{platform_machine}/{options_hash}'
 
     # Make testing of CI in forks not impact artifacts
     if 'root-project/root' not in args.repository:
