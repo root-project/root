@@ -350,6 +350,9 @@ TEST(RNTupleShow, Collections)
       leafFields.emplace_back(std::make_unique<RField<int>>("myInt"));
       leafFields.emplace_back(std::make_unique<RField<float>>("myFloat"));
       auto recordField = std::make_unique<RRecordField>("_0", leafFields);
+      EXPECT_EQ(offsetof(MyStruct, myInt), recordField->GetOffsets()[0]);
+      EXPECT_EQ(offsetof(MyStruct, myFloat), recordField->GetOffsets()[1]);
+
       auto collectionField = RVectorField::CreateUntyped("myCollection", std::move(recordField));
       model->AddField(std::move(collectionField));
       model->Freeze();
