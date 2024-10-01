@@ -4,10 +4,6 @@
 # higher than kInfo are issued by tests.
 # Stephan Hageboeck, CERN, 2022
 
-if(NOT testing)
-  return()
-endif()
-
 set(libname TestSupport)
 set(header_dir ROOT/)
 
