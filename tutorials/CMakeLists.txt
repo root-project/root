@@ -470,6 +470,10 @@ set(all_veto hsimple.C
              )
 
 file(GLOB_RECURSE tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.C)
+if(webgui)
+  file(GLOB_RECURSE tutorials_webcanv RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} webcanv/*.cxx)
+  list(APPEND tutorials ${tutorials_webcanv})
+endif()
 if(root7 AND webgui)
   file(GLOB_RECURSE tutorials_v7 RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} v7/*.cxx)
   list(APPEND tutorials ${tutorials_v7})
@@ -655,8 +659,8 @@ foreach(t ${tutorials})
   endif()
   if(${t} IN_LIST multithreaded)
     list(APPEND labels multithreaded)
-    # If this is not a TMVA tutorial, we want to limit the size of the thread 
-    # pool in case the tutorial invokes ROOT::EnableImplicitMT(), which by 
+    # If this is not a TMVA tutorial, we want to limit the size of the thread
+    # pool in case the tutorial invokes ROOT::EnableImplicitMT(), which by
     # default creates a thread pool of the size of the total number of cores.
     if(${t} IN_LIST multithreaded_all_cores)
       set(createThreadPool "-e \"ROOT::EnableImplicitMT(${NProcessors})\"")
@@ -884,8 +888,8 @@ if(ROOT_pyroot_FOUND)
     endif()
     if(${t} IN_LIST multithreaded)
       list(APPEND labels multithreaded)
-      # If this is not a TMVA tutorial, we want to limit the size of the thread 
-      # pool in case the tutorial invokes ROOT::EnableImplicitMT(), which by 
+      # If this is not a TMVA tutorial, we want to limit the size of the thread
+      # pool in case the tutorial invokes ROOT::EnableImplicitMT(), which by
       # default creates a thread pool of the size of the total number of cores.
       if(${t} IN_LIST multithreaded_all_cores)
         set(setThreadPoolSize ".enableImplicitMTWrapper.py")
