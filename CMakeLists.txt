@@ -383,6 +383,10 @@ endif()
 ROOT_ADD_TEST_SUBDIRECTORY(test)
 ROOT_ADD_TEST_SUBDIRECTORY(tutorials)
 
+# Each subdirectory added above will register headers to be copied to the build tree.
+# Here, the copy targets are created:
+ROOT_CREATE_HEADER_COPY_TARGETS()
+
 get_property(__allHeaders GLOBAL PROPERTY ROOT_HEADER_TARGETS)
 get_property(__allBuiltins GLOBAL PROPERTY ROOT_BUILTIN_TARGETS)
 add_custom_target(move_headers ALL DEPENDS ${__allHeaders} ${__allBuiltins} gitinfotxt)
