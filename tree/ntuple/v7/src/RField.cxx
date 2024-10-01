@@ -1502,6 +1502,7 @@ ROOT::Experimental::RField<double>::GetColumnRepresentations() const
                                                   {EColumnType::kSplitReal32},
                                                   {EColumnType::kReal32},
                                                   {EColumnType::kReal16},
+                                                  {EColumnType::kReal32Trunc},
                                                   {EColumnType::kReal32Quant}},
                                                  {});
    return representations;

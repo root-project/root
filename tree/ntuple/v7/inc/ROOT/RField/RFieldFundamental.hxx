@@ -432,9 +432,12 @@ public:
    /// This is mutually exclusive with `SetTruncated` and `SetQuantized`.
    void SetHalfPrecision() { SetColumnRepresentatives({{EColumnType::kReal16}}); }
 
-   /// Set the precision of this field to `nBits`. The remaining (sizeof(T)*8 - `nBits`) bits will be truncated
-   /// from the number's mantissa. `nBits` must be $10 <= nBits <= 31$ (this means that at least 1 bit
+   /// Set the on-disk representation of this field to a single-precision float truncated to `nBits`.
+   /// The remaining (32 - `nBits`) bits will be truncated from the number's mantissa.
+   /// `nBits` must be $10 <= nBits <= 31$ (this means that at least 1 bit
    /// of mantissa is always preserved). Note that this effectively rounds the number towards 0.
+   /// For a double-precision field, this implies first a cast to single-precision, then the truncation.
+   /// This is mutually exclusive with `SetHalfPrecision` and `SetQuantized`.
    void SetTruncated(std::size_t nBits)
    {
       const auto &[minBits, maxBits] = Internal::RColumnElementBase::GetValidBitRange(EColumnType::kReal32Trunc);
@@ -448,6 +451,7 @@ public:
    }
 
    /// Sets this field to use a quantized integer representation using `nBits` per value.
+   /// It must be $1 <= nBits <= 32$.
    /// This call promises that this field will only contain values contained in `[minValue, maxValue]` inclusive.
    /// If a value outside this range is assigned to this field, the behavior is undefined.
    /// This is mutually exclusive with `SetTruncated` and `SetHalfPrecision`.
