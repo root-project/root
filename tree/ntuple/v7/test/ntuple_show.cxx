@@ -341,16 +341,16 @@ TEST(RNTupleShow, Collections)
    FileRaii fileGuard(rootFileName);
    {
       struct MyStruct {
-         int myInt;
+         short myShort;
          float myFloat;
       };
 
       auto model = RNTupleModel::Create();
       std::vector<std::unique_ptr<RFieldBase>> leafFields;
-      leafFields.emplace_back(std::make_unique<RField<int>>("myInt"));
+      leafFields.emplace_back(std::make_unique<RField<short>>("myShort"));
       leafFields.emplace_back(std::make_unique<RField<float>>("myFloat"));
       auto recordField = std::make_unique<RRecordField>("_0", leafFields);
-      EXPECT_EQ(offsetof(MyStruct, myInt), recordField->GetOffsets()[0]);
+      EXPECT_EQ(offsetof(MyStruct, myShort), recordField->GetOffsets()[0]);
       EXPECT_EQ(offsetof(MyStruct, myFloat), recordField->GetOffsets()[1]);
 
       auto collectionField = RVectorField::CreateUntyped("myCollection", std::move(recordField));
@@ -371,7 +371,7 @@ TEST(RNTupleShow, Collections)
    // clang-format off
    std::string outputData{ std::string("")
       + "{\n"
-      + "  \"myCollection\": [{\"myInt\": 1, \"myFloat\": 10}, {\"myInt\": 2, \"myFloat\": 20}]\n"
+      + "  \"myCollection\": [{\"myShort\": 1, \"myFloat\": 10}, {\"myShort\": 2, \"myFloat\": 20}]\n"
       + "}\n" };
    // clang-format on
    EXPECT_EQ(outputData, osData.str());
@@ -386,7 +386,7 @@ TEST(RNTupleShow, Collections)
       + "********************************************************************************\n"
       + "* Field 1           : myCollection                                             *\n"
       + "*   Field 1.1       : _0                                                       *\n"
-      + "*     Field 1.1.1   : myInt (std::int32_t)                                     *\n"
+      + "*     Field 1.1.1   : myShort (std::int16_t)                                   *\n"
       + "*     Field 1.1.2   : myFloat (float)                                          *\n"
       + "********************************************************************************\n" };
    // clang-format on
