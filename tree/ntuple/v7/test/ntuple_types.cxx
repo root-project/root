@@ -891,6 +891,28 @@ TEST(RNTuple, StdUnorderedMultiMap)
    }
 }
 
+TEST(RNTuple, StdMapImposedModel)
+{
+   FileRaii fileGuard("test_ntuple_stdmap_imposed_model.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto ptrFoo = model->MakeField<std::map<std::string, float>>("foo");
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      ptrFoo->insert({"bar", 1.0});
+      writer->Fill();
+   }
+
+   auto model = RNTupleModel::Create();
+   auto ptrFoo = model->MakeField<std::vector<std::pair<std::string, float>>>("foo");
+   auto reader = RNTupleReader::Open(std::move(model), "ntpl", fileGuard.GetPath());
+
+   reader->LoadEntry(0);
+   EXPECT_EQ(1u, ptrFoo->size());
+   EXPECT_EQ("bar", ptrFoo->at(0).first);
+   EXPECT_FLOAT_EQ(1.0, ptrFoo->at(0).second);
+}
+
 TEST(RNTuple, Int64)
 {
    {
