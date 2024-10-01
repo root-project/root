@@ -488,7 +488,7 @@ protected:
 public:
    static constexpr bool kIsMappable = false;
 
-   // We don't implement Pack() because bolleans must not be written as integers to disk
+   // We don't implement Pack() because booleans must not be written as integers to disk
    void Pack(void *, const void *, std::size_t) const final { R__ASSERT(false); }
 
    void Unpack(void *dst, const void *src, std::size_t count) const final
