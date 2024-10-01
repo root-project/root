@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_hist
+/// \ingroup tutorial_webcanv
 /// \notebook -js
 /// Swap X/Y axes drawing and use to draw TH1 as bar and as markers
 /// Option "haxisg;y+" draw histogram axis as for "hbar" plus allow to draw grids plus draw Y labels on other side
@@ -14,16 +14,6 @@
 /// \macro_code
 ///
 /// \author Sergey Linev
-
-#include <fstream>
-#include <string>
-#include <vector>
-
-#include "TCanvas.h"
-#include "TH1.h"
-#include "TPolyLine.h"
-#include "TLatex.h"
-#include "TBox.h"
 
 void haxis()
 {
@@ -77,6 +67,10 @@ void haxis()
    haxis->GetXaxis()->SetLabelOffset(0.02);
 
    auto c1 = new TCanvas("chaxis", "title", 1500, 800);
+
+   if (!gROOT->IsBatch() && !c1->IsWeb())
+      ::Warning("haxis.cxx", "macro may not work without enabling web-based canvas");
+
    c1->SetLeftMargin(frame_left);
    c1->SetRightMargin(1 - frame_right);
    c1->SetTopMargin(1 - frame_top);
