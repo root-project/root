@@ -13,6 +13,7 @@
 
 #include <bitset>
 #include <cassert>
+#include <type_traits>
 
 // NOTE: some tests might define R__LITTLE_ENDIAN to simulate a different-endianness machine
 #ifndef R__LITTLE_ENDIAN
@@ -755,16 +756,17 @@ public:
    }
 };
 
-template <>
-class RColumnElement<float, EColumnType::kReal32Trunc> : public RColumnElementBase {
+template <typename T>
+class RColumnElementTrunc : public RColumnElementBase {
 public:
+   static_assert(std::is_floating_point_v<T>);
    static constexpr bool kIsMappable = false;
-   static constexpr std::size_t kSize = sizeof(float);
+   static constexpr std::size_t kSize = sizeof(T);
 
    // NOTE: setting bitsOnStorage == 0 by default. This is an invalid value that helps us
-   // catch misusages where RColumnElement is used without having explicitly set its bit width
+   // catch misuses where RColumnElement is used without having explicitly set its bit width
    // (which should never happen).
-   RColumnElement() : RColumnElementBase(kSize, 0) {}
+   RColumnElementTrunc() : RColumnElementBase(kSize, 0) {}
 
    void SetBitsOnStorage(std::size_t bitsOnStorage) final
    {
@@ -774,7 +776,11 @@ public:
    }
 
    bool IsMappable() const final { return kIsMappable; }
+};
 
+template <>
+class RColumnElement<float, EColumnType::kReal32Trunc> : public RColumnElementTrunc<float> {
+public:
    void Pack(void *dst, const void *src, std::size_t count) const final
    {
       using namespace ROOT::Experimental::Internal::BitPacking;
@@ -806,12 +812,62 @@ public:
    }
 };
 
+template <>
+class RColumnElement<double, EColumnType::kReal32Trunc> : public RColumnElementTrunc<double> {
+public:
+   void Pack(void *dst, const void *src, std::size_t count) const final
+   {
+      using namespace ROOT::Experimental::Internal::BitPacking;
+
+      R__ASSERT(GetPackedSize(count) == MinBufSize(count, fBitsOnStorage));
+
+      // Cast doubles to float before packing them
+      // TODO(gparolini): avoid this allocation
+      auto srcFloat = std::make_unique<float[]>(count);
+      const double *srcDouble = reinterpret_cast<const double *>(src);
+      for (std::size_t i = 0; i < count; ++i)
+         srcFloat[i] = static_cast<float>(srcDouble[i]);
+
+#if R__LITTLE_ENDIAN == 0
+      // TODO(gparolini): to avoid this extra allocation we might want to perform byte swapping
+      // directly in the Pack/UnpackBits functions.
+      auto bswapped = std::make_unique<float[]>(count);
+      CopyBswap<sizeof(float)>(bswapped.get(), srcFloat.get(), count);
+      const float *srcLe = bswapped.get();
+#else
+      const float *srcLe = reinterpret_cast<const float *>(srcFloat.get());
+#endif
+      PackBits(dst, srcLe, count, sizeof(float), fBitsOnStorage);
+   }
+
+   void Unpack(void *dst, const void *src, std::size_t count) const final
+   {
+      using namespace ROOT::Experimental::Internal::BitPacking;
+
+      R__ASSERT(GetPackedSize(count) == MinBufSize(count, fBitsOnStorage));
+
+      // TODO(gparolini): avoid this allocation
+      auto dstFloat = std::make_unique<float[]>(count);
+      UnpackBits(dstFloat.get(), src, count, sizeof(float), fBitsOnStorage);
+#if R__LITTLE_ENDIAN == 0
+      InPlaceBswap<sizeof(float)>(dstFloat.get(), count);
+#endif
+
+      double *dstDouble = reinterpret_cast<double *>(dst);
+      for (std::size_t i = 0; i < count; ++i)
+         dstDouble[i] = static_cast<double>(dstFloat[i]);
+   }
+};
+
 namespace Quantize {
 
 using Quantized_t = std::uint32_t;
 
 [[maybe_unused]] inline std::size_t LeadingZeroes(std::uint32_t x)
 {
+   if (x == 0)
+      return 64;
+
 #ifdef _MSC_VER
    unsigned long idx = 0;
    _BitScanForward(&idx, x);
@@ -823,6 +879,9 @@ using Quantized_t = std::uint32_t;
 
 [[maybe_unused]] inline std::size_t TrailingZeroes(std::uint32_t x)
 {
+   if (x == 0)
+      return 64;
+
 #ifdef _MSC_VER
    unsigned long idx = 0;
    _BitScanReverse(&idx, x);
@@ -883,6 +942,9 @@ int UnquantizeReals(T *dst, const Quantized_t *src, std::size_t count, double mi
    const std::size_t quantMax = (1ull << nQuantBits) - 1;
    const double scale = (max - min) / quantMax;
    const std::size_t unusedBits = sizeof(Quantized_t) * 8 - nQuantBits;
+   const double eps = std::numeric_limits<double>::epsilon();
+   const double emin = -eps * scale + min;
+   const double emax = (static_cast<double>(quantMax) + eps) * scale + min;
 
    int nOutOfRange = 0;
 
@@ -897,7 +959,7 @@ int UnquantizeReals(T *dst, const Quantized_t *src, std::size_t count, double mi
       const double e = fq * scale + min;
       dst[i] = static_cast<T>(e);
 
-      nOutOfRange += !(min <= dst[i] && dst[i] <= max);
+      nOutOfRange += !(emin <= dst[i] && dst[i] <= emax);
    }
 
    return nOutOfRange;
@@ -938,8 +1000,8 @@ public:
       auto quantized = std::make_unique<Quantize::Quantized_t[]>(count);
       assert(fValueRange);
       const auto [min, max] = *fValueRange;
-      const int nOutOfRange = Quantize::QuantizeReals(quantized.get(), reinterpret_cast<const float *>(src), count, min,
-                                                      max, fBitsOnStorage);
+      const int nOutOfRange =
+         Quantize::QuantizeReals(quantized.get(), reinterpret_cast<const T *>(src), count, min, max, fBitsOnStorage);
       if (nOutOfRange) {
          throw RException(R__FAIL(std::to_string(nOutOfRange) +
                                   " values were found of of range for quantization while packing (range is [" +
@@ -958,7 +1020,7 @@ public:
       const auto [min, max] = *fValueRange;
       Internal::BitPacking::UnpackBits(quantized.get(), src, count, sizeof(Quantize::Quantized_t), fBitsOnStorage);
       [[maybe_unused]] const int nOutOfRange =
-         Quantize::UnquantizeReals(reinterpret_cast<float *>(dst), quantized.get(), count, min, max, fBitsOnStorage);
+         Quantize::UnquantizeReals(reinterpret_cast<T *>(dst), quantized.get(), count, min, max, fBitsOnStorage);
       // NOTE: here, differently from Pack(), we don't ever expect to have values out of range, since the quantized
       // integers we pass to UnquantizeReals are by construction limited in value to the proper range. In Pack()
       // this is not the case, as the user may give us float values that are out of range.

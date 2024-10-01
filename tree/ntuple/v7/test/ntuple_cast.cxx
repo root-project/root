@@ -177,3 +177,112 @@ TEST(RNTuple, TypeCastBool)
    EXPECT_FALSE(*ptrInt64Unsplit);
    EXPECT_FALSE(*ptrUInt64Unsplit);
 }
+
+TEST(RNTuple, TypeCastReal)
+{
+   FileRaii fileGuard("test_ntuple_type_cast_real.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto ptrFloat = model->MakeField<float>("float");
+      auto ptrDouble = model->MakeField<double>("double");
+
+      auto fieldFloatHalf = std::make_unique<RField<float>>("float_half");
+      fieldFloatHalf->SetHalfPrecision();
+      model->AddField(std::move(fieldFloatHalf));
+      auto ptrFloatHalf = model->GetDefaultEntry().GetPtr<float>("float_half");
+
+      auto fieldDoubleHalf = std::make_unique<RField<double>>("double_half");
+      fieldDoubleHalf->SetHalfPrecision();
+      model->AddField(std::move(fieldDoubleHalf));
+      auto ptrDoubleHalf = model->GetDefaultEntry().GetPtr<double>("double_half");
+
+      auto fieldFloatTrunc = std::make_unique<RField<float>>("float_trunc");
+      fieldFloatTrunc->SetTruncated(20);
+      model->AddField(std::move(fieldFloatTrunc));
+      auto ptrFloatTrunc = model->GetDefaultEntry().GetPtr<float>("float_trunc");
+
+      auto fieldDoubleTrunc = std::make_unique<RField<double>>("double_trunc");
+      fieldDoubleTrunc->SetTruncated(16);
+      model->AddField(std::move(fieldDoubleTrunc));
+      auto ptrDoubleTrunc = model->GetDefaultEntry().GetPtr<double>("double_trunc");
+
+      auto fieldFloatQuant = std::make_unique<RField<float>>("float_quant");
+      fieldFloatQuant->SetQuantized(-1, 1, 12);
+      model->AddField(std::move(fieldFloatQuant));
+      auto ptrFloatQuant = model->GetDefaultEntry().GetPtr<float>("float_quant");
+
+      auto fieldDoubleQuant = std::make_unique<RField<double>>("double_quant");
+      fieldDoubleQuant->SetQuantized(0, 1, 32);
+      model->AddField(std::move(fieldDoubleQuant));
+      auto ptrDoubleQuant = model->GetDefaultEntry().GetPtr<double>("double_quant");
+
+      auto fieldDouble32 = std::make_unique<RField<double>>("double32");
+      fieldDouble32->SetDouble32();
+      model->AddField(std::move(fieldDouble32));
+      auto ptrDouble32 = model->GetDefaultEntry().GetPtr<double>("double32");
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      *ptrFloat = 42.4242;
+      *ptrDouble = -55.567;
+      *ptrFloatHalf = 12.345;
+      *ptrDoubleHalf = -777.777;
+      *ptrFloatTrunc = 0.00345;
+      *ptrDoubleTrunc = -0.001;
+      *ptrFloatQuant = -0.567;
+      *ptrDoubleQuant = 0.782;
+      *ptrDouble32 = 11.043;
+      writer->Fill();
+      *ptrFloat = -42.4242;
+      *ptrDouble = 55.567;
+      *ptrFloatHalf = -12.345;
+      *ptrDoubleHalf = 777.777;
+      *ptrFloatTrunc = -0.00345;
+      *ptrDoubleTrunc = 0.001;
+      *ptrFloatQuant = 0.567;
+      *ptrDoubleQuant = 0.113;
+      *ptrDouble32 = -11.043;
+      writer->Fill();
+   }
+
+   // Read back each pointer as the "opposite" type
+   auto castModel = RNTupleModel::Create();
+   auto ptrFloat = castModel->MakeField<double>("float");
+   auto ptrFloatHalf = castModel->MakeField<double>("float_half");
+   auto ptrDoubleHalf = castModel->MakeField<float>("double_half");
+   auto ptrFloatTrunc = castModel->MakeField<double>("float_trunc");
+   auto ptrDoubleTrunc = castModel->MakeField<float>("double_trunc");
+   auto ptrFloatQuant = castModel->MakeField<double>("float_quant");
+   auto ptrDoubleQuant = castModel->MakeField<float>("double_quant");
+   auto ptrDouble32 = castModel->MakeField<float>("double32");
+
+   {
+      auto castModelWrong = castModel->Clone();
+      castModelWrong->MakeField<float>("double");
+      // Should fail because we try to cast a Field<double> to a Field<float>
+      EXPECT_THROW(RNTupleReader::Open(std::move(castModelWrong), "ntpl", fileGuard.GetPath()), RException);
+   }
+
+   auto ptrDouble = castModel->MakeField<double>("double");
+   auto reader = RNTupleReader::Open(std::move(castModel), "ntpl", fileGuard.GetPath());
+   reader->LoadEntry(0);
+   EXPECT_FLOAT_EQ(*ptrFloat, 42.4242);
+   EXPECT_FLOAT_EQ(*ptrDouble, -55.567);
+   EXPECT_NEAR(*ptrFloatHalf, 12.345, 0.005);
+   EXPECT_NEAR(*ptrDoubleHalf, -777.777, 0.5);
+   EXPECT_NEAR(*ptrFloatTrunc, 0.00345, 0.05);
+   EXPECT_NEAR(*ptrDoubleTrunc, -0.001, 0.05);
+   EXPECT_NEAR(*ptrFloatQuant, -0.567, 0.005);
+   EXPECT_FLOAT_EQ(*ptrDoubleQuant, 0.782);
+   EXPECT_FLOAT_EQ(*ptrDouble32, 11.043);
+   reader->LoadEntry(1);
+   EXPECT_FLOAT_EQ(*ptrFloat, -42.4242);
+   EXPECT_FLOAT_EQ(*ptrDouble, 55.567);
+   EXPECT_NEAR(*ptrFloatHalf, -12.345, 0.005);
+   EXPECT_NEAR(*ptrDoubleHalf, 777.777, 0.5);
+   EXPECT_NEAR(*ptrFloatTrunc, -0.00345, 0.05);
+   EXPECT_NEAR(*ptrDoubleTrunc, 0.001, 0.05);
+   EXPECT_NEAR(*ptrFloatQuant, 0.567, 0.005);
+   EXPECT_FLOAT_EQ(*ptrDoubleQuant, 0.113);
+   EXPECT_FLOAT_EQ(*ptrDouble32, -11.043);
+}

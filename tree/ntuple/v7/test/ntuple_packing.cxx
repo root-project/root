@@ -410,7 +410,7 @@ TEST(Packing, OnDiskEncoding)
    EXPECT_NEAR(0.875f, viewFquant(1), 0.005f);
 }
 
-TEST(Packing, Real32Trunc)
+TEST(Packing, Real32TruncFloat)
 {
    namespace BitPacking = ROOT::Experimental::Internal::BitPacking;
    {
@@ -569,6 +569,165 @@ TEST(Packing, Real32Trunc)
    }
 }
 
+TEST(Packing, Real32TruncDouble)
+{
+   namespace BitPacking = ROOT::Experimental::Internal::BitPacking;
+   {
+      constexpr auto kBitsOnStorage = 10;
+      RColumnElement<double, EColumnType::kReal32Trunc> element;
+      element.SetBitsOnStorage(kBitsOnStorage);
+      element.Pack(nullptr, nullptr, 0);
+      element.Unpack(nullptr, nullptr, 0);
+
+      double f1 = 3.5f;
+      unsigned char out[8];
+      element.Pack(out, &f1, 1);
+
+      double f2;
+      element.Unpack(&f2, out, 1);
+      // Dropping all but first 10 bits:
+      // 0x40600000 -> 0x40400000
+      // 3.5f       -> 3.f
+      EXPECT_FLOAT_EQ(f2, 3.f);
+
+      double f[5] = {3.5f, 3.5f, 3.5f, 3.5f, 3.5f};
+      unsigned char out2[BitPacking::MinBufSize(5, kBitsOnStorage)];
+      element.Pack(out2, f, 5);
+
+      double fout[5];
+      element.Unpack(fout, out2, 5);
+      for (int i = 0; i < 5; ++i)
+         EXPECT_FLOAT_EQ(fout[i], 3.f);
+
+      // verify that Pack() doesn't write past the end of the valid buffer
+      unsigned char outExtra[BitPacking::MinBufSize(5, kBitsOnStorage) + 4];
+      outExtra[BitPacking::MinBufSize(5, kBitsOnStorage)] = 44;
+      outExtra[BitPacking::MinBufSize(5, kBitsOnStorage) + 1] = 11;
+      outExtra[BitPacking::MinBufSize(5, kBitsOnStorage) + 2] = 22;
+      outExtra[BitPacking::MinBufSize(5, kBitsOnStorage) + 3] = 33;
+      element.Pack(outExtra, f, 5);
+
+      EXPECT_FLOAT_EQ(outExtra[BitPacking::MinBufSize(5, kBitsOnStorage)], 44);
+      EXPECT_FLOAT_EQ(outExtra[BitPacking::MinBufSize(5, kBitsOnStorage) + 1], 11);
+      EXPECT_FLOAT_EQ(outExtra[BitPacking::MinBufSize(5, kBitsOnStorage) + 2], 22);
+      EXPECT_FLOAT_EQ(outExtra[BitPacking::MinBufSize(5, kBitsOnStorage) + 3], 33);
+   }
+
+   {
+      constexpr auto kBitsOnStorage = 11;
+      RColumnElement<double, EColumnType::kReal32Trunc> element;
+      element.SetBitsOnStorage(kBitsOnStorage);
+      element.Pack(nullptr, nullptr, 0);
+      element.Unpack(nullptr, nullptr, 0);
+
+      double f1 = 992.f;
+      unsigned char out[8];
+      element.Pack(out, &f1, 1);
+
+      double f2;
+      element.Unpack(&f2, out, 1);
+      // Dropping all but first 11 bits:
+      // 0x44780000 -> 0x44600000
+      // 992.f       -> 896.f
+      EXPECT_FLOAT_EQ(f2, 896.f);
+
+      // NOTE: 0b000'0000'0011, 0b000'0000'0111, 0b000'0000'1111, ...
+      double f[5] = {4.408104e-39, 1.0285575e-38, -2.2040519e-38, 8.8162076e-38, 1.4105932e-36};
+      // ... truncated to: 0b000'0000'0010, 0b000'0000'0110, 0b000'0000'1110, ...
+      const double expf[5] = {2.938736e-39, 8.816207e-39, -2.0571151e-38, 8.2284604e-38, 1.3165537e-36};
+      unsigned char out2[BitPacking::MinBufSize(5, kBitsOnStorage)];
+      element.Pack(out2, f, 5);
+
+      double fout[5];
+      element.Unpack(fout, out2, 5);
+      for (int i = 0; i < 5; ++i)
+         EXPECT_FLOAT_EQ(fout[i], expf[i]);
+   }
+
+   {
+      constexpr auto kBitsOnStorage = 31;
+      RColumnElement<double, EColumnType::kReal32Trunc> element;
+      element.SetBitsOnStorage(kBitsOnStorage);
+      element.Pack(nullptr, nullptr, 0);
+      element.Unpack(nullptr, nullptr, 0);
+
+      double f1 = 2.126f;
+      unsigned char out[8];
+      element.Pack(out, &f1, 1);
+
+      double f2;
+      element.Unpack(&f2, out, 1);
+      // 2.126f has a 1 in the 30th bit of the mantissa, we should have preserved it.
+      EXPECT_FLOAT_EQ(f2, 2.126f);
+
+      constexpr auto N = 10000;
+      double f[N];
+      for (int i = 0; i < N; ++i)
+         f[i] = -2097176.7f;
+      auto out2 = std::make_unique<unsigned char[]>(BitPacking::MinBufSize(N, kBitsOnStorage));
+      element.Pack(out2.get(), f, N);
+
+      double fout[N];
+      element.Unpack(fout, out2.get(), N);
+      for (int i = 0; i < N; ++i) {
+         EXPECT_FLOAT_EQ(fout[i], -2097176.5f); // dropped last bit of mantissa
+         if (fout[i] != -2097176.5f)            // prevent spamming
+            break;
+      }
+   }
+
+   {
+      constexpr auto kBitsOnStorage = 18;
+      constexpr auto N = 1000;
+      RColumnElement<double, EColumnType::kReal32Trunc> element;
+      element.SetBitsOnStorage(kBitsOnStorage);
+      double f[N];
+      for (int i = 0; i < N; ++i)
+         f[i] = 2.f + (0.000001f * i);
+
+      auto out = std::make_unique<unsigned char[]>(BitPacking::MinBufSize(N, kBitsOnStorage));
+      element.Pack(out.get(), f, N);
+
+      double fout[N];
+      element.Unpack(fout, out.get(), N);
+      for (int i = 0; i < N; ++i) {
+         EXPECT_FLOAT_EQ(fout[i], 2.f);
+         if (fout[i] != 2.f) // prevent spamming
+            break;
+      }
+   }
+
+   // Exhaustively test, for all valid bit widths, packing and unpacking of 0 to N random doubles.
+   std::uniform_real_distribution<double> dist(-1000000, 1000000);
+   const auto &[minBits, maxBits] = RColumnElementBase::GetValidBitRange(EColumnType::kReal32Trunc);
+   for (int bitWidth = minBits; bitWidth <= maxBits; ++bitWidth) {
+      RColumnElement<double, EColumnType::kReal32Trunc> element;
+      element.SetBitsOnStorage(bitWidth);
+
+      std::default_random_engine rng(bitWidth);
+      constexpr auto N = 2000;
+      double inputs[N];
+      for (int i = 0; i < N; ++i) {
+         inputs[i] = dist(rng);
+      }
+
+      auto packed = std::make_unique<std::uint8_t[]>(BitPacking::MinBufSize(N, bitWidth));
+
+      double outputs[N];
+      for (int i = 0; i < N; ++i) {
+         element.Pack(packed.get(), inputs, i);
+         element.Unpack(outputs, packed.get(), i);
+         for (int j = 0; j < i; ++j) {
+            int exponent;
+            std::frexp(inputs[j], &exponent);
+            const int scale = std::pow(2, exponent);
+            const double maxErr = scale * std::pow(2.f, 10 - bitWidth);
+            EXPECT_NEAR(outputs[j], inputs[j], maxErr);
+         }
+      }
+   }
+}
+
 TEST(Packing, RealQuantize)
 {
    using namespace Quantize;
@@ -642,7 +801,7 @@ TEST(Packing, RealQuantize)
    }
 }
 
-TEST(Packing, Real32Quant)
+TEST(Packing, Real32QuantFloat)
 {
    namespace BitPacking = ROOT::Experimental::Internal::BitPacking;
    {
@@ -768,6 +927,131 @@ TEST(Packing, Real32Quant)
    }
 }
 
+TEST(Packing, Real32QuantDouble)
+{
+   namespace BitPacking = ROOT::Experimental::Internal::BitPacking;
+   {
+      constexpr auto kBitsOnStorage = 10;
+      RColumnElement<double, EColumnType::kReal32Quant> element;
+      element.SetBitsOnStorage(kBitsOnStorage);
+      element.SetValueRange(-5.f, 5.f);
+      element.Pack(nullptr, nullptr, 0);
+      element.Unpack(nullptr, nullptr, 0);
+
+      double f1 = 3.5f;
+      unsigned char out[8];
+      element.Pack(out, &f1, 1);
+
+      double f2;
+      element.Unpack(&f2, out, 1);
+      EXPECT_NEAR(f2, 3.5f, 0.01f);
+
+      double f[7] = {-4.5f, -3.f, -2.55f, 0.f, 1.f, 3.f, 5.f};
+      unsigned char out2[BitPacking::MinBufSize(7, kBitsOnStorage)];
+      element.Pack(out2, f, 7);
+
+      double fout[7];
+      element.Unpack(fout, out2, 7);
+      for (int i = 0; i < 7; ++i)
+         EXPECT_NEAR(fout[i], f[i], 0.01f);
+   }
+
+   {
+      RColumnElement<double, EColumnType::kReal32Quant> element;
+      element.SetBitsOnStorage(20);
+      element.SetValueRange(-10.f, 10.f);
+
+      double f[5] = {3.4f, 5.f, -6.f, 10.f, -10.f};
+      unsigned char out[BitPacking::MinBufSize(std::size(f), 20)];
+      element.Pack(out, f, std::size(f));
+      double f2[std::size(f)];
+      element.Unpack(&f2, out, std::size(f));
+      for (size_t i = 0; i < std::size(f); ++i)
+         EXPECT_NEAR(f[i], f2[i], 0.01f);
+
+      f[3] = 11.f;
+      // should throw out of range
+      EXPECT_THROW(element.Pack(out, f, std::size(f)), RException);
+   }
+
+   {
+      constexpr auto kBitsOnStorage = 1;
+      RColumnElement<double, EColumnType::kReal32Quant> element;
+      element.SetBitsOnStorage(kBitsOnStorage);
+      element.SetValueRange(-10.f, 10.f);
+
+      double f1 = -10.f;
+      unsigned char out[1];
+      element.Pack(out, &f1, 1);
+      double f2;
+      element.Unpack(&f2, out, 1);
+      EXPECT_EQ(f2, -10.f);
+
+      f1 = 10.f;
+      element.Pack(out, &f1, 1);
+      element.Unpack(&f2, out, 1);
+      EXPECT_EQ(f2, 10.f);
+   }
+
+   {
+      constexpr auto kBitsOnStorage = 32;
+      RColumnElement<double, EColumnType::kReal32Quant> element;
+      element.SetBitsOnStorage(kBitsOnStorage);
+      element.SetValueRange(-10.f, 10.f);
+
+      double f1 = -5.f;
+      unsigned char out[1];
+      element.Pack(out, &f1, 1);
+      double f2;
+      element.Unpack(&f2, out, 1);
+      EXPECT_FLOAT_EQ(f2, -5.f);
+   }
+
+   // Exhaustively test, for all valid bit widths, packing and unpacking of 0 to N random doubles.
+   constexpr double kMin = -1000, kMax = 1000;
+   std::uniform_real_distribution<double> dist(kMin, kMax);
+   const auto &[minBits, maxBits] = RColumnElementBase::GetValidBitRange(EColumnType::kReal32Quant);
+   for (int bitWidth = minBits; bitWidth <= maxBits; ++bitWidth) {
+      SCOPED_TRACE(std::string("At bitWidth = ") + std::to_string(bitWidth));
+
+      RColumnElement<double, EColumnType::kReal32Quant> element;
+      element.SetBitsOnStorage(bitWidth);
+      element.SetValueRange(kMin, kMax);
+
+      std::default_random_engine rng(bitWidth);
+      constexpr auto N = 2000;
+      double inputs[N];
+      for (int i = 0; i < N; ++i) {
+         inputs[i] = dist(rng);
+      }
+
+      auto packed = std::make_unique<std::uint8_t[]>(BitPacking::MinBufSize(N, bitWidth));
+      double outputs[N];
+
+      if (bitWidth == 1) {
+         for (int i = 0; i < N; ++i) {
+            element.Pack(packed.get(), inputs, i);
+            element.Unpack(outputs, packed.get(), i);
+            for (int j = 0; j < i; ++j) {
+               if (inputs[j] < (kMax + kMin) * 0.5)
+                  EXPECT_FLOAT_EQ(outputs[j], kMin);
+               else
+                  EXPECT_FLOAT_EQ(outputs[j], kMax);
+            }
+         }
+      } else {
+         const auto k = 0.5 * (kMax - kMin) / ((1ull << bitWidth) - 1) + kMin;
+         for (int i = 0; i < N; ++i) {
+            element.Pack(packed.get(), inputs, i);
+            element.Unpack(outputs, packed.get(), i);
+            for (int j = 0; j < i; ++j) {
+               const double maxErr = std::abs(k) + std::abs(inputs[i]);
+               EXPECT_NEAR(outputs[j], inputs[j], maxErr);
+            }
+         }
+      }
+   }
+}
 #if defined(__GNUC__)
 #pragma GCC diagnostic pop
 #endif
