@@ -229,8 +229,8 @@ namespace Cppyy {
     CPPYY_IMPORT
     bool        IsMethodTemplate(TCppScope_t scope, TCppIndex_t imeth);
     CPPYY_IMPORT
-    TCppMethod_t
-    GetMethodTemplate(TCppScope_t scope, const std::string &name, const std::string &proto, std::ostream &diagnostics);
+    TCppMethod_t GetMethodTemplate(TCppScope_t scope, const std::string &name, const std::string &proto,
+                                   std::ostringstream &diagnostics);
 
     CPPYY_IMPORT
     TCppIndex_t  GetGlobalOperator(

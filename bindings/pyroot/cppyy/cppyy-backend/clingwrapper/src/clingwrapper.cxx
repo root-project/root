@@ -2109,7 +2109,7 @@ bool template_compare(std::string n1, std::string n2) {
 }
 
 Cppyy::TCppMethod_t Cppyy::GetMethodTemplate(TCppScope_t scope, const std::string &name, const std::string &proto,
-                                             std::ostream &diagnostics)
+                                             std::ostringstream &diagnostics)
 {
 // There is currently no clean way of extracting a templated method out of ROOT/meta
 // for a variety of reasons, none of them fundamental. The game played below is to
@@ -2127,6 +2127,7 @@ Cppyy::TCppMethod_t Cppyy::GetMethodTemplate(TCppScope_t scope, const std::strin
 // redirect diagnostics, taking the lock to make sure no other calls pollute the results
     R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
 
+    const std::string diagnosticsold = diagnostics.str();
     TInterpreter::RedirectDiagnostics redirectRAII(gInterpreter, diagnostics, /*enableColors*/ true, /*indent*/ 4);
 
     TFunction *func = nullptr;
@@ -2162,15 +2163,25 @@ Cppyy::TCppMethod_t Cppyy::GetMethodTemplate(TCppScope_t scope, const std::strin
 
     if (!func && name.back() == '>' && (cl || scope == (TCppScope_t)GLOBAL_HANDLE)) {
     // try again, ignoring proto in case full name is complete template
-        auto declid = gInterpreter->GetFunction(cl, name.c_str());
-        if (declid) {
-             auto existing = gMethodTemplates.find(declid);
-             if (existing == gMethodTemplates.end()) {
-                 auto cw = new_CallWrapper(declid, name);
-                 existing = gMethodTemplates.insert(std::make_pair(declid, cw)).first;
-             }
-             return (TCppMethod_t)existing->second;
+    std::ostringstream diagnostics2;
+    TInterpreter::RedirectDiagnostics redirectRAII2(gInterpreter, diagnostics2, /*enableColors*/ true, /*indent*/ 4);
+
+    auto declid = gInterpreter->GetFunction(cl, name.c_str());
+    if (declid) {
+       auto existing = gMethodTemplates.find(declid);
+       if (existing == gMethodTemplates.end()) {
+          auto cw = new_CallWrapper(declid, name);
+          existing = gMethodTemplates.insert(std::make_pair(declid, cw)).first;
+       }
+       // replace diagnostics to suppress spurious errors or warnings from the previous
+       // failed lookup
+       diagnostics = std::ostringstream();
+       diagnostics << diagnosticsold;
+       diagnostics << diagnostics2.str();
+
+       return (TCppMethod_t)existing->second;
         }
+        diagnostics << diagnostics2.str();
     }
 
     if (func) {
@@ -2186,13 +2197,20 @@ Cppyy::TCppMethod_t Cppyy::GetMethodTemplate(TCppScope_t scope, const std::strin
     if (name.back() == '>') {
         auto pos = name.find('<');
         if (pos != std::string::npos) {
-            TCppMethod_t cppmeth = GetMethodTemplate(scope, name.substr(0, pos), proto, diagnostics);
+            TCppMethod_t cppmeth = GetMethodTemplate(scope, name.substr(0, pos), proto, diagnostics2);
             if (cppmeth) {
             // allow if requested template names match up to the result
                 const std::string& alt = GetMethodFullName(cppmeth);
                 if (name.size() < alt.size() && alt.find('<') == pos) {
-                    if (template_compare(name, alt))
+                    if (template_compare(name, alt)){
+                        // replace diagnostics to suppress spurious errors or warnings
+                        // from the previous failed lookup
+                        diagnostics = std::ostringstream();
+                        diagnostics << diagnosticsold;
+                        diagnostics << diagnostics2.str();
                         return cppmeth;
+                    }
+                        
                 }
             }
         }
