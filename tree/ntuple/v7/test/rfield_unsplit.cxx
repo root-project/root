@@ -115,7 +115,7 @@ TEST(RField, UnsupportedUnsplit)
 {
    using ROOT::Experimental::RUnsplitField;
    auto success = std::make_unique<RUnsplitField>("name", "std::vector<int>");
-   EXPECT_THROW(std::make_unique<RUnsplitField>("name", "int"), RException); // no TClass of fundamental types
+   EXPECT_THROW(RUnsplitField("name", "int"), RException); // no TClass of fundamental types
 
    // Unsplit types cannot be added through MakeField<T> but only through RFieldBase::CreateField()
    auto model = RNTupleModel::Create();
