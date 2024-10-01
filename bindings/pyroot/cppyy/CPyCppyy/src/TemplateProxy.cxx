@@ -874,23 +874,24 @@ static PyObject* tpp_overload(TemplateProxy* pytmpl, PyObject* args)
         return nullptr;
     }
 
-    const bool emptydiag = diagnostics.str().find_first_not_of(' ') == diagnostics.str().npos;
-    if (!emptydiag) {
-       std::ostringstream warnmsg;
-       warnmsg << "Compiler warnings during instantiation of \"" << pytmpl->fTI->fCppName << "(" << proto << ")\"\n"
-               << diagnostics.str();
-       PyErr_WarnEx(PyExc_Warning, warnmsg.str().c_str(), 1);
-    }
-
 // else attempt instantiation
     if (!cppmeth) {
-       PyErr_Format(PyExc_TypeError, "Failed to instantiate \"%s(%s)\"\n%s", pytmpl->fTI->fCppName.c_str(),
-                    proto.c_str(), diagnostics.str().c_str());
+       PyErr_Format(PyExc_TypeError, "Failed in template overload resolution \"%s(%s)\"\n%s",
+                    pytmpl->fTI->fCppName.c_str(), proto.c_str(), diagnostics.str().c_str());
        PyErr_Restore(pytype, pyvalue, pytrace);
        return nullptr;
     }
 
     PyErr_Clear();
+
+    const bool emptydiag = diagnostics.str().find_first_not_of(' ') == diagnostics.str().npos;
+    if (!emptydiag) {
+       std::ostringstream warnmsg;
+       warnmsg << "Compiler warnings during template overload resolution of \"" << pytmpl->fTI->fCppName << "(" << proto
+               << ")\"\n"
+               << diagnostics.str();
+       PyErr_WarnEx(PyExc_Warning, warnmsg.str().c_str(), 1);
+    }
 
     // TODO: the next step should be consolidated with Instantiate()
     PyCallable* meth = nullptr;
