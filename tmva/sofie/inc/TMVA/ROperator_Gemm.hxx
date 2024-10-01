@@ -154,12 +154,7 @@ namespace SOFIE{
          }
          // assume if not shape is 2 that extra values are 1.
          // we need to implement MatMul case where we stack matrices (see numpy.matmul)
-         //if (fShapeA.size() != 2)
-         //   throw std::runtime_error("TMVA SOFIE Gemm Op Input Tensor" + fNA +
-         //                              " is not of 2 dimensions: A " +  ConvertDynamicShapeToString(fShapeA));
-         //if (fShapeB.size() != 2)
-         //      throw std::runtime_error("TMVA SOFIE Gemm Op Input Tensor" + fNB +
-         //                              " is not of 2 dimensions: B " +  ConvertDynamicShapeToString(fShapeB));
+
          if (fShapeA.size() != fShapeB.size())
               throw std::runtime_error("TMVA SOFIE Gemm Op Input Tensors have not compatible shapes. A " +
                ConvertDynamicShapeToString(fShapeA) + " B " + ConvertDynamicShapeToString(fShapeB) );
@@ -188,9 +183,6 @@ namespace SOFIE{
             //   broadcast_needed = false;
             //}
 
-            // std::cout << "doing broadcast " << broadcast_needed << " use session " << model.UseSession() <<
-            //    " shape C " << ConvertShapeToString(fShapeC) << " shape Y " << ConvertShapeToString(fShapeY)
-            //                << std::endl;
 
             if (broadcast_needed) {
                if (!model.UseSession()) {
