@@ -90,7 +90,6 @@ public:
                      auto tmp = output_shape;
                      tmp.erase(tmp.begin() + i);
                      auto tmp_length = ConvertShapeToLength(tmp);
-                     //if (model.Verbose())
                      output_shape[i] = input_length / tmp_length;
                      replacementDone = true;
                   }
@@ -146,7 +145,6 @@ public:
          auto &axes = input[1];
          // output rank
          int64_t r = input[0].size() + axes.size();
-         //std::cout << " Unsqueeze - inputs " << ConvertShapeToString(input[0])  << " axes " << ConvertShapeToString(input[1]) << std::endl;
          for (auto & a : axes) {
             int64_t i = static_cast<int64_t>(a);
             if ( i < -r  || i > r - 1 )
@@ -221,10 +219,6 @@ public:
       if (fIsOutputConstant) return "";  //no op for constant tensors
 
       OpName = "op_" + OpName;
-      // shape can be empties for scalar tensors
-      //if (fShapeInput.empty() || fShapeOutput.empty()) {
-      //   throw std::runtime_error("TMVA SOFIE Reshape Op called to Generate without being initialized first");
-      //}
 
       // output of reshape is same as input
       size_t length = ConvertShapeToLength(fShapeOutput);

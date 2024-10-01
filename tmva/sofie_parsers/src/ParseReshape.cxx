@@ -53,9 +53,6 @@ ParserFuncSignature ParseReshape = [](RModelParser_ONNX &parser, const onnx::Nod
    else // for old Squeeze and Unsqueeze
       op.reset(new ROperator_Reshape(opMode, attr_axes, input_name, output_name));
 
-   //   throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Reshape does not yet support input type " +
-   //                            ConvertTypeToString(input_type));
-
    if (!parser.IsRegisteredTensorType(output_name)) {
       parser.RegisterTensorType(output_name, input_type);
    }
