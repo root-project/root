@@ -5064,43 +5064,32 @@ void TStreamerInfo::AddWriteTextAction(TStreamerInfoActions::TActionSequence *wr
    switch (compinfo->fType) {
    // write basic types
    case TStreamerInfo::kBool:
-      writeSequence->AddAction(WriteBasicType<Bool_t>, new TConfiguration(this, i, compinfo, compinfo->fOffset));
-      break;
    case TStreamerInfo::kChar:
-      writeSequence->AddAction(WriteBasicType<Char_t>, new TConfiguration(this, i, compinfo, compinfo->fOffset));
-      break;
    case TStreamerInfo::kShort:
-      writeSequence->AddAction(WriteBasicType<Short_t>, new TConfiguration(this, i, compinfo, compinfo->fOffset));
-      break;
    case TStreamerInfo::kInt:
-      writeSequence->AddAction(WriteBasicType<Int_t>, new TConfiguration(this, i, compinfo, compinfo->fOffset));
-      break;
    case TStreamerInfo::kLong:
-      writeSequence->AddAction(WriteBasicType<Long_t>, new TConfiguration(this, i, compinfo, compinfo->fOffset));
-      break;
    case TStreamerInfo::kLong64:
-      writeSequence->AddAction(WriteBasicType<Long64_t>, new TConfiguration(this, i, compinfo, compinfo->fOffset));
-      break;
    case TStreamerInfo::kFloat:
-      writeSequence->AddAction(WriteBasicType<Float_t>, new TConfiguration(this, i, compinfo, compinfo->fOffset));
-      break;
    case TStreamerInfo::kDouble:
-      writeSequence->AddAction(WriteBasicType<Double_t>, new TConfiguration(this, i, compinfo, compinfo->fOffset));
-      break;
    case TStreamerInfo::kUChar:
-      writeSequence->AddAction(WriteBasicType<UChar_t>, new TConfiguration(this, i, compinfo, compinfo->fOffset));
-      break;
    case TStreamerInfo::kUShort:
-      writeSequence->AddAction(WriteBasicType<UShort_t>, new TConfiguration(this, i, compinfo, compinfo->fOffset));
-      break;
    case TStreamerInfo::kUInt:
-      writeSequence->AddAction(WriteBasicType<UInt_t>, new TConfiguration(this, i, compinfo, compinfo->fOffset));
-      break;
    case TStreamerInfo::kULong:
-      writeSequence->AddAction(WriteBasicType<ULong_t>, new TConfiguration(this, i, compinfo, compinfo->fOffset));
-      break;
    case TStreamerInfo::kULong64:
-      writeSequence->AddAction(WriteBasicType<ULong64_t>, new TConfiguration(this, i, compinfo, compinfo->fOffset));
+   case TStreamerInfo::kFloat16:
+   case TStreamerInfo::kDouble32:
+   case TStreamerInfo::kConv + TStreamerInfo::kChar:
+   case TStreamerInfo::kConv + TStreamerInfo::kShort:
+   case TStreamerInfo::kConv + TStreamerInfo::kInt:
+   case TStreamerInfo::kConv + TStreamerInfo::kLong:
+   case TStreamerInfo::kConv + TStreamerInfo::kLong64:
+   case TStreamerInfo::kConv + TStreamerInfo::kUChar:
+   case TStreamerInfo::kConv + TStreamerInfo::kUShort:
+   case TStreamerInfo::kConv + TStreamerInfo::kUInt:
+   case TStreamerInfo::kConv + TStreamerInfo::kULong:
+   case TStreamerInfo::kConv + TStreamerInfo::kULong64:
+      // Actually same action for this level
+      AddWriteAction(writeSequence, i, compinfo);
       break;
 
    case TStreamerInfo::kTObject:
