@@ -350,7 +350,7 @@ extern template class RSimpleField<double>;
 extern template class RSimpleField<float>;
 
 template <typename T>
-class RFloatField : public RSimpleField<T> {
+class RRealField : public RSimpleField<T> {
    using Base = RSimpleField<T>;
 
    using Base::fAvailableColumns;
@@ -362,7 +362,7 @@ class RFloatField : public RSimpleField<T> {
    double fValueMax = std::numeric_limits<T>::max();
 
 protected:
-   void OnClone(RFloatField<T> &cloned) const
+   void OnClone(RRealField<T> &cloned) const
    {
       cloned.fBitWidth = fBitWidth;
       cloned.fValueMin = fValueMin;
@@ -418,14 +418,14 @@ protected:
       fPrincipalColumn = fAvailableColumns[0].get();
    }
 
-   ~RFloatField() override = default;
+   ~RRealField() override = default;
 
 public:
    using Base::SetColumnRepresentatives;
 
-   RFloatField(std::string_view name, std::string_view typeName) : RSimpleField<T>(name, typeName) {}
-   RFloatField(RFloatField &&other) = default;
-   RFloatField &operator=(RFloatField &&other) = default;
+   RRealField(std::string_view name, std::string_view typeName) : RSimpleField<T>(name, typeName) {}
+   RRealField(RRealField &&other) = default;
+   RRealField &operator=(RRealField &&other) = default;
 
    /// Sets this field to use a half precision representation, occupying half as much storage space (16 bits:
    /// 1 sign bit, 5 exponent bits, 10 mantissa bits) on disk.
@@ -471,7 +471,7 @@ public:
 };
 
 template <>
-class RField<float> final : public RFloatField<float> {
+class RField<float> final : public RRealField<float> {
    const RColumnRepresentations &GetColumnRepresentations() const final;
 
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
@@ -484,13 +484,13 @@ class RField<float> final : public RFloatField<float> {
 public:
    static std::string TypeName() { return "float"; }
 
-   explicit RField(std::string_view name) : RFloatField<float>(name, TypeName()) {}
+   explicit RField(std::string_view name) : RRealField<float>(name, TypeName()) {}
 
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
 template <>
-class RField<double> final : public RFloatField<double> {
+class RField<double> final : public RRealField<double> {
    const RColumnRepresentations &GetColumnRepresentations() const final;
 
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
@@ -503,7 +503,7 @@ class RField<double> final : public RFloatField<double> {
 public:
    static std::string TypeName() { return "double"; }
 
-   explicit RField(std::string_view name) : RFloatField<double>(name, TypeName()) {}
+   explicit RField(std::string_view name) : RRealField<double>(name, TypeName()) {}
 
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 
