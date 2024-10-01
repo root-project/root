@@ -2,6 +2,7 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "TError.h"
+#include "TBranch.h"
 
 #include "TBufferFile.h"
 #include "TStreamerInfo.h"
