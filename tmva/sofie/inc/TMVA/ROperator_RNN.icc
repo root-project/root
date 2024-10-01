@@ -86,7 +86,7 @@ auto ROperator_RNN<T>::Initialize(RModel &model)
             float *original_bias = static_cast<float *>(original_data.get());
             float *new_bias = new float[num_directions * seq_length *
                                         batch_size * fAttrHiddenSize];
-            float sum[fAttrHiddenSize];
+            std::vector<float> sum(fAttrHiddenSize);
             for (size_t direction = 0; direction < num_directions;
                  direction++) {
                for (size_t h = 0; h < fAttrHiddenSize; h++) {
@@ -98,7 +98,7 @@ auto ROperator_RNN<T>::Initialize(RModel &model)
                      size_t bias_offset =
                          direction * seq_length * batch_size * fAttrHiddenSize +
                          seq * batch_size * fAttrHiddenSize + batch * fAttrHiddenSize;
-                     std::copy(sum, sum + fAttrHiddenSize, new_bias + bias_offset);
+                     std::copy(sum.begin(), sum.end(), new_bias + bias_offset);
                   }
                }
             }
@@ -241,7 +241,7 @@ auto ROperator_RNN<T>::Generate(std::string OpName)
       out << SP << "for(size_t seq = 0; seq < " << seq_length << "; seq++) {\n";
       out << SP << SP << "for(size_t batch = 0; batch < " << batch_size << "; batch++) {\n";
       out << SP << SP << SP << "for(size_t i = 0; i < " << input_size << "; i++) {\n";
-      out << SP << SP << SP << SP << OpName << "_input[seq * " << batch_size * input_size 
+      out << SP << SP << SP << SP << OpName << "_input[seq * " << batch_size * input_size
           << " + batch * " << input_size << " + i] = " << "tensor_" << fNX << "[batch * "
           << seq_length * input_size << " + seq * " << input_size << " + i];\n";
       out << SP << SP << SP << "}\n";
@@ -266,7 +266,7 @@ auto ROperator_RNN<T>::Generate(std::string OpName)
             out << SP << "for(size_t batch = 0; batch < " << batch_size << "; batch++) {\n";
             out << SP << SP << "for(size_t h = 0; h < " << fAttrHiddenSize << "; h++) {\n";
             out << SP << SP << SP << OpName << "_initial_hidden_state["
-                << direction * batch_size * fAttrHiddenSize << " + batch * " << fAttrHiddenSize 
+                << direction * batch_size * fAttrHiddenSize << " + batch * " << fAttrHiddenSize
                 << " + h] = tensor_" << fNInitial_h << "[batch * " << num_directions * fAttrHiddenSize
                 << " + " << direction * fAttrHiddenSize << " + h];\n";
             out << SP << SP << "}\n";
@@ -278,7 +278,7 @@ auto ROperator_RNN<T>::Generate(std::string OpName)
    if (fUseSession)
       out << SP << fType << " * " << OpName << "_feedforward = fVec_" << OpName
           << "_feedforward.data();\n";
-   else 
+   else
       out << SP << fType << " " << OpName << "_feedforward[" << seq_length * batch_size * fAttrHiddenSize << "] = {0};\n";
 
    // Set the hidden state
@@ -287,7 +287,7 @@ auto ROperator_RNN<T>::Generate(std::string OpName)
    } else {
       if (fUseSession)
          out << SP << fType << " * " << OpName << "_hidden_state = fVec_" << OpName << "_hidden_state.data();\n";
-      else 
+      else
          out << SP << fType << " " << OpName << "_hidden_state[" << seq_length * num_directions *
             batch_size * fAttrHiddenSize << "] = {0};\n";
    }
@@ -375,7 +375,7 @@ auto ROperator_RNN<T>::Generate(std::string OpName)
              << direction * batch_size * fAttrHiddenSize << ";\n";
          if (fType == "float") {
             out << SP << SP << SP << "BLAS::sgemm_(&" << OpName << "_transB, &" << OpName
-                << "_transA, &" << OpName << "_n, &m2, &" << OpName << "_n, &" << OpName 
+                << "_transA, &" << OpName << "_n, &m2, &" << OpName << "_n, &" << OpName
                 << "_alpha, tensor_" << fNR << " + r_offset, &" << OpName << "_n, " << OpName
                 << "_initial_hidden_state + initial_hidden_state_offset, &" << OpName << "_n, &"
                 << OpName << "_alpha, " << OpName << "_hidden_state + offset, &" << OpName << "_n);\n";
@@ -476,7 +476,7 @@ auto ROperator_RNN<T>::Generate(std::string OpName)
          out << SP << SP << "}\n";
       } else if (fAttrActivations[direction] == "Softsign") {
          out << SP << SP << "for (size_t i = offset; i < offset + size; i++) {\n";
-         out << SP << SP << SP << SP << OpName << "_hidden_state[i] = " << OpName 
+         out << SP << SP << SP << SP << OpName << "_hidden_state[i] = " << OpName
              << "_hidden_state[i] / (1. + abs(" << OpName << "_hidden_state[i]));\n";
          out << SP << SP << "}\n";
       } else { // fAttrActivations[direction] = Softplus
