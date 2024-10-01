@@ -391,7 +391,7 @@ jobs:
           - image: alma9
             is_special: true
             property: arm64
-            overrides: ["CMAKE_BUILD_TYPE=RelWithDebInfo"]
+            overrides: ["CMAKE_BUILD_TYPE=RelWithDebInfo", "ccache=ON"]
             runs-on: [self-hosted, root-ci, linux, ARM64]
           - image: alma9-clang
             is_special: true
