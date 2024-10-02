@@ -81,20 +81,23 @@
 #include <TMath.h>
 
 
+const int kMaxNumTests = 60;
+
 // Global variables.
 Int_t     gVerbose = 0;
 Int_t     gTestNum = 0;
 Int_t     gTestsFailed;
-Int_t     gPS1RefNb[60];
-Int_t     gPS1ErrNb[60];
-Int_t     gPDFRefNb[60];
-Int_t     gPDFErrNb[60];
-Int_t     gJPGRefNb[60];
-Int_t     gJPGErrNb[60];
-Int_t     gPNGRefNb[60];
-Int_t     gPNGErrNb[60];
-Int_t     gPS2RefNb[60];
-Int_t     gPS2ErrNb[60];
+Int_t     gPS1RefNb[kMaxNumTests];
+Int_t     gPS1ErrNb[kMaxNumTests];
+Int_t     gPDFRefNb[kMaxNumTests];
+Int_t     gPDFErrNb[kMaxNumTests];
+Int_t     gJPGRefNb[kMaxNumTests];
+Int_t     gJPGErrNb[kMaxNumTests];
+Int_t     gPNGRefNb[kMaxNumTests];
+Int_t     gPNGErrNb[kMaxNumTests];
+Int_t     gPS2RefNb[kMaxNumTests];
+Int_t     gPS2ErrNb[kMaxNumTests];
+Bool_t    gWebMode = kFALSE;
 Bool_t    gOptionR = kFALSE;
 Bool_t    gOptionK = kFALSE;
 TH2F     *gH2 = nullptr;
@@ -123,7 +126,8 @@ Int_t StatusPrint(TString &filename, Int_t id, const TString &title, Int_t res, 
          for (Int_t i = nch; i < 67; i++) std::cout << ".";
          std::cout << " OK" << std::endl;
 #ifndef ClingWorkAroundDeletedSourceFile
-         if (!gOptionK) gSystem->Unlink(filename.Data());
+         if (!gOptionK)
+            gSystem->Unlink(filename.Data());
 #endif
       } else {
          std::cout << line;
@@ -217,9 +221,17 @@ void TestReport(TCanvas *C, const TString &title, const TString &arg = "", Int_t
 {
    gErrorIgnoreLevel = 9999;
 
-   TString psfile = TString::Format("sg1_%2.2d.ps",gTestNum);
+   TString psfile, ps2file;
 
-   TString ps2file = TString::Format("sg2_%2.2d.ps", gTestNum);
+   if (gWebMode) {
+      psfile = TString::Format("sg1_%2.2d.svg", gTestNum);
+      ps2file = TString::Format("sg2_%2.2d.svg", gTestNum);
+      gROOT->ProcessLine("TWebCanvas::BatchImageMode(10);");
+      IPS = 1; // check only size of SVG files
+   } else {
+      psfile = TString::Format("sg1_%2.2d.ps", gTestNum);
+      ps2file = TString::Format("sg2_%2.2d.ps", gTestNum);
+   }
 
    TString pdffile = TString::Format("sg%2.2d.pdf",gTestNum);
 
@@ -233,14 +245,16 @@ void TestReport(TCanvas *C, const TString &title, const TString &arg = "", Int_t
 
    // start files generation
 
-   {
+   if (gWebMode) {
+      C->SaveAs(psfile);
+
+      C->SaveAs(pdffile);
+   } else {
       TPostScript ps1(psfile, 111);
       C->cd(0);
       C->Draw();
       ps1.Close();
-   }
 
-   {
       TPDF pdf(pdffile, 111);
       C->cd(0);
       C->Draw();
@@ -268,6 +282,10 @@ void TestReport(TCanvas *C, const TString &title, const TString &arg = "", Int_t
    }
 
    // done files generation
+   if (gWebMode) {
+      // all images produced with single browser invocation
+      gROOT->ProcessLine("TWebCanvas::BatchImageMode(0);");
+   }
 
    if (IPS) {
       StatusPrint(psfile,  gTestNum, title, FileSize(psfile) ,
@@ -2543,19 +2561,19 @@ void waves()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-
-void cleanup()
-{
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
 /// Run all graphics stress tests.
 
-void stressGraphics(Int_t verbose = 0)
+void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_files = kFALSE)
 {
+   gVerbose = verbose;
+   gOptionR = generate;
+   gOptionK = keep_files;
+
    gErrorIgnoreLevel = 9999;
    gROOT->SetStyle("Classic");
+
+   // only in batch web mode use
+   gWebMode = gROOT->IsWebDisplay();
 
    // Check if $ROOTSYS/tutorials/hsimple.root exists
    gHsimple = TFile::Open("$(ROOTSYS)/tutorials/hsimple.root");
@@ -2589,20 +2607,24 @@ void stressGraphics(Int_t verbose = 0)
 
    gErrorIgnoreLevel = 0;
 
-   // Read the reference file "stressGraphics.ref"
+   const char *ref_name = "stressGraphics.ref";
+   if (gWebMode) {
+      ref_name = "stressGraphics_web.ref";
+   } else {
 #ifdef R__HAS_CLOUDFLARE_ZLIB
-   FILE *sg = fopen("stressGraphics_builtinzlib.ref","r");
+      ref_name = "stressGraphics_builtinzlib.ref";
 #else
-   FILE *sg = fopen("stressGraphics.ref","r");
+   }
+   FILE *sg = fopen(ref_name, "r");
 #endif
    if (!sg) {
-      printf("Could not open stressGraphics.ref/stressGraphics_builtinzlib.ref\n");
+      printf("Could not open %s\n", ref_name);
       return;
    }
    char line[160];
    Int_t i = -1;
-   while (fgets(line,160,sg)) {
-      if (i>=0) {
+   while (fgets(line, 160, sg)) {
+      if ((i >= 0) && (i < kMaxNumTests)) {
          sscanf(&line[7]  ,"%d",&gPS1RefNb[i]);
          sscanf(&line[18] ,"%d",&gPS1ErrNb[i]);
          sscanf(&line[28] ,"%d",&gPDFRefNb[i]);
@@ -2621,20 +2643,21 @@ void stressGraphics(Int_t verbose = 0)
    gRandom->SetSeed(65539);
 
    if (gOptionR) {
-      std::cout << "Test#   PS1Ref#   PS1Err#   PDFRef#   PDFErr#   JPGRef#   JPGErr#   PNGRef#   PNGErr#   PS2Ref#   PS2Err#" <<std::endl;
+      if (gWebMode)
+         std::cout << "Test#   SVG1Ref#  SVG1Err#  PDFRef#   PDFErr#   JPGRef#   JPGErr#   PNGRef#   PNGErr#   SVG2Ref#  SVG2Err#" << std::endl;
+      else
+         std::cout << "Test#   PS1Ref#   PS1Err#   PDFRef#   PDFErr#   JPGRef#   JPGErr#   PNGRef#   PNGErr#   PS2Ref#   PS2Err#" << std::endl;
    } else {
       std::cout << "**********************************************************************" <<std::endl;
       std::cout << "*  Starting  Graphics - S T R E S S suite                            *" <<std::endl;
       std::cout << "**********************************************************************" <<std::endl;
    }
 
-   gVerbose     = verbose;
    gTestNum     = 0;
    gTestsFailed = 0;
 
-   gBenchmark->Start("stressGraphics");
-
    if (!gOptionR) {
+      gBenchmark->Start("stressGraphics");
       std::cout << "*  Starting Basic Graphics - S T R E S S                             *" <<std::endl;
       std::cout << "**********************************************************************" <<std::endl;
    }
@@ -2734,6 +2757,7 @@ void stressGraphics(Int_t verbose = 0)
 
       printf("**********************************************************************\n");
       printf("* ");
+
       gBenchmark->Print("stressGraphics");
 
       Double_t ct = gBenchmark->GetCpuTime("stressGraphics");
@@ -2748,56 +2772,48 @@ void stressGraphics(Int_t verbose = 0)
 }
 
 
-
 #ifndef __CLING__
 ////////////////////////////////////////////////////////////////////////////////
 
 int main(int argc, char *argv[])
 {
-   TString opt;
    Int_t verbose = 0;
-   if (argc > 1) verbose = atoi(argv[1]);
-   opt = argv[1];
+   Bool_t keep = kFALSE, generate = kFALSE;
 
-   if (argc > 2) {
-      for (int i = 2; i<argc; i++) opt += argv[i];
-   }
-
-   if (opt.Contains("-h")) {
-      printf("Usage: stressGraphics [-h] [-r] [-k]\n");
-      printf("Options:\n");
-      printf("  -r : Generate de reference output.\n");
-      printf("       Redirect the output in the file \"stressGraphics.ref\"\n");
-      printf("       to redefine the reference file.\n");
-      printf("\n");
-      printf("  -k : Keep the output files even for passed tests.\n");
-      printf("       By default output files for passed tests are deleted.\n");
-      printf("\n");
-      printf("  -h : Print usage\n");
-      printf("\n");
-      printf("  Any other option is ignored.\n");
-      return 0;
+   for (int i = 1; i < argc; ++i) {
+      if (!strcmp(argv[i], "-v"))
+         verbose++;
+      if (!strcmp(argv[i], "-r"))
+         generate = kTRUE;
+      else if (!strcmp(argv[i], "-k"))
+         keep = kTRUE;
+      else if (!strcmp(argv[i], "-h")) {
+         printf("Usage: stressGraphics [-h] [-r] [-k]\n");
+         printf("Options:\n");
+         printf("  -r : Generate the reference output.\n");
+         printf("       Redirect the output in the file \"stressGraphics.ref\"\n");
+         printf("       to redefine the reference file.\n");
+         printf("\n");
+         printf("  -k : Keep the output files even for passed tests.\n");
+         printf("       By default output files for passed tests are deleted.\n");
+         printf("\n");
+         printf("  -v : increase verbosity.\n");
+         printf("\n");
+         printf("  --web=chrome|firefox : Configure web mode\n");
+         printf("\n");
+         printf("  -h : Print usage\n");
+         printf("\n");
+         printf("  Any other option is ignored.\n");
+         return 0;
+      }
    }
 
    gROOT->SetBatch();
    TApplication theApp("App", &argc, argv);
    gBenchmark = new TBenchmark();
 
-   if (opt.Contains("-r")) {
-      gOptionR = kTRUE;
-   } else {
-      gOptionR = kFALSE;
-   }
+   stressGraphics(verbose, generate, keep);
 
-   if (opt.Contains("-k")) {
-      gOptionK = kTRUE;
-   } else {
-      gOptionK = kFALSE;
-   }
-
-   stressGraphics(verbose);
-
-   cleanup();
    return 0;
 }
 #else
