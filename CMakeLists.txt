@@ -109,7 +109,8 @@ include(RootMacros)
 include(CheckAssembler)
 include(CheckIntrinsics)
 
-if(clad AND NO_CONNECTION)
+# Building Clad requires an internet connection, if we're not side-loading the source directory
+if(clad AND NOT DEFINED CLAD_SOURCE_DIR AND NO_CONNECTION)
   if(fail-on-missing)
     message(FATAL_ERROR "No internet connection. Please check your connection, or either disable the 'clad' option or the 'fail-on-missing' to automatically disable options requiring internet access")
   else()
