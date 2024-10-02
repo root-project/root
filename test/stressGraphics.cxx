@@ -169,12 +169,6 @@ Bool_t    gOptionK;
 TH2F     *gH2;
 TFile    *gHsimple;
 TFile    *gCernstaff;
-constexpr std::size_t gCfileSize = 16;
-constexpr std::size_t outfileSize = 16;
-constexpr std::size_t gLineSize = 80;
-char      gCfile[gCfileSize];
-char      outfile[outfileSize];
-char      gLine[gLineSize];
 
 
 #ifndef __CLING__
@@ -443,22 +437,23 @@ Int_t StatusPrint(TString &filename, Int_t id, const TString &title,
                   Int_t res, Int_t ref, Int_t err)
 {
    if (!gOptionR) {
-      if (id>0) {
-         snprintf(gLine, gLineSize, "Test %2d: %s",id,title.Data());
+      TString line;
+      if (id > 0) {
+         line = TString::Format("Test %2d: %s", id, title.Data());
       } else {
-         snprintf(gLine, gLineSize, "       %s",title.Data());
+         line = TString::Format("       %s", title.Data());
       }
 
-      const Int_t nch = strlen(gLine);
+      const Int_t nch = line.Length();
       if (TMath::Abs(res-ref)<=err) {
-         std::cout << gLine;
+         std::cout << line;
          for (Int_t i = nch; i < 67; i++) std::cout << ".";
          std::cout << " OK" << std::endl;
 #ifndef ClingWorkAroundDeletedSourceFile
          if (!gOptionK) gSystem->Unlink(filename.Data());
 #endif
       } else {
-         std::cout << gLine;
+         std::cout << line;
          Int_t ndots = 60;
          Int_t w = 3;
          if (gTestNum < 10) { ndots++; w--;}
@@ -472,9 +467,9 @@ Int_t StatusPrint(TString &filename, Int_t id, const TString &title,
          return 1;
       }
    } else {
-      if (id>0)  printf("%5d%10d%10d",id,res,err);
-      if (id==0) printf("%10d%10d",res,err);
-      if (id<0)  printf("%10d%10d\n",res,err);
+      if (id > 0)  printf("%5d%10d%10d",id,res,err);
+      if (id == 0) printf("%10d%10d",res,err);
+      if (id < 0)  printf("%10d%10d\n",res,err);
    }
    return 0;
 }
@@ -609,12 +604,12 @@ void DoCcode(TCanvas *C)
 {
    gErrorIgnoreLevel = 9999;
 
-   snprintf(gCfile, gCfileSize, "sg%2.2d.C",gTestNum);
+   TString ccode = TString::Format("sg%2.2d.C",gTestNum);
 
    if (C) {
-      C->SaveAs(gCfile);
+      C->SaveAs(ccode);
       delete C;
-      C = 0;
+      C = nullptr;
    }
 
    gErrorIgnoreLevel = 0;
@@ -630,31 +625,30 @@ void DoCcode(TCanvas *C)
 
 void TestReport2(Int_t IPS)
 {
-   snprintf(outfile, outfileSize, "sg2_%2.2d.ps",gTestNum);
+   TString psfile = TString::Format("sg2_%2.2d.ps", gTestNum);
+   TString ccode = TString::Format("sg%2.2d.C", gTestNum);
 
    gErrorIgnoreLevel = 9999;
-   snprintf(gCfile, gCfileSize, ".x sg%2.2d.C",gTestNum);
-   gROOT->ProcessLine(gCfile);
-   gPad->SaveAs(outfile);
+
+   gROOT->ProcessLine(".x " + ccode);
+   gPad->SaveAs(psfile);
    gErrorIgnoreLevel = 0;
    Int_t i;
 
-   TString psfile = outfile;
    if (IPS) {
-      i = StatusPrint(psfile,-1, "  C file result", FileSize(outfile),
+      i = StatusPrint(psfile,-1, "  C file result", FileSize(psfile),
                                                     gPS2RefNb[gTestNum-1],
                                                     gPS2ErrNb[gTestNum-1]);
    } else {
-      i = StatusPrint(psfile,-1, "  C file result", AnalysePS(outfile),
+      i = StatusPrint(psfile,-1, "  C file result", AnalysePS(psfile),
                                                     gPS2RefNb[gTestNum-1],
                                                     gPS2ErrNb[gTestNum-1]);
    }
 
-   snprintf(gCfile, gCfileSize, "sg%2.2d.C",gTestNum);
 #ifndef ClingWorkAroundDeletedSourceFile
-   if (!gOptionK && !i) gSystem->Unlink(gCfile);
+   if (!gOptionK && !i)
+      gSystem->Unlink(ccode);
 #endif
-   return;
 }
 
 
