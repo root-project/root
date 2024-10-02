@@ -437,20 +437,6 @@ TEST(RNTupleModel, EnforceValidFieldNames)
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("field name 'pt' already exists"));
    }
-
-   // MakeCollection
-   try {
-      auto otherModel = RNTupleModel::Create();
-      auto collection = model->MakeCollection("pt", std::move(otherModel));
-      FAIL() << "repeated field names should throw";
-   } catch (const RException& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("field name 'pt' already exists"));
-   }
-
-   // subfield names don't throw because full name differs (otherModel.pt)
-   auto otherModel = RNTupleModel::Create();
-   auto otherField = otherModel->MakeField<float>("pt", 42.0);
-   auto collection = model->MakeCollection("otherModel", std::move(otherModel));
 }
 
 TEST(RNTupleModel, FieldDescriptions)
@@ -476,23 +462,6 @@ TEST(RNTupleModel, FieldDescriptions)
    ASSERT_EQ(2u, fieldDescriptions.size());
    EXPECT_EQ(std::string("transverse momentum"), fieldDescriptions[0]);
    EXPECT_EQ(std::string("electric charge"), fieldDescriptions[1]);
-}
-
-TEST(RNTupleModel, CollectionFieldDescriptions)
-{
-   FileRaii fileGuard("test_ntuple_collection_field_descriptions.root");
-   {
-      auto muon = RNTupleModel::Create();
-      muon->SetDescription("muons after basic selection");
-
-      auto model = RNTupleModel::Create();
-      model->MakeCollection("Muon", std::move(muon));
-      RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
-   }
-
-   auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-   const auto &muon_desc = *ntuple->GetDescriptor().GetTopLevelFields().begin();
-   EXPECT_EQ(std::string("muons after basic selection"), muon_desc.GetFieldDescription());
 }
 
 TEST(RNTupleModel, GetField)
@@ -558,14 +527,7 @@ TEST(RNTuple, EmptyString)
 
 TEST(RNTuple, NullSafety)
 {
-   // RNTupleModel
    auto model = RNTupleModel::Create();
-   try {
-      auto bad = model->MakeCollection("bad", nullptr);
-      FAIL() << "null submodels should throw";
-   } catch (const RException& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("null collectionModel"));
-   }
    try {
       model->AddField(nullptr);
       FAIL() << "null fields should throw";
@@ -772,47 +734,6 @@ TEST(RNTuple, FillBytesWritten)
    *fieldFloatVec = {42.0f, 1.1f};
    // A 32bit integer + "abc" literal + one 64bit integer for each index column + 3 bools + 2 floats
    EXPECT_EQ(18U + (3 * sizeof(std::uint64_t)), ntuple->Fill());
-}
-
-TEST(RNTuple, FillBytesWrittenCollections)
-{
-   FileRaii fileGuard("test_ntuple_fillbytes_collections.root");
-
-   auto eventModel = RNTupleModel::Create();
-   auto fldPt = eventModel->MakeField<float>("pt", 0.0);
-
-   auto hitModel = RNTupleModel::Create();
-   auto fldHitX = hitModel->MakeField<float>("x", 0.0);
-   auto fldHitY = hitModel->MakeField<float>("y", 0.0);
-
-   auto trackModel = RNTupleModel::Create();
-   auto fldTrackEnergy = trackModel->MakeField<float>("energy", 0.0);
-
-   auto fldHits = trackModel->MakeCollection("hits", std::move(hitModel));
-   auto fldTracks = eventModel->MakeCollection("tracks", std::move(trackModel));
-
-   {
-      RNTupleWriteOptions options;
-      options.SetApproxZippedClusterSize(1024 * 1024);
-      auto writer = RNTupleWriter::Recreate(std::move(eventModel), "myNTuple", fileGuard.GetPath(), options);
-
-      for (unsigned i = 0; i < 30000; ++i) {
-         for (unsigned t = 0; t < 3; ++t) {
-            for (unsigned h = 0; h < 2; ++h) {
-               *fldHitX = 4.0;
-               *fldHitY = 8.0;
-               EXPECT_EQ(4 + 4, fldHits->Fill());
-            }
-            *fldTrackEnergy = i * t;
-            EXPECT_EQ(2 * (4 + 4) + 8 + 4, fldTracks->Fill());
-         }
-         *fldPt = float(i);
-         EXPECT_EQ(3 * (2 * (4 + 4) + 8 + 4) + 8 + 4, writer->Fill());
-      }
-   }
-
-   auto reader = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
-   EXPECT_EQ(reader->GetDescriptor().GetNClusters(), 2);
 }
 
 TEST(RNTuple, RValue)

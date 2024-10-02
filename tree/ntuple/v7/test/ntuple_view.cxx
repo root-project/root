@@ -74,74 +74,6 @@ TEST(RNTuple, DirectAccessView)
    EXPECT_FLOAT_EQ(137.0, viewPt(1));
 }
 
-TEST(RNTuple, Composable)
-{
-   FileRaii fileGuard("test_ntuple_composable.root");
-
-   auto eventModel = RNTupleModel::Create();
-   auto fldPt = eventModel->MakeField<float>("pt", 0.0);
-
-   auto hitModel = RNTupleModel::Create();
-   auto fldHitX = hitModel->MakeField<float>("x", 0.0);
-   auto fldHitY = hitModel->MakeField<float>("y", 0.0);
-
-   auto trackModel = RNTupleModel::Create();
-   auto fldTrackEnergy = trackModel->MakeField<float>("energy", 0.0);
-
-   auto fldHits = trackModel->MakeCollection("hits", std::move(hitModel));
-   auto fldTracks = eventModel->MakeCollection("tracks", std::move(trackModel));
-
-   {
-      auto ntuple = RNTupleWriter::Recreate(std::move(eventModel), "myNTuple", fileGuard.GetPath());
-
-      for (unsigned i = 0; i < 8; ++i) {
-         for (unsigned t = 0; t < 3; ++t) {
-            for (unsigned h = 0; h < 2; ++h) {
-               *fldHitX = 4.0;
-               *fldHitY = 8.0;
-               fldHits->Fill();
-            }
-            *fldTrackEnergy = i * t;
-            fldTracks->Fill();
-         }
-         *fldPt = float(i);
-         ntuple->Fill();
-         if (i == 2)
-            ntuple->CommitCluster();
-      }
-   }
-
-   auto ntuple = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
-   auto viewPt = ntuple->GetView<float>("pt");
-   auto viewTracks = ntuple->GetCollectionView("tracks");
-   auto viewTrackEnergy = viewTracks.GetView<float>("energy");
-   auto viewHits = viewTracks.GetCollectionView("hits");
-   auto viewHitX = viewHits.GetView<float>("x");
-   auto viewHitY = viewHits.GetView<float>("y");
-
-   int nEv = 0;
-   for (auto e : ntuple->GetEntryRange()) {
-      EXPECT_EQ(float(nEv), viewPt(e));
-      EXPECT_EQ(3U, viewTracks(e));
-
-      int nTr = 0;
-      for (auto t : viewTracks.GetCollectionRange(e)) {
-         EXPECT_EQ(nEv * nTr, viewTrackEnergy(t));
-
-         EXPECT_EQ(2.0, viewHits(t));
-         for (auto h : viewHits.GetCollectionRange(t)) {
-            EXPECT_EQ(4.0, viewHitX(h));
-            EXPECT_EQ(8.0, viewHitY(h));
-         }
-         nTr++;
-      }
-      EXPECT_EQ(3, nTr);
-
-      nEv++;
-   }
-   EXPECT_EQ(8, nEv);
-}
-
 TEST(RNTuple, VoidView)
 {
    FileRaii fileGuard("test_ntuple_voidview.root");
@@ -166,10 +98,8 @@ TEST(RNTuple, MissingViewNames)
 {
    FileRaii fileGuard("test_ntuple_missing_view_names.root");
    auto model = RNTupleModel::Create();
-   auto fieldPt = model->MakeField<float>("pt", 42.0);
-   auto muonModel = RNTupleModel::Create();
-   auto muonPt = muonModel->MakeField<float>("pt", 42.0);
-   auto muon = model->MakeCollection("Muon", std::move(muonModel));
+   model->MakeField<float>("pt");
+   model->MakeField<std::vector<float>>("Muon");
    {
       RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath());
    }
