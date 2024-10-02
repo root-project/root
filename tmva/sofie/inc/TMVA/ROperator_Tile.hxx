@@ -100,8 +100,8 @@ public:
       // loop from inverse dim order
       out << "for (int i = " << fShapeInput.size()-1 << "; i >=0; i--) {\n";
       out << SP << "int r = repeats[i];\n";
-      // exclude case where repeats=1 apart first one
-      out << SP << "if (r == 1 && i < " << fShapeInput.size()-1 <<  ") continue;\n";
+      // we cannot exclude case where repeats=1 since we need offset
+      //out << SP << "if (r == 1 && i < " << fShapeInput.size()-1 <<  ") continue;\n";
       out << SP << "int i_offset = 0, o_offset = 0;\n";
       out << SP << "s = s * input_shape[i];\n";
       // case we have first copy
@@ -129,29 +129,6 @@ public:
       out << SP << "s *= r;\n";
       out << SP << "inputLength *= r;\n";
       out << "}\n"; // end i loop
-
-#if 0 // old inefficient implementation
-
-      out << "std::vector<size_t> input_shape = " << ConvertShapeToString(fShapeInput) << ";\n";
-      out << "std::vector<size_t> output_shape = " << ConvertShapeToString(fShapeY) << ";\n";
-      out << "std::vector<size_t> indices(input_shape.size(), 0);\n";
-      out << "for (size_t i = 0; i < " << output_length << "; ++i) {\n";
-      out << SP<<"size_t source_index = 0;\n";
-      out << SP<<"size_t stride = 1;\n";
-      out << SP<<"for (int j = input_shape.size() - 1; j >= 0; --j) {\n";
-      out << SP<<SP<<"source_index += (indices[j] % input_shape[j]) * stride;\n";
-      out << SP<<SP<<"stride *= input_shape[j];\n";
-      out << SP<<"}\n";
-      out << SP<<"tensor_"<<fNY<<"[i] = tensor_"<<fNInput<<"[source_index];\n";
-      out << SP<<"for (int j = input_shape.size() - 1; j >= 0; --j) {\n";
-      out << SP<<SP<<"if (++indices[j] < output_shape[j]) {\n";
-      out << SP<<SP<<SP<<"break;\n";
-      out << SP<<SP<<"}\n";
-      out << SP<<SP<<"indices[j] = 0;\n";
-      out << SP<<"}\n";
-      out << "}\n";
-      out << "}\n";
-#endif
       out << "}\n";  // end of scope
       return out.str();
    }
