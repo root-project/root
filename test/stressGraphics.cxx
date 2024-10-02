@@ -86,10 +86,7 @@ Int_t    StatusPrint    (TString &filename, Int_t id, const TString &title, Int_
 Int_t    AnalysePS      (const TString &filename);
 Int_t    FileSize       (const char *filename);
 TCanvas *StartTest      (Int_t w, Int_t h);
-void     TestReport1    (TCanvas *C, const TString &title, Int_t IPS=0);
-void     TestReport2    (Int_t IPS=0);
 void     TestReport     (TCanvas *C, const TString &title, const TString &arg = "", Int_t IPS=0);
-void     DoCcode        (TCanvas *C);
 TString  stime(time_t* t, bool utc = false, bool display_time_zone = true);
 
 
@@ -534,23 +531,35 @@ TCanvas *StartTest(Int_t w, Int_t h)
    return C;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Report 1:
-/// Draw the canvas generate as PostScript, count the number of characters in
-/// the PS file and compare the result with the reference value.
+/// Full report which includes following steps:
+/// 1. Draw the canvas generate as PostScript, count the number of characters in
+///    the PS file and compare the result with the reference value.
+/// 2.  Generate the C code corresponding to the canvas C
+/// 3. Draw the canvas generate as .C, generate the corresponding PostScript
+///    file (using gPad), count the number of characters in it and compare the
+///    result with the reference value.
+/// For special cases C code may be skipped or some object removed from global lists
 
-void TestReport1(TCanvas *C, const TString &title, Int_t IPS)
+void TestReport(TCanvas *C, const TString &title, const TString &arg, Int_t IPS)
 {
    gErrorIgnoreLevel = 9999;
 
    TString psfile = TString::Format("sg1_%2.2d.ps",gTestNum);
 
+   TString ps2file = TString::Format("sg2_%2.2d.ps", gTestNum);
+
    TString pdffile = TString::Format("sg%2.2d.pdf",gTestNum);
 
-   TString jpgfile = TString::Format("sg%2.2d.jpg",gTestNum);
+   TString jpgfile = TString::Format("sg%2.2d.jpg", gTestNum);
 
-   TString pngfile = TString::Format("sg%2.2d.png",gTestNum);
+   TString pngfile = TString::Format("sg%2.2d.png", gTestNum);
+
+   TString ccode = TString::Format("sg%2.2d.C", gTestNum);
+
+   Bool_t execute_ccode = (arg != kSkipCCode);
+
+   // start files generation
 
    {
       TPostScript ps1(psfile, 111);
@@ -571,6 +580,22 @@ void TestReport1(TCanvas *C, const TString &title, Int_t IPS)
 
    C->cd(0);
    C->SaveAs(pngfile);
+
+   if (execute_ccode) {
+      C->SaveAs(ccode);
+      delete C;
+      C = nullptr;
+
+      if (!arg.IsNull()) {
+         auto old = gDirectory->GetList()->FindObject(arg);
+         if (old) gDirectory->GetList()->Remove(old);
+      }
+
+      gROOT->ProcessLine(".x " + ccode);
+      gPad->SaveAs(ps2file);
+   }
+
+   // done files generation
 
    if (IPS) {
       StatusPrint(psfile,  gTestNum, title, FileSize(psfile) ,
@@ -594,87 +619,26 @@ void TestReport1(TCanvas *C, const TString &title, Int_t IPS)
                                            gPNGRefNb[gTestNum-1],
                                            gPNGErrNb[gTestNum-1]);
 
-   gErrorIgnoreLevel = 0;
+   if (execute_ccode) {
+      Int_t ret_code = 0;
 
-   return;
-}
+      if (IPS) {
+         ret_code = StatusPrint(psfile,-1, "  C file result", FileSize(ps2file),
+                                                      gPS2RefNb[gTestNum-1],
+                                                      gPS2ErrNb[gTestNum-1]);
+      } else {
+         ret_code = StatusPrint(psfile,-1, "  C file result", AnalysePS(ps2file),
+                                                      gPS2RefNb[gTestNum-1],
+                                                      gPS2ErrNb[gTestNum-1]);
+      }
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Generate the C code corresponding to the canvas C.
-
-void DoCcode(TCanvas *C)
-{
-   gErrorIgnoreLevel = 9999;
-
-   TString ccode = TString::Format("sg%2.2d.C",gTestNum);
-
-   if (C) {
-      C->SaveAs(ccode);
-      delete C;
-      C = nullptr;
+   #ifndef ClingWorkAroundDeletedSourceFile
+      if (!gOptionK && !ret_code)
+         gSystem->Unlink(ccode);
+   #endif
    }
 
    gErrorIgnoreLevel = 0;
-   return;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Report 2:
-/// Draw the canvas generate as .C, generate the corresponding PostScript
-/// file (using gPad), count the number of characters in it and compare the
-/// result with the reference value.
-
-void TestReport2(Int_t IPS)
-{
-   TString psfile = TString::Format("sg2_%2.2d.ps", gTestNum);
-   TString ccode = TString::Format("sg%2.2d.C", gTestNum);
-
-   gErrorIgnoreLevel = 9999;
-
-   gROOT->ProcessLine(".x " + ccode);
-   gPad->SaveAs(psfile);
-   gErrorIgnoreLevel = 0;
-   Int_t i;
-
-   if (IPS) {
-      i = StatusPrint(psfile,-1, "  C file result", FileSize(psfile),
-                                                    gPS2RefNb[gTestNum-1],
-                                                    gPS2ErrNb[gTestNum-1]);
-   } else {
-      i = StatusPrint(psfile,-1, "  C file result", AnalysePS(psfile),
-                                                    gPS2RefNb[gTestNum-1],
-                                                    gPS2ErrNb[gTestNum-1]);
-   }
-
-#ifndef ClingWorkAroundDeletedSourceFile
-   if (!gOptionK && !i)
-      gSystem->Unlink(ccode);
-#endif
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Full report which includes:
-/// - images generated,
-/// - canvas stored as C file
-/// - loaded canvas create image again
-
-void TestReport(TCanvas *C, const TString &title, const TString &arg, Int_t IPS)
-{
-   TestReport1(C, title, IPS);
-
-   if (arg == kSkipCCode)
-      return;
-
-   DoCcode(C);
-
-   if (!arg.IsNull()) {
-      auto old = gDirectory->GetList()->FindObject(arg);
-      if (old) gDirectory->GetList()->Remove(old);
-   }
-
-   TestReport2(IPS);
 }
 
 
