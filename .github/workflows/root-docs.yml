@@ -192,7 +192,7 @@ jobs:
       run: |
               source ${DOC_LOCATION}/ROOT-CI/build/bin/thisroot.sh
               export DOXYGEN_OUTPUT_DIRECTORY=${DOC_LOCATION}/${DOC_DIR}_TMP
-           
+
               cd ${DOC_LOCATION}/ROOT-CI/src/documentation/doxygen
               make -j$(nproc)
 
@@ -200,7 +200,7 @@ jobs:
                 rm -rf "${DOC_LOCATION}/${DOC_DIR}/html"
               fi
               mv -f ${DOXYGEN_OUTPUT_DIRECTORY}/html ${DOC_LOCATION}/${DOC_DIR}
-           
+
               if [ -d ${DOC_LOCATION}/${DOC_DIR}/notebooks ]; then
                 rm -rf "${DOC_LOCATION}/${DOC_DIR}/notebooks"
               fi
@@ -210,37 +210,26 @@ jobs:
       working-directory: ${{ env.DOC_LOCATION }}
       shell: bash
       run: |
-        tarnamegz=${DOC_DIR}.tar.gz
-        tar zcf $tarnamegz ${DOC_DIR}
-        tarnamexz1=${DOC_DIR}.tar
-        tar cf $tarnamexz1 ${DOC_DIR}
-        xz -T5 -f $tarnamexz1
+        tarname=${DOC_DIR}.tar
+        tar cf $tarname ${DOC_DIR}
 
     #Upload to GitHub as an artifact (optional)
-    - name: Upload tar.gz
+    - name: Upload tar file
       if:   ${{ !cancelled() }}
       uses: actions/upload-artifact@v4
       with:
-        name: rootdoc.tar.gz
-        path: ${{env.DOC_LOCATION}}/${{env.DOC_DIR}}.tar.gz
-
-    - name: Upload tar.xz
-      if:   ${{ !cancelled() }}
-      uses: actions/upload-artifact@v4
-      with:
-        name: rootdoc.tar.xz
-        path: ${{env.DOC_LOCATION}}/${{env.DOC_DIR}}.tar.xz
+        name: rootdoc.tar
+        path: ${{env.DOC_LOCATION}}/${{env.DOC_DIR}}.tar
 
     # Install AWS CLI before syncing to S3
     - name: Install AWS CLI
       run: |
         python -m pip install --upgrade pip
         pip install awscli
-    
+
     - name: Sync to S3
       run: |
-        aws s3 cp rootdoc.tar.gz s3://root/99999_${PR_NUMBER}/rootdoc.tar.gz
-        aws s3 cp rootdoc.tar.xz s3://root/99999_${PR_NUMBER}/rootdoc.tar.xz
+        aws s3 cp rootdoc.tar.zip s3://root/99999_${PR_NUMBER}/rootdoc.tar.zip
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
