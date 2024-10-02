@@ -185,14 +185,14 @@ namespace {
 inline double getLog(double prob, RooAbsReal const *caller)
 {
 
-   if (std::abs(prob) > 1e6) {
-      oocoutW(caller, Eval) << "RooAbsPdf::getLogVal(" << caller->GetName()
-                            << ") WARNING: top-level pdf has a large value: " << prob << std::endl;
-   }
-
    if (prob < 0) {
       caller->logEvalError("getLogVal() top-level p.d.f evaluates to a negative number");
       return RooNaNPacker::packFloatIntoNaN(-prob);
+   }
+
+   if (std::isinf(prob)) {
+      oocoutW(caller, Eval) << "RooAbsPdf::getLogVal(" << caller->GetName()
+                            << ") WARNING: top-level pdf has an infinite value" << std::endl;
    }
 
    if (prob == 0) {
