@@ -246,17 +246,14 @@ void stressGraphics(Int_t verbose = 0)
    gROOT->SetStyle("Classic");
 
    // Check if $ROOTSYS/tutorials/hsimple.root exists
-   gHsimple = new TFile("$(ROOTSYS)/tutorials/hsimple.root");
-   if (gHsimple->IsZombie()) {
-      delete gHsimple;
-      gHsimple = new TFile("hsimple.root");
-      if (gHsimple->IsZombie()) {
-         delete gHsimple;
+   gHsimple = TFile::Open("$(ROOTSYS)/tutorials/hsimple.root");
+   if (!gHsimple) {
+      gHsimple = TFile::Open("hsimple.root");
+      if (!gHsimple) {
          printf("Create $(ROOTSYS)/tutorials/hsimple.root\n");
          gROOT->Macro("$(ROOTSYS)/tutorials/hsimple.C");
-         gHsimple = new TFile("$(ROOTSYS)/tutorials/hsimple.root");
-         if (gHsimple->IsZombie()) {
-            delete gHsimple;
+         gHsimple = TFile::Open("$(ROOTSYS)/tutorials/hsimple.root");
+         if (!gHsimple) {
             printf("Could not create $(ROOTSYS)/tutorials/hsimple.root\n");
             return;
          }
@@ -264,17 +261,14 @@ void stressGraphics(Int_t verbose = 0)
    }
 
    // Check if cernstaff.root exists
-   gCernstaff = new TFile("cernstaff.root");
-   if (gCernstaff->IsZombie()) {
-      delete gCernstaff;
-      gCernstaff = new TFile("cernstaff.root");
-      if (gCernstaff->IsZombie()) {
-         delete gCernstaff;
+   gCernstaff = TFile::Open("cernstaff.root");
+   if (!gCernstaff) {
+      gCernstaff = TFile::Open("$(ROOTSYS)/tutorials/tree/cernstaff.root");
+      if (!gCernstaff) {
          printf("Create ./cernstaff.root\n");
          gROOT->Macro("$(ROOTSYS)/tutorials/tree/cernbuild.C(0,0)");
-         gCernstaff = new TFile("cernstaff.root");
-         if (gCernstaff->IsZombie()) {
-            delete gCernstaff;
+         gCernstaff = TFile::Open("cernstaff.root");
+         if (!gCernstaff) {
             printf("Could not create ./cernstaff.root\n");
             return;
          }
