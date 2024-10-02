@@ -2,8 +2,8 @@ import { isNodeJs, httpRequest, btoa_func, source_dir, settings, isObject } from
 
 
 const kArial = 'Arial', kTimes = 'Times New Roman', kCourier = 'Courier New', kVerdana = 'Verdana', kSymbol = 'RootSymbol', kWingdings = 'Wingdings',
-// average width taken from symbols.html, counted only for letters and digits
-root_fonts = [null,  // index 0 not exists
+    // average width taken from symbols.html, counted only for letters and digits
+    root_fonts = [null,  // index 0 not exists
       { n: kTimes, s: 'italic', aw: 0.5314 },
       { n: kTimes, w: 'bold', aw: 0.5809 },
       { n: kTimes, s: 'italic', w: 'bold', aw: 0.5540 },
@@ -22,10 +22,9 @@ root_fonts = [null,  // index 0 not exists
       { n: kVerdana, aw: 0.5664 },
       { n: kVerdana, s: 'italic', aw: 0.5495 },
       { n: kVerdana, w: 'bold', aw: 0.5748 },
-      { n: kVerdana, s: 'italic', w: 'bold', aw: 0.5578 }];
-
-
-const gFontFiles = {};
+      { n: kVerdana, s: 'italic', w: 'bold', aw: 0.5578 }],
+   // list of loaded fonts including handling of multiple simultaneous requests
+   gFontFiles = {};
 
 /** @summary Read font file from some pre-configured locations
   * @return {Promise} with base64 code of the font

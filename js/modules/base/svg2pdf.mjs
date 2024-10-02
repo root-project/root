@@ -1196,19 +1196,27 @@ function getBoundingBoxByChildren(context, svgnode) {
     if (getAttribute(svgnode.element, context.styleSheets, 'display') === 'none') {
         return [0, 0, 0, 0];
     }
-    var boundingBox = [0, 0, 0, 0];
+    var boundingBox = [];
     svgnode.children.forEach(function (child) {
         var nodeBox = child.getBoundingBox(context);
-        boundingBox = [
-            Math.min(boundingBox[0], nodeBox[0]),
-            Math.min(boundingBox[1], nodeBox[1]),
-            Math.max(boundingBox[0] + boundingBox[2], nodeBox[0] + nodeBox[2]) -
+        if ((nodeBox[0] === 0) && (nodeBox[1] === 0) && (nodeBox[2] === 0) && (nodeBox[3] === 0))
+            return;
+        var transform = child.computeNodeTransform(context);
+        nodeBox[0] = nodeBox[0] * transform.sx + transform.tx;
+        nodeBox[1] = nodeBox[1] * transform.sy + transform.ty;
+        if (boundingBox.length === 0)
+            boundingBox = nodeBox;
+        else
+            boundingBox = [
                 Math.min(boundingBox[0], nodeBox[0]),
-            Math.max(boundingBox[1] + boundingBox[3], nodeBox[1] + nodeBox[3]) -
-                Math.min(boundingBox[1], nodeBox[1])
-        ];
+                Math.min(boundingBox[1], nodeBox[1]),
+                Math.max(boundingBox[0] + boundingBox[2], nodeBox[0] + nodeBox[2]) -
+                    Math.min(boundingBox[0], nodeBox[0]),
+                Math.max(boundingBox[1] + boundingBox[3], nodeBox[1] + nodeBox[3]) -
+                    Math.min(boundingBox[1], nodeBox[1])
+            ];
     });
-    return boundingBox;
+    return boundingBox.length === 0 ? [0, 0, 0, 0] : boundingBox;
 }
 function defaultBoundingBox(element, context) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -2933,7 +2941,9 @@ var TextChunk = /** @class */ (function () {
 var TextNode = /** @class */ (function (_super) {
     __extends(TextNode, _super);
     function TextNode() {
-        return _super !== null && _super.apply(this, arguments) || this;
+        var _this = _super !== null && _super.apply(this, arguments) || this;
+        _this.boundingBox = [];
+        return _this;
     }
     TextNode.prototype.processTSpans = function (textNode, node, context, textChunks, currentTextSegment, trimInfo) {
         var pdfFontSize = context.pdf.getFontSize();
@@ -3029,6 +3039,9 @@ var TextNode = /** @class */ (function (_super) {
                             renderingMode: textRenderingMode === 'fill' ? void 0 : textRenderingMode,
                             charSpace: charSpace === 0 ? void 0 : charSpace
                         });
+                        this.boundingBox = [textX + dx - xOffset, textY + dy - pdfFontSize, context.textMeasure.measureTextWidth(transformedText, context.attributeState), pdfFontSize];
+                        if (alignmentBaseline === 'baseline')
+                            this.boundingBox[1] += pdfFontSize * 0.2;
                     }
                 }
                 else {
@@ -3080,7 +3093,7 @@ var TextNode = /** @class */ (function (_super) {
         return svgNodeAndChildrenVisible(this, parentVisible, context);
     };
     TextNode.prototype.getBoundingBoxCore = function (context) {
-        return defaultBoundingBox(this.element, context);
+        return this.boundingBox.length > 0 ? this.boundingBox : defaultBoundingBox(this.element, context);
     };
     TextNode.prototype.computeNodeTransformCore = function (context) {
         return context.pdf.unitMatrix;
@@ -5202,6 +5215,33 @@ var Group = /** @class */ (function (_super) {
     };
     return Group;
 }(ContainerNode));
+var GroupA = /** @class */ (function (_super) {
+    __extends(GroupA, _super);
+    function GroupA() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    GroupA.prototype.renderCore = function (context) {
+        return __awaiter(this, void 0, void 0, function () {
+            var href, box, scale, ph;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, _super.prototype.renderCore.call(this, context)];
+                    case 1:
+                        _a.sent();
+                        href = getAttribute(this.element, context.styleSheets, 'href');
+                        if (href) {
+                            box = this.getBoundingBox(context);
+                            scale = context.pdf.internal.scaleFactor;
+                            ph = context.pdf.internal.pageSize.getHeight();
+                            context.pdf.link(scale * (box[0] * context.transform.sx + context.transform.tx), ph - scale * (box[1] * context.transform.sy + context.transform.ty), scale * box[2], scale * box[3], { url: href });
+                        }
+                        return [2 /*return*/];
+                }
+            });
+        });
+    };
+    return GroupA;
+}(Group));
 
 var ClipPath = /** @class */ (function (_super) {
     __extends(ClipPath, _super);
@@ -5263,6 +5303,8 @@ function parse$1(node, idMap) {
     forEachChild(node, function (i, n) { return children.push(parse$1(n, idMap)); });
     switch (node.tagName.toLowerCase()) {
         case 'a':
+            svgnode = new GroupA(node, children);
+            break;
         case 'g':
             svgnode = new Group(node, children);
             break;

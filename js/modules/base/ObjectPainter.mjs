@@ -308,7 +308,7 @@ class ObjectPainter extends BasePainter {
      * or svg:g element created in specified frame layer ('main_layer' will be used when true specified)
      * @param {boolean|string} [frame_layer] - when specified, <g> element will be created inside frame layer, otherwise in the pad
      * @protected */
-   createG(frame_layer) {
+   createG(frame_layer, use_a = false) {
       let layer;
 
       if (frame_layer === 'frame2d') {
@@ -336,7 +336,7 @@ class ObjectPainter extends BasePainter {
          // clear all elements, keep g element on its place
          this.draw_g.selectAll('*').remove();
       } else {
-         this.draw_g = layer.append('svg:g');
+         this.draw_g = layer.append(use_a ? 'svg:a' : 'svg:g');
 
          if (!frame_layer)
             layer.selectChildren('.most_upper_primitives').raise();

@@ -1636,6 +1636,7 @@ class TFramePainter extends ObjectPainter {
       this.ymin = this.ymax = 0; // no scale specified, wait for objects drawing
       this.ranges_set = false;
       this.axes_drawn = false;
+      this.axes2_drawn = false;
       this.keys_handler = null;
       this.projection = 0; // different projections
    }
@@ -2173,7 +2174,7 @@ class TFramePainter extends ObjectPainter {
    /** @summary Identify if requested axes are drawn
      * @desc Checks if x/y axes are drawn. Also if second side is already there */
    hasDrawnAxes(second_x, second_y) {
-      return !second_x && !second_y ? this.axes_drawn : false;
+      return !second_x && !second_y ? this.axes_drawn : this.axes2_drawn;
    }
 
    /** @summary draw axes,
@@ -2294,7 +2295,10 @@ class TFramePainter extends ObjectPainter {
                                       draw_vertical.invert_side ? 0 : this._frame_x, false);
       }
 
-       return Promise.all([pr1, pr2]);
+       return Promise.all([pr1, pr2]).then(() => {
+         this.axes2_drawn = true;
+         return true;
+       });
    }
 
 
@@ -2389,7 +2393,7 @@ class TFramePainter extends ObjectPainter {
       this.y2_handle?.removeG();
 
       this.draw_g?.selectChild('.axis_layer').selectAll('*').remove();
-      this.axes_drawn = false;
+      this.axes_drawn = this.axes2_drawn = false;
    }
 
    /** @summary Returns frame rectangle plus extra info for hint display */
@@ -2516,7 +2520,7 @@ class TFramePainter extends ObjectPainter {
          main_svg = this.draw_g.selectChild('.main_layer');
       }
 
-      this.axes_drawn = false;
+      this.axes_drawn = this.axes2_drawn = false;
 
       this.draw_g.attr('transform', trans);
 

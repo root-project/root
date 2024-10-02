@@ -11,7 +11,8 @@ async function drawText() {
          pp = this.getPadPainter(),
          w = pp.getPadWidth(),
          h = pp.getPadHeight(),
-         fp = this.getFramePainter();
+         fp = this.getFramePainter(),
+         is_url = text.fName.startsWith('http://') || text.fName.startsWith('https://');
    let pos_x = text.fX, pos_y = text.fY, use_frame = false,
        fact = 1,
        annot = this.matchObjectType(clTAnnotation);
@@ -38,7 +39,7 @@ async function drawText() {
       text.fTextAlign = 22;
    }
 
-   this.createG(use_frame ? 'frame2d' : undefined);
+   this.createG(use_frame ? 'frame2d' : undefined, is_url);
 
    this.draw_g.attr('transform', null); // remove transform from interactive changes
 
@@ -58,6 +59,9 @@ async function drawText() {
       arg.latex = 2;
       fact = 0.8;
    }
+
+   if (is_url)
+      this.draw_g.attr('href', text.fName).append('title').text(`Link on ${text.fName}`);
 
    return this.startTextDrawingAsync(this.textatt.font, this.textatt.getSize(w, h, fact, 0.05))
               .then(() => this.drawText(arg))
@@ -91,7 +95,7 @@ async function drawText() {
       }
 
       if (annot !== '3d')
-         addMoveHandler(this);
+         addMoveHandler(this, true, is_url);
       else {
          fp.processRender3D = true;
          this.handleRender3D = () => {

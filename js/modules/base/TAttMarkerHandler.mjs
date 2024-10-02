@@ -3,7 +3,10 @@ import { select as d3_select } from '../d3.mjs';
 import { getColor } from './colors.mjs';
 
 
-const root_markers = [
+// list of marker types which can have line widths
+const root_50_67 = [2, 3, 5, 4, 25, 26, 27, 28, 30, 32, 35, 36, 37, 38, 40, 42, 44, 46],
+    // internal recoding of root markers
+    root_markers = [
       0, 1, 2, 3, 4,           //  0..4
       5, 106, 107, 104, 1,     //  5..9
       1, 1, 1, 1, 1,           // 10..14
@@ -135,8 +138,15 @@ class TAttMarkerHandler {
       }
 
       this.optimized = false;
+      this.lwidth = 1;
 
-      const marker_kind = root_markers[this.style] ?? 104,
+      let style = this.style;
+      if (style >= 50) {
+         this.lwidth = 2 + Math.floor((style - 50) / root_50_67.length);
+         style = root_50_67[(style - 50) % root_50_67.length];
+      }
+
+      const marker_kind = root_markers[style] ?? 104,
             shape = marker_kind % 100;
 
       this.fill = (marker_kind >= 100);
@@ -152,7 +162,8 @@ class TAttMarkerHandler {
             s3 = (size/3).toFixed(this.ndig),
             s4 = (size/4).toFixed(this.ndig),
             s8 = (size/8).toFixed(this.ndig),
-            s38 = (size*3/8).toFixed(this.ndig);
+            s38 = (size*3/8).toFixed(this.ndig),
+            s34 = (size*3/4).toFixed(this.ndig);
 
       switch (shape) {
          case 1: // dot
@@ -163,8 +174,8 @@ class TAttMarkerHandler {
             this.marker = `v${s1}m-${s2},-${s2}h${s1}`;
             break;
          case 3: // asterisk
-            this.x0 = this.y0 = -size / 2;
-            this.marker = `l${s1},${s1}m0,-${s1}l-${s1},${s1}m0,-${s2}h${s1}m-${s2},-${s2}v${s1}`;
+            this.y0 = -size / 2;
+            this.marker = `v${s1}m-${s2},-${s2}h${s1}m-${s8},-${s38}l-${s34},${s34}m${s34},0l-${s34},-${s34}`;
             break;
          case 4: // circle
             this.x0 = -parseFloat(s2);
@@ -172,8 +183,8 @@ class TAttMarkerHandler {
             this.marker = `a${s2},${s2},0,1,0,${s1},0a${s2},${s2},0,1,0,-${s1},0z`;
             break;
          case 5: // multiply
-            this.x0 = this.y0 = -size / 2;
-            this.marker = `l${s1},${s1}m0,-${s1}l-${s1},${s1}`;
+            this.x0 = this.y0 = -3 / 8 * size;
+            this.marker = `l${s34},${s34}m0,-${s34}l-${s34},${s34}`;
             break;
          case 6: // small dot
             this.x0 = -1;
@@ -271,6 +282,7 @@ class TAttMarkerHandler {
    apply(selection) {
       this.used = true;
       selection.style('stroke', this.stroke ? this.color : 'none')
+               .style('stroke-width', this.stroke && (this.lwidth > 1) ? this.lwidth : null)
                .style('fill', this.fill ? this.color : 'none');
    }
 

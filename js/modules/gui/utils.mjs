@@ -316,7 +316,7 @@ function detectRightButton(event) {
 
 /** @summary Add move handlers for drawn element
   * @private */
-function addMoveHandler(painter, enabled = true) {
+function addMoveHandler(painter, enabled = true, hover_handler = false) {
    if (!settings.MoveResize || painter.isBatchMode() || !painter.draw_g) return;
 
    if (painter.getPadPainter()?.isEditable() === false)
@@ -374,9 +374,14 @@ function addMoveHandler(painter, enabled = true) {
       }.bind(painter));
 
    painter.draw_g
-          .style('cursor', 'move')
+          .style('cursor', hover_handler ? 'pointer' : 'move')
           .property('assigned_move', true)
           .call(drag_move);
+
+   if (hover_handler) {
+      painter.draw_g.on('mouseenter', () => painter.draw_g.style('text-decoration', 'underline'))
+                    .on('mouseleave', () => painter.draw_g.style('text-decoration', null));
+   }
 }
 
 /** @summary Inject style

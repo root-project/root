@@ -5,13 +5,14 @@ typeof define === 'function' && define.amd ? define(['exports'], factory) :
 (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.JSROOT = global.JSROOT || {}));
 })(this, (function (exports) { 'use strict';
 
+var _documentCurrentScript = typeof document !== 'undefined' ? document.currentScript : null;
 /** @summary version id
   * @desc For the JSROOT release the string in format 'major.minor.patch' like '7.0.0' */
 const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '27/09/2024',
+version_date = '2/10/2024',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -29,7 +30,8 @@ internals = {
    id_counter: 1
 },
 
-_src = (typeof document === 'undefined' && typeof location === 'undefined' ? undefined : typeof document === 'undefined' ? location.href : (document.currentScript && document.currentScript.src || new URL('jsroot.js', document.baseURI).href));
+_src = (typeof document === 'undefined' && typeof location === 'undefined' ? require('u' + 'rl').pathToFileURL(__filename).href : typeof document === 'undefined' ? location.href : (_documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === 'SCRIPT' && _documentCurrentScript.src || new URL('jsroot.js', document.baseURI).href));
+
 
 /** @summary Location of JSROOT modules
   * @desc Automatically detected and used to dynamically load other modules
@@ -9267,8 +9269,8 @@ function convertDate(dt) {
 }
 
 const kArial = 'Arial', kTimes = 'Times New Roman', kCourier = 'Courier New', kVerdana = 'Verdana', kSymbol = 'RootSymbol', kWingdings = 'Wingdings',
-// average width taken from symbols.html, counted only for letters and digits
-root_fonts = [null,  // index 0 not exists
+    // average width taken from symbols.html, counted only for letters and digits
+    root_fonts = [null,  // index 0 not exists
       { n: kTimes, s: 'italic', aw: 0.5314 },
       { n: kTimes, w: 'bold', aw: 0.5809 },
       { n: kTimes, s: 'italic', w: 'bold', aw: 0.5540 },
@@ -9287,10 +9289,9 @@ root_fonts = [null,  // index 0 not exists
       { n: kVerdana, aw: 0.5664 },
       { n: kVerdana, s: 'italic', aw: 0.5495 },
       { n: kVerdana, w: 'bold', aw: 0.5748 },
-      { n: kVerdana, s: 'italic', w: 'bold', aw: 0.5578 }];
-
-
-const gFontFiles = {};
+      { n: kVerdana, s: 'italic', w: 'bold', aw: 0.5578 }],
+   // list of loaded fonts including handling of multiple simultaneous requests
+   gFontFiles = {};
 
 /** @summary Read font file from some pre-configured locations
   * @return {Promise} with base64 code of the font
@@ -9799,6 +9800,7 @@ const latex_features = [
    { name: '#scale[', arg: 'float' },  // font scale
    { name: '#color[', arg: 'int' },   // font color
    { name: '#font[', arg: 'int' },    // font face
+   { name: '#url[', arg: 'string' },   // url link
    { name: '_{', low_up: 'low' },  // subscript
    { name: '^{', low_up: 'up' },   // superscript
    { name: '#bar{', deco: 'overline' /* accent: '\u02C9' */ }, // '\u0305'
@@ -10010,14 +10012,14 @@ function parseLatex(node, arg, label, curr) {
    },
 
    /** Create special sub-container for elements like sqrt or braces  */
-   createGG = () => {
+   createGG = (is_a) => {
       const gg = currG();
 
       // this is indicator that gg element will be the only one, one can use directly main container
       if ((nelements === 1) && !label && !curr.x && !curr.y)
          return gg;
 
-      return makeTranslate(gg.append('svg:g'), curr.x, curr.y);
+      return makeTranslate(gg.append(is_a ? 'svg:a' : 'svg:g'), curr.x, curr.y);
    },
 
    extractSubLabel = (check_first, lbrace, rbrace) => {
@@ -10466,6 +10468,22 @@ function parseLatex(node, arg, label, curr) {
 
          shiftX(subpos.rect.width * (shiftx > 0 ? 1 + foundarg : 1));
 
+         continue;
+      }
+
+      if (found.name === '#url[') {
+         const sublabel = extractSubLabel();
+         if (sublabel === -1) return false;
+
+         const gg = createGG(true),
+               subpos = createSubPos();
+
+         gg.attr('href', foundarg);
+
+         parseLatex(gg, arg, sublabel, subpos);
+
+         positionGNode(subpos, 0, 0, true);
+         shiftX(subpos.rect.width);
          continue;
       }
 
@@ -11040,7 +11058,10 @@ async function typesetMathjax(node) {
    return loadMathjax().then(mj => mj.typesetPromise(node ? [node] : undefined));
 }
 
-const root_markers = [
+// list of marker types which can have line widths
+const root_50_67 = [2, 3, 5, 4, 25, 26, 27, 28, 30, 32, 35, 36, 37, 38, 40, 42, 44, 46],
+    // internal recoding of root markers
+    root_markers = [
       0, 1, 2, 3, 4,           //  0..4
       5, 106, 107, 104, 1,     //  5..9
       1, 1, 1, 1, 1,           // 10..14
@@ -11172,8 +11193,15 @@ class TAttMarkerHandler {
       }
 
       this.optimized = false;
+      this.lwidth = 1;
 
-      const marker_kind = root_markers[this.style] ?? 104,
+      let style = this.style;
+      if (style >= 50) {
+         this.lwidth = 2 + Math.floor((style - 50) / root_50_67.length);
+         style = root_50_67[(style - 50) % root_50_67.length];
+      }
+
+      const marker_kind = root_markers[style] ?? 104,
             shape = marker_kind % 100;
 
       this.fill = (marker_kind >= 100);
@@ -11189,7 +11217,8 @@ class TAttMarkerHandler {
             s3 = (size/3).toFixed(this.ndig),
             s4 = (size/4).toFixed(this.ndig),
             s8 = (size/8).toFixed(this.ndig),
-            s38 = (size*3/8).toFixed(this.ndig);
+            s38 = (size*3/8).toFixed(this.ndig),
+            s34 = (size*3/4).toFixed(this.ndig);
 
       switch (shape) {
          case 1: // dot
@@ -11200,8 +11229,8 @@ class TAttMarkerHandler {
             this.marker = `v${s1}m-${s2},-${s2}h${s1}`;
             break;
          case 3: // asterisk
-            this.x0 = this.y0 = -size / 2;
-            this.marker = `l${s1},${s1}m0,-${s1}l-${s1},${s1}m0,-${s2}h${s1}m-${s2},-${s2}v${s1}`;
+            this.y0 = -size / 2;
+            this.marker = `v${s1}m-${s2},-${s2}h${s1}m-${s8},-${s38}l-${s34},${s34}m${s34},0l-${s34},-${s34}`;
             break;
          case 4: // circle
             this.x0 = -parseFloat(s2);
@@ -11209,8 +11238,8 @@ class TAttMarkerHandler {
             this.marker = `a${s2},${s2},0,1,0,${s1},0a${s2},${s2},0,1,0,-${s1},0z`;
             break;
          case 5: // multiply
-            this.x0 = this.y0 = -size / 2;
-            this.marker = `l${s1},${s1}m0,-${s1}l-${s1},${s1}`;
+            this.x0 = this.y0 = -3 / 8 * size;
+            this.marker = `l${s34},${s34}m0,-${s34}l-${s34},${s34}`;
             break;
          case 6: // small dot
             this.x0 = -1;
@@ -11308,6 +11337,7 @@ class TAttMarkerHandler {
    apply(selection) {
       this.used = true;
       selection.style('stroke', this.stroke ? this.color : 'none')
+               .style('stroke-width', this.stroke && (this.lwidth > 1) ? this.lwidth : null)
                .style('fill', this.fill ? this.color : 'none');
    }
 
@@ -12396,7 +12426,7 @@ class ObjectPainter extends BasePainter {
      * or svg:g element created in specified frame layer ('main_layer' will be used when true specified)
      * @param {boolean|string} [frame_layer] - when specified, <g> element will be created inside frame layer, otherwise in the pad
      * @protected */
-   createG(frame_layer) {
+   createG(frame_layer, use_a = false) {
       let layer;
 
       if (frame_layer === 'frame2d') {
@@ -12424,7 +12454,7 @@ class ObjectPainter extends BasePainter {
          // clear all elements, keep g element on its place
          this.draw_g.selectAll('*').remove();
       } else {
-         this.draw_g = layer.append('svg:g');
+         this.draw_g = layer.append(use_a ? 'svg:a' : 'svg:g');
 
          if (!frame_layer)
             layer.selectChildren('.most_upper_primitives').raise();
@@ -60372,7 +60402,7 @@ function detectRightButton(event) {
 
 /** @summary Add move handlers for drawn element
   * @private */
-function addMoveHandler(painter, enabled = true) {
+function addMoveHandler(painter, enabled = true, hover_handler = false) {
    if (!settings.MoveResize || painter.isBatchMode() || !painter.draw_g) return;
 
    if (painter.getPadPainter()?.isEditable() === false)
@@ -60430,9 +60460,14 @@ function addMoveHandler(painter, enabled = true) {
       }.bind(painter));
 
    painter.draw_g
-          .style('cursor', 'move')
+          .style('cursor', hover_handler ? 'pointer' : 'move')
           .property('assigned_move', true)
           .call(drag_move);
+
+   if (hover_handler) {
+      painter.draw_g.on('mouseenter', () => painter.draw_g.style('text-decoration', 'underline'))
+                    .on('mouseleave', () => painter.draw_g.style('text-decoration', null));
+   }
 }
 
 /** @summary Inject style
@@ -60873,7 +60908,7 @@ class JSRootMenu {
 
             let col = (n < 0) ? 'none' : getColor(n);
             if ((n === 0) && (fill_kind === 1)) col = 'none';
-            const lbl = (n <= 0) || (col[0] !== '#') ? col : `col ${n}`,
+            const lbl = (n <= 0) || ((col[0] !== '#') && (col.indexOf('rgb') < 0)) ? col : `col ${n}`,
                   fill = (n === 1) ? 'white' : 'black',
                   stroke = (n === 1) ? 'red' : 'black',
                   rect = (value === (useid ? n : col)) ? `<rect width="50" height="18" style="fill:none;stroke-width:3px;stroke:${stroke}"></rect>` : '',
@@ -61119,22 +61154,34 @@ class JSRootMenu {
 
    /** @summary Add fill style menu
      * @private */
-   addFillStyleMenu(name, value, color_index, painter, set_func) {
+   addFillStyleMenu(name, value, color_index, set_func) {
       this.sub('' + name, () => {
-         this.input('Enter fill style id (1001-solid, 3000..3010)', value, 'int', 0, 4000).then(id => {
+         this.input('Enter fill style id (1001-solid, 3100..4000)', value, 'int', 0, 4000).then(id => {
             if ((id >= 0) && (id <= 4000)) set_func(id);
          });
       });
 
-      const supported = [1, 1001, 3001, 3002, 3003, 3004, 3005, 3006, 3007, 3010, 3021, 3022];
+      const supported = [1, 1001];
+      for (let k = 3001; k < 3025; ++k)
+         supported.push(k);
+      supported.push(3144, 3244, 3344, 3305, 3315, 3325, 3490, 3481, 3472);
 
       for (let n = 0; n < supported.length; ++n) {
-         let svg = supported[n];
-         if (painter) {
-            const sample = painter.createAttFill({ std: false, pattern: supported[n], color: color_index || 1 });
-            svg = `<svg width='100' height='18'><text x='1' y='12' style='font-size:12px'>${supported[n].toString()}</text><rect x='40' y='0' width='60' height='18' stroke='none' fill='${sample.getFillColor()}'></rect></svg>`;
-         }
-         this.addchk(value === supported[n], svg, supported[n], arg => set_func(parseInt(arg)));
+         if (n % 7 === 0) this.add('column:');
+
+         const selected = (value === supported[n]);
+
+         if (typeof document !== 'undefined') {
+            const svgelement = select(document.createElement('svg')),
+                  handler = new TAttFillHandler({ color: color_index || 1, pattern: supported[n], svg: svgelement });
+            svgelement.attr('width', 60).attr('height', 24);
+            if (selected)
+               svgelement.append('rect').attr('x', 0).attr('y', 0).attr('width', 60).attr('height', 24).style('stroke', 'red').style('fill', 'none').style('stroke-width', '3px');
+            svgelement.append('rect').attr('x', 3).attr('y', 3).attr('width', 54).attr('height', 18).style('stroke', 'none').call(handler.func);
+            this.add(svgelement.node().outerHTML, supported[n], arg => set_func(parseInt(arg)), `Pattern : ${supported[n]}` + (selected ? ' Active' : ''));
+         } else
+            this.addchk(selected, supported[n].toString(), supported[n], arg => set_func(parseInt(arg)));
+         if (n % 7 === 6) this.add('endcolumn:');
       }
       this.endsub();
    }
@@ -61257,7 +61304,7 @@ class JSRootMenu {
             if (pp) changeObjectMember(pp, 'fFrameFillColor', arg, true);
             painter.interactiveRedraw(redraw_arg, getColorExec(arg, 'SetFillColor'));
          }, painter.fillatt.kind);
-         this.addFillStyleMenu('style', painter.fillatt.pattern, painter.fillatt.colorindx, painter, id => {
+         this.addFillStyleMenu('style', painter.fillatt.pattern, painter.fillatt.colorindx, id => {
             painter.fillatt.change(undefined, id, painter.getCanvSvg());
             changeObjectMember(painter, 'fFillStyle', id);
             if (pp) changeObjectMember(pp, 'fFrameFillStyle', id);
@@ -61565,7 +61612,7 @@ class JSRootMenu {
 
       this.sub('Frame');
       this.addColorMenu('Fill color', gStyle.fFrameFillColor, col => { gStyle.fFrameFillColor = col; });
-      this.addFillStyleMenu('Fill style', gStyle.fFrameFillStyle, gStyle.fFrameFillColor, null, id => { gStyle.fFrameFillStyle = id; });
+      this.addFillStyleMenu('Fill style', gStyle.fFrameFillStyle, gStyle.fFrameFillColor, id => { gStyle.fFrameFillStyle = id; });
       this.addColorMenu('Line color', gStyle.fFrameLineColor, col => { gStyle.fFrameLineColor = col; });
       this.addSizeMenu('Line width', 1, 10, 1, gStyle.fFrameLineWidth, w => { gStyle.fFrameLineWidth = w; });
       this.addLineStyleMenu('Line style', gStyle.fFrameLineStyle, st => { gStyle.fFrameLineStyle = st; });
@@ -61581,7 +61628,7 @@ class JSRootMenu {
 
       this.sub('Title');
       this.addColorMenu('Fill color', gStyle.fTitleColor, col => { gStyle.fTitleColor = col; });
-      this.addFillStyleMenu('Fill style', gStyle.fTitleStyle, gStyle.fTitleColor, null, id => { gStyle.fTitleStyle = id; });
+      this.addFillStyleMenu('Fill style', gStyle.fTitleStyle, gStyle.fTitleColor, id => { gStyle.fTitleStyle = id; });
       this.addColorMenu('Text color', gStyle.fTitleTextColor, col => { gStyle.fTitleTextColor = col; });
       this.addSizeMenu('Border size', 0, 10, 1, gStyle.fTitleBorderSize, sz => { gStyle.fTitleBorderSize = sz; });
       this.addSizeMenu('Font size', 0.01, 0.1, 0.01, gStyle.fTitleFontSize, sz => { gStyle.fTitleFontSize = sz; });
@@ -61594,7 +61641,7 @@ class JSRootMenu {
 
       this.sub('Stat box');
       this.addColorMenu('Fill color', gStyle.fStatColor, col => { gStyle.fStatColor = col; });
-      this.addFillStyleMenu('Fill style', gStyle.fStatStyle, gStyle.fStatColor, null, id => { gStyle.fStatStyle = id; });
+      this.addFillStyleMenu('Fill style', gStyle.fStatStyle, gStyle.fStatColor, id => { gStyle.fStatStyle = id; });
       this.addColorMenu('Text color', gStyle.fStatTextColor, col => { gStyle.fStatTextColor = col; });
       this.addSizeMenu('Border size', 0, 10, 1, gStyle.fStatBorderSize, sz => { gStyle.fStatBorderSize = sz; });
       this.addSizeMenu('Font size', 0, 30, 5, gStyle.fStatFontSize, sz => { gStyle.fStatFontSize = sz; });
@@ -61608,7 +61655,7 @@ class JSRootMenu {
 
       this.sub('Legend');
       this.addColorMenu('Fill color', gStyle.fLegendFillColor, col => { gStyle.fLegendFillColor = col; });
-      this.addFillStyleMenu('Fill style', gStyle.fLegendFillStyle, gStyle.fLegendFillColor, null, id => { gStyle.fLegendFillStyle = id; });
+      this.addFillStyleMenu('Fill style', gStyle.fLegendFillStyle, gStyle.fLegendFillColor, id => { gStyle.fLegendFillStyle = id; });
       this.addSizeMenu('Border size', 0, 10, 1, gStyle.fLegendBorderSize, sz => { gStyle.fLegendBorderSize = sz; });
       this.addFontMenu('Font', gStyle.fLegendFont, fnt => { gStyle.fLegendFont = fnt; });
       this.addSizeMenu('Text size', 0, 0.1, 0.01, gStyle.fLegendTextSize, v => { gStyle.fLegendTextSize = v; }, 'legend text size, when 0 - auto adjustment is used');
@@ -61624,7 +61671,7 @@ class JSRootMenu {
       this.addSizeMenu('End error', 0, 12, 1, gStyle.fEndErrorSize, v => { gStyle.fEndErrorSize = v; }, 'size in pixels of end error for E1 draw options, gStyle.fEndErrorSize');
       this.addSizeMenu('Top margin', 0.0, 0.5, 0.05, gStyle.fHistTopMargin, v => { gStyle.fHistTopMargin = v; }, 'Margin between histogram top and frame top');
       this.addColorMenu('Fill color', gStyle.fHistFillColor, col => { gStyle.fHistFillColor = col; });
-      this.addFillStyleMenu('Fill style', gStyle.fHistFillStyle, gStyle.fHistFillColor, null, id => { gStyle.fHistFillStyle = id; });
+      this.addFillStyleMenu('Fill style', gStyle.fHistFillStyle, gStyle.fHistFillColor, id => { gStyle.fHistFillStyle = id; });
       this.addColorMenu('Line color', gStyle.fHistLineColor, col => { gStyle.fHistLineColor = col; });
       this.addSizeMenu('Line width', 1, 10, 1, gStyle.fHistLineWidth, w => { gStyle.fHistLineWidth = w; });
       this.addLineStyleMenu('Line style', gStyle.fHistLineStyle, st => { gStyle.fHistLineStyle = st; });
@@ -62818,7 +62865,8 @@ class TAxisPainter extends ObjectPainter {
             this.nticks2 = 1;
          }
          this.noexp = axis?.TestBit(EAxisBits.kNoExponent);
-         if ((this.scale_max < 300) && (this.scale_min > 0.3) && !this.noexp_changed) this.noexp = true;
+         if ((this.scale_max < 300) && (this.scale_min > 0.3) && !this.noexp_changed && (this.log === 1))
+            this.noexp = true;
          this.moreloglabels = axis?.TestBit(EAxisBits.kMoreLogLabels);
          this.format = this.formatLog;
       } else if (this.kind === kAxisLabels) {
@@ -65307,6 +65355,7 @@ class TFramePainter extends ObjectPainter {
       this.ymin = this.ymax = 0; // no scale specified, wait for objects drawing
       this.ranges_set = false;
       this.axes_drawn = false;
+      this.axes2_drawn = false;
       this.keys_handler = null;
       this.projection = 0; // different projections
    }
@@ -65844,7 +65893,7 @@ class TFramePainter extends ObjectPainter {
    /** @summary Identify if requested axes are drawn
      * @desc Checks if x/y axes are drawn. Also if second side is already there */
    hasDrawnAxes(second_x, second_y) {
-      return !second_x && !second_y ? this.axes_drawn : false;
+      return !second_x && !second_y ? this.axes_drawn : this.axes2_drawn;
    }
 
    /** @summary draw axes,
@@ -65965,7 +66014,10 @@ class TFramePainter extends ObjectPainter {
                                       draw_vertical.invert_side ? 0 : this._frame_x, false);
       }
 
-       return Promise.all([pr1, pr2]);
+       return Promise.all([pr1, pr2]).then(() => {
+         this.axes2_drawn = true;
+         return true;
+       });
    }
 
 
@@ -66060,7 +66112,7 @@ class TFramePainter extends ObjectPainter {
       this.y2_handle?.removeG();
 
       this.draw_g?.selectChild('.axis_layer').selectAll('*').remove();
-      this.axes_drawn = false;
+      this.axes_drawn = this.axes2_drawn = false;
    }
 
    /** @summary Returns frame rectangle plus extra info for hint display */
@@ -66187,7 +66239,7 @@ class TFramePainter extends ObjectPainter {
          main_svg = this.draw_g.selectChild('.main_layer');
       }
 
-      this.axes_drawn = false;
+      this.axes_drawn = this.axes2_drawn = false;
 
       this.draw_g.attr('transform', trans);
 
@@ -137309,19 +137361,27 @@ function getBoundingBoxByChildren(context, svgnode) {
     if (getAttribute(svgnode.element, context.styleSheets, 'display') === 'none') {
         return [0, 0, 0, 0];
     }
-    var boundingBox = [0, 0, 0, 0];
+    var boundingBox = [];
     svgnode.children.forEach(function (child) {
         var nodeBox = child.getBoundingBox(context);
-        boundingBox = [
-            Math.min(boundingBox[0], nodeBox[0]),
-            Math.min(boundingBox[1], nodeBox[1]),
-            Math.max(boundingBox[0] + boundingBox[2], nodeBox[0] + nodeBox[2]) -
+        if ((nodeBox[0] === 0) && (nodeBox[1] === 0) && (nodeBox[2] === 0) && (nodeBox[3] === 0))
+            return;
+        var transform = child.computeNodeTransform(context);
+        nodeBox[0] = nodeBox[0] * transform.sx + transform.tx;
+        nodeBox[1] = nodeBox[1] * transform.sy + transform.ty;
+        if (boundingBox.length === 0)
+            boundingBox = nodeBox;
+        else
+            boundingBox = [
                 Math.min(boundingBox[0], nodeBox[0]),
-            Math.max(boundingBox[1] + boundingBox[3], nodeBox[1] + nodeBox[3]) -
-                Math.min(boundingBox[1], nodeBox[1])
-        ];
+                Math.min(boundingBox[1], nodeBox[1]),
+                Math.max(boundingBox[0] + boundingBox[2], nodeBox[0] + nodeBox[2]) -
+                    Math.min(boundingBox[0], nodeBox[0]),
+                Math.max(boundingBox[1] + boundingBox[3], nodeBox[1] + nodeBox[3]) -
+                    Math.min(boundingBox[1], nodeBox[1])
+            ];
     });
-    return boundingBox;
+    return boundingBox.length === 0 ? [0, 0, 0, 0] : boundingBox;
 }
 function defaultBoundingBox(element, context) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -139046,7 +139106,9 @@ var TextChunk = /** @class */ (function () {
 var TextNode = /** @class */ (function (_super) {
     __extends(TextNode, _super);
     function TextNode() {
-        return _super !== null && _super.apply(this, arguments) || this;
+        var _this = _super !== null && _super.apply(this, arguments) || this;
+        _this.boundingBox = [];
+        return _this;
     }
     TextNode.prototype.processTSpans = function (textNode, node, context, textChunks, currentTextSegment, trimInfo) {
         var pdfFontSize = context.pdf.getFontSize();
@@ -139142,6 +139204,9 @@ var TextNode = /** @class */ (function (_super) {
                             renderingMode: textRenderingMode === 'fill' ? void 0 : textRenderingMode,
                             charSpace: charSpace === 0 ? void 0 : charSpace
                         });
+                        this.boundingBox = [textX + dx - xOffset, textY + dy - pdfFontSize, context.textMeasure.measureTextWidth(transformedText, context.attributeState), pdfFontSize];
+                        if (alignmentBaseline === 'baseline')
+                            this.boundingBox[1] += pdfFontSize * 0.2;
                     }
                 }
                 else {
@@ -139193,7 +139258,7 @@ var TextNode = /** @class */ (function (_super) {
         return svgNodeAndChildrenVisible(this, parentVisible, context);
     };
     TextNode.prototype.getBoundingBoxCore = function (context) {
-        return defaultBoundingBox(this.element, context);
+        return this.boundingBox.length > 0 ? this.boundingBox : defaultBoundingBox(this.element, context);
     };
     TextNode.prototype.computeNodeTransformCore = function (context) {
         return context.pdf.unitMatrix;
@@ -141315,6 +141380,33 @@ var Group = /** @class */ (function (_super) {
     };
     return Group;
 }(ContainerNode));
+var GroupA = /** @class */ (function (_super) {
+    __extends(GroupA, _super);
+    function GroupA() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    GroupA.prototype.renderCore = function (context) {
+        return __awaiter(this, void 0, void 0, function () {
+            var href, box, scale, ph;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, _super.prototype.renderCore.call(this, context)];
+                    case 1:
+                        _a.sent();
+                        href = getAttribute(this.element, context.styleSheets, 'href');
+                        if (href) {
+                            box = this.getBoundingBox(context);
+                            scale = context.pdf.internal.scaleFactor;
+                            ph = context.pdf.internal.pageSize.getHeight();
+                            context.pdf.link(scale * (box[0] * context.transform.sx + context.transform.tx), ph - scale * (box[1] * context.transform.sy + context.transform.ty), scale * box[2], scale * box[3], { url: href });
+                        }
+                        return [2 /*return*/];
+                }
+            });
+        });
+    };
+    return GroupA;
+}(Group));
 
 var ClipPath = /** @class */ (function (_super) {
     __extends(ClipPath, _super);
@@ -141376,6 +141468,8 @@ function parse$1(node, idMap) {
     forEachChild(node, function (i, n) { return children.push(parse$1(n, idMap)); });
     switch (node.tagName.toLowerCase()) {
         case 'a':
+            svgnode = new GroupA(node, children);
+            break;
         case 'g':
             svgnode = new Group(node, children);
             break;
@@ -146972,7 +147066,8 @@ async function drawText$1() {
          pp = this.getPadPainter(),
          w = pp.getPadWidth(),
          h = pp.getPadHeight(),
-         fp = this.getFramePainter();
+         fp = this.getFramePainter(),
+         is_url = text.fName.startsWith('http://') || text.fName.startsWith('https://');
    let pos_x = text.fX, pos_y = text.fY, use_frame = false,
        fact = 1,
        annot = this.matchObjectType(clTAnnotation);
@@ -146999,7 +147094,7 @@ async function drawText$1() {
       text.fTextAlign = 22;
    }
 
-   this.createG(use_frame ? 'frame2d' : undefined);
+   this.createG(use_frame ? 'frame2d' : undefined, is_url);
 
    this.draw_g.attr('transform', null); // remove transform from interactive changes
 
@@ -147019,6 +147114,9 @@ async function drawText$1() {
       arg.latex = 2;
       fact = 0.8;
    }
+
+   if (is_url)
+      this.draw_g.attr('href', text.fName).append('title').text(`Link on ${text.fName}`);
 
    return this.startTextDrawingAsync(this.textatt.font, this.textatt.getSize(w, h, fact, 0.05))
               .then(() => this.drawText(arg))
@@ -147052,7 +147150,7 @@ async function drawText$1() {
       }
 
       if (annot !== '3d')
-         addMoveHandler(this);
+         addMoveHandler(this, true, is_url);
       else {
          fp.processRender3D = true;
          this.handleRender3D = () => {
