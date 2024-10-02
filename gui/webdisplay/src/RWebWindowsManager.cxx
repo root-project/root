@@ -171,6 +171,18 @@ void RWebWindowsManager::SetUseConnectionKey(bool on)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
+/// Enable or disable single connection mode (default on)
+/// If enabled, one connection only with any web widget is possible
+/// Any attempt to establish more connections will fail
+/// if this mode is disabled some widgets like geom viewer or web canvas will be able to
+/// to serve several clients - only when they are connected with required authentication keys
+
+void RWebWindowsManager::SetSingleConnMode(bool on)
+{
+   gEnv->SetValue("WebGui.SingleConnMode", on ? "yes" : "no");
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
 /// Configure server location which can be used for loading of custom scripts or files
 /// When THttpServer instance of RWebWindowsManager will be created,
 /// THttpServer::AddLocation() method with correspondent arguments will be invoked.
@@ -752,6 +764,7 @@ std::string RWebWindowsManager::GetUrl(RWebWindow &win, bool remote, std::string
 ///
 ///      WebGui.Display: kind of display like chrome or firefox or browser, can be overwritten by --web=value command line argument
 ///      WebGui.OnetimeKey: if configured requires unique key every time window is connected (default yes)
+///      WebGui.SingleConnMode: if configured the only connection and the only user of any widget is possible (default yes)
 ///      WebGui.Chrome: full path to Google Chrome executable
 ///      WebGui.ChromeBatch: command to start chrome in batch, used for image production, like "$prog --headless --disable-gpu $geometry $url"
 ///      WebGui.ChromeHeadless: command to start chrome in headless mode, like "fork: --headless --disable-gpu $geometry $url"

@@ -123,7 +123,8 @@ void ping(int nclients = 1, int test_mode = 0)
    // create window
    window = ROOT::RWebWindow::Create();
 
-   // configure maximal number of clients which allowed to connect
+   // configure number of clients are allowed to connect
+   ROOT::RWebWindowsManager::SetSingleConnMode(false);
    window->SetConnLimit(num_clients);
 
    // configure default html page

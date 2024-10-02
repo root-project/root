@@ -693,9 +693,11 @@ void RWebWindow::CheckInactiveConnections()
 
 void RWebWindow::SetConnLimit(unsigned lmt)
 {
+   bool single_conn_mode = RWebWindowWSHandler::GetBoolEnv("WebGui.SingleConnMode", 1) == 1;
+
    std::lock_guard<std::mutex> grd(fConnMutex);
 
-   fConnLimit = lmt;
+   fConnLimit = single_conn_mode ? 1 : lmt;
 }
 
 /////////////////////////////////////////////////////////////////////////
