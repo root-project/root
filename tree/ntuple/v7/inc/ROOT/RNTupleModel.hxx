@@ -63,14 +63,6 @@ struct RNTupleModelChangeset {
    bool IsEmpty() const { return fAddedFields.empty() && fAddedProjectedFields.empty(); }
 };
 
-/// Merge two RNTuple models. The resulting model will take the description from the left-hand model.
-/// When `rightFieldPrefix` is specified, the right-hand model will be stored in an untyped sub-collection, identified
-/// by the prefix. This way, a field from the right-hand model is represented as `<prefix>.<fieldname>`.
-/// When no prefix is specified, the fields from the right-hand model get added directly to the resulting model.
-///
-/// Note that both models must be frozen before merging.
-std::unique_ptr<RNTupleModel>
-MergeModels(const RNTupleModel &left, const RNTupleModel &right, std::string_view rightFieldPrefix = "");
 } // namespace Internal
 
 // clang-format off
@@ -89,9 +81,6 @@ added and modified.  Once the schema is finalized, the model gets frozen.  Only 
 */
 // clang-format on
 class RNTupleModel {
-   friend std::unique_ptr<RNTupleModel>
-   Internal::MergeModels(const RNTupleModel &left, const RNTupleModel &right, std::string_view rightFieldPrefix);
-
 public:
    /// User provided function that describes the mapping of existing source fields to projected fields in terms
    /// of fully qualified field names. The mapping function is called with the qualified field names of the provided
