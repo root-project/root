@@ -31,7 +31,6 @@
 namespace ROOT {
 namespace Experimental {
 
-class RCollectionField;
 class RFieldBase;
 
 namespace Internal {
@@ -66,7 +65,6 @@ This is and can only be partially enforced through C++.
 */
 // clang-format on
 class RFieldBase {
-   friend class ROOT::Experimental::RCollectionField;                  // to move the fields from the collection model
    friend struct ROOT::Experimental::Internal::RFieldCallbackInjector; // used for unit tests
    friend struct ROOT::Experimental::Internal::RFieldRepresentationModifier; // used for unit tests
    friend void Internal::CallFlushColumnsOnField(RFieldBase &);

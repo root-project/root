@@ -33,7 +33,6 @@
 namespace ROOT {
 namespace Experimental {
 
-class RNTupleCollectionWriter;
 class RNTupleModel;
 class RNTupleWriter;
 class RNTupleWriteOptions;
