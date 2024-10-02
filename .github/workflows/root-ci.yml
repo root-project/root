@@ -388,6 +388,10 @@ jobs:
             is_special: true
             property: clang
             overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_C_COMPILER=clang", "CMAKE_CXX_COMPILER=clang++"]
+          - image: ubuntu2404-cuda
+            is_special: true
+            property: gpu
+            extra-runs-on: gpu
 
     runs-on:
       - self-hosted
@@ -400,8 +404,8 @@ jobs:
       ${{ (github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' && join( matrix.overrides, ', ' )) || '' }}
 
     container:
-      image: registry.cern.ch/root-ci/${{ matrix.image }}:buildready # ALSO UPDATE BELOW!
-      options: '--security-opt label=disable --rm' # ALSO UPDATE BELOW!
+      image: registry.cern.ch/root-ci/${{ matrix.image }}:buildready # KEEP IN SYNC WITH env key below
+      options: --security-opt label=disable --rm ${{ matrix.property == 'gpu' && '--device nvidia.com/gpu=all' || '' }} # KEEP IN SYNC WITH env key below
       volumes:
         - ${{ matrix.image }}_ccache_volume:/github/home/.cache/ccache
       env:
@@ -413,6 +417,8 @@ jobs:
         OS_INTERFACE: 'public'
         OS_REGION_NAME: 'cern'
         PYTHONUNBUFFERED: true
+        CONTAINER_IMAGE: "registry.cern.ch/root-ci/${{ matrix.image }}:buildready" #KEEP IN SYNC WITH ABOVE
+        CONTAINER_OPTIONS: "--security-opt label=disable --rm ${{ matrix.property == 'gpu' && '--device nvidia.com/gpu=all' || '' }}" #KEEP IN SYNC WITH ABOVE
 
     steps:
       - name: ccache info
@@ -434,7 +440,14 @@ jobs:
       - name: Dump GitHub context
         env:
           GITHUB_CONTEXT: ${{ toJSON(github) }}
-        run: echo "$GITHUB_CONTEXT"
+          JOB_CONTEXT: ${{ toJSON(job) }}
+          ENV_CONTEXT: ${{ toJSON(env) }}
+        run: |
+          echo "$GITHUB_CONTEXT"
+          echo "--------------------------"
+          echo "$JOB_CONTEXT"
+          echo "--------------------------"
+          echo "$ENV_CONTEXT"
 
       - name: Print debug info
         run:  'printf "%s@%s\\n" "$(whoami)" "$(hostname)";
@@ -478,7 +491,7 @@ jobs:
         run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype       RelWithDebInfo
                     --platform        ${{ matrix.image }}
-                    --dockeropts      '--security-opt label=disable --rm'
+                    --dockeropts      \"$CONTAINER_OPTIONS\"
                     --incremental     $INCREMENTAL
                     --base_ref        ${{ github.base_ref }}
                     --sha             ${{ github.sha }}
