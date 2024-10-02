@@ -388,6 +388,10 @@ jobs:
             is_special: true
             property: clang
             overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_C_COMPILER=clang", "CMAKE_CXX_COMPILER=clang++"]
+          - image: ubuntu2404-cuda
+            is_special: true
+            property: gpu
+            extra-runs-on: gpu
 
     runs-on:
       - self-hosted
@@ -401,7 +405,7 @@ jobs:
 
     container:
       image: registry.cern.ch/root-ci/${{ matrix.image }}:buildready # ALSO UPDATE BELOW!
-      options: '--security-opt label=disable --rm' # ALSO UPDATE BELOW!
+      options: "--security-opt label=disable --rm ${{ matrix.property == 'gpu' && '--device nvidia.com/gpu=all' || '' }}" # ALSO UPDATE BELOW!
       volumes:
         - ${{ matrix.image }}_ccache_volume:/github/home/.cache/ccache
       env:
@@ -478,7 +482,7 @@ jobs:
         run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype       RelWithDebInfo
                     --platform        ${{ matrix.image }}
-                    --dockeropts      '--security-opt label=disable --rm'
+                    --dockeropts      '${{ job.container.options }}'
                     --incremental     $INCREMENTAL
                     --base_ref        ${{ github.base_ref }}
                     --sha             ${{ github.sha }}
