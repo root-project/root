@@ -88,6 +88,7 @@ Int_t    FileSize       (const char *filename);
 TCanvas *StartTest      (Int_t w, Int_t h);
 void     TestReport1    (TCanvas *C, const TString &title, Int_t IPS=0);
 void     TestReport2    (Int_t IPS=0);
+void     TestReport     (TCanvas *C, const TString &title, const TString &arg = "", Int_t IPS=0);
 void     DoCcode        (TCanvas *C);
 TString  stime(time_t* t, bool utc = false, bool display_time_zone = true);
 
@@ -169,6 +170,8 @@ Bool_t    gOptionK;
 TH2F     *gH2;
 TFile    *gHsimple;
 TFile    *gCernstaff;
+
+static TString kSkipCCode = "__skip_c_code_generation__";
 
 
 #ifndef __CLING__
@@ -651,6 +654,29 @@ void TestReport2(Int_t IPS)
 #endif
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Full report which includes:
+/// - images generated,
+/// - canvas stored as C file
+/// - loaded canvas create image again
+
+void TestReport(TCanvas *C, const TString &title, const TString &arg, Int_t IPS)
+{
+   TestReport1(C, title, IPS);
+
+   if (arg == kSkipCCode)
+      return;
+
+   DoCcode(C);
+
+   if (!arg.IsNull()) {
+      auto old = gDirectory->GetList()->FindObject(arg);
+      if (old) gDirectory->GetList()->Remove(old);
+   }
+
+   TestReport2(IPS);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Test TLine.
@@ -678,9 +704,7 @@ void tline()
    TLine *l9 = new TLine(0.1,0.9,0.9,0.9);
    l9->SetLineColor(9); l9->SetLineWidth(9) ; l9->SetLineStyle(9) ; l9->Draw();
 
-   TestReport1(C, "TLine");
-   DoCcode(C);
-   TestReport2();
+   TestReport(C, "TLine");
 }
 
 
@@ -694,9 +718,7 @@ void tmarker()
    TMarker m;
    m.DisplayMarkerTypes();
 
-   TestReport1(C, "TMarker");
-   DoCcode(C);
-   TestReport2();
+   TestReport(C, "TMarker");
 }
 
 
@@ -716,9 +738,7 @@ void tpolyline()
    p->Draw("F");
    p->Draw("");
 
-   TestReport1(C, "TPolyLine");
-   DoCcode(C);
-   TestReport2();
+   TestReport(C, "TPolyLine");
 }
 
 
@@ -768,9 +788,7 @@ void patterns()
       y = y-bh-db;
    }
 
-   TestReport1(C, "Fill patterns");
-   DoCcode(C);
-   TestReport2();
+   TestReport(C, "Fill patterns");
 }
 
 
@@ -857,9 +875,7 @@ void ttext1()
    tex5->SetTextSize(0.1);
    tex5->Draw();
 
-   TestReport1(C, "TText 1 (Text attributes)");
-   DoCcode(C);
-   TestReport2();
+   TestReport(C, "TText 1 (Text attributes)");
 }
 
 
@@ -874,9 +890,7 @@ void ttext2()
    t.SetTextFont(42); t.SetTextSize(0.02);
    t.Draw();
 
-   TestReport1(C, "TText 2 (A very long text string)");
-   DoCcode(C);
-   TestReport2();
+   TestReport(C, "TText 2 (A very long text string)");
 }
 
 
@@ -896,9 +910,7 @@ void tlatex1()
    l.DrawLatex(0.1,0.3,"4) F(t) = #sum_{i=-#infty}^{#infty}A(i)cos#[]{#frac{i}{t+i}}");
    l.DrawLatex(0.1,0.1,"5) {}_{3}^{7}Li");
 
-   TestReport1(C, "TLatex 1");
-   DoCcode(C);
-   TestReport2();
+   TestReport(C, "TLatex 1");
 }
 
 
@@ -917,9 +929,7 @@ void tlatex2()
    l.DrawLatex(0.5,0.5,"i(#partial_{#mu}#bar{#psi}#gamma^{#mu}+m#bar{#psi})=0#Leftrightarrow(#Box+m^{2})#psi=0");
    l.DrawLatex(0.5,0.3,"L_{em}=eJ^{#mu}_{em}A_{#mu} , ^{}J^{#mu}_{em}=#bar{I}#gamma_{#mu}I , M^{j}_{i}=#SigmaA_{#alpha}#tau^{#alphaj}_{i}");
 
-   TestReport1(C, "TLatex 2");
-   DoCcode(C);
-   TestReport2();
+   TestReport(C, "TLatex 2");
 }
 
 
@@ -942,9 +952,7 @@ void tlatex3()
    pt.SetLabel("Born equation");
    pt.Draw();
 
-   TestReport1(C, "TLatex 3 (TLatex in TPaveText)");
-   DoCcode(C);
-   TestReport2();
+   TestReport(C, "TLatex 3 (TLatex in TPaveText)");
 }
 
 
@@ -1021,9 +1029,7 @@ void tlatex4()
    y = 0.1500 ; l.DrawLatex(x1, y, "varphi : ")     ; l.DrawLatex(x2, y, "#varphi");
    y = 0.0375 ; l.DrawLatex(x1, y, "varomega : ")   ; l.DrawLatex(x2, y, "#varomega");
 
-   TestReport1(C, "TLatex 4 (Greek letters)");
-   DoCcode(C);
-   TestReport2();
+   TestReport(C, "TLatex 4 (Greek letters)");
 }
 
 
@@ -1125,9 +1131,7 @@ void tlatex5()
    y -= step ; l.DrawLatex(x1, y-0.015, "#int")      ; l.DrawText(x2, y, "#int");
    y -= step ; l.DrawLatex(x1, y, "#odot")           ; l.DrawText(x2, y, "#odot");
 
-   TestReport1(C, "TLatex 5 (Mathematical Symbols)");
-   DoCcode(C);
-   TestReport2();
+   TestReport(C, "TLatex 5 (Mathematical Symbols)");
 }
 
 
@@ -1150,9 +1154,7 @@ void kerning()
       l1->Draw();
    }
 
-   TestReport1(C, "Text kerning");
-   DoCcode(C);
-   TestReport2();
+   TestReport(C, "Text kerning");
 }
 
 
@@ -1171,9 +1173,7 @@ void itbf()
    (new TLatex(0.01, 0.3, "Font styles: #^{}bf{#bf{bold}}, #^{}it{#it{italic}}, #^{}bf{#^{}it{#bf{#it{bold italic}}}}, #^{}bf{#^{}bf{#bf{#bf{unbold}}}}"))->Draw();
    (new TLatex(0.01, 0.1, "Font styles: abc#alpha#beta#gamma, #^{}it{#it{abc#alpha#beta#gamma}}, #^{}it{#^{}it{#it{#it{abc#alpha#beta#gamma}}}}"))->Draw();
 
-   TestReport1(C, "TLatex commands #kern, #lower, #it and #bf");
-   DoCcode(C);
-   TestReport2();
+   TestReport(C, "TLatex commands #kern, #lower, #it and #bf");
 }
 
 
@@ -1196,9 +1196,7 @@ void tmathtext()
    l.DrawMathText(0.27, 0.110, "\\mathbb{N} \\subset \\mathbb{R}");
    l.DrawMathText(0.63, 0.100, "\\hbox{RHIC スピン物理 Нью-Йорк}");
 
-   TestReport1(C, "TMathText",1);
-   DoCcode(C);
-   TestReport2(1);
+   TestReport(C, "TMathText", "", 1);
 }
 
 
@@ -1253,9 +1251,7 @@ void transpad()
    axis->SetLabelColor(kRed);
    axis->Draw();
 
-   TestReport1(C, "Transparent pad");
-   DoCcode(C);
-   TestReport2();
+   TestReport(C, "Transparent pad");
 }
 
 
@@ -1313,9 +1309,7 @@ void statfitparam ()
    pt->AddText("paint the fit parameters errors.");
    pt->Draw();
 
-   TestReport1(C, "Stat and fit parameters with errors");
-   DoCcode(C);
-   TestReport2();
+   TestReport(C, "Stat and fit parameters with errors");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1359,9 +1353,7 @@ void tgaxis1()
    axis8->SetName("axis8");
    axis8->Draw();
 
-   TestReport1(C, "TGaxis 1");
-   DoCcode(C);
-   TestReport2();
+   TestReport(C, "TGaxis 1");
 }
 
 
@@ -1399,9 +1391,7 @@ void tgaxis2()
    axis7->SetLabelOffset(0.01);
    axis7->Draw();
 
-   TestReport1(C, "TGaxis 2");
-   DoCcode(C);
-   TestReport2();
+   TestReport(C, "TGaxis 2");
 }
 
 
@@ -1466,9 +1456,7 @@ void tgaxis3()
    gt2->GetXaxis()->SetTimeDisplay(1);
    gt2->GetXaxis()->SetTimeFormat("y. %Y");
 
-   TestReport1(C, "TGaxis 3 (Time on axis)");
-   DoCcode(C);
-   TestReport2();
+   TestReport(C, "TGaxis 3 (Time on axis)");
 }
 
 
@@ -1497,9 +1485,7 @@ void tgaxis4()
    h1->GetXaxis()->SetTimeFormat("%Y:%m:%d");
    h1->Draw();
 
-   TestReport1(C, "TGaxis 4 (Time on axis)");
-   DoCcode(C);
-   TestReport2();
+   TestReport(C, "TGaxis 4 (Time on axis)");
    delete h1;
 }
 
@@ -1586,9 +1572,7 @@ void tgaxis5()
       }
    }
 
-   TestReport1(C, "TGaxis 5 (Time on axis: reference test)");
-   DoCcode(C);
-   TestReport2();
+   TestReport(C, "TGaxis 5 (Time on axis: reference test)");
 }
 
 
@@ -1655,9 +1639,7 @@ void labels1()
    pt->AddText(" \"<\"   to sort by increasing values");
    pt->Draw();
 
-   TestReport1(C, "Alphanumeric labels in a 1-d histogram");
-   DoCcode(C);
-   TestReport2();
+   TestReport(C, "Alphanumeric labels in a 1-d histogram");
    delete hlab1;
 }
 
@@ -1692,9 +1674,7 @@ void tellipse()
    el4.SetLineWidth(6);
    el4.Draw();
 
-   TestReport1(C, "TEllipse");
-   DoCcode(C);
-   TestReport2();
+   TestReport(C, "TEllipse");
 }
 
 
@@ -1746,9 +1726,7 @@ void feynman()
    C->Update();
    gStyle->SetLineWidth(linsav);
 
-   TestReport1(C, "Feynman diagrams");
-   DoCcode(C);
-   TestReport2();
+   TestReport(C, "Feynman diagrams");
 }
 
 
@@ -1772,9 +1750,7 @@ void ratioplot()
    C->SetTicks(0, 1);
    rp->Draw();
 
-   TestReport1(C, "Ratio plot");
-   DoCcode(C);
-   TestReport2();
+   TestReport(C, "Ratio plot");
 }
 
 
@@ -1806,9 +1782,7 @@ void tgraph1()
    C->GetFrame()->SetFillColor(21);
    C->GetFrame()->SetBorderSize(12);
 
-   TestReport1(C, "TGraph 1");
-   DoCcode(C);
-   TestReport2();
+   TestReport(C, "TGraph 1");
 }
 
 
@@ -1851,9 +1825,7 @@ void tgraph2()
    mg->Add(gr3);
    mg->Draw("AC");
 
-   TestReport1(C, "TGraph 2 (Exclusion Zone)");
-   DoCcode(C);
-   TestReport2();
+   TestReport(C, "TGraph 2 (Exclusion Zone)");
 }
 
 
@@ -1902,9 +1874,7 @@ void tgraph3()
    g2->GetYaxis()->CenterTitle();
    g2->Draw("a*");
 
-   TestReport1(C, "TGraph 3 (Fitting and log scales)");
-   DoCcode(C);
-   TestReport2();
+   TestReport(C, "TGraph 3 (Fitting and log scales)");
 }
 
 
@@ -1943,9 +1913,7 @@ void tgraph4()
    C->Update();
    gPad->SetLogx();
 
-   TestReport1(C, "TGraph 4 (Log scales setting order)");
-   DoCcode(C);
-   TestReport2();
+   TestReport(C, "TGraph 4 (Log scales setting order)");
 }
 
 
@@ -2014,9 +1982,7 @@ void th2poly()
    gStyle->SetPalette(kBird);
    p->DrawClone("COL");
 
-   TestReport1(C, "TH2Poly.(DrawClone() and remote file access)");
-   DoCcode(C);
-   TestReport2();
+   TestReport(C, "TH2Poly.(DrawClone() and remote file access)");
 }
 
 
@@ -2060,9 +2026,7 @@ void tmultigraph1()
    stats2->SetX1NDC(0.72); stats2->SetX2NDC(0.92); stats2->SetY1NDC(0.78);
    C->Modified();
 
-   TestReport1(C, "TMultigraph and TGraphErrors");
-   DoCcode(C);
-   TestReport2();
+   TestReport(C, "TMultigraph and TGraphErrors");
 }
 
 
@@ -2170,9 +2134,7 @@ void tmultigraph2()
 
    C->Modified();
 
-   TestReport1(C, "All Kind of TMultigraph");
-   DoCcode(C);
-   TestReport2();
+   TestReport(C, "All Kind of TMultigraph");
 }
 
 
@@ -2207,9 +2169,7 @@ void options2d1()
    C->cd(4);
    gH2->Draw("colz"); pl1.DrawPaveLabel(x1,y1,x2,y2,"COLZ","brNDC");
 
-   TestReport1(C, "Basic 2D options");
-   DoCcode(C);
-   TestReport2();
+   TestReport(C, "Basic 2D options");
 }
 
 
@@ -2227,9 +2187,7 @@ void options2d2()
    C->SetGrid();
    gH2->Draw("text"); pl2.DrawPaveLabel(x1,y1,x2,y2,"TEXT","brNDC");
 
-   TestReport1(C, "Text option");
-   DoCcode(C);
-   TestReport2();
+   TestReport(C, "Text option");
 }
 
 
@@ -2258,9 +2216,7 @@ void options2d3()
    gPad->SetGrid();
    gH2->Draw("cont3"); pl3.DrawPaveLabel(x1,y1,x2,y2,"CONT3","brNDC");
 
-   TestReport1(C, "Contour options");
-   DoCcode(C);
-   TestReport2();
+   TestReport(C, "Contour options");
 }
 
 
@@ -2287,9 +2243,7 @@ void options2d4()
    gPad->SetTheta(21); gPad->SetPhi(-90);
    gH2->Draw("surf1cyl"); pl4.DrawPaveLabel(x1,y1,x2+0.05,y2,"SURF1CYL","brNDC");
 
-   TestReport1(C, "Lego options");
-   DoCcode(C);
-   TestReport2();
+   TestReport(C, "Lego options");
 }
 
 
@@ -2314,9 +2268,7 @@ void options2d5()
    C->cd(4);
    gH2->Draw("surf4");   pl5.DrawPaveLabel(x1,y1,x2,y2,"SURF4","brNDC");
 
-   TestReport1(C, "Surface options");
-   DoCcode(C);
-   TestReport2();
+   TestReport(C, "Surface options");
    delete gH2;
 }
 
@@ -2359,9 +2311,7 @@ void earth()
    C->cd(3); h3->Draw("z sinusoidal");
    C->cd(4); h4->Draw("z parabolic");
 
-   TestReport1(C, "Special contour options (AITOFF etc.)");
-   DoCcode(C);
-   TestReport2();
+   TestReport(C, "Special contour options (AITOFF etc.)");
    delete h1;
    delete h2;
    delete h3;
@@ -2405,14 +2355,8 @@ void tgraph2d1()
    dt->SetMarkerSize(1);
    dt->Draw("tri2p0Z  ");
 
-   TestReport1(C, "TGraph2D 1 (TRI2 and P0)");
+   TestReport(C, "TGraph2D 1 (TRI2 and P0)", dt->GetName());
 
-   DoCcode(C);
-
-   TObject *old = (TObject*)gDirectory->GetList()->FindObject(dt->GetName());
-   if (old) gDirectory->GetList()->Remove(old);
-
-   TestReport2();
    delete dt;
 }
 
@@ -2447,13 +2391,7 @@ void tgraph2d2()
    dt->SetMarkerStyle(20);
    dt->Draw("PCOL");
 
-   TestReport1(C, "TGraph2D 2 (COL and P)");
-   DoCcode(C);
-
-   TObject *old = (TObject*)gDirectory->GetList()->FindObject(dt->GetName());
-   if (old) gDirectory->GetList()->Remove(old);
-
-   TestReport2();
+   TestReport(C, "TGraph2D 2 (COL and P)", dt->GetName());
    delete dt;
    delete [] rx;
    delete [] ry;
@@ -2490,13 +2428,8 @@ void tgraph2d3()
    dt->SetFillColor(0);
    dt->Draw("CONT5  ");
 
-   TestReport1(C, "TGraph2D 3 (CONT5)");
-   DoCcode(C);
+   TestReport(C, "TGraph2D 3 (CONT5)", dt->GetName());
 
-   TObject *old = (TObject*)gDirectory->GetList()->FindObject(dt->GetName());
-   if (old) gDirectory->GetList()->Remove(old);
-
-   TestReport2();
    delete dt;
    delete [] rx;
    delete [] ry;
@@ -2570,9 +2503,7 @@ void ntuple1()
    l4->Draw();
    gStyle->SetStatColor(19);
 
-   TestReport1(C, "Ntuple drawing and TPad");
-   DoCcode(C);
-   TestReport2();
+   TestReport(C, "Ntuple drawing and TPad");
 }
 
 
@@ -2645,9 +2576,7 @@ void quarks()
    tex1.DrawLatex(.5,.5,"W");
    C->cd();
 
-   TestReport1(C, "Divided pads and TLatex");
-   DoCcode(C);
-   TestReport2();
+   TestReport(C, "Divided pads and TLatex");
 }
 
 
@@ -2697,9 +2626,7 @@ void timage()
    i4->Draw();
    C->cd();
 
-   TestReport1(C, "TImage");
-   DoCcode(C);
-   TestReport2();
+   TestReport(C, "TImage");
 }
 
 
@@ -2730,7 +2657,7 @@ void zoomtf1()
    f[0]->GetXaxis()->UnZoom();
    gPad->Modified();
 
-   TestReport1(C, "Zoom/UnZoom a collection of TF1");
+   TestReport(C, "Zoom/UnZoom a collection of TF1", kSkipCCode);
    if (gOptionR) printf("%10d%10d\n",0,0);
 }
 
@@ -2751,9 +2678,7 @@ void zoomfit()
    gPad->Modified();
    gPad->Update();
 
-   TestReport1(C, "Zoom/UnZoom a fitted histogram");
-   DoCcode(C);
-   TestReport2();
+   TestReport(C, "Zoom/UnZoom a fitted histogram");
 }
 
 
@@ -2797,9 +2722,7 @@ void hbars()
    gPad->Modified();
    gPad->Update();
 
-   TestReport1(C, "Ntuple drawing with alphanumeric variables");
-   DoCcode(C);
-   TestReport2();
+   TestReport(C, "Ntuple drawing with alphanumeric variables");
 }
 
 
@@ -2823,7 +2746,7 @@ void parallelcoord()
    C->cd(2);
    ntuple->Draw("px:py:pz:random:px*py*pz","","candle");
 
-   TestReport1(C, "Parallel Coordinates");
+   TestReport(C, "Parallel Coordinates", kSkipCCode);
    if (gOptionR) printf("%10d%10d\n",0,0);
 }
 
@@ -2839,9 +2762,7 @@ void clonepad()
    hpxpy->Draw();
    TCanvas *C2 = (TCanvas*)C->DrawClone();
 
-   TestReport1(C2, "Draw a pad and clone it");
-   DoCcode(C2);
-   TestReport2();
+   TestReport(C2, "Draw a pad and clone it");
 }
 
 
@@ -2981,7 +2902,7 @@ void waves()
    line = new TLine(13.8,-10, 14, 10);
    line->SetLineWidth(10); line->SetLineColor(0); line->Draw();
 
-   TestReport1(C, "TGraph, TArc, TPalette and TColor");
+   TestReport(C, "TGraph, TArc, TPalette and TColor", kSkipCCode);
    if (gOptionR) printf("%10d%10d\n",0,0);
 }
 
