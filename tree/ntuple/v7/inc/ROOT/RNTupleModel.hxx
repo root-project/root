@@ -305,12 +305,6 @@ public:
    std::uint64_t GetModelId() const { return fModelId; }
    std::uint64_t GetSchemaId() const { return fSchemaId; }
 
-   /// Ingests a model for a sub collection and attaches it to the current model
-   ///
-   /// Throws an exception if collectionModel is null.
-   std::shared_ptr<RNTupleCollectionWriter>
-   MakeCollection(std::string_view fieldName, std::unique_ptr<RNTupleModel> collectionModel);
-
    std::unique_ptr<REntry> CreateEntry() const;
    /// In a bare entry, all values point to nullptr. The resulting entry shall use BindValue() in order
    /// set memory addresses to be serialized / deserialized

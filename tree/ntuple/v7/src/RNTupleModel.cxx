@@ -322,29 +322,6 @@ ROOT::Experimental::RNTupleModel::AddProjectedField(std::unique_ptr<RFieldBase> 
    return RResult<void>::Success();
 }
 
-std::shared_ptr<ROOT::Experimental::RNTupleCollectionWriter>
-ROOT::Experimental::RNTupleModel::MakeCollection(std::string_view fieldName,
-                                                 std::unique_ptr<RNTupleModel> collectionModel)
-{
-   EnsureNotFrozen();
-   EnsureValidFieldName(fieldName);
-   if (!collectionModel) {
-      throw RException(R__FAIL("null collectionModel"));
-   }
-
-   auto collectionWriter = std::make_shared<RNTupleCollectionWriter>(std::move(collectionModel->fDefaultEntry));
-
-   auto field = std::make_unique<RCollectionField>(fieldName, collectionWriter, std::move(collectionModel->fFieldZero));
-   field->SetDescription(collectionModel->GetDescription());
-
-   if (fDefaultEntry)
-      fDefaultEntry->AddValue(field->BindValue(std::shared_ptr<void>(collectionWriter->GetOffsetPtr(), [](void *) {})));
-
-   fFieldNames.insert(field->GetFieldName());
-   fFieldZero->Attach(std::move(field));
-   return collectionWriter;
-}
-
 ROOT::Experimental::RFieldZero &ROOT::Experimental::RNTupleModel::GetFieldZero()
 {
    if (!IsFrozen())
