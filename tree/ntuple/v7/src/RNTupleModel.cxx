@@ -33,28 +33,6 @@ std::uint64_t GetNewModelId()
 }
 } // anonymous namespace
 
-std::unique_ptr<ROOT::Experimental::RNTupleModel>
-ROOT::Experimental::Internal::MergeModels(const RNTupleModel &left, const RNTupleModel &right,
-                                          std::string_view rightFieldPrefix)
-{
-   if (!left.IsFrozen() || !right.IsFrozen())
-      throw RException(R__FAIL("invalid attempt to merge unfrozen models"));
-
-   auto newModel = left.Clone();
-   newModel->Unfreeze();
-
-   if (!rightFieldPrefix.empty()) {
-      newModel->MakeCollection(std::string(rightFieldPrefix), right.Clone());
-   } else {
-      for (const auto &f : right.GetFieldZero().GetSubFields()) {
-         newModel->AddField(f->Clone(f->GetFieldName()));
-      }
-   }
-
-   newModel->Freeze();
-   return newModel;
-}
-
 //------------------------------------------------------------------------------
 
 ROOT::Experimental::RResult<void>
