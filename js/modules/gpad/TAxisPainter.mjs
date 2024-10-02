@@ -555,7 +555,8 @@ class TAxisPainter extends ObjectPainter {
             this.nticks2 = 1;
          }
          this.noexp = axis?.TestBit(EAxisBits.kNoExponent);
-         if ((this.scale_max < 300) && (this.scale_min > 0.3) && !this.noexp_changed) this.noexp = true;
+         if ((this.scale_max < 300) && (this.scale_min > 0.3) && !this.noexp_changed && (this.log === 1))
+            this.noexp = true;
          this.moreloglabels = axis?.TestBit(EAxisBits.kMoreLogLabels);
          this.format = this.formatLog;
       } else if (this.kind === kAxisLabels) {

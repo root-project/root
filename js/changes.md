@@ -28,14 +28,21 @@
 25. Upgrade three.js r162 -> r168, use r162 only in node.js because of "gl" module
 26. Create unified svg2pdf/jspdf ES6 modules, integrate in jsroot builds
 27. Let create multipage PDF document - in TWebCanvas batch mode
-28. Internals - upgrade to eslint 9
-29. Internals - do not select pad (aka gPad) for objects drawing, always use assigned pad painter
-30. Fix - properly save zoomed ranges in drawingJSON()
-31. Fix - properly redraw TMultiGraph
-32. Fix - show empty bin in TProfile2D if it has entries #316
-33. Fix - saving embed TGeo in TCanvas into image
-34. Fix - unzooming on log scale was extending range forevever
-35. Fix - correct `#font[id]` handling in latex
+28. Let add external links via `#url[link]{label}` syntax - including jsPDF support
+29. Support TAttMarker style with line width bigger than 1
+30. Internals - upgrade to eslint 9
+31. Internals - do not select pad (aka gPad) for objects drawing, always use assigned pad painter
+32. Fix - properly save zoomed ranges in drawingJSON()
+33. Fix - properly redraw TMultiGraph
+34. Fix - show empty bin in TProfile2D if it has entries #316
+35. Fix - unzooming on log scale was extending range forevever
+
+
+## Changes in 7.7.4
+1. Fix - TGraph Y range selection, do not cross 0
+2. Fix - correctly handle `#font[id]` in latex
+3. Fix - store canvas with embed geometry drawing
+4. Fix - upgrade rollup and import.meta polyfill
 
 
 ## Changes in 7.7.3
