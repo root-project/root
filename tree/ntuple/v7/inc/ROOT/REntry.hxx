@@ -48,7 +48,6 @@ that are associated to values are managed.
 */
 // clang-format on
 class REntry {
-   friend class RNTupleCollectionWriter;
    friend class RNTupleModel;
    friend class RNTupleReader;
    friend class RNTupleFillContext;
