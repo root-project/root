@@ -503,7 +503,7 @@ public:
          }
       }
    }
-}; // RColumnElementBoolAsSplitInt
+}; // RColumnElementIntAsBool
 
 /**
  * Base class for zigzag + split columns (signed integer columns) whose on-storage representation is little-endian.
