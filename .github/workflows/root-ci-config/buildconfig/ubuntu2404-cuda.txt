@@ -1,0 +1,4 @@
+CMAKE_BUILD_TYPE=RelWithDebInfo
+pythia8=OFF
+cuda=ON
+ccache=ON
