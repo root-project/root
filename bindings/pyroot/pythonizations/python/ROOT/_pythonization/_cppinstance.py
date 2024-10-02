@@ -10,7 +10,7 @@
 
 def pythonize_cppinstance():
     import cppyy
-    from libROOTPythonizations import AddCPPInstancePickling
+    from ROOT.libROOTPythonizations import AddCPPInstancePickling
 
     klass = cppyy._backend.CPPInstance
 

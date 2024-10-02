@@ -130,7 +130,7 @@ ds.SetBranchAddress('structb', ms)
 */
 """
 
-from libROOTPythonizations import GetBranchAttr, BranchPyz
+from ROOT.libROOTPythonizations import GetBranchAttr, BranchPyz
 from ._rvec import _array_interface_dtype_map, _get_cpp_type_from_numpy_type
 from . import pythonization
 
