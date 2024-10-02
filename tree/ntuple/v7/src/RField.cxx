@@ -19,7 +19,6 @@
 #include <ROOT/RField.hxx>
 #include <ROOT/RFieldVisitor.hxx>
 #include <ROOT/RLogger.hxx>
-#include <ROOT/RNTupleCollectionWriter.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleSerialize.hxx>
 
@@ -3914,69 +3913,6 @@ void ROOT::Experimental::RTupleField::RTupleDeleter::operator()(void *objPtr, bo
 {
    fClass->Destructor(objPtr, true /* dtorOnly */);
    RDeleter::operator()(objPtr, dtorOnly);
-}
-
-//------------------------------------------------------------------------------
-
-ROOT::Experimental::RCollectionField::RCollectionField(std::string_view name,
-                                                       std::shared_ptr<RNTupleCollectionWriter> collectionWriter,
-                                                       std::unique_ptr<RFieldZero> collectionParent)
-   : RFieldBase(name, "", ENTupleStructure::kCollection, false /* isSimple */), fCollectionWriter(collectionWriter)
-{
-   const std::size_t N = collectionParent->fSubFields.size();
-   for (std::size_t i = 0; i < N; ++i) {
-      Attach(std::move(collectionParent->fSubFields[i]));
-   }
-}
-
-const ROOT::Experimental::RFieldBase::RColumnRepresentations &
-ROOT::Experimental::RCollectionField::GetColumnRepresentations() const
-{
-   static RColumnRepresentations representations(
-      {{EColumnType::kSplitIndex64}, {EColumnType::kIndex64}, {EColumnType::kSplitIndex32}, {EColumnType::kIndex32}},
-      {});
-   return representations;
-}
-
-void ROOT::Experimental::RCollectionField::GenerateColumns()
-{
-   GenerateColumnsImpl<ClusterSize_t>();
-}
-
-void ROOT::Experimental::RCollectionField::GenerateColumns(const RNTupleDescriptor &desc)
-{
-   GenerateColumnsImpl<ClusterSize_t>(desc);
-}
-
-std::unique_ptr<ROOT::Experimental::RFieldBase>
-ROOT::Experimental::RCollectionField::CloneImpl(std::string_view newName) const
-{
-   auto parent = std::make_unique<RFieldZero>();
-   for (auto &f : fSubFields) {
-      parent->Attach(f->Clone(f->GetFieldName()));
-   }
-   return std::make_unique<RCollectionField>(newName, fCollectionWriter, std::move(parent));
-}
-
-std::size_t ROOT::Experimental::RCollectionField::AppendImpl(const void *from)
-{
-   // RCollectionFields are almost simple, but they return the bytes written by their subfields as accumulated by the
-   // RNTupleCollectionWriter.
-   std::size_t bytesWritten = fCollectionWriter->fBytesWritten;
-   fCollectionWriter->fBytesWritten = 0;
-
-   fPrincipalColumn->Append(from);
-   return bytesWritten + fPrincipalColumn->GetElement()->GetPackedSize();
-}
-
-void ROOT::Experimental::RCollectionField::ReadGlobalImpl(NTupleSize_t, void *)
-{
-   R__ASSERT(false && "should never read an RCollectionField");
-}
-
-void ROOT::Experimental::RCollectionField::CommitClusterImpl()
-{
-   *fCollectionWriter->GetOffsetPtr() = 0;
 }
 
 //------------------------------------------------------------------------------

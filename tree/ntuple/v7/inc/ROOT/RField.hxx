@@ -47,7 +47,6 @@ class TSchemaRule;
 
 namespace Experimental {
 
-class RNTupleCollectionWriter;
 class REntry;
 
 namespace Detail {
@@ -267,36 +266,6 @@ public:
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
    ~RField() override = default;
-};
-
-/// The collection field is only used for writing; when reading, untyped collections are projected to an std::vector
-class RCollectionField final : public ROOT::Experimental::RFieldBase {
-private:
-   /// Save the link to the collection ntuple in order to reset the offset counter when committing the cluster
-   std::shared_ptr<RNTupleCollectionWriter> fCollectionWriter;
-
-protected:
-   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
-   const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumns() final;
-   void GenerateColumns(const RNTupleDescriptor &desc) final;
-   void ConstructValue(void *) const final {}
-
-   std::size_t AppendImpl(const void *from) final;
-   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
-
-   void CommitClusterImpl() final;
-
-public:
-   static std::string TypeName() { return ""; }
-   RCollectionField(std::string_view name, std::shared_ptr<RNTupleCollectionWriter> collectionWriter,
-                    std::unique_ptr<RFieldZero> collectionParent);
-   RCollectionField(RCollectionField &&other) = default;
-   RCollectionField &operator=(RCollectionField &&other) = default;
-   ~RCollectionField() override = default;
-
-   size_t GetValueSize() const final { return sizeof(ClusterSize_t); }
-   size_t GetAlignment() const final { return alignof(ClusterSize_t); }
 };
 
 /// An artificial field that transforms an RNTuple column that contains the offset of collections into
