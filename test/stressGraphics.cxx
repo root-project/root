@@ -84,7 +84,7 @@
 void     stressGraphics (Int_t verbose);
 Int_t    StatusPrint    (TString &filename, Int_t id, const TString &title, Int_t res, Int_t ref, Int_t err);
 Int_t    AnalysePS      (const TString &filename);
-Int_t    FileSize       (char *filename);
+Int_t    FileSize       (const char *filename);
 TCanvas *StartTest      (Int_t w, Int_t h);
 void     TestReport1    (TCanvas *C, const TString &title, Int_t IPS=0);
 void     TestReport2    (Int_t IPS=0);
@@ -483,7 +483,7 @@ Int_t StatusPrint(TString &filename, Int_t id, const TString &title,
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the size of filename
 
-Int_t FileSize (char *filename)
+Int_t FileSize(const char *filename)
 {
    FileStat_t fs;
    if (!gSystem->GetPathInfo(filename, fs)) {
@@ -545,45 +545,54 @@ TCanvas *StartTest(Int_t w, Int_t h)
 void TestReport1(TCanvas *C, const TString &title, Int_t IPS)
 {
    gErrorIgnoreLevel = 9999;
-   snprintf(outfile, outfileSize, "sg1_%2.2d.ps",gTestNum);
 
-   TPostScript *ps1 = new TPostScript(outfile, 111);
-   C->Draw();
-   ps1->Close();
-   TString psfile = outfile;
+   TString psfile = TString::Format("sg1_%2.2d.ps",gTestNum);
+
+   TString pdffile = TString::Format("sg%2.2d.pdf",gTestNum);
+
+   TString jpgfile = TString::Format("sg%2.2d.jpg",gTestNum);
+
+   TString pngfile = TString::Format("sg%2.2d.png",gTestNum);
+
+   {
+      TPostScript ps1(psfile, 111);
+      C->cd(0);
+      C->Draw();
+      ps1.Close();
+   }
+
+   {
+      TPDF pdf(pdffile, 111);
+      C->cd(0);
+      C->Draw();
+      pdf.Close();
+   }
+
+   C->cd(0);
+   C->SaveAs(jpgfile);
+
+   C->cd(0);
+   C->SaveAs(pngfile);
+
    if (IPS) {
-      StatusPrint(psfile,  gTestNum, title, FileSize(outfile) ,
+      StatusPrint(psfile,  gTestNum, title, FileSize(psfile) ,
                                             gPS1RefNb[gTestNum-1],
                                             gPS1ErrNb[gTestNum-1]);
    } else {
-      StatusPrint(psfile,  gTestNum, title, AnalysePS(outfile) ,
+      StatusPrint(psfile,  gTestNum, title, AnalysePS(psfile) ,
                                             gPS1RefNb[gTestNum-1],
                                             gPS1ErrNb[gTestNum-1]);
    }
 
-   snprintf(outfile, outfileSize, "sg%2.2d.pdf",gTestNum);
-   C->cd(0);
-   TPDF *pdf = new TPDF(outfile,111);
-   C->Draw();
-   pdf->Close();
-   TString pdffile = outfile;
-   StatusPrint(pdffile, 0, "  PDF output", FileSize(outfile),
+   StatusPrint(pdffile, 0, "  PDF output", FileSize(pdffile),
                                            gPDFRefNb[gTestNum-1],
                                            gPDFErrNb[gTestNum-1]);
 
-   snprintf(outfile, outfileSize, "sg%2.2d.jpg",gTestNum);
-   C->cd(0);
-   C->SaveAs(outfile);
-   TString jpgfile = outfile;
-   StatusPrint(jpgfile, 0, "  JPG output", FileSize(outfile),
+   StatusPrint(jpgfile, 0, "  JPG output", FileSize(jpgfile),
                                            gJPGRefNb[gTestNum-1],
                                            gJPGErrNb[gTestNum-1]);
 
-   snprintf(outfile, outfileSize, "sg%2.2d.png",gTestNum);
-   C->cd(0);
-   C->SaveAs(outfile);
-   TString pngfile = outfile;
-   StatusPrint(pngfile, 0, "  PNG output", FileSize(outfile),
+   StatusPrint(pngfile, 0, "  PNG output", FileSize(pngfile),
                                            gPNGRefNb[gTestNum-1],
                                            gPNGErrNb[gTestNum-1]);
 
