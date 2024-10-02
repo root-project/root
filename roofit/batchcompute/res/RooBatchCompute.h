@@ -109,7 +109,7 @@ enum Computer {
 struct ReduceNLLOutput {
    double nllSum = 0.0;
    double nllSumCarry = 0.0;
-   std::size_t nLargeValues = 0;
+   std::size_t nInfiniteValues = 0;
    std::size_t nNonPositiveValues = 0;
    std::size_t nNaNValues = 0;
 };
