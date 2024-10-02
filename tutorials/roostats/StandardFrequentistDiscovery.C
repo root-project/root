@@ -155,11 +155,6 @@ double StandardFrequentistDiscovery(const char *infile = "", const char *workspa
          cout << "Not sure what to do about this model" << endl;
    }
 
-   // We can use PROOF to speed things along in parallel
-   // ProofConfig pc(*w, 2, "user@yourfavoriteproofcluster", false);
-   ProofConfig pc(*w, 2, "", false);
-   // toymcs.SetProofConfig(&pc);    // enable proof
-
    // instantiate the calculator
    FrequentistCalculator freqCalc(*data, *mc, *mcNull, &toymcs);
    freqCalc.SetToys(toys, toys); // null toys, alt toys

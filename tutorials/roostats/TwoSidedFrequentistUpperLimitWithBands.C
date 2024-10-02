@@ -123,9 +123,6 @@ using namespace RooFit;
 using namespace RooStats;
 using std::cout, std::endl;
 
-bool useProof = false; // flag to control whether to use Proof
-int nworkers = 0;      // number of workers (default use all available cores)
-
 // -------------------------------------------------------
 
 void TwoSidedFrequentistUpperLimitWithBands(const char *infile = "", const char *workspaceName = "combined",
@@ -223,17 +220,6 @@ void TwoSidedFrequentistUpperLimitWithBands(const char *infile = "", const char 
          fc.FluctuateNumDataEntries(false);
       else
          cout << "Not sure what to do about this model" << endl;
-   }
-
-   // We can use PROOF to speed things along in parallel
-   // However, the test statistic has to be installed on the workers
-   // so either turn off PROOF or include the modified test statistic
-   // in your $ROOTSYS/roofit/roostats/inc directory,
-   // add the additional line to the LinkDef.h file,
-   // and recompile root.
-   if (useProof) {
-      ProofConfig pc(*w, nworkers, "", false);
-      toymcsampler->SetProofConfig(&pc); // enable proof
    }
 
    if (mc->GetGlobalObservables()) {

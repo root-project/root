@@ -324,7 +324,6 @@
 #pragma link C++ class RooStudyPackage+ ;
 #pragma link C++ class RooAbsStudy+ ;
 #pragma link C++ class RooGenFitStudy+ ;
-#pragma link C++ class RooProofDriverSelector+ ;
 #pragma link C++ class RooExtendedBinding+ ;
 #pragma link C++ class std::list<RooAbsStudy*>+ ;
 #pragma link C++ class std::map<string,RooDataSet*>+ ;
