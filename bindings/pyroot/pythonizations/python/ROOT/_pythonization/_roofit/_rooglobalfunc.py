@@ -184,7 +184,9 @@ def Import(*args, **kwargs):
     from cppyy.gbl import RooFit
 
     if len(args) == 1 and len(kwargs) == 0 and isinstance(args[0], dict):
-        return RooFit.Detail.ImportFlatMap(_dict_to_flat_map(args[0], {"std::string": ["TH1*", "RooDataHist*", "RooDataSet*"]}))
+        return RooFit.Detail.ImportFlatMap(
+            _dict_to_flat_map(args[0], {"std::string": ["TH1*", "RooDataHist*", "RooDataSet*"]})
+        )
 
     return RooFit._Import(*args, **kwargs)
 
@@ -318,7 +320,7 @@ def DataError(etype):
     return RooFit._DataError(etype)
 
 
-def bindFunction(name, func, *variables):
+def _bindFunctionOrPdf(name, func, is_rooabspdf, *variables):
     """
     Wrap an arbitrary function defined in Python or C++.
 
@@ -333,20 +335,30 @@ def bindFunction(name, func, *variables):
 
     import ROOT
 
-    # use the c++ version if dealing with c++ function
+    # use the C++ version if dealing with C++ function
     if "cppyy" in repr(type(func)):
         return ROOT.RooFit._bindFunction(name, func, *variables)
 
-    class MyBinFunc(ROOT.RooFit.Detail.RooPyBindFunction):
+    base_class_name = "RooAbsPdf" if is_rooabspdf else "RooAbsReal"
+
+    class RooPyBindDerived(ROOT.RooFit.Detail.RooPyBind[base_class_name]):
         def __init__(self, name, title, *variables):
-            super(MyBinFunc, self).__init__(name, title, ROOT.RooArgList(*variables))
+            super(RooPyBindDerived, self).__init__(name, title, ROOT.RooArgList(*variables))
 
         def evaluate(self):
             return func(*(v.getVal() for v in self.varlist()))
 
         def clone(self, newname=False):
-            cl = MyBinFunc(newname if newname else self.GetName(), self.GetTitle(), self.varlist())
+            cl = RooPyBindDerived(newname if newname else self.GetName(), self.GetTitle(), self.varlist())
             ROOT.SetOwnership(cl, False)
             return cl
 
-    return MyBinFunc(name, "", variables)
+    return RooPyBindDerived(name, "", variables)
+
+
+def bindFunction(name, func, *variables):
+    return _bindFunctionOrPdf(name, func, False, *variables)
+
+
+def bindPdf(name, func, *variables):
+    return _bindFunctionOrPdf(name, func, True, *variables)

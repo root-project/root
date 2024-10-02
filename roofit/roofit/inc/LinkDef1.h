@@ -14,7 +14,8 @@
 #pragma link C++ class RooBukinPdf+ ;
 #pragma link C++ class RooCrystalBall+ ;
 #pragma link C++ class RooCBShape+ ;
-#pragma link C++ class RooFit::Detail::RooPyBindFunction+ ;
+#pragma link C++ class RooFit::Detail::RooPyBind<RooAbsReal>+ ;
+#pragma link C++ class RooFit::Detail::RooPyBind<RooAbsPdf>+ ;
 #pragma link C++ class RooChebychev+ ;
 #pragma link C++ class RooDecay+ ;
 #pragma link C++ class RooDstD0BG+ ;
