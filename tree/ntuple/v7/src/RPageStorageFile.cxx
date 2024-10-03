@@ -447,8 +447,11 @@ ROOT::Experimental::Internal::RPageSourceFile::LoadPageImpl(ColumnHandle_t colum
 
    if (fOptions.GetClusterCache() == RNTupleReadOptions::EClusterCache::kOff) {
       directReadBuffer = std::unique_ptr<unsigned char[]>(new unsigned char[sealedPage.GetBufferSize()]);
-      fReader.ReadBuffer(directReadBuffer.get(), sealedPage.GetBufferSize(),
-                         pageInfo.fLocator.GetPosition<std::uint64_t>());
+      {
+         Detail::RNTupleAtomicTimer timer(fCounters->fTimeWallRead, fCounters->fTimeCpuRead);
+         fReader.ReadBuffer(directReadBuffer.get(), sealedPage.GetBufferSize(),
+                            pageInfo.fLocator.GetPosition<std::uint64_t>());
+      }
       fCounters->fNPageRead.Inc();
       fCounters->fNRead.Inc();
       fCounters->fSzReadPayload.Add(sealedPage.GetBufferSize());
