@@ -358,48 +358,42 @@ jobs:
         include:
           - image: fedora39
             overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
-            runs-on: [self-hosted, root-ci, linux, x64]
           - image: alma8
             overrides: ["LLVM_ENABLE_ASSERTIONS=On"]
-            runs-on: [self-hosted, root-ci, linux, x64]
           - image: alma9
             overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_BUILD_TYPE=Debug"]
-            runs-on: [self-hosted, root-ci, linux, x64]
           - image: ubuntu20
             overrides: ["LLVM_ENABLE_ASSERTIONS=On"]
-            runs-on: [self-hosted, root-ci, linux, x64]
           - image: ubuntu22
             overrides: ["imt=Off", "LLVM_ENABLE_ASSERTIONS=On", "CMAKE_BUILD_TYPE=Debug"]
-            runs-on: [self-hosted, root-ci, linux, x64]
           - image: ubuntu2404
             overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_BUILD_TYPE=Debug"]
-            runs-on: [self-hosted, root-ci, linux, x64]
           - image: debian125
             overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
-            runs-on: [self-hosted, root-ci, linux, x64]
           # Special builds
           - image: alma9
             is_special: true
             property: modules_off
             overrides: ["runtime_cxxmodules=Off"]
-            runs-on: [self-hosted, root-ci, linux, x64]
           - image: alma9
             is_special: true
             property: march_native
             overrides: ["CMAKE_BUILD_TYPE=RelWithDebInfo", "CMAKE_CXX_FLAGS=-march=native", "CMAKE_C_FLAGS=-march=native", "fortran=OFF"]
-            runs-on: [self-hosted, root-ci, linux, x64]
           - image: alma9
             is_special: true
             property: arm64
             overrides: ["CMAKE_BUILD_TYPE=RelWithDebInfo", "ccache=ON"]
-            runs-on: [self-hosted, root-ci, linux, ARM64]
+            architecture: ARM64
           - image: alma9-clang
             is_special: true
             property: clang
             overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_C_COMPILER=clang", "CMAKE_CXX_COMPILER=clang++"]
-            runs-on: [self-hosted, root-ci, linux, x64]
 
-    runs-on: ${{ matrix.runs-on }}
+    runs-on:
+      - self-hosted
+      - linux
+      - ${{ matrix.architecture == null && 'x64' || matrix.architecture }}
+      - ${{ matrix.extra-runs-on == null && 'cpu' || matrix.extra-runs-on }}
 
     name: |
       ${{ matrix.image }} ${{ matrix.property }}
