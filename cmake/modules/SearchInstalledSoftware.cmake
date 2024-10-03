@@ -5,7 +5,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 #----------------------------------------------------------------------------
-# macro ROOT_CHECK_CONNECTION()
+# macro ROOT_CHECK_CONNECTION(option)
 # Try to download a file to check internet connection.
 # If fail-on-missing=ON is set, a failed connection check will cause a fatal
 # configuration error.
@@ -48,13 +48,22 @@ macro(ROOT_CHECK_CONNECTION option)
   endif()
 endmacro()
 
+#----------------------------------------------------------------------------
+# macro ROOT_CHECK_CONNECTION_AND_DISABLE_OPTION(option_name)
+# Check internet connection. If no connection, either disable the option or
+# stop the configuration with a FATAL_ERROR in case of fail-on-missing=ON.
+#----------------------------------------------------------------------------
+macro(ROOT_CHECK_CONNECTION_AND_DISABLE_OPTION option_name)
+  ROOT_CHECK_CONNECTION("$(option_name)=OFF")
+  if(NO_CONNECTION)
+    message(STATUS "No internet connection, disabling '${option_name}' option")
+    set(${option_name} OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
+  endif()
+endmacro()
+
 # Building Clad requires an internet connection, if we're not side-loading the source directory
 if(clad AND NOT DEFINED CLAD_SOURCE_DIR)
-  ROOT_CHECK_CONNECTION("clad=OFF")
-  if(NO_CONNECTION)
-    message(STATUS "No internet connection, disabling the 'clad' option")
-    set(clad OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
-  endif()
+  ROOT_CHECK_CONNECTION_AND_DISABLE_OPTION("clad")
 endif()
 
 #---Check for installed packages depending on the build options/components enabled --
@@ -527,11 +536,7 @@ endif()
 #---Check for GSL library---------------------------------------------------------------
 if(mathmore OR builtin_gsl)
   if(builtin_gsl)
-    ROOT_CHECK_CONNECTION("builtin_gsl=OFF")
-    if(NO_CONNECTION)
-      message(STATUS "No internet connection, disabling 'builtin_gsl' option")
-      set(builtin_gsl OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
-    endif()
+    ROOT_CHECK_CONNECTION_AND_DISABLE_OPTION("builtin_gsl")
   endif()
   message(STATUS "Looking for GSL")
   if(NOT builtin_gsl)
@@ -831,11 +836,7 @@ if(pythia8)
 endif()
 
 if(builtin_fftw3)
-  ROOT_CHECK_CONNECTION("builtin_fftw3=OFF")
-  if(NO_CONNECTION)
-    message(STATUS "No internet connection, disabling 'builtin_fftw3' option")
-    set(builtin_fftw3 OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
-  endif()
+  ROOT_CHECK_CONNECTION_AND_DISABLE_OPTION("builtin_fftw3")
 endif()
 
 #---Check for FFTW3-------------------------------------------------------------------
@@ -879,11 +880,7 @@ endif()
 #---Check for fitsio-------------------------------------------------------------------
 if(fitsio OR builtin_cfitsio)
   if(builtin_cfitsio)
-    ROOT_CHECK_CONNECTION("builtin_cfitsio=OFF")
-    if(NO_CONNECTION)
-      message(STATUS "No internet connection, disabling 'builtin_cfitsio' option")
-      set(builtin_cfitsio OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
-    endif()
+    ROOT_CHECK_CONNECTION_AND_DISABLE_OPTION("builtin_cfitsio")
   endif()
   if(builtin_cfitsio)
     add_library(CFITSIO::CFITSIO STATIC IMPORTED GLOBAL)
@@ -1328,11 +1325,7 @@ elseif(vc)
 endif()
 
 if(vc AND NOT Vc_FOUND)
-  ROOT_CHECK_CONNECTION("vc=OFF")
-  if(NO_CONNECTION)
-    message(STATUS "No internet connection, disabling the 'vc' option")
-    set(vc OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
-  endif()
+  ROOT_CHECK_CONNECTION_AND_DISABLE_OPTION("vc")
 endif()
 
 if(vc AND NOT Vc_FOUND)
@@ -1429,11 +1422,7 @@ elseif(veccore)
 endif()
 
 if(builtin_veccore)
-  ROOT_CHECK_CONNECTION("builtin_veccore=OFF")
-  if(NO_CONNECTION)
-    message(STATUS "No internet connection, disabling the 'builtin_veccore' option")
-    set(builtin_veccore OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
-  endif()
+  ROOT_CHECK_CONNECTION_AND_DISABLE_OPTION("builtin_veccore")
 endif()
 
 if(builtin_veccore)
@@ -1501,11 +1490,7 @@ if(builtin_veccore)
 endif()
 
 if(builtin_vdt)
-  ROOT_CHECK_CONNECTION("builtin_vdt=OFF")
-  if(NO_CONNECTION)
-    message(STATUS "No internet connection, disabling the 'builtin_vdt' option")
-    set(builtin_vdt OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
-  endif()
+  ROOT_CHECK_CONNECTION_AND_DISABLE_OPTION("builtin_vdt")
 endif()
 
 #---Check for Vdt--------------------------------------------------------------------
