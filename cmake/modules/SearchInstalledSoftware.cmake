@@ -1124,27 +1124,6 @@ if(builtin_davix)
   endif()
 endif()
 
-#---Check for TCMalloc---------------------------------------------------------------
-if (tcmalloc)
-  message(STATUS "Looking for tcmalloc")
-  find_package(tcmalloc)
-  if(NOT TCMALLOC_FOUND)
-    message(STATUS "TCMalloc not found.")
-  endif()
-endif()
-
-#---Check for JEMalloc---------------------------------------------------------------
-if (jemalloc)
-  if (tcmalloc)
-   message(FATAL_ERROR "Both tcmalloc and jemalloc were selected: this is an inconsistent setup.")
-  endif()
-  message(STATUS "Looking for jemalloc")
-  find_package(jemalloc)
-  if(NOT JEMALLOC_FOUND)
-    message(STATUS "JEMalloc not found.")
-  endif()
-endif()
-
 #---Check for liburing----------------------------------------------------------------
 if (uring)
   if(NOT CMAKE_SYSTEM_NAME MATCHES Linux)
