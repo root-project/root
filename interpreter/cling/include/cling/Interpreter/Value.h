@@ -305,6 +305,7 @@ namespace cling {
     ///\endcode
     void print(llvm::raw_ostream& Out, bool escape = false) const;
     void dump(bool escape = true) const;
+    void clear();
   };
 
   template <> inline void* Value::getAs() const {
