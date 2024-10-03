@@ -123,7 +123,7 @@ bool DeleteChangesMemoryImpl()
    // so don't even try
    return true;
 #endif
-    if ( *o_fbits != 0x01000000 ) {
+   if ( *o_fbits != 0x01000000 ) {
       // operator delete tainted the memory, we can not rely on TestBit(kNotDeleted)
       return true;
    }
