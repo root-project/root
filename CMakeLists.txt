@@ -76,26 +76,6 @@ include(cmake/modules/SetROOTVersion.cmake)
 
 message(STATUS "Building ROOT version ${ROOT_FULL_VERSION}")
 
-#---Try to download a file to check internet connection-----------------------------------------
-message(STATUS "Checking internet connectivity")
-file(DOWNLOAD https://root.cern/files/cmake_connectivity_test.txt ${CMAKE_CURRENT_BINARY_DIR}/cmake_connectivity_test.txt
-  TIMEOUT 10 STATUS DOWNLOAD_STATUS
-)
-# Get the status code from the download status
-list(GET DOWNLOAD_STATUS 0 STATUS_CODE)
-# Check if download was successful.
-if(${STATUS_CODE} EQUAL 0)
-  # Succcess
-  message(STATUS "Checking internet connectivity - found")
-  # Now let's delete the file
-  file(REMOVE ${CMAKE_CURRENT_BINARY_DIR}/cmake_connectivity_test.txt)
-  set(NO_CONNECTION FALSE)
-else()
-  # Error
-  message(STATUS "Checking internet connectivity - failed: will not automatically download external dependencies")
-  set(NO_CONNECTION TRUE)
-endif()
-
 #---Where to look first for cmake modules, before ${CMAKE_ROOT}/Modules/ is checked-------------
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules)
 
@@ -110,12 +90,15 @@ include(CheckAssembler)
 include(CheckIntrinsics)
 
 # Building Clad requires an internet connection, if we're not side-loading the source directory
-if(clad AND NOT DEFINED CLAD_SOURCE_DIR AND NO_CONNECTION)
-  if(fail-on-missing)
-    message(FATAL_ERROR "No internet connection. Please check your connection, or either disable the 'clad' option or the 'fail-on-missing' to automatically disable options requiring internet access")
-  else()
-    message(STATUS "No internet connection, disabling the 'clad' option")
-    set(clad OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
+if(clad AND NOT DEFINED CLAD_SOURCE_DIR)
+  ROOT_CHECK_CONNECTION()
+  if(NO_CONNECTION)
+    if(fail-on-missing)
+      message(FATAL_ERROR "No internet connection. Please check your connection, or either disable the 'clad' option or the 'fail-on-missing' to automatically disable options requiring internet access")
+    else()
+      message(STATUS "No internet connection, disabling the 'clad' option")
+      set(clad OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
+    endif()
   endif()
 endif()
 
