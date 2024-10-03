@@ -91,11 +91,11 @@ sap.ui.define([
                                             this.RQ_MarkerScale * this.canvas.pixelRatio,
                                             this.RQ_LineScale   * this.canvas.pixelRatio);
          }
-         this.updateViewerAttributes();
 
          this.controller.createScenes();
          this.controller.redrawScenes();
          this.setupEventHandlers();
+         this.updateViewerAttributes();
 
          this.controller.glViewerInitDone();
       }
@@ -567,12 +567,13 @@ sap.ui.define([
             this.axis.add(ss);
          }
 
-         let url_base = this.eve_path + 'fonts/LiberationSans-Regular';
+ /*
+         let url_base = this.eve_path + 'sdf-fonts/LiberationMono-Regular';
          this.tex_cache.deliver_font(url_base,
             (texture, font_metrics) => {
                let diag = new RC.Vector3;
                bb.getSize(diag);
-               diag = diag.length() / 40;
+               diag = diag.length() / 100;
                let ag = this.axis;
                for (const ax of lines) {
                   const text = new RC.ZText({
@@ -592,7 +593,43 @@ sap.ui.define([
                }
             },
             (img) => RC.ZText.createDefaultTexture(img)
-         );
+         );*/
+         let ag = this.axis;
+         let fgCol = this.fgCol;
+         const fontImgLoader = new RC.ImageLoader();
+         let tname = this.eve_path + "textures/font2.png";
+         fontImgLoader.load(tname, function (image) {
+            const fontTexture = new RC.Texture(
+               image,
+               RC.Texture.WRAPPING.ClampToEdgeWrapping,
+               RC.Texture.WRAPPING.ClampToEdgeWrapping,
+               RC.Texture.FILTER.NearestFilter,
+               RC.Texture.FILTER.NearestFilter,
+               RC.Texture.FORMAT.RGBA,
+               RC.Texture.FORMAT.RGBA,
+               RC.Texture.TYPE.UNSIGNED_BYTE,
+               128,
+               256
+            );
+
+            fontTexture._generateMipmaps = false;
+            for (const ax of lines) {
+               const text = new RC.Text2D(
+                  {
+                     text: ax.text,
+                     fontTexture: fontTexture,
+                     xPos: 0,
+                     yPos: 0,
+                     fontSize: 44,
+                     cellAspect: 8 / 16,
+                     mode: RC.TEXT2D_SPACE_WORLD
+                  }
+               );
+               text.position.copy(ax.p);
+               text.material.color = fgCol;
+               ag.add(text);
+            }
+         });
       };
 
       //==============================================================================
