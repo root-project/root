@@ -464,3 +464,33 @@ TEST(RNTuple, VectorOfString)
    EXPECT_EQ(1u, ptrVecOfStr->size());
    EXPECT_STREQ("xyz", ptrVecOfStr->at(0).c_str());
 }
+
+TEST(RNTuple, VectorOfBitset)
+{
+   FileRaii fileGuard("test_ntuple_vector_of_bitset.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto ptrVecOfBitset = model->MakeField<std::vector<std::bitset<3>>>("f");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      ptrVecOfBitset->emplace_back("101");
+      ptrVecOfBitset->emplace_back("010");
+      writer->Fill();
+      writer->CommitCluster();
+      ptrVecOfBitset->clear();
+      ptrVecOfBitset->emplace_back("111");
+      ptrVecOfBitset->emplace_back("000");
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   auto ptrVecOfBitset = reader->GetModel().GetDefaultEntry().GetPtr<std::vector<std::bitset<3>>>("f");
+   reader->LoadEntry(0);
+   EXPECT_EQ(2u, ptrVecOfBitset->size());
+   EXPECT_EQ("101", ptrVecOfBitset->at(0).to_string());
+   EXPECT_EQ("010", ptrVecOfBitset->at(1).to_string());
+   reader->LoadEntry(1);
+   EXPECT_EQ(2u, ptrVecOfBitset->size());
+   EXPECT_EQ("111", ptrVecOfBitset->at(0).to_string());
+   EXPECT_EQ("000", ptrVecOfBitset->at(1).to_string());
+}

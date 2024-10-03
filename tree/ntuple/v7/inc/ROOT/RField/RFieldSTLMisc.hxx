@@ -104,6 +104,7 @@ protected:
    void ConstructValue(void *where) const final { memset(where, 0, GetValueSize()); }
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
+   void ReadInClusterImpl(RClusterIndex clusterIndex, void *to) final;
 
 public:
    RBitsetField(std::string_view fieldName, std::size_t N);

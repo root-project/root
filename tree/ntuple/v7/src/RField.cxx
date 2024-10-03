@@ -3296,6 +3296,19 @@ void ROOT::Experimental::RBitsetField::ReadGlobalImpl(NTupleSize_t globalIndex, 
    }
 }
 
+void ROOT::Experimental::RBitsetField::ReadInClusterImpl(RClusterIndex clusterIndex, void *to)
+{
+   auto *asULongArray = static_cast<Word_t *>(to);
+   bool elementValue;
+   for (std::size_t i = 0; i < fN; ++i) {
+      fPrincipalColumn->Read(RClusterIndex(clusterIndex.GetClusterId(), clusterIndex.GetIndex() * fN) + i,
+                             &elementValue);
+      Word_t mask = static_cast<Word_t>(1) << (i % kBitsPerWord);
+      Word_t bit = static_cast<Word_t>(elementValue) << (i % kBitsPerWord);
+      asULongArray[i / kBitsPerWord] = (asULongArray[i / kBitsPerWord] & ~mask) | bit;
+   }
+}
+
 void ROOT::Experimental::RBitsetField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitBitsetField(*this);
