@@ -561,6 +561,9 @@ ROOT::Experimental::Internal::RPageSourceFile::PrepareSingleCluster(
    const auto currentReadRequestIdx = readRequests.size();
 
    ROOT::Internal::RRawFile::RIOVec req;
+   // To simplify the first loop iteration, pretend an empty request starting at the first page's fOffset.
+   if (!onDiskPages.empty())
+      req.fOffset = onDiskPages[0].fOffset;
    std::size_t szPayload = 0;
    std::size_t szOverhead = 0;
    const std::uint64_t maxKeySize = fReader.GetMaxKeySize();
