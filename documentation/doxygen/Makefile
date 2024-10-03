@@ -90,4 +90,3 @@ rootWork: tutorialWorklist_root
 	xargs -L 1 -P 12 root < $<
 
 clean:
-	rm -rf $(DOXYGEN_OUTPUT_DIRECTORY) tutorialWorklist_py tutorialWorklist_root CleanNamespaces.sh

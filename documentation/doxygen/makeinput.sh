@@ -45,7 +45,7 @@ echo "        ../../graf3d/gl/                 \\" >> Doxyfile_INPUT
 echo "        ../../graf3d/gviz3d/             \\" >> Doxyfile_INPUT
 echo "        ../../gui/                       \\" >> Doxyfile_INPUT
 echo "        ../../hist/                      \\" >> Doxyfile_INPUT
-# echo "        ../../html/                      \\" >> Doxyfile_INPUT
+echo "        ../../html/                      \\" >> Doxyfile_INPUT
 echo "        ../../io/doc/TFile               \\" >> Doxyfile_INPUT
 echo "        ../../io/dcache/                 \\" >> Doxyfile_INPUT
 echo "        ../../io/io/                     \\" >> Doxyfile_INPUT
@@ -55,15 +55,15 @@ echo "        ../../io/xmlparser/              \\" >> Doxyfile_INPUT
 echo "        ../../main/src/hadd.cxx          \\" >> Doxyfile_INPUT
 echo "        ../../math/                      \\" >> Doxyfile_INPUT
 echo "        ../../montecarlo/                \\" >> Doxyfile_INPUT
-# echo "        ../../net/doc/                   \\" >> Doxyfile_INPUT
-# echo "        ../../net/auth/                  \\" >> Doxyfile_INPUT
-# echo "        ../../net/davix/                 \\" >> Doxyfile_INPUT
-# echo "        ../../net/http/                  \\" >> Doxyfile_INPUT
-# echo "        ../../net/net/                   \\" >> Doxyfile_INPUT
-# echo "        ../../net/netxng/                \\" >> Doxyfile_INPUT
-# echo "        ../../net/httpsniff/             \\" >> Doxyfile_INPUT
-# echo "        ../../proof/                     \\" >> Doxyfile_INPUT
-# echo "        ../../tmva/                      \\" >> Doxyfile_INPUT
+echo "        ../../net/doc/                   \\" >> Doxyfile_INPUT
+echo "        ../../net/auth/                  \\" >> Doxyfile_INPUT
+echo "        ../../net/davix/                 \\" >> Doxyfile_INPUT
+echo "        ../../net/http/                  \\" >> Doxyfile_INPUT
+echo "        ../../net/net/                   \\" >> Doxyfile_INPUT
+echo "        ../../net/netxng/                \\" >> Doxyfile_INPUT
+echo "        ../../net/httpsniff/             \\" >> Doxyfile_INPUT
+echo "        ../../proof/                     \\" >> Doxyfile_INPUT
+echo "        ../../tmva/                      \\" >> Doxyfile_INPUT
 echo "        ../../roofit/                    \\" >> Doxyfile_INPUT
 echo "        ../../tree/                      \\" >> Doxyfile_INPUT
 echo "        ../../sql/                       \\" >> Doxyfile_INPUT
@@ -88,3 +88,4 @@ echo "        ../../bindings/r/                \\" >> Doxyfile_INPUT
 # and print_roofit_pyz_doctrings.py
 ls $DOXYGEN_PYZDOC_PATH/*.pyzdoc | sed -e "s/$/ \\\\/"  \
 >> Doxyfile_INPUT
+
