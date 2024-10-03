@@ -89,19 +89,6 @@ include(RootMacros)
 include(CheckAssembler)
 include(CheckIntrinsics)
 
-# Building Clad requires an internet connection, if we're not side-loading the source directory
-if(clad AND NOT DEFINED CLAD_SOURCE_DIR)
-  ROOT_CHECK_CONNECTION()
-  if(NO_CONNECTION)
-    if(fail-on-missing)
-      message(FATAL_ERROR "No internet connection. Please check your connection, or either disable the 'clad' option or the 'fail-on-missing' to automatically disable options requiring internet access")
-    else()
-      message(STATUS "No internet connection, disabling the 'clad' option")
-      set(clad OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
-    endif()
-  endif()
-endif()
-
 # relatedrepo_GetClosestMatch(REPO_NAME <repo> ORIGIN_PREFIX <originp> UPSTREAM_PREFIX <upstreamp>
 #                             FETCHURL_VARIABLE <output_url> FETCHREF_VARIABLE <output_ref>)
 # Return the clone URL and head/tag of the closest match for `repo` (e.g. roottest), based on the
