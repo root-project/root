@@ -117,6 +117,12 @@ bool DeleteChangesMemoryImpl()
    // can guess this is always the case and we can rely on the changes to fBits made
    // by ~TObject to detect use-after-delete error (and print a message rather than
    // stop the program with a segmentation fault)
+#if defined(_MSC_VER) && defined(__SANITIZE_ADDRESS__)
+   // on Windows, even __declspec(no_sanitize_address) does not prevent catching
+   // heap-use-after-free errorswhen using the /fsanitize=address compiler flag
+   // so don't even try
+   return true;
+#endif
    if ( *o_fbits != 0x01000000 ) {
       // operator delete tainted the memory, we can not rely on TestBit(kNotDeleted)
       return true;
