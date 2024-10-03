@@ -33,7 +33,7 @@ define MkDir
 	+@[ -d $1 ] || mkdir -p $1
 endef
 
-all: filter folders mathjax js images doxygen replaceCollaborationDiagrams notebooks rootWork
+all: filter folders mathjax js images doxygen replaceCollaborationDiagrams rootWork
 
 filter:
 	`root-config --cxx` -o filter filter.cxx -std=c++14 -O2
@@ -56,16 +56,12 @@ pyzdoc:
 	$(Python3_EXECUTABLE) print_roofit_pyz_doctrings.py > $(DOXYGEN_PYZDOC_PATH)/_roofit.pyzdoc
 
 doxygen: filter pyzdoc
-	rm -f tutorialWorklist_py tutorialWorklist_root
 	$(call MkDir,$(DOXYGEN_OUTPUT_DIRECTORY))
 	$(call MkDir,$(DOXYGEN_EXAMPLE_PATH))
 	$(call MkDir,$(DOXYGEN_NOTEBOOK_PATH))
 	./makehtmlfooter.sh > htmlfooter.html
 	./makeinput.sh
 	doxygen
-	bash ./CleanNamespaces.sh
-	gzip $(DOXYGEN_IMAGE_PATH)/ROOT.tag
-	gzip $(DOXYGEN_IMAGE_PATH)/ROOT.qch
 	rm -rf files c1* *.ps *.eps *.png *.jpg *.tex *.svg *.pdf *.root *.xpm *.out *.dat *.dtd *.dot *.txt *.csv *.log *.rs
 	rm -rf listofclass.sh tmva* data* result* config* test* Roo* My* Freq*
 	rm -f Doxyfile_INPUT filter htmlfooter.html MDF.C pca.C
