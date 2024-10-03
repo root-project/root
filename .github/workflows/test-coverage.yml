@@ -50,10 +50,11 @@ jobs:
     permissions:
       contents: read
 
-    runs-on: 
+    runs-on:
       - self-hosted
       - linux
       - x64
+      - cpu
 
     name: Build and test to determine coverage
 
