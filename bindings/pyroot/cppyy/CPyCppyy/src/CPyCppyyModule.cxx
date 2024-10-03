@@ -208,6 +208,12 @@ static PyTypeObject PyDefault_t_Type = {
 
 namespace {
 
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+// More recent versions of python change the second argument from a ssize_t to
+// a union, therefore technically requiring an additional parenthesis.
+#pragma GCC diagnostic ignored "-Wmissing-braces"
+#endif
 PyObject _CPyCppyy_NullPtrStruct = {
     _PyObject_EXTRA_INIT
     1, &PyNullPtr_t_Type
@@ -217,6 +223,9 @@ PyObject _CPyCppyy_DefaultStruct = {
     _PyObject_EXTRA_INIT
     1, &PyDefault_t_Type
 };
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
 
 // TODO: refactor with Converters.cxx
 struct CPyCppyy_tagCDataObject {       // non-public (but stable)
