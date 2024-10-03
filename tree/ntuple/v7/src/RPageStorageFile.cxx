@@ -573,8 +573,8 @@ ROOT::Experimental::Internal::RPageSourceFile::PrepareSingleCluster(
       // Note: byte ranges of pages may overlap
       const std::uint64_t overhead = std::max(static_cast<std::int64_t>(s.fOffset) - readUpTo, std::int64_t(0));
       const std::uint64_t extent = std::max(static_cast<std::int64_t>(s.fOffset + s.fSize) - readUpTo, std::int64_t(0));
-      szPayload += extent;
       if (req.fSize + extent < maxKeySize && overhead <= gapCut) {
+         szPayload += (extent - overhead);
          szOverhead += overhead;
          s.fBufPos = reinterpret_cast<intptr_t>(req.fBuffer) + s.fOffset - req.fOffset;
          req.fSize += extent;
@@ -588,6 +588,7 @@ ROOT::Experimental::Internal::RPageSourceFile::PrepareSingleCluster(
       req.fBuffer = reinterpret_cast<unsigned char *>(req.fBuffer) + req.fSize;
       s.fBufPos = reinterpret_cast<intptr_t>(req.fBuffer);
 
+      szPayload += s.fSize;
       req.fOffset = s.fOffset;
       req.fSize = s.fSize;
    }
