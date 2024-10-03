@@ -61,12 +61,8 @@ int testPyKerasRegression(){
    dataloader->AddVariable("var2");
    dataloader->AddTarget("fvalue");
 
-   dataloader->PrepareTrainingAndTestTree("",
-#ifdef R__MACOSX  // on macos we don;t disable eager execution, it is very slow
-      "nTrain_Regression=500:nTest_Regression=100:SplitMode=Random:NormMode=NumEvents:!V");
-#else
-      "nTrain_Regression=1000:nTest_Regression=200:SplitMode=Random:NormMode=NumEvents:!V");
-#endif
+   dataloader->PrepareTrainingAndTestTree("", "SplitMode=Random:NormMode=NumEvents:!V");
+   //to reduce number of events for training/test add     "nTrain_Regression=1000:nTest_Regression=200
    // Book and train method
    factory->BookMethod(dataloader, TMVA::Types::kPyKeras, "PyKeras",
       "!H:!V:VarTransform=D,G:FilenameModel=kerasModelRegression.h5:FilenameTrainedModel=trainedKerasModelRegression.h5:NumEpochs=10:BatchSize=25:SaveBestOnly=false:Verbose=0");
@@ -101,16 +97,11 @@ int testPyKerasRegression(){
 
    // Check whether the response is obviously better than guessing
    std::cout << "Mean squared error: " << meanMvaError << std::endl;
-/*
-#ifdef R__MACOSX
+
    if(meanMvaError > 30.0){
-#else
-   if(meanMvaError > 60.0){
-#endif
       std::cout << "[ERROR] Mean squared error is " << meanMvaError << " (>30.0)" << std::endl;
       return 1;
    }
-*/
 
    return 0;
 }
