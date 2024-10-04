@@ -2,7 +2,7 @@
 Processing runminostest.C...
 
 StreamerInfo for class: SEIdAltL, version=3, checksum=0x289e7bdc
-  vector<SEIdAltLItem> vector<SEIdAltLItem> offset= [deleted from log] type=300 ,stl=1, ctype=61,                     
+  vector<SEIdAltLItem> vector<SEIdAltLItem> offset= [deleted from log] type=300 stl=1 ctype=61                     
   unsigned int   fCurrent        offset= [deleted from log] type=13 current position    
   int            fError          offset= [deleted from log] type= 3 -1=unchecked, 0=no consistency errors
    i= 0, vector<SEIdAltLItem> type=300, offset= [deleted from log], len=1, method=0
