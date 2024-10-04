@@ -100,3 +100,6 @@ ROOT_ADD_TEST(test-stressroofit-cpu COMMAND stressRooFit -b cpu FAILREGEX "FAILE
 if(cuda)
   ROOT_ADD_TEST(test-stressroofit-cuda COMMAND stressRooFit -b cuda FAILREGEX "FAILED|Error in")
 endif()
+if(dataframe)
+  ROOT_ADD_GTEST(testActionHelpers testActionHelpers.cxx LIBRARIES ROOTDataFrame RooFitCore)
+endif()

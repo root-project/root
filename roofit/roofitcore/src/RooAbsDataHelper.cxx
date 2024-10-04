@@ -10,9 +10,11 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#include <RooAbsDataFiller.h>
+#include <RooAbsDataHelper.h>
 
 #include <RooMsgService.h>
+#include <RooDataSet.h>
+#include <RooDataHist.h>
 
 #include <TROOT.h>
 
@@ -120,9 +122,10 @@ void RooAbsDataFiller::Finalize()
 void RooAbsDataFiller::ExecImpl(std::size_t nValues, std::vector<double> &vector)
 {
    if (nValues != _eventSize && !(_isWeighted && nValues == _eventSize + 1)) {
-      throw std::invalid_argument(std::string("RooAbsData can hold ") + std::to_string(_eventSize) +
-                                  " variables per event (plus an optional weight in case of weighted data), but RDataFrame passed " +
-                                  std::to_string(nValues) + " columns.");
+      throw std::invalid_argument(
+         std::string("RooAbsData can hold ") + std::to_string(_eventSize) +
+         " variables per event (plus an optional weight in case of weighted data), but RDataFrame passed " +
+         std::to_string(nValues) + " columns.");
    }
 
    _nValues = nValues;
