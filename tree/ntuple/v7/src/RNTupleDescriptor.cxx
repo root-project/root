@@ -88,10 +88,7 @@ ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplD
          std::vector<std::unique_ptr<RFieldBase>> memberFields;
          for (auto id : fLinkIds) {
             const auto &memberDesc = ntplDesc.GetFieldDescriptor(id);
-            auto field = memberDesc.CreateField(ntplDesc);
-            if (!dynamic_cast<RInvalidField *>(field.get())) {
-               memberFields.emplace_back(std::move(field));
-            }
+            memberFields.emplace_back(memberDesc.CreateField(ntplDesc));
          }
          auto recordField = std::make_unique<RRecordField>(GetFieldName(), memberFields);
          recordField->SetOnDiskId(fFieldId);
@@ -507,6 +504,9 @@ ROOT::Experimental::RNTupleDescriptor::CreateModel(const RCreateModelOptions &op
    auto model = RNTupleModel::Create(std::move(fieldZero));
    for (const auto &topDesc : GetTopLevelFields()) {
       auto field = topDesc.CreateField(*this);
+      if (!options.fForwardCompatible && dynamic_cast<RInvalidField *>(field.get())) {
+         throw RException(R__FAIL("field \"" + field->GetQualifiedFieldName() + "\" could not be reconstructed"));
+      }
       if (options.fReconstructProjections && topDesc.IsProjectedField()) {
          model->AddProjectedField(std::move(field), [this](const std::string &targetName) -> std::string {
             return GetQualifiedFieldName(GetFieldDescriptor(FindFieldId(targetName)).GetProjectionSourceId());

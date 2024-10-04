@@ -295,7 +295,7 @@ public:
 TEST(RNTupleCompat, FutureFieldStructuralRole)
 {
    // Write a RNTuple containing a field with an unknown structural role and verify we can
-   // read back the ntuple and its descriptor.
+   // read back the ntuple, its descriptor and reconstruct the model.
 
    FileRaii fileGuard("test_ntuple_compat_future_field_struct.root");
    {
@@ -310,4 +310,13 @@ TEST(RNTupleCompat, FutureFieldStructuralRole)
    const auto &desc = reader->GetDescriptor();
    const auto &fdesc = desc.GetFieldDescriptor(desc.FindFieldId("future"));
    EXPECT_EQ(fdesc.GetLogicalColumnIds().size(), 0);
+
+   // Attempting to create a model with default options should fail
+   EXPECT_THROW(desc.CreateModel(), RException);
+
+   auto modelOpts = RNTupleDescriptor::RCreateModelOptions();
+   modelOpts.fForwardCompatible = true;
+   auto model = desc.CreateModel(modelOpts);
+   const auto &field = model->GetField("future");
+   EXPECT_TRUE(!!dynamic_cast<const ROOT::Experimental::RInvalidField *>(&field));
 }

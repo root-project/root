@@ -583,6 +583,11 @@ public:
       /// If set to true, projected fields will be reconstructed as such. This will prevent the model to be used
       /// with an RNTupleReader, but it is useful, e.g., to accurately merge data.
       bool fReconstructProjections = false;
+      /// Normally creating a model will fail if any of the reconstructed fields contains an unknown column type or
+      /// field structural role.
+      /// If this option is enabled, the model will be created and all fields with an unknown structural role will
+      /// be converted to RInvalidFields.
+      bool fForwardCompatible = false;
    };
 
    RNTupleDescriptor() = default;
