@@ -128,10 +128,6 @@ public:
 
       size_t jump= groupSize/fShapeX[fAttrAxis];
       //candidates to check in group
-      size_t prod =1;
-      for(size_t i = fAttrAxis+1; i < size; i++){
-         prod *= fShapeX[i];
-      }
       size_t numOfChecksInGrp=groupSize/jump;
       size_t numOfCheckersInGrp=groupSize/numOfChecksInGrp;
 
