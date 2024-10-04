@@ -10,15 +10,79 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#ifndef ROOABSDATAHELPER
-#define ROOABSDATAHELPER
+#ifndef RooFit_RooFitCore_RooAbsDataHelper_h
+#define RooFit_RooFitCore_RooAbsDataHelper_h
 
-#include <RooAbsDataFiller.h>
+#include <RooArgSet.h>
+#include <RooDataHist.h>
+#include <RooDataSet.h>
+#include <RooRealVar.h>
 
-#include <ROOT/RDataFrame.hxx>
-#include <ROOT/RDF/ActionHelpers.hxx>
+#include <vector>
+#include <mutex>
+#include <cstddef>
+#include <string>
 
-#include <memory>
+class TTreeReader;
+
+namespace RooFit {
+namespace Detail {
+
+class RooAbsDataFiller {
+public:
+   RooAbsDataFiller();
+
+   /// Move constructor. It transfers ownership of the internal RooAbsData object.
+   RooAbsDataFiller(RooAbsDataFiller &&other) : _events{std::move(other._events)}, _eventSize{other._eventSize} {}
+   RooAbsDataFiller &operator=(RooAbsDataFiller &&) = delete;
+
+   /// Copy is discouraged.
+   /// Use `rdataframe.Book<...>(std::move(absDataHelper), ...)` instead.
+   RooAbsDataFiller(const RooAbsDataFiller &) = delete;
+   RooAbsDataFiller &operator=(const RooAbsDataFiller &) = delete;
+
+   ~RooAbsDataFiller() = default;
+
+   /// RDataFrame interface method.
+   void Initialize();
+   /// RDataFrame interface method. No tasks.
+   void InitTask(TTreeReader *, unsigned int) {}
+   /// RDataFrame interface method.
+   std::string GetActionName() { return "RooDataSetHelper"; }
+
+   void ExecImpl(std::size_t nValues, std::vector<double> &vector);
+   void Finalize();
+
+   virtual RooAbsData &GetAbsData() = 0;
+
+   std::vector<double> &events(std::size_t slot) { return _events[slot]; }
+
+protected:
+   void FillAbsData(const std::vector<double> &events, unsigned int eventSize);
+
+   std::mutex _mutexDataset;
+   std::size_t _numInvalid = 0;
+
+   std::vector<std::vector<double>> _events; // One vector of values per data-processing slot
+   std::size_t _eventSize;                   // Number of variables in dataset
+   std::size_t _nValues;                     // Number of variables in dataframe
+
+   bool _isWeighted = false;
+   bool _isDataHist = false;
+};
+
+} // namespace Detail
+} // namespace RooFit
+
+// Forward declarations from RDF
+namespace ROOT {
+namespace Detail {
+namespace RDF {
+template <typename Helper>
+class RActionImpl;
+}
+} // namespace Detail
+} // namespace ROOT
 
 /// This is a helper for an RDataFrame action, which fills RooFit data classes.
 ///
@@ -75,7 +139,7 @@ public:
    template <typename... ColumnTypes>
    void Exec(unsigned int slot, ColumnTypes... values)
    {
-      auto &vector = _events[slot];
+      std::vector<double> &vector = _events[slot];
       for (auto &&val : {static_cast<double>(values)...}) {
          vector.push_back(val);
       }
@@ -83,7 +147,7 @@ public:
       ExecImpl(sizeof...(values), vector);
    }
 
-   RooAbsData &GetAbsData() override { return *_dataset; }
+   DataSet_t &GetAbsData() override { return *_dataset; }
 
 private:
    std::shared_ptr<DataSet_t> _dataset;
