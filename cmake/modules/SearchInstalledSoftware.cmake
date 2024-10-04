@@ -100,9 +100,6 @@ if(cocoa)
   if(APPLE)
     set(x11 OFF CACHE BOOL "Disabled because cocoa requested (${x11_description})" FORCE)
     set(builtin_freetype ON CACHE BOOL "Enabled because needed for Cocoa graphics (${builtin_freetype_description})" FORCE)
-    if(NOT opengl)
-      message(FATAL_ERROR "Option \"cocoa=ON\" requires \"opengl=ON\"!")
-    endif()
   else()
     message(STATUS "Cocoa option can only be enabled on MacOSX platform")
     set(cocoa OFF CACHE BOOL "Disabled because only available on MacOSX (${cocoa_description})" FORCE)
@@ -607,7 +604,9 @@ endif()
 find_package(Python3 3.8 COMPONENTS ${python_components})
 
 #---Check for OpenGL installation-------------------------------------------------------
-if(opengl)
+# OpenGL is required by various graf3d features that are enabled with opengl=ON,
+# or by the Cocoa-related code that always requires it.
+if(opengl OR cocoa)
   message(STATUS "Looking for OpenGL")
   if(APPLE)
     set(CMAKE_FIND_FRAMEWORK FIRST)
@@ -637,8 +636,9 @@ if(NOT WIN32 AND NOT APPLE)
 endif()
 
 #---Check for GLEW -------------------------------------------------------------------
-# Opengl is "must" requirement for Glew.
-if(opengl AND NOT builtin_glew)
+# Glew is required by various graf3d features that are enabled with opengl=ON,
+# or by the Cocoa-related code that always requires it.
+if((opengl OR cocoa) AND NOT builtin_glew)
   message(STATUS "Looking for GLEW")
   if(fail-on-missing)
     find_package(GLEW REQUIRED)
@@ -665,6 +665,7 @@ endif()
 
 if(builtin_glew)
   list(APPEND ROOT_BUILTINS GLEW)
+  add_library(GLEW::GLEW INTERFACE IMPORTED GLOBAL)
   add_subdirectory(builtins/glew)
 endif()
 
