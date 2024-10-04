@@ -1,1 +1,0 @@
-ROOT_ADD_GTEST(testActionHelpers testActionHelpers.cxx LIBRARIES RooFitRDataFrameHelpers)

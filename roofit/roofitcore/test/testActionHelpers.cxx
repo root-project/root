@@ -7,6 +7,8 @@
 #include <RooGlobalFunc.h>
 #include <RooMsgService.h>
 
+#include <ROOT/RDataFrame.hxx>
+
 #include <TROOT.h>
 #include <TRandom.h>
 #include <TSystem.h>

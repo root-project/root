@@ -48,7 +48,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooAbsCategoryLValue.h
     RooAbsCollection.h
     RooAbsData.h
-    RooAbsDataFiller.h
+    RooAbsDataHelper.h
     RooAbsDataStore.h
     RooAbsFunc.h
     RooAbsGenContext.h
@@ -255,7 +255,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooAbsCategoryLValue.cxx
     src/RooAbsCollection.cxx
     src/RooAbsData.cxx
-    src/RooAbsDataFiller.cxx
+    src/RooAbsDataHelper.cxx
     src/RooAbsDataStore.cxx
     src/RooAbsFunc.cxx
     src/RooAbsGenContext.cxx
