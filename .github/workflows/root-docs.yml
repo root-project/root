@@ -229,7 +229,8 @@ jobs:
 
     - name: Sync to S3
       run: |
-        ls -l
+        pwd
+        ls -l ${DOC_LOCATION}
         echo "Uploading file from: ${DOC_LOCATION}/rootdoc.tar.zip"
         aws s3 cp ${DOC_LOCATION}/rootdoc.tar.zip s3://root/99999_${PR_NUMBER}/rootdoc.tar.zip
       env:
