@@ -265,6 +265,7 @@ auto MakeAliasedSharedPtr(T *rawPtr)
 
 #if defined(__GNUC__)
 #pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpragmas"
 #pragma GCC diagnostic ignored "-Wenum-constexpr-conversion"
 #endif
 inline constexpr ENTupleStructure kTestFutureFieldStructure =

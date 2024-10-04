@@ -584,7 +584,7 @@ public:
       /// with an RNTupleReader, but it is useful, e.g., to accurately merge data.
       bool fReconstructProjections = false;
       /// Normally creating a model will fail if any of the reconstructed fields contains an unknown column type.
-      /// If this option is enabled, the model will be created and all fields containing an unknown column (directly
+      /// If this option is enabled, the model will be created and all fields containing unknown data (directly
       /// or indirectly) will be skipped instead.
       bool fForwardCompatible = false;
    };
