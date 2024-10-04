@@ -3,6 +3,16 @@
 #include <cstdint>
 #include <utility>
 
+template <typename T>
+static std::shared_ptr<T>
+MakeField(std::string_view name, ROOT::Experimental::EColumnType colType, ROOT::Experimental::RNTupleModel &model)
+{
+   auto field = std::make_unique<RField<T>>(name);
+   field->SetColumnRepresentatives({{colType}});
+   model.AddField(std::move(field));
+   return model.GetDefaultEntry().GetPtr<T>(name);
+}
+
 TEST(RNTuple, TypeCastInvalid)
 {
    FileRaii fileGuard("test_ntuple_type_cast_invalid.root");
@@ -62,35 +72,12 @@ TEST(RNTuple, TypeCastBool)
       auto ptrInt64Split = model->MakeField<std::int64_t>("int64_split");
       auto ptrUInt64Split = model->MakeField<std::uint64_t>("uint64_split");
 
-      auto fieldInt16Unsplit = std::make_unique<RField<std::int16_t>>("int16_unsplit");
-      fieldInt16Unsplit->SetColumnRepresentatives({{EColumnType::kInt16}});
-      model->AddField(std::move(fieldInt16Unsplit));
-      auto ptrInt16Unsplit = model->GetDefaultEntry().GetPtr<std::int16_t>("int16_unsplit");
-
-      auto fieldUInt16Unsplit = std::make_unique<RField<std::uint16_t>>("uint16_unsplit");
-      fieldUInt16Unsplit->SetColumnRepresentatives({{EColumnType::kUInt16}});
-      model->AddField(std::move(fieldUInt16Unsplit));
-      auto ptrUInt16Unsplit = model->GetDefaultEntry().GetPtr<std::uint16_t>("uint16_unsplit");
-
-      auto fieldInt32Unsplit = std::make_unique<RField<std::int32_t>>("int32_unsplit");
-      fieldInt32Unsplit->SetColumnRepresentatives({{EColumnType::kInt32}});
-      model->AddField(std::move(fieldInt32Unsplit));
-      auto ptrInt32Unsplit = model->GetDefaultEntry().GetPtr<std::int32_t>("int32_unsplit");
-
-      auto fieldUInt32Unsplit = std::make_unique<RField<std::uint32_t>>("uint32_unsplit");
-      fieldUInt32Unsplit->SetColumnRepresentatives({{EColumnType::kUInt32}});
-      model->AddField(std::move(fieldUInt32Unsplit));
-      auto ptrUInt32Unsplit = model->GetDefaultEntry().GetPtr<std::uint32_t>("uint32_unsplit");
-
-      auto fieldInt64Unsplit = std::make_unique<RField<std::int64_t>>("int64_unsplit");
-      fieldInt64Unsplit->SetColumnRepresentatives({{EColumnType::kInt64}});
-      model->AddField(std::move(fieldInt64Unsplit));
-      auto ptrInt64Unsplit = model->GetDefaultEntry().GetPtr<std::int64_t>("int64_unsplit");
-
-      auto fieldUInt64Unsplit = std::make_unique<RField<std::uint64_t>>("uint64_unsplit");
-      fieldUInt64Unsplit->SetColumnRepresentatives({{EColumnType::kUInt64}});
-      model->AddField(std::move(fieldUInt64Unsplit));
-      auto ptrUInt64Unsplit = model->GetDefaultEntry().GetPtr<std::uint64_t>("uint64_unsplit");
+      auto ptrInt16Unsplit = MakeField<std::int16_t>("int16_unsplit", EColumnType::kInt16, *model);
+      auto ptrUInt16Unsplit = MakeField<std::uint16_t>("uint16_unsplit", EColumnType::kUInt16, *model);
+      auto ptrInt32Unsplit = MakeField<std::int32_t>("int32_unsplit", EColumnType::kInt32, *model);
+      auto ptrUInt32Unsplit = MakeField<std::uint32_t>("uint32_unsplit", EColumnType::kUInt32, *model);
+      auto ptrInt64Unsplit = MakeField<std::int64_t>("int64_unsplit", EColumnType::kInt64, *model);
+      auto ptrUInt64Unsplit = MakeField<std::uint64_t>("uint64_unsplit", EColumnType::kUInt64, *model);
 
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       *ptrChar = 127;
