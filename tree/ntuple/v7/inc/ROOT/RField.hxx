@@ -71,6 +71,8 @@ public:
 };
 
 /// Used in RFieldBase::Check() to record field creation failures.
+/// Also used when deserializing a field that contains unknown values that may come from
+/// future RNTuple versions (e.g. an unknown Structure)
 class RInvalidField final : public RFieldBase {
    std::string fError;
 

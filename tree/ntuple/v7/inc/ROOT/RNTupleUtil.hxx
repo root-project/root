@@ -89,7 +89,7 @@ enum class EColumnType {
  * Leaf fields contain just data, collection fields resolve to offset columns, record fields have no
  * materialization on the primitive column layer.
  */
-enum ENTupleStructure {
+enum ENTupleStructure : std::uint16_t {
    kInvalid,
    kLeaf,
    kCollection,
@@ -273,15 +273,8 @@ auto MakeAliasedSharedPtr(T *rawPtr)
    return std::shared_ptr<T>(fgRawPtrCtrlBlock, rawPtr);
 }
 
-#if defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wenum-constexpr-conversion"
-#endif
 inline constexpr ENTupleStructure kTestFutureFieldStructure =
    static_cast<ENTupleStructure>(std::numeric_limits<std::underlying_type_t<ENTupleStructure>>::max() - 1);
-#if defined(__GNUC__)
-#pragma GCC diagnostic pop
-#endif
 } // namespace Internal
 
 } // namespace Experimental
