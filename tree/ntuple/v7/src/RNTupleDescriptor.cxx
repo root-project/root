@@ -74,6 +74,14 @@ ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplD
       return unsplitField;
    }
 
+   // The structure may be unknown if the descriptor comes from a deserialized field with an unknown structural role.
+   // For forward compatibility, we allow this case and return an InvalidField.
+   if (GetStructure() == ENTupleStructure::kUnknown) {
+      auto invalidField = std::make_unique<RInvalidField>(GetFieldName(), GetTypeName(), "");
+      invalidField->SetOnDiskId(fFieldId);
+      return invalidField;
+   }
+
    if (GetTypeName().empty()) {
       switch (GetStructure()) {
       case ENTupleStructure::kRecord: {
