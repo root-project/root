@@ -952,6 +952,11 @@ if(builtin_xrootd)
       " option or the 'fail-on-missing' to automatically disable options requiring internet access")
   endif()
   list(APPEND ROOT_BUILTINS BUILTIN_XROOTD)
+  # The builtin XRootD requires OpenSSL.
+  # We have to find it here, such that OpenSSL is available in this scope to
+  # finalize the XRootD target configuration.
+  # See also: https://github.com/root-project/root/issues/16374
+  find_package(OpenSSL REQUIRED)
   add_subdirectory(builtins/xrootd)
   set(xrootd ON CACHE BOOL "Enabled because builtin_xrootd requested (${xrootd_description})" FORCE)
 endif()
