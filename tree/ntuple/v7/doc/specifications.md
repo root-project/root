@@ -852,13 +852,13 @@ Such cases are marked as `R` in the table.
 |---------------|:----:|:---------:|:----:|:------:|:-------:|:-------:|:--------:|:-------:|:--------:|:-------:|:--------:|:-----:|:------:|
 | Bit           |  W*  |           |  R   |   R    |    R    |    R    |    R     |    R    |    R     |    R    |    R     |       |        |
 | Byte          |      |     W*    |      |        |         |         |          |         |          |         |          |       |        |
-| Char          |  R   |           |  W*  |   R    |    R    |    R    |    R     |    R    |    R     |         |          |       |        |
-| Int8          |  R   |           |  R   |   W*   |    R    |    R    |    R     |    R    |    R     |         |          |       |        |
-| UInt8         |  R   |           |  R   |   R    |    W*   |    R    |    R     |    R    |    R     |         |          |       |        |
-| (Split)Int16  |  R   |           |  R   |   R    |    R    |    W*   |    R     |    R    |    R     |         |          |       |        |
-| (Split)UInt16 |  R   |           |  R   |   R    |    R    |    R    |    W*    |    R    |    R     |         |          |       |        |
-| (Split)Int32  |  R   |           |  R   |   R    |    R    |    R    |    R     |    W*   |    R     |    R    |          |       |        |
-| (Split)UInt32 |  R   |           |  R   |   R    |    R    |    R    |    R     |    R    |    W*    |    R    |          |       |        |
+| Char          |  R   |           |  W*  |   R    |    R    |    R    |    R     |    R    |    R     |    R    |    R     |       |        |
+| Int8          |  R   |           |  R   |   W*   |    R    |    R    |    R     |    R    |    R     |    R    |    R     |       |        |
+| UInt8         |  R   |           |  R   |   R    |    W*   |    R    |    R     |    R    |    R     |    R    |    R     |       |        |
+| (Split)Int16  |  R   |           |  R   |   R    |    R    |    W*   |    R     |    R    |    R     |    R    |    R     |       |        |
+| (Split)UInt16 |  R   |           |  R   |   R    |    R    |    R    |    W*    |    R    |    R     |    R    |    R     |       |        |
+| (Split)Int32  |  R   |           |  R   |   R    |    R    |    R    |    R     |    W*   |    R     |    R    |    R     |       |        |
+| (Split)UInt32 |  R   |           |  R   |   R    |    R    |    R    |    R     |    R    |    W*    |    R    |    R     |       |        |
 | (Split)Int64  |  R   |           |  R   |   R    |    R    |    R    |    R     |    R    |    R     |    W*   |    R     |       |        |
 | (Split)UInt64 |  R   |           |  R   |   R    |    R    |    R    |    R     |    R    |    R     |    R    |    W*    |       |        |
 | Real16        |      |           |      |        |         |         |          |         |          |         |          |   W   |   W    |
