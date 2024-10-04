@@ -6,8 +6,6 @@
 
 include(ExternalProject)
 
-find_package(OpenSSL REQUIRED)
-
 set(XROOTD_VERSION "5.5.2")
 
 set(XROOTD_PREFIX ${CMAKE_BINARY_DIR})
