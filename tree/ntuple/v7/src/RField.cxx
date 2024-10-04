@@ -1430,7 +1430,21 @@ template class ROOT::Experimental::RSimpleField<int8_t>;
 const ROOT::Experimental::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RIntegralField<std::int8_t>::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kInt8}}, {{EColumnType::kUInt8}, {EColumnType::kBit}});
+   static RColumnRepresentations representations({{EColumnType::kInt8}}, {{EColumnType::kChar},
+                                                                          {EColumnType::kUInt8},
+                                                                          {EColumnType::kInt16},
+                                                                          {EColumnType::kUInt16},
+                                                                          {EColumnType::kInt32},
+                                                                          {EColumnType::kUInt32},
+                                                                          {EColumnType::kInt64},
+                                                                          {EColumnType::kUInt64},
+                                                                          {EColumnType::kSplitInt16},
+                                                                          {EColumnType::kSplitUInt16},
+                                                                          {EColumnType::kSplitInt32},
+                                                                          {EColumnType::kSplitUInt32},
+                                                                          {EColumnType::kSplitInt64},
+                                                                          {EColumnType::kSplitUInt64},
+                                                                          {EColumnType::kBit}});
    return representations;
 }
 
@@ -1446,7 +1460,21 @@ template class ROOT::Experimental::RSimpleField<uint8_t>;
 const ROOT::Experimental::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RIntegralField<std::uint8_t>::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kUInt8}}, {{EColumnType::kInt8}, {EColumnType::kBit}});
+   static RColumnRepresentations representations({{EColumnType::kUInt8}}, {{EColumnType::kChar},
+                                                                           {EColumnType::kInt8},
+                                                                           {EColumnType::kInt16},
+                                                                           {EColumnType::kUInt16},
+                                                                           {EColumnType::kInt32},
+                                                                           {EColumnType::kUInt32},
+                                                                           {EColumnType::kInt64},
+                                                                           {EColumnType::kUInt64},
+                                                                           {EColumnType::kSplitInt16},
+                                                                           {EColumnType::kSplitUInt16},
+                                                                           {EColumnType::kSplitInt32},
+                                                                           {EColumnType::kSplitUInt32},
+                                                                           {EColumnType::kSplitInt64},
+                                                                           {EColumnType::kSplitUInt64},
+                                                                           {EColumnType::kBit}});
    return representations;
 }
 
