@@ -90,12 +90,13 @@ enum class EColumnType {
  * materialization on the primitive column layer.
  */
 enum ENTupleStructure {
+   kInvalid,
    kLeaf,
    kCollection,
    kRecord,
    kVariant,
    kUnsplit,
-   kInvalid,
+   kUnknown
 };
 
 /// Integer type long enough to hold the maximum number of entries in a column
@@ -107,9 +108,22 @@ struct RClusterSize {
 
    RClusterSize() : fValue(0) {}
    explicit constexpr RClusterSize(ValueType value) : fValue(value) {}
-   RClusterSize& operator =(const ValueType value) { fValue = value; return *this; }
-   RClusterSize& operator +=(const ValueType value) { fValue += value; return *this; }
-   RClusterSize operator++(int) { auto result = *this; fValue++; return result; }
+   RClusterSize &operator=(const ValueType value)
+   {
+      fValue = value;
+      return *this;
+   }
+   RClusterSize &operator+=(const ValueType value)
+   {
+      fValue += value;
+      return *this;
+   }
+   RClusterSize operator++(int)
+   {
+      auto result = *this;
+      fValue++;
+      return result;
+   }
    operator ValueType() const { return fValue; }
 
    ValueType fValue;
@@ -148,7 +162,7 @@ private:
 
 public:
    RColumnSwitch() = default;
-   RColumnSwitch(ClusterSize_t index, std::uint32_t tag) : fIndex(index), fTag(tag) { }
+   RColumnSwitch(ClusterSize_t index, std::uint32_t tag) : fIndex(index), fTag(tag) {}
    ClusterSize_t GetIndex() const { return fIndex; }
    std::uint32_t GetTag() const { return fTag; }
 };
@@ -166,17 +180,29 @@ class RClusterIndex {
 private:
    DescriptorId_t fClusterId = kInvalidDescriptorId;
    ClusterSize_t::ValueType fIndex = kInvalidClusterIndex;
+
 public:
    RClusterIndex() = default;
    RClusterIndex(const RClusterIndex &other) = default;
-   RClusterIndex &operator =(const RClusterIndex &other) = default;
+   RClusterIndex &operator=(const RClusterIndex &other) = default;
    constexpr RClusterIndex(DescriptorId_t clusterId, ClusterSize_t::ValueType index)
-      : fClusterId(clusterId), fIndex(index) {}
+      : fClusterId(clusterId), fIndex(index)
+   {
+   }
 
-   RClusterIndex  operator+(ClusterSize_t::ValueType off) const { return RClusterIndex(fClusterId, fIndex + off); }
-   RClusterIndex  operator-(ClusterSize_t::ValueType off) const { return RClusterIndex(fClusterId, fIndex - off); }
-   RClusterIndex  operator++(int) /* postfix */        { auto r = *this; fIndex++; return r; }
-   RClusterIndex& operator++()    /* prefix */         { ++fIndex; return *this; }
+   RClusterIndex operator+(ClusterSize_t::ValueType off) const { return RClusterIndex(fClusterId, fIndex + off); }
+   RClusterIndex operator-(ClusterSize_t::ValueType off) const { return RClusterIndex(fClusterId, fIndex - off); }
+   RClusterIndex operator++(int) /* postfix */
+   {
+      auto r = *this;
+      fIndex++;
+      return r;
+   }
+   RClusterIndex &operator++() /* prefix */
+   {
+      ++fIndex;
+      return *this;
+   }
    bool operator==(RClusterIndex other) const { return fClusterId == other.fClusterId && fIndex == other.fIndex; }
    bool operator!=(RClusterIndex other) const { return !(*this == other); }
 
@@ -219,7 +245,8 @@ struct RNTupleLocator {
    /// Reserved for use by concrete storage backends
    std::uint8_t fReserved = 0;
 
-   bool operator==(const RNTupleLocator &other) const {
+   bool operator==(const RNTupleLocator &other) const
+   {
       return fPosition == other.fPosition && fBytesOnStorage == other.fBytesOnStorage && fType == other.fType;
    }
    template <typename T>
@@ -245,6 +272,16 @@ auto MakeAliasedSharedPtr(T *rawPtr)
    const static std::shared_ptr<T> fgRawPtrCtrlBlock;
    return std::shared_ptr<T>(fgRawPtrCtrlBlock, rawPtr);
 }
+
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wenum-constexpr-conversion"
+#endif
+inline constexpr ENTupleStructure kTestFutureFieldStructure =
+   static_cast<ENTupleStructure>(std::numeric_limits<std::underlying_type_t<ENTupleStructure>>::max() - 1);
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
 } // namespace Internal
 
 } // namespace Experimental

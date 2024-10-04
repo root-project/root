@@ -349,3 +349,42 @@ TEST(RNTupleCompat, FutureColumnType_Nested)
       EXPECT_FLOAT_EQ(floatPtr(0), 33.f);
    }
 }
+
+class RFutureField : public RFieldBase {
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
+   {
+      return std::make_unique<RFutureField>(newName);
+   };
+   void ConstructValue(void *) const final {}
+
+   std::size_t AppendImpl(const void *) final { return 0; }
+
+public:
+   RFutureField(std::string_view name)
+      : RFieldBase(name, "Future", ROOT::Experimental::Internal::kTestFutureFieldStructure, false)
+   {
+   }
+
+   std::size_t GetValueSize() const final { return 0; }
+   std::size_t GetAlignment() const final { return 0; }
+};
+
+TEST(RNTupleCompat, FutureFieldStructuralRole)
+{
+   // Write a RNTuple containing a field with an unknown structural role and verify we can
+   // read back the ntuple and its descriptor.
+
+   FileRaii fileGuard("test_ntuple_compat_future_field_struct.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto field = std::make_unique<RFutureField>("future");
+      model->AddField(std::move(field));
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   const auto &desc = reader->GetDescriptor();
+   const auto &fdesc = desc.GetFieldDescriptor(desc.FindFieldId("future"));
+   EXPECT_EQ(fdesc.GetLogicalColumnIds().size(), 0);
+}

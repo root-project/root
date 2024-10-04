@@ -87,12 +87,8 @@ TEST(RNTuple, SerializeFieldStructure)
    }
 
    RNTupleSerializer::SerializeUInt16(5000, buffer);
-   try {
-      RNTupleSerializer::DeserializeFieldStructure(buffer, structure).Unwrap();
-      FAIL() << "unexpected on disk field structure value should throw";
-   } catch (const RException& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("unexpected on-disk field structure value"));
-   }
+   RNTupleSerializer::DeserializeFieldStructure(buffer, structure).Unwrap();
+   EXPECT_EQ(structure, ENTupleStructure::kUnknown);
 
    for (int i = 0; i < static_cast<int>(ENTupleStructure::kInvalid); ++i) {
       RNTupleSerializer::SerializeFieldStructure(static_cast<ENTupleStructure>(i), buffer);
