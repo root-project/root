@@ -400,21 +400,116 @@ TEST(RNTuple, TypeCastInt8)
    {
       auto model = RNTupleModel::Create();
       auto ptrBool = model->MakeField<bool>("bool");
+      auto ptrChar = model->MakeField<char>("char");
+      auto ptrUInt8 = model->MakeField<std::uint8_t>("uint8");
+
+      auto ptrInt16Split = MakeField<std::int16_t>("int16_split", EColumnType::kSplitInt16, *model);
+      auto ptrUInt16Split = MakeField<std::uint16_t>("uint16_split", EColumnType::kSplitUInt16, *model);
+      auto ptrInt32Split = MakeField<std::int32_t>("int32_split", EColumnType::kSplitInt32, *model);
+      auto ptrUInt32Split = MakeField<std::uint32_t>("uint32_split", EColumnType::kSplitUInt32, *model);
+      auto ptrInt64Split = MakeField<std::int64_t>("int64_split", EColumnType::kSplitInt64, *model);
+      auto ptrUInt64Split = MakeField<std::uint64_t>("uint64_split", EColumnType::kSplitUInt64, *model);
+
+      auto ptrInt16Unsplit = MakeField<std::int16_t>("int16_unsplit", EColumnType::kInt16, *model);
+      auto ptrUInt16Unsplit = MakeField<std::uint16_t>("uint16_unsplit", EColumnType::kUInt16, *model);
+      auto ptrInt32Unsplit = MakeField<std::int32_t>("int32_unsplit", EColumnType::kInt32, *model);
+      auto ptrUInt32Unsplit = MakeField<std::uint32_t>("uint32_unsplit", EColumnType::kUInt32, *model);
+      auto ptrInt64Unsplit = MakeField<std::int64_t>("int64_unsplit", EColumnType::kInt64, *model);
+      auto ptrUInt64Unsplit = MakeField<std::uint64_t>("uint64_unsplit", EColumnType::kUInt64, *model);
 
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       *ptrBool = true;
+      *ptrChar = 2;
+      *ptrUInt8 = 1;
+      *ptrInt16Split = 127;
+      *ptrUInt16Split = 1;
+      *ptrInt32Split = 127;
+      *ptrUInt32Split = 1;
+      *ptrInt64Split = 127;
+      *ptrUInt64Split = 1;
+      *ptrInt16Unsplit = 127;
+      *ptrUInt16Unsplit = 1;
+      *ptrInt32Unsplit = 127;
+      *ptrUInt32Unsplit = 1;
+      *ptrInt64Unsplit = 127;
+      *ptrUInt64Unsplit = 1;
       writer->Fill();
       *ptrBool = false;
+      *ptrChar = 127;
+      *ptrUInt8 = 127;
+      *ptrInt16Split = -128;
+      *ptrUInt16Split = 127;
+      *ptrInt32Split = -128;
+      *ptrUInt32Split = 127;
+      *ptrInt64Split = -128;
+      *ptrUInt64Split = 127;
+      *ptrInt16Unsplit = -128;
+      *ptrUInt16Unsplit = 127;
+      *ptrInt32Unsplit = -128;
+      *ptrUInt32Unsplit = 127;
+      *ptrInt64Unsplit = -128;
+      *ptrUInt64Unsplit = 127;
+      writer->Fill();
+      writer->CommitCluster();
+      *ptrInt16Unsplit = -313;
       writer->Fill();
    }
 
    auto castModel = RNTupleModel::Create();
    auto ptrBool = castModel->MakeField<std::int8_t>("bool");
+   auto ptrChar = castModel->MakeField<std::int8_t>("char");
+   auto ptrUInt8 = castModel->MakeField<std::int8_t>("uint8");
+   auto ptrInt16Split = castModel->MakeField<std::int8_t>("int16_split");
+   auto ptrUInt16Split = castModel->MakeField<std::int8_t>("uint16_split");
+   auto ptrInt32Split = castModel->MakeField<std::int8_t>("int32_split");
+   auto ptrUInt32Split = castModel->MakeField<std::int8_t>("uint32_split");
+   auto ptrInt64Split = castModel->MakeField<std::int8_t>("int64_split");
+   auto ptrUInt64Split = castModel->MakeField<std::int8_t>("uint64_split");
+   auto ptrInt16Unsplit = castModel->MakeField<std::int8_t>("int16_unsplit");
+   auto ptrUInt16Unsplit = castModel->MakeField<std::int8_t>("uint16_unsplit");
+   auto ptrInt32Unsplit = castModel->MakeField<std::int8_t>("int32_unsplit");
+   auto ptrUInt32Unsplit = castModel->MakeField<std::int8_t>("uint32_unsplit");
+   auto ptrInt64Unsplit = castModel->MakeField<std::int8_t>("int64_unsplit");
+   auto ptrUInt64Unsplit = castModel->MakeField<std::int8_t>("uint64_unsplit");
    auto reader = RNTupleReader::Open(std::move(castModel), "ntpl", fileGuard.GetPath());
    reader->LoadEntry(0);
    EXPECT_EQ(1, *ptrBool);
+   EXPECT_EQ(2, *ptrChar);
+   EXPECT_EQ(1, *ptrUInt8);
+   EXPECT_EQ(127, *ptrInt16Split);
+   EXPECT_EQ(1, *ptrUInt16Split);
+   EXPECT_EQ(127, *ptrInt32Split);
+   EXPECT_EQ(1, *ptrUInt32Split);
+   EXPECT_EQ(127, *ptrInt64Split);
+   EXPECT_EQ(1, *ptrUInt64Split);
+   EXPECT_EQ(127, *ptrInt16Unsplit);
+   EXPECT_EQ(1, *ptrUInt16Unsplit);
+   EXPECT_EQ(127, *ptrInt32Unsplit);
+   EXPECT_EQ(1, *ptrUInt32Unsplit);
+   EXPECT_EQ(127, *ptrInt64Unsplit);
+   EXPECT_EQ(1, *ptrUInt64Unsplit);
    reader->LoadEntry(1);
    EXPECT_EQ(0, *ptrBool);
+   EXPECT_EQ(127, *ptrChar);
+   EXPECT_EQ(127, *ptrUInt8);
+   EXPECT_EQ(-128, *ptrInt16Split);
+   EXPECT_EQ(127, *ptrUInt16Split);
+   EXPECT_EQ(-128, *ptrInt32Split);
+   EXPECT_EQ(127, *ptrUInt32Split);
+   EXPECT_EQ(-128, *ptrInt64Split);
+   EXPECT_EQ(127, *ptrUInt64Split);
+   EXPECT_EQ(-128, *ptrInt16Unsplit);
+   EXPECT_EQ(127, *ptrUInt16Unsplit);
+   EXPECT_EQ(-128, *ptrInt32Unsplit);
+   EXPECT_EQ(127, *ptrUInt32Unsplit);
+   EXPECT_EQ(-128, *ptrInt64Unsplit);
+   EXPECT_EQ(127, *ptrUInt64Unsplit);
+   try {
+      reader->LoadEntry(2);
+      FAIL() << "value out of range should throw";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("value out of range"));
+   }
 }
 
 TEST(RNTuple, TypeCastUInt8)
@@ -424,21 +519,116 @@ TEST(RNTuple, TypeCastUInt8)
    {
       auto model = RNTupleModel::Create();
       auto ptrBool = model->MakeField<bool>("bool");
+      auto ptrChar = model->MakeField<char>("char");
+      auto ptrInt8 = model->MakeField<std::int8_t>("int8");
+
+      auto ptrInt16Split = MakeField<std::int16_t>("int16_split", EColumnType::kSplitInt16, *model);
+      auto ptrUInt16Split = MakeField<std::uint16_t>("uint16_split", EColumnType::kSplitUInt16, *model);
+      auto ptrInt32Split = MakeField<std::int32_t>("int32_split", EColumnType::kSplitInt32, *model);
+      auto ptrUInt32Split = MakeField<std::uint32_t>("uint32_split", EColumnType::kSplitUInt32, *model);
+      auto ptrInt64Split = MakeField<std::int64_t>("int64_split", EColumnType::kSplitInt64, *model);
+      auto ptrUInt64Split = MakeField<std::uint64_t>("uint64_split", EColumnType::kSplitUInt64, *model);
+
+      auto ptrInt16Unsplit = MakeField<std::int16_t>("int16_unsplit", EColumnType::kInt16, *model);
+      auto ptrUInt16Unsplit = MakeField<std::uint16_t>("uint16_unsplit", EColumnType::kUInt16, *model);
+      auto ptrInt32Unsplit = MakeField<std::int32_t>("int32_unsplit", EColumnType::kInt32, *model);
+      auto ptrUInt32Unsplit = MakeField<std::uint32_t>("uint32_unsplit", EColumnType::kUInt32, *model);
+      auto ptrInt64Unsplit = MakeField<std::int64_t>("int64_unsplit", EColumnType::kInt64, *model);
+      auto ptrUInt64Unsplit = MakeField<std::uint64_t>("uint64_unsplit", EColumnType::kUInt64, *model);
 
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       *ptrBool = true;
+      *ptrChar = 2;
+      *ptrInt8 = 3;
+      *ptrInt16Split = 4;
+      *ptrUInt16Split = 5;
+      *ptrInt32Split = 6;
+      *ptrUInt32Split = 7;
+      *ptrInt64Split = 8;
+      *ptrUInt64Split = 9;
+      *ptrInt16Unsplit = 10;
+      *ptrUInt16Unsplit = 11;
+      *ptrInt32Unsplit = 12;
+      *ptrUInt32Unsplit = 13;
+      *ptrInt64Unsplit = 14;
+      *ptrUInt64Unsplit = 15;
       writer->Fill();
       *ptrBool = false;
+      *ptrChar = 127;
+      *ptrInt8 = 126;
+      *ptrInt16Split = 255;
+      *ptrUInt16Split = 254;
+      *ptrInt32Split = 253;
+      *ptrUInt32Split = 252;
+      *ptrInt64Split = 251;
+      *ptrUInt64Split = 250;
+      *ptrInt16Unsplit = 249;
+      *ptrUInt16Unsplit = 248;
+      *ptrInt32Unsplit = 247;
+      *ptrUInt32Unsplit = 246;
+      *ptrInt64Unsplit = 245;
+      *ptrUInt64Unsplit = 244;
+      writer->Fill();
+      writer->CommitCluster();
+      *ptrInt16Split = -313;
       writer->Fill();
    }
 
    auto castModel = RNTupleModel::Create();
    auto ptrBool = castModel->MakeField<std::uint8_t>("bool");
+   auto ptrChar = castModel->MakeField<std::uint8_t>("char");
+   auto ptrInt8 = castModel->MakeField<std::uint8_t>("int8");
+   auto ptrInt16Split = castModel->MakeField<std::uint8_t>("int16_split");
+   auto ptrUInt16Split = castModel->MakeField<std::uint8_t>("uint16_split");
+   auto ptrInt32Split = castModel->MakeField<std::uint8_t>("int32_split");
+   auto ptrUInt32Split = castModel->MakeField<std::uint8_t>("uint32_split");
+   auto ptrInt64Split = castModel->MakeField<std::uint8_t>("int64_split");
+   auto ptrUInt64Split = castModel->MakeField<std::uint8_t>("uint64_split");
+   auto ptrInt16Unsplit = castModel->MakeField<std::uint8_t>("int16_unsplit");
+   auto ptrUInt16Unsplit = castModel->MakeField<std::uint8_t>("uint16_unsplit");
+   auto ptrInt32Unsplit = castModel->MakeField<std::uint8_t>("int32_unsplit");
+   auto ptrUInt32Unsplit = castModel->MakeField<std::uint8_t>("uint32_unsplit");
+   auto ptrInt64Unsplit = castModel->MakeField<std::uint8_t>("int64_unsplit");
+   auto ptrUInt64Unsplit = castModel->MakeField<std::uint8_t>("uint64_unsplit");
    auto reader = RNTupleReader::Open(std::move(castModel), "ntpl", fileGuard.GetPath());
    reader->LoadEntry(0);
-   EXPECT_EQ(1u, *ptrBool);
+   EXPECT_EQ(1, *ptrBool);
+   EXPECT_EQ(2, *ptrChar);
+   EXPECT_EQ(3, *ptrInt8);
+   EXPECT_EQ(4, *ptrInt16Split);
+   EXPECT_EQ(5, *ptrUInt16Split);
+   EXPECT_EQ(6, *ptrInt32Split);
+   EXPECT_EQ(7, *ptrUInt32Split);
+   EXPECT_EQ(8, *ptrInt64Split);
+   EXPECT_EQ(9, *ptrUInt64Split);
+   EXPECT_EQ(10, *ptrInt16Unsplit);
+   EXPECT_EQ(11, *ptrUInt16Unsplit);
+   EXPECT_EQ(12, *ptrInt32Unsplit);
+   EXPECT_EQ(13, *ptrUInt32Unsplit);
+   EXPECT_EQ(14, *ptrInt64Unsplit);
+   EXPECT_EQ(15, *ptrUInt64Unsplit);
    reader->LoadEntry(1);
-   EXPECT_EQ(0u, *ptrBool);
+   EXPECT_EQ(0, *ptrBool);
+   EXPECT_EQ(127, *ptrChar);
+   EXPECT_EQ(126, *ptrInt8);
+   EXPECT_EQ(255, *ptrInt16Split);
+   EXPECT_EQ(254, *ptrUInt16Split);
+   EXPECT_EQ(253, *ptrInt32Split);
+   EXPECT_EQ(252, *ptrUInt32Split);
+   EXPECT_EQ(251, *ptrInt64Split);
+   EXPECT_EQ(250, *ptrUInt64Split);
+   EXPECT_EQ(249, *ptrInt16Unsplit);
+   EXPECT_EQ(248, *ptrUInt16Unsplit);
+   EXPECT_EQ(247, *ptrInt32Unsplit);
+   EXPECT_EQ(246, *ptrUInt32Unsplit);
+   EXPECT_EQ(245, *ptrInt64Unsplit);
+   EXPECT_EQ(244, *ptrUInt64Unsplit);
+   try {
+      reader->LoadEntry(2);
+      FAIL() << "value out of range should throw";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("value out of range"));
+   }
 }
 
 TEST(RNTuple, TypeCastInt16)
