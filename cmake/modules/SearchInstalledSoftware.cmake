@@ -634,6 +634,12 @@ if(NOT WIN32 AND NOT APPLE)
     set(opengl OFF CACHE BOOL "OpenGL requires x11" FORCE)
   endif()
 endif()
+# The opengl flag enables the graf3d features that depend on OpenGL, and these
+# features also depend on asimage. Therefore, the configuration will fail if
+# asimage is off. See also: https://github.com/root-project/root/issues/16250
+if(opengl AND NOT asimage)
+  message(FATAL_ERROR "OpenGL features enabled with \"opengl=ON\" require \"asimage=ON\"")
+endif()
 
 #---Check for GLEW -------------------------------------------------------------------
 # Glew is required by various graf3d features that are enabled with opengl=ON,
