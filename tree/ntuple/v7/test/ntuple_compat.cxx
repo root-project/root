@@ -372,7 +372,7 @@ public:
 TEST(RNTupleCompat, FutureFieldStructuralRole)
 {
    // Write a RNTuple containing a field with an unknown structural role and verify we can
-   // read back the ntuple and its descriptor.
+   // read back the ntuple, its descriptor and reconstruct the model.
 
    FileRaii fileGuard("test_ntuple_compat_future_field_struct.root");
    {
@@ -387,4 +387,56 @@ TEST(RNTupleCompat, FutureFieldStructuralRole)
    const auto &desc = reader->GetDescriptor();
    const auto &fdesc = desc.GetFieldDescriptor(desc.FindFieldId("future"));
    EXPECT_EQ(fdesc.GetLogicalColumnIds().size(), 0);
+
+   // Attempting to create a model with default options should fail
+   EXPECT_THROW(desc.CreateModel(), RException);
+
+   auto modelOpts = RNTupleDescriptor::RCreateModelOptions();
+   modelOpts.fForwardCompatible = true;
+   auto model = desc.CreateModel(modelOpts);
+   try {
+      model->GetField("future");
+      FAIL() << "trying to get a field with unknown role should fail";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("invalid field"));
+   }
+}
+
+TEST(RNTupleCompat, FutureFieldStructuralRole_Nested)
+{
+   // Write a RNTuple containing a field with an unknown structural role and verify we can
+   // read back the ntuple, its descriptor and reconstruct the model.
+
+   FileRaii fileGuard("test_ntuple_compat_future_field_struct_nested.root");
+   {
+      auto model = RNTupleModel::Create();
+      std::vector<std::unique_ptr<RFieldBase>> itemFields;
+      itemFields.emplace_back(new RField<int>("int"));
+      itemFields.emplace_back(new RFutureField("future"));
+      auto field = std::make_unique<ROOT::Experimental::RRecordField>("record", std::move(itemFields));
+      model->AddField(std::move(field));
+      model->MakeField<float>("float");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   const auto &desc = reader->GetDescriptor();
+   const auto &fdesc = desc.GetFieldDescriptor(desc.FindFieldId("record"));
+   EXPECT_EQ(fdesc.GetLogicalColumnIds().size(), 0);
+
+   // Attempting to create a model with default options should fail
+   EXPECT_THROW(desc.CreateModel(), RException);
+
+   auto modelOpts = RNTupleDescriptor::RCreateModelOptions();
+   modelOpts.fForwardCompatible = true;
+   auto model = desc.CreateModel(modelOpts);
+   const auto &floatFld = model->GetField("float");
+   EXPECT_EQ(floatFld.GetTypeName(), "float");
+   try {
+      model->GetField("record");
+      FAIL() << "trying to get a field with unknown role should fail";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("invalid field"));
+   }
 }
