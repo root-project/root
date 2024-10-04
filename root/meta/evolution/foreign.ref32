@@ -46,7 +46,7 @@ StreamerInfo for class: data, checksum=0x810cd3a3
 ==> Looking at the StreamerInfo after loading the library
 
 StreamerInfo for class: Tdata, version=1, checksum=0x589374f7
-  int            myvar_one       offset=99999 type= 3                     
+  int            myvar_one       offset=99999 type= 3 newtype=-1                     
    i= 0, myvar_one       type=103, offset=99999, len=1, method=0
 Tdata's streamerInfo #1 has a checksum of 0x589374f7
 
@@ -54,7 +54,7 @@ Tdata's streamerInfo #1 has a checksum of 0x589374f7
 OBJ: TObjArray	TObjArray	An array of objects : 0
 
 StreamerInfo for class: Tdata, version=1, checksum=0x589374f7
-  int            myvar_one       offset=99999 type= 3                     
+  int            myvar_one       offset=99999 type= 3 newtype=-1                     
    i= 0, myvar_one       type=103, offset=99999, len=1, method=0
 
 ==> List all the StreamerInfo after loading all the files

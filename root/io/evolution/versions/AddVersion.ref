@@ -322,7 +322,7 @@ StreamerInfo for class: MyClass, version=1, checksum=0x75bd56
   int            a               offset= n/a type= 3                     
 
 StreamerInfo for class: MyClass, version=2, checksum=0x423a847
-  float          a               offset= n/a type= 5                     
+  float          a               offset= n/a type= 5 newtype= 2                     
    i= 0, a               type=205, offset= n/a, len=1, method=0
 (int) 0
 
@@ -389,7 +389,7 @@ vs
 OBJ: TObjArray	TObjArray	An array of objects : 0
 
 StreamerInfo for class: MyClass, version=1, checksum=0x75bd56
-  int            a               offset= n/a type= 3                     
+  int            a               offset= n/a type= 3 newtype=16                     
    i= 0, a               type=203, offset= n/a, len=1, method=0
 
 StreamerInfo for class: MyClass, version=2, checksum=0x423a847

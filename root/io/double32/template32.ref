@@ -34,8 +34,8 @@ The following should be a Double32_t: Double32_t
 
 StreamerInfo for class: m02<Double32_t>, checksum=0x8610c861
   map2<Double32_t,Double32_t,alloc<pair<Double32_t,Double32_t> > > BASE            offset= [deleted from log] type= 0                     
-  int            fN              offset= [deleted from log] type= 6                     
-  vector<Double32_t> ff1             offset= [deleted from log] type=300 ,stl=1, ctype=9,                     
+  int            fN              offset= [deleted from log] type= 6 newtype= 3                     
+  vector<Double32_t> ff1             offset= [deleted from log] type=300 stl=1 ctype=9                     
   Double32_t     ff2[3]          offset= [deleted from log] type=29                     
   Double32_t     ff3             offset= [deleted from log] type= 9                     
   Double32_t*    ff4             offset= [deleted from log] type=49 [fN]                
