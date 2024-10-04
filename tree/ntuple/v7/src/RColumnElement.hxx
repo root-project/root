@@ -9,10 +9,12 @@
 #include <ROOT/RColumnElementBase.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RConfig.hxx>
+#include <ROOT/RError.hxx>
 #include <Byteswap.h>
 
 #include <bitset>
 #include <cassert>
+#include <limits>
 #include <type_traits>
 
 // NOTE: some tests might define R__LITTLE_ENDIAN to simulate a different-endianness machine
@@ -111,9 +113,52 @@ inline void ByteSwapIfNecessary(T &value)
    auto swapped = RByteSwap<N>::bswap(*reinterpret_cast<bswap_value_type *>(valuePtr));
    *reinterpret_cast<bswap_value_type *>(valuePtr) = swapped;
 }
+template <>
+inline void ByteSwapIfNecessary<char>(char &)
+{
+}
+template <>
+inline void ByteSwapIfNecessary<signed char>(signed char &)
+{
+}
+template <>
+inline void ByteSwapIfNecessary<unsigned char>(unsigned char &)
+{
+}
 #else
 #define ByteSwapIfNecessary(x) ((void)0)
 #endif
+
+/// For integral types, ensures that the value of type SourceT is representable as DestT
+template <typename DestT, typename SourceT>
+inline void EnsureValidRange(SourceT val [[maybe_unused]])
+{
+   using ROOT::Experimental::RException;
+
+   if constexpr (!std::is_integral_v<DestT> || !std::is_integral_v<SourceT>)
+      return;
+
+   if constexpr (static_cast<double>(std::numeric_limits<SourceT>::min()) <
+                 static_cast<double>(std::numeric_limits<DestT>::min())) {
+      if constexpr (!std::is_signed_v<DestT>) {
+         if (val < 0) {
+            throw RException(R__FAIL(std::string("value out of range: ") + std::to_string(val) + " for type " +
+                                     typeid(DestT).name()));
+         }
+      } else if (val < std::numeric_limits<DestT>::min()) {
+         throw RException(
+            R__FAIL(std::string("value out of range: ") + std::to_string(val) + " for type " + typeid(DestT).name()));
+      }
+   }
+
+   if constexpr (static_cast<double>(std::numeric_limits<SourceT>::max()) >
+                 static_cast<double>(std::numeric_limits<DestT>::max())) {
+      if (val > std::numeric_limits<DestT>::max()) {
+         throw RException(
+            R__FAIL(std::string("value out of range: ") + std::to_string(val) + " for type " + typeid(DestT).name()));
+      }
+   }
+}
 
 /// \brief Pack `count` elements into narrower (or wider) type
 ///
@@ -143,6 +188,7 @@ inline void CastUnpack(void *destination, const void *source, std::size_t count)
    for (std::size_t i = 0; i < count; ++i) {
       SourceT val = src[i];
       ByteSwapIfNecessary(val);
+      EnsureValidRange<DestT, SourceT>(val);
       dst[i] = val;
    }
 }
@@ -180,6 +226,7 @@ inline void CastSplitUnpack(void *destination, const void *source, std::size_t c
          reinterpret_cast<char *>(&val)[b] = splitArray[b * count + i];
       }
       ByteSwapIfNecessary(val);
+      EnsureValidRange<DestT, SourceT>(val);
       dst[i] = val;
    }
 }
@@ -217,7 +264,9 @@ inline void CastDeltaSplitUnpack(void *destination, const void *source, std::siz
          reinterpret_cast<char *>(&val)[b] = splitArray[b * count + i];
       }
       ByteSwapIfNecessary(val);
-      dst[i] = (i == 0) ? val : dst[i - 1] + val;
+      val = (i == 0) ? val : val + dst[i - 1];
+      EnsureValidRange<DestT, SourceT>(val);
+      dst[i] = val;
    }
 }
 
@@ -257,7 +306,9 @@ inline void CastZigzagSplitUnpack(void *destination, const void *source, std::si
          reinterpret_cast<char *>(&val)[b] = splitArray[b * count + i];
       }
       ByteSwapIfNecessary(val);
-      dst[i] = static_cast<SourceT>((val >> 1) ^ -(static_cast<SourceT>(val) & 1));
+      SourceT sval = static_cast<SourceT>((val >> 1) ^ -(static_cast<SourceT>(val) & 1));
+      EnsureValidRange<DestT, SourceT>(sval);
+      dst[i] = sval;
    }
 }
 } // namespace
