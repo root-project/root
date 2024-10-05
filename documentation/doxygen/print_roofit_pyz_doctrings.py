@@ -116,7 +116,8 @@ def write_pyroot_block_for_function(func):
 
 def print_roofit_pythonization_page():
     """Prints the doxygen code for the RooFit pythonization page."""
-    from ROOT._pythonization import _roofit
+    import ROOT
+    _roofit = ROOT.module._roofit
 
     def member_funcs_have_doc(python_class):
         funcs_have_doc = False
@@ -175,7 +176,8 @@ def print_roofit_pythonization_page():
 
 def print_pyroot_blocks_for_cpp_docs():
     """Print PyROOT blocks for the RooFit C++ documentation."""
-    from ROOT._pythonization import _roofit
+    import ROOT
+    _roofit = ROOT.module._roofit
 
     for python_klass in _roofit.python_classes:
 

@@ -139,43 +139,6 @@ endif()
 # Passing Python callables to ROOT.TF
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tf_pycallables tf_pycallables.py)
 
-if(roofit)
-  # RooAbsCollection and subclasses pythonizations
-  if(NOT MSVC OR CMAKE_SIZEOF_VOID_P EQUAL 4 OR win_broken_tests)
-    ROOT_ADD_PYUNITTEST(pyroot_roofit_rooabscollection roofit/rooabscollection.py)
-  endif()
-  ROOT_ADD_PYUNITTEST(pyroot_roofit_rooarglist roofit/rooarglist.py)
-
-  # RooDataHist pythonisations
-  ROOT_ADD_PYUNITTEST(pyroot_roofit_roodatahist_ploton roofit/roodatahist_ploton.py)
-
-  # RooDataSet pythonisations
-  ROOT_ADD_PYUNITTEST(pyroot_roofit_roodataset roofit/roodataset.py)
-
-  # RooWorkspace pythonizations
-  ROOT_ADD_PYUNITTEST(pyroot_roofit_rooabspdf_fitto roofit/rooabspdf_fitto.py)
-  ROOT_ADD_PYUNITTEST(pyroot_roofit_rooabsreal_ploton roofit/rooabsreal_ploton.py)
-
-  ROOT_ADD_PYUNITTEST(pyroot_roofit_roolinkedlist roofit/roolinkedlist.py)
-
-  if(NOT MSVC OR win_broken_tests)
-    # Test pythonizations for the RooFitHS3 package, which is not built on Windows.
-    ROOT_ADD_PYUNITTEST(pyroot_roofit_roojsonfactorywstool roofit/roojsonfactorywstool.py)
-
-    # Other pythonizations that fail on Windows for unknown reasons
-    ROOT_ADD_PYUNITTEST(pyroot_roofit_rooglobalfunc roofit/rooglobalfunc.py)
-    ROOT_ADD_PYUNITTEST(pyroot_roofit_roosimultaneous roofit/roosimultaneous.py)
-
-    # RooWorkspace pythonization that fails on Windows
-    ROOT_ADD_PYUNITTEST(pyroot_roofit_rooworkspace roofit/rooworkspace.py)
-  endif()
-
-  # NumPy compatibility
-  ROOT_ADD_PYUNITTEST(pyroot_roofit_roodataset_numpy roofit/roodataset_numpy.py PYTHON_DEPS numpy)
-  ROOT_ADD_PYUNITTEST(pyroot_roofit_roodatahist_numpy roofit/roodatahist_numpy.py PYTHON_DEPS numpy)
-
-endif()
-
 if (dataframe)
     # std::string_view in CPyCppyy
     ROOT_ADD_PYUNITTEST(pyroot_string_view string_view.py)
