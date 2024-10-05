@@ -14,7 +14,7 @@
 import sys
 import cppyy
 
-from .. import pythonization
+from ROOT._pythonization import pythonization
 
 from ._rooabscollection import RooAbsCollection
 from ._rooabsdata import RooAbsData

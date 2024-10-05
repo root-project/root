@@ -10,7 +10,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-from .. import pythonization
+from ROOT._pythonization import pythonization
 
 from ._utils import _kwargs_to_roocmdargs, cpp_signature
 

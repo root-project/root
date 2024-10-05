@@ -23,6 +23,7 @@ add_subdirectory(hs3)
 if(roofit_legacy_eval_backend AND NOT MSVC)
   add_subdirectory(xroofit)
 endif()
+add_subdirectory(pythonizations)
 
 generateManual(hist2workspaceMan
                ${CMAKE_CURRENT_SOURCE_DIR}/histfactory/src/hist2workspace-argparse.py

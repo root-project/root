@@ -38,6 +38,20 @@ from ._pythonization import _register_pythonizations
 
 _register_pythonizations()
 
+# Register the RooFit pythonizations
+try:
+    # First try to import the roofit_pythonization directly. This is relevant
+    # in case someone wants to do development on the RooFit pythonizations, in
+    # which case it is easiest to just install them with pip.
+    import roofit_pythonizations as _roofit
+except ImportError:
+    # If ROOT was not built with RooFit, the RooFit pythonizations will not be
+    # available, which is okay. Just pass in case of import failure.
+    try:
+        from . import _roofit_pythonizations as _roofit
+    except ImportError:
+        pass
+
 # Check if we are in the IPython shell
 import builtins
 
