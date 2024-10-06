@@ -239,6 +239,10 @@ TEST(RNTuple, ModelExtensionProjectComplex)
    {
       auto model = RNTupleModel::Create();
       auto fieldPt = model->MakeField<float>("pt", 42.0);
+      model->AddProjectedField(std::make_unique<RField<float>>("aliasPt"), [](const std::string &) { return "pt"; });
+      model->AddProjectedField(std::make_unique<RField<float>>("al2Pt"), [](const std::string &) { return "pt"; });
+      auto fieldE = model->MakeField<float>("E", 1.0);
+      model->AddProjectedField(std::make_unique<RField<float>>("aliasE"), [](const std::string &) { return "E"; });
 
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath());
       auto modelUpdater = ntuple->CreateModelUpdater();
@@ -258,18 +262,31 @@ TEST(RNTuple, ModelExtensionProjectComplex)
 
       ntuple->Fill();
       *fieldPt = 12.0;
+      *fieldE = 2.0;
       *fieldVec = refVec;
       ntuple->Fill();
    }
 
    auto ntuple = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
    EXPECT_EQ(2U, ntuple->GetNEntries());
-   EXPECT_EQ(6U, ntuple->GetDescriptor().GetNFields());
+   EXPECT_EQ(10U, ntuple->GetDescriptor().GetNFields());
 
    auto pt = ntuple->GetView<float>("pt");
+   auto aliasPt = ntuple->GetView<float>("aliasPt");
+   auto al2Pt = ntuple->GetView<float>("al2Pt");
    auto aliasVec = ntuple->GetView<std::vector<std::uint32_t>>("aliasVec");
+   auto E = ntuple->GetView<float>("E");
+   auto aliasE = ntuple->GetView<float>("aliasE");
    EXPECT_FLOAT_EQ(42.0, pt(0));
    EXPECT_FLOAT_EQ(12.0, pt(1));
+   EXPECT_FLOAT_EQ(42.0, aliasPt(0));
+   EXPECT_FLOAT_EQ(12.0, aliasPt(1));
+   EXPECT_FLOAT_EQ(42.0, al2Pt(0));
+   EXPECT_FLOAT_EQ(12.0, al2Pt(1));
+   EXPECT_FLOAT_EQ(1.0, E(0));
+   EXPECT_FLOAT_EQ(2.0, E(1));
+   EXPECT_FLOAT_EQ(1.0, aliasE(0));
+   EXPECT_FLOAT_EQ(2.0, aliasE(1));
    EXPECT_EQ(std::vector<std::uint32_t>{}, aliasVec(0));
    EXPECT_EQ(refVec, aliasVec(1));
 }
