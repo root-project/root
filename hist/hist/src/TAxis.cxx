@@ -83,6 +83,14 @@ TAxis::TAxis(Int_t nbins,const Double_t *xbins)
    Set(nbins,xbins);
 }
 
+TAxis::TAxis(const std::vector<double>& bins):
+  TAxis(bins.size()-1, bins.data())
+{}
+
+TAxis::TAxis(std::vector<double>&& bins):
+  TAxis(bins.size()-1, bins.data())
+{}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
 
