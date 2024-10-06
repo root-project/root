@@ -31,7 +31,7 @@ Readers should use the feature flag in the header to determine whether they supp
 ## Introduction
 
 The RNTuple binary format describes the serialized, on-disk representation of an RNTuple data set.
-The data on disk is organized in **pages** (typically 10-100kB in size)
+The data on disk is organized in **pages** (typically tens to hundreds of kilobytes in size)
 and several **envelopes** that contain information about the data such as header and footer.
 The RNTuple format specifies the binary layout of the pages and the envelopes.
 
@@ -136,10 +136,12 @@ _Algorithm_: Identifies the compression algorithm used to compress the data. Thi
 | 'L' '4' <VERSION_MAJOR>  | LZ4; third byte encodes major version number |
 | 'Z' 'S' '\x01'           | Zstd                                         |
 
-_Compressed size_: An unsigned, little-endian integer that indicates the compressed size of the data that follows the header.
+_Compressed size_: An unsigned, little-endian integer
+that indicates the compressed size of the data that follows the header.
 
 _Uncompressed size_: An unsigned, little-endian integer that indicates the uncompressed size of the data that follows.
-The maximum representable value is $(2^{24})-1$, i.e. 16777215, and thus each compressed chunk can represent up to 16 MiB of uncompressed data.
+The maximum representable value is $(2^{24})-1$, i.e. 16777215,
+and thus each compressed chunk can represent up to 16 MiB of uncompressed data.
 If the original data is larger than this value, more compressed chunks will follow.
 
 ## Basic Types
@@ -156,7 +158,7 @@ Strings are ASCII encoded; every character is a signed 8bit integer.
 
 _Compression settings_: A 32bit integer containing both a compression algorithm and the compression level.
 The compression settings are encoded according to this formula: $settings = algorithm * 100 + level$.
-See Compression.[h/cxx] for details and available algorithms.
+The level is between 1 and 9 and is extrapolated to the spectrum of levels of the corresponding algorithm.
 
 ### Feature Flags
 
@@ -206,7 +208,8 @@ without breaking the deserialization of older readers.
 
 A locator is a generalized way to specify a certain byte range on the storage medium.
 For disk-based storage, the locator is just byte offset and byte size.
-For other storage systems, the locator contains enough information to retrieve the referenced block, e.g. in object stores, the locator can specify a certain object ID.
+For other storage systems, the locator contains enough information to retrieve the referenced block,
+e.g. in object stores, the locator can specify a certain object ID.
 The locator has the following format
 
 ```
@@ -222,7 +225,7 @@ The locator has the following format
 ```
 
 _Size_: If `T` is zero, the number of bytes to read, i.e. the compressed size of the referenced block.
-Otherwise the 16 least-significant bits, i.e bits 0:15, specify the size of the locator itself (see below).
+Otherwise, the 16 least-significant bits, i.e. bits 0:15, specify the size of the locator itself (see below).
 
 _T(ype)_: Zero for a simple on-disk or in-file locator, 1 otherwise.
 Can be interpreted as the sign bit of the size, i.e. negative sizes indicate non-standard locators.
@@ -256,7 +259,7 @@ Each locator type follows a given format for the payload (see Section "Well-know
 The range 0x03 - 0x7f is currently unused.
 Additional types can be registered in the future.
 
-_Reserved_ is an 8bit field that can be used by the storage backend corresponding to the type
+_Reserved_ is an 8 bit field that can be used by the storage backend corresponding to the type
 in order to store additional information about the locator.
 
 An envelope link consists of a 64bit unsigned integer that specifies the uncompressed size of the envelope
@@ -318,7 +321,7 @@ The following envelope types exist
 |-------------------|------|-------------------------------------------------------------------|
 | _reserved_        | 0x00 | unused and reserved
 | Header            | 0x01 | RNTuple schema: field and column types                            |
-| Footer            | 0x02 | Description of clusters, location of user meta-data               |
+| Footer            | 0x02 | Description of clusters                                           |
 | Page list         | 0x03 | Location of data pages                                            |
 
 Envelopes have the following format
@@ -365,7 +368,8 @@ The header consists of the following elements:
  - List frame: list of alias column record frames
  - List frame: list of extra type information
 
-The last four list frames containing information about fields and columns are collectively referred to as _schema description_.
+The last four list frames containing information about fields and columns
+are collectively referred to as _schema description_.
 
 #### Field Description
 
@@ -395,9 +399,9 @@ The structural role of the field can have one of the following values:
 | 0x01     | The field is the parent of a collection (e.g., a vector)                 |
 | 0x02     | The field is the parent of a record (e.g., a struct)                     |
 | 0x03     | The field is the parent of a variant                                     |
-| 0x04     | The field represents an unsplit object serialized with the ROOT streamer |
+| 0x04     | The field stores objects serialized with the ROOT streamer               |
 
-The flags field can have any of the following bits set:
+The "flags" field can have any of the following bits set:
 
 | Bit      | Meaning                                                                    |
 |----------|----------------------------------------------------------------------------|
@@ -406,7 +410,7 @@ The flags field can have any of the following bits set:
 | 0x04     | Has ROOT type checksum as reported by TClass                               |
 
 If `flag==0x01` (_repetitive field_) is set, the field represents a fixed-size array.
-Another (sub) field with `Parent Field ID` equal to the ID of this field
+Usually, another (sub) field with `Parent Field ID` equal to the ID of this field
 is expected to be found, representing the array content
 (see Section "Mapping of C++ Types to Fields and Columns").
 
@@ -430,7 +434,7 @@ Depending on the flags, the following optional values follow:
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 +             Source Field ID (if flag 0x02 is set)             +
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-+          ROOT Streamer Checksum (if flag 0x04 is set)         +
++            ROOT Type Checksum (if flag 0x04 is set)           +
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ```
 
@@ -500,13 +504,13 @@ The column type and bits on storage integers can have one of the following value
 | 0x07 |   64 | Real64       | IEEE-754 double precision float                                                               |
 | 0x08 |   32 | Real32       | IEEE-754 single precision float                                                               |
 | 0x09 |   16 | Real16       | IEEE-754 half precision float                                                                 |
-| 0x16 |   64 | Int64        | Two's complement, little-endian 8 byte signed integer                                         |
-| 0x0A |   64 | UInt64       | Little-endian 8 byte unsigned integer                                                         |
-| 0x17 |   32 | Int32        | Two's complement, little-endian 4 byte signed integer                                         |
-| 0x0B |   32 | UInt32       | Little-endian 4 byte unsigned integer                                                         |
-| 0x18 |   16 | Int16        | Two's complement, little-endian 2 byte signed integer                                         |
-| 0x0C |   16 | UInt16       | Little-endian 2 byte unsigned integer                                                         |
-| 0x19 |    8 | Int8         | Two's complement, 1 byte signed integer                                                       |
+| 0x16 |   64 | Int64        | Two's complement, little-endian 8-byte signed integer                                         |
+| 0x0A |   64 | UInt64       | Little-endian 8-byte unsigned integer                                                         |
+| 0x17 |   32 | Int32        | Two's complement, little-endian 4-byte signed integer                                         |
+| 0x0B |   32 | UInt32       | Little-endian 4-byte unsigned integer                                                         |
+| 0x18 |   16 | Int16        | Two's complement, little-endian 2-byte signed integer                                         |
+| 0x0C |   16 | UInt16       | Little-endian 2-byte unsigned integer                                                         |
+| 0x19 |    8 | Int8         | Two's complement, 1-byte signed integer                                                       |
 | 0x0D |    8 | UInt8        | 1 byte unsigned integer                                                                       |
 | 0x0E |   64 | SplitIndex64 | Like Index64 but pages are stored in split + delta encoding                                   |
 | 0x0F |   32 | SplitIndex32 | Like Index32 but pages are stored in split + delta encoding                                   |
@@ -539,10 +543,11 @@ Zigzag + split
 **Note**: these encodings always happen within each page, thus decoding should be done page-wise,
 not cluster-wise.
 
-The "Real32Trunc" type column is a variable-sized floating point column with lower precision than `Real32` and `SplitReal32`.
-It is a IEEE-754 single precision float with some of the mantissa's least significant bits truncated.
+The `Real32Trunc` type column is a variable-sized floating point column
+with lower precision than `Real32` and `SplitReal32`.
+It is an IEEE-754 single precision float with some of the mantissa's least significant bits truncated.
 
-The "Real32Quant" type column is a variable-sized real column that is internally represented as an integer within
+The `Real32Quant` type column is a variable-sized real column that is internally represented as an integer within
 a specified range of values. For this column type, flag 0x10 (column with range) is always set (see paragraphs below).
 
 Future versions of the file format may introduce additional column types
@@ -550,22 +555,26 @@ without changing the minimum version of the header or introducing a feature flag
 Old readers need to ignore these columns and fields constructed from such columns.
 Old readers can, however, figure out the number of elements stored in such unknown columns.
 
-The flags field can have one of the following bits set
+The "flags" field can have one of the following bits set
 
 | Bit      | Meaning                                                           |
 |----------|-------------------------------------------------------------------|
 | 0x08     | Deferred column: index of first element in the column is not zero |
 | 0x10     | Column with a range of possible values                            |
 
-If flag 0x08 (deferred column) is set, the index of the first element in this column is not zero, which happens if the column is added at a later point during write.
+If flag 0x08 (deferred column) is set, the index of the first element in this column is not zero,
+which happens if the column is added at a later point during write.
 In this case, an additional 64bit integer containing the first element index follows the representation index field.
-Compliant implementations should yield synthetic data pages made up of 0x00 bytes when trying to read back elements in the range $[0, firstElementIndex-1]$.
-This results in zero-initialized values in the aforementioned range for fields of any supported C++ type, including `std::variant<Ts...>` and collections such as `std::vector<T>`.
+Compliant implementations should yield synthetic data pages made up of 0x00 bytes
+when trying to read back elements in the range $[0, firstElementIndex-1]$.
+This results in zero-initialized values in the aforementioned range for fields of any supported C++ type,
+including `std::variant<Ts...>` and collections such as `std::vector<T>`.
 The leading zero pages of deferred columns are _not_ part of the page list, i.e. they have no page locator.
 In practice, deferred columns only appear in the schema extension record frame (see Section Footer Envelope).
 
 If flag 0x10 (column with range) is set, the column metadata contains the inclusive range of valid values
-for this column (used e.g. for quantized real values). The range is represented as a min and a max value, specified as IEEE 754 little-endian double precision floats.
+for this column (used e.g. for quantized real values).
+The range is represented as a min and a max value, specified as IEEE 754 little-endian double precision floats.
 
 If the index of the first element is negative (sign bit set), the column is deferred _and_ suppressed.
 In this case, no (synthetic) pages exist up to and including the cluster of the first element index.
@@ -584,9 +593,10 @@ An alias column has the following format
 |                           Field ID                            |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ```
-Alias columns do not have associated data pages.  Instead, their data comes from another column referred to below as "physical column".
-The first 32bit integer references the physical column ID.
-The second 32bit integer references the associated "projected" field.
+Alias columns do not have associated data pages.
+Instead, their data comes from another column referred to below as "physical column".
+The first 32-bit integer references the physical column ID.
+The second 32-bit integer references the associated "projected" field.
 A projected field is a field using alias columns to present available data by an alternative C++ type.
 The ID of the alias column itself is given implicitly by the serialization order.
 In particular, alias columns have larger IDs than physical columns in the same schema description block
@@ -597,7 +607,7 @@ In the footer and page list envelopes, only physical column IDs must be referenc
 #### Extra type information
 
 Certain field types may come with additional information required, e.g., for schema evolution.
-The type information record frame has the following contents
+The type information record frame has the following contents followed by a string containing the type name.
 
 ```
  0                   1                   2                   3
@@ -610,8 +620,6 @@ The type information record frame has the following contents
 |                         Type Version To                       |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ```
-
-followed by a string containing the type name.
 
 The combination of type version from/to, type name, and content identifier should be unique in the list.
 However, not every type needs to provide additional type information.
@@ -626,7 +634,7 @@ The serialized ROOT streamer info is not bound to a specific type.
 It is the combined streamer information from all the unsplit fields.
 Writers set version from/to to zero and use an empty type name.
 Readers should ignore the type-specific information.
-The format of the content is a ROOT streamed TList of TStreamerInfo objects.
+The format of the content is a ROOT streamed `TList` of `TStreamerInfo` objects.
 
 ### Footer Envelope
 
@@ -641,11 +649,14 @@ The footer envelope has the following structure:
 The header checksum can be used to cross-check that header and footer belong together.
 The meaning of the feature flags is the same as for the header.
 The header flags do not need to be repeated.
-Readers should combine (logical `or` of the bits) the feature flags from header and footer for the complete set of flags.
+Readers should combine (logical `or` of the bits) the feature flags from header and footer for the full set of flags.
 
 #### Schema Extension Record Frame
 
-The schema extension record frame contains an additional schema description that is incremental with respect to the schema contained in the header (see Section Header Envelope). Specifically, it is a record frame with the following four fields (identical to the last four fields in Header Envelope):
+The schema extension record frame contains an additional schema description that is incremental
+with respect to the schema contained in the header (see Section Header Envelope).
+Specifically, it is a record frame with the following four fields
+(identical to the last four fields in Header Envelope):
 
  - List frame: list of field record frames
  - List frame: list of column record frames
@@ -653,13 +664,17 @@ The schema extension record frame contains an additional schema description that
  - List frame: list of extra type information
 
 In general, a schema extension is optional, and thus this record frame might be empty.
-The interpretation of the information contained therein should be identical as if it was found directly at the end of the header.
+The interpretation of the information contained therein should be identical
+as if it was found directly at the end of the header.
 This is necessary when fields have been added during writing.
 
 Note that the field IDs and column IDs given by the serialization order
 should continue from the largest IDs found in the header.
 For the column IDs,
 the order is physical columns (header), alias columns (header), physical columns (footer), alias columns (footer).
+
+Note that is it possible to extend existing fields by additional column representations.
+This means that columns of the extension header may point to fields of the regular header.
 
 #### Column Group Record Frame
 The column group record frame is used to set IDs for certain subsets of column IDs.
@@ -688,7 +703,7 @@ The frame hierarchy is as follows
 #### Cluster Group Record Frame
 
 The cluster group record frame references the page list envelopes for groups of clusters.
-A cluster group record frame starts with
+A cluster group record frame has the following contents followed by a page list envelope link.
 
 ```
  0                   1                   2                   3
@@ -705,13 +720,13 @@ A cluster group record frame starts with
 |                       Number of clusters                      |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ```
-Followed by the page list envelope link.
 
 To compute the minimum entry number, take first entry number from all clusters in the cluster group,
 and take the minimum among these numbers.
 The entry span is the number of entries that are covered by this cluster group.
 The entry range allows for finding the right page list for random access requests to entries.
-The number of clusters information allows for using consistent cluster IDs even if cluster groups are accessed non-sequentially.
+The number of clusters information allows for using consistent cluster IDs
+even if cluster groups are accessed non-sequentially.
 
 ### Page List Envelope
 
@@ -760,11 +775,10 @@ The inner list is followed by a 64bit signed integer element offset and,
 unless the column is suppressed, the 32bit compression settings
 See next Section on "Suppressed Columns" for additional details.
 Note that the size of the inner list frame includes the element offset and compression settings.
-The order of the outer items must match the order of the columns as specified in the cluster summary and column groups.
-For a complete cluster (covering all original columns), the order is given by the column IDs (small to large).
+The order of the outer items must match the order of columns in the header and the extension header (small to large).
 
-The order of the inner items must match the order of pages' resp. elements.
-Every inner item (that describes a page) has the following structure:
+The order of the inner items must match the order of pages or elements, resp.
+Every inner item (that describes a page) has the following structure followed by a locator for the page.
 
 ```
  0                   1                   2                   3
@@ -774,17 +788,13 @@ Every inner item (that describes a page) has the following structure:
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ```
 
-Followed by a locator for the page.
-Note that locators for byte ranges in a file do not need to reference pairwise distinct byte ranges.
-For instance, identical pages can point to the same page range.
+Note that locators for byte ranges in a file may reference identical byte ranges,
+but they must not reference arbitrarily overlapping byte ranges.
 
 _C(hecksum)_: If set, an XxHash-3 64bit checksum of the compressed page data is stored just after the page.
-This bit should be interpreted as the sign bit of the number of elements, i.e. negative values indicate pages with checksums.
+This bit should be interpreted as the sign bit of the number of elements,
+i.e. negative values indicate pages with checksums.
 Note that the page size stored in the locator does _not_ include the checksum.
-
-Depending on the number of pages per column per cluster, every page induces
-a total of 28-36 Bytes of data to be stored in the page list envelope.
-For typical page sizes, that should be < 1 per mille.
 
 Note that we do not need to store the uncompressed size of the page
 because the uncompressed size is given by the number of elements in the page and the element size.
@@ -842,8 +852,8 @@ e.g. `std::vector<MyEvent>` or `std::vector<std::vector<float>>`.
 ### Fundamental Types
 
 The following fundamental types are stored as `leaf` fields with a single column each.
-Type can potentially be stored in multiple possible column types.
-The possible combinations are marked as `W` in the following table
+Fundamental C++ types can potentially be stored in multiple possible column types.
+The possible combinations are marked as `W` in the following table.
 Additionally, some types allow for reading from certain column types but not to write into them.
 Such cases are marked as `R` in the table.
 
@@ -868,7 +878,7 @@ Such cases are marked as `R` in the table.
 | Real32Quant   |      |           |      |        |         |         |          |         |          |         |          |   W   |   W    |
 
 Possibly available `const` and `volatile` qualifiers of the C++ types are ignored for serialization.
-The default column for serialization is denoted with an asterix.
+The default column for serialization is denoted with an asterisk.
 If the ntuple is stored uncompressed, the default changes from split encoding to non-split encoding where applicable.
 
 ### Low-precision Floating Points
@@ -876,12 +886,11 @@ If the ntuple is stored uncompressed, the default changes from split encoding to
 The ROOT type `Double32_t` is stored on disk as a `double` field with a `SplitReal32` column representation.
 The field's type alias is set to `Double32_t`.
 
-### STL Types and Collections
+### Stdlib Types and Collections
 
-The following STL and collection types are supported.
 Generally, collections have a parent column of type (Split)Index32 or (Split)Index64.
 The parent column stores the offsets of the next collection entries relative to the cluster.
-For instance, an `std::vector<float>` with the values `{1.0}`, `{}`, `{1.0, 2.0}`
+For instance, a `std::vector<float>` with the values `{1.0}`, `{}`, `{1.0, 2.0}`
 for the first 3 entries results in an index column `[1, 1, 3]`
 and a value column `[1.0, 1.0, 2.0]`.
 
@@ -889,7 +898,7 @@ and a value column `[1.0, 1.0, 2.0]`.
 
 A string is stored as a single field with two columns.
 The first (principle) column is of type `(Split)Index[64|32]`.
-The second column is of type Char.
+The second column is of type `Char`.
 
 #### std::vector\<T\> and ROOT::RVec\<T\>
 
@@ -905,15 +914,17 @@ Implementations should also be able to parse the shorter alias `ROOT::Vec<T>`.
 #### std::array<T, N> and array type of the form T[N]
 
 Fixed-sized arrays are stored as two fields:
-  - A repetitive field of type `std::array<T, N>` with no attached columns. The array size `N` is stored in the field meta-data.
+  - A repetitive field of type `std::array<T, N>` with no attached columns.
+    The array size `N` is stored in the field meta-data.
   - Child field of type `T` named `_0`, which must be a type with RNTuple I/O support.
 
-Note that T can itself be an array type, which includes support for multidimensional C-style arrays.
+Note that T can itself be an array type, which implies support for multidimensional C-style arrays.
 
 #### std::variant<T1, T2, ..., Tn>
 
 Variants are stored in $n+1$ fields:
-  - Variant parent field with one column of type Switch; the dispatch tag points to the principal column of the active type
+  - Variant parent field with one column of type `Switch`;
+    the dispatch tag points to the active subfield number.
   - Child fields of types `T1`, ..., `Tn`; their names are `_0`, `_1`, ...
 
 The dispatch tag ranges from 1 to $n$.
@@ -925,7 +936,7 @@ This follows common compiler implementation limits.
 
 A pair is stored using an empty parent field with two subfields, one of type `T1` and one of type `T2`.
 `T1` and `T2` must be types with RNTuple I/O support.
-The child fileds are named `_0` and `_1`.
+The child fields are named `_0` and `_1`.
 
 #### std::tuple<T1, T2, ..., Tn>
 
@@ -949,8 +960,9 @@ Note that RNTuple does not support polymorphism, so the type `T` is expected to 
 
 #### std::set\<T\>, std::unordered_set\<T\>, std::multiset\<T\>, std::unordered_multiset\<T\>
 
-While STL (unordered) (multi)sets by definition are associative containers (i.e., elements are referenced by their keys,
-which in the case for sets are equal to the values), on disk they are represented as indexed collections.
+While STL (unordered) (multi)sets by definition are associative containers
+(i.e., elements are referenced by their keys, which in the case for sets are equal to the values),
+on disk they are represented as sequential collections.
 This means that they have the same on-disk representation as `std::vector<T>`, using two fields:
   - Collection parent field whose principal column is of type `(Split)Index[64|32]`.
   - Child field of type `T`, which must by a type with RNTuple I/O support.
@@ -965,7 +977,7 @@ whose principal column is of type `(Split)Index[64|32]` and a child field of typ
 
 Atomic types are stored as a leaf field with a single subfield named `_0`.
 The parent field has no attached columns.
-The subfield corresponds to the the inner type `T`.
+The subfield corresponds to the inner type `T`.
 
 ### User-defined enums
 
@@ -994,26 +1006,31 @@ User defined C++ classes are supported with the following limitations
 User classes are stored as a record parent field with no attached columns.
 Direct base classes and persistent members are stored as subfields with their respective types.
 The field name of member subfields is identical to the C++ field name.
-The field name of base class subfields are numbered and preceeded by a colon (`:`), i.e. `:_0`, `:_1`, ...
+The field name of base class subfields are numbered and preceded by a colon (`:`), i.e. `:_0`, `:_1`, ...
 
 #### Classes with an associated collection proxy
 
 User classes that specify a collection proxy behave as collections of a given value type.
 Associative collections are not currently supported.
 
-The on-disk representation is similar to a `std::vector<T>` where `T` is the value type; specifically, it is stored as two fields:
+The on-disk representation is similar to a `std::vector<T>` where `T` is the value type;
+specifically, it is stored as two fields:
   - Collection parent field whose principal column is of type `(Split)Index[64|32]`.
   - Child field of type `T`, which must by a type with RNTuple I/O support.
     The name of the child field is `_0`.
 
 ### ROOT::Experimental::RNTupleCardinality<SizeT>
 
-A field whose type is `ROOT::Experimental::RNTupleCardinality<SizeT>` is associated to a single column of type (Split)Index32 or (Split)Index64.
-This field presents the offsets in the index column as lengths that correspond to the cardinality of the pointed-to collection.
+A field whose type is `ROOT::Experimental::RNTupleCardinality<SizeT>` is associated to a single column
+of type `(Split)Index[32|64]`.
+This field presents the offsets in the index column as lengths
+that correspond to the cardinality of the pointed-to collection.
 It is meant to be used as a projected field and only for reading the size of a collection.
 
-The value for the $i$-th element is computed by subtracting the $(i-1)$-th value from the $i$-th value in the index column.
-If $i == 0$, i.e. it falls on the start of a cluster, the $(i-1)$-th value in the index column is assumed to be 0, e.g. given the index column values `[1, 1, 3]`, the values yielded by `RNTupleCardinality` shall be `[1, 0, 2]`.
+The value for the $i$-th element is computed
+by subtracting the $(i-1)$-th value from the $i$-th value in the index column.
+If $i == 0$, i.e. it falls on the start of a cluster, the $(i-1)$-th value in the index column is assumed to be 0,
+e.g. given the index column values `[1, 1, 3]`, the values yielded by `RNTupleCardinality` shall be `[1, 0, 2]`.
 
 The `SizeT` template parameter defines the in-memory integer type of the collection size.
 The valid types are `std::uint32_t` and `std::uint64_t`.
@@ -1022,15 +1039,15 @@ The valid types are `std::uint32_t` and `std::uint64_t`.
 
 A field with the structural role 0x04 ("unsplit") represents an object serialized by the ROOT streamer in unsplit mode.
 It can have any type supported by TClass (even types that are not available in the native RNTuple type system).
-The first (principal) column is of type [Split]Index[32|64].
-The second column is of type Byte.
+The first (principal) column is of type `(Split)Index[32|64]`.
+The second column is of type `Byte`.
 
 
 ### Untyped collections and records
 
 Untyped collections and records are fields with a collection or record role and an empty type name.
 Only top-level fields as well as direct subfields of untyped fields may be untyped.
-Except for the empty type name, untyped collections have the same on-disk representation as std::vector
+Except for the empty type name, untyped collections have the same on-disk representation as `std::vector`
 and untyped records have the same on-disk representation as a user-defined class.
 
 ## Limits
