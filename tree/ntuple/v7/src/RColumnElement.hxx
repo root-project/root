@@ -1390,6 +1390,8 @@ DECLARE_RCOLUMNELEMENT_SPEC(std::uint64_t, EColumnType::kBit, 1, RColumnElementI
 
 DECLARE_RCOLUMNELEMENT_SPEC(float, EColumnType::kReal32, 32, RColumnElementLE, <float>);
 DECLARE_RCOLUMNELEMENT_SPEC(float, EColumnType::kSplitReal32, 32, RColumnElementSplitLE, <float, float>);
+DECLARE_RCOLUMNELEMENT_SPEC(float, EColumnType::kReal64, 64, RColumnElementCastLE, <float, double>);
+DECLARE_RCOLUMNELEMENT_SPEC(float, EColumnType::kSplitReal64, 64, RColumnElementSplitLE, <float, double>);
 
 DECLARE_RCOLUMNELEMENT_SPEC(double, EColumnType::kReal64, 64, RColumnElementLE, <double>);
 DECLARE_RCOLUMNELEMENT_SPEC(double, EColumnType::kSplitReal64, 64, RColumnElementSplitLE, <double, double>);
