@@ -1406,6 +1406,23 @@ public:
    /// annotated as begin part of the header extension.
    void BeginHeaderExtension();
 
+   /// If the descriptor is constructed in pieces consisting of physical and alias columns
+   /// (regular and projected fields), the natural column order would be
+   ///   - Physical and alias columns of piece one
+   ///   - Physical and alias columns of piece two
+   ///   - etc.
+   /// What we want, however, are first all physical column IDs and then all alias column IDs.
+   /// This method adds `offset` to the logical column IDs of all alias columns and fixes up the corresponding
+   /// column IDs in the projected field descriptors.  In this way, a new piece of physical and alias columns can
+   /// first shift the existing alias columns by the number of new physical columns, resulting in the following order
+   ///   - Physical columns of piece one
+   ///   - Physical columns of piece two
+   ///   - ...
+   //    - Logical columns of piece one
+   ///   - Logical columns of piece two
+   ///   - ...
+   void ShiftAliasColumns(std::uint32_t offset);
+
    /// Get the streamer info records for custom classes. Currently requires the corresponding dictionaries to be loaded.
    RNTupleSerializer::StreamerInfoMap_t BuildStreamerInfos() const;
 };
