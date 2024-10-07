@@ -874,7 +874,7 @@ Such cases are marked as `R` in the table.
 | (Split)UInt64 |  R   |           |  R   |   R    |    R    |    R    |    R     |    R    |    R     |    R    |    W*    |       |        |
 | Real16        |      |           |      |        |         |         |          |         |          |         |          |   W   |   W    |
 | (Split)Real32 |      |           |      |        |         |         |          |         |          |         |          |   W*  |   W    |
-| (Split)Real64 |      |           |      |        |         |         |          |         |          |         |          |       |   W*   |
+| (Split)Real64 |      |           |      |        |         |         |          |         |          |         |          |   R   |   W*   |
 | Real32Trunc   |      |           |      |        |         |         |          |         |          |         |          |   W   |   W    |
 | Real32Quant   |      |           |      |        |         |         |          |         |          |         |          |   W   |   W    |
 

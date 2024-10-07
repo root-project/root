@@ -1525,7 +1525,7 @@ ROOT::Experimental::RField<float>::GetColumnRepresentations() const
                                                   {EColumnType::kReal16},
                                                   {EColumnType::kReal32Trunc},
                                                   {EColumnType::kReal32Quant}},
-                                                 {});
+                                                 {{EColumnType::kSplitReal64}, {EColumnType::kReal64}});
    return representations;
 }
 

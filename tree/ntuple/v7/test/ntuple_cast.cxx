@@ -235,6 +235,7 @@ TEST(RNTuple, TypeCastReal)
    // Read back each pointer as the "opposite" type
    auto castModel = RNTupleModel::Create();
    auto ptrFloat = castModel->MakeField<double>("float");
+   auto ptrDouble = castModel->MakeField<float>("double");
    auto ptrFloatHalf = castModel->MakeField<double>("float_half");
    auto ptrDoubleHalf = castModel->MakeField<float>("double_half");
    auto ptrFloatTrunc = castModel->MakeField<double>("float_trunc");
@@ -243,14 +244,6 @@ TEST(RNTuple, TypeCastReal)
    auto ptrDoubleQuant = castModel->MakeField<float>("double_quant");
    auto ptrDouble32 = castModel->MakeField<float>("double32");
 
-   {
-      auto castModelWrong = castModel->Clone();
-      castModelWrong->MakeField<float>("double");
-      // Should fail because we try to cast a Field<double> to a Field<float>
-      EXPECT_THROW(RNTupleReader::Open(std::move(castModelWrong), "ntpl", fileGuard.GetPath()), RException);
-   }
-
-   auto ptrDouble = castModel->MakeField<double>("double");
    auto reader = RNTupleReader::Open(std::move(castModel), "ntpl", fileGuard.GetPath());
    reader->LoadEntry(0);
    EXPECT_FLOAT_EQ(*ptrFloat, 42.4242);
