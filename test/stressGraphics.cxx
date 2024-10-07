@@ -326,6 +326,9 @@ void TestReport(TCanvas *C, const TString &title, const TString &arg = "", Int_t
       if (!gOptionK && !ret_code)
          gSystem->Unlink(ccode);
    #endif
+   } else {
+      if (gOptionR)
+         printf("%10d%10d\n",0,0);
    }
 
    gErrorIgnoreLevel = 0;
@@ -2311,7 +2314,6 @@ void zoomtf1()
    gPad->Modified();
 
    TestReport(C, "Zoom/UnZoom a collection of TF1", kSkipCCode);
-   if (gOptionR) printf("%10d%10d\n",0,0);
 }
 
 
@@ -2400,7 +2402,6 @@ void parallelcoord()
    ntuple->Draw("px:py:pz:random:px*py*pz","","candle");
 
    TestReport(C, "Parallel Coordinates", kSkipCCode);
-   if (gOptionR) printf("%10d%10d\n",0,0);
 }
 
 
@@ -2556,7 +2557,6 @@ void waves()
    line->SetLineWidth(10); line->SetLineColor(0); line->Draw();
 
    TestReport(C, "TGraph, TArc, TPalette and TColor", kSkipCCode);
-   if (gOptionR) printf("%10d%10d\n",0,0);
 }
 
 
@@ -2624,16 +2624,16 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
    Int_t i = -1;
    while (fgets(line, 160, sg)) {
       if ((i >= 0) && (i < kMaxNumTests)) {
-         sscanf(&line[7]  ,"%d",&gPS1RefNb[i]);
-         sscanf(&line[18] ,"%d",&gPS1ErrNb[i]);
-         sscanf(&line[28] ,"%d",&gPDFRefNb[i]);
-         sscanf(&line[38] ,"%d",&gPDFErrNb[i]);
-         sscanf(&line[48] ,"%d",&gJPGRefNb[i]);
-         sscanf(&line[58] ,"%d",&gJPGErrNb[i]);
-         sscanf(&line[68] ,"%d",&gPNGRefNb[i]);
-         sscanf(&line[78] ,"%d",&gPNGErrNb[i]);
-         sscanf(&line[87] ,"%d",&gPS2RefNb[i]);
-         sscanf(&line[98] ,"%d",&gPS2ErrNb[i]);
+         sscanf(&line[7],  "%d", &gPS1RefNb[i]);
+         sscanf(&line[18], "%d", &gPS1ErrNb[i]);
+         sscanf(&line[28], "%d", &gPDFRefNb[i]);
+         sscanf(&line[38], "%d", &gPDFErrNb[i]);
+         sscanf(&line[48], "%d", &gJPGRefNb[i]);
+         sscanf(&line[58], "%d", &gJPGErrNb[i]);
+         sscanf(&line[68], "%d", &gPNGRefNb[i]);
+         sscanf(&line[78], "%d", &gPNGErrNb[i]);
+         sscanf(&line[87], "%d", &gPS2RefNb[i]);
+         sscanf(&line[98], "%d", &gPS2ErrNb[i]);
       }
       i++;
    }
