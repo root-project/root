@@ -1037,15 +1037,14 @@ void ROOT::Experimental::Internal::RNTupleDescriptorBuilder::BeginHeaderExtensio
 
 void ROOT::Experimental::Internal::RNTupleDescriptorBuilder::ShiftAliasColumns(std::uint32_t offset)
 {
-   std::vector<DescriptorId_t> aliasColumns;
-   aliasColumns.reserve(fDescriptor.GetNLogicalColumns() - fDescriptor.GetNPhysicalColumns());
-   for (const auto &[_, c] : fDescriptor.fColumnDescriptors) {
-      if (c.IsAliasColumn())
-         aliasColumns.emplace_back(c.GetLogicalId());
-   }
+   if (fDescriptor.GetNLogicalColumns() == 0)
+      return;
+   R__ASSERT(fDescriptor.GetNPhysicalColumns() > 0);
 
-   for (auto id : aliasColumns) {
+   for (DescriptorId_t id = fDescriptor.GetNLogicalColumns() - 1; id >= fDescriptor.GetNPhysicalColumns(); --id) {
       auto c = fDescriptor.fColumnDescriptors[id].Clone();
+      R__ASSERT(c.IsAliasColumn());
+      R__ASSERT(id == c.GetLogicalId());
       fDescriptor.fColumnDescriptors.erase(id);
       for (auto &link : fDescriptor.fFieldDescriptors[c.fFieldId].fLogicalColumnIds) {
          if (link == c.fLogicalColumnId) {
@@ -1054,6 +1053,7 @@ void ROOT::Experimental::Internal::RNTupleDescriptorBuilder::ShiftAliasColumns(s
          }
       }
       c.fLogicalColumnId += offset;
+      R__ASSERT(fDescriptor.fColumnDescriptors.count(c.fLogicalColumnId) == 0);
       fDescriptor.fColumnDescriptors.emplace(c.fLogicalColumnId, std::move(c));
    }
 }
