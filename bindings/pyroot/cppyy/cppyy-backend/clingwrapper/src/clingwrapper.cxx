@@ -841,6 +841,7 @@ T CallT(Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, size_t nargs, void
     T t{};
     if (WrapperCall(method, nargs, args, (void*)self, &t))
         return t;
+    throw std::runtime_error("failed to resolve function");
     return (T)-1;
 }
 
@@ -871,6 +872,7 @@ void* Cppyy::CallR(TCppMethod_t method, TCppObject_t self, size_t nargs, void* a
     void* r = nullptr;
     if (WrapperCall(method, nargs, args, (void*)self, &r))
         return r;
+    throw std::runtime_error("failed to resolve function");
     return nullptr;
 }
 
@@ -884,9 +886,12 @@ char* Cppyy::CallS(
         cstr = cppstring_to_cstring(*cppresult);
         *length = cppresult->size();
         cppresult->std::string::~basic_string();
-    } else
-        *length = 0;
-    free((void*)cppresult);
+        free((void *)cppresult);
+    } else {
+       *length = 0;
+       free((void *)cppresult);
+       throw std::runtime_error("failed to resolve function");
+    }
     return cstr;
 }
 
@@ -896,6 +901,7 @@ Cppyy::TCppObject_t Cppyy::CallConstructor(
     void* obj = nullptr;
     if (WrapperCall(method, nargs, args, nullptr, &obj))
         return (TCppObject_t)obj;
+    throw std::runtime_error("failed to resolve function");
     return (TCppObject_t)0;
 }
 
@@ -913,6 +919,7 @@ Cppyy::TCppObject_t Cppyy::CallO(TCppMethod_t method,
     if (WrapperCall(method, nargs, args, self, obj))
         return (TCppObject_t)obj;
     ::operator delete(obj);
+    throw std::runtime_error("failed to resolve function");
     return (TCppObject_t)0;
 }
 
@@ -1829,8 +1836,8 @@ bool Cppyy::IsMethodTemplate(TCppScope_t scope, TCppIndex_t idx)
 // helpers for Cppyy::GetMethodTemplate()
 static std::map<TDictionary::DeclId_t, CallWrapper*> gMethodTemplates;
 
-Cppyy::TCppMethod_t Cppyy::GetMethodTemplate(
-    TCppScope_t scope, const std::string& name, const std::string& proto)
+Cppyy::TCppMethod_t Cppyy::GetMethodTemplate(TCppScope_t scope, const std::string &name, const std::string &proto,
+                                             std::ostringstream &diagnostics)
 {
 // There is currently no clean way of extracting a templated method out of ROOT/meta
 // for a variety of reasons, none of them fundamental. The game played below is to
@@ -1843,42 +1850,61 @@ Cppyy::TCppMethod_t Cppyy::GetMethodTemplate(
 // TFunction::GetPrototype() nor TFunction::GetSignature() is of the proper form, so
 // we'll/ manage the new TFunctions instead and will assume that they are cached on the
 // calling side to prevent multiple creations.
-    TFunction* func = nullptr; ClassInfo_t* cl = nullptr;
-    if (scope == (cppyy_scope_t)GLOBAL_HANDLE) {
-        func = gROOT->GetGlobalFunctionWithPrototype(name.c_str(), proto.c_str());
-        if (func && name.back() == '>' && name != func->GetName())
-            func = nullptr;  // happens if implicit conversion matches the overload
-    } else {
-        TClassRef& cr = type_from_handle(scope);
-        if (cr.GetClass()) {
-            func = cr->GetMethodWithPrototype(name.c_str(), proto.c_str());
-            if (!func) {
-                cl = cr->GetClassInfo();
-            // try base classes to cover a common 'using' case (TODO: this is stupid and misses
-            // out on base classes; fix that with improved access to Cling)
-                TCppIndex_t nbases = GetNumBases(scope);
-                for (TCppIndex_t i = 0; i < nbases; ++i) {
-                    TClassRef& base = type_from_handle(GetScope(GetBaseName(scope, i)));
-                    if (base.GetClass()) {
-                        func = base->GetMethodWithPrototype(name.c_str(), proto.c_str());
-                        if (func) break;
-                    }
-                }
+
+// redirect diagnostics, taking the lock to make sure no other calls pollute the results
+R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
+
+const std::string diagnosticsold = diagnostics.str();
+TInterpreter::RedirectDiagnostics redirectRAII(gInterpreter, diagnostics, /*enableColors*/ true, /*indent*/ 4);
+
+TFunction *func = nullptr;
+ClassInfo_t *cl = nullptr;
+if (scope == (cppyy_scope_t)GLOBAL_HANDLE) {
+   func = gROOT->GetGlobalFunctionWithPrototype(name.c_str(), proto.c_str());
+   if (func && name.back() == '>' && name != func->GetName())
+      func = nullptr; // happens if implicit conversion matches the overload
+} else {
+   TClassRef &cr = type_from_handle(scope);
+   if (cr.GetClass()) {
+      func = cr->GetMethodWithPrototype(name.c_str(), proto.c_str());
+      if (!func) {
+         cl = cr->GetClassInfo();
+         // try base classes to cover a common 'using' case (TODO: this is stupid and misses
+         // out on base classes; fix that with improved access to Cling)
+         TCppIndex_t nbases = GetNumBases(scope);
+         for (TCppIndex_t i = 0; i < nbases; ++i) {
+            TClassRef &base = type_from_handle(GetScope(GetBaseName(scope, i)));
+            if (base.GetClass()) {
+               func = base->GetMethodWithPrototype(name.c_str(), proto.c_str());
+               if (func)
+                  break;
             }
-        }
-    }
+         }
+      }
+   }
+}
 
     if (!func && name.back() == '>' && (cl || scope == (cppyy_scope_t)GLOBAL_HANDLE)) {
     // try again, ignoring proto in case full name is complete template
-        auto declid = gInterpreter->GetFunction(cl, name.c_str());
-        if (declid) {
-             auto existing = gMethodTemplates.find(declid);
-             if (existing == gMethodTemplates.end()) {
-                 auto cw = new_CallWrapper(declid, name);
-                 existing = gMethodTemplates.insert(std::make_pair(declid, cw)).first;
-             }
-             return (TCppMethod_t)existing->second;
+    std::ostringstream diagnostics2;
+    TInterpreter::RedirectDiagnostics redirectRAII2(gInterpreter, diagnostics2, /*enableColors*/ true, /*indent*/ 4);
+
+    auto declid = gInterpreter->GetFunction(cl, name.c_str());
+    if (declid) {
+       auto existing = gMethodTemplates.find(declid);
+       if (existing == gMethodTemplates.end()) {
+          auto cw = new_CallWrapper(declid, name);
+          existing = gMethodTemplates.insert(std::make_pair(declid, cw)).first;
+       }
+       // replace diagnostics to suppress spurious errors or warnings from the previous
+       // failed lookup
+       diagnostics = std::ostringstream();
+       diagnostics << diagnosticsold;
+       diagnostics << diagnostics2.str();
+
+       return (TCppMethod_t)existing->second;
         }
+        diagnostics << diagnostics2.str();
     }
 
     if (func) {
@@ -1894,16 +1920,24 @@ Cppyy::TCppMethod_t Cppyy::GetMethodTemplate(
     if (name.back() == '>') {
         auto pos = name.find('<');
         if (pos != std::string::npos) {
-            TCppMethod_t cppmeth = GetMethodTemplate(scope, name.substr(0, pos), proto);
-            if (cppmeth) {
-            // allow if requested template names match up to the result
-                const std::string& alt = GetMethodFullName(cppmeth);
-                if (name.size() < alt.size() && alt.find('<') == pos) {
-                    const std::string& partial = name.substr(pos, name.size()-1-pos);
-                    if (strncmp(partial.c_str(), alt.substr(pos, alt.size()-1-pos).c_str(), partial.size()) == 0)
-                        return cppmeth;
-                }
-            }
+           std::ostringstream diagnostics2;
+           TCppMethod_t cppmeth = GetMethodTemplate(scope, name.substr(0, pos), proto, diagnostics2);
+           if (cppmeth) {
+              // allow if requested template names match up to the result
+              const std::string &alt = GetMethodFullName(cppmeth);
+              if (name.size() < alt.size() && alt.find('<') == pos) {
+                 const std::string &partial = name.substr(pos, name.size() - 1 - pos);
+                 if (strncmp(partial.c_str(), alt.substr(pos, alt.size() - 1 - pos).c_str(), partial.size()) == 0) {
+                    // replace diagnostics to suppress spurious errors or warnings
+                    // from the previous failed lookup
+                    diagnostics = std::ostringstream();
+                    diagnostics << diagnosticsold;
+                    diagnostics << diagnostics2.str();
+                    return cppmeth;
+                 }
+              }
+           }
+           diagnostics << diagnostics2.str();
         }
     }
 
@@ -2705,7 +2739,8 @@ int cppyy_method_is_template(cppyy_scope_t scope, cppyy_index_t idx) {
 }
 
 cppyy_method_t cppyy_get_method_template(cppyy_scope_t scope, const char* name, const char* proto) {
-    return cppyy_method_t(Cppyy::GetMethodTemplate(scope, name, proto));
+   std::ostringstream os;
+   return cppyy_method_t(Cppyy::GetMethodTemplate(scope, name, proto, os));
 }
 
 cppyy_index_t cppyy_get_global_operator(cppyy_scope_t scope, cppyy_scope_t lc, cppyy_scope_t rc, const char* op) {
