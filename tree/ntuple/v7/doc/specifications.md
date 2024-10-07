@@ -410,9 +410,10 @@ The "flags" field can have any of the following bits set:
 | 0x04     | Has ROOT type checksum as reported by TClass                               |
 
 If `flag==0x01` (_repetitive field_) is set, the field represents a fixed-size array.
-Usually, another (sub) field with `Parent Field ID` equal to the ID of this field
-is expected to be found, representing the array content
-(see Section "Mapping of C++ Types to Fields and Columns").
+For fixed-size arrays, another (sub) field with `Parent Field ID` equal to the ID of this field
+is expected to be found, representing the array content.
+The field backing `std::bitmap<N>` is a single repetitive field.
+(See Section "Mapping of C++ Types to Fields and Columns").
 
 If `flag==0x02` (_projected field_) is set,
 the field has been created as a virtual field from another, non-projected source field.
