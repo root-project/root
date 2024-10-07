@@ -2613,10 +2613,9 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
    } else {
 #ifdef R__HAS_CLOUDFLARE_ZLIB
       ref_name = "stressGraphics_builtinzlib.ref";
-#else
+#endif
    }
    FILE *sg = fopen(ref_name, "r");
-#endif
    if (!sg) {
       printf("Could not open %s\n", ref_name);
       return;
