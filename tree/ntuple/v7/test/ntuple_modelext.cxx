@@ -209,9 +209,7 @@ TEST(RNTuple, ModelExtensionProject)
       auto fieldE = model->MakeField<float>("E", 1.0);
       model->AddProjectedField(std::make_unique<RField<float>>("aliasE"), [](const std::string &) { return "E"; });
 
-      RNTupleWriteOptions options;
-      options.SetUseBufferedWrite(false);
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath(), options);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath());
       auto modelUpdater = ntuple->CreateModelUpdater();
       modelUpdater->BeginUpdate();
       auto fieldVec = modelUpdater->MakeField<std::vector<std::uint32_t>>("vec");
