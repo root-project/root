@@ -241,6 +241,7 @@ jobs:
       - self-hosted
       - linux
       - x64
+      - cpu
 
     name: ${{ matrix.image }} ${{ join( matrix.overrides, ', ' ) }}
 
