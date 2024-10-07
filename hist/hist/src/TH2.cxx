@@ -2415,7 +2415,7 @@ TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbi
 ///
 ///   if option "e" is specified, the errors are computed.
 ///   if option "d" is specified, the projection is drawn in the current pad.
-///   if option "o" original axis range of the taget axes will be
+///   if option "o" original axis range of the target axes will be
 ///   kept, but only bins inside the selected range will be filled.
 ///
 ///   Using a TCutG object, it is possible to select a sub-range of a 2-D histogram.
@@ -2454,7 +2454,7 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
 ///
 ///   if option "e" is specified, the errors are computed.
 ///   if option "d" is specified, the projection is drawn in the current pad.
-///   if option "o" original axis range of the taget axes will be
+///   if option "o" original axis range of the target axes will be
 ///   kept, but only bins inside the selected range will be filled.
 ///
 ///   Using a TCutG object, it is possible to select a sub-range of a 2-D histogram.
