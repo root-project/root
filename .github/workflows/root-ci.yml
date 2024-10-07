@@ -374,6 +374,9 @@ jobs:
           - image: ubuntu2404
             overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_BUILD_TYPE=Debug"]
             runs-on: [self-hosted, root-ci, linux, x64]
+          - image: ubuntu2410
+            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_BUILD_TYPE=Debug"]
+            runs-on: [self-hosted, root-ci, linux, x64]
           - image: debian125
             overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
             runs-on: [self-hosted, root-ci, linux, x64]
