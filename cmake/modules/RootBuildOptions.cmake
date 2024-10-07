@@ -166,6 +166,7 @@ ROOT_BUILD_OPTION(sqlite ON "Enable support for SQLite")
 ROOT_BUILD_OPTION(ssl ON "Enable support for SSL encryption via OpenSSL")
 ROOT_BUILD_OPTION(test_distrdf_dask OFF "Enable distributed RDataFrame tests that use dask")
 ROOT_BUILD_OPTION(test_distrdf_pyspark OFF "Enable distributed RDataFrame tests that use pyspark")
+ROOT_BUILD_OPTION(testsupport OFF "Build the ROOT::TestSupport library required to use all features of ROOT_ADD_GTEST and similar macros (requires gtest at build time)")
 ROOT_BUILD_OPTION(tmva ON "Build TMVA multi variate analysis library")
 ROOT_BUILD_OPTION(tmva-cpu ON "Build TMVA with CPU support for deep learning (requires BLAS)")
 ROOT_BUILD_OPTION(tmva-gpu OFF "Build TMVA with GPU support for deep learning (requries CUDA)")
@@ -363,6 +364,11 @@ ROOT_APPLY_OPTIONS()
 #---roottest option implies testing
 if(roottest OR rootbench)
   set(testing ON CACHE BOOL "" FORCE)
+endif()
+
+#---testing implies testsupport
+if(testing)
+  set(testsupport ON CACHE BOOL "" FORCE)
 endif()
 
 if(cudnn AND NOT cuda)
