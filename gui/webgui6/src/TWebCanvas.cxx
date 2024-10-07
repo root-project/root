@@ -689,11 +689,19 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
       if (obj->InheritsFrom(THStack::Class())) {
          // workaround for THStack, create extra components before sending to client
          if (!opt.Contains("PADS") && !opt.Contains("SAME")) {
+            Bool_t do_rebuild_stack = kFALSE;
+
             auto hs = static_cast<THStack *>(obj);
+
+            if (!opt.Contains("NOSTACK") && !opt.Contains("CANDLE") && !opt.Contains("VIOLIN") && !IsReadOnly() && !fUsedObjs[hs]) {
+               do_rebuild_stack = kTRUE;
+               fUsedObjs[hs] = true;
+            }
+
             if (strlen(obj->GetTitle()) > 0)
                need_title = obj->GetTitle();
             TVirtualPad::TContext ctxt(pad, kFALSE);
-            hs->BuildPrimitives(iter.GetOption());
+            hs->BuildPrimitives(iter.GetOption(), do_rebuild_stack);
             has_histo = true;
             need_frame = true;
          }
@@ -1014,12 +1022,8 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          TString hopt = iter.GetOption();
          hopt.ToLower();
          if (!hopt.Contains("nostack") && !hopt.Contains("candle") && !hopt.Contains("violin") && !hopt.Contains("pads")) {
-            if (!IsReadOnly() && !fUsedObjs[hs]) {
-               hs->Modified();
-               fUsedObjs[hs] = true;
-            }
             auto arr = hs->GetStack();
-            arr->SetName(hs->GetName()); // mark list
+            arr->SetName(hs->GetName()); // mark list for JS
             paddata.NewPrimitive(arr, "__ignore_drawing__").SetSnapshot(TWebSnapshot::kObject, arr);
          }
 
