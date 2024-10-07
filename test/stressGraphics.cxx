@@ -2771,9 +2771,16 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
 
       gBenchmark->Print("stressGraphics");
 
-      Double_t ct = gBenchmark->GetCpuTime("stressGraphics");
-      //normalize at 860 rootmarks on pcbrun4
-      const Double_t rootmarks = 860*(47.12/ct);
+      Double_t rootmarks = 1.;
+      if (gWebMode) {
+         Double_t rt = gBenchmark->GetRealTime("stressGraphics");
+         //normalize at 2692 rootmarks on AMD Ryzen 9 3900X with chromium browser
+         rootmarks = 2692.*(52.36/rt);
+      } else {
+         Double_t ct = gBenchmark->GetCpuTime("stressGraphics");
+         //normalize at 860 rootmarks on pcbrun4
+         rootmarks = 860.*(47.12/ct);
+      }
 
       printf("**********************************************************************\n");
       printf("*  ROOTMARKS =%6.1f   *  Root %-8s  %d/%d\n",rootmarks,gROOT->GetVersion(),
