@@ -104,6 +104,10 @@ namespace cling {
     using ModuleFileExtensions =
         std::vector<std::shared_ptr<clang::ModuleFileExtension>>;
 
+    /// When CodeGen is created the first llvm::Module gets cached in many places
+    /// and we must keep it alive.
+    std::unique_ptr<llvm::Module> CachedInCodeGenModule;
+
   public:
     enum EParseResult {
       kSuccess,
@@ -264,6 +268,7 @@ namespace cling {
     ///
     llvm::Module* StartModule();
 
+    std::unique_ptr<llvm::Module> GenModule();
   };
 } // end namespace cling
 #endif // CLING_INCREMENTAL_PARSER_H

@@ -409,6 +409,7 @@ namespace cling {
     // been defined yet!
     ParseResultTransaction PRT = endTransaction(CurT);
     result.push_back(PRT);
+    CachedInCodeGenModule = GenModule();
     return true;
   }
 
@@ -593,9 +594,8 @@ namespace cling {
       bool MustStartNewModule = false;
       if (!T->isNestedTransaction() && hasCodeGenerator()) {
         MustStartNewModule = true;
-        std::unique_ptr<llvm::Module> M(getCodeGenerator()->ReleaseModule());
 
-        if (M) {
+        if (std::unique_ptr<llvm::Module> M = GenModule()) {
           T->setModule(std::move(M));
         }
       }
@@ -611,7 +611,7 @@ namespace cling {
 
       // Create a new module if necessary.
       if (MustStartNewModule)
-        StartModule();
+        GenModule();
 
       return;
     }
@@ -743,9 +743,7 @@ namespace cling {
       commitTransaction(PRT);
       deserT = PRT.getPointer();
 
-      std::unique_ptr<llvm::Module> M(getCodeGenerator()->ReleaseModule());
-
-      if (M)
+      if (std::unique_ptr<llvm::Module> M = GenModule())
         T->setModule(std::move(M));
 
       if (T->getIssuedDiags() != Transaction::kNone) {
@@ -759,7 +757,7 @@ namespace cling {
         callbacks->TransactionCodeGenFinished(*T);
 
       // Create a new module.
-      StartModule();
+      GenModule();
     }
   }
 
@@ -941,6 +939,29 @@ namespace cling {
       return kSuccessWithWarnings;
 
     return kSuccess;
+  }
+
+  std::unique_ptr<llvm::Module> IncrementalParser::GenModule() {
+    static unsigned ID = 0;
+    if (CodeGenerator *CG = getCodeGenerator()) {
+      // Clang's CodeGen is designed to work with a single llvm::Module. In many
+      // cases for convenience various CodeGen parts have a reference to the
+      // llvm::Module (TheModule or Module) which does not change when a new
+      // module is pushed. However, the execution engine wants to take ownership
+      // of the module which does not map well to CodeGen's design. To work this
+      // around we created an empty module to make CodeGen happy. We should make
+      // sure it always stays empty.
+      assert((!CachedInCodeGenModule ||
+              (CachedInCodeGenModule->empty() &&
+              CachedInCodeGenModule->global_empty() &&
+              CachedInCodeGenModule->alias_empty() &&
+              CachedInCodeGenModule->ifunc_empty())) &&
+            "CodeGen wrote to a readonly module");
+      std::unique_ptr<llvm::Module> M(CG->ReleaseModule());
+      StartModule();
+      return M;
+    }
+    return nullptr;
   }
 
   llvm::Error IncrementalParser::ParseOrWrapTopLevelDecl() {
