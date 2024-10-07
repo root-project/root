@@ -1035,6 +1035,29 @@ void ROOT::Experimental::Internal::RNTupleDescriptorBuilder::BeginHeaderExtensio
       fDescriptor.fHeaderExtension = std::make_unique<RNTupleDescriptor::RHeaderExtension>();
 }
 
+void ROOT::Experimental::Internal::RNTupleDescriptorBuilder::ShiftAliasColumns(std::uint32_t offset)
+{
+   std::vector<DescriptorId_t> aliasColumns;
+   aliasColumns.reserve(fDescriptor.GetNLogicalColumns() - fDescriptor.GetNPhysicalColumns());
+   for (const auto &[_, c] : fDescriptor.fColumnDescriptors) {
+      if (c.IsAliasColumn())
+         aliasColumns.emplace_back(c.GetLogicalId());
+   }
+
+   for (auto id : aliasColumns) {
+      auto c = fDescriptor.fColumnDescriptors[id].Clone();
+      fDescriptor.fColumnDescriptors.erase(id);
+      for (auto &link : fDescriptor.fFieldDescriptors[c.fFieldId].fLogicalColumnIds) {
+         if (link == c.fLogicalColumnId) {
+            link += offset;
+            break;
+         }
+      }
+      c.fLogicalColumnId += offset;
+      fDescriptor.fColumnDescriptors.emplace(c.fLogicalColumnId, std::move(c));
+   }
+}
+
 ROOT::Experimental::RResult<void>
 ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AddCluster(RClusterDescriptor &&clusterDesc)
 {
