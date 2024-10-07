@@ -104,7 +104,16 @@ TH2F     *gH2 = nullptr;
 TFile    *gHsimple = nullptr;
 TFile    *gCernstaff = nullptr;
 
-static TString kSkipCCode = "__skip_c_code_generation__";
+const TString kSkipCCode = "__skip_c_code_generation__";
+
+struct TestEntry {
+   Int_t TestNum;
+   TString title, psfile, ps2file, pdffile, jpgfile, pngfile, ccode;
+   Bool_t execute_ccode;
+   Int_t IPS;
+};
+
+std::vector<TestEntry> gReports;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -125,7 +134,7 @@ Int_t StatusPrint(TString &filename, Int_t id, const TString &title, Int_t res, 
          std::cout << line;
          for (Int_t i = nch; i < 67; i++) std::cout << ".";
          std::cout << " OK" << std::endl;
-#ifndef ClingWorkAroundDeletedSourceFile
+#ifndef __CLING__
          if (!gOptionK)
             gSystem->Unlink(filename.Data());
 #endif
@@ -221,54 +230,57 @@ void TestReport(TCanvas *C, const TString &title, const TString &arg = "", Int_t
 {
    gErrorIgnoreLevel = 9999;
 
-   TString psfile, ps2file;
+   TestEntry e;
+
+   e.TestNum = gTestNum;
+   e.title = title;
 
    if (gWebMode) {
-      psfile = TString::Format("sg1_%2.2d.svg", gTestNum);
-      ps2file = TString::Format("sg2_%2.2d.svg", gTestNum);
-      gROOT->ProcessLine("TWebCanvas::BatchImageMode(10);");
-      IPS = 1; // check only size of SVG files
+      e.psfile = TString::Format("sg1_%2.2d.svg", e.TestNum);
+      e.ps2file = TString::Format("sg2_%2.2d.svg", e.TestNum);
+      e.IPS = 1; // check only size of web SVG files
    } else {
-      psfile = TString::Format("sg1_%2.2d.ps", gTestNum);
-      ps2file = TString::Format("sg2_%2.2d.ps", gTestNum);
+      e.psfile = TString::Format("sg1_%2.2d.ps", e.TestNum);
+      e.ps2file = TString::Format("sg2_%2.2d.ps", e.TestNum);
+      e.IPS = IPS;
    }
 
-   TString pdffile = TString::Format("sg%2.2d.pdf",gTestNum);
+   e.pdffile = TString::Format("sg%2.2d.pdf",e.TestNum);
 
-   TString jpgfile = TString::Format("sg%2.2d.jpg", gTestNum);
+   e.jpgfile = TString::Format("sg%2.2d.jpg", e.TestNum);
 
-   TString pngfile = TString::Format("sg%2.2d.png", gTestNum);
+   e.pngfile = TString::Format("sg%2.2d.png", e.TestNum);
 
-   TString ccode = TString::Format("sg%2.2d.C", gTestNum);
+   e.ccode = TString::Format("sg%2.2d.C", e.TestNum);
 
-   Bool_t execute_ccode = (arg != kSkipCCode);
+   e.execute_ccode = (arg != kSkipCCode);
 
    // start files generation
 
    if (gWebMode) {
-      C->SaveAs(psfile);
+      C->SaveAs(e.psfile);
 
-      C->SaveAs(pdffile);
+      C->SaveAs(e.pdffile);
    } else {
-      TPostScript ps1(psfile, 111);
+      TPostScript ps1(e.psfile, 111);
       C->cd(0);
       C->Draw();
       ps1.Close();
 
-      TPDF pdf(pdffile, 111);
+      TPDF pdf(e.pdffile, 111);
       C->cd(0);
       C->Draw();
       pdf.Close();
    }
 
    C->cd(0);
-   C->SaveAs(jpgfile);
+   C->SaveAs(e.jpgfile);
 
    C->cd(0);
-   C->SaveAs(pngfile);
+   C->SaveAs(e.pngfile);
 
-   if (execute_ccode) {
-      C->SaveAs(ccode);
+   if (e.execute_ccode) {
+      C->SaveAs(e.ccode);
       delete C;
       C = nullptr;
 
@@ -277,61 +289,68 @@ void TestReport(TCanvas *C, const TString &title, const TString &arg = "", Int_t
          if (old) gDirectory->GetList()->Remove(old);
       }
 
-      gROOT->ProcessLine(".x " + ccode);
-      gPad->SaveAs(ps2file);
+      gROOT->ProcessLine(".x " + e.ccode);
+      gPad->SaveAs(e.ps2file);
    }
 
-   // done files generation
-   if (gWebMode) {
-      // all images produced with single browser invocation
-      gROOT->ProcessLine("TWebCanvas::BatchImageMode(0);");
-   }
-
-   if (IPS) {
-      StatusPrint(psfile,  gTestNum, title, FileSize(psfile) ,
-                                            gPS1RefNb[gTestNum-1],
-                                            gPS1ErrNb[gTestNum-1]);
-   } else {
-      StatusPrint(psfile,  gTestNum, title, AnalysePS(psfile) ,
-                                            gPS1RefNb[gTestNum-1],
-                                            gPS1ErrNb[gTestNum-1]);
-   }
-
-   StatusPrint(pdffile, 0, "  PDF output", FileSize(pdffile),
-                                           gPDFRefNb[gTestNum-1],
-                                           gPDFErrNb[gTestNum-1]);
-
-   StatusPrint(jpgfile, 0, "  JPG output", FileSize(jpgfile),
-                                           gJPGRefNb[gTestNum-1],
-                                           gJPGErrNb[gTestNum-1]);
-
-   StatusPrint(pngfile, 0, "  PNG output", FileSize(pngfile),
-                                           gPNGRefNb[gTestNum-1],
-                                           gPNGErrNb[gTestNum-1]);
-
-   if (execute_ccode) {
-      Int_t ret_code = 0;
-
-      if (IPS) {
-         ret_code = StatusPrint(psfile,-1, "  C file result", FileSize(ps2file),
-                                                      gPS2RefNb[gTestNum-1],
-                                                      gPS2ErrNb[gTestNum-1]);
-      } else {
-         ret_code = StatusPrint(psfile,-1, "  C file result", AnalysePS(ps2file),
-                                                      gPS2RefNb[gTestNum-1],
-                                                      gPS2ErrNb[gTestNum-1]);
-      }
-
-   #ifndef ClingWorkAroundDeletedSourceFile
-      if (!gOptionK && !ret_code)
-         gSystem->Unlink(ccode);
-   #endif
-   } else {
-      if (gOptionR)
-         printf("%10d%10d\n",0,0);
-   }
+   gReports.emplace_back(e);
 
    gErrorIgnoreLevel = 0;
+}
+
+void start_block(const TString &title, Bool_t with3d = kFALSE)
+{
+   if (!gOptionR) {
+      std::cout << "**********************************************************************" <<std::endl;
+      std::cout << "*  Starting " << title << " - S T R E S S " << TString(' ', 41 - title.Length()) << " *" << std::endl;
+      std::cout << "**********************************************************************" <<std::endl;
+   }
+   if (gWebMode) {
+      // one cannot create more than 10 webgl contexts in single browser instance
+      if (with3d)
+         gROOT->ProcessLine("TWebCanvas::BatchImageMode(10);");
+      else
+         gROOT->ProcessLine("TWebCanvas::BatchImageMode(80);");
+   }
+}
+
+
+void print_reports()
+{
+   // done files generation
+   // all non-processed web images will be generated now
+   if (gWebMode)
+      gROOT->ProcessLine("TWebCanvas::BatchImageMode(0);");
+
+   for (auto &e : gReports) {
+
+      StatusPrint(e.psfile,  e.TestNum, e.title,
+                  e.IPS ? FileSize(e.psfile) : AnalysePS(e.psfile), gPS1RefNb[e.TestNum-1], gPS1ErrNb[e.TestNum-1]);
+
+      StatusPrint(e.pdffile, 0, "  PDF output",
+                  FileSize(e.pdffile), gPDFRefNb[e.TestNum-1], gPDFErrNb[e.TestNum-1]);
+
+      StatusPrint(e.jpgfile, 0, "  JPG output",
+                  FileSize(e.jpgfile), gJPGRefNb[e.TestNum-1], gJPGErrNb[e.TestNum-1]);
+
+      StatusPrint(e.pngfile, 0, "  PNG output",
+                  FileSize(e.pngfile), gPNGRefNb[e.TestNum-1], gPNGErrNb[e.TestNum-1]);
+
+      if (e.execute_ccode) {
+         Int_t ret_code = StatusPrint(e.psfile,-1, "  C file result",
+                                    e.IPS ? FileSize(e.ps2file) : AnalysePS(e.ps2file), gPS2RefNb[e.TestNum-1], gPS2ErrNb[e.TestNum-1]);
+
+#ifndef __CLING__
+         if (!gOptionK && !ret_code)
+            gSystem->Unlink(e.ccode);
+#endif
+      } else {
+         if (gOptionR)
+            printf("%10d%10d\n",0,0);
+      }
+   }
+
+   gReports.clear();
 }
 
 
@@ -2649,17 +2668,14 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
    } else {
       std::cout << "**********************************************************************" <<std::endl;
       std::cout << "*  Starting  Graphics - S T R E S S suite                            *" <<std::endl;
-      std::cout << "**********************************************************************" <<std::endl;
    }
 
    gTestNum     = 0;
    gTestsFailed = 0;
 
-   if (!gOptionR) {
-      gBenchmark->Start("stressGraphics");
-      std::cout << "*  Starting Basic Graphics - S T R E S S                             *" <<std::endl;
-      std::cout << "**********************************************************************" <<std::endl;
-   }
+   gBenchmark->Start("stressGraphics");
+
+   start_block("Basic Graphics");
    tline         ();
    tmarker       ();
    tpolyline     ();
@@ -2676,11 +2692,9 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
    tmathtext     ();
    transpad      ();
    statfitparam  ();
-   if (!gOptionR) {
-      std::cout << "**********************************************************************" <<std::endl;
-      std::cout << "*  Starting High Level 2D Primitives - S T R E S S                   *" <<std::endl;
-      std::cout << "**********************************************************************" <<std::endl;
-   }
+   print_reports ();
+
+   start_block("High Level 2D Primitives");
    tgaxis1       ();
    tgaxis2       ();
    tgaxis3       ();
@@ -2697,11 +2711,9 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
    tmultigraph1  ();
    tmultigraph2  ();
    waves         ();
-   if (!gOptionR) {
-      std::cout << "**********************************************************************" <<std::endl;
-      std::cout << "*  Starting High Level 3D Primitives - S T R E S S                   *" <<std::endl;
-      std::cout << "**********************************************************************" <<std::endl;
-   }
+   print_reports ();
+
+   start_block("High Level 3D Primitives", kTRUE);
    options2d1    ();
    options2d2    ();
    options2d3    ();
@@ -2711,11 +2723,9 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
    tgraph2d1     ();
    tgraph2d2     ();
    tgraph2d3     ();
-   if (!gOptionR) {
-      std::cout << "**********************************************************************" <<std::endl;
-      std::cout << "*  Starting complex drawing and TPad - S T R E S S                   *" <<std::endl;
-      std::cout << "**********************************************************************" <<std::endl;
-   }
+   print_reports ();
+
+   start_block("complex drawing and TPad");
    ntuple1       ();
    quarks        ();
    timage        ();
@@ -2725,6 +2735,8 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
    clonepad      ();
    hbars         ();
    th2poly       ();
+   print_reports ();
+
    if (!gOptionR) {
       std::cout << "**********************************************************************" <<std::endl;
       if (!gTestsFailed) {
@@ -2815,11 +2827,5 @@ int main(int argc, char *argv[])
 
    return 0;
 }
-#else
-// Unlinking causes the file system to re-use inodes. This confuses clang:
-// "Ummm I know the content of the file with that inode number already",
-// even though the deleted file has been replaced by a new one (which happens
-// to re-use the old inode number).
-#define ClingWorkAroundDeletedSourceFile 1
 #endif
 
