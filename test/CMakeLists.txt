@@ -166,15 +166,23 @@ if(ROOT_opengl_FOUND)
   endif()
   configure_file(stressGraphics_web.ref stressGraphics_web.ref COPYONLY)
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/../tutorials/graphics/earth.dat earth.dat COPYONLY)
-  ROOT_ADD_TEST(test-stressgraphics ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH} COMMAND stressGraphics -b -k FAILREGEX "FAILED|Error in" LABELS longtest)
-  ROOT_ADD_TEST(test-stressgraphics-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressGraphics.cxx
-                FAILREGEX "FAILED|Error in" DEPENDS test-stressgraphics)
+  ROOT_ADD_TEST(test-stressgraphics
+                ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}
+                COMMAND stressGraphics -b -k
+                FAILREGEX "FAILED|Error in"
+                LABELS longtest)
+  ROOT_ADD_TEST(test-stressgraphics-interpreted
+                COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressGraphics.cxx
+                FAILREGEX "FAILED|Error in"
+                DEPENDS test-stressgraphics)
   if(CHROME_EXECUTABLE)
-     ROOT_ADD_TEST(test-stressgraphics-chrome ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}
-                   DEPENDS test-stressgraphics test-stressgraphics-interpreted
-                   COMMAND stressGraphics -b -k --web=chrome FAILREGEX "FAILED|Error in" LABELS longtest)
+     ROOT_ADD_TEST(test-stressgraphics-chrome
+                   RUN_SERIAL
+                   ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}
+                   COMMAND stressGraphics -b -k --web=chrome
+                   FAILREGEX "FAILED|Error in"
+                   LABELS longtest)
   endif()
-
 endif()
 
 #--stressHistogram------------------------------------------------------------------------------------
