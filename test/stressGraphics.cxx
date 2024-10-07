@@ -230,29 +230,19 @@ void TestReport(TCanvas *C, const TString &title, const TString &arg = "", Int_t
 {
    gErrorIgnoreLevel = 9999;
 
-   TestEntry e;
+   const char *prefix = gWebMode ? "sgw" : "sg";
+   const char *main_extension = gWebMode ? "svg" : "ps";
 
+   TestEntry e;
    e.TestNum = gTestNum;
    e.title = title;
-
-   if (gWebMode) {
-      e.psfile = TString::Format("sg1_%2.2d.svg", e.TestNum);
-      e.ps2file = TString::Format("sg2_%2.2d.svg", e.TestNum);
-      e.IPS = 1; // check only size of web SVG files
-   } else {
-      e.psfile = TString::Format("sg1_%2.2d.ps", e.TestNum);
-      e.ps2file = TString::Format("sg2_%2.2d.ps", e.TestNum);
-      e.IPS = IPS;
-   }
-
-   e.pdffile = TString::Format("sg%2.2d.pdf",e.TestNum);
-
-   e.jpgfile = TString::Format("sg%2.2d.jpg", e.TestNum);
-
-   e.pngfile = TString::Format("sg%2.2d.png", e.TestNum);
-
-   e.ccode = TString::Format("sg%2.2d.C", e.TestNum);
-
+   e.IPS = gWebMode ? 1 : IPS; // check only size of web SVG files
+   e.psfile = TString::Format("%s1_%2.2d.%s", prefix, e.TestNum, main_extension);
+   e.ps2file = TString::Format("%s2_%2.2d.%s", prefix, e.TestNum, main_extension);
+   e.pdffile = TString::Format("%s%2.2d.pdf", prefix, e.TestNum);
+   e.jpgfile = TString::Format("%s%2.2d.jpg", prefix, e.TestNum);
+   e.pngfile = TString::Format("%s%2.2d.png", prefix, e.TestNum);
+   e.ccode = TString::Format("%s%2.2d.C", prefix, e.TestNum);
    e.execute_ccode = (arg != kSkipCCode);
 
    // start files generation
@@ -319,8 +309,11 @@ void print_reports()
 {
    // done files generation
    // all non-processed web images will be generated now
-   if (gWebMode)
+   if (gWebMode) {
+      gErrorIgnoreLevel = 9999;
       gROOT->ProcessLine("TWebCanvas::BatchImageMode(0);");
+      gErrorIgnoreLevel = 0;
+   }
 
    for (auto &e : gReports) {
 
