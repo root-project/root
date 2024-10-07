@@ -197,9 +197,44 @@ TEST(RNTuple, ModelExtensionMultiple)
    EXPECT_EQ("abcdefABCDEF1234567890!@#$%^&*()", str(4));
 }
 
-TEST(RNTuple, ModelExtensionProject)
+TEST(RNTuple, ModelExtensionProjectSimple)
 {
-   FileRaii fileGuard("test_ntuple_modelext_project.root");
+   FileRaii fileGuard("test_ntuple_modelext_project_simple.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto fieldPt = model->MakeField<float>("pt", 42.0);
+      model->AddProjectedField(std::make_unique<RField<float>>("aliasPt"), [](const std::string &) { return "pt"; });
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      auto modelUpdater = writer->CreateModelUpdater();
+      modelUpdater->BeginUpdate();
+      auto fieldE = modelUpdater->MakeField<float>("E", 1.0);
+      modelUpdater->CommitUpdate();
+
+      writer->Fill();
+      *fieldPt = 137.0;
+      *fieldE = 2.0;
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   EXPECT_EQ(2U, reader->GetNEntries());
+   EXPECT_EQ(4U, reader->GetDescriptor().GetNFields());
+
+   auto pt = reader->GetView<float>("pt");
+   auto aliasPt = reader->GetView<float>("aliasPt");
+   auto E = reader->GetView<float>("E");
+   EXPECT_FLOAT_EQ(42.0, pt(0));
+   EXPECT_FLOAT_EQ(137.0, pt(1));
+   EXPECT_FLOAT_EQ(42.0, aliasPt(0));
+   EXPECT_FLOAT_EQ(137.0, aliasPt(1));
+   EXPECT_FLOAT_EQ(1.0, E(0));
+   EXPECT_FLOAT_EQ(2.0, E(1));
+}
+
+TEST(RNTuple, ModelExtensionProjectComplex)
+{
+   FileRaii fileGuard("test_ntuple_modelext_project_complex.root");
    std::vector<std::uint32_t> refVec{0x00, 0xff, 0x55, 0xaa};
    {
       auto model = RNTupleModel::Create();
@@ -233,8 +268,8 @@ TEST(RNTuple, ModelExtensionProject)
 
    auto pt = ntuple->GetView<float>("pt");
    auto aliasVec = ntuple->GetView<std::vector<std::uint32_t>>("aliasVec");
-   EXPECT_EQ(42.0, pt(0));
-   EXPECT_EQ(12.0, pt(1));
+   EXPECT_FLOAT_EQ(42.0, pt(0));
+   EXPECT_FLOAT_EQ(12.0, pt(1));
    EXPECT_EQ(std::vector<std::uint32_t>{}, aliasVec(0));
    EXPECT_EQ(refVec, aliasVec(1));
 }

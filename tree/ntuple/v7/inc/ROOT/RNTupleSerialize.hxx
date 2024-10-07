@@ -131,7 +131,11 @@ public:
       }
       /// Map an in-memory column ID to its on-disk counterpart. It is allowed to call this function multiple times for
       /// the same `memId`, in which case the return value is the on-disk ID assigned on the first call.
-      DescriptorId_t MapColumnId(DescriptorId_t memId) {
+      /// Note that we only map physical column IDs.  Logical column IDs of alias columns are shifted before the
+      /// serialization of the extension header.  Also, we only need to query physical column IDs for the page list
+      /// serialization.
+      DescriptorId_t MapPhysicalColumnId(DescriptorId_t memId)
+      {
          auto onDiskId = fOnDisk2MemColumnIDs.size();
          const auto &p = fMem2OnDiskColumnIDs.try_emplace(memId, onDiskId);
          if (p.second)

@@ -740,6 +740,25 @@ void ROOT::Experimental::Internal::RPagePersistentSink::UpdateSchema(const RNTup
                                                                      NTupleSize_t firstEntry)
 {
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
+
+   if (descriptor.GetNLogicalColumns() > descriptor.GetNPhysicalColumns()) {
+      // If we already have alias columns, add an offset to the alias columns so that the new physical columns
+      // of the changeset follow immediately the already existing physical columns
+      auto getNColumns = [](const RFieldBase &f) -> std::size_t {
+         const auto &reps = f.GetColumnRepresentatives();
+         if (reps.empty())
+            return 0;
+         return reps.size() * reps[0].size();
+      };
+      std::uint32_t nNewPhysicalColumns = 0;
+      for (auto f : changeset.fAddedFields) {
+         nNewPhysicalColumns += getNColumns(*f);
+         for (const auto &descendant : *f)
+            nNewPhysicalColumns += getNColumns(descendant);
+      }
+      fDescriptorBuilder.ShiftAliasColumns(nNewPhysicalColumns);
+   }
+
    auto addField = [&](RFieldBase &f) {
       auto fieldId = descriptor.GetNFields();
       fDescriptorBuilder.AddField(RFieldDescriptorBuilder::FromField(f).FieldId(fieldId).MakeDescriptor().Unwrap());
