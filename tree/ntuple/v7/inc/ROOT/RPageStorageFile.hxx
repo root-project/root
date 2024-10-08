@@ -34,13 +34,13 @@
 class TFile;
 
 namespace ROOT {
+class RNTuple; // for making RPageSourceFile a friend of RNTuple
 
 namespace Internal {
 class RRawFile;
 }
 
 namespace Experimental {
-class RNTuple; // for making RPageSourceFile a friend of RNTuple
 struct RNTupleLocator;
 
 namespace Internal {
@@ -115,7 +115,7 @@ public:
 */
 // clang-format on
 class RPageSourceFile : public RPageSource {
-   friend class ROOT::Experimental::RNTuple;
+   friend class ROOT::RNTuple;
 
 private:
    /// Holds the uncompressed header and footer

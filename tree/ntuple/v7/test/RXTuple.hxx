@@ -6,7 +6,6 @@
 
 // NOTE: This namespace must be the same as RNTuple
 namespace ROOT {
-namespace Experimental {
 
 // A mock of the RNTuple class, used to write a "future version" of RNTuple to a file.
 // The idea is:
@@ -42,7 +41,6 @@ public:
    ClassDefNV(RXTuple, 99);
 }; // class RXTuple
 
-} // namespace Experimental
 } // namespace ROOT
 
 #endif
