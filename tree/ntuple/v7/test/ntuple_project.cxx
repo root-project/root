@@ -76,6 +76,7 @@ TEST(RNTupleProjection, CatchInvalidMappings)
    model->MakeField<std::vector<float>>("vec");
    model->MakeField<std::variant<int, float>>("variant");
    model->MakeField<std::vector<std::vector<float>>>("nnlo");
+   model->MakeField<std::array<float, 3>>("lorentz");
 
    auto f1 = RFieldBase::Create("fail", "float").Unwrap();
    try {
@@ -134,10 +135,18 @@ TEST(RNTupleProjection, CatchInvalidMappings)
       EXPECT_THAT(err.what(), testing::HasSubstr("unsupported field mapping "));
    }
 
-   auto f6 = RFieldBase::Create("fail", "std::vector<float>").Unwrap();
+   auto f6 = RFieldBase::Create("fail", "float").Unwrap();
+   try {
+      model->AddProjectedField(std::move(f6), [](const std::string &) { return "lorentz._0"; }).ThrowOnError();
+      FAIL() << "mapping across fixed-size array should throw";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("unsupported field mapping "));
+   }
+
+   auto f7 = RFieldBase::Create("fail", "std::vector<float>").Unwrap();
    try {
       model
-         ->AddProjectedField(std::move(f6),
+         ->AddProjectedField(std::move(f7),
                              [](const std::string &fieldName) {
                                 if (fieldName == "fail")
                                    return "nnlo._0";
