@@ -40,6 +40,7 @@ class ImportLoadLibs(unittest.TestCase):
             'libssl',
             'libcrypt.*', # by libssl
             'libtbb',
+            'libtbb_debug',
             'libtbbmalloc',
             'liburing', # by libRIO if uring option is enabled
             # On centos7 libssl links against kerberos pulling in all dependencies below, removed with libssl1.1.0
