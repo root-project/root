@@ -996,10 +996,9 @@ specifically, it is stored as two fields:
   - Child field of type `T`, which must by a type with RNTuple I/O support.
     The name of the child field is `_0`.
 
-### ROOT::Experimental::RNTupleCardinality<SizeT>
+### ROOT::RNTupleCardinality<SizeT>
 
-A field whose type is `ROOT::Experimental::RNTupleCardinality<SizeT>` is associated to a single column
-of type `(Split)Index[32|64]`.
+A field whose type is `ROOT::RNTupleCardinality<SizeT>` is associated to a single column of type `(Split)Index[32|64]`.
 This field presents the offsets in the index column as lengths
 that correspond to the cardinality of the pointed-to collection.
 It is meant to be used as a projected field and only for reading the size of a collection.
