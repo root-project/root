@@ -85,47 +85,47 @@ ClassImp(TBranch);
 /// Default constructor.  Used for I/O by default.
 
 TBranch::TBranch()
-: TNamed()
-, TAttFill(0, 1001)
-, fCompress(0)
-, fBasketSize(32000)
-, fEntryOffsetLen(1000)
-, fWriteBasket(0)
-, fEntryNumber(0)
-, fExtraBasket(nullptr)
-, fOffset(0)
-, fMaxBaskets(10)
-, fNBaskets(0)
-, fSplitLevel(0)
-, fNleaves(0)
-, fReadBasket(0)
-, fReadEntry(-1)
-, fFirstBasketEntry(-1)
-, fNextBasketEntry(-1)
-, fCurrentBasket(nullptr)
-, fEntries(0)
-, fFirstEntry(0)
-, fTotBytes(0)
-, fZipBytes(0)
-, fBranches()
-, fLeaves()
-, fBaskets(fMaxBaskets)
-, fBasketBytes(nullptr)
-, fBasketEntry(nullptr)
-, fBasketSeek(nullptr)
-, fTree(nullptr)
-, fMother(nullptr)
-, fParent(nullptr)
-, fAddress(nullptr)
-, fDirectory(nullptr)
-, fFileName("")
-, fEntryBuffer(nullptr)
-, fTransientBuffer(nullptr)
-, fBrowsables(nullptr)
-, fBulk(*this)
-, fSkipZip(false)
-, fReadLeaves(&TBranch::ReadLeavesImpl)
-, fFillLeaves(&TBranch::FillLeavesImpl)
+   : TNamed(),
+     TAttFill(0, 1001),
+     fCompress(0),
+     fBasketSize(32000),
+     fEntryOffsetLen(1000),
+     fWriteBasket(0),
+     fEntryNumber(0),
+     fExtraBaskets(),
+     fOffset(0),
+     fMaxBaskets(10),
+     fNBaskets(0),
+     fSplitLevel(0),
+     fNleaves(0),
+     fReadBasket(0),
+     fReadEntry(-1),
+     fFirstBasketEntry(-1),
+     fNextBasketEntry(-1),
+     fCurrentBasket(nullptr),
+     fEntries(0),
+     fFirstEntry(0),
+     fTotBytes(0),
+     fZipBytes(0),
+     fBranches(),
+     fLeaves(),
+     fBaskets(fMaxBaskets),
+     fBasketBytes(nullptr),
+     fBasketEntry(nullptr),
+     fBasketSeek(nullptr),
+     fTree(nullptr),
+     fMother(nullptr),
+     fParent(nullptr),
+     fAddress(nullptr),
+     fDirectory(nullptr),
+     fFileName(""),
+     fEntryBuffer(nullptr),
+     fTransientBuffer(nullptr),
+     fBrowsables(nullptr),
+     fBulk(*this),
+     fSkipZip(false),
+     fReadLeaves(&TBranch::ReadLeavesImpl),
+     fFillLeaves(&TBranch::FillLeavesImpl)
 {
    SetBit(TBranch::kDoNotUseBufferMap);
 }
@@ -197,48 +197,48 @@ TBranch::TBranch()
 ///    Note that this function is invoked by TTree::Branch
 
 TBranch::TBranch(TTree *tree, const char *name, void *address, const char *leaflist, Int_t basketsize, Int_t compress)
-   : TNamed(name, leaflist)
-, TAttFill(0, 1001)
-, fCompress(compress)
-, fBasketSize((basketsize < 100) ? 100 : basketsize)
-, fEntryOffsetLen(0)
-, fWriteBasket(0)
-, fEntryNumber(0)
-, fExtraBasket(nullptr)
-, fIOFeatures(tree ? tree->GetIOFeatures().GetFeatures() : 0)
-, fOffset(0)
-, fMaxBaskets(10)
-, fNBaskets(0)
-, fSplitLevel(0)
-, fNleaves(0)
-, fReadBasket(0)
-, fReadEntry(-1)
-, fFirstBasketEntry(-1)
-, fNextBasketEntry(-1)
-, fCurrentBasket(nullptr)
-, fEntries(0)
-, fFirstEntry(0)
-, fTotBytes(0)
-, fZipBytes(0)
-, fBranches()
-, fLeaves()
-, fBaskets(fMaxBaskets)
-, fBasketBytes(nullptr)
-, fBasketEntry(nullptr)
-, fBasketSeek(nullptr)
-, fTree(tree)
-, fMother(nullptr)
-, fParent(nullptr)
-, fAddress((char *)address)
-, fDirectory(fTree->GetDirectory())
-, fFileName("")
-, fEntryBuffer(nullptr)
-, fTransientBuffer(nullptr)
-, fBrowsables(nullptr)
-, fBulk(*this)
-, fSkipZip(false)
-, fReadLeaves(&TBranch::ReadLeavesImpl)
-, fFillLeaves(&TBranch::FillLeavesImpl)
+   : TNamed(name, leaflist),
+     TAttFill(0, 1001),
+     fCompress(compress),
+     fBasketSize((basketsize < 100) ? 100 : basketsize),
+     fEntryOffsetLen(0),
+     fWriteBasket(0),
+     fEntryNumber(0),
+     fExtraBaskets(),
+     fIOFeatures(tree ? tree->GetIOFeatures().GetFeatures() : 0),
+     fOffset(0),
+     fMaxBaskets(10),
+     fNBaskets(0),
+     fSplitLevel(0),
+     fNleaves(0),
+     fReadBasket(0),
+     fReadEntry(-1),
+     fFirstBasketEntry(-1),
+     fNextBasketEntry(-1),
+     fCurrentBasket(nullptr),
+     fEntries(0),
+     fFirstEntry(0),
+     fTotBytes(0),
+     fZipBytes(0),
+     fBranches(),
+     fLeaves(),
+     fBaskets(fMaxBaskets),
+     fBasketBytes(nullptr),
+     fBasketEntry(nullptr),
+     fBasketSeek(nullptr),
+     fTree(tree),
+     fMother(nullptr),
+     fParent(nullptr),
+     fAddress((char *)address),
+     fDirectory(fTree->GetDirectory()),
+     fFileName(""),
+     fEntryBuffer(nullptr),
+     fTransientBuffer(nullptr),
+     fBrowsables(nullptr),
+     fBulk(*this),
+     fSkipZip(false),
+     fReadLeaves(&TBranch::ReadLeavesImpl),
+     fFillLeaves(&TBranch::FillLeavesImpl)
 {
    Init(name,leaflist,compress);
 }
@@ -251,48 +251,48 @@ TBranch::TBranch(TTree *tree, const char *name, void *address, const char *leafl
 
 TBranch::TBranch(TBranch *parent, const char *name, void *address, const char *leaflist, Int_t basketsize,
                  Int_t compress)
-: TNamed(name, leaflist)
-, TAttFill(0, 1001)
-, fCompress(compress)
-, fBasketSize((basketsize < 100) ? 100 : basketsize)
-, fEntryOffsetLen(0)
-, fWriteBasket(0)
-, fEntryNumber(0)
-, fExtraBasket(nullptr)
-, fIOFeatures(parent->fIOFeatures)
-, fOffset(0)
-, fMaxBaskets(10)
-, fNBaskets(0)
-, fSplitLevel(0)
-, fNleaves(0)
-, fReadBasket(0)
-, fReadEntry(-1)
-, fFirstBasketEntry(-1)
-, fNextBasketEntry(-1)
-, fCurrentBasket(nullptr)
-, fEntries(0)
-, fFirstEntry(0)
-, fTotBytes(0)
-, fZipBytes(0)
-, fBranches()
-, fLeaves()
-, fBaskets(fMaxBaskets)
-, fBasketBytes(nullptr)
-, fBasketEntry(nullptr)
-, fBasketSeek(nullptr)
-, fTree(parent ? parent->GetTree() : nullptr)
-, fMother(parent ? parent->GetMother() : nullptr)
-, fParent(parent)
-, fAddress((char *)address)
-, fDirectory(fTree ? fTree->GetDirectory() : nullptr)
-, fFileName("")
-, fEntryBuffer(nullptr)
-, fTransientBuffer(nullptr)
-, fBrowsables(nullptr)
-, fBulk(*this)
-, fSkipZip(false)
-, fReadLeaves(&TBranch::ReadLeavesImpl)
-, fFillLeaves(&TBranch::FillLeavesImpl)
+   : TNamed(name, leaflist),
+     TAttFill(0, 1001),
+     fCompress(compress),
+     fBasketSize((basketsize < 100) ? 100 : basketsize),
+     fEntryOffsetLen(0),
+     fWriteBasket(0),
+     fEntryNumber(0),
+     fExtraBaskets(),
+     fIOFeatures(parent->fIOFeatures),
+     fOffset(0),
+     fMaxBaskets(10),
+     fNBaskets(0),
+     fSplitLevel(0),
+     fNleaves(0),
+     fReadBasket(0),
+     fReadEntry(-1),
+     fFirstBasketEntry(-1),
+     fNextBasketEntry(-1),
+     fCurrentBasket(nullptr),
+     fEntries(0),
+     fFirstEntry(0),
+     fTotBytes(0),
+     fZipBytes(0),
+     fBranches(),
+     fLeaves(),
+     fBaskets(fMaxBaskets),
+     fBasketBytes(nullptr),
+     fBasketEntry(nullptr),
+     fBasketSeek(nullptr),
+     fTree(parent ? parent->GetTree() : nullptr),
+     fMother(parent ? parent->GetMother() : nullptr),
+     fParent(parent),
+     fAddress((char *)address),
+     fDirectory(fTree ? fTree->GetDirectory() : nullptr),
+     fFileName(""),
+     fEntryBuffer(nullptr),
+     fTransientBuffer(nullptr),
+     fBrowsables(nullptr),
+     fBulk(*this),
+     fSkipZip(false),
+     fReadLeaves(&TBranch::ReadLeavesImpl),
+     fFillLeaves(&TBranch::FillLeavesImpl)
 {
    Init(name,leaflist,compress);
 }
@@ -464,8 +464,11 @@ TBranch::~TBranch()
    delete [] fBasketBytes;
    fBasketBytes = nullptr;
 
-   if (fExtraBasket && !fBaskets.Remove(fExtraBasket))
-      delete fExtraBasket;
+   for (auto *extra : fExtraBaskets) {
+      if (!fBaskets.Remove(extra)) {
+         delete extra;
+      }
+   }
    fBaskets.Delete();
    fNBaskets = 0;
    fCurrentBasket = nullptr;
@@ -1538,8 +1541,7 @@ Int_t TBranch::GetBulkEntries(Long64_t entry, TBuffer &user_buf)
    user_buf.SetBufferOffset(bufbegin);
 
    if (fCurrentBasket == nullptr) {
-      R__ASSERT(fExtraBasket == nullptr && "fExtraBasket should have been set to nullptr by GetFreshBasket");
-      fExtraBasket = basket;
+      fExtraBaskets.push_back(basket);
       basket->DisownBuffer();
    }
 
@@ -1676,8 +1678,7 @@ Int_t TBranch::GetEntriesSerialized(Long64_t entry, TBuffer &user_buf, TBuffer *
    }
 
    if (fCurrentBasket == nullptr) {
-      R__ASSERT(fExtraBasket == nullptr && "fExtraBasket should have been set to nullptr by GetFreshBasket");
-      fExtraBasket = basket;
+      fExtraBaskets.push_back(basket);
       basket->DisownBuffer();
    }
 
@@ -1894,9 +1895,9 @@ TFile* TBranch::GetFile(Int_t mode)
 TBasket* TBranch::GetFreshBasket(Int_t basketnumber, TBuffer* user_buffer)
 {
    TBasket *basket = nullptr;
-   if (user_buffer && fExtraBasket) {
-      basket = fExtraBasket;
-      fExtraBasket = nullptr;
+   if (user_buffer && fExtraBaskets.size()) {
+      basket = fExtraBaskets.back();
+      fExtraBaskets.pop_back();
       basket->AdoptBuffer(user_buffer);
    } else {
       if (GetTree()->MemoryFull(0)) {
@@ -1956,9 +1957,9 @@ TBasket *TBranch::GetFreshCluster(TBuffer* user_buffer)
 
    auto CreateOrReuseBasket = [this, user_buffer]() -> TBasket* {
       TBasket *newbasket = nullptr;
-      if (fExtraBasket) {
-         newbasket = fExtraBasket;
-         fExtraBasket = nullptr;
+      if (fExtraBaskets.size()) {
+         newbasket = fExtraBaskets.back();
+         fExtraBaskets.pop_back();
       } else {
          newbasket = fTree->CreateBasket(this);
       }
