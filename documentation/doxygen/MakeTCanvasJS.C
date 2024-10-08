@@ -36,7 +36,7 @@ void MakeTCanvasJS(const char *MacroName, const char *IN, const char *OutDir, bo
    fprintf(fh,"<center>\n");
    while ((canvas = (TCanvas*) next()) != nullptr) {
       ImageNum++;
-      json_codes.push_back(TBufferJSON::ToJSON(canvas, TBufferJSON::kNoSpaces + TBufferJSON::kSameSuppression));
+      json_codes.push_back(TWebCanvas::CreateCanvasJSON(canvas, TBufferJSON::kNoSpaces + TBufferJSON::kSameSuppression));
       fprintf(fh,"   <div id=\"draw_pict%d_%s\" style=\"position: relative; width: %dpx; height: %dpx;\"></div>\n",
                   ImageNum,IN,canvas->GetWindowWidth(),canvas->GetWindowHeight());
    }
