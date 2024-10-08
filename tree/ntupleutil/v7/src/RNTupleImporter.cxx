@@ -340,8 +340,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
       }
 
       // Add projected fields for count leaf
-      auto projectedField =
-         RFieldBase::Create(countLeafName, "ROOT::Experimental::RNTupleCardinality<std::uint32_t>").Unwrap();
+      auto projectedField = RFieldBase::Create(countLeafName, "ROOT::RNTupleCardinality<std::uint32_t>").Unwrap();
       fModel->AddProjectedField(std::move(projectedField), [&c](const std::string &) { return c.fFieldName; });
 
       iLeafCountCollection++;

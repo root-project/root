@@ -75,16 +75,13 @@ TEST(RNTupleBulk, Complex)
 
 TEST(RNTupleBulk, CardinalityField)
 {
-   using RNTupleCardinality32 = ROOT::Experimental::RNTupleCardinality<std::uint32_t>;
-   using RNTupleCardinality64 = ROOT::Experimental::RNTupleCardinality<std::uint64_t>;
-
    FileRaii fileGuard("test_ntuple_bulk_cardinality.root");
    {
       auto model = RNTupleModel::Create();
       auto fldVec = model->MakeField<ROOT::RVec<int>>("vint");
-      model->AddProjectedField(std::make_unique<RField<RNTupleCardinality32>>("card32"),
+      model->AddProjectedField(std::make_unique<RField<ROOT::RNTupleCardinality<std::uint32_t>>>("card32"),
                                [](const std::string &) { return "vint"; });
-      model->AddProjectedField(std::make_unique<RField<RNTupleCardinality64>>("card64"),
+      model->AddProjectedField(std::make_unique<RField<ROOT::RNTupleCardinality<std::uint64_t>>>("card64"),
                                [](const std::string &) { return "vint"; });
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       for (int i = 0; i < 10; ++i) {

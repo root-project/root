@@ -150,7 +150,7 @@ std::tuple<std::string, std::vector<size_t>> ParseArrayType(std::string_view typ
 std::string GetCanonicalTypeName(const std::string &typeName)
 {
    // The following types are asummed to be canonical names; thus, do not perform `typedef` resolution on those
-   if (typeName.substr(0, 5) == "std::" || typeName.substr(0, 39) == "ROOT::Experimental::RNTupleCardinality<")
+   if (typeName.substr(0, 5) == "std::" || typeName.substr(0, 25) == "ROOT::RNTupleCardinality<")
       return typeName;
 
    return TClassEdit::ResolveTypedef(typeName.c_str());
@@ -841,8 +841,8 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
          auto normalizedInnerTypeName = itemField->GetTypeName();
          result = std::make_unique<RAtomicField>(fieldName, "std::atomic<" + normalizedInnerTypeName + ">",
                                                  std::move(itemField));
-      } else if (canonicalType.substr(0, 39) == "ROOT::Experimental::RNTupleCardinality<") {
-         auto innerTypes = TokenizeTypeList(canonicalType.substr(39, canonicalType.length() - 40));
+      } else if (canonicalType.substr(0, 25) == "ROOT::RNTupleCardinality<") {
+         auto innerTypes = TokenizeTypeList(canonicalType.substr(25, canonicalType.length() - 26));
          if (innerTypes.size() != 1)
             return R__FORWARD_RESULT(fnFail("invalid cardinality template: " + canonicalType));
          if (innerTypes[0] == "std::uint32_t") {
@@ -1347,13 +1347,13 @@ void ROOT::Experimental::RCardinalityField::AcceptVisitor(Detail::RFieldVisitor 
    visitor.VisitCardinalityField(*this);
 }
 
-const ROOT::Experimental::RField<ROOT::Experimental::RNTupleCardinality<std::uint32_t>> *
+const ROOT::Experimental::RField<ROOT::RNTupleCardinality<std::uint32_t>> *
 ROOT::Experimental::RCardinalityField::As32Bit() const
 {
    return dynamic_cast<const RField<RNTupleCardinality<std::uint32_t>> *>(this);
 }
 
-const ROOT::Experimental::RField<ROOT::Experimental::RNTupleCardinality<std::uint64_t>> *
+const ROOT::Experimental::RField<ROOT::RNTupleCardinality<std::uint64_t>> *
 ROOT::Experimental::RCardinalityField::As64Bit() const
 {
    return dynamic_cast<const RField<RNTupleCardinality<std::uint64_t>> *>(this);

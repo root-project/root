@@ -25,6 +25,28 @@
 #include <ROOT/RNTupleReadOptions.hxx>
 
 namespace ROOT {
+
+/// Helper types to present an offset column as array of collection sizes.
+/// See RField<RNTupleCardinality<SizeT>> for details.
+template <typename SizeT>
+struct RNTupleCardinality {
+   static_assert(std::is_same_v<SizeT, std::uint32_t> || std::is_same_v<SizeT, std::uint64_t>,
+                 "RNTupleCardinality is only supported with std::uint32_t or std::uint64_t template parameters");
+
+   using ValueType = SizeT;
+
+   RNTupleCardinality() : fValue(0) {}
+   explicit constexpr RNTupleCardinality(ValueType value) : fValue(value) {}
+   RNTupleCardinality &operator=(const ValueType value)
+   {
+      fValue = value;
+      return *this;
+   }
+   operator ValueType() const { return fValue; }
+
+   ValueType fValue;
+};
+
 namespace Experimental {
 
 class RLogChannel;
@@ -122,27 +144,6 @@ using ClusterSize_t = RClusterSize;
 constexpr ClusterSize_t kInvalidClusterIndex(std::uint64_t(-1));
 
 constexpr int kUnknownCompressionSettings = -1;
-
-/// Helper types to present an offset column as array of collection sizes.
-/// See RField<RNTupleCardinality<SizeT>> for details.
-template <typename SizeT>
-struct RNTupleCardinality {
-   static_assert(std::is_same_v<SizeT, std::uint32_t> || std::is_same_v<SizeT, std::uint64_t>,
-                 "RNTupleCardinality is only supported with std::uint32_t or std::uint64_t template parameters");
-
-   using ValueType = SizeT;
-
-   RNTupleCardinality() : fValue(0) {}
-   explicit constexpr RNTupleCardinality(ValueType value) : fValue(value) {}
-   RNTupleCardinality &operator=(const ValueType value)
-   {
-      fValue = value;
-      return *this;
-   }
-   operator ValueType() const { return fValue; }
-
-   ValueType fValue;
-};
 
 /// Holds the index and the tag of a kSwitch column
 class RColumnSwitch {
