@@ -56,8 +56,10 @@ ROOT::Experimental::RNTupleModel::RProjectedFields::EnsureValidMapping(const RFi
    auto fnBreakPoint = [](const RFieldBase *f) -> const RFieldBase * {
       auto parent = f->GetParent();
       while (parent) {
-         if (parent->GetStructure() != ENTupleStructure::kRecord)
+         if ((parent->GetStructure() != ENTupleStructure::kRecord) &&
+             (parent->GetStructure() != ENTupleStructure::kLeaf)) {
             return parent;
+         }
          parent = parent->GetParent();
       }
       // We reached the zero field
