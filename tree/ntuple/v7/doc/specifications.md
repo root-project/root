@@ -50,7 +50,7 @@ The RNTuple format does _not_ establish a semantic mapping from objects to keys 
 For example, one key may hold a single page or a number of pages of the same cluster.
 The only relevant means of finding objects is the locator information, consisting of an offset and a size.
 
-For the ROOT file embedding, the `ROOT::Experimental::RNTuple` object acts as an anchor.
+For the ROOT file embedding, the `ROOT::RNTuple` object acts as an anchor.
 
 ### Anchor schema
 
