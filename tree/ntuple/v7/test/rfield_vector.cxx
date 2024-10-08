@@ -128,10 +128,10 @@ TEST(RNTuple, InsideCollection)
    field->SetOnDiskId(idKlassVec);
    ROOT::Experimental::Internal::CallConnectPageSourceOnField(*field, *source);
 
-   auto fieldCardinality64 = RFieldBase::Create("", "ROOT::Experimental::RNTupleCardinality<std::uint64_t>").Unwrap();
+   auto fieldCardinality64 = RFieldBase::Create("", "ROOT::RNTupleCardinality<std::uint64_t>").Unwrap();
    fieldCardinality64->SetOnDiskId(idKlassVec);
    ROOT::Experimental::Internal::CallConnectPageSourceOnField(*fieldCardinality64, *source);
-   auto fieldCardinality32 = RFieldBase::Create("", "ROOT::Experimental::RNTupleCardinality<std::uint32_t>").Unwrap();
+   auto fieldCardinality32 = RFieldBase::Create("", "ROOT::RNTupleCardinality<std::uint32_t>").Unwrap();
    fieldCardinality32->SetOnDiskId(idKlassVec);
    ROOT::Experimental::Internal::CallConnectPageSourceOnField(*fieldCardinality32, *source);
 
