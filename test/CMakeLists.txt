@@ -168,7 +168,7 @@ if(ROOT_opengl_FOUND)
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/../tutorials/graphics/earth.dat earth.dat COPYONLY)
   ROOT_ADD_TEST(test-stressgraphics
                 ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}
-                COMMAND stressGraphics -b -k
+                COMMAND stressGraphics -b -k -p=sge
                 FAILREGEX "FAILED|Error in"
                 LABELS longtest)
   ROOT_ADD_TEST(test-stressgraphics-interpreted
@@ -179,7 +179,7 @@ if(ROOT_opengl_FOUND)
      ROOT_ADD_TEST(test-stressgraphics-chrome
                    RUN_SERIAL
                    ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}
-                   COMMAND stressGraphics -b -k --web=chrome
+                   COMMAND stressGraphics -b -k -p=sgc --web=chrome
                    FAILREGEX "FAILED|Error in"
                    LABELS longtest)
   endif()
@@ -187,7 +187,7 @@ if(ROOT_opengl_FOUND)
      ROOT_ADD_TEST(test-stressgraphics-firefox
                    RUN_SERIAL
                    ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}
-                   COMMAND stressGraphics -b -k --web=firefox
+                   COMMAND stressGraphics -b -k -p=sgf --web=firefox
                    FAILREGEX "FAILED|Error in"
                    LABELS longtest)
   endif()
