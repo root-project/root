@@ -7,7 +7,7 @@
 
 #include <xxhash.h>
 
-void ROOT::Experimental::RXTuple::Streamer(TBuffer &buf)
+void ROOT::RXTuple::Streamer(TBuffer &buf)
 {
    if (buf.IsReading()) {
       assert(!"This class should never be read!");
