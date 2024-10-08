@@ -1624,11 +1624,6 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeFooter(void *buffer,
    pos += SerializeSchemaDescription(*where, desc, context, /*forHeaderExtension=*/true);
    pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
 
-   // So far no support for shared clusters (no column groups)
-   frame = pos;
-   pos += SerializeListFramePreamble(0, *where);
-   pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
-
    // Cluster groups
    frame = pos;
    const auto nClusterGroups = desc.GetNClusterGroups();
@@ -1752,15 +1747,6 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeFooter(const void *b
       if (!result)
          return R__FORWARD_ERROR(result);
    }
-   bytes = frame + frameSize;
-
-   std::uint32_t nColumnGroups;
-   frame = bytes;
-   result = DeserializeFrameHeader(bytes, fnBufSizeLeft(), frameSize, nColumnGroups);
-   if (!result)
-      return R__FORWARD_ERROR(result);
-   if (nColumnGroups > 0)
-      return R__FAIL("sharded clusters are still unsupported");
    bytes = frame + frameSize;
 
    std::uint32_t nClusterGroups;
