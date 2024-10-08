@@ -118,7 +118,7 @@ public:
    RFieldDescriptor Clone() const;
    /// In general, we create a field simply from the C++ type name. For untyped fields, however, we potentially need
    /// access to sub fields, which is provided by the ntuple descriptor argument.
-   std::unique_ptr<RFieldBase> CreateField(const RNTupleDescriptor &ntplDesc) const;
+   std::unique_ptr<RFieldBase> CreateField(const RNTupleDescriptor &ntplDesc, bool continueOnError = false) const;
 
    DescriptorId_t GetId() const { return fFieldId; }
    std::uint32_t GetFieldVersion() const { return fFieldVersion; }
@@ -583,6 +583,10 @@ public:
       /// If set to true, projected fields will be reconstructed as such. This will prevent the model to be used
       /// with an RNTupleReader, but it is useful, e.g., to accurately merge data.
       bool fReconstructProjections = false;
+      /// Normally creating a model will fail if any of the reconstructed fields contains an unknown column type.
+      /// If this option is enabled, the model will be created and all fields containing an unknown column (directly
+      /// or indirectly) will be skipped instead.
+      bool fForwardCompatible = false;
    };
 
    RNTupleDescriptor() = default;

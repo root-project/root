@@ -641,229 +641,233 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
    if (canonicalType.empty())
       return R__FORWARD_RESULT(fnFail("no type name specified for field '" + fieldName + "'"));
 
-   if (auto [arrayBaseType, arraySizes] = ParseArrayType(canonicalType); !arraySizes.empty()) {
-      std::unique_ptr<RFieldBase> arrayField = Create("_0", arrayBaseType).Unwrap();
-      for (int i = arraySizes.size() - 1; i >= 0; --i) {
-         arrayField = std::make_unique<RArrayField>((i == 0) ? fieldName : "_0", std::move(arrayField), arraySizes[i]);
-      }
-      return arrayField;
-   }
-
    std::unique_ptr<ROOT::Experimental::RFieldBase> result;
 
-   if (canonicalType == "bool") {
-      result = std::make_unique<RField<bool>>(fieldName);
-   } else if (canonicalType == "char") {
-      result = std::make_unique<RField<char>>(fieldName);
-   } else if (canonicalType == "signed char") {
-      result = std::make_unique<RField<signed char>>(fieldName);
-   } else if (canonicalType == "unsigned char") {
-      result = std::make_unique<RField<unsigned char>>(fieldName);
-   } else if (canonicalType == "short") {
-      result = std::make_unique<RField<short>>(fieldName);
-   } else if (canonicalType == "unsigned short") {
-      result = std::make_unique<RField<unsigned short>>(fieldName);
-   } else if (canonicalType == "int") {
-      result = std::make_unique<RField<int>>(fieldName);
-   } else if (canonicalType == "unsigned int") {
-      result = std::make_unique<RField<unsigned int>>(fieldName);
-   } else if (canonicalType == "long") {
-      result = std::make_unique<RField<long>>(fieldName);
-   } else if (canonicalType == "unsigned long") {
-      result = std::make_unique<RField<unsigned long>>(fieldName);
-   } else if (canonicalType == "long long") {
-      result = std::make_unique<RField<long long>>(fieldName);
-   } else if (canonicalType == "unsigned long long") {
-      result = std::make_unique<RField<unsigned long long>>(fieldName);
-   } else if (canonicalType == "std::byte") {
-      result = std::make_unique<RField<std::byte>>(fieldName);
-   } else if (canonicalType == "std::int8_t") {
-      result = std::make_unique<RField<std::int8_t>>(fieldName);
-   } else if (canonicalType == "std::uint8_t") {
-      result = std::make_unique<RField<std::uint8_t>>(fieldName);
-   } else if (canonicalType == "std::int16_t") {
-      result = std::make_unique<RField<std::int16_t>>(fieldName);
-   } else if (canonicalType == "std::uint16_t") {
-      result = std::make_unique<RField<std::uint16_t>>(fieldName);
-   } else if (canonicalType == "std::int32_t") {
-      result = std::make_unique<RField<std::int32_t>>(fieldName);
-   } else if (canonicalType == "std::uint32_t") {
-      result = std::make_unique<RField<std::uint32_t>>(fieldName);
-   } else if (canonicalType == "std::int64_t") {
-      result = std::make_unique<RField<std::int64_t>>(fieldName);
-   } else if (canonicalType == "std::uint64_t") {
-      result = std::make_unique<RField<std::uint64_t>>(fieldName);
-   } else if (canonicalType == "float") {
-      result = std::make_unique<RField<float>>(fieldName);
-   } else if (canonicalType == "double") {
-      result = std::make_unique<RField<double>>(fieldName);
-   } else if (canonicalType == "Double32_t") {
-      result = std::make_unique<RField<double>>(fieldName);
-      static_cast<RField<double> *>(result.get())->SetDouble32();
-      // Prevent the type alias from being reset by returning early
-      return result;
-   } else if (canonicalType == "std::string") {
-      result = std::make_unique<RField<std::string>>(fieldName);
-   } else if (canonicalType == "TObject") {
-      result = std::make_unique<RField<TObject>>(fieldName);
-   } else if (canonicalType == "std::vector<bool>") {
-      result = std::make_unique<RField<std::vector<bool>>>(fieldName);
-   } else if (canonicalType.substr(0, 12) == "std::vector<") {
-      std::string itemTypeName = canonicalType.substr(12, canonicalType.length() - 13);
-      auto itemField = Create("_0", itemTypeName);
-      result = std::make_unique<RVectorField>(fieldName, itemField.Unwrap());
-   } else if (canonicalType.substr(0, 19) == "ROOT::VecOps::RVec<") {
-      std::string itemTypeName = canonicalType.substr(19, canonicalType.length() - 20);
-      auto itemField = Create("_0", itemTypeName);
-      result = std::make_unique<RRVecField>(fieldName, itemField.Unwrap());
-   } else if (canonicalType.substr(0, 11) == "std::array<") {
-      auto arrayDef = TokenizeTypeList(canonicalType.substr(11, canonicalType.length() - 12));
-      if (arrayDef.size() != 2) {
-         return R__FORWARD_RESULT(fnFail("the template list for std::array must have exactly two elements"));
-      }
-      auto arrayLength = std::stoi(arrayDef[1]);
-      auto itemField = Create("_0", arrayDef[0]);
-      result = std::make_unique<RArrayField>(fieldName, itemField.Unwrap(), arrayLength);
-   } else if (canonicalType.substr(0, 13) == "std::variant<") {
-      auto innerTypes = TokenizeTypeList(canonicalType.substr(13, canonicalType.length() - 14));
-      std::vector<RFieldBase *> items;
-      items.reserve(innerTypes.size());
-      for (unsigned int i = 0; i < innerTypes.size(); ++i) {
-         items.emplace_back(Create("_" + std::to_string(i), innerTypes[i]).Unwrap().release());
-      }
-      result = std::make_unique<RVariantField>(fieldName, items);
-   } else if (canonicalType.substr(0, 10) == "std::pair<") {
-      auto innerTypes = TokenizeTypeList(canonicalType.substr(10, canonicalType.length() - 11));
-      if (innerTypes.size() != 2) {
-         return R__FORWARD_RESULT(fnFail("the type list for std::pair must have exactly two elements"));
-      }
-      std::array<std::unique_ptr<RFieldBase>, 2> items{Create("_0", innerTypes[0]).Unwrap(),
-                                                       Create("_1", innerTypes[1]).Unwrap()};
-      result = std::make_unique<RPairField>(fieldName, items);
-   } else if (canonicalType.substr(0, 11) == "std::tuple<") {
-      auto innerTypes = TokenizeTypeList(canonicalType.substr(11, canonicalType.length() - 12));
-      std::vector<std::unique_ptr<RFieldBase>> items;
-      items.reserve(innerTypes.size());
-      for (unsigned int i = 0; i < innerTypes.size(); ++i) {
-         items.emplace_back(Create("_" + std::to_string(i), innerTypes[i]).Unwrap());
-      }
-      result = std::make_unique<RTupleField>(fieldName, items);
-   } else if (canonicalType.substr(0, 12) == "std::bitset<") {
-      auto size = std::stoull(canonicalType.substr(12, canonicalType.length() - 13));
-      result = std::make_unique<RBitsetField>(fieldName, size);
-   } else if (canonicalType.substr(0, 16) == "std::unique_ptr<") {
-      std::string itemTypeName = canonicalType.substr(16, canonicalType.length() - 17);
-      auto itemField = Create("_0", itemTypeName).Unwrap();
-      auto normalizedInnerTypeName = itemField->GetTypeName();
-      result = std::make_unique<RUniquePtrField>(fieldName, "std::unique_ptr<" + normalizedInnerTypeName + ">",
-                                                 std::move(itemField));
-   } else if (canonicalType.substr(0, 14) == "std::optional<") {
-      std::string itemTypeName = canonicalType.substr(14, canonicalType.length() - 15);
-      auto itemField = Create("_0", itemTypeName).Unwrap();
-      auto normalizedInnerTypeName = itemField->GetTypeName();
-      result = std::make_unique<ROptionalField>(fieldName, "std::optional<" + normalizedInnerTypeName + ">",
-                                                std::move(itemField));
-   } else if (canonicalType.substr(0, 9) == "std::set<") {
-      std::string itemTypeName = canonicalType.substr(9, canonicalType.length() - 10);
-      auto itemField = Create("_0", itemTypeName).Unwrap();
-      auto normalizedInnerTypeName = itemField->GetTypeName();
-      result =
-         std::make_unique<RSetField>(fieldName, "std::set<" + normalizedInnerTypeName + ">", std::move(itemField));
-   } else if (canonicalType.substr(0, 19) == "std::unordered_set<") {
-      std::string itemTypeName = canonicalType.substr(19, canonicalType.length() - 20);
-      auto itemField = Create("_0", itemTypeName).Unwrap();
-      auto normalizedInnerTypeName = itemField->GetTypeName();
-      result = std::make_unique<RSetField>(fieldName, "std::unordered_set<" + normalizedInnerTypeName + ">",
-                                           std::move(itemField));
-   } else if (canonicalType.substr(0, 14) == "std::multiset<") {
-      std::string itemTypeName = canonicalType.substr(14, canonicalType.length() - 15);
-      auto itemField = Create("_0", itemTypeName).Unwrap();
-      auto normalizedInnerTypeName = itemField->GetTypeName();
-      result =
-         std::make_unique<RSetField>(fieldName, "std::multiset<" + normalizedInnerTypeName + ">", std::move(itemField));
-   } else if (canonicalType.substr(0, 24) == "std::unordered_multiset<") {
-      std::string itemTypeName = canonicalType.substr(24, canonicalType.length() - 25);
-      auto itemField = Create("_0", itemTypeName).Unwrap();
-      auto normalizedInnerTypeName = itemField->GetTypeName();
-      result = std::make_unique<RSetField>(fieldName, "std::unordered_multiset<" + normalizedInnerTypeName + ">",
-                                           std::move(itemField));
-   } else if (canonicalType.substr(0, 9) == "std::map<") {
-      auto innerTypes = TokenizeTypeList(canonicalType.substr(9, canonicalType.length() - 10));
-      if (innerTypes.size() != 2) {
-         return R__FORWARD_RESULT(fnFail("the type list for std::map must have exactly two elements"));
-      }
-
-      auto itemField = Create("_0", "std::pair<" + innerTypes[0] + "," + innerTypes[1] + ">").Unwrap();
-
-      // We use the type names of subfields of the newly created item fields to create the map's type name to ensure
-      // the inner type names are properly normalized.
-      auto keyTypeName = itemField->GetSubFields()[0]->GetTypeName();
-      auto valueTypeName = itemField->GetSubFields()[1]->GetTypeName();
-
-      result = std::make_unique<RMapField>(fieldName, "std::map<" + keyTypeName + "," + valueTypeName + ">",
-                                           std::move(itemField));
-   } else if (canonicalType.substr(0, 19) == "std::unordered_map<") {
-      auto innerTypes = TokenizeTypeList(canonicalType.substr(19, canonicalType.length() - 20));
-      if (innerTypes.size() != 2)
-         return R__FORWARD_RESULT(fnFail("the type list for std::unordered_map must have exactly two elements"));
-
-      auto itemField = Create("_0", "std::pair<" + innerTypes[0] + "," + innerTypes[1] + ">").Unwrap();
-
-      // We use the type names of subfields of the newly created item fields to create the map's type name to ensure
-      // the inner type names are properly normalized.
-      auto keyTypeName = itemField->GetSubFields()[0]->GetTypeName();
-      auto valueTypeName = itemField->GetSubFields()[1]->GetTypeName();
-
-      result = std::make_unique<RMapField>(fieldName, "std::unordered_map<" + keyTypeName + "," + valueTypeName + ">",
-                                           std::move(itemField));
-   } else if (canonicalType.substr(0, 14) == "std::multimap<") {
-      auto innerTypes = TokenizeTypeList(canonicalType.substr(14, canonicalType.length() - 15));
-      if (innerTypes.size() != 2)
-         return R__FORWARD_RESULT(fnFail("the type list for std::multimap must have exactly two elements"));
-
-      auto itemField = Create("_0", "std::pair<" + innerTypes[0] + "," + innerTypes[1] + ">").Unwrap();
-
-      // We use the type names of subfields of the newly created item fields to create the map's type name to ensure
-      // the inner type names are properly normalized.
-      auto keyTypeName = itemField->GetSubFields()[0]->GetTypeName();
-      auto valueTypeName = itemField->GetSubFields()[1]->GetTypeName();
-
-      result = std::make_unique<RMapField>(fieldName, "std::multimap<" + keyTypeName + "," + valueTypeName + ">",
-                                           std::move(itemField));
-   } else if (canonicalType.substr(0, 24) == "std::unordered_multimap<") {
-      auto innerTypes = TokenizeTypeList(canonicalType.substr(24, canonicalType.length() - 25));
-      if (innerTypes.size() != 2)
-         return R__FORWARD_RESULT(fnFail("the type list for std::unordered_multimap must have exactly two elements"));
-
-      auto itemField = Create("_0", "std::pair<" + innerTypes[0] + "," + innerTypes[1] + ">").Unwrap();
-
-      // We use the type names of subfields of the newly created item fields to create the map's type name to ensure
-      // the inner type names are properly normalized.
-      auto keyTypeName = itemField->GetSubFields()[0]->GetTypeName();
-      auto valueTypeName = itemField->GetSubFields()[1]->GetTypeName();
-
-      result = std::make_unique<RMapField>(
-         fieldName, "std::unordered_multimap<" + keyTypeName + "," + valueTypeName + ">", std::move(itemField));
-   } else if (canonicalType.substr(0, 12) == "std::atomic<") {
-      std::string itemTypeName = canonicalType.substr(12, canonicalType.length() - 13);
-      auto itemField = Create("_0", itemTypeName).Unwrap();
-      auto normalizedInnerTypeName = itemField->GetTypeName();
-      result = std::make_unique<RAtomicField>(fieldName, "std::atomic<" + normalizedInnerTypeName + ">",
-                                              std::move(itemField));
-   } else if (canonicalType.substr(0, 39) == "ROOT::Experimental::RNTupleCardinality<") {
-      auto innerTypes = TokenizeTypeList(canonicalType.substr(39, canonicalType.length() - 40));
-      if (innerTypes.size() != 1)
-         return R__FORWARD_RESULT(fnFail("invalid cardinality template: " + canonicalType));
-      if (innerTypes[0] == "std::uint32_t") {
-         result = std::make_unique<RField<RNTupleCardinality<std::uint32_t>>>(fieldName);
-      } else if (innerTypes[0] == "std::uint64_t") {
-         result = std::make_unique<RField<RNTupleCardinality<std::uint64_t>>>(fieldName);
-      } else {
-         return R__FORWARD_RESULT(fnFail("invalid cardinality template: " + canonicalType));
-      }
-   }
-
+   // try-catch block to intercept any exception that may be thrown by Unwrap() so that this
+   // function never throws but returns RResult::Error instead.
    try {
+      if (auto [arrayBaseType, arraySizes] = ParseArrayType(canonicalType); !arraySizes.empty()) {
+         std::unique_ptr<RFieldBase> arrayField = Create("_0", arrayBaseType).Unwrap();
+         for (int i = arraySizes.size() - 1; i >= 0; --i) {
+            arrayField =
+               std::make_unique<RArrayField>((i == 0) ? fieldName : "_0", std::move(arrayField), arraySizes[i]);
+         }
+         return arrayField;
+      }
+
+      if (canonicalType == "bool") {
+         result = std::make_unique<RField<bool>>(fieldName);
+      } else if (canonicalType == "char") {
+         result = std::make_unique<RField<char>>(fieldName);
+      } else if (canonicalType == "signed char") {
+         result = std::make_unique<RField<signed char>>(fieldName);
+      } else if (canonicalType == "unsigned char") {
+         result = std::make_unique<RField<unsigned char>>(fieldName);
+      } else if (canonicalType == "short") {
+         result = std::make_unique<RField<short>>(fieldName);
+      } else if (canonicalType == "unsigned short") {
+         result = std::make_unique<RField<unsigned short>>(fieldName);
+      } else if (canonicalType == "int") {
+         result = std::make_unique<RField<int>>(fieldName);
+      } else if (canonicalType == "unsigned int") {
+         result = std::make_unique<RField<unsigned int>>(fieldName);
+      } else if (canonicalType == "long") {
+         result = std::make_unique<RField<long>>(fieldName);
+      } else if (canonicalType == "unsigned long") {
+         result = std::make_unique<RField<unsigned long>>(fieldName);
+      } else if (canonicalType == "long long") {
+         result = std::make_unique<RField<long long>>(fieldName);
+      } else if (canonicalType == "unsigned long long") {
+         result = std::make_unique<RField<unsigned long long>>(fieldName);
+      } else if (canonicalType == "std::byte") {
+         result = std::make_unique<RField<std::byte>>(fieldName);
+      } else if (canonicalType == "std::int8_t") {
+         result = std::make_unique<RField<std::int8_t>>(fieldName);
+      } else if (canonicalType == "std::uint8_t") {
+         result = std::make_unique<RField<std::uint8_t>>(fieldName);
+      } else if (canonicalType == "std::int16_t") {
+         result = std::make_unique<RField<std::int16_t>>(fieldName);
+      } else if (canonicalType == "std::uint16_t") {
+         result = std::make_unique<RField<std::uint16_t>>(fieldName);
+      } else if (canonicalType == "std::int32_t") {
+         result = std::make_unique<RField<std::int32_t>>(fieldName);
+      } else if (canonicalType == "std::uint32_t") {
+         result = std::make_unique<RField<std::uint32_t>>(fieldName);
+      } else if (canonicalType == "std::int64_t") {
+         result = std::make_unique<RField<std::int64_t>>(fieldName);
+      } else if (canonicalType == "std::uint64_t") {
+         result = std::make_unique<RField<std::uint64_t>>(fieldName);
+      } else if (canonicalType == "float") {
+         result = std::make_unique<RField<float>>(fieldName);
+      } else if (canonicalType == "double") {
+         result = std::make_unique<RField<double>>(fieldName);
+      } else if (canonicalType == "Double32_t") {
+         result = std::make_unique<RField<double>>(fieldName);
+         static_cast<RField<double> *>(result.get())->SetDouble32();
+         // Prevent the type alias from being reset by returning early
+         return result;
+      } else if (canonicalType == "std::string") {
+         result = std::make_unique<RField<std::string>>(fieldName);
+      } else if (canonicalType == "TObject") {
+         result = std::make_unique<RField<TObject>>(fieldName);
+      } else if (canonicalType == "std::vector<bool>") {
+         result = std::make_unique<RField<std::vector<bool>>>(fieldName);
+      } else if (canonicalType.substr(0, 12) == "std::vector<") {
+         std::string itemTypeName = canonicalType.substr(12, canonicalType.length() - 13);
+         auto itemField = Create("_0", itemTypeName);
+         result = std::make_unique<RVectorField>(fieldName, itemField.Unwrap());
+      } else if (canonicalType.substr(0, 19) == "ROOT::VecOps::RVec<") {
+         std::string itemTypeName = canonicalType.substr(19, canonicalType.length() - 20);
+         auto itemField = Create("_0", itemTypeName);
+         result = std::make_unique<RRVecField>(fieldName, itemField.Unwrap());
+      } else if (canonicalType.substr(0, 11) == "std::array<") {
+         auto arrayDef = TokenizeTypeList(canonicalType.substr(11, canonicalType.length() - 12));
+         if (arrayDef.size() != 2) {
+            return R__FORWARD_RESULT(fnFail("the template list for std::array must have exactly two elements"));
+         }
+         auto arrayLength = std::stoi(arrayDef[1]);
+         auto itemField = Create("_0", arrayDef[0]);
+         result = std::make_unique<RArrayField>(fieldName, itemField.Unwrap(), arrayLength);
+      } else if (canonicalType.substr(0, 13) == "std::variant<") {
+         auto innerTypes = TokenizeTypeList(canonicalType.substr(13, canonicalType.length() - 14));
+         std::vector<RFieldBase *> items;
+         items.reserve(innerTypes.size());
+         for (unsigned int i = 0; i < innerTypes.size(); ++i) {
+            items.emplace_back(Create("_" + std::to_string(i), innerTypes[i]).Unwrap().release());
+         }
+         result = std::make_unique<RVariantField>(fieldName, items);
+      } else if (canonicalType.substr(0, 10) == "std::pair<") {
+         auto innerTypes = TokenizeTypeList(canonicalType.substr(10, canonicalType.length() - 11));
+         if (innerTypes.size() != 2) {
+            return R__FORWARD_RESULT(fnFail("the type list for std::pair must have exactly two elements"));
+         }
+         std::array<std::unique_ptr<RFieldBase>, 2> items{Create("_0", innerTypes[0]).Unwrap(),
+                                                          Create("_1", innerTypes[1]).Unwrap()};
+         result = std::make_unique<RPairField>(fieldName, items);
+      } else if (canonicalType.substr(0, 11) == "std::tuple<") {
+         auto innerTypes = TokenizeTypeList(canonicalType.substr(11, canonicalType.length() - 12));
+         std::vector<std::unique_ptr<RFieldBase>> items;
+         items.reserve(innerTypes.size());
+         for (unsigned int i = 0; i < innerTypes.size(); ++i) {
+            items.emplace_back(Create("_" + std::to_string(i), innerTypes[i]).Unwrap());
+         }
+         result = std::make_unique<RTupleField>(fieldName, items);
+      } else if (canonicalType.substr(0, 12) == "std::bitset<") {
+         auto size = std::stoull(canonicalType.substr(12, canonicalType.length() - 13));
+         result = std::make_unique<RBitsetField>(fieldName, size);
+      } else if (canonicalType.substr(0, 16) == "std::unique_ptr<") {
+         std::string itemTypeName = canonicalType.substr(16, canonicalType.length() - 17);
+         auto itemField = Create("_0", itemTypeName).Unwrap();
+         auto normalizedInnerTypeName = itemField->GetTypeName();
+         result = std::make_unique<RUniquePtrField>(fieldName, "std::unique_ptr<" + normalizedInnerTypeName + ">",
+                                                    std::move(itemField));
+      } else if (canonicalType.substr(0, 14) == "std::optional<") {
+         std::string itemTypeName = canonicalType.substr(14, canonicalType.length() - 15);
+         auto itemField = Create("_0", itemTypeName).Unwrap();
+         auto normalizedInnerTypeName = itemField->GetTypeName();
+         result = std::make_unique<ROptionalField>(fieldName, "std::optional<" + normalizedInnerTypeName + ">",
+                                                   std::move(itemField));
+      } else if (canonicalType.substr(0, 9) == "std::set<") {
+         std::string itemTypeName = canonicalType.substr(9, canonicalType.length() - 10);
+         auto itemField = Create("_0", itemTypeName).Unwrap();
+         auto normalizedInnerTypeName = itemField->GetTypeName();
+         result =
+            std::make_unique<RSetField>(fieldName, "std::set<" + normalizedInnerTypeName + ">", std::move(itemField));
+      } else if (canonicalType.substr(0, 19) == "std::unordered_set<") {
+         std::string itemTypeName = canonicalType.substr(19, canonicalType.length() - 20);
+         auto itemField = Create("_0", itemTypeName).Unwrap();
+         auto normalizedInnerTypeName = itemField->GetTypeName();
+         result = std::make_unique<RSetField>(fieldName, "std::unordered_set<" + normalizedInnerTypeName + ">",
+                                              std::move(itemField));
+      } else if (canonicalType.substr(0, 14) == "std::multiset<") {
+         std::string itemTypeName = canonicalType.substr(14, canonicalType.length() - 15);
+         auto itemField = Create("_0", itemTypeName).Unwrap();
+         auto normalizedInnerTypeName = itemField->GetTypeName();
+         result = std::make_unique<RSetField>(fieldName, "std::multiset<" + normalizedInnerTypeName + ">",
+                                              std::move(itemField));
+      } else if (canonicalType.substr(0, 24) == "std::unordered_multiset<") {
+         std::string itemTypeName = canonicalType.substr(24, canonicalType.length() - 25);
+         auto itemField = Create("_0", itemTypeName).Unwrap();
+         auto normalizedInnerTypeName = itemField->GetTypeName();
+         result = std::make_unique<RSetField>(fieldName, "std::unordered_multiset<" + normalizedInnerTypeName + ">",
+                                              std::move(itemField));
+      } else if (canonicalType.substr(0, 9) == "std::map<") {
+         auto innerTypes = TokenizeTypeList(canonicalType.substr(9, canonicalType.length() - 10));
+         if (innerTypes.size() != 2) {
+            return R__FORWARD_RESULT(fnFail("the type list for std::map must have exactly two elements"));
+         }
+
+         auto itemField = Create("_0", "std::pair<" + innerTypes[0] + "," + innerTypes[1] + ">").Unwrap();
+
+         // We use the type names of subfields of the newly created item fields to create the map's type name to ensure
+         // the inner type names are properly normalized.
+         auto keyTypeName = itemField->GetSubFields()[0]->GetTypeName();
+         auto valueTypeName = itemField->GetSubFields()[1]->GetTypeName();
+
+         result = std::make_unique<RMapField>(fieldName, "std::map<" + keyTypeName + "," + valueTypeName + ">",
+                                              std::move(itemField));
+      } else if (canonicalType.substr(0, 19) == "std::unordered_map<") {
+         auto innerTypes = TokenizeTypeList(canonicalType.substr(19, canonicalType.length() - 20));
+         if (innerTypes.size() != 2)
+            return R__FORWARD_RESULT(fnFail("the type list for std::unordered_map must have exactly two elements"));
+
+         auto itemField = Create("_0", "std::pair<" + innerTypes[0] + "," + innerTypes[1] + ">").Unwrap();
+
+         // We use the type names of subfields of the newly created item fields to create the map's type name to ensure
+         // the inner type names are properly normalized.
+         auto keyTypeName = itemField->GetSubFields()[0]->GetTypeName();
+         auto valueTypeName = itemField->GetSubFields()[1]->GetTypeName();
+
+         result = std::make_unique<RMapField>(
+            fieldName, "std::unordered_map<" + keyTypeName + "," + valueTypeName + ">", std::move(itemField));
+      } else if (canonicalType.substr(0, 14) == "std::multimap<") {
+         auto innerTypes = TokenizeTypeList(canonicalType.substr(14, canonicalType.length() - 15));
+         if (innerTypes.size() != 2)
+            return R__FORWARD_RESULT(fnFail("the type list for std::multimap must have exactly two elements"));
+
+         auto itemField = Create("_0", "std::pair<" + innerTypes[0] + "," + innerTypes[1] + ">").Unwrap();
+
+         // We use the type names of subfields of the newly created item fields to create the map's type name to ensure
+         // the inner type names are properly normalized.
+         auto keyTypeName = itemField->GetSubFields()[0]->GetTypeName();
+         auto valueTypeName = itemField->GetSubFields()[1]->GetTypeName();
+
+         result = std::make_unique<RMapField>(fieldName, "std::multimap<" + keyTypeName + "," + valueTypeName + ">",
+                                              std::move(itemField));
+      } else if (canonicalType.substr(0, 24) == "std::unordered_multimap<") {
+         auto innerTypes = TokenizeTypeList(canonicalType.substr(24, canonicalType.length() - 25));
+         if (innerTypes.size() != 2)
+            return R__FORWARD_RESULT(
+               fnFail("the type list for std::unordered_multimap must have exactly two elements"));
+
+         auto itemField = Create("_0", "std::pair<" + innerTypes[0] + "," + innerTypes[1] + ">").Unwrap();
+
+         // We use the type names of subfields of the newly created item fields to create the map's type name to ensure
+         // the inner type names are properly normalized.
+         auto keyTypeName = itemField->GetSubFields()[0]->GetTypeName();
+         auto valueTypeName = itemField->GetSubFields()[1]->GetTypeName();
+
+         result = std::make_unique<RMapField>(
+            fieldName, "std::unordered_multimap<" + keyTypeName + "," + valueTypeName + ">", std::move(itemField));
+      } else if (canonicalType.substr(0, 12) == "std::atomic<") {
+         std::string itemTypeName = canonicalType.substr(12, canonicalType.length() - 13);
+         auto itemField = Create("_0", itemTypeName).Unwrap();
+         auto normalizedInnerTypeName = itemField->GetTypeName();
+         result = std::make_unique<RAtomicField>(fieldName, "std::atomic<" + normalizedInnerTypeName + ">",
+                                                 std::move(itemField));
+      } else if (canonicalType.substr(0, 39) == "ROOT::Experimental::RNTupleCardinality<") {
+         auto innerTypes = TokenizeTypeList(canonicalType.substr(39, canonicalType.length() - 40));
+         if (innerTypes.size() != 1)
+            return R__FORWARD_RESULT(fnFail("invalid cardinality template: " + canonicalType));
+         if (innerTypes[0] == "std::uint32_t") {
+            result = std::make_unique<RField<RNTupleCardinality<std::uint32_t>>>(fieldName);
+         } else if (innerTypes[0] == "std::uint64_t") {
+            result = std::make_unique<RField<RNTupleCardinality<std::uint64_t>>>(fieldName);
+         } else {
+            return R__FORWARD_RESULT(fnFail("invalid cardinality template: " + canonicalType));
+         }
+      }
+
       if (!result) {
          auto e = TEnum::GetEnum(canonicalType.c_str());
          if (e != nullptr) {
