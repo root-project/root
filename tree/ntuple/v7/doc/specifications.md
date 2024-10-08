@@ -253,11 +253,9 @@ The type can take one of the following values
 | Type | Meaning       | Payload format                      |
 |------|---------------|-------------------------------------|
 | 0x01 | Large locator | 64bit size followed by 64bit offset |
-| 0x02 | DAOS locator  | Object64                            |
 
 Each locator type follows a given format for the payload (see Section "Well-known payload formats" below).
-The range 0x03 - 0x7f is currently unused.
-Additional types can be registered in the future.
+The range 0x02 - 0x7f is reserved for future use.
 
 _Reserved_ is an 8 bit field that can be used by the storage backend corresponding to the type
 in order to store additional information about the locator.
@@ -288,28 +286,6 @@ Note that locators having a different value for _Type_ may share a given payload
 _Content size_: the number of bytes to read, i.e. the compressed size of the referenced block.
 
 _Content offset_: the 64bit byte offset of the referenced byte range counted from the start of the file.
-
-- _Object64_: Targets object storage systems in which 64bit suffice to locate a specific object. The payload has the following format
-```
- 0                   1                   2                   3
- 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                                                               |
-+- - - - - - - - - - - - - Content size - - - - - - - - - - - - +
-|                                                               |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                                                               |
-+                            Location                           +
-|                                                               |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-```
-
-_Content size_: the number of bytes to read, i.e. the compressed size of the referenced block.
-The content size is either 32bit or 64bit.
-The size field of the locator header distinguishes the two cases (telling the size of the locator as either 16 bytes or 20 bytes).
-
-_Location_: 64bit object address; its specific use depends on the object store.
-In particular, it might contain a partial address that can be qualified using some other information depending on the storage backend, e.g. a URL might be generated based on this value.
 
 
 ## Envelopes
