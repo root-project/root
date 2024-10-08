@@ -49,6 +49,19 @@ ROOT::Experimental::RNTupleModel::RProjectedFields::EnsureValidMapping(const RFi
          return R__FAIL("field mapping type mismatch: " + source->GetFieldName() + " --> " + target->GetFieldName());
    }
 
+   auto fnHasArrayParent = [](const RFieldBase &f) -> bool {
+      auto parent = f.GetParent();
+      while (parent) {
+         if (parent->GetNRepetitions() > 0)
+            return true;
+         parent = parent->GetParent();
+      }
+      return false;
+   };
+   if (fnHasArrayParent(*source) || fnHasArrayParent(*target)) {
+      return R__FAIL("unsupported field mapping across fixed-size arrays");
+   }
+
    // We support projections only across records and collections. In the following, we check that the projected
    // field is on the same path of collection fields in the field tree than the source field.
 
