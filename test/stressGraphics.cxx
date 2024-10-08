@@ -103,6 +103,7 @@ Bool_t    gOptionK = kFALSE;
 TH2F     *gH2 = nullptr;
 TFile    *gHsimple = nullptr;
 TFile    *gCernstaff = nullptr;
+const char *filePrefix = "sg";
 
 const TString kSkipCCode = "__skip_c_code_generation__";
 
@@ -227,19 +228,18 @@ void TestReport(TCanvas *C, const TString &title, const TString &arg = "", Int_t
 {
    gErrorIgnoreLevel = 9999;
 
-   const char *prefix = gWebMode ? "sgw" : "sg";
    const char *main_extension = gWebMode ? "svg" : "ps";
 
    TestEntry e;
    e.TestNum = gTestNum;
    e.title = title;
    e.IPS = gWebMode ? 1 : IPS; // check only size of web SVG files
-   e.psfile = TString::Format("%s1_%2.2d.%s", prefix, e.TestNum, main_extension);
-   e.ps2file = TString::Format("%s2_%2.2d.%s", prefix, e.TestNum, main_extension);
-   e.pdffile = TString::Format("%s%2.2d.pdf", prefix, e.TestNum);
-   e.jpgfile = TString::Format("%s%2.2d.jpg", prefix, e.TestNum);
-   e.pngfile = TString::Format("%s%2.2d.png", prefix, e.TestNum);
-   e.ccode = TString::Format("%s%2.2d.C", prefix, e.TestNum);
+   e.psfile = TString::Format("%s1_%2.2d.%s", filePrefix, e.TestNum, main_extension);
+   e.ps2file = TString::Format("%s2_%2.2d.%s", filePrefix, e.TestNum, main_extension);
+   e.pdffile = TString::Format("%s%2.2d.pdf", filePrefix, e.TestNum);
+   e.jpgfile = TString::Format("%s%2.2d.jpg", filePrefix, e.TestNum);
+   e.pngfile = TString::Format("%s%2.2d.png", filePrefix, e.TestNum);
+   e.ccode = TString::Format("%s%2.2d.C", filePrefix, e.TestNum);
    e.execute_ccode = (arg != kSkipCCode);
 
    // start files generation
@@ -2809,8 +2809,10 @@ int main(int argc, char *argv[])
          generate = kTRUE;
       else if (!strcmp(argv[i], "-k"))
          keep = kTRUE;
+      else if (strstr(argv[i], "-p="))
+         filePrefix = argv[i]+3;
       else if (!strcmp(argv[i], "-h")) {
-         printf("Usage: stressGraphics [-h] [-r] [-k]\n");
+         printf("Usage: stressGraphics [-h] [-r] [-k] [-p=prefix] [--web]\n");
          printf("Options:\n");
          printf("  -r : Generate the reference output.\n");
          printf("       Redirect the output in the file \"stressGraphics.ref\"\n");
@@ -2818,6 +2820,8 @@ int main(int argc, char *argv[])
          printf("\n");
          printf("  -k : Keep the output files even for passed tests.\n");
          printf("       By default output files for passed tests are deleted.\n");
+         printf("\n");
+         printf("  -p=prefix: Provide custom prefix for generated files, default \"sg\"\n");
          printf("\n");
          printf("  -v : increase verbosity.\n");
          printf("\n");
