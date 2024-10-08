@@ -200,7 +200,6 @@ public:
          out << SP << "}\n"; // end loop on input elements
          // normalize for reduced mean
          if (fReduceOpMode == ReduceMean) {
-            size_t reducedLength = inputLength / outputLength;
             out << SP << "for (size_t i = 0; i < " << outputLength << "; i++) {\n";
             out << SP << SP << "tensor_" << fNY << "[i] /= static_cast<float>(" << reducedLength << ");\n";
             out << SP << "}\n";
