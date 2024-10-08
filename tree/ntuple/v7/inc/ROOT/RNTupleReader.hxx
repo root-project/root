@@ -34,10 +34,10 @@
 #include <string_view>
 
 namespace ROOT {
-namespace Experimental {
-
-class REntry;
 class RNTuple;
+
+namespace Experimental {
+class REntry;
 
 /// Listing of the different options that can be printed by RNTupleReader::GetInfo()
 enum class ENTupleInfo {

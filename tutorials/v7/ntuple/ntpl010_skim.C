@@ -24,7 +24,6 @@
 #include <cstdint>
 
 // Import classes from experimental namespace for the time being.
-using ROOT::Experimental::RNTuple;
 using ROOT::Experimental::RNTupleModel;
 using ROOT::Experimental::RNTupleReader;
 using ROOT::Experimental::RNTupleWriter;

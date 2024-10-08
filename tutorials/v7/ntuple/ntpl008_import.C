@@ -23,7 +23,6 @@
 #include <TSystem.h>
 
 // Import classes from experimental namespace for the time being.
-using RNTuple = ROOT::Experimental::RNTuple;
 using RNTupleImporter = ROOT::Experimental::RNTupleImporter;
 using RNTupleReader = ROOT::Experimental::RNTupleReader;
 
@@ -53,7 +52,7 @@ void ntpl008_import()
       std::cerr << "cannot open " << kNTupleFileName << std::endl;
       return;
    }
-   auto ntpl = std::unique_ptr<RNTuple>(file->Get<RNTuple>("Events"));
+   auto ntpl = std::unique_ptr<ROOT::RNTuple>(file->Get<ROOT::RNTuple>("Events"));
    auto reader = RNTupleReader::Open(*ntpl);
    reader->PrintInfo();
 

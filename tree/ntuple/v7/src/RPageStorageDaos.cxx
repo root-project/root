@@ -168,7 +168,7 @@ struct RDaosContainerNTupleLocator {
       }
 
       anchor.Deserialize(buffer.get(), anchorSize).Unwrap();
-      if (anchor.fVersionEpoch != ROOT::Experimental::RNTuple::kVersionEpoch) {
+      if (anchor.fVersionEpoch != ROOT::RNTuple::kVersionEpoch) {
          throw ROOT::Experimental::RException(
             R__FAIL("unsupported RNTuple epoch version: " + std::to_string(anchor.fVersionEpoch)));
       }
