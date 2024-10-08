@@ -28,7 +28,7 @@ public:
 
    RNTupleDraw6Provider()
    {
-      RegisterDraw6(TClass::GetClass<ROOT::Experimental::RNTuple>(), [this](TVirtualPad *pad, std::unique_ptr<RHolder> &obj, const std::string &opt) -> bool {
+      RegisterDraw6(TClass::GetClass<ROOT::RNTuple>(), [this](TVirtualPad *pad, std::unique_ptr<RHolder> &obj, const std::string &opt) -> bool {
 
          auto h1 = DrawField(dynamic_cast<RFieldHolder*> (obj.get()));
          if (!h1) return false;
