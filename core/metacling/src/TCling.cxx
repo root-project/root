@@ -2971,9 +2971,12 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
             // if we can not find the member (which should not really happen),
             // let's consider it transient.
             Bool_t transient = isTransient || !mbr || !mbr->IsPersistent();
-
+            if (!mbr || !mbr->IsPersistent())
+               insp.IncrementNestedTransient();
             insp.InspectMember(sFieldRecName.c_str(), cobj + fieldOffset,
                                (fieldName + '.').c_str(), transient);
+            if (!mbr || !mbr->IsPersistent())
+               insp.DecrementNestedTransient();
 
          }
       }
@@ -6655,6 +6658,18 @@ void TCling::RefreshClassInfo(TClass *cl, const clang::NamedDecl *def, bool alia
       }
    } else if (!cl->TestBit(TClass::kLoading) && !cl->fHasRootPcmInfo) {
       cl->ResetCaches();
+      if (strncmp(cl->GetName(),"tuple<",strlen("tuple<"))==0) {
+         // We need to use the Emulated Tuple but we should not trigger parsing
+         // yet, so delay the creation of the ClassInfo
+         delete ((TClingClassInfo *)cl->fClassInfo);
+         cl->fClassInfo = nullptr;
+         cl->fCanLoadClassInfo = true;
+         cl->RemoveStreamerInfo(cl->fClassVersion);
+         if (cl->fState != TClass::kHasTClassInit) {
+            cl->fState = TClass::kInterpreted;
+         }
+         return;
+      }
       // yes, this is almost a waste of time, but we do need to lookup
       // the 'type' corresponding to the TClass anyway in order to
       // preserve the opaque typedefs (Double32_t)
