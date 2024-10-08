@@ -632,7 +632,7 @@ The following kinds of content are supported:
 | 0x00                | Serialized ROOT streamer info; see notes            |
 
 The serialized ROOT streamer info is not bound to a specific type.
-It is the combined streamer information from all the unsplit fields.
+It is the combined streamer information from all fields serialized by the ROOT streamer.
 Writers set version from/to to zero and use an empty type name.
 Readers should ignore the type-specific information.
 The format of the content is a ROOT streamed `TList` of `TStreamerInfo` objects.
@@ -1036,10 +1036,11 @@ e.g. given the index column values `[1, 1, 3]`, the values yielded by `RNTupleCa
 The `SizeT` template parameter defines the in-memory integer type of the collection size.
 The valid types are `std::uint32_t` and `std::uint64_t`.
 
-### Unsplit types
+### ROOT streamed types
 
-A field with the structural role 0x04 ("unsplit") represents an object serialized by the ROOT streamer in unsplit mode.
-It can have any type supported by TClass (even types that are not available in the native RNTuple type system).
+A field with the structural role 0x04 ("streamer") represents an object serialized by the ROOT streamer
+into a single `Byte` column.
+It can have any type supported by `TClass` (even types that are not available in the native RNTuple type system).
 The first (principal) column is of type `(Split)Index[32|64]`.
 The second column is of type `Byte`.
 
