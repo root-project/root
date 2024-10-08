@@ -12,7 +12,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '2/10/2024',
+version_date = '8/10/2024',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -9790,13 +9790,13 @@ function approximateLabelWidth(label, font, fsize) {
 /** @summary array defines features supported by latex parser, used by both old and new parsers
   * @private */
 const latex_features = [
-   { name: '#it{' }, // italic
-   { name: '#bf{' }, // bold
+   { name: '#it{', bi: 'italic' }, // italic
+   { name: '#bf{', bi: 'bold' }, // bold
    { name: '#underline{', deco: 'underline' }, // underline
    { name: '#overline{', deco: 'overline' }, // overline
    { name: '#strike{', deco: 'line-through' }, // line through
-   { name: '#kern[', arg: 'float' }, // horizontal shift
-   { name: '#lower[', arg: 'float' },  // vertical shift
+   { name: '#kern[', arg: 'float', shift: 'x' }, // horizontal shift
+   { name: '#lower[', arg: 'float', shift: 'y' },  // vertical shift
    { name: '#scale[', arg: 'float' },  // font scale
    { name: '#color[', arg: 'int' },   // font color
    { name: '#font[', arg: 'int' },    // font face
@@ -10132,8 +10132,7 @@ function parseLatex(node, arg, label, curr) {
             elem.attr('fill', curr.color || arg.color || null);
 
             // set font size directly to element to avoid complex control
-            if (curr.fisze !== curr.font.size)
-               elem.attr('font-size', Math.round(curr.fsize));
+            elem.attr('font-size', Math.max(1, Math.round(curr.fsize)));
 
             if (curr.font?.isSymbol) {
                elem.text(replaceSymbols(s, curr.font.isSymbol));
@@ -10417,16 +10416,18 @@ function parseLatex(node, arg, label, curr) {
          continue;
       }
 
-      if (found.name === '#bf{' || found.name === '#it{') {
+      if (found.bi) { // bold or italic
          const sublabel = extractSubLabel();
-         if (sublabel === -1) return false;
+         if (sublabel === -1)
+            return false;
 
          const subpos = createSubPos();
 
-         if (found.name === '#bf{')
-            subpos.bold = !subpos.bold;
-         else
-            subpos.italic = !subpos.italic;
+         let value;
+         for (let c = curr; c && (value === undefined && c); c = c.parent)
+            value = c[found.bi];
+
+         subpos[found.bi] = !value;
 
          parseLatex(currG(), arg, sublabel, subpos);
 
@@ -10453,7 +10454,7 @@ function parseLatex(node, arg, label, curr) {
          label = label.slice(pos + 2);
       }
 
-      if ((found.name === '#kern[') || (found.name === '#lower[')) {
+      if (found.shift) {
          const sublabel = extractSubLabel();
          if (sublabel === -1) return false;
 
@@ -10462,9 +10463,12 @@ function parseLatex(node, arg, label, curr) {
          parseLatex(currG(), arg, sublabel, subpos);
 
          let shiftx = 0, shifty = 0;
-         if (found.name === 'kern[') shiftx = foundarg; else shifty = foundarg;
+         if (found.shift === 'x')
+            shiftx = foundarg * subpos.rect.width;
+         else
+            shifty = foundarg * subpos.rect.height;
 
-         positionGNode(subpos, curr.x + shiftx * subpos.rect.width, curr.y + shifty * subpos.rect.height);
+         positionGNode(subpos, curr.x + shiftx, curr.y + shifty);
 
          shiftX(subpos.rect.width * (shiftx > 0 ? 1 + foundarg : 1));
 
@@ -10479,6 +10483,11 @@ function parseLatex(node, arg, label, curr) {
                subpos = createSubPos();
 
          gg.attr('href', foundarg);
+         if (!isBatchMode()) {
+            gg.on('mouseenter', () => gg.style('text-decoration', 'underline'))
+              .on('mouseleave', () => gg.style('text-decoration', null))
+              .append('svg:title').text(`link on ${foundarg}`);
+         }
 
          parseLatex(gg, arg, sublabel, subpos);
 
@@ -73527,10 +73536,10 @@ class TPavePainter extends ObjectPainter {
             } else if ((opt === 'postitle') || painter.isDummyPos(pave)) {
                const st = gStyle, fp = painter.getFramePainter();
                if (st && fp) {
-                  const midx = st.fTitleX, y2 = st.fTitleY;
+                  const midx = st.fTitleX, y2 = st.fTitleY, fsz = st.fTitleFontSize;
                   let w = st.fTitleW, h = st.fTitleH;
 
-                  if (!h) h = (y2 - fp.fY2NDC) * 0.7;
+                  if (!h) h = Math.max((y2 - fp.fY2NDC) * 0.7, (fsz < 1) ? 1.1 * fsz : 1.1 * fsz / fp.getFrameWidth());
                   if (!w) w = fp.fX2NDC - fp.fX1NDC;
                   if (!Number.isFinite(h) || (h <= 0)) h = 0.06;
                   if (!Number.isFinite(w) || (w <= 0)) w = 0.44;
@@ -82308,9 +82317,7 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
 
       if (show_markers) {
          // draw markers also when e2 option was specified
-         let style = this.options.MarkStyle;
-         if (!style && (histo.fMarkerStyle === 1)) style = 8; // as in recent ROOT changes
-         this.createAttMarker({ attr: histo, style }); // when style not configured, it will be ignored
+         this.createAttMarker({ attr: histo, style: this.options.MarkStyle }); // when style not configured, it will be ignored
          if (this.markeratt.size > 0) {
             // simply use relative move from point, can optimize in the future
             path_marker = '';
@@ -147115,8 +147122,11 @@ async function drawText$1() {
       fact = 0.8;
    }
 
-   if (is_url)
-      this.draw_g.attr('href', text.fName).append('title').text(`Link on ${text.fName}`);
+   if (is_url) {
+      this.draw_g.attr('href', text.fName);
+      if (!this.isBatchMode())
+         this.draw_g.append('svg:title').text(`link on ${text.fName}`);
+   }
 
    return this.startTextDrawingAsync(this.textatt.font, this.textatt.getSize(w, h, fact, 0.05))
               .then(() => this.drawText(arg))

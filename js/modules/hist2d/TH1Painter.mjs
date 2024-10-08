@@ -566,9 +566,7 @@ class TH1Painter extends THistPainter {
 
       if (show_markers) {
          // draw markers also when e2 option was specified
-         let style = this.options.MarkStyle;
-         if (!style && (histo.fMarkerStyle === 1)) style = 8; // as in recent ROOT changes
-         this.createAttMarker({ attr: histo, style }); // when style not configured, it will be ignored
+         this.createAttMarker({ attr: histo, style: this.options.MarkStyle }); // when style not configured, it will be ignored
          if (this.markeratt.size > 0) {
             // simply use relative move from point, can optimize in the future
             path_marker = '';

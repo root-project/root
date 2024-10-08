@@ -60,8 +60,11 @@ async function drawText() {
       fact = 0.8;
    }
 
-   if (is_url)
-      this.draw_g.attr('href', text.fName).append('title').text(`Link on ${text.fName}`);
+   if (is_url) {
+      this.draw_g.attr('href', text.fName);
+      if (!this.isBatchMode())
+         this.draw_g.append('svg:title').text(`link on ${text.fName}`);
+   }
 
    return this.startTextDrawingAsync(this.textatt.font, this.textatt.getSize(w, h, fact, 0.05))
               .then(() => this.drawText(arg))

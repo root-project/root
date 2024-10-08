@@ -36,6 +36,8 @@
 33. Fix - properly redraw TMultiGraph
 34. Fix - show empty bin in TProfile2D if it has entries #316
 35. Fix - unzooming on log scale was extending range forevever
+36. Fix - do not force style 8 for hist markers
+37. Fix - ensure minimal hist title height
 
 
 ## Changes in 7.7.4
