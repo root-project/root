@@ -301,7 +301,7 @@ std::shared_ptr<RElement> RProvider::Browse(std::unique_ptr<RHolder> &object)
 std::shared_ptr<RElement> RProvider::BrowseNTuple(const std::string &tuplename, const std::string &filename)
 {
    if (!gNTupleFunc) {
-      auto &entry = GetClassEntry("ROOT::Experimental::RNTuple");
+      auto &entry = GetClassEntry("ROOT::RNTuple");
 
       if (entry.browselib.empty())
          return nullptr;
@@ -513,7 +513,8 @@ public:
       RegisterClass("ROOT::Experimental::RH2D", "sap-icon://pixelate", "", "", "libROOTHistDrawProvider");
       RegisterClass("ROOT::Experimental::RH3D", "sap-icon://product", "", "", "libROOTHistDrawProvider");
       RegisterClass("ROOT::Experimental::RCanvas", "sap-icon://business-objects-experience", "", "", "libROOTHistDrawProvider");
-      RegisterClass("ROOT::Experimental::RNTuple", "sap-icon://table-chart", "libROOTNTupleBrowseProvider", "libROOTNTupleDraw6Provider", "libROOTNTupleDraw7Provider");
+      RegisterClass("ROOT::RNTuple", "sap-icon://table-chart", "libROOTNTupleBrowseProvider",
+                    "libROOTNTupleDraw6Provider", "libROOTNTupleDraw7Provider");
    }
 
 } newRDefaultProvider;

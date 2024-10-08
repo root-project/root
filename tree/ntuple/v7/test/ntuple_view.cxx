@@ -351,7 +351,7 @@ TEST(RNTuple, ViewFrameworkUse)
       }
    }
 
-   auto ntpl = std::unique_ptr<RNTuple>(file.Get<RNTuple>("ntpl"));
+   auto ntpl = std::unique_ptr<ROOT::RNTuple>(file.Get<ROOT::RNTuple>("ntpl"));
    auto reader = RNTupleReader::Open(*ntpl);
    reader->EnableMetrics();
 

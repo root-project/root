@@ -99,14 +99,14 @@ ROOT::Experimental::RNTupleReader::Open(std::string_view ntupleName, std::string
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleReader>
-ROOT::Experimental::RNTupleReader::Open(const ROOT::Experimental::RNTuple &ntuple, const RNTupleReadOptions &options)
+ROOT::Experimental::RNTupleReader::Open(const ROOT::RNTuple &ntuple, const RNTupleReadOptions &options)
 {
    return std::unique_ptr<RNTupleReader>(
       new RNTupleReader(Internal::RPageSourceFile::CreateFromAnchor(ntuple, options), options));
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleReader>
-ROOT::Experimental::RNTupleReader::Open(std::unique_ptr<RNTupleModel> model, const ROOT::Experimental::RNTuple &ntuple,
+ROOT::Experimental::RNTupleReader::Open(std::unique_ptr<RNTupleModel> model, const ROOT::RNTuple &ntuple,
                                         const RNTupleReadOptions &options)
 {
    return std::unique_ptr<RNTupleReader>(

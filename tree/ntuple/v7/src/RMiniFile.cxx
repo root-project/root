@@ -538,7 +538,7 @@ struct RTFUUID {
 /// that fVersionClass matches the class version of RNTuple.
 struct RTFNTuple {
    RUInt32BE fByteCount{0x40000000 | (sizeof(RTFNTuple) - sizeof(fByteCount))};
-   RUInt16BE fVersionClass{6};
+   RUInt16BE fVersionClass{2};
    RUInt16BE fVersionEpoch{0};
    RUInt16BE fVersionMajor{0};
    RUInt16BE fVersionMinor{0};
@@ -554,7 +554,7 @@ struct RTFNTuple {
    static constexpr std::uint32_t GetSizePlusChecksum() { return sizeof(RTFNTuple) + sizeof(std::uint64_t); }
 
    RTFNTuple() = default;
-   explicit RTFNTuple(const ROOT::Experimental::RNTuple &inMemoryAnchor)
+   explicit RTFNTuple(const ROOT::RNTuple &inMemoryAnchor)
    {
       fVersionEpoch = inMemoryAnchor.GetVersionEpoch();
       fVersionMajor = inMemoryAnchor.GetVersionMajor();
@@ -590,7 +590,7 @@ struct RBareFileHeader {
 /// The artifical class name shown for opaque RNTuple keys (see TBasket)
 constexpr char const *kBlobClassName = "RBlob";
 /// The class name of the RNTuple anchor
-constexpr char const *kNTupleClassName = "ROOT::Experimental::RNTuple";
+constexpr char const *kNTupleClassName = "ROOT::RNTuple";
 
 } // anonymous namespace
 
@@ -664,7 +664,7 @@ static size_t ComputeNumChunks(size_t nbytes, size_t maxChunkSize)
 
 ROOT::Experimental::Internal::RMiniFileReader::RMiniFileReader(ROOT::Internal::RRawFile *rawFile) : fRawFile(rawFile) {}
 
-ROOT::Experimental::RResult<ROOT::Experimental::RNTuple>
+ROOT::Experimental::RResult<ROOT::RNTuple>
 ROOT::Experimental::Internal::RMiniFileReader::GetNTuple(std::string_view ntupleName)
 {
    char ident[4];
@@ -675,7 +675,7 @@ ROOT::Experimental::Internal::RMiniFileReader::GetNTuple(std::string_view ntuple
    return GetNTupleBare(ntupleName);
 }
 
-ROOT::Experimental::RResult<ROOT::Experimental::RNTuple>
+ROOT::Experimental::RResult<ROOT::RNTuple>
 ROOT::Experimental::Internal::RMiniFileReader::GetNTupleProper(std::string_view ntupleName)
 {
    RTFHeader fileHeader;
@@ -727,7 +727,9 @@ ROOT::Experimental::Internal::RMiniFileReader::GetNTupleProper(std::string_view 
 
    offset = key.GetSeekKey() + key.fKeyLen;
 
-   constexpr size_t kMinNTupleSize = 70; // size of a RTFNTuple version 4 (min supported version)
+   // size of a RTFNTuple version 2 (min supported version); future anchor versions can grow.
+   constexpr size_t kMinNTupleSize = 78;
+   static_assert(kMinNTupleSize == RTFNTuple::GetSizePlusChecksum());
    if (key.fObjLen < kMinNTupleSize) {
       return R__FAIL("invalid anchor size: " + std::to_string(key.fObjLen) + " < " + std::to_string(sizeof(RTFNTuple)));
    }
@@ -743,24 +745,14 @@ ROOT::Experimental::Internal::RMiniFileReader::GetNTupleProper(std::string_view 
       decompressor.Unzip(bufAnchor.get(), objNbytes, key.fObjLen);
    }
 
-   if (ntuple->fVersionClass < 4) {
-      return R__FAIL("invalid anchor, unsupported pre-release of RNTuple");
-   }
-
    // We require that future class versions only append members and store the checksum in the last 8 bytes
    // Checksum calculation: strip byte count, class version, fChecksum member
    auto lenCkData = key.fObjLen - ntuple->GetOffsetCkData() - sizeof(uint64_t);
    auto ckCalc = XXH3_64bits(ntuple->GetPtrCkData(), lenCkData);
    uint64_t ckOnDisk;
 
-   // For version 4 there is no maxKeySize (there is the checksum instead)
-   if (ntuple->fVersionClass == 4) {
-      ckOnDisk = ntuple->fMaxKeySize;
-      ntuple->fMaxKeySize = 0;
-   } else {
-      RUInt64BE *ckOnDiskPtr = reinterpret_cast<RUInt64BE *>(bufAnchor.get() + key.fObjLen - sizeof(uint64_t));
-      ckOnDisk = static_cast<uint64_t>(*ckOnDiskPtr);
-   }
+   RUInt64BE *ckOnDiskPtr = reinterpret_cast<RUInt64BE *>(bufAnchor.get() + key.fObjLen - sizeof(uint64_t));
+   ckOnDisk = static_cast<uint64_t>(*ckOnDiskPtr);
    if (ckCalc != ckOnDisk) {
       return R__FAIL("RNTuple anchor checksum mismatch");
    }
@@ -770,7 +762,7 @@ ROOT::Experimental::Internal::RMiniFileReader::GetNTupleProper(std::string_view 
                        ntuple->fNBytesFooter, ntuple->fLenFooter, ntuple->fMaxKeySize);
 }
 
-ROOT::Experimental::RResult<ROOT::Experimental::RNTuple>
+ROOT::Experimental::RResult<ROOT::RNTuple>
 ROOT::Experimental::Internal::RMiniFileReader::GetNTupleBare(std::string_view ntupleName)
 {
    RBareFileHeader fileHeader;
@@ -1361,7 +1353,7 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::WriteTFileStreamerInfo()
 void ROOT::Experimental::Internal::RNTupleFileWriter::WriteTFileKeysList()
 {
    RTFString strEmpty;
-   RTFString strRNTupleClass{"ROOT::Experimental::RNTuple"};
+   RTFString strRNTupleClass{"ROOT::RNTuple"};
    RTFString strRNTupleName{fNTupleName};
    RTFString strFileName{fFileName};
 
@@ -1406,7 +1398,7 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::WriteTFileFreeList()
 
 void ROOT::Experimental::Internal::RNTupleFileWriter::WriteTFileNTupleKey()
 {
-   RTFString strRNTupleClass{"ROOT::Experimental::RNTuple"};
+   RTFString strRNTupleClass{"ROOT::RNTuple"};
    RTFString strRNTupleName{fNTupleName};
    RTFString strEmpty;
 
@@ -1421,7 +1413,7 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::WriteTFileNTupleKey()
    memcpy(keyBuf + sizeof(RTFNTuple), &checksum, sizeof(checksum));
 
    fFileSimple.WriteKey(keyBuf, sizeof(keyBuf), sizeof(keyBuf), fFileSimple.fControlBlock->fSeekNTuple, 100,
-                        "ROOT::Experimental::RNTuple", fNTupleName, "");
+                        "ROOT::RNTuple", fNTupleName, "");
 }
 
 void ROOT::Experimental::Internal::RNTupleFileWriter::WriteTFileSkeleton(int defaultCompression)

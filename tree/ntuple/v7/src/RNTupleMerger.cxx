@@ -42,7 +42,7 @@ using namespace ROOT::Experimental;
 using namespace ROOT::Experimental::Internal;
 
 // Entry point for TFileMerger. Internally calls RNTupleMerger::Merge().
-Long64_t RNTuple::Merge(TCollection *inputs, TFileMergeInfo *mergeInfo)
+Long64_t ROOT::RNTuple::Merge(TCollection *inputs, TFileMergeInfo *mergeInfo)
 // IMPORTANT: this function must not throw, as it is used in exception-unsafe code (TFileMerger).
 try {
    // Check the inputs
@@ -67,9 +67,9 @@ try {
 
    // Check if the output file already has a key with that name
    TKey *outKey = outFile->FindKey(ntupleName.c_str());
-   RNTuple *outNTuple = nullptr;
+   ROOT::RNTuple *outNTuple = nullptr;
    if (outKey) {
-      outNTuple = outKey->ReadObject<RNTuple>();
+      outNTuple = outKey->ReadObject<ROOT::RNTuple>();
       if (!outNTuple) {
          Error("RNTuple::Merge", "Output file already has key, but not of type RNTuple!");
          return -1;
@@ -102,7 +102,7 @@ try {
 
    while (const auto &pitr = itr()) {
       TFile *inFile = dynamic_cast<TFile *>(pitr);
-      RNTuple *anchor = inFile ? inFile->Get<RNTuple>(ntupleName.c_str()) : nullptr;
+      ROOT::RNTuple *anchor = inFile ? inFile->Get<ROOT::RNTuple>(ntupleName.c_str()) : nullptr;
       if (!anchor) {
          Error("RNTuple::Merge", "Failed to retrieve RNTuple anchor named '%s' from file '%s'", ntupleName.c_str(),
                inFile->GetName());
@@ -125,7 +125,7 @@ try {
 
    // Provide the caller with a merged anchor object (even though we've already
    // written it).
-   *this = *outFile->Get<RNTuple>(ntupleName.c_str());
+   *this = *outFile->Get<ROOT::RNTuple>(ntupleName.c_str());
 
    return 0;
 } catch (const RException &ex) {

@@ -488,7 +488,7 @@ TEST(RNTuple, WritePageBudget)
 TEST(RNTuple, OpenHTTP)
 {
    std::unique_ptr<TFile> file(TFile::Open("http://root.cern/files/tutorials/ntpl004_dimuon_v1rc2.root"));
-   auto Events = std::unique_ptr<RNTuple>(file->Get<RNTuple>("Events"));
+   auto Events = std::unique_ptr<ROOT::RNTuple>(file->Get<ROOT::RNTuple>("Events"));
    auto model = RNTupleModel::Create();
    model->MakeField<ROOT::RNTupleCardinality<std::uint32_t>>("nMuon");
    auto reader = RNTupleReader::Open(std::move(model), *Events);
@@ -508,7 +508,7 @@ TEST(RNTuple, TMemFile)
       writer->Fill();
    }
 
-   auto ntpl = std::unique_ptr<RNTuple>(file.Get<RNTuple>("ntpl"));
+   auto ntpl = std::unique_ptr<ROOT::RNTuple>(file.Get<ROOT::RNTuple>("ntpl"));
    auto reader = RNTupleReader::Open(*ntpl);
    auto pt = reader->GetModel().GetDefaultEntry().GetPtr<float>("pt");
    reader->LoadEntry(0);

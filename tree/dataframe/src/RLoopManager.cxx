@@ -1249,7 +1249,7 @@ ROOT::Detail::RDF::CreateLMFromFile(std::string_view datasetName, std::string_vi
 
    if (inFile->Get<TTree>(datasetName.data())) {
       return CreateLMFromTTree(datasetName, fileNameGlob, defaultColumns, /*checkFile=*/false);
-   } else if (inFile->Get<ROOT::Experimental::RNTuple>(datasetName.data())) {
+   } else if (inFile->Get<ROOT::RNTuple>(datasetName.data())) {
       return CreateLMFromRNTuple(datasetName, fileNameGlob, defaultColumns);
    }
 
@@ -1266,7 +1266,7 @@ ROOT::Detail::RDF::CreateLMFromFile(std::string_view datasetName, const std::vec
 
    if (inFile->Get<TTree>(datasetName.data())) {
       return CreateLMFromTTree(datasetName, fileNameGlobs, defaultColumns, /*checkFile=*/false);
-   } else if (inFile->Get<ROOT::Experimental::RNTuple>(datasetName.data())) {
+   } else if (inFile->Get<ROOT::RNTuple>(datasetName.data())) {
       return CreateLMFromRNTuple(datasetName, fileNameGlobs, defaultColumns);
    }
 

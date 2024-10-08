@@ -1,5 +1,5 @@
 #ifdef __CLING__
 
-#pragma link C++ class ROOT::Experimental::RXTuple - ;
+#pragma link C++ class ROOT::RXTuple - ;
 
 #endif

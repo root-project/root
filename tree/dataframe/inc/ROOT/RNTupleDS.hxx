@@ -32,10 +32,10 @@
 #include <unordered_map>
 
 namespace ROOT {
-namespace Experimental {
-
-class RFieldBase;
 class RNTuple;
+
+namespace Experimental {
+class RFieldBase;
 class RNTupleDescriptor;
 
 namespace Internal {
@@ -153,7 +153,7 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
 
 public:
    RNTupleDS(std::string_view ntupleName, std::string_view fileName);
-   RNTupleDS(ROOT::Experimental::RNTuple *ntuple);
+   RNTupleDS(ROOT::RNTuple *ntuple);
    RNTupleDS(std::string_view ntupleName, const std::vector<std::string> &fileNames);
    ~RNTupleDS();
 
@@ -180,13 +180,13 @@ protected:
    Record_t GetColumnReadersImpl(std::string_view name, const std::type_info &) final;
 };
 
-} // ns Experimental
+} // namespace Experimental
 
 namespace RDF {
 namespace Experimental {
 RDataFrame FromRNTuple(std::string_view ntupleName, std::string_view fileName);
 RDataFrame FromRNTuple(std::string_view ntupleName, const std::vector<std::string> &fileNames);
-RDataFrame FromRNTuple(ROOT::Experimental::RNTuple *ntuple);
+RDataFrame FromRNTuple(ROOT::RNTuple *ntuple);
 } // namespace Experimental
 } // namespace RDF
 

@@ -554,7 +554,7 @@ std::shared_ptr<RElement> TDirectoryLevelIter::GetDirElement(bool read_dir)
    if (!fKeysIter && fObj)
       return std::make_shared<TObjectElement>(fObj);
 
-   if ("ROOT::Experimental::RNTuple"s == fKey->GetClassName())
+   if ("ROOT::RNTuple"s == fKey->GetClassName())
       return RProvider::BrowseNTuple(fKey->GetName(), fDir->GetFile()->GetName());
 
    std::string key_class = fKey->GetClassName();
