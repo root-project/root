@@ -353,7 +353,7 @@ protected:
    void ConstructValue(void *where) const final { new (where) RNTupleCardinality<SizeT>(0); }
 
 public:
-   static std::string TypeName() { return "ROOT::Experimental::RNTupleCardinality<" + RField<SizeT>::TypeName() + ">"; }
+   static std::string TypeName() { return "ROOT::RNTupleCardinality<" + RField<SizeT>::TypeName() + ">"; }
    explicit RField(std::string_view name) : RCardinalityField(name, TypeName()) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
