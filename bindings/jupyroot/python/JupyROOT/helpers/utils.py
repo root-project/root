@@ -126,7 +126,7 @@ def RCanvasAvailable():
        return False
    return True
 
-_enableJSVis = False
+_enableJSVis = True
 _enableJSVisDebug = False
 def enableJSVis():
     if not TBufferJSONAvailable():
