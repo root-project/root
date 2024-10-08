@@ -6,21 +6,24 @@ TEST(RNTupleProjection, Basics)
 
    auto model = RNTupleModel::Create();
    model->MakeField<float>("met", 42.0);
+   model->MakeField<std::atomic<int>>("atomicNumber", 7);
    auto fvec = model->MakeField<std::vector<float>>("vec");
    fvec->emplace_back(1.0);
    fvec->emplace_back(2.0);
 
    auto f1 = RFieldBase::Create("missingE", "float").Unwrap();
    model->AddProjectedField(std::move(f1), [](const std::string &) { return "met"; });
-   auto f2 = RFieldBase::Create("aliasVec", "std::vector<float>").Unwrap();
-   model->AddProjectedField(std::move(f2), [](const std::string &fieldName) {
+   auto f2 = RFieldBase::Create("number", "int").Unwrap();
+   model->AddProjectedField(std::move(f2), [](const std::string &) { return "atomicNumber._0"; });
+   auto f3 = RFieldBase::Create("aliasVec", "std::vector<float>").Unwrap();
+   model->AddProjectedField(std::move(f3), [](const std::string &fieldName) {
       if (fieldName == "aliasVec")
          return "vec";
       else
          return "vec._0";
    });
-   auto f3 = RFieldBase::Create("vecSize", "ROOT::Experimental::RNTupleCardinality<std::uint64_t>").Unwrap();
-   model->AddProjectedField(std::move(f3), [](const std::string &) { return "vec"; });
+   auto f4 = RFieldBase::Create("vecSize", "ROOT::Experimental::RNTupleCardinality<std::uint64_t>").Unwrap();
+   model->AddProjectedField(std::move(f4), [](const std::string &) { return "vec"; });
 
    {
       auto writer = RNTupleWriter::Recreate(std::move(model), "A", fileGuard.GetPath());
@@ -35,9 +38,11 @@ TEST(RNTupleProjection, Basics)
    EXPECT_TRUE(desc.GetFieldDescriptor(missingEFieldId).IsProjectedField());
    EXPECT_EQ(metFieldId, desc.GetFieldDescriptor(missingEFieldId).GetProjectionSourceId());
    auto viewMissingE = reader->GetView<float>("missingE");
+   auto viewNumber = reader->GetView<int>("number");
    auto viewAliasVec = reader->GetView<std::vector<float>>("aliasVec");
    auto viewVecSize = reader->GetView<ROOT::Experimental::RNTupleCardinality<std::uint64_t>>("vecSize");
    EXPECT_FLOAT_EQ(42.0, viewMissingE(0));
+   EXPECT_EQ(7, viewNumber(0));
    EXPECT_EQ(2U, viewAliasVec(0).size());
    EXPECT_FLOAT_EQ(1.0, viewAliasVec(0).at(0));
    EXPECT_FLOAT_EQ(2.0, viewAliasVec(0).at(1));
@@ -48,11 +53,14 @@ TEST(RNTupleProjection, Basics)
    auto reconstructedModel = reader->GetDescriptor().CreateModel(options);
    auto itrFields = reconstructedModel->GetFieldZero().cbegin();
    EXPECT_EQ("met", itrFields->GetQualifiedFieldName());
+   EXPECT_EQ("atomicNumber", (++itrFields)->GetQualifiedFieldName());
+   EXPECT_EQ("atomicNumber._0", (++itrFields)->GetQualifiedFieldName());
    EXPECT_EQ("vec", (++itrFields)->GetQualifiedFieldName());
    EXPECT_EQ("vec._0", (++itrFields)->GetQualifiedFieldName());
    EXPECT_EQ(reconstructedModel->GetFieldZero().cend(), ++itrFields);
    auto itrProjectedFields = reconstructedModel->GetProjectedFields().GetFieldZero()->cbegin();
    EXPECT_EQ("missingE", itrProjectedFields->GetQualifiedFieldName());
+   EXPECT_EQ("number", (++itrProjectedFields)->GetQualifiedFieldName());
    EXPECT_EQ("aliasVec", (++itrProjectedFields)->GetQualifiedFieldName());
    EXPECT_EQ("aliasVec._0", (++itrProjectedFields)->GetQualifiedFieldName());
    EXPECT_EQ("vecSize", (++itrProjectedFields)->GetQualifiedFieldName());
