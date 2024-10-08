@@ -627,7 +627,6 @@ The footer envelope has the following structure:
 - Feature flags
 - Header checksum (XxHash-3 64bit)
 - Schema extension record frame
-- List frame of column group record frames
 - List frame of cluster group record frames
 
 The header checksum can be used to cross-check that header and footer belong together.
@@ -657,30 +656,6 @@ should continue from the largest IDs found in the header.
 
 Note that is it possible to extend existing fields by additional column representations.
 This means that columns of the extension header may point to fields of the regular header.
-
-#### Column Group Record Frame
-The column group record frame is used to set IDs for certain subsets of column IDs.
-Column groups are only used when there are sharded clusters.
-Otherwise, the enclosing list frame in the footer envelope is empty and all clusters span all columns.
-The purpose of column groups is to prevent repetition of column ID ranges in cluster summaries.
-
-The column group record frame consists of a list frame of 32bit integer items.
-Every item denotes a column ID that is part of this particular column group.
-The ID of the column group is given implicitly by the order of column groups.
-
-The frame hierarchy is as follows
-
-    - Column group outer list frame
-    |
-    |---- Column group 1 record frame
-    |     |---- List frame of column IDs
-    |     |     |---- Column ID 1 [32bit integer]
-    |     |     |---- Column ID 2 [32bit integer]
-    |     |     | ...
-    |
-    |---- Column group 2 record frame
-    | ...
-
 
 #### Cluster Group Record Frame
 
