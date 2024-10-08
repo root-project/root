@@ -1,4 +1,4 @@
-import { loadScript, settings, isNodeJs, isStr, source_dir, browser } from '../core.mjs';
+import { loadScript, settings, isNodeJs, isStr, source_dir, browser, isBatchMode } from '../core.mjs';
 import { getElementRect, _loadJSDOM, makeTranslate } from './BasePainter.mjs';
 import { FontHandler, kSymbol, kWingdings, kTimes } from './FontHandler.mjs';
 
@@ -236,13 +236,13 @@ function approximateLabelWidth(label, font, fsize) {
 /** @summary array defines features supported by latex parser, used by both old and new parsers
   * @private */
 const latex_features = [
-   { name: '#it{' }, // italic
-   { name: '#bf{' }, // bold
+   { name: '#it{', bi: 'italic' }, // italic
+   { name: '#bf{', bi: 'bold' }, // bold
    { name: '#underline{', deco: 'underline' }, // underline
    { name: '#overline{', deco: 'overline' }, // overline
    { name: '#strike{', deco: 'line-through' }, // line through
-   { name: '#kern[', arg: 'float' }, // horizontal shift
-   { name: '#lower[', arg: 'float' },  // vertical shift
+   { name: '#kern[', arg: 'float', shift: 'x' }, // horizontal shift
+   { name: '#lower[', arg: 'float', shift: 'y' },  // vertical shift
    { name: '#scale[', arg: 'float' },  // font scale
    { name: '#color[', arg: 'int' },   // font color
    { name: '#font[', arg: 'int' },    // font face
@@ -578,8 +578,7 @@ function parseLatex(node, arg, label, curr) {
             elem.attr('fill', curr.color || arg.color || null);
 
             // set font size directly to element to avoid complex control
-            if (curr.fisze !== curr.font.size)
-               elem.attr('font-size', Math.round(curr.fsize));
+            elem.attr('font-size', Math.max(1, Math.round(curr.fsize)));
 
             if (curr.font?.isSymbol) {
                elem.text(replaceSymbols(s, curr.font.isSymbol));
@@ -863,16 +862,18 @@ function parseLatex(node, arg, label, curr) {
          continue;
       }
 
-      if (found.name === '#bf{' || found.name === '#it{') {
+      if (found.bi) { // bold or italic
          const sublabel = extractSubLabel();
-         if (sublabel === -1) return false;
+         if (sublabel === -1)
+            return false;
 
          const subpos = createSubPos();
 
-         if (found.name === '#bf{')
-            subpos.bold = !subpos.bold;
-         else
-            subpos.italic = !subpos.italic;
+         let value;
+         for (let c = curr; c && (value === undefined && c); c = c.parent)
+            value = c[found.bi];
+
+         subpos[found.bi] = !value;
 
          parseLatex(currG(), arg, sublabel, subpos);
 
@@ -899,7 +900,7 @@ function parseLatex(node, arg, label, curr) {
          label = label.slice(pos + 2);
       }
 
-      if ((found.name === '#kern[') || (found.name === '#lower[')) {
+      if (found.shift) {
          const sublabel = extractSubLabel();
          if (sublabel === -1) return false;
 
@@ -908,9 +909,12 @@ function parseLatex(node, arg, label, curr) {
          parseLatex(currG(), arg, sublabel, subpos);
 
          let shiftx = 0, shifty = 0;
-         if (found.name === 'kern[') shiftx = foundarg; else shifty = foundarg;
+         if (found.shift === 'x')
+            shiftx = foundarg * subpos.rect.width;
+         else
+            shifty = foundarg * subpos.rect.height;
 
-         positionGNode(subpos, curr.x + shiftx * subpos.rect.width, curr.y + shifty * subpos.rect.height);
+         positionGNode(subpos, curr.x + shiftx, curr.y + shifty);
 
          shiftX(subpos.rect.width * (shiftx > 0 ? 1 + foundarg : 1));
 
@@ -925,6 +929,11 @@ function parseLatex(node, arg, label, curr) {
                subpos = createSubPos();
 
          gg.attr('href', foundarg);
+         if (!isBatchMode()) {
+            gg.on('mouseenter', () => gg.style('text-decoration', 'underline'))
+              .on('mouseleave', () => gg.style('text-decoration', null))
+              .append('svg:title').text(`link on ${foundarg}`);
+         }
 
          parseLatex(gg, arg, sublabel, subpos);
 
