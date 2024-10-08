@@ -36,12 +36,12 @@ public:
    std::uint32_t fFutureField1 = 1;
    std::uint64_t fFutureField2 = 2;
    std::uint64_t fFutureField3 = 3;
-   
+
    // Use an unreasonably high class version so we're guaranteed to always be a future version
    // (but not too high! Putting 9999 would probably cause trouble due to its special meaning)
    ClassDefNV(RXTuple, 99);
 }; // class RXTuple
- 
+
 } // namespace Experimental
 } // namespace ROOT
 
