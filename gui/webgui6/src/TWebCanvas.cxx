@@ -139,6 +139,7 @@ std::string TWebCanvas::gCustomScripts = {};
 std::vector<std::string> TWebCanvas::gCustomClasses = {};
 
 UInt_t TWebCanvas::gBatchImageMode = 0;
+std::string TWebCanvas::gBatchMultiPdf;
 std::vector<std::string> TWebCanvas::gBatchFiles;
 std::vector<std::string> TWebCanvas::gBatchJsons;
 std::vector<int> TWebCanvas::gBatchWidths;
@@ -2482,7 +2483,48 @@ bool TWebCanvas::ProduceImage(TPad *pad, const char *fileName, Int_t width, Int_
    if (!json.Length())
       return false;
 
-   std::string fmt = ROOT::RWebDisplayHandle::GetImageFormat(fileName);
+   TString fname = fileName;
+   const char *endings[4] = {"(", "[", "]", ")"};
+   const char *suffix = nullptr;
+   for (int n = 0; (n < 4) && !suffix; ++n) {
+      if (fname.EndsWith(endings[n])) {
+         fname.Resize(fname.Length() - 1);
+         suffix = endings[n];
+      }
+   }
+
+   Bool_t append_batch = kTRUE, flush_batch = kTRUE;
+
+   std::string fmt = ROOT::RWebDisplayHandle::GetImageFormat(fname.Data());
+   if (fmt.empty())
+      return false;
+
+   if (suffix) {
+      if (fmt != "pdf")
+         return false;
+      switch (*suffix) {
+         case '(': gBatchMultiPdf = fname.Data(); flush_batch = kFALSE; break;
+         case '[': gBatchMultiPdf = fname.Data(); append_batch = kFALSE; flush_batch = kFALSE; break;
+         case ']': gBatchMultiPdf.clear(); append_batch = kFALSE; break;
+         case ')': gBatchMultiPdf.clear(); fname.Append("+"); break;
+      }
+   } else if (fmt == "pdf") {
+      if (!gBatchMultiPdf.empty()) {
+         if (gBatchMultiPdf.compare(fileName) == 0) {
+            append_batch = kTRUE;
+            flush_batch = kFALSE;
+            suffix = "+"; // to let append to the batch
+            if ((gBatchFiles.size() > 0) && (gBatchFiles.back().compare(0, fname.Length(), fname.Data()) == 0))
+               fname.Append("+"); // .pdf+ means appending image to previous
+         } else {
+            ::Error("TWebCanvas::ProduceImage", "Cannot change PDF name when multi-page PDF active");
+            return false;
+         }
+      }
+   } else if (!gBatchMultiPdf.empty()) {
+      ::Error("TWebCanvas::ProduceImage", "Cannot produce other images when multi-page PDF active");
+      return false;
+   }
 
    if (!width && !height) {
       if ((pad->GetCanvas() == pad) || (pad->IsA() == TCanvas::Class())) {
@@ -2494,14 +2536,17 @@ bool TWebCanvas::ProduceImage(TPad *pad, const char *fileName, Int_t width, Int_
       }
    }
 
-   if (!gBatchImageMode || (fmt == "s.pdf") || (fmt == "json") || (fmt == "s.png"))
-      return ROOT::RWebDisplayHandle::ProduceImage(fileName, json.Data(), width, height);
+   if (!suffix && (!gBatchImageMode || (fmt == "s.pdf") || (fmt == "json") || (fmt == "s.png")))
+      return ROOT::RWebDisplayHandle::ProduceImage(fname.Data(), json.Data(), width, height);
 
-   gBatchFiles.emplace_back(fileName);
-   gBatchJsons.emplace_back(json);
-   gBatchWidths.emplace_back(width);
-   gBatchHeights.emplace_back(height);
-   if (gBatchJsons.size() < gBatchImageMode)
+   if (append_batch) {
+      gBatchFiles.emplace_back(fname.Data());
+      gBatchJsons.emplace_back(json);
+      gBatchWidths.emplace_back(width);
+      gBatchHeights.emplace_back(height);
+   }
+
+   if (!flush_batch || (gBatchJsons.size() < gBatchImageMode))
       return true;
 
    return FlushBatchImages();

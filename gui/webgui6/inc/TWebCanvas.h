@@ -120,6 +120,7 @@ protected:
    static std::vector<std::string> gCustomClasses;  ///<! list of custom classes, which can be delivered as is to client
 
    static UInt_t gBatchImageMode;           ///<! configured batch size
+   static std::string gBatchMultiPdf;           ///<! name of current multi-page pdf file
    static std::vector<std::string> gBatchFiles; ///<! file names for batch job
    static std::vector<std::string> gBatchJsons; ///<! converted jsons batch job
    static std::vector<int> gBatchWidths;   ///<! batch job widths
