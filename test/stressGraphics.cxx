@@ -119,25 +119,22 @@ std::vector<TestEntry> gReports;
 ////////////////////////////////////////////////////////////////////////////////
 /// Print test program number and its title
 
-Int_t StatusPrint(TString &filename, Int_t id, const TString &title, Int_t res, Int_t ref, Int_t err)
+Int_t StatusPrint(const TString &filename, Int_t id, const char *title, Int_t res, Int_t ref, Int_t err)
 {
    if (!gOptionR) {
       TString line;
-      if (id > 0) {
-         line = TString::Format("Test %2d: %s", id, title.Data());
-      } else {
-         line = TString::Format("       %s", title.Data());
-      }
+      if (id > 0)
+         line = TString::Format("Test %2d: %s", id, title);
+       else
+         line = TString::Format("       %s", title);
 
       const Int_t nch = line.Length();
-      if (TMath::Abs(res-ref)<=err) {
+      if (TMath::Abs(res - ref) <= err) {
          std::cout << line;
          for (Int_t i = nch; i < 67; i++) std::cout << ".";
          std::cout << " OK" << std::endl;
-#ifndef __CLING__
          if (!gOptionK)
             gSystem->Unlink(filename.Data());
-#endif
       } else {
          std::cout << line;
          Int_t ndots = 60;
@@ -288,6 +285,26 @@ void TestReport(TCanvas *C, const TString &title, const TString &arg = "", Int_t
    gErrorIgnoreLevel = 0;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Invoke TWebCanvas::BatchImageMode in web mode
+
+void webcanv_batch_mode(int number)
+{
+   if (!gWebMode) return;
+
+   gErrorIgnoreLevel = 9999;
+
+   gROOT->ProcessLine(TString::Format("TWebCanvas::BatchImageMode(%d);", number));
+
+   gErrorIgnoreLevel = 0;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Starts new block of tests
+/// In web mode configure number of batch images
+
 void start_block(const TString &title, Bool_t with3d = kFALSE)
 {
    if (!gOptionR) {
@@ -295,25 +312,19 @@ void start_block(const TString &title, Bool_t with3d = kFALSE)
       std::cout << "*  Starting " << title << " - S T R E S S " << TString(' ', 41 - title.Length()) << " *" << std::endl;
       std::cout << "**********************************************************************" <<std::endl;
    }
-   if (gWebMode) {
-      // one cannot create more than 10 webgl contexts in single browser instance
-      if (with3d)
-         gROOT->ProcessLine("TWebCanvas::BatchImageMode(10);");
-      else
-         gROOT->ProcessLine("TWebCanvas::BatchImageMode(80);");
-   }
+
+   webcanv_batch_mode(with3d ? 10 : 80);
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Analyze and print reports for performed tests
 
 void print_reports()
 {
    // done files generation
    // all non-processed web images will be generated now
-   if (gWebMode) {
-      gErrorIgnoreLevel = 9999;
-      gROOT->ProcessLine("TWebCanvas::BatchImageMode(0);");
-      gErrorIgnoreLevel = 0;
-   }
+   webcanv_batch_mode(0);
 
    for (auto &e : gReports) {
 
