@@ -48,7 +48,7 @@ struct RNTupleSourceSpec {
 \ingroup NTuple
 \brief Interface for iterating over entries of RNTuples and vertically concatenated RNTuples (chains).
 
-Example usage (see ntpl012_processor.C for a full example):
+Example usage:
 
 ~~~{.cpp}
 #include <ROOT/RNTupleProcessor.hxx>
