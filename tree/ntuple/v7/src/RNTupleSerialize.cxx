@@ -70,6 +70,11 @@ std::uint32_t SerializeField(const ROOT::Experimental::RFieldDescriptor &fieldDe
       flags |= RNTupleSerializer::kFlagHasTypeChecksum;
    pos += RNTupleSerializer::SerializeUInt16(flags, *where);
 
+   pos += RNTupleSerializer::SerializeString(fieldDesc.GetFieldName(), *where);
+   pos += RNTupleSerializer::SerializeString(fieldDesc.GetTypeName(), *where);
+   pos += RNTupleSerializer::SerializeString(fieldDesc.GetTypeAlias(), *where);
+   pos += RNTupleSerializer::SerializeString(fieldDesc.GetFieldDescription(), *where);
+
    if (flags & RNTupleSerializer::kFlagRepetitiveField) {
       pos += RNTupleSerializer::SerializeUInt64(fieldDesc.GetNRepetitions(), *where);
    }
@@ -79,11 +84,6 @@ std::uint32_t SerializeField(const ROOT::Experimental::RFieldDescriptor &fieldDe
    if (flags & RNTupleSerializer::kFlagHasTypeChecksum) {
       pos += RNTupleSerializer::SerializeUInt32(fieldDesc.GetTypeChecksum().value(), *where);
    }
-
-   pos += RNTupleSerializer::SerializeString(fieldDesc.GetFieldName(), *where);
-   pos += RNTupleSerializer::SerializeString(fieldDesc.GetTypeName(), *where);
-   pos += RNTupleSerializer::SerializeString(fieldDesc.GetTypeAlias(), *where);
-   pos += RNTupleSerializer::SerializeString(fieldDesc.GetFieldDescription(), *where);
 
    auto size = pos - base;
    RNTupleSerializer::SerializeFramePostscript(base, size);
@@ -158,6 +158,28 @@ RResult<std::uint32_t> DeserializeField(const void *buffer, std::uint64_t bufSiz
    bytes += RNTupleSerializer::DeserializeUInt16(bytes, flags);
    fieldDesc.FieldVersion(fieldVersion).TypeVersion(typeVersion).ParentId(parentId).Structure(structure);
 
+   std::string fieldName;
+   std::string typeName;
+   std::string aliasName;
+   std::string description;
+   result = RNTupleSerializer::DeserializeString(bytes, fnFrameSizeLeft(), fieldName).Unwrap();
+   if (!result)
+      return R__FORWARD_ERROR(result);
+   bytes += result.Unwrap();
+   result = RNTupleSerializer::DeserializeString(bytes, fnFrameSizeLeft(), typeName).Unwrap();
+   if (!result)
+      return R__FORWARD_ERROR(result);
+   bytes += result.Unwrap();
+   result = RNTupleSerializer::DeserializeString(bytes, fnFrameSizeLeft(), aliasName).Unwrap();
+   if (!result)
+      return R__FORWARD_ERROR(result);
+   bytes += result.Unwrap();
+   result = RNTupleSerializer::DeserializeString(bytes, fnFrameSizeLeft(), description).Unwrap();
+   if (!result)
+      return R__FORWARD_ERROR(result);
+   bytes += result.Unwrap();
+   fieldDesc.FieldName(fieldName).TypeName(typeName).TypeAlias(aliasName).FieldDescription(description);
+
    if (flags & RNTupleSerializer::kFlagRepetitiveField) {
       if (fnFrameSizeLeft() < sizeof(std::uint64_t))
          return R__FAIL("field record frame too short");
@@ -181,28 +203,6 @@ RResult<std::uint32_t> DeserializeField(const void *buffer, std::uint64_t bufSiz
       bytes += RNTupleSerializer::DeserializeUInt32(bytes, typeChecksum);
       fieldDesc.TypeChecksum(typeChecksum);
    }
-
-   std::string fieldName;
-   std::string typeName;
-   std::string aliasName;
-   std::string description;
-   result = RNTupleSerializer::DeserializeString(bytes, fnFrameSizeLeft(), fieldName).Unwrap();
-   if (!result)
-      return R__FORWARD_ERROR(result);
-   bytes += result.Unwrap();
-   result = RNTupleSerializer::DeserializeString(bytes, fnFrameSizeLeft(), typeName).Unwrap();
-   if (!result)
-      return R__FORWARD_ERROR(result);
-   bytes += result.Unwrap();
-   result = RNTupleSerializer::DeserializeString(bytes, fnFrameSizeLeft(), aliasName).Unwrap();
-   if (!result)
-      return R__FORWARD_ERROR(result);
-   bytes += result.Unwrap();
-   result = RNTupleSerializer::DeserializeString(bytes, fnFrameSizeLeft(), description).Unwrap();
-   if (!result)
-      return R__FORWARD_ERROR(result);
-   bytes += result.Unwrap();
-   fieldDesc.FieldName(fieldName).TypeName(typeName).TypeAlias(aliasName).FieldDescription(description);
 
    return frameSize;
 }
