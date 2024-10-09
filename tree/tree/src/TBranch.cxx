@@ -1517,7 +1517,6 @@ Int_t TBranch::GetBulkEntries(Long64_t entry, TBuffer &user_buf)
       if (fBasketSeek[fReadBasket]) {
          // It is backed, so we can be destructive
          user_buf.SwapBuffer(*buf);
-         buf->ResetBit(TBufferIO::kIsOwner);
          fCurrentBasket = nullptr;
          fBaskets[fReadBasket] = nullptr;
       } else {
@@ -1542,7 +1541,8 @@ Int_t TBranch::GetBulkEntries(Long64_t entry, TBuffer &user_buf)
 
    if (fCurrentBasket == nullptr) {
       fExtraBaskets.push_back(basket);
-      basket->DisownBuffer();
+      if (basket->GetBufferRef() == &user_buf)
+         basket->DisownBuffer();
    }
 
    return N;
@@ -1634,7 +1634,6 @@ Int_t TBranch::GetEntriesSerialized(Long64_t entry, TBuffer &user_buf, TBuffer *
       if (fBasketSeek[fReadBasket]) {
          // It is backed, so we can be destructive
          user_buf.SwapBuffer(*buf);
-         buf->ResetBit(TBufferIO::kIsOwner);
          fCurrentBasket = nullptr;
          fBaskets[fReadBasket] = nullptr;
       } else {
@@ -1679,7 +1678,8 @@ Int_t TBranch::GetEntriesSerialized(Long64_t entry, TBuffer &user_buf, TBuffer *
 
    if (fCurrentBasket == nullptr) {
       fExtraBaskets.push_back(basket);
-      basket->DisownBuffer();
+      if (basket->GetBufferRef() == &user_buf)
+         basket->DisownBuffer();
    }
 
    return N;
