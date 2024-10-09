@@ -2210,8 +2210,7 @@ ROOT::Experimental::RExtraTypeInfoDescriptor ROOT::Experimental::RStreamerField:
 {
    Internal::RExtraTypeInfoDescriptorBuilder extraTypeInfoBuilder;
    extraTypeInfoBuilder.ContentId(EExtraTypeInfoIds::kStreamerInfo)
-      .TypeVersionFrom(GetTypeVersion())
-      .TypeVersionTo(GetTypeVersion())
+      .TypeVersion(GetTypeVersion())
       .TypeName(GetTypeName())
       .Content(Internal::RNTupleSerializer::SerializeStreamerInfos(fStreamerInfos));
    return extraTypeInfoBuilder.MoveDescriptor().Unwrap();

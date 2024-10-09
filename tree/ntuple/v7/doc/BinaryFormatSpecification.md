@@ -599,13 +599,11 @@ The type information record frame has the following contents followed by a strin
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 +                       Content Identifier                      +
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                        Type Version From                      |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                         Type Version To                       |
+|                          Type Version                         |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ```
 
-The combination of type version from/to, type name, and content identifier should be unique in the list.
+The combination of type version, type name, and content identifier should be unique in the list.
 However, not every type needs to provide additional type information.
 
 The following kinds of content are supported:
@@ -616,7 +614,7 @@ The following kinds of content are supported:
 
 The serialized ROOT streamer info is not bound to a specific type.
 It is the combined streamer information from all fields serialized by the ROOT streamer.
-Writers set version from/to to zero and use an empty type name.
+Writers set the version to zero and use an empty type name.
 Readers should ignore the type-specific information.
 The format of the content is a ROOT streamed `TList` of `TStreamerInfo` objects.
 
