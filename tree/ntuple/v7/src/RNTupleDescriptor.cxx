@@ -264,16 +264,14 @@ ROOT::Experimental::RClusterDescriptor ROOT::Experimental::RClusterDescriptor::C
 
 bool ROOT::Experimental::RExtraTypeInfoDescriptor::operator==(const RExtraTypeInfoDescriptor &other) const
 {
-   return fContentId == other.fContentId && fTypeName == other.fTypeName &&
-          fTypeVersionFrom == other.fTypeVersionFrom && fTypeVersionTo == other.fTypeVersionTo;
+   return fContentId == other.fContentId && fTypeName == other.fTypeName && fTypeVersion == other.fTypeVersion;
 }
 
 ROOT::Experimental::RExtraTypeInfoDescriptor ROOT::Experimental::RExtraTypeInfoDescriptor::Clone() const
 {
    RExtraTypeInfoDescriptor clone;
    clone.fContentId = fContentId;
-   clone.fTypeVersionFrom = fTypeVersionFrom;
-   clone.fTypeVersionTo = fTypeVersionTo;
+   clone.fTypeVersion = fTypeVersion;
    clone.fTypeName = fTypeName;
    clone.fContent = fContent;
    return clone;
