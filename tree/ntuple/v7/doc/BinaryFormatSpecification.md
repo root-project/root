@@ -480,36 +480,36 @@ The column type and bits on storage integers can have one of the following value
 
 | Type | Bits | Name         | Contents                                                                                      |
 |------|------|--------------|-----------------------------------------------------------------------------------------------|
-| 0x01 |   64 | Index64      | Parent columns of (nested) collections, counting is relative to the cluster                   |
-| 0x02 |   32 | Index32      | Parent columns of (nested) collections, counting is relative to the cluster                   |
-| 0x03 |   96 | Switch       | Tuple of a kIndex64 value followed by a 32 bits dispatch tag to a column ID                   |
-| 0x04 |    8 | Byte         | An uninterpreted byte, e.g. part of a blob                                                    |
-| 0x05 |    8 | Char         | ASCII character                                                                               |
-| 0x06 |    1 | Bit          | Boolean value                                                                                 |
-| 0x07 |   64 | Real64       | IEEE-754 double precision float                                                               |
-| 0x08 |   32 | Real32       | IEEE-754 single precision float                                                               |
-| 0x09 |   16 | Real16       | IEEE-754 half precision float                                                                 |
-| 0x16 |   64 | Int64        | Two's complement, little-endian 8-byte signed integer                                         |
+| 0x00 |    1 | Bit          | Boolean value                                                                                 |
+| 0x01 |    8 | Byte         | An uninterpreted byte, e.g. part of a blob                                                    |
+| 0x02 |    8 | Char         | ASCII character                                                                               |
+| 0x03 |    8 | Int8         | Two's complement, 1-byte signed integer                                                       |
+| 0x04 |    8 | UInt8        | 1 byte unsigned integer                                                                       |
+| 0x05 |   16 | Int16        | Two's complement, little-endian 2-byte signed integer                                         |
+| 0x06 |   16 | UInt16       | Little-endian 2-byte unsigned integer                                                         |
+| 0x07 |   32 | Int32        | Two's complement, little-endian 4-byte signed integer                                         |
+| 0x08 |   32 | UInt32       | Little-endian 4-byte unsigned integer                                                         |
+| 0x09 |   64 | Int64        | Two's complement, little-endian 8-byte signed integer                                         |
 | 0x0A |   64 | UInt64       | Little-endian 8-byte unsigned integer                                                         |
-| 0x17 |   32 | Int32        | Two's complement, little-endian 4-byte signed integer                                         |
-| 0x0B |   32 | UInt32       | Little-endian 4-byte unsigned integer                                                         |
-| 0x18 |   16 | Int16        | Two's complement, little-endian 2-byte signed integer                                         |
-| 0x0C |   16 | UInt16       | Little-endian 2-byte unsigned integer                                                         |
-| 0x19 |    8 | Int8         | Two's complement, 1-byte signed integer                                                       |
-| 0x0D |    8 | UInt8        | 1 byte unsigned integer                                                                       |
-| 0x0E |   64 | SplitIndex64 | Like Index64 but pages are stored in split + delta encoding                                   |
-| 0x0F |   32 | SplitIndex32 | Like Index32 but pages are stored in split + delta encoding                                   |
-| 0x10 |   64 | SplitReal64  | Like Real64 but in split encoding                                                             |
-| 0x11 |   32 | SplitReal32  | Like Real32 but in split encoding                                                             |
-| 0x12 |   16 | SplitReal16  | Like Real16 but in split encoding                                                             |
-| 0x1A |   64 | SplitInt64   | Like Int64 but in split + zigzag encoding                                                     |
-| 0x13 |   64 | SplitUInt64  | Like UInt64 but in split encoding                                                             |
-| 0x1B |   64 | SplitInt32   | Like Int32 but in split + zigzag encoding                                                     |
+| 0x0B |   16 | Real16       | IEEE-754 half precision float                                                                 |
+| 0x0C |   32 | Real32       | IEEE-754 single precision float                                                               |
+| 0x0D |   64 | Real64       | IEEE-754 double precision float                                                               |
+| 0x0E |   32 | Index32      | Parent columns of (nested) collections, counting is relative to the cluster                   |
+| 0x0F |   64 | Index64      | Parent columns of (nested) collections, counting is relative to the cluster                   |
+| 0x10 |   96 | Switch       | Tuple of a kIndex64 value followed by a 32 bits dispatch tag to a column ID                   |
+| 0x11 |   16 | SplitInt16   | Like Int16 but in split + zigzag encoding                                                     |
+| 0x12 |   16 | SplitUInt16  | Like UInt16 but in split encoding                                                             |
+| 0x13 |   64 | SplitInt32   | Like Int32 but in split + zigzag encoding                                                     |
 | 0x14 |   32 | SplitUInt32  | Like UInt32 but in split encoding                                                             |
-| 0x1C |   16 | SplitInt16   | Like Int16 but in split + zigzag encoding                                                     |
-| 0x15 |   16 | SplitUInt16  | Like UInt16 but in split encoding                                                             |
-| 0x1D |10-31 | Real32Trunc  | IEEE-754 single precision float with truncated mantissa                                       |
-| 0x1E | 1-32 | Real32Quant  | Real value contained in a specified range with an underlying quantized integer representation |
+| 0x15 |   64 | SplitInt64   | Like Int64 but in split + zigzag encoding                                                     |
+| 0x16 |   64 | SplitUInt64  | Like UInt64 but in split encoding                                                             |
+| 0x17 |   16 | SplitReal16  | Like Real16 but in split encoding                                                             |
+| 0x18 |   32 | SplitReal32  | Like Real32 but in split encoding                                                             |
+| 0x19 |   64 | SplitReal64  | Like Real64 but in split encoding                                                             |
+| 0x1A |   32 | SplitIndex32 | Like Index32 but pages are stored in split + delta encoding                                   |
+| 0x1B |   64 | SplitIndex64 | Like Index64 but pages are stored in split + delta encoding                                   |
+| 0x1C |10-31 | Real32Trunc  | IEEE-754 single precision float with truncated mantissa                                       |
+| 0x1D | 1-32 | Real32Quant  | Real value contained in a specified range with an underlying quantized integer representation |
 
 The "split encoding" columns apply a byte transformation encoding to all pages of that column
 and in addition, depending on the column type, delta or zigzag encoding:
