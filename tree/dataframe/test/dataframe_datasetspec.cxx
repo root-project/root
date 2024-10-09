@@ -534,12 +534,12 @@ TEST(RDatasetSpecTest, Describe)
 TEST(RDatasetSpecTest, FromSpec)
 {
    auto dfWriter0 = ROOT::RDataFrame(5).Define("z", [](ULong64_t e) { return e + 100; }, {"rdfentry_"});
-   dfWriter0.Range(0, 2).Snapshot<ULong64_t>("subTree", "PYspecTestFile2.root", {"z"});
-   dfWriter0.Range(2, 4).Snapshot<ULong64_t>("subTree", "PYspecTestFile3.root", {"z"});
-   dfWriter0.Range(4, 5).Snapshot<ULong64_t>("subTree", "PYspecTestFile4.root", {"z"});
-   dfWriter0.Range(0, 2).Snapshot<ULong64_t>("subTree1", "PYspecTestFile5.root", {"z"});
-   dfWriter0.Range(2, 4).Snapshot<ULong64_t>("subTree2", "PYspecTestFile6.root", {"z"});
-   dfWriter0.Snapshot<ULong64_t>("anotherTree", "PYspecTestFile7.root", {"z"});
+   dfWriter0.Range(0, 2).Snapshot<ULong64_t>("subTree", "CPPspecTestFile2.root", {"z"});
+   dfWriter0.Range(2, 4).Snapshot<ULong64_t>("subTree", "CPPspecTestFile3.root", {"z"});
+   dfWriter0.Range(4, 5).Snapshot<ULong64_t>("subTree", "CPPspecTestFile4.root", {"z"});
+   dfWriter0.Range(0, 2).Snapshot<ULong64_t>("subTree1", "CPPspecTestFile5.root", {"z"});
+   dfWriter0.Range(2, 4).Snapshot<ULong64_t>("subTree2", "CPPspecTestFile6.root", {"z"});
+   dfWriter0.Snapshot<ULong64_t>("anotherTree", "CPPspecTestFile7.root", {"z"});
 
    auto rdf =
       FromSpec("spec.json")
@@ -570,7 +570,7 @@ TEST(RDatasetSpecTest, FromSpec)
    }
 
    for (auto i = 2u; i < 8u; ++i)
-      gSystem->Unlink(("PYspecTestFile" + std::to_string(i) + ".root").c_str());
+      gSystem->Unlink(("CPPspecTestFile" + std::to_string(i) + ".root").c_str());
 }
 
 TEST(RDatasetSpecTest, FromSpec_ordering_samplesAndFriends)
