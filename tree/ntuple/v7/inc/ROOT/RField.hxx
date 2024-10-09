@@ -348,6 +348,8 @@ protected:
    }
 
    const RColumnRepresentations &GetColumnRepresentations() const final;
+   using RSimpleField<ClusterSize_t>::GenerateColumns;
+   void GenerateColumns() final { throw RException(R__FAIL("RField<ClusterSize_t> must only be used for reading")); }
 
 public:
    static std::string TypeName() { return "ROOT::Experimental::ClusterSize_t"; }
