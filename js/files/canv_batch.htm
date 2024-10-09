@@ -9,7 +9,7 @@
         @page { margin: $page_margin; size: $page_width $page_height; }
      }
   </style>
-  <script src="$jsrootsys/build/jsroot.js"></script>
+  <script id="jsroot" src="$jsrootsys/build/jsroot.js"></script>
 </head>
 
 <body style="margin:0; padding:0; overflow:hidden">
@@ -57,6 +57,9 @@
 
    // remove data
    document.getElementById('data').remove();
+
+   // remove JSROOT script itself
+   document.getElementById('jsroot').remove();
 
    // complete drawings
    Promise.all(promises).then(arr => {
