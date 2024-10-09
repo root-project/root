@@ -343,6 +343,9 @@ ROOT::Experimental::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle,
       clusterInfo.fPageInfo = clusterDescriptor.GetPageRange(columnId).Find(idxInCluster);
    }
 
+   if (clusterInfo.fPageInfo.fLocator.fType == RNTupleLocator::kTypeUnknown)
+      throw RException(R__FAIL("tried to read a page with an unknown locator"));
+
    return LoadPageImpl(columnHandle, clusterInfo, idxInCluster);
 }
 
@@ -371,6 +374,9 @@ ROOT::Experimental::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle,
       clusterInfo.fColumnOffset = columnRange.fFirstElementIndex;
       clusterInfo.fPageInfo = clusterDescriptor.GetPageRange(columnId).Find(idxInCluster);
    }
+
+   if (clusterInfo.fPageInfo.fLocator.fType == RNTupleLocator::kTypeUnknown)
+      throw RException(R__FAIL("tried to read a page with an unknown locator"));
 
    return LoadPageImpl(columnHandle, clusterInfo, idxInCluster);
 }

@@ -440,3 +440,65 @@ TEST(RNTupleCompat, FutureFieldStructuralRole_Nested)
       EXPECT_THAT(err.what(), testing::HasSubstr("invalid field"));
    }
 }
+
+class RPageSinkTestLocator : public RPageSinkFile {
+   ROOT::Experimental::RNTupleLocator WriteSealedPage(const RPageStorage::RSealedPage &sealedPage, std::size_t)
+   {
+      auto payload = ROOT::Experimental::RNTupleLocatorObject64{0x420};
+      RNTupleLocator result;
+      result.fPosition = payload;
+      result.fType = RNTupleLocator::kTypeTestLocator;
+      result.fBytesOnStorage = sealedPage.GetDataSize();
+      return result;
+   }
+
+   RNTupleLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) override
+   {
+      auto element = columnHandle.fColumn->GetElement();
+      RPageStorage::RSealedPage sealedPage = SealPage(page, *element);
+      return WriteSealedPage(sealedPage, element->GetPackedSize(page.GetNElements()));
+   }
+
+public:
+   using RPageSinkFile::RPageSinkFile;
+};
+
+TEST(RNTupleCompat, UnknownLocatorType)
+{
+   // Write a RNTuple containing a page with an unknown locator type and verify we can
+   // read back the ntuple, its descriptor and reconstruct the model (but not read pages)
+
+   FileRaii fileGuard("test_ntuple_compat_future_locator.root");
+   fileGuard.PreserveFile();
+
+   {
+      auto model = RNTupleModel::Create();
+      auto fieldPt = model->MakeField<float>("pt", 14.0);
+      auto wopts = RNTupleWriteOptions();
+      wopts.SetCompression(0);
+      wopts.SetEnablePageChecksums(false);
+      auto sink = std::make_unique<RPageSinkTestLocator>("ntpl", fileGuard.GetPath(), wopts);
+      auto writer = CreateRNTupleWriter(std::move(model), std::move(sink));
+      *fieldPt = 33.f;
+      writer->Fill();
+   }
+
+   auto readOpts = RNTupleReadOptions();
+   // disable the cluster cache so we can catch the exception that happens on LoadEntry
+   readOpts.SetClusterCache(RNTupleReadOptions::EClusterCache::kOff);
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath(), readOpts);
+   const auto &desc = reader->GetDescriptor();
+   const auto &fdesc = desc.GetFieldDescriptor(desc.FindFieldId("pt"));
+   EXPECT_EQ(fdesc.GetLogicalColumnIds().size(), 1);
+
+   // Creating a model should succeed
+   auto model = desc.CreateModel();
+   (void)model;
+
+   try {
+      reader->LoadEntry(0);
+      FAIL() << "trying to read a field with an unknown locator should fail";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("tried to read a page with an unknown locator"));
+   }
+}

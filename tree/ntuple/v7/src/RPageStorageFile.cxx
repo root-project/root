@@ -510,15 +510,17 @@ ROOT::Experimental::Internal::RPageSourceFile::PrepareSingleCluster(
    std::vector<ROnDiskPageLocator> onDiskPages;
    auto activeSize = 0;
    auto pageZeroMap = std::make_unique<ROnDiskPageMap>();
-   PrepareLoadCluster(
-      clusterKey, *pageZeroMap,
-      [&](DescriptorId_t physicalColumnId, NTupleSize_t pageNo,
-          const RClusterDescriptor::RPageRange::RPageInfo &pageInfo) {
-         const auto &pageLocator = pageInfo.fLocator;
-         const auto nBytes = pageLocator.fBytesOnStorage + pageInfo.fHasChecksum * kNBytesPageChecksum;
-         activeSize += nBytes;
-         onDiskPages.push_back({physicalColumnId, pageNo, pageLocator.GetPosition<std::uint64_t>(), nBytes, 0});
-      });
+   PrepareLoadCluster(clusterKey, *pageZeroMap,
+                      [&](DescriptorId_t physicalColumnId, NTupleSize_t pageNo,
+                          const RClusterDescriptor::RPageRange::RPageInfo &pageInfo) {
+                         const auto &pageLocator = pageInfo.fLocator;
+                         if (pageLocator.fType == RNTupleLocator::kTypeUnknown)
+                            throw RException(R__FAIL("tried to read a page with an unknown locator"));
+                         const auto nBytes = pageLocator.fBytesOnStorage + pageInfo.fHasChecksum * kNBytesPageChecksum;
+                         activeSize += nBytes;
+                         onDiskPages.push_back(
+                            {physicalColumnId, pageNo, pageLocator.GetPosition<std::uint64_t>(), nBytes, 0});
+                      });
 
    // Linearize the page requests by file offset
    std::sort(onDiskPages.begin(), onDiskPages.end(),

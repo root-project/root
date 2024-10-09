@@ -231,8 +231,10 @@ struct RNTupleLocator {
       kTypeFile = 0x00,
       kTypeDAOS = 0x02,
 
+      kTypeTestLocator = 0x7e, // used for unit tests
       kLastSerializableType = 0x7f,
       kTypePageZero = kLastSerializableType + 1,
+      kTypeUnknown,
    };
 
    std::uint64_t fBytesOnStorage = 0;
