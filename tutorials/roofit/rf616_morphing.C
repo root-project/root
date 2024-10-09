@@ -32,13 +32,15 @@ using namespace RooFit;
 // Number of samples to fill the histograms
 const int n_samples = 1000;
 
+// Kills warning massages
+RooMsgService::instance().setGlobalKillBelow(RooFit::WARNING);
+
 // Define the morphing routine
-RooPlot *perform_morphing(RooWorkspace &ws, RooMomentMorphFuncND::Setting setting)
+RooPlot *perform_morphing(RooWorkspace &ws, RooMomentMorphFuncND::Setting setting, double sigma)
 {
     // Get Variables from the workspace
     RooRealVar *x_var = ws.var("x");
     RooRealVar *mu_var = ws.var("mu");
-    RooRealVar *sigma_var = ws.var("sigma");
     RooAbsPdf *gauss = ws.pdf("gauss");
 
     // Initialize a plot
@@ -57,11 +59,11 @@ RooPlot *perform_morphing(RooWorkspace &ws, RooMomentMorphFuncND::Setting settin
         // Define the sampled gaussians
         RooRealVar mu_help(Form("mu%d", i), Form("mu%d", i), i);
         // Use * because RooGaussian expects objects no pointers
-        RooGaussian help(Form("g%d", i), Form("g%d", i), *x_var, mu_help, *sigma_var);
-        ws.import(help);
+        RooGaussian help(Form("g%d", i), Form("g%d", i), *x_var, mu_help, sigma);
+        ws.import(help, Silence(true));
 
         // Fill the histograms use a unique pointer to prevent memory leaks
-        std::unique_ptr<RooDataHist> hist1{dynamic_cast<RooDataHist *>(ws.pdf(Form("g%d", i))->generateBinned(*x_var, n_samples))};
+        std::unique_ptr<RooDataHist> hist1{dynamic_cast<RooDataHist *>(ws.pdf(Form("g%d", i))->generateBinned(*x_var, 100*n_samples))};
 
         // Add the value 1 to each bin
         for (int i_bin = 0; i_bin < hist1->numEntries(); ++i_bin)
@@ -72,13 +74,12 @@ RooPlot *perform_morphing(RooWorkspace &ws, RooMomentMorphFuncND::Setting settin
 
         // Add the pdf to the workspace, the inOrder of 1 is necessary for calculation of the nll
         // Adjust it to 0 to see binning
-        ws.import(RooHistPdf(Form("histpdf%d", i), Form("histpdf%d", i), *x_var, *hist1, 1));
+        ws.import(RooHistPdf(Form("histpdf%d", i), Form("histpdf%d", i), *x_var, *hist1, 1), Silence(true));
 
         // Plot and add the pdf to the grid
         RooAbsPdf *pdf = ws.pdf(Form("histpdf%d", i));
         pdf->plotOn(frame1);
-        grid.addPdf(*pdf, i);
-
+        grid.addPdf(*pdf, i);        
         
     }
 
@@ -86,11 +87,11 @@ RooPlot *perform_morphing(RooWorkspace &ws, RooMomentMorphFuncND::Setting settin
     RooMomentMorphFuncND morph_func("morpf_func", "morph_func", RooArgList(*mu_var), RooArgList(*x_var), grid, setting);
 
     // Normalizing the morphed object to be a pdf, set it false to prevent warning messages and gain computational speed up
-    // morph_func.setPdfMode();
+    morph_func.setPdfMode();
 
     // Creating the morphed pdf
     RooWrapperPdf morph("morph", "morph", morph_func, true);
-    ws.import(morph);
+    ws.import(morph, Silence(true));
     RooAbsPdf *morph_ = ws.pdf("morph");
     morph_->plotOn(frame1, LineColor(kRed));
 
@@ -98,10 +99,10 @@ RooPlot *perform_morphing(RooWorkspace &ws, RooMomentMorphFuncND::Setting settin
 }
 
 // Define the workspace
-std::unique_ptr<RooWorkspace> build_ws(double mu_observed)
+std::unique_ptr<RooWorkspace> build_ws(double mu_observed, double sigma)
 {   
     auto ws = std::make_unique<RooWorkspace>();
-    ws-> factory(Form("Gaussian::gauss(x[-5,15],mu[%f,0,4],sigma[1.5])", mu_observed));
+    ws -> factory(Form("Gaussian::gauss(x[-5,15],mu[%f,0,4], %f)", mu_observed, sigma));
     return ws;
 }
 
@@ -110,16 +111,16 @@ void rf616_morphing()
 {
     // Define the 'observed' mu
     double mu_observed = 2.5;
+    double sigma = 1.5;
 
     // Import variables from workspace
-    std::unique_ptr<RooWorkspace> ws = build_ws(mu_observed);
+    std::unique_ptr<RooWorkspace> ws = build_ws(mu_observed, sigma);
 
 
-    RooPlot *frame1 = perform_morphing(*ws, RooMomentMorphFuncND::Linear);
+    RooPlot *frame1 = perform_morphing(*ws, RooMomentMorphFuncND::Linear, sigma);
 
     RooRealVar *x_var = ws->var("x");
     RooRealVar *mu_var = ws->var("mu");
-    RooRealVar *sigma_var = ws->var("sigma");
     RooAbsPdf *gauss = ws->pdf("gauss");
     RooDataSet *obs_data = gauss->generate(*x_var, n_samples);
 
@@ -128,7 +129,8 @@ void rf616_morphing()
     RooAbsReal *nll_gauss = gauss->createNLL(*obs_data);
 
     // Create the morphed negative log likelihood function
-    RooAbsReal *nll_morph = ws->pdf("morph")->createNLL(*obs_data);
+    // TODO: Fix RooAddPdf::fixCoefNormalization(nset) warnings with new CPU backend
+    RooAbsReal *nll_morph = ws->pdf("morph")->createNLL(*obs_data, RooFit::EvalBackend("legacy"));
 
     // Plot the negative logarithmic summed likelihood
     RooPlot *frame2 = mu_var->frame(Title("Negative log Likelihood"));
