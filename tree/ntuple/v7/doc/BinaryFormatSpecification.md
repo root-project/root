@@ -365,6 +365,13 @@ Every field record frame of the list of fields has the following contents
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ```
 
+The block of integers is followed by a list of strings:
+
+- String: field name
+- String: type name
+- String: type alias
+- String: field description
+
 The field version and type version are used for schema evolution.
 
 The structural role of the field can have one of the following values:
@@ -422,13 +429,6 @@ Depending on the flags, the following optional values follow:
 +            ROOT Type Checksum (if flag 0x04 is set)           +
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ```
-
-The block of integers is followed by a list of strings:
-
-- String: field name
-- String: type name
-- String: type alias
-- String: field description
 
 The order of fields matters: every field gets an implicit field ID
 which is equal the zero-based index of the field in the serialized list;
