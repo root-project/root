@@ -1,4 +1,4 @@
-# RNTuple Reference Specifications 0.2.12.0
+# RNTuple Binary Format Specification 0.2.12.0
 
 **Note:** This is work in progress. The RNTuple specification is not yet finalized.
 

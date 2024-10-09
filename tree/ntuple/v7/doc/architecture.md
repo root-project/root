@@ -3,7 +3,7 @@ RNTuple Code Architecture
 
 > This document is meant for ROOT developers. It provides background information on the RNTuple code design and behavior.
 
-> The RNTuple code uses the nomenclature from the [RNTuple format specification](https://github.com/root-project/root/blob/master/tree/ntuple/v7/doc/specifications.md) (e.g. "field", "column", "anchor", etc.).
+> The RNTuple code uses the nomenclature from the [RNTuple format specification](https://github.com/root-project/root/blob/master/tree/ntuple/v7/doc/BinaryFormatSpecification.md) (e.g. "field", "column", "anchor", etc.).
 
 General Principles
 ------------------
@@ -378,7 +378,7 @@ Pages are also reordered to ensure locality of pages of the same column.
 For fields added to the RNTupleModel after the RNTuple schema has been created (i.e., through `RNTupleWriter::CreateModelUpdater()`), the following steps are taken:
 
   1. On calling `RUpdater::BeginUpdate()`, all `REntry` instances belonging to the underlying RNTupleModel are invalidated.
-  2. After adding the desired additional fields, calling `RUpdater::CommitUpdate()` will add the relevant fields to the footer's [schema extension record frame](./specifications.md#schema-extensions-record-frame).
+  2. After adding the desired additional fields, calling `RUpdater::CommitUpdate()` will add the relevant fields to the footer's [schema extension record frame](./BinaryFormatSpecification.md#schema-extensions-record-frame).
       1. The principal columns of top-level fields and record subfields will have a non-zero first element index.
          These columns are referred to as "deferred columns".
          In particular, columns in a subfield tree of collections or variants are _not_ stored as deferred columns (see next point).
@@ -453,22 +453,22 @@ a brief serialization point handles the RNTuple meta-data updates and the reserv
 Low precision float types
 --------------------------
 RNTuple supports encoding floating point types with a lower precision when writing them to disk. This encoding is specified by the
-user per field and it is independent on the in-memory type used for that field (meaning both a `RField<double>` or `RField<float>` can 
-be mapped to e.g. a low-precision 16 bit float). 
+user per field and it is independent on the in-memory type used for that field (meaning both a `RField<double>` or `RField<float>` can
+be mapped to e.g. a low-precision 16 bit float).
 
 RNTuple supports the following encodings (all mutually exclusive):
 
 - **Real16**/**SplitReal16**: IEEE-754 half precision float. Set by calling `RField::SetHalfPrecision()`;
-- **Real32Trunc**: floating point with less than 32 bits of precision (truncated mantissa). 
+- **Real32Trunc**: floating point with less than 32 bits of precision (truncated mantissa).
   Set by calling `RField::SetTruncated(n)`, with $10 <= n <= 31$ equal to the total number of bits used on disk.
   Note that `SetTruncated(16)` makes this effectively a `bfloat16` on disk;
 - **Real32Quant**: floating point with a normalized/quantized integer representation on disk using a user-specified number of bits.
-  Set by calling `RField::SetQuantized(min, max, nBits)`, where $1 <= nBits <= 32$. 
+  Set by calling `RField::SetQuantized(min, max, nBits)`, where $1 <= nBits <= 32$.
   This representation will map the floating point value `min` to 0, `max` to the highest representable integer with `nBits` and any
   value in between will be a linear interpolation of the two. It is up to the user to ensure that only values between `min` and `max`
   are stored in this field. The current RNTuple implementation will throw an exception if that is not the case when writing the values to disk.
 
-In addition to these encodings, a user may call `RField<double>::SetDouble32()` to set the column representation of a `double` field to 
+In addition to these encodings, a user may call `RField<double>::SetDouble32()` to set the column representation of a `double` field to
 a 32-bit floating point value. The default behavior of `Float16_t` can be emulated by calling `RField::SetTruncated(21)` (which will truncate
 a single precision float's mantissa to 12 bits).
 
