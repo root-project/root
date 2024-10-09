@@ -469,8 +469,8 @@ RWebDisplayHandle::ChromeCreator::ChromeCreator(bool _edge) : BrowserCreator(tru
 #endif
 
 #ifdef _MSC_VER
-   fBatchExec = gEnv->GetValue((fEnvPrefix + "Batch").c_str(), "$prog --headless $geometry $url");
-   fHeadlessExec = gEnv->GetValue((fEnvPrefix + "Headless").c_str(), "$prog --headless --disable-gpu $geometry \"$url\" --dump-dom &");
+   fBatchExec = gEnv->GetValue((fEnvPrefix + "Batch").c_str(), "$prog --headless=old $geometry $url");
+   fHeadlessExec = gEnv->GetValue((fEnvPrefix + "Headless").c_str(), "$prog --headless=old --disable-gpu $geometry \"$url\" --dump-dom &");
    fExec = gEnv->GetValue((fEnvPrefix + "Interactive").c_str(), "$prog $geometry --new-window --app=$url &"); // & in windows mean usage of spawn
 #else
 #ifdef R__MACOSX
