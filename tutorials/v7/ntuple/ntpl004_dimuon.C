@@ -37,7 +37,7 @@
 // Import classes from experimental namespace for the time being
 using RNTupleDS = ROOT::Experimental::RNTupleDS;
 
-constexpr char const* kNTupleFileName = "http://root.cern/files/tutorials/ntpl004_dimuon_v1rc2.root";
+constexpr char const *kNTupleFileName = "http://root.cern/files/tutorials/ntpl004_dimuon_v1rc3.root";
 
 using namespace ROOT::VecOps;
 
