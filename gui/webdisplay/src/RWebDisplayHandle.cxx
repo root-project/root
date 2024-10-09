@@ -1098,10 +1098,20 @@ bool RWebDisplayHandle::ProduceImages(const std::vector<std::string> &fnames, co
    }
    mains.append("]");
 
-   if (strstr(jsrootsys,"http://") || strstr(jsrootsys,"https://") || strstr(jsrootsys,"file://"))
+   if (strstr(jsrootsys, "http://") || strstr(jsrootsys, "https://") || strstr(jsrootsys, "file://"))
       filecont = std::regex_replace(filecont, std::regex("\\$jsrootsys"), jsrootsys);
-   else
+   else {
+      static std::string jsroot_include = "<script id=\"jsroot\" src=\"$jsrootsys/build/jsroot.js\"></script>";
+      auto p = filecont.find(jsroot_include);
+      if (p != std::string::npos) {
+         auto jsroot_build = THttpServer::ReadFileContent(std::string(jsrootsys) + "/build/jsroot.js");
+         if (!jsroot_build.empty()) {
+            filecont.erase(p, jsroot_include.length());
+            filecont.insert(p, "<script id=\"jsroot\">" + jsroot_build + "</script>");
+         }
+      }
       filecont = std::regex_replace(filecont, std::regex("\\$jsrootsys"), "file://"s + jsrootsys);
+   }
 
    filecont = std::regex_replace(filecont, std::regex("\\$page_margin"), std::to_string(page_margin) + "px");
    filecont = std::regex_replace(filecont, std::regex("\\$page_width"), std::to_string(max_width + 2*page_margin) + "px");
