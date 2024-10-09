@@ -481,9 +481,8 @@ class RExtraTypeInfoDescriptor {
 private:
    /// Specifies the meaning of the extra information
    EExtraTypeInfoIds fContentId = EExtraTypeInfoIds::kInvalid;
-   /// Extra type information restricted to a certain version range of the type
-   std::uint32_t fTypeVersionFrom = 0;
-   std::uint32_t fTypeVersionTo = 0;
+   /// Type version the extra type information is bound to
+   std::uint32_t fTypeVersion = 0;
    /// The type name the extra information refers to; empty for RNTuple-wide extra information
    std::string fTypeName;
    /// The content format depends on the content ID and may be binary
@@ -501,8 +500,7 @@ public:
    RExtraTypeInfoDescriptor Clone() const;
 
    EExtraTypeInfoIds GetContentId() const { return fContentId; }
-   std::uint32_t GetTypeVersionFrom() const { return fTypeVersionFrom; }
-   std::uint32_t GetTypeVersionTo() const { return fTypeVersionTo; }
+   std::uint32_t GetTypeVersion() const { return fTypeVersion; }
    const std::string &GetTypeName() const { return fTypeName; }
    const std::string &GetContent() const { return fContent; }
 };
@@ -1332,14 +1330,9 @@ public:
       fExtraTypeInfo.fContentId = contentId;
       return *this;
    }
-   RExtraTypeInfoDescriptorBuilder &TypeVersionFrom(std::uint32_t typeVersionFrom)
+   RExtraTypeInfoDescriptorBuilder &TypeVersion(std::uint32_t typeVersion)
    {
-      fExtraTypeInfo.fTypeVersionFrom = typeVersionFrom;
-      return *this;
-   }
-   RExtraTypeInfoDescriptorBuilder &TypeVersionTo(std::uint32_t typeVersionTo)
-   {
-      fExtraTypeInfo.fTypeVersionTo = typeVersionTo;
+      fExtraTypeInfo.fTypeVersion = typeVersion;
       return *this;
    }
    RExtraTypeInfoDescriptorBuilder &TypeName(const std::string &typeName)

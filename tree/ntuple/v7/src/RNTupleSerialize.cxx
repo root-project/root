@@ -337,8 +337,7 @@ std::uint32_t SerializeExtraTypeInfo(const ROOT::Experimental::RExtraTypeInfoDes
    pos += RNTupleSerializer::SerializeRecordFramePreamble(*where);
 
    pos += RNTupleSerializer::SerializeExtraTypeInfoId(desc.GetContentId(), *where);
-   pos += RNTupleSerializer::SerializeUInt32(desc.GetTypeVersionFrom(), *where);
-   pos += RNTupleSerializer::SerializeUInt32(desc.GetTypeVersionTo(), *where);
+   pos += RNTupleSerializer::SerializeUInt32(desc.GetTypeVersion(), *where);
    pos += RNTupleSerializer::SerializeString(desc.GetTypeName(), *where);
    pos += RNTupleSerializer::SerializeString(desc.GetContent(), *where);
 
@@ -376,17 +375,15 @@ RResult<std::uint32_t> DeserializeExtraTypeInfo(const void *buffer, std::uint64_
    bytes += result.Unwrap();
 
    EExtraTypeInfoIds contentId{EExtraTypeInfoIds::kInvalid};
-   std::uint32_t typeVersionFrom;
-   std::uint32_t typeVersionTo;
-   if (fnFrameSizeLeft() < 3 * sizeof(std::uint32_t)) {
+   std::uint32_t typeVersion;
+   if (fnFrameSizeLeft() < 2 * sizeof(std::uint32_t)) {
       return R__FAIL("extra type info record frame too short");
    }
    result = RNTupleSerializer::DeserializeExtraTypeInfoId(bytes, contentId);
    if (!result)
       return R__FORWARD_ERROR(result);
    bytes += result.Unwrap();
-   bytes += RNTupleSerializer::DeserializeUInt32(bytes, typeVersionFrom);
-   bytes += RNTupleSerializer::DeserializeUInt32(bytes, typeVersionTo);
+   bytes += RNTupleSerializer::DeserializeUInt32(bytes, typeVersion);
 
    std::string typeName;
    std::string content;
@@ -399,11 +396,7 @@ RResult<std::uint32_t> DeserializeExtraTypeInfo(const void *buffer, std::uint64_
       return R__FORWARD_ERROR(result);
    bytes += result.Unwrap();
 
-   desc.ContentId(contentId)
-      .TypeVersionFrom(typeVersionFrom)
-      .TypeVersionTo(typeVersionTo)
-      .TypeName(typeName)
-      .Content(content);
+   desc.ContentId(contentId).TypeVersion(typeVersion).TypeName(typeName).Content(content);
 
    return frameSize;
 }
