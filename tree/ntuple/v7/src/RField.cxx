@@ -150,8 +150,7 @@ std::tuple<std::string, std::vector<size_t>> ParseArrayType(std::string_view typ
 std::string GetCanonicalTypeName(const std::string &typeName)
 {
    // The following types are asummed to be canonical names; thus, do not perform `typedef` resolution on those
-   if (typeName == "ROOT::Experimental::ClusterSize_t" || typeName.substr(0, 5) == "std::" ||
-       typeName.substr(0, 39) == "ROOT::Experimental::RNTupleCardinality<")
+   if (typeName.substr(0, 5) == "std::" || typeName.substr(0, 39) == "ROOT::Experimental::RNTupleCardinality<")
       return typeName;
 
    return TClassEdit::ResolveTypedef(typeName.c_str());
@@ -652,9 +651,7 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
 
    std::unique_ptr<ROOT::Experimental::RFieldBase> result;
 
-   if (canonicalType == "ROOT::Experimental::ClusterSize_t") {
-      result = std::make_unique<RField<ClusterSize_t>>(fieldName);
-   } else if (canonicalType == "bool") {
+   if (canonicalType == "bool") {
       result = std::make_unique<RField<bool>>(fieldName);
    } else if (canonicalType == "char") {
       result = std::make_unique<RField<char>>(fieldName);
