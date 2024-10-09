@@ -1516,7 +1516,7 @@ Int_t TBranch::GetBulkEntries(Long64_t entry, TBuffer &user_buf)
       R__ASSERT(result == fReadBasket);
       if (fBasketSeek[fReadBasket]) {
          // It is backed, so we can be destructive
-         user_buf.SetBuffer(buf->Buffer(), buf->BufferSize());
+         user_buf.SwapBuffer(*buf);
          buf->ResetBit(TBufferIO::kIsOwner);
          fCurrentBasket = nullptr;
          fBaskets[fReadBasket] = nullptr;
@@ -1633,7 +1633,7 @@ Int_t TBranch::GetEntriesSerialized(Long64_t entry, TBuffer &user_buf, TBuffer *
       R__ASSERT(result == fReadBasket);
       if (fBasketSeek[fReadBasket]) {
          // It is backed, so we can be destructive
-         user_buf.SetBuffer(buf->Buffer(), buf->BufferSize());
+         user_buf.SwapBuffer(*buf);
          buf->ResetBit(TBufferIO::kIsOwner);
          fCurrentBasket = nullptr;
          fBaskets[fReadBasket] = nullptr;
