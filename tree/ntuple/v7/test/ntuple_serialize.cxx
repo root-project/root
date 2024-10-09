@@ -649,8 +649,7 @@ TEST(RNTuple, SerializeHeader)
    EXPECT_EQ(1u, desc.GetNExtraTypeInfos());
    const auto &extraTypeInfoDesc = *desc.GetExtraTypeInfoIterable().begin();
    EXPECT_EQ(EExtraTypeInfoIds::kStreamerInfo, extraTypeInfoDesc.GetContentId());
-   EXPECT_EQ(0u, extraTypeInfoDesc.GetTypeVersionFrom());
-   EXPECT_EQ(0u, extraTypeInfoDesc.GetTypeVersionTo());
+   EXPECT_EQ(0u, extraTypeInfoDesc.GetTypeVersion());
    EXPECT_TRUE(extraTypeInfoDesc.GetTypeName().empty());
    EXPECT_STREQ("xyz", extraTypeInfoDesc.GetContent().c_str());
 }
@@ -922,8 +921,7 @@ TEST(RNTuple, SerializeFooterXHeader)
    EXPECT_EQ(1u, desc.GetNExtraTypeInfos());
    const auto &extraTypeInfoDesc = *desc.GetExtraTypeInfoIterable().begin();
    EXPECT_EQ(EExtraTypeInfoIds::kStreamerInfo, extraTypeInfoDesc.GetContentId());
-   EXPECT_EQ(0u, extraTypeInfoDesc.GetTypeVersionFrom());
-   EXPECT_EQ(0u, extraTypeInfoDesc.GetTypeVersionTo());
+   EXPECT_EQ(0u, extraTypeInfoDesc.GetTypeVersion());
    EXPECT_TRUE(extraTypeInfoDesc.GetTypeName().empty());
    EXPECT_STREQ("xyz", extraTypeInfoDesc.GetContent().c_str());
 }
