@@ -311,21 +311,31 @@ find_program(CHROME_EXECUTABLE NAMES chrome.exe chromium chromium-browser chrome
 if(CHROME_EXECUTABLE)
   if(WIN32)
     set(chromemajor 100)
-    message(STATUS "Found CHROME executable ${CHROME_EXECUTABLE}, not testing the version")
+    message(STATUS "Found Chrome browser executable ${CHROME_EXECUTABLE}, not testing the version")
   else()
     execute_process(COMMAND "${CHROME_EXECUTABLE}" --version
                     OUTPUT_VARIABLE CHROME_VERSION
                     OUTPUT_STRIP_TRAILING_WHITESPACE)
     string(REGEX MATCH "[0-9]+" CHROME_MAJOR_VERSION "${CHROME_VERSION}")
     set(chromemajor ${CHROME_MAJOR_VERSION})
-    message(STATUS "Found CHROME executable ${CHROME_EXECUTABLE} major version ${CHROME_MAJOR_VERSION}")
+    message(STATUS "Found Chrome browser executable ${CHROME_EXECUTABLE} major version ${CHROME_MAJOR_VERSION}")
   endif()
   set(chromeexe ${CHROME_EXECUTABLE})
+endif()
+
+if(WIN32)
+  find_program(EDGE_EXECUTABLE NAMES msedge.exe
+               PATH_SUFFIXES "Microsoft/Edge/Application")
+  if(EDGE_EXECUTABLE)
+    message(STATUS "Found Edge browser executable ${EDGE_EXECUTABLE}")
+    set(edgeexe ${EDGE_EXECUTABLE})
+  endif()
 endif()
 
 find_program(FIREFOX_EXECUTABLE NAMES firefox firefox-bin firefox.exe
              PATH_SUFFIXES "Mozilla Firefox")
 if(FIREFOX_EXECUTABLE)
+  message(STATUS "Found Firefox browser executable ${FIREFOX_EXECUTABLE}")
   set(firefoxexe ${FIREFOX_EXECUTABLE})
 endif()
 
