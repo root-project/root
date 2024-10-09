@@ -122,7 +122,8 @@ public:
       std::uint64_t GetHeaderXxHash3() const { return fHeaderXxHash3; }
       /// Map an in-memory field ID to its on-disk counterpart. It is allowed to call this function multiple times for
       /// the same `memId`, in which case the return value is the on-disk ID assigned on the first call.
-      DescriptorId_t MapFieldId(DescriptorId_t memId) {
+      DescriptorId_t MapFieldId(DescriptorId_t memId)
+      {
          auto onDiskId = fOnDisk2MemFieldIDs.size();
          const auto &p = fMem2OnDiskFieldIDs.try_emplace(memId, onDiskId);
          if (p.second)
@@ -142,7 +143,8 @@ public:
             fOnDisk2MemColumnIDs.push_back(memId);
          return (*p.first).second;
       }
-      DescriptorId_t MapClusterId(DescriptorId_t memId) {
+      DescriptorId_t MapClusterId(DescriptorId_t memId)
+      {
          auto onDiskId = fOnDisk2MemClusterIDs.size();
          fMem2OnDiskClusterIDs[memId] = onDiskId;
          fOnDisk2MemClusterIDs.push_back(memId);
