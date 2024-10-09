@@ -74,6 +74,14 @@ ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplD
       return unsplitField;
    }
 
+   // The structure may be unknown if the descriptor comes from a deserialized field with an unknown structural role.
+   // For forward compatibility, we allow this case and return an InvalidField.
+   if (GetStructure() == ENTupleStructure::kUnknown) {
+      auto invalidField = std::make_unique<RInvalidField>(GetFieldName(), GetTypeName(), "");
+      invalidField->SetOnDiskId(fFieldId);
+      return invalidField;
+   }
+
    if (GetTypeName().empty()) {
       switch (GetStructure()) {
       case ENTupleStructure::kRecord: {
@@ -496,6 +504,9 @@ ROOT::Experimental::RNTupleDescriptor::CreateModel(const RCreateModelOptions &op
    auto model = RNTupleModel::Create(std::move(fieldZero));
    for (const auto &topDesc : GetTopLevelFields()) {
       auto field = topDesc.CreateField(*this);
+      if (!options.fForwardCompatible && dynamic_cast<RInvalidField *>(field.get())) {
+         throw RException(R__FAIL("field \"" + field->GetQualifiedFieldName() + "\" could not be reconstructed"));
+      }
       if (options.fReconstructProjections && topDesc.IsProjectedField()) {
          model->AddProjectedField(std::move(field), [this](const std::string &targetName) -> std::string {
             return GetQualifiedFieldName(GetFieldDescriptor(FindFieldId(targetName)).GetProjectionSourceId());
