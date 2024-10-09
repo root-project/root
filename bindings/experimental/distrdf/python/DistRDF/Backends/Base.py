@@ -16,6 +16,7 @@ from dataclasses import dataclass
 from functools import partial
 from typing import Callable, Iterable, List, Optional, TYPE_CHECKING, Union
 
+
 import ROOT
 
 from DistRDF import Ranges
@@ -28,7 +29,7 @@ if TYPE_CHECKING:
     from DistRDF.Ranges import DataRange
 
 
-def setup_mapper(initialization_fn: Callable) -> None:
+def setup_mapper(initialization_fn: Callable, declaration_fn: Callable) -> None:    
     """
     Perform initial setup steps common to every mapper function.
     """
@@ -45,6 +46,7 @@ def setup_mapper(initialization_fn: Callable) -> None:
     # Run initialization method to prepare the worker runtime
     # environment
     initialization_fn()
+    declaration_fn()
 
 
 def get_mergeable_values(starting_node: ROOT.RDF.RNode, range_id: int,
@@ -83,15 +85,16 @@ def distrdf_mapper(
         build_rdf_from_range:  Callable[[Union[Ranges.EmptySourceRange, Ranges.TreeRangePerc]],
                                         TaskObjects],
         computation_graph_callable: Callable[[ROOT.RDF.RNode, int], List],
-        initialization_fn: Callable) -> TaskResult:
+        initialization_fn: Callable,
+        declaration_fn: Callable) -> TaskResult:
     """
     Maps the computation graph to the input logical range of entries.
     """
     # Wrap code that may be calling into C++ in a try-except block in order
     # to better propagate exceptions.
     try:
-        setup_mapper(initialization_fn)
-
+        setup_mapper(initialization_fn, declaration_fn)
+        
         # Build an RDataFrame instance for the current mapper task, based
         # on the type of the head node.
         rdf_plus = build_rdf_from_range(current_range)
@@ -171,11 +174,14 @@ class BaseBackend(ABC):
         shared_libraries (list): List of shared libraries needed for the
             analysis.
     """
-
+ 
     initialization = staticmethod(lambda: None)
-
+    declaration_func = staticmethod(lambda: None)
     headers = set()
+    files = set()
+    pcms = set()
     shared_libraries = set()
+    declaration_str = ""
 
     @classmethod
     def register_initialization(cls, fun, *args, **kwargs):
@@ -193,9 +199,47 @@ class BaseBackend(ABC):
 
             **kwargs (dict): Keyword arguments used to execute the function.
         """
-        cls.initialization = partial(fun, *args, **kwargs)
-        fun(*args, **kwargs)
+        cls.initialization = partial(fun, *args, **kwargs)    
+        fun(*args, **kwargs) 
 
+    @classmethod
+    def register_declaration(cls, declaration): 
+        
+        cls.declaration_str += declaration
+        code_to_declare = cls.declaration_str
+
+        def mydeclare(declaration_var): 
+            ROOT.gInterpreter.Declare(declaration_var)
+            
+        cls.declaration_func = partial(mydeclare, declaration_var = code_to_declare)
+        mydeclare(code_to_declare) # for the local declaration 
+    
+    @classmethod
+    def register_shared_lib(cls, paths_to_shared_libraries):
+        
+        libraries_to_distribute, pcms_to_distribute = Utils.register_shared_libs(paths_to_shared_libraries)
+        
+        cls.shared_libraries.update(libraries_to_distribute)
+        cls.pcms.update(pcms_to_distribute)
+    
+    @classmethod
+    def register_headers(cls, paths_to_headers):
+        
+        headers_to_distribute = Utils.register_headers(paths_to_headers)
+        cls.headers.update(headers_to_distribute)
+    
+    @classmethod 
+    def register_files(cls, paths_to_files):
+        """
+        Sends to the workers the generic files needed by the user.
+
+        Args:
+            files_paths (str, iter): Paths to the files to be sent to the
+                distributed workers.
+        """
+        files_to_distribute = Utils.register_files(paths_to_files)
+        cls.files.update(files_to_distribute)    
+    
     @abstractmethod
     def ProcessAndMerge(self, ranges: List[DataRange],
                         mapper: Callable[..., TaskResult],
@@ -221,92 +265,6 @@ class BaseBackend(ABC):
         depending on the backend.
         """
         pass
-
-    def distribute_files(self, files_paths):
-        """
-        Sends to the workers the generic files needed by the user.
-
-        Args:
-            files_paths (str, iter): Paths to the files to be sent to the
-                distributed workers.
-        """
-        files_to_distribute = set()
-
-        if isinstance(files_paths, str):
-            files_to_distribute.update(
-                Utils.get_paths_set_from_string(files_paths))
-        else:
-            for path_string in files_paths:
-                files_to_distribute.update(
-                    Utils.get_paths_set_from_string(path_string))
-
-        self.distribute_unique_paths(files_to_distribute)
-
-    def distribute_headers(self, headers_paths):
-        """
-        Includes the C++ headers to be declared before execution.
-
-        Args:
-            headers_paths (str, iter): A string or an iterable (such as a
-                list, set...) containing the paths to all necessary C++ headers
-                as strings. This function accepts both paths to the headers
-                themselves and paths to directories containing the headers.
-        """
-        headers_to_distribute = set()
-
-        if isinstance(headers_paths, str):
-            headers_to_distribute.update(
-                Utils.get_paths_set_from_string(headers_paths))
-        else:
-            for path_string in headers_paths:
-                headers_to_distribute.update(
-                    Utils.get_paths_set_from_string(path_string))
-
-        # Distribute header files to the workers
-        self.distribute_unique_paths(headers_to_distribute)
-
-        # Declare headers locally
-        Utils.declare_headers(headers_to_distribute)
-
-        # Finally, add everything to the includes set
-        self.headers.update(headers_to_distribute)
-
-    def distribute_shared_libraries(self, shared_libraries_paths):
-        """
-        Includes the C++ shared libraries to be declared before execution. If
-        any pcm file is present in the same folder as the shared libraries, the
-        function will try to retrieve them and distribute them.
-
-        Args:
-            shared_libraries_paths (str, iter): A string or an iterable (such as
-                a list, set...) containing the paths to all necessary C++ shared
-                libraries as strings. This function accepts both paths to the
-                libraries themselves and paths to directories containing the
-                libraries.
-        """
-        libraries_to_distribute = set()
-        pcm_to_distribute = set()
-
-        if isinstance(shared_libraries_paths, str):
-            pcm_to_distribute, libraries_to_distribute = (
-                Utils.check_pcm_in_library_path(shared_libraries_paths))
-        else:
-            for path_string in shared_libraries_paths:
-                pcm, libraries = Utils.check_pcm_in_library_path(
-                    path_string
-                )
-                libraries_to_distribute.update(libraries)
-                pcm_to_distribute.update(pcm)
-
-        # Distribute shared libraries and pcm files to the workers
-        self.distribute_unique_paths(libraries_to_distribute)
-        self.distribute_unique_paths(pcm_to_distribute)
-
-        # Include shared libraries locally
-        Utils.declare_shared_libraries(libraries_to_distribute)
-
-        # Finally, add everything to the includes set
-        self.shared_libraries.update(libraries_to_distribute)
 
     @abstractmethod
     def make_dataframe(self, *args, **kwargs):
