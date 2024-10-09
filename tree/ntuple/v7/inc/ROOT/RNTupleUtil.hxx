@@ -224,7 +224,7 @@ struct RNTupleLocatorObject64 {
 /// TODO(jblomer): consider moving this to `RNTupleDescriptor`
 struct RNTupleLocator {
    /// Values for the _Type_ field in non-disk locators.  Serializable types must have the MSb == 0; see
-   /// `doc/specifications.md` for details
+   /// `doc/BinaryFormatSpecification.md` for details
    enum ELocatorType : std::uint8_t {
       // The kTypeFile locator may translate to an on-disk standard locator (type 0x00) or a large locator (type 0x01),
       // if the size of the referenced data block is >2GB
