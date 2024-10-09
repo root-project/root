@@ -263,6 +263,30 @@ AddReal32QuantField(RNTupleModel &model, const std::string &fieldName, std::size
    model.AddField(std::move(fld));
 }
 
+namespace {
+
+// Test writing index32/64 columns
+class RFieldTestIndexColumn final : public ROOT::Experimental::RSimpleField<ClusterSize_t> {
+protected:
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
+   {
+      return std::make_unique<RFieldTestIndexColumn>(newName);
+   }
+   const RColumnRepresentations &GetColumnRepresentations() const final
+   {
+      static RColumnRepresentations representations({{EColumnType::kSplitIndex64}, {EColumnType::kSplitIndex32}}, {});
+      return representations;
+   }
+
+public:
+   explicit RFieldTestIndexColumn(std::string_view name) : RSimpleField(name, "ROOT::Experimental::ClusterSize_t") {}
+   RFieldTestIndexColumn(RFieldTestIndexColumn &&other) = default;
+   RFieldTestIndexColumn &operator=(RFieldTestIndexColumn &&other) = default;
+   ~RFieldTestIndexColumn() override = default;
+};
+
+} // anonymous namespace
+
 TEST(Packing, OnDiskEncoding)
 {
    FileRaii fileGuard("test_ntuple_packing_ondiskencoding.root");
@@ -280,10 +304,14 @@ TEST(Packing, OnDiskEncoding)
    AddField<float, EColumnType::kSplitReal32>(*model, "float");
    AddField<float, EColumnType::kReal16>(*model, "float16");
    AddField<double, EColumnType::kSplitReal64>(*model, "double");
-   AddField<ClusterSize_t, EColumnType::kSplitIndex32>(*model, "index32");
-   AddField<ClusterSize_t, EColumnType::kSplitIndex64>(*model, "index64");
    AddReal32TruncField(*model, "float32Trunc", 11);
    AddReal32QuantField(*model, "float32Quant", 7, 0.0, 1.0);
+   auto fldIdx32 = std::make_unique<RFieldTestIndexColumn>("index32");
+   fldIdx32->SetColumnRepresentatives({{EColumnType::kSplitIndex32}});
+   model->AddField(std::move(fldIdx32));
+   auto fldIdx64 = std::make_unique<RFieldTestIndexColumn>("index64");
+   fldIdx64->SetColumnRepresentatives({{EColumnType::kSplitIndex64}});
+   model->AddField(std::move(fldIdx64));
    auto fldStr = std::make_unique<RField<std::string>>("str");
    model->AddField(std::move(fldStr));
    {
@@ -396,8 +424,7 @@ TEST(Packing, OnDiskEncoding)
    unsigned char expF32Quant[] = {0xd8, 0x37};
    EXPECT_EQ(memcmp(sealedPage.GetBuffer(), expF32Quant, sizeof(expF32Quant)), 0);
 
-   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-   EXPECT_EQ(EColumnType::kIndex64, reader->GetModel().GetField("str").GetColumnRepresentatives()[0][0]);
+   auto reader = RNTupleReader::Open(RNTupleModel::Create(), "ntuple", fileGuard.GetPath());
    EXPECT_EQ(2u, reader->GetNEntries());
    auto viewStr = reader->GetView<std::string>("str");
    EXPECT_EQ(std::string("abc"), viewStr(0));
