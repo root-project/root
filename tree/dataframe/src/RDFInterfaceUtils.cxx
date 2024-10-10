@@ -662,7 +662,7 @@ BookFilterJit(std::shared_ptr<RDFDetail::RNodeBase> *prevNodeOnHeap, std::string
 
    const auto parsedExpr = ParseRDFExpression(expression, branches, colRegister, dsColumns);
    const auto exprVarTypes =
-      GetValidatedArgTypes(parsedExpr.fUsedCols, colRegister, tree, ds, "Filter", /*vector2rvec=*/true);
+      GetValidatedArgTypes(parsedExpr.fUsedCols, colRegister, tree, ds, "Filter", /*vector2RVec=*/true);
    const auto funcName = DeclareFunction(parsedExpr.fExpr, parsedExpr.fVarNames, exprVarTypes);
    const auto type = RetTypeOfFunc(funcName);
    if (type != "bool")
@@ -714,7 +714,7 @@ std::shared_ptr<RJittedDefine> BookDefineJit(std::string_view name, std::string_
 
    const auto parsedExpr = ParseRDFExpression(expression, branches, colRegister, dsColumns);
    const auto exprVarTypes =
-      GetValidatedArgTypes(parsedExpr.fUsedCols, colRegister, tree, ds, "Define", /*vector2rvec=*/true);
+      GetValidatedArgTypes(parsedExpr.fUsedCols, colRegister, tree, ds, "Define", /*vector2RVec=*/true);
    const auto funcName = DeclareFunction(parsedExpr.fExpr, parsedExpr.fVarNames, exprVarTypes);
    const auto type = RetTypeOfFunc(funcName);
 
@@ -789,7 +789,7 @@ BookVariationJit(const std::vector<std::string> &colNames, std::string_view vari
 
    const auto parsedExpr = ParseRDFExpression(expression, branches, colRegister, dsColumns);
    const auto exprVarTypes =
-      GetValidatedArgTypes(parsedExpr.fUsedCols, colRegister, tree, ds, "Vary", /*vector2rvec=*/true);
+      GetValidatedArgTypes(parsedExpr.fUsedCols, colRegister, tree, ds, "Vary", /*vector2RVec=*/true);
    const auto funcName = DeclareFunction(parsedExpr.fExpr, parsedExpr.fVarNames, exprVarTypes);
    const auto type = RetTypeOfFunc(funcName);
 
@@ -849,7 +849,7 @@ BookVariationJit(const std::vector<std::string> &colNames, std::string_view vari
 std::string JitBuildAction(const ColumnNames_t &cols, std::shared_ptr<RDFDetail::RNodeBase> *prevNode,
                            const std::type_info &helperArgType, const std::type_info &at, void *helperArgOnHeap,
                            TTree *tree, const unsigned int nSlots, const RColumnRegister &colRegister, RDataSource *ds,
-                           std::weak_ptr<RJittedAction> *jittedActionOnHeap, const bool vector2rvec)
+                           std::weak_ptr<RJittedAction> *jittedActionOnHeap, const bool vector2RVec)
 {
    // retrieve type of action as a string
    auto actionTypeClass = TClass::GetClass(at);
@@ -873,7 +873,7 @@ std::string JitBuildAction(const ColumnNames_t &cols, std::shared_ptr<RDFDetail:
    // just-in-time create an RAction object and it will assign it to its corresponding RJittedAction.
    std::stringstream createAction_str;
    createAction_str << "ROOT::Internal::RDF::CallBuildAction<" << actionTypeName;
-   const auto columnTypeNames = GetValidatedArgTypes(cols, colRegister, tree, ds, actionTypeNameBase, vector2rvec);
+   const auto columnTypeNames = GetValidatedArgTypes(cols, colRegister, tree, ds, actionTypeNameBase, vector2RVec);
    for (auto &colType : columnTypeNames)
       createAction_str << ", " << colType;
    // on Windows, to prefix the hexadecimal value of a pointer with '0x',
@@ -950,11 +950,11 @@ ColumnNames_t GetValidatedColumnNames(RLoopManager &lm, const unsigned int nColu
 
 std::vector<std::string> GetValidatedArgTypes(const ColumnNames_t &colNames, const RColumnRegister &colRegister,
                                               TTree *tree, RDataSource *ds, const std::string &context,
-                                              bool vector2rvec)
+                                              bool vector2RVec)
 {
    auto toCheckedArgType = [&](const std::string &c) {
       RDFDetail::RDefineBase *define = colRegister.GetDefine(c);
-      const auto colType = ColumnName2ColumnTypeName(c, tree, ds, define, vector2rvec);
+      const auto colType = ColumnName2ColumnTypeName(c, tree, ds, define, vector2RVec);
       if (colType.rfind("CLING_UNKNOWN_TYPE", 0) == 0) { // the interpreter does not know this type
          const auto msg =
             "The type of custom column \"" + c + "\" (" + colType.substr(19) +
