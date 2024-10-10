@@ -1,6 +1,7 @@
 /// \file
 /// \ingroup tutorial_roostats
 /// \notebook -js
+/// Demonstrates non central chi-square.
 ///
 /// \macro_image
 /// \macro_output

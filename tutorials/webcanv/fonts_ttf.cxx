@@ -1,8 +1,7 @@
 /// \file
 /// \ingroup tutorial_webcanv
 /// \notebook -js
-///
-/// Usage of TTF fonts in web canvas
+/// Usage of TTF fonts in web canvas.
 ///
 /// One can load TTF font file and specify it for usage in the web canvas
 /// Produced drawing also can be saved in PDF files.

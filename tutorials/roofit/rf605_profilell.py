@@ -1,7 +1,6 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-##
 ## 'LIKELIHOOD AND MINIMIZATION' RooFit tutorial macro #605
 ##
 ## Working with the profile likelihood estimator

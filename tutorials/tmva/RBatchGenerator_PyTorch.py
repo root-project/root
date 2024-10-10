@@ -1,7 +1,6 @@
 ### \file
 ### \ingroup tutorial_tmva
 ### \notebook -nodraw
-###
 ### Example of getting batches of events from a ROOT dataset into a basic
 ### PyTorch workflow.
 ###

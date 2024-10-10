@@ -1,9 +1,8 @@
 /// \file
 /// \ingroup tutorial_sql
 /// \notebook -js
-///
-/// This tutorial demonstrates how TSQLServer can be used to create a
-/// connection with a SQlite3 database. It accesses the Sqlite data base.
+/// This tutorial demonstrates how TSQLServer can be used to create a connection with a SQlite3 database.
+/// It accesses the Sqlite data base.
 /// Download from https://root.cern/files/root_download_stats.sqlite
 /// The world map is hold by a TH2Poly histogram which, after filling, will show
 /// the world wide dispersion of ROOT's users.

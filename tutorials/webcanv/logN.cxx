@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_webcanv
 /// \notebook -js
-/// Logarithmic scales support in web canvas
+/// Logarithmic scales support in web canvas.
 ///
 /// Shows support of log2, ln, log8 and log25 scales
 /// Any integer base for logarithm can be specified as well

@@ -1,7 +1,6 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-##
 ## 'DATA AND CATEGORIES' RooFit tutorial macro #401
 ##
 ## Overview of advanced option for importing data from ROOT ROOT.TTree and ROOT.THx histograms

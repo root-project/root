@@ -1,7 +1,6 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-##
 ## 'ORGANIZATION AND SIMULTANEOUS FITS' RooFit tutorial macro #512
 ##
 ## Illustration of operator expressions and expression-based
