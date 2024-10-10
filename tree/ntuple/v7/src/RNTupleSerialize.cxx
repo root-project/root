@@ -70,6 +70,11 @@ std::uint32_t SerializeField(const ROOT::Experimental::RFieldDescriptor &fieldDe
       flags |= RNTupleSerializer::kFlagHasTypeChecksum;
    pos += RNTupleSerializer::SerializeUInt16(flags, *where);
 
+   pos += RNTupleSerializer::SerializeString(fieldDesc.GetFieldName(), *where);
+   pos += RNTupleSerializer::SerializeString(fieldDesc.GetTypeName(), *where);
+   pos += RNTupleSerializer::SerializeString(fieldDesc.GetTypeAlias(), *where);
+   pos += RNTupleSerializer::SerializeString(fieldDesc.GetFieldDescription(), *where);
+
    if (flags & RNTupleSerializer::kFlagRepetitiveField) {
       pos += RNTupleSerializer::SerializeUInt64(fieldDesc.GetNRepetitions(), *where);
    }
@@ -79,11 +84,6 @@ std::uint32_t SerializeField(const ROOT::Experimental::RFieldDescriptor &fieldDe
    if (flags & RNTupleSerializer::kFlagHasTypeChecksum) {
       pos += RNTupleSerializer::SerializeUInt32(fieldDesc.GetTypeChecksum().value(), *where);
    }
-
-   pos += RNTupleSerializer::SerializeString(fieldDesc.GetFieldName(), *where);
-   pos += RNTupleSerializer::SerializeString(fieldDesc.GetTypeName(), *where);
-   pos += RNTupleSerializer::SerializeString(fieldDesc.GetTypeAlias(), *where);
-   pos += RNTupleSerializer::SerializeString(fieldDesc.GetFieldDescription(), *where);
 
    auto size = pos - base;
    RNTupleSerializer::SerializeFramePostscript(base, size);
@@ -158,6 +158,28 @@ RResult<std::uint32_t> DeserializeField(const void *buffer, std::uint64_t bufSiz
    bytes += RNTupleSerializer::DeserializeUInt16(bytes, flags);
    fieldDesc.FieldVersion(fieldVersion).TypeVersion(typeVersion).ParentId(parentId).Structure(structure);
 
+   std::string fieldName;
+   std::string typeName;
+   std::string aliasName;
+   std::string description;
+   result = RNTupleSerializer::DeserializeString(bytes, fnFrameSizeLeft(), fieldName).Unwrap();
+   if (!result)
+      return R__FORWARD_ERROR(result);
+   bytes += result.Unwrap();
+   result = RNTupleSerializer::DeserializeString(bytes, fnFrameSizeLeft(), typeName).Unwrap();
+   if (!result)
+      return R__FORWARD_ERROR(result);
+   bytes += result.Unwrap();
+   result = RNTupleSerializer::DeserializeString(bytes, fnFrameSizeLeft(), aliasName).Unwrap();
+   if (!result)
+      return R__FORWARD_ERROR(result);
+   bytes += result.Unwrap();
+   result = RNTupleSerializer::DeserializeString(bytes, fnFrameSizeLeft(), description).Unwrap();
+   if (!result)
+      return R__FORWARD_ERROR(result);
+   bytes += result.Unwrap();
+   fieldDesc.FieldName(fieldName).TypeName(typeName).TypeAlias(aliasName).FieldDescription(description);
+
    if (flags & RNTupleSerializer::kFlagRepetitiveField) {
       if (fnFrameSizeLeft() < sizeof(std::uint64_t))
          return R__FAIL("field record frame too short");
@@ -181,28 +203,6 @@ RResult<std::uint32_t> DeserializeField(const void *buffer, std::uint64_t bufSiz
       bytes += RNTupleSerializer::DeserializeUInt32(bytes, typeChecksum);
       fieldDesc.TypeChecksum(typeChecksum);
    }
-
-   std::string fieldName;
-   std::string typeName;
-   std::string aliasName;
-   std::string description;
-   result = RNTupleSerializer::DeserializeString(bytes, fnFrameSizeLeft(), fieldName).Unwrap();
-   if (!result)
-      return R__FORWARD_ERROR(result);
-   bytes += result.Unwrap();
-   result = RNTupleSerializer::DeserializeString(bytes, fnFrameSizeLeft(), typeName).Unwrap();
-   if (!result)
-      return R__FORWARD_ERROR(result);
-   bytes += result.Unwrap();
-   result = RNTupleSerializer::DeserializeString(bytes, fnFrameSizeLeft(), aliasName).Unwrap();
-   if (!result)
-      return R__FORWARD_ERROR(result);
-   bytes += result.Unwrap();
-   result = RNTupleSerializer::DeserializeString(bytes, fnFrameSizeLeft(), description).Unwrap();
-   if (!result)
-      return R__FORWARD_ERROR(result);
-   bytes += result.Unwrap();
-   fieldDesc.FieldName(fieldName).TypeName(typeName).TypeAlias(aliasName).FieldDescription(description);
 
    return frameSize;
 }
@@ -337,8 +337,7 @@ std::uint32_t SerializeExtraTypeInfo(const ROOT::Experimental::RExtraTypeInfoDes
    pos += RNTupleSerializer::SerializeRecordFramePreamble(*where);
 
    pos += RNTupleSerializer::SerializeExtraTypeInfoId(desc.GetContentId(), *where);
-   pos += RNTupleSerializer::SerializeUInt32(desc.GetTypeVersionFrom(), *where);
-   pos += RNTupleSerializer::SerializeUInt32(desc.GetTypeVersionTo(), *where);
+   pos += RNTupleSerializer::SerializeUInt32(desc.GetTypeVersion(), *where);
    pos += RNTupleSerializer::SerializeString(desc.GetTypeName(), *where);
    pos += RNTupleSerializer::SerializeString(desc.GetContent(), *where);
 
@@ -376,17 +375,15 @@ RResult<std::uint32_t> DeserializeExtraTypeInfo(const void *buffer, std::uint64_
    bytes += result.Unwrap();
 
    EExtraTypeInfoIds contentId{EExtraTypeInfoIds::kInvalid};
-   std::uint32_t typeVersionFrom;
-   std::uint32_t typeVersionTo;
-   if (fnFrameSizeLeft() < 3 * sizeof(std::uint32_t)) {
+   std::uint32_t typeVersion;
+   if (fnFrameSizeLeft() < 2 * sizeof(std::uint32_t)) {
       return R__FAIL("extra type info record frame too short");
    }
    result = RNTupleSerializer::DeserializeExtraTypeInfoId(bytes, contentId);
    if (!result)
       return R__FORWARD_ERROR(result);
    bytes += result.Unwrap();
-   bytes += RNTupleSerializer::DeserializeUInt32(bytes, typeVersionFrom);
-   bytes += RNTupleSerializer::DeserializeUInt32(bytes, typeVersionTo);
+   bytes += RNTupleSerializer::DeserializeUInt32(bytes, typeVersion);
 
    std::string typeName;
    std::string content;
@@ -399,11 +396,7 @@ RResult<std::uint32_t> DeserializeExtraTypeInfo(const void *buffer, std::uint64_
       return R__FORWARD_ERROR(result);
    bytes += result.Unwrap();
 
-   desc.ContentId(contentId)
-      .TypeVersionFrom(typeVersionFrom)
-      .TypeVersionTo(typeVersionTo)
-      .TypeName(typeName)
-      .Content(content);
+   desc.ContentId(contentId).TypeVersion(typeVersion).TypeName(typeName).Content(content);
 
    return frameSize;
 }
@@ -682,35 +675,35 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeColumnType(ROOT::Exper
    using EColumnType = ROOT::Experimental::EColumnType;
 
    switch (type) {
-   case EColumnType::kIndex64: return SerializeUInt16(0x01, buffer);
-   case EColumnType::kIndex32: return SerializeUInt16(0x02, buffer);
-   case EColumnType::kSwitch: return SerializeUInt16(0x03, buffer);
-   case EColumnType::kByte: return SerializeUInt16(0x04, buffer);
-   case EColumnType::kChar: return SerializeUInt16(0x05, buffer);
-   case EColumnType::kBit: return SerializeUInt16(0x06, buffer);
-   case EColumnType::kReal64: return SerializeUInt16(0x07, buffer);
-   case EColumnType::kReal32: return SerializeUInt16(0x08, buffer);
-   case EColumnType::kReal16: return SerializeUInt16(0x09, buffer);
-   case EColumnType::kInt64: return SerializeUInt16(0x16, buffer);
+   case EColumnType::kBit: return SerializeUInt16(0x00, buffer);
+   case EColumnType::kByte: return SerializeUInt16(0x01, buffer);
+   case EColumnType::kChar: return SerializeUInt16(0x02, buffer);
+   case EColumnType::kInt8: return SerializeUInt16(0x03, buffer);
+   case EColumnType::kUInt8: return SerializeUInt16(0x04, buffer);
+   case EColumnType::kInt16: return SerializeUInt16(0x05, buffer);
+   case EColumnType::kUInt16: return SerializeUInt16(0x06, buffer);
+   case EColumnType::kInt32: return SerializeUInt16(0x07, buffer);
+   case EColumnType::kUInt32: return SerializeUInt16(0x08, buffer);
+   case EColumnType::kInt64: return SerializeUInt16(0x09, buffer);
    case EColumnType::kUInt64: return SerializeUInt16(0x0A, buffer);
-   case EColumnType::kInt32: return SerializeUInt16(0x17, buffer);
-   case EColumnType::kUInt32: return SerializeUInt16(0x0B, buffer);
-   case EColumnType::kInt16: return SerializeUInt16(0x18, buffer);
-   case EColumnType::kUInt16: return SerializeUInt16(0x0C, buffer);
-   case EColumnType::kInt8: return SerializeUInt16(0x19, buffer);
-   case EColumnType::kUInt8: return SerializeUInt16(0x0D, buffer);
-   case EColumnType::kSplitIndex64: return SerializeUInt16(0x0E, buffer);
-   case EColumnType::kSplitIndex32: return SerializeUInt16(0x0F, buffer);
-   case EColumnType::kSplitReal64: return SerializeUInt16(0x10, buffer);
-   case EColumnType::kSplitReal32: return SerializeUInt16(0x11, buffer);
-   case EColumnType::kSplitInt64: return SerializeUInt16(0x1A, buffer);
-   case EColumnType::kSplitUInt64: return SerializeUInt16(0x13, buffer);
-   case EColumnType::kSplitInt32: return SerializeUInt16(0x1B, buffer);
+   case EColumnType::kReal16: return SerializeUInt16(0x0B, buffer);
+   case EColumnType::kReal32: return SerializeUInt16(0x0C, buffer);
+   case EColumnType::kReal64: return SerializeUInt16(0x0D, buffer);
+   case EColumnType::kIndex32: return SerializeUInt16(0x0E, buffer);
+   case EColumnType::kIndex64: return SerializeUInt16(0x0F, buffer);
+   case EColumnType::kSwitch: return SerializeUInt16(0x10, buffer);
+   case EColumnType::kSplitInt16: return SerializeUInt16(0x11, buffer);
+   case EColumnType::kSplitUInt16: return SerializeUInt16(0x12, buffer);
+   case EColumnType::kSplitInt32: return SerializeUInt16(0x13, buffer);
    case EColumnType::kSplitUInt32: return SerializeUInt16(0x14, buffer);
-   case EColumnType::kSplitInt16: return SerializeUInt16(0x1C, buffer);
-   case EColumnType::kSplitUInt16: return SerializeUInt16(0x15, buffer);
-   case EColumnType::kReal32Trunc: return SerializeUInt16(0x1D, buffer);
-   case EColumnType::kReal32Quant: return SerializeUInt16(0x1E, buffer);
+   case EColumnType::kSplitInt64: return SerializeUInt16(0x15, buffer);
+   case EColumnType::kSplitUInt64: return SerializeUInt16(0x16, buffer);
+   case EColumnType::kSplitReal32: return SerializeUInt16(0x18, buffer);
+   case EColumnType::kSplitReal64: return SerializeUInt16(0x19, buffer);
+   case EColumnType::kSplitIndex32: return SerializeUInt16(0x1A, buffer);
+   case EColumnType::kSplitIndex64: return SerializeUInt16(0x1B, buffer);
+   case EColumnType::kReal32Trunc: return SerializeUInt16(0x1C, buffer);
+   case EColumnType::kReal32Quant: return SerializeUInt16(0x1D, buffer);
    default:
       if (type == kTestFutureType)
          return SerializeUInt16(0x99, buffer);
@@ -727,36 +720,35 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeColumnType(const voi
    auto result = DeserializeUInt16(buffer, onDiskType);
 
    switch (onDiskType) {
-   case 0x00: return R__FAIL("unexpected on-disk column type");
-   case 0x01: type = EColumnType::kIndex64; break;
-   case 0x02: type = EColumnType::kIndex32; break;
-   case 0x03: type = EColumnType::kSwitch; break;
-   case 0x04: type = EColumnType::kByte; break;
-   case 0x05: type = EColumnType::kChar; break;
-   case 0x06: type = EColumnType::kBit; break;
-   case 0x07: type = EColumnType::kReal64; break;
-   case 0x08: type = EColumnType::kReal32; break;
-   case 0x09: type = EColumnType::kReal16; break;
-   case 0x16: type = EColumnType::kInt64; break;
+   case 0x00: type = EColumnType::kBit; break;
+   case 0x01: type = EColumnType::kByte; break;
+   case 0x02: type = EColumnType::kChar; break;
+   case 0x03: type = EColumnType::kInt8; break;
+   case 0x04: type = EColumnType::kUInt8; break;
+   case 0x05: type = EColumnType::kInt16; break;
+   case 0x06: type = EColumnType::kUInt16; break;
+   case 0x07: type = EColumnType::kInt32; break;
+   case 0x08: type = EColumnType::kUInt32; break;
+   case 0x09: type = EColumnType::kInt64; break;
    case 0x0A: type = EColumnType::kUInt64; break;
-   case 0x17: type = EColumnType::kInt32; break;
-   case 0x0B: type = EColumnType::kUInt32; break;
-   case 0x18: type = EColumnType::kInt16; break;
-   case 0x0C: type = EColumnType::kUInt16; break;
-   case 0x19: type = EColumnType::kInt8; break;
-   case 0x0D: type = EColumnType::kUInt8; break;
-   case 0x0E: type = EColumnType::kSplitIndex64; break;
-   case 0x0F: type = EColumnType::kSplitIndex32; break;
-   case 0x10: type = EColumnType::kSplitReal64; break;
-   case 0x11: type = EColumnType::kSplitReal32; break;
-   case 0x1A: type = EColumnType::kSplitInt64; break;
-   case 0x13: type = EColumnType::kSplitUInt64; break;
-   case 0x1B: type = EColumnType::kSplitInt32; break;
+   case 0x0B: type = EColumnType::kReal16; break;
+   case 0x0C: type = EColumnType::kReal32; break;
+   case 0x0D: type = EColumnType::kReal64; break;
+   case 0x0E: type = EColumnType::kIndex32; break;
+   case 0x0F: type = EColumnType::kIndex64; break;
+   case 0x10: type = EColumnType::kSwitch; break;
+   case 0x11: type = EColumnType::kSplitInt16; break;
+   case 0x12: type = EColumnType::kSplitUInt16; break;
+   case 0x13: type = EColumnType::kSplitInt32; break;
    case 0x14: type = EColumnType::kSplitUInt32; break;
-   case 0x1C: type = EColumnType::kSplitInt16; break;
-   case 0x15: type = EColumnType::kSplitUInt16; break;
-   case 0x1D: type = EColumnType::kReal32Trunc; break;
-   case 0x1E: type = EColumnType::kReal32Quant; break;
+   case 0x15: type = EColumnType::kSplitInt64; break;
+   case 0x16: type = EColumnType::kSplitUInt64; break;
+   case 0x18: type = EColumnType::kSplitReal32; break;
+   case 0x19: type = EColumnType::kSplitReal64; break;
+   case 0x1A: type = EColumnType::kSplitIndex32; break;
+   case 0x1B: type = EColumnType::kSplitIndex64; break;
+   case 0x1C: type = EColumnType::kReal32Trunc; break;
+   case 0x1D: type = EColumnType::kReal32Quant; break;
    // case 0x99 => kTestFutureType missing on purpose
    default:
       // may be a column type introduced by a future version
@@ -1618,11 +1610,6 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeFooter(void *buffer,
    pos += SerializeSchemaDescription(*where, desc, context, /*forHeaderExtension=*/true);
    pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
 
-   // So far no support for shared clusters (no column groups)
-   frame = pos;
-   pos += SerializeListFramePreamble(0, *where);
-   pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
-
    // Cluster groups
    frame = pos;
    const auto nClusterGroups = desc.GetNClusterGroups();
@@ -1746,15 +1733,6 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeFooter(const void *b
       if (!result)
          return R__FORWARD_ERROR(result);
    }
-   bytes = frame + frameSize;
-
-   std::uint32_t nColumnGroups;
-   frame = bytes;
-   result = DeserializeFrameHeader(bytes, fnBufSizeLeft(), frameSize, nColumnGroups);
-   if (!result)
-      return R__FORWARD_ERROR(result);
-   if (nColumnGroups > 0)
-      return R__FAIL("sharded clusters are still unsupported");
    bytes = frame + frameSize;
 
    std::uint32_t nClusterGroups;

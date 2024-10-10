@@ -1,4 +1,4 @@
-# RNTuple Reference Specifications 0.2.12.0
+# RNTuple Reference Specifications 0.3.0.0
 
 **Note:** This is work in progress. The RNTuple specification is not yet finalized.
 
@@ -50,7 +50,7 @@ The RNTuple format does _not_ establish a semantic mapping from objects to keys 
 For example, one key may hold a single page or a number of pages of the same cluster.
 The only relevant means of finding objects is the locator information, consisting of an offset and a size.
 
-For the ROOT file embedding, the `ROOT::Experimental::RNTuple` object acts as an anchor.
+For the ROOT file embedding, the `ROOT::RNTuple` object acts as an anchor.
 
 ### Anchor schema
 
@@ -365,6 +365,13 @@ Every field record frame of the list of fields has the following contents
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ```
 
+The block of integers is followed by a list of strings:
+
+- String: field name
+- String: type name
+- String: type alias
+- String: field description
+
 The field version and type version are used for schema evolution.
 
 The structural role of the field can have one of the following values:
@@ -415,13 +422,6 @@ Depending on the flags, the following optional values follow:
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ```
 
-The block of integers is followed by a list of strings:
-
-- String: field name
-- String: type name
-- String: type alias
-- String: field description
-
 The order of fields matters: every field gets an implicit field ID
 which is equal the zero-based index of the field in the serialized list;
 subfields are ordered from smaller IDs to larger IDs.
@@ -441,15 +441,15 @@ Top-level fields have their own field ID set as parent ID.
 |             Flags             |      Representation Index     |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |                                                               |
-+           First element index (if flag 0x08 is set)           +
++           First element index (if flag 0x01 is set)           +
 |                                                               |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |                                                               |
-+                Min value (if flag 0x10 is set)                +
++                Min value (if flag 0x02 is set)                +
 |                                                               |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |                                                               |
-+                Max value (if flag 0x10 is set)                +
++                Max value (if flag 0x02 is set)                +
 |                                                               |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ```
@@ -472,36 +472,36 @@ The column type and bits on storage integers can have one of the following value
 
 | Type | Bits | Name         | Contents                                                                                      |
 |------|------|--------------|-----------------------------------------------------------------------------------------------|
-| 0x01 |   64 | Index64      | Parent columns of (nested) collections, counting is relative to the cluster                   |
-| 0x02 |   32 | Index32      | Parent columns of (nested) collections, counting is relative to the cluster                   |
-| 0x03 |   96 | Switch       | Tuple of a kIndex64 value followed by a 32 bits dispatch tag to a column ID                   |
-| 0x04 |    8 | Byte         | An uninterpreted byte, e.g. part of a blob                                                    |
-| 0x05 |    8 | Char         | ASCII character                                                                               |
-| 0x06 |    1 | Bit          | Boolean value                                                                                 |
-| 0x07 |   64 | Real64       | IEEE-754 double precision float                                                               |
-| 0x08 |   32 | Real32       | IEEE-754 single precision float                                                               |
-| 0x09 |   16 | Real16       | IEEE-754 half precision float                                                                 |
-| 0x16 |   64 | Int64        | Two's complement, little-endian 8-byte signed integer                                         |
+| 0x00 |    1 | Bit          | Boolean value                                                                                 |
+| 0x01 |    8 | Byte         | An uninterpreted byte, e.g. part of a blob                                                    |
+| 0x02 |    8 | Char         | ASCII character                                                                               |
+| 0x03 |    8 | Int8         | Two's complement, 1-byte signed integer                                                       |
+| 0x04 |    8 | UInt8        | 1 byte unsigned integer                                                                       |
+| 0x05 |   16 | Int16        | Two's complement, little-endian 2-byte signed integer                                         |
+| 0x06 |   16 | UInt16       | Little-endian 2-byte unsigned integer                                                         |
+| 0x07 |   32 | Int32        | Two's complement, little-endian 4-byte signed integer                                         |
+| 0x08 |   32 | UInt32       | Little-endian 4-byte unsigned integer                                                         |
+| 0x09 |   64 | Int64        | Two's complement, little-endian 8-byte signed integer                                         |
 | 0x0A |   64 | UInt64       | Little-endian 8-byte unsigned integer                                                         |
-| 0x17 |   32 | Int32        | Two's complement, little-endian 4-byte signed integer                                         |
-| 0x0B |   32 | UInt32       | Little-endian 4-byte unsigned integer                                                         |
-| 0x18 |   16 | Int16        | Two's complement, little-endian 2-byte signed integer                                         |
-| 0x0C |   16 | UInt16       | Little-endian 2-byte unsigned integer                                                         |
-| 0x19 |    8 | Int8         | Two's complement, 1-byte signed integer                                                       |
-| 0x0D |    8 | UInt8        | 1 byte unsigned integer                                                                       |
-| 0x0E |   64 | SplitIndex64 | Like Index64 but pages are stored in split + delta encoding                                   |
-| 0x0F |   32 | SplitIndex32 | Like Index32 but pages are stored in split + delta encoding                                   |
-| 0x10 |   64 | SplitReal64  | Like Real64 but in split encoding                                                             |
-| 0x11 |   32 | SplitReal32  | Like Real32 but in split encoding                                                             |
-| 0x12 |   16 | SplitReal16  | Like Real16 but in split encoding                                                             |
-| 0x1A |   64 | SplitInt64   | Like Int64 but in split + zigzag encoding                                                     |
-| 0x13 |   64 | SplitUInt64  | Like UInt64 but in split encoding                                                             |
-| 0x1B |   64 | SplitInt32   | Like Int32 but in split + zigzag encoding                                                     |
+| 0x0B |   16 | Real16       | IEEE-754 half precision float                                                                 |
+| 0x0C |   32 | Real32       | IEEE-754 single precision float                                                               |
+| 0x0D |   64 | Real64       | IEEE-754 double precision float                                                               |
+| 0x0E |   32 | Index32      | Parent columns of (nested) collections, counting is relative to the cluster                   |
+| 0x0F |   64 | Index64      | Parent columns of (nested) collections, counting is relative to the cluster                   |
+| 0x10 |   96 | Switch       | Tuple of a kIndex64 value followed by a 32 bits dispatch tag to a column ID                   |
+| 0x11 |   16 | SplitInt16   | Like Int16 but in split + zigzag encoding                                                     |
+| 0x12 |   16 | SplitUInt16  | Like UInt16 but in split encoding                                                             |
+| 0x13 |   64 | SplitInt32   | Like Int32 but in split + zigzag encoding                                                     |
 | 0x14 |   32 | SplitUInt32  | Like UInt32 but in split encoding                                                             |
-| 0x1C |   16 | SplitInt16   | Like Int16 but in split + zigzag encoding                                                     |
-| 0x15 |   16 | SplitUInt16  | Like UInt16 but in split encoding                                                             |
-| 0x1D |10-31 | Real32Trunc  | IEEE-754 single precision float with truncated mantissa                                       |
-| 0x1E | 1-32 | Real32Quant  | Real value contained in a specified range with an underlying quantized integer representation |
+| 0x15 |   64 | SplitInt64   | Like Int64 but in split + zigzag encoding                                                     |
+| 0x16 |   64 | SplitUInt64  | Like UInt64 but in split encoding                                                             |
+| 0x17 |   16 | SplitReal16  | Like Real16 but in split encoding                                                             |
+| 0x18 |   32 | SplitReal32  | Like Real32 but in split encoding                                                             |
+| 0x19 |   64 | SplitReal64  | Like Real64 but in split encoding                                                             |
+| 0x1A |   32 | SplitIndex32 | Like Index32 but pages are stored in split + delta encoding                                   |
+| 0x1B |   64 | SplitIndex64 | Like Index64 but pages are stored in split + delta encoding                                   |
+| 0x1C |10-31 | Real32Trunc  | IEEE-754 single precision float with truncated mantissa                                       |
+| 0x1D | 1-32 | Real32Quant  | Real value contained in a specified range with an underlying quantized integer representation |
 
 The "split encoding" columns apply a byte transformation encoding to all pages of that column
 and in addition, depending on the column type, delta or zigzag encoding:
@@ -536,10 +536,10 @@ The "flags" field can have one of the following bits set
 
 | Bit      | Meaning                                                           |
 |----------|-------------------------------------------------------------------|
-| 0x08     | Deferred column: index of first element in the column is not zero |
-| 0x10     | Column with a range of possible values                            |
+| 0x01     | Deferred column: index of first element in the column is not zero |
+| 0x02     | Column with a range of possible values                            |
 
-If flag 0x08 (deferred column) is set, the index of the first element in this column is not zero,
+If flag 0x01 (deferred column) is set, the index of the first element in this column is not zero,
 which happens if the column is added at a later point during write.
 In this case, an additional 64bit integer containing the first element index follows the representation index field.
 Compliant implementations should yield synthetic data pages made up of 0x00 bytes
@@ -549,7 +549,7 @@ including `std::variant<Ts...>` and collections such as `std::vector<T>`.
 The leading zero pages of deferred columns are _not_ part of the page list, i.e. they have no page locator.
 In practice, deferred columns only appear in the schema extension record frame (see Section Footer Envelope).
 
-If flag 0x10 (column with range) is set, the column metadata contains the inclusive range of valid values
+If flag 0x02 (column with range) is set, the column metadata contains the inclusive range of valid values
 for this column (used e.g. for quantized real values).
 The range is represented as a min and a max value, specified as IEEE 754 little-endian double precision floats.
 
@@ -592,13 +592,11 @@ The type information record frame has the following contents followed by a strin
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 +                       Content Identifier                      +
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                        Type Version From                      |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                         Type Version To                       |
+|                          Type Version                         |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ```
 
-The combination of type version from/to, type name, and content identifier should be unique in the list.
+The combination of type version, type name, and content identifier should be unique in the list.
 However, not every type needs to provide additional type information.
 
 The following kinds of content are supported:
@@ -609,7 +607,7 @@ The following kinds of content are supported:
 
 The serialized ROOT streamer info is not bound to a specific type.
 It is the combined streamer information from all fields serialized by the ROOT streamer.
-Writers set version from/to to zero and use an empty type name.
+Writers set the version to zero and use an empty type name.
 Readers should ignore the type-specific information.
 The format of the content is a ROOT streamed `TList` of `TStreamerInfo` objects.
 
@@ -620,7 +618,6 @@ The footer envelope has the following structure:
 - Feature flags
 - Header checksum (XxHash-3 64bit)
 - Schema extension record frame
-- List frame of column group record frames
 - List frame of cluster group record frames
 
 The header checksum can be used to cross-check that header and footer belong together.
@@ -652,30 +649,6 @@ the order is physical columns (header), alias columns (header), physical columns
 
 Note that is it possible to extend existing fields by additional column representations.
 This means that columns of the extension header may point to fields of the regular header.
-
-#### Column Group Record Frame
-The column group record frame is used to set IDs for certain subsets of column IDs.
-Column groups are only used when there are sharded clusters.
-Otherwise, the enclosing list frame in the footer envelope is empty and all clusters span all columns.
-The purpose of column groups is to prevent repetition of column ID ranges in cluster summaries.
-
-The column group record frame consists of a list frame of 32bit integer items.
-Every item denotes a column ID that is part of this particular column group.
-The ID of the column group is given implicitly by the order of column groups.
-
-The frame hierarchy is as follows
-
-    - Column group outer list frame
-    |
-    |---- Column group 1 record frame
-    |     |---- List frame of column IDs
-    |     |     |---- Column ID 1 [32bit integer]
-    |     |     |---- Column ID 2 [32bit integer]
-    |     |     | ...
-    |
-    |---- Column group 2 record frame
-    | ...
-
 
 #### Cluster Group Record Frame
 
@@ -996,10 +969,9 @@ specifically, it is stored as two fields:
   - Child field of type `T`, which must by a type with RNTuple I/O support.
     The name of the child field is `_0`.
 
-### ROOT::Experimental::RNTupleCardinality<SizeT>
+### ROOT::RNTupleCardinality<SizeT>
 
-A field whose type is `ROOT::Experimental::RNTupleCardinality<SizeT>` is associated to a single column
-of type `(Split)Index[32|64]`.
+A field whose type is `ROOT::RNTupleCardinality<SizeT>` is associated to a single column of type `(Split)Index[32|64]`.
 This field presents the offsets in the index column as lengths
 that correspond to the cardinality of the pointed-to collection.
 It is meant to be used as a projected field and only for reading the size of a collection.

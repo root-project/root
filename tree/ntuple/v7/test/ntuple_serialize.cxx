@@ -649,8 +649,7 @@ TEST(RNTuple, SerializeHeader)
    EXPECT_EQ(1u, desc.GetNExtraTypeInfos());
    const auto &extraTypeInfoDesc = *desc.GetExtraTypeInfoIterable().begin();
    EXPECT_EQ(EExtraTypeInfoIds::kStreamerInfo, extraTypeInfoDesc.GetContentId());
-   EXPECT_EQ(0u, extraTypeInfoDesc.GetTypeVersionFrom());
-   EXPECT_EQ(0u, extraTypeInfoDesc.GetTypeVersionTo());
+   EXPECT_EQ(0u, extraTypeInfoDesc.GetTypeVersion());
    EXPECT_TRUE(extraTypeInfoDesc.GetTypeName().empty());
    EXPECT_STREQ("xyz", extraTypeInfoDesc.GetContent().c_str());
 }
@@ -922,8 +921,7 @@ TEST(RNTuple, SerializeFooterXHeader)
    EXPECT_EQ(1u, desc.GetNExtraTypeInfos());
    const auto &extraTypeInfoDesc = *desc.GetExtraTypeInfoIterable().begin();
    EXPECT_EQ(EExtraTypeInfoIds::kStreamerInfo, extraTypeInfoDesc.GetContentId());
-   EXPECT_EQ(0u, extraTypeInfoDesc.GetTypeVersionFrom());
-   EXPECT_EQ(0u, extraTypeInfoDesc.GetTypeVersionTo());
+   EXPECT_EQ(0u, extraTypeInfoDesc.GetTypeVersion());
    EXPECT_TRUE(extraTypeInfoDesc.GetTypeName().empty());
    EXPECT_STREQ("xyz", extraTypeInfoDesc.GetContent().c_str());
 }
@@ -934,12 +932,12 @@ TEST(RNTuple, SerializeStreamerInfos)
    auto content = RNTupleSerializer::SerializeStreamerInfos(infos);
    EXPECT_TRUE(RNTupleSerializer::DeserializeStreamerInfos(content).Unwrap().empty());
 
-   auto streamerInfo = RNTuple::Class()->GetStreamerInfo();
+   auto streamerInfo = ROOT::RNTuple::Class()->GetStreamerInfo();
    infos[streamerInfo->GetNumber()] = streamerInfo;
    content = RNTupleSerializer::SerializeStreamerInfos(infos);
    auto result = RNTupleSerializer::DeserializeStreamerInfos(content).Unwrap();
    EXPECT_EQ(1u, result.size());
-   EXPECT_STREQ("ROOT::Experimental::RNTuple", std::string(result.begin()->second->GetName()).c_str());
+   EXPECT_STREQ("ROOT::RNTuple", std::string(result.begin()->second->GetName()).c_str());
 }
 
 TEST(RNTuple, SerializeMultiColumnRepresentation)
