@@ -247,13 +247,13 @@ TEST(RNTupleIndex, MultipleMatches)
 
    auto entryIdxs = index->GetAllEntryNumbers<std::uint64_t>(1);
    auto expected = std::vector<std::uint64_t>{0, 1, 2, 3, 4};
-   EXPECT_EQ(expected, *entryIdxs);
+   EXPECT_EQ(expected, entryIdxs);
    entryIdxs = index->GetAllEntryNumbers<std::uint64_t>(2);
    expected = {5, 6, 7};
-   EXPECT_EQ(expected, *entryIdxs);
+   EXPECT_EQ(expected, entryIdxs);
    entryIdxs = index->GetAllEntryNumbers<std::uint64_t>(3);
    expected = {8, 9};
-   EXPECT_EQ(expected, *entryIdxs);
+   EXPECT_EQ(expected, entryIdxs);
    entryIdxs = index->GetAllEntryNumbers<std::uint64_t>(4);
-   EXPECT_EQ(nullptr, entryIdxs);
+   EXPECT_EQ(0, entryIdxs.size());
 }

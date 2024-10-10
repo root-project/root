@@ -33,6 +33,34 @@ CastValuePtr(void *valuePtr, const ROOT::Experimental::RFieldBase &field)
 }
 } // anonymous namespace
 
+void ROOT::Experimental::Internal::RNTupleIndex::RNTupleIndexPartition::Build()
+{
+   std::vector<RFieldBase::RValue> fieldValues;
+   fieldValues.reserve(fIndexFields.size());
+   for (const auto &field : fIndexFields) {
+      fieldValues.emplace_back(field->CreateValue());
+   }
+
+   std::vector<NTupleIndexValue_t> indexFieldValues;
+   indexFieldValues.reserve(fieldValues.size());
+
+   for (unsigned i = fFirstEntry; i < fLastEntry; ++i) {
+      indexFieldValues.clear();
+      for (auto &fieldValue : fieldValues) {
+         // TODO(fdegeus): use bulk reading
+         fieldValue.Read(i);
+
+         auto valuePtr = fieldValue.GetPtr<void>();
+         indexFieldValues.push_back(CastValuePtr(valuePtr.get(), fieldValue.GetField()));
+      }
+
+      RIndexValue indexValue(indexFieldValues);
+      fIndex[indexValue].push_back(i);
+   }
+}
+
+//------------------------------------------------------------------------------
+
 ROOT::Experimental::Internal::RNTupleIndex::RNTupleIndex(const std::vector<std::string> &fieldNames,
                                                          const RPageSource &pageSource)
    : fPageSource(pageSource.Clone())
@@ -42,6 +70,10 @@ ROOT::Experimental::Internal::RNTupleIndex::RNTupleIndex(const std::vector<std::
 
    fIndexFields.reserve(fieldNames.size());
 
+   static const std::unordered_set<std::string> allowedTypes = {"std::int8_t",   "std::int16_t", "std::int32_t",
+                                                                "std::int64_t",  "std::uint8_t", "std::uint16_t",
+                                                                "std::uint32_t", "std::uint64_t"};
+
    for (const auto &fieldName : fieldNames) {
       auto fieldId = desc->FindFieldId(fieldName);
       if (fieldId == kInvalidDescriptorId)
@@ -50,7 +82,10 @@ ROOT::Experimental::Internal::RNTupleIndex::RNTupleIndex(const std::vector<std::
       const auto &fieldDesc = desc->GetFieldDescriptor(fieldId);
       auto field = fieldDesc.CreateField(desc.GetRef());
 
-      CallConnectPageSourceOnField(*field, *fPageSource);
+      if (allowedTypes.find(field->GetTypeName()) == allowedTypes.end()) {
+         throw RException(R__FAIL("Cannot use field \"" + field->GetFieldName() + "\" with type \"" +
+                                  field->GetTypeName() + "\" for indexing. Only integral types are allowed."));
+      }
 
       fIndexFields.push_back(std::move(field));
    }
@@ -79,34 +114,13 @@ void ROOT::Experimental::Internal::RNTupleIndex::Build()
    if (fIsBuilt)
       return;
 
-   static const std::unordered_set<std::string> allowedTypes = {"std::int8_t",   "std::int16_t", "std::int32_t",
-                                                                "std::int64_t",  "std::uint8_t", "std::uint16_t",
-                                                                "std::uint32_t", "std::uint64_t"};
+   auto desc = fPageSource->GetSharedDescriptorGuard();
 
-   std::vector<RFieldBase::RValue> fieldValues;
-   fieldValues.reserve(fIndexFields.size());
+   fIndexPartitions.reserve(desc->GetNClusters());
 
-   for (const auto &field : fIndexFields) {
-      if (allowedTypes.find(field->GetTypeName()) == allowedTypes.end()) {
-         throw RException(R__FAIL("Cannot use field \"" + field->GetFieldName() + "\" with type \"" +
-                                  field->GetTypeName() + "\" for indexing. Only integral types are allowed."));
-      }
-      fieldValues.emplace_back(field->CreateValue());
-   }
-
-   std::vector<NTupleIndexValue_t> indexValues;
-   indexValues.reserve(fIndexFields.size());
-
-   for (unsigned i = 0; i < fPageSource->GetNEntries(); ++i) {
-      indexValues.clear();
-      for (auto &fieldValue : fieldValues) {
-         // TODO(fdegeus): use bulk reading
-         fieldValue.Read(i);
-
-         auto valuePtr = fieldValue.GetPtr<void>();
-         indexValues.push_back(CastValuePtr(valuePtr.get(), fieldValue.GetField()));
-      }
-      fIndex[RIndexValue(indexValues)].push_back(i);
+   for (const auto &cluster : desc->GetClusterIterable()) {
+      auto &indexPartition = fIndexPartitions.emplace_back(cluster, fIndexFields, *fPageSource);
+      indexPartition.Build();
    }
 
    fIsBuilt = true;
@@ -115,13 +129,13 @@ void ROOT::Experimental::Internal::RNTupleIndex::Build()
 ROOT::Experimental::NTupleSize_t
 ROOT::Experimental::Internal::RNTupleIndex::GetFirstEntryNumber(const std::vector<void *> &valuePtrs) const
 {
-   const auto entryIndices = GetAllEntryNumbers(valuePtrs);
-   if (!entryIndices)
+   const auto entryNumbers = GetAllEntryNumbers(valuePtrs);
+   if (entryNumbers.empty())
       return kInvalidNTupleIndex;
-   return entryIndices->front();
+   return entryNumbers.front();
 }
 
-const std::vector<ROOT::Experimental::NTupleSize_t> *
+const std::vector<ROOT::Experimental::NTupleSize_t>
 ROOT::Experimental::Internal::RNTupleIndex::GetAllEntryNumbers(const std::vector<void *> &valuePtrs) const
 {
    if (valuePtrs.size() != fIndexFields.size())
@@ -129,17 +143,31 @@ ROOT::Experimental::Internal::RNTupleIndex::GetAllEntryNumbers(const std::vector
 
    EnsureBuilt();
 
-   std::vector<NTupleIndexValue_t> indexValues;
-   indexValues.reserve(fIndexFields.size());
+   std::vector<std::vector<NTupleIndexValue_t>> entryNumbersPerCluster;
+
+   std::vector<NTupleIndexValue_t> indexFieldValues;
+   indexFieldValues.reserve(fIndexFields.size());
 
    for (unsigned i = 0; i < valuePtrs.size(); ++i) {
-      indexValues.push_back(CastValuePtr(valuePtrs[i], *fIndexFields[i]));
+      indexFieldValues.push_back(CastValuePtr(valuePtrs[i], *fIndexFields[i]));
    }
 
-   auto entryNumber = fIndex.find(RIndexValue(indexValues));
+   RIndexValue indexValue(indexFieldValues);
 
-   if (entryNumber == fIndex.end())
-      return nullptr;
+   for (const auto &indexPartition : fIndexPartitions) {
+      auto clusterEntryNumbers = indexPartition.fIndex.find(indexValue);
 
-   return &(entryNumber->second);
+      if (clusterEntryNumbers == indexPartition.fIndex.end())
+         continue;
+
+      entryNumbersPerCluster.push_back(clusterEntryNumbers->second);
+   }
+
+   std::vector<NTupleIndexValue_t> entryNumbers;
+
+   for (const auto &clusterEntries : entryNumbersPerCluster) {
+      entryNumbers.insert(entryNumbers.end(), clusterEntries.cbegin(), clusterEntries.cend());
+   }
+
+   return entryNumbers;
 }
