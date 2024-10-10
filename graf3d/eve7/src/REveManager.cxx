@@ -873,8 +873,14 @@ void REveManager::WindowData(unsigned connid, const std::string &arg)
    }
    else if (ROOT::RWebWindow::IsFileDialogMessage(arg))
    {
-      // file dialog
-      ROOT::RWebWindow::EmbedFileDialog(fWebWindow, connid, arg);
+      if (fHttpPublic)
+      {
+           R__LOG_INFO(REveLog()) << "REveManager::WindowData, file dialog is not allowed in restriced public mode";
+      }
+      else
+      {
+          ROOT::RWebWindow::EmbedFileDialog(fWebWindow, connid, arg);
+      }
       return;
    }
    else if (arg.compare(0, 11, "SETCHANNEL:") == 0) {
@@ -1280,4 +1286,14 @@ bool REveManager::Logger::Handler::Emit(const RLogEntry &entry)
 {
    gEveLogEntries.emplace_back(entry);
    return true;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Restrict functionality for this server when open to public
+
+void REveManager::SetHttpPublic(bool x)
+{
+   R__LOG_INFO(REveLog()) << "Set public mode to " << x <<".";
+   fHttpPublic = x;
 }
