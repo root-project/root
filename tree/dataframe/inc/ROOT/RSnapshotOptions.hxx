@@ -44,7 +44,7 @@ struct RSnapshotOptions {
    int fSplitLevel = 99;                            ///< Split level of output tree
    bool fLazy = false;                              ///< Do not start the event loop when Snapshot is called
    bool fOverwriteIfExists = false; ///< If fMode is "UPDATE", overwrite object in output file if it already exists
-   bool fVector2rvec = true; ///< If set to true will convert stl vectors to RVec
+   bool fVector2rvec = true;        ///< If set to true will convert stl vectors to RVec
 };
 } // namespace RDF
 } // namespace ROOT
