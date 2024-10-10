@@ -81,6 +81,16 @@ public:
    /// set free variable
    bool SetVariable(unsigned int ivar, const std::string &name, double val, double step) override;
 
+   /// set initial second derivatives
+   virtual bool SetG2(std::span<const double> g2, unsigned int n) override;
+
+   /// set initial covariance matrix
+   bool SetCovariance(std::span<const double> cov, unsigned int nrow) override
+   {
+      return SetCovariance(MnUserCovariance(cov, nrow));
+   };
+   bool SetCovariance(const MnUserCovariance &cov);
+
    /// set lower limit variable  (override if minimizer supports them )
    bool
    SetLowerLimitedVariable(unsigned int ivar, const std::string &name, double val, double step, double lower) override;
