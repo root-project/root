@@ -15,6 +15,11 @@
 
 #include <ROOT/RNTupleIndex.hxx>
 
+#include <TROOT.h>
+#ifdef R__USE_IMT
+#include "ROOT/TThreadExecutor.hxx"
+#endif
+
 namespace {
 ROOT::Experimental::Internal::RNTupleIndex::NTupleIndexValue_t
 CastValuePtr(void *valuePtr, const ROOT::Experimental::RFieldBase &field)
@@ -118,9 +123,25 @@ void ROOT::Experimental::Internal::RNTupleIndex::Build()
 
    fIndexPartitions.reserve(desc->GetNClusters());
 
-   for (const auto &cluster : desc->GetClusterIterable()) {
-      auto &indexPartition = fIndexPartitions.emplace_back(cluster, fIndexFields, *fPageSource);
-      indexPartition.Build();
+   if (ROOT::IsImplicitMTEnabled()) {
+#ifdef R__USE_IMT
+      for (const auto &cluster : desc->GetClusterIterable()) {
+         fIndexPartitions.emplace_back(cluster, fIndexFields, *fPageSource);
+      }
+
+      auto fnBuildIndexPartition = [](RNTupleIndexPartition &indexPartition) -> void { indexPartition.Build(); };
+
+      if (!fPool)
+         fPool = std::make_unique<ROOT::TThreadExecutor>();
+      fPool->Foreach(fnBuildIndexPartition, fIndexPartitions);
+#else
+      assert(false);
+#endif
+   } else {
+      for (const auto &cluster : desc->GetClusterIterable()) {
+         auto &indexPartition = fIndexPartitions.emplace_back(cluster, fIndexFields, *fPageSource);
+         indexPartition.Build();
+      }
    }
 
    fIsBuilt = true;

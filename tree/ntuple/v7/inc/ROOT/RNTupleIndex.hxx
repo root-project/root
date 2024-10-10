@@ -17,6 +17,9 @@
 #define ROOT7_RNTupleIndex
 
 #include <ROOT/RField.hxx>
+#ifdef R__USE_IMT
+#include "ROOT/TThreadExecutor.hxx"
+#endif
 
 #include <memory>
 #include <string>
@@ -125,6 +128,10 @@ private:
 
    /// Only built indexes can be queried.
    bool fIsBuilt = false;
+
+#ifdef R__USE_IMT
+   std::unique_ptr<ROOT::TThreadExecutor> fPool;
+#endif
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Create an a new RNTupleIndex for the RNTuple represented by the provided page source.

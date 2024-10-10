@@ -257,3 +257,51 @@ TEST(RNTupleIndex, MultipleMatches)
    entryIdxs = index->GetAllEntryNumbers<std::uint64_t>(4);
    EXPECT_EQ(0, entryIdxs.size());
 }
+
+#ifdef R__USE_IMT
+TEST(RNTupleIndex, IMT)
+{
+   FileRaii fileGuard("test_ntuple_index_build_mt.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto fldRun = model->MakeField<std::int16_t>("run");
+      auto fldEvent = model->MakeField<std::uint64_t>("event");
+      auto fldX = model->MakeField<float>("x");
+
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+
+      for (int i = 0; i < 5; ++i) {
+         *fldRun = i;
+         for (int j = 0; j < 15; ++j) {
+            *fldEvent = j;
+            *fldX = static_cast<float>(i + j) / 3.14;
+            ntuple->Fill();
+         }
+
+         ntuple->CommitCluster();
+      }
+   }
+
+   IMTRAII _;
+
+   auto pageSource = RPageSource::Create("ntuple", fileGuard.GetPath());
+   pageSource->Attach();
+   EXPECT_EQ(5UL, pageSource->GetSharedDescriptorGuard()->GetNClusters());
+
+   auto index = RNTupleIndex::Create({"run", "event"}, *pageSource);
+
+   EXPECT_EQ(5ULL * 15ULL, index->GetSize());
+
+   auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   auto fld = ntuple->GetView<float>("x");
+
+   std::int16_t run;
+   std::uint64_t event;
+   for (std::uint64_t i = 0; i < pageSource->GetNEntries(); ++i) {
+      run = i / 15;
+      event = i % 15;
+      auto entryIdx = index->GetFirstEntryNumber({&run, &event});
+      EXPECT_EQ(fld(entryIdx), fld(i));
+   }
+}
+#endif
