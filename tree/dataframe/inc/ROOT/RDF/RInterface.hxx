@@ -1351,8 +1351,8 @@ public:
          fullTreeName, filename, colListNoAliasesWithSizeBranches, /*checkFile*/ false));
 
       auto resPtr = CreateAction<RDFInternal::ActionTags::Snapshot, RDFDetail::RInferredType>(
-         colListNoAliasesWithSizeBranches, newRDF, snapHelperArgs, fProxiedPtr,
-         colListNoAliasesWithSizeBranches.size());
+         colListNoAliasesWithSizeBranches, newRDF, snapHelperArgs, fProxiedPtr, colListNoAliasesWithSizeBranches.size(),
+         options.fVector2RVec);
 
       if (!options.fLazy)
          *resPtr;
@@ -1495,7 +1495,7 @@ public:
       const auto validColumnNames =
          GetValidatedColumnNames(columnListWithoutSizeColumns.size(), columnListWithoutSizeColumns);
       const auto colTypes = GetValidatedArgTypes(validColumnNames, fColRegister, fLoopManager->GetTree(), fDataSource,
-                                                 "Cache", /*vector2rvec=*/false);
+                                                 "Cache", /*vector2RVec=*/false);
       for (const auto &colType : colTypes)
          cacheCall << colType << ", ";
       if (!columnListWithoutSizeColumns.empty())

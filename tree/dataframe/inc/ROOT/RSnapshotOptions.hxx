@@ -25,14 +25,15 @@ struct RSnapshotOptions {
    RSnapshotOptions(const RSnapshotOptions &) = default;
    RSnapshotOptions(RSnapshotOptions &&) = default;
    RSnapshotOptions(std::string_view mode, ECAlgo comprAlgo, int comprLevel, int autoFlush, int splitLevel, bool lazy,
-                    bool overwriteIfExists = false)
+                    bool overwriteIfExists = false, bool vector2RVec = true)
       : fMode(mode),
         fCompressionAlgorithm(comprAlgo),
         fCompressionLevel{comprLevel},
         fAutoFlush(autoFlush),
         fSplitLevel(splitLevel),
         fLazy(lazy),
-        fOverwriteIfExists(overwriteIfExists)
+        fOverwriteIfExists(overwriteIfExists),
+        fVector2RVec(vector2RVec)
    {
    }
    std::string fMode = "RECREATE"; ///< Mode of creation of output file
@@ -43,6 +44,7 @@ struct RSnapshotOptions {
    int fSplitLevel = 99;                            ///< Split level of output tree
    bool fLazy = false;                              ///< Do not start the event loop when Snapshot is called
    bool fOverwriteIfExists = false; ///< If fMode is "UPDATE", overwrite object in output file if it already exists
+   bool fVector2RVec = true;        ///< If set to true will convert std::vector columns to RVec when saving to disk
 };
 } // namespace RDF
 } // namespace ROOT
