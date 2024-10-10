@@ -87,12 +87,14 @@ public:
    double Int2extError(unsigned int, double, double) const;
 
    MnUserCovariance Int2extCovariance(const MnAlgebraicVector &, const MnAlgebraicSymMatrix &) const;
+   MnUserCovariance Ext2intCovariance(const MnAlgebraicVector &, const MnAlgebraicSymMatrix &) const;
 
    // Index = external Parameter
    double Ext2int(unsigned int, double) const;
 
    // Index = internal Parameter
    double DInt2Ext(unsigned int, double) const;
+   double DExt2Int(unsigned int, double) const;
 
    //   // Index = external Parameter
    //   double dExt2Int(unsigned int, double) const;

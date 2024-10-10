@@ -970,6 +970,15 @@ void RooMinimizer::initMinimizer()
    _minimizer = std::unique_ptr<ROOT::Math::Minimizer>(_config.CreateMinimizer());
    _minimizer->SetFunction(*getMultiGenFcn());
    _minimizer->SetVariables(_config.ParamsSettings().begin(), _config.ParamsSettings().end());
+
+   if (_cfg.setInitialCovariance) {
+      std::vector<double> v;
+      for (std::size_t i = 0; i < _fcn->getNDim(); ++i) {
+         RooRealVar &param = _fcn->floatableParam(i);
+         v.push_back(param.getError() * param.getError());
+      }
+      _minimizer->SetCovarianceDiag(v, v.size());
+   }
 }
 
 bool RooMinimizer::updateMinimizerOptions(bool canDifferentMinim)

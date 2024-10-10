@@ -63,14 +63,18 @@ operator()(const MnFcn &fcn, const GradientCalculator &gc, const MnUserParameter
    MnAlgebraicSymMatrix mat(n);
    double dcovar = 1.;
    if (st.HasCovariance()) {
-      for (unsigned int i = 0; i < n; i++)
-         for (unsigned int j = i; j < n; j++)
+      for (unsigned int i = 0; i < n; i++) {
+         mat(i, i) = st.IntCovariance()(i, i) > prec.Eps() ? st.IntCovariance()(i, i)
+                     : dgrad.G2()(i) > prec.Eps()          ? 1. / dgrad.G2()(i)
+                                                           : 1.0;
+         for (unsigned int j = i + 1; j < n; j++)
             mat(i, j) = st.IntCovariance()(i, j);
+      }
       dcovar = 0.;
    } else {
       for (unsigned int i = 0; i < n; i++)
         // if G2 is small better using an arbitrary value (e.g. 1)
-         mat(i, i) = std::fabs(dgrad.G2()(i)) > prec.Eps() ? 1. / dgrad.G2()(i) : 1.0;
+        mat(i, i) = dgrad.G2()(i) > prec.Eps() ? 1. / dgrad.G2()(i) : 1.0;
    }
    MinimumError err(mat, dcovar);
 
@@ -79,13 +83,15 @@ operator()(const MnFcn &fcn, const GradientCalculator &gc, const MnUserParameter
 
    print.Info("Initial state:", MnPrint::Oneline(state));
 
-   NegativeG2LineSearch ng2ls;
-   if (ng2ls.HasNegativeG2(dgrad, prec)) {
-      print.Debug("Negative G2 Found", "\n  point:", x, "\n  grad :", dgrad.Grad(), "\n  g2   :", dgrad.G2());
+   if (!st.HasCovariance()) {
+      NegativeG2LineSearch ng2ls;
+      if (ng2ls.HasNegativeG2(dgrad, prec)) {
+         print.Debug("Negative G2 Found", "\n  point:", x, "\n  grad :", dgrad.Grad(), "\n  g2   :", dgrad.G2());
 
-      state = ng2ls(fcn, state, gc, prec);
+         state = ng2ls(fcn, state, gc, prec);
 
-      print.Info("Negative G2 found - new state:", state);
+         print.Info("Negative G2 found - new state:", state);
+      }
    }
 
    if (stra.Strategy() == 2 && !st.HasCovariance()) {
@@ -180,15 +186,18 @@ MinimumSeed MnSeedGenerator::operator()(const MnFcn &fcn, const AnalyticalGradie
       // should maybe this an option, sometimes is not good to re-use existing covariance
       if (st.HasCovariance()) {
          print.Info("Using existing covariance matrix");
-         for (unsigned int i = 0; i < n; i++)
-            for (unsigned int j = i; j < n; j++)
+         for (unsigned int i = 0; i < n; i++) {
+            mat(i, i) = st.IntCovariance()(i, i) > prec.Eps() ? st.IntCovariance()(i, i)
+                        : grad.G2()(i) > prec.Eps()           ? 1. / grad.G2()(i)
+                                                              : 1.0;
+            for (unsigned int j = i + 1; j < n; j++)
                mat(i, j) = st.IntCovariance()(i, j);
+         }
          dcovar = 0.;
       } else {
          for (unsigned int i = 0; i < n; i++) {
             // if G2 is very small, better using an arbitrary value (e.g. 1.)
-            mat(i, i) = std::fabs(grad.G2()(i)) > prec.Eps() ? 1. / grad.G2()(i)
-                        : 1.0;
+            mat(i, i) = grad.G2()(i) > prec.Eps() ? 1. / grad.G2()(i) : 1.0;
          }
          dcovar = 1.;
       }
@@ -203,11 +212,14 @@ MinimumSeed MnSeedGenerator::operator()(const MnFcn &fcn, const AnalyticalGradie
       print.Error("Cannot compute seed because G2 is not computed");
    }
    MinimumState state(pa, err, grad, edm, fcn.NumOfCalls());
-   NegativeG2LineSearch ng2ls;
-   if (ng2ls.HasNegativeG2(grad, prec)) {
-      // do a negative line search - can use current gradient calculator
-      //Numerical2PGradientCalculator ngc(fcn, st.Trafo(), stra);
-      state = ng2ls(fcn, state, gc, prec);
+
+   if (!st.HasCovariance()) {
+      NegativeG2LineSearch ng2ls;
+      if (ng2ls.HasNegativeG2(grad, prec)) {
+         // do a negative line search - can use current gradient calculator
+         // Numerical2PGradientCalculator ngc(fcn, st.Trafo(), stra);
+         state = ng2ls(fcn, state, gc, prec);
+      }
    }
 
    // compute Hessian above will not have posdef check as it is done if we call MnHesse
