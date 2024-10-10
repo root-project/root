@@ -469,14 +469,11 @@ TEST(RNTupleCompat, UnknownLocatorType)
    // read back the ntuple, its descriptor and reconstruct the model (but not read pages)
 
    FileRaii fileGuard("test_ntuple_compat_future_locator.root");
-   fileGuard.PreserveFile();
 
    {
       auto model = RNTupleModel::Create();
       auto fieldPt = model->MakeField<float>("pt", 14.0);
       auto wopts = RNTupleWriteOptions();
-      wopts.SetCompression(0);
-      wopts.SetEnablePageChecksums(false);
       auto sink = std::make_unique<RPageSinkTestLocator>("ntpl", fileGuard.GetPath(), wopts);
       auto writer = CreateRNTupleWriter(std::move(model), std::move(sink));
       *fieldPt = 33.f;

@@ -87,12 +87,8 @@ TEST(RNTuple, SerializeFieldStructure)
    }
 
    RNTupleSerializer::SerializeUInt16(5000, buffer);
-   try {
-      RNTupleSerializer::DeserializeFieldStructure(buffer, structure).Unwrap();
-      FAIL() << "unexpected on disk field structure value should throw";
-   } catch (const RException& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("unexpected on-disk field structure value"));
-   }
+   RNTupleSerializer::DeserializeFieldStructure(buffer, structure).Unwrap();
+   EXPECT_EQ(structure, ENTupleStructure::kUnknown);
 
    for (int i = 0; i < static_cast<int>(ENTupleStructure::kInvalid); ++i) {
       RNTupleSerializer::SerializeFieldStructure(static_cast<ENTupleStructure>(i), buffer);
@@ -401,12 +397,8 @@ TEST(RNTuple, SerializeLocator)
 #else
    *head = (0x3 << 24) | *head;
 #endif
-   try {
-      RNTupleSerializer::DeserializeLocator(buffer, 20, locator).Unwrap();
-      FAIL() << "unsupported locator type should throw";
-   } catch (const RException& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("unsupported locator type"));
-   }
+   RNTupleSerializer::DeserializeLocator(buffer, 20, locator).Unwrap();
+   EXPECT_EQ(locator.fType, RNTupleLocator::kTypeUnknown);
 }
 
 TEST(RNTuple, SerializeEnvelopeLink)
