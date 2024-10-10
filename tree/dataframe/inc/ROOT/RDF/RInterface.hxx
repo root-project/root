@@ -1350,10 +1350,9 @@ public:
       auto newRDF = std::make_shared<RInterface<RLoopManager>>(ROOT::Detail::RDF::CreateLMFromTTree(
          fullTreeName, filename, colListNoAliasesWithSizeBranches, /*checkFile*/ false));
 
-
       auto resPtr = CreateAction<RDFInternal::ActionTags::Snapshot, RDFDetail::RInferredType>(
-         colListNoAliasesWithSizeBranches, newRDF, snapHelperArgs, fProxiedPtr,
-         colListNoAliasesWithSizeBranches.size(), options.fVector2rvec);
+         colListNoAliasesWithSizeBranches, newRDF, snapHelperArgs, fProxiedPtr, colListNoAliasesWithSizeBranches.size(),
+         options.fVector2rvec);
 
       if (!options.fLazy)
          *resPtr;

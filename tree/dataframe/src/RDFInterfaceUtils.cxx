@@ -873,8 +873,7 @@ std::string JitBuildAction(const ColumnNames_t &cols, std::shared_ptr<RDFDetail:
    // just-in-time create an RAction object and it will assign it to its corresponding RJittedAction.
    std::stringstream createAction_str;
    createAction_str << "ROOT::Internal::RDF::CallBuildAction<" << actionTypeName;
-   const auto columnTypeNames =
-      GetValidatedArgTypes(cols, colRegister, tree, ds, actionTypeNameBase, vector2rvec);
+   const auto columnTypeNames = GetValidatedArgTypes(cols, colRegister, tree, ds, actionTypeNameBase, vector2rvec);
    for (auto &colType : columnTypeNames)
       createAction_str << ", " << colType;
    // on Windows, to prefix the hexadecimal value of a pointer with '0x',
