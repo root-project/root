@@ -158,6 +158,9 @@ protected:
    REveServerStatus  fServerStatus;
    bool              fIsRCore{false};
 
+   // restricted functionality for public use
+   bool              fHttpPublic{false};
+
    void WindowConnect(unsigned connid);
    void WindowData(unsigned connid, const std::string &arg);
    void WindowDisconnect(unsigned connid);
@@ -281,6 +284,9 @@ public:
 
    void GetServerStatus(REveServerStatus&);
    bool IsRCore() const { return fIsRCore; }
+
+   bool GetHttpPublic() { return fHttpPublic;}
+   void SetHttpPublic(bool);
 };
 
 R__EXTERN REveManager* gEve;
