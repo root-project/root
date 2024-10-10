@@ -351,37 +351,6 @@ public:
 namespace ROOT {
 namespace Experimental {
 
-template <>
-class RField<ClusterSize_t> final : public RSimpleField<ClusterSize_t> {
-protected:
-   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
-   {
-      return std::make_unique<RField>(newName);
-   }
-
-   const RColumnRepresentations &GetColumnRepresentations() const final;
-   using RSimpleField<ClusterSize_t>::GenerateColumns;
-   void GenerateColumns() final { throw RException(R__FAIL("RField<ClusterSize_t> must only be used for reading")); }
-
-public:
-   static std::string TypeName() { return "ROOT::Experimental::ClusterSize_t"; }
-   explicit RField(std::string_view name) : RSimpleField(name, TypeName()) {}
-   RField(RField &&other) = default;
-   RField &operator=(RField &&other) = default;
-   ~RField() override = default;
-
-   /// Special help for offset fields
-   void GetCollectionInfo(NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *size)
-   {
-      fPrincipalColumn->GetCollectionInfo(globalIndex, collectionStart, size);
-   }
-   void GetCollectionInfo(RClusterIndex clusterIndex, RClusterIndex *collectionStart, ClusterSize_t *size)
-   {
-      fPrincipalColumn->GetCollectionInfo(clusterIndex, collectionStart, size);
-   }
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
-};
-
 template <typename SizeT>
 class RField<RNTupleCardinality<SizeT>> final : public RCardinalityField {
 protected:

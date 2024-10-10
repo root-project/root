@@ -279,7 +279,7 @@ protected:
    }
 
 public:
-   explicit RFieldTestIndexColumn(std::string_view name) : RSimpleField(name, "ROOT::Experimental::ClusterSize_t") {}
+   explicit RFieldTestIndexColumn(std::string_view name) : RSimpleField(name, "ROOT::Experimental::RClusterSize") {}
    RFieldTestIndexColumn(RFieldTestIndexColumn &&other) = default;
    RFieldTestIndexColumn &operator=(RFieldTestIndexColumn &&other) = default;
    ~RFieldTestIndexColumn() override = default;

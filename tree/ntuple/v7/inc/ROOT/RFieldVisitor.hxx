@@ -54,7 +54,6 @@ public:
    virtual void VisitUnsplitField(const RUnsplitField &field) { VisitField(field); }
    virtual void VisitProxiedCollectionField(const RProxiedCollectionField &field) { VisitField(field); }
    virtual void VisitRecordField(const RRecordField &field) { VisitField(field); }
-   virtual void VisitClusterSizeField(const RField<ClusterSize_t> &field) { VisitField(field); }
    virtual void VisitCardinalityField(const RCardinalityField &field) { VisitField(field); }
    virtual void VisitDoubleField(const RField<double> &field) { VisitField(field); }
    virtual void VisitEnumField(const REnumField &field) { VisitField(field); }
