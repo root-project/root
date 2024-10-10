@@ -307,19 +307,24 @@ public:
 \brief A view for a collection, that can itself generate new ntuple views for its nested fields.
 */
 // clang-format on
-class RNTupleCollectionView : public RNTupleView<ClusterSize_t> {
+class RNTupleCollectionView {
    friend class RNTupleReader;
 
 private:
    Internal::RPageSource *fSource;
+   RField<RNTupleCardinality<std::uint64_t>> fField;
+   RFieldBase::RValue fValue;
 
-   RNTupleCollectionView(std::unique_ptr<RFieldBase> field, Internal::RPageSource *source)
-      : RNTupleView<ClusterSize_t>(std::move(field)), fSource(source)
-   {}
+   RNTupleCollectionView(DescriptorId_t fieldId, const std::string &fieldName, Internal::RPageSource *source)
+      : fSource(source), fField(fieldName), fValue(fField.CreateValue())
+   {
+      fField.SetOnDiskId(fieldId);
+      Internal::CallConnectPageSourceOnField(fField, *source);
+   }
 
    static RNTupleCollectionView Create(DescriptorId_t fieldId, Internal::RPageSource *source)
    {
-      std::unique_ptr<RFieldBase> field;
+      std::string fieldName;
       {
          const auto &desc = source->GetSharedDescriptorGuard().GetRef();
          const auto &fieldDesc = desc.GetFieldDescriptor(fieldId);
@@ -327,14 +332,10 @@ private:
             throw RException(
                R__FAIL("invalid attemt to create collection view on non-collection field " + fieldDesc.GetFieldName()));
          }
-         field = std::make_unique<RField<ClusterSize_t>>(fieldDesc.GetFieldName());
+         fieldName = fieldDesc.GetFieldName();
       }
-      field->SetOnDiskId(fieldId);
-      Internal::CallConnectPageSourceOnField(*field, *source);
-      return RNTupleCollectionView(std::move(field), source);
+      return RNTupleCollectionView(fieldId, fieldName, source);
    }
-
-   RField<ClusterSize_t> *AsClusterSizeField() { return static_cast<RField<ClusterSize_t> *>(fField.get()); }
 
 public:
    RNTupleCollectionView(const RNTupleCollectionView &other) = delete;
@@ -346,7 +347,7 @@ public:
    RNTupleClusterRange GetCollectionRange(NTupleSize_t globalIndex) {
       ClusterSize_t size;
       RClusterIndex collectionStart;
-      AsClusterSizeField()->GetCollectionInfo(globalIndex, &collectionStart, &size);
+      fField.GetCollectionInfo(globalIndex, &collectionStart, &size);
       return RNTupleClusterRange(collectionStart.GetClusterId(), collectionStart.GetIndex(),
                                  collectionStart.GetIndex() + size);
    }
@@ -354,7 +355,7 @@ public:
    {
       ClusterSize_t size;
       RClusterIndex collectionStart;
-      AsClusterSizeField()->GetCollectionInfo(clusterIndex, &collectionStart, &size);
+      fField.GetCollectionInfo(clusterIndex, &collectionStart, &size);
       return RNTupleClusterRange(collectionStart.GetClusterId(), collectionStart.GetIndex(),
                                  collectionStart.GetIndex() + size);
    }
@@ -363,7 +364,7 @@ public:
    template <typename T>
    RNTupleView<T> GetView(std::string_view fieldName)
    {
-      auto fieldId = fSource->GetSharedDescriptorGuard()->FindFieldId(fieldName, fField->GetOnDiskId());
+      auto fieldId = fSource->GetSharedDescriptorGuard()->FindFieldId(fieldName, fField.GetOnDiskId());
       if (fieldId == kInvalidDescriptorId) {
          throw RException(R__FAIL("no field named '" + std::string(fieldName) + "' in RNTuple '" +
                                   fSource->GetSharedDescriptorGuard()->GetName() + "'"));
@@ -374,7 +375,7 @@ public:
    /// Raises an exception if there is no field with the given name.
    RNTupleCollectionView GetCollectionView(std::string_view fieldName)
    {
-      auto fieldId = fSource->GetSharedDescriptorGuard()->FindFieldId(fieldName, fField->GetOnDiskId());
+      auto fieldId = fSource->GetSharedDescriptorGuard()->FindFieldId(fieldName, fField.GetOnDiskId());
       if (fieldId == kInvalidDescriptorId) {
          throw RException(R__FAIL("no field named '" + std::string(fieldName) + "' in RNTuple '" +
                                   fSource->GetSharedDescriptorGuard()->GetName() + "'"));
@@ -382,19 +383,16 @@ public:
       return RNTupleCollectionView::Create(fieldId, fSource);
    }
 
-   ClusterSize_t operator()(NTupleSize_t globalIndex) {
-      ClusterSize_t size;
-      RClusterIndex collectionStart;
-      AsClusterSizeField()->GetCollectionInfo(globalIndex, &collectionStart, &size);
-      return size;
+   std::uint64_t operator()(NTupleSize_t globalIndex)
+   {
+      fValue.Read(globalIndex);
+      return fValue.GetRef<std::uint64_t>();
    }
 
-   ClusterSize_t operator()(RClusterIndex clusterIndex)
+   std::uint64_t operator()(RClusterIndex clusterIndex)
    {
-      ClusterSize_t size;
-      RClusterIndex collectionStart;
-      AsClusterSizeField()->GetCollectionInfo(clusterIndex, &collectionStart, &size);
-      return size;
+      fValue.Read(clusterIndex);
+      return fValue.GetRef<std::uint64_t>();
    }
 };
 
