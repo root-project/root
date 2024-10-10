@@ -98,8 +98,6 @@ struct NodeInfo {
 
    bool isScalar() const { return outputSize == 1; }
 
-   bool computeInGPU() const { return (absArg->isReducerNode() || !isScalar()) && absArg->canComputeBatchWithCuda(); }
-
    RooAbsArg *absArg = nullptr;
    RooAbsArg::OperMode originalOperMode;
 
@@ -113,6 +111,7 @@ struct NodeInfo {
    bool isDirty = true;
    bool isCategory = false;
    bool hasLogged = false;
+   bool computeInGPU = false;
    std::size_t outputSize = 1;
    std::size_t lastSetValCount = std::numeric_limits<std::size_t>::max();
    double scalarBuffer = 0.0;
@@ -459,7 +458,7 @@ std::span<const double> Evaluator::getValHeterogeneous()
 
    // find initial GPU nodes and assign them to GPU
    for (auto &info : _nodes) {
-      if (info.remServers == 0 && info.computeInGPU()) {
+      if (info.remServers == 0 && info.computeInGPU) {
          assignToGPU(info);
       }
    }
@@ -473,7 +472,7 @@ std::span<const double> Evaluator::getValHeterogeneous()
             // Decrement number of remaining servers for clients and start GPU computations
             for (auto *infoClient : info.clientInfos) {
                --infoClient->remServers;
-               if (infoClient->computeInGPU() && infoClient->remServers == 0) {
+               if (infoClient->computeInGPU && infoClient->remServers == 0) {
                   assignToGPU(*infoClient);
                }
             }
@@ -486,7 +485,7 @@ std::span<const double> Evaluator::getValHeterogeneous()
       // find next CPU node
       auto it = _nodes.begin();
       for (; it != _nodes.end(); it++) {
-         if (it->remServers == 0 && !it->computeInGPU())
+         if (it->remServers == 0 && !it->computeInGPU)
             break;
       }
 
@@ -507,7 +506,7 @@ std::span<const double> Evaluator::getValHeterogeneous()
 
       // Assign the clients that are computed on the GPU
       for (auto *infoClient : info.clientInfos) {
-         if (--infoClient->remServers == 0 && infoClient->computeInGPU()) {
+         if (--infoClient->remServers == 0 && infoClient->computeInGPU) {
             assignToGPU(*infoClient);
          }
       }
@@ -559,12 +558,28 @@ void Evaluator::assignToGPU(NodeInfo &info)
 /// Decides which nodes are assigned to the GPU in a CUDA fit.
 void Evaluator::markGPUNodes()
 {
+   // Decide which nodes get evaluated on the GPU: we select nodes that support
+   // CUDA evaluation and have at least one input of size greater than one.
+   for (auto &info : _nodes) {
+      info.computeInGPU = false;
+      if (!info.absArg->canComputeBatchWithCuda()) {
+         continue;
+      }
+      for (NodeInfo const *serverInfo : info.serverInfos) {
+         if (serverInfo->outputSize > 1) {
+            info.computeInGPU = true;
+            break;
+         }
+      }
+   }
+
+   // In a second pass, figure out which nodes need to copy over their results.
    for (auto &info : _nodes) {
       info.copyAfterEvaluation = false;
       // scalar nodes don't need copying
       if (!info.isScalar()) {
          for (auto *clientInfo : info.clientInfos) {
-            if (info.computeInGPU() != clientInfo->computeInGPU()) {
+            if (info.computeInGPU != clientInfo->computeInGPU) {
                info.copyAfterEvaluation = true;
                break;
             }
