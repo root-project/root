@@ -82,7 +82,7 @@ TEST_F(BulkApiTest, stdRead)
    delete hfile;
 }
 
-void SimpleReadFunc(const char *filename, const char *treename)
+void SimpleReadFunc(const char *filename, const char *treename, bool prefetch = true)
 {
    auto hfile = TFile::Open(filename);
    printf("Starting read of file %s.\n", filename);
@@ -96,6 +96,9 @@ void SimpleReadFunc(const char *filename, const char *treename)
    TBranch *branchF = tree->GetBranch("myFloat");
    ASSERT_TRUE(branchF);
    branchF->GetListOfBaskets()->ls();
+
+   if (prefetch)
+      tree->SetClusterPrefetch(true);
 
    float idx_f = 1;
    Long64_t evt_idx = 0;
@@ -135,7 +138,7 @@ TEST_F(BulkApiTest, simpleReadTrailingBasket)
    SimpleReadFunc(fFileName.c_str(), "TwithBasket");
 }
 
-void SimpleBulkReadFunc(const char *filename, const char *treename)
+void SimpleBulkReadFunc(const char *filename, const char *treename, bool prefetch)
 {
    auto hfile = TFile::Open(filename);
    printf("Starting read of file %s.\n", filename);
@@ -145,6 +148,9 @@ void SimpleBulkReadFunc(const char *filename, const char *treename)
    TBufferFile branchbuf(TBuffer::kWrite, 32 * 1024);
    auto tree = hfile->Get<TTree>(treename);
    ASSERT_TRUE(tree);
+
+   if (prefetch)
+      tree->SetClusterPrefetch(true);
 
    TBranch *branchF = tree->GetBranch("myFloat");
    ASSERT_TRUE(branchF);
@@ -176,12 +182,22 @@ void SimpleBulkReadFunc(const char *filename, const char *treename)
 
 TEST_F(BulkApiTest, simpleBulkRead)
 {
-   SimpleBulkReadFunc(fFileName.c_str(), "T");
+   SimpleBulkReadFunc(fFileName.c_str(), "T", false);
 }
 
 TEST_F(BulkApiTest, simpleBulkReadTrailingBasket)
 {
-   SimpleBulkReadFunc(fFileName.c_str(), "TwithBasket");
+   SimpleBulkReadFunc(fFileName.c_str(), "TwithBasket", false);
+}
+
+TEST_F(BulkApiTest, simpleBulkReadWithPrefetch)
+{
+   SimpleBulkReadFunc(fFileName.c_str(), "T", true);
+}
+
+TEST_F(BulkApiTest, simpleBulkReadTrailingBasketWithPrefetch)
+{
+   SimpleBulkReadFunc(fFileName.c_str(), "TwithBasket", true);
 }
 
 TEST_F(BulkApiTest, fastRead)
