@@ -166,6 +166,11 @@ public:
    }
    /// set a new free variable
    virtual bool SetVariable(unsigned int ivar, const std::string & name, double val, double step) = 0;
+   /// set initial second derivatives
+   virtual bool SetCovarianceDiag(std::span<const double> d2, unsigned int n);
+   /// set initial covariance matrix
+   virtual bool SetCovariance(std::span<const double> cov, unsigned int nrow);
+
    /// set a new lower limit variable  (override if minimizer supports them )
    virtual bool SetLowerLimitedVariable(unsigned int  ivar , const std::string & name , double val , double step , double lower ) {
       return SetLimitedVariable(ivar, name, val, step, lower, std::numeric_limits<double>::infinity() );

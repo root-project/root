@@ -107,6 +107,8 @@ public:
       bool profile = false;        // local config
       bool timingAnalysis = false; // local config
       std::string minimizerType;   // local config
+
+      bool setInitialCovariance = false; // Use covariance matrix provided by user
    };
 
    // For backwards compatibility with when the RooMinimizer used the ROOT::Math::Fitter.

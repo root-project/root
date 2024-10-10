@@ -45,11 +45,14 @@ MnUserParameterState::MnUserParameterState(const MnUserParameters &par)
 //
 // construct from user parameters + errors (before minimization)
 //
-MnUserParameterState::MnUserParameterState(std::span<const double> par, std::span<const double> cov,
-                                           unsigned int nrow)
-   : fValid(true), fCovarianceValid(true), fGCCValid(false), fCovStatus(-1), fFVal(0.), fEDM(0.), fNFcn(0),
-     fCovariance(MnUserCovariance(cov, nrow)),
-     fIntParameters(par.begin(), par.end()), fIntCovariance(MnUserCovariance(cov, nrow))
+MnUserParameterState::MnUserParameterState(std::span<const double> par, std::span<const double> cov, unsigned int nrow)
+   : fValid(true),
+     fGCCValid(false),
+     fCovStatus(-1),
+     fFVal(0.),
+     fEDM(0.),
+     fNFcn(0),
+     fIntParameters(par.begin(), par.end())
 {
    // construct from user parameters + errors (before minimization) using std::vector for parameter error and    // an
    // std::vector of size n*(n+1)/2 for the covariance matrix  and n (rank of cov matrix)
@@ -61,13 +64,17 @@ MnUserParameterState::MnUserParameterState(std::span<const double> par, std::spa
       err.push_back(std::sqrt(fCovariance(i, i)));
    }
    fParameters = MnUserParameters(par, err);
-   assert(fCovariance.Nrow() == VariableParameters());
+   MnUserParameterState::AddCovariance({cov, nrow});
 }
 
 MnUserParameterState::MnUserParameterState(std::span<const double> par, const MnUserCovariance &cov)
-   : fValid(true), fCovarianceValid(true), fGCCValid(false), fCovStatus(-1), fFVal(0.), fEDM(0.), fNFcn(0),
-     fCovariance(cov), fIntParameters(par.begin(), par.end()),
-     fIntCovariance(cov)
+   : fValid(true),
+     fGCCValid(false),
+     fCovStatus(-1),
+     fFVal(0.),
+     fEDM(0.),
+     fNFcn(0),
+     fIntParameters(par.begin(), par.end())
 {
    // construct from user parameters + errors (before minimization) using std::vector (params) and MnUserCovariance
    // class
@@ -79,18 +86,15 @@ MnUserParameterState::MnUserParameterState(std::span<const double> par, const Mn
       err.push_back(std::sqrt(fCovariance(i, i)));
    }
    fParameters = MnUserParameters(par, err);
-   assert(fCovariance.Nrow() == VariableParameters());
+   MnUserParameterState::AddCovariance(cov);
 }
 
 MnUserParameterState::MnUserParameterState(const MnUserParameters &par, const MnUserCovariance &cov)
-   : fValid(true), fCovarianceValid(true), fGCCValid(false), fCovStatus(-1), fFVal(0.), fEDM(0.), fNFcn(0),
-     fParameters(par), fCovariance(cov),
-     fIntCovariance(cov)
+   : fValid(true), fGCCValid(false), fCovStatus(-1), fFVal(0.), fEDM(0.), fNFcn(0), fParameters(par)
 {
    // construct from user parameters + errors (before minimization) using
    // MnUserParameters and MnUserCovariance objects
 
-   fIntCovariance.Scale(0.5);
    for (auto const &ipar : MinuitParameters()) {
       if (ipar.IsConst() || ipar.IsFixed())
          continue;
@@ -99,11 +103,8 @@ MnUserParameterState::MnUserParameterState(const MnUserParameters &par, const Mn
       else
          fIntParameters.push_back(ipar.Value());
    }
-   assert(fCovariance.Nrow() == VariableParameters());
-   //
-   // need to Fix that in case of limited parameters
-   //   fIntCovariance = MnUserCovariance();
-   //
+
+   MnUserParameterState::AddCovariance(cov);
 }
 
 //
@@ -285,6 +286,37 @@ void MnUserParameterState::Add(const std::string &name, double val)
       fValid = true;
    else
       SetValue(name, val);
+}
+
+void MnUserParameterState::AddCovariance(const MnUserCovariance &cov)
+{
+
+   unsigned int nrow = VariableParameters();
+   assert(cov.Nrow() >= nrow);
+
+   // add external covariance matrix
+   fCovariance = cov;
+
+   // compute and add internal covariance matrix
+   MnUserCovariance covsqueezed;
+   if (cov.Nrow() > nrow)
+      covsqueezed = MnCovarianceSqueeze()(cov, nrow);
+   else if (cov.Nrow() == nrow)
+      covsqueezed = cov;
+
+   MnAlgebraicVector params(nrow);
+   for (unsigned int i = 0; i < nrow; i++)
+      params(i) = fParameters.Params()[i];
+
+   MnAlgebraicSymMatrix covmat(nrow);
+   for (unsigned int i = 0; i < nrow; i++)
+      for (unsigned int j = i; j < nrow; j++)
+         covmat(i, j) = covsqueezed(i, j);
+
+   fIntCovariance = fParameters.Trafo().Ext2intCovariance(params, covmat);
+   fIntCovariance.Scale(0.5); //?
+   fCovarianceValid = true;
+   fCovStatus = 0; //?
 }
 
 // interaction via external number of Parameter
