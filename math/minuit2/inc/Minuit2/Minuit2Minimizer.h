@@ -292,6 +292,12 @@ protected:
    // internal function to compute Minos errors
    int RunMinosError(unsigned int i, double &errLow, double &errUp, int runopt);
 
+   /// set initial second derivatives
+   virtual bool SetCovarianceDiag(std::span<const double> d2, unsigned int n) override;
+
+   /// set initial covariance matrix
+   bool SetCovariance(std::span<const double> cov, unsigned int nrow) override;
+
 private:
    unsigned int fDim; // dimension of the function to be minimized
    bool fUseFumili;

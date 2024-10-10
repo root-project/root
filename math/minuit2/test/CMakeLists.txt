@@ -12,6 +12,7 @@ if(NOT DEFINED ROOT_SOURCE_DIR)
 endif()
 
 set(TestSource testMinimizer.cxx)
+list(APPEND TestSource testCovariance.cxx)
 if (clad)
   list(APPEND TestSource testADMinim.cxx)
 endif()

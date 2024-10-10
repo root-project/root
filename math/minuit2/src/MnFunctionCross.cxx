@@ -46,7 +46,7 @@ MnCross MnFunctionCross::operator()(std::span<const unsigned int> par, std::span
    // for finding the point :
    double tlf = tlr * up;
    double tla = tlr;
-   unsigned int maxitr = 15;
+   unsigned int maxitr = 30;
    unsigned int ipt = 0;
    double aminsv = fFval;
    double aim = aminsv + up;
