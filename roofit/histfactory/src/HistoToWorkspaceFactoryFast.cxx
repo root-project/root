@@ -469,6 +469,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
           cxcoutI(HistFactory) << "making normFactor: " << norm.GetName() << endl;
           // remove "doRatio" and name can be changed when ws gets imported to the combined model.
           emplace<RooRealVar>(proto, varname, norm.GetVal(), norm.GetLow(), norm.GetHigh());
+          proto.var(varname)->setError(0); // ensure factor is assigned an initial error, even if its zero
         }
 
         prodNames.push_back(varname);
