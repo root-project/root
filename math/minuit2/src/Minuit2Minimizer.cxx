@@ -193,6 +193,31 @@ bool Minuit2Minimizer::SetVariable(unsigned int ivar, const std::string &name, d
    return true;
 }
 
+/** set initial second derivatives
+ */
+bool Minuit2Minimizer::SetG2(std::span<const double> g2, unsigned int n)
+{
+   MnPrint print("Minuit2Minimizer::SetG2", PrintLevel());
+
+   std::vector<double> cov(n * (n + 1) / 2);
+
+   for (unsigned int i = 0; i < n; i++) {
+      for (unsigned int j = i; j < n; j++)
+         cov[i + j * (j + 1) / 2] = (i == j) ? g2[i] : 0.;
+   }
+
+   return Minuit2Minimizer::SetCovariance(cov, n);
+}
+
+bool Minuit2Minimizer::SetCovariance(const MnUserCovariance &cov)
+{
+   MnPrint print("Minuit2Minimizer::SetCovariance", PrintLevel());
+
+   fState.AddCovariance(cov);
+
+   return true;
+}
+
 bool Minuit2Minimizer::SetLowerLimitedVariable(unsigned int ivar, const std::string &name, double val, double step,
                                                double lower)
 {
