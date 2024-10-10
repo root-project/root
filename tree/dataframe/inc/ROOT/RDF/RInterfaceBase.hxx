@@ -173,7 +173,7 @@ protected:
    RResultPtr<ActionResultType>
    CreateAction(const ColumnNames_t &columns, const std::shared_ptr<ActionResultType> &r,
                 const std::shared_ptr<HelperArgType> &helperArg, const std::shared_ptr<RDFNode> &proxiedPtr,
-                const int nColumns = -1, const bool vector2rvec = true)
+                const int nColumns = -1, const bool vector2RVec = true)
    {
       auto realNColumns = (nColumns > -1 ? nColumns : sizeof...(ColTypes));
 
@@ -191,7 +191,7 @@ protected:
 
       auto toJit = RDFInternal::JitBuildAction(validColumnNames, upcastNodeOnHeap, typeid(HelperArgType),
                                                typeid(ActionTag), helperArgOnHeap, tree, nSlots, fColRegister,
-                                               fDataSource, jittedActionOnHeap, vector2rvec);
+                                               fDataSource, jittedActionOnHeap, vector2RVec);
       fLoopManager->ToJitExec(toJit);
       return MakeResultPtr(r, *fLoopManager, std::move(jittedAction));
    }
