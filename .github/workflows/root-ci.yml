@@ -388,6 +388,12 @@ jobs:
             is_special: true
             property: clang
             overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_C_COMPILER=clang", "CMAKE_CXX_COMPILER=clang++"]
+          - image: ubuntu2404-cuda
+            is_special: true
+            property: gpu
+            extra-runs-on: gpu
+    env:
+      CONTAINER_OPTIONS: "--security-opt label=disable --rm ${{ matrix.property == 'gpu' && '--device nvidia.com/gpu=all' || '' }}"
 
     runs-on:
       - self-hosted
@@ -401,7 +407,7 @@ jobs:
 
     container:
       image: registry.cern.ch/root-ci/${{ matrix.image }}:buildready # ALSO UPDATE BELOW!
-      options: '--security-opt label=disable --rm' # ALSO UPDATE BELOW!
+      options: ${env.CONTAINER_OPTIONS}
       volumes:
         - ${{ matrix.image }}_ccache_volume:/github/home/.cache/ccache
       env:
@@ -434,7 +440,10 @@ jobs:
       - name: Dump GitHub context
         env:
           GITHUB_CONTEXT: ${{ toJSON(github) }}
-        run: echo "$GITHUB_CONTEXT"
+          JOB_CONTEXT: ${{ toJSON(job) }}
+        run: |
+          echo "$GITHUB_CONTEXT"
+          echo "$JOB_CONTEXT"
 
       - name: Print debug info
         run:  'printf "%s@%s\\n" "$(whoami)" "$(hostname)";
@@ -478,7 +487,7 @@ jobs:
         run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype       RelWithDebInfo
                     --platform        ${{ matrix.image }}
-                    --dockeropts      '--security-opt label=disable --rm'
+                    --dockeropts      $CONTAINER_OPTIONS}
                     --incremental     $INCREMENTAL
                     --base_ref        ${{ github.base_ref }}
                     --sha             ${{ github.sha }}
