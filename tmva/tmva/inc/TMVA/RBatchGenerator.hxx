@@ -1,12 +1,12 @@
 #ifndef TMVA_BATCHGENERATOR
 #define TMVA_BATCHGENERATOR
 
-#include <iostream>
 #include <vector>
 #include <thread>
 #include <memory>
 #include <cmath>
 #include <mutex>
+#include <variant>
 
 #include "TMVA/RTensor.hxx"
 #include "ROOT/RDF/RDatasetSpec.hxx"
@@ -24,80 +24,82 @@ template <typename... Args>
 class RBatchGenerator {
 private:
    TMVA::RandomGenerator<TRandom3> fRng = TMVA::RandomGenerator<TRandom3>(0);
-
-   std::string fFileName;
-   std::string fTreeName;
-
-   std::vector<std::string> fCols;
-   std::string fFilters;
+   UInt_t fFixedSeed;
+   TMVA::RandomGenerator<TRandom3> fFixedRng;
 
    std::size_t fChunkSize;
    std::size_t fMaxChunks;
    std::size_t fBatchSize;
-   std::size_t fMaxBatches;
-   std::size_t fNumColumns;
    std::size_t fNumEntries;
-   std::size_t fCurrentRow = 0;
 
    float fValidationSplit;
 
-   std::unique_ptr<TMVA::Experimental::Internal::RChunkLoader<Args...>> fChunkLoader;
-   std::unique_ptr<TMVA::Experimental::Internal::RBatchLoader> fBatchLoader;
+   std::variant<std::shared_ptr<RChunkLoader<Args...>>, std::shared_ptr<RChunkLoaderFilters<Args...>>> fChunkLoader;
+
+   std::unique_ptr<RBatchLoader> fBatchLoader;
 
    std::unique_ptr<std::thread> fLoadingThread;
 
    bool fUseWholeFile = true;
 
-   std::unique_ptr<TMVA::Experimental::RTensor<float>> fChunkTensor;
-   std::unique_ptr<TMVA::Experimental::RTensor<float>> fCurrentBatch;
-
-   std::vector<std::vector<std::size_t>> fTrainingIdxs;
-   std::vector<std::vector<std::size_t>> fValidationIdxs;
+   std::shared_ptr<TMVA::Experimental::RTensor<float>> fChunkTensor;
+   
+   ROOT::RDF::RNode &f_rdf;
 
    // filled batch elements
    std::mutex fIsActiveLock;
 
+   bool fDropRemainder = true;
    bool fShuffle = true;
    bool fIsActive = false;
-
-   std::vector<std::size_t> fVecSizes;
-   float fVecPadding;
+   bool fNotFiltered;
 
 public:
-   RBatchGenerator(const std::string &treeName, const std::string &fileName, const std::size_t chunkSize,
-                   const std::size_t batchSize, const std::vector<std::string> &cols, const std::string &filters = "",
+   RBatchGenerator(ROOT::RDF::RNode &rdf, const std::size_t chunkSize,
+                   const std::size_t batchSize, const std::vector<std::string> &cols,
+                   const std::size_t numColumns,
                    const std::vector<std::size_t> &vecSizes = {}, const float vecPadding = 0.0,
-                   const float validationSplit = 0.0, const std::size_t maxChunks = 0, const std::size_t numColumns = 0,
-                   bool shuffle = true)
-      : fTreeName(treeName),
-        fFileName(fileName),
+                   const float validationSplit = 0.0, const std::size_t maxChunks = 0,
+                   bool shuffle = true, bool dropRemainder = true)
+      : f_rdf(rdf),
         fChunkSize(chunkSize),
         fBatchSize(batchSize),
-        fCols(cols),
-        fFilters(filters),
-        fVecSizes(vecSizes),
-        fVecPadding(vecPadding),
         fValidationSplit(validationSplit),
         fMaxChunks(maxChunks),
-        fNumColumns((numColumns != 0) ? numColumns : cols.size()),
         fShuffle(shuffle),
-        fUseWholeFile(maxChunks == 0)
+        fDropRemainder(dropRemainder),
+        fUseWholeFile(maxChunks == 0),
+        fNotFiltered(f_rdf.GetFilterNames().empty())
    {
-      // limits the number of batches that can be contained in the batchqueue based on the chunksize
-      fMaxBatches = ceil((fChunkSize / fBatchSize) * (1 - fValidationSplit));
 
-      // get the number of fNumEntries in the dataframe
-      std::unique_ptr<TFile> f{TFile::Open(fFileName.c_str())};
-      std::unique_ptr<TTree> t{f->Get<TTree>(fTreeName.c_str())};
-      fNumEntries = t->GetEntries();
-
-      fChunkLoader = std::make_unique<TMVA::Experimental::Internal::RChunkLoader<Args...>>(
-         fTreeName, fFileName, fChunkSize, fCols, fFilters, fVecSizes, fVecPadding);
-      fBatchLoader = std::make_unique<TMVA::Experimental::Internal::RBatchLoader>(fBatchSize, fNumColumns, fMaxBatches);
+      do {
+         fFixedSeed = fRng();
+      } while (fFixedSeed == 0);
 
       // Create tensor to load the chunk into
       fChunkTensor =
-         std::make_unique<TMVA::Experimental::RTensor<float>>(std::vector<std::size_t>{fChunkSize, fNumColumns});
+         std::make_shared<TMVA::Experimental::RTensor<float>>(std::vector<std::size_t>{fChunkSize, numColumns});
+
+      if(fNotFiltered){
+         fNumEntries = f_rdf.Count().GetValue();
+
+         fChunkLoader = std::make_unique<TMVA::Experimental::Internal::RChunkLoader<Args...>>(
+            f_rdf, fChunkTensor, fChunkSize, cols, vecSizes, vecPadding);
+      }
+      else{
+         auto report = f_rdf.Report();
+         fNumEntries = f_rdf.Count().GetValue();
+         std::size_t numAllEntries = report.begin()->GetAll();
+
+         fChunkLoader = std::make_unique<TMVA::Experimental::Internal::RChunkLoaderFilters<Args...>>(
+            f_rdf, fChunkTensor, fChunkSize, cols, fNumEntries, numAllEntries, vecSizes, vecPadding);
+      }
+      
+      std::size_t maxBatches = ceil((fChunkSize / fBatchSize) * (1 - fValidationSplit));
+
+      // limits the number of batches that can be contained in the batchqueue based on the chunksize
+      fBatchLoader = std::make_unique<TMVA::Experimental::Internal::RBatchLoader>(*fChunkTensor,
+                  fBatchSize, numColumns, maxBatches);
    }
 
    ~RBatchGenerator() { DeActivate(); }
@@ -132,9 +134,15 @@ public:
          fIsActive = true;
       }
 
-      fCurrentRow = 0;
+      fFixedRng.seed(fFixedSeed);
       fBatchLoader->Activate();
-      fLoadingThread = std::make_unique<std::thread>(&RBatchGenerator::LoadChunks, this);
+      // fLoadingThread = std::make_unique<std::thread>(&RBatchGenerator::LoadChunks, this);
+      if (fNotFiltered){
+            fLoadingThread = std::make_unique<std::thread>(&RBatchGenerator::LoadChunksNoFilters, this);
+      }
+      else{
+            fLoadingThread = std::make_unique<std::thread>(&RBatchGenerator::LoadChunksFilters, this);
+      }
    }
 
    /// \brief Returns the next batch of training data if available.
@@ -155,14 +163,65 @@ public:
       return fBatchLoader->GetValidationBatch();
    }
 
-   bool HasTrainData() { return fBatchLoader->HasTrainData(); }
+   std::size_t NumberOfTrainingBatches(){
+      std::size_t entriesForTraining = (fNumEntries / fChunkSize) * (fChunkSize - floor(fChunkSize * fValidationSplit)) +
+            fNumEntries % fChunkSize - floor(fValidationSplit * (fNumEntries % fChunkSize));
 
-   bool HasValidationData() { return fBatchLoader->HasValidationData(); }
+      if (fDropRemainder || !(entriesForTraining % fBatchSize))
+      {
+         return entriesForTraining / fBatchSize;
+      }
+      
+      return entriesForTraining / fBatchSize + 1;
+   }
 
-   void LoadChunks()
+   /// @brief Return number of training remainder rows
+   /// @return 
+   std::size_t TrainRemainderRows(){
+      std::size_t entriesForTraining = (fNumEntries / fChunkSize) * (fChunkSize - floor(fChunkSize * fValidationSplit)) +
+            fNumEntries % fChunkSize - floor(fValidationSplit * (fNumEntries % fChunkSize));
+
+      if (fDropRemainder || !(entriesForTraining % fBatchSize))
+      {
+         return 0;
+      }
+
+      return entriesForTraining % fBatchSize;
+   }
+
+   /// @brief Calculate number of validation batches and return it
+   /// @return 
+   std::size_t NumberOfValidationBatches(){
+      std::size_t entriesForValidation = (fNumEntries / fChunkSize) * floor(fChunkSize * fValidationSplit) +
+            floor((fNumEntries % fChunkSize) * fValidationSplit);
+
+      if (fDropRemainder || !(entriesForValidation%fBatchSize)){
+
+         return entriesForValidation / fBatchSize;
+      }
+      
+      return entriesForValidation / fBatchSize + 1; 
+   }
+
+   /// @brief Return number of validation remainder rows
+   /// @return 
+   std::size_t ValidationRemainderRows(){
+      std::size_t entriesForValidation = (fNumEntries / fChunkSize) * floor(fChunkSize * fValidationSplit) +
+            floor((fNumEntries % fChunkSize) * fValidationSplit);
+
+      if (fDropRemainder || !(entriesForValidation%fBatchSize)){
+
+         return 0;
+      }
+      
+      return entriesForValidation % fBatchSize; 
+   }
+
+   /// @brief Load chunks when no filters are applied on rdataframe
+   void LoadChunksNoFilters()
    {
-      for (std::size_t current_chunk = 0; ((current_chunk < fMaxChunks) || fUseWholeFile) && fCurrentRow < fNumEntries;
-           current_chunk++) {
+      for (std::size_t currentChunk = 0, currentRow = 0; ((currentChunk < fMaxChunks) || fUseWholeFile) && currentRow < fNumEntries;
+           currentChunk++) {
 
          // stop the loop when the loading is not active anymore
          {
@@ -172,61 +231,89 @@ public:
          }
 
          // A pair that consists the proccessed, and passed events while loading the chunk
-         std::pair<std::size_t, std::size_t> report = fChunkLoader->LoadChunk(*fChunkTensor, fCurrentRow);
-         fCurrentRow += report.first;
+         std::size_t report = std::get<std::shared_ptr<RChunkLoader<Args...>>>(fChunkLoader)->LoadChunk(currentRow);
+         currentRow += report;
 
-         CreateBatches(current_chunk, report.second);
+         CreateBatches(report);
+      }
 
-         // Stop loading if the number of processed events is smaller than the desired chunk size
-         if (report.first < fChunkSize) {
-            break;
-         }
+      if (!fDropRemainder){
+         fBatchLoader->LastBatches();
       }
 
       fBatchLoader->DeActivate();
    }
 
-   /// \brief Create batches for the current_chunk.
-   /// \param currentChunk
-   /// \param processedEvents
-   void CreateBatches(std::size_t currentChunk, std::size_t processedEvents)
-   {
+   void LoadChunksFilters()
+   {     
+      std::size_t currentChunk = 0;
+      for (std::size_t processedEvents = 0, currentRow = 0; ((currentChunk < fMaxChunks) || fUseWholeFile) && processedEvents < fNumEntries;
+           currentChunk++) {
 
-      // Check if the indices in this chunk where already split in train and validations
-      if (fTrainingIdxs.size() > currentChunk) {
-         fBatchLoader->CreateTrainingBatches(*fChunkTensor, fTrainingIdxs[currentChunk], fShuffle);
-      } else {
-         // Create the Validation batches if this is not the first epoch
-         createIdxs(processedEvents);
-         fBatchLoader->CreateTrainingBatches(*fChunkTensor, fTrainingIdxs[currentChunk], fShuffle);
-         fBatchLoader->CreateValidationBatches(*fChunkTensor, fValidationIdxs[currentChunk]);
+         // stop the loop when the loading is not active anymore
+         {
+            std::lock_guard<std::mutex> lock(fIsActiveLock);
+            if (!fIsActive)
+               return;
+         }
+
+         // A pair that consists the proccessed, and passed events while loading the chunk
+         std::pair<std::size_t, std::size_t> report = std::get<std::shared_ptr<RChunkLoaderFilters<Args...>>>(fChunkLoader)->LoadChunk(currentRow);
+
+         currentRow += report.first;
+         processedEvents += report.second;
+
+         CreateBatches(report.second);
       }
+
+      if (currentChunk < fMaxChunks || fUseWholeFile){
+         CreateBatches(std::get<std::shared_ptr<RChunkLoaderFilters<Args...>>>(fChunkLoader)->LastChunk());
+      }
+
+      if (!fDropRemainder){
+         fBatchLoader->LastBatches();
+      }
+
+      fBatchLoader->DeActivate();
    }
 
-   /// \brief plit the events of the current chunk into validation and training events
+   /// \brief Create batches
    /// \param processedEvents
-   void createIdxs(std::size_t processedEvents)
+   void CreateBatches(std::size_t processedEvents)
    {
-      // Create a vector of number 1..processedEvents
-      std::vector<std::size_t> row_order = std::vector<std::size_t>(processedEvents);
+      std::pair<std::vector<std::size_t>, std::vector<std::size_t>> indices = createIndices(processedEvents);
+
+      fBatchLoader->CreateTrainingBatches(indices.first);
+      fBatchLoader->CreateValidationBatches(indices.second);
+   }
+
+   /// \brief split the events of the current chunk into training and validation events, shuffle if needed
+   /// \param events
+   std::pair<std::vector<std::size_t>, std::vector<std::size_t>>
+   createIndices(std::size_t events)
+   {  
+      // Create a vector of number 1..events
+      std::vector<std::size_t> row_order = std::vector<std::size_t>(events);
       std::iota(row_order.begin(), row_order.end(), 0);
 
       if (fShuffle) {
-         std::shuffle(row_order.begin(), row_order.end(), fRng);
+         std::shuffle(row_order.begin(), row_order.end(), fFixedRng);
       }
 
       // calculate the number of events used for validation
-      std::size_t num_validation = ceil(processedEvents * fValidationSplit);
+      std::size_t num_validation = floor(events * fValidationSplit);
 
-      // Devide the vector into training and validation
-      std::vector<std::size_t> valid_idx({row_order.begin(), row_order.begin() + num_validation});
-      std::vector<std::size_t> train_idx({row_order.begin() + num_validation, row_order.end()});
+      // Devide the vector into training and validation and return
+      std::vector<std::size_t> trainingIndices = std::vector<std::size_t>({row_order.begin(), row_order.end() - num_validation});
+      std::vector<std::size_t> validationIndices = std::vector<std::size_t>({row_order.end() - num_validation, row_order.end()});
 
-      fTrainingIdxs.push_back(train_idx);
-      fValidationIdxs.push_back(valid_idx);
+      if (fShuffle) {
+         std::shuffle(trainingIndices.begin(), trainingIndices.end(), fRng);
+      }
+
+      return std::make_pair(trainingIndices, validationIndices);
    }
 
-   void StartValidation() { fBatchLoader->StartValidation(); }
    bool IsActive() { return fIsActive; }
 };
 
