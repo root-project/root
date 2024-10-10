@@ -274,6 +274,18 @@ public:
 /// It is used in the templated RField<RNTupleCardinality<SizeT>> form, which represents the collection sizes either
 /// as 32bit unsigned int (std::uint32_t) or as 64bit unsigned int (std::uint64_t).
 class RCardinalityField : public RFieldBase {
+   friend class RNTupleCollectionView; // to access GetCollectionInfo()
+
+private:
+   void GetCollectionInfo(NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *size)
+   {
+      fPrincipalColumn->GetCollectionInfo(globalIndex, collectionStart, size);
+   }
+   void GetCollectionInfo(RClusterIndex clusterIndex, RClusterIndex *collectionStart, ClusterSize_t *size)
+   {
+      fPrincipalColumn->GetCollectionInfo(clusterIndex, collectionStart, size);
+   }
+
 protected:
    RCardinalityField(std::string_view fieldName, std::string_view typeName)
       : RFieldBase(fieldName, typeName, ENTupleStructure::kLeaf, false /* isSimple */)
