@@ -35,8 +35,8 @@ unsigned int ROOT::RDF::RInterfaceBase::GetNFiles()
       return ROOT::Internal::TreeUtils::GetFileNamesFromTree(*tree).size();
    }
    // Datasource as input
-   if (fDataSource) {
-      return fDataSource->GetNFiles();
+   if (auto dataSource = GetDataSource()) {
+      return dataSource->GetNFiles();
    }
    return 0;
 }
@@ -108,8 +108,8 @@ std::string ROOT::RDF::RInterfaceBase::DescribeDataset() const
       return ss.str();
    }
    // Datasource as input
-   else if (fDataSource) {
-      const auto datasourceLabel = fDataSource->GetLabel();
+   else if (auto dataSource = GetDataSource()) {
+      const auto datasourceLabel = dataSource->GetLabel();
       return "Dataframe from datasource " + datasourceLabel;
    }
    // Trivial/empty datasource
@@ -124,14 +124,13 @@ std::string ROOT::RDF::RInterfaceBase::DescribeDataset() const
 }
 
 ROOT::RDF::RInterfaceBase::RInterfaceBase(std::shared_ptr<RDFDetail::RLoopManager> lm)
-   : fLoopManager(lm), fDataSource(lm->GetDataSource()), fColRegister(lm.get())
+   : fLoopManager(lm), fColRegister(lm.get())
 {
    AddDefaultColumns();
 }
 
 ROOT::RDF::RInterfaceBase::RInterfaceBase(RDFDetail::RLoopManager &lm, const RDFInternal::RColumnRegister &colRegister)
    : fLoopManager(std::shared_ptr<ROOT::Detail::RDF::RLoopManager>{&lm, [](ROOT::Detail::RDF::RLoopManager *) {}}),
-     fDataSource(lm.GetDataSource()),
      fColRegister(colRegister)
 {
 }
@@ -169,8 +168,8 @@ ROOT::RDF::ColumnNames_t ROOT::RDF::RInterfaceBase::GetColumnNames()
          allColumns.emplace(bName);
    }
 
-   if (fDataSource) {
-      for (const auto &s : fDataSource->GetColumnNames()) {
+   if (auto dataSource = GetDataSource()) {
+      for (const auto &s : dataSource->GetColumnNames()) {
          if (s.rfind("R_rdf_sizeof", 0) != 0)
             allColumns.emplace(s);
       }
@@ -362,7 +361,7 @@ bool ROOT::RDF::RInterfaceBase::HasColumn(std::string_view columnName)
          return true;
    }
 
-   if (fDataSource && fDataSource->HasColumn(columnName))
+   if (GetDataSource() && GetDataSource()->HasColumn(columnName))
       return true;
 
    return false;

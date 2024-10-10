@@ -12,12 +12,17 @@
 #define ROOT_RLOOPMANAGER
 
 #include "ROOT/InternalTreeUtils.hxx" // RNoCleanupNotifier
+#include "ROOT/RDataSource.hxx"
 #include "ROOT/RDF/RColumnReaderBase.hxx"
 #include "ROOT/RDF/RDatasetSpec.hxx"
 #include "ROOT/RDF/RNodeBase.hxx"
 #include "ROOT/RDF/RNewSampleNotifier.hxx"
 #include "ROOT/RDF/RSampleInfo.hxx"
 #include "ROOT/RDF/Utils.hxx"
+
+#ifdef R__HAS_ROOT7
+#include "ROOT/RNTupleWriter.hxx"
+#endif
 
 #include <functional>
 #include <limits>
@@ -144,7 +149,7 @@ class RLoopManager : public RNodeBase {
    const unsigned int fNSlots{1};
    bool fMustRunNamedFilters{true};
    const ELoopType fLoopType; ///< The kind of event loop that is going to be run (e.g. on ROOT files, on no files)
-   const std::unique_ptr<RDataSource> fDataSource; ///< Owning pointer to a data-source object. Null if no data-source
+   std::unique_ptr<RDataSource> fDataSource; ///< Owning pointer to a data-source object. Null if no data-source
    /// Registered callbacks to be executed every N events.
    /// The registration happens via the RegisterCallback method.
    std::vector<RDFInternal::RCallback> fCallbacksEveryNEvents;
@@ -216,6 +221,7 @@ public:
    ::TDirectory *GetDirectory() const;
    ULong64_t GetNEmptyEntries() const { return fEmptyEntryRange.second - fEmptyEntryRange.first; }
    RDataSource *GetDataSource() const { return fDataSource.get(); }
+   void SetDataSource(std::unique_ptr<RDataSource> dataSource) { fDataSource = std::move(dataSource); }
    void Register(RDFInternal::RActionBase *actionPtr);
    void Deregister(RDFInternal::RActionBase *actionPtr);
    void Register(RFilterBase *filterPtr);
