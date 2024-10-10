@@ -287,6 +287,28 @@ void MnUserParameterState::Add(const std::string &name, double val)
       SetValue(name, val);
 }
 
+void MnUserParameterState::AddCovariance(const MnUserCovariance &cov)
+{
+   // add covariance matrix
+   assert(cov.Nrow() == VariableParameters());
+
+   fCovariance = cov;
+   fIntCovariance = fCovariance;
+   fCovarianceValid = true;
+   fCovStatus = -1;
+}
+
+void MnUserParameterState::AddCovariance(std::span<const double> cov, unsigned int nrow)
+{
+   // add covariance matrix
+   assert(nrow == VariableParameters());
+
+   fCovariance = MnUserCovariance(cov, nrow);
+   fIntCovariance = fCovariance;
+   fCovarianceValid = true;
+   fCovStatus = -1;
+}
+
 // interaction via external number of Parameter
 
 void MnUserParameterState::Fix(unsigned int e)
