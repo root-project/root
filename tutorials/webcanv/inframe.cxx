@@ -1,8 +1,7 @@
 /// \file
 /// \ingroup tutorial_webcanv
 /// \notebook -js
-///
-/// Drawing primitives inside and outside of the frame
+/// Drawing primitives inside and outside of the frame.
 ///
 /// In normal ROOT graphics all objects drawn on the pad and therefore
 /// requires special treatment to be able drawn only inside frame borders.

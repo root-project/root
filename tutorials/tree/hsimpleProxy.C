@@ -1,6 +1,7 @@
 /// \file
 /// \ingroup tutorial_tree
 /// \notebook -nodraw
+/// Used by hsimpleProxyDriver.C.
 ///
 /// To use this file, generate hsimple.root:
 /// ~~~ {.cpp}

@@ -1,7 +1,6 @@
 /// \file
 /// \ingroup tutorial_ntuple
 /// \notebook
-///
 /// This ROOT 7 example demonstrates how to use RNTuple in combination with ROOT 6 features like RDataframe and
 /// visualizations. It ingests climate data and creates a model with fields like AverageTemperature. Then it uses
 /// RDataframe to process and filter the climate data for average temperature per city by season. Then it does the same

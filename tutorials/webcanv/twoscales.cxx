@@ -1,8 +1,7 @@
 /// \file
 /// \ingroup tutorial_webcanv
 /// \notebook -js
-///
-/// Two fully interactive scales in web canvas
+/// Two fully interactive scales in web canvas.
 ///
 /// Shows two scales drawing for X or Y axis
 /// Several objects can be drawn on the frame and one can select which axis is used for drawing

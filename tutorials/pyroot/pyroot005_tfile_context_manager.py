@@ -1,7 +1,6 @@
 ## \file
 ## \ingroup tutorial_pyroot
 ## \notebook -nodraw
-##
 ## This tutorial demonstrates the usage of the TFile class as a Python context
 ## manager.
 ##

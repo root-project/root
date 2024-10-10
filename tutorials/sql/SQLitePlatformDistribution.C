@@ -1,9 +1,8 @@
 /// \file
 /// \ingroup tutorial_sql
 /// \notebook -js
-///
-/// This tutorial demonstrates how TSQLServer can be used to create a
-/// connection with a SQlite3 database. It accesses the Sqlite data base.
+/// This tutorial demonstrates how TSQLServer can be used to create a connection with a SQlite3 database.
+/// It accesses the Sqlite data base.
 /// Download from https://root.cern/files/root_download_stats.sqlite
 /// In order to display the Platform Distribution of ROOT, we choose to create two TH1F
 /// histograms: one that includes all types of platforms, other filtering and classifying them.

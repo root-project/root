@@ -1,7 +1,6 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-##
 ## 'SPECIAL PDFS' RooFit tutorial macro #705
 ##
 ## Linear interpolation between p.d.f shapes using the 'Alex Read' algorithm

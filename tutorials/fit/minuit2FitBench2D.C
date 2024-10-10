@@ -1,6 +1,7 @@
 /// \file
 /// \ingroup tutorial_fit
 /// \notebook -js
+/// Minuit2 fit 2D benchmark.
 ///
 /// \macro_image
 /// \macro_output

@@ -1,8 +1,7 @@
 /// \file
 /// \ingroup tutorial_webcanv
 /// \notebook -js
-///
-/// Usage of URL inside TLatex
+/// Usage of URL inside TLatex.
 ///
 /// JSROOT now supports #url[link]{label} syntax
 /// It can be combined with any other latex commands like color ot font.

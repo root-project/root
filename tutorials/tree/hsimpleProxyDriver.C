@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_tree
 /// \notebook -nodraw
-/// This is the driver of the hsimpleProxy example
+/// This is the driver of the hsimpleProxy example.
 /// It provides the infrastructure to run that code on an ntuple
 /// To be run from the tutorials directory
 ///
