@@ -1,8 +1,7 @@
 /// \file
 /// \ingroup tutorial_fit
 /// \notebook
-///
-/// Example to fit two histograms at the same time via the Fitter class
+/// Example to fit two histograms at the same time via the Fitter class.
 ///
 /// To execute this tutorial, you can do:
 ///
