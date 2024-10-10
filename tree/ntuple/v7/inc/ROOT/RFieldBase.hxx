@@ -65,7 +65,7 @@ This is and can only be partially enforced through C++.
 */
 // clang-format on
 class RFieldBase {
-   friend struct ROOT::Experimental::Internal::RFieldCallbackInjector; // used for unit tests
+   friend struct ROOT::Experimental::Internal::RFieldCallbackInjector;       // used for unit tests
    friend struct ROOT::Experimental::Internal::RFieldRepresentationModifier; // used for unit tests
    friend void Internal::CallFlushColumnsOnField(RFieldBase &);
    friend void Internal::CallCommitClusterOnField(RFieldBase &);
@@ -434,7 +434,7 @@ protected:
    /// TODO(jalopezg): this overload may eventually be removed leaving only the `RFieldBase::Create()` that takes a
    /// single type name
    static RResult<std::unique_ptr<RFieldBase>> Create(const std::string &fieldName, const std::string &canonicalType,
-                                                      const std::string &typeAlias, bool fContinueOnError = false);
+                                                      const std::string &typeAlias, bool continueOnError = false);
 
 public:
    template <bool IsConstT>
@@ -514,7 +514,12 @@ public:
    const std::string &GetTypeAlias() const { return fTypeAlias; }
    ENTupleStructure GetStructure() const { return fStructure; }
    std::size_t GetNRepetitions() const { return fNRepetitions; }
-   NTupleSize_t GetNElements() const { return fPrincipalColumn->GetNElements(); }
+   NTupleSize_t GetNElements() const
+   {
+      if (fState == EState::kUnconnected)
+         throw RException(R__FAIL("Cannot call GetNElements() on an unconnected field!"));
+      return fPrincipalColumn->GetNElements();
+   }
    const RFieldBase *GetParent() const { return fParent; }
    std::vector<RFieldBase *> GetSubFields();
    std::vector<const RFieldBase *> GetSubFields() const;

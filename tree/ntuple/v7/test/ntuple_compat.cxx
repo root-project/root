@@ -259,16 +259,93 @@ TEST(RNTupleCompat, FutureColumnType)
    {
       auto model = RNTupleModel::Create();
       auto col = model->MakeField<ROOT::Experimental::Internal::RTestFutureColumn>("futureColumn");
-      auto writeOpts = RNTupleWriteOptions();
-      writeOpts.SetCompression(0);
-      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath(), writeOpts);
+      auto colValid = model->MakeField<float>("float");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       col->dummy = 0x42424242;
+      *colValid = 69.f;
       writer->Fill();
    }
 
    auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
    const auto &desc = reader->GetDescriptor();
    const auto &fdesc = desc.GetFieldDescriptor(desc.FindFieldId("futureColumn"));
+   GTEST_ASSERT_EQ(fdesc.GetLogicalColumnIds().size(), 1);
    const auto &cdesc = desc.GetColumnDescriptor(fdesc.GetLogicalColumnIds()[0]);
    EXPECT_EQ(cdesc.GetType(), EColumnType::kUnknown);
+
+   {
+      // Creating a model not in fwd-compatible mode should fail
+      EXPECT_THROW(desc.CreateModel(), RException);
+   }
+
+   {
+      auto modelOpts = RNTupleDescriptor::RCreateModelOptions();
+      modelOpts.fForwardCompatible = true;
+      auto model = desc.CreateModel(modelOpts);
+
+      // The future column should not show up in the model
+      EXPECT_THROW(model->GetField("futureColumn"), RException);
+
+      const auto &floatFld = model->GetField("float");
+      EXPECT_EQ(floatFld.GetTypeName(), "float");
+
+      reader.reset();
+      reader = RNTupleReader::Open(std::move(model), "ntpl", fileGuard.GetPath());
+
+      auto floatId = reader->GetDescriptor().FindFieldId("float");
+      auto floatPtr = reader->GetView<float>(floatId);
+      EXPECT_FLOAT_EQ(floatPtr(0), 69.f);
+   }
+}
+
+TEST(RNTupleCompat, FutureColumnType_Nested)
+{
+   // Write a RNTuple containing a field with an unknown column type and verify we can
+   // read back the ntuple and its descriptor.
+
+   FileRaii fileGuard("test_ntuple_compat_future_col_type_nested.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      std::vector<std::unique_ptr<RFieldBase>> itemFields;
+      itemFields.emplace_back(new RField<std::vector<ROOT::Experimental::Internal::RTestFutureColumn>>("vec"));
+      auto field = std::make_unique<ROOT::Experimental::RRecordField>("future", std::move(itemFields));
+      model->AddField(std::move(field));
+      auto floatP = model->MakeField<float>("float");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      *floatP = 33.f;
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   const auto &desc = reader->GetDescriptor();
+   const auto futureId = desc.FindFieldId("future");
+   const auto &fdesc = desc.GetFieldDescriptor(desc.FindFieldId("vec._0", futureId));
+   GTEST_ASSERT_EQ(fdesc.GetLogicalColumnIds().size(), 1);
+   const auto &cdesc = desc.GetColumnDescriptor(fdesc.GetLogicalColumnIds()[0]);
+   EXPECT_EQ(cdesc.GetType(), EColumnType::kUnknown);
+
+   {
+      // Creating a model not in fwd-compatible mode should fail
+      EXPECT_THROW(desc.CreateModel(), RException);
+   }
+
+   {
+      auto modelOpts = RNTupleDescriptor::RCreateModelOptions();
+      modelOpts.fForwardCompatible = true;
+      auto model = desc.CreateModel(modelOpts);
+
+      // The future column should not show up in the model
+      EXPECT_THROW(model->GetField("future"), RException);
+
+      const auto &floatFld = model->GetField("float");
+      EXPECT_EQ(floatFld.GetTypeName(), "float");
+
+      reader.reset();
+      reader = RNTupleReader::Open(std::move(model), "ntpl", fileGuard.GetPath());
+
+      auto floatId = reader->GetDescriptor().FindFieldId("float");
+      auto floatPtr = reader->GetView<float>(floatId);
+      EXPECT_FLOAT_EQ(floatPtr(0), 33.f);
+   }
 }
