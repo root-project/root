@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_webcanv
 /// \notebook -js
-/// User class with custom JavaScript painter in the TWebCanvas
+/// User class with custom JavaScript painter in the web canvas.
 ///
 /// Custom class is just triangle which drawn on the frame with NDC coordinates
 /// `triangle.mjs` provides JavaScript code for object painting and interactivity
