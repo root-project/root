@@ -1,6 +1,8 @@
 /// \file
 /// \ingroup tutorial_webgui
-///  This macro demonstrates simple openui5 panel, shown with RWebWindow
+/// \ingroup webwidgets
+/// This macro demonstrates simple openui5 panel, shown with RWebWindow
+///
 /// \macro_code
 ///
 /// \author Sergey Linev
