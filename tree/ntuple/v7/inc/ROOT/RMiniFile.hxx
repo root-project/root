@@ -89,6 +89,8 @@ public:
    void ReadBuffer(void *buffer, size_t nbytes, std::uint64_t offset);
 
    std::uint64_t GetMaxKeySize() const { return fMaxKeySize; }
+   /// If the reader is not used to retrieve the anchor, we need to set the max key size manually
+   void SetMaxKeySize(std::uint64_t maxKeySize) { fMaxKeySize = maxKeySize; }
 };
 
 // clang-format off
