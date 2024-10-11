@@ -36,6 +36,4 @@ endif()
                  COPY_TO_BUILDDIR
                  ${CMAKE_CURRENT_SOURCE_DIR}/data/test_workspace_01.root
                  )
-
-  add_subdirectory(vectorisedPDFs)
 endif()
