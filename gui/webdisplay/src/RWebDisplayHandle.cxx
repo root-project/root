@@ -428,7 +428,10 @@ RWebDisplayHandle::BrowserCreator::Display(const RWebDisplayArgs &args)
    if (!redirect.empty()) {
       dump_content = THttpServer::ReadFileContent(redirect.c_str());
 
-      gSystem->Unlink(redirect.c_str());
+      if (gEnv->GetValue("WebGui.PreserveBatchFiles", -1) > 0)
+         ::Info("RWebDisplayHandle::Display", "Preserve dump file %s", redirect.c_str());
+      else
+         gSystem->Unlink(redirect.c_str());
    }
 
    return std::make_unique<RWebBrowserHandle>(url, rmdir, tmpfile, dump_content);
@@ -1110,6 +1113,7 @@ bool RWebDisplayHandle::ProduceImages(const std::vector<std::string> &fnames, co
             filecont.insert(p, "<script id=\"jsroot\">" + jsroot_build + "</script>");
          }
       }
+
       filecont = std::regex_replace(filecont, std::regex("\\$jsrootsys"), "file://"s + jsrootsys);
    }
 
@@ -1264,6 +1268,8 @@ try_again:
       if ((dumpcont.length() > 20) && (dumpcont.length() < 60) && !chrome_tmp_workaround && isChromeBased) {
          // chrome creates dummy html file with mostly no content
          // problem running chrome from /tmp directory, lets try work from home directory
+
+         printf("Handle chrome workaround\n");
          chrome_tmp_workaround = true;
          goto try_again;
       }
