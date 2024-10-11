@@ -4,7 +4,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '9/10/2024',
+version_date = '11/10/2024',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -481,7 +481,8 @@ async function injectCode(code) {
          element.setAttribute('type', is_mjs ? 'module' : 'text/javascript');
          element.innerHTML = code;
          document.head.appendChild(element);
-         return postponePromise(true, 10); // while onload event not fired, just postpone resolve
+         // while onload event not fired, just postpone resolve
+         return isBatchMode() ? true : postponePromise(true, 10);
       });
    }
 
