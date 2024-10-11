@@ -51,7 +51,7 @@ class REntry {
    friend class RNTupleModel;
    friend class RNTupleReader;
    friend class RNTupleFillContext;
-   friend class Internal::RNTupleProcessor;
+   friend class RNTupleProcessor;
 
 public:
    /// The field token identifies a top-level field in this entry. It can be used for fast indexing in REntry's

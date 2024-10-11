@@ -17,8 +17,7 @@
 
 #include <ROOT/RFieldBase.hxx>
 
-ROOT::Experimental::NTupleSize_t
-ROOT::Experimental::Internal::RNTupleProcessor::ConnectNTuple(const RNTupleSourceSpec &ntuple)
+ROOT::Experimental::NTupleSize_t ROOT::Experimental::RNTupleProcessor::ConnectNTuple(const RNTupleSourceSpec &ntuple)
 {
    for (auto &fieldContext : fFieldContexts) {
       fieldContext.ResetConcreteField();
@@ -29,7 +28,7 @@ ROOT::Experimental::Internal::RNTupleProcessor::ConnectNTuple(const RNTupleSourc
    return fPageSource->GetNEntries();
 }
 
-void ROOT::Experimental::Internal::RNTupleProcessor::ConnectFields()
+void ROOT::Experimental::RNTupleProcessor::ConnectFields()
 {
    auto desc = fPageSource->GetSharedDescriptorGuard();
 
@@ -51,8 +50,8 @@ void ROOT::Experimental::Internal::RNTupleProcessor::ConnectFields()
    }
 }
 
-ROOT::Experimental::Internal::RNTupleProcessor::RNTupleProcessor(const std::vector<RNTupleSourceSpec> &ntuples,
-                                                                 std::unique_ptr<RNTupleModel> model)
+ROOT::Experimental::RNTupleProcessor::RNTupleProcessor(const std::vector<RNTupleSourceSpec> &ntuples,
+                                                       std::unique_ptr<RNTupleModel> model)
    : fNTuples(ntuples)
 {
    if (fNTuples.empty())

@@ -31,7 +31,6 @@
 
 namespace ROOT {
 namespace Experimental {
-namespace Internal {
 
 /// Helper type representing the name and storage location of an RNTuple.
 struct RNTupleSourceSpec {
@@ -260,7 +259,6 @@ public:
    RIterator end() { return RIterator(*this, fNTuples.size(), kInvalidNTupleIndex); }
 };
 
-} // namespace Internal
 } // namespace Experimental
 } // namespace ROOT
 

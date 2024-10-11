@@ -3,9 +3,9 @@
 #include <ROOT/RNTupleProcessor.hxx>
 
 using ROOT::Experimental::RNTupleModel;
+using ROOT::Experimental::RNTupleProcessor;
+using ROOT::Experimental::RNTupleSourceSpec;
 using ROOT::Experimental::RNTupleWriter;
-using ROOT::Experimental::Internal::RNTupleProcessor;
-using ROOT::Experimental::Internal::RNTupleSourceSpec;
 
 TEST(RNTupleProcessor, Basic)
 {
