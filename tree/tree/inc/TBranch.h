@@ -171,7 +171,7 @@ protected:
    void     Init(const char *name, const char *leaflist, Int_t compress);
 
    TBasket *GetFreshBasket(Int_t basketnumber, TBuffer *user_buffer);
-   TBasket *GetFreshCluster(TBuffer *user_buffer);
+   TBasket *GetFreshCluster(Int_t basketnumber, TBuffer *user_buffer);
    Int_t    WriteBasket(TBasket* basket, Int_t where) { return WriteBasketImpl(basket, where, nullptr); }
 
    TString  GetRealFileName() const;

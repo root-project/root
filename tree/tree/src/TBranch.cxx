@@ -864,7 +864,7 @@ Int_t TBranch::FillImpl(ROOT::Internal::TBranchIMTHelper *imtHelper)
 
    TBasket* basket = (TBasket*)fBaskets.UncheckedAt(fWriteBasket);
    if (!basket) {
-      basket = fTree->CreateBasket(this); //  create a new basket
+      basket = fTree->CreateBasket(this, 0); //  create a new basket
       if (!basket) return 0;
       ++fNBaskets;
       fBaskets.AddAtAndExpand(basket,fWriteBasket);
@@ -1248,7 +1248,7 @@ TBasket* TBranch::GetBasketImpl(Int_t basketnumber, TBuffer *user_buffer)
    // if cluster pre-fetching or retaining is on, do not re-use existing baskets
    // unless a new cluster is used.
    if (fTree->GetMaxVirtualSize() < 0 || fTree->GetClusterPrefetch())
-      basket = GetFreshCluster(user_buffer);
+      basket = GetFreshCluster(basketnumber, user_buffer);
    else
       basket = GetFreshBasket(basketnumber, user_buffer);
 
@@ -1927,19 +1927,19 @@ TBasket* TBranch::GetFreshBasket(Int_t basketnumber, TBuffer* user_buffer)
 #endif
                fTree->AddAllocationCount(basket->GetResetAllocationCount());
             } else {
-               basket = fTree->CreateBasket(this);
+               basket = fTree->CreateBasket(this, fBasketBytes[basketnumber]);
             }
          } else if (fNBaskets == 0) {
             // There is nothing to drop!
-            basket = fTree->CreateBasket(this);
+            basket = fTree->CreateBasket(this, fBasketBytes[basketnumber]);
          } else {
             // Memory is full and there is more than one basket,
             // Let DropBaskets do it job.
             DropBaskets();
-            basket = fTree->CreateBasket(this);
+            basket = fTree->CreateBasket(this, fBasketBytes[basketnumber]);
          }
       } else {
-         basket = fTree->CreateBasket(this);
+         basket = fTree->CreateBasket(this, fBasketBytes[basketnumber]);
       }
       if (user_buffer)
          basket->AdoptBuffer(user_buffer);
@@ -1951,17 +1951,17 @@ TBasket* TBranch::GetFreshBasket(Int_t basketnumber, TBuffer* user_buffer)
 /// Drops the cluster two behind the current cluster and returns a fresh basket
 /// by either reusing or creating a new one
 
-TBasket *TBranch::GetFreshCluster(TBuffer* user_buffer)
+TBasket *TBranch::GetFreshCluster(Int_t basketnumber, TBuffer* user_buffer)
 {
    TBasket *basket = nullptr;
 
-   auto CreateOrReuseBasket = [this, user_buffer]() -> TBasket* {
+   auto CreateOrReuseBasket = [this, user_buffer](Int_t bnumber) -> TBasket* {
       TBasket *newbasket = nullptr;
       if (fExtraBaskets.size()) {
          newbasket = fExtraBaskets.back();
          fExtraBaskets.pop_back();
       } else {
-         newbasket = fTree->CreateBasket(this);
+         newbasket = fTree->CreateBasket(this, fBasketBytes[bnumber]);
       }
       if (user_buffer)
          newbasket->AdoptBuffer(user_buffer);
@@ -1973,14 +1973,14 @@ TBasket *TBranch::GetFreshCluster(TBuffer* user_buffer)
    // if this is the case, we want to keep everything in memory so we return a new basket
    TTree::TClusterIterator iter = fTree->GetClusterIterator(fBasketEntry[fReadBasket]);
    if (iter.GetStartEntry() == 0) {
-      return CreateOrReuseBasket();
+      return CreateOrReuseBasket(basketnumber);
    }
 
    // Iterate backwards (1-VirtualSize) clusters to reach cluster to be unloaded from memory,
    // skipped if VirtualSize > 0.
    for (Int_t j = 0; j < -fTree->GetMaxVirtualSize(); j++) {
       if (iter.Previous() == 0) {
-         return CreateOrReuseBasket();
+         return CreateOrReuseBasket(basketnumber);
       }
    }
 
@@ -1992,7 +1992,7 @@ TBasket *TBranch::GetFreshCluster(TBuffer* user_buffer)
    while (fBasketEntry[basketToUnload] != entryToUnload) {
       basketToUnload--;
       if (basketToUnload < 0) {
-         return CreateOrReuseBasket();
+         return CreateOrReuseBasket(basketnumber);
       }
    }
 
@@ -2003,7 +2003,7 @@ TBasket *TBranch::GetFreshCluster(TBuffer* user_buffer)
       fBaskets.AddAt(nullptr, basketToUnload);
       --fNBaskets;
    } else {
-      basket = CreateOrReuseBasket();
+      basket = CreateOrReuseBasket(basketnumber);
    }
    ++basketToUnload;
 

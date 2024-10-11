@@ -3729,12 +3729,12 @@ TTree* TTree::CopyTree(const char* selection, Option_t* option /* = 0 */, Long64
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a basket for this tree and given branch.
 
-TBasket* TTree::CreateBasket(TBranch* branch)
+TBasket* TTree::CreateBasket(TBranch* branch, Int_t ondiskSize)
 {
    if (!branch) {
       return nullptr;
    }
-   return new TBasket(branch->GetName(), GetName(), branch);
+   return new TBasket(branch->GetName(), GetName(), branch, ondiskSize);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
