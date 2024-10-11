@@ -2,11 +2,6 @@
 
 #include <ROOT/RNTupleProcessor.hxx>
 
-using ROOT::Experimental::RNTupleModel;
-using ROOT::Experimental::RNTupleProcessor;
-using ROOT::Experimental::RNTupleSourceSpec;
-using ROOT::Experimental::RNTupleWriter;
-
 TEST(RNTupleProcessor, Basic)
 {
    FileRaii fileGuard("test_ntuple_processor_basic.root");
