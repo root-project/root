@@ -1,5 +1,7 @@
 #include "ntuple_test.hxx"
 
+#include <TMemFile.h>
+
 TEST(RNTuple, View)
 {
    FileRaii fileGuard("test_ntuple_view.root");
@@ -270,4 +272,73 @@ TEST(RNTuple, ViewStandardIntegerTypes)
    EXPECT_EQ(7, reader->GetView<unsigned long>("ul")(0));
    EXPECT_EQ(8, reader->GetView<long long>("ll")(0));
    EXPECT_EQ(9, reader->GetView<unsigned long long>("ull")(0));
+}
+
+TEST(RNTuple, ViewFrameworkUse)
+{
+   TMemFile file("memfile.root", "RECREATE");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto ptrPx = model->MakeField<float>("px");
+      auto ptrPy = model->MakeField<float>("py");
+      model->MakeField<bool>("trigger");
+      auto ptrPz = model->MakeField<float>("pz");
+
+      // Ensure that we use RTFileRawFile
+      auto writer = RNTupleWriter::Append(std::move(model), "ntpl", file);
+
+      for (int i = 0; i < 50; ++i) {
+         for (int j = 0; j < 5; ++j) {
+            *ptrPx = i * 5 + j;
+            *ptrPy = 0.2 + i * 5 + j;
+            *ptrPz = 0.4 + i * 5 + j;
+            writer->Fill();
+         }
+         writer->CommitCluster();
+      }
+   }
+
+   auto ntpl = std::unique_ptr<RNTuple>(file.Get<RNTuple>("ntpl"));
+   auto reader = RNTupleReader::Open(*ntpl);
+   reader->EnableMetrics();
+
+   std::optional<ROOT::Experimental::RNTupleView<void>> viewPx;
+   std::optional<ROOT::Experimental::RNTupleView<void>> viewPy;
+   std::optional<ROOT::Experimental::RNTupleView<void>> viewPz;
+
+   float px, py, pz;
+   for (auto i : reader->GetEntryRange()) {
+      if (i > 1) {
+         if (!viewPx) {
+            viewPx = reader->GetView<void>("px", &px);
+         }
+         (*viewPx)(i);
+         EXPECT_FLOAT_EQ(i, px);
+      }
+
+      if (i > 3) {
+         if (!viewPy) {
+            viewPy = reader->GetView<void>("py", &py);
+         }
+         (*viewPy)(i);
+         EXPECT_FLOAT_EQ(0.2 + i, py);
+      }
+
+      if (i > 7) {
+         if (!viewPz) {
+            viewPz = reader->GetView<void>("pz", &pz);
+         }
+         (*viewPz)(i);
+         EXPECT_FLOAT_EQ(0.4 + i, pz);
+      }
+   }
+
+   // Ensure that cluster prefetching and smearing of read requests works
+   EXPECT_LT(reader->GetDescriptor().GetNClusters(),
+             reader->GetMetrics().GetCounter("RNTupleReader.RPageSourceFile.nClusterLoaded")->GetValueAsInt());
+   EXPECT_LT(reader->GetMetrics().GetCounter("RNTupleReader.RPageSourceFile.nReadV")->GetValueAsInt(),
+             reader->GetMetrics().GetCounter("RNTupleReader.RPageSourceFile.nPageRead")->GetValueAsInt());
+   EXPECT_LT(reader->GetMetrics().GetCounter("RNTupleReader.RPageSourceFile.nRead")->GetValueAsInt(),
+             reader->GetMetrics().GetCounter("RNTupleReader.RPageSourceFile.nPageRead")->GetValueAsInt());
 }
