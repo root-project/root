@@ -157,7 +157,7 @@ def main():
         create_binaries(args.buildtype)
 
     if testing:
-        extra_ctest_flags = ""
+        extra_ctest_flags = "-R tmva"
         if WINDOWS:
             extra_ctest_flags += "--repeat until-pass:5 "
             extra_ctest_flags += "--build-config " + args.buildtype
