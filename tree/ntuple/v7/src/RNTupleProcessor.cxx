@@ -18,7 +18,7 @@
 #include <ROOT/RFieldBase.hxx>
 
 std::unique_ptr<ROOT::Experimental::RNTupleProcessor>
-ROOT::Experimental::RNTupleProcessor::CreateChain(const std::vector<RNTupleSourceSpec> &ntuples,
+ROOT::Experimental::RNTupleProcessor::CreateChain(const std::vector<RNTupleOpenSpec> &ntuples,
                                                   std::unique_ptr<RNTupleModel> model)
 {
    return std::unique_ptr<RNTupleChainProcessor>(new RNTupleChainProcessor(ntuples, std::move(model)));
@@ -26,14 +26,14 @@ ROOT::Experimental::RNTupleProcessor::CreateChain(const std::vector<RNTupleSourc
 
 //------------------------------------------------------------------------------
 
-ROOT::Experimental::RNTupleChainProcessor::RNTupleChainProcessor(const std::vector<RNTupleSourceSpec> &ntuples,
+ROOT::Experimental::RNTupleChainProcessor::RNTupleChainProcessor(const std::vector<RNTupleOpenSpec> &ntuples,
                                                                  std::unique_ptr<RNTupleModel> model)
    : RNTupleProcessor(ntuples)
 {
    if (fNTuples.empty())
       throw RException(R__FAIL("at least one RNTuple must be provided"));
 
-   fPageSource = Internal::RPageSource::Create(fNTuples[0].fName, fNTuples[0].fLocation);
+   fPageSource = Internal::RPageSource::Create(fNTuples[0].fNTupleName, fNTuples[0].fStorage);
    fPageSource->Attach();
 
    if (fPageSource->GetNEntries() == 0) {
@@ -64,13 +64,12 @@ ROOT::Experimental::RNTupleChainProcessor::RNTupleChainProcessor(const std::vect
    ConnectFields();
 }
 
-ROOT::Experimental::NTupleSize_t
-ROOT::Experimental::RNTupleChainProcessor::ConnectNTuple(const RNTupleSourceSpec &ntuple)
+ROOT::Experimental::NTupleSize_t ROOT::Experimental::RNTupleChainProcessor::ConnectNTuple(const RNTupleOpenSpec &ntuple)
 {
    for (auto &fieldContext : fFieldContexts) {
       fieldContext.ResetConcreteField();
    }
-   fPageSource = Internal::RPageSource::Create(ntuple.fName, ntuple.fLocation);
+   fPageSource = Internal::RPageSource::Create(ntuple.fNTupleName, ntuple.fStorage);
    fPageSource->Attach();
    ConnectFields();
    return fPageSource->GetNEntries();

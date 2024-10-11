@@ -23,8 +23,8 @@
 
 // Import classes from the `Experimental` namespace for the time being.
 using ROOT::Experimental::RNTupleModel;
+using ROOT::Experimental::RNTupleOpenSpec;
 using ROOT::Experimental::RNTupleProcessor;
-using ROOT::Experimental::RNTupleSourceSpec;
 using ROOT::Experimental::RNTupleWriter;
 
 // Number of events to generate for each ntuple.
@@ -61,7 +61,7 @@ void Write(std::string_view ntupleName, std::string_view ntupleFileName)
    }
 }
 
-void Read(const std::vector<RNTupleSourceSpec> &ntuples)
+void Read(const std::vector<RNTupleOpenSpec> &ntuples)
 {
    auto c = new TCanvas("c", "RNTupleProcessor Example", 200, 10, 700, 500);
    TH1F hPx("h", "This is the px distribution", 100, -4, 4);
@@ -80,7 +80,7 @@ void Read(const std::vector<RNTupleSourceSpec> &ntuples)
       // The RNTupleProcessor provides some additional bookkeeping information. The local entry number is reset each
       // a new ntuple in the chain is opened for processing.
       if (processor->GetLocalEntryNumber() == 0) {
-         std::cout << "Processing " << ntuples.at(processor->GetCurrentNTupleNumber()).fName << " ("
+         std::cout << "Processing " << ntuples.at(processor->GetCurrentNTupleNumber()).fNTupleName << " ("
                    << processor->GetNEntriesProcessed() << " total entries processed so far)" << std::endl;
       }
 
@@ -96,12 +96,13 @@ void Read(const std::vector<RNTupleSourceSpec> &ntuples)
 
 void ntpl012_processor()
 {
-   // The ntuples to generate (for the purpose of this tutorial) and subsequently process.
-   std::vector<RNTupleSourceSpec> ntuples = {
+   // The ntuples to generate and subsequently process. The model of the first ntuple will be used to construct the
+   // entry used by the processor.
+   std::vector<RNTupleOpenSpec> ntuples = {
       {"ntuple1", "ntuple1.root"}, {"ntuple2", "ntuple2.root"}, {"ntuple3", "ntuple3.root"}};
 
    for (const auto &ntuple : ntuples) {
-      Write(ntuple.fName, ntuple.fLocation);
+      Write(ntuple.fNTupleName, ntuple.fStorage);
    }
 
    Read(ntuples);

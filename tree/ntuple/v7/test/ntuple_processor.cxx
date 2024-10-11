@@ -16,7 +16,7 @@ TEST(RNTupleProcessor, Basic)
       }
    }
 
-   std::vector<RNTupleSourceSpec> ntuples;
+   std::vector<RNTupleOpenSpec> ntuples;
    try {
       auto proc = RNTupleProcessor::CreateChain(ntuples);
       FAIL() << "creating a processor without at least one RNTuple should throw";
@@ -57,7 +57,7 @@ TEST(RNTupleProcessor, WithModel)
    auto model = RNTupleModel::Create();
    auto fldY = model->MakeField<float>("y");
 
-   std::vector<RNTupleSourceSpec> ntuples = {{"ntuple", fileGuard.GetPath()}};
+   std::vector<RNTupleOpenSpec> ntuples = {{"ntuple", fileGuard.GetPath()}};
 
    auto proc = RNTupleProcessor::CreateChain(ntuples, std::move(model));
    for (const auto &entry : *proc) {
@@ -89,7 +89,7 @@ TEST(RNTupleProcessor, WithBareModel)
 
    auto model = RNTupleModel::CreateBare();
    model->MakeField<float>("y");
-   std::vector<RNTupleSourceSpec> ntuples = {{"ntuple", fileGuard.GetPath()}};
+   std::vector<RNTupleOpenSpec> ntuples = {{"ntuple", fileGuard.GetPath()}};
 
    auto proc = RNTupleProcessor::CreateChain(ntuples, std::move(model));
    for (const auto &entry : *proc) {
@@ -132,7 +132,7 @@ TEST(RNTupleProcessor, SimpleChain)
       }
    }
 
-   std::vector<RNTupleSourceSpec> ntuples = {{"ntuple", fileGuard1.GetPath()}, {"ntuple", fileGuard2.GetPath()}};
+   std::vector<RNTupleOpenSpec> ntuples = {{"ntuple", fileGuard1.GetPath()}, {"ntuple", fileGuard2.GetPath()}};
 
    std::uint64_t nEntries = 0;
    auto proc = RNTupleProcessor::CreateChain(ntuples);
@@ -184,7 +184,7 @@ TEST(RNTupleProcessor, SimpleChainWithModel)
    auto model = RNTupleModel::Create();
    auto fldX = model->MakeField<float>("x");
 
-   std::vector<RNTupleSourceSpec> ntuples = {
+   std::vector<RNTupleOpenSpec> ntuples = {
       {"ntuple", fileGuard1.GetPath()}, {"ntuple", fileGuard2.GetPath()}, {"ntuple", fileGuard3.GetPath()}};
 
    auto proc = RNTupleProcessor::CreateChain(ntuples, std::move(model));
@@ -246,11 +246,11 @@ TEST(RNTupleProcessor, EmptyNTuples)
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard5.GetPath());
    }
 
-   std::vector<RNTupleSourceSpec> ntuples = {{"ntuple", fileGuard1.GetPath()},
-                                             {"ntuple", fileGuard2.GetPath()},
-                                             {"ntuple", fileGuard3.GetPath()},
-                                             {"ntuple", fileGuard4.GetPath()},
-                                             {"ntuple", fileGuard5.GetPath()}};
+   std::vector<RNTupleOpenSpec> ntuples = {{"ntuple", fileGuard1.GetPath()},
+                                           {"ntuple", fileGuard2.GetPath()},
+                                           {"ntuple", fileGuard3.GetPath()},
+                                           {"ntuple", fileGuard4.GetPath()},
+                                           {"ntuple", fileGuard5.GetPath()}};
 
    std::uint64_t nEntries = 0;
 
@@ -294,7 +294,7 @@ TEST(RNTupleProcessor, ChainUnalignedModels)
       ntuple->Fill();
    }
 
-   std::vector<RNTupleSourceSpec> ntuples = {{"ntuple", fileGuard1.GetPath()}, {"ntuple", fileGuard2.GetPath()}};
+   std::vector<RNTupleOpenSpec> ntuples = {{"ntuple", fileGuard1.GetPath()}, {"ntuple", fileGuard2.GetPath()}};
 
    auto proc = RNTupleProcessor::CreateChain(ntuples);
    auto entry = proc->begin();
