@@ -59,19 +59,30 @@ TEST(RNTuple, DirectAccessView)
 
    auto model = RNTupleModel::Create();
    auto fieldPt = model->MakeField<float>("pt", 42.0);
+   auto fieldVec = model->MakeField<std::vector<float>>("vec");
    {
       RNTupleWriteOptions opt;
       auto writer = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath(), opt);
       writer->Fill();
       writer->CommitCluster();
       *fieldPt = 137.0;
+      fieldVec->emplace_back(1.0);
+      fieldVec->emplace_back(2.0);
       writer->Fill();
    }
    auto reader = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
    auto viewPt = reader->GetDirectAccessView<float>("pt");
+   auto viewVec = reader->GetCollectionView("vec");
+   auto viewVecInner = viewVec.GetDirectAccessView<float>("_0");
 
    EXPECT_FLOAT_EQ(42.0, viewPt(0));
    EXPECT_FLOAT_EQ(137.0, viewPt(1));
+
+   EXPECT_EQ(0u, viewVec(0));
+   EXPECT_EQ(2u, viewVec(1));
+
+   EXPECT_FLOAT_EQ(1.0, viewVecInner(0));
+   EXPECT_FLOAT_EQ(2.0, viewVecInner(1));
 }
 
 TEST(RNTuple, VoidView)
@@ -122,13 +133,13 @@ TEST(RNTuple, MissingViewNames)
       auto badView = viewMuon.GetView<float>("badField");
       FAIL() << "missing field names should throw";
    } catch (const RException& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("no field named 'badField' in RNTuple 'myNTuple'"));
+      EXPECT_THAT(err.what(), testing::HasSubstr("no field named 'badField' in collection 'Muon'"));
    }
    try {
       auto badView = viewMuon.GetCollectionView("badC");
       FAIL() << "missing field names should throw";
    } catch (const RException& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("no field named 'badC' in RNTuple 'myNTuple'"));
+      EXPECT_THAT(err.what(), testing::HasSubstr("no field named 'badC' in collection 'Muon'"));
    }
 }
 
