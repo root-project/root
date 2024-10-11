@@ -1390,7 +1390,10 @@ Int_t TBranch::GetBasketAndFirst(TBasket *&basket, Long64_t &first,
       // make sure basket buffers are in memory.
       basket = (TBasket*) fBaskets.UncheckedAt(fReadBasket);
       if (!basket) {
-         basket = GetBasketImpl(fReadBasket, user_buffer);
+         if ( fTree->GetClusterPrefetch() )
+            basket = GetBasketImpl(fReadBasket, nullptr);
+         else
+            basket = GetBasketImpl(fReadBasket, user_buffer);
          if (!basket) {
             fCurrentBasket = nullptr;
             fFirstBasketEntry = -1;
@@ -1514,7 +1517,7 @@ Int_t TBranch::GetBulkEntries(Long64_t entry, TBuffer &user_buf)
       // The basket was already in memory and might (and might not) be backed by persistent
       // storage.
       R__ASSERT(result == fReadBasket);
-      if (fBasketSeek[fReadBasket]) {
+      if (fBasketSeek[fReadBasket] && !fTree->GetClusterPrefetch()) {
          // It is backed, so we can be destructive
          user_buf.SwapBuffer(*buf);
          fCurrentBasket = nullptr;
@@ -1631,7 +1634,7 @@ Int_t TBranch::GetEntriesSerialized(Long64_t entry, TBuffer &user_buf, TBuffer *
       // The basket was already in memory and might (and might not) be backed by persistent
       // storage.
       R__ASSERT(result == fReadBasket);
-      if (fBasketSeek[fReadBasket]) {
+      if (fBasketSeek[fReadBasket] && !fTree->GetClusterPrefetch()) {
          // It is backed, so we can be destructive
          user_buf.SwapBuffer(*buf);
          fCurrentBasket = nullptr;
