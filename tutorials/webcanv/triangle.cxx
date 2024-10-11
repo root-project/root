@@ -1,18 +1,23 @@
 /// \file
-/// \ingroup tutorial_webgui
-/// This is example how custom user class can be used in the TWebCanvas
+/// \ingroup tutorial_webcanv
+/// \notebook -js
+/// User class with custom JavaScript painter in the TWebCanvas
+///
 /// Custom class is just triangle which drawn on the frame with NDC coordinates
-/// `custom.mjs` provides JavaScript code for object painting and interactivity
+/// `triangle.mjs` provides JavaScript code for object painting and interactivity
 /// It is also possible to use such "simple" class without loading of custom JS code,
 /// but then it requires appropriate Paint() method and will miss interactivity in browser
 ///
 /// This macro must be executed with ACLiC as follows:
 ///
 /// ~~~{.cpp}
-/// .x custom.cxx+
+/// .x triangle.cxx+
 /// ~~~
 ///
+/// \macro_image (tcanvas_js)
 /// \macro_code
+///
+/// \author Sergey Linev
 ///
 /// \author Sergey Linev
 
@@ -62,7 +67,7 @@ class TTriangle : public TNamed, public TAttLine, public TAttFill {
    ClassDefOverride(TTriangle, 1);   // Example of triangle drawing in web canvas
 };
 
-void custom(bool ignore_jsmodule = false)
+void triangle(bool ignore_jsmodule = false)
 {
    if (ignore_jsmodule) {
       printf("Custom JS module will NOT be provided for TTriangle class\n");
@@ -70,28 +75,28 @@ void custom(bool ignore_jsmodule = false)
       printf("TTriangle::Paint() method will be used for object painting - also in web case\n");
    } else {
       #ifdef __CLING__
-         printf("Please run this script in compiled mode by running \".x custom.cxx+\"\n");
+         printf("Please run this script in compiled mode by running \".x triangle.cxx+\"\n");
          printf("Requires to properly generate dictionary for TTriangle class\n");
          return;
       #endif
 
       std::string fdir = __FILE__;
-      auto pos = fdir.find("custom.cxx");
-      if (pos > 0)
+      auto pos = fdir.find("triangle.cxx");
+      if (pos != std::string::npos)
          fdir.resize(pos);
       else
-         fdir = gROOT->GetTutorialsDir() + std::string("/webgui/custom/");
+         fdir = gROOT->GetTutorialsDir() + std::string("/webcanv/");
 
       // location required to load files
       // also it is name of modules path used in importmap
-      ROOT::RWebWindowsManager::AddServerLocation("triangle", fdir);
+      ROOT::RWebWindowsManager::AddServerLocation("tutorials_webcanv", fdir);
 
       // mark TTriangle as supported on the client
       TWebCanvas::AddCustomClass("TTriangle");
 
       // specify which extra module should be loaded,
-      // "triangle/" is registered path from server locations
-      TWebCanvas::SetCustomScripts("modules:triangle/custom.mjs");
+      // "tutorials_webcanv/" is registered path from server locations
+      TWebCanvas::SetCustomScripts("modules:tutorials_webcanv/triangle.mjs");
    }
 
    auto tr1 = new TTriangle("tr1", "first triangle");
@@ -117,6 +122,6 @@ void custom(bool ignore_jsmodule = false)
    c1->Add(tr3, "f");
 
    // test image saving with web browser, chrome or firefox are required
-   // c1->Update();
    // c1->SaveAs("triangle.png");
+   // c1->SaveAs("triangle.pdf");
 }
