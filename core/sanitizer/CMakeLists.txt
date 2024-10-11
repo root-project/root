@@ -1,4 +1,4 @@
-if(NOT asan)
+if(NOT asan OR MSVC)
   return()
 endif()
 
