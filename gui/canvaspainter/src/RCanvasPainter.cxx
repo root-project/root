@@ -49,9 +49,10 @@ RLogChannel &CanvasPainerLog() {
 }
 }
 
-/** \class RCanvasPainter
-\ingroup webdisplay
-New implementation of canvas painter, using RWebWindow
+/** \class ROOT::Experimental::RCanvasPainter
+\ingroup webwidgets
+
+\brief Implementation of painter for ROOT::Experimental::RCanvas, using RWebWindow
 */
 
 namespace ROOT {

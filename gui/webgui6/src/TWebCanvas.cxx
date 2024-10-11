@@ -98,6 +98,7 @@ public:
 
 /** \class TWebCanvas
 \ingroup webgui6
+\ingroup webwidgets
 
 Basic TCanvasImp ABI implementation for Web-based Graphics
 Provides painting of main ROOT classes in web browsers using [JSROOT](https://root.cern/js/)

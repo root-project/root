@@ -21,8 +21,9 @@
 
 /** \class TWebControlBar
 \ingroup webgui6
+\ingroup webwidgets
 
-Web-based implementation for TControlBar class
+\brief Web-based implementation for TControlBar class
 
 */
 

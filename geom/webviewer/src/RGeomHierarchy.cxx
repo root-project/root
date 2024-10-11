@@ -18,6 +18,14 @@ using namespace std::string_literals;
 
 using namespace ROOT;
 
+/** \class ROOT::RGeomHierarchy
+\ingroup webwidgets
+
+\brief Web-based %ROOT geometry hierarchy viewer
+*/
+
+
+
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
