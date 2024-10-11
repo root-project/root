@@ -337,6 +337,17 @@ private:
       return RNTupleCollectionView(fieldId, fieldName, source);
    }
 
+   DescriptorId_t GetFieldId(std::string_view fieldName)
+   {
+      auto descGuard = fSource->GetSharedDescriptorGuard();
+      auto fieldId = descGuard->FindFieldId(fieldName, fField.GetOnDiskId());
+      if (fieldId == kInvalidDescriptorId) {
+         throw RException(R__FAIL("no field named '" + std::string(fieldName) + "' in collection '" +
+                                  descGuard->GetQualifiedFieldName(fField.GetOnDiskId()) + "'"));
+      }
+      return fieldId;
+   }
+
 public:
    RNTupleCollectionView(const RNTupleCollectionView &other) = delete;
    RNTupleCollectionView(RNTupleCollectionView &&other) = default;
@@ -364,23 +375,20 @@ public:
    template <typename T>
    RNTupleView<T> GetView(std::string_view fieldName)
    {
-      auto fieldId = fSource->GetSharedDescriptorGuard()->FindFieldId(fieldName, fField.GetOnDiskId());
-      if (fieldId == kInvalidDescriptorId) {
-         throw RException(R__FAIL("no field named '" + std::string(fieldName) + "' in RNTuple '" +
-                                  fSource->GetSharedDescriptorGuard()->GetName() + "'"));
-      }
-      return RNTupleView<T>(RNTupleView<T>::CreateField(fieldId, fSource));
+      return RNTupleView<T>(RNTupleView<T>::CreateField(GetFieldId(fieldName), fSource));
+   }
+
+   /// Raises an exception if there is no field with the given name.
+   template <typename T>
+   RNTupleDirectAccessView<T> GetDirectAccessView(std::string_view fieldName)
+   {
+      return RNTupleDirectAccessView<T>(RNTupleDirectAccessView<T>::CreateField(GetFieldId(fieldName), fSource));
    }
 
    /// Raises an exception if there is no field with the given name.
    RNTupleCollectionView GetCollectionView(std::string_view fieldName)
    {
-      auto fieldId = fSource->GetSharedDescriptorGuard()->FindFieldId(fieldName, fField.GetOnDiskId());
-      if (fieldId == kInvalidDescriptorId) {
-         throw RException(R__FAIL("no field named '" + std::string(fieldName) + "' in RNTuple '" +
-                                  fSource->GetSharedDescriptorGuard()->GetName() + "'"));
-      }
-      return RNTupleCollectionView::Create(fieldId, fSource);
+      return RNTupleCollectionView::Create(GetFieldId(fieldName), fSource);
    }
 
    std::uint64_t operator()(NTupleSize_t globalIndex)
