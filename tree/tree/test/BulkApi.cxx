@@ -28,6 +28,8 @@ protected:
       // Otherwise, we keep with the current ROOT defaults.
       auto tree = new TTree("T", "A ROOT tree of floats.");
       float f = 2;
+      // Create many clusters
+      tree->SetAutoFlush(80000);
       tree->Branch("myFloat", &f, 320000, 1);
       for (Long64_t ev = 0; ev < fEventCount; ev++) {
          tree->Fill();
