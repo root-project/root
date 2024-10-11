@@ -381,8 +381,8 @@ TEST(MiniFile, MultiKeyBlob)
 
       auto rawFile = RRawFile::Create(fileGuard.GetPath());
       auto reader = RMiniFileReader{rawFile.get()};
-      // Force reader to read the max key size
-      (void)reader.GetNTuple("ntpl");
+      auto ntuple = reader.GetNTuple("ntpl").Unwrap();
+      reader.SetMaxKeySize(ntuple.GetMaxKeySize());
       reader.ReadBuffer(data.get(), dataSize, blobOffset);
 
       EXPECT_EQ(data[0], 0x99);
@@ -419,8 +419,8 @@ TEST(MiniFile, MultiKeyBlob_ExactlyMax)
 
       auto rawFile = RRawFile::Create(fileGuard.GetPath());
       auto reader = RMiniFileReader{rawFile.get()};
-      // Force reader to read the max key size
-      (void)reader.GetNTuple("ntpl");
+      auto ntuple = reader.GetNTuple("ntpl").Unwrap();
+      reader.SetMaxKeySize(ntuple.GetMaxKeySize());
       rawFile->ReadAt(data.get(), dataSize, blobOffset);
 
       // If we didn't split the key, we expect to find all zeroes at the end of `data`.
@@ -458,8 +458,8 @@ TEST(MiniFile, MultiKeyBlob_ExactlyTwo)
 
       auto rawFile = RRawFile::Create(fileGuard.GetPath());
       auto reader = RMiniFileReader{rawFile.get()};
-      // Force reader to read the max key size
-      (void)reader.GetNTuple("ntpl");
+      auto ntuple = reader.GetNTuple("ntpl").Unwrap();
+      reader.SetMaxKeySize(ntuple.GetMaxKeySize());
 
       rawFile->ReadAt(data.get(), dataSize, blobOffset);
       // If the blob was split into exactly two keys, there should be only one pointer to the next chunk.
@@ -502,8 +502,8 @@ TEST(MiniFile, MultiKeyBlob_SmallKey)
 
       auto rawFile = RRawFile::Create(fileGuard.GetPath());
       auto reader = RMiniFileReader{rawFile.get()};
-      // Force reader to read the max key size
-      (void)reader.GetNTuple("ntpl");
+      auto ntuple = reader.GetNTuple("ntpl").Unwrap();
+      reader.SetMaxKeySize(ntuple.GetMaxKeySize());
       reader.ReadBuffer(data.get(), dataSize, blobOffset);
 
       EXPECT_EQ(data[0], 0x99);
