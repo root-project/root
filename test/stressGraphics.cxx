@@ -98,6 +98,7 @@ Int_t     gPNGErrNb[kMaxNumTests];
 Int_t     gPS2RefNb[kMaxNumTests];
 Int_t     gPS2ErrNb[kMaxNumTests];
 Bool_t    gWebMode = kFALSE;
+Bool_t    gSkip3D = kFALSE;
 Bool_t    gOptionR = kFALSE;
 Bool_t    gOptionK = kFALSE;
 TH2F     *gH2 = nullptr;
@@ -2717,20 +2718,28 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
    waves         ();
    print_reports ();
 
-   start_block("High Level 3D Primitives", kTRUE);
-   options2d1    ();
-   options2d2    ();
-   options2d3    ();
-   options2d4    ();
-   options2d5    ();
-   earth         ();
-   tgraph2d1     ();
-   tgraph2d2     ();
-   tgraph2d3     ();
-   print_reports ();
+   if (gSkip3D) {
+      gTestNum += 9;
+   } else {
+      start_block("High Level 3D Primitives", kTRUE);
+      options2d1    ();
+      options2d2    ();
+      options2d3    ();
+      options2d4    ();
+      options2d5    ();
+      earth         ();
+      tgraph2d1     ();
+      tgraph2d2     ();
+      tgraph2d3     ();
+      print_reports ();
+   }
 
    start_block("complex drawing and TPad");
-   ntuple1       ();
+   if (gSkip3D) {
+      gTestNum += 1;
+   } else {
+      ntuple1       ();
+   }
    quarks        ();
    timage        ();
    zoomtf1       ();
@@ -2811,6 +2820,8 @@ int main(int argc, char *argv[])
          keep = kTRUE;
       else if (strstr(argv[i], "-p="))
          filePrefix = argv[i]+3;
+      else if (strstr(argv[i], "-skip3d"))
+         gSkip3D = kTRUE;
       else if (!strcmp(argv[i], "-h")) {
          printf("Usage: stressGraphics [-h] [-r] [-k] [-p=prefix] [--web]\n");
          printf("Options:\n");
@@ -2822,6 +2833,8 @@ int main(int argc, char *argv[])
          printf("       By default output files for passed tests are deleted.\n");
          printf("\n");
          printf("  -p=prefix: Provide custom prefix for generated files, default \"sg\"\n");
+         printf("\n");
+         printf("  -skip3d : skip 3D testing.\n");
          printf("\n");
          printf("  -v : increase verbosity.\n");
          printf("\n");
