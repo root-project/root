@@ -1,6 +1,8 @@
 /// \file
 /// \ingroup tutorial_webgui
-///  This tutorial demonstrates how three.js model for geometry can be created.
+/// \ingroup webwidgets
+/// The tutorial demonstrates how three.js model for geometry can be created and displayed.
+///
 ///  In server.cxx one uses RGeomDescription class from geometry viewer, which produces
 ///  JSON data with all necessary information. Then RWebWindow is started and this information provided.
 ///  In client.html one uses **build** function to create Object3D with geometry

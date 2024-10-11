@@ -1,8 +1,10 @@
 /// \file
 /// \ingroup tutorial_webgui
-///  This program demonstrates minimal server/client code for working with RWebWindow class
-///  File server.cxx shows how RWebWindow can be created and used
-///  In client.html simple client code is provided.
+/// \ingroup webwidgets
+/// Minimal server/client code for working with RWebWindow class
+///
+/// File server.cxx shows how RWebWindow can be created and used
+/// In client.html simple client code is provided.
 ///
 /// \macro_code
 ///

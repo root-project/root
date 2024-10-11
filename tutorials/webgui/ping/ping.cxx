@@ -1,9 +1,11 @@
 /// \file
 /// \ingroup tutorial_webgui
-///  This is test suite for RWebWindow communication performance
-///  On the first place latency of round-trip (ping-pong) packet is measured
-///  File ping.cxx implements server-side code of RWebWindow
-///  In ping.html client code plus visualization is provided.
+/// \ingroup webwidgets
+/// Test suite for RWebWindow communication performance
+///
+/// On the first place latency of round-trip (ping-pong) packet is measured
+/// File ping.cxx implements server-side code of RWebWindow
+/// In ping.html client code plus visualization is provided.
 ///
 /// \macro_code
 ///

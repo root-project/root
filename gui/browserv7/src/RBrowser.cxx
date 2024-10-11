@@ -263,6 +263,8 @@ using namespace ROOT;
 
 /** \class ROOT::RBrowser
 \ingroup rbrowser
+\ingroup webwidgets
+
 \brief Web-based %ROOT files and objects browser
 
 \image html v7_rbrowser.png
