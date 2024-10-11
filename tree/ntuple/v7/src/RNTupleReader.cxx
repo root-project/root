@@ -113,7 +113,7 @@ ROOT::Experimental::RNTupleReader::Open(std::unique_ptr<RNTupleModel> model, con
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleReader>
-ROOT::Experimental::RNTupleReader::OpenFriends(std::span<ROpenSpec> ntuples, const RNTupleReadOptions &options)
+ROOT::Experimental::RNTupleReader::OpenFriends(std::span<RNTupleOpenSpec> ntuples, const RNTupleReadOptions &options)
 {
    std::vector<std::unique_ptr<Internal::RPageSource>> sources;
    sources.reserve(ntuples.size());

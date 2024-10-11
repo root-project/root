@@ -23,7 +23,7 @@ TEST(RPageStorageFriends, Null)
 
 TEST(RPageStorageFriends, Empty)
 {
-   std::span<RNTupleReader::ROpenSpec> ntuples;
+   std::span<RNTupleOpenSpec> ntuples;
    auto reader = RNTupleReader::OpenFriends(ntuples);
    EXPECT_EQ(0u, reader->GetNEntries());
    EXPECT_EQ(0u, reader->GetModel().GetFieldZero().GetOnDiskId());
@@ -68,9 +68,7 @@ TEST(RPageStorageFriends, Basic)
       ntuple->Fill();
    }
 
-   std::vector<RNTupleReader::ROpenSpec> friends{
-      {"ntpl1", fileGuard1.GetPath()},
-      {"ntpl2", fileGuard2.GetPath()} };
+   std::vector<RNTupleOpenSpec> friends{{"ntpl1", fileGuard1.GetPath()}, {"ntpl2", fileGuard2.GetPath()}};
    auto ntuple = RNTupleReader::OpenFriends(friends);
    EXPECT_EQ(3u, ntuple->GetNEntries());
 
