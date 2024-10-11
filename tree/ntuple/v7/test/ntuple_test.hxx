@@ -15,6 +15,7 @@
 #include <ROOT/RNTupleReadOptions.hxx>
 #include <ROOT/RNTupleReader.hxx>
 #include <ROOT/RNTupleParallelWriter.hxx>
+#include <ROOT/RNTupleProcessor.hxx>
 #include <ROOT/RNTupleSerialize.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RNTupleWriteOptions.hxx>
@@ -100,7 +101,9 @@ using ENTupleMergingMode = ROOT::Experimental::Internal::ENTupleMergingMode;
 using RNTupleModel = ROOT::Experimental::RNTupleModel;
 using RNTuplePlainCounter = ROOT::Experimental::Detail::RNTuplePlainCounter;
 using RNTuplePlainTimer = ROOT::Experimental::Detail::RNTuplePlainTimer;
+using RNTupleProcessor = ROOT::Experimental::RNTupleProcessor;
 using RNTupleSerializer = ROOT::Experimental::Internal::RNTupleSerializer;
+using RNTupleSourceSpec = ROOT::Experimental::RNTupleSourceSpec;
 using RPage = ROOT::Experimental::Internal::RPage;
 using RPageAllocatorHeap = ROOT::Experimental::Internal::RPageAllocatorHeap;
 using RPagePool = ROOT::Experimental::Internal::RPagePool;
