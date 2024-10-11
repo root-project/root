@@ -23,9 +23,9 @@
 
 // Import classes from the `Experimental` namespace for the time being.
 using ROOT::Experimental::RNTupleModel;
+using ROOT::Experimental::RNTupleProcessor;
+using ROOT::Experimental::RNTupleSourceSpec;
 using ROOT::Experimental::RNTupleWriter;
-using ROOT::Experimental::Internal::RNTupleProcessor;
-using ROOT::Experimental::Internal::RNTupleSourceSpec;
 
 // Number of events to generate for each ntuple.
 constexpr int kNEvents = 10000;
