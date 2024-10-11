@@ -859,15 +859,6 @@ bool RWebDisplayHandle::CheckIfCanProduceImages(RWebDisplayArgs &args)
          }
       }
 
-#ifdef _MSC_VER
-      if (!detected) {
-         auto &h3 = FindCreator("edge", "ChromeCreator");
-         if (h3 && h3->IsActive()) {
-            args.SetBrowserKind(RWebDisplayArgs::kEdge);
-            detected = true;
-         }
-      }
-#endif
       return detected;
    }
 
