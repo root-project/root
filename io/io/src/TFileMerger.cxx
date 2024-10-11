@@ -545,7 +545,7 @@ Bool_t TFileMerger::MergeOne(TDirectory *target, TList *sourcelist, Int_t type, 
 
    std::map<std::tuple<std::string, std::string, std::string>, TDirectory*> dirtodelete;
    auto getDirectory = [&dirtodelete](TDirectory *parent, const char *name, const TString &pathname) {
-      auto mapkey = std::make_tuple(parent->GetName(), std::string{name}, std::string{pathname});
+      auto mapkey = std::make_tuple(parent->GetName(), name, pathname.Data());
       auto result = dirtodelete.find(mapkey);
       if (result != dirtodelete.end()) {
          return result->second;
