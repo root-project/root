@@ -8,9 +8,27 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-import importlib
+# First, check for presence of important dependencies
 import os
+import shlex
 import sys
+import subprocess
+import textwrap
+
+try:
+    # Mimic what cling does to find standard headers include path
+    cmd = shlex.split('c++ -xc++ -E -v /dev/null')
+    env = os.environ
+    env.update({'LC_ALL': 'C'})
+    subprocess.run(cmd, env=env, check=True,
+                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+except Exception as e:
+    msg = (
+        "Could not find a C++ compiler when importing ROOT. Make sure a C++ compiler as well as the C++ standard "
+        "libraries are installed. For example, run `[apt,dnf] install g++` or follow similar instructions for your "
+        "distribution. For more info, visit https://root.cern/install/dependencies"
+    )
+    raise ImportError(textwrap.fill(msg, width=80)) from e
 
 # Prevent cppyy's check for the PCH
 os.environ["CLING_STANDARD_PCH"] = "none"
