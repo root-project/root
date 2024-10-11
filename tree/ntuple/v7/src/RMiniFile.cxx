@@ -785,8 +785,6 @@ ROOT::Experimental::Internal::RMiniFileReader::GetNTupleProper(std::string_view 
       return R__FAIL("RNTuple anchor checksum mismatch");
    }
 
-   fMaxKeySize = ntuple->fMaxKeySize;
-
    return CreateAnchor(ntuple->fVersionEpoch, ntuple->fVersionMajor, ntuple->fVersionMinor, ntuple->fVersionPatch,
                        ntuple->fSeekHeader, ntuple->fNBytesHeader, ntuple->fLenHeader, ntuple->fSeekFooter,
                        ntuple->fNBytesFooter, ntuple->fLenFooter, ntuple->fMaxKeySize);
@@ -815,8 +813,6 @@ ROOT::Experimental::Internal::RMiniFileReader::GetNTupleBare(std::string_view nt
    auto checksum = XXH3_64bits(ntuple.GetPtrCkData(), ntuple.GetSizeCkData());
    if (checksum != static_cast<uint64_t>(onDiskChecksum))
       return R__FAIL("RNTuple bare file: anchor checksum mismatch");
-
-   fMaxKeySize = ntuple.fMaxKeySize;
 
    return CreateAnchor(ntuple.fVersionEpoch, ntuple.fVersionMajor, ntuple.fVersionMinor, ntuple.fVersionPatch,
                        ntuple.fSeekHeader, ntuple.fNBytesHeader, ntuple.fLenHeader, ntuple.fSeekFooter,

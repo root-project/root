@@ -315,9 +315,8 @@ void ROOT::Experimental::Internal::RPageSourceFile::LoadStructureImpl()
    // Otherwise, the page source was created by OpenFromAnchor()
    if (!fAnchor) {
       fAnchor = fReader.GetNTuple(fNTupleName).Unwrap();
-   } else {
-      fReader.SetMaxKeySize(fAnchor->GetMaxKeySize());
    }
+   fReader.SetMaxKeySize(fAnchor->GetMaxKeySize());
 
    // TOOD(jblomer): can the epoch check be factored out across anchors?
    if (fAnchor->GetVersionEpoch() != RNTuple::kVersionEpoch) {
