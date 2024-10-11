@@ -56,6 +56,12 @@ elseif(MSVC)
     string(REPLACE "-MDd" "-MD" CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
   endif()
 
+  if(asan)
+    set(ASAN_EXTRA_CXX_FLAGS /fsanitize=address /wd5072)
+    set(ASAN_EXTRA_SHARED_LINKER_FLAGS "/InferASanLibs /incremental:no /DEBUG")
+    set(ASAN_EXTRA_EXE_LINKER_FLAGS "/InferASanLibs /incremental:no /DEBUG")
+  endif()
+
   if(CMAKE_PROJECT_NAME STREQUAL ROOT)
     set(CMAKE_CXX_FLAGS "-nologo -I${CMAKE_SOURCE_DIR}/cmake/win -Zc:__cplusplus -std:c++${CMAKE_CXX_STANDARD} -GR -FIw32pragma.h -FIsehmap.h ${BLDCXXFLAGS} -EHsc -W3 -wd4141 -wd4291 -wd4244 -wd4049 -wd4146 -wd4250 -wd4624 ${ARCH} -D_XKEYCHECK_H -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS")
     set(CMAKE_C_FLAGS   "-nologo -I${CMAKE_SOURCE_DIR}/cmake/win -FIw32pragma.h -FIsehmap.h -GR ${BLDCFLAGS} -EHsc -W3 ${ARCH} -DNOMINMAX")

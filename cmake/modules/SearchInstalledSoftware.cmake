@@ -1820,10 +1820,17 @@ if (builtin_gtest)
     ${_gtest_byproduct_binary_dir}/lib/libgmock_main.a
     )
 
+  set(GTEST_CXX_FLAGS "${ROOT_EXTERNAL_CXX_FLAGS}")
   if(MSVC)
     set(gtestbuild "Release")
     if(winrtdebug)
       set(gtestbuild "Debug")
+    endif()
+    if(asan)
+      if(NOT winrtdebug)
+        set(gtestbuild "RelWithDebInfo")
+      endif()
+      set(GTEST_CXX_FLAGS "${ROOT_EXTERNAL_CXX_FLAGS} ${ASAN_EXTRA_CXX_FLAGS}")
     endif()
     set(EXTRA_GTEST_OPTS
       -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG:PATH=${_gtest_byproduct_binary_dir}/lib/
@@ -1854,7 +1861,7 @@ if (builtin_gtest)
                   -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
                   -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
                   -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-                  -DCMAKE_CXX_FLAGS=${ROOT_EXTERNAL_CXX_FLAGS}
+                  -DCMAKE_CXX_FLAGS=${GTEST_CXX_FLAGS}
                   -DCMAKE_AR=${CMAKE_AR}
                   -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
                   ${EXTRA_GTEST_OPTS}
