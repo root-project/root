@@ -639,7 +639,7 @@ TEST(RNTupleShow, Friends)
       writer->Fill();
    }
 
-   std::vector<RNTupleReader::ROpenSpec> friends = {{"ntpl1", fileGuard1.GetPath()}, {"ntpl2", fileGuard2.GetPath()}};
+   std::vector<RNTupleOpenSpec> friends = {{"ntpl1", fileGuard1.GetPath()}, {"ntpl2", fileGuard2.GetPath()}};
    auto ntuple = RNTupleReader::OpenFriends(friends);
    std::ostringstream os;
    ntuple->Show(0, os);

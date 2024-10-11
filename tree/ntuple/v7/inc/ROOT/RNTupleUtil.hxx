@@ -22,6 +22,7 @@
 #include <variant>
 
 #include <ROOT/RLogger.hxx>
+#include <ROOT/RNTupleReadOptions.hxx>
 
 namespace ROOT {
 namespace Experimental {
@@ -226,6 +227,15 @@ struct RNTupleLocator {
    {
       return std::get<T>(fPosition);
    }
+};
+
+/// Used to specify the underlying RNTuples in RNTupleProcessor and RNTupleReader::OpenFriends()
+struct RNTupleOpenSpec {
+   std::string fNTupleName;
+   std::string fStorage;
+   RNTupleReadOptions fOptions;
+
+   RNTupleOpenSpec(std::string_view n, std::string_view s) : fNTupleName(n), fStorage(s) {}
 };
 
 namespace Internal {

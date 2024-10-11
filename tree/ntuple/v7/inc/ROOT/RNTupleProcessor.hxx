@@ -32,15 +32,6 @@
 namespace ROOT {
 namespace Experimental {
 
-/// Helper type representing the name and storage location of an RNTuple.
-struct RNTupleSourceSpec {
-   std::string fName;
-   std::string fLocation;
-
-   RNTupleSourceSpec() = default;
-   RNTupleSourceSpec(std::string_view n, std::string_view s) : fName(n), fLocation(s) {}
-};
-
 // clang-format off
 /**
 \class ROOT::Experimental::RNTupleProcessor
@@ -52,9 +43,9 @@ Example usage (see ntpl012_processor.C for a full example):
 ~~~{.cpp}
 #include <ROOT/RNTupleProcessor.hxx>
 using ROOT::Experimental::RNTupleProcessor;
-using ROOT::Experimental::RNTupleSourceSpec;
+using ROOT::Experimental::RNTupleOpenSpec;
 
-std::vector<RNTupleSourceSpec> ntuples = {{"ntuple1", "ntuple1.root"}, {"ntuple2", "ntuple2.root"}};
+std::vector<RNTupleOpenSpec> ntuples = {{"ntuple1", "ntuple1.root"}, {"ntuple2", "ntuple2.root"}};
 auto processor = RNTupleProcessor::CreateChain(ntuples);
 
 for (const auto &entry : processor) {
@@ -62,7 +53,7 @@ for (const auto &entry : processor) {
 }
 ~~~
 
-An RNTupleProcessor is created by providing one or more RNTupleSourceSpecs, each of which contains the name and storage
+An RNTupleProcessor is created by providing one or more RNTupleOpenSpecs, each of which contains the name and storage
 location of a single RNTuple. The RNTuples are processed in the order in which they were provided.
 
 The RNTupleProcessor constructor also (optionally) accepts an RNTupleModel, which determines which fields should be
@@ -108,7 +99,7 @@ protected:
       void SetConcreteField() { fConcreteField = fProtoField->Clone(fProtoField->GetFieldName()); }
    };
 
-   std::vector<RNTupleSourceSpec> fNTuples;
+   std::vector<RNTupleOpenSpec> fNTuples;
    std::unique_ptr<REntry> fEntry;
    std::unique_ptr<Internal::RPageSource> fPageSource;
    std::vector<RFieldContext> fFieldContexts;
@@ -120,13 +111,13 @@ protected:
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Connect an RNTuple for processing.
    ///
-   /// \param[in] ntuple The RNTupleSourceSpec describing the RNTuple to connect.
+   /// \param[in] ntuple The RNTupleOpenSpec describing the RNTuple to connect.
    ///
    /// \return The number of entries in the newly-connected RNTuple.
    ///
    /// Creates and attaches new page source for the specified RNTuple, and connects the fields that are known by
    /// the processor to it.
-   virtual NTupleSize_t ConnectNTuple(const RNTupleSourceSpec &ntuple) = 0;
+   virtual NTupleSize_t ConnectNTuple(const RNTupleOpenSpec &ntuple) = 0;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Creates and connects concrete fields to the current page source, based on the proto-fields.
@@ -142,7 +133,7 @@ protected:
    /// is connected or the iterator has reached the end.
    virtual NTupleSize_t Advance() = 0;
 
-   RNTupleProcessor(const std::vector<RNTupleSourceSpec> &ntuples)
+   RNTupleProcessor(const std::vector<RNTupleOpenSpec> &ntuples)
       : fNTuples(ntuples), fNEntriesProcessed(0), fCurrentNTupleNumber(0), fLocalEntryNumber(0)
    {
    }
@@ -243,7 +234,7 @@ public:
    ///
    /// \return A pointer to the newly created RNTupleProcessor.
    static std::unique_ptr<RNTupleProcessor>
-   CreateChain(const std::vector<RNTupleSourceSpec> &ntuples, std::unique_ptr<RNTupleModel> model = nullptr);
+   CreateChain(const std::vector<RNTupleOpenSpec> &ntuples, std::unique_ptr<RNTupleModel> model = nullptr);
 };
 
 // clang-format off
@@ -257,7 +248,7 @@ class RNTupleChainProcessor : public RNTupleProcessor {
    friend class RNTupleProcessor;
 
 private:
-   NTupleSize_t ConnectNTuple(const RNTupleSourceSpec &ntuple) final;
+   NTupleSize_t ConnectNTuple(const RNTupleOpenSpec &ntuple) final;
    void ConnectFields() final;
    NTupleSize_t Advance() final;
 
@@ -270,7 +261,7 @@ private:
    /// specified, it is created from the descriptor of the first RNTuple specified in `ntuples`.
    ///
    /// RNTuples are processed in the order in which they are specified.
-   RNTupleChainProcessor(const std::vector<RNTupleSourceSpec> &ntuples, std::unique_ptr<RNTupleModel> model = nullptr);
+   RNTupleChainProcessor(const std::vector<RNTupleOpenSpec> &ntuples, std::unique_ptr<RNTupleModel> model = nullptr);
 };
 
 } // namespace Experimental
