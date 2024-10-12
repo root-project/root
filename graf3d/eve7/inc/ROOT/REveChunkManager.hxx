@@ -17,6 +17,7 @@
 #include "TArrayC.h"
 
 #include <vector>
+#include <set>
 
 namespace ROOT {
 namespace Experimental {
