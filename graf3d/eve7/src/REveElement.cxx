@@ -117,6 +117,44 @@ REveElement::~REveElement()
    }
 }
 
+// MIR execution variables and helper functions
+
+thread_local REveElement *REveElement::stlMirAlpha = nullptr;
+thread_local int          REveElement::stlMirError = 0;
+thread_local std::string  REveElement::stlMirErrorString;
+
+void REveElement::ClearMirContext() {
+   stlMirAlpha = nullptr;
+   stlMirError = 0;
+   stlMirErrorString.clear();
+}
+
+void REveElement::SetMirContext(REveElement *el) {
+   stlMirAlpha = el;
+}
+
+void REveElement::SetMirError(int error, std::string_view err_str) {
+   stlMirError = error;
+   if ( ! err_str.empty()) {
+      AppendMirErrorString(err_str);
+   }
+}
+
+void REveElement::AppendMirErrorString(std::string_view err_str) {
+   if (stlMirErrorString.empty()) {
+      stlMirErrorString = err_str;
+   } else {
+      std::string s;
+      s.reserve(stlMirErrorString.size() + err_str.size() + 4);
+      s = err_str;
+      s += " :: ";
+      s += stlMirErrorString;
+      stlMirErrorString.swap(s);
+   }
+}
+
+// Element IDs etc
+
 ElementId_t REveElement::get_mother_id() const
 {
    return fMother ? fMother->GetElementId() : 0;

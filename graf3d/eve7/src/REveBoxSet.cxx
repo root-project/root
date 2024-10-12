@@ -314,7 +314,7 @@ void REveBoxSet::ComputeBBox()
 
       default:
       {
-         throw(eH + "unsupported box-type.");
+         throw eH + "unsupported box-type.";
       }
 
    } // end switch box-type
@@ -354,7 +354,7 @@ Int_t REveBoxSet::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
            N_tex = 4*N;
            break;
          default:
-           std::cout << "Ereor:: Unhandled instanced case\n";
+           R__LOG_ERROR(REveLog()) << "REveBoxSet::WriteCoreJson Unhandled instancing type.";
       }
 
       REveRenderData::CalcTextureSize(N_tex, 4, fTexX, fTexY);
@@ -367,7 +367,7 @@ Int_t REveBoxSet::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
       j["defHeight"] = fDefHeight;
       j["defDepth"] = fDefDepth;
 
-      // std::cout << "TEXTURE SIZE X " << fTexX << "\n";
+      // printf("TEXTURE SIZE X=%d, Y=%d\n", fTexX, fTexY);
    }
 
    // AMT:: the base class WroteCoreJson needs to be called after

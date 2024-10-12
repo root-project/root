@@ -108,15 +108,6 @@ public:
 
    // --------------------------------
 
-   void OnMouseOver(TObject* obj, UInt_t state);
-   void OnReMouseOver(TObject* obj, UInt_t state);
-   void OnUnMouseOver(TObject* obj, UInt_t state);
-   void OnClicked(TObject *obj, UInt_t button, UInt_t state);
-   void OnReClicked(TObject *obj, UInt_t button, UInt_t state);
-   void OnUnClicked(TObject *obj, UInt_t button, UInt_t state);
-
-   // --------------------------------
-
    Bool_t  GetShowTooltip()     const { return fShowTooltip; }
    void    SetShowTooltip(Bool_t x)   { fShowTooltip = x; }
 
