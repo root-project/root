@@ -368,6 +368,8 @@ jobs:
             overrides: ["imt=Off", "LLVM_ENABLE_ASSERTIONS=On", "CMAKE_BUILD_TYPE=Debug"]
           - image: ubuntu2404
             overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_BUILD_TYPE=Debug"]
+          - image: ubuntu2410
+            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_BUILD_TYPE=Debug"]
           - image: debian125
             overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
           # Special builds
