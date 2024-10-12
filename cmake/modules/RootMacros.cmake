@@ -1861,9 +1861,10 @@ function(ROOT_ADD_GTEST test_suite)
     set(extra_command --gtest_repeat=${ARG_REPEATS} --gtest_break_on_failure)
   endif()
 
-  ROOT_PATH_TO_STRING(mangled_name ${test_suite} PATH_SEPARATOR_REPLACEMENT "-")
+  ROOT_PATH_TO_STRING(name_with_path ${test_suite} PATH_SEPARATOR_REPLACEMENT "-")
+  string(REPLACE "-test-" "-" clean_name_with_path ${name_with_path})
   ROOT_ADD_TEST(
-    gtest${mangled_name}
+    gtest${clean_name_with_path}
     COMMAND ${test_suite} ${extra_command}
     WORKING_DIR ${CMAKE_CURRENT_BINARY_DIR}
     COPY_TO_BUILDDIR "${ARG_COPY_TO_BUILDDIR}"
@@ -1941,7 +1942,9 @@ function(ROOT_ADD_PYUNITTEST name file)
     list(APPEND labels python_runtime_deps)
   endif()
 
-  ROOT_ADD_TEST(pyunittests-${good_name}
+  ROOT_PATH_TO_STRING(name_with_path ${good_name} PATH_SEPARATOR_REPLACEMENT "-")
+  string(REPLACE "-test-" "-" clean_name_with_path ${name_with_path})
+  ROOT_ADD_TEST(pyunittests${clean_name_with_path}
               COMMAND ${Python3_EXECUTABLE} -B -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR}/${file_dir} -p ${file_name} -v
               ENVIRONMENT ${ROOT_ENV} ${ARG_ENVIRONMENT}
               LABELS ${labels}
