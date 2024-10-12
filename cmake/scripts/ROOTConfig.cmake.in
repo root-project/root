@@ -112,10 +112,11 @@ if (NOT ROOT_builtin_nlohmannjson_FOUND)
           set(_need_json TRUE)
        endif()
     endforeach()
-  else()
-    # if components not specified - suppose all
-    set(_need_json TRUE)
   endif()
+  # If components are not specified, we assume json is not required.
+  # Propagating the dependency on nlohmann_json just for the sake of one small
+  # ROOT feature that might be used is unreasonable. We can expect from the
+  # users that link against ROOTEve to list this component explicitly.
 endif()
 
 if(_need_json)
