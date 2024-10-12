@@ -324,6 +324,9 @@ def _bindFunctionOrPdf(name, func, is_rooabspdf, *variables):
     """
     Wrap an arbitrary function defined in Python or C++.
 
+    If you're wrapping a Python function, it must take numpy arrays of type
+    float64 as input and output types.
+
     Parameters:
     - name (str): Name of the function.
     - func (callable): Function that defines the function.
@@ -334,6 +337,7 @@ def _bindFunctionOrPdf(name, func, is_rooabspdf, *variables):
     """
 
     import ROOT
+    import numpy as np
 
     # use the C++ version if dealing with C++ function
     if "cppyy" in repr(type(func)):
@@ -342,11 +346,26 @@ def _bindFunctionOrPdf(name, func, is_rooabspdf, *variables):
     base_class_name = "RooAbsPdf" if is_rooabspdf else "RooAbsReal"
 
     class RooPyBindDerived(ROOT.RooFit.Detail.RooPyBind[base_class_name]):
+
+        _outputBuffer = None
+
         def __init__(self, name, title, *variables):
             super(RooPyBindDerived, self).__init__(name, title, ROOT.RooArgList(*variables))
 
         def evaluate(self):
-            return func(*(v.getVal() for v in self.varlist()))
+            inputs = [np.array([v.getVal()]) for v in self.varlist()]
+            return func(*inputs)[0]
+
+        def doEvalPy(self, ctx):
+
+            def span_to_numpy(sp):
+                return np.frombuffer(sp.data(), dtype=np.float64, count=sp.size())
+
+            inputs = [span_to_numpy(ctx.at(v)) for v in self.varlist()]
+            if self._outputBuffer is None:
+                self._outputBuffer = np.zeros(ctx.output().size())
+            self._outputBuffer[:] = func(*inputs)
+            return self._outputBuffer
 
         def clone(self, newname=False):
             cl = RooPyBindDerived(newname if newname else self.GetName(), self.GetTitle(), self.varlist())
