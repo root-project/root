@@ -143,10 +143,9 @@ std::string REveDataColumn::GetFunctionExpressionString() const
 
    std::stringstream s;
    s  << " *((std::function<" << rtyp << "(" << fClassType->GetName() << "*)>*)"
-     << std::hex << std::showbase << (size_t)fooptr
-     << ") = [](" << fClassType->GetName() << "* p){" << fClassType->GetName() << " &i=*p; return (" << fExpression.Data()
-     << "); };";
-
+      << std::hex << std::showbase << (size_t)fooptr
+      << ") = [](" << fClassType->GetName() << "* p){" << fClassType->GetName() << " &i=*p; return (" << fExpression.Data()
+      << "); };";
 
   return s.str();
 }
