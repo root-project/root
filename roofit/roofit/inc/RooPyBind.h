@@ -47,7 +47,21 @@ public:
    double evaluate() const override { return 1.; }
    const RooArgList &varlist() const { return _varlist; }
 
+   virtual double *doEvalPy(RooFit::EvalContext &) const
+   {
+      throw std::runtime_error("not implemented");
+   }
+
 protected:
+   void doEval(RooFit::EvalContext &ctx) const override
+   {
+      std::span<double> output = ctx.output();
+      std::span<const double> result{doEvalPy(ctx), output.size()};
+      for (std::size_t i = 0; i < result.size(); ++i) {
+         output[i] = result[i];
+      }
+   }
+
    RooListProxy _varlist; // all variables as list of variables
 
    ClassDefOverride(RooPyBind, 0);

@@ -221,23 +221,13 @@ sbi_model = model
 
 
 # Function to compute the likelihood ratio using the trained classifier
-def compute_likelihood_ratio(*args):
-    x_vals = args[: len(mu_observed)]
-    mu_vals = args[len(mu_observed) :]
-    data_point = np.array(list(x_vals) + list(mu_vals)).reshape(1, -1)
-    prob = sbi_model.classifier.predict_proba(data_point)[:, 1]
-    return prob[0]
-
-
-# Function to compute the summed logarithmic likelihood ratio
-def compute_log_likelihood_sum(*args):
-    mu_vals = args[: len(mu_observed)]
-    obs_data_np = ws["obs_data"].to_numpy()
-    x_data = np.array([obs_data_np[x.GetName()] for x in x_vars]).T
-    mu_arr = np.tile(mu_vals, (ws["obs_data"].numEntries(), 1))
-    data_points = np.hstack([x_data, mu_arr])
-    prob = sbi_model.classifier.predict_proba(data_points)[:, 1]
-    return np.sum(np.log((1 - prob) / prob))
+def learned_likelihood_ratio(*args):
+    n = max(*(len(a) for a in args))
+    X = np.zeros((n, len(args)))
+    for i in range(len(args)):
+        X[:,i] = args[i]
+    prob = sbi_model.classifier.predict_proba(X)[:, 1]
+    return prob / (1. - prob)
 
 
 # Create combined variable list for ROOT
@@ -246,14 +236,18 @@ for var in x_vars + mu_vars:
     combined_vars.add(var)
 
 # Create a custom likelihood ratio function using the trained classifier
-lhr_learned = ROOT.RooFit.bindFunction("MyBinFunc", compute_likelihood_ratio, combined_vars)
+lhr_learned = ROOT.RooFit.bindFunction("MyBinFunc", learned_likelihood_ratio, combined_vars)
 
 # Calculate the 'analytical' likelihood ratio
-lhr_calc = ROOT.RooFormulaVar("lhr_calc", "x[0] / (x[0] + x[1])", ROOT.RooArgList(ws["gauss"], ws["uniform"]))
+lhr_calc = ROOT.RooFormulaVar("lhr_calc", "x[0] / x[1]", [ws["gauss"], ws["uniform"]])
 
-# Define the 'analytical' negative logarithmic likelihood ratio + the learned
+# Define the 'analytical' negative logarithmic likelihood ratio
 nll_gauss = ws["gauss"].createNLL(ws["obs_data"])
-nllr_learned = ROOT.RooFit.bindFunction("MyBinFunc", compute_log_likelihood_sum, ROOT.RooArgList(mu_vars))
+
+# Create the learned pdf and NLL sum based on the learned likelihood ratio
+pdf_learned = ROOT.RooWrapperPdf("learned_pdf", "learned_pdf", lhr_learned, True)
+
+nllr_learned = pdf_learned.createNLL(ws["obs_data"])
 
 # Plot the learned and analytical summed negativelogarithmic likelihood
 frame1 = mu_vars[0].frame(

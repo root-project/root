@@ -118,8 +118,7 @@ def calculate_likelihood_xgb_vec(m4l_arr):
 
 
 def calculate_likelihood_xgb(m4l):
-    m4l_arr = np.array([[m4l]])
-    return calculate_likelihood_xgb_vec(m4l_arr)
+    return calculate_likelihood_xgb_vec(m4l.T)
 
 
 llh = ROOT.RooFit.bindFunction(f"llh", calculate_likelihood_xgb, m4l)
@@ -164,7 +163,7 @@ def extended_term(mu, n):
 def evaluate_nll(mu):
     likelihoods = likelihood_ratio(mu, precomputed_likelihoods)
     extended_val = np.log(extended_term(mu, n_obs))
-    return np.sum(nll_weights * np.log(likelihoods)) + extended_val
+    return np.array([np.sum(nll_weights * np.log(likelihoods)) + extended_val])
 
 
 # Precompute the likelihood values for all m4l values

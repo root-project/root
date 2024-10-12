@@ -38,6 +38,7 @@ import ROOT
 import numpy as np
 from sklearn.neural_network import MLPClassifier
 
+
 # The samples used for training the classifier in this tutorial / rescale for more accuracy
 n_samples = 1000
 
@@ -164,32 +165,28 @@ sbi_model = model
 
 
 # Compute the likelihood ratio of the classifier for analysis purposes
-def compute_likelihood_ratio(x, mu):
-    data_point = np.array([[x, mu]])
-    prob = sbi_model.classifier.predict_proba(data_point)[:, 1]
-    return prob[0]
-
-
-# Compute the negative logarithmic likelihood ratio summed,
-# the function depends just on one variable, the mean value mu
-def compute_log_likelihood_sum(mu):
-    mu_arr = np.repeat(mu, obs_data.numEntries()).reshape(-1, 1)
-    data_point = np.concatenate([obs_data.to_numpy()["x"].reshape(-1, 1), mu_arr], axis=1)
-    prob = sbi_model.classifier.predict_proba(data_point)[:, 1]
-    return np.sum(np.log((1 - prob) / prob))
+def learned_likelihood_ratio(x, mu):
+    n = max(len(x), len(mu))
+    X = np.zeros((n, 2))
+    X[:, 0] = x
+    X[:, 1] = mu
+    prob = sbi_model.classifier.predict_proba(X)[:, 1]
+    return prob / (1 - prob)
 
 
 # Compute the learned likelihood ratio
-llhr_learned = ROOT.RooFit.bindFunction("MyBinFunc", compute_likelihood_ratio, x_var, mu_var)
+llhr_learned = ROOT.RooFit.bindFunction("MyBinFunc", learned_likelihood_ratio, x_var, mu_var)
 
-# Compute the real likelihood ration
-llhr_calc = ROOT.RooFormulaVar("llhr_calc", "x[0] / (x[0] + x[1])", [gauss, uniform])
+# Compute the real likelihood ratio
+llhr_calc = ROOT.RooFormulaVar("llhr_calc", "x[0] / x[1]", [gauss, uniform])
 
 # Create the exact negative log likelihood functions for Gaussian model
 nll_gauss = gauss.createNLL(obs_data)
 
-# Create the learned NLL based on the
-nllr_learned = ROOT.RooFit.bindFunction("MyBinFunc", compute_log_likelihood_sum, mu_var)
+# Create the learned pdf and NLL sum based on the learned likelihood ratio
+pdf_learned = ROOT.RooWrapperPdf("learned_pdf", "learned_pdf", llhr_learned, True)
+
+nllr_learned = pdf_learned.createNLL(obs_data)
 
 # Compute the morphed nll
 morphing(ROOT.RooMomentMorphFuncND.Linear)
