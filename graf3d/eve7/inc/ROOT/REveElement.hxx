@@ -15,6 +15,7 @@
 #include <ROOT/REveTypes.hxx>
 #include <ROOT/REveVector.hxx>
 #include <ROOT/REveProjectionBases.hxx>
+#include "TString.h"
 
 #include <memory>
 #include <list>
@@ -338,6 +339,14 @@ public:
 protected:
    UChar_t      fChangeBits{0};  //!
    Char_t       fDestructing{kNone}; //!
+
+   static thread_local REveElement *stlMirAlpha;
+   static thread_local int          stlMirError;
+   static thread_local std::string  stlMirErrorString;
+   static void ClearMirContext();
+   static void SetMirContext(REveElement *el);
+   static void SetMirError(int error, std::string_view err_str="");
+   static void AppendMirErrorString(std::string_view err_str);
 
 public:
    void StampColorSelection() { AddStamp(kCBColorSelection); }

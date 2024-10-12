@@ -926,10 +926,12 @@ void REveManager::ScheduleMIR(const std::string &cmd, ElementId_t id, const std:
 //____________________________________________________________________
 void REveManager::ExecuteMIR(std::shared_ptr<MIR> mir)
 {
-   static const REveException eh("REveManager::ExecuteMIR ");
+   static const REveException eh(""); // Empty -- all errors go to R__LOG
 
    //if (gDebug > 0)
       ::Info("REveManager::ExecuteCommand", "MIR cmd %s", mir->fCmd.c_str());
+
+   std::string tag = mir->fCtype + "::<to-be-determined>";
 
    try {
       REveElement *el = FindElementById(mir->fId);
@@ -951,9 +953,9 @@ void REveManager::ExecuteMIR(std::shared_ptr<MIR> mir)
       if ( ! el_casted)
          throw eh + "Dynamic cast from REveElement to '" + mir->fCtype + "' failed.";
 
-      std::string tag(mir->fCtype + "::" + m.str(1));
-      std::shared_ptr<TMethodCall> mc;
+      tag = mir->fCtype + "::" + m.str(1);
 
+      std::shared_ptr<TMethodCall> mc;
       auto mmi = fMethCallMap.find(tag);
       if (mmi != fMethCallMap.end())
       {
@@ -968,8 +970,15 @@ void REveManager::ExecuteMIR(std::shared_ptr<MIR> mir)
          fMethCallMap.insert(std::make_pair(tag, mc));
       }
 
+      REveElement::SetMirContext(el);
+
       R__LOCKGUARD_CLING(gInterpreterMutex);
       mc->Execute(el_casted, m.str(2).c_str());
+
+      if (REveElement::stlMirError) {
+         R__LOG_ERROR(REveLog()) << eh << "error executing " << tag << ":" << REveElement::stlMirErrorString << " (code " << REveElement::stlMirError << ").";
+      }
+      REveElement::ClearMirContext();
 
       // Alternative implementation through Cling. "Leaks" 200 kB per call.
       // This might be needed for function calls that involve data-types TMethodCall
@@ -979,9 +988,9 @@ void REveManager::ExecuteMIR(std::shared_ptr<MIR> mir)
       // std::cout << cmd.str() << std::endl;
       // gROOT->ProcessLine(cmd.str().c_str());
    } catch (std::exception &e) {
-      R__LOG_ERROR(REveLog()) << "REveManager::ExecuteCommand " << e.what() << std::endl;
+      R__LOG_ERROR(REveLog()) << "caught exception executing " << tag << ": " << e.what();
    } catch (...) {
-      R__LOG_ERROR(REveLog()) << "REveManager::ExecuteCommand unknow execption \n";
+      R__LOG_ERROR(REveLog()) << "caught unknown execption.";
    }
 }
 

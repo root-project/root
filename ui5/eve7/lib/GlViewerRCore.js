@@ -181,7 +181,8 @@ sap.ui.define([
          // guides
          this.axis = new RC.Group();
          this.axis.name = "Axis";
-         this.overlay_scene.add(this.axis);
+         // this.overlay_scene.add(this.axis); // looks worse for now put to scene
+         this.scene.add(this.axis);
 
          if (this.controller.isEveCameraPerspective())
          {
@@ -544,20 +545,25 @@ sap.ui.define([
                 else
                     fs = val.toExponential(2);
             }
-            return fs;
+            return val > 0 ? "+" + fs : fs;
          }
 
          let bb = new RC.Box3();
          bb.setFromObject(this.scene);
 
-         let lines = [];
-         lines.push({ "p": new RC.Vector3(bb.min.x, 0, 0), "c": new RC.Color(1, 0, 0), "text": "X " + formatFloat(bb.min.x) });
-         lines.push({ "p": new RC.Vector3(bb.max.x, 0, 0), "c": new RC.Color(1, 0, 0), "text": "X " + formatFloat(bb.max.x) });
-         lines.push({ "p": new RC.Vector3(0, bb.min.y, 0), "c": new RC.Color(0, 1, 0), "text": "Y " + formatFloat(bb.min.y) });
-         lines.push({ "p": new RC.Vector3(0, bb.max.y, 0), "c": new RC.Color(0, 1, 0), "text": "Y " + formatFloat(bb.max.y) });
-         lines.push({ "p": new RC.Vector3(0, 0, bb.min.z), "c": new RC.Color(0, 0, 1), "text": "Z " + formatFloat(bb.min.z) });
-         lines.push({ "p": new RC.Vector3(0, 0, bb.max.z), "c": new RC.Color(0, 0, 1), "text": "Z " + formatFloat(bb.max.z) });
+         console.log(formatFloat(bb.max.x), formatFloat(bb.min.x),
+         formatFloat(bb.max.y), formatFloat(bb.min.y),
+         formatFloat(bb.max.z), formatFloat(bb.min.z));
 
+         let lines = [];
+         lines.push({ "p": new RC.Vector3(bb.min.x, 0, 0), "c": new RC.Color(1, 0, 0), "text": "x " + formatFloat(bb.min.x) });
+         lines.push({ "p": new RC.Vector3(bb.max.x, 0, 0), "c": new RC.Color(1, 0, 0), "text": "x " + formatFloat(bb.max.x) });
+         lines.push({ "p": new RC.Vector3(0, bb.min.y, 0), "c": new RC.Color(0, 1, 0), "text": "y " + formatFloat(bb.min.y) });
+         lines.push({ "p": new RC.Vector3(0, bb.max.y, 0), "c": new RC.Color(0, 1, 0), "text": "y " + formatFloat(bb.max.y) });
+         if (this.controller.isEveCameraPerspective()) {
+            lines.push({ "p": new RC.Vector3(0, 0, bb.min.z), "c": new RC.Color(0, 0, 1), "text": "z " + formatFloat(bb.min.z) });
+            lines.push({ "p": new RC.Vector3(0, 0, bb.max.z), "c": new RC.Color(0, 0, 1), "text": "z " + formatFloat(bb.max.z) });
+         }
 
          for (const ax of lines) {
             let geom = new RC.Geometry();
@@ -567,8 +573,7 @@ sap.ui.define([
             this.axis.add(ss);
          }
 
- /*
-         let url_base = this.eve_path + 'sdf-fonts/LiberationMono-Regular';
+         let url_base = this.eve_path + 'sdf-fonts/LiberationSans-Regular';
          this.tex_cache.deliver_font(url_base,
             (texture, font_metrics) => {
                let diag = new RC.Vector3;
@@ -579,57 +584,21 @@ sap.ui.define([
                   const text = new RC.ZText({
                      text: ax.text,
                      fontTexture: texture,
-                     xPos: 0,
-                     yPos: 0,
-                     fontSize: diag,
-                     mode: RC.TEXT2D_SPACE_WORLD,
+                     xPos: 0.0,
+                     yPos: 0.0,
+                     fontSize: 0.01,
+                     mode: RC.TEXT2D_SPACE_MIXED,
                      fontHinting: 1.0,
                      color: this.fgCol,
                      font: font_metrics,
                   });
-                  text.position.copy(ax.p);
-                  text.material.side = RC.FRONT_AND_BACK_SIDE;
+                  text.position = ax.p;
+                  text.material.side = RC.FRONT_SIDE;
                   ag.add(text);
                }
             },
             (img) => RC.ZText.createDefaultTexture(img)
-         );*/
-         let ag = this.axis;
-         let fgCol = this.fgCol;
-         const fontImgLoader = new RC.ImageLoader();
-         let tname = this.eve_path + "textures/font2.png";
-         fontImgLoader.load(tname, function (image) {
-            const fontTexture = new RC.Texture(
-               image,
-               RC.Texture.WRAPPING.ClampToEdgeWrapping,
-               RC.Texture.WRAPPING.ClampToEdgeWrapping,
-               RC.Texture.FILTER.NearestFilter,
-               RC.Texture.FILTER.NearestFilter,
-               RC.Texture.FORMAT.RGBA,
-               RC.Texture.FORMAT.RGBA,
-               RC.Texture.TYPE.UNSIGNED_BYTE,
-               128,
-               256
-            );
-
-            fontTexture._generateMipmaps = false;
-            for (const ax of lines) {
-               const text = new RC.Text2D(
-                  {
-                     text: ax.text,
-                     fontTexture: fontTexture,
-                     xPos: 0,
-                     yPos: 0,
-                     fontSize: 44,
-                     cellAspect: 8 / 16,
-                     mode: RC.TEXT2D_SPACE_WORLD
-                  }
-               );
-               text.position.copy(ax.p);
-               text.material.color = fgCol;
-               ag.add(text);
-            }
-         });
+         );
       };
 
       //==============================================================================
