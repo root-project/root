@@ -33,6 +33,12 @@
 ## \date September 2024
 ## \author Robin Syring
 
+import os
+
+nthreads = 1
+os.environ["OMP_NUM_THREADS"] = str(nthreads)
+os.environ["OPENBLAS_NUM_THREADS"] = str(nthreads)
+os.environ["MKL_NUM_THREADS"] = str(nthreads)
 
 import ROOT
 import os
@@ -97,12 +103,12 @@ X = np.concatenate((higgs_data, zz_data), axis=0).reshape(-1, 1)
 y = np.concatenate([np.ones(len(higgs_data)), np.zeros(len(zz_data))])
 
 # Train the Classifier to discriminate between higgs and zz
-model_xgb = xgb.XGBClassifier(n_estimators=1000, max_depth=5, eta=0.2, min_child_weight=1e-6)
+model_xgb = xgb.XGBClassifier(n_estimators=1000, max_depth=5, eta=0.2, min_child_weight=1e-6, nthread=1)
 model_xgb.fit(X, y, sample_weight=sample_weight)
 
 
 # Building a RooRealVar based on the observed data
-m4l = ROOT.RooRealVar("m4l", "Four Lepton Invariant Mass", 0.)
+m4l = ROOT.RooRealVar("m4l", "Four Lepton Invariant Mass", 0.0)
 
 
 # Define functions to compute the learned likelihood.
@@ -135,7 +141,7 @@ def weight_signal(mu) -> float:
 def likelihood_ratio(llr, mu):
     term1 = weight_back(mu) / weight_back(0) + weight_signal(mu) / weight_back(0) * llr
     term2 = weight_back(mu) / weight_signal(0) * 1 / llr + weight_signal(mu) / weight_signal(0)
-    return 1.0 / (1. / term1 + 1. / term2)
+    return 1.0 / (1.0 / term1 + 1.0 / term2)
 
 
 mu_var = ROOT.RooRealVar("mu", "mu", 0.1, 5)
@@ -173,4 +179,12 @@ minimizer.setErrorLevel(0.5)  # Adjust the error level in the minimization to wo
 minimizer.setPrintLevel(-1)
 minimizer.minimize("Minuit2")
 result = minimizer.save()
+ROOT.SetOwnership(result, True)
 result.Print()
+
+del minimizer
+del nll
+del pdf_learned_extended
+del n_pred
+del llh
+del nll_ratio
