@@ -196,9 +196,9 @@ nll_morph = workspace["morph"].createNLL(obs_data)
 frame1 = mu_var.frame(Title="NLL of SBI vs. Morphing", Range=(1.5, 2.5))
 nll_gauss.plotOn(frame1, LineColor="g", ShiftToZero=True, Name="gauss")
 nllr_learned.plotOn(frame1, LineColor="r", LineStyle="--", ShiftToZero=True, Name="learned")
-ROOT.RooAbsReal.setEvalErrorLoggingMode(ROOT.RooAbsReal.Ignore)  # Silence some warnings
+ROOT.RooAbsReal.setEvalErrorLoggingMode("Ignore")  # Silence some warnings
 nll_morph.plotOn(frame1, LineColor="c", ShiftToZero=True, Name="morphed")
-ROOT.RooAbsReal.setEvalErrorLoggingMode(ROOT.RooAbsReal.PrintErrors)
+ROOT.RooAbsReal.setEvalErrorLoggingMode("PrintErrors")
 
 # Plot the likelihood functions
 frame2 = x_var.frame(Title="Learned vs analytical likelihhood function")
