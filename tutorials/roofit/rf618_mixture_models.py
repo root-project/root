@@ -52,10 +52,7 @@ data_dict = df.AsNumpy(columns=["m4l", "sample_category", "weight"])
 
 
 weights_dict = {
-    "data": data_dict["weight"][data_dict["sample_category"] == ["data"]].sum(),
-    "zz": data_dict["weight"][data_dict["sample_category"] == ["zz"]].sum(),
-    "other": data_dict["weight"][data_dict["sample_category"] == ["other"]].sum(),
-    "higgs": data_dict["weight"][data_dict["sample_category"] == ["higgs"]].sum(),
+    name: data_dict["weight"][data_dict["sample_category"] == [name]].sum() for name in ("data", "zz", "other", "higgs")
 }
 
 # Loop over each sample category
@@ -100,25 +97,18 @@ X = np.concatenate((higgs_data, zz_data), axis=0).reshape(-1, 1)
 y = np.concatenate([np.ones(len(higgs_data)), np.zeros(len(zz_data))])
 
 # Train the Classifier to discriminate between higgs and zz
-model_xgb = xgb.XGBClassifier(n_estimators=1000, max_depth=5, eta=0.2, min_child_weight=1 / 1000000)
+model_xgb = xgb.XGBClassifier(n_estimators=1000, max_depth=5, eta=0.2, min_child_weight=1e-6)
 model_xgb.fit(X, y, sample_weight=sample_weight)
 
 
-# Prepare the observed data set
-observed_data = data_dict["m4l"][data_dict["sample_category"] == ["data"]]
-
 # Building a RooRealVar based on the observed data
-m4l = ROOT.RooRealVar("m4l", "Four Lepton Invariant Mass", np.min(observed_data), np.max(observed_data))
+m4l = ROOT.RooRealVar("m4l", "Four Lepton Invariant Mass", 0.)
 
 
-# Define functions to compute the learned likelihood. One function is simply the vectorized version. The 'calculate_likelihood_xgb' is needed as input for the  'bindFunction' object.
-def calculate_likelihood_xgb_vec(m4l_arr):
-    prob = model_xgb.predict_proba(m4l_arr)[:, 0]
+# Define functions to compute the learned likelihood.
+def calculate_likelihood_xgb(m4l_arr):
+    prob = model_xgb.predict_proba(m4l_arr.T)[:, 0]
     return (1 - prob) / prob
-
-
-def calculate_likelihood_xgb(m4l):
-    return calculate_likelihood_xgb_vec(m4l.T)
 
 
 llh = ROOT.RooFit.bindFunction(f"llh", calculate_likelihood_xgb, m4l)
@@ -142,37 +132,23 @@ def weight_signal(mu) -> float:
 
 
 # Define the likelihood ratio accordingly to mixture models
-def likelihood_ratio(mu, precomputed_likelihood):
-    return 1 / (weight_back(mu) / weight_back(0) + weight_signal(mu) / weight_back(0) * precomputed_likelihood) + 1 / (
-        weight_back(mu) / weight_signal(0) * 1 / precomputed_likelihood + weight_signal(mu) / weight_signal(0)
-    )
-
-
-# Weights for observed data are 1
-nll_weights = 1.0
-# Define the number of events for observed data
-n_obs = len(observed_data)
-
-
-# Extended likelihood term
-def extended_term(mu, n):
-    return (weight_back(mu)) ** n * np.exp(mu * n_signal)
-
-
-# Calculate nll for all m4l values
-def evaluate_nll(mu):
-    likelihoods = likelihood_ratio(mu, precomputed_likelihoods)
-    extended_val = np.log(extended_term(mu, n_obs))
-    return np.array([np.sum(nll_weights * np.log(likelihoods)) + extended_val])
-
-
-# Precompute the likelihood values for all m4l values
-m4l_values = observed_data.flatten()
-precomputed_likelihoods = calculate_likelihood_xgb_vec(m4l_values)
+def likelihood_ratio(llr, mu):
+    term1 = weight_back(mu) / weight_back(0) + weight_signal(mu) / weight_back(0) * llr
+    term2 = weight_back(mu) / weight_signal(0) * 1 / llr + weight_signal(mu) / weight_signal(0)
+    return 1.0 / (1. / term1 + 1. / term2)
 
 
 mu_var = ROOT.RooRealVar("mu", "mu", 0.1, 5)
-nll = ROOT.RooFit.bindFunction(f"nll", evaluate_nll, mu_var)
+
+nll_ratio = ROOT.RooFit.bindFunction(f"nll", likelihood_ratio, llh, mu_var)
+pdf_learned = ROOT.RooWrapperPdf("learned_pdf", "learned_pdf", nll_ratio, True)
+
+n_pred = ROOT.RooFormulaVar("n_pred", f"{n_back} + mu * {n_signal}", [mu_var])
+pdf_learned_extended = ROOT.RooExtendPdf("final_pdf", "final_pdf", pdf_learned, n_pred)
+
+# Prepare the observed data set and NLL
+data = ROOT.RooDataSet.from_numpy({"m4l": data_dict["m4l"][data_dict["sample_category"] == ["data"]]}, [m4l])
+nll = pdf_learned_extended.createNLL(data, Extended=True)
 
 # Plot the nll computet by the mixture model
 frame2 = mu_var.frame(Title="NLL")
