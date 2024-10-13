@@ -54,6 +54,17 @@ set(libname cppyy)
 add_library(${libname} SHARED ${headers} ${sources})
 # Set the suffix to '.so' and the prefix to 'lib'
 set_target_properties(${libname} PROPERTIES  ${ROOT_LIBRARY_PROPERTIES})
+# It is crucial to add the path to the other ROOT libraries for compatibility with pip build backends.
+# After the `pip install` step, the target install user directory will look like:
+# site-packages/
+# -- cppyy/
+# -- cppyy_backend/
+# -- libcppyy.so
+# -- libcppyy_backend.so
+# -- libROOTPythonizations.so
+# -- ROOT/
+# With most of the ROOT libraries being stored in `ROOT/lib`. The RPATH must then be updated for the CPython extension
+# shared libraries.
 set_target_properties(${libname} PROPERTIES  INSTALL_RPATH "${CMAKE_INSTALL_RPATH}:$ORIGIN/ROOT/lib")
 if(MSVC)
   target_link_libraries(${libname} PUBLIC cppyy_backend Python3::Python)

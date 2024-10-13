@@ -1,8 +1,22 @@
-"""A setuptools based setup module.
+"""
+setuptools-based build of ROOT.
 
-See:
-https://packaging.python.org/guides/distributing-packages-using-setuptools/
-https://github.com/pypa/sampleproject
+This script uses setuptools API to steer a custom CMake build of ROOT. All build
+configuration options are specified in the class responsible for building. The
+installation step produces the following output target install directory:
+
+```
+site-packages/
+-- cppyy/
+-- cppyy_backend/
+-- libcppyy.so
+-- libcppyy_backend.so
+-- libROOTPythonizations.so
+-- ROOT/
+```
+
+A custom extension module is injected in the setuptools setup to properly
+generate the wheel with CPython extension metadata.
 """
 
 from setuptools import setup, find_packages, Extension
@@ -30,7 +44,8 @@ class ROOTBuild(_build):
         # Configure ROOT build
         base_opts = shlex.split("cmake -GNinja")
         mode_opts = shlex.split(
-            "-Dbuiltin_nlohmannjson=ON -Dbuiltin_tbb=ON -Dbuiltin_xrootd=ON -Dbuiltin_lz4=ON -Dbuiltin_lzma=ON -Dbuiltin_zstd=ON -Dbuiltin_xxhash=ON" # builtins
+            "-Dbuiltin_nlohmannjson=ON -Dbuiltin_tbb=ON -Dbuiltin_xrootd=ON "  # builtins
+            "-Dbuiltin_lz4=ON -Dbuiltin_lzma=ON -Dbuiltin_zstd=ON -Dbuiltin_xxhash=ON"  # builtins
             "-Druntime_cxxmodules=ON -Drpath=ON -Dfail-on-missing=ON "  # Generic build configuration
             "-Dgminimal=ON -Dasimage=ON -Dopengl=OFF "  # Graphics
             "-Dpyroot=ON -Ddataframe=ON -Dxrootd=ON -Dimt=ON "
@@ -86,8 +101,15 @@ class ROOTInstall(_install):
 
 class DummyExtension(Extension):
     """
-    This simply overrides the base extension class so that setuptools
-    doesn't try to build your sources for you
+    Dummy CPython extension for setuptools setup.
+
+    In order to generate the wheel with CPython extension metadata (i.e. 
+    producing one wheel per supported Python version), setuptools requires that
+    at least one CPython extension is declared in the `ext_modules` kwarg passed
+    to the `setup` function. Usually, declaring a CPython extension triggers
+    compilation of the corresponding sources, but in this case we already do
+    that in the CMake build step. This class defines a dummy extension that
+    can be declared to setuptools while avoiding any further compilation step.
     """
     def __init__(_):
         super().__init__(name="Dummy", sources=[])
