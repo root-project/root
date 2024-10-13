@@ -129,19 +129,31 @@ n_back = results["zz"]["weight"].sum()
 
 
 # Define weight functions
-def weight_back(mu) -> float:
+def weight_back(mu):
     return n_back / (n_back + mu * n_signal)
 
 
-def weight_signal(mu) -> float:
+def weight_signal(mu):
     return 1 - weight_back(mu)
 
 
 # Define the likelihood ratio accordingly to mixture models
 def likelihood_ratio(llr, mu):
-    term1 = weight_back(mu) / weight_back(0) + weight_signal(mu) / weight_back(0) * llr
-    term2 = weight_back(mu) / weight_signal(0) * 1 / llr + weight_signal(mu) / weight_signal(0)
-    return 1.0 / (1.0 / term1 + 1.0 / term2)
+
+    m = 2
+
+    w_0 = np.array([weight_back(0), weight_signal(0)])
+    w_1 = np.array([weight_back(mu[0]), weight_signal(mu[0])])
+
+    w = np.outer(w_1, 1.0 / w_0)
+
+    p = np.ones((m, m, len(llr)))
+    p[1, 0] = llr
+    for i in range(m):
+        for j in range(i):
+            p[j, i] = 1.0 / p[i, j]
+
+    return 1.0 / np.sum(1.0 / np.sum(np.expand_dims(w, axis=2) * p, axis=0), axis=0)
 
 
 mu_var = ROOT.RooRealVar("mu", "mu", 0.1, 5)
