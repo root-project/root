@@ -596,6 +596,8 @@ set(Python3_FIND_FRAMEWORK LAST)
 # Even if we don't build PyROOT, one still need python executable to run some scripts
 list(APPEND python_components Interpreter)
 if(pyroot OR tmva-pymva)
+  # We have to only look for the Python development module in order to be able to build ROOT with a pip backend
+  # In particular, it is forbidden to link against libPython.so, see https://peps.python.org/pep-0513/#libpythonx-y-so-1
   list(APPEND python_components Development.Module)
 endif()
 if(tmva-pymva)

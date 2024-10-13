@@ -151,6 +151,17 @@ file(COPY ${ROOT_headers_dir}/ DESTINATION ${CMAKE_BINARY_DIR}/include/ROOT)
 set(libname ROOTPythonizations)
 
 add_library(${libname} SHARED ${cpp_sources})
+# It is crucial to add the path to the other ROOT libraries for compatibility with pip build backends.
+# After the `pip install` step, the target install user directory will look like:
+# site-packages/
+# -- cppyy/
+# -- cppyy_backend/
+# -- libcppyy.so
+# -- libcppyy_backend.so
+# -- libROOTPythonizations.so
+# -- ROOT/
+# With most of the ROOT libraries being stored in `ROOT/lib`. The RPATH must then be updated for the CPython extension
+# shared libraries.
 set_target_properties(${libname} PROPERTIES  INSTALL_RPATH "${CMAKE_INSTALL_RPATH}:$ORIGIN/ROOT/lib")
 
 # Insert the ROOTPythonizationsPySources in the dependency graph
