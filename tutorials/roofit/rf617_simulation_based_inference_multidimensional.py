@@ -27,6 +27,12 @@
 ## \date July 2024
 ## \author Robin Syring
 
+import os
+
+nthreads = 1
+os.environ["OMP_NUM_THREADS"] = str(nthreads)
+os.environ["OPENBLAS_NUM_THREADS"] = str(nthreads)
+os.environ["MKL_NUM_THREADS"] = str(nthreads)
 
 import ROOT
 import numpy as np
@@ -225,9 +231,9 @@ def learned_likelihood_ratio(*args):
     n = max(*(len(a) for a in args))
     X = np.zeros((n, len(args)))
     for i in range(len(args)):
-        X[:,i] = args[i]
+        X[:, i] = args[i]
     prob = sbi_model.classifier.predict_proba(X)[:, 1]
-    return prob / (1. - prob)
+    return prob / (1.0 - prob)
 
 
 # Create combined variable list for ROOT

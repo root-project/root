@@ -19,7 +19,6 @@
 
 
 import ROOT
-import numpy as np
 
 # Number of samples to fill the histograms
 n_samples = 1000
@@ -40,9 +39,7 @@ def morphing(setting):
     x_var.setBins(50)
 
     # number of 'sampled' Gaussians, if you change it, adjust the binning properly
-    parampoints = np.arange(5)
-
-    for i in parampoints:
+    for i in range(5):
         # Create the sampled Gaussian
         workspace.factory(f"Gaussian::g{i}(x, mu{i}[{i}], {sigma})".format(i=i))
 
