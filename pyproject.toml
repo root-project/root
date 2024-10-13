@@ -22,8 +22,7 @@ root = "ROOT._rootcli:main"
 [tool.cibuildwheel]
 # Increase pip debugging output
 build-verbosity = 1
-build="cp3{8,9,10,11,12}-manylinux_x86_64"
-#build="cp312-manylinux_x86_64"
+build="cp3{8,9,10,11,12,13}-manylinux_x86_64"
 manylinux-x86_64-image = "manylinux_2_28"
 
 # Install system libraries
