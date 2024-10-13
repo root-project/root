@@ -30,8 +30,9 @@ class ROOTBuild(_build):
         # Configure ROOT build
         base_opts = shlex.split("cmake -GNinja")
         mode_opts = shlex.split(
-            "-Druntime_cxxmodules=ON  -Drpath=ON "  # Generic build configuration
-            "-Dgminimal=ON -Dasimage=ON "  # Graphics
+            "-Dbuiltin_nlohmannjson=ON -Dbuiltin_tbb=ON -Dbuiltin_xrootd=ON -Dbuiltin_lz4=ON -Dbuiltin_lzma=ON -Dbuiltin_zstd=ON -Dbuiltin_xxhash=ON" # builtins
+            "-Druntime_cxxmodules=ON -Drpath=ON -Dfail-on-missing=ON "  # Generic build configuration
+            "-Dgminimal=ON -Dasimage=ON -Dopengl=OFF "  # Graphics
             "-Dpyroot=ON -Ddataframe=ON -Dxrootd=ON -Dimt=ON "
             "-Droofit=ON")
         dirs_opts = shlex.split(
