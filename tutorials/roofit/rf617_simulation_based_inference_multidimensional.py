@@ -255,9 +255,9 @@ frame1 = mu_vars[0].frame(
     Range=(mu_observed[0] - 1, mu_observed[0] + 1),
 )
 nll_gauss.plotOn(frame1, ShiftToZero=True, LineColor="g", Name="gauss")
-ROOT.RooAbsReal.setEvalErrorLoggingMode(ROOT.RooAbsReal.Ignore)  # Silence some warnings
+ROOT.RooAbsReal.setEvalErrorLoggingMode("Ignore")  # Silence some warnings
 nll_morph.plotOn(frame1, ShiftToZero=True, LineColor="c", Name="morph")
-ROOT.RooAbsReal.setEvalErrorLoggingMode(ROOT.RooAbsReal.PrintErrors)
+ROOT.RooAbsReal.setEvalErrorLoggingMode("PrintErrors")
 nllr_learned.plotOn(frame1, LineColor="r", ShiftToZero=True, LineStyle="--", Name="learned")
 
 
