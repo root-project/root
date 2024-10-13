@@ -370,13 +370,9 @@ class ROOTFacade(types.ModuleType):
     # Overload RooFit namespace
     @property
     def RooFit(self):
-        from ._pythonization._roofit import pythonize_roofit_namespace
-
         ns = self._fallback_getattr("RooFit")
-        try:
-            pythonize_roofit_namespace(ns)
-        except:
-            raise Exception("Failed to pythonize the namespace RooFit")
+        if hasattr(self.module, "_roofit"):
+            self.module._roofit.pythonize_roofit_namespace(ns)
         del type(self).RooFit
         return ns
 
