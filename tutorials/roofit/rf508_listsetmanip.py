@@ -85,7 +85,7 @@ subset3 = s1.selectCommon(s2)
 # error message
 s3 = ROOT.RooArgSet()
 for arg in [a, b, c, d, e, g]:
-   s3.addClone(arg)
+    s3.addClone(arg)
 
 # A clone of a owning set is non-owning and its
 # contents is owned by the originating owning set
