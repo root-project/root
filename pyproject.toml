@@ -28,4 +28,4 @@ manylinux-x86_64-image = "manylinux_2_28"
 
 # Install system libraries
 [tool.cibuildwheel.linux]
-before-all = "dnf install -y epel-release && /usr/bin/crb enable && dnf install -y openssl-devel libX11-devel libXpm-devel libXft-devel libXext-devel libuuid-devel tbb tbb-devel xrootd-client xrootd-client-devel"
+before-all = "dnf install -y epel-release && /usr/bin/crb enable && dnf install -y openssl-devel libX11-devel libXpm-devel libXft-devel libXext-devel libuuid-devel"
