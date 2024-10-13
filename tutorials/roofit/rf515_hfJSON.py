@@ -29,10 +29,13 @@ model = ws["ModelConfig"]
 
 # for resetting the parameters after the fit
 params = model.GetPdf().getParameters(ws["observed"])
+ROOT.SetOwnership(params, True)
 params_initial = params.snapshot()
+ROOT.SetOwnership(params_initial, True)
 
 # we are fitting a clone of the model now,
 result = model.fitTo(ws["observed"], ROOT.RooFit.Save(), ROOT.RooFit.PrintLevel(-1))
+ROOT.SetOwnership(result, True)
 result.Print()
 # reset parameters, such that we are not double-fitting the model in the
 # closure check.
@@ -49,4 +52,5 @@ tool_2.importJSON("myWorkspace.json")
 ws_2.Print()
 model_2 = ws_2["ModelConfig"]
 result = model_2.fitTo(ws_2["observed"], ROOT.RooFit.Save(), ROOT.RooFit.PrintLevel(-1))
+ROOT.SetOwnership(result, True)
 result.Print()

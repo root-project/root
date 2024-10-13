@@ -33,7 +33,9 @@ f = ROOT.RooFormulaVar("f", "f", "pow(@0,4) -5 * pow(@0,3) +5 * pow(@0,2) + 5 * 
 # -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -
 x0 = 2.0
 taylor_o1 = ROOT.RooPolyFunc.taylorExpand("taylorfunc_o1", "taylor expansion order 1", f, [x], 1, [x0])
+ROOT.SetOwnership(taylor_o1, True)
 taylor_o2 = ROOT.RooPolyFunc.taylorExpand("taylorfunc_o2", "taylor expansion order 2", f, [x], 2, [x0])
+ROOT.SetOwnership(taylor_o2, True)
 frame = x.frame(Title="x^{4} - 5x^{3} + 5x^{2} + 5x - 6")
 c = ROOT.TCanvas("c", "c", 400, 400)
 
