@@ -44,7 +44,6 @@ import ROOT
 import numpy as np
 from sklearn.neural_network import MLPClassifier
 
-
 # The samples used for training the classifier in this tutorial / rescale for more accuracy
 n_samples = 1000
 
@@ -188,15 +187,18 @@ llhr_calc = ROOT.RooFormulaVar("llhr_calc", "x[0] / x[1]", [gauss, uniform])
 
 # Create the exact negative log likelihood functions for Gaussian model
 nll_gauss = gauss.createNLL(obs_data)
+ROOT.SetOwnership(nll_gauss, True)
 
 # Create the learned pdf and NLL sum based on the learned likelihood ratio
 pdf_learned = ROOT.RooWrapperPdf("learned_pdf", "learned_pdf", llhr_learned, True)
 
 nllr_learned = pdf_learned.createNLL(obs_data)
+ROOT.SetOwnership(nllr_learned, True)
 
 # Compute the morphed nll
 morphing(ROOT.RooMomentMorphFuncND.Linear)
 nll_morph = workspace["morph"].createNLL(obs_data)
+ROOT.SetOwnership(nll_morph, True)
 
 # Plot the negative logarithmic summed likelihood
 frame1 = mu_var.frame(Title="NLL of SBI vs. Morphing", Range=(1.5, 2.5))
@@ -230,4 +232,15 @@ for nll in [nll_gauss, nllr_learned, nll_morph]:
     minimizer.setPrintLevel(-1)
     minimizer.minimize("Minuit2")
     result = minimizer.save()
+    ROOT.SetOwnership(result, True)
     result.Print()
+
+del nll_morph
+del nllr_learned
+del nll_gauss
+del workspace
+
+import sys
+
+# Hack to bypass ClearProxiedObjects()
+del sys.modules["libROOTPythonizations"]
