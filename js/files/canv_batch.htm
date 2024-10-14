@@ -29,6 +29,7 @@
    function complete() {
       if (JSROOT.browser.isFirefox && window && (typeof window.dump == "function")) {
          window.dump(document.body.innerHTML);
+         window.dump("###batch###job###done###\n");
          window.close();
       }
    }
