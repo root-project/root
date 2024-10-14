@@ -417,9 +417,13 @@ RWebDisplayHandle::BrowserCreator::Display(const RWebDisplayArgs &args)
    std::string redirect = args.GetRedirectOutput(), dump_content;
 
    if (!redirect.empty()) {
-      auto p = exec.length();
-      if (exec.rfind("&") == p-1) --p;
-      exec.insert(p, " >"s + redirect + " "s);
+      if (exec.find("$dumpfile") != std::string::npos) {
+         exec = std::regex_replace(exec, std::regex("\\$dumpfile"), redirect);
+      } else {
+         auto p = exec.length();
+         if (exec.rfind("&") == p-1) --p;
+         exec.insert(p, " >"s + redirect + " "s);
+      }
    }
 
    R__LOG_DEBUG(0, WebGUILog()) << "Showing web window in browser with:\n" << exec;
@@ -600,9 +604,9 @@ RWebDisplayHandle::FirefoxCreator::FirefoxCreator() : BrowserCreator(true)
    fHeadlessExec = gEnv->GetValue("WebGui.FirefoxHeadless", "$prog -headless -no-remote $profile $url &");
    fExec = gEnv->GetValue("WebGui.FirefoxInteractive", "$prog -no-remote $profile $geometry $url &");
 #else
-   fBatchExec = gEnv->GetValue("WebGui.FirefoxBatch", "$prog --headless --private-window -no-remote $profile $url >/dev/null 2>/dev/null");
+   fBatchExec = gEnv->GetValue("WebGui.FirefoxBatch", "$rootetcdir/runfirefox.sh $dumpfile $cleanup_profile $prog --headless -no-remote -new-instance $profile $url 2>/dev/null");
    fHeadlessExec = gEnv->GetValue("WebGui.FirefoxHeadless", "fork:--headless --private-window -no-remote $profile $url");
-   fExec = gEnv->GetValue("WebGui.FirefoxInteractive", "$rootetcdir/runfirefox.sh $cleanup_profile $prog -no-remote $profile $geometry -url \'$url\' &");
+   fExec = gEnv->GetValue("WebGui.FirefoxInteractive", "$rootetcdir/runfirefox.sh <nodump> $cleanup_profile $prog -no-remote $profile $geometry -url \'$url\' &");
 #endif
 }
 
