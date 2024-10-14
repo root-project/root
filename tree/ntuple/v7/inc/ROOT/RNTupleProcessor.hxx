@@ -19,6 +19,7 @@
 #include <ROOT/REntry.hxx>
 #include <ROOT/RError.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
+#include <ROOT/RNTupleIndex.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RPageStorage.hxx>
@@ -80,57 +81,63 @@ protected:
    class RFieldContext {
       friend class RNTupleProcessor;
       friend class RNTupleChainProcessor;
+      friend class RNTupleJoinProcessor;
 
    private:
       std::unique_ptr<RFieldBase> fProtoField;
       std::unique_ptr<RFieldBase> fConcreteField;
       REntry::RFieldToken fToken;
+      std::string fNTupleName;
+      bool fIsAuxiliary;
 
    public:
-      RFieldContext(std::unique_ptr<RFieldBase> protoField, REntry::RFieldToken token)
-         : fProtoField(std::move(protoField)), fToken(token)
+      RFieldContext(std::unique_ptr<RFieldBase> protoField, REntry::RFieldToken token, std::string_view ntupleName,
+                    bool isAuxiliary = false)
+         : fProtoField(std::move(protoField)), fToken(token), fNTupleName(ntupleName), fIsAuxiliary(isAuxiliary)
       {
       }
 
       const RFieldBase &GetProtoField() const { return *fProtoField; }
-      /// We need to disconnect the concrete fields before swapping the page sources
+      /// Concrete pages need to be reset explicitly before the page source they belong to is destroyed.
       void ResetConcreteField() { fConcreteField.reset(); }
       void SetConcreteField() { fConcreteField = fProtoField->Clone(fProtoField->GetFieldName()); }
+      bool IsAuxiliary() const { return fIsAuxiliary; }
+      const std::string &GetNTupleName() const { return fNTupleName; }
+      std::string GetQualifiedFieldName() const
+      {
+         if (fIsAuxiliary)
+            return fNTupleName + "." + fProtoField->GetFieldName();
+         return fProtoField->GetFieldName();
+      }
    };
 
    std::vector<RNTupleOpenSpec> fNTuples;
    std::unique_ptr<REntry> fEntry;
    std::unique_ptr<Internal::RPageSource> fPageSource;
-   std::vector<RFieldContext> fFieldContexts;
+   // Maps the (qualified) field name to its corresponding field context.
+   std::unordered_map<std::string, RFieldContext> fFieldContexts;
 
    NTupleSize_t fNEntriesProcessed;  //< Total number of entries processed so far
    std::size_t fCurrentNTupleNumber; //< Index of the currently open RNTuple
    NTupleSize_t fLocalEntryNumber;   //< Entry number within the current ntuple
 
    /////////////////////////////////////////////////////////////////////////////
-   /// \brief Connect an RNTuple for processing.
-   ///
-   /// \param[in] ntuple The RNTupleOpenSpec describing the RNTuple to connect.
-   ///
-   /// \return The number of entries in the newly-connected RNTuple.
-   ///
-   /// Creates and attaches new page source for the specified RNTuple, and connects the fields that are known by
-   /// the processor to it.
-   virtual NTupleSize_t ConnectNTuple(const RNTupleOpenSpec &ntuple) = 0;
-
-   /////////////////////////////////////////////////////////////////////////////
-   /// \brief Creates and connects concrete fields to the current page source, based on the proto-fields.
-   virtual void ConnectFields() = 0;
+   /// \brief Creates and connects a concrete field to the current page source, based on its proto field.
+   void ConnectField(RFieldContext &fieldContext, Internal::RPageSource &pageSource, REntry &entry);
 
    //////////////////////////////////////////////////////////////////////////
    /// \brief Advance the processor to the next available entry.
    ///
-   /// \return The new (global) entry number of after advancing, or kInvalidNTupleIndex if the last entry has been
-   /// processed.
+   /// \return The updated number of entries processed so far after advancing, or kInvalidNTupleIndex if the last
+   /// (global) entry has been processed.
    ///
    /// Checks if the end of the currently connected RNTuple is reached. If this is the case, either the next RNTuple
    /// is connected or the iterator has reached the end.
    virtual NTupleSize_t Advance() = 0;
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Fill the entry with values belonging to the current entry number.
+   virtual void LoadEntry() = 0;
 
    RNTupleProcessor(const std::vector<RNTupleOpenSpec> &ntuples)
       : fNTuples(ntuples), fNEntriesProcessed(0), fCurrentNTupleNumber(0), fLocalEntryNumber(0)
@@ -207,7 +214,7 @@ public:
 
       reference operator*()
       {
-         fProcessor.fEntry->Read(fProcessor.fLocalEntryNumber);
+         fProcessor.LoadEntry();
          return *fProcessor.fEntry;
       }
 
@@ -234,6 +241,26 @@ public:
    /// \return A pointer to the newly created RNTupleProcessor.
    static std::unique_ptr<RNTupleProcessor>
    CreateChain(const std::vector<RNTupleOpenSpec> &ntuples, std::unique_ptr<RNTupleModel> model = nullptr);
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Create a new RNTuple processor for horizontallly concatenated RNTuples.
+   ///
+   /// \param[in] ntuples A list specifying the names and locations of the ntuples to process. The first ntuple in the
+   /// list will be considered the primary ntuple and drives the processor iteration loop. Subsequent ntuples are
+   /// considered auxiliary, whose entries to be read are determined by the primary ntuple (which does not necessarily
+   /// have to be sequential).
+   /// \param[in] joinFields The names of the fields on which to join, in case the specified ntuples are unaligned.
+   /// The join is made based on the combined join field values, and therefore each field has to be present in each
+   /// specified RNTuple. If an empty list is provided, it is assumed that the specified ntuple are fully aligned, and
+   /// `RNTupleIndex` will not be used.
+   /// \param[in] models A list of models for the ntuples. This list must either contain a model for each ntuple in
+   /// `ntuples` (following the specification order), or be empty. When the list is empty, the default model (i.e.
+   /// containing all fields) will be used for each ntuple.
+   ///
+   /// \return A pointer to the newly created RNTupleProcessor.
+   static std::unique_ptr<RNTupleProcessor> CreateJoin(const std::vector<RNTupleOpenSpec> &ntuples,
+                                                       const std::vector<std::string> &joinFields,
+                                                       std::vector<std::unique_ptr<RNTupleModel>> models = {});
 };
 
 // clang-format off
@@ -247,9 +274,19 @@ class RNTupleChainProcessor : public RNTupleProcessor {
    friend class RNTupleProcessor;
 
 private:
-   NTupleSize_t ConnectNTuple(const RNTupleOpenSpec &ntuple) final;
-   void ConnectFields() final;
    NTupleSize_t Advance() final;
+   void LoadEntry() final { fEntry->Read(fLocalEntryNumber); }
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Connect an RNTuple for processing.
+   ///
+   /// \param[in] ntuple The RNTupleOpenSpec describing the RNTuple to connect.
+   ///
+   /// \return The number of entries in the newly-connected RNTuple.
+   ///
+   /// Creates and attaches new page source for the specified RNTuple, and connects the fields that are known by
+   /// the processor to it.
+   NTupleSize_t ConnectNTuple(const RNTupleOpenSpec &ntuple);
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Constructs a new RNTupleChainProcessor.
@@ -261,6 +298,66 @@ private:
    ///
    /// RNTuples are processed in the order in which they are specified.
    RNTupleChainProcessor(const std::vector<RNTupleOpenSpec> &ntuples, std::unique_ptr<RNTupleModel> model = nullptr);
+};
+
+// clang-format off
+/**
+\class ROOT::Experimental::RNTupleJoinProcessor
+\ingroup NTuple
+\brief Processor specializiation for horizontally concatenated RNTuples (joins).
+*/
+// clang-format on
+class RNTupleJoinProcessor : public RNTupleProcessor {
+   friend class RNTupleProcessor;
+
+private:
+   std::unique_ptr<RNTupleModel> fJoinModel;
+   /// Mapping of the auxiliary RNTuple name to its page source
+   std::unordered_map<std::string, std::unique_ptr<Internal::RPageSource>> fAuxiliaryPageSources;
+
+   std::vector<std::string> fJoinFieldNames;
+   /// Mapping of the auxiliary RNTuple name to its join index
+   std::unordered_map<std::string, std::unique_ptr<Internal::RNTupleIndex>> fJoinIndices;
+
+   bool IsUsingIndex() const { return fJoinFieldNames.size() > 0; }
+
+   NTupleSize_t Advance() final;
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Fill the entry with values belonging to the current entry number of the primary RNTuple.
+   void LoadEntry() final;
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Constructs a new RNTupleJoinProcessor.
+   ///
+   /// \param[in] mainNTuple The source specification (name and storage location) of the primary RNTuple.
+   /// \param[in] model The model that specifies which fields should be read by the processor. The pointer returned by
+   /// RNTupleModel::MakeField can be used to access a field's value during the processor iteration. When no model is
+   /// specified, it is created from the RNTuple's descriptor.
+   RNTupleJoinProcessor(const RNTupleOpenSpec &mainNTuple, const std::vector<std::string> &joinFields,
+                        std::unique_ptr<RNTupleModel> model = nullptr);
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Add an auxiliary RNTuple to the processor.
+   ///
+   /// \param[in] auxNTuple The source specification (name and storage location) of the auxiliary RNTuple.
+   /// \param[in] model The model that specifies which fields should be read by the processor. The pointer returned by
+   /// RNTupleModel::MakeField can be used to access a field's value during the processor iteration. When no model is
+   /// specified, it is created from the RNTuple's descriptor.
+   void AddAuxiliary(const RNTupleOpenSpec &auxNTuple, std::unique_ptr<RNTupleModel> model = nullptr);
+   void ConnectFields();
+
+public:
+   RNTupleJoinProcessor(const RNTupleJoinProcessor &) = delete;
+   RNTupleJoinProcessor operator=(const RNTupleJoinProcessor &) = delete;
+   RNTupleJoinProcessor(RNTupleJoinProcessor &&) = delete;
+   RNTupleJoinProcessor operator=(RNTupleJoinProcessor &&) = delete;
+   ~RNTupleJoinProcessor() override
+   {
+      for (auto &[_, fieldContext] : fFieldContexts) {
+         fieldContext.ResetConcreteField();
+      }
+   }
 };
 
 } // namespace Experimental
