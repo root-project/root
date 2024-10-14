@@ -66,19 +66,14 @@ class TestInitialization:
         Check that the user initialization method is assigned to the current
         backend.
         """
-        connection, backend = payload
+        connection, _ = payload
 
         def returnNumber(n):
             return n
 
         DistRDF.initialize(returnNumber, 123)
 
-        if backend == "dask":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-            df = RDataFrame(10, daskclient=connection)
-        elif backend == "spark":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-            df = RDataFrame(10, sparkcontext=connection)
+        df = ROOT.RDataFrame(10, executor=connection)
 
         # Dummy df just to retrieve the initialization function
         f = df._headnode.backend.initialization
@@ -91,7 +86,7 @@ class TestInitialization:
         to the ROOT interpreter. Check that this value is available in the
         worker processes.
         """
-        connection, backend = payload
+        connection, _ = payload
 
         def init(value):
             import ROOT
@@ -114,12 +109,7 @@ class TestInitialization:
         # Finally, Histo1D returns a histogram filled with one value. The mean
         # of this single value has to be the value itself, independently of
         # the number of spawned workers.
-        if backend == "dask":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-            df = RDataFrame(1, daskclient=connection)
-        elif backend == "spark":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-            df = RDataFrame(1, sparkcontext=connection)
+        df = ROOT.RDataFrame(1, executor=connection)
 
         df = df.Define("u", "userValue").Histo1D(
             ("name", "title", 1, 100, 130), "u")
@@ -139,16 +129,10 @@ class TestEmptyTreeError:
         an RDataFrame without entries, DistRDF raises an error.
         """
 
-        connection, backend = payload
+        connection, _ = payload
         # Create an RDataFrame from a file with an empty tree
-        if backend == "dask":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-            rdf = RDataFrame(
-                "empty", "../data/ttree/empty.root", daskclient=connection)
-        elif backend == "spark":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-            rdf = RDataFrame("empty", "../data/ttree/empty.root",
-                             sparkcontext=connection)
+        rdf = ROOT.RDataFrame(
+            "empty", "../data/ttree/empty.root", executor=connection)
         histo = rdf.Histo1D(("empty", "empty", 10, 0, 10), "mybranch")
 
         # Get entries in the histogram, raises error
@@ -162,7 +146,7 @@ class TestEmptyTreeError:
         execution.
         """
 
-        connection, backend = payload
+        connection, _ = payload
         treenames = [f"tree_{i}" for i in range(3)]
         filenames = [
             f"../data/ttree/distrdf_roottest_check_backend_{i}.root" for i in range(3)]
@@ -185,12 +169,7 @@ class TestEmptyTreeError:
 
         # 3 files are non-empty, we should always count 300 entries.
         for n in range(1, 6):
-            if backend == "dask":
-                RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-                rdf = RDataFrame(chain, daskclient=connection, npartitions=n)
-            elif backend == "spark":
-                RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-                rdf = RDataFrame(chain, sparkcontext=connection, npartitions=n)
+            rdf = ROOT.RDataFrame(chain, executor=connection, npartitions=n)
             assert rdf.Count().GetValue() == 300
 
 
@@ -204,17 +183,13 @@ class TestWithRepeatedTree:
         """
         Count entries of a dataset with three times the same tree.
         """
-        connection, backend = payload
+        connection, _ = payload
         treename = "tree_0"
         filename = "../data/ttree/distrdf_roottest_check_backend_0.root"
         filenames = [filename] * 3
 
-        if backend == "dask":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-            rdf = RDataFrame(treename, filenames, daskclient=connection)
-        elif backend == "spark":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-            rdf = RDataFrame(treename, filenames, sparkcontext=connection)
+        rdf = ROOT.RDataFrame(treename, filenames, executor=connection)
+
         assert rdf.Count().GetValue() == 300
 
 
@@ -228,13 +203,8 @@ class TestChangeAttribute:
         Check that if the user specifies a number of partitions, that is not
         overwritten by the backend.
         """
-        connection, backend = payload
-        if backend == "dask":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-            df = RDataFrame(100, daskclient=connection, npartitions=4)
-        elif backend == "spark":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-            df = RDataFrame(100, sparkcontext=connection, npartitions=4)
+        connection, _ = payload
+        df = ROOT.RDataFrame(100, executor=connection, npartitions=4)
 
         # The number of partitions was supplied by the user.
         assert df._headnode.npartitions == 4
@@ -248,24 +218,23 @@ class TestPropagateExceptions:
     def test_runtime_error_is_propagated(self, payload):
         """The test creates a TGraph with mixed scalar and vector columns."""
         connection, backend = payload
-        if backend == "dask":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-            df = RDataFrame(100, daskclient=connection)
-            RaisedExc = RuntimeError # Dask always raises a Python RuntimeError
-        elif backend == "spark":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-            df = RDataFrame(100, sparkcontext=connection)
+
+        df = ROOT.RDataFrame(100, executor=connection)
+
+        if backend == "spark":
             # PySpark raises a custom exception from the RuntimeError raised by
             # DistRDF. Need to make this distinction so that the pytest.raises
             # call does not get confused by the extra level of indirection
             from py4j import protocol
-            RaisedExc = protocol.Py4JJavaError
+            raised_exc = protocol.Py4JJavaError
+        else:
+            raised_exc = RuntimeError # Dask always raises a Python RuntimeError
 
         df = df.Define("x", "1").Define("y", "ROOT::RVecF{1., 2., 3.}")
         g = df.Graph("x", "y")
         cpp_error_what = ("runtime_error: Graph was applied to a mix of scalar "
                           "values and collections. This is not supported.")
-        with pytest.raises(RaisedExc, match=cpp_error_what):
+        with pytest.raises(raised_exc, match=cpp_error_what):
             g.GetValue()
 
 

@@ -9,17 +9,12 @@ class TestVariations:
     """Tests usage of systematic variations with Dask backend"""
 
     def test_histo(self, payload):
-        connection, backend = payload
-        if backend == "dask":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-            df = RDataFrame(10, npartitions=2, daskclient=connection)
-        elif backend == "spark":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-            df = RDataFrame(10, npartitions=2, sparkcontext=connection)
+        connection, _ = payload
+        df = ROOT.RDataFrame(10, executor=connection, npartitions=2)
         df = df.Define("x", "1")
         df1 = df.Vary("x", "ROOT::RVecI{-2,2}", ["down", "up"])
         h = df1.Histo1D(("name", "title", 10, -10, 10), "x")
-        histos = DistRDF.VariationsFor(h)
+        histos = ROOT.RDF.Experimental.VariationsFor(h)
 
         expectednames = ["nominal", "x:up", "x:down"]
         expectedmeans = [1, 2, -2]
@@ -30,16 +25,11 @@ class TestVariations:
             assert histo.GetMean() == mean
 
     def test_graph(self, payload):
-        connection, backend = payload
-        if backend == "dask":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-            df = RDataFrame(10, npartitions=2, daskclient=connection)
-        elif backend == "spark":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-            df = RDataFrame(10, npartitions=2, sparkcontext=connection)
+        connection, _ = payload
+        df = ROOT.RDataFrame(10, executor=connection, npartitions=2)
         df = df.Define("x", "1")
         g = df.Vary("x", "ROOT::RVecI{-1, 2}", nVariations=2).Graph("x", "x")
-        gs = DistRDF.VariationsFor(g)
+        gs = ROOT.RDF.Experimental.VariationsFor(g)
 
         assert g.GetMean() == 1
 
@@ -51,17 +41,12 @@ class TestVariations:
             assert graph.GetMean() == mean
 
     def test_mixed(self, payload):
-        connection, backend = payload
-        if backend == "dask":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-            df = RDataFrame(10, npartitions=2, daskclient=connection)
-        elif backend == "spark":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-            df = RDataFrame(10, npartitions=2, sparkcontext=connection)
+        connection, _ = payload
+        df = ROOT.RDataFrame(10, executor=connection, npartitions=2)
         df = df.Define("x", "1").Define("y", "42")
         h = df.Vary("x", "ROOT::RVecI{-1, 2}",
                     variationTags=["down", "up"]).Histo1D(("name", "title", 10, -500, 500), "x", "y")
-        histos = DistRDF.VariationsFor(h)
+        histos = ROOT.RDF.Experimental.VariationsFor(h)
 
         expectednames = ["nominal", "x:down", "x:up"]
         expectedmeans = [1, -1, 2]
@@ -73,18 +58,13 @@ class TestVariations:
             assert histo.GetMean() == mean
 
     def test_simultaneous(self, payload):
-        connection, backend = payload
-        if backend == "dask":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-            df = RDataFrame(10, npartitions=2, daskclient=connection)
-        elif backend == "spark":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-            df = RDataFrame(10, npartitions=2, sparkcontext=connection)
+        connection, _ = payload
+        df = ROOT.RDataFrame(10, executor=connection, npartitions=2)
         df = df.Define("x", "1").Define("y", "42")
         h = df.Vary(["x", "y"],
                     "ROOT::RVec<ROOT::RVecI>{{-1, 2, 3}, {41, 43, 44}}",
                     ["down", "up", "other"], "xy").Histo1D(("name", "title", 10, -500, 500), "x", "y")
-        histos = DistRDF.VariationsFor(h)
+        histos = ROOT.RDF.Experimental.VariationsFor(h)
 
         expectednames = ["nominal", "xy:down", "xy:up", "xy:other"]
         expectedmeans = [1, -1, 2, 3]
@@ -96,20 +76,15 @@ class TestVariations:
             assert graph.GetMean() == mean
 
     def test_varyfiltersum(self, payload):
-        connection, backend = payload
-        if backend == "dask":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-            df = RDataFrame(10, npartitions=2, daskclient=connection)
-        elif backend == "spark":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-            df = RDataFrame(10, npartitions=2, sparkcontext=connection)
+        connection, _ = payload
+        df = ROOT.RDataFrame(10, executor=connection, npartitions=2)
         df = df.Define("x", "1")
         df_sum = df.Vary(
             "x", "ROOT::RVecI{-1*x, 2*x}", ("down", "up"), "myvariation").Filter("x > 0").Sum("x")
 
         assert df_sum.GetValue() == 10
 
-        sums = DistRDF.VariationsFor(df_sum)
+        sums = ROOT.RDF.Experimental.VariationsFor(df_sum)
 
         expectednames = ["nominal", "myvariation:down", "myvariation:up"]
         expectedsums = [10, 0, 20]

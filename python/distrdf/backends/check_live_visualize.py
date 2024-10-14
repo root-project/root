@@ -6,9 +6,6 @@ from DistRDF import LiveVisualize
 
 import ROOT
 
-
-RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-
 # Callback functions
 def set_marker(graph):
     graph.SetMarkerStyle(5)
@@ -49,7 +46,7 @@ class TestLiveVisualizationCallback:
             # This feature is only available with the Dask backend
             return
         num_entries = 50
-        d = RDataFrame(num_entries, daskclient=connection)
+        d = ROOT.RDataFrame(num_entries, executor=connection)
         graph = d.Define("x", "rdfentry_").Define("y", "x*x").Graph("x", "y")
 
         # Create a temp file to store the number of data points
@@ -78,7 +75,7 @@ class TestLiveVisualizationCallback:
         if backend != "dask":
             # This feature is only available with the Dask backend
             return
-        d = RDataFrame(100, daskclient=connection)
+        d = ROOT.RDataFrame(100, executor=connection)
         dd = d.Define("x", "rdfentry_").Define("y1", "x*x").Define("y2", "x+10")
         graph1 = dd.Graph("x", "y1")
         graph2 = dd.Graph("x", "y2")
@@ -98,7 +95,7 @@ class TestLiveVisualizationCallback:
         if backend != "dask":
             # This feature is only available with the Dask backend
             return
-        d = RDataFrame(100, daskclient=connection)
+        d = ROOT.RDataFrame(100, executor=connection)
         graph = d.Define("x", "rdfentry_").Define("y1", "x*x").Define("y2", "x+10").Graph("x", "y1")
 
         # Use functools.partial to pass a callback that takes 2 arguments 
@@ -121,7 +118,7 @@ class TestInvalidArgument:
         if backend != "dask":
             # This feature is only available with the Dask backend
             return
-        d = RDataFrame(100, daskclient=connection)
+        d = ROOT.RDataFrame(100, executor=connection)
         df = d.Define("x", "rdfentry_").Define("y", "x*x")
         graph = df.Graph("x", "y")
         
@@ -141,7 +138,7 @@ class TestInvalidArgument:
         if backend != "dask":
             # This feature is only available with the Dask backend
             return
-        d = RDataFrame(100, daskclient=connection)
+        d = ROOT.RDataFrame(100, executor=connection)
         graph = d.Define("x", "rdfentry_").Define("y", "x*x").Graph("x", "y")
 
         with pytest.warns(UserWarning, match="The provided callback is not callable. Skipping callback."):
@@ -169,8 +166,8 @@ class TestUnsupportedCall:
         if backend != "dask":
             # This feature is only available with the Dask backend
             return
-        d1 = RDataFrame(100, daskclient=connection)
-        d2 = RDataFrame(50, daskclient=connection)
+        d1 = ROOT.RDataFrame(100, executor=connection)
+        d2 = ROOT.RDataFrame(50, executor=connection)
 
         graph1 = d1.Define("x1", "rdfentry_").Define("y1", "x1*x1").Graph("x1", "y1")
         graph2 = d2.Define("x2", "rdfentry_").Define("y2", "x2+10").Graph("x2", "y2")
@@ -187,7 +184,7 @@ class TestUnsupportedCall:
         if backend != "dask":
             # This feature is only available with the Dask backend
             return
-        d = RDataFrame(100, daskclient=connection)
+        d = ROOT.RDataFrame(100, executor=connection)
         df = d.Define("x", "rdfentry_")
         sum = df.Sum("x")
         
@@ -203,7 +200,7 @@ class TestUnsupportedCall:
         if backend != "dask":
             # This feature is only available with the Dask backend
             return
-        d = RDataFrame(100, daskclient=connection)
+        d = ROOT.RDataFrame(100, executor=connection)
         graph = d.Define("x", "rdfentry_").Define("y", "x*x").Graph("x", "y")
 
         # Trigger the computation graph

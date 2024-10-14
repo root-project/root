@@ -1,16 +1,10 @@
-import logging
-
-logger = logging.getLogger(__name__)
-
-import math
-import pytest
-import os
-
-from distributed import get_worker
-from pathlib import Path
-import subprocess
-
 import ROOT
+import subprocess
+from pathlib import Path
+from distributed import get_worker
+import os
+import pytest
+import math
 
 
 class TestInterfaceHeadersLibrariesFiles:
@@ -90,25 +84,20 @@ class TestInterfaceHeadersLibrariesFiles:
         assert histo.GetMean() == required_mean
         assert histo.GetStdDev() == required_stdDev
 
-    def _distribute_header_check_filter_and_histo(self, connection, backend):
+    def _distribute_header_check_filter_and_histo(self, connection):
         """
         Check that the filter operation is able to use C++ functions that
         were included using header files.
         """
-        if backend == "dask":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-            rdf = RDataFrame(10, daskclient=connection)
-        elif backend == "spark":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-            rdf = RDataFrame(10, sparkcontext=connection)
+        rdf = ROOT.RDataFrame(10, executor=connection)
 
         ROOT.RDF.Experimental.Distributed.DistributeHeaders(
             "../test_headers/header1.hxx"
         )
-        
+
         self._check_rdf_histos_5(rdf)
 
-    def _extend_ROOT_include_path(self, connection, backend):
+    def _extend_ROOT_include_path(self, connection):
         """
         Check that the include path of ROOT is extended with the directories
         specified in `DistRDF.include_headers()` so references between headers
@@ -117,12 +106,7 @@ class TestInterfaceHeadersLibrariesFiles:
         header_folder = "../test_headers/headers_folder"
 
         # Create an RDataFrame with 100 integers from 0 to 99
-        if backend == "dask":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-            rdf = RDataFrame(100, daskclient=connection)
-        elif backend == "spark":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-            rdf = RDataFrame(100, sparkcontext=connection)
+        rdf = ROOT.RDataFrame(100, executor=connection)
 
         ROOT.RDF.Experimental.Distributed.DistributeHeaders(header_folder)
         # Get list of include paths seen by ROOT
@@ -136,23 +120,19 @@ class TestInterfaceHeadersLibrariesFiles:
 
         # Filter numbers less than 10 and create an histogram
         rdf_less_than_10 = rdf.Filter("check_number_less_than_10(rdfentry_)")
-        histo1 = rdf_less_than_10.Histo1D(("name", "title", 10, 0, 100), "rdfentry_")
+        histo1 = rdf_less_than_10.Histo1D(
+            ("name", "title", 10, 0, 100), "rdfentry_")
 
         # Check that histogram has 10 entries and mean 4.5
         assert histo1.GetEntries() == 10
         assert histo1.GetMean() == pytest.approx(4.5)
 
-    def _distribute_shared_lib_check_filter_and_histo(self, connection, backend):
+    def _distribute_shared_lib_check_filter_and_histo(self, connection):
         """
         Check that the filter operation is able to use C++ functions that
         were included using a single shared library.
         """
-        if backend == "dask":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-            rdf = RDataFrame(15, daskclient=connection)
-        elif backend == "spark":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-            rdf = RDataFrame(15, sparkcontext=connection)
+        rdf = ROOT.RDataFrame(15, executor=connection)
 
         ROOT.RDF.Experimental.Distributed.DistributeHeaders(
             "../test_shared_libs/myheader7.h"
@@ -162,37 +142,28 @@ class TestInterfaceHeadersLibrariesFiles:
         )
         self._check_rdf_histos_7(rdf)
 
-    def _distribute_shared_lib_folder_check_filter_and_histo(self, connection, backend):
+    def _distribute_shared_lib_folder_check_filter_and_histo(self, connection):
         """
         Check that the filter operation is able to use C++ functions that
         were included using a single shared library which is in a folder of multiple libraries and only the folder is distributed.
         """
-        if backend == "dask":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-            rdf = RDataFrame(15, daskclient=connection)
-        elif backend == "spark":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-            rdf = RDataFrame(15, sparkcontext=connection)
+        rdf = ROOT.RDataFrame(15, executor=connection)
 
         ROOT.RDF.Experimental.Distributed.DistributeHeaders(
             "../test_shared_libs/myheader6.h"
         )
-        ROOT.RDF.Experimental.Distributed.DistributeSharedLibs("../test_shared_libs/")
+        ROOT.RDF.Experimental.Distributed.DistributeSharedLibs(
+            "../test_shared_libs/")
         self._check_rdf_histos_6(rdf)
 
     def _distribute_multiple_shared_lib_check_filter_and_histo(
-        self, connection, backend
+        self, connection
     ):
         """
         Check that the filter operation is able to use C++ functions that
         were included using multiple shared libraries.
         """
-        if backend == "dask":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-            rdf = RDataFrame(15, daskclient=connection)
-        elif backend == "spark":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-            rdf = RDataFrame(15, sparkcontext=connection)
+        rdf = ROOT.RDataFrame(15, executor=connection)
 
         ROOT.RDF.Experimental.Distributed.DistributeHeaders(
             ["../test_shared_libs/myheader7.h", "../test_shared_libs/myheader6.h"]
@@ -204,23 +175,19 @@ class TestInterfaceHeadersLibrariesFiles:
         self._check_rdf_histos_7(rdf)
 
     def _distribute_multiple_shared_lib_folder_check_filter_and_histo(
-        self, connection, backend
+        self, connection
     ):
         """
         Check that the filter operation is able to use C++ functions that
         were included using multiple shared libraries while only distributing the folder with shared libraries.
         """
-        if backend == "dask":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-            rdf = RDataFrame(15, daskclient=connection)
-        elif backend == "spark":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-            rdf = RDataFrame(15, sparkcontext=connection)
+        rdf = ROOT.RDataFrame(15, executor=connection)
 
         ROOT.RDF.Experimental.Distributed.DistributeHeaders(
             ["../test_shared_libs/myheader7.h", "../test_shared_libs/myheader6.h"]
         )
-        ROOT.RDF.Experimental.Distributed.DistributeSharedLibs("../test_shared_libs/")
+        ROOT.RDF.Experimental.Distributed.DistributeSharedLibs(
+            "../test_shared_libs/")
         self._check_rdf_histos_6(rdf)
         self._check_rdf_histos_7(rdf)
 
@@ -228,14 +195,10 @@ class TestInterfaceHeadersLibrariesFiles:
         # For spark we are using spark "addFile" function directly
         # hence this is not tested here directly.
 
-        if backend == "dask":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-            rdf = RDataFrame(10, daskclient=connection)
-        elif backend == "spark":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-            rdf = RDataFrame(100, sparkcontext=connection)
+        rdf = ROOT.RDataFrame(10, executor=connection)
 
-        ROOT.RDF.Experimental.Distributed.DistributeFiles("../test_files/file.txt")
+        ROOT.RDF.Experimental.Distributed.DistributeFiles(
+            "../test_files/file.txt")
 
         if backend == "dask":
 
@@ -267,12 +230,7 @@ class TestInterfaceHeadersLibrariesFiles:
         # For spark we are using spark "addFile" function directly
         # hence this is not tested here directly.
 
-        if backend == "dask":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-            rdf = RDataFrame(10, daskclient=connection)
-        elif backend == "spark":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-            rdf = RDataFrame(10, sparkcontext=connection)
+        rdf = ROOT.RDataFrame(10, executor=connection)
 
         ROOT.RDF.Experimental.Distributed.DistributeFiles(
             ["../test_files/file.txt", "../test_files/file_1.txt"]
@@ -310,7 +268,7 @@ class TestInterfaceHeadersLibrariesFiles:
         self._create_shared_libs()
         yield
         from DistRDF.Backends.Base import BaseBackend
-        
+
         BaseBackend.headers = set()
         BaseBackend.shared_libraries = set()
         BaseBackend.pcms = set()
@@ -318,29 +276,29 @@ class TestInterfaceHeadersLibrariesFiles:
         self._remove_shared_libs()
 
     def test_check_single_headers(self, payload):
-        connection, backend = payload
-        self._distribute_header_check_filter_and_histo(connection, backend)
+        connection, _ = payload
+        self._distribute_header_check_filter_and_histo(connection)
 
     def test_distribute_multiple_headers(self, payload):
-        connection, backend = payload
-        self._extend_ROOT_include_path(connection, backend)
+        connection, _ = payload
+        self._extend_ROOT_include_path(connection)
 
     def test_distribute_single_library(self, payload):
-        connection, backend = payload
-        self._distribute_shared_lib_check_filter_and_histo(connection, backend)
+        connection, _ = payload
+        self._distribute_shared_lib_check_filter_and_histo(connection)
 
     def test_distribute_single_library_from_folder(self, payload):
-        connection, backend = payload
-        self._distribute_shared_lib_folder_check_filter_and_histo(connection, backend)
+        connection, _ = payload
+        self._distribute_shared_lib_folder_check_filter_and_histo(connection)
 
     def test_distribute_multiple_libraries(self, payload):
-        connection, backend = payload
-        self._distribute_multiple_shared_lib_check_filter_and_histo(connection, backend)
+        connection, _ = payload
+        self._distribute_multiple_shared_lib_check_filter_and_histo(connection)
 
     def test_distribute_multiple_libraries_from_folder(self, payload):
-        connection, backend = payload
+        connection, _ = payload
         self._distribute_multiple_shared_lib_folder_check_filter_and_histo(
-            connection, backend
+            connection
         )
 
     def test_distribute_single_file(self, payload):
@@ -350,6 +308,7 @@ class TestInterfaceHeadersLibrariesFiles:
     def test_distribute_multiple_files(self, payload):
         connection, backend = payload
         self._distribute_multiple_files(connection, backend)
+
 
 if __name__ == "__main__":
     pytest.main(args=[__file__])

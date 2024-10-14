@@ -40,13 +40,8 @@ class TestDaskFriendTreesAlignment:
 
         chain = create_chain()
 
-        connection, backend = payload
-        if backend == "dask":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-            df = RDataFrame(chain, daskclient=connection, npartitions=nparts)
-        elif backend == "spark":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-            df = RDataFrame(chain, sparkcontext=connection, npartitions=nparts)
+        connection, _ = payload
+        df = ROOT.RDataFrame(chain, executor=connection, npartitions=nparts)
 
         s1 = df.Sum("x")
         s2 = df.Sum("friend.x")
