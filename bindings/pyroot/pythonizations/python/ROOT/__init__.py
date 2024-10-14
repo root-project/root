@@ -199,6 +199,8 @@ def cleanup():
             # Python proxies are properly nonified.
             backend.ClearProxiedObjects()
 
+        del sys.modules["libROOTPythonizations"]
+
 
 
 atexit.register(cleanup)
