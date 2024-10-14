@@ -307,7 +307,7 @@ TEST(RNTuple, ViewFrameworkUse)
    std::optional<ROOT::Experimental::RNTupleView<void>> viewPy;
    std::optional<ROOT::Experimental::RNTupleView<void>> viewPz;
 
-   float px, py, pz;
+   float px = 0, py = 0, pz = 0;
    for (auto i : reader->GetEntryRange()) {
       if (i > 1) {
          if (!viewPx) {
