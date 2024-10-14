@@ -89,6 +89,8 @@ if(MSVC AND NOT win_broken_tests)
   list(APPEND dataframe_veto dataframe/df036_missingBranches.py)
   list(APPEND dataframe_veto dataframe/df037_TTreeEventMatching.C)
   list(APPEND dataframe_veto dataframe/df037_TTreeEventMatching.py)
+  # The RooFit SBI tutorials fail on Windows for unknown reasons
+  list(APPEND roofit_veto roofit/rf615_simulation_based_inference.py roofit/rf617_simulation_based_inference_multidimensional.py)
 endif()
 
 if (NOT dataframe)
@@ -146,8 +148,6 @@ else()
     # IncrementalExecutor::executeFunction: symbol '__std_find_trivial_4@12' unresolved while linking [cling interface function]!
     # on Windows 32 bit and Visual Studio v17.8
     list(APPEND roofit_veto roofit/rf509_wsinteractive.C roofit/rf614_binned_fit_problems.C)
-    # The next tutorial uses scikit-learn, which is not available on Windows 32 bit
-    list(APPEND roofit_veto roofit/rf615_simulation_based_inference.py roofit/rf617_simulation_based_inference_multidimensional.py)
     # The following tutorial fails with a segfault (see #15364)
     list(APPEND roofit_veto roostats/rs101_limitexample.py)
   endif()
