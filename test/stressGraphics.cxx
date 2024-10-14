@@ -121,12 +121,12 @@ std::vector<TestEntry> gReports;
 ////////////////////////////////////////////////////////////////////////////////
 /// Print test program number and its title
 
-Int_t StatusPrint(const TString &filename, Int_t id, const char *title, Int_t res, Int_t ref, Int_t err)
+Int_t StatusPrint(const TString &filename, Int_t id, const char *title, Int_t testnum, Int_t res, Int_t ref, Int_t err)
 {
    if (!gOptionR) {
       TString line;
       if (id > 0)
-         line = TString::Format("Test %2d: %s", id, title);
+         line = TString::Format("Test %2d: %s", testnum, title);
        else
          line = TString::Format("       %s", title);
 
@@ -141,9 +141,9 @@ Int_t StatusPrint(const TString &filename, Int_t id, const char *title, Int_t re
          std::cout << line;
          Int_t ndots = 60;
          Int_t w = 3;
-         if (gTestNum < 10) { ndots++; w--;}
+         if (testnum < 10) { ndots++; w--;}
          for (Int_t i = nch; i < ndots; i++) std::cout << ".";
-         std::cout << std::setw(w) << gTestNum << " FAILED" << std::endl;
+         std::cout << std::setw(w) << testnum << " FAILED" << std::endl;
          std::cout << "         Result    = "  << res << std::endl;
          std::cout << "         Reference = "  << ref << std::endl;
          std::cout << "         Error     = "  << TMath::Abs(res-ref)
@@ -152,7 +152,7 @@ Int_t StatusPrint(const TString &filename, Int_t id, const char *title, Int_t re
          return 1;
       }
    } else {
-      if (id > 0)  printf("%5d%10d%10d",id,res,err);
+      if (id > 0)  printf("%5d%10d%10d",testnum,res,err);
       if (id == 0) printf("%10d%10d",res,err);
       if (id < 0)  printf("%10d%10d\n",res,err);
    }
@@ -329,20 +329,20 @@ void print_reports()
 
    for (auto &e : gReports) {
 
-      StatusPrint(e.psfile,  e.TestNum, e.title,
+      StatusPrint(e.psfile, 1, e.title, e.TestNum,
                   e.IPS ? FileSize(e.psfile) : AnalysePS(e.psfile), gPS1RefNb[e.TestNum-1], gPS1ErrNb[e.TestNum-1]);
 
-      StatusPrint(e.pdffile, 0, "  PDF output",
+      StatusPrint(e.pdffile, 0, "  PDF output", e.TestNum, 
                   FileSize(e.pdffile), gPDFRefNb[e.TestNum-1], gPDFErrNb[e.TestNum-1]);
 
-      StatusPrint(e.jpgfile, 0, "  JPG output",
+      StatusPrint(e.jpgfile, 0, "  JPG output", e.TestNum,
                   FileSize(e.jpgfile), gJPGRefNb[e.TestNum-1], gJPGErrNb[e.TestNum-1]);
 
-      StatusPrint(e.pngfile, 0, "  PNG output",
+      StatusPrint(e.pngfile, 0, "  PNG output", e.TestNum,
                   FileSize(e.pngfile), gPNGRefNb[e.TestNum-1], gPNGErrNb[e.TestNum-1]);
 
       if (e.execute_ccode) {
-         Int_t ret_code = StatusPrint(e.psfile,-1, "  C file result",
+         Int_t ret_code = StatusPrint(e.psfile, -1, "  C file result", e.TestNum,
                                     e.IPS ? FileSize(e.ps2file) : AnalysePS(e.ps2file), gPS2RefNb[e.TestNum-1], gPS2ErrNb[e.TestNum-1]);
 
 #ifndef __CLING__
