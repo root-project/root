@@ -43,3 +43,9 @@ include(${dir}/tutorials/CTestCustom.cmake OPTIONAL)
 
 #---Load custom environment variables for test configurations at runtime------
 include(${dir}/CTestEnvVars.cmake OPTIONAL)
+
+#---CDash submission--------------------------------------------------------
+set(CTEST_PROJECT_NAME ROOT)
+set(CTEST_NIGHTLY_START_TIME 00:00:00 Europe/Zurich)
+set(CTEST_SUBMIT_URL https://my.cdash.org/submit.php?project=ROOT)
+set(CTEST_DROP_SITE_CDASH TRUE)
