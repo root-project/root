@@ -18,9 +18,6 @@
 from dask.distributed import LocalCluster, Client
 import ROOT
 
-# Point RDataFrame calls to Dask RDataFrame object
-RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-
 
 def create_connection():
     """
@@ -89,7 +86,7 @@ if __name__ == "__main__":
     # Create the connection to the mock Dask cluster on the local machine
     connection = create_connection()
     # Create an RDataFrame that will use Dask as a backend for computations
-    df = RDataFrame(1000, daskclient=connection)
+    df = ROOT.RDataFrame(1000, executor=connection)
 
     # Set the random seed and define two columns of the dataset with random numbers.
     ROOT.gRandom.SetSeed(1)

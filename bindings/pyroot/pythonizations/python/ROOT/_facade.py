@@ -45,23 +45,6 @@ class _gROOTWrapper(object):
         return setattr(self._gROOT, name, value)
 
 
-def _create_rdf_experimental_distributed_module(parent):
-    """
-    Create the ROOT.RDF.Experimental.Distributed python module.
-
-    This module will be injected into the ROOT.RDF namespace.
-
-    Arguments:
-        parent: The ROOT.RDF namespace. Needed to define __package__.
-
-    Returns:
-        types.ModuleType: The ROOT.RDF.Experimental.Distributed submodule.
-    """
-    import DistRDF
-
-    return DistRDF.create_distributed_module(parent)
-
-
 def _subimport(name):
     # type: (str) -> types.ModuleType
     """
@@ -378,14 +361,32 @@ class ROOTFacade(types.ModuleType):
             ns.FromPandas = MakePandasDataFrame
 
             try:
-                # Inject Experimental.Distributed package into namespace RDF if available
-                ns.Experimental.Distributed = _create_rdf_experimental_distributed_module(ns.Experimental)
+                # Inject Pythonizations to interact between local and distributed RDF package
+                from ._pythonization._rdf_namespace import _create_distributed_module, _rungraphs, _variationsfor
+                ns.Experimental.Distributed = _create_distributed_module(ns.Experimental)
+                ns.RunGraphs = _rungraphs(ns.Experimental.Distributed.RunGraphs, ns.RunGraphs)
+                ns.Experimental.VariationsFor = _variationsfor(ns.Experimental.Distributed.VariationsFor, ns.Experimental.VariationsFor)
             except ImportError:
                 pass
         except:
             raise Exception("Failed to pythonize the namespace RDF")
         del type(self).RDF
         return ns
+
+    @property
+    def RDataFrame(self):
+        """
+        Dispatch between the local and distributed RDataFrame depending on
+        input arguments.
+        """
+        local_rdf = self.__getattr__("RDataFrame")
+        try:
+            import DistRDF
+            from ._pythonization._rdf_namespace import _rdataframe
+            return _rdataframe(local_rdf, DistRDF.RDataFrame)
+        except ImportError:
+            return local_rdf
+
 
     # Overload RooFit namespace
     @property

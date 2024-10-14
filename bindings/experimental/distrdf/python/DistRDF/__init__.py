@@ -3,7 +3,7 @@
 #  @date 2021-02
 
 ################################################################################
-# Copyright (C) 1995-2022, Rene Brun and Fons Rademakers.                      #
+# Copyright (C) 1995-2024, Rene Brun and Fons Rademakers.                      #
 # All rights reserved.                                                         #
 #                                                                              #
 # For the licensing terms see $ROOTSYS/LICENSE.                                #
@@ -117,19 +117,17 @@ def RunGraphs(proxies: Iterable) -> int:
 
         @code{.py}
         import ROOT
-        RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-        RunGraphs = ROOT.RDF.Experimental.Distributed.RunGraphs
 
         # Create 3 different dataframes and book an histogram on each one
         histoproxies = [
-            RDataFrame(100)
+            ROOT.RDataFrame(100, executor=SupportedExecutor(...))
                 .Define("x", "rdfentry_")
                 .Histo1D(("name", "title", 10, 0, 100), "x")
             for _ in range(4)
         ]
 
         # Execute the 3 computation graphs
-        n_graphs_run = RunGraphs(histoproxies)
+        n_graphs_run = ROOT.RDF.RunGraphs(histoproxies)
         # Retrieve all the histograms in one go
         histos = [histoproxy.GetValue() for histoproxy in histoproxies]
         @endcode
@@ -191,3 +189,33 @@ def create_distributed_module(parentmodule):
     distributed.DistributeCppCode = DistributeCppCode
     
     return distributed
+
+
+def RDataFrame(*args, **kwargs):
+    executor = kwargs.get("executor", None)
+    if executor is None:
+        raise ValueError(
+            "Missing keyword argument 'executor'. Please provide a connection object "
+            "to one of the schedulers supported by distributed RDataFrame."
+        )
+
+    # Try to dispatch to the correct distributed scheduler implementation
+    try:
+        from distributed import Client
+        from DistRDF.Backends.Dask import RDataFrame
+        if isinstance(executor, Client):
+            return RDataFrame(*args, **kwargs)
+    except ImportError:
+        pass
+
+    try:
+        from pyspark import SparkContext
+        from DistRDF.Backends.Spark import RDataFrame
+        if isinstance(executor, SparkContext):
+            return RDataFrame(*args, **kwargs)
+    except ImportError:
+        pass
+
+    raise TypeError(
+        f"The client object of type '{type(executor)}' is not a supported "
+        "connection type for distributed RDataFrame.")
