@@ -682,12 +682,12 @@ the backend-specific `RDataFrame` of your choice, for example:
 
 ~~~{.py}
 import ROOT
-
-# Point RDataFrame calls to the Spark specific RDataFrame
-RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-
+from distributed import Client
 # It still accepts the same constructor arguments as traditional RDataFrame
-df = RDataFrame("mytree", "myfile.root")
+# but needs a client object which allows connecting to one of the supported
+# schedulers (read more info below)
+client = Client(...)
+df = ROOT.RDataFrame("mytree", "myfile.root", executor=client)
 
 # Continue the application with the traditional RDataFrame API
 sum = df.Filter("x > 10").Sum("y")
@@ -739,16 +739,16 @@ import ROOT
 conf = SparkConf().setAppName(appName).setMaster(master)
 sc = SparkContext(conf=conf)
 
-# Point RDataFrame calls to the Spark specific RDataFrame
-RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-
 # The Spark RDataFrame constructor accepts an optional "sparkcontext" parameter
 # and it will distribute the application to the connected cluster
-df = RDataFrame("mytree", "myfile.root", sparkcontext = sc)
+df = RDataFrame("mytree", "myfile.root", executor = sc)
 ~~~
 
-If an instance of [SparkContext](https://spark.apache.org/docs/latest/api/python/reference/api/pyspark.SparkContext.html)
-is not provided, the default behaviour is to create one in the background for you.
+Note that with the usage above the case of `executor = None` is not supported. One
+can explicitly create a `ROOT.RDF.Experimental.Distributed.Spark.RDataFrame` object
+in order to get a default instance of 
+[SparkContext](https://spark.apache.org/docs/latest/api/python/reference/api/pyspark.SparkContext.html)
+in case it is not already provided as argument.
 
 ### Connecting to a Dask cluster
 
@@ -760,9 +760,6 @@ of the cluster schedulers supported by Dask (more information in the
 import ROOT
 from dask.distributed import Client
 
-# Point RDataFrame calls to the Dask specific RDataFrame
-RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-
 # In a Python script the Dask client needs to be initalized in a context
 # Jupyter notebooks / Python session don't need this
 if __name__ == "__main__":
@@ -770,14 +767,17 @@ if __name__ == "__main__":
     client = Client("dask_scheduler.domain.com:8786")
 
     # The Dask RDataFrame constructor accepts the Dask Client object as an optional argument
-    df = RDataFrame("mytree","myfile.root", daskclient=client)
+    df = RDataFrame("mytree","myfile.root", executor=client)
     # Proceed as usual
     df.Define("x","someoperation").Histo1D(("name", "title", 10, 0, 10), "x")
 ~~~
 
-If an instance of [distributed.Client](http://distributed.dask.org/en/stable/api.html#distributed.Client) is not
-provided to the RDataFrame object, it will be created for you and it will run the computations in the local machine
-using all cores available.
+Note that with the usage above the case of `executor = None` is not supported. One
+can explicitly create a `ROOT.RDF.Experimental.Distributed.Dask.RDataFrame` object
+in order to get a default instance of 
+[distributed.Client](http://distributed.dask.org/en/stable/api.html#distributed.Client)
+in case it is not already provided as argument. This will run multiple processes
+on the local machine using all available cores.
 
 ### Choosing the number of distributed tasks
 
@@ -797,13 +797,9 @@ backend used:
 ~~~{.py}
 import ROOT
 
-# Define correct imports and access the distributed RDataFrame appropriate for the
-# backend used in the analysis
-RDataFrame = ROOT.RDF.Experimental.Distributed.[BACKEND].RDataFrame
-
 if __name__ == "__main__":
     # The `npartitions` optional argument tells the RDataFrame how many tasks are desired
-    df = RDataFrame("mytree","myfile.root", npartitions=NPARTITIONS)
+    df = ROOT.RDataFrame("mytree", "myfile.root", executor=SupportedExecutor(...), npartitions=NPARTITIONS)
     # Proceed as usual
     df.Define("x","someoperation").Histo1D(("name", "title", 10, 0, 10), "x")
 ~~~
@@ -828,19 +824,17 @@ triggered concurrently to send multiple computation graphs to a distributed clus
 
 ~~~{.py}
 import ROOT
-RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-RunGraphs = ROOT.RDF.Experimental.Distributed.RunGraphs
 
 # Create 3 different dataframes and book an histogram on each one
 histoproxies = [
-   RDataFrame(100)
+   ROOT.RDataFrame(100, executor=SupportedExecutor(...))
          .Define("x", "rdfentry_")
          .Histo1D(("name", "title", 10, 0, 100), "x")
    for _ in range(4)
 ]
 
 # Execute the 3 computation graphs
-RunGraphs(histoproxies)
+ROOT.RDF.RunGraphs(histoproxies)
 # Retrieve all the histograms in one go
 histos = [histoproxy.GetValue() for histoproxy in histoproxies]
 ~~~
@@ -855,10 +849,9 @@ computed, e.g. the axis range and the number of bins:
 
 ~~~{.py}
 import ROOT
-RDataFrame = ROOT.RDF.Experimental.Distributed.[BACKEND].RDataFrame
 
 if __name__ == "__main__":
-    df = RDataFrame("mytree","myfile.root").Define("x","someoperation")
+    df = ROOT.RDataFrame("mytree","myfile.root",executor=SupportedExecutor(...)).Define("x","someoperation")
     # The model can be passed either as a tuple with the arguments in the correct order
     df.Histo1D(("name", "title", 10, 0, 10), "x")
     # Or by creating the specific struct
