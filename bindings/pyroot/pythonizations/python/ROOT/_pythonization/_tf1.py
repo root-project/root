@@ -63,7 +63,7 @@ params = np.array([
 
 # Slice to avoid the dummy column of 10's
 res = rtf1_coulomb.EvalPar(x[:, ::2], params)
-        
+
 \endcode
 
 \htmlonly
@@ -73,6 +73,7 @@ res = rtf1_coulomb.EvalPar(x[:, ::2], params)
 """
 
 from . import pythonization
+
 
 def _TF1_EvalPar(self, vars, params):
 
@@ -94,13 +95,28 @@ def _TF1_EvalPar(self, vars, params):
         self.SetNdim(x_size)
 
     out = numpy.zeros(len(x))
-    
-    ROOT.Internal.EvalParMultiDim(self, out, x, x_size, nrows, params)
-    return numpy.frombuffer(out, dtype=numpy.float64, count=nrows) 
 
-@pythonization('TF1')
+    ROOT.Internal.EvalParMultiDim(self, out, x, x_size, nrows, params)
+    return numpy.frombuffer(out, dtype=numpy.float64, count=nrows)
+
+
+def _TF1_init(self, *args, **kwargs):
+    """By default, ROOT manages all TF1 instances automatically,
+    so this wrapper is dropping the ownership on the Python side.
+    """
+    import ROOT
+
+    self._init(*args, **kwargs)
+    ROOT.SetOwnership(self, False)
+
+
+@pythonization("TF1")
 def pythonize_tf1(klass):
 
-    # Pythonizations for TH1::EvalPar
+    # Pythonizations for TF1 constructor
+    klass._init = klass.__init__
+    klass.__init__ = _TF1_init
+
+    # Pythonizations for TF1::EvalPar
     klass._EvalPar = klass.EvalPar
     klass.EvalPar = _TF1_EvalPar
