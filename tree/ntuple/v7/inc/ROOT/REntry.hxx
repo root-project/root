@@ -33,10 +33,9 @@
 namespace ROOT {
 namespace Experimental {
 
-namespace Internal {
 class RNTupleProcessor;
 class RNTupleChainProcessor;
-}
+class RNTupleJoinProcessor;
 
 // clang-format off
 /**
@@ -54,6 +53,7 @@ class REntry {
    friend class RNTupleFillContext;
    friend class RNTupleProcessor;
    friend class RNTupleChainProcessor;
+   friend class RNTupleJoinProcessor;
 
 public:
    /// The field token identifies a (sub)field in this entry. It can be used for fast indexing in REntry's methods, e.g.
@@ -105,6 +105,10 @@ private:
    /// happens when page source the field values are read from changes.
    void UpdateValue(RFieldToken token, RFieldBase::RValue &&value) { std::swap(fValues.at(token.fIndex), value); }
    void UpdateValue(RFieldToken token, RFieldBase::RValue &value) { std::swap(fValues.at(token.fIndex), value); }
+
+   /// Return the RValue currently bound to the provided field.
+   RFieldBase::RValue &GetValue(RFieldToken token) { return fValues.at(token.fIndex); }
+   RFieldBase::RValue &GetValue(std::string_view fieldName) { return GetValue(GetToken(fieldName)); }
 
    void Read(NTupleSize_t index)
    {
