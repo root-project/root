@@ -466,7 +466,11 @@ private:
    }
 };
 
+#ifdef HISTFACTORY_XML
 TEST(HistFactory, PdfComparison)
+#else
+TEST(HistFactory, DISABLED_PdfComparison)
+#endif
 {
    RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
 
