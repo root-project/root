@@ -10,19 +10,14 @@ from DistRDF.Backends import Dask
 class TestDaskHistograms:
     """Integration tests to check the working of DistRDF."""
 
-    def build_distrdf_graph(self, connection, backend):
+    def build_distrdf_graph(self, connection):
         """
         Create a DistRDF graph with a fixed set of operations and return it.
         """
         
         treename = "data"
         files = ["http://root.cern/files/teaching/CMS_Open_Dataset.root", ]
-        if backend == "dask":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-            rdf = RDataFrame(treename, files, npartitions=5, daskclient=connection)
-        elif backend == "spark":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-            rdf = RDataFrame(treename, files, npartitions=5, sparkcontext=connection)
+        rdf = ROOT.RDataFrame(treename, files, executor=connection, npartitions=5)
 
         # Define the analysis cuts
         chargeCutStr = "C1 != C2"
@@ -85,8 +80,8 @@ class TestDaskHistograms:
         physics_variables = ["pt1_h", "pt2_h", "invMass_h", "phis_h"]
 
         DaskResult = namedtuple("DaskResult", physics_variables)
-        connection, backend = payload
-        daskresults = DaskResult(*self.build_distrdf_graph(connection, backend))
+        connection, _ = payload
+        daskresults = DaskResult(*self.build_distrdf_graph(connection))
 
         daskresults.pt1_h.Draw("PL PLC PMC")  # Trigger Event-loop, Dask
 

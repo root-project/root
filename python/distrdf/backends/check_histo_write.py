@@ -28,13 +28,8 @@ class TestDaskHistoWrite:
             treename = "T"
             filename = "../data/ttree/distrdf_roottest_check_friend_trees_main.root"
             # Create a DistRDF RDataFrame with the parent and the friend trees
-            connection, backend = payload
-            if backend == "dask":
-                RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-                df = RDataFrame(treename, filename, daskclient=connection)
-            elif backend == "spark":
-                RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-                df = RDataFrame(treename, filename, sparkcontext=connection)
+            connection, _ = payload
+            df = ROOT.RDataFrame(treename, filename, executor=connection)
 
             # Create histogram
             histo = df.Histo1D(("x", "x", 100, 0, 20), "x")

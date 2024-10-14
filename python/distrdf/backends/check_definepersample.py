@@ -18,13 +18,8 @@ class TestDefinePerSample:
         string of operations.
         """
 
-        connection, backend = payload
-        if backend == "dask":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-            df = RDataFrame(self.maintreename, self.filenames, daskclient=connection)
-        elif backend == "spark":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-            df = RDataFrame(self.maintreename, self.filenames, sparkcontext=connection)
+        connection, _ = payload
+        df = ROOT.RDataFrame(self.maintreename, self.filenames, executor=connection)
 
         # Associate a number to each sample
         definepersample_code = """
@@ -86,13 +81,8 @@ class TestDefinePerSample:
             ''')
 
         DistRDF.initialize(declare_definepersample_code)
-        connection, backend = payload
-        if backend == "dask":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-            df = RDataFrame(self.maintreename, self.filenames, daskclient=connection)
-        elif backend == "spark":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-            df = RDataFrame(self.maintreename, self.filenames, sparkcontext=connection)
+        connection, _ = payload
+        df = ROOT.RDataFrame(self.maintreename, self.filenames, executor=connection)
         df1 = df.DefinePerSample("sample_weight", "samples_weights(rdfslot_, rdfsampleinfo_)")\
                 .DefinePerSample("sample_name", "samples_names(rdfslot_, rdfsampleinfo_)")
 

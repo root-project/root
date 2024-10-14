@@ -16,15 +16,8 @@ class TestRunGraphs:
         treename = "tree"
         filename = "../data/ttree/distrdf_roottest_check_rungraphs.root"
         nentries = 10000
-        connection, backend = payload
-        if backend == "dask":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-            df = RDataFrame(treename, filename, npartitions=2,
-                            daskclient=connection)
-        elif backend == "spark":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-            df = RDataFrame(treename, filename, npartitions=2,
-                            sparkcontext=connection)
+        connection, _ = payload
+        df = ROOT.RDataFrame(treename, filename, executor=connection, npartitions=2)
         histoproxies = [
             df.Histo1D((col, col, 1, 40, 45), col)
             for col in ["b1", "b2", "b3"]
@@ -34,7 +27,7 @@ class TestRunGraphs:
         for proxy in histoproxies:
             assert proxy.proxied_node.value is None
 
-        DistRDF.RunGraphs(histoproxies)
+        ROOT.RDF.RunGraphs(histoproxies)
 
         # After RunGraphs all histograms are correctly assigned to the
         # node objects

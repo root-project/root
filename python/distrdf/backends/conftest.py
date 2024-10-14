@@ -55,7 +55,7 @@ def payload(request):
     ```
     def test_my_feature(payload):
         connection, backend = payload
-        df = RDataFrame(10, daskclient=connection)
+        df = RDataFrame(10, executor=connection)
     ```
 
     The environment variable "DISTRDF_BACKENDS_IN_USE" is set at configuration

@@ -59,14 +59,8 @@ class TestReducerMerge:
     def test_histo1d_merge(self, payload):
         """Check the working of Histo1D merge operation in the reducer."""
         # Operations with DistRDF
-        connection, backend = payload
-        if backend == "dask":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-            rdf_py = RDataFrame(10, daskclient=connection)
-        elif backend == "spark":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-            rdf_py = RDataFrame(10, sparkcontext=connection)
-
+        connection, _ = payload
+        rdf_py = ROOT.RDataFrame(10, executor=connection)
         histo_py = rdf_py.Histo1D(("name", "title", 10, 0, 10), "rdfentry_")
 
         # Operations with PyROOT
@@ -81,13 +75,8 @@ class TestReducerMerge:
         modelTH2D = ("", "", 64, -4, 4, 64, -4, 4)
 
         # Operations with DistRDF
-        connection, backend = payload
-        if backend == "dask":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-            rdf_py = RDataFrame(10, daskclient=connection)
-        elif backend == "spark":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-            rdf_py = RDataFrame(10, sparkcontext=connection)
+        connection, _ = payload
+        rdf_py = ROOT.RDataFrame(10, executor=connection)
 
         columns_py = self.define_two_columns(rdf_py)
         histo_py = columns_py.Histo2D(modelTH2D, "x", "y")
@@ -104,13 +93,8 @@ class TestReducerMerge:
         """Check the working of Histo3D merge operation in the reducer."""
         modelTH3D = ("", "", 64, -4, 4, 64, -4, 4, 64, -4, 4)
         # Operations with DistRDF
-        connection, backend = payload
-        if backend == "dask":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-            rdf_py = RDataFrame(10, daskclient=connection)
-        elif backend == "spark":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-            rdf_py = RDataFrame(10, sparkcontext=connection)
+        connection, _ = payload
+        rdf_py = ROOT.RDataFrame(10, executor=connection)
         columns_py = self.define_three_columns(rdf_py)
         histo_py = columns_py.Histo3D(modelTH3D, "x", "y", "z")
 
@@ -130,13 +114,8 @@ class TestReducerMerge:
         modelTHND = ("name", "title", 4, nbins, xmin, xmax)
         colnames = ("x0", "x1", "x2", "x3")
 
-        connection, backend = payload
-        if backend == "dask":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-            distrdf = RDataFrame(100, daskclient=connection)
-        elif backend == "spark":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-            distrdf = RDataFrame(100, sparkcontext=connection)
+        connection, _ = payload
+        distrdf = ROOT.RDataFrame(100, executor=connection)
 
         rdf = ROOT.RDataFrame(100)
 
@@ -152,13 +131,8 @@ class TestReducerMerge:
     def test_profile1d_merge(self, payload):
         """Check the working of Profile1D merge operation in the reducer."""
         # Operations with DistRDF
-        connection, backend = payload
-        if backend == "dask":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-            rdf_py = RDataFrame(10, daskclient=connection)
-        elif backend == "spark":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-            rdf_py = RDataFrame(10, sparkcontext=connection)
+        connection, _ = payload
+        rdf_py = ROOT.RDataFrame(10, executor=connection)
 
         columns_py = self.define_two_columns(rdf_py)
         profile_py = columns_py.Profile1D(("", "", 64, -4, 4), "x", "y")
@@ -176,13 +150,8 @@ class TestReducerMerge:
         model = ("", "", 64, -4, 4, 64, -4, 4)
 
         # Operations with DistRDF
-        connection, backend = payload
-        if backend == "dask":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-            rdf_py = RDataFrame(10, daskclient=connection)
-        elif backend == "spark":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-            rdf_py = RDataFrame(10, sparkcontext=connection)
+        connection, _ = payload
+        rdf_py = ROOT.RDataFrame(10, executor=connection)
 
         columns_py = self.define_three_columns(rdf_py)
         profile_py = columns_py.Profile2D(model, "x", "y", "z")
@@ -198,13 +167,8 @@ class TestReducerMerge:
     def test_tgraph_merge(self, payload):
         """Check the working of TGraph merge operation in the reducer."""
         # Operations with DistRDF
-        connection, backend = payload
-        if backend == "dask":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-            rdf_py = RDataFrame(10, daskclient=connection)
-        elif backend == "spark":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-            rdf_py = RDataFrame(10, sparkcontext=connection)
+        connection, _ = payload
+        rdf_py = ROOT.RDataFrame(10, executor=connection)
 
         columns_py = self.define_two_columns(rdf_py)
         graph_py = columns_py.Graph("x", "y")
@@ -227,13 +191,8 @@ class TestReducerMerge:
     def test_tgraphasymmerrors_merge(self, payload):
         """Check the working of TGraphAsymmErrors merge operation in the reducer."""
         # Operations with DistRDF
-        connection, backend = payload
-        if backend == "dask":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-            rdf_py = RDataFrame(10, daskclient=connection)
-        elif backend == "spark":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-            rdf_py = RDataFrame(10, sparkcontext=connection)
+        connection, _ = payload
+        rdf_py = ROOT.RDataFrame(10, executor=connection)
 
         columns_py = self.define_two_columns(rdf_py)
         err_columns_py = self.define_two_err_columns(columns_py)
@@ -260,13 +219,8 @@ class TestReducerMerge:
 
     def test_distributed_count(self, payload):
         """Test support for `Count` operation in distributed backend"""
-        connection, backend = payload
-        if backend == "dask":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-            rdf_py = RDataFrame(100, daskclient=connection)
-        elif backend == "spark":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-            rdf_py = RDataFrame(100, sparkcontext=connection)
+        connection, _ = payload
+        rdf_py = ROOT.RDataFrame(100, executor=connection)
 
         count = rdf_py.Count()
 
@@ -274,13 +228,8 @@ class TestReducerMerge:
 
     def test_distributed_sum(self, payload):
         """Test support for `Sum` operation in distributed backend"""
-        connection, backend = payload
-        if backend == "dask":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-            rdf_py = RDataFrame(10, daskclient=connection)
-        elif backend == "spark":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-            rdf_py = RDataFrame(10, sparkcontext=connection)
+        connection, _ = payload
+        rdf_py = ROOT.RDataFrame(10, executor=connection)
 
         rdf_def = rdf_py.Define("x", "rdfentry_")
         rdf_sum = rdf_def.Sum("x")
@@ -312,13 +261,8 @@ class TestReducerMerge:
         """Test support for `AsNumpy` pythonization in distributed backend"""
 
         # Let's create a simple dataframe with ten rows and two columns
-        connection, backend = payload
-        if backend == "dask":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-            df = RDataFrame(10, daskclient=connection)
-        elif backend == "spark":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-            df = RDataFrame(10, sparkcontext=connection)
+        connection, _ = payload
+        df = ROOT.RDataFrame(10, executor=connection)
 
         df = df.Define("x", "(int)rdfentry_").Define("y", "1.f/(1.f+rdfentry_)")
 
@@ -333,13 +277,8 @@ class TestReducerMerge:
         """
 
         # Let's create a simple dataframe with ten rows and two columns
-        connection, backend = payload
-        if backend == "dask":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-            df = RDataFrame(10, daskclient=connection)
-        elif backend == "spark":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-            df = RDataFrame(10, sparkcontext=connection)
+        connection, _ = payload
+        df = ROOT.RDataFrame(10, executor=connection)
 
         df = df.Define("x", "(int)rdfentry_").Define("y", "1.f/(1.f+rdfentry_)")
 
@@ -360,13 +299,8 @@ class TestReducerMerge:
         """Test that `AsNumpy` can be still called lazily in distributed mode"""
 
         # Let's create a simple dataframe with ten rows and two columns
-        connection, backend = payload
-        if backend == "dask":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-            df = RDataFrame(10, daskclient=connection)
-        elif backend == "spark":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-            df = RDataFrame(10, sparkcontext=connection)
+        connection, _ = payload
+        df = ROOT.RDataFrame(10, executor=connection)
 
         df = df.Define("x", "(int)rdfentry_").Define("y", "1.f/(1.f+rdfentry_)")
 
@@ -399,13 +333,8 @@ class TestReducerMerge:
     def test_distributed_snapshot(self, payload):
         """Test support for `Snapshot` in distributed backend"""
         # A simple dataframe with ten sequential numbers from 0 to 9
-        connection, backend = payload
-        if backend == "dask":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-            df = RDataFrame(10, daskclient=connection)
-        elif backend == "spark":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-            df = RDataFrame(10, sparkcontext=connection)
+        connection, _ = payload
+        df = ROOT.RDataFrame(10, executor=connection)
 
         df = df.Define("x", "rdfentry_")
 
@@ -420,13 +349,8 @@ class TestReducerMerge:
         argument "columnList".
         """
         # A simple dataframe with ten sequential numbers from 0 to 9
-        connection, backend = payload
-        if backend == "dask":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-            df = RDataFrame(10, daskclient=connection)
-        elif backend == "spark":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-            df = RDataFrame(10, sparkcontext=connection)
+        connection, _ = payload
+        df = ROOT.RDataFrame(10, executor=connection)
         df = (
             df
             .Define("a", "rdfentry_")
@@ -451,13 +375,8 @@ class TestReducerMerge:
     def test_distributed_snapshot_lazy(self, payload):
         """Test that `Snapshot` can be still called lazily in distributed mode"""
         # A simple dataframe with ten sequential numbers from 0 to 9
-        connection, backend = payload
-        if backend == "dask":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-            df = RDataFrame(10, daskclient=connection)
-        elif backend == "spark":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-            df = RDataFrame(10, sparkcontext=connection)
+        connection, _ = payload
+        df = ROOT.RDataFrame(10, executor=connection)
         df = df.Define("x", "rdfentry_")
 
         opts = ROOT.RDF.RSnapshotOptions()
@@ -472,13 +391,8 @@ class TestReducerMerge:
     def test_redefine_one_column(self, payload):
         """Test that values of one column can be properly redefined."""
         # A simple dataframe with ten sequential numbers from 0 to 9
-        connection, backend = payload
-        if backend == "dask":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-            df = RDataFrame(10, daskclient=connection)
-        elif backend == "spark":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-            df = RDataFrame(10, sparkcontext=connection)
+        connection, _ = payload
+        df = ROOT.RDataFrame(10, executor=connection)
         df_before = df.Define("x", "1")
         df_after = df_before.Redefine("x", "2")
 
@@ -497,13 +411,8 @@ class TestReducerMerge:
         treename = "tree"
         filename = "../data/ttree/distrdf_roottest_check_reducer_merge_1.root"
 
-        connection, backend = payload
-        if backend == "dask":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-            df = RDataFrame(treename, filename, daskclient=connection)
-        elif backend == "spark":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-            df = RDataFrame(treename, filename, sparkcontext=connection)
+        connection, _ = payload
+        df = ROOT.RDataFrame(treename, filename, executor=connection)
 
         std = df.StdDev("v")
         expected = 29.0114
@@ -517,13 +426,8 @@ class TestReducerMerge:
         treename = "tree"
         filename = "../data/ttree/distrdf_roottest_check_reducer_merge_1.root"
 
-        connection, backend = payload
-        if backend == "dask":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-            df = RDataFrame(treename, filename, daskclient=connection)
-        elif backend == "spark":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-            df = RDataFrame(treename, filename, sparkcontext=connection)
+        connection, _ = payload
+        df = ROOT.RDataFrame(treename, filename, executor=connection)
 
         df = (
             df.Define("vec_v", "std::vector<double>({v, v+1, v+2})")

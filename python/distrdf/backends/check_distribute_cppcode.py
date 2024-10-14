@@ -62,26 +62,16 @@ class TestDeclare:
             """
         )
 
-    def _distribute_single_declare_check_filter_and_histo(self, connection, backend):
+    def _distribute_single_declare_check_filter_and_histo(self, connection):
 
-        if backend == "dask":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-            rdf = RDataFrame(10, daskclient=connection)
-        elif backend == "spark":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-            rdf = RDataFrame(10, sparkcontext=connection)
+        rdf = ROOT.RDataFrame(10, executor=connection)
 
         self._mydeclare_1(rdf)
         self._check_rdf_histos_1(rdf)
 
-    def _distribute_multiple_declares_check_filter_and_histo(self, connection, backend):
+    def _distribute_multiple_declares_check_filter_and_histo(self, connection):
 
-        if backend == "spark":
-            RDataFrame1 = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-            rdf = RDataFrame1(10, sparkcontext=connection)
-        elif backend == "dask":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-            rdf = RDataFrame(10, daskclient=connection)
+        rdf = ROOT.RDataFrame(10, executor=connection)
 
         self._mydeclare_1(rdf)
         self._mydeclare_2(rdf)
@@ -93,9 +83,9 @@ class TestDeclare:
         Tests for the distribution of headers to the workers and their
         corresponding inclusion.
         """
-        connection, backend = payload
-        self._distribute_single_declare_check_filter_and_histo(connection, backend)
-        self._distribute_multiple_declares_check_filter_and_histo(connection, backend)
+        connection, _ = payload
+        self._distribute_single_declare_check_filter_and_histo(connection)
+        self._distribute_multiple_declares_check_filter_and_histo(connection)
 
 
 if __name__ == "__main__":

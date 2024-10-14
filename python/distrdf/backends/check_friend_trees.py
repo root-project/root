@@ -43,13 +43,8 @@ class TestDaskFriendTrees:
         mainchain.AddFriend(friendchain)
 
         # Create a DistRDF RDataFrame with the main and the friend chains
-        connection, backend = payload
-        if backend == "dask":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-            df = RDataFrame(mainchain, daskclient=connection)
-        elif backend == "spark":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-            df = RDataFrame(mainchain, sparkcontext=connection)
+        connection, _ = payload
+        df = ROOT.RDataFrame(mainchain, executor=connection)
 
         # Create histograms
         h_parent = df.Histo1D(("main", "main", 10, 0, 20), "x")
@@ -70,13 +65,8 @@ class TestDaskFriendTrees:
             maintree.AddFriend(friendtree)
 
             # Create a DistRDF RDataFrame with the main and the friend trees
-            connection, backend = payload
-            if backend == "dask":
-                RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-                df = RDataFrame(maintree, daskclient=connection)
-            elif backend == "spark":
-                RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-                df = RDataFrame(maintree, sparkcontext=connection)
+            connection, _ = payload
+            df = ROOT.RDataFrame(maintree, executor=connection)
 
             # Create histograms
             h_parent = df.Histo1D(("main", "main", 10, 0, 20), "x")
@@ -100,13 +90,8 @@ class TestDaskFriendTrees:
 
         chain.AddFriend(chainFriend, "myfriend")
 
-        connection, backend = payload
-        if backend == "dask":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-            df = RDataFrame(chain, daskclient=connection)
-        elif backend == "spark":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-            df = RDataFrame(chain, sparkcontext=connection)
+        connection, _ = payload
+        df = ROOT.RDataFrame(chain, executor=connection)
 
         h_parent = df.Histo1D(("main", "main", 10, 0, 20), "rnd")
         h_friend = df.Histo1D(("friend", "friend", 10, 10, 30), "myfriend.rnd")

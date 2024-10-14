@@ -19,15 +19,8 @@ class TestAsNumpy:
 
         datasetname = "Events"
         filename = "../data/ttree/distrdf_roottest_check_cloned_actions_asnumpy.root"
-        connection, backend = payload
-        if backend == "dask":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-            distrdf = RDataFrame(datasetname, filename,
-                                 daskclient=connection, npartitions=nparts)
-        elif backend == "spark":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-            distrdf = RDataFrame(datasetname, filename,
-                                 sparkcontext=connection, npartitions=nparts)
+        connection, _ = payload
+        distrdf = ROOT.RDataFrame(datasetname, filename, executor=connection, npartitions=nparts)
 
         localdf = ROOT.RDataFrame("Events", filename)
 
