@@ -54,10 +54,12 @@ hB = ROOT.TH1D("hB", "histo B", 100, 0, 100)
 hSB = ROOT.TH1D("hSB", "histo S+B", 100, 0, 100)
 
 fB = ROOT.TF1("fB", "expo", 0, 100)
+ROOT.SetOwnership(fB, False)
 fB.SetParameters(1, -0.05)
 hB.FillRandom("fB")
 
 fS = ROOT.TF1("fS", "gaus", 0, 100)
+ROOT.SetOwnership(fS, False)
 fS.SetParameters(1, 30, 5)
 
 hSB.FillRandom("fB", 2000)
