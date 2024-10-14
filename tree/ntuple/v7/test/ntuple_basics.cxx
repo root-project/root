@@ -45,6 +45,16 @@ TEST(RNTuple, ReconstructModel)
    auto variant =
       modelReconstructed->GetDefaultEntry().GetPtr<std::variant<double, std::variant<std::string, double>>>("variant");
    EXPECT_TRUE(variant != nullptr);
+
+   auto createOpts = RNTupleDescriptor::RCreateModelOptions();
+   createOpts.fCreateBare = true;
+   auto modelReconstructedBare = source.GetSharedDescriptorGuard()->CreateModel(createOpts);
+   try {
+      modelReconstructedBare->GetDefaultEntry();
+      FAIL() << "getting the default entry of a bare model should throw";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("bare model"));
+   }
 }
 
 TEST(RNTuple, MultipleInFile)
@@ -84,7 +94,6 @@ TEST(RNTuple, MultipleInFile)
    }
    EXPECT_EQ(1, n);
 }
-
 
 TEST(RNTuple, WriteRead)
 {
@@ -410,13 +419,13 @@ TEST(RNTupleModel, EnforceValidFieldNames)
    try {
       auto field3 = model->MakeField<float>("", 42.0);
       FAIL() << "empty string as field name should throw";
-   } catch (const RException& err) {
+   } catch (const RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("name cannot be empty string"));
    }
    try {
       auto field3 = model->MakeField<float>("pt.pt", 42.0);
       FAIL() << "field name with periods should throw";
-   } catch (const RException& err) {
+   } catch (const RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("name 'pt.pt' cannot contain dot characters '.'"));
    }
 
@@ -434,7 +443,7 @@ TEST(RNTupleModel, EnforceValidFieldNames)
    try {
       model->AddField(std::make_unique<RField<float>>("pt"));
       FAIL() << "repeated field names should throw";
-   } catch (const RException& err) {
+   } catch (const RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("field name 'pt' already exists"));
    }
 }
@@ -499,13 +508,13 @@ TEST(RNTuple, EmptyString)
       auto model = RNTupleModel::Create();
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "myNTuple", "");
       FAIL() << "empty writer storage location should throw";
-   } catch (const RException& err) {
+   } catch (const RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("empty storage location"));
    }
    try {
       auto ntuple = RNTupleReader::Open("myNTuple", "");
       FAIL() << "empty reader storage location should throw";
-   } catch (const RException& err) {
+   } catch (const RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("empty storage location"));
    }
 
@@ -514,13 +523,13 @@ TEST(RNTuple, EmptyString)
       auto model = RNTupleModel::Create();
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "", "file.root");
       FAIL() << "empty RNTuple name should throw";
-   } catch (const RException& err) {
+   } catch (const RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("empty RNTuple name"));
    }
    try {
       auto ntuple = RNTupleReader::Open("", "file.root");
       FAIL() << "empty RNTuple name should throw";
-   } catch (const RException& err) {
+   } catch (const RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("empty RNTuple name"));
    }
 }
@@ -531,7 +540,7 @@ TEST(RNTuple, NullSafety)
    try {
       model->AddField(nullptr);
       FAIL() << "null fields should throw";
-   } catch (const RException& err) {
+   } catch (const RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("null field"));
    }
 }
