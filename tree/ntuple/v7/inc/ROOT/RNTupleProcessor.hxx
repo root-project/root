@@ -22,7 +22,6 @@
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RPageStorage.hxx>
-#include <ROOT/RSpan.hxx>
 
 #include <memory>
 #include <string>
