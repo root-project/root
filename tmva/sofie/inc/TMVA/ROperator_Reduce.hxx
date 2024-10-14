@@ -156,9 +156,9 @@ public:
          if (fReduceOpMode == ReduceProd)
             out << SP << SP << SP << "reducedValue *= tensor_" << fNX << "[i * " << reducedLength << " + j];\n";
          else if (fReduceOpMode == ReduceSum || fReduceOpMode == ReduceMean)
-            out << SP << SP << SP << "reducedValue *= tensor_" << fNX << "[i * " << reducedLength << " + j];\n";
+            out << SP << SP << SP << "reducedValue += tensor_" << fNX << "[i * " << reducedLength << " + j];\n";
          else if(fReduceOpMode == ReduceSumsquare)
-            out << SP << SP << SP << "reducedValue *= tensor_" << fNX << "[i * " << reducedLength << " + j] * tensor_"
+            out << SP << SP << SP << "reducedValue += tensor_" << fNX << "[i * " << reducedLength << " + j] * tensor_"
                                     << fNX << "[i * " << reducedLength << " + j];\n";
          out << SP << SP << "}\n"; // end j loop
          if(fReduceOpMode == ReduceMean)
