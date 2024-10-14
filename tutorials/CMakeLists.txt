@@ -843,7 +843,7 @@ if(ROOT_pyroot_FOUND)
                                 tutorial-pyroot-na49view-py
                                 tutorial-pyroot-h1ReadAndDraw-py
                                 tutorial-pyroot-ntuple1-py)
-  set(pyroot-fit1-depends tutorial-pyroot-fillrandom-py)
+  set(pyroot-fit1-depends tutorial-hist-fillrandom-py)
   set(pyroot-na49view-depends tutorial-pyroot-geometry-py)
   set(roofit-rf503_wspaceread-depends tutorial-roofit-rf502_wspacewrite-py)
   set(roofit-rf618_mixture_models-depends tutorial-dataframe-df106_HiggsToFourLeptons-py)

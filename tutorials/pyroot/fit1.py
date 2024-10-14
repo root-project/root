@@ -25,7 +25,7 @@ gBenchmark.Start( 'fit1' )
 #
 # We connect the ROOT file generated in a previous tutorial
 #
-File = "py-fillrandom.root"
+File = "fillrandom-py.root"
 if (ROOT.gSystem.AccessPathName(File)) :
     ROOT.Info("fit1.py", File+" does not exist")
     exit()
