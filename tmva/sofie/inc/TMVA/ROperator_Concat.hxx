@@ -146,16 +146,6 @@
                }
                fInputShapes.push_back(model.GetDynamicTensorShape(it));
             }
-            // patch for concat for case {1,x} with {y} remove the 1 in first tensor
-            // if (fInputShapes.size() == 2) {
-            //    if (fInputShapes[1].size() < fInputShapes[0].size()) {
-            //       if (fInputShapes[0].front().dim == 1) {
-            //          std::cout << "Patch concat and make first input with shape " << ConvertDynamicShapeToString(fInputShapes[0])
-            //             << " compatible with second input " <<  ConvertDynamicShapeToString(fInputShapes[1]) << "by removing firs dim" << std::endl;
-            //          fInputShapes[0].erase(fInputShapes[0].begin());
-            //       }
-            //    }
-            // }
             fOutputShape = ShapeInference(fInputShapes)[0];
             if (model.Verbose())
                std::cout << "Output of concat operator has shape " << ConvertDynamicShapeToString(fOutputShape) << std::endl;
