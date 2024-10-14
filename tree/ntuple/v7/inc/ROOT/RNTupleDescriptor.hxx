@@ -587,6 +587,8 @@ public:
       /// If this option is enabled, the model will be created and all fields containing an unknown column (directly
       /// or indirectly) will be skipped instead.
       bool fForwardCompatible = false;
+      /// If true, the model will be created without a default entry (bare model).
+      bool fCreateBare = false;
    };
 
    RNTupleDescriptor() = default;

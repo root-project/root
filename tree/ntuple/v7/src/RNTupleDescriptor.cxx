@@ -505,7 +505,8 @@ ROOT::Experimental::RNTupleDescriptor::CreateModel(const RCreateModelOptions &op
 {
    auto fieldZero = std::make_unique<RFieldZero>();
    fieldZero->SetOnDiskId(GetFieldZeroId());
-   auto model = RNTupleModel::Create(std::move(fieldZero));
+   auto model =
+      options.fCreateBare ? RNTupleModel::CreateBare(std::move(fieldZero)) : RNTupleModel::Create(std::move(fieldZero));
    bool continueOnError = options.fForwardCompatible;
    for (const auto &topDesc : GetTopLevelFields()) {
       auto field = topDesc.CreateField(*this, continueOnError);
