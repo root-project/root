@@ -38,6 +38,7 @@ public:
    enum EBrowserKind {
       kChrome,   ///< Google Chrome browser
       kEdge,     ///< Microsoft Edge browser (Windows only)
+      kSafari,   ///< Safari browser
       kFirefox,  ///< Mozilla Firefox browser
       kNative,   ///< either Chrome or Firefox - both support major functionality
       kCEF,      ///< Chromium Embedded Framework - local display with CEF libs
@@ -105,8 +106,8 @@ public:
    {
       return !IsHeadless() &&
              ((GetBrowserKind() == kOn) || (GetBrowserKind() == kNative) || (GetBrowserKind() == kChrome) ||
-              (GetBrowserKind() == kEdge) || (GetBrowserKind() == kFirefox) || (GetBrowserKind() == kDefault) ||
-              (GetBrowserKind() == kCustom));
+              (GetBrowserKind() == kEdge) || (GetBrowserKind() == kSafari) || (GetBrowserKind() == kFirefox) || 
+              (GetBrowserKind() == kDefault) || (GetBrowserKind() == kCustom));
    }
 
    /// returns true if local display like CEF or Qt5 QWebEngine should be used

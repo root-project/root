@@ -78,6 +78,8 @@ std::unique_ptr<RWebDisplayHandle::Creator> &RWebDisplayHandle::FindCreator(cons
          m.emplace(name, std::make_unique<ChromeCreator>(name == "edge"));
       } else if (libname == "FirefoxCreator") {
          m.emplace(name, std::make_unique<FirefoxCreator>());
+      } else if (libname == "SafariCreator") {
+         m.emplace(name, std::make_unique<SafariCreator>());
       } else if (libname == "BrowserCreator") {
          m.emplace(name, std::make_unique<BrowserCreator>(false));
       } else if (!libname.empty()) {
@@ -435,6 +437,26 @@ RWebDisplayHandle::BrowserCreator::Display(const RWebDisplayArgs &args)
    }
 
    return std::make_unique<RWebBrowserHandle>(url, rmdir, tmpfile, dump_content);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
+RWebDisplayHandle::SafariCreator::SafariCreator() : BrowserCreator(true)
+{
+   fExec = gEnv->GetValue("WebGui.SafariInteractive", "open -a Safari $url");
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+/// Returns true if it can be used
+
+bool RWebDisplayHandle::SafariCreator::IsActive() const
+{
+#ifdef R__MACOSX
+   return true;
+#else
+   return false;
+#endif
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -799,6 +821,11 @@ std::unique_ptr<RWebDisplayHandle> RWebDisplayHandle::Display(const RWebDisplayA
        (args.GetBrowserKind() == RWebDisplayArgs::kFirefox) || (args.GetBrowserKind() == RWebDisplayArgs::kEdge)) {
       // R__LOG_ERROR(WebGUILog()) << "Neither Chrome nor Firefox browser cannot be started to provide display";
       return handle;
+   }
+
+   if (args.GetBrowserKind() == RWebDisplayArgs::kSafari) {
+      if (try_creator(FindCreator("safari", "SafariCreator")))
+         return handle;
    }
 
    if ((args.GetBrowserKind() == RWebDisplayArgs::kCustom)) {

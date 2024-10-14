@@ -43,19 +43,20 @@ protected:
       std::string fExec;  ///< standard execute line
       std::string fHeadlessExec; ///< headless execute line
       std::string fBatchExec; ///< batch execute line
-
       void TestProg(const std::string &nexttry, bool check_std_paths = false);
-
       virtual void ProcessGeometry(std::string &, const RWebDisplayArgs &) {}
       virtual std::string MakeProfile(std::string &, bool) { return ""; }
-
    public:
-
       BrowserCreator(bool custom = true, const std::string &exec = "");
-
       std::unique_ptr<RWebDisplayHandle> Display(const RWebDisplayArgs &args) override;
-
       ~BrowserCreator() override = default;
+   };
+
+   class SafariCreator : public BrowserCreator {
+   public:
+      SafariCreator();
+      ~SafariCreator() override = default;
+      bool IsActive() const override;
    };
 
    class ChromeCreator : public BrowserCreator {
