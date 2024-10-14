@@ -3,6 +3,7 @@
 #include <TTreeReader.h>
 #include <TTreeReaderValue.h>
 #include <TH1D.h>
+#include <TInterpreter.h>
 
 #include "gtest/gtest.h"
 
@@ -37,4 +38,38 @@ TEST(TTreeReaderBasic, BranchObject)
    EXPECT_TRUE(r.Next());
    EXPECT_STREQ(rv->ClassName(), "TH1D");
    EXPECT_DOUBLE_EQ(static_cast<TH1D *>(rv.Get())->GetMean(), 42.);
+}
+
+// Issue #12334
+// branchobject.root created as
+//
+// ~~~ {.cpp}
+// f = new TFile("branchobject.root", "RECREATE");
+// TTree *t = new TTree("branchobject", "test tree for branchobject.cxx");
+// ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<Double32_t>> lv(1., 2., 3., 4.);
+// t->Branch("lv32", &lv);
+// t->Fill();
+// t->Write();
+// ~~~
+TEST(TTreeReaderBasic, LorentzVector32)
+{
+   // Ensure that the mismatching `<double>` specialization is available, i.e. will
+   // be chosen given the typeid of the TTreeReaderValue template argument.
+   TClass::GetClass("ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >");
+
+   TFile file("branchobject.root");
+   TTreeReader reader("branchobject");
+   std::string code;
+   {
+      std::stringstream sstr;
+      sstr << "TTreeReaderValue<ROOT::Math::PtEtaPhiMVector> lv32(*(TTreeReader*)"
+         << &reader << ", \"lv32\");";
+      code = sstr.str();
+   }
+   gInterpreter->Declare(code.c_str());
+   ASSERT_TRUE(reader.Next());
+   EXPECT_EQ(gInterpreter->Calc("int(lv32->pt() + 0.5)"), 1);
+   EXPECT_EQ(gInterpreter->Calc("int(lv32->eta() + 0.5)"), 2);
+   EXPECT_EQ(gInterpreter->Calc("int(lv32->phi() + 0.5)"), 3);
+   EXPECT_EQ(gInterpreter->Calc("int(lv32->M() + 0.5)"), 4);
 }
