@@ -495,7 +495,7 @@ RWebDisplayHandle::ChromeCreator::ChromeCreator(bool _edge) : BrowserCreator(tru
 #endif
 
 #ifdef _MSC_VER
-   fBatchExec = gEnv->GetValue((fEnvPrefix + "Batch").c_str(), "$prog --headless=old $geometry $url");
+   fBatchExec = gEnv->GetValue((fEnvPrefix + "Batch").c_str(), "$prog --headless=old $geometry --dump-dom $url");
    fHeadlessExec = gEnv->GetValue((fEnvPrefix + "Headless").c_str(), "$prog --headless=old --disable-gpu $geometry \"$url\" &");
    fExec = gEnv->GetValue((fEnvPrefix + "Interactive").c_str(), "$prog $geometry --new-window --app=$url &"); // & in windows mean usage of spawn
 #else
@@ -505,13 +505,13 @@ RWebDisplayHandle::ChromeCreator::ChromeCreator(bool _edge) : BrowserCreator(tru
    bool use_normal = fChromeVersion < 119;
 #endif
    if (use_normal) {
-      // old browser with standard headless mode
-      fBatchExec = gEnv->GetValue((fEnvPrefix + "Batch").c_str(), "$prog --headless --no-sandbox --no-zygote --disable-extensions --disable-gpu --disable-audio-output $geometry $url >/dev/null 2>/dev/null");
-      fHeadlessExec = gEnv->GetValue((fEnvPrefix + "Headless").c_str(), "$prog --headless --no-sandbox --no-zygote --disable-extensions --disable-gpu --disable-audio-output $geometry \'$url\' >/dev/null &");
+      // old browser with standard  headless mode
+      fBatchExec = gEnv->GetValue((fEnvPrefix + "Batch").c_str(), "$prog --headless --no-sandbox --no-zygote --disable-extensions --disable-audio-output $geometry --dump-dom $url 2>/dev/null");
+      fHeadlessExec = gEnv->GetValue((fEnvPrefix + "Headless").c_str(), "$prog --headless --no-sandbox --no-zygote --disable-extensions --disable-audio-output $geometry \'$url\' >/dev/null &");
    } else {
       // newer version with headless=new mode
-      fBatchExec = gEnv->GetValue((fEnvPrefix + "Batch").c_str(), "$prog --headless=new --no-sandbox --no-zygote --disable-extensions --disable-gpu --disable-audio-output $geometry $url >/dev/null 2>/dev/null");
-      fHeadlessExec = gEnv->GetValue((fEnvPrefix + "Headless").c_str(), "$prog --headless=new --no-sandbox --no-zygote --disable-extensions --disable-gpu --disable-audio-output $geometry \'$url\' &");
+      fBatchExec = gEnv->GetValue((fEnvPrefix + "Batch").c_str(), "$prog --headless=new --no-sandbox --no-zygote --disable-extensions --disable-audio-output $geometry --dump-dom $url 2>/dev/null");
+      fHeadlessExec = gEnv->GetValue((fEnvPrefix + "Headless").c_str(), "$prog --headless=new --no-sandbox --no-zygote --disable-extensions --disable-audio-output $geometry \'$url\' &");
    }
    fExec = gEnv->GetValue((fEnvPrefix + "Interactive").c_str(), "$prog $geometry --new-window --app=\'$url\' >/dev/null 2>/dev/null &");
 #endif
@@ -1247,12 +1247,8 @@ try_again:
       args.SetRedirectOutput(dump_name.Data());
       gSystem->Unlink(dump_name.Data());
    } else if (isChromeBased) {
-      // require temporary output file
-      args.SetExtraArgs("--dump-dom");
+      // chrome should have --dump-dom args configures
       args.SetRedirectOutput(dump_name.Data());
-
-      // wait_file_name = dump_name;
-
       gSystem->Unlink(dump_name.Data());
    }
 
