@@ -193,15 +193,3 @@ minimizer.minimize("Minuit2")
 result = minimizer.save()
 ROOT.SetOwnership(result, True)
 result.Print()
-
-del minimizer
-del nll
-del pdf_learned_extended
-del n_pred
-del llh
-del nll_ratio
-
-import sys
-
-# Hack to bypass ClearProxiedObjects()
-del sys.modules["libROOTPythonizations"]
