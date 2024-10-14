@@ -220,6 +220,10 @@ RWebDisplayArgs &RWebDisplayArgs::SetBrowserKind(const std::string &_kind)
       SetBrowserKind(kFirefox);
    else if ((kind == "chrome") || (kind == "chromium"))
       SetBrowserKind(kChrome);
+#ifdef R__MACOSX
+   else if (kind == "safari")
+      SetBrowserKind(kSafari);
+#endif
 #ifdef _MSC_VER
    else if ((kind == "edge") || (kind == "msedge"))
       SetBrowserKind(kEdge);
@@ -250,6 +254,7 @@ std::string RWebDisplayArgs::GetBrowserName() const
    switch (GetBrowserKind()) {
       case kChrome: return "chrome";
       case kEdge: return "edge";
+      case kSafari: return "safari";
       case kFirefox: return "firefox";
       case kNative: return "native";
       case kCEF: return "cef";
