@@ -336,7 +336,7 @@ FlagArg(int argc, char **argv, int &argIdxInOut, const char *flagStr, std::optio
          ++argIdxInOut;
          nxtArg = argv[argIdxInOut];
       } else {
-         Err() << "Expected argument after '-" << flagStr << "' flag.\n";
+         Err() << "expected argument after '-" << flagStr << "' flag.\n";
          return EFlagResult::kErr;
       }
    } else {
@@ -475,7 +475,7 @@ static std::optional<HAddArgs> ParseArgs(int argc, char **argv)
          continue;
 
       if (!args.fNoFlagsAfterPositionalArguments && argRaw[0] == '-' && argRaw[1] != '\0') {
-         if (argRaw[1] == '-') {
+         if (argRaw[1] == '-' && argRaw[2] == '\0') {
             // special case `--`: force parsing to consider all future args as positional arguments.
             if (parseState > kParseFirstFlagGroup) {
                Err()
