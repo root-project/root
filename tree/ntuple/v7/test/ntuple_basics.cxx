@@ -808,6 +808,55 @@ TEST(REntry, Basics)
    EXPECT_NE(&pt, e->GetPtr<void>("pt").get());
 }
 
+TEST(REntry, SubFields)
+{
+   FileRaii fileGuard("test_rentry_subfields");
+   {
+      auto model = RNTupleModel::Create();
+      model->MakeField<CustomStruct>("struct", CustomStruct{1.f, {2.f, 3.f}, {{4.f}, {5.f, 6.f, 7.f}}, "foo"});
+
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+      ntuple->Fill();
+   }
+
+   auto model = RNTupleModel::Create();
+   auto fldStruct = RFieldBase::Create("struct", "CustomStruct").Unwrap();
+   auto fldA = RFieldBase::Create("a", "float").Unwrap();
+
+   model->AddField(std::move(fldStruct));
+   model->RegisterSubField("struct.a");
+
+   try {
+      model->RegisterSubField("struct.doesnotexist");
+      FAIL() << "attempting to register a nonexistent subfield should throw";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("could not find subfield \"struct.doesnotexist\" in model"));
+   }
+
+   auto &entry = model->GetDefaultEntry();
+   auto ntuple = RNTupleReader::Open(std::move(model), "ntuple", fileGuard.GetPath());
+   ntuple->LoadEntry(0);
+
+   CustomStruct expectedStruct{1.f, {2.f, 3.f}, {{4.f}, {5.f, 6.f, 7.f}}, "foo"};
+
+   EXPECT_EQ(expectedStruct, *entry.GetPtr<CustomStruct>("struct"));
+   EXPECT_FLOAT_EQ(1.f, *entry.GetPtr<float>("struct.a"));
+
+   auto tokenStruct = entry.GetToken("struct");
+   EXPECT_EQ(expectedStruct, *entry.GetPtr<CustomStruct>(tokenStruct));
+
+   auto tokenStructA = entry.GetToken("struct.a");
+   EXPECT_FLOAT_EQ(1.f, *entry.GetPtr<float>(tokenStructA));
+
+   // sanity check
+   try {
+      *entry.GetPtr<std::vector<float>>("struct.v1");
+      FAIL() << "subfields not explicitly registered shouldn't be present in the entry";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("invalid field name: struct.v1"));
+   }
+}
+
 TEST(RFieldBase, CreateObject)
 {
    auto ptrInt = RField<int>("name").CreateObject<int>();
