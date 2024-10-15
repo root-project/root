@@ -18,6 +18,8 @@
 namespace ROOT {
 
 namespace RDF {
+enum class ESnapshotOutputFormat { kDefault, kTTree, kRNTuple };
+
 /// A collection of options to steer the creation of the dataset on file
 struct RSnapshotOptions {
    using ECAlgo = ROOT::RCompressionSetting::EAlgorithm::EValues;
@@ -25,14 +27,16 @@ struct RSnapshotOptions {
    RSnapshotOptions(const RSnapshotOptions &) = default;
    RSnapshotOptions(RSnapshotOptions &&) = default;
    RSnapshotOptions(std::string_view mode, ECAlgo comprAlgo, int comprLevel, int autoFlush, int splitLevel, bool lazy,
-                    bool overwriteIfExists = false)
+                    bool overwriteIfExists = false,
+                    ESnapshotOutputFormat outputFormat = ESnapshotOutputFormat::kDefault)
       : fMode(mode),
         fCompressionAlgorithm(comprAlgo),
         fCompressionLevel{comprLevel},
         fAutoFlush(autoFlush),
         fSplitLevel(splitLevel),
         fLazy(lazy),
-        fOverwriteIfExists(overwriteIfExists)
+        fOverwriteIfExists(overwriteIfExists),
+        fOutputFormat(outputFormat)
    {
    }
    std::string fMode = "RECREATE"; ///< Mode of creation of output file
@@ -43,6 +47,7 @@ struct RSnapshotOptions {
    int fSplitLevel = 99;                            ///< Split level of output tree
    bool fLazy = false;                              ///< Do not start the event loop when Snapshot is called
    bool fOverwriteIfExists = false; ///< If fMode is "UPDATE", overwrite object in output file if it already exists
+   ESnapshotOutputFormat fOutputFormat = ESnapshotOutputFormat::kDefault; ///< Which data format to write to
 };
 } // namespace RDF
 } // namespace ROOT
