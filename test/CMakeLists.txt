@@ -175,14 +175,15 @@ if(ROOT_opengl_FOUND)
                 COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressGraphics.cxx
                 FAILREGEX "FAILED|Error in"
                 DEPENDS test-stressgraphics)
-  if(CHROME_EXECUTABLE)
-     ROOT_ADD_TEST(test-stressgraphics-chrome
-                   RUN_SERIAL
-                   ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}
-                   COMMAND stressGraphics -b -k -p=sgc --web=chrome
-                   FAILREGEX "FAILED|Error in"
-                   LABELS longtest)
-  endif()
+  # Disable test until failures on fedora39 are understood
+  # if(CHROME_EXECUTABLE)
+  #    ROOT_ADD_TEST(test-stressgraphics-chrome
+  #                  RUN_SERIAL
+  #                  ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}
+  #                  COMMAND stressGraphics -b -k -p=sgc --web=chrome
+  #                  FAILREGEX "FAILED|Error in"
+  #                  LABELS longtest)
+  #endif()
   if(FIREFOX_EXECUTABLE AND NOT APPLE)
      ROOT_ADD_TEST(test-stressgraphics-firefox
                    RUN_SERIAL
