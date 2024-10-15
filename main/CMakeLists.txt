@@ -28,11 +28,16 @@ endif()
 if(proof)
   ROOT_EXECUTABLE(proofserv.exe pmain.cxx LIBRARIES Core MathCore)
 endif()
+
+
 if(MSVC)
   ROOT_EXECUTABLE(hadd hadd.cxx LIBRARIES Core RIO Net Hist Graf Graf3d Gpad Tree Matrix MathCore)
   set_property(TARGET hadd APPEND_STRING PROPERTY LINK_FLAGS "setargv.obj")
 else()
   ROOT_EXECUTABLE(hadd hadd.cxx LIBRARIES Core RIO Net Hist Graf Graf3d Gpad Tree Matrix MathCore MultiProc)
+  if (CMAKE_COMPILER_IS_GNUCC AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.0)
+    target_link_libraries(hadd PUBLIC stdc++fs)
+  endif()
 endif()
 ROOT_EXECUTABLE(rootnb.exe nbmain.cxx LIBRARIES Core)
 
