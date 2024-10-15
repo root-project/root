@@ -727,6 +727,127 @@ TEST(REntry, Basics)
    EXPECT_NE(&pt, e->GetPtr<void>("pt").get());
 }
 
+TEST(REntry, Subfields)
+{
+   FileRaii fileGuard("test_rentry_subfields.root");
+   {
+      auto model = RNTupleModel::Create();
+      model->MakeField<float>("a", 3.14f);
+      model->MakeField<CustomStruct>("struct", CustomStruct{1.f, {2.f, 3.f}, {{4.f}, {5.f, 6.f, 7.f}}, "foo"});
+      model->MakeField<std::vector<CustomStruct>>(
+         "structVec", std::vector{CustomStruct{.1f, {.2f, .3f}, {{.4f}, {.5f, .6f, .7f}}, "bar"},
+                                  CustomStruct{-1.f, {-2.f, -3.f}, {{-4.f}, {-5.f, -6.f, -7.f}}, "baz"}});
+      model->MakeField<std::pair<CustomStruct, int>>(
+         "structPair", std::pair{CustomStruct{.1f, {.2f, .3f}, {{.4f}, {.5f, .6f, .7f}}, "bar"}, 42});
+
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+      ntuple->Fill();
+   }
+
+   auto model = RNTupleModel::Create();
+   auto fldA = RFieldBase::Create("a", "float").Unwrap();
+   auto fldStruct = RFieldBase::Create("struct", "CustomStruct").Unwrap();
+   auto fldStructVec = RFieldBase::Create("structVec", "std::vector<CustomStruct>").Unwrap();
+   auto fldStructPair = RFieldBase::Create("structPair", "std::pair<CustomStruct, int>").Unwrap();
+
+   model->AddField(std::move(fldA));
+   model->AddField(std::move(fldStruct));
+   model->AddField(std::move(fldStructVec));
+   model->AddField(std::move(fldStructPair));
+
+   model->RegisterSubfield("struct.a");
+
+   try {
+      model->RegisterSubfield("struct.a");
+      FAIL() << "attempting to re-register subfield should throw";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("subfield \"struct.a\" already registered"));
+   }
+
+   try {
+      model->RegisterSubfield("struct.doesnotexist");
+      FAIL() << "attempting to register a nonexistent subfield should throw";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("could not find subfield \"struct.doesnotexist\" in model"));
+   }
+
+   try {
+      model->RegisterSubfield("struct");
+      FAIL() << "attempting to register a top-level field as subfield should throw";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("cannot register top-level field \"struct\" as a subfield"));
+   }
+
+   try {
+      model->RegisterSubfield("structVec._0.s");
+      FAIL() << "attempting to register a subfield in a collection should throw";
+   } catch (const RException &err) {
+      EXPECT_THAT(
+         err.what(),
+         testing::HasSubstr(
+            "registering a subfield as part of a collection, fixed-sized array or std::variant is not supported"));
+   }
+
+   model->RegisterSubfield("structPair._0.s");
+
+   model->Freeze();
+   try {
+      model->RegisterSubfield("struct.v1");
+      FAIL() << "attempting to register a subfield in a frozen model should throw";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("invalid attempt to modify frozen model"));
+   }
+
+   const auto &defaultEntry = model->GetDefaultEntry();
+   const auto entry = model->CreateEntry();
+   const auto bareEntry = model->CreateBareEntry();
+   auto ntuple = RNTupleReader::Open(std::move(model), "ntuple", fileGuard.GetPath());
+
+   // default entry
+   ntuple->LoadEntry(0);
+   EXPECT_FLOAT_EQ(1.f, *defaultEntry.GetPtr<float>("struct.a"));
+   EXPECT_EQ("bar", *defaultEntry.GetPtr<std::string>("structPair._0.s"));
+   auto defaultTokenStructA = defaultEntry.GetToken("struct.a");
+   EXPECT_FLOAT_EQ(1.f, *defaultEntry.GetPtr<float>(defaultTokenStructA));
+
+   // explicitly created entry
+   ntuple->LoadEntry(0, *entry);
+   EXPECT_FLOAT_EQ(1.f, *entry->GetPtr<float>("struct.a"));
+   EXPECT_EQ("bar", *entry->GetPtr<std::string>("structPair._0.s"));
+   auto tokenStructA = entry->GetToken("struct.a");
+   EXPECT_FLOAT_EQ(1.f, *entry->GetPtr<float>(tokenStructA));
+
+   // bare entry
+   EXPECT_EQ(nullptr, bareEntry->GetPtr<float>("struct.a"));
+   EXPECT_EQ(nullptr, bareEntry->GetPtr<std::string>("structPair._0.s"));
+
+   auto cs = std::make_shared<CustomStruct>();
+   bareEntry->BindValue("struct", cs);
+   bareEntry->BindRawPtr("struct.a", &cs->a);
+   auto pcs = std::make_shared<std::pair<CustomStruct, int>>();
+   bareEntry->BindValue("structPair", pcs);
+   bareEntry->BindRawPtr("structPair._0.s", &pcs->first.s);
+   bareEntry->BindValue("a", std::make_shared<float>());
+   bareEntry->BindValue("structVec", std::make_shared<std::vector<CustomStruct>>());
+
+   ntuple->LoadEntry(0, *bareEntry);
+   EXPECT_FLOAT_EQ(1.f, *bareEntry->GetPtr<float>("struct.a"));
+   EXPECT_FLOAT_EQ(1.f, cs->a);
+   EXPECT_EQ("bar", *bareEntry->GetPtr<std::string>("structPair._0.s"));
+   EXPECT_EQ("bar", pcs->first.s);
+   auto bareTokenStructA = bareEntry->GetToken("struct.a");
+   EXPECT_FLOAT_EQ(1.f, *bareEntry->GetPtr<float>(bareTokenStructA));
+
+   // sanity check
+   try {
+      *defaultEntry.GetPtr<std::vector<float>>("struct.v1");
+      *entry->GetPtr<std::vector<float>>("struct.v1");
+      FAIL() << "subfields not explicitly registered shouldn't be present in the entry";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("invalid field name: struct.v1"));
+   }
+}
+
 TEST(RFieldBase, CreateObject)
 {
    auto ptrInt = RField<int>("name").CreateObject<int>();

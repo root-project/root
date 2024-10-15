@@ -171,3 +171,14 @@ TEST(RNTupleModel, Clone)
    EXPECT_TRUE(clone->GetConstField("struct").GetTraits() & RFieldBase::kTraitTypeChecksum);
    EXPECT_TRUE(clone->GetConstField("obj").GetTraits() & RFieldBase::kTraitTypeChecksum);
 }
+
+TEST(RNTupleModel, CloneRegisteredSubfield)
+{
+   auto model = RNTupleModel::Create();
+   model->MakeField<CustomStruct>("struct");
+   model->RegisterSubfield("struct.a");
+   model->Freeze();
+
+   auto clone = model->Clone();
+   EXPECT_TRUE(clone->GetDefaultEntry().GetPtr<float>("struct.a"));
+}
