@@ -15,4 +15,4 @@ tmva-cpu=on
 tmva-pymva=on
 tmva=on
 unfold=OFF
-webgui=OFF
+webgui=ON
