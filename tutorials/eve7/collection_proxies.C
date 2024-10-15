@@ -131,8 +131,11 @@ public:
          {
             RCaloTower* tower = (RCaloTower*) fCollection->GetDataPtr(t);
             if (tower->fEta > cd.fEtaMin && tower->fEta < cd.fEtaMax &&
-                tower->fPhi > cd.fPhiMin && tower->fPhi < cd.fPhiMax)
-               item_set.insert(t);
+                tower->fPhi > cd.fPhiMin && tower->fPhi < cd.fPhiMax &&
+                fCollection->GetDataItem(t)->GetVisible())
+                {
+                   item_set.insert(t);
+                }
          }
       }
       REveSelection* sel = (REveSelection*)eveMng->FindElementById(selectionId);
