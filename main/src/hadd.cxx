@@ -202,8 +202,9 @@ static EFlagResult FlagToggle(const char *arg, const char *flagStr, bool &flagOu
       if (flagOut)
          Warn() << "duplicate flag: " << flagStr << "\n";
       flagOut = true;
+      return EFlagResult::kParsed;
    }
-   return flagOut ? EFlagResult::kParsed : EFlagResult::kIgnored;
+   return EFlagResult::kIgnored;
 }
 
 // NOTE: not using std::stoi or similar because they have bad error checking.
