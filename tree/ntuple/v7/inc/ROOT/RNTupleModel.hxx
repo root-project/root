@@ -196,7 +196,7 @@ public:
 private:
    /// Hierarchy of fields consisting of simple types and collections (sub trees)
    std::unique_ptr<RFieldZero> fFieldZero;
-   /// Contains field values corresponding to the created top-level fields
+   /// Contains field values corresponding to the created top-level fields, as well as registered subfields
    std::unique_ptr<REntry> fDefaultEntry;
    /// Keeps track of which field names are taken, including projected field names.
    std::unordered_set<std::string> fFieldNames;
@@ -204,6 +204,8 @@ private:
    std::string fDescription;
    /// The set of projected top-level fields
    std::unique_ptr<Internal::RProjectedFields> fProjectedFields;
+   /// Keeps track of which subfields have been registered to be included in entries belonging to this model.
+   std::unordered_set<std::string> fRegisteredSubfields;
    /// Every model has a unique ID to distinguish it from other models. Entries are linked to models via the ID.
    /// Cloned models get a new model ID.
    std::uint64_t fModelId = 0;
@@ -224,6 +226,10 @@ private:
 
    /// The field name can be a top-level field or a nested field. Returns nullptr if the field is not in the model.
    RFieldBase *FindField(std::string_view fieldName) const;
+
+   /// Add a subfield to the provided entry. If `initializeValue` is false, a nullptr will be bound to the entry value
+   /// (used in bare models).
+   void AddSubfield(std::string_view fieldName, REntry &entry, bool initializeValue = true) const;
 
    RNTupleModel(std::unique_ptr<RFieldZero> fieldZero);
 
@@ -305,6 +311,14 @@ public:
    /// Throws an exception if the field is null.
    void AddField(std::unique_ptr<RFieldBase> field);
 
+   /// Register a subfield so it can be accessed directly from entries belonging to the model. Because registering a
+   /// subfield does not fundamentally change the model, previously created entries will not be invalidated, nor
+   /// modified in any way; a registered subfield is merely an accessor added to the default entry (if present) and any
+   /// entries created afterwards.
+   ///
+   /// Throws an exception if the provided subfield could not be found in the model.
+   void RegisterSubfield(std::string_view qualifiedFieldName);
+
    /// Adds a top-level field based on existing fields.
    ///
    /// The mapping function takes one argument, which is a string containing the name of the projected field. The return
@@ -352,7 +366,7 @@ public:
    /// In a bare entry, all values point to nullptr. The resulting entry shall use BindValue() in order
    /// set memory addresses to be serialized / deserialized
    std::unique_ptr<REntry> CreateBareEntry() const;
-   /// Creates a token to be used in REntry methods to address a top-level field
+   /// Creates a token to be used in REntry methods to address a field present in the entry
    REntry::RFieldToken GetToken(std::string_view fieldName) const;
    /// Calls the given field's CreateBulk() method. Throws an exception if no field with the given name exists.
    RFieldBase::RBulk CreateBulk(std::string_view fieldName) const;

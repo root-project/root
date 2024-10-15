@@ -275,10 +275,14 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleMod
    cloneModel->fFieldNames = fFieldNames;
    cloneModel->fDescription = fDescription;
    cloneModel->fProjectedFields = fProjectedFields->Clone(*cloneModel);
+   cloneModel->fRegisteredSubfields = fRegisteredSubfields;
    if (fDefaultEntry) {
       cloneModel->fDefaultEntry = std::unique_ptr<REntry>(new REntry(cloneModel->fModelId, cloneModel->fSchemaId));
       for (const auto &f : cloneModel->fFieldZero->GetSubFields()) {
          cloneModel->fDefaultEntry->AddValue(f->CreateValue());
+      }
+      for (const auto &f : cloneModel->fRegisteredSubfields) {
+         cloneModel->AddSubfield(f, *cloneModel->fDefaultEntry);
       }
    }
    return cloneModel;
@@ -316,6 +320,50 @@ void ROOT::Experimental::RNTupleModel::AddField(std::unique_ptr<RFieldBase> fiel
       fDefaultEntry->AddValue(field->CreateValue());
    fFieldNames.insert(field->GetFieldName());
    fFieldZero->Attach(std::move(field));
+}
+
+void ROOT::Experimental::RNTupleModel::AddSubfield(std::string_view qualifiedFieldName, REntry &entry,
+                                                   bool initializeValue) const
+{
+   auto field = FindField(qualifiedFieldName);
+   if (initializeValue)
+      entry.AddValue(field->CreateValue());
+   else
+      entry.AddValue(field->BindValue(nullptr));
+}
+
+void ROOT::Experimental::RNTupleModel::RegisterSubfield(std::string_view qualifiedFieldName)
+{
+   if (qualifiedFieldName.empty())
+      throw RException(R__FAIL("no field name provided"));
+
+   if (fFieldNames.find(std::string(qualifiedFieldName)) != fFieldNames.end()) {
+      throw RException(
+         R__FAIL("cannot register top-level field \"" + std::string(qualifiedFieldName) + "\" as a subfield"));
+   }
+
+   if (fRegisteredSubfields.find(std::string(qualifiedFieldName)) != fRegisteredSubfields.end())
+      throw RException(R__FAIL("subfield \"" + std::string(qualifiedFieldName) + "\" already registered"));
+
+   EnsureNotFrozen();
+
+   auto *field = FindField(qualifiedFieldName);
+   if (!field) {
+      throw RException(R__FAIL("could not find subfield \"" + std::string(qualifiedFieldName) + "\" in model"));
+   }
+
+   auto parent = field->GetParent();
+   while (parent && !parent->GetFieldName().empty()) {
+      if (parent->GetStructure() == ENTupleStructure::kCollection || parent->GetNRepetitions() > 0 ||
+          parent->GetStructure() == ENTupleStructure::kVariant) {
+         throw RException(R__FAIL(
+            "registering a subfield as part of a collection, fixed-sized array or std::variant is not supported"));
+      }
+      parent = parent->GetParent();
+   }
+
+   AddSubfield(qualifiedFieldName, *fDefaultEntry);
+   fRegisteredSubfields.emplace(qualifiedFieldName);
 }
 
 ROOT::Experimental::RResult<void>
@@ -397,6 +445,9 @@ std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RNTupleModel::Cr
    for (const auto &f : fFieldZero->GetSubFields()) {
       entry->AddValue(f->CreateValue());
    }
+   for (const auto &f : fRegisteredSubfields) {
+      AddSubfield(f, *entry);
+   }
    return entry;
 }
 
@@ -408,6 +459,9 @@ std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RNTupleModel::Cr
    auto entry = std::unique_ptr<REntry>(new REntry(fModelId, fSchemaId));
    for (const auto &f : fFieldZero->GetSubFields()) {
       entry->AddValue(f->BindValue(nullptr));
+   }
+   for (const auto &f : fRegisteredSubfields) {
+      AddSubfield(f, *entry, false /* initializeValue */);
    }
    return entry;
 }
