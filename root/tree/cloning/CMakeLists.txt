@@ -50,7 +50,11 @@ if(NOT TARGET eventexe)
 
 else()
    if(MSVC)
-      set(RootExeOptions -e "gSystem->Load(\"${ROOTSYS}/test/$<CONFIG>/libEvent\")")
+      if(CMAKE_GENERATOR MATCHES Ninja)
+         set(RootExeOptions -e "gSystem->Load(\"${ROOTSYS}/test/libEvent\")")
+      else()
+         set(RootExeOptions -e "gSystem->Load(\"${ROOTSYS}/test/$<CONFIG>/libEvent\")")
+      endif()
    else()
       set(RootExeOptions -e "gSystem->Load(\"../test/libEvent\")")
 
