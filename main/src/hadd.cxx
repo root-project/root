@@ -50,8 +50,8 @@
                        (unless -O is specified). Compresses the meta data using the compression level specified
                        in the first input or the compression setting after fk (for example 505 when using -fk505)
   \param -ff           The compression level used is the one specified in the first input
-  \param -j [N_JOBS]   Parallelise the execution in `J` processes. If the number of processes is not specified,
-                       use the system maximum.
+  \param -j [N_JOBS]   Parallelise the execution in `N_JOBS` processes. If the number of processes is not specified,
+                       or is 0, use the system maximum.
   \param -k            Skip corrupt or non-existent files, do not exit
   \param -n <N_FILES>  Open at most `N` files at once (use 0 to request to use the system maximum)
   \param -O            Re-optimize basket size when merging TTree
@@ -271,21 +271,6 @@ FlagConvResult<ROOT::TIOFeatures> ConvertArg<ROOT::TIOFeatures>(const char *arg)
    return {features, EFlagResult::kParsed};
 }
 
-static FlagConvResult<IntFlag_t> ConvertNProcesses(const char *arg)
-{
-   auto np = ConvertArg<IntFlag_t>(arg);
-   if (np.fResult != EFlagResult::kParsed) {
-      // By returning a non-nullopt, we enable multiprocessing.
-      // Since 0 is not a valid number of processes, hadd will default to the number of cpus.
-      np = {0, EFlagResult::kParsed};
-   }
-   if (np.fValue == 0) {
-      Warn() << "the number of parallel processes passed after -j is invalid: " << arg
-             << ". We will use the system maximum.\n";
-   }
-   return np;
-}
-
 static FlagConvResult<TString> ConvertCacheSize(const char *arg)
 {
    TString cacheSize;
@@ -325,6 +310,7 @@ FlagArg(int argc, char **argv, int &argIdxInOut, const char *flagStr, std::optio
    if (strncmp(arg, flagStr, flagLen) != 0)
       return EFlagResult::kIgnored;
 
+   bool argIsSeparate = false;
    if (argLen > flagLen) {
       // interpret anything after the flag as the argument.
       nxtArg = arg + flagLen;
@@ -332,6 +318,7 @@ FlagArg(int argc, char **argv, int &argIdxInOut, const char *flagStr, std::optio
       if (nxtArg[0] == '=')
          ++nxtArg;
    } else if (argLen == flagLen) {
+      argIsSeparate = true;
       if (argIdx + 1 < argc) {
          ++argIdxInOut;
          nxtArg = argv[argIdxInOut];
@@ -347,7 +334,7 @@ FlagArg(int argc, char **argv, int &argIdxInOut, const char *flagStr, std::optio
    if (converted.fResult == EFlagResult::kParsed) {
       flagOut = converted.fValue;
    } else if (converted.fResult == EFlagResult::kIgnored) {
-      if (defaultVal) {
+      if (defaultVal && argIsSeparate) {
          flagOut = defaultVal;
          // If we had tried parsing the next argument, step back one arg idx.
          argIdxInOut -= (argIdxInOut > argIdx);
@@ -510,7 +497,7 @@ static std::optional<HAddArgs> ParseArgs(int argc, char **argv)
          PARSE_FLAG(FlagToggle, arg, "O", args.fReoptimize);
          PARSE_FLAG(FlagToggle, arg, "dbg", args.fDebug);
          PARSE_FLAG(FlagArg, argc, argv, argIdx, "d", args.fWorkingDir);
-         PARSE_FLAG(FlagArg, argc, argv, argIdx, "j", args.fNProcesses, {0}, ConvertNProcesses);
+         PARSE_FLAG(FlagArg, argc, argv, argIdx, "j", args.fNProcesses, {0});
          PARSE_FLAG(FlagArg, argc, argv, argIdx, "cachesize", args.fCacheSize, {}, ConvertCacheSize);
          PARSE_FLAG(FlagArg, argc, argv, argIdx, "experimental-io-features", args.fFeatures);
          PARSE_FLAG(FlagArg, argc, argv, argIdx, "n", args.fMaxOpenedFiles);
