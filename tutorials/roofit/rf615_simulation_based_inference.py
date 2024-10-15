@@ -38,7 +38,7 @@ import numpy as np
 from sklearn.neural_network import MLPClassifier
 
 # The samples used for training the classifier in this tutorial / rescale for more accuracy
-n_samples = 1000
+n_samples = 10000
 
 # Kills warning messages
 ROOT.RooMsgService.instance().setGlobalKillBelow(ROOT.RooFit.WARNING)
@@ -77,6 +77,15 @@ def morphing(setting):
     morph_func = ROOT.RooMomentMorphFuncND("morph_func", "morph_func", [mu_var], [x_var], grid, setting)
     morph = ROOT.RooWrapperPdf("morph", "morph", morph_func, True)
     workspace.Import(morph, Silence=True)
+
+    # Uncomment to see input plots for the first dimension (you might need to increase the morphed samples)
+    # f1 = x_var.frame(Title="linear morphing;x;pdf", Range=(-4, 8))
+    # for i in range(n_grid):
+    # workspace[f"histpdf{i}"].plotOn(f1)
+    # workspace["morph"].plotOn(f1, LineColor="r")
+    # c0 = ROOT.TCanvas()
+    # f1.Draw()
+    # input() # Wait for user input to proceed
 
 
 # Class used in this case to demonstrate the use of SBI in Root
@@ -132,15 +141,16 @@ n_samples_train = n_samples * 5
 # Define the "observed" data in a workspace
 def build_ws(mu_observed, sigma):
     # using a workspace for easier processing inside the class
-    workspace = ROOT.RooWorkspace()
-    workspace.factory(f"Gaussian::gauss(x[-5,15], mu[0,4], {sigma})")
-    workspace.factory("Uniform::uniform(x)")
-    workspace.Print("v")
-    obs_data = workspace["gauss"].generate(workspace["x"], n_samples)
+    ws = ROOT.RooWorkspace()
+    ws.factory(f"Gaussian::gauss(x[-5,15], mu[0,4], {sigma})")
+    ws.factory("Uniform::uniform(x)")
+    ws["mu"].setVal(mu_observed)
+    ws.Print("v")
+    obs_data = ws["gauss"].generate(ws["x"], 1000)
     obs_data.SetName("obs_data")
-    workspace.Import(obs_data, Silence=True)
+    ws.Import(obs_data, Silence=True)
 
-    return workspace
+    return ws
 
 
 # The "observed" data
@@ -194,29 +204,58 @@ nll_morph = workspace["morph"].createNLL(obs_data)
 ROOT.SetOwnership(nll_morph, True)
 
 # Plot the negative logarithmic summed likelihood
-frame1 = mu_var.frame(Title="NLL of SBI vs. Morphing", Range=(1.5, 2.5))
-nll_gauss.plotOn(frame1, LineColor="g", ShiftToZero=True, Name="gauss")
-nllr_learned.plotOn(frame1, LineColor="r", LineStyle="--", ShiftToZero=True, Name="learned")
+frame1 = mu_var.frame(Title="NLL of SBI vs. Morphing;mu;NLL", Range=(2.2, 2.8))
+nllr_learned.plotOn(frame1, LineColor="kP6Blue", ShiftToZero=True, Name="learned")
+nll_gauss.plotOn(frame1, LineColor="kP6Blue+1", ShiftToZero=True, Name="gauss")
 ROOT.RooAbsReal.setEvalErrorLoggingMode("Ignore")  # Silence some warnings
-nll_morph.plotOn(frame1, LineColor="c", ShiftToZero=True, Name="morphed")
+nll_morph.plotOn(frame1, LineColor="kP6Blue+2", ShiftToZero=True, Name="morphed")
 ROOT.RooAbsReal.setEvalErrorLoggingMode("PrintErrors")
 
 # Plot the likelihood functions
-frame2 = x_var.frame(Title="Learned vs analytical likelihhood function")
-llhr_learned.plotOn(frame2, LineColor="r", LineStyle="--", Name="learned_ratio")
-llhr_calc.plotOn(frame2, LineColor="g", Name="exact")
+frame2 = x_var.frame(Title="Likelihood ratio r(x|#mu=2.5);x;p_{gauss}/p_{uniform}")
+llhr_learned.plotOn(frame2, LineColor="kP6Blue", Name="learned_ratio")
+llhr_calc.plotOn(frame2, LineColor="kP6Blue+1", Name="exact")
 
-# Write the plots into one canvas
-c = ROOT.TCanvas("rf615_simulation_based_inference", "rf615_simulation_based_inference", 800, 400)
-c.Divide(2)
-c.cd(1)
-ROOT.gPad.SetLeftMargin(0.15)
-frame1.GetYaxis().SetTitleOffset(1.8)
+# Write the plots into one canvas to show, or into separate canvases for saving.
+single_canvas = True
+
+c = ROOT.TCanvas("", "", 1200 if single_canvas else 600, 600)
+if single_canvas:
+    c.Divide(2)
+    c.cd(1)
+    ROOT.gPad.SetLeftMargin(0.15)
+    frame1.GetYaxis().SetTitleOffset(1.8)
 frame1.Draw()
-c.cd(2)
-ROOT.gPad.SetLeftMargin(0.15)
-frame2.GetYaxis().SetTitleOffset(1.8)
+
+legend1 = ROOT.TLegend(0.43, 0.63, 0.8, 0.87)
+legend1.SetFillColor(ROOT.kWhite)
+legend1.SetLineColor(ROOT.kWhite)
+legend1.SetTextSize(0.04)
+legend1.AddEntry("learned", "learned (SBI)", "L")
+legend1.AddEntry("gauss", "true NLL", "L")
+legend1.AddEntry("morphed", "moment morphing", "L")
+legend1.Draw()
+
+if single_canvas:
+    c.cd(2)
+    ROOT.gPad.SetLeftMargin(0.15)
+    frame2.GetYaxis().SetTitleOffset(1.8)
+else:
+    c.SaveAs("rf615_plot_1.png")
+    c = ROOT.TCanvas("", "", 600, 600)
+
 frame2.Draw()
+
+legend2 = ROOT.TLegend(0.53, 0.73, 0.87, 0.87)
+legend2.SetFillColor(ROOT.kWhite)
+legend2.SetLineColor(ROOT.kWhite)
+legend2.SetTextSize(0.04)
+legend2.AddEntry("learned_ratio", "learned (SBI)", "L")
+legend2.AddEntry("exact", "true ratio", "L")
+legend2.Draw()
+
+if not single_canvas:
+    c.SaveAs("rf615_plot_2.png")
 
 # Compute the minimum via minuit and display the results
 for nll in [nll_gauss, nllr_learned, nll_morph]:
