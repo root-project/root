@@ -605,8 +605,8 @@ RWebDisplayHandle::FirefoxCreator::FirefoxCreator() : BrowserCreator(true)
    fExec = gEnv->GetValue("WebGui.FirefoxInteractive", "$prog -no-remote $profile $geometry $url &");
 #else
    fBatchExec = gEnv->GetValue("WebGui.FirefoxBatch", "$rootetcdir/runfirefox.sh $dumpfile $cleanup_profile $prog --headless -no-remote -new-instance $profile $url 2>/dev/null");
-   fHeadlessExec = gEnv->GetValue("WebGui.FirefoxHeadless", "fork:--headless --private-window -no-remote $profile $url");
-   fExec = gEnv->GetValue("WebGui.FirefoxInteractive", "$rootetcdir/runfirefox.sh <nodump> $cleanup_profile $prog -no-remote $profile $geometry -url \'$url\' &");
+   fHeadlessExec = gEnv->GetValue("WebGui.FirefoxHeadless", "fork:--headless -no-remote $profile --private-window $url");
+   fExec = gEnv->GetValue("WebGui.FirefoxInteractive", "$rootetcdir/runfirefox.sh __nodump__ $cleanup_profile $prog -no-remote $profile $geometry -url \'$url\' &");
 #endif
 }
 
@@ -702,7 +702,7 @@ std::string RWebDisplayHandle::FirefoxCreator::MakeProfile(std::string &exec, bo
    exec = std::regex_replace(exec, std::regex("\\$profile"), profile_arg);
 
    if (exec.find("$cleanup_profile") != std::string::npos) {
-      if (rmdir.empty()) rmdir = "<dummy>";
+      if (rmdir.empty()) rmdir = "__dummy__";
       exec = std::regex_replace(exec, std::regex("\\$cleanup_profile"), rmdir);
       rmdir.clear(); // no need to delete directory - it will be removed by script
    }
