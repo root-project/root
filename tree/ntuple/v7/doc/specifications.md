@@ -988,13 +988,16 @@ The field name of base class subfields are numbered and preceded by a colon (`:`
 #### Classes with an associated collection proxy
 
 User classes that specify a collection proxy behave as collections of a given value type.
-Associative collections are not currently supported.
 
-The on-disk representation is similar to a `std::vector<T>` where `T` is the value type;
-specifically, it is stored as two fields:
+The on-disk representation of non-associative collections is identical to a `std::vector<T>`, using two fields:
   - Collection parent field whose principal column is of type `(Split)Index[64|32]`.
-  - Child field of type `T`, which must by a type with RNTuple I/O support.
-    The name of the child field is `_0`.
+  - Child field of type `T`, which must be a type with RNTuple I/O support.
+
+The on-disk representation of associative collections is identical to a `std::map<K, V>`, using two fields:
+  - Collection parent field whose principal column is of type `(Split)Index[64|32]`.
+  - Child field of type `std::pair<K, V>`, where `K` and `V` must be types with RNTuple I/O support.
+
+N.B., proxy-based associative collections are supported in the RNTuple binary format, but currently are not implemented in ROOT's RNTuple reader and writer. This will be added in the future.
 
 ### ROOT::Experimental::RNTupleCardinality<SizeT>
 
