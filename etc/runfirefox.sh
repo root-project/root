@@ -16,10 +16,10 @@ while [ "$1" != "" ]; do
    shift
 done
 
-if [ "$dumpfile" == "<nodump>" ]; then
+if [ "$dumpfile" == "__nodump__" ]; then
    # Helper script to run firefox and delete temporary profile at exit
 
-   if [ "$profile" != "<dummy>" ]; then
+   if [ "$profile" != "__dummy__" ]; then
       trap "rm -rf $profile" 0 1 2 3 6
    fi
 
@@ -45,7 +45,7 @@ else
 
    kill $PID 2>/dev/null
 
-   if [ "$profile" != "<dummy>" ]; then
+   if [ "$profile" != "__dummy__" ]; then
       rm -rf $profile
    fi
 
