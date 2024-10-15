@@ -183,14 +183,14 @@ if(ROOT_opengl_FOUND)
                   FAILREGEX "FAILED|Error in"
                   LABELS longtest)
   endif()
-  # if(FIREFOX_EXECUTABLE AND NOT APPLE AND NOT MSVC)
-  #    ROOT_ADD_TEST(test-stressgraphics-firefox
-  #                  RUN_SERIAL
-  #                  ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}
-  #                  COMMAND stressGraphics -b -k -p=sgf --web=firefox
-  #                  FAILREGEX "FAILED|Error in"
-  #                  LABELS longtest)
-  # endif()
+  if(FIREFOX_EXECUTABLE AND NOT APPLE)
+    ROOT_ADD_TEST(test-stressgraphics-firefox-skip3d
+                  RUN_SERIAL
+                  ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}
+                  COMMAND stressGraphics -b -k -p=sgf --web=firefox -skip3d
+                  FAILREGEX "FAILED|Error in"
+                  LABELS longtest)
+  endif()
 endif()
 
 #--stressHistogram------------------------------------------------------------------------------------
