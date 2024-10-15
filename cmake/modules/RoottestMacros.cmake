@@ -246,7 +246,7 @@ macro(ROOTTEST_COMPILE_MACRO filename)
     set_property(TEST ${COMPILE_MACRO_TEST} PROPERTY FAIL_REGULAR_EXPRESSION "Warning in")
   endif()
   set_property(TEST ${COMPILE_MACRO_TEST} PROPERTY ENVIRONMENT ${ROOTTEST_ENVIRONMENT})
-  if(CMAKE_GENERATOR MATCHES Ninja)
+  if(CMAKE_GENERATOR MATCHES Ninja AND NOT MSVC)
     set_property(TEST ${COMPILE_MACRO_TEST} PROPERTY RUN_SERIAL true)
   endif()
 
@@ -336,11 +336,11 @@ macro(ROOTTEST_GENERATE_DICTIONARY dictname)
                                     -- ${always-make})
 
   set_property(TEST ${GENERATE_DICTIONARY_TEST} PROPERTY ENVIRONMENT ${ROOTTEST_ENVIRONMENT})
-  if(CMAKE_GENERATOR MATCHES Ninja)
+  if(CMAKE_GENERATOR MATCHES Ninja AND NOT MSVC)
     set_property(TEST ${GENERATE_DICTIONARY_TEST} PROPERTY RUN_SERIAL true)
   endif()
 
-  if(MSVC)
+  if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
     add_custom_command(TARGET ${targetname_libgen} POST_BUILD
        COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/${dictname}_rdict.pcm
                                         ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/${dictname}_rdict.pcm)
@@ -430,7 +430,7 @@ macro(ROOTTEST_GENERATE_REFLEX_DICTIONARY dictionary)
                                     -- ${always-make})
 
   set_property(TEST ${GENERATE_REFLEX_TEST} PROPERTY ENVIRONMENT ${ROOTTEST_ENVIRONMENT})
-  if(CMAKE_GENERATOR MATCHES Ninja)
+  if(CMAKE_GENERATOR MATCHES Ninja AND NOT MSVC)
     set_property(TEST ${GENERATE_REFLEX_TEST} PROPERTY RUN_SERIAL true)
   endif()
 
@@ -449,7 +449,7 @@ macro(ROOTTEST_GENERATE_REFLEX_DICTIONARY dictionary)
       FIXTURES_REQUIRED ${ARG_FIXTURES_REQUIRED})
   endif()
 
-  if(MSVC)
+  if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
     if(ARG_LIBNAME)
       add_custom_command(TARGET ${targetname_libgen} POST_BUILD
          COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/${ARG_LIBNAME}.dll
@@ -488,7 +488,7 @@ macro(ROOTTEST_GENERATE_EXECUTABLE executable)
   endif()
 
   if(ARG_LIBRARIES)
-    if(MSVC)
+    if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
       foreach(library ${ARG_LIBRARIES})
         if("${library}" MATCHES "ROOT::")
           string(REPLACE "ROOT::" "" library ${library})
@@ -550,11 +550,11 @@ macro(ROOTTEST_GENERATE_EXECUTABLE executable)
       RESOURCE_LOCK ${ARG_RESOURCE_LOCK})
   endif()
 
-  if(CMAKE_GENERATOR MATCHES Ninja)
+  if(CMAKE_GENERATOR MATCHES Ninja AND NOT MSVC)
     set_property(TEST ${GENERATE_EXECUTABLE_TEST} PROPERTY RUN_SERIAL true)
   endif()
 
-  if(MSVC)
+  if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
     add_custom_command(TARGET ${executable} POST_BUILD
        COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/${executable}.exe
                                         ${CMAKE_CURRENT_BINARY_DIR}/${executable}.exe)
@@ -1088,7 +1088,7 @@ function(ROOTTEST_ADD_UNITTEST_DIR)
     "*.C"
     )
 
-  if(MSVC)
+  if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
     foreach(library ${ARG_UNPARSED_ARGUMENTS})
       if(${library} MATCHES "[::]")
         set(libraries ${libraries} ${library})
@@ -1250,7 +1250,7 @@ endfunction()
 #---------------------------------------------------------------------------------------------------
 function(ROOTTEST_LINKER_LIBRARY library)
    ROOT_LINKER_LIBRARY(${ARGV})
-   if(MSVC)
+   if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
       add_custom_command(TARGET ${library} POST_BUILD
          COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/lib${library}.dll
                                           ${CMAKE_CURRENT_BINARY_DIR}/lib${library}.dll
