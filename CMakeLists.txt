@@ -704,7 +704,7 @@ Install path:      ${CMAKE_INSTALL_PREFIX}
 Compiler:          ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}
 C++ standard:      ${CMAKE_CXX_STANDARD}
 Compiler flags:")
-if(MSVC)
+if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
 message(STATUS "
  - C:                         ${CMAKE_C_FLAGS}
  - C (build type specific):
