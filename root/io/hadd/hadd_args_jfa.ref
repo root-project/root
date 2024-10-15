@@ -1,7 +1,0 @@
-Warning in <hadd>: the number of parallel processes passed after -j is invalid: fa. We will use the system maximum.
-Info in <hadd>: parallelizing  with 32 processes.
-Info in <hadd>: target file: hadd_args_jfa_out.root
-Info in <hadd>: compression setting for all output: 101
-Info in <hadd>: each process should handle at least 3 files for efficiency. Setting the number of processes to: 1
-hadd Source file 1: hadd_args_jfa.root
-hadd Target path: hadd_args_jfa_out.root:/

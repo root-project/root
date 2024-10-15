@@ -56,86 +56,104 @@ ROOTTEST_ADD_TEST(test_MergeCMSOpenDataRNTuples
                   COPY_TO_BUILDDIR hadd_check_cms.C cms_opendata_0_100.root cms_opendata_100_200.root cms_opendata_0_200.root
                   COMMAND ${ROOT_hadd_CMD} -f cms_opendata_merged.root cms_opendata_0_100.root cms_opendata_100_200.root
                   POSTCMD ${ROOT_root_CMD} -q -b -l "hadd_check_cms.C(\"cms_opendata_merged.root\", \"cms_opendata_0_200.root\")"
-)
 
 ################################################################
 #                 argument parsing tests                       #
 ################################################################
+ROOTTEST_ADD_TEST(test_hadd_args_gen_input
+                  COPY_TO_BUILDDIR hadd_gen_input_tree.C
+                  PRECMD ${CMAKE_COMMAND} -E rm -f hadd_args_in.root
+                  COMMAND ${ROOT_root_CMD} -q -b -l "hadd_gen_input_tree.C(\"hadd_args_in.root\")"
+)
 
 ROOTTEST_ADD_TEST(test_hadd_args_n0
-                  PRECMD ${ROOT_root_CMD} -q -b -l "hadd_gen_input_tree.C(\"hadd_args_n0.root\")"
-                  COMMAND ${ROOT_hadd_CMD} -n0 hadd_args_n0_out.root hadd_args_n0.root
-                  POSTCMD rm -f hadd_args_n0*.root
+                  DEPENDS test_hadd_args_gen_input
+                  COMMAND ${ROOT_hadd_CMD} -n0 hadd_args_n0_out.root hadd_args_in.root
+                  POSTCMD ${CMAKE_COMMAND} -E rm -f hadd_args_n0_out.root
                   OUTREF hadd_args_n0.ref
 )
 
 ROOTTEST_ADD_TEST(test_hadd_args_na
-                  PRECMD ${ROOT_root_CMD} -q -b -l "hadd_gen_input_tree.C(\"hadd_args_na.root\")"
-                  COMMAND ${ROOT_hadd_CMD} -na hadd_args_na_out.root hadd_args_na.root
-                  POSTCMD rm -f hadd_args_na*.root
+                  DEPENDS test_hadd_args_gen_input
+                  COMMAND ${ROOT_hadd_CMD} -na hadd_args_na_out.root hadd_args_in.root
+                  POSTCMD ${CMAKE_COMMAND} -E rm -f hadd_args_na_out.root
                   PASSREGEX "Error in <hadd>: the argument after '-n' flag was not of the expected type."
 )
 
 ROOTTEST_ADD_TEST(test_hadd_args_n_1
-                  PRECMD ${ROOT_root_CMD} -q -b -l "hadd_gen_input_tree.C(\"hadd_args_n_1.root\")"
-                  COMMAND ${ROOT_hadd_CMD} -n=1 hadd_args_n_1_out.root hadd_args_n_1.root
-                  POSTCMD rm -f hadd_args_n_1*.root
+                  DEPENDS test_hadd_args_gen_input
+                  COMMAND ${ROOT_hadd_CMD} -n=1 hadd_args_n_1_out.root hadd_args_in.root
+                  POSTCMD ${CMAKE_COMMAND} -E rm -f hadd_args_n_1_out.root
                   OUTREF hadd_args_n_1.ref
 )
 
 ROOTTEST_ADD_TEST(test_hadd_args_jfa
-                  PRECMD ${ROOT_root_CMD} -q -b -l "hadd_gen_input_tree.C(\"hadd_args_jfa.root\")"
-                  COMMAND ${ROOT_hadd_CMD} -jfa hadd_args_jfa_out.root hadd_args_jfa.root
-                  POSTCMD rm -f hadd_args_jfa*.root
-                  OUTREF hadd_args_jfa.ref
+                  DEPENDS test_hadd_args_gen_input
+                  COMMAND ${ROOT_hadd_CMD} -jfa hadd_args_jfa_out.root hadd_args_in.root
+                  POSTCMD ${CMAKE_COMMAND} -E rm -f hadd_args_jfa_out.root
+                  PASSREGEX "Error in <hadd>: the argument after '-j' flag was not of the expected type"
+)
+
+ROOTTEST_ADD_TEST(test_hadd_args_j_10a
+                  DEPENDS test_hadd_args_gen_input
+                  COMMAND ${ROOT_hadd_CMD} -j 10a hadd_args_j_10a_out.root hadd_args_in.root
+                  POSTCMD ${CMAKE_COMMAND} -E rm -f hadd_args_j_10a_out.root
+                  PASSREGEX "Error in <hadd>: error parsing integer argument '10a'"
+)
+
+ROOTTEST_ADD_TEST(test_hadd_args_j
+                  DEPENDS test_hadd_args_gen_input
+                  COMMAND ${ROOT_hadd_CMD} -j hadd_args_j_out.root hadd_args_in.root
+                  POSTCMD ${CMAKE_COMMAND} -E rm -f hadd_args_j_out.root
+                  PASSRC 0
 )
 
 ROOTTEST_ADD_TEST(test_hadd_args_ff_dbg_j_2
-                  PRECMD ${ROOT_root_CMD} -q -b -l "hadd_gen_input_tree.C(\"hadd_args_ff_dbg_j_2.root\")"
-                  COMMAND ${ROOT_hadd_CMD} -ff hadd_args_ff_dbg_j_2_out.root hadd_args_ff_dbg_j_2.root hadd_args_ff_dbg_j_2.root -dbg -j 2
-                  POSTCMD rm -f hadd_args_ff_dbg_j_2*.root
+                  DEPENDS test_hadd_args_gen_input
+                  COMMAND ${ROOT_hadd_CMD} -ff hadd_args_ff_dbg_j_2_out.root hadd_args_in.root hadd_args_in.root -dbg -j 2
+                  POSTCMD ${CMAKE_COMMAND} -E rm -f hadd_args_ff_dbg_j_2_out.root
                   OUTREF hadd_args_ff_dbg_j_2.ref
 )
 
 ROOTTEST_ADD_TEST(test_hadd_args_minusminus
-                  PRECMD ${ROOT_root_CMD} -q -b -l "hadd_gen_input_tree.C(\"--hadd_args.root\")"
-                  COMMAND ${ROOT_hadd_CMD} -f0 -- --hadd_args_out.root --hadd_args.root
-                  POSTCMD rm -f -- --hadd_args*.root
+                  DEPENDS test_hadd_args_gen_input
+                  COMMAND ${ROOT_hadd_CMD} -f0 -- --hadd_args_out.root hadd_args_in.root
+                  POSTCMD ${CMAKE_COMMAND} -E rm -f -- --hadd_args_out.root
                   OUTREF hadd_args_minusminus.ref
 )
 
 ROOTTEST_ADD_TEST(test_hadd_args_minusminus2
-                  PRECMD ${ROOT_root_CMD} -q -b -l "hadd_gen_input_tree.C(\"--hadd_args2.root\")"
-                  COMMAND ${ROOT_hadd_CMD} -f --hadd_args2_out.root -- --hadd_args2.root
-                  POSTCMD rm -f -- --hadd_args2*.root
+                  DEPENDS test_hadd_args_gen_input
+                  COMMAND ${ROOT_hadd_CMD} -f --hadd_args2_out.root -- hadd_args_in.root
+                  POSTCMD ${CMAKE_COMMAND} -E rm -f -- --hadd_args2_out.root
                   PASSREGEX "Warning in <hadd>: unknown flag: --hadd_args2_out.root"
                   PASSRC 1
 )
 
 ROOTTEST_ADD_TEST(test_hadd_args_multiple_pos
-                  PRECMD ${ROOT_root_CMD} -q -b -l "hadd_gen_input_tree.C(\"hadd_args_multiple_pos.root\")"
-                  COMMAND ${ROOT_hadd_CMD} -ff hadd_args_multiple_pos_out.root -k hadd_args_multiple_pos.root
-                  POSTCMD rm -f hadd_args_multiple_pos*.root
-                  PASSREGEX "Error in <hadd>: seen a positional argument 'hadd_args_multiple_pos.root' after some flags."
+                  DEPENDS test_hadd_args_gen_input
+                  COMMAND ${ROOT_hadd_CMD} -ff hadd_args_multiple_pos_out.root -k hadd_args_in.root
+                  POSTCMD ${CMAKE_COMMAND} -E rm -f hadd_args_multiple_pos_out.root
+                  PASSREGEX "Error in <hadd>: seen a positional argument 'hadd_args_in.root' after some flags."
 )
 
 ROOTTEST_ADD_TEST(test_hadd_args_cachesize
-                  PRECMD ${ROOT_root_CMD} -q -b -l "hadd_gen_input_tree.C(\"hadd_args_cachesize.root\")"
-                  COMMAND ${ROOT_hadd_CMD} hadd_args_cachesize_out.root hadd_args_cachesize.root -cachesize 100M -f
-                  POSTCMD rm -f hadd_args_cachesize*.root
+                  DEPENDS test_hadd_args_gen_input
+                  COMMAND ${ROOT_hadd_CMD} hadd_args_cachesize_out.root hadd_args_in.root -cachesize 100M -f
+                  POSTCMD ${CMAKE_COMMAND} -E rm -f hadd_args_cachesize_out.root
                   OUTREF hadd_args_cachesize.ref
 )
 
 ROOTTEST_ADD_TEST(test_hadd_args_missing_arg
-                  PRECMD ${ROOT_root_CMD} -q -b -l "hadd_gen_input_tree.C(\"hadd_args_missing_arg.root\")"
-                  COMMAND ${ROOT_hadd_CMD} -n hadd_args_missing_arg_out.root hadd_args_missing_arg.root
-                  POSTCMD rm -f hadd_args_missing_arg*.root
+                  DEPENDS test_hadd_args_gen_input
+                  COMMAND ${ROOT_hadd_CMD} -n hadd_args_missing_arg_out.root hadd_args_in.root
+                  POSTCMD ${CMAKE_COMMAND} -E rm -f hadd_args_missing_arg_out.root
                   PASSREGEX "Error in <hadd>: the argument after '-n' flag was not of the expected type"
 )
 
 ROOTTEST_ADD_TEST(test_hadd_args_missing_arg2
-                  PRECMD ${ROOT_root_CMD} -q -b -l "hadd_gen_input_tree.C(\"hadd_args_missing_arg2.root\")"
-                  COMMAND ${ROOT_hadd_CMD} hadd_args_missing_arg2_out.root hadd_args_missing_arg2.root -n
-                  POSTCMD rm -f hadd_args_missing_arg2*.root
+                  DEPENDS test_hadd_args_gen_input
+                  COMMAND ${ROOT_hadd_CMD} hadd_args_missing_arg2_out.root hadd_args_in.root -n
+                  POSTCMD ${CMAKE_COMMAND} -E rm -f hadd_args_missing_arg2_out.root
                   PASSREGEX "Error in <hadd>: expected argument after '-n' flag."
 )
