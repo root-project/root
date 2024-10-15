@@ -293,7 +293,7 @@ TEST(RNTuple, ViewFrameworkUse)
       auto model = RNTupleModel::Create();
       auto ptrPx = model->MakeField<float>("px");
       auto ptrPy = model->MakeField<float>("py");
-      // The trigger pages make a whole in the on-disk layout that is not (purposefully) read
+      // The trigger pages make a hole in the on-disk layout that is not (purposefully) read
       model->MakeField<bool>("trigger");
       auto ptrPz = model->MakeField<float>("pz");
 
