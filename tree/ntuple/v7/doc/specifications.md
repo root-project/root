@@ -942,7 +942,7 @@ While STL (unordered) (multi)sets by definition are associative containers
 on disk they are represented as sequential collections.
 This means that they have the same on-disk representation as `std::vector<T>`, using two fields:
   - Collection parent field whose principal column is of type `(Split)Index[64|32]`.
-  - Child field of type `T`, which must by a type with RNTuple I/O support.
+  - Child field of type `T`, which must be a type with RNTuple I/O support.
     The name of the child field is `_0`.
 
 #### std::map\<K, V\>, std::unordered_map\<K, V\>, std::multimap\<K, V\>, std::unordered_multimap\<K, V\>
