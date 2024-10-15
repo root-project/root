@@ -293,6 +293,7 @@ TEST(RNTuple, ViewFrameworkUse)
       auto model = RNTupleModel::Create();
       auto ptrPx = model->MakeField<float>("px");
       auto ptrPy = model->MakeField<float>("py");
+      // The trigger pages make a whole in the on-disk layout that is not (purposefully) read
       model->MakeField<bool>("trigger");
       auto ptrPz = model->MakeField<float>("pz");
 
@@ -346,6 +347,8 @@ TEST(RNTuple, ViewFrameworkUse)
    }
 
    // Ensure that cluster prefetching and smearing of read requests works
+   // Note that "nClusterLoaded" is the number of _partial_ clusters preloaded from storage. Because we read
+   // from the first cluster first px and then py, we'll call two times `LoadCluster()` on the first cluster.
    EXPECT_LT(reader->GetDescriptor().GetNClusters(),
              reader->GetMetrics().GetCounter("RNTupleReader.RPageSourceFile.nClusterLoaded")->GetValueAsInt());
    EXPECT_LT(reader->GetMetrics().GetCounter("RNTupleReader.RPageSourceFile.nReadV")->GetValueAsInt(),
