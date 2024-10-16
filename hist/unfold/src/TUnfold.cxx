@@ -108,6 +108,7 @@ constraint, both x and &lambda; are determined.
 */
 
 #include <iostream>
+#include <TGraph.h>
 #include <TMatrixD.h>
 #include <TMatrixDSparse.h>
 #include <TMatrixDSym.h>
