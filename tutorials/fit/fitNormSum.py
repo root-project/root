@@ -41,6 +41,7 @@ fnorm_exp_cb = ROOT.TF1NormSum(f_cb, f_exp, nsig, nbkg)
 # 4) :
 
 f_sum = ROOT.TF1("fsum", fnorm_exp_cb, -5.0, 5.0, fnorm_exp_cb.GetNpar())
+ROOT.SetOwnership(f_sum, False)
 
 # III.:
 parameter_values = fnorm_exp_cb.GetParameters()

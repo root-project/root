@@ -25,6 +25,7 @@ f_conv = ROOT.TF1Convolution("expo", "gaus", -1, 6, True)
 f_conv.SetRange(-1.0, 6.0)
 f_conv.SetNofPointsFFT(1000)
 f = ROOT.TF1("f", f_conv, 0.0, 5.0, f_conv.GetNpar())
+ROOT.SetOwnership(f, False)
 f.SetParameters(1.0, -0.3, 0.0, 1.0)
 
 c1 = ROOT.TCanvas("c1", "c1", 800, 1000)

@@ -95,8 +95,8 @@ ExternalProject_Add(
              -DLLVM_DIR=${LLVM_BINARY_DIR}
              -DCLANG_INCLUDE_DIRS=${CLANG_INCLUDE_DIRS}
              ${_clad_extra_cmake_args}
-  BUILD_COMMAND ${CMAKE_COMMAND} --build . ${EXTRA_BUILD_ARGS}
-  INSTALL_COMMAND ${CMAKE_COMMAND} --build . ${EXTRA_BUILD_ARGS} --target install
+  BUILD_COMMAND ${CMAKE_COMMAND} --build . ${EXTRA_BUILD_ARGS} -j 1
+  INSTALL_COMMAND ${CMAKE_COMMAND} --build . ${EXTRA_BUILD_ARGS} -j 1 --target install
   BUILD_BYPRODUCTS ${CLAD_BYPRODUCTS}
   ${_clad_extra_settings}
   # We need the target clangBasic to be built before building clad. However, we

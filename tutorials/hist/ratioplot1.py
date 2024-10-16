@@ -20,6 +20,7 @@ c1 = ROOT.TCanvas("c1", "A ratio example")
 h1 = ROOT.TH1D("h1", "h1", 50, 0, 10)
 h2 = ROOT.TH1D("h2", "h2", 50, 0, 10)
 f1 = ROOT.TF1("f1", "exp(- x/[0] )")
+ROOT.SetOwnership(f1, False)
 f1.SetParameter(0,3)
 
 h1.FillRandom("f1",1900)
