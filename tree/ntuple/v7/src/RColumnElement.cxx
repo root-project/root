@@ -67,7 +67,7 @@ ROOT::Experimental::Internal::RColumnElementBase::GetValidBitRange(EColumnType t
    return std::make_pair(0, 0);
 }
 
-std::string ROOT::Experimental::Internal::RColumnElementBase::GetTypeName(EColumnType type)
+const char *ROOT::Experimental::Internal::RColumnElementBase::GetTypeName(EColumnType type)
 {
    switch (type) {
    case EColumnType::kIndex64: return "Index64";
