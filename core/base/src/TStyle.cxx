@@ -60,8 +60,8 @@ referenced via the global variable `gStyle` (in TStyle.h).
 ROOT provides two styles called "Default" and "Plain". The "Default"
 style is created simply by:
 
-~~~ .cpp
-auto default = new TStyle("Default","Default Style");
+~~~ {.cpp}
+    auto default = new TStyle("Default","Default Style");
 ~~~
 
 The `Plain` style can be used if you are working on a monochrome display or

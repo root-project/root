@@ -748,7 +748,7 @@ Double_t TMath::KolmogorovProb(Double_t z)
 ///   functions. The for-loop handles 3 cases: when the next points to be
 ///   evaluated satisfy a>b, a<b, or a=b:
 ///
-/// ~~~ {cpp}
+/// ~~~ {.cpp}
 ///      for (Int_t i=0;i<na+nb;i++) {
 ///         if (a[ia-1] < b[ib-1]) {
 ///            rdiff -= sa;
@@ -782,7 +782,7 @@ Double_t TMath::KolmogorovProb(Double_t z)
 ///   The solution is to just add while-loops into the equality-case handling to
 ///   perform the tally:
 ///
-/// ~~~ {cpp}
+/// ~~~ {.cpp}
 ///         } else {
 ///            double x = a[ia-1];
 ///            while(a[ia-1] == x && ia <= na) {
