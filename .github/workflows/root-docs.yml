@@ -226,6 +226,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install awscli
+        aws configure list
 
     - name: Sync to S3
       run: |
