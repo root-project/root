@@ -186,20 +186,21 @@ if(builtin_freetype)
   message(STATUS "Building freetype version ${freetype_version} included in ROOT itself")
   set(FREETYPE_LIBRARY ${CMAKE_BINARY_DIR}/FREETYPE-prefix/src/FREETYPE/objs/.libs/${CMAKE_STATIC_LIBRARY_PREFIX}freetype${CMAKE_STATIC_LIBRARY_SUFFIX})
   if(WIN32)
-    set(FREETYPE_LIB_DIR .)
+    set(FREETYPE_LIB_DIR ".")
     if(CMAKE_GENERATOR MATCHES Ninja)
       set(freetypelib freetype.lib)
-      if (CMAKE_BUILD_TYPE MATCHES "Debug")
+      if (CMAKE_BUILD_TYPE MATCHES Debug)
         set(freetypelib freetyped.lib)
       endif()
     else()
-      set(freetypebuild "Release")
+      set(freetypebuild Release)
       set(freetypelib freetype.lib)
       if(winrtdebug)
-        set(freetypebuild "Debug")
+        set(freetypebuild Debug)
         set(freetypelib freetyped.lib)
       endif()
-      set(FREETYPE_LIB_DIR ${freetypebuild})
+      set(FREETYPE_LIB_DIR "${freetypebuild}")
+      set(FREETYPE_EXTRA_BUILD_ARGS --config ${freetypebuild})
     endif()
     ExternalProject_Add(
       FREETYPE
@@ -208,7 +209,7 @@ if(builtin_freetype)
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CMAKE_ARGS -G ${CMAKE_GENERATOR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
                  -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX} -DFT_DISABLE_BZIP2=TRUE
-      BUILD_COMMAND ${CMAKE_COMMAND} --build . ${EXTRA_BUILD_ARGS}
+      BUILD_COMMAND ${CMAKE_COMMAND} --build . ${FREETYPE_EXTRA_BUILD_ARGS}
       INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_if_different ${FREETYPE_LIB_DIR}/${freetypelib} ${FREETYPE_LIBRARY}
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 0
       BUILD_BYPRODUCTS ${FREETYPE_LIBRARY}
@@ -464,14 +465,15 @@ if(asimage)
   #---AfterImage---------------------------------------------------------------
   set(AFTERIMAGE_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libAfterImage${CMAKE_STATIC_LIBRARY_SUFFIX})
   if(WIN32)
-    set(ASTEP_LIB_DIR .)
+    set(ASTEP_LIB_DIR ".")
     if(NOT CMAKE_GENERATOR MATCHES Ninja)
       if(winrtdebug)
-        set(astepbld "--config Debug")
+        set(astepbld Debug)
       else()
-        set(astepbld "--config Release")
+        set(astepbld Release)
       endif()
-      set(ASTEP_LIB_DIR ${freetypebuild})
+      set(ASTEP_LIB_DIR "${astepbld}")
+      set(ASTEP_EXTRA_BUILD_ARGS --config ${astepbld})
     endif()
     ExternalProject_Add(
       AFTERIMAGE
@@ -479,7 +481,7 @@ if(asimage)
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CMAKE_ARGS -G ${CMAKE_GENERATOR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
                  -DFREETYPE_INCLUDE_DIR=${FREETYPE_INCLUDE_DIR} -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR}
-      BUILD_COMMAND ${CMAKE_COMMAND} --build . ${astepbld}
+      BUILD_COMMAND ${CMAKE_COMMAND} --build . ${ASTEP_EXTRA_BUILD_ARGS}
       INSTALL_COMMAND  ${CMAKE_COMMAND} -E copy_if_different ${ASTEP_LIB_DIR}/libAfterImage.lib <INSTALL_DIR>/lib/
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 0
       BUILD_BYPRODUCTS ${AFTERIMAGE_LIBRARIES}
@@ -1256,7 +1258,7 @@ if(builtin_tbb)
 
   if(MSVC)
     if(CMAKE_GENERATOR MATCHES Ninja)
-      if(CMAKE_BUILD_TYPE MATCHES "Debug")
+      if(CMAKE_BUILD_TYPE MATCHES Debug)
         set(tbbsuffix "_debug")
       endif()
     else()
@@ -1265,7 +1267,6 @@ if(builtin_tbb)
         set(tbb_build Debug)
         set(tbbsuffix "_debug")
       endif()
-      set(EXTRA_TBB_BUILD_ARGS --config ${tbb_build})
     endif()
     set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/tbb12${tbbsuffix}.lib)
     set(TBB_CXXFLAGS "-D__TBB_NO_IMPLICIT_LINKAGE=1")
@@ -1860,7 +1861,7 @@ if (builtin_gtest)
     if(CMAKE_GENERATOR MATCHES Ninja)
       set(GTEST_BUILD_COMMAND "BUILD_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR>")
     else()
-      set(GTEST_BUILD_COMMAND "BUILD_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> --config Release")
+      set(GTEST_BUILD_COMMAND "BUILD_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> --config ${GTEST_BUILD_TYPE}")
     endif()
     if(asan)
       if(NOT winrtdebug)
