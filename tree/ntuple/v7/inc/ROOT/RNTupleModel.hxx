@@ -294,6 +294,39 @@ public:
    void AddField(std::unique_ptr<RFieldBase> field);
 
    /// Adds a top-level field based on existing fields.
+   ///
+   /// The mapping function takes one argument, which is a string containing the name of the projected field. The return
+   /// value of the mapping function should be the name of the (existing) field onto which the projection is made.
+   /// **Example**
+   /// ~~~ {.cpp}
+   /// auto model = RNTupleModel::Create();
+   /// model->MakeField<float>("met");
+   /// auto metProjection = RFieldBase::Create("missingE", "float").Unwrap();
+   /// model->AddProjectedField(std::move(metProjection), [](const std::string &) { return "met"; });
+   /// ~~~
+   ///
+   /// Adding projections for collection fields is also possible, as long as they follow the same schema structure. For
+   /// example, a projection of a collection of structs onto a collection of scalars is possible, but a projection of a
+   /// collection of a collection of scalars onto a collection of scalars is not.
+   ///
+   /// In the case of projections for nested fields, the mapping function must provide a mapping for every nesting
+   /// level.
+   /// **Example**
+   /// ~~~ {.cpp}
+   /// struct P { int x, y; };
+   ///
+   /// auto model = RNTupleModel::Create();
+   /// model->MakeField<std::vector<P>>("points");
+   /// auto pxProjection = RFieldBase::Create("pxs", "std::vector<int>").Unwrap();
+   /// model->AddProjectedField(std::move(pxProjection), [](const std::string &fieldName) {
+   ///   if (fieldName == "pxs")
+   ///     return "points";
+   ///   else
+   ///     return "points._0.x";
+   /// });
+   /// ~~~
+   ///
+   /// Creating projections for fields containing `std::variant` or fixed-size arrays is unsupported.
    RResult<void> AddProjectedField(std::unique_ptr<RFieldBase> field, FieldMappingFunc_t mapping);
    const RProjectedFields &GetProjectedFields() const { return *fProjectedFields; }
 
