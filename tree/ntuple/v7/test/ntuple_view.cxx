@@ -2,6 +2,8 @@
 
 #include <TMemFile.h>
 
+#include <limits>
+
 TEST(RNTuple, View)
 {
    FileRaii fileGuard("test_ntuple_view.root");
@@ -53,6 +55,44 @@ TEST(RNTuple, View)
       EXPECT_EQ(n, viewJetElements(i));
    }
    EXPECT_EQ(3, n);
+}
+
+TEST(RNTuple, ViewCast)
+{
+   FileRaii fileGuard("test_ntuple_view_cast.root");
+
+   auto model = RNTupleModel::Create();
+   auto fieldF = model->MakeField<float>("f", 1.0);
+   auto fieldD = model->MakeField<double>("d", 2.0);
+   auto field32 = model->MakeField<std::uint32_t>("u32", 32);
+   auto field64 = model->MakeField<std::int64_t>("i64", -64);
+
+   {
+      auto writer = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath());
+      writer->Fill();
+      *fieldF = -42.0;
+      *fieldD = -63.0;
+      *field32 = std::numeric_limits<std::uint32_t>::max();
+      *field64 = std::numeric_limits<std::int32_t>::min();
+      writer->Fill();
+   }
+
+   // Test views that cast to a different type.
+   auto reader = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
+   auto viewF = reader->GetView<double>("f");
+   auto viewD = reader->GetView<float>("d");
+   auto view32 = reader->GetView<std::uint64_t>("u32");
+   auto view64 = reader->GetView<std::int32_t>("i64");
+
+   EXPECT_FLOAT_EQ(1.0, viewF(0));
+   EXPECT_FLOAT_EQ(2.0, viewD(0));
+   EXPECT_EQ(32, view32(0));
+   EXPECT_EQ(-64, view64(0));
+
+   EXPECT_FLOAT_EQ(-42.0, viewF(1));
+   EXPECT_FLOAT_EQ(-63.0, viewD(1));
+   EXPECT_EQ(std::numeric_limits<std::uint32_t>::max(), view32(1));
+   EXPECT_EQ(std::numeric_limits<std::int32_t>::min(), view64(1));
 }
 
 TEST(RNTuple, DirectAccessView)
