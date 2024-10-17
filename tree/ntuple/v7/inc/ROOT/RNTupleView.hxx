@@ -139,12 +139,11 @@ protected:
       std::unique_ptr<RFieldBase> field;
       {
          const auto &desc = pageSource->GetSharedDescriptorGuard().GetRef();
-         field = desc.GetFieldDescriptor(fieldId).CreateField(desc);
-      }
-      if constexpr (!std::is_void_v<T>) {
-         if (field->GetTypeName() != RField<T>::TypeName()) {
-            throw RException(R__FAIL("type mismatch for field " + field->GetFieldName() + ": " + field->GetTypeName() +
-                                     " vs. " + RField<T>::TypeName()));
+         const auto &fieldDesc = desc.GetFieldDescriptor(fieldId);
+         if constexpr (std::is_void_v<T>) {
+            field = fieldDesc.CreateField(desc);
+         } else {
+            field = std::make_unique<RField<T>>(fieldDesc.GetFieldName());
          }
       }
       field->SetOnDiskId(fieldId);
