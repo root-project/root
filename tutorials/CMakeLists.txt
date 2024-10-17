@@ -281,7 +281,9 @@ set(gui_veto fit/fitpanel_playback.C
              roostats/ModelInspector.C
              tree/tvdemo.C
              eve/*.C
-             webgui/panel/server.cxx webgui/webwindow/server.cxx)
+             webgui/geom/geom_threejs.cxx
+             webgui/panel/server.cxx
+             webgui/webwindow/server.cxx)
 if (NOT webgui)
   list(APPEND gui_veto graphics/save_batch.C rcanvas/df104.py rcanvas/df105.py)
 endif()
