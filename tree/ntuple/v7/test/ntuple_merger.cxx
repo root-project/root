@@ -831,6 +831,36 @@ static bool VerifyValidZLIB(const void *buf, size_t bufsize, size_t tgtsize)
    return true;
 }
 
+enum class PageCompCheckType { kUncompressed, kZlib };
+
+static bool VerifyPageCompression(const std::string_view fileName, PageCompCheckType checkType)
+{
+   // TODO(gparolini): eventually we want to do the following check:
+   //   auto reader = RNTupleReader::Open("ntuple", fileGuardOut.GetPath());
+   //   auto compSettings = reader->GetDescriptor().GetClusterDescriptor(0).GetColumnRange(0).fCompressionSettings;
+   //   EXPECT_EQ(compSettings, kNewComp);
+   // but right now we don't write the correct metadata when calling Merge() so we can't trust the advertised
+   // compression settings to reflect the actual algorithm being used for compression.
+   // Therefore, for now we do a more expensive check where we try to unzip the data using the expected
+   // algorithm and verify that it works.
+   auto source = RPageSource::Create("ntuple", fileName);
+   source->Attach();
+   auto descriptor = source->GetSharedDescriptorGuard();
+   const auto &columnDesc = descriptor->GetColumnDescriptor(0);
+   const auto colElement = ROOT::Experimental::Internal::RColumnElementBase::Generate(columnDesc.GetType());
+   ROOT::Experimental::Internal::RPageStorage::RSealedPage sealedPage;
+   source->LoadSealedPage(0, {0, 0}, sealedPage);
+   auto buffer = std::make_unique<unsigned char[]>(sealedPage.GetBufferSize());
+   sealedPage.SetBuffer(buffer.get());
+   source->LoadSealedPage(0, {0, 0}, sealedPage);
+
+   size_t uncompSize = sealedPage.GetNElements() * colElement->GetSize();
+   if (checkType == PageCompCheckType::kZlib)
+      return VerifyValidZLIB(sealedPage.GetBuffer(), sealedPage.GetDataSize(), uncompSize);
+   else
+      return sealedPage.GetDataSize() == uncompSize;
+}
+
 TEST(RNTupleMerger, ChangeCompression)
 {
    FileRaii fileGuard("test_ntuple_merge_changecomp_in.root");
@@ -876,37 +906,9 @@ TEST(RNTupleMerger, ChangeCompression)
    }
 
    // Check that compression is the right one
-
-   const auto CheckOutput = [](const std::string_view fileName, bool compressed) {
-      // TODO(gparolini): eventually we want to do the following check:
-      //   auto reader = RNTupleReader::Open("ntuple", fileGuardOut.GetPath());
-      //   auto compSettings = reader->GetDescriptor().GetClusterDescriptor(0).GetColumnRange(0).fCompressionSettings;
-      //   EXPECT_EQ(compSettings, kNewComp);
-      // but right now we don't write the correct metadata when calling Merge() so we can't trust the advertised
-      // compression settings to reflect the actual algorithm being used for compression.
-      // Therefore, for now we do a more expensive check where we try to unzip the data using the expected
-      // algorithm and verify that it works.
-      auto source = RPageSource::Create("ntuple", fileName);
-      source->Attach();
-      auto descriptor = source->GetSharedDescriptorGuard();
-      const auto &columnDesc = descriptor->GetColumnDescriptor(0);
-      const auto colElement = ROOT::Experimental::Internal::RColumnElementBase::Generate(columnDesc.GetType());
-      ROOT::Experimental::Internal::RPageStorage::RSealedPage sealedPage;
-      source->LoadSealedPage(0, {0, 0}, sealedPage);
-      auto buffer = std::make_unique<unsigned char[]>(sealedPage.GetBufferSize());
-      sealedPage.SetBuffer(buffer.get());
-      source->LoadSealedPage(0, {0, 0}, sealedPage);
-
-      size_t uncompSize = sealedPage.GetNElements() * colElement->GetSize();
-      if (compressed)
-         EXPECT_TRUE(VerifyValidZLIB(sealedPage.GetBuffer(), sealedPage.GetDataSize(), uncompSize));
-      else
-         EXPECT_EQ(sealedPage.GetDataSize(), uncompSize);
-   };
-
-   CheckOutput(fileGuardOutChecksum.GetPath(), true);
-   CheckOutput(fileGuardOutNoChecksum.GetPath(), true);
-   CheckOutput(fileGuardOutUncomp.GetPath(), false);
+   EXPECT_TRUE(VerifyPageCompression(fileGuardOutChecksum.GetPath(), PageCompCheckType::kZlib));
+   EXPECT_TRUE(VerifyPageCompression(fileGuardOutNoChecksum.GetPath(), PageCompCheckType::kZlib));
+   EXPECT_TRUE(VerifyPageCompression(fileGuardOutUncomp.GetPath(), PageCompCheckType::kUncompressed));
 }
 
 TEST(RNTupleMerger, MergeLateModelExtension)
@@ -992,5 +994,79 @@ TEST(RNTupleMerger, MergeLateModelExtension)
          ASSERT_EQ(*bar, 0);
          ASSERT_EQ(*baz, (i - 10) * 567);
       }
+   }
+}
+
+TEST(RNTupleMerger, MergeCompression)
+{
+   // Verify that the compression of the output rntuple is the one we ask for
+   FileRaii fileGuard1("test_ntuple_merge_comp_in_1.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto fieldFoo = model->MakeField<int>("foo", 0);
+      auto fieldBar = model->MakeField<int>("bar", 0);
+      auto writeOpts = RNTupleWriteOptions();
+      writeOpts.SetCompression(505);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath(), writeOpts);
+      for (size_t i = 0; i < 100; ++i) {
+         *fieldFoo = i * 123;
+         *fieldBar = i * 321;
+         ntuple->Fill();
+      }
+   }
+
+   FileRaii fileGuard2("test_ntuple_merge_comp_in_2.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto fieldBar = model->MakeField<int>("bar", 0);
+      auto fieldFoo = model->MakeField<int>("foo", 0);
+      auto writeOpts = RNTupleWriteOptions();
+      writeOpts.SetCompression(404);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath(), writeOpts);
+      for (size_t i = 0; i < 100; ++i) {
+         *fieldFoo = i * 567;
+         *fieldBar = i * 765;
+         ntuple->Fill();
+      }
+   }
+
+   // Now merge the inputs
+   const auto kOutCompSettings = 101;
+   FileRaii fileGuard3("test_ntuple_merge_comp_out.root");
+   {
+      // Gather the input sources
+      std::vector<std::unique_ptr<RPageSource>> sources;
+      sources.push_back(RPageSource::Create("ntuple", fileGuard1.GetPath(), RNTupleReadOptions()));
+      sources.push_back(RPageSource::Create("ntuple", fileGuard2.GetPath(), RNTupleReadOptions()));
+      std::vector<RPageSource *> sourcePtrs;
+      for (const auto &s : sources) {
+         sourcePtrs.push_back(s.get());
+      }
+
+      // Now Merge the inputs
+      RNTupleMerger merger;
+      RNTupleMergeOptions opts;
+      {
+         auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuard3.GetPath(), RNTupleWriteOptions());
+         opts.fMergingMode = ENTupleMergingMode::kUnion;
+         opts.fCompressionSettings = kOutCompSettings;
+         auto res = merger.Merge(sourcePtrs, *destination, opts);
+         EXPECT_TRUE(bool(res));
+      }
+   }
+
+   EXPECT_TRUE(VerifyPageCompression(fileGuard3.GetPath(), PageCompCheckType::kZlib));
+
+   {
+      FileRaii fileGuard4("test_ntuple_merge_comp_out_tfilemerger.root");
+      auto nt1 = std::unique_ptr<TFile>(TFile::Open(fileGuard1.GetPath().c_str()));
+      auto nt2 = std::unique_ptr<TFile>(TFile::Open(fileGuard2.GetPath().c_str()));
+      TFileMerger fileMerger(kFALSE, kFALSE);
+      fileMerger.OutputFile(fileGuard4.GetPath().c_str(), "RECREATE", kOutCompSettings);
+      fileMerger.AddFile(nt1.get());
+      fileMerger.AddFile(nt2.get());
+      fileMerger.Merge();
+
+      EXPECT_TRUE(VerifyPageCompression(fileGuard4.GetPath(), PageCompCheckType::kZlib));
    }
 }
