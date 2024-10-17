@@ -300,8 +300,8 @@ ROOT::Experimental::RNTupleInspector::GetColumnTypeInfoAsHist(ROOT::Experimental
       default: throw RException(R__FAIL("Unknown histogram type"));
       }
 
-      hist->AddBinContent(
-         hist->GetXaxis()->FindBin(Internal::RColumnElementBase::GetTypeName(colInfo.GetType()).c_str()), data);
+      hist->AddBinContent(hist->GetXaxis()->FindBin(Internal::RColumnElementBase::GetTypeName(colInfo.GetType())),
+                          data);
    }
 
    return hist;
@@ -322,9 +322,10 @@ ROOT::Experimental::RNTupleInspector::GetPageSizeDistribution(ROOT::Experimental
                                                               std::string histName, std::string histTitle, size_t nBins)
 {
    if (histName.empty())
-      histName = "pageSizeHistCol" + Internal::RColumnElementBase::GetTypeName(colType);
+      histName = "pageSizeHistCol" + std::string{Internal::RColumnElementBase::GetTypeName(colType)};
    if (histTitle.empty())
-      histTitle = "Page size distribution for columns with type " + Internal::RColumnElementBase::GetTypeName(colType);
+      histTitle = "Page size distribution for columns with type " +
+                  std::string{Internal::RColumnElementBase::GetTypeName(colType)};
 
    auto perTypeHist = GetPageSizeDistribution({colType}, histName, histTitle, nBins);
 
@@ -414,8 +415,8 @@ std::unique_ptr<THStack> ROOT::Experimental::RNTupleInspector::GetPageSizeDistri
 
    for (const auto &[colType, pageSizesForColType] : pageSizes) {
       auto hist = std::make_unique<TH1D>(
-         TString::Format("%s%s", histName.c_str(), Internal::RColumnElementBase::GetTypeName(colType).c_str()),
-         Internal::RColumnElementBase::GetTypeName(colType).c_str(), nBins, histMin,
+         TString::Format("%s%s", histName.c_str(), Internal::RColumnElementBase::GetTypeName(colType)),
+         Internal::RColumnElementBase::GetTypeName(colType), nBins, histMin,
          histMax + ((histMax - histMin) / static_cast<double>(nBins)));
 
       for (const auto pageSize : pageSizesForColType) {
