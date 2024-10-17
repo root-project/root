@@ -1,10 +1,10 @@
 /// \file
 /// \ingroup tutorial_webgui
 /// \ingroup webwidgets
-/// Minimal server/client code for working with RWebWindow class
+/// Minimal server/client code for working with RWebWindow class.
 ///
-/// File server.cxx shows how RWebWindow can be created and used
-/// In client.html simple client code is provided.
+/// File webwindow.cxx shows how RWebWindow can be created and used
+/// In webwindow.html simple client code is provided.
 ///
 /// \macro_code
 ///
@@ -14,7 +14,7 @@
 
 std::shared_ptr<ROOT::RWebWindow> window;
 
-int counter{0};
+int counter = 0;
 
 void ProcessData(unsigned connid, const std::string &arg)
 {
@@ -37,23 +37,20 @@ void ProcessData(unsigned connid, const std::string &arg)
    }
 }
 
-void server()
+void webwindow()
 {
    // create window
    window = ROOT::RWebWindow::Create();
 
-   // Detect macro file location to specify full path to the HTML file
-   std::string fname = __FILE__;
-   auto pos = fname.find("server.cxx");
-   if (pos > 0)
-      fname.resize(pos);
-   else
-      fname.clear();
-   fname.append("client.html");
-
    // configure default html page
    // either HTML code can be specified or just name of file after 'file:' prefix
-   window->SetDefaultPage("file:" + fname);
+   std::string fdir = __FILE__;
+   auto pos = fdir.find("webwindow.cxx");
+   if (pos > 0)
+      fdir.resize(pos);
+   else
+      fdir = gROOT->GetTutorialsDir() + std::string("/webgui/webwindow/");
+   window->SetDefaultPage("file:" + fdir + "webwindow.html");
 
    // this is call-back, invoked when message received from client
    window->SetDataCallBack(ProcessData);

@@ -2,7 +2,7 @@
 /// \ingroup tutorial_webcanv
 /// \notebook -js
 /// Swap X/Y axes drawing and use to draw TH1 as bar and as markers.
-
+///
 /// Option "haxisg;y+" draw histogram axis as for "hbar" plus allow to draw grids plus draw Y labels on other side
 /// Option "bar,base0,same" draws histogram as bars with 0 as reference value
 /// Option "P,same" draws histogram as markers
