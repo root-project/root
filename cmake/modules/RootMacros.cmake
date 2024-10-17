@@ -1848,7 +1848,7 @@ function(ROOT_ADD_GTEST test_suite)
   endif(ARG_INCLUDE_DIRS)
 
   if(MSVC)
-    set(test_exports "/EXPORT:_Init_thread_abort /EXPORT:_Init_thread_epoch
+    set(test_exports "/EXPORT:_Init_thread_abort /EXPORT:_Init_thread_epoch \
         /EXPORT:_Init_thread_footer /EXPORT:_Init_thread_header /EXPORT:_tls_index")
     set_property(TARGET ${test_suite} APPEND_STRING PROPERTY LINK_FLAGS ${test_exports})
   endif()

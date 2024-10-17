@@ -18,8 +18,8 @@ if(NOT WIN32)
 endif()
 ROOT_EXECUTABLE(root.exe rmain.cxx LIBRARIES Core Rint)
 if(MSVC)
-  set(root_exports "/EXPORT:_Init_thread_abort /EXPORT:_Init_thread_epoch
-      /EXPORT:_Init_thread_footer /EXPORT:_Init_thread_header /EXPORT:_tls_index
+  set(root_exports "/EXPORT:_Init_thread_abort /EXPORT:_Init_thread_epoch \
+      /EXPORT:_Init_thread_footer /EXPORT:_Init_thread_header /EXPORT:_tls_index \
       /STACK:4000000 setargv.obj")
   set_property(TARGET root.exe APPEND_STRING PROPERTY LINK_FLAGS ${root_exports})
   add_custom_command(TARGET root.exe POST_BUILD
