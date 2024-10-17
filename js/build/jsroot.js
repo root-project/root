@@ -12,7 +12,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '11/10/2024',
+version_date = '17/10/2024',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -10017,7 +10017,7 @@ function parseLatex(node, arg, label, curr) {
       const gg = currG();
 
       // this is indicator that gg element will be the only one, one can use directly main container
-      if ((nelements === 1) && !label && !curr.x && !curr.y)
+      if ((nelements === 1) && !label && !curr.x && !curr.y && !is_a)
          return gg;
 
       return makeTranslate(gg.append(is_a ? 'svg:a' : 'svg:g'), curr.x, curr.y);
