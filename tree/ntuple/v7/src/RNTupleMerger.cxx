@@ -121,7 +121,7 @@ try {
    RNTupleMerger merger;
    RNTupleMergeOptions mergerOpts;
    mergerOpts.fCompressionSettings = compression;
-   merger.Merge(sourcePtrs, *destination).ThrowOnError();
+   merger.Merge(sourcePtrs, *destination, mergerOpts).ThrowOnError();
 
    // Provide the caller with a merged anchor object (even though we've already
    // written it).
