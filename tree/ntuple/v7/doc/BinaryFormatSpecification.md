@@ -7,7 +7,7 @@
 The RNTuple binary format version is inspired by semantic versioning.
 It uses the following scheme: EPOCH.MAJOR.MINOR.PATCH
 
-_Epoch_: an increment of the epoch indicates backwards-incompatible changes.
+_Epoch_: an increment of the epoch indicates backward-incompatible changes.
 The RNTuple pre-release has epoch 0.
 The first public release will get epoch 1.
 There is currently no further epoch foreseen.
@@ -1107,11 +1107,28 @@ The `size` of something refers to the size in bytes on disk, possibly compressed
 
 ## Notes on Backward and Forward Compatibility
 
-TODO(jblomer)
-- Ignore unknown column types
-- Backwards compatiblity promised back to version 1
-- Envelope compression algorithm(s) fixed (zstd or none?)
-- Feature flags
-- Skipping of unknown information (frames, envelopes)
-- Writer version and minimum version
-- Feature flag skipping
+Note that this section covers the backward and forward compatibility of the binary format itself.
+It does not discuss schema evolution of the written types.
+
+Readers supporting a certain version of the specification should support reading files
+that were written according to previous versions of the same epoch.
+
+Readers should support reading data written according to _newer_ format versions of the same epoch in the following way
+
+  - Unknown trailing information in the anchor, in envelopes, and in frames should be ignored.
+    For instance, when reading frames, readers should continue reading after the frame-provided frame length
+    rather than summing up the lengths of the known contents of the frame.
+    Checksum verification, however, should still take place and include known and unknown contents.
+  - Unknown column, cluster, or field flags should be ignored.
+  - Unknown IDs for extra type information should be ignored.
+  - When a reader encounters an unknown column type or an unknown field type or field version or field structure,
+    it should ignore the entire top-level field that the column or field belongs to.
+    It should also ignore any projected fields and alias columns whose source fields or columns are already ignored.
+  - When a reader encounters an unknown feature flag, it must refuse reading any further.
+
+Writers using format features that will prevent older readers from correctly reading the data
+must set the corresponding feature flags.
+
+Writers should write in the anchor the format version that they support,
+independent of whether they use the all the features that this version provides.
+Only the feature flag signals which features are used.
