@@ -3,7 +3,7 @@
 /// \notebook -js
 /// Use of interactive URL links inside TLatex.
 ///
-/// JSROOT now supports #url[link]{label} syntax
+/// JSROOT now supports '#url[link]{label}' syntax
 /// It can be combined with any other latex commands like color ot font.
 /// While TLatex used in many places, one can add external links to histogram title,
 /// axis title, legend entry and so on.

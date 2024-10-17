@@ -8,16 +8,11 @@
 /// It is also possible to use such "simple" class without loading of custom JS code,
 /// but then it requires appropriate Paint() method and will miss interactivity in browser
 ///
-/// This macro must be executed with ACLiC as follows:
+/// This macro must be executed with ACLiC like 'root --web triangle.cxx+'
 ///
-/// ~~~{.cpp}
-/// .x triangle.cxx+
-/// ~~~
 ///
 /// \macro_image (tcanvas_js)
 /// \macro_code
-///
-/// \author Sergey Linev
 ///
 /// \author Sergey Linev
 
