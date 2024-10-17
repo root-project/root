@@ -87,7 +87,7 @@ private:
 
    void AddValue(RFieldBase::RValue &&value)
    {
-      fFieldName2Token[value.GetField().GetFieldName()] = fValues.size();
+      fFieldName2Token[value.GetField().GetQualifiedFieldName()] = fValues.size();
       fValues.emplace_back(std::move(value));
    }
 
@@ -95,7 +95,7 @@ private:
    template <typename T, typename... ArgsT>
    std::shared_ptr<T> AddValue(RField<T> &field, ArgsT &&...args)
    {
-      fFieldName2Token[field.GetFieldName()] = fValues.size();
+      fFieldName2Token[field.GetQualifiedFieldName()] = fValues.size();
       auto ptr = std::make_shared<T>(std::forward<ArgsT>(args)...);
       fValues.emplace_back(field.BindValue(ptr));
       return ptr;
@@ -136,7 +136,7 @@ private:
       if constexpr (!std::is_void_v<T>) {
          const auto &v = fValues[token.fIndex];
          if (v.GetField().GetTypeName() != RField<T>::TypeName()) {
-            throw RException(R__FAIL("type mismatch for field " + v.GetField().GetFieldName() + ": " +
+            throw RException(R__FAIL("type mismatch for field " + v.GetField().GetQualifiedFieldName() + ": " +
                                      v.GetField().GetTypeName() + " vs. " + RField<T>::TypeName()));
          }
       }
