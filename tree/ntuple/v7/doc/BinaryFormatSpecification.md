@@ -1054,27 +1054,51 @@ The limits refer to a single RNTuple and do not consider combinations/joins such
 
 ## Glossary
 
-TODO: This glossary is not yet complete
+### Anchor
+
+The anchor is a data block that makes the entry point to an RNTuple.
+The anchor is specific to the RNTuple container in which the RNTuple data are embedded (e.g., a ROOT file).
+The anchor must provide the information to load the header and the footer **envelopes**.
+
+### Cluster
+
+A cluster is a set of **pages** that contain all the data that belongs to a certain entry range.
+The data set is partitioned in clusters.
+A typical cluster size is tens to hundreds of megabytes.
 
 ### Column
 
 A column is a storage backed vector of a number of **elements** of a simple type.
-Column elements have a fixed bit-length depending on the column type.
+Column elements have a fixed bit-length that depends on the column type.
+Some column types allow setting the bit lengths within limits, (e.g. for floats with truncated mantiassa).
+
+### Envelope
+
+An envelope is a data block with RNTuple meta-data, such as the header and the footer.
+
+### Field
+
+A field describes a serialized C++ type.
+A field can have a hierarchy of subfields representing a composed C++ type (e.g., a vector of integers).
+A field has zero, one, or multiple **columns** attached to it.
+The columns contain the data related to the field but not to its subfields, which have their own columns.
+
+### Frame
+
+A frame is a byte range with meta-data information in an **envelope**.
+A frame starts with its size and thus can be extended in a forward-compatible way.
+
+### Locator
+
+A locator is a generalized way to identify a byte range in the RNTuple container.
+For a file container, for instance, a locator consists of an offset and a size.
 
 ### Page
 
 A page is segment of a column.
 Columns are partitioned in pages.
 A page is a unit of compression.
-Typical page sizes are of the order of 10-100kB.
-
-### Cluster
-
-A cluster is a set of pages from a fixed set of columns that contain all the data that belongs to a certain entry range.
-The data set is partitioned in clusters.
-Typically, a cluster comprises pages from all the available columns.
-If only a subset of the available columns are covered, it is called a **sharded cluster**.
-A typical cluster size is 50MB - 500MB.
+Typical page sizes are of the order of tens to hundreds of kilobytes.
 
 ### Indications of size
 
