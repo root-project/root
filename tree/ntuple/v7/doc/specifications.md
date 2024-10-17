@@ -395,6 +395,14 @@ If `flag==0x02` (_projected field_) is set,
 the field has been created as a virtual field from another, non-projected source field.
 If a projected field has attached columns,
 these columns are alias columns to physical columns attached to the source field.
+The following restrictions apply on field projections:
+  - The source field and the target field must have the same structure,
+    except for an `RNTupleCardinality` field that must have a collection field as a source.
+  - For streamer fields and leaf fields, the type name of the source field and the projected field must be identical.
+  - Projections involving variants or fixed-size arrays are unsupported.
+  - Projected fields must be on the same schema path of collection fields than the source field.
+    For instance, one can project a vector of struct with floats to individual vectors of floats but cannot
+    project a vector of a vector of floats to a vector of floats.
 
 If `flag==0x04` (_type checksum_) is set, the field metadata contain the checksum of the ROOT streamer info.
 This checksum is only used for I/O rules in order to find types that are identified by checksum.
