@@ -42,7 +42,7 @@ target_link_libraries(RootShower ROOT::Core ROOT::Rint ROOT::Gui ROOT::RIO ROOT:
   ROOT::Graf ROOT::EG ROOT::Html ROOT::Geom ROOT::Tree
 )
 set_target_properties(RootShower PROPERTIES ENABLE_EXPORTS 1)
-if(MSVC)
+if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
   add_custom_command(TARGET RootShower POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/RootShower.exe
                                      ${CMAKE_CURRENT_BINARY_DIR}

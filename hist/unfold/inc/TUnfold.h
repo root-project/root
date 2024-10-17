@@ -92,6 +92,7 @@
 
 #include <TH1D.h>
 #include <TH2D.h>
+#include <TGraph.h>
 #include <TObject.h>
 #include <TArrayI.h>
 #include <TSpline.h>

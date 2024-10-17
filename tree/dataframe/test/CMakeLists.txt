@@ -108,7 +108,7 @@ if(root7)
                                 LINKDEF NTupleStructLinkDef.h
                                 DEPENDENCIES RIO)
   configure_file(NTupleStruct.hxx . COPYONLY)
-  if(MSVC)
+  if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
     add_custom_command(TARGET NTupleStruct POST_BUILD
       COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libNTupleStruct.dll
                                        ${CMAKE_CURRENT_BINARY_DIR}/libNTupleStruct.dll)

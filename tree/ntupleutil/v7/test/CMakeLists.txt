@@ -13,7 +13,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(CustomStructUtil
                               LINKDEF CustomStructUtilLinkDef.h
                               DEPENDENCIES RIO)
 configure_file(CustomStructUtil.hxx . COPYONLY)
-if(MSVC)
+if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
   add_custom_command(TARGET CustomStructUtil POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libCustomStructUtil.dll
                                      ${CMAKE_CURRENT_BINARY_DIR}/libCustomStructUtil.dll)

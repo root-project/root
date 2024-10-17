@@ -50,7 +50,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Event
                               HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/Event.h
                               SOURCES Event.cxx LINKDEF EventLinkDef.h
                               DEPENDENCIES Hist MathCore)
-if(MSVC)
+if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
   if(NOT runtime_cxxmodules)
     add_custom_command(TARGET Event POST_BUILD
       COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/libEvent_rdict.pcm
@@ -233,7 +233,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TrackMathCoreDict
                               HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/TrackMathCore.h
                               LINKDEF TrackMathCoreLinkDef.h
                               DEPENDENCIES Core MathCore RIO GenVector Smatrix)
-if(MSVC)
+if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
   add_custom_command(TARGET TrackMathCoreDict POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libTrackMathCoreDict.dll
                                      ${CMAKE_CURRENT_BINARY_DIR}/libTrackMathCoreDict.dll)
@@ -277,6 +277,7 @@ if(WIN32)
   set(cleantmpfiles POSTCMD cmd /c del AutoDict_*)
 endif()
 ROOT_ADD_TEST(test-stressinterpreter COMMAND stressInterpreter
+              WORKING_DIR ${CMAKE_BINARY_DIR}
               PRECMD ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/stressInterpreter.cxx
                                               $<TARGET_FILE_DIR:stressInterpreter>/stressInterpreter.cxx
               ${cleantmpfiles}
