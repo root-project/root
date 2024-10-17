@@ -237,11 +237,14 @@ class HeadNode(Node, ABC):
 
         computation_graph_callable = partial(ComputationGraphGenerator.trigger_computation_graph, self._generate_graph_dict())
 
+        # Accumulate all code that needs to be declared in one string
+        code_to_declare = "\n".join(self.backend.strings_to_declare.values())
+
         mapper = partial(distrdf_mapper,
                          build_rdf_from_range=self._generate_rdf_creator(),
                          computation_graph_callable=computation_graph_callable,
                          initialization_fn=self.backend.initialization,
-                         declaration_fn=self.backend.declaration_func)
+                         code_to_declare=code_to_declare)
 
         # List of action nodes in the same order as values
         local_nodes = self._get_action_nodes()
