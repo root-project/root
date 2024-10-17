@@ -264,6 +264,7 @@ public:
    void AddSampleCallback(void *nodePtr, ROOT::RDF::SampleCallback_t &&callback);
 
    void SetEmptyEntryRange(std::pair<ULong64_t, ULong64_t> &&newRange);
+   void ChangeBeginAndEndEntries(Long64_t begin, Long64_t end);
    void ChangeSpec(ROOT::RDF::Experimental::RDatasetSpec &&spec);
 
    ROOT::Internal::RDF::RStringCache &GetColumnNamesCache() { return fCachedColNames; }
