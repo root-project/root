@@ -31,9 +31,9 @@
 #include <vector>
 
 namespace ROOT {
-namespace Experimental {
-
 class RNTuple;
+
+namespace Experimental {
 
 namespace Internal {
 class RPageSource;
