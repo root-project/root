@@ -220,6 +220,7 @@ jobs:
       with:
         name: rootdoc.tar
         path: ${{env.DOC_LOCATION}}/${{env.DOC_DIR}}.tar
+        if-no-files-found: error
 
     # Install AWS CLI before syncing to S3
     - name: Install AWS CLI
