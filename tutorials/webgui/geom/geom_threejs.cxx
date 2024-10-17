@@ -3,10 +3,10 @@
 /// \ingroup webwidgets
 /// The tutorial demonstrates how three.js model for geometry can be created and displayed.
 ///
-///  In server.cxx one uses RGeomDescription class from geometry viewer, which produces
-///  JSON data with all necessary information. Then RWebWindow is started and this information provided.
-///  In client.html one uses **build** function to create Object3D with geometry
-///  Then such object placed in three.js scene and rendered. Also simple animation is implemented
+/// In geom_threejs.cxx one uses RGeomDescription class from geometry viewer, which produces
+/// JSON data with all necessary information. Then RWebWindow is started and this information provided.
+/// In client.html one uses **build** function to create Object3D with geometry
+/// Then such object placed in three.js scene and rendered. Also simple animation is implemented
 ///
 /// \macro_code
 ///
@@ -16,10 +16,7 @@
 
 #include <ROOT/RWebWindow.hxx>
 
-
 std::shared_ptr<ROOT::RWebWindow> window;
-
-std::string json;
 
 TString base64;
 
@@ -35,7 +32,7 @@ void ProcessData(unsigned connid, const std::string &arg)
    }
 }
 
-void server()
+void geom_threejs()
 {
 
    TFile::SetCacheFileDir(".");
@@ -63,7 +60,7 @@ void server()
 
    data.Build(gGeoManager, "CMSE");
 
-   json = data.ProduceJson();
+   std::string json = data.ProduceJson();
 
    base64 = TBase64::Encode(json.c_str());
 
@@ -72,7 +69,13 @@ void server()
 
    // configure default html page
    // either HTML code can be specified or just name of file after 'file:' prefix
-   window->SetDefaultPage("file:client.html");
+   std::string fdir = __FILE__;
+   auto pos = fdir.find("geom_threejs.cxx");
+   if (pos > 0)
+      fdir.resize(pos);
+   else
+      fdir = gROOT->GetTutorialsDir() + std::string("/webgui/geom/");
+   window->SetDefaultPage("file:" + fdir + "geom_threejs.html");
 
    // this is call-back, invoked when message received from client
    window->SetDataCallBack(ProcessData);
