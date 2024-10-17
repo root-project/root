@@ -19,6 +19,7 @@ pad1.cd()
 ROOT.gBenchmark.Start("fillrandom")
 
 form1 = ROOT.TFormula("form1","abs(sin(x)/x)")
+ROOT.SetOwnership(form1, False)
 sqroot = ROOT.TF1("sqroot","x*gaus(0) + [3]*form1",0,10)
 sqroot.SetParameters(10,4,1,20)
 pad1.SetGridx()

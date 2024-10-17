@@ -234,13 +234,3 @@ for nll in [nll_gauss, nllr_learned, nll_morph]:
     result = minimizer.save()
     ROOT.SetOwnership(result, True)
     result.Print()
-
-del nll_morph
-del nllr_learned
-del nll_gauss
-del workspace
-
-import sys
-
-# Hack to bypass ClearProxiedObjects()
-del sys.modules["libROOTPythonizations"]
