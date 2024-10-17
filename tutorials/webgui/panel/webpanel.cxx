@@ -65,7 +65,7 @@ void ProcessData(unsigned connid, const std::string &arg)
    }
 }
 
-void server()
+void webpanel()
 {
    // prepare model
    model = std::make_unique<TestPanelModel>();

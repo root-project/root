@@ -282,7 +282,7 @@ set(gui_veto fit/fitpanel_playback.C
              tree/tvdemo.C
              eve/*.C
              webgui/geom/geom_threejs.cxx
-             webgui/panel/server.cxx
+             webgui/panel/webpanel.cxx
              webgui/webwindow/webwindow.cxx)
 if (NOT webgui)
   list(APPEND gui_veto graphics/save_batch.C rcanvas/df104.py rcanvas/df105.py)
