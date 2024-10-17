@@ -18,6 +18,12 @@
 class FTGL_EXPORT FTContour
 {
     public:
+ #if FREETYPE_MAJOR >= 2 && FREETYPE_MINOR >= 13 && FREETYPE_PATCH >= 3
+    using PointTag_t = unsigned char;
+ #else
+    using PointTag_t = char;
+ #endif
+
         /**
          * Constructor
          *
@@ -25,7 +31,7 @@ class FTGL_EXPORT FTContour
          * @param pointTags
          * @param numberOfPoints
          */
-        FTContour( FT_Vector* contour, char* pointTags, unsigned int numberOfPoints);
+        FTContour( FT_Vector* contour, PointTag_t* pointTags, unsigned int numberOfPoints);
 
         /**
          * Destructor
