@@ -56,35 +56,6 @@ def _kwargs_to_roocmdargs(*args, **kwargs):
     return args, {}
 
 
-def _string_to_root_attribute(value, lookup_map):
-    """Helper function to pythonize arguments based on the matplotlib color/style conventions."""
-    # lookup_map for color and style defined in _rooglobalfunc.py have matplotlib conventions specified which enables
-    # the use of string values like "r" or ":" instead of using enums like ROOT.kRed or ROOT.kDotted for colors or styles. For Eg.
-    # Default bindings:  pdf.plotOn(frame, LineColor=ROOT.kOrange)
-    # With pythonizations: pdf.plotOn(frame, LineColor="kOrange")
-
-    import ROOT
-
-    if isinstance(value, str):
-        if value in lookup_map:
-            return getattr(ROOT, lookup_map[value])
-        else:
-            try:
-                # Here getattr(ROOT, value) would have less overhead, but it's
-                # also less convenient. With `eval`, the string that is passed
-                # by the user can also contain postfix operations on the enum
-                # value, which is often used for columns, e.g. `kGreen+1`.
-                return eval("ROOT." + value)
-            except:
-                raise ValueError(
-                    "Unsupported value passed. The value either has to be the name of an attribute of the ROOT module, or match with one of the following values that get translated to ROOT attributes: {}".format(
-                        lookup_map
-                    )
-                )
-    else:
-        return value
-
-
 def _dict_to_flat_map(arg_dict, allowed_val_dict):
     """
     Helper function to convert python dict to std::map.

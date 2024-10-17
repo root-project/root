@@ -40,12 +40,6 @@ from ._rooglobalfunc import (
     Slice,
     Import,
     Link,
-    LineColor,
-    FillColor,
-    MarkerColor,
-    LineStyle,
-    FillStyle,
-    MarkerStyle,
     bindFunction,
 )
 from ._roojsonfactorywstool import RooJSONFactoryWSTool
@@ -105,12 +99,6 @@ python_roofit_functions = [
     Slice,
     Import,
     Link,
-    LineColor,
-    FillColor,
-    MarkerColor,
-    LineStyle,
-    FillStyle,
-    MarkerStyle,
     bindFunction,
 ]
 
