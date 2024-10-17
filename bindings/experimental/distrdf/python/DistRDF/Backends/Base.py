@@ -14,6 +14,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from functools import partial
+import hashlib
 from typing import Callable, Iterable, List, Optional, TYPE_CHECKING, Union
 
 
@@ -29,7 +30,7 @@ if TYPE_CHECKING:
     from DistRDF.Ranges import DataRange
 
 
-def setup_mapper(initialization_fn: Callable, declaration_fn: Callable) -> None:    
+def setup_mapper(initialization_fn: Callable, code_to_declare: str) -> None:    
     """
     Perform initial setup steps common to every mapper function.
     """
@@ -46,7 +47,9 @@ def setup_mapper(initialization_fn: Callable, declaration_fn: Callable) -> None:
     # Run initialization method to prepare the worker runtime
     # environment
     initialization_fn()
-    declaration_fn()
+    
+    # Declare all user code in one call
+    ROOT.gInterpreter.Declare(code_to_declare)
 
 
 def get_mergeable_values(starting_node: ROOT.RDF.RNode, range_id: int,
@@ -86,14 +89,14 @@ def distrdf_mapper(
                                         TaskObjects],
         computation_graph_callable: Callable[[ROOT.RDF.RNode, int], List],
         initialization_fn: Callable,
-        declaration_fn: Callable) -> TaskResult:
+        code_to_declare: str) -> TaskResult:
     """
     Maps the computation graph to the input logical range of entries.
     """
     # Wrap code that may be calling into C++ in a try-except block in order
     # to better propagate exceptions.
     try:
-        setup_mapper(initialization_fn, declaration_fn)
+        setup_mapper(initialization_fn, code_to_declare)
         
         # Build an RDataFrame instance for the current mapper task, based
         # on the type of the head node.
@@ -176,12 +179,11 @@ class BaseBackend(ABC):
     """
  
     initialization = staticmethod(lambda: None)
-    declaration_func = staticmethod(lambda: None)
     headers = set()
     files = set()
     pcms = set()
     shared_libraries = set()
-    declaration_str = ""
+    strings_to_declare = dict()
 
     @classmethod
     def register_initialization(cls, fun, *args, **kwargs):
@@ -203,17 +205,18 @@ class BaseBackend(ABC):
         fun(*args, **kwargs) 
 
     @classmethod
-    def register_declaration(cls, declaration): 
+    def register_declaration(cls, code_to_declare): 
         
-        cls.declaration_str += declaration
-        code_to_declare = cls.declaration_str
+        stripped = code_to_declare.strip()
+        sha256 = hashlib.sha256()
+        sha256.update(stripped.encode())
+        hex = sha256.hexdigest()
+        if cls.strings_to_declare.get(hex, None) is None:
+            code_with_guard = f"#ifndef {hex}\n#define {hex}\n{stripped}\n#endif"
+            cls.strings_to_declare[hex] = code_with_guard
 
-        def mydeclare(declaration_var): 
-            ROOT.gInterpreter.Declare(declaration_var)
-            
-        cls.declaration_func = partial(mydeclare, declaration_var = code_to_declare)
-        mydeclare(code_to_declare) # for the local declaration 
-    
+        ROOT.gInterpreter.Declare(cls.strings_to_declare[hex])
+
     @classmethod
     def register_shared_lib(cls, paths_to_shared_libraries):
         
