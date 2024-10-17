@@ -494,12 +494,12 @@ RWebDisplayHandle::ChromeCreator::ChromeCreator(bool _edge) : BrowserCreator(tru
    TestProg("/usr/bin/google-chrome");
 #endif
 
-// --no-sandbox is required to run chrome with super-user
+// --no-sandbox is required to run chrome with super-user, but only in headless mode
 
 #ifdef _MSC_VER
    fBatchExec = gEnv->GetValue((fEnvPrefix + "Batch").c_str(), "$prog --headless=old --no-sandbox $geometry --dump-dom $url");
    fHeadlessExec = gEnv->GetValue((fEnvPrefix + "Headless").c_str(), "$prog --headless=old --no-sandbox --disable-gpu $geometry \"$url\" &");
-   fExec = gEnv->GetValue((fEnvPrefix + "Interactive").c_str(), "$prog --no-sandbox $geometry --new-window --app=$url &"); // & in windows mean usage of spawn
+   fExec = gEnv->GetValue((fEnvPrefix + "Interactive").c_str(), "$prog $geometry --new-window --app=$url &"); // & in windows mean usage of spawn
 #else
 #ifdef R__MACOSX
    bool use_normal = true; // mac does not like new flag
@@ -515,7 +515,7 @@ RWebDisplayHandle::ChromeCreator::ChromeCreator(bool _edge) : BrowserCreator(tru
       fBatchExec = gEnv->GetValue((fEnvPrefix + "Batch").c_str(), "$prog --headless=new --no-sandbox --disable-extensions --disable-audio-output $geometry --dump-dom $url 2>/dev/null");
       fHeadlessExec = gEnv->GetValue((fEnvPrefix + "Headless").c_str(), "$prog --headless=new --no-sandbox --disable-extensions --disable-audio-output $geometry \'$url\' >/dev/null 2>/dev/null &");
    }
-   fExec = gEnv->GetValue((fEnvPrefix + "Interactive").c_str(), "$prog $geometry --no-sandbox --new-window --app=\'$url\' >/dev/null 2>/dev/null &");
+   fExec = gEnv->GetValue((fEnvPrefix + "Interactive").c_str(), "$prog $geometry --new-window --app=\'$url\' >/dev/null 2>/dev/null &");
 #endif
 }
 
