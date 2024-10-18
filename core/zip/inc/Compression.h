@@ -107,6 +107,10 @@ struct RCompressionSetting {
    };
 
    static std::string AlgorithmToString(EAlgorithm::EValues algorithm);
+   static EAlgorithm::EValues AlgorithmFromCompressionSettings(int compSettings)
+   {
+      return std::min(EAlgorithm::EValues::kUndefined, static_cast<EAlgorithm::EValues>(compSettings / 100));
+   }
 };
 
 // clang-format off
