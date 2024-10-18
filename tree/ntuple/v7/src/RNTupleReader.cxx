@@ -174,7 +174,7 @@ void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo what, std::o
       RPrintSchemaVisitor printVisitor(output);
 
       // Note that we do not need to connect the model, we are only looking at its tree of fields
-      fullModel->GetFieldZero().AcceptVisitor(prepVisitor);
+      fullModel->GetConstFieldZero().AcceptVisitor(prepVisitor);
 
       printVisitor.SetFrameSymbol(frameSymbol);
       printVisitor.SetWidth(width);
@@ -184,7 +184,7 @@ void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo what, std::o
       for (int i = 0; i < width; ++i)
          output << frameSymbol;
       output << "\n";
-      fullModel->GetFieldZero().AcceptVisitor(printVisitor);
+      fullModel->GetConstFieldZero().AcceptVisitor(printVisitor);
       for (int i = 0; i < width; ++i)
          output << frameSymbol;
       output << std::endl;

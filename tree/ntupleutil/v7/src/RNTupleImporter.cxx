@@ -349,7 +349,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
 
    fModel->Freeze();
    if (fFieldModifier) {
-      for (auto &field : fModel->GetFieldZero()) {
+      for (auto &field : fModel->GetMutableFieldZero()) {
          fFieldModifier(field);
       }
    }
