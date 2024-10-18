@@ -326,7 +326,6 @@ else()
   list(APPEND tmva_veto tmva/TMVA_SOFIE_GNN_Parser.py)
   if (NOT PY_SONNET_FOUND OR NOT PY_GRAPH_NETS_FOUND)
     list(APPEND tmva_veto tmva/TMVA_SOFIE_GNN.py)
-    list(APPEND tmva_veto tmva/TMVA_SOFIE_GNN_Parser.py)
     list(APPEND tmva_veto tmva/TMVA_SOFIE_GNN_Application.C)
   endif()
   if (NOT tmva-sofie)
@@ -599,9 +598,6 @@ if (PY_KERAS_FOUND)
   set (tmva-keras-ApplicationRegressionKeras-depends tutorial-tmva-keras-RegressionKeras-py)
   set (tmva-keras-ApplicationClassificationKeras-depends tutorial-tmva-keras-ClassificationKeras-py)
 endif()
-#if (PY_SONNET_FOUND AND PY_GRAPH_NETS_FOUND)
-#   set (tmva-TMVA_SOFIE_GNN_Application-depends tutorial-tmva-TMVA_SOFIE_GNN_Parser-py)
-#endif()
 
 #--List long-running tutorials to label them as "longtest"
 set (long_running
@@ -642,6 +638,7 @@ if (PY_SONNET_FOUND AND PY_GRAPH_NETS_FOUND)
   ROOT_ADD_TEST(tutorial-tmva-TMVA_SOFIE_GNN_Parser COMMAND ${Python3_EXECUTABLE}
   ${CMAKE_CURRENT_SOURCE_DIR}/tmva/TMVA_SOFIE_GNN_Parser.py
   PASSRC 0 FAILREGEX "Error in" ": error:" LABELS tutorial ENVIRONMENT ${ROOT_environ})
+  set (tmva-TMVA_SOFIE_GNN_Application-depends tutorial-tmva-TMVA_SOFIE_GNN_Parser)
 endif()
 
 #---Loop over all tutorials and define the corresponding test---------
