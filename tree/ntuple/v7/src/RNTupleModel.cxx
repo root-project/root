@@ -336,13 +336,6 @@ ROOT::Experimental::RNTupleModel::AddProjectedField(std::unique_ptr<RFieldBase> 
    return RResult<void>::Success();
 }
 
-ROOT::Experimental::RFieldZero &ROOT::Experimental::RNTupleModel::GetFieldZero()
-{
-   if (!IsFrozen())
-      throw RException(R__FAIL("invalid attempt to get mutable zero field of unfrozen model"));
-   return *fFieldZero;
-}
-
 const ROOT::Experimental::RFieldBase &ROOT::Experimental::RNTupleModel::GetField(std::string_view fieldName) const
 {
    auto f = FindField(fieldName);

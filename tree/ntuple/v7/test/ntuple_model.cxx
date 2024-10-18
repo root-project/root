@@ -1,5 +1,19 @@
 #include "ntuple_test.hxx"
 
+TEST(RNTupleModel, GetField)
+{
+   auto model = RNTupleModel::CreateBare();
+   model->MakeField<std::vector<float>>("v1");
+
+   for (auto &subfield : model->GetFieldZero()) {
+      if (subfield.GetTypeName() == "float") {
+         subfield.SetColumnRepresentatives({{EColumnType::kReal32}});
+      }
+   }
+
+   EXPECT_EQ(EColumnType::kReal32, model->GetField("v1._0").GetColumnRepresentatives()[0][0]);
+}
+
 TEST(RNTupleModel, EstimateWriteMemoryUsage)
 {
    auto model = RNTupleModel::CreateBare();
