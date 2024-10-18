@@ -777,8 +777,10 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeFieldStructure(ROOT::E
    case ENTupleStructure::kRecord: return SerializeUInt16(0x02, buffer);
    case ENTupleStructure::kVariant: return SerializeUInt16(0x03, buffer);
    case ENTupleStructure::kUnsplit: return SerializeUInt16(0x04, buffer);
-   case ROOT::Experimental::Internal::kTestFutureFieldStructure: return SerializeUInt16(0x99, buffer);
-   default: throw RException(R__FAIL("ROOT bug: unexpected field structure type"));
+   default:
+      if (structure == ROOT::Experimental::Internal::kTestFutureFieldStructure)
+         return SerializeUInt16(0x99, buffer);
+      throw RException(R__FAIL("ROOT bug: unexpected field structure type"));
    }
 }
 
