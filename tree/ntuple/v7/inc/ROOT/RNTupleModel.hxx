@@ -75,7 +75,7 @@ private:
    RResult<void> EnsureValidMapping(const RFieldBase *target, const FieldMap_t &fieldMap);
 
 public:
-   explicit RProjectedFields(const RNTupleModel *model) : fFieldZero(std::make_unique<RFieldZero>()), fModel(model) {}
+   explicit RProjectedFields(const RNTupleModel &model) : fFieldZero(std::make_unique<RFieldZero>()), fModel(&model) {}
    RProjectedFields(const RProjectedFields &) = delete;
    RProjectedFields(RProjectedFields &&) = default;
    RProjectedFields &operator=(const RProjectedFields &) = delete;
@@ -83,7 +83,7 @@ public:
    ~RProjectedFields() = default;
 
    /// The new model needs to be a clone of fModel
-   std::unique_ptr<RProjectedFields> Clone(const RNTupleModel *newModel) const;
+   std::unique_ptr<RProjectedFields> Clone(const RNTupleModel &newModel) const;
 
    RFieldZero *GetFieldZero() const { return fFieldZero.get(); }
    const RFieldBase *GetSourceField(const RFieldBase *target) const;
