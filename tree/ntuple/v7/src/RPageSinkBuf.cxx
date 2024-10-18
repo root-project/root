@@ -83,7 +83,7 @@ const ROOT::Experimental::RNTupleDescriptor &ROOT::Experimental::Internal::RPage
 
 void ROOT::Experimental::Internal::RPageSinkBuf::InitImpl(RNTupleModel &model)
 {
-   ConnectFields(model.GetFieldZero().GetSubFields(), 0U);
+   ConnectFields(Internal::GetFieldZero(model).GetSubFields(), 0U);
 
    fInnerModel = model.Clone();
    fInnerSink->Init(*fInnerModel);
@@ -105,13 +105,13 @@ void ROOT::Experimental::Internal::RPageSinkBuf::UpdateSchema(const RNTupleModel
    auto cloneAddProjectedField = [&](RFieldBase *field) {
       auto cloned = field->Clone(field->GetFieldName());
       auto p = &(*cloned);
-      auto &projectedFields = changeset.fModel.GetProjectedFields();
-      RNTupleModel::RProjectedFields::FieldMap_t fieldMap;
+      auto &projectedFields = Internal::GetProjectedFields(changeset.fModel);
+      Internal::RProjectedFields::FieldMap_t fieldMap;
       fieldMap[p] = projectedFields.GetSourceField(field);
       auto targetIt = cloned->begin();
       for (auto &f : *field)
          fieldMap[&(*targetIt++)] = projectedFields.GetSourceField(&f);
-      const_cast<RNTupleModel::RProjectedFields &>(fInnerModel->GetProjectedFields()).Add(std::move(cloned), fieldMap);
+      Internal::GetProjectedFields(*fInnerModel).Add(std::move(cloned), fieldMap);
       return p;
    };
    RNTupleModelChangeset innerChangeset{*fInnerModel};

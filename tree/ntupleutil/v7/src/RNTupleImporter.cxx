@@ -143,7 +143,7 @@ void ROOT::Experimental::RNTupleImporter::ReportSchema()
    for (const auto &f : fImportFields) {
       std::cout << "Importing '" << f.fField->GetFieldName() << "' [" << f.fField->GetTypeName() << "]\n";
    }
-   for (const auto &f : fModel->GetProjectedFields().GetFieldZero()->GetSubFields()) {
+   for (const auto &f : Internal::GetProjectedFields(*fModel).GetFieldZero().GetSubFields()) {
       std::cout << "Importing (projected) '" << f->GetFieldName() << "' [" << f->GetTypeName() << "]\n";
    }
 }
@@ -347,12 +347,13 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
       iLeafCountCollection++;
    }
 
-   fModel->Freeze();
    if (fFieldModifier) {
-      for (auto &field : fModel->GetFieldZero()) {
+      for (auto &field : fModel->GetMutableFieldZero()) {
          fFieldModifier(field);
       }
    }
+
+   fModel->Freeze();
 
    fEntry = fModel->CreateBareEntry();
    for (const auto &f : fImportFields) {

@@ -32,11 +32,21 @@ std::uint64_t GetNewModelId()
 }
 } // anonymous namespace
 
+ROOT::Experimental::RFieldZero &ROOT::Experimental::Internal::GetFieldZero(ROOT::Experimental::RNTupleModel &model)
+{
+   return *model.fFieldZero;
+}
+
+ROOT::Experimental::Internal::RProjectedFields &
+ROOT::Experimental::Internal::GetProjectedFields(ROOT::Experimental::RNTupleModel &model)
+{
+   return *model.fProjectedFields;
+}
+
 //------------------------------------------------------------------------------
 
 ROOT::Experimental::RResult<void>
-ROOT::Experimental::RNTupleModel::RProjectedFields::EnsureValidMapping(const RFieldBase *target,
-                                                                       const FieldMap_t &fieldMap)
+ROOT::Experimental::Internal::RProjectedFields::EnsureValidMapping(const RFieldBase *target, const FieldMap_t &fieldMap)
 {
    auto source = fieldMap.at(target);
    const bool hasCompatibleStructure =
@@ -109,7 +119,7 @@ ROOT::Experimental::RNTupleModel::RProjectedFields::EnsureValidMapping(const RFi
 }
 
 ROOT::Experimental::RResult<void>
-ROOT::Experimental::RNTupleModel::RProjectedFields::Add(std::unique_ptr<RFieldBase> field, const FieldMap_t &fieldMap)
+ROOT::Experimental::Internal::RProjectedFields::Add(std::unique_ptr<RFieldBase> field, const FieldMap_t &fieldMap)
 {
    auto result = EnsureValidMapping(field.get(), fieldMap);
    if (!result)
@@ -126,25 +136,25 @@ ROOT::Experimental::RNTupleModel::RProjectedFields::Add(std::unique_ptr<RFieldBa
 }
 
 const ROOT::Experimental::RFieldBase *
-ROOT::Experimental::RNTupleModel::RProjectedFields::GetSourceField(const RFieldBase *target) const
+ROOT::Experimental::Internal::RProjectedFields::GetSourceField(const RFieldBase *target) const
 {
    if (auto it = fFieldMap.find(target); it != fFieldMap.end())
       return it->second;
    return nullptr;
 }
 
-std::unique_ptr<ROOT::Experimental::RNTupleModel::RProjectedFields>
-ROOT::Experimental::RNTupleModel::RProjectedFields::Clone(const RNTupleModel *newModel) const
+std::unique_ptr<ROOT::Experimental::Internal::RProjectedFields>
+ROOT::Experimental::Internal::RProjectedFields::Clone(const RNTupleModel &newModel) const
 {
    auto cloneFieldZero = std::unique_ptr<RFieldZero>(static_cast<RFieldZero *>(fFieldZero->Clone("").release()));
    auto clone = std::unique_ptr<RProjectedFields>(new RProjectedFields(std::move(cloneFieldZero)));
-   clone->fModel = newModel;
+   clone->fModel = &newModel;
    // TODO(jblomer): improve quadratic search to re-wire the field mappings given the new model and the cloned
    // projected fields. Not too critical as we generally expect a limited number of projected fields
    for (const auto &[k, v] : fFieldMap) {
-      for (const auto &f : *clone->GetFieldZero()) {
+      for (const auto &f : clone->GetFieldZero()) {
          if (f.GetQualifiedFieldName() == k->GetQualifiedFieldName()) {
-            clone->fFieldMap[&f] = clone->fModel->FindField(v->GetQualifiedFieldName());
+            clone->fFieldMap[&f] = &newModel.GetField(v->GetQualifiedFieldName());
             break;
          }
       }
@@ -231,7 +241,7 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel>
 ROOT::Experimental::RNTupleModel::CreateBare(std::unique_ptr<RFieldZero> fieldZero)
 {
    auto model = std::unique_ptr<RNTupleModel>(new RNTupleModel(std::move(fieldZero)));
-   model->fProjectedFields = std::make_unique<RProjectedFields>(model.get());
+   model->fProjectedFields = std::make_unique<Internal::RProjectedFields>(*model);
    return model;
 }
 
@@ -263,7 +273,7 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleMod
    cloneModel->fIsFrozen = fIsFrozen;
    cloneModel->fFieldNames = fFieldNames;
    cloneModel->fDescription = fDescription;
-   cloneModel->fProjectedFields = fProjectedFields->Clone(cloneModel.get());
+   cloneModel->fProjectedFields = fProjectedFields->Clone(*cloneModel);
    if (fDefaultEntry) {
       cloneModel->fDefaultEntry = std::unique_ptr<REntry>(new REntry(cloneModel->fModelId, cloneModel->fSchemaId));
       for (const auto &f : cloneModel->fFieldZero->GetSubFields()) {
@@ -315,7 +325,7 @@ ROOT::Experimental::RNTupleModel::AddProjectedField(std::unique_ptr<RFieldBase> 
       return R__FAIL("null field");
    auto fieldName = field->GetFieldName();
 
-   RProjectedFields::FieldMap_t fieldMap;
+   Internal::RProjectedFields::FieldMap_t fieldMap;
    auto sourceField = FindField(mapping(fieldName));
    if (!sourceField)
       return R__FAIL("no such field: " + mapping(fieldName));
@@ -336,10 +346,10 @@ ROOT::Experimental::RNTupleModel::AddProjectedField(std::unique_ptr<RFieldBase> 
    return RResult<void>::Success();
 }
 
-ROOT::Experimental::RFieldZero &ROOT::Experimental::RNTupleModel::GetFieldZero()
+ROOT::Experimental::RFieldZero &ROOT::Experimental::RNTupleModel::GetMutableFieldZero()
 {
-   if (!IsFrozen())
-      throw RException(R__FAIL("invalid attempt to get mutable zero field of unfrozen model"));
+   if (IsFrozen())
+      throw RException(R__FAIL("invalid attempt to get mutable zero field of frozen model"));
    return *fFieldZero;
 }
 
