@@ -240,7 +240,8 @@ class HeadNode(Node, ABC):
         mapper = partial(distrdf_mapper,
                          build_rdf_from_range=self._generate_rdf_creator(),
                          computation_graph_callable=computation_graph_callable,
-                         initialization_fn=self.backend.initialization)
+                         initialization_fn=self.backend.initialization,
+                         declaration_fn=self.backend.declaration_func)
 
         # List of action nodes in the same order as values
         local_nodes = self._get_action_nodes()
