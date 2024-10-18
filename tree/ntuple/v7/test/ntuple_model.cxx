@@ -84,6 +84,12 @@ TEST(RNTupleModel, GetField)
    } catch (const RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("invalid field"));
    }
+   try {
+      m->GetMutableFieldZero();
+      FAIL() << "GetMutableFieldZero should throw";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("frozen model"));
+   }
    EXPECT_EQ("", m->GetConstFieldZero().GetQualifiedFieldName());
    EXPECT_EQ("x", m->GetField("x").GetQualifiedFieldName());
    EXPECT_EQ("cs", m->GetField("cs").GetQualifiedFieldName());
