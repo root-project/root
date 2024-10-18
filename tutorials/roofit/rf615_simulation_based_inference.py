@@ -33,13 +33,6 @@
 ## \date July 2024
 ## \author Robin Syring
 
-import os
-
-nthreads = 1
-os.environ["OMP_NUM_THREADS"] = str(nthreads)
-os.environ["OPENBLAS_NUM_THREADS"] = str(nthreads)
-os.environ["MKL_NUM_THREADS"] = str(nthreads)
-
 import ROOT
 import numpy as np
 from sklearn.neural_network import MLPClassifier
