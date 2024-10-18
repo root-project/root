@@ -293,6 +293,12 @@ public:
    /// Throws an exception if the field is null.
    void AddField(std::unique_ptr<RFieldBase> field);
 
+   /// Adds a subfield belonging to the provided parent, whose type is not known at compile time. `field` must be a
+   /// valid, existing subfield of `parent` (i.e., it is not possible to alter the parent's structure).
+   ///
+   /// Throws an exception if the field is null, or if it not a valid subfield of the provided parent.
+   void RegisterSubField(std::string_view qualifiedFieldName);
+
    /// Adds a top-level field based on existing fields.
    ///
    /// The mapping function takes one argument, which is a string containing the name of the projected field. The return
