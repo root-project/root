@@ -555,6 +555,8 @@ public:
 
    RSchemaIterator begin();
    RSchemaIterator end();
+   RConstSchemaIterator begin() const;
+   RConstSchemaIterator end() const;
    RConstSchemaIterator cbegin() const;
    RConstSchemaIterator cend() const;
 

@@ -84,7 +84,7 @@ TEST(RNTupleModel, GetField)
    } catch (const RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("invalid field"));
    }
-   EXPECT_EQ("", m->GetFieldZero().GetQualifiedFieldName());
+   EXPECT_EQ("", m->GetConstFieldZero().GetQualifiedFieldName());
    EXPECT_EQ("x", m->GetField("x").GetQualifiedFieldName());
    EXPECT_EQ("cs", m->GetField("cs").GetQualifiedFieldName());
    EXPECT_EQ("cs.v1", m->GetField("cs.v1").GetQualifiedFieldName());
@@ -136,7 +136,7 @@ TEST(RNTupleModel, Clone)
    model->Freeze();
 
    // FIXME: This actually should be moved to before the Freeze.
-   for (auto &f : model->GetFieldZero()) {
+   for (auto &f : model->GetMutableFieldZero()) {
       if (f.GetTypeName() == "float") {
          f.SetColumnRepresentatives({{EColumnType::kReal32}});
       }
@@ -147,7 +147,7 @@ TEST(RNTupleModel, Clone)
 
    auto clone = model->Clone();
 
-   for (const auto &f : clone->GetFieldZero()) {
+   for (const auto &f : clone->GetConstFieldZero()) {
       if (f.GetTypeName() == "float") {
          EXPECT_EQ(EColumnType::kReal32, f.GetColumnRepresentatives()[0][0]);
       }
