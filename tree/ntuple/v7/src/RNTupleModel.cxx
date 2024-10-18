@@ -349,8 +349,8 @@ ROOT::Experimental::RNTupleModel::AddProjectedField(std::unique_ptr<RFieldBase> 
 
 ROOT::Experimental::RFieldZero &ROOT::Experimental::RNTupleModel::GetMutableFieldZero()
 {
-   if (!IsFrozen())
-      throw RException(R__FAIL("invalid attempt to get mutable zero field of unfrozen model"));
+   if (IsFrozen())
+      throw RException(R__FAIL("invalid attempt to get mutable zero field of frozen model"));
    return *fFieldZero;
 }
 

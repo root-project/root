@@ -347,12 +347,13 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
       iLeafCountCollection++;
    }
 
-   fModel->Freeze();
    if (fFieldModifier) {
       for (auto &field : fModel->GetMutableFieldZero()) {
          fFieldModifier(field);
       }
    }
+
+   fModel->Freeze();
 
    fEntry = fModel->CreateBareEntry();
    for (const auto &f : fImportFields) {

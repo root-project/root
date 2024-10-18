@@ -84,6 +84,12 @@ TEST(RNTupleModel, GetField)
    } catch (const RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("invalid field"));
    }
+   try {
+      m->GetMutableFieldZero();
+      FAIL() << "GetMutableFieldZero should throw";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("frozen model"));
+   }
    EXPECT_EQ("", m->GetConstFieldZero().GetQualifiedFieldName());
    EXPECT_EQ("x", m->GetField("x").GetQualifiedFieldName());
    EXPECT_EQ("cs", m->GetField("cs").GetQualifiedFieldName());
@@ -133,9 +139,7 @@ TEST(RNTupleModel, Clone)
    model->MakeField<CustomStruct>("struct");
    model->MakeField<TObject>("obj");
    model->MakeField<CustomEnumUInt32>("enum");
-   model->Freeze();
 
-   // FIXME: This actually should be moved to before the Freeze.
    for (auto &f : model->GetMutableFieldZero()) {
       if (f.GetTypeName() == "float") {
          f.SetColumnRepresentatives({{EColumnType::kReal32}});
@@ -145,6 +149,7 @@ TEST(RNTupleModel, Clone)
       }
    }
 
+   model->Freeze();
    auto clone = model->Clone();
 
    for (const auto &f : clone->GetConstFieldZero()) {
