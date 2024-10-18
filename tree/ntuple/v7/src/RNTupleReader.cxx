@@ -27,7 +27,7 @@
 
 void ROOT::Experimental::RNTupleReader::ConnectModel(RNTupleModel &model)
 {
-   auto &fieldZero = model.GetFieldZero();
+   auto &fieldZero = Internal::GetFieldZeroOfModel(model);
    // We must not use the descriptor guard to prevent recursive locking in field.ConnectPageSource
    DescriptorId_t fieldZeroId = fSource->GetSharedDescriptorGuard()->GetFieldZeroId();
    fieldZero.SetOnDiskId(fieldZeroId);
