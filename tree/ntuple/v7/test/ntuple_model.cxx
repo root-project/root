@@ -67,11 +67,13 @@ TEST(RNTupleModel, GetField)
    auto m = RNTupleModel::Create();
    m->MakeField<int>("x");
    m->MakeField<CustomStruct>("cs");
+   m->GetMutableField("cs.v1._0").SetColumnRepresentatives({{EColumnType::kReal32}});
    m->Freeze();
    EXPECT_EQ(m->GetConstField("x").GetFieldName(), "x");
    EXPECT_EQ(m->GetConstField("x").GetTypeName(), "std::int32_t");
    EXPECT_EQ(m->GetConstField("cs.v1").GetFieldName(), "v1");
    EXPECT_EQ(m->GetConstField("cs.v1").GetTypeName(), "std::vector<float>");
+   EXPECT_EQ(m->GetConstField("cs.v1._0").GetColumnRepresentatives()[0][0], EColumnType::kReal32);
    try {
       m->GetConstField("nonexistent");
       FAIL() << "invalid field name should throw";
@@ -87,6 +89,12 @@ TEST(RNTupleModel, GetField)
    try {
       m->GetMutableFieldZero();
       FAIL() << "GetMutableFieldZero should throw";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("frozen model"));
+   }
+   try {
+      m->GetMutableField("x");
+      FAIL() << "GetMutableField should throw";
    } catch (const RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("frozen model"));
    }
