@@ -1107,6 +1107,16 @@ ROOT::Experimental::RFieldBase::RSchemaIterator ROOT::Experimental::RFieldBase::
    return RSchemaIterator(this, -1);
 }
 
+ROOT::Experimental::RFieldBase::RConstSchemaIterator ROOT::Experimental::RFieldBase::begin() const
+{
+   return fSubFields.empty() ? RConstSchemaIterator(this, -1) : RConstSchemaIterator(fSubFields[0].get(), 0);
+}
+
+ROOT::Experimental::RFieldBase::RConstSchemaIterator ROOT::Experimental::RFieldBase::end() const
+{
+   return RConstSchemaIterator(this, -1);
+}
+
 ROOT::Experimental::RFieldBase::RConstSchemaIterator ROOT::Experimental::RFieldBase::cbegin() const
 {
    return fSubFields.empty() ? RConstSchemaIterator(this, -1) : RConstSchemaIterator(fSubFields[0].get(), 0);

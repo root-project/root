@@ -360,10 +360,9 @@ public:
    REntry &GetDefaultEntry();
    const REntry &GetDefaultEntry() const;
 
-   /// Non-const access to the root field is used to commit clusters during writing,
-   /// and to make adjustments to the fields between freezing and connecting to a page sink.
-   RFieldZero &GetFieldZero();
-   const RFieldZero &GetFieldZero() const { return *fFieldZero; }
+   /// TODO: Mutable access to the root field is used to make adjustments to the fields.
+   RFieldZero &GetMutableFieldZero();
+   const RFieldZero &GetConstFieldZero() const { return *fFieldZero; }
    const RFieldBase &GetField(std::string_view fieldName) const;
 
    const std::string &GetDescription() const { return fDescription; }

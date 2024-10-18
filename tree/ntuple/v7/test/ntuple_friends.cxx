@@ -26,7 +26,7 @@ TEST(RPageStorageFriends, Empty)
    std::span<RNTupleOpenSpec> ntuples;
    auto reader = RNTupleReader::OpenFriends(ntuples);
    EXPECT_EQ(0u, reader->GetNEntries());
-   EXPECT_EQ(0u, reader->GetModel().GetFieldZero().GetOnDiskId());
+   EXPECT_EQ(0u, reader->GetModel().GetConstFieldZero().GetOnDiskId());
    EXPECT_EQ(0u,
              std::distance(reader->GetModel().GetDefaultEntry().begin(), reader->GetModel().GetDefaultEntry().end()));
    EXPECT_EQ(0u, reader->GetDescriptor().GetNLogicalColumns());
