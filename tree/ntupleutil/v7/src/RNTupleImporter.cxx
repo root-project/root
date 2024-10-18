@@ -143,7 +143,7 @@ void ROOT::Experimental::RNTupleImporter::ReportSchema()
    for (const auto &f : fImportFields) {
       std::cout << "Importing '" << f.fField->GetFieldName() << "' [" << f.fField->GetTypeName() << "]\n";
    }
-   for (const auto &f : fModel->GetProjectedFields().GetFieldZero()->GetSubFields()) {
+   for (const auto &f : Internal::GetProjectedFieldsOfModel(*fModel).GetFieldZero()->GetSubFields()) {
       std::cout << "Importing (projected) '" << f->GetFieldName() << "' [" << f->GetTypeName() << "]\n";
    }
 }

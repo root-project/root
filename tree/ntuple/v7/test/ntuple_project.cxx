@@ -58,13 +58,14 @@ TEST(RNTupleProjection, Basics)
    EXPECT_EQ("vec", (++itrFields)->GetQualifiedFieldName());
    EXPECT_EQ("vec._0", (++itrFields)->GetQualifiedFieldName());
    EXPECT_EQ(reconstructedModel->GetFieldZero().cend(), ++itrFields);
-   auto itrProjectedFields = reconstructedModel->GetProjectedFields().GetFieldZero()->cbegin();
+   auto &projectedFields = ROOT::Experimental::Internal::GetProjectedFieldsOfModel(*reconstructedModel);
+   auto itrProjectedFields = projectedFields.GetFieldZero()->cbegin();
    EXPECT_EQ("missingE", itrProjectedFields->GetQualifiedFieldName());
    EXPECT_EQ("number", (++itrProjectedFields)->GetQualifiedFieldName());
    EXPECT_EQ("aliasVec", (++itrProjectedFields)->GetQualifiedFieldName());
    EXPECT_EQ("aliasVec._0", (++itrProjectedFields)->GetQualifiedFieldName());
    EXPECT_EQ("vecSize", (++itrProjectedFields)->GetQualifiedFieldName());
-   EXPECT_EQ(reconstructedModel->GetProjectedFields().GetFieldZero()->cend(), ++itrProjectedFields);
+   EXPECT_EQ(projectedFields.GetFieldZero()->cend(), ++itrProjectedFields);
 }
 
 TEST(RNTupleProjection, CatchInvalidMappings)
