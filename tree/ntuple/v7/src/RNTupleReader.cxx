@@ -64,7 +64,8 @@ ROOT::Experimental::RNTupleReader::RNTupleReader(std::unique_ptr<ROOT::Experimen
    : fSource(std::move(source)), fModel(std::move(model)), fMetrics("RNTupleReader")
 {
    // TODO(jblomer): properly support projected fields
-   if (!fModel->GetProjectedFields().IsEmpty()) {
+   auto &projectedFields = Internal::GetProjectedFieldsOfModel(*fModel);
+   if (!projectedFields.IsEmpty()) {
       throw RException(R__FAIL("model has projected fields, which is incompatible with providing a read model"));
    }
    fModel->Freeze();
