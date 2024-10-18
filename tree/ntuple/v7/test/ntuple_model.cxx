@@ -45,6 +45,7 @@ TEST(RNTupleModel, Clone)
    model->MakeField<CustomEnumUInt32>("enum");
    model->Freeze();
 
+   // FIXME: This actually should be moved to before the Freeze.
    for (auto &f : model->GetFieldZero()) {
       if (f.GetTypeName() == "float") {
          f.SetColumnRepresentatives({{EColumnType::kReal32}});
