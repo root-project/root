@@ -112,16 +112,12 @@ m4l = ROOT.RooRealVar("m4l", "Four Lepton Invariant Mass", 0.0)
 
 
 # Define functions to compute the learned likelihood.
-def calculate_likelihood_xgb(m4l_arr):
+def calculate_likelihood_xgb(m4l_arr: np.ndarray) -> np.ndarray:
     prob = model_xgb.predict_proba(m4l_arr.T)[:, 0]
     return (1 - prob) / prob
 
 
 llh = ROOT.RooFit.bindFunction(f"llh", calculate_likelihood_xgb, m4l)
-
-# Plot the likelihood
-frame1 = m4l.frame(Title=f"Likelihood", Range=(0, 200))
-llh.plotOn(frame1, ShiftToZero=False)
 
 # Number of signals and background
 n_signal = results["higgs"]["weight"].sum()
@@ -138,7 +134,7 @@ def weight_signal(mu):
 
 
 # Define the likelihood ratio accordingly to mixture models
-def likelihood_ratio(llr, mu):
+def likelihood_ratio(llr: np.ndarray, mu: np.ndarray) -> np.ndarray:
 
     m = 2
 
@@ -159,7 +155,12 @@ def likelihood_ratio(llr, mu):
 mu_var = ROOT.RooRealVar("mu", "mu", 0.1, 5)
 
 nll_ratio = ROOT.RooFit.bindFunction(f"nll", likelihood_ratio, llh, mu_var)
-pdf_learned = ROOT.RooWrapperPdf("learned_pdf", "learned_pdf", nll_ratio, True)
+pdf_learned = ROOT.RooWrapperPdf("learned_pdf", "learned_pdf", nll_ratio, selfNormalized=True)
+
+# Plot the likelihood
+frame1 = m4l.frame(Title="Likelihood ratio r(m_{4l}|#mu=1);m_{4l};p(#mu=1)/p(#mu=0)", Range=(80, 170))
+# llh.plotOn(frame1, ShiftToZero=False, LineColor="kP6Blue")
+nll_ratio.plotOn(frame1, ShiftToZero=False, LineColor="kP6Blue")
 
 n_pred = ROOT.RooFormulaVar("n_pred", f"{n_back} + mu * {n_signal}", [mu_var])
 pdf_learned_extended = ROOT.RooExtendPdf("final_pdf", "final_pdf", pdf_learned, n_pred)
@@ -169,21 +170,32 @@ data = ROOT.RooDataSet.from_numpy({"m4l": data_dict["m4l"][data_dict["sample_cat
 nll = pdf_learned_extended.createNLL(data, Extended=True)
 
 # Plot the nll computet by the mixture model
-frame2 = mu_var.frame(Title="NLL")
-nll.plotOn(frame2)
+frame2 = mu_var.frame(Title="NLL sum;#mu (signal strength);#Delta NLL", Range=(0.5, 4))
+nll.plotOn(frame2, ShiftToZero=True, LineColor="kP6Blue")
 
-# Write the plots into one canvas
-c = ROOT.TCanvas("rf618_sbi_higgs", "rf618_sbi_higgs", 800, 400)
-c.Divide(2)
-c.cd(1)
-ROOT.gPad.SetLeftMargin(0.15)
-frame1.GetYaxis().SetTitleOffset(1.8)
+# Write the plots into one canvas to show, or into separate canvases for saving.
+single_canvas = True
+
+c = ROOT.TCanvas("", "", 1200 if single_canvas else 600, 600)
+if single_canvas:
+    c.Divide(2)
+    c.cd(1)
+    ROOT.gPad.SetLeftMargin(0.15)
+    frame1.GetYaxis().SetTitleOffset(1.8)
 frame1.Draw()
-c.cd(2)
-ROOT.gPad.SetLeftMargin(0.15)
-frame2.GetYaxis().SetTitleOffset(1.8)
+
+if single_canvas:
+    c.cd(2)
+    ROOT.gPad.SetLeftMargin(0.15)
+    frame2.GetYaxis().SetTitleOffset(1.8)
+else:
+    c.SaveAs("rf618_plot_1.png")
+    c = ROOT.TCanvas("", "", 600, 600)
+
 frame2.Draw()
 
+if not single_canvas:
+    c.SaveAs("rf618_plot_2.png")
 
 # Compute the minimum via minuit and display the results
 minimizer = ROOT.RooMinimizer(nll)
