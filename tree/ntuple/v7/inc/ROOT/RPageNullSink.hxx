@@ -58,7 +58,11 @@ public:
          }
       }
    }
-   void InitImpl(RNTupleModel &model) final { ConnectFields(model.GetFieldZero().GetSubFields(), 0); }
+   void InitImpl(RNTupleModel &model) final
+   {
+      auto &fieldZero = GetFieldZeroOfModel(model);
+      ConnectFields(fieldZero.GetSubFields(), 0);
+   }
    void UpdateSchema(const RNTupleModelChangeset &changeset, NTupleSize_t firstEntry) final
    {
       ConnectFields(changeset.fAddedFields, firstEntry);
