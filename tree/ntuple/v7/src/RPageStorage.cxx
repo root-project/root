@@ -749,7 +749,7 @@ void ROOT::Experimental::Internal::RPagePersistentSink::UpdateSchema(const RNTup
    };
    auto addProjectedField = [&](RFieldBase &f) {
       auto fieldId = descriptor.GetNFields();
-      auto sourceFieldId = changeset.fModel.GetProjectedFields().GetSourceField(&f)->GetOnDiskId();
+      auto sourceFieldId = Internal::GetProjectedFields(changeset.fModel).GetSourceField(&f)->GetOnDiskId();
       fDescriptorBuilder.AddField(RFieldDescriptorBuilder::FromField(f).FieldId(fieldId).MakeDescriptor().Unwrap());
       fDescriptorBuilder.AddFieldLink(f.GetParent()->GetOnDiskId(), fieldId);
       fDescriptorBuilder.AddFieldProjection(sourceFieldId, fieldId);
@@ -821,12 +821,13 @@ void ROOT::Experimental::Internal::RPagePersistentSink::InitImpl(RNTupleModel &m
    auto &fieldZero = model.GetFieldZero();
    fDescriptorBuilder.AddField(RFieldDescriptorBuilder::FromField(fieldZero).FieldId(0).MakeDescriptor().Unwrap());
    fieldZero.SetOnDiskId(0);
-   model.GetProjectedFields().GetFieldZero()->SetOnDiskId(0);
+   auto &projectedFields = Internal::GetProjectedFields(model);
+   projectedFields.GetFieldZero()->SetOnDiskId(0);
 
    RNTupleModelChangeset initialChangeset{model};
    for (auto f : fieldZero.GetSubFields())
       initialChangeset.fAddedFields.emplace_back(f);
-   for (auto f : model.GetProjectedFields().GetFieldZero()->GetSubFields())
+   for (auto f : projectedFields.GetFieldZero()->GetSubFields())
       initialChangeset.fAddedProjectedFields.emplace_back(f);
    UpdateSchema(initialChangeset, 0U);
 
