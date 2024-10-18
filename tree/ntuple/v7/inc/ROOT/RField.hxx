@@ -425,6 +425,9 @@ class RField<TObject> final : public RFieldBase {
    static std::size_t GetOffsetUniqueID() { return GetOffsetOfMember("fUniqueID"); }
    static std::size_t GetOffsetBits() { return GetOffsetOfMember("fBits"); }
 
+private:
+   RField(std::string_view fieldName, const RField<TObject> &source); ///< Used by CloneImpl()
+
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
 

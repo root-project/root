@@ -41,11 +41,15 @@ TEST(RNTupleModel, Clone)
    model->MakeField<float>("f");
    model->MakeField<std::vector<float>>("vec");
    model->MakeField<CustomStruct>("struct");
+   model->MakeField<TObject>("obj");
    model->Freeze();
 
    for (auto &f : model->GetFieldZero()) {
       if (f.GetTypeName() == "float") {
          f.SetColumnRepresentatives({{EColumnType::kReal32}});
+      }
+      if (f.GetTypeName() == "std::uint32_t") {
+         f.SetColumnRepresentatives({{EColumnType::kUInt32}});
       }
    }
 
@@ -55,6 +59,10 @@ TEST(RNTupleModel, Clone)
       if (f.GetTypeName() == "float") {
          EXPECT_EQ(EColumnType::kReal32, f.GetColumnRepresentatives()[0][0]);
       }
+      if (f.GetTypeName() == "std::uint32_t") {
+         EXPECT_EQ(EColumnType::kUInt32, f.GetColumnRepresentatives()[0][0]);
+      }
    }
    EXPECT_TRUE(clone->GetField("struct").GetTraits() & RFieldBase::kTraitTypeChecksum);
+   EXPECT_TRUE(clone->GetField("obj").GetTraits() & RFieldBase::kTraitTypeChecksum);
 }

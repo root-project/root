@@ -2012,6 +2012,14 @@ std::size_t ROOT::Experimental::RField<TObject>::GetOffsetOfMember(const char *n
    throw RException(R__FAIL('\'' + std::string(name) + '\'' + " is an invalid data member"));
 }
 
+ROOT::Experimental::RField<TObject>::RField(std::string_view fieldName, const RField<TObject> &source)
+   : ROOT::Experimental::RFieldBase(fieldName, "TObject", ENTupleStructure::kRecord, false /* isSimple */)
+{
+   fTraits |= kTraitTypeChecksum;
+   Attach(source.GetSubFields()[0]->Clone("fUniqueID"));
+   Attach(source.GetSubFields()[1]->Clone("fBits"));
+}
+
 ROOT::Experimental::RField<TObject>::RField(std::string_view fieldName)
    : ROOT::Experimental::RFieldBase(fieldName, "TObject", ENTupleStructure::kRecord, false /* isSimple */)
 {
@@ -2025,9 +2033,7 @@ ROOT::Experimental::RField<TObject>::RField(std::string_view fieldName)
 std::unique_ptr<ROOT::Experimental::RFieldBase>
 ROOT::Experimental::RField<TObject>::CloneImpl(std::string_view newName) const
 {
-   auto result = std::make_unique<RField<TObject>>(newName);
-   SyncFieldIDs(*this, *result);
-   return result;
+   return std::unique_ptr<RField<TObject>>(new RField<TObject>(newName, *this));
 }
 
 std::size_t ROOT::Experimental::RField<TObject>::AppendImpl(const void *from)
