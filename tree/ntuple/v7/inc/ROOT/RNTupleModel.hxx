@@ -80,6 +80,8 @@ added and modified.  Once the schema is finalized, the model gets frozen.  Only 
 */
 // clang-format on
 class RNTupleModel {
+   friend class Internal::RPageSinkBuf; // TODO(jblomer): remove me, currently required for RPageSinkBuf::UpdateSchema()
+
 public:
    /// User provided function that describes the mapping of existing source fields to projected fields in terms
    /// of fully qualified field names. The mapping function is called with the qualified field names of the provided

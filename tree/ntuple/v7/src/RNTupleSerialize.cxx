@@ -1260,14 +1260,11 @@ void ROOT::Experimental::Internal::RNTupleSerializer::RContext::MapSchema(const 
    }
    depthFirstTraversal(fieldTrees, [&](DescriptorId_t fieldId) { MapFieldId(fieldId); });
    depthFirstTraversal(fieldTrees, [&](DescriptorId_t fieldId) {
-      for (const auto &c : desc.GetColumnIterable(fieldId))
-         if (!c.IsAliasColumn())
-            MapColumnId(c.GetLogicalId());
-   });
-   depthFirstTraversal(fieldTrees, [&](DescriptorId_t fieldId) {
-      for (const auto &c : desc.GetColumnIterable(fieldId))
-         if (c.IsAliasColumn())
-            MapColumnId(c.GetLogicalId());
+      for (const auto &c : desc.GetColumnIterable(fieldId)) {
+         if (!c.IsAliasColumn()) {
+            MapPhysicalColumnId(c.GetPhysicalId());
+         }
+      }
    });
 
    if (forHeaderExtension) {
@@ -1276,13 +1273,7 @@ void ROOT::Experimental::Internal::RNTupleSerializer::RContext::MapSchema(const 
       for (auto memId : desc.GetHeaderExtension()->GetExtendedColumnRepresentations()) {
          const auto &columnDesc = desc.GetColumnDescriptor(memId);
          if (!columnDesc.IsAliasColumn()) {
-            MapColumnId(columnDesc.GetLogicalId());
-         }
-      }
-      for (auto memId : desc.GetHeaderExtension()->GetExtendedColumnRepresentations()) {
-         const auto &columnDesc = desc.GetColumnDescriptor(memId);
-         if (columnDesc.IsAliasColumn()) {
-            MapColumnId(columnDesc.GetLogicalId());
+            MapPhysicalColumnId(columnDesc.GetPhysicalId());
          }
       }
    } else {
@@ -1423,7 +1414,11 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeSchemaDescription(co
    if (!result)
       return R__FORWARD_ERROR(result);
    bytes += result.Unwrap();
-   const std::uint32_t columnIdRangeBegin = descBuilder.GetDescriptor().GetNLogicalColumns();
+
+   if (descBuilder.GetDescriptor().GetNLogicalColumns() > descBuilder.GetDescriptor().GetNPhysicalColumns())
+      descBuilder.ShiftAliasColumns(nColumns);
+
+   const std::uint32_t columnIdRangeBegin = descBuilder.GetDescriptor().GetNPhysicalColumns();
    for (unsigned i = 0; i < nColumns; ++i) {
       std::uint32_t columnId = columnIdRangeBegin + i;
       RColumnDescriptorBuilder columnBuilder;
@@ -1450,7 +1445,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeSchemaDescription(co
    if (!result)
       return R__FORWARD_ERROR(result);
    bytes += result.Unwrap();
-   const std::uint32_t aliasColumnIdRangeBegin = columnIdRangeBegin + nColumns;
+   const std::uint32_t aliasColumnIdRangeBegin = descBuilder.GetDescriptor().GetNLogicalColumns();
    for (unsigned i = 0; i < nAliasColumns; ++i) {
       std::uint32_t physicalId;
       std::uint32_t fieldId;

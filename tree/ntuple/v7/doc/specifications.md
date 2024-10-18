@@ -575,10 +575,9 @@ Instead, their data comes from another column referred to below as "physical col
 The first 32-bit integer references the physical column ID.
 The second 32-bit integer references the associated "projected" field.
 A projected field is a field using alias columns to present available data by an alternative C++ type.
-The ID of the alias column itself is given implicitly by the serialization order.
-In particular, alias columns have larger IDs than physical columns in the same schema description block
-(see comment in Section "Schema Extension Record Frame").
+Alias columns have no prescribed column ID of their own, since column IDs are not referenced.
 In the footer and page list envelopes, only physical column IDs must be referenced.
+However, columns should be attached to projected fields in their serialization order (first header then footer).
 
 
 #### Extra type information
@@ -645,10 +644,8 @@ The interpretation of the information contained therein should be identical
 as if it was found directly at the end of the header.
 This is necessary when fields have been added during writing.
 
-Note that the field IDs and column IDs given by the serialization order
+Note that the field IDs and physical column IDs given by the serialization order
 should continue from the largest IDs found in the header.
-For the column IDs,
-the order is physical columns (header), alias columns (header), physical columns (footer), alias columns (footer).
 
 Note that is it possible to extend existing fields by additional column representations.
 This means that columns of the extension header may point to fields of the regular header.
