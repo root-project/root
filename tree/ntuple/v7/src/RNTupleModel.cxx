@@ -354,6 +354,17 @@ ROOT::Experimental::RFieldZero &ROOT::Experimental::RNTupleModel::GetMutableFiel
    return *fFieldZero;
 }
 
+ROOT::Experimental::RFieldBase &ROOT::Experimental::RNTupleModel::GetMutableField(std::string_view fieldName)
+{
+   if (IsFrozen())
+      throw RException(R__FAIL("invalid attempt to get mutable field of frozen model"));
+   auto f = FindField(fieldName);
+   if (!f)
+      throw RException(R__FAIL("invalid field: " + std::string(fieldName)));
+
+   return *f;
+}
+
 const ROOT::Experimental::RFieldBase &ROOT::Experimental::RNTupleModel::GetConstField(std::string_view fieldName) const
 {
    auto f = FindField(fieldName);
