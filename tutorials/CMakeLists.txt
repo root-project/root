@@ -35,6 +35,12 @@ else()                       # testing using an installation
   enable_testing()
 endif()
 
+# Set the environment for the tutorials, which is the eventual ROOT_environ
+# plus some environment variables related to limiting the number of threads
+# used by NumPy.
+# See: https://stackoverflow.com/questions/30791550/limit-number-of-threads-in-numpy
+set(TUTORIAL_ENV ${ROOT_environ} OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1)
+
 #---Copy the CTestCustom.cmake file into the build directory--------
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/CTestCustom.cmake ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
 
@@ -54,14 +60,6 @@ Proof.Sandbox: /tmp/proof
 Rint.History:  .root_hist
 ACLiC.LinkLibs:  1
 ")
-
-#---Definition of the helper function--------------------------------
-function(ROOT_ADD_TUTORIAL macrofile rc)
-  string(REPLACE ".C" "" name ${macrofile})
-  string(REPLACE "/" "-" name ${name})
-  ROOT_ADD_TEST(tutorial-${name} COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/${macrofile}
-                PASSRC ${rc} FAILREGEX "Error in" "error:" "warning: Failed to call" LABELS tutorial)
-endfunction()
 
 #---Tutorials that need substantial network to work------------------
 set(need_network dataframe/df027_SQliteDependencyOverVersion.C)
@@ -342,10 +340,10 @@ if (NOT ROOT_pythia8_FOUND)
 else()
   if("$ENV{PYTHIA8}" STREQUAL "")
     get_filename_component(pythia8dir "${PYTHIA8_INCLUDE_DIR}" DIRECTORY)
-    list(APPEND ROOT_environ PYTHIA8=${pythia8dir})
+    list(APPEND TUTORIAL_ENV PYTHIA8=${pythia8dir})
   endif()
   if("$ENV{PYTHIA8DATA}" STREQUAL "" AND PYTHIA8_DATA)
-    list(APPEND ROOT_environ PYTHIA8DATA=${PYTHIA8_DATA})
+    list(APPEND TUTORIAL_ENV PYTHIA8DATA=${PYTHIA8_DATA})
   endif()
 endif()
 
@@ -628,16 +626,16 @@ file(GLOB multithreaded RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${multithreaded})
 
 #---Define the primordial tutorials-----------------------------------
 ROOT_ADD_TEST(tutorial-hsimple COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/hsimple.C
-                PASSRC 255 FAILREGEX "Error in" "error:" "warning: Failed to call" LABELS tutorial)
+    PASSRC 255 FAILREGEX "Error in" "error:" "warning: Failed to call" LABELS tutorial ENVIRONMENT ${TUTORIAL_ENV})
 if(ROOT_geom_FOUND)
   ROOT_ADD_TEST(tutorial-geom-geometry COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/geom/geometry.C
-                FAILREGEX "Error in" "error:" "warning: Failed to call" LABELS tutorial)
+                FAILREGEX "Error in" "error:" "warning: Failed to call" LABELS tutorial ENVIRONMENT ${TUTORIAL_ENV})
 endif()
 # define Python GNN parsing tutorial needed to run before
 if (PY_SONNET_FOUND AND PY_GRAPH_NETS_FOUND)
   ROOT_ADD_TEST(tutorial-tmva-TMVA_SOFIE_GNN_Parser COMMAND ${Python3_EXECUTABLE}
   ${CMAKE_CURRENT_SOURCE_DIR}/tmva/TMVA_SOFIE_GNN_Parser.py
-  PASSRC 0 FAILREGEX "Error in" ": error:" LABELS tutorial ENVIRONMENT ${ROOT_environ})
+  PASSRC 0 FAILREGEX "Error in" ": error:" LABELS tutorial ENVIRONMENT ${TUTORIAL_ENV})
   set (tmva-TMVA_SOFIE_GNN_Application-depends tutorial-tmva-TMVA_SOFIE_GNN_Parser)
 endif()
 
@@ -684,7 +682,7 @@ foreach(t ${tutorials})
                 PASSRC ${rc} FAILREGEX "Error in <" ": error:" "segmentation violation" "FROM HESSE     STATUS=FAILED" "warning: Failed to call"
                 LABELS ${labels}
                 DEPENDS tutorial-hsimple ${${tname}-depends}
-                ENVIRONMENT ${ROOT_environ}
+                ENVIRONMENT ${TUTORIAL_ENV}
                 TIMEOUT ${thisTestTimeout})
 
   if(${t} IN_LIST multithreaded)
@@ -718,7 +716,7 @@ foreach(t ${mpi_tutorials})
                 PASSRC ${rc} FAILREGEX "Error in <" ": error:" "segmentation violation" "FROM HESSE     STATUS=FAILED" "warning: Failed to call"
                 LABELS tutorial
                 DEPENDS tutorial-hsimple ${${tname}-depends}
-                ENVIRONMENT ${ROOT_environ}
+                ENVIRONMENT ${TUTORIAL_ENV}
                 TIMEOUT ${thisTestTimeout})
 endforeach()
 
@@ -772,7 +770,7 @@ if(ROOT_pyroot_FOUND)
   endif()
   # Use main Python executable to run in PySpark driver and executors
   if(test_distrdf_pyspark)
-    list(APPEND ROOT_environ PYSPARK_PYTHON=${Python3_EXECUTABLE})
+    list(APPEND TUTORIAL_ENV PYSPARK_PYTHON=${Python3_EXECUTABLE})
     if(MACOSX_VERSION VERSION_GREATER_EQUAL 10.13)
       # MacOS has changed rules about forking processes after 10.13
       # Running pyspark tests with XCode Python3 throws crashes with errors like:
@@ -782,7 +780,7 @@ if(ROOT_pyroot_FOUND)
       # specifically the XCode Python executable that triggers this.
       # For now, there seems no other way than this workaround,
       # which effectively sets the behaviour of `fork` back to MacOS 10.12
-      list(APPEND ROOT_environ OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES)
+      list(APPEND TUTORIAL_ENV OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES)
     endif()
   endif()
   # These lists keep track of distrdf tutorials, so we can add specific properties later
@@ -926,7 +924,7 @@ if(ROOT_pyroot_FOUND)
                 PASSRC ${rc} FAILREGEX "Error in" ": error:" "segmentation violation"
                 LABELS ${labels}
                 DEPENDS ${${tname}-depends}
-                ENVIRONMENT ${ROOT_environ}
+                ENVIRONMENT ${TUTORIAL_ENV}
                 PYTHON_DEPS ${python_deps}
                 ${py_will_fail})
 
