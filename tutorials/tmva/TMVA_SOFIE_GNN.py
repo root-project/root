@@ -123,11 +123,12 @@ output_transform.Generate()
 output_transform.OutputGenerated()
 
 # Compile now the generated C++ code from SOFIE
-ROOT.gInterpreter.Declare('#pragma cling optimize(2)')
-ROOT.gInterpreter.Declare('#include "encoder.hxx"')
-ROOT.gInterpreter.Declare('#include "core.hxx"')
-ROOT.gInterpreter.Declare('#include "decoder.hxx"')
-ROOT.gInterpreter.Declare('#include "output_transform.hxx"')
+gen_code = '''#pragma cling optimize(2)
+#include "encoder.hxx"
+#include "core.hxx"
+#include "decoder.hxx"
+#include "output_transform.hxx"'''
+ROOT.gInterpreter.Declare(gen_code)
 
 #helper function to print SOFIE GNN data structure
 def PrintSofie(output, printShape = False):
