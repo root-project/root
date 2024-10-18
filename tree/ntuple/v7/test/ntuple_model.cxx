@@ -42,6 +42,7 @@ TEST(RNTupleModel, Clone)
    model->MakeField<std::vector<float>>("vec");
    model->MakeField<CustomStruct>("struct");
    model->MakeField<TObject>("obj");
+   model->MakeField<CustomEnumUInt32>("enum");
    model->Freeze();
 
    for (auto &f : model->GetFieldZero()) {
