@@ -271,18 +271,6 @@ std::tuple<const void *const *, const std::int32_t *, const std::int32_t *> GetR
    return {GetRVecDataMembers(const_cast<void *>(rvecPtr))};
 }
 
-/// Applies the field IDs from 'from' to 'to', where from and to are expected to be each other's clones.
-/// Used in RClassField and RCollectionClassField cloning. In these classes, we don't clone the subfields
-/// but we recreate them. Therefore, the on-disk IDs need to be fixed up.
-void SyncFieldIDs(const ROOT::Experimental::RFieldBase &from, ROOT::Experimental::RFieldBase &to)
-{
-   auto iFrom = from.cbegin();
-   auto iTo = to.begin();
-   for (; iFrom != from.cend(); ++iFrom, ++iTo) {
-      iTo->SetOnDiskId(iFrom->GetOnDiskId());
-   }
-}
-
 std::size_t EvalRVecValueSize(std::size_t alignOfT, std::size_t sizeOfT, std::size_t alignOfRVecT)
 {
    // the size of an RVec<T> is the size of its 4 data-members + optional padding:
