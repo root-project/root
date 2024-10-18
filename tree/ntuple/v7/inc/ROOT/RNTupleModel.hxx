@@ -85,7 +85,7 @@ public:
    /// The new model needs to be a clone of fModel
    std::unique_ptr<RProjectedFields> Clone(const RNTupleModel &newModel) const;
 
-   RFieldZero *GetFieldZero() const { return fFieldZero.get(); }
+   RFieldZero &GetFieldZero() { return *fFieldZero; }
    const RFieldBase *GetSourceField(const RFieldBase *target) const;
    /// Adds a new projected field. The field map needs to provide valid source fields of fModel for 'field'
    /// and each of its sub fields.
