@@ -51,13 +51,13 @@ TEST(RNTupleProjection, Basics)
    RNTupleDescriptor::RCreateModelOptions options;
    options.fReconstructProjections = true;
    auto reconstructedModel = reader->GetDescriptor().CreateModel(options);
-   auto itrFields = reconstructedModel->GetFieldZero().cbegin();
+   auto itrFields = reconstructedModel->GetConstFieldZero().cbegin();
    EXPECT_EQ("met", itrFields->GetQualifiedFieldName());
    EXPECT_EQ("atomicNumber", (++itrFields)->GetQualifiedFieldName());
    EXPECT_EQ("atomicNumber._0", (++itrFields)->GetQualifiedFieldName());
    EXPECT_EQ("vec", (++itrFields)->GetQualifiedFieldName());
    EXPECT_EQ("vec._0", (++itrFields)->GetQualifiedFieldName());
-   EXPECT_EQ(reconstructedModel->GetFieldZero().cend(), ++itrFields);
+   EXPECT_EQ(reconstructedModel->GetConstFieldZero().cend(), ++itrFields);
    auto &projectedFields = ROOT::Experimental::Internal::GetProjectedFieldsOfModel(*reconstructedModel);
    auto itrProjectedFields = projectedFields.GetFieldZero().cbegin();
    EXPECT_EQ("missingE", itrProjectedFields->GetQualifiedFieldName());
