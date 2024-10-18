@@ -841,12 +841,12 @@ void ROOT::Experimental::Internal::RPagePersistentSink::InitImpl(RNTupleModel &m
    fDescriptorBuilder.AddField(RFieldDescriptorBuilder::FromField(fieldZero).FieldId(0).MakeDescriptor().Unwrap());
    fieldZero.SetOnDiskId(0);
    auto &projectedFields = GetProjectedFieldsOfModel(model);
-   projectedFields.GetFieldZero()->SetOnDiskId(0);
+   projectedFields.GetFieldZero().SetOnDiskId(0);
 
    RNTupleModelChangeset initialChangeset{model};
    for (auto f : fieldZero.GetSubFields())
       initialChangeset.fAddedFields.emplace_back(f);
-   for (auto f : projectedFields.GetFieldZero()->GetSubFields())
+   for (auto f : projectedFields.GetFieldZero().GetSubFields())
       initialChangeset.fAddedProjectedFields.emplace_back(f);
    UpdateSchema(initialChangeset, 0U);
 
