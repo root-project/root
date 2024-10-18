@@ -147,7 +147,7 @@ ROOT::Experimental::Internal::RProjectedFields::Clone(const RNTupleModel &newMod
    // TODO(jblomer): improve quadratic search to re-wire the field mappings given the new model and the cloned
    // projected fields. Not too critical as we generally expect a limited number of projected fields
    for (const auto &[k, v] : fFieldMap) {
-      for (const auto &f : *clone->GetFieldZero()) {
+      for (const auto &f : clone->GetFieldZero()) {
          if (f.GetQualifiedFieldName() == k->GetQualifiedFieldName()) {
             clone->fFieldMap[&f] = &newModel.GetField(v->GetQualifiedFieldName());
             break;
