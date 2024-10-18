@@ -32,6 +32,11 @@ std::uint64_t GetNewModelId()
 }
 } // anonymous namespace
 
+ROOT::Experimental::RFieldZero &ROOT::Experimental::Internal::GetFieldZero(ROOT::Experimental::RNTupleModel &model)
+{
+   return *model.fFieldZero;
+}
+
 ROOT::Experimental::Internal::RProjectedFields &
 ROOT::Experimental::Internal::GetProjectedFields(ROOT::Experimental::RNTupleModel &model)
 {

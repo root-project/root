@@ -818,7 +818,7 @@ void ROOT::Experimental::Internal::RPagePersistentSink::InitImpl(RNTupleModel &m
    fDescriptorBuilder.SetNTuple(fNTupleName, model.GetDescription());
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
 
-   auto &fieldZero = model.GetFieldZero();
+   auto &fieldZero = Internal::GetFieldZero(model);
    fDescriptorBuilder.AddField(RFieldDescriptorBuilder::FromField(fieldZero).FieldId(0).MakeDescriptor().Unwrap());
    fieldZero.SetOnDiskId(0);
    auto &projectedFields = Internal::GetProjectedFields(model);
