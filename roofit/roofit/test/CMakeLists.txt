@@ -28,3 +28,5 @@ else()
   ROOT_EXECUTABLE(testRooFit testRooFit.cxx LIBRARIES RooFit)
   ROOT_ADD_TEST(test-fit-testRooFit COMMAND testRooFit)
 endif()
+
+add_subdirectory(vectorisedPDFs)
