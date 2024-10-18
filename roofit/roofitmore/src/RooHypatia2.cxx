@@ -110,7 +110,9 @@
 /// \param[in] zeta Shape parameter (\f$ \zeta >= 0 \f$).
 /// \param[in] beta Asymmetry parameter \f$ \beta \f$. Symmetric case is \f$ \beta = 0 \f$,
 /// choose values close to zero.
-/// \param[in] argSigma Width parameter. If \f$ \beta = 0, \ \sigma \f$ is the RMS width.
+/// \param[in] argSigma Width parameter. If \f$ \beta = 0 \f$ and \f$ \zeta > 0 \f$, \f$ \sigma \f$ is the RMS width;
+/// if \f$ \beta = 0 \f$, \f$ \zeta = 0 \f$ and \f$ \lambda < -1 \f$ RMS = \f$ \sigma/\sqrt(-2(\lambda+1)) \f$;
+/// if \f$ \beta = 0 \f$, \f$ \zeta = 0 \f$ and \f$ -1 < \lambda < 0 \f$ RMS is infinity.
 /// \param[in] mu Location parameter. Shifts the distribution left/right.
 /// \param[in] a Start of the left tail (\f$ a \geq 0 \f$, to the left of the peak). Note that when setting \f$ a = \sigma = 1 \f$,
 /// the tail region is to the left of \f$ x = \mu - 1 \f$, so a should be positive.
@@ -224,7 +226,6 @@ double diff_eval(double d, double l, double alpha, double beta, double delta){
       * std::exp(beta*d) * 0.5;
 }
 
-/*
 double Gauss2F1(double a, double b, double c, double x){
   if (std::abs(x) <= 1.) {
     return ROOT::Math::hyperg(a, b, c, x);
@@ -236,7 +237,6 @@ double Gauss2F1(double a, double b, double c, double x){
 double stIntegral(double d1, double delta, double l){
   return d1 * Gauss2F1(0.5, 0.5-l, 3./2, -d1*d1/(delta*delta));
 }
-*/
 }
 
 double RooHypatia2::evaluate() const
@@ -509,7 +509,6 @@ void RooHypatia2::doEval(RooFit::EvalContext & ctx) const
 }
 
 
-/* Analytical integrals need testing.
 
 Int_t RooHypatia2::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char*) const
 {
@@ -555,13 +554,13 @@ double RooHypatia2::analyticalIntegral(Int_t code, const char* rangeName) const
   const double d1 = _x.max(rangeName) - _mu;
 
 
-  double delta;
-  if (_lambda <= -1.0) {
-    delta = _sigma * sqrt(-2. + -2.*_lambda);
-  }
-  else {
-    delta = _sigma;
-  }
+  double delta = _sigma;
+//   if (_lambda <= -1.0) {
+//     delta = _sigma * sqrt(-2. + -2.*_lambda);
+//   }
+//   else {
+//     delta = _sigma;
+//   }
   const double deltaSq = delta*delta;
 
   if ((d0 > -asigma) && (d1 < a2sigma)) {
@@ -618,5 +617,3 @@ double RooHypatia2::analyticalIntegral(Int_t code, const char* rangeName) const
   const double I1 = stIntegral(d1, delta, _lambda) + I1a + I1b;
   return I1 - I0;
 }
-
-*/
