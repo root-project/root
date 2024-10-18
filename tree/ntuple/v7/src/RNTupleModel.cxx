@@ -139,17 +139,17 @@ ROOT::Experimental::Internal::RProjectedFields::GetSourceField(const RFieldBase 
 }
 
 std::unique_ptr<ROOT::Experimental::Internal::RProjectedFields>
-ROOT::Experimental::Internal::RProjectedFields::Clone(const RNTupleModel *newModel) const
+ROOT::Experimental::Internal::RProjectedFields::Clone(const RNTupleModel &newModel) const
 {
    auto cloneFieldZero = std::unique_ptr<RFieldZero>(static_cast<RFieldZero *>(fFieldZero->Clone("").release()));
    auto clone = std::unique_ptr<RProjectedFields>(new RProjectedFields(std::move(cloneFieldZero)));
-   clone->fModel = newModel;
+   clone->fModel = &newModel;
    // TODO(jblomer): improve quadratic search to re-wire the field mappings given the new model and the cloned
    // projected fields. Not too critical as we generally expect a limited number of projected fields
    for (const auto &[k, v] : fFieldMap) {
       for (const auto &f : *clone->GetFieldZero()) {
          if (f.GetQualifiedFieldName() == k->GetQualifiedFieldName()) {
-            clone->fFieldMap[&f] = &clone->fModel->GetField(v->GetQualifiedFieldName());
+            clone->fFieldMap[&f] = &newModel.GetField(v->GetQualifiedFieldName());
             break;
          }
       }
@@ -236,7 +236,7 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel>
 ROOT::Experimental::RNTupleModel::CreateBare(std::unique_ptr<RFieldZero> fieldZero)
 {
    auto model = std::unique_ptr<RNTupleModel>(new RNTupleModel(std::move(fieldZero)));
-   model->fProjectedFields = std::make_unique<Internal::RProjectedFields>(model.get());
+   model->fProjectedFields = std::make_unique<Internal::RProjectedFields>(*model);
    return model;
 }
 
@@ -268,7 +268,7 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleMod
    cloneModel->fIsFrozen = fIsFrozen;
    cloneModel->fFieldNames = fFieldNames;
    cloneModel->fDescription = fDescription;
-   cloneModel->fProjectedFields = fProjectedFields->Clone(cloneModel.get());
+   cloneModel->fProjectedFields = fProjectedFields->Clone(*cloneModel);
    if (fDefaultEntry) {
       cloneModel->fDefaultEntry = std::unique_ptr<REntry>(new REntry(cloneModel->fModelId, cloneModel->fSchemaId));
       for (const auto &f : cloneModel->fFieldZero->GetSubFields()) {
