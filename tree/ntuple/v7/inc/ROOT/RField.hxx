@@ -124,6 +124,7 @@ private:
    std::size_t fMaxAlignment = 1;
 
 private:
+   RClassField(std::string_view fieldName, const RClassField &source); ///< Used by CloneImpl
    RClassField(std::string_view fieldName, std::string_view className, TClass *classp);
    void Attach(std::unique_ptr<RFieldBase> child, RSubFieldInfo info);
    /// Register post-read callbacks corresponding to a list of ROOT I/O customization rules. `classp` is used to

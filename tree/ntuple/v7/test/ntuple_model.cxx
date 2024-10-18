@@ -34,3 +34,27 @@ TEST(RNTupleModel, EstimateWriteMemoryUsage)
    static constexpr std::size_t Expected4 = PageBufferBudget;
    EXPECT_EQ(model->EstimateWriteMemoryUsage(options), Expected4);
 }
+
+TEST(RNTupleModel, Clone)
+{
+   auto model = RNTupleModel::Create();
+   model->MakeField<float>("f");
+   model->MakeField<std::vector<float>>("vec");
+   model->MakeField<CustomStruct>("struct");
+   model->Freeze();
+
+   for (auto &f : model->GetFieldZero()) {
+      if (f.GetTypeName() == "float") {
+         f.SetColumnRepresentatives({{EColumnType::kReal32}});
+      }
+   }
+
+   auto clone = model->Clone();
+
+   for (const auto &f : clone->GetFieldZero()) {
+      if (f.GetTypeName() == "float") {
+         EXPECT_EQ(EColumnType::kReal32, f.GetColumnRepresentatives()[0][0]);
+      }
+   }
+   EXPECT_TRUE(clone->GetField("struct").GetTraits() & RFieldBase::kTraitTypeChecksum);
+}

@@ -1782,6 +1782,18 @@ void ROOT::Experimental::RField<std::string>::AcceptVisitor(Detail::RFieldVisito
 
 //------------------------------------------------------------------------------
 
+ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, const RClassField &source)
+   : ROOT::Experimental::RFieldBase(fieldName, source.GetTypeName(), ENTupleStructure::kRecord, false /* isSimple */),
+     fClass(source.fClass),
+     fSubFieldsInfo(source.fSubFieldsInfo),
+     fMaxAlignment(source.fMaxAlignment)
+{
+   for (const auto &f : source.GetSubFields()) {
+      RFieldBase::Attach(f->Clone(f->GetFieldName()));
+   }
+   fTraits = source.GetTraits();
+}
+
 ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::string_view className)
    : RClassField(fieldName, className, TClass::GetClass(std::string(className).c_str()))
 {
@@ -1893,9 +1905,7 @@ void ROOT::Experimental::RClassField::AddReadCallbacksFromIORules(const std::spa
 std::unique_ptr<ROOT::Experimental::RFieldBase>
 ROOT::Experimental::RClassField::CloneImpl(std::string_view newName) const
 {
-   auto result = std::unique_ptr<RClassField>(new RClassField(newName, GetTypeName(), fClass));
-   SyncFieldIDs(*this, *result);
-   return result;
+   return std::unique_ptr<RClassField>(new RClassField(newName, *this));
 }
 
 std::size_t ROOT::Experimental::RClassField::AppendImpl(const void *from)
