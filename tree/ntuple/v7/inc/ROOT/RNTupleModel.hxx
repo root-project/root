@@ -40,6 +40,7 @@ class RNTupleWriteOptions;
 namespace Internal {
 class RProjectedFields;
 
+RFieldZero &GetFieldZeroOfModel(RNTupleModel &model);
 RProjectedFields &GetProjectedFieldsOfModel(RNTupleModel &model);
 
 // clang-format off
@@ -133,6 +134,7 @@ added and modified.  Once the schema is finalized, the model gets frozen.  Only 
 */
 // clang-format on
 class RNTupleModel {
+   friend RFieldZero &Internal::GetFieldZeroOfModel(RNTupleModel &);
    friend Internal::RProjectedFields &Internal::GetProjectedFieldsOfModel(RNTupleModel &);
 
 public:

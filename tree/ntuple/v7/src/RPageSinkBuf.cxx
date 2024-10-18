@@ -83,7 +83,7 @@ const ROOT::Experimental::RNTupleDescriptor &ROOT::Experimental::Internal::RPage
 
 void ROOT::Experimental::Internal::RPageSinkBuf::InitImpl(RNTupleModel &model)
 {
-   ConnectFields(model.GetFieldZero().GetSubFields(), 0U);
+   ConnectFields(Internal::GetFieldZeroOfModel(model).GetSubFields(), 0U);
 
    fInnerModel = model.Clone();
    fInnerSink->Init(*fInnerModel);

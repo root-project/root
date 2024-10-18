@@ -57,7 +57,7 @@ ROOT::Experimental::RNTupleFillContext::~RNTupleFillContext()
 
 void ROOT::Experimental::RNTupleFillContext::FlushColumns()
 {
-   for (auto &field : fModel->GetFieldZero()) {
+   for (auto &field : Internal::GetFieldZeroOfModel(*fModel)) {
       Internal::CallFlushColumnsOnField(field);
    }
 }
@@ -67,7 +67,7 @@ void ROOT::Experimental::RNTupleFillContext::FlushCluster()
    if (fNEntries == fLastFlushed) {
       return;
    }
-   for (auto &field : fModel->GetFieldZero()) {
+   for (auto &field : Internal::GetFieldZeroOfModel(*fModel)) {
       Internal::CallCommitClusterOnField(field);
    }
    auto nEntriesInCluster = fNEntries - fLastFlushed;
