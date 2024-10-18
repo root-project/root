@@ -351,6 +351,7 @@ public:
 
    RFieldZero &GetFieldZero() { return *fFieldZero; }
    const RFieldZero &GetFieldZero() const { return *fFieldZero; }
+   RFieldBase &GetField(std::string_view fieldName);
    const RFieldBase &GetField(std::string_view fieldName) const;
 
    const std::string &GetDescription() const { return fDescription; }

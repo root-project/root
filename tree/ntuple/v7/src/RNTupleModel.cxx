@@ -336,6 +336,15 @@ ROOT::Experimental::RNTupleModel::AddProjectedField(std::unique_ptr<RFieldBase> 
    return RResult<void>::Success();
 }
 
+ROOT::Experimental::RFieldBase &ROOT::Experimental::RNTupleModel::GetField(std::string_view fieldName)
+{
+   auto f = FindField(fieldName);
+   if (!f)
+      throw RException(R__FAIL("invalid field: " + std::string(fieldName)));
+
+   return *f;
+}
+
 const ROOT::Experimental::RFieldBase &ROOT::Experimental::RNTupleModel::GetField(std::string_view fieldName) const
 {
    auto f = FindField(fieldName);
