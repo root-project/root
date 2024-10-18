@@ -360,7 +360,7 @@ public:
    REntry &GetDefaultEntry();
    const REntry &GetDefaultEntry() const;
 
-   /// TODO: Mutable access to the root field is used to make adjustments to the fields.
+   /// Mutable access to the root field is used to make adjustments to the fields.
    RFieldZero &GetMutableFieldZero();
    const RFieldZero &GetConstFieldZero() const { return *fFieldZero; }
    const RFieldBase &GetField(std::string_view fieldName) const;
