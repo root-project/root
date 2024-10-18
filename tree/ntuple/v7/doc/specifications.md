@@ -7,7 +7,7 @@
 The RNTuple binary format version is inspired by semantic versioning.
 It uses the following scheme: EPOCH.MAJOR.MINOR.PATCH
 
-_Epoch_: an increment of the epoch indicates backwards-incompatible changes.
+_Epoch_: an increment of the epoch indicates backward-incompatible changes.
 The RNTuple pre-release has epoch 0.
 The first public release will get epoch 1.
 There is currently no further epoch foreseen.
@@ -395,6 +395,14 @@ If `flag==0x02` (_projected field_) is set,
 the field has been created as a virtual field from another, non-projected source field.
 If a projected field has attached columns,
 these columns are alias columns to physical columns attached to the source field.
+The following restrictions apply on field projections:
+  - The source field and the target field must have the same structure,
+    except for an `RNTupleCardinality` field that must have a collection field as a source.
+  - For streamer fields and leaf fields, the type name of the source field and the projected field must be identical.
+  - Projections involving variants or fixed-size arrays are unsupported.
+  - Projected fields must be on the same schema path of collection fields than the source field.
+    For instance, one can project a vector of struct with floats to individual vectors of floats but cannot
+    project a vector of a vector of floats to a vector of floats.
 
 If `flag==0x04` (_type checksum_) is set, the field metadata contain the checksum of the ROOT streamer info.
 This checksum is only used for I/O rules in order to find types that are identified by checksum.
@@ -1057,27 +1065,51 @@ The limits refer to a single RNTuple and do not consider combinations/joins such
 
 ## Glossary
 
-TODO: This glossary is not yet complete
+### Anchor
+
+The anchor is a data block that makes the entry point to an RNTuple.
+The anchor is specific to the RNTuple container in which the RNTuple data are embedded (e.g., a ROOT file).
+The anchor must provide the information to load the header and the footer **envelopes**.
+
+### Cluster
+
+A cluster is a set of **pages** that contain all the data that belongs to a certain entry range.
+The data set is partitioned in clusters.
+A typical cluster size is tens to hundreds of megabytes.
 
 ### Column
 
 A column is a storage backed vector of a number of **elements** of a simple type.
-Column elements have a fixed bit-length depending on the column type.
+Column elements have a fixed bit-length that depends on the column type.
+Some column types allow setting the bit lengths within limits, (e.g. for floats with truncated mantiassa).
+
+### Envelope
+
+An envelope is a data block with RNTuple meta-data, such as the header and the footer.
+
+### Field
+
+A field describes a serialized C++ type.
+A field can have a hierarchy of subfields representing a composed C++ type (e.g., a vector of integers).
+A field has zero, one, or multiple **columns** attached to it.
+The columns contain the data related to the field but not to its subfields, which have their own columns.
+
+### Frame
+
+A frame is a byte range with meta-data information in an **envelope**.
+A frame starts with its size and thus can be extended in a forward-compatible way.
+
+### Locator
+
+A locator is a generalized way to identify a byte range in the RNTuple container.
+For a file container, for instance, a locator consists of an offset and a size.
 
 ### Page
 
 A page is segment of a column.
 Columns are partitioned in pages.
 A page is a unit of compression.
-Typical page sizes are of the order of 10-100kB.
-
-### Cluster
-
-A cluster is a set of pages from a fixed set of columns that contain all the data that belongs to a certain entry range.
-The data set is partitioned in clusters.
-Typically, a cluster comprises pages from all the available columns.
-If only a subset of the available columns are covered, it is called a **sharded cluster**.
-A typical cluster size is 50MB - 500MB.
+Typical page sizes are of the order of tens to hundreds of kilobytes.
 
 ### Indications of size
 
@@ -1086,11 +1118,28 @@ The `size` of something refers to the size in bytes on disk, possibly compressed
 
 ## Notes on Backward and Forward Compatibility
 
-TODO(jblomer)
-- Ignore unknown column types
-- Backwards compatiblity promised back to version 1
-- Envelope compression algorithm(s) fixed (zstd or none?)
-- Feature flags
-- Skipping of unknown information (frames, envelopes)
-- Writer version and minimum version
-- Feature flag skipping
+Note that this section covers the backward and forward compatibility of the binary format itself.
+It does not discuss schema evolution of the written types.
+
+Readers supporting a certain version of the specification should support reading files
+that were written according to previous versions of the same epoch.
+
+Readers should support reading data written according to _newer_ format versions of the same epoch in the following way
+
+  - Unknown trailing information in the anchor, in envelopes, and in frames should be ignored.
+    For instance, when reading frames, readers should continue reading after the frame-provided frame length
+    rather than summing up the lengths of the known contents of the frame.
+    Checksum verification, however, should still take place and include known and unknown contents.
+  - Unknown column, cluster, or field flags should be ignored.
+  - Unknown IDs for extra type information should be ignored.
+  - When a reader encounters an unknown column type or an unknown field type or field version or field structure,
+    it should ignore the entire top-level field that the column or field belongs to.
+    It should also ignore any projected fields and alias columns whose source fields or columns are already ignored.
+  - When a reader encounters an unknown feature flag, it must refuse reading any further.
+
+Writers using format features that will prevent older readers from correctly reading the data
+must set the corresponding feature flags.
+
+Writers should write in the anchor the format version that they support,
+independent of whether they use the all the features that this version provides.
+Only the feature flag signals which features are used.
