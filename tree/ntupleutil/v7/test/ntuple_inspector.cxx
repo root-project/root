@@ -9,10 +9,10 @@
 #include "CustomStructUtil.hxx"
 #include "ntupleutil_test.hxx"
 
+using ROOT::RNTuple;
 using ROOT::Experimental::EColumnType;
 using ROOT::Experimental::RField;
 using ROOT::Experimental::RFieldBase;
-using ROOT::Experimental::RNTuple;
 using ROOT::Experimental::RNTupleInspector;
 using ROOT::Experimental::RNTupleModel;
 using ROOT::Experimental::RNTupleWriteOptions;
@@ -238,7 +238,7 @@ TEST(RNTupleInspector, SizeProjectedFields)
       muonPt->emplace_back(1.0);
       muonPt->emplace_back(2.0);
 
-      auto nMuons = RFieldBase::Create("nMuons", "ROOT::Experimental::RNTupleCardinality<std::uint64_t>").Unwrap();
+      auto nMuons = RFieldBase::Create("nMuons", "ROOT::RNTupleCardinality<std::uint64_t>").Unwrap();
       model->AddProjectedField(std::move(nMuons), [](const std::string &) { return "muonPt"; });
 
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
