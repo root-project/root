@@ -103,6 +103,10 @@ public:
    // add const Parameter
    void Add(const std::string &, double);
 
+   // add covariance matrix
+   void AddCovariance(const MnUserCovariance &);
+   void AddCovariance(std::span<const double>, unsigned int);
+
    // interaction via external number of Parameter
    void Fix(unsigned int);
    void Release(unsigned int);
