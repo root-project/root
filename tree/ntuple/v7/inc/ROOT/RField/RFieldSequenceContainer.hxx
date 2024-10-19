@@ -62,7 +62,7 @@ private:
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
 
-   void ConstructValue(void *where) const override;
+   void ConstructValue(void *where) const final;
    std::unique_ptr<RDeleter> GetDeleter() const final;
 
    std::size_t AppendImpl(const void *from) final;
@@ -84,11 +84,6 @@ public:
 
 template <typename ItemT, std::size_t N>
 class RField<std::array<ItemT, N>> : public RArrayField {
-   using ContainerT = typename std::array<ItemT, N>;
-
-protected:
-   void ConstructValue(void *where) const final { new (where) ContainerT(); }
-
 public:
    static std::string TypeName() { return "std::array<" + RField<ItemT>::TypeName() + "," + std::to_string(N) + ">"; }
    explicit RField(std::string_view name) : RArrayField(name, std::make_unique<RField<ItemT>>("_0"), N) {}
@@ -141,8 +136,8 @@ protected:
    void GenerateColumns() final;
    void GenerateColumns(const RNTupleDescriptor &desc) final;
 
-   void ConstructValue(void *where) const override;
-   std::unique_ptr<RDeleter> GetDeleter() const override;
+   void ConstructValue(void *where) const final;
+   std::unique_ptr<RDeleter> GetDeleter() const final;
 
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
@@ -174,17 +169,12 @@ public:
 
 template <typename ItemT>
 class RField<ROOT::VecOps::RVec<ItemT>> final : public RRVecField {
-   using ContainerT = typename ROOT::VecOps::RVec<ItemT>;
-
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
    {
       auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetFieldName());
       return std::make_unique<RField<ROOT::VecOps::RVec<ItemT>>>(newName, std::move(newItemField));
    }
-
-   void ConstructValue(void *where) const final { new (where) ContainerT(); }
-   std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RTypedDeleter<ContainerT>>(); }
 
 public:
    RField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField)
@@ -235,7 +225,7 @@ protected:
    void GenerateColumns() final;
    void GenerateColumns(const RNTupleDescriptor &desc) final;
 
-   void ConstructValue(void *where) const override { new (where) std::vector<char>(); }
+   void ConstructValue(void *where) const final { new (where) std::vector<char>(); }
    std::unique_ptr<RDeleter> GetDeleter() const final;
 
    std::size_t AppendImpl(const void *from) final;
@@ -268,11 +258,6 @@ public:
 
 template <typename ItemT>
 class RField<std::vector<ItemT>> final : public RVectorField {
-   using ContainerT = typename std::vector<ItemT>;
-
-protected:
-   void ConstructValue(void *where) const final { new (where) ContainerT(); }
-
 public:
    static std::string TypeName() { return "std::vector<" + RField<ItemT>::TypeName() + ">"; }
    explicit RField(std::string_view name) : RVectorField(name, std::make_unique<RField<ItemT>>("_0")) {}

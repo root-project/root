@@ -373,7 +373,7 @@ protected:
    void GenerateColumns() final;
    void GenerateColumns(const RNTupleDescriptor &desc) final;
 
-   void ConstructValue(void *where) const override;
+   void ConstructValue(void *where) const final;
    std::unique_ptr<RDeleter> GetDeleter() const final;
 
    std::size_t AppendImpl(const void *from) final;
@@ -394,8 +394,6 @@ public:
 
 template <typename... ItemTs>
 class RField<std::variant<ItemTs...>> final : public RVariantField {
-   using ContainerT = typename std::variant<ItemTs...>;
-
 private:
    template <typename HeadT, typename... TailTs>
    static std::string BuildItemTypes()
@@ -417,9 +415,6 @@ private:
       }
       return result;
    }
-
-protected:
-   void ConstructValue(void *where) const final { new (where) ContainerT(); }
 
 public:
    static std::string TypeName() { return "std::variant<" + BuildItemTypes<ItemTs...>() + ">"; }
