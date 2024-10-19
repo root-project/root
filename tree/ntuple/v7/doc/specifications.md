@@ -575,7 +575,7 @@ Instead, their data comes from another column referred to below as "physical col
 The first 32-bit integer references the physical column ID.
 The second 32-bit integer references the associated "projected" field.
 A projected field is a field using alias columns to present available data by an alternative C++ type.
-Alias columns have no prescribed column ID of their own, since column IDs are not referenced.
+Alias columns have no prescribed column ID of their own, since alias columns are not referenced.
 In the footer and page list envelopes, only physical column IDs must be referenced.
 However, columns should be attached to projected fields in their serialization order (first header then footer).
 
