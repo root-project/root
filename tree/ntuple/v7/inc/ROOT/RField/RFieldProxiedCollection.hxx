@@ -168,8 +168,8 @@ protected:
    void ConstructValue(void *where) const override;
    std::unique_ptr<RDeleter> GetDeleter() const override;
 
-   std::size_t AppendImpl(const void *from) override;
-   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) override;
+   std::size_t AppendImpl(const void *from) final;
+   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
 
    void CommitClusterImpl() final { fNWritten = 0; }
 
@@ -179,7 +179,7 @@ public:
    RProxiedCollectionField &operator=(RProxiedCollectionField &&other) = default;
    ~RProxiedCollectionField() override = default;
 
-   std::vector<RValue> SplitValue(const RValue &value) const override;
+   std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetValueSize() const override { return fProxy->Sizeof(); }
    size_t GetAlignment() const override { return alignof(std::max_align_t); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const override;
@@ -289,16 +289,11 @@ private:
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
 
-   std::size_t AppendImpl(const void *from) final;
-   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
-
 public:
    RMapField(std::string_view fieldName, std::string_view typeName, std::unique_ptr<RFieldBase> itemField);
    RMapField(RMapField &&other) = default;
    RMapField &operator=(RMapField &&other) = default;
    ~RMapField() override = default;
-
-   std::vector<RValue> SplitValue(const RValue &value) const final;
 
    size_t GetAlignment() const override { return std::alignment_of<std::map<std::max_align_t, std::max_align_t>>(); }
 };

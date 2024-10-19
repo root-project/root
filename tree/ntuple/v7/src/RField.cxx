@@ -3618,51 +3618,6 @@ ROOT::Experimental::RMapField::RMapField(std::string_view fieldName, std::string
    Attach(std::move(itemField));
 }
 
-std::size_t ROOT::Experimental::RMapField::AppendImpl(const void *from)
-{
-   std::size_t nbytes = 0;
-   unsigned count = 0;
-   TVirtualCollectionProxy::TPushPop RAII(fProxy.get(), const_cast<void *>(from));
-   for (auto ptr : RCollectionIterableOnce{const_cast<void *>(from), fIFuncsWrite, fProxy.get(), 0U}) {
-      nbytes += CallAppendOn(*fSubFields[0], ptr);
-      count++;
-   }
-   fNWritten += count;
-   fPrincipalColumn->Append(&fNWritten);
-   return nbytes + fPrincipalColumn->GetElement()->GetPackedSize();
-}
-
-void ROOT::Experimental::RMapField::ReadGlobalImpl(NTupleSize_t globalIndex, void *to)
-{
-   ClusterSize_t nItems;
-   RClusterIndex collectionStart;
-   fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nItems);
-
-   TVirtualCollectionProxy::TPushPop RAII(fProxy.get(), to);
-   void *obj =
-      fProxy->Allocate(static_cast<std::uint32_t>(nItems), (fProperties & TVirtualCollectionProxy::kNeedDelete));
-
-   unsigned i = 0;
-   for (auto ptr : RCollectionIterableOnce{obj, fIFuncsRead, fProxy.get(), fItemSize}) {
-      CallReadOn(*fSubFields[0], collectionStart + i, ptr);
-      i++;
-   }
-
-   if (obj != to)
-      fProxy->Commit(obj);
-}
-
-std::vector<ROOT::Experimental::RFieldBase::RValue> ROOT::Experimental::RMapField::SplitValue(const RValue &value) const
-{
-   std::vector<RValue> result;
-   auto valueRawPtr = value.GetPtr<void>().get();
-   TVirtualCollectionProxy::TPushPop RAII(fProxy.get(), valueRawPtr);
-   for (auto ptr : RCollectionIterableOnce{valueRawPtr, fIFuncsWrite, fProxy.get(), 0U}) {
-      result.emplace_back(fSubFields[0]->BindValue(std::shared_ptr<void>(value.GetPtr<void>(), ptr)));
-   }
-   return result;
-}
-
 std::unique_ptr<ROOT::Experimental::RFieldBase> ROOT::Experimental::RMapField::CloneImpl(std::string_view newName) const
 {
    auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetFieldName());
