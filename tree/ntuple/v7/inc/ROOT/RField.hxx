@@ -153,7 +153,7 @@ public:
    size_t GetAlignment() const final { return fMaxAlignment; }
    std::uint32_t GetTypeVersion() const final;
    std::uint32_t GetTypeChecksum() const final;
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const override;
+   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
 /// The field for a class in unsplit mode, which is using ROOT standard streaming

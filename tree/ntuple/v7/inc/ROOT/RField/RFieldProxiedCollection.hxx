@@ -182,7 +182,7 @@ public:
    std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetValueSize() const final { return fProxy->Sizeof(); }
    size_t GetAlignment() const final { return alignof(std::max_align_t); }
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const override;
+   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
    void GetCollectionInfo(NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const
    {
       fPrincipalColumn->GetCollectionInfo(globalIndex, collectionStart, size);
