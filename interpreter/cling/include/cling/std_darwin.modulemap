@@ -1137,7 +1137,10 @@ module std_private_chrono_system_clock           [system] {
   header "__chrono/system_clock.h"
   export std_private_chrono_time_point
 }
-module std_private_chrono_time_point             [system] { header "__chrono/time_point.h" }
+module std_private_chrono_time_point             [system] {
+  header "__chrono/time_point.h"
+  export std_private_chrono_file_clock
+}
 module std_private_chrono_weekday                [system] { header "__chrono/weekday.h" }
 module std_private_chrono_year                   [system] { header "__chrono/year.h" }
 module std_private_chrono_year_month             [system] { header "__chrono/year_month.h" }
