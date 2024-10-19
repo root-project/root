@@ -280,9 +280,6 @@ public:
 
 /// The generic field for a std::map<KeyType, ValueType> and std::unordered_map<KeyType, ValueType>
 class RMapField : public RProxiedCollectionField {
-private:
-   TClass *fItemClass;
-
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
 
