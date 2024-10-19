@@ -144,8 +144,8 @@ protected:
    void ConstructValue(void *where) const override;
    std::unique_ptr<RDeleter> GetDeleter() const override;
 
-   std::size_t AppendImpl(const void *from) override;
-   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) override;
+   std::size_t AppendImpl(const void *from) final;
+   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
    std::size_t ReadBulkImpl(const RBulkSpec &bulkSpec) final;
 
    void CommitClusterImpl() final { fNWritten = 0; }
@@ -185,30 +185,6 @@ protected:
 
    void ConstructValue(void *where) const final { new (where) ContainerT(); }
    std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RTypedDeleter<ContainerT>>(); }
-
-   std::size_t AppendImpl(const void *from) final
-   {
-      auto typedValue = static_cast<const ContainerT *>(from);
-      auto nbytes = 0;
-      auto count = typedValue->size();
-      for (unsigned i = 0; i < count; ++i) {
-         nbytes += CallAppendOn(*fSubFields[0], &typedValue->data()[i]);
-      }
-      this->fNWritten += count;
-      fPrincipalColumn->Append(&this->fNWritten);
-      return nbytes + fPrincipalColumn->GetElement()->GetPackedSize();
-   }
-   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final
-   {
-      auto typedValue = static_cast<ContainerT *>(to);
-      ClusterSize_t nItems;
-      RClusterIndex collectionStart;
-      fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nItems);
-      typedValue->resize(nItems);
-      for (unsigned i = 0; i < nItems; ++i) {
-         CallReadOn(*fSubFields[0], collectionStart + i, &typedValue->data()[i]);
-      }
-   }
 
 public:
    RField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField)
