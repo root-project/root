@@ -60,7 +60,7 @@ protected:
 
    std::size_t GetItemPadding(std::size_t baseOffset, std::size_t itemAlignment) const;
 
-   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const override;
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
 
    void ConstructValue(void *where) const final;
    std::unique_ptr<RDeleter> GetDeleter() const final;
@@ -114,8 +114,6 @@ private:
    static std::string GetTypeList(const std::array<std::unique_ptr<RFieldBase>, 2> &itemFields);
 
 protected:
-   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const override;
-
    RPairField(std::string_view fieldName, std::array<std::unique_ptr<RFieldBase>, 2> &&itemFields,
               const std::array<std::size_t, 2> &offsets);
 
@@ -145,14 +143,6 @@ private:
       return {offsetFirst, offsetSecond};
    }
 
-protected:
-   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
-   {
-      std::array<std::unique_ptr<RFieldBase>, 2> items{fSubFields[0]->Clone(fSubFields[0]->GetFieldName()),
-                                                       fSubFields[1]->Clone(fSubFields[1]->GetFieldName())};
-      return std::make_unique<RField<std::pair<T1, T2>>>(newName, std::move(items));
-   }
-
 public:
    static std::string TypeName() { return "std::pair<" + RField<T1>::TypeName() + "," + RField<T2>::TypeName() + ">"; }
    explicit RField(std::string_view name, std::array<std::unique_ptr<RFieldBase>, 2> &&itemFields)
@@ -177,8 +167,6 @@ private:
    static std::string GetTypeList(const std::vector<std::unique_ptr<RFieldBase>> &itemFields);
 
 protected:
-   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const override;
-
    RTupleField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> &&itemFields,
                const std::vector<std::size_t> &offsets);
 
@@ -233,15 +221,6 @@ private:
       std::vector<std::size_t> result;
       _BuildItemOffsets<0, Ts...>(result, ContainerT());
       return result;
-   }
-
-protected:
-   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
-   {
-      std::vector<std::unique_ptr<RFieldBase>> items;
-      for (auto &item : fSubFields)
-         items.push_back(item->Clone(item->GetFieldName()));
-      return std::make_unique<RField<std::tuple<ItemTs...>>>(newName, std::move(items));
    }
 
 public:

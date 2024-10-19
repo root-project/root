@@ -3597,12 +3597,6 @@ ROOT::Experimental::RSetField::RSetField(std::string_view fieldName, std::string
 {
 }
 
-std::unique_ptr<ROOT::Experimental::RFieldBase> ROOT::Experimental::RSetField::CloneImpl(std::string_view newName) const
-{
-   auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetFieldName());
-   return std::make_unique<RSetField>(newName, GetTypeName(), std::move(newItemField));
-}
-
 //------------------------------------------------------------------------------
 
 ROOT::Experimental::RMapField::RMapField(std::string_view fieldName, std::string_view typeName,
@@ -3616,12 +3610,6 @@ ROOT::Experimental::RMapField::RMapField(std::string_view fieldName, std::string
    fItemSize = itemClass->GetClassSize();
 
    Attach(std::move(itemField));
-}
-
-std::unique_ptr<ROOT::Experimental::RFieldBase> ROOT::Experimental::RMapField::CloneImpl(std::string_view newName) const
-{
-   auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetFieldName());
-   return std::unique_ptr<RMapField>(new RMapField(newName, GetTypeName(), std::move(newItemField)));
 }
 
 //------------------------------------------------------------------------------
@@ -3899,16 +3887,6 @@ ROOT::Experimental::RPairField::RPairField(std::string_view fieldName,
    fOffsets[1] = secondElem->GetThisOffset();
 }
 
-std::unique_ptr<ROOT::Experimental::RFieldBase>
-ROOT::Experimental::RPairField::CloneImpl(std::string_view newName) const
-{
-   std::array<std::unique_ptr<RFieldBase>, 2> items{fSubFields[0]->Clone(fSubFields[0]->GetFieldName()),
-                                                    fSubFields[1]->Clone(fSubFields[1]->GetFieldName())};
-
-   std::unique_ptr<RPairField> result(new RPairField(newName, std::move(items), {fOffsets[0], fOffsets[1]}));
-   return result;
-}
-
 //------------------------------------------------------------------------------
 
 std::string
@@ -3954,18 +3932,6 @@ ROOT::Experimental::RTupleField::RTupleField(std::string_view fieldName,
          throw RException(R__FAIL(memberName + ": no such member"));
       fOffsets.push_back(member->GetThisOffset());
    }
-}
-
-std::unique_ptr<ROOT::Experimental::RFieldBase>
-ROOT::Experimental::RTupleField::CloneImpl(std::string_view newName) const
-{
-   std::vector<std::unique_ptr<RFieldBase>> items;
-   items.reserve(fSubFields.size());
-   for (const auto &item : fSubFields)
-      items.push_back(item->Clone(item->GetFieldName()));
-
-   std::unique_ptr<RTupleField> result(new RTupleField(newName, std::move(items), fOffsets));
-   return result;
 }
 
 //------------------------------------------------------------------------------
