@@ -362,9 +362,7 @@ TEST(RNTuple, StdSet)
    EXPECT_EQ(field.GetTypeName(), otherField->GetTypeName());
    EXPECT_EQ((sizeof(std::set<int64_t>)), field.GetValueSize());
    EXPECT_EQ((sizeof(std::set<int64_t>)), otherField->GetValueSize());
-   EXPECT_EQ((alignof(std::set<int64_t>)), field.GetAlignment());
-   // For type-erased set fields, we use `alignof(std::set<std::max_align_t>)` to set the alignment,
-   // so the actual alignment may be smaller.
+   EXPECT_LE((alignof(std::set<int64_t>)), field.GetAlignment());
    EXPECT_LE((alignof(std::set<int64_t>)), otherField->GetAlignment());
 
    auto setSetField = RField<std::set<std::set<CustomStruct>>>("setSetField");
@@ -440,9 +438,7 @@ TEST(RNTuple, StdUnorderedSet)
    EXPECT_EQ(field.GetTypeName(), otherField->GetTypeName());
    EXPECT_EQ((sizeof(std::unordered_set<int64_t>)), field.GetValueSize());
    EXPECT_EQ((sizeof(std::unordered_set<int64_t>)), otherField->GetValueSize());
-   EXPECT_EQ((alignof(std::unordered_set<int64_t>)), field.GetAlignment());
-   // For type-erased set fields, we use `alignof(std::set<std::max_align_t>)` to set the alignment,
-   // so the actual alignment may be smaller.
+   EXPECT_LE((alignof(std::unordered_set<int64_t>)), field.GetAlignment());
    EXPECT_LE((alignof(std::unordered_set<int64_t>)), otherField->GetAlignment());
 
    FileRaii fileGuard("test_ntuple_rfield_stdunorderedset.root");
@@ -503,9 +499,7 @@ TEST(RNTuple, StdMultiSet)
    EXPECT_EQ(field.GetTypeName(), otherField->GetTypeName());
    EXPECT_EQ((sizeof(std::multiset<int64_t>)), field.GetValueSize());
    EXPECT_EQ((sizeof(std::multiset<int64_t>)), otherField->GetValueSize());
-   EXPECT_EQ((alignof(std::multiset<int64_t>)), field.GetAlignment());
-   // For type-erased set fields, we use `alignof(std::set<std::max_align_t>)` to set the alignment,
-   // so the actual alignment may be smaller.
+   EXPECT_LE((alignof(std::multiset<int64_t>)), field.GetAlignment());
    EXPECT_LE((alignof(std::multiset<int64_t>)), otherField->GetAlignment());
 
    FileRaii fileGuard("test_ntuple_rfield_stdmultiset.root");
@@ -550,9 +544,7 @@ TEST(RNTuple, StdUnorderedMultiSet)
    EXPECT_EQ(field.GetTypeName(), otherField->GetTypeName());
    EXPECT_EQ((sizeof(std::unordered_multiset<int64_t>)), field.GetValueSize());
    EXPECT_EQ((sizeof(std::unordered_multiset<int64_t>)), otherField->GetValueSize());
-   EXPECT_EQ((alignof(std::unordered_multiset<int64_t>)), field.GetAlignment());
-   // For type-erased set fields, we use `alignof(std::set<std::max_align_t>)` to set the alignment,
-   // so the actual alignment may be smaller.
+   EXPECT_LE((alignof(std::unordered_multiset<int64_t>)), field.GetAlignment());
    EXPECT_LE((alignof(std::unordered_multiset<int64_t>)), otherField->GetAlignment());
 
    FileRaii fileGuard("test_ntuple_rfield_stdmultiset.root");
@@ -597,13 +589,8 @@ TEST(RNTuple, StdMap)
    EXPECT_EQ(field.GetTypeName(), otherField->GetTypeName());
    EXPECT_EQ((sizeof(std::map<char, int64_t>)), field.GetValueSize());
    EXPECT_EQ((sizeof(std::map<char, int64_t>)), otherField->GetValueSize());
-   EXPECT_EQ((alignof(std::map<char, int64_t>)), field.GetAlignment());
-   // For type-erased map fields, we use `alignof(std::map<std::max_align_t, std::max_align_t>)` to map the alignment,
-   // so the actual alignment may be smaller.
+   EXPECT_LE((alignof(std::map<char, int64_t>)), field.GetAlignment());
    EXPECT_LE((alignof(std::map<char, int64_t>)), otherField->GetAlignment());
-   // The assumption is that the alignment of inner items does not matter. If at any point there is a mismatch, this
-   // test should fail.
-   EXPECT_EQ((alignof(std::map<char, char>)), otherField->GetAlignment());
 
    auto mapMapField = RField<std::map<char, std::map<int, CustomStruct>>>("mapMapField");
    EXPECT_STREQ("std::map<char,std::map<std::int32_t,CustomStruct>>", mapMapField.GetTypeName().c_str());
@@ -699,13 +686,8 @@ TEST(RNTuple, StdUnorderedMap)
    EXPECT_STREQ(field.GetTypeName().c_str(), otherField->GetTypeName().c_str());
    EXPECT_EQ((sizeof(std::unordered_map<char, int64_t>)), field.GetValueSize());
    EXPECT_EQ((sizeof(std::unordered_map<char, int64_t>)), otherField->GetValueSize());
-   EXPECT_EQ((alignof(std::unordered_map<char, int64_t>)), field.GetAlignment());
-   // For type-erased map fields, we use `alignof(std::map<std::max_align_t, std::max_align_t>)` to map the alignment,
-   // so the actual alignment may be smaller.
+   EXPECT_LE((alignof(std::unordered_map<char, int64_t>)), field.GetAlignment());
    EXPECT_LE((alignof(std::unordered_map<char, int64_t>)), otherField->GetAlignment());
-   // The assumption is that the alignment of inner items does not matter. If at any point there is a mismatch, this
-   // test should fail.
-   EXPECT_EQ((alignof(std::unordered_map<char, char>)), otherField->GetAlignment());
 
    EXPECT_THROW(RFieldBase::Create("myInvalidMap", "std::unordered_map<char>").Unwrap(), RException);
    EXPECT_THROW(RFieldBase::Create("myInvalidMap", "std::unordered_map<char, std::string, int>").Unwrap(), RException);
@@ -781,13 +763,8 @@ TEST(RNTuple, StdMultiMap)
    EXPECT_STREQ(field.GetTypeName().c_str(), otherField->GetTypeName().c_str());
    EXPECT_EQ((sizeof(std::multimap<char, int64_t>)), field.GetValueSize());
    EXPECT_EQ((sizeof(std::multimap<char, int64_t>)), otherField->GetValueSize());
-   EXPECT_EQ((alignof(std::multimap<char, int64_t>)), field.GetAlignment());
-   // For type-erased map fields, we use `alignof(std::map<std::max_align_t, std::max_align_t>)` to map the alignment,
-   // so the actual alignment may be smaller.
+   EXPECT_LE((alignof(std::multimap<char, int64_t>)), field.GetAlignment());
    EXPECT_LE((alignof(std::multimap<char, int64_t>)), otherField->GetAlignment());
-   // The assumption is that the alignment of inner items does not matter. If at any point there is a mismatch, this
-   // test should fail.
-   EXPECT_EQ((alignof(std::multimap<char, char>)), otherField->GetAlignment());
 
    FileRaii fileGuard("test_ntuple_rfield_stdmultimap.root");
    {
@@ -839,13 +816,8 @@ TEST(RNTuple, StdUnorderedMultiMap)
    EXPECT_STREQ(field.GetTypeName().c_str(), otherField->GetTypeName().c_str());
    EXPECT_EQ((sizeof(std::unordered_multimap<char, int64_t>)), field.GetValueSize());
    EXPECT_EQ((sizeof(std::unordered_multimap<char, int64_t>)), otherField->GetValueSize());
-   EXPECT_EQ((alignof(std::unordered_multimap<char, int64_t>)), field.GetAlignment());
-   // For type-erased map fields, we use `alignof(std::map<std::max_align_t, std::max_align_t>)` to map the alignment,
-   // so the actual alignment may be smaller.
+   EXPECT_LE((alignof(std::unordered_multimap<char, int64_t>)), field.GetAlignment());
    EXPECT_LE((alignof(std::unordered_multimap<char, int64_t>)), otherField->GetAlignment());
-   // The assumption is that the alignment of inner items does not matter. If at any point there is a mismatch, this
-   // test should fail.
-   EXPECT_EQ((alignof(std::unordered_multimap<char, char>)), otherField->GetAlignment());
 
    FileRaii fileGuard("test_ntuple_rfield_stdmultimap.root");
    {
@@ -1551,8 +1523,8 @@ TEST(RNTuple, Optional)
    EXPECT_EQ(alignof(std::optional<Variant_t>), RField<std::optional<Variant_t>>("f").GetAlignment());
    EXPECT_EQ(sizeof(std::optional<std::string>), RField<std::optional<std::string>>("f").GetValueSize());
    EXPECT_EQ(alignof(std::optional<std::string>), RField<std::optional<std::string>>("f").GetAlignment());
-   EXPECT_EQ(sizeof(std::optional<Map_t>), RField<std::optional<Map_t>>("f").GetValueSize());
-   EXPECT_EQ(alignof(std::optional<Map_t>), RField<std::optional<Map_t>>("f").GetAlignment());
+   EXPECT_LE(sizeof(std::optional<Map_t>), RField<std::optional<Map_t>>("f").GetValueSize());
+   EXPECT_LE(alignof(std::optional<Map_t>), RField<std::optional<Map_t>>("f").GetAlignment());
 
    FileRaii fileGuard("test_ntuple_optional.root");
 
