@@ -397,11 +397,11 @@ If a projected field has attached columns,
 these columns are alias columns to physical columns attached to the source field.
 The following restrictions apply on field projections:
   - The source field and the target field must have the same structure,
-    except for an `RNTupleCardinality` field that must have a collection field as a source.
+    except for an `RNTupleCardinality` field, which must have a collection field as a source.
   - For streamer fields and leaf fields, the type name of the source field and the projected field must be identical.
   - Projections involving variants or fixed-size arrays are unsupported.
-  - Projected fields must be on the same schema path of collection fields than the source field.
-    For instance, one can project a vector of struct with floats to individual vectors of floats but cannot
+  - Projected fields must be on the same schema path of collection fields as the source field.
+    For instance, one can project a vector of structs with floats to individual vectors of floats but cannot
     project a vector of a vector of floats to a vector of floats.
 
 If `flag==0x04` (_type checksum_) is set, the field metadata contain the checksum of the ROOT streamer info.
@@ -1070,7 +1070,7 @@ The anchor must provide the information to load the header and the footer **enve
 
 ### Cluster
 
-A cluster is a set of **pages** that contain all the data that belongs to a certain entry range.
+A cluster is a set of **pages** that contain all the data belonging to a certain entry range.
 The data set is partitioned in clusters.
 A typical cluster size is tens to hundreds of megabytes.
 
@@ -1078,7 +1078,7 @@ A typical cluster size is tens to hundreds of megabytes.
 
 A column is a storage backed vector of a number of **elements** of a simple type.
 Column elements have a fixed bit-length that depends on the column type.
-Some column types allow setting the bit lengths within limits, (e.g. for floats with truncated mantiassa).
+Some column types allow setting the bit lengths within specific limits (e.g. for floats with truncated mantiassa).
 
 ### Envelope
 
@@ -1093,7 +1093,7 @@ The columns contain the data related to the field but not to its subfields, whic
 
 ### Frame
 
-A frame is a byte range with meta-data information in an **envelope**.
+A frame is a byte range with metadata information in an **envelope**.
 A frame starts with its size and thus can be extended in a forward-compatible way.
 
 ### Locator
@@ -1121,16 +1121,16 @@ It does not discuss schema evolution of the written types.
 Readers supporting a certain version of the specification should support reading files
 that were written according to previous versions of the same epoch.
 
-Readers should support reading data written according to _newer_ format versions of the same epoch in the following way
+Readers should support reading data written according to _newer_ format versions of the same epoch in the following way:
 
   - Unknown trailing information in the anchor, in envelopes, and in frames should be ignored.
     For instance, when reading frames, readers should continue reading after the frame-provided frame length
     rather than summing up the lengths of the known contents of the frame.
-    Checksum verification, however, should still take place and include known and unknown contents.
+    Checksum verification, however, should still take place and must include both known and unknown contents.
   - Unknown column, cluster, or field flags should be ignored.
   - Unknown IDs for extra type information should be ignored.
-  - When a reader encounters an unknown column type or an unknown field type or field version or field structure,
-    it should ignore the entire top-level field that the column or field belongs to.
+  - When a reader encounters an unknown column type or an unknown field type, field version or field structure,
+    it should ignore the entire top-level field this column or field belongs to.
     It should also ignore any projected fields and alias columns whose source fields or columns are already ignored.
   - When a reader encounters an unknown feature flag, it must refuse reading any further.
 
