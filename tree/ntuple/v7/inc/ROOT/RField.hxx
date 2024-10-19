@@ -57,7 +57,7 @@ class RFieldVisitor;
 /// Therefore, the zero field must not be connected to a page source or sink.
 class RFieldZero final : public RFieldBase {
 protected:
-   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const override;
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
    void ConstructValue(void *) const final {}
 
 public:
@@ -200,7 +200,7 @@ public:
    RUnsplitField(std::string_view fieldName, std::string_view className, std::string_view typeAlias = "");
    RUnsplitField(RUnsplitField &&other) = default;
    RUnsplitField &operator=(RUnsplitField &&other) = default;
-   ~RUnsplitField() override = default;
+   ~RUnsplitField() final = default;
 
    size_t GetValueSize() const final;
    size_t GetAlignment() const final;
@@ -258,7 +258,7 @@ public:
    }
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
-   ~RField() override = default;
+   ~RField() final = default;
 };
 
 template <typename T>
@@ -368,7 +368,7 @@ public:
    explicit RField(std::string_view name) : RCardinalityField(name, TypeName()) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
-   ~RField() override = default;
+   ~RField() final = default;
 
    size_t GetValueSize() const final { return sizeof(RNTupleCardinality<SizeT>); }
    size_t GetAlignment() const final { return alignof(RNTupleCardinality<SizeT>); }
@@ -431,7 +431,7 @@ private:
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
 
-   void ConstructValue(void *where) const override;
+   void ConstructValue(void *where) const final;
    std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RTypedDeleter<TObject>>(); }
 
    std::size_t AppendImpl(const void *from) final;
@@ -445,7 +445,7 @@ public:
    RField(std::string_view fieldName);
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
-   ~RField() override = default;
+   ~RField() final = default;
 
    std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetValueSize() const final;

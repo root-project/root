@@ -74,7 +74,7 @@ public:
    explicit RField(std::string_view name) : RSimpleField(name, TypeName()) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
-   ~RField() override = default;
+   ~RField() final = default;
 
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
@@ -96,7 +96,7 @@ public:
    explicit RField(std::string_view name) : RSimpleField(name, TypeName()) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
-   ~RField() override = default;
+   ~RField() final = default;
 
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
@@ -328,7 +328,7 @@ public:
    RField(std::string_view name) : RIntegralField<MappedType>(name) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
-   ~RField() override = default;
+   ~RField() final = default;
 
    T *Map(NTupleSize_t globalIndex) { return reinterpret_cast<T *>(this->BaseType::Map(globalIndex)); }
    T *Map(RClusterIndex clusterIndex) { return reinterpret_cast<T *>(this->BaseType::Map(clusterIndex)); }
