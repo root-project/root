@@ -300,8 +300,3 @@ for nll in [nll_gauss, nllr_learned, nll_morph]:
     minimizer.minimize("Minuit2")
     result = minimizer.save()
     result.Print()
-
-import sys
-
-# Hack to bypass ClearProxiedObjects()
-del sys.modules["libROOTPythonizations"]
