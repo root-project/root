@@ -3612,8 +3612,8 @@ ROOT::Experimental::RMapField::RMapField(std::string_view fieldName, std::string
    if (!dynamic_cast<RPairField *>(itemField.get()))
       throw RException(R__FAIL("RMapField inner field type must be of RPairField"));
 
-   fItemClass = fProxy->GetValueClass();
-   fItemSize = fItemClass->GetClassSize();
+   auto *itemClass = fProxy->GetValueClass();
+   fItemSize = itemClass->GetClassSize();
 
    Attach(std::move(itemField));
 }
