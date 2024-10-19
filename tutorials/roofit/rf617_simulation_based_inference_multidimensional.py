@@ -35,7 +35,7 @@ import itertools
 # Kills warning messages
 ROOT.RooMsgService.instance().setGlobalKillBelow(ROOT.RooFit.WARNING)
 
-n_samples_morph = 1000  # Number of samples for morphing
+n_samples_morph = 10000  # Number of samples for morphing
 n_bins = 4  # Number of 'sampled' Gaussians
 n_samples_train = n_samples_morph * n_bins  # To have a fair comparison
 
@@ -165,7 +165,7 @@ class SBI:
 # Define the "observed" data in a workspace
 def build_ws(mu_observed):
     n_vars = len(mu_observed)
-    x_vars = [ROOT.RooRealVar(f"x{i}", f"x{i}", -2, 6) for i in range(n_vars)]
+    x_vars = [ROOT.RooRealVar(f"x{i}", f"x{i}", -5, 15) for i in range(n_vars)]
     mu_vars = [ROOT.RooRealVar(f"mu{i}", f"mu{i}", mu_observed[i], 0, 4) for i in range(n_vars)]
     gaussians = [ROOT.RooGaussian(f"gauss{i}", f"gauss{i}", x_vars[i], mu_vars[i], sigmas[i]) for i in range(n_vars)]
     uniforms = [ROOT.RooUniform(f"uniform{i}", f"uniform{i}", x_vars[i]) for i in range(n_vars)]
@@ -250,14 +250,14 @@ nllr_learned = pdf_learned.createNLL(ws["obs_data"])
 
 # Plot the learned and analytical summed negativelogarithmic likelihood
 frame1 = mu_vars[0].frame(
-    Title="Negative logarithmic Likelihood",
+    Title="NLL of SBI vs. Morphing;#mu_{1};NLL",
     Range=(mu_observed[0] - 1, mu_observed[0] + 1),
 )
-nll_gauss.plotOn(frame1, ShiftToZero=True, LineColor="g", Name="gauss")
+nll_gauss.plotOn(frame1, ShiftToZero=True, LineColor="kP6Blue+1", Name="gauss")
 ROOT.RooAbsReal.setEvalErrorLoggingMode("Ignore")  # Silence some warnings
-nll_morph.plotOn(frame1, ShiftToZero=True, LineColor="c", Name="morph")
+nll_morph.plotOn(frame1, ShiftToZero=True, LineColor="kP6Blue+2", Name="morph")
 ROOT.RooAbsReal.setEvalErrorLoggingMode("PrintErrors")
-nllr_learned.plotOn(frame1, LineColor="r", ShiftToZero=True, LineStyle="--", Name="learned")
+nllr_learned.plotOn(frame1, LineColor="kP6Blue", ShiftToZero=True, Name="learned")
 
 
 # Declare a helper function in ROOT to dereference unique_ptr
@@ -274,22 +274,50 @@ lhr_calc_final = ROOT.my_deref(lhr_calc_final_ptr)
 lhr_calc_final.recursiveRedirectServers(norm_set)
 
 # Plot the likelihood ratio functions
-frame2 = x_vars[0].frame(Title="Learned vs analytical likelihood function")
-lhr_learned.plotOn(frame2, LineColor="r", LineStyle="--", Name="learned")
-lhr_calc_final.plotOn(frame2, LineColor="g", Name="analytical")
+frame2 = x_vars[0].frame(Title="Likelihood ratio r(x_{1}|#mu_{1}=2.5);x_{1};p_{gauss}/p_{uniform}")
+lhr_learned.plotOn(frame2, LineColor="kP6Blue", Name="learned_ratio")
+lhr_calc_final.plotOn(frame2, LineColor="kP6Blue+1", Name="exact")
 
-c = ROOT.TCanvas(
-    "rf617_simulation_based_inference_multidimensional", "rf617_simulation_based_inference_multidimensional", 800, 400
-)
-c.Divide(2)
-c.cd(1)
-ROOT.gPad.SetLeftMargin(0.15)
-frame1.GetYaxis().SetTitleOffset(1.8)
+# Write the plots into one canvas to show, or into separate canvases for saving.
+single_canvas = True
+
+c = ROOT.TCanvas("", "", 1200 if single_canvas else 600, 600)
+if single_canvas:
+    c.Divide(2)
+    c.cd(1)
+    ROOT.gPad.SetLeftMargin(0.15)
+    frame1.GetYaxis().SetTitleOffset(1.8)
 frame1.Draw()
-c.cd(2)
-ROOT.gPad.SetLeftMargin(0.15)
-frame2.GetYaxis().SetTitleOffset(1.8)
+
+legend1 = ROOT.TLegend(0.43, 0.63, 0.8, 0.87)
+legend1.SetFillColor(ROOT.kWhite)
+legend1.SetLineColor(ROOT.kWhite)
+legend1.SetTextSize(0.04)
+legend1.AddEntry("learned", "learned (SBI)", "L")
+legend1.AddEntry("gauss", "true NLL", "L")
+legend1.AddEntry("morphed", "moment morphing", "L")
+legend1.Draw()
+
+if single_canvas:
+    c.cd(2)
+    ROOT.gPad.SetLeftMargin(0.15)
+    frame2.GetYaxis().SetTitleOffset(1.8)
+else:
+    c.SaveAs("rf617_plot_1.png")
+    c = ROOT.TCanvas("", "", 600, 600)
+
 frame2.Draw()
+
+legend2 = ROOT.TLegend(0.53, 0.73, 0.87, 0.87)
+legend2.SetFillColor(ROOT.kWhite)
+legend2.SetLineColor(ROOT.kWhite)
+legend2.SetTextSize(0.04)
+legend2.AddEntry("learned_ratio", "learned (SBI)", "L")
+legend2.AddEntry("exact", "true ratio", "L")
+legend2.Draw()
+
+if not single_canvas:
+    c.SaveAs("rf617_plot_2.png")
 
 
 # Use ROOT's minimizer to compute the minimum and display the results
