@@ -396,7 +396,7 @@ the field has been created as a virtual field from another, non-projected source
 If a projected field has attached columns,
 these columns are alias columns to physical columns attached to the source field.
 The following restrictions apply on field projections:
-  - The source field and the target field must have the same structure,
+  - The source field and the target field must have the same structural role,
     except for an `RNTupleCardinality` field, which must have a collection field as a source.
   - For streamer fields and leaf fields, the type name of the source field and the projected field must be identical.
   - Projections involving variants or fixed-size arrays are unsupported.
