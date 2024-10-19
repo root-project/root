@@ -111,16 +111,6 @@ public:
 /// The generic field for `std::pair<T1, T2>` types
 class RPairField : public RRecordField {
 private:
-   class RPairDeleter : public RDeleter {
-   private:
-      TClass *fClass;
-
-   public:
-      explicit RPairDeleter(TClass *cl) : fClass(cl) {}
-      void operator()(void *objPtr, bool dtorOnly) final;
-   };
-
-   TClass *fClass = nullptr;
    static std::string GetTypeList(const std::array<std::unique_ptr<RFieldBase>, 2> &itemFields);
 
 protected:
@@ -184,16 +174,6 @@ public:
 /// The generic field for `std::tuple<Ts...>` types
 class RTupleField : public RRecordField {
 private:
-   class RTupleDeleter : public RDeleter {
-   private:
-      TClass *fClass;
-
-   public:
-      explicit RTupleDeleter(TClass *cl) : fClass(cl) {}
-      void operator()(void *objPtr, bool dtorOnly) final;
-   };
-
-   TClass *fClass = nullptr;
    static std::string GetTypeList(const std::vector<std::unique_ptr<RFieldBase>> &itemFields);
 
 protected:
