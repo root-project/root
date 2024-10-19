@@ -18,9 +18,6 @@
 import pyspark
 import ROOT
 
-# Point RDataFrame calls to Spark RDataFrame object
-RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-
 # Setup the connection to Spark
 # First create a dictionary with keys representing Spark specific configuration
 # parameters. In this tutorial we use the following configuration parameters:
@@ -55,7 +52,7 @@ sparkconf = pyspark.SparkConf().setAll(
 sparkcontext = pyspark.SparkContext(conf=sparkconf)
 
 # Create an RDataFrame that will use Spark as a backend for computations
-df = RDataFrame(1000, sparkcontext=sparkcontext)
+df = ROOT.RDataFrame(1000, executor=sparkcontext)
 
 # Set the random seed and define two columns of the dataset with random numbers.
 ROOT.gRandom.SetSeed(1)

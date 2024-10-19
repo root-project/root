@@ -28,7 +28,6 @@ from dask.distributed import Client
 from dask_lxplus import CernCluster
 
 import ROOT
-RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
 
 
 def create_connection() -> Client:
@@ -90,7 +89,7 @@ def run_analysis(connection: Client) -> None:
     Run a simple example with RDataFrame, using the previously created
     connection to the HTCondor cluster.
     """
-    df = RDataFrame(10_000, daskclient=connection).Define(
+    df = ROOT.RDataFrame(10_000, executor=connection).Define(
         "x", "gRandom->Rndm() * 100")
 
     nentries = df.Count()
