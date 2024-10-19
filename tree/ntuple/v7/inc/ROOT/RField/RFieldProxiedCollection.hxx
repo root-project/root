@@ -180,8 +180,8 @@ public:
    ~RProxiedCollectionField() override = default;
 
    std::vector<RValue> SplitValue(const RValue &value) const final;
-   size_t GetValueSize() const override { return fProxy->Sizeof(); }
-   size_t GetAlignment() const override { return alignof(std::max_align_t); }
+   size_t GetValueSize() const final { return fProxy->Sizeof(); }
+   size_t GetAlignment() const final { return alignof(std::max_align_t); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const override;
    void GetCollectionInfo(NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const
    {
@@ -294,8 +294,6 @@ public:
    RMapField(RMapField &&other) = default;
    RMapField &operator=(RMapField &&other) = default;
    ~RMapField() override = default;
-
-   size_t GetAlignment() const override { return std::alignment_of<std::map<std::max_align_t, std::max_align_t>>(); }
 };
 
 template <typename KeyT, typename ValueT>
@@ -319,9 +317,6 @@ public:
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
    ~RField() final = default;
-
-   size_t GetValueSize() const final { return sizeof(ContainerT); }
-   size_t GetAlignment() const final { return std::alignment_of<ContainerT>(); }
 };
 
 template <typename KeyT, typename ValueT>
@@ -345,9 +340,6 @@ public:
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
    ~RField() final = default;
-
-   size_t GetValueSize() const final { return sizeof(ContainerT); }
-   size_t GetAlignment() const final { return std::alignment_of<ContainerT>(); }
 };
 
 template <typename KeyT, typename ValueT>
@@ -371,9 +363,6 @@ public:
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
    ~RField() final = default;
-
-   size_t GetValueSize() const final { return sizeof(ContainerT); }
-   size_t GetAlignment() const final { return std::alignment_of<ContainerT>(); }
 };
 
 template <typename KeyT, typename ValueT>
@@ -397,9 +386,6 @@ public:
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
    ~RField() final = default;
-
-   size_t GetValueSize() const final { return sizeof(ContainerT); }
-   size_t GetAlignment() const final { return std::alignment_of<ContainerT>(); }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -416,8 +402,6 @@ public:
    RSetField(RSetField &&other) = default;
    RSetField &operator=(RSetField &&other) = default;
    ~RSetField() override = default;
-
-   size_t GetAlignment() const override { return std::alignment_of<std::set<std::max_align_t>>(); }
 };
 
 template <typename ItemT>
@@ -435,9 +419,6 @@ public:
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
    ~RField() final = default;
-
-   size_t GetValueSize() const final { return sizeof(ContainerT); }
-   size_t GetAlignment() const final { return std::alignment_of<ContainerT>(); }
 };
 
 template <typename ItemT>
@@ -455,9 +436,6 @@ public:
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
    ~RField() final = default;
-
-   size_t GetValueSize() const final { return sizeof(ContainerT); }
-   size_t GetAlignment() const final { return std::alignment_of<ContainerT>(); }
 };
 
 template <typename ItemT>
@@ -475,9 +453,6 @@ public:
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
    ~RField() final = default;
-
-   size_t GetValueSize() const final { return sizeof(ContainerT); }
-   size_t GetAlignment() const final { return std::alignment_of<ContainerT>(); }
 };
 
 template <typename ItemT>
@@ -495,9 +470,6 @@ public:
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
    ~RField() final = default;
-
-   size_t GetValueSize() const final { return sizeof(ContainerT); }
-   size_t GetAlignment() const final { return std::alignment_of<ContainerT>(); }
 };
 
 } // namespace Experimental

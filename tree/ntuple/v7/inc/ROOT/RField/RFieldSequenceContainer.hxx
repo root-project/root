@@ -159,8 +159,8 @@ public:
    ~RRVecField() override = default;
 
    std::vector<RValue> SplitValue(const RValue &value) const final;
-   size_t GetValueSize() const override;
-   size_t GetAlignment() const override;
+   size_t GetValueSize() const final;
+   size_t GetAlignment() const final;
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
    void GetCollectionInfo(NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const
    {
@@ -198,9 +198,6 @@ public:
    ~RField() final = default;
 
    static std::string TypeName() { return "ROOT::VecOps::RVec<" + RField<ItemT>::TypeName() + ">"; }
-
-   size_t GetValueSize() const final { return sizeof(ContainerT); }
-   size_t GetAlignment() const final { return std::alignment_of<ContainerT>(); }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -256,7 +253,7 @@ public:
    CreateUntyped(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField);
 
    std::vector<RValue> SplitValue(const RValue &value) const final;
-   size_t GetValueSize() const override { return sizeof(std::vector<char>); }
+   size_t GetValueSize() const final { return sizeof(std::vector<char>); }
    size_t GetAlignment() const final { return std::alignment_of<std::vector<char>>(); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
    void GetCollectionInfo(NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const
@@ -282,8 +279,6 @@ public:
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
    ~RField() final = default;
-
-   size_t GetValueSize() const final { return sizeof(ContainerT); }
 };
 
 // std::vector<bool> is a template specialization and needs special treatment

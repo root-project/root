@@ -149,7 +149,7 @@ public:
    ~RClassField() override = default;
 
    std::vector<RValue> SplitValue(const RValue &value) const final;
-   size_t GetValueSize() const override;
+   size_t GetValueSize() const final;
    size_t GetAlignment() const final { return fMaxAlignment; }
    std::uint32_t GetTypeVersion() const final;
    std::uint32_t GetTypeChecksum() const final;
