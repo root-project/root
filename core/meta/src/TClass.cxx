@@ -488,6 +488,67 @@ DeclIdMap_t *TClass::GetDeclIdMap() {
 #endif
 }
 
+
+namespace {
+
+////////////////////////////////////////////////////////////////////////////////
+/// Check whether c is a character that can be part of an identifier.
+bool isIdentifierChar(char c) {
+   return isalnum(c) || c == '_';
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Count the number of occurrences of needle in typename haystack.
+
+static int CountStringOccurrences(const TString &needle, const TString &haystack) {
+   Ssiz_t currStart = 0;
+   int numOccurrences = 0;
+   Ssiz_t posFound = haystack.Index(needle, currStart);
+   while (posFound != TString::kNPOS) {
+      // Ensure it's neither FooNeedle nor NeedleFoo, but Needle is surrounded
+      // by delimiters:
+      auto hasDelimLeft = [&]() {
+         return posFound == 0
+            || !isIdentifierChar(haystack[posFound - 1]);
+      };
+      auto hasDelimRight = [&]() {
+         return posFound + needle.Length() == haystack.Length()
+            || !isIdentifierChar(haystack[posFound + needle.Length()]);
+      };
+
+      if (hasDelimLeft() && hasDelimRight())
+         ++numOccurrences;
+      currStart = posFound + needle.Length();
+      posFound = haystack.Index(needle, currStart);
+   }
+   return numOccurrences;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Whether an existing typeinfo value should be replaced because the new one
+/// has "less" Double32_t.
+
+static bool ShouldReplaceDouble32TypeInfo(TClass *newCl, TClass *existingCl) {
+
+   // If old and new names match, no need to replace.
+   if (!strcmp(newCl->GetName(), existingCl->GetName()))
+      return false;
+
+   int numExistingDouble32 = CountStringOccurrences("Double32_t", existingCl->GetName());
+   int numExistingFloat16 = CountStringOccurrences("Float16_t", existingCl->GetName());
+
+   // If the existing class has no I/O types then it should not be replaced.
+   if (numExistingDouble32 + numExistingFloat16 == 0)
+      return false;
+
+   int numNewDouble32 = CountStringOccurrences("Double32_t", newCl->GetName());
+   int numNewFloat16 = CountStringOccurrences("Float16_t", newCl->GetName());
+
+   // If old has more I/O types, replace!
+   return numExistingDouble32 + numExistingFloat16 > numNewDouble32 + numNewFloat16;
+}
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// static: Add a class to the list and map of classes.
 
@@ -498,7 +559,11 @@ void TClass::AddClass(TClass *cl)
    R__LOCKGUARD(gInterpreterMutex);
    gROOT->GetListOfClasses()->Add(cl);
    if (cl->GetTypeInfo()) {
-      GetIdMap()->Add(cl->GetTypeInfo()->name(),cl);
+      bool shouldAddTypeInfo = true;
+      if (TClass* existingCl = GetIdMap()->Find(cl->GetTypeInfo()->name()))
+         shouldAddTypeInfo = ShouldReplaceDouble32TypeInfo(cl, existingCl);
+      if (shouldAddTypeInfo)
+         GetIdMap()->Add(cl->GetTypeInfo()->name(),cl);
    }
    if (cl->fClassInfo) {
       GetDeclIdMap()->Add((void*)(cl->fClassInfo), cl);
@@ -524,7 +589,9 @@ void TClass::RemoveClass(TClass *oldcl)
    R__LOCKGUARD(gInterpreterMutex);
    gROOT->GetListOfClasses()->Remove(oldcl);
    if (oldcl->GetTypeInfo()) {
-      GetIdMap()->Remove(oldcl->GetTypeInfo()->name());
+      if (TClass* existingCl = GetIdMap()->Find(oldcl->GetTypeInfo()->name()))
+         if (existingCl == oldcl)
+            GetIdMap()->Remove(oldcl->GetTypeInfo()->name());
    }
    if (oldcl->fClassInfo) {
       //GetDeclIdMap()->Remove((void*)(oldcl->fClassInfo));
