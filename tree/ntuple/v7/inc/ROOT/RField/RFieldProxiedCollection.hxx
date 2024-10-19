@@ -160,7 +160,7 @@ protected:
                            std::unique_ptr<RFieldBase> itemField);
 
 protected:
-   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const override;
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumns() final;
    void GenerateColumns(const RNTupleDescriptor &desc) final;
@@ -280,9 +280,6 @@ public:
 
 /// The generic field for a std::map<KeyType, ValueType> and std::unordered_map<KeyType, ValueType>
 class RMapField : public RProxiedCollectionField {
-protected:
-   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
-
 public:
    RMapField(std::string_view fieldName, std::string_view typeName, std::unique_ptr<RFieldBase> itemField);
    RMapField(RMapField &&other) = default;
@@ -364,9 +361,6 @@ public:
 
 /// The generic field for a std::set<Type> and std::unordered_set<Type>
 class RSetField : public RProxiedCollectionField {
-protected:
-   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
-
 public:
    RSetField(std::string_view fieldName, std::string_view typeName, std::unique_ptr<RFieldBase> itemField);
    RSetField(RSetField &&other) = default;
