@@ -103,7 +103,7 @@ public:
    explicit RField(std::string_view name) : RField<std::array<ItemT, N>>(name) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
-   ~RField() override = default;
+   ~RField() final = default;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -219,7 +219,7 @@ public:
    explicit RField(std::string_view name) : RField(name, std::make_unique<RField<ItemT>>("_0")) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
-   ~RField() override = default;
+   ~RField() final = default;
 
    static std::string TypeName() { return "ROOT::VecOps::RVec<" + RField<ItemT>::TypeName() + ">"; }
 
@@ -305,7 +305,7 @@ public:
    explicit RField(std::string_view name) : RVectorField(name, std::make_unique<RField<ItemT>>("_0")) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
-   ~RField() override = default;
+   ~RField() final = default;
 
    size_t GetValueSize() const final { return sizeof(ContainerT); }
 };
@@ -339,7 +339,7 @@ public:
    explicit RField(std::string_view name);
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
-   ~RField() override = default;
+   ~RField() final = default;
 
    std::vector<RValue> SplitValue(const RValue &value) const final;
 

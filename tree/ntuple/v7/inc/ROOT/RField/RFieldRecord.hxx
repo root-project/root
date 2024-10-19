@@ -180,7 +180,7 @@ public:
    explicit RField(std::string_view name) : RField(name, BuildItemFields<T1, T2>()) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
-   ~RField() override = default;
+   ~RField() final = default;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -287,7 +287,7 @@ public:
    explicit RField(std::string_view name) : RField(name, BuildItemFields<ItemTs...>()) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
-   ~RField() override = default;
+   ~RField() final = default;
 };
 
 } // namespace Experimental

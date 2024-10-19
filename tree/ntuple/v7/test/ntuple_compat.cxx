@@ -247,7 +247,7 @@ public:
    explicit RField(std::string_view name) : RSimpleField(name, TypeName()) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
-   ~RField() override = default;
+   ~RField() final = default;
 };
 
 TEST(RNTupleCompat, FutureColumnType)
