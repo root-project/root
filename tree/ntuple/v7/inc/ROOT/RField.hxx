@@ -262,13 +262,13 @@ public:
 };
 
 template <typename T>
-class RField<T, typename std::enable_if<std::is_enum_v<T>>::type> : public REnumField {
+class RField<T, typename std::enable_if<std::is_enum_v<T>>::type> final : public REnumField {
 public:
    static std::string TypeName() { return ROOT::Internal::GetDemangledTypeName(typeid(T)); }
    RField(std::string_view name) : REnumField(name, TypeName()) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
-   ~RField() override = default;
+   ~RField() final = default;
 };
 
 /// An artificial field that transforms an RNTuple column that contains the offset of collections into
