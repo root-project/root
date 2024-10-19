@@ -3883,17 +3883,17 @@ ROOT::Experimental::RPairField::RPairField(std::string_view fieldName,
                                       "std::pair<" + GetTypeList(itemFields) + ">")
 {
    // ISO C++ does not guarantee any specific layout for `std::pair`; query TClass for the member offsets
-   fClass = TClass::GetClass(GetTypeName().c_str());
-   if (!fClass)
+   auto *c = TClass::GetClass(GetTypeName().c_str());
+   if (!c)
       throw RException(R__FAIL("cannot get type information for " + GetTypeName()));
-   fSize = fClass->Size();
+   fSize = c->Size();
 
-   auto firstElem = fClass->GetRealData("first");
+   auto firstElem = c->GetRealData("first");
    if (!firstElem)
       throw RException(R__FAIL("first: no such member"));
    fOffsets[0] = firstElem->GetThisOffset();
 
-   auto secondElem = fClass->GetRealData("second");
+   auto secondElem = c->GetRealData("second");
    if (!secondElem)
       throw RException(R__FAIL("second: no such member"));
    fOffsets[1] = secondElem->GetThisOffset();
@@ -3906,14 +3906,7 @@ ROOT::Experimental::RPairField::CloneImpl(std::string_view newName) const
                                                     fSubFields[1]->Clone(fSubFields[1]->GetFieldName())};
 
    std::unique_ptr<RPairField> result(new RPairField(newName, std::move(items), {fOffsets[0], fOffsets[1]}));
-   result->fClass = fClass;
    return result;
-}
-
-void ROOT::Experimental::RPairField::RPairDeleter::operator()(void *objPtr, bool dtorOnly)
-{
-   fClass->Destructor(objPtr, true /* dtorOnly */);
-   RDeleter::operator()(objPtr, dtorOnly);
 }
 
 //------------------------------------------------------------------------------
@@ -3944,10 +3937,10 @@ ROOT::Experimental::RTupleField::RTupleField(std::string_view fieldName,
    : ROOT::Experimental::RRecordField(fieldName, std::move(itemFields), {},
                                       "std::tuple<" + GetTypeList(itemFields) + ">")
 {
-   fClass = TClass::GetClass(GetTypeName().c_str());
-   if (!fClass)
+   auto *c = TClass::GetClass(GetTypeName().c_str());
+   if (!c)
       throw RException(R__FAIL("cannot get type information for " + GetTypeName()));
-   fSize = fClass->Size();
+   fSize = c->Size();
 
    // ISO C++ does not guarantee neither specific layout nor member names for `std::tuple`.  However, most
    // implementations including libstdc++ (gcc), libc++ (llvm), and MSVC name members as `_0`, `_1`, ..., `_N-1`,
@@ -3956,7 +3949,7 @@ ROOT::Experimental::RTupleField::RTupleField(std::string_view fieldName,
    // members, the assertion below will fail.
    for (unsigned i = 0; i < fSubFields.size(); ++i) {
       std::string memberName("_" + std::to_string(i));
-      auto member = fClass->GetRealData(memberName.c_str());
+      auto member = c->GetRealData(memberName.c_str());
       if (!member)
          throw RException(R__FAIL(memberName + ": no such member"));
       fOffsets.push_back(member->GetThisOffset());
@@ -3972,14 +3965,7 @@ ROOT::Experimental::RTupleField::CloneImpl(std::string_view newName) const
       items.push_back(item->Clone(item->GetFieldName()));
 
    std::unique_ptr<RTupleField> result(new RTupleField(newName, std::move(items), fOffsets));
-   result->fClass = fClass;
    return result;
-}
-
-void ROOT::Experimental::RTupleField::RTupleDeleter::operator()(void *objPtr, bool dtorOnly)
-{
-   fClass->Destructor(objPtr, true /* dtorOnly */);
-   RDeleter::operator()(objPtr, dtorOnly);
 }
 
 //------------------------------------------------------------------------------
