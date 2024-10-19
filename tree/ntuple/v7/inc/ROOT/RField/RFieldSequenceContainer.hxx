@@ -131,7 +131,7 @@ protected:
    ClusterSize_t fNWritten;
    std::size_t fValueSize;
 
-   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const override;
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumns() final;
    void GenerateColumns(const RNTupleDescriptor &desc) final;
@@ -169,13 +169,6 @@ public:
 
 template <typename ItemT>
 class RField<ROOT::VecOps::RVec<ItemT>> final : public RRVecField {
-protected:
-   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
-   {
-      auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetFieldName());
-      return std::make_unique<RField<ROOT::VecOps::RVec<ItemT>>>(newName, std::move(newItemField));
-   }
-
 public:
    RField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField)
       : RRVecField(fieldName, std::move(itemField))
@@ -219,7 +212,7 @@ private:
 protected:
    RVectorField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField, bool isUntyped);
 
-   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const override;
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
 
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumns() final;
