@@ -134,7 +134,7 @@ private:
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
 
-   void ConstructValue(void *where) const override;
+   void ConstructValue(void *where) const final;
    std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RClassDeleter>(fClass); }
 
    std::size_t AppendImpl(const void *from) final;
@@ -239,17 +239,6 @@ public:
 /// Classes with dictionaries that can be inspected by TClass
 template <typename T, typename = void>
 class RField final : public RClassField {
-protected:
-   void ConstructValue(void *where) const final
-   {
-      if constexpr (std::is_default_constructible_v<T>) {
-         new (where) T();
-      } else {
-         // If there is no default constructor, try with the IO constructor
-         new (where) T(static_cast<TRootIOCtor *>(nullptr));
-      }
-   }
-
 public:
    static std::string TypeName() { return ROOT::Internal::GetDemangledTypeName(typeid(T)); }
    RField(std::string_view name) : RClassField(name, TypeName())

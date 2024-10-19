@@ -3910,11 +3910,6 @@ ROOT::Experimental::RPairField::CloneImpl(std::string_view newName) const
    return result;
 }
 
-void ROOT::Experimental::RPairField::ConstructValue(void *where) const
-{
-   fClass->New(where);
-}
-
 void ROOT::Experimental::RPairField::RPairDeleter::operator()(void *objPtr, bool dtorOnly)
 {
    fClass->Destructor(objPtr, true /* dtorOnly */);
@@ -3979,11 +3974,6 @@ ROOT::Experimental::RTupleField::CloneImpl(std::string_view newName) const
    std::unique_ptr<RTupleField> result(new RTupleField(newName, std::move(items), fOffsets));
    result->fClass = fClass;
    return result;
-}
-
-void ROOT::Experimental::RTupleField::ConstructValue(void *where) const
-{
-   fClass->New(where);
 }
 
 void ROOT::Experimental::RTupleField::RTupleDeleter::operator()(void *objPtr, bool dtorOnly)

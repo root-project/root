@@ -165,8 +165,8 @@ protected:
    void GenerateColumns() final;
    void GenerateColumns(const RNTupleDescriptor &desc) final;
 
-   void ConstructValue(void *where) const override;
-   std::unique_ptr<RDeleter> GetDeleter() const override;
+   void ConstructValue(void *where) const final;
+   std::unique_ptr<RDeleter> GetDeleter() const final;
 
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
@@ -263,9 +263,6 @@ struct IsCollectionProxy : HasCollectionProxyMemberType<T> {
 /// ```
 template <typename T>
 class RField<T, typename std::enable_if<IsCollectionProxy<T>::value>::type> final : public RProxiedCollectionField {
-protected:
-   void ConstructValue(void *where) const final { new (where) T(); }
-
 public:
    static std::string TypeName() { return ROOT::Internal::GetDemangledTypeName(typeid(T)); }
    RField(std::string_view name) : RProxiedCollectionField(name, TypeName())
@@ -298,12 +295,6 @@ public:
 
 template <typename KeyT, typename ValueT>
 class RField<std::map<KeyT, ValueT>> final : public RMapField {
-   using ContainerT = typename std::map<KeyT, ValueT>;
-
-protected:
-   void ConstructValue(void *where) const final { new (where) ContainerT(); }
-   std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RTypedDeleter<ContainerT>>(); }
-
 public:
    static std::string TypeName()
    {
@@ -321,12 +312,6 @@ public:
 
 template <typename KeyT, typename ValueT>
 class RField<std::unordered_map<KeyT, ValueT>> final : public RMapField {
-   using ContainerT = typename std::unordered_map<KeyT, ValueT>;
-
-protected:
-   void ConstructValue(void *where) const final { new (where) ContainerT(); }
-   std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RTypedDeleter<ContainerT>>(); }
-
 public:
    static std::string TypeName()
    {
@@ -344,12 +329,6 @@ public:
 
 template <typename KeyT, typename ValueT>
 class RField<std::multimap<KeyT, ValueT>> final : public RMapField {
-   using ContainerT = typename std::multimap<KeyT, ValueT>;
-
-protected:
-   void ConstructValue(void *where) const final { new (where) ContainerT(); }
-   std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RTypedDeleter<ContainerT>>(); }
-
 public:
    static std::string TypeName()
    {
@@ -367,12 +346,6 @@ public:
 
 template <typename KeyT, typename ValueT>
 class RField<std::unordered_multimap<KeyT, ValueT>> final : public RMapField {
-   using ContainerT = typename std::unordered_multimap<KeyT, ValueT>;
-
-protected:
-   void ConstructValue(void *where) const final { new (where) ContainerT(); }
-   std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RTypedDeleter<ContainerT>>(); }
-
 public:
    static std::string TypeName()
    {
@@ -406,12 +379,6 @@ public:
 
 template <typename ItemT>
 class RField<std::set<ItemT>> final : public RSetField {
-   using ContainerT = typename std::set<ItemT>;
-
-protected:
-   void ConstructValue(void *where) const final { new (where) ContainerT(); }
-   std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RTypedDeleter<ContainerT>>(); }
-
 public:
    static std::string TypeName() { return "std::set<" + RField<ItemT>::TypeName() + ">"; }
 
@@ -423,12 +390,6 @@ public:
 
 template <typename ItemT>
 class RField<std::unordered_set<ItemT>> final : public RSetField {
-   using ContainerT = typename std::unordered_set<ItemT>;
-
-protected:
-   void ConstructValue(void *where) const final { new (where) ContainerT(); }
-   std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RTypedDeleter<ContainerT>>(); }
-
 public:
    static std::string TypeName() { return "std::unordered_set<" + RField<ItemT>::TypeName() + ">"; }
 
@@ -440,12 +401,6 @@ public:
 
 template <typename ItemT>
 class RField<std::multiset<ItemT>> final : public RSetField {
-   using ContainerT = typename std::multiset<ItemT>;
-
-protected:
-   void ConstructValue(void *where) const final { new (where) ContainerT(); }
-   std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RTypedDeleter<ContainerT>>(); }
-
 public:
    static std::string TypeName() { return "std::multiset<" + RField<ItemT>::TypeName() + ">"; }
 
@@ -457,12 +412,6 @@ public:
 
 template <typename ItemT>
 class RField<std::unordered_multiset<ItemT>> final : public RSetField {
-   using ContainerT = typename std::unordered_multiset<ItemT>;
-
-protected:
-   void ConstructValue(void *where) const final { new (where) ContainerT(); }
-   std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RTypedDeleter<ContainerT>>(); }
-
 public:
    static std::string TypeName() { return "std::unordered_multiset<" + RField<ItemT>::TypeName() + ">"; }
 
