@@ -426,7 +426,7 @@ public:
 };
 
 template <typename ItemT>
-class RField<std::set<ItemT>> : public RSetField {
+class RField<std::set<ItemT>> final : public RSetField {
    using ContainerT = typename std::set<ItemT>;
 
 protected:
@@ -439,7 +439,7 @@ public:
    explicit RField(std::string_view name) : RSetField(name, TypeName(), std::make_unique<RField<ItemT>>("_0")) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
-   ~RField() override = default;
+   ~RField() final = default;
 
    size_t GetValueSize() const final { return sizeof(ContainerT); }
    size_t GetAlignment() const final { return std::alignment_of<ContainerT>(); }
@@ -466,7 +466,7 @@ public:
 };
 
 template <typename ItemT>
-class RField<std::multiset<ItemT>> : public RSetField {
+class RField<std::multiset<ItemT>> final : public RSetField {
    using ContainerT = typename std::multiset<ItemT>;
 
 protected:
@@ -479,14 +479,14 @@ public:
    explicit RField(std::string_view name) : RSetField(name, TypeName(), std::make_unique<RField<ItemT>>("_0")) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
-   ~RField() override = default;
+   ~RField() final = default;
 
    size_t GetValueSize() const final { return sizeof(ContainerT); }
    size_t GetAlignment() const final { return std::alignment_of<ContainerT>(); }
 };
 
 template <typename ItemT>
-class RField<std::unordered_multiset<ItemT>> : public RSetField {
+class RField<std::unordered_multiset<ItemT>> final : public RSetField {
    using ContainerT = typename std::unordered_multiset<ItemT>;
 
 protected:
@@ -499,7 +499,7 @@ public:
    explicit RField(std::string_view name) : RSetField(name, TypeName(), std::make_unique<RField<ItemT>>("_0")) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
-   ~RField() override = default;
+   ~RField() final = default;
 
    size_t GetValueSize() const final { return sizeof(ContainerT); }
    size_t GetAlignment() const final { return std::alignment_of<ContainerT>(); }
