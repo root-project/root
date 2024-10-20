@@ -67,8 +67,6 @@ public:
   CacheMode canNodeBeCached() const override { return RooAbsArg::NotAdvised ; } ;
   void setCacheAndTrackHints(RooArgSet&) override ;
 
-  std::unique_ptr<RooAbsArg> compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext & ctx) const override;
-
   std::unique_ptr<RooAbsReal> createExpectedEventsFunc(const RooArgSet* nset) const override;
 
   void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
@@ -104,6 +102,7 @@ private:
                                       RooArgList& funcList, RooArgList& coefList);
 
   static double evaluate(RooAbsReal const& caller,
+                         RooArgSet const* normSet,
                          RooArgList const& funcList,
                          RooArgList const& coefList,
                          bool doFloor,
@@ -116,7 +115,7 @@ private:
                                RooArgList const &coefList);
 
   static Int_t getAnalyticalIntegralWN(RooAbsReal const& caller, RooObjCacheManager & normIntMgr,
-                                       RooArgList const& funcList, RooArgList const& coefList,
+                                       RooArgList const& funcList,
                                        RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet, const char* rangeName);
   static double analyticalIntegralWN(RooAbsReal const& caller, RooObjCacheManager & normIntMgr,
                                      RooArgList const& funcList, RooArgList const& coefList,
