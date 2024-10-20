@@ -155,7 +155,7 @@ ROOT::Experimental::Internal::RProjectedFields::Clone(const RNTupleModel &newMod
    for (const auto &[k, v] : fFieldMap) {
       for (const auto &f : clone->GetFieldZero()) {
          if (f.GetQualifiedFieldName() == k->GetQualifiedFieldName()) {
-            clone->fFieldMap[&f] = &newModel.GetField(v->GetQualifiedFieldName());
+            clone->fFieldMap[&f] = &newModel.GetConstField(v->GetQualifiedFieldName());
             break;
          }
       }
@@ -354,7 +354,7 @@ ROOT::Experimental::RFieldZero &ROOT::Experimental::RNTupleModel::GetMutableFiel
    return *fFieldZero;
 }
 
-const ROOT::Experimental::RFieldBase &ROOT::Experimental::RNTupleModel::GetField(std::string_view fieldName) const
+const ROOT::Experimental::RFieldBase &ROOT::Experimental::RNTupleModel::GetConstField(std::string_view fieldName) const
 {
    auto f = FindField(fieldName);
    if (!f)

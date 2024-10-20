@@ -363,7 +363,7 @@ public:
    /// Mutable access to the root field is used to make adjustments to the fields.
    RFieldZero &GetMutableFieldZero();
    const RFieldZero &GetConstFieldZero() const { return *fFieldZero; }
-   const RFieldBase &GetField(std::string_view fieldName) const;
+   const RFieldBase &GetConstField(std::string_view fieldName) const;
 
    const std::string &GetDescription() const { return fDescription; }
    void SetDescription(std::string_view description);
