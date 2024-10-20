@@ -774,7 +774,7 @@ TEST(RNTupleInspector, MultiColumnRepresentations)
       writer->Fill();
       writer->CommitCluster();
       ROOT::Experimental::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
-         const_cast<RFieldBase &>(writer->GetModel().GetField("px")), 1);
+         const_cast<RFieldBase &>(writer->GetModel().GetConstField("px")), 1);
       writer->Fill();
    }
 

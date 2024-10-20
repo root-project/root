@@ -251,7 +251,7 @@ TEST(RNTuple, TClassReadRules)
    auto reader = RNTupleReader::Open("f", fileGuard.GetPath());
    EXPECT_EQ(5U, reader->GetNEntries());
    EXPECT_EQ(TClass::GetClass("StructWithIORules")->GetCheckSum(),
-             reader->GetModel().GetField("class").GetOnDiskTypeChecksum());
+             reader->GetModel().GetConstField("class").GetOnDiskTypeChecksum());
    auto viewKlass = reader->GetView<StructWithIORules>("class");
    for (auto i : reader->GetEntryRange()) {
       float fi = static_cast<float>(i);
