@@ -284,9 +284,9 @@ TEST(RNTupleCompat, FutureColumnType)
       auto model = desc.CreateModel(modelOpts);
 
       // The future column should not show up in the model
-      EXPECT_THROW(model->GetField("futureColumn"), RException);
+      EXPECT_THROW(model->GetConstField("futureColumn"), RException);
 
-      const auto &floatFld = model->GetField("float");
+      const auto &floatFld = model->GetConstField("float");
       EXPECT_EQ(floatFld.GetTypeName(), "float");
 
       reader.reset();
@@ -336,9 +336,9 @@ TEST(RNTupleCompat, FutureColumnType_Nested)
       auto model = desc.CreateModel(modelOpts);
 
       // The future column should not show up in the model
-      EXPECT_THROW(model->GetField("future"), RException);
+      EXPECT_THROW(model->GetConstField("future"), RException);
 
-      const auto &floatFld = model->GetField("float");
+      const auto &floatFld = model->GetConstField("float");
       EXPECT_EQ(floatFld.GetTypeName(), "float");
 
       reader.reset();
@@ -395,7 +395,7 @@ TEST(RNTupleCompat, FutureFieldStructuralRole)
    modelOpts.fForwardCompatible = true;
    auto model = desc.CreateModel(modelOpts);
    try {
-      model->GetField("future");
+      model->GetConstField("future");
       FAIL() << "trying to get a field with unknown role should fail";
    } catch (const RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("invalid field"));
@@ -431,10 +431,10 @@ TEST(RNTupleCompat, FutureFieldStructuralRole_Nested)
    auto modelOpts = RNTupleDescriptor::RCreateModelOptions();
    modelOpts.fForwardCompatible = true;
    auto model = desc.CreateModel(modelOpts);
-   const auto &floatFld = model->GetField("float");
+   const auto &floatFld = model->GetConstField("float");
    EXPECT_EQ(floatFld.GetTypeName(), "float");
    try {
-      model->GetField("record");
+      model->GetConstField("record");
       FAIL() << "trying to get a field with unknown role should fail";
    } catch (const RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("invalid field"));

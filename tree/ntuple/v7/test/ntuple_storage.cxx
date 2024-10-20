@@ -864,8 +864,8 @@ TEST(RPageStorageFile, MultiKeyBlob_Header)
       EXPECT_GE(ntupleUcmp->GetDescriptor().GetOnDiskHeaderSize(), kMaxKeySize);
 
       for (int i = 0; i < kNFields; ++i) {
-         ntupleComp->GetModel().GetField(std::to_string(i));
-         ntupleUcmp->GetModel().GetField(std::to_string(i));
+         ntupleComp->GetModel().GetConstField(std::to_string(i));
+         ntupleUcmp->GetModel().GetConstField(std::to_string(i));
       }
    }
 }

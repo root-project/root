@@ -263,9 +263,9 @@ TEST(RNTupleImporter, FieldModifier)
    EXPECT_FLOAT_EQ(2.0, *reader->GetModel().GetDefaultEntry().GetPtr<float>("b"));
 
    EXPECT_EQ(RFieldBase::ColumnRepresentation_t{EColumnType::kReal16},
-             reader->GetModel().GetField("a").GetColumnRepresentatives()[0]);
+             reader->GetModel().GetConstField("a").GetColumnRepresentatives()[0]);
    EXPECT_EQ(RFieldBase::ColumnRepresentation_t{EColumnType::kSplitReal32},
-             reader->GetModel().GetField("b").GetColumnRepresentatives()[0]);
+             reader->GetModel().GetConstField("b").GetColumnRepresentatives()[0]);
 }
 
 TEST(RNTupleImporter, CString)
