@@ -24,6 +24,7 @@
 #include "TNamed.h"
 #include "TAttAxis.h"
 #include "TArrayD.h"
+#include <vector>
 
 class THashList;
 class TAxisModLab;
@@ -79,6 +80,8 @@ public:
    TAxis();
    TAxis(Int_t nbins, Double_t xmin, Double_t xmax);
    TAxis(Int_t nbins, const Double_t *xbins);
+   TAxis(const std::vector<double>& bins);
+   TAxis(std::vector<double>&& bins);
    TAxis(const TAxis &axis);
    ~TAxis() override;
    TAxis& operator=(const TAxis&);
