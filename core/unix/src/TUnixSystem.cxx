@@ -4678,23 +4678,34 @@ static const char *DynamicPath(const char *newpath = nullptr, Bool_t reset = kFA
       dynpath_syspart = "/usr/local/lib:/usr/X11R6/lib:/usr/lib:/lib:";
       dynpath_syspart += "/lib/x86_64-linux-gnu:/usr/local/lib64:/usr/lib64:/lib64:";
    #else
-      // trick to get the system search path
-      std::string cmd("LD_DEBUG=libs LD_PRELOAD=DOESNOTEXIST ls 2>&1");
-      FILE *pf = popen(cmd.c_str (), "r");
-      std::string result = "";
-      char buffer[128];
-      while (!feof(pf)) {
-         if (fgets(buffer, 128, pf) != NULL)
-            result += buffer;
-      }
-      pclose(pf);
-      std::size_t from = result.find("search path=", result.find("(LD_LIBRARY_PATH)"));
-      std::size_t to = result.find("(system search path)");
-      if (from != std::string::npos && to != std::string::npos) {
-         from += 12;
-         std::string sys_path = result.substr(from, to-from);
-         sys_path.erase(std::remove_if(sys_path.begin(), sys_path.end(), isspace), sys_path.end());
-         dynpath_syspart = sys_path.c_str();
+      // Obtain the system search path ...
+
+      // First of all, let's see if an outside entity gave us the system path.
+      // This is a power-user feature for users bringing up many executables with ROOT linked in.
+      // In this case, the system path could be cached in an environment variable ROOT_LDSYSPATH and prevent
+      // repeated sys-calls (popen) and to having to search through potentially long LD_LIBRARY_PATH strings.
+      const auto ldsyspath = getenv("ROOT_LDSYSPATH");
+      if (ldsyspath != nullptr) {
+         dynpath_syspart = ldsyspath;
+      } else {
+         // trick to get the system search path at runtime (default case)
+         std::string cmd("LD_DEBUG=libs LD_PRELOAD=DOESNOTEXIST ls 2>&1");
+         FILE *pf = popen(cmd.c_str(), "r");
+         std::string result = "";
+         char buffer[128];
+         while (!feof(pf)) {
+            if (fgets(buffer, 128, pf) != NULL)
+               result += buffer;
+         }
+         pclose(pf);
+         std::size_t from = result.find("search path=", result.find("(LD_LIBRARY_PATH)"));
+         std::size_t to = result.find("(system search path)");
+         if (from != std::string::npos && to != std::string::npos) {
+            from += 12;
+            std::string sys_path = result.substr(from, to - from);
+            sys_path.erase(std::remove_if(sys_path.begin(), sys_path.end(), isspace), sys_path.end());
+            dynpath_syspart = sys_path.c_str();
+         }
       }
       dynpath_envpart.ReplaceAll("::", ":");
       dynpath_syspart.ReplaceAll("::", ":");
