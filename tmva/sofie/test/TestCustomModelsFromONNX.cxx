@@ -51,6 +51,15 @@
 #include "Tanh_FromONNX.hxx"
 #include "input_models/references/Tanh.ref.hxx"
 
+#include "Clip_FromONNX.hxx"
+#include "input_models/references/Clip.ref.hxx"
+
+#include "Clip_without_max_FromONNX.hxx"
+#include "input_models/references/Clip_without_max.ref.hxx"
+
+#include "Clip_without_min_max_FromONNX.hxx"
+#include "input_models/references/Clip_without_min_max.ref.hxx"
+
 #include "Erf_FromONNX.hxx"
 #include "input_models/references/Erf.ref.hxx"
 
@@ -721,6 +730,81 @@ TEST(ONNX, Tanh)
    EXPECT_EQ(output.size(), sizeof(Tanh_ExpectedOutput::outputs) / sizeof(float));
 
    float *correct = Tanh_ExpectedOutput::outputs;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ONNX, Clip)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the random input
+   std::vector<float> input({
+      -1.9692234, -0.6685767, -0.61734754, -1.1698093, -1.3424054, 0.40203714, 1.9188353, 0.5280056, 0.24682386, 0.3878915, 0.13288656, -0.6365107, 0.01260121, -0.80068636, 0.31901595, -1.3111622, -0.5543124, -1.1456566, -0.5343999, -0.8980517, -1.8940028, -1.9568421, 0.14543489, 1.1601704, -1.0702193, 0.4447112, -0.15245153, -0.64089787, -1.6629856, 0.43905267, -0.6463053, 0.058394875, -0.5008753, -0.07740338, -0.59325397, 0.0137674315, -0.04159538, 1.5035298, 0.20460352, -0.27217796, 0.58820105, -1.6431018, 0.28663707, -0.44537753, -0.7284544, 0.014833751, 0.04212734, -0.6256867, -1.0545884, -1.1456554, -0.34938437, -0.6159723, 0.42095387, -0.18146378, -0.72932893, 0.75517327, -1.7607622, 1.0196097, -0.34607714, -0.033839844, -0.1062253, -1.4558129, -0.012860739, 2.3606772, -0.4635909, -1.1845925, -0.9806703, -0.36306113, 1.5352646, -0.22736038, 0.20120806, 0.22462063, 1.1262615, -0.12140672, 0.5832731
+   });
+   std::vector<float> min({0.0});
+   std::vector<float> max({3.0});
+
+   TMVA_SOFIE_Clip::Session s("Clip_FromONNX.dat");
+
+   std::vector<float> output = s.infer(input.data(),min.data(),max.data());
+
+   // Checking output size
+   EXPECT_EQ(output.size(), sizeof(Clip_ExpectedOutput::outputs) / sizeof(float));
+
+   float *correct = Clip_ExpectedOutput::outputs;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ONNX, Clip_without_max)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the random input
+   std::vector<float> input({
+      -0.44387808, -0.75909483, -0.4310424, -0.48224264, -0.18107834, 0.65879846, -1.1472352, -1.6430495, 0.50338256, 1.4609053, -0.6177167, -0.3448131, 0.31514466, 1.612544, 0.92406285, 0.14376482, -0.04005108, 1.7923949, -0.7199112, 0.0832968, -0.088539995, 1.0358192, -0.07492174, -1.7919655, -0.7090954, -0.015773986, -0.4827122, -0.8480309, -0.24967645, 0.1477981, -0.9456137, 0.3470153, 1.0296965, -0.49957862, 1.121637, 0.9516276, -0.9560234, 1.5165119, -0.6068834, 1.029368, 0.3273464, 0.924789, 1.3569808, -0.5030874, -0.41226596, 1.1679875, 0.31306195, -0.6246676, 1.4413211, 0.34967858, -0.44347325, 0.6853472, -0.09182218, -1.7592055, -0.14414111, 0.5171625, 0.9628901, 1.3407352, -2.4398413, 0.65731275, -0.054625466, -0.01664465, -0.40852106, 1.4960599, 1.9799757, 0.08772637, 1.3779085, -1.702955, 1.9567174, 0.36950567, -0.1820637, -1.0766861, -0.078769065, -0.10157552, 0.6256139
+   });
+   std::vector<float> min({0.5});
+
+   TMVA_SOFIE_Clip_without_max::Session s("Clip_without_max_FromONNX.dat");
+
+   std::vector<float> output = s.infer(input.data(),min.data());
+
+   // Checking output size
+   EXPECT_EQ(output.size(), sizeof(Clip_without_max_ExpectedOutput::outputs) / sizeof(float));
+
+   float *correct = Clip_without_max_ExpectedOutput::outputs;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ONNX, Clip_without_min_max)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the random input
+   std::vector<float> input({
+      std::numeric_limits<float>::infinity(),-std::numeric_limits<float>::infinity(), -0.4310424, -0.48224264, -0.18107834, 0.65879846, -1.1472352, -1.6430495, 0.50338256, 1.4609053, -0.6177167, -0.3448131
+   });
+
+   TMVA_SOFIE_Clip_without_min_max::Session s("Clip_without_min_max_FromONNX.dat");
+
+   std::vector<float> output = s.infer(input.data());
+
+   // Checking output size
+   EXPECT_EQ(output.size(), sizeof(Clip_without_min_max_ExpectedOutput::outputs) / sizeof(float));
+
+   float *correct = Clip_without_min_max_ExpectedOutput::outputs;
 
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); ++i) {
