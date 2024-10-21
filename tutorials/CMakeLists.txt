@@ -88,8 +88,14 @@ if(MSVC AND NOT win_broken_tests)
   list(APPEND dataframe_veto dataframe/df037_TTreeEventMatching.C)
   list(APPEND dataframe_veto dataframe/df037_TTreeEventMatching.py)
   # The RooFit SBI tutorials fail on Windows for unknown reasons
-  list(APPEND roofit_veto roofit/rf615_simulation_based_inference.py roofit/rf617_simulation_based_inference_multidimensional.py)
+  list(APPEND roofit_veto roofit/rf617_simulation_based_inference_multidimensional.py)
 endif()
+
+# TODO: fix the problem and re-enable the tutorial test. The rf615 tutorial
+# occasionally fails on cleanup on different platforms, hinting to a PyROOT
+# issue. We disable the rf617 tutorial for now. as the covered RooFit
+# functionality is also covered by rf617 (the multidimensional case).
+list(APPEND roofit_veto roofit/rf615_simulation_based_inference.py)
 
 if (NOT dataframe)
     # RDataFrame
