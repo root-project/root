@@ -57,7 +57,7 @@ class RFieldVisitor;
 /// Therefore, the zero field must not be connected to a page source or sink.
 class RFieldZero final : public RFieldBase {
 protected:
-   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const override;
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
    void ConstructValue(void *) const final {}
 
 public:
@@ -134,7 +134,7 @@ private:
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
 
-   void ConstructValue(void *where) const override;
+   void ConstructValue(void *where) const final;
    std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RClassDeleter>(fClass); }
 
    std::size_t AppendImpl(const void *from) final;
@@ -149,11 +149,11 @@ public:
    ~RClassField() override = default;
 
    std::vector<RValue> SplitValue(const RValue &value) const final;
-   size_t GetValueSize() const override;
+   size_t GetValueSize() const final;
    size_t GetAlignment() const final { return fMaxAlignment; }
    std::uint32_t GetTypeVersion() const final;
    std::uint32_t GetTypeChecksum() const final;
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const override;
+   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
 /// The field for a class in unsplit mode, which is using ROOT standard streaming
@@ -200,7 +200,7 @@ public:
    RUnsplitField(std::string_view fieldName, std::string_view className, std::string_view typeAlias = "");
    RUnsplitField(RUnsplitField &&other) = default;
    RUnsplitField &operator=(RUnsplitField &&other) = default;
-   ~RUnsplitField() override = default;
+   ~RUnsplitField() final = default;
 
    size_t GetValueSize() const final;
    size_t GetAlignment() const final;
@@ -239,17 +239,6 @@ public:
 /// Classes with dictionaries that can be inspected by TClass
 template <typename T, typename = void>
 class RField final : public RClassField {
-protected:
-   void ConstructValue(void *where) const final
-   {
-      if constexpr (std::is_default_constructible_v<T>) {
-         new (where) T();
-      } else {
-         // If there is no default constructor, try with the IO constructor
-         new (where) T(static_cast<TRootIOCtor *>(nullptr));
-      }
-   }
-
 public:
    static std::string TypeName() { return ROOT::Internal::GetDemangledTypeName(typeid(T)); }
    RField(std::string_view name) : RClassField(name, TypeName())
@@ -258,17 +247,17 @@ public:
    }
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
-   ~RField() override = default;
+   ~RField() final = default;
 };
 
 template <typename T>
-class RField<T, typename std::enable_if<std::is_enum_v<T>>::type> : public REnumField {
+class RField<T, typename std::enable_if<std::is_enum_v<T>>::type> final : public REnumField {
 public:
    static std::string TypeName() { return ROOT::Internal::GetDemangledTypeName(typeid(T)); }
    RField(std::string_view name) : REnumField(name, TypeName()) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
-   ~RField() override = default;
+   ~RField() final = default;
 };
 
 /// An artificial field that transforms an RNTuple column that contains the offset of collections into
@@ -368,7 +357,7 @@ public:
    explicit RField(std::string_view name) : RCardinalityField(name, TypeName()) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
-   ~RField() override = default;
+   ~RField() final = default;
 
    size_t GetValueSize() const final { return sizeof(RNTupleCardinality<SizeT>); }
    size_t GetAlignment() const final { return alignof(RNTupleCardinality<SizeT>); }
@@ -431,7 +420,7 @@ private:
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
 
-   void ConstructValue(void *where) const override;
+   void ConstructValue(void *where) const final;
    std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RTypedDeleter<TObject>>(); }
 
    std::size_t AppendImpl(const void *from) final;
@@ -445,7 +434,7 @@ public:
    RField(std::string_view fieldName);
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
-   ~RField() override = default;
+   ~RField() final = default;
 
    std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetValueSize() const final;

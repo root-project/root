@@ -60,10 +60,10 @@ protected:
 
    std::size_t GetItemPadding(std::size_t baseOffset, std::size_t itemAlignment) const;
 
-   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const override;
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
 
-   void ConstructValue(void *where) const override;
-   std::unique_ptr<RDeleter> GetDeleter() const override;
+   void ConstructValue(void *where) const final;
+   std::unique_ptr<RDeleter> GetDeleter() const final;
 
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
@@ -111,24 +111,9 @@ public:
 /// The generic field for `std::pair<T1, T2>` types
 class RPairField : public RRecordField {
 private:
-   class RPairDeleter : public RDeleter {
-   private:
-      TClass *fClass;
-
-   public:
-      explicit RPairDeleter(TClass *cl) : fClass(cl) {}
-      void operator()(void *objPtr, bool dtorOnly) final;
-   };
-
-   TClass *fClass = nullptr;
    static std::string GetTypeList(const std::array<std::unique_ptr<RFieldBase>, 2> &itemFields);
 
 protected:
-   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const override;
-
-   void ConstructValue(void *where) const override;
-   std::unique_ptr<RDeleter> GetDeleter() const override { return std::make_unique<RPairDeleter>(fClass); }
-
    RPairField(std::string_view fieldName, std::array<std::unique_ptr<RFieldBase>, 2> &&itemFields,
               const std::array<std::size_t, 2> &offsets);
 
@@ -158,17 +143,6 @@ private:
       return {offsetFirst, offsetSecond};
    }
 
-protected:
-   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
-   {
-      std::array<std::unique_ptr<RFieldBase>, 2> items{fSubFields[0]->Clone(fSubFields[0]->GetFieldName()),
-                                                       fSubFields[1]->Clone(fSubFields[1]->GetFieldName())};
-      return std::make_unique<RField<std::pair<T1, T2>>>(newName, std::move(items));
-   }
-
-   void ConstructValue(void *where) const final { new (where) ContainerT(); }
-   std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RTypedDeleter<ContainerT>>(); }
-
 public:
    static std::string TypeName() { return "std::pair<" + RField<T1>::TypeName() + "," + RField<T2>::TypeName() + ">"; }
    explicit RField(std::string_view name, std::array<std::unique_ptr<RFieldBase>, 2> &&itemFields)
@@ -180,7 +154,7 @@ public:
    explicit RField(std::string_view name) : RField(name, BuildItemFields<T1, T2>()) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
-   ~RField() override = default;
+   ~RField() final = default;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -190,24 +164,9 @@ public:
 /// The generic field for `std::tuple<Ts...>` types
 class RTupleField : public RRecordField {
 private:
-   class RTupleDeleter : public RDeleter {
-   private:
-      TClass *fClass;
-
-   public:
-      explicit RTupleDeleter(TClass *cl) : fClass(cl) {}
-      void operator()(void *objPtr, bool dtorOnly) final;
-   };
-
-   TClass *fClass = nullptr;
    static std::string GetTypeList(const std::vector<std::unique_ptr<RFieldBase>> &itemFields);
 
 protected:
-   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const override;
-
-   void ConstructValue(void *where) const override;
-   std::unique_ptr<RDeleter> GetDeleter() const override { return std::make_unique<RTupleDeleter>(fClass); }
-
    RTupleField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> &&itemFields,
                const std::vector<std::size_t> &offsets);
 
@@ -264,18 +223,6 @@ private:
       return result;
    }
 
-protected:
-   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
-   {
-      std::vector<std::unique_ptr<RFieldBase>> items;
-      for (auto &item : fSubFields)
-         items.push_back(item->Clone(item->GetFieldName()));
-      return std::make_unique<RField<std::tuple<ItemTs...>>>(newName, std::move(items));
-   }
-
-   void ConstructValue(void *where) const final { new (where) ContainerT(); }
-   std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RTypedDeleter<ContainerT>>(); }
-
 public:
    static std::string TypeName() { return "std::tuple<" + BuildItemTypes<ItemTs...>() + ">"; }
    explicit RField(std::string_view name, std::vector<std::unique_ptr<RFieldBase>> &&itemFields)
@@ -287,7 +234,7 @@ public:
    explicit RField(std::string_view name) : RField(name, BuildItemFields<ItemTs...>()) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
-   ~RField() override = default;
+   ~RField() final = default;
 };
 
 } // namespace Experimental

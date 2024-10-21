@@ -160,16 +160,16 @@ protected:
                            std::unique_ptr<RFieldBase> itemField);
 
 protected:
-   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const override;
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumns() final;
    void GenerateColumns(const RNTupleDescriptor &desc) final;
 
-   void ConstructValue(void *where) const override;
-   std::unique_ptr<RDeleter> GetDeleter() const override;
+   void ConstructValue(void *where) const final;
+   std::unique_ptr<RDeleter> GetDeleter() const final;
 
-   std::size_t AppendImpl(const void *from) override;
-   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) override;
+   std::size_t AppendImpl(const void *from) final;
+   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
 
    void CommitClusterImpl() final { fNWritten = 0; }
 
@@ -179,10 +179,10 @@ public:
    RProxiedCollectionField &operator=(RProxiedCollectionField &&other) = default;
    ~RProxiedCollectionField() override = default;
 
-   std::vector<RValue> SplitValue(const RValue &value) const override;
-   size_t GetValueSize() const override { return fProxy->Sizeof(); }
-   size_t GetAlignment() const override { return alignof(std::max_align_t); }
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const override;
+   std::vector<RValue> SplitValue(const RValue &value) const final;
+   size_t GetValueSize() const final { return fProxy->Sizeof(); }
+   size_t GetAlignment() const final { return alignof(std::max_align_t); }
+   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
    void GetCollectionInfo(NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const
    {
       fPrincipalColumn->GetCollectionInfo(globalIndex, collectionStart, size);
@@ -263,9 +263,6 @@ struct IsCollectionProxy : HasCollectionProxyMemberType<T> {
 /// ```
 template <typename T>
 class RField<T, typename std::enable_if<IsCollectionProxy<T>::value>::type> final : public RProxiedCollectionField {
-protected:
-   void ConstructValue(void *where) const final { new (where) T(); }
-
 public:
    static std::string TypeName() { return ROOT::Internal::GetDemangledTypeName(typeid(T)); }
    RField(std::string_view name) : RProxiedCollectionField(name, TypeName())
@@ -274,7 +271,7 @@ public:
    }
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
-   ~RField() override = default;
+   ~RField() final = default;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -283,34 +280,15 @@ public:
 
 /// The generic field for a std::map<KeyType, ValueType> and std::unordered_map<KeyType, ValueType>
 class RMapField : public RProxiedCollectionField {
-private:
-   TClass *fItemClass;
-
-protected:
-   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
-
-   std::size_t AppendImpl(const void *from) final;
-   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
-
 public:
    RMapField(std::string_view fieldName, std::string_view typeName, std::unique_ptr<RFieldBase> itemField);
    RMapField(RMapField &&other) = default;
    RMapField &operator=(RMapField &&other) = default;
    ~RMapField() override = default;
-
-   std::vector<RValue> SplitValue(const RValue &value) const final;
-
-   size_t GetAlignment() const override { return std::alignment_of<std::map<std::max_align_t, std::max_align_t>>(); }
 };
 
 template <typename KeyT, typename ValueT>
 class RField<std::map<KeyT, ValueT>> final : public RMapField {
-   using ContainerT = typename std::map<KeyT, ValueT>;
-
-protected:
-   void ConstructValue(void *where) const final { new (where) ContainerT(); }
-   std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RTypedDeleter<ContainerT>>(); }
-
 public:
    static std::string TypeName()
    {
@@ -323,20 +301,11 @@ public:
    }
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
-   ~RField() override = default;
-
-   size_t GetValueSize() const final { return sizeof(ContainerT); }
-   size_t GetAlignment() const final { return std::alignment_of<ContainerT>(); }
+   ~RField() final = default;
 };
 
 template <typename KeyT, typename ValueT>
 class RField<std::unordered_map<KeyT, ValueT>> final : public RMapField {
-   using ContainerT = typename std::unordered_map<KeyT, ValueT>;
-
-protected:
-   void ConstructValue(void *where) const final { new (where) ContainerT(); }
-   std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RTypedDeleter<ContainerT>>(); }
-
 public:
    static std::string TypeName()
    {
@@ -349,20 +318,11 @@ public:
    }
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
-   ~RField() override = default;
-
-   size_t GetValueSize() const final { return sizeof(ContainerT); }
-   size_t GetAlignment() const final { return std::alignment_of<ContainerT>(); }
+   ~RField() final = default;
 };
 
 template <typename KeyT, typename ValueT>
 class RField<std::multimap<KeyT, ValueT>> final : public RMapField {
-   using ContainerT = typename std::multimap<KeyT, ValueT>;
-
-protected:
-   void ConstructValue(void *where) const final { new (where) ContainerT(); }
-   std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RTypedDeleter<ContainerT>>(); }
-
 public:
    static std::string TypeName()
    {
@@ -375,20 +335,11 @@ public:
    }
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
-   ~RField() override = default;
-
-   size_t GetValueSize() const final { return sizeof(ContainerT); }
-   size_t GetAlignment() const final { return std::alignment_of<ContainerT>(); }
+   ~RField() final = default;
 };
 
 template <typename KeyT, typename ValueT>
 class RField<std::unordered_multimap<KeyT, ValueT>> final : public RMapField {
-   using ContainerT = typename std::unordered_multimap<KeyT, ValueT>;
-
-protected:
-   void ConstructValue(void *where) const final { new (where) ContainerT(); }
-   std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RTypedDeleter<ContainerT>>(); }
-
 public:
    static std::string TypeName()
    {
@@ -401,10 +352,7 @@ public:
    }
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
-   ~RField() override = default;
-
-   size_t GetValueSize() const final { return sizeof(ContainerT); }
-   size_t GetAlignment() const final { return std::alignment_of<ContainerT>(); }
+   ~RField() final = default;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -413,96 +361,55 @@ public:
 
 /// The generic field for a std::set<Type> and std::unordered_set<Type>
 class RSetField : public RProxiedCollectionField {
-protected:
-   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
-
 public:
    RSetField(std::string_view fieldName, std::string_view typeName, std::unique_ptr<RFieldBase> itemField);
    RSetField(RSetField &&other) = default;
    RSetField &operator=(RSetField &&other) = default;
    ~RSetField() override = default;
-
-   size_t GetAlignment() const override { return std::alignment_of<std::set<std::max_align_t>>(); }
 };
 
 template <typename ItemT>
-class RField<std::set<ItemT>> : public RSetField {
-   using ContainerT = typename std::set<ItemT>;
-
-protected:
-   void ConstructValue(void *where) const final { new (where) ContainerT(); }
-   std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RTypedDeleter<ContainerT>>(); }
-
+class RField<std::set<ItemT>> final : public RSetField {
 public:
    static std::string TypeName() { return "std::set<" + RField<ItemT>::TypeName() + ">"; }
 
    explicit RField(std::string_view name) : RSetField(name, TypeName(), std::make_unique<RField<ItemT>>("_0")) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
-   ~RField() override = default;
-
-   size_t GetValueSize() const final { return sizeof(ContainerT); }
-   size_t GetAlignment() const final { return std::alignment_of<ContainerT>(); }
+   ~RField() final = default;
 };
 
 template <typename ItemT>
 class RField<std::unordered_set<ItemT>> final : public RSetField {
-   using ContainerT = typename std::unordered_set<ItemT>;
-
-protected:
-   void ConstructValue(void *where) const final { new (where) ContainerT(); }
-   std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RTypedDeleter<ContainerT>>(); }
-
 public:
    static std::string TypeName() { return "std::unordered_set<" + RField<ItemT>::TypeName() + ">"; }
 
    explicit RField(std::string_view name) : RSetField(name, TypeName(), std::make_unique<RField<ItemT>>("_0")) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
-   ~RField() override = default;
-
-   size_t GetValueSize() const final { return sizeof(ContainerT); }
-   size_t GetAlignment() const final { return std::alignment_of<ContainerT>(); }
+   ~RField() final = default;
 };
 
 template <typename ItemT>
-class RField<std::multiset<ItemT>> : public RSetField {
-   using ContainerT = typename std::multiset<ItemT>;
-
-protected:
-   void ConstructValue(void *where) const final { new (where) ContainerT(); }
-   std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RTypedDeleter<ContainerT>>(); }
-
+class RField<std::multiset<ItemT>> final : public RSetField {
 public:
    static std::string TypeName() { return "std::multiset<" + RField<ItemT>::TypeName() + ">"; }
 
    explicit RField(std::string_view name) : RSetField(name, TypeName(), std::make_unique<RField<ItemT>>("_0")) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
-   ~RField() override = default;
-
-   size_t GetValueSize() const final { return sizeof(ContainerT); }
-   size_t GetAlignment() const final { return std::alignment_of<ContainerT>(); }
+   ~RField() final = default;
 };
 
 template <typename ItemT>
-class RField<std::unordered_multiset<ItemT>> : public RSetField {
-   using ContainerT = typename std::unordered_multiset<ItemT>;
-
-protected:
-   void ConstructValue(void *where) const final { new (where) ContainerT(); }
-   std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RTypedDeleter<ContainerT>>(); }
-
+class RField<std::unordered_multiset<ItemT>> final : public RSetField {
 public:
    static std::string TypeName() { return "std::unordered_multiset<" + RField<ItemT>::TypeName() + ">"; }
 
    explicit RField(std::string_view name) : RSetField(name, TypeName(), std::make_unique<RField<ItemT>>("_0")) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
-   ~RField() override = default;
-
-   size_t GetValueSize() const final { return sizeof(ContainerT); }
-   size_t GetAlignment() const final { return std::alignment_of<ContainerT>(); }
+   ~RField() final = default;
 };
 
 } // namespace Experimental
