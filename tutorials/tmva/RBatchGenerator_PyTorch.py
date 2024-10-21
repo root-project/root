@@ -17,13 +17,14 @@ file_name = "http://root.cern/files/Higgs_data.root"
 batch_size = 128
 chunk_size = 5_000
 
+rdataframe = ROOT.RDataFrame(tree_name, file_name)
+
 target = "Type"
 
 # Returns two generators that return training and validation batches
 # as PyTorch tensors.
 gen_train, gen_validation = ROOT.TMVA.Experimental.CreatePyTorchGenerators(
-    tree_name,
-    file_name,
+    rdataframe,
     batch_size,
     chunk_size,
     target=target,
@@ -53,31 +54,33 @@ model = torch.nn.Sequential(
 loss_fn = torch.nn.MSELoss(reduction="mean")
 optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
 
+number_of_epochs = 2
 
-# Loop through the training set and train model
-for i, (x_train, y_train) in enumerate(gen_train):
-    # Make prediction and calculate loss
-    pred = model(x_train).view(-1)
-    loss = loss_fn(pred, y_train)
+for _ in range(number_of_epochs):
+    # Loop through the training set and train model
+    for i, (x_train, y_train) in enumerate(gen_train):
+        # Make prediction and calculate loss
+        pred = model(x_train)
+        loss = loss_fn(pred, y_train)
 
-    # improve model
-    model.zero_grad()
-    loss.backward()
-    optimizer.step()
+        # improve model
+        model.zero_grad()
+        loss.backward()
+        optimizer.step()
 
-    # Calculate accuracy
-    accuracy = calc_accuracy(y_train, pred)
+        # Calculate accuracy
+        accuracy = calc_accuracy(y_train, pred)
 
-    print(f"Training => accuracy: {accuracy}")
+        print(f"Training => accuracy: {accuracy}")
 
-#################################################################
-# Validation
-#################################################################
+    #################################################################
+    # Validation
+    #################################################################
 
-# Evaluate the model on the validation set
-for i, (x_train, y_train) in enumerate(gen_validation):
-    # Make prediction and calculate accuracy
-    pred = model(x_train).view(-1)
-    accuracy = calc_accuracy(y_train, pred)
+    # Evaluate the model on the validation set
+    for i, (x_train, y_train) in enumerate(gen_validation):
+        # Make prediction and calculate accuracy
+        pred = model(x_train)
+        accuracy = calc_accuracy(y_train, pred)
 
-    print(f"Validation => accuracy: {accuracy}")
+        print(f"Validation => accuracy: {accuracy}")
