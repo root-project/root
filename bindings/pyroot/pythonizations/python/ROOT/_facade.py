@@ -15,6 +15,12 @@ from ._numbadeclare import _NumbaDeclareDecorator
 
 from ._pythonization import pythonization
 
+# Because the facade acts as the actual ROOT package for `import` purposes,
+# we have to expose any further scripts that must be picked up by the pip
+# build backend so that the generated executable can properly run
+# `from ROOT._name_of_script import main`. See pyproject.toml for the list
+# of enabled scripts.
+from . import _rootcli as _rootexe
 
 class PyROOTConfiguration(object):
     """Class for configuring PyROOT"""
@@ -76,6 +82,8 @@ def _subimport(name):
 
 class ROOTFacade(types.ModuleType):
     """Facade class for ROOT module"""
+
+    _rootcli = _rootexe
 
     def __init__(self, module, is_ipython):
         types.ModuleType.__init__(self, module.__name__)
