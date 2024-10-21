@@ -1631,6 +1631,17 @@ if(tmva-sofie)
       endif()
     endif()
   endif()
+
+  message(STATUS "Looking for BLAS for TMVA SOFIE")
+  find_package(BLAS)
+  if(NOT BLAS_FOUND)
+    if(GSL_FOUND)
+      message(STATUS "Using GSL CBLAS for TMVA SOFIE")
+    else()
+      set(tmva-sofie OFF CACHE BOOL "Disabled because BLAS was not found (${tmva-cpu_description})" FORCE)
+    endif()
+  endif()
+
 endif()
 
 ### Look for package CuDNN. If both cudnn and tmva-gpu are set and cudnn was
