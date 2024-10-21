@@ -67,19 +67,21 @@ TEST(RNTupleModel, GetField)
    auto m = RNTupleModel::Create();
    m->MakeField<int>("x");
    m->MakeField<CustomStruct>("cs");
+   m->GetMutableField("cs.v1._0").SetColumnRepresentatives({{EColumnType::kReal32}});
    m->Freeze();
-   EXPECT_EQ(m->GetField("x").GetFieldName(), "x");
-   EXPECT_EQ(m->GetField("x").GetTypeName(), "std::int32_t");
-   EXPECT_EQ(m->GetField("cs.v1").GetFieldName(), "v1");
-   EXPECT_EQ(m->GetField("cs.v1").GetTypeName(), "std::vector<float>");
+   EXPECT_EQ(m->GetConstField("x").GetFieldName(), "x");
+   EXPECT_EQ(m->GetConstField("x").GetTypeName(), "std::int32_t");
+   EXPECT_EQ(m->GetConstField("cs.v1").GetFieldName(), "v1");
+   EXPECT_EQ(m->GetConstField("cs.v1").GetTypeName(), "std::vector<float>");
+   EXPECT_EQ(m->GetConstField("cs.v1._0").GetColumnRepresentatives()[0][0], EColumnType::kReal32);
    try {
-      m->GetField("nonexistent");
+      m->GetConstField("nonexistent");
       FAIL() << "invalid field name should throw";
    } catch (const RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("invalid field"));
    }
    try {
-      m->GetField("");
+      m->GetConstField("");
       FAIL() << "empty field name should throw";
    } catch (const RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("invalid field"));
@@ -90,10 +92,16 @@ TEST(RNTupleModel, GetField)
    } catch (const RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("frozen model"));
    }
+   try {
+      m->GetMutableField("x");
+      FAIL() << "GetMutableField should throw";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("frozen model"));
+   }
    EXPECT_EQ("", m->GetConstFieldZero().GetQualifiedFieldName());
-   EXPECT_EQ("x", m->GetField("x").GetQualifiedFieldName());
-   EXPECT_EQ("cs", m->GetField("cs").GetQualifiedFieldName());
-   EXPECT_EQ("cs.v1", m->GetField("cs.v1").GetQualifiedFieldName());
+   EXPECT_EQ("x", m->GetConstField("x").GetQualifiedFieldName());
+   EXPECT_EQ("cs", m->GetConstField("cs").GetQualifiedFieldName());
+   EXPECT_EQ("cs.v1", m->GetConstField("cs.v1").GetQualifiedFieldName());
 }
 
 TEST(RNTupleModel, EstimateWriteMemoryUsage)
@@ -160,6 +168,6 @@ TEST(RNTupleModel, Clone)
          EXPECT_EQ(EColumnType::kUInt32, f.GetColumnRepresentatives()[0][0]);
       }
    }
-   EXPECT_TRUE(clone->GetField("struct").GetTraits() & RFieldBase::kTraitTypeChecksum);
-   EXPECT_TRUE(clone->GetField("obj").GetTraits() & RFieldBase::kTraitTypeChecksum);
+   EXPECT_TRUE(clone->GetConstField("struct").GetTraits() & RFieldBase::kTraitTypeChecksum);
+   EXPECT_TRUE(clone->GetConstField("obj").GetTraits() & RFieldBase::kTraitTypeChecksum);
 }

@@ -42,7 +42,7 @@ TEST(RNTuple, EnumBasics)
    auto ptrVecEnum = model->MakeField<std::vector<CustomEnum>>("ve");
    model->MakeField<StructWithEnums>("swe");
 
-   EXPECT_EQ(model->GetField("e").GetTypeName(), f->GetTypeName());
+   EXPECT_EQ(model->GetConstField("e").GetTypeName(), f->GetTypeName());
 
    FileRaii fileGuard("test_ntuple_enum_basics.root");
    {
@@ -1397,8 +1397,8 @@ TEST(RNTuple, Bitset)
    auto model = RNTupleModel::Create();
 
    auto f1 = model->MakeField<std::bitset<66>>("f1");
-   EXPECT_EQ(std::string("std::bitset<66>"), model->GetField("f1").GetTypeName());
-   EXPECT_EQ(sizeof(std::bitset<66>), model->GetField("f1").GetValueSize());
+   EXPECT_EQ(std::string("std::bitset<66>"), model->GetConstField("f1").GetTypeName());
+   EXPECT_EQ(sizeof(std::bitset<66>), model->GetConstField("f1").GetValueSize());
    auto f2 = model->MakeField<std::bitset<8>>("f2", "10101010");
 
    {
@@ -1413,7 +1413,7 @@ TEST(RNTuple, Bitset)
    }
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-   EXPECT_EQ(std::string("std::bitset<66>"), reader->GetModel().GetField("f1").GetTypeName());
+   EXPECT_EQ(std::string("std::bitset<66>"), reader->GetModel().GetConstField("f1").GetTypeName());
    auto bs1 = reader->GetModel().GetDefaultEntry().GetPtr<std::bitset<66>>("f1");
    auto bs2 = reader->GetModel().GetDefaultEntry().GetPtr<std::bitset<8>>("f2");
    reader->LoadEntry(0);
@@ -1437,12 +1437,12 @@ TEST(RNTuple, UniquePtr)
       auto ppString = model->MakeField<std::unique_ptr<std::unique_ptr<std::string>>>("PPString");
       auto pArray = model->MakeField<std::unique_ptr<std::array<char, 2>>>("PArray");
 
-      EXPECT_EQ("std::unique_ptr<bool>", model->GetField("PBool").GetTypeName());
-      EXPECT_EQ(std::string("std::unique_ptr<CustomStruct>"), model->GetField("PCustomStruct").GetTypeName());
-      EXPECT_EQ(std::string("std::unique_ptr<IOConstructor>"), model->GetField("PIOConstructor").GetTypeName());
+      EXPECT_EQ("std::unique_ptr<bool>", model->GetConstField("PBool").GetTypeName());
+      EXPECT_EQ(std::string("std::unique_ptr<CustomStruct>"), model->GetConstField("PCustomStruct").GetTypeName());
+      EXPECT_EQ(std::string("std::unique_ptr<IOConstructor>"), model->GetConstField("PIOConstructor").GetTypeName());
       EXPECT_EQ(std::string("std::unique_ptr<std::unique_ptr<std::string>>"),
-                model->GetField("PPString").GetTypeName());
-      EXPECT_EQ(std::string("std::unique_ptr<std::array<char,2>>"), model->GetField("PArray").GetTypeName());
+                model->GetConstField("PPString").GetTypeName());
+      EXPECT_EQ(std::string("std::unique_ptr<std::array<char,2>>"), model->GetConstField("PArray").GetTypeName());
 
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
 
@@ -1476,11 +1476,12 @@ TEST(RNTuple, UniquePtr)
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    const auto &model = reader->GetModel();
-   EXPECT_EQ("std::unique_ptr<bool>", model.GetField("PBool").GetTypeName());
-   EXPECT_EQ(std::string("std::unique_ptr<CustomStruct>"), model.GetField("PCustomStruct").GetTypeName());
-   EXPECT_EQ(std::string("std::unique_ptr<IOConstructor>"), model.GetField("PIOConstructor").GetTypeName());
-   EXPECT_EQ(std::string("std::unique_ptr<std::unique_ptr<std::string>>"), model.GetField("PPString").GetTypeName());
-   EXPECT_EQ(std::string("std::unique_ptr<std::array<char,2>>"), model.GetField("PArray").GetTypeName());
+   EXPECT_EQ("std::unique_ptr<bool>", model.GetConstField("PBool").GetTypeName());
+   EXPECT_EQ(std::string("std::unique_ptr<CustomStruct>"), model.GetConstField("PCustomStruct").GetTypeName());
+   EXPECT_EQ(std::string("std::unique_ptr<IOConstructor>"), model.GetConstField("PIOConstructor").GetTypeName());
+   EXPECT_EQ(std::string("std::unique_ptr<std::unique_ptr<std::string>>"),
+             model.GetConstField("PPString").GetTypeName());
+   EXPECT_EQ(std::string("std::unique_ptr<std::array<char,2>>"), model.GetConstField("PArray").GetTypeName());
 
    const auto &entry = model.GetDefaultEntry();
    auto pBool = entry.GetPtr<std::unique_ptr<bool>>("PBool");
@@ -1820,10 +1821,10 @@ TEST(RNTuple, Double32)
    }
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-   EXPECT_EQ(EColumnType::kReal32, reader->GetModel().GetField("d1").GetColumnRepresentatives()[0][0]);
-   EXPECT_EQ("", reader->GetModel().GetField("d1").GetTypeAlias());
-   EXPECT_EQ(EColumnType::kSplitReal32, reader->GetModel().GetField("d2").GetColumnRepresentatives()[0][0]);
-   EXPECT_EQ("Double32_t", reader->GetModel().GetField("d2").GetTypeAlias());
+   EXPECT_EQ(EColumnType::kReal32, reader->GetModel().GetConstField("d1").GetColumnRepresentatives()[0][0]);
+   EXPECT_EQ("", reader->GetModel().GetConstField("d1").GetTypeAlias());
+   EXPECT_EQ(EColumnType::kSplitReal32, reader->GetModel().GetConstField("d2").GetColumnRepresentatives()[0][0]);
+   EXPECT_EQ("Double32_t", reader->GetModel().GetConstField("d2").GetTypeAlias());
    auto d1 = reader->GetModel().GetDefaultEntry().GetPtr<double>("d1");
    auto d2 = reader->GetModel().GetDefaultEntry().GetPtr<double>("d2");
    reader->LoadEntry(0);
@@ -1877,8 +1878,9 @@ TEST(RNTuple, Double32Extended)
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    auto obj = reader->GetModel().GetDefaultEntry().GetPtr<LowPrecisionFloats>("obj");
-   EXPECT_EQ("Double32_t", reader->GetModel().GetField("obj").GetSubFields()[1]->GetTypeAlias());
-   EXPECT_EQ("Double32_t", reader->GetModel().GetField("obj").GetSubFields()[2]->GetSubFields()[0]->GetTypeAlias());
+   EXPECT_EQ("Double32_t", reader->GetModel().GetConstField("obj").GetSubFields()[1]->GetTypeAlias());
+   EXPECT_EQ("Double32_t",
+             reader->GetModel().GetConstField("obj").GetSubFields()[2]->GetSubFields()[0]->GetTypeAlias());
    EXPECT_DOUBLE_EQ(0.0, obj->a);
    EXPECT_DOUBLE_EQ(1.0, obj->b);
    EXPECT_DOUBLE_EQ(2.0, obj->c[0]);
@@ -2048,7 +2050,7 @@ TEST(RNTuple, TClassTemplateBased)
 
    auto reader = RNTupleReader::Open("f", fileGuard.GetPath());
 
-   const auto &fieldObject = reader->GetModel().GetField("klass");
+   const auto &fieldObject = reader->GetModel().GetConstField("klass");
    EXPECT_EQ("EdmWrapper<CustomStruct>", fieldObject.GetTypeName());
    auto object = reader->GetModel().GetDefaultEntry().GetPtr<EdmWrapper<CustomStruct>>("klass");
    reader->LoadEntry(0);

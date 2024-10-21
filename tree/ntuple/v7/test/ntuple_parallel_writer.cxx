@@ -179,12 +179,12 @@ TEST(RNTupleParallelWriter, StagedMultiColumn)
       c->Fill(*e);
       c->FlushCluster();
       ROOT::Experimental::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
-         const_cast<RFieldBase &>(c->GetModel().GetField("px")), 1);
+         const_cast<RFieldBase &>(c->GetModel().GetConstField("px")), 1);
       *px = 2.0;
       c->Fill(*e);
       c->FlushCluster();
       ROOT::Experimental::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
-         const_cast<RFieldBase &>(c->GetModel().GetField("px")), 0);
+         const_cast<RFieldBase &>(c->GetModel().GetConstField("px")), 0);
       *px = 3.0;
       c->Fill(*e);
       c->FlushCluster();
@@ -193,7 +193,7 @@ TEST(RNTupleParallelWriter, StagedMultiColumn)
    }
 
    auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
-   EXPECT_EQ(3u, reader->GetModel().GetField("px").GetNElements());
+   EXPECT_EQ(3u, reader->GetModel().GetConstField("px").GetNElements());
 
    const auto &desc = reader->GetDescriptor();
    EXPECT_EQ(3u, desc.GetNClusters());

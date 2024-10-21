@@ -155,7 +155,7 @@ ROOT::Experimental::Internal::RProjectedFields::Clone(const RNTupleModel &newMod
    for (const auto &[k, v] : fFieldMap) {
       for (const auto &f : clone->GetFieldZero()) {
          if (f.GetQualifiedFieldName() == k->GetQualifiedFieldName()) {
-            clone->fFieldMap[&f] = &newModel.GetField(v->GetQualifiedFieldName());
+            clone->fFieldMap[&f] = &newModel.GetConstField(v->GetQualifiedFieldName());
             break;
          }
       }
@@ -354,7 +354,18 @@ ROOT::Experimental::RFieldZero &ROOT::Experimental::RNTupleModel::GetMutableFiel
    return *fFieldZero;
 }
 
-const ROOT::Experimental::RFieldBase &ROOT::Experimental::RNTupleModel::GetField(std::string_view fieldName) const
+ROOT::Experimental::RFieldBase &ROOT::Experimental::RNTupleModel::GetMutableField(std::string_view fieldName)
+{
+   if (IsFrozen())
+      throw RException(R__FAIL("invalid attempt to get mutable field of frozen model"));
+   auto f = FindField(fieldName);
+   if (!f)
+      throw RException(R__FAIL("invalid field: " + std::string(fieldName)));
+
+   return *f;
+}
+
+const ROOT::Experimental::RFieldBase &ROOT::Experimental::RNTupleModel::GetConstField(std::string_view fieldName) const
 {
    auto f = FindField(fieldName);
    if (!f)

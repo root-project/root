@@ -107,10 +107,11 @@ void ROOT::Experimental::Internal::RPageSinkBuf::UpdateSchema(const RNTupleModel
       auto p = &(*cloned);
       auto &projectedFields = Internal::GetProjectedFieldsOfModel(changeset.fModel);
       Internal::RProjectedFields::FieldMap_t fieldMap;
-      fieldMap[p] = &fInnerModel->GetField(projectedFields.GetSourceField(field)->GetQualifiedFieldName());
+      fieldMap[p] = &fInnerModel->GetConstField(projectedFields.GetSourceField(field)->GetQualifiedFieldName());
       auto targetIt = cloned->begin();
       for (auto &f : *field)
-         fieldMap[&(*targetIt++)] = &fInnerModel->GetField(projectedFields.GetSourceField(&f)->GetQualifiedFieldName());
+         fieldMap[&(*targetIt++)] =
+            &fInnerModel->GetConstField(projectedFields.GetSourceField(&f)->GetQualifiedFieldName());
       Internal::GetProjectedFieldsOfModel(*fInnerModel).Add(std::move(cloned), fieldMap);
       return p;
    };

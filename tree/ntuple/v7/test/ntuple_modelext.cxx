@@ -61,8 +61,8 @@ TEST(RNTuple, ModelExtensionSimple)
    auto ntuple = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
    EXPECT_EQ(4U, ntuple->GetNEntries());
    EXPECT_EQ(4U, ntuple->GetDescriptor().GetNFields());
-   EXPECT_EQ(0U, GetFirstEntry(ntuple->GetModel().GetField("pt")));
-   EXPECT_EQ(2U, GetFirstEntry(ntuple->GetModel().GetField("array")));
+   EXPECT_EQ(0U, GetFirstEntry(ntuple->GetModel().GetConstField("pt")));
+   EXPECT_EQ(2U, GetFirstEntry(ntuple->GetModel().GetConstField("array")));
 
    auto pt = ntuple->GetView<float>("pt");
    auto array = ntuple->GetView<std::array<double, 2>>("array");
@@ -155,11 +155,11 @@ TEST(RNTuple, ModelExtensionMultiple)
    auto ntuple = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
    EXPECT_EQ(5U, ntuple->GetNEntries());
    EXPECT_EQ(7U, ntuple->GetDescriptor().GetNFields());
-   EXPECT_EQ(0U, GetFirstEntry(ntuple->GetModel().GetField("pt")));
-   EXPECT_EQ(3U, GetFirstEntry(ntuple->GetModel().GetField("vec")));
-   EXPECT_EQ(3U, GetFirstEntry(ntuple->GetModel().GetField("f")));
-   EXPECT_EQ(3U, GetFirstEntry(ntuple->GetModel().GetField("u8")));
-   EXPECT_EQ(3U, GetFirstEntry(ntuple->GetModel().GetField("str")));
+   EXPECT_EQ(0U, GetFirstEntry(ntuple->GetModel().GetConstField("pt")));
+   EXPECT_EQ(3U, GetFirstEntry(ntuple->GetModel().GetConstField("vec")));
+   EXPECT_EQ(3U, GetFirstEntry(ntuple->GetModel().GetConstField("f")));
+   EXPECT_EQ(3U, GetFirstEntry(ntuple->GetModel().GetConstField("u8")));
+   EXPECT_EQ(3U, GetFirstEntry(ntuple->GetModel().GetConstField("str")));
 
    auto pt = ntuple->GetView<float>("pt");
    auto vec = ntuple->GetView<std::vector<std::uint32_t>>("vec");
