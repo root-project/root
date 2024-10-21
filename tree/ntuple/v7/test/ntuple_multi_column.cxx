@@ -290,8 +290,8 @@ TEST(RNTuple, MultiColumnRepresentationNullable)
       auto model = RNTupleModel::Create();
       auto fldScalar = RFieldBase::Create("scalar", "std::optional<float>").Unwrap();
       auto fldVector = RFieldBase::Create("vector", "std::vector<std::optional<float>>").Unwrap();
-      fldScalar->SetColumnRepresentatives({{EColumnType::kBit}, {EColumnType::kSplitIndex64}});
-      fldVector->GetSubFields()[0]->SetColumnRepresentatives({{EColumnType::kSplitIndex64}, {EColumnType::kBit}});
+      fldScalar->SetColumnRepresentatives({{EColumnType::kIndex32}, {EColumnType::kSplitIndex64}});
+      fldVector->GetSubFields()[0]->SetColumnRepresentatives({{EColumnType::kSplitIndex64}, {EColumnType::kIndex32}});
       model->AddField(std::move(fldScalar));
       model->AddField(std::move(fldVector));
       auto ptrScalar = model->GetDefaultEntry().GetPtr<std::optional<float>>("scalar");
@@ -417,7 +417,7 @@ TEST(RNTuple, MultiColumnRepresentationFriends)
       writer->Fill();
    }
 
-   std::vector<RNTupleReader::ROpenSpec> friends{{"ntpl1", fileGuard1.GetPath()}, {"ntpl2", fileGuard2.GetPath()}};
+   std::vector<RNTupleOpenSpec> friends{{"ntpl1", fileGuard1.GetPath()}, {"ntpl2", fileGuard2.GetPath()}};
    auto reader = RNTupleReader::OpenFriends(friends);
    EXPECT_EQ(2u, reader->GetNEntries());
    auto viewPt = reader->GetView<float>("ntpl1.pt");

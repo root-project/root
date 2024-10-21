@@ -1,7 +1,8 @@
 // Author: Enrico Guiraud CERN 09/2020
+// Author: Vincenzo Eduardo Padulano CERN 09/2024
 
 /*************************************************************************
- * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2024, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -40,6 +41,19 @@ public:
    }
 };
 
+class R__CLING_PTRCHECK(off) RTreeOpaqueColumnReader final : public ROOT::Detail::RDF::RColumnReaderBase {
+   std::unique_ptr<ROOT::Internal::TTreeReaderOpaqueValue> fTreeValue;
+
+   void *GetImpl(Long64_t) final { return fTreeValue->GetAddress(); }
+
+public:
+   /// Construct the RTreeColumnReader. Actual initialization is performed lazily by the Init method.
+   RTreeOpaqueColumnReader(TTreeReader &r, const std::string &colName)
+      : fTreeValue(std::make_unique<ROOT::Internal::TTreeReaderOpaqueValue>(r, colName.c_str()))
+   {
+   }
+};
+
 /// RTreeColumnReader specialization for TTree values read via TTreeReaderArrays.
 ///
 /// TTreeReaderArrays are used whenever the RDF column type is RVec<T>.
@@ -72,6 +86,11 @@ class R__CLING_PTRCHECK(off) RTreeColumnReader<RVec<T>> final : public ROOT::Det
       // Currently we need the first entry to have been loaded to perform the check
       // TODO Move check to constructor once ROOT-10823 is fixed and TTreeReaderArray itself exposes this information
       const auto readerArraySize = readerArray.GetSize();
+
+      // The reader could not read an array, signal this back to the node requesting the value
+      if (R__unlikely(readerArray.GetReadStatus() == ROOT::Internal::TTreeReaderValueBase::EReadStatus::kReadError))
+         return nullptr;
+
       if (EStorageType::kUnknown == fStorageType && readerArraySize > 1) {
          // We can decide since the array is long enough
          fStorageType = EStorageType::kContiguous;

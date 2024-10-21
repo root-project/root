@@ -7,6 +7,7 @@
 ROOT_ADD_GTEST(testTProfile2Poly test_tprofile2poly.cxx LIBRARIES Hist Matrix MathCore RIO)
 ROOT_ADD_GTEST(testTH2PolyBinError test_TH2Poly_BinError.cxx LIBRARIES Hist Matrix MathCore RIO)
 ROOT_ADD_GTEST(testTH2PolyAdd test_TH2Poly_Add.cxx LIBRARIES Hist Matrix MathCore RIO)
+ROOT_ADD_GTEST(testTH2PolyGetNumberOfBins test_TH2Poly_GetNumberOfBins.cxx LIBRARIES Hist Matrix MathCore RIO)
 ROOT_ADD_GTEST(testTHn THn.cxx LIBRARIES Hist Matrix MathCore RIO)
 ROOT_ADD_GTEST(testTH1 test_TH1.cxx LIBRARIES Hist)
 ROOT_ADD_GTEST(testTHStack test_THStack.cxx LIBRARIES Hist)
@@ -22,6 +23,7 @@ ROOT_ADD_GTEST(testTMultiGraphGetHistogram test_TMultiGraph_GetHistogram.cxx LIB
 ROOT_ADD_GTEST(testMapCppName test_MapCppName.cxx LIBRARIES Hist Gpad)
 ROOT_ADD_GTEST(testTGraphSorting test_TGraph_sorting.cxx LIBRARIES Hist)
 ROOT_ADD_GTEST(testSpline test_spline.cxx LIBRARIES Hist)
+ROOT_ADD_GTEST(testTF1Simple test_tf1_simple.cxx LIBRARIES Hist RIO)
 
 if(fftw3)
   ROOT_ADD_GTEST(testTF1 test_tf1.cxx LIBRARIES Hist)

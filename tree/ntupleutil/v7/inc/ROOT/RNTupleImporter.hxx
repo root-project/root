@@ -19,7 +19,6 @@
 #include <ROOT/REntry.hxx>
 #include <ROOT/RError.hxx>
 #include <ROOT/RField.hxx>
-#include <ROOT/RNTupleCollectionWriter.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleWriteOptions.hxx>
 #include <ROOT/RNTupleWriter.hxx>
@@ -141,8 +140,6 @@ private:
       RFieldBase *fField = nullptr;
       std::unique_ptr<RFieldBase::RValue> fValue; ///< Set if a value is generated, only for transformed fields
       void *fFieldBuffer = nullptr; ///< Usually points to the corresponding RImportBranch::fBranchBuffer but not always
-      bool fIsInUntypedCollection = false; ///< Sub-fields of untyped collections (leaf count arrays in the input)
-      bool fIsClass = false; ///< Field imported from a branch with stramer info (e.g., STL, user-defined class)
    };
 
    /// Base class to perform data transformations from TTree branches to RNTuple fields if necessary
@@ -156,7 +153,6 @@ private:
       }
       virtual ~RImportTransformation() = default;
       virtual RResult<void> Transform(const RImportBranch &branch, RImportField &field) = 0;
-      virtual void ResetEntry() = 0; // called at the end of an entry
    };
 
    /// When the schema is set up and the import started, it needs to be reset before the next Import() call
@@ -172,7 +168,7 @@ private:
       ~RImportGuard() { fImporter.ResetSchema(); }
    };
 
-   /// Leaf count arrays require special treatment. They are translated into RNTuple untyped collections.
+   /// Leaf count arrays require special treatment. They are translated into untyped collections of untyped records.
    /// This class does the bookkeeping of the sub-schema for these collections.
    struct RImportLeafCountCollection {
       RImportLeafCountCollection() = default;
@@ -180,17 +176,20 @@ private:
       RImportLeafCountCollection(RImportLeafCountCollection &&other) = default;
       RImportLeafCountCollection &operator=(const RImportLeafCountCollection &other) = delete;
       RImportLeafCountCollection &operator=(RImportLeafCountCollection &&other) = default;
-      std::unique_ptr<RNTupleModel> fCollectionModel;             ///< The model for the collection itself
-      std::shared_ptr<RNTupleCollectionWriter> fCollectionWriter; ///< Used to fill the collection elements per event
-      std::unique_ptr<REntry> fCollectionEntry; ///< Keeps the memory location of the collection members
+      std::string fFieldName; ///< name of the untyped collection, e.g. `_collection0`, `_collection1`, etc.
+      /// Stores count leaf GetMaximum() to create large enough buffers for the array leafs.
+      /// Uses Int_t because that is the return type if TLeaf::GetMaximum().
+      Int_t fMaxLength = 0;
       /// The number of elements for the collection for a particular event. Used as a destination for SetBranchAddress()
       /// of the count leaf
       std::unique_ptr<Int_t> fCountVal;
-      std::vector<size_t> fImportFieldIndexes; ///< Points to the correspondings fields in fImportFields
-      /// One transformation for every field, to copy the content of the array one by one
-      std::vector<std::unique_ptr<RImportTransformation>> fTransformations;
-      Int_t fMaxLength = 0;   ///< Stores count leaf GetMaximum() to create large enough buffers for the array leafs
-      std::string fFieldName; ///< name of the untyped collection, e.g. `_collection0`, `_collection1`, etc.
+      /// The leafs of the array as we encounter them traversing the TTree schema.
+      /// Eventually, the fields are moved as leaves to an untyped collection of untyped records that in turn
+      /// is attached to the RNTuple model.
+      std::vector<std::unique_ptr<RFieldBase>> fLeafFields;
+      std::vector<size_t> fLeafBranchIndexes; ///< Points to the correspondings leaf branches in fImportBranches
+      RRecordField *fRecordField = nullptr; ///< Points to the item field of the untyped collection field in the model.
+      std::vector<unsigned char> fFieldBuffer; ///< The collection field memory representation. Bound to the entry.
    };
 
    /// Transform a NULL terminated C string branch into an `std::string` field
@@ -198,18 +197,6 @@ private:
       RCStringTransformation(std::size_t b, std::size_t f) : RImportTransformation(b, f) {}
       ~RCStringTransformation() override = default;
       RResult<void> Transform(const RImportBranch &branch, RImportField &field) final;
-      void ResetEntry() final {}
-   };
-
-   /// When writing the elements of a leaf count array, moves the data from the input array one-by-one
-   /// to the memory locations of the fields of the corresponding untyped collection.
-   /// TODO(jblomer): write arrays as a whole to RNTuple
-   struct RLeafArrayTransformation : public RImportTransformation {
-      std::int64_t fNum = 0;
-      RLeafArrayTransformation(std::size_t b, std::size_t f) : RImportTransformation(b, f) {}
-      ~RLeafArrayTransformation() override = default;
-      RResult<void> Transform(const RImportBranch &branch, RImportField &field) final;
-      void ResetEntry() final { fNum = 0; }
    };
 
    RNTupleImporter() = default;

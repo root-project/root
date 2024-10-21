@@ -20,22 +20,52 @@
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RPageStorage.hxx>
+#include <ROOT/TTaskGroup.hxx>
 #include <Compression.h>
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 #include <unordered_map>
 
-namespace ROOT {
-namespace Experimental {
-namespace Internal {
+namespace ROOT::Experimental::Internal {
+
+enum class ENTupleMergingMode {
+   /// The merger will discard all columns that aren't present in the prototype model (i.e. the model of the first
+   /// source)
+   kFilter,
+   /// The merger will refuse to merge any 2 RNTuples whose schema doesn't match exactly
+   kStrict,
+   /// The merger will update the output model to include all columns from all sources. Entries corresponding to columns
+   /// that are not present in a source will be set to the default value of the type.
+   kUnion
+};
+
+enum class ENTupleMergeErrBehavior {
+   /// The merger will abort merging as soon as an error is encountered
+   kAbort,
+   /// Upon errors, the merger will skip the current source and continue
+   kSkip
+};
+
+struct RColumnInfo;
+struct RNTupleMergeData;
+struct RSealedPageMergeData;
+
+class RClusterPool;
 
 struct RNTupleMergeOptions {
    /// If `fCompressionSettings == kUnknownCompressionSettings` (the default), the merger will not change the
    /// compression of any of its sources (fast merging). Otherwise, all sources will be converted to the specified
    /// compression algorithm and level.
    int fCompressionSettings = kUnknownCompressionSettings;
+   /// Determines how the merging treats sources with different models (\see ENTupleMergingMode).
+   ENTupleMergingMode fMergingMode = ENTupleMergingMode::kFilter;
+   /// Determines how the Merge function behaves upon merging errors
+   ENTupleMergeErrBehavior fErrBehavior = ENTupleMergeErrBehavior::kAbort;
+   /// If true, the merger will emit further diagnostics and information.
+   bool fExtraVerbose = false;
 };
 
 // clang-format off
@@ -46,50 +76,26 @@ struct RNTupleMergeOptions {
  *        This can also be used to change the compression of a single RNTuple by just passing a single source.
  */
 // clang-format on
-class RNTupleMerger {
+class RNTupleMerger final {
+   std::unique_ptr<RPageAllocator> fPageAlloc;
+   std::optional<TTaskGroup> fTaskGroup;
 
-private:
-   // Struct to hold column information
-   struct RColumnInfo {
-      std::string fColumnName; ///< The qualified field name to which the column belongs, followed by the column index
-      std::string fColumnTypeAndVersion; ///< "<type>.<version>" of the field to which the column belongs
-      DescriptorId_t fColumnInputId;
-      DescriptorId_t fColumnOutputId;
+   void MergeCommonColumns(RClusterPool &clusterPool, DescriptorId_t clusterId, std::span<RColumnInfo> commonColumns,
+                           RCluster::ColumnSet_t commonColumnSet, RSealedPageMergeData &sealedPageData,
+                           const RNTupleMergeData &mergeData);
 
-      RColumnInfo(const std::string &name, const std::string &typeAndVersion, const DescriptorId_t &inputId,
-                  const DescriptorId_t &outputId)
-         : fColumnName(name), fColumnTypeAndVersion(typeAndVersion), fColumnInputId(inputId), fColumnOutputId(outputId)
-      {
-      }
-   };
-
-   /// Build the internal column id map from the first source
-   /// This is where we assign the output ids for the first source
-   void BuildColumnIdMap(std::vector<RColumnInfo> &columns);
-
-   /// Validate the columns against the internal map that is built from the first source
-   /// This is where we assign the output ids for the remaining sources
-   void ValidateColumns(std::vector<RColumnInfo> &columns);
-
-   /// Recursively add columns from a given field
-   void AddColumnsFromField(std::vector<RColumnInfo> &columns, const RNTupleDescriptor &desc,
-                            const RFieldDescriptor &fieldDesc, const std::string &prefix = "");
-
-   /// Recursively collect all the columns for all the fields rooted at field zero
-   void CollectColumns(const RNTupleDescriptor &descriptor, std::vector<RColumnInfo> &columns);
-
-   // Internal map that holds column name, type, and type id : output ID information
-   std::unordered_map<std::string, DescriptorId_t> fOutputIdMap;
+   void MergeSourceClusters(RPageSource &source, std::span<RColumnInfo> commonColumns,
+                            std::span<RColumnInfo> extraDstColumns, RNTupleMergeData &mergeData);
 
 public:
-   /// Merge a given set of sources into the destination
-   void Merge(std::span<RPageSource *> sources, RPageSink &destination,
-              const RNTupleMergeOptions &options = RNTupleMergeOptions());
+   RNTupleMerger();
+
+   /// Merge a given set of sources into the destination.
+   RResult<void> Merge(std::span<RPageSource *> sources, RPageSink &destination,
+                       const RNTupleMergeOptions &mergeOpts = RNTupleMergeOptions());
 
 }; // end of class RNTupleMerger
 
-} // namespace Internal
-} // namespace Experimental
-} // namespace ROOT
+} // namespace ROOT::Experimental::Internal
 
 #endif

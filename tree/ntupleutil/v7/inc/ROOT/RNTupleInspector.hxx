@@ -64,7 +64,7 @@ using ROOT::Experimental::RNTupleInspector;
 
 auto file = TFile::Open("data.rntuple");
 auto rntuple = std::unique_ptr<RNTuple>(file->Get<RNTuple>("NTupleName"));
-auto inspector = RNTupleInspector::Create(rntuple);
+auto inspector = RNTupleInspector::Create(*rntuple);
 
 std::cout << "The compression factor is " << inspector->GetCompressionFactor()
           << " using compression settings " << inspector->GetCompressionSettings()
@@ -175,7 +175,7 @@ public:
    RNTupleInspector &operator=(const RNTupleInspector &other) = delete;
    RNTupleInspector(RNTupleInspector &&other) = delete;
    RNTupleInspector &operator=(RNTupleInspector &&other) = delete;
-   ~RNTupleInspector() = default;
+   ~RNTupleInspector();
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Create a new RNTupleInspector.

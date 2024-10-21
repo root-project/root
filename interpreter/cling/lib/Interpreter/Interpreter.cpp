@@ -912,9 +912,17 @@ namespace cling {
     // context triggered this import!
     DeclContext *OldDC = getSema().CurContext;
     getSema().CurContext = getSema().getASTContext().getTranslationUnitDecl();
-    bool success =
-      !getSema().ActOnModuleImport(ValidLoc, /*ExportLoc*/ {}, ValidLoc,
-                                   std::make_pair(II, ValidLoc)).isInvalid();
+
+    // Fix C++20 builds caused by commit:
+    // llvm-project/commit/574ee1c02ef73b66c5957cf93888234b0471695f
+    // We are loading clang modules here and not C++20 modules
+    auto Path = std::make_pair(II, ValidLoc);
+    Module* Mod = getSema().getModuleLoader().loadModule(
+        ValidLoc, Path, Module::AllVisible, /*IsInclusionDirective=*/false);
+    bool success = Mod && !getSema()
+                               .ActOnModuleImport(ValidLoc, /*ExportLoc*/ {},
+                                                  ValidLoc, Mod, Path)
+                               .isInvalid();
     getSema().CurContext = OldDC;
 
     if (success) {
@@ -1660,6 +1668,13 @@ namespace cling {
 
     static_cast<MultiplexInterpreterCallbacks*>(m_Callbacks.get())
       ->addCallback(std::move(C));
+  }
+
+  llvm::orc::LLJIT* Interpreter::getExecutionEngine() {
+    if (!m_Executor)
+      return nullptr;
+
+    return m_Executor->getLLJIT();
   }
 
   const DynamicLibraryManager* Interpreter::getDynamicLibraryManager() const {

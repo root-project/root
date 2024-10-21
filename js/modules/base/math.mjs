@@ -4,17 +4,13 @@
  * @namespace Math
  */
 
-/* eslint-disable no-loss-of-precision */
-/* eslint-disable space-in-parens */
 /* eslint-disable curly */
-/* eslint-disable operator-linebreak */
-/* eslint-disable no-floating-decimal */
-/* eslint-disable brace-style */
-/* eslint-disable comma-spacing */
+/* eslint-disable @stylistic/js/comma-spacing */
+/* eslint-disable @stylistic/js/no-floating-decimal */
+/* eslint-disable @stylistic/js/space-in-parens */
 
 // this can be improved later
 
-/* eslint-disable no-unreachable-loop */
 /* eslint-disable eqeqeq */
 
 const kMACHEP = 1.11022302462515654042363166809e-16,

@@ -1,4 +1,4 @@
-import { gStyle, settings, isFunc, isStr, postponePromise, browser, clTAxis, kNoZoom } from '../core.mjs';
+import { gStyle, settings, internals, isFunc, isStr, postponePromise, browser, clTAxis, kNoZoom } from '../core.mjs';
 import { select as d3_select, pointer as d3_pointer, pointers as d3_pointers, drag as d3_drag } from '../d3.mjs';
 import { getElementRect, getAbsPosInCanvas, makeTranslate, addHighlightStyle } from '../base/BasePainter.mjs';
 import { getActivePad, ObjectPainter, EAxisBits, kAxisLabels } from '../base/ObjectPainter.mjs';
@@ -185,7 +185,7 @@ function addDragHandler(_painter, arg) {
                arg.obj.fX2NDC = (newx + newwidth) / rect.width;
                arg.obj.fY1NDC = 1 - (newy + newheight) / rect.height;
                arg.obj.fY2NDC = 1 - newy / rect.height;
-               arg.obj.modified_NDC = true; // indicate that NDC was interactively changed, block in updated
+               arg.obj.$modifiedNDC = true; // indicate that NDC was interactively changed, block in updated
             } else if (isFunc(arg.move_resize))
                arg.move_resize(newx, newy, newwidth, newheight);
 
@@ -1636,6 +1636,7 @@ class TFramePainter extends ObjectPainter {
       this.ymin = this.ymax = 0; // no scale specified, wait for objects drawing
       this.ranges_set = false;
       this.axes_drawn = false;
+      this.axes2_drawn = false;
       this.keys_handler = null;
       this.projection = 0; // different projections
    }
@@ -1942,9 +1943,10 @@ class TFramePainter extends ObjectPainter {
       this.x_handle.configureAxis('xaxis', this.xmin, this.xmax, this.scale_xmin, this.scale_xmax, this.swap_xy, this.swap_xy ? [0, h] : [0, w],
                                       { reverse: this.reverse_x,
                                         log: this.swap_xy ? pad_logy : pad_logx,
+                                        ignore_labels: this.x_ignore_labels,
                                         noexp_changed: this.x_noexp_changed,
                                         symlog: this.swap_xy ? opts.symlog_y : opts.symlog_x,
-                                        logcheckmin: this.swap_xy,
+                                        logcheckmin: (opts.ndim > 1) || !this.swap_xy,
                                         logminfactor: logminfactorX });
 
       this.x_handle.assignFrameMembers(this, 'x');
@@ -1956,10 +1958,11 @@ class TFramePainter extends ObjectPainter {
                                       { value_axis: opts.ndim === 1,
                                         reverse: this.reverse_y,
                                         log: this.swap_xy ? pad_logx : pad_logy,
+                                        ignore_labels: this.y_ignore_labels,
                                         noexp_changed: this.y_noexp_changed,
                                         symlog: this.swap_xy ? opts.symlog_x : opts.symlog_y,
-                                        logcheckmin: (opts.ndim < 2) || this.swap_xy,
                                         log_min_nz: opts.ymin_nz && (opts.ymin_nz <= this.ymax) ? 0.5*opts.ymin_nz : 0,
+                                        logcheckmin: (opts.ndim > 1) || this.swap_xy,
                                         logminfactor: logminfactorY });
 
       this.y_handle.assignFrameMembers(this, 'y');
@@ -2015,8 +2018,9 @@ class TFramePainter extends ObjectPainter {
          this.x2_handle.configureAxis('x2axis', this.x2min, this.x2max, this.scale_x2min, this.scale_x2max, this.swap_xy, this.swap_xy ? [0, h] : [0, w],
                                          { reverse: this.reverse_x2,
                                            log: this.swap_xy ? pad.fLogy : pad.fLogx,
+                                           ignore_labels: this.x2_ignore_labels,
                                            noexp_changed: this.x2_noexp_changed,
-                                           logcheckmin: this.swap_xy,
+                                           logcheckmin: (opts.ndim > 1) || !this.swap_xy,
                                            logminfactor: logminfactorX });
 
          this.x2_handle.assignFrameMembers(this, 'x2');
@@ -2029,8 +2033,9 @@ class TFramePainter extends ObjectPainter {
          this.y2_handle.configureAxis('y2axis', this.y2min, this.y2max, this.scale_y2min, this.scale_y2max, !this.swap_xy, this.swap_xy ? [0, w] : [0, h],
                                          { reverse: this.reverse_y2,
                                            log: this.swap_xy ? pad.fLogx : pad.fLogy,
+                                           ignore_labels: this.y2_ignore_labels,
                                            noexp_changed: this.y2_noexp_changed,
-                                           logcheckmin: (opts.ndim < 2) || this.swap_xy,
+                                           logcheckmin: (opts.ndim > 1) || this.swap_xy,
                                            log_min_nz: opts.ymin_nz && (opts.ymin_nz < this.y2max) ? 0.5 * opts.ymin_nz : 0,
                                            logminfactor: logminfactorY });
 
@@ -2169,7 +2174,7 @@ class TFramePainter extends ObjectPainter {
    /** @summary Identify if requested axes are drawn
      * @desc Checks if x/y axes are drawn. Also if second side is already there */
    hasDrawnAxes(second_x, second_y) {
-      return !second_x && !second_y ? this.axes_drawn : false;
+      return !second_x && !second_y ? this.axes_drawn : this.axes2_drawn;
    }
 
    /** @summary draw axes,
@@ -2290,7 +2295,10 @@ class TFramePainter extends ObjectPainter {
                                       draw_vertical.invert_side ? 0 : this._frame_x, false);
       }
 
-       return Promise.all([pr1, pr2]);
+       return Promise.all([pr1, pr2]).then(() => {
+         this.axes2_drawn = true;
+         return true;
+       });
    }
 
 
@@ -2301,7 +2309,7 @@ class TFramePainter extends ObjectPainter {
           pad = pp?.getRootPad(true),
           tframe = this.getObject();
 
-      if ((this.fX1NDC === undefined) || (force && !this.modified_NDC)) {
+      if ((this.fX1NDC === undefined) || (force && !this.$modifiedNDC)) {
          if (!pad) {
             this.fX1NDC = gStyle.fPadLeftMargin;
             this.fX2NDC = 1 - gStyle.fPadRightMargin;
@@ -2385,7 +2393,7 @@ class TFramePainter extends ObjectPainter {
       this.y2_handle?.removeG();
 
       this.draw_g?.selectChild('.axis_layer').selectAll('*').remove();
-      this.axes_drawn = false;
+      this.axes_drawn = this.axes2_drawn = false;
    }
 
    /** @summary Returns frame rectangle plus extra info for hint display */
@@ -2512,7 +2520,7 @@ class TFramePainter extends ObjectPainter {
          main_svg = this.draw_g.selectChild('.main_layer');
       }
 
-      this.axes_drawn = false;
+      this.axes_drawn = this.axes2_drawn = false;
 
       this.draw_g.attr('transform', trans);
 
@@ -2582,7 +2590,8 @@ class TFramePainter extends ObjectPainter {
 
          menu.sub('Range');
          menu.add('Zoom', () => {
-            let min = this[`zoom_${kind}min`] ?? this[`${kind}min`], max = this[`zoom_${kind}max`] ?? this[`${kind}max`];
+            let min = this[`zoom_${kind}min`] ?? this[`${kind}min`],
+                max = this[`zoom_${kind}max`] ?? this[`${kind}max`];
             if (min === max) {
                min = this[`${kind}min`];
                max = this[`${kind}max`];
@@ -2646,18 +2655,7 @@ class TFramePainter extends ObjectPainter {
          if ((kind === 'z') && isFunc(main?.fillPaletteMenu))
             main.fillPaletteMenu(menu, !is_pal);
 
-         if ((handle?.kind === kAxisLabels) && (faxis.fNbins > 20)) {
-            menu.add('Find label', () => menu.input('Label id').then(id => {
-               if (!id) return;
-               for (let bin = 0; bin < faxis.fNbins; ++bin) {
-                  const lbl = handle.formatLabels(bin);
-                  if (lbl === id)
-                     return this.zoom(kind, Math.max(0, bin - 4), Math.min(faxis.fNbins, bin+5));
-                }
-            }));
-         }
-
-         menu.addTAxisMenu(EAxisBits, main || this, faxis, kind);
+         menu.addTAxisMenu(EAxisBits, main || this, faxis, kind, handle, this);
          return true;
       }
 
@@ -2703,7 +2701,9 @@ class TFramePainter extends ObjectPainter {
       menu.separator();
 
       menu.sub('Save as');
-      ['svg', 'png', 'jpeg', 'pdf', 'webp'].forEach(fmt => menu.add(`frame.${fmt}`, () => pp.saveAs(fmt, 'frame', `frame.${fmt}`)));
+      const fmts = ['svg', 'png', 'jpeg', 'webp'];
+      if (internals.makePDF) fmts.push('pdf');
+      fmts.forEach(fmt => menu.add(`frame.${fmt}`, () => pp.saveAs(fmt, 'frame', `frame.${fmt}`)));
       menu.endsub();
 
       return true;
@@ -2781,6 +2781,7 @@ class TFramePainter extends ObjectPainter {
 
       if (zoom_x) {
          let cnt = 0;
+         xmin = this.x_handle?.checkZoomMin(xmin) ?? xmin;
          if (xmin <= this.xmin) { xmin = this.xmin; cnt++; }
          if (xmax >= this.xmax) { xmax = this.xmax; cnt++; }
          if (cnt === 2) { zoom_x = false; unzoom_x = true; }
@@ -2789,11 +2790,8 @@ class TFramePainter extends ObjectPainter {
 
       if (zoom_y) {
          let cnt = 0;
-         if ((ymin <= this.ymin) || (!this.ymin && this.logy &&
-              ((!this.y_handle?.log_min_nz && ymin < logminfactorY*this.ymax) || (ymin < this.y_handle?.log_min_nz)))) {
-                 ymin = this.ymin;
-                 cnt++;
-              }
+         ymin = this.y_handle?.checkZoomMin(ymin) ?? ymin;
+         if (ymin <= this.ymin) { ymin = this.ymin; cnt++; }
          if (ymax >= this.ymax) { ymax = this.ymax; cnt++; }
          if ((cnt === 2) && (this.scales_ndim !== 1)) {
             zoom_y = false;
@@ -2804,6 +2802,7 @@ class TFramePainter extends ObjectPainter {
 
       if (zoom_z) {
          let cnt = 0;
+         zmin = this.z_handle?.checkZoomMin(zmin) ?? zmin;
          if (zmin <= this.zmin) { zmin = this.zmin; cnt++; }
          if (zmax >= this.zmax) { zmax = this.zmax; cnt++; }
          if ((cnt === 2) && (this.scales_ndim > 2)) { zoom_z = false; unzoom_z = true; }
@@ -2890,19 +2889,20 @@ class TFramePainter extends ObjectPainter {
      * @param {Boolean} [interactive] - if change was performed interactively
      * @protected */
    async zoomSingle(name, vmin, vmax, interactive) {
-      if (!this[`${name}_handle`] && (name !== 'z'))
+      const handle = this[`${name}_handle`];
+      if (!handle && (name !== 'z'))
          return false;
 
       let zoom_v = (vmin !== vmax), unzoom_v = false;
 
       if (zoom_v) {
          let cnt = 0;
+         vmin = handle?.checkZoomMin(vmin) ?? vmin;
          if (vmin <= this[name+'min']) { vmin = this[name+'min']; cnt++; }
          if (vmax >= this[name+'max']) { vmax = this[name+'max']; cnt++; }
          if (cnt === 2) { zoom_v = false; unzoom_v = true; }
       } else
          unzoom_v = (vmin === vmax) && (vmin === 0);
-
 
       let changed = false;
 

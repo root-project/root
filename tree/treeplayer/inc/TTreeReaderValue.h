@@ -1,8 +1,9 @@
 // @(#)root/tree:$Id$
 // Author: Axel Naumann, 2010-08-02
+// Author: Vincenzo Eduardo Padulano CERN 09/2024
 
 /*************************************************************************
- * Copyright (C) 1995-2013, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2024, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -96,7 +97,7 @@ Base class of TTreeReaderValue.
       virtual ~TTreeReaderValueBase();
 
    protected:
-      TTreeReaderValueBase(TTreeReader* reader, const char* branchname, TDictionary* dict);
+      TTreeReaderValueBase(TTreeReader *reader, const char *branchname, TDictionary *dict, bool opaqueRead = false);
       TTreeReaderValueBase(const TTreeReaderValueBase&);
       TTreeReaderValueBase& operator=(const TTreeReaderValueBase&);
 
@@ -118,6 +119,8 @@ Base class of TTreeReaderValue.
       /// Stringify the template argument.
       static std::string GetElementTypeName(const std::type_info& ti);
 
+      void ErrorAboutMissingProxyIfNeeded();
+
       bool         fHaveLeaf : 1;                 ///< Whether the data is in a leaf
       bool         fHaveStaticClassOffsets : 1;   ///< Whether !fStaticClassOffsets.empty()
       EReadStatus  fReadStatus : 2;               ///< Read status of this data access
@@ -131,11 +134,36 @@ Base class of TTreeReaderValue.
       std::vector<Long64_t> fStaticClassOffsets;
       typedef EReadStatus (TTreeReaderValueBase::*Read_t)();
       Read_t fProxyReadFunc = &TTreeReaderValueBase::ProxyReadDefaultImpl;      ///<! Pointer to the Read implementation to use.
+      /**
+       * If true, the reader will not do any type-checking against the actual
+       * type held by the branch. Useful to just check if the current entry can
+       * be read or not without caring about its value.
+       * \note Only used by TTreeReaderOpaqueValue.
+       */
+      bool fOpaqueRead{false};
 
       // FIXME: re-introduce once we have ClassDefInline!
       //ClassDefOverride(TTreeReaderValueBase, 0);//Base class for accessors to data via TTreeReader
 
       friend class ::TTreeReader;
+   };
+
+   /**
+    * \brief Read a value in a branch without knowledge of its type
+    *
+    * This class is helpful in situations where the actual contents of the branch
+    * at the current entry are not relevant and one only wants to know whether
+    * the entry can be read.
+    */
+   class R__CLING_PTRCHECK(off) TTreeReaderOpaqueValue final : public ROOT::Internal::TTreeReaderValueBase {
+   public:
+      TTreeReaderOpaqueValue(TTreeReader &tr, const char *branchname)
+         : TTreeReaderValueBase(&tr, branchname, /*dict*/ nullptr, /*opaqueRead*/ true)
+      {
+      }
+
+   protected:
+      const char *GetDerivedTypeName() const { return ""; }
    };
 
 } // namespace Internal
@@ -161,8 +189,7 @@ public:
    T *Get()
    {
       if (!fProxy) {
-         Error("TTreeReaderValue::Get()", "Value reader not properly initialized, did you call "
-                                          "TTreeReader::Set(Next)Entry() or TTreeReader::Next()?");
+         ErrorAboutMissingProxyIfNeeded();
          return nullptr;
       }
       void *address = GetAddress(); // Needed to figure out if it's a pointer

@@ -1,6 +1,6 @@
-import { loadScript, settings, isNodeJs, isStr, source_dir, browser } from '../core.mjs';
+import { loadScript, settings, isNodeJs, isStr, source_dir, browser, isBatchMode } from '../core.mjs';
 import { getElementRect, _loadJSDOM, makeTranslate } from './BasePainter.mjs';
-import { FontHandler } from './FontHandler.mjs';
+import { FontHandler, kSymbol, kWingdings, kTimes } from './FontHandler.mjs';
 
 
 const symbols_map = {
@@ -193,7 +193,6 @@ const symbols_map = {
 },
 
 
-
 /** @summary Create a single regex to detect any symbol to replace, apply longer symbols first
   * @private */
 symbolsRegexCache = new RegExp(Object.keys(symbols_map).sort((a, b) => (a.length < b.length ? 1 : (a.length > b.length ? -1 : 0))).join('|'), 'g'),
@@ -209,7 +208,7 @@ translateLaTeX = str => {
 
 // array with relative width of base symbols from range 32..126
 // eslint-disable-next-line
-base_symbols_width = [453,535,661,973,955,1448,1242,324,593,596,778,1011,431,570,468,492,947,885,947,947,947,947,947,947,947,947,511,495,980,1010,987,893,1624,1185,1147,1193,1216,1080,1028,1270,1274,531,910,1177,1004,1521,1252,1276,1111,1276,1164,1056,1073,1215,1159,1596,1150,1124,1065,540,591,540,837,874,572,929,972,879,973,901,569,967,973,453,458,903,453,1477,973,970,972,976,638,846,548,973,870,1285,884,864,835,656,430,656,1069],
+base_symbols_width = [453,535,661,973,955,1448,1242,324,593,596,778,1011,200,570,200,492,947,885,947,947,947,947,947,947,947,947,511,495,980,1010,987,893,1624,1185,1147,1193,1216,1080,1028,1270,1274,531,910,1177,1004,1521,1252,1276,1111,1276,1164,1056,1073,1215,1159,1596,1150,1124,1065,540,591,540,837,874,572,929,972,879,973,901,569,967,973,453,458,903,453,1477,973,970,972,976,638,846,548,973,870,1285,884,864,835,656,430,656,1069],
 
 // eslint-disable-next-line
 extra_symbols_width = {945:1002,946:996,967:917,948:953,949:834,966:1149,947:847,951:989,953:516,954:951,955:913,956:1003,957:862,959:967,960:1070,952:954,961:973,963:1017,964:797,965:944,982:1354,969:1359,958:803,968:1232,950:825,913:1194,914:1153,935:1162,916:1178,917:1086,934:1358,915:1016,919:1275,921:539,977:995,922:1189,923:1170,924:1523,925:1253,927:1281,928:1281,920:1285,929:1102,931:1041,932:1069,933:1135,962:848,937:1279,926:1092,936:1334,918:1067,978:1154,8730:986,8804:940,8260:476,8734:1453,402:811,9827:1170,9830:931,9829:1067,9824:965,8596:1768,8592:1761,8593:895,8594:1761,8595:895,710:695,177:955,8243:680,8805:947,215:995,8733:1124,8706:916,8226:626,247:977,8800:969,8801:1031,8776:976,8230:1552,175:883,8629:1454,8501:1095,8465:1002,8476:1490,8472:1493,8855:1417,8853:1417,8709:1205,8745:1276,8746:1404,8839:1426,8835:1426,8836:1426,8838:1426,8834:1426,8747:480,8712:1426,8713:1426,8736:1608,8711:1551,174:1339,169:1339,8482:1469,8719:1364,729:522,172:1033,8743:1383,8744:1383,8660:1768,8656:1496,8657:1447,8658:1496,8659:1447,8721:1182,9115:882,9144:1000,9117:882,8970:749,9127:1322,9128:1322,8491:1150,229:929,8704:1397,8707:1170,8901:524,183:519,10003:1477,732:692,295:984,9725:1780,9744:1581,8741:737,8869:1390,8857:1421};
@@ -237,16 +236,17 @@ function approximateLabelWidth(label, font, fsize) {
 /** @summary array defines features supported by latex parser, used by both old and new parsers
   * @private */
 const latex_features = [
-   { name: '#it{' }, // italic
-   { name: '#bf{' }, // bold
+   { name: '#it{', bi: 'italic' }, // italic
+   { name: '#bf{', bi: 'bold' }, // bold
    { name: '#underline{', deco: 'underline' }, // underline
    { name: '#overline{', deco: 'overline' }, // overline
    { name: '#strike{', deco: 'line-through' }, // line through
-   { name: '#kern[', arg: 'float' }, // horizontal shift
-   { name: '#lower[', arg: 'float' },  // vertical shift
+   { name: '#kern[', arg: 'float', shift: 'x' }, // horizontal shift
+   { name: '#lower[', arg: 'float', shift: 'y' },  // vertical shift
    { name: '#scale[', arg: 'float' },  // font scale
    { name: '#color[', arg: 'int' },   // font color
    { name: '#font[', arg: 'int' },    // font face
+   { name: '#url[', arg: 'string' },   // url link
    { name: '_{', low_up: 'low' },  // subscript
    { name: '^{', low_up: 'up' },   // superscript
    { name: '#bar{', deco: 'overline' /* accent: '\u02C9' */ }, // '\u0305'
@@ -319,6 +319,11 @@ function remapSymbolTtfCode(code) {
          }
          if (++cnt > 54 + 82) break;
       }
+      for (let k = 0; k < symbolsMap.length; ++k) {
+         const code = symbolsMap[k];
+         if (code)
+            symbolsPdfMap[code] = k + 33;
+      }
    }
    return symbolsPdfMap[code] ?? code;
 }
@@ -328,6 +333,18 @@ function remapSymbolTtfCode(code) {
  * @desc Used in PDF generation where greek symbols are not available
  * @private */
 function replaceSymbolsInTextNode(node) {
+   if (node.$text && node.$font) {
+      node.$originalHTML = node.innerHTML;
+      node.$originalFont = node.getAttribute('font-family');
+
+      node.innerHTML = node.$text;
+      if (settings.LoadSymbolTtf)
+         node.setAttribute('font-family', node.$font.isSymbol);
+      else
+         node.setAttribute('font-family', (node.$font.isSymbol === kWingdings) ? 'zapfdingbats' : 'symbol');
+      return node.$font.isSymbol;
+   }
+
    if (node.childNodes.length !== 1)
       return false;
    const txt = node.textContent;
@@ -338,7 +355,7 @@ function replaceSymbolsInTextNode(node) {
       const code = txt.charCodeAt(i),
             newcode = remapSymbolTtfCode(code);
       if (code !== newcode) {
-         new_html += txt.slice(lasti+1, i) + '<tspan font-family="symbol" font-style="normal" font-weight="normal">'+String.fromCharCode(newcode)+'</tspan>';
+         new_html += txt.slice(lasti+1, i) + `<tspan font-family="${settings.LoadSymbolTtf ? kSymbol : 'symbol'}" font-style="normal" font-weight="normal">${String.fromCharCode(newcode)} </tspan>`;
          lasti = i;
       }
    }
@@ -350,12 +367,16 @@ function replaceSymbolsInTextNode(node) {
       new_html += txt.slice(lasti+1, txt.length);
 
    node.$originalHTML = node.innerHTML;
+   node.$originalFont = node.getAttribute('font-family');
    node.innerHTML = new_html;
-   return true;
+   return kSymbol;
 }
 
-function replaceSymbols(s, kind) {
-   const m = (kind === 'Wingdings') ? wingdingsMap : symbolsMap;
+
+/** @summary Replace codes from symbols.ttf into normal font - when symbols.ttf cannot be used
+  * @private */
+function replaceSymbols(s, name) {
+   const m = name === kWingdings ? wingdingsMap : symbolsMap;
    let res = '';
    for (let k = 0; k < s.length; ++k) {
       const code = s.charCodeAt(k),
@@ -371,9 +392,11 @@ function producePlainText(painter, txt_node, arg) {
    arg.plain = true;
    if (arg.simple_latex)
       arg.text = translateLaTeX(arg.text); // replace latex symbols
-   if (arg.font && arg.font.isSymbol)
+   if (arg.font?.isSymbol) {
       txt_node.text(replaceSymbols(arg.text, arg.font.isSymbol));
-   else
+      txt_node.property('$text', arg.text);
+      txt_node.property('$font', arg.font);
+   } else
       txt_node.text(arg.text);
 }
 
@@ -435,14 +458,14 @@ function parseLatex(node, arg, label, curr) {
    },
 
    /** Create special sub-container for elements like sqrt or braces  */
-   createGG = () => {
+   createGG = (is_a) => {
       const gg = currG();
 
       // this is indicator that gg element will be the only one, one can use directly main container
-      if ((nelements === 1) && !label && !curr.x && !curr.y)
+      if ((nelements === 1) && !label && !curr.x && !curr.y && !is_a)
          return gg;
 
-      return makeTranslate(gg.append('svg:g'), curr.x, curr.y);
+      return makeTranslate(gg.append(is_a ? 'svg:a' : 'svg:g'), curr.x, curr.y);
    },
 
    extractSubLabel = (check_first, lbrace, rbrace) => {
@@ -492,10 +515,10 @@ function parseLatex(node, arg, label, curr) {
 
    createPath = (gg, d, dofill) => {
       return gg.append('svg:path')
+               .attr('d', d || 'M0,0') // provide dummy d value as placeholder, preserve order of attributes
                .style('stroke', dofill ? 'none' : (curr.color || arg.color))
                .style('stroke-width', dofill ? null : Math.max(1, Math.round(curr.fsize*(curr.font.weight ? 0.1 : 0.07))))
-               .style('fill', dofill ? (curr.color || arg.color) : 'none')
-               .attr('d', d ?? null);
+               .style('fill', dofill ? (curr.color || arg.color) : 'none');
    },
 
    createSubPos = fscale => {
@@ -555,12 +578,13 @@ function parseLatex(node, arg, label, curr) {
             elem.attr('fill', curr.color || arg.color || null);
 
             // set font size directly to element to avoid complex control
-            if (curr.fisze !== curr.font.size)
-               elem.attr('font-size', Math.round(curr.fsize));
+            elem.attr('font-size', Math.max(1, Math.round(curr.fsize)));
 
-            if (curr.font && curr.font.isSymbol)
+            if (curr.font?.isSymbol) {
                elem.text(replaceSymbols(s, curr.font.isSymbol));
-            else
+               elem.property('$text', s);
+               elem.property('$font', curr.font);
+            } else
                elem.text(s);
 
             const rect = !isNodeJs() && !settings.ApproxTextSize && !arg.fast
@@ -664,7 +688,7 @@ function parseLatex(node, arg, label, curr) {
 
          positionGNode(subpos2, (dw > 0 ? dw/2 : 0), dy - subpos2.rect.y1, true);
 
-         if (path) path.attr('d', `M0,${Math.round(dy)}h${Math.round(w - curr.fsize*0.1)}`);
+         path?.attr('d', `M0,${Math.round(dy)}h${Math.round(w - curr.fsize*0.1)}`);
 
          shiftX(w);
 
@@ -824,11 +848,10 @@ function parseLatex(node, arg, label, curr) {
 
          const r = subpos.rect;
          if (subpos.deco) {
-            const path = createPath(gg), r_width = Math.round(r.width);
             switch (subpos.deco) {
-               case 'underline': path.attr('d', `M0,${Math.round(r.y2)}h${r_width}`); break;
-               case 'overline': path.attr('d', `M0,${Math.round(r.y1)}h${r_width}`); break;
-               case 'line-through': path.attr('d', `M0,${Math.round(0.45*r.y1+0.55*r.y2)}h${r_width}`); break;
+               case 'underline': createPath(gg, `M0,${Math.round(r.y2)}h${Math.round(r.width)}`); break;
+               case 'overline': createPath(gg, `M0,${Math.round(r.y1)}h${Math.round(r.width)}`); break;
+               case 'line-through': createPath(gg, `M0,${Math.round(0.45*r.y1+0.55*r.y2)}h${Math.round(r.width)}`); break;
             }
          }
 
@@ -839,16 +862,18 @@ function parseLatex(node, arg, label, curr) {
          continue;
       }
 
-      if (found.name === '#bf{' || found.name === '#it{') {
+      if (found.bi) { // bold or italic
          const sublabel = extractSubLabel();
-         if (sublabel === -1) return false;
+         if (sublabel === -1)
+            return false;
 
          const subpos = createSubPos();
 
-         if (found.name === '#bf{')
-            subpos.bold = !subpos.bold;
-         else
-            subpos.italic = !subpos.italic;
+         let value;
+         for (let c = curr; c && (value === undefined && c); c = c.parent)
+            value = c[found.bi];
+
+         subpos[found.bi] = !value;
 
          parseLatex(currG(), arg, sublabel, subpos);
 
@@ -875,7 +900,7 @@ function parseLatex(node, arg, label, curr) {
          label = label.slice(pos + 2);
       }
 
-      if ((found.name === '#kern[') || (found.name === '#lower[')) {
+      if (found.shift) {
          const sublabel = extractSubLabel();
          if (sublabel === -1) return false;
 
@@ -884,12 +909,36 @@ function parseLatex(node, arg, label, curr) {
          parseLatex(currG(), arg, sublabel, subpos);
 
          let shiftx = 0, shifty = 0;
-         if (found.name === 'kern[') shiftx = foundarg; else shifty = foundarg;
+         if (found.shift === 'x')
+            shiftx = foundarg * subpos.rect.width;
+         else
+            shifty = foundarg * subpos.rect.height;
 
-         positionGNode(subpos, curr.x + shiftx * subpos.rect.width, curr.y + shifty * subpos.rect.height);
+         positionGNode(subpos, curr.x + shiftx, curr.y + shifty);
 
          shiftX(subpos.rect.width * (shiftx > 0 ? 1 + foundarg : 1));
 
+         continue;
+      }
+
+      if (found.name === '#url[') {
+         const sublabel = extractSubLabel();
+         if (sublabel === -1) return false;
+
+         const gg = createGG(true),
+               subpos = createSubPos();
+
+         gg.attr('href', foundarg);
+         if (!isBatchMode()) {
+            gg.on('mouseenter', () => gg.style('text-decoration', 'underline'))
+              .on('mouseleave', () => gg.style('text-decoration', null))
+              .append('svg:title').text(`link on ${foundarg}`);
+         }
+
+         parseLatex(gg, arg, sublabel, subpos);
+
+         positionGNode(subpos, 0, 0, true);
+         shiftX(subpos.rect.width);
          continue;
       }
 
@@ -903,6 +952,12 @@ function parseLatex(node, arg, label, curr) {
             subpos.color = curr.painter.getColor(foundarg);
          else if (found.name === '#font[') {
             subpos.font = new FontHandler(foundarg);
+            // here symbols embedding not works, use replacement
+            if ((subpos.font.name === kSymbol) && !subpos.font.isSymbol) {
+               subpos.font.isSymbol = kSymbol;
+               subpos.font.name = kTimes;
+            }
+            subpos.font.setUseFullStyle(true); // while embedding - need to enforce full style
             subpos.ufont = true; // mark that custom font is applied
          } else
             subpos.fsize *= foundarg;
@@ -1012,7 +1067,6 @@ async function loadMathjax() {
          svg,
          startup: {
             ready() {
-               // eslint-disable-next-line no-undef
                MathJax.startup.defaultReady();
                const arr = _mj_loading;
                _mj_loading = undefined;
@@ -1051,7 +1105,6 @@ async function loadMathjax() {
           startup: {
              typeset: false,
              ready() {
-                // eslint-disable-next-line no-undef
                 const mj = MathJax;
 
                 mj.startup.registerConstructor('jsdomAdaptor', () => {

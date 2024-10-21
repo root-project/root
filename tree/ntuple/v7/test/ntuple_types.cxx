@@ -891,6 +891,28 @@ TEST(RNTuple, StdUnorderedMultiMap)
    }
 }
 
+TEST(RNTuple, StdMapImposedModel)
+{
+   FileRaii fileGuard("test_ntuple_stdmap_imposed_model.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto ptrFoo = model->MakeField<std::map<std::string, float>>("foo");
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      ptrFoo->insert({"bar", 1.0});
+      writer->Fill();
+   }
+
+   auto model = RNTupleModel::Create();
+   auto ptrFoo = model->MakeField<std::vector<std::pair<std::string, float>>>("foo");
+   auto reader = RNTupleReader::Open(std::move(model), "ntpl", fileGuard.GetPath());
+
+   reader->LoadEntry(0);
+   EXPECT_EQ(1u, ptrFoo->size());
+   EXPECT_EQ("bar", ptrFoo->at(0).first);
+   EXPECT_FLOAT_EQ(1.0, ptrFoo->at(0).second);
+}
+
 TEST(RNTuple, Int64)
 {
    {
@@ -1402,44 +1424,18 @@ TEST(RNTuple, Bitset)
    EXPECT_EQ("01010101", bs2->to_string());
 }
 
-struct RTagNullableFieldDefault {};
-struct RTagNullableFieldSparse {};
-struct RTagNullableFieldDense {};
-using UniquePtrTags = ::testing::Types<RTagNullableFieldDefault, RTagNullableFieldSparse, RTagNullableFieldDense>;
-
-template <typename TagT>
-class UniquePtr : public ::testing::Test {
-public:
-   using Tag_t = TagT;
-};
-
-TYPED_TEST_SUITE(UniquePtr, UniquePtrTags);
-
-template <typename TypeT, typename TagT>
-static void AddUniquePtrField(RNTupleModel &model, const std::string &fieldName)
-{
-   auto fld = std::make_unique<RField<std::unique_ptr<TypeT>>>(fieldName);
-   if constexpr (std::is_same_v<TagT, RTagNullableFieldSparse>) {
-      fld->SetSparse();
-   }
-   if constexpr (std::is_same_v<TagT, RTagNullableFieldDense>) {
-      fld->SetDense();
-   }
-   model.AddField(std::move(fld));
-}
-
-TYPED_TEST(UniquePtr, Basics)
+TEST(RNTuple, UniquePtr)
 {
    FileRaii fileGuard("test_ntuple_unique_ptr.root");
 
    {
       auto model = RNTupleModel::Create();
 
-      AddUniquePtrField<bool, typename TestFixture::Tag_t>(*model, "PBool");
-      AddUniquePtrField<CustomStruct, typename TestFixture::Tag_t>(*model, "PCustomStruct");
-      AddUniquePtrField<IOConstructor, typename TestFixture::Tag_t>(*model, "PIOConstructor");
-      AddUniquePtrField<std::unique_ptr<std::string>, typename TestFixture::Tag_t>(*model, "PPString");
-      AddUniquePtrField<std::array<char, 2>, typename TestFixture::Tag_t>(*model, "PArray");
+      auto pBool = model->MakeField<std::unique_ptr<bool>>("PBool");
+      auto pCustomStruct = model->MakeField<std::unique_ptr<CustomStruct>>("PCustomStruct");
+      auto pIOConstructor = model->MakeField<std::unique_ptr<IOConstructor>>("PIOConstructor");
+      auto ppString = model->MakeField<std::unique_ptr<std::unique_ptr<std::string>>>("PPString");
+      auto pArray = model->MakeField<std::unique_ptr<std::array<char, 2>>>("PArray");
 
       EXPECT_EQ("std::unique_ptr<bool>", model->GetField("PBool").GetTypeName());
       EXPECT_EQ(std::string("std::unique_ptr<CustomStruct>"), model->GetField("PCustomStruct").GetTypeName());
@@ -1449,24 +1445,6 @@ TYPED_TEST(UniquePtr, Basics)
       EXPECT_EQ(std::string("std::unique_ptr<std::array<char,2>>"), model->GetField("PArray").GetTypeName());
 
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
-
-      if constexpr (std::is_same_v<typename TestFixture::Tag_t, RTagNullableFieldDefault>) {
-         EXPECT_EQ(EColumnType::kSplitIndex64, writer->GetModel().GetField("PBool").GetColumnRepresentatives()[0][0]);
-      }
-      if constexpr (std::is_same_v<typename TestFixture::Tag_t, RTagNullableFieldSparse>) {
-         EXPECT_EQ(EColumnType::kSplitIndex64, writer->GetModel().GetField("PBool").GetColumnRepresentatives()[0][0]);
-      }
-      if constexpr (std::is_same_v<typename TestFixture::Tag_t, RTagNullableFieldDense>) {
-         EXPECT_EQ(EColumnType::kBit, writer->GetModel().GetField("PBool").GetColumnRepresentatives()[0][0]);
-      }
-
-      auto pBool = writer->GetModel().GetDefaultEntry().GetPtr<std::unique_ptr<bool>>("PBool");
-      auto pCustomStruct = writer->GetModel().GetDefaultEntry().GetPtr<std::unique_ptr<CustomStruct>>("PCustomStruct");
-      auto pIOConstructor =
-         writer->GetModel().GetDefaultEntry().GetPtr<std::unique_ptr<IOConstructor>>("PIOConstructor");
-      auto ppString =
-         writer->GetModel().GetDefaultEntry().GetPtr<std::unique_ptr<std::unique_ptr<std::string>>>("PPString");
-      auto pArray = writer->GetModel().GetDefaultEntry().GetPtr<std::unique_ptr<std::array<char, 2>>>("PArray");
 
       *pBool = std::make_unique<bool>(true);
       EXPECT_EQ(nullptr, pCustomStruct->get());
@@ -1957,7 +1935,7 @@ TEST(RNTuple, TClass)
          auto viewKlass = ntuple->GetView<DerivedA>("klass");
          FAIL() << "GetView<a_base_class_of_T> should throw";
       } catch (const RException& err) {
-         EXPECT_THAT(err.what(), testing::HasSubstr("No on-disk field information for `klass.:_0.a`"));
+         EXPECT_THAT(err.what(), testing::HasSubstr("No on-disk field information"));
       }
    }
 }
@@ -2280,48 +2258,6 @@ TEST(RNTuple, Traits)
    EXPECT_EQ(baseTraits, RField<StringTraits>("f").GetTraits());
    EXPECT_EQ(baseTraits | RFieldBase::kTraitTriviallyDestructible, RField<ConstructorTraits>("f").GetTraits());
    EXPECT_EQ(baseTraits | RFieldBase::kTraitTriviallyConstructible, RField<DestructorTraits>("f").GetTraits());
-}
-
-TEST(RNTuple, TClassReadRules)
-{
-   ROOT::TestSupport::CheckDiagsRAII diags;
-   diags.requiredDiag(kWarning, "[ROOT.NTuple]", "ignoring I/O customization rule with non-transient member: a", false);
-   diags.optionalDiag(kWarning, "ROOT::Experimental::Detail::RPageSinkFile::RPageSinkFile",
-                      "The RNTuple file format will change.", false);
-   diags.optionalDiag(kWarning, "[ROOT.NTuple]", "Pre-release format version: RC 2", false);
-
-   FileRaii fileGuard("test_ntuple_tclassrules.ntuple");
-   char c[4] = {'R', 'O', 'O', 'T'};
-   {
-      auto model = RNTupleModel::Create();
-      auto fieldKlass = model->MakeField<StructWithIORules>("klass");
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
-      for (int i = 0; i < 20; i++) {
-         *fieldKlass = StructWithIORules{/*a=*/static_cast<float>(i), /*chars=*/c};
-         ntuple->Fill();
-      }
-   }
-
-   auto ntuple = RNTupleReader::Open("f", fileGuard.GetPath());
-   EXPECT_EQ(TClass::GetClass("StructWithIORules")->GetCheckSum(),
-             ntuple->GetModel().GetField("klass").GetOnDiskTypeChecksum());
-   EXPECT_EQ(20U, ntuple->GetNEntries());
-   auto viewKlass = ntuple->GetView<StructWithIORules>("klass");
-   for (auto i : ntuple->GetEntryRange()) {
-      float fi = static_cast<float>(i);
-      EXPECT_EQ(fi, viewKlass(i).a);
-      EXPECT_TRUE(0 == memcmp(c, viewKlass(i).s.chars, sizeof(c)));
-
-      // The following values are set from a read rule; see CustomStructLinkDef.h
-      EXPECT_EQ(fi + 1.0f, viewKlass(i).b);
-      EXPECT_EQ(viewKlass(i).a + viewKlass(i).b, viewKlass(i).c);
-      EXPECT_EQ("ROOT", viewKlass(i).s.str);
-
-      // The following member is set by a checksum based rule
-      EXPECT_FLOAT_EQ(42.0, viewKlass(i).checksumA);
-      // The following member is not touched by a rule due to a checksum mismatch
-      EXPECT_FLOAT_EQ(137.0, viewKlass(i).checksumB);
-   }
 }
 
 TEST(RNTuple, RColumnRepresentations)

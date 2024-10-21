@@ -69,7 +69,10 @@ thread_local MIR_TL_Data_t gMIRData;
 
 /** \class REveManager
 \ingroup REve
-Central application manager for Eve.
+\ingroup webwidgets
+
+\brief Central application manager for web-based REve.
+
 Manages elements, GUI, GL scenes and GL viewers.
 
 Following parameters can be specified in .rootrc file

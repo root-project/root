@@ -21,6 +21,8 @@
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RPageStorageFile.hxx>
 
+#include <TError.h>
+
 namespace {
 
 using ROOT::Experimental::DescriptorId_t;
@@ -71,7 +73,7 @@ public:
 
    const RNTupleDescriptor &GetDescriptor() const final { return fInnerSink->GetDescriptor(); }
 
-   ColumnHandle_t AddColumn(DescriptorId_t, const RColumn &) final { return {}; }
+   ColumnHandle_t AddColumn(DescriptorId_t, RColumn &) final { return {}; }
    void InitImpl(RNTupleModel &) final {}
    void UpdateSchema(const RNTupleModelChangeset &, NTupleSize_t) final
    {
@@ -96,6 +98,8 @@ public:
       fInnerSink->CommitSealedPageV(ranges);
    }
    std::uint64_t CommitCluster(NTupleSize_t nNewEntries) final { return fInnerSink->CommitCluster(nNewEntries); }
+   RStagedCluster StageCluster(NTupleSize_t nNewEntries) final { return fInnerSink->StageCluster(nNewEntries); }
+   void CommitStagedClusters(std::span<RStagedCluster> clusters) final { fInnerSink->CommitStagedClusters(clusters); }
    void CommitClusterGroup() final
    {
       throw RException(R__FAIL("should never commit cluster group via RPageSynchronizingSink"));

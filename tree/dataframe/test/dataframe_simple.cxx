@@ -48,29 +48,35 @@ protected:
 // Create file `filename` containing a test tree `treeName` with `nevents` events
 void FillTree(const char *filename, const char *treeName, int nevents = 0)
 {
-   TFile f(filename, "RECREATE");
-   TTree t(treeName, treeName);
-   t.SetAutoFlush(1); // yes, one event per cluster: to make MT more meaningful
+   // NOTE(gparolini): these TFile and TTree are created on the heap to work around a know bug that can
+   // cause a TObject to be incorrectly marked as "on heap" and attempted to be freed despite
+   // living on the stack.
+   // The bug is caused by the magic bit pattern `kObjectAllocMemValue` used by TStorage to
+   // mark a heap object appearing by chance on the stack.
+   // This is not a problem with a clear solution and in fact the whole heap detection system relies on UB,
+   // so for now we are forced to work around the bug rather than fixing it.
+   auto f = std::make_unique<TFile>(filename, "RECREATE");
+   auto t = std::make_unique<TTree>(treeName, treeName);
+   t->SetAutoFlush(1); // yes, one event per cluster: to make MT more meaningful
    double b1;
    int b2;
    double b3[2];
    unsigned int n;
    int b4[2] = {21, 42};
-   t.Branch("b1", &b1);
-   t.Branch("b2", &b2);
-   t.Branch("b3", b3, "b3[2]/D");
-   t.Branch("n", &n);
-   t.Branch("b4", b4, "b4[n]/I");
+   t->Branch("b1", &b1);
+   t->Branch("b2", &b2);
+   t->Branch("b3", b3, "b3[2]/D");
+   t->Branch("n", &n);
+   t->Branch("b4", b4, "b4[n]/I");
    for (int i = 0; i < nevents; ++i) {
       b1 = i;
       b2 = i * i;
       b3[0] = b1;
       b3[1] = -b1;
       n = i % 2 + 1;
-      t.Fill();
+      t->Fill();
    }
-   t.Write();
-   f.Close();
+   t->Write();
 }
 
 TEST_P(RDFSimpleTests, CreateEmpty)

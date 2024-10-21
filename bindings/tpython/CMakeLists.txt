@@ -38,3 +38,5 @@ if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" AND CMAKE_CXX_STANDARD GREATER_EQU
     target_compile_options(ROOTTPython PRIVATE -Wno-register)
     target_compile_options(ROOTTPython PRIVATE -Wno-deprecated-register)
 endif()
+
+ROOT_ADD_TEST_SUBDIRECTORY(test)

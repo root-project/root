@@ -135,16 +135,6 @@ public:
       bool operator!=(const iterator &rh) const { return fIndex != rh.fIndex; }
    };
 
-   /// Used to specify the underlying RNTuples in OpenFriends()
-   struct ROpenSpec {
-      std::string fNTupleName;
-      std::string fStorage;
-      RNTupleReadOptions fOptions;
-
-      ROpenSpec() = default;
-      ROpenSpec(std::string_view n, std::string_view s) : fNTupleName(n), fStorage(s) {}
-   };
-
    /// Open an RNTuple for reading.
    ///
    /// Throws an RException if there is no RNTuple with the given name.
@@ -173,7 +163,7 @@ public:
    /// have an identical number of entries.  Fields in the combined RNTuple are named with the ntuple name
    /// as a prefix, e.g. myNTuple1.px and myNTuple2.pt (see tutorial ntpl006_friends)
    static std::unique_ptr<RNTupleReader>
-   OpenFriends(std::span<ROpenSpec> ntuples, const RNTupleReadOptions &options = RNTupleReadOptions());
+   OpenFriends(std::span<RNTupleOpenSpec> ntuples, const RNTupleReadOptions &options = RNTupleReadOptions());
    std::unique_ptr<RNTupleReader> Clone()
    {
       auto options = RNTupleReadOptions{};
@@ -276,27 +266,51 @@ public:
    /// }
    /// ~~~
    template <typename T>
-   RNTupleView<T, false> GetView(std::string_view fieldName)
+   RNTupleView<T> GetView(std::string_view fieldName)
    {
       return GetView<T>(RetrieveFieldId(fieldName));
    }
 
    template <typename T>
-   RNTupleView<T, true> GetView(std::string_view fieldName, std::shared_ptr<T> objPtr)
+   RNTupleView<T> GetView(std::string_view fieldName, std::shared_ptr<T> objPtr)
    {
       return GetView<T>(RetrieveFieldId(fieldName), objPtr);
    }
 
    template <typename T>
-   RNTupleView<T, false> GetView(DescriptorId_t fieldId)
+   RNTupleView<T> GetView(std::string_view fieldName, T *rawPtr)
    {
-      return RNTupleView<T, false>(fieldId, fSource.get());
+      return GetView<T>(RetrieveFieldId(fieldName), rawPtr);
    }
 
    template <typename T>
-   RNTupleView<T, true> GetView(DescriptorId_t fieldId, std::shared_ptr<T> objPtr)
+   RNTupleView<T> GetView(DescriptorId_t fieldId)
    {
-      return RNTupleView<T, true>(fieldId, fSource.get(), objPtr);
+      return RNTupleView<T>(RNTupleView<T>::CreateField(fieldId, fSource.get()));
+   }
+
+   template <typename T>
+   RNTupleView<T> GetView(DescriptorId_t fieldId, std::shared_ptr<T> objPtr)
+   {
+      return RNTupleView<T>(RNTupleView<T>::CreateField(fieldId, fSource.get()), objPtr);
+   }
+
+   template <typename T>
+   RNTupleView<T> GetView(DescriptorId_t fieldId, T *rawPtr)
+   {
+      return RNTupleView<T>(RNTupleView<T>::CreateField(fieldId, fSource.get()), rawPtr);
+   }
+
+   template <typename T>
+   RNTupleDirectAccessView<T> GetDirectAccessView(std::string_view fieldName)
+   {
+      return GetDirectAccessView<T>(RetrieveFieldId(fieldName));
+   }
+
+   template <typename T>
+   RNTupleDirectAccessView<T> GetDirectAccessView(DescriptorId_t fieldId)
+   {
+      return RNTupleDirectAccessView<T>(RNTupleDirectAccessView<T>::CreateField(fieldId, fSource.get()));
    }
 
    /// Raises an exception if:
@@ -314,7 +328,7 @@ public:
 
    RNTupleCollectionView GetCollectionView(DescriptorId_t fieldId)
    {
-      return RNTupleCollectionView(fieldId, fSource.get());
+      return RNTupleCollectionView::Create(fieldId, fSource.get());
    }
 
    RIterator begin() { return RIterator(0); }

@@ -240,6 +240,9 @@ protected:
   /// True if the target supports LEB128 directives.
   bool HasLEB128Directives = true;
 
+  /// True if full register names are printed.
+  bool PPCUseFullRegisterNames = false;
+
   //===--- Data Emission Directives -------------------------------------===//
 
   /// This should be set to the directive used to get some number of zero (and
@@ -453,9 +456,9 @@ protected:
   /// Exception handling format for the target.  Defaults to None.
   ExceptionHandling ExceptionsType = ExceptionHandling::None;
 
-  /// True if target uses CFI unwind information for debugging purpose when
-  /// `ExceptionsType == ExceptionHandling::None`.
-  bool UsesCFIForDebug = false;
+  /// True if target uses CFI unwind information for other purposes than EH
+  /// (debugging / sanitizers) when `ExceptionsType == ExceptionHandling::None`.
+  bool UsesCFIWithoutEH = false;
 
   /// Windows exception handling data (.pdata) encoding.  Defaults to Invalid.
   WinEH::EncodingType WinEHEncodingType = WinEH::EncodingType::Invalid;
@@ -710,6 +713,9 @@ public:
 
   bool hasLEB128Directives() const { return HasLEB128Directives; }
 
+  bool useFullRegisterNames() const { return PPCUseFullRegisterNames; }
+  void setFullRegisterNames(bool V) { PPCUseFullRegisterNames = V; }
+
   const char *getZeroDirective() const { return ZeroDirective; }
   bool doesZeroDirectiveSupportNonZeroValue() const {
     return ZeroDirectiveSupportsNonZeroValue;
@@ -785,13 +791,16 @@ public:
     ExceptionsType = EH;
   }
 
-  bool doesUseCFIForDebug() const { return UsesCFIForDebug; }
+  bool usesCFIWithoutEH() const {
+    return ExceptionsType == ExceptionHandling::None && UsesCFIWithoutEH;
+  }
 
   /// Returns true if the exception handling method for the platform uses call
   /// frame information to unwind.
   bool usesCFIForEH() const {
     return (ExceptionsType == ExceptionHandling::DwarfCFI ||
-            ExceptionsType == ExceptionHandling::ARM || usesWindowsCFI());
+            ExceptionsType == ExceptionHandling::ARM ||
+            ExceptionsType == ExceptionHandling::ZOS || usesWindowsCFI());
   }
 
   bool usesWindowsCFI() const {

@@ -259,9 +259,9 @@ void RooNLLVarNew::doEval(RooFit::EvalContext &ctx) const
    auto nllOut = RooBatchCompute::reduceNLL(config, probas, _weightSquared ? weightsSumW2 : weights,
                                             _doBinOffset ? ctx.at(*_offsetPdf) : std::span<const double>{});
 
-   if (nllOut.nLargeValues > 0) {
+   if (nllOut.nInfiniteValues > 0) {
       oocoutW(&*_pdf, Eval) << "RooAbsPdf::getLogVal(" << _pdf->GetName()
-                            << ") WARNING: top-level pdf has unexpectedly large values" << std::endl;
+                            << ") WARNING: top-level pdf has some infinite values" << std::endl;
    }
    for (std::size_t i = 0; i < nllOut.nNonPositiveValues; ++i) {
       _pdf->logEvalError("getLogVal() top-level p.d.f not greater than zero");

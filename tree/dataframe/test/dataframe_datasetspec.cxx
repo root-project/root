@@ -334,46 +334,83 @@ TEST_P(RDatasetSpecTest, Ranges)
       std::logic_error);
 }
 
-// reuse the possible ranges from above
-TEST_P(RDatasetSpecTest, Friends)
+TEST_P(RDatasetSpecTest, FriendsEqualSize)
 {
-
+   // Test the canonical case: main tree and friend trees have all equal size.
    RDatasetSpec spec;
-   // pick the second sample as the main chain, so that can test shorter, equal-sized, longer friends
    spec.AddSample({data[1].name, data[1].trees[0][0].tree, data[1].fileGlobs});
-   for (const auto &d : data) {
-      std::vector<std::string> treeNames{};
-      std::vector<std::string> fileGlobs{};
-      std::vector<std::string> treeNamesExpanded{};
-      std::vector<std::string> fileGlobsExpanded{};
-      for (auto i = 0u; i < d.fileGlobs.size(); ++i) {
-         for (const auto &t : d.trees[i]) {
-            treeNamesExpanded.emplace_back(t.tree);
-            fileGlobsExpanded.emplace_back(t.file);
-         }
-         treeNames.emplace_back(d.trees[i][0].tree);
-         fileGlobs.emplace_back(d.fileGlobs[i]);
+   const auto &d = data[1];
+   std::vector<std::string> treeNames{};
+   std::vector<std::string> fileGlobs{};
+   std::vector<std::string> treeNamesExpanded{};
+   std::vector<std::string> fileGlobsExpanded{};
+   for (auto i = 0u; i < d.fileGlobs.size(); ++i) {
+      for (const auto &t : d.trees[i]) {
+         treeNamesExpanded.emplace_back(t.tree);
+         fileGlobsExpanded.emplace_back(t.file);
       }
-      spec.WithGlobalFriends(treeNames, fileGlobs, "friend_glob_" + d.name);
-      spec.WithGlobalFriends(treeNamesExpanded, fileGlobsExpanded, "friend_expanded_" + d.name);
+      treeNames.emplace_back(d.trees[i][0].tree);
+      fileGlobs.emplace_back(d.fileGlobs[i]);
    }
-   auto df = RDataFrame(spec);
-   std::unordered_map<std::string, ROOT::RDF::RResultPtr<std::vector<ULong64_t>>> res;
-   for (const auto &d : data) {
-      res["friend_glob_" + d.name + "x"] = df.Take<ULong64_t>("friend_glob_" + d.name + ".x");
-      res["friend_expanded_" + d.name + "x"] = df.Take<ULong64_t>("friend_expanded_" + d.name + ".x");
-   }
+   spec.WithGlobalFriends(treeNames, fileGlobs, "friend_glob_" + d.name);
+   spec.WithGlobalFriends(treeNamesExpanded, fileGlobsExpanded, "friend_expanded_" + d.name);
 
-   for (auto i = 0u; i < data.size(); ++i) {
-      std::sort(res["friend_glob_" + data[i].name + "x"]->begin(), res["friend_glob_" + data[i].name + "x"]->end());
-      std::sort(res["friend_expanded_" + data[i].name + "x"]->begin(),
-                res["friend_expanded_" + data[i].name + "x"]->end());
-      // case i = 0 is shorter friend, which currently leads to undesired behaviour
-      // see: https://github.com/root-project/root/issues/9137
-      if (i > 0) {
-         EXPECT_VEC_SEQ_EQ(*res["friend_glob_" + data[i].name + "x"],
-                           ROOT::TSeq<ULong64_t>(data[i].sampleStart, data[i].sampleStart + 24));
-      }
+   auto df = RDataFrame(spec);
+   auto take_glob = df.Take<ULong64_t>("friend_glob_" + d.name + ".x");
+   auto take_expanded = df.Take<ULong64_t>("friend_expanded_" + d.name + ".x");
+   std::sort(take_glob->begin(), take_glob->end());
+   std::sort(take_expanded->begin(), take_expanded->end());
+   EXPECT_VEC_SEQ_EQ(*take_glob, ROOT::TSeq<ULong64_t>(d.sampleStart, d.sampleStart + 24));
+   EXPECT_VEC_SEQ_EQ(*take_expanded, ROOT::TSeq<ULong64_t>(d.sampleStart, d.sampleStart + 24));
+}
+
+TEST_P(RDatasetSpecTest, FriendsLonger)
+{
+   // Test the case where there are still entries in the friend trees after
+   // processing of the main tree finishes. This should issue a warning
+   RDatasetSpec spec;
+   spec.AddSample({data[0].name, data[0].trees[0][0].tree, data[0].fileGlobs});
+   const auto &d = data[1];
+   std::vector<std::string> treeNames{};
+   std::vector<std::string> fileGlobs{};
+   for (auto i = 0u; i < d.fileGlobs.size(); ++i) {
+      treeNames.emplace_back(d.trees[i][0].tree);
+      fileGlobs.emplace_back(d.fileGlobs[i]);
+   }
+   spec.WithGlobalFriends(treeNames, fileGlobs, "friend_glob_" + d.name);
+
+   auto df = RDataFrame(spec);
+   auto take_glob = df.Take<ULong64_t>("friend_glob_" + d.name + ".x");
+   // The warning about longer friend only makes sense for the single-threaded case
+   if (!GetParam())
+      ROOT_EXPECT_WARNING(*take_glob, "SetEntryBase",
+                          "Last entry available from main tree '' was 14 but friend tree 'subTree' has more entries "
+                          "beyond the end of the main tree.");
+}
+
+TEST_P(RDatasetSpecTest, FriendsShorter)
+{
+   // Test the case where the friend trees are shorter than the main one.
+   // This should throw an exception.
+   RDatasetSpec spec;
+   spec.AddSample({data[1].name, data[1].trees[0][0].tree, data[1].fileGlobs});
+   const auto &d = data[0];
+   std::vector<std::string> treeNames{};
+   std::vector<std::string> fileGlobs{};
+   for (auto i = 0u; i < d.fileGlobs.size(); ++i) {
+      treeNames.emplace_back(d.trees[i][0].tree);
+      fileGlobs.emplace_back(d.fileGlobs[i]);
+   }
+   spec.WithGlobalFriends(treeNames, fileGlobs, "friend_glob_" + d.name);
+
+   auto df = RDataFrame(spec);
+   auto take_glob = df.Take<ULong64_t>("friend_glob_" + d.name + ".x");
+   try {
+      *take_glob;
+   } catch (const std::runtime_error &err) {
+      const std::string msg = "Cannot read entry 15 from friend tree 'tree'. The friend tree has less entries than the "
+                              "main tree. Make sure all trees of the dataset have the same number of entries.";
+      EXPECT_STREQ(err.what(), msg.c_str());
    }
 }
 
@@ -382,8 +419,7 @@ TEST_P(RDatasetSpecTest, Histo1D)
    RDatasetSpec spec;
    spec.AddSample({"real0", "tree"s, {"specTestFile0.root"s}});
    spec.AddSample({"real1", {{"tree"s, "specTestFile00*.root"s}}});
-   // 1 friend with entries from 15 up to 39 -> shortened to have the size of the main chain
-   spec.WithGlobalFriends({{"subTree"s, "specTestFile1*.root"s}}, "friend"s);
+   spec.WithGlobalFriends("subTree", std::vector<std::string>{"specTestFile1.root", "specTestFile11.root"}, "friend");
    ROOT::RDataFrame d(spec);
 
    auto h1 = d.Histo1D(::TH1D("h1", "h1", 10, 0, 10), "x");
@@ -429,8 +465,7 @@ TEST_P(RDatasetSpecTest, FilterDependingOnVariation)
    RDatasetSpec spec;
    spec.AddSample({"real0", "tree"s, {"specTestFile0.root"s}});
    spec.AddSample({"real1", {{"tree"s, "specTestFile00*.root"s}}});
-   // 1 friend with entries from 15 up to 39 -> shortened to have the size of the main chain
-   spec.WithGlobalFriends({{"subTree"s, "specTestFile1*.root"s}}, "friend"s);
+   spec.WithGlobalFriends("subTree", std::vector<std::string>{"specTestFile1.root", "specTestFile11.root"}, "friend");
    ROOT::RDataFrame df(spec);
 
    auto sum = df.Vary(
@@ -534,12 +569,12 @@ TEST(RDatasetSpecTest, Describe)
 TEST(RDatasetSpecTest, FromSpec)
 {
    auto dfWriter0 = ROOT::RDataFrame(5).Define("z", [](ULong64_t e) { return e + 100; }, {"rdfentry_"});
-   dfWriter0.Range(0, 2).Snapshot<ULong64_t>("subTree", "PYspecTestFile2.root", {"z"});
-   dfWriter0.Range(2, 4).Snapshot<ULong64_t>("subTree", "PYspecTestFile3.root", {"z"});
-   dfWriter0.Range(4, 5).Snapshot<ULong64_t>("subTree", "PYspecTestFile4.root", {"z"});
-   dfWriter0.Range(0, 2).Snapshot<ULong64_t>("subTree1", "PYspecTestFile5.root", {"z"});
-   dfWriter0.Range(2, 4).Snapshot<ULong64_t>("subTree2", "PYspecTestFile6.root", {"z"});
-   dfWriter0.Snapshot<ULong64_t>("anotherTree", "PYspecTestFile7.root", {"z"});
+   dfWriter0.Range(0, 2).Snapshot<ULong64_t>("subTree", "CPPspecTestFile2.root", {"z"});
+   dfWriter0.Range(2, 4).Snapshot<ULong64_t>("subTree", "CPPspecTestFile3.root", {"z"});
+   dfWriter0.Range(4, 5).Snapshot<ULong64_t>("subTree", "CPPspecTestFile4.root", {"z"});
+   dfWriter0.Range(0, 2).Snapshot<ULong64_t>("subTree1", "CPPspecTestFile5.root", {"z"});
+   dfWriter0.Range(2, 4).Snapshot<ULong64_t>("subTree2", "CPPspecTestFile6.root", {"z"});
+   dfWriter0.Snapshot<ULong64_t>("anotherTree", "CPPspecTestFile7.root", {"z"});
 
    auto rdf =
       FromSpec("spec.json")
@@ -570,7 +605,7 @@ TEST(RDatasetSpecTest, FromSpec)
    }
 
    for (auto i = 2u; i < 8u; ++i)
-      gSystem->Unlink(("PYspecTestFile" + std::to_string(i) + ".root").c_str());
+      gSystem->Unlink(("CPPspecTestFile" + std::to_string(i) + ".root").c_str());
 }
 
 TEST(RDatasetSpecTest, FromSpec_ordering_samplesAndFriends)

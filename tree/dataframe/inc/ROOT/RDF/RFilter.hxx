@@ -106,10 +106,22 @@ public:
       return fLastResult[slot * RDFInternal::CacheLineStep<int>()];
    }
 
+   template <typename ColType>
+   auto GetValueChecked(unsigned int slot, std::size_t readerIdx, Long64_t entry) -> ColType &
+   {
+      if (auto *val = fValues[slot][readerIdx]->template TryGet<ColType>(entry))
+         return *val;
+
+      throw std::out_of_range{"RDataFrame: Filter could not retrieve value for column '" + fColumnNames[readerIdx] +
+                              "' for entry " + std::to_string(entry) +
+                              ". You can use the DefaultValueFor operation to provide a default value, or "
+                              "FilterAvailable/FilterMissing to discard/keep entries with missing values instead."};
+   }
+
    template <typename... ColTypes, std::size_t... S>
    bool CheckFilterHelper(unsigned int slot, Long64_t entry, TypeList<ColTypes...>, std::index_sequence<S...>)
    {
-      return fFilter(fValues[slot][S]->template Get<ColTypes>(entry)...);
+      return fFilter(GetValueChecked<ColTypes>(slot, S, entry)...);
       // avoid unused parameter warnings (gcc 12.1)
       (void)slot;
       (void)entry;

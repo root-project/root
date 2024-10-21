@@ -346,18 +346,20 @@ void RooAbsMinimizerFcn::SetPdfParamErr(int index, double loVal, double hiVal)
 }
 
 /// Transfer MINUIT fit results back into RooFit objects.
-void RooAbsMinimizerFcn::BackProp(const ROOT::Fit::FitResult &results)
+void RooAbsMinimizerFcn::BackProp()
 {
+   auto const &results = _context->fitter()->Result();
+
    for (unsigned int index = 0; index < _nDim; index++) {
-      double value = results.Value(index);
+      double value = results.fParams[index];
       SetPdfParamVal(index, value);
 
       // Set the parabolic error
-      double err = results.Error(index);
+      double err = results.fErrors[index];
       SetPdfParamErr(index, err);
 
-      double eminus = results.LowerError(index);
-      double eplus = results.UpperError(index);
+      double eminus = results.lowerError(index);
+      double eplus = results.upperError(index);
 
       if (eplus > 0 || eminus < 0) {
          // Store the asymmetric error, if it is available
@@ -481,17 +483,6 @@ double RooAbsMinimizerFcn::applyEvalErrorHandling(double fvalue) const
 
 void RooAbsMinimizerFcn::finishDoEval() const
 {
-
-   if (_context->_loggingToDataSet) {
-
-      if (!_context->_logDataSet) {
-         const char *name = "minimizer_log_dataset";
-         _context->_logDataSet = std::make_unique<RooDataSet>(name, name, *_floatParamList);
-      }
-
-      _context->_logDataSet->add(*_floatParamList);
-   }
-
    _evalCounter++;
 }
 
@@ -542,18 +533,4 @@ void RooAbsMinimizerFcn::optimizeConstantTerms(bool constStatChange, bool constV
          << endl;
       setOptimizeConstOnFunction(RooAbsArg::ValueChange, true);
    }
-}
-
-std::vector<double> RooAbsMinimizerFcn::getParameterValues() const
-{
-   // TODO: make a cache for this somewhere so it doesn't have to be recreated on each call
-   std::vector<double> values;
-   values.reserve(_nDim);
-
-   for (std::size_t index = 0; index < _nDim; ++index) {
-      RooRealVar *par = static_cast<RooRealVar *>(_floatParamList->at(index));
-      values.push_back(par->getVal());
-   }
-
-   return values;
 }

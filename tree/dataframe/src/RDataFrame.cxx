@@ -84,6 +84,7 @@ You can directly see RDataFrame in action in our [tutorials](https://root.cern/d
    - [Activating RDataFrame execution logs](\ref rdf-logging)
    - [Creating an RDataFrame from a dataset specification file](\ref rdf-from-spec)
    - [Adding a progress bar](\ref progressbar)
+   - [Working with missing values in the dataset](\ref missing-values)
 - [Efficient analysis in Python](\ref python)
 - <a class="el" href="classROOT_1_1RDataFrame.html#reference" onclick="javascript:toggleInherit('pub_methods_classROOT_1_1RDF_1_1RInterface')">Class reference</a>
 
@@ -97,11 +98,14 @@ Transformations are a way to manipulate the data.
 | **Transformation** | **Description** |
 |------------------|--------------------|
 | Alias() | Introduce an alias for a particular column name. |
+| DefaultValueFor() | If the value of the input column is missing, provide a default value instead. |
 | Define() | Create a new column in the dataset. Example usages include adding a column that contains the invariant mass of a particle, or a selection of elements of an array (e.g. only the `pt`s of "good" muons). |
 | DefinePerSample() | Define a new column that is updated when the input sample changes, e.g. when switching tree being processed in a chain. |
 | DefineSlot() | Same as Define(), but the user-defined function must take an extra `unsigned int slot` as its first parameter. `slot` will take a different value, `0` to `nThreads - 1`, for each thread of execution. This is meant as a helper in writing thread-safe Define() transformation when using RDataFrame after ROOT::EnableImplicitMT(). DefineSlot() works just as well with single-thread execution: in that case `slot` will always be `0`.  |
 | DefineSlotEntry() | Same as DefineSlot(), but the entry number is passed in addition to the slot number. This is meant as a helper in case the expression depends on the entry number. For details about entry numbers in multi-threaded runs, see [here](\ref helper-cols). |
 | Filter() | Filter rows based on user-defined conditions. |
+| FilterAvailable() | Specialized Filter. If the value of the input column is available, keep the entry, otherwise discard it. |
+| FilterMissing() | Specialized Filter. If the value of the input column is missing, keep the entry, otherwise discard it. |
 | Range() | Filter rows based on entry number (single-thread only). |
 | Redefine() | Overwrite the value and/or type of an existing column. See Define() for more information. |
 | RedefineSlot() | Overwrite the value and/or type of an existing column. See DefineSlot() for more information. |
@@ -455,6 +459,42 @@ RDataFrame executes all above actions by **running the event-loop only once**. T
 executed at the moment they are called, but they are **lazy**, i.e. delayed until the moment one of their results is
 accessed through the smart pointer. At that time, the event loop is triggered and *all* results are produced
 simultaneously.
+
+### Properly exploiting RDataFrame laziness
+
+For yet another example of the difference between the correct and incorrect running of the event-loop, see the following
+two code snippets. We assume our ROOT file has branches a, b and c.
+
+The correct way - the dataset is only processed once.
+~~~{.py}
+df_correct = ROOT.RDataFrame(treename, filename);
+
+h_a = df_correct.Histo1D("a")
+h_b = df_correct.Histo1D("b")
+h_c = df_correct.Histo1D("c")
+
+h_a_val = h_a.GetValue()
+h_b_val = h_b.GetValue()
+h_c_val = h_c.GetValue()
+
+print(f"How many times was the data set processed? {df_wrong.GetNRuns()} time.") # The answer will be 1 time. 
+~~~
+
+An incorrect way - the dataset is processed three times.
+~~~{.py}
+df_incorrect = ROOT.RDataFrame(treename, filename);
+
+h_a = df_incorrect.Histo1D("a")
+h_a_val = h_a.GetValue()
+
+h_b = df_incorrect.Histo1D("b")
+h_b_val = h_b.GetValue()
+
+h_c = df_incorrect.Histo1D("c")
+h_c_val = h_c.GetValue()
+
+print(f"How many times was the data set processed? {df_wrong.GetNRuns()} times.") # The answer will be 3 times. 
+~~~
 
 It is therefore good practice to declare all your transformations and actions *before* accessing their results, allowing
 RDataFrame to run the loop once and produce all results in one go.
@@ -1536,6 +1576,143 @@ auto df_1 = ROOT::RDF::RNode(df.Filter("x>1"));
 ROOT::RDF::Experimental::AddProgressBar(df_1);
 ~~~
 Examples of implemented progress bars can be seen by running [Higgs to Four Lepton tutorial](https://root.cern/doc/master/df106__HiggsToFourLeptons_8py_source.html) and [Dimuon tutorial](https://root.cern/doc/master/df102__NanoAODDimuonAnalysis_8C.html). 
+
+\anchor missing-values
+### Working with missing values in the dataset
+
+In certain situations a dataset might be missing one or more values at one or
+more of its entries. For example:
+
+- If the dataset is composed of multiple files and one or more files is
+  missing one or more columns required by the analysis.
+- When joining different datasets horizontally according to some index value
+  (e.g. the event number), if the index does not find a match in one or more
+  other datasets for a certain entry.
+
+For example, suppose that column "y" does not have a value for entry 42:
+
+\code{.unparsed}
++-------+---+---+
+| Entry | x | y |
++-------+---+---+
+| 42    | 1 |   |
++-------+---+---+
+\endcode
+
+If the RDataFrame application reads that column, for example if a Take() action
+was requested, the default behaviour is to throw an exception indicating
+that that column is missing an entry.
+
+The following paragraphs discuss the functionalities provided by RDataFrame to
+work with missing values in the dataset.
+
+#### FilterAvailable and FilterMissing
+
+FilterAvailable and FilterMissing are specialized RDataFrame Filter operations.
+They take as input argument the name of a column of the dataset to watch for
+missing values. Like Filter, they will either keep or discard an entire entry
+based on whether a condition returns true or false. Specifically:
+
+- FilterAvailable: the condition is whether the value of the column is present.
+  If so, the entry is kept. Otherwise if the value is missing the entry is
+  discarded.
+- FilterMissing: the condition is whether the value of the column is missing. If
+  so, the entry is kept. Otherwise if the value is present the entry is
+  discarded.
+
+\code{.py}
+df = ROOT.RDataFrame(dataset)
+
+# Anytime an entry from "col" is missing, the entire entry will be filtered out
+df_available = df.FilterAvailable("col")
+df_available = df_available.Define("twice", "col * 2")
+
+# Conversely, if we want to select the entries for which the column has missing
+# values, we do the following
+df_missingcol = df.FilterMissing("col")
+# Following operations in the same branch of the computation graph clearly
+# cannot access that same column, since there would be no value to read
+df_missingcol = df_missingcol.Define("observable", "othercolumn * 2")
+\endcode
+
+\code{.cpp}
+ROOT::RDataFrame df{dataset};
+
+// Anytime an entry from "col" is missing, the entire entry will be filtered out
+auto df_available = df.FilterAvailable("col");
+auto df_twicecol = df_available.Define("twice", "col * 2");
+
+// Conversely, if we want to select the entries for which the column has missing
+// values, we do the following
+auto df_missingcol = df.FilterMissing("col");
+// Following operations in the same branch of the computation graph clearly
+// cannot access that same column, since there would be no value to read
+auto df_observable = df_missingcol.Define("observable", "othercolumn * 2");
+\endcode
+
+#### DefaultValueFor
+
+DefaultValueFor creates a node of the computation graph which just forwards the
+values of the columns necessary for other downstream nodes, when they are
+available. In case a value of the input column passed to this function is not
+available, the node will provide the default value passed to this function call
+instead. Example:
+
+\code{.py}
+df = ROOT.RDataFrame(dataset)
+# Anytime an entry from "col" is missing, the value will be the default one
+default_value = ... # Some sensible default value here
+df = df.DefaultValueFor("col", default_value) 
+df = df.Define("twice", "col * 2")
+\endcode
+
+\code{.cpp}
+ROOT::RDataFrame df{dataset};
+// Anytime an entry from "col" is missing, the value will be the default one
+constexpr auto default_value = ... // Some sensible default value here
+auto df_default = df.DefaultValueFor("col", default_value);
+auto df_col = df_default.Define("twice", "col * 2");
+\endcode
+
+#### Mixing different strategies to work with missing values in the same RDataFrame
+
+All the operations presented above only act on the particular branch of the
+computation graph where they are called, so that different results can be
+obtained by mixing and matching the filtering or providing a default value
+strategies:
+
+\code{.py}
+df = ROOT.RDataFrame(dataset)
+# Anytime an entry from "col" is missing, the value will be the default one
+default_value = ... # Some sensible default value here
+df_default = df.DefaultValueFor("col", default_value).Define("twice", "col * 2")
+df_filtered = df.FilterAvailable("col").Define("twice", "col * 2")
+
+# Same number of total entries as the input dataset, with defaulted values
+df_default.Display(["twice"]).Print()
+# Only keep the entries where "col" has values
+df_filtered.Display(["twice"]).Print()
+\endcode
+
+\code{.cpp}
+ROOT::RDataFrame df{dataset};
+
+// Anytime an entry from "col" is missing, the value will be the default one
+constexpr auto default_value = ... // Some sensible default value here
+auto df_default = df.DefaultValueFor("col", default_value).Define("twice", "col * 2");
+auto df_filtered = df.FilterAvailable("col").Define("twice", "col * 2");
+
+// Same number of total entries as the input dataset, with defaulted values
+df_default.Display({"twice"})->Print();
+// Only keep the entries where "col" has values
+df_filtered.Display({"twice"})->Print();
+\endcode
+
+#### Further considerations
+
+Note that working with missing values is currently supported with a TTree-based
+data source. Support of this functionality for other data sources may come in
+the future.
 
 */
 // clang-format on

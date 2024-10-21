@@ -304,7 +304,7 @@ void ROOT::Experimental::Internal::RPageSinkDaos::InitImpl(unsigned char *serial
       throw ROOT::Experimental::RException(R__FAIL("Unknown object class " + fNTupleAnchor.fObjClass));
 
    size_t cageSz = opts ? opts->GetMaxCageSize() : RNTupleWriteOptionsDaos().GetMaxCageSize();
-   size_t pageSz = opts ? opts->GetApproxUnzippedPageSize() : RNTupleWriteOptionsDaos().GetApproxUnzippedPageSize();
+   size_t pageSz = opts ? opts->GetMaxUnzippedPageSize() : RNTupleWriteOptionsDaos().GetMaxUnzippedPageSize();
    fCageSizeLimit = std::max(cageSz, pageSz);
 
    auto args = ParseDaosURI(fURI);
@@ -428,7 +428,7 @@ ROOT::Experimental::Internal::RPageSinkDaos::CommitSealedPageVImpl(std::span<RPa
    return locators;
 }
 
-std::uint64_t ROOT::Experimental::Internal::RPageSinkDaos::CommitClusterImpl()
+std::uint64_t ROOT::Experimental::Internal::RPageSinkDaos::StageClusterImpl()
 {
    return std::exchange(fNBytesCurrentCluster, 0);
 }

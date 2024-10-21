@@ -7,7 +7,7 @@ if (NOT builtin_clang)
 endif()
 
 #--Set the LLVM version required for ROOT-----------------------------------------------------------
-set(ROOT_LLVM_VERSION_REQUIRED_MAJOR 16)
+set(ROOT_LLVM_VERSION_REQUIRED_MAJOR 18)
 
 #---Define the way we want to build and what of llvm/clang/cling------------------------------------
 set(LLVM_ENABLE_RTTI ON CACHE BOOL "")
@@ -257,9 +257,13 @@ if(builtin_llvm)
   get_directory_property(LLVM_TARGETS_TO_BUILD DIRECTORY llvm-project/llvm DEFINITION LLVM_TARGETS_TO_BUILD)
 
   if(MSVC)
+    if(CMAKE_GENERATOR MATCHES Ninja)
+      set(LLVM_TABLEGEN_EXE "${LLVM_BINARY_DIR}/bin/llvm-tblgen.exe")
+    else()
       set(LLVM_TABLEGEN_EXE "${LLVM_BINARY_DIR}/$<CONFIG>/bin/llvm-tblgen.exe")
+    endif()
   else()
-      set(LLVM_TABLEGEN_EXE "${LLVM_BINARY_DIR}/bin/llvm-tblgen")
+    set(LLVM_TABLEGEN_EXE "${LLVM_BINARY_DIR}/bin/llvm-tblgen")
   endif()
 else()
   # Rely on llvm-config.
@@ -364,10 +368,10 @@ else()
   include(VersionFromVCS)
 
   set(PACKAGE_VERSION "${LLVM_PACKAGE_VERSION}")
-  if (${PACKAGE_VERSION} MATCHES "${ROOT_LLVM_VERSION_REQUIRED_MAJOR}\\.0(|\\.[0-9]+)")
+  if (${PACKAGE_VERSION} MATCHES "${ROOT_LLVM_VERSION_REQUIRED_MAJOR}\\.1(|\\.[0-9]+)")
     message(STATUS "Using LLVM external library - ${PACKAGE_VERSION}")
   else()
-    message(FATAL_ERROR "LLVM version ${LLVM_PACKAGE_VERSION} different from ROOT supported, please try ${ROOT_LLVM_VERSION_REQUIRED_MAJOR}.0.x")
+    message(FATAL_ERROR "LLVM version ${LLVM_PACKAGE_VERSION} different from ROOT supported, please try ${ROOT_LLVM_VERSION_REQUIRED_MAJOR}.1.x")
   endif()
 
   if (NOT DEFINED LLVM_INCLUDE_TESTS)

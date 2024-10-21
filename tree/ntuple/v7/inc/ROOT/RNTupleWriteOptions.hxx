@@ -65,20 +65,30 @@ protected:
    /// Memory limit for committing a cluster: with very high compression ratio, we need a limit
    /// on how large the I/O buffer can grow during writing.
    std::size_t fMaxUnzippedClusterSize = 512 * 1024 * 1024;
-   /// Should be just large enough so that the compression ratio does not benefit much more from larger pages.
-   /// Unless the cluster is too small to contain a sufficiently large page, pages are
-   /// fApproxUnzippedPageSize in size. If tail page optimization is enabled, the last page in a cluster is
-   /// between fApproxUnzippedPageSize/2 and fApproxUnzippedPageSize * 1.5 in size.
-   std::size_t fApproxUnzippedPageSize = 64 * 1024;
-   /// Whether to optimize tail pages to avoid an undersized last page per cluster (see above). Increases the
-   /// required memory by a factor 3x.
-   bool fUseTailPageOptimization = true;
+   /// Initially, columns start with a page large enough to hold the given number of elements. The initial
+   /// page size is the given number of elements multiplied by the column's element size.
+   /// If more elements are needed, pages are increased up until the byte limit given by fMaxUnzippedPageSize
+   /// or until the total page buffer limit is reached (as a sum of all page buffers).
+   /// The total write buffer limit needs to be large enough to hold the initial pages of all columns.
+   std::size_t fInitialNElementsPerPage = 64;
+   /// Pages can grow only to the given limit in bytes.
+   std::size_t fMaxUnzippedPageSize = 1024 * 1024;
+   /// The maximum size that the sum of all page buffers used for writing into a persistent sink are allowed to use.
+   /// If set to zero, RNTuple will auto-adjust the budget based on the value of fApproxZippedClusterSize.
+   /// If set manually, the size needs to be large enough to hold all initial page buffers.
+   /// The total amount of memory for writing is larger, e.g. for the additional compressed buffers etc.
+   /// Use RNTupleModel::EstimateWriteMemoryUsage() for the total estimated memory use for writing.
+   /// The default values are tuned for a total write memory of around 300 MB per fill context.
+   std::size_t fPageBufferBudget = 0;
    /// Whether to use buffered writing (with RPageSinkBuf). This buffers compressed pages in memory, reorders them
    /// to keep pages of the same column adjacent, and coalesces the writes when committing a cluster.
    bool fUseBufferedWrite = true;
    /// Whether to use Direct I/O for writing. Note that this introduces alignment requirements that may very between
    /// filesystems and platforms.
    bool fUseDirectIO = false;
+   /// Buffer size to use for writing to files, must be a multiple of 4096 bytes. Testing suggests that 4MiB gives best
+   /// performance (with Direct I/O) at a reasonable memory consumption.
+   std::size_t fWriteBufferSize = 4 * 1024 * 1024;
    /// Whether to use implicit multi-threading to compress pages. Only has an effect if buffered writing is turned on.
    EImplicitMT fUseImplicitMT = EImplicitMT::kDefault;
    /// If set, checksums will be calculated and written for every page.
@@ -88,10 +98,6 @@ protected:
    std::uint64_t fMaxKeySize = kDefaultMaxKeySize;
 
 public:
-   /// A maximum size of 512MB still allows for a vector of bool to be stored in a small cluster.  This is the
-   /// worst case wrt. the maximum required size of the index column.  A 32bit index column can address 512MB
-   /// of 1-bit (on disk size) bools.
-   static constexpr std::uint64_t kMaxSmallClusterSize = 512 * 1024 * 1024;
 
    virtual ~RNTupleWriteOptions() = default;
    virtual std::unique_ptr<RNTupleWriteOptions> Clone() const;
@@ -109,17 +115,23 @@ public:
    std::size_t GetMaxUnzippedClusterSize() const { return fMaxUnzippedClusterSize; }
    void SetMaxUnzippedClusterSize(std::size_t val);
 
-   std::size_t GetApproxUnzippedPageSize() const { return fApproxUnzippedPageSize; }
-   void SetApproxUnzippedPageSize(std::size_t val);
+   std::size_t GetInitialNElementsPerPage() const { return fInitialNElementsPerPage; }
+   void SetInitialNElementsPerPage(std::size_t val);
 
-   bool GetUseTailPageOptimization() const { return fUseTailPageOptimization; }
-   void SetUseTailPageOptimization(bool val) { fUseTailPageOptimization = val; }
+   std::size_t GetMaxUnzippedPageSize() const { return fMaxUnzippedPageSize; }
+   void SetMaxUnzippedPageSize(std::size_t val);
+
+   std::size_t GetPageBufferBudget() const;
+   void SetPageBufferBudget(std::size_t val) { fPageBufferBudget = val; }
 
    bool GetUseBufferedWrite() const { return fUseBufferedWrite; }
    void SetUseBufferedWrite(bool val) { fUseBufferedWrite = val; }
 
    bool GetUseDirectIO() const { return fUseDirectIO; }
    void SetUseDirectIO(bool val) { fUseDirectIO = val; }
+
+   std::size_t GetWriteBufferSize() const { return fWriteBufferSize; }
+   void SetWriteBufferSize(std::size_t val) { fWriteBufferSize = val; }
 
    EImplicitMT GetUseImplicitMT() const { return fUseImplicitMT; }
    void SetUseImplicitMT(EImplicitMT val) { fUseImplicitMT = val; }

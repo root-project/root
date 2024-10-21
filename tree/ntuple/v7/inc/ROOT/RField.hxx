@@ -47,7 +47,6 @@ class TSchemaRule;
 
 namespace Experimental {
 
-class RNTupleCollectionWriter;
 class REntry;
 
 namespace Detail {
@@ -72,6 +71,8 @@ public:
 };
 
 /// Used in RFieldBase::Check() to record field creation failures.
+/// Also used when deserializing a field that contains unknown values that may come from
+/// future RNTuple versions (e.g. an unknown Structure)
 class RInvalidField final : public RFieldBase {
    std::string fError;
 
@@ -123,6 +124,7 @@ private:
    std::size_t fMaxAlignment = 1;
 
 private:
+   RClassField(std::string_view fieldName, const RClassField &source); ///< Used by CloneImpl
    RClassField(std::string_view fieldName, std::string_view className, TClass *classp);
    void Attach(std::unique_ptr<RFieldBase> child, RSubFieldInfo info);
    /// Register post-read callbacks corresponding to a list of ROOT I/O customization rules. `classp` is used to
@@ -269,42 +271,24 @@ public:
    ~RField() override = default;
 };
 
-/// The collection field is only used for writing; when reading, untyped collections are projected to an std::vector
-class RCollectionField final : public ROOT::Experimental::RFieldBase {
-private:
-   /// Save the link to the collection ntuple in order to reset the offset counter when committing the cluster
-   std::shared_ptr<RNTupleCollectionWriter> fCollectionWriter;
-
-protected:
-   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
-   const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumns() final;
-   void GenerateColumns(const RNTupleDescriptor &desc) final;
-   void ConstructValue(void *) const final {}
-
-   std::size_t AppendImpl(const void *from) final;
-   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
-
-   void CommitClusterImpl() final;
-
-public:
-   static std::string TypeName() { return ""; }
-   RCollectionField(std::string_view name, std::shared_ptr<RNTupleCollectionWriter> collectionWriter,
-                    std::unique_ptr<RFieldZero> collectionParent);
-   RCollectionField(RCollectionField &&other) = default;
-   RCollectionField &operator=(RCollectionField &&other) = default;
-   ~RCollectionField() override = default;
-
-   size_t GetValueSize() const final { return sizeof(ClusterSize_t); }
-   size_t GetAlignment() const final { return alignof(ClusterSize_t); }
-};
-
 /// An artificial field that transforms an RNTuple column that contains the offset of collections into
 /// collection sizes. It is only used for reading, e.g. as projected field or as an artificial field that provides the
 /// "number of" RDF columns for collections (e.g. `R_rdf_sizeof_jets` for a collection named `jets`).
 /// It is used in the templated RField<RNTupleCardinality<SizeT>> form, which represents the collection sizes either
 /// as 32bit unsigned int (std::uint32_t) or as 64bit unsigned int (std::uint64_t).
 class RCardinalityField : public RFieldBase {
+   friend class RNTupleCollectionView; // to access GetCollectionInfo()
+
+private:
+   void GetCollectionInfo(NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *size)
+   {
+      fPrincipalColumn->GetCollectionInfo(globalIndex, collectionStart, size);
+   }
+   void GetCollectionInfo(RClusterIndex clusterIndex, RClusterIndex *collectionStart, ClusterSize_t *size)
+   {
+      fPrincipalColumn->GetCollectionInfo(clusterIndex, collectionStart, size);
+   }
+
 protected:
    RCardinalityField(std::string_view fieldName, std::string_view typeName)
       : RFieldBase(fieldName, typeName, ENTupleStructure::kLeaf, false /* isSimple */)
@@ -330,8 +314,8 @@ public:
 template <typename T>
 class RSimpleField : public RFieldBase {
 protected:
-   void GenerateColumns() final { GenerateColumnsImpl<T>(); }
-   void GenerateColumns(const RNTupleDescriptor &desc) final { GenerateColumnsImpl<T>(desc); }
+   void GenerateColumns() override { GenerateColumnsImpl<T>(); }
+   void GenerateColumns(const RNTupleDescriptor &desc) override { GenerateColumnsImpl<T>(desc); }
 
    void ConstructValue(void *where) const final { new (where) T{0}; }
 
@@ -369,35 +353,6 @@ public:
 
 namespace ROOT {
 namespace Experimental {
-
-template <>
-class RField<ClusterSize_t> final : public RSimpleField<ClusterSize_t> {
-protected:
-   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
-   {
-      return std::make_unique<RField>(newName);
-   }
-
-   const RColumnRepresentations &GetColumnRepresentations() const final;
-
-public:
-   static std::string TypeName() { return "ROOT::Experimental::ClusterSize_t"; }
-   explicit RField(std::string_view name) : RSimpleField(name, TypeName()) {}
-   RField(RField &&other) = default;
-   RField &operator=(RField &&other) = default;
-   ~RField() override = default;
-
-   /// Special help for offset fields
-   void GetCollectionInfo(NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *size)
-   {
-      fPrincipalColumn->GetCollectionInfo(globalIndex, collectionStart, size);
-   }
-   void GetCollectionInfo(RClusterIndex clusterIndex, RClusterIndex *collectionStart, ClusterSize_t *size)
-   {
-      fPrincipalColumn->GetCollectionInfo(clusterIndex, collectionStart, size);
-   }
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
-};
 
 template <typename SizeT>
 class RField<RNTupleCardinality<SizeT>> final : public RCardinalityField {
@@ -469,6 +424,9 @@ class RField<TObject> final : public RFieldBase {
    static std::size_t GetOffsetOfMember(const char *name);
    static std::size_t GetOffsetUniqueID() { return GetOffsetOfMember("fUniqueID"); }
    static std::size_t GetOffsetBits() { return GetOffsetOfMember("fBits"); }
+
+private:
+   RField(std::string_view fieldName, const RField<TObject> &source); ///< Used by CloneImpl()
 
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;

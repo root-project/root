@@ -317,7 +317,7 @@ class RH2Painter extends RHistPainter {
    }
 
    /** @summary Fill statistic into statistic box */
-   fillStatistic(stat, dostat /*, dofit */) {
+   fillStatistic(stat, dostat /* , dofit */) {
       const data = this.countStat(),
           print_name = Math.floor(dostat % 10),
           print_entries = Math.floor(dostat / 10) % 10,
@@ -433,8 +433,8 @@ class RH2Painter extends RHistPainter {
          if (entry) {
             this.draw_g
                 .append('svg:path')
-                .style('fill', handle.palette.getColor(colindx))
-                .attr('d', entry.path);
+                .attr('d', entry.path)
+                .style('fill', handle.palette.getColor(colindx));
          }
       });
 
@@ -524,8 +524,9 @@ class RH2Painter extends RHistPainter {
    }
 
    /** @summary Draw RH2 bins as text */
-   drawBinsText(handle) {
-      if (handle === null) handle = this.prepareDraw({ rounding: false });
+   async drawBinsText(handle) {
+      if (!handle)
+         handle = this.prepareDraw({ rounding: false });
 
       const histo = this.getHisto(),
             textFont = this.v7EvalFont('text', { size: 20, color: 'black', align: 22 }),
@@ -533,42 +534,42 @@ class RH2Painter extends RHistPainter {
             text_g = this.draw_g.append('svg:g').attr('class', 'th2_text'),
             di = handle.stepi, dj = handle.stepj,
             profile2d = false;
-      let i, j, binz, binw, binh, text, x, y, width, height;
 
-      this.startTextDrawing(textFont, 'font', text_g);
+      return this.startTextDrawingAsync(textFont, 'font', text_g).then(() => {
+         for (let i = handle.i1; i < handle.i2; i += di) {
+            for (let j = handle.j1; j < handle.j2; j += dj) {
+               let binz = histo.getBinContent(i+1, j+1);
+               if ((binz === 0) && !this._show_empty_bins) continue;
 
-      for (i = handle.i1; i < handle.i2; i += di) {
-         for (j = handle.j1; j < handle.j2; j += dj) {
-            binz = histo.getBinContent(i+1, j+1);
-            if ((binz === 0) && !this._show_empty_bins) continue;
+               const binw = handle.grx[i+di] - handle.grx[i],
+                     binh = handle.gry[j] - handle.gry[j+dj];
 
-            binw = handle.grx[i+di] - handle.grx[i];
-            binh = handle.gry[j] - handle.gry[j+dj];
+               if (profile2d)
+                  binz = histo.getBinEntries(i+1, j+1);
 
-            if (profile2d)
-               binz = histo.getBinEntries(i+1, j+1);
+               const text = (binz === Math.round(binz)) ? binz.toString() : floatToString(binz, gStyle.fPaintTextFormat);
 
-            text = (binz === Math.round(binz)) ? binz.toString() : floatToString(binz, gStyle.fPaintTextFormat);
+               let x, y, width, height;
 
-            if (textFont.angle) {
-               x = Math.round(handle.grx[i] + binw*0.5);
-               y = Math.round(handle.gry[j+dj] + binh*(0.5 + text_offset));
-               width = height = 0;
-            } else {
-               x = Math.round(handle.grx[i] + binw*0.1);
-               y = Math.round(handle.gry[j+dj] + binh*(0.1 + text_offset));
-               width = Math.round(binw*0.8);
-               height = Math.round(binh*0.8);
+               if (textFont.angle) {
+                  x = Math.round(handle.grx[i] + binw*0.5);
+                  y = Math.round(handle.gry[j+dj] + binh*(0.5 + text_offset));
+                  width = height = 0;
+               } else {
+                  x = Math.round(handle.grx[i] + binw*0.1);
+                  y = Math.round(handle.gry[j+dj] + binh*(0.1 + text_offset));
+                  width = Math.round(binw*0.8);
+                  height = Math.round(binh*0.8);
+               }
+
+               this.drawText({ align: 22, x, y, width, height, text, latex: 0, draw_g: text_g });
             }
-
-            this.drawText({ align: 22, x, y, width, height, text, latex: 0, draw_g: text_g });
          }
-      }
 
-      return this.finishTextDrawing(text_g, true).then(() => {
          handle.hide_only_zeros = true; // text drawing suppress only zeros
-         return handle;
-      });
+
+         return this.finishTextDrawing(text_g, true);
+      }).then(() => handle);
    }
 
    /** @summary Draw RH2 bins as arrows */
@@ -729,14 +730,14 @@ class RH2Painter extends RHistPainter {
          this.draw_g.append('svg:path')
                     .attr('d', btn1)
                     .call(this.fillatt.func)
-                    .style('fill', d3_rgb(this.fillatt.color).brighter(0.5).formatHex());
+                    .style('fill', d3_rgb(this.fillatt.color).brighter(0.5).formatRgb());
       }
 
       if (btn2) {
          this.draw_g.append('svg:path')
                     .attr('d', btn2)
                     .call(this.fillatt.func)
-                    .style('fill', !this.fillatt.hasColor() ? 'red' : d3_rgb(this.fillatt.color).darker(0.5).formatHex());
+                    .style('fill', !this.fillatt.hasColor() ? 'red' : d3_rgb(this.fillatt.color).darker(0.5).formatRgb());
       }
 
       if (cross) {
@@ -1146,8 +1147,8 @@ class RH2Painter extends RHistPainter {
                              FrontBox: false, BackBox: false };
 
          const kind = painter.v7EvalAttr('kind', ''),
-             sub = painter.v7EvalAttr('sub', 0),
-             o = painter.options;
+               sub = painter.v7EvalAttr('sub', 0),
+               o = painter.options;
 
          o.Text = painter.v7EvalAttr('drawtext', false);
 

@@ -31,6 +31,7 @@
 #include "llvm/IR/InlineAsm.h"
 #include "llvm/IR/Instruction.h"
 #include "llvm/IR/Instructions.h"
+#include "llvm/IR/IntrinsicInst.h"
 #include "llvm/IR/Metadata.h"
 #include "llvm/IR/Operator.h"
 #include "llvm/IR/Type.h"
@@ -145,6 +146,7 @@ public:
   Value *mapValue(const Value *V);
   void remapInstruction(Instruction *I);
   void remapFunction(Function &F);
+  void remapDPValue(DPValue &DPV);
 
   Constant *mapConstant(const Constant *C) {
     return cast_or_null<Constant>(mapValue(C));
@@ -523,12 +525,57 @@ Value *Mapper::mapValue(const Value *V) {
   if (isa<ConstantVector>(C))
     return getVM()[V] = ConstantVector::get(Ops);
   // If this is a no-operand constant, it must be because the type was remapped.
+  if (isa<PoisonValue>(C))
+    return getVM()[V] = PoisonValue::get(NewTy);
   if (isa<UndefValue>(C))
     return getVM()[V] = UndefValue::get(NewTy);
   if (isa<ConstantAggregateZero>(C))
     return getVM()[V] = ConstantAggregateZero::get(NewTy);
+  if (isa<ConstantTargetNone>(C))
+    return getVM()[V] = Constant::getNullValue(NewTy);
   assert(isa<ConstantPointerNull>(C));
   return getVM()[V] = ConstantPointerNull::get(cast<PointerType>(NewTy));
+}
+
+void Mapper::remapDPValue(DPValue &V) {
+  // Remap variables and DILocations.
+  auto *MappedVar = mapMetadata(V.getVariable());
+  auto *MappedDILoc = mapMetadata(V.getDebugLoc());
+  V.setVariable(cast<DILocalVariable>(MappedVar));
+  V.setDebugLoc(DebugLoc(cast<DILocation>(MappedDILoc)));
+
+  bool IgnoreMissingLocals = Flags & RF_IgnoreMissingLocals;
+
+  if (V.isDbgAssign()) {
+    auto *NewAddr = mapValue(V.getAddress());
+    if (!IgnoreMissingLocals && !NewAddr)
+      V.setKillAddress();
+    else if (NewAddr)
+      V.setAddress(NewAddr);
+  }
+
+  // Find Value operands and remap those.
+  SmallVector<Value *, 4> Vals, NewVals;
+  for (Value *Val : V.location_ops())
+    Vals.push_back(Val);
+  for (Value *Val : Vals)
+    NewVals.push_back(mapValue(Val));
+
+  // If there are no changes to the Value operands, finished.
+  if (Vals == NewVals)
+    return;
+
+  // Otherwise, do some replacement.
+  if (!IgnoreMissingLocals &&
+      llvm::any_of(NewVals, [&](Value *V) { return V == nullptr; })) {
+    V.setKillLocation();
+  } else {
+    // Either we have all non-empty NewVals, or we're permitted to ignore
+    // missing locals.
+    for (unsigned int I = 0; I < Vals.size(); ++I)
+      if (NewVals[I])
+        V.replaceVariableLocationOp(I, NewVals[I]);
+  }
 }
 
 Value *Mapper::mapBlockAddress(const BlockAddress &BA) {
@@ -1030,7 +1077,7 @@ void Mapper::mapAppendingVariable(GlobalVariable &GV, Constant *InitPrefix,
   if (IsOldCtorDtor) {
     // FIXME: This upgrade is done during linking to support the C API.  See
     // also IRLinker::linkAppendingVarProto() in IRMover.cpp.
-    VoidPtrTy = Type::getInt8Ty(GV.getContext())->getPointerTo();
+    VoidPtrTy = PointerType::getUnqual(GV.getContext());
     auto &ST = *cast<StructType>(NewMembers.front()->getType());
     Type *Tys[3] = {ST.getElementType(0), ST.getElementType(1), VoidPtrTy};
     EltTy = StructType::get(GV.getContext(), Tys, false);
@@ -1175,8 +1222,23 @@ void ValueMapper::remapInstruction(Instruction &I) {
   FlushingMapper(pImpl)->remapInstruction(&I);
 }
 
+void ValueMapper::remapDPValue(Module *M, DPValue &V) {
+  FlushingMapper(pImpl)->remapDPValue(V);
+}
+
+void ValueMapper::remapDPValueRange(
+    Module *M, iterator_range<DPValue::self_iterator> Range) {
+  for (DPValue &DPV : Range) {
+    remapDPValue(M, DPV);
+  }
+}
+
 void ValueMapper::remapFunction(Function &F) {
   FlushingMapper(pImpl)->remapFunction(F);
+}
+
+void ValueMapper::remapGlobalObjectMetadata(GlobalObject &GO) {
+  FlushingMapper(pImpl)->remapGlobalObjectMetadata(GO);
 }
 
 void ValueMapper::scheduleMapGlobalInitializer(GlobalVariable &GV,

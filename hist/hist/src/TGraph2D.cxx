@@ -236,8 +236,7 @@ gives a nice practical view of Delaunay triangulation and Voronoi diagram.
 /// Graph2D default constructor
 
 TGraph2D::TGraph2D()
-   : TNamed("Graph2D", "Graph2D"), TAttLine(1, 1, 1), TAttFill(0, 1001),
-     TAttMarker(), fNpoints(0)
+   : TNamed("Graph2D", "Graph2D"), TAttLine(1, 1, 1), TAttFill(0, 1001), fNpoints(0)
 {
    fSize      = 0;
    fMargin    = 0.;
@@ -263,8 +262,7 @@ TGraph2D::TGraph2D()
 /// Graph2D constructor with three vectors of ints as input.
 
 TGraph2D::TGraph2D(Int_t n, Int_t *x, Int_t *y, Int_t *z)
-   : TNamed("Graph2D", "Graph2D"), TAttLine(1, 1, 1), TAttFill(0, 1001),
-     TAttMarker(), fNpoints(n)
+   : TNamed("Graph2D", "Graph2D"), TAttLine(1, 1, 1), TAttFill(0, 1001), fNpoints(n)
 {
    Build(n);
 
@@ -281,8 +279,7 @@ TGraph2D::TGraph2D(Int_t n, Int_t *x, Int_t *y, Int_t *z)
 /// Graph2D constructor with three vectors of floats as input.
 
 TGraph2D::TGraph2D(Int_t n, Float_t *x, Float_t *y, Float_t *z)
-   : TNamed("Graph2D", "Graph2D"), TAttLine(1, 1, 1), TAttFill(0, 1001),
-     TAttMarker(), fNpoints(n)
+   : TNamed("Graph2D", "Graph2D"), TAttLine(1, 1, 1), TAttFill(0, 1001), fNpoints(n)
 {
    Build(n);
 
@@ -299,8 +296,7 @@ TGraph2D::TGraph2D(Int_t n, Float_t *x, Float_t *y, Float_t *z)
 /// Graph2D constructor with three vectors of doubles as input.
 
 TGraph2D::TGraph2D(Int_t n, Double_t *x, Double_t *y, Double_t *z)
-   : TNamed("Graph2D", "Graph2D"), TAttLine(1, 1, 1), TAttFill(0, 1001),
-     TAttMarker(), fNpoints(n)
+   : TNamed("Graph2D", "Graph2D"), TAttLine(1, 1, 1), TAttFill(0, 1001), fNpoints(n)
 {
    Build(n);
 
@@ -319,8 +315,7 @@ TGraph2D::TGraph2D(Int_t n, Double_t *x, Double_t *y, Double_t *z)
 /// Empty bins, recognized when both content and errors are zero, are excluded.
 
 TGraph2D::TGraph2D(TH2 *h2)
-   : TNamed("Graph2D", "Graph2D"), TAttLine(1, 1, 1), TAttFill(0, 1001),
-     TAttMarker(), fNpoints(0)
+   : TNamed("Graph2D", "Graph2D"), TAttLine(1, 1, 1), TAttFill(0, 1001), fNpoints(0)
 {
    Build(h2->GetNbinsX()*h2->GetNbinsY());
 
@@ -367,8 +362,7 @@ TGraph2D::TGraph2D(TH2 *h2)
 
 TGraph2D::TGraph2D(const char *name, const char *title,
                    Int_t n, Double_t *x, Double_t *y, Double_t *z)
-   : TNamed(name, title), TAttLine(1, 1, 1), TAttFill(0, 1001),
-     TAttMarker(), fNpoints(n)
+   : TNamed(name, title), TAttLine(1, 1, 1), TAttFill(0, 1001), fNpoints(n)
 {
    Build(n);
 
@@ -386,8 +380,7 @@ TGraph2D::TGraph2D(const char *name, const char *title,
 /// calls to SetPoint
 
 TGraph2D::TGraph2D(Int_t n)
-   : TNamed("Graph2D", "Graph2D"), TAttLine(1, 1, 1), TAttFill(0, 1001),
-     TAttMarker(), fNpoints(n)
+   : TNamed("Graph2D", "Graph2D"), TAttLine(1, 1, 1), TAttFill(0, 1001), fNpoints(n)
 {
    Build(n);
    for (Int_t i = 0; i < fNpoints; i++) {
@@ -408,8 +401,7 @@ TGraph2D::TGraph2D(Int_t n)
 /// Note in that case, the instantiation is about 2 times slower.
 
 TGraph2D::TGraph2D(const char *filename, const char *format, Option_t *option)
-   : TNamed("Graph2D", filename), TAttLine(1, 1, 1), TAttFill(0, 1001),
-     TAttMarker(), fNpoints(0)
+   : TNamed("Graph2D", filename), TAttLine(1, 1, 1), TAttFill(0, 1001), fNpoints(0)
 {
    Double_t x, y, z;
    TString fname = filename;

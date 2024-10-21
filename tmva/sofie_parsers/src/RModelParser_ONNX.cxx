@@ -75,6 +75,10 @@ extern ParserFuncSignature ParseErf;
 extern ParserFuncSignature ParseElu;
 extern ParserFuncSignature ParseEyeLike;
 extern ParserFuncSignature ParseRange;
+extern ParserFuncSignature ParseTopK;
+extern ParserFuncSignature ParseTile;
+extern ParserFuncSignature ParseSplit;
+extern ParserFuncSignature ParseIf;
 // Decalaration of fused operators
 extern ParserFuseFuncSignature ParseFuseConvAdd;
 extern ParserFuseFuncSignature ParseFuseConvTransposeAdd;
@@ -85,6 +89,57 @@ struct RModelParser_ONNX::OperatorsMapImpl {
    // Registered operators
    std::unordered_map<std::string, ParserFuncSignature> fOperatorsMap;
 };
+
+// helper function to get initialized tensor data
+template<typename T>
+struct ExtractDataFromTP {
+};
+// trait function to extract data from TensorProto
+template<>
+struct ExtractDataFromTP<float> {
+   static void Copy(onnx::TensorProto * tensor, void * data) {
+      tensor->mutable_float_data()->ExtractSubrange(0, tensor->float_data_size(),
+                                                            static_cast<float *>(data));
+   }
+};
+template<>
+struct ExtractDataFromTP<double> {
+   static void Copy(onnx::TensorProto * tensor, void * data) {
+      tensor->mutable_double_data()->ExtractSubrange(0, tensor->double_data_size(),
+                                                            static_cast<double *>(data));
+   }
+};
+template<>
+struct ExtractDataFromTP<int32_t> {
+   static void Copy(onnx::TensorProto * tensor, void * data) {
+      tensor->mutable_int32_data()->ExtractSubrange(0, tensor->int32_data_size(),
+                                                            static_cast<int32_t *>(data));
+   }
+};
+template<>
+struct ExtractDataFromTP<int64_t> {
+   static void Copy(onnx::TensorProto * tensor, void * data) {
+      tensor->mutable_int64_data()->ExtractSubrange(0, tensor->int64_data_size(),
+                                                            static_cast<int64_t *>(data));
+   }
+};
+template<typename T>
+std::shared_ptr<void> GetInitializedTensorData(onnx::TensorProto * tensorproto, size_t length) {
+   std::shared_ptr<void> data(malloc(length * sizeof(T)), free);
+
+   if (!tensorproto->raw_data().empty()) {
+#ifdef R__BYTESWAP
+      std::memcpy(data.get(), tensorproto->raw_data().c_str(), length * sizeof(T));
+#else
+      for (std::size_t k = 0; k < fLength; ++k)
+         (reinterpret_cast<uint32_t *>(data.get()))[k] =
+            Rbswap_32((reinterpret_cast<const uint32_t *>(tensorproto->raw_data().c_str()))[k]);
+#endif
+   } else {
+      ExtractDataFromTP<T>::Copy(tensorproto, data.get());
+   }
+   return data;
+}
 
 // Constructor of the parser
 RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_unique<OperatorsMapImpl>()) {
@@ -156,6 +211,10 @@ RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_un
    RegisterOperator("Elu", ParseElu);
    RegisterOperator("EyeLike", ParseEyeLike);
    RegisterOperator("Range", ParseRange);
+   RegisterOperator("TopK", ParseTopK);
+   RegisterOperator("Tile", ParseTile);
+   RegisterOperator("Split", ParseSplit);
+   RegisterOperator("If", ParseIf);
 }
 
 // Destructor of the parser
@@ -206,7 +265,7 @@ RModelParser_ONNX::ParseOperator(const size_t i, const onnx::GraphProto &graphpr
    const auto &nodeproto = graphproto.node(idx);
    const std::string op_type = nodeproto.op_type();
    if (fVerbose)
-      std::cout << "Parsing an operator " << op_type << std::endl;
+      std::cout << "Parsing operator " << op_type << std::endl;
 
    // try to fuse with following operator in case it is not last one
    if (i < nodes.size() - 1) {
@@ -242,6 +301,7 @@ RModelParser_ONNX::ParseOperator(const size_t i, const onnx::GraphProto &graphpr
 
    auto it = fOperatorsMapImpl->fOperatorsMap.find(op_type);
    if (it == fOperatorsMapImpl->fOperatorsMap.end()) {
+      std::cout << "operator " << op_type << " is not supported" << std::endl;
       throw std::runtime_error("TMVA::SOFIE Operator type " + op_type + " is not yet supported");
    }
    if (fVerbose) {
@@ -264,14 +324,11 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
       filename_nodir = (filename.substr(isep + 1, filename.length() - isep));
    }
 
-   std::time_t ttime = std::time(0);
-   std::tm *gmt_time = std::gmtime(&ttime);
-   std::string parsetime(std::asctime(gmt_time));
 
    GOOGLE_PROTOBUF_VERIFY_VERSION;
    // model I/O
    onnx::ModelProto model;
-   RModel rmodel(filename_nodir, parsetime);
+
 
    fTensorTypeMap.clear();
 
@@ -287,6 +344,25 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
    if (fVerbose) {
       std::cout << "ONNX Version " << model.ir_version() << std::endl;
    }
+
+   std::time_t ttime = std::time(0);
+   std::tm *gmt_time = std::gmtime(&ttime);
+   std::string parsetime(std::asctime(gmt_time));
+
+   RModel rmodel(filename_nodir, parsetime);
+   ParseONNXGraph(rmodel, graph, filename_nodir);
+   return rmodel;
+}
+
+void RModelParser_ONNX::ParseONNXGraph(RModel & rmodel, const onnx::GraphProto & graph, std::string  graphName)
+{
+   bool verbose = fVerbose;
+
+   if (graphName.empty())
+      graphName = graph.name();
+
+   if (verbose)
+      std::cout << "\nParsing Graph - " << graphName << std::endl;
 
    std::unordered_set<std::string> initializer_names;
    for (int i = 0; i < graph.initializer_size(); i++) {
@@ -319,12 +395,19 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
       std::vector<Dim> fShape;
       bool existParam = false;
       if (!valueinfoproto.type().tensor_type().has_shape())
-         throw std::runtime_error("TMVA::SOFIE datanode with no shape restrictions is not supported yet");
+         throw std::runtime_error("TMVA::SOFIE data node with no shape restrictions is not supported yet");
       for (int j = 0; j < valueinfoproto.type().tensor_type().shape().dim_size(); j++) {
          Dim dim;
          if (valueinfoproto.type().tensor_type().shape().dim(j).value_case() ==
              onnx::TensorShapeProto_Dimension::ValueCase::kDimValue) {
-            dim.dim = valueinfoproto.type().tensor_type().shape().dim(j).dim_value();
+             int dim_value = valueinfoproto.type().tensor_type().shape().dim(j).dim_value();
+             dim.dim = dim_value;
+             // case input dim is -1 - set a parametric shape
+             if (dim_value < 0) {
+               dim.isParam = true;
+               existParam = true;
+               dim.param = UTILITY::Clean_name(input_name) + "_size";
+             }
          } else if (valueinfoproto.type().tensor_type().shape().dim(j).value_case() ==
                     onnx::TensorShapeProto_Dimension::ValueCase::kDimParam) {
             dim.isParam = true;
@@ -376,44 +459,34 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
          std::cout << "\t initializer " << i << " name " << input_name << " type " << graph.initializer(i).data_type()
                    << std::endl;
 
-      switch (static_cast<ETensorType>(graph.initializer(i).data_type())) {
+      // register also the initialized tensors
+      auto tensor_type = static_cast<ETensorType>(graph.initializer(i).data_type());
+      RegisterTensorType(input_name, tensor_type);
+
+      switch (tensor_type) {
       case ETensorType::FLOAT: {
-         std::shared_ptr<void> data(malloc(fLength * sizeof(float)), free);
-
-         if (!tensorproto->raw_data().empty()) {
-#ifdef R__BYTESWAP
-            std::memcpy(data.get(), tensorproto->raw_data().c_str(), fLength * sizeof(float));
-#else
-            for (std::size_t k = 0; k < fLength; ++k)
-               (reinterpret_cast<uint32_t *>(data.get()))[k] =
-                  Rbswap_32((reinterpret_cast<const uint32_t *>(tensorproto->raw_data().c_str()))[k]);
-#endif
-         } else {
-            tensorproto->mutable_float_data()->ExtractSubrange(0, tensorproto->float_data_size(),
-                                                               static_cast<float *>(data.get()));
-         }
-
+         std::shared_ptr<void> data = GetInitializedTensorData<float>(tensorproto, fLength);
          if (verbose) std::cout << "add FLOAT initialized tensor " << input_name << " shape " << ConvertShapeToString(shape) << std::endl;
          rmodel.AddInitializedTensor(input_name, ETensorType::FLOAT, shape, data);
          allInitializedTensors[input_name] = i;
          break;
       }
+      case ETensorType::DOUBLE: {
+         std::shared_ptr<void> data = GetInitializedTensorData<double>(tensorproto, fLength);
+         if (verbose) std::cout << "add DOUBLE initialized tensor " << input_name << " shape " << ConvertShapeToString(shape) << std::endl;
+         rmodel.AddInitializedTensor(input_name, ETensorType::DOUBLE, shape, data);
+         allInitializedTensors[input_name] = i;
+         break;
+      }
+      case ETensorType::INT32: {
+         std::shared_ptr<void> data = GetInitializedTensorData<int32_t>(tensorproto, fLength);
+         if (verbose) std::cout << "add INT32 initialized tensor " << input_name << " shape " << ConvertShapeToString(shape) << std::endl;
+         rmodel.AddInitializedTensor(input_name, ETensorType::INT32, shape, data);
+         allInitializedTensors[input_name] = i;
+         break;
+      }
       case ETensorType::INT64: {
-         std::shared_ptr<void> data(malloc(fLength * sizeof(int64_t)), free);
-
-         if (!tensorproto->raw_data().empty()) {
-#ifdef R__BYTESWAP
-            std::memcpy(data.get(), tensorproto->raw_data().c_str(), fLength * sizeof(int64_t));
-#else
-            for (std::size_t k = 0; k < fLength; ++k)
-               (reinterpret_cast<uint64_t *>(data.get()))[k] =
-                  Rbswap_64((reinterpret_cast<const uint64_t *>(tensorproto->raw_data().c_str()))[k]);
-#endif
-         } else {
-            tensorproto->mutable_int64_data()->ExtractSubrange(0, tensorproto->int64_data_size(),
-                                                               static_cast<int64_t *>(data.get()));
-         }
-
+         std::shared_ptr<void> data = GetInitializedTensorData<int64_t>(tensorproto, fLength);
          if (verbose) std::cout << "add INT64 initialized tensor " << input_name << " shape " << ConvertShapeToString(shape) << std::endl;
          rmodel.AddInitializedTensor(input_name, ETensorType::INT64, shape, data);
          allInitializedTensors[input_name] = i;
@@ -446,7 +519,7 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
    nodesOrder.reserve(graph.node_size());
    std::vector<bool> foundNodes(graph.node_size());
    // loop at graph inputs
-   std::map<std::string, int> allInputs;
+   //std::map<std::string, int> allInputs;
    for (int i = 0; i < graph.input_size(); i++) {
       allInputs[graph.input(i).name()] = -1;
    }
@@ -459,14 +532,16 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
          bool existInputs = true;
          int input_size = graph.node(i).input_size();
          // special case for Reshape where shape is input and not a weight tensor
+         if (fVerbose )
+            std::cout << "Checking input of  Node " << i << " : " << graph.node(i).name() << std::endl;
          for (int j = 0; j < input_size; j++) {
             std::string name = graph.node(i).input(j);
             // skip empty names
             if (!name.empty()) {
                existInputs &= (allInputs.find(name) != allInputs.end() ||
                                allInitializedTensors.find(name) != allInitializedTensors.end());
-               if (fVerbose) {
-                  std::cout << graph.node(i).op_type() << " input " << name << " "
+               if (fVerbose ) {
+                  std::cout << "\t\t input " << name << " "
                      << bool(allInputs.find(name) != allInputs.end()) << "  " <<
                      bool(allInitializedTensors.find(name) != allInitializedTensors.end()) <<
                      existInputs << std::endl;
@@ -475,7 +550,7 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
          }
          if (!existInputs) {
             if (fVerbose) {
-               std::cout << "skip op " << graph.node(i).op_type() << " inputs are ";
+               std::cout << "skip node " << graph.node(i).op_type() << "  " << graph.node(i).name() << " inputs are not existing ";
                for (int j = 0; j < input_size; j++) {
                   std::cout << graph.node(i).input(j) << " ";
                }
@@ -484,17 +559,20 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
             continue;
          }
          if (verbose)
-            std::cout << "\tadd node " << graph.node(i).op_type() << " order " << i << std::endl;
+            std::cout << "===> New node " << graph.node(i).op_type() << "  " << graph.node(i).name() << " order " << i << std::endl;
 
          nodesOrder.push_back(i);
          foundNodes[i] = true;
          // register the outputs
          for (int j = 0; j < graph.node(i).output_size(); j++) {
+            if (fVerbose) std::cout << "\toutput : " << graph.node(i).output(j) << std::endl;
             allInputs[graph.node(i).output(j)] = i;
          }
       }
       // no increment in nodes - something wrong
       if (nodesOrder.size() == psize) {
+         int ilast = nodesOrder.back();
+         std::cout << "cannot find a new node after " << graph.node(ilast).op_type() << " " << graph.node(ilast).name() << std::endl;
          throw std::runtime_error("TMVA::SOFIE - cannot find a new node ");
       }
    } while ((int)nodesOrder.size() < graph.node_size());
@@ -547,7 +625,7 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
    }
    rmodel.AddOutputTensorNameList(outputnames);
 
-   return rmodel;
+   return;
 }
 
 } // namespace SOFIE

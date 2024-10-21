@@ -254,6 +254,17 @@ sap.ui.define([
             this.rqt.initFull(this.RQ_SSAA);
          }
          this.rqt.updateViewport(w, h);
+
+
+         // AMT secondary selection bug workaround for RenderCore PR #21
+         this.rqt.pick_instance = function(state)
+         {
+            return this.pick_instance_low_level(this.pqueue, state);
+         }
+         this.rqt.pick_instance_overlay = function(state)
+         {
+            return this.pick_instance_low_level(this.ovlpqueue, state);
+         }
       }
 
       setupEventHandlers()

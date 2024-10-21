@@ -3,6 +3,7 @@ import { select as d3_select, rgb as d3_rgb } from '../d3.mjs';
 import { closeCurrentWindow, showProgress, loadOpenui5, ToolbarIcons, getColorExec } from '../gui/utils.mjs';
 import { GridDisplay, getHPainter } from '../gui/display.mjs';
 import { makeTranslate } from '../base/BasePainter.mjs';
+import { convertColor } from '../base/colors.mjs';
 import { selectActivePad, cleanup, resize, EAxisBits } from '../base/ObjectPainter.mjs';
 import { RObjectPainter } from '../base/RObjectPainter.mjs';
 import { RAxisPainter } from './RAxisPainter.mjs';
@@ -287,7 +288,12 @@ class RCanvasPainter extends RPadPainter {
                  this.addPadInteractive();
                  handle.send(`SNAPDONE:${snapid}`); // send ready message back when drawing completed
                  this.confirmDraw();
-              });
+             }).catch(err => {
+               if (isFunc(this.showConsoleError))
+                  this.showConsoleError(err);
+               else
+                  console.log(err);
+             });
       } else if (msg.slice(0, 4) === 'JSON') {
          const obj = parse(msg.slice(4));
          // console.log('get JSON ', msg.length-4, obj._typename);
@@ -661,7 +667,7 @@ class RCanvasPainter extends RPadPainter {
    }
 
    /** @summary draw RCanvas object */
-   static async draw(dom, can /*, opt */) {
+   static async draw(dom, can /* , opt */) {
       const nocanvas = !can;
       if (nocanvas)
          can = create(`${nsREX}RCanvas`);
@@ -685,7 +691,7 @@ class RCanvasPainter extends RPadPainter {
 
 /** @summary draw RPadSnapshot object
   * @private */
-function drawRPadSnapshot(dom, snap /*, opt */) {
+function drawRPadSnapshot(dom, snap /* , opt */) {
    const painter = new RCanvasPainter(dom, null);
    painter.normal_canvas = false;
    painter.batch_mode = isBatchMode();
@@ -751,24 +757,22 @@ function drawRFrameTitle(reason, drag) {
 
    makeTranslate(this.draw_g, fx, Math.round(fy-title_margin-title_height));
 
-   const arg = { x: title_width/2, y: title_height/2, text: title.fText, latex: 1 };
-
-   this.startTextDrawing(textFont, 'font');
-
-   this.drawText(arg);
-
-   return this.finishTextDrawing().then(() =>
+   return this.startTextDrawingAsync(textFont, 'font').then(() => {
+      this.drawText({ x: title_width/2, y: title_height/2, text: title.fText, latex: 1 });
+      return this.finishTextDrawing();
+   }).then(() => {
       addDragHandler(this, { x: fx, y: Math.round(fy-title_margin-title_height), width: title_width, height: title_height,
-                             minwidth: 20, minheight: 20, no_change_x: true, redraw: d => this.redraw('drag', d) })
-   );
+                             minwidth: 20, minheight: 20, no_change_x: true, redraw: d => this.redraw('drag', d) });
+   });
 }
 
-/// /////////////////////////////////////////////////////////////////////////////////////////
+// ==========================================================
 
 registerMethods(`${nsREX}RPalette`, {
 
    extractRColor(rcolor) {
-     return rcolor.fColor || 'black';
+      const col = rcolor.fColor || 'black';
+      return convertColor(col);
    },
 
    getColor(indx) {
@@ -809,20 +813,20 @@ registerMethods(`${nsREX}RPalette`, {
 
    calcColor(value, entry1, entry2) {
       const dist = entry2.fOrdinal - entry1.fOrdinal,
-          r1 = entry2.fOrdinal - value,
-          r2 = value - entry1.fOrdinal;
+            r1 = entry2.fOrdinal - value,
+            r2 = value - entry1.fOrdinal;
 
       if (!this.fInterpolate || (dist <= 0))
-         return (r1 < r2) ? entry2.fColor : entry1.fColor;
+         return convertColor((r1 < r2) ? entry2.fColor : entry1.fColor);
 
       // interpolate
       const col1 = d3_rgb(this.extractRColor(entry1.fColor)),
-          col2 = d3_rgb(this.extractRColor(entry2.fColor)),
-          color = d3_rgb(Math.round((col1.r*r1 + col2.r*r2)/dist),
-                         Math.round((col1.g*r1 + col2.g*r2)/dist),
-                         Math.round((col1.b*r1 + col2.b*r2)/dist));
+            col2 = d3_rgb(this.extractRColor(entry2.fColor)),
+            color = d3_rgb(Math.round((col1.r*r1 + col2.r*r2)/dist),
+                           Math.round((col1.g*r1 + col2.g*r2)/dist),
+                           Math.round((col1.b*r1 + col2.b*r2)/dist));
 
-      return color.toString();
+      return color.formatRgb();
    },
 
    createPaletteColors(len) {
@@ -946,7 +950,7 @@ function drawRFont() {
                is_ttf = font.fSrc.indexOf('data:application/font-ttf') > 0;
          // TODO: for the moment only ttf format supported by jsPDF
          if (is_ttf)
-            entry.property('$fonthandler', { name: font.fFamily, format: 'ttf', base64 });
+            entry.property('$fontcfg', { n: font.fFamily, base64 });
       }
    }
 

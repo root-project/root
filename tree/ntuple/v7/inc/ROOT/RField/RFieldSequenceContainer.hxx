@@ -232,6 +232,7 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 
 /// The generic field for a (nested) std::vector<Type> except for std::vector<bool>
+/// The field can be constructed as untyped collection through CreateUntyped().
 class RVectorField : public RFieldBase {
 private:
    class RVectorDeleter : public RDeleter {
@@ -253,7 +254,9 @@ private:
    std::unique_ptr<RDeleter> fItemDeleter;
 
 protected:
-   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
+   RVectorField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField, bool isUntyped);
+
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const override;
 
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumns() final;
@@ -272,6 +275,9 @@ public:
    RVectorField(RVectorField &&other) = default;
    RVectorField &operator=(RVectorField &&other) = default;
    ~RVectorField() override = default;
+
+   static std::unique_ptr<RVectorField>
+   CreateUntyped(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField);
 
    std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetValueSize() const override { return sizeof(std::vector<char>); }

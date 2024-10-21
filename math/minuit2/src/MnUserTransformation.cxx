@@ -37,11 +37,7 @@ private:
    const std::string &fName;
 };
 
-MnUserTransformation::MnUserTransformation(const std::vector<double> &par, const std::vector<double> &err)
-   : fPrecision(MnMachinePrecision()), fParameters(std::vector<MinuitParameter>()),
-     fExtOfInt(std::vector<unsigned int>()), fDoubleLimTrafo(SinParameterTransformation()),
-     fUpperLimTrafo(SqrtUpParameterTransformation()), fLowerLimTrafo(SqrtLowParameterTransformation()),
-     fCache(std::vector<double>())
+MnUserTransformation::MnUserTransformation(std::span<const double> par, std::span<const double> err)
 {
    // constructor from a vector of parameter values and a vector of errors (step  sizes)
    // class has as data member the transformation objects (all of the types),
@@ -232,7 +228,7 @@ unsigned int MnUserTransformation::IntOfExt(unsigned int ext) const
    assert(ext < fParameters.size());
    assert(!fParameters[ext].IsFixed());
    assert(!fParameters[ext].IsConst());
-   std::vector<unsigned int>::const_iterator iind = std::find(fExtOfInt.begin(), fExtOfInt.end(), ext);
+   auto iind = std::find(fExtOfInt.begin(), fExtOfInt.end(), ext);
    assert(iind != fExtOfInt.end());
 
    return (iind - fExtOfInt.begin());
@@ -254,8 +250,9 @@ std::vector<double> MnUserTransformation::Errors() const
    // return std::vector of double with parameter errors
    std::vector<double> result;
    result.reserve(fParameters.size());
-   for (std::vector<MinuitParameter>::const_iterator ipar = Parameters().begin(); ipar != Parameters().end(); ++ipar)
-      result.push_back((*ipar).Error());
+   for (auto const &ipar : Parameters()) {
+      result.push_back(ipar.Error());
+   }
 
    return result;
 }
@@ -271,10 +268,10 @@ const MinuitParameter &MnUserTransformation::Parameter(unsigned int n) const
 //    // remove parameter with name
 //    // useful if want to re-define a parameter
 //    // return false if parameter does not exist
-//    std::vector<MinuitParameter>::iterator itr = std::find_if(fParameters.begin(), fParameters.end(), MnParStr(name)
+//    auto itr = std::find_if(fParameters.begin(), fParameters.end(), MnParStr(name)
 //    ); if (itr == fParameters.end() ) return false; int n = itr - fParameters.begin(); if (n < 0 || n >=
 //    fParameters.size() ) return false; fParameters.erase(itr); fCache.erase( fExtOfInt.begin() + n);
-//    std::vector<unsigned int>::iterator iind = std::find(fExtOfInt.begin(), fExtOfInt.end(), n);
+//    auto iind = std::find(fExtOfInt.begin(), fExtOfInt.end(), n);
 //    if (iind != fExtOfInt.end()) fExtOfInt.erase(iind);
 // }
 
@@ -318,7 +315,7 @@ void MnUserTransformation::Fix(unsigned int n)
 {
    // fix parameter n (external index)
    assert(n < fParameters.size());
-   std::vector<unsigned int>::iterator iind = std::find(fExtOfInt.begin(), fExtOfInt.end(), n);
+   auto iind = std::find(fExtOfInt.begin(), fExtOfInt.end(), n);
    if (iind != fExtOfInt.end())
       fExtOfInt.erase(iind, iind + 1);
    fParameters[n].Fix();
@@ -328,7 +325,7 @@ void MnUserTransformation::Release(unsigned int n)
 {
    // release parameter n (external index)
    assert(n < fParameters.size());
-   std::vector<unsigned int>::const_iterator iind = std::find(fExtOfInt.begin(), fExtOfInt.end(), n);
+   auto iind = std::find(fExtOfInt.begin(), fExtOfInt.end(), n);
    if (iind == fExtOfInt.end()) {
       fExtOfInt.push_back(n);
       std::sort(fExtOfInt.begin(), fExtOfInt.end());
@@ -466,8 +463,7 @@ double MnUserTransformation::Error(const std::string &name) const
 unsigned int MnUserTransformation::Index(const std::string &name) const
 {
    // get index (external) corresponding to name
-   std::vector<MinuitParameter>::const_iterator ipar =
-      std::find_if(fParameters.begin(), fParameters.end(), MnParStr(name));
+   auto ipar = std::find_if(fParameters.begin(), fParameters.end(), MnParStr(name));
    assert(ipar != fParameters.end());
    //   return (ipar - fParameters.begin());
    return (*ipar).Number();
@@ -476,8 +472,7 @@ unsigned int MnUserTransformation::Index(const std::string &name) const
 int MnUserTransformation::FindIndex(const std::string &name) const
 {
    // find index (external) corresponding to name - return -1 if not found
-   std::vector<MinuitParameter>::const_iterator ipar =
-      std::find_if(fParameters.begin(), fParameters.end(), MnParStr(name));
+   auto ipar = std::find_if(fParameters.begin(), fParameters.end(), MnParStr(name));
    if (ipar == fParameters.end())
       return -1;
    return (*ipar).Number();

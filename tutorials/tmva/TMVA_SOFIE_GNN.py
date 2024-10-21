@@ -106,28 +106,29 @@ output_gn = ep_model(input_graph_data, processing_steps)
 #print("\n\n---> Output:\n",output_gn)
 
 # Make SOFIE Model
-encoder = ROOT.TMVA.Experimental.SOFIE.RModel_GraphIndependent.ParseFromMemory(ep_model._encoder._network, GraphData, filename = "encoder")
+encoder = ROOT.TMVA.Experimental.SOFIE.RModel_GraphIndependent.ParseFromMemory(ep_model._encoder._network, GraphData, filename = "gnn_encoder")
 encoder.Generate()
 encoder.OutputGenerated()
 
-core = ROOT.TMVA.Experimental.SOFIE.RModel_GNN.ParseFromMemory(ep_model._core._network, CoreGraphData, filename = "core")
+core = ROOT.TMVA.Experimental.SOFIE.RModel_GNN.ParseFromMemory(ep_model._core._network, CoreGraphData, filename = "gnn_core")
 core.Generate()
 core.OutputGenerated()
 
-decoder = ROOT.TMVA.Experimental.SOFIE.RModel_GraphIndependent.ParseFromMemory(ep_model._decoder._network, DecodeGraphData, filename = "decoder")
+decoder = ROOT.TMVA.Experimental.SOFIE.RModel_GraphIndependent.ParseFromMemory(ep_model._decoder._network, DecodeGraphData, filename = "gnn_decoder")
 decoder.Generate()
 decoder.OutputGenerated()
 
-output_transform = ROOT.TMVA.Experimental.SOFIE.RModel_GraphIndependent.ParseFromMemory(ep_model._output_transform._network, DecodeGraphData, filename = "output_transform")
+output_transform = ROOT.TMVA.Experimental.SOFIE.RModel_GraphIndependent.ParseFromMemory(ep_model._output_transform._network, DecodeGraphData, filename = "gnn_output_transform")
 output_transform.Generate()
 output_transform.OutputGenerated()
 
 # Compile now the generated C++ code from SOFIE
-ROOT.gInterpreter.Declare('#pragma cling optimize(2)')
-ROOT.gInterpreter.Declare('#include "encoder.hxx"')
-ROOT.gInterpreter.Declare('#include "core.hxx"')
-ROOT.gInterpreter.Declare('#include "decoder.hxx"')
-ROOT.gInterpreter.Declare('#include "output_transform.hxx"')
+gen_code = '''#pragma cling optimize(2)
+#include "gnn_encoder.hxx"
+#include "gnn_core.hxx"
+#include "gnn_decoder.hxx"
+#include "gnn_output_transform.hxx"'''
+ROOT.gInterpreter.Declare(gen_code)
 
 #helper function to print SOFIE GNN data structure
 def PrintSofie(output, printShape = False):
@@ -147,10 +148,10 @@ def CopyData(input_data) :
 # Build  SOFIE GNN Model and run inference
 class  SofieGNN:
     def __init__(self):
-        self.encoder_session = ROOT.TMVA_SOFIE_encoder.Session()
-        self.core_session = ROOT.TMVA_SOFIE_core.Session()
-        self.decoder_session = ROOT.TMVA_SOFIE_decoder.Session()
-        self.output_transform_session = ROOT.TMVA_SOFIE_output_transform.Session()
+        self.encoder_session = ROOT.TMVA_SOFIE_gnn_encoder.Session()
+        self.core_session = ROOT.TMVA_SOFIE_gnn_core.Session()
+        self.decoder_session = ROOT.TMVA_SOFIE_gnn_decoder.Session()
+        self.output_transform_session = ROOT.TMVA_SOFIE_gnn_output_transform.Session()
 
     def infer(self, graphData):
         # copy the input data

@@ -835,11 +835,11 @@ TH2D *TUnfoldBinning::CreateHistogramOfMigrations
 {
    Int_t nBinX[3],axisListX[3];
    Int_t nDimX=
-      xAxis->GetTHxxBinning(originalXAxisBinning ? 1 : 0,nBinX,axisListX,0);
+      xAxis->GetTHxxBinning(originalXAxisBinning ? 1 : 0,nBinX,axisListX,nullptr);
    const TUnfoldBinning *neNodeX=xAxis->GetNonemptyNode();
    Int_t nBinY[3],axisListY[3];
    Int_t nDimY=
-      yAxis->GetTHxxBinning(originalYAxisBinning ? 1 : 0,nBinY,axisListY,0);
+      yAxis->GetTHxxBinning(originalYAxisBinning ? 1 : 0,nBinY,axisListY,nullptr);
    const TUnfoldBinning *neNodeY=yAxis->GetNonemptyNode();
    TString title=xAxis->BuildHistogramTitle2D
       (histogramName,histogramTitle,axisListX[0],yAxis,axisListY[0]);
@@ -1076,7 +1076,7 @@ Int_t TUnfoldBinning::FillBinMap1D
    Int_t axisBins[3],axisList[3];
    Int_t nDim=GetTHxxBinningSingleNode(3,axisBins,axisList,axisSteering);
    if((nDim==1)|| !GetDistributionDimension()) {
-      r+=FillBinMapSingleNode(0,r,0,0,axisSteering,binMap);
+      r+=FillBinMapSingleNode(nullptr,r,0,nullptr,axisSteering,binMap);
    } else {
       Error("FillBinMap1D","distribution %s with steering=%s is not 1D",
             (char *)GetName(),axisSteering);
@@ -1165,7 +1165,7 @@ Int_t TUnfoldBinning::FillBinMapRecursive
 (Int_t startBin,const char *axisSteering,Int_t *binMap) const
 {
    Int_t nbin=0;
-   nbin = FillBinMapSingleNode(0,startBin,0,0,axisSteering,binMap);
+   nbin = FillBinMapSingleNode(nullptr,startBin,0,nullptr,axisSteering,binMap);
    for(TUnfoldBinning const *child=GetChildNode();child;
        child=child->GetNextNode()) {
       nbin += child->FillBinMapRecursive(startBin+nbin,axisSteering,binMap);
@@ -1366,9 +1366,9 @@ TH1 *TUnfoldBinning::ExtractHistogram
    //        U: discard underflow bin
    //        O: discard overflow bin
    Int_t *binMap=nullptr;
-   TH1 *r=CreateHistogram(histogramName,originalAxisBinning,&binMap,0,
+   TH1 *r=CreateHistogram(histogramName,originalAxisBinning,&binMap,nullptr,
                           axisSteering);
-   if(!r) return 0;
+   if(!r) return nullptr;
    TUnfoldBinning const *root=GetRootNode();
    Int_t nMax=-1;
    for(Int_t iSrc=root->GetStartBin();iSrc<root->GetEndBin();iSrc++) {

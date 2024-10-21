@@ -15,7 +15,6 @@
 
 #include <ROOT/RError.hxx>
 #include <ROOT/RField.hxx>
-#include <ROOT/RNTupleCollectionWriter.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleWriter.hxx>
 #include <ROOT/StringUtils.hxx>
@@ -33,33 +32,22 @@ std::uint64_t GetNewModelId()
 }
 } // anonymous namespace
 
-std::unique_ptr<ROOT::Experimental::RNTupleModel>
-ROOT::Experimental::Internal::MergeModels(const RNTupleModel &left, const RNTupleModel &right,
-                                          std::string_view rightFieldPrefix)
+ROOT::Experimental::RFieldZero &
+ROOT::Experimental::Internal::GetFieldZeroOfModel(ROOT::Experimental::RNTupleModel &model)
 {
-   if (!left.IsFrozen() || !right.IsFrozen())
-      throw RException(R__FAIL("invalid attempt to merge unfrozen models"));
+   return *model.fFieldZero;
+}
 
-   auto newModel = left.Clone();
-   newModel->Unfreeze();
-
-   if (!rightFieldPrefix.empty()) {
-      newModel->MakeCollection(std::string(rightFieldPrefix), right.Clone());
-   } else {
-      for (const auto &f : right.GetFieldZero().GetSubFields()) {
-         newModel->AddField(f->Clone(f->GetFieldName()));
-      }
-   }
-
-   newModel->Freeze();
-   return newModel;
+ROOT::Experimental::Internal::RProjectedFields &
+ROOT::Experimental::Internal::GetProjectedFieldsOfModel(ROOT::Experimental::RNTupleModel &model)
+{
+   return *model.fProjectedFields;
 }
 
 //------------------------------------------------------------------------------
 
 ROOT::Experimental::RResult<void>
-ROOT::Experimental::RNTupleModel::RProjectedFields::EnsureValidMapping(const RFieldBase *target,
-                                                                       const FieldMap_t &fieldMap)
+ROOT::Experimental::Internal::RProjectedFields::EnsureValidMapping(const RFieldBase *target, const FieldMap_t &fieldMap)
 {
    auto source = fieldMap.at(target);
    const bool hasCompatibleStructure =
@@ -72,6 +60,19 @@ ROOT::Experimental::RNTupleModel::RProjectedFields::EnsureValidMapping(const RFi
          return R__FAIL("field mapping type mismatch: " + source->GetFieldName() + " --> " + target->GetFieldName());
    }
 
+   auto fnHasArrayParent = [](const RFieldBase &f) -> bool {
+      auto parent = f.GetParent();
+      while (parent) {
+         if (parent->GetNRepetitions() > 0)
+            return true;
+         parent = parent->GetParent();
+      }
+      return false;
+   };
+   if (fnHasArrayParent(*source) || fnHasArrayParent(*target)) {
+      return R__FAIL("unsupported field mapping across fixed-size arrays");
+   }
+
    // We support projections only across records and collections. In the following, we check that the projected
    // field is on the same path of collection fields in the field tree than the source field.
 
@@ -79,8 +80,10 @@ ROOT::Experimental::RNTupleModel::RProjectedFields::EnsureValidMapping(const RFi
    auto fnBreakPoint = [](const RFieldBase *f) -> const RFieldBase * {
       auto parent = f->GetParent();
       while (parent) {
-         if (parent->GetStructure() != ENTupleStructure::kRecord)
+         if ((parent->GetStructure() != ENTupleStructure::kRecord) &&
+             (parent->GetStructure() != ENTupleStructure::kLeaf)) {
             return parent;
+         }
          parent = parent->GetParent();
       }
       // We reached the zero field
@@ -117,7 +120,7 @@ ROOT::Experimental::RNTupleModel::RProjectedFields::EnsureValidMapping(const RFi
 }
 
 ROOT::Experimental::RResult<void>
-ROOT::Experimental::RNTupleModel::RProjectedFields::Add(std::unique_ptr<RFieldBase> field, const FieldMap_t &fieldMap)
+ROOT::Experimental::Internal::RProjectedFields::Add(std::unique_ptr<RFieldBase> field, const FieldMap_t &fieldMap)
 {
    auto result = EnsureValidMapping(field.get(), fieldMap);
    if (!result)
@@ -134,25 +137,25 @@ ROOT::Experimental::RNTupleModel::RProjectedFields::Add(std::unique_ptr<RFieldBa
 }
 
 const ROOT::Experimental::RFieldBase *
-ROOT::Experimental::RNTupleModel::RProjectedFields::GetSourceField(const RFieldBase *target) const
+ROOT::Experimental::Internal::RProjectedFields::GetSourceField(const RFieldBase *target) const
 {
    if (auto it = fFieldMap.find(target); it != fFieldMap.end())
       return it->second;
    return nullptr;
 }
 
-std::unique_ptr<ROOT::Experimental::RNTupleModel::RProjectedFields>
-ROOT::Experimental::RNTupleModel::RProjectedFields::Clone(const RNTupleModel *newModel) const
+std::unique_ptr<ROOT::Experimental::Internal::RProjectedFields>
+ROOT::Experimental::Internal::RProjectedFields::Clone(const RNTupleModel &newModel) const
 {
    auto cloneFieldZero = std::unique_ptr<RFieldZero>(static_cast<RFieldZero *>(fFieldZero->Clone("").release()));
    auto clone = std::unique_ptr<RProjectedFields>(new RProjectedFields(std::move(cloneFieldZero)));
-   clone->fModel = newModel;
+   clone->fModel = &newModel;
    // TODO(jblomer): improve quadratic search to re-wire the field mappings given the new model and the cloned
    // projected fields. Not too critical as we generally expect a limited number of projected fields
    for (const auto &[k, v] : fFieldMap) {
-      for (const auto &f : *clone->GetFieldZero()) {
+      for (const auto &f : clone->GetFieldZero()) {
          if (f.GetQualifiedFieldName() == k->GetQualifiedFieldName()) {
-            clone->fFieldMap[&f] = clone->fModel->FindField(v->GetQualifiedFieldName());
+            clone->fFieldMap[&f] = &newModel.GetField(v->GetQualifiedFieldName());
             break;
          }
       }
@@ -227,7 +230,7 @@ void ROOT::Experimental::RNTupleModel::EnsureNotBare() const
 }
 
 ROOT::Experimental::RNTupleModel::RNTupleModel(std::unique_ptr<RFieldZero> fieldZero)
-   : fFieldZero(std::move(fieldZero)), fModelId(GetNewModelId())
+   : fFieldZero(std::move(fieldZero)), fModelId(GetNewModelId()), fSchemaId(fModelId)
 {}
 
 std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleModel::CreateBare()
@@ -239,7 +242,7 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel>
 ROOT::Experimental::RNTupleModel::CreateBare(std::unique_ptr<RFieldZero> fieldZero)
 {
    auto model = std::unique_ptr<RNTupleModel>(new RNTupleModel(std::move(fieldZero)));
-   model->fProjectedFields = std::make_unique<RProjectedFields>(model.get());
+   model->fProjectedFields = std::make_unique<Internal::RProjectedFields>(*model);
    return model;
 }
 
@@ -252,7 +255,7 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel>
 ROOT::Experimental::RNTupleModel::Create(std::unique_ptr<RFieldZero> fieldZero)
 {
    auto model = CreateBare(std::move(fieldZero));
-   model->fDefaultEntry = std::unique_ptr<REntry>(new REntry(model->fModelId));
+   model->fDefaultEntry = std::unique_ptr<REntry>(new REntry(model->fModelId, model->fSchemaId));
    return model;
 }
 
@@ -261,12 +264,19 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleMod
    auto cloneModel = std::unique_ptr<RNTupleModel>(
       new RNTupleModel(std::unique_ptr<RFieldZero>(static_cast<RFieldZero *>(fFieldZero->Clone("").release()))));
    cloneModel->fModelId = GetNewModelId();
+   // For a frozen model, we can keep the schema id because adding new fields is forbidden. It is reset in Unfreeze()
+   // if called by the user.
+   if (fIsFrozen) {
+      cloneModel->fSchemaId = fSchemaId;
+   } else {
+      cloneModel->fSchemaId = cloneModel->fModelId;
+   }
    cloneModel->fIsFrozen = fIsFrozen;
    cloneModel->fFieldNames = fFieldNames;
    cloneModel->fDescription = fDescription;
-   cloneModel->fProjectedFields = fProjectedFields->Clone(cloneModel.get());
+   cloneModel->fProjectedFields = fProjectedFields->Clone(*cloneModel);
    if (fDefaultEntry) {
-      cloneModel->fDefaultEntry = std::unique_ptr<REntry>(new REntry(cloneModel->fModelId));
+      cloneModel->fDefaultEntry = std::unique_ptr<REntry>(new REntry(cloneModel->fModelId, cloneModel->fSchemaId));
       for (const auto &f : cloneModel->fFieldZero->GetSubFields()) {
          cloneModel->fDefaultEntry->AddValue(f->CreateValue());
       }
@@ -316,7 +326,7 @@ ROOT::Experimental::RNTupleModel::AddProjectedField(std::unique_ptr<RFieldBase> 
       return R__FAIL("null field");
    auto fieldName = field->GetFieldName();
 
-   RProjectedFields::FieldMap_t fieldMap;
+   Internal::RProjectedFields::FieldMap_t fieldMap;
    auto sourceField = FindField(mapping(fieldName));
    if (!sourceField)
       return R__FAIL("no such field: " + mapping(fieldName));
@@ -337,33 +347,10 @@ ROOT::Experimental::RNTupleModel::AddProjectedField(std::unique_ptr<RFieldBase> 
    return RResult<void>::Success();
 }
 
-std::shared_ptr<ROOT::Experimental::RNTupleCollectionWriter>
-ROOT::Experimental::RNTupleModel::MakeCollection(std::string_view fieldName,
-                                                 std::unique_ptr<RNTupleModel> collectionModel)
+ROOT::Experimental::RFieldZero &ROOT::Experimental::RNTupleModel::GetMutableFieldZero()
 {
-   EnsureNotFrozen();
-   EnsureValidFieldName(fieldName);
-   if (!collectionModel) {
-      throw RException(R__FAIL("null collectionModel"));
-   }
-
-   auto collectionWriter = std::make_shared<RNTupleCollectionWriter>(std::move(collectionModel->fDefaultEntry));
-
-   auto field = std::make_unique<RCollectionField>(fieldName, collectionWriter, std::move(collectionModel->fFieldZero));
-   field->SetDescription(collectionModel->GetDescription());
-
-   if (fDefaultEntry)
-      fDefaultEntry->AddValue(field->BindValue(std::shared_ptr<void>(collectionWriter->GetOffsetPtr(), [](void *) {})));
-
-   fFieldNames.insert(field->GetFieldName());
-   fFieldZero->Attach(std::move(field));
-   return collectionWriter;
-}
-
-ROOT::Experimental::RFieldZero &ROOT::Experimental::RNTupleModel::GetFieldZero()
-{
-   if (!IsFrozen())
-      throw RException(R__FAIL("invalid attempt to get mutable zero field of unfrozen model"));
+   if (IsFrozen())
+      throw RException(R__FAIL("invalid attempt to get mutable zero field of frozen model"));
    return *fFieldZero;
 }
 
@@ -395,7 +382,7 @@ std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RNTupleModel::Cr
    if (!IsFrozen())
       throw RException(R__FAIL("invalid attempt to create entry of unfrozen model"));
 
-   auto entry = std::unique_ptr<REntry>(new REntry(fModelId));
+   auto entry = std::unique_ptr<REntry>(new REntry(fModelId, fSchemaId));
    for (const auto &f : fFieldZero->GetSubFields()) {
       entry->AddValue(f->CreateValue());
    }
@@ -407,7 +394,7 @@ std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RNTupleModel::Cr
    if (!IsFrozen())
       throw RException(R__FAIL("invalid attempt to create entry of unfrozen model"));
 
-   auto entry = std::unique_ptr<REntry>(new REntry(fModelId));
+   auto entry = std::unique_ptr<REntry>(new REntry(fModelId, fSchemaId));
    for (const auto &f : fFieldZero->GetSubFields()) {
       entry->AddValue(f->BindValue(nullptr));
    }
@@ -416,9 +403,6 @@ std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RNTupleModel::Cr
 
 ROOT::Experimental::REntry::RFieldToken ROOT::Experimental::RNTupleModel::GetToken(std::string_view fieldName) const
 {
-   if (!IsFrozen())
-      throw RException(R__FAIL("invalid attempt to get field token of unfrozen model"));
-
    const auto &topLevelFields = fFieldZero->GetSubFields();
    auto it = std::find_if(topLevelFields.begin(), topLevelFields.end(),
                           [&fieldName](const RFieldBase *f) { return f->GetFieldName() == fieldName; });
@@ -426,7 +410,7 @@ ROOT::Experimental::REntry::RFieldToken ROOT::Experimental::RNTupleModel::GetTok
    if (it == topLevelFields.end()) {
       throw RException(R__FAIL("invalid field name: " + std::string(fieldName)));
    }
-   return REntry::RFieldToken(std::distance(topLevelFields.begin(), it), fModelId);
+   return REntry::RFieldToken(std::distance(topLevelFields.begin(), it), fSchemaId);
 }
 
 ROOT::Experimental::RFieldBase::RBulk ROOT::Experimental::RNTupleModel::CreateBulk(std::string_view fieldName) const
@@ -446,8 +430,11 @@ void ROOT::Experimental::RNTupleModel::Unfreeze()
       return;
 
    fModelId = GetNewModelId();
-   if (fDefaultEntry)
+   fSchemaId = fModelId;
+   if (fDefaultEntry) {
       fDefaultEntry->fModelId = fModelId;
+      fDefaultEntry->fSchemaId = fSchemaId;
+   }
    fIsFrozen = false;
 }
 
@@ -465,28 +452,25 @@ void ROOT::Experimental::RNTupleModel::SetDescription(std::string_view descripti
 std::size_t ROOT::Experimental::RNTupleModel::EstimateWriteMemoryUsage(const RNTupleWriteOptions &options) const
 {
    std::size_t bytes = 0;
+   std::size_t minPageBufferSize = 0;
 
-   // First estimate the write pages per column. Do not bother with computing the number of elements first, just take
-   // the value as set in the options.
-   std::size_t pageBufferPerColumn = options.GetApproxUnzippedPageSize();
-   if (options.GetUseTailPageOptimization()) {
-      // For tail page optimization, RColumn::ConnectPageSink allocates two pages that are larger by 50% to accomodate
-      // merging a small tail page.
-      pageBufferPerColumn *= 3;
-   }
-
+   // Start with the size of the page buffers used to fill a persistent sink
    std::size_t nColumns = 0;
    for (auto &&field : *fFieldZero) {
       for (const auto &r : field.GetColumnRepresentatives()) {
          nColumns += r.size();
+         for (auto columnType : r) {
+            minPageBufferSize +=
+               options.GetInitialNElementsPerPage() * Internal::RColumnElementBase::Generate(columnType)->GetSize();
+         }
       }
    }
-   const std::size_t pageBuffersPerModel = nColumns * pageBufferPerColumn;
-   bytes += pageBuffersPerModel;
+   bytes = std::min(options.GetPageBufferBudget(), nColumns * options.GetMaxUnzippedPageSize());
 
-   // If using buffered writing with RPageSinkBuf, we create a clone of the model and keep at least the compressed pages in memory.
+   // If using buffered writing with RPageSinkBuf, we create a clone of the model and keep at least
+   // the compressed pages in memory.
    if (options.GetUseBufferedWrite()) {
-      bytes += pageBuffersPerModel;
+      bytes += minPageBufferSize;
       // Use the target cluster size as an estimate for all compressed pages combined.
       bytes += options.GetApproxZippedClusterSize();
       int compression = options.GetCompression();

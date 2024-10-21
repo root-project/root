@@ -242,13 +242,13 @@ namespace {
 
 inline std::pair<double, double> getLog(double prob, ReduceNLLOutput &out)
 {
-   if (std::abs(prob) > 1e6) {
-      out.nLargeValues++;
-   }
-
    if (prob <= 0.0) {
       out.nNonPositiveValues++;
       return {std::log(prob), -prob};
+   }
+
+   if (std::isinf(prob)) {
+      out.nInfiniteValues++;
    }
 
    if (std::isnan(prob)) {

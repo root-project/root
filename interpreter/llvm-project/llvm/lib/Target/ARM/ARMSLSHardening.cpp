@@ -202,14 +202,15 @@ ArmInsertedThunks SLSBLRThunkInserter::insertThunks(MachineModuleInfo &MMI,
   const ARMSubtarget *ST = &MF.getSubtarget<ARMSubtarget>();
   for (auto T : SLSBLRThunks)
     if (ST->isThumb() == T.isThumb)
-      createThunkFunction(MMI, T.Name, ComdatThunks);
+      createThunkFunction(MMI, T.Name, ComdatThunks,
+                          T.isThumb ? "+thumb-mode" : "");
   return ST->isThumb() ? ThumbThunk : ArmThunk;
 }
 
 void SLSBLRThunkInserter::populateThunk(MachineFunction &MF) {
   // FIXME: How to better communicate Register number, rather than through
   // name and lookup table?
-  assert(MF.getName().startswith(getThunkPrefix()));
+  assert(MF.getName().starts_with(getThunkPrefix()));
   auto ThunkIt = llvm::find_if(
       SLSBLRThunks, [&MF](auto T) { return T.Name == MF.getName(); });
   assert(ThunkIt != std::end(SLSBLRThunks));

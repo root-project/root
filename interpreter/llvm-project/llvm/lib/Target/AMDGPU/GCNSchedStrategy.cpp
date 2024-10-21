@@ -32,18 +32,31 @@
 
 using namespace llvm;
 
-static cl::opt<bool>
-    DisableUnclusterHighRP("amdgpu-disable-unclustred-high-rp-reschedule",
-                           cl::Hidden,
-                           cl::desc("Disable unclustred high register pressure "
-                                    "reduction scheduling stage."),
-                           cl::init(false));
+static cl::opt<bool> DisableUnclusterHighRP(
+    "amdgpu-disable-unclustered-high-rp-reschedule", cl::Hidden,
+    cl::desc("Disable unclustered high register pressure "
+             "reduction scheduling stage."),
+    cl::init(false));
+
+static cl::opt<bool> DisableClusteredLowOccupancy(
+    "amdgpu-disable-clustered-low-occupancy-reschedule", cl::Hidden,
+    cl::desc("Disable clustered low occupancy "
+             "rescheduling for ILP scheduling stage."),
+    cl::init(false));
+
 static cl::opt<unsigned> ScheduleMetricBias(
     "amdgpu-schedule-metric-bias", cl::Hidden,
     cl::desc(
         "Sets the bias which adds weight to occupancy vs latency. Set it to "
         "100 to chase the occupancy only."),
     cl::init(10));
+
+static cl::opt<bool>
+    RelaxedOcc("amdgpu-schedule-relaxed-occupancy", cl::Hidden,
+               cl::desc("Relax occupancy targets for kernels which are memory "
+                        "bound (amdgpu-membound-threshold), or "
+                        "Wave Limited (amdgpu-limit-wave-threshold)."),
+               cl::init(false));
 
 const unsigned ScheduleMetrics::ScaleFactor = 100;
 
@@ -67,7 +80,10 @@ void GCNSchedStrategy::initialize(ScheduleDAGMI *DAG) {
   // Set the initial TargetOccupnacy to the maximum occupancy that we can
   // achieve for this function. This effectively sets a lower bound on the
   // 'Critical' register limits in the scheduler.
-  TargetOccupancy = MFI.getOccupancy();
+  // Allow for lower occupancy targets if kernel is wave limited or memory
+  // bound, and using the relaxed occupancy feature.
+  TargetOccupancy =
+      RelaxedOcc ? MFI.getMinAllowedOccupancy() : MFI.getOccupancy();
   SGPRCriticalLimit =
       std::min(ST.getMaxNumSGPRs(TargetOccupancy, true), SGPRExcessLimit);
 
@@ -471,6 +487,12 @@ GCNScheduleDAGMILive::GCNScheduleDAGMILive(
       StartingOccupancy(MFI.getOccupancy()), MinOccupancy(StartingOccupancy) {
 
   LLVM_DEBUG(dbgs() << "Starting occupancy is " << StartingOccupancy << ".\n");
+  if (RelaxedOcc) {
+    MinOccupancy = std::min(MFI.getMinAllowedOccupancy(), StartingOccupancy);
+    if (MinOccupancy != StartingOccupancy)
+      LLVM_DEBUG(dbgs() << "Allowing Occupancy drops to " << MinOccupancy
+                        << ".\n");
+  }
 }
 
 std::unique_ptr<GCNSchedStage>
@@ -511,11 +533,19 @@ void GCNScheduleDAGMILive::computeBlockPressure(unsigned RegionIdx,
   // If the block has the only successor then live-ins of that successor are
   // live-outs of the current block. We can reuse calculated live set if the
   // successor will be sent to scheduling past current block.
+
+  // However, due to the bug in LiveInterval analysis it may happen that two
+  // predecessors of the same successor block have different lane bitmasks for
+  // a live-out register. Workaround that by sticking to one-to-one relationship
+  // i.e. one predecessor with one successor block.
   const MachineBasicBlock *OnlySucc = nullptr;
-  if (MBB->succ_size() == 1 && !(*MBB->succ_begin())->empty()) {
-    SlotIndexes *Ind = LIS->getSlotIndexes();
-    if (Ind->getMBBStartIdx(MBB) < Ind->getMBBStartIdx(*MBB->succ_begin()))
-      OnlySucc = *MBB->succ_begin();
+  if (MBB->succ_size() == 1) {
+    auto *Candidate = *MBB->succ_begin();
+    if (!Candidate->empty() && Candidate->pred_size() == 1) {
+      SlotIndexes *Ind = LIS->getSlotIndexes();
+      if (Ind->getMBBStartIdx(MBB) < Ind->getMBBStartIdx(Candidate))
+        OnlySucc = Candidate;
+    }
   }
 
   // Scheduler sends regions from the end of the block upwards.
@@ -683,7 +713,7 @@ bool UnclusteredHighRPStage::initGCNSchedStage() {
     return false;
 
   SavedMutations.swap(DAG.Mutations);
-  DAG.addMutation(createIGroupLPDAGMutation());
+  DAG.addMutation(createIGroupLPDAGMutation(/*IsPostRA=*/false));
 
   InitialOccupancy = DAG.MinOccupancy;
   // Aggressivly try to reduce register pressure in the unclustered high RP
@@ -703,6 +733,9 @@ bool UnclusteredHighRPStage::initGCNSchedStage() {
 }
 
 bool ClusteredLowOccStage::initGCNSchedStage() {
+  if (DisableClusteredLowOccupancy)
+    return false;
+
   if (!GCNSchedStage::initGCNSchedStage())
     return false;
 
@@ -820,7 +853,9 @@ bool GCNSchedStage::initGCNRegion() {
       StageID != GCNSchedStageID::UnclusteredHighRPReschedule) {
     SavedMutations.clear();
     SavedMutations.swap(DAG.Mutations);
-    DAG.addMutation(createIGroupLPDAGMutation());
+    bool IsInitialStage = StageID == GCNSchedStageID::OccInitialSchedule ||
+                          StageID == GCNSchedStageID::ILPInitialSchedule;
+    DAG.addMutation(createIGroupLPDAGMutation(/*IsReentry=*/!IsInitialStage));
   }
 
   return true;
@@ -864,7 +899,8 @@ void GCNSchedStage::setupNewBlock() {
   DAG.startBlock(CurrentMBB);
   // Get real RP for the region if it hasn't be calculated before. After the
   // initial schedule stage real RP will be collected after scheduling.
-  if (StageID == GCNSchedStageID::OccInitialSchedule)
+  if (StageID == GCNSchedStageID::OccInitialSchedule ||
+      StageID == GCNSchedStageID::ILPInitialSchedule)
     DAG.computeBlockPressure(RegionIdx, CurrentMBB);
 }
 
@@ -1091,7 +1127,7 @@ bool OccInitialScheduleStage::shouldRevertScheduling(unsigned WavesAfter) {
 }
 
 bool UnclusteredHighRPStage::shouldRevertScheduling(unsigned WavesAfter) {
-  // If RP is not reduced in the unclustred reschedule stage, revert to the
+  // If RP is not reduced in the unclustered reschedule stage, revert to the
   // old schedule.
   if ((WavesAfter <= PressureBefore.getOccupancy(ST) &&
        mayCauseSpilling(WavesAfter)) ||
@@ -1099,6 +1135,10 @@ bool UnclusteredHighRPStage::shouldRevertScheduling(unsigned WavesAfter) {
     LLVM_DEBUG(dbgs() << "Unclustered reschedule did not help.\n");
     return true;
   }
+
+  // Do not attempt to relax schedule even more if we are already spilling.
+  if (isRegionWithExcessRP())
+    return false;
 
   LLVM_DEBUG(
       dbgs()
@@ -1188,9 +1228,8 @@ void GCNSchedStage::revertScheduling() {
     }
 
     // Reset read-undef flags and update them later.
-    for (auto &Op : MI->operands())
-      if (Op.isReg() && Op.isDef())
-        Op.setIsUndef(false);
+    for (auto &Op : MI->all_defs())
+      Op.setIsUndef(false);
     RegisterOperands RegOpers;
     RegOpers.collect(*MI, *DAG.TRI, DAG.MRI, DAG.ShouldTrackLaneMasks, false);
     if (!MI->isDebugInstr()) {
@@ -1463,8 +1502,8 @@ bool PreRARematStage::isTriviallyReMaterializable(const MachineInstr &MI) {
   if (!DAG.TII->isTriviallyReMaterializable(MI))
     return false;
 
-  for (const MachineOperand &MO : MI.operands())
-    if (MO.isReg() && MO.isUse() && MO.getReg().isVirtual())
+  for (const MachineOperand &MO : MI.all_uses())
+    if (MO.getReg().isVirtual())
       return false;
 
   return true;
@@ -1530,7 +1569,7 @@ void GCNPostScheduleDAGMILive::schedule() {
   if (HasIGLPInstrs) {
     SavedMutations.clear();
     SavedMutations.swap(Mutations);
-    addMutation(createIGroupLPDAGMutation());
+    addMutation(createIGroupLPDAGMutation(/*IsReentry=*/true));
   }
 
   ScheduleDAGMI::schedule();

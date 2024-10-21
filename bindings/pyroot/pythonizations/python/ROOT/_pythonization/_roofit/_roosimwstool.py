@@ -27,6 +27,8 @@ class RooSimWSTool(object):
     \endcode
     """
 
+    __cpp_name__ = 'RooSimWSTool'
+
     @cpp_signature(
         "RooSimultaneous *RooSimWSTool::build(const char* simPdfName, const char* protoPdfName,"
         "    const RooCmdArg& arg1={},const RooCmdArg& arg2={},"

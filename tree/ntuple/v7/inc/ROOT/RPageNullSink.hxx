@@ -40,7 +40,7 @@ class RPageNullSink : public RPageSink {
 public:
    RPageNullSink(std::string_view ntupleName, const RNTupleWriteOptions &options) : RPageSink(ntupleName, options) {}
 
-   ColumnHandle_t AddColumn(DescriptorId_t, const RColumn &column) final { return {fNColumns++, &column}; }
+   ColumnHandle_t AddColumn(DescriptorId_t, RColumn &column) final { return {fNColumns++, &column}; }
 
    const RNTupleDescriptor &GetDescriptor() const final
    {
@@ -58,7 +58,11 @@ public:
          }
       }
    }
-   void InitImpl(RNTupleModel &model) final { ConnectFields(model.GetFieldZero().GetSubFields(), 0); }
+   void InitImpl(RNTupleModel &model) final
+   {
+      auto &fieldZero = GetFieldZeroOfModel(model);
+      ConnectFields(fieldZero.GetSubFields(), 0);
+   }
    void UpdateSchema(const RNTupleModelChangeset &changeset, NTupleSize_t firstEntry) final
    {
       ConnectFields(changeset.fAddedFields, firstEntry);
@@ -80,12 +84,14 @@ public:
       }
    }
 
-   std::uint64_t CommitCluster(NTupleSize_t) final
+   RStagedCluster StageCluster(NTupleSize_t) final
    {
-      std::uint64_t bytes = fNBytesCurrentCluster;
+      RStagedCluster stagedCluster;
+      stagedCluster.fNBytesWritten = fNBytesCurrentCluster;
       fNBytesCurrentCluster = 0;
-      return bytes;
+      return stagedCluster;
    }
+   void CommitStagedClusters(std::span<RStagedCluster>) final {}
    void CommitClusterGroup() final {}
    void CommitDatasetImpl() final {}
 };

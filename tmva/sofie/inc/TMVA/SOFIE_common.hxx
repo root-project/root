@@ -81,6 +81,23 @@ std::string ConvertDynamicShapeToString(std::vector<Dim> shape);
 
 std::string ConvertDynamicShapeToLength(std::vector<Dim> shape);
 
+// convert list of values in a string
+template<class T>
+std::string ConvertValuesToString(size_t n, const T * data) {
+   std::stringstream ret;
+   ret << "[ ";
+   for (size_t i = 0; i < n; i++) {
+      ret << data[i];
+      if (i < n-1) ret << ", ";
+   }
+   ret << "]";
+   return ret.str();
+}
+template<class T>
+std::string ConvertValuesToString(const std::vector<T> & data) {
+  return ConvertValuesToString(data.size(), data.data());
+}
+
 class InitializedTensor {
 public:
    InitializedTensor() = default;
@@ -94,7 +111,7 @@ public:
    std::shared_ptr<void> const &sharedptr() const { return fData; }
    // query if tensor comes from a Constant operator
    bool IsConstantTensor() const { return fConstant;}
-   // query if tensor needs to be written in a weight file
+   // query if tensor needs to be written in a weight file. Constant tensors are not written in a file
    bool IsWeightTensor() const { return !fConstant && !fIsNotWritable;}
 
    void SetNotWritable() { fIsNotWritable = true;}

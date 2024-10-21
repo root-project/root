@@ -24,7 +24,7 @@
 #include <RooSimultaneous.h>
 #include <RooWorkspace.h>
 
-#include <ROOT/TestSupport.hxx>
+#include <TMath.h>
 
 #include "gtest_wrapper.h"
 
@@ -291,14 +291,7 @@ TEST_P(TestStatisticTest, EmptyData)
    std::unique_ptr<RooDataSet> data{model.generate(x, 0)};
    std::unique_ptr<RooDataHist> dataHist{data->binnedClone()};
 
-   {
-      // We expect errors in the Hessian calculation because the likelihood is
-      // constant.
-      ROOT::TestSupport::CheckDiagsRAII checkDiag;
-      checkDiag.requiredDiag(kWarning, "ROOT::Math::Fitter::CalculateHessErrors", "Error when calculating Hessian");
-
-      model.fitTo(*data, _evalBackend, RooFit::PrintLevel(-1));
-   }
+   model.fitTo(*data, _evalBackend, RooFit::PrintLevel(-1));
 
    EXPECT_EQ(mean.getVal(), meanOrigVal) << "Fitting an empty RooDataSet changed \"mean\" value!";
    EXPECT_EQ(sigma.getVal(), sigmaOrigVal) << "Fitting an empty RooDataSet changed \"sigma\" value!";
@@ -309,14 +302,7 @@ TEST_P(TestStatisticTest, EmptyData)
    mean.setError(0.0);
    sigma.setError(0.0);
 
-   {
-      // We expect errors in the Hessian calculation because the likelihood is
-      // constant (same as above for the RooDataSet).
-      ROOT::TestSupport::CheckDiagsRAII checkDiag;
-      checkDiag.requiredDiag(kWarning, "ROOT::Math::Fitter::CalculateHessErrors", "Error when calculating Hessian");
-
-      model.fitTo(*dataHist, _evalBackend, RooFit::PrintLevel(-1));
-   }
+   model.fitTo(*dataHist, _evalBackend, RooFit::PrintLevel(-1));
 
    EXPECT_EQ(mean.getVal(), meanOrigVal) << "Fitting an empty RooDataSet changed \"mean\" value!";
    EXPECT_EQ(sigma.getVal(), sigmaOrigVal) << "Fitting an empty RooDataSet changed \"sigma\" value!";
@@ -754,4 +740,56 @@ TEST(NLL, SetData)
    // The dataset was built in such a way that the updated NLL is shifted by
    // 0.5, so this is what we analytically expect.
    EXPECT_DOUBLE_EQ(valSimB, valSimA + 0.5);
+}
+
+// In some frameworks like CMS combine, all constraints are contained in a
+// single RooProdPdf, even if the constrained parameters are not used in this
+// pdf. The RooFit logic to figure out constrained parameters should however
+// now be confused by this, and not strip away these parameters from the list
+// of constrained parameters.
+TEST(CreateNLL, CombineStyleConstraints)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace ws;
+   ws.factory("Gaussian::g_main_1(x_1[0., -10, 10], mu_1[0., -10, 10], 1.0)");
+   ws.factory("Gaussian::g_main_2(x_2[0., -10, 10], mu_2[0., -10, 10], 1.0)");
+   ws.factory("Gaussian::g_constr_1(mu_1, 0.0, 1.0)");
+   ws.factory("Gaussian::g_constr_2(mu_2, 0.0, 1.0)");
+
+   // The RooProdPdf model_1 will contain all the constraints, also the one
+   // that applies to g_main_1. This is the corner case that this test is
+   // covering.
+   ws.factory("PROD::model_1(g_main_1, g_constr_1, g_constr_2)");
+   ws.factory("PROD::model_2(g_main_2)");
+   ws.factory("SIMUL::model(cat[A=0, B=1], A=model_1, B=model_2)");
+
+   auto &x1 = *ws.var("x_1");
+   auto &x2 = *ws.var("x_2");
+   auto &cat = *ws.cat("cat");
+   auto &model = static_cast<RooSimultaneous &>(*ws.pdf("model"));
+
+   RooArgSet vars{x1, x2, cat};
+   RooDataSet data{"data", "data", vars};
+   cat.setIndex(0);
+   data.add(vars);
+   cat.setIndex(1);
+   data.add(vars);
+
+   RooArgSet parameters;
+   model.getParameters(data.get(), parameters);
+
+   model.getAllConstraints(*data.get(), parameters, true);
+
+   EXPECT_EQ(parameters.size(), 2);
+   EXPECT_EQ(parameters.find("mu_1"), ws.var("mu_1"));
+   EXPECT_EQ(parameters.find("mu_2"), ws.var("mu_2"));
+
+   // Now, try it out in the context of createNLL
+   std::unique_ptr<RooAbsReal> nll{model.createNLL(data)};
+   const double proba = TMath::Gaus(0, 0, 1, true);
+   const double nChannels = model.indexCat().size();
+   //                                     main Gaussians                one constraint per channel
+   const double refNllVal = -nChannels * (std::log(proba / nChannels) + std::log(proba));
+   EXPECT_FLOAT_EQ(nll->getVal(), refNllVal);
 }

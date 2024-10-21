@@ -12,7 +12,6 @@ namespace Experimental{
 namespace SOFIE{
 
 
-template <typename T>
 class ROperator_Cast final : public ROperator
 {
 
@@ -44,11 +43,31 @@ public:
         throw std::runtime_error("TMVA SOFIE Cast Op Input Tensor is not found in model");
       }
       fShape = model.GetTensorShape(fNX);
-      model.AddIntermediateTensor(fNY, ConvertStringToType(fAttrType), fShape);
+      // shoud we add a check if the same type
+      auto inputType = model.GetTensorType(fNX);
+      if (model.IsInitializedTensor(fNX)) {
+         fIsOutputConstant = true;
+         auto inputData = model.GetInitializedTensorData(fNX);
+         if (ConvertStringToType(fAttrType) == ETensorType::INT64) {
+            model.AddConstantTensor<int64_t>(fNY, fShape, static_cast<int64_t*>(inputData.get()));
+            model.SetNotWritableInitializedTensor(fNX);
+         }
+         else
+            fIsOutputConstant = false;
+      }
+      if (!fIsOutputConstant)
+         model.AddIntermediateTensor(fNY, ConvertStringToType(fAttrType), fShape);
+      if (model.Verbose()) {
+         std::cout << "Cast : " << ConvertTypeToString(inputType) << " " << fNX << " -> " << fAttrType << " for " << fNY;
+         if (fIsOutputConstant) std::cout << " (constant) ";
+         std::cout << std::endl;
+      }
    }
 
 
    std::string Generate(std::string OpName){
+      if (fIsOutputConstant) return "";
+
       OpName = "op_" + OpName;
       if (fShape.empty()) {
          throw std::runtime_error("TMVA SOFIE Cast called to Generate without being initialized first");
@@ -58,6 +77,9 @@ public:
 
       // out << SP << ETensorType << " " << OpName << "_attr = "  << fattr << ";\n";
       out << "\n//------ CAST\n";
+       // no generated code for constant outputs
+      if (fIsOutputConstant) return out.str();
+
       out << SP << "for (int id = 0; id < " << length << " ; id++){\n";
 
       out << SP << SP << "tensor_" << fNY << "[id] = static_cast<"<< fAttrType << ">(tensor_" << fNX << "[id]);\n";

@@ -28,7 +28,7 @@ combined with other commands:
 .. option:: -d, --disassemble
 
   Disassemble all executable sections found in the input files. On some
-  architectures (AArch64, PPC64, x86), all known instructions are disassembled by
+  architectures (AArch64, PowerPC, x86), all known instructions are disassembled by
   default. On the others, :option:`--mcpu` or :option:`--mattr` is needed to
   enable some instruction sets. Disabled instructions are displayed as
   ``<unknown>``.
@@ -179,6 +179,15 @@ OPTIONS
   * ``att``: x86 only (default). Print in the AT&T syntax.
   * ``intel``: x86 only. Print in the intel syntax.
 
+
+.. option::  --disassembler-color=<mode>
+
+  Enable or disable disassembler color output.
+
+  * ``off``: Disable disassembler color output.
+  * ``on``: Enable disassembler color output.
+  * ``terminal``: Enable disassembler color output if the terminal supports it (default).
+
 .. option:: --mcpu=<cpu-name>
 
   Target a specific CPU type for disassembly. Specify ``--mcpu=help`` to display
@@ -188,6 +197,10 @@ OPTIONS
 
   Enable/disable target-specific attributes. Specify ``--mattr=help`` to display
   the available attributes.
+
+.. option:: -mllvm <arg>
+
+   Specify an argument to forward to LLVM's CommandLine library.
 
 .. option:: --no-leading-addr, --no-addresses
 
@@ -439,6 +452,10 @@ XCOFF ONLY OPTIONS AND COMMANDS
 .. option:: --symbol-description
 
   Add symbol description to disassembly output.
+
+.. option:: --traceback-table
+
+  Decode traceback table in disassembly output. Implies :option:`--disassemble`.
 
 BUGS
 ----

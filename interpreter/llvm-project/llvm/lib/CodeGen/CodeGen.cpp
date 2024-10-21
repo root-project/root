@@ -11,7 +11,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "llvm-c/Initialization.h"
 #include "llvm/InitializePasses.h"
 #include "llvm/PassRegistry.h"
 
@@ -21,14 +20,17 @@ using namespace llvm;
 void llvm::initializeCodeGen(PassRegistry &Registry) {
   initializeAssignmentTrackingAnalysisPass(Registry);
   initializeAtomicExpandPass(Registry);
+  initializeBasicBlockPathCloningPass(Registry);
   initializeBasicBlockSectionsPass(Registry);
   initializeBranchFolderPassPass(Registry);
   initializeBranchRelaxationPass(Registry);
+  initializeBreakFalseDepsPass(Registry);
+  initializeCallBrPreparePass(Registry);
   initializeCFGuardLongjmpPass(Registry);
   initializeCFIFixupPass(Registry);
   initializeCFIInstrInserterPass(Registry);
   initializeCheckDebugMachineModulePass(Registry);
-  initializeCodeGenPreparePass(Registry);
+  initializeCodeGenPrepareLegacyPassPass(Registry);
   initializeDeadMachineInstructionElimPass(Registry);
   initializeDebugifyMachineModulePass(Registry);
   initializeDetectDeadLanesPass(Registry);
@@ -39,7 +41,7 @@ void llvm::initializeCodeGen(PassRegistry &Registry) {
   initializeEarlyTailDuplicatePass(Registry);
   initializeExpandLargeDivRemLegacyPassPass(Registry);
   initializeExpandLargeFpConvertLegacyPassPass(Registry);
-  initializeExpandMemCmpPassPass(Registry);
+  initializeExpandMemCmpLegacyPassPass(Registry);
   initializeExpandPostRAPass(Registry);
   initializeFEntryInserterPass(Registry);
   initializeFinalizeISelPass(Registry);
@@ -48,10 +50,10 @@ void llvm::initializeCodeGen(PassRegistry &Registry) {
   initializeFuncletLayoutPass(Registry);
   initializeGCMachineCodeAnalysisPass(Registry);
   initializeGCModuleInfoPass(Registry);
-  initializeHardwareLoopsPass(Registry);
+  initializeHardwareLoopsLegacyPass(Registry);
   initializeIfConverterPass(Registry);
   initializeImplicitNullChecksPass(Registry);
-  initializeIndirectBrExpandPassPass(Registry);
+  initializeIndirectBrExpandLegacyPassPass(Registry);
   initializeInterleavedLoadCombinePass(Registry);
   initializeInterleavedAccessPass(Registry);
   initializeJMCInstrumenterPass(Registry);
@@ -139,8 +141,4 @@ void llvm::initializeCodeGen(PassRegistry &Registry) {
   initializeWasmEHPreparePass(Registry);
   initializeWinEHPreparePass(Registry);
   initializeXRayInstrumentationPass(Registry);
-}
-
-void LLVMInitializeCodeGen(LLVMPassRegistryRef R) {
-  initializeCodeGen(*unwrap(R));
 }

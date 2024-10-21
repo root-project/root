@@ -13,7 +13,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(CustomStruct
                               LINKDEF CustomStructLinkDef.h
                               DEPENDENCIES RIO)
 configure_file(CustomStruct.hxx . COPYONLY)
-if(MSVC)
+if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
   add_custom_command(TARGET CustomStruct POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libCustomStruct.dll
                                      ${CMAKE_CURRENT_BINARY_DIR}/libCustomStruct.dll)
@@ -21,6 +21,7 @@ endif()
 
 ROOT_ADD_GTEST(ntuple_basics ntuple_basics.cxx LIBRARIES ROOTNTuple CustomStruct)
 ROOT_ADD_GTEST(ntuple_bulk ntuple_bulk.cxx LIBRARIES ROOTNTuple CustomStruct)
+ROOT_ADD_GTEST(ntuple_cast ntuple_cast.cxx LIBRARIES ROOTNTuple)
 ROOT_ADD_GTEST(ntuple_checksum ntuple_checksum.cxx ntuple_test.cxx LIBRARIES ROOTNTuple)
 ROOT_ADD_GTEST(ntuple_cluster ntuple_cluster.cxx LIBRARIES ROOTNTuple)
 ROOT_ADD_GTEST(ntuple_compat ntuple_compat.cxx RXTuple.cxx LIBRARIES ROOTNTuple xxHash::xxHash)
@@ -29,8 +30,18 @@ ROOT_GENERATE_DICTIONARY(RXTupleDict ${CMAKE_CURRENT_SOURCE_DIR}/RXTuple.hxx
                        LINKDEF RXTupleLinkDef.h
                        DEPENDENCIES RIO)
 ROOT_ADD_GTEST(ntuple_descriptor ntuple_descriptor.cxx LIBRARIES ROOTNTuple CustomStruct)
+ROOT_GENERATE_DICTIONARY(RNTupleDescriptorDict ${CMAKE_CURRENT_SOURCE_DIR}/RNTupleDescriptorDict.hxx
+                       MODULE ntuple_descriptor
+                       LINKDEF RNTupleDescriptorLinkDef.h
+                       OPTIONS -inlineInputHeader
+                       DEPENDENCIES RIO CustomStruct)
 ROOT_ADD_GTEST(ntuple_endian ntuple_endian.cxx LIBRARIES ROOTNTuple)
+if(NOT MSVC)
+  # The unit test relies on fork(), which is not available on Windows.
+  ROOT_ADD_GTEST(ntuple_evolution ntuple_evolution.cxx LIBRARIES ROOTNTuple)
+endif()
 ROOT_ADD_GTEST(ntuple_friends ntuple_friends.cxx LIBRARIES ROOTNTuple CustomStruct)
+ROOT_ADD_GTEST(ntuple_index ntuple_index.cxx LIBRARIES ROOTNTuple)
 ROOT_ADD_GTEST(ntuple_merger ntuple_merger.cxx LIBRARIES ROOTNTuple CustomStruct ZLIB::ZLIB)
 ROOT_ADD_GTEST(ntuple_metrics ntuple_metrics.cxx LIBRARIES ROOTNTuple CustomStruct)
 ROOT_ADD_GTEST(ntuple_model ntuple_model.cxx LIBRARIES ROOTNTuple CustomStruct)
@@ -63,7 +74,7 @@ if(MSVC)
 endif()
 ROOT_ADD_GTEST(rfield_vector rfield_vector.cxx LIBRARIES ROOTNTuple CustomStruct)
 
-ROOT_ADD_GTEST(ntuple_minifile ntuple_minifile.cxx LIBRARIES ROOTNTuple Tree CustomStruct)
+ROOT_ADD_GTEST(ntuple_minifile ntuple_minifile.cxx LIBRARIES ROOTNTuple Physics Tree CustomStruct)
 ROOT_ADD_GTEST(ntuple_show ntuple_show.cxx LIBRARIES ROOTNTuple CustomStruct)
 ROOT_ADD_GTEST(ntuple_storage ntuple_storage.cxx LIBRARIES ROOTNTuple MathCore CustomStruct)
 ROOT_ADD_GTEST(ntuple_extended ntuple_extended.cxx LIBRARIES ROOTNTuple MathCore CustomStruct)

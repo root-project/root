@@ -99,7 +99,19 @@
                </menu>
             </MenuButton>
             <ToolbarSpacer />
-            <Button text="Help" type="Transparent"/>
+            <Button icon="sap-icon://message-warning" visible="{/ErrorVisible}" type="Critical" press="onShowConsoleErrors" tooltip="{/ErrorTooltip}"/>
+            <MenuButton text="Help" type="Transparent">
+               <menu>
+                  <Menu itemSelected="onHelpMenuAction">
+                     <items>
+                        <MenuItem text="ROOT"/>
+                        <MenuItem text="Canvas"/>
+                        <MenuItem text="Tutorials"/>
+                        <MenuItem text="About" startsSection="true"/>
+                     </items>
+                  </Menu>
+               </menu>
+            </MenuButton>
          </OverflowToolbar>
       </customHeader>
       <subHeader>

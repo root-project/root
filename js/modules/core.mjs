@@ -4,7 +4,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '30/07/2024',
+version_date = '17/10/2024',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -193,6 +193,10 @@ settings = {
    Render3DBatch: constants.Render3D.Default,
    /** @summary Way to embed 3D drawing in SVG, see {@link constants.Embed3D} for possible values */
    Embed3D: constants.Embed3D.Default,
+   /** @summary Default canvas width */
+   CanvasWidth: 1200,
+   /** @summary Default canvas height */
+   CanvasHeight: 800,
    /** @summary Enable or disable tooltips, default on */
    Tooltip: !nodejs,
    /** @summary Time in msec for appearance of tooltips, 0 - no animation */
@@ -231,6 +235,8 @@ settings = {
    CanAdjustFrame: false,
    /** @summary calculation of text size consumes time and can be skipped to improve performance (but with side effects on text adjustments) */
    ApproxTextSize: false,
+   /** @summary Load symbol.ttf font to display greek labels. By default font file not loaded and unicode is used */
+   LoadSymbolTtf: false,
    /** @summary Histogram drawing optimization: 0 - disabled, 1 - only for large (>5000 1d bins, >50 2d bins) histograms, 2 - always */
    OptimizeDraw: 1,
    /** @summary Automatically create stats box, default on */
@@ -262,7 +268,7 @@ settings = {
    YValuesFormat: undefined,
    /** @summary custom format for all Z values, when not specified {@link gStyle.fStatFormat} is used */
    ZValuesFormat: undefined,
-   /** @summary Let detect and solve problem when browser returns wrong content-length parameter
+   /** @summary Let detect and solve problem when server returns wrong Content-Length header
      * @desc See [jsroot#189]{@link https://github.com/root-project/jsroot/issues/189} for more info
      * Can be enabled by adding 'wrong_http_response' parameter to URL when using JSROOT UI
      * @default false */
@@ -291,6 +297,8 @@ settings = {
    AxisTiltAngle: 25,
    /** @summary Strip axis labels trailing 0 or replace 10^0 by 1 */
    StripAxisLabels: true,
+   /** @summary If true exclude (cut off) axis labels which may exceed graphical range, also axis name can be specified */
+   CutAxisLabels: false,
    /** @summary Draw TF1 by default as curve or line */
    FuncAsCurve: false,
    /** @summary Time zone used for date/time display, local by default, can be 'UTC' or 'Europe/Berlin' or any other valid value */
@@ -473,7 +481,8 @@ async function injectCode(code) {
          element.setAttribute('type', is_mjs ? 'module' : 'text/javascript');
          element.innerHTML = code;
          document.head.appendChild(element);
-         return postponePromise(true, 10); // while onload event not fired, just postpone resolve
+         // while onload event not fired, just postpone resolve
+         return isBatchMode() ? true : postponePromise(true, 10);
       });
    }
 
@@ -1010,7 +1019,6 @@ function createHttpRequest(url, kind, user_accept_callback, user_reject_callback
    if (isNodeJs()) {
       if (!use_promise)
          throw Error('Not allowed to create http requests in node.js without promise');
-      // eslint-disable-next-line new-cap
       return import('xhr2').then(h => configureXhr(new h.default()));
    }
 
@@ -1321,7 +1329,7 @@ function create(typename, target) {
                        fYsizeUser: 0, fXsizeReal: 20, fYsizeReal: 10,
                        fWindowTopX: 0, fWindowTopY: 0, fWindowWidth: 0, fWindowHeight: 0,
                        fBorderSize: gStyle.fCanvasBorderSize, fBorderMode: gStyle.fCanvasBorderMode,
-                       fCw: 500, fCh: 300, fCatt: create(clTAttCanvas),
+                       fCw: settings.CanvasWidth, fCh: settings.CanvasHeight, fCatt: create(clTAttCanvas),
                        kMoveOpaque: true, kResizeOpaque: true, fHighLightColor: 5,
                        fBatch: true, kShowEventStatus: false, kAutoExec: true, kMenuBar: true });
          break;

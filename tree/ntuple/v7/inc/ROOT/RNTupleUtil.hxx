@@ -22,6 +22,7 @@
 #include <variant>
 
 #include <ROOT/RLogger.hxx>
+#include <ROOT/RNTupleReadOptions.hxx>
 
 namespace ROOT {
 namespace Experimental {
@@ -78,6 +79,8 @@ enum class EColumnType {
    kSplitUInt32,
    kSplitInt16,
    kSplitUInt16,
+   kReal32Trunc,
+   kReal32Quant,
    kMax,
 };
 
@@ -86,13 +89,14 @@ enum class EColumnType {
  * Leaf fields contain just data, collection fields resolve to offset columns, record fields have no
  * materialization on the primitive column layer.
  */
-enum ENTupleStructure {
+enum ENTupleStructure : std::uint16_t {
+   kInvalid,
    kLeaf,
    kCollection,
    kRecord,
    kVariant,
    kUnsplit,
-   kInvalid,
+   kUnknown
 };
 
 /// Integer type long enough to hold the maximum number of entries in a column
@@ -104,9 +108,22 @@ struct RClusterSize {
 
    RClusterSize() : fValue(0) {}
    explicit constexpr RClusterSize(ValueType value) : fValue(value) {}
-   RClusterSize& operator =(const ValueType value) { fValue = value; return *this; }
-   RClusterSize& operator +=(const ValueType value) { fValue += value; return *this; }
-   RClusterSize operator++(int) { auto result = *this; fValue++; return result; }
+   RClusterSize &operator=(const ValueType value)
+   {
+      fValue = value;
+      return *this;
+   }
+   RClusterSize &operator+=(const ValueType value)
+   {
+      fValue += value;
+      return *this;
+   }
+   RClusterSize operator++(int)
+   {
+      auto result = *this;
+      fValue++;
+      return result;
+   }
    operator ValueType() const { return fValue; }
 
    ValueType fValue;
@@ -145,7 +162,7 @@ private:
 
 public:
    RColumnSwitch() = default;
-   RColumnSwitch(ClusterSize_t index, std::uint32_t tag) : fIndex(index), fTag(tag) { }
+   RColumnSwitch(ClusterSize_t index, std::uint32_t tag) : fIndex(index), fTag(tag) {}
    ClusterSize_t GetIndex() const { return fIndex; }
    std::uint32_t GetTag() const { return fTag; }
 };
@@ -163,17 +180,29 @@ class RClusterIndex {
 private:
    DescriptorId_t fClusterId = kInvalidDescriptorId;
    ClusterSize_t::ValueType fIndex = kInvalidClusterIndex;
+
 public:
    RClusterIndex() = default;
    RClusterIndex(const RClusterIndex &other) = default;
-   RClusterIndex &operator =(const RClusterIndex &other) = default;
+   RClusterIndex &operator=(const RClusterIndex &other) = default;
    constexpr RClusterIndex(DescriptorId_t clusterId, ClusterSize_t::ValueType index)
-      : fClusterId(clusterId), fIndex(index) {}
+      : fClusterId(clusterId), fIndex(index)
+   {
+   }
 
-   RClusterIndex  operator+(ClusterSize_t::ValueType off) const { return RClusterIndex(fClusterId, fIndex + off); }
-   RClusterIndex  operator-(ClusterSize_t::ValueType off) const { return RClusterIndex(fClusterId, fIndex - off); }
-   RClusterIndex  operator++(int) /* postfix */        { auto r = *this; fIndex++; return r; }
-   RClusterIndex& operator++()    /* prefix */         { ++fIndex; return *this; }
+   RClusterIndex operator+(ClusterSize_t::ValueType off) const { return RClusterIndex(fClusterId, fIndex + off); }
+   RClusterIndex operator-(ClusterSize_t::ValueType off) const { return RClusterIndex(fClusterId, fIndex - off); }
+   RClusterIndex operator++(int) /* postfix */
+   {
+      auto r = *this;
+      fIndex++;
+      return r;
+   }
+   RClusterIndex &operator++() /* prefix */
+   {
+      ++fIndex;
+      return *this;
+   }
    bool operator==(RClusterIndex other) const { return fClusterId == other.fClusterId && fIndex == other.fIndex; }
    bool operator!=(RClusterIndex other) const { return !(*this == other); }
 
@@ -197,25 +226,27 @@ struct RNTupleLocator {
    /// Values for the _Type_ field in non-disk locators.  Serializable types must have the MSb == 0; see
    /// `doc/specifications.md` for details
    enum ELocatorType : std::uint8_t {
+      // The kTypeFile locator may translate to an on-disk standard locator (type 0x00) or a large locator (type 0x01),
+      // if the size of the referenced data block is >2GB
       kTypeFile = 0x00,
-      kTypeURI = 0x01,
       kTypeDAOS = 0x02,
 
       kLastSerializableType = 0x7f,
       kTypePageZero = kLastSerializableType + 1,
    };
 
+   std::uint64_t fBytesOnStorage = 0;
    /// Simple on-disk locators consisting of a 64-bit offset use variant type `uint64_t`; extended locators have
    /// `fPosition.index()` > 0
-   std::variant<std::uint64_t, std::string, RNTupleLocatorObject64> fPosition{};
-   std::uint32_t fBytesOnStorage = 0;
+   std::variant<std::uint64_t, RNTupleLocatorObject64> fPosition{};
    /// For non-disk locators, the value for the _Type_ field. This makes it possible to have different type values even
    /// if the payload structure is identical.
    ELocatorType fType = kTypeFile;
    /// Reserved for use by concrete storage backends
    std::uint8_t fReserved = 0;
 
-   bool operator==(const RNTupleLocator &other) const {
+   bool operator==(const RNTupleLocator &other) const
+   {
       return fPosition == other.fPosition && fBytesOnStorage == other.fBytesOnStorage && fType == other.fType;
    }
    template <typename T>
@@ -225,6 +256,15 @@ struct RNTupleLocator {
    }
 };
 
+/// Used to specify the underlying RNTuples in RNTupleProcessor and RNTupleReader::OpenFriends()
+struct RNTupleOpenSpec {
+   std::string fNTupleName;
+   std::string fStorage;
+   RNTupleReadOptions fOptions;
+
+   RNTupleOpenSpec(std::string_view n, std::string_view s) : fNTupleName(n), fStorage(s) {}
+};
+
 namespace Internal {
 template <typename T>
 auto MakeAliasedSharedPtr(T *rawPtr)
@@ -232,6 +272,9 @@ auto MakeAliasedSharedPtr(T *rawPtr)
    const static std::shared_ptr<T> fgRawPtrCtrlBlock;
    return std::shared_ptr<T>(fgRawPtrCtrlBlock, rawPtr);
 }
+
+inline constexpr ENTupleStructure kTestFutureFieldStructure =
+   static_cast<ENTupleStructure>(std::numeric_limits<std::underlying_type_t<ENTupleStructure>>::max() - 1);
 } // namespace Internal
 
 } // namespace Experimental

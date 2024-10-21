@@ -71,9 +71,7 @@ if(MSVC)
    target_include_directories(MetaCling PRIVATE
       ${CMAKE_SOURCE_DIR}/core/winnt/inc
    )
-   if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-     set_source_files_properties(TCling.cxx COMPILE_FLAGS $<$<CONFIG:Debug>:/bigobj>)
-   endif()
+   set_source_files_properties(TCling.cxx COMPILE_FLAGS /bigobj)
 endif()
 
 add_dependencies(MetaCling CLING)

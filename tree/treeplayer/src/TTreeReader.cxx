@@ -16,8 +16,9 @@
 #include "TEntryList.h"
 #include "TTreeCache.h"
 #include "TTreeReaderValue.h"
+#include "TFriendElement.h"
 #include "TFriendProxy.h"
-
+#include "ROOT/InternalTreeUtils.hxx"
 
 // clang-format off
 /**
@@ -187,7 +188,7 @@ constexpr const char * const TTreeReader::fgEntryStatusText[TTreeReader::kEntryU
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.  Call SetTree to connect to a TTree.
 
-TTreeReader::TTreeReader() : fNotify(this) {}
+TTreeReader::TTreeReader() : fNotify(this), fFriendProxies() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Access data from tree.
@@ -199,10 +200,14 @@ TTreeReader::TTreeReader() : fNotify(this) {}
 ///                  In the latter case, the TEntryList must be associated to the TChain, as
 ///                  per chain.SetEntryList(&entryList).
 
-TTreeReader::TTreeReader(TTree* tree, TEntryList* entryList /*= nullptr*/):
-   fTree(tree),
-   fEntryList(entryList),
-   fNotify(this)
+TTreeReader::TTreeReader(TTree *tree, TEntryList *entryList /*= nullptr*/, bool warnAboutLongerFriends,
+                         const std::vector<std::string> &suppressErrorsForMissingBranches)
+   : fTree(tree),
+     fEntryList(entryList),
+     fNotify(this),
+     fFriendProxies(),
+     fWarnAboutLongerFriends(warnAboutLongerFriends),
+     fSuppressErrorsForMissingBranches(suppressErrorsForMissingBranches)
 {
    if (!fTree) {
       ::Error("TTreeReader::TTreeReader", "TTree is NULL!");
@@ -226,9 +231,8 @@ TTreeReader::TTreeReader(TTree* tree, TEntryList* entryList /*= nullptr*/):
 ///                  In the latter case, the TEntryList must be associated to the TChain, as
 ///                  per chain.SetEntryList(&entryList).
 
-TTreeReader::TTreeReader(const char* keyname, TDirectory* dir, TEntryList* entryList /*= nullptr*/):
-   fEntryList(entryList),
-   fNotify(this)
+TTreeReader::TTreeReader(const char *keyname, TDirectory *dir, TEntryList *entryList /*= nullptr*/)
+   : fEntryList(entryList), fNotify(this), fFriendProxies()
 {
    if (!dir) dir = gDirectory;
    dir->GetObject(keyname, fTree);
@@ -252,17 +256,6 @@ TTreeReader::~TTreeReader()
    }
    if (fTree && fNotify.IsLinked())
       fNotify.RemoveLink(*fTree);
-
-   // Need to clear the map of proxies before deleting the director otherwise
-   // they will have a dangling pointer.
-   fProxies.clear();
-
-   for (auto feproxy: fFriendProxies) {
-      delete feproxy;
-   }
-   fFriendProxies.clear();
-
-   delete fDirector;
 
    if (fEntryStatus != kEntryNoTree && !TestBit(kBitIsExternalTree)) {
       // a plain TTree is automatically added to the current directory,
@@ -296,7 +289,7 @@ void TTreeReader::Initialize()
       return;
    }
 
-   fDirector = new ROOT::Internal::TBranchProxyDirector(fTree, -1);
+   fDirector = std::make_unique<ROOT::Internal::TBranchProxyDirector>(fTree, -1);
 
    if (!fNotify.IsLinked()) {
       fNotify.PrependLink(*fTree);
@@ -310,12 +303,30 @@ void TTreeReader::Initialize()
    }
 }
 
+TFriendProxy &TTreeReader::AddFriendProxy(std::size_t friendIdx)
+{
+   if (friendIdx >= fFriendProxies.size()) {
+      fFriendProxies.resize(friendIdx + 1);
+   }
+
+   if (!fFriendProxies[friendIdx]) {
+      fFriendProxies[friendIdx] = std::make_unique<ROOT::Internal::TFriendProxy>(fDirector.get(), fTree, friendIdx);
+   }
+
+   return *fFriendProxies[friendIdx];
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Notify director and values of a change in tree. Called from TChain and TTree's LoadTree.
 /// TTreeReader registers its fNotify data member with the TChain/TTree which
 /// in turn leads to this method being called upon the execution of LoadTree.
 bool TTreeReader::Notify()
 {
+
+   // We are missing at least one proxy, retry creating them when switching
+   // to the next tree
+   if (!fMissingProxies.empty())
+      SetProxies();
 
    if (fSetEntryBaseCallingLoadTree) {
       if (fLoadTreeStatus == kExternalLoadTree) {
@@ -342,7 +353,9 @@ bool TTreeReader::Notify()
    }
 
    if (!fDirector->Notify()) {
-      Error("SetEntryBase()", "There was an error while notifying the proxies.");
+      if (fSuppressErrorsForMissingBranches.empty())
+         Error("SetEntryBase()", "There was an error while notifying the proxies.");
+      fLoadTreeStatus = kMissingBranchFromTree;
       return false;
    }
 
@@ -360,15 +373,40 @@ bool TTreeReader::Notify()
 /// fValues gets insertions during this loop (when parametrized arrays are read),
 /// invalidating iterators. Use old-school counting instead.
 
-bool TTreeReader::SetProxies() {
+bool TTreeReader::SetProxies()
+{
 
    for (size_t i = 0; i < fValues.size(); ++i) {
-      ROOT::Internal::TTreeReaderValueBase* reader = fValues[i];
-      reader->CreateProxy();
-      if (!reader->GetProxy()){
-         return false;
-      }
+      ROOT::Internal::TTreeReaderValueBase *reader = fValues[i];
+      // Check whether the user wants to suppress errors for this specific branch
+      // if it is missing. This information is used here to act in the situation
+      // where the first tree of the chain does not contain that branch. In such
+      // case, we need to postpone the creation of the corresponding proxy until
+      // we find the branch in a following tree of the chain.
+      const bool suppressErrorsForThisBranch =
+         (std::find(fSuppressErrorsForMissingBranches.cbegin(), fSuppressErrorsForMissingBranches.cend(),
+                    reader->fBranchName.View()) != fSuppressErrorsForMissingBranches.cend());
+      // Because of the situation described above, we may have some proxies
+      // already created and some not, if their branch was not available so far.
+      // Make sure we do not recreate the proxy unnecessarily, unless the
+      // data member was set outside of this function (e.g. in Restart).
+      if (!reader->GetProxy() || !fProxiesSet)
+         reader->CreateProxy();
 
+      // The creation of the proxy failed again. If it was due to a missing
+      // branch, we propagate this information upstream, otherwise we return
+      // false to signify there was some other problem.
+      if (!reader->GetProxy()) {
+         if (suppressErrorsForThisBranch ||
+             (reader->GetSetupStatus() == ROOT::Internal::TTreeReaderValueBase::ESetupStatus::kSetupMissingBranch))
+            fMissingProxies.push_back(reader->fBranchName.Data());
+         else
+            return false;
+      } else {
+         // Erase the branch name from the missing proxies if it was present
+         fMissingProxies.erase(std::remove(fMissingProxies.begin(), fMissingProxies.end(), reader->fBranchName.Data()),
+                               fMissingProxies.end());
+      }
    }
    // If at least one proxy was there and no error occurred, we assume the proxies to be set.
    fProxiesSet = !fValues.empty();
@@ -378,7 +416,8 @@ bool TTreeReader::SetProxies() {
    // 2. We add to the cache the branches identifying them by the name the user provided
    //    upon creation of the TTreeReader{Value, Array}s
    // 3. We stop the learning phase.
-   // Operations 1, 2 and 3 need to happen in this order. See: https://sft.its.cern.ch/jira/browse/ROOT-9773?focusedCommentId=87837
+   // Operations 1, 2 and 3 need to happen in this order. See:
+   // https://sft.its.cern.ch/jira/browse/ROOT-9773?focusedCommentId=87837
    if (fProxiesSet) {
       const auto curFile = fTree->GetCurrentFile();
       if (curFile && fTree->GetTree()->GetReadCache(curFile, true)) {
@@ -387,8 +426,9 @@ bool TTreeReader::SetProxies() {
             const auto lastEntry = (-1LL == fEndEntry) ? fTree->GetEntriesFast() : fEndEntry;
             fTree->SetCacheEntryRange(fBeginEntry, lastEntry);
          }
-         for (auto value: fValues) {
-            fTree->AddBranchToCache(value->GetProxy()->GetBranchName(), true);
+         for (auto value : fValues) {
+            if (value->GetProxy())
+               fTree->AddBranchToCache(value->GetProxy()->GetBranchName(), true);
          }
          fTree->StopCacheLearningPhase();
       }
@@ -397,6 +437,77 @@ bool TTreeReader::SetProxies() {
    return true;
 }
 
+void TTreeReader::WarnIfFriendsHaveMoreEntries()
+{
+   if (!fWarnAboutLongerFriends)
+      return;
+   if (!fTree)
+      return;
+   // Make sure all proxies are set, as in certain situations we might get to this
+   // point without having set the proxies first. For example, when processing a
+   // TChain and calling `SetEntry(N)` with N beyond the real number of entries.
+   // If the proxies can't be set return from the function and give up the warning.
+   if (!fProxiesSet && !SetProxies())
+      return;
+
+   // If we are stopping the reading because we reached the last entry specified
+   // explicitly via SetEntriesRange, do not bother the user with a warning
+   if (fEntry == fEndEntry)
+      return;
+
+   const std::string mainTreeName =
+      dynamic_cast<const TChain *>(fTree) ? fTree->GetName() : ROOT::Internal::TreeUtils::GetTreeFullPaths(*fTree)[0];
+
+   const auto *friendsList = fTree->GetListOfFriends();
+   if (!friendsList || friendsList->GetEntries() == 0)
+      return;
+
+   for (decltype(fFriendProxies.size()) idx = 0; idx < fFriendProxies.size(); idx++) {
+      auto &&fp = fFriendProxies[idx];
+      if (!fp)
+         continue;
+      // In case the friend is indexed it may very well be that it has a different number of events
+      // e.g. the friend contains information about luminosity block and
+      // all the entries in the main tree are from the same luminosity block
+      if (fp->HasIndex())
+         continue;
+      const auto *frTree = fp->GetDirector()->GetTree();
+      if (!frTree)
+         continue;
+
+      // Need to retrieve the real friend tree from the main tree
+      // because the current friend proxy points to the tree it is currently processing
+      // i.e. the current tree in a chain in case the real friend is a TChain
+      auto *frEl = static_cast<TFriendElement *>(friendsList->At(idx));
+      if (!frEl)
+         continue;
+      auto *frTreeFromMain = frEl->GetTree();
+      if (!frTreeFromMain)
+         continue;
+      // We are looking for the situation where there are actually still more
+      // entries to read in the friend. The following checks if the current entry to read
+      // is greater than the available entries in the dataset. If not, then we know there
+      // are more entries left in the friend.
+      //
+      // GetEntriesFast gives us a single handle to assess all the following:
+      // * If the friend is a TTree, it returns the total number of entries
+      // * If it is a TChain, then two more scenarios may occur:
+      //   - If we have processed until the last file, then it returns the total
+      //     number of entries.
+      //   - If we have not processed all files yet, then it returns TTree::kMaxEntries.
+      //     Thus, fEntry will always be smaller and the warning will be issued.
+      if (fEntry >= frTreeFromMain->GetEntriesFast())
+         continue;
+      // The friend tree still has entries beyond the last one of the main
+      // tree, warn the user about it.
+      const std::string frTreeName = dynamic_cast<const TChain *>(frTree)
+                                        ? frTree->GetName()
+                                        : ROOT::Internal::TreeUtils::GetTreeFullPaths(*frTree)[0];
+      std::string msg = "Last entry available from main tree '" + mainTreeName + "' was " + std::to_string(fEntry - 1) +
+                        " but friend tree '" + frTreeName + "' has more entries beyond the end of the main tree.";
+      Warning("SetEntryBase()", "%s", msg.c_str());
+   }
+}
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the range of entries to be loaded by `Next()`; end will not be loaded.
 ///
@@ -587,6 +698,7 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, bool local)
             }
          }
          fEntryStatus = kEntryBeyondEnd;
+         WarnIfFriendsHaveMoreEntries();
          return fEntryStatus;
       }
 
@@ -609,6 +721,24 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, bool local)
          return fEntryStatus;
       }
 
+      if (loadResult == -6) {
+         // An expected branch was not found when switching to a new tree.
+         fDirector->Notify();
+         if (fProxiesSet) {
+            for (auto value : fValues) {
+               value->NotifyNewTree(fTree->GetTree());
+            }
+         }
+         // Even though one (or more) branches might be missing from the new
+         // tree, other branches might still be there. We know we are switching
+         // into the tree at this point, so we want the director to start
+         // reading again from local entry 0, for those branches that are
+         // available
+         fDirector->SetReadEntry(0);
+         fEntryStatus = kMissingBranchWhenSwitchingTree;
+         return fEntryStatus;
+      }
+
       Warning("SetEntryBase()",
               "Unexpected error '%lld' in %s::LoadTree", loadResult,
               treeToCallLoadOn->IsA()->GetName());
@@ -626,10 +756,46 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, bool local)
 
    if ((fEndEntry >= 0 && entry >= fEndEntry) || (fEntry >= fTree->GetEntriesFast())) {
       fEntryStatus = kEntryBeyondEnd;
+      WarnIfFriendsHaveMoreEntries();
       return fEntryStatus;
    }
+
    fDirector->SetReadEntry(loadResult);
    fEntryStatus = kEntryValid;
+
+   // Convey the information that a branch was not found either when
+   // switching to a new tree (i.e. when trying to load its first entry) or
+   // even if we are in the middle of the tree (e.g. by calling SetEntriesRange
+   // beforehand) but a proxy was not created because of the missing branch
+   if (fLoadTreeStatus == kMissingBranchFromTree || !fMissingProxies.empty()) {
+      fEntryStatus = kMissingBranchWhenSwitchingTree;
+   }
+
+   for (auto &&fp : fFriendProxies) {
+      if (!fp)
+         continue;
+      if (fp->GetReadEntry() >= 0)
+         continue;
+      // We are going to read an invalid entry from a friend, propagate
+      // this information to the user.
+      const auto *frTree = fp->GetDirector()->GetTree();
+      if (!frTree)
+         continue;
+      const std::string frTreeName = dynamic_cast<const TChain *>(frTree)
+                                        ? frTree->GetName()
+                                        : ROOT::Internal::TreeUtils::GetTreeFullPaths(*frTree)[0];
+      // If the friend does not have a TTreeIndex, the cause of a failure reading an entry
+      // is most probably a difference in number of entries between main tree and friend tree
+      if (!fp->HasIndex()) {
+         std::string msg = "Cannot read entry " + std::to_string(entry) + " from friend tree '" + frTreeName +
+                           "'. The friend tree has less entries than the main tree. Make sure all trees "
+                           "of the dataset have the same number of entries.";
+         throw std::runtime_error{msg};
+      } else {
+         fEntryStatus = kIndexedFriendNoMatch;
+      }
+   }
+
    return fEntryStatus;
 }
 

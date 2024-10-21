@@ -61,8 +61,22 @@
 #pragma read sourceClass = "StructWithIORulesBase" source = "float a" version = "[100-]" targetClass = \
    "StructWithIORulesBase" target = "b" code = "{ b = 0.0f; }"
 
+// Note: This rule has been modified to work around ROOT bug #15877.
+// The original rule was `str = std::string{onfile.chars, 4};`
+//
+// This bug is triggered by the TClassReadRules unit test (in rfield_class.cxx) in the following way:
+//   1. Upon write, RNTuple calls TClass::GetStreamerInfo() to store the streamer info of StructWithTransientString
+//   2. The read rule calls TClass::GetDataMemberOffset("chars") to fill the `onfile` variable
+//   3. The class doesn't find "chars" among its real data members (it's "chars[4]" in this list)
+//   4. The class therefore tries to get the offset from the streamer info; the streamer info exists in
+//      GetCurrentStreamerInfo() because we called TClass::GetStreamerInfo() in step 1.
+//      Otherwise GetDataMemberOffset() would return 0 which happens to be correct.
+//   5. Now we enter the bug:
+//      - The streamer info has two elements for "chars", one with the correct offset (0),
+//        one cached, with a wrong one (8)
+//      - The streamer info returns the offset of the wrong data member
 #pragma read sourceClass = "StructWithTransientString" source = "char chars[4]" version = "[1-]" targetClass = \
-   "StructWithTransientString" target = "str" include = "string" code = "{ str = std::string{onfile.chars, 4}; }"
+   "StructWithTransientString" target = "str" include = "string" code = "{ str = \"ROOT\"; }"
 
 #pragma read sourceClass = "StructWithIORules" source = "float a;float b" version = "[1-]" targetClass = \
    "StructWithIORules" target = "c" code = "{ c = onfile.a + onfile.b; }"

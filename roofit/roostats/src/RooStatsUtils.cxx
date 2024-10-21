@@ -344,13 +344,12 @@ namespace RooStats {
 
    // clone a workspace, copying all needed components and discarding all others
    // start off with the old workspace
-   RooWorkspace* MakeCleanWorkspace(RooWorkspace *oldWS, const char *newName,
+   RooWorkspace* MakeReducedWorkspace(RooWorkspace *oldWS, const char *newName,
                                    bool copySnapshots, const char *mcname,
-                                   const char *newmcname) {
+                                   const char *newmcname, bool copyData) {
       auto objects = oldWS->allGenericObjects();
       RooStats::ModelConfig *oldMC =
           dynamic_cast<RooStats::ModelConfig *>(oldWS->obj(mcname));
-      auto data = oldWS->allData();
       for (auto it : objects) {
         if (!oldMC) {
           oldMC = dynamic_cast<RooStats::ModelConfig *>(it);
@@ -398,8 +397,10 @@ namespace RooStats {
       RooAbsPdf *newPdf = newWS->pdf(pdf->GetName());
       newMC->SetPdf(*newPdf);
 
-      for (auto d : data) {
-        newWS->import(*d);
+      if (copyData) {
+        for (auto d : oldWS->allData()) {
+          newWS->import(*d);
+        }
       }
 
       RooArgSet poiset;

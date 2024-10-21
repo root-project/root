@@ -1,6 +1,11 @@
 #include "ntuple_test.hxx"
 #include <TKey.h>
 #include <TTree.h>
+#include <TVector2.h>
+#include <TVector3.h>
+#include <TVirtualStreamerInfo.h>
+
+#include <cstring>
 
 using ROOT::Experimental::Internal::RNTupleWriteOptionsManip;
 
@@ -376,8 +381,8 @@ TEST(MiniFile, MultiKeyBlob)
 
       auto rawFile = RRawFile::Create(fileGuard.GetPath());
       auto reader = RMiniFileReader{rawFile.get()};
-      // Force reader to read the max key size
-      (void)reader.GetNTuple("ntpl");
+      auto ntuple = reader.GetNTuple("ntpl").Unwrap();
+      reader.SetMaxKeySize(ntuple.GetMaxKeySize());
       reader.ReadBuffer(data.get(), dataSize, blobOffset);
 
       EXPECT_EQ(data[0], 0x99);
@@ -414,8 +419,8 @@ TEST(MiniFile, MultiKeyBlob_ExactlyMax)
 
       auto rawFile = RRawFile::Create(fileGuard.GetPath());
       auto reader = RMiniFileReader{rawFile.get()};
-      // Force reader to read the max key size
-      (void)reader.GetNTuple("ntpl");
+      auto ntuple = reader.GetNTuple("ntpl").Unwrap();
+      reader.SetMaxKeySize(ntuple.GetMaxKeySize());
       rawFile->ReadAt(data.get(), dataSize, blobOffset);
 
       // If we didn't split the key, we expect to find all zeroes at the end of `data`.
@@ -453,8 +458,8 @@ TEST(MiniFile, MultiKeyBlob_ExactlyTwo)
 
       auto rawFile = RRawFile::Create(fileGuard.GetPath());
       auto reader = RMiniFileReader{rawFile.get()};
-      // Force reader to read the max key size
-      (void)reader.GetNTuple("ntpl");
+      auto ntuple = reader.GetNTuple("ntpl").Unwrap();
+      reader.SetMaxKeySize(ntuple.GetMaxKeySize());
 
       rawFile->ReadAt(data.get(), dataSize, blobOffset);
       // If the blob was split into exactly two keys, there should be only one pointer to the next chunk.
@@ -497,8 +502,8 @@ TEST(MiniFile, MultiKeyBlob_SmallKey)
 
       auto rawFile = RRawFile::Create(fileGuard.GetPath());
       auto reader = RMiniFileReader{rawFile.get()};
-      // Force reader to read the max key size
-      (void)reader.GetNTuple("ntpl");
+      auto ntuple = reader.GetNTuple("ntpl").Unwrap();
+      reader.SetMaxKeySize(ntuple.GetMaxKeySize());
       reader.ReadBuffer(data.get(), dataSize, blobOffset);
 
       EXPECT_EQ(data[0], 0x99);
@@ -653,4 +658,49 @@ TEST(MiniFile, DifferentTKeys)
    file->Close();
    auto ntuple = RNTupleReader::Open("Events", fileGuard.GetPath());
    EXPECT_EQ(1, ntuple->GetNEntries());
+}
+
+TEST(MiniFile, StreamerInfo)
+{
+   FileRaii fileGuardProper("test_ntuple_minifile_streamer_info_proper.root");
+   FileRaii fileGuardSimple("test_ntuple_minifile_streamer_info_simple.root");
+
+   RNTupleSerializer::StreamerInfoMap_t streamerInfos;
+   auto infoTVector2 = TClass::GetClass("TVector2")->GetStreamerInfo();
+   auto infoTVector3 = TClass::GetClass("TVector3")->GetStreamerInfo();
+   streamerInfos[infoTVector2->GetNumber()] = infoTVector2;
+   streamerInfos[infoTVector3->GetNumber()] = infoTVector3;
+
+   {
+      auto file = std::unique_ptr<TFile>(TFile::Open(fileGuardProper.GetPath().c_str(), "RECREATE"));
+      auto writerProper = RNTupleFileWriter::Append("MyNTuple", *file, RNTupleWriteOptions::kDefaultMaxKeySize);
+      writerProper->UpdateStreamerInfos(streamerInfos);
+      writerProper->Commit();
+   }
+
+   {
+      auto writerSimple = RNTupleFileWriter::Recreate(
+         "ntpl", fileGuardSimple.GetPath(), RNTupleFileWriter::EContainerFormat::kTFile, RNTupleWriteOptions());
+      writerSimple->UpdateStreamerInfos(streamerInfos);
+      writerSimple->Commit();
+   }
+
+   std::vector<TVirtualStreamerInfo *> vecInfos;
+   for (const auto &path : {fileGuardProper.GetPath(), fileGuardSimple.GetPath()}) {
+      auto file = std::make_unique<TFile>(path.c_str());
+
+      vecInfos.clear();
+      for (auto info : TRangeDynCast<TVirtualStreamerInfo>(*file->GetStreamerInfoList())) {
+         vecInfos.emplace_back(info);
+      }
+
+      auto fnComp = [](TVirtualStreamerInfo *a, TVirtualStreamerInfo *b) {
+         return strcmp(a->GetName(), b->GetName()) < 0;
+      };
+      std::sort(vecInfos.begin(), vecInfos.end(), fnComp);
+      ASSERT_EQ(3u, vecInfos.size());
+      EXPECT_STREQ("ROOT::Experimental::RNTuple", vecInfos[0]->GetName());
+      EXPECT_STREQ("TVector2", vecInfos[1]->GetName());
+      EXPECT_STREQ("TVector3", vecInfos[2]->GetName());
+   }
 }

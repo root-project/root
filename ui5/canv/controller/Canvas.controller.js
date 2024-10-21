@@ -8,10 +8,10 @@ sap.ui.define([
    'sap/m/List',
    'sap/m/InputListItem',
    'sap/m/Input',
+   'sap/m/Text',
    'sap/m/Button',
-   'sap/m/ButtonType',
+   'sap/m/library',
    'sap/ui/layout/SplitterLayoutData',
-   'sap/ui/core/ResizeHandler',
    'rootui5/browser/controller/FileDialog.controller'
 ], function (Controller,
              Component,
@@ -22,10 +22,10 @@ sap.ui.define([
              List,
              InputListItem,
              Input,
+             Text,
              Button,
-             ButtonType,
+             mLibrary,
              SplitterLayoutData,
-             ResizeHandler,
              FileDialogController) {
    "use strict";
 
@@ -49,7 +49,8 @@ sap.ui.define([
                                      HighlightPadIcon: chk_icon(false),
                                      CanvasName: 'c1',
                                      StatusLbl1: '', StatusLbl2: '', StatusLbl3: '', StatusLbl4: '',
-                                     Standalone: true, isRoot6: true, canResize: true, FixedSize: false });
+                                     Standalone: true, isRoot6: true, canResize: true, FixedSize: false,
+                                     ErrorVisible: false, ErrorTooltip: 'Error in JavaScript code' });
          this.getView().setModel(model);
 
          let cp = this.getView().getViewData()?.canvas_painter;
@@ -85,9 +86,10 @@ sap.ui.define([
 
             cp.showUI5Panel = this.showLeftArea.bind(this);
 
+            cp.showConsoleError = this.showConsoleError.bind(this);
+
             if (cp.v7canvas) model.setProperty('/isRoot6', false);
 
-            cp.enforceCanvasSize = !cp.embed_canvas && cp.online_canvas;
             cp.highlight_gpad = false;
 
             model.setProperty('/canResize', !cp.embed_canvas && cp.online_canvas);
@@ -96,16 +98,6 @@ sap.ui.define([
             if (!cp.embed_canvas && ws?.addReloadKeyHandler)
                ws.addReloadKeyHandler();
          }
-
-         if (!cp.embed_canvas)
-            ResizeHandler.register(this.getView(), () => {
-               cp._ignore_resize = true;
-               // ensure that all elements get there proper sizes
-               // otherwise canvas resize handler fails to determine real canvas size
-               this.getView().rerender();
-               delete cp._ignore_resize;
-               cp.checkCanvasResize();
-            });
       },
 
       onAfterRendering() {
@@ -134,7 +126,9 @@ sap.ui.define([
          }
 
          if (method.fName == 'FitPanel') {
-            this.showLeftArea('FitPanel');
+            const canvp = this.getCanvasPainter();
+            if (canvp?.startFitPanel)
+               canvp.startFitPanel(true);
             return true;
          }
 
@@ -144,7 +138,6 @@ sap.ui.define([
          }
 
          return false; // not processed
-
       },
 
       /** @summary function used to activate GED in full canvas */
@@ -154,8 +147,6 @@ sap.ui.define([
 
          return this.showGed(true).then(() => {
             canvp.selectObjectPainter(painter);
-
-            canvp.enforceCanvasSize = true;
 
             if (typeof canvp.processChanges == 'function')
                canvp.processChanges('sbits', canvp);
@@ -374,11 +365,8 @@ sap.ui.define([
       cleanupIfGed() {
          let ged = this.getLeftController('Ged'),
              p = this.getCanvasPainter();
-         if (p) p.registerForPadEvents(null);
-         if (ged) {
-            ged.cleanupGed();
-            if (p) p.enforceCanvasSize = true;
-         }
+         p?.registerForPadEvents(null);
+         ged?.cleanupGed();
          if (typeof p?.processChanges == 'function')
             p.processChanges('sbits', p);
       },
@@ -402,54 +390,74 @@ sap.ui.define([
       showLeftArea(panel_name, panel_handle) {
          let split = this.getView().byId('MainAreaSplitter'),
              model = this.getView().getModel(),
-             curr = model.getProperty('/LeftArea');
+             curr = model.getProperty('/LeftArea'),
+             is_fit = (panel_name === 'FitPanel'),
+             is_ged = (panel_name === 'Ged'),
+             is_flex = is_fit || is_ged ? 1 : 0,
+             was_fit = (curr === 'FitPanel'),
+             was_ged = (curr === 'Ged'),
+             was_flex = was_fit || was_ged ? 1 : 0,
+             canvp = this.getCanvasPainter(),
+             can_elem = this.getView().byId('MainPanel');
+
+         if (is_fit && !canvp?.startFitPanel) {
+            panel_name = '';
+            is_fit = false;
+         }
 
          if (!split || (!curr && !panel_name) || (curr === panel_name))
             return Promise.resolve(null);
 
+         const adjust_window_width = is_flex ^ was_flex;
+
+         if (adjust_window_width)
+            can_elem?.getController().rememberAreaSize();
+
          model.setProperty('/LeftArea', panel_name);
-         model.setProperty('/GedIcon', chk_icon(panel_name == 'Ged'));
+         model.setProperty('/GedIcon', chk_icon(is_ged));
 
          // first need to remove existing
          if (curr) {
             this.cleanupIfGed();
-            split.removeContentArea(split.getContentAreas()[0]);
+            let area = split.getContentAreas()[0];
+            if (adjust_window_width && !panel_name)
+               can_elem?.getController().resizeBrowser(-1*(area.$().width() + 16), 0);
+            split.removeContentArea(area);
          }
-
-         let canvp = this.getCanvasPainter();
-         if (canvp) canvp.enforceCanvasSize = true;
 
          if (!panel_name)
             return Promise.resolve(null);
 
          let viewName = panel_name;
 
-         if (panel_name == 'FitPanel')
+         if (is_fit) {
             viewName = 'rootui5.fitpanel.view.FitPanel';
-         else if (panel_name.indexOf('.') < 0)
+            // send panel command and return new channel
+            panel_handle = canvp.startFitPanel();
+         } else if (panel_name.indexOf('.') < 0)
             viewName = 'rootui5.canv.view.' + panel_name;
+
+         let panel_width = Math.max(250, Math.round(0.25 * this.getView().$().width()));
+
+         if (adjust_window_width)
+            can_elem?.getController().resizeBrowser(panel_width + 16, 0);
 
          let viewData = canvp.getUi5PanelData(panel_name);
          viewData.masterPanel = this;
          viewData.handle = panel_handle;
 
-         let can_elem = this.getView().byId('MainPanel');
-
-         let w = this.getView().$().width();
-
          return XMLView.create({
              viewName,
              viewData,
-             layoutData: new SplitterLayoutData({ resizable: true, size: Math.round(w*0.25) + 'px' }),
+             layoutData: new SplitterLayoutData({ resizable: true, size: panel_width + 'px' }),
              height: (panel_name == 'Panel') ? '100%' : undefined
          }).then(oView => {
-
             // workaround, while CanvasPanel.onBeforeRendering called too late
             can_elem.getController().preserveCanvasContent();
 
             split.insertContentArea(oView, 0);
 
-            if (panel_name === 'Ged') {
+            if (is_ged) {
                let ged = oView.getController();
                if (ged && (typeof canvp?.registerForPadEvents == 'function')) {
                   canvp.registerForPadEvents(ged.padEventsReceiver.bind(ged));
@@ -572,18 +580,19 @@ sap.ui.define([
          this.getView().getModel().setProperty('/StatusIcon', chk_icon(new_state));
 
          if (this.isStatusShown() != new_state) {
-
+            // restore size after next resize
+            this.getView().byId('MainPanel')?.getController().rememberAreaSize();
             this._Page.setShowFooter(new_state);
-            let canvp = this.getCanvasPainter();
-            if (canvp) {
-               canvp.enforceCanvasSize = true;
-               canvp.processChanges('sbits', canvp);
-            }
+            const canvp = this.getCanvasPainter();
+            canvp?.processChanges('sbits', canvp);
          }
       },
 
       toggleToolBar(new_state) {
-         if (new_state === undefined) new_state = !this.getView().getModel().getProperty('/ToolbarIcon');
+         if (new_state === undefined)
+            new_state = this.getView().getModel().getProperty('/ToolbarIcon') === chk_icon(false);
+
+         this.getView().byId('MainPanel')?.getController().rememberAreaSize();
 
          this._Page.setShowSubHeader(new_state);
 
@@ -613,12 +622,8 @@ sap.ui.define([
             new_state = !this._Page.getShowHeader();
          this.getView().getModel().setProperty('/MenuBarIcon', chk_icon(new_state));
 
-         if (this.isMenuBarShow() != new_state) {
-            let canvp = this.getCanvasPainter();
-            if (canvp)
-               canvp.enforceCanvasSize = true;
+         if (this.isMenuBarShow() != new_state)
             this._Page.setShowHeader(new_state);
-         }
       },
 
       onDivideDialog() {
@@ -627,7 +632,7 @@ sap.ui.define([
                title: 'Divide canvas',
                content: new Input({ placeholder: 'input N or NxM', value: '{/divideArg}' }),
                beginButton: new Button({
-                  type: ButtonType.Emphasized,
+                  type: mLibrary.ButtonType.Emphasized,
                   text: 'OK',
                   press: () => {
                      let arg = this.getView().getModel().getProperty('/divideArg');
@@ -722,16 +727,49 @@ sap.ui.define([
              name = item.getText();
 
          if (name == 'Fit panel') {
-            if (this.isv7()) {
-               let curr = this.getView().getModel().getProperty('/LeftArea');
-               this.showLeftArea(curr == 'FitPanel' ? '' : 'FitPanel');
-            } else {
-               this.getCanvasPainter()?.sendWebsocket('FITPANEL');
-            }
+            let curr = this.getView().getModel().getProperty('/LeftArea');
+            this.showLeftArea(curr == 'FitPanel' ? '' : 'FitPanel');
          } else if (name == 'Start browser') {
             this.getCanvasPainter()?.sendWebsocket('START_BROWSER');
          }
+      },
 
+      onHelpMenuAction(oEvent) {
+         const item = oEvent.getParameter('item'),
+               name = item.getText();
+         let url = '';
+         if (name === 'ROOT')
+            url = 'https://root.cern';
+         else if (name === 'Canvas')
+            url = this.isv7() ? 'https://root.cern/doc/master/classROOT_1_1Experimental_1_1RCanvas.html' : 'https://root.cern/doc/master/classTCanvas.html';
+         else if (name === 'Tutorials')
+            url = this.isv7() ? 'https://root.cern/doc/master/group__tutorial__rcanvas.html' : 'https://root.cern/doc/master/group__tutorial__graphics.html';
+         else if (name === 'About')
+            url = 'https://root.cern/about/';
+         if (url)
+            this.getCanvasPainter()?.sendWebsocket('SHOWURL:' + url);
+      },
+
+      showConsoleError(err) {
+         this.getView().getModel().setProperty('/ErrorVisible', true);
+         this.err_message = err?.message ?? '';
+         this.getView().getModel().setProperty('/ErrorTooltip', 'Err: ' + (this.err_message || 'unknown'));
+         this.err_stack = err?.stack ?? err ?? 'Abstract stack';
+      },
+
+      onShowConsoleErrors() {
+         const errDialog = new Dialog({
+            title: 'JavaScript Error: ' + this.err_message,
+            type: 'Message',
+            state: 'Warning',
+            content: new Text({ text: this.err_stack }),
+            endButton: new Button({
+              text: 'Ok',
+              press: () => { errDialog.close(); errDialog.destroy(); }
+            })
+         });
+
+         errDialog.open();
       },
 
       showMessage(msg) {

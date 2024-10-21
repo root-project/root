@@ -92,7 +92,7 @@ protected:
    CommitSealedPageImpl(DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) final;
    std::vector<RNTupleLocator>
    CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges, const std::vector<bool> &mask) final;
-   std::uint64_t CommitClusterImpl() final;
+   std::uint64_t StageClusterImpl() final;
    RNTupleLocator CommitClusterGroupImpl(unsigned char *serializedPageList, std::uint32_t length) final;
    using RPagePersistentSink::CommitDatasetImpl;
    void CommitDatasetImpl(unsigned char *serializedFooter, std::uint32_t length) final;

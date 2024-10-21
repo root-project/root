@@ -87,10 +87,37 @@ public:
       kIgnoreTObjectStreamer  = TVirtualStreamerInfo::kIgnoreTObjectStreamer
    };
 
+   // clang-format off
+   /// EReadWrite Enumerator
+   /// | Enum Constant | Description   |
+   /// |-------------|--------------------|
+   /// | kBase       | Base class element |
+   /// | kOffsetL    | Fixed size array |
+   /// | kOffsetP    | Pointer to object |
+   /// | kCounter    | Counter for array size |
+   /// | kCharStar   | Pointer to array of char |
+   /// | kLegacyChar | Equal to TDataType's kchar |
+   /// | kBits       | TObject::fBits in case of a referenced object |
+   /// | kObject     | Class  derived from TObject, or for TStreamerSTL::fCtype non-pointer elements |
+   /// | kObjectp    | Class* derived from TObject and with    comment field //->Class, or for TStreamerSTL::fCtype: pointer elements |
+   /// | kObjectP    | Class* derived from TObject and with NO comment field //->Class |
+   /// | kAny        | Class  not derived from TObject |
+   /// | kAnyp       | Class* not derived from TObject with    comment field //->Class |
+   /// | kAnyP       | Class* not derived from TObject with NO comment field //->Class |
+   /// | kAnyPnoVT   | Class* not derived from TObject with NO comment field //->Class and Class has NO virtual table |
+   /// | kSTLp       | Pointer to STL container |
+   /// | kTString    | TString, special case |
+   /// | kTObject    | TObject, special case |
+   /// | kTNamed     | TNamed , special case |
+   /// | kCache      | Cache the value in memory than is not part of the object but is accessible via a SchemaRule |
+   /// | kNoType     | Indicator that we don't know the current type because the member does not exist in memory |
+   /// | kUnsupportedConversion | The member type onfile and in memory can not be converted |
+   /// | kUnset      | default value |
    enum EReadWrite {
       kBase        =  0,  kOffsetL = 20,  kOffsetP = 40,  kCounter =  6,  kCharStar = 7,
       kChar        =  1,  kShort   =  2,  kInt     =  3,  kLong    =  4,  kFloat    = 5,
       kDouble      =  8,  kDouble32=  9,
+      kLegacyChar  = 10, /// Equal to TDataType's kchar
       kUChar       = 11,  kUShort  = 12,  kUInt    = 13,  kULong   = 14,  kBits     = 15,
       kLong64      = 16,  kULong64 = 17,  kBool    = 18,  kFloat16 = 19,
       kObject      = 61,  kAny     = 62,  kObjectp = 63,  kObjectP = 64,  kTString  = 65,
@@ -106,29 +133,12 @@ public:
       kCacheNew    = 1001,
       kCacheDelete = 1002,
       kNeedObjectForVirtualBaseClass = 99997,
-      kMissing     = 99999
+      kMissing     = 99999,
+      kNoType      = -1,   /// Type corresponding to a 'missing' data member (with kMissing offset)
+      kUnsupportedConversion = -2,
+      kUnset       = -3
    };
-
-// Some comments about EReadWrite
-// kBase    : base class element
-// kOffsetL : fixed size array
-// kOffsetP : pointer to object
-// kCounter : counter for array size
-// kCharStar: pointer to array of char
-// kBits    : TObject::fBits in case of a referenced object
-// kObject  : Class  derived from TObject
-// kObjectp : Class* derived from TObject and with    comment field //->Class
-// kObjectP : Class* derived from TObject and with NO comment field //->Class
-// kAny     : Class  not derived from TObject
-// kAnyp    : Class* not derived from TObject with    comment field //->Class
-// kAnyP    : Class* not derived from TObject with NO comment field //->Class
-// kAnyPnoVT: Class* not derived from TObject with NO comment field //->Class and Class has NO virtual table
-// kSTLp    : Pointer to STL container.
-// kTString : TString, special case
-// kTObject : TObject, special case
-// kTNamed  : TNamed , special case
-
-
+   // clang-format off
 
    TVirtualStreamerInfo();
    TVirtualStreamerInfo(TClass * /*cl*/);

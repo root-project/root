@@ -29,7 +29,7 @@ double sum_of_elements(const LASymMatrix &);
 
 class LASquareMatrix {
 public:
-   LASquareMatrix(unsigned int n) : fNRow(n), fData(std::vector<double>(n * n)) {}
+   LASquareMatrix(unsigned int n) : fNRow(n), fData(n * n) {}
 
    double operator()(unsigned int row, unsigned int col) const
    {

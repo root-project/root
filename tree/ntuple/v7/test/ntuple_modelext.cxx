@@ -197,13 +197,52 @@ TEST(RNTuple, ModelExtensionMultiple)
    EXPECT_EQ("abcdefABCDEF1234567890!@#$%^&*()", str(4));
 }
 
-TEST(RNTuple, ModelExtensionProject)
+TEST(RNTuple, ModelExtensionProjectSimple)
 {
-   FileRaii fileGuard("test_ntuple_modelext_project.root");
+   FileRaii fileGuard("test_ntuple_modelext_project_simple.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto fieldPt = model->MakeField<float>("pt", 42.0);
+      model->AddProjectedField(std::make_unique<RField<float>>("aliasPt"), [](const std::string &) { return "pt"; });
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      auto modelUpdater = writer->CreateModelUpdater();
+      modelUpdater->BeginUpdate();
+      auto fieldE = modelUpdater->MakeField<float>("E", 1.0);
+      modelUpdater->CommitUpdate();
+
+      writer->Fill();
+      *fieldPt = 137.0;
+      *fieldE = 2.0;
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   EXPECT_EQ(2U, reader->GetNEntries());
+   EXPECT_EQ(4U, reader->GetDescriptor().GetNFields());
+
+   auto pt = reader->GetView<float>("pt");
+   auto aliasPt = reader->GetView<float>("aliasPt");
+   auto E = reader->GetView<float>("E");
+   EXPECT_FLOAT_EQ(42.0, pt(0));
+   EXPECT_FLOAT_EQ(137.0, pt(1));
+   EXPECT_FLOAT_EQ(42.0, aliasPt(0));
+   EXPECT_FLOAT_EQ(137.0, aliasPt(1));
+   EXPECT_FLOAT_EQ(1.0, E(0));
+   EXPECT_FLOAT_EQ(2.0, E(1));
+}
+
+TEST(RNTuple, ModelExtensionProjectComplex)
+{
+   FileRaii fileGuard("test_ntuple_modelext_project_complex.root");
    std::vector<std::uint32_t> refVec{0x00, 0xff, 0x55, 0xaa};
    {
       auto model = RNTupleModel::Create();
       auto fieldPt = model->MakeField<float>("pt", 42.0);
+      model->AddProjectedField(std::make_unique<RField<float>>("aliasPt"), [](const std::string &) { return "pt"; });
+      model->AddProjectedField(std::make_unique<RField<float>>("al2Pt"), [](const std::string &) { return "pt"; });
+      auto fieldE = model->MakeField<float>("E", 1.0);
+      model->AddProjectedField(std::make_unique<RField<float>>("aliasE"), [](const std::string &) { return "E"; });
 
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath());
       auto modelUpdater = ntuple->CreateModelUpdater();
@@ -223,18 +262,31 @@ TEST(RNTuple, ModelExtensionProject)
 
       ntuple->Fill();
       *fieldPt = 12.0;
+      *fieldE = 2.0;
       *fieldVec = refVec;
       ntuple->Fill();
    }
 
    auto ntuple = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
    EXPECT_EQ(2U, ntuple->GetNEntries());
-   EXPECT_EQ(6U, ntuple->GetDescriptor().GetNFields());
+   EXPECT_EQ(10U, ntuple->GetDescriptor().GetNFields());
 
    auto pt = ntuple->GetView<float>("pt");
+   auto aliasPt = ntuple->GetView<float>("aliasPt");
+   auto al2Pt = ntuple->GetView<float>("al2Pt");
    auto aliasVec = ntuple->GetView<std::vector<std::uint32_t>>("aliasVec");
-   EXPECT_EQ(42.0, pt(0));
-   EXPECT_EQ(12.0, pt(1));
+   auto E = ntuple->GetView<float>("E");
+   auto aliasE = ntuple->GetView<float>("aliasE");
+   EXPECT_FLOAT_EQ(42.0, pt(0));
+   EXPECT_FLOAT_EQ(12.0, pt(1));
+   EXPECT_FLOAT_EQ(42.0, aliasPt(0));
+   EXPECT_FLOAT_EQ(12.0, aliasPt(1));
+   EXPECT_FLOAT_EQ(42.0, al2Pt(0));
+   EXPECT_FLOAT_EQ(12.0, al2Pt(1));
+   EXPECT_FLOAT_EQ(1.0, E(0));
+   EXPECT_FLOAT_EQ(2.0, E(1));
+   EXPECT_FLOAT_EQ(1.0, aliasE(0));
+   EXPECT_FLOAT_EQ(2.0, aliasE(1));
    EXPECT_EQ(std::vector<std::uint32_t>{}, aliasVec(0));
    EXPECT_EQ(refVec, aliasVec(1));
 }
@@ -492,4 +544,36 @@ TEST(RNTuple, ModelExtensionComplex)
    // The floating point arithmetic should have been executed in the same order for reading and writing,
    // thus we expect the checksums to be bitwise identical
    EXPECT_EQ(chksumRead, chksumWrite);
+}
+
+TEST(RNTuple, ModelExtensionNullableField)
+{
+   FileRaii fileGuard("test_ntuple_modelext_nullablefield.root");
+
+   {
+      auto writer = RNTupleWriter::Recreate(RNTupleModel::Create(), "ntpl", fileGuard.GetPath());
+      writer->Fill();
+
+      auto modelUpdater = writer->CreateModelUpdater();
+      modelUpdater->BeginUpdate();
+      auto fieldA = std::make_unique<RField<std::optional<float>>>("A");
+      modelUpdater->AddField(std::move(fieldA));
+      modelUpdater->CommitUpdate();
+
+      auto ptrA = writer->GetModel().GetDefaultEntry().GetPtr<std::optional<float>>("A");
+
+      *ptrA = 1.0;
+      writer->Fill();
+
+      ptrA->reset();
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   EXPECT_EQ(3u, reader->GetNEntries());
+   auto viewA = reader->GetView<std::optional<float>>("A");
+
+   EXPECT_FALSE(viewA(0).has_value());
+   EXPECT_FLOAT_EQ(1.0, viewA(1).value());
+   EXPECT_FALSE(viewA(2).has_value());
 }

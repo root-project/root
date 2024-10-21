@@ -13,7 +13,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <ROOT/RColumnElement.hxx>
+#include <ROOT/RColumnElementBase.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 
@@ -194,7 +194,7 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
       std::string nameAndType = std::string("  ") + col.fFieldName + " [#" + std::to_string(col.fColumnIndex);
       if (col.fRepresentationIndex > 0)
          nameAndType += " / R." + std::to_string(col.fRepresentationIndex);
-      nameAndType += "]  --  " + Internal::RColumnElementBase::GetTypeName(col.fType);
+      nameAndType += "]  --  " + std::string{Internal::RColumnElementBase::GetTypeName(col.fType)};
       std::string id = std::string("{id:") + std::to_string(col.fLogicalColumnId) + "}";
       if (col.fLogicalColumnId != col.fPhysicalColumnId)
          id += " --alias--> " + std::to_string(col.fPhysicalColumnId);

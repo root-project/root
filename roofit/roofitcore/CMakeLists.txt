@@ -16,10 +16,6 @@ if(roofit_multiprocess)
 endif()
 
 if(roofit_legacy_eval_backend)
-  set(LegacyEvalBackendHeaders
-    RooRealMPFE.h
-  )
-
   set(LegacyEvalBackendSources
     src/BidirMMapPipe.cxx
     src/BidirMMapPipe.h
@@ -52,7 +48,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooAbsCategoryLValue.h
     RooAbsCollection.h
     RooAbsData.h
-    RooAbsDataFiller.h
+    RooAbsDataHelper.h
     RooAbsDataStore.h
     RooAbsFunc.h
     RooAbsGenContext.h
@@ -239,7 +235,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooWorkspace.h
     RooWorkspaceHandle.h
     RooWrapperPdf.h
-    ${LegacyEvalBackendHeaders}
   SOURCES
     src/BatchModeDataHelpers.cxx
     src/ConstraintHelpers.cxx
@@ -260,7 +255,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooAbsCategoryLValue.cxx
     src/RooAbsCollection.cxx
     src/RooAbsData.cxx
-    src/RooAbsDataFiller.cxx
+    src/RooAbsDataHelper.cxx
     src/RooAbsDataStore.cxx
     src/RooAbsFunc.cxx
     src/RooAbsGenContext.cxx

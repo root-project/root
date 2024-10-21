@@ -221,7 +221,7 @@ ROOT::Experimental::Internal::RPageSinkFile::CommitSealedPageVImpl(std::span<RPa
    return locators;
 }
 
-std::uint64_t ROOT::Experimental::Internal::RPageSinkFile::CommitClusterImpl()
+std::uint64_t ROOT::Experimental::Internal::RPageSinkFile::StageClusterImpl()
 {
    auto result = fNBytesCurrentCluster;
    fNBytesCurrentCluster = 0;
@@ -245,6 +245,7 @@ ROOT::Experimental::Internal::RPageSinkFile::CommitClusterGroupImpl(unsigned cha
 void ROOT::Experimental::Internal::RPageSinkFile::CommitDatasetImpl(unsigned char *serializedFooter,
                                                                     std::uint32_t length)
 {
+   fWriter->UpdateStreamerInfos(fDescriptorBuilder.BuildStreamerInfos());
    auto bufFooterZip = std::make_unique<unsigned char[]>(length);
    auto szFooterZip = fCompressor->Zip(serializedFooter, length, GetWriteOptions().GetCompression(),
                                        RNTupleCompressor::MakeMemCopyWriter(bufFooterZip.get()));
@@ -312,8 +313,10 @@ void ROOT::Experimental::Internal::RPageSourceFile::LoadStructureImpl()
 {
    // If we constructed the page source with (ntuple name, path), we need to find the anchor first.
    // Otherwise, the page source was created by OpenFromAnchor()
-   if (!fAnchor)
+   if (!fAnchor) {
       fAnchor = fReader.GetNTuple(fNTupleName).Unwrap();
+   }
+   fReader.SetMaxKeySize(fAnchor->GetMaxKeySize());
 
    // TOOD(jblomer): can the epoch check be factored out across anchors?
    if (fAnchor->GetVersionEpoch() != RNTuple::kVersionEpoch) {
@@ -446,8 +449,11 @@ ROOT::Experimental::Internal::RPageSourceFile::LoadPageImpl(ColumnHandle_t colum
 
    if (fOptions.GetClusterCache() == RNTupleReadOptions::EClusterCache::kOff) {
       directReadBuffer = std::unique_ptr<unsigned char[]>(new unsigned char[sealedPage.GetBufferSize()]);
-      fReader.ReadBuffer(directReadBuffer.get(), sealedPage.GetBufferSize(),
-                         pageInfo.fLocator.GetPosition<std::uint64_t>());
+      {
+         Detail::RNTupleAtomicTimer timer(fCounters->fTimeWallRead, fCounters->fTimeCpuRead);
+         fReader.ReadBuffer(directReadBuffer.get(), sealedPage.GetBufferSize(),
+                            pageInfo.fLocator.GetPosition<std::uint64_t>());
+      }
       fCounters->fNPageRead.Inc();
       fCounters->fNRead.Inc();
       fCounters->fSzReadPayload.Add(sealedPage.GetBufferSize());
@@ -557,6 +563,9 @@ ROOT::Experimental::Internal::RPageSourceFile::PrepareSingleCluster(
    const auto currentReadRequestIdx = readRequests.size();
 
    ROOT::Internal::RRawFile::RIOVec req;
+   // To simplify the first loop iteration, pretend an empty request starting at the first page's fOffset.
+   if (!onDiskPages.empty())
+      req.fOffset = onDiskPages[0].fOffset;
    std::size_t szPayload = 0;
    std::size_t szOverhead = 0;
    const std::uint64_t maxKeySize = fReader.GetMaxKeySize();
@@ -566,8 +575,8 @@ ROOT::Experimental::Internal::RPageSourceFile::PrepareSingleCluster(
       // Note: byte ranges of pages may overlap
       const std::uint64_t overhead = std::max(static_cast<std::int64_t>(s.fOffset) - readUpTo, std::int64_t(0));
       const std::uint64_t extent = std::max(static_cast<std::int64_t>(s.fOffset + s.fSize) - readUpTo, std::int64_t(0));
-      szPayload += extent;
       if (req.fSize + extent < maxKeySize && overhead <= gapCut) {
+         szPayload += (extent - overhead);
          szOverhead += overhead;
          s.fBufPos = reinterpret_cast<intptr_t>(req.fBuffer) + s.fOffset - req.fOffset;
          req.fSize += extent;
@@ -581,6 +590,7 @@ ROOT::Experimental::Internal::RPageSourceFile::PrepareSingleCluster(
       req.fBuffer = reinterpret_cast<unsigned char *>(req.fBuffer) + req.fSize;
       s.fBufPos = reinterpret_cast<intptr_t>(req.fBuffer);
 
+      szPayload += s.fSize;
       req.fOffset = s.fOffset;
       req.fSize = s.fSize;
    }

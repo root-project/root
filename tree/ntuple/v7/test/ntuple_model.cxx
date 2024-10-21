@@ -1,51 +1,99 @@
 #include "ntuple_test.hxx"
 
-TEST(RNTupleModel, Merge)
+TEST(RNTupleModel, EnforceValidFieldNames)
 {
-   auto model1 = RNTupleModel::Create();
-   model1->MakeField<int>("x");
+   auto model = RNTupleModel::Create();
 
-   auto model2 = RNTupleModel::Create();
-   model2->MakeField<std::vector<float>>("y");
-
+   // MakeField
    try {
-      ROOT::Experimental::Internal::MergeModels(*model1, *model2);
-      FAIL() << "cannot merge unfrozen models";
+      auto field3 = model->MakeField<float>("", 42.0);
+      FAIL() << "empty string as field name should throw";
    } catch (const RException &err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("invalid attempt to merge unfrozen models"));
+      EXPECT_THAT(err.what(), testing::HasSubstr("name cannot be empty string"));
+   }
+   try {
+      auto field3 = model->MakeField<float>("pt.pt", 42.0);
+      FAIL() << "field name with periods should throw";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("name 'pt.pt' cannot contain dot characters '.'"));
    }
 
-   model1->Freeze();
-   model2->Freeze();
+   // Previous failures to create 'pt' should not block the name
+   auto field = model->MakeField<float>("pt", 42.0);
 
-   auto mergedModel = ROOT::Experimental::Internal::MergeModels(*model1, *model2);
+   try {
+      auto field2 = model->MakeField<float>("pt", 42.0);
+      FAIL() << "repeated field names should throw";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("field name 'pt' already exists"));
+   }
 
-   EXPECT_EQ(mergedModel->GetField("x").GetQualifiedFieldName(), "x");
-   EXPECT_EQ(mergedModel->GetField("y").GetQualifiedFieldName(), "y");
+   // AddField
+   try {
+      model->AddField(std::make_unique<RField<float>>("pt"));
+      FAIL() << "repeated field names should throw";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("field name 'pt' already exists"));
+   }
 }
 
-TEST(RNTupleModel, MergeWithPrefix)
+TEST(RNTupleModel, FieldDescriptions)
 {
-   auto model1 = RNTupleModel::Create();
-   model1->MakeField<int>("x");
-   model1->Freeze();
+   FileRaii fileGuard("test_ntuple_field_descriptions.root");
+   auto model = RNTupleModel::Create();
 
-   auto model2 = RNTupleModel::Create();
-   model2->MakeField<int>("x");
-   model2->MakeField<std::vector<float>>("y");
-   model2->Freeze();
+   auto pt = model->MakeField<float>({"pt", "transverse momentum"}, 42.0);
 
-   try {
-      ROOT::Experimental::Internal::MergeModels(*model1, *model2);
-      FAIL() << "cannot merge models with fields containing the same name without providing a prefix";
-   } catch (const RException &err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("field name 'x' already exists in NTuple model"));
+   auto charge = std::make_unique<RField<float>>(RField<float>("charge"));
+   charge->SetDescription("electric charge");
+   model->AddField(std::move(charge));
+
+   {
+      RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
    }
 
-   auto mergedModel = ROOT::Experimental::Internal::MergeModels(*model1, *model2, "n");
+   auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   std::vector<std::string> fieldDescriptions;
+   for (auto &f : ntuple->GetDescriptor().GetTopLevelFields()) {
+      fieldDescriptions.push_back(f.GetFieldDescription());
+   }
+   ASSERT_EQ(2u, fieldDescriptions.size());
+   EXPECT_EQ(std::string("transverse momentum"), fieldDescriptions[0]);
+   EXPECT_EQ(std::string("electric charge"), fieldDescriptions[1]);
+}
 
-   EXPECT_EQ(mergedModel->GetField("x").GetQualifiedFieldName(), "x");
-   EXPECT_EQ(mergedModel->GetField("n.x").GetQualifiedFieldName(), "n.x");
+TEST(RNTupleModel, GetField)
+{
+   auto m = RNTupleModel::Create();
+   m->MakeField<int>("x");
+   m->MakeField<CustomStruct>("cs");
+   m->Freeze();
+   EXPECT_EQ(m->GetField("x").GetFieldName(), "x");
+   EXPECT_EQ(m->GetField("x").GetTypeName(), "std::int32_t");
+   EXPECT_EQ(m->GetField("cs.v1").GetFieldName(), "v1");
+   EXPECT_EQ(m->GetField("cs.v1").GetTypeName(), "std::vector<float>");
+   try {
+      m->GetField("nonexistent");
+      FAIL() << "invalid field name should throw";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("invalid field"));
+   }
+   try {
+      m->GetField("");
+      FAIL() << "empty field name should throw";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("invalid field"));
+   }
+   try {
+      m->GetMutableFieldZero();
+      FAIL() << "GetMutableFieldZero should throw";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("frozen model"));
+   }
+   EXPECT_EQ("", m->GetConstFieldZero().GetQualifiedFieldName());
+   EXPECT_EQ("x", m->GetField("x").GetQualifiedFieldName());
+   EXPECT_EQ("cs", m->GetField("cs").GetQualifiedFieldName());
+   EXPECT_EQ("cs.v1", m->GetField("cs.v1").GetQualifiedFieldName());
 }
 
 TEST(RNTupleModel, EstimateWriteMemoryUsage)
@@ -54,33 +102,64 @@ TEST(RNTupleModel, EstimateWriteMemoryUsage)
    auto customStructVec = model->MakeField<std::vector<CustomStruct>>("CustomStructVec");
 
    static constexpr std::size_t NumColumns = 10;
-   static constexpr std::size_t PageSize = 1234;
+   static constexpr std::size_t ColumnElementsSize = 8 + 4 + 8 + 4 + 8 + 8 + 4 + 8 + 1 + 1;
+   static constexpr std::size_t InitialNElementsPerPage = 1;
+   static constexpr std::size_t MaxPageSize = 100;
    static constexpr std::size_t ClusterSize = 6789;
    RNTupleWriteOptions options;
-   options.SetApproxUnzippedPageSize(PageSize);
+   options.SetInitialNElementsPerPage(InitialNElementsPerPage);
+   options.SetMaxUnzippedPageSize(MaxPageSize);
    options.SetApproxZippedClusterSize(ClusterSize);
 
    // Tail page optimization and buffered writing on, IMT not disabled.
-   static constexpr std::size_t Expected1 = NumColumns * 3 * PageSize * 2 + 3 * ClusterSize;
+   static constexpr std::size_t Expected1 = NumColumns * MaxPageSize + ColumnElementsSize + 3 * ClusterSize;
    EXPECT_EQ(model->EstimateWriteMemoryUsage(options), Expected1);
+
+   static constexpr std::size_t PageBufferBudget = 800;
+   options.SetPageBufferBudget(PageBufferBudget);
+   static constexpr std::size_t Expected2 = PageBufferBudget + ColumnElementsSize + 3 * ClusterSize;
+   EXPECT_EQ(model->EstimateWriteMemoryUsage(options), Expected2);
 
    // Disable IMT.
    options.SetUseImplicitMT(RNTupleWriteOptions::EImplicitMT::kOff);
-   static constexpr std::size_t Expected2 = NumColumns * 3 * PageSize * 2 + ClusterSize;
-   EXPECT_EQ(model->EstimateWriteMemoryUsage(options), Expected2);
+   static constexpr std::size_t Expected3 = PageBufferBudget + ColumnElementsSize + ClusterSize;
+   EXPECT_EQ(model->EstimateWriteMemoryUsage(options), Expected3);
 
    // Disable buffered writing.
    options.SetUseBufferedWrite(false);
-   static constexpr std::size_t Expected3 = NumColumns * 3 * PageSize;
-   EXPECT_EQ(model->EstimateWriteMemoryUsage(options), Expected3);
-
-   // Disable tail page optimization.
-   options.SetUseTailPageOptimization(false);
-   static constexpr std::size_t Expected4 = NumColumns * PageSize;
+   static constexpr std::size_t Expected4 = PageBufferBudget;
    EXPECT_EQ(model->EstimateWriteMemoryUsage(options), Expected4);
+}
 
-   // Enable buffered writing again.
-   options.SetUseBufferedWrite(true);
-   static constexpr std::size_t Expected5 = NumColumns * PageSize * 2 + ClusterSize;
-   EXPECT_EQ(model->EstimateWriteMemoryUsage(options), Expected5);
+TEST(RNTupleModel, Clone)
+{
+   auto model = RNTupleModel::Create();
+   model->MakeField<float>("f");
+   model->MakeField<std::vector<float>>("vec");
+   model->MakeField<CustomStruct>("struct");
+   model->MakeField<TObject>("obj");
+   model->MakeField<CustomEnumUInt32>("enum");
+
+   for (auto &f : model->GetMutableFieldZero()) {
+      if (f.GetTypeName() == "float") {
+         f.SetColumnRepresentatives({{EColumnType::kReal32}});
+      }
+      if (f.GetTypeName() == "std::uint32_t") {
+         f.SetColumnRepresentatives({{EColumnType::kUInt32}});
+      }
+   }
+
+   model->Freeze();
+   auto clone = model->Clone();
+
+   for (const auto &f : clone->GetConstFieldZero()) {
+      if (f.GetTypeName() == "float") {
+         EXPECT_EQ(EColumnType::kReal32, f.GetColumnRepresentatives()[0][0]);
+      }
+      if (f.GetTypeName() == "std::uint32_t") {
+         EXPECT_EQ(EColumnType::kUInt32, f.GetColumnRepresentatives()[0][0]);
+      }
+   }
+   EXPECT_TRUE(clone->GetField("struct").GetTraits() & RFieldBase::kTraitTypeChecksum);
+   EXPECT_TRUE(clone->GetField("obj").GetTraits() & RFieldBase::kTraitTypeChecksum);
 }

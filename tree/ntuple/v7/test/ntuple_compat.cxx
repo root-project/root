@@ -5,6 +5,10 @@
 #include "ROOT/EExecutionPolicy.hxx"
 #include "RXTuple.hxx"
 #include <gtest/gtest.h>
+#include <memory>
+#include <cstdio>
+
+#include "../src/RColumnElement.hxx"
 
 TEST(RNTupleCompat, Epoch)
 {
@@ -65,7 +69,7 @@ TEST(RNTupleCompat, FeatureFlag)
    }
 }
 
-TEST(RNTupleCompat, FwdCompat_FutureNTuple)
+TEST(RNTupleCompat, FwdCompat_FutureNTupleAnchor)
 {
    using ROOT::Experimental::RXTuple;
 
@@ -221,5 +225,218 @@ TEST(RNTupleCompat, NTupleV4)
       auto ntuple = reader.GetNTuple("myNTuple").Unwrap();
       EXPECT_EQ(ntuple.GetVersionMajor(), 2);
       EXPECT_EQ(ntuple.GetMaxKeySize(), 0);
+   }
+}
+
+template <>
+class ROOT::Experimental::RField<ROOT::Experimental::Internal::RTestFutureColumn> final
+   : public RSimpleField<ROOT::Experimental::Internal::RTestFutureColumn> {
+protected:
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
+   {
+      return std::make_unique<RField>(newName);
+   }
+   const RColumnRepresentations &GetColumnRepresentations() const final
+   {
+      static const RColumnRepresentations representations{{{kTestFutureType}}, {}};
+      return representations;
+   }
+
+public:
+   static std::string TypeName() { return "FutureColumn"; }
+   explicit RField(std::string_view name) : RSimpleField(name, TypeName()) {}
+   RField(RField &&other) = default;
+   RField &operator=(RField &&other) = default;
+   ~RField() override = default;
+};
+
+TEST(RNTupleCompat, FutureColumnType)
+{
+   // Write a RNTuple containing a field with an unknown column type and verify we can
+   // read back the ntuple and its descriptor.
+
+   FileRaii fileGuard("test_ntuple_compat_future_col_type.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto col = model->MakeField<ROOT::Experimental::Internal::RTestFutureColumn>("futureColumn");
+      auto colValid = model->MakeField<float>("float");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      col->dummy = 0x42424242;
+      *colValid = 69.f;
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   const auto &desc = reader->GetDescriptor();
+   const auto &fdesc = desc.GetFieldDescriptor(desc.FindFieldId("futureColumn"));
+   GTEST_ASSERT_EQ(fdesc.GetLogicalColumnIds().size(), 1);
+   const auto &cdesc = desc.GetColumnDescriptor(fdesc.GetLogicalColumnIds()[0]);
+   EXPECT_EQ(cdesc.GetType(), EColumnType::kUnknown);
+
+   {
+      // Creating a model not in fwd-compatible mode should fail
+      EXPECT_THROW(desc.CreateModel(), RException);
+   }
+
+   {
+      auto modelOpts = RNTupleDescriptor::RCreateModelOptions();
+      modelOpts.fForwardCompatible = true;
+      auto model = desc.CreateModel(modelOpts);
+
+      // The future column should not show up in the model
+      EXPECT_THROW(model->GetField("futureColumn"), RException);
+
+      const auto &floatFld = model->GetField("float");
+      EXPECT_EQ(floatFld.GetTypeName(), "float");
+
+      reader.reset();
+      reader = RNTupleReader::Open(std::move(model), "ntpl", fileGuard.GetPath());
+
+      auto floatId = reader->GetDescriptor().FindFieldId("float");
+      auto floatPtr = reader->GetView<float>(floatId);
+      EXPECT_FLOAT_EQ(floatPtr(0), 69.f);
+   }
+}
+
+TEST(RNTupleCompat, FutureColumnType_Nested)
+{
+   // Write a RNTuple containing a field with an unknown column type and verify we can
+   // read back the ntuple and its descriptor.
+
+   FileRaii fileGuard("test_ntuple_compat_future_col_type_nested.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      std::vector<std::unique_ptr<RFieldBase>> itemFields;
+      itemFields.emplace_back(new RField<std::vector<ROOT::Experimental::Internal::RTestFutureColumn>>("vec"));
+      auto field = std::make_unique<ROOT::Experimental::RRecordField>("future", std::move(itemFields));
+      model->AddField(std::move(field));
+      auto floatP = model->MakeField<float>("float");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      *floatP = 33.f;
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   const auto &desc = reader->GetDescriptor();
+   const auto futureId = desc.FindFieldId("future");
+   const auto &fdesc = desc.GetFieldDescriptor(desc.FindFieldId("vec._0", futureId));
+   GTEST_ASSERT_EQ(fdesc.GetLogicalColumnIds().size(), 1);
+   const auto &cdesc = desc.GetColumnDescriptor(fdesc.GetLogicalColumnIds()[0]);
+   EXPECT_EQ(cdesc.GetType(), EColumnType::kUnknown);
+
+   {
+      // Creating a model not in fwd-compatible mode should fail
+      EXPECT_THROW(desc.CreateModel(), RException);
+   }
+
+   {
+      auto modelOpts = RNTupleDescriptor::RCreateModelOptions();
+      modelOpts.fForwardCompatible = true;
+      auto model = desc.CreateModel(modelOpts);
+
+      // The future column should not show up in the model
+      EXPECT_THROW(model->GetField("future"), RException);
+
+      const auto &floatFld = model->GetField("float");
+      EXPECT_EQ(floatFld.GetTypeName(), "float");
+
+      reader.reset();
+      reader = RNTupleReader::Open(std::move(model), "ntpl", fileGuard.GetPath());
+
+      auto floatId = reader->GetDescriptor().FindFieldId("float");
+      auto floatPtr = reader->GetView<float>(floatId);
+      EXPECT_FLOAT_EQ(floatPtr(0), 33.f);
+   }
+}
+
+class RFutureField : public RFieldBase {
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
+   {
+      return std::make_unique<RFutureField>(newName);
+   };
+   void ConstructValue(void *) const final {}
+
+   std::size_t AppendImpl(const void *) final { return 0; }
+
+public:
+   RFutureField(std::string_view name)
+      : RFieldBase(name, "Future", ROOT::Experimental::Internal::kTestFutureFieldStructure, false)
+   {
+   }
+
+   std::size_t GetValueSize() const final { return 0; }
+   std::size_t GetAlignment() const final { return 0; }
+};
+
+TEST(RNTupleCompat, FutureFieldStructuralRole)
+{
+   // Write a RNTuple containing a field with an unknown structural role and verify we can
+   // read back the ntuple, its descriptor and reconstruct the model.
+
+   FileRaii fileGuard("test_ntuple_compat_future_field_struct.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto field = std::make_unique<RFutureField>("future");
+      model->AddField(std::move(field));
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   const auto &desc = reader->GetDescriptor();
+   const auto &fdesc = desc.GetFieldDescriptor(desc.FindFieldId("future"));
+   EXPECT_EQ(fdesc.GetLogicalColumnIds().size(), 0);
+
+   // Attempting to create a model with default options should fail
+   EXPECT_THROW(desc.CreateModel(), RException);
+
+   auto modelOpts = RNTupleDescriptor::RCreateModelOptions();
+   modelOpts.fForwardCompatible = true;
+   auto model = desc.CreateModel(modelOpts);
+   try {
+      model->GetField("future");
+      FAIL() << "trying to get a field with unknown role should fail";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("invalid field"));
+   }
+}
+
+TEST(RNTupleCompat, FutureFieldStructuralRole_Nested)
+{
+   // Write a RNTuple containing a field with an unknown structural role and verify we can
+   // read back the ntuple, its descriptor and reconstruct the model.
+
+   FileRaii fileGuard("test_ntuple_compat_future_field_struct_nested.root");
+   {
+      auto model = RNTupleModel::Create();
+      std::vector<std::unique_ptr<RFieldBase>> itemFields;
+      itemFields.emplace_back(new RField<int>("int"));
+      itemFields.emplace_back(new RFutureField("future"));
+      auto field = std::make_unique<ROOT::Experimental::RRecordField>("record", std::move(itemFields));
+      model->AddField(std::move(field));
+      model->MakeField<float>("float");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   const auto &desc = reader->GetDescriptor();
+   const auto &fdesc = desc.GetFieldDescriptor(desc.FindFieldId("record"));
+   EXPECT_EQ(fdesc.GetLogicalColumnIds().size(), 0);
+
+   // Attempting to create a model with default options should fail
+   EXPECT_THROW(desc.CreateModel(), RException);
+
+   auto modelOpts = RNTupleDescriptor::RCreateModelOptions();
+   modelOpts.fForwardCompatible = true;
+   auto model = desc.CreateModel(modelOpts);
+   const auto &floatFld = model->GetField("float");
+   EXPECT_EQ(floatFld.GetTypeName(), "float");
+   try {
+      model->GetField("record");
+      FAIL() << "trying to get a field with unknown role should fail";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("invalid field"));
    }
 }

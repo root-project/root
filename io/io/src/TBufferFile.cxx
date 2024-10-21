@@ -436,8 +436,14 @@ Int_t TBufferFile::CheckByteCount(UInt_t startpos, UInt_t bcnt, const char *clas
 /// Read a Float16_t from the buffer,
 /// see comments about Float16_t encoding at TBufferFile::WriteFloat16().
 
-void TBufferFile::ReadFloat16(Float_t *f, TStreamerElement *ele)
+void TBufferFile::ReadFloat16(Float_t *f, TStreamerElement *elem)
 {
+   // The parameter should be const, however we have not yet decided how to
+   // transition the signature since the function is virtual.  This ensures
+   // that the function does not inadvertently use non-const parts of
+   // TStreamerElement.
+   const TStreamerElement *ele = elem;
+
    if (ele && ele->GetFactor() != 0) {
       ReadWithFactor(f, ele->GetFactor(), ele->GetXmin());
    } else {
@@ -452,8 +458,14 @@ void TBufferFile::ReadFloat16(Float_t *f, TStreamerElement *ele)
 /// Read a Double32_t from the buffer,
 /// see comments about Double32_t encoding at TBufferFile::WriteDouble32().
 
-void TBufferFile::ReadDouble32(Double_t *d, TStreamerElement *ele)
+void TBufferFile::ReadDouble32(Double_t *d, TStreamerElement *elem)
 {
+   // The parameter should be const, however we have not yet decided how to
+   // transition the signature since the function is virtual.  This ensures
+   // that the function does not inadvertently use non-const parts of
+   // TStreamerElement.
+   const TStreamerElement *ele = elem;
+
    if (ele && ele->GetFactor() != 0) {
       ReadWithFactor(d, ele->GetFactor(), ele->GetXmin());
    } else {
@@ -594,8 +606,13 @@ void TBufferFile::ReadWithNbits(Double_t *ptr, Int_t nbits)
 ///  See example of use of the Float16_t data type in tutorial float16.C
 ///  \image html tbufferfile_double32.gif
 
-void TBufferFile::WriteFloat16(Float_t *f, TStreamerElement *ele)
+void TBufferFile::WriteFloat16(Float_t *f, TStreamerElement *elem)
 {
+   // The parameter should be const, however we have not yet decided how to
+   // transition the signature since the function is virtual.  This ensures
+   // that the function does not inadvertently use non-const parts of
+   // TStreamerElement.
+   const TStreamerElement *ele = elem;
 
    if (ele && ele->GetFactor() != 0) {
       //A range is specified. We normalize the double to the range and
@@ -658,8 +675,13 @@ void TBufferFile::WriteFloat16(Float_t *f, TStreamerElement *ele)
 ///  see example of use of the Double32_t data type in tutorial double32.C
 ///  \image html tbufferfile_double32.gif
 
-void TBufferFile::WriteDouble32(Double_t *d, TStreamerElement *ele)
+void TBufferFile::WriteDouble32(Double_t *d, TStreamerElement *elem)
 {
+   // The parameter should be const, however we have not yet decided how to
+   // transition the signature since the function is virtual.  This ensures
+   // that the function does not inadvertently use non-const parts of
+   // TStreamerElement.
+   const TStreamerElement *ele = elem;
 
    if (ele && ele->GetFactor() != 0) {
       //A range is specified. We normalize the double to the range and
@@ -1419,9 +1441,15 @@ void TBufferFile::ReadFastArray(Double_t *d, Int_t n)
 /// Read array of n floats (written as truncated float) from the I/O buffer.
 /// see comments about Float16_t encoding at TBufferFile::WriteFloat16
 
-void TBufferFile::ReadFastArrayFloat16(Float_t *f, Int_t n, TStreamerElement *ele)
+void TBufferFile::ReadFastArrayFloat16(Float_t *f, Int_t n, TStreamerElement *elem)
 {
    if (n <= 0 || 3*n > fBufSize) return;
+
+   // The parameter should be const, however we have not yet decided how to
+   // transition the signature since the function is virtual.  This ensures
+   // that the function does not inadvertently use non-const parts of
+   // TStreamerElement.
+   const TStreamerElement *ele = elem;
 
    if (ele && ele->GetFactor() != 0) {
       //a range was specified. We read an integer and convert it back to a float
@@ -1501,8 +1529,13 @@ void TBufferFile::ReadFastArrayWithNbits(Float_t *ptr, Int_t n, Int_t nbits)
 /// Read array of n doubles (written as float) from the I/O buffer.
 /// see comments about Double32_t encoding at TBufferFile::WriteDouble32
 
-void TBufferFile::ReadFastArrayDouble32(Double_t *d, Int_t n, TStreamerElement *ele)
+void TBufferFile::ReadFastArrayDouble32(Double_t *d, Int_t n, TStreamerElement *elem)
 {
+   // The parameter should be const, however we have not yet decided how to
+   // transition the signature since the function is virtual.  This ensures
+   // that the function does not inadvertently use non-const parts of
+   // TStreamerElement.
+   const TStreamerElement *ele = elem;
    if (n <= 0 || 3*n > fBufSize) return;
 
    if (ele && ele->GetFactor() != 0) {
@@ -2229,9 +2262,15 @@ void TBufferFile::WriteFastArray(const Double_t *d, Long64_t n)
 /// see comments about Float16_t encoding at TBufferFile::WriteFloat16
 /// \note Due to the current limit of the buffer size, the function aborts execution of the program in case of underflow or overflow. See https://github.com/root-project/root/issues/6734 for more details.
 
-void TBufferFile::WriteFastArrayFloat16(const Float_t *f, Long64_t n, TStreamerElement *ele)
+void TBufferFile::WriteFastArrayFloat16(const Float_t *f, Long64_t n, TStreamerElement *elem)
 {
    if (n == 0) return;
+
+   // The parameter should be const, however we have not yet decided how to
+   // transition the signature since the function is virtual.  This ensures
+   // that the function does not inadvertently use non-const parts of
+   // TStreamerElement.
+   const TStreamerElement *ele = elem;
 
    constexpr Int_t dataWidth = static_cast<Int_t>(sizeof(Float_t));
    const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;
@@ -2289,9 +2328,15 @@ void TBufferFile::WriteFastArrayFloat16(const Float_t *f, Long64_t n, TStreamerE
 /// see comments about Double32_t encoding at TBufferFile::WriteDouble32
 /// \note Due to the current limit of the buffer size, the function aborts execution of the program in case of underflow or overflow. See https://github.com/root-project/root/issues/6734 for more details.
 
-void TBufferFile::WriteFastArrayDouble32(const Double_t *d, Long64_t n, TStreamerElement *ele)
+void TBufferFile::WriteFastArrayDouble32(const Double_t *d, Long64_t n, TStreamerElement *elem)
 {
    if (n == 0) return;
+
+   // The parameter should be const, however we have not yet decided how to
+   // transition the signature since the function is virtual.  This ensures
+   // that the function does not inadvertently use non-const parts of
+   // TStreamerElement.
+   const TStreamerElement *ele = elem;
 
    constexpr Int_t dataWidth = static_cast<Int_t>(sizeof(Float_t));
    const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;

@@ -98,6 +98,7 @@ public:
 
 /** \class TWebCanvas
 \ingroup webgui6
+\ingroup webwidgets
 
 Basic TCanvasImp ABI implementation for Web-based Graphics
 Provides painting of main ROOT classes in web browsers using [JSROOT](https://root.cern/js/)
@@ -137,6 +138,45 @@ static std::vector<WebFont_t> gWebFonts;
 
 std::string TWebCanvas::gCustomScripts = {};
 std::vector<std::string> TWebCanvas::gCustomClasses = {};
+
+UInt_t TWebCanvas::gBatchImageMode = 0;
+std::string TWebCanvas::gBatchMultiPdf;
+std::vector<std::string> TWebCanvas::gBatchFiles;
+std::vector<std::string> TWebCanvas::gBatchJsons;
+std::vector<int> TWebCanvas::gBatchWidths;
+std::vector<int> TWebCanvas::gBatchHeights;
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+/// Configure batch image mode for web graphics.
+/// Allows to process many images with single headless browser invocation and increase performance of image production.
+/// When many canvases are stored as image in difference places, they first collected in batch and then processed when at least `n`
+/// images are prepared. Only then headless browser invoked and create all these images at once.
+/// This allows to significantly increase performance of image production in web mode
+
+void TWebCanvas::BatchImageMode(UInt_t n)
+{
+   gBatchImageMode = n;
+   if (gBatchImageMode <= gBatchJsons.size())
+      FlushBatchImages();
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+/// Flush batch images
+
+bool TWebCanvas::FlushBatchImages()
+{
+   bool res = true;
+
+   if (gBatchJsons.size() > 0)
+      res = ROOT::RWebDisplayHandle::ProduceImages(gBatchFiles, gBatchJsons, gBatchWidths, gBatchHeights);
+
+   gBatchFiles.clear();
+   gBatchJsons.clear();
+   gBatchWidths.clear();
+   gBatchHeights.clear();
+
+   return res;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
@@ -178,7 +218,7 @@ TWebCanvas::~TWebCanvas()
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
-/// Add font to static list of fonts upported by the canvas
+/// Add font to static list of fonts supported by the canvas
 /// Name specifies name of the font, second is font file with .ttf or .woff2 extension
 /// Only True Type Fonts (ttf) are supported by PDF
 /// Returns font index which can be used in
@@ -651,11 +691,19 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
       if (obj->InheritsFrom(THStack::Class())) {
          // workaround for THStack, create extra components before sending to client
          if (!opt.Contains("PADS") && !opt.Contains("SAME")) {
+            Bool_t do_rebuild_stack = kFALSE;
+
             auto hs = static_cast<THStack *>(obj);
+
+            if (!opt.Contains("NOSTACK") && !opt.Contains("CANDLE") && !opt.Contains("VIOLIN") && !IsReadOnly() && !fUsedObjs[hs]) {
+               do_rebuild_stack = kTRUE;
+               fUsedObjs[hs] = true;
+            }
+
             if (strlen(obj->GetTitle()) > 0)
                need_title = obj->GetTitle();
             TVirtualPad::TContext ctxt(pad, kFALSE);
-            hs->BuildPrimitives(iter.GetOption());
+            hs->BuildPrimitives(iter.GetOption(), do_rebuild_stack);
             has_histo = true;
             need_frame = true;
          }
@@ -976,12 +1024,8 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          TString hopt = iter.GetOption();
          hopt.ToLower();
          if (!hopt.Contains("nostack") && !hopt.Contains("candle") && !hopt.Contains("violin") && !hopt.Contains("pads")) {
-            if (!IsReadOnly() && !fUsedObjs[hs]) {
-               hs->Modified();
-               fUsedObjs[hs] = true;
-            }
             auto arr = hs->GetStack();
-            arr->SetName(hs->GetName()); // mark list
+            arr->SetName(hs->GetName()); // mark list for JS
             paddata.NewPrimitive(arr, "__ignore_drawing__").SetSnapshot(TWebSnapshot::kObject, arr);
          }
 
@@ -1832,11 +1876,18 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
       // create ROOT, PDF, ... files using native ROOT functionality
       Canvas()->Print(arg.c_str() + 8);
 
-   } else if (arg.compare(0, 9, "OPTIONS6:") == 0) {
+   } else if (arg.compare(0, 8, "GETMENU:") == 0) {
 
-      if (is_main_connection && !IsReadOnly())
-         if (DecodePadOptions(arg.substr(9), true))
-            CheckCanvasModified();
+      TObject *obj = FindPrimitive(arg.substr(8));
+      if (!obj)
+         obj = Canvas();
+
+      TWebMenuItems items(arg.c_str() + 8);
+      items.PopulateObjectMenu(obj, obj->IsA());
+      std::string buf = "MENU:";
+      buf.append(TBufferJSON::ToJSON(&items, 103).Data());
+
+      AddSendQueue(connid, buf);
 
    } else if (arg.compare(0, 11, "STATUSBITS:") == 0) {
 
@@ -1844,7 +1895,9 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
          AssignStatusBits(std::stoul(arg.substr(11)));
          if (fUpdatedSignal) fUpdatedSignal(); // invoke signal
       }
+
    } else if (arg.compare(0, 10, "HIGHLIGHT:") == 0) {
+
       if (is_main_connection) {
          auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(arg.substr(10));
          if (!arr || (arr->size() != 4)) {
@@ -1860,11 +1913,26 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
             }
          }
       }
+
    } else if (ROOT::RWebWindow::IsFileDialogMessage(arg)) {
 
       ROOT::RWebWindow::EmbedFileDialog(fWindow, connid, arg);
 
-   } else if (arg == "FITPANEL"s) {
+   } else if (IsReadOnly() || !is_main_connection) {
+
+      ///////////////////////////////////////////////////////////////////////////////////////
+      // all following messages are not allowed in readonly mode or for secondary connections
+
+      return kFALSE;
+
+   } else if (arg.compare(0, 9, "OPTIONS6:") == 0) {
+
+      if (DecodePadOptions(arg.substr(9), true))
+         CheckCanvasModified();
+
+   } else if (arg.compare(0, 9, "FITPANEL:") == 0) {
+
+      std::string chid = arg.substr(9);
 
       TH1 *hist = nullptr;
       TIter iter(Canvas()->GetListOfPrimitives());
@@ -1873,22 +1941,23 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
          if (hist) break;
       }
 
-      TString cmd = TString::Format("auto panel = std::make_shared<ROOT::Experimental::RFitPanel>(\"FitPanel\");"
-                                    "panel->AssignCanvas(\"%s\");"
-                                    "panel->AssignHistogram((TH1 *)0x%zx);"
-                                    "panel->Show();"
-                                    "panel->ClearOnClose(panel);", Canvas()->GetName(), (size_t) hist);
+      TString showcmd;
+      if (chid == "standalone")
+         showcmd = "panel->Show()";
+      else
+         showcmd = TString::Format("auto wptr = (std::shared_ptr<ROOT::RWebWindow>*)0x%zx;"
+                                   "panel->Show({*wptr, %u, %s})",
+                                   (size_t) &fWindow, connid, chid.c_str());
 
+      auto cmd = TString::Format("auto panel = std::make_shared<ROOT::Experimental::RFitPanel>(\"FitPanel\");"
+                                 "panel->AssignCanvas(\"%s\");"
+                                 "panel->AssignHistogram((TH1 *)0x%zx);"
+                                 "%s;panel->ClearOnClose(panel);",
+                                 Canvas()->GetName(), (size_t) hist, showcmd.Data());
       gROOT->ProcessLine(cmd.Data());
-
    } else if (arg == "START_BROWSER"s) {
 
       gROOT->ProcessLine("new TBrowser;");
-
-   } else if (IsReadOnly()) {
-
-      // all following messages are not allowed in readonly mode
-      return kFALSE;
 
    } else if (arg.compare(0, 6, "EVENT:") == 0) {
       auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(arg.substr(6));
@@ -1914,39 +1983,23 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
          }
       }
 
-   } else if (arg.compare(0, 8, "GETMENU:") == 0) {
-
-      TObject *obj = FindPrimitive(arg.substr(8));
-      if (!obj)
-         obj = Canvas();
-
-      TWebMenuItems items(arg.c_str() + 8);
-      items.PopulateObjectMenu(obj, obj->IsA());
-      std::string buf = "MENU:";
-      buf.append(TBufferJSON::ToJSON(&items, 103).Data());
-
-      AddSendQueue(connid, buf);
-
    } else if (arg.compare(0, 8, "PRIMIT6:") == 0) {
 
-      if (IsFirstConn(connid) && !IsReadOnly()) { // only first connection can modify object
+      auto opt = TBufferJSON::FromJSON<TWebObjectOptions>(arg.c_str() + 8);
 
-         auto opt = TBufferJSON::FromJSON<TWebObjectOptions>(arg.c_str() + 8);
+      if (opt) {
+         TPad *modpad = ProcessObjectOptions(*opt, nullptr);
 
-         if (opt) {
-            TPad *modpad = ProcessObjectOptions(*opt, nullptr);
-
-            // indicate that pad was modified
-            if (modpad)
-               modpad->Modified();
-         }
+         // indicate that pad was modified
+         if (modpad)
+            modpad->Modified();
       }
 
    } else if (arg.compare(0, 11, "PADCLICKED:") == 0) {
 
       auto click = TBufferJSON::FromJSON<TWebPadClick>(arg.c_str() + 11);
 
-      if (click && IsFirstConn(connid) && !IsReadOnly()) {
+      if (click) {
 
          TPad *pad = dynamic_cast<TPad *>(FindPrimitive(click->padid));
 
@@ -1993,7 +2046,7 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
      auto buf = arg.substr(8);
      auto pos = buf.find(":");
 
-     if ((pos > 0) && IsFirstConn(connid) && !IsReadOnly()) { // only first client can execute commands
+     if ((pos > 0) && (pos != std::string::npos)) {
         auto sid = buf.substr(0, pos);
         buf.erase(0, pos + 1);
 
@@ -2025,7 +2078,7 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
 
       auto pos = buf.find(":");
 
-      if ((pos > 0) && IsFirstConn(connid) && !IsReadOnly()) {
+      if (pos > 0) {
          // only first client can execute commands
          reply = buf.substr(0, pos);
          buf.erase(0, pos + 1);
@@ -2099,6 +2152,7 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
       }
 
    } else if (arg.compare(0, 8, "DRAWOPT:") == 0) {
+
       auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(arg.substr(8));
       if (arr && arr->size() == 2) {
          TObjLink *objlnk = nullptr;
@@ -2106,7 +2160,9 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
          if (objlnk)
             objlnk->SetOption(arr->at(1).c_str());
       }
+
    } else if (arg.compare(0, 8, "RESIZED:") == 0) {
+
       auto arr = TBufferJSON::FromJSON<std::vector<int>>(arg.substr(8));
       if (arr && arr->size() == 7) {
          // set members directly to avoid redrawing of the client again
@@ -2116,7 +2172,9 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
          arr->resize(4);
          SetWindowGeometry(*arr);
       }
+
    } else if (arg.compare(0, 7, "POPOBJ:") == 0) {
+
       auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(arg.substr(7));
       if (arr && arr->size() == 2) {
          TPad *pad = dynamic_cast<TPad *>(FindPrimitive(arr->at(0)));
@@ -2132,11 +2190,24 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
                }
          }
       }
+
+   } else if (arg.compare(0, 8, "SHOWURL:") == 0) {
+
+      ROOT::RWebDisplayArgs args;
+      args.SetUrl(arg.substr(8));
+      args.SetStandalone(false);
+
+      fHelpHandles.emplace_back(ROOT::RWebDisplayHandle::Display(args));
+
    } else if (arg == "INTERRUPT"s) {
+
       gROOT->SetInterrupt();
+
    } else {
+
       // unknown message, probably should be processed by other implementation
       return kFALSE;
+
    }
 
    return kTRUE;
@@ -2413,6 +2484,49 @@ bool TWebCanvas::ProduceImage(TPad *pad, const char *fileName, Int_t width, Int_
    if (!json.Length())
       return false;
 
+   TString fname = fileName;
+   const char *endings[4] = {"(", "[", "]", ")"};
+   const char *suffix = nullptr;
+   for (int n = 0; (n < 4) && !suffix; ++n) {
+      if (fname.EndsWith(endings[n])) {
+         fname.Resize(fname.Length() - 1);
+         suffix = endings[n];
+      }
+   }
+
+   Bool_t append_batch = kTRUE, flush_batch = kTRUE;
+
+   std::string fmt = ROOT::RWebDisplayHandle::GetImageFormat(fname.Data());
+   if (fmt.empty())
+      return false;
+
+   if (suffix) {
+      if (fmt != "pdf")
+         return false;
+      switch (*suffix) {
+         case '(': gBatchMultiPdf = fname.Data(); flush_batch = kFALSE; break;
+         case '[': gBatchMultiPdf = fname.Data(); append_batch = kFALSE; flush_batch = kFALSE; break;
+         case ']': gBatchMultiPdf.clear(); append_batch = kFALSE; break;
+         case ')': gBatchMultiPdf.clear(); fname.Append("+"); break;
+      }
+   } else if (fmt == "pdf") {
+      if (!gBatchMultiPdf.empty()) {
+         if (gBatchMultiPdf.compare(fileName) == 0) {
+            append_batch = kTRUE;
+            flush_batch = kFALSE;
+            suffix = "+"; // to let append to the batch
+            if ((gBatchFiles.size() > 0) && (gBatchFiles.back().compare(0, fname.Length(), fname.Data()) == 0))
+               fname.Append("+"); // .pdf+ means appending image to previous
+         } else {
+            ::Error("TWebCanvas::ProduceImage", "Cannot change PDF name when multi-page PDF active");
+            return false;
+         }
+      }
+   } else if (!gBatchMultiPdf.empty()) {
+      ::Error("TWebCanvas::ProduceImage", "Cannot produce other images when multi-page PDF active");
+      return false;
+   }
+
    if (!width && !height) {
       if ((pad->GetCanvas() == pad) || (pad->IsA() == TCanvas::Class())) {
          width = pad->GetWw();
@@ -2423,7 +2537,20 @@ bool TWebCanvas::ProduceImage(TPad *pad, const char *fileName, Int_t width, Int_
       }
    }
 
-   return ROOT::RWebDisplayHandle::ProduceImage(fileName, json.Data(), width, height);
+   if (!suffix && (!gBatchImageMode || (fmt == "s.pdf") || (fmt == "json") || (fmt == "s.png")))
+      return ROOT::RWebDisplayHandle::ProduceImage(fname.Data(), json.Data(), width, height);
+
+   if (append_batch) {
+      gBatchFiles.emplace_back(fname.Data());
+      gBatchJsons.emplace_back(json);
+      gBatchWidths.emplace_back(width);
+      gBatchHeights.emplace_back(height);
+   }
+
+   if (!flush_batch || (gBatchJsons.size() < gBatchImageMode))
+      return true;
+
+   return FlushBatchImages();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -2440,9 +2567,6 @@ bool TWebCanvas::ProduceImages(std::vector<TPad *> pads, const char *filename, I
 
    std::vector<std::string> jsons;
    std::vector<Int_t> widths, heights;
-
-   bool isMultiPdf = (strstr(filename, ".pdf") || strstr(filename, ".PDF")) && strstr(filename, "%");
-   bool is_multipdf_ok = true;
 
    for (unsigned n = 0; n < pads.size(); ++n) {
       auto pad = pads[n];
@@ -2463,21 +2587,26 @@ bool TWebCanvas::ProduceImages(std::vector<TPad *> pads, const char *filename, I
          }
       }
 
-      if (isMultiPdf) {
-         TString pdfname = TString::Format(filename, (int)n);
-         if (!ROOT::RWebDisplayHandle::ProduceImage(pdfname.Data(), json.Data(), w, h))
-            is_multipdf_ok = false;
-      } else {
-         jsons.emplace_back(json.Data());
-         widths.emplace_back(w);
-         heights.emplace_back(h);
-      }
+      jsons.emplace_back(json.Data());
+      widths.emplace_back(w);
+      heights.emplace_back(h);
    }
 
-   if (isMultiPdf)
-      return is_multipdf_ok;
+   std::string fmt = ROOT::RWebDisplayHandle::GetImageFormat(filename);
 
-   return ROOT::RWebDisplayHandle::ProduceImages(filename, jsons, widths, heights);
+   if (!gBatchImageMode || (fmt == "json") || (fmt == "s.png") || (fmt == "s.pdf"))
+      return ROOT::RWebDisplayHandle::ProduceImages(filename, jsons, widths, heights);
+
+   auto fnames = ROOT::RWebDisplayHandle::ProduceImagesNames(filename, jsons.size());
+
+   gBatchFiles.insert(gBatchFiles.end(), fnames.begin(), fnames.end());
+   gBatchJsons.insert(gBatchJsons.end(), jsons.begin(), jsons.end());
+   gBatchWidths.insert(gBatchWidths.end(), widths.begin(), widths.end());
+   gBatchHeights.insert(gBatchHeights.end(), heights.begin(), heights.end());
+   if (gBatchJsons.size() < gBatchImageMode)
+      return true;
+
+   return FlushBatchImages();
 }
 
 
@@ -2748,3 +2877,4 @@ TCanvasImp *TWebCanvas::NewCanvas(TCanvas *c, const char *name, Int_t x, Int_t y
 
    return imp;
 }
+

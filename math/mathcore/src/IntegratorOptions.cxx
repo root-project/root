@@ -49,7 +49,7 @@ namespace IntegMultiDim {
    static int gDefaultIntegrator = IntegrationMultiDim::kADAPTIVE;
    // by default do not use absolute tolerance in AdaptiveIntegration multidim.
    // If an absolute tolerance is given integration of shar peaks often failed
-   static double gDefaultAbsTolerance = 0.0;  
+   static double gDefaultAbsTolerance = 0.0;
    static double gDefaultRelTolerance = 1.E-09;
    static unsigned int gDefaultWKSize = 100000;
    static unsigned int gDefaultNCalls = 100000;
@@ -176,8 +176,7 @@ void BaseIntegratorOptions::SetExtraOptions(const IOptions & opt) {
 
 // implementation of non-static methods
 
-IntegratorOneDimOptions::IntegratorOneDimOptions(IOptions * opts):
-   BaseIntegratorOptions()
+IntegratorOneDimOptions::IntegratorOneDimOptions(IOptions * opts)
 {
    fWKSize       = IntegOneDim::gDefaultWKSize;
    fNCalls       = IntegOneDim::gDefaultNPoints;
@@ -283,8 +282,7 @@ IOptions * IntegratorOneDimOptions::FindDefault(const char * algo) {
 //Multi-dim integration options implementation
 /////////////////////////////////////////////////////////
 
-IntegratorMultiDimOptions::IntegratorMultiDimOptions(IOptions * opts):
-   BaseIntegratorOptions()
+IntegratorMultiDimOptions::IntegratorMultiDimOptions(IOptions * opts)
 {
    fWKSize       = IntegMultiDim::gDefaultWKSize;
    fNCalls       = IntegMultiDim::gDefaultNCalls;

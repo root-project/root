@@ -114,8 +114,17 @@ protected:
    PadClickedSignal_t fPadDblClickedSignal; ///<! signal emitted when simple mouse click performed on the pad
    ObjectSelectSignal_t fObjSelectSignal; ///<! signal emitted when new object selected in the pad
 
+   std::vector<std::unique_ptr<ROOT::RWebDisplayHandle>> fHelpHandles; ///<! array of handles for help widgets
+
    static std::string gCustomScripts;     ///<! custom JavaScript code or URL on JavaScript files to load before start drawing
    static std::vector<std::string> gCustomClasses;  ///<! list of custom classes, which can be delivered as is to client
+
+   static UInt_t gBatchImageMode;           ///<! configured batch size
+   static std::string gBatchMultiPdf;           ///<! name of current multi-page pdf file
+   static std::vector<std::string> gBatchFiles; ///<! file names for batch job
+   static std::vector<std::string> gBatchJsons; ///<! converted jsons batch job
+   static std::vector<int> gBatchWidths;   ///<! batch job widths
+   static std::vector<int> gBatchHeights;  ///<! batch job heights
 
    void Lock() override {}
    void Unlock() override {}
@@ -171,6 +180,8 @@ protected:
    void SetWindowGeometry(const std::vector<int> &arr);
 
    static std::string ProcessCustomScripts(bool batch);
+
+   static bool FlushBatchImages();
 
 public:
    TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height, Bool_t readonly = kTRUE);
@@ -259,6 +270,8 @@ public:
    static bool ProduceImage(TPad *pad, const char *filename, Int_t width = 0, Int_t height = 0);
 
    static bool ProduceImages(std::vector<TPad *> pads, const char *filename, Int_t width = 0, Int_t height = 0);
+
+   static void BatchImageMode(UInt_t n = 100);
 
    static TCanvasImp *NewCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height);
 

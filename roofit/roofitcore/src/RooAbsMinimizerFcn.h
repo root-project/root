@@ -16,8 +16,6 @@
 #define ROO_ABS_MINIMIZER_FCN
 
 #include "Math/IFunction.h"
-#include "Fit/ParameterSettings.h"
-#include "Fit/FitResult.h"
 
 #include "TMatrixDSym.h"
 
@@ -25,8 +23,6 @@
 #include "RooArgList.h"
 #include "RooMinimizer.h"
 #include "RooRealVar.h"
-
-#include <Fit/Fitter.h>
 
 #include <iostream>
 #include <fstream>
@@ -61,7 +57,7 @@ public:
    double &getOffset() const { return _funcOffset; }
 
    /// Put Minuit results back into RooFit objects.
-   void BackProp(const ROOT::Fit::FitResult &results);
+   void BackProp();
 
    /// RooMinimizer sometimes needs the name of the minimized function. Implement this in the derived class.
    virtual std::string getFunctionName() const = 0;
@@ -83,8 +79,6 @@ public:
    inline unsigned int NDim() const { return getNDim(); }
 
    void setOptimizeConst(Int_t flag);
-
-   std::vector<double> getParameterValues() const;
 
    bool SetPdfParamVal(int index, double value) const;
 

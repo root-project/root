@@ -14,10 +14,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <ROOT/RColumnElement.hxx>
+#include <ROOT/RColumnElementBase.hxx>
 #include <ROOT/RError.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleSerialize.hxx>
+#include <ROOT/RNTupleUtil.hxx>
+
+#include "RColumnElement.hxx"
 
 #include <RVersion.h>
 #include <TBufferFile.h>
@@ -32,6 +35,7 @@
 #include <cstring> // for memcpy
 #include <deque>
 #include <functional>
+#include <limits>
 #include <set>
 #include <unordered_map>
 
@@ -221,6 +225,8 @@ std::uint32_t SerializePhysicalColumn(const ROOT::Experimental::RColumnDescripto
    std::uint16_t flags = 0;
    if (columnDesc.IsDeferredColumn())
       flags |= RNTupleSerializer::kFlagDeferredColumn;
+   if (columnDesc.GetValueRange().has_value())
+      flags |= RNTupleSerializer::kFlagHasValueRange;
    std::int64_t firstElementIdx = columnDesc.GetFirstElementIndex();
    if (columnDesc.IsSuppressedDeferredColumn())
       firstElementIdx = -firstElementIdx;
@@ -228,6 +234,15 @@ std::uint32_t SerializePhysicalColumn(const ROOT::Experimental::RColumnDescripto
    pos += RNTupleSerializer::SerializeUInt16(columnDesc.GetRepresentationIndex(), *where);
    if (flags & RNTupleSerializer::kFlagDeferredColumn)
       pos += RNTupleSerializer::SerializeInt64(firstElementIdx, *where);
+   if (flags & RNTupleSerializer::kFlagHasValueRange) {
+      auto [min, max] = *columnDesc.GetValueRange();
+      std::uint64_t intMin, intMax;
+      static_assert(sizeof(min) == sizeof(intMin) && sizeof(max) == sizeof(intMax));
+      memcpy(&intMin, &min, sizeof(min));
+      memcpy(&intMax, &max, sizeof(max));
+      pos += RNTupleSerializer::SerializeUInt64(intMin, *where);
+      pos += RNTupleSerializer::SerializeUInt64(intMax, *where);
+   }
 
    pos += RNTupleSerializer::SerializeFramePostscript(buffer ? base : nullptr, pos - base);
 
@@ -258,7 +273,7 @@ std::uint32_t SerializeColumnsOfFields(const ROOT::Experimental::RNTupleDescript
 RResult<std::uint32_t> DeserializeColumn(const void *buffer, std::uint64_t bufSize,
                                          ROOT::Experimental::Internal::RColumnDescriptorBuilder &columnDesc)
 {
-   using EColumnType = ROOT::Experimental::EColumnType;
+   using ROOT::Experimental::EColumnType;
 
    auto base = reinterpret_cast<const unsigned char *>(buffer);
    auto bytes = base;
@@ -292,6 +307,17 @@ RResult<std::uint32_t> DeserializeColumn(const void *buffer, std::uint64_t bufSi
       if (fnFrameSizeLeft() < sizeof(std::uint64_t))
          return R__FAIL("column record frame too short");
       bytes += RNTupleSerializer::DeserializeInt64(bytes, firstElementIdx);
+   }
+   if (flags & RNTupleSerializer::kFlagHasValueRange) {
+      if (fnFrameSizeLeft() < 2 * sizeof(std::uint64_t))
+         return R__FAIL("field record frame too short");
+      std::uint64_t minInt, maxInt;
+      bytes += RNTupleSerializer::DeserializeUInt64(bytes, minInt);
+      bytes += RNTupleSerializer::DeserializeUInt64(bytes, maxInt);
+      double min, max;
+      memcpy(&min, &minInt, sizeof(min));
+      memcpy(&max, &maxInt, sizeof(max));
+      columnDesc.ValueRange(min, max);
    }
 
    columnDesc.FieldId(fieldId).BitsOnStorage(bitsOnStorage).Type(type).RepresentationIndex(representationIndex);
@@ -382,40 +408,56 @@ RResult<std::uint32_t> DeserializeExtraTypeInfo(const void *buffer, std::uint64_
    return frameSize;
 }
 
-std::uint32_t SerializeLocatorPayloadURI(const ROOT::Experimental::RNTupleLocator &locator, unsigned char *buffer)
+std::uint32_t SerializeLocatorPayloadLarge(const ROOT::Experimental::RNTupleLocator &locator, unsigned char *buffer)
 {
-   const auto &uri = locator.GetPosition<std::string>();
-   if (uri.length() >= (1 << 16))
-      throw ROOT::Experimental::RException(R__FAIL("locator too large"));
-   if (buffer)
-      memcpy(buffer, uri.data(), uri.length());
-   return uri.length();
+   if (buffer) {
+      RNTupleSerializer::SerializeUInt64(locator.fBytesOnStorage, buffer);
+      RNTupleSerializer::SerializeUInt64(locator.GetPosition<std::uint64_t>(), buffer + sizeof(std::uint64_t));
+   }
+   return sizeof(std::uint64_t) + sizeof(std::uint64_t);
 }
 
-void DeserializeLocatorPayloadURI(const unsigned char *buffer, std::uint32_t payloadSize,
-                                  ROOT::Experimental::RNTupleLocator &locator)
+void DeserializeLocatorPayloadLarge(const unsigned char *buffer, ROOT::Experimental::RNTupleLocator &locator)
 {
-   locator.fBytesOnStorage = 0;
-   auto &uri = locator.fPosition.emplace<std::string>();
-   uri.resize(payloadSize);
-   memcpy(uri.data(), buffer, payloadSize);
+   auto &data = locator.fPosition.emplace<std::uint64_t>();
+   RNTupleSerializer::DeserializeUInt64(buffer, locator.fBytesOnStorage);
+   RNTupleSerializer::DeserializeUInt64(buffer + sizeof(std::uint64_t), data);
 }
 
 std::uint32_t SerializeLocatorPayloadObject64(const ROOT::Experimental::RNTupleLocator &locator, unsigned char *buffer)
 {
    const auto &data = locator.GetPosition<ROOT::Experimental::RNTupleLocatorObject64>();
+   const uint32_t sizeofBytesOnStorage = (locator.fBytesOnStorage > std::numeric_limits<std::uint32_t>::max())
+                                            ? sizeof(std::uint64_t)
+                                            : sizeof(std::uint32_t);
    if (buffer) {
-      RNTupleSerializer::SerializeUInt32(locator.fBytesOnStorage, buffer);
-      RNTupleSerializer::SerializeUInt64(data.fLocation, buffer + sizeof(std::uint32_t));
+      if (sizeofBytesOnStorage == sizeof(std::uint32_t)) {
+         RNTupleSerializer::SerializeUInt32(locator.fBytesOnStorage, buffer);
+      } else {
+         RNTupleSerializer::SerializeUInt64(locator.fBytesOnStorage, buffer);
+      }
+      RNTupleSerializer::SerializeUInt64(data.fLocation, buffer + sizeofBytesOnStorage);
    }
-   return sizeof(std::uint32_t) + sizeof(std::uint64_t);
+   return sizeofBytesOnStorage + sizeof(std::uint64_t);
 }
 
-void DeserializeLocatorPayloadObject64(const unsigned char *buffer, ROOT::Experimental::RNTupleLocator &locator)
+void DeserializeLocatorPayloadObject64(const unsigned char *buffer, std::uint32_t sizeofLocatorPayload,
+                                       ROOT::Experimental::RNTupleLocator &locator)
 {
+   using ROOT::Experimental::RException;
+
    auto &data = locator.fPosition.emplace<ROOT::Experimental::RNTupleLocatorObject64>();
-   RNTupleSerializer::DeserializeUInt32(buffer, locator.fBytesOnStorage);
-   RNTupleSerializer::DeserializeUInt64(buffer + sizeof(std::uint32_t), data.fLocation);
+   if (sizeofLocatorPayload == 12) {
+      std::uint32_t bytesOnStorage;
+      RNTupleSerializer::DeserializeUInt32(buffer, bytesOnStorage);
+      locator.fBytesOnStorage = bytesOnStorage;
+      RNTupleSerializer::DeserializeUInt64(buffer + sizeof(std::uint32_t), data.fLocation);
+   } else if (sizeofLocatorPayload == 16) {
+      RNTupleSerializer::DeserializeUInt64(buffer, locator.fBytesOnStorage);
+      RNTupleSerializer::DeserializeUInt64(buffer + sizeof(std::uint64_t), data.fLocation);
+   } else {
+      throw RException(R__FAIL("invalid DAOS locator payload size: " + std::to_string(sizeofLocatorPayload)));
+   }
 }
 
 std::uint32_t SerializeAliasColumn(const ROOT::Experimental::RColumnDescriptor &columnDesc,
@@ -638,6 +680,7 @@ std::uint32_t
 ROOT::Experimental::Internal::RNTupleSerializer::SerializeColumnType(ROOT::Experimental::EColumnType type, void *buffer)
 {
    using EColumnType = ROOT::Experimental::EColumnType;
+
    switch (type) {
    case EColumnType::kIndex64: return SerializeUInt16(0x01, buffer);
    case EColumnType::kIndex32: return SerializeUInt16(0x02, buffer);
@@ -666,7 +709,12 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeColumnType(ROOT::Exper
    case EColumnType::kSplitUInt32: return SerializeUInt16(0x14, buffer);
    case EColumnType::kSplitInt16: return SerializeUInt16(0x1C, buffer);
    case EColumnType::kSplitUInt16: return SerializeUInt16(0x15, buffer);
-   default: throw RException(R__FAIL("ROOT bug: unexpected column type"));
+   case EColumnType::kReal32Trunc: return SerializeUInt16(0x1D, buffer);
+   case EColumnType::kReal32Quant: return SerializeUInt16(0x1E, buffer);
+   default:
+      if (type == kTestFutureType)
+         return SerializeUInt16(0x99, buffer);
+      throw RException(R__FAIL("ROOT bug: unexpected column type"));
    }
 }
 
@@ -677,7 +725,9 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeColumnType(const voi
    using EColumnType = ROOT::Experimental::EColumnType;
    std::uint16_t onDiskType;
    auto result = DeserializeUInt16(buffer, onDiskType);
+
    switch (onDiskType) {
+   case 0x00: return R__FAIL("unexpected on-disk column type");
    case 0x01: type = EColumnType::kIndex64; break;
    case 0x02: type = EColumnType::kIndex32; break;
    case 0x03: type = EColumnType::kSwitch; break;
@@ -705,7 +755,13 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeColumnType(const voi
    case 0x14: type = EColumnType::kSplitUInt32; break;
    case 0x1C: type = EColumnType::kSplitInt16; break;
    case 0x15: type = EColumnType::kSplitUInt16; break;
-   default: return R__FAIL("unexpected on-disk column type");
+   case 0x1D: type = EColumnType::kReal32Trunc; break;
+   case 0x1E: type = EColumnType::kReal32Quant; break;
+   // case 0x99 => kTestFutureType missing on purpose
+   default:
+      // may be a column type introduced by a future version
+      type = EColumnType::kUnknown;
+      break;
    }
    return result;
 }
@@ -721,6 +777,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeFieldStructure(ROOT::E
    case ENTupleStructure::kRecord: return SerializeUInt16(0x02, buffer);
    case ENTupleStructure::kVariant: return SerializeUInt16(0x03, buffer);
    case ENTupleStructure::kUnsplit: return SerializeUInt16(0x04, buffer);
+   case ROOT::Experimental::Internal::kTestFutureFieldStructure: return SerializeUInt16(0x99, buffer);
    default: throw RException(R__FAIL("ROOT bug: unexpected field structure type"));
    }
 }
@@ -737,7 +794,8 @@ RResult<std::uint32_t> ROOT::Experimental::Internal::RNTupleSerializer::Deserial
    case 0x02: structure = ENTupleStructure::kRecord; break;
    case 0x03: structure = ENTupleStructure::kVariant; break;
    case 0x04: structure = ENTupleStructure::kUnsplit; break;
-   default: return R__FAIL("unexpected on-disk field structure value");
+   // case 0x99 => kTestFutureFieldStructure intentionally missing
+   default: structure = ENTupleStructure::kUnknown;
    }
    return result;
 }
@@ -972,24 +1030,30 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeLocator(const RNTupleL
       throw RException(R__FAIL("locator is not serializable"));
 
    std::uint32_t size = 0;
-   if (locator.fType == RNTupleLocator::kTypeFile) {
-      if (static_cast<std::int32_t>(locator.fBytesOnStorage) < 0)
-         throw RException(R__FAIL("locator too large"));
+   if ((locator.fType == RNTupleLocator::kTypeFile) &&
+       (locator.fBytesOnStorage <= std::numeric_limits<std::int32_t>::max())) {
       size += SerializeUInt32(locator.fBytesOnStorage, buffer);
       size += SerializeUInt64(locator.GetPosition<std::uint64_t>(),
                               buffer ? reinterpret_cast<unsigned char *>(buffer) + size : nullptr);
       return size;
    }
 
+   std::uint8_t locatorType = 0;
    auto payloadp = buffer ? reinterpret_cast<unsigned char *>(buffer) + sizeof(std::int32_t) : nullptr;
    switch (locator.fType) {
-   case RNTupleLocator::kTypeURI: size += SerializeLocatorPayloadURI(locator, payloadp); break;
-   case RNTupleLocator::kTypeDAOS: size += SerializeLocatorPayloadObject64(locator, payloadp); break;
+   case RNTupleLocator::kTypeFile:
+      size += SerializeLocatorPayloadLarge(locator, payloadp);
+      locatorType = 0x01;
+      break;
+   case RNTupleLocator::kTypeDAOS:
+      size += SerializeLocatorPayloadObject64(locator, payloadp);
+      locatorType = 0x02;
+      break;
    default: throw RException(R__FAIL("locator has unknown type"));
    }
    std::int32_t head = sizeof(std::int32_t) + size;
    head |= locator.fReserved << 16;
-   head |= static_cast<int>(locator.fType & 0x7F) << 24;
+   head |= static_cast<int>(locatorType & 0x7F) << 24;
    head = -head;
    size += RNTupleSerializer::SerializeInt32(head, buffer);
    return size;
@@ -1013,11 +1077,17 @@ RResult<std::uint32_t> ROOT::Experimental::Internal::RNTupleSerializer::Deserial
       const std::uint32_t payloadSize = (static_cast<std::uint32_t>(head) & 0x0000FFFF) - sizeof(std::int32_t);
       if (bufSize < payloadSize)
          return R__FAIL("too short locator");
-      locator.fType = static_cast<RNTupleLocator::ELocatorType>(type);
+
       locator.fReserved = static_cast<std::uint32_t>(head >> 16) & 0xFF;
       switch (type) {
-      case RNTupleLocator::kTypeURI: DeserializeLocatorPayloadURI(bytes, payloadSize, locator); break;
-      case RNTupleLocator::kTypeDAOS: DeserializeLocatorPayloadObject64(bytes, locator); break;
+      case 0x01:
+         locator.fType = RNTupleLocator::kTypeFile;
+         DeserializeLocatorPayloadLarge(bytes, locator);
+         break;
+      case 0x02:
+         locator.fType = RNTupleLocator::kTypeDAOS;
+         DeserializeLocatorPayloadObject64(bytes, payloadSize, locator);
+         break;
       default: return R__FAIL("unsupported locator type: " + std::to_string(type));
       }
       bytes += payloadSize;
@@ -1062,6 +1132,10 @@ std::uint32_t
 ROOT::Experimental::Internal::RNTupleSerializer::SerializeClusterSummary(const RClusterSummary &clusterSummary,
                                                                          void *buffer)
 {
+   if (clusterSummary.fNEntries >= (static_cast<std::uint64_t>(1) << 56)) {
+      throw RException(R__FAIL("number of entries in cluster exceeds maximum of 2^56"));
+   }
+
    auto base = reinterpret_cast<unsigned char *>(buffer);
    auto pos = base;
    void **where = (buffer == nullptr) ? &buffer : reinterpret_cast<void **>(&pos);
@@ -1069,12 +1143,10 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeClusterSummary(const R
    auto frame = pos;
    pos += SerializeRecordFramePreamble(*where);
    pos += SerializeUInt64(clusterSummary.fFirstEntry, *where);
-   if (clusterSummary.fColumnGroupID >= 0) {
-      pos += SerializeInt64(-static_cast<int64_t>(clusterSummary.fNEntries), *where);
-      pos += SerializeUInt32(clusterSummary.fColumnGroupID, *where);
-   } else {
-      pos += SerializeInt64(static_cast<int64_t>(clusterSummary.fNEntries), *where);
-   }
+   const std::uint64_t nEntriesAndFlags =
+      (static_cast<std::uint64_t>(clusterSummary.fFlags) << 56) | clusterSummary.fNEntries;
+   pos += SerializeUInt64(nEntriesAndFlags, *where);
+
    auto size = pos - frame;
    pos += SerializeFramePostscript(frame, size);
    return size;
@@ -1097,20 +1169,18 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeClusterSummary(const
       return R__FAIL("too short cluster summary");
 
    bytes += DeserializeUInt64(bytes, clusterSummary.fFirstEntry);
-   std::int64_t nEntries;
-   bytes += DeserializeInt64(bytes, nEntries);
+   std::uint64_t nEntriesAndFlags;
+   bytes += DeserializeUInt64(bytes, nEntriesAndFlags);
 
-   if (nEntries < 0) {
-      if (fnFrameSizeLeft() < sizeof(std::uint32_t))
-         return R__FAIL("too short cluster summary");
-      clusterSummary.fNEntries = -nEntries;
-      std::uint32_t columnGroupID;
-      bytes += DeserializeUInt32(bytes, columnGroupID);
-      clusterSummary.fColumnGroupID = columnGroupID;
-   } else {
-      clusterSummary.fNEntries = nEntries;
-      clusterSummary.fColumnGroupID = -1;
+   const std::uint64_t nEntries = (nEntriesAndFlags << 8) >> 8;
+   const std::uint8_t flags = nEntriesAndFlags >> 56;
+
+   if (flags & 0x01) {
+      return R__FAIL("sharded cluster flag set in cluster summary; sharded clusters are currently unsupported.");
    }
+
+   clusterSummary.fNEntries = nEntries;
+   clusterSummary.fFlags = flags;
 
    return frameSize;
 }
@@ -1190,14 +1260,11 @@ void ROOT::Experimental::Internal::RNTupleSerializer::RContext::MapSchema(const 
    }
    depthFirstTraversal(fieldTrees, [&](DescriptorId_t fieldId) { MapFieldId(fieldId); });
    depthFirstTraversal(fieldTrees, [&](DescriptorId_t fieldId) {
-      for (const auto &c : desc.GetColumnIterable(fieldId))
-         if (!c.IsAliasColumn())
-            MapColumnId(c.GetLogicalId());
-   });
-   depthFirstTraversal(fieldTrees, [&](DescriptorId_t fieldId) {
-      for (const auto &c : desc.GetColumnIterable(fieldId))
-         if (c.IsAliasColumn())
-            MapColumnId(c.GetLogicalId());
+      for (const auto &c : desc.GetColumnIterable(fieldId)) {
+         if (!c.IsAliasColumn()) {
+            MapPhysicalColumnId(c.GetPhysicalId());
+         }
+      }
    });
 
    if (forHeaderExtension) {
@@ -1206,13 +1273,7 @@ void ROOT::Experimental::Internal::RNTupleSerializer::RContext::MapSchema(const 
       for (auto memId : desc.GetHeaderExtension()->GetExtendedColumnRepresentations()) {
          const auto &columnDesc = desc.GetColumnDescriptor(memId);
          if (!columnDesc.IsAliasColumn()) {
-            MapColumnId(columnDesc.GetLogicalId());
-         }
-      }
-      for (auto memId : desc.GetHeaderExtension()->GetExtendedColumnRepresentations()) {
-         const auto &columnDesc = desc.GetColumnDescriptor(memId);
-         if (columnDesc.IsAliasColumn()) {
-            MapColumnId(columnDesc.GetLogicalId());
+            MapPhysicalColumnId(columnDesc.GetPhysicalId());
          }
       }
    } else {
@@ -1353,7 +1414,11 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeSchemaDescription(co
    if (!result)
       return R__FORWARD_ERROR(result);
    bytes += result.Unwrap();
-   const std::uint32_t columnIdRangeBegin = descBuilder.GetDescriptor().GetNLogicalColumns();
+
+   if (descBuilder.GetDescriptor().GetNLogicalColumns() > descBuilder.GetDescriptor().GetNPhysicalColumns())
+      descBuilder.ShiftAliasColumns(nColumns);
+
+   const std::uint32_t columnIdRangeBegin = descBuilder.GetDescriptor().GetNPhysicalColumns();
    for (unsigned i = 0; i < nColumns; ++i) {
       std::uint32_t columnId = columnIdRangeBegin + i;
       RColumnDescriptorBuilder columnBuilder;
@@ -1380,7 +1445,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeSchemaDescription(co
    if (!result)
       return R__FORWARD_ERROR(result);
    bytes += result.Unwrap();
-   const std::uint32_t aliasColumnIdRangeBegin = columnIdRangeBegin + nColumns;
+   const std::uint32_t aliasColumnIdRangeBegin = descBuilder.GetDescriptor().GetNLogicalColumns();
    for (unsigned i = 0; i < nAliasColumns; ++i) {
       std::uint32_t physicalId;
       std::uint32_t fieldId;
@@ -1393,6 +1458,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeSchemaDescription(co
       columnBuilder.LogicalColumnId(aliasColumnIdRangeBegin + i).PhysicalColumnId(physicalId).FieldId(fieldId);
       const auto &physicalColumnDesc = descBuilder.GetDescriptor().GetColumnDescriptor(physicalId);
       columnBuilder.BitsOnStorage(physicalColumnDesc.GetBitsOnStorage());
+      columnBuilder.ValueRange(physicalColumnDesc.GetValueRange());
       columnBuilder.Type(physicalColumnDesc.GetType());
       columnBuilder.RepresentationIndex(physicalColumnDesc.GetRepresentationIndex());
       columnBuilder.Index(fnNextColumnIndex(columnBuilder.GetFieldId(), columnBuilder.GetRepresentationIndex()));
@@ -1477,7 +1543,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializePageList(void *buffer,
    pos += SerializeListFramePreamble(nClusters, *where);
    for (auto clusterId : physClusterIDs) {
       const auto &clusterDesc = desc.GetClusterDescriptor(context.GetMemClusterId(clusterId));
-      RClusterSummary summary{clusterDesc.GetFirstEntryIndex(), clusterDesc.GetNEntries(), -1};
+      RClusterSummary summary{clusterDesc.GetFirstEntryIndex(), clusterDesc.GetNEntries(), 0};
       pos += SerializeClusterSummary(summary, *where);
    }
    pos += SerializeFramePostscript(buffer ? clusterSummaryFrame : nullptr, pos - clusterSummaryFrame);
@@ -1568,11 +1634,6 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeFooter(void *buffer,
       clusterGroup.fPageListEnvelopeLink.fLocator = cgDesc.GetPageListLocator();
       pos += SerializeClusterGroup(clusterGroup, *where);
    }
-   pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
-
-   // So far no support for meta-data
-   frame = pos;
-   pos += SerializeListFramePreamble(0, *where);
    pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
 
    std::uint32_t size = pos - base;
@@ -1718,15 +1779,6 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeFooter(const void *b
    }
    bytes = frame + frameSize;
 
-   std::uint32_t nMDBlocks;
-   frame = bytes;
-   result = DeserializeFrameHeader(bytes, fnBufSizeLeft(), frameSize, nMDBlocks);
-   if (!result)
-      return R__FORWARD_ERROR(result);
-   if (nMDBlocks > 0)
-      R__LOG_WARNING(NTupleLog()) << "meta-data blocks are still unsupported";
-   bytes = frame + frameSize;
-
    return RResult<void>::Success();
 }
 
@@ -1773,8 +1825,6 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializePageList(const void 
       if (!result)
          return R__FORWARD_ERROR(result);
       bytes += result.Unwrap();
-      if (clusterSummary.fColumnGroupID >= 0)
-         return R__FAIL("sharded clusters are still unsupported");
 
       RClusterDescriptorBuilder builder;
       builder.ClusterId(clusterId).FirstEntryIndex(clusterSummary.fFirstEntry).NEntries(clusterSummary.fNEntries);

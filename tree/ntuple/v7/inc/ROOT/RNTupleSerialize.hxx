@@ -70,14 +70,15 @@ public:
    static constexpr std::uint16_t kFlagHasTypeChecksum = 0x04;
 
    static constexpr std::uint16_t kFlagDeferredColumn = 0x08;
+   static constexpr std::uint16_t kFlagHasValueRange = 0x10;
 
    static constexpr DescriptorId_t kZeroFieldId = std::uint64_t(-2);
 
    static constexpr int64_t kSuppressedColumnMarker = std::numeric_limits<std::int64_t>::min();
 
    // In the page sink and the unsplit field, the seen streamer infos are stored in a map
-   // with the unique streamer info number being the key.
-   using StreamerInfoMap_t = std::unordered_map<Int_t, TVirtualStreamerInfo *>;
+   // with the unique streamer info number being the key. Sorted by unique number.
+   using StreamerInfoMap_t = std::map<Int_t, TVirtualStreamerInfo *>;
 
    struct REnvelopeLink {
       std::uint64_t fLength = 0;
@@ -87,8 +88,7 @@ public:
    struct RClusterSummary {
       std::uint64_t fFirstEntry = 0;
       std::uint64_t fNEntries = 0;
-      /// -1 for "all columns"
-      std::int32_t fColumnGroupID = -1;
+      std::uint8_t fFlags = 0;
    };
 
    struct RClusterGroup {
@@ -131,7 +131,11 @@ public:
       }
       /// Map an in-memory column ID to its on-disk counterpart. It is allowed to call this function multiple times for
       /// the same `memId`, in which case the return value is the on-disk ID assigned on the first call.
-      DescriptorId_t MapColumnId(DescriptorId_t memId) {
+      /// Note that we only map physical column IDs.  Logical column IDs of alias columns are shifted before the
+      /// serialization of the extension header.  Also, we only need to query physical column IDs for the page list
+      /// serialization.
+      DescriptorId_t MapPhysicalColumnId(DescriptorId_t memId)
+      {
          auto onDiskId = fOnDisk2MemColumnIDs.size();
          const auto &p = fMem2OnDiskColumnIDs.try_emplace(memId, onDiskId);
          if (p.second)

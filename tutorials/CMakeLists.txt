@@ -35,6 +35,12 @@ else()                       # testing using an installation
   enable_testing()
 endif()
 
+# Set the environment for the tutorials, which is the eventual ROOT_environ
+# plus some environment variables related to limiting the number of threads
+# used by NumPy.
+# See: https://stackoverflow.com/questions/30791550/limit-number-of-threads-in-numpy
+set(TUTORIAL_ENV ${ROOT_environ} OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1)
+
 #---Copy the CTestCustom.cmake file into the build directory--------
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/CTestCustom.cmake ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
 
@@ -55,14 +61,6 @@ Rint.History:  .root_hist
 ACLiC.LinkLibs:  1
 ")
 
-#---Definition of the helper function--------------------------------
-function(ROOT_ADD_TUTORIAL macrofile rc)
-  string(REPLACE ".C" "" name ${macrofile})
-  string(REPLACE "/" "-" name ${name})
-  ROOT_ADD_TEST(tutorial-${name} COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/${macrofile}
-                PASSRC ${rc} FAILREGEX "Error in" "error:" "warning: Failed to call" LABELS tutorial)
-endfunction()
-
 #---Tutorials that need substantial network to work------------------
 set(need_network dataframe/df027_SQliteDependencyOverVersion.C)
 
@@ -77,12 +75,20 @@ if(NOT clad)
   )
 endif()
 
-# RBatchGenerator tutorials don't work on Windows at the moment.
 if(MSVC AND NOT win_broken_tests)
+  # RBatchGenerator tutorials don't work on Windows at the moment.
   list(APPEND dataframe_veto tmva/RBatchGenerator_NumPy.py)
   list(APPEND dataframe_veto tmva/RBatchGenerator_TensorFlow.py)
   list(APPEND dataframe_veto tmva/RBatchGenerator_PyTorch.py)
   list(APPEND dataframe_veto tmva/RBatchGenerator_filters_vectors.py)
+  # df036* and df037* seem to trigger OS errors when trying to delete the
+  # test files created in the tutorials. It is unclear why.
+  list(APPEND dataframe_veto dataframe/df036_missingBranches.C)
+  list(APPEND dataframe_veto dataframe/df036_missingBranches.py)
+  list(APPEND dataframe_veto dataframe/df037_TTreeEventMatching.C)
+  list(APPEND dataframe_veto dataframe/df037_TTreeEventMatching.py)
+  # The RooFit SBI tutorials fail on Windows for unknown reasons
+  list(APPEND roofit_veto roofit/rf615_simulation_based_inference.py roofit/rf617_simulation_based_inference_multidimensional.py)
 endif()
 
 if (NOT dataframe)
@@ -118,6 +124,10 @@ if(MACOSX_VERSION VERSION_EQUAL 10.13)
    list(APPEND dataframe_veto dataframe/df103_NanoAODHiggsAnalysis.*)
 endif()
 
+if(NOT geom)
+  set(geom_veto geom/*.C)
+endif()
+
 if(NOT ROOT_proof_FOUND)
    set(proof_veto roostats/StandardFrequentistDiscovery.C)
 endif()
@@ -136,8 +146,6 @@ else()
     # IncrementalExecutor::executeFunction: symbol '__std_find_trivial_4@12' unresolved while linking [cling interface function]!
     # on Windows 32 bit and Visual Studio v17.8
     list(APPEND roofit_veto roofit/rf509_wsinteractive.C roofit/rf614_binned_fit_problems.C)
-    # The next tutorial uses scikit-learn, which is not available on Windows 32 bit
-    list(APPEND roofit_veto roofit/rf615_simulation_based_inference.py)
     # The following tutorial fails with a segfault (see #15364)
     list(APPEND roofit_veto roostats/rs101_limitexample.py)
   endif()
@@ -177,6 +185,7 @@ if(NOT xrootd)
                   dataframe/df105_WBosonAnalysis.py
                   dataframe/df106_HiggsToFourLeptons.py
                   dataframe/df107_SingleTopAnalysis.py
+                  roofit/rf618_mixture_models.py # depends on df106_HiggsToFourLeptons.py
                   rcanvas/df104.py
                   rcanvas/df105.py
                   )
@@ -270,7 +279,12 @@ set(gui_veto fit/fitpanel_playback.C
              roostats/ModelInspector.C
              tree/tvdemo.C
              eve/*.C
-             webgui/panel/server.cxx webgui/webwindow/server.cxx)
+             webgui/geom/geom_threejs.cxx
+             webgui/panel/webpanel.cxx
+             webgui/webwindow/webwindow.cxx)
+if (NOT webgui)
+  list(APPEND gui_veto graphics/save_batch.C rcanvas/df104.py rcanvas/df105.py)
+endif()
 
 if (NOT ROOT_tmva_FOUND)
   list(APPEND tmva_veto tmva/*.C tmva/*.py tmva/envelope/*.C tmva/keras/*.C tmva/keras/*.py tmva/pytorch/*.py )
@@ -310,7 +324,6 @@ else()
   list(APPEND tmva_veto tmva/TMVA_SOFIE_GNN_Parser.py)
   if (NOT PY_SONNET_FOUND OR NOT PY_GRAPH_NETS_FOUND)
     list(APPEND tmva_veto tmva/TMVA_SOFIE_GNN.py)
-    list(APPEND tmva_veto tmva/TMVA_SOFIE_GNN_Parser.py)
     list(APPEND tmva_veto tmva/TMVA_SOFIE_GNN_Application.C)
   endif()
   if (NOT tmva-sofie)
@@ -327,10 +340,10 @@ if (NOT ROOT_pythia8_FOUND)
 else()
   if("$ENV{PYTHIA8}" STREQUAL "")
     get_filename_component(pythia8dir "${PYTHIA8_INCLUDE_DIR}" DIRECTORY)
-    list(APPEND ROOT_environ PYTHIA8=${pythia8dir})
+    list(APPEND TUTORIAL_ENV PYTHIA8=${pythia8dir})
   endif()
   if("$ENV{PYTHIA8DATA}" STREQUAL "" AND PYTHIA8_DATA)
-    list(APPEND ROOT_environ PYTHIA8DATA=${PYTHIA8_DATA})
+    list(APPEND TUTORIAL_ENV PYTHIA8DATA=${PYTHIA8_DATA})
   endif()
 endif()
 
@@ -443,6 +456,7 @@ set(all_veto hsimple.C
              ${tbb_veto}
              ${imt_veto}
              ${classic_veto}
+             ${geom_veto}
              ${pythia_veto}
              ${vecgeom_veto}
              ${root7_veto}
@@ -455,6 +469,10 @@ set(all_veto hsimple.C
              )
 
 file(GLOB_RECURSE tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.C)
+if(webgui)
+  file(GLOB_RECURSE tutorials_webcanv RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} webcanv/*.cxx)
+  list(APPEND tutorials ${tutorials_webcanv})
+endif()
 if(root7 AND webgui)
   file(GLOB_RECURSE tutorials_v7 RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} v7/*.cxx)
   list(APPEND tutorials ${tutorials_v7})
@@ -578,9 +596,6 @@ if (PY_KERAS_FOUND)
   set (tmva-keras-ApplicationRegressionKeras-depends tutorial-tmva-keras-RegressionKeras-py)
   set (tmva-keras-ApplicationClassificationKeras-depends tutorial-tmva-keras-ClassificationKeras-py)
 endif()
-#if (PY_SONNET_FOUND AND PY_GRAPH_NETS_FOUND)
-#   set (tmva-TMVA_SOFIE_GNN_Application-depends tutorial-tmva-TMVA_SOFIE_GNN_Parser-py)
-#endif()
 
 #--List long-running tutorials to label them as "longtest"
 set (long_running
@@ -611,14 +626,17 @@ file(GLOB multithreaded RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${multithreaded})
 
 #---Define the primordial tutorials-----------------------------------
 ROOT_ADD_TEST(tutorial-hsimple COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/hsimple.C
-                PASSRC 255 FAILREGEX "Error in" "error:" "warning: Failed to call" LABELS tutorial)
-ROOT_ADD_TEST(tutorial-geom-geometry COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/geom/geometry.C
-                FAILREGEX "Error in" "error:" "warning: Failed to call" LABELS tutorial)
+    PASSRC 255 FAILREGEX "Error in" "error:" "warning: Failed to call" LABELS tutorial ENVIRONMENT ${TUTORIAL_ENV})
+if(ROOT_geom_FOUND)
+  ROOT_ADD_TEST(tutorial-geom-geometry COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/geom/geometry.C
+                FAILREGEX "Error in" "error:" "warning: Failed to call" LABELS tutorial ENVIRONMENT ${TUTORIAL_ENV})
+endif()
 # define Python GNN parsing tutorial needed to run before
 if (PY_SONNET_FOUND AND PY_GRAPH_NETS_FOUND)
   ROOT_ADD_TEST(tutorial-tmva-TMVA_SOFIE_GNN_Parser COMMAND ${Python3_EXECUTABLE}
   ${CMAKE_CURRENT_SOURCE_DIR}/tmva/TMVA_SOFIE_GNN_Parser.py
-  PASSRC 0 FAILREGEX "Error in" ": error:" LABELS tutorial ENVIRONMENT ${ROOT_environ})
+  PASSRC 0 FAILREGEX "Error in" ": error:" LABELS tutorial ENVIRONMENT ${TUTORIAL_ENV})
+  set (tmva-TMVA_SOFIE_GNN_Application-depends tutorial-tmva-TMVA_SOFIE_GNN_Parser)
 endif()
 
 #---Loop over all tutorials and define the corresponding test---------
@@ -638,8 +656,8 @@ foreach(t ${tutorials})
   endif()
   if(${t} IN_LIST multithreaded)
     list(APPEND labels multithreaded)
-    # If this is not a TMVA tutorial, we want to limit the size of the thread 
-    # pool in case the tutorial invokes ROOT::EnableImplicitMT(), which by 
+    # If this is not a TMVA tutorial, we want to limit the size of the thread
+    # pool in case the tutorial invokes ROOT::EnableImplicitMT(), which by
     # default creates a thread pool of the size of the total number of cores.
     if(${t} IN_LIST multithreaded_all_cores)
       set(createThreadPool "-e \"ROOT::EnableImplicitMT(${NProcessors})\"")
@@ -664,7 +682,7 @@ foreach(t ${tutorials})
                 PASSRC ${rc} FAILREGEX "Error in <" ": error:" "segmentation violation" "FROM HESSE     STATUS=FAILED" "warning: Failed to call"
                 LABELS ${labels}
                 DEPENDS tutorial-hsimple ${${tname}-depends}
-                ENVIRONMENT ${ROOT_environ}
+                ENVIRONMENT ${TUTORIAL_ENV}
                 TIMEOUT ${thisTestTimeout})
 
   if(${t} IN_LIST multithreaded)
@@ -698,7 +716,7 @@ foreach(t ${mpi_tutorials})
                 PASSRC ${rc} FAILREGEX "Error in <" ": error:" "segmentation violation" "FROM HESSE     STATUS=FAILED" "warning: Failed to call"
                 LABELS tutorial
                 DEPENDS tutorial-hsimple ${${tname}-depends}
-                ENVIRONMENT ${ROOT_environ}
+                ENVIRONMENT ${TUTORIAL_ENV}
                 TIMEOUT ${thisTestTimeout})
 endforeach()
 
@@ -752,7 +770,7 @@ if(ROOT_pyroot_FOUND)
   endif()
   # Use main Python executable to run in PySpark driver and executors
   if(test_distrdf_pyspark)
-    list(APPEND ROOT_environ PYSPARK_PYTHON=${Python3_EXECUTABLE})
+    list(APPEND TUTORIAL_ENV PYSPARK_PYTHON=${Python3_EXECUTABLE})
     if(MACOSX_VERSION VERSION_GREATER_EQUAL 10.13)
       # MacOS has changed rules about forking processes after 10.13
       # Running pyspark tests with XCode Python3 throws crashes with errors like:
@@ -762,7 +780,7 @@ if(ROOT_pyroot_FOUND)
       # specifically the XCode Python executable that triggers this.
       # For now, there seems no other way than this workaround,
       # which effectively sets the behaviour of `fork` back to MacOS 10.12
-      list(APPEND ROOT_environ OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES)
+      list(APPEND TUTORIAL_ENV OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES)
     endif()
   endif()
   # These lists keep track of distrdf tutorials, so we can add specific properties later
@@ -788,12 +806,20 @@ if(ROOT_pyroot_FOUND)
     list(APPEND pyveto tmva/keras/MultiClassKeras.py)
   endif()
 
+  if (PY_KERAS_FOUND)
+    set (tmva-TMVA_SOFIE_RDataFrame-py-depends tutorial-tmva-TMVA_SOFIE_Keras_HiggsModel)
+  endif()
+
   if(NOT PY_TORCH_FOUND)
     file(GLOB tmva_veto_py RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} tmva/pytorch/*.py)
     list(APPEND pyveto ${tmva_veto_py})
   endif()
   # disable PyTorch model file used by TMVA_CNN_Classification.C
   list(APPEND pyveto tmva/PyTorch_Generate_CNN_Model.py)
+
+  if(NOT ROOT_geom_FOUND)
+    list(APPEND pyveto pyroot/geometry.py)
+  endif()
 
   # Now glob all vetos for pyroot
   file(GLOB pyveto RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${pyveto})
@@ -814,9 +840,10 @@ if(ROOT_pyroot_FOUND)
                                 tutorial-pyroot-na49view-py
                                 tutorial-pyroot-h1ReadAndDraw-py
                                 tutorial-pyroot-ntuple1-py)
-  set(pyroot-fit1-depends tutorial-pyroot-fillrandom-py)
+  set(pyroot-fit1-depends tutorial-hist-fillrandom-py)
   set(pyroot-na49view-depends tutorial-pyroot-geometry-py)
   set(roofit-rf503_wspaceread-depends tutorial-roofit-rf502_wspacewrite-py)
+  set(roofit-rf618_mixture_models-depends tutorial-dataframe-df106_HiggsToFourLeptons-py)
 
   # Avoid a race condition: make sure Python tutorial is run after C++ tutorial
   set(roofit-rf104_classfactory-depends tutorial-roofit-rf104_classfactory)
@@ -858,8 +885,8 @@ if(ROOT_pyroot_FOUND)
     endif()
     if(${t} IN_LIST multithreaded)
       list(APPEND labels multithreaded)
-      # If this is not a TMVA tutorial, we want to limit the size of the thread 
-      # pool in case the tutorial invokes ROOT::EnableImplicitMT(), which by 
+      # If this is not a TMVA tutorial, we want to limit the size of the thread
+      # pool in case the tutorial invokes ROOT::EnableImplicitMT(), which by
       # default creates a thread pool of the size of the total number of cores.
       if(${t} IN_LIST multithreaded_all_cores)
         set(setThreadPoolSize ".enableImplicitMTWrapper.py")
@@ -897,7 +924,7 @@ if(ROOT_pyroot_FOUND)
                 PASSRC ${rc} FAILREGEX "Error in" ": error:" "segmentation violation"
                 LABELS ${labels}
                 DEPENDS ${${tname}-depends}
-                ENVIRONMENT ${ROOT_environ}
+                ENVIRONMENT ${TUTORIAL_ENV}
                 PYTHON_DEPS ${python_deps}
                 ${py_will_fail})
 

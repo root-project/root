@@ -134,6 +134,7 @@ def get_defined_attributes(klass, consider_base_classes=False):
         "__weakref__",
         "__firstlineno__",
         "__static_attributes__",
+        "__cpp_name__"
     ]
 
     if not consider_base_classes:

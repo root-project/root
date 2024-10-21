@@ -285,7 +285,7 @@ TEST(RNTuple, LargePages)
          auto fldRnd = model->MakeField<std::uint32_t>("rnd");
          RNTupleWriteOptions options;
          // Larger than the 16MB compression block limit
-         options.SetApproxUnzippedPageSize(32 * 1024 * 1024);
+         options.SetMaxUnzippedPageSize(32 * 1024 * 1024);
          options.SetUseBufferedWrite(useBufferedWrite);
          auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath(), options);
 

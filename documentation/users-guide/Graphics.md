@@ -2312,11 +2312,13 @@ At initialization time, a table of basic colors is generated when the
 first Canvas constructor is called. This table is a linked list, which
 can be accessed from the ***`gROOT`*** object (see
 `TROOT::GetListOfColors()`). Each color has an index and when a basic
-color is defined, two "companion" colors are defined:
-
--   the dark version (color index + 100)
-
--   the bright version (color index + 150)
+color is defined, two "companion" colors are defined: the dark version and the bright version.
+Two static functions are available that return the bright or dark color number corresponding
+to a given color index. If these variants don't already exist, they are created as needed:
+```
+   Int_t dark   = TColor::GetColorDark(color_index);
+   Int_t bright = TColor::GetColorBright(color_index);
+```
 
 The dark and bright colors are used to give 3-D effects when drawing
 various boxes (see **`TWbox`**, **`TPave`**, **`TPaveText`**,
