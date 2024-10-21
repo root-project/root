@@ -74,18 +74,18 @@ def write_pyroot_block_for_class(klass):
     if klass.__doc__ is None:
         return
 
-    print("\class " + klass.__cpp_name__)
-    print("\\brief \parblock \endparblock")
-    print("\htmlonly")
+    print(r"\class " + klass.__name__)
+    print(r"\brief \parblock \endparblock")
+    print(r"\htmlonly")
     print('<div class="pyrootbox">')
-    print("\endhtmlonly")
+    print(r"\endhtmlonly")
     print("## PyROOT")
 
     print(inspect.cleandoc(klass.__doc__))
 
-    print("\htmlonly")
+    print(r"\htmlonly")
     print("</div>")
-    print("\endhtmlonly")
+    print(r"\endhtmlonly")
     print("")
 
 
@@ -100,17 +100,17 @@ def write_pyroot_block_for_function(func):
 
     for sig in sigs:
         print("\\fn " + clean_cpp_signature(sig))
-        print("\\brief \parblock \endparblock")
-        print("\htmlonly")
+        print(r"\brief \parblock \endparblock")
+        print(r"\htmlonly")
         print('<div class="pyrootbox">')
-        print("\endhtmlonly")
+        print(r"\endhtmlonly")
         print("## PyROOT")
 
         print(inspect.cleandoc(func.__doc__))
 
-        print("\htmlonly")
+        print(r"\htmlonly")
         print("</div>")
-        print("\endhtmlonly")
+        print(r"\endhtmlonly")
         print("")
 
 
@@ -126,8 +126,8 @@ def print_roofit_pythonization_page():
         return funcs_have_doc
 
     # Fill separate RooFit pythonization page, starting with the introduction and table of contents...
-    print("\defgroup RoofitPythonizations RooFit Pythonizations")
-    print("\ingroup Roofitmain")
+    print(r"\defgroup RoofitPythonizations RooFit Pythonizations")
+    print(r"\ingroup Roofitmain")
     for python_klass in _roofit.python_classes:
         if python_klass.__doc__ is None and not member_funcs_have_doc(python_klass):
             continue
@@ -150,7 +150,7 @@ def print_roofit_pythonization_page():
 
         print("\\anchor _" + python_klass.__name__.lower())
         print("## " + python_klass.__name__)
-        print("\see " + python_klass.__name__)
+        print("\\see " + python_klass.__name__)
         if not python_klass.__doc__ is None:
             print("")
             print(inspect.cleandoc(python_klass.__doc__))
@@ -169,7 +169,7 @@ def print_roofit_pythonization_page():
                 if isinstance(sigs, str):
                     sigs = [sigs]
                 for sig in sigs:
-                    print("\see " + clean_cpp_signature(sig))
+                    print("\\see " + clean_cpp_signature(sig))
                     print("")
 
 
