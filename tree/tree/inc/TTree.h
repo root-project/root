@@ -424,7 +424,7 @@ public:
    virtual void            CopyAddresses(TTree*,bool undo = false);
    virtual Long64_t        CopyEntries(TTree* tree, Long64_t nentries = -1, Option_t *option = "", bool needCopyAddresses = false);
    virtual TTree          *CopyTree(const char* selection, Option_t* option = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0);
-   virtual TBasket        *CreateBasket(TBranch*);
+   virtual TBasket        *CreateBasket(TBranch*, Int_t ondiskSize = 0);
    virtual void            DirectoryAutoAdd(TDirectory *);
            Int_t           Debug() const { return fDebug; }
            void            Delete(Option_t* option = "") override; // *MENU*
