@@ -78,6 +78,7 @@ add_cling_library(clingInterpreter OBJECT
   DynamicExprInfo.cpp
   Exception.cpp
   ExternalInterpreterSource.cpp
+  FindTypeTransformer.cpp
   ForwardDeclPrinter.cpp
   IncrementalCUDADeviceCompiler.cpp
   IncrementalExecutor.cpp
