@@ -53,6 +53,8 @@ private:
       void operator()(void *objPtr, bool dtorOnly) final;
    };
 
+   RRecordField(std::string_view name, const RRecordField &source); // Used by CloneImpl()
+
 protected:
    std::size_t fMaxAlignment = 1;
    std::size_t fSize = 0;

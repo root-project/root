@@ -366,6 +366,8 @@ private:
    static std::uint8_t GetTag(const void *variantPtr, std::size_t tagOffset);
    static void SetTag(void *variantPtr, std::size_t tagOffset, std::uint8_t tag);
 
+   RVariantField(std::string_view name, const RVariantField &source); // Used by CloneImpl()
+
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
 
