@@ -2498,6 +2498,17 @@ void ROOT::Experimental::RProxiedCollectionField::AcceptVisitor(Detail::RFieldVi
 
 //------------------------------------------------------------------------------
 
+ROOT::Experimental::RRecordField::RRecordField(std::string_view name, const RRecordField &source)
+   : ROOT::Experimental::RFieldBase(name, source.GetTypeName(), ENTupleStructure::kRecord, false /* isSimple */),
+     fMaxAlignment(source.fMaxAlignment),
+     fSize(source.fSize),
+     fOffsets(source.fOffsets)
+{
+   for (const auto &f : source.GetSubFields())
+      Attach(f->Clone(f->GetFieldName()));
+   fTraits = source.fTraits;
+}
+
 ROOT::Experimental::RRecordField::RRecordField(std::string_view fieldName,
                                                std::vector<std::unique_ptr<RFieldBase>> &&itemFields,
                                                const std::vector<std::size_t> &offsets, std::string_view typeName)
@@ -2551,11 +2562,7 @@ std::size_t ROOT::Experimental::RRecordField::GetItemPadding(std::size_t baseOff
 std::unique_ptr<ROOT::Experimental::RFieldBase>
 ROOT::Experimental::RRecordField::CloneImpl(std::string_view newName) const
 {
-   std::vector<std::unique_ptr<RFieldBase>> cloneItems;
-   cloneItems.reserve(fSubFields.size());
-   for (auto &item : fSubFields)
-      cloneItems.emplace_back(item->Clone(item->GetFieldName()));
-   return std::unique_ptr<RRecordField>(new RRecordField(newName, std::move(cloneItems), fOffsets, GetTypeName()));
+   return std::unique_ptr<RRecordField>(new RRecordField(newName, *this));
 }
 
 std::size_t ROOT::Experimental::RRecordField::AppendImpl(const void *from)
@@ -3436,6 +3443,19 @@ std::string ROOT::Experimental::RVariantField::GetTypeList(const std::vector<RFi
    return result;
 }
 
+ROOT::Experimental::RVariantField::RVariantField(std::string_view name, const RVariantField &source)
+   : ROOT::Experimental::RFieldBase(name, source.GetTypeName(), ENTupleStructure::kVariant, false /* isSimple */),
+     fMaxItemSize(source.fMaxItemSize),
+     fMaxAlignment(source.fMaxAlignment),
+     fTagOffset(source.fTagOffset),
+     fVariantOffset(source.fVariantOffset),
+     fNWritten(source.fNWritten.size(), 0)
+{
+   for (const auto &f : source.GetSubFields())
+      Attach(f->Clone(f->GetFieldName()));
+   fTraits = source.fTraits;
+}
+
 ROOT::Experimental::RVariantField::RVariantField(std::string_view fieldName,
                                                  const std::vector<RFieldBase *> &itemFields)
    : ROOT::Experimental::RFieldBase(fieldName, "std::variant<" + GetTypeList(itemFields) + ">",
@@ -3472,14 +3492,7 @@ ROOT::Experimental::RVariantField::RVariantField(std::string_view fieldName,
 std::unique_ptr<ROOT::Experimental::RFieldBase>
 ROOT::Experimental::RVariantField::CloneImpl(std::string_view newName) const
 {
-   auto nFields = fSubFields.size();
-   std::vector<RFieldBase *> itemFields;
-   itemFields.reserve(nFields);
-   for (unsigned i = 0; i < nFields; ++i) {
-      // TODO(jblomer): use unique_ptr in RVariantField constructor
-      itemFields.emplace_back(fSubFields[i]->Clone(fSubFields[i]->GetFieldName()).release());
-   }
-   return std::make_unique<RVariantField>(newName, itemFields);
+   return std::unique_ptr<RVariantField>(new RVariantField(newName, *this));
 }
 
 std::uint8_t ROOT::Experimental::RVariantField::GetTag(const void *variantPtr, std::size_t tagOffset)
