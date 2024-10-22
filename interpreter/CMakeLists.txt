@@ -62,26 +62,6 @@ endif()
 # mechanism.
 set(LLVM_ENABLE_THREADS OFF CACHE BOOL "")
 
-# The llvm::ReverseIterate<bool>::value symbol from llvm's SmallPtrSet.h
-# somehow lands in our cling libraries on OS X and doesn't get hidden
-# by visibility-inlines-hidden, so we suddenly have a global weak symbol
-# from LLVM in cling which our visiblity=hidden compiled LLVM libraries
-# reference. This is triggering some build system warnings like this:
-#   ld: warning: direct access in function '(anonymous namespace)::NewGVN::runGVN()'
-#   from file 'interpreter/llvm-project/llvm/lib/libLLVMScalarOpts.a(NewGVN.cpp.o)' to global weak symbol
-#   'llvm::ReverseIterate<bool>::value' from file 'interpreter/llvm-project/llvm/lib/libclingUtils.a(AST.cpp.o)'
-#   means the weak symbol cannot be overridden at runtime. This was likely caused by different
-#   translation units being compiled with different visibility settings.
-# There is no apparent reason why this is happening and it looks like a compiler bug,
-# so let's just disable the part of the code that provides this symbol.
-# As it's in the validation part of LLVM and not in something that providing functionality,
-# this shouldn't cause any problems.
-# TODO: We maybe can remove this code once we upgrade to LLVM>=6.0 as this symbol
-# was introduced quite recently into LLVM 5.0 and probably is also causing problems
-# for some other projects.
-set(LLVM_ENABLE_ABI_BREAKING_CHECKS OFF CACHE BOOL "" FORCE)
-set(LLVM_ABI_BREAKING_CHECKS FORCE_OFF CACHE BOOL "" FORCE)
-
 set(CMAKE_REQUIRED_QUIET 1)  # Make the configuration of LLVM quiet
 
 if(ROOT_ARCHITECTURE MATCHES arm64)
