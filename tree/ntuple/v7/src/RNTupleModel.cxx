@@ -318,6 +318,16 @@ void ROOT::Experimental::RNTupleModel::AddField(std::unique_ptr<RFieldBase> fiel
    fFieldZero->Attach(std::move(field));
 }
 
+void ROOT::Experimental::RNTupleModel::RegisterSubField(std::string_view qualifiedFieldName)
+{
+   auto field = FindField(qualifiedFieldName);
+   if (!field) {
+      throw RException(R__FAIL("could not find subfield \"" + std::string(qualifiedFieldName) + "\" in model"));
+   }
+
+   fDefaultEntry->AddValue(field->CreateValue());
+}
+
 ROOT::Experimental::RResult<void>
 ROOT::Experimental::RNTupleModel::AddProjectedField(std::unique_ptr<RFieldBase> field, FieldMappingFunc_t mapping)
 {
