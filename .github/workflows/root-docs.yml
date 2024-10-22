@@ -175,17 +175,17 @@ jobs:
     #               --repository     ${{ github.server_url }}/${{ github.repository }}
     #         "
 
-    - name: Workflow dispatch
-      if:   github.event_name == 'workflow_dispatch'
-      run: ".github/workflows/root-ci-config/build_root.py
-                  --buildtype      Release
-                  --platform       alma9
-                  --incremental    ${{ inputs.incremental }}
-                  --base_ref       ${{ inputs.base_ref }}
-                  --head_ref       ${{ inputs.head_ref }}
-                  --binaries       ${{ inputs.binaries }}
-                  --repository     ${{ github.server_url }}/${{ github.repository }}
-           "
+#     - name: Workflow dispatch
+#       if:   github.event_name == 'workflow_dispatch'
+#       run: ".github/workflows/root-ci-config/build_root.py
+#                   --buildtype      Release
+#                   --platform       alma9
+#                   --incremental    ${{ inputs.incremental }}
+#                   --base_ref       ${{ inputs.base_ref }}
+#                   --head_ref       ${{ inputs.head_ref }}
+#                   --binaries       ${{ inputs.binaries }}
+#                   --repository     ${{ github.server_url }}/${{ github.repository }}
+#            "
 
     - name: Run Doxygen
       shell: bash
