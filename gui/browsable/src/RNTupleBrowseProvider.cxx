@@ -66,7 +66,7 @@ public:
    std::unique_ptr<RLevelIter> GetChildsIter() override;
 
    /** Return class of field  - for a moment using RNTuple class as dummy */
-   const TClass *GetClass() const { return TClass::GetClass<ROOT::Experimental::RNTuple>(); }
+   const TClass *GetClass() const { return TClass::GetClass<ROOT::RNTuple>(); }
 
    std::unique_ptr<RHolder> GetObject() override
    {
@@ -124,7 +124,7 @@ public:
    /** Create iterator for childs elements if any */
    std::unique_ptr<RLevelIter> GetChildsIter() override;
 
-   const TClass *GetClass() const { return TClass::GetClass<ROOT::Experimental::RNTuple>(); }
+   const TClass *GetClass() const { return TClass::GetClass<ROOT::RNTuple>(); }
 
    std::unique_ptr<RItem> CreateItem() const override
    {

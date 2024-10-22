@@ -56,7 +56,7 @@ ClassImp(TFileMerger);
 
 TClassRef R__TH1_Class("TH1");
 TClassRef R__TTree_Class("TTree");
-TClassRef R__RNTuple_Class("ROOT::Experimental::RNTuple");
+TClassRef R__RNTuple_Class("ROOT::RNTuple");
 
 static const Int_t kCpProgress = BIT(14);
 static const Int_t kCintFileNumber = 100;
