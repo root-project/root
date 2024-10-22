@@ -47,7 +47,7 @@ long double SqrtUpParameterTransformation::DInt2Ext(long double value, long doub
 long double SqrtUpParameterTransformation::DExt2Int(long double value, long double upper) const
 {
    // derivative of internal to external transformation :  d (Ext2Int ) / d Ext
-   long double val = - (upper -value + 1) / (std::sqrt( (upper -value + 1) * (upper -value + 1) - 1.));
+   long double val = -(upper - value + 1) / (std::sqrt((upper - value + 1) * (upper - value + 1) - 1.));
    return val;
 }
 

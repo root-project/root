@@ -983,7 +983,7 @@ void RooMinimizer::initMinimizer()
    if (_cfg.setInitialCovariance) {
       std::vector<double> v;
       for (auto *param : static_range_cast<RooRealVar *>(*_fcn->GetFloatParamList())) {
-          v.push_back(param->getError());
+         v.push_back(param->getError());
       }
       _minimizer->SetG2(v, v.size());
    }

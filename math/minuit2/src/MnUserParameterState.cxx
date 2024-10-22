@@ -290,23 +290,37 @@ void MnUserParameterState::Add(const std::string &name, double val)
 void MnUserParameterState::AddCovariance(const MnUserCovariance &cov)
 {
    // add covariance matrix
-   assert(cov.Nrow() == VariableParameters());
+   unsigned int nrow = VariableParameters();
+   MnUserCovariance covsqueezed;
 
-   fCovariance = cov;
+   if (cov.Nrow() > nrow)
+      covsqueezed = MnCovarianceSqueeze()(cov, nrow);
+   else if (cov.Nrow() == nrow)
+      covsqueezed = cov;
+   else {
+      fCovarianceValid = false;
+      return;
+   }
+
+   MnAlgebraicVector params(nrow);
+   for (unsigned int i = 0; i < nrow; i++)
+      params(i) = fParameters.Params()[i];
+
+   MnAlgebraicSymMatrix covmat(nrow);
+   for (unsigned int i = 0; i < nrow; i++)
+      for (unsigned int j = i; j < nrow; j++)
+         covmat(i, j) = covsqueezed(i, j);
+
+   fCovariance = fParameters.Trafo().Ext2intCovariance(params, covmat);
    fIntCovariance = fCovariance;
    fCovarianceValid = true;
-   fCovStatus = -1;
+   fCovStatus = 0; //?
 }
 
-void MnUserParameterState::AddCovariance(std::span<const double> cov, unsigned int nrow)
+void MnUserParameterState::AddCovariance(std::span<const double> covvec, unsigned int nrow)
 {
-   // add covariance matrix
-   assert(nrow == VariableParameters());
-
-   fCovariance = MnUserCovariance(cov, nrow);
-   fIntCovariance = fCovariance;
-   fCovarianceValid = true;
-   fCovStatus = -1;
+   MnUserCovariance cov(covvec, nrow);
+   MnUserParameterState::AddCovariance(cov);
 }
 
 // interaction via external number of Parameter
