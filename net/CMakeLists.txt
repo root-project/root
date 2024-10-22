@@ -3,6 +3,11 @@
 #
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
+cmake_minimum_required(VERSION 3.28)
+project(ROOT::net)
+
+include(${ROOT_GLOBAL_SOURCE_DIR}/cmake/modules/RootInitExternalProject.cmake)
+ROOT_INIT_EXTERNAL_PROJECT(ROOT::net)
 
 add_subdirectory(net)
 add_subdirectory(auth)
