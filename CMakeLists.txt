@@ -372,7 +372,6 @@ if(ROOT_ENABLE_PROJECTS STREQUAL "All" OR ROOT_ENABLE_PROJECTS STREQUAL "Essenti
        add_subdirectory (graf2d)
        add_subdirectory (graf3d)
        add_subdirectory (gui)
-       add_subdirectory (build)
        add_subdirectory (html)
        add_subdirectory (tree)
        add_subdirectory (montecarlo)
