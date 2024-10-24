@@ -481,15 +481,13 @@ void ROOT::Experimental::RFieldBase::RBulk::ReleaseValues()
    if (fIsAdopted)
       return;
 
-   if (fField->GetTraits() & RFieldBase::kTraitTriviallyDestructible) {
-      free(fValues);
-      return;
+   if (!(fField->GetTraits() & RFieldBase::kTraitTriviallyDestructible)) {
+      for (std::size_t i = 0; i < fCapacity; ++i) {
+         fDeleter->operator()(GetValuePtrAt(i), true /* dtorOnly */);
+      }
    }
 
-   for (std::size_t i = 0; i < fCapacity; ++i) {
-      fDeleter->operator()(GetValuePtrAt(i), true /* dtorOnly */);
-   }
-   free(fValues);
+   operator delete(fValues);
 }
 
 void ROOT::Experimental::RFieldBase::RBulk::Reset(RClusterIndex firstIndex, std::size_t size)
@@ -499,7 +497,7 @@ void ROOT::Experimental::RFieldBase::RBulk::Reset(RClusterIndex firstIndex, std:
          throw RException(R__FAIL("invalid attempt to bulk read beyond the adopted buffer"));
       }
       ReleaseValues();
-      fValues = malloc(size * fValueSize);
+      fValues = operator new(size * fValueSize);
 
       if (!(fField->GetTraits() & RFieldBase::kTraitTriviallyConstructible)) {
          for (std::size_t i = 0; i < size; ++i) {
