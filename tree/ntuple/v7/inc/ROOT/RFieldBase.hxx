@@ -212,9 +212,6 @@ private:
    /// determined using the page source descriptor, based on the parent field ID and the sub field name.
    void ConnectPageSource(Internal::RPageSource &pageSource);
 
-   /// Factory method for the field's type. The caller owns the returned pointer
-   void *CreateObjectRawPtr() const;
-
 protected:
    /// Input parameter to ReadBulk() and ReadBulkImpl(). See RBulk class for more information
    struct RBulkSpec;
@@ -251,6 +248,9 @@ protected:
    /// SetColumnRepresentatives is called.  Otherwise (if empty) GetColumnRepresentatives() returns a vector
    /// with a single element, the default representation.
    std::vector<std::reference_wrapper<const ColumnRepresentation_t>> fColumnRepresentatives;
+
+   /// Factory method for the field's type. The caller owns the returned pointer
+   void *CreateObjectRawPtr() const;
 
    /// Helpers for generating columns. We use the fact that most fields have the same C++/memory types
    /// for all their column representations.
@@ -402,6 +402,7 @@ protected:
    static std::size_t CallAppendOn(RFieldBase &other, const void *from) { return other.Append(from); }
    static void CallReadOn(RFieldBase &other, RClusterIndex clusterIndex, void *to) { other.Read(clusterIndex, to); }
    static void CallReadOn(RFieldBase &other, NTupleSize_t globalIndex, void *to) { other.Read(globalIndex, to); }
+   static void *CallCreateObjectRawPtrOn(RFieldBase &other) { return other.CreateObjectRawPtr(); }
 
    /// Fields may need direct access to the principal column of their sub fields, e.g. in RRVecField::ReadBulk
    static Internal::RColumn *GetPrincipalColumnOf(const RFieldBase &other) { return other.fPrincipalColumn; }
