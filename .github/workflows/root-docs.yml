@@ -238,6 +238,7 @@ jobs:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_REGION: "eu-west-1"
+        AWS_ENDPOINT_URL: https://s3.cern.ch/
 
     # DEST="s3://root/99999_${PR_NUMBER:-}" # if PR, upload in s3://root/99999_<prnumber>
     # aws --endpoint-url https://s3.cern.ch s3 sync --delete build/99999_${PR_NUMBER:-} ${DEST}
