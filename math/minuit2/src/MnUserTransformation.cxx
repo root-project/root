@@ -167,6 +167,31 @@ MnUserTransformation::Int2extCovariance(const MnAlgebraicVector &vec, const MnAl
    return result;
 }
 
+MnUserCovariance
+MnUserTransformation::Ext2intCovariance(const MnAlgebraicVector &vec, const MnAlgebraicSymMatrix &cov) const
+{
+   // return the internal covariance matrix from the external error matrix and the internal parameter value
+   // the vector of internal parameter is needed for the derivatives (Jacobian of the transformation)
+   // Vint(i,j) = Vext(i,j) * dPint(i)/dPext(i) * dPint(j)/dPext(j)
+
+   MnUserCovariance result(cov.Nrow());
+   for (unsigned int i = 0; i < vec.size(); i++) {
+      double dxdi = 1.;
+      if (fParameters[fExtOfInt[i]].HasLimits()) {
+         dxdi = DExt2Int(i, vec(i));
+      }
+      for (unsigned int j = i; j < vec.size(); j++) {
+         double dxdj = 1.;
+         if (fParameters[fExtOfInt[j]].HasLimits()) {
+            dxdj = DExt2Int(j, vec(j));
+         }
+         result(i, j) = dxdi * cov(i, j) * dxdj;
+      }
+   }
+
+   return result;
+}
+
 double MnUserTransformation::Ext2int(unsigned int i, double val) const
 {
    // return the internal value for parameter i with external value val
@@ -204,23 +229,26 @@ double MnUserTransformation::DInt2Ext(unsigned int i, double val) const
    return dd;
 }
 
-/*
- double MnUserTransformation::dExt2Int(unsigned int, double) const {
-    double dd = 1.;
+double MnUserTransformation::DExt2Int(unsigned int i, double val) const
+{
+   // return the derivative of the ext->int transformation: dPint(i) / dPext(i)
+   // for the parameter i with value val
 
-    if(fParameters[fExtOfInt[i]].HasLimits()) {
-       if(fParameters[fExtOfInt[i]].HasUpperLimit() && fParameters[fExtOfInt[i]].HasLowerLimit())
-          //       dd = 0.5*std::fabs((fParameters[fExtOfInt[i]].Upper() -
- fParameters[fExtOfInt[i]].Lower())*cos(vec(i))); dd = fDoubleLimTrafo.dExt2Int(val,
- fParameters[fExtOfInt[i]].UpperLimit(), fParameters[fExtOfInt[i]].LowerLimit()); else
- if(fParameters[fExtOfInt[i]].HasUpperLimit() && !fParameters[fExtOfInt[i]].HasLowerLimit()) dd =
- fUpperLimTrafo.dExt2Int(val, fParameters[fExtOfInt[i]].UpperLimit()); else dd = fLowerLimTrafo.dExtInt(val,
- fParameters[fExtOfInt[i]].LowerLimit());
-    }
+   double dd = 1.;
+   if (fParameters[fExtOfInt[i]].HasLimits()) {
+      if (fParameters[fExtOfInt[i]].HasUpperLimit() && fParameters[fExtOfInt[i]].HasLowerLimit())
+         //       dd = 0.5*std::fabs((fParameters[fExtOfInt[i]].Upper() -
+         //       fParameters[fExtOfInt[i]].Lower())*cos(vec(i)));
+         dd = fDoubleLimTrafo.DExt2Int(val, fParameters[fExtOfInt[i]].UpperLimit(),
+                                       fParameters[fExtOfInt[i]].LowerLimit());
+      else if (fParameters[fExtOfInt[i]].HasUpperLimit() && !fParameters[fExtOfInt[i]].HasLowerLimit())
+         dd = fUpperLimTrafo.DExt2Int(val, fParameters[fExtOfInt[i]].UpperLimit());
+      else
+         dd = fLowerLimTrafo.DExt2Int(val, fParameters[fExtOfInt[i]].LowerLimit());
+   }
 
-    return dd;
- }
- */
+   return dd;
+}
 
 unsigned int MnUserTransformation::IntOfExt(unsigned int ext) const
 {

@@ -56,6 +56,12 @@ long double SinParameterTransformation::DInt2Ext(long double Value, long double 
    return 0.5 * ((Upper - Lower) * std::cos(Value));
 }
 
+long double SinParameterTransformation::DExt2Int(long double Value, long double Upper, long double Lower) const
+{
+   // return the derivative of the transformation d Int/ d Ext
+   return 1. / std::sqrt((Value - Lower) * (Upper - Value));
+}
+
 } // namespace Minuit2
 
 } // namespace ROOT
