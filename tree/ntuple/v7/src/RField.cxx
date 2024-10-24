@@ -3727,8 +3727,7 @@ void ROOT::Experimental::RUniquePtrField::ReadGlobalImpl(NTupleSize_t globalInde
       return;
 
    if (!isValidValue) {
-      valuePtr = malloc(fSubFields[0]->GetValueSize());
-      CallConstructValueOn(*fSubFields[0], valuePtr);
+      valuePtr = CallCreateObjectRawPtrOn(*fSubFields[0]);
       ptr->reset(reinterpret_cast<char *>(valuePtr));
    }
 
