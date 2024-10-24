@@ -65,7 +65,6 @@ def main():
     if not pull_request:
         build_utils.print_info("head_ref same as base_ref, assuming non-PR build")
 
-    cleanup_previous_build()
 
     # Load CMake options from .github/workflows/root-ci-config/buildconfig/[platform].txt
     this_script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -103,6 +102,15 @@ def main():
     if 'root-project/root' not in args.repository:
         obj_prefix = f"ci-testing/{args.repository.split('/')[-2]}/" + obj_prefix
         print("Attempting to download")
+
+    # Build artifacts should only be uploaded for full builds, and only for
+    # "official" branches (master, v?-??-??-patches), i.e. not for pull_request
+    if args.upload_S3 and not pull_request and not args.incremental and not args.coverage:
+        archive_and_upload(yyyy_mm_dd, obj_prefix)
+        return
+
+
+    cleanup_previous_build()
 
     if args.incremental:
         try:
@@ -145,17 +153,6 @@ def main():
         show_node_state()
 
     build(options, args.buildtype)
-
-    # Build artifacts should only be uploaded for full builds, and only for
-    # "official" branches (master, v?-??-??-patches), i.e. not for pull_request
-    # We also want to upload any successful build, even if it fails testing
-    # later on.
-    if not pull_request and not args.incremental and not args.coverage:
-        try:
-            archive_and_upload(yyyy_mm_dd, obj_prefix)
-        except Exception as err:
-            build_utils.print_warning("failed to upload artifact:", err)
-
 
     if args.binaries:
         create_binaries(args.buildtype)
@@ -209,6 +206,7 @@ def parse_args():
     parser.add_argument("--architecture",    default=None,      help="Windows only, target arch")
     parser.add_argument("--repository",      default="https://github.com/root-project/root.git",
                         help="url to repository")
+    parser.add_argument("--upload_S3",       action='store_true', help="Upload build to S3")
 
     args = parser.parse_args()
 

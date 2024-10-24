@@ -501,32 +501,25 @@ jobs:
                     --repository      ${{ github.server_url }}/${{ github.repository }}
               "
 
-      - name: Workflow dispatch
-        if:   ${{ github.event_name == 'workflow_dispatch' && !matrix.is_special }}
+      - name: Full Build
+        env:
+          BINARIES: ${{ github.event.name == 'schedule' || startsWith(github.ref, 'refs/tags/') || inputs.binaries }}
+        if:   ${{ github.event_name == 'workflow_dispatch' && !matrix.is_special || github.event_name == 'schedule' || github.event_name == 'push' }}
         run: ".github/workflows/root-ci-config/build_root.py
-                    --buildtype      ${{ inputs.buildtype }}
+                    --buildtype      ${{ inputs.buildtype == null && 'RelWithDebInfo' || inputs.buildtype }}
                     --platform       ${{ matrix.image }}
-                    --incremental    ${{ inputs.incremental }}
+                    --incremental    ${{ inputs.incremental == null && 'false' || inputs.incremental }}
                     --base_ref       ${{ inputs.base_ref }}
                     --head_ref       ${{ inputs.head_ref }}
-                    --binaries       ${{ inputs.binaries }}
+                    --binaries       ${BINARIES}
                     --repository     ${{ github.server_url }}/${{ github.repository }}
               "
 
-      - name: Nightly build
-        if:   github.event_name == 'schedule'
+      - name: Upload to S3
+        if:   github.event_name == 'push' || github.event_name == 'schedule'
+        continue-on-error: true
         run: ".github/workflows/root-ci-config/build_root.py
-                    --buildtype      Release
-                    --platform       ${{ matrix.image }}
-                    --incremental    false
-                    --binaries       true
-                    --base_ref       ${{ inputs.ref_name }}
-                    --repository     ${{ github.server_url }}/${{ github.repository }}
-              "
-
-      - name: Update build cache after push to release branch
-        if:   github.event_name == 'push'
-        run: ".github/workflows/root-ci-config/build_root.py
+                    --upload_S3
                     --buildtype      RelWithDebInfo
                     --platform       ${{ matrix.image }}
                     --incremental    false
@@ -552,7 +545,6 @@ jobs:
 
       - name: ccache info (post)
         run: |
-          ccache -p || true
           ccache -s || true
 
   event_file:
