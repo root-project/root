@@ -10,6 +10,7 @@ if(WIN32)
   # Set CMP0091 (MSVC runtime library flags are selected by an abstraction) to OLD
   # to keep the old way of selecting the runtime library with the -MD/-MDd compiler flag
   cmake_policy(SET CMP0091 OLD)
+  set(CMAKE_SKIP_TEST_ALL_DEPENDENCY TRUE)
 endif()
 
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR AND NOT ALLOW_IN_SOURCE)
