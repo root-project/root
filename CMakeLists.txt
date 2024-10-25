@@ -27,7 +27,7 @@ if(NOT DEFINED Python3_EXECUTABLE)
 endif()
 
 if(MSVC)
-
+  set(CMAKE_SKIP_TEST_ALL_DEPENDENCY TRUE)
   set(libsuffix .dll)
   set(exesuffix .exe)
   set(CMAKE_CXX_FLAGS "/nologo /Zc:__cplusplus /MD /GR /EHsc- /W3 /D_WIN32")
