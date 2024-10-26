@@ -28,7 +28,7 @@
 #include "RooHelpers.h"
 #include "RooFit/Evaluator.h"
 
-#include "RooFit/Detail/BatchModeDataHelpers.h"
+#include "../../../roofitcore/src/RooFit/BatchModeDataHelpers.h"
 
 #include <Math/Util.h>
 #include <TCanvas.h>
@@ -50,9 +50,8 @@ std::vector<double> getValues(RooAbsReal const &real, RooAbsData const &data)
    std::unique_ptr<RooAbsReal> clone = RooFit::Detail::compileForNormSet<RooAbsReal>(real, *data.get());
    RooFit::Evaluator evaluator(*clone);
    std::stack<std::vector<double>> vectorBuffers;
-   auto dataSpans =
-      RooFit::Detail::BatchModeDataHelpers::getDataSpans(data, "", nullptr, /*skipZeroWeights=*/false,
-                                                         /*takeGlobalObservablesFromData=*/true, vectorBuffers);
+   auto dataSpans = RooFit::BatchModeDataHelpers::getDataSpans(data, "", nullptr, /*skipZeroWeights=*/false,
+                                                               /*takeGlobalObservablesFromData=*/true, vectorBuffers);
    for (auto const &item : dataSpans) {
       evaluator.setInput(item.first->GetName(), item.second, false);
    }
