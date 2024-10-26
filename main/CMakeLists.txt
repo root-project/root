@@ -9,6 +9,7 @@
 # @author Pere Mato, CERN
 ############################################################################
 
+<<<<<<< HEAD
 if(NOT WIN32)
   ROOT_EXECUTABLE(rootn.exe rmain.cxx LIBRARIES New Core MathCore Rint CMAKENOEXPORT)
   if(CMAKE_SYSTEM_NAME STREQUAL Linux)
@@ -59,23 +60,75 @@ endif()
 file(GLOB utils RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} python/root*)
 foreach(rawUtilName ${utils})
   get_filename_component(utilName ${rawUtilName} NAME)
+if(ROOT_ENABLE_PROJECTS STREQUAL "All" OR ROOT_ENABLE_PROJECTS STREQUAL "Essentials")
   if(NOT WIN32)
-    # We need the .py only on Windows
-    string(REPLACE ".py" "" utilName ${utilName})
-    set(python python3)
-  else()
-    set(python python)
+    ROOT_EXECUTABLE(rootn.exe rmain.cxx LIBRARIES New Core MathCore Rint)
+    if(CMAKE_SYSTEM_NAME STREQUAL Linux)
+      SET_TARGET_PROPERTIES(rootn.exe PROPERTIES LINK_FLAGS "-Wl,--no-as-needed")
+    endif()
+    ROOT_EXECUTABLE(roots.exe roots.cxx LIBRARIES Core MathCore)
   endif()
-  configure_file(${rawUtilName} ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}/${utilName} @ONLY)
+  ROOT_EXECUTABLE(root.exe rmain.cxx LIBRARIES Core Rint)
+  if(MSVC)
+    set(root_exports "/EXPORT:_Init_thread_abort /EXPORT:_Init_thread_epoch \
+        /EXPORT:_Init_thread_footer /EXPORT:_Init_thread_header /EXPORT:_tls_index \
+        /STACK:4000000 setargv.obj")
+    set_property(TARGET root.exe APPEND_STRING PROPERTY LINK_FLAGS ${root_exports})
+    add_custom_command(TARGET root.exe POST_BUILD
+                       COMMAND mt -manifest ${ROOT_MANIFEST} -outputresource:${CMAKE_BINARY_DIR}/bin/root.exe)
+  endif()
+endif()
 
-  install(FILES ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}/${utilName}
-                               DESTINATION ${CMAKE_INSTALL_BINDIR}
-                               RENAME ${utilName}
-                               PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
-                                           GROUP_EXECUTE GROUP_READ
-                                           WORLD_EXECUTE WORLD_READ
-                               COMPONENT applications)
-endforeach()
+if(ROOT_ENABLE_PROJECTS STREQUAL "All")
+	if(proof)
+	  ROOT_EXECUTABLE(proofserv.exe pmain.cxx LIBRARIES Core MathCore)
+	endif()
+	if(MSVC)
+	  ROOT_EXECUTABLE(hadd hadd.cxx LIBRARIES Core RIO Net Hist Graf Graf3d Gpad Tree Matrix MathCore)
+	  set_property(TARGET hadd APPEND_STRING PROPERTY LINK_FLAGS "setargv.obj")
+	else()
+	  ROOT_EXECUTABLE(hadd hadd.cxx LIBRARIES Core RIO Net Hist Graf Graf3d Gpad Tree Matrix MathCore MultiProc)
+	endif()
+	ROOT_EXECUTABLE(rootnb.exe nbmain.cxx LIBRARIES Core)
+
+	#---ReadSpeed-------------------------------------------------------------------------------------
+	ROOT_EXECUTABLE(rootreadspeed src/readspeed.cxx LIBRARIES RIO Tree TreePlayer ReadSpeed)
+
+	#---CreateHaddCommandLineOptions------------------------------------------------------------------
+	generateHeader(hadd
+	  ${CMAKE_SOURCE_DIR}/main/src/hadd-argparse.py
+	  ${CMAKE_BINARY_DIR}/ginclude/haddCommandLineOptionsHelp.h
+	)
+
+	if(fortran AND CMAKE_Fortran_COMPILER)
+	  ROOT_EXECUTABLE(g2root g2root.f LIBRARIES minicern)
+	  set_target_properties(g2root PROPERTIES COMPILE_FLAGS "-w")
+	  ROOT_EXECUTABLE(h2root h2root.cxx LIBRARIES Core RIO Net Hist Graf Graf3d Gpad Tree Matrix MathCore Thread minicern)
+	endif()
+
+	file(GLOB utils RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} python/root*)
+	foreach(rawUtilName ${utils})
+	  get_filename_component(utilName ${rawUtilName} NAME)
+	  if(NOT WIN32)
+	    # We need the .py only on Windows
+	    string(REPLACE ".py" "" utilName ${utilName})
+	    set(python python3)
+	  else()
+	    set(python python)
+	  endif()
+	  configure_file(${rawUtilName} ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}/${utilName} @ONLY)
+
+	  install(FILES ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}/${utilName}
+				       DESTINATION ${CMAKE_INSTALL_BINDIR}
+				       RENAME ${utilName}
+				       PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
+						   GROUP_EXECUTE GROUP_READ
+						   WORLD_EXECUTE WORLD_READ
+				       COMPONENT applications)
+	endforeach()
+
+
+endif()
 
 install(FILES python/cmdLineUtils.py DESTINATION ${runtimedir})
 if(IS_ABSOLUTE ${runtimedir})
@@ -88,55 +141,58 @@ install(CODE "execute_process(COMMAND ${Python3_EXECUTABLE} -O -m py_compile \$E
 configure_file(python/cmdLineUtils.py ${localruntimedir}/cmdLineUtils.py @ONLY)
 
 
-set_source_files_properties(src/rootcling.cxx PROPERTIES
-  COMPILE_FLAGS "${CLING_CXXFLAGS}"
-  VISIBILITY_INLINES_HIDDEN "ON"
-)
+if(ROOT_ENABLE_PROJECTS STREQUAL "All" OR ROOT_ENABLE_PROJECTS STREQUAL "Essentials")
 
-ROOT_EXECUTABLE(rootcling src/rootcling.cxx LIBRARIES RIO Cling Core Rint)
+	set_source_files_properties(src/rootcling.cxx PROPERTIES
+	  COMPILE_FLAGS "${CLING_CXXFLAGS}"
+	  VISIBILITY_INLINES_HIDDEN "ON"
+	)
 
-# rootcling includes the ROOT complex header which would build the complex
-# dictionary with modules. To make sure that rootcling_stage1 builds this
-# dict before we use it, we add a dependency here.
-add_dependencies(rootcling complexDict)
+	ROOT_EXECUTABLE(rootcling src/rootcling.cxx LIBRARIES RIO Cling Core Rint)
 
-target_include_directories(rootcling PRIVATE
-        ${CMAKE_SOURCE_DIR}/core/metacling/res
-        ${CMAKE_SOURCE_DIR}/core/dictgen/res
-        ${CMAKE_SOURCE_DIR}/io/rootpcm/res)
-set_property(TARGET rootcling PROPERTY ENABLE_EXPORTS 1)
-if(WIN32)
-  set_target_properties(rootcling PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS 1)
-  set_property(TARGET rootcling APPEND_STRING PROPERTY LINK_FLAGS " -STACK:4000000")
-endif()
+	# rootcling includes the ROOT complex header which would build the complex
+	# dictionary with modules. To make sure that rootcling_stage1 builds this
+	# dict before we use it, we add a dependency here.
+	add_dependencies(rootcling complexDict)
 
-# Create aliases: rootcint, genreflex.
-if(WIN32)
-  add_custom_command(TARGET rootcling POST_BUILD
-                     COMMAND copy /y rootcling.exe rootcint.exe
-                     COMMAND copy /y rootcling.exe genreflex.exe
-                     WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-else()
-  add_custom_command(TARGET rootcling POST_BUILD
-                     COMMAND ln -f rootcling rootcint
-                     COMMAND ln -f rootcling genreflex
-                     WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-endif()
-set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES
-                         "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rootcint;${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/genreflex")
+	target_include_directories(rootcling PRIVATE
+		${CMAKE_SOURCE_DIR}/core/metacling/res
+		${CMAKE_SOURCE_DIR}/core/dictgen/res
+		${CMAKE_SOURCE_DIR}/io/rootpcm/res)
+	set_property(TARGET rootcling PROPERTY ENABLE_EXPORTS 1)
+	if(WIN32)
+	  set_target_properties(rootcling PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS 1)
+	  set_property(TARGET rootcling APPEND_STRING PROPERTY LINK_FLAGS " -STACK:4000000")
+	endif()
 
-if(CMAKE_HOST_UNIX)
-  install(CODE "execute_process(COMMAND ln -f rootcling rootcint WORKING_DIRECTORY \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR})" COMPONENT applications)
-  install(CODE "execute_process(COMMAND ln -f rootcling genreflex WORKING_DIRECTORY \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR})" COMPONENT applications)
-else()
-  if(MSVC)
-    install(PROGRAMS  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rootcling.exe DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT applications)
-    install(PROGRAMS  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rootcint.exe DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT applications)
-    install(PROGRAMS  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/genreflex.exe DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT applications)
-  else()
-    install(PROGRAMS  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rootcint
-                      ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/genreflex
-                      ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rlibmap
-                      DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT applications)
-  endif()
+	# Create aliases: rootcint, genreflex.
+	if(WIN32)
+	  add_custom_command(TARGET rootcling POST_BUILD
+			     COMMAND copy /y rootcling.exe rootcint.exe
+			     COMMAND copy /y rootcling.exe genreflex.exe
+			     WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+	else()
+	  add_custom_command(TARGET rootcling POST_BUILD
+			     COMMAND ln -f rootcling rootcint
+			     COMMAND ln -f rootcling genreflex
+			     WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+	endif()
+	set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES
+				 "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rootcint;${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/genreflex")
+
+	if(CMAKE_HOST_UNIX)
+	  install(CODE "execute_process(COMMAND ln -f rootcling rootcint WORKING_DIRECTORY \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR})" COMPONENT applications)
+	  install(CODE "execute_process(COMMAND ln -f rootcling genreflex WORKING_DIRECTORY \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR})" COMPONENT applications)
+	else()
+	  if(MSVC)
+	    install(PROGRAMS  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rootcling.exe DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT applications)
+	    install(PROGRAMS  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rootcint.exe DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT applications)
+	    install(PROGRAMS  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/genreflex.exe DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT applications)
+	  else()
+	    install(PROGRAMS  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rootcint
+			      ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/genreflex
+			      ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rlibmap
+			      DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT applications)
+	  endif()
+	endif()
 endif()
