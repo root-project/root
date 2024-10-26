@@ -1,10 +1,10 @@
 // Tests for the RooAbsCollection and derived classes
 // Authors: Stephan Hageboeck, CERN  05/2020
-#include "RooArgSet.h"
-#include "RooRealVar.h"
-#include "RooHelpers.h"
+#include <RooArgSet.h>
+#include <RooHelpers.h>
+#include <RooRealVar.h>
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
 /// ROOT-10845 IsOnHeap() always returned false.
 TEST(RooArgSet, IsOnHeap) {
@@ -136,4 +136,31 @@ TEST(RooArgSet, HashAssistedFind) {
   list[0].SetName("a'");
   EXPECT_EQ(set.find("a"), nullptr);
   EXPECT_EQ(set.find("a'"), & list[0]);
+}
+
+// Previously in: roottest/root/roofitstats/read_scientific_notation.py
+TEST(RooArgSet, TextFileIO)
+{
+   const double xVal = 1000000;
+   const double xMin = 10000;
+   const double xMax = 1000000;
+
+   std::stringstream ss;
+   {
+      RooRealVar x{"x", "x", xVal, xMin, xMax};
+      RooArgSet aset{x};
+
+      aset.writeToStream(ss, false);
+   }
+
+   std::istringstream iss{ss.str()};
+
+   RooRealVar x{"x", "x", 10, 1, 100};
+   RooArgSet aset{x};
+   aset.readFromStream(iss, false, nullptr, nullptr);
+
+   // Test that both value and range have been updated correctly:
+   EXPECT_EQ(x.getVal(), xVal);
+   EXPECT_EQ(x.getMin(), xMin);
+   EXPECT_EQ(x.getMax(), xMax);
 }
