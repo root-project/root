@@ -377,6 +377,7 @@ if(ROOT_ENABLE_PROJECTS STREQUAL "All" OR ROOT_ENABLE_PROJECTS STREQUAL "Essenti
        add_subdirectory (montecarlo)
        if(geom)
          add_subdirectory (geom)
+       endif()
        if(NOT WIN32)
          add_subdirectory (rootx)
        endif()
@@ -392,10 +393,10 @@ if(ROOT_ENABLE_PROJECTS STREQUAL "All" OR ROOT_ENABLE_PROJECTS STREQUAL "Essenti
        if(roofit)
          add_subdirectory(roofit)
        endif()
+	ROOT_ADD_TEST_SUBDIRECTORY(test)
+	ROOT_ADD_TEST_SUBDIRECTORY(tutorials)
 endif()
 
-ROOT_ADD_TEST_SUBDIRECTORY(test)
-ROOT_ADD_TEST_SUBDIRECTORY(tutorials)
 
 get_property(__allHeaders GLOBAL PROPERTY ROOT_HEADER_TARGETS)
 get_property(__allBuiltins GLOBAL PROPERTY ROOT_BUILTIN_TARGETS)
@@ -422,9 +423,9 @@ make_directory("${CMAKE_BINARY_DIR}/include/ROOT.modulemap.d")
 add_custom_target(copymodulemap DEPENDS "${CMAKE_BINARY_DIR}/include/ROOT.modulemap")
 add_custom_command(
 		  OUTPUT "${CMAKE_BINARY_DIR}/include/ROOT.modulemap"
-                  DEPENDS build/unix/module.modulemap "${CMAKE_BINARY_DIR}/include/module.modulemap.extra"
-		  COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/build/unix/module.modulemap" "${CMAKE_BINARY_DIR}/include/ROOT.modulemap"
-                  COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/build/unix/module.modulemap" "${CMAKE_BINARY_DIR}/include/ROOT.modulemap.split"
+		  DEPENDS cmake/unix/module.modulemap "${CMAKE_BINARY_DIR}/include/module.modulemap.extra"
+		  COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/cmake/unix/module.modulemap" "${CMAKE_BINARY_DIR}/include/ROOT.modulemap"
+                  COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/cmake/unix/module.modulemap" "${CMAKE_BINARY_DIR}/include/ROOT.modulemap.split"
                   COMMAND ${_os_cat} "${_from_native}" >> "${_to_native}"
                   COMMAND ${_os_cat} "${_from_native_split}" >> "${_to_native_split}"
 )
@@ -562,21 +563,24 @@ if(runtime_cxxmodules)
   set_directory_properties(PROPERTIES ADDITIONAL_CLEAN_FILES "${library_output_dir}/modules.timestamp")
 endif()
 
+
 #---hsimple.root---------(use the executable for clearer dependencies and proper return code)---
-add_custom_target(hsimple ALL DEPENDS tutorials/hsimple.root)
-add_dependencies(hsimple onepcm)
-if(WIN32)
-  set(hsimple_cmd COMMAND ${CMAKE_COMMAND} -E env PATH="${CMAKE_RUNTIME_OUTPUT_DIRECTORY}\\\;%PATH%"
-                          ROOTIGNOREPREFIX=1 ROOT_HIST=0 $<TARGET_FILE:root.exe> -l -q -b -n -x ${CMAKE_SOURCE_DIR}/tutorials/hsimple.C -e return)
-else()
-  set(hsimple_cmd COMMAND ${MODULES_ROOT_INCPATH} ${ld_library_path}=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}:$ENV{${ld_library_path}}
-                          ROOTIGNOREPREFIX=1 ROOT_HIST=0 $<TARGET_FILE:root.exe> -l -q -b -n -x ${CMAKE_SOURCE_DIR}/tutorials/hsimple.C -e return)
+if(ROOT_ENABLE_PROJECTS STREQUAL "All")
+	add_custom_target(hsimple ALL DEPENDS tutorials/hsimple.root)
+	add_dependencies(hsimple onepcm)
+	if(WIN32)
+	  set(hsimple_cmd COMMAND ${CMAKE_COMMAND} -E env PATH="${CMAKE_RUNTIME_OUTPUT_DIRECTORY}\\\;%PATH%"
+				  ROOTIGNOREPREFIX=1 ROOT_HIST=0 $<TARGET_FILE:root.exe> -l -q -b -n -x hsimple.C -e return)
+	else()
+	  set(hsimple_cmd COMMAND ${MODULES_ROOT_INCPATH} ${ld_library_path}=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}:$ENV{${ld_library_path}}
+				  ROOTIGNOREPREFIX=1 ROOT_HIST=0 $<TARGET_FILE:root.exe> -l -q -b -n -x hsimple.C -e return)
+	endif()
+	add_custom_command(OUTPUT tutorials/hsimple.root
+			   ${hsimple_cmd}
+			   WORKING_DIRECTORY tutorials
+			   DEPENDS $<TARGET_FILE:root.exe> Cling Hist Tree Gpad Graf HistPainter move_artifacts)
+	install(FILES ${CMAKE_BINARY_DIR}/tutorials/hsimple.root DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tests)
 endif()
-add_custom_command(OUTPUT tutorials/hsimple.root
-                   ${hsimple_cmd}
-                   WORKING_DIRECTORY tutorials
-                   DEPENDS $<TARGET_FILE:root.exe> Cling Hist Tree Gpad Graf HistPainter move_artifacts)
-install(FILES ${CMAKE_BINARY_DIR}/tutorials/hsimple.root DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tests)
 
 if(runtime_cxxmodules)
   add_dependencies(hsimple modules_idx)
