@@ -156,22 +156,6 @@ protected:
       std::cout << "\nMaximal relative error (scalar vs batch) is: " << maximalRelativeError << "\n\n"; \
    }
 
-/// Run a fit for batch and scalar code and compare results.
-#define FIT_TEST_BATCH_VS_SCALAR(TEST_CLASS, TEST_NAME) \
-   TEST_F(TEST_CLASS, TEST_NAME)                        \
-   {                                                    \
-      runBatchVsScalar();                               \
-   }
-
-/// Run a fit for batch and scalar code and compare results.
-/// Clone the PDFs before running the tests. This can run the test even if some internal state
-/// is propagated / saved wrongly.
-#define FIT_TEST_BATCH_VS_SCALAR_CLONE_PDF(TEST_CLASS, TEST_NAME) \
-   TEST_F(TEST_CLASS, TEST_NAME)                                  \
-   {                                                              \
-      runBatchVsScalar(true);                                     \
-   }
-
 /// Run a fit in batch mode and compare results to pre-fit values.
 #define FIT_TEST_BATCH(TEST_CLASS, TEST_NAME) \
    TEST_F(TEST_CLASS, TEST_NAME)              \
@@ -181,6 +165,18 @@ protected:
       checkParameters();                      \
    }
 
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
+
+/// Run a fit for batch and scalar code and compare results.
+#define FIT_TEST_BATCH_VS_SCALAR(TEST_CLASS, TEST_NAME) \
+   TEST_F(TEST_CLASS, TEST_NAME) { runBatchVsScalar(); }
+
+/// Run a fit for batch and scalar code and compare results.
+/// Clone the PDFs before running the tests. This can run the test even if some internal state
+/// is propagated / saved wrongly.
+#define FIT_TEST_BATCH_VS_SCALAR_CLONE_PDF(TEST_CLASS, TEST_NAME) \
+   TEST_F(TEST_CLASS, TEST_NAME) { runBatchVsScalar(true); }
+
 /// Run a fit in legacy mode and compare results to pre-fit values.
 #define FIT_TEST_SCALAR(TEST_CLASS, TEST_NAME) \
    TEST_F(TEST_CLASS, TEST_NAME)               \
@@ -189,3 +185,12 @@ protected:
       ASSERT_NE(result, nullptr);              \
       checkParameters();                       \
    }
+
+#else
+
+// Ignore legacy tests if legacy backend is not available
+#define FIT_TEST_BATCH_VS_SCALAR(TEST_CLASS, TEST_NAME)
+#define FIT_TEST_BATCH_VS_SCALAR_CLONE_PDF(TEST_CLASS, TEST_NAME)
+#define FIT_TEST_SCALAR(TEST_CLASS, TEST_NAME)
+
+#endif

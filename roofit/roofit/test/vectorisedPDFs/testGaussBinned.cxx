@@ -135,7 +135,11 @@ TEST_P(GaussBinnedFit, DISABLED_BatchFitFineBins)
    EXPECT_NEAR(s.getVal(), 4., s.getError());
 }
 
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
 INSTANTIATE_TEST_SUITE_P(RunFits, GaussBinnedFit,
                          testing::Values(RooFit::EvalBackend::Value::Legacy, RooFit::EvalBackend::Value::Cpu));
+#else
+INSTANTIATE_TEST_SUITE_P(RunFits, GaussBinnedFit, testing::Values(RooFit::EvalBackend::Value::Cpu));
+#endif
 
 // TODO Test a batch fit that uses categories once categories can be passed through the batch interface.
