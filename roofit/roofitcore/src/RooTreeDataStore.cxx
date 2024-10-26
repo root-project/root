@@ -633,12 +633,10 @@ double RooTreeDataStore::weightError(RooAbsData::ErrorType etype) const
       return _wgtVar->getError() ;
     }
 
-  } else {
-
-    // We have no weights
-    return 0 ;
-
   }
+
+  // We have no weights
+  return 0.0;
 }
 
 
@@ -798,7 +796,7 @@ RooAbsArg* RooTreeDataStore::addColumn(RooAbsArg& newVar, bool adjustRange)
   resetBuffers() ;
 
   // Clone variable and attach to cloned tree
-  RooAbsArg* newVarClone = newVar.cloneTree() ;
+  std::unique_ptr<RooAbsArg> newVarClone{newVar.cloneTree()};
   newVarClone->recursiveRedirectServers(_vars,false) ;
 
   // Attach value place holder to this tree
@@ -812,7 +810,7 @@ RooAbsArg* RooTreeDataStore::addColumn(RooAbsArg& newVar, bool adjustRange)
     get(i) ;
 
     newVarClone->syncCache(&_vars) ;
-    valHolder->copyCache(newVarClone) ;
+    valHolder->copyCache(newVarClone.get());
     valHolder->fillTreeBranch(*_tree) ;
   }
 
@@ -829,9 +827,6 @@ RooAbsArg* RooTreeDataStore::addColumn(RooAbsArg& newVar, bool adjustRange)
 //     }
   }
 
-
-
-  delete newVarClone ;
   return valHolder ;
 }
 
