@@ -59,8 +59,6 @@ to the fractions of the various functions. **This requires setting the last argu
 #include <memory>
 #include <stdexcept>
 
-using std::list, std::endl, std::ostream;
-
 ClassImp(RooRealSumPdf);
 
 bool RooRealSumPdf::_doFloorGlobal = false ;
@@ -281,7 +279,7 @@ void RooRealSumPdf::doEval(RooFit::EvalContext & ctx) const
       if (!_haveWarned) {
         coutW(Eval) << "RooRealSumPdf::doEval(" << GetName()
             << ") WARNING: sum of FUNC coefficients not in range [0-1], value="
-            << sumCoeff << ". This means that the PDF is not properly normalised. If the PDF was meant to be extended, provide as many coefficients as functions." << endl ;
+            << sumCoeff << ". This means that the PDF is not properly normalised. If the PDF was meant to be extended, provide as many coefficients as functions." << std::endl;
         _haveWarned = true;
       }
       // Signal that we are in an undefined region by handing back one NaN.
@@ -510,7 +508,7 @@ double RooRealSumPdf::analyticalIntegralWN(RooAbsReal const& caller, RooObjCache
     if (!hasWarnedBefore && (lastCoef<0 || lastCoef>1)) {
       oocoutW(&caller, Eval) << caller.ClassName() << "::evaluate(" << caller.GetName()
             << " WARNING: sum of FUNC coefficients not in range [0-1], value="
-            << 1-lastCoef << endl ;
+            << 1-lastCoef << std::endl;
     }
   }
 
@@ -564,44 +562,41 @@ std::list<double>* RooRealSumPdf::binBoundaries(RooAbsRealLValue& obs, double xl
 }
 
 
-std::list<double>* RooRealSumPdf::binBoundaries(RooArgList const& funcList, RooAbsRealLValue& obs, double xlo, double xhi)
+std::list<double> *
+RooRealSumPdf::binBoundaries(RooArgList const &funcList, RooAbsRealLValue &obs, double xlo, double xhi)
 {
-  std::list<double>* sumBinB = nullptr;
-  bool needClean(false) ;
+   std::unique_ptr<std::list<double>> sumBinB;
+   bool needClean(false);
 
-  // Loop over components pdf
-  for (auto * func : static_range_cast<RooAbsReal*>(funcList)) {
+   // Loop over components pdf
+   for (auto *func : static_range_cast<RooAbsReal *>(funcList)) {
 
-    list<double>* funcBinB = func->binBoundaries(obs,xlo,xhi) ;
+      std::unique_ptr<std::list<double>> funcBinB{func->binBoundaries(obs, xlo, xhi)};
 
-    // Process hint
-    if (funcBinB) {
-      if (!sumBinB) {
-   // If this is the first hint, then just save it
-   sumBinB = funcBinB ;
-      } else {
+      // Process hint
+      if (funcBinB) {
+         if (!sumBinB) {
+            // If this is the first hint, then just save it
+            sumBinB = std::move(funcBinB);
+            continue;
+         }
 
-   std::list<double>* newSumBinB = new list<double>(sumBinB->size()+funcBinB->size()) ;
+         auto newSumBinB = std::make_unique<std::list<double>>(sumBinB->size() + funcBinB->size());
 
-   // Merge hints into temporary array
-   merge(funcBinB->begin(),funcBinB->end(),sumBinB->begin(),sumBinB->end(),newSumBinB->begin()) ;
+         // Merge hints into temporary array
+         std::merge(funcBinB->begin(), funcBinB->end(), sumBinB->begin(), sumBinB->end(), newSumBinB->begin());
 
-   // Copy merged array without duplicates to new sumBinBArrau
-   delete sumBinB ;
-   delete funcBinB ;
-   sumBinB = newSumBinB ;
-   needClean = true ;
+         sumBinB = std::move(newSumBinB);
+         needClean = true;
       }
-    }
-  }
+   }
 
-  // Remove consecutive duplicates
-  if (needClean) {
-    list<double>::iterator new_end = unique(sumBinB->begin(),sumBinB->end()) ;
-    sumBinB->erase(new_end,sumBinB->end()) ;
-  }
+   // Remove consecutive duplicates
+   if (needClean) {
+      sumBinB->erase(std::unique(sumBinB->begin(), sumBinB->end()), sumBinB->end());
+   }
 
-  return sumBinB ;
+   return sumBinB.release();
 }
 
 
@@ -634,48 +629,46 @@ std::list<double>* RooRealSumPdf::plotSamplingHint(RooAbsRealLValue& obs, double
   return plotSamplingHint(_funcList, obs, xlo, xhi);
 }
 
-std::list<double>* RooRealSumPdf::plotSamplingHint(RooArgList const& funcList, RooAbsRealLValue& obs, double xlo, double xhi)
+std::list<double> *
+RooRealSumPdf::plotSamplingHint(RooArgList const &funcList, RooAbsRealLValue &obs, double xlo, double xhi)
 {
-  std::list<double>* sumHint = nullptr;
-  bool needClean(false) ;
+   std::unique_ptr<std::list<double>> sumHint;
+   bool needClean(false);
 
-  // Loop over components pdf
-  for (const auto elm : funcList) {
-    auto func = static_cast<RooAbsReal*>(elm);
+   // Loop over components pdf
+   for (const auto elm : funcList) {
+      auto func = static_cast<RooAbsReal *>(elm);
 
-    list<double>* funcHint = func->plotSamplingHint(obs,xlo,xhi) ;
+      std::unique_ptr<std::list<double>> funcHint{func->plotSamplingHint(obs, xlo, xhi)};
 
-    // Process hint
-    if (funcHint) {
-      if (!sumHint) {
+      // Process hint
+      if (funcHint) {
+         if (!sumHint) {
 
-   // If this is the first hint, then just save it
-   sumHint = funcHint ;
+            // If this is the first hint, then just save it
+            sumHint = std::move(funcHint);
+            continue;
+         }
 
-      } else {
+         auto newSumHint = std::make_unique<std::list<double>>(sumHint->size() + funcHint->size());
 
-   auto* newSumHint = new std::list<double>(sumHint->size()+funcHint->size()) ;
+         // the lists must be sorted before merging them
+         funcHint->sort();
+         sumHint->sort();
+         // Merge hints into temporary array
+         std::merge(funcHint->begin(), funcHint->end(), sumHint->begin(), sumHint->end(), newSumHint->begin());
 
-   // the lists must be sorted before merging them
-   funcHint->sort();
-   sumHint->sort();
-   // Merge hints into temporary array
-   merge(funcHint->begin(),funcHint->end(),sumHint->begin(),sumHint->end(),newSumHint->begin()) ;
-
-   // Copy merged array without duplicates to new sumHintArrau
-   delete sumHint ;
-   sumHint = newSumHint ;
-   needClean = true ;
+         sumHint = std::move(newSumHint);
+         needClean = true;
       }
-    }
-  }
+   }
 
-  // Remove consecutive duplicates
-  if (needClean) {
-    sumHint->erase(std::unique(sumHint->begin(),sumHint->end()), sumHint->end()) ;
-  }
+   // Remove consecutive duplicates
+   if (needClean) {
+      sumHint->erase(std::unique(sumHint->begin(), sumHint->end()), sumHint->end());
+   }
 
-  return sumHint ;
+   return sumHint.release();
 }
 
 
@@ -695,7 +688,6 @@ void RooRealSumPdf::setCacheAndTrackHints(RooArgList const& funcList, RooArgSet&
   for (const auto sarg : funcList) {
     if (sarg->canNodeBeCached()==Always) {
       trackNodes.add(*sarg) ;
-      //cout << "tracking node RealSumPdf component " << sarg->ClassName() << "::" << sarg->GetName() << endl ;
     }
   }
 }
@@ -705,13 +697,13 @@ void RooRealSumPdf::setCacheAndTrackHints(RooArgList const& funcList, RooArgSet&
 /// Customized printing of arguments of a RooRealSumPdf to more intuitively reflect the contents of the
 /// product operator construction
 
-void RooRealSumPdf::printMetaArgs(ostream& os) const
+void RooRealSumPdf::printMetaArgs(std::ostream& os) const
 {
   printMetaArgs(_funcList, _coefList, os);
 }
 
 
-void RooRealSumPdf::printMetaArgs(RooArgList const& funcList, RooArgList const& coefList, ostream& os)
+void RooRealSumPdf::printMetaArgs(RooArgList const& funcList, RooArgList const& coefList, std::ostream& os)
 {
 
   bool first(true) ;
