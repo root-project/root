@@ -1,3 +1,0 @@
-[#1] INFO:ObjectHandling -- RooWorkspace::import(ws) importing RooRealVar::x
-RooRealVar::x = 10  L(1 - 100) 
-RooRealVar::x = 1e+06  L(10000 - 1e+06)
