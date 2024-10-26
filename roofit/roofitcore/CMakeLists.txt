@@ -117,7 +117,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooFirstMoment.h
     RooFit.h
     RooFit/Config.h
-    RooFit/Detail/BatchModeDataHelpers.h
     RooFit/Detail/CodeSquashContext.h
     RooFit/Detail/MathFuncs.h
     RooFit/Detail/NormalizationHelpers.h
