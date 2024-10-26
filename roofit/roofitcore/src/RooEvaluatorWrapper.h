@@ -23,7 +23,7 @@
 #include <RooRealProxy.h>
 #include <RooSetProxy.h>
 
-#include "RooFit/Detail/BatchModeDataHelpers.h"
+#include "RooFit/BatchModeDataHelpers.h"
 
 #include <chrono>
 #include <memory>

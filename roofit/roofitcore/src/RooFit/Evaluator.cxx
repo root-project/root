@@ -39,7 +39,7 @@ RooAbsPdf::fitTo() is called and gets destroyed when the fitting ends.
 
 #include <RooBatchCompute.h>
 
-#include "RooFit/Detail/BatchModeDataHelpers.h"
+#include "BatchModeDataHelpers.h"
 #include "RooFitImplHelpers.h"
 
 #include <chrono>
@@ -301,7 +301,7 @@ void Evaluator::updateOutputSizes()
    }
 
    auto outputSizeMap =
-      RooFit::Detail::BatchModeDataHelpers::determineOutputSizes(_topNode, [&](RooFit::Detail::DataKey key) -> int {
+      RooFit::BatchModeDataHelpers::determineOutputSizes(_topNode, [&](RooFit::Detail::DataKey key) -> int {
          auto found = sizeMap.find(key);
          return found != sizeMap.end() ? found->second : -1;
       });

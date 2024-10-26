@@ -12,7 +12,7 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#include "RooFit/Detail/BatchModeDataHelpers.h"
+#include "RooFit/BatchModeDataHelpers.h"
 
 #include <RooAbsData.h>
 #include <RooRealVar.h>
@@ -204,10 +204,9 @@ getSingleDataSpans(RooAbsData const &data, std::string_view rangeName, std::stri
 ///            object can't be used directly (e.g. because you used the range
 ///            selection or the splitting by categories).
 std::map<RooFit::Detail::DataKey, std::span<const double>>
-RooFit::Detail::BatchModeDataHelpers::getDataSpans(RooAbsData const &data, std::string const &rangeName,
-                                                   RooSimultaneous const *simPdf, bool skipZeroWeights,
-                                                   bool takeGlobalObservablesFromData,
-                                                   std::stack<std::vector<double>> &buffers)
+RooFit::BatchModeDataHelpers::getDataSpans(RooAbsData const &data, std::string const &rangeName,
+                                           RooSimultaneous const *simPdf, bool skipZeroWeights,
+                                           bool takeGlobalObservablesFromData, std::stack<std::vector<double>> &buffers)
 {
    std::vector<std::pair<std::string, RooAbsData const *>> datasets;
    std::vector<bool> isBinnedL;
@@ -267,7 +266,7 @@ RooFit::Detail::BatchModeDataHelpers::getDataSpans(RooAbsData const &data, std::
 /// \return A `std::map` with output sizes for each node in the computation graph.
 /// \param[in] topNode The top node of the computation graph.
 /// \param[in] inputSizeFunc A function to get the input sizes.
-std::map<RooFit::Detail::DataKey, std::size_t> RooFit::Detail::BatchModeDataHelpers::determineOutputSizes(
+std::map<RooFit::Detail::DataKey, std::size_t> RooFit::BatchModeDataHelpers::determineOutputSizes(
    RooAbsArg const &topNode, std::function<int(RooFit::Detail::DataKey)> const &inputSizeFunc)
 {
    std::map<RooFit::Detail::DataKey, std::size_t> output;
