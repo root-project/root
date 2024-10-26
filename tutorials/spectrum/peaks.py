@@ -43,59 +43,66 @@ import ctypes
 from array import array
 
 
-TCanvas = ROOT.TCanvas 
-TF1 = ROOT.TF1 
-TH1 = ROOT.TH1 
-TMath = ROOT.TMath 
-TRandom = ROOT.TRandom 
-TSpectrum = ROOT.TSpectrum 
-TVirtualFitter = ROOT.TVirtualFitter 
-#standard library
-std = ROOT.std
-make_shared = std.make_shared
-unique_ptr = std.unique_ptr
+# standard library
+from ROOT import std
+from ROOT.std import (
+                       make_shared,
+                       unique_ptr,
+                       )
 
-#classes
-TCanvas = ROOT.TCanvas
-TH1F = ROOT.TH1F
-TGraph = ROOT.TGraph
-TLatex = ROOT.TLatex
+# classes
+from ROOT import (
+                   TF1,
+                   TH1,
+                   TMath,
+                   TRandom,
+                   TSpectrum,
+                   TVirtualFitter,
+                   TCanvas,
+                   TH1F,
+                   TGraph,
+                   TLatex,
+                   )
 
-#maths
-sin = ROOT.sin
-cos = ROOT.cos
-sqrt = ROOT.sqrt
+# maths
+from ROOT import (
+                   sin,
+                   cos,
+                   sqrt,
+                   )
 
-#types
-Double_t = ROOT.Double_t
-Bool_t = ROOT.Bool_t
-Float_t = ROOT.Float_t
-Int_t = ROOT.Int_t
-nullptr = ROOT.nullptr
-c_double = ctypes.c_double
+# types
+from ROOT import (
+                   Double_t,
+                   Bool_t,
+                   Float_t,
+                   Int_t,
+                   nullptr,
+                   )
 
-#utils
+from ctypes import c_double
+
+# utils
 def to_c( ls ):
-   return (c_double * len(ls) )( * ls )
+   return ( c_double * len( ls ) )( * ls )
 def to_py( c_ls ):
    return list( c_ls ) 
-def printf(string, *args):
-   print( string % args, end="")
-def sprintf(buffer, string, *args):
-   buffer = string % args 
-   return buffer
 
-#constants
-kBlue = ROOT.kBlue
-kRed = ROOT.kRed
-kGreen = ROOT.kGreen
+# constants
+from ROOT import (
+                   kBlue,
+                   kRed,
+                   kGreen,
+                   )
 
-#globals
-gStyle = ROOT.gStyle
-gPad = ROOT.gPad
-gRandom = ROOT.gRandom
-gBenchmark = ROOT.gBenchmark
-gROOT = ROOT.gROOT
+# globals
+from ROOT import (
+                   gStyle,
+                   gPad,
+                   gRandom,
+                   gBenchmark,
+                   gROOT,
+                   )
 
 
 
@@ -120,27 +127,28 @@ def fpeaks(x : Double_t, par : Double_t) :
    #   for (Int_t p = 0; p < npeaks; p++) {
    for p in range(0, npeaks, 1):
 
-      norm = par[3 * p + 2]; # "height" or "area"
-      mean = par[3 * p + 3]
-      sigma = par[3 * p + 4]
-      #if defined(__PEAKS_C_FIT_AREAS__)
+      norm   = par[ 3 * p + 2 ] # "height" or "area"
+      mean   = par[ 3 * p + 3 ]
+      sigma  = par[ 3 * p + 4 ]
+
       if __PEAKS_C_FIT_AREAS__ :
-         norm /= sigma * (TMath.Sqrt(TMath.TwoPi())) # "area"
-      #endif 
-      result += norm * TMath.Gaus(x[0], mean, sigma)
+         norm /= sigma * ( TMath.Sqrt( TMath.TwoPi() ) ) # "area"
+
+      result += norm * TMath.Gaus( x[0], mean, sigma )
       
    return result
    
+
 # void
 def peaks(np : Int_t = 10) :
 
    global npeaks
-   npeaks = TMath.Abs(np)
+   npeaks = TMath.Abs( np )
 
    global h
-   h = TH1F("h", "test", 500, 0, 1000)
+   h = TH1F( "h", "test", 500, 0, 1000 )
    
-   # Generate n peaks at random
+   # Generate n peaks at random.
    par = [ Double_t() for _ in range(3000) ]
    par[0] = 0.8
    par[1] = -0.6 / 1000
@@ -148,15 +156,13 @@ def peaks(np : Int_t = 10) :
    #   for (p = 0; p < npeaks; p++) {
    for p in range(0, npeaks, 1):
 
-      par[3 * p + 2] = 1;                            # "height"
-      par[3 * p + 3] = 10    + gRandom.Rndm() * 980; # "mean"
-      par[3 * p + 4] = 3 + 2 * gRandom.Rndm();       # "sigma"
+      par[3 * p + 2] = 1                            # "height"
+      par[3 * p + 3] = 10    + gRandom.Rndm() * 980 # "mean"
+      par[3 * p + 4] = 3 + 2 * gRandom.Rndm()       # "sigma"
     
-      #if defined(__PEAKS_C_FIT_AREAS__)
       if (__PEAKS_C_FIT_AREAS__) :
          # "area"
-         par[3 * p + 2] *= par[3 * p + 4] * (TMath.Sqrt(TMath.TwoPi())); 
-      #endif
+         par[3 * p + 2] *= par[3 * p + 4] * TMath.Sqrt( TMath.TwoPi() ) 
 
       
 
@@ -187,19 +193,19 @@ def peaks(np : Int_t = 10) :
    global s
    s = TSpectrum(2 * npeaks)
    global nfound
-   nfound = s.Search(h, 2, "", 0.10)
+   nfound = s.Search( h, 2, "", 0.10 )
    #
-   printf("Found %d candidate peaks to fit\n", nfound)
+   print( "Found %d candidate peaks to fit\n" % nfound )
    
 
-   # Estimate background using TSpectrum::Background
+   # Estimate background using "TSpectrum.Background" . 
    global hb
    hb = s.Background(h, 20, "same")
    if (hb) :
       c1.Update()
 
    if (np < 0) : 
-      #No Fitting.
+      # No Fitting.
       return
    
 
@@ -211,44 +217,42 @@ def peaks(np : Int_t = 10) :
    #
    h.Fit("fline", "qn")
    #
-   # Loop on all found peaks. Eliminate peaks at the background level
+   # Loop on all found peaks. Eliminate peaks at the background level.
    par[0] = fline.GetParameter(0)
    par[1] = fline.GetParameter(1)
    #
    npeaks = 0
-   #xpeaks = ctypes.pointer( c_double() ) 
+   # xpeaks = ctypes.pointer( c_double() ) 
    global xpeaks
-   xpeaks = s.GetPositionX()
+   xpeaks = s.GetPositionX() # c_double *
    #   for (p = 0; p < nfound; p++) {
    for p in range(0, nfound, 1):
-      xp = xpeaks[p]
-      Bin = h.GetXaxis().FindBin(xp)
-      yp = h.GetBinContent(Bin)
+      xp   = xpeaks[p]
+      Bin  = h.GetXaxis().FindBin( xp )
+      yp   = h.GetBinContent( Bin )
       if (yp - TMath.Sqrt(yp) < fline.Eval(xp)) :
          continue
 
-      par[3 * npeaks + 2] = yp; # "height"
-      par[3 * npeaks + 3] = xp; # "mean"
-      par[3 * npeaks + 4] = 3;  # "sigma"
+      par[ 3 * npeaks + 2 ] = yp # "height"
+      par[ 3 * npeaks + 3 ] = xp # "mean"
+      par[ 3 * npeaks + 4 ] = 3  # "sigma"
 
-      #if defined(__PEAKS_C_FIT_AREAS__)
       if (__PEAKS_C_FIT_AREAS__) :
         # "area"
-        par[3 * npeaks + 2] *= par[3 * npeaks + 4] * (TMath.Sqrt(TMath.TwoPi())); 
-      #endif                                                                          
+        par[3 * npeaks + 2] *= par[3 * npeaks + 4] * TMath.Sqrt( TMath.TwoPi() )
 
       npeaks += 1
    # # # 
-   printf("Found %d useful peaks to fit\n", npeaks)
+   print( "Found %d useful peaks to fit\n" % npeaks )
 
 
-   printf("\n\n >>> Now fitting...: Please, be patient. Could take time.\n")
+   print( "\n\n >>> Now fitting...: Please, be patient. Could take time.\n" )
    #
    global fit
    fit = TF1("fit", fpeaks, 0, 1000, 2 + 3 * npeaks)
    #
    # We may have more than the default 25 parameters, adding 10 shoud do it.
-   TVirtualFitter.Fitter(h2, 10 + 3 * npeaks)
+   TVirtualFitter.Fitter( h2, 10 + 3 * npeaks )
    #
    c_par = to_c( par )  
    fit.SetParameters( c_par)
@@ -262,4 +266,4 @@ def peaks(np : Int_t = 10) :
 
 if __name__ == "__main__":
    peaks()
-   #peaks(-20)
+   # peaks(-20)

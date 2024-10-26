@@ -30,81 +30,93 @@ import ctypes
 from array import array
 
 
-TCanvas = ROOT.TCanvas 
-TF2 = ROOT.TF2 
-TH2 = ROOT.TH2 
-TH2F = ROOT.TH2F
-TMath = ROOT.TMath 
-TROOT = ROOT.TROOT 
-TRandom = ROOT.TRandom 
-TSpectrum2 = ROOT.TSpectrum2 
-#standard library
-std = ROOT.std
-make_shared = std.make_shared
-unique_ptr = std.unique_ptr
+# standard library
+from ROOT import std
+from ROOT.std import (
+                       make_shared,
+                       unique_ptr,
+                       )
 
-#classes
-TCanvas = ROOT.TCanvas
-TH1F = ROOT.TH1F
-TGraph = ROOT.TGraph
-TLatex = ROOT.TLatex
+# classes
+from ROOT import (
+                   TF2,
+                   TH2,
+                   TH2F,
+                   TMath,
+                   TROOT,
+                   TRandom,
+                   TSpectrum2,
+                   TCanvas,
+                   TH1F,
+                   TGraph,
+                   TLatex,
+                   )
 
-#maths
-sin = ROOT.sin
-cos = ROOT.cos
-sqrt = ROOT.sqrt
+# maths
+from ROOT import (
+                   sin,
+                   cos,
+                   sqrt,
+                   )
 
-#types
-Double_t = ROOT.Double_t
-Bool_t = ROOT.Bool_t
-Float_t = ROOT.Float_t
-Int_t = ROOT.Int_t
-nullptr = ROOT.nullptr
-c_double = ctypes.c_double
+# types
+from ROOT import (
+                   Double_t,
+                   Bool_t,
+                   Float_t,
+                   Int_t,
+                   nullptr,
+                   )
 
-#utils
+from ctypes import c_double
+
+# utils
 def to_c( ls ):
    return (c_double * len(ls) )( * ls )
 def to_py( c_ls ):
    return list( c_ls ) 
-def printf(string, *args):
-   print( string % args, end="")
-def sprintf(buffer, string, *args):
-   buffer = string % args 
-   return buffer
 
-#constants
-kBlue = ROOT.kBlue
-kRed = ROOT.kRed
-kGreen = ROOT.kGreen
+# constants
+from ROOT import (
+                   kBlue,
+                   kRed,
+                   kGreen,
+                   )
 
-#globals
-gStyle = ROOT.gStyle
-gPad = ROOT.gPad
-gRandom = ROOT.gRandom
-gBenchmark = ROOT.gBenchmark
-gROOT = ROOT.gROOT
+# globals
+from ROOT import (
+                   gStyle,
+                   gPad,
+                   gRandom,
+                   gBenchmark,
+                   gROOT,
+                   )
 
 
 
 
 # variables
-s = TSpectrum2()
-h2 = TH2F() # nullptr
-npeaks = 30
+s       = TSpectrum2()
+h2      = TH2F() # nullptr
+npeaks  = 30
 
 # Double_t
-def fpeaks2(x : Double_t, par : Double_t) :
+def fpeaks2(x : float, par : float) :
 
    result = 0.1
    #   for (Int_t p = 0; p < npeaks; p++) {
    for p in range(0, npeaks, 1):
-      norm = par[5 * p + 0]
-      mean1 = par[5 * p + 1]
-      sigma1 = par[5 * p + 2]
-      mean2 = par[5 * p + 3]
-      sigma2 = par[5 * p + 4]
-      result += norm * TMath.Gaus(x[0], mean1, sigma1) * TMath.Gaus(x[1], mean2, sigma2)
+
+      norm    = par[5 * p + 0]
+      mean1   = par[5 * p + 1]
+      sigma1  = par[5 * p + 2]
+      mean2   = par[5 * p + 3]
+      sigma2  = par[5 * p + 4]
+
+      result += \
+                norm *\
+                TMath.Gaus(x[0], mean1, sigma1) *\
+                TMath.Gaus(x[1], mean2, sigma2)
       
    return result
 
@@ -113,17 +125,17 @@ def fpeaks2(x : Double_t, par : Double_t) :
 # void
 def findPeak2() :
 
-   printf("Generating histogram with %d peaks\n", npeaks)
+   print("Generating histogram with %d peaks\n" % npeaks)
    
    # Setting-up ...
    nbinsx = 200
    nbinsy = 200
    #
    xmin = 0
-   xmax = Double_t( nbinsx )
+   xmax = float( nbinsx )
    #
    ymin = 0
-   ymax = Double_t( nbinsy )
+   ymax = float( nbinsy )
    #
    dx = (xmax - xmin) / nbinsx
    dy = (ymax - ymin) / nbinsy
@@ -134,19 +146,19 @@ def findPeak2() :
       del h2
    #
    h2 = TH2F("h2", "test", nbinsx, xmin, xmax, nbinsy, ymin, ymax)
-   h2.SetStats(False)
+   h2.SetStats( False )
 
    
-   # generate n peaks at random
-   par = [ Double_t() for _ in range(3000) ]
+   # Generate n peaks at random.
+   par = [ float() for _ in range(3000) ]
    #
    #   for (p = 0; p < npeaks; p++) {
    for p in range(0, npeaks, 1):
-      par[5 * p + 0] = gRandom.Uniform(0.2, 1)
-      par[5 * p + 1] = gRandom.Uniform(xmin, xmax)
-      par[5 * p + 2] = gRandom.Uniform(dx, 5 * dx)
-      par[5 * p + 3] = gRandom.Uniform(ymin, ymax)
-      par[5 * p + 4] = gRandom.Uniform(dy, 5 * dy)
+      par[5 * p + 0] = gRandom.Uniform( 0.2  , 1      )
+      par[5 * p + 1] = gRandom.Uniform( xmin , xmax   )
+      par[5 * p + 2] = gRandom.Uniform( dx   , 5 * dx )
+      par[5 * p + 3] = gRandom.Uniform( ymin , ymax   )
+      par[5 * p + 4] = gRandom.Uniform( dy   , 5 * dy )
       
 
    global f2
@@ -160,18 +172,18 @@ def findPeak2() :
 
 
    global c1
-   c1 = gROOT.GetListOfCanvases().FindObject("c1") # (TCanvas*)
+   c1 = gROOT.GetListOfCanvases().FindObject( "c1" ) # (TCanvas*)
    if (not c1) :
-      c1 = TCanvas("c1", "c1", 10, 10, 1000, 700)
+      c1 = TCanvas( "c1", "c1", 10, 10, 1000, 700 )
 
-   h2.FillRandom("f2", 500000)
+   h2.FillRandom( "f2", 500000 )
    
-   # now the real stuff: Finding the peaks
+   # Now the real stuff: Finding the peaks.
    global nfound
-   nfound = s.Search(h2, 2, "col")
+   nfound = s.Search( h2, 2, "col" )
    
-   # searching good and ghost peaks (approximation)
-   pf, ngood = Int_t(0), Int_t(0)
+   # Searching good and ghost peaks (approximation).
+   pf, ngood = int(0), int(0)
    global xpeaks, ypeaks
    xpeaks = s.GetPositionX()
    ypeaks = s.GetPositionY()
@@ -181,10 +193,8 @@ def findPeak2() :
    for p in range(0, npeaks, 1):
       for pf in range(0, nfound, 1):
 
-         global diffx
-         diffx = TMath.Abs(xpeaks[pf] - par[5 * p + 1])
-         global diffy
-         diffy = TMath.Abs(ypeaks[pf] - par[5 * p + 3])
+         diffx = TMath.Abs( xpeaks[pf] - par[5 * p + 1] )
+         diffy = TMath.Abs( ypeaks[pf] - par[5 * p + 3] )
 
          if (diffx < 2 * dx and diffy < 2 * dy) :
             ngood += 1 
@@ -200,8 +210,8 @@ def findPeak2() :
       nf = 0
       #      for (p = 0; p < npeaks; p++) {
       for p in range(0, npeaks, 1):
-         diffx = TMath.Abs(xpeaks[pf] - par[5 * p + 1])
-         diffy = TMath.Abs(ypeaks[pf] - par[5 * p + 3])
+         diffx = TMath.Abs( xpeaks[pf] - par[5 * p + 1] )
+         diffy = TMath.Abs( ypeaks[pf] - par[5 * p + 3] )
 
          if (diffx < 2 * dx and diffy < 2 * dy) :
             nf += 1
@@ -213,31 +223,38 @@ def findPeak2() :
    
 
    s.Print()
-   printf("Gener=%d, Found=%d, Good=%d, Ghost=%d\n", npeaks, nfound, ngood, nghost)
+   print(
+          "Gener=%d, Found=%d, Good=%d, Ghost=%d\n" % ( 
+                                                       npeaks ,
+                                                       nfound ,
+                                                       ngood  ,
+                                                       nghost ,
+                                                       )
+          )
 
 
    if not gROOT.IsBatch():
-      printf("\nDouble click in the bottom right corner of the pad to continue\n")
+      print("\nDouble click in the bottom right corner of the pad to continue\n")
       c1.WaitPrimitive()
       
    
 # void
-def peaks2(maxpeaks : Int_t = 50) :
+def peaks2(maxpeaks : int = 50) :
 
    global s
-   s = TSpectrum2(2 * maxpeaks)
+   s = TSpectrum2( 2 * maxpeaks )
 
    #   for (int i = 0; i < 10; ++i) {
    for i in range(0, 10, 1):
    #for i in range(0, 2, 1):
       global npeaks
-      npeaks = Int_t( gRandom.Uniform(5, maxpeaks) ) 
+      npeaks = int( gRandom.Uniform( 5, maxpeaks ) ) 
       findPeak2()
       
    
 
 
 if __name__ == "__main__":
-   #peaks2() # 50 peaks default
+   # peaks2() # 50 peaks by default
    peaks2(10)
-   #peaks2(1)
+   # peaks2(1)

@@ -18,62 +18,73 @@ import ctypes
 from array import array
 
 
-#standard library
-std = ROOT.std
-make_shared = std.make_shared
-unique_ptr = std.unique_ptr
+# standard library
+from ROOT import std
+from ROOT.std import (
+                       make_shared,
+                       unique_ptr,
+                       )
 
-#classes
-TFile = ROOT.TFile
-TMarker = ROOT.TMarker
-TString = ROOT.TString
-TSpectrum2 = ROOT.TSpectrum2 
-TCanvas = ROOT.TCanvas
-TH1F = ROOT.TH1F
-TGraph = ROOT.TGraph
-TLatex = ROOT.TLatex
+# classes
+from ROOT import (
+                   TFile,
+                   TMarker,
+                   TString,
+                   TSpectrum2,
+                   TCanvas,
+                   TH1F,
+                   TGraph,
+                   TLatex,
+                   )
 
-#maths
-sin = ROOT.sin
-cos = ROOT.cos
-sqrt = ROOT.sqrt
+# maths
+from ROOT import (
+                   sin,
+                   cos,
+                   sqrt,
+                   )
 
-#types
-Double_t = ROOT.Double_t
-Bool_t = ROOT.Bool_t
-Float_t = ROOT.Float_t
-Int_t = ROOT.Int_t
-nullptr = ROOT.nullptr
-c_double = ctypes.c_double
-POINTER = ctypes.POINTER
-sizeof = ctypes.sizeof
+# types
+from ROOT import (
+                   Double_t,
+                   Bool_t,
+                   Float_t,
+                   Int_t,
+                   nullptr,
+                   )
+
+# ctypes
+from ctypes import (
+                     c_double,
+                     POINTER,
+                     sizeof,
+                     )
 
 #utils
 def to_c( ls ):
    return (c_double * len(ls) )( * ls )
-def printf(string, *args):
-   print( string % args, end="")
-def sprintf(buffer, string, *args):
-   buffer = string % args 
-   return buffer
 
-#constants
-kBlue = ROOT.kBlue
-kRed = ROOT.kRed
-kGreen = ROOT.kGreen
+# constants
+from ROOT import (
+                   kBlue,
+                   kRed,
+                   kGreen,
+                   )
 
-#globals
-gStyle = ROOT.gStyle
-gPad = ROOT.gPad
-gRandom = ROOT.gRandom
-gBenchmark = ROOT.gBenchmark
-gROOT = ROOT.gROOT
+# globals
+from ROOT import (
+                   gStyle,
+                   gPad,
+                   gRandom,
+                   gBenchmark,
+                   gROOT,
+                   )
 
 
 # For C++ type: double **
 def to_c_double_ptr_ptr_FLAT( matrix ) :
 
-   rows, cols = len(matrix), len(matrix[0])
+   rows, cols = len( matrix ), len( matrix[0] )
 
    data = ( c_double * ( rows * cols ) )()
    row_pointers = ( POINTER( c_double ) * rows )()
@@ -114,22 +125,22 @@ def Src2() :
    #
    ##for (Int_t i = 0; i < nbinsx; i++) {
    #for i in range(0, nbinsx, 1):
-   #   source[i] =  Double_t[nbinsy]; # new
-   #   dest[i]   =  Double_t[nbinsy]; # new
+   #   source[i] =  Double_t[nbinsy] # new
+   #   dest[i]   =  Double_t[nbinsy] # new
    #
    #
-   source = [ [ Double_t() for _ in range( nbinsy ) ] for _ in range( nbinsx ) ] 
-   dest   = [ [ Double_t() for _ in range( nbinsy ) ] for _ in range( nbinsx ) ]
+   source = [ [ float() for _ in range( nbinsy ) ] for _ in range( nbinsx ) ] 
+   dest   = [ [ float() for _ in range( nbinsy ) ] for _ in range( nbinsx ) ]
       
-   Dir = gROOT.GetTutorialDir(); # TString
-   file = Dir + TString( "/spectrum/TSpectrum2.root" ); # TString
+   Dir   = gROOT.GetTutorialDir()                        # TString
+   file  = Dir + TString( "/spectrum/TSpectrum2.root" )  # TString
    global f
    f = TFile.Open(file.Data()) # TFile *
 
-   gStyle.SetOptStat(0)
+   gStyle.SetOptStat( 0 )
 
    global search
-   search = f.Get("back3"); # auto # (TH2F *)
+   search = f.Get("back3") # (TH2F *)
 
 
    # # #
@@ -142,32 +153,43 @@ def Src2() :
    for i in range(0, nbinsx, 1):
       #      for (Int_t j = 0; j < nbinsy; j++) {
       for j in range(0, nbinsy, 1):
-         source[i][j] = search.GetBinContent(i + 1, j + 1)
+         source[i][j] = search.GetBinContent( i + 1, j + 1 )
          
    # double** type
    source_ptr_ptr = to_c_double_ptr_ptr_FLAT( source )  
    dest_ptr_ptr   = to_c_double_ptr_ptr_FLAT( dest   )  
 
    # Error:
-   #nfound = s.SearchHighRes(source.data(), dest.data(), nbinsx, nbinsy, 2, 10, True, 10, False, 3); # Int_t
+   #nfound = \
+   #     s.SearchHighRes( 
+   #                      source.data() ,
+   #                      dest.data()   ,
+   #                      nbinsx        ,
+   #                      nbinsy        ,
+   #                      2             ,
+   #                      10            ,
+   #                      True          ,
+   #                      10            ,
+   #                      False         ,
+   #                      3             ,
+   #                      ) # int 
    #
    # Ok:
    global nfound
-   # Int_t
    nfound = s.SearchHighRes(
-                            source_ptr_ptr,
-                            dest_ptr_ptr,
-                            nbinsx,
-                            nbinsy,
-                            2,
-                            10,
-                            True,
-                            10,
-                            False,
-                            3,
-                            )
+                            source_ptr_ptr ,
+                            dest_ptr_ptr   ,
+                            nbinsx         ,
+                            nbinsy         ,
+                            2              ,
+                            10             ,
+                            True           ,
+                            10             ,
+                            False          ,
+                            3              ,
+                            ) # int
 
-   printf("Found %d candidate peaks\n", nfound)
+   print( "Found %d candidate peaks\n" % nfound )
 
    global PositionX, PositionY
    PositionX = s.GetPositionX() # Double_t *
@@ -177,23 +199,28 @@ def Src2() :
 
    global m
    m = TMarker()
-   m.SetMarkerStyle(23)
-   m.SetMarkerColor(kRed)
+   m.SetMarkerStyle( 23   )
+   m.SetMarkerColor( kRed )
 
    #for (Int_t i = 0; i < nfound; i++) {
    for i in range(0, nfound, 1):
-      printf("posx= %d, posy= %d, value=%d\n",
-             Int_t( PositionX[i] + 0.5 ) ,
-             Int_t( PositionY[i] + 0.5 ) ,
-             Int_t( source[Int_t( PositionX[i] + 0.5 ) ][Int_t( PositionY[i] + 0.5 ) ] ),
+      print(
+             "posx= %d, posy= %d, value=%d\n" % (
+                 int( PositionX[i] + 0.5 )                    ,
+                 int( PositionY[i] + 0.5 )                    ,
+                 int( source[                            \
+                             int( PositionX[i] + 0.5 )   \
+                             ]                           \
+                            [                            \
+                             int( PositionY[i] + 0.5 )   \
+                             ]                           \
+                      )                                       ,
+                 )
             )
-      m.DrawMarker(PositionX[i], PositionY[i])
+      m.DrawMarker( PositionX[i], PositionY[i] )
       
 
-   ##for (Int_t i = 0; i < nbinsx; i++) {
-   #for i in range(0, nbinsx, 1):
-   #   del source[i]
-   #   del dest[i]
+   # Clean up.
    del source
    del source_ptr_ptr
    del dest_ptr_ptr

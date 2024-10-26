@@ -18,87 +18,92 @@ import ctypes
 from array import array
 
 
-#standard library
-std = ROOT.std
-make_shared = std.make_shared
-unique_ptr = std.unique_ptr
+# standard library
+from ROOT import std
+from ROOT.std import (
+                       make_shared,
+                       unique_ptr,
+                       )
 
-#classes
-TMarker = ROOT.TMarker
-TSpectrum2 = ROOT.TSpectrum2 
-TFile = ROOT.TFile
-TString = ROOT.TString
+# classes
+from ROOT import (
+                   TMarker,
+                   TSpectrum2,
+                   TFile,
+                   TString,
+                   TCanvas,
+                   TH1F,
+                   TGraph,
+                   TLatex,
+                   )
 
-TCanvas = ROOT.TCanvas
-TH1F = ROOT.TH1F
-TGraph = ROOT.TGraph
-TLatex = ROOT.TLatex
+# maths
+from ROOT import (
+                   sin,
+                   cos,
+                   sqrt,
+                   )
 
-#maths
-sin = ROOT.sin
-cos = ROOT.cos
-sqrt = ROOT.sqrt
+# types
+from ROOT import (
+                   Double_t,
+                   Long_t,
+                   Bool_t,
+                   Float_t,
+                   Int_t,
+                   nullptr,
+                   )
 
-#types
-Double_t = ROOT.Double_t
-Long_t = ROOT.Long_t
-Bool_t = ROOT.Bool_t
-Float_t = ROOT.Float_t
-Int_t = ROOT.Int_t
-nullptr = ROOT.nullptr
-c_double = ctypes.c_double
-POINTER = ctypes.POINTER
-sizeof = ctypes.sizeof
-byref = ctypes.byref
-cast = ctypes.cast
+from ctypes import (
+                     c_double,
+                     POINTER,
+                     sizeof,
+                     byref,
+                     cast,
+                     )
 
 #utils
 def to_c( ls ):
-   return (c_double * len(ls) )( * ls )
-def printf(string, *args):
-   print( string % args, end="")
-def sprintf(buffer, string, *args):
-   buffer = string % args 
-   return buffer
+   return ( c_double * len( ls ) )( * ls )
 
-#constants
-kOrange = ROOT.kOrange
-kMagenta = ROOT.kMagenta
-kBlue = ROOT.kBlue
-kRed = ROOT.kRed
-kGreen = ROOT.kGreen
+# constants
+from ROOT import (
+                   kOrange,
+                   kMagenta,
+                   kBlue,
+                   kRed,
+                   kGreen,
+                   )
 
-#globals
-gStyle = ROOT.gStyle
-gPad = ROOT.gPad
-gRandom = ROOT.gRandom
-gBenchmark = ROOT.gBenchmark
-gROOT = ROOT.gROOT
+# globals
+from ROOT import (
+                   gStyle,
+                   gPad,
+                   gRandom,
+                   gBenchmark,
+                   gROOT,
+                   )
 
-#ProcessLine("""
-#   double ** y
-#""")
+
 
 
 # For c++ type: double**
 def to_c_double_ptr_ptr(rows, cols) : 
-   #
+   
    LP_c_double    = POINTER( c_double )
    LP_LP_c_double = POINTER( POINTER( c_double ) ) 
-   #
+   
    c_double_Array_Array = ( c_double * cols ) * rows
 
    array_2d = c_double_Array_Array()
    array_of_ptrs = ( LP_c_double * rows )( ) #  LP_c_double_Array 
-   #
+   
    for i in range( rows ):
-      #LP_c_double_Array[ i ] = ptr_to_array_1 
-      #LP_c_double_Array[ i ] = ptr_to_array
       array_of_ptrs[ i ] = array_2d[ i ]
    
-   #
+   
    ptr_to_pointer = LP_LP_c_double( array_of_ptrs )
-   #
+     
    return ptr_to_pointer
 
 
@@ -106,7 +111,7 @@ def to_c_double_ptr_ptr(rows, cols) :
 # For C++ type: double **
 def to_c_double_ptr_ptr_FLAT( matrix ) :
 
-   rows, cols = len(matrix), len(matrix[0])
+   rows, cols = len( matrix ), len( matrix[0] )
 
    data = ( c_double * ( rows * cols ) )()
    row_pointers = ( POINTER( c_double ) * rows )()
@@ -119,10 +124,12 @@ def to_c_double_ptr_ptr_FLAT( matrix ) :
    # fill addresses
    for i in range( rows ) :
       # Ok
-      #row_pointers[i] = cast(byref(data, i * cols * sizeof(c_double)), POINTER(c_double))
+      #row_pointers[i] = \
+      #     cast(byref(data, i * cols * sizeof(c_double)), POINTER(c_double))
 
       # Ok
-      row_pointers[i] = (c_double * cols ).from_buffer( data, i*( cols * sizeof( c_double) ) ) 
+      row_pointers[i] = \
+            (c_double * cols ).from_buffer( data, i*( cols * sizeof( c_double ) ) ) 
 
 
    return row_pointers
@@ -133,23 +140,24 @@ def to_c_double_ptr_ptr_FLAT( matrix ) :
 def Src3() :
 
    # x
-   nbinsx = 64 # Int_t
+   nbinsx = 64
    # y
-   nbinsy = 64 # Int_t
+   nbinsy = 64
 
    # # #
    # x
    #global source, dest
-   #source = std.vector[ "Double_t *" ]( nbinsx )
-   #dest   = std.vector[ "Double_t *" ]( nbinsx )
+   ## source = std.vector[ "Double_t *" ]( nbinsx ) # error
+   ## dest   = std.vector[ "Double_t *" ]( nbinsx ) # error
+   # instead
    #source = std.vector[ "Double_t *" ]( )
    #dest   = std.vector[ "Double_t *" ]( )
 
    ##for (Int_t i = 0; i < nbinsx; i++) {
    #for i in range(0, nbinsx, 1):
    #   # y
-   #   source_i  =  [ Double_t() for _ in range( nbinsy ) ]; # new
-   #   dest_i    =  [ Double_t() for _ in range( nbinsy ) ]; # new
+   #   source_i  =  [ Double_t() for _ in range( nbinsy ) ] # new
+   #   dest_i    =  [ Double_t() for _ in range( nbinsy ) ] # new
    #   #
    #   source_i  = array( "d", source_i )
    #   dest_i    = array( "d", dest_i )
@@ -166,15 +174,15 @@ def Src3() :
 
 
       
-   Dir = gROOT.GetTutorialDir(); # TString
-   file = Dir + TString( "/spectrum/TSpectrum2.root" ); # TString
+   Dir   = gROOT.GetTutorialDir() # TString
+   file  = Dir + TString( "/spectrum/TSpectrum2.root" ) # TString
    global f
-   f = TFile.Open(file.Data()) # TFile *
+   f = TFile.Open( file.Data() ) # TFile *
 
    gStyle.SetOptStat(0)
 
    global search
-   search = f.Get("search1"); # auto # (TH2F *)
+   search = f.Get("search1") # auto # (TH2F *)
 
 
    # # #
@@ -199,7 +207,7 @@ def Src3() :
 
 
 
-   #Note:
+   # Note:
    #     Alternatives for the type double**.
    #     None of the next below have been sucessfully received by the
    #                          # Error:
@@ -238,9 +246,9 @@ def Src3() :
                             3,
                             False,
                             1,
-   )
+                            )
    #   
-   printf("Found %d candidate peaks\n", nfound)
+   print( "Found %d candidate peaks\n" % nfound )
    #
    search.Draw("CONT")
 
@@ -257,12 +265,19 @@ def Src3() :
    #
    #for (Int_t i = 0; i < nfound; i++) {
    for i in range(0, nfound, 1):
-      printf("posx= %d, posy= %d, value=%d\n",
-             Int_t( PositionX[i] + 0.5 ) ,
-             Int_t( PositionY[i] + 0.5 ) ,
-             Int_t( source[Int_t( PositionX[i] + 0.5 ) ][Int_t( PositionY[i] + 0.5 ) ] ),
-            )
-      m.DrawMarker(PositionX[i], PositionY[i])
+      print( "posx= %d, posy= %d, value=%d\n" % (
+                int( PositionX[i] + 0.5 )                 ,
+                int( PositionY[i] + 0.5 )                 ,
+                int( source[                           \
+                            int( PositionX[i] + 0.5 )  \
+                            ]                          \
+                           [                           \
+                            int( PositionY[i] + 0.5 )  \
+                            ]                          \
+                     )                                    ,
+                )
+            ) 
+      m.DrawMarker( PositionX[i], PositionY[i] )
       
 
   
@@ -270,11 +285,7 @@ def Src3() :
    #       memory item by item. Instead we will use a simple garbage 
    #       collector of Python-style: del source_ptr_ptr
    #
-   ## Clean-up. 
-   ##for (Int_t i = 0; i < nbinsx; i++) {
-   #for i in range(0, nbinsx, 1):
-   #   del source_ptr_ptr[i]
-   #   del dest_ptr_ptr[i]
+   # Clean-up. 
    del source_ptr_ptr
    del dest_ptr_ptr
 
@@ -282,7 +293,6 @@ def Src3() :
    while len(source) > 0 and len(dest) > 0: 
       del source[0]
       del dest[0]
-      #pass
       
    
 

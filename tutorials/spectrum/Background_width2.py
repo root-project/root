@@ -17,183 +17,193 @@ import ctypes
 from array import array
 
 
-#standard library
-std = ROOT.std
-make_shared = std.make_shared
-unique_ptr = std.unique_ptr
+# standard library
+from ROOT import std
+from ROOT.std import (
+                       make_shared,
+                       unique_ptr,
+                       )
 
-#classes
-TString = ROOT.TString
-TSpectrum = ROOT.TSpectrum
-TFile = ROOT.TFile
-TCanvas = ROOT.TCanvas
-TH1F = ROOT.TH1F
-TGraph = ROOT.TGraph
-TLatex = ROOT.TLatex
+# classes
+from ROOT import (
+                   TString,
+                   TSpectrum,
+                   TFile,
+                   TCanvas,
+                   TH1F,
+                   TGraph,
+                   TLatex,
+                   )
 
-#maths
-sin = ROOT.sin
-cos = ROOT.cos
-sqrt = ROOT.sqrt
+# maths
+from ROOT import (
+                   sin,
+                   cos,
+                   sqrt,
+                   )
 
-#types
-Double_t = ROOT.Double_t
-Bool_t = ROOT.Bool_t
-Float_t = ROOT.Float_t
-Int_t = ROOT.Int_t
-nullptr = ROOT.nullptr
-c_double = ctypes.c_double
+# types
+from ROOT import (
+                   Double_t,
+                   Bool_t,
+                   Float_t,
+                   Int_t,
+                   nullptr,
+                   )
+#
+from ctypes import c_double
 
-#utils
+# utils
 def to_c( ls ):
-   return (c_double * len(ls) )( * ls )
-def printf(string, *args):
-   print( string % args, end="")
-def sprintf(buffer, string, *args):
-   buffer = string % args 
-   return buffer
+   return ( c_double * len( ls ) )( * ls )
 
-#constants
-kMagenta = ROOT.kMagenta
-kBlue = ROOT.kBlue
-kRed = ROOT.kRed
-kGreen = ROOT.kGreen
+# constants
+from ROOT import (
+                   kMagenta,
+                   kBlue,
+                   kRed,
+                   kGreen,
+                   )
 
-#globals
-gStyle = ROOT.gStyle
-gPad = ROOT.gPad
-gRandom = ROOT.gRandom
-gBenchmark = ROOT.gBenchmark
-gROOT = ROOT.gROOT
+# globals
+from ROOT import (
+                   gStyle,
+                   gPad,
+                   gRandom,
+                   gBenchmark,
+                   gROOT,
+                   )
 
 
 
 # void
 def Background_width2() :
 
-   i = Int_t()
-   nbins = 4096 # Int_t
-   xmin = 0; # Double_t
-   xmax = 4096; # Double_t
+   nbins = 4096
+   xmin  = 0.
+   xmax  = 4096.
 
-   source = [ Double_t() for _ in range(nbins) ]
+   source = [ float() for _ in range( nbins ) ]
    source = array( "d", source )
 
    gROOT.ForceStyle()
    
    global d1, d2, d3, d4
-   d1 = TH1F("d1", "", nbins, xmin, xmax); # TH1F
-   d2 = TH1F("d2", "", nbins, xmin, xmax); # TH1F
-   d3 = TH1F("d3", "", nbins, xmin, xmax); # TH1F
-   d4 = TH1F("d4", "", nbins, xmin, xmax); # TH1F
+   d1 = TH1F("d1", "", nbins, xmin, xmax) # TH1F
+   d2 = TH1F("d2", "", nbins, xmin, xmax) # TH1F
+   d3 = TH1F("d3", "", nbins, xmin, xmax) # TH1F
+   d4 = TH1F("d4", "", nbins, xmin, xmax) # TH1F
    
-   Dir = gROOT.GetTutorialDir(); # TString
-   file = Dir + TString( "/spectrum/TSpectrum.root" ); # TString
+   Dir  = gROOT.GetTutorialDir()                       # TString
+   file = Dir + TString( "/spectrum/TSpectrum.root" )  # TString
    global f
-   f = TFile(file.Data()); # TFile
+   f = TFile( file.Data() ) # TFile
 
    global back
-   back = f.Get("back2"); # (TH1F *)
+   back = f.Get( "back2" ) # (TH1F *)
    
-   back.SetTitle("Influence of clipping window width on the estimated background")
-   back.SetAxisRange(0, 1000)
-   back.SetMaximum(7000)
-   back.Draw("L")
+   back.SetTitle(
+                  "Influence of clipping window width"
+                  " on the estimated background."
+                  )
+   back.SetAxisRange ( 0, 1000 )
+   back.SetMaximum   ( 7000    )
+   back.Draw         ( "L"     )
 
    
    # # #
 
 
    global s
-   s = TSpectrum(); # TSpectrum
+   s = TSpectrum() # TSpectrum
    
    #for (i = 0; i < nbins; i++) {
    for i in range(0, nbins, 1):
-      source[i] = back.GetBinContent(i + 1)
-   # # 
+      source[i] = back.GetBinContent( i + 1 )
+   #
    s.Background(
-                source,
-                nbins,
-                10,
-                TSpectrum.kBackDecreasingWindow,
-                TSpectrum.kBackOrder2,
-                False,
-                TSpectrum.kBackSmoothing3,
-                False,
-   )
+                 source                          ,
+                 nbins                           ,
+                 10                              ,
+                 TSpectrum.kBackDecreasingWindow ,
+                 TSpectrum.kBackOrder2           ,
+                 False                           ,
+                 TSpectrum.kBackSmoothing3       ,
+                 False                           ,
+                 )
    #for (i = 0; i < nbins; i++) {
    for i in range(0, nbins, 1):
-      d1.SetBinContent(i + 1, source[i])
+      d1.SetBinContent( i + 1, source[i] )
    # #    
-   d1.SetLineColor(kRed)
-   d1.Draw("SAME L")
+   d1.SetLineColor ( kRed     )
+   d1.Draw         ( "SAME L" )
    
 
    #for (i = 0; i < nbins; i++) {
    for i in range(0, nbins, 1):
-      source[i] = back.GetBinContent(i + 1)
-   # #   
+      source[i] = back.GetBinContent( i + 1 )
+   #
    s.Background(
-                source,
-                nbins,
-                20,
-                TSpectrum.kBackDecreasingWindow,
-                TSpectrum.kBackOrder2,
-                False,
-                TSpectrum.kBackSmoothing3,
-                False
-   )
+                source                          ,
+                nbins                           ,
+                20                              ,
+                TSpectrum.kBackDecreasingWindow ,
+                TSpectrum.kBackOrder2           ,
+                False                           ,
+                TSpectrum.kBackSmoothing3       ,
+                False                           ,
+                )
 
    #for (i = 0; i < nbins; i++) {
    for i in range(0, nbins, 1):
-      d2.SetBinContent(i + 1, source[i])
+      d2.SetBinContent( i + 1, source[i] )
    # #
-   d2.SetLineColor(kBlue)
-   d2.Draw("SAME L")
+   d2.SetLineColor ( kBlue    )
+   d2.Draw         ( "SAME L" )
    
 
    #for (i = 0; i < nbins; i++) {
    for i in range(0, nbins, 1):
-      source[i] = back.GetBinContent(i + 1)
+      source[i] = back.GetBinContent( i + 1 )
    # #      
    s.Background(
-                source,
-                nbins,
-                30,
-                TSpectrum.kBackDecreasingWindow,
-                TSpectrum.kBackOrder2,
-                False,
-                TSpectrum.kBackSmoothing3,
-                False,
-   )
+                 source                          ,
+                 nbins,
+                 30,
+                 TSpectrum.kBackDecreasingWindow ,
+                 TSpectrum.kBackOrder2           ,
+                 False,
+                 TSpectrum.kBackSmoothing3       ,
+                 False,
+                 )
    #for (i = 0; i < nbins; i++) {
    for i in range(0, nbins, 1):
-      d3.SetBinContent(i + 1, source[i])
+      d3.SetBinContent( i + 1, source[i] )
    # #
-   d3.SetLineColor(kGreen)
-   d3.Draw("SAME L")
+   d3.SetLineColor ( kGreen   )
+   d3.Draw         ( "SAME L" )
    
 
    #for (i = 0; i < nbins; i++) {
    for i in range(0, nbins, 1):
-      source[i] = back.GetBinContent(i + 1)
-   # #      
+      source[i] = back.GetBinContent( i + 1 )
+   #
    s.Background(
-                source,
-                nbins,
-                40,
-                TSpectrum.kBackDecreasingWindow,
-                TSpectrum.kBackOrder2,
-                False,
-                TSpectrum.kBackSmoothing3,
-                False,
-   )
+                 source                          ,
+                 nbins                           ,
+                 40                              ,
+                 TSpectrum.kBackDecreasingWindow ,
+                 TSpectrum.kBackOrder2           ,
+                 False                           ,
+                 TSpectrum.kBackSmoothing3       ,
+                 False                           ,
+                 )
    #for (i = 0; i < nbins; i++) {
    for i in range(0, nbins, 1):
-      d4.SetBinContent(i + 1, source[i])
-   # #   
-   d4.SetLineColor(kMagenta)
-   d4.Draw("SAME L")
+      d4.SetBinContent( i + 1, source[i] )
+   #
+   d4.SetLineColor ( kMagenta )
+   d4.Draw         ( "SAME L" )
    
 
 
