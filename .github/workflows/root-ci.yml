@@ -358,6 +358,8 @@ jobs:
         include:
           - image: fedora40
             overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
+          - image: fedora41
+            overrides: ["LLVM_ENABLE_ASSERTIONS=On"]
           - image: alma8
             overrides: ["LLVM_ENABLE_ASSERTIONS=On"]
           - image: alma9
