@@ -62,15 +62,9 @@ RooFuncWrapper::RooFuncWrapper(const char *name, const char *title, RooAbsReal &
    // Get the parameters.
    RooArgSet paramSet;
    obj.getParameters(data ? data->get() : nullptr, paramSet);
-   RooArgSet floatingParamSet;
-   for (RooAbsArg *param : paramSet) {
-      if (!param->isConstant()) {
-         floatingParamSet.add(*param);
-      }
-   }
 
    // Load the parameters and observables.
-   loadParamsAndData(&obj, floatingParamSet, data, simPdf);
+   loadParamsAndData(&obj, paramSet, data, simPdf);
 
    func = buildCode(obj);
 

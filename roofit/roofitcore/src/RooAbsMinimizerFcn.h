@@ -97,6 +97,11 @@ protected:
    double applyEvalErrorHandling(double fvalue) const;
    void finishDoEval() const;
 
+   inline static bool canBeFloating(RooAbsArg const &arg) { return dynamic_cast<RooRealVar const *>(&arg); }
+
+   // Figure out whether we have to treat this parameter as a constant.
+   inline static bool treatAsConstant(RooAbsArg const &arg) { return arg.isConstant() || !canBeFloating(arg); }
+
    // members
    RooMinimizer *_context = nullptr;
 

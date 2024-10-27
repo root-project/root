@@ -36,25 +36,9 @@
 #include <fstream>
 #include <iomanip>
 
-namespace {
-
-bool canBeFloating(RooAbsArg const &arg)
-{
-   return dynamic_cast<RooRealVar const *>(&arg);
-}
-
-// Figure out whether we have to treat this parameter as a constant.
-bool treatAsConstant(RooAbsArg const &arg)
-{
-   return arg.isConstant() || !canBeFloating(arg);
-}
-
-} // namespace
-
 RooAbsMinimizerFcn::RooAbsMinimizerFcn(RooArgList paramList, RooMinimizer *context) : _context{context}
 {
    _allParams.add(paramList);
-   _allParams.sort();
 
    RooArgList initFloatParams;
 
