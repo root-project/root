@@ -65,11 +65,10 @@ ValAndError getValAndError(RooArgSet const &parsFinal, const char *name)
 
 std::vector<double> getParamVals(RooAbsMinimizerFcn &fcn)
 {
-   std::vector<double> values;
-   values.reserve(fcn.GetFloatParamList()->size());
+   std::vector<double> values(fcn.getNDim());
 
-   for (auto *par : static_range_cast<RooRealVar *>(*fcn.GetFloatParamList())) {
-      values.push_back(par->getVal());
+   for (std::size_t i = 0; i < values.size(); ++i) {
+      values[i] = fcn.floatableParam(i).getVal();
    }
 
    return values;
