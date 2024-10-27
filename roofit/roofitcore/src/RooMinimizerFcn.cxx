@@ -71,7 +71,7 @@ void RooMinimizerFcn::setOptimizeConstOnFunction(RooAbsArg::ConstOpCode opcode, 
 double RooMinimizerFcn::operator()(const double *x) const
 {
    // Set the parameter values for this iteration
-   for (unsigned index = 0; index < _nDim; index++) {
+   for (unsigned index = 0; index < getNDim(); index++) {
       if (_logfile)
          (*_logfile) << x[index] << " ";
       SetPdfParamVal(index, x[index]);
@@ -101,7 +101,7 @@ double RooMinimizerFcn::operator()(const double *x) const
 void RooMinimizerFcn::evaluateGradient(const double *x, double *out) const
 {
    // Set the parameter values for this iteration
-   for (unsigned index = 0; index < _nDim; index++) {
+   for (unsigned index = 0; index < getNDim(); index++) {
       if (_logfile)
          (*_logfile) << x[index] << " ";
       SetPdfParamVal(index, x[index]);
