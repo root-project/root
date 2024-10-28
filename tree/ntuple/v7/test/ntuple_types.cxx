@@ -307,6 +307,14 @@ TEST(RNTuple, StdTuple)
          "tupleTupleField");
    EXPECT_STREQ("std::tuple<std::tuple<std::int64_t,float,char,float>,std::vector<std::tuple<char,char,char>>>",
                 tupleTupleField.GetTypeName().c_str());
+   using TupleMapSetType = std::tuple<std::map<char, int64_t>, std::set<int64_t>>;
+   auto tupleMapSetField = RField<TupleMapSetType>("tupleMapSetField");
+   EXPECT_LE(sizeof(TupleMapSetType), tupleMapSetField.GetValueSize());
+   EXPECT_LE(alignof(TupleMapSetType), tupleMapSetField.GetAlignment());
+   using TupleUnorderedMapSetType = std::tuple<std::unordered_map<char, int64_t>, std::unordered_set<int64_t>>;
+   auto tupleUnorderedMapSetField = RField<TupleUnorderedMapSetType>("tupleUnorderedMapSetField");
+   EXPECT_LE(sizeof(TupleUnorderedMapSetType), tupleUnorderedMapSetField.GetValueSize());
+   EXPECT_LE(alignof(TupleUnorderedMapSetType), tupleUnorderedMapSetField.GetAlignment());
 
    FileRaii fileGuard("test_ntuple_rfield_stdtuple.root");
    {

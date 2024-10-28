@@ -85,6 +85,9 @@ protected:
          fTraits &= itemFields[i]->GetTraits();
          Attach(std::move(itemFields[i]));
       }
+      // Trailing padding: although this is implementation-dependent, most add enough padding to comply with the
+      // requirements of the type with strictest alignment
+      fSize += GetItemPadding(fSize, fMaxAlignment);
    }
 
 public:
@@ -145,8 +148,8 @@ public:
    static std::string TypeName() { return "std::pair<" + RField<T1>::TypeName() + "," + RField<T2>::TypeName() + ">"; }
    explicit RField(std::string_view name) : RPairField(name, BuildItemFields(), BuildItemOffsets())
    {
-      fMaxAlignment = std::max(alignof(T1), alignof(T2));
-      fSize = sizeof(ContainerT);
+      R__ASSERT(fMaxAlignment >= std::max(alignof(T1), alignof(T2)));
+      R__ASSERT(fSize >= sizeof(ContainerT));
    }
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
@@ -221,8 +224,8 @@ public:
    static std::string TypeName() { return "std::tuple<" + BuildItemTypes<ItemTs...>() + ">"; }
    explicit RField(std::string_view name) : RTupleField(name, BuildItemFields(), BuildItemOffsets())
    {
-      fMaxAlignment = std::max({alignof(ItemTs)...});
-      fSize = sizeof(ContainerT);
+      R__ASSERT(fMaxAlignment >= std::max({alignof(ItemTs)...}));
+      R__ASSERT(fSize >= sizeof(ContainerT));
    }
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;

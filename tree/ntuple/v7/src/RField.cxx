@@ -2522,6 +2522,9 @@ void ROOT::Experimental::RRecordField::RRecordField::AttachItemFields(
       fTraits &= item->GetTraits();
       Attach(std::move(item));
    }
+   // Trailing padding: although this is implementation-dependent, most add enough padding to comply with the
+   // requirements of the type with strictest alignment
+   fSize += GetItemPadding(fSize, fMaxAlignment);
 }
 
 ROOT::Experimental::RRecordField::RRecordField(std::string_view fieldName,
