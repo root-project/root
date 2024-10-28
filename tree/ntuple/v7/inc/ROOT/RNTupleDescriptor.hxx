@@ -721,7 +721,7 @@ public:
       using iterator = RIterator;
       using value_type = RFieldDescriptor;
       using difference_type = std::ptrdiff_t;
-      using pointer = RColumnDescriptor *;
+      using pointer = const RColumnDescriptor *;
       using reference = const RColumnDescriptor &;
 
       RIterator(const RNTupleDescriptor &ntuple, const std::vector<DescriptorId_t> &columns, std::size_t index)
@@ -734,6 +734,7 @@ public:
          return *this;
       }
       reference operator*() { return fNTuple.GetColumnDescriptor(fColumns.at(fIndex)); }
+      pointer operator->() { return &fNTuple.GetColumnDescriptor(fColumns.at(fIndex)); }
       bool operator!=(const iterator &rh) const { return fIndex != rh.fIndex; }
       bool operator==(const iterator &rh) const { return fIndex == rh.fIndex; }
    };
