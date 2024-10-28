@@ -322,12 +322,6 @@ void ROOT::Experimental::Internal::RPageSourceFile::LoadStructureImpl()
    if (fAnchor->GetVersionEpoch() != RNTuple::kVersionEpoch) {
       throw RException(R__FAIL("unsupported RNTuple epoch version: " + std::to_string(fAnchor->GetVersionEpoch())));
    }
-   if (fAnchor->GetVersionEpoch() == 0) {
-      static std::once_flag once;
-      std::call_once(once, [this]() {
-         R__LOG_WARNING(NTupleLog()) << "Pre-release format version: RC " << fAnchor->GetVersionMajor();
-      });
-   }
 
    fDescriptorBuilder.SetOnDiskHeaderSize(fAnchor->GetNBytesHeader());
    fDescriptorBuilder.AddToOnDiskFooterSize(fAnchor->GetNBytesFooter());
