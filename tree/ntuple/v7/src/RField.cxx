@@ -716,12 +716,12 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
          result = std::make_unique<RArrayField>(fieldName, itemField.Unwrap(), arrayLength);
       } else if (canonicalType.substr(0, 13) == "std::variant<") {
          auto innerTypes = TokenizeTypeList(canonicalType.substr(13, canonicalType.length() - 14));
-         std::vector<RFieldBase *> items;
+         std::vector<std::unique_ptr<RFieldBase>> items;
          items.reserve(innerTypes.size());
          for (unsigned int i = 0; i < innerTypes.size(); ++i) {
-            items.emplace_back(Create("_" + std::to_string(i), innerTypes[i]).Unwrap().release());
+            items.emplace_back(Create("_" + std::to_string(i), innerTypes[i]).Unwrap());
          }
-         result = std::make_unique<RVariantField>(fieldName, items);
+         result = std::make_unique<RVariantField>(fieldName, std::move(items));
       } else if (canonicalType.substr(0, 10) == "std::pair<") {
          auto innerTypes = TokenizeTypeList(canonicalType.substr(10, canonicalType.length() - 11));
          if (innerTypes.size() != 2) {
@@ -3429,7 +3429,7 @@ void ROOT::Experimental::RBitsetField::AcceptVisitor(Detail::RFieldVisitor &visi
 
 //------------------------------------------------------------------------------
 
-std::string ROOT::Experimental::RVariantField::GetTypeList(const std::vector<RFieldBase *> &itemFields)
+std::string ROOT::Experimental::RVariantField::GetTypeList(const std::vector<std::unique_ptr<RFieldBase>> &itemFields)
 {
    std::string result;
    for (size_t i = 0; i < itemFields.size(); ++i) {
@@ -3454,7 +3454,7 @@ ROOT::Experimental::RVariantField::RVariantField(std::string_view name, const RV
 }
 
 ROOT::Experimental::RVariantField::RVariantField(std::string_view fieldName,
-                                                 const std::vector<RFieldBase *> &itemFields)
+                                                 std::vector<std::unique_ptr<RFieldBase>> itemFields)
    : ROOT::Experimental::RFieldBase(fieldName, "std::variant<" + GetTypeList(itemFields) + ">",
                                     ENTupleStructure::kVariant, false /* isSimple */)
 {
@@ -3470,7 +3470,7 @@ ROOT::Experimental::RVariantField::RVariantField(std::string_view fieldName,
       fMaxItemSize = std::max(fMaxItemSize, itemFields[i]->GetValueSize());
       fMaxAlignment = std::max(fMaxAlignment, itemFields[i]->GetAlignment());
       fTraits &= itemFields[i]->GetTraits();
-      Attach(std::unique_ptr<RFieldBase>(itemFields[i]));
+      Attach(std::move(itemFields[i]));
    }
 
    // With certain template parameters, the union of members of an std::variant starts at an offset > 0.
@@ -3578,7 +3578,7 @@ std::unique_ptr<ROOT::Experimental::RFieldBase::RDeleter> ROOT::Experimental::RV
    for (const auto &f : fSubFields) {
       itemDeleters.emplace_back(GetDeleterOf(*f));
    }
-   return std::make_unique<RVariantDeleter>(fTagOffset, fVariantOffset, itemDeleters);
+   return std::make_unique<RVariantDeleter>(fTagOffset, fVariantOffset, std::move(itemDeleters));
 }
 
 size_t ROOT::Experimental::RVariantField::GetAlignment() const
