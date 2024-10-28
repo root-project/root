@@ -806,13 +806,6 @@ std::unique_ptr<RWebDisplayHandle> RWebDisplayHandle::Display(const RWebDisplayA
    bool handleAsNative =
       (args.GetBrowserKind() == RWebDisplayArgs::kNative) || (args.GetBrowserKind() == RWebDisplayArgs::kOn);
 
-#ifdef _MSC_VER
-   if (handleAsNative || (args.GetBrowserKind() == RWebDisplayArgs::kEdge)) {
-      if (try_creator(FindCreator("edge", "ChromeCreator")))
-         return handle;
-   }
-#endif
-
    if (handleAsNative || (args.GetBrowserKind() == RWebDisplayArgs::kChrome)) {
       if (try_creator(FindCreator("chrome", "ChromeCreator")))
          return handle;
@@ -822,6 +815,14 @@ std::unique_ptr<RWebDisplayHandle> RWebDisplayHandle::Display(const RWebDisplayA
       if (try_creator(FindCreator("firefox", "FirefoxCreator")))
          return handle;
    }
+
+#ifdef _MSC_VER
+   // Edge browser cannot be run headless without registry change, therefore do not try it by default
+   if ((handleAsNative && !args.IsHeadless() && !args.IsBatchMode()) || (args.GetBrowserKind() == RWebDisplayArgs::kEdge)) {
+      if (try_creator(FindCreator("edge", "ChromeCreator")))
+         return handle;
+   }
+#endif
 
    if ((args.GetBrowserKind() == RWebDisplayArgs::kNative) || (args.GetBrowserKind() == RWebDisplayArgs::kChrome) ||
        (args.GetBrowserKind() == RWebDisplayArgs::kFirefox) || (args.GetBrowserKind() == RWebDisplayArgs::kEdge)) {
