@@ -57,22 +57,50 @@ RooFuncWrapper::RooFuncWrapper(const char *name, const char *title, RooAbsReal &
       _absReal = std::make_unique<RooEvaluatorWrapper>(obj, const_cast<RooAbsData *>(data), false, "", simPdf, false);
    }
 
-   std::string func;
-
    // Get the parameters.
    RooArgSet paramSet;
    obj.getParameters(data ? data->get() : nullptr, paramSet);
 
    // Load the parameters and observables.
-   loadParamsAndData(&obj, paramSet, data, simPdf);
+   auto spans = loadParamsAndData(paramSet, data, simPdf);
 
-   func = buildCode(obj);
+   // Set up the code generation context
+   std::map<RooFit::Detail::DataKey, std::size_t> nodeOutputSizes =
+      RooFit::BatchModeDataHelpers::determineOutputSizes(obj, [&spans](RooFit::Detail::DataKey key) -> int {
+         auto found = spans.find(key);
+         return found != spans.end() ? found->second.size() : -1;
+      });
+
+   RooFit::Detail::CodeSquashContext ctx;
+
+   // First update the result variable of params in the compute graph to in[<position>].
+   int idx = 0;
+   for (RooAbsArg *param : _params) {
+      ctx.addResult(param, "params[" + std::to_string(idx) + "]");
+      idx++;
+   }
+
+   for (auto const &item : _obsInfos) {
+      const char *obsName = item.first->GetName();
+      // If the observable is scalar, set name to the start idx. else, store
+      // the start idx and later set the the name to obs[start_idx + curr_idx],
+      // here curr_idx is defined by a loop producing parent node.
+      if (item.second.size == 1) {
+         ctx.addResult(obsName, "obs[" + std::to_string(item.second.idx) + "]");
+      } else {
+         ctx.addResult(obsName, "obs");
+         ctx.addVecObs(obsName, item.second.idx);
+      }
+   }
 
    gInterpreter->Declare("#pragma cling optimize(2)");
 
    // Declare the function and create its derivative.
-   _funcName = declareFunction(func);
+   _funcName = ctx.buildFunction(obj, nodeOutputSizes);
    _func = reinterpret_cast<Func>(gInterpreter->ProcessLine((_funcName + ";").c_str()));
+
+   _xlArr = ctx.xlArr();
+   _collectedFunctions = ctx.collectedFunctions();
 }
 
 RooFuncWrapper::RooFuncWrapper(const RooFuncWrapper &other, const char *name)
@@ -87,8 +115,8 @@ RooFuncWrapper::RooFuncWrapper(const RooFuncWrapper &other, const char *name)
 {
 }
 
-void RooFuncWrapper::loadParamsAndData(RooAbsArg const *head, RooArgSet const &paramSet, const RooAbsData *data,
-                                       RooSimultaneous const *simPdf)
+std::map<RooFit::Detail::DataKey, std::span<const double>>
+RooFuncWrapper::loadParamsAndData(RooArgSet const &paramSet, const RooAbsData *data, RooSimultaneous const *simPdf)
 {
    // Extract observables
    std::stack<std::vector<double>> vectorBuffers; // for data loading
@@ -124,32 +152,7 @@ void RooFuncWrapper::loadParamsAndData(RooAbsArg const *head, RooArgSet const &p
    }
    _gradientVarBuffer.resize(_params.size());
 
-   if (head) {
-      _nodeOutputSizes = RooFit::BatchModeDataHelpers::determineOutputSizes(
-         *head, [&spans](RooFit::Detail::DataKey key) -> int {
-            auto found = spans.find(key);
-            return found != spans.end() ? found->second.size() : -1;
-         });
-   }
-}
-
-std::string RooFuncWrapper::declareFunction(std::string const &funcBody)
-{
-   static int iFuncWrapper = 0;
-   auto funcName = "roo_func_wrapper_" + std::to_string(iFuncWrapper++);
-
-   // Declare the function
-   std::stringstream bodyWithSigStrm;
-   bodyWithSigStrm << "double " << funcName << "(double* params, double const* obs, double const* xlArr) {\n"
-                   << funcBody << "\n}";
-   _collectedFunctions.emplace_back(funcName);
-   if (!gInterpreter->Declare(bodyWithSigStrm.str().c_str())) {
-      std::stringstream errorMsg;
-      errorMsg << "Function " << funcName << " could not be compiled. See above for details.";
-      oocoutE(nullptr, InputArguments) << errorMsg.str() << std::endl;
-      throw std::runtime_error(errorMsg.str().c_str());
-   }
-   return funcName;
+   return spans;
 }
 
 void RooFuncWrapper::createGradient()
@@ -207,33 +210,6 @@ void RooFuncWrapper::gradient(const double *x, double *g) const
    std::fill(g, g + _params.size(), 0.0);
 
    _grad(const_cast<double *>(x), _observables.data(), _xlArr.data(), g);
-}
-
-std::string RooFuncWrapper::buildCode(RooAbsReal const &head)
-{
-   RooFit::Detail::CodeSquashContext ctx(_nodeOutputSizes, _xlArr, *this);
-
-   // First update the result variable of params in the compute graph to in[<position>].
-   int idx = 0;
-   for (RooAbsArg *param : _params) {
-      ctx.addResult(param, "params[" + std::to_string(idx) + "]");
-      idx++;
-   }
-
-   for (auto const &item : _obsInfos) {
-      const char *name = item.first->GetName();
-      // If the observable is scalar, set name to the start idx. else, store
-      // the start idx and later set the the name to obs[start_idx + curr_idx],
-      // here curr_idx is defined by a loop producing parent node.
-      if (item.second.size == 1) {
-         ctx.addResult(name, "obs[" + std::to_string(item.second.idx) + "]");
-      } else {
-         ctx.addResult(name, "obs");
-         ctx.addVecObs(name, item.second.idx);
-      }
-   }
-
-   return ctx.assembleCode(ctx.getResult(head));
 }
 
 /// @brief Dumps a macro "filename.C" that can be used to test and debug the generated code and gradient.
