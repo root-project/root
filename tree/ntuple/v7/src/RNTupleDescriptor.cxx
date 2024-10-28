@@ -68,10 +68,10 @@ ROOT::Experimental::RFieldDescriptor ROOT::Experimental::RFieldDescriptor::Clone
 std::unique_ptr<ROOT::Experimental::RFieldBase>
 ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplDesc, bool continueOnError) const
 {
-   if (GetStructure() == ENTupleStructure::kUnsplit) {
-      auto unsplitField = std::make_unique<RUnsplitField>(GetFieldName(), GetTypeName());
-      unsplitField->SetOnDiskId(fFieldId);
-      return unsplitField;
+   if (GetStructure() == ENTupleStructure::kStreamer) {
+      auto streamerField = std::make_unique<RStreamerField>(GetFieldName(), GetTypeName());
+      streamerField->SetOnDiskId(fFieldId);
+      return streamerField;
    }
 
    // The structure may be unknown if the descriptor comes from a deserialized field with an unknown structural role.
@@ -132,7 +132,7 @@ ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplD
 
 bool ROOT::Experimental::RFieldDescriptor::IsCustomClass() const
 {
-   if (fStructure != ENTupleStructure::kRecord && fStructure != ENTupleStructure::kUnsplit)
+   if (fStructure != ENTupleStructure::kRecord && fStructure != ENTupleStructure::kStreamer)
       return false;
 
    // Skip untyped structs
@@ -1138,13 +1138,13 @@ ROOT::Experimental::Internal::RNTupleDescriptorBuilder::BuildStreamerInfos() con
 
    fnWalkFieldTree(desc.GetFieldZero());
 
-   // Add the streamer info records from unsplit fields: because of runtime polymorphism we may need to add additional
+   // Add the streamer info records from streamer fields: because of runtime polymorphism we may need to add additional
    // types not covered by the type names stored in the field headers
    for (const auto &extraTypeInfo : desc.GetExtraTypeInfoIterable()) {
       if (extraTypeInfo.GetContentId() != EExtraTypeInfoIds::kStreamerInfo)
          continue;
-      // Ideally, we would avoid deserializing the streamer info records of the unsplit fields that we just serialized.
-      // However, this happens only once at the end of writing and only when unsplit fields are used, so the
+      // Ideally, we would avoid deserializing the streamer info records of the streamer fields that we just serialized.
+      // However, this happens only once at the end of writing and only when streamer fields are used, so the
       // preference here is for code simplicity.
       streamerInfoMap.merge(RNTupleSerializer::DeserializeStreamerInfos(extraTypeInfo.GetContent()).Unwrap());
    }

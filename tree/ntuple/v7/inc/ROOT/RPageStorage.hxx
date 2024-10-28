@@ -356,7 +356,7 @@ public:
    /// Adds an extra type information record to schema. The extra type information will be written to the
    /// extension header. The information in the record will be merged with the existing information, e.g.
    /// duplicate streamer info records will be removed. This method is called by the "on commit dataset" callback
-   /// registered by specific fields (e.g., unsplit field) and during merging.
+   /// registered by specific fields (e.g., streamer field) and during merging.
    virtual void UpdateExtraTypeInfo(const RExtraTypeInfoDescriptor &extraTypeInfo) = 0;
 
    /// Commits a suppressed column for the current cluster. Can be called anytime before CommitCluster().
@@ -446,7 +446,7 @@ private:
    /// Keeps track of the written pages in the currently open cluster. Indexed by column id.
    std::vector<RClusterDescriptor::RPageRange> fOpenPageRanges;
 
-   /// Union of the streamer info records that are sent from unsplit fields to the sink before committing the dataset.
+   /// Union of the streamer info records that are sent from streamer fields to the sink before committing the dataset.
    RNTupleSerializer::StreamerInfoMap_t fStreamerInfos;
 
 protected:

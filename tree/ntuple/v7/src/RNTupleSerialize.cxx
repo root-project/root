@@ -776,7 +776,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeFieldStructure(ROOT::E
    case ENTupleStructure::kCollection: return SerializeUInt16(0x01, buffer);
    case ENTupleStructure::kRecord: return SerializeUInt16(0x02, buffer);
    case ENTupleStructure::kVariant: return SerializeUInt16(0x03, buffer);
-   case ENTupleStructure::kUnsplit: return SerializeUInt16(0x04, buffer);
+   case ENTupleStructure::kStreamer: return SerializeUInt16(0x04, buffer);
    default:
       if (structure == ROOT::Experimental::Internal::kTestFutureFieldStructure)
          return SerializeUInt16(0x99, buffer);
@@ -795,7 +795,7 @@ RResult<std::uint32_t> ROOT::Experimental::Internal::RNTupleSerializer::Deserial
    case 0x01: structure = ENTupleStructure::kCollection; break;
    case 0x02: structure = ENTupleStructure::kRecord; break;
    case 0x03: structure = ENTupleStructure::kVariant; break;
-   case 0x04: structure = ENTupleStructure::kUnsplit; break;
+   case 0x04: structure = ENTupleStructure::kStreamer; break;
    // case 0x99 => kTestFutureFieldStructure intentionally missing
    default: structure = ENTupleStructure::kUnknown;
    }
