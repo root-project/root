@@ -134,11 +134,11 @@ protected:
    std::unique_ptr<RFieldBase> fField;
    RFieldBase::RValue fValue;
 
-   static std::unique_ptr<RFieldBase> CreateField(DescriptorId_t fieldId, Internal::RPageSource *pageSource)
+   static std::unique_ptr<RFieldBase> CreateField(DescriptorId_t fieldId, Internal::RPageSource &pageSource)
    {
       std::unique_ptr<RFieldBase> field;
       {
-         const auto &desc = pageSource->GetSharedDescriptorGuard().GetRef();
+         const auto &desc = pageSource.GetSharedDescriptorGuard().GetRef();
          const auto &fieldDesc = desc.GetFieldDescriptor(fieldId);
          if constexpr (std::is_void_v<T>) {
             field = fieldDesc.CreateField(desc);
@@ -147,7 +147,7 @@ protected:
          }
       }
       field->SetOnDiskId(fieldId);
-      Internal::CallConnectPageSourceOnField(*field, *pageSource);
+      Internal::CallConnectPageSourceOnField(*field, pageSource);
       return field;
    }
 
@@ -269,9 +269,9 @@ class RNTupleDirectAccessView {
 protected:
    RField<T> fField;
 
-   static RField<T> CreateField(DescriptorId_t fieldId, Internal::RPageSource *pageSource)
+   static RField<T> CreateField(DescriptorId_t fieldId, Internal::RPageSource &pageSource)
    {
-      const auto &desc = pageSource->GetSharedDescriptorGuard().GetRef();
+      const auto &desc = pageSource.GetSharedDescriptorGuard().GetRef();
       const auto &fieldDesc = desc.GetFieldDescriptor(fieldId);
       if (fieldDesc.GetTypeName() != RField<T>::TypeName()) {
          throw RException(R__FAIL("type mismatch for field " + fieldDesc.GetFieldName() + ": " +
@@ -279,7 +279,7 @@ protected:
       }
       RField<T> field(fieldDesc.GetFieldName());
       field.SetOnDiskId(fieldId);
-      Internal::CallConnectPageSourceOnField(field, *pageSource);
+      Internal::CallConnectPageSourceOnField(field, pageSource);
       return field;
    }
 
@@ -374,14 +374,14 @@ public:
    template <typename T>
    RNTupleView<T> GetView(std::string_view fieldName)
    {
-      return RNTupleView<T>(RNTupleView<T>::CreateField(GetFieldId(fieldName), fSource));
+      return RNTupleView<T>(RNTupleView<T>::CreateField(GetFieldId(fieldName), *fSource));
    }
 
    /// Raises an exception if there is no field with the given name.
    template <typename T>
    RNTupleDirectAccessView<T> GetDirectAccessView(std::string_view fieldName)
    {
-      return RNTupleDirectAccessView<T>(RNTupleDirectAccessView<T>::CreateField(GetFieldId(fieldName), fSource));
+      return RNTupleDirectAccessView<T>(RNTupleDirectAccessView<T>::CreateField(GetFieldId(fieldName), *fSource));
    }
 
    /// Raises an exception if there is no field with the given name.
