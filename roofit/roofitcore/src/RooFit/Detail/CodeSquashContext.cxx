@@ -13,22 +13,25 @@
 
 #include <RooFit/Detail/CodeSquashContext.h>
 
-#include "RooFuncWrapper.h"
-
 #include "RooFitImplHelpers.h"
+
+#include <TInterpreter.h>
 
 #include <algorithm>
 #include <cctype>
 
+namespace {
+
+bool startsWith(std::string_view str, std::string_view prefix)
+{
+   return str.size() >= prefix.size() && 0 == str.compare(0, prefix.size(), prefix);
+}
+
+}
+
 namespace RooFit {
 
 namespace Detail {
-
-CodeSquashContext::CodeSquashContext(std::map<RooFit::Detail::DataKey, std::size_t> const &outputSizes,
-                                     std::vector<double> &xlarr, Experimental::RooFuncWrapper &wrapper)
-   : _wrapper{&wrapper}, _nodeOutputSizes(outputSizes), _xlArr(xlarr)
-{
-}
 
 /// @brief Adds (or overwrites) the string representing the result of a node.
 /// @param key The name of the node to add the result for.
@@ -81,14 +84,6 @@ std::string const &CodeSquashContext::getResult(RooAbsArg const &arg)
 void CodeSquashContext::addToGlobalScope(std::string const &str)
 {
    _globalScope += str;
-}
-
-/// @brief Assemble and return the final code with the return expression and global statements.
-/// @param returnExpr The string representation of what the squashed function should return, usually the head node.
-/// @return The final body of the function.
-std::string CodeSquashContext::assembleCode(std::string const &returnExpr)
-{
-   return _globalScope + _code + "\n return " + returnExpr + ";\n";
 }
 
 /// @brief Since the squashed code represents all observables as a single flattened array, it is important
@@ -227,8 +222,8 @@ std::string CodeSquashContext::buildArg(RooAbsCollection const &in)
       return "nullptr";
    }
 
-   auto it = listNames.find(in.uniqueId().value());
-   if (it != listNames.end())
+   auto it = _listNames.find(in.uniqueId().value());
+   if (it != _listNames.end())
       return it->second;
 
    std::string savedName = getTmpVarName();
@@ -245,7 +240,7 @@ std::string CodeSquashContext::buildArg(RooAbsCollection const &in)
 
    addToCodeBody(declStrm.str(), canSaveOutside);
 
-   listNames.insert({in.uniqueId().value(), savedName});
+   _listNames.insert({in.uniqueId().value(), savedName});
    return savedName;
 }
 
@@ -269,7 +264,48 @@ bool CodeSquashContext::isScopeIndependent(RooAbsArg const *in) const
 /// This is useful to dump the standalone C++ code for the computation graph.
 void CodeSquashContext::collectFunction(std::string const &name)
 {
-   _wrapper->collectFunction(name);
+   _collectedFunctions.emplace_back(name);
+}
+
+/// @brief Assemble and return the final code with the return expression and global statements.
+/// @param returnExpr The string representation of what the squashed function should return, usually the head node.
+/// @return The name of the declared function.
+std::string CodeSquashContext::buildFunction(RooAbsArg const &arg, std::map<RooFit::Detail::DataKey, std::size_t> const &outputSizes)
+{
+   CodeSquashContext ctx;
+   ctx._nodeOutputSizes = outputSizes;
+   ctx._vecObsIndices = _vecObsIndices;
+   // We only want to take over parameters and observables
+   for (auto const& item : _nodeNames) {
+      if (startsWith(item.second, "params[") || startsWith(item.second, "obs[")) {
+         ctx._nodeNames.insert(item);
+      }
+   }
+   ctx._xlArr = _xlArr;
+   ctx._collectedFunctions = _collectedFunctions;
+
+   static int iCodegen = 0;
+   auto funcName = "roo_codegen_" + std::to_string(iCodegen++);
+
+   std::string funcBody = ctx.getResult(arg);
+   funcBody = ctx._globalScope + ctx._code + "\n return " + funcBody + ";\n";
+
+   // Declare the function
+   std::stringstream bodyWithSigStrm;
+   bodyWithSigStrm << "double " << funcName << "(double* params, double const* obs, double const* xlArr) {\n"
+                   << funcBody << "\n}";
+   ctx._collectedFunctions.emplace_back(funcName);
+   if (!gInterpreter->Declare(bodyWithSigStrm.str().c_str())) {
+      std::stringstream errorMsg;
+      errorMsg << "Function " << funcName << " could not be compiled. See above for details.";
+      oocoutE(nullptr, InputArguments) << errorMsg.str() << std::endl;
+      throw std::runtime_error(errorMsg.str().c_str());
+   }
+
+   _xlArr = ctx._xlArr;
+   _collectedFunctions = ctx._collectedFunctions;
+
+   return funcName;
 }
 
 } // namespace Detail
