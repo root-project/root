@@ -594,7 +594,8 @@ TEST(RNTupleDescriptor, BuildStreamerInfos)
    streamerInfoMap = fnBuildStreamerInfosOf(*RFieldBase::Create("f", "std::unordered_map<int, float>").Unwrap());
    EXPECT_TRUE(streamerInfoMap.empty());
 
-   streamerInfoMap = fnBuildStreamerInfosOf(ROOT::Experimental::RRecordField("f", {}));
+   std::vector<std::unique_ptr<RFieldBase>> itemFields;
+   streamerInfoMap = fnBuildStreamerInfosOf(ROOT::Experimental::RRecordField("f", std::move(itemFields)));
    EXPECT_TRUE(streamerInfoMap.empty());
 
    streamerInfoMap = fnBuildStreamerInfosOf(*RFieldBase::Create("f", "CustomStruct").Unwrap());
