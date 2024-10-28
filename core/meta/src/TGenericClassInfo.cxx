@@ -292,14 +292,14 @@ namespace Internal {
          CreateRuleSet( fReadRules, true );
          CreateRuleSet( fReadRawRules, false );
 
-         if (fPragmaBits & (TClassTable::kNtplForceSplit | TClassTable::kNtplForceUnsplit)) {
+         if (fPragmaBits & (TClassTable::kNtplForceNative | TClassTable::kNtplForceStreamed)) {
             fClass->CreateAttributeMap();
             // The force-split and force-unsplit flags are mutually exclusive
-            assert(!((fPragmaBits & TClassTable::kNtplForceSplit) && (fPragmaBits & TClassTable::kNtplForceUnsplit)));
-            if (fPragmaBits & TClassTable::kNtplForceSplit) {
-               fClass->GetAttributeMap()->AddProperty("rntuple.split", "true");
-            } else if (fPragmaBits & TClassTable::kNtplForceUnsplit) {
-               fClass->GetAttributeMap()->AddProperty("rntuple.split", "false");
+            assert(!((fPragmaBits & TClassTable::kNtplForceNative) && (fPragmaBits & TClassTable::kNtplForceStreamed)));
+            if (fPragmaBits & TClassTable::kNtplForceNative) {
+               fClass->GetAttributeMap()->AddProperty("rntuple.streamed", "false");
+            } else if (fPragmaBits & TClassTable::kNtplForceStreamed) {
+               fClass->GetAttributeMap()->AddProperty("rntuple.streamed", "true");
             }
          }
       }
