@@ -193,7 +193,7 @@ TEST(RNTupleParallelWriter, StagedMultiColumn)
    }
 
    auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
-   EXPECT_EQ(3u, reader->GetModel().GetConstField("px").GetNElements());
+   EXPECT_EQ(3u, reader->GetView<float>("px").GetFieldRange().count());
 
    const auto &desc = reader->GetDescriptor();
    EXPECT_EQ(3u, desc.GetNClusters());
