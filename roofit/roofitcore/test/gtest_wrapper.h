@@ -24,6 +24,14 @@
 #define ROOFIT_EVAL_BACKEND_CUDA
 #endif
 
+#ifdef ROOFIT_CLAD
+#define ROOFIT_EVAL_BACKEND_CODEGEN RooFit::EvalBackend::Codegen(),
+#else
+#define ROOFIT_EVAL_BACKEND_CODEGEN
+#endif
+
 #define ROOFIT_EVAL_BACKENDS ROOFIT_EVAL_BACKEND_LEGACY ROOFIT_EVAL_BACKEND_CUDA RooFit::EvalBackend::Cpu()
+
+#define ROOFIT_EVAL_BACKENDS_WITH_CODEGEN ROOFIT_EVAL_BACKENDS, ROOFIT_EVAL_BACKEND_CODEGEN RooFit::EvalBackend::CodegenNoGrad()
 
 #endif // RooFit_gtest_wrapper_h

@@ -476,6 +476,10 @@ if(roofit_multiprocess)
   target_compile_definitions(RooFitCore PUBLIC ROOFIT_MULTIPROCESS)
 endif()
 
+if(clad)
+  target_compile_definitions(RooFitCore PUBLIC ROOFIT_CLAD)
+endif()
+
 if(cuda)
   target_compile_definitions(RooFitCore PUBLIC ROOFIT_CUDA)
 endif()
