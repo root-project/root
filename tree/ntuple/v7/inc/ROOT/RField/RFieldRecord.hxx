@@ -147,13 +147,11 @@ private:
 
 public:
    static std::string TypeName() { return "std::pair<" + RField<T1>::TypeName() + "," + RField<T2>::TypeName() + ">"; }
-   explicit RField(std::string_view name, std::array<std::unique_ptr<RFieldBase>, 2> &&itemFields)
-      : RPairField(name, std::move(itemFields), BuildItemOffsets())
+   explicit RField(std::string_view name) : RPairField(name, BuildItemFields<T1, T2>(), BuildItemOffsets())
    {
       fMaxAlignment = std::max(alignof(T1), alignof(T2));
       fSize = sizeof(ContainerT);
    }
-   explicit RField(std::string_view name) : RField(name, BuildItemFields<T1, T2>()) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
    ~RField() final = default;
@@ -227,13 +225,12 @@ private:
 
 public:
    static std::string TypeName() { return "std::tuple<" + BuildItemTypes<ItemTs...>() + ">"; }
-   explicit RField(std::string_view name, std::vector<std::unique_ptr<RFieldBase>> &&itemFields)
-      : RTupleField(name, std::move(itemFields), BuildItemOffsets<ItemTs...>())
+   explicit RField(std::string_view name)
+      : RTupleField(name, BuildItemFields<ItemTs...>(), BuildItemOffsets<ItemTs...>())
    {
       fMaxAlignment = std::max({alignof(ItemTs)...});
       fSize = sizeof(ContainerT);
    }
-   explicit RField(std::string_view name) : RField(name, BuildItemFields<ItemTs...>()) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
    ~RField() final = default;
