@@ -39,7 +39,7 @@ ROOT::Experimental::Internal::GetFieldRange(const RFieldBase &field, const RPage
    }
 
    if (columnId == kInvalidDescriptorId) {
-      throw RException(R__FAIL("field iteration over empty field is unsupported: " +
+      throw RException(R__FAIL("field iteration over empty fields is unsupported: " +
                                desc.GetQualifiedFieldName(field.GetOnDiskId())));
    }
 

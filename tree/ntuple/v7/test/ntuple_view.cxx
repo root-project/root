@@ -459,6 +459,6 @@ TEST(RNTuple, ViewFieldIteration)
       auto viewEmpty = reader->GetView<void>("empty");
       FAIL() << "creating a view on an empty field should throw";
    } catch (const RException &err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("field iteration over empty field is unsupported"));
+      EXPECT_THAT(err.what(), testing::HasSubstr("field iteration over empty fields is unsupported"));
    }
 }
