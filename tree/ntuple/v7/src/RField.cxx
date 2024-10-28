@@ -729,7 +729,7 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
          }
          std::array<std::unique_ptr<RFieldBase>, 2> items{Create("_0", innerTypes[0]).Unwrap(),
                                                           Create("_1", innerTypes[1]).Unwrap()};
-         result = std::make_unique<RPairField>(fieldName, items);
+         result = std::make_unique<RPairField>(fieldName, std::move(items));
       } else if (canonicalType.substr(0, 11) == "std::tuple<") {
          auto innerTypes = TokenizeTypeList(canonicalType.substr(11, canonicalType.length() - 12));
          std::vector<std::unique_ptr<RFieldBase>> items;
@@ -737,7 +737,7 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
          for (unsigned int i = 0; i < innerTypes.size(); ++i) {
             items.emplace_back(Create("_" + std::to_string(i), innerTypes[i]).Unwrap());
          }
-         result = std::make_unique<RTupleField>(fieldName, items);
+         result = std::make_unique<RTupleField>(fieldName, std::move(items));
       } else if (canonicalType.substr(0, 12) == "std::bitset<") {
          auto size = std::stoull(canonicalType.substr(12, canonicalType.length() - 13));
          result = std::make_unique<RBitsetField>(fieldName, size);
@@ -2513,7 +2513,7 @@ ROOT::Experimental::RRecordField::RRecordField(std::string_view fieldName, std::
 }
 
 void ROOT::Experimental::RRecordField::RRecordField::AttachItemFields(
-   std::vector<std::unique_ptr<RFieldBase>> &&itemFields)
+   std::vector<std::unique_ptr<RFieldBase>> itemFields)
 {
    fTraits |= kTraitTrivialType;
    for (auto &item : itemFields) {
@@ -2525,7 +2525,7 @@ void ROOT::Experimental::RRecordField::RRecordField::AttachItemFields(
 }
 
 ROOT::Experimental::RRecordField::RRecordField(std::string_view fieldName,
-                                               std::vector<std::unique_ptr<RFieldBase>> &&itemFields)
+                                               std::vector<std::unique_ptr<RFieldBase>> itemFields)
    : ROOT::Experimental::RFieldBase(fieldName, "", ENTupleStructure::kRecord, false /* isSimple */)
 {
    fTraits |= kTraitTrivialType;
@@ -2541,12 +2541,6 @@ ROOT::Experimental::RRecordField::RRecordField(std::string_view fieldName,
    // Trailing padding: although this is implementation-dependent, most add enough padding to comply with the
    // requirements of the type with strictest alignment
    fSize += GetItemPadding(fSize, fMaxAlignment);
-}
-
-ROOT::Experimental::RRecordField::RRecordField(std::string_view fieldName,
-                                               std::vector<std::unique_ptr<RFieldBase>> &itemFields)
-   : ROOT::Experimental::RRecordField(fieldName, std::move(itemFields))
-{
 }
 
 std::size_t ROOT::Experimental::RRecordField::GetItemPadding(std::size_t baseOffset, std::size_t itemAlignment) const
@@ -2610,7 +2604,7 @@ std::unique_ptr<ROOT::Experimental::RFieldBase::RDeleter> ROOT::Experimental::RR
    for (const auto &f : fSubFields) {
       itemDeleters.emplace_back(GetDeleterOf(*f));
    }
-   return std::make_unique<RRecordDeleter>(itemDeleters, fOffsets);
+   return std::make_unique<RRecordDeleter>(std::move(itemDeleters), fOffsets);
 }
 
 std::vector<ROOT::Experimental::RFieldBase::RValue>
@@ -3870,7 +3864,7 @@ ROOT::Experimental::RPairField::RPairField::GetTypeList(const std::array<std::un
 }
 
 ROOT::Experimental::RPairField::RPairField(std::string_view fieldName,
-                                           std::array<std::unique_ptr<RFieldBase>, 2> &&itemFields,
+                                           std::array<std::unique_ptr<RFieldBase>, 2> itemFields,
                                            const std::array<std::size_t, 2> &offsets)
    : ROOT::Experimental::RRecordField(fieldName, "std::pair<" + GetTypeList(itemFields) + ">")
 {
@@ -3880,7 +3874,7 @@ ROOT::Experimental::RPairField::RPairField(std::string_view fieldName,
 }
 
 ROOT::Experimental::RPairField::RPairField(std::string_view fieldName,
-                                           std::array<std::unique_ptr<RFieldBase>, 2> &itemFields)
+                                           std::array<std::unique_ptr<RFieldBase>, 2> itemFields)
    : ROOT::Experimental::RRecordField(fieldName, "std::pair<" + GetTypeList(itemFields) + ">")
 {
    AttachItemFields(std::move(itemFields));
@@ -3918,7 +3912,7 @@ ROOT::Experimental::RTupleField::RTupleField::GetTypeList(const std::vector<std:
 }
 
 ROOT::Experimental::RTupleField::RTupleField(std::string_view fieldName,
-                                             std::vector<std::unique_ptr<RFieldBase>> &&itemFields,
+                                             std::vector<std::unique_ptr<RFieldBase>> itemFields,
                                              const std::vector<std::size_t> &offsets)
    : ROOT::Experimental::RRecordField(fieldName, "std::tuple<" + GetTypeList(itemFields) + ">")
 {
@@ -3927,7 +3921,7 @@ ROOT::Experimental::RTupleField::RTupleField(std::string_view fieldName,
 }
 
 ROOT::Experimental::RTupleField::RTupleField(std::string_view fieldName,
-                                             std::vector<std::unique_ptr<RFieldBase>> &itemFields)
+                                             std::vector<std::unique_ptr<RFieldBase>> itemFields)
    : ROOT::Experimental::RRecordField(fieldName, "std::tuple<" + GetTypeList(itemFields) + ">")
 {
    AttachItemFields(std::move(itemFields));

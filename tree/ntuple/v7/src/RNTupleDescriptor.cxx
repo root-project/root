@@ -97,7 +97,7 @@ ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplD
                return field;
             memberFields.emplace_back(std::move(field));
          }
-         auto recordField = std::make_unique<RRecordField>(GetFieldName(), memberFields);
+         auto recordField = std::make_unique<RRecordField>(GetFieldName(), std::move(memberFields));
          recordField->SetOnDiskId(fFieldId);
          return recordField;
       }

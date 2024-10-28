@@ -349,7 +349,7 @@ TEST(RNTupleShow, Collections)
       std::vector<std::unique_ptr<RFieldBase>> leafFields;
       leafFields.emplace_back(std::make_unique<RField<short>>("myShort"));
       leafFields.emplace_back(std::make_unique<RField<float>>("myFloat"));
-      auto recordField = std::make_unique<RRecordField>("_0", leafFields);
+      auto recordField = std::make_unique<RRecordField>("_0", std::move(leafFields));
       EXPECT_EQ(offsetof(MyStruct, myShort), recordField->GetOffsets()[0]);
       EXPECT_EQ(offsetof(MyStruct, myFloat), recordField->GetOffsets()[1]);
 

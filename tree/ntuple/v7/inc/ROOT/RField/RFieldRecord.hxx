@@ -46,7 +46,7 @@ private:
       std::vector<std::size_t> fOffsets;
 
    public:
-      RRecordDeleter(std::vector<std::unique_ptr<RDeleter>> &itemDeleters, const std::vector<std::size_t> &offsets)
+      RRecordDeleter(std::vector<std::unique_ptr<RDeleter>> itemDeleters, const std::vector<std::size_t> &offsets)
          : fItemDeleters(std::move(itemDeleters)), fOffsets(offsets)
       {
       }
@@ -73,10 +73,10 @@ protected:
 
    RRecordField(std::string_view fieldName, std::string_view typeName);
 
-   void AttachItemFields(std::vector<std::unique_ptr<RFieldBase>> &&itemFields);
+   void AttachItemFields(std::vector<std::unique_ptr<RFieldBase>> itemFields);
 
    template <std::size_t N>
-   void AttachItemFields(std::array<std::unique_ptr<RFieldBase>, N> &&itemFields)
+   void AttachItemFields(std::array<std::unique_ptr<RFieldBase>, N> itemFields)
    {
       fTraits |= kTraitTrivialType;
       for (unsigned i = 0; i < N; ++i) {
@@ -90,8 +90,7 @@ protected:
 public:
    /// Construct a RRecordField based on a vector of child fields. The ownership of the child fields is transferred
    /// to the RRecordField instance.
-   RRecordField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> &&itemFields);
-   RRecordField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> &itemFields);
+   RRecordField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> itemFields);
    RRecordField(RRecordField &&other) = default;
    RRecordField &operator=(RRecordField &&other) = default;
    ~RRecordField() override = default;
@@ -114,11 +113,11 @@ private:
    static std::string GetTypeList(const std::array<std::unique_ptr<RFieldBase>, 2> &itemFields);
 
 protected:
-   RPairField(std::string_view fieldName, std::array<std::unique_ptr<RFieldBase>, 2> &&itemFields,
+   RPairField(std::string_view fieldName, std::array<std::unique_ptr<RFieldBase>, 2> itemFields,
               const std::array<std::size_t, 2> &offsets);
 
 public:
-   RPairField(std::string_view fieldName, std::array<std::unique_ptr<RFieldBase>, 2> &itemFields);
+   RPairField(std::string_view fieldName, std::array<std::unique_ptr<RFieldBase>, 2> itemFields);
    RPairField(RPairField &&other) = default;
    RPairField &operator=(RPairField &&other) = default;
    ~RPairField() override = default;
@@ -165,11 +164,11 @@ private:
    static std::string GetTypeList(const std::vector<std::unique_ptr<RFieldBase>> &itemFields);
 
 protected:
-   RTupleField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> &&itemFields,
+   RTupleField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> itemFields,
                const std::vector<std::size_t> &offsets);
 
 public:
-   RTupleField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> &itemFields);
+   RTupleField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> itemFields);
    RTupleField(RTupleField &&other) = default;
    RTupleField &operator=(RTupleField &&other) = default;
    ~RTupleField() override = default;
