@@ -76,8 +76,8 @@ class RNTuple final {
       std::uint64_t nbytesFooter, std::uint64_t lenFooter, std::uint64_t maxKeySize);
 
 public:
-   static constexpr std::uint16_t kVersionEpoch = 0;
-   static constexpr std::uint16_t kVersionMajor = 3;
+   static constexpr std::uint16_t kVersionEpoch = 1;
+   static constexpr std::uint16_t kVersionMajor = 0;
    static constexpr std::uint16_t kVersionMinor = 0;
    static constexpr std::uint16_t kVersionPatch = 0;
 
