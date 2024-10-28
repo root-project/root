@@ -128,10 +128,9 @@ class RField<std::pair<T1, T2>> final : public RPairField {
    using ContainerT = typename std::pair<T1, T2>;
 
 private:
-   template <typename Ty1, typename Ty2>
    static std::array<std::unique_ptr<RFieldBase>, 2> BuildItemFields()
    {
-      return {std::make_unique<RField<Ty1>>("_0"), std::make_unique<RField<Ty2>>("_1")};
+      return {std::make_unique<RField<T1>>("_0"), std::make_unique<RField<T2>>("_1")};
    }
 
    static std::array<std::size_t, 2> BuildItemOffsets()
@@ -144,7 +143,7 @@ private:
 
 public:
    static std::string TypeName() { return "std::pair<" + RField<T1>::TypeName() + "," + RField<T2>::TypeName() + ">"; }
-   explicit RField(std::string_view name) : RPairField(name, BuildItemFields<T1, T2>(), BuildItemOffsets())
+   explicit RField(std::string_view name) : RPairField(name, BuildItemFields(), BuildItemOffsets())
    {
       fMaxAlignment = std::max(alignof(T1), alignof(T2));
       fSize = sizeof(ContainerT);
@@ -195,11 +194,10 @@ private:
       if constexpr (sizeof...(TailTs) > 0)
          _BuildItemFields<TailTs...>(itemFields, index + 1);
    }
-   template <typename... Ts>
    static std::vector<std::unique_ptr<RFieldBase>> BuildItemFields()
    {
       std::vector<std::unique_ptr<RFieldBase>> result;
-      _BuildItemFields<Ts...>(result);
+      _BuildItemFields<ItemTs...>(result);
       return result;
    }
 
@@ -212,18 +210,16 @@ private:
       if constexpr (sizeof...(TailTs) > 0)
          _BuildItemOffsets<Index + 1, TailTs...>(offsets, tuple);
    }
-   template <typename... Ts>
    static std::vector<std::size_t> BuildItemOffsets()
    {
       std::vector<std::size_t> result;
-      _BuildItemOffsets<0, Ts...>(result, ContainerT());
+      _BuildItemOffsets<0, ItemTs...>(result, ContainerT());
       return result;
    }
 
 public:
    static std::string TypeName() { return "std::tuple<" + BuildItemTypes<ItemTs...>() + ">"; }
-   explicit RField(std::string_view name)
-      : RTupleField(name, BuildItemFields<ItemTs...>(), BuildItemOffsets<ItemTs...>())
+   explicit RField(std::string_view name) : RTupleField(name, BuildItemFields(), BuildItemOffsets())
    {
       fMaxAlignment = std::max({alignof(ItemTs)...});
       fSize = sizeof(ContainerT);
