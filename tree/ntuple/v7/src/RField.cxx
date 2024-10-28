@@ -338,24 +338,24 @@ void DestroyRVecWithChecks(std::size_t alignOfT, void **beginPtr, char *begin, s
       free(begin);
 }
 
-/// Possible settings for the "rntuple.split" class attribute in the dictionary.
+/// Possible settings for the "rntuple.streamed" class attribute in the dictionary.
 enum class ERNTupleSerializationMode { kForceNative, kForceStreamed, kUnset };
 
 ERNTupleSerializationMode GetRNTupleSerializationMode(TClass *cl)
 {
    auto am = cl->GetAttributeMap();
-   if (!am || !am->HasKey("rntuple.split"))
+   if (!am || !am->HasKey("rntuple.streamed"))
       return ERNTupleSerializationMode::kUnset;
 
-   std::string value = am->GetPropertyAsString("rntuple.split");
+   std::string value = am->GetPropertyAsString("rntuple.streamed");
    std::transform(value.begin(), value.end(), value.begin(), ::toupper);
    if (value == "TRUE") {
-      return ERNTupleSerializationMode::kForceNative;
-   } else if (value == "FALSE") {
       return ERNTupleSerializationMode::kForceStreamed;
+   } else if (value == "FALSE") {
+      return ERNTupleSerializationMode::kForceNative;
    } else {
       R__LOG_WARNING(ROOT::Experimental::NTupleLog())
-         << "invalid setting for 'rntuple.split' class attribute: " << am->GetPropertyAsString("rntuple.split");
+         << "invalid setting for 'rntuple.streamed' class attribute: " << am->GetPropertyAsString("rntuple.streamed");
       return ERNTupleSerializationMode::kUnset;
    }
 }
@@ -1814,7 +1814,7 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::st
          R__FAIL(std::string(className) + " has an associated collection proxy; use RProxiedCollectionField instead"));
    }
    // Classes with, e.g., custom streamers are not supported through this field. Empty classes, however, are.
-   // Can be overwritten with the "rntuple.split=true" class attribute
+   // Can be overwritten with the "rntuple.streamed=true" class attribute
    if (!fClass->CanSplit() && fClass->Size() > 1 &&
        GetRNTupleSerializationMode(fClass) != ERNTupleSerializationMode::kForceNative) {
       throw RException(R__FAIL(std::string(className) + " cannot be stored natively in RNTuple"));

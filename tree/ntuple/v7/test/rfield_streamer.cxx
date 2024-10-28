@@ -31,7 +31,7 @@ TEST(RField, StreamedMember)
 {
    auto cl = TClass::GetClass("CyclicMember");
    cl->CreateAttributeMap();
-   cl->GetAttributeMap()->AddProperty("rntuple.split", "false");
+   cl->GetAttributeMap()->AddProperty("rntuple.streamed", "true");
 
    FileRaii fileGuard("test_ntuple_rfield_streamed_member.root");
    {
@@ -67,7 +67,7 @@ TEST(RField, ForceNativeMode)
    EXPECT_THROW(RFieldBase::Create("f", "CustomStreamer").Unwrap(), RException);
 
    cl->CreateAttributeMap();
-   cl->GetAttributeMap()->AddProperty("rntuple.split", "true");
+   cl->GetAttributeMap()->AddProperty("rntuple.streamed", "false");
 
    // No exception
    RFieldBase::Create("f", "CustomStreamer").Unwrap();

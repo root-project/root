@@ -13,7 +13,7 @@ struct CyclicMember {
 
 struct ClassWithStreamedMember {
    float fA = 0.0;
-   CyclicMember fStreamed; // in the unit test, we set the "rntuple.unsplit" class attribute of CyclicMember
+   CyclicMember fStreamed; // in the unit test, we set the "rntuple.streamed" class attribute of CyclicMember
 };
 
 struct CustomStreamer {

@@ -157,9 +157,9 @@ void ClassSelectionRule::SetRequestedVersionNumber(int version)
    fRequestedVersionNumber = version;
 }
 
-void ClassSelectionRule::SetRequestedRNTupleSplitMode(int splitMode)
+void ClassSelectionRule::SetRequestedRNTupleSerializationMode(int serializationMode)
 {
-   fRequestedRNTupleSplitMode = splitMode;
+   fRequestedRNTupleSerializationMode = serializationMode;
 }
 
 bool ClassSelectionRule::RequestOnlyTClass() const
@@ -182,7 +182,7 @@ int ClassSelectionRule::RequestedVersionNumber() const
    return fRequestedVersionNumber;
 }
 
-int ClassSelectionRule::RequestedRNTupleSplitMode() const
+int ClassSelectionRule::RequestedRNTupleSerializationMode() const
 {
-   return fRequestedRNTupleSplitMode;
+   return fRequestedRNTupleSerializationMode;
 }

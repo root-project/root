@@ -45,7 +45,8 @@ private:
    bool fRequestProtected;       // Explicit request to be able to access protected member from the interpreter.
    bool fRequestPrivate;         // Explicit request to be able to access private member from the interpreter.
    int  fRequestedVersionNumber; // Explicit request for a specific version number (default to no request with -1).
-   int  fRequestedRNTupleSplitMode = 0; // Explicit request for unsplit (-1) or split (=1), defaults to unset (=0)
+   // Explicit request for unsplit (-1) or split (=1), defaults to unset (=0)
+   int  fRequestedRNTupleSerializationMode = 0;
    // clang-format on
 
 public:
@@ -81,7 +82,7 @@ public:
    void SetRequestProtected(bool val);
    void SetRequestPrivate(bool val);
    void SetRequestedVersionNumber(int version);
-   void SetRequestedRNTupleSplitMode(int splitMode);
+   void SetRequestedRNTupleSerializationMode(int serializationMode);
 
    bool RequestOnlyTClass() const;      // True if the user want the TClass intiliazer but *not* the interpreter meta data
    bool RequestNoStreamer() const;      // Request no Streamer function in the dictionary
@@ -90,7 +91,7 @@ public:
    bool RequestProtected() const;
    bool RequestPrivate() const;
    int  RequestedVersionNumber() const;
-   int RequestedRNTupleSplitMode() const;
+   int RequestedRNTupleSerializationMode() const;
 };
 
 #endif
