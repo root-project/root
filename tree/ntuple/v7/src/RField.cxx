@@ -2507,11 +2507,13 @@ ROOT::Experimental::RRecordField::RRecordField(std::string_view name, const RRec
    fTraits = source.fTraits;
 }
 
-ROOT::Experimental::RRecordField::RRecordField(std::string_view fieldName,
-                                               std::vector<std::unique_ptr<RFieldBase>> &&itemFields,
-                                               const std::vector<std::size_t> &offsets, std::string_view typeName)
-   : ROOT::Experimental::RFieldBase(fieldName, typeName, ENTupleStructure::kRecord, false /* isSimple */),
-     fOffsets(offsets)
+ROOT::Experimental::RRecordField::RRecordField(std::string_view fieldName, std::string_view typeName)
+   : ROOT::Experimental::RFieldBase(fieldName, typeName, ENTupleStructure::kRecord, false /* isSimple */)
+{
+}
+
+void ROOT::Experimental::RRecordField::RRecordField::AttachItemFields(
+   std::vector<std::unique_ptr<RFieldBase>> &&itemFields)
 {
    fTraits |= kTraitTrivialType;
    for (auto &item : itemFields) {
@@ -3870,16 +3872,19 @@ ROOT::Experimental::RPairField::RPairField::GetTypeList(const std::array<std::un
 ROOT::Experimental::RPairField::RPairField(std::string_view fieldName,
                                            std::array<std::unique_ptr<RFieldBase>, 2> &&itemFields,
                                            const std::array<std::size_t, 2> &offsets)
-   : ROOT::Experimental::RRecordField(fieldName, std::move(itemFields), offsets,
-                                      "std::pair<" + GetTypeList(itemFields) + ">")
+   : ROOT::Experimental::RRecordField(fieldName, "std::pair<" + GetTypeList(itemFields) + ">")
 {
+   AttachItemFields(std::move(itemFields));
+   fOffsets.push_back(offsets[0]);
+   fOffsets.push_back(offsets[1]);
 }
 
 ROOT::Experimental::RPairField::RPairField(std::string_view fieldName,
                                            std::array<std::unique_ptr<RFieldBase>, 2> &itemFields)
-   : ROOT::Experimental::RRecordField(fieldName, std::move(itemFields), {},
-                                      "std::pair<" + GetTypeList(itemFields) + ">")
+   : ROOT::Experimental::RRecordField(fieldName, "std::pair<" + GetTypeList(itemFields) + ">")
 {
+   AttachItemFields(std::move(itemFields));
+
    // ISO C++ does not guarantee any specific layout for `std::pair`; query TClass for the member offsets
    auto *c = TClass::GetClass(GetTypeName().c_str());
    if (!c)
@@ -3889,12 +3894,12 @@ ROOT::Experimental::RPairField::RPairField(std::string_view fieldName,
    auto firstElem = c->GetRealData("first");
    if (!firstElem)
       throw RException(R__FAIL("first: no such member"));
-   fOffsets[0] = firstElem->GetThisOffset();
+   fOffsets.push_back(firstElem->GetThisOffset());
 
    auto secondElem = c->GetRealData("second");
    if (!secondElem)
       throw RException(R__FAIL("second: no such member"));
-   fOffsets[1] = secondElem->GetThisOffset();
+   fOffsets.push_back(secondElem->GetThisOffset());
 }
 
 //------------------------------------------------------------------------------
@@ -3915,16 +3920,18 @@ ROOT::Experimental::RTupleField::RTupleField::GetTypeList(const std::vector<std:
 ROOT::Experimental::RTupleField::RTupleField(std::string_view fieldName,
                                              std::vector<std::unique_ptr<RFieldBase>> &&itemFields,
                                              const std::vector<std::size_t> &offsets)
-   : ROOT::Experimental::RRecordField(fieldName, std::move(itemFields), offsets,
-                                      "std::tuple<" + GetTypeList(itemFields) + ">")
+   : ROOT::Experimental::RRecordField(fieldName, "std::tuple<" + GetTypeList(itemFields) + ">")
 {
+   AttachItemFields(std::move(itemFields));
+   fOffsets = offsets;
 }
 
 ROOT::Experimental::RTupleField::RTupleField(std::string_view fieldName,
                                              std::vector<std::unique_ptr<RFieldBase>> &itemFields)
-   : ROOT::Experimental::RRecordField(fieldName, std::move(itemFields), {},
-                                      "std::tuple<" + GetTypeList(itemFields) + ">")
+   : ROOT::Experimental::RRecordField(fieldName, "std::tuple<" + GetTypeList(itemFields) + ">")
 {
+   AttachItemFields(std::move(itemFields));
+
    auto *c = TClass::GetClass(GetTypeName().c_str());
    if (!c)
       throw RException(R__FAIL("cannot get type information for " + GetTypeName()));
