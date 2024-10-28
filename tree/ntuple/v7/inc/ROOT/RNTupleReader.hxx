@@ -286,19 +286,19 @@ public:
    template <typename T>
    RNTupleView<T> GetView(DescriptorId_t fieldId)
    {
-      return RNTupleView<T>(RNTupleView<T>::CreateField(fieldId, fSource.get()));
+      return RNTupleView<T>(RNTupleView<T>::CreateField(fieldId, *fSource));
    }
 
    template <typename T>
    RNTupleView<T> GetView(DescriptorId_t fieldId, std::shared_ptr<T> objPtr)
    {
-      return RNTupleView<T>(RNTupleView<T>::CreateField(fieldId, fSource.get()), objPtr);
+      return RNTupleView<T>(RNTupleView<T>::CreateField(fieldId, *fSource), objPtr);
    }
 
    template <typename T>
    RNTupleView<T> GetView(DescriptorId_t fieldId, T *rawPtr)
    {
-      return RNTupleView<T>(RNTupleView<T>::CreateField(fieldId, fSource.get()), rawPtr);
+      return RNTupleView<T>(RNTupleView<T>::CreateField(fieldId, *fSource), rawPtr);
    }
 
    template <typename T>
@@ -310,7 +310,7 @@ public:
    template <typename T>
    RNTupleDirectAccessView<T> GetDirectAccessView(DescriptorId_t fieldId)
    {
-      return RNTupleDirectAccessView<T>(RNTupleDirectAccessView<T>::CreateField(fieldId, fSource.get()));
+      return RNTupleDirectAccessView<T>(RNTupleDirectAccessView<T>::CreateField(fieldId, *fSource));
    }
 
    /// Raises an exception if:
