@@ -23,7 +23,7 @@ set(Libraries TMVA)
 if (tmva-gpu AND tmva-cudnn)
    list(APPEND Libraries CUDA::cuda_driver CUDA::cudart)
 
-   set(DNN_CUDA_LIBRARIES ${CUDA_CUBLAS_LIBRARIES} ${CUDNN_LIBRARIES} )
+   set(DNN_CUDA_LIBRARIES ${CUDA_CUBLAS_LIBRARIES} )
 
    add_executable(testLSTMForwardPassCudnn TestLSTMForwardPassCudnn.cxx)
    target_link_libraries(testLSTMForwardPassCudnn ${Libraries} ${DNN_CUDA_LIBRARIES})

@@ -17,7 +17,7 @@ if (tmva-gpu)
   include_directories(${CUDA_INCLUDE_DIRS})
 
 
-  SET(DNN_CUDA_LIBRARIES ${CUDA_CUBLAS_LIBRARIES} ${CUDNN_LIBRARIES} )
+  SET(DNN_CUDA_LIBRARIES ${CUDA_CUBLAS_LIBRARIES} )
 
   list(APPEND Libraries ${DNN_CUDA_LIBRARIES} CUDA::cuda_driver CUDA::cudart)
 
