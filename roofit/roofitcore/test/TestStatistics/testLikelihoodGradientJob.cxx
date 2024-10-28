@@ -259,8 +259,8 @@ TEST_P(LikelihoodGradientJobTest, GaussianND)
    std::unique_ptr<RooFitResult> m0result{m0.save()};
    double minNll0 = m0result->minNll();
    double edm0 = m0result->edm();
-   double mean0[N];
-   double std0[N];
+   std::vector<double> mean0(N);
+   std::vector<double> std0(N);
    for (unsigned ix = 0; ix < N; ++ix) {
       {
          std::ostringstream os;
@@ -294,8 +294,8 @@ TEST_P(LikelihoodGradientJobTest, GaussianND)
    std::unique_ptr<RooFitResult> m1result{m1.save()};
    double minNll1 = m1result->minNll();
    double edm1 = m1result->edm();
-   double mean1[N];
-   double std1[N];
+   std::vector<double> mean1(N);
+   std::vector<double> std1(N);
    for (unsigned ix = 0; ix < N; ++ix) {
       {
          std::ostringstream os;
