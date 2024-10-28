@@ -286,19 +286,25 @@ public:
    template <typename T>
    RNTupleView<T> GetView(DescriptorId_t fieldId)
    {
-      return RNTupleView<T>(RNTupleView<T>::CreateField(fieldId, *fSource));
+      auto field = RNTupleView<T>::CreateField(fieldId, *fSource);
+      auto range = Internal::GetFieldRange(*field, *fSource);
+      return RNTupleView<T>(std::move(field), range);
    }
 
    template <typename T>
    RNTupleView<T> GetView(DescriptorId_t fieldId, std::shared_ptr<T> objPtr)
    {
-      return RNTupleView<T>(RNTupleView<T>::CreateField(fieldId, *fSource), objPtr);
+      auto field = RNTupleView<T>::CreateField(fieldId, *fSource);
+      auto range = Internal::GetFieldRange(*field, *fSource);
+      return RNTupleView<T>(std::move(field), range, objPtr);
    }
 
    template <typename T>
    RNTupleView<T> GetView(DescriptorId_t fieldId, T *rawPtr)
    {
-      return RNTupleView<T>(RNTupleView<T>::CreateField(fieldId, *fSource), rawPtr);
+      auto field = RNTupleView<T>::CreateField(fieldId, *fSource);
+      auto range = Internal::GetFieldRange(*field, *fSource);
+      return RNTupleView<T>(std::move(field), range, rawPtr);
    }
 
    template <typename T>
@@ -310,7 +316,9 @@ public:
    template <typename T>
    RNTupleDirectAccessView<T> GetDirectAccessView(DescriptorId_t fieldId)
    {
-      return RNTupleDirectAccessView<T>(RNTupleDirectAccessView<T>::CreateField(fieldId, *fSource));
+      auto field = RNTupleDirectAccessView<T>::CreateField(fieldId, *fSource);
+      auto range = Internal::GetFieldRange(field, *fSource);
+      return RNTupleDirectAccessView<T>(std::move(field), range);
    }
 
    /// Raises an exception if:
