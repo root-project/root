@@ -343,7 +343,7 @@ private:
 
    public:
       RVariantDeleter(std::size_t tagOffset, std::size_t variantOffset,
-                      std::vector<std::unique_ptr<RDeleter>> &itemDeleters)
+                      std::vector<std::unique_ptr<RDeleter>> itemDeleters)
          : fTagOffset(tagOffset), fVariantOffset(variantOffset), fItemDeleters(std::move(itemDeleters))
       {
       }
@@ -358,7 +358,7 @@ private:
    size_t fVariantOffset = 0;
    std::vector<ClusterSize_t::ValueType> fNWritten;
 
-   static std::string GetTypeList(const std::vector<RFieldBase *> &itemFields);
+   static std::string GetTypeList(const std::vector<std::unique_ptr<RFieldBase>> &itemFields);
    /// Extracts the index from an std::variant and transforms it into the 1-based index used for the switch column
    /// The implementation supports two memory layouts that are in use: a trailing unsigned byte, zero-indexed,
    /// having the exception caused empty state encoded by the max tag value,
@@ -384,8 +384,7 @@ protected:
    void CommitClusterImpl() final;
 
 public:
-   // TODO(jblomer): use std::span in signature
-   RVariantField(std::string_view fieldName, const std::vector<RFieldBase *> &itemFields);
+   RVariantField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> itemFields);
    RVariantField(RVariantField &&other) = default;
    RVariantField &operator=(RVariantField &&other) = default;
    ~RVariantField() override = default;
@@ -407,20 +406,22 @@ private:
    }
 
    template <typename HeadT, typename... TailTs>
-   static std::vector<RFieldBase *> BuildItemFields(unsigned int index = 0)
+   static void _BuildItemFields(std::vector<std::unique_ptr<RFieldBase>> &itemFields, unsigned int index = 0)
    {
-      std::vector<RFieldBase *> result;
-      result.emplace_back(new RField<HeadT>("_" + std::to_string(index)));
-      if constexpr (sizeof...(TailTs) > 0) {
-         auto tailFields = BuildItemFields<TailTs...>(index + 1);
-         result.insert(result.end(), tailFields.begin(), tailFields.end());
-      }
+      itemFields.emplace_back(new RField<HeadT>("_" + std::to_string(index)));
+      if constexpr (sizeof...(TailTs) > 0)
+         _BuildItemFields<TailTs...>(itemFields, index + 1);
+   }
+   static std::vector<std::unique_ptr<RFieldBase>> BuildItemFields()
+   {
+      std::vector<std::unique_ptr<RFieldBase>> result;
+      _BuildItemFields<ItemTs...>(result);
       return result;
    }
 
 public:
    static std::string TypeName() { return "std::variant<" + BuildItemTypes<ItemTs...>() + ">"; }
-   explicit RField(std::string_view name) : RVariantField(name, BuildItemFields<ItemTs...>()) {}
+   explicit RField(std::string_view name) : RVariantField(name, BuildItemFields()) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
    ~RField() final = default;
