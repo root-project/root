@@ -421,3 +421,44 @@ TEST(RNTuple, ViewOutOfBounds)
       EXPECT_THAT(ex.what(), testing::HasSubstr("out of bounds"));
    }
 }
+
+TEST(RNTuple, ViewFieldIteration)
+{
+   FileRaii fileGuard("test_ntuple_viewfielditeration.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      model->MakeField<float>("pt");
+      model->MakeField<std::vector<float>>("vec");
+      model->MakeField<std::atomic<int>>("atomic");
+      model->MakeField<CustomEnum>("enum");
+      model->MakeField<std::array<CustomEnum, 2>>("array");
+      model->MakeField<CustomStruct>("struct");
+      model->MakeField<EmptyStruct>("empty");
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+
+   auto viewPt = reader->GetView<void>("pt");
+   EXPECT_EQ(1u, viewPt.GetFieldRange().size());
+   auto viewVec = reader->GetView<void>("vec");
+   EXPECT_EQ(1u, viewVec.GetFieldRange().size());
+   auto viewAtomic = reader->GetView<void>("atomic");
+   EXPECT_EQ(1u, viewAtomic.GetFieldRange().size());
+   auto viewEnum = reader->GetView<void>("enum");
+   EXPECT_EQ(1u, viewEnum.GetFieldRange().size());
+   auto viewStruct = reader->GetView<void>("struct");
+   EXPECT_EQ(1u, viewStruct.GetFieldRange().size());
+   auto viewArray = reader->GetView<void>("array");
+   EXPECT_EQ(1u, viewArray.GetFieldRange().size());
+
+   try {
+      auto viewEmpty = reader->GetView<void>("empty");
+      FAIL() << "creating a view on an empty field should throw";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("field iteration over empty field is unsupported"));
+   }
+}
