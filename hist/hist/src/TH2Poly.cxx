@@ -232,15 +232,20 @@ void TH2Poly::Copy(TObject &newobj) const
       newth2p.fCompletelyInside[i] = fCompletelyInside[i];
    }
    // need to use Clone to copy the contained bin list
-   newth2p.fBins = dynamic_cast<TList *>(fBins->Clone());
-   if (!newth2p.fBins)
-      Error("Copy","Error cloning the TH2Poly bin list");
+   if (!fBins) {
+       newth2p.fBins = nullptr;
+   }
    else {
-      // add bins in the fCells partition. We need to add the TH2PolyBin objects
-      // of the new copied histograms. For this we call AddBinToPartition
-      // we could probably optimize this by implementing a copy of the partition
-      for (auto bin : *(newth2p.fBins)) {
-         newth2p.AddBinToPartition(dynamic_cast<TH2PolyBin*>(bin));
+      newth2p.fBins = dynamic_cast<TList *>(fBins->Clone());
+      if (!newth2p.fBins)
+         Error("Copy","Error cloning the TH2Poly bin list");
+      else {
+         // add bins in the fCells partition. We need to add the TH2PolyBin objects
+         // of the new copied histograms. For this we call AddBinToPartition
+         // we could probably optimize this by implementing a copy of the partition
+         for (auto bin : *(newth2p.fBins)) {
+            newth2p.AddBinToPartition(dynamic_cast<TH2PolyBin*>(bin));
+         }
       }
    }
    // copy overflow contents
