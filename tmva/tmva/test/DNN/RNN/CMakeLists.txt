@@ -37,7 +37,7 @@ endif()
 #--- CUDA tests. ---------------------------
 if (tmva-gpu)
 
-set(DNN_CUDA_LIBRARIES ${CUDA_CUBLAS_LIBRARIES} ${CUDNN_LIBRARIES} )
+set(DNN_CUDA_LIBRARIES ${CUDA_CUBLAS_LIBRARIES})
 
 add_executable(testRecurrentBackpropagationCuda TestRecurrentBackpropagationCuda.cxx)
 target_link_libraries(testRecurrentBackpropagationCuda ${Libraries} ${DNN_CUDA_LIBRARIES})

@@ -442,8 +442,7 @@ if(tmva-gpu)
     target_sources(TMVA PRIVATE
                    src/DNN/Architectures/Cudnn/TensorDataLoader.cxx
                    src/DNN/Architectures/Cudnn.cu)
-    target_include_directories(TMVA PRIVATE ${CUDNN_INCLUDE_DIRS} )
-    target_link_libraries(TMVA PRIVATE ${CUDNN_LIBRARIES})
+    target_link_libraries(TMVA PRIVATE ROOT::cuDNN)
   else()
     message(STATUS "cuDNN not found or disabled - use only Cuda+Cublas for TMVA Deep Learning on GPU")
   endif()
