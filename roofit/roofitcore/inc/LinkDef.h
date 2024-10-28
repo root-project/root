@@ -233,6 +233,7 @@
 #pragma link C++ class RooRealSumFunc + ;
 #pragma link C++ class RooResolutionModel+ ;
 #pragma link C++ class RooTruthModel+ ;
+#pragma link C++ class RooFit::Detail::RooFixedProdPdf+ ;
 #pragma link C++ class RooProdPdf+ ;
 #pragma read sourceClass="RooProdPdf" targetClass="RooProdPdf" version="[-5]" \
   source="RooLinkedList _pdfNSetList" target="_pdfNSetList"                  \
@@ -334,5 +335,7 @@
 #pragma link off class RooErrorHandler+ ;
 #pragma link C++ class RooBinSamplingPdf+;
 #pragma link C++ class RooBinWidthFunction+;
+#pragma link C++ class RooFit::Detail::RooNLLVarNew+;
+#pragma link C++ class RooFit::Detail::RooNormalizedPdf+ ;
 
 #endif

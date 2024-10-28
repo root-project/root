@@ -63,7 +63,6 @@ public:
   CacheMode canNodeBeCached() const override { return RooAbsArg::NotAdvised ; } ;
   void setCacheAndTrackHints(RooArgSet&) override ;
 
-  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
 protected:
 
   void ioStreamerPass2() override ;

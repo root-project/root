@@ -55,10 +55,9 @@ namespace HistFactory{
     double nominal() const { return _nominal; }
     const std::vector<double>& low() const { return _low; }
     const std::vector<double>& high() const { return _high; }
+    double globalBoundary() const { return _interpBoundary;}
 
     void doEval(RooFit::EvalContext &) const override;
-
-    void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
 
   protected:
 

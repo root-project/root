@@ -55,18 +55,3 @@ void RooConstVar::writeToStream(std::ostream& os, bool /*compact*/) const
 {
   os << _value ;
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-void RooConstVar::translate(RooFit::Detail::CodeSquashContext &ctx) const
-{
-   // Just return a stringy-field version of the const value.
-   // Formats to the maximum precision.
-   constexpr auto max_precision{std::numeric_limits<double>::digits10 + 1};
-   std::stringstream ss;
-   ss.precision(max_precision);
-   // Just use toString to make sure we do not output 'inf'.
-   // This is really ugly for large numbers...
-   ss << std::fixed << RooNumber::toString(_value);
-   ctx.addResult(this, ss.str());
-}

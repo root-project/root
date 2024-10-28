@@ -31,9 +31,10 @@ public:
   Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool staticInitOK=true) const override;
   void generateEvent(Int_t code) override;
 
-  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
-  std::string
-  buildCallToAnalyticIntegral(Int_t code, const char *rangeName, RooFit::Detail::CodeSquashContext &ctx) const override;
+  RooAbsReal const &getX() const { return *x; }
+  RooAbsReal const &getGamma() const { return *gamma; }
+  RooAbsReal const &getBeta() const { return *beta; }
+  RooAbsReal const &getMu() const { return *mu; }
 
 protected:
 

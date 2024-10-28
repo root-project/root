@@ -64,15 +64,6 @@ double RooPoisson::evaluate() const
   return RooFit::Detail::MathFuncs::poisson(k, mean);
 }
 
-void RooPoisson::translate(RooFit::Detail::CodeSquashContext &ctx) const
-{
-   std::string xName = ctx.getResult(x);
-   if (!_noRounding)
-      xName = "std::floor(" + xName + ")";
-
-   ctx.addResult(this, ctx.buildCall("RooFit::Detail::MathFuncs::poisson", xName, mean));
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of the Poisson distribution.
 void RooPoisson::doEval(RooFit::EvalContext &ctx) const
@@ -100,22 +91,6 @@ double RooPoisson::analyticalIntegral(Int_t code, const char* rangeName) const
   RooRealProxy const &integrand = code == 1 ? x : mean;
   return RooFit::Detail::MathFuncs::poissonIntegral(
      code, mean, _noRounding ? x : std::floor(x), integrand.min(rangeName), integrand.max(rangeName), _protectNegative);
-}
-
-std::string
-RooPoisson::buildCallToAnalyticIntegral(int code, const char *rangeName, RooFit::Detail::CodeSquashContext &ctx) const
-{
-   R__ASSERT(code == 1 || code == 2);
-   std::string xName = ctx.getResult(x);
-   if (!_noRounding)
-      xName = "std::floor(" + xName + ")";
-
-   RooRealProxy const &integrand = code == 1 ? x : mean;
-   // Since the integral function is the same for both codes, we need to make sure the indexed observables do not appear
-   // in the function if they are not required.
-   xName = code == 1 ? "0" : xName;
-   return ctx.buildCall("RooFit::Detail::MathFuncs::poissonIntegral", code, mean, xName,
-                        integrand.min(rangeName), integrand.max(rangeName), _protectNegative);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

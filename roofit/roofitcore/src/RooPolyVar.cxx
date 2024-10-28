@@ -112,17 +112,6 @@ double RooPolyVar::evaluate() const
    return RooFit::Detail::MathFuncs::polynomial(_wksp.data(), sz, _lowestOrder, _x);
 }
 
-void RooPolyVar::translate(RooFit::Detail::CodeSquashContext &ctx) const
-{
-   const unsigned sz = _coefList.size();
-   if (!sz) {
-      ctx.addResult(this, std::to_string((_lowestOrder ? 1. : 0.)));
-      return;
-   }
-
-   ctx.addResult(this, ctx.buildCall("RooFit::Detail::MathFuncs::polynomial", _coefList, sz, _lowestOrder, _x));
-}
-
 void RooPolyVar::doEvalImpl(RooAbsArg const *caller, RooFit::EvalContext &ctx, RooAbsReal const &x,
                             RooArgList const &coefs, int lowestOrder)
 {
@@ -186,16 +175,4 @@ double RooPolyVar::analyticalIntegral(Int_t code, const char *rangeName) const
    fillCoeffValues(_wksp, _coefList);
 
    return RooFit::Detail::MathFuncs::polynomialIntegral(_wksp.data(), sz, _lowestOrder, xmin, xmax);
-}
-
-std::string RooPolyVar::buildCallToAnalyticIntegral(Int_t /* code */, const char *rangeName,
-                                                    RooFit::Detail::CodeSquashContext &ctx) const
-{
-   const double xmin = _x.min(rangeName);
-   const double xmax = _x.max(rangeName);
-   const unsigned sz = _coefList.size();
-   if (!sz)
-      return std::to_string(_lowestOrder ? xmax - xmin : 0.0);
-
-   return ctx.buildCall("RooFit::Detail::MathFuncs::polynomialIntegral", _coefList, sz, _lowestOrder, xmin, xmax);
 }

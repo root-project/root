@@ -7,6 +7,7 @@
 set(roofit_legacy_eval_backend ON CACHE BOOL "" FORCE)
 
 add_subdirectory(batchcompute)
+add_subdirectory(codegen)
 if (roofit_multiprocess)
   add_subdirectory(roofitZMQ)
   add_subdirectory(multiprocess)

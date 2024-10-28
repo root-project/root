@@ -39,15 +39,13 @@ public:
   /// Switch on or off protection against negative means.
   void protectNegativeMean(bool flag = true) {_protectNegative = flag;}
 
+  bool getProtectNegativeMean() const { return _protectNegative; }
+
   /// Get the x variable.
   RooAbsReal const& getX() const { return x.arg(); }
 
   /// Get the mean parameter.
   RooAbsReal const& getMean() const { return mean.arg(); }
-
-  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
-  std::string
-  buildCallToAnalyticIntegral(int code, const char *rangeName, RooFit::Detail::CodeSquashContext &ctx) const override;
 
 protected:
 

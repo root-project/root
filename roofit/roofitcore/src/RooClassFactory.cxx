@@ -39,6 +39,7 @@ instantiate objects.
 #include "RooWorkspace.h"
 #include "RooGlobalFunc.h"
 #include "RooAbsPdf.h"
+#include "RooFitImplHelpers.h"
 
 #include <ROOT/StringUtils.hxx>
 
@@ -401,15 +402,6 @@ std::string getFromVarSpans(std::vector<std::string> const &alist)
    return ss.str();
 }
 
-/// Replace all occurrences of `what` with `with` inside of `inOut`.
-void replaceAll(std::string &inOut, std::string_view what, std::string_view with)
-{
-   for (std::string::size_type pos{}; inOut.npos != (pos = inOut.find(what.data(), pos, what.length()));
-        pos += with.length()) {
-      inOut.replace(pos, what.length(), with.data(), with.length());
-   }
-}
-
 inline bool isSpecial(char c)
 {
    return c != '_' && !std::isalnum(c);
@@ -506,8 +498,7 @@ public:
    CLASS_NAME(const char *name, const char *title,)";
 
   // Insert list of input arguments
-  unsigned int i ;
-  for (i=0 ; i<alist.size() ; i++) {
+  for (std::size_t i=0 ; i<alist.size() ; i++) {
     if (!isCat[i]) {
       hf << "        RooAbsReal& _" ;
     } else {
@@ -540,11 +531,10 @@ public:
 )";
   }
 
-  hf << "protected:" << endl
-     << "" << endl ;
+  hf << "" << endl ;
 
   // Insert list of input arguments
-  for (i=0 ; i<alist.size() ; i++) {
+  for (std::size_t i=0 ; i<alist.size() ; i++) {
     if (!isCat[i]) {
       hf << "  RooRealProxy " << alist[i] << " ;" << endl ;
     } else {
@@ -555,16 +545,24 @@ public:
   hf << R"(
   double evaluate() const override;
   void doEval(RooFit::EvalContext &) const override;
-  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
 
 private:
 
   ClassDefOverride(CLASS_NAME, 1) // Your description goes here...
-};)";
+};
+
+namespace RooFit {
+namespace Experimental {
+
+void codegenImpl(CLASS_NAME &arg, CodegenContext &ctx);
+
+} // namespace Experimental
+} // namespace RooFit
+
+)";
 
 
-  hf << endl
-     << "inline double CLASS_NAME_evaluate(" << listVars(alist, isCat) << ") ";
+  hf << "inline double CLASS_NAME_evaluate(" << listVars(alist, isCat) << ")";
   hf << R"(
 {)";
 
@@ -582,7 +580,7 @@ private:
    // ENTER EXPRESSION IN TERMS OF VARIABLE ARGUMENTS HERE
 
 )"
-     << "   return " << expression << "; " << endl
+     << "   return " << expression << ";" << endl
      << "}\n"
      << endl;
 
@@ -614,7 +612,7 @@ CLASS_NAME::CLASS_NAME(const char *name, const char *title,
 )";
 
   // Insert list of proxy constructors
-  for (i=0 ; i<alist.size() ; i++) {
+  for (std::size_t i=0 ; i<alist.size() ; i++) {
     if (!isCat[i]) {
       cf << "                        RooAbsReal& _" << alist[i] ;
     } else {
@@ -632,7 +630,7 @@ CLASS_NAME::CLASS_NAME(const char *name, const char *title,
   cf << "   : BASE_NAME(name,title)," << endl ;
 
   // Insert list of proxy constructors
-  for (i=0 ; i<alist.size() ; i++) {
+  for (std::size_t i=0 ; i<alist.size() ; i++) {
     cf << "   " << alist[i] << "(\"" << alist[i] << "\",\"" << alist[i] << "\",this,_" << alist[i] << ")" ;
     if (i<alist.size()-1) {
       cf << "," ;
@@ -647,7 +645,7 @@ CLASS_NAME::CLASS_NAME(const char *name, const char *title,
      << "CLASS_NAME::CLASS_NAME(CLASS_NAME const &other, const char *name)" << endl
      << "   : BASE_NAME(other,name)," << endl ;
 
-  for (i=0 ; i<alist.size() ; i++) {
+  for (std::size_t i=0 ; i<alist.size() ; i++) {
     cf << "   " << alist[i] << "(\"" << alist[i] << "\",this,other." << alist[i] << ")" ;
     if (i<alist.size()-1) {
       cf << "," ;
@@ -661,23 +659,33 @@ CLASS_NAME::CLASS_NAME(const char *name, const char *title,
      << "\n"
      << "double CLASS_NAME::evaluate() const " << endl
      << "{\n"
-     << "   return CLASS_NAME_evaluate(" << listVars(alist) << "); " << endl
+     << "   return CLASS_NAME_evaluate(" << listVars(alist) << ");" << endl
      << "}\n"
      << "\n"
-     << "void CLASS_NAME::doEval(RooFit::EvalContext &ctx) const " << endl
-     << "{ \n"
+     << "void CLASS_NAME::doEval(RooFit::EvalContext &ctx) const" << endl
+     << "{\n"
      << declareVarSpans(alist)
      << "\n"
      << "   std::size_t n = ctx.output().size();\n"
      << "   for (std::size_t i = 0; i < n; ++i) {\n"
      << "      ctx.output()[i] = CLASS_NAME_evaluate(" << getFromVarSpans(alist) << ");\n"
      << "   }\n"
-     << "} \n";
+     << "}\n";
 
-cf << "void CLASS_NAME::translate(RooFit::Detail::CodeSquashContext &ctx) const\n"
-<< "{\n"
-<< "   ctx.addResult(this, ctx.buildCall(\"CLASS_NAME_evaluate\", " << listVars(alist) << "));\n"
-<<"}\n";
+   {
+   std::stringstream varsGetters;
+   for (std::size_t i = 0; i < alist.size(); ++i) {
+      varsGetters << "arg." << alist[i];
+      if (i < alist.size() - 1) {
+         varsGetters << ", ";
+      }
+   }
+
+   cf << "void RooFit::Experimental::codegenImpl(CLASS_NAME &arg, RooFit::Experimental::CodegenContext &ctx)\n"
+      << "{\n"
+      << "   ctx.addResult(&arg, ctx.buildCall(\"CLASS_NAME_evaluate\", " << varsGetters.str() << "));\n"
+      <<"}\n";
+  }
 
   if (hasAnaInt) {
 
@@ -782,10 +790,10 @@ void CLASS_NAME::generateEvent(int code)
    std::ofstream ocf(className + ".cxx");
    std::string headerCode = hf.str();
    std::string sourceCode = cf.str();
-   replaceAll(headerCode, "CLASS_NAME", className);
-   replaceAll(sourceCode, "CLASS_NAME", className);
-   replaceAll(headerCode, "BASE_NAME", baseName);
-   replaceAll(sourceCode, "BASE_NAME", baseName);
+   RooFit::Detail::replaceAll(headerCode, "CLASS_NAME", className);
+   RooFit::Detail::replaceAll(sourceCode, "CLASS_NAME", className);
+   RooFit::Detail::replaceAll(headerCode, "BASE_NAME", baseName);
+   RooFit::Detail::replaceAll(sourceCode, "BASE_NAME", baseName);
    ohf << headerCode;
    ocf << sourceCode;
 

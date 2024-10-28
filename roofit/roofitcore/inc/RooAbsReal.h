@@ -21,7 +21,7 @@
 #include "RooArgSet.h"
 #include "RooCmdArg.h"
 #include "RooCurve.h"
-#include "RooFit/Detail/CodeSquashContext.h"
+#include "RooFit/CodegenContext.h"
 #include "RooFit/EvalContext.h"
 #include "RooGlobalFunc.h"
 
@@ -388,9 +388,6 @@ public:
   virtual void gradient(double *) const {
     if(!hasGradient()) throw std::runtime_error("RooAbsReal::gradient(double *) not implemented by this class!");
   }
-
-  virtual std::string
-  buildCallToAnalyticIntegral(Int_t code, const char *rangeName, RooFit::Detail::CodeSquashContext &ctx) const;
 
   // PlotOn with command list
   virtual RooPlot* plotOn(RooPlot* frame, RooLinkedList& cmdList) const ;

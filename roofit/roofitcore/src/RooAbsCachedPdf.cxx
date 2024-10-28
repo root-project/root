@@ -33,7 +33,7 @@ for changes to trigger a refilling of the cache histogram.
 #include "RooDataHist.h"
 #include "RooHistPdf.h"
 #include "RooExpensiveObjectCache.h"
-#include "RooNormalizedPdf.h"
+#include "RooFit/Detail/RooNormalizedPdf.h"
 
 ClassImp(RooAbsCachedPdf);
 
@@ -415,7 +415,7 @@ RooAbsCachedPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::Com
    std::unique_ptr<RooAbsPdf> pdfClone(static_cast<RooAbsPdf *>(this->Clone()));
    ctx.compileServers(*pdfClone, {});
 
-   auto newArg = std::make_unique<RooNormalizedPdf>(*pdfClone, normSet);
+   auto newArg = std::make_unique<RooFit::Detail::RooNormalizedPdf>(*pdfClone, normSet);
 
    // The direct servers are this pdf and the normalization integral, which
    // don't need to be compiled further.
