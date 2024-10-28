@@ -1,10 +1,10 @@
 #ifdef __CLING__
 
 #pragma link C++ struct CyclicMember;
-#pragma link C++ class ClassWithUnsplitMember + ;
+#pragma link C++ class ClassWithStreamedMember + ;
 #pragma link C++ class CustomStreamer - ;
-#pragma link C++ options = rntupleSplit(true) class CustomStreamerForceSplit - ;
-#pragma link C++ options = rntupleSplit(false) class CustomStreamerForceUnsplit + ;
+#pragma link C++ options = rntupleSplit(true) class CustomStreamerForceNative - ;
+#pragma link C++ options = rntupleSplit(false) class CustomStreamerForceStreamed + ;
 #pragma link C++ class IgnoreUnsplitComment + ;
 
 #pragma link C++ class PolyBase + ;

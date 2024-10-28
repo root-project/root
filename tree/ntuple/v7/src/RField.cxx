@@ -339,24 +339,24 @@ void DestroyRVecWithChecks(std::size_t alignOfT, void **beginPtr, char *begin, s
 }
 
 /// Possible settings for the "rntuple.split" class attribute in the dictionary.
-enum class ERNTupleUnsplitSetting { kForceSplit, kForceUnsplit, kUnset };
+enum class ERNTupleSerializationMode { kForceNative, kForceStreamed, kUnset };
 
-ERNTupleUnsplitSetting GetRNTupleUnsplitSetting(TClass *cl)
+ERNTupleSerializationMode GetRNTupleSerializationMode(TClass *cl)
 {
    auto am = cl->GetAttributeMap();
    if (!am || !am->HasKey("rntuple.split"))
-      return ERNTupleUnsplitSetting::kUnset;
+      return ERNTupleSerializationMode::kUnset;
 
    std::string value = am->GetPropertyAsString("rntuple.split");
    std::transform(value.begin(), value.end(), value.begin(), ::toupper);
    if (value == "TRUE") {
-      return ERNTupleUnsplitSetting::kForceSplit;
+      return ERNTupleSerializationMode::kForceNative;
    } else if (value == "FALSE") {
-      return ERNTupleUnsplitSetting::kForceUnsplit;
+      return ERNTupleSerializationMode::kForceStreamed;
    } else {
       R__LOG_WARNING(ROOT::Experimental::NTupleLog())
          << "invalid setting for 'rntuple.split' class attribute: " << am->GetPropertyAsString("rntuple.split");
-      return ERNTupleUnsplitSetting::kUnset;
+      return ERNTupleSerializationMode::kUnset;
    }
 }
 
@@ -377,7 +377,7 @@ struct RVariantTag {
                                                    typename std::conditional_t<VariantSizeT == 4, std::uint32_t, void>>;
 };
 
-/// Used in RUnsplitField::AppendImpl() in order to record the encountered streamer info records
+/// Used in RStreamerField::AppendImpl() in order to record the encountered streamer info records
 class TBufferRecStreamer : public TBufferFile {
 public:
    using RCallbackStreamerInfo = std::function<void(TVirtualStreamerInfo *)>;
@@ -868,8 +868,8 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
             if (cl->GetCollectionProxy()) {
                result = std::make_unique<RProxiedCollectionField>(fieldName, canonicalType);
             } else {
-               if (GetRNTupleUnsplitSetting(cl) == ERNTupleUnsplitSetting::kForceUnsplit) {
-                  result = std::make_unique<RUnsplitField>(fieldName, canonicalType);
+               if (GetRNTupleSerializationMode(cl) == ERNTupleSerializationMode::kForceStreamed) {
+                  result = std::make_unique<RStreamerField>(fieldName, canonicalType);
                } else {
                   result = std::make_unique<RClassField>(fieldName, canonicalType);
                }
@@ -1244,7 +1244,7 @@ void ROOT::Experimental::RFieldBase::ConnectPageSink(Internal::RPageSink &pageSi
    GenerateColumns();
    for (auto &column : fAvailableColumns) {
       // Only the first column of every representation can be a deferred column. In all column representations,
-      // larger column indexes are data columns of collections (string, unsplit) and thus
+      // larger column indexes are data columns of collections (string, streamer) and thus
       // they have no elements on late model extension
       auto firstElementIndex = (column->GetIndex() == 0) ? EntryToColumnElementIndex(firstEntry) : 0;
       column->ConnectPageSink(fOnDiskId, pageSink, firstElementIndex);
@@ -1816,12 +1816,12 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::st
    // Classes with, e.g., custom streamers are not supported through this field. Empty classes, however, are.
    // Can be overwritten with the "rntuple.split=true" class attribute
    if (!fClass->CanSplit() && fClass->Size() > 1 &&
-       GetRNTupleUnsplitSetting(fClass) != ERNTupleUnsplitSetting::kForceSplit) {
-      throw RException(R__FAIL(std::string(className) + " cannot be split"));
+       GetRNTupleSerializationMode(fClass) != ERNTupleSerializationMode::kForceNative) {
+      throw RException(R__FAIL(std::string(className) + " cannot be stored natively in RNTuple"));
    }
-   if (GetRNTupleUnsplitSetting(fClass) == ERNTupleUnsplitSetting::kForceUnsplit) {
+   if (GetRNTupleSerializationMode(fClass) == ERNTupleSerializationMode::kForceStreamed) {
       throw RException(
-         R__FAIL(std::string(className) + " has unsplit mode enforced, not supported as native RNTuple class"));
+         R__FAIL(std::string(className) + " has streamer mode enforced, not supported as native RNTuple class"));
    }
 
    if (!(fClass->ClassProperty() & kClassHasExplicitCtor))
@@ -2120,20 +2120,21 @@ void ROOT::Experimental::RField<TObject>::AcceptVisitor(Detail::RFieldVisitor &v
 
 //------------------------------------------------------------------------------
 
-ROOT::Experimental::RUnsplitField::RUnsplitField(std::string_view fieldName, std::string_view className,
-                                                 std::string_view typeAlias)
-   : RUnsplitField(fieldName, className, TClass::GetClass(std::string(className).c_str()))
+ROOT::Experimental::RStreamerField::RStreamerField(std::string_view fieldName, std::string_view className,
+                                                   std::string_view typeAlias)
+   : RStreamerField(fieldName, className, TClass::GetClass(std::string(className).c_str()))
 {
    fTypeAlias = typeAlias;
 }
 
-ROOT::Experimental::RUnsplitField::RUnsplitField(std::string_view fieldName, std::string_view className, TClass *classp)
-   : ROOT::Experimental::RFieldBase(fieldName, className, ENTupleStructure::kUnsplit, false /* isSimple */),
+ROOT::Experimental::RStreamerField::RStreamerField(std::string_view fieldName, std::string_view className,
+                                                   TClass *classp)
+   : ROOT::Experimental::RFieldBase(fieldName, className, ENTupleStructure::kStreamer, false /* isSimple */),
      fClass(classp),
      fIndex(0)
 {
    if (fClass == nullptr) {
-      throw RException(R__FAIL("RUnsplitField: no I/O support for type " + std::string(className)));
+      throw RException(R__FAIL("RStreamerField: no I/O support for type " + std::string(className)));
    }
 
    fTraits |= kTraitTypeChecksum;
@@ -2144,12 +2145,12 @@ ROOT::Experimental::RUnsplitField::RUnsplitField(std::string_view fieldName, std
 }
 
 std::unique_ptr<ROOT::Experimental::RFieldBase>
-ROOT::Experimental::RUnsplitField::CloneImpl(std::string_view newName) const
+ROOT::Experimental::RStreamerField::CloneImpl(std::string_view newName) const
 {
-   return std::unique_ptr<RUnsplitField>(new RUnsplitField(newName, GetTypeName(), GetTypeAlias()));
+   return std::unique_ptr<RStreamerField>(new RStreamerField(newName, GetTypeName(), GetTypeAlias()));
 }
 
-std::size_t ROOT::Experimental::RUnsplitField::AppendImpl(const void *from)
+std::size_t ROOT::Experimental::RStreamerField::AppendImpl(const void *from)
 {
    TBufferRecStreamer buffer(TBuffer::kWrite, GetValueSize(),
                              [this](TVirtualStreamerInfo *info) { fStreamerInfos[info->GetNumber()] = info; });
@@ -2162,7 +2163,7 @@ std::size_t ROOT::Experimental::RUnsplitField::AppendImpl(const void *from)
    return nbytes + fPrincipalColumn->GetElement()->GetPackedSize();
 }
 
-void ROOT::Experimental::RUnsplitField::ReadGlobalImpl(NTupleSize_t globalIndex, void *to)
+void ROOT::Experimental::RStreamerField::ReadGlobalImpl(NTupleSize_t globalIndex, void *to)
 {
    RClusterIndex collectionStart;
    ClusterSize_t nbytes;
@@ -2174,7 +2175,7 @@ void ROOT::Experimental::RUnsplitField::ReadGlobalImpl(NTupleSize_t globalIndex,
 }
 
 const ROOT::Experimental::RFieldBase::RColumnRepresentations &
-ROOT::Experimental::RUnsplitField::GetColumnRepresentations() const
+ROOT::Experimental::RStreamerField::GetColumnRepresentations() const
 {
    static RColumnRepresentations representations({{EColumnType::kSplitIndex64, EColumnType::kByte},
                                                   {EColumnType::kIndex64, EColumnType::kByte},
@@ -2184,28 +2185,28 @@ ROOT::Experimental::RUnsplitField::GetColumnRepresentations() const
    return representations;
 }
 
-void ROOT::Experimental::RUnsplitField::GenerateColumns()
+void ROOT::Experimental::RStreamerField::GenerateColumns()
 {
    GenerateColumnsImpl<ClusterSize_t, std::byte>();
 }
 
-void ROOT::Experimental::RUnsplitField::GenerateColumns(const RNTupleDescriptor &desc)
+void ROOT::Experimental::RStreamerField::GenerateColumns(const RNTupleDescriptor &desc)
 {
    GenerateColumnsImpl<ClusterSize_t, std::byte>(desc);
 }
 
-void ROOT::Experimental::RUnsplitField::ConstructValue(void *where) const
+void ROOT::Experimental::RStreamerField::ConstructValue(void *where) const
 {
    fClass->New(where);
 }
 
-void ROOT::Experimental::RUnsplitField::RUnsplitDeleter::operator()(void *objPtr, bool dtorOnly)
+void ROOT::Experimental::RStreamerField::RStreamerFieldDeleter::operator()(void *objPtr, bool dtorOnly)
 {
    fClass->Destructor(objPtr, true /* dtorOnly */);
    RDeleter::operator()(objPtr, dtorOnly);
 }
 
-ROOT::Experimental::RExtraTypeInfoDescriptor ROOT::Experimental::RUnsplitField::GetExtraTypeInfo() const
+ROOT::Experimental::RExtraTypeInfoDescriptor ROOT::Experimental::RStreamerField::GetExtraTypeInfo() const
 {
    Internal::RExtraTypeInfoDescriptorBuilder extraTypeInfoBuilder;
    extraTypeInfoBuilder.ContentId(EExtraTypeInfoIds::kStreamerInfo)
@@ -2216,29 +2217,29 @@ ROOT::Experimental::RExtraTypeInfoDescriptor ROOT::Experimental::RUnsplitField::
    return extraTypeInfoBuilder.MoveDescriptor().Unwrap();
 }
 
-std::size_t ROOT::Experimental::RUnsplitField::GetAlignment() const
+std::size_t ROOT::Experimental::RStreamerField::GetAlignment() const
 {
    return std::min(alignof(std::max_align_t), GetValueSize()); // TODO(jblomer): fix me
 }
 
-std::size_t ROOT::Experimental::RUnsplitField::GetValueSize() const
+std::size_t ROOT::Experimental::RStreamerField::GetValueSize() const
 {
    return fClass->GetClassSize();
 }
 
-std::uint32_t ROOT::Experimental::RUnsplitField::GetTypeVersion() const
+std::uint32_t ROOT::Experimental::RStreamerField::GetTypeVersion() const
 {
    return fClass->GetClassVersion();
 }
 
-std::uint32_t ROOT::Experimental::RUnsplitField::GetTypeChecksum() const
+std::uint32_t ROOT::Experimental::RStreamerField::GetTypeChecksum() const
 {
    return fClass->GetCheckSum();
 }
 
-void ROOT::Experimental::RUnsplitField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+void ROOT::Experimental::RStreamerField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
 {
-   visitor.VisitUnsplitField(*this);
+   visitor.VisitStreamerField(*this);
 }
 
 //------------------------------------------------------------------------------

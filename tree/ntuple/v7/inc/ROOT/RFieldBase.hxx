@@ -421,7 +421,7 @@ protected:
    virtual bool HasExtraTypeInfo() const { return false; }
    // The page sink's callback when the data set gets committed will call this method to get the field's extra
    // type information. This has to happen at the end of writing because the type information may change depending
-   // on the data that's written, e.g. for polymorphic types in the unsplit field.
+   // on the data that's written, e.g. for polymorphic types in the streamer field.
    virtual RExtraTypeInfoDescriptor GetExtraTypeInfo() const { return RExtraTypeInfoDescriptor(); }
 
    /// Add a new subfield to the list of nested fields

@@ -493,11 +493,11 @@ static void GenerateExtraDstColumns(size_t nClusterEntries, std::span<RColumnInf
 
       const auto structure = field->GetStructure();
 
-      if (structure == ENTupleStructure::kUnsplit) {
+      if (structure == ENTupleStructure::kStreamer) {
          Fatal(
             "RNTuple::Merge",
-            "Destination RNTuple contains an Unsplit field (%s) that is not present in one of the sources. "
-            "Creating a default value for an Unsplit field is ill-defined, therefore the merging process will abort.",
+            "Destination RNTuple contains a streamer field (%s) that is not present in one of the sources. "
+            "Creating a default value for a streamer field is ill-defined, therefore the merging process will abort.",
             field->GetFieldName().c_str());
          continue;
       }

@@ -84,12 +84,10 @@ enum class EColumnType {
    kMax,
 };
 
-/**
- * The fields in the ntuple model tree can carry different structural information about the type system.
- * Leaf fields contain just data, collection fields resolve to offset columns, record fields have no
- * materialization on the primitive column layer.
- */
-enum ENTupleStructure : std::uint16_t { kInvalid, kLeaf, kCollection, kRecord, kVariant, kUnsplit, kUnknown };
+/// The fields in the ntuple model tree can carry different structural information about the type system.
+/// Leaf fields contain just data, collection fields resolve to offset columns, record fields have no
+/// materialization on the primitive column layer.
+enum ENTupleStructure : std::uint16_t { kInvalid, kLeaf, kCollection, kRecord, kVariant, kStreamer, kUnknown };
 
 /// Integer type long enough to hold the maximum number of entries in a column
 using NTupleSize_t = std::uint64_t;

@@ -1,4 +1,4 @@
-#include "Unsplit.hxx"
+#include "StreamerField.hxx"
 
 #include <TBuffer.h>
 
@@ -15,13 +15,13 @@ void CustomStreamer::Streamer(TBuffer &R__b)
 }
 
 // A custom streamer that does what the automatic streamer does
-void CustomStreamerForceSplit::Streamer(TBuffer &R__b)
+void CustomStreamerForceNative::Streamer(TBuffer &R__b)
 {
    if (R__b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
-      R__b.ReadClassBuffer(CustomStreamerForceSplit::Class(), this, R__v, R__s, R__c);
+      R__b.ReadClassBuffer(CustomStreamerForceNative::Class(), this, R__v, R__s, R__c);
    } else {
-      R__b.WriteClassBuffer(CustomStreamerForceSplit::Class(), this);
+      R__b.WriteClassBuffer(CustomStreamerForceNative::Class(), this);
    }
 }

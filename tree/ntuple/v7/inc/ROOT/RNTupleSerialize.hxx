@@ -76,7 +76,7 @@ public:
 
    static constexpr int64_t kSuppressedColumnMarker = std::numeric_limits<std::int64_t>::min();
 
-   // In the page sink and the unsplit field, the seen streamer infos are stored in a map
+   // In the page sink and the streamer field, the seen streamer infos are stored in a map
    // with the unique streamer info number being the key. Sorted by unique number.
    using StreamerInfoMap_t = std::map<Int_t, TVirtualStreamerInfo *>;
 

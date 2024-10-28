@@ -1,6 +1,0 @@
-<lcgdict>
-  <selection>
-    <class name="ForceSplitXML" rntupleSplit="true" noStreamer="true" />
-    <class name="ForceUnsplitXML" rntupleSplit="false" />
-  </selection>
-</lcgdict>

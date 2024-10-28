@@ -472,7 +472,7 @@ enum class EExtraTypeInfoIds { kInvalid, kStreamerInfo };
 \ingroup NTuple
 \brief Field specific extra type information from the header / extenstion header
 
-Currently only used by unsplit fields to store RNTuple-wide list of streamer info records.
+Currently only used by streamer fields to store RNTuple-wide list of streamer info records.
 */
 // clang-format on
 class RExtraTypeInfoDescriptor {

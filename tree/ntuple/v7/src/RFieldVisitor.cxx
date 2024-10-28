@@ -330,11 +330,11 @@ void ROOT::Experimental::RPrintValueVisitor::VisitArrayAsRVecField(const RArrayA
    PrintCollection(field);
 }
 
-void ROOT::Experimental::RPrintValueVisitor::VisitUnsplitField(const RUnsplitField &field)
+void ROOT::Experimental::RPrintValueVisitor::VisitStreamerField(const RStreamerField &field)
 {
    PrintIndent();
    PrintName(field);
-   fOutput << "<unsplit>";
+   fOutput << "<streamer mode>";
 }
 
 void ROOT::Experimental::RPrintValueVisitor::VisitClassField(const RClassField &field)
