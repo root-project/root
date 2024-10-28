@@ -24,3 +24,8 @@ ROOTTEST_ADD_TEST(dotLibraries
                   COMMAND root -b -q -l -e ".libraries"
                   PASSREGEX "libRint")
 endif()
+
+# issue 11707
+ROOTTEST_ADD_TEST(macroCalledMain
+                  COPY_TO_BUILDDIR main.cpp
+                  MACRO main.cpp)
