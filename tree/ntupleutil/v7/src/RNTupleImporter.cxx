@@ -317,7 +317,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
       auto &c = p.second;
 
       c.fFieldName = "_collection" + std::to_string(iLeafCountCollection);
-      auto recordField = std::make_unique<RRecordField>("_0", c.fLeafFields);
+      auto recordField = std::make_unique<RRecordField>("_0", std::move(c.fLeafFields));
       c.fRecordField = recordField.get();
       auto collectionField = RVectorField::CreateUntyped(c.fFieldName, std::move(recordField));
       fModel->AddField(std::move(collectionField));

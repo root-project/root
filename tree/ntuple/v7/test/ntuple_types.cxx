@@ -138,7 +138,7 @@ TEST(RNTuple, CreateField)
    std::vector<std::unique_ptr<RFieldBase>> itemFields;
    itemFields.push_back(std::make_unique<RField<std::uint32_t>>("u32"));
    itemFields.push_back(std::make_unique<RField<std::uint8_t>>("u8"));
-   ROOT::Experimental::RRecordField record("test", itemFields);
+   ROOT::Experimental::RRecordField record("test", std::move(itemFields));
    EXPECT_EQ(alignof(std::uint32_t), record.GetAlignment());
    // Check that trailing padding is added after `u8` to comply with the alignment requirements of uint32_t
    EXPECT_EQ(sizeof(std::uint32_t) + alignof(std::uint32_t), record.GetValueSize());
