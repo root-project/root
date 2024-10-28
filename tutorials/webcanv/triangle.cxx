@@ -1,6 +1,5 @@
 /// \file
 /// \ingroup tutorial_webcanv
-/// \notebook -js
 /// User class with custom JavaScript painter in the web canvas.
 ///
 /// Custom class is just triangle which drawn on the frame with NDC coordinates
@@ -10,8 +9,7 @@
 ///
 /// This macro must be executed with ACLiC like 'root --web triangle.cxx+'
 ///
-///
-/// \macro_image (tcanvas_js)
+/// \macro_image (tcanvas_jsp)
 /// \macro_code
 ///
 /// \author Sergey Linev
