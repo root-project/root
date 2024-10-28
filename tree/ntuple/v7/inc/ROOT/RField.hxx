@@ -156,15 +156,15 @@ public:
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
-/// The field for a class in unsplit mode, which is using ROOT standard streaming
-class RUnsplitField final : public RFieldBase {
+/// The field for a class using ROOT standard streaming
+class RStreamerField final : public RFieldBase {
 private:
-   class RUnsplitDeleter : public RDeleter {
+   class RStreamerFieldDeleter : public RDeleter {
    private:
       TClass *fClass;
 
    public:
-      explicit RUnsplitDeleter(TClass *cl) : fClass(cl) {}
+      explicit RStreamerFieldDeleter(TClass *cl) : fClass(cl) {}
       void operator()(void *objPtr, bool dtorOnly) final;
    };
 
@@ -175,7 +175,7 @@ private:
 private:
    // Note that className may be different from classp->GetName(), e.g. through different canonicalization of RNTuple
    // vs. TClass. Also, classp may be nullptr for types unsupported by the ROOT I/O.
-   RUnsplitField(std::string_view fieldName, std::string_view className, TClass *classp);
+   RStreamerField(std::string_view fieldName, std::string_view className, TClass *classp);
 
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
@@ -185,7 +185,7 @@ protected:
    void GenerateColumns(const RNTupleDescriptor &) final;
 
    void ConstructValue(void *where) const final;
-   std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RUnsplitDeleter>(fClass); }
+   std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RStreamerFieldDeleter>(fClass); }
 
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
@@ -197,10 +197,10 @@ protected:
    RExtraTypeInfoDescriptor GetExtraTypeInfo() const final;
 
 public:
-   RUnsplitField(std::string_view fieldName, std::string_view className, std::string_view typeAlias = "");
-   RUnsplitField(RUnsplitField &&other) = default;
-   RUnsplitField &operator=(RUnsplitField &&other) = default;
-   ~RUnsplitField() final = default;
+   RStreamerField(std::string_view fieldName, std::string_view className, std::string_view typeAlias = "");
+   RStreamerField(RStreamerField &&other) = default;
+   RStreamerField &operator=(RStreamerField &&other) = default;
+   ~RStreamerField() final = default;
 
    size_t GetValueSize() const final;
    size_t GetAlignment() const final;

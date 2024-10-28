@@ -25,7 +25,7 @@ TEST(RNTuple, TClass) {
    auto model = RNTupleModel::Create();
    auto ptrKlass = model->MakeField<CustomStruct>("klass");
 
-   // TDatime would be a supported class layout but it is unsplittable due to its custom streamer
+   // TDatime would be a supported class layout but it is blocked due to its custom streamer
    EXPECT_THROW(model->MakeField<TDatime>("datime"), RException);
 
    FileRaii fileGuard("test_ntuple_tclass.root");
@@ -220,7 +220,7 @@ TEST(RNTuple, TClassTypeChecksum)
    EXPECT_TRUE(f1->GetTraits() & RFieldBase::kTraitTypeChecksum);
    EXPECT_EQ(TClass::GetClass("CustomStruct")->GetCheckSum(), f1->GetTypeChecksum());
 
-   auto f2 = std::make_unique<ROOT::Experimental::RUnsplitField>("f2", "TRotation");
+   auto f2 = std::make_unique<ROOT::Experimental::RStreamerField>("f2", "TRotation");
    EXPECT_TRUE(f2->GetTraits() & RFieldBase::kTraitTypeChecksum);
    EXPECT_EQ(TClass::GetClass("TRotation")->GetCheckSum(), f2->GetTypeChecksum());
 

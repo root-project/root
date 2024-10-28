@@ -504,7 +504,7 @@ For these cases, RNTuple depends on the `RRawFile` class and its XRootD and Davi
 For user-defined classes as well as sets and maps, RNTuple uses `TClass`.
 Simple types and other stdlib classes are natively supported and do not require dictionaries.
 See the format specification for an exhaustive list of types supported in RNTuple.
-The unsplit field uses the standard ROOT (unsplit) streaming machinery.
+The streamer field uses the standard ROOT streaming machinery.
 
 Integration to RDataFrame is provided through an RNTuple data source.
 A universal RDataFrame constructor can create a data frame from either a TTree or an RNTuple with the same syntax.
