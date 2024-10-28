@@ -734,8 +734,6 @@ TEST(RNTupleMerger, MergeThroughTFileMergerIncremental)
 TEST(RNTupleMerger, MergeThroughTFileMergerKey)
 {
    ROOT::TestSupport::CheckDiagsRAII diags;
-   diags.optionalDiag(kWarning, "RPageSinkFile", "The RNTuple file format will change.", false);
-   diags.optionalDiag(kWarning, "[ROOT.NTuple]", "Pre-release format version: RC 2", false);
    diags.requiredDiag(kWarning, "TFileMerger", "Merging RNTuples is experimental");
    diags.requiredDiag(kError, "RNTuple::Merge", "Output file already has key, but not of type RNTuple!");
    diags.requiredDiag(kError, "TFileMerger", "Could NOT merge RNTuples!");
@@ -774,8 +772,6 @@ TEST(RNTupleMerger, MergeThroughTFileMergerKey)
 TEST(RNTupleMerger, MergeThroughTBufferMerger)
 {
    ROOT::TestSupport::CheckDiagsRAII diags;
-   diags.optionalDiag(kWarning, "RPageSinkFile", "The RNTuple file format will change.", false);
-   diags.optionalDiag(kWarning, "[ROOT.NTuple]", "Pre-release format version: RC 2", false);
    diags.requiredDiag(kWarning, "TFileMerger", "Merging RNTuples is experimental");
    diags.requiredDiag(kWarning, "TBufferMergerFile", "not attached to the directory", false);
 
