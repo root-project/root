@@ -515,12 +515,6 @@ public:
    const std::string &GetTypeAlias() const { return fTypeAlias; }
    ENTupleStructure GetStructure() const { return fStructure; }
    std::size_t GetNRepetitions() const { return fNRepetitions; }
-   NTupleSize_t GetNElements() const
-   {
-      if (fState == EState::kUnconnected)
-         throw RException(R__FAIL("Cannot call GetNElements() on an unconnected field!"));
-      return fPrincipalColumn->GetNElements();
-   }
    const RFieldBase *GetParent() const { return fParent; }
    std::vector<RFieldBase *> GetSubFields();
    std::vector<const RFieldBase *> GetSubFields() const;
