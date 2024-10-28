@@ -2697,7 +2697,7 @@ void ROOT::Experimental::RVectorField::ReadGlobalImpl(NTupleSize_t globalIndex, 
       return;
    }
 
-   // See "semantics of reading non-trivial objects" in RNTuple's architecture.md
+   // See "semantics of reading non-trivial objects" in RNTuple's Architecture.md
    const auto oldNItems = typedValue->size() / fItemSize;
    const bool canRealloc = oldNItems < nItems;
    bool allDeallocated = false;
@@ -2834,7 +2834,7 @@ void ROOT::Experimental::RRVecField::ReadGlobalImpl(NTupleSize_t globalIndex, vo
    char *begin = reinterpret_cast<char *>(*beginPtr); // for pointer arithmetics
    const std::size_t oldSize = *sizePtr;
 
-   // See "semantics of reading non-trivial objects" in RNTuple's architecture.md for details
+   // See "semantics of reading non-trivial objects" in RNTuple's Architecture.md for details
    // on the element construction/destrution.
    const bool owns = (*capacityPtr != -1);
    const bool needsConstruct = !(fSubFields[0]->GetTraits() & kTraitTriviallyConstructible);
@@ -3249,7 +3249,7 @@ void ROOT::Experimental::RArrayAsRVecField::ConstructValue(void *where) const
       return;
 
    // Need to allocate the RVec if it is the first time the value is being created.
-   // See "semantics of reading non-trivial objects" in RNTuple's architecture.md for details
+   // See "semantics of reading non-trivial objects" in RNTuple's Architecture.md for details
    // on the element construction.
    const bool owns = (*capacityPtr != -1); // RVec is adopting the memory
    const bool needsConstruct = !(fSubFields[0]->GetTraits() & kTraitTriviallyConstructible);
