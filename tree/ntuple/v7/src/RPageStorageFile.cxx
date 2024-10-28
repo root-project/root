@@ -47,11 +47,6 @@ ROOT::Experimental::Internal::RPageSinkFile::RPageSinkFile(std::string_view ntup
                                                            const RNTupleWriteOptions &options)
    : RPagePersistentSink(ntupleName, options)
 {
-   static std::once_flag once;
-   std::call_once(once, []() {
-      R__LOG_WARNING(NTupleLog()) << "The RNTuple file format will change. "
-                                  << "Do not store real data with this version of RNTuple!";
-   });
    fCompressor = std::make_unique<RNTupleCompressor>();
    EnableDefaultMetrics("RPageSinkFile");
    fFeatures.fCanMergePages = true;
