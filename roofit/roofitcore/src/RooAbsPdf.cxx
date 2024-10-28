@@ -138,7 +138,7 @@ called for each data event.
 #include "RooAbsPdf.h"
 
 #include "FitHelpers.h"
-#include "RooNormalizedPdf.h"
+#include "RooFit/Detail/RooNormalizedPdf.h"
 #include "RooMsgService.h"
 #include "RooArgSet.h"
 #include "RooArgProxy.h"
@@ -2793,7 +2793,7 @@ RooAbsPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileCo
    std::unique_ptr<RooAbsPdf> pdfClone(static_cast<RooAbsPdf *>(this->Clone()));
    ctx.compileServers(*pdfClone, normSet);
 
-   auto newArg = std::make_unique<RooNormalizedPdf>(*pdfClone, normSet);
+   auto newArg = std::make_unique<RooFit::Detail::RooNormalizedPdf>(*pdfClone, normSet);
 
    // The direct servers are this pdf and the normalization integral, which
    // don't need to be compiled further.

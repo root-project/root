@@ -23,6 +23,9 @@
 
 #include <Math/Util.h>
 
+namespace RooFit {
+namespace Detail {
+
 class RooNLLVarNew : public RooAbsReal {
 
 public:
@@ -52,7 +55,11 @@ public:
 
    void setSimCount(int simCount) { _simCount = simCount; }
 
-   void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
+   RooAbsPdf const &pdf() const { return *_pdf; }
+   RooAbsReal const &weightVar() const { return *_weightVar; }
+   bool binnedL() const { return _binnedL; }
+   int simCount() const { return _simCount; }
+   RooAbsReal const *expectedEvents() const { return _expectedEvents ? &**_expectedEvents : nullptr; }
 
 private:
    double evaluate() const override { return _value; }
@@ -77,7 +84,11 @@ private:
    std::vector<double> _binw;
    mutable ROOT::Math::KahanSum<double> _offset{0.}; ///<! Offset as KahanSum to avoid loss of precision
 
-}; // end class RooNLLVar
+   ClassDefOverride(RooFit::Detail::RooNLLVarNew, 0);
+};
+
+} // namespace Detail
+} // namespace RooFit
 
 #endif
 

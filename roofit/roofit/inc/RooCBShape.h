@@ -23,7 +23,7 @@ class RooRealVar;
 
 class RooCBShape : public RooAbsPdf {
 public:
-  RooCBShape() {} ;
+  RooCBShape() {}
   RooCBShape(const char *name, const char *title, RooAbsReal& _m,
         RooAbsReal& _m0, RooAbsReal& _sigma,
         RooAbsReal& _alpha, RooAbsReal& _n);
@@ -38,9 +38,11 @@ public:
   Int_t getMaxVal(const RooArgSet& vars) const override ;
   double maxVal(Int_t code) const override ;
 
-  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
-  std::string
-  buildCallToAnalyticIntegral(Int_t code, const char *rangeName, RooFit::Detail::CodeSquashContext &ctx) const override;
+  RooAbsReal const& getM() const { return m.arg(); }
+  RooAbsReal const& getM0() const { return m0.arg(); }
+  RooAbsReal const& getSigma() const { return sigma.arg(); }
+  RooAbsReal const& getAlpha() const { return alpha.arg(); }
+  RooAbsReal const& getN() const { return n.arg(); }
 
 protected:
 

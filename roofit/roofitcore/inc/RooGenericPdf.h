@@ -59,6 +59,8 @@ public:
   const char* expression() const { return _formExpr.Data(); }
   const RooArgList& dependents() const { return _actualVars; }
 
+  std::string getUniqueFuncName() const;
+
 protected:
 
   RooFormula& formula() const ;
@@ -67,7 +69,6 @@ protected:
   RooListProxy _actualVars ;
   double evaluate() const override ;
   void doEval(RooFit::EvalContext &) const override;
-  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
 
   // Post-processing of server redirection
   bool redirectServersHook(const RooAbsCollection& newServerList, bool mustReplaceAll, bool nameChange, bool isRecursive) override ;

@@ -992,7 +992,7 @@ Int_t RooDataHist::getIndex(const RooAbsCollection& coord, bool fast) const {
   return calcTreeIndex(coord, fast);
 }
 
-std::string RooDataHist::declWeightArrayForCodeSquash(RooFit::Detail::CodeSquashContext &ctx,
+std::string RooDataHist::declWeightArrayForCodeSquash(RooFit::Experimental::CodegenContext &ctx,
                                                       bool correctForBinSize) const
 {
    std::vector<double> vals(_arrSize);
@@ -1008,7 +1008,7 @@ std::string RooDataHist::declWeightArrayForCodeSquash(RooFit::Detail::CodeSquash
    return ctx.buildArg(vals);
 }
 
-std::string RooDataHist::calculateTreeIndexForCodeSquash(RooAbsArg const * /*klass*/, RooFit::Detail::CodeSquashContext &ctx,
+std::string RooDataHist::calculateTreeIndexForCodeSquash(RooAbsArg const * /*klass*/, RooFit::Experimental::CodegenContext &ctx,
                                                          const RooAbsCollection &coords, bool reverse) const
 {
    assert(coords.size() == _vars.size());

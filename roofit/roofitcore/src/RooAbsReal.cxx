@@ -4414,23 +4414,6 @@ void RooAbsReal::doEval(RooFit::EvalContext & ctx) const
   }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// This function defines the analytical integral translation for the class.
-///
-/// \param[in] code The code that decides the integrands.
-/// \param[in] rangeName Name of the normalization range.
-/// \param[in] ctx An object to manage auxiliary information for code-squashing.
-///
-/// \returns The representative code string of the integral for the given object.
-std::string RooAbsReal::buildCallToAnalyticIntegral(Int_t /* code */, const char * /* rangeName */,
-                                                    RooFit::Detail::CodeSquashContext & /*ctx*/) const
-{
-   std::stringstream errorMsg;
-   errorMsg << "An analytical integral function for class \"" << ClassName() << "\" has not yet been implemented.";
-   coutE(Minimization) << errorMsg.str() << std::endl;
-   throw std::runtime_error(errorMsg.str().c_str());
-}
-
 double RooAbsReal::_DEBUG_getVal(const RooArgSet* normalisationSet) const {
 
   const bool tmpFast = _fast;

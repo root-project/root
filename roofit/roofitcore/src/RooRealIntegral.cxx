@@ -35,7 +35,6 @@ integration is performed in the various implementations of the RooAbsIntegrator 
 #include <RooConstVar.h>
 #include <RooDouble.h>
 #include <RooExpensiveObjectCache.h>
-#include <RooHelpers.h>
 #include <RooInvTransform.h>
 #include <RooMsgService.h>
 #include <RooNameReg.h>
@@ -44,8 +43,6 @@ integration is performed in the various implementations of the RooAbsIntegrator 
 #include <RooRealBinding.h>
 #include <RooSuperCategory.h>
 #include <RooTrace.h>
-
-#include "RooFitImplHelpers.h"
 
 #include <iostream>
 #include <memory>
@@ -1029,58 +1026,6 @@ bool RooRealIntegral::getAllowComponentSelection() const {
 
 void RooRealIntegral::setAllowComponentSelection(bool allow){
   _respectCompSelect = allow;
-}
-
-void RooRealIntegral::translate(RooFit::Detail::CodeSquashContext &ctx) const
-{
-   if (_sumList.empty() && _intList.empty()) {
-      ctx.addResult(this, _function.arg().buildCallToAnalyticIntegral(_mode, RooNameReg::str(_rangeName), ctx));
-      return;
-   }
-
-   if (intVars().size() != 1 || _intList.size() != 1) {
-      std::stringstream errorMsg;
-      errorMsg << "Only analytical integrals and 1D numeric integrals are supported for AD for class"
-               << _function.GetName();
-      coutE(Minimization) << errorMsg.str() << std::endl;
-      throw std::runtime_error(errorMsg.str().c_str());
-   }
-
-   auto &intVar = static_cast<RooAbsRealLValue &>(*_intList[0]);
-
-   std::string obsName = ctx.getTmpVarName();
-   std::string oldIntVarResult = ctx.getResult(intVar);
-   ctx.addResult(&intVar, "obs[0]");
-
-   std::string funcName = ctx.buildFunction(*_function, {});
-
-   std::stringstream ss;
-
-   ss  << "double " << obsName << "[1];\n";
-
-   std::string resName = RooFit::Detail::makeValidVarName(GetName()) + "Result";
-   ctx.addResult(this, resName);
-   ctx.addToGlobalScope("double " + resName + " = 0.0;\n");
-
-   // TODO: once Clad has support for higher-order functions (follow also the
-   // Clad issue #637), we could refactor this code into an actual function
-   // instead of hardcoding it here as a string.
-   ss << "{\n"
-      << "   const int n = 1000; // number of sampling points\n"
-      << "   double d = " << intVar.getMax(intRange()) << " - " << intVar.getMin(intRange()) << ";\n"
-      << "   double eps = d / n;\n"
-      << "   for (int i = 0; i < n; ++i) {\n"
-      << "      " << obsName << "[0] = " << intVar.getMin(intRange()) << " + eps * i;\n"
-      << "      double tmpA = " << funcName << "(params, " << obsName << ", xlArr);\n"
-      << "      " << obsName << "[0] = " << intVar.getMin(intRange()) << " + eps * (i + 1);\n"
-      << "      double tmpB = " << funcName << "(params, " << obsName << ", xlArr);\n"
-      << "      " << resName << " += (tmpA + tmpB) * 0.5 * eps;\n"
-      << "   }\n"
-      << "}\n";
-
-   ctx.addToGlobalScope(ss.str());
-
-   ctx.addResult(&intVar, oldIntVarResult);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

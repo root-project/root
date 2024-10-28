@@ -42,13 +42,15 @@
 #include "ConstraintHelpers.h"
 #include "RooEvaluatorWrapper.h"
 #include "RooFitImplHelpers.h"
-#include "RooNLLVarNew.h"
+#include "RooFit/Detail/RooNLLVarNew.h"
 
 #ifdef ROOFIT_LEGACY_EVAL_BACKEND
 #include "RooChi2Var.h"
 #include "RooNLLVar.h"
 #include "RooXYChi2Var.h"
 #endif
+
+using RooFit::Detail::RooNLLVarNew;
 
 namespace {
 

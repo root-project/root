@@ -61,13 +61,6 @@ double RooBifurGauss::evaluate() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-void RooBifurGauss::translate(RooFit::Detail::CodeSquashContext &ctx) const
-{
-   ctx.addResult(this, ctx.buildCall("RooFit::Detail::MathFuncs::bifurGauss", x, mean, sigmaL, sigmaR));
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of BifurGauss distribution.
 void RooBifurGauss::doEval(RooFit::EvalContext & ctx) const
 {
@@ -95,16 +88,4 @@ double RooBifurGauss::analyticalIntegral(Int_t code, const char *rangeName) cons
 
    return RooFit::Detail::MathFuncs::bifurGaussIntegral(integrand.min(rangeName), integrand.max(rangeName),
                                                                   constant, sigmaL, sigmaR);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-std::string RooBifurGauss::buildCallToAnalyticIntegral(Int_t code, const char *rangeName,
-                                                       RooFit::Detail::CodeSquashContext &ctx) const
-{
-   auto &constant = code == 1 ? mean : x;
-   auto &integrand = code == 1 ? x : mean;
-
-   return ctx.buildCall("RooFit::Detail::MathFuncs::bifurGaussIntegral", integrand.min(rangeName),
-                        integrand.max(rangeName), constant, sigmaL, sigmaR);
 }

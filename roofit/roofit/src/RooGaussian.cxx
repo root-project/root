@@ -126,23 +126,3 @@ void RooGaussian::generateEvent(Int_t code)
 
   return;
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-void RooGaussian::translate(RooFit::Detail::CodeSquashContext &ctx) const
-{
-   // Build a call to the stateless gaussian defined later.
-   ctx.addResult(this, ctx.buildCall("RooFit::Detail::MathFuncs::gaussian", x, mean, sigma));
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-std::string RooGaussian::buildCallToAnalyticIntegral(Int_t code, const char *rangeName,
-                                                     RooFit::Detail::CodeSquashContext &ctx) const
-{
-   auto& constant  = code == 1 ? mean : x;
-   auto& integrand = code == 1 ? x : mean;
-
-   return ctx.buildCall("RooFit::Detail::MathFuncs::gaussianIntegral",
-                        integrand.min(rangeName), integrand.max(rangeName), constant, sigma);
-}

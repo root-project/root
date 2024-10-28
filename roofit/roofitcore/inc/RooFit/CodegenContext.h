@@ -11,8 +11,8 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#ifndef RooFit_Detail_CodeSquashContext_h
-#define RooFit_Detail_CodeSquashContext_h
+#ifndef RooFit_Detail_CodegenContext_h
+#define RooFit_Detail_CodegenContext_h
 
 #include <RooAbsCollection.h>
 #include <RooFit/EvalContext.h>
@@ -31,11 +31,19 @@ template <class T>
 class RooTemplateProxy;
 
 namespace RooFit {
+namespace Experimental {
 
-namespace Detail {
+template <int P>
+struct Prio {
+   static_assert(P >= 1 && P <= 10, "P must be 1 <= P <= 10!");
+   static auto next() { return Prio<P + 1>{}; }
+};
+
+using PrioHighest = Prio<1>;
+using PrioLowest = Prio<10>;
 
 /// @brief A class to maintain the context for squashing of RooFit models into code.
-class CodeSquashContext {
+class CodegenContext {
 public:
    void addResult(RooAbsArg const *key, std::string const &value);
    void addResult(const char *key, std::string const &value);
@@ -86,13 +94,13 @@ public:
    /// }
    class LoopScope {
    public:
-      LoopScope(CodeSquashContext &ctx, std::vector<TNamed const *> &&vars) : _ctx{ctx}, _vars{vars} {}
+      LoopScope(CodegenContext &ctx, std::vector<TNamed const *> &&vars) : _ctx{ctx}, _vars{vars} {}
       ~LoopScope() { _ctx.endLoop(*this); }
 
       std::vector<TNamed const *> const &vars() const { return _vars; }
 
    private:
-      CodeSquashContext &_ctx;
+      CodegenContext &_ctx;
       const std::vector<TNamed const *> _vars;
    };
 
@@ -111,7 +119,7 @@ public:
    std::vector<std::string> const &collectedFunctions() { return _collectedFunctions; }
 
    std::string
-   buildFunction(RooAbsArg const &arg, std::map<RooFit::Detail::DataKey, std::size_t> const &outputSizes);
+   buildFunction(RooAbsArg const &arg, std::map<RooFit::Detail::DataKey, std::size_t> const &outputSizes = {});
 
    auto const &outputSizes() const { return _nodeOutputSizes; }
 
@@ -193,18 +201,18 @@ private:
 };
 
 template <>
-inline std::string CodeSquashContext::typeName<double>() const
+inline std::string CodegenContext::typeName<double>() const
 {
    return "double";
 }
 template <>
-inline std::string CodeSquashContext::typeName<int>() const
+inline std::string CodegenContext::typeName<int>() const
 {
    return "int";
 }
 
 template <class T>
-std::string CodeSquashContext::buildArgSpanImpl(std::span<const T> arr)
+std::string CodegenContext::buildArgSpanImpl(std::span<const T> arr)
 {
    unsigned int n = arr.size();
    std::string arrName = getTmpVarName();
@@ -219,8 +227,11 @@ std::string CodeSquashContext::buildArgSpanImpl(std::span<const T> arr)
    return arrName;
 }
 
-} // namespace Detail
+void declareDispatcherCode(std::string const &funcName);
 
+void codegen(RooAbsArg &arg, CodegenContext &ctx);
+
+} // namespace Experimental
 } // namespace RooFit
 
 #endif

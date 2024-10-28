@@ -132,8 +132,6 @@ public:
 
   static void cleanup() ;
 
-  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
-
   protected:
 
   static bool _printScientific ;

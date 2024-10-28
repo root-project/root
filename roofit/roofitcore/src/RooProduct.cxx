@@ -489,13 +489,6 @@ void RooProduct::setCacheAndTrackHints(RooArgSet& trackNodes)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-void RooProduct::translate(RooFit::Detail::CodeSquashContext &ctx) const
-{
-   ctx.addResult(this, ctx.buildCall("RooFit::Detail::MathFuncs::product", _compRSet, _compRSet.size()));
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Customized printing of arguments of a RooProduct to more intuitively reflect the contents of the
 /// product operator construction
 

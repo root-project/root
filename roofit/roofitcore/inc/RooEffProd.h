@@ -28,12 +28,13 @@ public:
   RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype,
                                        const RooArgSet* auxProto, bool verbose) const override;
 
+  RooAbsReal const& pdf() const { return *_pdf; }
+  RooAbsReal const& eff() const { return *_eff; }
+
 protected:
 
   // Function evaluation
   double evaluate() const override ;
-  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
-
 
   RooRealProxy _pdf ;               ///< Probability Density function
   RooRealProxy _eff;                ///< Efficiency function

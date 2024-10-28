@@ -94,8 +94,8 @@ computation, but without any overhead that is hard to digest by the AD tool.
 On a high level, this *code generation* is implemented as follows:
 
 1. The computation graph is visited recursively by a
-   RooFit::Detail::CodeSquashContext object, via the virtual
-   RooAbsArg::translate() function that implements the   translation of a
+   RooFit::CodegenContext object, via the
+   RooFit::codegenImpl(RooAbsArg &, RooFit::CodegenContext &) function that implements the translation of a
    given RooFit class to minimal C++ code. This is an example of the visitor
    pattern.
 
@@ -124,10 +124,10 @@ separate header file.
 Since Clad prefers the code for models to be within a single translation unit,
  in many classes, this has been implemented by moving the computational
 aspects of the RooFit class
-to free functions in a single header file named [MathFuncs] (and/or
-[MathFuncs], where relevant). This approach enables easier debugging
- (e.g., you can standalone-compile the generated code with just a few header
-files copied outside ROOT)
+to free functions in a single header file named [MathFuncs].
+This approach enables easier debugging
+(e.g., you can standalone-compile the generated code with just a few header
+files copied outside ROOT).
 
 *Refactoring* It is important to refactor the code such that:
 
@@ -153,14 +153,14 @@ installation. Please note the following recommendations:
 header file (e.g., as part of the class definition), and
 
 - if/when your class is upstreamed to RooFit, expect to move into the
-`RooFit::detail` namespace and their implementations into `MathFuncs.h`.
+`RooFit::Detail` namespace and their implementations into `MathFuncs.h`.
 
 \htmlonly
 </div>
 \endhtmlonly
 
-*Overriding the Translate Function*: The `RooAbsArg::translate()` function
-needs to be overridden to specify how the class is translating to C++ code
+*Overloading the code generation function*: The `RooFit::codegenImpl()` function
+needs to be overloaded to specify how the class is translating to C++ code
 that is using the aforementioned free function.
 
 **Sample Steps**: To add Code Generation support to an existing RooFit class,
@@ -176,25 +176,27 @@ This implementation must be compatible with the syntax supported by Clad.
 can reduce code duplication and potential for bugs. This may require some
 effort if an extensive caching infrastructure is used in your model.
 
-**3. Add translate():** RooFit classes are extended using a (typically) simple
- `translate()` function that extracts the mathematically differentiable
+**3. Add RooFit::codegenImpl():** Define a (typically) simple
+ `RooFit::codegenImpl()` function that extracts the mathematically differentiable
 properties out of the RooFit classes that make up the statistical model.
+This function needs to be declared in a public header file, such that it is known to the interpreter.
 
-The `translate()` function helps implement the Code Squashing logic that is
+The `RooFit::codegenImpl()` function helps implement the code generation logic that is
 used to optimize numerical evaluations. It accomplishes this by using a small
 subset of helper functions that are available in the
-`RooFit::Detail::CodeSquashContext` and `RooFuncWrapper` classes
-(see Appendix B). It converts a RooFit expression into a form that can be
+`RooFit::CodegenContext` class (see Appendix B).
+It converts a RooFit expression into a form that can be
 efficiently evaluated by Clad.
 
-The `translate()` function returns an `std::string` representing the
+The `RooFit::codegenImpl()` function places a `std::string` inside the `RooFit::CodegenContext`.
+This string is representing the
 underlying mathematical notation of the class as code, that can later be
 concatenated into a single string representing the entire model. This string
 of code is then just-in-time compiled by Cling (a C++ interpreter for Root).
 
-**4. analyticalIntegral() Use Case:** If your class includes (or should
+**4. RooFit::codegenIntegralImpl() Use Case:** If your class includes (or should
 include) the `analyticalIntegral()` function, then a simple
-`buildCallToAnalyticIntegral()` function needs to be created to help call the
+`RooFit::codegenIntegralImpl()` function needs to be defined to help call the
 `analyticalIntegral()` function.
 
 
@@ -277,20 +279,21 @@ together.
 
 > Directory path: [roofit/roofitcore/inc/RooFit/Detail/MathFuncs.h](https://github.com/root-project/root/blob/master/roofit/roofitcore/inc/RooFit/Detail/MathFuncs.h)
 
-### Step 2. Override RooAbsArg::translate()
+### Step 2. Overload RooFit::codegenImpl()
 
-**translate() Example 1:** Continuing our RooPoisson example:
+**RooFit::codegenImpl() Example 1:** Continuing our RooPoisson example:
 
-To translate the `RooPoisson` class, create a translate function and in it
-include a call to the updated function.
+To translate the `RooPoisson` class, create a code generation function and in it
+include a call to the free function.
 
 ``` {.cpp}
-void RooPoisson::translate(RooFit::Detail::RooFit::Detail::CodeSquashContext &ctx) const
+void RooFit::codegenImpl(RooPoisson &arg, RooFit::CodegenContext &ctx)
 {
-   std::string xName = ctx.getResult(x);
-   if (!_noRounding)
+   std::string xName = ctx.getResult(arg.getX());
+   if (!arg.getNoRounding())
       xName = "std::floor(" + xName + ")";
-   ctx.addResult(this, ctx.buildCall("RooFit::Detail::MathFuncs::poissonEvaluate", xName, mean));
+
+   ctx.addResult(&arg, ctx.buildCall("RooFit::Detail::MathFuncs::poisson", xName, arg.getMean()));
 }
 ```
 
@@ -299,58 +302,59 @@ member of RooPoisson) is retrieved and stored in the `xName` variable. Next,
 there's an `if` condition that does an operation on `x` (may or may not round
 it to the nearest integer, depending on the condition).
 
-The important part is where the `RooPoisson::addResult()` function helps add
+The important part is where the `RooFit::CodegenContext::addResult()` function adds
  the result of evaluating the Poisson function to the context (`ctx`). It uses
-the `RooPoisson::buildCall()` method to construct a function call to the fully
+the `RooFit::CodegenContext::buildCall()` method to construct a function call to the fully
 qualified name of `MathFuncs::poissonEvaluate` (which now resides in the
-`MathFuncs` file), with arguments `xName` and `mean`.
+`MathFuncs` file), with arguments `xName` and the mean of the Poisson.
 
-Essentially, the `RooPoisson::translate()` function constructs a function call
+Essentially, the `RooFit::codegenImpl()` function constructs a function call
  to evaluate the Poisson function using 'x' and 'mean' variables, and adds the
 result to the context.
 
 Helper Functions:
 
-- `getResult()` helps lookup the result of a child node (the string that the
-child node previously saved in a variable using the `addResult()` function).
+- `RooFit::CodegenContext::getResult()` helps lookup the result of a child node (the string that the
+child node previously saved in a variable using the `RooFit::CodegenContext::addResult()` function).
 
-- `addResult()` It may include a function call, an expression, or something
+- `RooFit::CodegenContext::addResult()` It may include a function call, an expression, or something
 more complicated. For a specific class, it will add whatever is represented on
  the right-hand side to the result of that class, which can then be propagated
  in the rest of the compute graph.
 
-\note For each `translate()` function, it is important to call `addResult()` since this is what enables the squashing to happen.
+\note For each `RooFit::codegenImpl()` function, it is important to call `RooFit::CodegenContext::addResult()` since this is what enables the squashing to happen.
 
 
 **translate() Example 2:** Following is a code snippet from `RooGaussian.cxx`
 *after* it has AD support.
 
 ``` {.cpp}
-void RooGaussian::translate(RooFit::Detail::RooFit::Detail::CodeSquashContext &ctx) const
+void RooFit::codegenImpl(RooGaussian &arg, RooFit::CodegenContext &ctx)
 {
-   ctx.addResult(this, ctx.buildCall("RooFit::Detail::MathFuncs::gaussianEvaluate", x, mean, sigma));
+   // Build a call to the stateless gaussian defined later.
+   ctx.addResult(&arg, ctx.buildCall("RooFit::Detail::MathFuncs::gaussian", arg.getX(), arg.getMean(), arg.getSigma()));
 }
 ```
 
-Here we can see that the `RooGaussian::translate()` function constructs a
-function call using the `buildCall()` method. It specifies the fully qualified
-name of the `gaussianEvaluate` function (which is now part of the
+Here we can see that the `RooFit::codegenImpl(RooGaussian &, RooFit::CodegenContext &)` function constructs a
+function call using the `RooFit::CodegenContext::buildCall()` method. It specifies the fully qualified
+name of the `gaussian` function (which is now part of the
 `MathFuncs` file), and includes the x, mean, and sigma variables as
 arguments to this function call.
 
 Helper Function:
 
-- `buildCall()` helps build a function call. Requires the fully qualified name
- (`RooFit::Detail::MathFuncs::gaussianEvaluate`) of the function. When
-this external `buildCall()` function is called, internally, the `getResult()`
+- `RooFit::CodegenContext::buildCall()` helps build a function call. Requires the fully qualified name
+ (`RooFit::Detail::MathFuncs::gaussian`) of the function. When
+this external `RooFit::CodegenContext::buildCall()` function is called, internally, the `RooFit::CodegenContext::getResult()`
 function is called on the input RooFit objects (e.g., x, mean, sigma). That's
 the only way to propagate these upwards into the compute graph.
 
-**translate() Example 3:** A more complicated example of a `translate()`
+**translate() Example 3:** A more complicated example of a `RooFit::codegenImpl()`
 function can be seen here:
 
 ``` {.cpp}
-void RooNLLVarNew::translate(RooFit::Detail::RooFit::Detail::CodeSquashContext &ctx) const
+void RooFit::codegenImpl(RooFit::Detail::RooNLLVarNew &arg, RooFit::CodegenContext &ctx)
 {
    std::string weightSumName = ctx.makeValidVarName(GetName()) + "WeightSum";
    std::string resName = ctx.makeValidVarName(GetName()) + "Result";
@@ -376,14 +380,14 @@ void RooNLLVarNew::translate(RooFit::Detail::RooFit::Detail::CodeSquashContext &
 
 > Source: - [RooNLLVarNew](https://github.com/root-project/root/blob/master/roofit/roofitcore/src/RooNLLVarNew.cxx)
 
-The complexity of the `RooNLLVarNew::translate()` function in this example can
+The complexity of the `RooFit::codegenImpl()` function in this example can
  be attributed to the more complex scenarios/operations specific to the
 computation of negative log-likelihood (NLL) values for probability density
 functions (PDFs) in RooFit, especially for simultaneous fits (multiple
 simultaneous PDFs being considered) and binned likelihoods (adding further
 complexity).
 
-In this example, the `RooNLLVarNew::translate()` function generates code to
+In this example, the `RooFit::codegenImpl()` function generates code to
 compute the Negative Log likelihood (NLL). We can see that the intermediate
 result variable `resName` is added to the context so that it can be accessed
  and used in the generated code. This variable is made available globally
@@ -516,7 +520,7 @@ the `res` variable in the following example) of this class, which can then be
 propagated in the rest of the compute graph.
 
 ``` {.cpp}
-     void translate(RooFit::Detail::RooFit::Detail::CodeSquashContext &ctx) const override {
+     void translate(RooFit::CodegenContext &ctx) const override {
             std::string res = ctx.buildCall("MathFuncs::doFoo", a, b);
             ctx.addResult(this, res);
     }
@@ -561,7 +565,7 @@ return the output using the `buildCall()` function.
 
 ``` {.cpp}
     std::string
-    buildCallToAnalyticIntegral(Int_t code, const char *rangeName, RooFit::Detail::RooFit::Detail::CodeSquashContext &ctx) const override {
+    buildCallToAnalyticIntegral(Int_t code, const char *rangeName, RooFit::CodegenContext &ctx) const override {
         return ctx.buildCall("EvaluateFunc::integralFoo", a, b);
     }
 ```
@@ -594,13 +598,13 @@ class RooFoo : public RooAbsReal {
     }
 
     //// ************************** functions for AD Support ***********************
-    void translate(RooFit::Detail::RooFit::Detail::CodeSquashContext &ctx) const override {
+    void translate(RooFit::CodegenContext &ctx) const override {
         std::string res = ctx.buildCall("EvaluateFunc::doFoo", a, b);
         ctx.addResult(this, res);
     }
 
     std::string
-    buildCallToAnalyticIntegral(Int_t code, const char *rangeName, RooFit::Detail::RooFit::Detail::CodeSquashContext &ctx) const override {
+    buildCallToAnalyticIntegral(Int_t code, const char *rangeName, RooFit::CodegenContext &ctx) const override {
         return ctx.buildCall("EvaluateFunc::integralFoo", a, b);
     }
     //// ************************** functions for AD Support ***********************
@@ -717,19 +721,19 @@ compile times are reasonable, but with an increase in the level of complexity,
 Following classes provide several Helper Functions to translate existing logic
 into AD-supported logic.
 
-a - RooFit::Detail::CodeSquashContext
+a - RooFit::CodegenContext
 
 b - RooFuncWrapper
 
-### a. RooFit::Detail::CodeSquashContext
+### a. RooFit::CodegenContext
 
-> [roofit/roofitcore/inc/RooFit/Detail/CodeSquashContext.h](https://github.com/root-project/root/blob/master/roofit/roofitcore/inc/RooFit/Detail/CodeSquashContext.h)
+> [roofit/roofitcore/inc/RooFit/CodegenContext.h](https://github.com/root-project/root/blob/master/roofit/roofitcore/inc/RooFit/CodegenContext.h)
 
 It handles how to create a C++ function out of the compute graph (which is
 created with different RooFit classes). This C++ function will be independent
 of these RooFit classes.
 
-RooFit::Detail::CodeSquashContext helps traverse the compute graph received from RooFit and
+RooFit::CodegenContext helps traverse the compute graph received from RooFit and
 then it translates that into a single piece of code (a C++ function), that can
 then be differentiated using Clad. It also helps evaluate the model.
 
@@ -747,7 +751,7 @@ the squashing to happen.
 
 #### Helper Functions
 
-- **RooFit::Detail::CodeSquashContext**: this class maintains the context for squashing of
+- **RooFit::CodegenContext**: this class maintains the context for squashing of
 RooFit models into code.  It keeps track of the results of various
 expressions to avoid redundant calculations.
 
@@ -787,7 +791,7 @@ code body of the squashed function.
 These functions will appear again in this document with more contextual
 examples. For detailed in-line documentation (code comments), please see:
 
-> [roofit/roofitcore/src/RooFit/Detail/CodeSquashContext.cxx](https://github.com/root-project/root/blob/master/roofit/roofitcore/src/RooFit/Detail/CodeSquashContext.cxx)
+> [roofit/roofitcore/src/RooFit/CodegenContext.cxx](https://github.com/root-project/root/blob/master/roofit/roofitcore/src/RooFit/Detail/CodegenContext.cxx)
 
 
 ### b. RooFuncWrapper
@@ -828,7 +832,7 @@ examples. For detailed in-line documentation (code comments), please see:
 
 ## Appendix C - Helper functions discussed in this document
 
-- **RooFit::Detail::CodeSquashContext::addResult()**: For a specific class, it
+- **RooFit::CodegenContext::addResult()**: For a specific class, it
 will add whatever is represented on the right-hand side (a function call, an
 expression, etc.) to the result of this class, which can then be propagated in
  the rest of the compute graph. A to call `addResult()`must be included in
@@ -838,14 +842,14 @@ expression, etc.) to the result of this class, which can then be propagated in
     new name to assign/overwrite).
   - Output: Adds (or overwrites) the string representing the result of a node.
 
-- **RooFit::Detail::CodeSquashContext::getResult()**: It helps lookup the
+- **RooFit::CodegenContext::getResult()**: It helps lookup the
 result of a child node (the string that the child node previously saved in a
 variable using the `addResult()` function).
 
   - Input: `key` (the node to get the result string for).
   - Output: String representing the result of this node.
 
-- **RooFit::Detail::CodeSquashContext::addToCodeBody()**: Takes whatever string
+- **RooFit::CodegenContext::addToCodeBody()**: Takes whatever string
  is computed in its arguments and adds it to the overall function string (which
  will later be just-in-time compiled).
 
@@ -853,7 +857,7 @@ variable using the `addResult()` function).
     (string to add to the squashed code).
   - Output: Adds the input string to the squashed code body.
 
-- **RooFit::Detail::CodeSquashContext::addToGlobalScope()**: Helps declare and
+- **RooFit::CodegenContext::addToGlobalScope()**: Helps declare and
 initialize the results variable, so that it can be available globally
 (throughout the function body).
 
@@ -861,14 +865,14 @@ initialize the results variable, so that it can be available globally
   - Output: Adds the given string to the string block that will be emitted at
     the top of the squashed function.
 
-- **RooFit::Detail::CodeSquashContext::assembleCode()**: combines the generated
+- **RooFit::CodegenContext::assembleCode()**: combines the generated
 code statements into the final code body of the squashed function.
 
   - Input: `returnExpr` (he string representation of what the squashed function
     should return, usually the head node).
   - Output: The final body of the function.
 
-- **RooFit::Detail::CodeSquashContext::beginLoop()**: The code squashing task
+- **RooFit::CodegenContext::beginLoop()**: The code squashing task
 will automatically build a For loop around the indented statements that follow
  this function.
 
@@ -876,13 +880,13 @@ will automatically build a For loop around the indented statements that follow
     dependent variables).
   - Output: A scope for iterating over vector observables.
 
-- **RooFit::Detail::CodeSquashContext::buildArg()**: helps convert RooFit
+- **RooFit::CodegenContext::buildArg()**: helps convert RooFit
 objects into arrays or other C++ representations for efficient computation.
 
   - Input: `in` (the list to convert to array).
   - Output: Name of the array that stores the input list in the squashed code.
 
-- **RooFit::Detail::CodeSquashContext::buildCall()**: Creates a string
+- **RooFit::CodegenContext::buildCall()**: Creates a string
 representation of the function to be called and its arguments.
 
   - Input: A function with name `funcname`, passing some arguments.

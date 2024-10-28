@@ -222,34 +222,6 @@ double RooHistPdf::evaluate() const
   return std::max(ret, 0.0);
 }
 
-void RooHistPdf::rooHistTranslateImpl(RooAbsArg const *klass, RooFit::Detail::CodeSquashContext &ctx, int intOrder,
-                                      RooDataHist const *dataHist, const RooArgSet &obs, bool correctForBinSize,
-                                      bool cdfBoundaries)
-{
-   if (intOrder != 0 && !(!cdfBoundaries && !correctForBinSize && intOrder == 1 && obs.size() == 1)) {
-      ooccoutE(klass, InputArguments) << "RooHistPdf::weight(" << klass->GetName()
-                                      << ") ERROR: Code Squashing currently only supports non-interpolation cases."
-                                      << std::endl;
-      return;
-   }
-
-   if (intOrder == 1) {
-      RooAbsBinning const &binning = *dataHist->getBinnings()[0];
-      std::string weightArr = dataHist->declWeightArrayForCodeSquash(ctx, correctForBinSize);
-      ctx.addResult(klass, ctx.buildCall("RooFit::Detail::MathFuncs::interpolate1d", binning.lowBound(),
-                                         binning.highBound(), *obs[0], binning.numBins(), weightArr));
-      return;
-   }
-   std::string const &offset = dataHist->calculateTreeIndexForCodeSquash(klass, ctx, obs);
-   std::string weightArr = dataHist->declWeightArrayForCodeSquash(ctx, correctForBinSize);
-   ctx.addResult(klass, "*(" + weightArr + " + " + offset + ")");
-}
-
-void RooHistPdf::translate(RooFit::Detail::CodeSquashContext &ctx) const
-{
-   rooHistTranslateImpl(this, ctx, _intOrder, _dataHist, _pdfObsList, !_unitNorm, _cdfBoundaries);
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the total volume spanned by the observables of the RooHistPdf
 
@@ -393,24 +365,6 @@ double RooHistPdf::analyticalIntegral(Int_t code,
                               dataHist.sum(intSet,histObsList,true,!histFuncMode, ranges);
 
   return ret ;
-}
-
-std::string RooHistPdf::rooHistIntegralTranslateImpl(int code, RooAbsArg const *klass, RooDataHist const *dataHist,
-                                                     const RooArgSet &obs, bool histFuncMode)
-{
-   if (((2 << obs.size()) - 1) != code) {
-      oocoutE(klass, InputArguments)
-         << "RooHistPdf::integral(" << klass->GetName()
-         << ") ERROR: AD currently only supports integrating over all histogram observables." << std::endl;
-      return "";
-   }
-   return std::to_string(dataHist->sum(histFuncMode));
-}
-
-std::string RooHistPdf::buildCallToAnalyticIntegral(int code, const char * /*rangeName */,
-                                                    RooFit::Detail::CodeSquashContext & /* ctx */) const
-{
-   return rooHistIntegralTranslateImpl(code, this, _dataHist, _pdfObsList, false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

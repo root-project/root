@@ -23,7 +23,7 @@ This class calls functions from `RooBatchCompute` library to provide faster
 computation times.
 **/
 
-#include "RooNLLVarNew.h"
+#include "RooFit/Detail/RooNLLVarNew.h"
 
 #include <RooHistPdf.h>
 #include <RooBatchCompute.h>
@@ -45,6 +45,11 @@ computation times.
 #include <numeric>
 #include <stdexcept>
 #include <vector>
+
+ClassImp(RooFit::Detail::RooNLLVarNew);
+
+namespace RooFit {
+namespace Detail {
 
 // Declare constexpr static members to make them available if odr-used in C++14.
 constexpr const char *RooNLLVarNew::weightVarName;
@@ -331,46 +336,7 @@ void RooNLLVarNew::finalizeResult(RooFit::EvalContext &ctx, ROOT::Math::KahanSum
    ctx.setOutputWithOffset(this, result, _offset);
 }
 
-void RooNLLVarNew::translate(RooFit::Detail::CodeSquashContext &ctx) const
-{
-   if (_binnedL && !_pdf->getAttribute("BinnedLikelihoodActiveYields")) {
-      std::stringstream errorMsg;
-      errorMsg << "RooNLLVarNew::translate(): binned likelihood optimization is only supported when raw pdf "
-                  "values can be interpreted as yields."
-               << " This is not the case for HistFactory models written with ROOT versions before 6.26.00";
-      coutE(InputArguments) << errorMsg.str() << std::endl;
-      throw std::runtime_error(errorMsg.str());
-   }
-
-   std::string weightSumName = RooFit::Detail::makeValidVarName(GetName()) + "WeightSum";
-   std::string resName = RooFit::Detail::makeValidVarName(GetName()) + "Result";
-   ctx.addResult(this, resName);
-   ctx.addToGlobalScope("double " + weightSumName + " = 0.0;\n");
-   ctx.addToGlobalScope("double " + resName + " = 0.0;\n");
-
-   const bool needWeightSum = _expectedEvents || _simCount > 1;
-
-   if (needWeightSum) {
-      auto scope = ctx.beginLoop(this);
-      ctx.addToCodeBody(weightSumName + " += " + ctx.getResult(*_weightVar) + ";\n");
-   }
-   if (_simCount > 1) {
-      std::string simCountStr = std::to_string(static_cast<double>(_simCount));
-      ctx.addToCodeBody(resName + " += " + weightSumName + " * std::log(" + simCountStr + ");\n");
-   }
-
-   // Begin loop scope for the observables and weight variable. If the weight
-   // is a scalar, the context will ignore it for the loop scope. The closing
-   // brackets of the loop is written at the end of the scopes lifetime.
-   {
-      auto scope = ctx.beginLoop(this);
-      std::string term = ctx.buildCall("RooFit::Detail::MathFuncs::nll", _pdf, _weightVar, _binnedL, 0);
-      ctx.addToCodeBody(this, resName + " += " + term + ";");
-   }
-   if (_expectedEvents) {
-      std::string expected = ctx.getResult(**_expectedEvents);
-      ctx.addToCodeBody(resName + " += " + expected + " - " + weightSumName + " * std::log(" + expected + ");\n");
-   }
-}
+} // namespace Detail
+} // namespace RooFit
 
 /// \endcond

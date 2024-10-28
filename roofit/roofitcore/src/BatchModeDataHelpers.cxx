@@ -19,7 +19,7 @@
 #include <RooSimultaneous.h>
 
 #include "RooFitImplHelpers.h"
-#include "RooNLLVarNew.h"
+#include "RooFit/Detail/RooNLLVarNew.h"
 
 #include <ROOT/StringUtils.hxx>
 
@@ -93,8 +93,8 @@ getSingleDataSpans(RooAbsData const &data, std::string_view rangeName, std::stri
          assignSpan(weight, {buffer.data(), nNonZeroWeight});
          assignSpan(weightSumW2, {bufferSumW2.data(), nNonZeroWeight});
       }
-      insert(RooNLLVarNew::weightVarName, weight);
-      insert(RooNLLVarNew::weightVarNameSumW2, weightSumW2);
+      insert(RooFit::Detail::RooNLLVarNew::weightVarName, weight);
+      insert(RooFit::Detail::RooNLLVarNew::weightVarNameSumW2, weightSumW2);
    }
 
    // Get the real-valued batches and cast the also to double branches to put in

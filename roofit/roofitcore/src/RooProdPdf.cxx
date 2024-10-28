@@ -73,6 +73,7 @@ have to appear in any specific place in the list.
 
 using std::endl, std::string, std::vector, std::list, std::ostream, std::map, std::ostringstream;
 
+ClassImp(RooFit::Detail::RooFixedProdPdf);
 ClassImp(RooProdPdf);
 
 
@@ -2311,98 +2312,6 @@ std::unique_ptr<RooArgSet> RooProdPdf::fillNormSetForServer(RooArgSet const &nor
    }
 }
 
-/// A RooProdPdf with a fixed normalization set can be replaced by this class.
-/// Its purpose is to provide the right client-server interface for the
-/// evaluation of RooProdPdf cache elements that were created for a given
-/// normalization set.
-class RooFixedProdPdf : public RooAbsPdf {
-public:
-   RooFixedProdPdf(std::unique_ptr<RooProdPdf> &&prodPdf, RooArgSet const &normSet)
-      : RooAbsPdf(prodPdf->GetName(), prodPdf->GetTitle()), _normSet{normSet},
-        _servers("!servers", "List of servers", this), _prodPdf{std::move(prodPdf)}
-   {
-      initialize();
-   }
-   RooFixedProdPdf(const RooFixedProdPdf &other, const char *name = nullptr)
-      : RooAbsPdf(other, name), _normSet{other._normSet},
-        _servers("!servers", "List of servers", this), _prodPdf{static_cast<RooProdPdf *>(other._prodPdf->Clone())}
-   {
-      initialize();
-   }
-   TObject *clone(const char *newname) const override { return new RooFixedProdPdf(*this, newname); }
-
-   bool selfNormalized() const override { return true; }
-
-   inline bool canComputeBatchWithCuda() const override { return true; }
-
-   void doEval(RooFit::EvalContext &ctx) const override
-   {
-      _prodPdf->doEvalImpl(this, *_cache, ctx);
-   }
-
-   void translate(RooFit::Detail::CodeSquashContext &ctx) const override
-   {
-      if (_cache->_isRearranged) {
-         ctx.addResult(this, ctx.buildCall("RooFit::Detail::MathFuncs::ratio", *_cache->_rearrangedNum, *_cache->_rearrangedDen));
-      } else {
-         ctx.addResult(this, ctx.buildCall("RooFit::Detail::MathFuncs::product", _cache->_partList, _cache->_partList.size()));
-      }
-   }
-
-   ExtendMode extendMode() const override { return _prodPdf->extendMode(); }
-   double expectedEvents(const RooArgSet * /*nset*/) const override { return _prodPdf->expectedEvents(&_normSet); }
-   std::unique_ptr<RooAbsReal> createExpectedEventsFunc(const RooArgSet * /*nset*/) const override
-   {
-      return _prodPdf->createExpectedEventsFunc(&_normSet);
-   }
-
-   // Analytical Integration handling
-   bool forceAnalyticalInt(const RooAbsArg &dep) const override { return _prodPdf->forceAnalyticalInt(dep); }
-   Int_t getAnalyticalIntegralWN(RooArgSet &allVars, RooArgSet &analVars, const RooArgSet *normSet,
-                                 const char *rangeName = nullptr) const override
-   {
-      return _prodPdf->getAnalyticalIntegralWN(allVars, analVars, normSet, rangeName);
-   }
-   Int_t getAnalyticalIntegral(RooArgSet &allVars, RooArgSet &numVars, const char *rangeName = nullptr) const override
-   {
-      return _prodPdf->getAnalyticalIntegral(allVars, numVars, rangeName);
-   }
-   double analyticalIntegralWN(Int_t code, const RooArgSet *normSet, const char *rangeName) const override
-   {
-      return _prodPdf->analyticalIntegralWN(code, normSet, rangeName);
-   }
-   double analyticalIntegral(Int_t code, const char *rangeName = nullptr) const override
-   {
-      return _prodPdf->analyticalIntegral(code, rangeName);
-   }
-
-private:
-   void initialize()
-   {
-      _cache = _prodPdf->createCacheElem(&_normSet, nullptr);
-      auto &cache = *_cache;
-
-      // The actual servers for a given normalization set depend on whether the
-      // cache is rearranged or not. See RooProdPdf::calculateBatch to see
-      // which args in the cache are used directly.
-      if (cache._isRearranged) {
-         _servers.add(*cache._rearrangedNum);
-         _servers.add(*cache._rearrangedDen);
-      } else {
-         for (std::size_t i = 0; i < cache._partList.size(); ++i) {
-            _servers.add(cache._partList[i]);
-         }
-      }
-   }
-
-   double evaluate() const override { return _prodPdf->calculate(*_cache); }
-
-   RooArgSet _normSet;
-   std::unique_ptr<RooProdPdf::CacheElem> _cache;
-   RooSetProxy _servers;
-   std::unique_ptr<RooProdPdf> _prodPdf;
-};
-
 std::unique_ptr<RooAbsArg>
 RooProdPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext &ctx) const
 {
@@ -2426,8 +2335,50 @@ RooProdPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileC
       ctx.compileServer(*server, *prodPdfClone, depList);
    }
 
-   auto fixedProdPdf = std::make_unique<RooFixedProdPdf>(std::move(prodPdfClone), normSet);
+   auto fixedProdPdf = std::make_unique<RooFit::Detail::RooFixedProdPdf>(std::move(prodPdfClone), normSet);
    ctx.markAsCompiled(*fixedProdPdf);
 
    return fixedProdPdf;
 }
+
+namespace RooFit {
+namespace Detail {
+
+RooFixedProdPdf::RooFixedProdPdf(std::unique_ptr<RooProdPdf> &&prodPdf, RooArgSet const &normSet)
+   : RooAbsPdf(prodPdf->GetName(), prodPdf->GetTitle()),
+     _normSet{normSet},
+     _servers("!servers", "List of servers", this),
+     _prodPdf{std::move(prodPdf)}
+{
+   initialize();
+}
+
+RooFixedProdPdf::RooFixedProdPdf(const RooFixedProdPdf &other, const char *name)
+   : RooAbsPdf(other, name),
+     _normSet{other._normSet},
+     _servers("!servers", "List of servers", this),
+     _prodPdf{static_cast<RooProdPdf *>(other._prodPdf->Clone())}
+{
+   initialize();
+}
+
+void RooFixedProdPdf::initialize()
+{
+   _cache = _prodPdf->createCacheElem(&_normSet, nullptr);
+   auto &cache = *_cache;
+
+   // The actual servers for a given normalization set depend on whether the
+   // cache is rearranged or not. See RooProdPdf::calculateBatch to see
+   // which args in the cache are used directly.
+   if (cache._isRearranged) {
+      _servers.add(*cache._rearrangedNum);
+      _servers.add(*cache._rearrangedDen);
+   } else {
+      for (std::size_t i = 0; i < cache._partList.size(); ++i) {
+         _servers.add(cache._partList[i]);
+      }
+   }
+}
+
+} // namespace Detail
+} // namespace RooFit
