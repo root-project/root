@@ -382,7 +382,7 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
                                          bool rRequestNoInputOperator,
                                          bool rRequestOnlyTClass,
                                          int rRequestedVersionNumber,
-                                         int rRequestedRNTupleSplitMode,
+                                         int rRequestedRNTupleSerializationMode,
                                          const cling::Interpreter &interpreter,
                                          const TNormalizedCtxt &normCtxt)
    : fRuleIndex(index),
@@ -392,7 +392,7 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
      fRequestNoInputOperator(rRequestNoInputOperator),
      fRequestOnlyTClass(rRequestOnlyTClass),
      fRequestedVersionNumber(rRequestedVersionNumber),
-     fRequestedRNTupleSplitMode(rRequestedRNTupleSplitMode)
+     fRequestedRNTupleSerializationMode(rRequestedRNTupleSerializationMode)
 // clang-format on
 {
    TMetaUtils::GetNormalizedName(fNormalizedName, decl->getASTContext().getTypeDeclType(decl), interpreter,normCtxt);
@@ -413,7 +413,7 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
                                          bool rRequestNoInputOperator,
                                          bool rRequestOnlyTClass,
                                          int rRequestVersionNumber,
-                                         int rRequestedRNTupleSplitMode,
+                                         int rRequestedRNTupleSerializationMode,
                                          const cling::Interpreter &interpreter,
                                          const TNormalizedCtxt &normCtxt)
    : fRuleIndex(index),
@@ -424,7 +424,7 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
      fRequestNoInputOperator(rRequestNoInputOperator),
      fRequestOnlyTClass(rRequestOnlyTClass),
      fRequestedVersionNumber(rRequestVersionNumber),
-     fRequestedRNTupleSplitMode(rRequestedRNTupleSplitMode)
+     fRequestedRNTupleSerializationMode(rRequestedRNTupleSerializationMode)
 // clang-format on
 {
    // For comparison purposes.
@@ -452,7 +452,7 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
                                          bool rRequestNoInputOperator,
                                          bool rRequestOnlyTClass,
                                          int rRequestVersionNumber,
-                                         int rRequestedRNTupleSplitMode,
+                                         int rRequestedRNTupleSerializationMode,
                                          const cling::Interpreter &interpreter,
                                          const TNormalizedCtxt &normCtxt)
    : fRuleIndex(index),
@@ -463,7 +463,7 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
      fRequestNoInputOperator(rRequestNoInputOperator),
      fRequestOnlyTClass(rRequestOnlyTClass),
      fRequestedVersionNumber(rRequestVersionNumber),
-     fRequestedRNTupleSplitMode(rRequestedRNTupleSplitMode)
+     fRequestedRNTupleSerializationMode(rRequestedRNTupleSerializationMode)
 // clang-format on
 {
    // For comparison purposes.
@@ -486,7 +486,7 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
                                          bool rRequestNoInputOperator,
                                          bool rRequestOnlyTClass,
                                          int rRequestVersionNumber,
-                                         int rRequestedRNTupleSplitMode,
+                                         int rRequestedRNTupleSerializationMode,
                                          const cling::Interpreter &interpreter,
                                          const TNormalizedCtxt &normCtxt)
    : fRuleIndex(index),
@@ -497,7 +497,7 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
      fRequestNoInputOperator(rRequestNoInputOperator),
      fRequestOnlyTClass(rRequestOnlyTClass),
      fRequestedVersionNumber(rRequestVersionNumber),
-     fRequestedRNTupleSplitMode(rRequestedRNTupleSplitMode)
+     fRequestedRNTupleSerializationMode(rRequestedRNTupleSerializationMode)
 // clang-format on
 {
    // const clang::ClassTemplateSpecializationDecl *tmplt_specialization = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl> (decl);
