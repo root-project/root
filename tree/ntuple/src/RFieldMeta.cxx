@@ -701,19 +701,6 @@ void ROOT::REnumField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
 
 //------------------------------------------------------------------------------
 
-ROOT::RPairField::RPairField(std::string_view fieldName, std::array<std::unique_ptr<RFieldBase>, 2> itemFields,
-                             const std::array<std::size_t, 2> &offsets)
-   : ROOT::RRecordField(fieldName, "std::pair<" + GetTypeList(itemFields, false /* useTypeAliases */) + ">")
-{
-   const std::string typeAlias = "std::pair<" + GetTypeList(itemFields, true /* useTypeAliases */) + ">";
-   if (typeAlias != GetTypeName())
-      fTypeAlias = typeAlias;
-
-   AttachItemFields(std::move(itemFields));
-   fOffsets.push_back(offsets[0]);
-   fOffsets.push_back(offsets[1]);
-}
-
 ROOT::RPairField::RPairField(std::string_view fieldName, std::array<std::unique_ptr<RFieldBase>, 2> itemFields)
    : ROOT::RRecordField(fieldName, "std::pair<" + GetTypeList(itemFields, false /* useTypeAliases */) + ">")
 {
@@ -742,10 +729,9 @@ ROOT::RPairField::RPairField(std::string_view fieldName, std::array<std::unique_
 
 std::unique_ptr<ROOT::RFieldBase> ROOT::RPairField::CloneImpl(std::string_view newName) const
 {
-   std::array<std::size_t, 2> offsets = {fOffsets[0], fOffsets[1]};
    std::array<std::unique_ptr<RFieldBase>, 2> itemClones = {fSubfields[0]->Clone(fSubfields[0]->GetFieldName()),
                                                             fSubfields[1]->Clone(fSubfields[1]->GetFieldName())};
-   return std::unique_ptr<RPairField>(new RPairField(newName, std::move(itemClones), offsets));
+   return std::unique_ptr<RPairField>(new RPairField(newName, std::move(itemClones)));
 }
 
 void ROOT::RPairField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
@@ -1314,18 +1300,6 @@ void ROOT::RField<TObject>::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) 
 
 //------------------------------------------------------------------------------
 
-ROOT::RTupleField::RTupleField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> itemFields,
-                               const std::vector<std::size_t> &offsets)
-   : ROOT::RRecordField(fieldName, "std::tuple<" + GetTypeList(itemFields, false /* useTypeAliases */) + ">")
-{
-   const std::string typeAlias = "std::tuple<" + GetTypeList(itemFields, true /* useTypeAliases */) + ">";
-   if (typeAlias != GetTypeName())
-      fTypeAlias = typeAlias;
-
-   AttachItemFields(std::move(itemFields));
-   fOffsets = offsets;
-}
-
 ROOT::RTupleField::RTupleField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> itemFields)
    : ROOT::RRecordField(fieldName, "std::tuple<" + GetTypeList(itemFields, false /* useTypeAliases */) + ">")
 {
@@ -1361,7 +1335,7 @@ std::unique_ptr<ROOT::RFieldBase> ROOT::RTupleField::CloneImpl(std::string_view 
    for (const auto &f : fSubfields) {
       itemClones.emplace_back(f->Clone(f->GetFieldName()));
    }
-   return std::unique_ptr<RTupleField>(new RTupleField(newName, std::move(itemClones), fOffsets));
+   return std::unique_ptr<RTupleField>(new RTupleField(newName, std::move(itemClones)));
 }
 
 void ROOT::RTupleField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
