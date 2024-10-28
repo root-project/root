@@ -32,18 +32,11 @@ class RooTemplateProxy;
 
 namespace RooFit {
 
-namespace Experimental {
-class RooFuncWrapper;
-}
-
 namespace Detail {
 
 /// @brief A class to maintain the context for squashing of RooFit models into code.
 class CodeSquashContext {
 public:
-   CodeSquashContext(std::map<RooFit::Detail::DataKey, std::size_t> const &outputSizes, std::vector<double> &xlarr,
-                     Experimental::RooFuncWrapper &wrapper);
-
    void addResult(RooAbsArg const *key, std::string const &value);
    void addResult(const char *key, std::string const &value);
 
@@ -68,7 +61,6 @@ public:
    }
 
    void addToGlobalScope(std::string const &str);
-   std::string assembleCode(std::string const &returnExpr);
    void addVecObs(const char *key, int idx);
 
    void addToCodeBody(RooAbsArg const *klass, std::string const &in);
@@ -113,9 +105,15 @@ public:
    std::string buildArg(std::span<const double> arr);
    std::string buildArg(std::span<const int> arr) { return buildArgSpanImpl(arr); }
 
-   void collectFunction(std::string const &name);
+   std::vector<double> const &xlArr() { return _xlArr; }
 
-   Experimental::RooFuncWrapper *_wrapper = nullptr;
+   void collectFunction(std::string const &name);
+   std::vector<std::string> const &collectedFunctions() { return _collectedFunctions; }
+
+   std::string
+   buildFunction(RooAbsArg const &arg, std::map<RooFit::Detail::DataKey, std::size_t> const &outputSizes);
+
+   auto const &outputSizes() const { return _nodeOutputSizes; }
 
 private:
    template <class T>
@@ -189,8 +187,9 @@ private:
    /// Mainly used for placing decls outside of loops.
    std::string _tempScope;
    /// @brief A map to keep track of list names as assigned by addResult.
-   std::unordered_map<RooFit::UniqueId<RooAbsCollection>::Value_t, std::string> listNames;
-   std::vector<double> &_xlArr;
+   std::unordered_map<RooFit::UniqueId<RooAbsCollection>::Value_t, std::string> _listNames;
+   std::vector<double> _xlArr;
+   std::vector<std::string> _collectedFunctions;
 };
 
 template <>

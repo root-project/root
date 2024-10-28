@@ -36,7 +36,6 @@ in the two sets.
 #include "RooNLLVarNew.h"
 #include "RooMsgService.h"
 #include "RooBatchCompute.h"
-#include "RooFuncWrapper.h"
 
 #ifdef ROOFIT_LEGACY_EVAL_BACKEND
 #include "RooNLLVar.h"
@@ -175,9 +174,7 @@ void RooAddition::translate(RooFit::Detail::CodeSquashContext &ctx) const
          if (i < _set.size()) result += '+';
          continue;
       }
-      auto &wrp = *ctx._wrapper;
-      auto funcName = wrp.declareFunction(wrp.buildCode(*component));
-      result += funcName + "(params, obs, xlArr)";
+      result += ctx.buildFunction(*component, ctx.outputSizes()) + "(params, obs, xlArr)";
       ++i;
       if (i < _set.size()) result += '+';
    }
