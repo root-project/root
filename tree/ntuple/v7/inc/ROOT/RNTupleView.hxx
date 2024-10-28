@@ -39,8 +39,9 @@ namespace Experimental {
 // clang-format on
 class RNTupleGlobalRange {
 private:
-   const NTupleSize_t fStart;
-   const NTupleSize_t fEnd;
+   NTupleSize_t fStart;
+   NTupleSize_t fEnd;
+
 public:
    class RIterator {
    private:
@@ -142,6 +143,7 @@ template <typename T>
 class RNTupleViewBase {
 protected:
    std::unique_ptr<RFieldBase> fField;
+   RNTupleGlobalRange fFieldRange;
    RFieldBase::RValue fValue;
 
    static std::unique_ptr<RFieldBase> CreateField(DescriptorId_t fieldId, Internal::RPageSource &pageSource)
@@ -161,15 +163,18 @@ protected:
       return field;
    }
 
-   RNTupleViewBase(std::unique_ptr<RFieldBase> field) : fField(std::move(field)), fValue(fField->CreateValue()) {}
-
-   RNTupleViewBase(std::unique_ptr<RFieldBase> field, std::shared_ptr<T> objPtr)
-      : fField(std::move(field)), fValue(fField->BindValue(objPtr))
+   RNTupleViewBase(std::unique_ptr<RFieldBase> field, RNTupleGlobalRange range)
+      : fField(std::move(field)), fFieldRange(range), fValue(fField->CreateValue())
    {
    }
 
-   RNTupleViewBase(std::unique_ptr<RFieldBase> field, T *rawPtr)
-      : fField(std::move(field)), fValue(fField->BindValue(Internal::MakeAliasedSharedPtr(rawPtr)))
+   RNTupleViewBase(std::unique_ptr<RFieldBase> field, RNTupleGlobalRange range, std::shared_ptr<T> objPtr)
+      : fField(std::move(field)), fFieldRange(range), fValue(fField->BindValue(objPtr))
+   {
+   }
+
+   RNTupleViewBase(std::unique_ptr<RFieldBase> field, RNTupleGlobalRange range, T *rawPtr)
+      : fField(std::move(field)), fFieldRange(range), fValue(fField->BindValue(Internal::MakeAliasedSharedPtr(rawPtr)))
    {
    }
 
@@ -182,7 +187,7 @@ public:
 
    const RFieldBase &GetField() const { return *fField; }
    const RFieldBase::RValue &GetValue() const { return fValue; }
-   RNTupleGlobalRange GetFieldRange() const { return RNTupleGlobalRange(0, fField->GetNElements()); }
+   RNTupleGlobalRange GetFieldRange() const { return fFieldRange; }
 
    void Bind(std::shared_ptr<T> objPtr) { fValue.Bind(objPtr); }
    void BindRawPtr(T *rawPtr) { fValue.BindRawPtr(rawPtr); }
@@ -202,14 +207,20 @@ class RNTupleView : public RNTupleViewBase<T> {
    friend class RNTupleCollectionView;
 
 protected:
-   RNTupleView(std::unique_ptr<RFieldBase> field) : RNTupleViewBase<T>(std::move(field)) {}
-
-   RNTupleView(std::unique_ptr<RFieldBase> field, std::shared_ptr<T> objPtr)
-      : RNTupleViewBase<T>(std::move(field), objPtr)
+   RNTupleView(std::unique_ptr<RFieldBase> field, RNTupleGlobalRange range)
+      : RNTupleViewBase<T>(std::move(field), range)
    {
    }
 
-   RNTupleView(std::unique_ptr<RFieldBase> field, T *rawPtr) : RNTupleViewBase<T>(std::move(field), rawPtr) {}
+   RNTupleView(std::unique_ptr<RFieldBase> field, RNTupleGlobalRange range, std::shared_ptr<T> objPtr)
+      : RNTupleViewBase<T>(std::move(field), range, objPtr)
+   {
+   }
+
+   RNTupleView(std::unique_ptr<RFieldBase> field, RNTupleGlobalRange range, T *rawPtr)
+      : RNTupleViewBase<T>(std::move(field), range, rawPtr)
+   {
+   }
 
 public:
    RNTupleView(const RNTupleView &other) = delete;
@@ -244,14 +255,20 @@ class RNTupleView<void> final : public RNTupleViewBase<void> {
    friend class RNTupleCollectionView;
 
 protected:
-   RNTupleView(std::unique_ptr<RFieldBase> field) : RNTupleViewBase<void>(std::move(field)) {}
-
-   RNTupleView(std::unique_ptr<RFieldBase> field, std::shared_ptr<void> objPtr)
-      : RNTupleViewBase<void>(std::move(field), objPtr)
+   RNTupleView(std::unique_ptr<RFieldBase> field, RNTupleGlobalRange range)
+      : RNTupleViewBase<void>(std::move(field), range)
    {
    }
 
-   RNTupleView(std::unique_ptr<RFieldBase> field, void *rawPtr) : RNTupleViewBase<void>(std::move(field), rawPtr) {}
+   RNTupleView(std::unique_ptr<RFieldBase> field, RNTupleGlobalRange range, std::shared_ptr<void> objPtr)
+      : RNTupleViewBase<void>(std::move(field), range, objPtr)
+   {
+   }
+
+   RNTupleView(std::unique_ptr<RFieldBase> field, RNTupleGlobalRange range, void *rawPtr)
+      : RNTupleViewBase<void>(std::move(field), range, rawPtr)
+   {
+   }
 
 public:
    RNTupleView(const RNTupleView &other) = delete;
@@ -278,6 +295,7 @@ class RNTupleDirectAccessView {
 
 protected:
    RField<T> fField;
+   RNTupleGlobalRange fFieldRange;
 
    static RField<T> CreateField(DescriptorId_t fieldId, Internal::RPageSource &pageSource)
    {
@@ -293,7 +311,7 @@ protected:
       return field;
    }
 
-   RNTupleDirectAccessView(RField<T> field) : fField(std::move(field)) {}
+   RNTupleDirectAccessView(RField<T> field, RNTupleGlobalRange range) : fField(std::move(field)), fFieldRange(range) {}
 
 public:
    RNTupleDirectAccessView(const RNTupleDirectAccessView &other) = delete;
@@ -303,7 +321,7 @@ public:
    ~RNTupleDirectAccessView() = default;
 
    const RFieldBase &GetField() const { return fField; }
-   RNTupleGlobalRange GetFieldRange() const { return RNTupleGlobalRange(0, fField.GetNElements()); }
+   RNTupleGlobalRange GetFieldRange() const { return fFieldRange; }
 
    const T &operator()(NTupleSize_t globalIndex) { return *fField.Map(globalIndex); }
    const T &operator()(RClusterIndex clusterIndex) { return *fField.Map(clusterIndex); }
@@ -384,14 +402,18 @@ public:
    template <typename T>
    RNTupleView<T> GetView(std::string_view fieldName)
    {
-      return RNTupleView<T>(RNTupleView<T>::CreateField(GetFieldId(fieldName), *fSource));
+      auto field = RNTupleView<T>::CreateField(GetFieldId(fieldName), *fSource);
+      auto range = Internal::GetFieldRange(*field, *fSource);
+      return RNTupleView<T>(std::move(field), range);
    }
 
    /// Raises an exception if there is no field with the given name.
    template <typename T>
    RNTupleDirectAccessView<T> GetDirectAccessView(std::string_view fieldName)
    {
-      return RNTupleDirectAccessView<T>(RNTupleDirectAccessView<T>::CreateField(GetFieldId(fieldName), *fSource));
+      auto field = RNTupleDirectAccessView<T>::CreateField(GetFieldId(fieldName), *fSource);
+      auto range = Internal::GetFieldRange(field, *fSource);
+      return RNTupleDirectAccessView<T>(std::move(field), range);
    }
 
    /// Raises an exception if there is no field with the given name.
