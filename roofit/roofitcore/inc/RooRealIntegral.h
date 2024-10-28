@@ -78,9 +78,9 @@ public:
 
   std::unique_ptr<RooAbsArg> compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext & ctx) const override;
 
-  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
-
   inline RooArgSet const* funcNormSet() const { return _funcNormSet.get(); }
+
+  int mode() const { return _mode; }
 
 protected:
 

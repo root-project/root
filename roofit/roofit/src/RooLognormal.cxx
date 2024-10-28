@@ -82,12 +82,6 @@ double RooLognormal::evaluate() const
    return ROOT::Math::lognormal_pdf(x, ln_m0, ln_k);
 }
 
-void RooLognormal::translate(RooFit::Detail::CodeSquashContext &ctx) const
-{
-   std::string funcName = _useStandardParametrization ? "logNormalEvaluateStandard" : "logNormal";
-   ctx.addResult(this, ctx.buildCall("RooFit::Detail::MathFuncs::" + funcName, x, k, m0));
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of Lognormal distribution.
 void RooLognormal::doEval(RooFit::EvalContext &ctx) const
@@ -114,13 +108,6 @@ double RooLognormal::analyticalIntegral(Int_t /*code*/, const char *rangeName) c
    double scaledMin = _useStandardParametrization ? std::log(x.min(rangeName)) - m0 : std::log(x.min(rangeName) / m0);
    double scaledMax = _useStandardParametrization ? std::log(x.max(rangeName)) - m0 : std::log(x.max(rangeName) / m0);
    return 0.5 * (RooMath::erf(scaledMax / (root2 * ln_k)) - RooMath::erf(scaledMin / (root2 * ln_k)));
-}
-
-std::string RooLognormal::buildCallToAnalyticIntegral(int /*code*/, const char *rangeName,
-                                                      RooFit::Detail::CodeSquashContext &ctx) const
-{
-   std::string funcName = _useStandardParametrization ? "logNormalIntegralStandard" : "logNormalIntegral";
-   return ctx.buildCall("RooFit::Detail::MathFuncs::" + funcName, x.min(rangeName), x.max(rangeName), m0, k);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -46,7 +46,7 @@ to the fractions of the various functions. **This requires setting the last argu
 
 #include "RooRealSumPdf.h"
 
-#include "RooNormalizedPdf.h"
+#include "RooFit/Detail/RooNormalizedPdf.h"
 #include "RooRealIntegral.h"
 #include "RooRealProxy.h"
 #include "RooRealVar.h"
@@ -295,42 +295,6 @@ void RooRealSumPdf::doEval(RooFit::EvalContext & ctx) const
       output[j] = std::max(0., output[j]);
     }
   }
-}
-
-std::string RooRealSumPdf::translateImpl(RooFit::Detail::CodeSquashContext &ctx, RooAbsArg const *klass,
-                                         RooArgList const &funcList, RooArgList const &coefList, bool normalize)
-{
-   bool noLastCoeff = funcList.size() != coefList.size();
-
-   std::string const &funcName = ctx.buildArg(funcList);
-   std::string const &coeffName = ctx.buildArg(coefList);
-   std::string const &coeffSize = std::to_string(coefList.size());
-
-   std::string sum = ctx.getTmpVarName();
-   std::string coeffSum = ctx.getTmpVarName();
-   ctx.addToCodeBody(klass, "double " + sum + " = 0;\ndouble " + coeffSum + "= 0;\n");
-
-   std::string iterator = "i_" + ctx.getTmpVarName();
-   std::string subscriptExpr = "[" + iterator + "]";
-
-   std::string code = "for(int " + iterator + " = 0; " + iterator + " < " + coeffSize + "; " + iterator + "++) {\n" +
-                      sum + " += " + funcName + subscriptExpr + " * " + coeffName + subscriptExpr + ";\n";
-   code += coeffSum + " += " + coeffName + subscriptExpr + ";\n";
-   code += "}\n";
-
-   if (noLastCoeff) {
-      code += sum + " += " + funcName + "[" + coeffSize + "]" + " * (1 - " + coeffSum + ");\n";
-   } else if (normalize) {
-      code += sum + " /= " + coeffSum + ";\n";
-   }
-   ctx.addToCodeBody(klass, code);
-
-   return sum;
-}
-
-void RooRealSumPdf::translate(RooFit::Detail::CodeSquashContext &ctx) const
-{
-   ctx.addResult(this, translateImpl(ctx, this, _funcList, _coefList));
 }
 
 bool RooRealSumPdf::checkObservables(RooAbsReal const& caller, RooArgSet const* nset,
@@ -777,7 +741,7 @@ RooRealSumPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::Compi
    RooArgSet depList;
    pdfClone->getObservables(&normSet, depList);
 
-   auto newArg = std::make_unique<RooNormalizedPdf>(*pdfClone, depList);
+   auto newArg = std::make_unique<RooFit::Detail::RooNormalizedPdf>(*pdfClone, depList);
 
    // The direct servers are this pdf and the normalization integral, which
    // don't need to be compiled further.

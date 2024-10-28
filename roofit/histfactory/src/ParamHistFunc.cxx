@@ -560,21 +560,6 @@ double ParamHistFunc::evaluate() const
   return getParameter().getVal();
 }
 
-void ParamHistFunc::translate(RooFit::Detail::CodeSquashContext &ctx) const
-{
-   auto const &n = _numBinsPerDim;
-
-   // check if _numBins needs to be filled
-   if (n.x == 0) {
-      _numBinsPerDim = getNumBinsPerDim(_dataVars);
-   }
-
-   std::string const &idx = _dataSet.calculateTreeIndexForCodeSquash(this, ctx, _dataVars, true);
-   std::string const &paramNames = ctx.buildArg(_paramSet);
-
-   ctx.addResult(this, paramNames + "[" + idx + "]");
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Find all bins corresponding to the values of the observables in `evalData`, and evaluate
 /// the associated parameters.

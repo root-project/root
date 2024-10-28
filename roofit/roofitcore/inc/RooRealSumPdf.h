@@ -71,8 +71,6 @@ public:
 
   std::unique_ptr<RooAbsReal> createExpectedEventsFunc(const RooArgSet* nset) const override;
 
-  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
-
 protected:
 
   class CacheElem : public RooAbsCacheElement {
@@ -108,9 +106,6 @@ private:
                          RooArgList const& coefList,
                          bool doFloor,
                          bool & hasWarnedBefore);
-
-  static std::string translateImpl(RooFit::Detail::CodeSquashContext &ctx, RooAbsArg const *klass,
-                                   RooArgList const &funcList, RooArgList const &coefList, bool normalize=false);
 
   static bool checkObservables(RooAbsReal const &caller, RooArgSet const *nset, RooArgList const &funcList,
                                RooArgList const &coefList);

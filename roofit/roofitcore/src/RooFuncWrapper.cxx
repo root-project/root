@@ -13,7 +13,7 @@
 #include <RooFuncWrapper.h>
 
 #include <RooAbsData.h>
-#include <RooFit/Detail/CodeSquashContext.h>
+#include <RooFit/CodegenContext.h>
 #include <RooFit/Evaluator.h>
 #include <RooGlobalFunc.h>
 #include <RooHelpers.h>
@@ -71,7 +71,7 @@ RooFuncWrapper::RooFuncWrapper(const char *name, const char *title, RooAbsReal &
          return found != spans.end() ? found->second.size() : -1;
       });
 
-   RooFit::Detail::CodeSquashContext ctx;
+   RooFit::Experimental::CodegenContext ctx;
 
    // First update the result variable of params in the compute graph to in[<position>].
    int idx = 0;

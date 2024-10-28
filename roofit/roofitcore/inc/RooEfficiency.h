@@ -33,14 +33,16 @@ public:
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
   double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override ;
-  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
-  std::string
-  buildCallToAnalyticIntegral(Int_t code, const char *rangeName, RooFit::Detail::CodeSquashContext &ctx) const override;
+
+  RooAbsCategory const& cat() const { return *_cat; }
+  RooAbsReal const& effFunc() const { return *_effFunc; }
+  std::string sigCatName() const { return _sigCatName.Data(); }
 
 protected:
 
   // Function evaluation
   double evaluate() const override ;
+
   RooCategoryProxy _cat ; ///< Accept/reject categort
   RooRealProxy _effFunc ; ///< Efficiency modeling function
   TString _sigCatName ;   ///< Name of accept state of accept/reject category

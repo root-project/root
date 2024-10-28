@@ -231,29 +231,6 @@ double FlexibleInterpVar::evaluate() const
    return total;
 }
 
-void FlexibleInterpVar::translate(RooFit::Detail::CodeSquashContext &ctx) const
-{
-   unsigned int n = _interpCode.size();
-
-   int interpCode = _interpCode[0];
-   // To get consistent codes with the PiecewiseInterpolation
-   if (interpCode == 4) {
-      interpCode = 5;
-   }
-
-   for (unsigned int i = 1; i < n; i++) {
-      if (_interpCode[i] != _interpCode[0]) {
-         coutE(InputArguments) << "FlexibleInterpVar::evaluate ERROR:  Code Squashing AD does not yet support having "
-                                  "different interpolation codes for the same class object "
-                               << std::endl;
-      }
-   }
-
-   std::string const &resName = ctx.buildCall("RooFit::Detail::MathFuncs::flexibleInterp", interpCode,
-                                              _paramList, n, _low, _high, _interpBoundary, _nominal, 1.0);
-   ctx.addResult(this, resName);
-}
-
 void FlexibleInterpVar::doEval(RooFit::EvalContext &ctx) const
 {
    double total(_nominal);
