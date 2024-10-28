@@ -172,13 +172,6 @@ struct RDaosContainerNTupleLocator {
          throw ROOT::Experimental::RException(
             R__FAIL("unsupported RNTuple epoch version: " + std::to_string(anchor.fVersionEpoch)));
       }
-      if (anchor.fVersionEpoch == 0) {
-         static std::once_flag once;
-         std::call_once(once, [&anchor]() {
-            R__LOG_WARNING(ROOT::Experimental::NTupleLog())
-               << "Pre-release format version: RC " << anchor.fVersionMajor;
-         });
-      }
 
       builder.SetOnDiskHeaderSize(anchor.fNBytesHeader);
       buffer = std::make_unique<unsigned char[]>(anchor.fLenHeader);
