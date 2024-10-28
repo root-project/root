@@ -113,6 +113,16 @@ public:
    RIterator end() { return RIterator(RClusterIndex(fClusterId, fEnd)); }
 };
 
+namespace Internal {
+
+/// Helper to get the iteration space of the given field that needs to be connected to the given page source.
+/// The indexes are given by the number of elements of the principle column of the field or, if none exists,
+/// by the number of elements of the first principle column found in the sbufields searched by BFS.
+/// If the field hierarchy is empty on columns, throw an exception.
+RNTupleGlobalRange GetFieldRange(const RFieldBase &field, const RPageSource &pageSource);
+
+} // namespace Internal
+
 // clang-format off
 /**
 \class ROOT::Experimental::RNTupleViewBase

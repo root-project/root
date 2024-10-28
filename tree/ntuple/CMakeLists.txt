@@ -75,6 +75,7 @@ SOURCES
   v7/src/RNTupleUtil.cxx
   v7/src/RNTupleWriteOptions.cxx
   v7/src/RNTupleWriter.cxx
+  v7/src/RNTupleView.cxx
   v7/src/RPage.cxx
   v7/src/RPageAllocator.cxx
   v7/src/RPagePool.cxx
