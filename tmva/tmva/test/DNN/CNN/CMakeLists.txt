@@ -17,7 +17,7 @@ if (tmva-gpu)
 
 list(APPEND Libraries CUDA::cuda_driver CUDA::cudart)
 
-set(DNN_CUDA_LIBRARIES ${CUDA_CUBLAS_LIBRARIES} ${CUDNN_LIBRARIES} )
+set(DNN_CUDA_LIBRARIES ${CUDA_CUBLAS_LIBRARIES} )
 
 add_executable(testIm2ColCuda TestIm2ColCuda.cxx)
 target_link_libraries(testIm2ColCuda ${Libraries} ${DNN_CUDA_LIBRARIES})

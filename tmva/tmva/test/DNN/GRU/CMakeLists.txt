@@ -12,7 +12,7 @@ if (tmva-gpu AND tmva-cudnn)
 
    list(APPEND Libraries CUDA::cuda_driver CUDA::cudart)
 
-   set(DNN_CUDA_LIBRARIES ${CUDA_CUBLAS_LIBRARIES} ${CUDNN_LIBRARIES} )
+   set(DNN_CUDA_LIBRARIES ${CUDA_CUBLAS_LIBRARIES} )
 
    add_executable(testGRUBackpropagationCudnn TestGRUBackpropagationCudnn.cxx)
    target_link_libraries(testGRUBackpropagationCudnn ${Libraries} ${DNN_CUDA_LIBRARIES})
