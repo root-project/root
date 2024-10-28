@@ -345,10 +345,25 @@ void FilterTutorial()
       if (gLineString.find("\\macro_image") != string::npos) {
          bool nobatch = (gLineString.find("(nobatch)") != string::npos);
          ReplaceAll(gLineString,"(nobatch)","");
-         bool tcanvas_js = (gLineString.find("(tcanvas_js)") != string::npos);
-         ReplaceAll(gLineString,"(tcanvas_js)","");
-         bool rcanvas_js = (gLineString.find("(rcanvas_js)") != string::npos);
-         ReplaceAll(gLineString,"(rcanvas_js)","");
+         bool tcanvas_js = false, rcanvas_js = false;
+         int tcanvas_aclic = 0;
+
+         if (gLineString.find("(tcanvas_js)") != string::npos) {
+            tcanvas_js = true;
+            tcanvas_aclic = 0;
+            ReplaceAll(gLineString,"(tcanvas_js)", "");
+         }
+
+         if (gLineString.find("(tcanvas_jsp)") != string::npos) {
+            tcanvas_js = true;
+            tcanvas_aclic = 1;
+            ReplaceAll(gLineString,"(tcanvas_jsp)", "");
+         }
+
+         if (gLineString.find("(rcanvas_js)") != string::npos) {
+            rcanvas_js = true;
+            ReplaceAll(gLineString,"(rcanvas_js)", "");
+         }
 
          bool image_created_by_macro = (gLineString.find(".png)") != string::npos) ||
                                        (gLineString.find(".svg)") != string::npos) ||
@@ -371,8 +386,8 @@ void FilterTutorial()
             IN = gImageName;
             int i = IN.find(".");
             IN.erase(i,IN.length());
-            ExecuteCommand(StringFormat("root -l -b -q \"MakeTCanvasJS.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,%d)\"",
-                                         gFileName.c_str(), IN.c_str(), gOutDir.c_str(), gPython));
+            ExecuteCommand(StringFormat("root -l -b -q \"MakeTCanvasJS.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,%d,%d)\"",
+                                         gFileName.c_str(), IN.c_str(), gOutDir.c_str(), gPython, tcanvas_aclic));
             ReplaceAll(gLineString, "macro_image", StringFormat("htmlinclude %s.html",IN.c_str()));
          } else if (rcanvas_js) {
             string IN;
