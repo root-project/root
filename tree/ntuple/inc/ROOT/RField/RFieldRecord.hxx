@@ -157,9 +157,6 @@ public:
 /// The generic field for `std::pair<T1, T2>` types
 class RPairField : public RRecordField {
 protected:
-   RPairField(std::string_view fieldName, std::array<std::unique_ptr<RFieldBase>, 2> itemFields,
-              const std::array<std::size_t, 2> &offsets);
-
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
 
    void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
@@ -181,17 +178,9 @@ private:
       return {std::make_unique<RField<T1>>("_0"), std::make_unique<RField<T2>>("_1")};
    }
 
-   static std::array<std::size_t, 2> BuildItemOffsets()
-   {
-      auto pair = ContainerT();
-      auto offsetFirst = reinterpret_cast<std::uintptr_t>(&(pair.first)) - reinterpret_cast<std::uintptr_t>(&pair);
-      auto offsetSecond = reinterpret_cast<std::uintptr_t>(&(pair.second)) - reinterpret_cast<std::uintptr_t>(&pair);
-      return {offsetFirst, offsetSecond};
-   }
-
 public:
    static std::string TypeName() { return "std::pair<" + RField<T1>::TypeName() + "," + RField<T2>::TypeName() + ">"; }
-   explicit RField(std::string_view name) : RPairField(name, BuildItemFields(), BuildItemOffsets())
+   explicit RField(std::string_view name) : RPairField(name, BuildItemFields())
    {
       R__ASSERT(fMaxAlignment >= std::max(alignof(T1), alignof(T2)));
       R__ASSERT(fSize >= sizeof(ContainerT));
@@ -208,9 +197,6 @@ public:
 /// The generic field for `std::tuple<Ts...>` types
 class RTupleField : public RRecordField {
 protected:
-   RTupleField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> itemFields,
-               const std::vector<std::size_t> &offsets);
-
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
 
    void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
@@ -250,25 +236,9 @@ private:
       return result;
    }
 
-   template <unsigned Index, typename HeadT, typename... TailTs>
-   static void _BuildItemOffsets(std::vector<std::size_t> &offsets, const ContainerT &tuple)
-   {
-      auto offset =
-         reinterpret_cast<std::uintptr_t>(&std::get<Index>(tuple)) - reinterpret_cast<std::uintptr_t>(&tuple);
-      offsets.emplace_back(offset);
-      if constexpr (sizeof...(TailTs) > 0)
-         _BuildItemOffsets<Index + 1, TailTs...>(offsets, tuple);
-   }
-   static std::vector<std::size_t> BuildItemOffsets()
-   {
-      std::vector<std::size_t> result;
-      _BuildItemOffsets<0, ItemTs...>(result, ContainerT());
-      return result;
-   }
-
 public:
    static std::string TypeName() { return "std::tuple<" + BuildItemTypes<ItemTs...>() + ">"; }
-   explicit RField(std::string_view name) : RTupleField(name, BuildItemFields(), BuildItemOffsets())
+   explicit RField(std::string_view name) : RTupleField(name, BuildItemFields())
    {
       R__ASSERT(fMaxAlignment >= std::max({alignof(ItemTs)...}));
       R__ASSERT(fSize >= sizeof(ContainerT));
