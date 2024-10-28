@@ -902,7 +902,7 @@ void TH2Poly::SetBinError(Int_t bin, Double_t error)
 const char *TH2Poly::GetBinName(Int_t bin) const
 {
    if (bin > GetNumberOfBins())  return "";
-   if (bin < 0)          return "";
+   if (bin <= 0)          return "";
    return ((TH2PolyBin*) fBins->At(bin-1))->GetPolygon()->GetName();
 }
 
@@ -912,7 +912,7 @@ const char *TH2Poly::GetBinName(Int_t bin) const
 const char *TH2Poly::GetBinTitle(Int_t bin) const
 {
    if (bin > GetNumberOfBins())  return "";
-   if (bin < 0)          return "";
+   if (bin <= 0)          return "";
    return ((TH2PolyBin*) fBins->At(bin-1))->GetPolygon()->GetTitle();
 }
 
