@@ -222,6 +222,10 @@ void TH2Poly::Copy(TObject &newobj) const
    newth2p.fStepX = fStepX;
    newth2p.fStepY = fStepY;
 
+   // deallocate previous arrays, if existing
+   delete[] newth2p.fCells;
+   delete[] newth2p.fIsEmpty;
+   delete[] newth2p.fCompletelyInside;
    // allocate arrays
    newth2p.fCells  = new TList [fNCells];
    newth2p.fIsEmpty = new Bool_t [fNCells]; // Empty partition
@@ -232,6 +236,7 @@ void TH2Poly::Copy(TObject &newobj) const
       newth2p.fCompletelyInside[i] = fCompletelyInside[i];
    }
    // need to use Clone to copy the contained bin list
+   delete newth2p.fBins; // in case there was something before there
    if (!fBins) {
        newth2p.fBins = nullptr;
    }
