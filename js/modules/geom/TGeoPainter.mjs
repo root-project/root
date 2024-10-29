@@ -1714,7 +1714,7 @@ class TGeoPainter extends ObjectPainter {
    ensureBloom(on) {
       if (on === undefined) {
          if (this.ctrl.highlight_bloom === 0)
-             this.ctrl.highlight_bloom = this._webgl;
+             this.ctrl.highlight_bloom = this._webgl && ((typeof navigator === 'undefined') || !/android/i.test(navigator.userAgent));
 
          on = this.ctrl.highlight_bloom && this.ctrl.getMaterialCfg()?.emissive;
       }

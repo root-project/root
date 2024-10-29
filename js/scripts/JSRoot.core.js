@@ -324,7 +324,8 @@ if ((typeof globalThis !== 'undefined') && !globalThis.JSROOT) {
 
    globalThis.JSROOT._complete_loading = _sync;
 
-   let pr = Promise.all([import('../modules/core.mjs'), import('../modules/draw.mjs'), import('../modules/gui/HierarchyPainter.mjs')]).then(arr => {
+   let pr = Promise.all([import('../modules/core.mjs'), import('../modules/draw.mjs'),
+            import('../modules/gui/HierarchyPainter.mjs'), import('../modules/gui/display.mjs')]).then(arr => {
 
       Object.assign(globalThis.JSROOT, arr[0], arr[1], arr[2]);
 
@@ -332,7 +333,7 @@ if ((typeof globalThis !== 'undefined') && !globalThis.JSROOT) {
 
       globalThis.JSROOT._ = arr[0].internals;
 
-      getHPainter = arr[2].getHPainter;
+      getHPainter = arr[3].getHPainter;
 
       globalThis.JSROOT.hpainter = getHPainter();
    });
