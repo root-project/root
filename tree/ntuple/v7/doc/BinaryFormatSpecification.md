@@ -1070,7 +1070,7 @@ The anchor must provide the information to load the header and the footer **enve
 
 ### Cluster
 
-A cluster is a set of **pages** that contain all the data belonging to a certain entry range.
+A cluster is a set of **pages** that contain all the data belonging to an entry range.
 The data set is partitioned in clusters.
 A typical cluster size is tens to hundreds of megabytes.
 
