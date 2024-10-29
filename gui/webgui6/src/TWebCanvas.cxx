@@ -2442,15 +2442,21 @@ TString TWebCanvas::CreateCanvasJSON(TCanvas *c, Int_t json_compression, Bool_t 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Create JSON painting output for given canvas and store into the file
 /// See TBufferJSON::ExportToFile() method for more details about option
-/// If option string starts with symbol 'b', JSON for batch mode will be generated
+/// If option string starts with symbol 'b', JSON for batch mode will be generated (default)
+/// If option string starts with symbol 'i', JSON for interactive mode will be generated
 
 Int_t TWebCanvas::StoreCanvasJSON(TCanvas *c, const char *filename, const char *option)
 {
    Int_t res = 0;
-   Bool_t batchmode = kFALSE;
-   if (option && *option == 'b') {
-      batchmode = kTRUE;
-      ++option;
+   Bool_t batchmode = kTRUE;
+   if (option) {
+      if (*option == 'b') {
+         batchmode = kTRUE;
+         ++option;
+      } else if (*option == 'i') {
+         batchmode = kFALSE;
+         ++option;
+      }
    }
 
    if (!c)
