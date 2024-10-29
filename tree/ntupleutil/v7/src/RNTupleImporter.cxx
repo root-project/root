@@ -43,14 +43,14 @@ namespace {
 
 class RDefaultProgressCallback : public ROOT::Experimental::RNTupleImporter::RProgressCallback {
 private:
-   static constexpr std::uint64_t gUpdateFrequencyBytes = 50 * 1000 * 1000; // report every 50MB
+   static constexpr std::uint64_t gUpdateFrequencyBytes = 100 * 1000 * 1000; // report every 100 MB
    std::uint64_t fNbytesNext = gUpdateFrequencyBytes;
 
 public:
    ~RDefaultProgressCallback() override {}
    void Call(std::uint64_t nbytesWritten, std::uint64_t neventsWritten) final
    {
-      // Report if more than 50MB (compressed) where written since the last status update
+      // Report if more than 100 MB (compressed) where written since the last status update
       if (nbytesWritten < fNbytesNext)
          return;
       std::cout << "Wrote " << nbytesWritten / 1000 / 1000 << "MB, " << neventsWritten << " entries\n";
