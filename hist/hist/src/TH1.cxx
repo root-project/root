@@ -4550,7 +4550,7 @@ TVirtualHistPainter *TH1::GetPainter(Option_t *option)
 /// \author Eddy Offermann
 /// code from Eddy Offermann, Renaissance
 ///
-/// \param[in] n maximum size of array p and size of array xp (if given)
+/// \param[in] n maximum size of array xp and size of array p (if given)
 /// \param[out] xp array to be filled with nq quantiles evaluated at (p)
 /// \param[in] p array of probabilities where quantiles should be evaluated.
 ///   - if p is null, p will be computed internally and will
