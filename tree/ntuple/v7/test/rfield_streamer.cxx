@@ -185,7 +185,7 @@ TEST(RField, StreamerMerge)
    }
 
    // Now merge the inputs
-   FileRaii fileGuard3("test_ntuple_merge_streamer_out.root");
+   FileRaii fileGuard3("test_ntuple_merge_streamed_out.root");
    {
       std::vector<std::unique_ptr<RPageSource>> sources;
       sources.push_back(RPageSource::Create("ntpl", fileGuard1.GetPath(), RNTupleReadOptions()));
