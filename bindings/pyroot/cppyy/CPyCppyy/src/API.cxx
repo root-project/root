@@ -413,7 +413,21 @@ void CPyCppyy::ExecScript(const std::string& name, const std::vector<std::string
                           << std::endl;
             }
          };
-         WideStringListAppendHelper(&fConfig.argv, Py_GetProgramName());
+
+         // The first element of the PyWideStringList can be arbitray, which
+         // you can seen by running the following:
+         //
+         // Content of test.py
+         // ```python
+         // print(sys.executable) # will print the executable, e.g. "python" or "root"
+         // print(sys.argv)       # will print ['test.py', '1', '2', '3'] in this example
+         // ```
+         //
+         // ```c++
+         // CPyCppyy::ExecScript("test.py", sizeof(argv)/sizeof(argv[0]), argv);
+         // ```
+         WideStringListAppendHelper(&fConfig.argv, std::wstring{}.c_str());
+
          for (const auto &iarg : argv2) {
             WideStringListAppendHelper(&fConfig.argv, iarg.c_str());
          }
