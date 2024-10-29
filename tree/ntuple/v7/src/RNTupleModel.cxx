@@ -362,7 +362,8 @@ void ROOT::Experimental::RNTupleModel::RegisterSubfield(std::string_view qualifi
       parent = parent->GetParent();
    }
 
-   AddSubfield(qualifiedFieldName, *fDefaultEntry);
+   if (fDefaultEntry)
+      AddSubfield(qualifiedFieldName, *fDefaultEntry);
    fRegisteredSubfields.emplace(qualifiedFieldName);
 }
 
