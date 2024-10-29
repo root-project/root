@@ -1064,7 +1064,7 @@ The limits refer to a single RNTuple and do not consider combinations/joins such
 
 ### Anchor
 
-The anchor is a data block that makes the entry point to an RNTuple.
+The anchor is a data block that represents the entry point to an RNTuple.
 The anchor is specific to the RNTuple container in which the RNTuple data are embedded (e.g., a ROOT file or an object store).
 The anchor must provide the information to load the header and the footer **envelopes**.
 
