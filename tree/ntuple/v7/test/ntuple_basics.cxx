@@ -869,3 +869,20 @@ TEST(RFieldBase, CreateObject)
    auto ptrClass = RField<LowPrecisionFloats>("name").CreateObject<LowPrecisionFloats>();
    EXPECT_DOUBLE_EQ(1.0, ptrClass->b);
 }
+
+TEST(RNTupleWriter, ForbidModelWithSubfields)
+{
+   FileRaii fileGuard("test_ntuple_writer_forbid_model_with_subfields.root");
+
+   auto model = RNTupleModel::Create();
+   model->MakeField<CustomStruct>("struct");
+   model->RegisterSubfield("struct.a");
+
+   try {
+      auto writer = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
+      FAIL() << "should not able to create a writer using a model with registered subfields";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(),
+                  testing::HasSubstr("cannot create an RNTupleWriter from a model with registered subfields"));
+   }
+}

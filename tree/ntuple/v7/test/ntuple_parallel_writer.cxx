@@ -276,6 +276,23 @@ TEST(RNTupleParallelWriter, Options)
    }
 }
 
+TEST(RNTupleParallelWriter, ForbidModelWithSubfields)
+{
+   FileRaii fileGuard("test_ntuple_forbid_model_with_subfields.root");
+
+   auto model = RNTupleModel::Create();
+   model->MakeField<CustomStruct>("struct");
+   model->RegisterSubfield("struct.a");
+
+   try {
+      auto writer = RNTupleParallelWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
+      FAIL() << "should not able to create a writer using a model with registered subfields";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(),
+                  testing::HasSubstr("cannot create an RNTupleWriter from a model with registered subfields"));
+   }
+}
+
 TEST(RNTupleFillContext, FlushColumns)
 {
    FileRaii fileGuard("test_ntuple_context_flush.root");

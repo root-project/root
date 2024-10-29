@@ -316,6 +316,9 @@ public:
    /// modified in any way; a registered subfield is merely an accessor added to the default entry (if present) and any
    /// entries created afterwards.
    ///
+   /// Using models with registered subfields for writing is not allowed. Attempting to do so will result in an
+   /// exception.
+   ///
    /// Throws an exception if the provided subfield could not be found in the model.
    void RegisterSubfield(std::string_view qualifiedFieldName);
 
@@ -382,6 +385,9 @@ public:
 
    const std::string &GetDescription() const { return fDescription; }
    void SetDescription(std::string_view description);
+
+   /// Get the (qualified) names of subfields that have been registered to be included in entries from this model.
+   const std::unordered_set<std::string> &GetRegisteredSubfields() const { return fRegisteredSubfields; }
 
    /// Estimate the memory usage for this model during writing
    ///
