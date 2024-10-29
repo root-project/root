@@ -45,7 +45,7 @@ Jupyter.CodeCell.options_default.highlight_modes['magic_{cppMIME}'] = {{'reg':[/
 console.log("JupyROOT - %%cpp magic configured");
 """
 
-_jsNotDrawableClassesPatterns = ["TEve*","TF3","TPolyLine3D"]
+_jsNotDrawableClassesPatterns = ["TEve*"]
 
 _jsCanvasWidth = 800
 _jsCanvasHeight = 600
@@ -299,7 +299,7 @@ def produceCanvasJson(canvas):
        canvas.Draw()
 
    if TWebCanvasAvailable():
-       return ROOT.TWebCanvas.CreateCanvasJSON(canvas, 3)
+       return ROOT.TWebCanvas.CreateCanvasJSON(canvas, 23, True)
 
    # Add extra primitives to canvas with custom colors, palette, gStyle
 
