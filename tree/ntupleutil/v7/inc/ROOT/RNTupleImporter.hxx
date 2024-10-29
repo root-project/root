@@ -105,7 +105,7 @@ public:
    /// Used to make adjustments to the fields of the output model.
    using FieldModifier_t = std::function<void(RFieldBase &)>;
 
-   /// Used to report every ~50MB (compressed), and at the end about the status of the import.
+   /// Used to report every ~100 MB (compressed), and at the end about the status of the import.
    class RProgressCallback {
    public:
       virtual ~RProgressCallback() = default;
