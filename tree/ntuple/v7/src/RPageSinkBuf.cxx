@@ -145,7 +145,8 @@ void ROOT::Experimental::Internal::RPageSinkBuf::CommitPage(ColumnHandle_t colum
    // Safety: References are guaranteed to be valid until the element is destroyed. In other words, all buffered page
    // elements are valid until DropBufferedPages().
    auto &zipItem = fBufferedColumns.at(colId).BufferPage(columnHandle);
-   zipItem.AllocateSealedPageBuf(page.GetNBytes() + GetWriteOptions().GetEnablePageChecksums() * kNBytesPageChecksum);
+   std::size_t maxSealedPageBytes = page.GetNBytes() + GetWriteOptions().GetEnablePageChecksums() * kNBytesPageChecksum;
+   zipItem.fBuf = std::make_unique<unsigned char[]>(maxSealedPageBytes);
    R__ASSERT(zipItem.fBuf);
    auto &sealedPage = fBufferedColumns.at(colId).RegisterSealedPage();
 
