@@ -293,6 +293,19 @@ TEST(RNTupleModel, RegisterSubfield)
    }
 }
 
+TEST(RNTupleModel, RegisterSubfieldBare)
+{
+   auto model = RNTupleModel::CreateBare();
+   model->MakeField<CustomStruct>("struct");
+   model->RegisterSubfield("struct.a");
+   model->Freeze();
+
+   EXPECT_THROW(model->GetDefaultEntry(), RException);
+
+   const auto entry = model->CreateEntry();
+   EXPECT_TRUE(entry->GetPtr<float>("struct.a"));
+}
+
 TEST(RNTupleModel, CloneRegisteredSubfield)
 {
    auto model = RNTupleModel::Create();
