@@ -50,10 +50,6 @@ private:
          std::unique_ptr<unsigned char[]> fBuf;
          RPageStorage::RSealedPage *fSealedPage = nullptr;
          bool IsSealed() const { return fSealedPage != nullptr; }
-         void AllocateSealedPageBuf(std::size_t nBytes)
-         {
-            fBuf = std::unique_ptr<unsigned char[]>(new unsigned char[nBytes]);
-         }
       };
    public:
       RColumnBuf() = default;
