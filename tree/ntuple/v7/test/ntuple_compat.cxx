@@ -447,7 +447,7 @@ class RPageSinkTestLocator : public RPageSinkFile {
       auto payload = ROOT::Experimental::RNTupleLocatorObject64{0x420};
       RNTupleLocator result;
       result.fPosition = payload;
-      result.fType = RNTupleLocator::kTypeTestLocator;
+      result.fType = ROOT::Experimental::Internal::kTestLocatorType;
       result.fBytesOnStorage = sealedPage.GetDataSize();
       return result;
    }

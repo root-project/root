@@ -89,15 +89,7 @@ enum class EColumnType {
  * Leaf fields contain just data, collection fields resolve to offset columns, record fields have no
  * materialization on the primitive column layer.
  */
-enum ENTupleStructure : std::uint16_t {
-   kInvalid,
-   kLeaf,
-   kCollection,
-   kRecord,
-   kVariant,
-   kUnsplit,
-   kUnknown
-};
+enum ENTupleStructure : std::uint16_t { kInvalid, kLeaf, kCollection, kRecord, kVariant, kUnsplit, kUnknown };
 
 /// Integer type long enough to hold the maximum number of entries in a column
 using NTupleSize_t = std::uint64_t;
@@ -231,7 +223,6 @@ struct RNTupleLocator {
       kTypeFile = 0x00,
       kTypeDAOS = 0x02,
 
-      kTypeTestLocator = 0x7e, // used for unit tests
       kLastSerializableType = 0x7f,
       kTypePageZero = kLastSerializableType + 1,
       kTypeUnknown,
@@ -277,6 +268,10 @@ auto MakeAliasedSharedPtr(T *rawPtr)
 
 inline constexpr ENTupleStructure kTestFutureFieldStructure =
    static_cast<ENTupleStructure>(std::numeric_limits<std::underlying_type_t<ENTupleStructure>>::max() - 1);
+
+inline constexpr RNTupleLocator::ELocatorType kTestLocatorType = static_cast<RNTupleLocator::ELocatorType>(0x7e);
+static_assert(kTestLocatorType < RNTupleLocator::ELocatorType::kLastSerializableType);
+
 } // namespace Internal
 
 } // namespace Experimental
