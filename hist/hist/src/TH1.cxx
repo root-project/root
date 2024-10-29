@@ -4553,7 +4553,7 @@ TVirtualHistPainter *TH1::GetPainter(Option_t *option)
 /// \param[in] n maximum size of array xp and size of array p (if given)
 /// \param[out] xp array to be filled with nq quantiles evaluated at (p)
 /// \param[in] p array of probabilities where quantiles should be evaluated.
-///   - if p is null, p will be computed internally and will
+///   - if p is null, the CDF of the histogram will be used instead as array, and will
 ///     have a size = number of bins + 1 in h. it will correspond to the
 ///     quantiles calculated at the lowest edge of the histogram (quantile=0) and
 ///     all the upper edges of the bins.
