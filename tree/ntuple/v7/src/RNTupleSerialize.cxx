@@ -1051,12 +1051,14 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeLocator(const RNTupleL
       size += SerializeLocatorPayloadObject64(locator, payloadp);
       locatorType = 0x02;
       break;
-   case RNTupleLocator::kTypeTestLocator:
-      // For the testing locator, use the same payload as Object64. We're not gonna really read it back anyway.
-      size += SerializeLocatorPayloadObject64(locator, payloadp);
-      locatorType = 0x7e;
-      break;
-   default: throw RException(R__FAIL("locator has unknown type"));
+   default:
+      if (locator.fType == kTestLocatorType) {
+         // For the testing locator, use the same payload as Object64. We're not gonna really read it back anyway.
+         size += SerializeLocatorPayloadObject64(locator, payloadp);
+         locatorType = 0x7e;
+      } else {
+         throw RException(R__FAIL("locator has unknown type"));
+      }
    }
    std::int32_t head = sizeof(std::int32_t) + size;
    head |= locator.fReserved << 16;
