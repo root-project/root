@@ -37,7 +37,6 @@ int merge_changeComp_check_output(int expectedCompression, const char *fnameOut,
          const auto &pages = clusterDesc.GetPageRange(column.GetLogicalId());
          std::uint64_t pageIdx = 0;
          for (const auto &pageInfo : pages.fPageInfos) {
-            std::vector<Internal::RCluster::RKey> keys{clusterDesc.GetId(), {column.GetPhysicalId()}};
             auto cluster = pool.GetCluster(clusterDesc.GetId(), {column.GetPhysicalId()});
             Internal::ROnDiskPage::Key key{column.GetPhysicalId(), pageIdx};
             auto onDiskPage = cluster->GetOnDiskPage(key);
