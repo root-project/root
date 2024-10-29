@@ -68,8 +68,8 @@ public:
       kAutoStreamer            = 0x04,
       kHasVersion              = 0x08,
       kHasCustomStreamerMember = 0x10,
-      kNtplForceNative         = 0x20,
-      kNtplForceStreamed       = 0x40
+      kNtplForceNativeMode     = 0x20,
+      kNtplForceStreamerMode   = 0x40
    };
    // clang-format on
 

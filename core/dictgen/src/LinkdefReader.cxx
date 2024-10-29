@@ -685,11 +685,11 @@ public:
          } else if (tok.getIdentifierInfo()->getName() == "nostreamer") options.fNoStreamer = 1;
          else if (tok.getIdentifierInfo()->getName() == "noinputoper") options.fNoInputOper = 1;
          else if (tok.getIdentifierInfo()->getName() == "evolution") options.fRequestStreamerInfo = 1;
-         else if (tok.getIdentifierInfo()->getName() == "rntupleStreamed") {
+         else if (tok.getIdentifierInfo()->getName() == "rntupleStreamerMode") {
             clang::Token start = tok;
             PP.Lex(tok);
             if (tok.is(clang::tok::eod) || tok.isNot(clang::tok::l_paren)) {
-               Error("Error: missing left parenthesis after rntupleStreamed.", start, PP);
+               Error("Error: missing left parenthesis after rntupleStreamerMode.", start, PP);
                return false;
             }
             PP.Lex(tok);
@@ -697,17 +697,17 @@ public:
             if (tok.isNot(clang::tok::eod))
                PP.Lex(tok);
             if (tok.is(clang::tok::eod) || tok.isNot(clang::tok::r_paren)) {
-               Error("Error: missing right parenthesis after rntupleStreamed.", start, PP);
+               Error("Error: missing right parenthesis after rntupleStreamerMode.", start, PP);
                return false;
             }
             if (!boolval.getIdentifierInfo()) {
-               Error("Error: Malformed rntupleStreamed option (either 'true' or 'false').", boolval, PP);
+               Error("Error: Malformed rntupleStreamerMode option (either 'true' or 'false').", boolval, PP);
             }
 
             if (boolval.getIdentifierInfo()->getName() == "false") {
                if (options.fRNTupleSerializationMode == -1) {
                   Error("Error: Can only specify a single rntuple option "
-                        "(either rntupleStreamed(true) or rntupleStreamed(false))",
+                        "(either rntupleStreamerMode(true) or rntupleStreamerMode(false))",
                         boolval, PP);
                } else {
                   options.fRNTupleSerializationMode = 1;
@@ -715,13 +715,13 @@ public:
             } else if (boolval.getIdentifierInfo()->getName() == "true") {
                if (options.fRNTupleSerializationMode == 1) {
                   Error("Error: Can only specify a single rntuple option "
-                        "(either rntupleStreamed(true) or rntupleStreamed(false))",
+                        "(either rntupleStreamerMode(true) or rntupleStreamerMode(false))",
                         boolval, PP);
                } else {
                   options.fRNTupleSerializationMode = -1;
                }
             } else {
-               Error("Error: Malformed rntupleStreamed option (either 'true' or 'false').", boolval, PP);
+               Error("Error: Malformed rntupleStreamerMode option (either 'true' or 'false').", boolval, PP);
             }
          } else if (tok.getIdentifierInfo()->getName() == "stub") {
             // This was solely for CINT dictionary, ignore for now.

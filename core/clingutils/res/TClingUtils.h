@@ -215,8 +215,8 @@ public:
       kStreamerInfo = 0x04,
       kHasVersion = 0x08,
       // kHasCustomStreamerMember = 0x10 (see TClingUtils.cxx and TClassTable.h)
-      kNtplForceNative = 0x20,
-      kNtplForceStreamed = 0x40
+      kNtplForceNativeMode = 0x20,
+      kNtplForceStreamerMode = 0x40
    };
    // clang-format on
 
@@ -304,8 +304,8 @@ public:
       if (fRequestedVersionNumber > -1) result |= kHasVersion;
       switch (fRequestedRNTupleSerializationMode) {
       case 0: break;
-      case 1: result |= kNtplForceNative; break;
-      case -1: result |= kNtplForceStreamed; break;
+      case 1: result |= kNtplForceNativeMode; break;
+      case -1: result |= kNtplForceStreamerMode; break;
       default: assert(false && "invalid setting of fRequestedRNTupleSerializationMode");
       }
       return result;
