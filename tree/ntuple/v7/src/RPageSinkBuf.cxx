@@ -150,6 +150,18 @@ void ROOT::Experimental::Internal::RPageSinkBuf::CommitPage(ColumnHandle_t colum
    R__ASSERT(zipItem.fBuf);
    auto &sealedPage = fBufferedColumns.at(colId).RegisterSealedPage();
 
+   auto shrinkSealedPage = [&zipItem, maxSealedPageBytes, &sealedPage]() {
+      // If the sealed page is smaller than the maximum size (with compression), allocate what is needed and copy the
+      // sealed page content to save memory.
+      auto sealedBufferSize = sealedPage.GetBufferSize();
+      if (sealedBufferSize < maxSealedPageBytes) {
+         auto buf = std::make_unique<unsigned char[]>(sealedBufferSize);
+         memcpy(buf.get(), sealedPage.GetBuffer(), sealedBufferSize);
+         zipItem.fBuf = std::move(buf);
+         sealedPage.SetBuffer(zipItem.fBuf.get());
+      }
+   };
+
    if (!fTaskScheduler) {
       // Seal the page right now, avoiding the allocation and copy, but making sure that the page buffer is not aliased.
       RSealPageConfig config;
@@ -160,6 +172,7 @@ void ROOT::Experimental::Internal::RPageSinkBuf::CommitPage(ColumnHandle_t colum
       config.fAllowAlias = false;
       config.fBuffer = zipItem.fBuf.get();
       sealedPage = SealPage(config);
+      shrinkSealedPage();
       zipItem.fSealedPage = &sealedPage;
       return;
    }
@@ -173,7 +186,7 @@ void ROOT::Experimental::Internal::RPageSinkBuf::CommitPage(ColumnHandle_t colum
    fCounters->fParallelZip.SetValue(1);
    // Thread safety: Each thread works on a distinct zipItem which owns its
    // compression buffer.
-   fTaskScheduler->AddTask([this, &zipItem, &sealedPage, &element] {
+   fTaskScheduler->AddTask([this, &zipItem, &sealedPage, &element, shrinkSealedPage] {
       RSealPageConfig config;
       config.fPage = &zipItem.fPage;
       config.fElement = &element;
@@ -182,6 +195,7 @@ void ROOT::Experimental::Internal::RPageSinkBuf::CommitPage(ColumnHandle_t colum
       config.fAllowAlias = true;
       config.fBuffer = zipItem.fBuf.get();
       sealedPage = SealPage(config);
+      shrinkSealedPage();
       zipItem.fSealedPage = &sealedPage;
    });
 }
