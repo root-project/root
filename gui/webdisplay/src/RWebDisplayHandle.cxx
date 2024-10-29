@@ -354,7 +354,7 @@ RWebDisplayHandle::BrowserCreator::Display(const RWebDisplayArgs &args)
       }
 
       // use UnixPathName to simplify handling of backslashes
-      exec = "wmic process call create '"s + gSystem->UnixPathName(fProg.c_str()) + exec + "' | find \"ProcessId\" "s;
+      exec = "wmic process call create '"s + gSystem->UnixPathName(fProg.c_str()) + " " + exec + "' | find \"ProcessId\" "s;
       std::string process_id = gSystem->GetFromPipe(exec.c_str()).Data();
       std::stringstream ss(process_id);
       std::string tmp;
@@ -497,8 +497,10 @@ RWebDisplayHandle::ChromeCreator::ChromeCreator(bool _edge) : BrowserCreator(tru
 // --no-sandbox is required to run chrome with super-user, but only in headless mode
 
 #ifdef _MSC_VER
+   // here --headless=old required to let normally end of Edge process when --dump-dom is used
    fBatchExec = gEnv->GetValue((fEnvPrefix + "Batch").c_str(), "$prog --headless=old --no-sandbox $geometry --dump-dom $url");
-   fHeadlessExec = gEnv->GetValue((fEnvPrefix + "Headless").c_str(), "$prog --headless=old --no-sandbox --disable-gpu $geometry \"$url\" &");
+   // in interactive headless mode fork used to let stop browser via process id
+   fHeadlessExec = gEnv->GetValue((fEnvPrefix + "Headless").c_str(), "fork:--headless=old --no-sandbox --disable-gpu $geometry \"$url\"");
    fExec = gEnv->GetValue((fEnvPrefix + "Interactive").c_str(), "$prog $geometry --new-window --app=$url &"); // & in windows mean usage of spawn
 #else
 #ifdef R__MACOSX
@@ -603,7 +605,7 @@ RWebDisplayHandle::FirefoxCreator::FirefoxCreator() : BrowserCreator(true)
    // there is a problem when specifying the window size with wmic on windows:
    // It gives: Invalid format. Hint: <paramlist> = <param> [, <paramlist>].
    fBatchExec = gEnv->GetValue("WebGui.FirefoxBatch", "$prog -headless -no-remote $profile $url");
-   fHeadlessExec = gEnv->GetValue("WebGui.FirefoxHeadless", "$prog -headless -no-remote $profile $url &");
+   fHeadlessExec = gEnv->GetValue("WebGui.FirefoxHeadless", "fork:-headless -no-remote $profile \"$url\"");
    fExec = gEnv->GetValue("WebGui.FirefoxInteractive", "$prog -no-remote $profile $geometry $url &");
 #else
    fBatchExec = gEnv->GetValue("WebGui.FirefoxBatch", "$rootetcdir/runfirefox.sh $dumpfile $cleanup_profile $prog --headless -no-remote -new-instance $profile $url 2>/dev/null");
