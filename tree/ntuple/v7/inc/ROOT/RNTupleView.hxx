@@ -69,7 +69,7 @@ public:
    RNTupleGlobalRange(NTupleSize_t start, NTupleSize_t end) : fStart(start), fEnd(end) {}
    RIterator begin() { return RIterator(fStart); }
    RIterator end() { return RIterator(fEnd); }
-   NTupleSize_t count() { return fEnd - fStart; }
+   NTupleSize_t size() { return fEnd - fStart; }
 };
 
 
