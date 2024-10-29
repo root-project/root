@@ -164,6 +164,9 @@ static PyTypeObject PyNullPtr_t_Type = {
 #if PY_VERSION_HEX >= 0x030c0000
     , 0                  // tp_watched
 #endif
+#if PY_VERSION_HEX >= 0x030d0000
+    , 0                  // tp_versions_used
+#endif
 };
 
 
@@ -203,6 +206,9 @@ static PyTypeObject PyDefault_t_Type = {
 #endif
 #if PY_VERSION_HEX >= 0x030c0000
     , 0                 // tp_watched
+#endif
+#if PY_VERSION_HEX >= 0x030d0000
+    , 0                 // tp_versions_used
 #endif
 };
 
