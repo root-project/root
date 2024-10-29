@@ -192,11 +192,14 @@ void ROOT::Experimental::Internal::RPageSinkBuf::CommitPage(ColumnHandle_t colum
       config.fElement = &element;
       config.fCompressionSetting = GetWriteOptions().GetCompression();
       config.fWriteChecksum = GetWriteOptions().GetEnablePageChecksums();
-      config.fAllowAlias = true;
+      // Make sure the page buffer is not aliased so that we can free the uncompressed page.
+      config.fAllowAlias = false;
       config.fBuffer = zipItem.fBuf.get();
       sealedPage = SealPage(config);
       shrinkSealedPage();
       zipItem.fSealedPage = &sealedPage;
+      // Release the uncompressed page. This works because the "page allocator must be thread-safe."
+      zipItem.fPage = RPage();
    });
 }
 
