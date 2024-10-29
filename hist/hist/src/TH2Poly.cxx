@@ -180,7 +180,8 @@ TH2Poly::TH2Poly(const char *name,const char *title,
 
 /////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
-TH2Poly::TH2Poly(const TH2Poly & rhs) : TH2() {
+TH2Poly::TH2Poly(const TH2Poly & rhs) : TH2(), fCells(nullptr),
+fIsEmpty(nullptr), fCompletelyInside(nullptr), fBins(nullptr) {
     rhs.Copy(*this);
 }
 
