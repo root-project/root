@@ -1136,6 +1136,8 @@ bool RWebDisplayHandle::ProduceImages(const std::vector<std::string> &fnames, co
       if (p != std::string::npos) {
          auto jsroot_build = THttpServer::ReadFileContent(std::string(jsrootsys) + "/build/jsroot.js");
          if (!jsroot_build.empty()) {
+            // insert actual jsroot file location
+            jsroot_build = std::regex_replace(jsroot_build, std::regex("'\\$jsrootsys'"), std::string("'file://") + jsrootsys + "/'");
             filecont.erase(p, jsroot_include.length());
             filecont.insert(p, "<script id=\"jsroot\">" + jsroot_build + "</script>");
          }
