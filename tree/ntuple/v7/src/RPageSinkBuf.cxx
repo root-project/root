@@ -146,10 +146,13 @@ void ROOT::Experimental::Internal::RPageSinkBuf::CommitPage(ColumnHandle_t colum
    // elements are valid until DropBufferedPages().
    auto &zipItem = fBufferedColumns.at(colId).BufferPage(columnHandle);
    std::size_t maxSealedPageBytes = page.GetNBytes() + GetWriteOptions().GetEnablePageChecksums() * kNBytesPageChecksum;
-   zipItem.fBuf = std::make_unique<unsigned char[]>(maxSealedPageBytes);
-   R__ASSERT(zipItem.fBuf);
+   // Do not allocate the buffer yet, in case of IMT we only need it once the task is started.
    auto &sealedPage = fBufferedColumns.at(colId).RegisterSealedPage();
 
+   auto allocateBuf = [&zipItem, maxSealedPageBytes]() {
+      zipItem.fBuf = std::make_unique<unsigned char[]>(maxSealedPageBytes);
+      R__ASSERT(zipItem.fBuf);
+   };
    auto shrinkSealedPage = [&zipItem, maxSealedPageBytes, &sealedPage]() {
       // If the sealed page is smaller than the maximum size (with compression), allocate what is needed and copy the
       // sealed page content to save memory.
@@ -163,6 +166,7 @@ void ROOT::Experimental::Internal::RPageSinkBuf::CommitPage(ColumnHandle_t colum
    };
 
    if (!fTaskScheduler) {
+      allocateBuf();
       // Seal the page right now, avoiding the allocation and copy, but making sure that the page buffer is not aliased.
       RSealPageConfig config;
       config.fPage = &page;
@@ -186,7 +190,8 @@ void ROOT::Experimental::Internal::RPageSinkBuf::CommitPage(ColumnHandle_t colum
    fCounters->fParallelZip.SetValue(1);
    // Thread safety: Each thread works on a distinct zipItem which owns its
    // compression buffer.
-   fTaskScheduler->AddTask([this, &zipItem, &sealedPage, &element, shrinkSealedPage] {
+   fTaskScheduler->AddTask([this, &zipItem, &sealedPage, &element, allocateBuf, shrinkSealedPage] {
+      allocateBuf();
       RSealPageConfig config;
       config.fPage = &zipItem.fPage;
       config.fElement = &element;
