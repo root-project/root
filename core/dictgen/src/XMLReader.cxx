@@ -941,12 +941,12 @@ bool XMLReader::Parse(const std::string &fileName, SelectionRules& out)
                   }
 
                   // request RNTuple serialization mode
-                  if (tagKind == kClass && csr && "rntupleStreamed" == iAttrName) {
+                  if (tagKind == kClass && csr && "rntupleStreamerMode" == iAttrName) {
                      if (iAttrValue == "false") {
                         if (csr->RequestedRNTupleSerializationMode() == -1) {
                            ROOT::TMetaUtils::Error(
                               nullptr,
-                              "XML at line %s: class attribute 'rntupleStreamed' must be either 'true' or 'false', "
+                              "XML at line %s: class attribute 'rntupleStreamerMode' must be either 'true' or 'false', "
                               "not both\n",
                               lineNumCharp, iAttrValue.c_str());
                         } else {
@@ -956,7 +956,7 @@ bool XMLReader::Parse(const std::string &fileName, SelectionRules& out)
                         if (csr->RequestedRNTupleSerializationMode() == 1) {
                            ROOT::TMetaUtils::Error(
                               nullptr,
-                              "XML at line %s: class attribute 'rntupleStreamed' must be either 'true' or 'false', "
+                              "XML at line %s: class attribute 'rntupleStreamerMode' must be either 'true' or 'false', "
                               "not both\n",
                               lineNumCharp, iAttrValue.c_str());
                         } else {
@@ -965,7 +965,8 @@ bool XMLReader::Parse(const std::string &fileName, SelectionRules& out)
                      } else {
                         ROOT::TMetaUtils::Error(
                            nullptr,
-                           "XML at line %s: class attribute 'rntupleStreamed' must be 'true' or 'false' (it was %s)\n",
+                           "XML at line %s: class attribute 'rntupleStreamerMode' must be 'true' or 'false' "
+                           "(it was %s)\n",
                            lineNumCharp, iAttrValue.c_str());
                      }
                   }

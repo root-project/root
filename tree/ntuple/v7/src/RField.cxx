@@ -338,24 +338,24 @@ void DestroyRVecWithChecks(std::size_t alignOfT, void **beginPtr, char *begin, s
       free(begin);
 }
 
-/// Possible settings for the "rntuple.streamed" class attribute in the dictionary.
-enum class ERNTupleSerializationMode { kForceNative, kForceStreamed, kUnset };
+/// Possible settings for the "rntuple.streamerMode" class attribute in the dictionary.
+enum class ERNTupleSerializationMode { kForceNativeMode, kForceStreamerMode, kUnset };
 
 ERNTupleSerializationMode GetRNTupleSerializationMode(TClass *cl)
 {
    auto am = cl->GetAttributeMap();
-   if (!am || !am->HasKey("rntuple.streamed"))
+   if (!am || !am->HasKey("rntuple.streamerMode"))
       return ERNTupleSerializationMode::kUnset;
 
-   std::string value = am->GetPropertyAsString("rntuple.streamed");
+   std::string value = am->GetPropertyAsString("rntuple.streamerMode");
    std::transform(value.begin(), value.end(), value.begin(), ::toupper);
    if (value == "TRUE") {
-      return ERNTupleSerializationMode::kForceStreamed;
+      return ERNTupleSerializationMode::kForceStreamerMode;
    } else if (value == "FALSE") {
-      return ERNTupleSerializationMode::kForceNative;
+      return ERNTupleSerializationMode::kForceNativeMode;
    } else {
-      R__LOG_WARNING(ROOT::Experimental::NTupleLog())
-         << "invalid setting for 'rntuple.streamed' class attribute: " << am->GetPropertyAsString("rntuple.streamed");
+      R__LOG_WARNING(ROOT::Experimental::NTupleLog()) << "invalid setting for 'rntuple.streamerMode' class attribute: "
+                                                      << am->GetPropertyAsString("rntuple.streamerMode");
       return ERNTupleSerializationMode::kUnset;
    }
 }
@@ -868,7 +868,7 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
             if (cl->GetCollectionProxy()) {
                result = std::make_unique<RProxiedCollectionField>(fieldName, canonicalType);
             } else {
-               if (GetRNTupleSerializationMode(cl) == ERNTupleSerializationMode::kForceStreamed) {
+               if (GetRNTupleSerializationMode(cl) == ERNTupleSerializationMode::kForceStreamerMode) {
                   result = std::make_unique<RStreamerField>(fieldName, canonicalType);
                } else {
                   result = std::make_unique<RClassField>(fieldName, canonicalType);
@@ -1814,12 +1814,12 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::st
          R__FAIL(std::string(className) + " has an associated collection proxy; use RProxiedCollectionField instead"));
    }
    // Classes with, e.g., custom streamers are not supported through this field. Empty classes, however, are.
-   // Can be overwritten with the "rntuple.streamed=true" class attribute
+   // Can be overwritten with the "rntuple.streamerMode=true" class attribute
    if (!fClass->CanSplit() && fClass->Size() > 1 &&
-       GetRNTupleSerializationMode(fClass) != ERNTupleSerializationMode::kForceNative) {
+       GetRNTupleSerializationMode(fClass) != ERNTupleSerializationMode::kForceNativeMode) {
       throw RException(R__FAIL(std::string(className) + " cannot be stored natively in RNTuple"));
    }
-   if (GetRNTupleSerializationMode(fClass) == ERNTupleSerializationMode::kForceStreamed) {
+   if (GetRNTupleSerializationMode(fClass) == ERNTupleSerializationMode::kForceStreamerMode) {
       throw RException(
          R__FAIL(std::string(className) + " has streamer mode enforced, not supported as native RNTuple class"));
    }
