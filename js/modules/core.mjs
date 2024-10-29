@@ -4,7 +4,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '17/10/2024',
+version_date = '29/10/2024',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -22,7 +22,9 @@ internals = {
    id_counter: 1
 },
 
-_src = import.meta?.url;
+_src = import.meta?.url,
+
+_src_dir = '$jsrootsys';
 
 
 /** @summary Location of JSROOT modules
@@ -30,17 +32,25 @@ _src = import.meta?.url;
   * @private */
 let source_dir = '';
 
-if (_src && isStr(_src)) {
-   const pos = _src.indexOf('modules/core.mjs');
-   if (pos >= 0) {
+if (_src_dir[0] !== '$')
+   source_dir = _src_dir;
+else if (_src && isStr(_src)) {
+   let pos = _src.indexOf('modules/core.mjs');
+   if (pos < 0)
+      pos = _src.indexOf('build/jsroot.js');
+   if (pos < 0)
+      pos = _src.indexOf('build/jsroot.min.js');
+   if (pos >= 0)
       source_dir = _src.slice(0, pos);
-      if (!nodejs)
-         console.log(`Set jsroot source_dir to ${source_dir}, ${version}`);
-   } else {
-      if (!nodejs)
-         console.log(`jsroot bundle, ${version}`);
+   else
       internals.ignore_v6 = true;
-   }
+}
+
+if (!nodejs) {
+   if (source_dir)
+      console.log(`Set jsroot source_dir to ${source_dir}, ${version}`);
+   else
+      console.log(`jsroot bundle, ${version}`);
 }
 
 /** @summary Is batch mode flag

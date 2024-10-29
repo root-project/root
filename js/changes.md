@@ -38,6 +38,7 @@
 35. Fix - unzooming on log scale was extending range forevever
 36. Fix - do not force style 8 for hist markers
 37. Fix - ensure minimal hist title height
+38. Fix - disable Bloom effects on Android TGeo displays
 
 
 ## Changes in 7.7.4
