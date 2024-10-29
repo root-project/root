@@ -4552,12 +4552,12 @@ TVirtualHistPainter *TH1::GetPainter(Option_t *option)
 ///
 /// \param[in] n maximum size of array xp and size of array p (if given)
 /// \param[out] xp array to be filled with nq quantiles evaluated at (p). Memory has to be preallocated by caller.
-/// If p is null (default value), then xp is actually set to the histogram bin edges
+/// If p is null (default value), then xp is actually set to the (first n) histogram bin edges
 /// \param[in] p array of cumulative probabilities where quantiles should be evaluated.
 ///   - if p is null, the CDF of the histogram will be used instead as array, and will
-///     have a size = number of bins + 1 in h. it will correspond to the
+///     have a size = number of bins + 1 in h. It will correspond to the
 ///     quantiles calculated at the lowest edge of the histogram (quantile=0) and
-///     all the upper edges of the bins.
+///     all the upper edges of the bins. (nbins might be > n).
 ///   - if p is not null, it is assumed to contain at least n values.
 /// \return value nq (<=n) with the number of quantiles computed
 ///
