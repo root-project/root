@@ -4547,6 +4547,7 @@ TVirtualHistPainter *TH1::GetPainter(Option_t *option)
 ///      x_0.5 = Q(0.5)
 /// ~~~
 ///
+/// \author Eddy Offermann
 /// code from Eddy Offermann, Renaissance
 ///
 /// \param[in] n maximum size of array p and size of array xp (if given)
