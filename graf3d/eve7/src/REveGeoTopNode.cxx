@@ -1,6 +1,6 @@
 
-#include <ROOT/REveGeoTopNode.hxx> 
-#include <ROOT/REveRenderData.hxx> 
+#include <ROOT/REveGeoTopNode.hxx>
+#include <ROOT/REveRenderData.hxx>
 #include <ROOT/RGeomData.hxx>
 #include <ROOT/REveManager.hxx>
 
@@ -29,7 +29,7 @@ thread_local ElementId_t gSelId;
 
 REveGeoTopNodeData::REveGeoTopNodeData(const Text_t *n, const Text_t *t) : REveElement(n, t)
 {
-   fWebHierarchy = std::make_shared<RGeomHierarchy>(fDesc);
+   fWebHierarchy = std::make_shared<RGeomHierarchy>(fDesc, true);
 }
 
 void REveGeoTopNodeData::SetTNode(TGeoNode *n)
