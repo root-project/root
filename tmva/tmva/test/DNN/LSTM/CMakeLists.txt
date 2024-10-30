@@ -32,6 +32,8 @@ if (tmva-gpu AND tmva-cudnn)
    add_executable(testLSTMBackpropagationCudnn TestLSTMBackpropagationCudnn.cxx)
    target_link_libraries(testLSTMBackpropagationCudnn ${Libraries} ${DNN_CUDA_LIBRARIES})
    ROOT_ADD_TEST(TMVA-DNN-LSTM-BackpropagationCudnn COMMAND testLSTMBackpropagationCudnn)
+   # Test crashes on ubuntu2404-cuda-12.6.1. See root-project/root#16790:
+   set_tests_properties(TMVA-DNN-LSTM-BackpropagationCudnn PROPERTIES DISABLED True)
 
    # LSTM - Full Test GPU
    add_executable(testFullLSTMCudnn TestFullLSTMCudnn.cxx)
