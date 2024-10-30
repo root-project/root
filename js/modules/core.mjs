@@ -4,7 +4,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '29/10/2024',
+version_date = '30/10/2024',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -484,7 +484,11 @@ async function injectCode(code) {
       // try to detect if code includes import and must be treated as module
       const is_v6 = code.indexOf('JSROOT.require') >= 0,
             is_mjs = !is_v6 && (code.indexOf('import {') > 0) && (code.indexOf('} from \'') > 0),
-            promise = is_v6 ? _ensureJSROOT() : Promise.resolve(true);
+            is_batch = !is_v6 && !is_mjs && (code.indexOf('JSROOT.ObjectPainter') >= 0),
+            promise = (is_v6 ? _ensureJSROOT() : Promise.resolve(true));
+
+      if (is_batch && !globalThis.JSROOT)
+         globalThis.JSROOT = internals.jsroot;
 
       return promise.then(() => {
          const element = document.createElement('script');
@@ -1907,6 +1911,10 @@ async function _ensureJSROOT() {
          return globalThis.JSROOT._complete_loading();
    }).then(() => globalThis.JSROOT);
 }
+
+/** @summary Internal collection of functions potentially used by batch scripts
+  * @private */
+internals.jsroot = { version, source_dir, settings, gStyle, parse, isBatchMode };
 
 export { version_id, version_date, version, source_dir, isNodeJs, isBatchMode, setBatchMode,
          browser, internals, constants, settings, gStyle, atob_func, btoa_func, prROOT,

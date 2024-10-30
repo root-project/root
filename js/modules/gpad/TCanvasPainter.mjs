@@ -1,4 +1,4 @@
-import { BIT, settings, browser, create, parse, toJSON, loadScript, isFunc, isStr, clTCanvas } from '../core.mjs';
+import { BIT, settings, internals, browser, create, parse, toJSON, loadScript, isFunc, isStr, clTCanvas } from '../core.mjs';
 import { select as d3_select } from '../d3.mjs';
 import { closeCurrentWindow, showProgress, loadOpenui5, ToolbarIcons, getColorExec } from '../gui/utils.mjs';
 import { GridDisplay, getHPainter } from '../gui/display.mjs';
@@ -977,5 +977,7 @@ async function drawTFrame(dom, obj, opt) {
    fp.mode3d = opt === '3d';
    return ensureTCanvas(fp, false).then(() => fp.redraw());
 }
+
+Object.assign(internals.jsroot, { ensureTCanvas, TPadPainter, TCanvasPainter });
 
 export { ensureTCanvas, drawTPadSnapshot, drawTFrame, TPadPainter, TCanvasPainter };
