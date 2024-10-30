@@ -396,3 +396,28 @@ TEST(RNTuple, ViewFrameworkUse)
    EXPECT_LT(reader->GetMetrics().GetCounter("RNTupleReader.RPageSourceFile.nRead")->GetValueAsInt(),
              reader->GetMetrics().GetCounter("RNTupleReader.RPageSourceFile.nPageRead")->GetValueAsInt());
 }
+
+TEST(RNTuple, ViewOutOfBounds)
+{
+   FileRaii fileGuard("test_ntuple_view_oob.root");
+
+   auto model = RNTupleModel::Create();
+   auto foo = model->MakeField<std::int32_t>("foo");
+
+   {
+      auto writer = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath());
+      *foo = 1;
+      writer->Fill();
+      *foo = 2;
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
+   try {
+      auto viewJets = reader->GetView<std::int32_t>("foo");
+      viewJets(3);
+      FAIL() << "accessing an out-of-bounds entry with a view should throw";
+   } catch (const RException &ex) {
+      EXPECT_THAT(ex.what(), testing::HasSubstr("out of bounds"));
+   }
+}
