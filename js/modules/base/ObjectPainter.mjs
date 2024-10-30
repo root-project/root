@@ -1756,6 +1756,7 @@ const EAxisBits = {
    kOppositeTitle: BIT(32) // artificial bit, not possible to set in ROOT
 }, kAxisLabels = 'labels', kAxisNormal = 'normal', kAxisFunc = 'func', kAxisTime = 'time';
 
+Object.assign(internals.jsroot, { ObjectPainter, cleanup, resize });
 
 export { getElementCanvPainter, getElementMainPainter, drawingJSON,
          selectActivePad, getActivePad, cleanup, resize,

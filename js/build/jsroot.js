@@ -12,7 +12,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '29/10/2024',
+version_date = '30/10/2024',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -492,7 +492,11 @@ async function injectCode(code) {
       // try to detect if code includes import and must be treated as module
       const is_v6 = code.indexOf('JSROOT.require') >= 0,
             is_mjs = !is_v6 && (code.indexOf('import {') > 0) && (code.indexOf('} from \'') > 0),
-            promise = is_v6 ? _ensureJSROOT() : Promise.resolve(true);
+            is_batch = !is_v6 && !is_mjs && (code.indexOf('JSROOT.ObjectPainter') >= 0),
+            promise = (is_v6 ? _ensureJSROOT() : Promise.resolve(true));
+
+      if (is_batch && !globalThis.JSROOT)
+         globalThis.JSROOT = internals.jsroot;
 
       return promise.then(() => {
          const element = document.createElement('script');
@@ -1915,6 +1919,10 @@ async function _ensureJSROOT() {
          return globalThis.JSROOT._complete_loading();
    }).then(() => globalThis.JSROOT);
 }
+
+/** @summary Internal collection of functions potentially used by batch scripts
+  * @private */
+internals.jsroot = { version, source_dir: exports.source_dir, settings, gStyle, parse: parse$2, isBatchMode };
 
 var core = /*#__PURE__*/Object.freeze({
 __proto__: null,
@@ -13893,6 +13901,8 @@ const EAxisBits = {
    kMoreLogLabels: BIT(23),
    kOppositeTitle: BIT(32) // artificial bit, not possible to set in ROOT
 }, kAxisLabels = 'labels', kAxisNormal = 'normal', kAxisFunc = 'func', kAxisTime = 'time';
+
+Object.assign(internals.jsroot, { ObjectPainter, cleanup, resize });
 
 /**
  * @license
@@ -60716,6 +60726,8 @@ function changeObjectMember(painter, member, val, is_color) {
       obj[member] = val;
 }
 
+Object.assign(internals.jsroot, { addMoveHandler, registerForResize });
+
 const kToFront = '__front__', sDfltName = 'root_ctx_menu', sDfltDlg = '_dialog',
       sSub = 'sub:', sEndsub = 'endsub:', sSeparator = 'separator', sHeader = 'header:';
 
@@ -62336,6 +62348,8 @@ function assignContextMenu(painter, kind) {
    if (!painter?.isBatchMode() && painter?.draw_g)
       painter.draw_g.on('contextmenu', settings.ContextMenu ? evnt => showPainterMenu(evnt, painter, kind) : null);
 }
+
+Object.assign(internals.jsroot, { createMenu, closeMenu, assignContextMenu, kToFront });
 
 /** @summary Return time offset value for given TAxis object
   * @private */
@@ -72150,6 +72164,8 @@ async function drawTFrame(dom, obj, opt) {
    return ensureTCanvas(fp, false).then(() => fp.redraw());
 }
 
+Object.assign(internals.jsroot, { ensureTCanvas, TPadPainter, TCanvasPainter });
+
 var TCanvasPainter$1 = /*#__PURE__*/Object.freeze({
 __proto__: null,
 TCanvasPainter: TCanvasPainter,
@@ -77184,7 +77200,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
          res.wmax = 0;
       res.integral = stat_sum0;
 
-      if (histo.fEntries > 1)
+      if (histo.fEntries > 0)
          res.entries = histo.fEntries;
 
       res.eff_entries = stat_sumw2 ? stat_sum0*stat_sum0/stat_sumw2 : Math.abs(stat_sum0);
@@ -81878,7 +81894,7 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
       else
          hsum += histo.getBinContent(0) + histo.getBinContent(this.nbinsx + 1);
 
-      this.stat_entries = (histo.fEntries > 1) ? histo.fEntries : hsum;
+      this.stat_entries = hsum;
 
       this.hmin = hmin;
       this.hmax = hmax;
@@ -81997,7 +82013,8 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
             right = this.getSelectIndex('x', 'right'),
             fp = this.getFramePainter(),
             res = { name: histo.fName, meanx: 0, meany: 0, rmsx: 0, rmsy: 0, integral: 0,
-                    entries: this.stat_entries, eff_entries: 0, xmax: 0, wmax: 0, skewx: 0, skewd: 0, kurtx: 0, kurtd: 0 },
+                    entries: (histo.fEntries > 0) ? histo.fEntries : this.stat_entries,
+                    eff_entries: 0, xmax: 0, wmax: 0, skewx: 0, skewd: 0, kurtx: 0, kurtd: 0 },
             has_counted_stat = !fp.isAxisZoomed('x') && (Math.abs(histo.fTsumw) > 1e-300);
       let stat_sumw = 0, stat_sumw2 = 0, stat_sumwx = 0, stat_sumwx2 = 0, stat_sumwy = 0, stat_sumwy2 = 0,
           i, xx = 0, w = 0, xmax = null, wmax = null;
@@ -82345,6 +82362,7 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
       const draw_markers = show_errors || show_markers,
             draw_any_but_hist = draw_markers || show_text || show_line || show_curve,
             draw_hist = this.options.Hist && (!this.lineatt.empty() || !this.fillatt.empty()),
+            check_sumw2 = show_errors && histo.fSumw2?.length,
             // if there are too many points, exclude many vertical drawings at the same X position
             // instead define min and max value and made min-max drawing
             use_minmax = draw_any_but_hist || ((right - left) > 3*width);
@@ -82375,7 +82393,8 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
          // just to get correct values for the specified bin
          const extract_bin = bin => {
             bincont = histo.getBinContent(bin+1);
-            if (exclude_zero && (bincont === 0)) return false;
+            if (exclude_zero && (bincont === 0) && (!check_sumw2 || !histo.fSumw2[bin+1]))
+               return false;
             mx1 = Math.round(funcs.grx(xaxis.GetBinLowEdge(bin+1)));
             mx2 = Math.round(funcs.grx(xaxis.GetBinLowEdge(bin+2)));
             midx = Math.round((mx1 + mx2) / 2);
@@ -82854,7 +82873,7 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
             findbin = null;
          else if ((pnt_x < grx1 - gapx) || (pnt_x > grx2 + gapx))
             findbin = null; // if bars option used check that bar is not match
-         else if (!this.options.Zero && (histo.getBinContent(findbin+1) === 0))
+         else if (!this.options.Zero && (histo.getBinContent(findbin+1) === 0) && (histo.getBinError(findbin+1) === 0))
             findbin = null; // exclude empty bin if empty bins suppressed
       }
 
@@ -83561,7 +83580,7 @@ class TH3Painter extends THistPainter {
 
       res.integral = stat_sum0;
 
-      if (histo.fEntries > 1)
+      if (histo.fEntries > 0)
          res.entries = histo.fEntries;
 
       res.eff_entries = stat_sumw2 ? stat_sum0*stat_sum0/stat_sumw2 : Math.abs(stat_sum0);
@@ -100259,7 +100278,7 @@ class TFile {
          // multipart messages requires special handling
 
          const indx = hdr.indexOf('boundary=');
-         let boundary = '', n = first, o = 0;
+         let boundary = '', n = first, o = 0, normal_order = true;
          if (indx > 0) {
             boundary = hdr.slice(indx + 9);
             if ((boundary[0] === '"') && (boundary[boundary.length - 1] === '"'))
@@ -100313,11 +100332,33 @@ class TFile {
                blobs.push(new DataView(res, o, place[n + 1]));
                o += place[n + 1];
                n += 2;
-            } else {
+            } else if (normal_order) {
+               const n0 = n;
                while ((n < last) && (place[n] >= segm_start) && (place[n] + place[n + 1] - 1 <= segm_last)) {
                   blobs.push(new DataView(res, o + place[n] - segm_start, place[n + 1]));
                   n += 2;
                }
+
+               if (n > n0)
+                  o += (segm_last - segm_start + 1);
+               else
+                  normal_order = false;
+            }
+
+            if (!normal_order) {
+               // special situation when server reorder segments in the reply
+               let isany = false;
+               for (let n1 = n; n1 < last; n1 += 2) {
+                  if ((place[n1] >= segm_start) && (place[n1] + place[n1 + 1] - 1 <= segm_last)) {
+                     blobs[n1/2] = new DataView(res, o + place[n1] - segm_start, place[n1 + 1]);
+                     isany = true;
+                  }
+               }
+               if (!isany)
+                  return rejectFunc(Error(`Provided fragment ${segm_start} - ${segm_last} out of requested multi-range request`));
+
+               while (blobs[n/2])
+                  n += 2;
 
                o += (segm_last - segm_start + 1);
             }
@@ -142652,6 +142693,8 @@ async function init_v7(arg) {
 // to avoid cross-dependency between modules
 Object.assign(internals, { addStreamerInfosForPainter, addDrawFunc, setDefaultDrawOpt, makePDF });
 
+Object.assign(internals.jsroot, { draw, redraw, makeSVG, makeImage, addDrawFunc });
+
 
 /** @summary Draw TRooPlot
   * @private */
@@ -165234,9 +165277,6 @@ class RH3Painter extends RHistPainter {
       }
 
       res.integral = stat_sum0;
-
-      if (histo.fEntries > 1)
-         res.entries = histo.fEntries;
 
       return res;
    }

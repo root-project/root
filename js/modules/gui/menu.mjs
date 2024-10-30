@@ -1630,4 +1630,6 @@ function assignContextMenu(painter, kind) {
       painter.draw_g.on('contextmenu', settings.ContextMenu ? evnt => showPainterMenu(evnt, painter, kind) : null);
 }
 
+Object.assign(internals.jsroot, { createMenu, closeMenu, assignContextMenu, kToFront });
+
 export { createMenu, closeMenu, showPainterMenu, assignContextMenu, hasMenu, kToFront };

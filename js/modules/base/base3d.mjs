@@ -46,9 +46,9 @@ async function importThreeJs(original) {
 
    if (!isNodeJs() || (THREE.REVISION <= 162))
       return THREE;
-   return import('../r162/three.mjs').then(h1 => {
+   return import('three').then(h1 => {
       Object.assign(THREE, h1);
-      return import('../r162/three_addons.mjs');
+      return import('three/addons');
    }).then(h2 => {
       Object.assign(THREE, h2);
       return THREE;

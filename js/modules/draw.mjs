@@ -726,6 +726,8 @@ async function init_v7(arg) {
 // to avoid cross-dependency between modules
 Object.assign(internals, { addStreamerInfosForPainter, addDrawFunc, setDefaultDrawOpt, makePDF });
 
+Object.assign(internals.jsroot, { draw, redraw, makeSVG, makeImage, addDrawFunc });
+
 
 /** @summary Draw TRooPlot
   * @private */

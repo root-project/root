@@ -39,6 +39,9 @@
 36. Fix - do not force style 8 for hist markers
 37. Fix - ensure minimal hist title height
 38. Fix - disable Bloom effects on Android TGeo displays
+39. Fix - handle reordering of fragments in multipart reply #319
+40. Fix - properly show non-zero entries #320
+41. Fix - display empty hist bin if fSumw2 not zero
 
 
 ## Changes in 7.7.4

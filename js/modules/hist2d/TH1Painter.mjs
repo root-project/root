@@ -116,7 +116,7 @@ class TH1Painter extends THistPainter {
       else
          hsum += histo.getBinContent(0) + histo.getBinContent(this.nbinsx + 1);
 
-      this.stat_entries = (histo.fEntries > 1) ? histo.fEntries : hsum;
+      this.stat_entries = hsum;
 
       this.hmin = hmin;
       this.hmax = hmax;
@@ -235,7 +235,8 @@ class TH1Painter extends THistPainter {
             right = this.getSelectIndex('x', 'right'),
             fp = this.getFramePainter(),
             res = { name: histo.fName, meanx: 0, meany: 0, rmsx: 0, rmsy: 0, integral: 0,
-                    entries: this.stat_entries, eff_entries: 0, xmax: 0, wmax: 0, skewx: 0, skewd: 0, kurtx: 0, kurtd: 0 },
+                    entries: (histo.fEntries > 0) ? histo.fEntries : this.stat_entries,
+                    eff_entries: 0, xmax: 0, wmax: 0, skewx: 0, skewd: 0, kurtx: 0, kurtd: 0 },
             has_counted_stat = !fp.isAxisZoomed('x') && (Math.abs(histo.fTsumw) > 1e-300);
       let stat_sumw = 0, stat_sumw2 = 0, stat_sumwx = 0, stat_sumwx2 = 0, stat_sumwy = 0, stat_sumwy2 = 0,
           i, xx = 0, w = 0, xmax = null, wmax = null;
@@ -583,6 +584,7 @@ class TH1Painter extends THistPainter {
       const draw_markers = show_errors || show_markers,
             draw_any_but_hist = draw_markers || show_text || show_line || show_curve,
             draw_hist = this.options.Hist && (!this.lineatt.empty() || !this.fillatt.empty()),
+            check_sumw2 = show_errors && histo.fSumw2?.length,
             // if there are too many points, exclude many vertical drawings at the same X position
             // instead define min and max value and made min-max drawing
             use_minmax = draw_any_but_hist || ((right - left) > 3*width);
@@ -613,7 +615,8 @@ class TH1Painter extends THistPainter {
          // just to get correct values for the specified bin
          const extract_bin = bin => {
             bincont = histo.getBinContent(bin+1);
-            if (exclude_zero && (bincont === 0)) return false;
+            if (exclude_zero && (bincont === 0) && (!check_sumw2 || !histo.fSumw2[bin+1]))
+               return false;
             mx1 = Math.round(funcs.grx(xaxis.GetBinLowEdge(bin+1)));
             mx2 = Math.round(funcs.grx(xaxis.GetBinLowEdge(bin+2)));
             midx = Math.round((mx1 + mx2) / 2);
@@ -1092,7 +1095,7 @@ class TH1Painter extends THistPainter {
             findbin = null;
          else if ((pnt_x < grx1 - gapx) || (pnt_x > grx2 + gapx))
             findbin = null; // if bars option used check that bar is not match
-         else if (!this.options.Zero && (histo.getBinContent(findbin+1) === 0))
+         else if (!this.options.Zero && (histo.getBinContent(findbin+1) === 0) && (histo.getBinError(findbin+1) === 0))
             findbin = null; // exclude empty bin if empty bins suppressed
       }
 
