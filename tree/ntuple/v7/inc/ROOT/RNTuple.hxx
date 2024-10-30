@@ -27,10 +27,18 @@ class TFileMergeInfo;
 namespace ROOT {
 namespace Experimental {
 
+class RNTuple;
+
 namespace Internal {
 class RMiniFileReader;
 class RNTupleFileWriter;
 class RPageSourceFile;
+
+RNTuple CreateAnchor(std::uint16_t versionEpoch, std::uint16_t versionMajor, std::uint16_t versionMinor,
+                     std::uint16_t versionPatch, std::uint64_t seekHeader, std::uint64_t nbytesHeader,
+                     std::uint64_t lenHeader, std::uint64_t seekFooter, std::uint64_t nbytesFooter,
+                     std::uint64_t lenFooter, std::uint64_t maxKeySize);
+
 } // namespace Internal
 
 // clang-format off
@@ -59,9 +67,13 @@ auto reader = RNTupleReader::Open(ntpl);
 */
 // clang-format on
 class RNTuple final {
-   friend class Internal::RMiniFileReader;
    friend class Internal::RNTupleFileWriter;
    friend class Internal::RPageSourceFile;
+
+   friend ROOT::Experimental::RNTuple ROOT::Experimental::Internal::CreateAnchor(
+      std::uint16_t versionEpoch, std::uint16_t versionMajor, std::uint16_t versionMinor, std::uint16_t versionPatch,
+      std::uint64_t seekHeader, std::uint64_t nbytesHeader, std::uint64_t lenHeader, std::uint64_t seekFooter,
+      std::uint64_t nbytesFooter, std::uint64_t lenFooter, std::uint64_t maxKeySize);
 
 public:
    static constexpr std::uint16_t kVersionEpoch = 0;
@@ -120,10 +132,7 @@ public:
    /// Merge this NTuple with the input list entries
    Long64_t Merge(TCollection *input, TFileMergeInfo *mergeInfo);
 
-   /// NOTE: if you change this version you also need to update:
-   ///    - RTFNTuple::fClassVersion in RMiniFile.cxx
-   ///    - RTFStreamerInfoObject::fVersionRNTuple in RMiniFile.cxx
-   ///    - RTFStreamerInfoObject::fStreamers in RMiniFile.cxx
+   /// NOTE: if you change this version you also need to update RTFNTuple::fClassVersion in RMiniFile.cxx
    ClassDefNV(RNTuple, 6);
 }; // class RNTuple
 
