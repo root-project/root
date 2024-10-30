@@ -487,7 +487,7 @@ TEST(RNTuple, WritePageBudget)
 #ifdef R__HAS_DAVIX
 TEST(RNTuple, OpenHTTP)
 {
-   std::unique_ptr<TFile> file(TFile::Open("http://root.cern/files/tutorials/ntpl004_dimuon_v1rc3.root"));
+   std::unique_ptr<TFile> file(TFile::Open("http://root.cern/files/tutorials/ntpl004_dimuon_v1.root"));
    auto Events = std::unique_ptr<ROOT::RNTuple>(file->Get<ROOT::RNTuple>("Events"));
    auto model = RNTupleModel::Create();
    model->MakeField<ROOT::RNTupleCardinality<std::uint32_t>>("nMuon");
