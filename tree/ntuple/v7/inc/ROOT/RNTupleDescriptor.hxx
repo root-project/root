@@ -405,7 +405,7 @@ public:
 
    RIterator begin() { return RIterator{fDesc.fColumnRanges.cbegin()}; }
    RIterator end() { return fDesc.fColumnRanges.cend(); }
-   size_t count() { return fDesc.fColumnRanges.size(); }
+   size_t size() { return fDesc.fColumnRanges.size(); }
 };
 
 // clang-format off
@@ -743,7 +743,7 @@ public:
 
    RIterator begin() { return RIterator(fNTuple, fColumns, 0); }
    RIterator end() { return RIterator(fNTuple, fColumns, fColumns.size()); }
-   size_t count() { return fColumns.size(); }
+   size_t size() { return fColumns.size(); }
 };
 
 // clang-format off
