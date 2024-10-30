@@ -211,7 +211,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             this.viewer?.onRowHover(prop, is_enter);
          } else {
             let req = is_enter && prop?.path && prop?.isLeaf ? prop.path : [];
-           /// return this.websocket.sendLast('hover', 200, 'HOVER:' + JSON.stringify(req));
+            return this.websocket.sendLast('hover', 200, 'HOVER:' + JSON.stringify(req));
          }
       },
 

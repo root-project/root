@@ -510,7 +510,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
          }
       }
       getTooltipText() {
-         return this.top_obj.name;
+         return this.top_obj.eve_el.fName;
       }
       extractIndex(instance) {
          this.pick = instance;
@@ -521,6 +521,16 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
          console.log("SOCKET mesage !!! AMT", this);
          let topNode = this.top_obj;
          let aa = pstate_obj.stack || [];
+
+         let mgr =  topNode.scene.mgr;
+         let hbr = mgr.GetElement(topNode.eve_el.dataId);
+
+         if (!hbr.hasOwnProperty("websocket"))
+         {
+            let websocket = mgr.handle.createChannel();
+            mgr.handle.send("SETCHANNEL:" + hbr.fElementId + "," + websocket.getChannelId());
+            hbr.websocket =  websocket;
+         }
 
          let name = topNode.clones.getStackName(aa);
          const myArray = name.split("/");
@@ -535,9 +545,8 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
                msg += ",";
 
          }
-         
+
          // console.log("senf last AMT ", msg);
-         let hbr = EVE.mgr.GetElement(topNode.eve_el.dataId);
          hbr.websocket.sendLast(t1, 200, t2 + msg);
       }
 
@@ -1591,7 +1600,6 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
 
       makeGeoTopNodeProcessObject(o3, ctx, eveTopNode)
       {
-         //   console.log("topnode 22", eveTopNode);
          let orc;
          if (o3 instanceof THREE.Mesh) {
             if (!ctx.geomap.has(o3.geometry)) {
@@ -1629,7 +1637,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
       }
 
       makeGeoTopNode(tn, rnr_data) {
-         console.log("make top node ", tn);
+         // console.log("make top node ", tn);
          let json = atob(tn.geomDescription);
          let zz = EVE.JSR.parse(json);
          let o3 = EVE.JSR.build(zz);
