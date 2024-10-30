@@ -753,7 +753,7 @@ TEST(RNTuple, SerializeFooter)
    EXPECT_EQ(0, clusterDesc.GetFirstEntryIndex());
    EXPECT_EQ(100, clusterDesc.GetNEntries());
    auto columnIds = clusterDesc.GetColumnRangeIterable();
-   EXPECT_EQ(1u, columnIds.count());
+   EXPECT_EQ(1u, columnIds.size());
    EXPECT_EQ(0, columnIds.begin()->fPhysicalColumnId);
    columnRange = clusterDesc.GetColumnRange(0);
    EXPECT_EQ(100u, columnRange.fNElements);
