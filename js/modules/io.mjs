@@ -2882,7 +2882,7 @@ class TFile {
          // multipart messages requires special handling
 
          const indx = hdr.indexOf('boundary=');
-         let boundary = '', n = first, o = 0;
+         let boundary = '', n = first, o = 0, normal_order = true;
          if (indx > 0) {
             boundary = hdr.slice(indx + 9);
             if ((boundary[0] === '"') && (boundary[boundary.length - 1] === '"'))
@@ -2936,11 +2936,33 @@ class TFile {
                blobs.push(new DataView(res, o, place[n + 1]));
                o += place[n + 1];
                n += 2;
-            } else {
+            } else if (normal_order) {
+               const n0 = n;
                while ((n < last) && (place[n] >= segm_start) && (place[n] + place[n + 1] - 1 <= segm_last)) {
                   blobs.push(new DataView(res, o + place[n] - segm_start, place[n + 1]));
                   n += 2;
                }
+
+               if (n > n0)
+                  o += (segm_last - segm_start + 1);
+               else
+                  normal_order = false;
+            }
+
+            if (!normal_order) {
+               // special situation when server reorder segments in the reply
+               let isany = false;
+               for (let n1 = n; n1 < last; n1 += 2) {
+                  if ((place[n1] >= segm_start) && (place[n1] + place[n1 + 1] - 1 <= segm_last)) {
+                     blobs[n1/2] = new DataView(res, o + place[n1] - segm_start, place[n1 + 1]);
+                     isany = true;
+                  }
+               }
+               if (!isany)
+                  return rejectFunc(Error(`Provided fragment ${segm_start} - ${segm_last} out of requested multi-range request`));
+
+               while (blobs[n/2])
+                  n += 2;
 
                o += (segm_last - segm_start + 1);
             }

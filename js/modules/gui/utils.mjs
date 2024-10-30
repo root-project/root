@@ -610,6 +610,8 @@ function changeObjectMember(painter, member, val, is_color) {
       obj[member] = val;
 }
 
+Object.assign(internals.jsroot, { addMoveHandler, registerForResize });
+
 export { showProgress, closeCurrentWindow, loadOpenui5, ToolbarIcons, registerForResize,
          detectRightButton, addMoveHandler, injectStyle,
          selectgStyle, setStoragePrefix, saveSettings, readSettings, saveStyle, readStyle,
