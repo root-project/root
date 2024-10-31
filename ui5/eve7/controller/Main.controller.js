@@ -45,7 +45,6 @@ sap.ui.define(['sap/ui/core/Component',
       },
 
       initClientLog: function() {
-         return;
          let consoleObj = {};
          consoleObj.data = [];
 
@@ -173,13 +172,13 @@ sap.ui.define(['sap/ui/core/Component',
          let main = this;
          // create missing view
          console.log("Creating view", viewid);
-
-         // TODO:: Introduce REveView view types
+ 
+         // TODO: Generalize instantiation without  the if/else statements
          let vtype = "rootui5.eve7.view.GL";
          if (elem.fName === "Table")
-            vtype = "rootui5.eve7.view.EveTable"; // AMT temporary solution
+            vtype = "rootui5.eve7.view.EveTable";
          else if (elem.fName === "Lego")
-            vtype = "rootui5.eve7.view.Lego"; // AMT temporary solution
+            vtype = "rootui5.eve7.view.Lego";
          else if (elem.fName === "GeoTable")
                vtype = "rootui5.eve7.view.GeoTable";
 

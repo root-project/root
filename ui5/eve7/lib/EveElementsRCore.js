@@ -483,15 +483,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
             }
             this.addMeshRec(c, res);
          }
-      }/*
-      getChildFromStackIdx(o3, depth, stackIdx) {
-         for (let meshIdx = 0; meshIdx < o3.children.length; ++meshIdx) {
-            if (stackIdx === o3.children[meshIdx].stack[depth])
-               return meshIdx;
-         }
-         console.log("fail find node with idc !!!!", o3, stackIx, depth);
-         return 0;
-      }*/
+      }
       DrawForSelection(sec_idcs, res, extra) {
 
          if (extra.stack.length > 0) {
@@ -503,9 +495,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
             // TODO: make same logic fro RC objects 
             let x = topNode.clones.createRCObject3D(stack, topNode, 'force');
 
-            console.log("topnode controll res = ",x);
-            //if (x)
-            //res.geom.push(x);
+            // console.log("geo topnode control res = ",x);
             this.addMeshRec(x, res);
          }
       }
@@ -518,7 +508,6 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
 
       sendSocketMassage(pstate_obj, t1, t2)
       {
-         console.log("SOCKET mesage !!! AMT", this);
          let topNode = this.top_obj;
          let aa = pstate_obj.stack || [];
 
@@ -546,7 +535,6 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
 
          }
 
-         // console.log("senf last AMT ", msg);
          hbr.websocket.sendLast(t1, 200, t2 + msg);
       }
 
@@ -1616,11 +1604,11 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
             orc = new RC.Mesh(ctx.geomap.get(o3.geometry), mrc);
             this.RcPickable(eveTopNode, orc, true, GeoTopNodeControl);
             orc.material.normalFlat = true;
-            // orc.amt_debug_name = "mesh" + o3.name; // TODO debug
+            // orc.amt_debug_name = "mesh" + o3.name; // set for debugging purposes
             ++ctx.n_mesh;
          } else {
             orc = new RC.Group();
-            // orc.amt_debug_name = "group" + o3.name; // TODO debug
+            // orc.amt_debug_name = "group" + o3.name; // set for debugging purposes
             ++ctx.n_o3d;
          }
 
@@ -1632,7 +1620,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
          }
 
          // selection ... remore new ...
-         orc.stack = o3.stack; // ?? AMT do we need this
+         orc.stack = o3.stack;
          return orc;
       }
 
@@ -1641,10 +1629,10 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
          let json = atob(tn.geomDescription);
          let zz = EVE.JSR.parse(json);
          let o3 = EVE.JSR.build(zz);
-         console.log("tgeo painter builder", o3);
+         // console.log("tgeo painter builder o3 obj =", o3);
          let ctx = { geomap: new Map, n_o3d: 0, n_mesh: 0, n_geo_reuse: 0 };
          let orc = this.makeGeoTopNodeProcessObject(o3, ctx, tn);
-         console.log("map summary ", ctx.geomap.size, ctx.n_o3d, ctx.n_mesh, ctx.n_geo_reuse);
+         // console.log("map summary ", ctx.geomap.size, ctx.n_o3d, ctx.n_mesh, ctx.n_geo_reuse);
          orc.get_ctrl = function () { return new GeoTopNodeControl(this, orc); };
 
          orc.clones = o3.clones;
@@ -1655,7 +1643,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
 
             for (let lvl = 0; lvl <= stack.length; ++lvl) {
                let nchld = (lvl > 0) ? stack[lvl - 1] : 0;
-               console.log("level ", lvl, "nchld", nchld);
+               // console.log("level ", lvl, "nchld", nchld);
                // extract current node
                if (lvl > 0) node = this.nodes[node.chlds[nchld]];
                if (!node) return null;
@@ -1674,12 +1662,12 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
 
                if (obj3d) {
                   three_prnt = obj3d;
-                  console.log("set three");
+                  // console.log("set three");
                   if (obj3d.$jsroot_drawable) draw_depth++;
                   continue;
                }
 
-               console.log("make NEW ode ", node);
+               // console.log("make NEW ode ", node);
                obj3d = new RC.Object3D();
 
                if (node.abs_matrix) {
