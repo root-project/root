@@ -4635,13 +4635,34 @@ Int_t TH1::GetQuantiles(Int_t n, Double_t *xp, const Double_t *p)
 
    for (i = 0; i < nq; i++) {
       ibin = TMath::BinarySearch(nbins,fIntegral,prob[i]);
-      while (ibin < nbins-1 && fIntegral[ibin+1] == prob[i]) {
-         if (fIntegral[ibin+2] == prob[i]) ibin++;
-         else break;
+      if (fIntegral[ibin] == prob[i]) {
+         if (prob[i] == 0.) {
+            for (; ibin+1 <= nbins && fIntegral[ibin+1] == 0.; ++ibin) {
+
+            }
+            xp[i] = fXaxis.GetBinUpEdge(ibin);
+         }
+         else if (prob[i] == 1.) {
+            xp[i] = fXaxis.GetBinUpEdge(ibin);
+         }
+         else {
+            // Find equal integral in later bins (ie their entries are zero)
+            Double_t width = 0;
+            for (Int_t j = ibin+1; j <= nbins; ++j) {
+               if (prob[i] == fIntegral[j]) {
+                  width += fXaxis.GetBinWidth(j);
+               }
+               else
+                  break;
+            }
+            xp[i] = width == 0 ? fXaxis.GetBinCenter(ibin) : fXaxis.GetBinUpEdge(ibin) + width/2.;
+         }
       }
-      xp[i] = GetBinLowEdge(ibin+1);
-      const Double_t dint = fIntegral[ibin+1]-fIntegral[ibin];
-      if (dint > 0) xp[i] += GetBinWidth(ibin+1)*(prob[i]-fIntegral[ibin])/dint;
+      else {
+         xp[i] = GetBinLowEdge(ibin+1);
+         const Double_t dint = fIntegral[ibin+1]-fIntegral[ibin];
+         if (dint > 0) xp[i] += GetBinWidth(ibin+1)*(prob[i]-fIntegral[ibin])/dint;
+      }
    }
 
    if (!p) delete [] prob;
