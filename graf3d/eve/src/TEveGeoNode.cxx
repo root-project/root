@@ -25,6 +25,7 @@
 #include "TBuffer3D.h"
 #include "TVirtualViewer3D.h"
 #include "TColor.h"
+#include "TEnv.h"
 #include "TFile.h"
 
 #include "TGeoShape.h"
@@ -512,6 +513,10 @@ void TEveGeoTopNode::Paint(Option_t* option)
 {
    if (fRnrSelf)
    {
+      const char * gpn = gEnv->GetValue("GeomPainter.Name", "");
+      if (strncmp(gpn, "root", 4))
+         gEnv->SetValue("GeomPainter.Name", "root");
+
       TEveGeoManagerHolder geo_holder(fManager);
       TVirtualPad *pad = gPad;
       gPad = nullptr;
@@ -544,6 +549,9 @@ void TEveGeoTopNode::Paint(Option_t* option)
          vgp->PaintNode(fNode, option, &geomat);
       }
       fManager->SetTopVolume(top_volume);
+
+      if (strncmp(gpn, "root", 4))
+         gEnv->SetValue("GeomPainter.Name", gpn);
    }
 }
 
