@@ -58,6 +58,8 @@ public:
 
   void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
 
+  void fillVariableGroups(RooFit::VariableGroups &out) const override;
+
 protected:
 
   RooArgList   _ownedList ;      ///< List of owned components
