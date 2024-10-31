@@ -24,7 +24,6 @@ TGeoNode* testCmsGeo()
    TGeoManager::Import("https://root.cern/files/cms.root");
 
    gGeoManager->DefaultColors();
-   gGeoManager->SetVisLevel(2);
    gGeoManager->GetVolume("TRAK")->InvisibleAll();
    gGeoManager->GetVolume("HVP2")->SetTransparency(20);
    gGeoManager->GetVolume("HVEQ")->SetTransparency(20);
@@ -41,17 +40,13 @@ TGeoNode* testCmsGeo()
    gGeoManager->GetVolume("HTC1")->SetLineColor(2);
 
    TGeoNode* top = gGeoManager->GetTopVolume()->FindNode("CMSE_1");
-   // TGeoNode* n = getNodeFromPath(top, "TRAK_1/SVTX_1/TGBX_1/GAW1_1");
-// TGeoNode* n = getNodeFromPath(top, "TRAK_1/SVTX_1/TGBX_1");
- TGeoNode* n = getNodeFromPath(top, "MUON_1");
-//TGeoNode* n = top;
-   return n;
+   TGeoNode* n = getNodeFromPath(top, "MUON_1");
+   return top;
 }
 
 TGeoNode* rootgeom()
 {
    TGeoManager *geom = new TGeoManager("simple1", "Simple geometry");
-
 
    TGeoMaterial *matVacuum = new TGeoMaterial("Vacuum", 0,0,0);
    TGeoMaterial *matAl = new TGeoMaterial("Al", 26.98,13,2.7);
@@ -148,8 +143,6 @@ TGeoNode* rootgeom()
    bar6->SetLineColor(kBlue);
    T->AddNode(bar6, 1, tr9);
 
-
-
    rootbox->AddNode(R, 1, tr10);
    rootbox->AddNode(O, 1, tr11);
    rootbox->AddNode(O, 2, tr12);
@@ -173,77 +166,38 @@ TGeoNode* rootgeom()
 }
 
 
-REX::REvePointSet *getPointSet(int npoints = 2, float s=2, int color=28)
+void eveGeoBrowser(bool showDet = true)
 {
-   TRandom &r = *gRandom;
-
-   auto ps = new REX::REvePointSet("fu", "", npoints);
-
-   for (Int_t i=0; i<npoints; ++i)
-       ps->SetNextPoint(r.Uniform(-s,s), r.Uniform(-s,s), r.Uniform(-s,s));
-
-   ps->SetMarkerColor(color);
-   ps->SetMarkerSize(8 + r.Uniform(1, 8));
-   ps->SetMarkerStyle(4);
-   return ps;
-}
-
-void eveGeoBrowser()
-{
-   gEnv->SetValue("WebEve.GLViewer", "Three");
    auto eveMng = REX::REveManager::Create();
-   eveMng->AllowMultipleRemoteConnections(false, false);
+   // eveMng->AllowMultipleRemoteConnections(false, false);
 
-   TGeoNode* gn;
-   bool simple = true;
-   if (1)
-    gn = rootgeom();
-   else
-    gn = testCmsGeo();
+   TGeoNode *gn;
+   int vislevel = 4;
+   if (showDet) {
+      gn = testCmsGeo();
+      vislevel = 2;
+   } else {
+      gn = rootgeom();
+      vislevel = 8;
+   }
 
-   //TGeoNode *gn = rootgeom();
-
-   // table
+   // initialize RGeomDesc from TGeoNode
    auto data = new REX::REveGeoTopNodeData();
    data->SetTNode(gn);
-   data->RefDescription().SetVisLevel(8);
-   {
-       auto scene = eveMng->SpawnNewScene("GeoSceneTable");
-       auto view = eveMng->SpawnNewViewer("GeoTable");
-       view->AddScene(scene);
-       scene->AddElement(data);
-   }
-   // GL data
-   {
-       auto geoViz = new REX::REveGeoTopNodeViz();
-       geoViz->SetGeoData(data);
-       geoViz->SetPickable(true);
-       data->AddNiece(geoViz);
-       // scene->AddElement(geoViz);
-       eveMng->GetEventScene()->AddElement(geoViz);
-   }
+   data->RefDescription().SetVisLevel(vislevel);
+   
+   // make geoTable
+   auto scene = eveMng->SpawnNewScene("GeoSceneTable");
+   auto view = eveMng->SpawnNewViewer("GeoTable");
+   view->AddScene(scene);
+   scene->AddElement(data);
 
-// test points
-   {
-
-       REX::REveElement *event = eveMng->GetEventScene();
-
-       auto pntHolder = new REX::REveCompound("Hits");
-
-       auto ps1 = getPointSet(20, 100);
-       ps1->SetName("Points_1");
-       ps1->SetTitle("Points_1 title"); // used as tooltip
-
-       pntHolder->AddElement(ps1);
-
-       auto ps2 = getPointSet(10, 200, 4);
-       ps2->SetName("Points_2");
-       ps2->SetTitle("Points_2ftopno title"); // used as tooltip
-       ps2->SetAlwaysSecSelect(true);
-       pntHolder->AddElement(ps2);
-
-       event->AddElement(pntHolder);
-   }
+   // 3D representation
+   auto geoViz = new REX::REveGeoTopNodeViz();
+   geoViz->SetGeoData(data);
+   geoViz->SetPickable(true);
+   data->AddNiece(geoViz);
+   eveMng->GetEventScene()->AddElement(geoViz);
 
    eveMng->Show();
 }

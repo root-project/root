@@ -24,6 +24,13 @@ using namespace ROOT::Experimental;
 
 thread_local ElementId_t gSelId;
 
+#define REVEGEO_DEBUG
+#ifdef REVEGEO_DEBUG
+#define REVEGEO_DEBUG_PRINT(fmt, ...) printf(fmt, ##__VA_ARGS__)
+#else
+#define REVEGEO_DEBUG_PRINT(fmt, ...)
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
@@ -35,7 +42,6 @@ REveGeoTopNodeData::REveGeoTopNodeData(const Text_t *n, const Text_t *t) : REveE
 void REveGeoTopNodeData::SetTNode(TGeoNode *n)
 {
    fGeoNode = n;
-   // fDesc.SetVisLevel(2);
    fDesc.Build(fGeoNode->GetVolume());
    fDesc.AddSignalHandler(this, [this](const std::string &kind) { ProcessSignal(kind); });
 }
@@ -45,6 +51,7 @@ void REveGeoTopNodeData::SetChannel(unsigned connid, int chid)
 {
    fWebHierarchy->Show({gEve->GetWebWindow(), connid, chid});
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 namespace {
 std::size_t getHash(std::vector<int> &vec)
@@ -154,46 +161,18 @@ void REveGeoTopNodeViz::FillExtraSelectionData(nlohmann::json &j, const std::set
    if (stack.empty())
       return;
 
+#ifdef REVEGEO_DEBUG
    printf("cicked stack: ");
    for (auto i : stack)
       printf(" %d, ", i);
    printf("\n");
-
-   auto tnPath = fGeoData->fDesc.GetSelectedStack();
-
-   /*
-      if  (tnPath.empty()) {
-         for (auto i : stack)
-            j["stack"].push_back(i);
-      } else {
-         printf("top node: ");
-         for (auto i : fGeoData->fDesc.GetSelectedStack())
-            printf(" %d ", i);
-         printf("\n");
-
-         j["stack"].push_back(0);
-         j["stack"].push_back(0); // ????
-
-         size_t off = fGeoData->fDesc.GetSelectedStack().size();
-
-         for (size_t i = 0; i < stack.size(); ++i) {
-            if (i < off) {
-               if (stack[i] != tnPath[i]) {
-                  printf("top node path do not match with selections arg !!!!!!!!!! \n");
-                  j["stack"].clear();
-                  break;
-               }
-            } else {
-               j["stack"].push_back(stack[i]);
-               printf("push for stack >>> %d >>>  \n", stack[i]);
-            }
-         }
-      }
-   */
+#endif
 
    for (auto i : stack)
       j["stack"].push_back(i);
 
+
+#ifdef REVEGEO_DEBUG
    printf("extra stack: ");
    int ss = j["stack"].size();
    for (int i = 0; i < ss; ++i) {
@@ -201,18 +180,13 @@ void REveGeoTopNodeViz::FillExtraSelectionData(nlohmann::json &j, const std::set
       printf(" %d,", d);
    }
    printf("----\n");
-
-   // DEBUG 1
-
    auto ids = fGeoData->fDesc.MakeIdsByStack(stack);
    printf("node ids from stack: ");
    for (auto i : ids)
       printf(" %d, ", i);
    printf("\n");
 
-   // DEBUG 1
    int id = fGeoData->fDesc.FindNodeId(stack);
    printf("NODE ID %d\n", id);
-
-   printf("\n");
+#endif
 }
