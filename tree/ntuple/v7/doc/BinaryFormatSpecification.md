@@ -1137,6 +1137,6 @@ Readers should support reading data written according to _newer_ format versions
 Writers using format features that will prevent older readers from correctly reading the data
 must set the corresponding feature flags.
 
-Writers should write in the anchor the format version that they support,
+Writers should write in the anchor which format version they support,
 independent of whether they use the all the features that this version provides.
-Only the feature flag signals which features are used.
+Only the feature flags signal which features are actually used in this particular instance.
