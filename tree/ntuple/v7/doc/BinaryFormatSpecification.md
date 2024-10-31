@@ -1078,7 +1078,7 @@ A typical cluster size is tens to hundreds of megabytes.
 
 A column is a storage backed vector of a number of **elements** of a simple type.
 Column elements have a fixed bit-length that depends on the column type.
-Some column types allow setting the bit lengths within specific limits (e.g. for floats with truncated mantiassa).
+Some column types allow setting the bit lengths within specific limits (e.g. for floats with truncated mantissa).
 
 ### Envelope
 
