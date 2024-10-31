@@ -1703,7 +1703,9 @@ endif(tmva)
 #---Check for PyROOT---------------------------------------------------------------------
 if(pyroot)
 
-  if(NOT Python3_Development_FOUND)
+  if(Python3_Development_FOUND)
+    message(STATUS "PyROOT: development package found. Building for version ${Python3_VERSION}")
+  else()
     if(fail-on-missing)
       message(FATAL_ERROR "PyROOT: Python development package not found and pyroot component required"
                           " (python executable: ${Python3_EXECUTABLE})")
@@ -1712,8 +1714,6 @@ if(pyroot)
       set(pyroot OFF CACHE BOOL "Disabled because Python development package was not found for ${Python3_EXECUTABLE}" FORCE)
     endif()
   endif()
-
-  message(STATUS "PyROOT: development package found. Building for version ${Python3_VERSION}")
 
 endif()
 
