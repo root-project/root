@@ -1056,7 +1056,7 @@ class TH2Painter extends THistPainter {
          res.wmax = 0;
       res.integral = stat_sum0;
 
-      if (histo.fEntries > 1)
+      if (histo.fEntries > 0)
          res.entries = histo.fEntries;
 
       res.eff_entries = stat_sumw2 ? stat_sum0*stat_sum0/stat_sumw2 : Math.abs(stat_sum0);

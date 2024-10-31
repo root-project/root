@@ -99,7 +99,7 @@ class TH1Painter extends THistPainter {
       else
          hsum += histo.getBinContent(0) + histo.getBinContent(this.nbinsx + 1);
 
-      this.stat_entries = (histo.fEntries > 1) ? histo.fEntries : hsum;
+      this.stat_entries = hsum;
 
       this.hmin = hmin;
       this.hmax = hmax;
@@ -210,7 +210,8 @@ class TH1Painter extends THistPainter {
             right = this.getSelectIndex('x', 'right'),
             fp = this.getFramePainter(),
             res = { name: histo.fName, meanx: 0, meany: 0, rmsx: 0, rmsy: 0, integral: 0,
-                    entries: this.stat_entries, eff_entries: 0, xmax: 0, wmax: 0, skewx: 0, skewd: 0, kurtx: 0, kurtd: 0 },
+                    entries: (histo.fEntries > 0) ? histo.fEntries : this.stat_entries,
+                    eff_entries: 0, xmax: 0, wmax: 0, skewx: 0, skewd: 0, kurtx: 0, kurtd: 0 },
             has_counted_stat = !fp.isAxisZoomed('x') && (Math.abs(histo.fTsumw) > 1e-300);
       let stat_sumw = 0, stat_sumw2 = 0, stat_sumwx = 0, stat_sumwx2 = 0, stat_sumwy = 0, stat_sumwy2 = 0,
           i, xx = 0, w = 0, xmax = null, wmax = null;
@@ -534,9 +535,7 @@ class TH1Painter extends THistPainter {
 
       if (show_markers) {
          // draw markers also when e2 option was specified
-         let style = this.options.MarkStyle;
-         if (!style && (histo.fMarkerStyle === 1)) style = 8; // as in recent ROOT changes
-         this.createAttMarker({ attr: histo, style }); // when style not configured, it will be ignored
+         this.createAttMarker({ attr: histo, style: this.options.MarkStyle }); // when style not configured, it will be ignored
          if (this.markeratt.size > 0) {
             // simply use relative move from point, can optimize in the future
             path_marker = '';

@@ -555,7 +555,7 @@ function parseLatex(node, arg, label, curr) {
             elem.attr('fill', curr.color || arg.color || null);
 
             // set font size directly to element to avoid complex control
-            if (curr.fisze !== curr.font.size)
+            if (curr.fsize)
                elem.attr('font-size', Math.round(curr.fsize));
 
             if (curr.font && curr.font.isSymbol)

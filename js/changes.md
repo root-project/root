@@ -1,5 +1,15 @@
 # JSROOT changelog
 
+## Changes in 7.7.5
+1. Fix - can enable exponent only for log10 axis scale
+2. Fix - proper set custom font size in latex
+3. Fix - do not force style 8 for hist markers
+4. Fix - ensure minimal hist title height
+5. Fix - disable Bloom effect on Android
+6. Fix - handle reordering of fragments in multipart reply #319
+7. Fix - properly show non-zero entries #320
+
+
 ## Changes in 7.7.4
 1. Fix - TGraph Y range selection, do not cross 0
 2. Fix - correctly handle `#font[id]` in latex

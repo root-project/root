@@ -110,9 +110,6 @@ class RH3Painter extends RHistPainter {
 
       res.integral = stat_sum0;
 
-      if (histo.fEntries > 1)
-         res.entries = histo.fEntries;
-
       return res;
    }
 
