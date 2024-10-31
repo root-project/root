@@ -1040,7 +1040,7 @@ This section summarizes default settings of
 |----------------------------------------|------------------------------|
 | Approximate Zipped Cluster             | 50MB                         |
 | Max Unzipped Cluster                   | 500MB                        |
-| Max Unzipped Page                      | 1MB                          |
+| Max Unzipped Page                      | 1 MiB                        |
 
 ## Glossary
 
