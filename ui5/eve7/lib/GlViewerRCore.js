@@ -693,16 +693,6 @@ sap.ui.define([
          //    window.requestAnimationFrame(this.render.bind(this));
       }
 
-      getCtrlRec(io)
-      {
-         if (io.get_ctrl)
-         return io.get_ctrl();
-         else if (io.parent)
-         return this.getCtrlRec(io.parent)
-         else
-         return null;
-      }
-
       render_for_picking(x, y, detect_depth)
       {
          // console.log("RENDER FOR PICKING", this.scene, this.camera, this.canvas, this.renderer);
