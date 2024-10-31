@@ -425,6 +425,9 @@ jobs:
         run: |
           ccache -p || true
           ccache -s || true
+      
+      - name: resolv.conf
+        run: cat /etc/resolv.conf
 
       - name: Set up Python Virtual Env
         # if the `if` expr is false, `if` still has exit code 0.
