@@ -3483,6 +3483,8 @@ ROOT::Experimental::RVariantField::RVariantField(std::string_view fieldName,
       fVariantOffset = dm->GetOffset();
 
    const auto tagSize = GetVariantTagSize();
+   // To calculate the padding, we use the tag size as a substitute for the tag alignment, i.e. the next line
+   // calculates alignof(tagtype) - (fMaxItemSize % alignof(tagtype));
    const auto padding = tagSize - (fMaxItemSize % tagSize);
    fTagOffset = fVariantOffset + fMaxItemSize + ((padding == tagSize) ? 0 : padding);
 }
