@@ -1717,6 +1717,21 @@ if(pyroot)
 
 endif()
 
+#---Check for TPython---------------------------------------------------------------------
+if(tpython)
+
+  if(NOT Python3_Development_FOUND)
+    if(fail-on-missing)
+      message(FATAL_ERROR "TPython: Python development package not found and tpython component required"
+                          " (python executable: ${Python3_EXECUTABLE})")
+    else()
+      message(STATUS "TPython: Python development package not found for python ${Python3_EXECUTABLE}. Switching off tpython option")
+      set(tpython OFF CACHE BOOL "Disabled because Python development package was not found for ${Python3_EXECUTABLE}" FORCE)
+    endif()
+  endif()
+
+endif()
+
 #---Check for MPI---------------------------------------------------------------------
 if (mpi)
   message(STATUS "Looking for MPI")
