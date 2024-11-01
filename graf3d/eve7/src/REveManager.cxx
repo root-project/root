@@ -883,8 +883,6 @@ void REveManager::WindowData(unsigned connid, const std::string &arg)
       int eveid = std::stoi(s.substr(0, p));
       int chid = std::stoi(s.substr(p+1));
 
-      printf("SETCHANNEL GEO %s EveId %d chid %d connid %u \n", arg.c_str(), eveid, chid, connid);
-
       REveElement* n = FindElementById(eveid);
       auto nn = dynamic_cast<REveGeoTopNodeData*>(n);
       if (nn) nn->SetChannel(connid, chid);
