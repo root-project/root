@@ -125,76 +125,20 @@ public:
    virtual RIdentifier GetIdentifier() const = 0;
 }; // class RColumnElementBase
 
-// All supported C++ in-memory types
-enum class EColumnCppType {
-   kChar,
-   kBool,
-   kByte,
-   kUint8,
-   kUint16,
-   kUint32,
-   kUint64,
-   kInt8,
-   kInt16,
-   kInt32,
-   kInt64,
-   kFloat,
-   kDouble,
-   kClusterSize,
-   kColumnSwitch,
-   kMax
-};
-
-inline constexpr EColumnCppType kTestFutureColumn =
-   static_cast<EColumnCppType>(std::numeric_limits<std::underlying_type_t<EColumnCppType>>::max() - 1);
-
 struct RTestFutureColumn {
    std::uint32_t dummy;
 };
 
-std::unique_ptr<RColumnElementBase> GenerateColumnElement(EColumnCppType cppType, EColumnType colType);
+std::unique_ptr<RColumnElementBase> GenerateColumnElement(std::type_index inMemoryType, EColumnType onDiskType);
 
 template <typename CppT>
-std::unique_ptr<RColumnElementBase> RColumnElementBase::Generate(EColumnType type)
+std::unique_ptr<RColumnElementBase> RColumnElementBase::Generate(EColumnType onDiskType)
 {
-   if constexpr (std::is_same_v<CppT, char>)
-      return GenerateColumnElement(EColumnCppType::kChar, type);
-   else if constexpr (std::is_same_v<CppT, bool>)
-      return GenerateColumnElement(EColumnCppType::kBool, type);
-   else if constexpr (std::is_same_v<CppT, std::byte>)
-      return GenerateColumnElement(EColumnCppType::kByte, type);
-   else if constexpr (std::is_same_v<CppT, std::uint8_t>)
-      return GenerateColumnElement(EColumnCppType::kUint8, type);
-   else if constexpr (std::is_same_v<CppT, std::uint16_t>)
-      return GenerateColumnElement(EColumnCppType::kUint16, type);
-   else if constexpr (std::is_same_v<CppT, std::uint32_t>)
-      return GenerateColumnElement(EColumnCppType::kUint32, type);
-   else if constexpr (std::is_same_v<CppT, std::uint64_t>)
-      return GenerateColumnElement(EColumnCppType::kUint64, type);
-   else if constexpr (std::is_same_v<CppT, std::int8_t>)
-      return GenerateColumnElement(EColumnCppType::kInt8, type);
-   else if constexpr (std::is_same_v<CppT, std::int16_t>)
-      return GenerateColumnElement(EColumnCppType::kInt16, type);
-   else if constexpr (std::is_same_v<CppT, std::int32_t>)
-      return GenerateColumnElement(EColumnCppType::kInt32, type);
-   else if constexpr (std::is_same_v<CppT, std::int64_t>)
-      return GenerateColumnElement(EColumnCppType::kInt64, type);
-   else if constexpr (std::is_same_v<CppT, float>)
-      return GenerateColumnElement(EColumnCppType::kFloat, type);
-   else if constexpr (std::is_same_v<CppT, double>)
-      return GenerateColumnElement(EColumnCppType::kDouble, type);
-   else if constexpr (std::is_same_v<CppT, ClusterSize_t>)
-      return GenerateColumnElement(EColumnCppType::kClusterSize, type);
-   else if constexpr (std::is_same_v<CppT, RColumnSwitch>)
-      return GenerateColumnElement(EColumnCppType::kColumnSwitch, type);
-   else if constexpr (std::is_same_v<CppT, RTestFutureColumn>)
-      return GenerateColumnElement(kTestFutureColumn, type);
-   else
-      static_assert(!sizeof(CppT), "Unsupported Cpp type");
+   return GenerateColumnElement(std::type_index(typeid(CppT)), onDiskType);
 }
 
 template <>
-std::unique_ptr<RColumnElementBase> RColumnElementBase::Generate<void>(EColumnType type);
+std::unique_ptr<RColumnElementBase> RColumnElementBase::Generate<void>(EColumnType onDiskType);
 
 } // namespace ROOT::Experimental::Internal
 
