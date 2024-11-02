@@ -1186,7 +1186,7 @@ ROOT::Experimental::RFieldBase::EnsureCompatibleColumnTypes(const RNTupleDescrip
    for (const auto &t : onDiskTypes) {
       if (!columnTypeNames.empty())
          columnTypeNames += ", ";
-      columnTypeNames += std::string("`") + Internal::RColumnElementBase::GetTypeName(t) + "`";
+      columnTypeNames += std::string("`") + Internal::RColumnElementBase::GetColumnTypeName(t) + "`";
    }
    throw RException(R__FAIL("On-disk column types {" + columnTypeNames + "} for field `" + GetQualifiedFieldName() +
                             "` cannot be matched to its in-memory type `" + GetTypeName() + "` " +
