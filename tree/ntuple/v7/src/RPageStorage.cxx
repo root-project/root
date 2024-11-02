@@ -84,28 +84,36 @@ ROOT::Experimental::RResult<std::uint64_t> ROOT::Experimental::Internal::RPageSt
 
 //------------------------------------------------------------------------------
 
-void ROOT::Experimental::Internal::RPageSource::RActivePhysicalColumns::Insert(DescriptorId_t physicalColumnID)
+void ROOT::Experimental::Internal::RPageSource::RActivePhysicalColumns::Insert(
+   DescriptorId_t physicalColumnId, RColumnElementBase::RIdentifier elementId)
 {
-   for (unsigned i = 0; i < fIDs.size(); ++i) {
-      if (fIDs[i] == physicalColumnID) {
-         fRefCounters[i]++;
+   auto [itr, _] = fColumnInfos.emplace(physicalColumnId, std::vector<RColumnInfo>());
+   for (auto &columnInfo : itr->second) {
+      if (columnInfo.fElementId == elementId) {
+         columnInfo.fRefCounter++;
          return;
       }
    }
-   fIDs.emplace_back(physicalColumnID);
-   fRefCounters.emplace_back(1);
+   itr->second.emplace_back(RColumnInfo{elementId, 1});
 }
 
-void ROOT::Experimental::Internal::RPageSource::RActivePhysicalColumns::Erase(DescriptorId_t physicalColumnID)
+void ROOT::Experimental::Internal::RPageSource::RActivePhysicalColumns::Erase(DescriptorId_t physicalColumnId,
+                                                                              RColumnElementBase::RIdentifier elementId)
 {
-   for (unsigned i = 0; i < fIDs.size(); ++i) {
-      if (fIDs[i] == physicalColumnID) {
-         if (--fRefCounters[i] == 0) {
-            fIDs.erase(fIDs.begin() + i);
-            fRefCounters.erase(fRefCounters.begin() + i);
+   auto itr = fColumnInfos.find(physicalColumnId);
+   R__ASSERT(itr != fColumnInfos.end());
+   for (std::size_t i = 0; i < itr->second.size(); ++i) {
+      if (itr->second[i].fElementId != elementId)
+         continue;
+
+      itr->second[i].fRefCounter--;
+      if (itr->second[i].fRefCounter == 0) {
+         itr->second.erase(itr->second.begin() + i);
+         if (itr->second.empty()) {
+            fColumnInfos.erase(itr);
          }
-         return;
       }
+      break;
    }
 }
 
@@ -113,8 +121,8 @@ ROOT::Experimental::Internal::RCluster::ColumnSet_t
 ROOT::Experimental::Internal::RPageSource::RActivePhysicalColumns::ToColumnSet() const
 {
    RCluster::ColumnSet_t result;
-   for (const auto &id : fIDs)
-      result.insert(id);
+   for (const auto &[physicalColumnId, _] : fColumnInfos)
+      result.insert(physicalColumnId);
    return result;
 }
 
@@ -168,13 +176,13 @@ ROOT::Experimental::Internal::RPageSource::AddColumn(DescriptorId_t fieldId, RCo
    auto physicalId =
       GetSharedDescriptorGuard()->FindPhysicalColumnId(fieldId, column.GetIndex(), column.GetRepresentationIndex());
    R__ASSERT(physicalId != kInvalidDescriptorId);
-   fActivePhysicalColumns.Insert(physicalId);
+   fActivePhysicalColumns.Insert(physicalId, column.GetElement()->GetIdentifier());
    return ColumnHandle_t{physicalId, &column};
 }
 
 void ROOT::Experimental::Internal::RPageSource::DropColumn(ColumnHandle_t columnHandle)
 {
-   fActivePhysicalColumns.Erase(columnHandle.fPhysicalId);
+   fActivePhysicalColumns.Erase(columnHandle.fPhysicalId, columnHandle.fColumn->GetElement()->GetIdentifier());
 }
 
 void ROOT::Experimental::Internal::RPageSource::SetEntryRange(const REntryRange &range)
