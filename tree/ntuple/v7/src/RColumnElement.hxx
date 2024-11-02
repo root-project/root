@@ -327,9 +327,9 @@ template <typename CppT, EColumnType>
 class RColumnElement;
 
 template <typename CppT>
-std::unique_ptr<RColumnElementBase> GenerateColumnElementInternal(EColumnType type)
+std::unique_ptr<RColumnElementBase> GenerateColumnElementInternal(EColumnType onDiskType)
 {
-   switch (type) {
+   switch (onDiskType) {
    case EColumnType::kIndex64: return std::make_unique<RColumnElement<CppT, EColumnType::kIndex64>>();
    case EColumnType::kIndex32: return std::make_unique<RColumnElement<CppT, EColumnType::kIndex32>>();
    case EColumnType::kSwitch: return std::make_unique<RColumnElement<CppT, EColumnType::kSwitch>>();
@@ -360,7 +360,7 @@ std::unique_ptr<RColumnElementBase> GenerateColumnElementInternal(EColumnType ty
    case EColumnType::kReal32Trunc: return std::make_unique<RColumnElement<CppT, EColumnType::kReal32Trunc>>();
    case EColumnType::kReal32Quant: return std::make_unique<RColumnElement<CppT, EColumnType::kReal32Quant>>();
    default:
-      if (type == kTestFutureType)
+      if (onDiskType == kTestFutureType)
          return std::make_unique<RColumnElement<CppT, kTestFutureType>>();
       R__ASSERT(false);
    }
