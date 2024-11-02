@@ -243,52 +243,58 @@ void ROOT::Experimental::Internal::RPageSource::UnzipClusterImpl(RCluster *clust
    auto descriptorGuard = GetSharedDescriptorGuard();
    const auto &clusterDescriptor = descriptorGuard->GetClusterDescriptor(clusterId);
 
-   std::vector<std::unique_ptr<RColumnElementBase>> allElements;
-
    std::atomic<bool> foundChecksumFailure{false};
 
+   std::vector<std::unique_ptr<RColumnElementBase>> allElements;
    const auto &columnsInCluster = cluster->GetAvailPhysicalColumns();
    for (const auto columnId : columnsInCluster) {
-      const auto &columnDesc = descriptorGuard->GetColumnDescriptor(columnId);
+      // By the time we unzip a cluster, the set of active columns may have already changed wrt. to the moment when
+      // we requested reading the cluster. That doesn't matter much, we simply decompress what is now in the list
+      // of active columns.
+      if (!fActivePhysicalColumns.HasColumnInfos(columnId))
+         continue;
+      const auto &columnInfos = fActivePhysicalColumns.GetColumnInfos(columnId);
 
-      allElements.emplace_back(RColumnElementBase::Generate(columnDesc.GetType()));
+      for (const auto &info : columnInfos) {
+         allElements.emplace_back(GenerateColumnElement(info.fElementId));
 
-      const auto &pageRange = clusterDescriptor.GetPageRange(columnId);
-      std::uint64_t pageNo = 0;
-      std::uint64_t firstInPage = 0;
-      for (const auto &pi : pageRange.fPageInfos) {
-         ROnDiskPage::Key key(columnId, pageNo);
-         auto onDiskPage = cluster->GetOnDiskPage(key);
-         RSealedPage sealedPage;
-         sealedPage.SetNElements(pi.fNElements);
-         sealedPage.SetHasChecksum(pi.fHasChecksum);
-         sealedPage.SetBufferSize(pi.fLocator.fBytesOnStorage + pi.fHasChecksum * kNBytesPageChecksum);
-         sealedPage.SetBuffer(onDiskPage->GetAddress());
-         R__ASSERT(onDiskPage && (onDiskPage->GetSize() == sealedPage.GetBufferSize()));
+         const auto &pageRange = clusterDescriptor.GetPageRange(columnId);
+         std::uint64_t pageNo = 0;
+         std::uint64_t firstInPage = 0;
+         for (const auto &pi : pageRange.fPageInfos) {
+            ROnDiskPage::Key key(columnId, pageNo);
+            auto onDiskPage = cluster->GetOnDiskPage(key);
+            RSealedPage sealedPage;
+            sealedPage.SetNElements(pi.fNElements);
+            sealedPage.SetHasChecksum(pi.fHasChecksum);
+            sealedPage.SetBufferSize(pi.fLocator.fBytesOnStorage + pi.fHasChecksum * kNBytesPageChecksum);
+            sealedPage.SetBuffer(onDiskPage->GetAddress());
+            R__ASSERT(onDiskPage && (onDiskPage->GetSize() == sealedPage.GetBufferSize()));
 
-         auto taskFunc = [this, columnId, clusterId, firstInPage, sealedPage, element = allElements.back().get(),
-                          &foundChecksumFailure,
-                          indexOffset = clusterDescriptor.GetColumnRange(columnId).fFirstElementIndex]() {
-            auto rv = UnsealPage(sealedPage, *element, columnId);
-            if (!rv) {
-               foundChecksumFailure = true;
-               return;
-            }
-            auto newPage = rv.Unwrap();
-            fCounters->fSzUnzip.Add(element->GetSize() * sealedPage.GetNElements());
+            auto taskFunc = [this, columnId, clusterId, firstInPage, sealedPage, element = allElements.back().get(),
+                             &foundChecksumFailure,
+                             indexOffset = clusterDescriptor.GetColumnRange(columnId).fFirstElementIndex]() {
+               auto rv = UnsealPage(sealedPage, *element, columnId);
+               if (!rv) {
+                  foundChecksumFailure = true;
+                  return;
+               }
+               auto newPage = rv.Unwrap();
+               fCounters->fSzUnzip.Add(element->GetSize() * sealedPage.GetNElements());
 
-            newPage.SetWindow(indexOffset + firstInPage, RPage::RClusterInfo(clusterId, indexOffset));
-            fPagePool.PreloadPage(std::move(newPage));
-         };
+               newPage.SetWindow(indexOffset + firstInPage, RPage::RClusterInfo(clusterId, indexOffset));
+               fPagePool.PreloadPage(std::move(newPage));
+            };
 
-         fTaskScheduler->AddTask(taskFunc);
+            fTaskScheduler->AddTask(taskFunc);
 
-         firstInPage += pi.fNElements;
-         pageNo++;
-      } // for all pages in column
+            firstInPage += pi.fNElements;
+            pageNo++;
+         } // for all pages in column
+
+         fCounters->fNPageUnsealed.Add(pageNo);
+      } // for all in-memory types of the column
    }    // for all columns in cluster
-
-   fCounters->fNPageUnsealed.Add(cluster->GetNOnDiskPages());
 
    fTaskScheduler->Wait();
 
