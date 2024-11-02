@@ -599,6 +599,8 @@ public:
          R__FAIL(std::string("internal error: no column mapping for this C++ type: ") + typeid(CppT).name() + " --> " +
                  GetColumnTypeName(ColumnT)));
    }
+
+   RIdentifier GetIdentifier() const final { return RIdentifier{typeid(CppT), EColumnType::kUnknown}; }
 };
 
 template <>
@@ -606,6 +608,7 @@ class RColumnElement<bool, EColumnType::kUnknown> : public RColumnElementBase {
 public:
    static constexpr std::size_t kSize = sizeof(bool);
    RColumnElement() : RColumnElementBase(kSize) {}
+   RIdentifier GetIdentifier() const final { return RIdentifier{typeid(bool), EColumnType::kUnknown}; }
 };
 
 template <>
@@ -613,6 +616,7 @@ class RColumnElement<std::byte, EColumnType::kUnknown> : public RColumnElementBa
 public:
    static constexpr std::size_t kSize = sizeof(std::byte);
    RColumnElement() : RColumnElementBase(kSize) {}
+   RIdentifier GetIdentifier() const final { return RIdentifier{typeid(std::byte), EColumnType::kUnknown}; }
 };
 
 template <>
@@ -620,6 +624,7 @@ class RColumnElement<char, EColumnType::kUnknown> : public RColumnElementBase {
 public:
    static constexpr std::size_t kSize = sizeof(char);
    RColumnElement() : RColumnElementBase(kSize) {}
+   RIdentifier GetIdentifier() const final { return RIdentifier{typeid(char), EColumnType::kUnknown}; }
 };
 
 template <>
@@ -627,6 +632,7 @@ class RColumnElement<std::int8_t, EColumnType::kUnknown> : public RColumnElement
 public:
    static constexpr std::size_t kSize = sizeof(std::int8_t);
    RColumnElement() : RColumnElementBase(kSize) {}
+   RIdentifier GetIdentifier() const final { return RIdentifier{typeid(std::int8_t), EColumnType::kUnknown}; }
 };
 
 template <>
@@ -634,6 +640,7 @@ class RColumnElement<std::uint8_t, EColumnType::kUnknown> : public RColumnElemen
 public:
    static constexpr std::size_t kSize = sizeof(std::uint8_t);
    RColumnElement() : RColumnElementBase(kSize) {}
+   RIdentifier GetIdentifier() const final { return RIdentifier{typeid(std::uint8_t), EColumnType::kUnknown}; }
 };
 
 template <>
@@ -641,6 +648,7 @@ class RColumnElement<std::int16_t, EColumnType::kUnknown> : public RColumnElemen
 public:
    static constexpr std::size_t kSize = sizeof(std::int16_t);
    RColumnElement() : RColumnElementBase(kSize) {}
+   RIdentifier GetIdentifier() const final { return RIdentifier{typeid(std::int16_t), EColumnType::kUnknown}; }
 };
 
 template <>
@@ -648,6 +656,7 @@ class RColumnElement<std::uint16_t, EColumnType::kUnknown> : public RColumnEleme
 public:
    static constexpr std::size_t kSize = sizeof(std::uint16_t);
    RColumnElement() : RColumnElementBase(kSize) {}
+   RIdentifier GetIdentifier() const final { return RIdentifier{typeid(std::uint16_t), EColumnType::kUnknown}; }
 };
 
 template <>
@@ -655,6 +664,7 @@ class RColumnElement<std::int32_t, EColumnType::kUnknown> : public RColumnElemen
 public:
    static constexpr std::size_t kSize = sizeof(std::int32_t);
    RColumnElement() : RColumnElementBase(kSize) {}
+   RIdentifier GetIdentifier() const final { return RIdentifier{typeid(std::int32_t), EColumnType::kUnknown}; }
 };
 
 template <>
@@ -662,6 +672,7 @@ class RColumnElement<std::uint32_t, EColumnType::kUnknown> : public RColumnEleme
 public:
    static constexpr std::size_t kSize = sizeof(std::uint32_t);
    RColumnElement() : RColumnElementBase(kSize) {}
+   RIdentifier GetIdentifier() const final { return RIdentifier{typeid(std::uint32_t), EColumnType::kUnknown}; }
 };
 
 template <>
@@ -669,6 +680,7 @@ class RColumnElement<std::int64_t, EColumnType::kUnknown> : public RColumnElemen
 public:
    static constexpr std::size_t kSize = sizeof(std::int64_t);
    RColumnElement() : RColumnElementBase(kSize) {}
+   RIdentifier GetIdentifier() const final { return RIdentifier{typeid(std::int64_t), EColumnType::kUnknown}; }
 };
 
 template <>
@@ -676,6 +688,7 @@ class RColumnElement<std::uint64_t, EColumnType::kUnknown> : public RColumnEleme
 public:
    static constexpr std::size_t kSize = sizeof(std::uint64_t);
    RColumnElement() : RColumnElementBase(kSize) {}
+   RIdentifier GetIdentifier() const final { return RIdentifier{typeid(std::uint64_t), EColumnType::kUnknown}; }
 };
 
 template <>
@@ -683,6 +696,7 @@ class RColumnElement<float, EColumnType::kUnknown> : public RColumnElementBase {
 public:
    static constexpr std::size_t kSize = sizeof(float);
    RColumnElement() : RColumnElementBase(kSize) {}
+   RIdentifier GetIdentifier() const final { return RIdentifier{typeid(float), EColumnType::kUnknown}; }
 };
 
 template <>
@@ -690,6 +704,7 @@ class RColumnElement<double, EColumnType::kUnknown> : public RColumnElementBase 
 public:
    static constexpr std::size_t kSize = sizeof(double);
    RColumnElement() : RColumnElementBase(kSize) {}
+   RIdentifier GetIdentifier() const final { return RIdentifier{typeid(double), EColumnType::kUnknown}; }
 };
 
 template <>
@@ -697,6 +712,10 @@ class RColumnElement<ROOT::Experimental::ClusterSize_t, EColumnType::kUnknown> :
 public:
    static constexpr std::size_t kSize = sizeof(ROOT::Experimental::ClusterSize_t);
    RColumnElement() : RColumnElementBase(kSize) {}
+   RIdentifier GetIdentifier() const final
+   {
+      return RIdentifier{typeid(ROOT::Experimental::ClusterSize_t), EColumnType::kUnknown};
+   }
 };
 
 template <>
@@ -704,6 +723,10 @@ class RColumnElement<ROOT::Experimental::RColumnSwitch, EColumnType::kUnknown> :
 public:
    static constexpr std::size_t kSize = sizeof(ROOT::Experimental::RColumnSwitch);
    RColumnElement() : RColumnElementBase(kSize) {}
+   RIdentifier GetIdentifier() const final
+   {
+      return RIdentifier{typeid(ROOT::Experimental::RColumnSwitch), EColumnType::kUnknown};
+   }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -755,6 +778,11 @@ public:
             ROOT::Experimental::RColumnSwitch(ROOT::Experimental::ClusterSize_t{element.fIndex}, element.fTag);
       }
    }
+
+   RIdentifier GetIdentifier() const final
+   {
+      return RIdentifier{typeid(ROOT::Experimental::RColumnSwitch), EColumnType::kSwitch};
+   }
 };
 
 template <>
@@ -768,6 +796,8 @@ public:
 
    void Pack(void *dst, const void *src, std::size_t count) const final;
    void Unpack(void *dst, const void *src, std::size_t count) const final;
+
+   RIdentifier GetIdentifier() const final { return RIdentifier{typeid(bool), EColumnType::kBit}; }
 };
 
 template <>
@@ -801,6 +831,8 @@ public:
          floatArray[i] = ROOT::Experimental::Internal::HalfToFloat(val);
       }
    }
+
+   RIdentifier GetIdentifier() const final { return RIdentifier{typeid(float), EColumnType::kReal16}; }
 };
 
 template <>
@@ -834,6 +866,8 @@ public:
          doubleArray[i] = static_cast<double>(ROOT::Experimental::Internal::HalfToFloat(val));
       }
    }
+
+   RIdentifier GetIdentifier() const final { return RIdentifier{typeid(double), EColumnType::kReal16}; }
 };
 
 template <typename T>
@@ -856,6 +890,8 @@ public:
    }
 
    bool IsMappable() const final { return kIsMappable; }
+
+   RIdentifier GetIdentifier() const final { return RIdentifier{typeid(T), EColumnType::kReal32Trunc}; }
 };
 
 template <>
@@ -1106,6 +1142,8 @@ public:
       // this is not the case, as the user may give us float values that are out of range.
       assert(nOutOfRange == 0);
    }
+
+   RIdentifier GetIdentifier() const final { return RIdentifier{typeid(T), EColumnType::kReal32Quant}; }
 };
 
 template <>
@@ -1114,13 +1152,17 @@ class RColumnElement<float, EColumnType::kReal32Quant> : public RColumnElementQu
 template <>
 class RColumnElement<double, EColumnType::kReal32Quant> : public RColumnElementQuantized<double> {};
 
-#define __RCOLUMNELEMENT_SPEC_BODY(CppT, BaseT, BitsOnStorage)  \
-   static constexpr std::size_t kSize = sizeof(CppT);           \
-   static constexpr std::size_t kBitsOnStorage = BitsOnStorage; \
-   RColumnElement() : BaseT(kSize, kBitsOnStorage) {}           \
-   bool IsMappable() const final                                \
-   {                                                            \
-      return kIsMappable;                                       \
+#define __RCOLUMNELEMENT_SPEC_BODY(CppT, ColumnT, BaseT, BitsOnStorage) \
+   static constexpr std::size_t kSize = sizeof(CppT);                   \
+   static constexpr std::size_t kBitsOnStorage = BitsOnStorage;         \
+   RColumnElement() : BaseT(kSize, kBitsOnStorage) {}                   \
+   bool IsMappable() const final                                        \
+   {                                                                    \
+      return kIsMappable;                                               \
+   }                                                                    \
+   RIdentifier GetIdentifier() const final                              \
+   {                                                                    \
+      return RIdentifier{typeid(CppT), ColumnT};                        \
    }
 /// These macros are used to declare `RColumnElement` template specializations below.  Additional arguments can be used
 /// to forward template parameters to the base class, e.g.
@@ -1132,14 +1174,14 @@ class RColumnElement<double, EColumnType::kReal32Quant> : public RColumnElementQ
    template <>                                                                \
    class RColumnElement<CppT, ColumnT> : public BaseT __VA_ARGS__ {           \
    public:                                                                    \
-      __RCOLUMNELEMENT_SPEC_BODY(CppT, BaseT, BitsOnStorage)                  \
+      __RCOLUMNELEMENT_SPEC_BODY(CppT, ColumnT, BaseT, BitsOnStorage)         \
    }
-#define DECLARE_RCOLUMNELEMENT_SPEC_SIMPLE(CppT, ColumnT, BitsOnStorage)  \
-   template <>                                                            \
-   class RColumnElement<CppT, ColumnT> : public RColumnElementBase {      \
-   public:                                                                \
-      static constexpr bool kIsMappable = true;                           \
-      __RCOLUMNELEMENT_SPEC_BODY(CppT, RColumnElementBase, BitsOnStorage) \
+#define DECLARE_RCOLUMNELEMENT_SPEC_SIMPLE(CppT, ColumnT, BitsOnStorage)           \
+   template <>                                                                     \
+   class RColumnElement<CppT, ColumnT> : public RColumnElementBase {               \
+   public:                                                                         \
+      static constexpr bool kIsMappable = true;                                    \
+      __RCOLUMNELEMENT_SPEC_BODY(CppT, ColumnT, RColumnElementBase, BitsOnStorage) \
    }
 
 DECLARE_RCOLUMNELEMENT_SPEC(bool, EColumnType::kChar, 8, RColumnElementBoolAsUnsplitInt, <char>);
@@ -1419,6 +1461,11 @@ public:
    bool IsMappable() const { return kIsMappable; }
    void Pack(void *, const void *, std::size_t) const {}
    void Unpack(void *, const void *, std::size_t) const {}
+
+   RIdentifier GetIdentifier() const final
+   {
+      return RIdentifier{typeid(ROOT::Experimental::Internal::RTestFutureColumn), kTestFutureType};
+   }
 };
 
 inline void
