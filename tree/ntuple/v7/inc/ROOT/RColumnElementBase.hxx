@@ -70,6 +70,13 @@ public:
    struct RIdentifier {
       std::type_index fInMemoryType = std::type_index(typeid(void));
       EColumnType fOnDiskType = EColumnType::kUnknown;
+
+      bool operator==(const RIdentifier &other) const
+      {
+         return this->fInMemoryType == other.fInMemoryType && this->fOnDiskType == other.fOnDiskType;
+      }
+
+      bool operator!=(const RIdentifier &other) const { return !(*this == other); }
    };
 
    RColumnElementBase(const RColumnElementBase &other) = default;
