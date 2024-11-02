@@ -18,6 +18,7 @@
 
 #include <ROOT/RError.hxx>
 #include <ROOT/RCluster.hxx>
+#include <ROOT/RColumnElementBase.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleReadOptions.hxx>
@@ -38,6 +39,7 @@
 #include <mutex>
 #include <set>
 #include <shared_mutex>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
@@ -48,7 +50,6 @@ class RNTupleModel;
 
 namespace Internal {
 class RColumn;
-class RColumnElementBase;
 class RNTupleCompressor;
 struct RNTupleModelChangeset;
 class RPageAllocator;
@@ -628,17 +629,32 @@ protected:
       Detail::RNTupleCalcPerf &fCompressionRatio;
    };
 
-   /// Keeps track of the requested physical column IDs. When using alias columns (projected fields), physical
-   /// columns may be requested multiple times.
+   /// Keeps track of the requested physical column IDs and their in-memory target type via a column element identifier.
+   /// When using alias columns (projected fields), physical columns may be requested multiple times.
    class RActivePhysicalColumns {
+   public:
+      struct RColumnInfo {
+         RColumnElementBase::RIdentifier fElementId;
+         std::size_t fRefCounter = 0;
+      };
+
    private:
-      std::vector<DescriptorId_t> fIDs;
-      std::vector<std::size_t> fRefCounters;
+      /// Maps physical column IDs to all the requested in-memory representations.
+      /// A pair of physical column ID and in-memory representation can be requested multiple times, which is
+      /// indicated by the reference counter.
+      /// We can only have a handful of possible in-memory representations for a given column,
+      /// so it is fine to search them linearly.
+      std::unordered_map<DescriptorId_t, std::vector<RColumnInfo>> fColumnInfos;
 
    public:
-      void Insert(DescriptorId_t physicalColumnID);
-      void Erase(DescriptorId_t physicalColumnID);
+      void Insert(DescriptorId_t physicalColumnId, RColumnElementBase::RIdentifier elementId);
+      void Erase(DescriptorId_t physicalColumnId, RColumnElementBase::RIdentifier elementId);
       RCluster::ColumnSet_t ToColumnSet() const;
+      bool HasColumnInfos(DescriptorId_t physicalColumnId) const { return fColumnInfos.count(physicalColumnId) > 0; }
+      const std::vector<RColumnInfo> &GetColumnInfos(DescriptorId_t physicalColumnId) const
+      {
+         return fColumnInfos.at(physicalColumnId);
+      }
    };
 
    /// Summarizes cluster-level information that are necessary to load a certain page.
