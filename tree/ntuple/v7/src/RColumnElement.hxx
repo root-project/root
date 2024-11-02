@@ -597,7 +597,7 @@ public:
    {
       throw ROOT::Experimental::RException(
          R__FAIL(std::string("internal error: no column mapping for this C++ type: ") + typeid(CppT).name() + " --> " +
-                 GetTypeName(ColumnT)));
+                 GetColumnTypeName(ColumnT)));
    }
 };
 

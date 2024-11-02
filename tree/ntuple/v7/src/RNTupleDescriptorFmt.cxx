@@ -194,7 +194,7 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
       std::string nameAndType = std::string("  ") + col.fFieldName + " [#" + std::to_string(col.fColumnIndex);
       if (col.fRepresentationIndex > 0)
          nameAndType += " / R." + std::to_string(col.fRepresentationIndex);
-      nameAndType += "]  --  " + std::string{Internal::RColumnElementBase::GetTypeName(col.fType)};
+      nameAndType += "]  --  " + std::string{Internal::RColumnElementBase::GetColumnTypeName(col.fType)};
       std::string id = std::string("{id:") + std::to_string(col.fLogicalColumnId) + "}";
       if (col.fLogicalColumnId != col.fPhysicalColumnId)
          id += " --alias--> " + std::to_string(col.fPhysicalColumnId);
