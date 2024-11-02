@@ -108,9 +108,9 @@ const char *ROOT::Experimental::Internal::RColumnElementBase::GetColumnTypeName(
 
 template <>
 std::unique_ptr<ROOT::Experimental::Internal::RColumnElementBase>
-ROOT::Experimental::Internal::RColumnElementBase::Generate<void>(EColumnType type)
+ROOT::Experimental::Internal::RColumnElementBase::Generate<void>(EColumnType onDiskType)
 {
-   switch (type) {
+   switch (onDiskType) {
    case EColumnType::kIndex64: return std::make_unique<RColumnElement<ClusterSize_t, EColumnType::kIndex64>>();
    case EColumnType::kIndex32: return std::make_unique<RColumnElement<ClusterSize_t, EColumnType::kIndex32>>();
    case EColumnType::kSwitch: return std::make_unique<RColumnElement<RColumnSwitch, EColumnType::kSwitch>>();
@@ -144,7 +144,7 @@ ROOT::Experimental::Internal::RColumnElementBase::Generate<void>(EColumnType typ
    case EColumnType::kReal32Trunc: return std::make_unique<RColumnElement<float, EColumnType::kReal32Trunc>>();
    case EColumnType::kReal32Quant: return std::make_unique<RColumnElement<float, EColumnType::kReal32Quant>>();
    default:
-      if (type == kTestFutureType)
+      if (onDiskType == kTestFutureType)
          return std::make_unique<RColumnElement<Internal::RTestFutureColumn, kTestFutureType>>();
       assert(false);
    }
@@ -153,28 +153,42 @@ ROOT::Experimental::Internal::RColumnElementBase::Generate<void>(EColumnType typ
 }
 
 std::unique_ptr<ROOT::Experimental::Internal::RColumnElementBase>
-ROOT::Experimental::Internal::GenerateColumnElement(EColumnCppType cppType, EColumnType type)
+ROOT::Experimental::Internal::GenerateColumnElement(std::type_index inMemoryType, EColumnType onDiskType)
 {
-   switch (cppType) {
-   case EColumnCppType::kChar: return GenerateColumnElementInternal<char>(type);
-   case EColumnCppType::kBool: return GenerateColumnElementInternal<bool>(type);
-   case EColumnCppType::kByte: return GenerateColumnElementInternal<std::byte>(type);
-   case EColumnCppType::kUint8: return GenerateColumnElementInternal<std::uint8_t>(type);
-   case EColumnCppType::kUint16: return GenerateColumnElementInternal<std::uint16_t>(type);
-   case EColumnCppType::kUint32: return GenerateColumnElementInternal<std::uint32_t>(type);
-   case EColumnCppType::kUint64: return GenerateColumnElementInternal<std::uint64_t>(type);
-   case EColumnCppType::kInt8: return GenerateColumnElementInternal<std::int8_t>(type);
-   case EColumnCppType::kInt16: return GenerateColumnElementInternal<std::int16_t>(type);
-   case EColumnCppType::kInt32: return GenerateColumnElementInternal<std::int32_t>(type);
-   case EColumnCppType::kInt64: return GenerateColumnElementInternal<std::int64_t>(type);
-   case EColumnCppType::kFloat: return GenerateColumnElementInternal<float>(type);
-   case EColumnCppType::kDouble: return GenerateColumnElementInternal<double>(type);
-   case EColumnCppType::kClusterSize: return GenerateColumnElementInternal<ClusterSize_t>(type);
-   case EColumnCppType::kColumnSwitch: return GenerateColumnElementInternal<RColumnSwitch>(type);
-   default:
-      if (cppType == kTestFutureColumn)
-         return GenerateColumnElementInternal<RTestFutureColumn>(type);
-      R__ASSERT(!"Invalid column cpp type");
+   if (inMemoryType == std::type_index(typeid(char))) {
+      return GenerateColumnElementInternal<char>(onDiskType);
+   } else if (inMemoryType == std::type_index(typeid(bool))) {
+      return GenerateColumnElementInternal<bool>(onDiskType);
+   } else if (inMemoryType == std::type_index(typeid(std::byte))) {
+      return GenerateColumnElementInternal<std::byte>(onDiskType);
+   } else if (inMemoryType == std::type_index(typeid(std::uint8_t))) {
+      return GenerateColumnElementInternal<std::uint8_t>(onDiskType);
+   } else if (inMemoryType == std::type_index(typeid(std::uint16_t))) {
+      return GenerateColumnElementInternal<std::uint16_t>(onDiskType);
+   } else if (inMemoryType == std::type_index(typeid(std::uint32_t))) {
+      return GenerateColumnElementInternal<std::uint32_t>(onDiskType);
+   } else if (inMemoryType == std::type_index(typeid(std::uint64_t))) {
+      return GenerateColumnElementInternal<std::uint64_t>(onDiskType);
+   } else if (inMemoryType == std::type_index(typeid(std::int8_t))) {
+      return GenerateColumnElementInternal<std::int8_t>(onDiskType);
+   } else if (inMemoryType == std::type_index(typeid(std::int16_t))) {
+      return GenerateColumnElementInternal<std::int16_t>(onDiskType);
+   } else if (inMemoryType == std::type_index(typeid(std::int32_t))) {
+      return GenerateColumnElementInternal<std::int32_t>(onDiskType);
+   } else if (inMemoryType == std::type_index(typeid(std::int64_t))) {
+      return GenerateColumnElementInternal<std::int64_t>(onDiskType);
+   } else if (inMemoryType == std::type_index(typeid(float))) {
+      return GenerateColumnElementInternal<float>(onDiskType);
+   } else if (inMemoryType == std::type_index(typeid(double))) {
+      return GenerateColumnElementInternal<double>(onDiskType);
+   } else if (inMemoryType == std::type_index(typeid(ClusterSize_t))) {
+      return GenerateColumnElementInternal<ClusterSize_t>(onDiskType);
+   } else if (inMemoryType == std::type_index(typeid(RColumnSwitch))) {
+      return GenerateColumnElementInternal<RColumnSwitch>(onDiskType);
+   } else if (inMemoryType == std::type_index(typeid(RTestFutureColumn))) {
+      return GenerateColumnElementInternal<RTestFutureColumn>(onDiskType);
+   } else {
+      R__ASSERT(!"Invalid memory type in GenerateColumnElement");
    }
    // never here
    return nullptr;
