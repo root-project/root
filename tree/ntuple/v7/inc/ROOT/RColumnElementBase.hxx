@@ -31,6 +31,7 @@
 #include <optional>
 #include <string>
 #include <type_traits>
+#include <typeindex>
 #include <typeinfo>
 #include <utility>
 
@@ -64,6 +65,13 @@ protected:
    }
 
 public:
+   /// Every concrete RColumnElement type is identified by its on-disk type (column type) and the
+   /// in-memory C++ type, given by a type index.
+   struct RIdentifier {
+      std::type_index fInMemoryType = std::type_index(typeid(void));
+      EColumnType fOnDiskType = EColumnType::kUnknown;
+   };
+
    RColumnElementBase(const RColumnElementBase &other) = default;
    RColumnElementBase(RColumnElementBase &&other) = default;
    RColumnElementBase &operator=(const RColumnElementBase &other) = delete;
@@ -113,6 +121,8 @@ public:
    std::size_t GetBitsOnStorage() const { return fBitsOnStorage; }
    std::optional<std::pair<double, double>> GetValueRange() const { return fValueRange; }
    std::size_t GetPackedSize(std::size_t nElements = 1U) const { return (nElements * fBitsOnStorage + 7) / 8; }
+
+   virtual RIdentifier GetIdentifier() const = 0;
 }; // class RColumnElementBase
 
 // All supported C++ in-memory types
