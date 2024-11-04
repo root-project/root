@@ -21,24 +21,23 @@
 #include <cstdlib>
 #include <utility>
 
-ROOT::Experimental::Internal::RPageRef
-ROOT::Experimental::Internal::RPagePool::RegisterPage(RPage page, std::type_index inMemoryType)
+ROOT::Experimental::Internal::RPageRef ROOT::Experimental::Internal::RPagePool::RegisterPage(RPage page, RKey key)
 {
    std::lock_guard<std::mutex> lockGuard(fLock);
    fPages.emplace_back(std::move(page));
    RPageInfo pageInfo;
-   pageInfo.fInMemoryType = inMemoryType;
+   pageInfo.fKey = key;
    pageInfo.fRefCounter = 1;
    fPageInfos.emplace_back(pageInfo);
    return RPageRef(page, this);
 }
 
-void ROOT::Experimental::Internal::RPagePool::PreloadPage(RPage page, std::type_index inMemoryType)
+void ROOT::Experimental::Internal::RPagePool::PreloadPage(RPage page, RKey key)
 {
    std::lock_guard<std::mutex> lockGuard(fLock);
    fPages.emplace_back(std::move(page));
    RPageInfo pageInfo;
-   pageInfo.fInMemoryType = inMemoryType;
+   pageInfo.fKey = key;
    pageInfo.fRefCounter = 0;
    fPageInfos.emplace_back(pageInfo);
 }
@@ -63,17 +62,15 @@ void ROOT::Experimental::Internal::RPagePool::ReleasePage(const RPage &page)
    R__ASSERT(false);
 }
 
-ROOT::Experimental::Internal::RPageRef ROOT::Experimental::Internal::RPagePool::GetPage(ColumnId_t columnId,
-                                                                                        std::type_index inMemoryType,
-                                                                                        NTupleSize_t globalIndex)
+ROOT::Experimental::Internal::RPageRef
+ROOT::Experimental::Internal::RPagePool::GetPage(RKey key, NTupleSize_t globalIndex)
 {
    std::lock_guard<std::mutex> lockGuard(fLock);
    unsigned int N = fPages.size();
    for (unsigned int i = 0; i < N; ++i) {
-      if (fPages[i].GetColumnId() != columnId) continue;
       if (fPageInfos[i].fRefCounter < 0)
          continue;
-      if (fPageInfos[i].fInMemoryType != inMemoryType)
+      if (fPageInfos[i].fKey != key)
          continue;
       if (!fPages[i].Contains(globalIndex)) continue;
       fPageInfos[i].fRefCounter++;
@@ -82,17 +79,15 @@ ROOT::Experimental::Internal::RPageRef ROOT::Experimental::Internal::RPagePool::
    return RPageRef();
 }
 
-ROOT::Experimental::Internal::RPageRef ROOT::Experimental::Internal::RPagePool::GetPage(ColumnId_t columnId,
-                                                                                        std::type_index inMemoryType,
-                                                                                        RClusterIndex clusterIndex)
+ROOT::Experimental::Internal::RPageRef
+ROOT::Experimental::Internal::RPagePool::GetPage(RKey key, RClusterIndex clusterIndex)
 {
    std::lock_guard<std::mutex> lockGuard(fLock);
    unsigned int N = fPages.size();
    for (unsigned int i = 0; i < N; ++i) {
-      if (fPages[i].GetColumnId() != columnId) continue;
       if (fPageInfos[i].fRefCounter < 0)
          continue;
-      if (fPageInfos[i].fInMemoryType != inMemoryType)
+      if (fPageInfos[i].fKey != key)
          continue;
       if (!fPages[i].Contains(clusterIndex)) continue;
       fPageInfos[i].fRefCounter++;

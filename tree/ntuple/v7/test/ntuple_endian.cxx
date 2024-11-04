@@ -100,7 +100,8 @@ public:
    RPageRef LoadPage(ColumnHandle_t columnHandle, NTupleSize_t i) final
    {
       auto page = RPageSource::UnsealPage(fPages[i], fElement, columnHandle.fPhysicalId).Unwrap();
-      return fPagePool.RegisterPage(std::move(page), std::type_index(typeid(void)));
+      ROOT::Experimental::Internal::RPagePool::RKey key{columnHandle.fPhysicalId, std::type_index(typeid(void))};
+      return fPagePool.RegisterPage(std::move(page), key);
    }
    RPageRef LoadPage(ColumnHandle_t, ROOT::Experimental::RClusterIndex) final { return RPageRef(); }
    void LoadSealedPage(ROOT::Experimental::DescriptorId_t, ROOT::Experimental::RClusterIndex, RSealedPage &) final {}
