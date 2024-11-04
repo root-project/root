@@ -88,9 +88,6 @@ index 3ab4c8b3a1..ae0e31cac8 100644
          Utility::AddToClass(pyclass, "__str__", (PyCFunction)UTF8Str, METH_NOARGS);
      }
 +#endif
- 
-     // This pythonization is disabled for ROOT because it is a bit buggy
- #if 0
 -- 
 2.44.0
 

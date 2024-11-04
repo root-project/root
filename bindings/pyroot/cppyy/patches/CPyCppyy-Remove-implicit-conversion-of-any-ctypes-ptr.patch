@@ -1,0 +1,93 @@
+From 1ec1d647f8a67c22184b4401dd63b672fbde1490 Mon Sep 17 00:00:00 2001
+From: Jonas Rembser <jonas.rembser@cern.ch>
+Date: Mon, 4 Nov 2024 21:29:30 +0100
+Subject: [PATCH] [CPyCppyy] Remove implicit conversion of any ctypes ptr type
+ to `void*`
+
+The `IsCTypesArrayOrPointer` gives false positives in Python 3.13,
+resulting the void pointer converter to take the wrong code path and
+crash. See:
+https://github.com/wlav/cppyy/issues/272
+
+This code path is used for implicit conversion from other `ctypes`
+pointer types to `void*`, which is not strictly required. One can
+always do an explicit cast:  `ctypes.cast(my_ptr, ctypes.c_void_p )`.
+
+Given that this a niche feature that broke Python 3.13 support for
+functions taking `void*`, which is quite common, it can be argued that
+it's better to remove this implicit conversion.
+
+This commit fixes the following tests under Python 3.13:
+
+```
+roottest-python-basic-datatype
+roottest-python-cpp-cpp
+```
+
+This reverts the following commit from upstream:
+https://github.com/wlav/CPyCppyy/commit/80a0205f590394b88a583a296704356a9740606f
+---
+ .../pyroot/cppyy/CPyCppyy/src/Converters.cxx  | 33 -------------------
+ 1 file changed, 33 deletions(-)
+
+diff --git a/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx b/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx
+index 0a8bce3692..ea7e1abed2 100644
+--- a/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx
++++ b/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx
+@@ -203,24 +203,6 @@ static bool IsPyCArgObject(PyObject* pyobject)
+     return Py_TYPE(pyobject) == pycarg_type;
+ }
+ 
+-static bool IsCTypesArrayOrPointer(PyObject* pyobject)
+-{
+-    static PyTypeObject* cstgdict_type = nullptr;
+-    if (!cstgdict_type) {
+-    // get any pointer type to initialize the extended dictionary type
+-        PyTypeObject* ct_int = GetCTypesType(ct_c_int);
+-        if (ct_int && ct_int->tp_dict) {
+-            cstgdict_type = Py_TYPE(ct_int->tp_dict);
+-        }
+-    }
+-
+-    PyTypeObject* pytype = Py_TYPE(pyobject);
+-    if (pytype->tp_dict && Py_TYPE(pytype->tp_dict) == cstgdict_type)
+-        return true;
+-    return false;
+-}
+-
+-
+ //- helper to establish life lines -------------------------------------------
+ static inline bool SetLifeLine(PyObject* holder, PyObject* target, intptr_t ref)
+ {
+@@ -1506,16 +1488,6 @@ bool CPyCppyy::VoidArrayConverter::SetArg(
+         return true;
+     }
+ 
+-// allow any other ctypes pointer type
+-    if (IsCTypesArrayOrPointer(pyobject)) {
+-        void** payload = (void**)((CPyCppyy_tagCDataObject*)pyobject)->b_ptr;
+-        if (payload) {
+-            para.fValue.fVoidp = *payload;
+-            para.fTypeCode = 'p';
+-            return true;
+-        }
+-    }
+-
+ // final try: attempt to get buffer
+     Py_ssize_t buflen = Utility::GetBuffer(pyobject, '*', 1, para.fValue.fVoidp, false);
+ 
+@@ -1628,11 +1600,6 @@ bool CPyCppyy::name##ArrayConverter::SetArg(                                 \
+             para.fValue.fVoidp = (void*)((CPyCppyy_tagCDataObject*)pyobject)->b_ptr;\
+             para.fTypeCode = 'p';                                            \
+             convOk = true;                                                   \
+-        } else if (Py_TYPE(pyobject) == GetCTypesType(ct_c_void_p)) {        \
+-        /* special case: pass address of c_void_p buffer to return the address */\
+-            para.fValue.fVoidp = (void*)((CPyCppyy_tagCDataObject*)pyobject)->b_ptr;\
+-            para.fTypeCode = 'p';                                            \
+-            convOk = true;                                                   \
+         } else if (LowLevelView_Check(pyobject) &&                           \
+                 ((LowLevelView*)pyobject)->fBufInfo.ndim == 2 &&             \
+                 strchr(((LowLevelView*)pyobject)->fBufInfo.format, code)) {  \
+-- 
+2.47.0
+
