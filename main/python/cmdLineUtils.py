@@ -793,7 +793,8 @@ def _openBrowser(rootFile=None):
         print("Press ctrl+c to exit.")
         try:
             while True:
-                ROOT.gSystem.ProcessEvents()
+                if ROOT.gROOT.IsInterrupted() or ROOT.gSystem.ProcessEvents():
+                    break
                 sleep(0.01)
         except (KeyboardInterrupt, SystemExit):
             pass
