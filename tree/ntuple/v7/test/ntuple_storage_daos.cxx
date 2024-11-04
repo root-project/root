@@ -319,7 +319,7 @@ TEST_F(RPageStorageDaos, CagedPages)
 
       auto colType = desc->GetColumnDescriptor(colId).GetType();
       auto elem = ROOT::Experimental::Internal::RColumnElementBase::Generate<std::uint32_t>(colType);
-      auto page = pageSource->UnsealPage(sealedPage, *elem, colId).Unwrap();
+      auto page = pageSource->UnsealPage(sealedPage, *elem).Unwrap();
       EXPECT_GT(page.GetNElements(), 0);
       auto ptrData = static_cast<std::uint32_t *>(page.GetBuffer());
       for (std::uint32_t i = 0; i < page.GetNElements(); ++i) {

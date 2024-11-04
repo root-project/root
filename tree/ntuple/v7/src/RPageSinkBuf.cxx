@@ -188,7 +188,7 @@ void ROOT::Experimental::Internal::RPageSinkBuf::CommitPage(ColumnHandle_t colum
    }
 
    // TODO avoid frequent (de)allocations by holding on to allocated buffers in RColumnBuf
-   zipItem.fPage = fPageAllocator->NewPage(columnHandle.fPhysicalId, page.GetElementSize(), page.GetNElements());
+   zipItem.fPage = fPageAllocator->NewPage(page.GetElementSize(), page.GetNElements());
    // make sure the page is aware of how many elements it will have
    zipItem.fPage.GrowUnchecked(page.GetNElements());
    memcpy(zipItem.fPage.GetBuffer(), page.GetBuffer(), page.GetNBytes());

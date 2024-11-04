@@ -66,7 +66,6 @@ public:
    };
 
 private:
-   ColumnId_t fColumnId = kInvalidColumnId;
    void *fBuffer = nullptr;
    /// The allocator used to allocate fBuffer. Can be null if the buffer doesn't need to be freed.
    RPageAllocator *fPageAllocator = nullptr;
@@ -79,19 +78,14 @@ private:
 
 public:
    RPage() = default;
-   RPage(ColumnId_t columnId, void *buffer, RPageAllocator *pageAllocator, ClusterSize_t::ValueType elementSize,
+   RPage(void *buffer, RPageAllocator *pageAllocator, ClusterSize_t::ValueType elementSize,
          ClusterSize_t::ValueType maxElements)
-      : fColumnId(columnId),
-        fBuffer(buffer),
-        fPageAllocator(pageAllocator),
-        fElementSize(elementSize),
-        fMaxElements(maxElements)
+      : fBuffer(buffer), fPageAllocator(pageAllocator), fElementSize(elementSize), fMaxElements(maxElements)
    {}
    RPage(const RPage &) = delete;
    RPage &operator=(const RPage &) = delete;
    RPage(RPage &&other)
    {
-      fColumnId = other.fColumnId;
       fBuffer = other.fBuffer;
       fPageAllocator = other.fPageAllocator;
       fElementSize = other.fElementSize;
@@ -104,7 +98,6 @@ public:
    RPage &operator=(RPage &&other)
    {
       if (this != &other) {
-         std::swap(fColumnId, other.fColumnId);
          std::swap(fBuffer, other.fBuffer);
          std::swap(fPageAllocator, other.fPageAllocator);
          std::swap(fElementSize, other.fElementSize);
@@ -117,7 +110,6 @@ public:
    }
    ~RPage();
 
-   ColumnId_t GetColumnId() const { return fColumnId; }
    /// The space taken by column elements in the buffer
    std::size_t GetNBytes() const
    {
@@ -169,17 +161,16 @@ public:
    void Reset(NTupleSize_t rangeFirst) { fNElements = 0; fRangeFirst = rangeFirst; }
    void ResetCluster(const RClusterInfo &clusterInfo) { fNElements = 0; fClusterInfo = clusterInfo; }
 
-   /// Make a 'zero' page for column `columnId` (that is comprised of 0x00 bytes only). The caller is responsible for
+   /// Make a 'zero' page, which is comprised of 0x00 bytes only. The caller is responsible for
    /// invoking `GrowUnchecked()` and `SetWindow()` as appropriate.
-   static RPage MakePageZero(ColumnId_t columnId, ClusterSize_t::ValueType elementSize)
+   static RPage MakePageZero(ClusterSize_t::ValueType elementSize)
    {
-      return RPage{columnId, const_cast<void *>(GetPageZeroBuffer()), nullptr, elementSize,
+      return RPage{const_cast<void *>(GetPageZeroBuffer()), nullptr, elementSize,
                    /*maxElements=*/(kPageZeroSize / elementSize)};
    }
    /// Return a pointer to the page zero buffer used if there is no on-disk data for a particular deferred column
    static const void *GetPageZeroBuffer();
 
-   bool IsValid() const { return fColumnId != kInvalidColumnId; }
    bool IsNull() const { return fBuffer == nullptr; }
    bool IsEmpty() const { return fNElements == 0; }
    bool operator ==(const RPage &other) const { return fBuffer == other.fBuffer; }

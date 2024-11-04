@@ -724,7 +724,7 @@ public:
    /// currently always makes a memory copy, even if the sealed page is uncompressed and in the final memory layout.
    /// The optimization of directly mapping pages is left to the concrete page source implementations.
    RResult<RPage> static UnsealPage(const RSealedPage &sealedPage, const RColumnElementBase &element,
-                                    DescriptorId_t physicalColumnId, RPageAllocator &pageAlloc);
+                                    RPageAllocator &pageAlloc);
 
    EPageStorageType GetType() final { return EPageStorageType::kSource; }
    const RNTupleReadOptions &GetReadOptions() const { return fOptions; }
@@ -790,9 +790,7 @@ public:
    void UnzipCluster(RCluster *cluster);
 
    // TODO(gparolini): for symmetry with SealPage(), we should either make this private or SealPage() public.
-   RResult<RPage>
-   UnsealPage(const RSealedPage &sealedPage, const RColumnElementBase &element, DescriptorId_t physicalColumnId);
-
+   RResult<RPage> UnsealPage(const RSealedPage &sealedPage, const RColumnElementBase &element);
 }; // class RPageSource
 
 } // namespace Internal

@@ -4,7 +4,7 @@ TEST(Pages, Allocation)
 {
    RPageAllocatorHeap allocator;
 
-   auto page = allocator.NewPage(42, 4, 16);
+   auto page = allocator.NewPage(4, 16);
    EXPECT_FALSE(page.IsNull());
    EXPECT_EQ(16U, page.GetMaxElements());
    EXPECT_EQ(0U, page.GetNElements());
@@ -22,7 +22,7 @@ TEST(Pages, Pool)
    } // returning empty page should not crash
 
    RPage::RClusterInfo clusterInfo(2, 40);
-   auto page = allocator.NewPage(1, 1, 10);
+   auto page = allocator.NewPage(1, 10);
    page.GrowUnchecked(10);
    EXPECT_EQ(page.GetMaxElements(), page.GetNElements());
    page.SetWindow(50, clusterInfo);
