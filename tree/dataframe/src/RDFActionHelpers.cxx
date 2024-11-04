@@ -16,6 +16,24 @@ namespace ROOT {
 namespace Internal {
 namespace RDF {
 
+void ResetIfPossible(TStatistic *h)
+{
+   *h = TStatistic();
+}
+// cannot safely re-initialize variations of the result, hence error out
+void ResetIfPossible(...)
+{
+   throw std::runtime_error(
+      "A systematic variation was requested for a custom Fill action, but the type of the object to be filled does "
+      "not implement a Reset method, so we cannot safely re-initialize variations of the result. Aborting.");
+}
+
+void UnsetDirectoryIfPossible(TH1 *h)
+{
+   h->SetDirectory(nullptr);
+}
+void UnsetDirectoryIfPossible(...) {}
+
 CountHelper::CountHelper(const std::shared_ptr<ULong64_t> &resultCount, const unsigned int nSlots)
    : fResultCount(resultCount), fCounts(nSlots, 0)
 {
