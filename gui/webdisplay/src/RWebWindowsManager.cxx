@@ -939,6 +939,9 @@ void RWebWindowsManager::Terminate()
    if (fServer)
       fServer->SetTerminate();
 
+   // set flag which sometimes checked in TSystem::ProcessEvents
+   gROOT->SetInterrupt(kTRUE);
+
    if (gApplication)
       TTimer::SingleShot(100, "TApplication",  gApplication, "Terminate()");
 }
