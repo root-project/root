@@ -1033,13 +1033,12 @@ The limits refer to a single RNTuple and do not consider combinations/joins such
 
 ## Defaults
 
-This section summarizes default settings of
-[`RNTupleWriteOptions`](https://github.com/root-project/root/blob/96989396d03d17b877ecc3d7eb7293109d24e5cf/tree/ntuple/v7/inc/ROOT/RNTupleWriteOptions.hxx#L61-L75).
+This section summarizes default settings of `RNTupleWriteOptions`:
 
 | Default                                | Value                        |
 |----------------------------------------|------------------------------|
-| Approximate Zipped Cluster             | 50MB                         |
-| Max Unzipped Cluster                   | 500MB                        |
+| Approximate Zipped Cluster             | 100 MB                       |
+| Max Unzipped Cluster                   | 1 GiB                        |
 | Max Unzipped Page                      | 1 MiB                        |
 
 ## Glossary
