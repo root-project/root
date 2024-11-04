@@ -136,8 +136,6 @@ try {
 namespace {
 // Functor used to change the compression of a page to `options.fCompressionSettings`.
 struct RChangeCompressionFunc {
-   DescriptorId_t fOutputColumnId;
-
    const RColumnElementBase &fSrcColElement;
    const RColumnElementBase &fDstColElement;
    const RNTupleMergeOptions &fMergeOptions;
@@ -148,7 +146,7 @@ struct RChangeCompressionFunc {
 
    void operator()() const
    {
-      auto page = RPageSource::UnsealPage(fSealedPage, fSrcColElement, fOutputColumnId, fPageAlloc).Unwrap();
+      auto page = RPageSource::UnsealPage(fSealedPage, fSrcColElement, fPageAlloc).Unwrap();
       RPageSink::RSealPageConfig sealConf;
       sealConf.fElement = &fDstColElement;
       sealConf.fPage = &page;
@@ -546,8 +544,7 @@ void RNTupleMerger::MergeCommonColumns(RClusterPool &clusterPool, DescriptorId_t
             auto &buffer = sealedPageData.fBuffers[pageBufferBaseIdx + pageIdx];
             buffer = std::make_unique<std::uint8_t[]>(uncompressedSize + checksumSize);
             RChangeCompressionFunc compressTask{
-               column.fOutputId, *srcColElement, *dstColElement, mergeData.fMergeOpts,
-               sealedPage,       *fPageAlloc,    buffer.get(),
+               *srcColElement, *dstColElement, mergeData.fMergeOpts, sealedPage, *fPageAlloc, buffer.get(),
             };
 
             if (fTaskGroup)

@@ -424,7 +424,7 @@ ROOT::Experimental::Internal::RPageSourceFile::LoadPageImpl(ColumnHandle_t colum
    const auto elementInMemoryType = element->GetIdentifier().fInMemoryType;
 
    if (pageInfo.fLocator.fType == RNTupleLocator::kTypePageZero) {
-      auto pageZero = RPage::MakePageZero(columnId, elementSize);
+      auto pageZero = RPage::MakePageZero(elementSize);
       pageZero.GrowUnchecked(pageInfo.fNElements);
       pageZero.SetWindow(clusterInfo.fColumnOffset + pageInfo.fFirstInPage,
                          RPage::RClusterInfo(clusterId, clusterInfo.fColumnOffset));
@@ -467,7 +467,7 @@ ROOT::Experimental::Internal::RPageSourceFile::LoadPageImpl(ColumnHandle_t colum
    RPage newPage;
    {
       Detail::RNTupleAtomicTimer timer(fCounters->fTimeWallUnzip, fCounters->fTimeCpuUnzip);
-      newPage = UnsealPage(sealedPage, *element, columnId).Unwrap();
+      newPage = UnsealPage(sealedPage, *element).Unwrap();
       fCounters->fSzUnzip.Add(elementSize * pageInfo.fNElements);
    }
 

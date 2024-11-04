@@ -99,7 +99,7 @@ public:
 
    RPageRef LoadPage(ColumnHandle_t columnHandle, NTupleSize_t i) final
    {
-      auto page = RPageSource::UnsealPage(fPages[i], fElement, columnHandle.fPhysicalId).Unwrap();
+      auto page = RPageSource::UnsealPage(fPages[i], fElement).Unwrap();
       ROOT::Experimental::Internal::RPagePool::RKey key{columnHandle.fPhysicalId, std::type_index(typeid(void))};
       return fPagePool.RegisterPage(std::move(page), key);
    }
@@ -120,7 +120,7 @@ TEST(RColumnElementEndian, ByteCopy)
    RPageSinkMock sink1(element);
    unsigned char buf1[] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
                            0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f};
-   RPage page1(0, buf1, nullptr, 4, 4);
+   RPage page1(buf1, nullptr, 4, 4);
    page1.GrowUnchecked(4);
    sink1.CommitPage(RPageStorage::ColumnHandle_t{}, page1);
 
@@ -146,7 +146,7 @@ TEST(RColumnElementEndian, Cast)
    unsigned char buf1[] = {0x00, 0x01, 0x02, 0x03, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
                            0x07, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x08, 0x09,
                            0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x0c, 0x0d, 0x0e, 0x0f};
-   RPage page1(0, buf1, nullptr, 8, 4);
+   RPage page1(buf1, nullptr, 8, 4);
    page1.GrowUnchecked(4);
    sink1.CommitPage(RPageStorage::ColumnHandle_t{}, page1);
 
@@ -172,7 +172,7 @@ TEST(RColumnElementEndian, Split)
    RPageSinkMock sink1(splitElement);
    unsigned char buf1[] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
                            0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f};
-   RPage page1(0, buf1, nullptr, 8, 2);
+   RPage page1(buf1, nullptr, 8, 2);
    page1.GrowUnchecked(2);
    sink1.CommitPage(RPageStorage::ColumnHandle_t{}, page1);
 
@@ -200,7 +200,7 @@ TEST(RColumnElementEndian, DeltaSplit)
    unsigned char buf1[] = {0x00, 0x01, 0x02, 0x03, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
                            0x07, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x08, 0x09,
                            0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x0c, 0x0d, 0x0e, 0x0f};
-   RPage page1(0, buf1, nullptr, 8, 4);
+   RPage page1(buf1, nullptr, 8, 4);
    page1.GrowUnchecked(4);
    sink1.CommitPage(RPageStorage::ColumnHandle_t{}, page1);
 
@@ -227,7 +227,7 @@ TEST(RColumnElementEndian, Real32Trunc)
    RPageSinkMock sink1(element);
    unsigned char buf1[] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
                            0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f};
-   RPage page1(0, buf1, nullptr, sizeof(float), 4);
+   RPage page1(buf1, nullptr, sizeof(float), 4);
    page1.GrowUnchecked(4);
    sink1.CommitPage(RPageStorage::ColumnHandle_t{}, page1);
 
