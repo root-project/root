@@ -26,8 +26,10 @@ ROOT::Experimental::Internal::RPagePool::RegisterPage(RPage page, std::type_inde
 {
    std::lock_guard<std::mutex> lockGuard(fLock);
    fPages.emplace_back(std::move(page));
-   fPageInfos.emplace_back(RPageInfo{inMemoryType});
-   fReferences.emplace_back(1);
+   RPageInfo pageInfo;
+   pageInfo.fInMemoryType = inMemoryType;
+   pageInfo.fRefCounter = 1;
+   fPageInfos.emplace_back(pageInfo);
    return RPageRef(page, this);
 }
 
@@ -35,8 +37,10 @@ void ROOT::Experimental::Internal::RPagePool::PreloadPage(RPage page, std::type_
 {
    std::lock_guard<std::mutex> lockGuard(fLock);
    fPages.emplace_back(std::move(page));
-   fPageInfos.emplace_back(RPageInfo{inMemoryType});
-   fReferences.emplace_back(0);
+   RPageInfo pageInfo;
+   pageInfo.fInMemoryType = inMemoryType;
+   pageInfo.fRefCounter = 0;
+   fPageInfos.emplace_back(pageInfo);
 }
 
 void ROOT::Experimental::Internal::RPagePool::ReleasePage(const RPage &page)
@@ -48,13 +52,11 @@ void ROOT::Experimental::Internal::RPagePool::ReleasePage(const RPage &page)
    for (unsigned i = 0; i < N; ++i) {
       if (fPages[i] != page) continue;
 
-      if (--fReferences[i] == 0) {
+      if (--fPageInfos[i].fRefCounter == 0) {
          fPages[i] = std::move(fPages[N - 1]);
          fPageInfos[i] = fPageInfos[N - 1];
-         fReferences[i] = fReferences[N - 1];
          fPages.resize(N - 1);
          fPageInfos.resize(N - 1);
-         fReferences.resize(N - 1);
       }
       return;
    }
@@ -68,12 +70,13 @@ ROOT::Experimental::Internal::RPageRef ROOT::Experimental::Internal::RPagePool::
    std::lock_guard<std::mutex> lockGuard(fLock);
    unsigned int N = fPages.size();
    for (unsigned int i = 0; i < N; ++i) {
-      if (fReferences[i] < 0) continue;
       if (fPages[i].GetColumnId() != columnId) continue;
+      if (fPageInfos[i].fRefCounter < 0)
+         continue;
       if (fPageInfos[i].fInMemoryType != inMemoryType)
          continue;
       if (!fPages[i].Contains(globalIndex)) continue;
-      fReferences[i]++;
+      fPageInfos[i].fRefCounter++;
       return RPageRef(fPages[i], this);
    }
    return RPageRef();
@@ -86,12 +89,13 @@ ROOT::Experimental::Internal::RPageRef ROOT::Experimental::Internal::RPagePool::
    std::lock_guard<std::mutex> lockGuard(fLock);
    unsigned int N = fPages.size();
    for (unsigned int i = 0; i < N; ++i) {
-      if (fReferences[i] < 0) continue;
       if (fPages[i].GetColumnId() != columnId) continue;
+      if (fPageInfos[i].fRefCounter < 0)
+         continue;
       if (fPageInfos[i].fInMemoryType != inMemoryType)
          continue;
       if (!fPages[i].Contains(clusterIndex)) continue;
-      fReferences[i]++;
+      fPageInfos[i].fRefCounter++;
       return RPageRef(fPages[i], this);
    }
    return RPageRef();

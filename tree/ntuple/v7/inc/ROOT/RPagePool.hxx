@@ -48,6 +48,7 @@ class RPagePool {
    // TODO(jblomer): move column ID from RPage to this struct
    struct RPageInfo {
       std::type_index fInMemoryType = std::type_index(typeid(void));
+      std::int32_t fRefCounter = 0;
    };
 
    /// TODO(jblomer): should be an efficient index structure that allows
@@ -56,7 +57,6 @@ class RPagePool {
    ///   - searching by page
    std::vector<RPage> fPages;
    std::vector<RPageInfo> fPageInfos;
-   std::vector<std::int32_t> fReferences;
    std::mutex fLock;
 
    /// Give back a page to the pool and decrease the reference counter. There must not be any pointers anymore into
