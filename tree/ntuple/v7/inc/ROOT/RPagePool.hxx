@@ -22,6 +22,8 @@
 
 #include <cstddef>
 #include <mutex>
+#include <typeindex>
+#include <typeinfo>
 #include <vector>
 
 namespace ROOT {
@@ -43,11 +45,17 @@ Page sources also use the page pool to stage (preload) pages unsealed by IMT tas
 class RPagePool {
    friend class RPageRef;
 
+   // TODO(jblomer): move column ID from RPage to this struct
+   struct RPageInfo {
+      std::type_index fInMemoryType = std::type_index(typeid(void));
+   };
+
    /// TODO(jblomer): should be an efficient index structure that allows
    ///   - random insert
    ///   - random delete
    ///   - searching by page
    std::vector<RPage> fPages;
+   std::vector<RPageInfo> fPageInfos;
    std::vector<std::int32_t> fReferences;
    std::mutex fLock;
 
@@ -64,13 +72,13 @@ public:
 
    /// Adds a new page to the pool. Upon registration, the page pool takes ownership of the page's memory.
    /// The new page has its reference counter set to 1.
-   RPageRef RegisterPage(RPage page);
+   RPageRef RegisterPage(RPage page, std::type_index inMemoryType);
    /// Like RegisterPage() but the reference counter is initialized to 0
-   void PreloadPage(RPage page);
+   void PreloadPage(RPage page, std::type_index inMemoryType);
    /// Tries to find the page corresponding to column and index in the cache. If the page is found, its reference
    /// counter is increased
-   RPageRef GetPage(ColumnId_t columnId, NTupleSize_t globalIndex);
-   RPageRef GetPage(ColumnId_t columnId, RClusterIndex clusterIndex);
+   RPageRef GetPage(ColumnId_t columnId, std::type_index inMemoryType, NTupleSize_t globalIndex);
+   RPageRef GetPage(ColumnId_t columnId, std::type_index inMemoryType, RClusterIndex clusterIndex);
 };
 
 // clang-format off
