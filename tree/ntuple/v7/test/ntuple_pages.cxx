@@ -17,7 +17,7 @@ TEST(Pages, Pool)
    RPagePool pool;
 
    {
-      auto pageRef = pool.GetPage(0, 0);
+      auto pageRef = pool.GetPage(0, std::type_index(typeid(void)), 0);
       EXPECT_TRUE(pageRef.Get().IsNull());
    } // returning empty page should not crash
 
@@ -29,26 +29,30 @@ TEST(Pages, Pool)
    EXPECT_FALSE(page.IsNull());
 
    {
-      auto registeredPage = pool.RegisterPage(std::move(page));
+      auto registeredPage = pool.RegisterPage(std::move(page), std::type_index(typeid(void)));
 
       {
-         auto pageRef = pool.GetPage(0, 0);
+         auto pageRef = pool.GetPage(0, std::type_index(typeid(void)), 0);
          EXPECT_TRUE(pageRef.Get().IsNull());
-         pageRef = pool.GetPage(0, 55);
+         pageRef = pool.GetPage(0, std::type_index(typeid(void)), 55);
          EXPECT_TRUE(pageRef.Get().IsNull());
-         pageRef = pool.GetPage(1, 55);
+         pageRef = pool.GetPage(1, std::type_index(typeid(int)), 55);
+         EXPECT_TRUE(pageRef.Get().IsNull());
+         pageRef = pool.GetPage(1, std::type_index(typeid(void)), 55);
          EXPECT_FALSE(pageRef.Get().IsNull());
          EXPECT_EQ(50U, pageRef.Get().GetGlobalRangeFirst());
          EXPECT_EQ(59U, pageRef.Get().GetGlobalRangeLast());
          EXPECT_EQ(10U, pageRef.Get().GetClusterRangeFirst());
          EXPECT_EQ(19U, pageRef.Get().GetClusterRangeLast());
 
-         auto pageRef2 = pool.GetPage(1, ROOT::Experimental::RClusterIndex(0, 15));
+         auto pageRef2 = pool.GetPage(1, std::type_index(typeid(void)), ROOT::Experimental::RClusterIndex(0, 15));
          EXPECT_TRUE(pageRef2.Get().IsNull());
-         pageRef2 = pool.GetPage(1, ROOT::Experimental::RClusterIndex(2, 15));
+         pageRef2 = pool.GetPage(1, std::type_index(typeid(int)), ROOT::Experimental::RClusterIndex(2, 15));
+         EXPECT_TRUE(pageRef2.Get().IsNull());
+         pageRef2 = pool.GetPage(1, std::type_index(typeid(void)), ROOT::Experimental::RClusterIndex(2, 15));
          EXPECT_FALSE(pageRef2.Get().IsNull());
       }
    }
-   auto pageRef = pool.GetPage(1, 55);
+   auto pageRef = pool.GetPage(1, std::type_index(typeid(void)), 55);
    EXPECT_TRUE(pageRef.Get().IsNull());
 }
