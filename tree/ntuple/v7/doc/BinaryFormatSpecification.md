@@ -1031,6 +1031,18 @@ The limits refer to a single RNTuple and do not consider combinations/joins such
 | Maximum string length (meta-data)              | 4GB                          | String encoding                                        |
 | Maximum RBlob size                             | 128 PiB                      | 1GiB / 8B * 1GiB (with maxKeySize=1GiB, offsetSize=8B) |
 
+## Naming specification
+
+The name of an RNTuple as well as the name of a field cannot be represented with an empty string when persistified (e.g.
+when written to disk). Furthermore, the allowed character set is restricted to Unicode characters encoded as UTF-8,
+with the following exceptions:
+
+* All control codes. These notably include newline (U+000A) and horizontal tab (U+0009).
+* Full stop (U+002E '&#46;')
+* Space (U+0020 '&#32;')
+* Backslash (U+005C '&#92;')
+* Slash (U+002F '&#47;')
+
 ## Defaults
 
 This section summarizes default settings of `RNTupleWriteOptions`.
