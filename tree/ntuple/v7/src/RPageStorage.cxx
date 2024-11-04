@@ -283,7 +283,8 @@ void ROOT::Experimental::Internal::RPageSource::UnzipClusterImpl(RCluster *clust
                fCounters->fSzUnzip.Add(element->GetSize() * sealedPage.GetNElements());
 
                newPage.SetWindow(indexOffset + firstInPage, RPage::RClusterInfo(clusterId, indexOffset));
-               fPagePool.PreloadPage(std::move(newPage), element->GetIdentifier().fInMemoryType);
+               fPagePool.PreloadPage(std::move(newPage),
+                                     RPagePool::RKey{columnId, element->GetIdentifier().fInMemoryType});
             };
 
             fTaskScheduler->AddTask(taskFunc);
@@ -334,7 +335,7 @@ ROOT::Experimental::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle,
 {
    const auto columnId = columnHandle.fPhysicalId;
    const auto columnElementId = columnHandle.fColumn->GetElement()->GetIdentifier();
-   auto cachedPageRef = fPagePool.GetPage(columnId, columnElementId.fInMemoryType, globalIndex);
+   auto cachedPageRef = fPagePool.GetPage(RPagePool::RKey{columnId, columnElementId.fInMemoryType}, globalIndex);
    if (!cachedPageRef.Get().IsNull())
       return cachedPageRef;
 
@@ -371,7 +372,7 @@ ROOT::Experimental::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle,
    const auto idxInCluster = clusterIndex.GetIndex();
    const auto columnId = columnHandle.fPhysicalId;
    const auto columnElementId = columnHandle.fColumn->GetElement()->GetIdentifier();
-   auto cachedPageRef = fPagePool.GetPage(columnId, columnElementId.fInMemoryType, clusterIndex);
+   auto cachedPageRef = fPagePool.GetPage(RPagePool::RKey{columnId, columnElementId.fInMemoryType}, clusterIndex);
    if (!cachedPageRef.Get().IsNull())
       return cachedPageRef;
 

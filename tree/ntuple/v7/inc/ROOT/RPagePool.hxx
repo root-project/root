@@ -45,9 +45,25 @@ Page sources also use the page pool to stage (preload) pages unsealed by IMT tas
 class RPagePool {
    friend class RPageRef;
 
+public:
+   // Search key for a set of pages covering the same column and in-memory target type.
+   // Within the set of pages, one needs to find the page of a given index.
+   struct RKey {
+      DescriptorId_t fColumnId = kInvalidDescriptorId;
+      std::type_index fInMemoryType = std::type_index(typeid(void));
+
+      bool operator==(const RKey &other) const
+      {
+         return this->fColumnId == other.fColumnId && this->fInMemoryType == other.fInMemoryType;
+      }
+
+      bool operator!=(const RKey &other) const { return !(*this == other); }
+   };
+
+private:
    // TODO(jblomer): move column ID from RPage to this struct
    struct RPageInfo {
-      std::type_index fInMemoryType = std::type_index(typeid(void));
+      RKey fKey;
       std::int32_t fRefCounter = 0;
    };
 
@@ -72,13 +88,13 @@ public:
 
    /// Adds a new page to the pool. Upon registration, the page pool takes ownership of the page's memory.
    /// The new page has its reference counter set to 1.
-   RPageRef RegisterPage(RPage page, std::type_index inMemoryType);
+   RPageRef RegisterPage(RPage page, RKey key);
    /// Like RegisterPage() but the reference counter is initialized to 0
-   void PreloadPage(RPage page, std::type_index inMemoryType);
+   void PreloadPage(RPage page, RKey key);
    /// Tries to find the page corresponding to column and index in the cache. If the page is found, its reference
    /// counter is increased
-   RPageRef GetPage(ColumnId_t columnId, std::type_index inMemoryType, NTupleSize_t globalIndex);
-   RPageRef GetPage(ColumnId_t columnId, std::type_index inMemoryType, RClusterIndex clusterIndex);
+   RPageRef GetPage(RKey key, NTupleSize_t globalIndex);
+   RPageRef GetPage(RKey key, RClusterIndex clusterIndex);
 };
 
 // clang-format off
