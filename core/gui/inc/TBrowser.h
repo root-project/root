@@ -92,6 +92,7 @@ public:
    void          BrowseObject(TObject *obj)    { if (fImp) fImp->BrowseObj(obj); }
    void          ExecuteDefaultAction(TObject *obj);
    TBrowserImp  *GetBrowserImp() const         { return fImp; }
+   Bool_t        IsWeb() const                 { return fImp ? fImp->IsWeb() : kFALSE; }
    void          SetBrowserImp(TBrowserImp *i) { fImp = i; }
    TContextMenu *GetContextMenu() const        { return fContextMenu; }
    Bool_t        GetRefreshFlag() const        { return fNeedRefresh; }
