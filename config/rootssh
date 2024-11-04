@@ -154,7 +154,7 @@ else
    fi
 
    ssh -t -R $listener_remote:$listener_local -L $localport:$root_socket $ssh_destination $ssh_args \
-   "chmod 0700 $listener_remote; export ROOT_LISTENER_SOCKET=$listener_remote; export ROOT_WEBGUI_SOCKET=$root_socket; $ssh_command; rm -f $listener_remote $root_socket"
+   "chmod 0700 $listener_remote; export ROOT_WEBDISPLAY=server; export ROOT_LISTENER_SOCKET=$listener_remote; export ROOT_WEBGUI_SOCKET=$root_socket; $ssh_command; rm -f $listener_remote $root_socket"
 
    # try to stop listener with "stop" message
 
