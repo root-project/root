@@ -604,7 +604,7 @@ ROOT::Experimental::Internal::RPageSourceDaos::LoadPageImpl(ColumnHandle_t colum
       pageZero.GrowUnchecked(pageInfo.fNElements);
       pageZero.SetWindow(clusterInfo.fColumnOffset + pageInfo.fFirstInPage,
                          RPage::RClusterInfo(clusterId, clusterInfo.fColumnOffset));
-      return fPagePool.RegisterPage(std::move(pageZero), elementInMemoryType);
+      return fPagePool.RegisterPage(std::move(pageZero), RPagePool::RKey{columnId, elementInMemoryType});
    }
 
    RSealedPage sealedPage;
@@ -633,7 +633,8 @@ ROOT::Experimental::Internal::RPageSourceDaos::LoadPageImpl(ColumnHandle_t colum
          fCurrentCluster = fClusterPool->GetCluster(clusterId, fActivePhysicalColumns.ToColumnSet());
       R__ASSERT(fCurrentCluster->ContainsColumn(columnId));
 
-      auto cachedPageRef = fPagePool.GetPage(columnId, elementInMemoryType, RClusterIndex(clusterId, idxInCluster));
+      auto cachedPageRef =
+         fPagePool.GetPage(RPagePool::RKey{columnId, elementInMemoryType}, RClusterIndex(clusterId, idxInCluster));
       if (!cachedPageRef.Get().IsNull())
          return cachedPageRef;
 
@@ -653,7 +654,7 @@ ROOT::Experimental::Internal::RPageSourceDaos::LoadPageImpl(ColumnHandle_t colum
    newPage.SetWindow(clusterInfo.fColumnOffset + pageInfo.fFirstInPage,
                      RPage::RClusterInfo(clusterId, clusterInfo.fColumnOffset));
    fCounters->fNPageUnsealed.Inc();
-   return fPagePool.RegisterPage(std::move(newPage), elementInMemoryType);
+   return fPagePool.RegisterPage(std::move(newPage), RPagePool::RKey{columnId, elementInMemoryType});
 }
 
 std::unique_ptr<ROOT::Experimental::Internal::RPageSource>
