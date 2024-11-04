@@ -169,11 +169,11 @@ ROOT::Experimental::Internal::RPageSourceFriends::LoadPage(ColumnHandle_t column
 
    auto pageRef = fSources[originColumnId.fSourceIdx]->LoadPage(columnHandle, globalIndex);
    // Suppressed column
-   if (!pageRef.Get().IsValid())
+   if (pageRef.Get().IsNull())
       return RPageRef();
 
    auto virtualClusterId = fIdBiMap.GetVirtualId({originColumnId.fSourceIdx, pageRef.Get().GetClusterInfo().GetId()});
-   pageRef.ChangeIds(virtualColumnId, virtualClusterId);
+   pageRef.ChangeClusterId(virtualClusterId);
 
    return pageRef;
 }
@@ -188,10 +188,10 @@ ROOT::Experimental::Internal::RPageSourceFriends::LoadPage(ColumnHandle_t column
 
    auto pageRef = fSources[originColumnId.fSourceIdx]->LoadPage(columnHandle, originClusterIndex);
    // Suppressed column
-   if (!pageRef.Get().IsValid())
+   if (pageRef.Get().IsNull())
       return RPageRef();
 
-   pageRef.ChangeIds(virtualColumnId, clusterIndex.GetClusterId());
+   pageRef.ChangeClusterId(clusterIndex.GetClusterId());
    return pageRef;
 }
 

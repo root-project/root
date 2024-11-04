@@ -50,7 +50,7 @@ public:
 
    /// Reserves memory large enough to hold nElements of the given size. The page is immediately tagged with
    /// a column id. Returns a default constructed page on out-of-memory condition.
-   virtual RPage NewPage(ColumnId_t columnId, std::size_t elementSize, std::size_t nElements) = 0;
+   virtual RPage NewPage(std::size_t elementSize, std::size_t nElements) = 0;
 };
 
 // clang-format off
@@ -65,7 +65,7 @@ protected:
    void DeletePage(RPage &page) final;
 
 public:
-   RPage NewPage(ColumnId_t columnId, std::size_t elementSize, std::size_t nElements) final;
+   RPage NewPage(std::size_t elementSize, std::size_t nElements) final;
 };
 
 } // namespace Internal

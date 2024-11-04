@@ -88,7 +88,7 @@ bool ROOT::Experimental::Internal::RColumn::TryMapPage(NTupleSize_t globalIndex)
    std::size_t iTeam = 1;
    do {
       fReadPageRef = fPageSource->LoadPage(fTeam.at(fLastGoodTeamIdx)->GetHandleSource(), globalIndex);
-      if (fReadPageRef.Get().IsValid())
+      if (!fReadPageRef.Get().IsNull())
          break;
       fLastGoodTeamIdx = (fLastGoodTeamIdx + 1) % nTeam;
       iTeam++;
@@ -103,7 +103,7 @@ bool ROOT::Experimental::Internal::RColumn::TryMapPage(RClusterIndex clusterInde
    std::size_t iTeam = 1;
    do {
       fReadPageRef = fPageSource->LoadPage(fTeam.at(fLastGoodTeamIdx)->GetHandleSource(), clusterIndex);
-      if (fReadPageRef.Get().IsValid())
+      if (!fReadPageRef.Get().IsNull())
          break;
       fLastGoodTeamIdx = (fLastGoodTeamIdx + 1) % nTeam;
       iTeam++;

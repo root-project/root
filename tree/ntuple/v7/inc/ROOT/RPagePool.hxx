@@ -61,7 +61,6 @@ public:
    };
 
 private:
-   // TODO(jblomer): move column ID from RPage to this struct
    struct RPageInfo {
       RKey fKey;
       std::int32_t fRefCounter = 0;
@@ -116,7 +115,6 @@ class RPageRef {
    RPageRef(const RPage &page, RPagePool *pagePool) : fPagePool(pagePool)
    {
       // We leave the fPage::fPageAllocator member unset (nullptr), since fPage is a non-owning view on the page
-      fPage.fColumnId = page.fColumnId;
       fPage.fBuffer = page.fBuffer;
       fPage.fElementSize = page.fElementSize;
       fPage.fNElements = page.fNElements;
@@ -147,10 +145,9 @@ public:
          fPagePool->ReleasePage(fPage);
    }
 
-   /// Used by the friend virtual page source to map the physical column and cluster IDs to ther virtual counterparts
-   void ChangeIds(DescriptorId_t columnId, DescriptorId_t clusterId)
+   /// Used by the friend virtual page source to map the cluster ID to its virtual counterpart
+   void ChangeClusterId(DescriptorId_t clusterId)
    {
-      fPage.fColumnId = columnId;
       fPage.fClusterInfo = RPage::RClusterInfo(clusterId, fPage.fClusterInfo.GetIndexOffset());
    }
 

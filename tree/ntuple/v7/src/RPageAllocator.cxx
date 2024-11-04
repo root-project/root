@@ -20,14 +20,13 @@
 
 #include <algorithm>
 
-ROOT::Experimental::Internal::RPage ROOT::Experimental::Internal::RPageAllocatorHeap::NewPage(ColumnId_t columnId,
-                                                                                              std::size_t elementSize,
-                                                                                              std::size_t nElements)
+ROOT::Experimental::Internal::RPage
+ROOT::Experimental::Internal::RPageAllocatorHeap::NewPage(std::size_t elementSize, std::size_t nElements)
 {
    R__ASSERT((elementSize > 0) && (nElements > 0));
    auto nbytes = elementSize * nElements;
    auto buffer = new unsigned char[nbytes];
-   return RPage(columnId, buffer, this, elementSize, nElements);
+   return RPage(buffer, this, elementSize, nElements);
 }
 
 void ROOT::Experimental::Internal::RPageAllocatorHeap::DeletePage(RPage &page)
