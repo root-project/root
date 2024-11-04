@@ -789,7 +789,7 @@ REPLACE_HELP = "replace object if already existing"
 
 def _openBrowser(rootFile=None):
     browser = ROOT.TBrowser()
-    if ROOT.gSystem.InheritsFrom("TMacOSXSystem") or ROOT.gEnv.GetValue("Browser.Name", "") == "ROOT::RWebBrowserImp":
+    if ROOT.gSystem.InheritsFrom("TMacOSXSystem") or browser.IsWeb():
         print("Press ctrl+c to exit.")
         try:
             while True:
