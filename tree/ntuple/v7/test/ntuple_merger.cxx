@@ -521,10 +521,10 @@ TEST(RNTupleMerger, MergeInconsistentTypes)
    FileRaii fileGuard1("test_ntuple_merge_in_1.root");
    {
       auto model = RNTupleModel::Create();
-      auto fieldFoo = model->MakeField<int>("foo", 0);
+      auto fieldFoo = model->MakeField<std::string>("foo", "0");
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath());
       for (size_t i = 0; i < 10; ++i) {
-         *fieldFoo = i * 123;
+         *fieldFoo = std::to_string(i * 123);
          ntuple->Fill();
       }
    }
@@ -1068,5 +1068,67 @@ TEST(RNTupleMerger, MergeCompression)
       fileMerger.Merge();
 
       EXPECT_TRUE(VerifyPageCompression(fileGuard4.GetPath(), PageCompCheckType::kZlib));
+   }
+}
+
+TEST(RNTupleMerger, DifferentCompatibleRepresentations)
+{
+   // Verify that we can merge two RNTuples with fields that have different, but compatible, column representations.
+   FileRaii fileGuard1("test_ntuple_merge_diff_rep_in_1.root");
+
+   auto model = RNTupleModel::Create();
+   auto pFoo = model->MakeField<double>("foo", 0);
+   auto clonedModel = model->Clone();
+   {
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath());
+      for (size_t i = 0; i < 10; ++i) {
+         *pFoo = i * 123;
+         ntuple->Fill();
+      }
+   }
+
+   FileRaii fileGuard2("test_ntuple_merge_diff_rep_in_2.root");
+
+   {
+      auto &fieldFooDbl = clonedModel->GetMutableField("foo");
+      fieldFooDbl.SetColumnRepresentatives({{ EColumnType::kReal32 }});
+      auto ntuple = RNTupleWriter::Recreate(std::move(clonedModel), "ntuple", fileGuard2.GetPath());
+      auto e = ntuple->CreateEntry();
+      auto pFoo = e->GetPtr<double>("foo");
+      for (size_t i = 0; i < 10; ++i) {
+         *pFoo = i * 567;
+         ntuple->Fill();
+      }
+   }
+
+   // Now merge the inputs
+   FileRaii fileGuard3("test_ntuple_merge_diff_rep_out1.root");
+   FileRaii fileGuard4("test_ntuple_merge_diff_rep_out2.root");
+   {
+      // Gather the input sources
+      std::vector<std::unique_ptr<RPageSource>> sources;
+      sources.push_back(RPageSource::Create("ntuple", fileGuard1.GetPath()));
+      sources.push_back(RPageSource::Create("ntuple", fileGuard2.GetPath()));
+      std::vector<RPageSource *> sourcePtrs;
+      for (const auto &s : sources) {
+         sourcePtrs.push_back(s.get());
+      }
+
+      auto sourcePtrs2 = sourcePtrs;
+      
+      // Now Merge the inputs. Do both with and without compression change
+      RNTupleMerger merger;
+      {
+         auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuard3.GetPath(), RNTupleWriteOptions());
+         auto opts = RNTupleMergeOptions();
+         opts.fCompressionSettings = 0;
+         auto res = merger.Merge(sourcePtrs, *destination, opts);
+         EXPECT_TRUE(bool(res));
+      }
+      {
+         auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuard4.GetPath(), RNTupleWriteOptions());
+         auto res = merger.Merge(sourcePtrs, *destination);
+         EXPECT_TRUE(bool(res));
+      }
    }
 }

@@ -49,7 +49,7 @@ enum class ENTupleMergeErrBehavior {
    kSkip
 };
 
-struct RColumnInfo;
+struct RColumnMergeInfo;
 struct RNTupleMergeData;
 struct RSealedPageMergeData;
 
@@ -80,12 +80,12 @@ class RNTupleMerger final {
    std::unique_ptr<RPageAllocator> fPageAlloc;
    std::optional<TTaskGroup> fTaskGroup;
 
-   void MergeCommonColumns(RClusterPool &clusterPool, DescriptorId_t clusterId, std::span<RColumnInfo> commonColumns,
-                           RCluster::ColumnSet_t commonColumnSet, RSealedPageMergeData &sealedPageData,
-                           const RNTupleMergeData &mergeData);
+   void MergeCommonColumns(RClusterPool &clusterPool, DescriptorId_t clusterId,
+                           std::span<RColumnMergeInfo> commonColumns, RCluster::ColumnSet_t commonColumnSet,
+                           RSealedPageMergeData &sealedPageData, const RNTupleMergeData &mergeData);
 
-   void MergeSourceClusters(RPageSource &source, std::span<RColumnInfo> commonColumns,
-                            std::span<RColumnInfo> extraDstColumns, RNTupleMergeData &mergeData);
+   void MergeSourceClusters(RPageSource &source, std::span<RColumnMergeInfo> commonColumns,
+                            std::span<RColumnMergeInfo> extraDstColumns, RNTupleMergeData &mergeData);
 
 public:
    RNTupleMerger();
