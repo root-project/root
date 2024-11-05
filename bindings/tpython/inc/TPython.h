@@ -20,16 +20,15 @@
 //                                                                          //
 //////////////////////////////////////////////////////////////////////////////
 
-// Bindings
-#include "TPyReturn.h"
-
 // ROOT
 #include "TObject.h"
 
-#include "ROOT/RConfig.hxx" // R__DEPRECATED
-
 #include <any>
 #include <cstdint>
+
+// Python
+struct _object;
+typedef _object PyObject;
 
 namespace ROOT {
 namespace Internal {
@@ -58,9 +57,6 @@ public:
 
    // execute a python statement (e.g. "import ROOT" )
    static Bool_t Exec(const char *cmd, std::any *result = nullptr, std::string const& resultName="_anyresult");
-
-   // evaluate a python expression (e.g. "1+1")
-   static const TPyReturn Eval(const char *expr) R__DEPRECATED(6,36, "Use TPython::Exec() with an std::any output parameter instead.");
 
    // bind a ROOT object with, at the python side, the name "label"
    static Bool_t Bind(TObject *object, const char *label);
