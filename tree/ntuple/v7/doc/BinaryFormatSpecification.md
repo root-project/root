@@ -1031,6 +1031,16 @@ The limits refer to a single RNTuple and do not consider combinations/joins such
 | Maximum string length (meta-data)              | 4GB                          | String encoding                                        |
 | Maximum RBlob size                             | 128 PiB                      | 1GiB / 8B * 1GiB (with maxKeySize=1GiB, offsetSize=8B) |
 
+## Defaults
+
+This section summarizes default settings of `RNTupleWriteOptions`.
+
+| Default                                | Value                        |
+|----------------------------------------|------------------------------|
+| Approximate Zipped Cluster             | 100 MB                       |
+| Max Unzipped Cluster                   | 1 GiB                        |
+| Max Unzipped Page                      | 1 MiB                        |
+
 ## Glossary
 
 ### Anchor
