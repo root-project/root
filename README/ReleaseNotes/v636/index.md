@@ -14,6 +14,8 @@ The following people have contributed to this new version:
 
 ## Deprecation and Removal
 
+* The RooFit legacy interfaces that were deprecated in ROOT 6.34 and scheduled for removal in ROOT 6.36 are removed. See the RooFit section in the 6.34 release notes for a full list.
+
 ## Python Interface
 
 ## RDataFrame

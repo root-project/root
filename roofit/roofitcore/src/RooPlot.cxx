@@ -106,23 +106,6 @@ RooPlot::RooPlot(double xmin, double xmax, int nBins)
 
 }
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Construct of a two-dimensional RooPlot with ranges [xmin,xmax] x [ymin,ymax]
-
-RooPlot::RooPlot(double xmin, double xmax, double ymin, double ymax) :
-  _defYmax(0)
-{
-  _hist = new TH1D(histName(),"A RooPlot",100,xmin,xmax) ;
-  _hist->Sumw2(false) ;
-  _hist->GetSumw2()->Set(0) ;
-  _hist->SetDirectory(nullptr);
-
-  SetMinimum(ymin);
-  SetMaximum(ymax);
-  initialize();
-}
-
 namespace {
 
 const RooAbsRealLValue& validateFiniteLimits(const RooAbsRealLValue &var)
@@ -166,29 +149,6 @@ RooPlot::RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2, dou
    SetMaximum(ymax);
    SetXTitle(var1.getTitle(true));
    SetYTitle(var2.getTitle(true));
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Create an 1-dimensional with all properties taken from 'var', but
-/// with an explicit range [xmin,xmax] and a default binning of 'nbins'
-
-RooPlot::RooPlot(const char *name, const char *title, const RooAbsRealLValue &var, double xmin, double xmax,
-                 Int_t nbins)
-   : _hist(new TH1D(name, title, nbins, xmin, xmax)),
-     _plotVar(const_cast<RooAbsRealLValue *>(&var)),
-     _normBinWidth((xmax - xmin) / nbins)
-{
-  _hist->Sumw2(false) ;
-  _hist->GetSumw2()->Set(0) ;
-  _hist->SetDirectory(nullptr);
-
-  // In the past, the plot variable was cloned, but there was no apparent reason for doing so.
-
-  TString xtitle= var.getTitle(true);
-  SetXTitle(xtitle.Data());
-
-  initialize();
 }
 
 
