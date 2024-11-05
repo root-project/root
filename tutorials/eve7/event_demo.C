@@ -168,6 +168,9 @@ void makeGeometryScene()
    // Debug of surface fill in RPhi (index buffer screwed).
    // b1->SetNSegments(3);
    b1->SetNSegments(40);
+
+   // an example of axis guides
+   eveMng->GetDefaultViewer()->SetAxesType(REX::REveViewer::EAxesType::kAxesOrigin);
 }
 
 
