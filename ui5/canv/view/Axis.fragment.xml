@@ -16,7 +16,7 @@
              <Label text="Ticks:" wrapping="true"/>
          </VBox>
          <VBox>
-            <StepInput min="-1.000" max="1.000" step="0.001" value="{/axis_ticksize}" editable="true" displayValuePrecision="3"/>
+            <StepInput min="-1.000" max="1.000" step="0.01" value="{/axis_ticksize}" editable="true" displayValuePrecision="3"/>
          </VBox>
       </HBox>
       <jsroot:ColorButton text="Title" attrcolor="{/color_title}" tooltip="Title color"/>
