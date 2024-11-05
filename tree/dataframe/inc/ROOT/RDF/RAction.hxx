@@ -98,11 +98,24 @@ public:
       fHelper.InitTask(r, slot);
    }
 
+   template <typename ColType>
+   auto GetValueChecked(unsigned int slot, std::size_t readerIdx, Long64_t entry) -> ColType &
+   {
+      if (auto *val = fValues[slot][readerIdx]->template TryGet<ColType>(entry))
+         return *val;
+
+      throw std::out_of_range{"RDataFrame: Action (" + fHelper.GetActionName() +
+                              ") could not retrieve value for column '" + fColumnNames[readerIdx] + "' for entry " +
+                              std::to_string(entry) +
+                              ". You can use the DefaultValueFor operation to provide a default value, or "
+                              "FilterAvailable/FilterMissing to discard/keep entries with missing values instead."};
+   }
+
    template <typename... ColTypes, std::size_t... S>
    void CallExec(unsigned int slot, Long64_t entry, TypeList<ColTypes...>, std::index_sequence<S...>)
    {
       ROOT::Internal::RDF::CallGuaranteedOrder{[&](auto &&...args) { return fHelper.Exec(slot, args...); },
-                                               fValues[slot][S]->template Get<ColTypes>(entry)...};
+                                               GetValueChecked<ColTypes>(slot, S, entry)...};
       (void)entry; // avoid unused parameter warning (gcc 12.1)
    }
 

@@ -42,7 +42,7 @@ TEST(RNTuple, EnumBasics)
    auto ptrVecEnum = model->MakeField<std::vector<CustomEnum>>("ve");
    model->MakeField<StructWithEnums>("swe");
 
-   EXPECT_EQ(model->GetField("e").GetTypeName(), f->GetTypeName());
+   EXPECT_EQ(model->GetConstField("e").GetTypeName(), f->GetTypeName());
 
    FileRaii fileGuard("test_ntuple_enum_basics.root");
    {
@@ -138,7 +138,7 @@ TEST(RNTuple, CreateField)
    std::vector<std::unique_ptr<RFieldBase>> itemFields;
    itemFields.push_back(std::make_unique<RField<std::uint32_t>>("u32"));
    itemFields.push_back(std::make_unique<RField<std::uint8_t>>("u8"));
-   ROOT::Experimental::RRecordField record("test", itemFields);
+   ROOT::Experimental::RRecordField record("test", std::move(itemFields));
    EXPECT_EQ(alignof(std::uint32_t), record.GetAlignment());
    // Check that trailing padding is added after `u8` to comply with the alignment requirements of uint32_t
    EXPECT_EQ(sizeof(std::uint32_t) + alignof(std::uint32_t), record.GetValueSize());
@@ -307,6 +307,14 @@ TEST(RNTuple, StdTuple)
          "tupleTupleField");
    EXPECT_STREQ("std::tuple<std::tuple<std::int64_t,float,char,float>,std::vector<std::tuple<char,char,char>>>",
                 tupleTupleField.GetTypeName().c_str());
+   using TupleMapSetType = std::tuple<std::map<char, int64_t>, std::set<int64_t>>;
+   auto tupleMapSetField = RField<TupleMapSetType>("tupleMapSetField");
+   EXPECT_LE(sizeof(TupleMapSetType), tupleMapSetField.GetValueSize());
+   EXPECT_LE(alignof(TupleMapSetType), tupleMapSetField.GetAlignment());
+   using TupleUnorderedMapSetType = std::tuple<std::unordered_map<char, int64_t>, std::unordered_set<int64_t>>;
+   auto tupleUnorderedMapSetField = RField<TupleUnorderedMapSetType>("tupleUnorderedMapSetField");
+   EXPECT_LE(sizeof(TupleUnorderedMapSetType), tupleUnorderedMapSetField.GetValueSize());
+   EXPECT_LE(alignof(TupleUnorderedMapSetType), tupleUnorderedMapSetField.GetAlignment());
 
    FileRaii fileGuard("test_ntuple_rfield_stdtuple.root");
    {
@@ -362,9 +370,7 @@ TEST(RNTuple, StdSet)
    EXPECT_EQ(field.GetTypeName(), otherField->GetTypeName());
    EXPECT_EQ((sizeof(std::set<int64_t>)), field.GetValueSize());
    EXPECT_EQ((sizeof(std::set<int64_t>)), otherField->GetValueSize());
-   EXPECT_EQ((alignof(std::set<int64_t>)), field.GetAlignment());
-   // For type-erased set fields, we use `alignof(std::set<std::max_align_t>)` to set the alignment,
-   // so the actual alignment may be smaller.
+   EXPECT_LE((alignof(std::set<int64_t>)), field.GetAlignment());
    EXPECT_LE((alignof(std::set<int64_t>)), otherField->GetAlignment());
 
    auto setSetField = RField<std::set<std::set<CustomStruct>>>("setSetField");
@@ -440,9 +446,7 @@ TEST(RNTuple, StdUnorderedSet)
    EXPECT_EQ(field.GetTypeName(), otherField->GetTypeName());
    EXPECT_EQ((sizeof(std::unordered_set<int64_t>)), field.GetValueSize());
    EXPECT_EQ((sizeof(std::unordered_set<int64_t>)), otherField->GetValueSize());
-   EXPECT_EQ((alignof(std::unordered_set<int64_t>)), field.GetAlignment());
-   // For type-erased set fields, we use `alignof(std::set<std::max_align_t>)` to set the alignment,
-   // so the actual alignment may be smaller.
+   EXPECT_LE((alignof(std::unordered_set<int64_t>)), field.GetAlignment());
    EXPECT_LE((alignof(std::unordered_set<int64_t>)), otherField->GetAlignment());
 
    FileRaii fileGuard("test_ntuple_rfield_stdunorderedset.root");
@@ -503,9 +507,7 @@ TEST(RNTuple, StdMultiSet)
    EXPECT_EQ(field.GetTypeName(), otherField->GetTypeName());
    EXPECT_EQ((sizeof(std::multiset<int64_t>)), field.GetValueSize());
    EXPECT_EQ((sizeof(std::multiset<int64_t>)), otherField->GetValueSize());
-   EXPECT_EQ((alignof(std::multiset<int64_t>)), field.GetAlignment());
-   // For type-erased set fields, we use `alignof(std::set<std::max_align_t>)` to set the alignment,
-   // so the actual alignment may be smaller.
+   EXPECT_LE((alignof(std::multiset<int64_t>)), field.GetAlignment());
    EXPECT_LE((alignof(std::multiset<int64_t>)), otherField->GetAlignment());
 
    FileRaii fileGuard("test_ntuple_rfield_stdmultiset.root");
@@ -550,9 +552,7 @@ TEST(RNTuple, StdUnorderedMultiSet)
    EXPECT_EQ(field.GetTypeName(), otherField->GetTypeName());
    EXPECT_EQ((sizeof(std::unordered_multiset<int64_t>)), field.GetValueSize());
    EXPECT_EQ((sizeof(std::unordered_multiset<int64_t>)), otherField->GetValueSize());
-   EXPECT_EQ((alignof(std::unordered_multiset<int64_t>)), field.GetAlignment());
-   // For type-erased set fields, we use `alignof(std::set<std::max_align_t>)` to set the alignment,
-   // so the actual alignment may be smaller.
+   EXPECT_LE((alignof(std::unordered_multiset<int64_t>)), field.GetAlignment());
    EXPECT_LE((alignof(std::unordered_multiset<int64_t>)), otherField->GetAlignment());
 
    FileRaii fileGuard("test_ntuple_rfield_stdmultiset.root");
@@ -597,13 +597,8 @@ TEST(RNTuple, StdMap)
    EXPECT_EQ(field.GetTypeName(), otherField->GetTypeName());
    EXPECT_EQ((sizeof(std::map<char, int64_t>)), field.GetValueSize());
    EXPECT_EQ((sizeof(std::map<char, int64_t>)), otherField->GetValueSize());
-   EXPECT_EQ((alignof(std::map<char, int64_t>)), field.GetAlignment());
-   // For type-erased map fields, we use `alignof(std::map<std::max_align_t, std::max_align_t>)` to map the alignment,
-   // so the actual alignment may be smaller.
+   EXPECT_LE((alignof(std::map<char, int64_t>)), field.GetAlignment());
    EXPECT_LE((alignof(std::map<char, int64_t>)), otherField->GetAlignment());
-   // The assumption is that the alignment of inner items does not matter. If at any point there is a mismatch, this
-   // test should fail.
-   EXPECT_EQ((alignof(std::map<char, char>)), otherField->GetAlignment());
 
    auto mapMapField = RField<std::map<char, std::map<int, CustomStruct>>>("mapMapField");
    EXPECT_STREQ("std::map<char,std::map<std::int32_t,CustomStruct>>", mapMapField.GetTypeName().c_str());
@@ -699,13 +694,8 @@ TEST(RNTuple, StdUnorderedMap)
    EXPECT_STREQ(field.GetTypeName().c_str(), otherField->GetTypeName().c_str());
    EXPECT_EQ((sizeof(std::unordered_map<char, int64_t>)), field.GetValueSize());
    EXPECT_EQ((sizeof(std::unordered_map<char, int64_t>)), otherField->GetValueSize());
-   EXPECT_EQ((alignof(std::unordered_map<char, int64_t>)), field.GetAlignment());
-   // For type-erased map fields, we use `alignof(std::map<std::max_align_t, std::max_align_t>)` to map the alignment,
-   // so the actual alignment may be smaller.
+   EXPECT_LE((alignof(std::unordered_map<char, int64_t>)), field.GetAlignment());
    EXPECT_LE((alignof(std::unordered_map<char, int64_t>)), otherField->GetAlignment());
-   // The assumption is that the alignment of inner items does not matter. If at any point there is a mismatch, this
-   // test should fail.
-   EXPECT_EQ((alignof(std::unordered_map<char, char>)), otherField->GetAlignment());
 
    EXPECT_THROW(RFieldBase::Create("myInvalidMap", "std::unordered_map<char>").Unwrap(), RException);
    EXPECT_THROW(RFieldBase::Create("myInvalidMap", "std::unordered_map<char, std::string, int>").Unwrap(), RException);
@@ -781,13 +771,8 @@ TEST(RNTuple, StdMultiMap)
    EXPECT_STREQ(field.GetTypeName().c_str(), otherField->GetTypeName().c_str());
    EXPECT_EQ((sizeof(std::multimap<char, int64_t>)), field.GetValueSize());
    EXPECT_EQ((sizeof(std::multimap<char, int64_t>)), otherField->GetValueSize());
-   EXPECT_EQ((alignof(std::multimap<char, int64_t>)), field.GetAlignment());
-   // For type-erased map fields, we use `alignof(std::map<std::max_align_t, std::max_align_t>)` to map the alignment,
-   // so the actual alignment may be smaller.
+   EXPECT_LE((alignof(std::multimap<char, int64_t>)), field.GetAlignment());
    EXPECT_LE((alignof(std::multimap<char, int64_t>)), otherField->GetAlignment());
-   // The assumption is that the alignment of inner items does not matter. If at any point there is a mismatch, this
-   // test should fail.
-   EXPECT_EQ((alignof(std::multimap<char, char>)), otherField->GetAlignment());
 
    FileRaii fileGuard("test_ntuple_rfield_stdmultimap.root");
    {
@@ -839,13 +824,8 @@ TEST(RNTuple, StdUnorderedMultiMap)
    EXPECT_STREQ(field.GetTypeName().c_str(), otherField->GetTypeName().c_str());
    EXPECT_EQ((sizeof(std::unordered_multimap<char, int64_t>)), field.GetValueSize());
    EXPECT_EQ((sizeof(std::unordered_multimap<char, int64_t>)), otherField->GetValueSize());
-   EXPECT_EQ((alignof(std::unordered_multimap<char, int64_t>)), field.GetAlignment());
-   // For type-erased map fields, we use `alignof(std::map<std::max_align_t, std::max_align_t>)` to map the alignment,
-   // so the actual alignment may be smaller.
+   EXPECT_LE((alignof(std::unordered_multimap<char, int64_t>)), field.GetAlignment());
    EXPECT_LE((alignof(std::unordered_multimap<char, int64_t>)), otherField->GetAlignment());
-   // The assumption is that the alignment of inner items does not matter. If at any point there is a mismatch, this
-   // test should fail.
-   EXPECT_EQ((alignof(std::unordered_multimap<char, char>)), otherField->GetAlignment());
 
    FileRaii fileGuard("test_ntuple_rfield_stdmultimap.root");
    {
@@ -889,6 +869,28 @@ TEST(RNTuple, StdUnorderedMultiMap)
                                                       {i + 1, CustomStruct{3.f, {4.f, 5.f}, {{1.f}, {2.f}}, "baz"}}};
       EXPECT_EQ(map2, viewMap2(i));
    }
+}
+
+TEST(RNTuple, StdMapImposedModel)
+{
+   FileRaii fileGuard("test_ntuple_stdmap_imposed_model.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto ptrFoo = model->MakeField<std::map<std::string, float>>("foo");
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      ptrFoo->insert({"bar", 1.0});
+      writer->Fill();
+   }
+
+   auto model = RNTupleModel::Create();
+   auto ptrFoo = model->MakeField<std::vector<std::pair<std::string, float>>>("foo");
+   auto reader = RNTupleReader::Open(std::move(model), "ntpl", fileGuard.GetPath());
+
+   reader->LoadEntry(0);
+   EXPECT_EQ(1u, ptrFoo->size());
+   EXPECT_EQ("bar", ptrFoo->at(0).first);
+   EXPECT_FLOAT_EQ(1.0, ptrFoo->at(0).second);
 }
 
 TEST(RNTuple, Int64)
@@ -1375,8 +1377,8 @@ TEST(RNTuple, Bitset)
    auto model = RNTupleModel::Create();
 
    auto f1 = model->MakeField<std::bitset<66>>("f1");
-   EXPECT_EQ(std::string("std::bitset<66>"), model->GetField("f1").GetTypeName());
-   EXPECT_EQ(sizeof(std::bitset<66>), model->GetField("f1").GetValueSize());
+   EXPECT_EQ(std::string("std::bitset<66>"), model->GetConstField("f1").GetTypeName());
+   EXPECT_EQ(sizeof(std::bitset<66>), model->GetConstField("f1").GetValueSize());
    auto f2 = model->MakeField<std::bitset<8>>("f2", "10101010");
 
    {
@@ -1391,7 +1393,7 @@ TEST(RNTuple, Bitset)
    }
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-   EXPECT_EQ(std::string("std::bitset<66>"), reader->GetModel().GetField("f1").GetTypeName());
+   EXPECT_EQ(std::string("std::bitset<66>"), reader->GetModel().GetConstField("f1").GetTypeName());
    auto bs1 = reader->GetModel().GetDefaultEntry().GetPtr<std::bitset<66>>("f1");
    auto bs2 = reader->GetModel().GetDefaultEntry().GetPtr<std::bitset<8>>("f2");
    reader->LoadEntry(0);
@@ -1402,71 +1404,27 @@ TEST(RNTuple, Bitset)
    EXPECT_EQ("01010101", bs2->to_string());
 }
 
-struct RTagNullableFieldDefault {};
-struct RTagNullableFieldSparse {};
-struct RTagNullableFieldDense {};
-using UniquePtrTags = ::testing::Types<RTagNullableFieldDefault, RTagNullableFieldSparse, RTagNullableFieldDense>;
-
-template <typename TagT>
-class UniquePtr : public ::testing::Test {
-public:
-   using Tag_t = TagT;
-};
-
-TYPED_TEST_SUITE(UniquePtr, UniquePtrTags);
-
-template <typename TypeT, typename TagT>
-static void AddUniquePtrField(RNTupleModel &model, const std::string &fieldName)
-{
-   auto fld = std::make_unique<RField<std::unique_ptr<TypeT>>>(fieldName);
-   if constexpr (std::is_same_v<TagT, RTagNullableFieldSparse>) {
-      fld->SetSparse();
-   }
-   if constexpr (std::is_same_v<TagT, RTagNullableFieldDense>) {
-      fld->SetDense();
-   }
-   model.AddField(std::move(fld));
-}
-
-TYPED_TEST(UniquePtr, Basics)
+TEST(RNTuple, UniquePtr)
 {
    FileRaii fileGuard("test_ntuple_unique_ptr.root");
 
    {
       auto model = RNTupleModel::Create();
 
-      AddUniquePtrField<bool, typename TestFixture::Tag_t>(*model, "PBool");
-      AddUniquePtrField<CustomStruct, typename TestFixture::Tag_t>(*model, "PCustomStruct");
-      AddUniquePtrField<IOConstructor, typename TestFixture::Tag_t>(*model, "PIOConstructor");
-      AddUniquePtrField<std::unique_ptr<std::string>, typename TestFixture::Tag_t>(*model, "PPString");
-      AddUniquePtrField<std::array<char, 2>, typename TestFixture::Tag_t>(*model, "PArray");
+      auto pBool = model->MakeField<std::unique_ptr<bool>>("PBool");
+      auto pCustomStruct = model->MakeField<std::unique_ptr<CustomStruct>>("PCustomStruct");
+      auto pIOConstructor = model->MakeField<std::unique_ptr<IOConstructor>>("PIOConstructor");
+      auto ppString = model->MakeField<std::unique_ptr<std::unique_ptr<std::string>>>("PPString");
+      auto pArray = model->MakeField<std::unique_ptr<std::array<char, 2>>>("PArray");
 
-      EXPECT_EQ("std::unique_ptr<bool>", model->GetField("PBool").GetTypeName());
-      EXPECT_EQ(std::string("std::unique_ptr<CustomStruct>"), model->GetField("PCustomStruct").GetTypeName());
-      EXPECT_EQ(std::string("std::unique_ptr<IOConstructor>"), model->GetField("PIOConstructor").GetTypeName());
+      EXPECT_EQ("std::unique_ptr<bool>", model->GetConstField("PBool").GetTypeName());
+      EXPECT_EQ(std::string("std::unique_ptr<CustomStruct>"), model->GetConstField("PCustomStruct").GetTypeName());
+      EXPECT_EQ(std::string("std::unique_ptr<IOConstructor>"), model->GetConstField("PIOConstructor").GetTypeName());
       EXPECT_EQ(std::string("std::unique_ptr<std::unique_ptr<std::string>>"),
-                model->GetField("PPString").GetTypeName());
-      EXPECT_EQ(std::string("std::unique_ptr<std::array<char,2>>"), model->GetField("PArray").GetTypeName());
+                model->GetConstField("PPString").GetTypeName());
+      EXPECT_EQ(std::string("std::unique_ptr<std::array<char,2>>"), model->GetConstField("PArray").GetTypeName());
 
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
-
-      if constexpr (std::is_same_v<typename TestFixture::Tag_t, RTagNullableFieldDefault>) {
-         EXPECT_EQ(EColumnType::kSplitIndex64, writer->GetModel().GetField("PBool").GetColumnRepresentatives()[0][0]);
-      }
-      if constexpr (std::is_same_v<typename TestFixture::Tag_t, RTagNullableFieldSparse>) {
-         EXPECT_EQ(EColumnType::kSplitIndex64, writer->GetModel().GetField("PBool").GetColumnRepresentatives()[0][0]);
-      }
-      if constexpr (std::is_same_v<typename TestFixture::Tag_t, RTagNullableFieldDense>) {
-         EXPECT_EQ(EColumnType::kBit, writer->GetModel().GetField("PBool").GetColumnRepresentatives()[0][0]);
-      }
-
-      auto pBool = writer->GetModel().GetDefaultEntry().GetPtr<std::unique_ptr<bool>>("PBool");
-      auto pCustomStruct = writer->GetModel().GetDefaultEntry().GetPtr<std::unique_ptr<CustomStruct>>("PCustomStruct");
-      auto pIOConstructor =
-         writer->GetModel().GetDefaultEntry().GetPtr<std::unique_ptr<IOConstructor>>("PIOConstructor");
-      auto ppString =
-         writer->GetModel().GetDefaultEntry().GetPtr<std::unique_ptr<std::unique_ptr<std::string>>>("PPString");
-      auto pArray = writer->GetModel().GetDefaultEntry().GetPtr<std::unique_ptr<std::array<char, 2>>>("PArray");
 
       *pBool = std::make_unique<bool>(true);
       EXPECT_EQ(nullptr, pCustomStruct->get());
@@ -1498,11 +1456,12 @@ TYPED_TEST(UniquePtr, Basics)
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    const auto &model = reader->GetModel();
-   EXPECT_EQ("std::unique_ptr<bool>", model.GetField("PBool").GetTypeName());
-   EXPECT_EQ(std::string("std::unique_ptr<CustomStruct>"), model.GetField("PCustomStruct").GetTypeName());
-   EXPECT_EQ(std::string("std::unique_ptr<IOConstructor>"), model.GetField("PIOConstructor").GetTypeName());
-   EXPECT_EQ(std::string("std::unique_ptr<std::unique_ptr<std::string>>"), model.GetField("PPString").GetTypeName());
-   EXPECT_EQ(std::string("std::unique_ptr<std::array<char,2>>"), model.GetField("PArray").GetTypeName());
+   EXPECT_EQ("std::unique_ptr<bool>", model.GetConstField("PBool").GetTypeName());
+   EXPECT_EQ(std::string("std::unique_ptr<CustomStruct>"), model.GetConstField("PCustomStruct").GetTypeName());
+   EXPECT_EQ(std::string("std::unique_ptr<IOConstructor>"), model.GetConstField("PIOConstructor").GetTypeName());
+   EXPECT_EQ(std::string("std::unique_ptr<std::unique_ptr<std::string>>"),
+             model.GetConstField("PPString").GetTypeName());
+   EXPECT_EQ(std::string("std::unique_ptr<std::array<char,2>>"), model.GetConstField("PArray").GetTypeName());
 
    const auto &entry = model.GetDefaultEntry();
    auto pBool = entry.GetPtr<std::unique_ptr<bool>>("PBool");
@@ -1572,8 +1531,8 @@ TEST(RNTuple, Optional)
    EXPECT_EQ(alignof(std::optional<Variant_t>), RField<std::optional<Variant_t>>("f").GetAlignment());
    EXPECT_EQ(sizeof(std::optional<std::string>), RField<std::optional<std::string>>("f").GetValueSize());
    EXPECT_EQ(alignof(std::optional<std::string>), RField<std::optional<std::string>>("f").GetAlignment());
-   EXPECT_EQ(sizeof(std::optional<Map_t>), RField<std::optional<Map_t>>("f").GetValueSize());
-   EXPECT_EQ(alignof(std::optional<Map_t>), RField<std::optional<Map_t>>("f").GetAlignment());
+   EXPECT_LE(sizeof(std::optional<Map_t>), RField<std::optional<Map_t>>("f").GetValueSize());
+   EXPECT_LE(alignof(std::optional<Map_t>), RField<std::optional<Map_t>>("f").GetAlignment());
 
    FileRaii fileGuard("test_ntuple_optional.root");
 
@@ -1842,10 +1801,10 @@ TEST(RNTuple, Double32)
    }
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-   EXPECT_EQ(EColumnType::kReal32, reader->GetModel().GetField("d1").GetColumnRepresentatives()[0][0]);
-   EXPECT_EQ("", reader->GetModel().GetField("d1").GetTypeAlias());
-   EXPECT_EQ(EColumnType::kSplitReal32, reader->GetModel().GetField("d2").GetColumnRepresentatives()[0][0]);
-   EXPECT_EQ("Double32_t", reader->GetModel().GetField("d2").GetTypeAlias());
+   EXPECT_EQ(EColumnType::kReal32, reader->GetModel().GetConstField("d1").GetColumnRepresentatives()[0][0]);
+   EXPECT_EQ("", reader->GetModel().GetConstField("d1").GetTypeAlias());
+   EXPECT_EQ(EColumnType::kSplitReal32, reader->GetModel().GetConstField("d2").GetColumnRepresentatives()[0][0]);
+   EXPECT_EQ("Double32_t", reader->GetModel().GetConstField("d2").GetTypeAlias());
    auto d1 = reader->GetModel().GetDefaultEntry().GetPtr<double>("d1");
    auto d2 = reader->GetModel().GetDefaultEntry().GetPtr<double>("d2");
    reader->LoadEntry(0);
@@ -1899,8 +1858,9 @@ TEST(RNTuple, Double32Extended)
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    auto obj = reader->GetModel().GetDefaultEntry().GetPtr<LowPrecisionFloats>("obj");
-   EXPECT_EQ("Double32_t", reader->GetModel().GetField("obj").GetSubFields()[1]->GetTypeAlias());
-   EXPECT_EQ("Double32_t", reader->GetModel().GetField("obj").GetSubFields()[2]->GetSubFields()[0]->GetTypeAlias());
+   EXPECT_EQ("Double32_t", reader->GetModel().GetConstField("obj").GetSubFields()[1]->GetTypeAlias());
+   EXPECT_EQ("Double32_t",
+             reader->GetModel().GetConstField("obj").GetSubFields()[2]->GetSubFields()[0]->GetTypeAlias());
    EXPECT_DOUBLE_EQ(0.0, obj->a);
    EXPECT_DOUBLE_EQ(1.0, obj->b);
    EXPECT_DOUBLE_EQ(2.0, obj->c[0]);
@@ -1957,7 +1917,7 @@ TEST(RNTuple, TClass)
          auto viewKlass = ntuple->GetView<DerivedA>("klass");
          FAIL() << "GetView<a_base_class_of_T> should throw";
       } catch (const RException& err) {
-         EXPECT_THAT(err.what(), testing::HasSubstr("No on-disk field information for `klass.:_0.a`"));
+         EXPECT_THAT(err.what(), testing::HasSubstr("No on-disk field information"));
       }
    }
 }
@@ -2070,7 +2030,7 @@ TEST(RNTuple, TClassTemplateBased)
 
    auto reader = RNTupleReader::Open("f", fileGuard.GetPath());
 
-   const auto &fieldObject = reader->GetModel().GetField("klass");
+   const auto &fieldObject = reader->GetModel().GetConstField("klass");
    EXPECT_EQ("EdmWrapper<CustomStruct>", fieldObject.GetTypeName());
    auto object = reader->GetModel().GetDefaultEntry().GetPtr<EdmWrapper<CustomStruct>>("klass");
    reader->LoadEntry(0);

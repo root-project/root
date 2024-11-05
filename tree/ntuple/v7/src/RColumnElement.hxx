@@ -9,9 +9,13 @@
 #include <ROOT/RColumnElementBase.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RConfig.hxx>
+#include <ROOT/RError.hxx>
 #include <Byteswap.h>
 
 #include <bitset>
+#include <cassert>
+#include <limits>
+#include <type_traits>
 
 // NOTE: some tests might define R__LITTLE_ENDIAN to simulate a different-endianness machine
 #ifndef R__LITTLE_ENDIAN
@@ -22,6 +26,34 @@
 #define R__LITTLE_ENDIAN 0
 #endif
 #endif /* R__LITTLE_ENDIAN */
+
+namespace ROOT::Experimental::Internal::BitPacking {
+
+using Word_t = std::uintmax_t;
+inline constexpr std::size_t kBitsPerWord = sizeof(Word_t) * 8;
+
+/// Returns the minimum safe size (in bytes) of a buffer that is intended to be used as a destination for PackBits
+/// or a source for UnpackBits.
+/// Passing a buffer that's less than this size will cause invalid memory reads and writes.
+constexpr std::size_t MinBufSize(std::size_t count, std::size_t nDstBits)
+{
+   return (count * nDstBits + 7) / 8;
+}
+
+/// Tightly packs `count` items of size `sizeofSrc` contained in `src` into `dst` using `nDstBits` per item.
+/// It must be  `0 < sizeofSrc <= 8`  and  `0 < nDstBits <= sizeofSrc * 8`.
+/// The extra least significant bits are dropped (assuming LE ordering of the items in `src`).
+/// Note that this function doesn't do any byte reordering for you.
+/// IMPORTANT: the size of `dst` must be at least `MinBufSize(count, nBitBits)`
+void PackBits(void *dst, const void *src, std::size_t count, std::size_t sizeofSrc, std::size_t nDstBits);
+
+/// Undoes the effect of `PackBits`. The bits that were truncated in the packed representation
+/// are filled with zeroes.
+/// `src` must be at least `MinBufSize(count, nDstBits)` bytes long.
+/// `dst` must be at least `count * sizeofDst` bytes long.
+void UnpackBits(void *dst, const void *src, std::size_t count, std::size_t sizeofDst, std::size_t nSrcBits);
+
+} // namespace ROOT::Experimental::Internal::BitPacking
 
 namespace {
 
@@ -61,6 +93,15 @@ inline void CopyBswap(void *destination, const void *source, std::size_t count)
    }
 }
 
+template <std::size_t N>
+void InPlaceBswap(void *array, std::size_t count)
+{
+   auto arr = reinterpret_cast<typename RByteSwap<N>::value_type *>(array);
+   for (std::size_t i = 0; i < count; ++i) {
+      arr[i] = RByteSwap<N>::bswap(arr[i]);
+   }
+}
+
 /// Casts T to one of the ints used in RByteSwap and back to its original type, which may be float or double
 #if R__LITTLE_ENDIAN == 0
 template <typename T>
@@ -72,9 +113,52 @@ inline void ByteSwapIfNecessary(T &value)
    auto swapped = RByteSwap<N>::bswap(*reinterpret_cast<bswap_value_type *>(valuePtr));
    *reinterpret_cast<bswap_value_type *>(valuePtr) = swapped;
 }
+template <>
+inline void ByteSwapIfNecessary<char>(char &)
+{
+}
+template <>
+inline void ByteSwapIfNecessary<signed char>(signed char &)
+{
+}
+template <>
+inline void ByteSwapIfNecessary<unsigned char>(unsigned char &)
+{
+}
 #else
 #define ByteSwapIfNecessary(x) ((void)0)
 #endif
+
+/// For integral types, ensures that the value of type SourceT is representable as DestT
+template <typename DestT, typename SourceT>
+inline void EnsureValidRange(SourceT val [[maybe_unused]])
+{
+   using ROOT::Experimental::RException;
+
+   if constexpr (!std::is_integral_v<DestT> || !std::is_integral_v<SourceT>)
+      return;
+
+   if constexpr (static_cast<double>(std::numeric_limits<SourceT>::min()) <
+                 static_cast<double>(std::numeric_limits<DestT>::min())) {
+      if constexpr (!std::is_signed_v<DestT>) {
+         if (val < 0) {
+            throw RException(R__FAIL(std::string("value out of range: ") + std::to_string(val) + " for type " +
+                                     typeid(DestT).name()));
+         }
+      } else if (val < std::numeric_limits<DestT>::min()) {
+         throw RException(
+            R__FAIL(std::string("value out of range: ") + std::to_string(val) + " for type " + typeid(DestT).name()));
+      }
+   }
+
+   if constexpr (static_cast<double>(std::numeric_limits<SourceT>::max()) >
+                 static_cast<double>(std::numeric_limits<DestT>::max())) {
+      if (val > std::numeric_limits<DestT>::max()) {
+         throw RException(
+            R__FAIL(std::string("value out of range: ") + std::to_string(val) + " for type " + typeid(DestT).name()));
+      }
+   }
+}
 
 /// \brief Pack `count` elements into narrower (or wider) type
 ///
@@ -104,6 +188,7 @@ inline void CastUnpack(void *destination, const void *source, std::size_t count)
    for (std::size_t i = 0; i < count; ++i) {
       SourceT val = src[i];
       ByteSwapIfNecessary(val);
+      EnsureValidRange<DestT, SourceT>(val);
       dst[i] = val;
    }
 }
@@ -141,6 +226,7 @@ inline void CastSplitUnpack(void *destination, const void *source, std::size_t c
          reinterpret_cast<char *>(&val)[b] = splitArray[b * count + i];
       }
       ByteSwapIfNecessary(val);
+      EnsureValidRange<DestT, SourceT>(val);
       dst[i] = val;
    }
 }
@@ -178,7 +264,9 @@ inline void CastDeltaSplitUnpack(void *destination, const void *source, std::siz
          reinterpret_cast<char *>(&val)[b] = splitArray[b * count + i];
       }
       ByteSwapIfNecessary(val);
-      dst[i] = (i == 0) ? val : dst[i - 1] + val;
+      val = (i == 0) ? val : val + dst[i - 1];
+      EnsureValidRange<DestT, SourceT>(val);
+      dst[i] = val;
    }
 }
 
@@ -218,7 +306,9 @@ inline void CastZigzagSplitUnpack(void *destination, const void *source, std::si
          reinterpret_cast<char *>(&val)[b] = splitArray[b * count + i];
       }
       ByteSwapIfNecessary(val);
-      dst[i] = static_cast<SourceT>((val >> 1) ^ -(static_cast<SourceT>(val) & 1));
+      SourceT sval = static_cast<SourceT>((val >> 1) ^ -(static_cast<SourceT>(val) & 1));
+      EnsureValidRange<DestT, SourceT>(sval);
+      dst[i] = sval;
    }
 }
 } // namespace
@@ -228,6 +318,10 @@ namespace {
 
 using ROOT::Experimental::EColumnType;
 using ROOT::Experimental::Internal::RColumnElementBase;
+
+// testing value for an unknown future column type
+inline constexpr EColumnType kTestFutureType =
+   static_cast<EColumnType>(std::numeric_limits<std::underlying_type_t<EColumnType>>::max() - 1);
 
 template <typename CppT, EColumnType>
 class RColumnElement;
@@ -263,7 +357,12 @@ std::unique_ptr<RColumnElementBase> GenerateColumnElementInternal(EColumnType ty
    case EColumnType::kSplitUInt32: return std::make_unique<RColumnElement<CppT, EColumnType::kSplitUInt32>>();
    case EColumnType::kSplitInt16: return std::make_unique<RColumnElement<CppT, EColumnType::kSplitInt16>>();
    case EColumnType::kSplitUInt16: return std::make_unique<RColumnElement<CppT, EColumnType::kSplitUInt16>>();
-   default: R__ASSERT(false);
+   case EColumnType::kReal32Trunc: return std::make_unique<RColumnElement<CppT, EColumnType::kReal32Trunc>>();
+   case EColumnType::kReal32Quant: return std::make_unique<RColumnElement<CppT, EColumnType::kReal32Quant>>();
+   default:
+      if (type == kTestFutureType)
+         return std::make_unique<RColumnElement<CppT, kTestFutureType>>();
+      R__ASSERT(false);
    }
    // never here
    return nullptr;
@@ -370,6 +469,92 @@ public:
       CastDeltaSplitUnpack<CppT, NarrowT>(dst, src, count);
    }
 }; // class RColumnElementDeltaSplitLE
+
+/// Reading of unsplit integer columns to boolean
+template <typename CppIntT>
+class RColumnElementBoolAsUnsplitInt : public RColumnElementBase {
+protected:
+   explicit RColumnElementBoolAsUnsplitInt(std::size_t size, std::size_t bitsOnStorage)
+      : RColumnElementBase(size, bitsOnStorage)
+   {
+   }
+
+public:
+   static constexpr bool kIsMappable = false;
+
+   // We don't implement Pack() because integers must not be written to disk as booleans
+   void Pack(void *, const void *, std::size_t) const final { R__ASSERT(false); }
+
+   void Unpack(void *dst, const void *src, std::size_t count) const final
+   {
+      auto *boolArray = reinterpret_cast<bool *>(dst);
+      auto *intArray = reinterpret_cast<const CppIntT *>(src);
+      for (std::size_t i = 0; i < count; ++i) {
+         boolArray[i] = intArray[i] != 0;
+      }
+   }
+}; // class RColumnElementBoolAsUnsplitInt
+
+/// Reading of split integer columns to boolean
+template <typename CppIntT>
+class RColumnElementBoolAsSplitInt : public RColumnElementBase {
+protected:
+   explicit RColumnElementBoolAsSplitInt(std::size_t size, std::size_t bitsOnStorage)
+      : RColumnElementBase(size, bitsOnStorage)
+   {
+   }
+
+public:
+   static constexpr bool kIsMappable = false;
+
+   // We don't implement Pack() because integers must not be written to disk as booleans
+   void Pack(void *, const void *, std::size_t) const final { R__ASSERT(false); }
+
+   void Unpack(void *dst, const void *src, std::size_t count) const final
+   {
+      constexpr std::size_t N = sizeof(CppIntT);
+      auto *boolArray = reinterpret_cast<bool *>(dst);
+      auto *splitArray = reinterpret_cast<const char *>(src);
+      for (std::size_t i = 0; i < count; ++i) {
+         boolArray[i] = false;
+         for (std::size_t b = 0; b < N; ++b) {
+            if (splitArray[b * count + i]) {
+               boolArray[i] = true;
+               break;
+            }
+         }
+      }
+   }
+}; // RColumnElementBoolAsSplitInt
+
+/// Reading of bit columns as integer
+template <typename CppIntT>
+class RColumnElementIntAsBool : public RColumnElementBase {
+protected:
+   explicit RColumnElementIntAsBool(std::size_t size, std::size_t bitsOnStorage)
+      : RColumnElementBase(size, bitsOnStorage)
+   {
+   }
+
+public:
+   static constexpr bool kIsMappable = false;
+
+   // We don't implement Pack() because booleans must not be written as integers to disk
+   void Pack(void *, const void *, std::size_t) const final { R__ASSERT(false); }
+
+   void Unpack(void *dst, const void *src, std::size_t count) const final
+   {
+      auto *intArray = reinterpret_cast<CppIntT *>(dst);
+      const char *charArray = reinterpret_cast<const char *>(src);
+      std::bitset<8> bitSet;
+      for (std::size_t i = 0; i < count; i += 8) {
+         bitSet = charArray[i / 8];
+         for (std::size_t j = i; j < std::min(count, i + 8); ++j) {
+            intArray[j] = bitSet[j % 8];
+         }
+      }
+   }
+}; // RColumnElementIntAsBool
 
 /**
  * Base class for zigzag + split columns (signed integer columns) whose on-storage representation is little-endian.
@@ -651,6 +836,284 @@ public:
    }
 };
 
+template <typename T>
+class RColumnElementTrunc : public RColumnElementBase {
+public:
+   static_assert(std::is_floating_point_v<T>);
+   static constexpr bool kIsMappable = false;
+   static constexpr std::size_t kSize = sizeof(T);
+
+   // NOTE: setting bitsOnStorage == 0 by default. This is an invalid value that helps us
+   // catch misuses where RColumnElement is used without having explicitly set its bit width
+   // (which should never happen).
+   RColumnElementTrunc() : RColumnElementBase(kSize, 0) {}
+
+   void SetBitsOnStorage(std::size_t bitsOnStorage) final
+   {
+      const auto &[minBits, maxBits] = GetValidBitRange(EColumnType::kReal32Trunc);
+      R__ASSERT(bitsOnStorage >= minBits && bitsOnStorage <= maxBits);
+      fBitsOnStorage = bitsOnStorage;
+   }
+
+   bool IsMappable() const final { return kIsMappable; }
+};
+
+template <>
+class RColumnElement<float, EColumnType::kReal32Trunc> : public RColumnElementTrunc<float> {
+public:
+   void Pack(void *dst, const void *src, std::size_t count) const final
+   {
+      using namespace ROOT::Experimental::Internal::BitPacking;
+
+      R__ASSERT(GetPackedSize(count) == MinBufSize(count, fBitsOnStorage));
+
+#if R__LITTLE_ENDIAN == 0
+      // TODO(gparolini): to avoid this extra allocation we might want to perform byte swapping
+      // directly in the Pack/UnpackBits functions.
+      auto bswapped = std::make_unique<float[]>(count);
+      CopyBswap<sizeof(float)>(bswapped.get(), src, count);
+      const auto *srcLe = bswapped.get();
+#else
+      const auto *srcLe = reinterpret_cast<const float *>(src);
+#endif
+      PackBits(dst, srcLe, count, sizeof(float), fBitsOnStorage);
+   }
+
+   void Unpack(void *dst, const void *src, std::size_t count) const final
+   {
+      using namespace ROOT::Experimental::Internal::BitPacking;
+
+      R__ASSERT(GetPackedSize(count) == MinBufSize(count, fBitsOnStorage));
+
+      UnpackBits(dst, src, count, sizeof(float), fBitsOnStorage);
+#if R__LITTLE_ENDIAN == 0
+      InPlaceBswap<sizeof(float)>(dst, count);
+#endif
+   }
+};
+
+template <>
+class RColumnElement<double, EColumnType::kReal32Trunc> : public RColumnElementTrunc<double> {
+public:
+   void Pack(void *dst, const void *src, std::size_t count) const final
+   {
+      using namespace ROOT::Experimental::Internal::BitPacking;
+
+      R__ASSERT(GetPackedSize(count) == MinBufSize(count, fBitsOnStorage));
+
+      // Cast doubles to float before packing them
+      // TODO(gparolini): avoid this allocation
+      auto srcFloat = std::make_unique<float[]>(count);
+      const double *srcDouble = reinterpret_cast<const double *>(src);
+      for (std::size_t i = 0; i < count; ++i)
+         srcFloat[i] = static_cast<float>(srcDouble[i]);
+
+#if R__LITTLE_ENDIAN == 0
+      // TODO(gparolini): to avoid this extra allocation we might want to perform byte swapping
+      // directly in the Pack/UnpackBits functions.
+      auto bswapped = std::make_unique<float[]>(count);
+      CopyBswap<sizeof(float)>(bswapped.get(), srcFloat.get(), count);
+      const float *srcLe = bswapped.get();
+#else
+      const float *srcLe = reinterpret_cast<const float *>(srcFloat.get());
+#endif
+      PackBits(dst, srcLe, count, sizeof(float), fBitsOnStorage);
+   }
+
+   void Unpack(void *dst, const void *src, std::size_t count) const final
+   {
+      using namespace ROOT::Experimental::Internal::BitPacking;
+
+      R__ASSERT(GetPackedSize(count) == MinBufSize(count, fBitsOnStorage));
+
+      // TODO(gparolini): avoid this allocation
+      auto dstFloat = std::make_unique<float[]>(count);
+      UnpackBits(dstFloat.get(), src, count, sizeof(float), fBitsOnStorage);
+#if R__LITTLE_ENDIAN == 0
+      InPlaceBswap<sizeof(float)>(dstFloat.get(), count);
+#endif
+
+      double *dstDouble = reinterpret_cast<double *>(dst);
+      for (std::size_t i = 0; i < count; ++i)
+         dstDouble[i] = static_cast<double>(dstFloat[i]);
+   }
+};
+
+namespace Quantize {
+
+using Quantized_t = std::uint32_t;
+
+[[maybe_unused]] inline std::size_t LeadingZeroes(std::uint32_t x)
+{
+   if (x == 0)
+      return 64;
+
+#ifdef _MSC_VER
+   unsigned long idx = 0;
+   _BitScanForward(&idx, x);
+   return static_cast<std::size_t>(idx);
+#else
+   return static_cast<std::size_t>(__builtin_clzl(x));
+#endif
+}
+
+[[maybe_unused]] inline std::size_t TrailingZeroes(std::uint32_t x)
+{
+   if (x == 0)
+      return 64;
+
+#ifdef _MSC_VER
+   unsigned long idx = 0;
+   _BitScanReverse(&idx, x);
+   return static_cast<std::size_t>(idx);
+#else
+   return static_cast<std::size_t>(__builtin_ctzl(x));
+#endif
+}
+
+/// Converts the array `src` of `count` floating point numbers into an array of their quantized representations.
+/// Each element of `src` is assumed to be in the inclusive range [min, max].
+/// The quantized representation will consist of unsigned integers of at most `nQuantBits` (with `nQuantBits <= 8 *
+/// sizeof(Quantized_t)`). The unused bits are kept in the LSB of the quantized integers, to allow for easy bit packing
+/// of those integers via BitPacking::PackBits().
+/// \return The number of values in `src` that were found to be out of range (0 means all values were in range).
+template <typename T>
+int QuantizeReals(Quantized_t *dst, const T *src, std::size_t count, double min, double max, std::size_t nQuantBits)
+{
+   static_assert(std::is_floating_point_v<T>);
+   static_assert(sizeof(T) <= sizeof(double));
+   assert(1 <= nQuantBits && nQuantBits <= 8 * sizeof(Quantized_t));
+
+   const std::size_t quantMax = (1ull << nQuantBits) - 1;
+   const double scale = quantMax / (max - min);
+   const std::size_t unusedBits = sizeof(Quantized_t) * 8 - nQuantBits;
+
+   int nOutOfRange = 0;
+
+   for (std::size_t i = 0; i < count; ++i) {
+      const T elem = src[i];
+
+      nOutOfRange += !(min <= elem && elem <= max);
+
+      const double e = 0.5 + (elem - min) * scale;
+      Quantized_t q = static_cast<Quantized_t>(e);
+      ByteSwapIfNecessary(q);
+
+      // double-check we actually used at most `nQuantBits`
+      assert(LeadingZeroes(q) >= unusedBits);
+
+      // we want to leave zeroes in the LSB, not the MSB, because we'll then drop the LSB
+      // when bit packing.
+      dst[i] = q << unusedBits;
+   }
+
+   return nOutOfRange;
+}
+
+/// Undoes the transformation performed by QuantizeReals() (assuming the same `count`, `min`, `max` and `nQuantBits`).
+/// \return The number of unpacked values that were found to be out of range (0 means all values were in range).
+template <typename T>
+int UnquantizeReals(T *dst, const Quantized_t *src, std::size_t count, double min, double max, std::size_t nQuantBits)
+{
+   static_assert(std::is_floating_point_v<T>);
+   static_assert(sizeof(T) <= sizeof(double));
+   assert(1 <= nQuantBits && nQuantBits <= 8 * sizeof(Quantized_t));
+
+   const std::size_t quantMax = (1ull << nQuantBits) - 1;
+   const double scale = (max - min) / quantMax;
+   const std::size_t unusedBits = sizeof(Quantized_t) * 8 - nQuantBits;
+   const double eps = std::numeric_limits<double>::epsilon();
+   const double emin = -eps * scale + min;
+   const double emax = (static_cast<double>(quantMax) + eps) * scale + min;
+
+   int nOutOfRange = 0;
+
+   for (std::size_t i = 0; i < count; ++i) {
+      Quantized_t elem = src[i];
+      // Undo the LSB-preserving shift performed by QuantizeReals
+      assert(TrailingZeroes(elem) >= unusedBits);
+      elem >>= unusedBits;
+      ByteSwapIfNecessary(elem);
+
+      const double fq = static_cast<double>(elem);
+      const double e = fq * scale + min;
+      dst[i] = static_cast<T>(e);
+
+      nOutOfRange += !(emin <= dst[i] && dst[i] <= emax);
+   }
+
+   return nOutOfRange;
+}
+} // namespace Quantize
+
+template <typename T>
+class RColumnElementQuantized : public RColumnElementBase {
+   static_assert(std::is_floating_point_v<T>);
+
+public:
+   static constexpr bool kIsMappable = false;
+   static constexpr std::size_t kSize = sizeof(T);
+
+   RColumnElementQuantized() : RColumnElementBase(kSize, 0) {}
+
+   void SetBitsOnStorage(std::size_t bitsOnStorage) final
+   {
+      const auto [minBits, maxBits] = GetValidBitRange(EColumnType::kReal32Quant);
+      R__ASSERT(bitsOnStorage >= minBits && bitsOnStorage <= maxBits);
+      fBitsOnStorage = bitsOnStorage;
+   }
+
+   void SetValueRange(double min, double max) final
+   {
+      R__ASSERT(min >= std::numeric_limits<T>::lowest());
+      R__ASSERT(max <= std::numeric_limits<T>::max());
+      fValueRange = {min, max};
+   }
+
+   bool IsMappable() const final { return kIsMappable; }
+
+   void Pack(void *dst, const void *src, std::size_t count) const final
+   {
+      using namespace ROOT::Experimental;
+
+      // TODO(gparolini): see if we can avoid this allocation
+      auto quantized = std::make_unique<Quantize::Quantized_t[]>(count);
+      assert(fValueRange);
+      const auto [min, max] = *fValueRange;
+      const int nOutOfRange =
+         Quantize::QuantizeReals(quantized.get(), reinterpret_cast<const T *>(src), count, min, max, fBitsOnStorage);
+      if (nOutOfRange) {
+         throw RException(R__FAIL(std::to_string(nOutOfRange) +
+                                  " values were found of of range for quantization while packing (range is [" +
+                                  std::to_string(min) + ", " + std::to_string(max) + "])"));
+      }
+      Internal::BitPacking::PackBits(dst, quantized.get(), count, sizeof(Quantize::Quantized_t), fBitsOnStorage);
+   }
+
+   void Unpack(void *dst, const void *src, std::size_t count) const final
+   {
+      using namespace ROOT::Experimental;
+
+      // TODO(gparolini): see if we can avoid this allocation
+      auto quantized = std::make_unique<Quantize::Quantized_t[]>(count);
+      assert(fValueRange);
+      const auto [min, max] = *fValueRange;
+      Internal::BitPacking::UnpackBits(quantized.get(), src, count, sizeof(Quantize::Quantized_t), fBitsOnStorage);
+      [[maybe_unused]] const int nOutOfRange =
+         Quantize::UnquantizeReals(reinterpret_cast<T *>(dst), quantized.get(), count, min, max, fBitsOnStorage);
+      // NOTE: here, differently from Pack(), we don't ever expect to have values out of range, since the quantized
+      // integers we pass to UnquantizeReals are by construction limited in value to the proper range. In Pack()
+      // this is not the case, as the user may give us float values that are out of range.
+      assert(nOutOfRange == 0);
+   }
+};
+
+template <>
+class RColumnElement<float, EColumnType::kReal32Quant> : public RColumnElementQuantized<float> {};
+
+template <>
+class RColumnElement<double, EColumnType::kReal32Quant> : public RColumnElementQuantized<double> {};
+
 #define __RCOLUMNELEMENT_SPEC_BODY(CppT, BaseT, BitsOnStorage)  \
    static constexpr std::size_t kSize = sizeof(CppT);           \
    static constexpr std::size_t kBitsOnStorage = BitsOnStorage; \
@@ -679,70 +1142,256 @@ public:
       __RCOLUMNELEMENT_SPEC_BODY(CppT, RColumnElementBase, BitsOnStorage) \
    }
 
+DECLARE_RCOLUMNELEMENT_SPEC(bool, EColumnType::kChar, 8, RColumnElementBoolAsUnsplitInt, <char>);
+DECLARE_RCOLUMNELEMENT_SPEC(bool, EColumnType::kInt8, 8, RColumnElementBoolAsUnsplitInt, <std::int8_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(bool, EColumnType::kUInt8, 8, RColumnElementBoolAsUnsplitInt, <std::uint8_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(bool, EColumnType::kInt16, 16, RColumnElementBoolAsUnsplitInt, <std::int16_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(bool, EColumnType::kUInt16, 16, RColumnElementBoolAsUnsplitInt, <std::uint16_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(bool, EColumnType::kInt32, 32, RColumnElementBoolAsUnsplitInt, <std::int32_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(bool, EColumnType::kUInt32, 32, RColumnElementBoolAsUnsplitInt, <std::uint32_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(bool, EColumnType::kInt64, 64, RColumnElementBoolAsUnsplitInt, <std::int64_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(bool, EColumnType::kUInt64, 64, RColumnElementBoolAsUnsplitInt, <std::uint64_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(bool, EColumnType::kSplitInt16, 16, RColumnElementBoolAsSplitInt, <std::int16_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(bool, EColumnType::kSplitUInt16, 16, RColumnElementBoolAsSplitInt, <std::uint16_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(bool, EColumnType::kSplitInt32, 32, RColumnElementBoolAsSplitInt, <std::int32_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(bool, EColumnType::kSplitUInt32, 32, RColumnElementBoolAsSplitInt, <std::uint32_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(bool, EColumnType::kSplitInt64, 64, RColumnElementBoolAsSplitInt, <std::int64_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(bool, EColumnType::kSplitUInt64, 64, RColumnElementBoolAsSplitInt, <std::uint64_t>);
+
 DECLARE_RCOLUMNELEMENT_SPEC_SIMPLE(std::byte, EColumnType::kByte, 8);
 
-DECLARE_RCOLUMNELEMENT_SPEC_SIMPLE(char, EColumnType::kByte, 8);
 DECLARE_RCOLUMNELEMENT_SPEC_SIMPLE(char, EColumnType::kChar, 8);
+DECLARE_RCOLUMNELEMENT_SPEC(char, EColumnType::kInt8, 8, RColumnElementCastLE, <char, std::int8_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(char, EColumnType::kUInt8, 8, RColumnElementCastLE, <char, std::uint8_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(char, EColumnType::kInt16, 16, RColumnElementCastLE, <char, std::int16_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(char, EColumnType::kUInt16, 16, RColumnElementCastLE, <char, std::uint16_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(char, EColumnType::kInt32, 32, RColumnElementCastLE, <char, std::int32_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(char, EColumnType::kUInt32, 32, RColumnElementCastLE, <char, std::uint32_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(char, EColumnType::kInt64, 64, RColumnElementCastLE, <char, std::int64_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(char, EColumnType::kUInt64, 64, RColumnElementCastLE, <char, std::uint64_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(char, EColumnType::kSplitInt16, 16, RColumnElementZigzagSplitLE, <char, std::int16_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(char, EColumnType::kSplitUInt16, 16, RColumnElementSplitLE, <char, std::uint16_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(char, EColumnType::kSplitInt32, 32, RColumnElementZigzagSplitLE, <char, std::int32_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(char, EColumnType::kSplitUInt32, 32, RColumnElementSplitLE, <char, std::uint32_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(char, EColumnType::kSplitInt64, 64, RColumnElementZigzagSplitLE, <char, std::int64_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(char, EColumnType::kSplitUInt64, 64, RColumnElementSplitLE, <char, std::uint64_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(char, EColumnType::kBit, 1, RColumnElementIntAsBool, <char>);
 
 DECLARE_RCOLUMNELEMENT_SPEC_SIMPLE(std::int8_t, EColumnType::kInt8, 8);
-DECLARE_RCOLUMNELEMENT_SPEC_SIMPLE(std::int8_t, EColumnType::kUInt8, 8);
-DECLARE_RCOLUMNELEMENT_SPEC_SIMPLE(std::int8_t, EColumnType::kByte, 8);
+DECLARE_RCOLUMNELEMENT_SPEC(std::int8_t, EColumnType::kChar, 8, RColumnElementCastLE, <std::int8_t, char>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::int8_t, EColumnType::kUInt8, 8, RColumnElementCastLE, <std::int8_t, std::uint8_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::int8_t, EColumnType::kInt16, 16, RColumnElementCastLE, <std::int8_t, std::int16_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::int8_t, EColumnType::kUInt16, 16, RColumnElementCastLE, <std::int8_t, std::uint16_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::int8_t, EColumnType::kInt32, 32, RColumnElementCastLE, <std::int8_t, std::int32_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::int8_t, EColumnType::kUInt32, 32, RColumnElementCastLE, <std::int8_t, std::uint32_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::int8_t, EColumnType::kInt64, 64, RColumnElementCastLE, <std::int8_t, std::int64_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::int8_t, EColumnType::kUInt64, 64, RColumnElementCastLE, <std::int8_t, std::uint64_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::int8_t, EColumnType::kSplitInt16, 16, RColumnElementZigzagSplitLE,
+                            <std::int8_t, std::int16_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::int8_t, EColumnType::kSplitUInt16, 16, RColumnElementSplitLE,
+                            <std::int8_t, std::uint16_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::int8_t, EColumnType::kSplitInt32, 32, RColumnElementZigzagSplitLE,
+                            <std::int8_t, std::int32_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::int8_t, EColumnType::kSplitUInt32, 32, RColumnElementSplitLE,
+                            <std::int8_t, std::uint32_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::int8_t, EColumnType::kSplitInt64, 64, RColumnElementZigzagSplitLE,
+                            <std::int8_t, std::int64_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::int8_t, EColumnType::kSplitUInt64, 64, RColumnElementSplitLE,
+                            <std::int8_t, std::uint64_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::int8_t, EColumnType::kBit, 1, RColumnElementIntAsBool, <std::int8_t>);
 
 DECLARE_RCOLUMNELEMENT_SPEC_SIMPLE(std::uint8_t, EColumnType::kUInt8, 8);
-DECLARE_RCOLUMNELEMENT_SPEC_SIMPLE(std::uint8_t, EColumnType::kInt8, 8);
-DECLARE_RCOLUMNELEMENT_SPEC_SIMPLE(std::uint8_t, EColumnType::kByte, 8);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint8_t, EColumnType::kChar, 8, RColumnElementCastLE, <std::uint8_t, char>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint8_t, EColumnType::kInt8, 8, RColumnElementCastLE, <std::uint8_t, std::int8_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint8_t, EColumnType::kInt16, 16, RColumnElementCastLE, <std::uint8_t, std::int16_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint8_t, EColumnType::kUInt16, 16, RColumnElementCastLE,
+                            <std::uint8_t, std::uint16_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint8_t, EColumnType::kInt32, 32, RColumnElementCastLE, <std::uint8_t, std::int32_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint8_t, EColumnType::kUInt32, 32, RColumnElementCastLE,
+                            <std::uint8_t, std::uint32_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint8_t, EColumnType::kInt64, 64, RColumnElementCastLE, <std::uint8_t, std::int64_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint8_t, EColumnType::kUInt64, 64, RColumnElementCastLE,
+                            <std::uint8_t, std::uint64_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint8_t, EColumnType::kSplitInt16, 16, RColumnElementZigzagSplitLE,
+                            <std::uint8_t, std::int16_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint8_t, EColumnType::kSplitUInt16, 16, RColumnElementSplitLE,
+                            <std::uint8_t, std::uint16_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint8_t, EColumnType::kSplitInt32, 32, RColumnElementZigzagSplitLE,
+                            <std::uint8_t, std::int32_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint8_t, EColumnType::kSplitUInt32, 32, RColumnElementSplitLE,
+                            <std::uint8_t, std::uint32_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint8_t, EColumnType::kSplitInt64, 64, RColumnElementZigzagSplitLE,
+                            <std::uint8_t, std::int64_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint8_t, EColumnType::kSplitUInt64, 64, RColumnElementSplitLE,
+                            <std::uint8_t, std::uint64_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint8_t, EColumnType::kBit, 1, RColumnElementIntAsBool, <std::uint8_t>);
 
 DECLARE_RCOLUMNELEMENT_SPEC(std::int16_t, EColumnType::kInt16, 16, RColumnElementLE, <std::int16_t>);
-DECLARE_RCOLUMNELEMENT_SPEC(std::int16_t, EColumnType::kUInt16, 16, RColumnElementLE, <std::int16_t>);
 DECLARE_RCOLUMNELEMENT_SPEC(std::int16_t, EColumnType::kSplitInt16, 16, RColumnElementZigzagSplitLE,
                             <std::int16_t, std::int16_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::int16_t, EColumnType::kChar, 8, RColumnElementCastLE, <std::int16_t, char>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::int16_t, EColumnType::kInt8, 8, RColumnElementCastLE, <std::int16_t, std::int8_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::int16_t, EColumnType::kUInt8, 8, RColumnElementCastLE, <std::int16_t, std::uint8_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::int16_t, EColumnType::kUInt16, 16, RColumnElementCastLE,
+                            <std::int16_t, std::uint16_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::int16_t, EColumnType::kInt32, 32, RColumnElementCastLE, <std::int16_t, std::int32_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::int16_t, EColumnType::kUInt32, 32, RColumnElementCastLE,
+                            <std::int16_t, std::uint32_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::int16_t, EColumnType::kInt64, 64, RColumnElementCastLE, <std::int16_t, std::int64_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::int16_t, EColumnType::kUInt64, 64, RColumnElementCastLE,
+                            <std::int16_t, std::uint64_t>);
 DECLARE_RCOLUMNELEMENT_SPEC(std::int16_t, EColumnType::kSplitUInt16, 16, RColumnElementSplitLE,
                             <std::int16_t, std::uint16_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::int16_t, EColumnType::kSplitInt32, 32, RColumnElementZigzagSplitLE,
+                            <std::int16_t, std::int32_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::int16_t, EColumnType::kSplitUInt32, 32, RColumnElementSplitLE,
+                            <std::int16_t, std::uint32_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::int16_t, EColumnType::kSplitInt64, 64, RColumnElementZigzagSplitLE,
+                            <std::int16_t, std::int64_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::int16_t, EColumnType::kSplitUInt64, 64, RColumnElementSplitLE,
+                            <std::int16_t, std::uint64_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::int16_t, EColumnType::kBit, 1, RColumnElementIntAsBool, <std::int16_t>);
 
 DECLARE_RCOLUMNELEMENT_SPEC(std::uint16_t, EColumnType::kUInt16, 16, RColumnElementLE, <std::uint16_t>);
-DECLARE_RCOLUMNELEMENT_SPEC(std::uint16_t, EColumnType::kInt16, 16, RColumnElementLE, <std::uint16_t>);
 DECLARE_RCOLUMNELEMENT_SPEC(std::uint16_t, EColumnType::kSplitUInt16, 16, RColumnElementSplitLE,
                             <std::uint16_t, std::uint16_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint16_t, EColumnType::kChar, 8, RColumnElementCastLE, <std::uint16_t, char>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint16_t, EColumnType::kInt8, 8, RColumnElementCastLE, <std::uint16_t, std::int8_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint16_t, EColumnType::kUInt8, 8, RColumnElementCastLE, <std::uint16_t, std::uint8_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint16_t, EColumnType::kInt16, 16, RColumnElementCastLE,
+                            <std::uint16_t, std::int16_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint16_t, EColumnType::kInt32, 32, RColumnElementCastLE,
+                            <std::uint16_t, std::int32_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint16_t, EColumnType::kUInt32, 32, RColumnElementCastLE,
+                            <std::uint16_t, std::uint32_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint16_t, EColumnType::kInt64, 64, RColumnElementCastLE,
+                            <std::uint16_t, std::int64_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint16_t, EColumnType::kUInt64, 64, RColumnElementCastLE,
+                            <std::uint16_t, std::uint64_t>);
 DECLARE_RCOLUMNELEMENT_SPEC(std::uint16_t, EColumnType::kSplitInt16, 16, RColumnElementZigzagSplitLE,
                             <std::uint16_t, std::int16_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint16_t, EColumnType::kSplitInt32, 32, RColumnElementZigzagSplitLE,
+                            <std::uint16_t, std::int32_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint16_t, EColumnType::kSplitUInt32, 32, RColumnElementSplitLE,
+                            <std::uint16_t, std::uint32_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint16_t, EColumnType::kSplitInt64, 64, RColumnElementZigzagSplitLE,
+                            <std::uint16_t, std::int64_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint16_t, EColumnType::kSplitUInt64, 64, RColumnElementSplitLE,
+                            <std::uint16_t, std::uint64_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint16_t, EColumnType::kBit, 1, RColumnElementIntAsBool, <std::uint16_t>);
 
 DECLARE_RCOLUMNELEMENT_SPEC(std::int32_t, EColumnType::kInt32, 32, RColumnElementLE, <std::int32_t>);
-DECLARE_RCOLUMNELEMENT_SPEC(std::int32_t, EColumnType::kUInt32, 32, RColumnElementLE, <std::int32_t>);
 DECLARE_RCOLUMNELEMENT_SPEC(std::int32_t, EColumnType::kSplitInt32, 32, RColumnElementZigzagSplitLE,
                             <std::int32_t, std::int32_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::int32_t, EColumnType::kChar, 8, RColumnElementCastLE, <std::int32_t, char>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::int32_t, EColumnType::kInt8, 8, RColumnElementCastLE, <std::int32_t, std::int8_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::int32_t, EColumnType::kUInt8, 8, RColumnElementCastLE, <std::int32_t, std::uint8_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::int32_t, EColumnType::kInt16, 16, RColumnElementCastLE, <std::int32_t, std::int16_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::int32_t, EColumnType::kUInt16, 16, RColumnElementCastLE,
+                            <std::int32_t, std::uint16_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::int32_t, EColumnType::kUInt32, 32, RColumnElementCastLE,
+                            <std::int32_t, std::uint32_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::int32_t, EColumnType::kInt64, 64, RColumnElementCastLE, <std::int32_t, std::int64_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::int32_t, EColumnType::kUInt64, 64, RColumnElementCastLE,
+                            <std::int32_t, std::uint64_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::int32_t, EColumnType::kSplitInt16, 16, RColumnElementZigzagSplitLE,
+                            <std::int32_t, std::int16_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::int32_t, EColumnType::kSplitUInt16, 16, RColumnElementSplitLE,
+                            <std::int32_t, std::uint16_t>);
 DECLARE_RCOLUMNELEMENT_SPEC(std::int32_t, EColumnType::kSplitUInt32, 32, RColumnElementSplitLE,
                             <std::int32_t, std::uint32_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::int32_t, EColumnType::kSplitInt64, 64, RColumnElementZigzagSplitLE,
+                            <std::int32_t, std::int64_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::int32_t, EColumnType::kSplitUInt64, 64, RColumnElementSplitLE,
+                            <std::int32_t, std::uint64_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::int32_t, EColumnType::kBit, 1, RColumnElementIntAsBool, <std::int32_t>);
 
 DECLARE_RCOLUMNELEMENT_SPEC(std::uint32_t, EColumnType::kUInt32, 32, RColumnElementLE, <std::uint32_t>);
-DECLARE_RCOLUMNELEMENT_SPEC(std::uint32_t, EColumnType::kInt32, 32, RColumnElementLE, <std::uint32_t>);
 DECLARE_RCOLUMNELEMENT_SPEC(std::uint32_t, EColumnType::kSplitUInt32, 32, RColumnElementSplitLE,
                             <std::uint32_t, std::uint32_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint32_t, EColumnType::kChar, 8, RColumnElementCastLE, <std::uint32_t, char>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint32_t, EColumnType::kInt8, 8, RColumnElementCastLE, <std::uint32_t, std::int8_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint32_t, EColumnType::kUInt8, 8, RColumnElementCastLE, <std::uint32_t, std::uint8_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint32_t, EColumnType::kInt16, 16, RColumnElementCastLE,
+                            <std::uint32_t, std::int16_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint32_t, EColumnType::kUInt16, 16, RColumnElementCastLE,
+                            <std::uint32_t, std::uint16_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint32_t, EColumnType::kInt32, 32, RColumnElementCastLE,
+                            <std::uint32_t, std::int32_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint32_t, EColumnType::kInt64, 64, RColumnElementCastLE,
+                            <std::uint32_t, std::int64_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint32_t, EColumnType::kUInt64, 64, RColumnElementCastLE,
+                            <std::uint32_t, std::uint64_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint32_t, EColumnType::kSplitInt16, 16, RColumnElementZigzagSplitLE,
+                            <std::uint32_t, std::int16_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint32_t, EColumnType::kSplitUInt16, 16, RColumnElementSplitLE,
+                            <std::uint32_t, std::uint16_t>);
 DECLARE_RCOLUMNELEMENT_SPEC(std::uint32_t, EColumnType::kSplitInt32, 32, RColumnElementZigzagSplitLE,
                             <std::uint32_t, std::int32_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint32_t, EColumnType::kSplitInt64, 64, RColumnElementZigzagSplitLE,
+                            <std::uint32_t, std::int64_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint32_t, EColumnType::kSplitUInt64, 64, RColumnElementSplitLE,
+                            <std::uint32_t, std::uint64_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint32_t, EColumnType::kBit, 1, RColumnElementIntAsBool, <std::uint32_t>);
 
 DECLARE_RCOLUMNELEMENT_SPEC(std::int64_t, EColumnType::kInt64, 64, RColumnElementLE, <std::int64_t>);
-DECLARE_RCOLUMNELEMENT_SPEC(std::int64_t, EColumnType::kUInt64, 64, RColumnElementLE, <std::int64_t>);
 DECLARE_RCOLUMNELEMENT_SPEC(std::int64_t, EColumnType::kSplitInt64, 64, RColumnElementZigzagSplitLE,
                             <std::int64_t, std::int64_t>);
-DECLARE_RCOLUMNELEMENT_SPEC(std::int64_t, EColumnType::kSplitUInt64, 64, RColumnElementSplitLE,
-                            <std::int64_t, std::uint64_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::int64_t, EColumnType::kChar, 8, RColumnElementCastLE, <std::int64_t, char>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::int64_t, EColumnType::kInt8, 8, RColumnElementCastLE, <std::int64_t, std::int8_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::int64_t, EColumnType::kUInt8, 8, RColumnElementCastLE, <std::int64_t, std::uint8_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::int64_t, EColumnType::kInt16, 16, RColumnElementCastLE, <std::int64_t, std::int16_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::int64_t, EColumnType::kUInt16, 16, RColumnElementCastLE,
+                            <std::int64_t, std::uint16_t>);
 DECLARE_RCOLUMNELEMENT_SPEC(std::int64_t, EColumnType::kInt32, 32, RColumnElementCastLE, <std::int64_t, std::int32_t>);
 DECLARE_RCOLUMNELEMENT_SPEC(std::int64_t, EColumnType::kUInt32, 32, RColumnElementCastLE,
                             <std::int64_t, std::uint32_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::int64_t, EColumnType::kUInt64, 64, RColumnElementCastLE,
+                            <std::int64_t, std::uint64_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::int64_t, EColumnType::kSplitInt16, 16, RColumnElementZigzagSplitLE,
+                            <std::int64_t, std::int16_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::int64_t, EColumnType::kSplitUInt16, 16, RColumnElementSplitLE,
+                            <std::int64_t, std::uint16_t>);
 DECLARE_RCOLUMNELEMENT_SPEC(std::int64_t, EColumnType::kSplitInt32, 32, RColumnElementZigzagSplitLE,
                             <std::int64_t, std::int32_t>);
 DECLARE_RCOLUMNELEMENT_SPEC(std::int64_t, EColumnType::kSplitUInt32, 32, RColumnElementSplitLE,
                             <std::int64_t, std::uint32_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::int64_t, EColumnType::kSplitUInt64, 64, RColumnElementSplitLE,
+                            <std::int64_t, std::uint64_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::int64_t, EColumnType::kBit, 1, RColumnElementIntAsBool, <std::int64_t>);
 
 DECLARE_RCOLUMNELEMENT_SPEC(std::uint64_t, EColumnType::kUInt64, 64, RColumnElementLE, <std::uint64_t>);
-DECLARE_RCOLUMNELEMENT_SPEC(std::uint64_t, EColumnType::kInt64, 64, RColumnElementLE, <std::uint64_t>);
 DECLARE_RCOLUMNELEMENT_SPEC(std::uint64_t, EColumnType::kSplitUInt64, 64, RColumnElementSplitLE,
                             <std::uint64_t, std::uint64_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint64_t, EColumnType::kChar, 8, RColumnElementCastLE, <std::uint64_t, char>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint64_t, EColumnType::kInt8, 8, RColumnElementCastLE, <std::uint64_t, std::int8_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint64_t, EColumnType::kUInt8, 8, RColumnElementCastLE, <std::uint64_t, std::uint8_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint64_t, EColumnType::kInt16, 16, RColumnElementCastLE,
+                            <std::uint64_t, std::int16_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint64_t, EColumnType::kUInt16, 16, RColumnElementCastLE,
+                            <std::uint64_t, std::uint16_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint64_t, EColumnType::kInt32, 32, RColumnElementCastLE,
+                            <std::uint64_t, std::int32_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint64_t, EColumnType::kUInt32, 32, RColumnElementCastLE,
+                            <std::uint64_t, std::uint32_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint64_t, EColumnType::kInt64, 64, RColumnElementCastLE,
+                            <std::uint64_t, std::int64_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint64_t, EColumnType::kSplitInt16, 16, RColumnElementZigzagSplitLE,
+                            <std::uint64_t, std::int16_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint64_t, EColumnType::kSplitUInt16, 16, RColumnElementSplitLE,
+                            <std::uint64_t, std::uint16_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint64_t, EColumnType::kSplitInt32, 32, RColumnElementZigzagSplitLE,
+                            <std::uint64_t, std::int32_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint64_t, EColumnType::kSplitUInt32, 32, RColumnElementSplitLE,
+                            <std::uint64_t, std::uint32_t>);
 DECLARE_RCOLUMNELEMENT_SPEC(std::uint64_t, EColumnType::kSplitInt64, 64, RColumnElementZigzagSplitLE,
                             <std::uint64_t, std::int64_t>);
+DECLARE_RCOLUMNELEMENT_SPEC(std::uint64_t, EColumnType::kBit, 1, RColumnElementIntAsBool, <std::uint64_t>);
 
 DECLARE_RCOLUMNELEMENT_SPEC(float, EColumnType::kReal32, 32, RColumnElementLE, <float>);
 DECLARE_RCOLUMNELEMENT_SPEC(float, EColumnType::kSplitReal32, 32, RColumnElementSplitLE, <float, float>);
+DECLARE_RCOLUMNELEMENT_SPEC(float, EColumnType::kReal64, 64, RColumnElementCastLE, <float, double>);
+DECLARE_RCOLUMNELEMENT_SPEC(float, EColumnType::kSplitReal64, 64, RColumnElementSplitLE, <float, double>);
 
 DECLARE_RCOLUMNELEMENT_SPEC(double, EColumnType::kReal64, 64, RColumnElementLE, <double>);
 DECLARE_RCOLUMNELEMENT_SPEC(double, EColumnType::kSplitReal64, 64, RColumnElementSplitLE, <double, double>);
@@ -758,8 +1407,22 @@ DECLARE_RCOLUMNELEMENT_SPEC(ROOT::Experimental::ClusterSize_t, EColumnType::kSpl
 DECLARE_RCOLUMNELEMENT_SPEC(ROOT::Experimental::ClusterSize_t, EColumnType::kSplitIndex32, 32,
                             RColumnElementDeltaSplitLE, <std::uint64_t, std::uint32_t>);
 
-void RColumnElement<bool, ROOT::Experimental::EColumnType::kBit>::Pack(void *dst, const void *src,
-                                                                       std::size_t count) const
+template <>
+class RColumnElement<ROOT::Experimental::Internal::RTestFutureColumn, kTestFutureType> final
+   : public RColumnElementBase {
+public:
+   static constexpr bool kIsMappable = false;
+   static constexpr std::size_t kSize = sizeof(ROOT::Experimental::Internal::RTestFutureColumn);
+   static constexpr std::size_t kBitsOnStorage = kSize * 8;
+   RColumnElement() : RColumnElementBase(kSize, kBitsOnStorage) {}
+
+   bool IsMappable() const { return kIsMappable; }
+   void Pack(void *, const void *, std::size_t) const {}
+   void Unpack(void *, const void *, std::size_t) const {}
+};
+
+inline void
+RColumnElement<bool, ROOT::Experimental::EColumnType::kBit>::Pack(void *dst, const void *src, std::size_t count) const
 {
    const bool *boolArray = reinterpret_cast<const bool *>(src);
    char *charArray = reinterpret_cast<char *>(dst);
@@ -778,8 +1441,8 @@ void RColumnElement<bool, ROOT::Experimental::EColumnType::kBit>::Pack(void *dst
    }
 }
 
-void RColumnElement<bool, ROOT::Experimental::EColumnType::kBit>::Unpack(void *dst, const void *src,
-                                                                         std::size_t count) const
+inline void
+RColumnElement<bool, ROOT::Experimental::EColumnType::kBit>::Unpack(void *dst, const void *src, std::size_t count) const
 {
    bool *boolArray = reinterpret_cast<bool *>(dst);
    const char *charArray = reinterpret_cast<const char *>(src);

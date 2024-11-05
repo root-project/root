@@ -1,4 +1,5 @@
 import { BIT } from '../core.mjs';
+import { DrawOptions } from '../base/BasePainter.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
 import { ensureTCanvas } from '../gpad/TCanvasPainter.mjs';
 import { addMoveHandler } from '../gui/utils.mjs';
@@ -33,13 +34,19 @@ class TLinePainter extends ObjectPainter {
    moveEnd(not_changed) {
       if (not_changed) return;
       const line = this.getObject();
-      let exec = '';
-      line.fX1 = this.svgToAxis('x', this.x1, this.isndc);
-      line.fX2 = this.svgToAxis('x', this.x2, this.isndc);
-      line.fY1 = this.svgToAxis('y', this.y1, this.isndc);
-      line.fY2 = this.svgToAxis('y', this.y2, this.isndc);
-      if (this.side !== 1) exec += `SetX1(${line.fX1});;SetY1(${line.fY1});;`;
-      if (this.side !== -1) exec += `SetX2(${line.fX2});;SetY2(${line.fY2});;`;
+      let exec = '',
+          fx1 = this.svgToAxis('x', this.x1, this.isndc),
+          fx2 = this.svgToAxis('x', this.x2, this.isndc),
+          fy1 = this.svgToAxis('y', this.y1, this.isndc),
+          fy2 = this.svgToAxis('y', this.y2, this.isndc);
+      if (this.swap_xy)
+         [fx1, fy1, fx2, fy2] = [fy1, fx1, fy2, fx2];
+      line.fX1 = fx1;
+      line.fX2 = fx2;
+      line.fY1 = fy1;
+      line.fY2 = fy2;
+      if (this.side !== 1) exec += `SetX1(${fx1});;SetY1(${fy1});;`;
+      if (this.side !== -1) exec += `SetX2(${fx2});;SetY2(${fy2});;`;
       this.submitCanvExec(exec + 'Notify();;');
    }
 
@@ -63,12 +70,21 @@ class TLinePainter extends ObjectPainter {
 
       this.isndc = line.TestBit(kLineNDC);
 
-      const func = this.getAxisToSvgFunc(this.isndc, true, true);
+      const use_frame = this.isndc ? false : new DrawOptions(this.getDrawOpt()).check('FRAME');
+
+      this.createG(use_frame ? 'frame2d' : undefined);
+
+      this.swap_xy = use_frame && this.getFramePainter()?.swap_xy;
+
+      const func = this.getAxisToSvgFunc(this.isndc, true);
 
       this.x1 = func.x(line.fX1);
       this.y1 = func.y(line.fY1);
       this.x2 = func.x(line.fX2);
       this.y2 = func.y(line.fY2);
+
+      if (this.swap_xy)
+         [this.x1, this.y1, this.x2, this.y2] = [this.y1, this.x1, this.y2, this.x2];
 
       this.createAttLine({ attr: line });
    }
@@ -84,8 +100,6 @@ class TLinePainter extends ObjectPainter {
 
    /** @summary Redraw line */
    redraw() {
-      this.createG();
-
       this.prepareDraw();
 
       const elem = this.draw_g.append('svg:path')

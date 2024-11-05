@@ -1,8 +1,13 @@
 import { select as d3_select } from '../d3.mjs';
-import { settings, internals, isNodeJs, isFunc, isStr, isObject, btoa_func, getDocument, source_dir, loadScript, httpRequest } from '../core.mjs';
-import { detectFont, addCustomFont, getCustomFont, FontHandler } from './FontHandler.mjs';
-import { approximateLabelWidth, replaceSymbolsInTextNode } from './latex.mjs';
+import { settings, internals, isNodeJs, isFunc, isStr, isObject, btoa_func, getDocument } from '../core.mjs';
 import { getColor } from './colors.mjs';
+
+/** @summary Standard prefix for SVG file context as data url
+ * @private */
+const prSVG = 'data:image/svg+xml;charset=utf-8,',
+/** @summary Standard prefix for JSON file context as data url
+ * @private */
+      prJSON = 'data:application/json;charset=utf-8,';
 
 
 /** @summary Returns visible rect of element
@@ -73,32 +78,49 @@ function getAbsPosInCanvas(sel, pos) {
   * @param {boolean} [ret_fmt] - when true returns array with value and actual format like ['0.1','6.4f']
   * @return {string|Array} - converted value or array with value and actual format
   * @private */
-function floatToString(value, fmt, ret_fmt) {
-   if (!fmt) fmt = '6.4g';
+function floatToString(value, fmt, ret_fmt, significance) {
+   if (!fmt)
+      fmt = '6.4g';
+   else if (fmt === 'g')
+      fmt = '8.6g';
+   else if (fmt === 'c')
+      fmt = '8.6c';
 
    fmt = fmt.trim();
    const len = fmt.length;
    if (len < 2)
       return ret_fmt ? [value.toFixed(4), '6.4f'] : value.toFixed(4);
-   const last = fmt[len-1];
+   const kind = fmt[len-1].toLowerCase();
    fmt = fmt.slice(0, len-1);
    let isexp, prec = fmt.indexOf('.');
    prec = (prec < 0) ? 4 : parseInt(fmt.slice(prec+1));
    if (!Number.isInteger(prec) || (prec <= 0)) prec = 4;
 
-   let significance = false;
-   if ((last === 'e') || (last === 'E')) isexp = true; else
-   if (last === 'Q') { isexp = true; significance = true; } else
-   if ((last === 'f') || (last === 'F')) isexp = false; else
-   if (last === 'W') { isexp = false; significance = true; } else
-   if ((last === 'g') || (last === 'G')) {
-      const se = floatToString(value, fmt+'Q', true);
-      let sg = floatToString(value, fmt+'W', true);
-      if (se[0].length < sg[0].length) sg = se;
-      return ret_fmt ? sg : sg[0];
-   } else {
-      isexp = false;
-      prec = 4;
+   switch (kind) {
+      case 'e':
+         isexp = true;
+         break;
+      case 'f':
+         isexp = false;
+         break;
+      case 'c':
+      case 'g': {
+         const se = floatToString(value, fmt+'e', true, true);
+         let sg = floatToString(value, fmt+'f', true, true);
+         const pnt = sg[0].indexOf('.');
+         if ((kind === 'c') && (pnt > 0)) {
+            let len = sg[0].length;
+            while ((len > pnt) && (sg[0][len-1] === '0'))
+               len--;
+            if (len === pnt) len--;
+            sg[0] = sg[0].slice(0, len);
+         }
+         if (se[0].length < sg[0].length) sg = se;
+         return ret_fmt ? sg : sg[0];
+      }
+      default:
+         isexp = false;
+         prec = 4;
    }
 
    if (isexp) {
@@ -107,7 +129,7 @@ function floatToString(value, fmt, ret_fmt) {
       if (prec < 0) prec = 0;
 
       const se = value.toExponential(prec);
-      return ret_fmt ? [se, `5.${prec}e`] : se;
+      return ret_fmt ? [se, `${prec+2}.${prec}e`] : se;
    }
 
    let sg = value.toFixed(prec);
@@ -134,7 +156,7 @@ function floatToString(value, fmt, ret_fmt) {
       }
    }
 
-   return ret_fmt ? [sg, '5.'+prec+'f'] : sg;
+   return ret_fmt ? [sg, `${prec+2}.${prec}f`] : sg;
 }
 
 
@@ -405,6 +427,7 @@ function compressSVG(svg) {
             .replace(/ class="\w*"/g, '')                              // remove all classes
             .replace(/ pad="\w*"/g, '')                                // remove all pad ids
             .replace(/ title=""/g, '')                                 // remove all empty titles
+            .replace(/ style=""/g, '')                                 // remove all empty styles
             .replace(/<g objname="\w*" objtype="\w*"/g, '<g')          // remove object ids
             .replace(/<g transform="translate\(\d+,\d+\)"><\/g>/g, '') // remove all empty groups with transform
             .replace(/<g transform="translate\(\d+,\d+\)" style="display: none;"><\/g>/g, '') // remove hidden title
@@ -728,153 +751,22 @@ function addHighlightStyle(elem, drag) {
    }
 }
 
-/** @summary Create pdf for existing SVG element
-  * @return {Promise} with produced PDF file as url string
-  * @private */
-async function svgToPDF(args, as_buffer) {
-   const nodejs = isNodeJs();
-   let _jspdf, _svg2pdf, need_symbols = false;
-
-   const pr = nodejs
-      ? import('../../scripts/jspdf.es.min.js').then(h1 => { _jspdf = h1; return import('../../scripts/svg2pdf.es.min.js'); }).then(h2 => { _svg2pdf = h2; })
-      : loadScript(source_dir + 'scripts/jspdf.umd.min.js').then(() => loadScript(source_dir + 'scripts/svg2pdf.umd.min.js')).then(() => { _jspdf = globalThis.jspdf; _svg2pdf = globalThis.svg2pdf; }),
-        restore_fonts = [], restore_dominant = [], restore_text = [],
-        node_transform = args.node.getAttribute('transform'), custom_fonts = {};
-
-   if (args.reset_tranform)
-      args.node.removeAttribute('transform');
-
-   return pr.then(() => {
-      d3_select(args.node).selectAll('g').each(function() {
-         if (this.hasAttribute('font-family')) {
-            const name = this.getAttribute('font-family');
-            if (name === 'Courier New') {
-               this.setAttribute('font-family', 'courier');
-               if (!args.can_modify) restore_fonts.push(this); // keep to restore it
-            }
-         }
-      });
-
-      d3_select(args.node).selectAll('text').each(function() {
-         if (this.hasAttribute('dominant-baseline')) {
-            this.setAttribute('dy', '.2em'); // slightly different as in plain text
-            this.removeAttribute('dominant-baseline');
-            if (!args.can_modify) restore_dominant.push(this); // keep to restore it
-         } else if (args.can_modify && nodejs && this.getAttribute('dy') === '.4em')
-            this.setAttribute('dy', '.2em'); // better alignment in PDF
-
-         if (replaceSymbolsInTextNode(this)) {
-            need_symbols = true;
-            if (!args.can_modify) restore_text.push(this); // keep to restore it
-         }
-      });
-
-      if (nodejs) {
-         const doc = internals.nodejs_document;
-         doc.oldFunc = doc.createElementNS;
-         globalThis.document = doc;
-         globalThis.CSSStyleSheet = internals.nodejs_window.CSSStyleSheet;
-         globalThis.CSSStyleRule = internals.nodejs_window.CSSStyleRule;
-         doc.createElementNS = function(ns, kind) {
-            const res = doc.oldFunc(ns, kind);
-            res.getBBox = function() {
-               let width = 50, height = 10;
-               if (this.tagName === 'text') {
-                  // TODO: use jsDOC fonts for label width estimation
-                  const font = detectFont(this);
-                  width = approximateLabelWidth(this.textContent, font);
-                  height = font.size;
-               }
-
-               return { x: 0, y: 0, width, height };
-            };
-            return res;
-         };
-      }
-
-      // eslint-disable-next-line new-cap
-      const doc = new _jspdf.jsPDF({
-         orientation: 'landscape',
-         unit: 'px',
-         format: [args.width + 10, args.height + 10]
-      });
-
-      // add custom fonts to PDF document, only TTF format supported
-      d3_select(args.node).selectAll('style').each(function() {
-         const fh = this.$fonthandler;
-         if (!fh || custom_fonts[fh.name] || (fh.format !== 'ttf')) return;
-         const filename = fh.name.toLowerCase().replace(/\s/g, '') + '.ttf';
-         doc.addFileToVFS(filename, fh.base64);
-         doc.addFont(filename, fh.name, 'normal', 'normal', (fh.name === 'symbol') ? 'StandardEncoding' : 'Identity-H');
-         custom_fonts[fh.name] = true;
-      });
-
-      let pr2 = Promise.resolve(true);
-
-      if (need_symbols && !custom_fonts.symbol) {
-         if (!getCustomFont('symbol')) {
-            pr2 = nodejs
-              ? import('fs').then(fs => {
-                 const base64 = fs.readFileSync('../../fonts/symbol.ttf').toString('base64');
-                 console.log('reading symbol.ttf', base64.length);
-                 addCustomFont(25, 'symbol', 'ttf', base64);
-              })
-              : httpRequest(source_dir+'fonts/symbol.ttf', 'bin').then(buf => {
-               const base64 = btoa_func(buf);
-               addCustomFont(25, 'symbol', 'ttf', base64);
-            });
-         }
-
-         pr2 = pr2.then(() => {
-            const fh = getCustomFont('symbol'),
-                  handler = new FontHandler(1242, 10);
-            handler.name = 'symbol';
-            handler.base64 = fh.base64;
-            handler.addCustomFontToSvg(d3_select(args.node));
-            doc.addFileToVFS('symbol.ttf', fh.base64);
-            doc.addFont('symbol.ttf', 'symbol', 'normal', 'normal', 'StandardEncoding' /* 'WinAnsiEncoding' */);
-         });
-      }
-
-      return pr2.then(() => _svg2pdf.svg2pdf(args.node, doc, { x: 5, y: 5, width: args.width, height: args.height }))
-         .then(() => {
-            if (args.reset_tranform && !args.can_modify && node_transform)
-               args.node.setAttribute('transform', node_transform);
-
-            restore_fonts.forEach(node => node.setAttribute('font-family', 'Courier New'));
-            restore_dominant.forEach(node => {
-               node.setAttribute('dominant-baseline', 'middle');
-               node.removeAttribute('dy');
-            });
-
-            restore_text.forEach(node => { node.innerHTML = node.$originalHTML; });
-
-            const res = as_buffer ? doc.output('arraybuffer') : doc.output('dataurlstring');
-            if (nodejs) {
-               globalThis.document = undefined;
-               globalThis.CSSStyleSheet = undefined;
-               globalThis.CSSStyleRule = undefined;
-               internals.nodejs_document.createElementNS = internals.nodejs_document.oldFunc;
-               if (as_buffer) return Buffer.from(res);
-            }
-             return res;
-         });
-   });
-}
-
-
 /** @summary Create image based on SVG
   * @param {string} svg - svg code of the image
   * @param {string} [image_format] - image format like 'png', 'jpeg' or 'webp'
-  * @param {boolean} [as_buffer] - return Buffer object for image
+  * @param {Objects} [args] - optional arguments
+  * @param {boolean} [args.as_buffer] - return image as buffer
   * @return {Promise} with produced image in base64 form or as Buffer (or canvas when no image_format specified)
   * @private */
-async function svgToImage(svg, image_format, as_buffer) {
+async function svgToImage(svg, image_format, args) {
+   if ((args === true) || (args === false))
+      args = { as_buffer: args };
+
    if (image_format === 'svg')
       return svg;
 
    if (image_format === 'pdf')
-      return svgToPDF(svg, as_buffer);
+      return internals.makePDF ? internals.makePDF(svg, args) : null;
 
    // required with df104.py/df105.py example with RCanvas or any special symbols in TLatex
    const doctype = '<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">';
@@ -883,9 +775,9 @@ async function svgToImage(svg, image_format, as_buffer) {
        const c = String.fromCharCode('0x'+p1);
        return c === '%' ? '%25' : c;
    });
-   svg = decodeURIComponent(svg);
 
-   const img_src = 'data:image/svg+xml;base64,' + btoa_func(svg);
+   // Cannot use prSVG because of some special cases like RCanvas/rh2
+   const img_src = 'data:image/svg+xml;base64,' + btoa_func(decodeURIComponent(svg));
 
    if (isNodeJs()) {
       return import('canvas').then(async handle => {
@@ -894,7 +786,7 @@ async function svgToImage(svg, image_format, as_buffer) {
 
             canvas.getContext('2d').drawImage(img, 0, 0, img.width, img.height);
 
-            if (as_buffer) return canvas.toBuffer('image/' + image_format);
+            if (args?.as_buffer) return canvas.toBuffer('image/' + image_format);
 
             return image_format ? canvas.toDataURL('image/' + image_format) : canvas;
          });
@@ -911,7 +803,7 @@ async function svgToImage(svg, image_format, as_buffer) {
 
          canvas.getContext('2d').drawImage(image, 0, 0);
 
-         if (as_buffer && image_format)
+         if (args?.as_buffer && image_format)
             canvas.toBlob(blob => blob.arrayBuffer().then(resolveFunc), 'image/' + image_format);
          else
             resolveFunc(image_format ? canvas.toDataURL('image/' + image_format) : canvas);
@@ -952,6 +844,6 @@ function convertDate(dt) {
    return res || dt.toLocaleString('en-GB');
 }
 
-export { getElementRect, getAbsPosInCanvas, getTDatime, convertDate,
+export { prSVG, prJSON, getElementRect, getAbsPosInCanvas, getTDatime, convertDate,
          DrawOptions, TRandom, floatToString, buildSvgCurve, compressSVG,
          BasePainter, _loadJSDOM, makeTranslate, addHighlightStyle, svgToImage };

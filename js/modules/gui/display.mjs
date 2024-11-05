@@ -1,6 +1,6 @@
 import { select as d3_select, drag as d3_drag } from '../d3.mjs';
-import { browser, internals, toJSON, settings, isObject, isFunc, isStr, nsSVG } from '../core.mjs';
-import { compressSVG, BasePainter } from '../base/BasePainter.mjs';
+import { browser, internals, toJSON, settings, isObject, isFunc, isStr, nsSVG, btoa_func } from '../core.mjs';
+import { compressSVG, BasePainter, svgToImage } from '../base/BasePainter.mjs';
 import { getElementCanvPainter, selectActivePad, cleanup, resize, ObjectPainter } from '../base/ObjectPainter.mjs';
 import { createMenu } from './menu.mjs';
 import { detectRightButton, injectStyle } from './utils.mjs';
@@ -1156,8 +1156,8 @@ class BatchDisplay extends MDIDisplay {
    constructor(width, height, jsdom_body) {
       super('$batch$');
       this.frames = []; // array of configured frames
-      this.width = width || 1200;
-      this.height = height || 800;
+      this.width = width || settings.CanvasWidth;
+      this.height = height || settings.CanvasHeight;
       this.jsdom_body = jsdom_body || d3_select('body'); // d3 body handle
    }
 
@@ -1183,33 +1183,57 @@ class BatchDisplay extends MDIDisplay {
       return this.afterCreateFrame(frame.node());
    }
 
+   /** @summary Create final frame */
+   createFinalBatchFrame() {
+      const cnt = this.numFrames(), prs = [];
+
+      for (let n = 0; n < cnt; ++n) {
+         const json = this.makeJSON(n, 1, true);
+         if (json)
+            d3_select(this.frames[n]).text('json:' + btoa_func(json));
+         else
+            prs.push(this.makeSVG(n, true));
+      }
+
+      return Promise.all(prs).then(() => {
+         this.jsdom_body.append('div')
+             .attr('id', 'jsroot_batch_final')
+             .html(`${cnt}`);
+      });
+   }
+
    /** @summary Returns number of created frames */
    numFrames() { return this.frames.length; }
 
    /** @summary returns JSON representation if any
      * @desc Now works only for inspector, can be called once */
-   makeJSON(id, spacing) {
+   makeJSON(id, spacing, keep_frame) {
       const frame = this.frames[id];
       if (!frame) return;
       const obj = d3_select(frame).property('_json_object_');
       if (obj) {
          d3_select(frame).property('_json_object_', null);
          cleanup(frame);
-         d3_select(frame).remove();
+         if (!keep_frame)
+            d3_select(frame).remove();
          return toJSON(obj, spacing);
       }
    }
 
    /** @summary Create SVG for specified frame id */
-   makeSVG(id) {
+   makeSVG(id, keep_frame) {
       const frame = this.frames[id];
       if (!frame) return;
-      const main = d3_select(frame);
-      main.select('svg')
-          .attr('xmlns', nsSVG)
-          .attr('width', this.width)
-          .attr('height', this.height)
-          .attr('title', null).attr('style', null).attr('class', null).attr('x', null).attr('y', null);
+      const main = d3_select(frame),
+            mainsvg = main.select('svg');
+      if (mainsvg.empty())
+         return;
+
+      mainsvg.attr('xmlns', nsSVG)
+             .attr('title', null).attr('style', null).attr('class', null).attr('x', null).attr('y', null);
+
+      if (!mainsvg.attr('width') && !mainsvg.attr('height'))
+            mainsvg.attr('width', this.width).attr('height', this.height);
 
       function clear_element() {
          const elem = d3_select(this);
@@ -1218,6 +1242,15 @@ class BatchDisplay extends MDIDisplay {
 
       main.selectAll('g.root_frame').each(clear_element);
       main.selectAll('svg').each(clear_element);
+
+      if (internals.batch_png) {
+         return svgToImage(compressSVG(main.html()), 'png').then(href => {
+            d3_select(this.frames[id]).text('png:' + href);
+         });
+      }
+
+      if (keep_frame)
+         return true;
 
       const svg = compressSVG(main.html());
 

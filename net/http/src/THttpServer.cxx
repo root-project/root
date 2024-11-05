@@ -185,7 +185,9 @@ THttpServer::THttpServer(const char *engine) : TNamed("http", "ROOT http server"
 
    AddLocation("jsrootsys/", fJSROOTSYS.Data());
 
-   if (!basic_sniffer) {
+   if (basic_sniffer) {
+      AddLocation("rootsys_fonts/", TString::Format("%s/fonts", TROOT::GetDataDir().Data()));
+   } else {
       AddLocation("currentdir/", ".");
       AddLocation("rootsys/", TROOT::GetRootSys());
    }
@@ -927,8 +929,11 @@ void THttpServer::ReplaceJSROOTLinks(std::shared_ptr<THttpCallArg> &arg, const s
       }
 
       static std::map<std::string, std::string> modules = {
-         {"jsroot", "main.mjs"}, {"jsroot/core", "core.mjs"}, {"jsroot/io", "io.mjs"}, {"jsroot/tree", "tree.mjs"},
-         {"jsroot/draw", "draw.mjs"}, {"jsroot/geom", "geom.mjs"}, {"jsroot/gui", "gui.mjs"}, {"jsroot/webwindow", "webwindow.mjs"}
+         {"jsroot", "main.mjs"}, {"jsroot/core", "core.mjs"},
+         {"jsroot/io", "io.mjs"}, {"jsroot/tree", "tree.mjs"},
+         {"jsroot/draw", "draw.mjs"}, {"jsroot/gui", "gui.mjs"},
+         {"jsroot/three", "three.mjs"}, {"jsroot/geom", "geom/TGeoPainter.mjs"},
+         {"jsroot/webwindow", "webwindow.mjs"}
       };
 
       if (std::string("qt5") == arg->GetWSPlatform()) {

@@ -283,6 +283,25 @@ static int is_valid_header(unsigned char *src)
           is_valid_header_lz4(src) || is_valid_header_zstd(src);
 }
 
+ROOT::RCompressionSetting::EAlgorithm::EValues R__getCompressionAlgorithm(const unsigned char *buf, size_t bufsize)
+{
+   if (bufsize < 3)
+      return ROOT::RCompressionSetting::EAlgorithm::kUndefined;
+
+   if (is_valid_header_zstd(const_cast<unsigned char *>(buf)))
+      return ROOT::RCompressionSetting::EAlgorithm::kZSTD;
+   if (is_valid_header_zlib(const_cast<unsigned char *>(buf)))
+      return ROOT::RCompressionSetting::EAlgorithm::kZLIB;
+   if (is_valid_header_lz4(const_cast<unsigned char *>(buf)))
+      return ROOT::RCompressionSetting::EAlgorithm::kLZ4;
+   if (is_valid_header_lzma(const_cast<unsigned char *>(buf)))
+      return ROOT::RCompressionSetting::EAlgorithm::kLZMA;
+   if (is_valid_header_old(const_cast<unsigned char *>(buf)))
+      return ROOT::RCompressionSetting::EAlgorithm::kOldCompressionAlgo;
+
+   return ROOT::RCompressionSetting::EAlgorithm::kUndefined;
+}
+
 int R__unzip_header(int *srcsize, uch *src, int *tgtsize)
 {
   // Reads header envelope, and determines target size.

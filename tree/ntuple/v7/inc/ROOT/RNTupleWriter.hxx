@@ -54,7 +54,7 @@ CreateRNTupleWriter(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Interna
 An output ntuple can be filled with entries. The caller has to make sure that the data that gets filled into an ntuple
 is not modified for the time of the Fill() call. The fill call serializes the C++ object into the column format and
 writes data into the corresponding column page buffers.  Writing of the buffers to storage is deferred and can be
-triggered by CommitCluster() or by destructing the writer.  On I/O errors, an exception is thrown.
+triggered by FlushCluster() or by destructing the writer.  On I/O errors, an exception is thrown.
 */
 // clang-format on
 class RNTupleWriter {
@@ -108,20 +108,27 @@ public:
    /// \return The number of uncompressed bytes written.
    std::size_t Fill(REntry &entry) { return fFillContext.Fill(entry); }
    /// Fill an entry into this ntuple, but don't commit the cluster. The calling code must pass an RNTupleFillStatus
-   /// and check RNTupleFillStatus::ShouldCommitCluster.
-   void FillNoCommit(REntry &entry, RNTupleFillStatus &status) { fFillContext.FillNoCommit(entry, status); }
+   /// and check RNTupleFillStatus::ShouldFlushCluster.
+   void FillNoFlush(REntry &entry, RNTupleFillStatus &status) { fFillContext.FillNoFlush(entry, status); }
+   /// Flush column data, preparing for CommitCluster or to reduce memory usage. This will trigger compression of pages,
+   /// but not actually write to storage (unless buffered writing is turned off).
+   void FlushColumns() { fFillContext.FlushColumns(); }
+   /// Flush so far filled entries to storage
+   void FlushCluster() { fFillContext.FlushCluster(); }
    /// Ensure that the data from the so far seen Fill calls has been written to storage
    void CommitCluster(bool commitClusterGroup = false)
    {
-      fFillContext.CommitCluster();
+      fFillContext.FlushCluster();
       if (commitClusterGroup)
          CommitClusterGroup();
    }
 
    std::unique_ptr<REntry> CreateEntry() { return fFillContext.CreateEntry(); }
 
+   /// Return the entry number that was last flushed in a cluster.
+   NTupleSize_t GetLastFlushed() const { return fFillContext.GetLastFlushed(); }
    /// Return the entry number that was last committed in a cluster.
-   NTupleSize_t GetLastCommitted() const { return fFillContext.GetLastCommitted(); }
+   NTupleSize_t GetLastCommitted() const { return fFillContext.GetLastFlushed(); }
    /// Return the entry number that was last committed in a cluster group.
    NTupleSize_t GetLastCommittedClusterGroup() const { return fLastCommittedClusterGroup; }
    /// Return the number of entries filled so far.

@@ -73,6 +73,9 @@ const std::vector<size_t>& RModel::GetTensorShape(std::string name) {
     if (fDynamicTensorInfos.find(name) != fDynamicTensorInfos.end())
       throw std::runtime_error("TMVA SOFIE tensor [" + name + "] is a dynamic tensor. Use GetDynamicTensorShape instead of GetTensorShape");
 
+   if (fIsSubGraph && fParentGraph)
+      return fParentGraph->GetTensorShape(name);
+
     throw std::runtime_error("TMVA SOFIE tensor [" + name + "] for which the shape is requested is not found");
 }
 
@@ -110,6 +113,9 @@ const ETensorType& RModel::GetTensorType(std::string name) {
       return f5->second.type;
     }
 
+    if (fIsSubGraph && fParentGraph)
+      return fParentGraph->GetTensorType(name);
+
     throw std::runtime_error("TMVA SOFIE tensor [" + name + "] for which the type is requested is not found");
 }
 
@@ -119,6 +125,7 @@ bool RModel::CheckIfTensorAlreadyExist(std::string tensor_name) {
     if (fInitializedTensors.find(tensor_name) != fInitializedTensors.end()) return true;
     if (fIntermediateTensorInfos.find(tensor_name) != fIntermediateTensorInfos.end()) return true;
     if (fDynamicTensorInfos.find(tensor_name) != fDynamicTensorInfos.end()) return true;
+    if (fIsSubGraph && fParentGraph) return fParentGraph->CheckIfTensorAlreadyExist(tensor_name);
     return false;
 }
 
@@ -272,7 +279,23 @@ void RModel::SetNotWritableInitializedTensor(const std::string & tensor_name) {
    }
 
 void RModel::Initialize(int batchSize, bool verbose) {
+   std::map<std::string, size_t> inputParams;
+   if (batchSize > 0) {
+      inputParams["input_size"] = batchSize;
+      inputParams["batch_size"] = batchSize;
+      inputParams["bs"] = batchSize;
+   }
+   Initialize(inputParams, verbose);
+}
+void RModel::Initialize(const std::map<std::string, size_t> & inputParams, bool verbose) {
 
+   fVerbose = int(verbose);
+
+   if (fIsInitialized) {
+      if (verbose)
+         std::cout << "Model is already initialized  - skip initialization " << std::endl;
+      return;
+   }
    fIntermediateTensorInfos.clear();
    fDynamicTensorInfos.clear();
 
@@ -282,34 +305,34 @@ void RModel::Initialize(int batchSize, bool verbose) {
    auto originalInputTensorInfos = fInputTensorInfos; // need to copy because we may delete elements
    for (auto &input : originalInputTensorInfos) {
       if (verbose) std::cout << "looking at the tensor " << input.first << std::endl;
-      // if a batch size is provided convert batch size
-      // assume is parameterised as "bs" or "batch_size"
-      if (batchSize > 0) {
-         // std::vector<Dim> shape;
-         // shape.reserve(input.second.shape.size());
-         // assume first parameter is teh batch size
-         if (!input.second.shape.empty()) {
-            auto & d0 = input.second.shape[0];
-            if (d0.isParam) {
-               if (verbose) std::cout << "Fix the batch size to " << batchSize << std::endl;
-               d0 = Dim{static_cast<size_t>(batchSize)};
-            }
-            else {  // look for cases that a bs or bath_size is specified in tensor shape
-               for (auto &d : input.second.shape) {
-                  if (d.isParam && (d.param == "bs" || d.param == "batch_size")) {
-                     d = Dim{static_cast<size_t>(batchSize)};
-                     if (verbose) std::cout << "Input shape has bs or batch_size as names. Fix the batch size to " << batchSize << std::endl;
-                  }
+      // if a parameter (e.g. batch_size) is specified use for converting parametric shape in defined one
+      if (!inputParams.empty()) {
+         for (auto &d : input.second.shape) {
+            if (d.isParam) {
+               std::string pname = d.param;
+               if (pname == input.first + "_size") pname = "input_size";
+               auto itr = inputParams.find(pname);
+               if (itr != inputParams.end() ) {
+                  d = Dim{ itr->second };
+                  if (verbose)
+                     std::cout << "Tensor: " << input.first << " - fix parametric shape " << itr->first << " to " << itr->second << std::endl;
                }
             }
          }
       }
+      // see if shape now is fully defined
       auto shape = ConvertShapeToInt(input.second.shape);
+      if (verbose)
+         std::cout << "converting input shape for " << input.first << " " << ConvertShapeToString(shape) << " from "
+            << ConvertDynamicShapeToString(input.second.shape) << std::endl;
       if (!shape.empty()) {
-         // remove from the tensor info old dynamic shape
+         // case shape is defined (not parametric) we add the tensor in the fReadyInputTensorInfos map and
+         // we remove the tensor from the fInputTensorInfo where th eold parametric shape was stored
          fInputTensorInfos.erase(input.first);
          // add to the ready input tensor information the new fixed shape
          AddInputTensorInfo(input.first, input.second.type, shape);
+         // check consistency
+         assert( fReadyInputTensorInfos.size() + fInputTensorInfos.size() == fInputTensorNames.size());
       }
       // store the parameters of the input tensors
       else {
@@ -349,6 +372,36 @@ void RModel::Initialize(int batchSize, bool verbose) {
       op->Initialize(*this);
       i++;
    }
+   fIsInitialized = true;
+}
+
+void RModel::InitializeSubGraph(std::shared_ptr<RModel>  graph) {
+   // add the subgraph to the list
+   fSubGraphs.push_back(graph);
+   //this needs to be done before initializing
+   graph->fParentGraph = this;
+   graph->fIsSubGraph = true;
+
+   graph->Initialize(fBatchSize, fVerbose);
+   // set the same options as parent model
+   graph->fWeightFile = fWeightFile;
+   graph->fUseWeightFile = fUseWeightFile;
+   graph->fUseSession = fUseSession;
+   // add needed blas routines and libs
+   std::vector<std::string> blasRoutines;
+   for (auto & e : graph->fNeededBlasRoutines)
+      blasRoutines.push_back(e);
+   AddBlasRoutines(blasRoutines);
+   for (auto e : graph->fNeededStdLib)
+      AddNeededStdLib(e);
+
+   // add parent input tensors to current graph
+   for (auto & name : fInputTensorNames)
+      graph->fInputTensorNames.push_back(name);
+
+   // clean graph name
+   graph->fName = UTILITY::Clean_name(graph->fName);
+
 }
 
 void RModel::GenerateInitializedTensorInfo() {
@@ -445,7 +498,45 @@ void RModel::GenerateDynamicTensorInfo() {
     fGC += out.str();
 }
 
+std::string RModel::GenerateInferSignature(bool isdecl) {
+   // generate the infer signature given the inputs: eg. "float * tensor1, float * tensor2"
+   // if (decl = false) generate only calling signature (tensor1,tensor2,....)
+   std::string rGC;
+   std::unordered_map<std::string, int> inputParams;
+   int i_input = 0;
+   for (auto &name : fInputTensorNames) {
+      // if is a dynamic tensor pass initial parameters
+      if (IsInputTensor(name)) {
+         auto shape = GetDynamicTensorShape(name);
+         for (auto &d : shape) {
+            std::string pName = d.param;
+            // need to check if the input parameters is already existing in another input tensor
+            if (d.isParam && inputParams.count(pName) == 0) {
+               if (isdecl) rGC += "size_t ";
+               rGC += d.param + ",";
+               inputParams[pName] = i_input;
+            }
+         }
+      }
+      if (isdecl) {
+         std::string type = ConvertTypeToString(GetTensorType(name));
+         if (type == "other")
+            throw std::runtime_error("TMVA-SOFIE: input tensor " + name +
+                                     " is of a data type which is not yet supported.");
+         rGC += type + "* ";
+      }
+      rGC += "tensor_" + name + ",";
+      i_input++;
+   }
+
+   if (fInputTensorNames.size() > 0) rGC.pop_back();// remove last ","
+   return rGC;
+}
+
 void RModel::GenerateOutput() {
+
+   if (fVerbose)
+      std::cout << "Generating main inference code for " << fName << std::endl;
 
    size_t outputSize = fOutputTensorNames.size();
    // assume output types are all the same
@@ -469,54 +560,12 @@ void RModel::GenerateOutput() {
 
    fGC += "infer(";
 
-   std::unordered_map<std::string, int> inputParams;
-   int i_input = 0;
-   for (auto &name : fInputTensorNames) {
-      // if is a dynamic tensor pass initial parameters
-      if (IsInputTensor(name)) {
-         auto shape = GetDynamicTensorShape(name);
-         for (auto &d : shape) {
-            std::string pName = d.param;
-            // need to check if the input parameters is already existing in another input tensor
-            if (d.isParam && inputParams.count(pName) == 0) {
-               fGC += "size_t " + d.param + ",";
-               inputParams[pName] = i_input;
-            }
-         }
-      }
-      switch (GetTensorType(name)) {
-      case ETensorType::FLOAT: {
-         fGC += "float* tensor_" + name + ",";
-         break;
-      }
-      case ETensorType::INT32: {
-         fGC += "int32_t* tensor_" + name + ",";
-         break;
-      }
-      case ETensorType::INT64: {
-         fGC += "int64_t* tensor_" + name + ",";
-         break;
-      }
-      case ETensorType::DOUBLE: {
-         fGC += "double* tensor_" + name + ",";
-         break;
-      }
-      case ETensorType::BOOL: {
-         fGC += "bool* tensor_" + name + ",";
-         break;
-      }
-      default: {
-         throw std::runtime_error("TMVA-SOFIE: input tensor " + name +
-                                  " is of a data type which is not yet supported.");
-      }
-      }
-      i_input++;
-   }
+   fGC += GenerateInferSignature();
 
-   if (fInputTensorNames.size() > 0) fGC.pop_back();// remove last ","
    fGC += "){\n";
 
    for (size_t id = 0; id < fOperators.size(); id++) {
+      if (fVerbose) std::cout << "Generating code for operator .... " << id << std::endl;
       fGC += (fOperators[id]->Generate(std::to_string(id)));
    }
 
@@ -566,106 +615,147 @@ void RModel::GenerateOutput() {
       fGC += "});\n";
       fGC += SP + "return ret;\n";
    }
-   fGC += "}\n";
+   fGC += "}\n";  // end of infer function scope
 }
 
-void RModel::Generate(std::underlying_type_t<Options> options, int batchSize, long pos, bool verbose) {
-    // session flag is used in operator initialize
-    if (static_cast<std::underlying_type_t<Options>>(Options::kNoSession) & options) {
-        fUseSession = false;
-        fWeightFile = WeightFileType::None;
-    }
-    if (static_cast<std::underlying_type_t<Options>>(Options::kNoWeightFile) & options) {
-        fUseWeightFile = false;
-        fWeightFile = WeightFileType::None;
-    }
-    if (static_cast<std::underlying_type_t<Options>>(Options::kRootBinaryWeightFile) & options) {
-        fUseWeightFile = true;
-        fWeightFile = WeightFileType::RootBinary;
-    }
-    if (fUseWeightFile && !fUseSession) {
-        throw
-        std::runtime_error("TMVA-SOFIE: RModel::Generate: cannot use a separate weight file without generating a Session class");
-    }
+void RModel::GenerateSessionCode()
+{
 
-    if (static_cast<std::underlying_type_t<Options>>(Options::kGNN) & options)
-        fIsGNN = true;
-    if (static_cast<std::underlying_type_t<Options>>(Options::kGNNComponent) & options)
-        fIsGNNComponent = true;
+   // define the Session struct (for GNN this is generated in RModel_GNN)
+   if (fUseSession && !fIsGNNComponent) {
+      if (!fIsSubGraph)
+         fGC += "struct Session {\n";
+      else
+         fGC += "struct Session_" + fName + " {\n";
+   }
 
-    Initialize(batchSize, verbose);
-    std::string hgname;
-    if(!fIsGNNComponent) {
-        fGC.clear();
-        GenerateHeaderInfo(hgname);
-        if (fUseSession) {
-            fGC += "struct Session {\n";
-        }
-    }
+   GenerateInitializedTensorInfo();
+   GenerateIntermediateTensorInfo();
 
-    GenerateInitializedTensorInfo();
-    GenerateIntermediateTensorInfo();
+   // add subgraph session
+   if (!fSubGraphs.empty()) fGC += "//   subgraph sessions\n";
+   for (auto & graph : fSubGraphs) {
+      fGC += "Session_" + graph->fName + "  fSession_" + graph->fName + ";\n";
+   }
 
-    if (fUseSession) {
-        // add here specific operator code that needs to define session data members
-        fGC += "\n";
-        for (size_t id = 0; id < fOperators.size(); id++) {
-            std::string opName = std::to_string(id);
-            fGC += fOperators[id]->GenerateSessionMembersCode(opName);
-        }
-        fGC += "\n";
-        // here add initialization and reading of weight tensors
-        if (fUseWeightFile) {
-            std::string fileName = fName;
-            if (fWeightFile == WeightFileType::Text) {
-               fileName += ".dat";
-            }
-            if (fWeightFile == WeightFileType::RootBinary) {
-               fileName += ".root";
-            }
-            fGC += "Session(std::string filename =\"" + fileName + "\"";
-        } else {
-            // no need to pass weight file since it is not used
-            // keep passing a string for compatibility
-            fGC += "Session(std::string = \"\"";
-        }
-        // add initialization of shape parameters
-        // assume all parameters are of type size_t
-        if (!fShapeParams.empty()) {
-            for (auto & p : fShapeParams) {
-               fGC += ",\n";
-               fGC += "        size_t " + p.first + " = " + p.second;
-            }
-        }
-        fGC += ") {\n";
+   if (fUseSession) {
+      std::string sessionName = "Session";
+      if (fIsSubGraph)
+         sessionName += "_" + fName;
+      // add here specific operator code that needs to define session data members
+      fGC += "\n";
+      for (size_t id = 0; id < fOperators.size(); id++) {
+         std::string opName = std::to_string(id);
+         fGC += fOperators[id]->GenerateSessionMembersCode(opName);
+      }
+      fGC += "\n";
+      // here add initialization and reading of weight tensors
+      if (fUseWeightFile) {
+         std::string fileName = fName;
+         if (fWeightFile == WeightFileType::Text) {
+            fileName += ".dat";
+         }
+         if (fWeightFile == WeightFileType::RootBinary) {
+            fileName += ".root";
+         }
+         fGC += sessionName + "(std::string filename =\"" + fileName + "\"";
+      } else {
+         // no need to pass weight file since it is not used
+         // keep passing a string for compatibility
+         fGC += sessionName + "(std::string = \"\"";
+      }
+      // add initialization of shape parameters
+      // assume all parameters are of type size_t
+      if (!fShapeParams.empty()) {
+         for (auto &p : fShapeParams) {
+            fGC += ",\n";
+            fGC += "        size_t " + p.first + " = " + p.second;
+         }
+      }
+      fGC += ") {\n";
 
-        if (fUseWeightFile) {
-            fGC += "\n//--- reading weights from file\n";
-            ReadInitializedTensorsFromFile(pos);
-            fGC += "\n";
-            //fUseWeightFile = fUseWeightFile;
-        }
+      if (fUseWeightFile) {
+         fGC += "\n//--- reading weights from file\n";
+         ReadInitializedTensorsFromFile(fReadPos);
+         fGC += "\n";
+         // fUseWeightFile = fUseWeightFile;
+      }
 
-        // now we have passed the parameters we can allocate the dynamic tensors
-        GenerateDynamicTensorInfo();
+      // now we have passed the parameters we can allocate the dynamic tensors
+      GenerateDynamicTensorInfo();
 
-        // add here initialization code  for operator
-        for (size_t id = 0; id < fOperators.size() ; id++) {
-            fGC += fOperators[id]->GenerateInitCode();
-        }
+      // add here initialization code  for operator
+      for (size_t id = 0; id < fOperators.size(); id++) {
+         fGC += fOperators[id]->GenerateInitCode();
+      }
 
-        fGC += "}\n\n";
-    }
+      fGC += "}\n\n";
+   }
 
-    GenerateOutput();
+   GenerateOutput();
 
-    if(!fIsGNNComponent) {
-        if (fUseSession) {
-            fGC += "};\n";
-        }
-        fGC += ("} //TMVA_SOFIE_" + fName + "\n");
-        fGC += "\n#endif  // " + hgname + "\n";
-    }
+   // end of session
+   if (fUseSession && !fIsGNNComponent) {
+      fGC += "};   // end of Session\n";
+   }
+}
+
+void RModel::Generate(std::underlying_type_t<Options> options, int batchSize, long pos, bool verbose)
+{
+   fVerbose = verbose;
+   fBatchSize = batchSize;
+   fReadPos = pos;
+
+   // session flag is used in operator initialize
+   if (static_cast<std::underlying_type_t<Options>>(Options::kNoSession) & options) {
+      fUseSession = false;
+      fWeightFile = WeightFileType::None;
+   }
+   if (static_cast<std::underlying_type_t<Options>>(Options::kNoWeightFile) & options) {
+      fUseWeightFile = false;
+      fWeightFile = WeightFileType::None;
+   }
+   if (static_cast<std::underlying_type_t<Options>>(Options::kRootBinaryWeightFile) & options) {
+      fUseWeightFile = true;
+      fWeightFile = WeightFileType::RootBinary;
+   }
+   if (fUseWeightFile && !fUseSession) {
+      throw std::runtime_error(
+         "TMVA-SOFIE: RModel::Generate: cannot use a separate weight file without generating a Session class");
+   }
+
+   if (static_cast<std::underlying_type_t<Options>>(Options::kGNN) & options)
+      fIsGNN = true;
+   if (static_cast<std::underlying_type_t<Options>>(Options::kGNNComponent) & options)
+      fIsGNNComponent = true;
+
+   // initialize the model including all operators and sub-graphs
+   Initialize(batchSize, verbose);
+
+   std::string hgname;
+   if (!fIsGNNComponent && !fIsSubGraph) {
+      fGC.clear();
+      GenerateHeaderInfo(hgname);
+   }
+
+   // generate first code for the subgraphs
+   for (auto &graph : fSubGraphs) {
+      if (fVerbose)
+         std::cout << "generate session code for subgraph " << graph->fName << std::endl;
+      graph->GenerateSessionCode();
+      fGC += graph->fGC;
+   }
+
+   if (fVerbose)
+      std::cout << "generate Main session code - model  " << fName << std::endl;
+
+   // generate main session code
+   GenerateSessionCode();
+
+   if (!fIsGNNComponent && !fIsSubGraph) {
+      fGC += ("} //TMVA_SOFIE_" + fName + "\n");
+      fGC += "\n#endif  // " + hgname + "\n";
+   }
 }
 
 void RModel::ReadInitializedTensorsFromFile(long pos) {
@@ -865,7 +955,7 @@ long RModel::WriteInitializedTensorsToFile(std::string filename) {
 void RModel::PrintRequiredInputTensors() {
     std::cout << "Model requires following inputs:\n";
     for (auto& inputInfo: fInputTensorInfos) {
-        std::cout << "Parametraised Tensor name: " << inputInfo.first << "\t";
+        std::cout << "Parametrised Tensor name: " << inputInfo.first << "\t";
         std::cout << "type: " << ConvertTypeToString(inputInfo.second.type) << "\t";
         std::cout << "shape: [";
         for (size_t i = 0; i < inputInfo.second.shape.size(); i++) {

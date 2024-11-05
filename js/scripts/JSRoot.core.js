@@ -180,8 +180,8 @@ function v6_require(need) {
       else if (name == 'painter')
          arr.push(loadPainter());
       else if (name == 'hierarchy')
-         arr.push(Promise.all([import('../modules/gui/HierarchyPainter.mjs'), import('../modules/draw/TTree.mjs')]).then(arr => {
-            Object.assign(globalThis.JSROOT, arr[0], arr[1]);
+         arr.push(Promise.all([import('../modules/gui/display.mjs'), import('../modules/gui/HierarchyPainter.mjs'), import('../modules/draw/TTree.mjs')]).then(arr => {
+            Object.assign(globalThis.JSROOT, arr[0], arr[1], arr[2]);
             getHPainter = arr[0].getHPainter;
             globalThis.JSROOT.hpainter = getHPainter();
             return globalThis.JSROOT;
@@ -221,7 +221,7 @@ exports.define = function(req, factoryFunc) {
    sync_promises.push(pr); // will wait until other PRs are finished
 }
 
-/// duplicate function here, used before loading any other functionality
+// duplicate function here, used before loading any other functionality
 exports.decodeUrl = function(url) {
    let res = {
       opts: {},
@@ -324,7 +324,8 @@ if ((typeof globalThis !== 'undefined') && !globalThis.JSROOT) {
 
    globalThis.JSROOT._complete_loading = _sync;
 
-   let pr = Promise.all([import('../modules/core.mjs'), import('../modules/draw.mjs'), import('../modules/gui/HierarchyPainter.mjs')]).then(arr => {
+   let pr = Promise.all([import('../modules/core.mjs'), import('../modules/draw.mjs'),
+            import('../modules/gui/HierarchyPainter.mjs'), import('../modules/gui/display.mjs')]).then(arr => {
 
       Object.assign(globalThis.JSROOT, arr[0], arr[1], arr[2]);
 
@@ -332,7 +333,7 @@ if ((typeof globalThis !== 'undefined') && !globalThis.JSROOT) {
 
       globalThis.JSROOT._ = arr[0].internals;
 
-      getHPainter = arr[2].getHPainter;
+      getHPainter = arr[3].getHPainter;
 
       globalThis.JSROOT.hpainter = getHPainter();
    });

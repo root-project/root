@@ -34,13 +34,13 @@
 class TFile;
 
 namespace ROOT {
+class RNTuple; // for making RPageSourceFile a friend of RNTuple
 
 namespace Internal {
 class RRawFile;
 }
 
 namespace Experimental {
-class RNTuple; // for making RPageSourceFile a friend of RNTuple
 struct RNTupleLocator;
 
 namespace Internal {
@@ -87,12 +87,12 @@ private:
 protected:
    using RPagePersistentSink::InitImpl;
    void InitImpl(unsigned char *serializedHeader, std::uint32_t length) final;
-   RNTupleLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) final;
+   RNTupleLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) override;
    RNTupleLocator
    CommitSealedPageImpl(DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) final;
    std::vector<RNTupleLocator>
    CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges, const std::vector<bool> &mask) final;
-   std::uint64_t CommitClusterImpl() final;
+   std::uint64_t StageClusterImpl() final;
    RNTupleLocator CommitClusterGroupImpl(unsigned char *serializedPageList, std::uint32_t length) final;
    using RPagePersistentSink::CommitDatasetImpl;
    void CommitDatasetImpl(unsigned char *serializedFooter, std::uint32_t length) final;
@@ -115,7 +115,7 @@ public:
 */
 // clang-format on
 class RPageSourceFile : public RPageSource {
-   friend class ROOT::Experimental::RNTuple;
+   friend class ROOT::RNTuple;
 
 private:
    /// Holds the uncompressed header and footer

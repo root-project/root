@@ -27,6 +27,8 @@ class RooSimultaneous(object):
     \endcode
     """
 
+    __cpp_name__ = 'RooSimultaneous'
+
     @cpp_signature(
         "RooSimultaneous(const char *name, const char *title,"
         "                std::map<std::string,RooAbsPdf*> pdfMap, RooAbsCategoryLValue& inIndexCat) ;"

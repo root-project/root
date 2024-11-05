@@ -103,20 +103,6 @@ TLinearMinimizer::~TLinearMinimizer()
    if (fFitter) delete fFitter;
 }
 
-TLinearMinimizer::TLinearMinimizer(const TLinearMinimizer &) :
-   Minimizer()
-{
-   // Implementation of copy constructor.
-}
-
-TLinearMinimizer & TLinearMinimizer::operator = (const TLinearMinimizer &rhs)
-{
-   // Implementation of assignment operator.
-   if (this == &rhs) return *this;  // time saving self-test
-   return *this;
-}
-
-
 void TLinearMinimizer::SetFunction(const  ROOT::Math::IMultiGenFunction & objfunc) {
    // Set the function to be minimized. The function must be a Chi2 gradient function
    // When performing a linear fit we need the basis functions, which are the partial derivatives with respect to the parameters of the model function.

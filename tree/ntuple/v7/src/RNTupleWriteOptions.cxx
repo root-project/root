@@ -20,21 +20,25 @@
 
 namespace {
 
-void EnsureValidTunables(std::size_t zippedClusterSize, std::size_t unzippedClusterSize, std::size_t unzippedPageSize)
+void EnsureValidTunables(std::size_t zippedClusterSize, std::size_t unzippedClusterSize,
+                         std::size_t initialNElementsPerPage, std::size_t maxUnzippedPageSize)
 {
    using RException = ROOT::Experimental::RException;
    if (zippedClusterSize == 0) {
       throw RException(R__FAIL("invalid target cluster size: 0"));
    }
-   if (unzippedPageSize == 0) {
-      throw RException(R__FAIL("invalid target page size: 0"));
+   if (maxUnzippedPageSize == 0) {
+      throw RException(R__FAIL("invalid maximum page size: 0"));
+   }
+   if (initialNElementsPerPage == 0) {
+      throw RException(R__FAIL("invalid initial number of elements per page: 0"));
    }
    if (zippedClusterSize > unzippedClusterSize) {
       throw RException(R__FAIL("compressed target cluster size must not be larger than "
                                "maximum uncompressed cluster size"));
    }
-   if (unzippedPageSize > unzippedClusterSize) {
-      throw RException(R__FAIL("target page size must not be larger than "
+   if (maxUnzippedPageSize > unzippedClusterSize) {
+      throw RException(R__FAIL("maximum page size must not be larger than "
                                "maximum uncompressed cluster size"));
    }
 }
@@ -48,18 +52,32 @@ std::unique_ptr<ROOT::Experimental::RNTupleWriteOptions> ROOT::Experimental::RNT
 
 void ROOT::Experimental::RNTupleWriteOptions::SetApproxZippedClusterSize(std::size_t val)
 {
-   EnsureValidTunables(val, fMaxUnzippedClusterSize, fApproxUnzippedPageSize);
+   EnsureValidTunables(val, fMaxUnzippedClusterSize, fInitialNElementsPerPage, fMaxUnzippedPageSize);
    fApproxZippedClusterSize = val;
 }
 
 void ROOT::Experimental::RNTupleWriteOptions::SetMaxUnzippedClusterSize(std::size_t val)
 {
-   EnsureValidTunables(fApproxZippedClusterSize, val, fApproxUnzippedPageSize);
+   EnsureValidTunables(fApproxZippedClusterSize, val, fInitialNElementsPerPage, fMaxUnzippedPageSize);
    fMaxUnzippedClusterSize = val;
 }
 
-void ROOT::Experimental::RNTupleWriteOptions::SetApproxUnzippedPageSize(std::size_t val)
+void ROOT::Experimental::RNTupleWriteOptions::SetInitialNElementsPerPage(std::size_t val)
 {
-   EnsureValidTunables(fApproxZippedClusterSize, fMaxUnzippedClusterSize, val);
-   fApproxUnzippedPageSize = val;
+   EnsureValidTunables(fApproxZippedClusterSize, fMaxUnzippedClusterSize, val, fMaxUnzippedPageSize);
+   fInitialNElementsPerPage = val;
+}
+
+void ROOT::Experimental::RNTupleWriteOptions::SetMaxUnzippedPageSize(std::size_t val)
+{
+   EnsureValidTunables(fApproxZippedClusterSize, fMaxUnzippedClusterSize, fInitialNElementsPerPage, val);
+   fMaxUnzippedPageSize = val;
+}
+
+std::size_t ROOT::Experimental::RNTupleWriteOptions::GetPageBufferBudget() const
+{
+   if (fPageBufferBudget != 0)
+      return fPageBufferBudget;
+
+   return GetApproxZippedClusterSize() + (GetCompression() != 0) * GetApproxZippedClusterSize();
 }

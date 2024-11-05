@@ -72,11 +72,6 @@ private:
    /// Used when the file turns out to be a TFile container
    RResult<RNTuple> GetNTupleProper(std::string_view ntupleName);
 
-   RNTuple CreateAnchor(std::uint16_t versionEpoch, std::uint16_t versionMajor, std::uint16_t versionMinor,
-                        std::uint16_t versionPatch, std::uint64_t seekHeader, std::uint64_t nbytesHeader,
-                        std::uint64_t lenHeader, std::uint64_t seekFooter, std::uint64_t nbytesFooter,
-                        std::uint64_t lenFooter, std::uint64_t maxKeySize);
-
 public:
    RMiniFileReader() = default;
    /// Uses the given raw file to read byte ranges
@@ -89,6 +84,8 @@ public:
    void ReadBuffer(void *buffer, size_t nbytes, std::uint64_t offset);
 
    std::uint64_t GetMaxKeySize() const { return fMaxKeySize; }
+   /// If the reader is not used to retrieve the anchor, we need to set the max key size manually
+   void SetMaxKeySize(std::uint64_t maxKeySize) { fMaxKeySize = maxKeySize; }
 };
 
 // clang-format off
@@ -123,13 +120,12 @@ private:
       /// is shorter than 255 characters, we should need at most ~600 bytes. However, the header also needs to be
       /// aligned to kBlockAlign...
       static constexpr std::size_t kHeaderBlockSize = 4096;
-      /// Testing suggests that 4MiB gives best performance at a reasonable memory consumption.
-      static constexpr std::size_t kBlockSize = 4 * 1024 * 1024;
 
       // fHeaderBlock and fBlock are raw pointers because we have to manually call operator new and delete.
-      unsigned char *fHeaderBlock;
+      unsigned char *fHeaderBlock = nullptr;
+      std::size_t fBlockSize = 0;
       std::uint64_t fBlockOffset = 0;
-      unsigned char *fBlock;
+      unsigned char *fBlock = nullptr;
 
       /// For the simplest cases, a C file stream can be used for writing
       FILE *fFile = nullptr;
@@ -149,6 +145,7 @@ private:
       RFileSimple &operator=(RFileSimple &&other) = delete;
       ~RFileSimple();
 
+      void AllocateBuffers(std::size_t bufferSize);
       void Flush();
 
       /// Writes bytes in the open stream, either at fFilePos or at the given offset

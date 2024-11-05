@@ -12,23 +12,28 @@ set(clad_install_dir ${CMAKE_BINARY_DIR}/etc/cling/)
 # Specify include dirs for clad
 set(CLAD_INCLUDE_DIRS ${clad_install_dir})
 # Clad Libraries
+set(CLAD_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 set(_clad_build_type ${CMAKE_CFG_INTDIR})
-if(MSVC)
+if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
   if (winrtdebug)
     set(_clad_build_type Debug)
   else()
     set(_clad_build_type Release)
   endif()
-endif(MSVC)
+  if(asan)
+    set(CLAD_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ASAN_EXTRA_CXX_FLAGS}")
+  endif()
+  set(EXTRA_BUILD_ARGS --config ${_clad_build_type})
+endif()
 if(NOT _clad_build_type STREQUAL "" AND NOT _clad_build_type STREQUAL ".")
   set(EXTRA_BUILD_ARGS --config ${_clad_build_type})
 endif()
 set(_CLAD_LIBRARY_PATH ${CMAKE_CURRENT_BINARY_DIR}/clad-prefix/src/clad-build/${_clad_build_type}/lib${LLVM_LIBDIR_SUFFIX})
 
 # build byproducts only needed by Ninja
-if("${CMAKE_GENERATOR}" STREQUAL "Ninja")
+if(CMAKE_GENERATOR MATCHES Ninja)
   set(CLAD_BYPRODUCTS
-     ${_CLAD_LIBRARY_PATH}/${CMAKE_STATIC_LIBRARY_PREFIX}cladPlugin${CMAKE_STATIC_LIBRARY_SUFFIX}
+    ${_CLAD_LIBRARY_PATH}/${CMAKE_STATIC_LIBRARY_PREFIX}cladPlugin${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${_CLAD_LIBRARY_PATH}/${CMAKE_STATIC_LIBRARY_PREFIX}cladDifferentiator${CMAKE_STATIC_LIBRARY_SUFFIX}
   )
 endif()
@@ -52,14 +57,20 @@ endif(LLVM_FORCE_USE_OLD_TOOLCHAIN)
 list(APPEND _clad_extra_cmake_args -DCLAD_BUILD_STATIC_ONLY=ON)
 
 # Wrap download, configure and build steps in a script to log output
-set(_clad_cmake_logging_settings
+set(_clad_extra_settings
   LOG_DOWNLOAD ON
   LOG_CONFIGURE ON
   LOG_BUILD ON
   LOG_INSTALL ON
+  LOG_OUTPUT_ON_FAILURE ON
 )
 
-list(APPEND _clad_cmake_logging_settings LOG_OUTPUT_ON_FAILURE ON)
+# If the CLAD_SOURCE_DIR variable is defined in the CMake configuration, we're
+# skipping the download of the repository and use the passed directory.
+if (DEFINED CLAD_SOURCE_DIR)
+  list(APPEND _clad_extra_settings DOWNLOAD_COMMAND "")
+  list(APPEND _clad_extra_settings SOURCE_DIR ${CLAD_SOURCE_DIR})
+endif()
 
 #list(APPEND _clad_patches_list "patch1.patch" "patch2.patch")
 #set(_clad_patch_command
@@ -80,15 +91,19 @@ ExternalProject_Add(
              -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
              -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
              -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-             -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
+             -DCMAKE_CXX_FLAGS=${CLAD_CXX_FLAGS}
              -DCMAKE_INSTALL_PREFIX=${clad_install_dir}/plugins
              -DLLVM_DIR=${LLVM_BINARY_DIR}
              -DCLANG_INCLUDE_DIRS=${CLANG_INCLUDE_DIRS}
              ${_clad_extra_cmake_args}
-  BUILD_COMMAND ${CMAKE_COMMAND} --build . ${EXTRA_BUILD_ARGS}
-  INSTALL_COMMAND ${CMAKE_COMMAND} --build . ${EXTRA_BUILD_ARGS} --target install
+  # FIXME
+  # Building with 1 core is a temporary workaround for #16654 and has to be 
+  # there until the behaviour of the clad build on ubuntu 24.10 is understood.
+  # The performance penalty in the build is negligible.
+  BUILD_COMMAND ${CMAKE_COMMAND} --build . ${EXTRA_BUILD_ARGS} -j 1
+  INSTALL_COMMAND ${CMAKE_COMMAND} --build . ${EXTRA_BUILD_ARGS} -j 1 --target install
   BUILD_BYPRODUCTS ${CLAD_BYPRODUCTS}
-  ${_clad_cmake_logging_settings}
+  ${_clad_extra_settings}
   # We need the target clangBasic to be built before building clad. However, we
   # support building prebuilt clang and adding clangBasic breaks this case.
   # Delegate the dependency resolution to the clingInterpreter target (which

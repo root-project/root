@@ -1,14 +1,36 @@
-import { clTColor, settings } from '../core.mjs';
+import { clTColor, isBatchMode, isNodeJs, settings } from '../core.mjs';
 import { color as d3_color } from '../d3.mjs';
 
 const clTLinearGradient = 'TLinearGradient', clTRadialGradient = 'TRadialGradient',
       kWhite = 0, kBlack = 1, kRed = 2, kGreen = 3, kBlue = 4, kYellow = 5, kMagenta = 6, kCyan = 7;
 
-/** @summary Covert value between 0 and 1 into hex, used for colors coding
+/** @summary Covert value between 0 and 1 into decimal string using scale factor, used for colors coding
   * @private */
-function toHex(num, scale = 255) {
-   const s = Math.round(num * scale).toString(16);
-   return s.length === 1 ? '0'+s : s;
+function toDec(num, scale = 255) {
+   return Math.round(num * scale).toString(10);
+}
+
+/** @summary Convert alfa value from rgba to string
+  * @private */
+function toAlfa(a) {
+   const res = a.toFixed(2);
+   if ((res.length === 4) && (res[3] === '0'))
+      return res.slice(0, 3);
+   return res;
+}
+
+/** @summary Convert r,g,b,a values to string
+  * @private */
+function toColor(r, g, b, a = 1) {
+   return (a !== undefined) && (a !== 1)
+      ? `rgba(${toDec(r)}, ${toDec(g)}, ${toDec(b)}, ${toAlfa(a)})`
+      : `rgb(${toDec(r)}, ${toDec(g)}, ${toDec(b)})`;
+}
+
+/** @summary Convert color string to unify node.js and browser
+  * @private */
+function convertColor(col) {
+   return (isNodeJs() || (isBatchMode() && settings.ApproxTextSize)) && (col[0] === '#' || col[0] === 'r') ? d3_color(col).formatRgb() : col;
 }
 
 /** @summary list of global root colors
@@ -18,7 +40,14 @@ let gbl_colors_list = [];
 /** @summary Generates all root colors, used also in jstests to reset colors
   * @private */
 function createRootColors() {
-   const colorMap = ['white', 'black', 'red', 'green', 'blue', 'yellow', 'magenta', 'cyan', '#59d454', '#5954d9', 'white'];
+   function conv(arg) {
+      const r = Number.parseInt(arg.slice(0, 2), 16),
+            g = Number.parseInt(arg.slice(2, 4), 16),
+            b = Number.parseInt(arg.slice(4, 6), 16);
+      return `rgb(${r}, ${g}, ${b})`;
+   }
+
+   const colorMap = ['white', 'black', 'red', 'green', 'blue', 'yellow', 'magenta', 'cyan', conv('59d454'), conv('5954d9'), 'white'];
    colorMap[110] = 'white';
 
    const moreCol = [
@@ -37,7 +66,7 @@ function createRootColors() {
       const s = entry.s;
       for (let n = 0; n < s.length; n += 6) {
          const num = entry.n + n / 6;
-         colorMap[num] = '#' + s.slice(n, n+6);
+         colorMap[num] = conv(s.slice(n, n+6));
       }
    });
 
@@ -53,21 +82,20 @@ function getRootColors() {
 /** @summary Produces rgb code for TColor object
   * @private */
 function getRGBfromTColor(col) {
-   if (col?._typename !== clTColor) return null;
+   if (col?._typename !== clTColor)
+      return null;
 
-   let rgb = '#' + toHex(col.fRed) + toHex(col.fGreen) + toHex(col.fBlue);
-   if ((col.fAlpha !== undefined) && (col.fAlpha !== 1))
-      rgb += toHex(col.fAlpha);
+   const rgb = toColor(col.fRed, col.fGreen, col.fBlue, col.fAlpha);
 
    switch (rgb) {
-      case '#ffffff': return 'white';
-      case '#000000': return 'black';
-      case '#ff0000': return 'red';
-      case '#00ff00': return 'green';
-      case '#0000ff': return 'blue';
-      case '#ffff00': return 'yellow';
-      case '#ff00ff': return 'magenta';
-      case '#00ffff': return 'cyan';
+      case 'rgb(255, 255, 255)': return 'white';
+      case 'rgb(0, 0, 0)': return 'black';
+      case 'rgb(255, 0, 0)': return 'red';
+      case 'rgb(0, 255, 0)': return 'green';
+      case 'rgb(0, 0, 255)': return 'blue';
+      case 'rgb(255, 255, 0)': return 'yellow';
+      case 'rgb(255, 0, 255)': return 'magenta';
+      case 'rgb(0, 255, 255)': return 'cyan';
    }
    return rgb;
 }
@@ -84,7 +112,7 @@ function getGrayColors(rgb_array) {
       const rgb = d3_color(rgb_array[n]),
             gray = 0.299*rgb.r + 0.587*rgb.g + 0.114*rgb.b;
       rgb.r = rgb.g = rgb.b = gray;
-      gray_colors[n] = rgb.hex();
+      gray_colors[n] = rgb.formatRgb();
    }
 
    return gray_colors;
@@ -163,6 +191,10 @@ function findColor(name) {
   * @private */
 function addColor(rgb, lst) {
    if (!lst) lst = gbl_colors_list;
+
+   if ((rgb[0] === '#') && (isNodeJs() || (isBatchMode() && settings.ApproxTextSize)))
+      rgb = d3_color(rgb).formatRgb();
+
    const indx = lst.indexOf(rgb);
    if (indx >= 0) return indx;
    lst.push(rgb);
@@ -213,7 +245,7 @@ function createDefaultPalette(grayscale) {
             r = hue2rgb(p, q, h + 1/3),
             g = hue2rgb(p, q, h),
             b = hue2rgb(p, q, h - 1/3);
-      return '#' + toHex(r) + toHex(g) + toHex(b);
+      return toColor(r, g, b);
    }, minHue = 0, maxHue = 280, maxPretty = 50, palette = [];
    for (let i = 0; i < maxPretty; ++i) {
       const hue = (maxHue - (i + 1) * ((maxHue - minHue) / maxPretty)) / 360;
@@ -225,14 +257,13 @@ function createDefaultPalette(grayscale) {
 function createGrayPalette() {
    const palette = [];
    for (let i = 0; i < 50; ++i) {
-      const code = toHex((i+2)/60);
-      palette.push('#'+code+code+code);
+      const code = toDec((i+2)/60);
+      palette.push(`rgb(${code}, ${code}, ${code})`);
    }
    return new ColorPalette(palette);
 }
 
-/* eslint-disable comma-spacing */
-
+/* eslint-disable @stylistic/js/comma-spacing */
 
 /** @summary Create color palette
   * @private */
@@ -376,14 +407,14 @@ function getColorPalette(id, grayscale) {
    const NColors = 255, Red = rgb[0], Green = rgb[1], Blue = rgb[2], palette = [];
 
    for (let g = 1; g < stops.length; g++) {
-       // create the colors...
-       const nColorsGradient = Math.round(Math.floor(NColors*stops[g]) - Math.floor(NColors*stops[g-1]));
-       for (let c = 0; c < nColorsGradient; c++) {
-          const col = '#' + toHex(Red[g-1] + c * (Red[g] - Red[g-1]) / nColorsGradient, 1) +
-                            toHex(Green[g-1] + c * (Green[g] - Green[g-1]) / nColorsGradient, 1) +
-                            toHex(Blue[g-1] + c * (Blue[g] - Blue[g-1]) / nColorsGradient, 1);
-          palette.push(col);
-       }
+      // create the colors...
+      const nColorsGradient = Math.round(Math.floor(NColors*stops[g]) - Math.floor(NColors*stops[g-1]));
+      for (let c = 0; c < nColorsGradient; c++) {
+         const col = 'rgb(' + toDec(Red[g-1] + c * (Red[g] - Red[g-1]) / nColorsGradient, 1) + ', ' +
+                              toDec(Green[g-1] + c * (Green[g] - Green[g-1]) / nColorsGradient, 1) + ', ' +
+                              toDec(Blue[g-1] + c * (Blue[g] - Blue[g-1]) / nColorsGradient, 1) + ')';
+         palette.push(col);
+      }
     }
 
     return new ColorPalette(palette, grayscale);
@@ -393,17 +424,25 @@ function getColorPalette(id, grayscale) {
 /** @summary Decode list of ROOT colors coded by TWebCanvas
   * @private */
 function decodeWebCanvasColors(oper) {
-   const colors = [], arr = oper.split(';');
+   const colors = [], arr = oper.split(';'),
+         convert_rgb = isNodeJs() || (isBatchMode() && settings.ApproxTextSize);
    for (let n = 0; n < arr.length; ++n) {
       const name = arr[n];
       let p = name.indexOf(':');
       if (p > 0) {
-         colors[parseInt(name.slice(0, p))] = d3_color(`rgb(${name.slice(p+1)})`).formatHex();
+         const col = `rgb(${name.slice(p+1)})`;
+         colors[parseInt(name.slice(0, p))] = convert_rgb ? d3_color(col).formatRgb() : col;
          continue;
       }
       p = name.indexOf('=');
       if (p > 0) {
-         colors[parseInt(name.slice(0, p))] = d3_color(`rgba(${name.slice(p+1)})`).formatHex8();
+         let col = `rgba(${name.slice(p+1)})`;
+         if (convert_rgb) {
+            col = d3_color(col);
+            col.opacity = (Math.round(col.opacity*255) / 255).toFixed(2);
+            col = col.formatRgb();
+         }
+         colors[parseInt(name.slice(0, p))] = col;
          continue;
       }
       p = name.indexOf('#');
@@ -435,8 +474,8 @@ function decodeWebCanvasColors(oper) {
 
 createRootColors();
 
-export { getColor, findColor, addColor, adoptRootColors,
+export { getColor, findColor, addColor, adoptRootColors, convertColor,
          getRootColors, getGrayColors,
-         extendRootColors, getRGBfromTColor, createRootColors, toHex,
+         extendRootColors, getRGBfromTColor, createRootColors, toColor,
          kWhite, kBlack, kRed, kGreen, kBlue, kYellow, kMagenta, kCyan,
          ColorPalette, getColorPalette, clTLinearGradient, clTRadialGradient, decodeWebCanvasColors };

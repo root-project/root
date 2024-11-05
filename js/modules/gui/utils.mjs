@@ -1,8 +1,9 @@
 import { settings, internals, browser, gStyle, isBatchMode, isNodeJs, isObject, isFunc, isStr, source_dir, atob_func, btoa_func } from '../core.mjs';
 import { select as d3_select, pointer as d3_pointer, drag as d3_drag, color as d3_color } from '../d3.mjs';
-import { BasePainter } from '../base/BasePainter.mjs';
+import { prSVG, BasePainter } from '../base/BasePainter.mjs';
 import { resize } from '../base/ObjectPainter.mjs';
 import { getRootColors } from '../base/colors.mjs';
+
 
 /** @summary Display progress message in the left bottom corner.
   * @desc Previous message will be overwritten
@@ -142,7 +143,7 @@ async function loadOpenui5(args) {
    }
 
    const openui5_sources = [];
-   let openui5_dflt = 'https://openui5.hana.ondemand.com/1.98.0/',
+   let openui5_dflt = 'https://openui5.hana.ondemand.com/' + (browser.qt5 ? '1.108.35/' : '1.128.0/'),
        openui5_root = rootui5sys ? rootui5sys + 'distribution/' : '';
 
    if (isStr(args.openui5src)) {
@@ -156,7 +157,7 @@ async function loadOpenui5(args) {
    } else if (args.ui5dbg)
       openui5_root = ''; // exclude ROOT version in debug mode
 
-   if (openui5_root && (openui5_sources.indexOf(openui5_root) < 0))
+   if (openui5_root && (openui5_sources.indexOf(openui5_root) < 0) && !browser.qt5)
       openui5_sources.push(openui5_root);
    if (openui5_dflt && (openui5_sources.indexOf(openui5_dflt) < 0))
       openui5_sources.push(openui5_dflt);
@@ -183,9 +184,9 @@ async function loadOpenui5(args) {
    });
 }
 
-/* eslint-disable key-spacing */
-/* eslint-disable comma-spacing */
-/* eslint-disable object-curly-spacing */
+/* eslint-disable @stylistic/js/key-spacing */
+/* eslint-disable @stylistic/js/comma-spacing */
+/* eslint-disable @stylistic/js/object-curly-spacing */
 
 // some icons taken from http://uxrepo.com/
 const ToolbarIcons = {
@@ -315,7 +316,7 @@ function detectRightButton(event) {
 
 /** @summary Add move handlers for drawn element
   * @private */
-function addMoveHandler(painter, enabled = true) {
+function addMoveHandler(painter, enabled = true, hover_handler = false) {
    if (!settings.MoveResize || painter.isBatchMode() || !painter.draw_g) return;
 
    if (painter.getPadPainter()?.isEditable() === false)
@@ -373,9 +374,14 @@ function addMoveHandler(painter, enabled = true) {
       }.bind(painter));
 
    painter.draw_g
-          .style('cursor', 'move')
+          .style('cursor', hover_handler ? 'pointer' : 'move')
           .property('assigned_move', true)
           .call(drag_move);
+
+   if (hover_handler) {
+      painter.draw_g.on('mouseenter', () => painter.draw_g.style('text-decoration', 'underline'))
+                    .on('mouseleave', () => painter.draw_g.style('text-decoration', null));
+   }
 }
 
 /** @summary Inject style
@@ -502,10 +508,8 @@ let _saveFileFunc = null;
   * @private */
 
 function getBinFileContent(content) {
-   const svg_prefix = 'data:image/svg+xml;charset=utf-8,';
-
-   if (content.indexOf(svg_prefix) === 0)
-      return decodeURIComponent(content.slice(svg_prefix.length));
+   if (content.indexOf(prSVG) === 0)
+      return decodeURIComponent(content.slice(prSVG.length));
 
    if (content.indexOf('data:image/') === 0) {
       const p = content.indexOf('base64,');
@@ -605,6 +609,8 @@ function changeObjectMember(painter, member, val, is_color) {
    if (obj && (obj[member] !== undefined))
       obj[member] = val;
 }
+
+Object.assign(internals.jsroot, { addMoveHandler, registerForResize });
 
 export { showProgress, closeCurrentWindow, loadOpenui5, ToolbarIcons, registerForResize,
          detectRightButton, addMoveHandler, injectStyle,

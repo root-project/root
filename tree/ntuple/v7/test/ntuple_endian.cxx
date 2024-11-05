@@ -38,7 +38,7 @@ protected:
    const RColumnElementBase &fElement;
    std::vector<RPageStorage::RSealedPage> fPages;
 
-   ColumnHandle_t AddColumn(ROOT::Experimental::DescriptorId_t, const ROOT::Experimental::Internal::RColumn &) final
+   ColumnHandle_t AddColumn(ROOT::Experimental::DescriptorId_t, ROOT::Experimental::Internal::RColumn &) final
    {
       return {};
    }
@@ -55,7 +55,8 @@ protected:
    void CommitSuppressedColumn(ColumnHandle_t) final {}
    void CommitSealedPage(ROOT::Experimental::DescriptorId_t, const RPageStorage::RSealedPage &) final {}
    void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup>) final {}
-   std::uint64_t CommitCluster(NTupleSize_t) final { return 0; }
+   RStagedCluster StageCluster(NTupleSize_t) final { return {}; }
+   void CommitStagedClusters(std::span<RStagedCluster>) final {}
    void CommitClusterGroup() final {}
    void CommitDatasetImpl() final {}
 
@@ -211,5 +212,29 @@ TEST(RColumnElementEndian, DeltaSplit)
                        "\x00\x01\x02\x03\x00\x00\x00\x00\x04\x05\x06\x07\x00\x00\x00\x00"
                        "\x08\x09\x0a\x0b\x00\x00\x00\x00\x0c\x0d\x0e\x0f\x00\x00\x00\x00",
                        32));
+#endif
+}
+
+TEST(RColumnElementEndian, Real32Trunc)
+{
+#ifndef R__BYTESWAP
+   GTEST_SKIP() << "Skipping test on big endian node";
+#else
+   RColumnElement<float, EColumnType::kReal32Trunc> element;
+   element.SetBitsOnStorage(12);
+
+   RPageSinkMock sink1(element);
+   unsigned char buf1[] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+                           0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f};
+   RPage page1(0, buf1, nullptr, sizeof(float), 4);
+   page1.GrowUnchecked(4);
+   sink1.CommitPage(RPageStorage::ColumnHandle_t{}, page1);
+
+   EXPECT_EQ(0, memcmp(sink1.GetPages()[0].GetBuffer(), "\x00\x00\x04\x80\x00\x0c", 6));
+
+   RPageSourceMock source1(sink1.GetPages(), element);
+   auto page2Ref = source1.LoadPage(RPageStorage::ColumnHandle_t{}, NTupleSize_t{0});
+   EXPECT_EQ(
+      0, memcmp(page2Ref.Get().GetBuffer(), "\x00\x00\x00\x00\x04\x00\x00\x00\x08\x00\x00\x00\x0c\x00\x00\x00", 16));
 #endif
 }

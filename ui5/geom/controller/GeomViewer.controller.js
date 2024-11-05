@@ -8,7 +8,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
    "use strict";
 
-   /** @summary Central geometry viewer contoller
+   /** @summary Central geometry viewer controller
     * @desc All TGeo functionality is loaded after main ui5 rendering is performed,
     * To start drawing, following stages should be completed:
     *    - ui5 element is rendered (onAfterRendering is called)
@@ -211,7 +211,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       /** @summary function to accumulate and process all drawings messages
-       * @desc if not all scripts are loaded, messages are quied and processed later */
+       * @desc if not all scripts are loaded, messages are queued and processed later */
       checkDrawMsg(kind, msg) {
          if (kind) {
             if (!msg)
@@ -290,7 +290,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       onWebsocketMsg(handle, msg /*, offset */) {
 
          // binary data can be send only as addition to draw message
-         // here data can be placed in the queue and processed when all other prerequicities are done
+         // here data can be placed in the queue and processed when all other prerequisites are done
          if (typeof msg != "string")
             return console.error("Geom viewer do not uses binary messages len = " + mgs.byteLength);
 
@@ -675,6 +675,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       onExpandMaster() {
+         this.byId('geomViewerApp').getAggregation('_navMaster').setWidth('');
+
          const master = this.getView().byId('geomHierarchy').getParent();
          master.toggleStyleClass('masterExpanded');
          const expanded = master.hasStyleClass('masterExpanded');

@@ -1,7 +1,6 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-##
 ## 'LIKELIHOOD AND MINIMIZATION' RooFit tutorial macro #602
 ##
 ## Setting up a chi^2 fit to a binned dataset

@@ -28,6 +28,8 @@ class RooCategory(object):
     \endcode
     """
 
+    __cpp_name__ = 'RooCategory'
+
     @cpp_signature("RooCategory(const char* name, const char* title, const std::map<std::string, int>& allowedStates);")
     def __init__(self, *args, **kwargs):
         r"""The RooCategory constructor is pythonized for converting python dict to std::map.

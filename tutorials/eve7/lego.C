@@ -67,7 +67,7 @@ void lego()
       */
 
       // *** Load std CMS calo demo
-      const char* histFile = "http://amraktad.web.cern.ch/amraktad/cms_calo_hist.root";
+      const char* histFile = "http://root.cern/files/cms_calo_hist.root";
       TFile::SetCacheFileDir(".");
       auto hf = TFile::Open(histFile, "CACHEREAD");
       auto ecalHist = (TH2F*)hf->Get("ecalLego");

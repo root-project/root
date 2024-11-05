@@ -22,6 +22,15 @@ ParserFuncSignature ParseConstant = [](RModelParser_ONNX &parser, const onnx::No
       }
    }
 
+   if (parser.Verbose()) {
+      std::cout << "\t.... ";
+      if (isConstantOfShape)
+         std::cout << "ConstantOfShape " << nodeproto.input(0) << "  -> ";
+      else
+         std::cout << "Constant  --> ";
+      std::cout << nodeproto.output(0) << std::endl;
+   }
+
    std::unique_ptr<ROperator> op;
    std::string attr_type;
 
@@ -52,6 +61,7 @@ ParserFuncSignature ParseConstant = [](RModelParser_ONNX &parser, const onnx::No
             // need to use raw_data() to get the tensor values
          case ETensorType::INT64: {
             std::vector<int64_t> values(length);
+            // case empty shape with length=1 represents scalars
             auto raw_data_ptr = reinterpret_cast<int64_t *>(const_cast<char *>(t.raw_data().c_str()));
             std::memcpy(values.data(), raw_data_ptr, length * sizeof(int64_t));
             op.reset(new ROperator_Constant<int64_t>("int64_t", values, shape, input_name, output_name));
@@ -62,6 +72,15 @@ ParserFuncSignature ParseConstant = [](RModelParser_ONNX &parser, const onnx::No
             auto raw_data_ptr = reinterpret_cast<float *>(const_cast<char *>(t.raw_data().c_str()));
             std::memcpy(values.data(), raw_data_ptr, length * sizeof(float));
             op.reset(new ROperator_Constant<float>("float",values, shape, input_name, output_name));
+            break;
+         }
+         case ETensorType::BOOL: {
+            std::vector<bool> values(length);
+            auto raw_data_ptr = reinterpret_cast<bool *>(const_cast<char *>(t.raw_data().c_str()));
+            // cannot use values.data() for vector of bools
+            std::copy(raw_data_ptr, raw_data_ptr + length, values.begin());
+            //std::memcpy(values.data(), raw_data_ptr, length * sizeof(float));
+            op.reset(new ROperator_Constant<bool>("bool",values, shape, input_name, output_name));
             break;
          }
          default:
@@ -117,6 +136,9 @@ ParserFuncSignature ParseConstant = [](RModelParser_ONNX &parser, const onnx::No
    if (!parser.IsRegisteredTensorType(output_name)) {
       parser.RegisterTensorType(output_name, output_type);
    }
+
+   if (parser.Verbose())
+      std::cout << "\t ParseConstant: operator created\n";
 
    return op;
 };

@@ -49,9 +49,10 @@ RLogChannel &CanvasPainerLog() {
 }
 }
 
-/** \class RCanvasPainter
-\ingroup webdisplay
-New implementation of canvas painter, using RWebWindow
+/** \class ROOT::Experimental::RCanvasPainter
+\ingroup webwidgets
+
+\brief Implementation of painter for ROOT::Experimental::RCanvas, using RWebWindow
 */
 
 namespace ROOT {
@@ -117,6 +118,8 @@ private:
    std::list<WebUpdate> fUpdatesLst; ///<! list of callbacks for canvas update
 
    int fJsonComp{23};                ///<! json compression for data send to client
+
+   std::vector<std::unique_ptr<ROOT::RWebDisplayHandle>> fHelpHandles; ///<! array of handles for help widgets
 
    /// Disable copy construction.
    RCanvasPainter(const RCanvasPainter &) = delete;
@@ -606,6 +609,11 @@ void RCanvasPainter::ProcessData(unsigned connid, const std::string &arg)
    } else if (check_header("CLEAR")) {
       fCanvas.Wipe();
       fCanvas.Modified();
+   } else if (check_header("SHOWURL:")) {
+      ROOT::RWebDisplayArgs args;
+      args.SetUrl(cdata);
+      args.SetStandalone(false);
+      fHelpHandles.emplace_back(ROOT::RWebDisplayHandle::Display(args));
    } else {
       R__LOG_ERROR(CanvasPainerLog()) << "Got not recognized message" << arg;
    }

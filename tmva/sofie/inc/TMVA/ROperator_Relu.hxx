@@ -43,6 +43,9 @@ public:
       fShape = model.GetDynamicTensorShape(fNX);
 
       model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShape);
+      if (model.Verbose()) {
+         std::cout << "Relu : " << fNX << " -> " << fNY << " " << ConvertDynamicShapeToString(fShape) << std::endl;
+      }
    }
 
 

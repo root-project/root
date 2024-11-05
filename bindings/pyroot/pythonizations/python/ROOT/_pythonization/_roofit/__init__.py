@@ -40,12 +40,6 @@ from ._rooglobalfunc import (
     Slice,
     Import,
     Link,
-    LineColor,
-    FillColor,
-    MarkerColor,
-    LineStyle,
-    FillStyle,
-    MarkerStyle,
     bindFunction,
 )
 from ._roojsonfactorywstool import RooJSONFactoryWSTool
@@ -105,12 +99,6 @@ python_roofit_functions = [
     Slice,
     Import,
     Link,
-    LineColor,
-    FillColor,
-    MarkerColor,
-    LineStyle,
-    FillStyle,
-    MarkerStyle,
     bindFunction,
 ]
 
@@ -134,6 +122,7 @@ def get_defined_attributes(klass, consider_base_classes=False):
         "__weakref__",
         "__firstlineno__",
         "__static_attributes__",
+        "__cpp_name__"
     ]
 
     if not consider_base_classes:

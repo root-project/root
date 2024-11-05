@@ -8,17 +8,54 @@
 5. Implement "haxis" draw option for histogram to draw only axes for hbar
 6. Implement "axisg" and "haxisg" to draw axes with grids
 7. Support TH1 marker, text and line drawing superimposed with "haxis"
-8. Support TBox and TLatex drawing on "frame", support drawing on swapped axes
-9. TProfile and TProfile2D projections https://github.com/root-project/root/issues/15851
+8. Support `TBox`, `TLatex`, `TLine`, `TMarker` drawing on "frame", support drawing on swapped axes
+9. `TProfile` and `TProfile2D` projections https://github.com/root-project/root/issues/15851
 10. Draw total histogram from TEfficiency when draw option starts with 'b'
 11. Let redraw TEfficiency, THStack and TMultiGraph with different draw options via hist context menu
 12. Support 'pads' draw options for TMultiGraph, support context menu for it
 13. Let drop object on sub-pads
 14. Properly loads ES6 modules for web canvas
-15. Internals - do not select pad (aka gPad) for objects drawing, always use assigned pad painter
-16. Fix - properly save zoomed ranges in drawingJSON()
-17. Fix - properly redraw TMultuGraph
-18. Fix - show empty bin in TProfile2D if it has entries #316
+15. Improve performance of TH3/RH3 drawing by using THREE.InstancedMesh
+16. Implement batch mode with '&batch' URL parameter to create SVG/PNG images with default GUI
+17. Adjust node.js implementation to produce identical output with normal browser
+18. Create necessary infrastructure for testing with 'puppeteer'
+19. Support inject of ES6 modules via '&inject=path.mjs'
+20. Using importmap for 'jsroot' in all major HTML files and in demos
+21. Implement `settings.CutAxisLabels` flag to remove labels which may exceed graphical range
+22. Let disable usage of TAxis custom labels via context menu
+23. Let configure default draw options via context menu, they can be preserved in the local storage
+24. Let save canvas as JSON file from context menu, object as JSON from inspector
+25. Upgrade three.js r162 -> r168, use r162 only in node.js because of "gl" module
+26. Create unified svg2pdf/jspdf ES6 modules, integrate in jsroot builds
+27. Let create multipage PDF document - in TWebCanvas batch mode
+28. Let add external links via `#url[link]{label}` syntax - including jsPDF support
+29. Support TAttMarker style with line width bigger than 1
+30. Internals - upgrade to eslint 9
+31. Internals - do not select pad (aka gPad) for objects drawing, always use assigned pad painter
+32. Fix - properly save zoomed ranges in drawingJSON()
+33. Fix - properly redraw TMultiGraph
+34. Fix - show empty bin in TProfile2D if it has entries #316
+35. Fix - unzooming on log scale was extending range forevever
+36. Fix - do not force style 8 for hist markers
+37. Fix - ensure minimal hist title height
+38. Fix - disable Bloom effects on Android TGeo displays
+39. Fix - handle reordering of fragments in multipart reply #319
+40. Fix - properly show non-zero entries #320
+41. Fix - display empty hist bin if fSumw2 not zero
+
+
+## Changes in 7.7.4
+1. Fix - TGraph Y range selection, do not cross 0
+2. Fix - correctly handle `#font[id]` in latex
+3. Fix - store canvas with embed geometry drawing
+4. Fix - upgrade rollup and import.meta polyfill
+
+
+## Changes in 7.7.3
+1. Fix - correctly handle in I/O empty std::map
+2. Fix - reading of small (<1KB) ROOT files
+3. Fix - race condition in zstd initialization #318
+4. Fix - deployment with zstd #317
 
 
 ## Changes in 7.7.2

@@ -1036,10 +1036,8 @@ Steps to reproduce the behavior:
 -->
 
 ### Setup
-```
 )"+GetSetup()+
-R"(```
-
+R"(
 <!--
 Please specify also how you obtained ROOT, such as `dnf install` / binary download / you built it yourself.
 -->

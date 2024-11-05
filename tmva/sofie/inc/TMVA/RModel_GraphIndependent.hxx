@@ -14,6 +14,11 @@ namespace SOFIE {
 class RFunction_Update;
 
 struct GraphIndependent_Init {
+
+   // Explicitly define default constructor so cppyy doesn't attempt
+   // aggregate initialization.
+   GraphIndependent_Init() {}
+
    // update blocks
    std::unique_ptr<RFunction_Update> edges_update_block;
    std::unique_ptr<RFunction_Update> nodes_update_block;

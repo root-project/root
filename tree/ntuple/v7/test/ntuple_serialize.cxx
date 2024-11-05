@@ -63,12 +63,9 @@ TEST(RNTuple, SerializeColumnType)
    }
 
    RNTupleSerializer::SerializeUInt16(5000, buffer);
-   try {
-      RNTupleSerializer::DeserializeColumnType(buffer, type).Unwrap();
-      FAIL() << "unexpected on disk column type should throw";
-   } catch (const RException& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("unexpected on-disk column type"));
-   }
+   auto res = RNTupleSerializer::DeserializeColumnType(buffer, type);
+   EXPECT_TRUE(bool(res));
+   EXPECT_EQ(type, EColumnType::kUnknown);
 
    for (int i = 1; i < static_cast<int>(EColumnType::kMax); ++i) {
       RNTupleSerializer::SerializeColumnType(static_cast<EColumnType>(i), buffer);
@@ -90,12 +87,8 @@ TEST(RNTuple, SerializeFieldStructure)
    }
 
    RNTupleSerializer::SerializeUInt16(5000, buffer);
-   try {
-      RNTupleSerializer::DeserializeFieldStructure(buffer, structure).Unwrap();
-      FAIL() << "unexpected on disk field structure value should throw";
-   } catch (const RException& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("unexpected on-disk field structure value"));
-   }
+   RNTupleSerializer::DeserializeFieldStructure(buffer, structure).Unwrap();
+   EXPECT_EQ(structure, ENTupleStructure::kUnknown);
 
    for (int i = 0; i < static_cast<int>(ENTupleStructure::kInvalid); ++i) {
       RNTupleSerializer::SerializeFieldStructure(static_cast<ENTupleStructure>(i), buffer);
@@ -404,12 +397,8 @@ TEST(RNTuple, SerializeLocator)
 #else
    *head = (0x3 << 24) | *head;
 #endif
-   try {
-      RNTupleSerializer::DeserializeLocator(buffer, 20, locator).Unwrap();
-      FAIL() << "unsupported locator type should throw";
-   } catch (const RException& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("unsupported locator type"));
-   }
+   RNTupleSerializer::DeserializeLocator(buffer, 20, locator).Unwrap();
+   EXPECT_EQ(locator.fType, RNTupleLocator::kTypeUnknown);
 }
 
 TEST(RNTuple, SerializeEnvelopeLink)
@@ -439,9 +428,10 @@ TEST(RNTuple, SerializeClusterSummary)
 {
    RNTupleSerializer::RClusterSummary summary;
    summary.fFirstEntry = 42;
-   summary.fNEntries = 137;
+   summary.fNEntries = (static_cast<std::uint64_t>(1) << 56) - 1;
+   summary.fFlags = 0x02;
 
-   unsigned char buffer[28];
+   unsigned char buffer[24];
    ASSERT_EQ(24u, RNTupleSerializer::SerializeClusterSummary(summary, nullptr));
    EXPECT_EQ(24u, RNTupleSerializer::SerializeClusterSummary(summary, buffer));
    RNTupleSerializer::RClusterSummary reco;
@@ -454,21 +444,25 @@ TEST(RNTuple, SerializeClusterSummary)
    EXPECT_EQ(24u, RNTupleSerializer::DeserializeClusterSummary(buffer, 24, reco).Unwrap());
    EXPECT_EQ(summary.fFirstEntry, reco.fFirstEntry);
    EXPECT_EQ(summary.fNEntries, reco.fNEntries);
-   EXPECT_EQ(summary.fColumnGroupID, reco.fColumnGroupID);
+   EXPECT_EQ(summary.fFlags, reco.fFlags);
 
-   summary.fColumnGroupID = 13;
-   ASSERT_EQ(28u, RNTupleSerializer::SerializeClusterSummary(summary, nullptr));
-   EXPECT_EQ(28u, RNTupleSerializer::SerializeClusterSummary(summary, buffer));
+   summary.fFlags |= 0x01;
+   EXPECT_EQ(24u, RNTupleSerializer::SerializeClusterSummary(summary, buffer));
    try {
-      RNTupleSerializer::DeserializeClusterSummary(buffer, 27, reco).Unwrap();
-      FAIL() << "too short cluster summary should fail";
+      RNTupleSerializer::DeserializeClusterSummary(buffer, 24, reco).Unwrap();
+      FAIL() << "sharded cluster flag should fail";
    } catch (const RException& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
+      EXPECT_THAT(err.what(), testing::HasSubstr("sharded"));
    }
-   EXPECT_EQ(28u, RNTupleSerializer::DeserializeClusterSummary(buffer, 28, reco).Unwrap());
-   EXPECT_EQ(summary.fFirstEntry, reco.fFirstEntry);
-   EXPECT_EQ(summary.fNEntries, reco.fNEntries);
-   EXPECT_EQ(summary.fColumnGroupID, reco.fColumnGroupID);
+
+   summary.fFlags = 0;
+   summary.fNEntries++;
+   try {
+      RNTupleSerializer::SerializeClusterSummary(summary, buffer);
+      FAIL() << "overesized cluster should fail";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("exceed"));
+   }
 }
 
 TEST(RNTuple, SerializeClusterGroup)
@@ -647,8 +641,7 @@ TEST(RNTuple, SerializeHeader)
    EXPECT_EQ(1u, desc.GetNExtraTypeInfos());
    const auto &extraTypeInfoDesc = *desc.GetExtraTypeInfoIterable().begin();
    EXPECT_EQ(EExtraTypeInfoIds::kStreamerInfo, extraTypeInfoDesc.GetContentId());
-   EXPECT_EQ(0u, extraTypeInfoDesc.GetTypeVersionFrom());
-   EXPECT_EQ(0u, extraTypeInfoDesc.GetTypeVersionTo());
+   EXPECT_EQ(0u, extraTypeInfoDesc.GetTypeVersion());
    EXPECT_TRUE(extraTypeInfoDesc.GetTypeName().empty());
    EXPECT_STREQ("xyz", extraTypeInfoDesc.GetContent().c_str());
 }
@@ -759,7 +752,7 @@ TEST(RNTuple, SerializeFooter)
    EXPECT_EQ(0, clusterDesc.GetFirstEntryIndex());
    EXPECT_EQ(100, clusterDesc.GetNEntries());
    auto columnIds = clusterDesc.GetColumnRangeIterable();
-   EXPECT_EQ(1u, columnIds.count());
+   EXPECT_EQ(1u, columnIds.size());
    EXPECT_EQ(0, columnIds.begin()->fPhysicalColumnId);
    columnRange = clusterDesc.GetColumnRange(0);
    EXPECT_EQ(100u, columnRange.fNElements);
@@ -920,8 +913,7 @@ TEST(RNTuple, SerializeFooterXHeader)
    EXPECT_EQ(1u, desc.GetNExtraTypeInfos());
    const auto &extraTypeInfoDesc = *desc.GetExtraTypeInfoIterable().begin();
    EXPECT_EQ(EExtraTypeInfoIds::kStreamerInfo, extraTypeInfoDesc.GetContentId());
-   EXPECT_EQ(0u, extraTypeInfoDesc.GetTypeVersionFrom());
-   EXPECT_EQ(0u, extraTypeInfoDesc.GetTypeVersionTo());
+   EXPECT_EQ(0u, extraTypeInfoDesc.GetTypeVersion());
    EXPECT_TRUE(extraTypeInfoDesc.GetTypeName().empty());
    EXPECT_STREQ("xyz", extraTypeInfoDesc.GetContent().c_str());
 }
@@ -932,12 +924,12 @@ TEST(RNTuple, SerializeStreamerInfos)
    auto content = RNTupleSerializer::SerializeStreamerInfos(infos);
    EXPECT_TRUE(RNTupleSerializer::DeserializeStreamerInfos(content).Unwrap().empty());
 
-   auto streamerInfo = RNTuple::Class()->GetStreamerInfo();
+   auto streamerInfo = ROOT::RNTuple::Class()->GetStreamerInfo();
    infos[streamerInfo->GetNumber()] = streamerInfo;
    content = RNTupleSerializer::SerializeStreamerInfos(infos);
    auto result = RNTupleSerializer::DeserializeStreamerInfos(content).Unwrap();
    EXPECT_EQ(1u, result.size());
-   EXPECT_STREQ("ROOT::Experimental::RNTuple", std::string(result.begin()->second->GetName()).c_str());
+   EXPECT_STREQ("ROOT::RNTuple", std::string(result.begin()->second->GetName()).c_str());
 }
 
 TEST(RNTuple, SerializeMultiColumnRepresentation)

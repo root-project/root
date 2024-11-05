@@ -16,7 +16,7 @@ namespace ROOT {
 
 namespace Minuit2 {
 
-double GaussFcn2::operator()(const std::vector<double> &par) const
+double GaussFcn2::operator()(std::vector<double> const &par) const
 {
 
    assert(par.size() == 6);

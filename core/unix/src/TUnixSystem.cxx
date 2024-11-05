@@ -4817,12 +4817,12 @@ static void GetFreeBSDSysInfo(SysInfo_t *sysinfo)
    // it probably would be better to get this information from syscalls
    // this is possibly less error prone
    FILE *p = gSystem->OpenPipe("sysctl -n kern.ostype hw.model hw.ncpu "
-                               "hw.physmem dev.cpu.0.freq", "r");
+                               "hw.realmem dev.cpu.0.freq", "r");
    TString s;
    s.Gets(p);
    sysinfo->fOS = s;
    s.Gets(p);
-   sysinfo->fModel = s;
+   sysinfo->fCpuType = s;
    s.Gets(p);
    sysinfo->fCpus = s.Atoi();
    s.Gets(p);
@@ -4830,13 +4830,13 @@ static void GetFreeBSDSysInfo(SysInfo_t *sysinfo)
    sysinfo->fPhysRam = Int_t(t / 1024 / 1024);
    s.Gets(p);
    t = s.Atoll();
-   sysinfo->fCpuSpeed = Int_t(t / 1000000);
+   sysinfo->fCpuSpeed = Int_t(t);
    gSystem->ClosePipe(p);
 }
 
 static void GetFreeBSDCpuInfo(CpuInfo_t*, Int_t)
 {
-  //not yet implemented
+   Error("ListSymbols", "not yet implemented");
 }
 #endif
 

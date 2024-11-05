@@ -28,7 +28,7 @@ class TF2Painter extends TH2Painter {
    getPrimaryObject() { return this.$func; }
 
    /** @summary Update histogram */
-   updateObject(obj /*, opt */) {
+   updateObject(obj /* , opt */) {
       if (!obj || (this.getClassName() !== obj._typename)) return false;
       delete obj.evalPar;
       const histo = this.getHisto();

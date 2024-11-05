@@ -62,7 +62,7 @@ private:
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
 
-   void ConstructValue(void *where) const override;
+   void ConstructValue(void *where) const final;
    std::unique_ptr<RDeleter> GetDeleter() const final;
 
    std::size_t AppendImpl(const void *from) final;
@@ -84,11 +84,6 @@ public:
 
 template <typename ItemT, std::size_t N>
 class RField<std::array<ItemT, N>> : public RArrayField {
-   using ContainerT = typename std::array<ItemT, N>;
-
-protected:
-   void ConstructValue(void *where) const final { new (where) ContainerT(); }
-
 public:
    static std::string TypeName() { return "std::array<" + RField<ItemT>::TypeName() + "," + std::to_string(N) + ">"; }
    explicit RField(std::string_view name) : RArrayField(name, std::make_unique<RField<ItemT>>("_0"), N) {}
@@ -103,7 +98,7 @@ public:
    explicit RField(std::string_view name) : RField<std::array<ItemT, N>>(name) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
-   ~RField() override = default;
+   ~RField() final = default;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -136,16 +131,16 @@ protected:
    ClusterSize_t fNWritten;
    std::size_t fValueSize;
 
-   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const override;
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumns() final;
    void GenerateColumns(const RNTupleDescriptor &desc) final;
 
-   void ConstructValue(void *where) const override;
-   std::unique_ptr<RDeleter> GetDeleter() const override;
+   void ConstructValue(void *where) const final;
+   std::unique_ptr<RDeleter> GetDeleter() const final;
 
-   std::size_t AppendImpl(const void *from) override;
-   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) override;
+   std::size_t AppendImpl(const void *from) final;
+   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
    std::size_t ReadBulkImpl(const RBulkSpec &bulkSpec) final;
 
    void CommitClusterImpl() final { fNWritten = 0; }
@@ -159,8 +154,8 @@ public:
    ~RRVecField() override = default;
 
    std::vector<RValue> SplitValue(const RValue &value) const final;
-   size_t GetValueSize() const override;
-   size_t GetAlignment() const override;
+   size_t GetValueSize() const final;
+   size_t GetAlignment() const final;
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
    void GetCollectionInfo(NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const
    {
@@ -174,42 +169,6 @@ public:
 
 template <typename ItemT>
 class RField<ROOT::VecOps::RVec<ItemT>> final : public RRVecField {
-   using ContainerT = typename ROOT::VecOps::RVec<ItemT>;
-
-protected:
-   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
-   {
-      auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetFieldName());
-      return std::make_unique<RField<ROOT::VecOps::RVec<ItemT>>>(newName, std::move(newItemField));
-   }
-
-   void ConstructValue(void *where) const final { new (where) ContainerT(); }
-   std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RTypedDeleter<ContainerT>>(); }
-
-   std::size_t AppendImpl(const void *from) final
-   {
-      auto typedValue = static_cast<const ContainerT *>(from);
-      auto nbytes = 0;
-      auto count = typedValue->size();
-      for (unsigned i = 0; i < count; ++i) {
-         nbytes += CallAppendOn(*fSubFields[0], &typedValue->data()[i]);
-      }
-      this->fNWritten += count;
-      fPrincipalColumn->Append(&this->fNWritten);
-      return nbytes + fPrincipalColumn->GetElement()->GetPackedSize();
-   }
-   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final
-   {
-      auto typedValue = static_cast<ContainerT *>(to);
-      ClusterSize_t nItems;
-      RClusterIndex collectionStart;
-      fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nItems);
-      typedValue->resize(nItems);
-      for (unsigned i = 0; i < nItems; ++i) {
-         CallReadOn(*fSubFields[0], collectionStart + i, &typedValue->data()[i]);
-      }
-   }
-
 public:
    RField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField)
       : RRVecField(fieldName, std::move(itemField))
@@ -219,12 +178,9 @@ public:
    explicit RField(std::string_view name) : RField(name, std::make_unique<RField<ItemT>>("_0")) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
-   ~RField() override = default;
+   ~RField() final = default;
 
    static std::string TypeName() { return "ROOT::VecOps::RVec<" + RField<ItemT>::TypeName() + ">"; }
-
-   size_t GetValueSize() const final { return sizeof(ContainerT); }
-   size_t GetAlignment() const final { return std::alignment_of<ContainerT>(); }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -232,6 +188,7 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 
 /// The generic field for a (nested) std::vector<Type> except for std::vector<bool>
+/// The field can be constructed as untyped collection through CreateUntyped().
 class RVectorField : public RFieldBase {
 private:
    class RVectorDeleter : public RDeleter {
@@ -253,13 +210,15 @@ private:
    std::unique_ptr<RDeleter> fItemDeleter;
 
 protected:
+   RVectorField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField, bool isUntyped);
+
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
 
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumns() final;
    void GenerateColumns(const RNTupleDescriptor &desc) final;
 
-   void ConstructValue(void *where) const override { new (where) std::vector<char>(); }
+   void ConstructValue(void *where) const final { new (where) std::vector<char>(); }
    std::unique_ptr<RDeleter> GetDeleter() const final;
 
    std::size_t AppendImpl(const void *from) final;
@@ -273,8 +232,11 @@ public:
    RVectorField &operator=(RVectorField &&other) = default;
    ~RVectorField() override = default;
 
+   static std::unique_ptr<RVectorField>
+   CreateUntyped(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField);
+
    std::vector<RValue> SplitValue(const RValue &value) const final;
-   size_t GetValueSize() const override { return sizeof(std::vector<char>); }
+   size_t GetValueSize() const final { return sizeof(std::vector<char>); }
    size_t GetAlignment() const final { return std::alignment_of<std::vector<char>>(); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
    void GetCollectionInfo(NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const
@@ -289,19 +251,12 @@ public:
 
 template <typename ItemT>
 class RField<std::vector<ItemT>> final : public RVectorField {
-   using ContainerT = typename std::vector<ItemT>;
-
-protected:
-   void ConstructValue(void *where) const final { new (where) ContainerT(); }
-
 public:
    static std::string TypeName() { return "std::vector<" + RField<ItemT>::TypeName() + ">"; }
    explicit RField(std::string_view name) : RVectorField(name, std::make_unique<RField<ItemT>>("_0")) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
-   ~RField() override = default;
-
-   size_t GetValueSize() const final { return sizeof(ContainerT); }
+   ~RField() final = default;
 };
 
 // std::vector<bool> is a template specialization and needs special treatment
@@ -333,7 +288,7 @@ public:
    explicit RField(std::string_view name);
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
-   ~RField() override = default;
+   ~RField() final = default;
 
    std::vector<RValue> SplitValue(const RValue &value) const final;
 

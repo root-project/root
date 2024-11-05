@@ -167,7 +167,7 @@ TEST(RNTuple, LargeFile1)
    {
       auto f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "READ"));
       EXPECT_TRUE(f);
-      auto ntuple = std::unique_ptr<RNTuple>(f->Get<RNTuple>("myNTuple"));
+      auto ntuple = std::unique_ptr<ROOT::RNTuple>(f->Get<ROOT::RNTuple>("myNTuple"));
       auto reader = RNTupleReader::Open(*ntuple);
       auto rdEnergy  = reader->GetView<double>("energy");
 
@@ -258,12 +258,12 @@ TEST(RNTuple, LargeFile2)
       auto s2 = f->Get<std::string>("s2");
       EXPECT_EQ("two", *s2);
 
-      auto small = std::unique_ptr<RNTuple>(f->Get<RNTuple>("small"));
+      auto small = std::unique_ptr<ROOT::RNTuple>(f->Get<ROOT::RNTuple>("small"));
       auto reader = RNTupleReader::Open(*small);
       reader->LoadEntry(0);
       EXPECT_EQ(42.0f, *reader->GetModel().GetDefaultEntry().GetPtr<float>("pt"));
 
-      auto large = std::unique_ptr<RNTuple>(f->Get<RNTuple>("large"));
+      auto large = std::unique_ptr<ROOT::RNTuple>(f->Get<ROOT::RNTuple>("large"));
       reader = RNTupleReader::Open(*large);
       auto viewE = reader->GetView<double>("E");
       double chksumRead = 0.0;
@@ -285,7 +285,7 @@ TEST(RNTuple, LargePages)
          auto fldRnd = model->MakeField<std::uint32_t>("rnd");
          RNTupleWriteOptions options;
          // Larger than the 16MB compression block limit
-         options.SetApproxUnzippedPageSize(32 * 1024 * 1024);
+         options.SetMaxUnzippedPageSize(32 * 1024 * 1024);
          options.SetUseBufferedWrite(useBufferedWrite);
          auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath(), options);
 

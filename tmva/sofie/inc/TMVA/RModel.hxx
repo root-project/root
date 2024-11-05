@@ -12,8 +12,14 @@ namespace SOFIE {
 class RModel final : public RModel_Base {
 
 private:
+   bool fIsInitialized = false;
+   bool fIsSubGraph = false;
+   int fVerbose = 0;
+   int fBatchSize = -1;
+   long fReadPos = 0;  // reading file position
+
    std::unordered_map<std::string, InputTensorInfo>
-      fInputTensorInfos; // input tensors where shape is not defined or other graph inputs?
+      fInputTensorInfos; // input tensors where shape may not fully defined or other graph inputs?
    std::unordered_map<std::string, TensorInfo> fReadyInputTensorInfos; // input tensors where shape is full defined
    std::unordered_map<std::string, InitializedTensor> fInitializedTensors;
    std::unordered_map<std::string, TensorInfo> fIntermediateTensorInfos;
@@ -24,6 +30,9 @@ private:
    std::vector<std::string> fInputTensorNames; // input tensor names using ONNX order
 
    std::vector<std::unique_ptr<ROperator>> fOperators;
+
+   std::vector<std::shared_ptr<RModel>> fSubGraphs;    ///<!  sub-graph models (transient)
+   RModel * fParentGraph = nullptr;
 
    const std::string SP = "   ";
 
@@ -45,6 +54,8 @@ public:
    // For GNN Functions usage
    RModel(std::string function_name) : RModel_Base(function_name) {}
 
+   int Verbose() const { return fVerbose;}
+
    const std::vector<size_t> &GetTensorShape(std::string name);
    std::vector<Dim> GetDynamicTensorShape(std::string name);
    const ETensorType &GetTensorType(std::string name);
@@ -63,18 +74,34 @@ public:
    void AddConstantTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape,
                              std::shared_ptr<void> data);
 
+   template<class T>
+   void AddConstantTensor(const std::string & name, const std::vector<size_t> & shape, const T * data) {
+      size_t length = ConvertShapeToLength(shape);
+      std::shared_ptr<void> data_ptr(malloc(length * sizeof(T)), free);
+      std::memcpy(data_ptr.get(), (void*) data, length * sizeof(T));
+      AddConstantTensor(name, GetTemplatedType<T>(T()), shape, data_ptr);
+   }
+   // for boolean can be more convenient passing an std::vector
+   template<class T>
+   void AddConstantTensor(const std::string & name, const std::vector<size_t> & shape, const std::vector<T> & data) {
+      size_t length = data.size();
+      std::shared_ptr<void> data_ptr(malloc(length * sizeof(T)), free);
+      std::copy(data.begin(), data.end(), (T*) data_ptr.get());
+      //std::memcpy(data_ptr.get(), (void*) data, length * sizeof(T));
+      AddConstantTensor(name, GetTemplatedType<T>(T()), shape, data_ptr);
+   }
 
    template <typename T>
-   void AddInitializedTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape, T *raw_data)
+   void AddInitializedTensor(const std::string & tensor_name, const std::vector<std::size_t> & shape, T *raw_data)
    {
-      int size = 1;
-      for (auto item : shape) {
-         size *= (int)item;
-      }
+      size_t size = ConvertShapeToLength(shape);
       std::shared_ptr<void> data(malloc(size * sizeof(T)), free);
       std::memcpy(data.get(), raw_data, size * sizeof(T));
-      AddInitializedTensor(tensor_name, type, shape, data);
+      AddInitializedTensor(tensor_name,  GetTemplatedType(T()), shape, data);
    }
+
+   // add and initialize subgraph to the model
+   void InitializeSubGraph(std::shared_ptr<RModel>  graph);
 
    // set a flag to indicate tensor does not need to be written in a weight file
    // (e.g. shape tensors used as input to define a shape (in Reshape))
@@ -100,16 +127,30 @@ public:
    std::shared_ptr<void> GetInitializedTensorData(std::string tensor_name);
 
    void Initialize(int batchSize = -1, bool verbose = false);
-   void GenerateInitializedTensorInfo();
-   void GenerateIntermediateTensorInfo();
-   void GenerateDynamicTensorInfo();
-   void GenerateOutput();
+   void Initialize(const std::map<std::string,size_t> & inputParams, bool verbose = false);
+
    void Generate(std::underlying_type_t<Options> options, int batchSize = -1, long pos = 0, bool verbose = false);
    void Generate(Options options = Options::kDefault, int batchSize = -1, int pos = 0, bool verbose = false)
    {
       Generate(static_cast<std::underlying_type_t<Options>>(options), batchSize, pos, verbose);
    }
+   // generate the infer function signature. If isdecl= false generate the calling infer function
+   // used to infer the sub-graphs
+   std::string GenerateInferSignature(bool isdecl = true);
 
+protected:
+   // internal functions
+   // generate code for the initialized tensors
+   void GenerateInitializedTensorInfo();
+   // generate code for the intermediate tensors
+   void GenerateIntermediateTensorInfo();
+   // generate code for the dynamic tensors
+   void GenerateDynamicTensorInfo();
+   void GenerateOutput();
+   // Generate all session code
+   void GenerateSessionCode();
+
+public:
    const std::vector<std::string> &GetInputTensorNames() const { return fInputTensorNames; }
    const std::vector<std::string> &GetOutputTensorNames() const { return fOutputTensorNames; }
 
@@ -143,7 +184,7 @@ public:
    bool UseSession() const { return fUseSession; }
 
    // Use the ClassDef macro to allow definition of custom streaming
-   ClassDefNV(RModel, 2);
+   ClassDefNV(RModel, 3);
 };
 
 } // namespace SOFIE

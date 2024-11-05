@@ -66,7 +66,7 @@ End_Macro
 ////////////////////////////////////////////////////////////////////////////////
 /// TGraphErrors default constructor.
 
-TGraphErrors::TGraphErrors(): TGraph()
+TGraphErrors::TGraphErrors()
 {
    if (!CtorAllocate()) return;
 }

@@ -56,6 +56,7 @@ void ROOT::Experimental::Internal::RPageSourceFriends::AddVirtualField(const RNT
          .PhysicalColumnId(physicalId)
          .FieldId(virtualFieldId)
          .BitsOnStorage(c.GetBitsOnStorage())
+         .ValueRange(c.GetValueRange())
          .Type(c.GetType())
          .Index(c.GetIndex())
          .RepresentationIndex(c.GetRepresentationIndex());
@@ -144,7 +145,7 @@ ROOT::Experimental::Internal::RPageSourceFriends::CloneImpl() const
 }
 
 ROOT::Experimental::Internal::RPageStorage::ColumnHandle_t
-ROOT::Experimental::Internal::RPageSourceFriends::AddColumn(DescriptorId_t fieldId, const RColumn &column)
+ROOT::Experimental::Internal::RPageSourceFriends::AddColumn(DescriptorId_t fieldId, RColumn &column)
 {
    auto originFieldId = fIdBiMap.GetOriginId(fieldId);
    fSources[originFieldId.fSourceIdx]->AddColumn(originFieldId.fId, column);

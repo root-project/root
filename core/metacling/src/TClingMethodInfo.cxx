@@ -519,7 +519,7 @@ long TClingMethodInfo::Property() const
       if (md->isVirtual()) {
          property |= kIsVirtual;
       }
-      if (md->isPure()) {
+      if (md->isPureVirtual()) {
          property |= kIsPureVirtual;
       }
       if (const clang::CXXConstructorDecl *cd =

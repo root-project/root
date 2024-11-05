@@ -1,5 +1,9 @@
 #include "ntuple_test.hxx"
 
+#include <TMemFile.h>
+
+#include <limits>
+
 TEST(RNTuple, View)
 {
    FileRaii fileGuard("test_ntuple_view.root");
@@ -53,150 +57,74 @@ TEST(RNTuple, View)
    EXPECT_EQ(3, n);
 }
 
-TEST(RNTuple, BulkView)
+TEST(RNTuple, ViewCast)
 {
-   FileRaii fileGuard("test_ntuple_bulk_view.root");
+   FileRaii fileGuard("test_ntuple_view_cast.root");
+
+   auto model = RNTupleModel::Create();
+   auto fieldF = model->MakeField<float>("f", 1.0);
+   auto fieldD = model->MakeField<double>("d", 2.0);
+   auto field32 = model->MakeField<std::uint32_t>("u32", 32);
+   auto field64 = model->MakeField<std::int64_t>("i64", -64);
+
+   {
+      auto writer = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath());
+      writer->Fill();
+      *fieldF = -42.0;
+      *fieldD = -63.0;
+      *field32 = std::numeric_limits<std::uint32_t>::max();
+      *field64 = std::numeric_limits<std::int32_t>::min();
+      writer->Fill();
+   }
+
+   // Test views that cast to a different type.
+   auto reader = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
+   auto viewF = reader->GetView<double>("f");
+   auto viewD = reader->GetView<float>("d");
+   auto view32 = reader->GetView<std::uint64_t>("u32");
+   auto view64 = reader->GetView<std::int32_t>("i64");
+
+   EXPECT_FLOAT_EQ(1.0, viewF(0));
+   EXPECT_FLOAT_EQ(2.0, viewD(0));
+   EXPECT_EQ(32, view32(0));
+   EXPECT_EQ(-64, view64(0));
+
+   EXPECT_FLOAT_EQ(-42.0, viewF(1));
+   EXPECT_FLOAT_EQ(-63.0, viewD(1));
+   EXPECT_EQ(std::numeric_limits<std::uint32_t>::max(), view32(1));
+   EXPECT_EQ(std::numeric_limits<std::int32_t>::min(), view64(1));
+}
+
+TEST(RNTuple, DirectAccessView)
+{
+   FileRaii fileGuard("test_ntuple_direct_access_view.root");
 
    auto model = RNTupleModel::Create();
    auto fieldPt = model->MakeField<float>("pt", 42.0);
-   auto eltsPerPage = 10'000;
+   auto fieldVec = model->MakeField<std::vector<float>>("vec");
    {
       RNTupleWriteOptions opt;
-      opt.SetApproxUnzippedPageSize(eltsPerPage * sizeof(float));
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "myNTuple",
-         fileGuard.GetPath(), opt);
-      for (int i = 0; i < 100'000; i++) {
-         ntuple->Fill();
-      }
+      auto writer = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath(), opt);
+      writer->Fill();
+      writer->CommitCluster();
+      *fieldPt = 137.0;
+      fieldVec->emplace_back(1.0);
+      fieldVec->emplace_back(2.0);
+      writer->Fill();
    }
-   auto ntuple = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
-   auto viewPt = ntuple->GetView<float>("pt");
+   auto reader = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
+   auto viewPt = reader->GetDirectAccessView<float>("pt");
+   auto viewVec = reader->GetCollectionView("vec");
+   auto viewVecInner = viewVec.GetDirectAccessView<float>("_0");
 
-   NTupleSize_t nPageItems = 0;
-   const float *buf = viewPt.MapV(0, nPageItems);
-   ASSERT_EQ(eltsPerPage, nPageItems);
-   for (NTupleSize_t i = 0; i < nPageItems; i++) {
-      ASSERT_EQ(42.0f, buf[i]) << i;
-   }
-   // second last element
-   buf = viewPt.MapV(eltsPerPage - 2, nPageItems);
-   ASSERT_EQ(2, nPageItems);
-   for (NTupleSize_t i = 0; i < nPageItems; i++) {
-      ASSERT_EQ(42.0f, buf[i]) << i;
-   }
-   // last element
-   buf = viewPt.MapV(eltsPerPage - 1, nPageItems);
-   ASSERT_EQ(1, nPageItems);
-   for (NTupleSize_t i = 0; i < nPageItems; i++) {
-      ASSERT_EQ(42.0f, buf[i]) << i;
-   }
-}
+   EXPECT_FLOAT_EQ(42.0, viewPt(0));
+   EXPECT_FLOAT_EQ(137.0, viewPt(1));
 
-TEST(RNTuple, BulkCollectionView)
-{
-   FileRaii fileGuard("test_ntuple_bulk_view_collection.root");
+   EXPECT_EQ(0u, viewVec(0));
+   EXPECT_EQ(2u, viewVec(1));
 
-   auto model = RNTupleModel::Create();
-   auto fieldVec = model->MakeField<std::vector<double>>({"vec", "some data"});
-   auto pageSize = 80 * 1024;
-   {
-      RNTupleWriteOptions opt;
-      opt.SetApproxUnzippedPageSize(pageSize);
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "myNTuple",
-         fileGuard.GetPath(), opt);
-      for (int i = 0; i < 100'000; i++) {
-         *fieldVec = std::vector<double>(i % 5, 100);
-         ntuple->Fill();
-      }
-   }
-   auto ntuple = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
-   auto viewVecOffsets = ntuple->GetView<ClusterSize_t>("vec");
-   auto viewVecData = ntuple->GetView<double>("vec._0");
-
-   NTupleSize_t nPageItems = 0;
-   const ClusterSize_t *offsets_buf = viewVecOffsets.MapV(0, nPageItems);
-   ASSERT_EQ(pageSize / sizeof(ClusterSize_t), nPageItems);
-   std::unique_ptr<ClusterSize_t[]> offsets = std::make_unique<ClusterSize_t[]>(nPageItems + 1);
-   auto raw_offsets = offsets.get();
-   // offsets implicitly start at zero, RNTuple does not store that information
-   raw_offsets[0] = 0;
-   memcpy(raw_offsets + 1, offsets_buf, sizeof(ClusterSize_t) * nPageItems);
-   for (NTupleSize_t i = 1; i < nPageItems + 1; i++) {
-      ASSERT_EQ((i - 1) % 5, raw_offsets[i] - raw_offsets[i-1]) << i;
-   }
-   const double *buf = viewVecData.MapV(0, nPageItems);
-   ASSERT_EQ(pageSize / sizeof(double), nPageItems);
-   for (NTupleSize_t i = 0; i < nPageItems; i++) {
-      ASSERT_EQ(100.0f, buf[i]) << i;
-   }
-}
-
-TEST(RNTuple, Composable)
-{
-   FileRaii fileGuard("test_ntuple_composable.root");
-
-   auto eventModel = RNTupleModel::Create();
-   auto fldPt = eventModel->MakeField<float>("pt", 0.0);
-
-   auto hitModel = RNTupleModel::Create();
-   auto fldHitX = hitModel->MakeField<float>("x", 0.0);
-   auto fldHitY = hitModel->MakeField<float>("y", 0.0);
-
-   auto trackModel = RNTupleModel::Create();
-   auto fldTrackEnergy = trackModel->MakeField<float>("energy", 0.0);
-
-   auto fldHits = trackModel->MakeCollection("hits", std::move(hitModel));
-   auto fldTracks = eventModel->MakeCollection("tracks", std::move(trackModel));
-
-   {
-      auto ntuple = RNTupleWriter::Recreate(std::move(eventModel), "myNTuple", fileGuard.GetPath());
-
-      for (unsigned i = 0; i < 8; ++i) {
-         for (unsigned t = 0; t < 3; ++t) {
-            for (unsigned h = 0; h < 2; ++h) {
-               *fldHitX = 4.0;
-               *fldHitY = 8.0;
-               fldHits->Fill();
-            }
-            *fldTrackEnergy = i * t;
-            fldTracks->Fill();
-         }
-         *fldPt = float(i);
-         ntuple->Fill();
-         if (i == 2)
-            ntuple->CommitCluster();
-      }
-   }
-
-   auto ntuple = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
-   auto viewPt = ntuple->GetView<float>("pt");
-   auto viewTracks = ntuple->GetCollectionView("tracks");
-   auto viewTrackEnergy = viewTracks.GetView<float>("energy");
-   auto viewHits = viewTracks.GetCollectionView("hits");
-   auto viewHitX = viewHits.GetView<float>("x");
-   auto viewHitY = viewHits.GetView<float>("y");
-
-   int nEv = 0;
-   for (auto e : ntuple->GetEntryRange()) {
-      EXPECT_EQ(float(nEv), viewPt(e));
-      EXPECT_EQ(3U, viewTracks(e));
-
-      int nTr = 0;
-      for (auto t : viewTracks.GetCollectionRange(e)) {
-         EXPECT_EQ(nEv * nTr, viewTrackEnergy(t));
-
-         EXPECT_EQ(2.0, viewHits(t));
-         for (auto h : viewHits.GetCollectionRange(t)) {
-            EXPECT_EQ(4.0, viewHitX(h));
-            EXPECT_EQ(8.0, viewHitY(h));
-         }
-         nTr++;
-      }
-      EXPECT_EQ(3, nTr);
-
-      nEv++;
-   }
-   EXPECT_EQ(8, nEv);
+   EXPECT_FLOAT_EQ(1.0, viewVecInner(0));
+   EXPECT_FLOAT_EQ(2.0, viewVecInner(1));
 }
 
 TEST(RNTuple, VoidView)
@@ -223,10 +151,8 @@ TEST(RNTuple, MissingViewNames)
 {
    FileRaii fileGuard("test_ntuple_missing_view_names.root");
    auto model = RNTupleModel::Create();
-   auto fieldPt = model->MakeField<float>("pt", 42.0);
-   auto muonModel = RNTupleModel::Create();
-   auto muonPt = muonModel->MakeField<float>("pt", 42.0);
-   auto muon = model->MakeCollection("Muon", std::move(muonModel));
+   model->MakeField<float>("pt");
+   model->MakeField<std::vector<float>>("Muon");
    {
       RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath());
    }
@@ -249,13 +175,13 @@ TEST(RNTuple, MissingViewNames)
       auto badView = viewMuon.GetView<float>("badField");
       FAIL() << "missing field names should throw";
    } catch (const RException& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("no field named 'badField' in RNTuple 'myNTuple'"));
+      EXPECT_THAT(err.what(), testing::HasSubstr("no field named 'badField' in collection 'Muon'"));
    }
    try {
       auto badView = viewMuon.GetCollectionView("badC");
       FAIL() << "missing field names should throw";
    } catch (const RException& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("no field named 'badC' in RNTuple 'myNTuple'"));
+      EXPECT_THAT(err.what(), testing::HasSubstr("no field named 'badC' in collection 'Muon'"));
    }
 }
 
@@ -397,4 +323,142 @@ TEST(RNTuple, ViewStandardIntegerTypes)
    EXPECT_EQ(7, reader->GetView<unsigned long>("ul")(0));
    EXPECT_EQ(8, reader->GetView<long long>("ll")(0));
    EXPECT_EQ(9, reader->GetView<unsigned long long>("ull")(0));
+}
+
+TEST(RNTuple, ViewFrameworkUse)
+{
+   TMemFile file("memfile.root", "RECREATE");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto ptrPx = model->MakeField<float>("px");
+      auto ptrPy = model->MakeField<float>("py");
+      // The trigger pages make a hole in the on-disk layout that is not (purposefully) read
+      model->MakeField<bool>("trigger");
+      auto ptrPz = model->MakeField<float>("pz");
+
+      // Ensure that we use RTFileRawFile
+      auto writer = RNTupleWriter::Append(std::move(model), "ntpl", file);
+
+      for (int i = 0; i < 50; ++i) {
+         for (int j = 0; j < 5; ++j) {
+            *ptrPx = i * 5 + j;
+            *ptrPy = 0.2 + i * 5 + j;
+            *ptrPz = 0.4 + i * 5 + j;
+            writer->Fill();
+         }
+         writer->CommitCluster();
+      }
+   }
+
+   auto ntpl = std::unique_ptr<ROOT::RNTuple>(file.Get<ROOT::RNTuple>("ntpl"));
+   auto reader = RNTupleReader::Open(*ntpl);
+   reader->EnableMetrics();
+
+   std::optional<ROOT::Experimental::RNTupleView<void>> viewPx;
+   std::optional<ROOT::Experimental::RNTupleView<void>> viewPy;
+   std::optional<ROOT::Experimental::RNTupleView<void>> viewPz;
+
+   float px = 0, py = 0, pz = 0;
+   for (auto i : reader->GetEntryRange()) {
+      if (i > 1) {
+         if (!viewPx) {
+            viewPx = reader->GetView<void>("px", &px);
+         }
+         (*viewPx)(i);
+         EXPECT_FLOAT_EQ(i, px);
+      }
+
+      if (i > 3) {
+         if (!viewPy) {
+            viewPy = reader->GetView<void>("py", &py);
+         }
+         (*viewPy)(i);
+         EXPECT_FLOAT_EQ(0.2 + i, py);
+      }
+
+      if (i > 7) {
+         if (!viewPz) {
+            viewPz = reader->GetView<void>("pz", &pz);
+         }
+         (*viewPz)(i);
+         EXPECT_FLOAT_EQ(0.4 + i, pz);
+      }
+   }
+
+   // Ensure that cluster prefetching and smearing of read requests works
+   // Note that "nClusterLoaded" is the number of _partial_ clusters preloaded from storage. Because we read
+   // from the first cluster first px and then py, we'll call two times `LoadCluster()` on the first cluster.
+   EXPECT_LT(reader->GetDescriptor().GetNClusters(),
+             reader->GetMetrics().GetCounter("RNTupleReader.RPageSourceFile.nClusterLoaded")->GetValueAsInt());
+   EXPECT_LT(reader->GetMetrics().GetCounter("RNTupleReader.RPageSourceFile.nReadV")->GetValueAsInt(),
+             reader->GetMetrics().GetCounter("RNTupleReader.RPageSourceFile.nPageRead")->GetValueAsInt());
+   EXPECT_LT(reader->GetMetrics().GetCounter("RNTupleReader.RPageSourceFile.nRead")->GetValueAsInt(),
+             reader->GetMetrics().GetCounter("RNTupleReader.RPageSourceFile.nPageRead")->GetValueAsInt());
+}
+
+TEST(RNTuple, ViewOutOfBounds)
+{
+   FileRaii fileGuard("test_ntuple_view_oob.root");
+
+   auto model = RNTupleModel::Create();
+   auto foo = model->MakeField<std::int32_t>("foo");
+
+   {
+      auto writer = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath());
+      *foo = 1;
+      writer->Fill();
+      *foo = 2;
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
+   try {
+      auto viewJets = reader->GetView<std::int32_t>("foo");
+      viewJets(3);
+      FAIL() << "accessing an out-of-bounds entry with a view should throw";
+   } catch (const RException &ex) {
+      EXPECT_THAT(ex.what(), testing::HasSubstr("out of bounds"));
+   }
+}
+
+TEST(RNTuple, ViewFieldIteration)
+{
+   FileRaii fileGuard("test_ntuple_viewfielditeration.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      model->MakeField<float>("pt");
+      model->MakeField<std::vector<float>>("vec");
+      model->MakeField<std::atomic<int>>("atomic");
+      model->MakeField<CustomEnum>("enum");
+      model->MakeField<std::array<CustomEnum, 2>>("array");
+      model->MakeField<CustomStruct>("struct");
+      model->MakeField<EmptyStruct>("empty");
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+
+   auto viewPt = reader->GetView<void>("pt");
+   EXPECT_EQ(1u, viewPt.GetFieldRange().size());
+   auto viewVec = reader->GetView<void>("vec");
+   EXPECT_EQ(1u, viewVec.GetFieldRange().size());
+   auto viewAtomic = reader->GetView<void>("atomic");
+   EXPECT_EQ(1u, viewAtomic.GetFieldRange().size());
+   auto viewEnum = reader->GetView<void>("enum");
+   EXPECT_EQ(1u, viewEnum.GetFieldRange().size());
+   auto viewStruct = reader->GetView<void>("struct");
+   EXPECT_EQ(1u, viewStruct.GetFieldRange().size());
+   auto viewArray = reader->GetView<void>("array");
+   EXPECT_EQ(1u, viewArray.GetFieldRange().size());
+
+   try {
+      auto viewEmpty = reader->GetView<void>("empty");
+      FAIL() << "creating a view on an empty field should throw";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("field iteration over empty fields is unsupported"));
+   }
 }

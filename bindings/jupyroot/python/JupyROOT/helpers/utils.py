@@ -45,7 +45,7 @@ Jupyter.CodeCell.options_default.highlight_modes['magic_{cppMIME}'] = {{'reg':[/
 console.log("JupyROOT - %%cpp magic configured");
 """
 
-_jsNotDrawableClassesPatterns = ["TEve*","TF3","TPolyLine3D"]
+_jsNotDrawableClassesPatterns = ["TEve*"]
 
 _jsCanvasWidth = 800
 _jsCanvasHeight = 600
@@ -74,7 +74,7 @@ if (typeof requirejs !== 'undefined') {{
 
     // We are in jupyter notebooks, use require.js which should be configured already
     requirejs.config({{
-       paths: {{ 'JSRootCore' : [ 'build/jsroot', 'https://root.cern/js/7.7.2/build/jsroot', 'https://jsroot.gsi.de/7.7.2/build/jsroot' ] }}
+       paths: {{ 'JSRootCore' : [ 'build/jsroot', 'https://root.cern/js/7.7.4/build/jsroot', 'https://jsroot.gsi.de/7.7.4/build/jsroot' ] }}
     }})(['JSRootCore'],  function(Core) {{
        display_{jsDivId}(Core);
     }});
@@ -97,7 +97,7 @@ if (typeof requirejs !== 'undefined') {{
     // Try loading a local version of requirejs and fallback to cdn if not possible.
     script_load_{jsDivId}(base_url + 'static/build/jsroot.js', function(){{
         console.error('Fail to load JSROOT locally, please check your jupyter_notebook_config.py file');
-        script_load_{jsDivId}('https://root.cern/js/7.7.2/build/jsroot.js', function(){{
+        script_load_{jsDivId}('https://root.cern/js/7.7.4/build/jsroot.js', function(){{
             document.getElementById("{jsDivId}").innerHTML = "Failed to load JSROOT";
         }});
     }});
@@ -126,7 +126,7 @@ def RCanvasAvailable():
        return False
    return True
 
-_enableJSVis = False
+_enableJSVis = True
 _enableJSVisDebug = False
 def enableJSVis():
     if not TBufferJSONAvailable():
@@ -299,7 +299,7 @@ def produceCanvasJson(canvas):
        canvas.Draw()
 
    if TWebCanvasAvailable():
-       return ROOT.TWebCanvas.CreateCanvasJSON(canvas, 3)
+       return ROOT.TWebCanvas.CreateCanvasJSON(canvas, 23, True)
 
    # Add extra primitives to canvas with custom colors, palette, gStyle
 

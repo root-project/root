@@ -41,7 +41,8 @@ namespace Detail {
 /// @brief A class to maintain the context for squashing of RooFit models into code.
 class CodeSquashContext {
 public:
-   CodeSquashContext(std::map<RooFit::Detail::DataKey, std::size_t> const &outputSizes, std::vector<double> &xlarr, Experimental::RooFuncWrapper &wrapper);
+   CodeSquashContext(std::map<RooFit::Detail::DataKey, std::size_t> const &outputSizes, std::vector<double> &xlarr,
+                     Experimental::RooFuncWrapper &wrapper);
 
    void addResult(RooAbsArg const *key, std::string const &value);
    void addResult(const char *key, std::string const &value);
@@ -111,6 +112,8 @@ public:
 
    std::string buildArg(std::span<const double> arr);
    std::string buildArg(std::span<const int> arr) { return buildArgSpanImpl(arr); }
+
+   void collectFunction(std::string const &name);
 
    Experimental::RooFuncWrapper *_wrapper = nullptr;
 

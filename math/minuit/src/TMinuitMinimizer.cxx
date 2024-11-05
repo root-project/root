@@ -107,19 +107,6 @@ TMinuitMinimizer::~TMinuitMinimizer()
    }
 }
 
-TMinuitMinimizer::TMinuitMinimizer(const TMinuitMinimizer &) :
-   Minimizer()
-{
-   // Implementation of copy constructor (it is private).
-}
-
-TMinuitMinimizer & TMinuitMinimizer::operator = (const TMinuitMinimizer &rhs)
-{
-   // Implementation of assignment operator (private)
-   if (this == &rhs) return *this;  // time saving self-test
-   return *this;
-}
-
 bool TMinuitMinimizer::UseStaticMinuit(bool on ) {
    // static method to control usage of global TMinuit instance
    bool prev = fgUseStaticMinuit;

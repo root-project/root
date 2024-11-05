@@ -12,7 +12,7 @@
 
 #include "clang/Basic/CodeGenOptions.h"
 #include "llvm/ADT/SmallString.h"
-#include "llvm/ADT/Triple.h"
+#include "llvm/TargetParser/Triple.h"
 
 #include <string>
 #include <vector>
@@ -121,7 +121,7 @@ namespace cling {
     ///\param [in] hostTriple - The llvm triple of the host system
     void setCuArgs(const clang::LangOptions& langOpts,
                    const cling::InvocationOptions& invocationOptions,
-                   const clang::codegenoptions::DebugInfoKind debugInfo,
+                   const llvm::codegenoptions::DebugInfoKind debugInfo,
                    const llvm::Triple hostTriple);
 
   public:

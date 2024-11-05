@@ -51,7 +51,7 @@
 #include "RooDataSet.h"
 #include "RooDerivative.h"
 #include "RooFirstMoment.h"
-#include "RooFit/Detail/BatchModeDataHelpers.h"
+#include "RooFit/BatchModeDataHelpers.h"
 #include "RooFit/Evaluator.h"
 #include "RooFitResult.h"
 #include "RooFormulaVar.h"
@@ -116,9 +116,9 @@ public:
       _arg->recursiveRedirectServers(RooArgList{var});
       _evaluator = std::make_unique<RooFit::Evaluator>(*_arg);
       std::stack<std::vector<double>>{}.swap(_vectorBuffers);
-      auto dataSpans =
-         RooFit::Detail::BatchModeDataHelpers::getDataSpans(data, "", nullptr, /*skipZeroWeights=*/false,
-                                                            /*takeGlobalObservablesFromData=*/true, _vectorBuffers);
+      auto dataSpans = RooFit::BatchModeDataHelpers::getDataSpans(data, "", nullptr, /*skipZeroWeights=*/false,
+                                                                   /*takeGlobalObservablesFromData=*/true,
+                                                                   _vectorBuffers);
       for (auto const& item : dataSpans) {
          _evaluator->setInput(item.first->GetName(), item.second, false);
       }
@@ -158,7 +158,30 @@ private:
    std::stack<std::vector<double>> _vectorBuffers;
 };
 
+struct EvalErrorData {
+   using ErrorList = std::map<const RooAbsArg *, std::pair<std::string, std::list<RooAbsReal::EvalError>>>;
+   RooAbsReal::ErrorLoggingMode mode = RooAbsReal::PrintErrors;
+   int count = 0;
+   ErrorList errorList;
+};
+
+EvalErrorData &evalErrorData()
+{
+   static EvalErrorData data;
+   return data;
+}
+
 } // namespace
+
+Int_t RooAbsReal::numEvalErrorItems()
+{
+   return evalErrorData().errorList.size();
+}
+
+EvalErrorData::ErrorList::iterator RooAbsReal::evalErrorIter()
+{
+   return evalErrorData().errorList.begin();
+}
 
 ClassImp(RooAbsReal)
 
@@ -167,10 +190,6 @@ bool RooAbsReal::_hideOffset = true ;
 
 void RooAbsReal::setHideOffset(bool flag) { _hideOffset = flag ; }
 bool RooAbsReal::hideOffset() { return _hideOffset ; }
-
-RooAbsReal::ErrorLoggingMode RooAbsReal::_evalErrorMode = RooAbsReal::PrintErrors ;
-Int_t RooAbsReal::_evalErrorCount = 0 ;
-std::map<const RooAbsArg*,std::pair<std::string,std::list<RooAbsReal::EvalError> > > RooAbsReal::_evalErrorList ;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -216,7 +235,13 @@ RooAbsReal::RooAbsReal(const RooAbsReal& other, const char* name) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooAbsReal::~RooAbsReal() {}
+RooAbsReal::~RooAbsReal()
+{
+   if (_treeReadBuffer) {
+      delete _treeReadBuffer;
+   }
+   _treeReadBuffer = nullptr;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3043,8 +3068,11 @@ void RooAbsReal::attachToTree(TTree& t, Int_t bufSize)
       coutI(DataHandling) << "RooAbsReal::attachToTree(" << GetName() << ") TTree " << typeDetails->first << " branch " << GetName()
                   << " will be converted to double precision." << std::endl ;
       setAttribute(typeDetails->second.first.c_str(), true);
-      _treeReadBuffer = typeDetails->second.second();
+      _treeReadBuffer = typeDetails->second.second().release();
     } else {
+      if (_treeReadBuffer) {
+         delete _treeReadBuffer;
+      }
       _treeReadBuffer = nullptr;
 
       if (!typeName.CompareTo("Double_t")) {
@@ -3379,12 +3407,12 @@ double RooAbsReal::maxVal(Int_t /*code*/) const
 
 void RooAbsReal::logEvalError(const RooAbsReal* originator, const char* origName, const char* message, const char* serverValueString)
 {
-  if (_evalErrorMode==Ignore) {
+  if (evalErrorData().mode == Ignore) {
     return ;
   }
 
-  if (_evalErrorMode==CountErrors) {
-    _evalErrorCount++ ;
+  if (evalErrorData().mode == CountErrors) {
+    evalErrorData().count++ ;
     return ;
   }
 
@@ -3402,14 +3430,15 @@ void RooAbsReal::logEvalError(const RooAbsReal* originator, const char* origName
     ee.setServerValues(serverValueString) ;
   }
 
-  if (_evalErrorMode==PrintErrors) {
+  if (evalErrorData().mode == PrintErrors) {
    oocoutE(nullptr,Eval) << "RooAbsReal::logEvalError(" << "<STATIC>" << ") evaluation error, " << std::endl
          << " origin       : " << origName << std::endl
          << " message      : " << ee._msg << std::endl
          << " server values: " << ee._srvval << std::endl ;
-  } else if (_evalErrorMode==CollectErrors) {
-    _evalErrorList[originator].first = origName ;
-    _evalErrorList[originator].second.push_back(ee) ;
+  } else if (evalErrorData().mode == CollectErrors) {
+    auto &evalErrorList = evalErrorData().errorList[originator];
+    evalErrorList.first = origName ;
+    evalErrorList.second.push_back(ee) ;
   }
 
 
@@ -3434,12 +3463,12 @@ void RooAbsReal::logEvalError(const RooAbsReal* originator, const char* origName
 
 void RooAbsReal::logEvalError(const char* message, const char* serverValueString) const
 {
-  if (_evalErrorMode==Ignore) {
+  if (evalErrorData().mode == Ignore) {
     return ;
   }
 
-  if (_evalErrorMode==CountErrors) {
-    _evalErrorCount++ ;
+  if (evalErrorData().mode == CountErrors) {
+    evalErrorData().count++ ;
     return ;
   }
 
@@ -3476,16 +3505,17 @@ void RooAbsReal::logEvalError(const char* message, const char* serverValueString
   std::ostringstream oss2 ;
   printStream(oss2,kName|kClassName|kArgs,kInline)  ;
 
-  if (_evalErrorMode==PrintErrors) {
+  if (evalErrorData().mode == PrintErrors) {
    coutE(Eval) << "RooAbsReal::logEvalError(" << GetName() << ") evaluation error, " << std::endl
           << " origin       : " << oss2.str() << std::endl
           << " message      : " << ee._msg << std::endl
           << " server values: " << ee._srvval << std::endl ;
-  } else if (_evalErrorMode==CollectErrors) {
-    if (_evalErrorList[this].second.size() >= 2048) {
+  } else if (evalErrorData().mode == CollectErrors) {
+    auto &evalErrorList = evalErrorData().errorList[this];
+    if (evalErrorList.second.size() >= 2048) {
        // avoid overflowing the error list, so if there are very many, print
        // the oldest one first, and pop it off the list
-       const EvalError& oee = _evalErrorList[this].second.front();
+       const EvalError& oee = evalErrorList.second.front();
        // print to debug stream, since these would normally be suppressed, and
        // we do not want to increase the error count in the message service...
        ccoutD(Eval) << "RooAbsReal::logEvalError(" << GetName()
@@ -3493,10 +3523,10 @@ void RooAbsReal::logEvalError(const char* message, const char* serverValueString
                    << " origin       : " << oss2.str() << std::endl
                    << " message      : " << oee._msg << std::endl
                    << " server values: " << oee._srvval << std::endl ;
-       _evalErrorList[this].second.pop_front();
+       evalErrorList.second.pop_front();
     }
-    _evalErrorList[this].first = oss2.str() ;
-    _evalErrorList[this].second.push_back(ee) ;
+    evalErrorList.first = oss2.str() ;
+    evalErrorList.second.push_back(ee) ;
   }
 
   inLogEvalError = false ;
@@ -3511,12 +3541,12 @@ void RooAbsReal::logEvalError(const char* message, const char* serverValueString
 
 void RooAbsReal::clearEvalErrorLog()
 {
-  if (_evalErrorMode==PrintErrors) {
+  if (evalErrorData().mode == PrintErrors) {
     return ;
-  } else if (_evalErrorMode==CollectErrors) {
-    _evalErrorList.clear() ;
+  } else if (evalErrorData().mode == CollectErrors) {
+    evalErrorData().errorList.clear() ;
   } else {
-    _evalErrorCount = 0 ;
+    evalErrorData().count = 0 ;
   }
 }
 
@@ -3549,38 +3579,41 @@ std::list<double>* RooAbsReal::plotSamplingHint(RooAbsRealLValue& /*obs*/, doubl
 /// per source of errors. A truncation message is shown if there were more errors logged
 /// than shown.
 
-void RooAbsReal::printEvalErrors(std::ostream& os, Int_t maxPerNode)
+void RooAbsReal::printEvalErrors(std::ostream &os, Int_t maxPerNode)
 {
-  if (_evalErrorMode == CountErrors) {
-    os << _evalErrorCount << " errors counted" << std::endl ;
-  }
-
-  if (maxPerNode<0) return ;
-
-  for(auto iter = _evalErrorList.begin();iter!=_evalErrorList.end() ; ++iter) {
-    if (maxPerNode==0) {
-
-      // Only print node name with total number of errors
-      os << iter->second.first ;
-      //iter->first->printStream(os,kName|kClassName|kArgs,kInline)  ;
-      os << " has " << iter->second.second.size() << " errors" << std::endl ;
-
-    } else {
-
-      // Print node name and details of 'maxPerNode' errors
-      os << iter->second.first << std::endl ;
-      //iter->first->printStream(os,kName|kClassName|kArgs,kSingleLine) ;
-
-      Int_t i(0) ;
-      for(auto iter2 = iter->second.second.begin();iter2!=iter->second.second.end() ; ++iter2, i++) {
-   os << "     " << iter2->_msg << " @ " << iter2->_srvval << std::endl ;
-   if (i>maxPerNode) {
-     os << "    ... (remaining " << iter->second.second.size() - maxPerNode << " messages suppressed)" << std::endl ;
-     break ;
+   if (evalErrorData().mode == CountErrors) {
+      os << evalErrorData().count << " errors counted" << std::endl;
    }
+
+   if (maxPerNode < 0)
+      return;
+
+   for (auto const &item : evalErrorData().errorList) {
+      if (maxPerNode == 0) {
+
+         // Only print node name with total number of errors
+         os << item.second.first;
+         // item.first->printStream(os,kName|kClassName|kArgs,kInline)  ;
+         os << " has " << item.second.second.size() << " errors" << std::endl;
+
+      } else {
+
+         // Print node name and details of 'maxPerNode' errors
+         os << item.second.first << std::endl;
+         // item.first->printStream(os,kName|kClassName|kArgs,kSingleLine) ;
+
+         Int_t i(0);
+         for (auto const &item2 : item.second.second) {
+            os << "     " << item2._msg << " @ " << item2._srvval << std::endl;
+            if (i > maxPerNode) {
+               os << "    ... (remaining " << item.second.second.size() - maxPerNode << " messages suppressed)"
+                  << std::endl;
+               break;
+            }
+            i++;
+         }
       }
-    }
-  }
+   }
 }
 
 
@@ -3590,15 +3623,16 @@ void RooAbsReal::printEvalErrors(std::ostream& os, Int_t maxPerNode)
 
 Int_t RooAbsReal::numEvalErrors()
 {
-  if (_evalErrorMode==CountErrors) {
-    return _evalErrorCount ;
-  }
+   auto &evalErrors = evalErrorData();
+   if (evalErrors.mode == CountErrors) {
+      return evalErrors.count;
+   }
 
-  Int_t ntot(0) ;
-  for(auto const& elem : _evalErrorList) {
-    ntot += elem.second.second.size() ;
-  }
-  return ntot ;
+   Int_t ntot(0);
+   for (auto const &elem : evalErrors.errorList) {
+      ntot += elem.second.second.size();
+   }
+   return ntot;
 }
 
 
@@ -4267,7 +4301,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createChi2(RooDataSet &data, const Roo
 
 RooAbsReal::ErrorLoggingMode RooAbsReal::evalErrorLoggingMode()
 {
-  return _evalErrorMode ;
+  return evalErrorData().mode  ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4281,7 +4315,7 @@ RooAbsReal::ErrorLoggingMode RooAbsReal::evalErrorLoggingMode()
 
 void RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::ErrorLoggingMode m)
 {
-  _evalErrorMode =  m;
+  evalErrorData().mode = m;
 }
 
 

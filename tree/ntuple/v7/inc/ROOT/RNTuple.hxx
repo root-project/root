@@ -25,17 +25,25 @@ class TFile;
 class TFileMergeInfo;
 
 namespace ROOT {
-namespace Experimental {
 
+class RNTuple;
+
+namespace Experimental {
 namespace Internal {
-class RMiniFileReader;
 class RNTupleFileWriter;
 class RPageSourceFile;
+
+RNTuple CreateAnchor(std::uint16_t versionEpoch, std::uint16_t versionMajor, std::uint16_t versionMinor,
+                     std::uint16_t versionPatch, std::uint64_t seekHeader, std::uint64_t nbytesHeader,
+                     std::uint64_t lenHeader, std::uint64_t seekFooter, std::uint64_t nbytesFooter,
+                     std::uint64_t lenFooter, std::uint64_t maxKeySize);
+
 } // namespace Internal
+} // namespace Experimental
 
 // clang-format off
 /**
-\class ROOT::Experimental::RNTuple
+\class ROOT::RNTuple
 \ingroup NTuple
 \brief Representation of an RNTuple data set in a ROOT file
 
@@ -44,7 +52,7 @@ Only the RNTuple key will be listed in the list of keys. Like TBaskets, the page
 Byte offset references in the RNTuple header and footer reference directly the data part of page records,
 skipping the TFile key part.
 
-In the list of keys, this object appears as "ROOT::Experimental::RNTuple".
+In the list of keys, this object appears as "ROOT::RNTuple".
 It is the user-facing representation of an RNTuple data set in a ROOT file and
 it provides an API entry point to an RNTuple stored in a ROOT file. Its main purpose is to
 construct a page source for an RNTuple, which in turn can be used to read an RNTuple with an RDF or
@@ -53,19 +61,23 @@ an RNTupleReader.
 For instance, for an RNTuple called "Events" in a ROOT file, usage can be
 ~~~ {.cpp}
 auto f = TFile::Open("data.root");
-auto ntpl = f->Get<ROOT::Experimental::RNTuple>("Events");
+auto ntpl = f->Get<ROOT::RNTuple>("Events");
 auto reader = RNTupleReader::Open(ntpl);
 ~~~
 */
 // clang-format on
 class RNTuple final {
-   friend class Internal::RMiniFileReader;
-   friend class Internal::RNTupleFileWriter;
-   friend class Internal::RPageSourceFile;
+   friend class Experimental::Internal::RNTupleFileWriter;
+   friend class Experimental::Internal::RPageSourceFile;
+
+   friend ROOT::RNTuple ROOT::Experimental::Internal::CreateAnchor(
+      std::uint16_t versionEpoch, std::uint16_t versionMajor, std::uint16_t versionMinor, std::uint16_t versionPatch,
+      std::uint64_t seekHeader, std::uint64_t nbytesHeader, std::uint64_t lenHeader, std::uint64_t seekFooter,
+      std::uint64_t nbytesFooter, std::uint64_t lenFooter, std::uint64_t maxKeySize);
 
 public:
    static constexpr std::uint16_t kVersionEpoch = 0;
-   static constexpr std::uint16_t kVersionMajor = 2;
+   static constexpr std::uint16_t kVersionMajor = 3;
    static constexpr std::uint16_t kVersionMinor = 0;
    static constexpr std::uint16_t kVersionPatch = 0;
 
@@ -120,14 +132,10 @@ public:
    /// Merge this NTuple with the input list entries
    Long64_t Merge(TCollection *input, TFileMergeInfo *mergeInfo);
 
-   /// NOTE: if you change this version you also need to update:
-   ///    - RTFNTuple::fClassVersion in RMiniFile.cxx
-   ///    - RTFStreamerInfoObject::fVersionRNTuple in RMiniFile.cxx
-   ///    - RTFStreamerInfoObject::fStreamers in RMiniFile.cxx
-   ClassDefNV(RNTuple, 6);
+   /// NOTE: if you change this version you also need to update RTFNTuple::fClassVersion in RMiniFile.cxx
+   ClassDefNV(RNTuple, 2);
 }; // class RNTuple
 
-} // namespace Experimental
 } // namespace ROOT
 
 #endif

@@ -1,8 +1,8 @@
 import { select as d3_select, pointer as d3_pointer } from '../d3.mjs';
 import { settings, constants, internals, isNodeJs, isBatchMode, getPromise, BIT,
          prROOT, clTObjString, clTAxis, isObject, isFunc, isStr, getDocument } from '../core.mjs';
-import { isPlainText, producePlainText, produceLatex, produceMathjax, typesetMathjax } from './latex.mjs';
-import { getElementRect, BasePainter, makeTranslate, DrawOptions } from './BasePainter.mjs';
+import { isPlainText, producePlainText, produceLatex, produceMathjax, typesetMathjax, approximateLabelWidth } from './latex.mjs';
+import { getElementRect, BasePainter, makeTranslate } from './BasePainter.mjs';
 import { TAttMarkerHandler } from './TAttMarkerHandler.mjs';
 import { TAttFillHandler } from './TAttFillHandler.mjs';
 import { TAttLineHandler } from './TAttLineHandler.mjs';
@@ -224,7 +224,7 @@ class ObjectPainter extends BasePainter {
      * @param {object} obj - object with new data
      * @param {string} [opt] - option which will be used for redrawing
      * @protected */
-   updateObject(obj /*, opt */) {
+   updateObject(obj /* , opt */) {
       if (!this.matchObjectType(obj)) return false;
       Object.assign(this.getObject(), obj);
       return true;
@@ -308,7 +308,7 @@ class ObjectPainter extends BasePainter {
      * or svg:g element created in specified frame layer ('main_layer' will be used when true specified)
      * @param {boolean|string} [frame_layer] - when specified, <g> element will be created inside frame layer, otherwise in the pad
      * @protected */
-   createG(frame_layer) {
+   createG(frame_layer, use_a = false) {
       let layer;
 
       if (frame_layer === 'frame2d') {
@@ -336,7 +336,7 @@ class ObjectPainter extends BasePainter {
          // clear all elements, keep g element on its place
          this.draw_g.selectAll('*').remove();
       } else {
-         this.draw_g = layer.append('svg:g');
+         this.draw_g = layer.append(use_a ? 'svg:a' : 'svg:g');
 
          if (!frame_layer)
             layer.selectChildren('.most_upper_primitives').raise();
@@ -850,7 +850,7 @@ class ObjectPainter extends BasePainter {
      * @private */
    executeMenuCommand(method) {
       if (method.fName === 'Inspect')
-         // primitve inspector, keep it here
+         // primitive inspector, keep it here
          return this.showInspector();
 
       return false;
@@ -949,11 +949,14 @@ class ObjectPainter extends BasePainter {
      * @param {object} [draw_g] - element where text drawn, by default using main object <g> element
      * @param {number} [max_font_size] - maximal font size, used when text can be scaled
      * @protected */
-   startTextDrawing(font_face, font_size, draw_g, max_font_size) {
+   startTextDrawing(font_face, font_size, draw_g, max_font_size, can_async) {
       if (!draw_g) draw_g = this.draw_g;
-      if (!draw_g || draw_g.empty()) return;
+      if (!draw_g || draw_g.empty())
+         return false;
 
       const font = (font_size === 'font') ? font_face : new FontHandler(font_face, font_size);
+      if (can_async && font.needLoad())
+         return font;
 
       font.setPainter(this); // may be required when custom font is used
 
@@ -969,6 +972,23 @@ class ObjectPainter extends BasePainter {
 
       if (draw_g.property('_fast_drawing'))
          draw_g.property('_font_too_small', (max_font_size && (max_font_size < 5)) || (font.size < 4));
+
+      return true;
+   }
+
+   /** @summary Start async text drawing
+    * @return {Promise} for loading of font if necessary
+    * @private */
+   async startTextDrawingAsync(font_face, font_size, draw_g, max_font_size) {
+      const font = this.startTextDrawing(font_face, font_size, draw_g, max_font_size, true);
+      if ((font === true) || (font === false))
+         return font;
+      return font.load().then(res => {
+         if (!res)
+            return false;
+
+         return this.startTextDrawing(font, 'font', draw_g, max_font_size);
+      });
    }
 
    /** @summary Apply scaling factor to all drawn text in the <g> element
@@ -1010,7 +1030,7 @@ class ObjectPainter extends BasePainter {
             max_sz = draw_g.property('max_font_size');
       let font_size = font.size, any_text = false, only_text = true;
 
-      if ((f > 0) && ((f < 0.9) || (f > 1)))
+      if ((f > 0) && ((f < 0.95) || (f > 1.05)))
          font.size = Math.max(1, Math.floor(font.size / f));
 
       if (max_sz && (font.size > max_sz))
@@ -1091,8 +1111,8 @@ class ObjectPainter extends BasePainter {
                if (arg.align[1] === 'top')
                   txt.attr('dy', '.8em');
                else if (arg.align[1] === 'middle') {
-                  if (isNodeJs()) txt.attr('dy', '.4em');
-                             else txt.attr('dominant-baseline', 'middle');
+                  // if (isNodeJs()) txt.attr('dy', '.4em'); else // old workaround for node.js
+                  txt.attr('dominant-baseline', 'middle');
                }
             } else {
                txt.attr('text-anchor', 'start');
@@ -1161,7 +1181,7 @@ class ObjectPainter extends BasePainter {
       // complete rectangle with very rough size estimations
       arg.box = !isNodeJs() && !settings.ApproxTextSize && !arg.fast
                  ? getElementRect(txt_node, 'bbox')
-                 : (arg.text_rect || { height: arg.font_size * 1.2, width: arg.text.length * arg.font_size * arg.font.aver_width });
+                 : (arg.text_rect || { height: Math.round(1.15 * arg.font_size), width: approximateLabelWidth(arg.text, arg.font, arg.font_size) });
 
       txt_node.attr('visibility', 'hidden'); // hide elements until text drawing is finished
 
@@ -1279,12 +1299,12 @@ class ObjectPainter extends BasePainter {
 
          arg.simple_latex = arg.latex && (settings.Latex === cl.Symbols);
 
-         if (!arg.plain || arg.simple_latex || (arg.font && arg.font.isSymbol)) {
+         if (!arg.plain || arg.simple_latex || arg.font?.isSymbol) {
             if (arg.simple_latex || isPlainText(arg.text) || arg.plain) {
                arg.simple_latex = true;
                producePlainText(this, arg.txt_node, arg);
             } else {
-               arg.txt_node.remove(); // just remove text node,
+               arg.txt_node.remove(); // just remove text node
                delete arg.txt_node;
                arg.txt_g = arg.draw_g.append('svg:g');
                produceLatex(this, arg.txt_g, arg);
@@ -1736,8 +1756,9 @@ const EAxisBits = {
    kOppositeTitle: BIT(32) // artificial bit, not possible to set in ROOT
 }, kAxisLabels = 'labels', kAxisNormal = 'normal', kAxisFunc = 'func', kAxisTime = 'time';
 
+Object.assign(internals.jsroot, { ObjectPainter, cleanup, resize });
 
 export { getElementCanvPainter, getElementMainPainter, drawingJSON,
          selectActivePad, getActivePad, cleanup, resize,
-         ObjectPainter, DrawOptions, drawRawText,
+         ObjectPainter, drawRawText,
          EAxisBits, kAxisLabels, kAxisNormal, kAxisFunc, kAxisTime };

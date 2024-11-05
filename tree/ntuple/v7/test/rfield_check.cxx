@@ -36,10 +36,10 @@ TEST(RField, Check)
    EXPECT_EQ(2u, report.size());
    EXPECT_EQ("f.timestamp", report[0].fFieldName);
    EXPECT_THAT(report[0].fTypeName, testing::HasSubstr("chrono::time_point"));
-   EXPECT_THAT(report[0].fErrMsg, testing::HasSubstr("unknown type"));
+   EXPECT_THAT(report[0].fErrMsg, testing::HasSubstr("is not supported"));
    EXPECT_EQ("f.rd", report[1].fFieldName);
    EXPECT_THAT(report[1].fTypeName, testing::HasSubstr("random_device"));
-   EXPECT_THAT(report[1].fErrMsg, testing::HasSubstr("unknown type"));
+   EXPECT_THAT(report[1].fErrMsg, testing::HasSubstr("is not supported"));
 
    report = RFieldBase::Check("f", "long double");
    EXPECT_EQ(1u, report.size());

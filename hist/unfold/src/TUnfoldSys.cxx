@@ -620,9 +620,9 @@ void TUnfoldSys::InitTUnfoldSys(void)
    // initialize pointers and TMaps
 
    // input
-   fDAinRelSq = 0;
-   fDAinColRelSq = 0;
-   fAoutside = 0;
+   fDAinRelSq = nullptr;
+   fDAinColRelSq = nullptr;
+   fAoutside = nullptr;
    fBgrIn = new TMap();
    fBgrErrUncorrInSq = new TMap();
    fBgrErrScaleIn = new TMap();
@@ -632,13 +632,13 @@ void TUnfoldSys::InitTUnfoldSys(void)
    fBgrErrScaleIn->SetOwnerKeyValue();
    fSysIn->SetOwnerKeyValue();
    // results
-   fEmatUncorrX = 0;
-   fEmatUncorrAx = 0;
+   fEmatUncorrX = nullptr;
+   fEmatUncorrAx = nullptr;
    fDeltaCorrX = new TMap();
    fDeltaCorrAx = new TMap();
    fDeltaCorrX->SetOwnerKeyValue();
    fDeltaCorrAx->SetOwnerKeyValue();
-   fDeltaSysTau = 0;
+   fDeltaSysTau = nullptr;
    fDtau=0.0;
    fYData=nullptr;
    fVyyData=nullptr;
@@ -667,7 +667,7 @@ void TUnfoldSys::PrepareSysError(void)
    if(!fEmatUncorrX) {
       fEmatUncorrX=PrepareUncorrEmat(GetDXDAM(0),GetDXDAM(1));
    }
-   TMatrixDSparse *AM0=nullptr,*AM1=0;
+   TMatrixDSparse *AM0=nullptr,*AM1=nullptr;
    if(!fEmatUncorrAx) {
       if(!AM0) AM0=MultiplyMSparseMSparse(fA,GetDXDAM(0));
       if(!AM1) {
@@ -897,9 +897,9 @@ TMatrixDSparse *TUnfoldSys::PrepareUncorrEmat
       //      r0 = sum_j [ F_mj * F_nj * SRsq_j ]
       r=MultiplyMSparseMSparseTranspVector(F,F,fDAinColRelSq);
       //      r1 = sum_j [ G_mj * F_nj ]
-      TMatrixDSparse *r1=MultiplyMSparseMSparseTranspVector(F,G,0);
+      TMatrixDSparse *r1=MultiplyMSparseMSparseTranspVector(F,G,nullptr);
       //      r2 = sum_j [ F_mj * G_nj ]
-      TMatrixDSparse *r2=MultiplyMSparseMSparseTranspVector(G,F,0);
+      TMatrixDSparse *r2=MultiplyMSparseMSparseTranspVector(G,F,nullptr);
       // r = r0-r1-r2
       AddMSparse(r,-1.0,r1);
       AddMSparse(r,-1.0,r2);
@@ -945,9 +945,9 @@ TMatrixDSparse *TUnfoldSys::PrepareUncorrEmat
       // H_mi = Z0_i * sum_j [ M0_mj * Z1_j * Rsq_ij ]
       ScaleColumnsByVector(H,GetDXDAZ(0));
       //      r5 = sum_i [ M1_mi * H_ni ]
-      TMatrixDSparse *r5=MultiplyMSparseMSparseTranspVector(m_1,H,0);
+      TMatrixDSparse *r5=MultiplyMSparseMSparseTranspVector(m_1,H,nullptr);
       //      r6 = sum_i [ H_mi * M1_ni ]
-      TMatrixDSparse *r6=MultiplyMSparseMSparseTranspVector(H,m_1,0);
+      TMatrixDSparse *r6=MultiplyMSparseMSparseTranspVector(H,m_1,nullptr);
       DeleteMatrix(&H);
       // r =  r0 -r1 -r2 +r3 +r4 -r5 -r6
       if(r) {
@@ -1118,7 +1118,7 @@ void TUnfoldSys::GetEmatrixSysSource
    TMatrixDSparse *emat=nullptr;
    if(named_emat) {
       const TMatrixDSparse *delta=(TMatrixDSparse *)named_emat->Value();
-      emat=MultiplyMSparseMSparseTranspVector(delta,delta,0);
+      emat=MultiplyMSparseMSparseTranspVector(delta,delta,nullptr);
    }
    ErrorMatrixToHist(ematrix,emat,binMap,clearEmat);
    DeleteMatrix(&emat);
@@ -1150,7 +1150,7 @@ void TUnfoldSys::GetEmatrixSysBackgroundScale
    if(named_err) {
       const TMatrixD *dy=(TMatrixD *)named_err->Value();
       TMatrixDSparse *dx=MultiplyMSparseM(GetDXDY(),dy);
-      emat=MultiplyMSparseMSparseTranspVector(dx,dx,0);
+      emat=MultiplyMSparseMSparseTranspVector(dx,dx,nullptr);
       DeleteMatrix(&dx);
    }
    ErrorMatrixToHist(ematrix,emat,binMap,clearEmat);
@@ -1183,7 +1183,7 @@ void TUnfoldSys::GetEmatrixSysTau
    PrepareSysError();
    TMatrixDSparse *emat=nullptr;
    if(fDeltaSysTau) {
-      emat=MultiplyMSparseMSparseTranspVector(fDeltaSysTau,fDeltaSysTau,0);
+      emat=MultiplyMSparseMSparseTranspVector(fDeltaSysTau,fDeltaSysTau,nullptr);
    }
    ErrorMatrixToHist(ematrix,emat,binMap,clearEmat);
    DeleteMatrix(&emat);
@@ -1259,7 +1259,7 @@ void TUnfoldSys::GetEmatrixFromVyy
    TMatrixDSparse *em=nullptr;
    if(vyy) {
       TMatrixDSparse *dxdyVyy=MultiplyMSparseMSparse(GetDXDY(),vyy);
-      em=MultiplyMSparseMSparseTranspVector(dxdyVyy,GetDXDY(),0);
+      em=MultiplyMSparseMSparseTranspVector(dxdyVyy,GetDXDY(),nullptr);
       DeleteMatrix(&dxdyVyy);
    }
    ErrorMatrixToHist(ematrix,em,binMap,clearEmat);
@@ -1310,7 +1310,7 @@ TMatrixDSparse *TUnfoldSys::GetSummedErrorMatrixYY(void)
    // correlated systematic errors
    for(key=sysErrPtr.Next();key;key=sysErrPtr.Next()) {
       const TMatrixDSparse *delta=(TMatrixDSparse *)((const TPair *)*sysErrPtr)->Value();
-      TMatrixDSparse *emat=MultiplyMSparseMSparseTranspVector(delta,delta,0);
+      TMatrixDSparse *emat=MultiplyMSparseMSparseTranspVector(delta,delta,nullptr);
       AddMSparse(emat_sum,1.0,emat);
       DeleteMatrix(&emat);
    }
@@ -1318,7 +1318,7 @@ TMatrixDSparse *TUnfoldSys::GetSummedErrorMatrixYY(void)
    if(fDeltaSysTau) {
       TMatrixDSparse *Adx_tau=MultiplyMSparseMSparse(fA,fDeltaSysTau);
       TMatrixDSparse *emat_tau=
-         MultiplyMSparseMSparseTranspVector(Adx_tau,Adx_tau,0);
+         MultiplyMSparseMSparseTranspVector(Adx_tau,Adx_tau,nullptr);
       DeleteMatrix(&Adx_tau);
       AddMSparse(emat_sum,1.0,emat_tau);
       DeleteMatrix(&emat_tau);
@@ -1345,14 +1345,14 @@ TMatrixDSparse *TUnfoldSys::GetSummedErrorMatrixXX(void)
    // correlated systematic errors
    for(key=sysErrPtr.Next();key;key=sysErrPtr.Next()) {
       const TMatrixDSparse *delta=(TMatrixDSparse *)((const TPair *)*sysErrPtr)->Value();
-      TMatrixDSparse *emat=MultiplyMSparseMSparseTranspVector(delta,delta,0);
+      TMatrixDSparse *emat=MultiplyMSparseMSparseTranspVector(delta,delta,nullptr);
       AddMSparse(emat_sum,1.0,emat);
       DeleteMatrix(&emat);
    }
    // error on tau
    if(fDeltaSysTau) {
       TMatrixDSparse *emat_tau=
-         MultiplyMSparseMSparseTranspVector(fDeltaSysTau,fDeltaSysTau,0);
+         MultiplyMSparseMSparseTranspVector(fDeltaSysTau,fDeltaSysTau,nullptr);
       AddMSparse(emat_sum,1.0,emat_tau);
       DeleteMatrix(&emat_tau);
    }

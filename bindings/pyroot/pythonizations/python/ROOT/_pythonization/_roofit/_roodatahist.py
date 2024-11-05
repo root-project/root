@@ -26,6 +26,8 @@ class RooDataHist(object):
     \endcode
     """
 
+    __cpp_name__ = 'RooDataHist'
+
     @cpp_signature(
         [
             "RooDataHist(std::string_view name, std::string_view title, const RooArgList& vars, RooCategory& indexCat, std::map<std::string,TH1*> histMap, Double_t initWgt=1.0) ;",

@@ -971,6 +971,83 @@ TEST(RDFSnapshotMore, OutOfOrderSizeBranch)
    gSystem->Unlink(outFile);
 }
 
+TEST(RDFSnapshotMore, PreserveStdVectorWithOptions)
+{
+   struct DatasetGuard {
+
+      const char *fFileName{"rdfsnapshotmore_preservestdvectorwithoptions.root"};
+      const char *fTreeName{"rdfsnapshotmore_preservestdvectorwithoptions"};
+      const char *fSnapFileDefault{"rdfsnapshotmore_preservestdvectorwithoptions_snap_default.root"};
+      const char *fSnapTreeDefault{"rdfsnapshotmore_preservestdvectorwithoptions_snap_default"};
+      const char *fSnapFileOpts{"rdfsnapshotmore_preservestdvectorwithoptions_snap_opts.root"};
+      const char *fSnapTreeOpts{"rdfsnapshotmore_preservestdvectorwithoptions_snap_opts"};
+
+      DatasetGuard()
+      {
+         std::unique_ptr<TFile> f{TFile::Open(fFileName, "RECREATE")};
+         auto t = std::make_unique<TTree>(fTreeName, fTreeName);
+         std::vector<int> a{11, 22, 33};
+         std::vector<float> b{44.f, 55.f, 66.f};
+         std::vector<double> c{77., 88., 99.};
+         t->Branch("a", &a);
+         t->Branch("b", &b);
+         t->Branch("c", &c);
+         t->Fill();
+         t->Write();
+      }
+
+      ~DatasetGuard()
+      {
+         std::remove(fFileName);
+         std::remove(fSnapFileDefault);
+         std::remove(fSnapFileOpts);
+      }
+   } dataset;
+
+   // Snapshot with default options: std::vector branches are converted to ROOT::RVec
+   {
+      ROOT::RDataFrame df{dataset.fTreeName, dataset.fFileName};
+      df.Snapshot(dataset.fSnapTreeDefault, dataset.fSnapFileDefault);
+   }
+
+   {
+      std::unique_ptr<TFile> f{TFile::Open(dataset.fSnapFileDefault)};
+      std::unique_ptr<TTree> t{f->Get<TTree>(dataset.fSnapTreeDefault)};
+      std::vector<std::string> expected_typenames_default{"ROOT::VecOps::RVec<int>", "ROOT::VecOps::RVec<float>",
+                                                          "ROOT::VecOps::RVec<double>"};
+      std::vector<std::string> typenames_default;
+      for (const auto *leaf : ROOT::Detail::TRangeStaticCast<TLeaf>(t->GetListOfLeaves())) {
+         typenames_default.push_back(leaf->GetTypeName());
+      }
+      EXPECT_EQ(expected_typenames_default.size(), typenames_default.size());
+      for (std::size_t i = 0; i < expected_typenames_default.size(); i++) {
+         EXPECT_EQ(expected_typenames_default[i], typenames_default[i]);
+      }
+   }
+
+   // Pass option to Snapshot to avoid the type conversion
+   {
+      ROOT::RDF::RSnapshotOptions opts;
+      opts.fVector2RVec = false;
+      ROOT::RDataFrame df{dataset.fTreeName, dataset.fFileName};
+      df.Snapshot(dataset.fSnapTreeOpts, dataset.fSnapFileOpts, df.GetColumnNames(), opts);
+   }
+
+   {
+      std::unique_ptr<TFile> f{TFile::Open(dataset.fSnapFileOpts)};
+      std::unique_ptr<TTree> t{f->Get<TTree>(dataset.fSnapTreeOpts)};
+      std::vector<std::string> expected_typenames_default{"vector<int>", "vector<float>", "vector<double>"};
+      std::vector<std::string> typenames_default;
+      for (const auto *leaf : ROOT::Detail::TRangeStaticCast<TLeaf>(t->GetListOfLeaves())) {
+         typenames_default.push_back(leaf->GetTypeName());
+      }
+      EXPECT_EQ(expected_typenames_default.size(), typenames_default.size());
+      for (std::size_t i = 0; i < expected_typenames_default.size(); i++) {
+         EXPECT_EQ(expected_typenames_default[i], typenames_default[i]);
+      }
+   }
+}
+
 /********* MULTI THREAD TESTS ***********/
 #ifdef R__USE_IMT
 TEST_F(RDFSnapshotMT, Snapshot_update_diff_treename)
@@ -1211,6 +1288,14 @@ TEST(RDFSnapshotMore, LazyNotTriggeredMT)
    ROOT::EnableImplicitMT(4);
    ROOT_EXPECT_WARNING(BookLazySnapshot(), "Snapshot", "A lazy Snapshot action was booked but never triggered.");
    ROOT::DisableImplicitMT();
+}
+
+TEST(RDFSnapshotMore, LazyTriggeredMT)
+{
+   TIMTEnabler _(4);
+   auto fname = "LazyTriggeredMT.root";
+   ROOT_EXPECT_NODIAG(*ReturnLazySnapshot(fname));
+   gSystem->Unlink(fname);
 }
 
 TEST(RDFSnapshotMore, EmptyBuffersMT)

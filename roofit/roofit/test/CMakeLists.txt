@@ -6,6 +6,7 @@
 
 # @author Stephan Hageboeck, CERN, 2019
 
+ROOT_ADD_GTEST(stabilityTests stabilityTests.cxx LIBRARIES RooFit)
 ROOT_ADD_GTEST(testRooBernstein testRooBernstein.cxx LIBRARIES RooFit)
 ROOT_ADD_GTEST(testRooBifurGauss testRooBifurGauss.cxx LIBRARIES RooFit)
 ROOT_ADD_GTEST(testRooCrystalBall testRooCrystalBall.cxx LIBRARIES Gpad RooFit)
@@ -28,3 +29,5 @@ else()
   ROOT_EXECUTABLE(testRooFit testRooFit.cxx LIBRARIES RooFit)
   ROOT_ADD_TEST(test-fit-testRooFit COMMAND testRooFit)
 endif()
+
+add_subdirectory(vectorisedPDFs)

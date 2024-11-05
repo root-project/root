@@ -23,6 +23,7 @@ This file contains the code for cuda computations using the RooBatchCompute libr
 #include "CudaInterface.h"
 
 #include <algorithm>
+#include <cassert>
 #include <functional>
 #include <map>
 #include <queue>
@@ -298,6 +299,14 @@ ReduceNLLOutput RooBatchComputeClass::reduceNLL(RooBatchCompute::Config const &c
    CudaInterface::DeviceArray<double> devOut(2 * gridSize);
    cudaStream_t stream = *cfg.cudaStream();
    constexpr int shMemSize = 2 * blockSize * sizeof(double);
+
+#ifndef NDEBUG
+   for (auto span : {probas, weights, offsetProbas}) {
+      cudaPointerAttributes attr;
+      assert(span.size() == 0 || span.data() == nullptr ||
+             (cudaPointerGetAttributes(&attr, span.data()) == cudaSuccess && attr.type == cudaMemoryTypeDevice));
+   }
+#endif
 
    nllSumKernel<<<gridSize, blockSize, shMemSize, stream>>>(
       probas.data(), weights.size() == 1 ? nullptr : weights.data(),

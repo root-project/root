@@ -47,7 +47,6 @@ class TSchemaRule;
 
 namespace Experimental {
 
-class RNTupleCollectionWriter;
 class REntry;
 
 namespace Detail {
@@ -58,7 +57,7 @@ class RFieldVisitor;
 /// Therefore, the zero field must not be connected to a page source or sink.
 class RFieldZero final : public RFieldBase {
 protected:
-   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const override;
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
    void ConstructValue(void *) const final {}
 
 public:
@@ -72,6 +71,8 @@ public:
 };
 
 /// Used in RFieldBase::Check() to record field creation failures.
+/// Also used when deserializing a field that contains unknown values that may come from
+/// future RNTuple versions (e.g. an unknown Structure)
 class RInvalidField final : public RFieldBase {
    std::string fError;
 
@@ -123,6 +124,7 @@ private:
    std::size_t fMaxAlignment = 1;
 
 private:
+   RClassField(std::string_view fieldName, const RClassField &source); ///< Used by CloneImpl
    RClassField(std::string_view fieldName, std::string_view className, TClass *classp);
    void Attach(std::unique_ptr<RFieldBase> child, RSubFieldInfo info);
    /// Register post-read callbacks corresponding to a list of ROOT I/O customization rules. `classp` is used to
@@ -132,7 +134,7 @@ private:
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
 
-   void ConstructValue(void *where) const override;
+   void ConstructValue(void *where) const final;
    std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RClassDeleter>(fClass); }
 
    std::size_t AppendImpl(const void *from) final;
@@ -147,22 +149,22 @@ public:
    ~RClassField() override = default;
 
    std::vector<RValue> SplitValue(const RValue &value) const final;
-   size_t GetValueSize() const override;
+   size_t GetValueSize() const final;
    size_t GetAlignment() const final { return fMaxAlignment; }
    std::uint32_t GetTypeVersion() const final;
    std::uint32_t GetTypeChecksum() const final;
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const override;
+   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
-/// The field for a class in unsplit mode, which is using ROOT standard streaming
-class RUnsplitField final : public RFieldBase {
+/// The field for a class using ROOT standard streaming
+class RStreamerField final : public RFieldBase {
 private:
-   class RUnsplitDeleter : public RDeleter {
+   class RStreamerFieldDeleter : public RDeleter {
    private:
       TClass *fClass;
 
    public:
-      explicit RUnsplitDeleter(TClass *cl) : fClass(cl) {}
+      explicit RStreamerFieldDeleter(TClass *cl) : fClass(cl) {}
       void operator()(void *objPtr, bool dtorOnly) final;
    };
 
@@ -173,7 +175,7 @@ private:
 private:
    // Note that className may be different from classp->GetName(), e.g. through different canonicalization of RNTuple
    // vs. TClass. Also, classp may be nullptr for types unsupported by the ROOT I/O.
-   RUnsplitField(std::string_view fieldName, std::string_view className, TClass *classp);
+   RStreamerField(std::string_view fieldName, std::string_view className, TClass *classp);
 
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
@@ -183,7 +185,7 @@ protected:
    void GenerateColumns(const RNTupleDescriptor &) final;
 
    void ConstructValue(void *where) const final;
-   std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RUnsplitDeleter>(fClass); }
+   std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RStreamerFieldDeleter>(fClass); }
 
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
@@ -195,10 +197,10 @@ protected:
    RExtraTypeInfoDescriptor GetExtraTypeInfo() const final;
 
 public:
-   RUnsplitField(std::string_view fieldName, std::string_view className, std::string_view typeAlias = "");
-   RUnsplitField(RUnsplitField &&other) = default;
-   RUnsplitField &operator=(RUnsplitField &&other) = default;
-   ~RUnsplitField() override = default;
+   RStreamerField(std::string_view fieldName, std::string_view className, std::string_view typeAlias = "");
+   RStreamerField(RStreamerField &&other) = default;
+   RStreamerField &operator=(RStreamerField &&other) = default;
+   ~RStreamerField() final = default;
 
    size_t GetValueSize() const final;
    size_t GetAlignment() const final;
@@ -237,17 +239,6 @@ public:
 /// Classes with dictionaries that can be inspected by TClass
 template <typename T, typename = void>
 class RField final : public RClassField {
-protected:
-   void ConstructValue(void *where) const final
-   {
-      if constexpr (std::is_default_constructible_v<T>) {
-         new (where) T();
-      } else {
-         // If there is no default constructor, try with the IO constructor
-         new (where) T(static_cast<TRootIOCtor *>(nullptr));
-      }
-   }
-
 public:
    static std::string TypeName() { return ROOT::Internal::GetDemangledTypeName(typeid(T)); }
    RField(std::string_view name) : RClassField(name, TypeName())
@@ -256,47 +247,17 @@ public:
    }
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
-   ~RField() override = default;
+   ~RField() final = default;
 };
 
 template <typename T>
-class RField<T, typename std::enable_if<std::is_enum_v<T>>::type> : public REnumField {
+class RField<T, typename std::enable_if<std::is_enum_v<T>>::type> final : public REnumField {
 public:
    static std::string TypeName() { return ROOT::Internal::GetDemangledTypeName(typeid(T)); }
    RField(std::string_view name) : REnumField(name, TypeName()) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
-   ~RField() override = default;
-};
-
-/// The collection field is only used for writing; when reading, untyped collections are projected to an std::vector
-class RCollectionField final : public ROOT::Experimental::RFieldBase {
-private:
-   /// Save the link to the collection ntuple in order to reset the offset counter when committing the cluster
-   std::shared_ptr<RNTupleCollectionWriter> fCollectionWriter;
-
-protected:
-   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
-   const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumns() final;
-   void GenerateColumns(const RNTupleDescriptor &desc) final;
-   void ConstructValue(void *) const final {}
-
-   std::size_t AppendImpl(const void *from) final;
-   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
-
-   void CommitClusterImpl() final;
-
-public:
-   static std::string TypeName() { return ""; }
-   RCollectionField(std::string_view name, std::shared_ptr<RNTupleCollectionWriter> collectionWriter,
-                    std::unique_ptr<RFieldZero> collectionParent);
-   RCollectionField(RCollectionField &&other) = default;
-   RCollectionField &operator=(RCollectionField &&other) = default;
-   ~RCollectionField() override = default;
-
-   size_t GetValueSize() const final { return sizeof(ClusterSize_t); }
-   size_t GetAlignment() const final { return alignof(ClusterSize_t); }
+   ~RField() final = default;
 };
 
 /// An artificial field that transforms an RNTuple column that contains the offset of collections into
@@ -305,6 +266,18 @@ public:
 /// It is used in the templated RField<RNTupleCardinality<SizeT>> form, which represents the collection sizes either
 /// as 32bit unsigned int (std::uint32_t) or as 64bit unsigned int (std::uint64_t).
 class RCardinalityField : public RFieldBase {
+   friend class RNTupleCollectionView; // to access GetCollectionInfo()
+
+private:
+   void GetCollectionInfo(NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *size)
+   {
+      fPrincipalColumn->GetCollectionInfo(globalIndex, collectionStart, size);
+   }
+   void GetCollectionInfo(RClusterIndex clusterIndex, RClusterIndex *collectionStart, ClusterSize_t *size)
+   {
+      fPrincipalColumn->GetCollectionInfo(clusterIndex, collectionStart, size);
+   }
+
 protected:
    RCardinalityField(std::string_view fieldName, std::string_view typeName)
       : RFieldBase(fieldName, typeName, ENTupleStructure::kLeaf, false /* isSimple */)
@@ -330,8 +303,8 @@ public:
 template <typename T>
 class RSimpleField : public RFieldBase {
 protected:
-   void GenerateColumns() final { GenerateColumnsImpl<T>(); }
-   void GenerateColumns(const RNTupleDescriptor &desc) final { GenerateColumnsImpl<T>(desc); }
+   void GenerateColumns() override { GenerateColumnsImpl<T>(); }
+   void GenerateColumns(const RNTupleDescriptor &desc) override { GenerateColumnsImpl<T>(desc); }
 
    void ConstructValue(void *where) const final { new (where) T{0}; }
 
@@ -370,35 +343,6 @@ public:
 namespace ROOT {
 namespace Experimental {
 
-template <>
-class RField<ClusterSize_t> final : public RSimpleField<ClusterSize_t> {
-protected:
-   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
-   {
-      return std::make_unique<RField>(newName);
-   }
-
-   const RColumnRepresentations &GetColumnRepresentations() const final;
-
-public:
-   static std::string TypeName() { return "ROOT::Experimental::ClusterSize_t"; }
-   explicit RField(std::string_view name) : RSimpleField(name, TypeName()) {}
-   RField(RField &&other) = default;
-   RField &operator=(RField &&other) = default;
-   ~RField() override = default;
-
-   /// Special help for offset fields
-   void GetCollectionInfo(NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *size)
-   {
-      fPrincipalColumn->GetCollectionInfo(globalIndex, collectionStart, size);
-   }
-   void GetCollectionInfo(RClusterIndex clusterIndex, RClusterIndex *collectionStart, ClusterSize_t *size)
-   {
-      fPrincipalColumn->GetCollectionInfo(clusterIndex, collectionStart, size);
-   }
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
-};
-
 template <typename SizeT>
 class RField<RNTupleCardinality<SizeT>> final : public RCardinalityField {
 protected:
@@ -409,11 +353,11 @@ protected:
    void ConstructValue(void *where) const final { new (where) RNTupleCardinality<SizeT>(0); }
 
 public:
-   static std::string TypeName() { return "ROOT::Experimental::RNTupleCardinality<" + RField<SizeT>::TypeName() + ">"; }
+   static std::string TypeName() { return "ROOT::RNTupleCardinality<" + RField<SizeT>::TypeName() + ">"; }
    explicit RField(std::string_view name) : RCardinalityField(name, TypeName()) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
-   ~RField() override = default;
+   ~RField() final = default;
 
    size_t GetValueSize() const final { return sizeof(RNTupleCardinality<SizeT>); }
    size_t GetAlignment() const final { return alignof(RNTupleCardinality<SizeT>); }
@@ -470,10 +414,13 @@ class RField<TObject> final : public RFieldBase {
    static std::size_t GetOffsetUniqueID() { return GetOffsetOfMember("fUniqueID"); }
    static std::size_t GetOffsetBits() { return GetOffsetOfMember("fBits"); }
 
+private:
+   RField(std::string_view fieldName, const RField<TObject> &source); ///< Used by CloneImpl()
+
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
 
-   void ConstructValue(void *where) const override;
+   void ConstructValue(void *where) const final;
    std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RTypedDeleter<TObject>>(); }
 
    std::size_t AppendImpl(const void *from) final;
@@ -487,7 +434,7 @@ public:
    RField(std::string_view fieldName);
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
-   ~RField() override = default;
+   ~RField() final = default;
 
    std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetValueSize() const final;

@@ -149,7 +149,7 @@ class RH1Painter extends RHistPainter {
    }
 
    /** @summary Fill statistic */
-   fillStatistic(stat, dostat/*, dofit */) {
+   fillStatistic(stat, dostat /* , dofit */) {
       const histo = this.getHisto(),
           data = this.countStat(),
           print_name = dostat % 10,
@@ -263,21 +263,21 @@ class RH1Painter extends RHistPainter {
          this.draw_g.append('svg:path')
                .attr('d', barsl)
                .call(this.fillatt.func)
-               .style('fill', d3_rgb(this.fillatt.color).brighter(0.5).formatHex());
+               .style('fill', d3_rgb(this.fillatt.color).brighter(0.5).formatRgb());
       }
 
       if (barsr) {
          this.draw_g.append('svg:path')
                .attr('d', barsr)
                .call(this.fillatt.func)
-               .style('fill', d3_rgb(this.fillatt.color).darker(0.5).formatHex());
+               .style('fill', d3_rgb(this.fillatt.color).darker(0.5).formatRgb());
        }
 
        return true;
    }
 
    /** @summary Draw histogram as filled errors */
-   async drawFilledErrors(handle, funcs /*, width, height */) {
+   async drawFilledErrors(handle, funcs /* , width, height */) {
       this.createG(true);
 
       const left = handle.i1, right = handle.i2, di = handle.stepi,
@@ -358,7 +358,7 @@ class RH1Painter extends RHistPainter {
           path_fill = null, path_err = null, path_marker = null, path_line = null,
           hints_err = null,
           endx = '', endy = '', dend = 0, my, yerr1, yerr2, bincont, binerr, mx1, mx2, midx,
-          text_font;
+          text_font, pr = Promise.resolve();
 
       if (show_errors && !show_markers && (this.v7EvalAttr('marker_style', 1) > 1))
          show_markers = true;
@@ -395,206 +395,208 @@ class RH1Painter extends RHistPainter {
              }
          }
 
-         this.startTextDrawing(text_font, 'font');
+         pr = this.startTextDrawingAsync(text_font, 'font');
       }
 
-      // if there are too many points, exclude many vertical drawings at the same X position
-      // instead define min and max value and made min-max drawing
-      let use_minmax = ((right-left) > 3*width);
+      return pr.then(() => {
+         // if there are too many points, exclude many vertical drawings at the same X position
+         // instead define min and max value and made min-max drawing
+         let use_minmax = ((right-left) > 3*width);
 
-      if (options.ErrorKind === 1) {
-         const lw = this.lineatt.width + gStyle.fEndErrorSize;
-         endx = `m0,${lw}v${-2*lw}m0,${lw}`;
-         endy = `m${lw},0h${-2*lw}m${lw},0`;
-         dend = Math.floor((this.lineatt.width-1)/2);
-      }
+         if (options.ErrorKind === 1) {
+            const lw = this.lineatt.width + gStyle.fEndErrorSize;
+            endx = `m0,${lw}v${-2*lw}m0,${lw}`;
+            endy = `m${lw},0h${-2*lw}m${lw},0`;
+            dend = Math.floor((this.lineatt.width-1)/2);
+         }
 
-      const draw_markers = show_errors || show_markers;
+         const draw_markers = show_errors || show_markers;
 
-      if (draw_markers || show_text || show_line) use_minmax = true;
+         if (draw_markers || show_text || show_line) use_minmax = true;
 
-      const draw_bin = besti => {
-         bincont = histo.getBinContent(besti+1);
-         if (!exclude_zero || (bincont !== 0)) {
-            mx1 = Math.round(funcs.grx(xaxis.GetBinCoord(besti)));
-            mx2 = Math.round(funcs.grx(xaxis.GetBinCoord(besti+di)));
-            midx = Math.round((mx1+mx2)/2);
-            my = Math.round(funcs.gry(bincont));
-            yerr1 = yerr2 = 20;
-            if (show_errors) {
-               binerr = histo.getBinError(besti+1);
-               yerr1 = Math.round(my - funcs.gry(bincont + binerr)); // up
-               yerr2 = Math.round(funcs.gry(bincont - binerr) - my); // down
-            }
+         const draw_bin = besti => {
+            bincont = histo.getBinContent(besti+1);
+            if (!exclude_zero || (bincont !== 0)) {
+               mx1 = Math.round(funcs.grx(xaxis.GetBinCoord(besti)));
+               mx2 = Math.round(funcs.grx(xaxis.GetBinCoord(besti+di)));
+               midx = Math.round((mx1+mx2)/2);
+               my = Math.round(funcs.gry(bincont));
+               yerr1 = yerr2 = 20;
+               if (show_errors) {
+                  binerr = histo.getBinError(besti+1);
+                  yerr1 = Math.round(my - funcs.gry(bincont + binerr)); // up
+                  yerr2 = Math.round(funcs.gry(bincont - binerr) - my); // down
+               }
 
-            if (show_text && (bincont !== 0)) {
-               const lbl = (bincont === Math.round(bincont)) ? bincont.toString() : floatToString(bincont, gStyle.fPaintTextFormat);
+               if (show_text && (bincont !== 0)) {
+                  const lbl = (bincont === Math.round(bincont)) ? bincont.toString() : floatToString(bincont, gStyle.fPaintTextFormat);
 
-               if (text_font.angle)
-                  this.drawText({ align: 12, x: midx, y: Math.round(my - 2 - text_font.size / 5), text: lbl, latex: 0 });
-               else
-                  this.drawText({ x: Math.round(mx1 + (mx2 - mx1) * 0.1), y: Math.round(my - 2 - text_font.size), width: Math.round((mx2 - mx1) * 0.8), height: text_font.size, text: lbl, latex: 0 });
-            }
+                  if (text_font.angle)
+                     this.drawText({ align: 12, x: midx, y: Math.round(my - 2 - text_font.size / 5), text: lbl, latex: 0 });
+                  else
+                     this.drawText({ x: Math.round(mx1 + (mx2 - mx1) * 0.1), y: Math.round(my - 2 - text_font.size), width: Math.round((mx2 - mx1) * 0.8), height: text_font.size, text: lbl, latex: 0 });
+               }
 
-            if (show_line && (path_line !== null))
-               path_line += ((path_line.length === 0) ? 'M' : 'L') + midx + ',' + my;
+               if (show_line && (path_line !== null))
+                  path_line += ((path_line.length === 0) ? 'M' : 'L') + midx + ',' + my;
 
-            if (draw_markers) {
-               if ((my >= -yerr1) && (my <= height + yerr2)) {
-                  if (path_fill !== null)
-                     path_fill += `M${mx1},${my-yerr1}h${mx2-mx1}v${yerr1+yerr2+1}h${mx1-mx2}z`;
-                  if (path_marker !== null)
-                     path_marker += this.markeratt.create(midx, my);
-                  if (path_err !== null) {
-                     let edx = 5;
-                     if (this.options.errorX > 0) {
-                        edx = Math.round((mx2-mx1)*this.options.errorX);
-                        const mmx1 = midx - edx, mmx2 = midx + edx;
-                        path_err += `M${mmx1+dend},${my}${endx}h${mmx2-mmx1-2*dend}${endx}`;
+               if (draw_markers) {
+                  if ((my >= -yerr1) && (my <= height + yerr2)) {
+                     if (path_fill !== null)
+                        path_fill += `M${mx1},${my-yerr1}h${mx2-mx1}v${yerr1+yerr2+1}h${mx1-mx2}z`;
+                     if (path_marker !== null)
+                        path_marker += this.markeratt.create(midx, my);
+                     if (path_err !== null) {
+                        let edx = 5;
+                        if (this.options.errorX > 0) {
+                           edx = Math.round((mx2-mx1)*this.options.errorX);
+                           const mmx1 = midx - edx, mmx2 = midx + edx;
+                           path_err += `M${mmx1+dend},${my}${endx}h${mmx2-mmx1-2*dend}${endx}`;
+                        }
+                        path_err += `M${midx},${my-yerr1+dend}${endy}v${yerr1+yerr2-2*dend}${endy}`;
+                        if (hints_err !== null)
+                           hints_err += `M${midx-edx},${my-yerr1}h${2*edx}v${yerr1+yerr2}h${-2*edx}z`;
                      }
-                     path_err += `M${midx},${my-yerr1+dend}${endy}v${yerr1+yerr2-2*dend}${endy}`;
-                     if (hints_err !== null)
-                        hints_err += `M${midx-edx},${my-yerr1}h${2*edx}v${yerr1+yerr2}h${-2*edx}z`;
                   }
                }
             }
-         }
-      };
+         };
 
-      for (i = left; i <= right; i += di) {
-         x = xaxis.GetBinCoord(i);
+         for (i = left; i <= right; i += di) {
+            x = xaxis.GetBinCoord(i);
 
-         if (funcs.logx && (x <= 0)) continue;
+            if (funcs.logx && (x <= 0)) continue;
 
-         grx = Math.round(funcs.grx(x));
+            grx = Math.round(funcs.grx(x));
 
-         lastbin = (i > right - di);
+            lastbin = (i > right - di);
 
-         if (lastbin && (left < right))
-            gry = curry;
-          else {
-            y = histo.getBinContent(i+1);
-            gry = Math.round(funcs.gry(y));
-         }
+            if (lastbin && (left < right))
+               gry = curry;
+            else {
+               y = histo.getBinContent(i+1);
+               gry = Math.round(funcs.gry(y));
+            }
 
-         if (res.length === 0) {
-            bestimin = bestimax = i;
-            prevx = startx = currx = grx;
-            prevy = curry_min = curry_max = curry = gry;
-            res = 'M'+currx+','+curry;
-         } else
-         if (use_minmax) {
-            if ((grx === currx) && !lastbin) {
-               if (gry < curry_min) bestimax = i; else
-               if (gry > curry_max) bestimin = i;
-               curry_min = Math.min(curry_min, gry);
-               curry_max = Math.max(curry_max, gry);
-               curry = gry;
-            } else {
-               if (draw_markers || show_text || show_line) {
-                  if (bestimin === bestimax) draw_bin(bestimin); else
-                     if (bestimin < bestimax) { draw_bin(bestimin); draw_bin(bestimax); } else {
-                        draw_bin(bestimax); draw_bin(bestimin);
-                     }
-               }
-
-               // when several points as same X differs, need complete logic
-               if (!draw_markers && ((curry_min !== curry_max) || (prevy !== curry_min))) {
-                  if (prevx !== currx)
-                     res += 'h'+(currx-prevx);
-
-                  if (curry === curry_min) {
-                     if (curry_max !== prevy)
-                        res += 'v' + (curry_max - prevy);
-                     if (curry_min !== curry_max)
-                        res += 'v' + (curry_min - curry_max);
-                  } else {
-                     if (curry_min !== prevy)
-                        res += 'v' + (curry_min - prevy);
-                     if (curry_max !== curry_min)
-                        res += 'v' + (curry_max - curry_min);
-                     if (curry !== curry_max)
-                       res += 'v' + (curry - curry_max);
-                  }
-
-                  prevx = currx;
-                  prevy = curry;
-               }
-
-               if (lastbin && (prevx !== grx))
-                  res += 'h'+(grx-prevx);
-
+            if (res.length === 0) {
                bestimin = bestimax = i;
-               curry_min = curry_max = curry = gry;
+               prevx = startx = currx = grx;
+               prevy = curry_min = curry_max = curry = gry;
+               res = 'M'+currx+','+curry;
+            } else
+            if (use_minmax) {
+               if ((grx === currx) && !lastbin) {
+                  if (gry < curry_min) bestimax = i; else
+                  if (gry > curry_max) bestimin = i;
+                  curry_min = Math.min(curry_min, gry);
+                  curry_max = Math.max(curry_max, gry);
+                  curry = gry;
+               } else {
+                  if (draw_markers || show_text || show_line) {
+                     if (bestimin === bestimax) draw_bin(bestimin); else
+                        if (bestimin < bestimax) { draw_bin(bestimin); draw_bin(bestimax); } else {
+                           draw_bin(bestimax); draw_bin(bestimin);
+                        }
+                  }
+
+                  // when several points as same X differs, need complete logic
+                  if (!draw_markers && ((curry_min !== curry_max) || (prevy !== curry_min))) {
+                     if (prevx !== currx)
+                        res += 'h'+(currx-prevx);
+
+                     if (curry === curry_min) {
+                        if (curry_max !== prevy)
+                           res += 'v' + (curry_max - prevy);
+                        if (curry_min !== curry_max)
+                           res += 'v' + (curry_min - curry_max);
+                     } else {
+                        if (curry_min !== prevy)
+                           res += 'v' + (curry_min - prevy);
+                        if (curry_max !== curry_min)
+                           res += 'v' + (curry_max - curry_min);
+                        if (curry !== curry_max)
+                        res += 'v' + (curry - curry_max);
+                     }
+
+                     prevx = currx;
+                     prevy = curry;
+                  }
+
+                  if (lastbin && (prevx !== grx))
+                     res += 'h'+(grx-prevx);
+
+                  bestimin = bestimax = i;
+                  curry_min = curry_max = curry = gry;
+                  currx = grx;
+               }
+            } else
+            if ((gry !== curry) || lastbin) {
+               if (grx !== currx) res += 'h'+(grx-currx);
+               if (gry !== curry) res += 'v'+(gry-curry);
+               curry = gry;
                currx = grx;
             }
-         } else
-         if ((gry !== curry) || lastbin) {
-            if (grx !== currx) res += 'h'+(grx-currx);
-            if (gry !== curry) res += 'v'+(gry-curry);
-            curry = gry;
-            currx = grx;
-         }
-      }
-
-      const fill_for_interactive = !this.isBatchMode() && this.fillatt.empty() && options.Hist && settings.Tooltip && !draw_markers && !show_line;
-      let h0 = height + 3;
-      if (!fill_for_interactive) {
-         const gry0 = Math.round(funcs.gry(0));
-         if (gry0 <= 0)
-            h0 = -3;
-         else if (gry0 < height)
-            h0 = gry0;
-      }
-      const close_path = `L${currx},${h0}H${startx}Z`;
-
-      if (draw_markers || show_line) {
-         if (path_fill) {
-            this.draw_g.append('svg:path')
-                       .attr('d', path_fill)
-                       .call(this.fillatt.func);
          }
 
-         if (path_err) {
-            this.draw_g.append('svg:path')
-                   .attr('d', path_err)
-                   .call(this.lineatt.func);
+         const fill_for_interactive = !this.isBatchMode() && this.fillatt.empty() && options.Hist && settings.Tooltip && !draw_markers && !show_line;
+         let h0 = height + 3;
+         if (!fill_for_interactive) {
+            const gry0 = Math.round(funcs.gry(0));
+            if (gry0 <= 0)
+               h0 = -3;
+            else if (gry0 < height)
+               h0 = gry0;
          }
+         const close_path = `L${currx},${h0}H${startx}Z`;
 
-         if (hints_err) {
-            this.draw_g.append('svg:path')
-                   .attr('d', hints_err)
-                   .style('fill', 'none')
-                   .style('pointer-events', this.isBatchMode() ? null : 'visibleFill');
-         }
-
-         if (path_line) {
-            if (!this.fillatt.empty() && !options.Hist) {
+         if (draw_markers || show_line) {
+            if (path_fill) {
                this.draw_g.append('svg:path')
-                     .attr('d', path_line + close_path)
-                     .call(this.fillatt.func);
+                        .attr('d', path_fill)
+                        .call(this.fillatt.func);
             }
 
+            if (path_err) {
+               this.draw_g.append('svg:path')
+                     .attr('d', path_err)
+                     .call(this.lineatt.func);
+            }
+
+            if (hints_err) {
+               this.draw_g.append('svg:path')
+                     .attr('d', hints_err)
+                     .style('fill', 'none')
+                     .style('pointer-events', this.isBatchMode() ? null : 'visibleFill');
+            }
+
+            if (path_line) {
+               if (!this.fillatt.empty() && !options.Hist) {
+                  this.draw_g.append('svg:path')
+                        .attr('d', path_line + close_path)
+                        .call(this.fillatt.func);
+               }
+
+               this.draw_g.append('svg:path')
+                     .attr('d', path_line)
+                     .style('fill', 'none')
+                     .call(this.lineatt.func);
+            }
+
+            if (path_marker) {
+               this.draw_g.append('svg:path')
+                  .attr('d', path_marker)
+                  .call(this.markeratt.func);
+            }
+         } else if (res && options.Hist) {
             this.draw_g.append('svg:path')
-                   .attr('d', path_line)
-                   .style('fill', 'none')
-                   .call(this.lineatt.func);
+                     .attr('d', res + ((!this.fillatt.empty() || fill_for_interactive) ? close_path : ''))
+                     .style('stroke-linejoin', 'miter')
+                     .call(this.lineatt.func)
+                     .call(this.fillatt.func);
          }
 
-         if (path_marker) {
-            this.draw_g.append('svg:path')
-                .attr('d', path_marker)
-                .call(this.markeratt.func);
-         }
-      } else if (res && options.Hist) {
-         this.draw_g.append('svg:path')
-                    .attr('d', res + ((!this.fillatt.empty() || fill_for_interactive) ? close_path : ''))
-                    .style('stroke-linejoin', 'miter')
-                    .call(this.lineatt.func)
-                    .call(this.fillatt.func);
-      }
-
-      return show_text ? this.finishTextDrawing() : true;
+         return show_text ? this.finishTextDrawing() : true;
+      });
    }
 
    /** @summary Provide text information (tooltips) for histogram bin */

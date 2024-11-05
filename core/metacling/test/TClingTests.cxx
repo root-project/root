@@ -364,3 +364,74 @@ auto val2 = Ln10_pushforward();
    EXPECT_DOUBLE_EQ(2.3025850929940459, val1);
    EXPECT_DOUBLE_EQ(2.3025850929940459, val2);
 }
+
+// #15511
+TEST_F(TClingTests, ManyConstConstructors)
+{
+   std::vector<int> constructors;
+   std::ostringstream declareConstructors;
+   declareConstructors << "namespace issue_15511 { auto constructors = "
+                       << "reinterpret_cast<std::vector<int> *>(" << reinterpret_cast<uintptr_t>(&constructors)
+                       << "); }";
+   gInterpreter->Declare(declareConstructors.str().c_str());
+
+   gInterpreter->Declare(R"cpp(
+namespace issue_15511 {
+struct Constructor {
+  Constructor(int value) { constructors->push_back(value); }
+};
+
+const Constructor c0(0);
+const Constructor c1(1);
+const Constructor c2(2);
+const Constructor c3(3);
+const Constructor c4(4);
+const Constructor c5(5);
+const Constructor c6(6);
+const Constructor c7(7);
+const Constructor c8(8);
+const Constructor c9(9);
+const Constructor c10(10);
+const Constructor c11(11);
+const Constructor c12(12);
+const Constructor c13(13);
+const Constructor c14(14);
+const Constructor c15(15);
+const Constructor c16(16);
+const Constructor c17(17);
+const Constructor c18(18);
+const Constructor c19(19);
+}
+   )cpp");
+
+   ASSERT_EQ(constructors.size(), 20);
+   for (int i = 0; i < 20; i++) {
+      EXPECT_EQ(constructors[i], i);
+   }
+}
+
+// #8828
+TEST_F(TClingTests, RefreshNSShadowing)
+{
+   // These two lines would make the test fail because of two reasons:
+   // - An assertion failure "Assertion failed: (detail::isPresent(Val) && "dyn_cast on a non-existent value"), function dyn_cast, file Casting.h, line 662."
+   // - An error "Error in <TInterpreter::RefreshClassInfo>: Should not need to update the classInfo a non type decl: Detail"
+   // This is why there is no check performed.
+   ROOT::TestSupport::CheckDiagsRAII diags;
+   diags.requiredDiag(kError, "TInterpreter::RefreshClassInfo", "Should not need to update the classInfo a non type decl: Detail");
+   gInterpreter->Declare("namespace std { namespace Detail {} }; auto c = TClass::GetClass(\"Detail\");");
+   gInterpreter->ProcessLine("namespace Detail {}");
+}
+
+// #8367
+TEST_F(TClingTests, UndeclaredIdentifierCrash)
+{
+   auto expectedError = R"(error: use of undeclared identifier 'i'
+ for(i=0; i < 0;); // the second usage of `i` was enough to get a segfault
+          ^
+)";
+   using namespace ROOT::TestSupport;
+   CheckDiagsRAII diagRAII;
+   diagRAII.requiredDiag(kError, "cling", expectedError, false);
+   gInterpreter->ProcessLine("for(i=0; i < 0;); // the second usage of `i` was enough to get a segfault");
+}

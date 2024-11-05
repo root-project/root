@@ -28,6 +28,7 @@
 #include <cstddef> // for std::byte
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
 #include <type_traits>
 #include <typeinfo>
@@ -54,6 +55,8 @@ protected:
    /// Size of the C++ value that corresponds to the on-disk element
    std::size_t fSize;
    std::size_t fBitsOnStorage;
+   /// This is only meaningful for column elements that support it (e.g. Real32Quant)
+   std::optional<std::pair<double, double>> fValueRange = std::nullopt;
 
    explicit RColumnElementBase(std::size_t size, std::size_t bitsOnStorage = 0)
       : fSize(size), fBitsOnStorage(bitsOnStorage ? bitsOnStorage : 8 * size)
@@ -70,7 +73,7 @@ public:
    /// If CppT == void, use the default C++ type for the given column type
    template <typename CppT = void>
    static std::unique_ptr<RColumnElementBase> Generate(EColumnType type);
-   static std::string GetTypeName(EColumnType type);
+   static const char *GetTypeName(EColumnType type);
    /// Most types have a fixed on-disk bit width. Some low-precision column types
    /// have a range of possible bit widths. Return the minimum and maximum allowed
    /// bit size per type.
@@ -81,6 +84,17 @@ public:
    {
       R__ASSERT(false);
       return false;
+   }
+
+   virtual void SetBitsOnStorage(std::size_t bitsOnStorage)
+   {
+      if (bitsOnStorage != fBitsOnStorage)
+         throw RException(R__FAIL(std::string("internal error: cannot change bit width of this column type")));
+   }
+
+   virtual void SetValueRange(double, double)
+   {
+      throw RException(R__FAIL(std::string("internal error: cannot change value range of this column type")));
    }
 
    /// If the on-storage layout and the in-memory layout differ, packing creates an on-disk page from an in-memory page
@@ -97,6 +111,7 @@ public:
 
    std::size_t GetSize() const { return fSize; }
    std::size_t GetBitsOnStorage() const { return fBitsOnStorage; }
+   std::optional<std::pair<double, double>> GetValueRange() const { return fValueRange; }
    std::size_t GetPackedSize(std::size_t nElements = 1U) const { return (nElements * fBitsOnStorage + 7) / 8; }
 }; // class RColumnElementBase
 
@@ -117,6 +132,14 @@ enum class EColumnCppType {
    kDouble,
    kClusterSize,
    kColumnSwitch,
+   kMax
+};
+
+inline constexpr EColumnCppType kTestFutureColumn =
+   static_cast<EColumnCppType>(std::numeric_limits<std::underlying_type_t<EColumnCppType>>::max() - 1);
+
+struct RTestFutureColumn {
+   std::uint32_t dummy;
 };
 
 std::unique_ptr<RColumnElementBase> GenerateColumnElement(EColumnCppType cppType, EColumnType colType);
@@ -154,6 +177,8 @@ std::unique_ptr<RColumnElementBase> RColumnElementBase::Generate(EColumnType typ
       return GenerateColumnElement(EColumnCppType::kClusterSize, type);
    else if constexpr (std::is_same_v<CppT, RColumnSwitch>)
       return GenerateColumnElement(EColumnCppType::kColumnSwitch, type);
+   else if constexpr (std::is_same_v<CppT, RTestFutureColumn>)
+      return GenerateColumnElement(kTestFutureColumn, type);
    else
       static_assert(!sizeof(CppT), "Unsupported Cpp type");
 }

@@ -6,15 +6,16 @@
 #include <ROOT/RField.hxx>
 #include <ROOT/RFieldVisitor.hxx>
 #include <ROOT/RMiniFile.hxx>
-#include <ROOT/RNTupleCollectionWriter.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleFillStatus.hxx>
+#include <ROOT/RNTupleIndex.hxx>
 #include <ROOT/RNTupleMerger.hxx>
 #include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleReadOptions.hxx>
 #include <ROOT/RNTupleReader.hxx>
 #include <ROOT/RNTupleParallelWriter.hxx>
+#include <ROOT/RNTupleProcessor.hxx>
 #include <ROOT/RNTupleSerialize.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RNTupleWriteOptions.hxx>
@@ -76,7 +77,6 @@ using RFieldDescriptor = ROOT::Experimental::RFieldDescriptor;
 using RNTupleLocator = ROOT::Experimental::RNTupleLocator;
 using RNTupleLocatorObject64 = ROOT::Experimental::RNTupleLocatorObject64;
 using RMiniFileReader = ROOT::Experimental::Internal::RMiniFileReader;
-using RNTuple = ROOT::Experimental::RNTuple;
 using RNTupleAtomicCounter = ROOT::Experimental::Detail::RNTupleAtomicCounter;
 using RNTupleAtomicTimer = ROOT::Experimental::Detail::RNTupleAtomicTimer;
 using RNTupleCalcPerf = ROOT::Experimental::Detail::RNTupleCalcPerf;
@@ -86,6 +86,7 @@ using RNTupleDescriptor = ROOT::Experimental::RNTupleDescriptor;
 using RNTupleFillStatus = ROOT::Experimental::RNTupleFillStatus;
 using RNTupleDescriptorBuilder = ROOT::Experimental::Internal::RNTupleDescriptorBuilder;
 using RNTupleFileWriter = ROOT::Experimental::Internal::RNTupleFileWriter;
+using RNTupleIndex = ROOT::Experimental::Internal::RNTupleIndex;
 using RNTupleParallelWriter = ROOT::Experimental::RNTupleParallelWriter;
 using RNTupleReader = ROOT::Experimental::RNTupleReader;
 using RNTupleReadOptions = ROOT::Experimental::RNTupleReadOptions;
@@ -95,9 +96,12 @@ using RNTupleWriteOptionsDaos = ROOT::Experimental::RNTupleWriteOptionsDaos;
 using RNTupleMetrics = ROOT::Experimental::Detail::RNTupleMetrics;
 using RNTupleMerger = ROOT::Experimental::Internal::RNTupleMerger;
 using RNTupleMergeOptions = ROOT::Experimental::Internal::RNTupleMergeOptions;
+using ENTupleMergingMode = ROOT::Experimental::Internal::ENTupleMergingMode;
 using RNTupleModel = ROOT::Experimental::RNTupleModel;
+using RNTupleOpenSpec = ROOT::Experimental::RNTupleOpenSpec;
 using RNTuplePlainCounter = ROOT::Experimental::Detail::RNTuplePlainCounter;
 using RNTuplePlainTimer = ROOT::Experimental::Detail::RNTuplePlainTimer;
+using RNTupleProcessor = ROOT::Experimental::RNTupleProcessor;
 using RNTupleSerializer = ROOT::Experimental::Internal::RNTupleSerializer;
 using RPage = ROOT::Experimental::Internal::RPage;
 using RPageAllocatorHeap = ROOT::Experimental::Internal::RPageAllocatorHeap;

@@ -1,8 +1,8 @@
 import { gStyle, settings, browser, constants, internals, addMethods,
          isPromise, getPromise, postponePromise, isBatchMode, isObject, isFunc, isStr, clTPad, clTFrame, nsREX } from '../core.mjs';
-import { ColorPalette, addColor, getRootColors } from '../base/colors.mjs';
+import { ColorPalette, addColor, getRootColors, convertColor } from '../base/colors.mjs';
 import { RObjectPainter } from '../base/RObjectPainter.mjs';
-import { getElementRect, getAbsPosInCanvas, DrawOptions, compressSVG, makeTranslate, svgToImage } from '../base/BasePainter.mjs';
+import { prSVG, getElementRect, getAbsPosInCanvas, DrawOptions, compressSVG, makeTranslate, svgToImage } from '../base/BasePainter.mjs';
 import { selectActivePad, getActivePad } from '../base/ObjectPainter.mjs';
 import { registerForResize, saveFile } from '../gui/utils.mjs';
 import { BrowserLayout } from '../gui/display.mjs';
@@ -954,7 +954,7 @@ class RPadPainter extends RObjectPainter {
       if (snap.fColIndex && snap.fColValue) {
          const colors = this.root_colors || getRootColors();
          for (let k = 0; k < snap.fColIndex.length; ++k)
-            colors[snap.fColIndex[k]] = snap.fColValue[k];
+            colors[snap.fColIndex[k]] = convertColor(snap.fColValue[k]);
        }
 
       // painter used only for evaluation of attributes
@@ -1096,7 +1096,7 @@ class RPadPainter extends RObjectPainter {
             for (let n = 0; n < arr.length; ++n) {
                const name = arr[n].fString, p = name.indexOf('=');
                if (p > 0)
-                  ListOfColors[parseInt(name.slice(0, p))] = name.slice(p+1);
+                  ListOfColors[parseInt(name.slice(0, p))] = convertColor(name.slice(p+1));
             }
 
             this.root_colors = ListOfColors;
@@ -1337,7 +1337,7 @@ class RPadPainter extends RObjectPainter {
             if (res)
               this.getCanvPainter()?.sendWebsocket(`SAVE:${filename}:${res}`);
          } else
-            saveFile(filename, (kind !== 'svg') ? imgdata : 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(imgdata));
+            saveFile(filename, (kind !== 'svg') ? imgdata : prSVG + encodeURIComponent(imgdata));
       });
    }
 
@@ -1349,7 +1349,7 @@ class RPadPainter extends RObjectPainter {
 
    /** @summary Produce image for the pad
      * @return {Promise} with created image */
-   async produceImage(full_canvas, file_format) {
+   async produceImage(full_canvas, file_format, args) {
       const use_frame = (full_canvas === 'frame'),
             elem = use_frame ? this.getFrameSvg(this.this_pad_name) : (full_canvas ? this.getCanvSvg() : this.svg_this_pad()),
             painter = (full_canvas && !use_frame) ? this.getCanvPainter() : this,
@@ -1381,18 +1381,24 @@ class RPadPainter extends RObjectPainter {
                btns.remove();
             }
 
-            const main = pp.getFramePainter();
-            if (!isFunc(main?.render3D) || !isFunc(main?.access3dKind)) return;
+            const fp = pp.getFramePainter();
+            if (!isFunc(fp?.access3dKind)) return;
 
-            const can3d = main.access3dKind();
-
+            const can3d = fp.access3dKind();
             if ((can3d !== constants.Embed3D.Overlay) && (can3d !== constants.Embed3D.Embed)) return;
 
-            const sz2 = main.getSizeFor3d(constants.Embed3D.Embed), // get size and position of DOM element as it will be embed
-                  canvas = main.renderer.domElement;
+            let main, canvas;
+            if (isFunc(fp.render3D)) {
+               main = fp;
+               canvas = fp.renderer?.domElement;
+            } else {
+               main = fp.getMainPainter();
+               canvas = main?._renderer?.domElement;
+            }
+            if (!isFunc(main?.render3D) || !isObject(canvas)) return;
 
+            const sz2 = fp.getSizeFor3d(constants.Embed3D.Embed); // get size and position of DOM element as it will be embed
             main.render3D(0); // WebGL clears buffers, therefore we should render scene and convert immediately
-
             const dataUrl = canvas.toDataURL('image/png');
 
             // remove 3D drawings
@@ -1429,7 +1435,7 @@ class RPadPainter extends RObjectPainter {
          ? { node: elem.node(), width, height, reset_tranform: use_frame }
          : compressSVG(`<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">${elem.node().innerHTML}</svg>`);
 
-      return svgToImage(arg, file_format).then(res => {
+      return svgToImage(arg, file_format, args).then(res => {
          for (let k = 0; k < items.length; ++k) {
             const item = items[k];
 

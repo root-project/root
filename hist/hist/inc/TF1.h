@@ -569,7 +569,7 @@ public:
    }
    virtual void     GetParLimits(Int_t ipar, Double_t &parmin, Double_t &parmax) const;
    virtual Double_t GetProb() const;
-   virtual Int_t    GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum);
+   virtual Int_t    GetQuantiles(Int_t n, Double_t *xp, const Double_t *p);
    virtual Double_t GetRandom(TRandom * rng = nullptr, Option_t * opt = nullptr);
    virtual Double_t GetRandom(Double_t xmin, Double_t xmax, TRandom * rng = nullptr, Option_t * opt = nullptr);
    virtual void     GetRange(Double_t &xmin, Double_t &xmax) const;
@@ -656,6 +656,11 @@ public:
    virtual void     SetNormalized(Bool_t flag)
    {
       fNormalized = flag;
+      Update();
+   }
+   inline void SetNdim(Int_t ndim)
+   {
+      fNdim = ndim;
       Update();
    }
    virtual void     SetNpx(Int_t npx = 100); // *MENU*
@@ -786,6 +791,14 @@ namespace ROOT {
             f->SetTitle(title);
          }
       };
+
+      inline void
+      EvalParMultiDim(TF1 *func, Double_t *out, const Double_t *x, std::size_t size, std::size_t rows, Double_t *params)
+      {
+         for (size_t i = 0; i < rows; i++) {
+            out[i] = func->EvalPar(x + i * size, params);
+         }
+      }
    }
 }
 

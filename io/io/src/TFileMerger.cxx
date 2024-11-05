@@ -50,12 +50,13 @@ to be merged, like the standalone hadd program.
 #endif
 
 #include <cstring>
+#include <map>
 
 ClassImp(TFileMerger);
 
 TClassRef R__TH1_Class("TH1");
 TClassRef R__TTree_Class("TTree");
-TClassRef R__RNTuple_Class("ROOT::Experimental::RNTuple");
+TClassRef R__RNTuple_Class("ROOT::RNTuple");
 
 static const Int_t kCpProgress = BIT(14);
 static const Int_t kCintFileNumber = 100;
@@ -132,7 +133,7 @@ Bool_t TFileMerger::AddFile(const char *url, Bool_t cpProgress)
       Printf("%s Source file %d: %s", fMsgPrefix.Data(), fFileList.GetEntries() + fExcessFiles.GetEntries() + 1, url);
    }
 
-   TFile *newfile = 0;
+   TFile *newfile = nullptr;
    TString localcopy;
 
    if (fFileList.GetEntries() >= (fMaxOpenedFiles-1)) {
@@ -164,7 +165,7 @@ Bool_t TFileMerger::AddFile(const char *url, Bool_t cpProgress)
    // Zombie files should also be skipped
    if (newfile && newfile->IsZombie()) {
       delete newfile;
-      newfile = 0;
+      newfile = nullptr;
    }
 
    if (!newfile) {
@@ -542,17 +543,19 @@ Bool_t TFileMerger::MergeOne(TDirectory *target, TList *sourcelist, Int_t type, 
    }
    Bool_t canBeMerged = kTRUE;
 
-   TList dirtodelete;
-   auto getDirectory = [&dirtodelete](TDirectory *parent, const char *name, const TString &pathname)
-   {
-      TDirectory *result = dynamic_cast<TDirectory*>(parent->GetList()->FindObject(name));
-      if (!result) {
-         result = parent->GetDirectory(pathname);
-         if (result && result != parent)
-            dirtodelete.Add(result);
+   std::map<std::tuple<std::string, std::string, std::string>, TDirectory*> dirtodelete;
+   auto getDirectory = [&dirtodelete](TDirectory *parent, const char *name, const TString &pathname) {
+      auto mapkey = std::make_tuple(parent->GetName(), name, pathname.Data());
+      auto result = dirtodelete.find(mapkey);
+      if (result != dirtodelete.end()) {
+         return result->second;
       }
 
-      return result;
+      auto dir = dynamic_cast<TDirectory *>(parent->GetDirectory(pathname));
+      if (dir)
+         dirtodelete[mapkey] = dir;
+
+      return dir;
    };
 
    if ( cl->InheritsFrom( TDirectory::Class() ) ) {
@@ -786,8 +789,7 @@ Bool_t TFileMerger::MergeOne(TDirectory *target, TList *sourcelist, Int_t type, 
       // Let's also delete the directory from the other source (thanks to the 'allNames'
       // mechanism above we will not process the directories when tranversing the next
       // files).
-      TIter deliter(&dirtodelete);
-      while(TObject *ndir = deliter()) {
+      for (const auto &[_, ndir] : dirtodelete) {
          // For consistency (and performance), we reset the MustCleanup be also for those
          // 'key' retrieved indirectly.
          ndir->ResetBit(kMustCleanup);
@@ -804,7 +806,6 @@ Bool_t TFileMerger::MergeOne(TDirectory *target, TList *sourcelist, Int_t type, 
       }
    }
    info.Reset();
-   dirtodelete.Clear("nodelete");  // If needed the delete is done explicitly above.
    return kTRUE;
 }
 

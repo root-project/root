@@ -31,7 +31,7 @@ ROOT::Experimental::RNTupleFillContext::RNTupleFillContext(std::unique_ptr<RNTup
    : fSink(std::move(sink)), fModel(std::move(model)), fMetrics("RNTupleFillContext")
 {
    fModel->Freeze();
-   fSink->Init(*fModel.get());
+   fSink->Init(*fModel);
    fMetrics.ObserveMetrics(fSink->GetMetrics());
 
    const auto &writeOpts = fSink->GetWriteOptions();
@@ -44,30 +44,58 @@ ROOT::Experimental::RNTupleFillContext::RNTupleFillContext(std::unique_ptr<RNTup
 ROOT::Experimental::RNTupleFillContext::~RNTupleFillContext()
 {
    try {
-      CommitCluster();
+      FlushCluster();
    } catch (const RException &err) {
-      R__LOG_ERROR(NTupleLog()) << "failure committing ntuple: " << err.GetError().GetReport();
+      R__LOG_ERROR(NTupleLog()) << "failure flushing cluster: " << err.GetError().GetReport();
+   }
+
+   if (!fStagedClusters.empty()) {
+      R__LOG_ERROR(NTupleLog()) << std::to_string(fStagedClusters.size())
+                                << " staged clusters still pending, their data is lost";
    }
 }
 
-void ROOT::Experimental::RNTupleFillContext::CommitCluster()
+void ROOT::Experimental::RNTupleFillContext::FlushColumns()
 {
-   if (fNEntries == fLastCommitted) {
+   for (auto &field : Internal::GetFieldZeroOfModel(*fModel)) {
+      Internal::CallFlushColumnsOnField(field);
+   }
+}
+
+void ROOT::Experimental::RNTupleFillContext::FlushCluster()
+{
+   if (fNEntries == fLastFlushed) {
       return;
    }
-   for (auto &field : fModel->GetFieldZero()) {
+   for (auto &field : Internal::GetFieldZeroOfModel(*fModel)) {
       Internal::CallCommitClusterOnField(field);
    }
-   auto nEntriesInCluster = fNEntries - fLastCommitted;
-   fNBytesCommitted += fSink->CommitCluster(nEntriesInCluster);
+   auto nEntriesInCluster = fNEntries - fLastFlushed;
+   if (fStagedClusterCommitting) {
+      auto stagedCluster = fSink->StageCluster(nEntriesInCluster);
+      fNBytesFlushed += stagedCluster.fNBytesWritten;
+      fStagedClusters.push_back(std::move(stagedCluster));
+   } else {
+      fNBytesFlushed += fSink->CommitCluster(nEntriesInCluster);
+   }
    fNBytesFilled += fUnzippedClusterSize;
 
    // Cap the compression factor at 1000 to prevent overflow of fUnzippedClusterSizeEst
    const float compressionFactor =
-      std::min(1000.f, static_cast<float>(fNBytesFilled) / static_cast<float>(fNBytesCommitted));
+      std::min(1000.f, static_cast<float>(fNBytesFilled) / static_cast<float>(fNBytesFlushed));
    fUnzippedClusterSizeEst =
       compressionFactor * static_cast<float>(fSink->GetWriteOptions().GetApproxZippedClusterSize());
 
-   fLastCommitted = fNEntries;
+   fLastFlushed = fNEntries;
    fUnzippedClusterSize = 0;
+}
+
+void ROOT::Experimental::RNTupleFillContext::CommitStagedClusters()
+{
+   if (fStagedClusters.empty()) {
+      return;
+   }
+
+   fSink->CommitStagedClusters(fStagedClusters);
+   fStagedClusters.clear();
 }

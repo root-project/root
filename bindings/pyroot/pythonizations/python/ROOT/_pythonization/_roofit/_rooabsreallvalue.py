@@ -27,6 +27,8 @@ class RooAbsRealLValue(object):
     \endcode
     """
 
+    __cpp_name__ = 'RooAbsRealLValue'
+
     @cpp_signature(
         "TH1 *RooAbsRealLValue::createHistogram(const char *name,"
         "    const RooCmdArg& arg1={}, const RooCmdArg& arg2={},"

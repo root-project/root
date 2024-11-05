@@ -5,7 +5,7 @@ A cluster contains all the data of a given event range.
 As clusters are usually compressed and tied to event boundaries, an exact size cannot be enforced.
 Instead, RNTuple uses a *target size* for the compressed data as a guideline for when to flush a cluster.
 
-The default cluster target size is 50MB of compressed data.
+The default cluster target size is 100 MB of compressed data.
 The default can be changed by the `RNTupleWriteOptions`.
 The default should work well in the majority of cases.
 In general, larger clusters provide room for more and larger pages and should improve compression ratio and speed.
@@ -13,7 +13,7 @@ However, clusters also need to be buffered during write and (partially) during r
 so larger clusters increase the memory footprint.
 
 A second option in `RNTupleWriteOptions` specifies the maximum uncompressed cluster size.
-The default is 512MiB.
+The default is 1 GiB.
 This setting acts as an "emergency break" and should prevent very compressible clusters from growing too large.
 
 Given the two settings, writing works as follows:
@@ -27,35 +27,30 @@ See the notes below on a discussion of this approximation.
 Page Sizes
 ==========
 
-Pages contain consecutive elements of a certain columns.
+Pages contain consecutive elements of a certain column.
 They are the unit of compression and of addressability on storage.
-RNTuple uses a *target size* for the uncompressed data as a guideline for when to flush a page.
+RNTuple puts a configurable maximum uncompressed size for pages.
+This limit is by default set to 1 MiB.
+When the limit is reached, a page will be flushed to disk.
 
-The default page target size is 64KiB.
-The default can be changed by the `RNTupleWriteOptions`.
-In general, larger pages give better compression ratios; smaller pages reduce the memory footprint.
-When reading, every active column requires at least one page buffer.
-For the number of read requests, the page size does not matter
-because pages of the same column are written consecutively and therefore read in one go.
+In addition, RNTuple maintains a memory budget for the combined allocated size of the pages that are currently filled.
+By default, this limit is set to twice the compressed target cluster size when compression is used,
+and to the cluster target size for uncompressed data.
+Initially, and after flushing, all columns use small pages,
+just big enough to hold the configurable minimum number of elements (64 by default).
+Page sizes are doubled as more data is filled into them.
+When a page reaches the maximum page size (see above), it is flushed.
+When the overall page budget is reached,
+pages larger than the page at hand are flushed before the page at hand is flushed.
+For the parallel writer, every fill context maintains the page memory budget independently.
 
-Given the target size, writing works as follows:
-In the beginning, the first page is filled until the target size.
-Afterwards there is a mechanism to prevent undersized tail pages:
-writing uses two page buffers in turns and flushes the previous buffer filled to its target size only once the next buffer is at least at 50%.
-Then writing continues until the target size, at which point writing switches back to the other page.
-If the cluster gets flushed with an undersized tail page,
-the small page is appended to the previous page before flushing.
-Therefore, tail pages sizes are between `[0.5 * target size .. 1.5 * target size]`
-(unless the column doesn't have enough elements to fill 50% of the first page).
+Note that the total amount of memory consumed for writing is usually larger than the write page budget.
+For instance, if buffered writing is used (the default), additional memory is required.
+Use RNTupleModel::EstimateWriteMemoryUsage() for the total estimated memory use for writing.
 
-Concretely, writing will fill and flush two pages `A` and `B` as follows:
-1. Writing starts to fill page `A`.
-2. When page `A` reached its target size, writing switches to page `B` while the contents of page `A` are kept in memory.
-3. Once page `B` is at least at 50%, page `A` is flushed.
-4. When page `B` reaches its target size, writing switches to page `A`.
-5. Once page `A` is at least at 50%, page `B` is flushed.
-6. ... and so on, going back to 2.
-
+The default values are tuned for a total write memory of around 300 MB per writer resp. fill context.
+In order to decrease the memory consumption,
+users should decrease the target cluster size before tuning more intricate memory settings.
 
 Notes
 =====

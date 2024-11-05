@@ -1928,36 +1928,6 @@ namespace TStreamerInfoActions
          return 0;
       }
 
-      static INLINE_TEMPLATE_ARGS Int_t ReadCollectionBool(TBuffer &buf, void *addr, const TConfiguration *conf)
-      {
-         // Collection of numbers.  Memberwise or not, it is all the same.
-
-         TConfigSTL *config = (TConfigSTL*)conf;
-         UInt_t start, count;
-         /* Version_t vers = */ buf.ReadVersion(&start, &count, config->fOldClass);
-
-         std::vector<bool> *const vec = (std::vector<bool>*)(((char*)addr)+config->fOffset);
-         Int_t nvalues;
-         buf.ReadInt(nvalues);
-         vec->resize(nvalues);
-
-         bool *items = new bool[nvalues];
-         buf.ReadFastArray(items, nvalues);
-         for(Int_t i = 0 ; i < nvalues; ++i) {
-            (*vec)[i] = items[i];
-         }
-         delete [] items;
-
-         // We could avoid the call to ReadFastArray, and we could
-         // the following, however this breaks TBufferXML ...
-         // for(Int_t i = 0 ; i < nvalues; ++i) {
-         //    bool tmp; buf >> tmp;
-         //    (*vec)[i] = tmp;
-         // }
-
-         buf.CheckByteCount(start,count,config->fTypeName);
-         return 0;
-      }
 
       static INLINE_TEMPLATE_ARGS Int_t ReadCollectionFloat16(TBuffer &buf, void *addr, const TConfiguration *conf)
       {
@@ -2276,11 +2246,6 @@ namespace TStreamerInfoActions
 
          buf.CheckByteCount(start,count,config->fTypeName);
          return 0;
-      }
-
-      static INLINE_TEMPLATE_ARGS Int_t ReadCollectionBool(TBuffer &buf, void *addr, const TConfiguration *conf)
-      {
-         return ReadNumericalCollection<bool,SimpleRead<bool> >(buf,addr,conf);
       }
 
       static INLINE_TEMPLATE_ARGS Int_t ReadCollectionFloat16(TBuffer &buf, void *addr, const TConfiguration *conf)
@@ -2634,11 +2599,6 @@ namespace TStreamerInfoActions
          return 0;
       }
 
-      static INLINE_TEMPLATE_ARGS Int_t ReadCollectionBool(TBuffer &buf, void *addr, const TConfiguration *conf)
-      {
-         return ReadNumericalCollection<ConvertBasicType<bool,bool,Numeric > >(buf,addr,conf);
-      }
-
       static INLINE_TEMPLATE_ARGS Int_t ReadCollectionFloat16(TBuffer &buf, void *addr, const TConfiguration *conf)
       {
          return ReadNumericalCollection<ConvertBasicType<NoFactorMarker<float>,float,Numeric > >(buf,addr,conf);
@@ -2671,6 +2631,8 @@ namespace TStreamerInfoActions
    };
 }
 
+// Used in GetCollectionReadAction for the kConv cases within a collection
+// Not to be confused with GetConvertCollectionReadAction
 template <typename Looper, typename From>
 static TConfiguredAction GetCollectionReadConvertAction(Int_t newtype, TConfiguration *conf)
 {
@@ -2706,7 +2668,9 @@ static TConfiguredAction GetNumericCollectionReadAction(Int_t type, TConfigSTL *
 
    switch (type) {
       // Read basic types.
-      case TStreamerInfo::kBool:    return TConfiguredAction( Looper::ReadCollectionBool, conf );    break;
+
+      // Because of std::vector of bool is not backed up by an array of bool we have to converted it first.
+      case TStreamerInfo::kBool:    return TConfiguredAction( Looper::template ConvertCollectionBasicType<bool,bool>::Action, conf );    break;
       case TStreamerInfo::kChar:    return TConfiguredAction( Looper::template ReadCollectionBasicType<Char_t>, conf );    break;
       case TStreamerInfo::kShort:   return TConfiguredAction( Looper::template ReadCollectionBasicType<Short_t>,conf );   break;
       case TStreamerInfo::kInt:     return TConfiguredAction( Looper::template ReadCollectionBasicType<Int_t>,  conf );     break;
@@ -2783,6 +2747,9 @@ static TConfiguredAction GetConvertCollectionReadActionFrom(Int_t newtype, TConf
    return TConfiguredAction();
 }
 
+// Used in AddReadAction to implement the kSTL cases
+// Not to be confused with GetCollectionReadConvertAction
+// nor with GetConvertCollectionReadActionFrom (used to implement this function)
 template <typename Looper>
 static TConfiguredAction GetConvertCollectionReadAction(Int_t oldtype, Int_t newtype, TConfiguration *conf)
 {

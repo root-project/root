@@ -1,0 +1,22 @@
+<mvc:View
+    controllerName="rootui5.eve7.controller.GeoTable"
+    xmlns:core="sap.ui.core"
+    xmlns="sap.m"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:layout="sap.ui.layout"
+    xmlns:m="sap.m"
+    xmlns:table="sap.ui.table"
+    xmlns:f="sap.ui.layout.form"
+    height="100%">
+    <Toolbar id="tbar">
+      <content>
+         <Label text="GeoTable" id="titleLabel" width="100%" textAlign="Center"/>
+         <Button icon="sap-icon://move" press="switchSingle" tooltip="single view"/>
+         <Button icon="sap-icon://arrow-right" press="swap" tooltip="swap"/>
+         <Button icon="sap-icon://decline" press="detachViewer" tooltip="destroy"/>
+      </content>
+    </Toolbar>
+    <mvc:XMLView id="geomHierarchyPanel" width="100%"
+      height="100%" viewName="rootui5.geom.view.GeomHierarchy">
+    </mvc:XMLView>
+</mvc:View>

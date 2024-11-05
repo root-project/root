@@ -17,10 +17,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                'sap/ui/core/mvc/XMLView',
                'sap/ui/core/Icon',
                'sap/m/Button',
-               'sap/m/ButtonType',
-               'sap/ui/core/ValueState',
+               'sap/m/library',
+               'sap/ui/core/library',
                'sap/m/Dialog',
-               'sap/m/DialogType',
                'sap/ui/codeeditor/CodeEditor',
                'sap/m/Image',
                'sap/tnt/ToolHeader',
@@ -47,10 +46,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
            XMLView,
            CoreIcon,
            Button,
-           ButtonType,
-           ValueState,
+           mLibrary,
+           uiCoreLibrary,
            Dialog,
-           DialogType,
            CodeEditor,
            Image,
            ToolHeader,
@@ -256,9 +254,27 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             })
          }));
 
+         // ignore first resize
+         this._columnResized = -1;
+
          // catch re-rendering of the table to assign handlers
          t.addEventDelegate({
-            onAfterRendering() { this.assignRowHandlers(); }
+            onAfterRendering() {
+               this.assignRowHandlers();
+               if (this._columnResized < 1) return;
+               this._columnResized = 0;
+               let fullsz = 4;
+
+               t.getColumns().forEach(col => {
+                  if (col.getVisible()) fullsz += 4 + col.$().width();
+               });
+               // this.getView().byId('masterPage').getParent().removeStyleClass('masterExpanded');
+               this.getView().byId('SplitAppBrowser').getAggregation('_navMaster').setWidth(fullsz + 'px');
+            }
+         }, this);
+
+         t.attachEvent("columnResize", {}, evnt => {
+            this._columnResized++;
          }, this);
       },
 
@@ -629,7 +645,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             }
       },
 
-      /** @summary Retuns current selected tab, instance of TabContainerItem */
+      /** @summary Returns current selected tab, instance of TabContainerItem */
       getSelectedTab() {
          let oTabContainer = this.byId("tabContainer");
          let items = oTabContainer.getItems();
@@ -638,7 +654,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                return items[i];
       },
 
-      /** @summary Retuns code editor from the tab */
+      /** @summary Returns code editor from the tab */
       getCodeEditor(tab) {
          let items = tab ? tab.getContent() : [];
          for (let n = 0; n < items.length; ++n)
@@ -884,9 +900,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             this.websocket.send("WIDGET_SELECTED:" + item.getKey());
       },
 
-      doCloseTabItem(item) {
+      doCloseTabItem(item, skip_send) {
          let oTabContainer = this.byId("tabContainer");
-         if (item.getKey())
+         if (item.getKey() && !skip_send)
             this.websocket.send("CLOSE_TAB:" + item.getKey());
          // force connection to close
          item._jsroot_conn?.close(true);
@@ -991,6 +1007,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       onExpandMaster() {
+         // when button pressed - remove exact width value to let rule it via the style
+         this.getView().byId('SplitAppBrowser').getAggregation('_navMaster').setWidth('');
          const master = this.getView().byId('masterPage').getParent();
          master.toggleStyleClass('masterExpanded');
          const expanded = master.hasStyleClass('masterExpanded');
@@ -1046,12 +1064,12 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             content.addItem(this.oWarningProgress);
 
             this.oWarningDialog = new Dialog({
-               type: DialogType.Message,
+               type: mLibrary.DialogType.Message,
                title: "Warning",
-               state: ValueState.Warning,
+               state: uiCoreLibrary.ValueState.Warning,
                content,
                beginButton: new Button({
-                  type: ButtonType.Emphasized,
+                  type: mLibrary.ButtonType.Emphasized,
                   text: 'OK',
                   press: () => this.cancelWarning()
                })
@@ -1182,6 +1200,12 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          case "SELECT_WIDGET":
            this.findTab(msg, true); // set active
            break;
+         case "CLOSE_WIDGETS":
+            JSON.parse(msg).forEach(name => {
+               let tab = this.findTab(name);
+               if (tab) this.doCloseTabItem(tab, true);
+            });
+            break;
          case "BREPL":   // browser reply
             if (this.model) {
                let bresp = JSON.parse(msg);

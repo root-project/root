@@ -10,7 +10,7 @@
 using ROOT::Experimental::Internal::RNTupleWriteOptionsManip;
 
 namespace {
-bool IsEqual(const ROOT::Experimental::RNTuple &a, const ROOT::Experimental::RNTuple &b)
+bool IsEqual(const ROOT::RNTuple &a, const ROOT::RNTuple &b)
 {
    return a.GetVersionEpoch() == b.GetVersionEpoch() && a.GetVersionMajor() == b.GetVersionMajor() &&
           a.GetVersionMinor() == b.GetVersionMinor() && a.GetVersionPatch() == b.GetVersionPatch() &&
@@ -21,10 +21,10 @@ bool IsEqual(const ROOT::Experimental::RNTuple &a, const ROOT::Experimental::RNT
 }
 
 struct RNTupleTester {
-   ROOT::Experimental::RNTuple fNtpl;
+   ROOT::RNTuple fNtpl;
 
-   explicit RNTupleTester(const ROOT::Experimental::RNTuple &ntpl) : fNtpl(ntpl) {}
-   RNTuple GetAnchor() const { return fNtpl; }
+   explicit RNTupleTester(const ROOT::RNTuple &ntpl) : fNtpl(ntpl) {}
+   ROOT::RNTuple GetAnchor() const { return fNtpl; }
 };
 } // namespace
 
@@ -87,7 +87,7 @@ TEST(MiniFile, Stream)
 
    auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "READ"));
    ASSERT_TRUE(file);
-   auto k = std::unique_ptr<ROOT::Experimental::RNTuple>(file->Get<ROOT::Experimental::RNTuple>("MyNTuple"));
+   auto k = std::unique_ptr<ROOT::RNTuple>(file->Get<ROOT::RNTuple>("MyNTuple"));
    EXPECT_TRUE(IsEqual(ntuple, RNTupleTester(*k).GetAnchor()));
 }
 
@@ -214,7 +214,7 @@ TEST(MiniFile, SimpleKeys)
    EXPECT_EQ(buffer[offBlob6], blob6);
 
    ASSERT_TRUE(readNextKey());
-   EXPECT_STREQ(key->GetClassName(), "ROOT::Experimental::RNTuple");
+   EXPECT_STREQ(key->GetClassName(), "ROOT::RNTuple");
 
    ASSERT_TRUE(readNextKey());
    // KeysList
@@ -319,7 +319,7 @@ TEST(MiniFile, ProperKeys)
    EXPECT_EQ(buffer[offBlob6], blob6);
 
    ASSERT_TRUE(readNextKey());
-   EXPECT_STREQ(key->GetClassName(), "ROOT::Experimental::RNTuple");
+   EXPECT_STREQ(key->GetClassName(), "ROOT::RNTuple");
 
    ASSERT_TRUE(readNextKey());
    // KeysList
@@ -381,8 +381,8 @@ TEST(MiniFile, MultiKeyBlob)
 
       auto rawFile = RRawFile::Create(fileGuard.GetPath());
       auto reader = RMiniFileReader{rawFile.get()};
-      // Force reader to read the max key size
-      (void)reader.GetNTuple("ntpl");
+      auto ntuple = reader.GetNTuple("ntpl").Unwrap();
+      reader.SetMaxKeySize(ntuple.GetMaxKeySize());
       reader.ReadBuffer(data.get(), dataSize, blobOffset);
 
       EXPECT_EQ(data[0], 0x99);
@@ -419,8 +419,8 @@ TEST(MiniFile, MultiKeyBlob_ExactlyMax)
 
       auto rawFile = RRawFile::Create(fileGuard.GetPath());
       auto reader = RMiniFileReader{rawFile.get()};
-      // Force reader to read the max key size
-      (void)reader.GetNTuple("ntpl");
+      auto ntuple = reader.GetNTuple("ntpl").Unwrap();
+      reader.SetMaxKeySize(ntuple.GetMaxKeySize());
       rawFile->ReadAt(data.get(), dataSize, blobOffset);
 
       // If we didn't split the key, we expect to find all zeroes at the end of `data`.
@@ -458,8 +458,8 @@ TEST(MiniFile, MultiKeyBlob_ExactlyTwo)
 
       auto rawFile = RRawFile::Create(fileGuard.GetPath());
       auto reader = RMiniFileReader{rawFile.get()};
-      // Force reader to read the max key size
-      (void)reader.GetNTuple("ntpl");
+      auto ntuple = reader.GetNTuple("ntpl").Unwrap();
+      reader.SetMaxKeySize(ntuple.GetMaxKeySize());
 
       rawFile->ReadAt(data.get(), dataSize, blobOffset);
       // If the blob was split into exactly two keys, there should be only one pointer to the next chunk.
@@ -502,8 +502,8 @@ TEST(MiniFile, MultiKeyBlob_SmallKey)
 
       auto rawFile = RRawFile::Create(fileGuard.GetPath());
       auto reader = RMiniFileReader{rawFile.get()};
-      // Force reader to read the max key size
-      (void)reader.GetNTuple("ntpl");
+      auto ntuple = reader.GetNTuple("ntpl").Unwrap();
+      reader.SetMaxKeySize(ntuple.GetMaxKeySize());
       reader.ReadBuffer(data.get(), dataSize, blobOffset);
 
       EXPECT_EQ(data[0], 0x99);
@@ -616,7 +616,7 @@ TEST(MiniFile, Failures)
 
    auto rawFile = RRawFile::Create(fileGuard.GetPath());
    RMiniFileReader reader(rawFile.get());
-   ROOT::Experimental::RNTuple anchor;
+   ROOT::RNTuple anchor;
    try {
       anchor = reader.GetNTuple("No such RNTuple").Inspect();
       FAIL() << "bad RNTuple names should throw";
@@ -699,7 +699,7 @@ TEST(MiniFile, StreamerInfo)
       };
       std::sort(vecInfos.begin(), vecInfos.end(), fnComp);
       ASSERT_EQ(3u, vecInfos.size());
-      EXPECT_STREQ("ROOT::Experimental::RNTuple", vecInfos[0]->GetName());
+      EXPECT_STREQ("ROOT::RNTuple", vecInfos[0]->GetName());
       EXPECT_STREQ("TVector2", vecInfos[1]->GetName());
       EXPECT_STREQ("TVector3", vecInfos[2]->GetName());
    }

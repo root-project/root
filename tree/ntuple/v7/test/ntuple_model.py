@@ -29,12 +29,14 @@ class NTupleModel(unittest.TestCase):
         model.MakeField["std::vector<std::vector<float>>"]("f")
 
         options = RNTupleWriteOptions()
-        PageSize = 1234
+        InitialNElementsPerPage = 1
+        MaxPageSize = 100
         ClusterSize = 6789
-        options.SetApproxUnzippedPageSize(PageSize)
+        options.SetInitialNElementsPerPage(InitialNElementsPerPage)
+        options.SetMaxUnzippedPageSize(MaxPageSize)
         options.SetApproxZippedClusterSize(ClusterSize)
 
-        Expected = 4 * 3 * PageSize * 2 + 3 * ClusterSize
+        Expected = 4 * MaxPageSize + (4 + 8 + 8 + 4) + 3 * ClusterSize
         self.assertEqual(model.EstimateWriteMemoryUsage(options), Expected)
 
 

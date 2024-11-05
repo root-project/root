@@ -350,10 +350,13 @@ ColumnNames_t ROOT::Internal::RDF::GetBranchNames(TTree &t, bool allowDuplicates
 }
 
 RLoopManager::RLoopManager(TTree *tree, const ColumnNames_t &defaultBranches)
-   : fTree(std::shared_ptr<TTree>(tree, [](TTree *) {})), fDefaultColumns(defaultBranches),
+   : fTree(std::shared_ptr<TTree>(tree, [](TTree *) {})),
+     fDefaultColumns(defaultBranches),
      fNSlots(RDFInternal::GetNSlots()),
      fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kROOTFilesMT : ELoopType::kROOTFiles),
-     fNewSampleNotifier(fNSlots), fSampleInfos(fNSlots), fDatasetColumnReaders(fNSlots)
+     fNewSampleNotifier(fNSlots),
+     fSampleInfos(fNSlots),
+     fDatasetColumnReaders(fNSlots)
 {
 }
 
@@ -379,9 +382,13 @@ RLoopManager::RLoopManager(ULong64_t nEmptyEntries)
 }
 
 RLoopManager::RLoopManager(std::unique_ptr<RDataSource> ds, const ColumnNames_t &defaultBranches)
-   : fDefaultColumns(defaultBranches), fNSlots(RDFInternal::GetNSlots()),
+   : fDefaultColumns(defaultBranches),
+     fNSlots(RDFInternal::GetNSlots()),
      fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kDataSourceMT : ELoopType::kDataSource),
-     fDataSource(std::move(ds)), fNewSampleNotifier(fNSlots), fSampleInfos(fNSlots), fDatasetColumnReaders(fNSlots)
+     fDataSource(std::move(ds)),
+     fNewSampleNotifier(fNSlots),
+     fSampleInfos(fNSlots),
+     fDatasetColumnReaders(fNSlots)
 {
    fDataSource->SetNSlots(fNSlots);
 }
@@ -513,6 +520,31 @@ void RLoopManager::RunEmptySource()
    }
 }
 
+namespace {
+/// Return true on succesful entry read.
+///
+/// TTreeReader encodes successful reads in the `kEntryValid` enum value, but
+/// there can be other situations where the read is still valid. For now, these
+/// are:
+/// - If there was no match of the current entry in one or more friend trees
+///   according to their respective indexes.
+/// - If there was a missing branch at the start of a new tree in the dataset.
+///
+/// In such situations, although the entry is not complete, the processing
+/// should not be aborted and nodes of the computation graph will take action
+/// accordingly.
+bool validTTreeReaderRead(TTreeReader &treeReader)
+{
+   treeReader.Next();
+   switch (treeReader.GetEntryStatus()) {
+   case TTreeReader::kEntryValid: return true;
+   case TTreeReader::kIndexedFriendNoMatch: return true;
+   case TTreeReader::kMissingBranchWhenSwitchingTree: return true;
+   default: return false;
+   }
+}
+} // namespace
+
 /// Run event loop over one or multiple ROOT files, in parallel.
 void RLoopManager::RunTreeProcessorMT()
 {
@@ -521,9 +553,11 @@ void RLoopManager::RunTreeProcessorMT()
       return;
    ROOT::Internal::RSlotStack slotStack(fNSlots);
    const auto &entryList = fTree->GetEntryList() ? *fTree->GetEntryList() : TEntryList();
-   auto tp = (fBeginEntry != 0 || fEndEntry != std::numeric_limits<Long64_t>::max())
-                ? std::make_unique<ROOT::TTreeProcessorMT>(*fTree, fNSlots, std::make_pair(fBeginEntry, fEndEntry))
-                : std::make_unique<ROOT::TTreeProcessorMT>(*fTree, entryList, fNSlots);
+   auto tp =
+      (fBeginEntry != 0 || fEndEntry != std::numeric_limits<Long64_t>::max())
+         ? std::make_unique<ROOT::TTreeProcessorMT>(*fTree, fNSlots, std::make_pair(fBeginEntry, fEndEntry),
+                                                    fSuppressErrorsForMissingBranches)
+         : std::make_unique<ROOT::TTreeProcessorMT>(*fTree, entryList, fNSlots, fSuppressErrorsForMissingBranches);
 
    std::atomic<ULong64_t> entryCount(0ull);
 
@@ -538,7 +572,7 @@ void RLoopManager::RunTreeProcessorMT()
       auto count = entryCount.fetch_add(nEntries);
       try {
          // recursive call to check filters and conditionally execute actions
-         while (r.Next()) {
+         while (validTTreeReaderRead(r)) {
             if (fNewSampleNotifier.CheckFlag(slot)) {
                UpdateSampleInfo(slot, r);
             }
@@ -562,7 +596,8 @@ void RLoopManager::RunTreeProcessorMT()
 /// Run event loop over one or multiple ROOT files, in sequence.
 void RLoopManager::RunTreeReader()
 {
-   TTreeReader r(fTree.get(), fTree->GetEntryList());
+   TTreeReader r(fTree.get(), fTree->GetEntryList(), /*warnAboutLongerFriends*/ true,
+                 fSuppressErrorsForMissingBranches);
    if (0 == fTree->GetEntriesFast() || fBeginEntry == fEndEntry)
       return;
    // Apply the range if there is any
@@ -579,7 +614,7 @@ void RLoopManager::RunTreeReader()
    // recursive call to check filters and conditionally execute actions
    // in the non-MT case processing can be stopped early by ranges, hence the check on fNStopsReceived
    try {
-      while (r.Next() && fNStopsReceived < fNChildren) {
+      while (validTTreeReaderRead(r) && fNStopsReceived < fNChildren) {
          if (fNewSampleNotifier.CheckFlag(0)) {
             UpdateSampleInfo(/*slot*/0, r);
          }
@@ -1214,7 +1249,7 @@ ROOT::Detail::RDF::CreateLMFromFile(std::string_view datasetName, std::string_vi
 
    if (inFile->Get<TTree>(datasetName.data())) {
       return CreateLMFromTTree(datasetName, fileNameGlob, defaultColumns, /*checkFile=*/false);
-   } else if (inFile->Get<ROOT::Experimental::RNTuple>(datasetName.data())) {
+   } else if (inFile->Get<ROOT::RNTuple>(datasetName.data())) {
       return CreateLMFromRNTuple(datasetName, fileNameGlob, defaultColumns);
    }
 
@@ -1231,7 +1266,7 @@ ROOT::Detail::RDF::CreateLMFromFile(std::string_view datasetName, const std::vec
 
    if (inFile->Get<TTree>(datasetName.data())) {
       return CreateLMFromTTree(datasetName, fileNameGlobs, defaultColumns, /*checkFile=*/false);
-   } else if (inFile->Get<ROOT::Experimental::RNTuple>(datasetName.data())) {
+   } else if (inFile->Get<ROOT::RNTuple>(datasetName.data())) {
       return CreateLMFromRNTuple(datasetName, fileNameGlobs, defaultColumns);
    }
 

@@ -421,14 +421,6 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
             "geom"     : []
          };
 
-         // Exit if we are trying to highlight an object that has already been selected.
-         if (stype == ST_Highlight &&
-             outline_map[element_id][this.mgr.global_selection_id] !== undefined)
-         {
-            if (!res.sec_sel)
-            return;
-         }
-
          if (!res.sec_sel) outline_map[element_id] = [];
 
          if (obj3d.get_ctrl) {

@@ -53,7 +53,6 @@ class RColumnElementBase;
 
 namespace Internal {
 class RColumnDescriptorBuilder;
-class RColumnGroupDescriptorBuilder;
 class RClusterDescriptorBuilder;
 class RClusterGroupDescriptorBuilder;
 class RExtraTypeInfoDescriptorBuilder;
@@ -119,7 +118,7 @@ public:
    RFieldDescriptor Clone() const;
    /// In general, we create a field simply from the C++ type name. For untyped fields, however, we potentially need
    /// access to sub fields, which is provided by the ntuple descriptor argument.
-   std::unique_ptr<RFieldBase> CreateField(const RNTupleDescriptor &ntplDesc) const;
+   std::unique_ptr<RFieldBase> CreateField(const RNTupleDescriptor &ntplDesc, bool continueOnError = false) const;
 
    DescriptorId_t GetId() const { return fFieldId; }
    std::uint32_t GetFieldVersion() const { return fFieldVersion; }
@@ -154,6 +153,17 @@ class RColumnDescriptor {
    friend class Internal::RColumnDescriptorBuilder;
    friend class Internal::RNTupleDescriptorBuilder;
 
+public:
+   struct RValueRange {
+      double fMin = 0, fMax = 0;
+
+      RValueRange() = default;
+      RValueRange(double min, double max) : fMin(min), fMax(max) {}
+      RValueRange(std::pair<double, double> range) : fMin(range.first), fMax(range.second) {}
+
+      bool operator==(RValueRange other) const { return fMin == other.fMin && fMax == other.fMax; }
+   };
+
 private:
    /// The actual column identifier, which is the link to the corresponding field
    DescriptorId_t fLogicalColumnId = kInvalidDescriptorId;
@@ -175,6 +185,8 @@ private:
    std::uint16_t fBitsOnStorage = 0;
    /// The on-disk column type
    EColumnType fType = EColumnType::kUnknown;
+   /// Optional value range (used e.g. by quantized real fields)
+   std::optional<RValueRange> fValueRange;
 
 public:
    RColumnDescriptor() = default;
@@ -195,44 +207,10 @@ public:
    std::uint64_t GetFirstElementIndex() const { return std::abs(fFirstElementIndex); }
    std::uint16_t GetBitsOnStorage() const { return fBitsOnStorage; }
    EColumnType GetType() const { return fType; }
+   std::optional<RValueRange> GetValueRange() const { return fValueRange; }
    bool IsAliasColumn() const { return fPhysicalColumnId != fLogicalColumnId; }
    bool IsDeferredColumn() const { return fFirstElementIndex != 0; }
    bool IsSuppressedDeferredColumn() const { return fFirstElementIndex < 0; }
-};
-
-// clang-format off
-/**
-\class ROOT::Experimental::RColumnGroupDescriptor
-\ingroup NTuple
-\brief Meta-data for a sets of columns; non-trivial column groups are used for sharded clusters
-
-Clusters can span a subset of columns. Such subsets are described as a column group. An empty column group
-is used to denote the column group of all the columns. Every ntuple has at least one column group.
-*/
-// clang-format on
-class RColumnGroupDescriptor {
-   friend class Internal::RColumnGroupDescriptorBuilder;
-
-private:
-   DescriptorId_t fColumnGroupId = kInvalidDescriptorId;
-   std::unordered_set<DescriptorId_t> fPhysicalColumnIds;
-
-public:
-   RColumnGroupDescriptor() = default;
-   RColumnGroupDescriptor(const RColumnGroupDescriptor &other) = delete;
-   RColumnGroupDescriptor &operator=(const RColumnGroupDescriptor &other) = delete;
-   RColumnGroupDescriptor(RColumnGroupDescriptor &&other) = default;
-   RColumnGroupDescriptor &operator=(RColumnGroupDescriptor &&other) = default;
-
-   bool operator==(const RColumnGroupDescriptor &other) const;
-
-   DescriptorId_t GetId() const { return fColumnGroupId; }
-   const std::unordered_set<DescriptorId_t> &GetPhysicalColumnIds() const { return fPhysicalColumnIds; }
-   bool Contains(DescriptorId_t physicalId) const
-   {
-      return fPhysicalColumnIds.empty() || fPhysicalColumnIds.count(physicalId) > 0;
-   }
-   bool HasAllColumns() const { return fPhysicalColumnIds.empty(); }
 };
 
 // clang-format off
@@ -427,7 +405,7 @@ public:
 
    RIterator begin() { return RIterator{fDesc.fColumnRanges.cbegin()}; }
    RIterator end() { return fDesc.fColumnRanges.cend(); }
-   size_t count() { return fDesc.fColumnRanges.size(); }
+   size_t size() { return fDesc.fColumnRanges.size(); }
 };
 
 // clang-format off
@@ -494,7 +472,7 @@ enum class EExtraTypeInfoIds { kInvalid, kStreamerInfo };
 \ingroup NTuple
 \brief Field specific extra type information from the header / extenstion header
 
-Currently only used by unsplit fields to store RNTuple-wide list of streamer info records.
+Currently only used by streamer fields to store RNTuple-wide list of streamer info records.
 */
 // clang-format on
 class RExtraTypeInfoDescriptor {
@@ -503,9 +481,8 @@ class RExtraTypeInfoDescriptor {
 private:
    /// Specifies the meaning of the extra information
    EExtraTypeInfoIds fContentId = EExtraTypeInfoIds::kInvalid;
-   /// Extra type information restricted to a certain version range of the type
-   std::uint32_t fTypeVersionFrom = 0;
-   std::uint32_t fTypeVersionTo = 0;
+   /// Type version the extra type information is bound to
+   std::uint32_t fTypeVersion = 0;
    /// The type name the extra information refers to; empty for RNTuple-wide extra information
    std::string fTypeName;
    /// The content format depends on the content ID and may be binary
@@ -523,8 +500,7 @@ public:
    RExtraTypeInfoDescriptor Clone() const;
 
    EExtraTypeInfoIds GetContentId() const { return fContentId; }
-   std::uint32_t GetTypeVersionFrom() const { return fTypeVersionFrom; }
-   std::uint32_t GetTypeVersionTo() const { return fTypeVersionTo; }
+   std::uint32_t GetTypeVersion() const { return fTypeVersion; }
    const std::string &GetTypeName() const { return fTypeName; }
    const std::string &GetContent() const { return fContent; }
 };
@@ -605,6 +581,12 @@ public:
       /// If set to true, projected fields will be reconstructed as such. This will prevent the model to be used
       /// with an RNTupleReader, but it is useful, e.g., to accurately merge data.
       bool fReconstructProjections = false;
+      /// Normally creating a model will fail if any of the reconstructed fields contains an unknown column type.
+      /// If this option is enabled, the model will be created and all fields containing unknown data (directly
+      /// or indirectly) will be skipped instead.
+      bool fForwardCompatible = false;
+      /// If true, the model will be created without a default entry (bare model).
+      bool fCreateBare = false;
    };
 
    RNTupleDescriptor() = default;
@@ -737,7 +719,7 @@ public:
       using iterator = RIterator;
       using value_type = RFieldDescriptor;
       using difference_type = std::ptrdiff_t;
-      using pointer = RColumnDescriptor *;
+      using pointer = const RColumnDescriptor *;
       using reference = const RColumnDescriptor &;
 
       RIterator(const RNTupleDescriptor &ntuple, const std::vector<DescriptorId_t> &columns, std::size_t index)
@@ -750,6 +732,7 @@ public:
          return *this;
       }
       reference operator*() { return fNTuple.GetColumnDescriptor(fColumns.at(fIndex)); }
+      pointer operator->() { return &fNTuple.GetColumnDescriptor(fColumns.at(fIndex)); }
       bool operator!=(const iterator &rh) const { return fIndex != rh.fIndex; }
       bool operator==(const iterator &rh) const { return fIndex == rh.fIndex; }
    };
@@ -759,7 +742,7 @@ public:
 
    RIterator begin() { return RIterator(fNTuple, fColumns, 0); }
    RIterator end() { return RIterator(fNTuple, fColumns, fColumns.size()); }
-   size_t count() { return fColumns.size(); }
+   size_t size() { return fColumns.size(); }
 };
 
 // clang-format off
@@ -1096,6 +1079,16 @@ public:
       fColumn.fRepresentationIndex = representationIndex;
       return *this;
    }
+   RColumnDescriptorBuilder &ValueRange(double min, double max)
+   {
+      fColumn.fValueRange = {min, max};
+      return *this;
+   }
+   RColumnDescriptorBuilder &ValueRange(std::optional<RColumnDescriptor::RValueRange> valueRange)
+   {
+      fColumn.fValueRange = valueRange;
+      return *this;
+   }
    DescriptorId_t GetFieldId() const { return fColumn.fFieldId; }
    DescriptorId_t GetRepresentationIndex() const { return fColumn.fRepresentationIndex; }
    /// Attempt to make a column descriptor. This may fail if the column
@@ -1320,30 +1313,6 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::Internal::RColumnGroupDescriptorBuilder
-\ingroup NTuple
-\brief A helper class for piece-wise construction of an RColumnGroupDescriptor
-*/
-// clang-format on
-class RColumnGroupDescriptorBuilder {
-private:
-   RColumnGroupDescriptor fColumnGroup;
-
-public:
-   RColumnGroupDescriptorBuilder() = default;
-
-   RColumnGroupDescriptorBuilder &ColumnGroupId(DescriptorId_t columnGroupId)
-   {
-      fColumnGroup.fColumnGroupId = columnGroupId;
-      return *this;
-   }
-   void AddColumn(DescriptorId_t physicalId) { fColumnGroup.fPhysicalColumnIds.insert(physicalId); }
-
-   RResult<RColumnGroupDescriptor> MoveDescriptor();
-};
-
-// clang-format off
-/**
 \class ROOT::Experimental::Internal::RExtraTypeInfoDescriptorBuilder
 \ingroup NTuple
 \brief A helper class for piece-wise construction of an RExtraTypeInfoDescriptor
@@ -1361,14 +1330,9 @@ public:
       fExtraTypeInfo.fContentId = contentId;
       return *this;
    }
-   RExtraTypeInfoDescriptorBuilder &TypeVersionFrom(std::uint32_t typeVersionFrom)
+   RExtraTypeInfoDescriptorBuilder &TypeVersion(std::uint32_t typeVersion)
    {
-      fExtraTypeInfo.fTypeVersionFrom = typeVersionFrom;
-      return *this;
-   }
-   RExtraTypeInfoDescriptorBuilder &TypeVersionTo(std::uint32_t typeVersionTo)
-   {
-      fExtraTypeInfo.fTypeVersionTo = typeVersionTo;
+      fExtraTypeInfo.fTypeVersion = typeVersion;
       return *this;
    }
    RExtraTypeInfoDescriptorBuilder &TypeName(const std::string &typeName)
@@ -1435,6 +1399,23 @@ public:
    /// Mark the beginning of the header extension; any fields and columns added after a call to this function are
    /// annotated as begin part of the header extension.
    void BeginHeaderExtension();
+
+   /// If the descriptor is constructed in pieces consisting of physical and alias columns
+   /// (regular and projected fields), the natural column order would be
+   ///   - Physical and alias columns of piece one
+   ///   - Physical and alias columns of piece two
+   ///   - etc.
+   /// What we want, however, are first all physical column IDs and then all alias column IDs.
+   /// This method adds `offset` to the logical column IDs of all alias columns and fixes up the corresponding
+   /// column IDs in the projected field descriptors.  In this way, a new piece of physical and alias columns can
+   /// first shift the existing alias columns by the number of new physical columns, resulting in the following order
+   ///   - Physical columns of piece one
+   ///   - Physical columns of piece two
+   ///   - ...
+   //    - Logical columns of piece one
+   ///   - Logical columns of piece two
+   ///   - ...
+   void ShiftAliasColumns(std::uint32_t offset);
 
    /// Get the streamer info records for custom classes. Currently requires the corresponding dictionaries to be loaded.
    RNTupleSerializer::StreamerInfoMap_t BuildStreamerInfos() const;

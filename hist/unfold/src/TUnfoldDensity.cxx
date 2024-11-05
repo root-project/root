@@ -227,7 +227,7 @@ TUnfoldDensity::TUnfoldDensity
    fRegularisationConditions=nullptr;
    // set up binning schemes
    fConstOutputBins = outputBins;
-   fOwnedOutputBins = 0;
+   fOwnedOutputBins = nullptr;
    TAxis const *genAxis,*detAxis;
    if(histmap==kHistMapOutputHoriz) {
       genAxis=hist_A->GetXaxis();
@@ -249,7 +249,7 @@ TUnfoldDensity::TUnfoldDensity
             "Invalid output binning scheme (node is not the root node)");
    }
    fConstInputBins = inputBins;
-   fOwnedInputBins = 0;
+   fOwnedInputBins = nullptr;
    if(!fConstInputBins) {
       // underflow and overflow are not included in the binning scheme
       // They are still used to count events which have not been reconstructed
@@ -725,7 +725,7 @@ TH1 *TUnfoldDensity::GetFoldedOutput
    if(r) {
       TUnfoldSys::GetFoldedOutput(r,binMap);
       if(addBgr) {
-         TUnfoldSys::GetBackground(r,0,binMap,0,kFALSE);
+         TUnfoldSys::GetBackground(r,nullptr,binMap,0,kFALSE);
       }
    }
    if(binMap) delete [] binMap;
@@ -1271,7 +1271,7 @@ TH1 *TUnfoldDensity::GetLxMinusBias
       Warning("GetLxMinusBias","create flat regularisation conditions scheme");
    }
    TH1 *r=fRegularisationConditions->CreateHistogram
-      (histogramName,kFALSE,0,histogramTitle);
+      (histogramName,kFALSE,nullptr,histogramTitle);
    const Int_t *Ldx_rows=Ldx->GetRowIndexArray();
    const Double_t *Ldx_data=Ldx->GetMatrixArray();
    for(Int_t row=0;row<Ldx->GetNrows();row++) {
@@ -1599,7 +1599,7 @@ Int_t TUnfoldDensity::ScanTau
    //       scanResult lCurve logTauX logTauY
 
    Int_t bestChoice=-1;
-   if(curve.size()>0) {
+   if(!curve.empty()) {
       Double_t *y=new Double_t[curve.size()];
       Double_t *logT=new Double_t[curve.size()];
       int n=0;
@@ -1623,7 +1623,7 @@ Int_t TUnfoldDensity::ScanTau
       delete[] y;
       delete[] logT;
    }
-   if(lcurve.size()) {
+   if(!lcurve.empty()) {
       Double_t *logT=new Double_t[lcurve.size()];
       Double_t *x=new Double_t[lcurve.size()];
       Double_t *y=new Double_t[lcurve.size()];
@@ -1690,10 +1690,10 @@ Double_t TUnfoldDensity::GetScanVariable
    TH1 *rhoi=nullptr;
    if((mode==kEScanTauRhoAvg)||(mode==kEScanTauRhoMax)||
       (mode==kEScanTauRhoSquareAvg)) {
-      rhoi=GetRhoIstatbgr(name,0,distribution,axisSteering,kFALSE);
+      rhoi=GetRhoIstatbgr(name,nullptr,distribution,axisSteering,kFALSE);
    } else if((mode==kEScanTauRhoAvgSys)||(mode==kEScanTauRhoMaxSys)||
              (mode==kEScanTauRhoSquareAvgSys)) {
-      rhoi=GetRhoItotal(name,0,distribution,axisSteering,kFALSE);
+      rhoi=GetRhoItotal(name,nullptr,distribution,axisSteering,kFALSE);
    }
    if(rhoi) {
       Double_t sum=0.0;

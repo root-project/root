@@ -712,7 +712,7 @@ void THStack::Paint(Option_t *chopt)
 ////////////////////////////////////////////////////////////////////////////////
 /// Create all additional objects and stack (if specified).
 
-void THStack::BuildAndPaint(Option_t *choptin, Bool_t paint)
+void THStack::BuildAndPaint(Option_t *choptin, Bool_t paint, Bool_t rebuild_stack)
 {
    if (!fHists) return;
    if (!fHists->GetSize()) return;
@@ -818,11 +818,17 @@ void THStack::BuildAndPaint(Option_t *choptin, Bool_t paint)
    Bool_t candle   = loption.Contains("candle");
    Bool_t violin   = loption.Contains("violin");
 
-   // do not delete the stack. Another pad may contain the same object
-   // drawn in stack mode!
-   //if (nostack && fStack) {fStack->Delete(); delete fStack; fStack = 0;}
 
-   if (!nostack && !candle && !violin) BuildStack();
+   if (!nostack && !candle && !violin) {
+      // do not delete the stack by default - only when needed.
+      // Another pad may contain the same object and use it
+      if (rebuild_stack && fStack) {
+         fStack->Delete();
+         delete fStack;
+         fStack = nullptr;
+      }
+      BuildStack();
+   }
 
    Double_t themax,themin;
    if (fMaximum == -1111) themax = GetMaximum(option);

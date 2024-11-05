@@ -16,8 +16,6 @@
 #define ROO_ABS_MINIMIZER_FCN
 
 #include "Math/IFunction.h"
-#include "Fit/ParameterSettings.h"
-#include "Fit/FitResult.h"
 
 #include "TMatrixDSym.h"
 
@@ -25,8 +23,6 @@
 #include "RooArgList.h"
 #include "RooMinimizer.h"
 #include "RooRealVar.h"
-
-#include <Fit/Fitter.h>
 
 #include <iostream>
 #include <fstream>
@@ -37,7 +33,6 @@ class RooAbsMinimizerFcn {
 
 public:
    RooAbsMinimizerFcn(RooArgList paramList, RooMinimizer *context);
-   RooAbsMinimizerFcn(const RooAbsMinimizerFcn &other);
    virtual ~RooAbsMinimizerFcn() = default;
 
    /// Informs Minuit through its parameter_settings vector of RooFit parameter properties.
@@ -48,10 +43,10 @@ public:
    /// synchronization in subclasses.
    virtual bool Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameters);
 
-   RooArgList *GetFloatParamList() { return _floatParamList.get(); }
-   RooArgList *GetConstParamList() { return _constParamList.get(); }
-   RooArgList *GetInitFloatParamList() { return _initFloatParamList.get(); }
-   RooArgList *GetInitConstParamList() { return _initConstParamList.get(); }
+   RooArgList const &allParams() const { return _allParams; }
+   RooArgList floatParams() const;
+   RooArgList constParams() const;
+   RooArgList initFloatParams() const;
    Int_t GetNumInvalidNLL() const { return _numBadNLL; }
 
    double &GetMaxFCN() { return _maxFCN; }
@@ -61,7 +56,7 @@ public:
    double &getOffset() const { return _funcOffset; }
 
    /// Put Minuit results back into RooFit objects.
-   void BackProp(const ROOT::Fit::FitResult &results);
+   void BackProp();
 
    /// RooMinimizer sometimes needs the name of the minimized function. Implement this in the derived class.
    virtual std::string getFunctionName() const = 0;
@@ -74,17 +69,9 @@ public:
    bool SetLogFile(const char *inLogfile);
    std::ofstream *GetLogFile() { return _logfile; }
 
-   unsigned int getNDim() const { return _nDim; }
-
-   // In the past, the `getNDim` function was called just `NDim`. The function
-   // was renamed to match the code convention (lower case for function names),
-   // but we have to keep an overload with the old name to not break existing
-   // user code.
-   inline unsigned int NDim() const { return getNDim(); }
+   unsigned int getNDim() const { return _floatableParamIndices.size(); }
 
    void setOptimizeConst(Int_t flag);
-
-   std::vector<double> getParameterValues() const;
 
    bool SetPdfParamVal(int index, double value) const;
 
@@ -94,24 +81,29 @@ public:
 
    RooMinimizer::Config const &cfg() const { return _context->_cfg; }
 
+   inline RooRealVar &floatableParam(std::size_t i) const
+   {
+      return static_cast<RooRealVar &>(_allParams[_floatableParamIndices[i]]);
+   }
+
 protected:
    void optimizeConstantTerms(bool constStatChange, bool constValChange);
    /// This function must be overridden in the derived class to pass on constant term optimization configuration
    /// to the function to be minimized. For a RooAbsArg, this would be RooAbsArg::constOptimizeTestStatistic.
    virtual void setOptimizeConstOnFunction(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt) = 0;
 
-   // used in BackProp (Minuit results -> RooFit) and ApplyCovarianceMatrix
-   void SetPdfParamErr(Int_t index, double value);
-   void ClearPdfParamAsymErr(Int_t index);
-   void SetPdfParamErr(Int_t index, double loVal, double hiVal);
-
    void printEvalErrors() const;
 
    double applyEvalErrorHandling(double fvalue) const;
    void finishDoEval() const;
 
+   inline static bool canBeFloating(RooAbsArg const &arg) { return dynamic_cast<RooRealVar const *>(&arg); }
+
+   // Figure out whether we have to treat this parameter as a constant.
+   inline static bool treatAsConstant(RooAbsArg const &arg) { return arg.isConstant() || !canBeFloating(arg); }
+
    // members
-   RooMinimizer *_context;
+   RooMinimizer *_context = nullptr;
 
    // the following four are mutable because DoEval is const (in child classes)
    // Reset the *largest* negative log-likelihood value we have seen so far:
@@ -124,14 +116,12 @@ protected:
    // functions to be actually const (even though state still changes in the
    // error handling object).
 
-   unsigned int _nDim = 0;
-
    bool _optConst = false;
 
-   std::unique_ptr<RooArgList> _floatParamList;
-   std::unique_ptr<RooArgList> _constParamList;
-   std::unique_ptr<RooArgList> _initFloatParamList;
-   std::unique_ptr<RooArgList> _initConstParamList;
+   RooArgList _allParams;
+   RooArgList _allParamsInit;
+
+   std::vector<std::size_t> _floatableParamIndices;
 
    std::ofstream *_logfile = nullptr;
 };

@@ -254,6 +254,17 @@ sap.ui.define([
             this.rqt.initFull(this.RQ_SSAA);
          }
          this.rqt.updateViewport(w, h);
+
+
+         // AMT secondary selection bug workaround for RenderCore PR #21
+         this.rqt.pick_instance = function(state)
+         {
+            return this.pick_instance_low_level(this.pqueue, state);
+         }
+         this.rqt.pick_instance_overlay = function(state)
+         {
+            return this.pick_instance_low_level(this.ovlpqueue, state);
+         }
       }
 
       setupEventHandlers()
@@ -862,7 +873,7 @@ sap.ui.define([
          let c = pstate.ctrl;
          let idx = c.extractIndex(pstate.instance);
 
-         c.elementHighlighted(idx, null);
+         c.elementHighlighted(idx, null, pstate.object);
 
          if (this.highlighted_top_object !== pstate.top_object)
          {
@@ -999,7 +1010,7 @@ sap.ui.define([
 
          if (pstate) {
             let c = pstate.ctrl;
-            c.elementSelected(c.extractIndex(pstate.instance), event);
+            c.elementSelected(c.extractIndex(pstate.instance), event, pstate.object);
             // WHY ??? this.highlighted_scene = pstate.top_object.scene;
          } else {
             // XXXX HACK - handlersMIR senders should really be in the mgr

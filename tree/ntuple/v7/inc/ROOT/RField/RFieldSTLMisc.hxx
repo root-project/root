@@ -75,7 +75,7 @@ public:
    explicit RField(std::string_view name) : RAtomicField(name, TypeName(), std::make_unique<RField<ItemT>>("_0")) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
-   ~RField() override = default;
+   ~RField() final = default;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -104,6 +104,7 @@ protected:
    void ConstructValue(void *where) const final { memset(where, 0, GetValueSize()); }
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
+   void ReadInClusterImpl(RClusterIndex clusterIndex, void *to) final;
 
 public:
    RBitsetField(std::string_view fieldName, std::size_t N);
@@ -126,7 +127,7 @@ public:
    explicit RField(std::string_view name) : RBitsetField(name, N) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
-   ~RField() override = default;
+   ~RField() final = default;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -150,7 +151,7 @@ public:
    explicit RField(std::string_view name) : RSimpleField(name, TypeName()) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
-   ~RField() override = default;
+   ~RField() final = default;
 
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
@@ -162,15 +163,9 @@ public:
 /// The field for values that may or may not be present in an entry. Parent class for unique pointer field and
 /// optional field. A nullable field cannot be instantiated itself but only its descendants.
 /// The RNullableField takes care of the on-disk representation. Child classes are responsible for the in-memory
-/// representation.  The on-disk representation can be "dense" or "sparse". Dense nullable fields have a bitmask
-/// (true: item available, false: item missing) and serialize a default-constructed item for missing items.
-/// Sparse nullable fields use a (Split)Index[64|32] column to point to the available items.
-/// By default, items whose size is smaller or equal to 4 bytes (size of (Split)Index32 column element) are stored
-/// densely.
+/// representation.  Nullable fields use a (Split)Index[64|32] column to point to the available items.
 class RNullableField : public RFieldBase {
-   /// For a dense nullable field, used to write a default-constructed item for missing ones.
-   std::unique_ptr<RValue> fDefaultItemValue;
-   /// For a sparse nullable field, the number of written non-null items in this cluster
+   /// The number of written non-null items in this cluster
    ClusterSize_t fNWritten{0};
 
 protected:
@@ -182,10 +177,6 @@ protected:
    std::size_t AppendValue(const void *from);
    void CommitClusterImpl() final { fNWritten = 0; }
 
-   // The default implementation that translates the request into a call to ReadGlobalImpl() cannot be used
-   // because we don't team up the columns of the different column representations for this field.
-   void ReadInClusterImpl(RClusterIndex clusterIndex, void *to) final;
-
    /// Given the index of the nullable field, returns the corresponding global index of the subfield or,
    /// if it is null, returns kInvalidClusterIndex
    RClusterIndex GetItemIndex(NTupleSize_t globalIndex);
@@ -196,9 +187,6 @@ public:
    RNullableField(RNullableField &&other) = default;
    RNullableField &operator=(RNullableField &&other) = default;
    ~RNullableField() override = default;
-
-   void SetDense() { SetColumnRepresentatives({{EColumnType::kBit}}); }
-   void SetSparse() { SetColumnRepresentatives({{EColumnType::kSplitIndex64}}); }
 
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
@@ -248,7 +236,7 @@ public:
    explicit RField(std::string_view name) : ROptionalField(name, TypeName(), std::make_unique<RField<ItemT>>("_0")) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
-   ~RField() override = default;
+   ~RField() final = default;
 };
 
 class RUniquePtrField : public RNullableField {
@@ -290,7 +278,7 @@ public:
    explicit RField(std::string_view name) : RUniquePtrField(name, TypeName(), std::make_unique<RField<ItemT>>("_0")) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
-   ~RField() override = default;
+   ~RField() final = default;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -327,7 +315,7 @@ public:
    }
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
-   ~RField() override = default;
+   ~RField() final = default;
 
    size_t GetValueSize() const final { return sizeof(std::string); }
    size_t GetAlignment() const final { return std::alignment_of<std::string>(); }
@@ -355,7 +343,7 @@ private:
 
    public:
       RVariantDeleter(std::size_t tagOffset, std::size_t variantOffset,
-                      std::vector<std::unique_ptr<RDeleter>> &itemDeleters)
+                      std::vector<std::unique_ptr<RDeleter>> itemDeleters)
          : fTagOffset(tagOffset), fVariantOffset(variantOffset), fItemDeleters(std::move(itemDeleters))
       {
       }
@@ -370,13 +358,15 @@ private:
    size_t fVariantOffset = 0;
    std::vector<ClusterSize_t::ValueType> fNWritten;
 
-   static std::string GetTypeList(const std::vector<RFieldBase *> &itemFields);
+   static std::string GetTypeList(const std::vector<std::unique_ptr<RFieldBase>> &itemFields);
    /// Extracts the index from an std::variant and transforms it into the 1-based index used for the switch column
    /// The implementation supports two memory layouts that are in use: a trailing unsigned byte, zero-indexed,
    /// having the exception caused empty state encoded by the max tag value,
    /// or a trailing unsigned int instead of a char.
    static std::uint8_t GetTag(const void *variantPtr, std::size_t tagOffset);
    static void SetTag(void *variantPtr, std::size_t tagOffset, std::uint8_t tag);
+
+   RVariantField(std::string_view name, const RVariantField &source); // Used by CloneImpl()
 
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
@@ -385,7 +375,7 @@ protected:
    void GenerateColumns() final;
    void GenerateColumns(const RNTupleDescriptor &desc) final;
 
-   void ConstructValue(void *where) const override;
+   void ConstructValue(void *where) const final;
    std::unique_ptr<RDeleter> GetDeleter() const final;
 
    std::size_t AppendImpl(const void *from) final;
@@ -394,8 +384,7 @@ protected:
    void CommitClusterImpl() final;
 
 public:
-   // TODO(jblomer): use std::span in signature
-   RVariantField(std::string_view fieldName, const std::vector<RFieldBase *> &itemFields);
+   RVariantField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> itemFields);
    RVariantField(RVariantField &&other) = default;
    RVariantField &operator=(RVariantField &&other) = default;
    ~RVariantField() override = default;
@@ -406,8 +395,6 @@ public:
 
 template <typename... ItemTs>
 class RField<std::variant<ItemTs...>> final : public RVariantField {
-   using ContainerT = typename std::variant<ItemTs...>;
-
 private:
    template <typename HeadT, typename... TailTs>
    static std::string BuildItemTypes()
@@ -419,26 +406,25 @@ private:
    }
 
    template <typename HeadT, typename... TailTs>
-   static std::vector<RFieldBase *> BuildItemFields(unsigned int index = 0)
+   static void _BuildItemFields(std::vector<std::unique_ptr<RFieldBase>> &itemFields, unsigned int index = 0)
    {
-      std::vector<RFieldBase *> result;
-      result.emplace_back(new RField<HeadT>("_" + std::to_string(index)));
-      if constexpr (sizeof...(TailTs) > 0) {
-         auto tailFields = BuildItemFields<TailTs...>(index + 1);
-         result.insert(result.end(), tailFields.begin(), tailFields.end());
-      }
+      itemFields.emplace_back(new RField<HeadT>("_" + std::to_string(index)));
+      if constexpr (sizeof...(TailTs) > 0)
+         _BuildItemFields<TailTs...>(itemFields, index + 1);
+   }
+   static std::vector<std::unique_ptr<RFieldBase>> BuildItemFields()
+   {
+      std::vector<std::unique_ptr<RFieldBase>> result;
+      _BuildItemFields<ItemTs...>(result);
       return result;
    }
 
-protected:
-   void ConstructValue(void *where) const final { new (where) ContainerT(); }
-
 public:
    static std::string TypeName() { return "std::variant<" + BuildItemTypes<ItemTs...>() + ">"; }
-   explicit RField(std::string_view name) : RVariantField(name, BuildItemFields<ItemTs...>()) {}
+   explicit RField(std::string_view name) : RVariantField(name, BuildItemFields()) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
-   ~RField() override = default;
+   ~RField() final = default;
 };
 
 } // namespace Experimental

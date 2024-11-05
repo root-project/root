@@ -18,18 +18,18 @@ TEST(RNTuple, MultiColumnRepresentationSimple)
       writer->Fill();
       writer->CommitCluster();
       ROOT::Experimental::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
-         const_cast<RFieldBase &>(writer->GetModel().GetField("px")), 1);
+         const_cast<RFieldBase &>(writer->GetModel().GetConstField("px")), 1);
       *ptrPx = 2.0;
       writer->Fill();
       writer->CommitCluster();
       ROOT::Experimental::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
-         const_cast<RFieldBase &>(writer->GetModel().GetField("px")), 0);
+         const_cast<RFieldBase &>(writer->GetModel().GetConstField("px")), 0);
       *ptrPx = 3.0;
       writer->Fill();
    }
 
    auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
-   EXPECT_EQ(3u, reader->GetModel().GetField("px").GetNElements());
+   EXPECT_EQ(3u, reader->GetView<float>("px").GetFieldRange().size());
 
    const auto &desc = reader->GetDescriptor();
    EXPECT_EQ(3u, desc.GetNClusters());
@@ -157,16 +157,16 @@ TEST(RNTuple, MultiColumnRepresentationString)
       writer->Fill();
       writer->CommitCluster();
       ROOT::Experimental::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
-         const_cast<RFieldBase &>(writer->GetModel().GetField("str")), 1);
+         const_cast<RFieldBase &>(writer->GetModel().GetConstField("str")), 1);
       ptrStr->clear();
       writer->Fill();
       writer->CommitCluster();
       ROOT::Experimental::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
-         const_cast<RFieldBase &>(writer->GetModel().GetField("str")), 0);
+         const_cast<RFieldBase &>(writer->GetModel().GetConstField("str")), 0);
       writer->Fill();
       writer->CommitCluster();
       ROOT::Experimental::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
-         const_cast<RFieldBase &>(writer->GetModel().GetField("str")), 1);
+         const_cast<RFieldBase &>(writer->GetModel().GetConstField("str")), 1);
       *ptrStr = "x";
       writer->Fill();
    }
@@ -199,17 +199,17 @@ TEST(RNTuple, MultiColumnRepresentationVector)
       writer->Fill();
       writer->CommitCluster();
       ROOT::Experimental::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
-         const_cast<RFieldBase &>(writer->GetModel().GetField("vec")), 1);
+         const_cast<RFieldBase &>(writer->GetModel().GetConstField("vec")), 1);
       ptrVec->push_back(1.0);
       writer->Fill();
       writer->CommitCluster();
       ROOT::Experimental::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
-         const_cast<RFieldBase &>(writer->GetModel().GetField("vec")), 0);
+         const_cast<RFieldBase &>(writer->GetModel().GetConstField("vec")), 0);
       ptrVec->clear();
       writer->Fill();
       writer->CommitCluster();
       ROOT::Experimental::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
-         const_cast<RFieldBase &>(writer->GetModel().GetField("vec")), 1);
+         const_cast<RFieldBase &>(writer->GetModel().GetConstField("vec")), 1);
       ptrVec->push_back(2.0);
       ptrVec->push_back(3.0);
       writer->Fill();
@@ -250,17 +250,17 @@ TEST(RNTuple, MultiColumnRepresentationMany)
       writer->Fill();
       writer->CommitCluster();
       ROOT::Experimental::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
-         const_cast<RFieldBase &>(writer->GetModel().GetField("vec")), 1);
+         const_cast<RFieldBase &>(writer->GetModel().GetConstField("vec")), 1);
       (*ptrVec)[0] = 2.0;
       writer->Fill();
       writer->CommitCluster();
       ROOT::Experimental::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
-         const_cast<RFieldBase &>(writer->GetModel().GetField("vec")), 2);
+         const_cast<RFieldBase &>(writer->GetModel().GetConstField("vec")), 2);
       (*ptrVec)[0] = 3.0;
       writer->Fill();
       writer->CommitCluster();
       ROOT::Experimental::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
-         const_cast<RFieldBase &>(writer->GetModel().GetField("vec")), 3);
+         const_cast<RFieldBase &>(writer->GetModel().GetConstField("vec")), 3);
       (*ptrVec)[0] = 4.0;
       writer->Fill();
    }
@@ -290,8 +290,8 @@ TEST(RNTuple, MultiColumnRepresentationNullable)
       auto model = RNTupleModel::Create();
       auto fldScalar = RFieldBase::Create("scalar", "std::optional<float>").Unwrap();
       auto fldVector = RFieldBase::Create("vector", "std::vector<std::optional<float>>").Unwrap();
-      fldScalar->SetColumnRepresentatives({{EColumnType::kBit}, {EColumnType::kSplitIndex64}});
-      fldVector->GetSubFields()[0]->SetColumnRepresentatives({{EColumnType::kSplitIndex64}, {EColumnType::kBit}});
+      fldScalar->SetColumnRepresentatives({{EColumnType::kIndex32}, {EColumnType::kSplitIndex64}});
+      fldVector->GetSubFields()[0]->SetColumnRepresentatives({{EColumnType::kSplitIndex64}, {EColumnType::kIndex32}});
       model->AddField(std::move(fldScalar));
       model->AddField(std::move(fldVector));
       auto ptrScalar = model->GetDefaultEntry().GetPtr<std::optional<float>>("scalar");
@@ -302,18 +302,18 @@ TEST(RNTuple, MultiColumnRepresentationNullable)
       writer->Fill();
       writer->CommitCluster();
       ROOT::Experimental::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
-         const_cast<RFieldBase &>(writer->GetModel().GetField("scalar")), 1);
+         const_cast<RFieldBase &>(writer->GetModel().GetConstField("scalar")), 1);
       ROOT::Experimental::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
-         const_cast<RFieldBase &>(writer->GetModel().GetField("vector._0")), 1);
+         const_cast<RFieldBase &>(writer->GetModel().GetConstField("vector._0")), 1);
       ptrScalar->reset();
       ptrVector->clear();
       ptrVector->push_back(std::optional<float>());
       writer->Fill();
       writer->CommitCluster();
       ROOT::Experimental::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
-         const_cast<RFieldBase &>(writer->GetModel().GetField("scalar")), 0);
+         const_cast<RFieldBase &>(writer->GetModel().GetConstField("scalar")), 0);
       ROOT::Experimental::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
-         const_cast<RFieldBase &>(writer->GetModel().GetField("vector._0")), 0);
+         const_cast<RFieldBase &>(writer->GetModel().GetConstField("vector._0")), 0);
       *ptrScalar = 3.0;
       ptrVector->clear();
       ptrVector->push_back(15.0);
@@ -362,7 +362,7 @@ TEST(RNTuple, MultiColumnRepresentationBulk)
       writer->Fill();
       writer->CommitCluster();
       ROOT::Experimental::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
-         const_cast<RFieldBase &>(writer->GetModel().GetField("px")), 1);
+         const_cast<RFieldBase &>(writer->GetModel().GetConstField("px")), 1);
       *ptrPx = 2.0;
       writer->Fill();
    }
@@ -402,7 +402,7 @@ TEST(RNTuple, MultiColumnRepresentationFriends)
       writer->Fill();
       writer->CommitCluster();
       ROOT::Experimental::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
-         const_cast<RFieldBase &>(writer->GetModel().GetField("pt")), 1);
+         const_cast<RFieldBase &>(writer->GetModel().GetConstField("pt")), 1);
       *ptrPt = 2.0;
       writer->Fill();
    }
@@ -412,12 +412,12 @@ TEST(RNTuple, MultiColumnRepresentationFriends)
       writer->Fill();
       writer->CommitCluster();
       ROOT::Experimental::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
-         const_cast<RFieldBase &>(writer->GetModel().GetField("eta")), 1);
+         const_cast<RFieldBase &>(writer->GetModel().GetConstField("eta")), 1);
       *ptrEta = 4.0;
       writer->Fill();
    }
 
-   std::vector<RNTupleReader::ROpenSpec> friends{{"ntpl1", fileGuard1.GetPath()}, {"ntpl2", fileGuard2.GetPath()}};
+   std::vector<RNTupleOpenSpec> friends{{"ntpl1", fileGuard1.GetPath()}, {"ntpl2", fileGuard2.GetPath()}};
    auto reader = RNTupleReader::OpenFriends(friends);
    EXPECT_EQ(2u, reader->GetNEntries());
    auto viewPt = reader->GetView<float>("ntpl1.pt");

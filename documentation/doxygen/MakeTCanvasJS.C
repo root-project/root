@@ -7,12 +7,16 @@
 #include "TBufferJSON.h"
 #include <fstream>
 
-void MakeTCanvasJS(const char *MacroName, const char *IN, const char *OutDir, bool cp, bool py)
+void MakeTCanvasJS(const char *MacroName, const char *IN, const char *OutDir, bool cp, bool py, bool aclic)
 {
 
    // Execute the macro as a C++ one or a Python one.
-   if (!py) gROOT->ProcessLine(TString::Format(".x %s",MacroName));
-   else     gROOT->ProcessLine(TString::Format("TPython::ExecScript(\"%s\");",MacroName));
+   if (py)
+      gROOT->ProcessLine(TString::Format("TPython::ExecScript(\"%s\");",MacroName));
+   else if (aclic)
+      gROOT->ProcessLine(TString::Format(".x %s+",MacroName));
+   else
+      gROOT->ProcessLine(TString::Format(".x %s",MacroName));
 
    // If needed, copy the macro in the documentation directory.
    if (cp) {
@@ -36,7 +40,7 @@ void MakeTCanvasJS(const char *MacroName, const char *IN, const char *OutDir, bo
    fprintf(fh,"<center>\n");
    while ((canvas = (TCanvas*) next()) != nullptr) {
       ImageNum++;
-      json_codes.push_back(TBufferJSON::ToJSON(canvas, TBufferJSON::kNoSpaces + TBufferJSON::kSameSuppression));
+      json_codes.push_back(TWebCanvas::CreateCanvasJSON(canvas, TBufferJSON::kNoSpaces + TBufferJSON::kSameSuppression, kTRUE));
       fprintf(fh,"   <div id=\"draw_pict%d_%s\" style=\"position: relative; width: %dpx; height: %dpx;\"></div>\n",
                   ImageNum,IN,canvas->GetWindowWidth(),canvas->GetWindowHeight());
    }

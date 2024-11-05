@@ -85,7 +85,7 @@ ClassImp(TProfile2D);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for Profile2D histograms.
 
-TProfile2D::TProfile2D() : TH2D()
+TProfile2D::TProfile2D()
 {
    fTsumwz = fTsumwz2 = 0;
    fScaling = kFALSE;

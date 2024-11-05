@@ -95,8 +95,9 @@ def main():
         macos_version_tuple = platform.mac_ver()
         macos_version = macos_version_tuple[0]
         macos_version_prefix = f'{macos_version}/'
+    platform_machine = platform.machine()
 
-    obj_prefix = f'{args.platform}/{macos_version_prefix}{args.base_ref}/{args.buildtype}/{options_hash}'
+    obj_prefix = f'{args.platform}/{macos_version_prefix}{args.base_ref}/{args.buildtype}_{platform_machine}/{options_hash}'
 
     # Make testing of CI in forks not impact artifacts
     if 'root-project/root' not in args.repository:
@@ -375,10 +376,11 @@ def dump_requested_config(options):
 @github_log_group("Build")
 def cmake_build(buildtype):
     generator_flags = "-- '-verbosity:minimal'" if WINDOWS else ""
+    parallel_jobs = "4" if WINDOWS else str(os.cpu_count())
 
     builddir = os.path.join(WORKDIR, "build")
     result = subprocess_with_log(f"""
-        cmake --build '{builddir}' --config '{buildtype}' --parallel '{os.cpu_count()}' {generator_flags}
+        cmake --build '{builddir}' --config '{buildtype}' --parallel '{parallel_jobs}' {generator_flags}
     """)
 
     if result != 0:

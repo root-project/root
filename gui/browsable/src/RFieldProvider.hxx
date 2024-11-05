@@ -82,8 +82,8 @@ class RFieldProvider : public RProvider {
          }
       }
 
-      template<typename T>
-      void FillHistogramImpl(const ROOT::Experimental::RFieldBase &field, ROOT::Experimental::RNTupleView<T, false> &view)
+      template <typename T>
+      void FillHistogramImpl(const ROOT::Experimental::RFieldBase &field, ROOT::Experimental::RNTupleView<T> &view)
       {
          std::string title = "Drawing of RField "s + field.GetFieldName();
 

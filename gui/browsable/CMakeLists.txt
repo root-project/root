@@ -42,13 +42,15 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTBrowsable
 
 # provider for drawing of v7 histograms on RCanvas
 
-ROOT_LINKER_LIBRARY(ROOTHistDrawProvider
-     src/RHistDraw7Provider.cxx
-  DEPENDENCIES
-     ROOTBrowsable
-     ROOTGpadv7
-     ROOTHistDraw
-)
+if(root7)
+  ROOT_LINKER_LIBRARY(ROOTHistDrawProvider
+       src/RHistDraw7Provider.cxx
+    DEPENDENCIES
+       ROOTBrowsable
+       ROOTGpadv7
+       ROOTHistDraw
+  )
+endif()
 
 # provider for generic drawing of TObject on TCanvas
 
@@ -62,12 +64,14 @@ ROOT_LINKER_LIBRARY(ROOTObjectDraw6Provider
 
 # provider for generic drawing of TObject on RCanvas
 
-ROOT_LINKER_LIBRARY(ROOTObjectDraw7Provider
-     src/TObjectDraw7Provider.cxx
-  DEPENDENCIES
-     ROOTBrowsable
-     ROOTGpadv7
+if(root7)
+  ROOT_LINKER_LIBRARY(ROOTObjectDraw7Provider
+       src/TObjectDraw7Provider.cxx
+    DEPENDENCIES
+       ROOTBrowsable
+       ROOTGpadv7
 )
+endif()
 
 # provider for browsing of TBranchElement
 
@@ -80,12 +84,14 @@ ROOT_LINKER_LIBRARY(ROOTBranchBrowseProvider
 
 # provider for browsing of TGeo class
 
-ROOT_LINKER_LIBRARY(ROOTGeoBrowseProvider
-     src/TGeoBrowseProvider.cxx
-  DEPENDENCIES
-     ROOTBrowsable
-     Geom
-)
+if(geom)
+  ROOT_LINKER_LIBRARY(ROOTGeoBrowseProvider
+       src/TGeoBrowseProvider.cxx
+    DEPENDENCIES
+       ROOTBrowsable
+       Geom
+  )
+endif()
 
 # provider for drawing of TLeaf on TCanvas
 
@@ -100,39 +106,43 @@ ROOT_LINKER_LIBRARY(ROOTLeafDraw6Provider
 
 # provider for drawing of TLeaf on RCanvas
 
-ROOT_LINKER_LIBRARY(ROOTLeafDraw7Provider
-     src/TLeafDraw7Provider.cxx
-  DEPENDENCIES
-     ROOTBrowsable
-     Tree
-     Hist
-     ROOTGpadv7
-)
+if(root7)
+  ROOT_LINKER_LIBRARY(ROOTLeafDraw7Provider
+       src/TLeafDraw7Provider.cxx
+    DEPENDENCIES
+       ROOTBrowsable
+       Tree
+       Hist
+       ROOTGpadv7
+  )
+endif()
 
-# provider for browsing of RNTuple
+# provider for browsing and drawing of RNTuple
 
-ROOT_LINKER_LIBRARY(ROOTNTupleBrowseProvider
-     src/RNTupleBrowseProvider.cxx
-  DEPENDENCIES
-     ROOTBrowsable
-     ROOTNTuple
-)
+if(root7)
+  ROOT_LINKER_LIBRARY(ROOTNTupleBrowseProvider
+       src/RNTupleBrowseProvider.cxx
+    DEPENDENCIES
+       ROOTBrowsable
+       ROOTNTuple
+  )
 
-ROOT_LINKER_LIBRARY(ROOTNTupleDraw6Provider
-     src/RNTupleDraw6Provider.cxx
-  DEPENDENCIES
-     ROOTBrowsable
-     ROOTNTuple
-     Hist
-     Gpad
-)
+  ROOT_LINKER_LIBRARY(ROOTNTupleDraw6Provider
+       src/RNTupleDraw6Provider.cxx
+    DEPENDENCIES
+       ROOTBrowsable
+       ROOTNTuple
+       Hist
+       Gpad
+  )
 
-ROOT_LINKER_LIBRARY(ROOTNTupleDraw7Provider
-     src/RNTupleDraw7Provider.cxx
-  DEPENDENCIES
-     ROOTBrowsable
-     ROOTNTuple
-     Hist
-     ROOTGpadv7
+  ROOT_LINKER_LIBRARY(ROOTNTupleDraw7Provider
+       src/RNTupleDraw7Provider.cxx
+    DEPENDENCIES
+       ROOTBrowsable
+       ROOTNTuple
+       Hist
+       ROOTGpadv7
 )
+endif()
 

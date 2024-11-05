@@ -9,10 +9,10 @@
 #include "CustomStructUtil.hxx"
 #include "ntupleutil_test.hxx"
 
+using ROOT::RNTuple;
 using ROOT::Experimental::EColumnType;
 using ROOT::Experimental::RField;
 using ROOT::Experimental::RFieldBase;
-using ROOT::Experimental::RNTuple;
 using ROOT::Experimental::RNTupleInspector;
 using ROOT::Experimental::RNTupleModel;
 using ROOT::Experimental::RNTupleWriteOptions;
@@ -238,7 +238,7 @@ TEST(RNTupleInspector, SizeProjectedFields)
       muonPt->emplace_back(1.0);
       muonPt->emplace_back(2.0);
 
-      auto nMuons = RFieldBase::Create("nMuons", "ROOT::Experimental::RNTupleCardinality<std::uint64_t>").Unwrap();
+      auto nMuons = RFieldBase::Create("nMuons", "ROOT::RNTupleCardinality<std::uint64_t>").Unwrap();
       model->AddProjectedField(std::move(nMuons), [](const std::string &) { return "muonPt"; });
 
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
@@ -534,7 +534,8 @@ TEST(RNTupleInspector, PageSizeDistribution)
 
       auto writeOptions = RNTupleWriteOptions();
       writeOptions.SetCompression(505);
-      writeOptions.SetApproxUnzippedPageSize(64);
+      writeOptions.SetInitialNElementsPerPage(1);
+      writeOptions.SetMaxUnzippedPageSize(64);
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), writeOptions);
 
       for (unsigned i = 0; i < 100; ++i) {
@@ -773,7 +774,7 @@ TEST(RNTupleInspector, MultiColumnRepresentations)
       writer->Fill();
       writer->CommitCluster();
       ROOT::Experimental::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
-         const_cast<RFieldBase &>(writer->GetModel().GetField("px")), 1);
+         const_cast<RFieldBase &>(writer->GetModel().GetConstField("px")), 1);
       writer->Fill();
    }
 

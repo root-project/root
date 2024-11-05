@@ -605,14 +605,14 @@ poissonIntegral(int code, double mu, double x, double integrandMin, double integ
 
       // Sum from 0 to just before the bin outside of the range.
       if (ixMin == 0) {
-         return ROOT::Math::gamma_cdf_c(mu, ixMax, 1);
+         return ROOT::Math::inc_gamma_c(ixMax, mu);
       } else {
          // If necessary, subtract from 0 to the beginning of the range
          if (ixMin <= mu) {
-            return ROOT::Math::gamma_cdf_c(mu, ixMax, 1) - ROOT::Math::gamma_cdf_c(mu, ixMin, 1);
+            return ROOT::Math::inc_gamma_c(ixMax, mu) - ROOT::Math::inc_gamma_c(ixMin, mu);
          } else {
             // Avoid catastrophic cancellation in the high tails:
-            return ROOT::Math::gamma_cdf(mu, ixMin, 1) - ROOT::Math::gamma_cdf(mu, ixMax, 1);
+            return ROOT::Math::inc_gamma(ixMin, mu) - ROOT::Math::inc_gamma(ixMax, mu);
          }
       }
    }
@@ -621,7 +621,7 @@ poissonIntegral(int code, double mu, double x, double integrandMin, double integ
    // negative ix does not need protection (gamma returns 0.0)
    const double ix = 1 + x;
 
-   return ROOT::Math::gamma_cdf(integrandMax, ix, 1.0) - ROOT::Math::gamma_cdf(integrandMin, ix, 1.0);
+   return ROOT::Math::inc_gamma(ix, integrandMax) - ROOT::Math::inc_gamma(ix, integrandMin);
 }
 
 inline double logNormalIntegral(double xMin, double xMax, double m0, double k)

@@ -42,7 +42,7 @@ NVPTXTargetInfo::NVPTXTargetInfo(const llvm::Triple &Triple,
   PTXVersion = 32;
   for (const StringRef Feature : Opts.FeaturesAsWritten) {
     int PTXV;
-    if (!Feature.startswith("+ptx") ||
+    if (!Feature.starts_with("+ptx") ||
         Feature.drop_front(4).getAsInteger(10, PTXV))
       continue;
     PTXVersion = PTXV; // TODO: should it be max(PTXVersion, PTXV)?
@@ -73,7 +73,7 @@ NVPTXTargetInfo::NVPTXTargetInfo(const llvm::Triple &Triple,
   // types.
   llvm::Triple HostTriple(Opts.HostTriple);
   if (!HostTriple.isNVPTX())
-    HostTarget.reset(AllocateTarget(llvm::Triple(Opts.HostTriple), Opts));
+    HostTarget = AllocateTarget(llvm::Triple(Opts.HostTriple), Opts);
 
   // If no host target, make some guesses about the data layout and return.
   if (!HostTarget) {
@@ -93,6 +93,8 @@ NVPTXTargetInfo::NVPTXTargetInfo(const llvm::Triple &Triple,
     default:
       llvm_unreachable("TargetPointerWidth must be 32 or 64");
     }
+
+    MaxAtomicInlineWidth = TargetPointerWidth;
     return;
   }
 
@@ -166,7 +168,7 @@ void NVPTXTargetInfo::getTargetDefines(const LangOptions &Opts,
                                        MacroBuilder &Builder) const {
   Builder.defineMacro("__PTX__");
   Builder.defineMacro("__NVPTX__");
-  if (Opts.CUDAIsDevice || Opts.OpenMPIsDevice) {
+  if (Opts.CUDAIsDevice || Opts.OpenMPIsTargetDevice || !HostTarget) {
     // Set __CUDA_ARCH__ for the GPU specified.
     std::string CUDAArchCode = [this] {
       switch (GPU) {
@@ -193,6 +195,8 @@ void NVPTXTargetInfo::getTargetDefines(const LangOptions &Opts,
       case CudaArch::GFX90a:
       case CudaArch::GFX90c:
       case CudaArch::GFX940:
+      case CudaArch::GFX941:
+      case CudaArch::GFX942:
       case CudaArch::GFX1010:
       case CudaArch::GFX1011:
       case CudaArch::GFX1012:
@@ -208,6 +212,10 @@ void NVPTXTargetInfo::getTargetDefines(const LangOptions &Opts,
       case CudaArch::GFX1101:
       case CudaArch::GFX1102:
       case CudaArch::GFX1103:
+      case CudaArch::GFX1150:
+      case CudaArch::GFX1151:
+      case CudaArch::GFX1200:
+      case CudaArch::GFX1201:
       case CudaArch::Generic:
       case CudaArch::LAST:
         break;
@@ -254,11 +262,14 @@ void NVPTXTargetInfo::getTargetDefines(const LangOptions &Opts,
       case CudaArch::SM_89:
         return "890";
       case CudaArch::SM_90:
+      case CudaArch::SM_90a:
         return "900";
       }
       llvm_unreachable("unhandled CudaArch");
     }();
     Builder.defineMacro("__CUDA_ARCH__", CUDAArchCode);
+    if (GPU == CudaArch::SM_90a)
+      Builder.defineMacro("__CUDA_ARCH_FEAT_SM90_ALL", "1");
   }
 }
 

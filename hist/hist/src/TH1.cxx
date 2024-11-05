@@ -612,7 +612,7 @@ ClassImp(TH1);
 ////////////////////////////////////////////////////////////////////////////////
 /// Histogram default constructor.
 
-TH1::TH1(): TNamed(), TAttLine(), TAttFill(), TAttMarker()
+TH1::TH1()
 {
    fDirectory     = nullptr;
    fFunctions     = new TList;
@@ -695,7 +695,7 @@ TH1::~TH1()
 
 
 TH1::TH1(const char *name,const char *title,Int_t nbins,Double_t xlow,Double_t xup)
-    :TNamed(name,title), TAttLine(), TAttFill(), TAttMarker()
+    :TNamed(name,title)
 {
    Build();
    if (nbins <= 0) {Warning("TH1","nbins is <=0 - set to nbins = 1"); nbins = 1; }
@@ -717,7 +717,7 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,Double_t xlow,Double_t x
 ///            This is an array of type float and size nbins+1
 
 TH1::TH1(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
-    :TNamed(name,title), TAttLine(), TAttFill(), TAttMarker()
+    :TNamed(name,title)
 {
    Build();
    if (nbins <= 0) {Warning("TH1","nbins is <=0 - set to nbins = 1"); nbins = 1; }
@@ -739,7 +739,7 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
 ///            This is an array of type double and size nbins+1
 
 TH1::TH1(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
-    :TNamed(name,title), TAttLine(), TAttFill(), TAttMarker()
+    :TNamed(name,title)
 {
    Build();
    if (nbins <= 0) {Warning("TH1","nbins is <=0 - set to nbins = 1"); nbins = 1; }
@@ -4531,30 +4531,35 @@ TVirtualHistPainter *TH1::GetPainter(Option_t *option)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute Quantiles for this histogram
-/// Quantile x_q of a probability distribution Function F is defined as
+/// Quantile x_p := Q(p) is defined as the value x_p such that the cumulative
+/// probability distribution Function F of variable X yields:
 ///
 /// ~~~ {.cpp}
-///      F(x_q) = q with 0 <= q <= 1.
+///      F(x_p) = Pr(X <= x_p) = p with 0 <= p <= 1.
+///      x_p = Q(p) = F_inv(p)
 /// ~~~
 ///
 /// For instance the median x_0.5 of a distribution is defined as that value
-/// of the random variable for which the distribution function equals 0.5:
+/// of the random variable X for which the distribution function equals 0.5:
 ///
 /// ~~~ {.cpp}
-///      F(x_0.5) = Probability(x < x_0.5) = 0.5
+///      F(x_0.5) = Probability(X < x_0.5) = 0.5
+///      x_0.5 = Q(0.5)
 /// ~~~
 ///
+/// \author Eddy Offermann
 /// code from Eddy Offermann, Renaissance
 ///
-/// \param[in] nprobSum maximum size of array q and size of array probSum (if given)
-/// \param[in] probSum array of positions where quantiles will be computed.
-///   - if probSum is null, probSum will be computed internally and will
-///     have a size = number of bins + 1 in h. it will correspond to the
+/// \param[in] n maximum size of array xp and size of array p (if given)
+/// \param[out] xp array to be filled with nq quantiles evaluated at (p). Memory has to be preallocated by caller.
+/// If p is null (default value), then xp is actually set to the (first n) histogram bin edges
+/// \param[in] p array of cumulative probabilities where quantiles should be evaluated.
+///   - if p is null, the CDF of the histogram will be used instead as array, and will
+///     have a size = number of bins + 1 in h. It will correspond to the
 ///     quantiles calculated at the lowest edge of the histogram (quantile=0) and
-///     all the upper edges of the bins.
-///   - if probSum is not null, it is assumed to contain at least nprobSum values.
-/// \param[out] q array q filled with nq quantiles
-/// \return value nq (<=nprobSum) with the number of quantiles computed
+///     all the upper edges of the bins. (nbins might be > n).
+///   - if p is not null, it is assumed to contain at least n values.
+/// \return value nq (<=n) with the number of quantiles computed
 ///
 /// Note that the Integral of the histogram is automatically recomputed
 /// if the number of entries is different of the number of entries when
@@ -4562,7 +4567,7 @@ TVirtualHistPainter *TH1::GetPainter(Option_t *option)
 /// functions to fill your histogram, but SetBinContent, you must call
 /// TH1::ComputeIntegral before calling this function.
 ///
-/// Getting quantiles q from two histograms and storing results in a TGraph,
+/// Getting quantiles xp from two histograms and storing results in a TGraph,
 /// a so-called QQ-plot
 ///
 /// ~~~ {.cpp}
@@ -4580,11 +4585,13 @@ TVirtualHistPainter *TH1::GetPainter(Option_t *option)
 ///    const Int_t nq = 20;
 ///    TH1F *h = new TH1F("h","demo quantiles",100,-3,3);
 ///    h->FillRandom("gaus",5000);
+///    h->GetXaxis()->SetTitle("x");
+///    h->GetYaxis()->SetTitle("Counts");
 ///
-///    Double_t xq[nq];  // position where to compute the quantiles in [0,1]
-///    Double_t yq[nq];  // array to contain the quantiles
-///    for (Int_t i=0;i<nq;i++) xq[i] = Float_t(i+1)/nq;
-///    h->GetQuantiles(nq,yq,xq);
+///    Double_t p[nq];  // probabilities where to evaluate the quantiles in [0,1]
+///    Double_t xp[nq]; // array of positions X to store the resulting quantiles
+///    for (Int_t i=0;i<nq;i++) p[i] = Float_t(i+1)/nq;
+///    h->GetQuantiles(nq,xp,p);
 ///
 ///    //show the original histogram in the top pad
 ///    TCanvas *c1 = new TCanvas("c1","demo quantiles",10,10,700,900);
@@ -4595,13 +4602,15 @@ TVirtualHistPainter *TH1::GetPainter(Option_t *option)
 ///    // show the quantiles in the bottom pad
 ///    c1->cd(2);
 ///    gPad->SetGrid();
-///    TGraph *gr = new TGraph(nq,xq,yq);
+///    TGraph *gr = new TGraph(nq,p,xp);
 ///    gr->SetMarkerStyle(21);
+///    gr->GetXaxis()->SetTitle("p");
+///    gr->GetYaxis()->SetTitle("x");
 ///    gr->Draw("alp");
 /// }
 /// ~~~
 
-Int_t TH1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum)
+Int_t TH1::GetQuantiles(Int_t n, Double_t *xp, const Double_t *p)
 {
    if (GetDimension() > 1) {
       Error("GetQuantiles","Only available for 1-d histograms");
@@ -4613,9 +4622,9 @@ Int_t TH1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum)
    if (fIntegral[nbins+1] != fEntries) ComputeIntegral();
 
    Int_t i, ibin;
-   Double_t *prob = (Double_t*)probSum;
-   Int_t nq = nprobSum;
-   if (probSum == nullptr) {
+   Double_t *prob = (Double_t*)p;
+   Int_t nq = n;
+   if (p == nullptr) {
       nq = nbins+1;
       prob = new Double_t[nq];
       prob[0] = 0;
@@ -4630,12 +4639,12 @@ Int_t TH1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum)
          if (fIntegral[ibin+2] == prob[i]) ibin++;
          else break;
       }
-      q[i] = GetBinLowEdge(ibin+1);
+      xp[i] = GetBinLowEdge(ibin+1);
       const Double_t dint = fIntegral[ibin+1]-fIntegral[ibin];
-      if (dint > 0) q[i] += GetBinWidth(ibin+1)*(prob[i]-fIntegral[ibin])/dint;
+      if (dint > 0) xp[i] += GetBinWidth(ibin+1)*(prob[i]-fIntegral[ibin])/dint;
    }
 
-   if (!probSum) delete [] prob;
+   if (!p) delete [] prob;
    return nq;
 }
 
@@ -9463,7 +9472,7 @@ ClassImp(TH1C);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TH1C::TH1C(): TH1(), TArrayC()
+TH1C::TH1C()
 {
    fDimension = 1;
    SetBinsLength(3);
@@ -9649,7 +9658,7 @@ ClassImp(TH1S);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TH1S::TH1S(): TH1(), TArrayS()
+TH1S::TH1S()
 {
    fDimension = 1;
    SetBinsLength(3);
@@ -9836,7 +9845,7 @@ ClassImp(TH1I);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TH1I::TH1I(): TH1(), TArrayI()
+TH1I::TH1I()
 {
    fDimension = 1;
    SetBinsLength(3);
@@ -10024,7 +10033,7 @@ ClassImp(TH1L);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TH1L::TH1L(): TH1(), TArrayL64()
+TH1L::TH1L()
 {
    fDimension = 1;
    SetBinsLength(3);
@@ -10211,7 +10220,7 @@ ClassImp(TH1F);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TH1F::TH1F(): TH1(), TArrayF()
+TH1F::TH1F()
 {
    fDimension = 1;
    SetBinsLength(3);
@@ -10392,7 +10401,7 @@ ClassImp(TH1D);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TH1D::TH1D(): TH1(), TArrayD()
+TH1D::TH1D()
 {
    fDimension = 1;
    SetBinsLength(3);

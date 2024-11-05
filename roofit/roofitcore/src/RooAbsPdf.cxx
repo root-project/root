@@ -185,14 +185,14 @@ namespace {
 inline double getLog(double prob, RooAbsReal const *caller)
 {
 
-   if (std::abs(prob) > 1e6) {
-      oocoutW(caller, Eval) << "RooAbsPdf::getLogVal(" << caller->GetName()
-                            << ") WARNING: top-level pdf has a large value: " << prob << std::endl;
-   }
-
    if (prob < 0) {
       caller->logEvalError("getLogVal() top-level p.d.f evaluates to a negative number");
       return RooNaNPacker::packFloatIntoNaN(-prob);
+   }
+
+   if (std::isinf(prob)) {
+      oocoutW(caller, Eval) << "RooAbsPdf::getLogVal(" << caller->GetName()
+                            << ") WARNING: top-level pdf has an infinite value" << std::endl;
    }
 
    if (prob == 0) {
@@ -2560,23 +2560,50 @@ RooFit::OwningPtr<RooAbsReal> RooAbsPdf::createScanCdf(const RooArgSet& iset, co
 /// and returns a RooArgSet with all those terms.
 
 RooArgSet* RooAbsPdf::getAllConstraints(const RooArgSet& observables, RooArgSet& constrainedParams,
-                                        bool stripDisconnected, bool removeConstraintsFromPdf) const
+                                        bool stripDisconnected) const
 {
-  RooArgSet* ret = new RooArgSet("AllConstraints") ;
+  RooArgSet constraints;
+  RooArgSet pdfParams;
 
   std::unique_ptr<RooArgSet> comps(getComponents());
   for (const auto arg : *comps) {
     auto pdf = dynamic_cast<const RooAbsPdf*>(arg) ;
-    if (pdf && !ret->find(pdf->GetName())) {
+    if (pdf && !constraints.find(pdf->GetName())) {
       std::unique_ptr<RooArgSet> compRet(
-              pdf->getConstraints(observables,constrainedParams,stripDisconnected,removeConstraintsFromPdf));
+              pdf->getConstraints(observables,constrainedParams, pdfParams));
       if (compRet) {
-        ret->add(*compRet,false) ;
+        constraints.add(*compRet,false) ;
       }
     }
   }
 
-  return ret ;
+  RooArgSet conParams;
+
+  // Strip any constraints that are completely decoupled from the other product terms
+  RooArgSet* finalConstraints = new RooArgSet("AllConstraints") ;
+  for(auto * pdf : static_range_cast<RooAbsPdf*>(constraints)) {
+
+    RooArgSet tmp;
+    pdf->getParameters(nullptr, tmp);
+    conParams.add(tmp,true) ;
+
+    if (pdf->dependsOnValue(pdfParams) || !stripDisconnected) {
+      finalConstraints->add(*pdf) ;
+    } else {
+      coutI(Minimization) << "RooAbsPdf::getAllConstraints(" << GetName() << ") omitting term " << pdf->GetName()
+           << " as constraint term as it does not share any parameters with the other pdfs in product. "
+           << "To force inclusion in likelihood, add an explicit Constrain() argument for the target parameter" << endl ;
+    }
+  }
+
+  // Now remove from constrainedParams all parameters that occur exclusively in constraint term and not in regular pdf term
+
+  RooArgSet cexl;
+  conParams.selectCommon(constrainedParams, cexl);
+  cexl.remove(pdfParams,true,true) ;
+  constrainedParams.remove(cexl,true,true) ;
+
+  return finalConstraints ;
 }
 
 

@@ -164,6 +164,9 @@ static PyTypeObject PyNullPtr_t_Type = {
 #if PY_VERSION_HEX >= 0x030c0000
     , 0                  // tp_watched
 #endif
+#if PY_VERSION_HEX >= 0x030d0000
+    , 0                  // tp_versions_used
+#endif
 };
 
 
@@ -204,19 +207,30 @@ static PyTypeObject PyDefault_t_Type = {
 #if PY_VERSION_HEX >= 0x030c0000
     , 0                 // tp_watched
 #endif
+#if PY_VERSION_HEX >= 0x030d0000
+    , 0                 // tp_versions_used
+#endif
 };
 
 namespace {
 
-PyObject _CPyCppyy_NullPtrStruct = {
-    _PyObject_EXTRA_INIT
-    1, &PyNullPtr_t_Type
-};
+PyObject _CPyCppyy_NullPtrStruct = {_PyObject_EXTRA_INIT
+// In 3.12.0-beta this field was changed from a ssize_t to a union
+#if PY_VERSION_HEX >= 0x30c00b1
+                                    {1},
+#else
+                                    1,
+#endif
+                                    &PyNullPtr_t_Type};
 
-PyObject _CPyCppyy_DefaultStruct = {
-    _PyObject_EXTRA_INIT
-    1, &PyDefault_t_Type
-};
+PyObject _CPyCppyy_DefaultStruct = {_PyObject_EXTRA_INIT
+// In 3.12.0-beta this field was changed from a ssize_t to a union
+#if PY_VERSION_HEX >= 0x30c00b1
+                                    {1},
+#else
+                                    1,
+#endif
+                                    &PyDefault_t_Type};
 
 // TODO: refactor with Converters.cxx
 struct CPyCppyy_tagCDataObject {       // non-public (but stable)
@@ -236,10 +250,15 @@ namespace CPyCppyy {
     PyObject* gSegvException = nullptr;
     PyObject* gIllException  = nullptr;
     PyObject* gAbrtException = nullptr;
-    std::map<std::string, std::vector<PyObject*>> gPythonizations;
     std::set<Cppyy::TCppType_t> gPinnedTypes;
     std::ostringstream gCapturedError;
     std::streambuf* gOldErrorBuffer = nullptr;
+
+    std::map<std::string, std::vector<PyObject*>> &pythonizations()
+    {
+       static std::map<std::string, std::vector<PyObject*>> pyzMap;
+       return pyzMap;
+    }
 }
 
 
@@ -824,7 +843,7 @@ static PyObject* AddPythonization(PyObject*, PyObject* args)
     }
 
     Py_INCREF(pythonizor);
-    gPythonizations[scope].push_back(pythonizor);
+    pythonizations()[scope].push_back(pythonizor);
 
     Py_RETURN_NONE;
 }
@@ -838,8 +857,9 @@ static PyObject* RemovePythonization(PyObject*, PyObject* args)
     if (!PyArg_ParseTuple(args, const_cast<char*>("Os"), &pythonizor, &scope))
         return nullptr;
 
-    auto p1 = gPythonizations.find(scope);
-    if (p1 != gPythonizations.end()) {
+    auto &pyzMap = pythonizations();
+    auto p1 = pyzMap.find(scope);
+    if (p1 != pyzMap.end()) {
         auto p2 = std::find(p1->second.begin(), p1->second.end(), pythonizor);
         if (p2 != p1->second.end()) {
             p1->second.erase(p2);

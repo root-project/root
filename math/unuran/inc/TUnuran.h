@@ -91,20 +91,12 @@ public:
    */
    ~TUnuran ();
 
-private:
-   // usually copying is non trivial, so we make this unaccessible
+   // usually copying is non trivial, so we delete this
+   TUnuran(const TUnuran &) = delete;
+   TUnuran & operator = (const TUnuran & rhs) = delete;
+   TUnuran(TUnuran &&) = delete;
+   TUnuran & operator = (TUnuran && rhs) = delete;
 
-   /**
-      Copy constructor
-   */
-   TUnuran(const TUnuran &);
-
-   /**
-      Assignment operator
-   */
-   TUnuran & operator = (const TUnuran & rhs);
-
-public:
    /**
       Initialize with Unuran string API interface.
       See  https://statmath.wu.ac.at/unuran/doc/unuran.html#StringAPI
