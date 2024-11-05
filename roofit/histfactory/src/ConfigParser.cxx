@@ -380,7 +380,8 @@ HistFactory::Measurement ConfigParser::CreateMeasurementFromDriverNode(TXMLNode 
       } else if (curAttrName == "Mode") {
          cout << "\n INFO: Mode attribute is deprecated and no longer supported, will ignore\n";
       } else if (curAttrName == "ExportOnly") {
-         measurement.SetExportOnly(CheckTrueFalse(curAttrValue, "Measurement"));
+         // ignored
+         cxcoutIHF << "The \"ExportOnly\" attribute is ignored it is always \"true\" for any Measurement." << std::endl;
       } else {
          cxcoutEHF << "Found unknown XML attribute in Measurement: " << curAttrName << "\n";
          throw hf_exc();

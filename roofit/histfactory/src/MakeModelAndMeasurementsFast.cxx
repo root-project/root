@@ -20,10 +20,6 @@
 #include "HFMsgService.h"
 
 #include <TFile.h>
-#include <TH1F.h>
-#include <TCanvas.h>
-#include <TStyle.h>
-#include <TLine.h>
 #include <TSystem.h>
 
 #include <string>
@@ -31,8 +27,6 @@
 #include <map>
 #include <fstream>
 #include <sstream>
-
-static void formatFrameForLikelihoodImpl(RooPlot* frame, std::string YTitle);
 
 /** ********************************************************************************************
   \ingroup HistFactory
@@ -90,7 +84,6 @@ RooStats::HistFactory::MakeModelAndMeasurementFast(RooStats::HistFactory::Measur
                                                    HistoToWorkspaceFactoryFast::Configuration const &cfg)
 {
   std::unique_ptr<TFile> outFile;
-  std::ofstream tableFile;
 
   auto& msgSvc = RooMsgService::instance();
   msgSvc.getStream(1).removeTopic(RooFit::ObjectHandling);
@@ -105,8 +98,8 @@ RooStats::HistFactory::MakeModelAndMeasurementFast(RooStats::HistFactory::Measur
     std::ostringstream parameterMessage;
     parameterMessage << "fixing the following parameters:"  << std::endl;
 
-    for(std::vector<std::string>::iterator itr=measurement.GetConstantParams().begin(); itr!=measurement.GetConstantParams().end(); ++itr){
-      parameterMessage << "   " << *itr << '\n';
+    for (auto const &name : measurement.GetConstantParams()) {
+      parameterMessage << "   " << name << '\n';
     }
     cxcoutIHF << parameterMessage.str();
 
@@ -142,9 +135,6 @@ RooStats::HistFactory::MakeModelAndMeasurementFast(RooStats::HistFactory::Measur
     cxcoutIHF << "Creating the output file: " << outputFileName << std::endl;
     outFile = std::make_unique<TFile>(outputFileName.c_str(), "recreate");
 
-    // Create the table file, which holds the table of fitted values and errors
-    tableFile.open(measurement.GetOutputFilePrefix() + "_results.table", std::ios::out | std::ios::app);
-
     cxcoutIHF << "Creating the HistoToWorkspaceFactoryFast factory" << std::endl;
     HistoToWorkspaceFactoryFast factory{measurement, cfg};
 
@@ -152,9 +142,6 @@ RooStats::HistFactory::MakeModelAndMeasurementFast(RooStats::HistFactory::Measur
     // HistoToWorkspaceFactoryFast factory(measurement, rowTitle, outFile);
     cxcoutIHF << "Setting preprocess functions" << std::endl;
     factory.SetFunctionsToPreprocess( measurement.GetPreprocessFunctions() );
-
-    // for results tables
-    tableFile << " " << rowTitle << " &";
 
     // First: Loop to make the individual channels
     for( unsigned int chanItr = 0; chanItr < measurement.GetChannels().size(); ++chanItr ) {
@@ -189,27 +176,6 @@ RooStats::HistFactory::MakeModelAndMeasurementFast(RooStats::HistFactory::Measur
         cxcoutPHF << "Successfully wrote channel to file" << std::endl;
       }
 
-      // Get the Parameter of Interest as a RooRealVar
-      RooRealVar* poi = dynamic_cast<RooRealVar*>(ws_single->var(measurement.GetPOI()));
-
-      // do fit unless exportOnly requested
-      if(! measurement.GetExportOnly()){
-   if(!poi) {
-     cxcoutWHF << "Can't do fit for: " << measurement.GetName()
-          << ", no parameter of interest" << std::endl;
-   } else {
-     if(ws_single->data("obsData")) {
-       FitModelAndPlot(measurement.GetName(), measurement.GetOutputFilePrefix(), *ws_single,
-             ch_name, "obsData",    *outFile, tableFile);
-     } else {
-       FitModelAndPlot(measurement.GetName(), measurement.GetOutputFilePrefix(), *ws_single,
-             ch_name, "asimovData", *outFile, tableFile);
-     }
-   }
-      }
-
-      tableFile << " & ";
-
       channel_workspaces.emplace_back(std::move(ws_single));
     } // End loop over channels
 
@@ -225,9 +191,6 @@ RooStats::HistFactory::MakeModelAndMeasurementFast(RooStats::HistFactory::Measur
     // Configure that workspace
     HistoToWorkspaceFactoryFast::ConfigureWorkspaceForMeasurement("simPdf", ws.get(), measurement);
 
-    // Get the Parameter of interest as a RooRealVar
-    RooRealVar* poi = dynamic_cast<RooRealVar*>(ws->var(measurement.GetPOI()));
-
     {
       std::string CombinedFileName = measurement.GetOutputFilePrefix() + "_combined_"
         + rowTitle + "_model.root";
@@ -242,240 +205,7 @@ RooStats::HistFactory::MakeModelAndMeasurementFast(RooStats::HistFactory::Measur
       measurement.writeToFile( combFile.get() );
     }
 
-    // Fit the combined model
-    if(! measurement.GetExportOnly()){
-      if(!poi) {
-   cxcoutWHF << "Can't do fit for: " << measurement.GetName()
-        << ", no parameter of interest" << std::endl;
-      }
-      else {
-   if(ws->data("obsData")){
-     FitModelAndPlot(measurement.GetName(), measurement.GetOutputFilePrefix(), *ws,"combined",
-           "obsData",    *outFile, tableFile);
-   }
-   else {
-     FitModelAndPlot(measurement.GetName(), measurement.GetOutputFilePrefix(), *ws,"combined",
-           "asimovData", *outFile, tableFile);
-   }
-      }
-    }
-
-    tableFile << " \\\\ \n";
-
   msgSvc.getStream(1).addTopic(RooFit::ObjectHandling);
 
   return RooFit::makeOwningPtr(std::move(ws));
-}
-
-///////////////////////////////////////////////
-/// \deprecated Will be removed in ROOT 6.36. Please write your own plotting code inspired by the hf001 tutorial.
-
-void RooStats::HistFactory::FitModelAndPlot(const std::string &MeasurementName, const std::string &FileNamePrefix,
-                                            RooWorkspace &combined, std::string channel, std::string data_name,
-                                            TFile &outFile, std::ostream &tableStream)
-{
-  using namespace RooFit;
-
-  auto combined_config = static_cast<ModelConfig *>(combined.obj("ModelConfig"));
-  if(!combined_config){
-    cxcoutEHF << "Error: no ModelConfig found in Measurement: "
-         << MeasurementName <<  std::endl;
-    throw hf_exc();
-  }
-
-  RooAbsData* simData = combined.data(data_name);
-  if(!simData){
-    cxcoutEHF << "Error: Failed to get dataset: " << data_name
-         << " in measurement: " << MeasurementName << std::endl;
-    throw hf_exc();
-  }
-
-  const RooArgSet* POIs = combined_config->GetParametersOfInterest();
-  if(!POIs) {
-    cxcoutEHF << "Not Fitting Model for measurement: " << MeasurementName
-         << ", no poi found" << std::endl;
-    // Should I throw an exception here?
-    return;
-  }
-
-  RooAbsPdf* model = combined_config->GetPdf();
-  if( model==nullptr ) {
-    cxcoutEHF << "Error: Failed to find pdf in ModelConfig: " << combined_config->GetName()
-         << std::endl;
-    throw hf_exc();
-  }
-
-  // Save a Snapshot
-  RooArgSet PoiPlusNuisance;
-  if( combined_config->GetNuisanceParameters() ) {
-    PoiPlusNuisance.add( *combined_config->GetNuisanceParameters() );
-  }
-  PoiPlusNuisance.add( *combined_config->GetParametersOfInterest() );
-  combined.saveSnapshot("InitialValues", PoiPlusNuisance);
-
-  ///////////////////////////////////////
-  // Do the fit
-  cxcoutPHF << "\n---------------"
-    << "\nDoing "<< channel << " Fit"
-    << "\n---------------\n\n" << std::endl;
-  const int printLevel = RooMsgService::instance().isActive(nullptr, RooFit::HistFactory, RooFit::DEBUG) ? 1 : -1;
-  model->fitTo(*simData, Minos(true), PrintLevel(printLevel));
-
-  // If there are no parameters of interest,
-  // we exit the function here
-  if( POIs->empty() ) {
-    cxcoutWHF << "WARNING: No POIs found in measurement: " << MeasurementName << std::endl;
-    return;
-  }
-
-  // Loop over all POIs and print their fitted values
-  for (auto const *poi : static_range_cast<RooRealVar *>(*POIs)) {
-    cxcoutIHF << "printing results for " << poi->GetName()
-         << " at " << poi->getVal()<< " high "
-         << poi->getErrorLo() << " low "
-         << poi->getErrorHi() << std::endl;
-  }
-
-  // But we only make detailed plots and tables
-  // for the 'first' POI
-  RooRealVar* poi = static_cast<RooRealVar *>(POIs->first());
-
-  // Print the MINOS errors to the TableFile
-  const auto oldPrecision = tableStream.precision();
-  tableStream.precision(4);
-  tableStream << " " << poi->getErrorLo() << " / " << poi->getErrorHi() << "  ";
-  tableStream.precision(oldPrecision);
-
-  // Make the Profile Likelihood Plot
-  std::unique_ptr<RooAbsReal> nll{model->createNLL(*simData)};
-  std::unique_ptr<RooAbsReal> profile{nll->createProfile(*poi)};
-
-  std::unique_ptr<RooPlot> frame{poi->frame()};
-
-  // Draw the likelihood curve
-  FormatFrameForLikelihood(frame.get());
-  {
-    TCanvas profileLikelihoodCanvas{channel.c_str(), "",800,600};
-    nll->plotOn(frame.get(), ShiftToZero(), LineColor(kRed), LineStyle(kDashed));
-    profile->plotOn(frame.get());
-    frame->SetMinimum(0);
-    frame->SetMaximum(2.);
-    frame->Draw();
-    std::string profilePlotName = FileNamePrefix+"_"+channel+"_"+MeasurementName+"_profileLR.eps";
-    profileLikelihoodCanvas.SaveAs( profilePlotName.c_str() );
-  }
-
-  // Now, we save our results to the 'output' file
-  // (I'm not sure if users actually look into this file,
-  // but adding additional information and useful plots
-  // may make it more attractive)
-
-  // Save to the output file
-  TDirectory* channel_dir = outFile.mkdir(channel.c_str());
-  if( channel_dir == nullptr ) {
-    cxcoutEHF << "Error: Failed to make channel directory: " << channel << std::endl;
-    throw hf_exc();
-  }
-  TDirectory* summary_dir = channel_dir->mkdir("Summary");
-  if( summary_dir == nullptr ) {
-    cxcoutEHF << "Error: Failed to make Summary directory for channel: "
-         << channel << std::endl;
-    throw hf_exc();
-  }
-  summary_dir->cd();
-
-  // Save a graph of the profile likelihood curve
-  RooCurve* curve=frame->getCurve();
-  Int_t curve_N=curve->GetN();
-  double* curve_x=curve->GetX();
-
-  std::vector<double> x_arr(curve_N);
-  std::vector<double> y_arr_nll(curve_N);
-
-  for(int i=0; i<curve_N; i++){
-    double f=curve_x[i];
-    poi->setVal(f);
-    x_arr[i]=f;
-    y_arr_nll[i]=nll->getVal();
-  }
-
-  TGraph g{curve_N, x_arr.data(), y_arr_nll.data()};
-  g.SetName( (FileNamePrefix +"_nll").c_str() );
-  g.Write();
-
-  // Finally, restore the initial values
-  combined.loadSnapshot("InitialValues");
-
-}
-
-
-/// \deprecated Will be removed in ROOT 6.36. Please write your own plotting code inspired by the hf001 tutorial.
-
-void RooStats::HistFactory::FitModel(RooWorkspace * combined, std::string data_name )
-{
-   using namespace RooFit;
-
-    cxcoutIHF << "In Fit Model" << std::endl;
-    ModelConfig * combined_config = static_cast<ModelConfig *>(combined->obj("ModelConfig"));
-    if(!combined_config){
-      cxcoutEHF << "no model config " << "ModelConfig" << " exiting" << std::endl;
-      return;
-    }
-
-    RooAbsData* simData = combined->data(data_name);
-    if(!simData){
-      cxcoutEHF << "no data " << data_name << " exiting" << std::endl;
-      return;
-    }
-
-    const RooArgSet * POIs=combined_config->GetParametersOfInterest();
-    if(!POIs){
-      cxcoutEHF << "no poi " << data_name << " exiting" << std::endl;
-      return;
-    }
-
-    RooAbsPdf* model=combined_config->GetPdf();
-    model->fitTo(*simData, Minos(true), PrintLevel(1));
-
-  }
-
-void formatFrameForLikelihoodImpl(RooPlot* frame, std::string YTitle)
-{
-   using namespace RooFit;
-
-    gStyle->SetCanvasBorderMode(0);
-    gStyle->SetPadBorderMode(0);
-    // gStyle->SetPadColor(0);
-    // gStyle->SetCanvasColor(255);
-    // gStyle->SetTitleFillColor(255);
-    // gStyle->SetFrameFillColor(0);
-    // gStyle->SetStatColor(255);
-
-    RooAbsRealLValue* var = frame->getPlotVar();
-    double xmin = var->getMin();
-    double xmax = var->getMax();
-
-    frame->SetTitle("");
-    //      frame->GetXaxis()->SetTitle(XTitle.c_str());
-    frame->GetXaxis()->SetTitle(var->GetTitle());
-    frame->GetYaxis()->SetTitle(YTitle.c_str());
-    frame->SetMaximum(2.);
-    frame->SetMinimum(0.);
-    TLine * line = new TLine(xmin,.5,xmax,.5);
-    line->SetLineColor(kGreen);
-    TLine * line90 = new TLine(xmin,2.71/2.,xmax,2.71/2.);
-    line90->SetLineColor(kGreen);
-    TLine * line95 = new TLine(xmin,3.84/2.,xmax,3.84/2.);
-    line95->SetLineColor(kGreen);
-    frame->addObject(line);
-    frame->addObject(line90);
-    frame->addObject(line95);
-}
-
-/// \deprecated Will be removed in ROOT 6.36. Please write your own plotting code inspired by the hf001 tutorial.
-
-void RooStats::HistFactory::FormatFrameForLikelihood(RooPlot* frame, std::string /*XTitle*/,
-                       std::string YTitle)
-{
-   formatFrameForLikelihoodImpl(frame, YTitle);
 }

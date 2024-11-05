@@ -777,25 +777,6 @@ bool RooAbsArg::getObservables(const RooAbsCollection* dataList, RooArgSet& outp
 }
 
 
-/// \deprecated Use getObservables()
-RooFit::OwningPtr<RooArgSet> RooAbsArg::getDependents(const RooArgSet &set) const
-{
-   return getObservables(set);
-}
-
-/// \deprecated Use getObservables()
-RooFit::OwningPtr<RooArgSet> RooAbsArg::getDependents(const RooAbsData *set) const
-{
-   return getObservables(set);
-}
-
-/// \deprecated Use getObservables()
-RooFit::OwningPtr<RooArgSet> RooAbsArg::getDependents(const RooArgSet *depList) const
-{
-   return getObservables(depList);
-}
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a RooArgSet with all components (branch nodes) of the
 /// expression tree headed by this object.

@@ -23,8 +23,6 @@
 #include "RooStats/HistFactory/Channel.h"
 #include "RooStats/HistFactory/Asimov.h"
 
-#include <ROOT/RConfig.hxx> // for the R__DEPRECATED macro
-
 class TFile;
 
 namespace RooStats{
@@ -96,22 +94,6 @@ public:
   void SetBinHigh ( int BinHigh ) { fBinHigh = BinHigh; }
   int GetBinLow() { return fBinLow; }
   int GetBinHigh() { return fBinHigh; }
-
-  /// Do not produce any plots or tables, just save the model.
-  ///
-  /// \deprecated Will be removed in ROOT 6.36. ExportOnly() == true is the default since ROOT 6.34 and it can't be disabled anymore in 6.36.
-  void SetExportOnly( bool ExportOnly )
-#ifndef ROOFIT_BUILDS_ITSELF
-  R__DEPRECATED(6,36, "ExportOnly() == true is the default since ROOT 6.34 and it can't be disabled anymore in 6.36.")
-#endif
-  { fExportOnly = ExportOnly; }
-
-  /// \deprecated Will be removed in ROOT 6.36. ExportOnly() == true is the default since ROOT 6.34 and it can't be disabled anymore in 6.36.
-  bool GetExportOnly()
-#ifndef ROOFIT_BUILDS_ITSELF
-  R__DEPRECATED(6,36, "ExportOnly() == true is the default since ROOT 6.34 and it can't be disabled anymore in 6.36.")
-#endif
-  { return fExportOnly; }
 
   void PrintTree( std::ostream& = std::cout ); /// Print to a stream
   void PrintXML( std::string Directory="", std::string NewOutputPrefix="" );
