@@ -573,7 +573,7 @@ sap.ui.define([
             this.axis.add(ss);
          }
 
-         let url_base = this.eve_path + 'sdf-fonts/LiberationSans-Regular';
+         let url_base = this.eve_path + 'sdf-fonts/LiberationSerif-Regular';
          this.tex_cache.deliver_font(url_base,
             (texture, font_metrics) => {
                let diag = new RC.Vector3;
