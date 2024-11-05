@@ -53,6 +53,9 @@ elif [[ "$1" == "--as-listener--" ]] ; then
    #remember processid to be able kill it
    nc_procid=$!
 
+   # protect socket and log file from reading
+   chmod 0700 $listener_socket $listener_socket.log
+
    # remove netcat listening on socket
    trap "kill -SIGINT $nc_procid >/dev/null 2>&1; rm -f $listener_socket.log" 0 1 2 3 6
 
@@ -158,15 +161,14 @@ else
 
    listener_processid=$!
 
-   # start ssh
+   # by the exit kill listener and remove temporary files
+   trap "kill -SIGINT $listener_processid > /dev/null 2>&1; rm -f $listener_local $listener_local.log $listener_remote $root_socket" 0 1 2 3 6
+
+   # starting ssh
 
    if [[ "x$ssh_command" == "x" ]] ; then
       ssh_command="\$SHELL"
    fi
-
-   # by the exit kill listener and remove temporary files
-   trap "kill -SIGINT $listener_processid > /dev/null 2>&1; rm -f $listener_local $listener_local.log $listener_remote $root_socket" 0 1 2 3 6
-
 
    ssh -t -R $listener_remote:$listener_local -L $localport:$root_socket $ssh_destination $ssh_args \
    "chmod 0700 $listener_remote; export ROOT_WEBDISPLAY=server; export ROOT_LISTENER_SOCKET=$listener_remote; export ROOT_WEBGUI_SOCKET=$root_socket; $ssh_command; rm -f $listener_remote $root_socket"
