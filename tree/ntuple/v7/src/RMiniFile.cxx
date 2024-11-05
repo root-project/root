@@ -1109,6 +1109,8 @@ std::unique_ptr<ROOT::Experimental::Internal::RNTupleFileWriter>
 ROOT::Experimental::Internal::RNTupleFileWriter::Append(std::string_view ntupleName, TFile &file,
                                                         std::uint64_t maxKeySize)
 {
+   assert(file.IsBinary());
+
    auto writer = std::unique_ptr<RNTupleFileWriter>(new RNTupleFileWriter(ntupleName, maxKeySize));
    writer->fFileProper.fFile = &file;
    return writer;

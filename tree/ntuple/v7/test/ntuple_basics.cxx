@@ -765,3 +765,13 @@ TEST(RNTupleWriter, ForbidModelWithSubfields)
                   testing::HasSubstr("cannot create an RNTupleWriter from a model with registered subfields"));
    }
 }
+
+TEST(RNTupleWriter, ForbidNonRootTFiles)
+{
+   FileRaii fileGuard("test_ntuple_writer_forbid_xml.xml");
+
+   auto model = RNTupleModel::Create();
+   auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+   // Opening an XML TFile should fail
+   EXPECT_THROW(RNTupleWriter::Append(std::move(model), "ntpl", *file), RException);
+}
