@@ -90,6 +90,15 @@ inline double gaussian(double x, double mean, double sigma)
    return std::exp(-0.5 * arg * arg / (sig * sig));
 }
 
+inline double product(double const *factors, std::size_t nFactors)
+{
+   double out = 1.0;
+   for (std::size_t i = 0; i < nFactors; ++i) {
+      out *= factors[i];
+   }
+   return out;
+}
+
 // RooRatio evaluate function.
 inline double ratio(double numerator, double denominator)
 {
@@ -164,6 +173,26 @@ inline unsigned int getUniformBinning(double low, double high, double val, unsig
 {
    double binWidth = (high - low) / numBins;
    return val >= high ? numBins - 1 : std::abs((val - low) / binWidth);
+}
+
+inline double interpolate1d(double low, double high, double val, unsigned int numBins, double const* vals)
+{
+   double binWidth = (high - low) / numBins;
+   int idx = val >= high ? numBins - 1 : std::abs((val - low) / binWidth);
+
+   // interpolation
+   double central = low + (idx + 0.5) * binWidth;
+   if (val > low + 0.5 * binWidth && val < high - 0.5 * binWidth) {
+      double slope;
+      if (val < central) {
+          slope = vals[idx] - vals[idx - 1];
+      } else {
+          slope = vals[idx + 1] - vals[idx];
+      }
+      return vals[idx] + slope * (val - central) / binWidth;
+   }
+
+   return vals[idx];
 }
 
 inline double poisson(double x, double par)
@@ -249,9 +278,12 @@ inline double flexibleInterpSingle(unsigned int code, double low, double high, d
          // interpolate 6th degree exp
          double x0 = boundary;
 
+         high /= nominal;
+         low /= nominal;
+
          // GHL: Swagato's suggestions
-         double powUp = std::pow(high / nominal, x0);
-         double powDown = std::pow(low / nominal, x0);
+         double powUp = std::pow(high, x0);
+         double powDown = std::pow(low, x0);
          double logHi = std::log(high);
          double logLo = std::log(low);
          double powUpLog = high <= 0.0 ? 0.0 : powUp * logHi;
@@ -285,16 +317,15 @@ inline double flexibleInterpSingle(unsigned int code, double low, double high, d
    return 0.0;
 }
 
-template <bool cutoff = true>
-inline double flexibleInterp(unsigned int code, double *params, unsigned int n, double *low, double *high,
-                             double boundary, double nominal)
+inline double flexibleInterp(unsigned int code, double const *params, unsigned int n, double const *low,
+                             double const *high, double boundary, double nominal, int doCutoff)
 {
    double total = nominal;
    for (std::size_t i = 0; i < n; ++i) {
       total += flexibleInterpSingle(code, low[i], high[i], boundary, nominal, params[i], total);
    }
 
-   return cutoff && total <= 0 ? TMath::Limits<double>::Min() : total;
+   return doCutoff && total <= 0 ? TMath::Limits<double>::Min() : total;
 }
 
 inline double landau(double x, double mu, double sigma)
@@ -544,17 +575,6 @@ inline double chebychevIntegral(double const *coeffs, unsigned int nCoeffs, doub
    return halfrange * sum;
 }
 
-// Clad does not like std::max and std::min so redefined here for simplicity.
-inline double max(double x, double y)
-{
-   return x >= y ? x : y;
-}
-
-inline double min(double x, double y)
-{
-   return x <= y ? x : y;
-}
-
 // The last param should be of type bool but it is not as that causes some issues with Cling for some reason...
 inline double
 poissonIntegral(int code, double mu, double x, double integrandMin, double integrandMax, unsigned int protectNegative)
@@ -566,7 +586,7 @@ poissonIntegral(int code, double mu, double x, double integrandMin, double integ
    if (code == 1) {
       // Implement integral over x as summation. Add special handling in case
       // range boundaries are not on integer values of x
-      integrandMin = max(0, integrandMin);
+      integrandMin = std::max(0., integrandMin);
 
       if (integrandMax < 0. || integrandMax < integrandMin) {
          return 0;
@@ -575,24 +595,24 @@ poissonIntegral(int code, double mu, double x, double integrandMin, double integ
       // If the limits are more than many standard deviations away from the mean,
       // we might as well return the integral of the full Poisson distribution to
       // save computing time.
-      if (integrandMin < max(mu - delta, 0.0) && integrandMax > mu + delta) {
+      if (integrandMin < std::max(mu - delta, 0.0) && integrandMax > mu + delta) {
          return 1.;
       }
 
       // The range as integers. ixMin is included, ixMax outside.
       const unsigned int ixMin = integrandMin;
-      const unsigned int ixMax = min(integrandMax + 1, (double)std::numeric_limits<unsigned int>::max());
+      const unsigned int ixMax = std::min(integrandMax + 1, (double)std::numeric_limits<unsigned int>::max());
 
       // Sum from 0 to just before the bin outside of the range.
       if (ixMin == 0) {
-         return ROOT::Math::gamma_cdf_c(mu, ixMax, 1);
+         return ROOT::Math::inc_gamma_c(ixMax, mu);
       } else {
          // If necessary, subtract from 0 to the beginning of the range
          if (ixMin <= mu) {
-            return ROOT::Math::gamma_cdf_c(mu, ixMax, 1) - ROOT::Math::gamma_cdf_c(mu, ixMin, 1);
+            return ROOT::Math::inc_gamma_c(ixMax, mu) - ROOT::Math::inc_gamma_c(ixMin, mu);
          } else {
             // Avoid catastrophic cancellation in the high tails:
-            return ROOT::Math::gamma_cdf(mu, ixMin, 1) - ROOT::Math::gamma_cdf(mu, ixMax, 1);
+            return ROOT::Math::inc_gamma(ixMin, mu) - ROOT::Math::inc_gamma(ixMax, mu);
          }
       }
    }
@@ -601,7 +621,7 @@ poissonIntegral(int code, double mu, double x, double integrandMin, double integ
    // negative ix does not need protection (gamma returns 0.0)
    const double ix = 1 + x;
 
-   return ROOT::Math::gamma_cdf(integrandMax, ix, 1.0) - ROOT::Math::gamma_cdf(integrandMin, ix, 1.0);
+   return ROOT::Math::inc_gamma(ix, integrandMax) - ROOT::Math::inc_gamma(ix, integrandMin);
 }
 
 inline double logNormalIntegral(double xMin, double xMax, double m0, double k)

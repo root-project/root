@@ -162,10 +162,11 @@ PyObject *PyROOT::RPyROOTApplication::InitApplication(PyObject * /*self*/, PyObj
 
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Construct a TApplication for PyROOT.
-/// \param[in] acn Application class name.
+/// \param[in] name Application class name.
 /// \param[in] argc Number of arguments.
 /// \param[in] argv Arguments.
-PyROOT::RPyROOTApplication::RPyROOTApplication(const char *acn, int *argc, char **argv) : TApplication(acn, argc, argv)
+PyROOT::RPyROOTApplication::RPyROOTApplication(const char *name, int *argc, char **argv)
+   : TApplication(name, argc, argv)
 {
    // Save current interpreter context
    gInterpreter->SaveContext();

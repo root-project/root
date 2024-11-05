@@ -12,6 +12,8 @@
 
 #include "Minuit2/FCNBase.h"
 
+#include <ROOT/RSpan.hxx>
+
 #include <vector>
 
 namespace ROOT {
@@ -35,18 +37,11 @@ class FCNAdapter : public FCNBase {
 public:
    FCNAdapter(const Function &f, double up = 1.) : fFunc(f), fUp(up) {}
 
-   ~FCNAdapter() override {}
-
-   double operator()(const std::vector<double> &v) const override { return fFunc.operator()(&v[0]); }
+   double operator()(std::vector<double> const& v) const override { return fFunc.operator()(&v[0]); }
    double operator()(const double *v) const { return fFunc.operator()(v); }
    double Up() const override { return fUp; }
 
    void SetErrorDef(double up) override { fUp = up; }
-
-   // virtual std::vector<double> Gradient(const std::vector<double>&) const;
-
-   // forward interface
-   // virtual double operator()(int npar, double* params,int iflag = 4) const;
 
 private:
    const Function &fFunc;

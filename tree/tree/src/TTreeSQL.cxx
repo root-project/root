@@ -377,7 +377,7 @@ void TTreeSQL::CreateBranch(const TString &branchName, const TString &typeName)
    alterSQL = "ALTER TABLE ";
    alterSQL += fTable.Data();
    alterSQL += " ADD ";
-   alterSQL += branchName.Data();;
+   alterSQL += branchName.Data();
    alterSQL += " ";
    alterSQL += typeName;
    alterSQL += " ";

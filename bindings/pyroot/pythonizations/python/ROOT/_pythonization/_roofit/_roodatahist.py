@@ -11,7 +11,7 @@
 ################################################################################
 
 
-from ._utils import _kwargs_to_roocmdargs, _dict_to_std_map, cpp_signature
+from ._utils import _kwargs_to_roocmdargs, _dict_to_flat_map, cpp_signature
 
 
 class RooDataHist(object):
@@ -25,6 +25,8 @@ class RooDataHist(object):
     dh = ROOT.RooDataHist("dh", "dh", ROOT.RooArgList(x), Import=("SampleA", histo))
     \endcode
     """
+
+    __cpp_name__ = 'RooDataHist'
 
     @cpp_signature(
         [
@@ -40,7 +42,7 @@ class RooDataHist(object):
         # Redefinition of `RooDataHist` constructor for keyword arguments and converting python dict to std::map.
         if len(args) > 4 and isinstance(args[4], dict):
             args = list(args)
-            args[4] = _dict_to_std_map(args[4], {"std::string": ["RooDataHist*", "TH1*"]})
+            args[4] = _dict_to_flat_map(args[4], {"std::string": ["RooDataHist*", "TH1*"]})
 
         args, kwargs = _kwargs_to_roocmdargs(*args, **kwargs)
         self._init(*args, **kwargs)

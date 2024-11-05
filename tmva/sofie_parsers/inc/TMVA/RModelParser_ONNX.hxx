@@ -29,11 +29,16 @@ public:
    struct OperatorsMapImpl;
 
 private:
+
    bool fVerbose = false;
    // Registered operators
    std::unique_ptr<OperatorsMapImpl> fOperatorsMapImpl;
    // Type of the tensors
    std::unordered_map<std::string, ETensorType> fTensorTypeMap;
+
+   // all model inputs
+   std::map<std::string, int> allInputs;
+
 
 public:
    // Register an ONNX operator
@@ -51,6 +56,11 @@ public:
    // Check if the type of the tensor is registered
    bool IsRegisteredTensorType(const std::string & /*name*/);
 
+   // check verbosity
+   bool Verbose() const {
+      return fVerbose;
+   }
+
    // Get the type of the tensor
    ETensorType GetTensorType(const std::string &name);
 
@@ -58,10 +68,15 @@ public:
    std::unique_ptr<ROperator> ParseOperator(const size_t /*index*/, const onnx::GraphProto & /*graphproto*/,
                                             const std::vector<size_t> & /*nodes*/);
 
+   // parse the ONNX graph
+   void ParseONNXGraph(RModel & model, const onnx::GraphProto & g, std::string  name = "");
+
 public:
+
    RModelParser_ONNX() noexcept;
 
    RModel Parse(std::string filename, bool verbose = false);
+
 
    ~RModelParser_ONNX();
 };

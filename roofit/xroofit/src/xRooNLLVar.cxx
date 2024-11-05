@@ -23,7 +23,7 @@ This xRooNLLVar object has several special methods, e.g. for fitting and toy dat
 #define protected public
 #endif
 #include "RooFitResult.h"
-#include "RooNLLVar.h"
+#include "../../roofitcore/src/RooNLLVar.h"
 #ifdef protected
 #undef protected
 #endif
@@ -93,7 +93,7 @@ This xRooNLLVar object has several special methods, e.g. for fitting and toy dat
 #include "TKey.h"
 #include "TRegexp.h"
 
-BEGIN_XROOFIT_NAMESPACE;
+BEGIN_XROOFIT_NAMESPACE
 
 std::set<int> xRooNLLVar::xRooHypoPoint::allowedStatusCodes = {0};
 
@@ -293,7 +293,7 @@ xRooNLLVar::xRooNLLVar(const std::shared_ptr<RooAbsPdf> &pdf,
    //        fGlobs->setAttribAll("Constant",true);
    //        const_cast<RooArgSet*>(globs->getSet(0))->replace(*fGlobs);*/
    //    }
-};
+}
 
 xRooNLLVar::xRooNLLVar(const std::shared_ptr<RooAbsPdf> &pdf, const std::shared_ptr<RooAbsData> &data,
                        const RooLinkedList &opts)
@@ -754,7 +754,8 @@ double xRooNLLVar::getEntryBinWidth(size_t entry) const
    double volume = 1.;
    for (auto o : *_robs) {
 
-      if (auto a = dynamic_cast<RooAbsRealLValue *>(o); a) {
+      if (auto a = dynamic_cast<RooAbsRealLValue *>(o);
+          a && _pdf->dependsOn(*a)) { // dependsOn check needed until ParamHistFunc binBoundaries method fixed
          std::unique_ptr<std::list<double>> bins(
             _pdf->binBoundaries(*a, -std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity()));
          if (bins) {
@@ -788,6 +789,11 @@ double xRooNLLVar::saturatedConstraintTerm() const
       return 0;
 
    for (auto c : cTerm->list()) {
+      if (std::string(c->ClassName()) == "RooAbsPdf") {
+         // in ROOT 6.32 the constraintTerm is full of RooNormalizedPdfs which aren't public
+         // in that case use the first server
+         c = c->servers()[0];
+      }
       if (auto gaus = dynamic_cast<RooGaussian *>(c)) {
          auto v = dynamic_cast<RooAbsReal *>(fGlobs->find(gaus->getX().GetName()));
          if (!v) {
@@ -810,7 +816,7 @@ double xRooNLLVar::saturatedConstraintTerm() const
 
 double xRooNLLVar::ndof() const
 {
-   return data()->numEntries() + (globs() ? globs()->size() : 0) -
+   return data()->numEntries() + (fFuncGlobs ? fFuncGlobs->size() : 0) -
           std::unique_ptr<RooAbsCollection>(pars()->selectByAttrib("Constant", false))->size();
 }
 
@@ -821,19 +827,41 @@ double xRooNLLVar::pgof() const
    return TMath::Prob(2. * (get()->getVal() - saturatedVal()), ndof());
 }
 
-double xRooNLLVar::saturatedVal() const
+double xRooNLLVar::mainTermNdof() const
 {
-   return saturatedNllTerm() + saturatedConstraintTerm();
+   // need to count number of floating unconstrained parameters
+   // which are floating parameters not featured in the constraintTerm
+   std::unique_ptr<RooAbsCollection> _floats(pars()->selectByAttrib("Constant", false));
+   if (auto _constraintTerm = constraintTerm()) {
+      _floats->remove(*std::unique_ptr<RooAbsCollection>(_constraintTerm->getVariables()));
+   }
+   return data()->numEntries() - _floats->size();
 }
 
-double xRooNLLVar::saturatedNllTerm() const
+double xRooNLLVar::mainTermPgof() const
+{
+   // using totVal - constraintTerm while new evalbackend causes mainTerm() to return nullptr
+   double val = get()->getVal();
+   if (auto _constraintTerm = constraintTerm()) {
+      val -= _constraintTerm->getVal();
+   }
+
+   return TMath::Prob(2. * (val - saturatedMainTerm()), mainTermNdof());
+}
+
+double xRooNLLVar::saturatedVal() const
+{
+   return saturatedMainTerm() + saturatedConstraintTerm();
+}
+
+double xRooNLLVar::saturatedMainTerm() const
 {
 
    // Use this term to create a goodness-of-fit metric, which is approx chi2 distributed with numEntries (data) d.o.f:
-   // prob = TMath::Prob( 2.*(nll.nllTerm()->getVal() - nll.saturatedNllTerm()), nll.data()->numEntries() )
+   // prob = TMath::Prob( 2.*(nll.mainTerm()->getVal() - nll.saturatedNllTerm()), nll.data()->numEntries() )
 
    // note that need to construct nll with explicit Binned(1 or 0) option otherwise will pick up nll eval
-   // from attributes in model already, so many get binned nllTerm eval when thinking not binned because didnt specify
+   // from attributes in model already, so many get binned mainTerm eval when thinking not binned because didnt specify
    // Binned(1)
 
    auto _data = data();
@@ -1115,8 +1143,18 @@ bool xRooNLLVar::setData(const std::pair<std::shared_ptr<RooAbsData>, std::share
    }
 
    try {
-      if (!kReuseNLL || nllTerm()->operMode() == RooAbsTestStatistic::MPMaster) {
-         throw std::runtime_error("not supported");
+      if (!kReuseNLL || !mainTerm() || mainTerm()->operMode() == RooAbsTestStatistic::MPMaster) {
+         // happens when using MP need to rebuild the nll instead
+         // also happens if there's no mainTerm(), which is the case in 6.32 where RooNLLVar is partially deprecated
+         AutoRestorer snap(*fFuncVars);
+         // ensure the const state is back where it was at nll construction time;
+         fFuncVars->setAttribAll("Constant", false);
+         fConstVars->setAttribAll("Constant", true);
+         std::shared_ptr<RooAbsData> __data = fData; // do this just to keep fData alive while killing previous NLLVar
+                                                     // (can't kill data while NLL constructed with it)
+         fData = _data.first;
+         reinitialize();
+         return true;
       }
       bool out = false;
       if (_data.first) {
@@ -1124,8 +1162,8 @@ bool xRooNLLVar::setData(const std::pair<std::shared_ptr<RooAbsData>, std::share
             // replace in all terms
             get()->setData(*_data.first, false);
          } else {
-            // replace just in nllTerm ... note to self: why not just replace in all like above? should test!
-            out = nllTerm()->setData(*_data.first, false /* clone data? */);
+            // replace just in mainTerm ... note to self: why not just replace in all like above? should test!
+            out = mainTerm()->setData(*_data.first, false /* clone data? */);
          }
       } else {
          reset();
@@ -1134,6 +1172,7 @@ bool xRooNLLVar::setData(const std::pair<std::shared_ptr<RooAbsData>, std::share
       return out;
    } catch (std::runtime_error &) {
       // happens when using MP need to rebuild the nll instead
+      // also happens if there's no mainTerm(), which is the case in 6.32 where RooNLLVar is partially deprecated
       AutoRestorer snap(*fFuncVars);
       // ensure the const state is back where it was at nll construction time;
       fFuncVars->setAttribAll("Constant", false);
@@ -1183,7 +1222,7 @@ void xRooNLLVar::AddOption(const RooCmdArg &opt)
 
 RooAbsData *xRooNLLVar::data() const
 {
-   auto _nll = nllTerm();
+   auto _nll = mainTerm();
    if (!_nll)
       return fData.get();
    RooAbsData *out = &_nll->data();
@@ -1192,7 +1231,7 @@ RooAbsData *xRooNLLVar::data() const
    return out;
 }
 
-RooNLLVar *xRooNLLVar::nllTerm() const
+RooNLLVar *xRooNLLVar::mainTerm() const
 {
    auto _func = func();
    if (auto a = dynamic_cast<RooNLLVar *>(_func.get()); a)
@@ -1241,6 +1280,11 @@ RooConstraintSum *xRooNLLVar::constraintTerm() const
    for (auto s : _func->servers()) {
       if (auto a = dynamic_cast<RooConstraintSum *>(s); a)
          return a;
+      // allow one more depth to support 6.32 (where sum is hidden inside the first server)
+      for (auto s2 : s->servers()) {
+         if (auto a2 = dynamic_cast<RooConstraintSum *>(s2); a2)
+            return a2;
+      }
    }
    return nullptr;
 }
@@ -3036,4 +3080,4 @@ std::string cling::printValue(const std::map<std::string, xRooNLLVar::xValueWith
    return out;
 }
 
-END_XROOFIT_NAMESPACE;
+END_XROOFIT_NAMESPACE

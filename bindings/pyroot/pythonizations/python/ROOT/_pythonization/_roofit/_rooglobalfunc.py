@@ -37,21 +37,7 @@ ROOT.RooMCStudy(model, ROOT.RooArgSet(x), FitOptions=dict(Save=True, PrintEvalEr
 */
 """
 
-from ._utils import _kwargs_to_roocmdargs, _string_to_root_attribute, _dict_to_std_map, cpp_signature
-
-
-# Color and Style dictionary to define matplotlib conventions
-_color_map = {
-    "r": "kRed",
-    "b": "kBlue",
-    "g": "kGreen",
-    "y": "kYellow",
-    "w": "kWhite",
-    "k": "kBlack",
-    "m": "kMagenta",
-    "c": "kCyan",
-}
-_style_map = {"-": "kSolid", "--": "kDashed", ":": "kDotted", "-.": "kDashDotted"}
+from ._utils import _kwargs_to_roocmdargs, _dict_to_flat_map, cpp_signature
 
 
 @cpp_signature(
@@ -163,9 +149,7 @@ def Slice(*args, **kwargs):
     from cppyy.gbl import RooFit
 
     if len(args) == 1 and len(kwargs) == 0 and isinstance(args[0], dict):
-        args = list(args)
-        args[0] = _dict_to_std_map(args[0], {"RooCategory*": "std::string"})
-        return RooFit._Slice(args[0])
+        return RooFit.Detail.SliceFlatMap(_dict_to_flat_map(args[0], {"RooCategory*": "std::string"}))
 
     return RooFit._Slice(*args, **kwargs)
 
@@ -186,9 +170,9 @@ def Import(*args, **kwargs):
     from cppyy.gbl import RooFit
 
     if len(args) == 1 and len(kwargs) == 0 and isinstance(args[0], dict):
-        args = list(args)
-        args[0] = _dict_to_std_map(args[0], {"std::string": ["TH1*", "RooDataHist*", "RooDataSet*"]})
-        return RooFit._Import(args[0])
+        return RooFit.Detail.ImportFlatMap(
+            _dict_to_flat_map(args[0], {"std::string": ["TH1*", "RooDataHist*", "RooDataSet*"]})
+        )
 
     return RooFit._Import(*args, **kwargs)
 
@@ -203,80 +187,9 @@ def Link(*args, **kwargs):
     from cppyy.gbl import RooFit
 
     if len(args) == 1 and len(kwargs) == 0 and isinstance(args[0], dict):
-        args = list(args)
-        args[0] = _dict_to_std_map(args[0], {"std::string": "RooAbsData*"})
-        return RooFit._Link(args[0])
+        return RooFit.Detail.LinkFlatMap(_dict_to_flat_map(args[0], {"std::string": "RooAbsData*"}))
 
     return RooFit._Link(*args, **kwargs)
-
-
-@cpp_signature("RooFit::LineColor(Color_t color) ;")
-def LineColor(color):
-    r"""The `color` argument doesn't necessarily have to be a ROOT color enum value, like `ROOT.kRed`.
-    Here is what you can also do in PyROOT:
-
-      1. Pass a string with the enum value name instead, e.g.:
-    ~~~ {.py}
-    pdf.plotOn(frame, LineColor="kRed")
-    ~~~
-      2. Pass a string with the corresponding single-character color code following the matplotlib convention:
-    ~~~ {.py}
-    pdf.plotOn(frame, LineColor="r")
-    ~~~
-      3. Pass a string with the enum value name instead followed by some manipulation of the enum value:
-    ~~~ {.py}
-    pdf.plotOn(frame, LineColor="kRed+1")
-    ~~~
-    """
-    from cppyy.gbl import RooFit
-
-    return RooFit._LineColor(_string_to_root_attribute(color, _color_map))
-
-
-@cpp_signature("RooFit::FillColor(Color_t color) ;")
-def FillColor(color):
-    # Redefinition of `FillColor` for matplotlib conventions and string arguments.
-    from cppyy.gbl import RooFit
-
-    return RooFit._FillColor(_string_to_root_attribute(color, _color_map))
-
-# Copy the docstring from LineColor.
-FillColor.__doc__ = LineColor.__doc__
-
-
-@cpp_signature("RooFit::MarkerColor(Color_t color) ;")
-def MarkerColor(color):
-    # Redefinition of `MarkerColor` for matplotlib conventions and string arguments.
-    from cppyy.gbl import RooFit
-
-    return RooFit._MarkerColor(_string_to_root_attribute(color, _color_map))
-
-# Copy the docstring from LineColor.
-MarkerColor.__doc__ = LineColor.__doc__
-
-
-@cpp_signature("RooFit::LineStyle(Style_t style) ;")
-def LineStyle(style):
-    # Redefinition of `LineStyle` for matplotlib conventions and string arguments.
-    from cppyy.gbl import RooFit
-
-    return RooFit._LineStyle(_string_to_root_attribute(style, _style_map))
-
-
-@cpp_signature("RooFit::FillStyle(Style_t style) ;")
-def FillStyle(style):
-    # Redefinition of `FillStyle` for matplotlib conventions and string arguments.
-    from cppyy.gbl import RooFit
-
-    return RooFit._FillStyle(_string_to_root_attribute(style, {}))
-
-
-@cpp_signature("RooFit::MarkerStyle(Style_t style) ;")
-def MarkerStyle(style):
-    # Redefinition of `MarkerStyle` for matplotlib conventions and string arguments.
-    from cppyy.gbl import RooFit
-
-    return RooFit._MarkerStyle(_string_to_root_attribute(style, {}))
 
 
 @cpp_signature("RooFit::DataError(Int_t) ;")
@@ -309,13 +222,77 @@ def DataError(etype):
     if isinstance(etype, str):
         try:
             import ROOT
+
             etype = getattr(ROOT.RooAbsData.ErrorType, etype)
         except AttributeError as error:
             raise ValueError(
-                'Unsupported error type type passed to DataError().'
+                "Unsupported error type type passed to DataError()."
                 + ' Supported decay types are : "Poisson", "SumW2", "Auto", "Expected", and None.'
             )
         except Exception as exception:
             raise exception
 
     return RooFit._DataError(etype)
+
+
+def _bindFunctionOrPdf(name, func, is_rooabspdf, *variables):
+    """
+    Wrap an arbitrary function defined in Python or C++.
+
+    If you're wrapping a Python function, it must take numpy arrays of type
+    float64 as input and output types.
+
+    Parameters:
+    - name (str): Name of the function.
+    - func (callable): Function that defines the function.
+    - variables (list): List of variables to be used in the function.
+
+    Returns:
+    - RooAbsReal wrapping the given function
+    """
+
+    import ROOT
+    import numpy as np
+
+    # use the C++ version if dealing with C++ function
+    if "cppyy" in repr(type(func)):
+        return ROOT.RooFit._bindFunction(name, func, *variables)
+
+    base_class_name = "RooAbsPdf" if is_rooabspdf else "RooAbsReal"
+
+    class RooPyBindDerived(ROOT.RooFit.Detail.RooPyBind[base_class_name]):
+
+        _outputBuffer = None
+
+        def __init__(self, name, title, *variables):
+            super(RooPyBindDerived, self).__init__(name, title, ROOT.RooArgList(*variables))
+
+        def evaluate(self):
+            inputs = [np.array([v.getVal()]) for v in self.varlist()]
+            return func(*inputs)[0]
+
+        def doEvalPy(self, ctx):
+
+            def span_to_numpy(sp):
+                return np.frombuffer(sp.data(), dtype=np.float64, count=sp.size())
+
+            inputs = [span_to_numpy(ctx.at(v)) for v in self.varlist()]
+            if self._outputBuffer is None:
+                self._outputBuffer = np.zeros(ctx.output().size())
+            self._outputBuffer[:] = func(*inputs)
+            return self._outputBuffer
+
+        def clone(self, newname=False):
+            cl = RooPyBindDerived(newname if newname else self.GetName(), self.GetTitle(), self.varlist())
+            ROOT.SetOwnership(cl, False)
+            return cl
+
+    return RooPyBindDerived(name, "", variables)
+
+
+def bindFunction(name, func, *variables):
+    return _bindFunctionOrPdf(name, func, False, *variables)
+
+
+def bindPdf(name, func, *variables):
+    return _bindFunctionOrPdf(name, func, True, *variables)

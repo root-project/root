@@ -27,7 +27,7 @@
 
 void ROOT::Experimental::RNTupleReader::ConnectModel(RNTupleModel &model)
 {
-   auto &fieldZero = model.GetFieldZero();
+   auto &fieldZero = Internal::GetFieldZeroOfModel(model);
    // We must not use the descriptor guard to prevent recursive locking in field.ConnectPageSource
    DescriptorId_t fieldZeroId = fSource->GetSharedDescriptorGuard()->GetFieldZeroId();
    fieldZero.SetOnDiskId(fieldZeroId);
@@ -43,7 +43,7 @@ void ROOT::Experimental::RNTupleReader::ConnectModel(RNTupleModel &model)
    }
 }
 
-void ROOT::Experimental::RNTupleReader::InitPageSource()
+void ROOT::Experimental::RNTupleReader::InitPageSource(bool enableMetrics)
 {
 #ifdef R__USE_IMT
    if (IsImplicitMTEnabled() &&
@@ -52,27 +52,32 @@ void ROOT::Experimental::RNTupleReader::InitPageSource()
       fSource->SetTaskScheduler(fUnzipTasks.get());
    }
 #endif
-   fSource->Attach();
    fMetrics.ObserveMetrics(fSource->GetMetrics());
+   if (enableMetrics)
+      EnableMetrics();
+   fSource->Attach();
 }
 
 ROOT::Experimental::RNTupleReader::RNTupleReader(std::unique_ptr<ROOT::Experimental::RNTupleModel> model,
-                                                 std::unique_ptr<ROOT::Experimental::Internal::RPageSource> source)
+                                                 std::unique_ptr<ROOT::Experimental::Internal::RPageSource> source,
+                                                 const RNTupleReadOptions &options)
    : fSource(std::move(source)), fModel(std::move(model)), fMetrics("RNTupleReader")
 {
    // TODO(jblomer): properly support projected fields
-   if (!fModel->GetProjectedFields().IsEmpty()) {
+   auto &projectedFields = Internal::GetProjectedFieldsOfModel(*fModel);
+   if (!projectedFields.IsEmpty()) {
       throw RException(R__FAIL("model has projected fields, which is incompatible with providing a read model"));
    }
    fModel->Freeze();
-   InitPageSource();
+   InitPageSource(options.HasMetricsEnabled());
    ConnectModel(*fModel);
 }
 
-ROOT::Experimental::RNTupleReader::RNTupleReader(std::unique_ptr<ROOT::Experimental::Internal::RPageSource> source)
+ROOT::Experimental::RNTupleReader::RNTupleReader(std::unique_ptr<ROOT::Experimental::Internal::RPageSource> source,
+                                                 const RNTupleReadOptions &options)
    : fSource(std::move(source)), fModel(nullptr), fMetrics("RNTupleReader")
 {
-   InitPageSource();
+   InitPageSource(options.HasMetricsEnabled());
 }
 
 ROOT::Experimental::RNTupleReader::~RNTupleReader() = default;
@@ -82,7 +87,7 @@ ROOT::Experimental::RNTupleReader::Open(std::unique_ptr<RNTupleModel> model, std
                                         std::string_view storage, const RNTupleReadOptions &options)
 {
    return std::unique_ptr<RNTupleReader>(
-      new RNTupleReader(std::move(model), Internal::RPageSource::Create(ntupleName, storage, options)));
+      new RNTupleReader(std::move(model), Internal::RPageSource::Create(ntupleName, storage, options), options));
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleReader>
@@ -90,33 +95,34 @@ ROOT::Experimental::RNTupleReader::Open(std::string_view ntupleName, std::string
                                         const RNTupleReadOptions &options)
 {
    return std::unique_ptr<RNTupleReader>(
-      new RNTupleReader(Internal::RPageSource::Create(ntupleName, storage, options)));
+      new RNTupleReader(Internal::RPageSource::Create(ntupleName, storage, options), options));
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleReader>
-ROOT::Experimental::RNTupleReader::Open(ROOT::Experimental::RNTuple *ntuple, const RNTupleReadOptions &options)
+ROOT::Experimental::RNTupleReader::Open(const ROOT::RNTuple &ntuple, const RNTupleReadOptions &options)
 {
    return std::unique_ptr<RNTupleReader>(
-      new RNTupleReader(Internal::RPageSourceFile::CreateFromAnchor(*ntuple, options)));
+      new RNTupleReader(Internal::RPageSourceFile::CreateFromAnchor(ntuple, options), options));
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleReader>
-ROOT::Experimental::RNTupleReader::Open(std::unique_ptr<RNTupleModel> model, ROOT::Experimental::RNTuple *ntuple,
+ROOT::Experimental::RNTupleReader::Open(std::unique_ptr<RNTupleModel> model, const ROOT::RNTuple &ntuple,
                                         const RNTupleReadOptions &options)
 {
    return std::unique_ptr<RNTupleReader>(
-      new RNTupleReader(std::move(model), Internal::RPageSourceFile::CreateFromAnchor(*ntuple, options)));
+      new RNTupleReader(std::move(model), Internal::RPageSourceFile::CreateFromAnchor(ntuple, options), options));
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleReader>
-ROOT::Experimental::RNTupleReader::OpenFriends(std::span<ROpenSpec> ntuples)
+ROOT::Experimental::RNTupleReader::OpenFriends(std::span<RNTupleOpenSpec> ntuples, const RNTupleReadOptions &options)
 {
    std::vector<std::unique_ptr<Internal::RPageSource>> sources;
+   sources.reserve(ntuples.size());
    for (const auto &n : ntuples) {
       sources.emplace_back(Internal::RPageSource::Create(n.fNTupleName, n.fStorage, n.fOptions));
    }
    return std::unique_ptr<RNTupleReader>(
-      new RNTupleReader(std::make_unique<Internal::RPageSourceFriends>("_friends", sources)));
+      new RNTupleReader(std::make_unique<Internal::RPageSourceFriends>("_friends", sources), options));
 }
 
 const ROOT::Experimental::RNTupleModel &ROOT::Experimental::RNTupleReader::GetModel()
@@ -128,7 +134,7 @@ const ROOT::Experimental::RNTupleModel &ROOT::Experimental::RNTupleReader::GetMo
    return *fModel;
 }
 
-void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo what, std::ostream &output)
+void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo what, std::ostream &output) const
 {
    // TODO(lesimon): In a later version, these variables may be defined by the user or the ideal width may be read out
    // from the terminal.
@@ -155,12 +161,12 @@ void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo what, std::o
       output << " NTUPLE ";
       for (int i = 0; i < (width / 2 - 4); ++i)
          output << frameSymbol;
-      output << std::endl;
+      output << "\n";
       // FitString defined in RFieldVisitor.cxx
       output << frameSymbol << " N-Tuple : " << RNTupleFormatter::FitString(name, width - 13) << frameSymbol
-             << std::endl; // prints line with name of ntuple
+             << "\n"; // prints line with name of ntuple
       output << frameSymbol << " Entries : " << RNTupleFormatter::FitString(std::to_string(GetNEntries()), width - 13)
-             << frameSymbol << std::endl; // prints line with number of entries
+             << frameSymbol << "\n"; // prints line with number of entries
 
       // Traverses through all fields to gather information needed for printing.
       RPrepareVisitor prepVisitor;
@@ -168,7 +174,7 @@ void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo what, std::o
       RPrintSchemaVisitor printVisitor(output);
 
       // Note that we do not need to connect the model, we are only looking at its tree of fields
-      fullModel->GetFieldZero().AcceptVisitor(prepVisitor);
+      fullModel->GetConstFieldZero().AcceptVisitor(prepVisitor);
 
       printVisitor.SetFrameSymbol(frameSymbol);
       printVisitor.SetWidth(width);
@@ -177,8 +183,8 @@ void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo what, std::o
 
       for (int i = 0; i < width; ++i)
          output << frameSymbol;
-      output << std::endl;
-      fullModel->GetFieldZero().AcceptVisitor(printVisitor);
+      output << "\n";
+      fullModel->GetConstFieldZero().AcceptVisitor(printVisitor);
       for (int i = 0; i < width; ++i)
          output << frameSymbol;
       output << std::endl;

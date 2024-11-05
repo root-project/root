@@ -13,6 +13,8 @@
 
 #include <RooFit/Detail/CodeSquashContext.h>
 
+#include "RooFuncWrapper.h"
+
 #include "RooFitImplHelpers.h"
 
 #include <algorithm>
@@ -21,6 +23,12 @@
 namespace RooFit {
 
 namespace Detail {
+
+CodeSquashContext::CodeSquashContext(std::map<RooFit::Detail::DataKey, std::size_t> const &outputSizes,
+                                     std::vector<double> &xlarr, Experimental::RooFuncWrapper &wrapper)
+   : _wrapper{&wrapper}, _nodeOutputSizes(outputSizes), _xlArr(xlarr)
+{
+}
 
 /// @brief Adds (or overwrites) the string representing the result of a node.
 /// @param key The name of the node to add the result for.
@@ -80,12 +88,7 @@ void CodeSquashContext::addToGlobalScope(std::string const &str)
 /// @return The final body of the function.
 std::string CodeSquashContext::assembleCode(std::string const &returnExpr)
 {
-   std::string arrDecl;
-   if(!_xlArr.empty()) {
-      arrDecl += "double auxArr[" + std::to_string(_xlArr.size()) + "];\n";
-      arrDecl += "for (int i = 0; i < " + std::to_string(_xlArr.size()) + "; i++) auxArr[i] = xlArr[i];\n";
-   }
-   return arrDecl + _globalScope + _code + "\n return " + returnExpr + ";\n";
+   return _globalScope + _code + "\n return " + returnExpr + ";\n";
 }
 
 /// @brief Since the squashed code represents all observables as a single flattened array, it is important
@@ -195,7 +198,7 @@ std::string CodeSquashContext::getTmpVarName() const
 /// @param valueToSave The actual string value to save as a temporary.
 void CodeSquashContext::addResult(RooAbsArg const *in, std::string const &valueToSave)
 {
-   //std::string savedName = RooFit::Detail::makeValidVarName(in->GetName());
+   // std::string savedName = RooFit::Detail::makeValidVarName(in->GetName());
    std::string savedName = getTmpVarName();
 
    // Only save values if they contain operations.
@@ -220,6 +223,10 @@ void CodeSquashContext::addResult(RooAbsArg const *in, std::string const &valueT
 /// @return Name of the array that stores the input list in the squashed code.
 std::string CodeSquashContext::buildArg(RooAbsCollection const &in)
 {
+   if (in.empty()) {
+      return "nullptr";
+   }
+
    auto it = listNames.find(in.uniqueId().value());
    if (it != listNames.end())
       return it->second;
@@ -250,12 +257,19 @@ std::string CodeSquashContext::buildArg(std::span<const double> arr)
    for (unsigned int i = 0; i < n; i++) {
       _xlArr.push_back(arr[i]);
    }
-   return "auxArr + " + offset;
+   return "xlArr + " + offset;
 }
 
 bool CodeSquashContext::isScopeIndependent(RooAbsArg const *in) const
 {
    return !in->isReducerNode() && outputSize(in->namePtr()) == 1;
+}
+
+/// @brief Register a function that is only know to the interpreter to the context.
+/// This is useful to dump the standalone C++ code for the computation graph.
+void CodeSquashContext::collectFunction(std::string const &name)
+{
+   _wrapper->collectFunction(name);
 }
 
 } // namespace Detail

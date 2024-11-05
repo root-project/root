@@ -565,7 +565,7 @@ TClass *REveElement::IsA() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Export render-element to CINT with variable name var_name.
 
-void REveElement::ExportToCINT(const char *var_name)
+void REveElement::ExportToInterpreter(const char *var_name)
 {
    const char* cname = IsA()->GetName();
    gROOT->ProcessLine(TString::Format("%s* %s = (%s*)0x%zx;", cname, var_name, cname, (size_t)this));
@@ -1492,9 +1492,9 @@ Int_t REveElement::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
          nlohmann::json rd = {};
 
          rd["rnr_offset"] = rnr_offset;
-         rd["rnr_func"] = fRenderData->GetRnrFunc();
-         rd["vert_size"] = fRenderData->SizeV();
-         rd["norm_size"] = fRenderData->SizeN();
+         rd["rnr_func"]   = fRenderData->GetRnrFunc();
+         rd["vert_size"]  = fRenderData->SizeV();
+         rd["norm_size"]  = fRenderData->SizeN();
          rd["index_size"] = fRenderData->SizeI();
          rd["trans_size"] = fRenderData->SizeT();
 

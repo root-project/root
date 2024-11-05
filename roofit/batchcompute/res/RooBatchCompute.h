@@ -15,15 +15,11 @@
 
 #include <ROOT/RSpan.hxx>
 
-#include <RConfig.h>
-
-#ifdef ROOFIT_CUDA
-#include <RooFit/Detail/CudaInterface.h>
-#endif
-
 #include <DllImport.h> //for R__EXTERN, needed for windows
 
+#include <cstddef>
 #include <initializer_list>
+#include <memory>
 #include <string>
 
 /**
@@ -40,28 +36,30 @@
  */
 namespace RooBatchCompute {
 
+namespace CudaInterface {
+class CudaEvent;
+class CudaStream;
+} // namespace CudaInterface
+
 typedef std::span<const std::span<const double>> VarSpan;
 typedef std::span<double> ArgSpan;
 typedef const double *__restrict InputArr;
 
 constexpr std::size_t bufferSize = 64;
 
-void init();
+int initCPU();
+int initCUDA();
 
 /// Minimal configuration struct to steer the evaluation of a single node with
 /// the RooBatchCompute library.
 class Config {
 public:
-#ifdef ROOFIT_CUDA
    bool useCuda() const { return _cudaStream != nullptr; }
-   void setCudaStream(RooFit::Detail::CudaInterface::CudaStream *cudaStream) { _cudaStream = cudaStream; }
-   RooFit::Detail::CudaInterface::CudaStream *cudaStream() const { return _cudaStream; }
+   void setCudaStream(CudaInterface::CudaStream *cudaStream) { _cudaStream = cudaStream; }
+   CudaInterface::CudaStream *cudaStream() const { return _cudaStream; }
 
 private:
-   RooFit::Detail::CudaInterface::CudaStream *_cudaStream = nullptr;
-#else
-   bool useCuda() const { return false; }
-#endif
+   CudaInterface::CudaStream *_cudaStream = nullptr;
 };
 
 enum class Architecture { AVX512, AVX2, AVX, SSE4, GENERIC, CUDA };
@@ -111,9 +109,34 @@ enum Computer {
 struct ReduceNLLOutput {
    double nllSum = 0.0;
    double nllSumCarry = 0.0;
-   std::size_t nLargeValues = 0;
+   std::size_t nInfiniteValues = 0;
    std::size_t nNonPositiveValues = 0;
    std::size_t nNaNValues = 0;
+};
+
+class AbsBuffer {
+public:
+   virtual ~AbsBuffer() = default;
+
+   virtual double const *hostReadPtr() const = 0;
+   virtual double const *deviceReadPtr() const = 0;
+
+   virtual double *hostWritePtr() = 0;
+   virtual double *deviceWritePtr() = 0;
+
+   virtual void assignFromHost(std::span<const double> input) = 0;
+   virtual void assignFromDevice(std::span<const double> input) = 0;
+};
+
+class AbsBufferManager {
+public:
+   virtual ~AbsBufferManager() = default;
+
+   virtual std::unique_ptr<AbsBuffer> makeScalarBuffer() = 0;
+   virtual std::unique_ptr<AbsBuffer> makeCpuBuffer(std::size_t size) = 0;
+   virtual std::unique_ptr<AbsBuffer> makeGpuBuffer(std::size_t size) = 0;
+   virtual std::unique_ptr<AbsBuffer>
+   makePinnedBuffer(std::size_t size, CudaInterface::CudaStream *stream = nullptr) = 0;
 };
 
 /**
@@ -147,6 +170,16 @@ public:
 
    virtual Architecture architecture() const = 0;
    virtual std::string architectureName() const = 0;
+
+   virtual std::unique_ptr<AbsBufferManager> createBufferManager() const = 0;
+
+   virtual CudaInterface::CudaEvent *newCudaEvent(bool forTiming) const = 0;
+   virtual CudaInterface::CudaStream *newCudaStream() const = 0;
+   virtual void deleteCudaEvent(CudaInterface::CudaEvent *) const = 0;
+   virtual void deleteCudaStream(CudaInterface::CudaStream *) const = 0;
+   virtual void cudaEventRecord(CudaInterface::CudaEvent *, CudaInterface::CudaStream *) const = 0;
+   virtual void cudaStreamWaitForEvent(CudaInterface::CudaStream *, CudaInterface::CudaEvent *) const = 0;
+   virtual bool cudaStreamIsActive(CudaInterface::CudaStream *) const = 0;
 };
 
 /**
@@ -156,29 +189,21 @@ public:
  *
  * \see RooBatchComputeInterface, RooBatchComputeClass, RF_ARCH
  */
-R__EXTERN RooBatchComputeInterface *dispatchCPU, *dispatchCUDA;
+R__EXTERN RooBatchComputeInterface *dispatchCPU;
+R__EXTERN RooBatchComputeInterface *dispatchCUDA;
 
 inline Architecture cpuArchitecture()
 {
-   init();
    return dispatchCPU->architecture();
 }
 
 inline std::string cpuArchitectureName()
 {
-   init();
    return dispatchCPU->architectureName();
-}
-
-inline bool hasCuda()
-{
-   init();
-   return dispatchCUDA;
 }
 
 inline void compute(Config cfg, Computer comp, std::span<double> output, VarSpan vars, ArgSpan extraArgs = {})
 {
-   init();
    auto dispatch = cfg.useCuda() ? dispatchCUDA : dispatchCPU;
    dispatch->compute(cfg, comp, output, vars, extraArgs);
 }
@@ -194,7 +219,6 @@ inline void compute(Config cfg, Computer comp, std::span<double> output,
 
 inline double reduceSum(Config cfg, InputArr input, size_t n)
 {
-   init();
    auto dispatch = cfg.useCuda() ? dispatchCUDA : dispatchCPU;
    return dispatch->reduceSum(cfg, input, n);
 }
@@ -202,7 +226,6 @@ inline double reduceSum(Config cfg, InputArr input, size_t n)
 inline ReduceNLLOutput reduceNLL(Config cfg, std::span<const double> probas, std::span<const double> weights,
                                  std::span<const double> offsetProbas)
 {
-   init();
    auto dispatch = cfg.useCuda() ? dispatchCUDA : dispatchCPU;
    return dispatch->reduceNLL(cfg, probas, weights, offsetProbas);
 }

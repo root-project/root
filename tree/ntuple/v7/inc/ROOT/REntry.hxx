@@ -33,6 +33,11 @@
 namespace ROOT {
 namespace Experimental {
 
+namespace Internal {
+class RNTupleProcessor;
+class RNTupleChainProcessor;
+}
+
 // clang-format off
 /**
 \class ROOT::Experimental::REntry
@@ -44,39 +49,45 @@ that are associated to values are managed.
 */
 // clang-format on
 class REntry {
-   friend class RNTupleCollectionWriter;
    friend class RNTupleModel;
    friend class RNTupleReader;
    friend class RNTupleFillContext;
+   friend class RNTupleProcessor;
+   friend class RNTupleChainProcessor;
 
 public:
-   /// The field token identifies a top-level field in this entry. It can be used for fast indexing in REntry's
-   /// methods, e.g. BindValue. The field token can also be created by the model.
+   /// The field token identifies a (sub)field in this entry. It can be used for fast indexing in REntry's methods, e.g.
+   /// BindValue. The field token can also be created by the model.
    class RFieldToken {
       friend class REntry;
       friend class RNTupleModel;
 
-      std::size_t fIndex;     ///< the index in fValues that belongs to the top-level field
-      std::uint64_t fModelId; ///< Safety check to prevent tokens from other models being used
-      RFieldToken(std::size_t index, std::uint64_t modelId) : fIndex(index), fModelId(modelId) {}
+      std::size_t fIndex = 0;                      ///< The index in fValues that belongs to the field
+      std::uint64_t fSchemaId = std::uint64_t(-1); ///< Safety check to prevent tokens from other models being used
+      RFieldToken(std::size_t index, std::uint64_t schemaId) : fIndex(index), fSchemaId(schemaId) {}
+
+   public:
+      RFieldToken() = default; // The default constructed token cannot be used by any entry
    };
 
 private:
-   /// The entry must be linked to a specific model (or one if its clones), identified by a model ID
+   /// The entry must be linked to a specific model, identified by a model ID
    std::uint64_t fModelId = 0;
-   /// Corresponds to the top-level fields of the linked model
+   /// The entry and its tokens are also linked to a specific schema, identified by a schema ID
+   std::uint64_t fSchemaId = 0;
+   /// Corresponds to the fields of the linked model
    std::vector<RFieldBase::RValue> fValues;
-   /// For fast lookup of token IDs given a top-level field name
+   /// For fast lookup of token IDs given a (sub)field name present in the entry
    std::unordered_map<std::string, std::size_t> fFieldName2Token;
 
    // Creation of entries is done by the RNTupleModel class
 
    REntry() = default;
-   explicit REntry(std::uint64_t modelId) : fModelId(modelId) {}
+   explicit REntry(std::uint64_t modelId, std::uint64_t schemaId) : fModelId(modelId), fSchemaId(schemaId) {}
 
    void AddValue(RFieldBase::RValue &&value)
    {
-      fFieldName2Token[value.GetField().GetFieldName()] = fValues.size();
+      fFieldName2Token[value.GetField().GetQualifiedFieldName()] = fValues.size();
       fValues.emplace_back(std::move(value));
    }
 
@@ -84,11 +95,16 @@ private:
    template <typename T, typename... ArgsT>
    std::shared_ptr<T> AddValue(RField<T> &field, ArgsT &&...args)
    {
-      fFieldName2Token[field.GetFieldName()] = fValues.size();
+      fFieldName2Token[field.GetQualifiedFieldName()] = fValues.size();
       auto ptr = std::make_shared<T>(std::forward<ArgsT>(args)...);
       fValues.emplace_back(field.BindValue(ptr));
       return ptr;
    }
+
+   /// Update the RValue for a field in the entry. To be used when its underlying RFieldBase changes, which typically
+   /// happens when page source the field values are read from changes.
+   void UpdateValue(RFieldToken token, RFieldBase::RValue &&value) { std::swap(fValues.at(token.fIndex), value); }
+   void UpdateValue(RFieldToken token, RFieldBase::RValue &value) { std::swap(fValues.at(token.fIndex), value); }
 
    void Read(NTupleSize_t index)
    {
@@ -108,9 +124,9 @@ private:
 
    void EnsureMatchingModel(RFieldToken token) const
    {
-      if (fModelId != token.fModelId) {
+      if (fSchemaId != token.fSchemaId) {
          throw RException(R__FAIL("invalid token for this entry, "
-                                  "make sure to use a token from the same model as this entry."));
+                                  "make sure to use a token from a model with the same schema as this entry."));
       }
    }
 
@@ -120,7 +136,7 @@ private:
       if constexpr (!std::is_void_v<T>) {
          const auto &v = fValues[token.fIndex];
          if (v.GetField().GetTypeName() != RField<T>::TypeName()) {
-            throw RException(R__FAIL("type mismatch for field " + v.GetField().GetFieldName() + ": " +
+            throw RException(R__FAIL("type mismatch for field " + v.GetField().GetQualifiedFieldName() + ": " +
                                      v.GetField().GetTypeName() + " vs. " + RField<T>::TypeName()));
          }
       }
@@ -135,14 +151,14 @@ public:
    REntry &operator=(REntry &&other) = default;
    ~REntry() = default;
 
-   /// The ordinal of the top-level field fieldName; can be used in other methods to address the corresponding value
+   /// The ordinal of the (sub)field fieldName; can be used in other methods to address the corresponding value
    RFieldToken GetToken(std::string_view fieldName) const
    {
       auto it = fFieldName2Token.find(std::string(fieldName));
       if (it == fFieldName2Token.end()) {
          throw RException(R__FAIL("invalid field name: " + std::string(fieldName)));
       }
-      return RFieldToken(it->second, fModelId);
+      return RFieldToken(it->second, fSchemaId);
    }
 
    void EmplaceNewValue(RFieldToken token)
@@ -196,6 +212,7 @@ public:
    }
 
    std::uint64_t GetModelId() const { return fModelId; }
+   std::uint64_t GetSchemaId() const { return fSchemaId; }
 
    ConstIterator_t begin() const { return fValues.cbegin(); }
    ConstIterator_t end() const { return fValues.cend(); }

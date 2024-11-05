@@ -1,19 +1,20 @@
 import { select as d3_select } from './d3.mjs';
-import { loadScript, findFunction, internals, getPromise, isNodeJs, isObject, isFunc, isStr, _ensureJSROOT,
-         prROOT,
+import { loadScript, loadModules, findFunction, internals, settings, getPromise, isNodeJs, isObject, isFunc, isStr,
+         _ensureJSROOT, prROOT,
          clTObject, clTNamed, clTString, clTAttLine, clTAttFill, clTAttMarker, clTAttText,
          clTObjString, clTFile, clTList, clTHashList, clTMap, clTObjArray, clTClonesArray,
          clTPave, clTPaveText, clTPavesText, clTPaveStats, clTPaveLabel, clTPaveClass, clTDiamond, clTLegend, clTPaletteAxis,
          clTText, clTLine, clTBox, clTLatex, clTMathText, clTAnnotation, clTMultiGraph, clTH2, clTF1, clTF2, clTF3, clTH3,
-         clTProfile, clTProfile2D, clTProfile3D,
+         clTProfile, clTProfile2D, clTProfile3D, clTFrame,
          clTColor, clTHStack, clTGraph, clTGraph2DErrors, clTGraph2DAsymmErrors,
          clTGraphPolar, clTGraphPolargram, clTGraphTime, clTCutG, clTPolyLine, clTPolyLine3D, clTPolyMarker3D,
-         clTPad, clTStyle, clTCanvas, clTGaxis, clTGeoVolume, kInspect, nsREX, atob_func } from './core.mjs';
-import { clTStreamerInfoList } from './io.mjs';
+         clTPad, clTStyle, clTCanvas, clTGaxis, clTGeoVolume, kInspect, nsREX, nsSVG, atob_func } from './core.mjs';
+import { clTStreamerInfoList, kBaseClass } from './io.mjs';
 import { clTBranchFunc } from './tree.mjs';
 import { BasePainter, compressSVG, svgToImage, _loadJSDOM } from './base/BasePainter.mjs';
 import { ObjectPainter, cleanup, drawRawText, getElementCanvPainter, getElementMainPainter } from './base/ObjectPainter.mjs';
 import { TPadPainter, clTButton } from './gpad/TPadPainter.mjs';
+import { makePDF } from './base/makepdf.mjs';
 
 
 async function import_more() { return import('./draw/more.mjs'); }
@@ -43,7 +44,7 @@ drawFuncs = { lst: [
    { name: clTPad, icon: 'img_canvas', func: TPadPainter.draw, opt: ';grid;gridx;gridy;tick;tickx;ticky;log;logx;logy;logz', expand_item: fPrimitives, noappend: true },
    { name: 'TSlider', icon: 'img_canvas', func: TPadPainter.draw },
    { name: clTButton, icon: 'img_canvas', func: TPadPainter.draw },
-   { name: 'TFrame', icon: 'img_frame', draw: () => import_canvas().then(h => h.drawTFrame) },
+   { name: clTFrame, icon: 'img_frame', draw: () => import_canvas().then(h => h.drawTFrame) },
    { name: clTPave, icon: 'img_pavetext', class: () => import('./hist/TPavePainter.mjs').then(h => h.TPavePainter) },
    { name: clTPaveText, sameas: clTPave },
    { name: clTPavesText, sameas: clTPave },
@@ -58,15 +59,15 @@ drawFuncs = { lst: [
    { name: clTText, sameas: clTLatex },
    { name: clTAnnotation, sameas: clTLatex },
    { name: /^TH1/, icon: 'img_histo1d', class: () => import('./hist/TH1Painter.mjs').then(h => h.TH1Painter), opt: ';hist;P;P0;E;E1;E2;E3;E4;E1X0;L;LF2;C;B;B1;A;TEXT;LEGO;same', ctrl: 'l', expand_item: fFunctions, for_derived: true },
-   { name: clTProfile, icon: 'img_profile', class: () => import('./hist/TH1Painter.mjs').then(h => h.TH1Painter), opt: ';E0;E1;E2;p;AH;hist', expand_item: fFunctions },
+   { name: clTProfile, icon: 'img_profile', class: () => import('./hist/TH1Painter.mjs').then(h => h.TH1Painter), opt: ';E0;E1;E2;p;AH;hist;projx;projxb;projxc=e;projxw', expand_item: fFunctions },
    { name: clTH2Poly, icon: 'img_histo2d', class: () => import('./hist/TH2Painter.mjs').then(h => h.TH2Painter), opt: ';COL;COL0;COLZ;LCOL;LCOL0;LCOLZ;LEGO;TEXT;same', expand_item: 'fBins', theonly: true },
    { name: 'TProfile2Poly', sameas: clTH2Poly },
    { name: 'TH2PolyBin', icon: 'img_histo2d', draw_field: 'fPoly', draw_field_opt: 'L' },
-   { name: /^TH2/, icon: 'img_histo2d', class: () => import('./hist/TH2Painter.mjs').then(h => h.TH2Painter), dflt: 'col', opt: ';COL;COLZ;COL0;COL1;COL0Z;COL1Z;COLA;BOX;BOX1;PROJ;PROJX1;PROJX2;PROJX3;PROJY1;PROJY2;PROJY3;SCAT;TEXT;TEXTE;TEXTE0;CANDLE;CANDLE1;CANDLE2;CANDLE3;CANDLE4;CANDLE5;CANDLE6;CANDLEY1;CANDLEY2;CANDLEY3;CANDLEY4;CANDLEY5;CANDLEY6;VIOLIN;VIOLIN1;VIOLIN2;VIOLINY1;VIOLINY2;CONT;CONT1;CONT2;CONT3;CONT4;ARR;SURF;SURF1;SURF2;SURF4;SURF6;E;A;LEGO;LEGO0;LEGO1;LEGO2;LEGO3;LEGO4;same', ctrl: 'lego', expand_item: fFunctions, for_derived: true },
-   { name: clTProfile2D, sameas: clTH2 },
+   { name: /^TH2/, icon: 'img_histo2d', class: () => import('./hist/TH2Painter.mjs').then(h => h.TH2Painter), opt: ';COL;COLZ;COL0;COL1;COL0Z;COL1Z;COLA;BOX;BOX1;PROJ;PROJX1;PROJX2;PROJX3;PROJY1;PROJY2;PROJY3;PROJXY1;PROJXY2;PROJXY3;SCAT;TEXT;TEXTE;TEXTE0;CANDLE;CANDLE1;CANDLE2;CANDLE3;CANDLE4;CANDLE5;CANDLE6;CANDLEY1;CANDLEY2;CANDLEY3;CANDLEY4;CANDLEY5;CANDLEY6;VIOLIN;VIOLIN1;VIOLIN2;VIOLINY1;VIOLINY2;CONT;CONT1;CONT2;CONT3;CONT4;ARR;SURF;SURF1;SURF2;SURF4;SURF6;E;A;LEGO;LEGO0;LEGO1;LEGO2;LEGO3;LEGO4;same', ctrl: 'lego', expand_item: fFunctions, for_derived: true },
+   { name: clTProfile2D, sameas: clTH2, opt2: ';projxyb;projxyc=e;projxyw' },
    { name: /^TH3/, icon: 'img_histo3d', class: () => import('./hist/TH3Painter.mjs').then(h => h.TH3Painter), opt: ';SCAT;BOX;BOX2;BOX3;GLBOX1;GLBOX2;GLCOL', expand_item: fFunctions, for_derived: true },
    { name: clTProfile3D, sameas: clTH3 },
-   { name: clTHStack, icon: 'img_histo1d', class: () => import('./hist/THStackPainter.mjs').then(h => h.THStackPainter), expand_item: 'fHists', opt: 'NOSTACK;HIST;E;PFC;PLC' },
+   { name: clTHStack, icon: 'img_histo1d', class: () => import('./hist/THStackPainter.mjs').then(h => h.THStackPainter), expand_item: 'fHists', opt: 'NOSTACK;HIST;COL;LEGO;E;PFC;PLC;PADS' },
    { name: clTPolyMarker3D, icon: 'img_histo3d', draw: () => import('./draw/draw3d.mjs').then(h => h.drawPolyMarker3D), direct: true, frame: '3d' },
    { name: clTPolyLine3D, icon: 'img_graph', draw: () => import('./draw/draw3d.mjs').then(h => h.drawPolyLine3D), direct: true, frame: '3d' },
    { name: 'TGraphStruct' },
@@ -79,14 +80,14 @@ drawFuncs = { lst: [
    { name: clTGraphPolargram, icon: 'img_graph', class: () => import('./draw/TGraphPolarPainter.mjs').then(h => h.TGraphPolargramPainter), theonly: true },
    { name: clTGraphPolar, icon: 'img_graph', class: () => import('./draw/TGraphPolarPainter.mjs').then(h => h.TGraphPolarPainter), opt: ';F;L;P;PE', theonly: true },
    { name: /^TGraph/, icon: 'img_graph', class: () => import('./hist2d/TGraphPainter.mjs').then(h => h.TGraphPainter), opt: ';L;P' },
-   { name: 'TEfficiency', icon: 'img_graph', class: () => import('./hist/TEfficiencyPainter.mjs').then(h => h.TEfficiencyPainter), opt: ';AP' },
+   { name: 'TEfficiency', icon: 'img_graph', class: () => import('./hist/TEfficiencyPainter.mjs').then(h => h.TEfficiencyPainter), opt: ';AP;A4P;B' },
    { name: clTCutG, sameas: clTGraph },
    { name: /^RooHist/, sameas: clTGraph },
    { name: /^RooCurve/, sameas: clTGraph },
    { name: 'TScatter', icon: 'img_graph', class: () => import('./hist2d/TScatterPainter.mjs').then(h => h.TScatterPainter), opt: ';A' },
    { name: 'RooPlot', icon: 'img_canvas', func: drawRooPlot },
    { name: 'TRatioPlot', icon: 'img_mgraph', class: () => import('./draw/TRatioPlotPainter.mjs').then(h => h.TRatioPlotPainter), opt: '' },
-   { name: clTMultiGraph, icon: 'img_mgraph', class: () => import('./hist/TMultiGraphPainter.mjs').then(h => h.TMultiGraphPainter), opt: ';l;p;3d', expand_item: 'fGraphs' },
+   { name: clTMultiGraph, icon: 'img_mgraph', class: () => import('./hist/TMultiGraphPainter.mjs').then(h => h.TMultiGraphPainter), opt: ';ac;l;p;3d;pads', expand_item: 'fGraphs' },
    { name: clTStreamerInfoList, icon: 'img_question', draw: () => import_h().then(h => h.drawStreamerInfo) },
    { name: 'TWebPainting', icon: 'img_graph', class: () => import('./draw/TWebPaintingPainter.mjs').then(h => h.TWebPaintingPainter) },
    { name: clTCanvasWebSnapshot, icon: 'img_canvas', draw: () => import_canvas().then(h => h.drawTPadSnapshot) },
@@ -106,12 +107,12 @@ drawFuncs = { lst: [
    { name: 'TExec', icon: 'img_graph', dummy: true },
    { name: clTLine, icon: 'img_graph', class: () => import('./draw/TLinePainter.mjs').then(h => h.TLinePainter) },
    { name: 'TArrow', icon: 'img_graph', class: () => import('./draw/TArrowPainter.mjs').then(h => h.TArrowPainter) },
-   { name: clTPolyLine, icon: 'img_graph', draw: () => import_more().then(h => h.drawPolyLine), direct: true },
+   { name: clTPolyLine, icon: 'img_graph', class: () => import('./draw/TPolyLinePainter.mjs').then(h => h.TPolyLinePainter), opt: ';F' },
    { name: 'TCurlyLine', sameas: clTPolyLine },
    { name: 'TCurlyArc', sameas: clTPolyLine },
    { name: 'TParallelCoord', icon: 'img_graph', dummy: true },
    { name: clTGaxis, icon: 'img_graph', class: () => import('./draw/TGaxisPainter.mjs').then(h => h.TGaxisPainter) },
-   { name: clTBox, icon: 'img_graph', draw: () => import_more().then(h => h.drawBox), direct: true },
+   { name: clTBox, icon: 'img_graph', class: () => import('./draw/TBoxPainter.mjs').then(h => h.TBoxPainter), opt: ';L' },
    { name: 'TWbox', sameas: clTBox },
    { name: 'TSliderBox', sameas: clTBox },
    { name: 'TMarker', icon: 'img_graph', draw: () => import_more().then(h => h.drawMarker), direct: true },
@@ -225,19 +226,21 @@ function getDrawHandle(kind, selector) {
 
       if ((selector === null) || (selector === undefined)) {
          // store found handle in cache, can reuse later
-         if (!(kind in drawFuncs.cache)) drawFuncs.cache[kind] = h;
+         if (!(kind in drawFuncs.cache))
+            drawFuncs.cache[kind] = h;
          return h;
       } else if (isStr(selector)) {
          if (!first) first = h;
-         // if drawoption specified, check it present in the list
+         // if draw option specified, check it present in the list
 
          if (selector === '::expand') {
             if (('expand' in h) || ('expand_item' in h)) return h;
          } else if ('opt' in h) {
             const opts = h.opt.split(';');
-            for (let j = 0; j < opts.length; ++j)
-               opts[j] = opts[j].toLowerCase();
-            if (opts.indexOf(selector.toLowerCase()) >= 0) return h;
+            for (let j = 0; j < opts.length; ++j) {
+               if (opts[j].toLowerCase() === selector.toLowerCase())
+                  return h;
+            }
          }
       } else if (selector === counter)
          return h;
@@ -273,8 +276,10 @@ function getDrawSettings(kind, selector) {
       if (h.expand || h.get_expand || h.expand_item || h.can_expand) canexpand = true;
       if (!h.func && !h.class && !h.draw) break;
       isany = true;
-      if (!('opt' in h)) continue;
-      const opts = h.opt.split(';');
+      if (h.opt === undefined) continue;
+      let opt = h.opt;
+      if (isStr(h.opt2)) opt += h.opt2;
+      const opts = opt.split(';');
       for (let i = 0; i < opts.length; ++i) {
          opts[i] = opts[i].toLowerCase();
          if (opts[i].indexOf('same') === 0) {
@@ -311,9 +316,20 @@ function getDrawSettings(kind, selector) {
   setDefaultDrawOpt('TH1', 'text');
   setDefaultDrawOpt('TH2', 'col');  */
 function setDefaultDrawOpt(classname, opt) {
-   const handle = getDrawHandle(prROOT + classname, 0);
-   if (handle)
-      handle.dflt = opt;
+   if (!classname)
+      return;
+   if ((opt === undefined) && isStr(classname) && (classname.indexOf(':') > 0)) {
+      // special usage to set list of options like TH2:lego2;TH3:glbox2
+      opt.split(';').forEach(part => {
+         const arr = part.split(':');
+         if (arr.length >= 1)
+            setDefaultDrawOpt(arr[0], arr[1] || '');
+      });
+   } else {
+      const handle = getDrawHandle(prROOT + classname, 0);
+      if (handle)
+         handle.dflt = opt;
+   }
 }
 
 /** @summary Draw object in specified HTML element with given draw options.
@@ -410,21 +426,38 @@ async function draw(dom, obj, opt) {
       promise = handle.draw().then(h => { handle.func = h; });
    } else if (!handle.func || !isStr(handle.func))
       return Promise.reject(Error(`Draw function or class not specified to draw ${type_info}`));
-   else if (!handle.prereq && !handle.script)
-      return Promise.reject(Error(`Prerequicities to load ${handle.func} are not specified`));
    else {
-      const init_promise = internals.ignore_v6
-         ? Promise.resolve(true)
-         : _ensureJSROOT().then(v6 => {
-         const pr = handle.prereq ? v6.require(handle.prereq) : Promise.resolve(true);
-         return pr.then(() => {
-            if (handle.script)
-               return loadScript(handle.script);
-         }).then(() => v6._complete_loading());
-      });
+      let func = findFunction(handle.func);
+      if (isFunc(func)) {
+         handle.func = func;
+         return performDraw();
+      }
+      let modules = null;
+      if (isStr(handle.script)) {
+         if (handle.script.indexOf('modules:') === 0)
+            modules = handle.script.slice(8);
+         else if (handle.script.indexOf('.mjs') > 0)
+            modules = handle.script;
+      }
+
+      if (!modules && !handle.prereq && !handle.script)
+         return Promise.reject(Error(`Prerequicities to load ${handle.func} are not specified`));
+
+      let init_promise = Promise.resolve(true);
+      if (modules)
+         init_promise = loadModules(modules);
+      else if (!internals.ignore_v6) {
+         init_promise = _ensureJSROOT().then(v6 => {
+            const pr = handle.prereq ? v6.require(handle.prereq) : Promise.resolve(true);
+            return pr.then(() => {
+               if (handle.script)
+                  return loadScript(handle.script);
+            }).then(() => v6._complete_loading());
+         });
+      }
 
       promise = init_promise.then(() => {
-         const func = findFunction(handle.func);
+         func = findFunction(handle.func);
          if (!isFunc(func))
             return Promise.reject(Error(`Fail to find function ${handle.func} after loading ${handle.prereq || handle.script}`));
 
@@ -509,7 +542,7 @@ function addStreamerInfosForPainter(lst) {
 
    function checkBaseClasses(si, lvl) {
       const element = si.fElements?.arr[0];
-      if ((element?.fTypeName !== 'BASE') || (lvl > 4))
+      if ((element?.fTypeName !== kBaseClass) || (lvl > 4))
          return null;
       // exclude very basic classes
       if (basics.indexOf(element.fName) >= 0)
@@ -572,18 +605,14 @@ async function makeImage(args) {
    if (!args.format)
       args.format = 'svg';
    if (!args.width)
-      args.width = 1200;
+      args.width = settings.CanvasWidth;
    if (!args.height)
-      args.height = 800;
-
-   if (args.use_canvas_size && (args.object?._typename === clTCanvas) && args.object.fCw && args.object.fCh) {
-      args.width = args.object?.fCw;
-      args.height = args.object?.fCh;
-   }
+      args.height = settings.CanvasHeight;
 
    async function build(main) {
       main.attr('width', args.width).attr('height', args.height)
           .style('width', args.width + 'px').style('height', args.height + 'px')
+          .property('_batch_use_canvsize', args.use_canvas_size ?? false)
           .property('_batch_mode', true)
           .property('_batch_format', args.format !== 'svg' ? args.format : null);
 
@@ -612,11 +641,13 @@ async function makeImage(args) {
             }
          }
 
-         main.select('svg')
-             .attr('xmlns', 'http://www.w3.org/2000/svg')
-             .attr('width', args.width)
-             .attr('height', args.height)
-             .attr('style', null).attr('class', null).attr('x', null).attr('y', null);
+         const mainsvg = main.select('svg');
+
+         mainsvg.attr('xmlns', nsSVG)
+                .attr('style', null).attr('class', null).attr('x', null).attr('y', null);
+
+         if (!mainsvg.attr('width') && !mainsvg.attr('height'))
+            mainsvg.attr('width', args.width).attr('height', args.height);
 
          function clear_element() {
             const elem = d3_select(this);
@@ -628,14 +659,14 @@ async function makeImage(args) {
 
          let svg;
          if (args.format === 'pdf')
-            svg = { node: main.select('svg').node(), width: args.width, height: args.height, can_modify: true };
+            svg = { node: mainsvg.node(), width: args.width, height: args.height, can_modify: true };
          else {
             svg = compressSVG(main.html());
             if (args.format === 'svg')
                return complete(svg);
          }
 
-         return svgToImage(svg, args.format, args.as_buffer).then(complete);
+         return svgToImage(svg, args.format, args).then(complete);
       });
    }
 
@@ -667,11 +698,8 @@ async function makeSVG(args) {
    return makeImage(args);
 }
 
-internals.addDrawFunc = addDrawFunc;
-
 function assignPadPainterDraw(PadPainterClass) {
-   PadPainterClass.prototype.drawObject = (...args) =>
-      draw(...args).catch(err => { console.log(`Error ${err?.message ?? err}  at ${err?.stack ?? 'uncknown place'}`); return null; });
+   PadPainterClass.prototype.drawObject = draw;
    PadPainterClass.prototype.getObjectDrawSettings = getDrawSettings;
 }
 
@@ -695,8 +723,11 @@ async function init_v7(arg) {
 }
 
 
-// to avoid cross-dependnecy between io.mjs and draw.mjs
-internals.addStreamerInfosForPainter = addStreamerInfosForPainter;
+// to avoid cross-dependency between modules
+Object.assign(internals, { addStreamerInfosForPainter, addDrawFunc, setDefaultDrawOpt, makePDF });
+
+Object.assign(internals.jsroot, { draw, redraw, makeSVG, makeImage, addDrawFunc });
+
 
 /** @summary Draw TRooPlot
   * @private */

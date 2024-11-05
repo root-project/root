@@ -58,6 +58,9 @@ std::unique_ptr<ROOT::Experimental::RNTupleWriter>
 ROOT::Experimental::RNTupleWriter::Create(std::unique_ptr<RNTupleModel> model,
                                           std::unique_ptr<Internal::RPageSink> sink, const RNTupleWriteOptions &options)
 {
+   if (model->GetRegisteredSubfields().size() > 0) {
+      throw RException(R__FAIL("cannot create an RNTupleWriter from a model with registered subfields"));
+   }
    if (options.GetUseBufferedWrite()) {
       sink = std::make_unique<Internal::RPageSinkBuf>(std::move(sink));
    }

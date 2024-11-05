@@ -266,9 +266,6 @@ namespace cling {
 
     Sema& SemaRef = getSema();
     Preprocessor& PP = SemaRef.getPreprocessor();
-    // Enable incremental processing, which prevents the preprocessor destroying
-    // the lexer on EOF token.
-    PP.enableIncrementalProcessing();
 
     m_LookupHelper.reset(new LookupHelper(new Parser(PP, SemaRef,
                                                      /*SkipFunctionBodies*/false,
@@ -327,32 +324,13 @@ namespace cling {
       setupCallbacks(*this, parentInterp);
     }
 
-    llvm::SmallVector<llvm::StringRef, 6> Syms;
-    Initialize(noRuntime || m_Opts.NoRuntime, isInSyntaxOnlyMode(), Syms);
+    Initialize(noRuntime || m_Opts.NoRuntime, isInSyntaxOnlyMode());
 
     // Commit the transactions, now that gCling is set up. It is needed for
     // static initialization in these transactions through
     // registerCxaAtExitHelper().
     for (auto&& I: IncrParserTransactions)
       m_IncrParser->commitTransaction(I);
-
-    // Now that the transactions have been commited, force symbol emission
-    // and overrides.
-    if (!isInSyntaxOnlyMode() && !m_Opts.CompilerOpts.CUDADevice) {
-      for (const llvm::StringRef& Sym : Syms) {
-        void* Addr = m_Executor->getPointerToGlobalFromJIT(Sym);
-#if defined(__linux__)
-        // We need to look for the mangled name of at_quick_exit on linux.
-        if (!Addr && Sym.equals("at_quick_exit"))
-          Addr = m_Executor->getPointerToGlobalFromJIT("_Z13at_quick_exitPFvvE");
-#endif
-        if (!Addr) {
-          cling::errs() << "Replaced symbol " << Sym << " cannot be found in JIT!\n";
-        } else {
-          m_Executor->replaceSymbol(Sym.str().c_str(), Addr);
-        }
-      }
-    }
 
     m_IncrParser->SetTransformers(parentInterp);
 
@@ -423,8 +401,7 @@ namespace cling {
     m_IncrParser.reset(nullptr);
   }
 
-  Transaction* Interpreter::Initialize(bool NoRuntime, bool SyntaxOnly,
-                              llvm::SmallVectorImpl<llvm::StringRef>& Globals) {
+  Transaction* Interpreter::Initialize(bool NoRuntime, bool SyntaxOnly) {
     // The Initialize() function is called twice in CUDA mode. The first time
     // the host interpreter is initialized and the second time the device
     // interpreter is initialized. Without this if statement, a redefinition
@@ -521,7 +498,6 @@ namespace cling {
           << " { return __cxa_atexit((void(*)(void*))f, 0, __dso_handle); }\n";
       else
         Strm << ";\n";
-      Globals.push_back("at_quick_exit");
     }
 
 #if defined(_WIN32)
@@ -539,7 +515,6 @@ namespace cling {
                 " return f; }\n";
       else
         Strm << ";\n";
-    Globals.push_back("__dllonexit");
 #if !defined(_M_CEE_PURE)
     Strm << Linkage << " " << Spec << " int (*_onexit("
          << "int (" << Spec << " *f)()))()";
@@ -548,7 +523,6 @@ namespace cling {
               " return f; }\n";
     else
       Strm << ";\n";
-    Globals.push_back("_onexit");
 #endif
 #endif
 
@@ -938,9 +912,17 @@ namespace cling {
     // context triggered this import!
     DeclContext *OldDC = getSema().CurContext;
     getSema().CurContext = getSema().getASTContext().getTranslationUnitDecl();
-    bool success =
-      !getSema().ActOnModuleImport(ValidLoc, /*ExportLoc*/ {}, ValidLoc,
-                                   std::make_pair(II, ValidLoc)).isInvalid();
+
+    // Fix C++20 builds caused by commit:
+    // llvm-project/commit/574ee1c02ef73b66c5957cf93888234b0471695f
+    // We are loading clang modules here and not C++20 modules
+    auto Path = std::make_pair(II, ValidLoc);
+    Module* Mod = getSema().getModuleLoader().loadModule(
+        ValidLoc, Path, Module::AllVisible, /*IsInclusionDirective=*/false);
+    bool success = Mod && !getSema()
+                               .ActOnModuleImport(ValidLoc, /*ExportLoc*/ {},
+                                                  ValidLoc, Mod, Path)
+                               .isInvalid();
     getSema().CurContext = OldDC;
 
     if (success) {
@@ -1686,6 +1668,13 @@ namespace cling {
 
     static_cast<MultiplexInterpreterCallbacks*>(m_Callbacks.get())
       ->addCallback(std::move(C));
+  }
+
+  llvm::orc::LLJIT* Interpreter::getExecutionEngine() {
+    if (!m_Executor)
+      return nullptr;
+
+    return m_Executor->getLLJIT();
   }
 
   const DynamicLibraryManager* Interpreter::getDynamicLibraryManager() const {

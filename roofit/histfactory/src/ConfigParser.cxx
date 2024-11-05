@@ -353,7 +353,6 @@ HistFactory::Measurement ConfigParser::CreateMeasurementFromDriverNode(TXMLNode 
    measurement.SetLumiRelErr(.10);
    measurement.SetBinLow(0);
    measurement.SetBinHigh(1);
-   measurement.SetExportOnly(false);
 
    cxcoutIHF << "Creating new measurement:\n";
 

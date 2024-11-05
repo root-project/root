@@ -87,9 +87,9 @@ This example illustrates that objects can work together without knowing about ea
 
 * The ROOT implementation **does not require the** *moc* preprocessor and the `signal:` and `slot:` keywords in the class declaration. Signals and slots are normal class methods.
 
-* The class which corresponds to **Qt's** **QObject** is [TQObject](http://root.cern.ch/root/html/TQObject.html). It reproduces the general features of the QObject class and has the `Connect()`, `Disconnect()` and `Emit()` methods. The [TQObject](http://root.cern.ch/root/html/TQObject.html) class does not derive from any class which makes it possible to have multiple inheritance from [TObject](http://root.cern.ch/root/html/TObject.html) derived classes and [TQObject](http://root.cern.ch/root/html/TQObject.html).
+* The class which corresponds to **Qt's** **QObject** is [TQObject](https://root.cern/doc/master/classTQObject.html). It reproduces the general features of the QObject class and has the `Connect()`, `Disconnect()` and `Emit()` methods. The [TQObject](https://root.cern/doc/master/classTQObject.html) class does not derive from any class which makes it possible to have multiple inheritance from [TObject](https://root.cern/doc/master/classTQObject.html) derived classes and [TQObject](https://root.cern/doc/master/classTQObject.html).
 
-* By placing the [`RQ_OBJECT()`](http://root.cern.ch/root/html/RQ_OBJECT.h) macro inside a class body you can use signals and slots with classes not inheriting from [TQObject](http://root.cern.ch/root/html/TQObject.html), like interpreted classes which can not derive from compiled classes. This makes it possible to apply the **Object Communication Mechanism** between compiled and interpreted classes in an interactive ROOT session.
+* By placing the [`RQ_OBJECT()`](https://root.cern/doc/master/RQ__OBJECT_8h.html) macro inside a class body you can use signals and slots with classes not inheriting from [TQObject](https://root.cern/doc/master/classTQObject.html), like interpreted classes which can not derive from compiled classes. This makes it possible to apply the **Object Communication Mechanism** between compiled and interpreted classes in an interactive ROOT session.
 
 * The ROOT implementation allows to make connections to any object known to the ROOT C++ interpreter. The following line makes a connection between signal `Pressed()` from `button` and method/slot `Draw()` from object `hist` of class (compiled or interpreted) `TH1`
 
@@ -139,7 +139,7 @@ This provides an explicit interface specification for the user (this requirement
 
 **The third requirement**, only necessary if you want to have class signals (i.e. for all objects of a class), is that you have to replace the standard `ClassImp` macro by `ClassImpQ`.
 
-Signals are currently implemented for all ROOT GUI classes and the [TTimer](http://root.cern.ch/root/html/TTimer.html) and [TCanvas](http://root.cern.ch/root/html/TCanvas.html) classes (to find quickly all defined signals do for example: `grep '*SIGNAL*' $ROOTSYS/include/*.h`).
+Signals are currently implemented for all ROOT GUI classes and the [TTimer](https://root.cern/doc/master/classTTimer.html) and [TCanvas](https://root.cern/doc/master/classTCanvas.html) classes (to find quickly all defined signals do for example: `grep '*SIGNAL*' $ROOTSYS/include/*.h`).
 
 ## Examples
 
@@ -157,14 +157,14 @@ Based on hsimple this example demonstrates:
 
 *   All features of the hsimple example.
 *   How to create an interpreted class with signals which will report about dynamic state of the histogram processing.
-*   How to use the [TTimer](http://root.cern.ch/root/html/TTimer.html) class for emulation of "multithreading".
+*   How to use the [TTimer](https://root.cern/doc/master/classTTimer.html) class for emulation of "multithreading".
 *   How to use signals for the concurrent update of pad, file, benchmark facility, etc.
 
 ### An Example on How to Use Canvas Event Signals ([rqfiller.C](http://root.cern.ch/root/rqex/rqfiller.C))
 
 This example shows:
 
-*   How the object communication mechanism can be used for handling the [TCanvas](http://root.cern.ch/root/html/TCanvas.html)'s mouse/key events in an interpreted class.
+*   How the object communication mechanism can be used for handling the [TCanvas](https://root.cern/doc/master/classTCanvas.html)'s mouse/key events in an interpreted class.
 
 With this demo you can fill histograms by hand:
 

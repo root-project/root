@@ -35,14 +35,14 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
 {
    // calculate gradient using Initial gradient calculator and from MinimumParameters object
 
-   InitialGradientCalculator gc(fFcn, fTransformation, fStrategy);
+   InitialGradientCalculator gc(fFcn, fTransformation);
    FunctionGradient gra = gc(par);
 
    return (*this)(par, gra);
 }
 
 // comment it, because it was added
-FunctionGradient Numerical2PGradientCalculator::operator()(const std::vector<double> &params) const
+FunctionGradient Numerical2PGradientCalculator::operator()(std::span<const double> params) const
 {
    // calculate gradient from an std;:vector of paramteters
 

@@ -25,17 +25,13 @@
 class ChangeOperModeRAII;
 class RooAbsArg;
 
+namespace RooBatchCompute {
+class AbsBufferManager;
+}
+
 namespace RooFit {
 
-namespace Detail {
-class BufferManager;
-}
-
 struct NodeInfo;
-
-namespace Detail {
-class BufferManager;
-}
 
 class Evaluator {
 public:
@@ -60,7 +56,7 @@ private:
    void syncDataTokens();
    void updateOutputSizes();
 
-   std::unique_ptr<Detail::BufferManager> _bufferManager;
+   std::unique_ptr<RooBatchCompute::AbsBufferManager> _bufferManager;
    RooAbsReal &_topNode;
    const bool _useGPU = false;
    int _nEvaluations = 0;

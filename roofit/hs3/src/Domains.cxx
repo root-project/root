@@ -27,40 +27,80 @@ constexpr static auto defaultDomainName = "default_domain";
 
 void Domains::populate(RooWorkspace &ws) const
 {
-   auto found = _map.find(defaultDomainName);
-   if (found != _map.end()) {
-      found->second.populate(ws);
+   auto default_domain = _map.find(defaultDomainName);
+   if (default_domain != _map.end()) {
+      default_domain->second.populate(ws);
+   }
+   for (const auto &domain : _map) {
+      if (domain.first == defaultDomainName)
+         continue;
+      domain.second.registerBinnings(domain.first.c_str(), ws);
    }
 }
+
 void Domains::readVariable(const char *name, double min, double max)
 {
-   _map[defaultDomainName].readVariable(name, min, max);
+   readVariable(name, min, max, defaultDomainName);
 }
+void Domains::readVariable(const char *name, double min, double max, const char *domain)
+{
+   _map[domain].readVariable(name, min, max);
+}
+
 void Domains::readVariable(RooRealVar const &var)
 {
-   readVariable(var.GetName(), var.getMin(), var.getMax());
+   readVariable(var.GetName(), var.getMin(), var.getMax(), defaultDomainName);
+   for (const auto &bname : var.getBinningNames()) {
+      if (bname.empty())
+         continue;
+      auto &binning = var.getBinning(bname.c_str());
+      readVariable(var.GetName(), binning.lowBound(), binning.highBound(), bname.c_str());
+   }
 }
+
 void Domains::writeVariable(RooRealVar &var) const
 {
-   _map.at(defaultDomainName).writeVariable(var);
+   auto default_domain = _map.find(defaultDomainName);
+   if (default_domain != _map.end()) {
+      default_domain->second.writeVariable(var);
+   }
 }
 
 void Domains::readJSON(RooFit::Detail::JSONNode const &node)
 {
-   auto defaultDomain = RooJSONFactoryWSTool::findNamedChild(node, defaultDomainName);
-   if (!defaultDomain) {
+   auto default_domain_element = RooJSONFactoryWSTool::findNamedChild(node, defaultDomainName);
+   if (!default_domain_element) {
       RooJSONFactoryWSTool::error("\"domains\" do not contain \"" + std::string{defaultDomainName} + "\"");
    }
-   _map[defaultDomainName].readJSON(*defaultDomain);
+   for (auto &domain : node.children()) {
+      if (!domain.has_child("name")) {
+         RooJSONFactoryWSTool::error("encountered domain without \"name\"");
+      }
+      auto &name = domain["name"];
+      _map[name.val()].readJSON(domain);
+   }
 }
+
 void Domains::writeJSON(RooFit::Detail::JSONNode &node) const
 {
    for (auto const &domain : _map) {
-      domain.second.writeJSON(RooJSONFactoryWSTool::appendNamedChild(node, domain.first));
+      // Avoid writing a domain that was already written
+      if (!RooJSONFactoryWSTool::findNamedChild(node, domain.first)) {
+         domain.second.writeJSON(RooJSONFactoryWSTool::appendNamedChild(node, domain.first));
+      }
    }
 }
+
+void Domains::ProductDomain::readVariable(RooRealVar const &var)
+{
+   readVariable(var.GetName(), var.getMin(), var.getMax());
+}
+
 void Domains::ProductDomain::readVariable(const char *name, double min, double max)
 {
+   if (RooNumber::isInfinite(min) && RooNumber::isInfinite(max))
+      return;
+
    auto &elem = _map[name];
 
    if (!RooNumber::isInfinite(min)) {
@@ -102,6 +142,7 @@ void Domains::ProductDomain::readJSON(RooFit::Detail::JSONNode const &node)
    }
 }
 void Domains::ProductDomain::writeJSON(RooFit::Detail::JSONNode &node) const
+
 {
    node.set_map();
    node["type"] << "product_domain";
@@ -127,6 +168,15 @@ void Domains::ProductDomain::populate(RooWorkspace &ws) const
          const double vMax = elem.hasMax ? elem.max : RooNumber::infinity();
          ws.import(RooRealVar{name.c_str(), name.c_str(), vMin, vMax});
       }
+   }
+}
+void Domains::ProductDomain::registerBinnings(const char *name, RooWorkspace &ws) const
+{
+   for (auto const &item : _map) {
+      auto *var = ws.var(item.first);
+      if (!var)
+         continue;
+      var->setRange(name, item.second.min, item.second.max);
    }
 }
 

@@ -41,9 +41,9 @@ void candleplotstack()
    gPad->SetGrid(1,0);
 
    hs->GetXaxis()->SetTimeDisplay(1);
-   hs->GetXaxis()->SetTimeFormat("%m/%y");
-   hs->GetXaxis()->SetTitle("Date [month/year]");
-
+   hs->GetXaxis()->SetTimeFormat("%d/%m/%y");
+   hs->GetXaxis()->SetNdivisions(-6);
+   hs->GetXaxis()->SetTitle("Date [day/month/year]");
    c1->Modified();
 
    gPad->BuildLegend(0.75,0.75,0.95,0.95,"");

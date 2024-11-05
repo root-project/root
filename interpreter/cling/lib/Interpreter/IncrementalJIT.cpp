@@ -19,7 +19,6 @@
 #include <clang/Basic/TargetOptions.h>
 #include <clang/Frontend/CompilerInstance.h>
 
-#include <llvm/ADT/Triple.h>
 #include <llvm/ExecutionEngine/JITLink/EHFrameSupport.h>
 #include <llvm/ExecutionEngine/Orc/JITTargetMachineBuilder.h>
 #include <llvm/ExecutionEngine/Orc/ObjectLinkingLayer.h>
@@ -28,8 +27,9 @@
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/MC/TargetRegistry.h>
 #include <llvm/Support/raw_ostream.h>
-#include <llvm/Support/Host.h>
 #include <llvm/Target/TargetMachine.h>
+#include <llvm/TargetParser/Host.h>
+#include <llvm/TargetParser/Triple.h>
 
 #include <optional>
 
@@ -69,8 +69,6 @@ namespace {
 #endif
     }
   };
-
-  ClingMMapper MMapperInstance;
 
   // A memory manager for Cling that reserves memory for code and data sections
   // to keep them contiguous for the emission of one module. This is required
@@ -133,7 +131,7 @@ namespace {
     AllocInfo m_RWData;
 
   public:
-    ClingMemoryManager() : Super(&MMapperInstance) {}
+    ClingMemoryManager(ClingMMapper& MMapper) : Super(&MMapper) {}
 
     uint8_t* allocateCodeSection(uintptr_t Size, unsigned Alignment,
                                  unsigned SectionID,
@@ -306,10 +304,9 @@ Error RTDynamicLibrarySearchGenerator::tryToGenerate(
 
     std::string Tmp((*Name).data() + StripGlobalPrefix,
                     (*Name).size() - StripGlobalPrefix);
-    if (void *Addr = Dylib.getAddressOfSymbol(Tmp.c_str())) {
-      NewSymbols[Name] = JITEvaluatedSymbol(
-          static_cast<JITTargetAddress>(reinterpret_cast<uintptr_t>(Addr)),
-          JITSymbolFlags::Exported);
+    if (void* P = Dylib.getAddressOfSymbol(Tmp.c_str())) {
+      NewSymbols[Name] = {orc::ExecutorAddr::fromPtr(P),
+                          JITSymbolFlags::Exported};
     }
   }
 
@@ -340,9 +337,7 @@ public:
       auto Addr = lookup(*KV.first);
       if (auto Err = Addr.takeError())
         return Err;
-      Symbols[KV.first] = JITEvaluatedSymbol(
-          Addr->getValue(),
-          JITSymbolFlags::Exported);
+      Symbols[KV.first] = {Addr.get(), JITSymbolFlags::Exported};
     }
     if (Symbols.empty())
       return Error::success();
@@ -357,7 +352,8 @@ static bool UseJITLink(const Triple& TT) {
   if (TT.getArch() == Triple::riscv64 ||
       (TT.isOSBinFormatMachO() &&
        (TT.getArch() == Triple::aarch64 || TT.getArch() == Triple::x86_64)) ||
-      (TT.isOSBinFormatELF() && TT.getArch() == Triple::ppc64le)) {
+      (TT.isOSBinFormatELF() &&
+       (TT.getArch() == Triple::aarch64 || TT.getArch() == Triple::ppc64le))) {
     jitLink = true;
   }
   // Finally, honor the user's choice by setting an environment variable.
@@ -369,13 +365,13 @@ static bool UseJITLink(const Triple& TT) {
 
 static std::unique_ptr<TargetMachine>
 CreateTargetMachine(const clang::CompilerInstance& CI, bool JITLink) {
-  CodeGenOpt::Level OptLevel = CodeGenOpt::Default;
+  CodeGenOptLevel OptLevel = CodeGenOptLevel::Default;
   switch (CI.getCodeGenOpts().OptimizationLevel) {
-    case 0: OptLevel = CodeGenOpt::None; break;
-    case 1: OptLevel = CodeGenOpt::Less; break;
-    case 2: OptLevel = CodeGenOpt::Default; break;
-    case 3: OptLevel = CodeGenOpt::Aggressive; break;
-    default: OptLevel = CodeGenOpt::Default;
+    case 0: OptLevel = CodeGenOptLevel::None; break;
+    case 1: OptLevel = CodeGenOptLevel::Less; break;
+    case 2: OptLevel = CodeGenOptLevel::Default; break;
+    case 3: OptLevel = CodeGenOptLevel::Aggressive; break;
+    default: OptLevel = CodeGenOptLevel::Default;
   }
 
   const Triple &TT = CI.getTarget().getTriple();
@@ -400,12 +396,13 @@ CreateTargetMachine(const clang::CompilerInstance& CI, bool JITLink) {
     // Set up the TargetMachine as otherwise done by
     // LLJITBuilderState::prepareForConstruction.
     JTMB.setRelocationModel(Reloc::PIC_);
-    // Set the small code except for macOS on AArch64 - it results in relocation
-    // targets that are out-of-range.
-    // TODO: Investigate / report upstream and re-evaluate after a future LLVM
-    // upgrade.
-    if (!(TT.isOSBinFormatMachO() && TT.getArch() == Triple::aarch64))
-      JTMB.setCodeModel(CodeModel::Small);
+    // However, do not change the code model: While the small code model would
+    // be enough if we created a new JITDylib per Module, Cling adds multiple
+    // modules to the same library. This causes problems because weak symbols
+    // are merged and may end up more than 2 GB apart. This is especially
+    // visible for DW.ref.__gxx_personality_v0 related to exception handling.
+    // TODO: Investigate if we can use one JITDylib per Module as recommended
+    // by upstream.
   }
 
   return cantFail(JTMB.createTargetMachine());
@@ -428,10 +425,8 @@ static SymbolMap GetListOfLibcNonsharedSymbols(const LLJIT& Jit) {
 
   SymbolMap LibcNonsharedSymbols;
   for (const auto& NamePtr : NamePtrList) {
-    auto Addr = static_cast<JITTargetAddress>(
-        reinterpret_cast<uintptr_t>(NamePtr.second));
-    LibcNonsharedSymbols[Jit.mangleAndIntern(NamePtr.first)] =
-        JITEvaluatedSymbol(Addr, JITSymbolFlags::Exported);
+    LibcNonsharedSymbols[Jit.mangleAndIntern(NamePtr.first)] = {
+        orc::ExecutorAddr::fromPtr(NamePtr.second), JITSymbolFlags::Exported};
   }
   return LibcNonsharedSymbols;
 }
@@ -442,6 +437,24 @@ namespace cling {
 
 ///\brief Creates JIT event listener to allow profiling of JITted code with perf
 llvm::JITEventListener* createPerfJITEventListener();
+
+IncrementalJIT::~IncrementalJIT() {
+  // FIXME: This should ideally happen in the right order without explicitly
+  // doing this. We started seeing failing tests (eg, tutorial-hist-cumulative,
+  // JITLink turned on) with assertion failure in ~FinalizedAlloc after commit
+  // [cling] Move generators to ProcessSymbols JITDylib
+  // This likely changed the destruction order that caused the assertion to
+  // trigger.
+  if (auto Err = Jit->getMainJITDylib().clear()) {
+    llvm::logAllUnhandledErrors(std::move(Err), llvm::errs(),
+                                "Error clearing MainJITDylib: ");
+  }
+
+  if (auto Err = Jit->getProcessSymbolsJITDylib()->clear()) {
+    llvm::logAllUnhandledErrors(std::move(Err), llvm::errs(),
+                                "Error clearing ProcessSymbolsJITDylib: ");
+  }
+}
 
 IncrementalJIT::IncrementalJIT(
     IncrementalExecutor& Executor, const clang::CompilerInstance &CI,
@@ -474,7 +487,10 @@ IncrementalJIT::IncrementalJIT(
       return ObjLinkingLayer;
     }
 
-    auto GetMemMgr = []() { return std::make_unique<ClingMemoryManager>(); };
+    auto MMapper = std::make_unique<ClingMMapper>();
+    auto GetMemMgr = [MMapper = std::move(MMapper)]() {
+      return std::make_unique<ClingMemoryManager>(*MMapper);
+    };
     auto Layer =
         std::make_unique<RTDyldObjectLinkingLayer>(ES, std::move(GetMemMgr));
 
@@ -494,7 +510,8 @@ IncrementalJIT::IncrementalJIT(
       Layer->setAutoClaimResponsibilityForObjectSymbols(true);
     }
 
-    if (TT.isOSBinFormatELF() && (TT.getArch() == Triple::ArchType::ppc64 ||
+    if (TT.isOSBinFormatELF() && (TT.getArch() == Triple::ArchType::aarch64 ||
+                                  TT.getArch() == Triple::ArchType::ppc64 ||
                                   TT.getArch() == Triple::ArchType::ppc64le))
       Layer->setAutoClaimResponsibilityForObjectSymbols(true);
 
@@ -504,6 +521,34 @@ IncrementalJIT::IncrementalJIT(
   Builder.setCompileFunctionCreator([&](llvm::orc::JITTargetMachineBuilder)
   -> llvm::Expected<std::unique_ptr<llvm::orc::IRCompileLayer::IRCompiler>> {
     return std::make_unique<SimpleCompiler>(*m_TM);
+  });
+
+  char LinkerPrefix = this->m_TM->createDataLayout().getGlobalPrefix();
+
+  Builder.setProcessSymbolsJITDylibSetup([&](LLJIT& J) -> Expected<JITDylibSP> {
+    auto& JD = J.getExecutionSession().createBareJITDylib("<Process Symbols>");
+    // Process symbol resolution
+    auto HostProcessLookup =
+        RTDynamicLibrarySearchGenerator::GetForCurrentProcess(
+            LinkerPrefix, [this] { return m_CurrentProcessRT; },
+            [this](const SymbolStringPtr& Sym) {
+              return !m_ForbidDlSymbols.contains(*Sym);
+            });
+    if (!HostProcessLookup) {
+      return HostProcessLookup.takeError();
+    }
+    JD.addGenerator(std::move(*HostProcessLookup));
+
+    // This must come after process resolution, to  consistently resolve global
+    // symbols (e.g. std::cout) to the same address.
+    auto LibLookup = std::make_unique<RTDynamicLibrarySearchGenerator>(
+        llvm::sys::DynamicLibrary(ExtraLibHandle), LinkerPrefix,
+        [this] { return m_CurrentProcessRT; },
+        [this](const SymbolStringPtr& Sym) {
+          return !m_ForbidDlSymbols.contains(*Sym);
+        });
+    JD.addGenerator(std::move(LibLookup));
+    return &JD;
   });
 
   if (Expected<std::unique_ptr<LLJIT>> JitInstance = Builder.create()) {
@@ -523,32 +568,9 @@ IncrementalJIT::IncrementalJIT(
       m_CompiledModules[Unsafe] = std::move(TSM);
     });
 
-  char LinkerPrefix = this->m_TM->createDataLayout().getGlobalPrefix();
-
-  // Process symbol resolution
-  auto HostProcessLookup
-    = RTDynamicLibrarySearchGenerator::GetForCurrentProcess(LinkerPrefix,
-                                              [&]{ return m_CurrentRT; },
-                                              [&](const SymbolStringPtr &Sym) {
-                                  return !m_ForbidDlSymbols.contains(*Sym); });
-  if (!HostProcessLookup) {
-    Err = HostProcessLookup.takeError();
-    return;
-  }
-  Jit->getMainJITDylib().addGenerator(std::move(*HostProcessLookup));
-
-  // This must come after process resolution, to  consistently resolve global
-  // symbols (e.g. std::cout) to the same address.
-  auto LibLookup = std::make_unique<RTDynamicLibrarySearchGenerator>(
-                       llvm::sys::DynamicLibrary(ExtraLibHandle), LinkerPrefix,
-                                              [&]{ return m_CurrentRT; },
-                                              [&](const SymbolStringPtr &Sym) {
-                                  return !m_ForbidDlSymbols.contains(*Sym); });
-  Jit->getMainJITDylib().addGenerator(std::move(LibLookup));
-
 #if defined(__linux__) && defined(__GLIBC__)
   // See comment in ListOfLibcNonsharedSymbols.
-  cantFail(Jit->getMainJITDylib().define(
+  cantFail(Jit->getProcessSymbolsJITDylib()->define(
       absoluteSymbols(GetListOfLibcNonsharedSymbols(*Jit))));
 #endif
 
@@ -586,12 +608,15 @@ IncrementalJIT::IncrementalJIT(
 
 std::unique_ptr<llvm::orc::DefinitionGenerator> IncrementalJIT::getGenerator() {
   return std::make_unique<DelegateGenerator>(
-      [&](StringRef UnmangledName) { return Jit->lookup(UnmangledName); });
+      [&](StringRef Name) { return Jit->lookupLinkerMangled(Name); });
 }
 
 void IncrementalJIT::addModule(Transaction& T) {
-  ResourceTrackerSP RT = Jit->getMainJITDylib().createResourceTracker();
-  m_ResourceTrackers[&T] = RT;
+  ResourceTrackerSP MainRT = Jit->getMainJITDylib().createResourceTracker();
+  m_MainResourceTrackers[&T] = MainRT;
+  ResourceTrackerSP ProcessRT =
+      Jit->getProcessSymbolsJITDylib()->createResourceTracker();
+  m_ProcessResourceTrackers[&T] = ProcessRT;
 
   std::unique_ptr<Module> module = T.takeModule();
 
@@ -614,9 +639,9 @@ void IncrementalJIT::addModule(Transaction& T) {
 
   const Module *Unsafe = TSM.getModuleUnlocked();
   T.m_CompiledModule = Unsafe;
-  m_CurrentRT = RT;
+  m_CurrentProcessRT = ProcessRT;
 
-  if (Error Err = Jit->addIRModule(RT, std::move(TSM))) {
+  if (Error Err = Jit->addIRModule(MainRT, std::move(TSM))) {
     logAllUnhandledErrors(std::move(Err), errs(),
                           "[IncrementalJIT] addModule() failed: ");
     return;
@@ -624,12 +649,16 @@ void IncrementalJIT::addModule(Transaction& T) {
 }
 
 llvm::Error IncrementalJIT::removeModule(const Transaction& T) {
-  ResourceTrackerSP RT = std::move(m_ResourceTrackers[&T]);
-  if (!RT)
+  ResourceTrackerSP MainRT = std::move(m_MainResourceTrackers[&T]);
+  if (!MainRT)
     return llvm::Error::success();
+  ResourceTrackerSP ProcessRT = std::move(m_ProcessResourceTrackers[&T]);
 
-  m_ResourceTrackers.erase(&T);
-  if (Error Err = RT->remove())
+  m_MainResourceTrackers.erase(&T);
+  m_ProcessResourceTrackers.erase(&T);
+  if (Error Err = MainRT->remove())
+    return Err;
+  if (Error Err = ProcessRT->remove())
     return Err;
   auto iMod = m_CompiledModules.find(T.m_CompiledModule);
   if (iMod != m_CompiledModules.end())
@@ -638,44 +667,40 @@ llvm::Error IncrementalJIT::removeModule(const Transaction& T) {
   return llvm::Error::success();
 }
 
-JITTargetAddress
+orc::ExecutorAddr
 IncrementalJIT::addOrReplaceDefinition(StringRef Name,
-                                       JITTargetAddress KnownAddr) {
-
-  void* Symbol = getSymbolAddress(Name, /*IncludeFromHost=*/true);
-
-  // Nothing to define, we are redefining the same function. FIXME: Diagnose.
-  if (Symbol && (JITTargetAddress)Symbol == KnownAddr)
-    return KnownAddr;
-
-  llvm::SmallString<128> LinkerMangledName;
-  char LinkerPrefix = this->m_TM->createDataLayout().getGlobalPrefix();
-  bool HasLinkerPrefix = LinkerPrefix != '\0';
-  if (HasLinkerPrefix && Name.front() == LinkerPrefix) {
-    LinkerMangledName.assign(1, LinkerPrefix);
-    LinkerMangledName.append(Name);
-  } else {
-    LinkerMangledName.assign(Name);
-  }
+                                       orc::ExecutorAddr KnownAddr) {
 
   // Let's inject it
   bool Inserted;
   SymbolMap::iterator It;
   std::tie(It, Inserted) = m_InjectedSymbols.try_emplace(
-      Jit->getExecutionSession().intern(LinkerMangledName),
-      JITEvaluatedSymbol(KnownAddr, JITSymbolFlags::Exported));
+      Jit->mangleAndIntern(Name),
+      ExecutorSymbolDef(KnownAddr, JITSymbolFlags::Exported));
   assert(Inserted && "Why wasn't this found in the initial Jit lookup?");
 
-  JITDylib& DyLib = Jit->getMainJITDylib();
-  // We want to replace a symbol with a custom provided one.
-  if (Symbol && KnownAddr)
-     // The symbol be in the DyLib or in-process.
-     llvm::consumeError(DyLib.remove({It->first}));
+  bool Defined = false;
+  for (auto* Dylib :
+       {&Jit->getMainJITDylib(), Jit->getPlatformJITDylib().get()}) {
+    if (Dylib->remove({It->first})) {
+      continue;
+    }
 
-  if (Error Err = DyLib.define(absoluteSymbols({*It}))) {
-    logAllUnhandledErrors(std::move(Err), errs(),
-                          "[IncrementalJIT] define() failed: ");
-    return JITTargetAddress{};
+    if (Error Err = Dylib->define(absoluteSymbols({*It}))) {
+      logAllUnhandledErrors(std::move(Err), errs(),
+                            "[IncrementalJIT] define() failed: ");
+      return orc::ExecutorAddr();
+    }
+    Defined = true;
+  }
+
+  if (!Defined) {
+    // Symbol was not found, just define it in the main library.
+    if (Error Err = Jit->getMainJITDylib().define(absoluteSymbols({*It}))) {
+      logAllUnhandledErrors(std::move(Err), errs(),
+                            "[IncrementalJIT] define() failed: ");
+      return orc::ExecutorAddr();
+    }
   }
 
   return KnownAddr;
@@ -690,7 +715,14 @@ void* IncrementalJIT::getSymbolAddress(StringRef Name, bool IncludeHostSymbols){
   if (!IncludeHostSymbols)
     insertInfo = m_ForbidDlSymbols.insert(Name);
 
-  Expected<llvm::orc::ExecutorAddr> Symbol = Jit->lookup(Name);
+  Expected<llvm::orc::ExecutorAddr> Symbol =
+      Jit->lookup(Jit->getMainJITDylib(), Name);
+  if (!Symbol) {
+    // FIXME: We should take advantage of the fact that all process symbols
+    // are now in a separate JITDylib; see also the comments and ideas in
+    // IncrementalExecutor::getAddressOfGlobal().
+    Symbol = Jit->lookup(*Jit->getProcessSymbolsJITDylib(), Name);
+  }
 
   // If m_ForbidDlSymbols already contained Name before we tried to insert it
   // then some calling frame has added it and will remove it later because its
@@ -705,7 +737,7 @@ void* IncrementalJIT::getSymbolAddress(StringRef Name, bool IncludeHostSymbols){
     return nullptr;
   }
 
-  return jitTargetAddressToPointer<void*>(Symbol->getValue());
+  return (Symbol.get()).toPtr<void*>();
 }
 
 bool IncrementalJIT::doesSymbolAlreadyExist(StringRef UnmangledName) {

@@ -194,6 +194,7 @@ class BaseBackend(ABC):
             **kwargs (dict): Keyword arguments used to execute the function.
         """
         cls.initialization = partial(fun, *args, **kwargs)
+        fun(*args, **kwargs)
 
     @abstractmethod
     def ProcessAndMerge(self, ranges: List[DataRange],
@@ -313,3 +314,10 @@ class BaseBackend(ABC):
         Distributed backends have to take care of creating an RDataFrame object
         that can run distributedly.
         """
+
+    def cleanup_cache(self, _: ExecutionIdentifier) -> None:
+        """
+        Remove the artifacts of the computation graph identified by the input
+        argument.
+        """
+        pass

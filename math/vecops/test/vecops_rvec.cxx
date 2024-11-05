@@ -455,6 +455,12 @@ TEST(VecOps, MathFuncs)
    CheckEqual(pow(v,1), v, " error checking math function pow");
    CheckEqual(pow(v,v), w, " error checking math function pow");
 
+   // #16031
+   RVec<double> vv{3.4};
+   RVec<double> vv_ref{11.56};
+   CheckEqual(pow(vv,2), vv_ref, " error checking math function pow");
+   CheckEqual(pow(vv,2.), vv_ref, " error checking math function pow");
+
    CheckEqual(sqrt(v), Map(v, [](double x) { return std::sqrt(x); }), " error checking math function sqrt");
    CheckEqual(log(v), Map(v, [](double x) { return std::log(x); }), " error checking math function log");
    CheckEqual(sin(v), Map(v, [](double x) { return std::sin(x); }), " error checking math function sin");
@@ -525,8 +531,8 @@ TEST(VecOps, InputOutput)
    const RVec<ULong64_t> ullref {1ULL, 2ULL, 3ULL};
    const RVec<UShort_t> usref {1, 2, 3};
    const RVec<UChar_t> ucref {1, 2, 3};
-   const RVec<Int_t> iref {1, 2, 3};;
-   const RVec<Long_t> lref {1UL, 2UL, 3UL};;
+   const RVec<Int_t> iref {1, 2, 3};
+   const RVec<Long_t> lref {1UL, 2UL, 3UL};
    const RVec<Long64_t> llref {1ULL, 2ULL, 3ULL};
    const RVec<Short_t> sref {1, 2, 3};
    const RVec<Char_t> cref {1, 2, 3};
@@ -819,15 +825,15 @@ TEST(VecOps, TakeN)
    auto res = Take(x,5,1);
    RVec<int> expected = {1,2,3,4,1};
    CheckEqual(res, expected); // Check the contents of the output vector are correct
-    
+
    res = Take(x,-5,1);
    expected = {1,1,2,3,4};
    CheckEqual(res, expected); // Check the contents of the output vector are correct
-    
+
    res = Take(x,-1,1);
    expected = {4};
    CheckEqual(res, expected); // Check the contents of the output vector are correct
-    
+
    res = Take(x,4,1);
    expected = {1,2,3,4};
    CheckEqual(res, expected); // Check the contents of the output vector are correct
@@ -868,7 +874,7 @@ TEST(VecOps, RangeBeginEndStride)
 {
     const RVecI ref{1, 3};
     CheckEqual(Range(1, 5, 2), ref);
-    
+
     CheckEqual(Range(-1, 8, 3), RVecI{-1, 2, 5});
     CheckEqual(Range(6, 1, -1), RVecI{6, 5, 4, 3, 2});
     CheckEqual(Range(-3, -9, -2), RVecI{-3, -5, -7});
@@ -1236,8 +1242,8 @@ TEST(VecOps, InvariantMass)
    RVec<double> phi1 =  {0.0, 0.0, 0.0,  -0.5, -2.4};
 
    RVec<double> mass2 = {40,  40,  40,  40,  30};
-   RVec<double> pt2 =   {0,   5,   5,   10,  2};
-   RVec<double> eta2 =  {0.0, 0.0, 0.5, 0.4, 1.2};
+   RVec<double> pt2 = {1, 5, 5, 10, 2};
+   RVec<double> eta2 = {0.1, 0.0, 0.5, 0.4, 1.2};
    RVec<double> phi2 =  {0.0, 0.0, 0.0, 0.5, 2.4};
 
    // Compute invariant mass of two particle system using both collections
@@ -1280,7 +1286,7 @@ TEST(VecOps, InvariantMass)
    // Check that calling with different argument types works and yields the
    // expected return types and values
    RVec<float> pt1f =   {0.f, 5.f, 5.f, 10.f, 10.f};
-   RVec<float> eta2f =  {0.f, 0.f, 0.5f, 0.4f, 1.2f};
+   RVec<float> eta2f = {0.1f, 0.f, 0.5f, 0.4f, 1.2f};
    const auto invMassF = InvariantMasses(pt1f, eta1, phi1, mass1, pt2, eta2f, phi2, mass2);
    EXPECT_TRUE((std::is_same_v<decltype(invMassF), const RVec<double>>)) << "InvariantMasses should return double if one of the arguments is double";
    for (size_t i = 0; i < invMass.size(); ++i) {
@@ -1294,6 +1300,43 @@ TEST(VecOps, InvariantMass)
    const auto invMass2F = InvariantMass(pt1f, eta1, phi1, mass1);
    EXPECT_TRUE((std::is_same_v<decltype(invMass2F), const double>)) << "InvariantMass should return double if one of the arguments is double";
    EXPECT_EQ(invMass2F, invMass2);
+
+   // Dummy particle collections
+   RVec<double> px1 = {0, 5, 5, 10, 10};
+   RVec<double> py1 = {0.0, 0.0, -1.0, 0.5, 2.5};
+   RVec<double> pz1 = {0.0, 0.0, 0.0, -0.5, -2.4};
+
+   RVec<double> px2 = {0, 5, 5, 10, 2};
+   RVec<double> py2 = {0.0, 0.0, 0.5, 0.4, 1.2};
+   RVec<double> pz2 = {0.0, 0.0, 0.0, 0.5, 2.4};
+
+   // Check with PxPyPxM coordinate systems
+   // Compute invariant mass of two particle system using both collections
+   const auto invMass_XYXM = InvariantMasses_PxPyPzM(px1, py1, pz1, mass1, px2, py2, pz2, mass2);
+
+   for (size_t i = 0; i < mass1.size(); i++) {
+      TLorentzVector p1, p2;
+      p1.SetXYZM(px1[i], py1[i], pz1[i], mass1[i]);
+      p2.SetXYZM(px2[i], py2[i], pz2[i], mass2[i]);
+      // NOTE: The accuracy of the optimized trigonometric functions is relatively
+      // low and the test start to fail with an accuracy of 1e-5.
+      EXPECT_NEAR((p1 + p2).M(), invMass_XYXM[i], 1e-4);
+   }
+
+   // Check that calling with different argument types works and yields the
+   // expected return types and values
+   RVec<float> px1f = {0.f, 5.f, 5.f, 10.f, 10.f};
+   RVec<float> py2f = {0.f, 0.f, 0.5f, 0.4f, 1.2f};
+   const auto invMassF_XYXM = InvariantMasses_PxPyPzM(px1f, py1, pz1, mass1, px2, py2f, pz2, mass2);
+   EXPECT_TRUE((std::is_same_v<decltype(invMassF_XYXM), const RVec<double>>))
+      << "InvariantMasses should return double if one of the arguments is double";
+   for (size_t i = 0; i < invMassF_XYXM.size(); ++i) {
+      // We use the full double result here as reference and allow for some
+      // jitter introduced by the floating point promotion that happens along
+      // the way (in deterministic but different places depending on the types
+      // of the arguments)
+      EXPECT_NEAR(invMassF_XYXM[i], invMass_XYXM[i], 1e-7);
+   }
 }
 
 TEST(VecOps, DeltaR)

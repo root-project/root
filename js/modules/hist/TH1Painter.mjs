@@ -21,11 +21,12 @@ class TH1Painter extends TH1Painter2D {
       let pr = Promise.resolve(true);
 
       if (reason === 'resize') {
-         if (is_main && main.resize3D()) main.render3D();
+         if (is_main && main.resize3D())
+            main.render3D();
       } else {
          this.createHistDrawAttributes(true);
 
-         this.scanContent(true); // may be required for axis drawings
+         this.scanContent(reason === 'zoom'); // may be required for axis drawings
 
          if (is_main) {
             assignFrame3DMethods(main);
@@ -47,12 +48,12 @@ class TH1Painter extends TH1Painter2D {
          }
       }
 
-      if (is_main) {
-         pr = pr.then(() => this.drawColorPalette(this.options.Zscale && ((this.options.Lego === 12) || (this.options.Lego === 14))))
-                .then(() => this.drawHistTitle());
-      }
+      if (is_main)
+         pr = pr.then(() => this.drawColorPalette(this.options.Zscale && ((this.options.Lego === 12) || (this.options.Lego === 14))));
 
-      return pr.then(() => this.updateFunctions()).then(() => this);
+      return pr.then(() => this.updateFunctions())
+               .then(() => this.updateHistTitle())
+               .then(() => this);
    }
 
    /** @summary draw TH1 object */

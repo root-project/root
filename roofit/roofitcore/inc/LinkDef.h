@@ -1,4 +1,4 @@
-#ifdef __CINT__
+#ifdef __CLING__
 
 //Old LinkDef1.h
 #pragma link off all globals;
@@ -171,7 +171,6 @@
 #pragma link C++ class RooRealBinding+ ;
 #pragma link C++ class RooRealConstant+ ;
 #pragma link C++ class RooRealIntegral+ ;
-#pragma link C++ class RooRealMPFE+ ;
 #pragma link C++ class RooRealProxy+;
 #pragma read sourceClass="RooRealProxy" targetClass="RooTemplateProxy<RooAbsReal>";
 #pragma link C++ class RooTemplateProxy<RooAbsPdf>+;
@@ -335,12 +334,5 @@
 #pragma link off class RooErrorHandler+ ;
 #pragma link C++ class RooBinSamplingPdf+;
 #pragma link C++ class RooBinWidthFunction+;
-
-// Classes for legacy evaluation backend
-#pragma link C++ class RooAbsOptTestStatistic+ ;
-#pragma link C++ class RooAbsTestStatistic+ ;
-#pragma link C++ class RooChi2Var+ ;
-#pragma link C++ class RooNLLVar+ ;
-#pragma link C++ class RooXYChi2Var+ ;
 
 #endif

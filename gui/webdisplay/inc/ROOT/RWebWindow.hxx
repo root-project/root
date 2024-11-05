@@ -15,6 +15,8 @@
 
 #include <ROOT/RWebDisplayHandle.hxx>
 
+#include "ROOT/RConfig.hxx"
+
 #include <memory>
 #include <vector>
 #include <string>
@@ -69,6 +71,7 @@ private:
    struct WebConn {
       unsigned fConnId{0};                 ///<! connection id (unique inside the window)
       bool fHeadlessMode{false};           ///<! indicate if connection represent batch job
+      bool fWasFirst{false};               ///<! indicate if this was first connection, will be reinjected also on first place
       std::string fKey;                    ///<! key value supplied to the window (when exists)
       int fKeyUsed{0};                     ///<! key value used to verify connection
       std::string fNewKey;                 ///<! new key if connection request reload
@@ -152,6 +155,7 @@ private:
    unsigned fConnLimit{1};                          ///<! number of allowed active connections
    std::string fConnToken;                          ///<! value of "token" URL parameter which should be provided for connecting window
    bool fNativeOnlyConn{false};                     ///<! only native connection are allowed, created by Show() method
+   bool fUseCurrentDir{false};                      ///<! if window can access local files via currentdir/ path of http server
    unsigned fMaxQueueLength{10};                    ///<! maximal number of queue entries
    WebWindowConnectCallback_t fConnCallback;        ///<! callback for connect event
    WebWindowDataCallback_t fDataCallback;           ///<! main callback when data over channel 1 is arrived
@@ -187,8 +191,6 @@ private:
 
    std::shared_ptr<WebConn> RemoveConnection(unsigned wsid);
 
-   std::shared_ptr<WebConn> _FindConnWithKey(const std::string &key) const;
-
    bool _CanTrustIn(std::shared_ptr<WebConn> &conn, const std::string &key, const std::string &ntry, bool remote, bool test_first_time);
 
    std::string _MakeSendHeader(std::shared_ptr<WebConn> &conn, bool txt, const std::string &data, int chid);
@@ -203,7 +205,7 @@ private:
 
    void CheckDataToSend(bool only_once = false);
 
-   bool HasKey(const std::string &key) const;
+   bool HasKey(const std::string &key, bool also_newkey = false) const;
 
    void RemoveKey(const std::string &key);
 
@@ -320,6 +322,14 @@ public:
    /// returns true if authentication string is required
    bool IsRequireAuthKey() const { return fRequireAuthKey; }
 
+   /////////////////////////////////////////////////////////////////////////
+   /// Configure if window can access local files via currentdir/ path of http server
+   void SetUseCurrentDir(bool on = true) { fUseCurrentDir = on; }
+
+   /////////////////////////////////////////////////////////////////////////
+   /// returns true if window can access local files via currentdir/ path of http server
+   bool IsUseCurrentDir() const { return fUseCurrentDir; }
+
    void SetClientVersion(const std::string &vers);
 
    std::string GetClientVersion() const;
@@ -375,8 +385,10 @@ public:
 
    std::string GetAddr() const;
 
+   _R__DEPRECATED_LATER("Use GetUrl() to get valid connection URL")
    std::string GetRelativeAddr(const std::shared_ptr<RWebWindow> &win) const;
 
+   _R__DEPRECATED_LATER("Use GetAddr() to get valid connection URL")
    std::string GetRelativeAddr(const RWebWindow &win) const;
 
    void SetCallBacks(WebWindowConnectCallback_t conn, WebWindowDataCallback_t data, WebWindowConnectCallback_t disconn = nullptr);

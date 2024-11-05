@@ -139,7 +139,7 @@ class RDatasetSpecTest(unittest.TestCase):
                 # self.assertEqual(fr3[j], expectedRess[i][j])
 
     def test_FromSpec(self):
-        rdf = ROOT.RDF.Experimental.FromSpec("spec.json")
+        rdf = ROOT.RDF.Experimental.FromSpec("pyspec.json")
         rdf = rdf.DefinePerSample("name", "rdfsampleinfo_.GetSampleName()")
         rdf = rdf.DefinePerSample("lumi", 'rdfsampleinfo_.GetD("lumi")')
 

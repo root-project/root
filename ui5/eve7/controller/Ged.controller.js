@@ -301,6 +301,20 @@ sap.ui.define([
          this.makeNumberSetter(el.fNDiv, "NDiv");
       },
 
+      buildREveTextSetter : function(el)
+      {
+         this.buildREveElementSetter(el);
+         // write editor only for screen coordinates
+         this.makeStringSetter(el.fText, "Text");
+         if (el.fMode) {
+            let gedFrame = this.getView().byId("GED");
+            this.makeNumberSetter(el.fFont, "FontType", "SetFont");
+            this.makeNumberSetter(el.fFontSize, "FontSize");
+            this.makeNumberSetter(el.fPosX, "PosX", "SetPosX");
+            this.makeNumberSetter(el.fPosY, "PosY", "SetPosY");
+         }
+      },
+
       buildREveTrackSetter : function(el)
       {
          this.buildREveElementSetter(el);
@@ -676,7 +690,7 @@ sap.ui.define([
             change: function (event)
             {
                let value = event.getParameter("value");
-               let mir =  funcName + "( " + value + " )";
+               let mir =  funcName + "(" + value + " )";
                gcm.mgr.SendMIR(mir, gcm.editorElement.fElementId, gcm.editorElement._typename );
             }
          });
@@ -688,6 +702,7 @@ sap.ui.define([
             content : [widget, label]
          });
          gedFrame.addContent(frame);
+         return widget;
       },
 
       makeStringSetter : function(val, labelName, funcName, gedFrame)

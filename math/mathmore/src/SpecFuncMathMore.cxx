@@ -28,6 +28,7 @@
 #include "gsl/gsl_sf_zeta.h"
 #include "gsl/gsl_sf_airy.h"
 #include "gsl/gsl_sf_coupling.h"
+#include "gsl/gsl_sf_psi.h"
 
 
 namespace ROOT {
@@ -472,6 +473,13 @@ double wigner_6j(int ja, int jb, int jc, int jd, int je, int jf) {
 
 double wigner_9j(int ja, int jb, int jc, int jd, int je, int jf, int jg, int jh, int ji) {
    return gsl_sf_coupling_9j(ja,jb,jc,jd,je,jf,jg,jh,ji);
+}
+
+// Psi (Digamma) Function.
+
+double digamma(double x)
+{
+   return gsl_sf_psi(x);
 }
 
 } // namespace Math

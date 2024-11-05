@@ -666,9 +666,6 @@ PyTypeObject CPPScope_Type = {
 #if PY_VERSION_HEX >= 0x03040000
         | Py_TPFLAGS_TYPE_SUBCLASS
 #endif
-#if PY_VERSION_HEX >= 0x03120000
-        | Py_TPFLAGS_MANAGED_DICT | Py_TPFLAGS_HAVE_GC
-#endif
         ,                          // tp_flags
     (char*)"CPyCppyy metatype (internal)",        // tp_doc
     0,                             // tp_traverse
@@ -709,6 +706,9 @@ PyTypeObject CPPScope_Type = {
 #endif
 #if PY_VERSION_HEX >= 0x030c0000
     , 0                           // tp_watched
+#endif
+#if PY_VERSION_HEX >= 0x030d0000
+    , 0                           // tp_versions_used
 #endif
 };
 

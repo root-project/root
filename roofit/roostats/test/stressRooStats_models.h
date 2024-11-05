@@ -85,66 +85,65 @@ inline void buildPoissonProductModel(RooWorkspace *w)
 //__________________________________________________________________________________
 // Insightful comments on model courtesy of Kyle Cranmer, Wouter Verkerke, Sven Kreiss
 //    from $ROOTSYS/tutorials/roostats/HybridInstructional.C
-inline void buildOnOffModel(RooWorkspace *w)
+inline void buildOnOffModel(RooWorkspace &ws)
 {
    // Build model for prototype on/off problem
    // Poiss(x | s+b) * Poiss(y | tau b )
-   w->factory("Poisson::on_pdf(n_on[0,300],sum::splusb(sig[0,100],bkg[0,200]))");
-   w->factory("Poisson::off_pdf(n_off[0,1100],prod::taub(tau[0.1,5.0],bkg))");
-   w->factory("PROD::prod_pdf(on_pdf, off_pdf)");
+   ws.factory("Poisson::on_pdf(n_on[0,300],sum::splusb(sig[0,100],bkg[0,200]))");
+   ws.factory("Poisson::off_pdf(n_off[0,1100],prod::taub(tau[0.1,5.0],bkg))");
+   ws.factory("PROD::prod_pdf(on_pdf, off_pdf)");
 
    // construct the Bayesian-averaged model (eg. a projection pdf)
    // p'(x|s) = \int db p(x|s+b) * [ p(y|b) * prior(b) ]
-   w->factory("Uniform::prior(bkg)");
-   w->factory("PROJ::averagedModel(PROD::foo(on_pdf|bkg,off_pdf,prior),bkg)");
+   ws.factory("Uniform::prior(bkg)");
+   ws.factory("PROJ::averagedModel(PROD::foo(on_pdf|bkg,off_pdf,prior),bkg)");
 
    // create signal + background model configuration
-   ModelConfig *sbModel = new ModelConfig("S+B", w);
+   ModelConfig *sbModel = new ModelConfig("S+B", &ws);
    sbModel->SetPdf("prod_pdf");
    sbModel->SetObservables("n_on,n_off");
    sbModel->SetParametersOfInterest("sig");
    sbModel->SetNuisanceParameters("bkg");
-   w->import(*sbModel);
+   ws.import(*sbModel);
 
    // create background model configuration
    ModelConfig *bModel = new ModelConfig(*sbModel);
    bModel->SetName("B");
-   w->import(*bModel);
+   ws.import(*bModel);
 
    // alternate priors
-   w->factory("Gaussian::gauss_prior(bkg, n_off, expr::sqrty('sqrt(n_off)', n_off))");
-   w->factory("Lognormal::lognorm_prior(bkg, n_off, expr::kappa('1+1./sqrt(n_off)',n_off))");
+   ws.factory("Gaussian::gauss_prior(bkg, n_off, expr::sqrty('sqrt(n_off)', n_off))");
+   ws.factory("Lognormal::lognorm_prior(bkg, n_off, expr::kappa('1+1./sqrt(n_off)',n_off))");
 
    // define data set
-   RooDataSet *data = new RooDataSet("data", "data", *sbModel->GetObservables());
-   w->import(*data);
+   ws.import(RooDataSet{"data", "data", *sbModel->GetObservables()});
 }
 
-inline void buildPoissonEfficiencyModel(RooWorkspace *w)
+inline void buildPoissonEfficiencyModel(RooWorkspace &ws)
 {
 
    // build models
-   w->factory("Gaussian::constrb(b0[-5,5], b1[-5,5], 1)");
-   w->factory("Gaussian::constre(e0[-5,5], e1[-5,5], 1)");
-   w->factory("expr::bkg('5 * pow(1.3, b1)', b1)");   // background
-   w->factory("expr::eff('0.5 * pow(1.2, e1)', e1)"); // efficiency
-   w->factory("expr::esb('eff * sig + bkg', eff, bkg, sig[0,50])");
-   w->factory("Poisson::poiss(x[0,50], esb)");
-   w->factory("PROD::pdf(poiss, constrb, constre)");
+   ws.factory("Gaussian::constrb(b0[-5,5], b1[-5,5], 1)");
+   ws.factory("Gaussian::constre(e0[-5,5], e1[-5,5], 1)");
+   ws.factory("expr::bkg('5 * pow(1.3, b1)', b1)");   // background
+   ws.factory("expr::eff('0.5 * pow(1.2, e1)', e1)"); // efficiency
+   ws.factory("expr::esb('eff * sig + bkg', eff, bkg, sig[0,50])");
+   ws.factory("Poisson::poiss(x[0,50], esb)");
+   ws.factory("PROD::pdf(poiss, constrb, constre)");
 
    // create model configuration
-   ModelConfig sbModel{"S+B", w};
+   ModelConfig sbModel{"S+B", &ws};
    sbModel.SetObservables("x");
    sbModel.SetParametersOfInterest("sig");
    sbModel.SetNuisanceParameters("b1,e1");
    sbModel.SetGlobalObservables("b0,e0");
    sbModel.SetPdf("pdf");
-   w->import(sbModel);
+   ws.import(sbModel);
 
    ModelConfig bModel{sbModel};
    bModel.SetName("B");
-   w->import(bModel);
+   ws.import(bModel);
 
    // define data set and import it into workspace
-   w->import(RooDataSet("data", "data", *sbModel.GetObservables()));
+   ws.import(RooDataSet("data", "data", *sbModel.GetObservables()));
 }

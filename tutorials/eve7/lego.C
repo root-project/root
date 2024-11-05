@@ -62,12 +62,12 @@ void lego()
          h->Fill(0.1*r.Gaus() + 2, 0.1*r.Gaus());
       }
       // h->Draw("LEGO2");
-      p->GetListOfPrimitives()->Add(h, "LEGO2");
+      p->Add(h, "LEGO2");
       p->Modified(kTRUE);
       */
 
       // *** Load std CMS calo demo
-      const char* histFile = "http://amraktad.web.cern.ch/amraktad/cms_calo_hist.root";
+      const char* histFile = "http://root.cern/files/cms_calo_hist.root";
       TFile::SetCacheFileDir(".");
       auto hf = TFile::Open(histFile, "CACHEREAD");
       auto ecalHist = (TH2F*)hf->Get("ecalLego");
@@ -85,14 +85,14 @@ void lego()
       s->Add(ecalHist);
       hcalHist->SetFillColor(kBlue);
       s->Add(hcalHist);
-      p->GetListOfPrimitives()->Add(s);
+      p->Add(s);
 
       TGraph2D *line = new TGraph2D(200);
       for (int i = 0; i < 200; ++i)
          line->SetPoint(i, std::cos(i*0.1), std::sin(i*0.1), i*0.25);
       line->SetLineWidth(5);
       line->SetLineColor(kCyan - 2);
-      p->GetListOfPrimitives()->Add(line, "LINE");
+      p->Add(line, "LINE");
 
       p->Modified(kTRUE);
 

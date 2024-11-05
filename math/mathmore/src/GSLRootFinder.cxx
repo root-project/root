@@ -62,18 +62,6 @@ GSLRootFinder::~GSLRootFinder()
    if (fFunction) delete fFunction;
 }
 
-GSLRootFinder::GSLRootFinder(const GSLRootFinder &): IRootFinderMethod()
-{
-}
-
-GSLRootFinder & GSLRootFinder::operator = (const GSLRootFinder &rhs)
-{
-   // dummy operator=
-   if (this == &rhs) return *this;  // time saving self-test
-
-   return *this;
-}
-
 bool GSLRootFinder::SetFunction(  GSLFuncPointer f, void * p, double xlow, double xup) {
    // set from GSL function
    fXlow = xlow;

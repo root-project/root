@@ -1,5 +1,7 @@
 #include "ntuple_test.hxx"
 
+#include <limits>
+
 // This test aims to exercise some limits of RNTuple that are expected to be upper bounds for realistic applications.
 // The theoretical limits may be higher: for example, the specification supports up to 4B clusters per group, but the
 // expectation is less than 10k. For good measure, we test up to 100k clusters per group below.
@@ -37,7 +39,7 @@ TEST(RNTuple, DISABLED_Limits_ManyFields)
    const auto &model = reader->GetModel();
 
    EXPECT_EQ(descriptor.GetNFields(), 1 + NumFields);
-   EXPECT_EQ(model.GetFieldZero().GetSubFields().size(), NumFields);
+   EXPECT_EQ(model.GetConstFieldZero().GetSubFields().size(), NumFields);
    EXPECT_EQ(reader->GetNEntries(), 1);
 
    reader->LoadEntry(0);
@@ -131,7 +133,8 @@ TEST(RNTuple, DISABLED_Limits_ManyPages)
       auto id = model->MakeField<int>("id");
       RNTupleWriteOptions options;
       // Two elements per page.
-      options.SetApproxUnzippedPageSize(8);
+      options.SetInitialNElementsPerPage(1);
+      options.SetMaxUnzippedPageSize(8);
 
       auto writer = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath(), options);
       for (int i = 0; i < NumEntries; i++) {
@@ -144,7 +147,7 @@ TEST(RNTuple, DISABLED_Limits_ManyPages)
    const auto &descriptor = reader->GetDescriptor();
    const auto &model = reader->GetModel();
    auto fieldId = descriptor.FindFieldId("id");
-   auto columnId = descriptor.FindPhysicalColumnId(fieldId, 0);
+   auto columnId = descriptor.FindPhysicalColumnId(fieldId, 0, 0);
 
    EXPECT_EQ(reader->GetNEntries(), NumEntries);
    EXPECT_EQ(descriptor.GetNClusters(), 1);
@@ -171,7 +174,8 @@ TEST(RNTuple, DISABLED_Limits_ManyPagesOneEntry)
       auto ids = model->MakeField<std::vector<int>>("ids");
       RNTupleWriteOptions options;
       // Four elements per page (must fit two 64-bit indices!)
-      options.SetApproxUnzippedPageSize(16);
+      options.SetInitialNElementsPerPage(1);
+      options.SetMaxUnzippedPageSize(16);
 
       auto writer = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath(), options);
       for (int i = 0; i < NumElements; i++) {
@@ -185,7 +189,7 @@ TEST(RNTuple, DISABLED_Limits_ManyPagesOneEntry)
    const auto &model = reader->GetModel();
    auto fieldId = descriptor.FindFieldId("ids");
    auto subFieldId = descriptor.FindFieldId("_0", fieldId);
-   auto columnId = descriptor.FindPhysicalColumnId(subFieldId, 0);
+   auto columnId = descriptor.FindPhysicalColumnId(subFieldId, 0, 0);
 
    EXPECT_EQ(reader->GetNEntries(), 1);
    EXPECT_EQ(descriptor.GetNClusters(), 1);
@@ -201,20 +205,23 @@ TEST(RNTuple, DISABLED_Limits_ManyPagesOneEntry)
 
 TEST(RNTuple, DISABLED_Limits_LargePage)
 {
-   // Writing and reading one page with 100M elements takes around 3.5s and seems to have linear complexity (200M
-   // elements take 7s, 400M elements take 13.5s).
+   // Writing and reading one page with 600M elements takes around 18s and seems to have linear complexity
+   // (900M elements take 27s)
    FileRaii fileGuard("test_ntuple_limits_largePage.root");
 
-   static constexpr int NumElements = 100'000'000;
+   // clang-format off
+   static constexpr int NumElements = 600'000'000;
+   // clang-format on
 
    {
       auto model = RNTupleModel::Create();
-      auto id = model->MakeField<int>("id");
+      auto id = model->MakeField<std::uint64_t>("id");
       RNTupleWriteOptions options;
-      static constexpr std::size_t Size = NumElements * sizeof(int);
+      static constexpr std::size_t Size = NumElements * sizeof(std::uint64_t);
       options.SetMaxUnzippedClusterSize(Size);
       options.SetApproxZippedClusterSize(Size);
-      options.SetApproxUnzippedPageSize(Size);
+      options.SetMaxUnzippedPageSize(Size);
+      options.SetUseBufferedWrite(false);
 
       auto writer = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath(), options);
       for (int i = 0; i < NumElements; i++) {
@@ -223,17 +230,21 @@ TEST(RNTuple, DISABLED_Limits_LargePage)
       }
    }
 
-   auto reader = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
+   RNTupleReadOptions options;
+   options.SetClusterCache(RNTupleReadOptions::EClusterCache::kOff);
+   auto reader = RNTupleReader::Open("myNTuple", fileGuard.GetPath(), options);
    const auto &descriptor = reader->GetDescriptor();
    const auto &model = reader->GetModel();
    auto fieldId = descriptor.FindFieldId("id");
-   auto columnId = descriptor.FindPhysicalColumnId(fieldId, 0);
+   auto columnId = descriptor.FindPhysicalColumnId(fieldId, 0, 0);
 
    EXPECT_EQ(reader->GetNEntries(), NumElements);
    EXPECT_EQ(descriptor.GetNClusters(), 1);
    EXPECT_EQ(descriptor.GetClusterDescriptor(0).GetPageRange(columnId).fPageInfos.size(), 1);
+   EXPECT_GT(descriptor.GetClusterDescriptor(0).GetPageRange(columnId).fPageInfos[0].fLocator.fBytesOnStorage,
+             static_cast<std::uint64_t>(std::numeric_limits<std::uint32_t>::max()));
 
-   auto id = model.GetDefaultEntry().GetPtr<int>("id");
+   auto id = model.GetDefaultEntry().GetPtr<std::uint64_t>("id");
    for (int i = 0; i < NumElements; i++) {
       reader->LoadEntry(i);
       EXPECT_EQ(*id, i);
@@ -255,7 +266,7 @@ TEST(RNTuple, DISABLED_Limits_LargePageOneEntry)
       static constexpr std::size_t Size = NumElements * sizeof(int);
       options.SetMaxUnzippedClusterSize(Size);
       options.SetApproxZippedClusterSize(Size);
-      options.SetApproxUnzippedPageSize(Size);
+      options.SetMaxUnzippedPageSize(Size);
 
       auto writer = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath(), options);
       for (int i = 0; i < NumElements; i++) {
@@ -269,7 +280,7 @@ TEST(RNTuple, DISABLED_Limits_LargePageOneEntry)
    const auto &model = reader->GetModel();
    auto fieldId = descriptor.FindFieldId("ids");
    auto subFieldId = descriptor.FindFieldId("_0", fieldId);
-   auto columnId = descriptor.FindPhysicalColumnId(subFieldId, 0);
+   auto columnId = descriptor.FindPhysicalColumnId(subFieldId, 0, 0);
 
    EXPECT_EQ(reader->GetNEntries(), 1);
    EXPECT_EQ(descriptor.GetNClusters(), 1);

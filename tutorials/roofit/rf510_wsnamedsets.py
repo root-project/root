@@ -1,7 +1,6 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-##
 ## 'ORGANIZATION AND SIMULTANEOUS FITS' RooFit tutorial macro #510
 ##
 ## Working with named parameter sets and parameter snapshots in

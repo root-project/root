@@ -185,14 +185,14 @@ namespace {
 inline double getLog(double prob, RooAbsReal const *caller)
 {
 
-   if (std::abs(prob) > 1e6) {
-      oocoutW(caller, Eval) << "RooAbsPdf::getLogVal(" << caller->GetName()
-                            << ") WARNING: top-level pdf has a large value: " << prob << std::endl;
-   }
-
    if (prob < 0) {
       caller->logEvalError("getLogVal() top-level p.d.f evaluates to a negative number");
       return RooNaNPacker::packFloatIntoNaN(-prob);
+   }
+
+   if (std::isinf(prob)) {
+      oocoutW(caller, Eval) << "RooAbsPdf::getLogVal(" << caller->GetName()
+                            << ") WARNING: top-level pdf has an infinite value" << std::endl;
    }
 
    if (prob == 0) {
@@ -445,7 +445,7 @@ const RooAbsReal* RooAbsPdf::getNormObj(const RooArgSet* nset, const RooArgSet* 
   // Check normalization is already stored
   CacheElem* cache = static_cast<CacheElem*>(_normMgr.getObj(nset,iset,nullptr,rangeName)) ;
   if (cache) {
-    return cache->_norm ;
+    return cache->_norm.get();
   }
 
   // If not create it now
@@ -459,8 +459,7 @@ const RooAbsReal* RooAbsPdf::getNormObj(const RooArgSet* nset, const RooArgSet* 
   RooAbsReal* norm = std::unique_ptr<RooAbsReal>{createIntegral(depList,*nset, *getIntegratorConfig(), RooNameReg::str(rangeName))}.release();
 
   // Store it in the cache
-  cache = new CacheElem(*norm) ;
-  _normMgr.setObj(nset,iset,cache,rangeName) ;
+  _normMgr.setObj(nset,iset,new CacheElem(*norm),rangeName) ;
 
   // And return the newly created integral
   return norm ;
@@ -487,8 +486,8 @@ bool RooAbsPdf::syncNormalization(const RooArgSet* nset, bool adjustProxies) con
   CacheElem* cache = static_cast<CacheElem*>(_normMgr.getObj(nset)) ;
   if (cache) {
 
-    bool nintChanged = (_norm!=cache->_norm) ;
-    _norm = cache->_norm ;
+    bool nintChanged = (_norm!=cache->_norm.get()) ;
+    _norm = cache->_norm.get();
 
     // In the past, this condition read `if (nintChanged && adjustProxies)`.
     // However, the cache checks if the nset was already cached **by content**,
@@ -1024,6 +1023,8 @@ std::unique_ptr<RooAbsReal> RooAbsPdf::createNLLImpl(RooAbsData &data, const Roo
  *             matrix calculated with the squared weights.
  * <tr><td> `AsymptoticError()`               <td> Use the asymptotically correct approach to estimate errors in the presence of weights.
  *                                                 This is slower but more accurate than `SumW2Error`. See also https://arxiv.org/abs/1911.01303).
+                                                   This option even correctly implements the case of extended likelihood fits
+                                                   (see this [writeup on extended weighted fits](https://root.cern/files/extended_weighted_fits.pdf) that complements the paper linked before).
  * <tr><td> `PrefitDataFraction(double fraction)`
  *                                            <td>  Runs a prefit on a small dataset of size fraction*(actual data size). This can speed up fits
  *                                                  by finding good starting values for the parameters for the actual fit.
@@ -2172,9 +2173,9 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
     // Obtain direct selection
     std::unique_ptr<RooArgSet> dirSelNodes;
     if (compSet) {
-      dirSelNodes.reset(static_cast<RooArgSet*>(branchNodeSet.selectCommon(*compSet)));
+      dirSelNodes = std::unique_ptr<RooArgSet>{branchNodeSet.selectCommon(*compSet)};
     } else {
-      dirSelNodes.reset(static_cast<RooArgSet*>(branchNodeSet.selectByName(compSpec)));
+      dirSelNodes = std::unique_ptr<RooArgSet>{branchNodeSet.selectByName(compSpec)};
     }
     if (!dirSelNodes->empty()) {
       coutI(Plotting) << "RooAbsPdf::plotOn(" << GetName() << ") directly selected PDF components: " << *dirSelNodes << endl ;
@@ -2319,7 +2320,7 @@ RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdA
   // Decode command line arguments
   std::unique_ptr<RooArgSet> params{getParameters(frame->getNormVars())} ;
   if(RooArgSet* requestedParams = pc.getSet("params")) {
-    params = std::unique_ptr<RooArgSet>{static_cast<RooArgSet*>(params->selectCommon(*requestedParams))};
+    params = std::unique_ptr<RooArgSet>{params->selectCommon(*requestedParams)};
   }
   paramOn(frame,*params,showc,label,xmin,xmax,ymax,formatCmd);
 
@@ -2431,12 +2432,10 @@ RooAbsPdf::CacheElem::~CacheElem()
   // Zero _norm pointer in RooAbsPdf if it is points to our cache payload
   if (_owner) {
     RooAbsPdf* pdfOwner = static_cast<RooAbsPdf*>(_owner) ;
-    if (pdfOwner->_norm == _norm) {
+    if (pdfOwner->_norm == _norm.get()) {
       pdfOwner->_norm = nullptr ;
     }
   }
-
-  delete _norm ;
 }
 
 
@@ -2447,20 +2446,7 @@ RooAbsPdf::CacheElem::~CacheElem()
 RooAbsPdf* RooAbsPdf::createProjection(const RooArgSet& iset)
 {
   // Construct name for new object
-  std::string name(GetName()) ;
-  name.append("_Proj[") ;
-  if (!iset.empty()) {
-    bool first = true;
-    for(auto const& arg : iset) {
-      if (first) {
-        first = false ;
-      } else {
-        name.append(",") ;
-      }
-      name.append(arg->GetName()) ;
-    }
-  }
-  name.append("]") ;
+  std::string name = std::string{GetName()} + "_Proj[" + RooHelpers::getColonSeparatedNameString(iset, ',') + "]";
 
   // Return projected p.d.f.
   return new RooProjectedPdf(name.c_str(),name.c_str(),*this,iset) ;
@@ -2574,23 +2560,50 @@ RooFit::OwningPtr<RooAbsReal> RooAbsPdf::createScanCdf(const RooArgSet& iset, co
 /// and returns a RooArgSet with all those terms.
 
 RooArgSet* RooAbsPdf::getAllConstraints(const RooArgSet& observables, RooArgSet& constrainedParams,
-                                        bool stripDisconnected, bool removeConstraintsFromPdf) const
+                                        bool stripDisconnected) const
 {
-  RooArgSet* ret = new RooArgSet("AllConstraints") ;
+  RooArgSet constraints;
+  RooArgSet pdfParams;
 
   std::unique_ptr<RooArgSet> comps(getComponents());
   for (const auto arg : *comps) {
     auto pdf = dynamic_cast<const RooAbsPdf*>(arg) ;
-    if (pdf && !ret->find(pdf->GetName())) {
+    if (pdf && !constraints.find(pdf->GetName())) {
       std::unique_ptr<RooArgSet> compRet(
-              pdf->getConstraints(observables,constrainedParams,stripDisconnected,removeConstraintsFromPdf));
+              pdf->getConstraints(observables,constrainedParams, pdfParams));
       if (compRet) {
-        ret->add(*compRet,false) ;
+        constraints.add(*compRet,false) ;
       }
     }
   }
 
-  return ret ;
+  RooArgSet conParams;
+
+  // Strip any constraints that are completely decoupled from the other product terms
+  RooArgSet* finalConstraints = new RooArgSet("AllConstraints") ;
+  for(auto * pdf : static_range_cast<RooAbsPdf*>(constraints)) {
+
+    RooArgSet tmp;
+    pdf->getParameters(nullptr, tmp);
+    conParams.add(tmp,true) ;
+
+    if (pdf->dependsOnValue(pdfParams) || !stripDisconnected) {
+      finalConstraints->add(*pdf) ;
+    } else {
+      coutI(Minimization) << "RooAbsPdf::getAllConstraints(" << GetName() << ") omitting term " << pdf->GetName()
+           << " as constraint term as it does not share any parameters with the other pdfs in product. "
+           << "To force inclusion in likelihood, add an explicit Constrain() argument for the target parameter" << endl ;
+    }
+  }
+
+  // Now remove from constrainedParams all parameters that occur exclusively in constraint term and not in regular pdf term
+
+  RooArgSet cexl;
+  conParams.selectCommon(constrainedParams, cexl);
+  cexl.remove(pdfParams,true,true) ;
+  constrainedParams.remove(cexl,true,true) ;
+
+  return finalConstraints ;
 }
 
 
@@ -2664,14 +2677,7 @@ void RooAbsPdf::setGeneratorConfig()
   _specGeneratorConfig.reset();
 }
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-RooAbsPdf::GenSpec::~GenSpec()
-{
-  delete _genContext ;
-}
+RooAbsPdf::GenSpec::~GenSpec() = default;
 
 
 ////////////////////////////////////////////////////////////////////////////////

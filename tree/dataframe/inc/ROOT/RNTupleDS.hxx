@@ -22,17 +22,20 @@
 #include <ROOT/RNTupleUtil.hxx>
 #include <string_view>
 
+#include <condition_variable>
 #include <cstdint>
 #include <memory>
+#include <mutex>
 #include <string>
+#include <thread>
 #include <vector>
 #include <unordered_map>
 
 namespace ROOT {
-namespace Experimental {
-
-class RFieldBase;
 class RNTuple;
+
+namespace Experimental {
+class RFieldBase;
 class RNTupleDescriptor;
 
 namespace Internal {
@@ -53,16 +56,29 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
       ULong64_t fLastEntry = 0;
    };
 
-   /// The first source is used to extract the schema and build the prototype fields. The page source
-   /// is used to extract a clone of the descriptor to fPrincipalDescriptor. Afterwards it is moved
-   /// into the first REntryRangeDS.
-   std::unique_ptr<Internal::RPageSource> fPrincipalSource;
    /// A clone of the first pages source's descriptor.
    std::unique_ptr<RNTupleDescriptor> fPrincipalDescriptor;
 
    /// The data source may be constructed with an ntuple name and a list of files
    std::string fNTupleName;
    std::vector<std::string> fFileNames;
+   /// The staging area is relevant for chains of files, i.e. when fFileNames is not empty. In this case,
+   /// files are opened in the background in batches of size `fNSlots` and kept in the staging area.
+   /// The first file (chains or no chains) is always opened on construction in order to process the schema.
+   /// For all subsequent files, the corresponding page sources in the staging area only executed `LoadStructure()`,
+   /// i.e. they should have a compressed buffer of the meta-data available.
+   /// Concretely:
+   ///   1. We open the first file on construction to read the schema and then move the corresponding page source
+   ///      in the staging area.
+   ///   2. On `Initialize()`, we start the I/O background thread, which in turn opens the first batch of files.
+   ///   3. At the beginning of `GetEntryRanges()`, we
+   ///      a) wait for the I/O thread to finish,
+   ///      b) call `PrepareNextRanges()` in the main thread to move the page sources from the staging area
+   ///         into `fNextRanges`; this will also call `Attach()` on the page sources (i.e., deserialize the meta-data),
+   ///         and
+   ///      c) trigger staging of the next batch of files in the I/O background thread.
+   ///   4. On `Finalize()`, the I/O background thread is stopped.
+   std::vector<std::unique_ptr<ROOT::Experimental::Internal::RPageSource>> fStagingArea;
    std::size_t fNextFileIndex = 0; ///< Index into fFileNames to the next file to process
 
    /// We prepare a prototype field for every column. If a column reader is actually requested
@@ -89,6 +105,19 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    /// onto slots.  In the InitSlot method, the column readers use this map to find the correct range to connect to.
    std::unordered_map<ULong64_t, std::size_t> fFirstEntry2RangeIdx;
 
+   /// The background thread that runs StageNextSources()
+   std::thread fThreadStaging;
+   /// Protects the shared state between the main thread and the I/O thread
+   std::mutex fMutexStaging;
+   /// Signal for the state information of fIsReadyForStaging and fHasNextSources
+   std::condition_variable fCvStaging;
+   /// Is true when the staging thread should start working
+   bool fIsReadyForStaging = false;
+   /// Is true when the staging thread has populated the next batch of files to fStagingArea
+   bool fHasNextSources = false;
+   /// Is true when the I/O thread should quit
+   bool fStagingThreadShouldTerminate = false;
+
    /// \brief Holds useful information about fields added to the RNTupleDS
    struct RFieldInfo {
       DescriptorId_t fFieldId;
@@ -109,7 +138,12 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    void AddField(const RNTupleDescriptor &desc, std::string_view colName, DescriptorId_t fieldId,
                  std::vector<RFieldInfo> fieldInfos);
 
-   /// Populates fNextRanges with the next set of entry ranges. Opens files from the chain as necessary
+   /// The main function of the fThreadStaging background thread
+   void ExecStaging();
+   /// Starting from `fNextFileIndex`, opens the next `fNSlots` files. Calls `LoadStructure()` on the opened files.
+   /// The very first file is already available from the constructor.
+   void StageNextSources();
+   /// Populates fNextRanges with the next set of entry ranges. Moves files from the staging area as necessary
    /// and aligns ranges with cluster boundaries for scheduling the tail of files.
    /// Upon return, the fNextRanges list is ordered.  It has usually fNSlots elements; fewer if there
    /// is not enough work to give at least one cluster to every slot.
@@ -119,18 +153,17 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
 
 public:
    RNTupleDS(std::string_view ntupleName, std::string_view fileName);
-   RNTupleDS(ROOT::Experimental::RNTuple *ntuple);
+   RNTupleDS(ROOT::RNTuple *ntuple);
    RNTupleDS(std::string_view ntupleName, const std::vector<std::string> &fileNames);
    ~RNTupleDS();
 
    void SetNSlots(unsigned int nSlots) final;
+   std::size_t GetNFiles() const final { return fFileNames.empty() ? 1 : fFileNames.size(); }
    const std::vector<std::string> &GetColumnNames() const final { return fColumnNames; }
    bool HasColumn(std::string_view colName) const final;
    std::string GetTypeName(std::string_view colName) const final;
    std::vector<std::pair<ULong64_t, ULong64_t>> GetEntryRanges() final;
    std::string GetLabel() final { return "RNTupleDS"; }
-
-   bool SetEntry(unsigned int slot, ULong64_t entry) final;
 
    void Initialize() final;
    void InitSlot(unsigned int slot, ULong64_t firstEntry) final;
@@ -140,17 +173,20 @@ public:
    std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase>
    GetColumnReaders(unsigned int /*slot*/, std::string_view /*name*/, const std::type_info &) final;
 
+   // Old API, unused
+   bool SetEntry(unsigned int, ULong64_t) final { return true; }
+
 protected:
    Record_t GetColumnReadersImpl(std::string_view name, const std::type_info &) final;
 };
 
-} // ns Experimental
+} // namespace Experimental
 
 namespace RDF {
 namespace Experimental {
 RDataFrame FromRNTuple(std::string_view ntupleName, std::string_view fileName);
 RDataFrame FromRNTuple(std::string_view ntupleName, const std::vector<std::string> &fileNames);
-RDataFrame FromRNTuple(ROOT::Experimental::RNTuple *ntuple);
+RDataFrame FromRNTuple(ROOT::RNTuple *ntuple);
 } // namespace Experimental
 } // namespace RDF
 

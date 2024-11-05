@@ -64,8 +64,6 @@
 #include "RooRealVar.h"
 #include "RooAbsDataStore.h"
 
-ClassImp(RooChi2Var);
-
 RooChi2Var::RooChi2Var(const char *name, const char *title, RooAbsReal &func, RooDataHist &data, bool extended,
                        RooDataHist::ErrorType etype, RooAbsTestStatistic::Configuration const &cfg)
    : RooAbsOptTestStatistic(name, title, func, data, RooArgSet{}, cfg),

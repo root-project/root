@@ -512,7 +512,7 @@ template <typename T>
 struct RVecInlineStorageSize {
 private:
 #ifdef R__HAS_HARDWARE_INTERFERENCE_SIZE
-   constexpr std::size_t cacheLineSize = std::hardware_destructive_interference_size;
+   static constexpr std::size_t cacheLineSize = std::hardware_destructive_interference_size;
 #else
    // safe bet: assume the typical 64 bytes
    static constexpr std::size_t cacheLineSize = 64;
@@ -1809,7 +1809,7 @@ using PromoteTypes = decltype(PromoteType<U>() + PromoteType<V>());
    RVec<PromoteTypes<T0, T1>> NAME(const RVec<T0> &v, const T1 &y)             \
    {                                                                           \
       RVec<PromoteTypes<T0, T1>> ret(v.size());                                \
-      auto f = [&y](const T1 &x) { return FUNC(x, y); };                       \
+      auto f = [&y](const T0 &x) { return FUNC(x, y); };                       \
       std::transform(v.begin(), v.end(), ret.begin(), f);                      \
       return ret;                                                              \
    }                                                                           \
@@ -3019,6 +3019,110 @@ Common_t DeltaR(T0 eta1, T1 eta2, T2 phi1, T3 phi2, const Common_t c = M_PI)
    return std::sqrt((eta1 - eta2) * (eta1 - eta2) + dphi * dphi);
 }
 
+/// Return the angle between two three-vectors given the quantities
+/// x coordinate (x), y coordinate (y), z coordinate (y).
+///
+/// The function computes the angle between two three-vectors
+/// (x1, y2, z1) and (x2, y2, z2).
+template <typename T0, typename T1 = T0, typename T2 = T0, typename T3 = T0, typename T4 = T0,
+          typename T5 = T0, typename Common_t = std::common_type_t<T0, T1>>
+Common_t Angle(T0 x1, T1 y1, T2 z1, T3 x2, T4 y2, T5 z2){
+    // cross product
+    const auto cx = y1 * z2 - y2 * z1;
+    const auto cy = x1 * z2 - x2 * z1;
+    const auto cz = x1 * y2 - x2 * y1;
+    
+    // norm of cross product
+    const auto c = std::sqrt(cx * cx + cy * cy + cz * cz);
+    
+    // dot product
+    const auto  d = x1 * x2 + y1 * y2 + z1 * z2;
+    
+    return std::atan2(c, d);
+}
+
+/// Return the invariant mass of two particles given
+/// x coordinate (px), y coordinate (py), z coordinate (pz) and mass.
+///
+/// The function computes the invariant mass of two particles with the four-vectors
+/// (x1, y2, z1, mass1) and (x2, py2, pz2, mass2).
+template <typename T0, typename T1 = T0, typename T2 = T0, typename T3 = T0, typename T4 = T0,
+          typename T5 = T0, typename T6 = T0, typename T7 = T0, typename Common_t = std::common_type_t<T0, T1, T2, T3, T4, T5, T6, T7>>
+Common_t InvariantMasses_PxPyPzM(
+   const T0& x1, const T1& y1, const T2& z1, const T3& mass1,
+   const T4& x2, const T5& y2, const T6& z2, const T7& mass2)
+{
+
+      // Numerically stable computation of Invariant Masses
+      const auto p1_sq = x1 * x1 + y1 * y1 + z1 * z1;
+      const auto p2_sq = x2 * x2 + y2 * y2 + z2 * z2;
+
+      if (p1_sq <= 0 && p2_sq <= 0)
+         return (mass1 + mass2);
+      if (p1_sq <= 0) {
+         auto mm = mass1 + std::sqrt(mass2*mass2 + p2_sq);
+         auto m2 = mm*mm - p2_sq; 
+         if (m2 >= 0)
+            return std::sqrt( m2 );
+         else
+            return std::sqrt( -m2 );
+      }
+      if (p2_sq <= 0) {
+         auto mm = mass2 + std::sqrt(mass1*mass1 + p1_sq);
+         auto m2 = mm*mm - p1_sq; 
+         if (m2 >= 0)
+            return std::sqrt( m2 );
+         else
+            return std::sqrt( -m2 );
+      }
+
+      const auto m1_sq =  mass1 * mass1;
+      const auto m2_sq =  mass2 * mass2;
+
+      const auto r1 = m1_sq / p1_sq;
+      const auto r2 = m2_sq / p2_sq;
+      const auto x = r1 + r2 + r1 * r2;
+      const auto a = Angle(x1, y1, z1, x2, y2, z2);
+      const auto cos_a = std::cos(a);
+      auto y = x;
+      if ( cos_a >= 0){
+         y = (x + std::sin(a) * std::sin(a)) / (std::sqrt(x + 1) + cos_a);
+      } else {
+         y = std::sqrt(x + 1) - cos_a;
+      }
+
+      const auto z = 2 * std::sqrt(p1_sq * p2_sq);
+
+   // Return invariant mass with (+, -, -, -) metric
+   return std::sqrt(m1_sq + m2_sq + y * z);
+}
+
+/// Return the invariant mass of two particles given the collections of the quantities
+/// x coordinate (px), y coordinate (py), z coordinate (pz) and mass.
+///
+/// The function computes the invariant mass of two particles with the four-vectors
+/// (px1, py2, pz1, mass1) and (px2, py2, pz2, mass2).
+template <typename T0, typename T1 = T0, typename T2 = T0, typename T3 = T0, typename T4 = T0,
+          typename T5 = T0, typename T6 = T0, typename T7 = T0, typename Common_t = std::common_type_t<T0, T1, T2, T3, T4, T5, T6, T7>>
+RVec<Common_t> InvariantMasses_PxPyPzM(
+   const RVec<T0>& px1, const RVec<T1>& py1, const RVec<T2>& pz1, const RVec<T3>& mass1,
+   const RVec<T4>& px2, const RVec<T5>& py2, const RVec<T6>& pz2, const RVec<T7>& mass2)
+{
+   std::size_t size = px1.size();
+
+   R__ASSERT(py1.size() == size && pz1.size() == size && mass1.size() == size);
+   R__ASSERT(px2.size() == size && py2.size() == size && pz2.size() == size && mass2.size() == size);
+
+   RVec<Common_t> inv_masses(size);
+
+   for (std::size_t i = 0u; i < size; ++i) {
+      inv_masses[i] = InvariantMasses_PxPyPzM(px1[i], py1[i], pz1[i], mass1[i], px2[i], py2[i], pz2[i], mass2[i]);
+   }
+
+   // Return invariant mass with (+, -, -, -) metric
+   return inv_masses;
+}
+
 /// Return the invariant mass of two particles given the collections of the quantities
 /// transverse momentum (pt), rapidity (eta), azimuth (phi) and mass.
 ///
@@ -3038,24 +3142,17 @@ RVec<Common_t> InvariantMasses(
    RVec<Common_t> inv_masses(size);
 
    for (std::size_t i = 0u; i < size; ++i) {
-      // Conversion from (pt, eta, phi, mass) to (x, y, z, e) coordinate system
+      // Conversion from (pt, eta, phi, mass) to (x, y, z, mass) coordinate system
       const auto x1 = pt1[i] * std::cos(phi1[i]);
       const auto y1 = pt1[i] * std::sin(phi1[i]);
       const auto z1 = pt1[i] * std::sinh(eta1[i]);
-      const auto e1 = std::sqrt(x1 * x1 + y1 * y1 + z1 * z1 + mass1[i] * mass1[i]);
-
+      
       const auto x2 = pt2[i] * std::cos(phi2[i]);
       const auto y2 = pt2[i] * std::sin(phi2[i]);
       const auto z2 = pt2[i] * std::sinh(eta2[i]);
-      const auto e2 = std::sqrt(x2 * x2 + y2 * y2 + z2 * z2 + mass2[i] * mass2[i]);
-
-      // Addition of particle four-vector elements
-      const auto e = e1 + e2;
-      const auto x = x1 + x2;
-      const auto y = y1 + y2;
-      const auto z = z1 + z2;
-
-      inv_masses[i] = std::sqrt(e * e - x * x - y * y - z * z);
+      
+      // Numerically stable computation of Invariant Masses
+      inv_masses[i] = InvariantMasses_PxPyPzM(x1, y1, z1, mass1[i], x2, y2, z2, mass2[i]);
    }
 
    // Return invariant mass with (+, -, -, -) metric

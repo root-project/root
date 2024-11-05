@@ -393,8 +393,7 @@ int main( int argc, char **argv )
             std::string line;
             while (indirect_file) {
                if( std::getline(indirect_file, line) && line.length() ) {
-                  if (gSystem->AccessPathName(line.c_str(), kReadPermission) == kTRUE ||
-                      (!TString(line).EndsWith(".root"))) {
+                  if (gSystem->AccessPathName(line.c_str(), kReadPermission) == kTRUE) {
                      std::cerr << "hadd could not validate the file name \"" << line << "\" within indirect file "
                                << (argv[a] + 1) << std::endl;
                      if (!skip_errors)
@@ -406,7 +405,7 @@ int main( int argc, char **argv )
          }
       } else {
          const std::string line = argv[a];
-         if (gSystem->AccessPathName(line.c_str(), kReadPermission) == kTRUE || (!TString(line).EndsWith(".root"))) {
+         if (gSystem->AccessPathName(line.c_str(), kReadPermission) == kTRUE) {
             std::cerr << "hadd could not validate argument \"" << line << "\" as input file " << std::endl;
             if (!skip_errors)
                return 1;
@@ -482,8 +481,8 @@ int main( int argc, char **argv )
          merger.SetFastMethod(kFALSE);
       } else {
          if (!keepCompressionAsIs && merger.HasCompressionChange()) {
-            // Don't warn if the user any request re-optimization.
-            std::cout << "hadd Sources and Target have different compression levels" << std::endl;
+            // Don't warn if the user explicitly requested re-optimization.
+            std::cout << "hadd Sources and Target have different compression settings\n";
             std::cout << "hadd merging will be slower" << std::endl;
          }
       }

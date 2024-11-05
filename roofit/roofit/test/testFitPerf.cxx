@@ -268,7 +268,7 @@ template <class MinType, class T>
 int DoUnBinFit(T *tree, Func &func, bool debug = false, bool copyData = false)
 {
 
-   ROOT::Fit::UnBinData *d = FillUnBinData(tree, copyData, func.NDim());
+    std::unique_ptr<ROOT::Fit::UnBinData> d{FillUnBinData(tree, copyData, func.NDim())};
    // need to have done Tree->Draw() before fit
    // FillUnBinData(d,tree);
 
@@ -305,8 +305,6 @@ int DoUnBinFit(T *tree, Func &func, bool debug = false, bool copyData = false)
    }
    if (debug)
       fitter.Result().Print(std::cout);
-
-   delete d;
 
    return 0;
 }
@@ -415,7 +413,7 @@ int FitUsingTFit(T *hist, TF1 *func)
       iret |= hist->Fit(func, "BFV0");
    else
       iret |= hist->Fit(func, "V0");
-   // get precice value of minimum
+   // get precise value of minimum
    int pr = std::cout.precision(18);
    std::cout << "Chi2 value = " << func->GetChisquare() << std::endl;
    std::cout.precision(pr);
@@ -494,21 +492,21 @@ int FitUsingRooFit(TH1 *hist, TF1 *func)
 
       RooDataHist data("bindata", "bin dataset with x", x, hist);
       // define params
-      RooAbsPdf *pdf = 0;
-      RooRealVar *mean = 0;
-      RooRealVar *sigma = 0;
+      std::unique_ptr<RooAbsPdf> pdf;
+      std::unique_ptr<RooRealVar> mean;
+      std::unique_ptr<RooRealVar> sigma;
 
       func->SetParameters(iniPar);
       std::string fname = func->GetName();
       if (fname == "gaussian") {
          double val, pmin, pmax;
          val = func->GetParameter(1); // func->GetParLimits(1,-100,100);
-         mean = new RooRealVar("mean", "Mean of Gaussian", val);
+         mean = std::make_unique<RooRealVar>("mean", "Mean of Gaussian", val);
          val = func->GetParameter(2);
          func->GetParLimits(1, pmin, pmax);
-         sigma = new RooRealVar("sigma", "Width of Gaussian", val);
+         sigma = std::make_unique<RooRealVar>("sigma", "Width of Gaussian", val);
 
-         pdf = new RooGaussian("gauss", "gauss(x,mean,sigma)", x, *mean, *sigma);
+         pdf = std::make_unique<RooGaussian>("gauss", "gauss(x,mean,sigma)", x, *mean, *sigma);
       }
 
       assert(pdf != 0);
@@ -519,9 +517,6 @@ int FitUsingRooFit(TH1 *hist, TF1 *func)
       pdf->fitTo(data);
 #endif
       //      if (iret != 0) return iret;
-      delete pdf;
-      delete mean;
-      delete sigma;
    }
 
    w.Stop();
@@ -612,16 +607,16 @@ int FitUsingRooFit2(TTree *tree)
    for (int i = 0; i < nfit; ++i) {
 
       RooArgSet xvars;
-      std::vector<RooRealVar *> x(N);
-      std::vector<RooRealVar *> m(N);
-      std::vector<RooRealVar *> s(N);
+      std::vector<std::unique_ptr<RooRealVar>> x(N);
+      std::vector<std::unique_ptr<RooRealVar>> m(N);
+      std::vector<std::unique_ptr<RooRealVar>> s(N);
 
-      std::vector<RooGaussian *> g(N);
-      std::vector<RooProdPdf *> pdf(N);
+      std::vector<std::unique_ptr<RooGaussian>> g(N);
+      std::vector<std::unique_ptr<RooProdPdf>> pdf(N);
 
       for (int j = 0; j < N; ++j) {
          std::string xname = "x_" + ROOT::Math::Util::ToString(j);
-         x[j] = new RooRealVar(xname.c_str(), xname.c_str(), -10000, 10000);
+         x[j] = std::make_unique<RooRealVar>(xname.c_str(), xname.c_str(), -10000, 10000);
          xvars.add(*x[j]);
       }
 
@@ -632,17 +627,17 @@ int FitUsingRooFit2(TTree *tree)
          std::string mname = "m_" + ROOT::Math::Util::ToString(j);
          std::string sname = "s_" + ROOT::Math::Util::ToString(j);
 
-         m[j] = new RooRealVar(mname.c_str(), mname.c_str(), iniPar[2 * j], -100, 100);
-         s[j] = new RooRealVar(sname.c_str(), sname.c_str(), iniPar[2 * j + 1], 0.01, 100);
+         m[j] = std::make_unique<RooRealVar>(mname.c_str(), mname.c_str(), iniPar[2 * j], -100, 100);
+         s[j] = std::make_unique<RooRealVar>(sname.c_str(), sname.c_str(), iniPar[2 * j + 1], 0.01, 100);
 
          std::string gname = "g_" + ROOT::Math::Util::ToString(j);
-         g[j] = new RooGaussian(gname.c_str(), "gauss(x,mean,sigma)", *x[j], *m[j], *s[j]);
+         g[j] = std::make_unique<RooGaussian>(gname.c_str(), "gauss(x,mean,sigma)", *x[j], *m[j], *s[j]);
 
          std::string pname = "prod_" + ROOT::Math::Util::ToString(j);
          if (j == 1) {
-            pdf[1] = new RooProdPdf(pname.c_str(), pname.c_str(), RooArgSet(*g[1], *g[0]));
+            pdf[1] = std::make_unique<RooProdPdf>(pname.c_str(), pname.c_str(), RooArgSet(*g[1], *g[0]));
          } else if (j > 1) {
-            pdf[j] = new RooProdPdf(pname.c_str(), pname.c_str(), RooArgSet(*g[j], *pdf[j - 1]));
+            pdf[j] = std::make_unique<RooProdPdf>(pname.c_str(), pname.c_str(), RooArgSet(*g[j], *pdf[j - 1]));
          }
          //          else
          //             pdf[0] = g[0];
@@ -669,16 +664,6 @@ int FitUsingRooFit2(TTree *tree)
 #endif
 
       iret |= (result != 0);
-
-      // free
-      for (int j = 0; j < N; ++j) {
-         delete x[j];
-         delete m[j];
-         delete s[j];
-         delete g[j];
-         if (j > 0)
-            delete pdf[j];
-      }
 
       if (iret != 0)
          return iret;

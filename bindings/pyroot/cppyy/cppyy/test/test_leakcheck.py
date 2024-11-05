@@ -226,3 +226,23 @@ class TestLEAKCHECK:
         import cppyy
 
         self.check_func(cppyy.gbl, '__dir__', cppyy.gbl)
+
+    def test07_string_handling(self):
+
+        import cppyy
+
+        cppyy.cppdef("""\
+        namespace LeakCheck {
+        class Leaker {
+        public:
+             const std::string leak_string(std::size_t size) const {
+                  std::string result;
+                  result.reserve(size);
+                  return result;
+             }
+        }; }""")
+
+        ns = cppyy.gbl.LeakCheck
+
+        obj = ns.Leaker()
+        self.check_func(obj, 'leak_string', 2048)

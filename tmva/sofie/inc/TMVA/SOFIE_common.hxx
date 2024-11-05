@@ -81,17 +81,40 @@ std::string ConvertDynamicShapeToString(std::vector<Dim> shape);
 
 std::string ConvertDynamicShapeToLength(std::vector<Dim> shape);
 
+// convert list of values in a string
+template<class T>
+std::string ConvertValuesToString(size_t n, const T * data) {
+   std::stringstream ret;
+   ret << "[ ";
+   for (size_t i = 0; i < n; i++) {
+      ret << data[i];
+      if (i < n-1) ret << ", ";
+   }
+   ret << "]";
+   return ret.str();
+}
+template<class T>
+std::string ConvertValuesToString(const std::vector<T> & data) {
+  return ConvertValuesToString(data.size(), data.data());
+}
+
 class InitializedTensor {
 public:
    InitializedTensor() = default;
-   InitializedTensor(ETensorType type, std::span<std::size_t> shape, std::shared_ptr<void> data)
-      : fType{type}, fShape{shape.begin(), shape.end()}, fData{data}
+   InitializedTensor(ETensorType type, std::span<std::size_t> shape, std::shared_ptr<void> data, bool typeConstant = false)
+      : fConstant(typeConstant), fType{type}, fShape{shape.begin(), shape.end()}, fData{data}
    {
    }
 
    ETensorType const &type() const { return fType; }
    std::vector<std::size_t> const &shape() const { return fShape; }
    std::shared_ptr<void> const &sharedptr() const { return fData; }
+   // query if tensor comes from a Constant operator
+   bool IsConstantTensor() const { return fConstant;}
+   // query if tensor needs to be written in a weight file. Constant tensors are not written in a file
+   bool IsWeightTensor() const { return !fConstant && !fIsNotWritable;}
+
+   void SetNotWritable() { fIsNotWritable = true;}
 
    template <class T = void>
    T const *data() const
@@ -143,6 +166,8 @@ public:
    }
 
 private:
+   bool  fConstant = false;      ///< Flag specifying if tensor is a Constant one (coming from a Constant operator)
+   bool  fIsNotWritable = false; ///< Flag to indicate that tensor values do not need to be written as weight or generated code
    ETensorType fType;               ///< Encodes the type of the data
    std::vector<std::size_t> fShape; ///< The shape of the data in terms of elements in each dimension
    std::shared_ptr<void> fData;     ///<! Transient shared data

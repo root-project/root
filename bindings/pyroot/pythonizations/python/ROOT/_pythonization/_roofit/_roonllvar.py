@@ -17,6 +17,8 @@ from ._utils import _kwargs_to_roocmdargs, cpp_signature
 class RooNLLVar(object):
     r"""RooNLLVar() constructor takes a RooCmdArg as argument also supports keyword arguments."""
 
+    __cpp_name__ = 'RooNLLVar'
+
     @cpp_signature(
         "RooNLLVar(const char* name, const char* title, RooAbsPdf& pdf, RooAbsData& data,"
         "    const RooCmdArg& arg1={}, const RooCmdArg& arg2={},const RooCmdArg& arg3={},"

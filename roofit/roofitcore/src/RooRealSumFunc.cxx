@@ -116,7 +116,7 @@ double RooRealSumFunc::evaluate() const
 
 void RooRealSumFunc::translate(RooFit::Detail::CodeSquashContext &ctx) const
 {
-   RooRealSumPdf::translateImpl(ctx, this, _funcList, _coefList);
+   ctx.addResult(this, RooRealSumPdf::translateImpl(ctx, this, _funcList, _coefList));
 }
 
 //_____________________________________________________________________________

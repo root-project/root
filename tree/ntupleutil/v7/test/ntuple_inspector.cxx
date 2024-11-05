@@ -9,10 +9,10 @@
 #include "CustomStructUtil.hxx"
 #include "ntupleutil_test.hxx"
 
+using ROOT::RNTuple;
 using ROOT::Experimental::EColumnType;
 using ROOT::Experimental::RField;
 using ROOT::Experimental::RFieldBase;
-using ROOT::Experimental::RNTuple;
 using ROOT::Experimental::RNTupleInspector;
 using ROOT::Experimental::RNTupleModel;
 using ROOT::Experimental::RNTupleWriteOptions;
@@ -27,12 +27,9 @@ TEST(RNTupleInspector, CreateFromPointer)
    }
 
    std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str()));
-   auto ntuple = file->Get<RNTuple>("ntuple");
-   auto inspector = RNTupleInspector::Create(ntuple);
+   auto ntuple = std::unique_ptr<RNTuple>(file->Get<RNTuple>("ntuple"));
+   auto inspector = RNTupleInspector::Create(*ntuple);
    EXPECT_EQ(inspector->GetDescriptor()->GetName(), "ntuple");
-
-   auto nullNTuple = file->Get<RNTuple>("null");
-   EXPECT_THROW(RNTupleInspector::Create(nullNTuple), ROOT::Experimental::RException);
 }
 
 TEST(RNTupleInspector, CreateFromString)
@@ -67,6 +64,37 @@ TEST(RNTupleInspector, CompressionSettings)
 
    EXPECT_EQ(207, inspector->GetCompressionSettings());
    EXPECT_EQ("LZMA (level 7)", inspector->GetCompressionSettingsAsString());
+}
+
+// Relevant for RNTuples created with late model extension, see https://github.com/root-project/root/issues/15661 for
+// background.
+TEST(RNTupleInspector, UnknownCompression)
+{
+   FileRaii fileGuard("test_ntuple_inspector_unknown_compression.root");
+   std::vector<float> refVec{1., 2., 3.};
+   {
+      auto model = RNTupleModel::Create();
+
+      auto vecFld = model->MakeField<std::vector<float>>("vecFld", refVec);
+
+      RNTupleWriteOptions opts;
+      opts.SetCompression(505);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), opts);
+
+      ntuple->Fill();
+      ntuple->CommitCluster();
+
+      auto modelUpdater = ntuple->CreateModelUpdater();
+
+      modelUpdater->BeginUpdate();
+      auto extVecField = modelUpdater->MakeField<std::vector<float>>("extVecFld", refVec);
+      modelUpdater->CommitUpdate();
+
+      ntuple->Fill();
+   }
+
+   auto inspector = RNTupleInspector::Create("ntuple", fileGuard.GetPath());
+   EXPECT_EQ(505, inspector->GetCompressionSettings());
 }
 
 TEST(RNTupleInspector, SizeUncompressedSimple)
@@ -210,7 +238,7 @@ TEST(RNTupleInspector, SizeProjectedFields)
       muonPt->emplace_back(1.0);
       muonPt->emplace_back(2.0);
 
-      auto nMuons = RFieldBase::Create("nMuons", "ROOT::Experimental::RNTupleCardinality<std::uint64_t>").Unwrap();
+      auto nMuons = RFieldBase::Create("nMuons", "ROOT::RNTupleCardinality<std::uint64_t>").Unwrap();
       model->AddProjectedField(std::move(nMuons), [](const std::string &) { return "muonPt"; });
 
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
@@ -269,11 +297,11 @@ TEST(RNTupleInspector, ColumnInfoUncompressed)
       auto model = RNTupleModel::Create();
 
       auto int32fld = std::make_unique<RField<std::int32_t>>("int32");
-      int32fld->SetColumnRepresentative({EColumnType::kInt32});
+      int32fld->SetColumnRepresentatives({{EColumnType::kInt32}});
       model->AddField(std::move(int32fld));
 
       auto splitReal64fld = std::make_unique<RField<double>>("splitReal64");
-      splitReal64fld->SetColumnRepresentative({EColumnType::kSplitReal64});
+      splitReal64fld->SetColumnRepresentatives({{EColumnType::kSplitReal64}});
       model->AddField(std::move(splitReal64fld));
 
       auto writeOptions = RNTupleWriteOptions();
@@ -506,7 +534,8 @@ TEST(RNTupleInspector, PageSizeDistribution)
 
       auto writeOptions = RNTupleWriteOptions();
       writeOptions.SetCompression(505);
-      writeOptions.SetApproxUnzippedPageSize(64);
+      writeOptions.SetInitialNElementsPerPage(1);
+      writeOptions.SetMaxUnzippedPageSize(64);
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), writeOptions);
 
       for (unsigned i = 0; i < 100; ++i) {
@@ -731,4 +760,29 @@ TEST(RNTupleInspector, FieldsByName)
    for (const auto fieldId : intFieldIds) {
       EXPECT_EQ("std::int32_t", inspector->GetFieldTreeInspector(fieldId).GetDescriptor().GetTypeName());
    }
+}
+
+TEST(RNTupleInspector, MultiColumnRepresentations)
+{
+   FileRaii fileGuard("test_ntuple_inspector_multi_column_representations.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto fldPx = RFieldBase::Create("px", "float").Unwrap();
+      fldPx->SetColumnRepresentatives({{EColumnType::kReal32}, {EColumnType::kReal16}});
+      model->AddField(std::move(fldPx));
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      writer->Fill();
+      writer->CommitCluster();
+      ROOT::Experimental::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
+         const_cast<RFieldBase &>(writer->GetModel().GetConstField("px")), 1);
+      writer->Fill();
+   }
+
+   auto inspector = RNTupleInspector::Create("ntpl", fileGuard.GetPath());
+   auto px0Inspector = inspector->GetColumnInspector(0);
+   auto px1Inspector = inspector->GetColumnInspector(1);
+   EXPECT_EQ(EColumnType::kReal32, px0Inspector.GetType());
+   EXPECT_EQ(1u, px0Inspector.GetNElements());
+   EXPECT_EQ(EColumnType::kReal16, px1Inspector.GetType());
+   EXPECT_EQ(1u, px1Inspector.GetNElements());
 }

@@ -151,6 +151,14 @@ RooSimultaneous::RooSimultaneous(const char *name, const char *title, std::map<s
 {
 }
 
+/// For internal use in RooFit.
+RooSimultaneous::RooSimultaneous(const char *name, const char *title,
+                                 RooFit::Detail::FlatMap<std::string, RooAbsPdf *> const &pdfMap,
+                                 RooAbsCategoryLValue &inIndexCat)
+   : RooSimultaneous(name, title, RooFit::Detail::flatMapToStdMap(pdfMap), inIndexCat)
+{
+}
+
 RooSimultaneous::RooSimultaneous(const char *name, const char *title, RooSimultaneous::InitializationOutput &&initInfo)
    : RooAbsPdf(name, title),
      _plotCoefNormSet("!plotCoefNormSet", "plotCoefNormSet", this, false, false),
@@ -1054,13 +1062,14 @@ RooFit::OwningPtr<RooDataSet> RooSimultaneous::generateSimGlobal(const RooArgSet
       // Get pdf associated with state from simpdf
       RooAbsPdf* pdftmp = getPdf(nameIdx.first);
 
-      // Generate only global variables defined by the pdf associated with this state
       RooArgSet globtmp;
       pdftmp->getObservables(&whatVars, globtmp) ;
-      std::unique_ptr<RooDataSet> tmp{pdftmp->generate(globtmp,1)};
 
-      // Transfer values to output placeholder
-      globClone.assign(*tmp->get(0)) ;
+      // If there are any, generate only global variables defined by the pdf
+      // associated with this state and transfer values to output placeholder.
+      if (!globtmp.empty()) {
+        globClone.assign(*std::unique_ptr<RooDataSet>{pdftmp->generate(globtmp,1)}->get(0)) ;
+      }
     }
     data->add(globClone) ;
   }
@@ -1166,6 +1175,18 @@ RooArgSet const& RooSimultaneous::flattenedCatList() const
 
 namespace {
 
+void markObs(RooAbsArg *arg, std::string const &prefix, RooArgSet const &normSet)
+{
+   for (RooAbsArg *server : arg->servers()) {
+      if (server->isFundamental() && normSet.find(*server)) {
+         markObs(server, prefix, normSet);
+         server->setAttribute("__obs__");
+      } else if (!server->isFundamental()) {
+         markObs(server, prefix, normSet);
+      }
+   }
+}
+
 void prefixArgs(RooAbsArg *arg, std::string const &prefix, RooArgSet const &normSet)
 {
    if (!arg->getStringAttribute("__prefix__")) {
@@ -1175,7 +1196,6 @@ void prefixArgs(RooAbsArg *arg, std::string const &prefix, RooArgSet const &norm
    for (RooAbsArg *server : arg->servers()) {
       if (server->isFundamental() && normSet.find(*server)) {
          prefixArgs(server, prefix, normSet);
-         server->setAttribute("__obs__");
       } else if (!server->isFundamental()) {
          prefixArgs(server, prefix, normSet);
       }
@@ -1204,7 +1224,7 @@ RooSimultaneous::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::Com
 
       auto pdfClone = RooHelpers::cloneTreeWithSameParameters(static_cast<RooAbsPdf const &>(proxy->arg()), &normSet);
 
-      prefixArgs(pdfClone.get(), prefix, normSet);
+      markObs(pdfClone.get(), prefix, normSet);
 
       std::unique_ptr<RooArgSet> pdfNormSet(
          static_cast<RooArgSet *>(std::unique_ptr<RooArgSet>(pdfClone->getVariables())->selectByAttrib("__obs__", true)));
@@ -1216,6 +1236,15 @@ RooSimultaneous::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::Com
       RooFit::Detail::CompileContext pdfContext{*pdfNormSet};
       pdfContext.setLikelihoodMode(ctx.likelihoodMode());
       auto *pdfFinal = pdfContext.compile(*pdfClone, *newSimPdf, *pdfNormSet);
+
+      // We can only prefix the observables after everything related the
+      // compiling of the compute graph for the normalization set is done. This
+      // is because of a subtlety in conditional RooProdPdfs, which stores the
+      // normalization sets for the individual pdfs in RooArgSets that are
+      // disconnected from the computation graph, so we have no control over
+      // them. An alternative would be to use recursive server re-direction,
+      // but this has more performance overhead.
+      prefixArgs(pdfFinal, prefix, normSet);
 
       pdfFinal->fixAddCoefNormalization(*pdfNormSet, false);
 

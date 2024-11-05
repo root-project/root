@@ -88,7 +88,10 @@ static bool Initialize()
     // retrieve the main dictionary
         gMainDict = PyModule_GetDict(
             PyImport_AddModule(const_cast<char*>("__main__")));
-        Py_INCREF(gMainDict);
+    // The gMainDict is borrowed, i.e. we are not calling Py_INCREF(gMainDict).
+    // Like this, we avoid unexpectedly affecting how long __main__ is kept
+    // alive. The gMainDict is only used in Exec(), ExecScript(), and Eval(),
+    // which should not be called after __main__ is garbage collected anyway.
     }
 
 // declare success ...
@@ -179,6 +182,39 @@ bool CPyCppyy::Instance_CheckExact(PyObject* pyobject)
 
 // direct pointer comparison of type member
     return CPPInstance_CheckExact(pyobject);
+}
+
+//-----------------------------------------------------------------------------
+bool CPyCppyy::Sequence_Check(PyObject* pyobject)
+{
+// Extends on PySequence_Check() to determine whether an object can be iterated
+// over (technically, all objects can b/c of C++ pointer arithmetic, hence this
+// check isn't 100% accurate, but neither is PySequence_Check()).
+
+// Note: simply having the iterator protocol does not constitute a sequence, bc
+// PySequence_GetItem() would fail.
+
+// default to PySequence_Check() if called with a non-C++ object
+    if (!CPPInstance_Check(pyobject))
+        return (bool)PySequence_Check(pyobject);
+
+// all C++ objects should have sq_item defined, but a user-derived class may
+// have deleted it, in which case this is not a sequence
+    PyTypeObject* t = Py_TYPE(pyobject);
+    if (!t->tp_as_sequence || !t->tp_as_sequence->sq_item)
+        return false;
+
+// if this is the default getitem, it is only a sequence if it's an array type
+    if (t->tp_as_sequence->sq_item == CPPInstance_Type.tp_as_sequence->sq_item) {
+        if (((CPPInstance*)pyobject)->fFlags & CPPInstance::kIsArray)
+            return true;
+        return false;
+    }
+
+// TODO: could additionally verify whether __len__ is supported and/or whether
+// operator()[] takes an int argument type
+
+    return true;
 }
 
 //-----------------------------------------------------------------------------
@@ -316,17 +352,79 @@ void CPyCppyy::ExecScript(const std::string& name, const std::vector<std::string
     }
 
 // create and set (add program name) the new command line
-#if PY_VERSION_HEX < 0x03000000
     int argc = args.size() + 1;
+#if PY_VERSION_HEX < 0x03000000
+// This is a legacy implementation for Python 2
     const char** argv = new const char*[argc];
     for (int i = 1; i < argc; ++i) argv[i] = args[i-1].c_str();
     argv[0] = Py_GetProgramName();
     PySys_SetArgv(argc, const_cast<char**>(argv));
     delete [] argv;
 #else
-// TODO: fix this to work like above ...
-    (void)args;
-#endif
+// This is a common code block for Python 3. We prefer using objects to
+// automatize memory management and not introduce even more preprocessor
+// branching for deletion at the end of the method.
+//
+// FUTURE IMPROVEMENT ONCE OLD PYTHON VERSIONS ARE NOT SUPPORTED BY CPPYY:
+// Right now we use C++ objects to automatize memory management. One could use
+// RAAI and the Python memory allocation API (PEP 445) once some old Python
+// version is deprecated in CPPYY. That new feature is available since version
+// 3.4 and the preprocessor branching to also support that would be so
+// complicated to make the code unreadable.
+   std::vector<std::wstring> argv2;
+   argv2.reserve(argc);
+   argv2.emplace_back(name.c_str(), &name[name.size()]);
+
+   for (int i = 1; i < argc; ++i) {
+      auto iarg = args[i - 1].c_str();
+      argv2.emplace_back(iarg, &iarg[strlen(iarg)]);
+   }
+
+#if PY_VERSION_HEX < 0x03080000
+// Before version 3.8, the code is one simple line
+   wchar_t *argv2_arr[argc];
+   for (int i = 0; i < argc; ++i) {
+      argv2_arr[i] = const_cast<wchar_t *>(argv2[i].c_str());
+   }
+   PySys_SetArgv(argc, argv2_arr);
+
+#else
+// Here we comply to "PEP 587 – Python Initialization Configuration" to avoid
+// deprecation warnings at compile time.
+   class PyConfigHelperRAAI {
+   public:
+      PyConfigHelperRAAI(const std::vector<std::wstring> &argv2)
+      {
+         PyConfig_InitPythonConfig(&fConfig);
+         fConfig.parse_argv = 1;
+         UpdateArgv(argv2);
+         InitFromConfig();
+      }
+      ~PyConfigHelperRAAI() { PyConfig_Clear(&fConfig); }
+
+   private:
+      void InitFromConfig() { Py_InitializeFromConfig(&fConfig); };
+      void UpdateArgv(const std::vector<std::wstring> &argv2)
+      {
+         auto WideStringListAppendHelper = [](PyWideStringList *wslist, const wchar_t *wcstr) {
+            PyStatus append_status = PyWideStringList_Append(wslist, wcstr);
+            if (PyStatus_IsError(append_status)) {
+               std::wcerr << "Error: could not append element " << wcstr << " to arglist - " << append_status.err_msg
+                          << std::endl;
+            }
+         };
+         WideStringListAppendHelper(&fConfig.argv, Py_GetProgramName());
+         for (const auto &iarg : argv2) {
+            WideStringListAppendHelper(&fConfig.argv, iarg.c_str());
+         }
+      }
+      PyConfig fConfig;
+   };
+
+   PyConfigHelperRAAI pych(argv2);
+
+#endif // of the else branch of PY_VERSION_HEX < 0x03080000
+#endif // of the else branch of PY_VERSION_HEX < 0x03000000
 
 // actual script execution
     PyObject* gbl = PyDict_Copy(gMainDict);

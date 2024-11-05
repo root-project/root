@@ -57,6 +57,7 @@ public:
       std::size_t job_id; // job ID must always be the first part of any result message/type
       double value;
       double carry;
+      bool has_errors;
    };
 
    void send_back_task_result_from_worker(std::size_t task) override;

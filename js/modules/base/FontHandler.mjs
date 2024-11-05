@@ -1,6 +1,9 @@
-const kArial = 'Arial', kTimes = 'Times New Roman', kCourier = 'Courier New', kVerdana = 'Verdana', kSymbol = 'Symbol', kWingdings = 'Wingdings',
-// average width taken from symbols.html, counted only for letters and digits
-root_fonts = [null,  // index 0 not exists
+import { isNodeJs, httpRequest, btoa_func, source_dir, settings, isObject } from '../core.mjs';
+
+
+const kArial = 'Arial', kTimes = 'Times New Roman', kCourier = 'Courier New', kVerdana = 'Verdana', kSymbol = 'RootSymbol', kWingdings = 'Wingdings',
+    // average width taken from symbols.html, counted only for letters and digits
+    root_fonts = [null,  // index 0 not exists
       { n: kTimes, s: 'italic', aw: 0.5314 },
       { n: kTimes, w: 'bold', aw: 0.5809 },
       { n: kTimes, s: 'italic', w: 'bold', aw: 0.5540 },
@@ -12,14 +15,74 @@ root_fonts = [null,  // index 0 not exists
       { n: kCourier, s: 'oblique', aw: 0.6004 },
       { n: kCourier, w: 'bold', aw: 0.6003 },
       { n: kCourier, s: 'oblique', w: 'bold', aw: 0.6005 },
-      { n: kSymbol, aw: 0.5521 },
+      { n: kSymbol, aw: 0.5521, file: 'symbol.ttf' },
       { n: kTimes, aw: 0.5521 },
-      { n: kWingdings, aw: 0.5664 },
-      { n: kSymbol, s: 'italic', aw: 0.5314 },
+      { n: kWingdings, aw: 0.5664, file: 'wingding.ttf' },
+      { n: kSymbol, s: 'oblique', aw: 0.5314, file: 'symbol.ttf' },
       { n: kVerdana, aw: 0.5664 },
       { n: kVerdana, s: 'italic', aw: 0.5495 },
       { n: kVerdana, w: 'bold', aw: 0.5748 },
-      { n: kVerdana, s: 'italic', w: 'bold', aw: 0.5578 }];
+      { n: kVerdana, s: 'italic', w: 'bold', aw: 0.5578 }],
+   // list of loaded fonts including handling of multiple simultaneous requests
+   gFontFiles = {};
+
+/** @summary Read font file from some pre-configured locations
+  * @return {Promise} with base64 code of the font
+  * @private */
+async function loadFontFile(fname) {
+   let entry = gFontFiles[fname];
+   if (entry?.base64)
+      return entry?.base64;
+
+   if (entry?.promises !== undefined) {
+      return new Promise(resolveFunc => {
+         cfg.promises.push(resolveFunc);
+      });
+   }
+
+   entry = gFontFiles[fname] = { promises: [] };
+
+   const locations = [];
+   if (fname.indexOf('/') >= 0)
+      locations.push(''); // just use file name as is
+   else {
+      locations.push(source_dir + 'fonts/');
+      if (isNodeJs())
+         locations.push('../../fonts/');
+      else if (source_dir.indexOf('jsrootsys/') >= 0) {
+         locations.unshift(source_dir.replace(/jsrootsys/g, 'rootsys_fonts'));
+         locations.unshift(source_dir.replace(/jsrootsys/g, 'rootsys/fonts'));
+      }
+   }
+
+   function completeReading(base64) {
+      entry.base64 = base64;
+      const arr = entry.promises;
+      delete entry.promises;
+      arr.forEach(func => func(base64));
+      return base64;
+   }
+
+   async function tryNext() {
+      if (locations.length === 0) {
+         completeReading(null);
+         throw new Error(`Fail to load ${fname} font`);
+      }
+      let path = locations.shift() + fname;
+      console.log('loading font', path);
+      const pr = isNodeJs() ? import('fs').then(fs => {
+         const prefix = 'file://' + (process?.platform === 'win32' ? '/' : '');
+         if (path.indexOf(prefix) === 0)
+            path = path.slice(prefix.length);
+         return fs.readFileSync(path).toString('base64');
+      }) : httpRequest(path, 'bin').then(buf => btoa_func(buf));
+
+      return pr.then(res => res ? completeReading(res) : tryNext()).catch(() => tryNext());
+   }
+
+   return tryNext();
+}
+
 
 /**
  * @summary Helper class for font handling
@@ -40,13 +103,34 @@ class FontHandler {
 
       this.func = this.setFont.bind(this);
 
-      const indx = (fontIndex && Number.isInteger(fontIndex)) ? Math.floor(fontIndex / 10) : 0,
-            cfg = root_fonts[indx];
+      let cfg = null;
 
-      if (cfg)
-         this.setNameStyleWeight(cfg.n, cfg.s, cfg.w, cfg.aw, cfg.format, cfg.base64);
+      if (fontIndex && isObject(fontIndex))
+         cfg = fontIndex;
       else
+         cfg = root_fonts[(fontIndex && Number.isInteger(fontIndex)) ? Math.floor(fontIndex / 10) : 0];
+
+      if (cfg) {
+         this.cfg = cfg;
+         this.setNameStyleWeight(cfg.n, cfg.s, cfg.w, cfg.aw, cfg.format, cfg.base64);
+      } else
          this.setNameStyleWeight(kArial);
+   }
+
+   /** @summary Should returns true if font has to be loaded before
+    * @private */
+   needLoad() { return this.cfg?.file && !this.isSymbol && !this.base64; }
+
+   /** @summary Async function to load font
+    * @private */
+   async load() {
+      if (!this.needLoad())
+         return true;
+      return loadFontFile(this.cfg.file).then(base64 => {
+         this.cfg.base64 = this.base64 = base64;
+         this.format = 'ttf';
+         return !!base64;
+      });
    }
 
    /** @summary Directly set name, style and weight for the font
@@ -58,7 +142,7 @@ class FontHandler {
       this.aver_width = aver_width || (weight ? 0.58 : 0.55);
       this.format = format; // format of custom font, ttf by default
       this.base64 = base64; // indication of custom font
-      if ((this.name === kSymbol) || (this.name === kWingdings)) {
+      if (!settings.LoadSymbolTtf && ((this.name === kSymbol) || (this.name === kWingdings))) {
          this.isSymbol = this.name;
          this.name = kTimes;
       } else
@@ -68,6 +152,11 @@ class FontHandler {
    /** @summary Set painter for which font will be applied */
    setPainter(painter) {
       this.painter = painter;
+   }
+
+   /** @summary Force setting of style and weight, used in latex */
+   setUseFullStyle(flag) {
+      this.full_style = flag;
    }
 
    /** @summary Assigns font-related attributes */
@@ -80,10 +169,9 @@ class FontHandler {
          defs = svg.insert('svg:defs', ':first-child').attr('class', 'canvas_defs');
       const entry = defs.selectChild('.' + clname);
       if (entry.empty()) {
-         console.log('Adding style entry for class', clname);
          defs.append('style')
                .attr('class', clname)
-               .property('$fonthandler', this)
+               .property('$fontcfg', this.cfg || null)
                .text(`@font-face { font-family: "${this.name}"; font-weight: normal; font-style: normal; src: url(data:application/font-${fmt};charset=utf-8;base64,${this.base64}); }`);
       }
    }
@@ -95,9 +183,14 @@ class FontHandler {
 
       selection.attr('font-family', this.name)
                .attr('font-size', this.size)
-               .attr('xml:space', 'preserve')
-               .attr('font-weight', this.weight || null)
-               .attr('font-style', this.style || null);
+               .attr(':xml:space', 'preserve');
+      this.setFontStyle(selection);
+   }
+
+   /** @summary Assigns only font style attributes */
+   setFontStyle(selection) {
+      selection.attr('font-weight', this.weight || (this.full_style ? 'normal' : null))
+               .attr('font-style', this.style || (this.full_style ? 'normal' : null));
    }
 
    /** @summary Set font size (optional) */
@@ -112,7 +205,7 @@ class FontHandler {
    /** @summary Set text angle (optional) */
    setAngle(angle) { this.angle = angle; }
 
-   /** @summary Allign angle to step raster, add optional offset */
+   /** @summary Align angle to step raster, add optional offset */
    roundAngle(step, offset) {
       this.angle = parseInt(this.angle || 0);
       if (!Number.isInteger(this.angle)) this.angle = 0;
@@ -127,7 +220,7 @@ class FontHandler {
    clearFont(selection) {
       selection.attr('font-family', null)
                .attr('font-size', null)
-               .attr('xml:space', null)
+               .attr(':xml:space', null)
                .attr('font-weight', null)
                .attr('font-style', null);
    }
@@ -172,43 +265,37 @@ function getCustomFont(name) {
 
 /** @summary Try to detect and create font handler for SVG text node
   * @private */
-function detectFont(node) {
+function detectPdfFont(node) {
    const sz = node.getAttribute('font-size'),
-         family = node.getAttribute('font-family'),
          p = sz.indexOf('px'),
          sz_pixels = p > 0 ? Number.parseInt(sz.slice(0, p)) : 12;
-   let style = node.getAttribute('font-style'),
-       weight = node.getAttribute('font-weight'),
-      fontIndx = null, name = '';
+
+   let family = node.getAttribute('font-family'),
+       style = node.getAttribute('font-style'),
+       weight = node.getAttribute('font-weight');
+
+   if (family === 'times')
+      family = kTimes;
+   else if (family === 'symbol')
+      family = kSymbol;
+   else if (family === 'arial')
+      family = kArial;
+   else if (family === 'verdana')
+      family = kVerdana;
    if (weight === 'normal')
       weight = '';
-   else if (weight === 'bold')
-      name += 'b';
    if (style === 'normal')
       style = '';
-   else if (style === 'italic')
-      name += 'i';
-   else if (style === 'oblique')
-      name += 'o';
 
-   if (family === 'arial')
-      name += 'Arial';
-   else if (family === 'times')
-      name += 'Times New Roman';
-   else if (family === 'verdana')
-      name += 'Verdana';
+   const fcfg = root_fonts.find(elem => {
+      return (elem?.n === family) &&
+             ((!weight && !elem.w) || (elem.w === weight)) &&
+             ((!style && !elem.s) || (elem.s === style));
+   });
 
-   for (let n = 1; n < root_fonts.length; ++n) {
-      if (name === root_fonts[n]) {
-         fontIndx = n*10 + 2;
-         break;
-      }
-   }
-
-   const handler = new FontHandler(fontIndx, sz_pixels);
-   if (!fontIndx)
-      handler.setNameStyleWeight(family, style, weight);
-   return handler;
+   return new FontHandler(fcfg || root_fonts[13], sz_pixels);
 }
 
-export { FontHandler, addCustomFont, getCustomFont, detectFont };
+
+export { kArial, kCourier, kSymbol, kWingdings, kTimes,
+         FontHandler, addCustomFont, getCustomFont, detectPdfFont };

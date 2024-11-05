@@ -121,17 +121,20 @@ void LikelihoodGradientJob::update_workers_state()
    // TODO optimization: only send changed parameters (now sending all)
    zmq::message_t gradient_message(grad_.begin(), grad_.end());
    zmq::message_t minuit_internal_x_message(minuit_internal_x_.begin(), minuit_internal_x_.end());
+   double maxFCN = minimizer_->maxFCN();
+   double fcnOffset = minimizer_->fcnOffset();
    ++state_id_;
 
    if (shared_offset_.offsets() != offsets_previous_) {
       zmq::message_t offsets_message(shared_offset_.offsets().begin(), shared_offset_.offsets().end());
       get_manager()->messenger().publish_from_master_to_workers(
-         id_, state_id_, isCalculating_, std::move(gradient_message), std::move(minuit_internal_x_message),
-         std::move(offsets_message));
+         id_, state_id_, isCalculating_, maxFCN, fcnOffset, std::move(gradient_message),
+         std::move(minuit_internal_x_message), std::move(offsets_message));
       offsets_previous_ = shared_offset_.offsets();
    } else {
-      get_manager()->messenger().publish_from_master_to_workers(
-         id_, state_id_, isCalculating_, std::move(gradient_message), std::move(minuit_internal_x_message));
+      get_manager()->messenger().publish_from_master_to_workers(id_, state_id_, isCalculating_, maxFCN, fcnOffset,
+                                                                std::move(gradient_message),
+                                                                std::move(minuit_internal_x_message));
    }
 }
 
@@ -146,10 +149,18 @@ void LikelihoodGradientJob::update_state()
    bool more;
 
    state_id_ = get_manager()->messenger().receive_from_master_on_worker<MultiProcess::State>(&more);
-
+   assert(more);
    isCalculating_ = get_manager()->messenger().receive_from_master_on_worker<bool>(&more);
 
    if (more) {
+      auto maxFCN = get_manager()->messenger().receive_from_master_on_worker<double>(&more);
+      minimizer_->maxFCN() = maxFCN;
+      assert(more);
+
+      auto fcnOffset = get_manager()->messenger().receive_from_master_on_worker<double>(&more);
+      minimizer_->fcnOffset() = fcnOffset;
+      assert(more);
+
       auto gradient_message = get_manager()->messenger().receive_from_master_on_worker<zmq::message_t>(&more);
       assert(more);
       auto gradient_message_begin = gradient_message.data<ROOT::Minuit2::DerivatorElement>();

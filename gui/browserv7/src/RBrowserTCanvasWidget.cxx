@@ -29,16 +29,30 @@ using namespace std::string_literals;
 
 class RBrowserTCanvasWidget : public RBrowserWidget {
 
-   std::unique_ptr<TCanvas> fCanvas; ///<! drawn canvas
+   TString fCanvasName; ///<! canvas name
+   TCanvas *fCanvas{nullptr}; ///<! last canvas pointer
    TWebCanvas *fWebCanvas{nullptr};  ///<! web implementation, owned by TCanvas
 
    std::multimap<TVirtualPad *, std::unique_ptr<Browsable::RHolder>> fObjects; ///<! objects holder, associated with pads
+
+   bool CheckCanvasPointer()
+   {
+      if (!fCanvas)
+         return false;
+
+      auto c = gROOT->GetListOfCanvases()->FindObject(fCanvasName.Data());
+      if (c && (fCanvas == c))
+         return true;
+
+      fCanvas = nullptr;
+      return false;
+   }
 
    void SetPrivateCanvasFields(bool on_init)
    {
       Long_t offset = TCanvas::Class()->GetDataMemberOffset("fCanvasID");
       if (offset > 0) {
-         Int_t *id = (Int_t *)((char*) fCanvas.get() + offset);
+         Int_t *id = (Int_t *)((char *) fCanvas + offset);
          if (*id == fCanvas->GetCanvasID()) *id = on_init ? 111222333 : -1;
       } else {
          printf("ERROR: Cannot modify TCanvas::fCanvasID data member\n");
@@ -46,7 +60,7 @@ class RBrowserTCanvasWidget : public RBrowserWidget {
 
       offset = TCanvas::Class()->GetDataMemberOffset("fPixmapID");
       if (offset > 0) {
-         Int_t *id = (Int_t *)((char*) fCanvas.get() + offset);
+         Int_t *id = (Int_t *)((char *) fCanvas + offset);
          if (*id == fCanvas->GetPixmapID()) *id = on_init ? 332211 : -1;
       } else {
          printf("ERROR: Cannot modify TCanvas::fPixmapID data member\n");
@@ -54,15 +68,15 @@ class RBrowserTCanvasWidget : public RBrowserWidget {
 
       offset = TCanvas::Class()->GetDataMemberOffset("fMother");
       if (offset > 0) {
-         TPad **moth = (TPad **)((char*) fCanvas.get() + offset);
-         if (*moth == fCanvas->GetMother()) *moth = on_init ? fCanvas.get() : nullptr;
+         TPad **moth = (TPad **)((char *) fCanvas + offset);
+         if (*moth == fCanvas->GetMother()) *moth = on_init ? fCanvas : nullptr;
       } else {
          printf("ERROR: Cannot set TCanvas::fMother data member\n");
       }
 
       offset = TCanvas::Class()->GetDataMemberOffset("fCw");
       if (offset > 0) {
-         UInt_t *cw = (UInt_t *)((char*) fCanvas.get() + offset);
+         UInt_t *cw = (UInt_t *)((char *) fCanvas + offset);
          if (*cw == fCanvas->GetWw()) *cw = on_init ? 800 : 0;
       } else {
          printf("ERROR: Cannot set TCanvas::fCw data member\n");
@@ -70,32 +84,44 @@ class RBrowserTCanvasWidget : public RBrowserWidget {
 
       offset = TCanvas::Class()->GetDataMemberOffset("fCh");
       if (offset > 0) {
-         UInt_t *ch = (UInt_t *)((char*) fCanvas.get() + offset);
+         UInt_t *ch = (UInt_t *)((char *) fCanvas + offset);
          if (*ch == fCanvas->GetWh()) *ch = on_init ? 600 : 0;
       } else {
          printf("ERROR: Cannot set TCanvas::fCw data member\n");
       }
+   }
 
+   void RegisterCanvasInGlobalLists()
+   {
+      R__LOCKGUARD(gROOTMutex);
+      auto l1 = gROOT->GetListOfCleanups();
+      if (!l1->FindObject(fCanvas))
+         l1->Add(fCanvas);
+      auto l2 = gROOT->GetListOfCanvases();
+      if (!l2->FindObject(fCanvas))
+         l2->Add(fCanvas);
    }
 
 public:
 
    RBrowserTCanvasWidget(const std::string &name) : RBrowserWidget(name)
    {
-      fCanvas = std::make_unique<TCanvas>(kFALSE);
-      fCanvas->SetName(name.c_str());
-      fCanvas->SetTitle(name.c_str());
+      fCanvasName = name.c_str();
+
+      fCanvas = new TCanvas(kFALSE);
+      fCanvas->SetName(fCanvasName);
+      fCanvas->SetTitle(fCanvasName);
       fCanvas->ResetBit(TCanvas::kShowEditor);
       fCanvas->ResetBit(TCanvas::kShowToolBar);
       fCanvas->SetBit(TCanvas::kMenuBar, kTRUE);
-      fCanvas->SetCanvas(fCanvas.get());
+      fCanvas->SetCanvas(fCanvas);
       fCanvas->SetBatch(kTRUE); // mark canvas as batch
       fCanvas->SetEditable(kTRUE); // ensure fPrimitives are created
 
       Bool_t readonly = gEnv->GetValue("WebGui.FullCanvas", (Int_t) 1) == 0;
 
       // create implementation
-      fWebCanvas = new TWebCanvas(fCanvas.get(), "title", 0, 0, 800, 600, readonly);
+      fWebCanvas = new TWebCanvas(fCanvas, "title", 0, 0, 800, 600, readonly);
 
       // use async mode to prevent blocking inside qt5/qt6/cef
       fWebCanvas->SetAsyncMode(kTRUE);
@@ -105,19 +131,19 @@ public:
       SetPrivateCanvasFields(true);
       fCanvas->cd();
 
-      R__LOCKGUARD(gROOTMutex);
-      gROOT->GetListOfCleanups()->Add(fCanvas.get());
+      RegisterCanvasInGlobalLists();
    }
 
    RBrowserTCanvasWidget(const std::string &name, std::unique_ptr<TCanvas> &canv) : RBrowserWidget(name)
    {
-      fCanvas = std::move(canv);
+      fCanvas = canv.release();
+      fCanvasName = fCanvas->GetName();
       fCanvas->SetBatch(kTRUE); // mark canvas as batch
 
       Bool_t readonly = gEnv->GetValue("WebGui.FullCanvas", (Int_t) 1) == 0;
 
       // create implementation
-      fWebCanvas = new TWebCanvas(fCanvas.get(), "title", 0, 0, 800, 600, readonly);
+      fWebCanvas = new TWebCanvas(fCanvas, "title", 0, 0, 800, 600, readonly);
 
       // use async mode to prevent blocking inside qt5/qt6/cef
       fWebCanvas->SetAsyncMode(kTRUE);
@@ -127,20 +153,22 @@ public:
       SetPrivateCanvasFields(true);
       fCanvas->cd();
 
-      R__LOCKGUARD(gROOTMutex);
-      gROOT->GetListOfCleanups()->Add(fCanvas.get());
+      RegisterCanvasInGlobalLists();
    }
 
    virtual ~RBrowserTCanvasWidget()
    {
+      if (!fCanvas || !gROOT->GetListOfCanvases()->FindObject(fCanvas))
+         return;
+
       {
          R__LOCKGUARD(gROOTMutex);
-         gROOT->GetListOfCleanups()->Remove(fCanvas.get());
+         gROOT->GetListOfCleanups()->Remove(fCanvas);
       }
 
       SetPrivateCanvasFields(false);
 
-      gROOT->GetListOfCanvases()->Remove(fCanvas.get());
+      gROOT->GetListOfCanvases()->Remove(fCanvas);
 
       if ((fCanvas->GetCanvasID() == -1) && (fCanvas->GetCanvasImp() == fWebCanvas)) {
          fCanvas->SetCanvasImp(nullptr);
@@ -148,28 +176,33 @@ public:
       }
 
       fCanvas->Close();
+      delete fCanvas;
    }
 
    std::string GetKind() const override { return "tcanvas"s; }
 
    void SetActive() override
    {
-      fCanvas->cd();
+      if (CheckCanvasPointer())
+         fCanvas->cd();
    }
 
    void Show(const std::string &arg) override
    {
-      fWebCanvas->ShowWebWindow(arg);
+      if (CheckCanvasPointer())
+         fWebCanvas->ShowWebWindow(arg);
    }
 
    std::string GetUrl() override
    {
-      return fWebCanvas->GetWebWindow()->GetUrl(false);
+      if (CheckCanvasPointer())
+         return fWebCanvas->GetWebWindow()->GetUrl(false);
+      return ""s;
    }
 
    std::string GetTitle() override
    {
-      return fCanvas->GetName();
+      return fCanvasName.Data();
    }
 
    bool DrawElement(std::shared_ptr<Browsable::RElement> &elem, const std::string &opt = "") override
@@ -181,6 +214,9 @@ public:
       if (!obj)
          return false;
 
+      if (!CheckCanvasPointer())
+         return false;
+
       Browsable::RProvider::ExtendProgressHandle(elem.get(), obj.get());
 
       std::string drawopt = opt;
@@ -190,22 +226,22 @@ public:
       do {
          find_removed_pad = false;
          for (auto &entry : fObjects)
-            if ((entry.first != fCanvas.get()) && !fCanvas->FindObject(entry.first)) {
+            if ((entry.first != fCanvas) && !fCanvas->FindObject(entry.first)) {
                fObjects.erase(entry.first);
                find_removed_pad = true;
                break;
             }
       } while (find_removed_pad);
 
-      TVirtualPad *pad = fCanvas.get();
-      if (gPad && fCanvas.get()->FindObject(gPad))
+      TVirtualPad *pad = fCanvas;
+      if (gPad && fCanvas->FindObject(gPad))
          pad = gPad;
 
       if (drawopt.compare(0,8,"<append>") == 0) {
          drawopt.erase(0,8);
       } else {
          pad->GetListOfPrimitives()->Clear();
-         if (pad == fCanvas.get())
+         if (pad == fCanvas)
             fObjects.clear();
          else
             fObjects.erase(pad);
@@ -227,8 +263,13 @@ public:
 
    void CheckModified() override
    {
-      if (fCanvas->IsModified())
+      if (CheckCanvasPointer() && fCanvas->IsModified())
          fCanvas->UpdateAsync();
+   }
+
+   bool IsValid() override
+   {
+      return CheckCanvasPointer();
    }
 
 };

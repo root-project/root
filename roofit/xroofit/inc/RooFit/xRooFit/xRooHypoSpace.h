@@ -22,7 +22,7 @@
 
 #include "xRooNLLVar.h"
 
-BEGIN_XROOFIT_NAMESPACE;
+BEGIN_XROOFIT_NAMESPACE
 
 class xRooHypoSpace : public xRooNLLVar::xRooHypoSpace {
 public:
@@ -30,6 +30,6 @@ public:
    ClassDef(xRooHypoSpace, 0)
 };
 
-END_XROOFIT_NAMESPACE;
+END_XROOFIT_NAMESPACE
 
 #endif // include guard

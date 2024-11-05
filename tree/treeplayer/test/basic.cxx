@@ -12,6 +12,7 @@
 
 #include "gtest/gtest.h"
 #include "ROOT/TestSupport.hxx"
+#include "ROOT/InternalTreeUtils.hxx" // GetFileNamesFromTree
 #include <cstdlib>
 #include <memory>
 
@@ -468,8 +469,8 @@ TEST(TTreeReaderBasic, InfLoop)
 // ROOT-10019
 TEST(TTreeReaderBasic, DisappearingBranch)
 {
-   ROOT::TestSupport::CheckDiagsRAII diags{ kError, "TTreeReader::SetEntryBase()", "There was an error while notifying the proxies." };
-   diags.requiredDiag(kWarning, "TTreeReader::SetEntryBase()", "Unexpected error '-6' in TChain::LoadTree");
+   ROOT::TestSupport::CheckDiagsRAII diags{kError, "TTreeReader::SetEntryBase()",
+                                           "There was an error while notifying the proxies."};
 
    auto createFile = [](const char *fileName, int ncols) {
       // auto r = ROOT::RDataFrame(1).Define("col0",[](){return 0;}).Snapshot<int>("t","f1.root",{"col0"});
@@ -489,6 +490,10 @@ TEST(TTreeReaderBasic, DisappearingBranch)
 
    TChain c("t");
    c.Add("DisappearingBranch*.root");
+   diags.requiredDiag(kError, "TBranchProxy::Setup()",
+                      "Branch 'col1' is not available from tree 't' in file '" +
+                         ROOT::Internal::TreeUtils::GetFileNamesFromTree(c)[1] + "'.");
+
    TTreeReader r(&c);
    TTreeReaderValue<int> rv(r, "col1");
    r.Next();
@@ -508,4 +513,24 @@ TEST(TTreeReaderBasic, DisappearingBranch)
 
    gSystem->Unlink("DisappearingBranch0.root");
    gSystem->Unlink("DisappearingBranch1.root");
+}
+
+// Issue #16249
+TEST(TTreeReaderBasic, ZeroEntriesTree)
+{
+   TTree t("t", "t");
+   TTreeReader tr(&t);
+   auto b = tr.begin();
+   auto e = tr.end();
+   auto n_iterations = 0;
+   for ([[maybe_unused]] auto &d : tr) {
+      ++n_iterations;
+   }
+   EXPECT_EQ(n_iterations, 0);
+   EXPECT_TRUE(b == e);
+   EXPECT_TRUE(b == b);
+   EXPECT_TRUE(e == e);
+   auto b_copy(b);
+   EXPECT_TRUE(b++ == e);
+   EXPECT_TRUE(++b_copy == e);
 }

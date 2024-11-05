@@ -1,4 +1,3 @@
-
 name: 'ROOT CI'
 
 on:
@@ -100,6 +99,9 @@ jobs:
             arch: ARM64
             overrides: ["LLVM_ENABLE_ASSERTIONS=On", "builtin_zlib=ON"]
           - platform: mac14
+            arch: X64
+            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
+          - platform: mac15
             arch: ARM64
             overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
           - platform: mac-beta
@@ -112,11 +114,15 @@ jobs:
       - ${{ matrix.arch }}
       - ${{ matrix.platform }}
 
-    name: ${{ matrix.platform }} ${{ matrix.arch }} ${{ join( matrix.overrides, ', ' ) }}
+    name: |
+      ${{ matrix.platform }} ${{ matrix.arch }} 
+      ${{ (github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' && join( matrix.overrides, ', ' )) || '' }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref_name }}
 
       - name: Apply option overrides from matrix for this job for non-release builds
         if: ${{ github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' && matrix.overrides != NaN }}
@@ -196,14 +202,14 @@ jobs:
 
       - name: Upload test results
         if:   ${{ !cancelled() }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Test Results ${{ matrix.platform }} ${{ matrix.arch }}
           path: /Users/sftnight/ROOT-CI/build/TestResults.xml
 
       - name: Upload binaries
         if:   ${{ !cancelled() && (inputs.binaries || github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/')) }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Binaries ${{ matrix.platform }} ${{ matrix.arch }}
           path: /Users/sftnight/ROOT-CI/packages/root_v*
@@ -230,13 +236,17 @@ jobs:
         # by the fact that event_name is a string, but we need an array. So
         # we construct a JSON string that we can then convert into an array.
         event_name: ${{ fromJSON(format('["{0}"]', github.event_name)) }}
-        config: ["Debug", "Release"]
+        config: ["RelWithDebInfo", "Release"]
         target_arch: [x64, x86]
         exclude:
           - event_name: pull_request
-            config: Debug
+            config: RelWithDebInfo
           - event_name: push
-            config: Debug
+            config: RelWithDebInfo
+          # This is this platform is subject to timeouts when building from
+          # scratch.
+          #- target_arch: x86
+          #  config: RelWithDebInfo
 
     name: Windows 10 ${{ matrix.target_arch }} ${{ matrix.config }}
 
@@ -249,6 +259,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref_name }}
 
       - name: Pull Request Build
         if: github.event_name == 'pull_request'
@@ -311,14 +323,14 @@ jobs:
 
       - name: Upload test results
         if:   ${{ !cancelled() }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Test Results Windows ${{ matrix.target_arch }} ${{ matrix.config }}
           path: C:/ROOT-CI/build/TestResults.xml
 
       - name: Upload binaries
         if:   ${{ !cancelled() && (inputs.binaries || github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/')) }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Binaries ${{ matrix.target_arch }} ${{ matrix.config }}
           path: C:/ROOT-CI/packages/root_v*
@@ -344,7 +356,7 @@ jobs:
         # Common configs: {Release,Debug,RelWithDebInfo)
         # Build options: https://root.cern/install/build_from_source/#all-build-options
         include:
-          - image: fedora39
+          - image: fedora40
             overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
           - image: alma8
             overrides: ["LLVM_ENABLE_ASSERTIONS=On"]
@@ -354,19 +366,48 @@ jobs:
             overrides: ["LLVM_ENABLE_ASSERTIONS=On"]
           - image: ubuntu22
             overrides: ["imt=Off", "LLVM_ENABLE_ASSERTIONS=On", "CMAKE_BUILD_TYPE=Debug"]
-          - image: ubuntu2310
+          - image: ubuntu2404
+            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_BUILD_TYPE=Debug"]
+          - image: debian125
             overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
+          # Special builds
+          - image: alma9
+            is_special: true
+            property: modules_off
+            overrides: ["runtime_cxxmodules=Off"]
+          - image: alma9
+            is_special: true
+            property: march_native
+            overrides: ["CMAKE_BUILD_TYPE=RelWithDebInfo", "CMAKE_CXX_FLAGS=-march=native", "CMAKE_C_FLAGS=-march=native", "fortran=OFF"]
+          - image: alma9
+            is_special: true
+            property: arm64
+            overrides: ["CMAKE_BUILD_TYPE=RelWithDebInfo", "ccache=ON"]
+            architecture: ARM64
+          - image: alma9-clang
+            is_special: true
+            property: clang
+            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_C_COMPILER=clang", "CMAKE_CXX_COMPILER=clang++"]
+          - image: ubuntu2404-cuda
+            is_special: true
+            property: gpu
+            extra-runs-on: gpu
 
     runs-on:
       - self-hosted
       - linux
-      - x64
+      - ${{ matrix.architecture == null && 'x64' || matrix.architecture }}
+      - ${{ matrix.extra-runs-on == null && 'cpu' || matrix.extra-runs-on }}
 
-    name: ${{ matrix.image }} ${{ join( matrix.overrides, ', ' ) }}
+    name: |
+      ${{ matrix.image }} ${{ matrix.property }}
+      ${{ (github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' && join( matrix.overrides, ', ' )) || '' }}
 
     container:
-      image: registry.cern.ch/root-ci/${{ matrix.image }}:buildready # ALSO UPDATE BELOW!
-      options: '--security-opt label=disable --rm' # ALSO UPDATE BELOW!
+      image: registry.cern.ch/root-ci/${{ matrix.image }}:buildready # KEEP IN SYNC WITH env key below
+      options: --security-opt label=disable --rm ${{ matrix.property == 'gpu' && '--device nvidia.com/gpu=all' || '' }} # KEEP IN SYNC WITH env key below
+      volumes:
+        - ${{ matrix.image }}_ccache_volume:/github/home/.cache/ccache
       env:
         OS_APPLICATION_CREDENTIAL_ID: '7f5b64a265244623a3a933308569bdba'
         OS_APPLICATION_CREDENTIAL_SECRET: ${{ secrets.OS_APPLICATION_CREDENTIAL_SECRET }}
@@ -376,8 +417,15 @@ jobs:
         OS_INTERFACE: 'public'
         OS_REGION_NAME: 'cern'
         PYTHONUNBUFFERED: true
+        CONTAINER_IMAGE: "registry.cern.ch/root-ci/${{ matrix.image }}:buildready" #KEEP IN SYNC WITH ABOVE
+        CONTAINER_OPTIONS: "--security-opt label=disable --rm ${{ matrix.property == 'gpu' && '--device nvidia.com/gpu=all' || '' }}" #KEEP IN SYNC WITH ABOVE
 
     steps:
+      - name: ccache info
+        run: |
+          ccache -p || true
+          ccache -s || true
+
       - name: Set up Python Virtual Env
         # if the `if` expr is false, `if` still has exit code 0.
         # if the `if` block is entered, the block's exit code becomes the exit
@@ -386,19 +434,28 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref_name }}
 
       - name: Dump GitHub context
         env:
           GITHUB_CONTEXT: ${{ toJSON(github) }}
-        run: echo "$GITHUB_CONTEXT"
+          JOB_CONTEXT: ${{ toJSON(job) }}
+          ENV_CONTEXT: ${{ toJSON(env) }}
+        run: |
+          echo "$GITHUB_CONTEXT"
+          echo "--------------------------"
+          echo "$JOB_CONTEXT"
+          echo "--------------------------"
+          echo "$ENV_CONTEXT"
 
       - name: Print debug info
         run:  'printf "%s@%s\\n" "$(whoami)" "$(hostname)";
                ls -la
               '
 
-      - name: Apply option overrides from matrix for this job for non-release builds
-        if: ${{ github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' && matrix.overrides != NaN }}
+      - name: Apply option overrides from matrix for this job for all builds except non-special nightlies and releases
+        if: ${{ ( github.event_name != 'schedule' || matrix.is_special) && github.event_name != 'workflow_dispatch' && matrix.overrides != NaN }}
         env:
           OVERRIDES: ${{ join( matrix.overrides, ' ') }}
           CONFIGFILE: '.github/workflows/root-ci-config/buildconfig/${{ matrix.image }}.txt'
@@ -427,15 +484,14 @@ jobs:
           build-directory: /github/home/ROOT-CI/src/
 
       - name: Pull Request Build
-        if: github.event_name == 'pull_request'
+        if:   ${{ github.event_name == 'pull_request' }}
         env:
           INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') }}
           GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
         run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype       RelWithDebInfo
                     --platform        ${{ matrix.image }}
-                    --image           registry.cern.ch/root-ci/${{ matrix.image }}:buildready
-                    --dockeropts      '--security-opt label=disable --rm'
+                    --dockeropts      \"$CONTAINER_OPTIONS\"
                     --incremental     $INCREMENTAL
                     --base_ref        ${{ github.base_ref }}
                     --sha             ${{ github.sha }}
@@ -446,7 +502,7 @@ jobs:
               "
 
       - name: Workflow dispatch
-        if:   github.event_name == 'workflow_dispatch'
+        if:   ${{ github.event_name == 'workflow_dispatch' && !matrix.is_special }}
         run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype      ${{ inputs.buildtype }}
                     --platform       ${{ matrix.image }}
@@ -481,18 +537,23 @@ jobs:
 
       - name: Upload test results
         if:   ${{ !cancelled() }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: Test Results ${{ matrix.image }}
+          name: Test Results ${{ matrix.image }} ${{ matrix.property }}
           path: /github/home/ROOT-CI/build/TestResults.xml
 
       - name: Upload binaries
         if:   ${{ !cancelled() && (inputs.binaries || github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/')) }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: Binaries ${{ matrix.image }}
+          name: Binaries ${{ matrix.image }} ${{ matrix.property }}
           path: /github/home/ROOT-CI/packages/root_v*
           if-no-files-found: error
+
+      - name: ccache info (post)
+        run: |
+          ccache -p || true
+          ccache -s || true
 
   event_file:
     # For any event that is not a PR, the CI will always run. In PRs, the CI
@@ -505,7 +566,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Upload
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: Event File
         path: ${{ github.event_path }}

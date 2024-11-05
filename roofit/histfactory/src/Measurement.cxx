@@ -37,7 +37,7 @@ ClassImp(RooStats::HistFactory::Measurement);
 
 /// Standard constructor
 RooStats::HistFactory::Measurement::Measurement()
-   : fLumi(1.0), fLumiRelErr(.10), fBinLow(0), fBinHigh(1), fExportOnly(false)
+   : fLumi(1.0), fLumiRelErr(.10), fBinLow(0), fBinHigh(1)
 {
 
 }
@@ -52,7 +52,7 @@ RooStats::HistFactory::Measurement::Measurement(const Measurement& other) :
 
 /// Standard constructor specifying name and title of measurement
 RooStats::HistFactory::Measurement::Measurement(const char *Name, const char *Title)
-   : TNamed(Name, Title), fLumi(1.0), fLumiRelErr(.10), fBinLow(0), fBinHigh(1), fExportOnly(false)
+   : TNamed(Name, Title), fLumi(1.0), fLumiRelErr(.10), fBinLow(0), fBinHigh(1)
 {
 
 }
@@ -370,7 +370,7 @@ void RooStats::HistFactory::Measurement::PrintXML( std::string directory, std::s
     xml << "    <ParamSetting Const=\"True\">";
     for( unsigned int i = 0; i < fConstantParams.size(); ++i ) {
       if (i==0) xml << fConstantParams.at(i);
-      else      xml << " " << fConstantParams.at(i);;
+      else      xml << " " << fConstantParams.at(i);
     }
     xml << "</ParamSetting>" << std::endl;
   }

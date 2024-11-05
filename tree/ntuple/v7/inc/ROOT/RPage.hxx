@@ -26,6 +26,9 @@ namespace ROOT {
 namespace Experimental {
 namespace Internal {
 
+class RPageAllocator;
+class RPageRef;
+
 // clang-format off
 /**
 \class ROOT::Experimental::Internal::RPage
@@ -34,11 +37,15 @@ namespace Internal {
 
 The page provides an opaque memory buffer for uncompressed, unpacked data. It does not interpret
 the contents but it does now about the size (and thus the number) of the elements inside as well as the element
-number range within the backing column/cluster. The memory buffer is not managed by the page. It is normally registered
-with the page pool and allocated/freed by the page storage.
+number range within the backing column/cluster.
+For reading, pages are allocated and filled by the page source and then registered with the page pool.
+For writing, the page sink allocates uninitialized pages of a given size.
+The page has a pointer to its memory allocator so that it can release itself.
 */
 // clang-format on
 class RPage {
+   friend class RPageRef;
+
 public:
    static constexpr size_t kPageZeroSize = 64 * 1024;
 
@@ -59,28 +66,68 @@ public:
    };
 
 private:
-   ColumnId_t fColumnId;
-   void *fBuffer;
-   std::uint32_t fElementSize;
-   std::uint32_t fNElements;
+   ColumnId_t fColumnId = kInvalidColumnId;
+   void *fBuffer = nullptr;
+   /// The allocator used to allocate fBuffer. Can be null if the buffer doesn't need to be freed.
+   RPageAllocator *fPageAllocator = nullptr;
+   std::uint32_t fElementSize = 0;
+   std::uint32_t fNElements = 0;
    /// The capacity of the page in number of elements
-   std::uint32_t fMaxElements;
-   NTupleSize_t fRangeFirst;
+   std::uint32_t fMaxElements = 0;
+   NTupleSize_t fRangeFirst = 0;
    RClusterInfo fClusterInfo;
 
 public:
-   RPage()
-      : fColumnId(kInvalidColumnId), fBuffer(nullptr), fElementSize(0), fNElements(0), fMaxElements(0), fRangeFirst(0)
+   RPage() = default;
+   RPage(ColumnId_t columnId, void *buffer, RPageAllocator *pageAllocator, ClusterSize_t::ValueType elementSize,
+         ClusterSize_t::ValueType maxElements)
+      : fColumnId(columnId),
+        fBuffer(buffer),
+        fPageAllocator(pageAllocator),
+        fElementSize(elementSize),
+        fMaxElements(maxElements)
    {}
-   RPage(ColumnId_t columnId, void* buffer, ClusterSize_t::ValueType elementSize, ClusterSize_t::ValueType maxElements)
-      : fColumnId(columnId), fBuffer(buffer), fElementSize(elementSize), fNElements(0), fMaxElements(maxElements),
-        fRangeFirst(0)
-   {}
-   ~RPage() = default;
+   RPage(const RPage &) = delete;
+   RPage &operator=(const RPage &) = delete;
+   RPage(RPage &&other)
+   {
+      fColumnId = other.fColumnId;
+      fBuffer = other.fBuffer;
+      fPageAllocator = other.fPageAllocator;
+      fElementSize = other.fElementSize;
+      fNElements = other.fNElements;
+      fMaxElements = other.fMaxElements;
+      fRangeFirst = other.fRangeFirst;
+      fClusterInfo = other.fClusterInfo;
+      other.fPageAllocator = nullptr;
+   }
+   RPage &operator=(RPage &&other)
+   {
+      if (this != &other) {
+         std::swap(fColumnId, other.fColumnId);
+         std::swap(fBuffer, other.fBuffer);
+         std::swap(fPageAllocator, other.fPageAllocator);
+         std::swap(fElementSize, other.fElementSize);
+         std::swap(fNElements, other.fNElements);
+         std::swap(fMaxElements, other.fMaxElements);
+         std::swap(fRangeFirst, other.fRangeFirst);
+         std::swap(fClusterInfo, other.fClusterInfo);
+      }
+      return *this;
+   }
+   ~RPage();
 
    ColumnId_t GetColumnId() const { return fColumnId; }
    /// The space taken by column elements in the buffer
-   std::uint32_t GetNBytes() const { return fElementSize * fNElements; }
+   std::size_t GetNBytes() const
+   {
+      return static_cast<std::size_t>(fElementSize) * static_cast<std::size_t>(fNElements);
+   }
+   std::size_t GetCapacity() const
+   {
+      return static_cast<std::size_t>(fElementSize) * static_cast<std::size_t>(fMaxElements);
+   }
+   std::uint32_t GetElementSize() const { return fElementSize; }
    std::uint32_t GetNElements() const { return fNElements; }
    std::uint32_t GetMaxElements() const { return fMaxElements; }
    NTupleSize_t GetGlobalRangeFirst() const { return fRangeFirst; }
@@ -122,25 +169,18 @@ public:
    void Reset(NTupleSize_t rangeFirst) { fNElements = 0; fRangeFirst = rangeFirst; }
    void ResetCluster(const RClusterInfo &clusterInfo) { fNElements = 0; fClusterInfo = clusterInfo; }
 
-   /// Used by virtual page sources to map the physical column and cluster IDs to ther virtual counterparts
-   void ChangeIds(DescriptorId_t columnId, DescriptorId_t clusterId)
-   {
-      fColumnId = columnId;
-      fClusterInfo = RClusterInfo(clusterId, fClusterInfo.GetIndexOffset());
-   }
-
    /// Make a 'zero' page for column `columnId` (that is comprised of 0x00 bytes only). The caller is responsible for
    /// invoking `GrowUnchecked()` and `SetWindow()` as appropriate.
    static RPage MakePageZero(ColumnId_t columnId, ClusterSize_t::ValueType elementSize)
    {
-      return RPage{columnId, const_cast<void *>(GetPageZeroBuffer()), elementSize,
+      return RPage{columnId, const_cast<void *>(GetPageZeroBuffer()), nullptr, elementSize,
                    /*maxElements=*/(kPageZeroSize / elementSize)};
    }
    /// Return a pointer to the page zero buffer used if there is no on-disk data for a particular deferred column
    static const void *GetPageZeroBuffer();
 
+   bool IsValid() const { return fColumnId != kInvalidColumnId; }
    bool IsNull() const { return fBuffer == nullptr; }
-   bool IsPageZero() const { return fBuffer == GetPageZeroBuffer(); }
    bool IsEmpty() const { return fNElements == 0; }
    bool operator ==(const RPage &other) const { return fBuffer == other.fBuffer; }
    bool operator !=(const RPage &other) const { return !(*this == other); }

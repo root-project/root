@@ -28,53 +28,44 @@ namespace Internal {
 
 // clang-format off
 /**
-\class ROOT::Experimental::Internal::RPageDeleter
+\class ROOT::Experimental::Internal::RPageAllocator
 \ingroup NTuple
-\brief A closure that can free the memory associated with a mapped page
+\brief Abstract interface to allocate and release pages
 
-The page pool, once taken ownership of pages, must know how to free them. When registering a new page with
-the page pool, the passed page deleter encapsulates that knowledge.
+The page allocator acquires and releases memory for pages.  It does not load the page data, the returned pages
+are empty but guaranteed to have enough contiguous space for the given number of elements.
+The page allocator must be thread-safe.
 */
 // clang-format on
-class RPageDeleter {
-private:
-   /// The callable that is suppped to free the given page; it is called with fUserData as the second argument.
-   std::function<void(const RPage &page, void *userData)> fFnDelete;
-   /// Optionally additional information necessary to free resources associated with a page.  For instance,
-   /// when the page is read from a TKey, user data points to the ROOT object created for reading, which needs to be
-   /// freed as well.
-   void *fUserData;
+class RPageAllocator {
+   friend class RPage;
+
+protected:
+   /// Releases the memory pointed to by page and resets the page's information. Note that the memory of the
+   /// zero page must not be deleted. Called by the RPage destructor.
+   virtual void DeletePage(RPage &page) = 0;
 
 public:
-   RPageDeleter() : fFnDelete(), fUserData(nullptr) {}
-   explicit RPageDeleter(decltype(fFnDelete) fnDelete) : fFnDelete(fnDelete), fUserData(nullptr) {}
-   RPageDeleter(decltype(fFnDelete) fnDelete, void *userData) : fFnDelete(fnDelete), fUserData(userData) {}
-   RPageDeleter(const RPageDeleter &other) = default;
-   RPageDeleter &operator =(const RPageDeleter &other) = default;
-   ~RPageDeleter() = default;
+   virtual ~RPageAllocator() = default;
 
-   void operator()(const RPage &page) { fFnDelete(page, fUserData); }
+   /// Reserves memory large enough to hold nElements of the given size. The page is immediately tagged with
+   /// a column id. Returns a default constructed page on out-of-memory condition.
+   virtual RPage NewPage(ColumnId_t columnId, std::size_t elementSize, std::size_t nElements) = 0;
 };
-
 
 // clang-format off
 /**
 \class ROOT::Experimental::Internal::RPageAllocatorHeap
 \ingroup NTuple
 \brief Uses standard C++ memory allocation for the column data pages
-
-The page allocator acquires and releases memory for pages.  It does not populate the pages, the returned pages
-are empty but guaranteed to have enough contiguous space for the given number of elements.  While a common
-concrete implementation uses the heap, other implementations are possible, e.g. using arenas or mmap().
 */
 // clang-format on
-class RPageAllocatorHeap {
+class RPageAllocatorHeap : public RPageAllocator {
+protected:
+   void DeletePage(RPage &page) final;
+
 public:
-   /// Reserves memory large enough to hold nElements of the given size. The page is immediately tagged with
-   /// a column id.
-   static RPage NewPage(ColumnId_t columnId, std::size_t elementSize, std::size_t nElements);
-   /// Releases the memory pointed to by page and resets the page's information
-   static void DeletePage(const RPage &page);
+   RPage NewPage(ColumnId_t columnId, std::size_t elementSize, std::size_t nElements) final;
 };
 
 } // namespace Internal

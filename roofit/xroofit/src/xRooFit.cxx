@@ -52,7 +52,7 @@
 #include "TGraphErrors.h"
 #include "TLegend.h"
 #include "TKey.h"
-#include "RooAbsTestStatistic.h"
+#include "../../roofitcore/src/RooAbsTestStatistic.h"
 #include "TPRegexp.h"
 #include "RooStringVar.h"
 
@@ -65,7 +65,7 @@
 #include "TROOT.h"
 #include "TBrowser.h"
 
-BEGIN_XROOFIT_NAMESPACE;
+BEGIN_XROOFIT_NAMESPACE
 
 std::shared_ptr<RooLinkedList> xRooFit::sDefaultNLLOptions = nullptr;
 std::shared_ptr<ROOT::Fit::FitConfig> xRooFit::sDefaultFitConfig = nullptr;
@@ -210,10 +210,12 @@ xRooFit::generateFrom(RooAbsPdf &pdf, const RooFitResult &_fr, bool expected, in
                      bool foundServer = false;
                      // note : this will work only for this type of constraints
                      // expressed as RooPoisson, RooGaussian, RooLognormal, RooGamma
+                     // SimpleGaussianConstraint is CMS's own version of a RooGaussian, which also works.
                      TClass *cClass = thePdf->IsA();
                      if (cClass != RooGaussian::Class() && cClass != RooPoisson::Class() &&
                          cClass != RooGamma::Class() && cClass != RooLognormal::Class() &&
-                         cClass != RooBifurGauss::Class()) {
+                         cClass != RooBifurGauss::Class() &&
+                         !(cClass && strcmp(cClass->GetName(), "SimpleGaussianConstraint") == 0)) {
                         TString className = (cClass) ? cClass->GetName() : "undefined";
                         oocoutW((TObject *)nullptr, Generation)
                            << "AsymptoticCalculator::MakeAsimovData:constraint term " << thePdf->GetName()
@@ -622,6 +624,17 @@ public:
          sout << (counter) << ") (" << evalRate << "Hz) " << TDatime().AsString();
          if (!fState.empty())
             sout << " : " << fState;
+         if (counter2) {
+            // doing a hesse step, estimate progress based on evaluations
+            int nRequired = prevPars.size();
+            if (nRequired > 1) {
+               nRequired *= (nRequired - 1) / 2;
+               if (fState == "Hesse3") {
+                  nRequired *= 4;
+               }
+               sout << " (~" << int(100.0 * (counter - counter2) / nRequired) << "%)";
+            }
+         }
          sout << " : " << minVal << " Delta = " << (minVal - prevMin);
          if (minVal < prevMin) {
             sout << " : ";
@@ -678,10 +691,11 @@ public:
    }
 
    std::string fState;
+   mutable int counter = 0;
+   int counter2 = 0; // used to estimate progress of a Hesse calculation
 
 private:
    RooRealProxy fFunc;
-   mutable int counter = 0;
    mutable double minVal = std::numeric_limits<double>::infinity();
    mutable double prevMin = std::numeric_limits<double>::infinity();
    mutable RooArgList minPars;
@@ -1120,8 +1134,9 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
 
       // only do hesse if was a valid min and not full accurate cov matrix already (can happen if e.g. ran strat2)
       if (hesse &&
-          (m_strategy(sIdx) == 'h' || strategy < 2 || _minimizer.fitter()->GetMinimizer()->CovMatrixStatus() != 3) &&
-          _minimizer.fitter()->Result().IsValid()) {
+          (m_strategy(sIdx) == 'h' || ((strategy < 2 || _minimizer.fitter()->GetMinimizer()->CovMatrixStatus() != 3) &&
+                                       _minimizer.fitter()->Result().IsValid()))) {
+
          // Note: minima where the covariance was made posdef are deemed 'valid' ...
 
          // remove limits on pars before calculation - CURRENTLY HAS NO EFFECT, minuit still holds the state as
@@ -1162,6 +1177,7 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
 
             if (auto fff = dynamic_cast<ProgressMonitor *>(_nll); fff) {
                fff->fState = TString::Format("Hesse%d", _minimizer.fitter()->Config().MinimizerOptions().Strategy());
+               fff->counter2 = fff->counter;
             }
 
             //_nll->getVal(); // for reasons I dont understand, if nll evaluated before hesse call the edm is smaller? -
@@ -1956,7 +1972,7 @@ double round_to_digits(double value, int digits)
       return 0.0;
    double factor = pow(10.0, digits - ceil(log10(std::abs(value))));
    return std::round(value * factor) / factor;
-};
+}
 double round_to_decimal(double value, int decimal_places)
 {
    const double multiplier = std::pow(10.0, decimal_places);
@@ -1981,4 +1997,4 @@ std::pair<double, double> xRooFit::matchPrecision(const std::pair<double, double
    return out;
 }
 
-END_XROOFIT_NAMESPACE;
+END_XROOFIT_NAMESPACE

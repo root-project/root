@@ -1024,7 +1024,7 @@ TestDialog::TestDialog(const TGWindow *p, const TGWindow *main, UInt_t w,
    char tmp[20];
    for (i = 0; i < 20; i++) {
 
-      sprintf(tmp, "Entry %i", i+1);
+      snprintf(tmp, 20, "Entry %i", i+1);
       fCombo->AddEntry(tmp, i+1);
    }
 
@@ -1093,7 +1093,7 @@ TestDialog::TestDialog(const TGWindow *p, const TGWindow *main, UInt_t w,
    tf->AddFrame(fF4, fL3);
 
    for (i = 0; i < 20; ++i)  {
-      sprintf(tmp, "Entry %i", i);
+      snprintf(tmp, 20, "Entry %i", i);
       fListBox->AddEntry(tmp, i);
    }
    fFirstEntry = 0;
@@ -1114,7 +1114,7 @@ TestDialog::TestDialog(const TGWindow *p, const TGWindow *main, UInt_t w,
    char buff[100];
    int j;
    for (j = 0; j < 4; j++) {
-      sprintf(buff, "Module %i", j+1);
+      snprintf(buff, 100, "Module %i", j+1);
       fF6->AddFrame(new TGLabel(fF6, new TGHotString(buff)));
 
       TGTextBuffer *tbuf = new TGTextBuffer(10);
@@ -1300,7 +1300,7 @@ void TestDialog::HandleButtons(Int_t id)
          break;
       case 90:  // add one entry in list box
          fLastEntry++;
-         sprintf(tmp, "Entry %i", fLastEntry);
+         snprintf(tmp, 20, "Entry %i", fLastEntry);
          fListBox->AddEntry(tmp, fLastEntry);
          fListBox->MapSubwindows();
          fListBox->Layout();
@@ -1341,7 +1341,7 @@ void TestDialog::HandleButtons(Int_t id)
          }
          break;
       case 103:  // add tabs
-         sprintf(tmp, "New Tab %d", ++newtab);
+         snprintf(tmp, 20, "New Tab %d", ++newtab);
          fTab->AddTab(tmp);
          fTab->MapSubwindows();
          fTab->Layout();
@@ -1744,7 +1744,7 @@ void TestSliders::DoSlider(Int_t pos)
    }
 
    char buf[32];
-   sprintf(buf, "%d", pos);
+   snprintf(buf, 32, "%d", pos);
 
 #ifdef CINT_FIXED
    switch (id) {
@@ -1789,7 +1789,7 @@ void TestSliders::DoSlider(Int_t pos)
    }
    else if (id == VSId2) {
 #endif
-      sprintf(buf, "%f", fVslider2->GetMinPosition());
+      snprintf(buf, 32, "%f", fVslider2->GetMinPosition());
       fTbv2->Clear();
       fTbv2->AddText(0, buf);
       fTev2->SetCursorPosition(fTev2->GetCursorPosition());
@@ -2496,9 +2496,9 @@ void Editor::SetTitle()
 
    char title[256];
    if (untitled)
-      sprintf(title, "ROOT Editor - Untitled");
+      snprintf(title, 256, "ROOT Editor - Untitled");
    else
-      sprintf(title, "ROOT Editor - %s", txt->GetFileName());
+      snprintf(title, 256, "ROOT Editor - %s", txt->GetFileName());
 
    fMain->SetWindowName(title);
    fMain->SetIconName(title);

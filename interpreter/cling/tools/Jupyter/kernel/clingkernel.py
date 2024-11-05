@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #------------------------------------------------------------------------------
 # CLING - the C++ LLVM-based InterpreterG :)
 # author:  Min RK
@@ -14,8 +14,6 @@ Cling Kernel for Jupyter
 
 Talks to Cling via ctypes
 """
-
-from __future__ import print_function
 
 __version__ = '0.0.3'
 
@@ -92,8 +90,8 @@ class ClingKernel(Kernel):
     flush_interval = Float(0.25, config=True)
 
     std = CaselessStrEnum(default_value='c++11',
-            values = ['c++11', 'c++14', 'c++1z', 'c++17'],
-            help="C++ standard to use, either c++17, c++1z, c++14 or c++11").tag(config=True);
+            values = ['c++11', 'c++14', 'c++1z', 'c++17', 'c++20', 'c++2b'],
+            help="C++ standard to use, either c++2b, c++20, c++17, c++1z, c++14 or c++11").tag(config=True);
 
     def __init__(self, **kwargs):
         super(ClingKernel, self).__init__(**kwargs)

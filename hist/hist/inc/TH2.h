@@ -162,12 +162,12 @@ public:
            void     SetBinsLength(Int_t n=-1) override;
 
            TH2C&    operator=(const TH2C &h1);
-   friend  TH2C     operator*(Float_t c1, TH2C &h1);
-   friend  TH2C     operator*(TH2C &h1, Float_t c1) {return operator*(c1,h1);}
-   friend  TH2C     operator+(TH2C &h1, TH2C &h2);
-   friend  TH2C     operator-(TH2C &h1, TH2C &h2);
-   friend  TH2C     operator*(TH2C &h1, TH2C &h2);
-   friend  TH2C     operator/(TH2C &h1, TH2C &h2);
+   friend  TH2C     operator*(Float_t c1, TH2C const &h1);
+   friend  TH2C     operator*(TH2C const &h1, Float_t c1) {return operator*(c1,h1);}
+   friend  TH2C     operator+(TH2C const &h1, TH2C const &h2);
+   friend  TH2C     operator-(TH2C const &h1, TH2C const &h2);
+   friend  TH2C     operator*(TH2C const &h1, TH2C const &h2);
+   friend  TH2C     operator/(TH2C const &h1, TH2C const &h2);
 
 protected:
            Double_t RetrieveBinContent(Int_t bin) const override { return Double_t (fArray[bin]); }
@@ -205,12 +205,12 @@ public:
            void     SetBinsLength(Int_t n=-1) override;
 
            TH2S&    operator=(const TH2S &h1);
-   friend  TH2S     operator*(Float_t c1, TH2S &h1);
-   friend  TH2S     operator*(TH2S &h1, Float_t c1) {return operator*(c1,h1);}
-   friend  TH2S     operator+(TH2S &h1, TH2S &h2);
-   friend  TH2S     operator-(TH2S &h1, TH2S &h2);
-   friend  TH2S     operator*(TH2S &h1, TH2S &h2);
-   friend  TH2S     operator/(TH2S &h1, TH2S &h2);
+   friend  TH2S     operator*(Float_t c1, TH2S const &h1);
+   friend  TH2S     operator*(TH2S const &h1, Float_t c1) {return operator*(c1,h1);}
+   friend  TH2S     operator+(TH2S const &h1, TH2S const &h2);
+   friend  TH2S     operator-(TH2S const &h1, TH2S const &h2);
+   friend  TH2S     operator*(TH2S const &h1, TH2S const &h2);
+   friend  TH2S     operator/(TH2S const &h1, TH2S const &h2);
 
 protected:
            Double_t RetrieveBinContent(Int_t bin) const override { return Double_t (fArray[bin]); }
@@ -248,12 +248,12 @@ public:
            void     SetBinsLength(Int_t n=-1) override;
 
            TH2I&    operator=(const TH2I &h1);
-   friend  TH2I     operator*(Float_t c1, TH2I &h1);
-   friend  TH2I     operator*(TH2I &h1, Float_t c1) {return operator*(c1,h1);}
-   friend  TH2I     operator+(TH2I &h1, TH2I &h2);
-   friend  TH2I     operator-(TH2I &h1, TH2I &h2);
-   friend  TH2I     operator*(TH2I &h1, TH2I &h2);
-   friend  TH2I     operator/(TH2I &h1, TH2I &h2);
+   friend  TH2I     operator*(Float_t c1, TH2I const &h1);
+   friend  TH2I     operator*(TH2I const &h1, Float_t c1) {return operator*(c1,h1);}
+   friend  TH2I     operator+(TH2I const &h1, TH2I const &h2);
+   friend  TH2I     operator-(TH2I const &h1, TH2I const &h2);
+   friend  TH2I     operator*(TH2I const &h1, TH2I const &h2);
+   friend  TH2I     operator/(TH2I const &h1, TH2I const &h2);
 
 protected:
            Double_t RetrieveBinContent(Int_t bin) const override { return Double_t (fArray[bin]); }
@@ -288,12 +288,12 @@ public:
    void     Reset(Option_t *option="") override;
    void     SetBinsLength(Int_t n=-1) override;
            TH2L&    operator=(const TH2L &h1);
-   friend  TH2L     operator*(Float_t c1, TH2L &h1);
-   friend  TH2L     operator*(TH2L &h1, Float_t c1) {return operator*(c1,h1);}
-   friend  TH2L     operator+(TH2L &h1, TH2L &h2);
-   friend  TH2L     operator-(TH2L &h1, TH2L &h2);
-   friend  TH2L     operator*(TH2L &h1, TH2L &h2);
-   friend  TH2L     operator/(TH2L &h1, TH2L &h2);
+   friend  TH2L     operator*(Float_t c1, TH2L const &h1);
+   friend  TH2L     operator*(TH2L const &h1, Float_t c1) {return operator*(c1,h1);}
+   friend  TH2L     operator+(TH2L const &h1, TH2L const &h2);
+   friend  TH2L     operator-(TH2L const &h1, TH2L const &h2);
+   friend  TH2L     operator*(TH2L const &h1, TH2L const &h2);
+   friend  TH2L     operator/(TH2L const &h1, TH2L const &h2);
 
 protected:
    Double_t RetrieveBinContent(Int_t bin) const override { return Double_t (fArray[bin]); }
@@ -337,12 +337,12 @@ public:
            void     SetBinsLength(Int_t n=-1) override;
 
            TH2F&    operator=(const TH2F &h1);
-   friend  TH2F     operator*(Float_t c1, TH2F &h1);
-   friend  TH2F     operator*(TH2F &h1, Float_t c1);
-   friend  TH2F     operator+(TH2F &h1, TH2F &h2);
-   friend  TH2F     operator-(TH2F &h1, TH2F &h2);
-   friend  TH2F     operator*(TH2F &h1, TH2F &h2);
-   friend  TH2F     operator/(TH2F &h1, TH2F &h2);
+   friend  TH2F     operator*(Float_t c1, TH2F const &h1);
+   friend  TH2F     operator*(TH2F const &h1, Float_t c1);
+   friend  TH2F     operator+(TH2F const &h1, TH2F const &h2);
+   friend  TH2F     operator-(TH2F const &h1, TH2F const &h2);
+   friend  TH2F     operator*(TH2F const &h1, TH2F const &h2);
+   friend  TH2F     operator/(TH2F const &h1, TH2F const &h2);
 
 protected:
            Double_t RetrieveBinContent(Int_t bin) const override { return Double_t (fArray[bin]); }
@@ -386,12 +386,12 @@ public:
            void     SetBinsLength(Int_t n=-1) override;
 
            TH2D&    operator=(const TH2D &h1);
-   friend  TH2D     operator*(Float_t c1, TH2D &h1);
-   friend  TH2D     operator*(TH2D &h1, Float_t c1) {return operator*(c1,h1);}
-   friend  TH2D     operator+(TH2D &h1, TH2D &h2);
-   friend  TH2D     operator-(TH2D &h1, TH2D &h2);
-   friend  TH2D     operator*(TH2D &h1, TH2D &h2);
-   friend  TH2D     operator/(TH2D &h1, TH2D &h2);
+   friend  TH2D     operator*(Float_t c1, TH2D const &h1);
+   friend  TH2D     operator*(TH2D const &h1, Float_t c1) {return operator*(c1,h1);}
+   friend  TH2D     operator+(TH2D const &h1, TH2D const &h2);
+   friend  TH2D     operator-(TH2D const &h1, TH2D const &h2);
+   friend  TH2D     operator*(TH2D const &h1, TH2D const &h2);
+   friend  TH2D     operator/(TH2D const &h1, TH2D const &h2);
 
 protected:
            Double_t RetrieveBinContent(Int_t bin) const override { return fArray[bin]; }

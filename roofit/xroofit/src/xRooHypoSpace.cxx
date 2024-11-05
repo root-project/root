@@ -37,7 +37,7 @@
 #include "RooStats/HypoTestInverterResult.h"
 #include "TEnv.h"
 
-BEGIN_XROOFIT_NAMESPACE;
+BEGIN_XROOFIT_NAMESPACE
 
 xRooNLLVar::xRooHypoSpace::xRooHypoSpace(const char *name, const char *title)
    : TNamed(name, title), fPars(std::make_shared<RooArgSet>())
@@ -1918,4 +1918,4 @@ RooStats::HypoTestInverterResult *xRooNLLVar::xRooHypoSpace::result()
    return out;
 }
 
-END_XROOFIT_NAMESPACE;
+END_XROOFIT_NAMESPACE

@@ -24,6 +24,7 @@
 #include "TVirtualFitter.h"
 #include "TFitResult.h"
 #include "THStack.h"
+#include "TStyle.h"
 
 /** \class TRatioPlot
     \ingroup gpad
@@ -100,9 +101,7 @@ is responsible for the range, which enables you to modify the range.
 ////////////////////////////////////////////////////////////////////////////////
 /// TRatioPlot default constructor
 
-TRatioPlot::TRatioPlot()
-{
-}
+TRatioPlot::TRatioPlot() : fLeftMargin(gStyle->GetPadLeftMargin()), fRightMargin(gStyle->GetPadRightMargin()) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
@@ -184,7 +183,7 @@ void TRatioPlot::Init(TH1* h1, TH1* h2, Option_t *option)
 /// \param h2 Second histogram
 /// \param option Steers the error calculation, as well as ratio / difference
 
-TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, Option_t *option)
+TRatioPlot::TRatioPlot(TH1 *h1, TH1 *h2, Option_t *option) : TRatioPlot()
 {
    if (!h1 || !h2) {
       Warning("TRatioPlot", "Need two histograms.");
@@ -213,7 +212,7 @@ TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, Option_t *option)
 /// \param h2 The other histogram
 /// \param option Steers the calculation of the lower plot
 
-TRatioPlot::TRatioPlot(THStack *st, TH1 *h2, Option_t *option)
+TRatioPlot::TRatioPlot(THStack *st, TH1 *h2, Option_t *option) : TRatioPlot()
 {
    if (!st || !h2) {
       Warning("TRatioPlot", "Need a histogram and a stack");
@@ -242,15 +241,51 @@ TRatioPlot::TRatioPlot(THStack *st, TH1 *h2, Option_t *option)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Constructor which accepts a `THStack` and a histogram. Converts the
+/// stack to a regular sum of its containing histograms for processing.
+///
+/// \param h1 The other histogram
+/// \param st The THStack object
+/// \param option Steers the calculation of the lower plot
+
+TRatioPlot::TRatioPlot(TH1 *h1, THStack *st, Option_t *option) : TRatioPlot()
+{
+   if (!st || !h1) {
+      Warning("TRatioPlot", "Need a histogram and a stack");
+      return;
+   }
+
+   TList *stackHists = st->GetHists();
+
+   if (stackHists->GetSize() == 0) {
+      Warning("TRatioPlot", "Stack does not have histograms");
+      return;
+   }
+
+   auto tmpHist = static_cast<TH1 *>(stackHists->At(0)->Clone());
+   tmpHist->Reset();
+
+   for (int i = 0; i < stackHists->GetSize(); ++i) {
+      tmpHist->Add(static_cast<TH1 *>(stackHists->At(i)));
+   }
+
+   fHistDrawProxy = st;
+   fHistDrawProxyStack = kTRUE;
+
+   Init(h1, tmpHist, option);
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Constructor for one histogram and a fit.
 ///
 /// \param h1 The histogram
 /// \param option Steers the error calculation
 /// \param fitres Explicit fit result to be used for calculation. Uses last fit if left empty
 
-TRatioPlot::TRatioPlot(TH1 *h1, Option_t *option, TFitResult *fitres)
-   : fH1(h1)
+TRatioPlot::TRatioPlot(TH1 *h1, Option_t *option, TFitResult *fitres) : TRatioPlot()
 {
+   fH1 = h1;
    if (!fH1) {
       Warning("TRatioPlot", "Need a histogram.");
       return;
@@ -792,7 +827,7 @@ void TRatioPlot::CreateGridlines()
    while (fGridlines.size() < fGridlinePositions.size()) {
       TLine *newline = new TLine(0, 0, 0, 0);
       newline->SetLineStyle(2);
-      fLowerPad->GetListOfPrimitives()->Add(newline);
+      fLowerPad->Add(newline);
       fGridlines.emplace_back(newline);
    }
 
@@ -1111,22 +1146,22 @@ void TRatioPlot::CreateVisualAxes()
 
    if (!fUpperGXaxis) {
       fUpperGXaxis = new TGaxis(0, 0, 1, 1, 0, 1, 510, "+U");
-      fTopPad->GetListOfPrimitives()->Add(fUpperGXaxis);
+      fTopPad->Add(fUpperGXaxis);
    }
 
    if (!fUpperGYaxis) {
       fUpperGYaxis = new TGaxis(0, 0, 1, 1, upYFirst, upYLast, 510, "S");
-      fTopPad->GetListOfPrimitives()->Add(fUpperGYaxis);
+      fTopPad->Add(fUpperGYaxis);
    }
 
    if (!fLowerGXaxis) {
       fLowerGXaxis = new TGaxis(0, 0, 1, 1, first, last, 510, "+S");
-      fTopPad->GetListOfPrimitives()->Add(fLowerGXaxis);
+      fTopPad->Add(fLowerGXaxis);
    }
 
    if (!fLowerGYaxis) {
       fLowerGYaxis = new TGaxis(0, 0, 1, 1, lowYFirst, lowYLast, 510, "-S");
-      fTopPad->GetListOfPrimitives()->Add(fLowerGYaxis);
+      fTopPad->Add(fLowerGYaxis);
    }
 
    // Create the axes on the other sides of the graphs
@@ -1134,22 +1169,22 @@ void TRatioPlot::CreateVisualAxes()
 
    if (!fUpperGXaxisMirror && axistop) {
       fUpperGXaxisMirror = static_cast<TGaxis *>(fUpperGXaxis->Clone());
-      fTopPad->GetListOfPrimitives()->Add(fUpperGXaxisMirror);
+      fTopPad->Add(fUpperGXaxisMirror);
    }
 
    if (!fLowerGXaxisMirror && axistop) {
       fLowerGXaxisMirror = static_cast<TGaxis *>(fLowerGXaxis->Clone());
-      fTopPad->GetListOfPrimitives()->Add(fLowerGXaxisMirror);
+      fTopPad->Add(fLowerGXaxisMirror);
    }
 
    if (!fUpperGYaxisMirror && axisright) {
       fUpperGYaxisMirror = static_cast<TGaxis *>(fUpperGYaxis->Clone());
-      fTopPad->GetListOfPrimitives()->Add(fUpperGYaxisMirror);
+      fTopPad->Add(fUpperGYaxisMirror);
    }
 
    if (!fLowerGYaxisMirror && axisright) {
       fLowerGYaxisMirror = static_cast<TGaxis *>(fLowerGYaxis->Clone());
-      fTopPad->GetListOfPrimitives()->Add(fLowerGYaxisMirror);
+      fTopPad->Add(fLowerGYaxisMirror);
    }
 
    UpdateVisualAxes();

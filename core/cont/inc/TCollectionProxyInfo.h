@@ -837,8 +837,10 @@ namespace Detail {
             if (iter->first.fIndex != c->size()) {
                iter->second = c->test(iter->first.fIndex);
                ++(iter->first.fIndex);
+               return &(iter->second);
+            } else {
+               return nullptr;
             }
-            return &(iter->second);
          }
          static void destruct1(void *iter_ptr) {
             iterator *start = (iterator *)(iter_ptr);

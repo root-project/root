@@ -187,7 +187,7 @@ public:
    The Kolmogorov-Smirnov 2-Samples Test algorithm is described at
    http://www.itl.nist.gov/div898/software/dataplot/refman1/auxillar/ks2samp.htm
    and described and taken from
-   http://root.cern.ch/root/html/TMath.html#TMath:KolmogorovTest
+   https://root.cern/doc/master/namespaceTMath.html
    */
    void KolmogorovSmirnov2SamplesTest(Double_t& pvalue, Double_t& testStat) const;
 

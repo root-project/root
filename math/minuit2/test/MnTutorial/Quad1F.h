@@ -18,24 +18,20 @@ namespace Minuit2 {
 class Quad1F : public FCNGradientBase {
 
 public:
-   Quad1F() : fErrorDef(1.) {}
-
-   ~Quad1F() override {}
-
-   double operator()(const std::vector<double> &par) const override
+   double operator()(std::vector<double> const &par) const override
    {
 
       double x = par[0];
 
-      return (x * x);
+      return x * x;
    }
 
-   std::vector<double> Gradient(const std::vector<double> &par) const override
+   std::vector<double> Gradient(std::vector<double> const &par) const override
    {
 
       double x = par[0];
 
-      return (std::vector<double>(1, 2. * x));
+      return std::vector<double>(1, 2. * x);
    }
 
    void SetErrorDef(double up) override { fErrorDef = up; }
@@ -45,7 +41,7 @@ public:
    const FCNBase *Base() const { return this; }
 
 private:
-   double fErrorDef;
+   double fErrorDef = 1.;
 };
 
 } // namespace Minuit2

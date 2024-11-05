@@ -2,16 +2,15 @@ Introduction
 ============
 
 This document contains the release notes for the interactive C++ interpreter
-Cling, release 1.1. Cling is built on top of [Clang](http://clang.llvm.org) and
+Cling, release 1.2. Cling is built on top of [Clang](http://clang.llvm.org) and
 [LLVM](http://llvm.org>) compiler infrastructure. Here we
 describe the status of Cling in some detail, including major
 improvements from the previous release and new feature work.
 
-Note that if you are reading this file from a git checkout or the main
-[Cling web page](https://rawgit.com/root-project/cling/master/www/index.html),
-this document applies to the *next* release, not the current one.
+Note that if you are reading this file from a git checkout or the main Cling
+web page, this document applies to the *next* release, not the current one.
 
-What's New in Cling 1.1?
+What's New in Cling 1.2?
 ========================
 
 Some of the major new features and improvements to Cling are listed
@@ -44,9 +43,7 @@ Fixed Bugs
 [ROOT-XXXX](https://sft.its.cern.ch/jira/browse/ROOT-XXXX)
 
 <!---Get release bugs
-git log v1.0..master | grep 'ROOT-' | sed -E \
-  's,^.*(ROOT-[0-9]+).*$,[\1]\(https://sft.its.cern.ch/jira/browse/\1\),' | \
-  sort | uniq
+git log v1.1..master | grep -i "fix" | grep '#' | sed -E 's,.*\#([0-9]*).*,\[\1\]\(https://github.com/root-project/cling/issues/\1\),g' | sort
 --->
 <!---Standard MarkDown doesn't support neither variables nor <base>
 [ROOT-XXX](https://sft.its.cern.ch/jira/browse/ROOT-XXX)
@@ -72,6 +69,6 @@ listed in the form of Firstname Lastname (#contributions):
 FirstName LastName (#commits)
 
 <!---Find contributor list for this release
-git log --pretty=format:"%an"  v1.0...master | sort | uniq -c | sort -rn |\
+git log --pretty=format:"%an"  v1.1...master | sort | uniq -c | sort -rn |\
   sed -E 's,^ *([0-9]+) (.*)$,\2 \(\1\),'
 --->

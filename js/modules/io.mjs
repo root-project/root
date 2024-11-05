@@ -38,8 +38,10 @@ const clTStreamerElement = 'TStreamerElement', clTStreamerObject = 'TStreamerObj
       // kSTLforwardlist = 9, kSTLunorderedset = 10, kSTLunorderedmultiset = 11, kSTLunorderedmap = 12,
       // kSTLunorderedmultimap = 13, kSTLend = 14
 
+      kBaseClass = 'BASE',
+
       // name of base IO types
-      BasicTypeNames = ['BASE', 'char', 'short', 'int', 'long', 'float', 'int', 'const char*', 'double', 'Double32_t',
+      BasicTypeNames = [kBaseClass, 'char', 'short', 'int', 'long', 'float', 'int', 'const char*', 'double', 'Double32_t',
                         'char', 'unsigned  char', 'unsigned short', 'unsigned', 'unsigned long', 'unsigned', 'Long64_t', 'ULong64_t', 'bool', 'Float16_t'],
 
       // names of STL containers
@@ -91,7 +93,7 @@ CustomStreamers = {
       const pos = classv.lastIndexOf(';');
 
       if (pos > 0) {
-         clv = parseInt(classv.slice(pos + 1));
+         clv = Number.parseInt(classv.slice(pos + 1));
          classv = classv.slice(0, pos);
       }
 
@@ -486,19 +488,6 @@ function addUserStreamer(type, user_streamer) {
    CustomStreamers[type] = user_streamer;
 }
 
-function getTDatimeDate() {
-   const res = new Date();
-   res.setFullYear((this.fDatime >>> 26) + 1995);
-   res.setMonth(((this.fDatime << 6) >>> 28) - 1);
-   res.setDate((this.fDatime << 10) >>> 27);
-   res.setHours((this.fDatime << 15) >>> 27);
-   res.setMinutes((this.fDatime << 20) >>> 26);
-   res.setSeconds((this.fDatime << 26) >>> 26);
-   res.setMilliseconds(0);
-   return res;
-}
-
-
 /** @summary these are streamers which do not handle version regularly
   * @desc used for special classes like TRef or TBasket
   * @private */
@@ -511,7 +500,6 @@ const DirectStreamers = {
 
    TDatime(buf, obj) {
       obj.fDatime = buf.ntou4();
-      obj.getDate = getTDatimeDate;
    },
 
    TKey(buf, key) {
@@ -786,7 +774,7 @@ function createMemberStreamer(element, file) {
       fMaxIndex: element.fMaxIndex
    };
 
-   if (element.fTypeName === 'BASE') {
+   if (element.fTypeName === kBaseClass) {
       if (getArrayKind(member.name) > 0) {
          // this is workaround for arrays as base class
          // we create 'fArray' member, which read as any other data member
@@ -901,7 +889,6 @@ function createMemberStreamer(element, file) {
       case kOffsetL + kDouble32:
       case kOffsetP + kDouble32:
          member.double32 = true;
-      // eslint-disable-next-line no-fallthrough
       case kFloat16:
       case kOffsetL + kFloat16:
       case kOffsetP + kFloat16:
@@ -961,7 +948,7 @@ function createMemberStreamer(element, file) {
       case kAnyp:
       case kObjectp:
       case kObject: {
-         let classname = (element.fTypeName === 'BASE') ? element.fName : element.fTypeName;
+         let classname = (element.fTypeName === kBaseClass) ? element.fName : element.fTypeName;
          if (classname[classname.length - 1] === '*')
             classname = classname.slice(0, classname.length - 1);
 
@@ -1511,7 +1498,7 @@ function ZIP_inflate(arr, tgt) {
                for (o = 0; o < z; ++o)
                   q[o] = { e: 0, b: 0, n: 0, t: null }; // new zip_HuftNode
 
-               if (tail == null)
+               if (tail === null)
                   tail = res.root = { next: null, list: null }; // new zip_HuftList();
                else
                   tail = tail.next = { next: null, list: null }; // new zip_HuftList();
@@ -1693,11 +1680,11 @@ function ZIP_inflate(arr, tgt) {
 
    function zip_inflate_fixed(buff, off, size) {
       /* decompress an inflated type 1 (fixed Huffman codes) block.  We should
-         either replace this with a custom decoder, or at least precompute the
+         either replace this with a custom decoder, or at least pre-compute the
          Huffman tables. */
 
       // if first time, set up tables for fixed blocks
-      if (zip_fixed_tl == null) {
+      if (zip_fixed_tl === null) {
          // literal table
          const l = Array(288).fill(8, 0, 144).fill(9, 144, 256).fill(7, 256, 280).fill(8, 280, 288);
          // make a complete, but wrong code set
@@ -1890,14 +1877,14 @@ function ZIP_inflate(arr, tgt) {
                break;
 
             case 1: // zip_STATIC_TREES
-               if (zip_tl != null)
+               if (zip_tl !== null)
                   i = zip_inflate_codes(buff, off + n, size - n);
                else
                   i = zip_inflate_fixed(buff, off + n, size - n);
                break;
 
             case 2: // zip_DYN_TREES
-               if (zip_tl != null)
+               if (zip_tl !== null)
                   i = zip_inflate_codes(buff, off + n, size - n);
                else
                   i = zip_inflate_dynamic(buff, off + n, size - n);
@@ -1934,7 +1921,7 @@ function ZIP_inflate(arr, tgt) {
  * Decode a block. Assumptions: input contains all sequences of a
  * chunk, output is large enough to receive the decoded data.
  * If the output buffer is too small, an error will be thrown.
- * If the returned value is negative, an error occured at the returned offset.
+ * If the returned value is negative, an error occurred at the returned offset.
  *
  * @param input {Buffer} input data
  * @param output {Buffer} output data
@@ -2029,10 +2016,23 @@ async function R__unzip(arr, tgtsize, noalert, src_shift) {
          const tgt8arr = new Uint8Array(tgtbuf, fullres);
 
          if (fmt === 'ZSTD') {
-            const promise = internals._ZstdStream
-                            ? Promise.resolve(internals._ZstdStream)
-                            : (isNodeJs() ? import('@oneidentity/zstd-js') : import(/* webpackIgnore: true */ './base/zstd.mjs'))
-                              .then(({ ZstdInit }) => ZstdInit()).then(({ ZstdStream }) => { internals._ZstdStream = ZstdStream; return ZstdStream; });
+            let promise;
+            if (internals._ZstdStream)
+               promise = Promise.resolve(internals._ZstdStream);
+            else if (internals._ZstdInit !== undefined)
+               promise = new Promise(resolveFunc => { internals._ZstdInit.push(resolveFunc); });
+            else {
+               internals._ZstdInit = [];
+               promise = (isNodeJs() ? import('@oneidentity/zstd-js') : import('./base/zstd.mjs'))
+                   .then(({ ZstdInit }) => ZstdInit())
+                   .then(({ ZstdStream }) => {
+                     internals._ZstdStream = ZstdStream;
+                     internals._ZstdInit.forEach(func => func(ZstdStream));
+                     delete internals._ZstdInit;
+                     return ZstdStream;
+                  });
+            }
+
             return promise.then(ZstdStream => {
                const data2 = ZstdStream.decompress(uint8arr),
                      reslen = data2.length;
@@ -2045,7 +2045,7 @@ async function R__unzip(arr, tgtsize, noalert, src_shift) {
                return nextPortion();
             });
          } else if (fmt === 'LZMA') {
-            return import(/* webpackIgnore: true */ './base/lzma.mjs').then(lzma => {
+            return import('./base/lzma.mjs').then(lzma => {
                const expected_len = (getCode(curr + 6) & 0xff) | ((getCode(curr + 7) & 0xff) << 8) | ((getCode(curr + 8) & 0xff) << 16),
                      reslen = lzma.decompress(uint8arr, tgt8arr, expected_len);
                fullres += reslen;
@@ -2175,7 +2175,6 @@ class TBuffer {
       * @desc string either contains all symbols or until 0 symbol */
    readFastString(n) {
       let res = '', code, closed = false;
-      // eslint-disable-next-line no-unmodified-loop-condition
       for (let i = 0; (n < 0) || (i < n); ++i) {
          code = this.ntou1();
          if (code === 0) { closed = true; if (n < 0) break; }
@@ -2782,16 +2781,14 @@ class TFile {
          }
 
          if (res && first_req) {
-            if (file.fAcceptRanges && !first_req.getResponseHeader('Accept-Ranges')) {
-               file.fAcceptRanges = false;
-               if (res?.byteLength === place[1]) {
-                  // special case with cernbox, let try to get full size content
-                  console.warn(`First block is ${place[1]} bytes but browser does not provides access to header - try to read full file`);
-                  first_block_retry = true;
-                  return send_new_request();
-               }
+            // special workaround for servers like cernbox blocking access to some response headers
+            // as result, it is not possible to parse multipart responses
+            if (file.fAcceptRanges && (first_req.status === 206) && (res?.byteLength === place[1]) && !first_req.getResponseHeader('Content-Range') && (file.fMaxRanges > 1)) {
+               console.warn('Server response with 206 code but browser does not provide access to Content-Range header - setting fMaxRanges = 1, consider to load full file with "filename.root+" argument or adjust server configurations');
+               file.fMaxRanges = 1;
             }
 
+            // workaround for simpleHTTP
             const kind = browser.isFirefox ? first_req.getResponseHeader('Server') : '';
             if (isStr(kind) && kind.indexOf('SimpleHTTP') === 0) {
                file.fMaxRanges = 1;
@@ -2801,7 +2798,6 @@ class TFile {
 
          if (res && first_block && !file.fFileContent) {
             // special case - keep content of first request (could be complete file) in memory
-
             file.fFileContent = new TBuffer(isStr(res) ? res : new DataView(res));
 
             if (!file.fAcceptRanges)
@@ -2854,8 +2850,8 @@ class TFile {
             if (isStr(hdr_range) && hdr_range.indexOf('bytes') >= 0) {
                const parts = hdr_range.slice(hdr_range.indexOf('bytes') + 6).split(/[\s-/]+/);
                if (parts.length === 3) {
-                  segm_start = parseInt(parts[0]);
-                  segm_last = parseInt(parts[1]);
+                  segm_start = Number.parseInt(parts[0]);
+                  segm_last = Number.parseInt(parts[1]);
                   if (!Number.isInteger(segm_start) || !Number.isInteger(segm_last) || (segm_start > segm_last)) {
                      segm_start = 0; segm_last = -1;
                   }
@@ -2886,7 +2882,7 @@ class TFile {
          // multipart messages requires special handling
 
          const indx = hdr.indexOf('boundary=');
-         let boundary = '', n = first, o = 0;
+         let boundary = '', n = first, o = 0, normal_order = true;
          if (indx > 0) {
             boundary = hdr.slice(indx + 9);
             if ((boundary[0] === '"') && (boundary[boundary.length - 1] === '"'))
@@ -2912,8 +2908,8 @@ class TFile {
                   if ((line.indexOf('content-range') >= 0) && (line.indexOf('bytes') > 0)) {
                      const parts = line.slice(line.indexOf('bytes') + 6).split(/[\s-/]+/);
                      if (parts.length === 3) {
-                        segm_start = parseInt(parts[0]);
-                        segm_last = parseInt(parts[1]);
+                        segm_start = Number.parseInt(parts[0]);
+                        segm_last = Number.parseInt(parts[1]);
                         if (!Number.isInteger(segm_start) || !Number.isInteger(segm_last) || (segm_start > segm_last)) {
                            segm_start = 0; segm_last = -1;
                         }
@@ -2940,11 +2936,33 @@ class TFile {
                blobs.push(new DataView(res, o, place[n + 1]));
                o += place[n + 1];
                n += 2;
-            } else {
+            } else if (normal_order) {
+               const n0 = n;
                while ((n < last) && (place[n] >= segm_start) && (place[n] + place[n + 1] - 1 <= segm_last)) {
                   blobs.push(new DataView(res, o + place[n] - segm_start, place[n + 1]));
                   n += 2;
                }
+
+               if (n > n0)
+                  o += (segm_last - segm_start + 1);
+               else
+                  normal_order = false;
+            }
+
+            if (!normal_order) {
+               // special situation when server reorder segments in the reply
+               let isany = false;
+               for (let n1 = n; n1 < last; n1 += 2) {
+                  if ((place[n1] >= segm_start) && (place[n1] + place[n1 + 1] - 1 <= segm_last)) {
+                     blobs[n1/2] = new DataView(res, o + place[n1] - segm_start, place[n1 + 1]);
+                     isany = true;
+                  }
+               }
+               if (!isany)
+                  return rejectFunc(Error(`Provided fragment ${segm_start} - ${segm_last} out of requested multi-range request`));
+
+               while (blobs[n/2])
+                  n += 2;
 
                o += (segm_last - segm_start + 1);
             }
@@ -2965,7 +2983,10 @@ class TFile {
    getDir(dirname, cycle) {
       if ((cycle === undefined) && isStr(dirname)) {
          const pos = dirname.lastIndexOf(';');
-         if (pos > 0) { cycle = parseInt(dirname.slice(pos + 1)); dirname = dirname.slice(0, pos); }
+         if (pos > 0) {
+            cycle = Number.parseInt(dirname.slice(pos + 1));
+            dirname = dirname.slice(0, pos);
+         }
       }
 
       for (let j = 0; j < this.fDirectories.length; ++j) {
@@ -3044,8 +3065,8 @@ class TFile {
      * console.log(`Read object of type ${obj._typename}`); */
    async readObject(obj_name, cycle, only_dir) {
       const pos = obj_name.lastIndexOf(';');
-      if (pos > 0) {
-         cycle = parseInt(obj_name.slice(pos + 1));
+      if (pos >= 0) {
+         cycle = Number.parseInt(obj_name.slice(pos + 1));
          obj_name = obj_name.slice(0, pos);
       }
 
@@ -3055,7 +3076,7 @@ class TFile {
 
       // one uses Promises while in some cases we need to
       // read sub-directory to get list of keys
-      // in such situation calls are asynchrone
+      // in such situation calls are asynchronous
       return this.getKey(obj_name, cycle).then(key => {
          if ((obj_name === nameStreamerInfo) && (key.fClassName === clTList))
             return this.fStreamerInfos;
@@ -3173,7 +3194,7 @@ class TFile {
      * @private */
    async readKeys() {
       // with the first readbuffer we read bigger amount to create header cache
-      return this.readBuffer([0, 1024]).then(blob => {
+      return this.readBuffer([0, 400]).then(blob => {
          const buf = new TBuffer(blob, 0, this);
          if (buf.substring(0, 4) !== 'root')
             return Promise.reject(Error(`Not a ROOT file ${this.fURL}`));
@@ -3292,7 +3313,7 @@ class TFile {
                return si;
             }
          }
-         cache[checksum] = null; // checksum didnot found, do not try again
+         cache[checksum] = null; // checksum did not found, do not try again
       } else {
          for (let i = 0; i < len; ++i) {
             const si = arr[i];
@@ -3406,7 +3427,7 @@ class TFile {
       return tgt;
    }
 
-   /** @summary Fully clenaup TFile data
+   /** @summary Fully cleanup TFile data
      * @private */
    delete() {
       this.fDirectories = null;
@@ -3549,6 +3570,11 @@ function readMapElement(buf) {
    }
 
    const n = buf.ntoi4(), res = new Array(n);
+
+   // no extra data written for empty map
+   if (n === 0)
+      return res;
+
    if (this.member_wise && (buf.remain() >= 6)) {
       if (buf.ntoi2() === kStreamedMemberWise)
          buf.shift(4); // skip checksum
@@ -3605,7 +3631,7 @@ class TLocalFile extends TFile {
 
    /** @summary read buffer from local file
      * @return {Promise} with read data */
-   async readBuffer(place, filename /*, progress_callback */) {
+   async readBuffer(place, filename /* , progress_callback */) {
       const file = this.fLocalFile;
 
       return new Promise((resolve, reject) => {
@@ -3674,7 +3700,7 @@ class TNodejsFile extends TFile {
 
    /** @summary Read buffer from node.js file
      * @return {Promise} with requested blocks */
-   async readBuffer(place, filename /*, progress_callback */) {
+   async readBuffer(place, filename /* , progress_callback */) {
       return new Promise((resolve, reject) => {
          if (filename)
             return reject(Error(`Cannot access other local file ${filename}`));
@@ -3685,7 +3711,6 @@ class TNodejsFile extends TFile {
          const blobs = [];
          let cnt = 0;
 
-         // eslint-disable-next-line n/handle-callback-err
          const readfunc = (_err, _bytesRead, buf) => {
             const res = new DataView(buf.buffer, buf.byteOffset, place[cnt + 1]);
             if (place.length === 2) return resolve(res);
@@ -3702,7 +3727,7 @@ class TNodejsFile extends TFile {
 } // class TNodejsFile
 
 /**
-  * @summary Proxy to read file contenxt
+  * @summary Proxy to read file content
   *
   * @desc Should implement following methods:
   *
@@ -3757,7 +3782,7 @@ class TProxyFile extends TFile {
 
    /** @summary Read buffer from FileProxy
      * @return {Promise} with requested blocks */
-   async readBuffer(place, filename /*, progress_callback */) {
+   async readBuffer(place, filename /* , progress_callback */) {
       if (filename)
          return Promise.reject(Error(`Cannot access other file ${filename}`));
 
@@ -3826,7 +3851,7 @@ export { kChar, kShort, kInt, kLong, kFloat, kCounter,
    kUChar, kUShort, kUInt, kULong, kBits,
    kLong64, kULong64, kBool, kFloat16,
    kBase, kOffsetL, kOffsetP, kObject, kAny, kObjectp, kObjectP, kTString,
-   kAnyP, kStreamer, kStreamLoop, kSTLp, kSTL,
+   kAnyP, kStreamer, kStreamLoop, kSTLp, kSTL, kBaseClass,
    clTStreamerInfoList, clTDirectory, clTDirectoryFile, nameStreamerInfo, clTBasket,
    R__unzip, addUserStreamer, createStreamerElement, createMemberStreamer,
-   openFile, reconstructObject, FileProxy, TBuffer }; /*, TDirectory, TFile, TLocalFile, TNodejsFile */
+   openFile, reconstructObject, FileProxy, TBuffer };

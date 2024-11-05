@@ -21,6 +21,7 @@
 #include <ROOT/RLogger.hxx>
 #include <ROOT/REveSystem.hxx>
 #include <ROOT/RWebWindowsManager.hxx>
+#include <ROOT/REveGeoTopNode.hxx>
 
 #include "TGeoManager.h"
 #include "TGeoMatrix.h"
@@ -69,7 +70,10 @@ thread_local MIR_TL_Data_t gMIRData;
 
 /** \class REveManager
 \ingroup REve
-Central application manager for Eve.
+\ingroup webwidgets
+
+\brief Central application manager for web-based REve.
+
 Manages elements, GUI, GL scenes and GL viewers.
 
 Following parameters can be specified in .rootrc file
@@ -873,6 +877,18 @@ void REveManager::WindowData(unsigned connid, const std::string &arg)
       ROOT::RWebWindow::EmbedFileDialog(fWebWindow, connid, arg);
       return;
    }
+   else if (arg.compare(0, 11, "SETCHANNEL:") == 0) {
+      std::string s = arg.substr(11);
+      auto p = s.find(",");
+      int eveid = std::stoi(s.substr(0, p));
+      int chid = std::stoi(s.substr(p+1));
+
+      REveElement* n = FindElementById(eveid);
+      auto nn = dynamic_cast<REveGeoTopNodeData*>(n);
+      if (nn) nn->SetChannel(connid, chid);
+
+      return;
+   }
 
    nlohmann::json cj = nlohmann::json::parse(arg);
    if (gDebug > 0)
@@ -1050,14 +1066,17 @@ void REveManager::MIRExecThread()
 
          lock.unlock();
 
-         // allow scenes to accept changes in the element
+         // Ideally, as in gled, MIR execution would be steered by scenes themselves.
+         // But this requires alpha/beta/gamma MIR elements and scene dependenices,
+         // so dependent scenes can be locked, too.
+         // On top of that, one could also implements authorization framework, as in gled.
+
          gEve->GetWorld()->BeginAcceptingChanges();
-         gEve->GetScenes()->AcceptChanges(true);
+         gEve->GetScenes()->BeginAcceptingChanges();
 
          ExecuteMIR(mir);
 
-         // disable scene's element changing
-         gEve->GetScenes()->AcceptChanges(false);
+         gEve->GetScenes()->EndAcceptingChanges();
          gEve->GetWorld()->EndAcceptingChanges();
 
          StreamSceneChangesToJson();
@@ -1170,14 +1189,14 @@ void REveManager::BeginChange()
       fServerState.fVal = ServerState::UpdatingScenes;
    }
    GetWorld()->BeginAcceptingChanges();
-   GetScenes()->AcceptChanges(true);
+   GetScenes()->BeginAcceptingChanges();
 }
 
 //____________________________________________________________________
 void REveManager::EndChange()
 {
    // tag scene to disable accepting chages, write the change json
-   GetScenes()->AcceptChanges(false);
+   GetScenes()->EndAcceptingChanges();
    GetWorld()->EndAcceptingChanges();
 
    StreamSceneChangesToJson();

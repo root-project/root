@@ -27,11 +27,16 @@
 unsigned int ROOT::RDF::RInterfaceBase::GetNFiles()
 {
    // TTree/TChain as input
-   const auto tree = fLoopManager->GetTree();
-
-   if (tree) {
-      const auto files = ROOT::Internal::TreeUtils::GetFileNamesFromTree(*tree);
-      return files.size();
+   if (const auto *tree = fLoopManager->GetTree()) {
+      if (!dynamic_cast<const TChain *>(tree) && !tree->GetCurrentFile()) {
+         // in-memory TTree
+         return 0;
+      }
+      return ROOT::Internal::TreeUtils::GetFileNamesFromTree(*tree).size();
+   }
+   // Datasource as input
+   if (fDataSource) {
+      return fDataSource->GetNFiles();
    }
    return 0;
 }
@@ -283,7 +288,7 @@ ROOT::RDF::RDFDescription ROOT::RDF::RInterfaceBase::Describe()
    }
    // Use the string returned from DescribeDataset() as the 'brief' description
    // Use the converted to string stringstream ss as the 'full' description
-   return RDFDescription(DescribeDataset(), ss.str());
+   return RDFDescription(DescribeDataset(), ss.str(), GetNFiles());
 }
 
 /// \brief Returns the names of the defined columns.
