@@ -454,67 +454,6 @@ Bool_t TPython::Exec(const char *cmd, std::any *result, std::string const &resul
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Evaluate a python expression (e.g. "ROOT.TBrowser()").
-///
-/// Caution: do not hold on to the return value: either store it in a builtin
-/// type (implicit casting will work), or in a pointer to a ROOT object (explicit
-/// casting to a void* is required).
-///
-/// \deprecated Use TPython::Exec() with an std::any output parameter instead.
-
-const TPyReturn TPython::Eval(const char *expr)
-{
-   // setup
-   if (!Initialize())
-      return TPyReturn();
-
-   PyGILRAII gilRaii;
-
-   // evaluate the expression
-   PyObject *result = PyRun_String(const_cast<char *>(expr), Py_eval_input, gMainDict, gMainDict);
-
-   // report errors as appropriate; return void
-   if (!result) {
-      PyErr_Print();
-      return TPyReturn();
-   }
-
-   // results that require no conversion
-   if (result == Py_None || CPyCppyy::Instance_Check(result) || PyBytes_Check(result) || PyFloat_Check(result) ||
-       PyLong_Check(result))
-      return TPyReturn(result);
-
-   // explicit conversion for python type required
-   PyObject *pyclass = PyObject_GetAttrString(result, const_cast<char *>("__class__"));
-   if (pyclass != 0) {
-      CachedPyString moduleStr{"__module__"};
-      CachedPyString nameStr{"__name__"};
-
-      // retrieve class name and the module in which it resides
-      PyObject *name = PyObject_GetAttr(pyclass, nameStr.obj());
-      PyObject *module = PyObject_GetAttr(pyclass, moduleStr.obj());
-
-      // concat name
-      std::string qname = std::string(PyUnicode_AsUTF8(module)) + '.' + PyUnicode_AsUTF8(name);
-      Py_DECREF(module);
-      Py_DECREF(name);
-      Py_DECREF(pyclass);
-
-      // locate ROOT style class with this name
-      TClass *klass = TClass::GetClass(qname.c_str());
-
-      // construct general ROOT python object that pretends to be of class 'klass'
-      if (klass != 0)
-         return TPyReturn(result);
-   } else
-      PyErr_Clear();
-
-   // no conversion, return null pointer object
-   Py_DECREF(result);
-   return TPyReturn();
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Bind a ROOT object with, at the python side, the name "label".
 
 Bool_t TPython::Bind(TObject *object, const char *label)
