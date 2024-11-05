@@ -329,7 +329,7 @@ sap.ui.define([
          if ((typeof cl == 'string') && opts.Mode3D && (cl.indexOf('ROOT::Experimental::RHist') == 0))
             opts.Lego = 12;
 
-         opts.Contor = parseInt(opts.Contor);
+         opts.Contour = parseInt(opts.Contour);
          opts.ErrorKind = parseInt(opts.ErrorKind);
 
          this.currentPainter?.interactiveRedraw('pad', 'drawopt');

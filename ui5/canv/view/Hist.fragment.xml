@@ -11,26 +11,31 @@
          </buttons>
       </RadioButtonGroup>
       <Panel visible="{= ${/opts/Mode3Dindx} === 0  &amp;&amp; ${/opts/ndim} === 1}">
-         <Label text="Error:" class="sapUiSmallMarginEnd" labelFor="ErrorsSelectTh1" />
-         <Select selectedKey="{/opts/ErrorKind}" enabled="{/opts/Error}" tooltip="Error kinds" id="ErrorsSelectTh1">
-            <items>
-               <core:Item text="Simple" key="-1" />
-               <core:Item text="E0" key="0"/>
-               <core:Item text="E1" key="1"/>
-               <core:Item text="E2" key="2"/>
-               <core:Item text="E3" key="3"/>
-               <core:Item text="E4" key="4"/>
-            </items>
-         </Select>
-         <Label text="Style:" class="sapUiSmallMarginEnd" labelFor="StyleSelectTh1" />
-         <Select selectedKey="{/opts/Style}" tooltip="Contor" id="StyleSelectTh1">
-            <items>
-               <core:Item text="No" key="0" />
-               <core:Item text="Simple" key="1" />
-               <core:Item text="Strooth" key="2" />
-               <core:Item text="Fill" key="3" />
-            </items>
-         </Select>
+         <HBox alignItems="Center">
+            <Label text="Error:" class="sapUiTinyMarginEnd" labelFor="ErrorsSelectTh1"/>
+            <Select selectedKey="{/opts/ErrorKind}" enabled="{/opts/Error}" tooltip="Error kinds" id="ErrorsSelectTh1">
+               <items>
+                  <core:Item text="Simple" key="-1" />
+                  <core:Item text="E0" key="0"/>
+                  <core:Item text="E1" key="1"/>
+                  <core:Item text="E2" key="2"/>
+                  <core:Item text="E3" key="3"/>
+                  <core:Item text="E4" key="4"/>
+               </items>
+            </Select>
+         </HBox>
+
+         <HBox alignItems="Center">
+            <Label text="Style:" class="sapUiTinyMarginEnd" labelFor="StyleSelectTh1" />
+            <Select selectedKey="{/opts/Style}" tooltip="Style" id="StyleSelectTh1">
+               <items>
+                  <core:Item text="No" key="0" />
+                  <core:Item text="Simple" key="1" />
+                  <core:Item text="Strooth" key="2" />
+                  <core:Item text="Fill" key="3" />
+               </items>
+            </Select>
+         </HBox>
 
          <CheckBox text="Simple drawing" selected="true" enabled="false" />
          <CheckBox text="Show errors" selected="{/opts/Error}" />
@@ -39,34 +44,37 @@
          <CheckBox text="Draw bar chart" selected="{/opts/Bar}" />
          <CheckBox text="Bar option" selected="false" enabled="false"/>
       </Panel>
-      
-      <Panel visible="{= ${/opts/Mode3Dindx} === 1 &amp;&amp; ${/opts/ndim} === 1}">
-         <Label text="Type" labelFor="LegoSelectTh1" />
-         <Select selectedKey="{/opts/Lego}" tooltip="Contor" id="LegoSelectTh1">
-            <items>
-               <core:Item text="NoLego" key="0" />
-               <core:Item text="Lego" key="1" />
-               <core:Item text="Lego1" key="11" />
-               <core:Item text="Lego2" key="12" />
-               <core:Item text="Lego3" key="13" />
-               <core:Item text="Lego4" key="14" />
-            </items>
-         </Select>
-      </Panel>
-      
-      <Panel visible="{= ${/opts/Mode3Dindx} === 0 &amp;&amp; ${/opts/ndim} === 2}">
-         <Label text="Contor" labelFor="ContorSelectTh2" />
-         <Select selectedKey="{/opts/Contor}" tooltip="Contor" id="ContorSelectTh2">
-            <items>
-               <core:Item text="none" key="0"/>
-               <core:Item text="Cont" key="1"/>
-               <core:Item text="Cont1" key="11"/>
-               <core:Item text="Cont2" key="12"/>
-               <core:Item text="Cont3" key="13"/>
-               <core:Item text="Cont4" key="14"/>
-            </items>
-         </Select>
 
+      <Panel visible="{= ${/opts/Mode3Dindx} === 1 &amp;&amp; ${/opts/ndim} === 1}">
+         <HBox alignItems="Center">
+            <Label text="Type" labelFor="LegoSelectTh1" class="sapUiTinyMarginEnd"/>
+            <Select selectedKey="{/opts/Lego}" tooltip="Lego kinds" id="LegoSelectTh1">
+               <items>
+                  <core:Item text="NoLego" key="0" />
+                  <core:Item text="Lego" key="1" />
+                  <core:Item text="Lego1" key="11" />
+                  <core:Item text="Lego2" key="12" />
+                  <core:Item text="Lego3" key="13" />
+                  <core:Item text="Lego4" key="14" />
+               </items>
+            </Select>
+         </HBox>
+      </Panel>
+
+      <Panel visible="{= ${/opts/Mode3Dindx} === 0 &amp;&amp; ${/opts/ndim} === 2}">
+         <HBox alignItems="Center">
+            <Label text="Type" labelFor="ContourSelectTh2" class="sapUiTinyMarginEnd"/>
+            <Select selectedKey="{/opts/Contour}" tooltip="Contour kind" id="ContourSelectTh2">
+               <items>
+                  <core:Item text="No contour" key="0"/>
+                  <core:Item text="Cont" key="1"/>
+                  <core:Item text="Cont1" key="11"/>
+                  <core:Item text="Cont2" key="12"/>
+                  <core:Item text="Cont3" key="13"/>
+                  <core:Item text="Cont4" key="14"/>
+               </items>
+            </Select>
+         </HBox>
          <CheckBox text="Scat" selected="{/opts/Scat}" />
          <CheckBox text="Col" selected="{/opts/Color}" />
          <CheckBox text="Arrow" selected="{/opts/Arrow}" />
@@ -75,19 +83,21 @@
          <CheckBox text="Zero" selected="{/opts/Zero}" />
          <CheckBox text="Palette" selected="{/opts/Zscale}" />
       </Panel>
-      
+
       <Panel visible="{= ${/opts/Mode3Dindx} === 1 &amp;&amp; ${/opts/ndim} === 2}">
-         <Label text="Type" labelFor="LegoSelectTh2" />
-         <Select selectedKey="{/opts/Lego}" tooltip="Contor" id="LegoSelectTh2">
-            <items>
-               <core:Item text="NoLego" key="0" />
-               <core:Item text="Lego" key="1" />
-               <core:Item text="Lego1" key="11" />
-               <core:Item text="Lego2" key="12" />
-               <core:Item text="Lego3" key="13" />
-               <core:Item text="Lego4" key="14" />
-            </items>
-         </Select>
+         <HBox alignItems="Center">
+            <Label text="Type" labelFor="LegoSelectTh2" class="sapUiTinyMarginEnd"/>
+            <Select selectedKey="{/opts/Lego}" tooltip="Lego kind" id="LegoSelectTh2">
+               <items>
+                  <core:Item text="No lego" key="0" />
+                  <core:Item text="Lego" key="1" />
+                  <core:Item text="Lego1" key="11" />
+                  <core:Item text="Lego2" key="12" />
+                  <core:Item text="Lego3" key="13" />
+                  <core:Item text="Lego4" key="14" />
+               </items>
+            </Select>
+         </HBox>
 
          <CheckBox text="Front" selected="{/opts/FrontBox}" />
          <CheckBox text="Back" selected="{/opts/BackBox}" />
