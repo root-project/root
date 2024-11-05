@@ -54,9 +54,19 @@
 ## \macro_output
 ## \macro_code
 ##
-## \date 2021-02-26
+## \date 2024-02-26
 ## \author John Yoon
 ## \translator P. P.
+
+'''
+*************************************************************************
+* Copyright (C) 1995-2024, Rene Brun and Fons Rademakers.               *
+* All rights reserved.                                                  *
+*                                                                       *
+* For the licensing terms see $ROOTSYS/LICENSE.                         *
+* For the list of contributors see $ROOTSYS/README/CREDITS.             *
+*************************************************************************
+'''
 
 
 import re
@@ -84,19 +94,19 @@ sscanf = libc.sscanf
 # root 7
 # experimental classes
 from ROOT.Experimental import (
-                               RDrawable,
-                               RCanvas,
-                               RColor,
-                               RHistDrawable,
-                               RNTuple,
-                               RNTupleDS,
-                               RNTupleModel,
-                               RNTupleWriteOptions,
-                               RNTupleWriter,
-                               # RNTupleOptions,
-                               # RNTupleOptions,
-                               # RRawFile,
-                               )
+                                RDrawable,
+                                RCanvas,
+                                RColor,
+                                RHistDrawable,
+                                RNTuple,
+                                RNTupleDS,
+                                RNTupleModel,
+                                RNTupleWriteOptions,
+                                RNTupleWriter,
+                                # RNTupleOptions,
+                                # RNTupleOptions,
+                                # RRawFile,
+                                )
 
 #
 from ROOT import RDataFrame
@@ -148,8 +158,8 @@ from ROOT import (
                    Float_t,
                    Int_t,
                    nullptr,
-)
-#
+                   )
+# ctypes
 from ctypes import (
                      c_double,
                      c_int,
@@ -163,7 +173,7 @@ from ctypes import (
                      POINTER,
                      cast,
                      )
-#
+# ctypes
 c_string = create_string_buffer
 
 
@@ -200,10 +210,8 @@ from ROOT import (
 
 
 # c-integration
-from ROOT.gInterpreter import (
-                                ProcessLine,
-                                Declare,
-                                )
+ProcessLine = gInterpreter.ProcessLine
+Declare     = gInterpreter.Declare
 
 Clock = std.chrono.high_resolution_clock
 
@@ -346,8 +354,8 @@ GetDrawableHist = ROOT.GetDrawableHist
 #                   g++                                \
 #                        -shared                       \
 #                        -fPIC                         \
-#                        -o histogram_wrapper.so       \
-#                        histogram_wrapper.cpp         \
+#                        -o global_temp_wrapper.so     \
+#                        global_temp_wrapper.cpp       \
 #                        `root-config --cflags --libs` \
 #                        -fmax-errors=1                
 #             
@@ -356,8 +364,8 @@ import subprocess
 command = ( " g++                              "                            
             "     -shared                      " 
             "     -fPIC                        " 
-            "     -o histogram_wrapper.so      " 
-            "     histogram_wrapper.cpp        " 
+            "     -o global_temp_wrapper.so    " 
+            "     global_temp_wrapper.cpp      " 
             "     `root-config --cflags --libs`" 
             "     -fmax-errors=1"               ,               
             )
@@ -365,10 +373,10 @@ command = ( " g++                              "
 try : 
    subprocess.run( command, shell=True )
 except :
-   raise RuntimeError( "histogram_wrapper.cpp function not well compiled.")
-# Then load `histogram_wrapper.cpp` .
-cppyy.load_library( "./histogram_wrapper.so" )
-cppyy.include     ( "./histogram_wrapper.cpp" )
+   raise RuntimeError( "global_temp_wrapper.cpp function not well compiled.")
+# Then load `global_temp_wrapper.cpp` .
+cppyy.load_library( "./global_temp_wrapper.so" )
+cppyy.include     ( "./global_temp_wrapper.cpp" )
 from cppyy.gbl import (
                         DrawHistogram_wrapper,
                         DrawLegend_wrapper,
