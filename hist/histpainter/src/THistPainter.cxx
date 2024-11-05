@@ -5075,7 +5075,6 @@ void THistPainter::PaintBar(Option_t *)
       } else {
          umin = xmin + bar*(xmax-xmin)/10.;
          umax = xmax - bar*(xmax-xmin)/10.;
-         //box.SetFillColor(hcolor+150); //bright
          box.SetFillColor(TColor::GetColorBright(hcolor)); //bright
          box.PaintBox(xmin,ymin,umin,ymax);
          box.SetFillColor(hcolor);
@@ -6785,7 +6784,7 @@ void THistPainter::PaintFrame()
    if (Hoption.Lego || Hoption.Surf || Hoption.Tri ||
        Hoption.Contour == 14 || Hoption.Error >= 100) {
       TObject *frame = gPad->FindObject("TFrame");
-      if (frame) gPad->GetListOfPrimitives()->Remove(frame);
+      if (frame) gPad->Remove(frame);
       return;
    }
 

@@ -24,6 +24,14 @@
 
 #include <plugins/include/clad/Differentiator/Differentiator.h>
 #include "TMath.h"
+
+// For the digamma function, that is the derivative of lgamma. We get it via
+// mathmore from the GSL, so the pullbacks that use digamma are only available
+// with mathmore=ON.
+#ifdef R__HAS_MATHMORE
+#include "Math/SpecFuncMathMore.h"
+#endif
+
 namespace clad {
 namespace custom_derivatives {
 namespace TMath {
@@ -92,6 +100,16 @@ ValueAndPushforward<T, T> Erfc_pushforward(T x, T d_x)
 {
    return {::TMath::Erfc(x), -Erf_pushforward(x, d_x).pushforward};
 }
+
+#ifdef R__HAS_MATHMORE
+
+template <typename T>
+ValueAndPushforward<T, T> LnGamma_pushforward(T z, T d_z)
+{
+   return {::TMath::LnGamma(z), ::ROOT::Math::digamma(z) * d_z};
+}
+
+#endif
 
 template <typename T>
 ValueAndPushforward<T, T> Exp_pushforward(T x, T d_x)
@@ -242,7 +260,6 @@ ValueAndPushforward<Double_t, Double_t> Ln10_pushforward()
 #endif
 } // namespace TMath
 
-
 namespace ROOT {
 namespace Math {
 
@@ -279,7 +296,6 @@ inline void landau_pdf_pullback(double x, double xi, double x0, double d_out, do
    double _d_v = 0;
    double _d_denlan = 0;
    if (v < -5.5) {
-      double _t0;
       double u = ::std::exp(v + 1.);
       double _d_u = 0;
       if (u >= 1.e-10) {
@@ -308,15 +324,14 @@ inline void landau_pdf_pullback(double x, double xi, double x0, double d_out, do
          double _r_d1 = _d_ue;
          _d_ue -= _r_d1;
          double _r2 = 0;
-         _r2 += _r_d1 * clad::custom_derivatives::exp_pushforward(-1 / u, 1.).pushforward;
+         _r2 += _r_d1 * ::std::exp(-1 / u);
          double _r3 = _r2 * -(-1 / (u * u));
          _d_u += _r3;
       }
-      u = _t0;
       double _r_d0 = _d_u;
       _d_u -= _r_d0;
       double _r1 = 0;
-      _r1 += _r_d0 * clad::custom_derivatives::exp_pushforward(v + 1., 1.).pushforward;
+      _r1 += _r_d0 * ::std::exp(v + 1.);
       _d_v += _r1;
    } else if (v < -1) {
       double _t4;
@@ -333,8 +348,7 @@ inline void landau_pdf_pullback(double x, double xi, double x0, double d_out, do
       double _r_d5 = _d_denlan;
       _d_denlan -= _r_d5;
       double _r7 = 0;
-      _r7 += _r_d5 / _t6 * (p1[0] + (p1[1] + (p1[2] + (p1[3] + p1[4] * v) * v) * v) * v) * _t7 *
-             clad::custom_derivatives::exp_pushforward(-u, 1.).pushforward;
+      _r7 += _r_d5 / _t6 * (p1[0] + (p1[1] + (p1[2] + (p1[3] + p1[4] * v) * v) * v) * v) * _t7 * ::std::exp(-u);
       _d_u += -_r7;
       double _r8 = 0;
       _r8 += _t8 * _r_d5 / _t6 * (p1[0] + (p1[1] + (p1[2] + (p1[3] + p1[4] * v) * v) * v) * v) *
@@ -353,7 +367,7 @@ inline void landau_pdf_pullback(double x, double xi, double x0, double d_out, do
       double _r_d4 = _d_u;
       _d_u -= _r_d4;
       double _r6 = 0;
-      _r6 += _r_d4 * clad::custom_derivatives::exp_pushforward(-v - 1, 1.).pushforward;
+      _r6 += _r_d4 * ::std::exp(-v - 1);
       _d_v += -_r6;
    } else if (v < 1) {
       double _t9;
@@ -496,7 +510,7 @@ inline void landau_pdf_pullback(double x, double xi, double x0, double d_out, do
       _d_v += _r18;
       _d_v += -_r18 / _t24 * _t25;
       double _r19 = 0;
-      _r19 += v * -_r18 / _t24 * clad::custom_derivatives::log_pushforward(v, 1.).pushforward;
+      _r19 += v * -_r18 / _t24 / v;
       _d_v += _r19;
       double _r20 = -_r18 * -(v * _t25 / (_t24 * _t24));
       _d_v += _r20;
@@ -541,8 +555,7 @@ inline void landau_cdf_pullback(double x, double xi, double x0, double d_out, do
       double _t3 = ::std::exp(-1. / u);
       double _t2 = ::std::sqrt(u);
       double _r2 = 0;
-      _r2 += _const0 * d_out * (1 + (a1[1] + (a1[2] + a1[3] * u) * u) * u) * _t2 *
-             clad::custom_derivatives::exp_pushforward(-1. / u, 1.).pushforward;
+      _r2 += _const0 * d_out * (1 + (a1[1] + (a1[2] + a1[3] * u) * u) * u) * _t2 * ::std::exp(-1. / u);
       double _r3 = _r2 * -(-1. / (u * u));
       _d_u += _r3;
       double _r4 = 0;
@@ -552,7 +565,7 @@ inline void landau_cdf_pullback(double x, double xi, double x0, double d_out, do
       _d_u += a1[3] * _const0 * _t3 * _t2 * d_out * u * u;
       _d_u += (a1[2] + a1[3] * u) * _const0 * _t3 * _t2 * d_out * u;
       _d_u += (a1[1] + (a1[2] + a1[3] * u) * u) * _const0 * _t3 * _t2 * d_out;
-      _d_v += _d_u * clad::custom_derivatives::exp_pushforward(v + 1, 1.).pushforward;
+      _d_v += _d_u * ::std::exp(v + 1);
    } else if (v < -1) {
       double _d_u = 0;
       double u = ::std::exp(-v - 1);
@@ -560,8 +573,7 @@ inline void landau_cdf_pullback(double x, double xi, double x0, double d_out, do
       double _t7 = ::std::sqrt(u);
       double _t6 = (q1[0] + (q1[1] + (q1[2] + (q1[3] + q1[4] * v) * v) * v) * v);
       double _r6 = 0;
-      _r6 += d_out / _t6 * (p1[0] + (p1[1] + (p1[2] + (p1[3] + p1[4] * v) * v) * v) * v) / _t7 *
-             clad::custom_derivatives::exp_pushforward(-u, 1.).pushforward;
+      _r6 += d_out / _t6 * (p1[0] + (p1[1] + (p1[2] + (p1[3] + p1[4] * v) * v) * v) * v) / _t7 * ::std::exp(-u);
       _d_u += -_r6;
       double _r7 = d_out / _t6 * (p1[0] + (p1[1] + (p1[2] + (p1[3] + p1[4] * v) * v) * v) * v) * -(_t8 / (_t7 * _t7));
       double _r8 = 0;
@@ -576,7 +588,7 @@ inline void landau_cdf_pullback(double x, double xi, double x0, double d_out, do
       _d_v += (q1[3] + q1[4] * v) * _r9 * v * v;
       _d_v += (q1[2] + (q1[3] + q1[4] * v) * v) * _r9 * v;
       _d_v += (q1[1] + (q1[2] + (q1[3] + q1[4] * v) * v) * v) * _r9;
-      _d_v += -_d_u * clad::custom_derivatives::exp_pushforward(-v - 1, 1.).pushforward;
+      _d_v += -_d_u * ::std::exp(-v - 1);
    } else if (v < 1) {
       double _t10 = (q2[0] + (q2[1] + (q2[2] + q2[3] * v) * v) * v);
       _d_v += p2[3] * d_out / _t10 * v * v;
@@ -648,7 +660,7 @@ inline void landau_cdf_pullback(double x, double xi, double x0, double d_out, do
       _d_v += _r18;
       _d_v += -_r18 / _t24 * _t25;
       double _r19 = 0;
-      _r19 += v * -_r18 / _t24 * clad::custom_derivatives::log_pushforward(v, 1.).pushforward;
+      _r19 += v * -_r18 / _t24 / v;
       _d_v += _r19;
       double _r20 = -_r18 * -(v * _t25 / (_t24 * _t24));
       _d_v += _r20;
@@ -658,6 +670,459 @@ inline void landau_cdf_pullback(double x, double xi, double x0, double d_out, do
    *d_x0 += -_d_v / xi;
    *d_xi += _d_v * -((x - x0) / (xi * xi));
 }
+
+#ifdef R__HAS_MATHMORE
+
+inline void inc_gamma_c_pullback(double a, double x, double _d_y, double *_d_a, double *_d_x);
+
+inline void inc_gamma_pullback(double a, double x, double _d_y, double *_d_a, double *_d_x)
+{
+   // Synced with SpecFuncCephes.h
+   constexpr double kMACHEP = 1.11022302462515654042363166809e-16;
+   constexpr double kMAXLOG = 709.782712893383973096206318587;
+   constexpr double kMINLOG = -708.396418532264078748994506896;
+   constexpr double kMAXSTIR = 108.116855767857671821730036754;
+   constexpr double kMAXLGM = 2.556348e305;
+   constexpr double kBig = 4.503599627370496e15;
+   constexpr double kBiginv = 2.22044604925031308085e-16;
+
+   double _d_ans = 0, _d_ax = 0, _d_c = 0, _d_r = 0;
+   double _t1;
+   double _t2;
+   double _t3;
+   double _t4;
+   double _t5;
+   clad::tape<double> _t7 = {};
+   clad::tape<double> _t8 = {};
+   clad::tape<double> _t9 = {};
+   double ans, ax, c, r;
+   if (a <= 0)
+      return;
+   if (x <= 0)
+      return;
+   if ((x > 1.) && (x > a)) {
+      double _r0 = 0;
+      double _r1 = 0;
+      inc_gamma_c_pullback(a, x, -_d_y, &_r0, &_r1);
+      *_d_a += _r0;
+      *_d_x += _r1;
+      return;
+   }
+   _t1 = ::std::log(x);
+   ax = a * _t1 - x - ::std::lgamma(a);
+   if (ax < -kMAXLOG) {
+      *_d_x += (a * _d_ax / x) - _d_ax;
+      *_d_a += _d_ax * (_t1 - ::ROOT::Math::digamma(a)); // numerical_diff::forward_central_difference(::std::lgamma, a, 0, 0, a);
+      _d_ax = 0.;
+      return;
+   }
+   _t2 = ax;
+   ax = ::std::exp(ax);
+   _t3 = r;
+   r = a;
+   _t4 = c;
+   c = 1.;
+   _t5 = ans;
+   ans = 1.;
+   unsigned long _t6 = 0;
+   do {
+      _t6++;
+      clad::push(_t7, r);
+      r += 1.;
+      clad::push(_t8, c);
+      c *= x / r;
+      clad::push(_t9, ans);
+      ans += c;
+   } while (c / ans > kMACHEP);
+   {
+      _d_ans += _d_y / a * ax;
+      _d_ax += ans * _d_y / a;
+      double _r6 = _d_y * -(ans * ax / (a * a));
+      *_d_a += _r6;
+   }
+   do {
+      {
+         {
+            ans = clad::pop(_t9);
+            double _r_d7 = _d_ans;
+            _d_c += _r_d7;
+         }
+         {
+            c = clad::pop(_t8);
+            double _r_d6 = _d_c;
+            _d_c -= _r_d6;
+            _d_c += _r_d6 * x / r;
+            *_d_x += c * _r_d6 / r;
+            double _r5 = c * _r_d6 * -(x / (r * r));
+            _d_r += _r5;
+         }
+         {
+            r = clad::pop(_t7);
+            double _r_d5 = _d_r;
+         }
+      }
+      _t6--;
+   } while (_t6);
+   {
+      ans = _t5;
+      double _r_d4 = _d_ans;
+      _d_ans -= _r_d4;
+   }
+   {
+      c = _t4;
+      double _r_d3 = _d_c;
+      _d_c -= _r_d3;
+   }
+   {
+      r = _t3;
+      double _r_d2 = _d_r;
+      _d_r -= _r_d2;
+      *_d_a += _r_d2;
+   }
+   {
+      ax = _t2;
+      double _r_d1 = _d_ax;
+      _d_ax -= _r_d1;
+      double _r4 = 0;
+      _r4 += _r_d1 * ::std::exp(ax);
+      _d_ax += _r4;
+   }
+   {
+      *_d_x += (a * _d_ax / x) - _d_ax;
+      *_d_a += _d_ax * (_t1 - ::ROOT::Math::digamma(a)); // numerical_diff::forward_central_difference(::std::lgamma, a, 0, 0, a);
+      _d_ax = 0.;
+   }
+}
+
+inline void inc_gamma_c_pullback(double a, double x, double _d_y, double *_d_a, double *_d_x)
+{
+   // Synced with SpecFuncCephes.h
+   constexpr double kMACHEP = 1.11022302462515654042363166809e-16;
+   constexpr double kMAXLOG = 709.782712893383973096206318587;
+   constexpr double kMINLOG = -708.396418532264078748994506896;
+   constexpr double kMAXSTIR = 108.116855767857671821730036754;
+   constexpr double kMAXLGM = 2.556348e305;
+   constexpr double kBig = 4.503599627370496e15;
+   constexpr double kBiginv = 2.22044604925031308085e-16;
+
+   double _d_ans = 0, _d_ax = 0, _d_c = 0, _d_yc = 0, _d_r = 0, _d_t = 0, _d_y0 = 0, _d_z = 0;
+   double _d_pk = 0, _d_pkm1 = 0, _d_pkm2 = 0, _d_qk = 0, _d_qkm1 = 0, _d_qkm2 = 0;
+   double _t1;
+   double _t2;
+   double _t3;
+   double _t4;
+   double _t5;
+   double _t6;
+   double _t7;
+   double _t8;
+   double _t9;
+   double _t10;
+   unsigned long _t11;
+   clad::tape<double> _t12 = {};
+   clad::tape<double> _t13 = {};
+   clad::tape<double> _t14 = {};
+   clad::tape<double> _t15 = {};
+   clad::tape<double> _t16 = {};
+   clad::tape<double> _t17 = {};
+   clad::tape<double> _t19 = {};
+   clad::tape<double> _t20 = {};
+   clad::tape<double> _t21 = {};
+   clad::tape<double> _t22 = {};
+   clad::tape<double> _t23 = {};
+   clad::tape<double> _t24 = {};
+   clad::tape<double> _t25 = {};
+   clad::tape<double> _t26 = {};
+   clad::tape<double> _t27 = {};
+   clad::tape<bool> _t29 = {};
+   clad::tape<double> _t30 = {};
+   clad::tape<double> _t31 = {};
+   clad::tape<double> _t32 = {};
+   clad::tape<double> _t33 = {};
+   double ans, ax, c, yc, r, t, y, z;
+   double pk, pkm1, pkm2, qk, qkm1, qkm2;
+   if (a <= 0)
+      return;
+   if (x <= 0)
+      return;
+   if ((x < 1.) || (x < a)) {
+      double _r0 = 0;
+      double _r1 = 0;
+      inc_gamma_pullback(a, x, -_d_y, &_r0, &_r1);
+      *_d_a += _r0;
+      *_d_x += _r1;
+      return;
+   }
+   _t1 = ::std::log(x);
+   ax = a * _t1 - x - ::std::lgamma(a);
+   if (ax < -kMAXLOG) {
+      *_d_x += a * _d_ax / x - _d_ax;
+      *_d_a += _d_ax * (_t1 -::ROOT::Math::digamma(a)); // numerical_diff::forward_central_difference(::std::lgamma, a, 0, 0, a);
+      _d_ax = 0.;
+      return;
+   }
+   _t2 = ax;
+   ax = ::std::exp(ax);
+   _t3 = y;
+   y = 1. - a;
+   _t4 = z;
+   z = x + y + 1.;
+   _t5 = c;
+   c = 0.;
+   _t6 = pkm2;
+   pkm2 = 1.;
+   _t7 = qkm2;
+   qkm2 = x;
+   _t8 = pkm1;
+   pkm1 = x + 1.;
+   _t9 = qkm1;
+   qkm1 = z * x;
+   _t10 = ans;
+   ans = pkm1 / qkm1;
+   _t11 = 0;
+   do {
+      _t11++;
+      clad::push(_t12, c);
+      c += 1.;
+      clad::push(_t13, y);
+      y += 1.;
+      clad::push(_t14, z);
+      z += 2.;
+      clad::push(_t15, yc);
+      yc = y * c;
+      clad::push(_t16, pk);
+      pk = pkm1 * z - pkm2 * yc;
+      clad::push(_t17, qk);
+      qk = qkm1 * z - qkm2 * yc;
+      double _t18 = qk;
+      {
+         if (_t18) {
+            clad::push(_t20, r);
+            r = pk / qk;
+            clad::push(_t21, t);
+            t = ::std::abs((ans - r) / r);
+            clad::push(_t22, ans);
+            ans = r;
+         } else {
+            clad::push(_t23, t);
+            t = 1.;
+         }
+         clad::push(_t19, _t18);
+      }
+      clad::push(_t24, pkm2);
+      pkm2 = pkm1;
+      clad::push(_t25, pkm1);
+      pkm1 = pk;
+      clad::push(_t26, qkm2);
+      qkm2 = qkm1;
+      clad::push(_t27, qkm1);
+      qkm1 = qk;
+      bool _t28 = ::std::abs(pk) > kBig;
+      {
+         if (_t28) {
+            clad::push(_t30, pkm2);
+            pkm2 *= kBiginv;
+            clad::push(_t31, pkm1);
+            pkm1 *= kBiginv;
+            clad::push(_t32, qkm2);
+            qkm2 *= kBiginv;
+            clad::push(_t33, qkm1);
+            qkm1 *= kBiginv;
+         }
+         clad::push(_t29, _t28);
+      }
+   } while (t > kMACHEP);
+   {
+      _d_ans += _d_y * ax;
+      _d_ax += ans * _d_y;
+   }
+   do {
+      {
+         if (clad::pop(_t29)) {
+            {
+               qkm1 = clad::pop(_t33);
+               double _r_d27 = _d_qkm1;
+               _d_qkm1 -= _r_d27;
+               _d_qkm1 += _r_d27 * kBiginv;
+            }
+            {
+               qkm2 = clad::pop(_t32);
+               double _r_d26 = _d_qkm2;
+               _d_qkm2 -= _r_d26;
+               _d_qkm2 += _r_d26 * kBiginv;
+            }
+            {
+               pkm1 = clad::pop(_t31);
+               double _r_d25 = _d_pkm1;
+               _d_pkm1 -= _r_d25;
+               _d_pkm1 += _r_d25 * kBiginv;
+            }
+            {
+               pkm2 = clad::pop(_t30);
+               double _r_d24 = _d_pkm2;
+               _d_pkm2 -= _r_d24;
+               _d_pkm2 += _r_d24 * kBiginv;
+            }
+         }
+         {
+            qkm1 = clad::pop(_t27);
+            double _r_d23 = _d_qkm1;
+            _d_qkm1 -= _r_d23;
+            _d_qk += _r_d23;
+         }
+         {
+            qkm2 = clad::pop(_t26);
+            double _r_d22 = _d_qkm2;
+            _d_qkm2 -= _r_d22;
+            _d_qkm1 += _r_d22;
+         }
+         {
+            pkm1 = clad::pop(_t25);
+            double _r_d21 = _d_pkm1;
+            _d_pkm1 -= _r_d21;
+            _d_pk += _r_d21;
+         }
+         {
+            pkm2 = clad::pop(_t24);
+            double _r_d20 = _d_pkm2;
+            _d_pkm2 -= _r_d20;
+            _d_pkm1 += _r_d20;
+         }
+         if (clad::pop(_t19)) {
+            {
+               ans = clad::pop(_t22);
+               double _r_d18 = _d_ans;
+               _d_ans -= _r_d18;
+               _d_r += _r_d18;
+            }
+            {
+               t = clad::pop(_t21);
+               double _r_d17 = _d_t;
+               _d_t -= _r_d17;
+               double _r7 = 0;
+               _r7 += _r_d17 * clad::custom_derivatives::std::abs_pushforward((ans - r) / r, 1.).pushforward;
+               _d_ans += _r7 / r;
+               _d_r += -_r7 / r;
+               double _r8 = _r7 * -((ans - r) / (r * r));
+               _d_r += _r8;
+            }
+            {
+               r = clad::pop(_t20);
+               double _r_d16 = _d_r;
+               _d_r -= _r_d16;
+               _d_pk += _r_d16 / qk;
+               double _r6 = _r_d16 * -(pk / (qk * qk));
+               _d_qk += _r6;
+            }
+         } else {
+            t = clad::pop(_t23);
+            double _r_d19 = _d_t;
+            _d_t -= _r_d19;
+         }
+         {
+            qk = clad::pop(_t17);
+            double _r_d15 = _d_qk;
+            _d_qk -= _r_d15;
+            _d_qkm1 += _r_d15 * z;
+            _d_z += qkm1 * _r_d15;
+            _d_qkm2 += -_r_d15 * yc;
+            _d_yc += qkm2 * -_r_d15;
+         }
+         {
+            pk = clad::pop(_t16);
+            double _r_d14 = _d_pk;
+            _d_pk -= _r_d14;
+            _d_pkm1 += _r_d14 * z;
+            _d_z += pkm1 * _r_d14;
+            _d_pkm2 += -_r_d14 * yc;
+            _d_yc += pkm2 * -_r_d14;
+         }
+         {
+            yc = clad::pop(_t15);
+            double _r_d13 = _d_yc;
+            _d_yc -= _r_d13;
+            _d_y0 += _r_d13 * c;
+            _d_c += y * _r_d13;
+         }
+         {
+            z = clad::pop(_t14);
+            double _r_d12 = _d_z;
+         }
+         {
+            y = clad::pop(_t13);
+            double _r_d11 = _d_y0;
+         }
+         {
+            c = clad::pop(_t12);
+            double _r_d10 = _d_c;
+         }
+      }
+      _t11--;
+   } while (_t11);
+   {
+      ans = _t10;
+      double _r_d9 = _d_ans;
+      _d_ans -= _r_d9;
+      _d_pkm1 += _r_d9 / qkm1;
+      double _r5 = _r_d9 * -(pkm1 / (qkm1 * qkm1));
+      _d_qkm1 += _r5;
+   }
+   {
+      qkm1 = _t9;
+      double _r_d8 = _d_qkm1;
+      _d_qkm1 -= _r_d8;
+      _d_z += _r_d8 * x;
+      *_d_x += z * _r_d8;
+   }
+   {
+      pkm1 = _t8;
+      double _r_d7 = _d_pkm1;
+      _d_pkm1 -= _r_d7;
+      *_d_x += _r_d7;
+   }
+   {
+      qkm2 = _t7;
+      double _r_d6 = _d_qkm2;
+      _d_qkm2 -= _r_d6;
+      *_d_x += _r_d6;
+   }
+   {
+      pkm2 = _t6;
+      double _r_d5 = _d_pkm2;
+      _d_pkm2 -= _r_d5;
+   }
+   {
+      c = _t5;
+      double _r_d4 = _d_c;
+      _d_c -= _r_d4;
+   }
+   {
+      z = _t4;
+      double _r_d3 = _d_z;
+      _d_z -= _r_d3;
+      *_d_x += _r_d3;
+      _d_y0 += _r_d3;
+   }
+   {
+      y = _t3;
+      double _r_d2 = _d_y0;
+      _d_y0 -= _r_d2;
+      *_d_a += -_r_d2;
+   }
+   {
+      ax = _t2;
+      double _r_d1 = _d_ax;
+      _d_ax -= _r_d1;
+      double _r4 = _r_d1 * ::std::exp(ax);
+      _d_ax += _r4;
+   }
+   {
+      *_d_x += a * _d_ax / x - _d_ax;
+      *_d_a += _d_ax * (_t1 -::ROOT::Math::digamma(a)); // numerical_diff::forward_central_difference(::std::lgamma, a, 0, 0, a);
+      _d_ax = 0.;
+   }
+}
+
+#endif // R__HAS_MATHMORE
 
 } // namespace Math
 } // namespace ROOT

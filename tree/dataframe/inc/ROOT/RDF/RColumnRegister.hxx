@@ -126,6 +126,9 @@ public:
 
    RDFDetail::RColumnReaderBase *GetReader(unsigned int slot, const std::string &colName,
                                            const std::string &variationName, const std::type_info &tid);
+
+   RDFDetail::RColumnReaderBase *
+   GetReaderUnchecked(unsigned int slot, const std::string &colName, const std::string &variationName);
 };
 
 } // Namespace RDF

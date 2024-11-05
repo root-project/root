@@ -36,6 +36,7 @@ namespace llvm {
   template <typename T> class SmallVectorImpl;
   namespace orc {
     class DefinitionGenerator;
+    class LLJIT;
   }
 }
 
@@ -334,12 +335,10 @@ namespace cling {
     ///
     ///\param[in] NoRuntime - Don't include the runtime headers / gCling
     ///\param[in] SyntaxOnly - In SyntaxOnly mode
-    ///\param[out] Globals - Global symbols that need to be emitted
     ///
     ///\returns The resulting Transation of initialization.
     ///
-    Transaction* Initialize(bool NoRuntime, bool SyntaxOnly,
-                            llvm::SmallVectorImpl<llvm::StringRef>& Globals);
+    Transaction* Initialize(bool NoRuntime, bool SyntaxOnly);
 
     ///\ Shut down the interpreter runtime.
     ///
@@ -772,6 +771,11 @@ namespace cling {
     void setCallbacks(std::unique_ptr<InterpreterCallbacks> C);
     const InterpreterCallbacks* getCallbacks() const {return m_Callbacks.get();}
     InterpreterCallbacks* getCallbacks() { return m_Callbacks.get(); }
+
+    ///\brief Returns the JIT managed by the Interpreter.
+    /// Accesses and returns the JIT held in the IncrementalJIT instance
+    /// managed by m_Executor
+    llvm::orc::LLJIT* getExecutionEngine();
 
     const DynamicLibraryManager* getDynamicLibraryManager() const;
     DynamicLibraryManager* getDynamicLibraryManager();

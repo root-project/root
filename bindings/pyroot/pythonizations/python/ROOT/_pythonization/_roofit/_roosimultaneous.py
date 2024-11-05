@@ -11,7 +11,7 @@
 ################################################################################
 
 
-from ._utils import _kwargs_to_roocmdargs, cpp_signature, _dict_to_std_map
+from ._utils import _kwargs_to_roocmdargs, cpp_signature, _dict_to_flat_map
 
 
 class RooSimultaneous(object):
@@ -27,6 +27,8 @@ class RooSimultaneous(object):
     \endcode
     """
 
+    __cpp_name__ = 'RooSimultaneous'
+
     @cpp_signature(
         "RooSimultaneous(const char *name, const char *title,"
         "                std::map<std::string,RooAbsPdf*> pdfMap, RooAbsCategoryLValue& inIndexCat) ;"
@@ -37,7 +39,7 @@ class RooSimultaneous(object):
         """
         if len(args) >= 3 and isinstance(args[2], dict):
             args = list(args)
-            args[2] = _dict_to_std_map(args[2], {"std::string": "RooAbsPdf*"})
+            args[2] = _dict_to_flat_map(args[2], {"std::string": "RooAbsPdf*"})
         self._init(*args)
 
     @cpp_signature(

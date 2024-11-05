@@ -547,7 +547,7 @@ double RooAddPdf::getValV(const RooArgSet* normSet) const
 
 void RooAddPdf::translate(RooFit::Detail::CodeSquashContext &ctx) const
 {
-   RooRealSumPdf::translateImpl(ctx, this, _pdfList, _coefList);
+   ctx.addResult(this, RooRealSumPdf::translateImpl(ctx, this, _pdfList, _coefList, true));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

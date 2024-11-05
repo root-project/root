@@ -50,7 +50,7 @@ TCudaHostBuffer<AFloat>::TCudaHostBuffer(size_t size) : fOffset(0), fSize(size),
 
 //______________________________________________________________________________
 template <typename AFloat>
-TCudaHostBuffer<AFloat>::operator AFloat *() const
+AFloat *TCudaHostBuffer<AFloat>::data() const
 {
    return (fHostPointer) ? *fHostPointer + fOffset : nullptr;
 }
@@ -124,7 +124,7 @@ TCudaDeviceBuffer<AFloat> TCudaDeviceBuffer<AFloat>::GetSubBuffer(size_t offset,
 
 //______________________________________________________________________________
 template <typename AFloat>
-TCudaDeviceBuffer<AFloat>::operator AFloat *() const
+AFloat *TCudaDeviceBuffer<AFloat>::data() const
 {
    return (fDevicePointer) ? *fDevicePointer + fOffset : nullptr;
 }
@@ -134,14 +134,14 @@ template <typename AFloat>
 void TCudaDeviceBuffer<AFloat>::CopyFrom(const TCudaHostBuffer<AFloat> &buffer) const
 {
    cudaStreamSynchronize(fComputeStream);
-   cudaMemcpyAsync(*this, buffer, fSize * sizeof(AFloat), cudaMemcpyHostToDevice, fComputeStream);
+   cudaMemcpyAsync(this->data(), buffer.data(), fSize * sizeof(AFloat), cudaMemcpyHostToDevice, fComputeStream);
 }
 
 //______________________________________________________________________________
 template <typename AFloat>
 void TCudaDeviceBuffer<AFloat>::CopyTo(const TCudaHostBuffer<AFloat> &buffer) const
 {
-   cudaMemcpyAsync(buffer, *this, fSize * sizeof(AFloat), cudaMemcpyDeviceToHost, fComputeStream);
+   cudaMemcpyAsync(buffer.data(), this->data(), fSize * sizeof(AFloat), cudaMemcpyDeviceToHost, fComputeStream);
    buffer.fComputeStream = fComputeStream;
 }
 

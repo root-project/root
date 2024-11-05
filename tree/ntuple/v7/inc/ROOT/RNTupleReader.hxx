@@ -34,10 +34,10 @@
 #include <string_view>
 
 namespace ROOT {
-namespace Experimental {
-
-class REntry;
 class RNTuple;
+
+namespace Experimental {
+class REntry;
 
 /// Listing of the different options that can be printed by RNTupleReader::GetInfo()
 enum class ENTupleInfo {
@@ -89,13 +89,14 @@ private:
    std::unique_ptr<RNTupleDescriptor> fCachedDescriptor;
    Detail::RNTupleMetrics fMetrics;
 
-   RNTupleReader(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Internal::RPageSource> source);
+   RNTupleReader(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Internal::RPageSource> source,
+                 const RNTupleReadOptions &options);
    /// The model is generated from the ntuple metadata on storage.
-   explicit RNTupleReader(std::unique_ptr<Internal::RPageSource> source);
+   explicit RNTupleReader(std::unique_ptr<Internal::RPageSource> source, const RNTupleReadOptions &options);
 
    void ConnectModel(RNTupleModel &model);
    RNTupleReader *GetDisplayReader();
-   void InitPageSource();
+   void InitPageSource(bool enableMetrics);
 
    DescriptorId_t RetrieveFieldId(std::string_view fieldName) const;
 
@@ -134,16 +135,6 @@ public:
       bool operator!=(const iterator &rh) const { return fIndex != rh.fIndex; }
    };
 
-   /// Used to specify the underlying RNTuples in OpenFriends()
-   struct ROpenSpec {
-      std::string fNTupleName;
-      std::string fStorage;
-      RNTupleReadOptions fOptions;
-
-      ROpenSpec() = default;
-      ROpenSpec(std::string_view n, std::string_view s) : fNTupleName(n), fStorage(s) {}
-   };
-
    /// Open an RNTuple for reading.
    ///
    /// Throws an RException if there is no RNTuple with the given name.
@@ -161,20 +152,23 @@ public:
    static std::unique_ptr<RNTupleReader> Open(std::string_view ntupleName, std::string_view storage,
                                               const RNTupleReadOptions &options = RNTupleReadOptions());
    static std::unique_ptr<RNTupleReader>
-   Open(RNTuple *ntuple, const RNTupleReadOptions &options = RNTupleReadOptions());
+   Open(const RNTuple &ntuple, const RNTupleReadOptions &options = RNTupleReadOptions());
    /// The caller imposes a model, which must be compatible with the model found in the data on storage.
    static std::unique_ptr<RNTupleReader> Open(std::unique_ptr<RNTupleModel> model, std::string_view ntupleName,
                                               std::string_view storage,
                                               const RNTupleReadOptions &options = RNTupleReadOptions());
-   static std::unique_ptr<RNTupleReader>
-   Open(std::unique_ptr<RNTupleModel> model, RNTuple *ntuple, const RNTupleReadOptions &options = RNTupleReadOptions());
+   static std::unique_ptr<RNTupleReader> Open(std::unique_ptr<RNTupleModel> model, const RNTuple &ntuple,
+                                              const RNTupleReadOptions &options = RNTupleReadOptions());
    /// Open RNTuples as one virtual, horizontally combined ntuple.  The underlying RNTuples must
    /// have an identical number of entries.  Fields in the combined RNTuple are named with the ntuple name
    /// as a prefix, e.g. myNTuple1.px and myNTuple2.pt (see tutorial ntpl006_friends)
-   static std::unique_ptr<RNTupleReader> OpenFriends(std::span<ROpenSpec> ntuples);
+   static std::unique_ptr<RNTupleReader>
+   OpenFriends(std::span<RNTupleOpenSpec> ntuples, const RNTupleReadOptions &options = RNTupleReadOptions());
    std::unique_ptr<RNTupleReader> Clone()
    {
-      return std::unique_ptr<RNTupleReader>(new RNTupleReader(fSource->Clone()));
+      auto options = RNTupleReadOptions{};
+      options.SetMetricsEnabled(fMetrics.IsEnabled());
+      return std::unique_ptr<RNTupleReader>(new RNTupleReader(fSource->Clone(), options));
    }
    ~RNTupleReader();
 
@@ -213,7 +207,7 @@ public:
    /// ~~~
    ///
    /// For use of ENTupleInfo::kMetrics, see #EnableMetrics.
-   void PrintInfo(const ENTupleInfo what = ENTupleInfo::kSummary, std::ostream &output = std::cout);
+   void PrintInfo(const ENTupleInfo what = ENTupleInfo::kSummary, std::ostream &output = std::cout) const;
 
    /// Shows the values of the i-th entry/row, starting with 0 for the first entry. By default,
    /// prints the output in JSON format.
@@ -272,27 +266,59 @@ public:
    /// }
    /// ~~~
    template <typename T>
-   RNTupleView<T, false> GetView(std::string_view fieldName)
+   RNTupleView<T> GetView(std::string_view fieldName)
    {
       return GetView<T>(RetrieveFieldId(fieldName));
    }
 
    template <typename T>
-   RNTupleView<T, true> GetView(std::string_view fieldName, std::shared_ptr<T> objPtr)
+   RNTupleView<T> GetView(std::string_view fieldName, std::shared_ptr<T> objPtr)
    {
       return GetView<T>(RetrieveFieldId(fieldName), objPtr);
    }
 
    template <typename T>
-   RNTupleView<T, false> GetView(DescriptorId_t fieldId)
+   RNTupleView<T> GetView(std::string_view fieldName, T *rawPtr)
    {
-      return RNTupleView<T, false>(fieldId, fSource.get());
+      return GetView<T>(RetrieveFieldId(fieldName), rawPtr);
    }
 
    template <typename T>
-   RNTupleView<T, true> GetView(DescriptorId_t fieldId, std::shared_ptr<T> objPtr)
+   RNTupleView<T> GetView(DescriptorId_t fieldId)
    {
-      return RNTupleView<T, true>(fieldId, fSource.get(), objPtr);
+      auto field = RNTupleView<T>::CreateField(fieldId, *fSource);
+      auto range = Internal::GetFieldRange(*field, *fSource);
+      return RNTupleView<T>(std::move(field), range);
+   }
+
+   template <typename T>
+   RNTupleView<T> GetView(DescriptorId_t fieldId, std::shared_ptr<T> objPtr)
+   {
+      auto field = RNTupleView<T>::CreateField(fieldId, *fSource);
+      auto range = Internal::GetFieldRange(*field, *fSource);
+      return RNTupleView<T>(std::move(field), range, objPtr);
+   }
+
+   template <typename T>
+   RNTupleView<T> GetView(DescriptorId_t fieldId, T *rawPtr)
+   {
+      auto field = RNTupleView<T>::CreateField(fieldId, *fSource);
+      auto range = Internal::GetFieldRange(*field, *fSource);
+      return RNTupleView<T>(std::move(field), range, rawPtr);
+   }
+
+   template <typename T>
+   RNTupleDirectAccessView<T> GetDirectAccessView(std::string_view fieldName)
+   {
+      return GetDirectAccessView<T>(RetrieveFieldId(fieldName));
+   }
+
+   template <typename T>
+   RNTupleDirectAccessView<T> GetDirectAccessView(DescriptorId_t fieldId)
+   {
+      auto field = RNTupleDirectAccessView<T>::CreateField(fieldId, *fSource);
+      auto range = Internal::GetFieldRange(field, *fSource);
+      return RNTupleDirectAccessView<T>(std::move(field), range);
    }
 
    /// Raises an exception if:
@@ -310,7 +336,7 @@ public:
 
    RNTupleCollectionView GetCollectionView(DescriptorId_t fieldId)
    {
-      return RNTupleCollectionView(fieldId, fSource.get());
+      return RNTupleCollectionView::Create(fieldId, fSource.get());
    }
 
    RIterator begin() { return RIterator(0); }

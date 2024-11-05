@@ -175,62 +175,63 @@ class RLegendPainter extends RPavePainter {
       if (!nlines || !pp) return this;
 
       const stepy = height / nlines, margin_x = 0.02 * width;
-      let posy = 0;
 
       textFont.setSize(height/(nlines * 1.2));
-      this.startTextDrawing(textFont, 'font');
+      return this.startTextDrawingAsync(textFont, 'font').then(() => {
+         let posy = 0;
 
-      if (legend.fTitle) {
-         this.drawText({ latex: 1, width: width - 2*margin_x, height: stepy, x: margin_x, y: posy, text: legend.fTitle });
-         posy += stepy;
-      }
-
-      for (let i = 0; i < legend.fEntries.length; ++i) {
-         const entry = legend.fEntries[i], w4 = Math.round(width/4);
-         let objp = null;
-
-         this.drawText({ latex: 1, width: 0.75*width - 3*margin_x, height: stepy, x: 2*margin_x + w4, y: posy, text: entry.fLabel });
-
-         if (entry.fDrawableId !== 'custom')
-            objp = pp.findSnap(entry.fDrawableId, true);
-          else if (entry.fDrawable.fIO) {
-            objp = new RObjectPainter(this.getDom(), entry.fDrawable.fIO);
-            if (entry.fLine) objp.createv7AttLine();
-            if (entry.fFill) objp.createv7AttFill();
-            if (entry.fMarker) objp.createv7AttMarker();
+         if (legend.fTitle) {
+            this.drawText({ latex: 1, width: width - 2*margin_x, height: stepy, x: margin_x, y: posy, text: legend.fTitle });
+            posy += stepy;
          }
 
-         if (entry.fFill && objp?.fillatt) {
-            this.draw_g
-                .append('svg:path')
-                .attr('d', `M${Math.round(margin_x)},${Math.round(posy + stepy*0.1)}h${w4}v${Math.round(stepy*0.8)}h${-w4}z`)
-                .call(objp.fillatt.func);
+         for (let i = 0; i < legend.fEntries.length; ++i) {
+            const entry = legend.fEntries[i], w4 = Math.round(width/4);
+            let objp = null;
+
+            this.drawText({ latex: 1, width: 0.75*width - 3*margin_x, height: stepy, x: 2*margin_x + w4, y: posy, text: entry.fLabel });
+
+            if (entry.fDrawableId !== 'custom')
+               objp = pp.findSnap(entry.fDrawableId, true);
+            else if (entry.fDrawable.fIO) {
+               objp = new RObjectPainter(this.getPadPainter(), entry.fDrawable.fIO);
+               if (entry.fLine) objp.createv7AttLine();
+               if (entry.fFill) objp.createv7AttFill();
+               if (entry.fMarker) objp.createv7AttMarker();
+            }
+
+            if (entry.fFill && objp?.fillatt) {
+               this.draw_g
+                  .append('svg:path')
+                  .attr('d', `M${Math.round(margin_x)},${Math.round(posy + stepy*0.1)}h${w4}v${Math.round(stepy*0.8)}h${-w4}z`)
+                  .call(objp.fillatt.func);
+            }
+
+            if (entry.fLine && objp?.lineatt) {
+               this.draw_g
+                  .append('svg:path')
+                  .attr('d', `M${Math.round(margin_x)},${Math.round(posy + stepy/2)}h${w4}`)
+                  .call(objp.lineatt.func);
+            }
+
+            if (entry.fError && objp?.lineatt) {
+               this.draw_g
+                  .append('svg:path')
+                  .attr('d', `M${Math.round(margin_x + width/8)},${Math.round(posy + stepy*0.2)}v${Math.round(stepy*0.6)}`)
+                  .call(objp.lineatt.func);
+            }
+
+            if (entry.fMarker && objp?.markeratt) {
+               this.draw_g.append('svg:path')
+                  .attr('d', objp.markeratt.create(margin_x + width/8, posy + stepy/2))
+                  .call(objp.markeratt.func);
+            }
+
+            posy += stepy;
          }
 
-         if (entry.fLine && objp?.lineatt) {
-            this.draw_g
-                .append('svg:path')
-                .attr('d', `M${Math.round(margin_x)},${Math.round(posy + stepy/2)}h${w4}`)
-                .call(objp.lineatt.func);
-         }
-
-         if (entry.fError && objp?.lineatt) {
-            this.draw_g
-                .append('svg:path')
-                .attr('d', `M${Math.round(margin_x + width/8)},${Math.round(posy + stepy*0.2)}v${Math.round(stepy*0.6)}`)
-                .call(objp.lineatt.func);
-         }
-
-         if (entry.fMarker && objp?.markeratt) {
-            this.draw_g.append('svg:path')
-                .attr('d', objp.markeratt.create(margin_x + width/8, posy + stepy/2))
-                .call(objp.markeratt.func);
-         }
-
-         posy += stepy;
-      }
-
-      return this.finishTextDrawing();
+         return this.finishTextDrawing();
+      });
    }
 
    /** @summary draw RLegend object */
@@ -251,7 +252,7 @@ class RLegendPainter extends RPavePainter {
 class RPaveTextPainter extends RPavePainter {
 
    /** @summary draw RPaveText content */
-   drawContent() {
+   async drawContent() {
       const pavetext = this.getObject(),
             textFont = this.v7EvalFont('text', { size: 12, color: 'black', align: 22 }),
             width = this.pave_width,
@@ -261,20 +262,15 @@ class RPaveTextPainter extends RPavePainter {
       if (!nlines) return;
 
       const stepy = height / nlines, margin_x = 0.02 * width;
-      let posy = 0;
 
       textFont.setSize(height/(nlines * 1.2));
 
-      this.startTextDrawing(textFont, 'font');
+      return this.startTextDrawingAsync(textFont, 'font').then(() => {
+         for (let i = 0, posy = 0; i < pavetext.fText.length; ++i, posy += stepy)
+            this.drawText({ latex: 1, width: width - 2*margin_x, height: stepy, x: margin_x, y: posy, text: pavetext.fText[i] });
 
-      for (let i = 0; i < pavetext.fText.length; ++i) {
-         const line = pavetext.fText[i];
-
-         this.drawText({ latex: 1, width: width - 2*margin_x, height: stepy, x: margin_x, y: posy, text: line });
-         posy += stepy;
-      }
-
-      return this.finishTextDrawing(undefined, true);
+         return this.finishTextDrawing(undefined, true);
+      });
    }
 
    /** @summary draw RPaveText object */
@@ -328,7 +324,7 @@ class RHistStatsPainter extends RPavePainter {
          return main.fillStatistic(this, gStyle.fOptStat, gStyle.fOptFit);
       }
 
-      // show lines which are exists, maybe server request will be recieved later
+      // show lines which are exists, maybe server request will be received later
       return (this.stats_lines !== undefined);
    }
 
@@ -380,13 +376,13 @@ class RHistStatsPainter extends RPavePainter {
          const obj = this.getObject(),
              action = this.changeMask.bind(this);
 
-         menu.add('header: StatBox');
+         menu.header('Stat Box');
 
-         for (let n=0; n<obj.fEntries.length; ++n)
+         for (let n = 0; n < obj.fEntries.length; ++n)
             menu.addchk((obj.fShowMask & (1<<n)), obj.fEntries[n], n, action);
 
          return this.fillObjectExecMenu(menu);
-     }).then(menu => menu.show());
+      }).then(menu => menu.show());
    }
 
    /** @summary Draw statistic */
@@ -419,66 +415,66 @@ class RHistStatsPainter extends RPavePainter {
          text_g.selectAll('*').remove();
 
       textFont.setSize(height/(nlines * 1.2));
-      this.startTextDrawing(textFont, 'font', text_g);
+      return this.startTextDrawingAsync(textFont, 'font', text_g).then(() => {
+         if (nlines === 1)
+            this.drawText({ width, height, text: lines[0], latex: 1, draw_g: text_g });
+         else {
+            for (let j = 0; j < nlines; ++j) {
+               const posy = j*stepy;
 
-      if (nlines === 1)
-         this.drawText({ width, height, text: lines[0], latex: 1, draw_g: text_g });
-       else {
-         for (let j = 0; j < nlines; ++j) {
-            const posy = j*stepy;
+               if (first_stat && (j >= first_stat)) {
+                  const parts = lines[j].split('|');
+                  for (let n = 0; n < parts.length; ++n) {
+                     this.drawText({ align: 'middle', x: width * n / num_cols, y: posy, latex: 0,
+                                    width: width/num_cols, height: stepy, text: parts[n], draw_g: text_g });
+                  }
+               } else if (lines[j].indexOf('=') < 0) {
+                  if (j === 0) {
+                     has_head = true;
+                     const max_hlen = Math.max(maxlen, Math.round((width-2*margin_x)/stepy/0.65));
+                     if (lines[j].length > max_hlen + 5)
+                        lines[j] = lines[j].slice(0, max_hlen+2) + '...';
+                  }
+                  this.drawText({ align: (j === 0) ? 'middle' : 'start', x: margin_x, y: posy,
+                                 width: width - 2*margin_x, height: stepy, text: lines[j], draw_g: text_g });
+               } else {
+                  const parts = lines[j].split('='), args = [];
 
-            if (first_stat && (j >= first_stat)) {
-               const parts = lines[j].split('|');
-               for (let n = 0; n < parts.length; ++n) {
-                  this.drawText({ align: 'middle', x: width * n / num_cols, y: posy, latex: 0,
-                                  width: width/num_cols, height: stepy, text: parts[n], draw_g: text_g });
+                  for (let n = 0; n < 2; ++n) {
+                     const arg = {
+                        align: (n === 0) ? 'start' : 'end', x: margin_x, y: posy,
+                        width: width-2*margin_x, height: stepy, text: parts[n], draw_g: text_g,
+                        _expected_width: width-2*margin_x, _args: args,
+                        post_process(painter) {
+                        if (this._args[0].ready && this._args[1].ready)
+                           painter.scaleTextDrawing(1.05*(this._args[0].result_width && this._args[1].result_width)/this.__expected_width, this.draw_g);
+                        }
+                     };
+                     args.push(arg);
+                  }
+
+                  for (let n = 0; n < 2; ++n)
+                     this.drawText(args[n]);
                }
-            } else if (lines[j].indexOf('=') < 0) {
-               if (j === 0) {
-                  has_head = true;
-                  const max_hlen = Math.max(maxlen, Math.round((width-2*margin_x)/stepy/0.65));
-                  if (lines[j].length > max_hlen + 5)
-                     lines[j] = lines[j].slice(0, max_hlen+2) + '...';
-               }
-               this.drawText({ align: (j === 0) ? 'middle' : 'start', x: margin_x, y: posy,
-                               width: width - 2*margin_x, height: stepy, text: lines[j], draw_g: text_g });
-            } else {
-               const parts = lines[j].split('='), args = [];
-
-               for (let n = 0; n < 2; ++n) {
-                  const arg = {
-                     align: (n === 0) ? 'start' : 'end', x: margin_x, y: posy,
-                     width: width-2*margin_x, height: stepy, text: parts[n], draw_g: text_g,
-                     _expected_width: width-2*margin_x, _args: args,
-                     post_process(painter) {
-                       if (this._args[0].ready && this._args[1].ready)
-                          painter.scaleTextDrawing(1.05*(this._args[0].result_width && this._args[1].result_width)/this.__expected_width, this.draw_g);
-                     }
-                  };
-                  args.push(arg);
-               }
-
-               for (let n = 0; n < 2; ++n)
-                  this.drawText(args[n]);
             }
          }
-      }
 
-      let lpath = '';
+         let lpath = '';
 
-      if (has_head)
-         lpath += 'M0,' + Math.round(stepy) + 'h' + width;
+         if (has_head)
+            lpath += 'M0,' + Math.round(stepy) + 'h' + width;
 
-      if ((first_stat > 0) && (num_cols > 1)) {
-         for (let nrow = first_stat; nrow < nlines; ++nrow)
-            lpath += 'M0,' + Math.round(nrow * stepy) + 'h' + width;
-         for (let ncol = 0; ncol < num_cols - 1; ++ncol)
-            lpath += 'M' + Math.round(width / num_cols * (ncol + 1)) + ',' + Math.round(first_stat * stepy) + 'V' + height;
-      }
+         if ((first_stat > 0) && (num_cols > 1)) {
+            for (let nrow = first_stat; nrow < nlines; ++nrow)
+               lpath += 'M0,' + Math.round(nrow * stepy) + 'h' + width;
+            for (let ncol = 0; ncol < num_cols - 1; ++ncol)
+               lpath += 'M' + Math.round(width / num_cols * (ncol + 1)) + ',' + Math.round(first_stat * stepy) + 'V' + height;
+         }
 
-      if (lpath) this.draw_g.append('svg:path').attr('d', lpath);
+         if (lpath) this.draw_g.append('svg:path').attr('d', lpath);
 
-      return this.finishTextDrawing(text_g);
+         return this.finishTextDrawing(text_g);
+      });
    }
 
    /** @summary Redraw stats box */

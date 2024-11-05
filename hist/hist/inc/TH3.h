@@ -178,12 +178,12 @@ public:
            void      SetBinsLength(Int_t n=-1) override;
 
            TH3C&     operator=(const TH3C &h1);
-   friend  TH3C      operator*(Float_t c1, TH3C &h1);
-   friend  TH3C      operator*(TH3C &h1, Float_t c1) {return operator*(c1,h1);}
-   friend  TH3C      operator+(TH3C &h1, TH3C &h2);
-   friend  TH3C      operator-(TH3C &h1, TH3C &h2);
-   friend  TH3C      operator*(TH3C &h1, TH3C &h2);
-   friend  TH3C      operator/(TH3C &h1, TH3C &h2);
+   friend  TH3C      operator*(Float_t c1, TH3C const &h1);
+   friend  TH3C      operator*(TH3C const &h1, Float_t c1) {return operator*(c1,h1);}
+   friend  TH3C      operator+(TH3C const &h1, TH3C const &h2);
+   friend  TH3C      operator-(TH3C const &h1, TH3C const &h2);
+   friend  TH3C      operator*(TH3C const &h1, TH3C const &h2);
+   friend  TH3C      operator/(TH3C const &h1, TH3C const &h2);
 
 protected:
            Double_t RetrieveBinContent(Int_t bin) const override { return Double_t (fArray[bin]); }
@@ -218,12 +218,12 @@ public:
            void      SetBinsLength(Int_t n=-1) override;
 
            TH3S&     operator=(const TH3S &h1);
-   friend  TH3S      operator*(Float_t c1, TH3S &h1);
-   friend  TH3S      operator*(TH3S &h1, Float_t c1) {return operator*(c1,h1);}
-   friend  TH3S      operator+(TH3S &h1, TH3S &h2);
-   friend  TH3S      operator-(TH3S &h1, TH3S &h2);
-   friend  TH3S      operator*(TH3S &h1, TH3S &h2);
-   friend  TH3S      operator/(TH3S &h1, TH3S &h2);
+   friend  TH3S      operator*(Float_t c1, TH3S const &h1);
+   friend  TH3S      operator*(TH3S const &h1, Float_t c1) {return operator*(c1,h1);}
+   friend  TH3S      operator+(TH3S const &h1, TH3S const &h2);
+   friend  TH3S      operator-(TH3S const &h1, TH3S const &h2);
+   friend  TH3S      operator*(TH3S const &h1, TH3S const &h2);
+   friend  TH3S      operator/(TH3S const &h1, TH3S const &h2);
 
 protected:
            Double_t RetrieveBinContent(Int_t bin) const override { return Double_t (fArray[bin]); }
@@ -258,12 +258,12 @@ public:
            void      SetBinsLength(Int_t n=-1) override;
 
            TH3I&     operator=(const TH3I &h1);
-   friend  TH3I      operator*(Float_t c1, TH3I &h1);
-   friend  TH3I      operator*(TH3I &h1, Float_t c1) {return operator*(c1,h1);}
-   friend  TH3I      operator+(TH3I &h1, TH3I &h2);
-   friend  TH3I      operator-(TH3I &h1, TH3I &h2);
-   friend  TH3I      operator*(TH3I &h1, TH3I &h2);
-   friend  TH3I      operator/(TH3I &h1, TH3I &h2);
+   friend  TH3I      operator*(Float_t c1, TH3I const &h1);
+   friend  TH3I      operator*(TH3I const &h1, Float_t c1) {return operator*(c1,h1);}
+   friend  TH3I      operator+(TH3I const &h1, TH3I const &h2);
+   friend  TH3I      operator-(TH3I const &h1, TH3I const &h2);
+   friend  TH3I      operator*(TH3I const &h1, TH3I const &h2);
+   friend  TH3I      operator/(TH3I const &h1, TH3I const &h2);
 
 protected:
            Double_t RetrieveBinContent(Int_t bin) const override { return Double_t (fArray[bin]); }
@@ -297,12 +297,12 @@ public:
    void      Reset(Option_t *option="") override;
    void      SetBinsLength(Int_t n=-1) override;
            TH3L&     operator=(const TH3L &h1);
-   friend  TH3L      operator*(Float_t c1, TH3L &h1);
-   friend  TH3L      operator*(TH3L &h1, Float_t c1) {return operator*(c1,h1);}
-   friend  TH3L      operator+(TH3L &h1, TH3L &h2);
-   friend  TH3L      operator-(TH3L &h1, TH3L &h2);
-   friend  TH3L      operator*(TH3L &h1, TH3L &h2);
-   friend  TH3L      operator/(TH3L &h1, TH3L &h2);
+   friend  TH3L      operator*(Float_t c1, TH3L const &h1);
+   friend  TH3L      operator*(TH3L const &h1, Float_t c1) {return operator*(c1,h1);}
+   friend  TH3L      operator+(TH3L const &h1, TH3L const &h2);
+   friend  TH3L      operator-(TH3L const &h1, TH3L const &h2);
+   friend  TH3L      operator*(TH3L const &h1, TH3L const &h2);
+   friend  TH3L      operator/(TH3L const &h1, TH3L const &h2);
 
 protected:
    Double_t RetrieveBinContent(Int_t bin) const override { return Double_t (fArray[bin]); }
@@ -344,12 +344,12 @@ public:
            void      SetBinsLength(Int_t n=-1) override;
 
            TH3F&     operator=(const TH3F &h1);
-   friend  TH3F      operator*(Float_t c1, TH3F &h1);
-   friend  TH3F      operator*(TH3F &h1, Float_t c1) {return operator*(c1,h1);}
-   friend  TH3F      operator+(TH3F &h1, TH3F &h2);
-   friend  TH3F      operator-(TH3F &h1, TH3F &h2);
-   friend  TH3F      operator*(TH3F &h1, TH3F &h2);
-   friend  TH3F      operator/(TH3F &h1, TH3F &h2);
+   friend  TH3F      operator*(Float_t c1, TH3F const &h1);
+   friend  TH3F      operator*(TH3F const &h1, Float_t c1) {return operator*(c1,h1);}
+   friend  TH3F      operator+(TH3F const &h1, TH3F const &h2);
+   friend  TH3F      operator-(TH3F const &h1, TH3F const &h2);
+   friend  TH3F      operator*(TH3F const &h1, TH3F const &h2);
+   friend  TH3F      operator/(TH3F const &h1, TH3F const &h2);
 
 protected:
            Double_t RetrieveBinContent(Int_t bin) const override { return Double_t (fArray[bin]); }
@@ -389,12 +389,12 @@ public:
            void      SetBinsLength(Int_t n=-1) override;
 
            TH3D&     operator=(const TH3D &h1);
-   friend  TH3D      operator*(Float_t c1, TH3D &h1);
-   friend  TH3D      operator*(TH3D &h1, Float_t c1) {return operator*(c1,h1);}
-   friend  TH3D      operator+(TH3D &h1, TH3D &h2);
-   friend  TH3D      operator-(TH3D &h1, TH3D &h2);
-   friend  TH3D      operator*(TH3D &h1, TH3D &h2);
-   friend  TH3D      operator/(TH3D &h1, TH3D &h2);
+   friend  TH3D      operator*(Float_t c1, TH3D const &h1);
+   friend  TH3D      operator*(TH3D const &h1, Float_t c1) {return operator*(c1,h1);}
+   friend  TH3D      operator+(TH3D const &h1, TH3D const &h2);
+   friend  TH3D      operator-(TH3D const &h1, TH3D const &h2);
+   friend  TH3D      operator*(TH3D const &h1, TH3D const &h2);
+   friend  TH3D      operator/(TH3D const &h1, TH3D const &h2);
 
 protected:
            Double_t RetrieveBinContent(Int_t bin) const override { return fArray[bin]; }

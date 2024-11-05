@@ -819,12 +819,6 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    TStyle::BuildStyles();
    SetStyle(gEnv->GetValue("Canvas.Style", "Modern"));
 
-   const char *webdisplay = gSystem->Getenv("ROOT_WEBDISPLAY");
-   if (!webdisplay || !*webdisplay)
-      webdisplay = gEnv->GetValue("WebGui.Display", "");
-   if (webdisplay && *webdisplay)
-      SetWebDisplay(webdisplay);
-
    // Setup default (batch) graphics and GUI environment
    gBatchGuiFactory = new TGuiFactory;
    gGuiFactory      = gBatchGuiFactory;
@@ -841,6 +835,12 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    else
       fBatch = kTRUE;
 #endif
+
+   const char *webdisplay = gSystem->Getenv("ROOT_WEBDISPLAY");
+   if (!webdisplay || !*webdisplay)
+      webdisplay = gEnv->GetValue("WebGui.Display", "");
+   if (webdisplay && *webdisplay)
+      SetWebDisplay(webdisplay);
 
    int i = 0;
    while (initfunc && initfunc[i]) {
@@ -2796,6 +2796,18 @@ void TROOT::SetMacroPath(const char *newpath)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set batch mode for ROOT
+/// If the argument evaluates to `true`, the session does not use interactive graphics.
+/// If web graphics runs in server mode, the web widgets are still available via URL
+
+void TROOT::SetBatch(Bool_t batch)
+{
+   fIsWebDisplayBatch = fBatch = batch;
+   if (fIsWebDisplayBatch && (fWebDisplay == "server"))
+      fIsWebDisplayBatch = kFALSE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// \brief Specify where web graphics shall be rendered
 ///
 /// The input parameter `webdisplay` defines where web graphics is rendered.
@@ -2824,6 +2836,9 @@ void TROOT::SetWebDisplay(const char *webdisplay)
    static TString canName = gEnv->GetValue("Canvas.Name", "");
    static TString brName = gEnv->GetValue("Browser.Name", "");
    static TString trName = gEnv->GetValue("TreeViewer.Name", "");
+   static TString geomName = gEnv->GetValue("GeomPainter.Name", "");
+
+   fIsWebDisplayBatch = fBatch;
 
    if (!strcmp(wd, "off")) {
       fIsWebDisplay = kFALSE;
@@ -2834,6 +2849,7 @@ void TROOT::SetWebDisplay(const char *webdisplay)
       // handle server mode
       if (!strncmp(wd, "server", 6)) {
          fWebDisplay = "server";
+         fIsWebDisplayBatch = kFALSE;
          if (wd[6] == ':') {
             if ((wd[7] >= '0') && (wd[7] <= '9')) {
                auto port = TString(wd+7).Atoi();
@@ -2855,11 +2871,13 @@ void TROOT::SetWebDisplay(const char *webdisplay)
       // This is necessary when SetWebDisplay() called several times and therefore current settings may differ
       gEnv->SetValue("Canvas.Name", canName);
       gEnv->SetValue("Browser.Name", brName);
-      gEnv->SetValue("TreeViewer.Name", "RTreeViewer");
+      gEnv->SetValue("TreeViewer.Name", trName);
+      gEnv->SetValue("GeomPainter.Name", geomName);
    } else {
       gEnv->SetValue("Canvas.Name", "TRootCanvas");
       gEnv->SetValue("Browser.Name", "TRootBrowser");
-      gEnv->SetValue("TreeViewer.Name", trName);
+      gEnv->SetValue("TreeViewer.Name", "TTreeViewer");
+      gEnv->SetValue("GeomPainter.Name", "root");
    }
 }
 

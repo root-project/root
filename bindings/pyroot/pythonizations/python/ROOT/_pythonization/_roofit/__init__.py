@@ -40,12 +40,7 @@ from ._rooglobalfunc import (
     Slice,
     Import,
     Link,
-    LineColor,
-    FillColor,
-    MarkerColor,
-    LineStyle,
-    FillStyle,
-    MarkerStyle,
+    bindFunction,
 )
 from ._roojsonfactorywstool import RooJSONFactoryWSTool
 from ._roomcstudy import RooMCStudy
@@ -57,6 +52,7 @@ from ._roosimultaneous import RooSimultaneous
 from ._roosimwstool import RooSimWSTool
 from ._rooworkspace import RooWorkspace
 from ._roovectordatastore import RooVectorDataStore
+from ._roostats import SPlot
 
 
 # list of python classes that are used to pythonize RooFit classes
@@ -88,6 +84,7 @@ python_classes = [
     RooSimWSTool,
     RooWorkspace,
     RooVectorDataStore,
+    SPlot
 ]
 
 # list of python functions that are used to pythonize RooGlobalFunc function in RooFit
@@ -102,12 +99,7 @@ python_roofit_functions = [
     Slice,
     Import,
     Link,
-    LineColor,
-    FillColor,
-    MarkerColor,
-    LineStyle,
-    FillStyle,
-    MarkerStyle,
+    bindFunction,
 ]
 
 # create a dictionary for convenient access to python classes
@@ -122,7 +114,16 @@ def get_defined_attributes(klass, consider_base_classes=False):
     any of its base classes (except for `object`).
     """
 
-    blacklist = ["__dict__", "__doc__", "__hash__", "__module__", "__weakref__"]
+    blacklist = [
+        "__dict__",
+        "__doc__",
+        "__hash__",
+        "__module__",
+        "__weakref__",
+        "__firstlineno__",
+        "__static_attributes__",
+        "__cpp_name__"
+    ]
 
     if not consider_base_classes:
         return sorted([attr for attr in klass.__dict__.keys() if attr not in blacklist])
@@ -146,6 +147,7 @@ def get_defined_attributes(klass, consider_base_classes=False):
         return in_any_dict
 
     return sorted([attr for attr in dir(klass) if is_defined(attr)])
+
 
 def is_classmethod(klass, func):
     if hasattr(func, "__self__"):
@@ -230,9 +232,9 @@ def pythonize_roofit_namespace(ns):
 
     for python_func in python_roofit_functions:
         func_name = python_func.__name__
-        func_name_orig = "_" + func_name
-
-        setattr(ns, func_name_orig, getattr(ns, func_name))
+        if hasattr(ns, func_name):
+            func_name_orig = "_" + func_name
+            setattr(ns, func_name_orig, getattr(ns, func_name))
         setattr(ns, func_name, python_func)
 
     return ns

@@ -298,7 +298,7 @@ static void AnnotateFieldDecl(clang::FieldDecl &decl,
             // before persisting the ProtoClasses in the root pcms.
             // BEGIN ROOT PCMS
             if (name == propNames::comment) {
-               decl.addAttr(clang::AnnotateAttr::CreateImplicit(C, value));
+               decl.addAttr(clang::AnnotateAttr::CreateImplicit(C, value, nullptr, 0));
             }
             // END ROOT PCMS
 
@@ -308,7 +308,7 @@ static void AnnotateFieldDecl(clang::FieldDecl &decl,
                // This next line is here to use the root pcms. Indeed we need to annotate the AST
                // before persisting the ProtoClasses in the root pcms.
                // BEGIN ROOT PCMS
-               decl.addAttr(clang::AnnotateAttr::CreateImplicit(C, "!"));
+               decl.addAttr(clang::AnnotateAttr::CreateImplicit(C, "!", nullptr, 0));
                // END ROOT PCMS
                // The rest of the lines are not changed to leave in place the system which
                // works with bulk header parsing on library load.
@@ -316,8 +316,7 @@ static void AnnotateFieldDecl(clang::FieldDecl &decl,
                userDefinedProperty = name + propNames::separator + value;
             }
             ROOT::TMetaUtils::Info(nullptr, "%s %s\n", varName.c_str(), userDefinedProperty.c_str());
-            decl.addAttr(clang::AnnotateAttr::CreateImplicit(C, userDefinedProperty));
-
+            decl.addAttr(clang::AnnotateAttr::CreateImplicit(C, userDefinedProperty, nullptr, 0));
          }
       }
    }
@@ -362,7 +361,7 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
          const std::string &value = attr.second;
          userDefinedProperty = name + ROOT::TMetaUtils::propNames::separator + value;
          if (genreflex::verbose) std::cout << " * " << userDefinedProperty << std::endl;
-         CXXRD.addAttr(AnnotateAttr::CreateImplicit(C, userDefinedProperty));
+         CXXRD.addAttr(AnnotateAttr::CreateImplicit(C, userDefinedProperty, nullptr, 0));
       }
    }
 
@@ -389,14 +388,14 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
          if (comment.size()) {
             // The ClassDef annotation is for the class itself
             if (isClassDefMacro) {
-               CXXRD.addAttr(AnnotateAttr::CreateImplicit(C, comment.str()));
+               CXXRD.addAttr(AnnotateAttr::CreateImplicit(C, comment.str(), nullptr, 0));
             } else if (!isGenreflex) {
                // Here we check if we are in presence of a selection file so that
                // the comment does not ends up as a decoration in the AST,
                // Nevertheless, w/o PCMS this has no effect, since the headers
                // are parsed at runtime and the information in the AST dumped by
                // rootcling is not relevant.
-               (*I)->addAttr(AnnotateAttr::CreateImplicit(C, comment.str()));
+               (*I)->addAttr(AnnotateAttr::CreateImplicit(C, comment.str(), nullptr, 0));
             }
          }
          // Match decls with sel rules if we are in presence of a selection file
@@ -3543,6 +3542,9 @@ public:
    }
 };
 
+static llvm::cl::opt<bool> gOptSystemModuleByproducts("mSystemByproducts", llvm::cl::Hidden,
+                                                      llvm::cl::desc("Allow implicit build of system modules."),
+                                                      llvm::cl::cat(gRootclingOptions));
 static llvm::cl::list<std::string>
 gOptModuleByproducts("mByproduct", llvm::cl::ZeroOrMore,
                      llvm::cl::Hidden,
@@ -3616,9 +3618,19 @@ public:
       // an error because rootcling is not able to generate the corresponding
       // dictionary.
       // If we build a I/O requiring module implicitly we should display
-      // an error unless the -mByproduct was specified.
-      bool isByproductModule
-         = module && std::find(gOptModuleByproducts.begin(), gOptModuleByproducts.end(), moduleName) != gOptModuleByproducts.end();
+      // an error unless -mSystemByproducts or -mByproduct were specified.
+      bool isByproductModule = false;
+      if (module) {
+         // -mSystemByproducts allows implicit building of any system module.
+         if (module->IsSystem && gOptSystemModuleByproducts) {
+            isByproductModule = true;
+         }
+         // -mByproduct lists concrete module names that are allowed.
+         if (std::find(gOptModuleByproducts.begin(), gOptModuleByproducts.end(), moduleName) !=
+             gOptModuleByproducts.end()) {
+            isByproductModule = true;
+         }
+      }
       if (!isByproductModule)
          fChild->HandleDiagnostic(DiagLevel, Info);
 
@@ -3707,8 +3719,7 @@ gOptCint("cint", llvm::cl::desc("Deprecated, legacy flag which is ignored."),
         llvm::cl::Hidden,
         llvm::cl::cat(gRootclingOptions));
 static llvm::cl::opt<bool>
-gOptReflex("reflex", llvm::cl::desc("Deprecated, legacy flag which is ignored."),
-          llvm::cl::Hidden,
+gOptReflex("reflex", llvm::cl::desc("Behave internally like genreflex."),
           llvm::cl::cat(gRootclingOptions));
 static llvm::cl::opt<bool>
 gOptGccXml("gccxml", llvm::cl::desc("Deprecated, legacy flag which is ignored."),
@@ -3846,7 +3857,7 @@ gOptWDiags("W", llvm::cl::Prefix, llvm::cl::ZeroOrMore,
 // Really OneOrMore, will be changed in RootClingMain below.
 static llvm::cl::list<std::string>
 gOptDictionaryHeaderFiles(llvm::cl::Positional, llvm::cl::ZeroOrMore,
-                         llvm::cl::desc("<list of dictionary header files> <LinkDef file>"),
+                         llvm::cl::desc("<list of dictionary header files> <LinkDef file | selection xml file>"),
                          llvm::cl::cat(gRootclingOptions));
 static llvm::cl::list<std::string>
 gOptSink(llvm::cl::ZeroOrMore, llvm::cl::Sink,
@@ -3897,7 +3908,7 @@ static bool ModuleContainsHeaders(TModuleGenerator &modGen, clang::HeaderSearch 
                header, clang::SourceLocation(),
                /*isAngled*/ false,
                /*FromDir*/ 0, CurDir,
-               clang::ArrayRef<std::pair<const clang::FileEntry *, const clang::DirectoryEntry *>>(),
+               clang::ArrayRef<std::pair<clang::OptionalFileEntryRef, clang::DirectoryEntryRef>>(),
                /*SearchPath*/ 0,
                /*RelativePath*/ 0,
                /*RequestingModule*/ 0, &SuggestedModule,
@@ -5295,6 +5306,7 @@ namespace genreflex {
                        bool noGlobalUsingStd,
                        const std::vector<std::string> &headersNames,
                        bool failOnWarnings,
+                       bool printRootclingInvocation,
                        const std::string &ofilename)
    {
       // Prepare and invoke the commandline to invoke rootcling
@@ -5347,6 +5359,10 @@ namespace genreflex {
          argvVector.push_back(string2charptr("-rml"));
          argvVector.push_back(string2charptr(newRootmapLibName));
       }
+
+      // Always use the -reflex option: we want rootcling to behave
+      // like genreflex in this case
+      argvVector.push_back(string2charptr("-reflex"));
 
       // Interpreter only dictionaries
       if (interpreteronly)
@@ -5407,10 +5423,16 @@ namespace genreflex {
       const int argc = argvVector.size();
 
       // Output commandline for rootcling
-      if (genreflex::verbose) {
-         std::cout << "Rootcling commandline:\n";
-         for (int i = 0; i < argc; i++)
-            std::cout << i << ") " << argvVector[i] << std::endl;
+      if (genreflex::verbose || printRootclingInvocation) {
+         std::string cmd;
+         for (int i = 0; i < argc; i++) {
+            cmd += argvVector[i];
+            cmd += " ";
+         }
+         cmd.pop_back();
+         if (genreflex::verbose) std::cout << "Rootcling commandline: ";
+         std::cout << cmd << std::endl;
+         if (printRootclingInvocation) return 0; // we do not generate anything
       }
 
       char **argv =  & (argvVector[0]);
@@ -5449,6 +5471,7 @@ namespace genreflex {
                            bool noGlobalUsingStd,
                            const std::vector<std::string> &headersNames,
                            bool failOnWarnings,
+                           bool printRootclingInvocation,
                            const std::string &outputDirName_const = "")
    {
       std::string outputDirName(outputDirName_const);
@@ -5486,6 +5509,7 @@ namespace genreflex {
                                           noGlobalUsingStd,
                                           namesSingleton,
                                           failOnWarnings,
+                                          printRootclingInvocation,
                                           ofilenameFullPath);
          if (returnCode != 0)
             return returnCode;
@@ -5587,6 +5611,7 @@ int GenReflexMain(int argc, char **argv)
 
    // Setup the options parser
    enum  optionIndex { UNKNOWN,
+                       PRINTROOTCLINGINVOCATION,
                        OFILENAME,
                        TARGETLIB,
                        MULTIDICT,
@@ -5621,9 +5646,21 @@ int GenReflexMain(int argc, char **argv)
 
    // Some long help strings
    const char *genreflexUsage =
+      "********************************************************************************\n"
+      "* The genreflex utility does not allow to generate C++ modules containing      *\n"
+      "* reflection information required at runtime. Please use rootcling instead     *\n"
+      "* To print the rootcling invocation that corresponds to the current genreflex  *\n"
+      "* invocation please use the --print-rootcling-invocation flag.                 *\n"
+      "********************************************************************************\n"
+      "\n"
       "Generates dictionary sources and related ROOT pcm starting from an header.\n"
       "Usage: genreflex headerfile.h [opts] [preproc. opts]\n\n"
       "Options:\n";
+
+   const char *printRootclingInvocationUsage =
+      "--print-rootcling-invocation\n"
+      "      Print to screen the rootcling invocation corresponding to the current \n"
+      "      genreflex invocation.\n";
 
    const char *selectionFilenameUsage =
       "-s, --selection_file\tSelection filename\n"
@@ -5641,7 +5678,7 @@ int GenReflexMain(int argc, char **argv)
       "        without \"//\". For example comment=\"!\" or \"||\".\n"
       "      - noStreamer [true/false]: turns off streamer generation if set to 'true.'\n"
       "        Default value is 'false'\n"
-      "      - rntupleSplit [true/false]: enforce split or unsplit writing for RNTuple.\n"
+      "      - rntupleStreamerMode [true/false]: enforce streamed or native writing for RNTuple.\n"
       "        If unset, RNTuple stores classes in split mode or fails if the class cannot be split.\n"
       "      - noInputOperator [true/false]: turns off input operator generation if set\n"
       "        to 'true'. Default value is 'false'\n"
@@ -5652,7 +5689,7 @@ int GenReflexMain(int argc, char **argv)
       "                 [file_name=\"filename\"] [file_pattern=\"wildname\"]\n"
       "                 [id=\"xxxx\"] [noStreamer=\"true/false\"]\n"
       "                 [noInputOperator=\"true/false\"]\n"
-      "                 [rntupleSplit=\"true/false\"] />\n"
+      "                 [rntupleStreamerMode=\"true/false\"] />\n"
       "          <class name=\"classname\" >\n"
       "            <field name=\"m_transient\" transient=\"true\"/>\n"
       "            <field name=\"m_anothertransient\" persistent=\"false\"/>\n"
@@ -5720,12 +5757,21 @@ int GenReflexMain(int argc, char **argv)
 
    // The Descriptor
    const ROOT::option::Descriptor genreflexUsageDescriptor[] = {
+
       {
          UNKNOWN,
          NOTYPE,
          "", "",
          ROOT::option::Arg::None,
          genreflexUsage
+      },
+
+      {
+         PRINTROOTCLINGINVOCATION,
+         NOTYPE,
+         "", "print-rootcling-invocation",
+         ROOT::option::Arg::None,
+         printRootclingInvocationUsage
       },
 
       {
@@ -6051,6 +6097,10 @@ int GenReflexMain(int argc, char **argv)
       return 1;
    }
 
+   bool printRootclingInvocation = false;
+   if (options[PRINTROOTCLINGINVOCATION])
+      printRootclingInvocation = true;
+
    bool interpreteronly = false;
    if (options[INTERPRETERONLY])
       interpreteronly = true;
@@ -6137,6 +6187,7 @@ int GenReflexMain(int argc, char **argv)
                                     noGlobalUsingStd,
                                     headersNames,
                                     failOnWarnings,
+                                    printRootclingInvocation,
                                     ofileName);
    } else {
       // Here ofilename is either "" or a directory: this is irrelevant.
@@ -6160,6 +6211,7 @@ int GenReflexMain(int argc, char **argv)
                                         noGlobalUsingStd,
                                         headersNames,
                                         failOnWarnings,
+                                        printRootclingInvocation,
                                         ofileName);
    }
 

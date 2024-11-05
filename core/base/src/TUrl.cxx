@@ -573,7 +573,7 @@ void TUrl::Print(Option_t *) const
 
 TObjArray *TUrl::GetSpecialProtocols()
 {
-   static std::atomic_bool usedEnv = ATOMIC_VAR_INIT(false);
+   static std::atomic_bool usedEnv { false };
 
    if (!gEnv) {
       R__LOCKGUARD(gROOTMutex);

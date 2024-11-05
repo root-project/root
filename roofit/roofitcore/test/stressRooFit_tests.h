@@ -738,7 +738,7 @@ public:
       // Declare observable x
       RooRealVar x("x", "x", 0, 10);
 
-      // Create two Gaussian PDFs g1(x,mean1,sigma) anf g2(x,mean2,sigma) and their parameters
+      // Create two Gaussian PDFs g1(x,mean1,sigma) and g2(x,mean2,sigma) and their parameters
       RooRealVar mean("mean", "mean of gaussians", 5);
       RooRealVar sigma1("sigma1", "width of gaussians", 0.5);
       RooRealVar sigma2("sigma2", "width of gaussians", 1);
@@ -831,7 +831,7 @@ public:
       // Declare observable x
       RooRealVar x("x", "x", 0, 10);
 
-      // Create two Gaussian PDFs g1(x,mean1,sigma) anf g2(x,mean2,sigma) and their parameters
+      // Create two Gaussian PDFs g1(x,mean1,sigma) and g2(x,mean2,sigma) and their parameters
       RooRealVar mean("mean", "mean of gaussians", 5);
       RooRealVar sigma1("sigma1", "width of gaussians", 0.5);
       RooRealVar sigma2("sigma2", "width of gaussians", 1);
@@ -981,7 +981,7 @@ public:
       // Declare observable x
       RooRealVar x("x", "x", 0, 10);
 
-      // Create two Gaussian PDFs g1(x,mean1,sigma) anf g2(x,mean2,sigma) and their parameters
+      // Create two Gaussian PDFs g1(x,mean1,sigma) and g2(x,mean2,sigma) and their parameters
       RooRealVar mean("mean", "mean of gaussians", 5);
       RooRealVar sigma1("sigma1", "width of gaussians", 0.5);
       RooRealVar sigma2("sigma2", "width of gaussians", 1);
@@ -1045,7 +1045,7 @@ public:
       // Declare observable x
       RooRealVar x("x", "x", 0, 10);
 
-      // Create two Gaussian PDFs g1(x,mean1,sigma) anf g2(x,mean2,sigma) and their parameters
+      // Create two Gaussian PDFs g1(x,mean1,sigma) and g2(x,mean2,sigma) and their parameters
       RooRealVar mean("mean", "mean of gaussians", 5);
       RooRealVar sigma1("sigma1", "width of gaussians", 0.5);
       RooRealVar sigma2("sigma2", "width of gaussians", 1);
@@ -1061,7 +1061,7 @@ public:
       RooRealVar a1("a1", "a1", -0.2, -1., 1.);
       RooChebychev bkg1("bkg1", "Background 1", x, RooArgSet(a0, a1));
 
-      // Build expontential pdf
+      // Build exponential pdf
       RooRealVar alpha("alpha", "alpha", 1);
       RooExponential bkg2("bkg2", "Background 2", x, alpha, true);
 
@@ -3110,89 +3110,6 @@ public:
    }
 };
 
-// Interactive minimization with MINUIT.
-class TestBasic601 : public RooUnitTest {
-public:
-   TestBasic601(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("Interactive Minuit", refFile, writeRef, verbose){};
-   bool testCode() override
-   {
-
-      // S e t u p   p d f   a n d   l i k e l i h o o d
-      // -----------------------------------------------
-
-      // Observable
-      RooRealVar x("x", "x", -20, 20);
-
-      // Model (intentional strong correlations)
-      RooRealVar mean("mean", "mean of g1 and g2", 0);
-      RooRealVar sigma_g1("sigma_g1", "width of g1", 3);
-      RooGaussian g1("g1", "g1", x, mean, sigma_g1);
-
-      RooRealVar sigma_g2("sigma_g2", "width of g2", 4, 3.0, 6.0);
-      RooGaussian g2("g2", "g2", x, mean, sigma_g2);
-
-      RooRealVar frac("frac", "frac", 0.5, 0.0, 1.0);
-      RooAddPdf model("model", "model", RooArgList(g1, g2), frac);
-
-      // Generate 1000 events
-      std::unique_ptr<RooDataSet> data{model.generate(x, 1000)};
-
-      // Construct unbinned likelihood
-      std::unique_ptr<RooAbsReal> nll{model.createNLL(*data)};
-
-      // I n t e r a c t i v e   m i n i m i z a t i o n ,   e r r o r   a n a l y s i s
-      // -------------------------------------------------------------------------------
-
-      // Create MINUIT interface object
-      RooMinimizer m(*nll);
-
-      // Call MIGRAD to minimize the likelihood
-      m.migrad();
-
-      // Run HESSE to calculate errors from d2L/dp2
-      m.hesse();
-
-      // Run MINOS on sigma_g2 parameter only
-      m.minos(sigma_g2);
-
-      // S a v i n g   r e s u l t s ,   c o n t o u r   p l o t s
-      // ---------------------------------------------------------
-
-      // Save a snapshot of the fit result. This object contains the initial
-      // fit parameters, the final fit parameters, the complete correlation
-      // matrix, the EDM, the minimized FCN , the last MINUIT status code and
-      // the number of times the RooFit function object has indicated evaluation
-      // problems (e.g. zero probabilities during likelihood evaluation)
-      std::unique_ptr<RooFitResult> r{m.save()};
-
-      // C h a n g e   p a r a m e t e r   v a l u e s ,   f l o a t i n g
-      // -----------------------------------------------------------------
-
-      // At any moment you can manually change the value of a (constant)
-      // parameter
-      mean = 0.3;
-
-      // Rerun MIGRAD,HESSE
-      m.migrad();
-      m.hesse();
-
-      // Now fix sigma_g2
-      sigma_g2.setConstant(true);
-
-      // Rerun MIGRAD,HESSE
-      m.migrad();
-      m.hesse();
-
-      std::unique_ptr<RooFitResult> r2{m.save()};
-
-      regResult(std::move(r), "rf601_r");
-      regResult(std::move(r2), "rf601_r2");
-
-      return true;
-   }
-};
-
 // Setting up a binning chi^2 fit.
 class TestBasic602 : public RooUnitTest {
 public:
@@ -3207,7 +3124,7 @@ public:
       // Declare observable x
       RooRealVar x("x", "x", 0, 10);
 
-      // Create two Gaussian PDFs g1(x,mean1,sigma) anf g2(x,mean2,sigma) and their parameters
+      // Create two Gaussian PDFs g1(x,mean1,sigma) and g2(x,mean2,sigma) and their parameters
       RooRealVar mean("mean", "mean of gaussians", 5);
       RooRealVar sigma1("sigma1", "width of gaussians", 0.5);
       RooRealVar sigma2("sigma2", "width of gaussians", 1);
@@ -3473,7 +3390,7 @@ public:
       // Declare observable x
       RooRealVar x("x", "x", 0, 10);
 
-      // Create two Gaussian PDFs g1(x,mean1,sigma) anf g2(x,mean2,sigma) and their parameters
+      // Create two Gaussian PDFs g1(x,mean1,sigma) and g2(x,mean2,sigma) and their parameters
       RooRealVar mean("mean", "mean of gaussians", 5, -10, 10);
       RooRealVar sigma1("sigma1", "width of gaussians", 0.5, 0.1, 10);
       RooRealVar sigma2("sigma2", "width of gaussians", 1, 0.1, 10);
@@ -4115,7 +4032,7 @@ public:
       // C r e a t e   l o w   s t a t s   2 - D   d a t a s e t
       // -------------------------------------------------------
 
-      // Construct a 2D toy pdf for sampleing
+      // Construct a 2D toy pdf for sampling
       RooRealVar y("y", "y", 0, 20);
       RooPolynomial py("py", "py", y, RooArgList(0.01, 0.01, -0.0004));
       RooProdPdf pxy("pxy", "pxy", RooArgSet(p, py));
@@ -4338,7 +4255,7 @@ public:
       RooRealVar x("x", "x", 0, 10);
       x.setBins(40);
 
-      // Create two Gaussian PDFs g1(x,mean1,sigma) anf g2(x,mean2,sigma) and their parameters
+      // Create two Gaussian PDFs g1(x,mean1,sigma) and g2(x,mean2,sigma) and their parameters
       RooRealVar mean("mean", "mean of gaussians", 5, 0, 10);
       RooRealVar sigma1("sigma1", "width of gaussians", 0.5);
       RooRealVar sigma2("sigma2", "width of gaussians", 1);

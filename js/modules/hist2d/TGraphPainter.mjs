@@ -2,7 +2,7 @@ import { gStyle, BIT, settings, create, createHistogram, setHistogramTitle, isFu
          clTPaveStats, clTCutG, clTH1I, clTH2I, clTF1, clTF2, clTPad, kNoZoom, kNoStats } from '../core.mjs';
 import { select as d3_select } from '../d3.mjs';
 import { DrawOptions, buildSvgCurve, makeTranslate, addHighlightStyle } from '../base/BasePainter.mjs';
-import { ObjectPainter } from '../base/ObjectPainter.mjs';
+import { ObjectPainter, kAxisNormal } from '../base/ObjectPainter.mjs';
 import { FunctionsHandler } from './THistPainter.mjs';
 import { TH1Painter, PadDrawOptions } from './TH1Painter.mjs';
 import { kBlack, kWhite } from '../base/colors.mjs';
@@ -135,7 +135,7 @@ class TGraphPainter extends ObjectPainter {
          }
       }
 
-      const res = this.options, _a = 'AXIS;FORCE_TITLE;';
+      const res = this.options;
       let d = new DrawOptions(opt), hopt = '';
 
       PadDrawOptions.forEach(name => { if (d.check(name)) hopt += ';' + name; });
@@ -158,7 +158,7 @@ class TGraphPainter extends ObjectPainter {
       if (d.check('PMC') && !res._pmc)
          res._pmc = 2;
 
-      if (d.check('A')) res.Axis = d.check('I') ? 'A;' : _a; // I means invisible axis
+      if (d.check('A')) res.Axis = d.check('I') ? 'A;' : ' '; // I means invisible axis
       if (d.check('X+')) { res.Axis += 'X+'; res.second_x = has_main; }
       if (d.check('Y+')) { res.Axis += 'Y+'; res.second_y = has_main; }
       if (d.check('RX')) res.Axis += 'RX';
@@ -208,9 +208,8 @@ class TGraphPainter extends ObjectPainter {
          // either graph drawn directly or
          // graph is first object in list of primitives
          const pad = this.getPadPainter()?.getRootPad(true);
-         if (!pad || (pad?.fPrimitives?.arr[0] === this.getObject())) res.Axis = _a;
-      } else if (res.Axis.indexOf('A') < 0)
-         res.Axis = _a + res.Axis;
+         if (!pad || (pad?.fPrimitives?.arr[0] === this.getObject())) res.Axis = ' ';
+      }
 
       res.Axis += hopt;
 
@@ -313,6 +312,11 @@ class TGraphPainter extends ObjectPainter {
       let uxmin = xmin - dx, uxmax = xmax + dx,
           minimum = ymin - dy, maximum = ymax + dy;
 
+      if ((ymin > 0) && (minimum <= 0))
+         minimum = (1 - margin) * ymin;
+      if ((ymax < 0) && (maximum >= 0))
+         maximum = (1 - margin) * ymax;
+
       if (!this._not_adjust_hrange) {
          const pad_logx = this.getPadPainter()?.getPadLog('x');
 
@@ -326,7 +330,7 @@ class TGraphPainter extends ObjectPainter {
       let histo = this.getHistogram();
 
       if (!histo) {
-         histo = this._need_2dhist ? createHistogram(clTH2I, 30, 30) : createHistogram(clTH1I, 100);
+         histo = this._is_scatter ? createHistogram(clTH2I, 30, 30) : createHistogram(clTH1I, 100);
          histo.fName = graph.fName + '_h';
          histo.fBits |= kNoStats;
          this._own_histogram = true;
@@ -338,28 +342,35 @@ class TGraphPainter extends ObjectPainter {
 
       if (graph.fMinimum !== kNoZoom) minimum = ymin = graph.fMinimum;
       if (graph.fMaximum !== kNoZoom) maximum = graph.fMaximum;
-      if ((minimum < 0) && (ymin >= 0)) minimum = (1 - margin)*ymin;
+      if ((minimum < 0) && (ymin >= 0))
+         minimum = (1 - margin)*ymin;
+      if ((ymax < 0) && (maximum >= 0))
+         maximum = (1 - margin) * ymax;
 
       setHistogramTitle(histo, this.getObject().fTitle);
 
-      if (set_x) {
+      if (set_x && !histo.fXaxis.fLabels) {
          histo.fXaxis.fXmin = uxmin;
          histo.fXaxis.fXmax = uxmax;
       }
 
-      if (set_y) {
+      if (set_y && !histo.fYaxis.fLabels) {
          histo.fYaxis.fXmin = Math.min(minimum0, minimum);
          histo.fYaxis.fXmax = Math.max(maximum0, maximum);
-         histo.fMinimum = minimum;
-         histo.fMaximum = maximum;
+         if (!this._is_scatter) {
+            histo.fMinimum = minimum;
+            histo.fMaximum = maximum;
+         }
       }
+
+      histo.$ymin_nz = ymin > 0 ? ymin : undefined;
 
       return histo;
    }
 
-   /** @summary Check if user range can be unzommed
+   /** @summary Check if user range can be un-zommed
      * @desc Used when graph points covers larger range than provided histogram */
-   unzoomUserRange(dox, doy /*, doz */) {
+   unzoomUserRange(dox, doy /* , doz */) {
       const graph = this.getGraph();
       if (this._own_histogram || !graph) return false;
 
@@ -433,20 +444,20 @@ class TGraphPainter extends ObjectPainter {
          lines.push('x = ' + funcs.axisAsText('x', d.x), 'y = ' + funcs.axisAsText('y', d.y));
          if (gme)
             lines.push('error x = -' + funcs.axisAsText('x', gme.fExL[d.indx]) + '/+' + funcs.axisAsText('x', gme.fExH[d.indx]));
-         else if (this.options.Errors && (funcs.x_handle.kind === 'normal') && (d.exlow || d.exhigh))
+         else if (this.options.Errors && (funcs.x_handle.kind === kAxisNormal) && (d.exlow || d.exhigh))
             lines.push('error x = -' + funcs.axisAsText('x', d.exlow) + '/+' + funcs.axisAsText('x', d.exhigh));
 
          if (gme) {
             for (let ny = 0; ny < gme.fNYErrors; ++ny)
                lines.push(`error y${ny} = -${funcs.axisAsText('y', gme.fEyL[ny][d.indx])}/+${funcs.axisAsText('y', gme.fEyH[ny][d.indx])}`);
-         } else if ((this.options.Errors || (this.options.EF > 0)) && (funcs.y_handle.kind === 'normal') && (d.eylow || d.eyhigh))
+         } else if ((this.options.Errors || (this.options.EF > 0)) && (funcs.y_handle.kind === kAxisNormal) && (d.eylow || d.eyhigh))
             lines.push('error y = -' + funcs.axisAsText('y', d.eylow) + '/+' + funcs.axisAsText('y', d.eyhigh));
       }
       return lines;
    }
 
    /** @summary Provide frame painter for graph
-     * @desc If not exists, emulate its behaviour */
+     * @desc If not exists, emulate its behavior */
    get_main() {
       let pmain = this.getFramePainter();
 
@@ -520,6 +531,9 @@ class TGraphPainter extends ObjectPainter {
       if (!graph?.fNpoints) return;
 
       let excl_width = 0, drawbins = null;
+      // if markers or errors drawn - no need handle events for line drawing
+      // this improves interactivity like zooming around graph points
+      const line_events_handling = !this.isBatchMode() && (options.Line || options.Errors) ? 'none' : null;
 
       if (main_block && lineatt.excl_side) {
          excl_width = lineatt.excl_width;
@@ -546,11 +560,14 @@ class TGraphPainter extends ObjectPainter {
          }
 
          // build upper part (in reverse direction)
-         const path2 = buildSvgCurve(bins2, { line: options.EF < 2, cmd: 'L', qubic: true });
-
-         draw_g.append('svg:path')
+         const path2 = buildSvgCurve(bins2, { line: options.EF < 2, cmd: 'L', qubic: true }),
+            area = draw_g.append('svg:path')
                .attr('d', path1 + path2 + 'Z')
                .call(fillatt.func);
+
+         // Let behaves as ROOT - see JIRA ROOT-8131
+         if (fillatt.empty() && fillatt.colorindx)
+            area.style('stroke', this.getColor(fillatt.colorindx));
          if (main_block)
             this.draw_kind = 'lines';
       }
@@ -580,7 +597,9 @@ class TGraphPainter extends ObjectPainter {
          if (excl_width)
              this.appendExclusion(false, path, drawbins, excl_width);
 
-         const elem = draw_g.append('svg:path').attr('d', path + close_symbol);
+         const elem = draw_g.append('svg:path')
+                            .attr('d', path + close_symbol)
+                            .style('pointer-events', line_events_handling);
          if (options.Line)
             elem.call(lineatt.func);
 
@@ -611,7 +630,8 @@ class TGraphPainter extends ObjectPainter {
          draw_g.append('svg:path')
                .attr('d', path)
                .call(lineatt.func)
-               .style('fill', 'none');
+               .style('fill', 'none')
+               .style('pointer-events', line_events_handling);
          if (main_block)
             this.draw_kind = 'lines'; // handled same way as lines
       }
@@ -767,21 +787,21 @@ class TGraphPainter extends ObjectPainter {
 
          if (!this.isBatchMode() && settings.Tooltip && main_block) {
             visible.append('svg:path')
+                   .attr('d', d => `M${d.grx0},${d.gry0}h${d.grx2-d.grx0}v${d.gry2-d.gry0}h${d.grx0-d.grx2}z`)
                    .style('fill', 'none')
-                   .style('pointer-events', 'visibleFill')
-                   .attr('d', d => `M${d.grx0},${d.gry0}h${d.grx2-d.grx0}v${d.gry2-d.gry0}h${d.grx0-d.grx2}z`);
+                   .style('pointer-events', 'visibleFill');
          }
 
          visible.append('svg:path')
-             .call(lineatt.func)
-             .style('fill', 'none')
-             .attr('d', d => {
-                d.error = true;
-                return ((d.exlow > 0) ? mainLine(d.grx0+lw, d.grdx0) + vleft : '') +
-                       ((d.exhigh > 0) ? mainLine(d.grx2-lw, d.grdx2) + vright : '') +
-                       ((d.eylow > 0) ? mainLine(d.grdy0, d.gry0-lw) + hbottom : '') +
-                       ((d.eyhigh > 0) ? mainLine(d.grdy2, d.gry2+lw) + htop : '');
-              });
+                .attr('d', d => {
+                   d.error = true;
+                   return ((d.exlow > 0) ? mainLine(d.grx0+lw, d.grdx0) + vleft : '') +
+                          ((d.exhigh > 0) ? mainLine(d.grx2-lw, d.grdx2) + vright : '') +
+                          ((d.eylow > 0) ? mainLine(d.grdy0, d.gry0-lw) + hbottom : '') +
+                          ((d.eyhigh > 0) ? mainLine(d.grdy2, d.gry2+lw) + htop : '');
+                })
+                .style('fill', 'none')
+                .call(lineatt.func);
       }
 
       if (options.Mark) {
@@ -901,7 +921,7 @@ class TGraphPainter extends ObjectPainter {
    drawGraph() {
       const pmain = this.get_main(),
             graph = this.getGraph();
-      if (!pmain) return;
+      if (!pmain || !this.options) return;
 
       // special mode for TMultiGraph 3d drawing
       if (this.options.pos3d)
@@ -1360,8 +1380,11 @@ class TGraphPainter extends ObjectPainter {
 
    /** @summary Fill context menu */
    fillContextMenuItems(menu) {
-      if (!this.snapid)
+      if (!this.snapid) {
          menu.addchk(this.testEditable(), 'Editable', () => { this.testEditable('toggle'); this.drawGraph(); });
+
+         menu.addRedrawMenu(this.getPrimary());
+      }
    }
 
    /** @summary Execute menu command
@@ -1394,7 +1417,7 @@ class TGraphPainter extends ObjectPainter {
       return false;
    }
 
-   /** @summary Update object members
+   /** @summary Update TGraph object members
      * @private */
    _updateMembers(graph, obj) {
       graph.fBits = obj.fBits;
@@ -1421,6 +1444,8 @@ class TGraphPainter extends ObjectPainter {
          graph.fMarkerColor = obj.fMarkerColor;
       graph.fMarkerSize = obj.fMarkerSize;
       graph.fMarkerStyle = obj.fMarkerStyle;
+
+      return obj.fFunctions;
    }
 
    /** @summary Update TGraph object */
@@ -1430,7 +1455,7 @@ class TGraphPainter extends ObjectPainter {
       if (opt && (opt !== this.options.original))
          this.decodeOptions(opt);
 
-      this._updateMembers(this.getObject(), obj);
+      const new_funcs = this._updateMembers(this.getObject(), obj);
 
       this.createBins();
 
@@ -1446,7 +1471,7 @@ class TGraphPainter extends ObjectPainter {
          }
       }
 
-      this._funcHandler = new FunctionsHandler(this, this.getPadPainter(), obj.fFunctions);
+      this._funcHandler = new FunctionsHandler(this, this.getPadPainter(), new_funcs);
 
       return true;
    }
@@ -1455,10 +1480,19 @@ class TGraphPainter extends ObjectPainter {
      * @desc allow to zoom TGraph only when at least one point in the range */
    canZoomInside(axis, min, max) {
       const gr = this.getGraph();
-      if (!gr || (axis !== (this.options.pos3d ? 'y' : 'x'))) return false;
+      if (!gr || ((axis !== 'x') && (axis !== 'y')))
+         return false;
 
-      for (let n = 0; n < gr.fNpoints; ++n)
-         if ((min < gr.fX[n]) && (gr.fX[n] < max)) return true;
+      let arr = gr.fX;
+      if (this._is_scatter)
+         arr = (axis === 'x') ? gr.fX : gr.fY;
+      else if (axis !== (this.options.pos3d ? 'y' : 'x'))
+         return false;
+
+      for (let n = 0; n < gr.fNpoints; ++n) {
+         if ((min < arr[n]) && (arr[n] < max))
+            return true;
+      }
 
       return false;
    }
@@ -1533,7 +1567,7 @@ class TGraphPainter extends ObjectPainter {
      * @private */
    async drawAxisHisto() {
       const histo = this.createHistogram();
-      return TH1Painter.draw(this.getDom(), histo, this.options.Axis);
+      return TH1Painter.draw(this.getDrawDom(), histo, this.options.Axis);
    }
 
    /** @summary Draw TGraph

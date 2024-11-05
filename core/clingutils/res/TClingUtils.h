@@ -203,7 +203,7 @@ private:
    bool fRequestNoInputOperator;
    bool fRequestOnlyTClass;
    int  fRequestedVersionNumber;
-   int  fRequestedRNTupleSplitMode;
+   int  fRequestedRNTupleSerializationMode;
    // clang-format on
 
 public:
@@ -215,8 +215,8 @@ public:
       kStreamerInfo = 0x04,
       kHasVersion = 0x08,
       // kHasCustomStreamerMember = 0x10 (see TClingUtils.cxx and TClassTable.h)
-      kNtplForceSplit = 0x20,
-      kNtplForceUnsplit = 0x40
+      kNtplForceNativeMode = 0x20,
+      kNtplForceStreamerMode = 0x40
    };
    // clang-format on
 
@@ -228,7 +228,7 @@ public:
                        bool rRequestNoInputOperator,
                        bool rRequestOnlyTClass,
                        int rRequestedVersionNumber,
-                       int rRequestedRNTupleSplitMode,
+                       int rRequestedRNTupleSerializationMode,
                        const cling::Interpreter &interpret,
                        const TNormalizedCtxt &normCtxt);
 
@@ -240,7 +240,7 @@ public:
                        bool rRequestNoInputOperator,
                        bool rRequestOnlyTClass,
                        int rRequestedVersionNumber,
-                       int rRequestedRNTupleSplitMode,
+                       int rRequestedRNTupleSerializationMode,
                        const cling::Interpreter &interpret,
                        const TNormalizedCtxt &normCtxt);
 
@@ -253,7 +253,7 @@ public:
                        bool rRequestNoInputOperator,
                        bool rRequestOnlyTClass,
                        int rRequestedVersionNumber,
-                       int rRequestedRNTupleSplitMode,
+                       int rRequestedRNTupleSerializationMode,
                        const cling::Interpreter &interpret,
                        const TNormalizedCtxt &normCtxt);
 
@@ -267,7 +267,7 @@ public:
                        bool rRequestNoInputOperator,
                        bool rRequestOnlyTClass,
                        int rRequestedVersionNumber,
-                       int rRequestedRNTupleSplitMode,
+                       int rRequestedRNTupleSerializationMode,
                        const cling::Interpreter &interpret,
                        const TNormalizedCtxt &normCtxt);
    // clang-format on
@@ -292,7 +292,7 @@ public:
    bool RequestNoStreamer() const { return fRequestNoStreamer; }
    bool RequestOnlyTClass() const { return fRequestOnlyTClass; }
    int  RequestedVersionNumber() const { return fRequestedVersionNumber; }
-   int  RequestedRNTupleSplitMode() const { return fRequestedRNTupleSplitMode; }
+   int  RequestedRNTupleSerializationMode() const { return fRequestedRNTupleSerializationMode; }
    // clang-format on
    int  RootFlag() const {
       // Return the request (streamerInfo, has_version, etc.) combined in a single
@@ -302,11 +302,11 @@ public:
       if (fRequestNoInputOperator) result |= kNoInputOperator;
       if (fRequestStreamerInfo) result |= kStreamerInfo;
       if (fRequestedVersionNumber > -1) result |= kHasVersion;
-      switch (fRequestedRNTupleSplitMode) {
+      switch (fRequestedRNTupleSerializationMode) {
       case 0: break;
-      case 1: result |= kNtplForceSplit; break;
-      case -1: result |= kNtplForceUnsplit; break;
-      default: assert(false && "invalid setting of fRequestedRNTupleSplitMode");
+      case 1: result |= kNtplForceNativeMode; break;
+      case -1: result |= kNtplForceStreamerMode; break;
+      default: assert(false && "invalid setting of fRequestedRNTupleSerializationMode");
       }
       return result;
    }
@@ -698,6 +698,16 @@ const clang::TypedefNameDecl* GetAnnotatedRedeclarable(const clang::TypedefNameD
 //______________________________________________________________________________
 // Overload the template for tags, because we only check definitions.
 const clang::TagDecl* GetAnnotatedRedeclarable(const clang::TagDecl* TND);
+
+//______________________________________________________________________________
+// Return true if the DeclContext is representing an entity reacheable from the
+// global namespace
+bool IsCtxtReacheable(const clang::DeclContext &ctxt);
+
+//______________________________________________________________________________
+// Return true if the decl is representing an entity reacheable from the
+// global namespace
+bool IsDeclReacheable(const clang::Decl &decl);
 
 //______________________________________________________________________________
 // Return true if the decl is part of the std namespace.

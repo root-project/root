@@ -19,6 +19,22 @@ using ROOT::Experimental::RNTupleModel;
 using ROOT::Experimental::RNTupleWriter;
 using ROOT::Experimental::Internal::RPageSource;
 
+namespace {
+
+class FileRAII {
+private:
+   std::string fPath;
+
+public:
+   explicit FileRAII(const std::string &path) : fPath(path) {}
+   FileRAII(const FileRAII &) = delete;
+   FileRAII &operator=(const FileRAII &) = delete;
+   ~FileRAII() { std::remove(fPath.c_str()); }
+   std::string GetPath() const { return fPath; }
+};
+
+} // namespace
+
 template <typename V1, typename V2>
 void EXPECT_VEC_EQ(const V1 &v1, const V2 &v2)
 {
@@ -85,6 +101,12 @@ TEST_F(RNTupleDSTest, ColTypeNames)
    EXPECT_STREQ("ROOT::VecOps::RVec<std::int32_t>", ds.GetTypeName("rvec").c_str());
 }
 
+TEST_F(RNTupleDSTest, NFiles)
+{
+   RNTupleDS ds(fNtplName, fFileName);
+
+   EXPECT_EQ(1, ds.GetNFiles());
+}
 
 TEST_F(RNTupleDSTest, CardinalityColumn)
 {
@@ -166,18 +188,6 @@ static void ChainTest(const std::string &name, const std::string &fname)
    auto df1000 = ROOT::RDataFrame(std::make_unique<RNTupleDS>(name, fileNames));
    EXPECT_DOUBLE_EQ(42000.0, df1000.Sum<float>("pt").GetValue());
 
-   class FileRAII {
-   private:
-      std::string fPath;
-
-   public:
-      explicit FileRAII(const std::string &path) : fPath(path) {}
-      FileRAII(const FileRAII &) = delete;
-      FileRAII &operator=(const FileRAII &) = delete;
-      ~FileRAII() { std::remove(fPath.c_str()); }
-      std::string GetPath() const { return fPath; }
-   };
-
    FileRAII guardFile1("RNTupleDS_test_chain_1.root");
    FileRAII guardFile2("RNTupleDS_test_chain_2.root");
    FileRAII guardFile3("RNTupleDS_test_chain_3.root");
@@ -211,6 +221,7 @@ static void ChainTest(const std::string &name, const std::string &fname)
 
    auto df3 = ROOT::RDataFrame(std::make_unique<RNTupleDS>(
       "chain", std::vector<std::string>{guardFile1.GetPath(), guardFile2.GetPath(), guardFile3.GetPath()}));
+   EXPECT_EQ(3, df3.Describe().GetNFiles());
    auto sumElectronPt =
       df3.Aggregate([](float &acc, const Electron &e) { acc += e.pt; }, [](float a, float b) { return a + b; }, "e");
    EXPECT_FLOAT_EQ(6.0, sumElectronPt.GetValue());
@@ -246,6 +257,48 @@ TEST_F(RNTupleDSTest, ChainMT)
    IMTRAII _;
 
    ChainTest(fNtplName, fFileName);
+}
+
+TEST_F(RNTupleDSTest, ChainTailScheduling)
+{
+   IMTRAII _;
+
+   FileRAII guardFile1("RNTupleDS_test_chain_tail_scheduling_1.root");
+   FileRAII guardFile2("RNTupleDS_test_chain_tail_scheduling_2.root");
+   FileRAII guardFile3("RNTupleDS_test_chain_tail_scheduling_3.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto ptrX = model->MakeField<int>("x");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "chain", guardFile1.GetPath());
+      for (unsigned i = 0; i < 2; ++i) {
+         *ptrX = i;
+         writer->Fill();
+         writer->CommitCluster();
+      }
+   }
+   {
+      auto model = RNTupleModel::Create();
+      model->MakeField<int>("x");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "chain", guardFile2.GetPath());
+      // Empty file
+   }
+   {
+      auto model = RNTupleModel::Create();
+      auto ptrX = model->MakeField<int>("x");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "chain", guardFile3.GetPath());
+      for (unsigned i = 0; i < 11; ++i) {
+         *ptrX = i;
+         writer->Fill();
+         writer->CommitCluster();
+      }
+   }
+
+   auto df = ROOT::RDataFrame(std::make_unique<RNTupleDS>(
+      "chain", std::vector<std::string>{guardFile1.GetPath(), guardFile2.GetPath(), guardFile3.GetPath()}));
+   EXPECT_EQ(3, df.Describe().GetNFiles());
+   auto sumX = df.Aggregate([](int &acc, int x) { acc += x; }, [](int a, int b) { return a + b; }, "x");
+   EXPECT_EQ(56, sumX.GetValue());
 }
 #endif
 

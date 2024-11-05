@@ -94,11 +94,11 @@ void regexp()
    // criteria:
    // 1) It should be of the form string1@string2 . The "^" and "$" ensure that we compare the complete
    //    email string
-   // 2) ([\\w-\\.]+)  :
+   // 2) ([\\w\\-\\.]+)  :
    //    string1 is only allowed to be composed out of the alphanumeric characters, "-" and "." .
    //    The "+" ensures that string1 can not be empty .
    // 3) string2 is matched against three different parts :
-   //    a. ((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.)|(([\\w-]+\\.)+))  :
+   //    a. ((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.)|(([\\w\\-]+\\.)+))  :
    //       This regular expression ensures that EITHER the string starts with "[" followed by three groups
    //       of numbers, separated by "." , where each group has 1 to 3 numbers, OR alphanumeric strings,
    //       possibly containing "-" characters, separated by "." .
@@ -108,7 +108,7 @@ void regexp()
    //       At most one "]" character .
 
    TString s5("fons.rademakers@cern.ch");
-   TPRegexp r5("^([\\w-\\.]+)@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.)|(([\\w-]+\\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\\]?)$");
+   TPRegexp r5("^([\\w\\-\\.]+)@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.)|(([\\w\\-]+\\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\\]?)$");
    cout << "Check if the email address \"" << s5 << "\" is valid: " << (r5.MatchB(s5) ? "TRUE" : "FALSE") << endl;
 
    // Substitute Example with pattern modifier :

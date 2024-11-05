@@ -76,6 +76,11 @@ private:
    Detail::RNTupleMetrics fMetrics;
    std::vector<std::unique_ptr<RPageSource>> fSources;
    RIdBiMap fIdBiMap;
+   /// TODO(jblomer): Not only the columns, but actually all the different objects of the descriptor would need
+   /// their own maps to avoid descriptor ID clashes. The need for the distinct column map was triggered by adding
+   /// support for multi-column representations. A follow-up patch should either fix the friend page source properly
+   /// or remove it in favor of the RNTupleProcessor.
+   RIdBiMap fColumnMap;
 
    RNTupleDescriptorBuilder fBuilder;
    DescriptorId_t fNextId = 1;  ///< 0 is reserved for the friend zero field
@@ -84,20 +89,26 @@ private:
                         DescriptorId_t virtualParent, const std::string &virtualName);
 
 protected:
+   void LoadStructureImpl() final {}
    RNTupleDescriptor AttachImpl() final;
+   std::unique_ptr<RPageSource> CloneImpl() const final;
+
+   // Unused because we overwrite LoadPage()
+   virtual RPageRef LoadPageImpl(ColumnHandle_t /* columnHandle */, const RClusterInfo & /* clusterInfo */,
+                                 ClusterSize_t::ValueType /* idxInCluster */)
+   {
+      return RPageRef();
+   }
 
 public:
    RPageSourceFriends(std::string_view ntupleName, std::span<std::unique_ptr<RPageSource>> sources);
-
-   std::unique_ptr<RPageSource> Clone() const final;
    ~RPageSourceFriends() final;
 
-   ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) final;
+   ColumnHandle_t AddColumn(DescriptorId_t fieldId, RColumn &column) final;
    void DropColumn(ColumnHandle_t columnHandle) final;
 
-   RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex) final;
-   RPage PopulatePage(ColumnHandle_t columnHandle, RClusterIndex clusterIndex) final;
-   void ReleasePage(RPage &page) final;
+   RPageRef LoadPage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex) final;
+   RPageRef LoadPage(ColumnHandle_t columnHandle, RClusterIndex clusterIndex) final;
 
    void LoadSealedPage(DescriptorId_t physicalColumnId, RClusterIndex clusterIndex, RSealedPage &sealedPage) final;
 

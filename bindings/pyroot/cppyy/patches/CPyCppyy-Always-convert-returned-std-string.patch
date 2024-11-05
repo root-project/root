@@ -49,7 +49,7 @@ index 1f3e43152e..70d8f72596 100644
 -    return BindCppObjectNoCast((void*)result, sSTLStringScope, CPPInstance::kIsOwner);
 +    PyObject* pyresult =
 +        CPyCppyy_PyText_FromStringAndSize(result->c_str(), result->size());
-+    ::operator delete(result); // calls Cppyy::CallO which calls ::operator new
++    delete result; // Cppyy::CallO allocates and constructs a string, so it must be properly destroyed
 +
 +    return pyresult;
  }

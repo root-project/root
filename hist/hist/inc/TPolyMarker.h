@@ -30,7 +30,7 @@ class TCollection;
 
 class TPolyMarker : public TObject, public TAttMarker {
 protected:
-   Int_t       fN{0};             ///< Number of points
+   Int_t       fN{0};             ///< Number of points internally reserved (not necessarily used)
    Int_t       fLastPoint{-1};    ///< The index of the last filled point
    Double_t   *fX{nullptr};       ///<[fN] Array of X coordinates
    Double_t   *fY{nullptr};       ///<[fN] Array of Y coordinates
@@ -50,7 +50,14 @@ public:
    void     Draw(Option_t *option="") override;
    virtual void     DrawPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *option="");
    void     ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
+   /// \brief Get the index of the last filled point
+   /// \note In case the TPolyMarker was filled in sequential order, the returned value + 1 matches
+   /// the total number of points used (and is less or equal than the capacity GetN()).
    virtual Int_t    GetLastPoint() const { return fLastPoint;}
+   /// \brief Get the current capacity (reserved size) of the TPolyMarker.
+   /// \note In contrast to TGraph::GetN(), this does not necessarily match with the used points
+   /// \warning Do not add points via SetPoint(pm->GetN(), x, y) as with a TGraph, use instead TPolyMarker::SetNextPoint
+   /// \see GetLastPoint()
    virtual Int_t    GetN() const {return fN;}
    Option_t        *GetOption() const override {return fOption.Data();}
    Double_t        *GetX() const {return fX;}

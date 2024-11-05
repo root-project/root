@@ -1,8 +1,9 @@
 import { settings, internals, browser, gStyle, isBatchMode, isNodeJs, isObject, isFunc, isStr, source_dir, atob_func, btoa_func } from '../core.mjs';
 import { select as d3_select, pointer as d3_pointer, drag as d3_drag, color as d3_color } from '../d3.mjs';
-import { BasePainter } from '../base/BasePainter.mjs';
+import { prSVG, BasePainter } from '../base/BasePainter.mjs';
 import { resize } from '../base/ObjectPainter.mjs';
 import { getRootColors } from '../base/colors.mjs';
+
 
 /** @summary Display progress message in the left bottom corner.
   * @desc Previous message will be overwritten
@@ -142,7 +143,7 @@ async function loadOpenui5(args) {
    }
 
    const openui5_sources = [];
-   let openui5_dflt = 'https://openui5.hana.ondemand.com/1.98.0/',
+   let openui5_dflt = 'https://openui5.hana.ondemand.com/' + (browser.qt5 ? '1.108.35/' : '1.128.0/'),
        openui5_root = rootui5sys ? rootui5sys + 'distribution/' : '';
 
    if (isStr(args.openui5src)) {
@@ -156,7 +157,7 @@ async function loadOpenui5(args) {
    } else if (args.ui5dbg)
       openui5_root = ''; // exclude ROOT version in debug mode
 
-   if (openui5_root && (openui5_sources.indexOf(openui5_root) < 0))
+   if (openui5_root && (openui5_sources.indexOf(openui5_root) < 0) && !browser.qt5)
       openui5_sources.push(openui5_root);
    if (openui5_dflt && (openui5_sources.indexOf(openui5_dflt) < 0))
       openui5_sources.push(openui5_dflt);
@@ -183,9 +184,9 @@ async function loadOpenui5(args) {
    });
 }
 
-/* eslint-disable key-spacing */
-/* eslint-disable comma-spacing */
-/* eslint-disable object-curly-spacing */
+/* eslint-disable @stylistic/js/key-spacing */
+/* eslint-disable @stylistic/js/comma-spacing */
+/* eslint-disable @stylistic/js/object-curly-spacing */
 
 // some icons taken from http://uxrepo.com/
 const ToolbarIcons = {
@@ -315,7 +316,7 @@ function detectRightButton(event) {
 
 /** @summary Add move handlers for drawn element
   * @private */
-function addMoveHandler(painter, enabled = true) {
+function addMoveHandler(painter, enabled = true, hover_handler = false) {
    if (!settings.MoveResize || painter.isBatchMode() || !painter.draw_g) return;
 
    if (painter.getPadPainter()?.isEditable() === false)
@@ -373,9 +374,14 @@ function addMoveHandler(painter, enabled = true) {
       }.bind(painter));
 
    painter.draw_g
-          .style('cursor', 'move')
+          .style('cursor', hover_handler ? 'pointer' : 'move')
           .property('assigned_move', true)
           .call(drag_move);
+
+   if (hover_handler) {
+      painter.draw_g.on('mouseenter', () => painter.draw_g.style('text-decoration', 'underline'))
+                    .on('mouseleave', () => painter.draw_g.style('text-decoration', null));
+   }
 }
 
 /** @summary Inject style
@@ -445,7 +451,7 @@ function saveLocalStorage(obj, expires, name) {
       localStorage.setItem(_storage_prefix + name, btoa_func(JSON.stringify(obj)));
 }
 
-/** @summary Read cookie with specified name
+/** @summary Read object from storage with specified name
   * @private */
 function readLocalStorage(name) {
    if (typeof localStorage === 'undefined')
@@ -455,9 +461,9 @@ function readLocalStorage(name) {
    return isObject(s) ? s : null;
 }
 
-/** @summary Save JSROOT settings as specified cookie parameter
-  * @param {Number} expires - days when cookie will be removed by browser, negative - delete immediately
-  * @param {String} name - cookie parameter name
+/** @summary Save JSROOT settings in local storage
+  * @param {Number} [expires] - delete settings when negative
+  * @param {String} [name] - storage name, 'settings' by default
   * @private */
 function saveSettings(expires = 365, name = 'settings') {
    saveLocalStorage(settings, expires, name);
@@ -465,7 +471,7 @@ function saveSettings(expires = 365, name = 'settings') {
 
 /** @summary Read JSROOT settings from specified cookie parameter
   * @param {Boolean} only_check - when true just checks if settings were stored before with provided name
-  * @param {String} name - cookie parameter name
+  * @param {String} [name] - storage name, 'settings' by default
   * @private */
 function readSettings(only_check = false, name = 'settings') {
    const s = readLocalStorage(name);
@@ -475,17 +481,17 @@ function readSettings(only_check = false, name = 'settings') {
    return true;
 }
 
-/** @summary Save JSROOT gStyle object as specified cookie parameter
-  * @param {Number} expires - days when cookie will be removed by browser, negative - delete immediately
-  * @param {String} name - cookie parameter name
+/** @summary Save JSROOT gStyle object in local storage
+  * @param {Number} [expires] - delete style when negative
+  * @param {String} [name] - storage name, 'style' by default
   * @private */
 function saveStyle(expires = 365, name = 'style') {
    saveLocalStorage(gStyle, expires, name);
 }
 
-/** @summary Read JSROOT gStyle object specified cookie parameter
-  * @param {Boolean} only_check - when true just checks if settings were stored before with provided name
-  * @param {String} name - cookie parameter name
+/** @summary Read JSROOT gStyle object from local storage
+  * @param {Boolean} [only_check] - when true just checks if settings were stored before with provided name
+  * @param {String} [name] - storage name, 'style' by default
   * @private */
 function readStyle(only_check = false, name = 'style') {
    const s = readLocalStorage(name);
@@ -502,10 +508,8 @@ let _saveFileFunc = null;
   * @private */
 
 function getBinFileContent(content) {
-   const svg_prefix = 'data:image/svg+xml;charset=utf-8,';
-
-   if (content.indexOf(svg_prefix) === 0)
-      return decodeURIComponent(content.slice(svg_prefix.length));
+   if (content.indexOf(prSVG) === 0)
+      return decodeURIComponent(content.slice(prSVG.length));
 
    if (content.indexOf('data:image/') === 0) {
       const p = content.indexOf('base64,');
@@ -548,11 +552,9 @@ function setSaveFile(func) {
    _saveFileFunc = func;
 }
 
-/** @summary Produce exec string for WebCanas to set color value
-  * @desc Color can be id or string, but should belong to list of known colors
-  * For higher color numbers TColor::GetColor(r,g,b) will be invoked to ensure color is exists
+/** @summary Returns color id for the color
   * @private */
-function getColorExec(col, method) {
+function getColorId(col) {
    const arr = getRootColors();
    let id = -1;
    if (isStr(col)) {
@@ -569,18 +571,48 @@ function getColorExec(col, method) {
       col = arr[id];
    }
 
-   if (id < 0) return '';
+   return { id, col };
+}
+
+/** @summary Produce exec string for WebCanvas to set color value
+  * @desc Color can be id or string, but should belong to list of known colors
+  * For higher color numbers TColor::GetColor(r,g,b) will be invoked to ensure color is exists
+  * @private */
+function getColorExec(col, method) {
+   const d = getColorId(col);
+
+   if (d.id < 0)
+      return '';
 
    // for higher color numbers ensure that such color exists
-   if (id >= 50) {
-      const c = d3_color(col);
-      id = `TColor::GetColor(${c.r},${c.g},${c.b})`;
+   if (d.id >= 50) {
+      const c = d3_color(d.col);
+      d.id = `TColor::GetColor(${c.r},${c.g},${c.b})`;
     }
 
-   return `exec:${method}(${id})`;
+   return `exec:${method}(${d.id})`;
 }
+
+/** @summary Change object member in the painter
+  * @desc Used when interactively change in the menu
+  * Special handling for color is provided
+  * @private */
+function changeObjectMember(painter, member, val, is_color) {
+   if (is_color) {
+      const d = getColorId(val);
+      if ((d.id < 0) || (d.id === 9999))
+         return;
+      val = d.id;
+   }
+
+   const obj = painter?.getObject();
+   if (obj && (obj[member] !== undefined))
+      obj[member] = val;
+}
+
+Object.assign(internals.jsroot, { addMoveHandler, registerForResize });
 
 export { showProgress, closeCurrentWindow, loadOpenui5, ToolbarIcons, registerForResize,
          detectRightButton, addMoveHandler, injectStyle,
          selectgStyle, setStoragePrefix, saveSettings, readSettings, saveStyle, readStyle,
-         saveFile, setSaveFile, getBinFileContent, getColorExec };
+         saveFile, setSaveFile, getBinFileContent, getColorExec, changeObjectMember };

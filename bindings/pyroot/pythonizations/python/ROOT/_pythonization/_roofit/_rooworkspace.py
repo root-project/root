@@ -20,6 +20,8 @@ class RooWorkspace(object):
     \endcode
     """
 
+    __cpp_name__ = 'RooWorkspace'
+
     @cpp_signature(
         "Bool_t RooWorkspace::import(const RooAbsArg& arg,"
         "    const RooCmdArg& arg1={},const RooCmdArg& arg2={},const RooCmdArg& arg3={},"

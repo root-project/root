@@ -1,35 +1,34 @@
-<core:View
+<mvc:View
     controllerName="rootui5.eve7.controller.EveTable"
-    xmlns:core="sap.ui.core"
     xmlns="sap.m"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:core="sap.ui.core"
     xmlns:layout="sap.ui.layout"
     xmlns:m="sap.m"
     xmlns:table="sap.ui.table"
     xmlns:f="sap.ui.layout.form"
     height="100%">
-    <Toolbar id="tbar">
-      <content>
-         <Label text="Table" id="titleLabel" width="100%" textAlign="Center"/>
-         <Button icon="sap-icon://move" press="switchSingle" tooltip="single view"/>
-         <Button icon="sap-icon://arrow-right" press="swap" tooltip="swap"/>
-         <Button icon="sap-icon://decline" press="detachViewer" tooltip="destroy"/>
-      </content>
-    </Toolbar>
-    <m:FlexBox direction="Column" height="100%">
+  <Toolbar id="tbar">
+    <content>
+      <Label text="Table" id="titleLabel" width="100%" textAlign="Center"/>
+      <Button icon="sap-icon://move" press="switchSingle" tooltip="single view"/>
+      <Button icon="sap-icon://arrow-right" press="swap" tooltip="swap"/>
+      <Button icon="sap-icon://decline" press="detachViewer" tooltip="destroy"/>
+    </content>
+  </Toolbar>
+  <m:FlexBox direction="Column" height="100%">
     <layout:VerticalLayout id="header" width="100%" >
-      <layout:HorizontalLayout id="gedHeader" width="100%">
+      <layout:HorizontalLayout id="gedHeader">
         <m:ComboBox id="ccombo" change="collectionChanged"
-                    items="{
-                           path: 'collections>/itemx'
-                           }">
+                    items="{ path: 'collections>/itemx' }">
           <core:Item key="{collections>key}" text="{collections>text}" />
         </m:ComboBox>
         <m:Button text="Edit Collection Columns" id="toggleButtonId" press="toggleTableEdit" tooltip="toggle column edit"/>
-      </layout:HorizontalLayout  >
+      </layout:HorizontalLayout>
     </layout:VerticalLayout >
     <table:Table
         id="table"
-	sort="sortTable"
+	      sort="sortTable"
         class="sapUiNoMarginTop"
         selectionBehavior="RowOnly"
         editable="false"
@@ -41,4 +40,4 @@
       </table:layoutData>
     </table:Table>
   </m:FlexBox>
-</core:View>
+</mvc:View>

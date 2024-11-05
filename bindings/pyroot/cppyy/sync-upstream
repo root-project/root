@@ -4,8 +4,8 @@
 
 # We will keep our own CMakeLists.txt files
 
-mv CPyCppyy/CMakeLists.txt CPyCppyy_CMakeLists.txt 
-mv cppyy/CMakeLists.txt cppyy_CMakeLists.txt 
+mv CPyCppyy/CMakeLists.txt CPyCppyy_CMakeLists.txt
+mv cppyy/CMakeLists.txt cppyy_CMakeLists.txt
 
 rm -rf CPyCppyy
 rm -rf cppyy
@@ -27,10 +27,7 @@ rebase_topic () {
   git rebase sync $1 && git branch -D sync && git checkout -b sync
 }
 
-rebase_topic guitargeek/exceptions
-rebase_topic guitargeek/converter_control
 rebase_topic guitargeek/string_converters
-rebase_topic guitargeek/py12_warnings
 
 cd ..
 
@@ -39,17 +36,15 @@ rm -rf cppyy/.git
 
 # Move back CMakeLists.txt files
 
-mv CPyCppyy_CMakeLists.txt CPyCppyy/CMakeLists.txt 
-mv cppyy_CMakeLists.txt cppyy/CMakeLists.txt 
+mv CPyCppyy_CMakeLists.txt CPyCppyy/CMakeLists.txt
+mv cppyy_CMakeLists.txt cppyy/CMakeLists.txt
 
 # Apply patches (they were created with git format-patch -1 HEAD)
 # Alternatively, one can also use "git am" to create individual commits
-git apply patches/CPyCppyy-Disable-initializer-style-construction.patch
-git apply patches/CPyCppyy-Add-converters-and-executors-for-ROOT-types.patch
-git apply patches/CPyCppyy-TString_converter.patch
 git apply patches/CPyCppyy-Adapt-to-no-std-in-ROOT.patch
 git apply patches/CPyCppyy-Always-convert-returned-std-string.patch
 git apply patches/CPyCppyy-Disable-implicit-conversion-to-smart-ptr.patch
+git apply patches/CPyCppyy-TString_converter.patch
 git apply patches/cppyy-No-CppyyLegacy-namespace.patch
 git apply patches/cppyy-Remove-Windows-workaround.patch
 git apply patches/cppyy-Don-t-enable-cling-autoloading.patch

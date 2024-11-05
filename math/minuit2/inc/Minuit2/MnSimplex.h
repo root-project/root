@@ -35,39 +35,8 @@ class FCNBase;
 class MnSimplex : public MnApplication {
 
 public:
-   /// construct from FCNBase + std::vector for parameters and errors
-   MnSimplex(const FCNBase &fcn, const std::vector<double> &par, const std::vector<double> &err, unsigned int stra = 1)
-      : MnApplication(fcn, MnUserParameterState(par, err), MnStrategy(stra)), fMinimizer(SimplexMinimizer())
-   {
-   }
-
-   /// construct from FCNBase + std::vector for parameters and covariance
-   MnSimplex(const FCNBase &fcn, const std::vector<double> &par, unsigned int nrow, const std::vector<double> &cov,
-             unsigned int stra = 1)
-      : MnApplication(fcn, MnUserParameterState(par, cov, nrow), MnStrategy(stra)), fMinimizer(SimplexMinimizer())
-   {
-   }
-
-   /// construct from FCNBase + std::vector for parameters and MnUserCovariance
-   MnSimplex(const FCNBase &fcn, const std::vector<double> &par, const MnUserCovariance &cov, unsigned int stra = 1)
-      : MnApplication(fcn, MnUserParameterState(par, cov), MnStrategy(stra)), fMinimizer(SimplexMinimizer())
-   {
-   }
-
-   /// construct from FCNBase + MnUserParameters
-   MnSimplex(const FCNBase &fcn, const MnUserParameters &par, unsigned int stra = 1)
-      : MnApplication(fcn, MnUserParameterState(par), MnStrategy(stra)), fMinimizer(SimplexMinimizer())
-   {
-   }
-
-   /// construct from FCNBase + MnUserParameters + MnUserCovariance
-   MnSimplex(const FCNBase &fcn, const MnUserParameters &par, const MnUserCovariance &cov, unsigned int stra = 1)
-      : MnApplication(fcn, MnUserParameterState(par, cov), MnStrategy(stra)), fMinimizer(SimplexMinimizer())
-   {
-   }
-
    /// construct from FCNBase + MnUserParameterState + MnStrategy
-   MnSimplex(const FCNBase &fcn, const MnUserParameterState &par, const MnStrategy &str)
+   MnSimplex(const FCNBase &fcn, const MnUserParameterState &par, const MnStrategy &str = MnStrategy{1})
       : MnApplication(fcn, MnUserParameterState(par), str), fMinimizer(SimplexMinimizer())
    {
    }
@@ -76,8 +45,6 @@ public:
       : MnApplication(migr.Fcnbase(), migr.State(), migr.Strategy(), migr.NumOfCalls()), fMinimizer(migr.fMinimizer)
    {
    }
-
-   ~MnSimplex() override {}
 
    ModularFunctionMinimizer &Minimizer() override { return fMinimizer; }
    const ModularFunctionMinimizer &Minimizer() const override { return fMinimizer; }

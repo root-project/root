@@ -111,6 +111,13 @@ def _TFileExit(obj, exc_type, exc_val, exc_tb):
     Signature and return value are imposed by Python, see
     https://docs.python.org/3/library/stdtypes.html#typecontextmanager.
     """
+    # A TFile might be storing references to objects retrieved by the user in
+    # a cache. Make sure the cache is cleaned at exit time rather than having
+    # to wait for the garbage collector.
+    try:
+        delattr(obj, "_cached_items")
+    except AttributeError:
+        pass
     obj.Close()
     return False
 

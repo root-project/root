@@ -52,12 +52,11 @@ public:
       gsl_min_fminimizer_free(fMinimizer);
    }
 
-private:
-// usually copying is non trivial, so we make this unaccessible
+// usually copying is non trivial, so we delete this
    GSL1DMinimizerWrapper(const GSL1DMinimizerWrapper &) = delete;
    GSL1DMinimizerWrapper & operator = (const GSL1DMinimizerWrapper &) = delete;
-
-public:
+   GSL1DMinimizerWrapper(GSL1DMinimizerWrapper &&) = delete;
+   GSL1DMinimizerWrapper & operator = (GSL1DMinimizerWrapper &&) = delete;
 
    gsl_min_fminimizer * Get() const {
       return fMinimizer;

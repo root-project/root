@@ -38,6 +38,7 @@ public:
    TGraph2DErrors(const TGraph2DErrors&);
    TGraph2DErrors& operator=(const TGraph2DErrors&);
    ~TGraph2DErrors() override;
+   virtual void AddPointError(Double_t x, Double_t y, Double_t z, Double_t ex = 0., Double_t ey = 0., Double_t ez = 0.);
    Double_t        GetErrorX(Int_t bin) const override;
    Double_t        GetErrorY(Int_t bin) const override;
    Double_t        GetErrorZ(Int_t bin) const override;

@@ -201,8 +201,6 @@ actually written to disk for those objects.
 \anchor ptpo
 ## Pointers to persistent objects
 
-Information on how these work in memory can be found at:
-https://root.cern/root/html303/examples/Version302.news.html
 These were introduced in release 3.02, so there is not yet a description in the current
 Root Users Guide, which is for a version release 3.1.  Here we discuss only the information
 on disk.

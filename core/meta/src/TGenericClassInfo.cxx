@@ -292,14 +292,15 @@ namespace Internal {
          CreateRuleSet( fReadRules, true );
          CreateRuleSet( fReadRawRules, false );
 
-         if (fPragmaBits & (TClassTable::kNtplForceSplit | TClassTable::kNtplForceUnsplit)) {
+         if (fPragmaBits & (TClassTable::kNtplForceNativeMode | TClassTable::kNtplForceStreamerMode)) {
             fClass->CreateAttributeMap();
             // The force-split and force-unsplit flags are mutually exclusive
-            assert(!((fPragmaBits & TClassTable::kNtplForceSplit) && (fPragmaBits & TClassTable::kNtplForceUnsplit)));
-            if (fPragmaBits & TClassTable::kNtplForceSplit) {
-               fClass->GetAttributeMap()->AddProperty("rntuple.split", "true");
-            } else if (fPragmaBits & TClassTable::kNtplForceUnsplit) {
-               fClass->GetAttributeMap()->AddProperty("rntuple.split", "false");
+            assert(!((fPragmaBits & TClassTable::kNtplForceNativeMode) &&
+                     (fPragmaBits & TClassTable::kNtplForceStreamerMode)));
+            if (fPragmaBits & TClassTable::kNtplForceNativeMode) {
+               fClass->GetAttributeMap()->AddProperty("rntuple.streamerMode", "false");
+            } else if (fPragmaBits & TClassTable::kNtplForceStreamerMode) {
+               fClass->GetAttributeMap()->AddProperty("rntuple.streamerMode", "true");
             }
          }
       }
@@ -448,7 +449,7 @@ namespace Internal {
       // Set the info for the CollectionProxy and take ownership of the object
       // being passed
 
-      delete fCollectionProxyInfo;;
+      delete fCollectionProxyInfo;
       fCollectionProxyInfo = info;
    }
 

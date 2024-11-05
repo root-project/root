@@ -163,6 +163,45 @@ class ROOTFacade(types.ModuleType):
                 return res
         raise AttributeError("Failed to get attribute {} from ROOT".format(name))
 
+    def _register_converters_and_executors(self):
+
+        converter_aliases = {
+            "Long64_t": "long long",
+            "Long64_t ptr": "long long ptr",
+            "Long64_t&": "long long&",
+            "const Long64_t&": "const long long&",
+            "ULong64_t": "unsigned long long",
+            "ULong64_t ptr": "unsigned long long ptr",
+            "ULong64_t&": "unsigned long long&",
+            "const ULong64_t&": "const unsigned long long&",
+            "Float16_t": "float",
+            "const Float16_t&": "const float&",
+            "Double32_t": "double",
+            "Double32_t&": "double&",
+            "const Double32_t&": "const double&",
+        }
+
+        executor_aliases = {
+            "Long64_t": "long long",
+            "Long64_t&": "long long&",
+            "Long64_t ptr": "long long ptr",
+            "ULong64_t": "unsigned long long",
+            "ULong64_t&": "unsigned long long&",
+            "ULong64_t ptr": "unsigned long long ptr",
+            "Float16_t": "float",
+            "Float16_t&": "float&",
+            "Double32_t": "double",
+            "Double32_t&": "double&",
+        }
+
+        from libROOTPythonizations import CPyCppyyRegisterConverterAlias, CPyCppyyRegisterExecutorAlias
+
+        for name, target in converter_aliases.items():
+            CPyCppyyRegisterConverterAlias(name, target)
+
+        for name, target in executor_aliases.items():
+            CPyCppyyRegisterExecutorAlias(name, target)
+
     def _finalSetup(self):
         # Prevent this method from being re-entered through the gROOT wrapper
         self.__dict__["gROOT"] = gROOT
@@ -180,6 +219,9 @@ class ROOTFacade(types.ModuleType):
         # Redirect lookups to cppyy's global namespace
         self.__class__.__getattr__ = self._fallback_getattr
         self.__class__.__setattr__ = lambda self, name, val: setattr(cppyy.gbl, name, val)
+
+        # Register custom converters and executors
+        self._register_converters_and_executors()
 
         # Run rootlogon if exists
         self._run_rootlogon()
@@ -289,6 +331,7 @@ class ROOTFacade(types.ModuleType):
     # Overload RDF namespace
     @property
     def RDF(self):
+        self._finalSetup()
         ns = self._fallback_getattr("RDF")
         try:
             from ._pythonization._rdataframe import _MakeNumpyDataFrame

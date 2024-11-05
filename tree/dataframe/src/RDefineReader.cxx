@@ -16,7 +16,7 @@
 
 ROOT::Internal::RDF::RDefinesWithReaders::RDefinesWithReaders(std::shared_ptr<ROOT::Detail::RDF::RDefineBase> define,
                                                               unsigned int nSlots,
-                                                              std::unordered_set<std::string> &cachedColNames)
+                                                              ROOT::Internal::RDF::RStringCache &cachedColNames)
    : fDefine(std::move(define)), fReadersPerVariation(nSlots), fCachedColNames(cachedColNames)
 {
    assert(fDefine != nullptr);
@@ -25,7 +25,7 @@ ROOT::Internal::RDF::RDefinesWithReaders::RDefinesWithReaders(std::shared_ptr<RO
 ROOT::Internal::RDF::RDefineReader &
 ROOT::Internal::RDF::RDefinesWithReaders::GetReader(unsigned int slot, std::string_view variationName)
 {
-   auto [nameIt, _] = fCachedColNames.insert(std::string(variationName));
+   auto nameIt = fCachedColNames.Insert(std::string(variationName));
    auto &defineReaders = fReadersPerVariation[slot];
 
    auto it = defineReaders.find(*nameIt);

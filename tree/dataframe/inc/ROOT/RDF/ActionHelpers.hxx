@@ -1040,13 +1040,6 @@ public:
    }
 };
 
-// TODO
-// extern template void MinHelper::Exec(unsigned int, const std::vector<float> &);
-// extern template void MinHelper::Exec(unsigned int, const std::vector<double> &);
-// extern template void MinHelper::Exec(unsigned int, const std::vector<char> &);
-// extern template void MinHelper::Exec(unsigned int, const std::vector<int> &);
-// extern template void MinHelper::Exec(unsigned int, const std::vector<unsigned int> &);
-
 template <typename ResultType>
 class R__CLING_PTRCHECK(off) MaxHelper : public RActionImpl<MaxHelper<ResultType>> {
    std::shared_ptr<ResultType> fResultMax;
@@ -1096,13 +1089,6 @@ public:
       return MaxHelper(result, fMaxs.size());
    }
 };
-
-// TODO
-// extern template void MaxHelper::Exec(unsigned int, const std::vector<float> &);
-// extern template void MaxHelper::Exec(unsigned int, const std::vector<double> &);
-// extern template void MaxHelper::Exec(unsigned int, const std::vector<char> &);
-// extern template void MaxHelper::Exec(unsigned int, const std::vector<int> &);
-// extern template void MaxHelper::Exec(unsigned int, const std::vector<unsigned int> &);
 
 template <typename ResultType>
 class R__CLING_PTRCHECK(off) SumHelper : public RActionImpl<SumHelper<ResultType>> {
@@ -1238,12 +1224,6 @@ public:
    }
 };
 
-extern template void MeanHelper::Exec(unsigned int, const std::vector<float> &);
-extern template void MeanHelper::Exec(unsigned int, const std::vector<double> &);
-extern template void MeanHelper::Exec(unsigned int, const std::vector<char> &);
-extern template void MeanHelper::Exec(unsigned int, const std::vector<int> &);
-extern template void MeanHelper::Exec(unsigned int, const std::vector<unsigned int> &);
-
 class R__CLING_PTRCHECK(off) StdDevHelper : public RActionImpl<StdDevHelper> {
    // Number of subsets of data
    unsigned int fNSlots;
@@ -1291,12 +1271,6 @@ public:
       return StdDevHelper(result, fCounts.size());
    }
 };
-
-extern template void StdDevHelper::Exec(unsigned int, const std::vector<float> &);
-extern template void StdDevHelper::Exec(unsigned int, const std::vector<double> &);
-extern template void StdDevHelper::Exec(unsigned int, const std::vector<char> &);
-extern template void StdDevHelper::Exec(unsigned int, const std::vector<int> &);
-extern template void StdDevHelper::Exec(unsigned int, const std::vector<unsigned int> &);
 
 template <typename PrevNodeType>
 class R__CLING_PTRCHECK(off) DisplayHelper : public RActionImpl<DisplayHelper<PrevNodeType>> {
@@ -1698,7 +1672,7 @@ public:
    SnapshotHelperMT(SnapshotHelperMT &&) = default;
    ~SnapshotHelperMT()
    {
-      if (!fTreeName.empty() /*not moved from*/ && fOptions.fLazy &&
+      if (!fTreeName.empty() /*not moved from*/ && fOptions.fLazy && !fOutputFiles.empty() &&
           std::all_of(fOutputFiles.begin(), fOutputFiles.end(), [](const auto &f) { return !f; }) /* never run */)
          Warning("Snapshot", "A lazy Snapshot action was booked but never triggered.");
    }

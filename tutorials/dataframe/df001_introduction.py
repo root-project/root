@@ -15,11 +15,11 @@
 
 import ROOT
 
-# A simple helper function to fill a test tree: this makes the example stand-alone.
 def fill_tree(treeName, fileName):
+    """A simple helper function to fill a test tree: this makes the example stand-alone."""
     df = ROOT.RDataFrame(10)
-    df.Define("b1", "(double) rdfentry_")\
-      .Define("b2", "(int) rdfentry_ * rdfentry_").Snapshot(treeName, fileName)
+    df.Define("b1", "static_cast<double>(rdfentry_)")\
+      .Define("b2", "static_cast<int>(rdfentry_ * rdfentry_)").Snapshot(treeName, fileName)
 
 # We prepare an input tree to run on
 fileName = "df001_introduction_py.root"

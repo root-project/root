@@ -1,5 +1,7 @@
 #include "JSONIOUtils.h"
 
+#include <string>
+
 using RooFit::Detail::JSONNode;
 using RooFit::Detail::JSONTree;
 
@@ -11,6 +13,21 @@ bool startsWith(std::string_view str, std::string_view prefix)
 bool endsWith(std::string_view str, std::string_view suffix)
 {
    return str.size() >= suffix.size() && 0 == str.compare(str.size() - suffix.size(), suffix.size(), suffix);
+}
+
+std::string removePrefix(std::string_view str, std::string_view prefix)
+{
+   std::string out;
+   out += str;
+   out = out.substr(prefix.length());
+   return out;
+}
+std::string removeSuffix(std::string_view str, std::string_view suffix)
+{
+   std::string out;
+   out += str;
+   out = out.substr(0, out.length() - suffix.length());
+   return out;
 }
 
 std::unique_ptr<RooFit::Detail::JSONTree> varJSONString(const JSONNode &treeRoot)

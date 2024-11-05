@@ -1,7 +1,6 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-##
 ## 'ORGANIZATION AND SIMULTANEOUS FITS' RooFit tutorial macro #508
 ##
 ## RooArgSet and RooArgList tools and tricks
@@ -80,27 +79,13 @@ subset3 = s1.selectCommon(s2)
 # Owning RooArgSets
 # ---------------------------------
 
-# Create a RooArgSet that owns its components
-# A set either owns all of its components or none,
-# so once addOwned() is used, add() can no longer be
-# used and will result in an error message
-
-ac = a.clone("a")
-bc = b.clone("b")
-cc = c.clone("c")
-
+# You can create a RooArgSet that owns copies of the objects instead of
+# referencing the originals. A set either owns all of its components or none,
+# so once addClone() is used, add() can no longer be used and will result in an
+# error message
 s3 = ROOT.RooArgSet()
-# s3.addOwned(ROOT.RooArgSet(ac, bc, cc))
-s3.addOwned(ac)
-s3.addOwned(bc)
-s3.addOwned(cc)
-
-# Another possibility is to add an owned clone
-# of an object instead of the original
-# s3.addClone(ROOT.RooArgSet(d, e, g))
-s3.addClone(d)
-s3.addClone(e)
-s3.addClone(g)
+for arg in [a, b, c, d, e, g]:
+    s3.addClone(arg)
 
 # A clone of a owning set is non-owning and its
 # contents is owned by the originating owning set
@@ -118,7 +103,7 @@ sclone2 = s3.snapshot()
 # dependencies, together form a self-consistent
 # set that is free of external dependencies
 
-sclone3 = s3.snapshot(ROOT.kTRUE)
+sclone3 = s3.snapshot(True)
 
 # Set printing
 # ------------------------

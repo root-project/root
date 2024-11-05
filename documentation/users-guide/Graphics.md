@@ -153,7 +153,7 @@ The curious reader will have noticed that each entry in the context menu
 corresponds to a method of the class. Look for example to the menu named
 `TAxis::xaxis`. `xaxis` is the name of the object and **`TAxis`** the
 name of its class. If we look at the list of **`TAxis`** methods, for
-example in <http://root.cern.ch/root/htmldoc/TAxis.html>, we see the
+example in <https://root.cern/doc/master/classTAxis.html>, we see the
 methods `SetTimeDisplay()` and` UnZoom()`, which appear also in the
 context menu.
 
@@ -262,7 +262,7 @@ of the class. When the mouse is moved or a button pressed/released, the
 in all it's pads and for each object calls some standard methods to make
 the object react to the event (mouse movement, click or whatever).
 
-The second one is `DistanceToPrimitive(px,py)`. This function computes a
+The second one is `DistancetoPrimitive(px,py)`. This function computes a
 "distance" to an object from the mouse position at the pixel position
 (`px`, `py`, see definition at the end of this paragraph) and returns
 this distance in pixel units. The selected object will be the one with
@@ -524,7 +524,7 @@ known ahead of time.
 #### The Pixel Coordinate System
 
 The least common is the pixel coordinate system, used by functions such
-as `DistanceToPrimitive()` and `ExecuteEvent()`. Its primary use is for
+as `DistancetoPrimitive()` and `ExecuteEvent()`. Its primary use is for
 cursor position, which is always given in pixel coordinates. If
 (`px,py`) is the cursor position, `px=0` and `py=0` corresponds to the
 top-left corner of the pad, which is the standard convention in
@@ -2312,11 +2312,13 @@ At initialization time, a table of basic colors is generated when the
 first Canvas constructor is called. This table is a linked list, which
 can be accessed from the ***`gROOT`*** object (see
 `TROOT::GetListOfColors()`). Each color has an index and when a basic
-color is defined, two "companion" colors are defined:
-
--   the dark version (color index + 100)
-
--   the bright version (color index + 150)
+color is defined, two "companion" colors are defined: the dark version and the bright version.
+Two static functions are available that return the bright or dark color number corresponding
+to a given color index. If these variants don't already exist, they are created as needed:
+```
+   Int_t dark   = TColor::GetColorDark(color_index);
+   Int_t bright = TColor::GetColorBright(color_index);
+```
 
 The dark and bright colors are used to give 3-D effects when drawing
 various boxes (see **`TWbox`**, **`TPave`**, **`TPaveText`**,

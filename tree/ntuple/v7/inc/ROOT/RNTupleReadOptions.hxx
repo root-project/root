@@ -44,14 +44,22 @@ private:
    EClusterCache fClusterCache = EClusterCache::kDefault;
    unsigned int fClusterBunchSize = 1;
    EImplicitMT fUseImplicitMT = EImplicitMT::kDefault;
+   /// If true, the RNTupleReader will track metrics straight from its construction, as
+   /// if calling `RNTupleReader::EnableMetrics()` before having created the object.
+   bool fEnableMetrics = false;
 
 public:
    EClusterCache GetClusterCache() const { return fClusterCache; }
    void SetClusterCache(EClusterCache val) { fClusterCache = val; }
+
    unsigned int GetClusterBunchSize() const { return fClusterBunchSize; }
    void SetClusterBunchSize(unsigned int val) { fClusterBunchSize = val; }
+
    EImplicitMT GetUseImplicitMT() const { return fUseImplicitMT; }
    void SetUseImplicitMT(EImplicitMT val) { fUseImplicitMT = val; }
+
+   bool HasMetricsEnabled() const { return fEnableMetrics; }
+   void SetMetricsEnabled(bool enable) { fEnableMetrics = enable; }
 };
 
 } // namespace Experimental

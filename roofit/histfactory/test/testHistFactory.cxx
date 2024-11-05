@@ -275,8 +275,6 @@ public:
          meas.AddConstantParam("gamma_stat_channel1_bin_1");
       }
 
-      meas.SetExportOnly(true);
-
       meas.SetLumi(1.0);
       meas.SetLumiRelErr(0.10);
 
@@ -690,13 +688,8 @@ TEST_P(HFFixtureFit, Fit)
          if (!par) {
             // Parameter was constant in this fit
             par = dynamic_cast<RooRealVar *>(fitResult->constPars().find(param.c_str()));
-            if (evalBackend != RooFit::EvalBackend::Codegen()) {
-               ASSERT_NE(par, nullptr) << param;
-               EXPECT_DOUBLE_EQ(par->getVal(), target) << "Constant parameter " << param << " is off target.";
-            } else {
-               // We expect "codegen" to strip away constant RooRealVars
-               ASSERT_EQ(par, nullptr) << param;
-            }
+            ASSERT_NE(par, nullptr) << param;
+            EXPECT_DOUBLE_EQ(par->getVal(), target) << "Constant parameter " << param << " is off target.";
          } else {
             EXPECT_NEAR(par->getVal(), target, par->getError())
                << "Parameter " << param << " close to target " << target << " within uncertainty";

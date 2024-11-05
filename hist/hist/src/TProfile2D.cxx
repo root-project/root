@@ -85,7 +85,7 @@ ClassImp(TProfile2D);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for Profile2D histograms.
 
-TProfile2D::TProfile2D() : TH2D()
+TProfile2D::TProfile2D()
 {
    fTsumwz = fTsumwz2 = 0;
    fScaling = kFALSE;
@@ -1311,6 +1311,8 @@ TH2D *TProfile2D::ProjectionXY(const char *name, Option_t *option) const
    } else {
       h1 = new TH2D(pname,GetTitle(),nx,xbins->GetArray(),ny,ybins->GetArray() );
    }
+   fXaxis.Copy(*h1->GetXaxis());
+   fYaxis.Copy(*h1->GetYaxis());
    Bool_t computeErrors = kFALSE;
    Bool_t cequalErrors  = kFALSE;
    Bool_t binEntries    = kFALSE;

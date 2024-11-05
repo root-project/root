@@ -68,83 +68,9 @@
 
 using std::istream, std::ostream, std::ifstream, std::ofstream, std::endl;
 
-#if (__GNUC__==3&&__GNUC_MINOR__==2&&__GNUC_PATCHLEVEL__==3)
-char* operator+( streampos&, char* );
-#endif
-
 ClassImp(RooArgSet);
 
-
-
-#ifndef USEMEMPOOLFORARGSET
 void RooArgSet::cleanup() { }
-#else
-
-#include "MemPoolForRooSets.h"
-
-RooArgSet::MemPool* RooArgSet::memPool() {
-  RooSentinel::activate();
-  static auto * memPool = new RooArgSet::MemPool();
-  return memPool;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Clear memory pool on exit to avoid reported memory leaks
-
-void RooArgSet::cleanup()
-{
-  auto pool = memPool();
-  memPool()->teardown();
-
-  //Here, the pool might have to leak if RooArgSets are still alive.
-  if (pool->empty())
-    delete pool;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Overloaded new operator guarantees that all RooArgSets allocated with new
-/// have a unique address, a property that is exploited in several places
-/// in roofit to quickly index contents on normalization set pointers.
-/// The memory pool only allocates space for the class itself. The elements
-/// stored in the set are stored outside the pool.
-
-void* RooArgSet::operator new (size_t bytes)
-{
-  // To make sure that derived classes don't use this operator
-  if (bytes != sizeof(RooArgSet)) {
-    return ::operator new(bytes);
-  }
-
-  return memPool()->allocate(bytes);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Overloaded new operator with placement does not guarantee that all
-/// RooArgSets allocated with new have a unique address, but uses the global
-/// operator.
-
-void* RooArgSet::operator new (size_t bytes, void* ptr) noexcept
-{
-   return ::operator new (bytes, ptr);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Memory is owned by pool, we need to do nothing to release it
-
-void RooArgSet::operator delete (void* ptr)
-{
-  // Decrease use count in pool that ptr is on
-  if (memPool()->deallocate(ptr))
-    return;
-
-  // Not part of any pool; use global op delete:
-  ::operator delete(ptr);
-}
-
-#endif
 
 
 ////////////////////////////////////////////////////////////////////////////////

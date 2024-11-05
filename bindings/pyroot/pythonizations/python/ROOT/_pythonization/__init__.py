@@ -252,7 +252,7 @@ def _find_used_classes(ns, passes_filter, user_pythonizor, npars):
 
         if str(var_value).startswith('<cppyy.Template'):
             # If this is a template, pythonize the instances. Note that in
-            # older cppyy, template instanciations are cached by
+            # older cppyy, template instantiations are cached by
             # fully-qualified name directly in the namespace, so they are
             # covered by the code branch above.
             instantiations = getattr(var_value, "_instantiations", {})

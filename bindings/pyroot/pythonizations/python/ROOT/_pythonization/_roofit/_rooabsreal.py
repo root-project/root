@@ -29,6 +29,8 @@ class RooAbsReal(object):
     \endcode
     """
 
+    __cpp_name__ = "RooAbsReal"
+
     @cpp_signature(
         "RooPlot* RooAbsReal::plotOn(RooPlot* frame,"
         "    const RooCmdArg& arg1={}, const RooCmdArg& arg2={},"
@@ -129,3 +131,23 @@ class RooAbsReal(object):
         if normalizationSet:
             self._getVal_normSet = normalizationSet
         return self._getVal(normalizationSet) if normalizationSet else self._getVal()
+
+    def setEvalErrorLoggingMode(m):
+
+        import ROOT
+
+        if isinstance(m, str):
+            # Hardcode enum integer values here, because enum lookups cause
+            # some memory fiasco at the end.
+            # TODO: fix this in cppyy / PyROOT!
+            lut = {"PrintErrors": 0, "CollectErrors": 1, "CountErrors": 2, "Ignore": 3}
+            if m not in lut:
+                raise ValueError(
+                    "Unsupported value passed. The value has to be the name or enum value of an RooAbsReal ErrorLogging mode: {}".format(
+                        lut
+                    )
+                )
+
+            m = lut[m]
+
+        ROOT.RooAbsReal._setEvalErrorLoggingMode(m)

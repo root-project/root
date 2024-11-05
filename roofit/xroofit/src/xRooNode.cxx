@@ -209,7 +209,7 @@ auto GETLISTTREE(TGFileBrowser *b)
 #include "RooNaNPacker.h"
 #endif
 
-BEGIN_XROOFIT_NAMESPACE;
+BEGIN_XROOFIT_NAMESPACE
 
 xRooNode::InteractiveObject *xRooNode::gIntObj = nullptr;
 std::map<std::string, std::tuple<std::function<double(double, double, double)>, bool>> xRooNode::auxFunctions;
@@ -969,6 +969,14 @@ std::shared_ptr<TObject> xRooNode::getObject(const std::string &name, const std:
             out = _tmp;
       }
       return out;
+   }
+   if (auto arg = get<RooAbsArg>()) {
+      // can try all nodes
+      RooArgSet nodes;
+      arg->treeNodeServerList(&nodes);
+      if (auto server = nodes.find(name.c_str())) {
+         return std::shared_ptr<TObject>(server, [](TObject *) {});
+      }
    }
    return nullptr;
 }
@@ -4541,15 +4549,15 @@ std::shared_ptr<TObject> xRooNode::convertForAcquisition(xRooNode &acquirer, con
 
 std::shared_ptr<TStyle> xRooNode::style(TObject *initObject, bool autoCreate) const
 {
+   TString t = GetTitle();
 
    auto arg = get<RooAbsArg>();
-   if (!initObject && !arg) {
+   if (!initObject && !arg && !gROOT->GetStyle(t)) {
       return nullptr;
    }
 
    std::unique_ptr<TObject> argInitObject;
 
-   TString t = GetTitle();
    if (initObject) {
       t = (strlen(initObject->GetTitle())) ? initObject->GetTitle() : initObject->GetName();
    } else if (arg) {
@@ -5968,7 +5976,9 @@ RooArgList xRooNode::argList() const
 xRooNode xRooNode::datasets() const
 {
    xRooNode out(".datasets()", nullptr, *this);
-   out.fBrowseOperation = [](xRooNode *f) { return f->fParent->datasets(); };
+   // removed the browse operation since no longer showing '.datasets()' in browser
+   // and otherwise this means dataset reduction operation will be called every time we 'browse()' the datasets node
+   // out.fBrowseOperation = [](xRooNode *f) { return f->fParent->datasets(); };
 
    if (auto _ws = get<RooWorkspace>(); _ws) {
       for (auto &d : _ws->allData()) {
@@ -8419,7 +8429,7 @@ TLegend *getLegend(bool create = true, bool doPaint = false)
    l->ConvertNDCtoPad();
    tmpPad->cd();
    return l;
-};
+}
 
 std::string formatLegendString(const std::string &s)
 {
@@ -8967,7 +8977,7 @@ void xRooNode::Draw(Option_t *opt)
             auto _pad = pad->GetPad(_size); // will use as the legend pad
             _pad->SetName("legend");
             // stretch the pad all the way to the left
-            _pad->SetPad(_pad->GetAbsXlowNDC(), _pad->GetAbsYlowNDC(), 1.0, _pad->GetAbsYlowNDC() + _pad->GetAbsHNDC());
+            _pad->SetPad(_pad->GetXlowNDC(), _pad->GetYlowNDC(), 1.0, _pad->GetYlowNDC() + _pad->GetHNDC());
             // and make all the remaining pads transparent
             int x = _size;
             while (pad->GetPad(x + 1)) {
@@ -9771,15 +9781,19 @@ void xRooNode::Draw(Option_t *opt)
       auto s = parentPdf();
       if (s && s->get<RooSimultaneous>()) {
          // drawing dataset associated to a simultaneous means must find subpads with variation names
-         // may not have subpads if drawning a "Yield" plot ...
+         // may not have subpads if drawing a "Yield" plot ...
          bool doneDraw = false;
          for (auto c : s->bins()) {
             auto _pad = dynamic_cast<TPad *>(gPad->GetPrimitive(c->GetName()));
             if (!_pad)
                continue; // channel was hidden?
+            // attach as a child before calling datasets(), so that if this dataset is external to workspace it is
+            // included still attaching the dataset ensures dataset reduction for the channel is applied
+            c->push_back(std::make_shared<xRooNode>(*this));
             auto ds = c->datasets().find(GetName());
+            c->resize(c->size() - 1); // remove the child we attached
             if (!ds) {
-               std::cout << " no ds " << GetName() << std::endl;
+               std::cout << " no ds " << GetName() << " - this should never happen!" << std::endl;
                continue;
             }
             auto tmp = gPad;
@@ -10072,7 +10086,10 @@ void xRooNode::Draw(Option_t *opt)
          gPad->SetGrid(1, 1);
       }
    }
-   TString dOpt = (TString(rar->ClassName()).Contains("Hist") || vv->isCategory() || rar->isBinnedDistribution(*vv) ||
+   // need to strip namespace to discount the "HistFactory" namespace classes from all being treated as binned
+   TString clNameNoNamespace = rar->ClassName();
+   clNameNoNamespace = clNameNoNamespace(clNameNoNamespace.Last(':') + 1, clNameNoNamespace.Length());
+   TString dOpt = (clNameNoNamespace.Contains("Hist") || vv->isCategory() || rar->isBinnedDistribution(*vv) ||
                    h->GetNbinsX() == 1 || rar->getAttribute("BinnedLikelihood") ||
                    (dynamic_cast<RooAbsRealLValue *>(vv) &&
                     std::unique_ptr<std::list<double>>(rar->binBoundaries(*dynamic_cast<RooAbsRealLValue *>(vv),
@@ -10088,7 +10105,9 @@ void xRooNode::Draw(Option_t *opt)
       // if so then dOpt="";
       bool allHist = true;
       for (auto &s : components()) {
-         if (!(s->get() && TString(s->get()->ClassName()).Contains("Hist"))) {
+         TString _clName = s->get()->ClassName();
+         _clName = _clName(_clName.Last(':') + 1, _clName.Length());
+         if (!(s->get() && _clName.Contains("Hist"))) {
             allHist = false;
             break;
          }
@@ -11075,22 +11094,22 @@ std::string cling::printValue(const xRooNode *v)
             out += "{";
          out += n->GetName();
          if (out.length() > 100 && left > 0) {
-            out += TString::Format(",... and %lu more", left);
+            out += TString::Format(",... and %zu more", left);
             break;
          }
       }
       out += "}\n";
-      out = std::string(Form(" %s", v->GetName())) + out;
+      out = std::string(Form("<%s> %s", v->get() ? v->get()->ClassName() : "nullptr", v->GetName())) + out;
       return out;
    }
    std::string out;
    if (!(*v)) {
-      return "<empty node>";
+      return "<nullptr>";
    } else {
-      return Form(" %s", v->GetName());
+      return Form("<%s> %s", v->get() ? v->get()->ClassName() : "nullptr", v->GetName());
    }
 
    return out;
 }
 
-END_XROOFIT_NAMESPACE;
+END_XROOFIT_NAMESPACE

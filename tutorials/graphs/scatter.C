@@ -11,9 +11,10 @@
 void scatter()
 {
    auto canvas = new TCanvas();
+   canvas->SetRightMargin(0.14);
    gStyle->SetPalette(kBird, 0, 0.6); // define a transparent palette
 
-   const int n = 100;
+   const int n = 175;
    double x[n];
    double y[n];
    double c[n];
@@ -30,6 +31,9 @@ void scatter()
 
    auto scatter = new TScatter(n, x, y, c, s);
    scatter->SetMarkerStyle(20);
-   scatter->SetTitle("Scatter plot;X;Y");
+   scatter->SetTitle("Scatter plot title;X title;Y title;Z title");
+   scatter->GetXaxis()->SetRangeUser(20.,90.);
+   scatter->GetYaxis()->SetRangeUser(55.,90.);
+   scatter->GetZaxis()->SetRangeUser(10.,200.);
    scatter->Draw("A");
 }

@@ -71,9 +71,7 @@ if(MSVC)
    target_include_directories(MetaCling PRIVATE
       ${CMAKE_SOURCE_DIR}/core/winnt/inc
    )
-   if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-     set_source_files_properties(TCling.cxx COMPILE_FLAGS $<$<CONFIG:Debug>:/bigobj>)
-   endif()
+   set_source_files_properties(TCling.cxx COMPILE_FLAGS /bigobj)
 endif()
 
 add_dependencies(MetaCling CLING)
@@ -103,6 +101,12 @@ if (clad)
   else()
     set(CLING_PLUGIN_LINK_LIBS -Wl,--whole-archive cladPlugin cladDifferentiator -Wl,--no-whole-archive)
   endif()
+  if(TARGET clang)
+    # Link our clad libraries to clang. If users use the clang from ROOT they will
+    # also be able to use clad out of the box.
+    add_dependencies(clang clad)
+    target_link_libraries(clang PUBLIC ${CLING_PLUGIN_LINK_LIBS})
+  endif()
 endif()
 
 ROOT_LINKER_LIBRARY(Cling
@@ -126,7 +130,7 @@ if(MSVC)
       __std_terminate
       cling_runtime_internal_throwIfInvalidPointer
   )
-  if(MSVC_VERSION GREATER_EQUAL 1936)
+  if(MSVC_VERSION GREATER_EQUAL 1933)
     set(cling_exports ${cling_exports}
         __std_find_trivial_1
         __std_find_trivial_2
@@ -187,7 +191,7 @@ if(MSVC)
       ??1LifetimeHandler@internal@runtime@cling@@QAE@XZ
       ?_Facet_Register@std@@YAXPAV_Facet_base@1@@Z
     )
-    if(MSVC_VERSION GREATER_EQUAL 1938)
+    if(MSVC_VERSION GREATER_EQUAL 1938 AND MSVC_VERSION LESS 1940)
       set(cling_exports ${cling_exports}
         ??$__std_find_trivial@$$CBDD@@YAPBDPBD0D@Z
         ??$__std_find_trivial@DD@@YAPADPAD0D@Z

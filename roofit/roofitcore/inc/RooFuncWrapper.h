@@ -19,6 +19,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <sstream>
 
 class RooSimultaneous;
 
@@ -33,7 +34,7 @@ namespace Experimental {
 class RooFuncWrapper final : public RooAbsReal {
 public:
    RooFuncWrapper(const char *name, const char *title, RooAbsReal &obj, const RooAbsData *data = nullptr,
-                  RooSimultaneous const *simPdf = nullptr, bool useEvaluator=false);
+                  RooSimultaneous const *simPdf = nullptr, bool useEvaluator = false);
 
    RooFuncWrapper(const RooFuncWrapper &other, const char *name = nullptr);
 
@@ -48,10 +49,6 @@ public:
 
    std::size_t getNumParams() const { return _params.size(); }
 
-   void dumpCode();
-
-   void dumpGradient();
-
    /// No constant term optimization is possible in code-generation mode.
    void constOptimizeTestStatistic(ConstOpCode /*opcode*/, bool /*doAlsoTrackingOpt*/) override {}
 
@@ -59,14 +56,20 @@ public:
 
    void createGradient();
 
+   void disableEvaluator() { _useEvaluator = false; }
+
+   void writeDebugMacro(std::string const &) const;
+
+   std::string declareFunction(std::string const &funcBody);
+   void collectFunction(std::string const &funcName) { _collectedFunctions.emplace_back(funcName); }
+   std::vector<std::string> const &collectedFunctions() { return _collectedFunctions; }
+
+   std::string buildCode(RooAbsReal const &head);
+
 protected:
    double evaluate() const override;
 
 private:
-   std::string buildCode(RooAbsReal const &head);
-
-   static std::string declareFunction(std::string const &funcBody);
-
    void updateGradientVarBuffer() const;
 
    void loadParamsAndData(RooAbsArg const *head, RooArgSet const &paramSet, const RooAbsData *data,
@@ -89,11 +92,13 @@ private:
    Func _func;
    Grad _grad;
    bool _hasGradient = false;
+   bool _useEvaluator = false;
    mutable std::vector<double> _gradientVarBuffer;
    std::vector<double> _observables;
    std::map<RooFit::Detail::DataKey, ObsInfo> _obsInfos;
    std::map<RooFit::Detail::DataKey, std::size_t> _nodeOutputSizes;
    std::vector<double> _xlArr;
+   std::vector<std::string> _collectedFunctions;
 };
 
 } // namespace Experimental

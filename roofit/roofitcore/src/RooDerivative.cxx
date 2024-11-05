@@ -59,27 +59,18 @@ RooDerivative::RooDerivative(const char* name, const char* title, RooAbsReal& fu
   _x("x","x",this,x)
 {
   if (_order<0 || _order>3 ) {
-    throw std::string(Form("RooDerivative::ctor(%s) ERROR, derivation order must be 1,2 or 3",name)) ;
+    throw std::runtime_error(Form("RooDerivative::ctor(%s) ERROR, derivation order must be 1,2 or 3",name)) ;
   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooDerivative::RooDerivative(const char* name, const char* title, RooAbsReal& func, RooRealVar& x, const RooArgSet& nset, Int_t orderIn, double epsIn) :
-  RooAbsReal(name, title),
-  _order(orderIn),
-  _eps(epsIn),
-  _nset("nset","nset",this,false,false),
-  _func("function","function",this,func),
-  _x("x","x",this,x)
+RooDerivative::RooDerivative(const char *name, const char *title, RooAbsReal &func, RooRealVar &x,
+                             const RooArgSet &nset, Int_t orderIn, double epsIn)
+   : RooDerivative(name, title, func, x, orderIn, epsIn)
 {
-  if (_order<0 || _order>3) {
-    throw std::string(Form("RooDerivative::ctor(%s) ERROR, derivation order must be 1,2 or 3",name)) ;
-  }
-  _nset.add(nset) ;
+   _nset.add(nset);
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -103,7 +94,7 @@ double RooDerivative::evaluate() const
   if (!_ftor) {
     _ftor = std::unique_ptr<RooFunctor>{_func.arg().functor(_x.arg(),RooArgSet(),_nset)};
     ROOT::Math::WrappedFunction<RooFunctor&> wf(*_ftor);
-    _rd = std::make_unique<ROOT::Math::RichardsonDerivator>(wf,_eps*(_x.max()-_x.min()),true);
+    _rd = std::make_unique<ROOT::Math::RichardsonDerivator>(wf,_eps,true);
   }
 
   switch (_order) {

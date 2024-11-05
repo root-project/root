@@ -17,6 +17,7 @@
 #include "ROOT/RDF/RNodeBase.hxx"
 #include "ROOT/RDF/RNewSampleNotifier.hxx"
 #include "ROOT/RDF/RSampleInfo.hxx"
+#include "ROOT/RDF/Utils.hxx"
 
 #include <functional>
 #include <limits>
@@ -181,7 +182,11 @@ class RLoopManager : public RNodeBase {
    void UpdateSampleInfo(unsigned int slot, const std::pair<ULong64_t, ULong64_t> &range);
    void UpdateSampleInfo(unsigned int slot, TTreeReader &r);
 
-   std::unordered_set<std::string> fCachedColNames;
+   // List of branches for which we want to suppress the printed error about
+   // missing branch when switching to a new tree. This is modified by readers,
+   // so must be declared before them in this class.
+   std::vector<std::string> fSuppressErrorsForMissingBranches{};
+   ROOT::Internal::RDF::RStringCache fCachedColNames;
    std::set<std::pair<std::string_view, std::unique_ptr<ROOT::Internal::RDF::RDefinesWithReaders>>>
       fUniqueDefinesWithReaders;
    std::set<std::pair<std::string_view, std::unique_ptr<ROOT::Internal::RDF::RVariationsWithReaders>>>
@@ -261,7 +266,7 @@ public:
    void SetEmptyEntryRange(std::pair<ULong64_t, ULong64_t> &&newRange);
    void ChangeSpec(ROOT::RDF::Experimental::RDatasetSpec &&spec);
 
-   std::unordered_set<std::string> &GetColumnNamesCache() { return fCachedColNames; }
+   ROOT::Internal::RDF::RStringCache &GetColumnNamesCache() { return fCachedColNames; }
    std::set<std::pair<std::string_view, std::unique_ptr<ROOT::Internal::RDF::RDefinesWithReaders>>> &
    GetUniqueDefinesWithReaders()
    {
@@ -271,6 +276,12 @@ public:
    GetUniqueVariationsWithReaders()
    {
       return fUniqueVariationsWithReaders;
+   }
+
+   std::vector<std::string> &GetSuppressErrorsForMissingBranches() { return fSuppressErrorsForMissingBranches; }
+   const std::vector<std::string> &GetSuppressErrorsForMissingBranches() const
+   {
+      return fSuppressErrorsForMissingBranches;
    }
 };
 

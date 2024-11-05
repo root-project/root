@@ -400,6 +400,59 @@ TPad::~TPad()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Add an object to list of primitives with speicified draw option
+/// When \par modified set to kTRUE (default) pad will be marked as modified
+/// Let avoid usage of gPad when drawing object(s) in canvas or in subpads.
+///
+/// ~~~{.cpp}
+/// auto c1 = new TCanvas("c1","Canvas with subpoads", 600, 600);
+/// c1->Divide(2,2);
+///
+/// for (Int_t n = 1; n <= 4; ++n) {
+///    auto h1 = new TH1I(TString::Format("hist_%d",n), "Random hist", 100, -5, 5);
+///    h1->FillRandom("gaus", 2000 + n*1000);
+///    c1->GetPad(n)->Add(h1);
+/// }
+/// ~~~
+
+void TPad::Add(TObject *obj, Option_t *opt, Bool_t modified)
+{
+   if (!obj)
+      return;
+
+   if (!fPrimitives)
+      fPrimitives = new TList;
+
+   obj->SetBit(kMustCleanup);
+
+   fPrimitives->Add(obj, opt);
+
+   if (modified)
+      Modified();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Add an object as first in list of primitives with speicified draw option
+/// When \par modified set to kTRUE (default) pad will be marked as modified
+/// Let avoid usage of gPad when drawing object(s) in canvas or in subpads.
+
+void TPad::AddFirst(TObject *obj, Option_t *opt, Bool_t modified)
+{
+   if (!obj)
+      return;
+
+   if (!fPrimitives)
+      fPrimitives = new TList;
+
+   obj->SetBit(kMustCleanup);
+
+   fPrimitives->AddFirst(obj, opt);
+
+   if (modified)
+      Modified();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Add a new TExec object to the list of Execs.
 ///
 /// When an event occurs in the pad (mouse click, etc) the list of C++ commands
@@ -1050,10 +1103,10 @@ void TPad::Close(Option_t *)
 
       // remove from the mother's list of primitives
       if (fMother) {
-         if (fMother->GetListOfPrimitives())
-            fMother->GetListOfPrimitives()->Remove(this);
+         fMother->Remove(this, kFALSE); // do not produce modified
 
-         if (gPad == this) fMother->cd();
+         if (gPad == this)
+            fMother->cd();
       }
       if (fCanvas) {
          if (fCanvas->GetPadSave() == this)
@@ -1319,7 +1372,7 @@ void TPad::Draw(Option_t *option)
    if (!fPrimitives) fPrimitives = new TList;
    if (gPad != this) {
       if (fMother && !ROOT::Detail::HasBeenDeleted(fMother))
-            if (fMother->GetListOfPrimitives()) fMother->GetListOfPrimitives()->Remove(this);
+            fMother->Remove(this, kFALSE);
       TPad *oldMother = fMother;
       fCanvas = gPad->GetCanvas();
       //
@@ -1335,7 +1388,7 @@ void TPad::Draw(Option_t *option)
    }
 
    if (gPad->IsRetained() && gPad != this && fMother)
-      if (fMother->GetListOfPrimitives()) fMother->GetListOfPrimitives()->Add(this, option);
+      fMother->Add(this, option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3617,7 +3670,7 @@ void TPad::PaintBorder(Color_t color, Bool_t tops)
    Short_t px1,py1,px2,py2;
    Double_t xl, xt, yl, yt;
 
-   // GetDarkColor() and GetLightColor() use GetFillColor()
+   // GetColorDark() and GetColorBright() use GetFillColor()
    Color_t oldcolor = GetFillColor();
    SetFillColor(color);
    TAttFill::Modify();
@@ -4722,17 +4775,19 @@ TPad *TPad::Pick(Int_t px, Int_t py, TObjLink *&pickobj)
 
 void TPad::Pop()
 {
-   if (!fMother) return;
-   if (ROOT::Detail::HasBeenDeleted(fMother)) return;
-   if (!fPrimitives) fPrimitives = new TList;
-   if (this == fMother->GetListOfPrimitives()->Last()) return;
+   if (!fMother || ROOT::Detail::HasBeenDeleted(fMother) || !fMother->GetListOfPrimitives())
+      return;
+   if (!fPrimitives)
+      fPrimitives = new TList;
+   if (this == fMother->GetListOfPrimitives()->Last())
+      return;
 
    TListIter next(fMother->GetListOfPrimitives());
    while (auto obj = next())
       if (obj == this) {
          TString opt = next.GetOption();
-         fMother->GetListOfPrimitives()->Remove(this);
-         fMother->GetListOfPrimitives()->AddLast(this, opt.Data());
+         fMother->Remove(this, kFALSE); // do not issue modified
+         fMother->Add(this, opt.Data());
          return;
       }
 }
@@ -5342,6 +5397,21 @@ void TPad::RecursiveRemove(TObject *obj)
    Int_t nold = fPrimitives->GetSize();
    fPrimitives->RecursiveRemove(obj);
    if (nold != fPrimitives->GetSize()) fModified = kTRUE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Remove object from list of primitives
+/// When \par modified set to kTRUE (default) pad will be marked as modified - if object really removed
+/// Returns result of GetListOfPrimitives()->Remove(obj) or nullptr if list of primitives not exists
+
+TObject *TPad::Remove(TObject *obj, Bool_t modified)
+{
+   TObject *res = nullptr;
+   if (fPrimitives)
+      res = fPrimitives->Remove(obj);
+   if (res && modified)
+      Modified();
+   return res;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6976,7 +7046,8 @@ void TPad::UseCurrentStyle()
 
 TObject *TPad::WaitPrimitive(const char *pname, const char *emode)
 {
-   if (!gPad) return nullptr;
+   if (!gPad || IsWeb())
+      return nullptr;
 
    if (emode && strlen(emode)) gROOT->SetEditorMode(emode);
    if (gROOT->GetEditorMode() == 0 && pname && strlen(pname) > 2) gROOT->SetEditorMode(&pname[1]);

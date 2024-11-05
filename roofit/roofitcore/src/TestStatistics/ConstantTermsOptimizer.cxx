@@ -74,9 +74,8 @@ void ConstantTermsOptimizer::enableConstantTermsOptimization(RooAbsReal *functio
          arg->setCacheAndTrackHints(trackNodes);
       }
       // Do not set CacheAndTrack on constant expressions
-      auto constNodes = static_cast<RooArgSet *>(trackNodes.selectByAttrib("Constant", true));
+      std::unique_ptr<RooArgSet> constNodes{static_cast<RooArgSet *>(trackNodes.selectByAttrib("Constant", true))};
       trackNodes.remove(*constNodes);
-      delete constNodes;
 
       // Set CacheAndTrack flag on all remaining nodes
       trackNodes.setAttribAll("CacheAndTrack", true);
@@ -155,14 +154,12 @@ void ConstantTermsOptimizer::optimizeCaching(RooAbsReal *function, RooArgSet *no
    function->getVal(norm_set);
 
    // Set value caching mode for all nodes that depend on any of the observables to ADirty
-   bool delete_observables = false;
+   std::unique_ptr<RooArgSet> ownedObservables;
    if (observables == nullptr) {
-      observables = function->getObservables(dataset);
-      delete_observables = true;
+      ownedObservables = std::unique_ptr<RooArgSet>{function->getObservables(dataset)};
+      observables = ownedObservables.get();
    }
    function->optimizeCacheMode(*observables);
-   if (delete_observables)
-      delete observables;
 
    // Disable propagation of dirty state flags for observables
    dataset->setDirtyProp(false);

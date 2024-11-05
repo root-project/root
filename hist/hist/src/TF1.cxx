@@ -487,15 +487,13 @@ TF1 *TF1::fgCurrent = nullptr;
 /// TF1 default constructor.
 
 TF1::TF1():
-   TNamed(), TAttLine(), TAttFill(), TAttMarker(),
    fXmin(0), fXmax(0), fNpar(0), fNdim(0), fType(EFType::kFormula)
 {
    SetFillStyle(0);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// F1 constructor using a formula definition
+/// TF1 constructor using a formula definition
 ///
 /// See TFormula constructor for explanation of the formula syntax.
 ///
@@ -509,7 +507,7 @@ TF1::TF1():
 /// titles for the X and Y axis respectively.
 
 TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EAddToList addToGlobList, bool vectorize) :
-   TNamed(name, formula), TAttLine(), TAttFill(), TAttMarker(), fType(EFType::kFormula)
+   TNamed(name, formula),  fType(EFType::kFormula)
 {
    if (xmin < xmax) {
       fXmin = xmin;
@@ -1964,9 +1962,9 @@ Double_t TF1::GetProb() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute Quantiles for density distribution of this function
 ///
-/// Quantile x_q of a probability distribution Function F is defined as
+/// Quantile x_p of a probability distribution Function F is defined as
 /// \f[
-///     F(x_{q}) = \int_{xmin}^{x_{q}} f dx = q with 0 <= q <= 1.
+///     F(x_{p}) = \int_{xmin}^{x_{p}} f dx = p with 0 <= p <= 1.
 /// \f]
 /// For instance the median \f$ x_{\frac{1}{2}} \f$ of a distribution is defined as that value
 /// of the random variable for which the distribution function equals 0.5:
@@ -1974,29 +1972,31 @@ Double_t TF1::GetProb() const
 ///        F(x_{\frac{1}{2}}) = \prod(x < x_{\frac{1}{2}}) = \frac{1}{2}
 /// \f]
 ///
-/// \param[in] nprobSum maximum size of array q and size of array probSum
-/// \param[out] q array filled with nq quantiles
-/// \param[in] probSum array of positions where quantiles will be computed.
-///     It is assumed to contain at least nprobSum values.
-/// \return value nq (<=nprobSum) with the number of quantiles computed
+/// \param[in] n maximum size of array xp and size of array p
+/// \param[out] xp array filled with n quantiles evaluated at p. Memory has to be preallocated by caller.
+/// \param[in] p array of cumulative probabilities where quantiles should be evaluated.
+///     It is assumed to contain at least n values.
+/// \return n, the number of quantiles computed (same as input argument n)
 ///
 ///  Getting quantiles from two histograms and storing results in a TGraph,
 ///  a so-called QQ-plot
 ///
 ///      TGraph *gr = new TGraph(nprob);
-///      f1->GetQuantiles(nprob,gr->GetX());
-///      f2->GetQuantiles(nprob,gr->GetY());
+///      f1->GetQuantiles(nprob,gr->GetX(),p);
+///      f2->GetQuantiles(nprob,gr->GetY(),p);
 ///      gr->Draw("alp");
 ///
 /// \author Eddy Offermann
+/// \warning Function leads to undefined behavior if xp or p are null or
+/// their size does not match with n
 
 
-Int_t TF1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum)
+Int_t TF1::GetQuantiles(Int_t n, Double_t *xp, const Double_t *p)
 {
    // LM: change to use fNpx
    // should we change code to use a root finder ?
    // It should be more precise and more efficient
-   const Int_t npx     = TMath::Max(fNpx, 2 * nprobSum);
+   const Int_t npx     = TMath::Max(fNpx, 2 * n);
    const Double_t xMin = GetXmin();
    const Double_t xMax = GetXmax();
    const Double_t dx   = (xMax - xMin) / npx;
@@ -2043,12 +2043,12 @@ Int_t TF1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum)
 
    // Be careful because of finite precision in the integral; Use the fact that the integral
    // is monotone increasing
-   for (i = 0; i < nprobSum; i++) {
-      const Double_t r = probSum[i];
+   for (i = 0; i < n; i++) {
+      const Double_t r = p[i];
       Int_t bin  = TMath::Max(TMath::BinarySearch(npx + 1, integral.GetArray(), r), (Long64_t)0);
       // in case the prob is 1
       if (bin == npx) {
-         q[i] = xMax;
+         xp[i] = xMax;
          continue;
       }
       // LM use a tolerance 1.E-12 (integral precision)
@@ -2065,14 +2065,14 @@ Int_t TF1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum)
             xx = (-beta[bin] + TMath::Sqrt(beta[bin] * beta[bin] + 2 * gamma[bin] * rr)) / gamma[bin];
          else if (beta[bin] != 0.)
             xx = rr / beta[bin];
-         q[i] = alpha[bin] + xx;
+         xp[i] = alpha[bin] + xx;
       } else {
-         q[i] = alpha[bin];
-         if (integral[bin + 1] == r) q[i] += dx;
+         xp[i] = alpha[bin];
+         if (integral[bin + 1] == r) xp[i] += dx;
       }
    }
 
-   return nprobSum;
+   return n;
 }
 ////////////////////////////////////////////////////////////////////////////////
 ///

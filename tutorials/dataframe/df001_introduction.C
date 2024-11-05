@@ -20,14 +20,8 @@
 void fill_tree(const char *treeName, const char *fileName)
 {
    ROOT::RDataFrame d(10);
-   int i(0);
-   d.Define("b1", [&i]() { return (double)i; })
-      .Define("b2",
-              [&i]() {
-                 auto j = i * i;
-                 ++i;
-                 return j;
-              })
+   d.Define("b1", [](ULong64_t entry) -> double { return entry; }, {"rdfentry_"})
+      .Define("b2", [](ULong64_t entry) -> int { return entry * entry; }, {"rdfentry_"})
       .Snapshot(treeName, fileName);
 }
 

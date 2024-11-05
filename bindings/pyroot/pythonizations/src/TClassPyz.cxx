@@ -30,10 +30,7 @@ PyObject *TClassDynamicCastPyz(PyObject *self, PyObject *args)
    PyObject *pyclass = nullptr;
    PyObject *pyobject = nullptr;
    int up = 1;
-   if (!PyArg_ParseTuple(args, "O!O|i:DynamicCast",
-                         &CPPInstance_Type, &pyclass,
-                         &pyobject,
-                         &up))
+   if (!PyArg_ParseTuple(args, "O!O|i:DynamicCast", &CPPInstance_Type, &pyclass, &pyobject, &up))
       return nullptr;
 
    // Perform actual cast - calls default implementation of DynamicCast
@@ -52,7 +49,7 @@ PyObject *TClassDynamicCastPyz(PyObject *self, PyObject *args)
 
    // Now use binding to return a usable class. Upcast: result is a base.
    // Downcast: result is a derived.
-   Cppyy::TCppType_t cpptype = ((CPyCppyy::CPPInstance*)(up ? pyclass : self))->ObjectIsA();
+   Cppyy::TCppType_t cpptype = ((CPyCppyy::CPPInstance *)(up ? pyclass : self))->ObjectIsA();
    TClass *tcl = TClass::GetClass(Cppyy::GetScopedFinalName(cpptype).c_str());
    TClass *klass = (TClass *)tcl->DynamicCast(TClass::Class(), up ? CPyCppyy::Instance_AsVoidPtr(pyclass) : cl1);
 

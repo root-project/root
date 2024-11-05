@@ -15,20 +15,7 @@ if(roofit_multiprocess)
   list(APPEND EXTRA_DEPENDENCIES Minuit2)
 endif()
 
-if(cuda)
-  list(APPEND EXTRA_LIBRARIES RooFitCuda)
-endif()
-
 if(roofit_legacy_eval_backend)
-  set(LegacyEvalBackendHeaders
-    RooAbsOptTestStatistic.h
-    RooAbsTestStatistic.h
-    RooChi2Var.h
-    RooNLLVar.h
-    RooRealMPFE.h
-    RooXYChi2Var.h
-  )
-
   set(LegacyEvalBackendSources
     src/BidirMMapPipe.cxx
     src/BidirMMapPipe.h
@@ -61,6 +48,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooAbsCategoryLValue.h
     RooAbsCollection.h
     RooAbsData.h
+    RooAbsDataHelper.h
     RooAbsDataStore.h
     RooAbsFunc.h
     RooAbsGenContext.h
@@ -129,7 +117,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooFirstMoment.h
     RooFit.h
     RooFit/Config.h
-    RooFit/Detail/BatchModeDataHelpers.h
     RooFit/Detail/CodeSquashContext.h
     RooFit/Detail/MathFuncs.h
     RooFit/Detail/NormalizationHelpers.h
@@ -247,10 +234,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooWorkspace.h
     RooWorkspaceHandle.h
     RooWrapperPdf.h
-    ${LegacyEvalBackendHeaders}
   SOURCES
     src/BatchModeDataHelpers.cxx
-    src/Buffers.cxx
     src/ConstraintHelpers.cxx
     src/FitHelpers.cxx
     src/Initialisation.cxx
@@ -269,6 +254,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooAbsCategoryLValue.cxx
     src/RooAbsCollection.cxx
     src/RooAbsData.cxx
+    src/RooAbsDataHelper.cxx
     src/RooAbsDataStore.cxx
     src/RooAbsFunc.cxx
     src/RooAbsGenContext.cxx
@@ -490,6 +476,10 @@ if(roofit_multiprocess)
   target_compile_definitions(RooFitCore PUBLIC ROOFIT_MULTIPROCESS)
 endif()
 
+if(clad)
+  target_compile_definitions(RooFitCore PUBLIC ROOFIT_CLAD)
+endif()
+
 if(cuda)
   target_compile_definitions(RooFitCore PUBLIC ROOFIT_CUDA)
 endif()
@@ -502,7 +492,7 @@ endif()
 # RooFit has to include them to build the documentation.
 target_compile_definitions(RooFitCore PUBLIC ROOFIT_BUILDS_ITSELF)
 
-target_include_directories(RooFitCore INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/res>)
+target_include_directories(RooFitCore PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/res>)
 
 # For recent clang, this can facilitate auto-vectorisation.
 # In RooFit, the errno side effect is not needed, anyway:

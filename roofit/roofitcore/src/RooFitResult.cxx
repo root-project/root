@@ -660,7 +660,7 @@ void RooFitResult::fillLegacyCorrMatrix() const
     }
   }
 
-  for (unsigned int i = 0; i < (unsigned int)_CM->GetNcols() ; ++i) {
+  for (unsigned int i = 0; i < static_cast<unsigned int>(_corrMatrix.GetSize()) ; ++i) {
 
     // Find the next global correlation slot to fill, skipping fixed parameters
     auto& gcVal = static_cast<RooRealVar&>((*_globalCorr)[i]);
@@ -668,7 +668,7 @@ void RooFitResult::fillLegacyCorrMatrix() const
 
     // Fill a row of the correlation matrix
     auto corrMatrixCol = static_cast<RooArgList const&>(*_corrMatrix.At(i));
-    for (unsigned int it = 0; it < (unsigned int)_CM->GetNcols() ; ++it) {
+    for (unsigned int it = 0; it < corrMatrixCol.size() ; ++it) {
       auto& cVal = static_cast<RooRealVar&>(corrMatrixCol[it]);
       double value = (*_CM)(i,it) ;
       cVal.setVal(value);

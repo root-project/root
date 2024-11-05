@@ -190,7 +190,7 @@ public:
 
    TClass *IsA() const;
 
-   virtual void ExportToCINT(const char *var_name); // *MENU*
+   virtual void ExportToInterpreter(const char *var_name); // *MENU*
 
    virtual Bool_t AcceptElement(REveElement *el);
 
@@ -328,9 +328,9 @@ public:
       kCBColorSelection =  BIT(0), // Main color or select/hilite state changed.
       kCBTransBBox      =  BIT(1), // Transformation matrix or bounding-box changed.
       kCBObjProps       =  BIT(2), // Object changed, requires dropping its display-lists.
-      kCBVisibility     =  BIT(3),  // Rendering of self/children changed.
-      kCBElementAdded   =  BIT(4) // Element was added to a new parent.
-      // kCBElementRemoved = BIT()  // Element was removed from a parent.
+      kCBVisibility     =  BIT(3), // Rendering of self/children changed.
+      kCBElementAdded   =  BIT(4)  // Element was added to a new parent.
+      // kCBElementRemoved = BIT() // Element was removed from a parent.
 
       // Deletions are handled in a special way in REveManager::PreDeleteElement().
    };
@@ -342,13 +342,14 @@ protected:
 public:
    void StampColorSelection() { AddStamp(kCBColorSelection); }
    void StampTransBBox()      { AddStamp(kCBTransBBox); }
-   void StampObjProps()       { AddStamp(kCBObjProps); }
-   void StampObjPropsPreChk() { if ( ! (fChangeBits & kCBObjProps)) AddStamp(kCBObjProps); }
+   void StampObjProps()       { if ( ! (fChangeBits & kCBObjProps)) AddStamp(kCBObjProps); }
    void StampVisibility()     { AddStamp(kCBVisibility); }
    void StampElementAdded()   { AddStamp(kCBElementAdded); }
    // void StampElementRemoved() { AddStamp(kCBElementRemoved); }
    virtual void AddStamp(UChar_t bits);
    virtual void ClearStamps() { fChangeBits = 0; }
+   // Default stamp for object properties -- the most common case.
+   void Stamp() { StampObjProps(); }
 
    UChar_t GetChangeBits() const { return fChangeBits; }
 

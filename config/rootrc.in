@@ -214,8 +214,6 @@ Gui.TooltipForegroundColor:  black
 Gui.MimeTypeFile:            $(HOME)/.root.mimes
 # If above does not exists defaults to this:
 #Gui.MimeTypeFile:            @etcdir@/root.mimes
-# Type of tree viewer: TTreeViewer or RTreeViewer
-TreeViewer.Name:             TTreeViewer
 # Type of Browser: TRootBrowser or TRootBrowserLite
 Browser.Name:                @root_browser_class@
 # Browser Options (plugins)
@@ -234,6 +232,12 @@ Browser.AutoThumbnail:       yes
 Browser.ExpandDirectories    yes
 # Start URL for the TRootBrowser embedded HTML renderer
 Browser.StartUrl:            http://root.cern.ch/root/html/ClassIndex.html
+
+# Type of tree viewer: TTreeViewer or RTreeViewer
+TreeViewer.Name:             @root_treeviewer_class@
+
+# Type of geometry painter: root or web
+GeomPainter.Name:            @root_geompainter_type@
 
 # THttpServer specific settings
 # location of JavaScript ROOT sources
@@ -259,6 +263,7 @@ WebGui.WaitForTmout:        100.0
 # name of executable for firefox and chrome
 WebGui.Chrome:             @chromeexe@
 WebGui.ChromeVersion:      @chromemajor@
+WebGui.Edge:               @edgeexe@
 WebGui.Firefox:            @firefoxexe@
 # location of OpenUi5 applications for ROOT like canvas, eve, fitpanel, ...
 #WebGui.RootUi5Path:        @openui5dir@

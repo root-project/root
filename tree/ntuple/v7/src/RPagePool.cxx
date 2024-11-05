@@ -19,24 +19,24 @@
 #include <TError.h>
 
 #include <cstdlib>
+#include <utility>
 
-void ROOT::Experimental::Internal::RPagePool::RegisterPage(const RPage &page, const RPageDeleter &deleter)
+ROOT::Experimental::Internal::RPageRef ROOT::Experimental::Internal::RPagePool::RegisterPage(RPage page)
 {
    std::lock_guard<std::mutex> lockGuard(fLock);
-   fPages.emplace_back(page);
+   fPages.emplace_back(std::move(page));
    fReferences.emplace_back(1);
-   fDeleters.emplace_back(deleter);
+   return RPageRef(page, this);
 }
 
-void ROOT::Experimental::Internal::RPagePool::PreloadPage(const RPage &page, const RPageDeleter &deleter)
+void ROOT::Experimental::Internal::RPagePool::PreloadPage(RPage page)
 {
    std::lock_guard<std::mutex> lockGuard(fLock);
-   fPages.emplace_back(page);
+   fPages.emplace_back(std::move(page));
    fReferences.emplace_back(0);
-   fDeleters.emplace_back(deleter);
 }
 
-void ROOT::Experimental::Internal::RPagePool::ReturnPage(const RPage &page)
+void ROOT::Experimental::Internal::RPagePool::ReleasePage(const RPage &page)
 {
    if (page.IsNull()) return;
    std::lock_guard<std::mutex> lockGuard(fLock);
@@ -46,20 +46,17 @@ void ROOT::Experimental::Internal::RPagePool::ReturnPage(const RPage &page)
       if (fPages[i] != page) continue;
 
       if (--fReferences[i] == 0) {
-         fDeleters[i](fPages[i]);
-         fPages[i] = fPages[N-1];
-         fReferences[i] = fReferences[N-1];
-         fDeleters[i] = fDeleters[N-1];
+         fPages[i] = std::move(fPages[N - 1]);
+         fReferences[i] = fReferences[N - 1];
          fPages.resize(N-1);
-         fReferences.resize(N-1);
-         fDeleters.resize(N-1);
+         fReferences.resize(N - 1);
       }
       return;
    }
    R__ASSERT(false);
 }
 
-ROOT::Experimental::Internal::RPage
+ROOT::Experimental::Internal::RPageRef
 ROOT::Experimental::Internal::RPagePool::GetPage(ColumnId_t columnId, NTupleSize_t globalIndex)
 {
    std::lock_guard<std::mutex> lockGuard(fLock);
@@ -69,12 +66,12 @@ ROOT::Experimental::Internal::RPagePool::GetPage(ColumnId_t columnId, NTupleSize
       if (fPages[i].GetColumnId() != columnId) continue;
       if (!fPages[i].Contains(globalIndex)) continue;
       fReferences[i]++;
-      return fPages[i];
+      return RPageRef(fPages[i], this);
    }
-   return RPage();
+   return RPageRef();
 }
 
-ROOT::Experimental::Internal::RPage
+ROOT::Experimental::Internal::RPageRef
 ROOT::Experimental::Internal::RPagePool::GetPage(ColumnId_t columnId, RClusterIndex clusterIndex)
 {
    std::lock_guard<std::mutex> lockGuard(fLock);
@@ -84,7 +81,7 @@ ROOT::Experimental::Internal::RPagePool::GetPage(ColumnId_t columnId, RClusterIn
       if (fPages[i].GetColumnId() != columnId) continue;
       if (!fPages[i].Contains(clusterIndex)) continue;
       fReferences[i]++;
-      return fPages[i];
+      return RPageRef(fPages[i], this);
    }
-   return RPage();
+   return RPageRef();
 }

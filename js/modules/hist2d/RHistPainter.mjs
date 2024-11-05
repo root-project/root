@@ -1,4 +1,5 @@
 import { gStyle, settings, isObject, isFunc, isStr, nsREX, getPromise } from '../core.mjs';
+import { kAxisLabels, kAxisTime } from '../base/ObjectPainter.mjs';
 import { RObjectPainter } from '../base/RObjectPainter.mjs';
 
 
@@ -66,7 +67,6 @@ class RHistPainter extends RObjectPainter {
       this.draw_content = true;
       this.nbinsx = 0;
       this.nbinsy = 0;
-      this.accept_drops = true; // indicate that one can drop other objects like doing Draw('same')
       this.mode3d = false;
 
       // initialize histogram methods
@@ -241,7 +241,7 @@ class RHistPainter extends RObjectPainter {
    scanContent(/* when_axis_changed */) {
       // function will be called once new histogram or
       // new histogram content is assigned
-      // one should find min,max,nbins, maxcontent values
+      // one should find min, max, bins number, content min/max values
       // if when_axis_changed === true specified, content will be scanned after axis zoom changed
    }
 
@@ -359,12 +359,12 @@ class RHistPainter extends RObjectPainter {
           axis = this.getAxis(name),
           x1 = axis.GetBinCoord(bin);
 
-      if (handle.kind === 'labels')
+      if (handle.kind === kAxisLabels)
          return pmain.axisAsText(name, x1);
 
       const x2 = axis.GetBinCoord(bin+(step || 1));
 
-      if (handle.kind === 'time')
+      if (handle.kind === kAxisTime)
          return pmain.axisAsText(name, (x1+x2)/2);
 
       return `[${pmain.axisAsText(name, x1)}, ${pmain.axisAsText(name, x2)})`;
@@ -451,7 +451,7 @@ class RHistPainter extends RObjectPainter {
       return true;
    }
 
-   /** @summary Toggle statbox drawing
+   /** @summary Toggle statistic box drawing
      * @desc Not yet implemented */
    toggleStat(/* arg */) {}
 
@@ -626,7 +626,7 @@ class RHistPainter extends RObjectPainter {
          // menu for 3D drawings
 
          if (menu.size() > 0)
-            menu.add('separator');
+            menu.separator();
 
          const main = this.getMainPainter() || this;
 
@@ -701,7 +701,7 @@ class RHistPainter extends RObjectPainter {
       return this.interactiveRedraw('pad', 'drawopt');
    }
 
-   /** @summary Calculate histogram inidicies and axes values for each visible bin */
+   /** @summary Calculate histogram indices and axes values for each visible bin */
    prepareDraw(args) {
       if (!args) args = { rounding: true, extra: 0, middle: 0 };
 
@@ -780,7 +780,7 @@ class RHistPainter extends RObjectPainter {
          if ((res.i1 < res.i2-2) && (res.grx[res.i2-1] === res.grx[res.i2])) res.i2--;
       }
 
-      // copy last valid value to higher indicies
+      // copy last valid value to higher indices
       while (i < res.i2 + res.stepi + 1)
          res.grx[i++] = res.grx[res.i2];
 
@@ -807,7 +807,7 @@ class RHistPainter extends RObjectPainter {
          if ((res.j1 < res.j2-2) && (res.gry[res.j2-1] === res.gry[res.j2])) res.j2--;
       }
 
-      // copy last valid value to higher indicies
+      // copy last valid value to higher indices
       if (hdim > 1) {
          while (j < res.j2 + res.stepj + 1)
             res.gry[j++] = res.gry[res.j2];

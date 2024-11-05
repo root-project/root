@@ -10,7 +10,7 @@
 #ifndef ROOT_Minuit2_FCNGradAdapter
 #define ROOT_Minuit2_FCNGradAdapter
 
-#include "Minuit2/FCNGradientBase.h"
+#include "Minuit2/FCNBase.h"
 #include "Minuit2/MnPrint.h"
 
 #include <vector>
@@ -32,32 +32,31 @@ template wrapped class for adapting to FCNBase signature a IGradFunction
 */
 
 template <class Function>
-class FCNGradAdapter : public FCNGradientBase {
+class FCNGradAdapter : public FCNBase {
 
 public:
    FCNGradAdapter(const Function &f, double up = 1.) : fFunc(f), fUp(up), fGrad(std::vector<double>(fFunc.NDim())) {}
 
    ~FCNGradAdapter() override {}
 
-   double operator()(const std::vector<double> &v) const override { return fFunc.operator()(&v[0]); }
+   bool HasGradient() const override { return true; }
+
+   double operator()(std::vector<double> const& v) const override { return fFunc.operator()(&v[0]); }
    double operator()(const double *v) const { return fFunc.operator()(v); }
 
    double Up() const override { return fUp; }
 
-   std::vector<double> Gradient(const std::vector<double> &v) const override
+   std::vector<double> Gradient(std::vector<double> const& v) const override
    {
       fFunc.Gradient(&v[0], &fGrad[0]);
       return fGrad;
    }
-   std::vector<double> GradientWithPrevResult(const std::vector<double> &v, double *previous_grad, double *previous_g2,
+   std::vector<double> GradientWithPrevResult(std::vector<double> const& v, double *previous_grad, double *previous_g2,
                                               double *previous_gstep) const override
    {
       fFunc.GradientWithPrevResult(&v[0], &fGrad[0], previous_grad, previous_g2, previous_gstep);
       return fGrad;
    }
-   // forward interface
-   // virtual double operator()(int npar, double* params,int iflag = 4) const;
-   bool CheckGradient() const override { return false; }
 
    GradientParameterSpace gradParameterSpace() const override {
       if (fFunc.returnsInMinuit2ParameterSpace()) {
@@ -68,7 +67,7 @@ public:
    }
 
    /// return second derivatives (diagonal of the Hessian matrix)
-   std::vector<double> G2(const std::vector<double> & x) const override {
+   std::vector<double> G2(std::vector<double> const&  x) const override {
       if (fG2Func)
          return fG2Func(x);
       if (fHessianFunc) {
@@ -89,7 +88,7 @@ public:
    }
 
    /// compute Hessian. Return Hessian as a std::vector of size(n*n)
-   std::vector<double> Hessian(const std::vector<double> & x ) const override {
+   std::vector<double> Hessian(std::vector<double> const&  x ) const override {
       unsigned int n = fFunc.NDim();
       if (fHessianFunc) {
          if (fHessian.empty() ) fHessian.resize(n * n);
@@ -127,8 +126,8 @@ private:
    mutable std::vector<double> fHessian;
    mutable std::vector<double> fG2Vec;
 
-   std::function<std::vector<double>(const std::vector<double> &)> fG2Func;
-   mutable std::function<bool(const std::vector<double> &, double *)> fHessianFunc;
+   std::function<std::vector<double>(std::vector<double> const& )> fG2Func;
+   mutable std::function<bool(std::vector<double> const& , double *)> fHessianFunc;
 };
 
 } // end namespace Minuit2

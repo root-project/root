@@ -31,7 +31,7 @@ using namespace PyROOT;
 
 namespace {
 
-static void AddToGlobalScope(const char *label, TObject *obj, const char * classname)
+static void AddToGlobalScope(const char *label, TObject *obj, const char *classname)
 {
    // Bind the given object with the given class in the global scope with the
    // given label for its reference.
@@ -40,9 +40,13 @@ static void AddToGlobalScope(const char *label, TObject *obj, const char * class
 
 } // unnamed namespace
 
-static TMemoryRegulator &GetMemoryRegulator()
+PyROOT::RegulatorCleanup &GetRegulatorCleanup()
 {
-   static TMemoryRegulator m;
+   // The object is thread-local because it can happen that we call into
+   // C++ code (from the PyROOT CPython extension, from CPyCppyy or from cling)
+   // from different Python threads. A notable example is within a distributed
+   // RDataFrame application running on Dask.
+   thread_local PyROOT::RegulatorCleanup m;
    return m;
 }
 
@@ -54,7 +58,7 @@ void PyROOT::Init()
 #endif
 
    // Memory management
-   gROOT->GetListOfCleanups()->Add(&GetMemoryRegulator());
+   gROOT->GetListOfCleanups()->Add(&GetRegulatorCleanup());
 
    // Bind ROOT globals that will be needed in ROOT.py
    AddToGlobalScope("gROOT", gROOT, gROOT->IsA()->GetName());
@@ -65,6 +69,6 @@ void PyROOT::Init()
 PyObject *PyROOT::ClearProxiedObjects(PyObject * /* self */, PyObject * /* args */)
 {
    // Delete all memory-regulated objects
-   GetMemoryRegulator().ClearProxiedObjects();
+   GetRegulatorCleanup().CallClearProxiedObjects();
    Py_RETURN_NONE;
 }

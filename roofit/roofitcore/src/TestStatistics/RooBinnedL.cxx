@@ -52,8 +52,8 @@ RooBinnedL::RooBinnedL(RooAbsPdf *pdf, RooAbsData *data)
    pdf->setAttribute("BinnedLikelihoodActive");
 
    RooArgSet params;
-   pdf->getParameters(data->get(), params) ;
-   paramTracker_ = std::make_unique<RooChangeTracker>("chtracker","change tracker",params,true);
+   pdf->getParameters(data->get(), params);
+   paramTracker_ = std::make_unique<RooChangeTracker>("chtracker", "change tracker", params, true);
 
    std::unique_ptr<RooArgSet> obs(pdf->getObservables(data));
    if (obs->size() != 1) {
@@ -94,13 +94,16 @@ RooBinnedL::evaluatePartition(Section bins, std::size_t /*components_begin*/, st
    ROOT::Math::KahanSum<double> result;
 
    // Do not reevaluate likelihood if parameters nor event range have changed
-   if (!paramTracker_->hasChanged(true) && bins == lastSection_ && (cachedResult_.Sum() != 0 || cachedResult_.Carry() != 0)) return cachedResult_;
+   if (!paramTracker_->hasChanged(true) && bins == lastSection_ &&
+       (cachedResult_.Sum() != 0 || cachedResult_.Carry() != 0))
+      return cachedResult_;
 
-//   data->store()->recalculateCache(_projDeps, firstEvent, lastEvent, stepSize, (_binnedPdf?false:true));
+   //   data->store()->recalculateCache(_projDeps, firstEvent, lastEvent, stepSize, (_binnedPdf?false:true));
    // TODO: check when we might need _projDeps (it seems to be mostly empty); ties in with TODO below
    data_->store()->recalculateCache(nullptr, bins.begin(N_events_), bins.end(N_events_), 1, false);
 
    ROOT::Math::KahanSum<double> sumWeight;
+   auto numEvalErrorsBefore = RooAbsReal::numEvalErrors();
 
    for (std::size_t i = bins.begin(N_events_); i < bins.end(N_events_); ++i) {
 
@@ -115,10 +118,8 @@ RooBinnedL::evaluatePartition(Section bins, std::size_t /*components_begin*/, st
       if (mu <= 0 && N > 0) {
 
          // Catch error condition: data present where zero events are predicted
-//         logEvalError(Form("Observed %f events in bin %d with zero event yield", N, i));
-         // TODO: check if using regular stream vs logEvalError error gathering is ok
-         oocoutI(nullptr, Minimization)
-            << "Observed " << N << " events in bin " << i << " with zero event yield" << std::endl;
+         RooAbsReal::logEvalError(nullptr, GetName().c_str(),
+                                  TString::Format("Observed %f events in bin %zu with zero event yield", N, i));
 
       } else if (std::abs(mu) < 1e-10 && std::abs(N) < 1e-10) {
 
@@ -146,8 +147,12 @@ RooBinnedL::evaluatePartition(Section bins, std::size_t /*components_begin*/, st
       pdf_->wireAllCaches();
    }
 
-   cachedResult_ = result;
-   lastSection_ = bins;
+   if ((RooAbsReal::evalErrorLoggingMode() == RooAbsReal::CollectErrors ||
+        RooAbsReal::evalErrorLoggingMode() == RooAbsReal::CountErrors) &&
+       numEvalErrorsBefore == RooAbsReal::numEvalErrors()) {
+      cachedResult_ = result;
+      lastSection_ = bins;
+   }
    return result;
 }
 

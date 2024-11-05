@@ -185,7 +185,9 @@ THttpServer::THttpServer(const char *engine) : TNamed("http", "ROOT http server"
 
    AddLocation("jsrootsys/", fJSROOTSYS.Data());
 
-   if (!basic_sniffer) {
+   if (basic_sniffer) {
+      AddLocation("rootsys_fonts/", TString::Format("%s/fonts", TROOT::GetDataDir().Data()));
+   } else {
       AddLocation("currentdir/", ".");
       AddLocation("rootsys/", TROOT::GetRootSys());
    }
@@ -836,43 +838,134 @@ std::string THttpServer::BuildWSEntryPage()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Replaces all references like "jsrootsys/..."
+/// Replaces all references like "jsrootsys/..." or other pre-configured pathes
 ///
 /// Either using pre-configured JSROOT installation from web or
 /// redirect to jsrootsys from the main server path to benefit from browser caching
+/// Creates appropriate importmap instead of <!--jsroot_importmap--> placeholder
 
-void THttpServer::ReplaceJSROOTLinks(std::shared_ptr<THttpCallArg> &arg)
+void THttpServer::ReplaceJSROOTLinks(std::shared_ptr<THttpCallArg> &arg, const std::string &version)
 {
-   std::string repl;
+   const std::string place_holder = "<!--jsroot_importmap-->";
 
-   if (fJSROOT.Length() > 0) {
-      repl = "=\"";
-      repl.append(fJSROOT.Data());
-      if (repl.back() != '/')
-         repl.append("/");
+   auto p = arg->fContent.find(place_holder);
+
+   bool old_format = (p == std::string::npos);
+
+   // count slashes to handler relative paths to jsroot
+   Int_t slash_cnt = 0;
+   if (arg->fPathName.Length() > 0)
+      slash_cnt++;
+   for (Int_t n = 1; n < arg->fPathName.Length()-1; ++n)
+      if (arg->fPathName[n] == '/') {
+         if (arg->fPathName[n-1] != '/') {
+            slash_cnt++; // normal slash in the middle, count it
+         } else {
+            slash_cnt = 0; // double slash, do not touch such path
+            break;
+         }
+      }
+
+
+   if (old_format) {
+      // old functionality
+
+      if (!version.empty()) {
+         // replace link to JSROOT modules in import statements emulating new version for browser
+         std::string search = "from './jsrootsys/";
+         std::string replace = "from './" + version + "/jsrootsys/";
+         arg->ReplaceAllinContent(search, replace);
+         // replace link to ROOT ui5 modules in import statements emulating new version for browser
+         search = "from './rootui5sys/";
+         replace = "from './" + version + "/rootui5sys/";
+         arg->ReplaceAllinContent(search, replace);
+         // replace link on old JSRoot.core.js script - if still appears
+         search = "jsrootsys/scripts/JSRoot.core.";
+         replace = version + "/jsrootsys/scripts/JSRoot.core.";
+         arg->ReplaceAllinContent(search, replace, true);
+         arg->AddNoCacheHeader();
+      }
+
+      std::string repl;
+
+      if (fJSROOT.Length() > 0) {
+         repl = "=\"";
+         repl.append(fJSROOT.Data());
+         if (repl.back() != '/')
+            repl.append("/");
+      } else {
+         if (slash_cnt > 0) {
+            repl = "=\"";
+            while (slash_cnt-- > 0) repl.append("../");
+            repl.append("jsrootsys/");
+         }
+      }
+
+      if (!repl.empty()) {
+         arg->ReplaceAllinContent("=\"jsrootsys/", repl);
+         arg->ReplaceAllinContent("from './jsrootsys/", TString::Format("from '%s", repl.substr(2).c_str()).Data());
+      }
    } else {
-      Int_t cnt = 0;
-      if (arg->fPathName.Length() > 0) cnt++;
-      for (Int_t n = 1; n < arg->fPathName.Length()-1; ++n)
-         if (arg->fPathName[n] == '/') {
-            if (arg->fPathName[n-1] != '/') {
-               cnt++; // normal slash in the middle, count it
-            } else {
-               cnt = 0; // double slash, do not touch such path
-               break;
-            }
+      // new functionality creating importmap
+
+      std::string path_prefix, jsroot_prefix;
+      if (slash_cnt > 0) {
+         path_prefix = "";
+         while (slash_cnt-- > 0)
+            path_prefix.append("../");
+      } else {
+         path_prefix = "./";
+      }
+
+      if (!version.empty())
+         path_prefix.append(version + "/");
+
+      if (fJSROOT.Length() > 0) {
+         jsroot_prefix = fJSROOT.Data();
+         if (jsroot_prefix.back() != '/')
+            jsroot_prefix.append("/");
+      } else {
+         jsroot_prefix = path_prefix + "jsrootsys/";
+      }
+
+      static std::map<std::string, std::string> modules = {
+         {"jsroot", "main.mjs"}, {"jsroot/core", "core.mjs"},
+         {"jsroot/io", "io.mjs"}, {"jsroot/tree", "tree.mjs"},
+         {"jsroot/draw", "draw.mjs"}, {"jsroot/gui", "gui.mjs"},
+         {"jsroot/three", "three.mjs"}, {"jsroot/geom", "geom/TGeoPainter.mjs"},
+         {"jsroot/webwindow", "webwindow.mjs"}
+      };
+
+      if (std::string("qt5") == arg->GetWSPlatform()) {
+         // Chromium in QWebEngine in Qt5.15 does not support importmap functionality and need to be workaround for some widgets
+
+         arg->ReplaceAllinContent("from 'jsrootsys/modules/", "from '" + jsroot_prefix + "modules/");
+
+         for (auto &entry : modules) {
+            std::string search = "from '" + entry.first + "';";
+            std::string replace = "from '" + jsroot_prefix + "modules/" + entry.second + "';";
+            arg->ReplaceAllinContent(search, replace);
          }
 
-      if (cnt > 0) {
-         repl = "=\"";
-         while (cnt-- >0) repl.append("../");
-         repl.append("jsrootsys/");
-      }
-   }
+      } else {
 
-   if (!repl.empty()) {
-      arg->ReplaceAllinContent("=\"jsrootsys/", repl);
-      arg->ReplaceAllinContent("from './jsrootsys/", TString::Format("from '%s", repl.substr(2).c_str()).Data());
+         bool first = true;
+         TString importmap = "<script type=\"importmap\">\n{\n   \"imports\": ";
+         for (auto &entry : modules) {
+            importmap.Append(TString::Format("%s\n      \"%s\": \"%smodules/%s\"", first ? "{" : ",", entry.first.c_str(), jsroot_prefix.c_str(), entry.second.c_str()));
+            first = false;
+         }
+         importmap.Append(TString::Format(",\n      \"jsrootsys/\": \"%s\"", jsroot_prefix.c_str()));
+
+         for (auto &entry : fLocations)
+            if (entry.first != "jsrootsys/")
+               importmap.Append(TString::Format(",\n      \"%s\": \"%s%s\"", entry.first.c_str(), path_prefix.c_str(), entry.first.c_str()));
+         importmap.Append("\n   }\n}\n</script>\n");
+
+         arg->fContent.erase(p, place_holder.length());
+
+         arg->fContent.insert(p, importmap.Data());
+      }
    }
 }
 
@@ -895,6 +988,8 @@ void THttpServer::ProcessRequest(std::shared_ptr<THttpCallArg> arg)
    }
 
    if (arg->fFileName.IsNull() || (arg->fFileName == "index.htm") || (arg->fFileName == "default.htm")) {
+
+      std::string version;
 
       if (arg->fFileName == "default.htm") {
 
@@ -920,13 +1015,15 @@ void THttpServer::ProcessRequest(std::shared_ptr<THttpCallArg> arg)
                arg->fContent = ReadFileContent(resolve.Data());
             }
 
+            version = handler->GetCodeVersion();
+
             handler->VerifyDefaultPageContent(arg);
          }
       }
 
       if (arg->fContent.empty() && arg->fFileName.IsNull() && arg->fPathName.IsNull() && IsWSOnly()) {
          // Creating page with list of available widgets is disabled now for security reasons
-         // Later one can provide functionality back only if explicitely desired by the user
+         // Later one can provide functionality back only if explicitly desired by the user
          //  BuildWSEntryPage();
 
          arg->SetContent("refused");
@@ -946,7 +1043,7 @@ void THttpServer::ProcessRequest(std::shared_ptr<THttpCallArg> arg)
          arg->Set404();
       } else if (!arg->Is404()) {
 
-         ReplaceJSROOTLinks(arg);
+         ReplaceJSROOTLinks(arg, version);
 
          const char *hjsontag = "\"$$$h.json$$$\"";
 

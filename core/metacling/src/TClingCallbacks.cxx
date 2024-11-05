@@ -128,8 +128,7 @@ public:
          }
 
          if (addr) {
-            loadedSymbols[symbol] =
-               llvm::JITEvaluatedSymbol(llvm::pointerToJITTargetAddress(addr), llvm::JITSymbolFlags::Exported);
+            loadedSymbols[symbol] = {llvm::orc::ExecutorAddr::fromPtr(addr), llvm::JITSymbolFlags::Exported};
          } else {
             // Collect all failing symbols, delegate their responsibility and then
             // fail their materialization. R->defineNonExistent() sounds like it
@@ -182,7 +181,6 @@ public:
       // provides the symbol and create one MaterializationUnit per library to
       // actually load it if needed.
       std::unordered_map<std::string, llvm::orc::SymbolNameVector> found;
-      llvm::orc::SymbolNameSet missing;
 
       // TODO: Do we need to take gInterpreterMutex?
       // R__LOCKGUARD(gInterpreterMutex);
@@ -204,9 +202,7 @@ public:
          // is made available as argument to `CreateInterpreter`.
          assert(libName.find("/libCling.") == std::string::npos && "Must not autoload libCling!");
 
-         if (libName.empty())
-            missing.insert(name);
-         else
+         if (!libName.empty())
             found[libName].push_back(name);
       }
 
@@ -215,10 +211,6 @@ public:
          if (auto Err = JD.define(MU))
             return Err;
       }
-
-      if (!missing.empty())
-         return llvm::make_error<llvm::orc::SymbolsNotFound>(
-            JD.getExecutionSession().getSymbolStringPool(), std::move(missing));
 
       return llvm::Error::success();
    }
@@ -853,6 +845,12 @@ bool TClingCallbacks::tryResolveAtRuntimeInternal(LookupResult &R, Scope *S) {
       return false;
    }
 
+   // Prevent redundant declarations for control statements (e.g., for, if, while)
+   // that have already been annotated.
+   if (auto annot = Wrapper->getAttr<AnnotateAttr>())
+      if (annot->getAnnotation().equals("__ResolveAtRuntime") && S->isControlScope())
+         return false;
+
    VarDecl* Result = VarDecl::Create(C, TU, Loc, Loc, II, C.DependentTy,
                                      /*TypeSourceInfo*/nullptr, SC_None);
 
@@ -865,7 +863,7 @@ bool TClingCallbacks::tryResolveAtRuntimeInternal(LookupResult &R, Scope *S) {
    // is a gross hack, because TClingCallbacks shouldn't know about
    // EvaluateTSynthesizer at all!
 
-   Wrapper->addAttr(AnnotateAttr::CreateImplicit(C, "__ResolveAtRuntime"));
+   Wrapper->addAttr(AnnotateAttr::CreateImplicit(C, "__ResolveAtRuntime", nullptr, 0));
 
    // Here we have the scope but we cannot do Sema::PushDeclContext, because
    // on pop it will try to go one level up, which we don't want.
@@ -1002,7 +1000,7 @@ bool TClingCallbacks::tryInjectImplicitAutoKeyword(LookupResult &R, Scope *S) {
    // Annotate the decl to give a hint in cling.
    // FIXME: We should move this in cling, when we implement turning it on
    // and off.
-   Result->addAttr(AnnotateAttr::CreateImplicit(C, "__Auto"));
+   Result->addAttr(AnnotateAttr::CreateImplicit(C, "__Auto", nullptr, 0));
 
    R.addDecl(Result);
 

@@ -226,7 +226,7 @@ These are the nodes of the `physical` `tree` of positioned volumes
 represented by **`TGeoNode`** objects. This hierarchy is a tree since a
 node can have only one parent and several daughters. For a better
 understanding of the hierarchy, have a look at
-<http://root.cern.ch/root/htmldoc/TGeoManager.html>.
+<https://root.cern.ch/doc/master/classTGeoManager.html>.
 
 Just close now the `X3D` window and focus at the wire frame picture
 drawn in a pad. Activate Options/Event Status. Moving the mouse in the

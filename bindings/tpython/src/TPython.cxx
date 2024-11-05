@@ -21,9 +21,12 @@
 #include "TClassRef.h"
 #include "TObject.h"
 
-// Standard
-#include <stdio.h>
 #include <Riostream.h>
+
+// Standard
+#include <mutex>
+#include <sstream>
+#include <stdio.h>
 #include <string>
 
 /// \class TPython
@@ -40,20 +43,22 @@
 /// ~~~{.cpp}
 ///  $ root -l
 ///  // Execute a string of python code.
-///  root [0] TPython::Exec( "print(\'Hello World!\')" );
+///  root [0] TPython::Exec( "print('Hello World!')" );
 ///  Hello World!
 ///
-///  // Create a TBrowser on the python side, and transfer it back and forth.
-///  // Note the required explicit (void*) cast!
-///  root [1] TBrowser* b = (void*)TPython::Eval( "ROOT.TBrowser()" );
-///  root [2] TPython::Bind( b, "b" );
-///  root [3] b == (void*) TPython::Eval( "b" )
-///  (int)1
+///  // Create a TNamed on the python side, and transfer it back and forth.
+///  root [1] std::any res1;
+///  root [2] TPython::Exec("_anyresult = ROOT.std.make_any['TNamed']('hello', '')", &res1);
+///  root [3] TPython::Bind(&std::any_cast<TNamed&>(res1), "n");
+///  root [4] std::any res2;
+///  root [5] TPython::Exec("_anyresult = ROOT.std.make_any['TNamed*', 'TNamed*'](n)", &res2);
+///  root [6] (&std::any_cast<TNamed&>(res1) == std::any_cast<TNamed*>(res2))
+///  (bool) true
 ///
-///  // Builtin variables can cross-over by using implicit casts.
-///  root [4] int i = TPython::Eval( "1 + 1" );
-///  root [5] i
-///  (int)2
+///  // Variables can cross-over by using an `std::any` with a specific name.
+///  root [6] TPython::Exec("_anyresult = ROOT.std.make_any['Int_t'](1 + 1)", &res1);
+///  root [7] std::any_cast<int>(res1)
+///  (int) 2
 /// ~~~
 ///
 /// And with a python file `MyPyClass.py` like this:
@@ -99,10 +104,10 @@ class CachedPyString {
 public:
    CachedPyString(const char *name) : fObj{PyUnicode_FromString(name)} {}
 
-   CachedPyString(CachedPyString const&) = delete;
+   CachedPyString(CachedPyString const &) = delete;
    CachedPyString(CachedPyString &&) = delete;
-   CachedPyString& operator=(CachedPyString const&) = delete;
-   CachedPyString& operator=(CachedPyString &&) = delete;
+   CachedPyString &operator=(CachedPyString const &) = delete;
+   CachedPyString &operator=(CachedPyString &&) = delete;
 
    ~CachedPyString() { Py_DECREF(fObj); }
 
@@ -112,28 +117,17 @@ private:
    PyObject *fObj = nullptr;
 };
 
-namespace PyStrings {
-PyObject *basesStr()
-{
-   static CachedPyString wrapper{"__bases__"};
-   return wrapper.obj();
-}
-PyObject *cppNameStr()
-{
-   static CachedPyString wrapper{"__cpp_name__"};
-   return wrapper.obj();
-}
-PyObject *moduleStr()
-{
-   static CachedPyString wrapper{"__module__"};
-   return wrapper.obj();
-}
-PyObject *nameStr()
-{
-   static CachedPyString wrapper{"__name__"};
-   return wrapper.obj();
-}
-} // namespace PyStrings
+PyThreadState *mainThreadState;
+
+// To acquire the GIL as described here:
+// https://docs.python.org/3/c-api/init.html#non-python-created-threads
+class PyGILRAII {
+   PyGILState_STATE m_GILState;
+
+public:
+   PyGILRAII() : m_GILState(PyGILState_Ensure()) {}
+   ~PyGILRAII() { PyGILState_Release(m_GILState); }
+};
 
 } // namespace
 
@@ -142,6 +136,10 @@ PyObject *nameStr()
 /// ROOT module.
 Bool_t TPython::Initialize()
 {
+   // Don't initialize Python from two concurrent threads
+   static std::mutex initMutex;
+   const std::lock_guard<std::mutex> lock(initMutex);
+
    static Bool_t isInitialized = kFALSE;
    if (isInitialized)
       return kTRUE;
@@ -199,19 +197,29 @@ Bool_t TPython::Initialize()
       PySys_SetArgv(argc, argv);
 #endif
 
-      // force loading of the ROOT module
-      const int ret = PyRun_SimpleString(const_cast<char *>("import ROOT"));
-      if( ret != 0 )
-      {
-          std::cerr << "Error: import ROOT failed, check your PYTHONPATH environmental variable." << std::endl;
-          return kFALSE;
-      }
+      mainThreadState = PyEval_SaveThread();
    }
 
-   if (!gMainDict) {
-      // retrieve the main dictionary
-      gMainDict = PyModule_GetDict(PyImport_AddModule(const_cast<char *>("__main__")));
-      Py_INCREF(gMainDict);
+   {
+      // For the Python API calls
+      PyGILRAII gilRaii;
+
+      // force loading of the ROOT module
+      const int ret = PyRun_SimpleString(const_cast<char *>("import ROOT"));
+      if (ret != 0) {
+         std::cerr << "Error: import ROOT failed, check your PYTHONPATH environmental variable." << std::endl;
+         return kFALSE;
+      }
+
+      if (!gMainDict) {
+
+         // retrieve the main dictionary
+         gMainDict = PyModule_GetDict(PyImport_AddModule(const_cast<char *>("__main__")));
+         // The gMainDict is borrowed, i.e. we are not calling Py_INCREF(gMainDict).
+         // Like this, we avoid unexpectedly affecting how long __main__ is kept
+         // alive. The gMainDict is only used in Exec(), ExecScript(), and Eval(),
+         // which should not be called after __main__ is garbage collected anyway.
+      }
    }
 
    // python side class construction, managed by ROOT
@@ -228,6 +236,12 @@ Bool_t TPython::Initialize()
 
 Bool_t TPython::Import(const char *mod_name)
 {
+   // setup
+   if (!Initialize())
+      return false;
+
+   PyGILRAII gilRaii;
+
    if (!CPyCppyy::Import(mod_name)) {
       return false;
    }
@@ -239,6 +253,10 @@ Bool_t TPython::Import(const char *mod_name)
    PyObject *mod = PyImport_GetModule(modNameObj);
    PyObject *dct = PyModule_GetDict(mod);
 
+   CachedPyString basesStr{"__bases__"};
+   CachedPyString cppNameStr{"__cpp_name__"};
+   CachedPyString nameStr{"__name__"};
+
    // create Cling classes for all new python classes
    PyObject *values = PyDict_Values(dct);
    for (int i = 0; i < PyList_GET_SIZE(values); ++i) {
@@ -246,11 +264,11 @@ Bool_t TPython::Import(const char *mod_name)
       Py_INCREF(value);
 
       // collect classes
-      if (PyType_Check(value) || PyObject_HasAttr(value, PyStrings::basesStr())) {
+      if (PyType_Check(value) || PyObject_HasAttr(value, basesStr.obj())) {
          // get full class name (including module)
-         PyObject *pyClName = PyObject_GetAttr(value, PyStrings::cppNameStr());
+         PyObject *pyClName = PyObject_GetAttr(value, cppNameStr.obj());
          if (!pyClName) {
-            pyClName = PyObject_GetAttr(value, PyStrings::nameStr());
+            pyClName = PyObject_GetAttr(value, nameStr.obj());
          }
 
          if (PyErr_Occurred())
@@ -290,6 +308,8 @@ void TPython::LoadMacro(const char *name)
    if (!Initialize())
       return;
 
+   PyGILRAII gilRaii;
+
    // obtain a reference to look for new classes later
    PyObject *old = PyDict_Values(gMainDict);
 
@@ -297,14 +317,19 @@ void TPython::LoadMacro(const char *name)
 #if PY_VERSION_HEX < 0x03000000
    Exec((std::string("execfile(\"") + name + "\")").c_str());
 #else
-   Exec((std::string("__pyroot_f = open(\"") + name + "\"); "
-                                                      "exec(__pyroot_f.read()); "
-                                                      "__pyroot_f.close(); del __pyroot_f")
+   Exec((std::string("__pyroot_f = open(\"") + name +
+         "\"); "
+         "exec(__pyroot_f.read()); "
+         "__pyroot_f.close(); del __pyroot_f")
            .c_str());
 #endif
 
    // obtain new __main__ contents
    PyObject *current = PyDict_Values(gMainDict);
+
+   CachedPyString basesStr{"__bases__"};
+   CachedPyString moduleStr{"__module__"};
+   CachedPyString nameStr{"__name__"};
 
    // create Cling classes for all new python classes
    for (int i = 0; i < PyList_GET_SIZE(current); ++i) {
@@ -313,19 +338,18 @@ void TPython::LoadMacro(const char *name)
 
       if (!PySequence_Contains(old, value)) {
          // collect classes
-         if (PyType_Check(value) || PyObject_HasAttr(value, PyStrings::basesStr())) {
+         if (PyType_Check(value) || PyObject_HasAttr(value, basesStr.obj())) {
             // get full class name (including module)
-            PyObject *pyModName = PyObject_GetAttr(value, PyStrings::moduleStr());
-            PyObject *pyClName = PyObject_GetAttr(value, PyStrings::nameStr());
+            PyObject *pyModName = PyObject_GetAttr(value, moduleStr.obj());
+            PyObject *pyClName = PyObject_GetAttr(value, nameStr.obj());
 
             if (PyErr_Occurred())
                PyErr_Clear();
 
             // need to check for both exact and derived (differences exist between older and newer
             // versions of python ... bug?)
-            if ((pyModName && pyClName) &&
-                ((PyUnicode_CheckExact(pyModName) && PyUnicode_CheckExact(pyClName)) ||
-                 (PyUnicode_Check(pyModName) && PyUnicode_Check(pyClName)))) {
+            if ((pyModName && pyClName) && ((PyUnicode_CheckExact(pyModName) && PyUnicode_CheckExact(pyClName)) ||
+                                            (PyUnicode_Check(pyModName) && PyUnicode_Check(pyClName)))) {
                // build full, qualified name
                std::string fullname = PyUnicode_AsUTF8(pyModName);
                fullname += '.';
@@ -361,127 +385,67 @@ void TPython::ExecScript(const char *name, int argc, const char **argv)
    if (!Initialize())
       return;
 
+   PyGILRAII gilRaii;
+
    // verify arguments
    if (!name) {
       std::cerr << "Error: no file name specified." << std::endl;
       return;
    }
 
-   FILE *fp = fopen(name, "r");
-   if (!fp) {
-      std::cerr << "Error: could not open file \"" << name << "\"." << std::endl;
-      return;
-   }
-
-   // store a copy of the old cli for restoration
-   PyObject *oldargv = PySys_GetObject(const_cast<char *>("argv")); // borrowed
-   if (!oldargv)                                                    // e.g. apache
-      PyErr_Clear();
-   else {
-      PyObject *l = PyList_New(PyList_GET_SIZE(oldargv));
-      for (int i = 0; i < PyList_GET_SIZE(oldargv); ++i) {
-         PyObject *item = PyList_GET_ITEM(oldargv, i);
-         Py_INCREF(item);
-         PyList_SET_ITEM(l, i, item); // steals ref
-      }
-      oldargv = l;
-   }
-
-   // create and set (add progam name) the new command line
-   argc += 1;
-   // This is a common block for Python 3. We prefer using objects to automatize memory management and not introduce
-   // even more preprocessor branching for deletion at the end of the method.
-   // FUTURE IMPROVEMENT ONCE OLD PYTHON VERSIONS ARE NOT SUPPORTED BY ROOT:
-   // Right now we use C++ objects to automatize memory management. One could use RAAI and the Python memory allocation
-   // API (PEP 445) once some old Python version is deprecated in ROOT. That new feature is available since version 3.4
-   // and the preprocessor branching to also support that would be so complicated to make the code unreadable.
-   std::vector<std::wstring> argv2;
-   argv2.reserve(argc);
-   argv2.emplace_back(name, &name[strlen(name)]);
-
-   for (int i = 1; i < argc; ++i) {
-      auto iarg = argv[i - 1];
-      argv2.emplace_back(iarg, &iarg[strlen(iarg)]);
-   }
-
-#if PY_VERSION_HEX < 0x03080000
-   // Before version 3.8, the code is one simple line
-   wchar_t *argv2_arr[argc];
+   std::vector<std::string> args(argc);
    for (int i = 0; i < argc; ++i) {
-      argv2_arr[i] = const_cast<wchar_t *>(argv2[i].c_str());
+      args[i] = argv[i];
    }
-   PySys_SetArgv(argc, argv2_arr);
-
-#else
-   // Here we comply to "PEP 587 – Python Initialization Configuration" to avoid deprecation warnings at compile time.
-   class PyConfigHelperRAAI {
-   public:
-      PyConfigHelperRAAI(const std::vector<std::wstring> &argv2)
-      {
-         PyConfig_InitPythonConfig(&fConfig);
-         fConfig.parse_argv = 1;
-         UpdateArgv(argv2);
-         InitFromConfig();
-      }
-      ~PyConfigHelperRAAI() { PyConfig_Clear(&fConfig); }
-
-   private:
-      void InitFromConfig() { Py_InitializeFromConfig(&fConfig); };
-      void UpdateArgv(const std::vector<std::wstring> &argv2)
-      {
-         auto WideStringListAppendHelper = [](PyWideStringList *wslist, const wchar_t *wcstr) {
-            PyStatus append_status = PyWideStringList_Append(wslist, wcstr);
-            if (PyStatus_IsError(append_status)) {
-               std::wcerr << "Error: could not append element " << wcstr << " to arglist - " << append_status.err_msg
-                          << std::endl;
-            }
-         };
-         WideStringListAppendHelper(&fConfig.argv, Py_GetProgramName());
-         for (const auto &iarg : argv2) {
-            WideStringListAppendHelper(&fConfig.argv, iarg.c_str());
-         }
-      }
-      PyConfig fConfig;
-   };
-
-   PyConfigHelperRAAI pych(argv2);
-
-#endif // of the else branch of PY_VERSION_HEX < 0x03080000
-
-   // actual script execution
-   PyObject *gbl = PyDict_Copy(gMainDict);
-   PyObject *result = // PyRun_FileEx closes fp (b/c of last argument "1")
-      PyRun_FileEx(fp, const_cast<char *>(name), Py_file_input, gbl, gbl, 1);
-   if (!result) {
-      std::cerr << "An error occurred executing file " << name << std::endl;
-      PyErr_Print();
-   }
-
-   Py_XDECREF(result);
-   Py_DECREF(gbl);
-
-   // restore original command line
-   if (oldargv) {
-      PySys_SetObject(const_cast<char *>("argv"), oldargv);
-      Py_DECREF(oldargv);
-   }
+   CPyCppyy::ExecScript(name, args);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Execute a python statement (e.g. "import ROOT").
+/// Executes a Python command within the current Python environment.
+///
+/// This function initializes the Python environment if it is not already
+/// initialized. It then executes the specified Python command string using the
+/// Python C API.
+///
+/// In the Python command, you can change the value of a special TPyResult
+/// object returned by TPyBuffer(). If the optional result parameter is
+/// non-zero, the result parameter will be swapped with a std::any variable on
+/// the Python side. You need to define this variable yourself, and it needs to
+/// be of type std::any and its name needs to be `"_anyresult"` by default.
+/// Like this, you can pass information from Python back to C++.
+///
+/// \param cmd The Python command to be executed as a string.
+/// \param result Optional pointer to a std::any object that can be used to
+///               transfer results from Python to C++.
+/// \param resultName Name of the Python variable that is swapped over to the std::any result.
+///                   The default value is `"_anyresult"`.
+/// \return bool Returns `true` if the command was successfully executed,
+///              otherwise returns `false`.
 
-Bool_t TPython::Exec(const char *cmd)
+Bool_t TPython::Exec(const char *cmd, std::any *result, std::string const &resultName)
 {
    // setup
    if (!Initialize())
       return kFALSE;
 
+   PyGILRAII gilRaii;
+
+   std::stringstream command;
+   // Add the actual command
+   command << cmd;
+   // Swap the std::any with the one in the C++ world if required
+   if (result) {
+      command << "; ROOT.Internal.SwapWithObjAtAddr['std::any'](" << resultName << ", "
+              << reinterpret_cast<std::intptr_t>(result) << ")";
+   }
+
    // execute the command
-   PyObject *result = PyRun_String(const_cast<char *>(cmd), Py_file_input, gMainDict, gMainDict);
+   PyObject *pyObjectResult =
+      PyRun_String(const_cast<char *>(command.str().c_str()), Py_file_input, gMainDict, gMainDict);
 
    // test for error
-   if (result) {
-      Py_DECREF(result);
+   if (pyObjectResult) {
+      Py_DECREF(pyObjectResult);
       return kTRUE;
    }
 
@@ -495,12 +459,16 @@ Bool_t TPython::Exec(const char *cmd)
 /// Caution: do not hold on to the return value: either store it in a builtin
 /// type (implicit casting will work), or in a pointer to a ROOT object (explicit
 /// casting to a void* is required).
+///
+/// \deprecated Use TPython::Exec() with an std::any output parameter instead.
 
 const TPyReturn TPython::Eval(const char *expr)
 {
    // setup
    if (!Initialize())
       return TPyReturn();
+
+   PyGILRAII gilRaii;
 
    // evaluate the expression
    PyObject *result = PyRun_String(const_cast<char *>(expr), Py_eval_input, gMainDict, gMainDict);
@@ -517,11 +485,14 @@ const TPyReturn TPython::Eval(const char *expr)
       return TPyReturn(result);
 
    // explicit conversion for python type required
-   PyObject *pyclass = PyObject_GetAttrString(result, const_cast<char*>("__class__"));
+   PyObject *pyclass = PyObject_GetAttrString(result, const_cast<char *>("__class__"));
    if (pyclass != 0) {
+      CachedPyString moduleStr{"__module__"};
+      CachedPyString nameStr{"__name__"};
+
       // retrieve class name and the module in which it resides
-      PyObject *name = PyObject_GetAttr(pyclass, PyStrings::nameStr());
-      PyObject *module = PyObject_GetAttr(pyclass, PyStrings::moduleStr());
+      PyObject *name = PyObject_GetAttr(pyclass, nameStr.obj());
+      PyObject *module = PyObject_GetAttr(pyclass, moduleStr.obj());
 
       // concat name
       std::string qname = std::string(PyUnicode_AsUTF8(module)) + '.' + PyUnicode_AsUTF8(name);
@@ -552,6 +523,8 @@ Bool_t TPython::Bind(TObject *object, const char *label)
    if (!(object && Initialize()))
       return kFALSE;
 
+   PyGILRAII gilRaii;
+
    // bind object in the main namespace
    TClass *klass = object->IsA();
    if (klass != 0) {
@@ -579,6 +552,8 @@ void TPython::Prompt()
       return;
    }
 
+   PyGILRAII gilRaii;
+
    // enter i/o interactive mode
    PyRun_InteractiveLoop(stdin, const_cast<char *>("\0"));
 }
@@ -593,6 +568,8 @@ Bool_t TPython::CPPInstance_Check(PyObject *pyobject)
    if (!Initialize())
       return kFALSE;
 
+   PyGILRAII gilRaii;
+
    // detailed walk through inheritance hierarchy
    return CPyCppyy::Instance_Check(pyobject);
 }
@@ -605,6 +582,8 @@ Bool_t TPython::CPPInstance_CheckExact(PyObject *pyobject)
    // setup
    if (!Initialize())
       return kFALSE;
+
+   PyGILRAII gilRaii;
 
    // direct pointer comparison of type member
    return CPyCppyy::Instance_CheckExact(pyobject);
@@ -620,6 +599,8 @@ Bool_t TPython::CPPOverload_Check(PyObject *pyobject)
    if (!Initialize())
       return kFALSE;
 
+   PyGILRAII gilRaii;
+
    // detailed walk through inheritance hierarchy
    return CPyCppyy::Overload_Check(pyobject);
 }
@@ -632,6 +613,8 @@ Bool_t TPython::CPPOverload_CheckExact(PyObject *pyobject)
    // setup
    if (!Initialize())
       return kFALSE;
+
+   PyGILRAII gilRaii;
 
    // direct pointer comparison of type member
    return CPyCppyy::Overload_CheckExact(pyobject);
@@ -646,6 +629,8 @@ void *TPython::CPPInstance_AsVoidPtr(PyObject *pyobject)
    if (!Initialize())
       return 0;
 
+   PyGILRAII gilRaii;
+
    // get held object (may be null)
    return CPyCppyy::Instance_AsVoidPtr(pyobject);
 }
@@ -658,6 +643,8 @@ PyObject *TPython::CPPInstance_FromVoidPtr(void *addr, const char *classname, Bo
    // setup
    if (!Initialize())
       return 0;
+
+   PyGILRAII gilRaii;
 
    // perform cast (the call will check TClass and addr, and set python errors)
    // give ownership, for ref-counting, to the python side, if so requested

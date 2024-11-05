@@ -45,9 +45,6 @@ void buildAPI_XML_TestModel(TString prefix)
 
    HistFactory::Measurement meas("Test", "API_XML_TestModel");
 
-   // do not fit, just export the workspace
-   meas.SetExportOnly(true);
-
    // put output in separate sub-directory
    meas.SetOutputFilePrefix(prefix.Data());
 
@@ -469,7 +466,11 @@ private:
    }
 };
 
+#ifdef HISTFACTORY_XML
 TEST(HistFactory, PdfComparison)
+#else
+TEST(HistFactory, DISABLED_PdfComparison)
+#endif
 {
    RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
 

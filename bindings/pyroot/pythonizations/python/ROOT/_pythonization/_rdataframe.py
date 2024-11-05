@@ -204,6 +204,9 @@ def RDataFrameAsNumpy(df, columns=None, exclude=None, lazy=False):
             1D numpy arrays with content as values; if lazy, AsNumpyResult containing
             the result pointers obtained from the Take actions.
     """
+
+    import ROOT
+
     # Sanitize input arguments
     if isinstance(columns, str):
         raise TypeError("The columns argument requires a list of strings")
@@ -233,14 +236,19 @@ def RDataFrameAsNumpy(df, columns=None, exclude=None, lazy=False):
         # bools in bytes - different from the std::vector<bool> returned by the
         # action, which might do some space optimization
         column_type = "unsigned char" if column_type == "bool" else column_type
+
+        # If the column type is a class, make sure cling knows about it
+        tclass = ROOT.TClass.GetClass(column_type)
+        if tclass and not tclass.GetClassInfo():
+            raise RuntimeError(
+                f'The column named "{column}" is of type "{column_type}", which is not known to the ROOT interpreter. Please load the corresponding header files or dictionaries.'
+            )
+
         result_ptrs[column] = df.Take[column_type](column)
 
     result = AsNumpyResult(result_ptrs, columns)
 
-    if lazy:
-        return result
-    else:
-        return result.GetValue()
+    return result if lazy else result.GetValue()
 
 
 class AsNumpyResult(object):
@@ -355,12 +363,9 @@ def _clone_asnumpyresult(res: AsNumpyResult) -> AsNumpyResult:
     result.
     """
     import ROOT
+
     return AsNumpyResult(
-        {
-            col: ROOT.Internal.RDF.CloneResultAndAction(ptr)
-            for (col, ptr) in res._result_ptrs.items()
-        },
-        res._columns
+        {col: ROOT.Internal.RDF.CloneResultAndAction(ptr) for (col, ptr) in res._result_ptrs.items()}, res._columns
     )
 
 
@@ -460,7 +465,7 @@ def _make_name_rvec_pair(key, value):
     return ROOT.std.pair["std::string", type(pyvec)](key, ROOT.std.move(pyvec))
 
 
-# For refernces to keep alive the NumPy arrays that are read by
+# For references to keep alive the NumPy arrays that are read by
 # MakeNumpyDataFrame.
 _numpy_data = {}
 

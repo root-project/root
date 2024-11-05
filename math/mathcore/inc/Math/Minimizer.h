@@ -16,6 +16,8 @@
 #include "Math/IFunction.h"
 #include "Math/MinimizerOptions.h"
 
+#include <ROOT/RSpan.hxx>
+
 #include <string>
 #include <limits>
 #include <cmath>
@@ -118,39 +120,17 @@ class Minimizer {
 
 public:
 
-   /**
-      Default constructor
-   */
-   Minimizer () :
-      fValidError(false),
-      fStatus(-1)
-   {}
+   /// Default constructor.
+   Minimizer () {}
 
-   /**
-      Destructor (no operations)
-   */
+   /// Destructor (no operations).
    virtual ~Minimizer ()  {}
 
-
-
-
-private:
-   // usually copying is non trivial, so we make this unaccessible
-
-   /**
-      Copy constructor
-   */
-   Minimizer(const Minimizer &) {}
-
-   /**
-      Assignment operator
-   */
-   Minimizer & operator = (const Minimizer & rhs)  {
-      if (this == &rhs) return *this;  // time saving self-test
-      return *this;
-   }
-
-public:
+   // usually copying is non trivial, so we delete this
+   Minimizer(Minimizer const&) = delete;
+   Minimizer &operator=(Minimizer const&) = delete;
+   Minimizer(Minimizer &&) = delete;
+   Minimizer &operator=(Minimizer &&) = delete;
 
    /// reset for consecutive minimization - implement if needed
    virtual void Clear() {}
@@ -159,7 +139,7 @@ public:
    virtual void SetFunction(const ROOT::Math::IMultiGenFunction & func) = 0;
 
    /// set the function implementing Hessian computation (re-implemented by Minimizer using it)
-   virtual void SetHessianFunction(std::function<bool(const std::vector<double> &, double *)> ) {}
+   virtual void SetHessianFunction(std::function<bool(std::span<const double>, double *)> ) {}
 
    /// add variables  . Return number of variables successfully added
    template<class VariableIterator>
@@ -186,6 +166,11 @@ public:
    }
    /// set a new free variable
    virtual bool SetVariable(unsigned int ivar, const std::string & name, double val, double step) = 0;
+   /// set initial second derivatives
+   virtual bool SetCovarianceDiag(std::span<const double> d2, unsigned int n);
+   /// set initial covariance matrix
+   virtual bool SetCovariance(std::span<const double> cov, unsigned int nrow);
+
    /// set a new lower limit variable  (override if minimizer supports them )
    virtual bool SetLowerLimitedVariable(unsigned int  ivar , const std::string & name , double val , double step , double lower ) {
       return SetLimitedVariable(ivar, name, val, step, lower, std::numeric_limits<double>::infinity() );
@@ -379,16 +364,11 @@ public:
 
 protected:
 
-
-//private:
-
-
    // keep protected to be accessible by the derived classes
 
-
-   bool fValidError;            ///< flag to control if errors have been validated (Hesse has been run in case of Minuit)
+   bool fValidError = false;    ///< flag to control if errors have been validated (Hesse has been run in case of Minuit)
    MinimizerOptions fOptions;   ///< minimizer options
-   int fStatus;                 ///< status of minimizer
+   int fStatus = -1;            ///< status of minimizer
 };
 
    } // end namespace Math

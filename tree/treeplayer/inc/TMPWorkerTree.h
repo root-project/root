@@ -199,32 +199,36 @@ void TMPWorkerTreeFunc<F>::Process(UInt_t code, MPCodeBufPair &msg)
       return;
    }
 
+   // If we are not done processing entries in the tree, 
    // create a TTreeReader that reads this range of entries
-   TTreeReader reader(fTree, enl);
+   if (start >= 0 && start < fTree->GetEntries()) {
+      TTreeReader reader(fTree, enl);
 
-   TTreeReader::EEntryStatus status = reader.SetEntriesRange(start, finish);
-   if(status != TTreeReader::kEntryValid) {
-      reply = sn + "could not set TTreeReader to range " + std::to_string(start) + " " + std::to_string(finish - 1);
-      MPSend(GetSocket(), MPCode::kProcError, reply.c_str());
-      return;
+      TTreeReader::EEntryStatus status = reader.SetEntriesRange(start, finish);
+      if (status != TTreeReader::kEntryValid) {
+         reply = sn + "could not set TTreeReader to range " + std::to_string(start) + " " + std::to_string(finish - 1);
+         MPSend(GetSocket(), MPCode::kProcError, reply.c_str());
+         return;
+      }
+
+      // execute function
+      auto res = fProcFunc(reader);
+
+      // detach result from file if needed (currently needed for TH1, TTree, TEventList)
+      DetachRes(res);
+
+      if (fCanReduce) {
+         PoolUtils::ReduceObjects<TObject *> redfunc;
+         fReducedResult = static_cast<decltype(fReducedResult)>(redfunc(
+            {res, fReducedResult})); // TODO try not to copy these into a vector, do everything by ref. std::vector<T&>?
+      } else {
+         fCanReduce = true;
+         fReducedResult = res;
+      }
    }
-
-   //execute function
-   auto res = fProcFunc(reader);
-
-   //detach result from file if needed (currently needed for TH1, TTree, TEventList)
-   DetachRes(res);
 
    //update the number of processed entries
    fProcessedEntries += finish - start;
-
-   if(fCanReduce) {
-      PoolUtils::ReduceObjects<TObject *> redfunc;
-      fReducedResult = static_cast<decltype(fReducedResult)>(redfunc({res, fReducedResult})); //TODO try not to copy these into a vector, do everything by ref. std::vector<T&>?
-   } else {
-      fCanReduce = true;
-      fReducedResult = res;
-   }
 
    if(fMaxNEntries == fProcessedEntries)
       //we are done forever

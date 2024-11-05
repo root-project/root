@@ -43,7 +43,6 @@
 #endif
 #ifdef HAVE_JPEG
 /* Include file for users of jpg library. */
-# undef HAVE_STDLIB_H
 # ifndef X_DISPLAY_MISSING
 #  include <X11/Xmd.h>
 # endif
@@ -147,7 +146,7 @@ ASImage2file( ASImage *im, const char *dir, const char *file,
 	int   filename_len, dirname_len = 0 ;
 	char *realfilename = NULL ;
 	Bool  res = False ;
-   int typei = (int) type;
+	int typei = (int) type;
 
 	if( im == NULL ) return False;
 
@@ -1055,7 +1054,7 @@ Bool ASImage2gif( ASImage *im, const char *path,  ASImageExportParams *params )
 			gif->SColorMap = NULL ;
 			gif->Image.ColorMap = NULL ;
 #if (GIFLIB_MAJOR>=5)
-            DGifCloseFile(gif, &errcode);
+			DGifCloseFile(gif, &errcode);
 #else
 			DGifCloseFile(gif);
 #endif
@@ -1131,7 +1130,7 @@ Bool ASImage2gif( ASImage *im, const char *path,  ASImageExportParams *params )
 			outfile = open_writable_image_file(path);
 			
 		if (outfile)
-        {
+		{
 #if (GIFLIB_MAJOR>=5)
 			gif = EGifOpenFileHandle(fileno(outfile), &errcode);
 			if (errcode != E_GIF_SUCCEEDED)
@@ -1140,7 +1139,7 @@ Bool ASImage2gif( ASImage *im, const char *path,  ASImageExportParams *params )
 			if ((gif = EGifOpenFileHandle(fileno(outfile))) == NULL)
 				ASIM_PrintGifError();
 #endif
-        }
+		}
 	}
 
 	if( new_image && gif )

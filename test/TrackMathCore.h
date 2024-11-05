@@ -32,7 +32,7 @@ typedef ROOT::Math::SMatrix<double,4,4,ROOT::Math::MatRepStd<double,4,4> >      
 typedef ROOT::Math::SMatrix<Double32_t,4,4,ROOT::Math::MatRepStd<Double32_t,4,4> >      Matrix4D32;
 
 typedef ROOT::Math::SMatrix<double,6,6,ROOT::Math::MatRepSym<double,6> >      SymMatrix6D;
-typedef ROOT::Math::SMatrix<Double32_t,6,6,ROOT::Math::MatRepSym<Double32_t,6> >      SymMatrix6D32;;
+typedef ROOT::Math::SMatrix<Double32_t,6,6,ROOT::Math::MatRepSym<Double32_t,6> >      SymMatrix6D32;
 
 
 // track class containing a vector and a point

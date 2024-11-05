@@ -124,6 +124,9 @@ public:
    // clang-format on
    virtual void SetNSlots(unsigned int nSlots) = 0;
 
+   /// \brief Returns the number of files from which the dataset is constructed
+   virtual std::size_t GetNFiles() const { return 0; }
+
    // clang-format off
    /// \brief Returns a reference to the collection of the dataset's column names
    // clang-format on

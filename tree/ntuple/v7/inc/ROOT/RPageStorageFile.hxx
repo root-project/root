@@ -17,6 +17,7 @@
 #define ROOT7_RPageStorageFile
 
 #include <ROOT/RMiniFile.hxx>
+#include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleSerialize.hxx>
 #include <ROOT/RNTupleZip.hxx>
 #include <ROOT/RPageStorage.hxx>
@@ -26,24 +27,25 @@
 #include <array>
 #include <cstdio>
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 
 class TFile;
 
 namespace ROOT {
+class RNTuple; // for making RPageSourceFile a friend of RNTuple
 
 namespace Internal {
 class RRawFile;
 }
 
 namespace Experimental {
-class RNTuple; // for making RPageSourceFile a friend of RNTuple
+struct RNTupleLocator;
 
 namespace Internal {
 class RClusterPool;
 class RPageAllocatorHeap;
-class RPagePool;
 
 // clang-format off
 /**
@@ -56,38 +58,53 @@ The written file can be either in ROOT format or in RNTuple bare format.
 // clang-format on
 class RPageSinkFile : public RPagePersistentSink {
 private:
-   std::unique_ptr<RPageAllocatorHeap> fPageAllocator;
+   // A set of pages to be committed together in a vector write.
+   // Currently we assume they're all sequential (although they may span multiple ranges).
+   struct CommitBatch {
+      /// The list of pages to commit
+      std::vector<const RSealedPage *> fSealedPages;
+      /// Total size in bytes of the batch
+      size_t fSize;
+      /// Total uncompressed size of the elements in the page batch
+      size_t fBytesPacked;
+   };
 
    std::unique_ptr<RNTupleFileWriter> fWriter;
    /// Number of bytes committed to storage in the current cluster
    std::uint64_t fNBytesCurrentCluster = 0;
    RPageSinkFile(std::string_view ntupleName, const RNTupleWriteOptions &options);
 
-   RNTupleLocator WriteSealedPage(const RPageStorage::RSealedPage &sealedPage,
-                                                std::size_t bytesPacked);
+   /// We pass bytesPacked so that TFile::ls() reports a reasonable value for the compression ratio of the corresponding
+   /// key. It is not strictly necessary to write and read the sealed page.
+   RNTupleLocator WriteSealedPage(const RPageStorage::RSealedPage &sealedPage, std::size_t bytesPacked);
+
+   /// Subroutine of CommitSealedPageVImpl, used to perform a vector write of the (multi-)range of pages
+   /// contained in `batch`. The locators for the written pages are appended to `locators`.
+   /// This procedure also updates some internal metrics of the page sink, hence it's not const.
+   /// `batch` gets reset to size 0 after the writing is done (but its begin and end are not updated).
+   void CommitBatchOfPages(CommitBatch &batch, std::vector<RNTupleLocator> &locators);
 
 protected:
    using RPagePersistentSink::InitImpl;
    void InitImpl(unsigned char *serializedHeader, std::uint32_t length) final;
-   RNTupleLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) final;
+   RNTupleLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) override;
    RNTupleLocator
    CommitSealedPageImpl(DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) final;
-   std::vector<RNTupleLocator> CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges) final;
-   std::uint64_t CommitClusterImpl() final;
+   std::vector<RNTupleLocator>
+   CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges, const std::vector<bool> &mask) final;
+   std::uint64_t StageClusterImpl() final;
    RNTupleLocator CommitClusterGroupImpl(unsigned char *serializedPageList, std::uint32_t length) final;
+   using RPagePersistentSink::CommitDatasetImpl;
    void CommitDatasetImpl(unsigned char *serializedFooter, std::uint32_t length) final;
 
 public:
    RPageSinkFile(std::string_view ntupleName, std::string_view path, const RNTupleWriteOptions &options);
    RPageSinkFile(std::string_view ntupleName, TFile &file, const RNTupleWriteOptions &options);
-   RPageSinkFile(const RPageSinkFile&) = delete;
-   RPageSinkFile& operator=(const RPageSinkFile&) = delete;
-   RPageSinkFile(RPageSinkFile&&) = default;
-   RPageSinkFile& operator=(RPageSinkFile&&) = default;
+   RPageSinkFile(const RPageSinkFile &) = delete;
+   RPageSinkFile &operator=(const RPageSinkFile &) = delete;
+   RPageSinkFile(RPageSinkFile &&) = default;
+   RPageSinkFile &operator=(RPageSinkFile &&) = default;
    ~RPageSinkFile() override;
-
-   RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final;
-   void ReleasePage(RPage &page) final;
 }; // class RPageSinkFile
 
 // clang-format off
@@ -98,22 +115,26 @@ public:
 */
 // clang-format on
 class RPageSourceFile : public RPageSource {
-   friend class ROOT::Experimental::RNTuple;
+   friend class ROOT::RNTuple;
 
 private:
-   /// Summarizes cluster-level information that are necessary to populate a certain page.
-   /// Used by PopulatePageFromCluster().
-   struct RClusterInfo {
-      DescriptorId_t fClusterId = 0;
-      /// Location of the page on disk
-      RClusterDescriptor::RPageRange::RPageInfoExtended fPageInfo;
-      /// The first element number of the page's column in the given cluster
-      std::uint64_t fColumnOffset = 0;
+   /// Holds the uncompressed header and footer
+   struct RStructureBuffer {
+      std::unique_ptr<unsigned char[]> fBuffer; ///< single buffer for both header and footer
+      void *fPtrHeader = nullptr;               ///< either nullptr or points into fBuffer
+      void *fPtrFooter = nullptr;               ///< either nullptr or points into fBuffer
+
+      /// Called at the end of Attach(), i.e. when the header and footer are processed
+      void Reset()
+      {
+         RStructureBuffer empty;
+         std::swap(empty, *this);
+      }
    };
 
-   /// Populated pages might be shared; the page pool might, at some point, be used by multiple page sources
-   std::shared_ptr<RPagePool> fPagePool;
-   /// The last cluster from which a page got populated.  Points into fClusterPool->fPool
+   /// Either provided by CreateFromAnchor, or read from the ROOT file given the ntuple name
+   std::optional<RNTuple> fAnchor;
+   /// The last cluster from which a page got loaded.  Points into fClusterPool->fPool
    RCluster *fCurrentCluster = nullptr;
    /// An RRawFile is used to request the necessary byte ranges from a local or a remote file
    std::unique_ptr<ROOT::Internal::RRawFile> fFile;
@@ -123,26 +144,26 @@ private:
    RNTupleDescriptorBuilder fDescriptorBuilder;
    /// The cluster pool asynchronously preloads the next few clusters
    std::unique_ptr<RClusterPool> fClusterPool;
-
-   /// Deserialized header and footer into a minimal descriptor held by fDescriptorBuilder
-   void InitDescriptor(const RNTuple &anchor);
+   /// Populated by LoadStructureImpl(), reset at the end of Attach()
+   RStructureBuffer fStructureBuffer;
 
    RPageSourceFile(std::string_view ntupleName, const RNTupleReadOptions &options);
-
-   RPage PopulatePageFromCluster(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo,
-                                 ClusterSize_t::ValueType idxInCluster);
 
    /// Helper function for LoadClusters: it prepares the memory buffer (page map) and the
    /// read requests for a given cluster and columns.  The reead requests are appended to
    /// the provided vector.  This way, requests can be collected for multiple clusters before
    /// sending them to RRawFile::ReadV().
-   std::unique_ptr<RCluster> PrepareSingleCluster(
-      const RCluster::RKey &clusterKey,
-      std::vector<ROOT::Internal::RRawFile::RIOVec> &readRequests);
+   std::unique_ptr<RCluster>
+   PrepareSingleCluster(const RCluster::RKey &clusterKey, std::vector<ROOT::Internal::RRawFile::RIOVec> &readRequests);
 
 protected:
+   void LoadStructureImpl() final;
    RNTupleDescriptor AttachImpl() final;
-   void UnzipClusterImpl(RCluster *cluster) final;
+   /// The cloned page source creates a new raw file and reader and opens its own file descriptor to the data.
+   std::unique_ptr<RPageSource> CloneImpl() const final;
+
+   RPageRef LoadPageImpl(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo,
+                         ClusterSize_t::ValueType idxInCluster) final;
 
 public:
    RPageSourceFile(std::string_view ntupleName, std::string_view path, const RNTupleReadOptions &options);
@@ -152,19 +173,12 @@ public:
    /// Requires the RNTuple object to be streamed from a file.
    static std::unique_ptr<RPageSourceFile>
    CreateFromAnchor(const RNTuple &anchor, const RNTupleReadOptions &options = RNTupleReadOptions());
-   /// The cloned page source creates a new raw file and reader and opens its own file descriptor to the data.
-   /// The meta-data (header and footer) is reread and parsed by the clone.
-   std::unique_ptr<RPageSource> Clone() const final;
 
-   RPageSourceFile(const RPageSourceFile&) = delete;
-   RPageSourceFile& operator=(const RPageSourceFile&) = delete;
+   RPageSourceFile(const RPageSourceFile &) = delete;
+   RPageSourceFile &operator=(const RPageSourceFile &) = delete;
    RPageSourceFile(RPageSourceFile &&) = delete;
    RPageSourceFile &operator=(RPageSourceFile &&) = delete;
    ~RPageSourceFile() override;
-
-   RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex) final;
-   RPage PopulatePage(ColumnHandle_t columnHandle, RClusterIndex clusterIndex) final;
-   void ReleasePage(RPage &page) final;
 
    void LoadSealedPage(DescriptorId_t physicalColumnId, RClusterIndex clusterIndex, RSealedPage &sealedPage) final;
 

@@ -64,7 +64,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TrackMathCoreUnitDict
                               LINKDEF stress/TrackMathCoreLinkDef.h
                               DEPENDENCIES Core MathCore RIO GenVector Smatrix)
 
-if(MSVC)
+if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
   add_custom_command(TARGET TrackMathCoreUnitDict POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libTrackMathCoreUnitDict.dll
                                      ${CMAKE_CURRENT_BINARY_DIR}/libTrackMathCoreUnitDict.dll)

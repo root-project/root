@@ -102,6 +102,8 @@ if(xml)
     ${CMAKE_CURRENT_SOURCE_DIR}/src/hist2workspace-argparse.py
     ${CMAKE_BINARY_DIR}/ginclude/hist2workspaceCommandLineOptionsHelp.h
   )
+
+  target_compile_definitions(HistFactory PUBLIC HISTFACTORY_XML)
 endif()
 
 if(MSVC)

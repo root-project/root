@@ -213,7 +213,7 @@ int ROOT::Experimental::Internal::RDaosContainer::ReadSingleAkey(void *buffer, s
                                                                  ObjClassId_t cid)
 {
    std::vector<d_iov_t> iovs(1);
-   d_iov_set(&iovs[0], const_cast<void *>(buffer), length);
+   d_iov_set(&iovs[0], buffer, length);
    RDaosObject::RAkeyRequest requests[] = {{akey, std::move(iovs)}};
    RDaosObject::FetchUpdateArgs args(dkey, requests);
    return RDaosObject(*this, oid, cid.fCid).Fetch(args);

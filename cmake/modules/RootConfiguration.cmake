@@ -311,21 +311,31 @@ find_program(CHROME_EXECUTABLE NAMES chrome.exe chromium chromium-browser chrome
 if(CHROME_EXECUTABLE)
   if(WIN32)
     set(chromemajor 100)
-    message(STATUS "Found CHROME executable ${CHROME_EXECUTABLE}, not testing the version")
+    message(STATUS "Found Chrome browser executable ${CHROME_EXECUTABLE}, not testing the version")
   else()
     execute_process(COMMAND "${CHROME_EXECUTABLE}" --version
                     OUTPUT_VARIABLE CHROME_VERSION
                     OUTPUT_STRIP_TRAILING_WHITESPACE)
     string(REGEX MATCH "[0-9]+" CHROME_MAJOR_VERSION "${CHROME_VERSION}")
     set(chromemajor ${CHROME_MAJOR_VERSION})
-    message(STATUS "Found CHROME executable ${CHROME_EXECUTABLE} major version ${CHROME_MAJOR_VERSION}")
+    message(STATUS "Found Chrome browser executable ${CHROME_EXECUTABLE} major version ${CHROME_MAJOR_VERSION}")
   endif()
   set(chromeexe ${CHROME_EXECUTABLE})
+endif()
+
+if(WIN32)
+  find_program(EDGE_EXECUTABLE NAMES msedge.exe
+               PATH_SUFFIXES "Microsoft/Edge/Application")
+  if(EDGE_EXECUTABLE)
+    message(STATUS "Found Edge browser executable ${EDGE_EXECUTABLE}")
+    set(edgeexe ${EDGE_EXECUTABLE})
+  endif()
 endif()
 
 find_program(FIREFOX_EXECUTABLE NAMES firefox firefox-bin firefox.exe
              PATH_SUFFIXES "Mozilla Firefox")
 if(FIREFOX_EXECUTABLE)
+  message(STATUS "Found Firefox browser executable ${FIREFOX_EXECUTABLE}")
   set(firefoxexe ${FIREFOX_EXECUTABLE})
 endif()
 
@@ -521,13 +531,16 @@ endif()
 
 if(webgui)
    set(root_canvas_class "TWebCanvas")
+   set(root_treeviewer_class "RTreeViewer")
+   set(root_geompainter_type "web")
 else()
    set(root_canvas_class "TRootCanvas")
+   set(root_treeviewer_class "TTreeViewer")
+   set(root_geompainter_type "root")
 endif()
 
 if(root7 AND webgui)
-#   set(root_browser_class "ROOT::RWebBrowserImp")
-   set(root_browser_class "TRootBrowser")
+   set(root_browser_class "ROOT::RWebBrowserImp")
 else()
    set(root_browser_class "TRootBrowser")
 endif()
@@ -548,9 +561,13 @@ set(pythonvers ${Python3_VERSION})
 set(python${Python3_VERSION_MAJOR}vers ${Python3_VERSION})
 
 #---RConfigure.h---------------------------------------------------------------------------------------------
-try_compile(has__cplusplus "${CMAKE_BINARY_DIR}" SOURCES "${CMAKE_SOURCE_DIR}/config/__cplusplus.cxx"
+if (CMAKE_CXX_COMPILER_ID STREQUAL "NVHPC")
+   execute_process(COMMAND ${CMAKE_CXX_COMPILER} -dM -E /dev/null OUTPUT_VARIABLE __cplusplus_PPout)
+else()
+   try_compile(has__cplusplus "${CMAKE_BINARY_DIR}" SOURCES "${CMAKE_SOURCE_DIR}/config/__cplusplus.cxx"
             OUTPUT_VARIABLE __cplusplus_PPout)
-string(REGEX MATCH "__cplusplus=([0-9]+)" __cplusplus "${__cplusplus_PPout}")
+endif()
+string(REGEX MATCH "__cplusplus[=| ]([0-9]+)" __cplusplus "${__cplusplus_PPout}")
 set(__cplusplus ${CMAKE_MATCH_1}L)
 
 configure_file(${PROJECT_SOURCE_DIR}/config/RConfigure.in ginclude/RConfigure.h NEWLINE_STYLE UNIX)
@@ -584,8 +601,8 @@ string(REGEX REPLACE "(^|[ ]*)-W[^ ]*" "" __cxxflags "${CMAKE_CXX_FLAGS}")
 string(REGEX REPLACE "(^|[ ]*)-W[^ ]*" "" __cflags "${CMAKE_C_FLAGS}")
 
 if(MSVC)
-  string(REPLACE "-I${CMAKE_SOURCE_DIR}/build/win" "" __cxxflags "${__cxxflags}")
-  string(REPLACE "-I${CMAKE_SOURCE_DIR}/build/win" "" __cflags "${__cflags}")
+  string(REPLACE "-I${CMAKE_SOURCE_DIR}/cmake/win" "" __cxxflags "${__cxxflags}")
+  string(REPLACE "-I${CMAKE_SOURCE_DIR}/cmake/win" "" __cflags "${__cflags}")
 endif()
 
 if (cxxmodules)
@@ -714,7 +731,12 @@ if(WIN32)
 else()
   # Needed by ACLIC, while in ROOT we are using everywhere C++ standard via CMake features that are requested to build target
   set(CMAKE_CXX_ACLIC_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX${CMAKE_CXX_STANDARD}_STANDARD_COMPILE_OPTION}")
-  execute_process(COMMAND ${CMAKE_SOURCE_DIR}/build/unix/compiledata.sh
+  if(asan)
+    # Replace the semicolon with space so that the produced compiler invokation still makes sense
+    string (REPLACE ";" " " ASAN_EXTRA_CXX_FLAGS_STR "${ASAN_EXTRA_CXX_FLAGS}")
+    set(CMAKE_CXX_ACLIC_FLAGS "${CMAKE_CXX_ACLIC_FLAGS} ${ASAN_EXTRA_CXX_FLAGS_STR}")
+  endif()
+  execute_process(COMMAND ${CMAKE_SOURCE_DIR}/cmake/unix/compiledata.sh
     ${CMAKE_BINARY_DIR}/ginclude/compiledata.h "${CMAKE_CXX_COMPILER}"
         "${CMAKE_CXX_FLAGS_RELEASE}" "${CMAKE_CXX_FLAGS_DEBUG}" "${CMAKE_CXX_ACLIC_FLAGS}"
         "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS}" "${CMAKE_EXE_LINKER_FLAGS}" "so"
@@ -741,8 +763,8 @@ if(WIN32)
   configure_file(${CMAKE_SOURCE_DIR}/config/thisroot.ps1 ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.ps1 @ONLY)
   configure_file(${CMAKE_SOURCE_DIR}/config/root.rc.in ${CMAKE_BINARY_DIR}/etc/root.rc @ONLY)
   configure_file(${CMAKE_SOURCE_DIR}/config/root-manifest.xml.in ${CMAKE_BINARY_DIR}/etc/root-manifest.xml @ONLY)
-  install(FILES ${CMAKE_SOURCE_DIR}/build/win/w32pragma.h  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
-  install(FILES ${CMAKE_SOURCE_DIR}/build/win/sehmap.h  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
+  install(FILES ${CMAKE_SOURCE_DIR}/cmake/win/w32pragma.h  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
+  install(FILES ${CMAKE_SOURCE_DIR}/cmake/win/sehmap.h  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
 endif()
 
 #--Local root-configure

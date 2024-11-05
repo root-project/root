@@ -18,22 +18,23 @@ HEADERS
   ROOT/RCluster.hxx
   ROOT/RClusterPool.hxx
   ROOT/RColumn.hxx
-  ROOT/RColumnElement.hxx
-  ROOT/RColumnModel.hxx
+  ROOT/RColumnElementBase.hxx
   ROOT/REntry.hxx
   ROOT/RField.hxx
+  ROOT/RFieldBase.hxx
   ROOT/RFieldVisitor.hxx
   ROOT/RMiniFile.hxx
   ROOT/RNTuple.hxx
-  ROOT/RNTupleCollectionWriter.hxx
   ROOT/RNTupleDescriptor.hxx
   ROOT/RNTupleFillContext.hxx
   ROOT/RNTupleFillStatus.hxx
   ROOT/RNTupleImtTaskScheduler.hxx
+  ROOT/RNTupleIndex.hxx
   ROOT/RNTupleMerger.hxx
   ROOT/RNTupleMetrics.hxx
   ROOT/RNTupleModel.hxx
   ROOT/RNTupleParallelWriter.hxx
+  ROOT/RNTupleProcessor.hxx
   ROOT/RNTupleReadOptions.hxx
   ROOT/RNTupleReader.hxx
   ROOT/RNTupleSerialize.hxx
@@ -63,15 +64,18 @@ SOURCES
   v7/src/RNTupleDescriptor.cxx
   v7/src/RNTupleDescriptorFmt.cxx
   v7/src/RNTupleFillContext.cxx
+  v7/src/RNTupleIndex.cxx
   v7/src/RNTupleMerger.cxx
   v7/src/RNTupleMetrics.cxx
   v7/src/RNTupleModel.cxx
   v7/src/RNTupleParallelWriter.cxx
+  v7/src/RNTupleProcessor.cxx
   v7/src/RNTupleReader.cxx
   v7/src/RNTupleSerialize.cxx
   v7/src/RNTupleUtil.cxx
   v7/src/RNTupleWriteOptions.cxx
   v7/src/RNTupleWriter.cxx
+  v7/src/RNTupleView.cxx
   v7/src/RPage.cxx
   v7/src/RPageAllocator.cxx
   v7/src/RPagePool.cxx
@@ -108,6 +112,7 @@ endif()
 
 if(MSVC)
   target_compile_definitions(ROOTNTuple PRIVATE _USE_MATH_DEFINES)
+  set_source_files_properties(v7/src/RField.cxx PROPERTIES COMPILE_FLAGS /bigobj)
 endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(v7/test)

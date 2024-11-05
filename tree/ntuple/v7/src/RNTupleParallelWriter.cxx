@@ -21,11 +21,14 @@
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RPageStorageFile.hxx>
 
+#include <TError.h>
+
 namespace {
 
 using ROOT::Experimental::DescriptorId_t;
 using ROOT::Experimental::NTupleSize_t;
 using ROOT::Experimental::RException;
+using ROOT::Experimental::RExtraTypeInfoDescriptor;
 using ROOT::Experimental::RNTupleDescriptor;
 using ROOT::Experimental::RNTupleModel;
 using ROOT::Experimental::Internal::RColumn;
@@ -70,13 +73,18 @@ public:
 
    const RNTupleDescriptor &GetDescriptor() const final { return fInnerSink->GetDescriptor(); }
 
-   ColumnHandle_t AddColumn(DescriptorId_t, const RColumn &) final { return {}; }
+   ColumnHandle_t AddColumn(DescriptorId_t, RColumn &) final { return {}; }
    void InitImpl(RNTupleModel &) final {}
    void UpdateSchema(const RNTupleModelChangeset &, NTupleSize_t) final
    {
       throw RException(R__FAIL("UpdateSchema not supported via RPageSynchronizingSink"));
    }
+   void UpdateExtraTypeInfo(const RExtraTypeInfoDescriptor &) final
+   {
+      throw RException(R__FAIL("UpdateExtraTypeInfo not supported via RPageSynchronizingSink"));
+   }
 
+   void CommitSuppressedColumn(ColumnHandle_t handle) final { fInnerSink->CommitSuppressedColumn(handle); }
    void CommitPage(ColumnHandle_t, const RPage &) final
    {
       throw RException(R__FAIL("should never commit single pages via RPageSynchronizingSink"));
@@ -90,17 +98,16 @@ public:
       fInnerSink->CommitSealedPageV(ranges);
    }
    std::uint64_t CommitCluster(NTupleSize_t nNewEntries) final { return fInnerSink->CommitCluster(nNewEntries); }
+   RStagedCluster StageCluster(NTupleSize_t nNewEntries) final { return fInnerSink->StageCluster(nNewEntries); }
+   void CommitStagedClusters(std::span<RStagedCluster> clusters) final { fInnerSink->CommitStagedClusters(clusters); }
    void CommitClusterGroup() final
    {
       throw RException(R__FAIL("should never commit cluster group via RPageSynchronizingSink"));
    }
-   void CommitDataset() final { throw RException(R__FAIL("should never commit dataset via RPageSynchronizingSink")); }
-
-   RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final
+   void CommitDatasetImpl() final
    {
-      return fInnerSink->ReservePage(columnHandle, nElements);
+      throw RException(R__FAIL("should never commit dataset via RPageSynchronizingSink"));
    }
-   void ReleasePage(RPage &page) final { fInnerSink->ReleasePage(page); }
 
    RSinkGuard GetSinkGuard() final { return RSinkGuard(fMutex); }
 };
@@ -111,6 +118,9 @@ ROOT::Experimental::RNTupleParallelWriter::RNTupleParallelWriter(std::unique_ptr
                                                                  std::unique_ptr<Internal::RPageSink> sink)
    : fSink(std::move(sink)), fModel(std::move(model)), fMetrics("RNTupleParallelWriter")
 {
+   if (fModel->GetRegisteredSubfields().size() > 0) {
+      throw RException(R__FAIL("cannot create an RNTupleWriter from a model with registered subfields"));
+   }
    fModel->Freeze();
    fSink->Init(*fModel.get());
    fMetrics.ObserveMetrics(fSink->GetMetrics());

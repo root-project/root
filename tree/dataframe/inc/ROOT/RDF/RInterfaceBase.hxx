@@ -170,9 +170,10 @@ protected:
    template <typename ActionTag, typename... ColTypes, typename ActionResultType, typename RDFNode,
              typename HelperArgType = ActionResultType,
              std::enable_if_t<RDFInternal::RNeedJitting<ColTypes...>::value, int> = 0>
-   RResultPtr<ActionResultType> CreateAction(const ColumnNames_t &columns, const std::shared_ptr<ActionResultType> &r,
-                                             const std::shared_ptr<HelperArgType> &helperArg,
-                                             const std::shared_ptr<RDFNode> &proxiedPtr, const int nColumns = -1)
+   RResultPtr<ActionResultType>
+   CreateAction(const ColumnNames_t &columns, const std::shared_ptr<ActionResultType> &r,
+                const std::shared_ptr<HelperArgType> &helperArg, const std::shared_ptr<RDFNode> &proxiedPtr,
+                const int nColumns = -1, const bool vector2RVec = true)
    {
       auto realNColumns = (nColumns > -1 ? nColumns : sizeof...(ColTypes));
 
@@ -188,9 +189,9 @@ protected:
                                                                              fColRegister, proxiedPtr->GetVariations());
       auto jittedActionOnHeap = RDFInternal::MakeWeakOnHeap(jittedAction);
 
-      auto toJit =
-         RDFInternal::JitBuildAction(validColumnNames, upcastNodeOnHeap, typeid(HelperArgType), typeid(ActionTag),
-                                     helperArgOnHeap, tree, nSlots, fColRegister, fDataSource, jittedActionOnHeap);
+      auto toJit = RDFInternal::JitBuildAction(validColumnNames, upcastNodeOnHeap, typeid(HelperArgType),
+                                               typeid(ActionTag), helperArgOnHeap, tree, nSlots, fColRegister,
+                                               fDataSource, jittedActionOnHeap, vector2RVec);
       fLoopManager->ToJitExec(toJit);
       return MakeResultPtr(r, *fLoopManager, std::move(jittedAction));
    }

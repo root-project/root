@@ -417,8 +417,8 @@ Histograms' axis can be defined as "time axis". To do that it is enough to activ
 the TAxis::SetTimeDisplay attribute on a given axis. If `h` is an histogram, it is
 done the following way:
 
-~~~ .cpp
-h->GetXaxis()->SetTimeDisplay(1);  // The X axis is a time axis
+~~~ {.cpp}
+    h->GetXaxis()->SetTimeDisplay(1);  // The X axis is a time axis
 ~~~
 
 Two parameters can be adjusted in order to define time axis:
@@ -447,8 +447,8 @@ It's a string containing the following formatting characters:
  The other characters are output as is. For example to have a format like
  `dd/mm/yyyy` one should do:
 
-~~~ .cpp
-h->GetXaxis()->SetTimeFormat("%d\/%m\/%Y");
+~~~ {.cpp}
+    h->GetXaxis()->SetTimeFormat("%d\/%m\/%Y");
 ~~~
 
 ### The time offset:
@@ -460,9 +460,9 @@ three ways to define the time offset:
 
 #### By setting the global default time offset:
 
-~~~ .cpp
-TDatime da(2003,02,28,12,00,00);
-gStyle->SetTimeOffset(da.Convert());
+~~~ {.cpp}
+    TDatime da(2003,02,28,12,00,00);
+    gStyle->SetTimeOffset(da.Convert());
 ~~~
 
   If no time offset is defined for a particular axis, the default time offset
@@ -471,9 +471,9 @@ gStyle->SetTimeOffset(da.Convert());
 
 #### By setting a time offset to a particular axis:
 
-~~~ .cpp
-TDatime dh(2001,09,23,15,00,00);
-h->GetXaxis()->SetTimeOffset(dh.Convert());
+~~~ {.cpp}
+    TDatime dh(2001,09,23,15,00,00);
+    h->GetXaxis()->SetTimeOffset(dh.Convert());
 ~~~
 
 #### Together with the time format using TAxis::SetTimeFormat:
@@ -484,8 +484,8 @@ the normal time format. **%F** is followed by the date in the format:
 
 Example:
 
-~~~ .cpp
-h->GetXaxis()->SetTimeFormat("%d\/%m\/%y%F2000-02-28 13:00:01");
+~~~ {.cpp}
+    h->GetXaxis()->SetTimeFormat("%d\/%m\/%y%F2000-02-28 13:00:01");
 ~~~
 
 
@@ -589,8 +589,8 @@ and maximum values (in seconds) of the axis. Let's take again an example. Having
 defined "2003, February 28 at 12h" we would like to see the axis a day before and
 a day after. A TGaxis can be created the following way (a day has 86400 seconds):
 
-~~~ .cpp
-TGaxis *axis = new TGaxis(x1,y1,x2,y2,-100000,150000,2405,"t");
+~~~ {.cpp}
+    TGaxis *axis = new TGaxis(x1,y1,x2,y2,-100000,150000,2405,"t");
 ~~~
 
 the `t` option (in lower case) means it is a "time axis". The axis goes form
@@ -619,9 +619,9 @@ End_Macro
 Thanks to the TLatex directive `#splitline` it is possible to write the time
 labels on two lines. In the previous example changing the `SetTimeFormat` line by
 
-~~~ .cpp
-   axis->SetLabelOffset(0.15);
-   axis->SetTimeFormat("#splitline{%Y}{%d\/%m}");
+~~~ {.cpp}
+    axis->SetLabelOffset(0.15);
+    axis->SetTimeFormat("#splitline{%Y}{%d\/%m}");
 ~~~
 
 will produce the following axis:

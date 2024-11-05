@@ -34,17 +34,15 @@ else()
   set(runtimedir ${CMAKE_INSTALL_PYTHONDIR})
 endif()
 
+set(ROOT_LIBRARY_PROPERTIES_NO_VERSION ${ROOT_LIBRARY_PROPERTIES_NO_VERSION}
+    SUFFIX ${libsuffix}
+    PREFIX ${libprefix} )
 if(soversion)
-  set(ROOT_LIBRARY_PROPERTIES ${ROOT_LIBRARY_PROPERTIES}
+  set(ROOT_LIBRARY_PROPERTIES ${ROOT_LIBRARY_PROPERTIES} ${ROOT_LIBRARY_PROPERTIES_NO_VERSION}
       VERSION ${ROOT_VERSION}
-      SOVERSION ${ROOT_MAJOR_VERSION}.${ROOT_MINOR_VERSION}
-      SUFFIX ${libsuffix}
-      PREFIX ${libprefix} )
+      SOVERSION ${ROOT_MAJOR_VERSION}.${ROOT_MINOR_VERSION} )
 else()
-  set(ROOT_LIBRARY_PROPERTIES ${ROOT_LIBRARY_PROPERTIES}
-      SUFFIX ${libsuffix}
-      PREFIX ${libprefix}
-      IMPORT_PREFIX ${libprefix} )
+  set(ROOT_LIBRARY_PROPERTIES ${ROOT_LIBRARY_PROPERTIES} ${ROOT_LIBRARY_PROPERTIES_NO_VERSION} )
 endif()
 
 include(CMakeParseArguments)
@@ -1818,13 +1816,14 @@ endfunction()
 #                        [INCLUDE_DIRS label1 label2...] -- Extra target include directories
 #                        [REPEATS number] -- Repeats testsuite `number` times, stopping at the first failure.
 #                        [FAILREGEX ...] Fail test if this regex matches.
+#                        [ENVIRONMENT var1=val1 var2=val2 ...
 # Creates a new googletest exectuable, and registers it as a test.
 #----------------------------------------------------------------------------
 function(ROOT_ADD_GTEST test_suite)
   cmake_parse_arguments(ARG
     "WILLFAIL"
     "TIMEOUT;REPEATS;FAILREGEX"
-    "COPY_TO_BUILDDIR;LIBRARIES;LABELS;INCLUDE_DIRS" ${ARGN})
+    "COPY_TO_BUILDDIR;LIBRARIES;LABELS;INCLUDE_DIRS;ENVIRONMENT" ${ARGN})
 
   ROOT_GET_SOURCES(source_files . ${ARG_UNPARSED_ARGUMENTS})
   # Note we cannot use ROOT_EXECUTABLE without user-specified set of LIBRARIES to link with.
@@ -1837,6 +1836,9 @@ function(ROOT_ADD_GTEST test_suite)
   if(TARGET ROOT::TestSupport)
     target_link_libraries(${test_suite} ROOT::TestSupport)
   else()
+    # Since we don't inherit the linkage against gtest from ROOT::TestSupport,
+    # we need to link against gtest here.
+    target_link_libraries(${test_suite} gtest)
     message(WARNING "ROOT_ADD_GTEST(${test_suite} ...): The target ROOT::TestSupport is missing. It looks like the test is declared against a ROOT build that is configured with -Dtesting=OFF.
             If this test sends warning or error messages, this will go unnoticed.")
   endif()
@@ -1846,7 +1848,7 @@ function(ROOT_ADD_GTEST test_suite)
   endif(ARG_INCLUDE_DIRS)
 
   if(MSVC)
-    set(test_exports "/EXPORT:_Init_thread_abort /EXPORT:_Init_thread_epoch
+    set(test_exports "/EXPORT:_Init_thread_abort /EXPORT:_Init_thread_epoch \
         /EXPORT:_Init_thread_footer /EXPORT:_Init_thread_header /EXPORT:_tls_index")
     set_property(TARGET ${test_suite} APPEND_STRING PROPERTY LINK_FLAGS ${test_exports})
   endif()
@@ -1859,9 +1861,10 @@ function(ROOT_ADD_GTEST test_suite)
     set(extra_command --gtest_repeat=${ARG_REPEATS} --gtest_break_on_failure)
   endif()
 
-  ROOT_PATH_TO_STRING(mangled_name ${test_suite} PATH_SEPARATOR_REPLACEMENT "-")
+  ROOT_PATH_TO_STRING(name_with_path ${test_suite} PATH_SEPARATOR_REPLACEMENT "-")
+  string(REPLACE "-test-" "-" clean_name_with_path ${name_with_path})
   ROOT_ADD_TEST(
-    gtest${mangled_name}
+    gtest${clean_name_with_path}
     COMMAND ${test_suite} ${extra_command}
     WORKING_DIR ${CMAKE_CURRENT_BINARY_DIR}
     COPY_TO_BUILDDIR "${ARG_COPY_TO_BUILDDIR}"
@@ -1869,6 +1872,7 @@ function(ROOT_ADD_GTEST test_suite)
     TIMEOUT "${ARG_TIMEOUT}"
     LABELS "${ARG_LABELS}"
     FAILREGEX "${ARG_FAILREGEX}"
+    ENVIRONMENT "${ARG_ENVIRONMENT}"
   )
 endfunction()
 
@@ -1938,7 +1942,9 @@ function(ROOT_ADD_PYUNITTEST name file)
     list(APPEND labels python_runtime_deps)
   endif()
 
-  ROOT_ADD_TEST(pyunittests-${good_name}
+  ROOT_PATH_TO_STRING(name_with_path ${good_name} PATH_SEPARATOR_REPLACEMENT "-")
+  string(REPLACE "-test-" "-" clean_name_with_path ${name_with_path})
+  ROOT_ADD_TEST(pyunittests${clean_name_with_path}
               COMMAND ${Python3_EXECUTABLE} -B -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR}/${file_dir} -p ${file_name} -v
               ENVIRONMENT ${ROOT_ENV} ${ARG_ENVIRONMENT}
               LABELS ${labels}
@@ -2019,7 +2025,7 @@ endfunction()
 
 #----------------------------------------------------------------------------
 # generateHeader(target input output)
-# Generate a help header file with build/misc/argparse2help.py script
+# Generate a help header file with cmake/scripts/argparse2help.py script
 # The 1st argument is the target to which the custom command will be attached
 # The 2nd argument is the path to the python argparse input file
 # The 3rd argument is the path to the output header file
@@ -2029,15 +2035,15 @@ function(generateHeader target input output)
     MAIN_DEPENDENCY
       ${input}
     DEPENDS
-      ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py
+      ${CMAKE_SOURCE_DIR}/cmake/scripts/argparse2help.py
     COMMAND
-      ${Python3_EXECUTABLE} -B ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py ${input} ${output}
+      ${Python3_EXECUTABLE} -B ${CMAKE_SOURCE_DIR}/cmake/scripts/argparse2help.py ${input} ${output}
   )
   target_sources(${target} PRIVATE ${output})
 endfunction()
 
 #----------------------------------------------------------------------------
-# Generate and install manual page with build/misc/argparse2help.py script
+# Generate and install manual page with cmake/scripts/argparse2help.py script
 # The 1st argument is the name of the manual page
 # The 2nd argument is the path to the python argparse input file
 # The 3rd argument is the path to the output manual page
@@ -2049,9 +2055,9 @@ function(generateManual name input output)
     MAIN_DEPENDENCY
       ${input}
     DEPENDS
-      ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py
+      ${CMAKE_SOURCE_DIR}/cmake/scripts/argparse2help.py
     COMMAND
-      ${Python3_EXECUTABLE} -B ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py ${input} ${output}
+      ${Python3_EXECUTABLE} -B ${CMAKE_SOURCE_DIR}/cmake/scripts/argparse2help.py ${input} ${output}
   )
 
   install(FILES ${output} DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)

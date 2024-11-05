@@ -24,46 +24,61 @@
 
 #include <xxhash.h>
 
-void ROOT::Experimental::RNTuple::Streamer(TBuffer &buf)
+void ROOT::RNTuple::Streamer(TBuffer &buf)
 {
    if (buf.IsReading()) {
       UInt_t offClassBuf;
       UInt_t bcnt;
       auto classVersion = buf.ReadVersion(&offClassBuf, &bcnt);
-      if (classVersion < 4)
-         throw RException(R__FAIL("unsupported RNTuple pre-release"));
 
-      // Strip class version and the fChecksum member from checksum calculation
-      const UInt_t lenStrip = sizeof(fChecksum) + sizeof(Version_t);
+      // Strip class version from checksum calculation
+      UInt_t lenStrip = sizeof(Version_t);
+
       if (bcnt < lenStrip)
-         throw RException(R__FAIL("invalid anchor byte count: " + std::to_string(bcnt)));
+         throw Experimental::RException(R__FAIL("invalid anchor byte count: " + std::to_string(bcnt)));
+
       auto lenCkData = bcnt - lenStrip;
       // Skip byte count and class version
       auto offCkData = offClassBuf + sizeof(UInt_t) + sizeof(Version_t);
-      auto checksum = XXH3_64bits(buf.Buffer() + offCkData, lenCkData);
+      auto expectedChecksum = XXH3_64bits(buf.Buffer() + offCkData, lenCkData);
 
+      std::uint64_t onDiskChecksum;
       buf.ReadClassBuffer(RNTuple::Class(), this, classVersion, offClassBuf, bcnt);
+      if (static_cast<std::size_t>(buf.BufferSize()) < buf.Length() + sizeof(onDiskChecksum))
+         throw Experimental::RException(R__FAIL("the buffer containing RNTuple is too small to contain the checksum!"));
+      buf >> onDiskChecksum;
 
-      if (checksum != fChecksum)
-         throw RException(R__FAIL("checksum mismatch in RNTuple anchor"));
+      if (expectedChecksum != onDiskChecksum)
+         throw Experimental::RException(R__FAIL("checksum mismatch in RNTuple anchor"));
 
       R__ASSERT(buf.GetParent() && buf.GetParent()->InheritsFrom("TFile"));
       fFile = static_cast<TFile *>(buf.GetParent());
    } else {
-      auto offBcnt = buf.WriteVersion(RNTuple::Class(), kTRUE /* useBcnt */);
-      auto offCkData = buf.GetCurrent() - buf.Buffer();
-      buf << fVersionEpoch;
-      buf << fVersionMajor;
-      buf << fVersionMinor;
-      buf << fVersionPatch;
-      buf << fSeekHeader;
-      buf << fNBytesHeader;
-      buf << fLenHeader;
-      buf << fSeekFooter;
-      buf << fNBytesFooter;
-      buf << fLenFooter;
-      fChecksum = XXH3_64bits(buf.Buffer() + offCkData, buf.Length() - offCkData);
-      buf << fChecksum;
-      buf.SetByteCount(offBcnt, kTRUE /* packInVersion */);
+      auto offCkData = buf.Length() + sizeof(UInt_t) + sizeof(Version_t);
+      buf.WriteClassBuffer(RNTuple::Class(), this);
+      std::uint64_t checksum = XXH3_64bits(buf.Buffer() + offCkData, buf.Length() - offCkData);
+      buf << checksum;
    }
+}
+
+ROOT::RNTuple ROOT::Experimental::Internal::CreateAnchor(std::uint16_t versionEpoch, std::uint16_t versionMajor,
+                                                         std::uint16_t versionMinor, std::uint16_t versionPatch,
+                                                         std::uint64_t seekHeader, std::uint64_t nbytesHeader,
+                                                         std::uint64_t lenHeader, std::uint64_t seekFooter,
+                                                         std::uint64_t nbytesFooter, std::uint64_t lenFooter,
+                                                         std::uint64_t maxKeySize)
+{
+   RNTuple ntuple;
+   ntuple.fVersionEpoch = versionEpoch;
+   ntuple.fVersionMajor = versionMajor;
+   ntuple.fVersionMinor = versionMinor;
+   ntuple.fVersionPatch = versionPatch;
+   ntuple.fSeekHeader = seekHeader;
+   ntuple.fNBytesHeader = nbytesHeader;
+   ntuple.fLenHeader = lenHeader;
+   ntuple.fSeekFooter = seekFooter;
+   ntuple.fNBytesFooter = nbytesFooter;
+   ntuple.fLenFooter = lenFooter;
+   ntuple.fMaxKeySize = maxKeySize;
+   return ntuple;
 }

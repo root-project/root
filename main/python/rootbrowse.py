@@ -15,6 +15,8 @@ import ROOT
 # Help strings
 description = "Open a ROOT file in a TBrowser"
 
+WEBON_HELP = "Configure webdisplay like chrome or qt6web"
+
 WEBOFF_HELP = "Invoke the normal TBrowser (not the web version)"
 
 EPILOG = """Examples:
@@ -30,7 +32,8 @@ def get_argparse():
 	parser = cmdLineUtils.getParserSingleFile(description, EPILOG)
 	parser.prog = 'rootbrowse'
 
-	parser.add_argument("-w", "--webOff", help=WEBOFF_HELP, action= "store_true")
+	parser.add_argument("-w", "--web", help=WEBON_HELP)
+	parser.add_argument("-wf", "--webOff", help=WEBOFF_HELP, action="store_true")
 	return parser
 
 
@@ -41,6 +44,9 @@ def execute():
 	args = cmdLineUtils.getArgs(parser)
 	if args.webOff:
 		ROOT.gROOT.SetWebDisplay("off")
+	elif args.web:
+		ROOT.gROOT.SetWebDisplay(args.web)
+
 
 	# Process rootBrowse
 	return cmdLineUtils.rootBrowse(args.FILE)

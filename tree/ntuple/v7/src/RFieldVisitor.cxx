@@ -222,28 +222,28 @@ void ROOT::Experimental::RPrintValueVisitor::VisitCharField(const RField<char> &
    fOutput << fValue.GetRef<char>();
 }
 
-void ROOT::Experimental::RPrintValueVisitor::VisitInt8Field(const RField<std::int8_t> &field)
+void ROOT::Experimental::RPrintValueVisitor::VisitInt8Field(const RIntegralField<std::int8_t> &field)
 {
    PrintIndent();
    PrintName(field);
    fOutput << fValue.GetRef<std::int8_t>();
 }
 
-void ROOT::Experimental::RPrintValueVisitor::VisitInt16Field(const RField<std::int16_t> &field)
+void ROOT::Experimental::RPrintValueVisitor::VisitInt16Field(const RIntegralField<std::int16_t> &field)
 {
    PrintIndent();
    PrintName(field);
    fOutput << fValue.GetRef<std::int16_t>();
 }
 
-void ROOT::Experimental::RPrintValueVisitor::VisitIntField(const RField<int> &field)
+void ROOT::Experimental::RPrintValueVisitor::VisitInt32Field(const RIntegralField<std::int32_t> &field)
 {
    PrintIndent();
    PrintName(field);
-   fOutput << fValue.GetRef<int>();
+   fOutput << fValue.GetRef<std::int32_t>();
 }
 
-void ROOT::Experimental::RPrintValueVisitor::VisitInt64Field(const RField<std::int64_t> &field)
+void ROOT::Experimental::RPrintValueVisitor::VisitInt64Field(const RIntegralField<std::int64_t> &field)
 {
    PrintIndent();
    PrintName(field);
@@ -258,29 +258,28 @@ void ROOT::Experimental::RPrintValueVisitor::VisitStringField(const RField<std::
    fOutput << "\"" << fValue.GetRef<std::string>() << "\"";
 }
 
-void ROOT::Experimental::RPrintValueVisitor::VisitUInt8Field(const RField<std::uint8_t> &field)
+void ROOT::Experimental::RPrintValueVisitor::VisitUInt8Field(const RIntegralField<std::uint8_t> &field)
 {
    PrintIndent();
    PrintName(field);
    fOutput << static_cast<int>(fValue.GetRef<std::uint8_t>());
 }
 
-void ROOT::Experimental::RPrintValueVisitor::VisitUInt16Field(const RField<std::uint16_t> &field)
+void ROOT::Experimental::RPrintValueVisitor::VisitUInt16Field(const RIntegralField<std::uint16_t> &field)
 {
    PrintIndent();
    PrintName(field);
    fOutput << fValue.GetRef<std::uint16_t>();
 }
 
-void ROOT::Experimental::RPrintValueVisitor::VisitUInt32Field(const RField<std::uint32_t> &field)
+void ROOT::Experimental::RPrintValueVisitor::VisitUInt32Field(const RIntegralField<std::uint32_t> &field)
 {
    PrintIndent();
    PrintName(field);
    fOutput << fValue.GetRef<std::uint32_t>();
 }
 
-
-void ROOT::Experimental::RPrintValueVisitor::VisitUInt64Field(const RField<std::uint64_t> &field)
+void ROOT::Experimental::RPrintValueVisitor::VisitUInt64Field(const RIntegralField<std::uint64_t> &field)
 {
    PrintIndent();
    PrintName(field);
@@ -331,11 +330,11 @@ void ROOT::Experimental::RPrintValueVisitor::VisitArrayAsRVecField(const RArrayA
    PrintCollection(field);
 }
 
-void ROOT::Experimental::RPrintValueVisitor::VisitUnsplitField(const RUnsplitField &field)
+void ROOT::Experimental::RPrintValueVisitor::VisitStreamerField(const RStreamerField &field)
 {
    PrintIndent();
    PrintName(field);
-   fOutput << "<unsplit>";
+   fOutput << "<streamer mode>";
 }
 
 void ROOT::Experimental::RPrintValueVisitor::VisitClassField(const RClassField &field)
