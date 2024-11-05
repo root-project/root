@@ -194,6 +194,12 @@ ROOT::Experimental::Internal::GenerateColumnElement(std::type_index inMemoryType
    return nullptr;
 }
 
+std::unique_ptr<ROOT::Experimental::Internal::RColumnElementBase>
+ROOT::Experimental::Internal::GenerateColumnElement(const RColumnElementBase::RIdentifier &elementId)
+{
+   return GenerateColumnElement(elementId.fInMemoryType, elementId.fOnDiskType);
+}
+
 void ROOT::Experimental::Internal::BitPacking::PackBits(void *dst, const void *src, std::size_t count,
                                                         std::size_t sizeofSrc, std::size_t nDstBits)
 {
