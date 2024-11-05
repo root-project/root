@@ -25,6 +25,7 @@
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RPageStorageFile.hxx>
 
+#include <TFile.h>
 #include <TROOT.h>
 
 #include <utility>
@@ -95,6 +96,10 @@ std::unique_ptr<ROOT::Experimental::RNTupleWriter>
 ROOT::Experimental::RNTupleWriter::Append(std::unique_ptr<RNTupleModel> model, std::string_view ntupleName, TFile &file,
                                           const RNTupleWriteOptions &options)
 {
+   if (!file.IsBinary())
+      throw RException(R__FAIL("RNTupleWriter only supports writing to a ROOT file. Cannot write into " +
+                               std::string(file.GetName())));
+
    auto sink = std::make_unique<Internal::RPageSinkFile>(ntupleName, file, options);
    return Create(std::move(model), std::move(sink), options);
 }
