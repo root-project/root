@@ -33,7 +33,7 @@ extern "C" ROOT::RCompressionSetting::EAlgorithm::EValues R__getCompressionAlgor
  * R__zipMultipleAlgorithm instead.
  */
 extern "C" void R__zip(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep)
-   R__DEPRECATED(6, 34, "use R__zipMultipleAlgorithm instead");
+   R__DEPRECATED(6, 36, "use R__zipMultipleAlgorithm instead");
 
 extern "C" void R__unzip(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep);
 

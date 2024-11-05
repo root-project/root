@@ -1,10 +1,10 @@
 % ROOT Version 6.34 Release Notes
-% 2025-05
+% 2024-11
 <a name="TopOfPage"></a>
 
 ## Introduction
 
-ROOT version 6.34.00 is scheduled for release at the end of May 2025.
+ROOT version 6.34.00 is scheduled for release at the end of November 2024.
 
 For more information, see:
 
@@ -75,6 +75,9 @@ The following people have contributed to this new version:
 - The `RooTemplateProxy` constructors that take a `proxyOwnsArg` parameter to manually pass ownership are deprecated and replaced by a new constructor that takes ownership via `std::unique_ptr<T>`. They will be removed in ROOT 6.36.
 - Several RooFit legacy functions are deprecated and will be removed in ROOT 6.36 (see section "RooFit libraries")
 - Multiple overloads of internal Minuit 2 constructors and functions have been removed. If your code fails to compile, you can easily change to another overload that takes a `MnUserParameterState`, which is a change backwards compatible with older ROOT versions.
+- The `int ROOT::CompressionSettings(ROOT::ECompressionAlgorithm algorithm, int compressionLevel)` function is deprecated and will be removed in ROOT 6.36. Please use `int CompressionSettings(RCompressionSetting::EAlgorithm::EValues algorithm, int compressionLevel)` instead.
+- The `void R__zip(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep)`  is deprecated and will be removed in ROOT 6.36. Please use `void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep, ROOT::RCompressionSetting::EAlgorithm::EValues algorithm)` instead.
+- The `Bool_t TGeoShape::AreOverlapping(const TGeoBBox *box1, const TGeoMatrix *mat1, const TGeoBBox *box2, const TGeoMatrix *mat2)` is deprecated and will be removed in ROOT 6.36.
 
 ## Core Libraries
 
