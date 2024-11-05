@@ -22,8 +22,6 @@
 #include "RooAbsCategory.h"
 #include "RooMsgService.h"
 
-#include <ROOT/RConfig.hxx> // for the R__DEPRECATED macro
-
 #include <string>
 
 /**
@@ -176,31 +174,6 @@ public:
     // not happen.
   }
 
-#ifndef ROOFIT_MEMORY_SAFE_INTERFACES
-  /// Constructor with owner.
-  ///
-  /// \deprecated Kept for backwards compatibility and will be removed in ROOT 6.36.
-  ///             Either use RooTemplateProxy(const char*, const char*, RooAbsArg*, bool, bool),
-  ///             and transfer the ownership with RooTemplateProxy::putOwnedArg(),
-  ///             or use RooTemplateProxy(const char*, const char*, RooAbsArg*, std::unique_ptr<T>, bool, bool)
-  ///             if you want the proxy to own the argument.
-  ///             depending if you want to transfer ownership or not.
-  ///
-  /// \param[in] theName Name of this proxy (for printing).
-  /// \param[in] desc Description what this proxy should act as.
-  /// \param[in] owner The object that owns the proxy. This is important for tracking
-  ///            of client-server dependencies.
-  /// \param[in] valueServer Notify the owner if value changes.
-  /// \param[in] shapeServer Notify the owner if shape (e.g. binning) changes.
-  /// \param[in] proxyOwnsArg Proxy will delete the payload if owning.
-  template<typename Bool = bool, typename = std::enable_if_t<std::is_same<Bool,bool>::value>>
-  R__DEPRECATED(6,36, "Use RooTemplateProxy(const char*, const char*, RooAbsArg*, bool, bool) and transfer the ownership with RooTemplateProxy::putOwnedArg().")
-  RooTemplateProxy(const char* theName, const char* desc, RooAbsArg* owner,
-       Bool valueServer, bool shapeServer, bool proxyOwnsArg)
-  : RooArgProxy(theName, desc, owner, valueServer, shapeServer, proxyOwnsArg)
-  {}
-#endif
-
   ////////////////////////////////////////////////////////////////////////////////
   /// Constructor with owner and proxied object.
   /// \param[in] theName Name of this proxy (for printing).
@@ -213,29 +186,6 @@ public:
   RooTemplateProxy(const char* theName, const char* desc, RooAbsArg* owner, T& ref,
       bool valueServer=true, bool shapeServer=false) :
         RooArgProxy(theName, desc, owner, const_cast<typename std::remove_const<T>::type&>(ref), valueServer, shapeServer, false) { }
-
-#ifndef ROOFIT_MEMORY_SAFE_INTERFACES
-  ////////////////////////////////////////////////////////////////////////////////
-  /// Constructor with owner and proxied object.
-  ///
-  /// \deprecated Kept for backwards compatibility and will be removed in ROOT 6.36.
-  ///             Please use RooTemplateProxy(const char*, const char*, RooAbsArg*, std::unique_ptr<T>, bool, bool)
-  ///             or RooTemplateProxy(const char*, const char*, RooAbsArg*, T&, bool, bool),
-  ///             depending if you want to transfer ownership or not.
-  ///
-  /// \param[in] theName Name of this proxy (for printing).
-  /// \param[in] desc Description what this proxy should act as.
-  /// \param[in] owner The object that owns the proxy. This is important for tracking
-  ///            of client-server dependencies.
-  /// \param[in] ref Reference to the object that the proxy should hold.
-  /// \param[in] valueServer Notify the owner if value changes.
-  /// \param[in] shapeServer Notify the owner if shape (e.g. binning) changes.
-  /// \param[in] proxyOwnsArg Proxy will delete the payload if owning.
-  R__DEPRECATED(6,36, "Use constructors without proxyOwnsArg argument, taking the one that accepts a std::unique_ptr<T> if you want to pass ownership.")
-  RooTemplateProxy(const char* theName, const char* desc, RooAbsArg* owner, T& ref,
-      bool valueServer, bool shapeServer, bool proxyOwnsArg) :
-        RooArgProxy(theName, desc, owner, const_cast<typename std::remove_const<T>::type&>(ref), valueServer, shapeServer, proxyOwnsArg) { }
-#endif
 
    ////////////////////////////////////////////////////////////////////////////////
    /// Constructor with owner and proxied object, taking ownership of the proxied object.
