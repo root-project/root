@@ -838,7 +838,7 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &
    if (!args.IsHeadless() && normal_http) {
       auto winurl = args.GetUrl();
       winurl.erase(0, fAddr.length());
-      InformListener(std::string("win:") + winurl);
+      InformListener(std::string("win:") + winurl + "\n");
    }
 
    if (!args.IsHeadless() && ((args.GetBrowserKind() == RWebDisplayArgs::kServer) || gROOT->IsWebDisplayBatch()) /*&& (RWebWindowWSHandler::GetBoolEnv("WebGui.OnetimeKey") != 1)*/) {
