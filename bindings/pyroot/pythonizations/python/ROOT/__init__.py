@@ -187,10 +187,6 @@ def cleanup():
     if "libROOTPythonizations" in sys.modules:
         backend = sys.modules["libROOTPythonizations"]
 
-        # Make sure all the objects regulated by PyROOT are deleted and their
-        # Python proxies are properly nonified.
-        backend.ClearProxiedObjects()
-
         from ROOT import PyConfig
 
         if PyConfig.ShutDown:
