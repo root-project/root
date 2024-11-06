@@ -214,8 +214,9 @@ private:
    /// Changed by Freeze() / Unfreeze() and by the RUpdater.
    bool fIsFrozen = false;
 
-   /// Checks that user-provided field names are valid in the context
-   /// of this NTuple model. Throws an RException for invalid names.
+   /// Checks that user-provided field names are valid in the context of this RNTuple model.
+   /// Throws an RException for invalid names, empty names (which is reserved for the zero field) and duplicate field
+   /// names.
    void EnsureValidFieldName(std::string_view fieldName);
 
    /// Throws an RException if fFrozen is true
