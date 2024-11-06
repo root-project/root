@@ -242,12 +242,6 @@ static void R__zipZLIB(int cxlevel, int *srcsize, char *src, int *tgtsize, char 
     *irep = stream.total_out + HDRSIZE;
 }
 
-
-void R__zip(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep) {
-   R__zipMultipleAlgorithm(cxlevel, srcsize, src, tgtsize, tgt, irep,
-                           ROOT::RCompressionSetting::EAlgorithm::kUseGlobal);
-}
-
 /**
  * Below are the routines for unzipping (inflating) buffers.
  */

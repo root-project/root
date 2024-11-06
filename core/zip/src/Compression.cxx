@@ -24,19 +24,6 @@ namespace ROOT {
     return algo * 100 + compressionLevel;
   }
 
-// Avoid spitting warnings for the use of ECompressionAlgorithm, as this function is itself deprecated
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-  int CompressionSettings(ROOT::ECompressionAlgorithm algorithm, int compressionLevel)
-  {
-    if (compressionLevel < 0) compressionLevel = 0;
-    if (compressionLevel > 99) compressionLevel = 99;
-    int algo = algorithm;
-    if (algo >= ROOT::RCompressionSetting::EAlgorithm::kUndefined) algo = 0;
-    return algo * 100 + compressionLevel;
-  }
-#pragma GCC diagnostic pop
-
   std::string RCompressionSetting::AlgorithmToString(RCompressionSetting::EAlgorithm::EValues algorithm)
   {
      switch (algorithm) {
