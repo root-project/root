@@ -200,4 +200,4 @@ def cleanup():
             backend.gROOT.EndOfProcessCleanups()
 
 
-atexit.register(cleanup)
+# atexit.register(cleanup)
