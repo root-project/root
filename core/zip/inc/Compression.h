@@ -114,21 +114,9 @@ struct RCompressionSetting {
 };
 
 // clang-format off
-enum R__DEPRECATED(6, 36, "Use RCompressionSetting::EAlgorithm instead") ECompressionAlgorithm {
-   kUseGlobalCompressionSetting = static_cast<int>(RCompressionSetting::EAlgorithm::kUseGlobal),
-   kUseGlobalSetting = static_cast<int>(RCompressionSetting::EAlgorithm::kUseGlobal),
-   kZLIB = static_cast<int>(RCompressionSetting::EAlgorithm::kZLIB),
-   kLZMA = static_cast<int>(RCompressionSetting::EAlgorithm::kLZMA),
-   kOldCompressionAlgo = static_cast<int>(RCompressionSetting::EAlgorithm::kOldCompressionAlgo),
-   kLZ4 = static_cast<int>(RCompressionSetting::EAlgorithm::kLZ4),
-   kZSTD = static_cast<int>(RCompressionSetting::EAlgorithm::kZSTD),
-   kUndefinedCompressionAlgorithm = static_cast<int>(RCompressionSetting::EAlgorithm::kUndefined)
-};
 
 int CompressionSettings(RCompressionSetting::EAlgorithm::EValues algorithm, int compressionLevel);
 
-int CompressionSettings(ROOT::ECompressionAlgorithm algorithm, int compressionLevel)
-   R__DEPRECATED(6, 36, "Use the overload accepting RCompressionSetting::EAlgorithm instead");
 // clang-format on
 
 } // namespace ROOT
