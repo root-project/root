@@ -16,6 +16,7 @@
 #include <ROOT/REveSceneInfo.hxx>
 #include <ROOT/REveManager.hxx>
 #include <ROOT/REveSelection.hxx>
+#include <ROOT/REveText.hxx>
 
 #include <nlohmann/json.hpp>
 
@@ -106,6 +107,10 @@ List of Viewers providing common operations on REveViewer collections.
 void REveViewer::SetAxesType(int at)
 {
    fAxesType = (EAxesType)at;
+   if (fAxesType != kAxesNone) {
+      std::string rf_dir = gSystem->ExpandPathName("${ROOTSYS}/fonts/");
+      REX::REveText::AssertSdfFont("LiberationSerif-Regular", rf_dir + "LiberationSerif-Regular.ttf");
+   }
    StampObjProps();
 }
 
