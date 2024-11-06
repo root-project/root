@@ -408,7 +408,7 @@ sap.ui.define([
          if (!split || (!curr && !panel_name) || (curr === panel_name))
             return Promise.resolve(null);
 
-         const adjust_window_width = is_flex ^ was_flex;
+         const adjust_window_width = (is_flex ^ was_flex) && !canvp?._ignore_section_resize;
 
          if (adjust_window_width)
             can_elem?.getController().rememberAreaSize();
@@ -580,23 +580,31 @@ sap.ui.define([
          this.getView().getModel().setProperty('/StatusIcon', chk_icon(new_state));
 
          if (this.isStatusShown() != new_state) {
-            // restore size after next resize
-            this.getView().byId('MainPanel')?.getController().rememberAreaSize();
-            this._Page.setShowFooter(new_state);
             const canvp = this.getCanvasPainter();
+            // restore canvas size after getting next resize event
+            if (!canvp?._ignore_section_resize)
+               this.getView().byId('MainPanel')?.getController().rememberAreaSize();
+            this._Page.setShowFooter(new_state);
             canvp?.processChanges('sbits', canvp);
          }
       },
 
+      isToolBarShown() {
+         return this._Page.getShowSubHeader();
+      },
+
       toggleToolBar(new_state) {
+         const old_state = this.isToolBarShown();
          if (new_state === undefined)
-            new_state = this.getView().getModel().getProperty('/ToolbarIcon') === chk_icon(false);
+            new_state = !old_state;
 
-         this.getView().byId('MainPanel')?.getController().rememberAreaSize();
-
-         this._Page.setShowSubHeader(new_state);
-
-         this.getView().getModel().setProperty('/ToolbarIcon', chk_icon(new_state));
+         if (new_state !== old_state) {
+            // restore canvas size after getting next resize event
+            if (!this.getCanvasPainter()?._ignore_section_resize)
+               this.getView().byId('MainPanel')?.getController().rememberAreaSize();
+            this._Page.setShowSubHeader(new_state);
+            this.getView().getModel().setProperty('/ToolbarIcon', chk_icon(new_state));
+         }
       },
 
       toggleToolTip(new_state) {
