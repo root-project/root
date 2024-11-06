@@ -28,13 +28,6 @@ extern "C" void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, in
 extern "C" ROOT::RCompressionSetting::EAlgorithm::EValues R__getCompressionAlgorithm(const unsigned char *buf, 
                                                                                      size_t bufsize);
 
-/**
- * This is a historical definition, prior to ROOT supporting multiple algorithms in a single file.  Use
- * R__zipMultipleAlgorithm instead.
- */
-extern "C" void R__zip(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep)
-   R__DEPRECATED(6, 36, "use R__zipMultipleAlgorithm instead");
-
 extern "C" void R__unzip(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep);
 
 extern "C" int R__unzip_header(int *srcsize, unsigned char *src, int *tgtsize);
