@@ -39,8 +39,7 @@ ROOT::Experimental::Internal::GetFieldRange(const RFieldBase &field, const RPage
    }
 
    if (columnId == kInvalidDescriptorId) {
-      throw RException(R__FAIL("field iteration over empty fields is unsupported: " +
-                               desc.GetQualifiedFieldName(field.GetOnDiskId())));
+      return RNTupleGlobalRange(kInvalidNTupleIndex, kInvalidNTupleIndex);
    }
 
    auto arraySize = std::max(std::uint64_t(1), desc.GetFieldDescriptor(field.GetOnDiskId()).GetNRepetitions());
