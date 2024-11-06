@@ -2063,7 +2063,11 @@ public:
       const auto userColumns = RDFInternal::AtLeastOneEmptyString(columnViews)
                                   ? ColumnNames_t()
                                   : ColumnNames_t(columnViews.begin(), columnViews.end());
-      return CreateAction<RDFInternal::ActionTags::Histo3D, V1, V2, V3>(userColumns, h, h, fProxiedPtr);
+      if (model.fCloneHistogram) {
+         return CreateAction<RDFInternal::ActionTags::Histo3D, V1, V2, V3>(userColumns, h, h, fProxiedPtr);
+      } else {
+         return CreateAction<RDFInternal::ActionTags::Histo3DNoClone, V1, V2, V3>(userColumns, h, h, fProxiedPtr);
+      }
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -2112,7 +2116,11 @@ public:
       const auto userColumns = RDFInternal::AtLeastOneEmptyString(columnViews)
                                   ? ColumnNames_t()
                                   : ColumnNames_t(columnViews.begin(), columnViews.end());
-      return CreateAction<RDFInternal::ActionTags::Histo3D, V1, V2, V3, W>(userColumns, h, h, fProxiedPtr);
+      if (model.fCloneHistogram) {
+         return CreateAction<RDFInternal::ActionTags::Histo3D, V1, V2, V3, W>(userColumns, h, h, fProxiedPtr);
+      } else {
+         return CreateAction<RDFInternal::ActionTags::Histo3DNoClone, V1, V2, V3, W>(userColumns, h, h, fProxiedPtr);
+      }
    }
 
    template <typename V1, typename V2, typename V3, typename W>

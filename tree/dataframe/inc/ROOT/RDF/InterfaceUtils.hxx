@@ -92,6 +92,7 @@ namespace ActionTags {
 struct Histo1D{};
 struct Histo2D{};
 struct Histo3D{};
+struct Histo3DNoClone{};
 struct HistoND{};
 struct Graph{};
 struct GraphAsymmErrors{};
@@ -134,6 +135,17 @@ BuildAction(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &h,
    using Helper_t = FillHelper<ActionResultType>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
    return std::make_unique<Action_t>(Helper_t(h, nSlots), bl, std::move(prevNode), colRegister);
+}
+
+// Filling of histograms without cloning of the object
+template <typename... ColTypes, typename ActionResultType, typename PrevNodeType>
+std::unique_ptr<RActionBase>
+BuildAction(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &h, const unsigned int /*nSlots*/,
+            std::shared_ptr<PrevNodeType> prevNode, ActionTags::Histo3DNoClone, const RColumnRegister &colRegister)
+{
+   using Helper_t = FillThreadSafeHistogramHelper<ActionResultType, typename ValueType<ColTypes>::value_type...>;
+   using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
+   return std::make_unique<Action_t>(Helper_t{h}, bl, std::move(prevNode), colRegister);
 }
 
 // Histo1D filling (must handle the special case of distinguishing FillHelper and BufferedFillHelper
