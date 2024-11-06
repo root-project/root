@@ -1,9 +1,4 @@
-#include <ROOT/RField.hxx>
-
-#include "CustomStruct.hxx"
-
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
+#include "ntuple_test.hxx"
 
 class NoDict {};
 
