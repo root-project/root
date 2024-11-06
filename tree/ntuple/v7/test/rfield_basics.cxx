@@ -42,3 +42,22 @@ TEST(RField, Check)
    EXPECT_EQ("long double", report[0].fTypeName);
    EXPECT_THAT(report[0].fErrMsg, testing::HasSubstr("unknown type"));
 }
+
+TEST(RField, ValidNaming)
+{
+   try {
+      RFieldBase::Create("x.y", "float").Unwrap();
+      FAIL() << "creating a field with an invalid name should throw";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("name 'x.y' cannot contain dot characters '.'"));
+   }
+
+   auto field = RFieldBase::Create("x", "float").Unwrap();
+
+   try {
+      field->Clone("x.y");
+      FAIL() << "cloning a field with an invalid name should throw";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("name 'x.y' cannot contain dot characters '.'"));
+   }
+}
