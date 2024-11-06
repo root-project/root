@@ -82,8 +82,6 @@ static PyMethodDef gPyROOTMethods[] = {
     (char *)"Install an input hook to process GUI events"},
    {(char *)"_CPPInstance__expand__", (PyCFunction)PyROOT::CPPInstanceExpand, METH_VARARGS,
     (char *)"Deserialize a pickled object"},
-   {(char *)"ClearProxiedObjects", (PyCFunction)PyROOT::ClearProxiedObjects, METH_NOARGS,
-    (char *)"Clear proxied objects regulated by PyROOT"},
    {(char *)"JupyROOTExecutor", (PyCFunction)JupyROOTExecutor, METH_VARARGS, (char *)"Create JupyROOTExecutor"},
    {(char *)"JupyROOTDeclarer", (PyCFunction)JupyROOTDeclarer, METH_VARARGS, (char *)"Create JupyROOTDeclarer"},
    {(char *)"JupyROOTExecutorHandler_Clear", (PyCFunction)JupyROOTExecutorHandler_Clear, METH_NOARGS,
