@@ -19,9 +19,6 @@ namespace PyROOT {
 // initialize ROOT
 void Init();
 
-// clean up all objects controlled by TMemoryRegulator
-PyObject *ClearProxiedObjects(PyObject *self, PyObject *args);
-
 } // namespace PyROOT
 
 #endif // !PYROOT_ROOTWRAPPER_H
