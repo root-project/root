@@ -878,7 +878,7 @@ public:
    ///            return an RVec of varied values, one for each variation tag, in the same order as the tags.
    /// \param[in] inputColumns the names of the columns to be passed to the callable.
    /// \param[in] nVariations number of variations returned by the expression. The corresponding tags will be `"0"`,
-   /// `"1"`, etc. 
+   /// `"1"`, etc.
    /// \param[in] variationName a generic name for this set of varied values, e.g. `"ptvariation"`.
    ///            colName is used if none is provided.
    ///
@@ -984,7 +984,7 @@ public:
    ///            return an RVec of varied values, one for each variation tag, in the same order as the tags.
    /// \param[in] inputColumns the names of the columns to be passed to the callable.
    /// \param[in] nVariations number of variations returned by the expression. The corresponding tags will be `"0"`,
-   /// `"1"`, etc. 
+   /// `"1"`, etc.
    /// \param[in] variationName a generic name for this set of varied values, e.g. `"ptvariation"`.
    ///            colName is used if none is provided.
    ///
@@ -1032,7 +1032,7 @@ public:
    /// \param[in] inputColumns the names of the columns to be passed to the callable.
    /// \param[in] inputColumns the names of the columns to be passed to the callable.
    /// \param[in] nVariations number of variations returned by the expression. The corresponding tags will be `"0"`,
-   /// `"1"`, etc. 
+   /// `"1"`, etc.
    /// \param[in] variationName a generic name for this set of varied values, e.g. `"ptvariation"`.
    ///            colName is used if none is provided.
    ///
@@ -1087,7 +1087,7 @@ public:
    /// \param[in] expression a string containing valid C++ code that evaluates to an RVec containing the varied
    ///            values for the specified column.
    /// \param[in] nVariations number of variations returned by the expression. The corresponding tags will be `"0"`,
-   /// `"1"`, etc. 
+   /// `"1"`, etc.
    /// \param[in] variationName a generic name for this set of varied values, e.g. `"ptvariation"`.
    ///            colName is used if none is provided.
    ///
@@ -1122,7 +1122,7 @@ public:
    /// \param[in] expression a string containing valid C++ code that evaluates to an RVec or RVecs containing the varied
    ///            values for the specified columns.
    /// \param[in] nVariations number of variations returned by the expression. The corresponding tags will be `"0"`,
-   /// `"1"`, etc. 
+   /// `"1"`, etc.
    /// \param[in] variationName a generic name for this set of varied values, e.g. `"ptvariation"`.
    ///
    /// This overload adds the possibility for the expression used to evaluate the varied values to be just-in-time
@@ -1159,7 +1159,7 @@ public:
    /// \param[in] expression a string containing valid C++ code that evaluates to an RVec containing the varied
    ///            values for the specified column.
    /// \param[in] nVariations number of variations returned by the expression. The corresponding tags will be `"0"`,
-   /// `"1"`, etc. 
+   /// `"1"`, etc.
    /// \param[in] variationName a generic name for this set of varied values, e.g. `"ptvariation"`.
    ///            colName is used if none is provided.
    ///
@@ -2088,7 +2088,7 @@ public:
    ///
    /// ### Example usage:
    /// ~~~{.cpp}
-   /// // Deduce column types (this invocation needs jitting internally)
+   /// // Deduce column types (this invocation leads to just-in-time compilation)
    /// auto myHist1 = myDf.Histo3D({"name", "title", 64u, 0., 128., 32u, -4., 4., 8u, -2., 2.},
    ///                             "myValueX", "myValueY", "myValueZ", "myWeight");
    /// // Explicit column types
