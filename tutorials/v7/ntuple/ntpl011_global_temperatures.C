@@ -14,8 +14,8 @@
 /// \author John Yoon
 
 // NOTE: The RNTuple classes are experimental at this point.
-// Functionality, interface, and data format is still subject to changes.
-// Do not use for real data! During ROOT setup, configure the following flags:
+// Functionality and interface are still subject to changes.
+// During ROOT setup, configure the following flags:
 // `-DCMAKE_CXX_STANDARD=17 -Droot7=ON -Dwebgui=ON`
 
 #include <ROOT/RDataFrame.hxx>
