@@ -910,6 +910,9 @@ ROOT::Experimental::Internal::RFieldDescriptorBuilder::MakeDescriptor() const
       if (!validName) {
          return R__FORWARD_ERROR(validName);
       }
+      if (fField.GetFieldName().empty()) {
+         return R__FAIL("name cannot be empty string \"\"");
+      }
    }
    return fField.Clone();
 }

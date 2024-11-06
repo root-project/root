@@ -212,6 +212,9 @@ void ROOT::Experimental::RNTupleModel::EnsureValidFieldName(std::string_view fie
    if (!nameValid) {
       nameValid.Throw();
    }
+   if (fieldName.empty()) {
+      throw RException(R__FAIL("name cannot be empty string \"\""));
+   }
    auto fieldNameStr = std::string(fieldName);
    if (fFieldNames.count(fieldNameStr) > 0)
       throw RException(R__FAIL("field name '" + fieldNameStr + "' already exists in NTuple model"));
