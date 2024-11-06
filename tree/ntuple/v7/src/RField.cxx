@@ -565,6 +565,7 @@ ROOT::Experimental::RFieldBase::RFieldBase(std::string_view name, std::string_vi
      fPrincipalColumn(nullptr),
      fTraits(isSimple ? kTraitMappable : 0)
 {
+   EnsureValidFieldName(name);
 }
 
 std::string ROOT::Experimental::RFieldBase::GetQualifiedFieldName() const
@@ -896,9 +897,7 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
 
 ROOT::Experimental::RResult<void> ROOT::Experimental::RFieldBase::EnsureValidFieldName(std::string_view fieldName)
 {
-   if (fieldName.empty()) {
-      return R__FAIL("name cannot be empty string \"\"");
-   } else if (fieldName.find('.') != std::string::npos) {
+   if (fieldName.find('.') != std::string::npos) {
       return R__FAIL("name '" + std::string(fieldName) + "' cannot contain dot characters '.'");
    }
    return RResult<void>::Success();
