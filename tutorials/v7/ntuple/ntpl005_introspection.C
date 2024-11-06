@@ -11,8 +11,7 @@
 /// \author The ROOT Team
 
 // NOTE: The RNTuple classes are experimental at this point.
-// Functionality, interface, and data format is still subject to changes.
-// Do not use for real data!
+// Functionality and interface are still subject to changes.
 
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleReader.hxx>
