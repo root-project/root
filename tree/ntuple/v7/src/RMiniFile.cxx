@@ -24,6 +24,7 @@
 
 #include <Byteswap.h>
 #include <TBufferFile.h>
+#include <TDirectory.h>
 #include <TError.h>
 #include <TFile.h>
 #include <TKey.h>
@@ -1114,6 +1115,21 @@ ROOT::Experimental::Internal::RNTupleFileWriter::Append(std::string_view ntupleN
    return writer;
 }
 
+std::unique_ptr<ROOT::Experimental::Internal::RNTupleFileWriter>
+ROOT::Experimental::Internal::RNTupleFileWriter::Append(std::string_view ntupleName, TDirectory &directory,
+                                                        std::uint64_t maxKeySize)
+{
+   TFile *file = directory.GetFile();
+   if (!file)
+      throw RException(R__FAIL("invalid attempt to add an RNTuple to a directory that is not backed by a file"));
+   assert(file->IsBinary());
+
+   auto writer = std::unique_ptr<RNTupleFileWriter>(new RNTupleFileWriter(ntupleName, maxKeySize));
+   writer->fFileProper.fFile = file;
+   writer->fFileProper.fDirectory = &directory;
+   return writer;
+}
+
 void ROOT::Experimental::Internal::RNTupleFileWriter::UpdateStreamerInfos(
    const RNTupleSerializer::StreamerInfoMap_t &streamerInfos)
 {
@@ -1124,7 +1140,8 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::Commit()
 {
    if (fFileProper) {
       // Easy case, the ROOT file header and the RNTuple streaming is taken care of by TFile
-      fFileProper.fFile->WriteObject(&fNTupleAnchor, fNTupleName.c_str());
+      TDirectory *d = fFileProper.fDirectory ? fFileProper.fDirectory : fFileProper.fFile;
+      d->WriteObject(&fNTupleAnchor, fNTupleName.c_str());
 
       // Make sure the streamer info records used in the RNTuple are written to the file
       TBufferFile buf(TBuffer::kWrite);

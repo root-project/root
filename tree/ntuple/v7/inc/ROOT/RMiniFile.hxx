@@ -27,7 +27,7 @@
 #include <memory>
 #include <string>
 
-class TCollection;
+class TDirectory;
 class TFile;
 class TFileMergeInfo;
 class TVirtualStreamerInfo;
@@ -103,7 +103,10 @@ A stand-alone version of RNTuple can remove the TFile based writer.
 class RNTupleFileWriter {
 private:
    struct RFileProper {
+      /// If fDirectory is set, fFile is equal to fDirectory->GetFile()
       TFile *fFile = nullptr;
+      /// A sub directory in fFile or nullptr if the data is stored in the root directory of the file
+      TDirectory *fDirectory = nullptr;
       /// Low-level writing using a TFile
       void Write(const void *buffer, size_t nbytes, std::int64_t offset);
       /// Writes an RBlob opaque key with the provided buffer as data record and returns the offset of the record
@@ -205,6 +208,9 @@ public:
                                                       const RNTupleWriteOptions &options);
    /// Add a new RNTuple identified by ntupleName to the existing TFile.
    static std::unique_ptr<RNTupleFileWriter> Append(std::string_view ntupleName, TFile &file, std::uint64_t maxKeySize);
+   /// Add a new RNTuple identified by ntupleName to the existing directory, which must be a directory in a file.
+   static std::unique_ptr<RNTupleFileWriter>
+   Append(std::string_view ntupleName, TDirectory &directory, std::uint64_t maxKeySize);
 
    RNTupleFileWriter(const RNTupleFileWriter &other) = delete;
    RNTupleFileWriter(RNTupleFileWriter &&other) = delete;
