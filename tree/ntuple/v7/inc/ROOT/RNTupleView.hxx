@@ -16,6 +16,7 @@
 #ifndef ROOT7_RNTupleView
 #define ROOT7_RNTupleView
 
+#include <ROOT/RError.hxx>
 #include <ROOT/RField.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <string_view>
@@ -70,6 +71,7 @@ public:
    RIterator begin() { return RIterator(fStart); }
    RIterator end() { return RIterator(fEnd); }
    NTupleSize_t size() { return fEnd - fStart; }
+   bool IsValid() const { return (fStart != kInvalidNTupleIndex) && (fEnd != kInvalidNTupleIndex); }
 };
 
 
@@ -120,7 +122,8 @@ namespace Internal {
 /// Helper to get the iteration space of the given field that needs to be connected to the given page source.
 /// The indexes are given by the number of elements of the principal column of the field or, if none exists,
 /// by the number of elements of the first principal column found in the subfields searched by BFS.
-/// If the field hierarchy is empty on columns, throw an exception.
+/// If the field hierarchy is empty on columns, the returned field range is invalid (start and end set to
+/// kInvalidNTupleIndex). An attempt to use such a field range in RNTupleViewBase::GetFieldRange will throw.
 RNTupleGlobalRange GetFieldRange(const RFieldBase &field, const RPageSource &pageSource);
 
 } // namespace Internal
@@ -188,7 +191,13 @@ public:
 
    const RFieldBase &GetField() const { return *fField; }
    const RFieldBase::RValue &GetValue() const { return fValue; }
-   RNTupleGlobalRange GetFieldRange() const { return fFieldRange; }
+   RNTupleGlobalRange GetFieldRange() const
+   {
+      if (!fFieldRange.IsValid()) {
+         throw RException(R__FAIL("field iteration over empty fields is unsupported: " + fField->GetFieldName()));
+      }
+      return fFieldRange;
+   }
 
    void Bind(std::shared_ptr<T> objPtr) { fValue.Bind(objPtr); }
    void BindRawPtr(T *rawPtr) { fValue.BindRawPtr(rawPtr); }
