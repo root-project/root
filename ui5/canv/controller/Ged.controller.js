@@ -43,7 +43,7 @@ sap.ui.define([
          this.getView().byId('ged_page').removeAllContent();
 
          // set dummy model
-         this.getView().setModel(new JSONModel({ SelectedClass: 'none' }));
+         this.getView().setModel(new JSONModel({ SelectedClass: 'none', SelectedPlace: '' }));
 
          // remove references
          this.currentPainter = null;
@@ -334,6 +334,8 @@ sap.ui.define([
 
          opts.Contour = parseInt(opts.Contour);
          opts.ErrorKind = parseInt(opts.ErrorKind);
+         opts.BoxStyle = parseInt(opts.BoxStyle);
+         opts.GLBox = parseInt(opts.GLBox);
 
          this.currentPainter?.interactiveRedraw('pad', 'drawopt');
       },
@@ -361,6 +363,7 @@ sap.ui.define([
 
 
          this.getView().getModel().setProperty('/SelectedClass', selectedClass);
+         this.getView().getModel().setProperty('/SelectedPlace', place);
 
          let oPage = this.getView().byId('ged_page');
          oPage.removeAllContent();
