@@ -446,14 +446,14 @@ int main(int argc, char **argv)
       hfile->SetCompressionLevel(3);
       if (hfile->GetCompressionSettings() != 203) exit(26);
 
-      if (ROOT::CompressionSettings(ROOT::kUseGlobalSetting, 5) != 5) exit(31);
-      if (ROOT::CompressionSettings(ROOT::kZLIB, 0) != 100) exit(32);
-      if (ROOT::CompressionSettings(ROOT::kZLIB, -1) != 100) exit(36);
-      if (ROOT::CompressionSettings(ROOT::kLZMA, 99) != 299) exit(33);
-      if (ROOT::CompressionSettings(ROOT::kLZ4, 0) != 400) exit(37);
-      if (ROOT::CompressionSettings(ROOT::kLZ4, -1) != 400) exit(38);
-      if (ROOT::CompressionSettings(ROOT::kOldCompressionAlgo, 100) != 399) exit(34);
-      if (ROOT::CompressionSettings(ROOT::kUndefinedCompressionAlgorithm, 7) != 7) exit(35);
+      if (ROOT::CompressionSettings(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal, 5) != 5) exit(31);
+      if (ROOT::CompressionSettings(ROOT::RCompressionSetting::EAlgorithm::kZLIB, 0) != 100) exit(32);
+      if (ROOT::CompressionSettings(ROOT::RCompressionSetting::EAlgorithm::kZLIB, -1) != 100) exit(36);
+      if (ROOT::CompressionSettings(ROOT::RCompressionSetting::EAlgorithm::kLZMA, 99) != 299) exit(33);
+      if (ROOT::CompressionSettings(ROOT::RCompressionSetting::EAlgorithm::kLZ4, 0) != 400) exit(37);
+      if (ROOT::CompressionSettings(ROOT::RCompressionSetting::EAlgorithm::kLZ4, -1) != 400) exit(38);
+      if (ROOT::CompressionSettings(ROOT::RCompressionSetting::EAlgorithm::kOldCompressionAlgo, 100) != 399) exit(34);
+      if (ROOT::CompressionSettings(ROOT::RCompressionSetting::EAlgorithm::kUndefined, 7) != 7) exit(35);
 
       // Repeat the same tests for get and set functions in TBranch
       TBranch *testBranch = new TBranch();
