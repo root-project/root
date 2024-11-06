@@ -1583,18 +1583,6 @@ void RooAbsCollection::sortTopologically() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Factory for legacy iterators.
-
-std::unique_ptr<RooAbsCollection::LegacyIterator_t> RooAbsCollection::makeLegacyIterator (bool forward) const {
-   if (!forward) {
-      ccoutE(DataHandling) << "The legacy RooFit collection iterators don't support reverse iterations, any more. "
-                           << "Use begin() and end()" << std::endl;
-   }
-  return std::make_unique<LegacyIterator_t>(_list);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
 /// Insert an element into the owned collections.
 void RooAbsCollection::insert(RooAbsArg* item) {
   _list.push_back(item);

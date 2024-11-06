@@ -408,15 +408,6 @@ protected:
 
 private:
 
-#if ROOT_VERSION_CODE < ROOT_VERSION(6, 34, 00)
-  // TODO: Remove this friend declaration and function in 6.34, where it's not
-  // needed anymore because the deprecated legacy iterators will be removed.
-  friend class RooWorkspace;
-  std::unique_ptr<LegacyIterator_t> makeLegacyIterator (bool forward = true) const;
-#else
-#error "Please remove this unneeded code."
-#endif
-
   bool replaceImpl(const RooAbsArg& var1, const RooAbsArg& var2);
 
   using HashAssistedFind = RooFit::Detail::HashAssistedFind;
