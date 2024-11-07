@@ -424,8 +424,9 @@ ROOT::Experimental::Internal::RPageSourceFile::LoadPageImpl(ColumnHandle_t colum
    const auto elementInMemoryType = element->GetIdentifier().fInMemoryType;
 
    if (pageInfo.fLocator.fType == RNTupleLocator::kTypePageZero) {
-      auto pageZero = RPage::MakePageZero(elementSize);
+      auto pageZero = fPageAllocator->NewPage(elementSize, pageInfo.fNElements);
       pageZero.GrowUnchecked(pageInfo.fNElements);
+      memset(pageZero.GetBuffer(), 0, pageZero.GetNBytes());
       pageZero.SetWindow(clusterInfo.fColumnOffset + pageInfo.fFirstInPage,
                          RPage::RClusterInfo(clusterId, clusterInfo.fColumnOffset));
       return fPagePool.RegisterPage(std::move(pageZero), RPagePool::RKey{columnId, elementInMemoryType});

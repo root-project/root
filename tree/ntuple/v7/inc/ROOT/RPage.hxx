@@ -144,10 +144,14 @@ public:
    }
 
    void* GetBuffer() const { return fBuffer; }
-   /// Called during writing: returns a pointer after the last element and increases the element counter
-   /// in anticipation of the caller filling nElements in the page. It is the responsibility of the caller
-   /// to prevent page overflows, i.e. that fNElements + nElements <= fMaxElements
-   void* GrowUnchecked(ClusterSize_t::ValueType nElements) {
+   /// Increases the number elements in the page. The caller is responsible to respect the page capacity,
+   /// i.e. to ensure that fNElements + nElements <= fMaxElements.
+   /// Returns a pointer after the last element, which is used during writing in anticipation of the caller filling
+   /// nElements in the page.
+   /// When reading a page from disk, GrowUnchecked is used to set the actual number of elements. In this case, the
+   /// return value is ignored.
+   void *GrowUnchecked(ClusterSize_t::ValueType nElements)
+   {
       auto offset = GetNBytes();
       fNElements += nElements;
       return static_cast<unsigned char *>(fBuffer) + offset;
@@ -161,13 +165,6 @@ public:
    void Reset(NTupleSize_t rangeFirst) { fNElements = 0; fRangeFirst = rangeFirst; }
    void ResetCluster(const RClusterInfo &clusterInfo) { fNElements = 0; fClusterInfo = clusterInfo; }
 
-   /// Make a 'zero' page, which is comprised of 0x00 bytes only. The caller is responsible for
-   /// invoking `GrowUnchecked()` and `SetWindow()` as appropriate.
-   static RPage MakePageZero(ClusterSize_t::ValueType elementSize)
-   {
-      return RPage{const_cast<void *>(GetPageZeroBuffer()), nullptr, elementSize,
-                   /*maxElements=*/(kPageZeroSize / elementSize)};
-   }
    /// Return a pointer to the page zero buffer used if there is no on-disk data for a particular deferred column
    static const void *GetPageZeroBuffer();
 
