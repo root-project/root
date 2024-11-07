@@ -18,22 +18,37 @@
 
 #include <TError.h>
 
+#include <algorithm>
 #include <cstdlib>
 #include <utility>
+
+void ROOT::Experimental::Internal::RPagePool::AddPage(const RPage &page, const RKey &key, std::size_t index)
+{
+   assert(fLookupByBuffer.count(page.GetBuffer()) == 0);
+   fLookupByBuffer[page.GetBuffer()] = index;
+   auto itr = fLookupByKey.find(key);
+   if (itr == fLookupByKey.end()) {
+      fLookupByKey.emplace(key, std::vector<size_t>({index}));
+   } else {
+      itr->second.emplace_back(index);
+   }
+}
 
 ROOT::Experimental::Internal::RPageRef ROOT::Experimental::Internal::RPagePool::RegisterPage(RPage page, RKey key)
 {
    std::lock_guard<std::mutex> lockGuard(fLock);
-   fLookupByBuffer[page.GetBuffer()] = fEntries.size();
+   auto index = fEntries.size();
    auto &entry = fEntries.emplace_back(REntry{std::move(page), key, 1});
+   AddPage(page, key, index);
    return RPageRef(entry.fPage, this);
 }
 
 void ROOT::Experimental::Internal::RPagePool::PreloadPage(RPage page, RKey key)
 {
    std::lock_guard<std::mutex> lockGuard(fLock);
-   fLookupByBuffer[page.GetBuffer()] = fEntries.size();
+   auto index = fEntries.size();
    fEntries.emplace_back(REntry{std::move(page), key, 0});
+   AddPage(page, key, index);
 }
 
 void ROOT::Experimental::Internal::RPagePool::ReleasePage(const RPage &page)
@@ -47,8 +62,19 @@ void ROOT::Experimental::Internal::RPagePool::ReleasePage(const RPage &page)
    if (--fEntries[idx].fRefCounter == 0) {
       fLookupByBuffer.erase(page.GetBuffer());
 
+      auto itrPageSet = fLookupByKey.find(fEntries[idx].fKey);
+      assert(itrPageSet != fLookupByKey.end());
+      itrPageSet->second.erase(std::find(itrPageSet->second.begin(), itrPageSet->second.end(), idx));
+      if (itrPageSet->second.empty())
+         fLookupByKey.erase(itrPageSet);
+
       if (idx != (N - 1)) {
          fLookupByBuffer[fEntries[N - 1].fPage.GetBuffer()] = idx;
+         itrPageSet = fLookupByKey.find(fEntries[N - 1].fKey);
+         assert(itrPageSet != fLookupByKey.end());
+         auto itrPageIdx = std::find(itrPageSet->second.begin(), itrPageSet->second.end(), N - 1);
+         assert(itrPageIdx != itrPageSet->second.end());
+         *itrPageIdx = idx;
          fEntries[idx] = std::move(fEntries[N - 1]);
       }
 
@@ -60,16 +86,15 @@ ROOT::Experimental::Internal::RPageRef
 ROOT::Experimental::Internal::RPagePool::GetPage(RKey key, NTupleSize_t globalIndex)
 {
    std::lock_guard<std::mutex> lockGuard(fLock);
-   unsigned int N = fEntries.size();
-   for (unsigned int i = 0; i < N; ++i) {
-      if (fEntries[i].fRefCounter < 0)
-         continue;
-      if (fEntries[i].fKey != key)
-         continue;
-      if (!fEntries[i].fPage.Contains(globalIndex))
-         continue;
-      fEntries[i].fRefCounter++;
-      return RPageRef(fEntries[i].fPage, this);
+   auto itrPageSet = fLookupByKey.find(key);
+   if (itrPageSet == fLookupByKey.end())
+      return RPageRef();
+
+   for (auto idx : itrPageSet->second) {
+      if (fEntries[idx].fPage.Contains(globalIndex)) {
+         fEntries[idx].fRefCounter++;
+         return RPageRef(fEntries[idx].fPage, this);
+      }
    }
    return RPageRef();
 }
@@ -78,16 +103,15 @@ ROOT::Experimental::Internal::RPageRef
 ROOT::Experimental::Internal::RPagePool::GetPage(RKey key, RClusterIndex clusterIndex)
 {
    std::lock_guard<std::mutex> lockGuard(fLock);
-   unsigned int N = fEntries.size();
-   for (unsigned int i = 0; i < N; ++i) {
-      if (fEntries[i].fRefCounter < 0)
-         continue;
-      if (fEntries[i].fKey != key)
-         continue;
-      if (!fEntries[i].fPage.Contains(clusterIndex))
-         continue;
-      fEntries[i].fRefCounter++;
-      return RPageRef(fEntries[i].fPage, this);
+   auto itrPageSet = fLookupByKey.find(key);
+   if (itrPageSet == fLookupByKey.end())
+      return RPageRef();
+
+   for (auto idx : itrPageSet->second) {
+      if (fEntries[idx].fPage.Contains(clusterIndex)) {
+         fEntries[idx].fRefCounter++;
+         return RPageRef(fEntries[idx].fPage, this);
+      }
    }
    return RPageRef();
 }

@@ -62,6 +62,16 @@ public:
    };
 
 private:
+   /// Hash function to be used in the unordered map fLookupByKey
+   struct RKeyHasher {
+      /// Like boost::hash_combine
+      std::size_t operator()(const RKey &k) const
+      {
+         auto seed = std::hash<DescriptorId_t>()(k.fColumnId);
+         return seed ^ (std::hash<std::type_index>()(k.fInMemoryType) + 0x9e3779b9 + (seed << 6) + (seed >> 2));
+      }
+   };
+
    /// Every page in the page pool is annotated with a search key and a reference counter.
    struct REntry {
       RPage fPage;
@@ -72,7 +82,15 @@ private:
    std::vector<REntry> fEntries; ///< All cached pages in the page pool
    /// Used in ReleasePage() to find the page index in fPages
    std::unordered_map<void *, std::size_t> fLookupByBuffer;
+   /// Used in GetPage() to find the right page in fEntries. Lookup for the key (pair of on-disk and in-memory type)
+   /// takes place in O(1). The selected pages are identified by index into the fEntries vector. Access in this
+   /// selected set is linear. We may consider replacing this in the future by a sorted list of pages (e.g., std::set).
+   /// That comes at a code complexity cost though.
+   std::unordered_map<RKey, std::vector<std::size_t>, RKeyHasher> fLookupByKey;
    std::mutex fLock; ///< The page pool is accessed concurrently due to parallel decompression
+
+   /// Add a new page to the fLookupByBuffer and fLookupByKey data structures.
+   void AddPage(const RPage &page, const RKey &key, std::size_t index);
 
    /// Give back a page to the pool and decrease the reference counter. There must not be any pointers anymore into
    /// this page. If the reference counter drops to zero, the page pool might decide to call the deleter given in
