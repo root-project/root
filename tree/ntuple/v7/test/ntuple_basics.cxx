@@ -775,3 +775,49 @@ TEST(RNTupleWriter, ForbidNonRootTFiles)
    // Opening an XML TFile should fail
    EXPECT_THROW(RNTupleWriter::Append(std::move(model), "ntpl", *file), RException);
 }
+
+TEST(RNTupleWriter, ForbiddenCharactersInRNTupleName)
+{
+   FileRaii fileGuard("test_ntuple_writer_forbidden_characters_in_rntuple_name.root");
+
+   std::array<const char *, 6> names{"ntu.ple", "nt/uple", "n tuple", "ntupl\\e", "n\ntuple", "ntup\tle"};
+
+   for (auto &&name : names) {
+      try {
+         auto writer = RNTupleWriter::Recreate(RNTupleModel::Create(), name, fileGuard.GetPath());
+         FAIL() << "Should not be able to create an RNTuple with name '" << name << "'.";
+      } catch (const RException &err) {
+         EXPECT_THAT(err.what(),
+                     testing::HasSubstr("RNTuple name '" + std::string(name) + "' cannot contain character"));
+      }
+   }
+}
+
+TEST(RNTuple, ForbiddenCharactersInField)
+{
+   std::array<const char *, 6> names{"fie.ld", "fi/eld", "f ield", "fiel\\d", "f\nield", "fi\teld"};
+
+   for (auto &&name : names) {
+      try {
+         auto field = RFieldBase::Create(name, "int").Unwrap();
+         FAIL() << "Should not be able to create an RNTuple field with name '" << name << "'.";
+      } catch (const RException &err) {
+         EXPECT_THAT(err.what(), testing::HasSubstr("Field name '" + std::string(name) + "' cannot contain character"));
+      }
+   }
+}
+
+TEST(RNTuple, ForbiddenCharactersInModelField)
+{
+   std::array<const char *, 6> names{"fie.ld", "fi/eld", "f ield", "fiel\\d", "f\nield", "fi\teld"};
+
+   auto model = RNTupleModel::Create();
+   for (auto &&name : names) {
+      try {
+         auto field = model->MakeField<int>(name);
+         FAIL() << "Should not be able to create an RNTuple field with name '" << name << "'.";
+      } catch (const RException &err) {
+         EXPECT_THAT(err.what(), testing::HasSubstr("Field name '" + std::string(name) + "' cannot contain character"));
+      }
+   }
+}

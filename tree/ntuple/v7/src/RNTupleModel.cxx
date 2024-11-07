@@ -208,7 +208,7 @@ ROOT::Experimental::RNTupleModel::RUpdater::AddProjectedField(std::unique_ptr<RF
 
 void ROOT::Experimental::RNTupleModel::EnsureValidFieldName(std::string_view fieldName)
 {
-   RResult<void> nameValid = RFieldBase::EnsureValidFieldName(fieldName);
+   RResult<void> nameValid = ROOT::Experimental::Internal::EnsureValidNameForRNTuple(fieldName, "Field");
    if (!nameValid) {
       nameValid.Throw();
    }

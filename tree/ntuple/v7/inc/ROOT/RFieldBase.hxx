@@ -475,8 +475,6 @@ public:
    /// Checks if the given type is supported by RNTuple. In case of success, the result vector is empty.
    /// Otherwise there is an error record for each failing sub field (sub type).
    static std::vector<RCheckResult> Check(const std::string &fieldName, const std::string &typeName);
-   /// Check whether a given string is a valid field name
-   static RResult<void> EnsureValidFieldName(std::string_view fieldName);
 
    /// Generates an object of the field type and allocates new initialized memory according to the type.
    /// Implemented at the end of this header because the implementation is using RField<T>::TypeName()
