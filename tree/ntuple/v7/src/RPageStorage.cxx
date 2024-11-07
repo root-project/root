@@ -627,6 +627,7 @@ bool ROOT::Experimental::Internal::RWritePageMemoryManager::TryUpdate(RColumn &c
 ROOT::Experimental::Internal::RPageSink::RPageSink(std::string_view name, const RNTupleWriteOptions &options)
    : RPageStorage(name), fOptions(options.Clone()), fWritePageMemoryManager(options.GetPageBufferBudget())
 {
+   ROOT::Experimental::Internal::EnsureValidNameForRNTuple(name, "RNTuple").ThrowOnError();
 }
 
 ROOT::Experimental::Internal::RPageSink::~RPageSink() {}
