@@ -277,6 +277,10 @@ class TCanvasPainter extends TPadPainter {
          return this.sendWebsocket(`OBJEXEC:${snapid}:${exec}`);
    }
 
+   /** @summary Return true if message can be send via web socket
+    * @private */
+   canSendWebSocket() { return this._websocket?.canSend(); }
+
    /** @summary Send text message with web socket
      * @desc used for communication with server-side of web canvas
      * @private */
@@ -594,7 +598,6 @@ class TCanvasPainter extends TPadPainter {
 
                   objpainter?.getPadPainter()?.selectObjectPainter(objpainter);
 
-                  console.log('activate GED');
                   this.processChanges('sbits', this);
 
                   resolveFunc(true);
@@ -644,11 +647,17 @@ class TCanvasPainter extends TPadPainter {
 
       if (this._all_sections_showed) return;
       this._all_sections_showed = true;
+
+      // used in Canvas.controller.js to avoid browser resize because of initial sections show/hide
+      this._ignore_section_resize = true;
+
       this.showSection('Menu', this.pad.TestBit(kMenuBar));
       this.showSection('StatusBar', this.pad.TestBit(kShowEventStatus));
       this.showSection('ToolBar', this.pad.TestBit(kShowToolBar));
       this.showSection('Editor', this.pad.TestBit(kShowEditor));
       this.showSection('ToolTips', this.pad.TestBit(kShowToolTips) || this._highlight_connect);
+
+      this._ignore_section_resize = false;
    }
 
    /** @summary Handle highlight in canvas - deliver information to server

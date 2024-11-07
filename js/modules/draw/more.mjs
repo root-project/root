@@ -111,6 +111,13 @@ async function drawText() {
 
       assignContextMenu(this, kToFront);
 
+      this.fillContextMenuItems = function(menu) {
+         menu.add('Change text', () => menu.input('Enter new text', text.fTitle).then(t => {
+            text.fTitle = t;
+            this.interactiveRedraw('pad', `exec:SetTitle("${t}")`);
+         }));
+      };
+
       return this;
    });
 }
