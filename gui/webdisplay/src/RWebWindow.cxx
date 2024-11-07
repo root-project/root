@@ -690,6 +690,10 @@ void RWebWindow::CheckInactiveConnections()
 /// Configure maximal number of allowed connections - 0 is unlimited
 /// Will not affect already existing connections
 /// Default is 1 - the only client is allowed
+/// Because of security reasons setting number of allowed connections is not sufficient now.
+/// To enable multi-connection mode, one also has to call
+/// `ROOT::RWebWindowsManager::SetSingleConnMode(false);`
+/// before creating of the RWebWindow instance
 
 void RWebWindow::SetConnLimit(unsigned lmt)
 {
