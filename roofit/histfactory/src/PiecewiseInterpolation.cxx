@@ -5,17 +5,35 @@
  * more altered or distorted ones, it computes a new shape depending on the value of the nuisance
  * parameters \f$ \alpha_i \f$:
  * \f[
- *   A = \sum_i \mathrm{Interpolate}(\mathrm{low}_i, \mathrm{nominal}, \mathrm{high}_i, \alpha_i).
+ *   A = \mathrm{nominal} + \sum_i I(\mathrm{low}_i, \mathrm{nominal}, \mathrm{high}_i, \alpha_i).
  * \f]
+ * for additive interpolation modes (interpCodes 0, 2, 3, and 4), or:
+ * \f[
+ *   A = \mathrm{nominal}\prod_i I(\mathrm{low}_i, \mathrm{nominal}, \mathrm{high}_i, \alpha_i).
+ * \f]
+ * for multiplicative interpolation modes (interpCodes 1, 5, and 6). The interpCodes determine the function \f$ I \f$ (see table below).
+ * 
+ * Note that a PiecewiseInterpolation with \f$ \mathrm{nominal}=1 \f$, N variations, and a multiplicative interpolation mode is equivalen to N
+ * PiecewiseInterpolations each with a single variation and the same interpolation code, all inside a RooProduct.
+ * 
  * If an \f$ \alpha_i \f$ is zero, the distribution is identical to the nominal distribution, at
  * \f$ \pm 1 \f$ it is identical to the up/down distribution for that specific \f$ i \f$.
  *
+ * PiecewiseInterpolation will behave identically (except for differences in the interpCode assignments) to a FlexibleInterpVar if both its nominal, and high and low variation sets
+ * are all RooRealVar.
+ *
  * The class supports several interpolation methods, which can be selected for each parameter separately
- * using setInterpCode(). The default interpolation code is 4. This performs
- * - \f$ |\alpha | > 1 \f$: Linear extrapolation.
- * - \f$ |\alpha | < 1 \f$: Polynomial interpolation. A sixth-order polynomial is used. Its coefficients
- * are chosen such that function, first, and second derivative at \f$ \alpha \pm 1 \f$ match the values
- * that the extrapolation procedure uses.
+ * using setInterpCode(). The default interpolation code is 0. The table below provides details of the interpCodes:
+
+| **interpCode** | **Name** | **Description** |
+|----------------|----------|-----------------|
+| 0   (default)  | Additive Piecewise Linear | \f$ I = \alpha_i(\mathrm{high}_i - \mathrm{nominal}) \f$ for \f$ \alpha_i>=0 \f$, otherwise \f$ I = \alpha_i(\mathrm{nominal}-\mathrm{low}_i) \f$. Not recommended except if using a symmetric variation, because of discontinuities in derivatives. |
+| 1              | Multiplicative Piecewise Exponential | \f$ I = (\mathrm{high}_i/\mathrm{nominal})^{\alpha_i} \f$ for \f$ \alpha_i>=0 \f$, otherwise \f$ I = (\mathrm{low}_i/\mathrm{nominal})^{-\alpha_i} \f$. |
+| 2              | Additive Quadratic Interp. + Linear Extrap. | Deprecated by interpCode 4. |
+| 4              | Additive Poly Interp. + Linear Extrap. | interpCode 0 for \f$ |\alpha_i|>=1 \f$. 6th-order polynomial for \f$ |\alpha_i|<1 \f$ with matching 0th,1st,2nd derivatives at boundary. Recommended for normalization factors. |
+| 5              | Multiplicative Poly Interp. + Exponential Extrap. | interpCode 1 for \f$ |\alpha_i|>=1 \f$. 6th-order polynomial for \f$ |\alpha_i|<1 \f$ with matching 0th,1st,2nd derivatives at boundary. Recommended for normalization factors. In FlexibleInterpVar this is interpCode=4. |
+| 6              | Multiplicative Poly Interp. + Linear Extrap. | Multiplicative version of interpCode 4. Recommended for normalization factors that must not have roots (i.e. be equal to 0) outside of \f$ |\alpha_i|<1 \f$. |
+
  */
 
 #include "RooStats/HistFactory/PiecewiseInterpolation.h"
@@ -576,7 +594,7 @@ void PiecewiseInterpolation::setAllInterpCodes(int code)
 void PiecewiseInterpolation::setInterpCodeForParam(int iParam, int code)
 {
    RooAbsArg const &param = _paramSet[iParam];
-   if (code < 0 || code > 5) {
+   if (code < 0 || code > 6) {
       coutE(InputArguments) << "PiecewiseInterpolation::setInterpCode ERROR: " << param.GetName()
                             << " with unknown interpolation code " << code << ", keeping current code "
                             << _interpCode[iParam] << std::endl;
