@@ -875,7 +875,9 @@ function drawXYZ(toplevel, AxisPainter, opts) {
    if (opts.v7) {
       this.x_handle.pad_name = this.pad_name;
       this.x_handle.snapid = this.snapid;
-   }
+   } else if (opts.hist_painter)
+      this.x_handle.setHistPainter(opts.hist_painter, 'x');
+
    this.x_handle.configureAxis('xaxis', this.xmin, this.xmax, xmin, xmax, false, [grminx, grmaxx],
                                { log: pad?.fLogx ?? 0, reverse: opts.reverse_x, logcheckmin: true });
    this.x_handle.assignFrameMembers(this, 'x');
@@ -885,7 +887,8 @@ function drawXYZ(toplevel, AxisPainter, opts) {
    if (opts.v7) {
       this.y_handle.pad_name = this.pad_name;
       this.y_handle.snapid = this.snapid;
-   }
+   } else if (opts.hist_painter)
+      this.y_handle.setHistPainter(opts.hist_painter, 'y');
    this.y_handle.configureAxis('yaxis', this.ymin, this.ymax, ymin, ymax, false, [grminy, grmaxy],
                                { log: pad && !opts.use_y_for_z ? pad.fLogy : 0, reverse: opts.reverse_y, logcheckmin: opts.ndim > 1 });
    this.y_handle.assignFrameMembers(this, 'y');
@@ -895,7 +898,8 @@ function drawXYZ(toplevel, AxisPainter, opts) {
    if (opts.v7) {
       this.z_handle.pad_name = this.pad_name;
       this.z_handle.snapid = this.snapid;
-   }
+   } else if (opts.hist_painter)
+      this.z_handle.setHistPainter(opts.hist_painter, 'z');
    this.z_handle.configureAxis('zaxis', this.zmin, this.zmax, zmin, zmax, false, [grminz, grmaxz],
                                { value_axis: (opts.ndim === 1) || (opts.ndim === 2),
                                  log: ((opts.use_y_for_z || (opts.ndim === 2)) ? pad?.fLogv : undefined) ?? pad?.fLogz ?? 0,
@@ -1105,6 +1109,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
    xcont.position.set(0, grminy, grminz);
    xcont.rotation.x = 1/4*Math.PI;
    xcont.xyid = 2;
+   xcont.painter = this.x_handle;
 
    if (opts.draw) {
       xtickslines = createLineSegments(ticks, getLineMaterial(this.x_handle, 'ticks'));
@@ -1134,6 +1139,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
    xcont = new THREE.Object3D();
    xcont.position.set(0, grmaxy, grminz);
    xcont.rotation.x = 3/4*Math.PI;
+   xcont.painter = this.x_handle;
 
    if (opts.draw)
       xcont.add(new THREE.LineSegments(xtickslines.geometry, xtickslines.material));
@@ -1217,6 +1223,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
       let yticksline, ycont = new THREE.Object3D();
       ycont.position.set(grminx, 0, grminz);
       ycont.rotation.y = -1/4*Math.PI;
+      ycont.painter = this.y_handle;
       if (opts.draw) {
          yticksline = createLineSegments(ticks, getLineMaterial(this.y_handle, 'ticks'));
          ycont.add(yticksline);
@@ -1245,6 +1252,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
       ycont = new THREE.Object3D();
       ycont.position.set(grmaxx, 0, grminz);
       ycont.rotation.y = -3/4*Math.PI;
+      ycont.painter = this.y_handle;
       if (opts.draw)
          ycont.add(new THREE.LineSegments(yticksline.geometry, yticksline.material));
 
@@ -1395,6 +1403,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
 
       zcont[n].zid = n + 2;
       top.add(zcont[n]);
+      zcont[n].painter = this.z_handle;
    }
 
    zcont[0].position.set(grminx, grmaxy, 0);
