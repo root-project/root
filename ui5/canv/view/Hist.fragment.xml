@@ -51,7 +51,7 @@
             <Label text="Type" labelFor="LegoSelectTh1" class="sapUiTinyMarginEnd"/>
             <Select selectedKey="{/opts/Lego}" tooltip="Lego kinds" id="LegoSelectTh1">
                <items>
-                  <core:Item text="NoLego" key="0" />
+                  <core:Item text="none" key="0" />
                   <core:Item text="Lego" key="1" />
                   <core:Item text="Lego1" key="11" />
                   <core:Item text="Lego2" key="12" />
@@ -91,12 +91,28 @@
             <Label text="Type" labelFor="LegoSelectTh2" class="sapUiTinyMarginEnd"/>
             <Select selectedKey="{/opts/Lego}" tooltip="Lego kind" id="LegoSelectTh2">
                <items>
-                  <core:Item text="No lego" key="0" />
+                  <core:Item text="None" key="0" />
                   <core:Item text="Lego" key="1" />
                   <core:Item text="Lego1" key="11" />
                   <core:Item text="Lego2" key="12" />
                   <core:Item text="Lego3" key="13" />
                   <core:Item text="Lego4" key="14" />
+               </items>
+            </Select>
+         </HBox>
+         <HBox alignItems="Center">
+            <Label text="Type" labelFor="SurfSelectTh2" class="sapUiTinyMarginEnd"/>
+            <Select selectedKey="{/opts/Surf}" tooltip="Surface kind" id="SurfSelectTh2">
+               <items>
+                  <core:Item text="None" key="0"/>
+                  <core:Item text="Surf" key="1"/>
+                  <core:Item text="Surf1" key="11"/>
+                  <core:Item text="Surf2" key="12"/>
+                  <core:Item text="Surf3" key="13"/>
+                  <core:Item text="Surf4" key="14"/>
+                  <core:Item text="Surf5" key="15"/>
+                  <core:Item text="Surf6" key="16"/>
+                  <core:Item text="Surf7" key="17"/>
                </items>
             </Select>
          </HBox>
