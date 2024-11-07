@@ -528,13 +528,14 @@ PyObject* VectorData(PyObject* self, PyObject*)
 
 
 //---------------------------------------------------------------------------
-PyObject* VectorArray(PyObject* self, PyObject* /* args */, PyObject* /* kwargs */)
+PyObject* VectorArray(PyObject* self, PyObject* args, PyObject* kwargs)
 {
-    // TODO: kwargs are ignored as the only known use is NumPy passing copy=False
     PyObject* pydata = VectorData(self, nullptr);
-    PyObject* view = PyObject_CallMethodNoArgs(pydata, PyStrings::gArray);
+    PyObject* arrcall = PyObject_GetAttr(pydata, PyStrings::gArray);
+    PyObject* newarr = PyObject_Call(arrcall, args, kwargs);
+    Py_DECREF(arrcall);
     Py_DECREF(pydata);
-    return view;
+    return newarr;
 }
 
 
