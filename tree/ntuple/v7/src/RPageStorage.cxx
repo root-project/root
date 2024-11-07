@@ -34,6 +34,7 @@
 #include <algorithm>
 #include <atomic>
 #include <cassert>
+#include <cstring>
 #include <functional>
 #include <memory>
 #include <string_view>
@@ -506,8 +507,9 @@ ROOT::Experimental::Internal::RPageSource::UnsealPage(const RSealedPage &sealedP
    // Unsealing a page zero is a no-op.  `RPageRange::ExtendToFitColumnRange()` guarantees that the page zero buffer is
    // large enough to hold `sealedPage.fNElements`
    if (sealedPage.GetBuffer() == RPage::GetPageZeroBuffer()) {
-      auto page = RPage::MakePageZero(element.GetSize());
+      auto page = pageAlloc.NewPage(element.GetSize(), sealedPage.GetNElements());
       page.GrowUnchecked(sealedPage.GetNElements());
+      memset(page.GetBuffer(), 0, page.GetNBytes());
       return page;
    }
 
