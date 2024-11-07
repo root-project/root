@@ -326,6 +326,7 @@ sap.ui.define([
          opts.Mode3D = opts.Mode3Dindx > 0;
 
          opts.Lego = parseInt(opts.Lego);
+         opts.Surf = parseInt(opts.Surf);
 
          let cl = this.getView().getModel().getProperty('/SelectedClass');
 
