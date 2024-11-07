@@ -46,6 +46,7 @@ git apply patches/CPyCppyy-Always-convert-returned-std-string.patch
 git apply patches/CPyCppyy-Disable-implicit-conversion-to-smart-ptr.patch
 git apply patches/CPyCppyy-TString_converter.patch
 git apply patches/CPyCppyy-Remove-implicit-conversion-of-any-ctypes-ptr.patch
+git apply patches/CPyCppyy-Prevent-construction-of-agg-init-for-tuple.patch
 git apply patches/cppyy-No-CppyyLegacy-namespace.patch
 git apply patches/cppyy-Remove-Windows-workaround.patch
 git apply patches/cppyy-Don-t-enable-cling-autoloading.patch

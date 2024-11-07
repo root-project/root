@@ -528,8 +528,9 @@ PyObject* VectorData(PyObject* self, PyObject*)
 
 
 //---------------------------------------------------------------------------
-PyObject* VectorArray(PyObject* self, PyObject* /* args */)
+PyObject* VectorArray(PyObject* self, PyObject* /* args */, PyObject* /* kwargs */)
 {
+    // TODO: kwargs are ignored as the only known use is NumPy passing copy=False
     PyObject* pydata = VectorData(self, nullptr);
     PyObject* view = PyObject_CallMethodNoArgs(pydata, PyStrings::gArray);
     Py_DECREF(pydata);
@@ -1809,7 +1810,7 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
             Utility::AddToClass(pyclass, "data", (PyCFunction)VectorData);
 
         // numpy array conversion
-            Utility::AddToClass(pyclass, "__array__", (PyCFunction)VectorArray);
+            Utility::AddToClass(pyclass, "__array__", (PyCFunction)VectorArray, METH_VARARGS | METH_KEYWORDS /* unused */);
 
         // checked getitem
             if (HasAttrDirect(pyclass, PyStrings::gLen)) {

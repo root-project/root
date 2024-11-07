@@ -499,11 +499,9 @@ PyObject* CPyCppyy::GetScopeProxy(Cppyy::TCppScope_t scope)
 // Retrieve scope proxy from the known ones.
     PyClassMap_t::iterator pci = gPyClasses.find(scope);
     if (pci != gPyClasses.end()) {
-        PyObject* pyclass = PyWeakref_GetObject(pci->second);
-        if (pyclass != Py_None) {
-            Py_INCREF(pyclass);
+        PyObject* pyclass = CPyCppyy_GetWeakRef(pci->second);
+        if (pyclass)
             return pyclass;
-        }
     }
 
     return nullptr;

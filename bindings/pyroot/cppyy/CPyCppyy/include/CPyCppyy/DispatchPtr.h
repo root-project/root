@@ -64,7 +64,7 @@ public:
     }
 
 private:
-    PyObject* Get() const;
+    PyObject* Get(bool borrowed=true) const;
 
 private:
     PyObject* fPyHardRef;

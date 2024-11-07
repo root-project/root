@@ -214,23 +214,15 @@ static PyTypeObject PyDefault_t_Type = {
 
 namespace {
 
-PyObject _CPyCppyy_NullPtrStruct = {_PyObject_EXTRA_INIT
-// In 3.12.0-beta this field was changed from a ssize_t to a union
-#if PY_VERSION_HEX >= 0x30c00b1
-                                    {1},
-#else
-                                    1,
-#endif
-                                    &PyNullPtr_t_Type};
+PyObject _CPyCppyy_NullPtrStruct = {
+    _PyObject_EXTRA_INIT
+    1, &PyNullPtr_t_Type
+};
 
-PyObject _CPyCppyy_DefaultStruct = {_PyObject_EXTRA_INIT
-// In 3.12.0-beta this field was changed from a ssize_t to a union
-#if PY_VERSION_HEX >= 0x30c00b1
-                                    {1},
-#else
-                                    1,
-#endif
-                                    &PyDefault_t_Type};
+PyObject _CPyCppyy_DefaultStruct = {
+    _PyObject_EXTRA_INIT
+    1, &PyDefault_t_Type
+};
 
 // TODO: refactor with Converters.cxx
 struct CPyCppyy_tagCDataObject {       // non-public (but stable)
