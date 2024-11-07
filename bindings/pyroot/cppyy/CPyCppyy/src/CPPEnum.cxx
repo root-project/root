@@ -32,11 +32,18 @@ static PyObject* pyval_from_enum(const std::string& enum_type, PyObject* pytype,
     PyObject* bval;
     if (enum_type == "char") {
         char val = (char)llval;
+#if PY_VERSION_HEX < 0x03000000
         bval = CPyCppyy_PyText_FromStringAndSize(&val, 1);
+#else
+        bval = PyUnicode_FromOrdinal((int)val);
+#endif
     } else if (enum_type == "int" || enum_type == "unsigned int")
         bval = PyInt_FromLong((long)llval);
     else
         bval = PyLong_FromLongLong(llval);
+
+    if (!bval)
+        return nullptr;      // e.g. when out of range for small integers
 
     PyObject* args = PyTuple_New(1);
     PyTuple_SET_ITEM(args, 0, bval);
@@ -133,7 +140,7 @@ static PyObject* enum_ctype(PyObject* cls, PyObject* args, PyObject* kwds)
 CPyCppyy::CPPEnum* CPyCppyy::CPPEnum_New(const std::string& name, Cppyy::TCppScope_t scope)
 {
 // Create a new enum type based on the actual C++ type. Enum values are added to
-// the type by may also live in the enclosing scope.
+// the type but may also live in the enclosing scope.
 
     CPPEnum* pyenum = nullptr;
 
@@ -190,8 +197,13 @@ CPyCppyy::CPPEnum* CPyCppyy::CPPEnum_New(const std::string& name, Cppyy::TCppSco
 
     // collect the enum values
         Cppyy::TCppIndex_t ndata = Cppyy::GetNumEnumData(etype);
+        bool values_ok = true;
         for (Cppyy::TCppIndex_t idata = 0; idata < ndata; ++idata) {
             PyObject* val = pyval_from_enum(resolved, pyenum, pyside_type, etype, idata);
+            if (!val) {
+                values_ok = false;
+                break;
+            }
             PyObject* pydname = CPyCppyy_PyText_FromString(Cppyy::GetEnumDataName(etype, idata).c_str());
             PyObject_SetAttr(pyenum, pydname, val);
             PyObject_SetAttr(val, PyStrings::gCppName, pydname);
@@ -205,6 +217,13 @@ CPyCppyy::CPPEnum* CPyCppyy::CPPEnum_New(const std::string& name, Cppyy::TCppSco
     // final cleanup
         Py_DECREF(args);
         Py_DECREF(pymeta);
+
+        if (!values_ok) {
+            if (!PyErr_Occurred())
+                PyErr_SetString(PyExc_ValueError, "could not set some of the enum values");
+            Py_DECREF(pyenum);
+            return nullptr;
+        }
 
     } else {
     // presumably not a class enum; simply pretend int
