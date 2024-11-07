@@ -1,17 +1,25 @@
-import sys
+import importlib
 import os
 import pytest
+import sys
 import time
 
 import ROOT
-import numba
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
+def has_required_numba():
+    """Check if numba is available and that the version matches requirement."""
+    if not importlib.util.find_spec("numba"):
+        return False
+    import numba
 
-@pytest.mark.skipif(
-        not hasattr(numba, 'version_info') or numba.version_info < (0, 54),
-        reason="Numba version 0.54 or more required")
+    # With fallback in case it's an older numba version that doesn't have the
+    # version_info attribute yet:
+    return getattr(numba, "version_info", (0, 0)) >= (0, 54)
+
+
+@pytest.mark.skipif(not has_required_numba(), reason="Numba version >=0.54 required")
 class TestClasNumba:
     """Tests numba support for PyROOT"""
 
@@ -35,6 +43,7 @@ class TestClasNumba:
         import ROOT.NumbaExt
         import math
         import numpy as np
+        import numba
 
         def go_slow(a):
             trace = 0.0
@@ -57,6 +66,7 @@ class TestClasNumba:
     def test02_member_function(self):
         import ROOT.NumbaExt
         import math
+        import numba
 
         # Obtain a vector of ROOT::Math::LorentzVector from the sample
         # .root file
@@ -78,8 +88,9 @@ class TestClasNumba:
 
     def test03_inheritance(self):
         """This test shows one of the limitations of the current support"""
-
+        import numba
         from numba.core.errors import TypingError
+
         errtyp = TypingError if numba.version_info < (0, 60) else KeyError
 
         ROOT.gInterpreter.Declare("""
