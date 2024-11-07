@@ -1654,7 +1654,7 @@ void TPad::DrawCrosshair()
 ///   \param[in] xmax      X axis upper limit
 ///   \param[in] ymin      Y axis lower limit
 ///   \param[in] ymax      Y axis upper limit
-///   \param[in] title     Pad title.If title is of the form "stringt;stringx;stringy"
+///   \param[in] title     Pad title. If title is of the form "stringt;stringx;stringy"
 ///                        the pad title is set to stringt, the x axis title to
 ///                        stringx, the y axis title to stringy.
 ///
