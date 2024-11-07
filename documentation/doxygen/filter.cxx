@@ -448,7 +448,10 @@ void FilterTutorial()
 
       // \preview found
       if (gLineString.find("\\preview") != string::npos) {
-         ReplaceAll(gLineString, "\\preview", StringFormat("\\htmlonly <img src=\"pict1_%s.png\" valign=\"middle\" width=\"120\"/>\\endhtmlonly",gMacroName.c_str()));
+         string name = gMacroName;
+         int width = 120;
+         ReplaceAll(name,".C","_8C.html");
+         ReplaceAll(gLineString, "\\preview", StringFormat("\\htmlonly <a href=\"%s\"><img src=\"pict1_%s.png\" valign=\"middle\" width=\"%d\"/></a>\\endhtmlonly",name.c_str(),gMacroName.c_str(),width));
       }
 
       // \macro_output found
