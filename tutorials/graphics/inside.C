@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphics
 /// \notebook -js
-/// Test the IsInside methods of various graphics primitives.
+/// \preview Test the IsInside methods of various graphics primitives.
 ///
 /// \macro_image
 /// \macro_code
