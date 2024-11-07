@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphics
 /// \notebook
-/// This macro displays the ROOT architecture.
+/// \preview This macro displays the ROOT architecture.
 ///
 /// \macro_image
 /// \macro_code
