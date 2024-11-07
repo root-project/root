@@ -479,12 +479,14 @@ static PyObject* meta_getattro(PyObject* pyclass, PyObject* pyname)
     // try all outstanding using namespaces in turn to find the attribute (will cache
     // locally later; TODO: doing so may cause pathological cases)
         for (auto pyref : *klass->fImp.fUsing) {
-            PyObject* pyuscope = PyWeakref_GetObject(pyref);
+            PyObject* pyuscope = CPyCppyy_GetWeakRef(pyref);
             if (pyuscope) {
                 attr = PyObject_GetAttr(pyuscope, pyname);
-                if (attr) break;
-                PyErr_Clear();
+                if (!attr) PyErr_Clear();
+                Py_DECREF(pyuscope);
             }
+            if (attr)
+                break;
         }
     }
 
