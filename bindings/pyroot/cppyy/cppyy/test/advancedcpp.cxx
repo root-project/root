@@ -73,12 +73,12 @@ double pass_double_through_const_ref(const double& d) { return d; }
 
 
 // for math conversions testing
-bool operator==(const some_comparable& c1, const some_comparable& c2 )
+bool operator==(const some_comparable& c1, const some_comparable& c2)
 {
    return &c1 != &c2;              // the opposite of a pointer comparison
 }
 
-bool operator!=( const some_comparable& c1, const some_comparable& c2 )
+bool operator!=(const some_comparable& c1, const some_comparable& c2)
 {
    return &c1 == &c2;              // the opposite of a pointer comparison
 }

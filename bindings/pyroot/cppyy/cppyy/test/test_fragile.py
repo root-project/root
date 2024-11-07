@@ -528,7 +528,7 @@ class TestFRAGILE:
         err = get_errmsg(cppdef_exc)
         assert "FailedtoparsethegivenC++code" in err
         assert "error:" in err
-        assert "expectedunqualified-id" in err
+        assert "invaliddigit" in err
         assert "1aap=42;" in err
 
     def test22_cppexec(self):
