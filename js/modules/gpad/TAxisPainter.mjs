@@ -409,6 +409,9 @@ class TAxisPainter extends ObjectPainter {
    /** @summary cleanup painter */
    cleanup() {
       this.cleanupAxisPainter();
+      delete this.hist_painter;
+      delete this.hist_axis;
+      delete this.is_gaxis;
       super.cleanup();
    }
 
@@ -794,8 +797,8 @@ class TAxisPainter extends ObjectPainter {
    addTitleDrag(title_g, vertical, offset_k, reverse, axis_length) {
       if (!settings.MoveResize || this.isBatchMode()) return;
 
-      let drag_rect = null,
-          acc_x, acc_y, new_x, new_y, sign_0, alt_pos, curr_indx;
+      let drag_rect = null, x_0, y_0, i_0,
+          acc_x, acc_y, new_x, new_y, sign_0, alt_pos, curr_indx, can_indx0 = true;
       const drag_move = d3_drag().subject(Object);
 
       drag_move.on('start', evnt => {
@@ -805,10 +808,11 @@ class TAxisPainter extends ObjectPainter {
          const box = title_g.node().getBBox(), // check that elements visible, request precise value
              title_length = vertical ? box.height : box.width;
 
-         new_x = acc_x = title_g.property('shift_x');
-         new_y = acc_y = title_g.property('shift_y');
+         x_0 = new_x = acc_x = title_g.property('shift_x');
+         y_0 = new_y = acc_y = title_g.property('shift_y');
 
          sign_0 = vertical ? (acc_x > 0) : (acc_y > 0); // sign should remain
+         can_indx0 = !this.hist_painter?.snapid; // online canvas does not allow alternate position
 
          alt_pos = vertical ? [axis_length, axis_length/2, 0] : [0, axis_length/2, axis_length]; // possible positions
          const off = vertical ? -title_length/2 : title_length/2;
@@ -825,12 +829,13 @@ class TAxisPainter extends ObjectPainter {
 
          if (this.titleCenter)
             curr_indx = 1;
-         else if (reverse ^ this.titleOpposite)
+         else if ((reverse ^ this.titleOpposite) && can_indx0)
             curr_indx = 0;
          else
             curr_indx = 2;
 
          alt_pos[curr_indx] = vertical ? acc_y : acc_x;
+         i_0 = curr_indx;
 
          drag_rect = title_g.append('rect')
             .attr('x', box.x)
@@ -849,11 +854,13 @@ class TAxisPainter extends ObjectPainter {
          acc_x += evnt.dx;
          acc_y += evnt.dy;
 
-         let set_x, set_y, besti = 0;
+         let set_x, set_y, besti = can_indx0 ? 0 : 1;
          const p = vertical ? acc_y : acc_x;
 
-         for (let i = 1; i < 3; ++i)
-            if (Math.abs(p - alt_pos[i]) < Math.abs(p - alt_pos[besti])) besti = i;
+         for (let i = 1; i < 3; ++i) {
+            if (Math.abs(p - alt_pos[i]) < Math.abs(p - alt_pos[besti]))
+               besti = i;
+         }
 
          if (vertical) {
             set_x = acc_x;
@@ -864,7 +871,9 @@ class TAxisPainter extends ObjectPainter {
          }
 
          if (sign_0 === (vertical ? (set_x > 0) : (set_y > 0))) {
-            new_x = set_x; new_y = set_y; curr_indx = besti;
+            new_x = set_x;
+            new_y = set_y;
+            curr_indx = besti;
             makeTranslate(title_g, new_x, new_y);
          }
       }).on('end', evnt => {
@@ -898,10 +907,14 @@ class TAxisPainter extends ObjectPainter {
             setBit(EAxisBits.kOppositeTitle, false); this.titleOpposite = false;
          }
 
-         this.submitAxisExec(`SetTitleOffset(${offset});;SetBit(${EAxisBits.kCenterTitle},${this.titleCenter?1:0})`);
-
          drag_rect.remove();
          drag_rect = null;
+
+         if ((x_0 !== new_x) || (y_0 !== new_y) || (i_0 !== curr_indx))
+            this.submitAxisExec(`SetTitleOffset(${offset});;SetBit(${EAxisBits.kCenterTitle},${this.titleCenter?1:0})`);
+
+         if (this.hist_painter && this.hist_axis)
+            this.hist_painter.getCanvPainter()?.producePadEvent('select', this.hist_painter.getPadPainter(), this);
       });
 
       title_g.style('cursor', 'move').call(drag_move);

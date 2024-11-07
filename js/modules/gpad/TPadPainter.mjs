@@ -1,7 +1,7 @@
 import { gStyle, settings, constants, browser, internals, BIT,
          create, toJSON, isBatchMode, loadModules, loadScript, injectCode, isPromise, getPromise, postponePromise,
-         isObject, isFunc, isStr, clTObjArray, clTPaveText, clTColor, clTPad, clTFrame, clTStyle, clTLegend,
-         clTHStack, clTMultiGraph, clTLegendEntry, nsSVG, kTitle, clTList } from '../core.mjs';
+         isObject, isFunc, isStr, clTObjArray, clTPaveText, clTColor, clTPad, clTCanvas, clTFrame, clTStyle, clTLegend,
+         clTHStack, clTMultiGraph, clTLegendEntry, nsSVG, kTitle, clTList, urlClassPrefix } from '../core.mjs';
 import { select as d3_select, rgb as d3_rgb } from '../d3.mjs';
 import { ColorPalette, adoptRootColors, getColorPalette, getGrayColors, extendRootColors,
          getRGBfromTColor, decodeWebCanvasColors } from '../base/colors.mjs';
@@ -512,27 +512,28 @@ class TPadPainter extends ObjectPainter {
    /** @summary Generate pad events, normally handled by GED
      * @desc in pad painter, while pad may be drawn without canvas
      * @private */
-   producePadEvent(what, padpainter, painter, position, place) {
+   producePadEvent(what, padpainter, painter, position) {
       if ((what === 'select') && isFunc(this.selectActivePad))
          this.selectActivePad(padpainter, painter, position);
 
       if (isFunc(this.pad_events_receiver))
-         this.pad_events_receiver({ what, padpainter, painter, position, place });
+         this.pad_events_receiver({ what, padpainter, painter, position });
    }
 
    /** @summary method redirect call to pad events receiver */
-   selectObjectPainter(painter, pos, place) {
+   selectObjectPainter(painter, pos) {
       const istoppad = this.iscan || !this.has_canvas,
-          canp = istoppad ? this : this.getCanvPainter();
+            canp = istoppad ? this : this.getCanvPainter();
 
-      if (painter === undefined) painter = this;
+      if (painter === undefined)
+         painter = this;
 
       if (pos && !istoppad)
          pos = getAbsPosInCanvas(this.svg_this_pad(), pos);
 
       selectActivePad({ pp: this, active: true });
 
-      canp?.producePadEvent('select', this, painter, pos, place);
+      canp?.producePadEvent('select', this, painter, pos);
    }
 
    /** @summary Draw pad active border
@@ -1261,9 +1262,9 @@ class TPadPainter extends ObjectPainter {
      * @private */
    fillContextMenu(menu) {
       if (this.pad)
-         menu.header(`${this.pad._typename}::${this.pad.fName}`);
+         menu.header(`${this.pad._typename}::${this.pad.fName}`, `${urlClassPrefix}${this.pad._typename}.html`);
       else
-         menu.header('Canvas');
+         menu.header('Canvas', `${urlClassPrefix}${clTCanvas}.html`);
 
       menu.addchk(this.isTooltipAllowed(), 'Show tooltips', () => this.setTooltipAllowed('toggle'));
 
@@ -2347,7 +2348,7 @@ class TPadPainter extends ObjectPainter {
 
       const arg = (file_format === 'pdf')
          ? { node: elem.node(), width, height, reset_tranform: use_frame }
-         : compressSVG(`<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">${elem.node().innerHTML}</svg>`);
+         : compressSVG(`<svg width="${width}" height="${height}" xmlns="${nsSVG}">${elem.node().innerHTML}</svg>`);
 
       return svgToImage(arg, file_format, args).then(res => {
          // reactivate border

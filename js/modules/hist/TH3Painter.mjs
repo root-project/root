@@ -369,7 +369,7 @@ class TH3Painter extends THistPainter {
       if (!this.draw_content)
          return false;
 
-      let box_option = this.options.Box ? this.options.BoxStyle : 0;
+      let box_option = this.options.BoxStyle;
 
       if (!box_option && this.options.Scat) {
          const promise = this.draw3DScatter();
@@ -394,7 +394,8 @@ class TH3Painter extends THistPainter {
       if ((this.options.GLBox === 11) || (this.options.GLBox === 12)) {
          tipscale = 0.4;
          use_lambert = true;
-         if (this.options.GLBox === 12) use_colors = true;
+         if (this.options.GLBox === 12)
+            use_colors = true;
 
          single_bin_geom = new THREE.SphereGeometry(0.5, main.webgl ? 16 : 8, main.webgl ? 12 : 6);
          single_bin_geom.applyMatrix4(new THREE.Matrix4().makeRotationX(Math.PI/2));
@@ -422,7 +423,7 @@ class TH3Painter extends THistPainter {
 
          if (box_option === 12)
             use_colors = true;
-            else if (box_option === 13) {
+         else if (box_option === 13) {
             use_colors = true;
             use_helper = false;
          } else if (this.options.GLColor) {
@@ -626,8 +627,10 @@ class TH3Painter extends THistPainter {
          pr = main.create3DScene(this.options.Render3D, this.options.x3dscale, this.options.y3dscale, this.options.Ortho).then(() => {
             main.setAxesRanges(histo.fXaxis, this.xmin, this.xmax, histo.fYaxis, this.ymin, this.ymax, histo.fZaxis, this.zmin, this.zmax, this);
             main.set3DOptions(this.options);
-            main.drawXYZ(main.toplevel, TAxisPainter, { zoom: settings.Zooming, ndim: 3,
-                   draw: this.options.Axis !== -1, drawany: this.options.isCartesian() });
+            main.drawXYZ(main.toplevel, TAxisPainter, {
+               ndim: 3, hist_painter: this, zoom: settings.Zooming,
+               draw: this.options.Axis !== -1, drawany: this.options.isCartesian()
+            });
             return this.draw3DBins();
          }).then(() => {
             main.render3D();
@@ -637,7 +640,7 @@ class TH3Painter extends THistPainter {
       }
 
       if (this.isMainPainter())
-        pr = pr.then(() => this.drawColorPalette(this.options.Zscale && (this._box_option === 12 || this._box_option === 13)));
+        pr = pr.then(() => this.drawColorPalette(this.options.Zscale && (this._box_option === 12 || this._box_option === 13 || this.options.GLBox === 12)));
 
       return pr.then(() => this.updateFunctions())
                .then(() => this.updateHistTitle())
@@ -652,6 +655,7 @@ class TH3Painter extends THistPainter {
       pp.addPadButton('auto_zoom', 'Unzoom all axes', 'ToggleZoom', 'Ctrl *');
       if (this.draw_content)
          pp.addPadButton('statbox', 'Toggle stat box', 'ToggleStatBox');
+      pp.addPadButton('th2colorz', 'Toggle color palette', 'ToggleColorZ');
       pp.showPadButtons();
    }
 

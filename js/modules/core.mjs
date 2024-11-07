@@ -4,7 +4,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '30/10/2024',
+version_date = '7/11/2024',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -287,8 +287,8 @@ settings = {
      * @desc When specified, extra URL parameter like ```?stamp=unique_value``` append to each files loaded
      * In such case browser will be forced to load file content disregards of server cache settings
      * Can be disabled by providing &usestamp=false in URL or via Settings/Files sub-menu
-     * @default true */
-   UseStamp: true,
+     * Disabled by default on node.js, enabled in the web browsers */
+   UseStamp: !nodejs,
    /** @summary Maximal number of bytes ranges in http 'Range' header
      * @desc Some http server has limitations for number of bytes ranges therefore let change maximal number via setting
      * @default 200 */
@@ -1086,7 +1086,8 @@ const prROOT = 'ROOT.', clTObject = 'TObject', clTNamed = 'TNamed', clTString = 
       clTF1 = 'TF1', clTF2 = 'TF2', clTF3 = 'TF3', clTProfile = 'TProfile', clTProfile2D = 'TProfile2D', clTProfile3D = 'TProfile3D',
       clTGeoVolume = 'TGeoVolume', clTGeoNode = 'TGeoNode', clTGeoNodeMatrix = 'TGeoNodeMatrix',
       nsREX = 'ROOT::Experimental::', nsSVG = 'http://www.w3.org/2000/svg',
-      kNoZoom = -1111, kNoStats = BIT(9), kInspect = 'inspect', kTitle = 'title';
+      kNoZoom = -1111, kNoStats = BIT(9), kInspect = 'inspect', kTitle = 'title',
+      urlClassPrefix = 'https://root.cern/doc/master/class';
 
 
 /** @summary Create some ROOT classes
@@ -1929,7 +1930,8 @@ export { version_id, version_date, version, source_dir, isNodeJs, isBatchMode, s
          clTProfile, clTProfile2D, clTProfile3D, clTHStack,
          clTGraph, clTGraph2DErrors, clTGraph2DAsymmErrors,
          clTGraphPolar, clTGraphPolargram, clTGraphTime, clTCutG,
-         clTPolyLine3D, clTPolyMarker3D, clTGeoVolume, clTGeoNode, clTGeoNodeMatrix, nsREX, nsSVG, kNoZoom, kNoStats, kInspect, kTitle,
+         clTPolyLine3D, clTPolyMarker3D, clTGeoVolume, clTGeoNode, clTGeoNodeMatrix,
+         nsREX, nsSVG, kNoZoom, kNoStats, kInspect, kTitle, urlClassPrefix,
          isArrayProto, getDocument, BIT, clone, addMethods, parse, parseMulti, toJSON,
          decodeUrl, findFunction, createHttpRequest, httpRequest, loadModules, loadScript, injectCode,
          create, createHistogram, setHistogramTitle, createTPolyLine, createTGraph, createTHStack, createTMultiGraph,

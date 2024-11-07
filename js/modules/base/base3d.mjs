@@ -185,7 +185,7 @@ function createSVGRenderer(as_is, precision, doc) {
            _textSizeAttr = `viewBox="${wrap.svg_attr.viewBox}" width="${wrap.svg_attr.width}" height="${wrap.svg_attr.height}"`,
            _textClearAttr = wrap.svg_style.backgroundColor ? ` style="background:${wrap.svg_style.backgroundColor}"` : '';
 
-      return `<svg xmlns="http://www.w3.org/2000/svg" ${_textSizeAttr}${_textClearAttr}>${wrap.accPath}</svg>`;
+      return `<svg xmlns="${nsSVG}" ${_textSizeAttr}${_textClearAttr}>${wrap.accPath}</svg>`;
    };
 
    rndr.fillTargetSVG = function(svg) {
@@ -1245,6 +1245,21 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
          const intersects = this.getMouseIntersects(mouse_pos);
          this.processSingleClick(intersects);
       }
+
+      if (kind === 3) {
+         const intersects = this.getMouseIntersects(mouse_pos);
+         let objpainter = null;
+         for (let i = 0; !objpainter && (i < intersects.length); ++i) {
+            const obj3d = intersects[i].object;
+            objpainter = obj3d.painter || obj3d.parent?.painter; // check one top level
+         }
+         if (objpainter) {
+            // while axis painter not directly appears in the list of primitives, pad and canvas take from frame
+            const padp = this.painter?.getPadPainter(),
+                  canvp = this.painter?.getCanvPainter();
+            canvp?.producePadEvent('select', padp, objpainter);
+         }
+      }
    };
 
    control.lstn_click = function(evnt) {
@@ -1258,9 +1273,11 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
 
       let kind = 0;
       if (isFunc(this.painter?.getFramePainter()?._click_handler))
-         kind = 1; // user click handler
+         kind = 1;  // user click handler
       else if (this.processSingleClick && this.painter?.options?.mouse_click)
          kind = 2;  // eve7 click handler
+      else if (this.painter?.getCanvPainter())
+         kind = 3;  // select event for GED
 
       // if normal event, set longer timeout waiting if double click not detected
       if (kind)
@@ -1563,7 +1580,7 @@ class PointsCreator {
 
       const handler = new TAttMarkerHandler({ style: args.style, color: args.color, size: 7 }),
             w = handler.fill ? 1 : 7,
-            imgdata = '<svg width="64" height="64" xmlns="http://www.w3.org/2000/svg">' +
+            imgdata = `<svg width="64" height="64" xmlns="${nsSVG}">` +
                       `<path d="${handler.create(32, 32)}" style="stroke: ${handler.getStrokeColor()}; stroke-width: ${w}; fill: ${handler.getFillColor()}"></path>`+
                       '</svg>',
             dataUrl = prSVG + (isNodeJs() ? imgdata : encodeURIComponent(imgdata));

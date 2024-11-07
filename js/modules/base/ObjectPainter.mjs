@@ -1,6 +1,6 @@
 import { select as d3_select, pointer as d3_pointer } from '../d3.mjs';
 import { settings, constants, internals, isNodeJs, isBatchMode, getPromise, BIT,
-         prROOT, clTObjString, clTAxis, isObject, isFunc, isStr, getDocument } from '../core.mjs';
+         prROOT, clTObjString, clTAxis, isObject, isFunc, isStr, getDocument, urlClassPrefix } from '../core.mjs';
 import { isPlainText, producePlainText, produceLatex, produceMathjax, typesetMathjax, approximateLabelWidth } from './latex.mjs';
 import { getElementRect, BasePainter, makeTranslate } from './BasePainter.mjs';
 import { TAttMarkerHandler } from './TAttMarkerHandler.mjs';
@@ -891,9 +891,10 @@ class ObjectPainter extends BasePainter {
       let cl = this.getClassName();
       const p = cl.lastIndexOf('::');
       if (p > 0) cl = cl.slice(p+2);
-      const title = (cl && name) ? `${cl}:${name}` : (cl || name || 'object');
+      const hdr = (cl && name) ? `${cl}:${name}` : (cl || name || 'object'),
+            url = (p < 0) ? `${urlClassPrefix}${cl}.html` : '';
 
-      menu.header(title);
+      menu.header(hdr, url);
 
       const size0 = menu.size();
 

@@ -1,4 +1,5 @@
-import { gStyle, settings, internals, isFunc, isStr, postponePromise, browser, clTAxis, kNoZoom } from '../core.mjs';
+import { gStyle, settings, internals, isFunc, isStr, postponePromise, browser,
+         clTAxis, clTFrame, kNoZoom, urlClassPrefix } from '../core.mjs';
 import { select as d3_select, pointer as d3_pointer, pointers as d3_pointers, drag as d3_drag } from '../d3.mjs';
 import { getElementRect, getAbsPosInCanvas, makeTranslate, addHighlightStyle } from '../base/BasePainter.mjs';
 import { getActivePad, ObjectPainter, EAxisBits, kAxisLabels } from '../base/ObjectPainter.mjs';
@@ -913,7 +914,8 @@ const TooltipHandler = {
 
       if (exact) {
          const handler = dblckick ? this._dblclick_handler : this._click_handler;
-         if (handler) res = handler(exact.user_info, pnt);
+         if (isFunc(handler))
+            res = handler(exact.user_info, pnt);
       }
 
       if (!dblckick) {
@@ -1178,10 +1180,10 @@ const TooltipHandler = {
             this.processFrameClick(pnt);
             break;
          case 2:
-            this.getPadPainter()?.selectObjectPainter(this, null, 'xaxis');
+            this.getPadPainter()?.selectObjectPainter(this.x_handle);
             break;
          case 3:
-            this.getPadPainter()?.selectObjectPainter(this, null, 'yaxis');
+            this.getPadPainter()?.selectObjectPainter(this.y_handle);
             break;
       }
 
@@ -2586,7 +2588,9 @@ class TFramePainter extends ObjectPainter {
                handle = this[`${kind}_handle`];
          if (!isFunc(faxis?.TestBit))
             return false;
-         menu.header(`${kind.toUpperCase()} axis`);
+         const hist_painter = handle?.hist_painter || main;
+
+         menu.header(`${kind.toUpperCase()} axis`, `${urlClassPrefix}${clTAxis}.html`);
 
          menu.sub('Range');
          menu.add('Zoom', () => {
@@ -2636,8 +2640,8 @@ class TFramePainter extends ObjectPainter {
          }
          menu.addchk(faxis.TestBit(EAxisBits.kMoreLogLabels), 'More log', flag => {
             faxis.InvertBit(EAxisBits.kMoreLogLabels);
-            if (main?.snapid && (kind.length === 1))
-               main.interactiveRedraw('pad', `exec:SetMoreLogLabels(${flag})`, kind);
+            if (hist_painter?.snapid && (kind.length === 1))
+               hist_painter.interactiveRedraw('pad', `exec:SetMoreLogLabels(${flag})`, kind);
             else
                this.interactiveRedraw('pad');
          });
@@ -2646,23 +2650,23 @@ class TFramePainter extends ObjectPainter {
                faxis.InvertBit(EAxisBits.kNoExponent);
             if (handle) handle.noexp_changed = true;
             this[`${kind}_noexp_changed`] = true;
-            if (main?.snapid && (kind.length === 1))
-               main.interactiveRedraw('pad', `exec:SetNoExponent(${flag})`, kind);
+            if (hist_painter?.snapid && (kind.length === 1))
+               hist_painter.interactiveRedraw('pad', `exec:SetNoExponent(${flag})`, kind);
             else
                this.interactiveRedraw('pad');
          });
 
-         if ((kind === 'z') && isFunc(main?.fillPaletteMenu))
-            main.fillPaletteMenu(menu, !is_pal);
+         if ((kind === 'z') && isFunc(hist_painter?.fillPaletteMenu))
+            hist_painter.fillPaletteMenu(menu, !is_pal);
 
-         menu.addTAxisMenu(EAxisBits, main || this, faxis, kind, handle, this);
+         menu.addTAxisMenu(EAxisBits, hist_painter || this, faxis, kind, handle, this);
          return true;
       }
 
       const alone = menu.size() === 0;
 
       if (alone)
-         menu.header('Frame');
+         menu.header('Frame', `${urlClassPrefix}${clTFrame}.html`);
       else
          menu.separator();
 

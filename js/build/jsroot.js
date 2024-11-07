@@ -12,7 +12,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '30/10/2024',
+version_date = '7/11/2024',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -295,8 +295,8 @@ settings = {
      * @desc When specified, extra URL parameter like ```?stamp=unique_value``` append to each files loaded
      * In such case browser will be forced to load file content disregards of server cache settings
      * Can be disabled by providing &usestamp=false in URL or via Settings/Files sub-menu
-     * @default true */
-   UseStamp: true,
+     * Disabled by default on node.js, enabled in the web browsers */
+   UseStamp: !nodejs,
    /** @summary Maximal number of bytes ranges in http 'Range' header
      * @desc Some http server has limitations for number of bytes ranges therefore let change maximal number via setting
      * @default 200 */
@@ -1094,7 +1094,8 @@ const prROOT = 'ROOT.', clTObject = 'TObject', clTNamed = 'TNamed', clTString = 
       clTF1 = 'TF1', clTF2 = 'TF2', clTF3 = 'TF3', clTProfile = 'TProfile', clTProfile2D = 'TProfile2D', clTProfile3D = 'TProfile3D',
       clTGeoVolume = 'TGeoVolume', clTGeoNode = 'TGeoNode', clTGeoNodeMatrix = 'TGeoNodeMatrix',
       nsREX = 'ROOT::Experimental::', nsSVG = 'http://www.w3.org/2000/svg',
-      kNoZoom = -1111, kNoStats = BIT(9), kInspect = 'inspect', kTitle = 'title';
+      kNoZoom = -1111, kNoStats = BIT(9), kInspect = 'inspect', kTitle = 'title',
+      urlClassPrefix = 'https://root.cern/doc/master/class';
 
 
 /** @summary Create some ROOT classes
@@ -2044,6 +2045,7 @@ setHistogramTitle: setHistogramTitle,
 settings: settings,
 get source_dir () { return exports.source_dir; },
 toJSON: toJSON,
+urlClassPrefix: urlClassPrefix,
 version: version,
 version_date: version_date,
 version_id: version_id
@@ -13037,9 +13039,10 @@ class ObjectPainter extends BasePainter {
       let cl = this.getClassName();
       const p = cl.lastIndexOf('::');
       if (p > 0) cl = cl.slice(p+2);
-      const title = (cl && name) ? `${cl}:${name}` : (cl || name || 'object');
+      const hdr = (cl && name) ? `${cl}:${name}` : (cl || name || 'object'),
+            url = (p < 0) ? `${urlClassPrefix}${cl}.html` : '';
 
-      menu.header(title);
+      menu.header(hdr, url);
 
       const size0 = menu.size();
 
@@ -56583,7 +56586,7 @@ function createSVGRenderer(as_is, precision, doc) {
            _textSizeAttr = `viewBox="${wrap.svg_attr.viewBox}" width="${wrap.svg_attr.width}" height="${wrap.svg_attr.height}"`,
            _textClearAttr = wrap.svg_style.backgroundColor ? ` style="background:${wrap.svg_style.backgroundColor}"` : '';
 
-      return `<svg xmlns="http://www.w3.org/2000/svg" ${_textSizeAttr}${_textClearAttr}>${wrap.accPath}</svg>`;
+      return `<svg xmlns="${nsSVG}" ${_textSizeAttr}${_textClearAttr}>${wrap.accPath}</svg>`;
    };
 
    rndr.fillTargetSVG = function(svg) {
@@ -57643,6 +57646,21 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
          const intersects = this.getMouseIntersects(mouse_pos);
          this.processSingleClick(intersects);
       }
+
+      if (kind === 3) {
+         const intersects = this.getMouseIntersects(mouse_pos);
+         let objpainter = null;
+         for (let i = 0; !objpainter && (i < intersects.length); ++i) {
+            const obj3d = intersects[i].object;
+            objpainter = obj3d.painter || obj3d.parent?.painter; // check one top level
+         }
+         if (objpainter) {
+            // while axis painter not directly appears in the list of primitives, pad and canvas take from frame
+            const padp = this.painter?.getPadPainter(),
+                  canvp = this.painter?.getCanvPainter();
+            canvp?.producePadEvent('select', padp, objpainter);
+         }
+      }
    };
 
    control.lstn_click = function(evnt) {
@@ -57656,9 +57674,11 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
 
       let kind = 0;
       if (isFunc(this.painter?.getFramePainter()?._click_handler))
-         kind = 1; // user click handler
+         kind = 1;  // user click handler
       else if (this.processSingleClick && this.painter?.options?.mouse_click)
          kind = 2;  // eve7 click handler
+      else if (this.painter?.getCanvPainter())
+         kind = 3;  // select event for GED
 
       // if normal event, set longer timeout waiting if double click not detected
       if (kind)
@@ -57880,7 +57900,7 @@ class PointsCreator {
 
       const handler = new TAttMarkerHandler({ style: args.style, color: args.color, size: 7 }),
             w = handler.fill ? 1 : 7,
-            imgdata = '<svg width="64" height="64" xmlns="http://www.w3.org/2000/svg">' +
+            imgdata = `<svg width="64" height="64" xmlns="${nsSVG}">` +
                       `<path d="${handler.create(32, 32)}" style="stroke: ${handler.getStrokeColor()}; stroke-width: ${w}; fill: ${handler.getFillColor()}"></path>`+
                       '</svg>',
             dataUrl = prSVG + (isNodeJs() ? imgdata : encodeURIComponent(imgdata));
@@ -60822,8 +60842,8 @@ class JSRootMenu {
    }
 
    /** @summary Add menu header - must be first entry */
-   header(name) {
-      this.add(sHeader + name);
+   header(name, title) {
+      this.add(sHeader + name, undefined, undefined, title);
    }
 
    /** @summary Add draw sub-menu with draw options
@@ -61463,8 +61483,10 @@ class JSRootMenu {
       });
       this.addchk(faxis.TestBit(EAxisBits.kCenterTitle), 'Center',
             arg => { faxis.InvertBit(EAxisBits.kCenterTitle); painter.interactiveRedraw('pad', `exec:CenterTitle(${arg})`, kind); });
-      this.addchk(faxis.TestBit(EAxisBits.kOppositeTitle), 'Opposite',
-             () => { faxis.InvertBit(EAxisBits.kOppositeTitle); painter.redrawPad(); });
+      if (!painter?.snapid) {
+         this.addchk(faxis.TestBit(EAxisBits.kOppositeTitle), 'Opposite',
+                () => { faxis.InvertBit(EAxisBits.kOppositeTitle); painter.redrawPad(); });
+      }
       this.addchk(faxis.TestBit(EAxisBits.kRotateTitle), 'Rotate',
             arg => { faxis.InvertBit(EAxisBits.kRotateTitle); painter.interactiveRedraw('pad', is_gaxis ? `exec:SetBit(TAxis::kRotateTitle, ${arg})` : `exec:RotateTitle(${arg})`, kind); });
       if (is_gaxis) {
@@ -61892,7 +61914,7 @@ class StandaloneMenu extends JSRootMenu {
          return curr.push({ divider: true });
 
       if (name.indexOf(sHeader) === 0)
-         return curr.push({ text: name.slice(sHeader.length), header: true });
+         return curr.push({ text: name.slice(sHeader.length), header: true, title });
 
       if (name === sEndsub) {
          this.stack.pop();
@@ -62000,16 +62022,50 @@ class StandaloneMenu extends JSRootMenu {
 
          if (d.header) {
             item.style = 'background-color: lightblue; padding: 3px 7px; font-weight: bold; border-bottom: 1px;';
-            item.innerHTML = d.text;
+
+            let url = '', title = '';
+            if (d.title) {
+               const p = d.title.indexOf('https://');
+               if (p >= 0) {
+                  url = d.title.slice(p);
+                  title = d.title.slice(0, p);
+               } else
+                  title = d.title;
+            }
+            if (!url)
+               item.innerHTML = d.text;
+            else {
+               item.style.display = 'flex';
+               item.style['justify-content'] = 'space-between';
+
+               const txt = doc.createElement('span');
+               txt.innerHTML = d.text;
+               txt.style = 'display: inline-block; margin: 0;';
+               item.appendChild(txt);
+
+               const anchor = doc.createElement('span');
+               anchor.style = 'margin: 0; color: blue; opacity: 0.1; margin-left: 7px; right: 3px; display: inline-block; cursor: pointer;';
+               anchor.textContent = '?';
+               anchor.title = url;
+               anchor.addEventListener('click', () => {
+                  const cp = this.painter?.getCanvPainter();
+                  if (cp?.canSendWebSocket())
+                     cp.sendWebsocket(`SHOWURL:${url}`);
+                  else
+                     window.open(url);
+               });
+               anchor.addEventListener('mouseenter', () => { anchor.style.opacity = 1; });
+               anchor.addEventListener('mouseleave', () => { anchor.style.opacity = 0.1; });
+               item.appendChild(anchor);
+            }
+            if (title)
+               item.setAttribute('title', title);
+
             return;
          }
 
          const hovArea = doc.createElement('div');
-         hovArea.style.width = '100%';
-         hovArea.style.height = '100%';
-         hovArea.style.display = 'flex';
-         hovArea.style.justifyContent = 'space-between';
-         hovArea.style.cursor = 'pointer';
+         hovArea.style = 'width: 100%; height: 100%; display: flex; justify-content: space-between; cursor: pointer;';
          if (d.title) hovArea.setAttribute('title', d.title);
 
          item.appendChild(hovArea);
@@ -62066,7 +62122,7 @@ class StandaloneMenu extends JSRootMenu {
          if (d.extraText || d.sub) {
             const extraText = doc.createElement('span');
             extraText.className = 'jsroot_ctxt_extraText';
-            extraText.style = 'margin: 0; padding: 3px 7px; color: rgb(0, 0, 0, 0.6);';
+            extraText.style = 'margin: 0; padding: 3px 7px; color: rgba(0, 0, 0, 0.6);';
             extraText.textContent = d.sub ? '\u25B6' : d.extraText;
             hovArea.appendChild(extraText);
 
@@ -62753,6 +62809,9 @@ class TAxisPainter extends ObjectPainter {
    /** @summary cleanup painter */
    cleanup() {
       this.cleanupAxisPainter();
+      delete this.hist_painter;
+      delete this.hist_axis;
+      delete this.is_gaxis;
       super.cleanup();
    }
 
@@ -63138,8 +63197,8 @@ class TAxisPainter extends ObjectPainter {
    addTitleDrag(title_g, vertical, offset_k, reverse, axis_length) {
       if (!settings.MoveResize || this.isBatchMode()) return;
 
-      let drag_rect = null,
-          acc_x, acc_y, new_x, new_y, sign_0, alt_pos, curr_indx;
+      let drag_rect = null, x_0, y_0, i_0,
+          acc_x, acc_y, new_x, new_y, sign_0, alt_pos, curr_indx, can_indx0 = true;
       const drag_move = drag().subject(Object);
 
       drag_move.on('start', evnt => {
@@ -63149,10 +63208,11 @@ class TAxisPainter extends ObjectPainter {
          const box = title_g.node().getBBox(), // check that elements visible, request precise value
              title_length = vertical ? box.height : box.width;
 
-         new_x = acc_x = title_g.property('shift_x');
-         new_y = acc_y = title_g.property('shift_y');
+         x_0 = new_x = acc_x = title_g.property('shift_x');
+         y_0 = new_y = acc_y = title_g.property('shift_y');
 
          sign_0 = vertical ? (acc_x > 0) : (acc_y > 0); // sign should remain
+         can_indx0 = !this.hist_painter?.snapid; // online canvas does not allow alternate position
 
          alt_pos = vertical ? [axis_length, axis_length/2, 0] : [0, axis_length/2, axis_length]; // possible positions
          const off = vertical ? -title_length/2 : title_length/2;
@@ -63169,12 +63229,13 @@ class TAxisPainter extends ObjectPainter {
 
          if (this.titleCenter)
             curr_indx = 1;
-         else if (reverse ^ this.titleOpposite)
+         else if ((reverse ^ this.titleOpposite) && can_indx0)
             curr_indx = 0;
          else
             curr_indx = 2;
 
          alt_pos[curr_indx] = vertical ? acc_y : acc_x;
+         i_0 = curr_indx;
 
          drag_rect = title_g.append('rect')
             .attr('x', box.x)
@@ -63193,11 +63254,13 @@ class TAxisPainter extends ObjectPainter {
          acc_x += evnt.dx;
          acc_y += evnt.dy;
 
-         let set_x, set_y, besti = 0;
+         let set_x, set_y, besti = can_indx0 ? 0 : 1;
          const p = vertical ? acc_y : acc_x;
 
-         for (let i = 1; i < 3; ++i)
-            if (Math.abs(p - alt_pos[i]) < Math.abs(p - alt_pos[besti])) besti = i;
+         for (let i = 1; i < 3; ++i) {
+            if (Math.abs(p - alt_pos[i]) < Math.abs(p - alt_pos[besti]))
+               besti = i;
+         }
 
          if (vertical) {
             set_x = acc_x;
@@ -63208,7 +63271,9 @@ class TAxisPainter extends ObjectPainter {
          }
 
          if (sign_0 === (vertical ? (set_x > 0) : (set_y > 0))) {
-            new_x = set_x; new_y = set_y; curr_indx = besti;
+            new_x = set_x;
+            new_y = set_y;
+            curr_indx = besti;
             makeTranslate(title_g, new_x, new_y);
          }
       }).on('end', evnt => {
@@ -63242,10 +63307,14 @@ class TAxisPainter extends ObjectPainter {
             setBit(EAxisBits.kOppositeTitle, false); this.titleOpposite = false;
          }
 
-         this.submitAxisExec(`SetTitleOffset(${offset});;SetBit(${EAxisBits.kCenterTitle},${this.titleCenter?1:0})`);
-
          drag_rect.remove();
          drag_rect = null;
+
+         if ((x_0 !== new_x) || (y_0 !== new_y) || (i_0 !== curr_indx))
+            this.submitAxisExec(`SetTitleOffset(${offset});;SetBit(${EAxisBits.kCenterTitle},${this.titleCenter?1:0})`);
+
+         if (this.hist_painter && this.hist_axis)
+            this.hist_painter.getCanvPainter()?.producePadEvent('select', this.hist_painter.getPadPainter(), this);
       });
 
       title_g.style('cursor', 'move').call(drag_move);
@@ -64666,7 +64735,8 @@ const TooltipHandler = {
 
       if (exact) {
          const handler = dblckick ? this._dblclick_handler : this._click_handler;
-         if (handler) res = handler(exact.user_info, pnt);
+         if (isFunc(handler))
+            res = handler(exact.user_info, pnt);
       }
 
       if (!dblckick) {
@@ -64931,10 +65001,10 @@ const TooltipHandler = {
             this.processFrameClick(pnt);
             break;
          case 2:
-            this.getPadPainter()?.selectObjectPainter(this, null, 'xaxis');
+            this.getPadPainter()?.selectObjectPainter(this.x_handle);
             break;
          case 3:
-            this.getPadPainter()?.selectObjectPainter(this, null, 'yaxis');
+            this.getPadPainter()?.selectObjectPainter(this.y_handle);
             break;
       }
 
@@ -66339,7 +66409,9 @@ class TFramePainter extends ObjectPainter {
                handle = this[`${kind}_handle`];
          if (!isFunc(faxis?.TestBit))
             return false;
-         menu.header(`${kind.toUpperCase()} axis`);
+         const hist_painter = handle?.hist_painter || main;
+
+         menu.header(`${kind.toUpperCase()} axis`, `${urlClassPrefix}${clTAxis}.html`);
 
          menu.sub('Range');
          menu.add('Zoom', () => {
@@ -66389,8 +66461,8 @@ class TFramePainter extends ObjectPainter {
          }
          menu.addchk(faxis.TestBit(EAxisBits.kMoreLogLabels), 'More log', flag => {
             faxis.InvertBit(EAxisBits.kMoreLogLabels);
-            if (main?.snapid && (kind.length === 1))
-               main.interactiveRedraw('pad', `exec:SetMoreLogLabels(${flag})`, kind);
+            if (hist_painter?.snapid && (kind.length === 1))
+               hist_painter.interactiveRedraw('pad', `exec:SetMoreLogLabels(${flag})`, kind);
             else
                this.interactiveRedraw('pad');
          });
@@ -66399,23 +66471,23 @@ class TFramePainter extends ObjectPainter {
                faxis.InvertBit(EAxisBits.kNoExponent);
             if (handle) handle.noexp_changed = true;
             this[`${kind}_noexp_changed`] = true;
-            if (main?.snapid && (kind.length === 1))
-               main.interactiveRedraw('pad', `exec:SetNoExponent(${flag})`, kind);
+            if (hist_painter?.snapid && (kind.length === 1))
+               hist_painter.interactiveRedraw('pad', `exec:SetNoExponent(${flag})`, kind);
             else
                this.interactiveRedraw('pad');
          });
 
-         if ((kind === 'z') && isFunc(main?.fillPaletteMenu))
-            main.fillPaletteMenu(menu, !is_pal);
+         if ((kind === 'z') && isFunc(hist_painter?.fillPaletteMenu))
+            hist_painter.fillPaletteMenu(menu, !is_pal);
 
-         menu.addTAxisMenu(EAxisBits, main || this, faxis, kind, handle, this);
+         menu.addTAxisMenu(EAxisBits, hist_painter || this, faxis, kind, handle, this);
          return true;
       }
 
       const alone = menu.size() === 0;
 
       if (alone)
-         menu.header('Frame');
+         menu.header('Frame', `${urlClassPrefix}${clTFrame}.html`);
       else
          menu.separator();
 
@@ -69106,27 +69178,28 @@ class TPadPainter extends ObjectPainter {
    /** @summary Generate pad events, normally handled by GED
      * @desc in pad painter, while pad may be drawn without canvas
      * @private */
-   producePadEvent(what, padpainter, painter, position, place) {
+   producePadEvent(what, padpainter, painter, position) {
       if ((what === 'select') && isFunc(this.selectActivePad))
          this.selectActivePad(padpainter, painter, position);
 
       if (isFunc(this.pad_events_receiver))
-         this.pad_events_receiver({ what, padpainter, painter, position, place });
+         this.pad_events_receiver({ what, padpainter, painter, position });
    }
 
    /** @summary method redirect call to pad events receiver */
-   selectObjectPainter(painter, pos, place) {
+   selectObjectPainter(painter, pos) {
       const istoppad = this.iscan || !this.has_canvas,
-          canp = istoppad ? this : this.getCanvPainter();
+            canp = istoppad ? this : this.getCanvPainter();
 
-      if (painter === undefined) painter = this;
+      if (painter === undefined)
+         painter = this;
 
       if (pos && !istoppad)
          pos = getAbsPosInCanvas(this.svg_this_pad(), pos);
 
       selectActivePad({ pp: this, active: true });
 
-      canp?.producePadEvent('select', this, painter, pos, place);
+      canp?.producePadEvent('select', this, painter, pos);
    }
 
    /** @summary Draw pad active border
@@ -69855,9 +69928,9 @@ class TPadPainter extends ObjectPainter {
      * @private */
    fillContextMenu(menu) {
       if (this.pad)
-         menu.header(`${this.pad._typename}::${this.pad.fName}`);
+         menu.header(`${this.pad._typename}::${this.pad.fName}`, `${urlClassPrefix}${this.pad._typename}.html`);
       else
-         menu.header('Canvas');
+         menu.header('Canvas', `${urlClassPrefix}${clTCanvas}.html`);
 
       menu.addchk(this.isTooltipAllowed(), 'Show tooltips', () => this.setTooltipAllowed('toggle'));
 
@@ -70941,7 +71014,7 @@ class TPadPainter extends ObjectPainter {
 
       const arg = (file_format === 'pdf')
          ? { node: elem.node(), width, height, reset_tranform: use_frame }
-         : compressSVG(`<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">${elem.node().innerHTML}</svg>`);
+         : compressSVG(`<svg width="${width}" height="${height}" xmlns="${nsSVG}">${elem.node().innerHTML}</svg>`);
 
       return svgToImage(arg, file_format, args).then(res => {
          // reactivate border
@@ -71463,6 +71536,10 @@ class TCanvasPainter extends TPadPainter {
          return this.sendWebsocket(`OBJEXEC:${snapid}:${exec}`);
    }
 
+   /** @summary Return true if message can be send via web socket
+    * @private */
+   canSendWebSocket() { return this._websocket?.canSend(); }
+
    /** @summary Send text message with web socket
      * @desc used for communication with server-side of web canvas
      * @private */
@@ -71780,7 +71857,6 @@ class TCanvasPainter extends TPadPainter {
 
                   objpainter?.getPadPainter()?.selectObjectPainter(objpainter);
 
-                  console.log('activate GED');
                   this.processChanges('sbits', this);
 
                   resolveFunc(true);
@@ -71830,11 +71906,17 @@ class TCanvasPainter extends TPadPainter {
 
       if (this._all_sections_showed) return;
       this._all_sections_showed = true;
+
+      // used in Canvas.controller.js to avoid browser resize because of initial sections show/hide
+      this._ignore_section_resize = true;
+
       this.showSection('Menu', this.pad.TestBit(kMenuBar));
       this.showSection('StatusBar', this.pad.TestBit(kShowEventStatus));
       this.showSection('ToolBar', this.pad.TestBit(kShowToolBar));
       this.showSection('Editor', this.pad.TestBit(kShowEditor));
       this.showSection('ToolTips', this.pad.TestBit(kShowToolTips) || this._highlight_connect);
+
+      this._ignore_section_resize = false;
    }
 
    /** @summary Handle highlight in canvas - deliver information to server
@@ -72214,7 +72296,7 @@ class TPavePainter extends ObjectPainter {
 
       svg_code = compressSVG(svg_code);
 
-      svg_code = '<svg xmlns="http://www.w3.org/2000/svg"' + svg_code.slice(4);
+      svg_code = `<svg xmlns="${nsSVG}"` + svg_code.slice(4);
 
       const lm = pad?.fLeftMargin ?? gStyle.fPadLeftMargin,
             rm = pad?.fRightMargin ?? gStyle.fPadRightMargin,
@@ -72987,6 +73069,7 @@ class TPavePainter extends ObjectPainter {
             can_move = isStr(arg) && (arg.indexOf('can_move') >= 0),
             postpone_draw = isStr(arg) && (arg.indexOf('postpone') >= 0),
             cjust = isStr(arg) && (arg.indexOf('cjust') >= 0),
+            bring_stats_front = isStr(arg) && (arg.indexOf('bring_stats_front') >= 0),
             pp = this.getPadPainter(),
             width = pp.getPadWidth(),
             height = pp.getPadHeight(),
@@ -73124,6 +73207,9 @@ class TPavePainter extends ObjectPainter {
                r.on('dblclick', () => this.getFramePainter().unzoomSingle('z'));
          }
       }
+
+      if (bring_stats_front)
+         this.getPadPainter()?.findPainterFor(null, '', clTPaveStats)?.bringToFront();
 
       return this.z_handle.drawAxis(this.draw_g, s_width, s_height, axis_transform, axis_second).then(() => {
          let rect;
@@ -73690,6 +73776,9 @@ class THistDrawOptions {
 
    /** @summary Is palette can be used with current draw options */
    canHavePalette() {
+      if (this.ndim === 3)
+         return this.BoxStyle === 12 || this.BoxStyle === 13 || this.GLBox === 12;
+
       if (this.ndim !== 2)
          return false;
 
@@ -75507,6 +75596,7 @@ class THistPainter extends ObjectPainter {
          case 'ToggleLogY': return fp.toggleAxisLog('y');
          case 'ToggleLogZ': return fp.toggleAxisLog('z');
          case 'ToggleStatBox': return getPromise(this.toggleStat());
+         case 'ToggleColorZ': return this.toggleColz();
       }
       return false;
    }
@@ -75807,7 +75897,7 @@ class THistPainter extends ObjectPainter {
       // TODO: use weak reference (via pad list of painters and any kind of string)
       pal.$main_painter = this;
 
-      let arg = '', pr;
+      let arg = 'bring_stats_front', pr;
       if (postpone_draw) arg += ';postpone';
       if (can_move && !this.do_redraw_palette) arg += ';can_move';
       if (this.options.Cjust) arg += ';cjust';
@@ -76899,7 +76989,6 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
       if (this.isMainPainter()) {
          switch (funcname) {
             case 'ToggleColor': return this.toggleColor();
-            case 'ToggleColorZ': return this.toggleColz();
             case 'Toggle3D': return this.toggleMode3D();
          }
       }
@@ -80317,7 +80406,9 @@ function drawXYZ(toplevel, AxisPainter, opts) {
    if (opts.v7) {
       this.x_handle.pad_name = this.pad_name;
       this.x_handle.snapid = this.snapid;
-   }
+   } else if (opts.hist_painter)
+      this.x_handle.setHistPainter(opts.hist_painter, 'x');
+
    this.x_handle.configureAxis('xaxis', this.xmin, this.xmax, xmin, xmax, false, [grminx, grmaxx],
                                { log: pad?.fLogx ?? 0, reverse: opts.reverse_x, logcheckmin: true });
    this.x_handle.assignFrameMembers(this, 'x');
@@ -80327,7 +80418,8 @@ function drawXYZ(toplevel, AxisPainter, opts) {
    if (opts.v7) {
       this.y_handle.pad_name = this.pad_name;
       this.y_handle.snapid = this.snapid;
-   }
+   } else if (opts.hist_painter)
+      this.y_handle.setHistPainter(opts.hist_painter, 'y');
    this.y_handle.configureAxis('yaxis', this.ymin, this.ymax, ymin, ymax, false, [grminy, grmaxy],
                                { log: pad && !opts.use_y_for_z ? pad.fLogy : 0, reverse: opts.reverse_y, logcheckmin: opts.ndim > 1 });
    this.y_handle.assignFrameMembers(this, 'y');
@@ -80337,7 +80429,8 @@ function drawXYZ(toplevel, AxisPainter, opts) {
    if (opts.v7) {
       this.z_handle.pad_name = this.pad_name;
       this.z_handle.snapid = this.snapid;
-   }
+   } else if (opts.hist_painter)
+      this.z_handle.setHistPainter(opts.hist_painter, 'z');
    this.z_handle.configureAxis('zaxis', this.zmin, this.zmax, zmin, zmax, false, [grminz, grmaxz],
                                { value_axis: (opts.ndim === 1) || (opts.ndim === 2),
                                  log: ((opts.use_y_for_z || (opts.ndim === 2)) ? pad?.fLogv : undefined) ?? pad?.fLogz ?? 0,
@@ -80547,6 +80640,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
    xcont.position.set(0, grminy, grminz);
    xcont.rotation.x = 1/4*Math.PI;
    xcont.xyid = 2;
+   xcont.painter = this.x_handle;
 
    if (opts.draw) {
       xtickslines = createLineSegments(ticks, getLineMaterial(this.x_handle, 'ticks'));
@@ -80576,6 +80670,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
    xcont = new THREE.Object3D();
    xcont.position.set(0, grmaxy, grminz);
    xcont.rotation.x = 3/4*Math.PI;
+   xcont.painter = this.x_handle;
 
    if (opts.draw)
       xcont.add(new THREE.LineSegments(xtickslines.geometry, xtickslines.material));
@@ -80659,6 +80754,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
       let yticksline, ycont = new THREE.Object3D();
       ycont.position.set(grminx, 0, grminz);
       ycont.rotation.y = -1/4*Math.PI;
+      ycont.painter = this.y_handle;
       if (opts.draw) {
          yticksline = createLineSegments(ticks, getLineMaterial(this.y_handle, 'ticks'));
          ycont.add(yticksline);
@@ -80687,6 +80783,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
       ycont = new THREE.Object3D();
       ycont.position.set(grmaxx, 0, grminz);
       ycont.rotation.y = -3/4*Math.PI;
+      ycont.painter = this.y_handle;
       if (opts.draw)
          ycont.add(new THREE.LineSegments(yticksline.geometry, yticksline.material));
 
@@ -80837,6 +80934,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
 
       zcont[n].zid = n + 2;
       top.add(zcont[n]);
+      zcont[n].painter = this.z_handle;
    }
 
    zcont[0].position.set(grminx, grmaxy, 0);
@@ -83136,8 +83234,10 @@ class TH1Painter extends TH1Painter$2 {
             pr = main.create3DScene(this.options.Render3D, this.options.x3dscale, this.options.y3dscale, this.options.Ortho).then(() => {
                main.setAxesRanges(histo.fXaxis, this.xmin, this.xmax, histo.fYaxis, this.ymin, this.ymax, histo.fZaxis, 0, 0, this);
                main.set3DOptions(this.options);
-               main.drawXYZ(main.toplevel, TAxisPainter, { use_y_for_z: true, zmult, zoom: settings.Zooming, ndim: 1,
-                  draw: (this.options.Axis !== -1), drawany: this.options.isCartesian() });
+               main.drawXYZ(main.toplevel, TAxisPainter, {
+                  ndim: 1, hist_painter: this, use_y_for_z: true, zmult, zoom: settings.Zooming,
+                  draw: (this.options.Axis !== -1), drawany: this.options.isCartesian()
+               });
             });
          }
 
@@ -83406,9 +83506,11 @@ class TH2Painter extends TH2Painter$2 {
             pr = main.create3DScene(this.options.Render3D, this.options.x3dscale, this.options.y3dscale, this.options.Ortho).then(() => {
                main.setAxesRanges(histo.fXaxis, this.xmin, this.xmax, histo.fYaxis, this.ymin, this.ymax, histo.fZaxis, this.zmin, this.zmax, this);
                main.set3DOptions(this.options);
-               main.drawXYZ(main.toplevel, TAxisPainter, { zmult, zoom: settings.Zooming, ndim: 2,
+               main.drawXYZ(main.toplevel, TAxisPainter, {
+                  ndim: 2, hist_painter: this, zmult, zoom: settings.Zooming,
                   draw: this.options.Axis !== -1, drawany: this.options.isCartesian(),
-                  reverse_x: this.options.RevX, reverse_y: this.options.RevY });
+                  reverse_x: this.options.RevX, reverse_y: this.options.RevY
+               });
             });
          }
 
@@ -83820,7 +83922,7 @@ class TH3Painter extends THistPainter {
       if (!this.draw_content)
          return false;
 
-      let box_option = this.options.Box ? this.options.BoxStyle : 0;
+      let box_option = this.options.BoxStyle;
 
       if (!box_option && this.options.Scat) {
          const promise = this.draw3DScatter();
@@ -83845,7 +83947,8 @@ class TH3Painter extends THistPainter {
       if ((this.options.GLBox === 11) || (this.options.GLBox === 12)) {
          tipscale = 0.4;
          use_lambert = true;
-         if (this.options.GLBox === 12) use_colors = true;
+         if (this.options.GLBox === 12)
+            use_colors = true;
 
          single_bin_geom = new THREE.SphereGeometry(0.5, main.webgl ? 16 : 8, main.webgl ? 12 : 6);
          single_bin_geom.applyMatrix4(new THREE.Matrix4().makeRotationX(Math.PI/2));
@@ -83873,7 +83976,7 @@ class TH3Painter extends THistPainter {
 
          if (box_option === 12)
             use_colors = true;
-            else if (box_option === 13) {
+         else if (box_option === 13) {
             use_colors = true;
             use_helper = false;
          } else if (this.options.GLColor) {
@@ -84077,8 +84180,10 @@ class TH3Painter extends THistPainter {
          pr = main.create3DScene(this.options.Render3D, this.options.x3dscale, this.options.y3dscale, this.options.Ortho).then(() => {
             main.setAxesRanges(histo.fXaxis, this.xmin, this.xmax, histo.fYaxis, this.ymin, this.ymax, histo.fZaxis, this.zmin, this.zmax, this);
             main.set3DOptions(this.options);
-            main.drawXYZ(main.toplevel, TAxisPainter, { zoom: settings.Zooming, ndim: 3,
-                   draw: this.options.Axis !== -1, drawany: this.options.isCartesian() });
+            main.drawXYZ(main.toplevel, TAxisPainter, {
+               ndim: 3, hist_painter: this, zoom: settings.Zooming,
+               draw: this.options.Axis !== -1, drawany: this.options.isCartesian()
+            });
             return this.draw3DBins();
          }).then(() => {
             main.render3D();
@@ -84088,7 +84193,7 @@ class TH3Painter extends THistPainter {
       }
 
       if (this.isMainPainter())
-        pr = pr.then(() => this.drawColorPalette(this.options.Zscale && (this._box_option === 12 || this._box_option === 13)));
+        pr = pr.then(() => this.drawColorPalette(this.options.Zscale && (this._box_option === 12 || this._box_option === 13 || this.options.GLBox === 12)));
 
       return pr.then(() => this.updateFunctions())
                .then(() => this.updateHistTitle())
@@ -84103,6 +84208,7 @@ class TH3Painter extends THistPainter {
       pp.addPadButton('auto_zoom', 'Unzoom all axes', 'ToggleZoom', 'Ctrl *');
       if (this.draw_content)
          pp.addPadButton('statbox', 'Toggle stat box', 'ToggleStatBox');
+      pp.addPadButton('th2colorz', 'Toggle color palette', 'ToggleColorZ');
       pp.showPadButtons();
    }
 
@@ -147127,6 +147233,13 @@ async function drawText$1() {
 
       assignContextMenu(this, kToFront);
 
+      this.fillContextMenuItems = function(menu) {
+         menu.add('Change text', () => menu.input('Enter new text', text.fTitle).then(t => {
+            text.fTitle = t;
+            this.interactiveRedraw('pad', `exec:SetTitle("${t}")`);
+         }));
+      };
+
       return this;
    });
 }
@@ -157228,7 +157341,7 @@ class RAxisPainter extends RObjectPainter {
                evnt.stopPropagation(); // disable main context menu
                evnt.preventDefault();  // disable browser context menu
                createMenu(evnt, this).then(menu => {
-                 menu.header('RAxisDrawable');
+                 menu.header('RAxisDrawable', `${urlClassPrefix}ROOT_1_1Experimental_1_1RAxisBase.html`);
                  menu.add('Unzoom', () => this.zoomStandalone());
                  this.fillAxisContextMenu(menu, '');
                  menu.show();
@@ -158403,7 +158516,7 @@ class RFramePainter extends RObjectPainter {
          const handle = this[kind+'_handle'],
                faxis = obj || this[kind+'axis'];
          if (!handle) return false;
-         menu.header(`${kind.toUpperCase()} axis`);
+         menu.header(`${kind.toUpperCase()} axis`, `${urlClassPrefix}ROOT_1_1Experimental_1_1RAxisBase.html`);
 
          if (isFunc(faxis?.TestBit)) {
             const main = this.getMainPainter(true);
@@ -158417,7 +158530,7 @@ class RFramePainter extends RObjectPainter {
       const alone = menu.size() === 0;
 
       if (alone)
-         menu.header('Frame');
+         menu.header('Frame', `${urlClassPrefix}ROOT_1_1Experimental_1_1RFrame.html`);
       else
          menu.separator();
 
@@ -158832,16 +158945,16 @@ class RPadPainter extends RObjectPainter {
    /** @summary Generate pad events, normally handled by GED
      * @desc in pad painter, while pad may be drawn without canvas
      * @private */
-   producePadEvent(what, padpainter, painter, position, place) {
+   producePadEvent(what, padpainter, painter, position) {
       if ((what === 'select') && isFunc(this.selectActivePad))
          this.selectActivePad(padpainter, painter, position);
 
-      if (this.pad_events_receiver)
-         this.pad_events_receiver({ what, padpainter, painter, position, place });
+      if (isFunc(this.pad_events_receiver))
+         this.pad_events_receiver({ what, padpainter, painter, position });
    }
 
    /** @summary method redirect call to pad events receiver */
-   selectObjectPainter(painter, pos, place) {
+   selectObjectPainter(painter, pos) {
       const istoppad = (this.iscan || !this.has_canvas),
           canp = istoppad ? this : this.getCanvPainter();
 
@@ -158852,7 +158965,7 @@ class RPadPainter extends RObjectPainter {
 
       selectActivePad({ pp: this, active: true });
 
-      canp.producePadEvent('select', this, painter, pos, place);
+      canp.producePadEvent('select', this, painter, pos);
    }
 
    /** @summary Set fast drawing property depending on the size
@@ -159265,7 +159378,9 @@ class RPadPainter extends RObjectPainter {
    /** @summary Fill pad context menu
      * @private */
    fillContextMenu(menu) {
-      menu.header(this.iscan ? 'RCanvas' : 'RPad');
+      const clname = this.iscan ? 'RCanvas' : 'RPad';
+
+      menu.header(clname, `${urlClassPrefix}ROOT_1_1Experimental_1_1${clname}.html`);
 
       menu.addchk(this.isTooltipAllowed(), 'Show tooltips', () => this.setTooltipAllowed('toggle'));
 
@@ -159949,7 +160064,7 @@ class RPadPainter extends RObjectPainter {
 
       const arg = (file_format === 'pdf')
          ? { node: elem.node(), width, height, reset_tranform: use_frame }
-         : compressSVG(`<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">${elem.node().innerHTML}</svg>`);
+         : compressSVG(`<svg width="${width}" height="${height}" xmlns="${nsSVG}">${elem.node().innerHTML}</svg>`);
 
       return svgToImage(arg, file_format, args).then(res => {
          for (let k = 0; k < items.length; ++k) {
@@ -160389,6 +160504,10 @@ class RCanvasPainter extends RPadPainter {
    sendSaveCommand(fname) {
       this.sendWebsocket('PRODUCE:' + fname);
    }
+
+   /** @summary Return true if message can be send via web socket
+    * @private */
+   canSendWebSocket() { return this._websocket?.canSend(); }
 
    /** @summary Send message via web socket
      * @private */
@@ -166033,6 +166152,7 @@ exports.svgToImage = svgToImage;
 exports.toJSON = toJSON;
 exports.treeDraw = treeDraw;
 exports.treeProcess = treeProcess;
+exports.urlClassPrefix = urlClassPrefix;
 exports.version = version;
 exports.version_date = version_date;
 exports.version_id = version_id;

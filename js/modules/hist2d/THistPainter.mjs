@@ -69,6 +69,9 @@ class THistDrawOptions {
 
    /** @summary Is palette can be used with current draw options */
    canHavePalette() {
+      if (this.ndim === 3)
+         return this.BoxStyle === 12 || this.BoxStyle === 13 || this.GLBox === 12;
+
       if (this.ndim !== 2)
          return false;
 
@@ -1886,6 +1889,7 @@ class THistPainter extends ObjectPainter {
          case 'ToggleLogY': return fp.toggleAxisLog('y');
          case 'ToggleLogZ': return fp.toggleAxisLog('z');
          case 'ToggleStatBox': return getPromise(this.toggleStat());
+         case 'ToggleColorZ': return this.toggleColz();
       }
       return false;
    }
@@ -2186,7 +2190,7 @@ class THistPainter extends ObjectPainter {
       // TODO: use weak reference (via pad list of painters and any kind of string)
       pal.$main_painter = this;
 
-      let arg = '', pr;
+      let arg = 'bring_stats_front', pr;
       if (postpone_draw) arg += ';postpone';
       if (can_move && !this.do_redraw_palette) arg += ';can_move';
       if (this.options.Cjust) arg += ';cjust';

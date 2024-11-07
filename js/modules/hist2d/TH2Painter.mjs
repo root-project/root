@@ -782,7 +782,6 @@ class TH2Painter extends THistPainter {
       if (this.isMainPainter()) {
          switch (funcname) {
             case 'ToggleColor': return this.toggleColor();
-            case 'ToggleColorZ': return this.toggleColz();
             case 'Toggle3D': return this.toggleMode3D();
          }
       }
