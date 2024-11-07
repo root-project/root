@@ -565,7 +565,7 @@ ROOT::Experimental::RFieldBase::RFieldBase(std::string_view name, std::string_vi
      fPrincipalColumn(nullptr),
      fTraits(isSimple ? kTraitMappable : 0)
 {
-   EnsureValidFieldName(name);
+   ROOT::Experimental::Internal::EnsureValidNameForRNTuple(name, "Field");
 }
 
 std::string ROOT::Experimental::RFieldBase::GetQualifiedFieldName() const
@@ -893,14 +893,6 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
       return result;
    }
    return R__FORWARD_RESULT(fnFail("unknown type: " + canonicalType));
-}
-
-ROOT::Experimental::RResult<void> ROOT::Experimental::RFieldBase::EnsureValidFieldName(std::string_view fieldName)
-{
-   if (fieldName.find('.') != std::string::npos) {
-      return R__FAIL("name '" + std::string(fieldName) + "' cannot contain dot characters '.'");
-   }
-   return RResult<void>::Success();
 }
 
 const ROOT::Experimental::RFieldBase::RColumnRepresentations &
