@@ -62,20 +62,17 @@ public:
    };
 
 private:
-   struct RPageInfo {
+   /// Every page in the page pool is annotated with a search key and a reference counter.
+   struct REntry {
+      RPage fPage;
       RKey fKey;
       std::int32_t fRefCounter = 0;
    };
 
-   /// TODO(jblomer): should be an efficient index structure that allows
-   ///   - random insert
-   ///   - random delete
-   ///   - searching by page
-   std::vector<RPage> fPages;
-   std::vector<RPageInfo> fPageInfos;
-   /// Used in ReleasePage() to find the page index in fPages/fPageInfos
+   std::vector<REntry> fEntries; ///< All cached pages in the page pool
+   /// Used in ReleasePage() to find the page index in fPages
    std::unordered_map<void *, std::size_t> fLookupByBuffer;
-   std::mutex fLock;
+   std::mutex fLock; ///< The page pool is accessed concurrently due to parallel decompression
 
    /// Give back a page to the pool and decrease the reference counter. There must not be any pointers anymore into
    /// this page. If the reference counter drops to zero, the page pool might decide to call the deleter given in

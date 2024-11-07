@@ -24,24 +24,16 @@
 ROOT::Experimental::Internal::RPageRef ROOT::Experimental::Internal::RPagePool::RegisterPage(RPage page, RKey key)
 {
    std::lock_guard<std::mutex> lockGuard(fLock);
-   fLookupByBuffer[page.GetBuffer()] = fPages.size();
-   fPages.emplace_back(std::move(page));
-   RPageInfo pageInfo;
-   pageInfo.fKey = key;
-   pageInfo.fRefCounter = 1;
-   fPageInfos.emplace_back(pageInfo);
-   return RPageRef(page, this);
+   fLookupByBuffer[page.GetBuffer()] = fEntries.size();
+   auto &entry = fEntries.emplace_back(REntry{std::move(page), key, 1});
+   return RPageRef(entry.fPage, this);
 }
 
 void ROOT::Experimental::Internal::RPagePool::PreloadPage(RPage page, RKey key)
 {
    std::lock_guard<std::mutex> lockGuard(fLock);
-   fLookupByBuffer[page.GetBuffer()] = fPages.size();
-   fPages.emplace_back(std::move(page));
-   RPageInfo pageInfo;
-   pageInfo.fKey = key;
-   pageInfo.fRefCounter = 0;
-   fPageInfos.emplace_back(pageInfo);
+   fLookupByBuffer[page.GetBuffer()] = fEntries.size();
+   fEntries.emplace_back(REntry{std::move(page), key, 0});
 }
 
 void ROOT::Experimental::Internal::RPagePool::ReleasePage(const RPage &page)
@@ -50,19 +42,17 @@ void ROOT::Experimental::Internal::RPagePool::ReleasePage(const RPage &page)
    std::lock_guard<std::mutex> lockGuard(fLock);
 
    const auto idx = fLookupByBuffer.at(page.GetBuffer());
-   const auto N = fPages.size();
+   const auto N = fEntries.size();
 
-   if (--fPageInfos[idx].fRefCounter == 0) {
+   if (--fEntries[idx].fRefCounter == 0) {
       fLookupByBuffer.erase(page.GetBuffer());
 
       if (idx != (N - 1)) {
-         fLookupByBuffer[fPages[N - 1].GetBuffer()] = idx;
-         fPages[idx] = std::move(fPages[N - 1]);
-         fPageInfos[idx] = fPageInfos[N - 1];
+         fLookupByBuffer[fEntries[N - 1].fPage.GetBuffer()] = idx;
+         fEntries[idx] = std::move(fEntries[N - 1]);
       }
 
-      fPages.resize(N - 1);
-      fPageInfos.resize(N - 1);
+      fEntries.resize(N - 1);
    }
 }
 
@@ -70,15 +60,16 @@ ROOT::Experimental::Internal::RPageRef
 ROOT::Experimental::Internal::RPagePool::GetPage(RKey key, NTupleSize_t globalIndex)
 {
    std::lock_guard<std::mutex> lockGuard(fLock);
-   unsigned int N = fPages.size();
+   unsigned int N = fEntries.size();
    for (unsigned int i = 0; i < N; ++i) {
-      if (fPageInfos[i].fRefCounter < 0)
+      if (fEntries[i].fRefCounter < 0)
          continue;
-      if (fPageInfos[i].fKey != key)
+      if (fEntries[i].fKey != key)
          continue;
-      if (!fPages[i].Contains(globalIndex)) continue;
-      fPageInfos[i].fRefCounter++;
-      return RPageRef(fPages[i], this);
+      if (!fEntries[i].fPage.Contains(globalIndex))
+         continue;
+      fEntries[i].fRefCounter++;
+      return RPageRef(fEntries[i].fPage, this);
    }
    return RPageRef();
 }
@@ -87,15 +78,16 @@ ROOT::Experimental::Internal::RPageRef
 ROOT::Experimental::Internal::RPagePool::GetPage(RKey key, RClusterIndex clusterIndex)
 {
    std::lock_guard<std::mutex> lockGuard(fLock);
-   unsigned int N = fPages.size();
+   unsigned int N = fEntries.size();
    for (unsigned int i = 0; i < N; ++i) {
-      if (fPageInfos[i].fRefCounter < 0)
+      if (fEntries[i].fRefCounter < 0)
          continue;
-      if (fPageInfos[i].fKey != key)
+      if (fEntries[i].fKey != key)
          continue;
-      if (!fPages[i].Contains(clusterIndex)) continue;
-      fPageInfos[i].fRefCounter++;
-      return RPageRef(fPages[i], this);
+      if (!fEntries[i].fPage.Contains(clusterIndex))
+         continue;
+      fEntries[i].fRefCounter++;
+      return RPageRef(fEntries[i].fPage, this);
    }
    return RPageRef();
 }
