@@ -37,8 +37,11 @@ ROOT::Experimental::Internal::RPageSinkBuf::RPageSinkBuf(std::unique_ptr<RPageSi
    fMetrics = Detail::RNTupleMetrics("RPageSinkBuf");
    fCounters = std::make_unique<RCounters>(RCounters{
       *fMetrics.MakeCounter<Detail::RNTuplePlainCounter *>("ParallelZip", "", "compressing pages in parallel"),
+      *fMetrics.MakeCounter<Detail::RNTupleAtomicCounter *>("timeWallZip", "ns", "wall clock time spent compressing"),
       *fMetrics.MakeCounter<Detail::RNTuplePlainCounter *>("timeWallCriticalSection", "ns",
                                                            "wall clock time spent in critical sections"),
+      *fMetrics.MakeCounter<Detail::RNTupleTickCounter<Detail::RNTupleAtomicCounter> *>("timeCpuZip", "ns",
+                                                                                        "CPU time spent compressing"),
       *fMetrics.MakeCounter<Detail::RNTupleTickCounter<Detail::RNTuplePlainCounter> *>(
          "timeCpuCriticalSection", "ns", "CPU time spent in critical section")});
    fMetrics.ObserveMetrics(fInnerSink->GetMetrics());
@@ -175,7 +178,10 @@ void ROOT::Experimental::Internal::RPageSinkBuf::CommitPage(ColumnHandle_t colum
       config.fWriteChecksum = GetWriteOptions().GetEnablePageChecksums();
       config.fAllowAlias = false;
       config.fBuffer = zipItem.fBuf.get();
-      sealedPage = SealPage(config);
+      {
+         Detail::RNTupleAtomicTimer timer(fCounters->fTimeWallZip, fCounters->fTimeCpuZip);
+         sealedPage = SealPage(config);
+      }
       shrinkSealedPage();
       zipItem.fSealedPage = &sealedPage;
       return;
@@ -200,6 +206,8 @@ void ROOT::Experimental::Internal::RPageSinkBuf::CommitPage(ColumnHandle_t colum
       // Make sure the page buffer is not aliased so that we can free the uncompressed page.
       config.fAllowAlias = false;
       config.fBuffer = zipItem.fBuf.get();
+      // TODO: Somehow expose the time spent in zipping via the metrics. Wall time is tricky because the tasks run
+      // in parallel...
       sealedPage = SealPage(config);
       shrinkSealedPage();
       zipItem.fSealedPage = &sealedPage;

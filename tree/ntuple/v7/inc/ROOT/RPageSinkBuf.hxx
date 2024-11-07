@@ -100,7 +100,9 @@ private:
    /// I/O performance counters that get registered in fMetrics
    struct RCounters {
       Detail::RNTuplePlainCounter &fParallelZip;
+      Detail::RNTupleAtomicCounter &fTimeWallZip;
       Detail::RNTuplePlainCounter &fTimeWallCriticalSection;
+      Detail::RNTupleTickCounter<Detail::RNTupleAtomicCounter> &fTimeCpuZip;
       Detail::RNTupleTickCounter<Detail::RNTuplePlainCounter> &fTimeCpuCriticalSection;
    };
    std::unique_ptr<RCounters> fCounters;
