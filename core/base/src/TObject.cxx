@@ -29,7 +29,7 @@ class hierarchies (watch out for overlaps).
    `= default` for any of the constructors.
    The default implementation for a constructor can sometime do 'more' than we
    expect (and still being standard compliant).  On some platforms it will reset
-   all the data member of the class including its base class's member before the=
+   all the data member of the class including its base class's member before the
    actual execution of the base class constructor.
    `TObject`'s implementation of the `IsOnHeap` bit requires the memory occupied
    by `TObject::fUniqueID` to *not* be reset between the execution of `TObject::operator new`
