@@ -24,6 +24,7 @@
 #include <mutex>
 #include <typeindex>
 #include <typeinfo>
+#include <unordered_map>
 #include <vector>
 
 namespace ROOT {
@@ -72,6 +73,8 @@ private:
    ///   - searching by page
    std::vector<RPage> fPages;
    std::vector<RPageInfo> fPageInfos;
+   /// Used in ReleasePage() to find the page index in fPages/fPageInfos
+   std::unordered_map<void *, std::size_t> fLookupByBuffer;
    std::mutex fLock;
 
    /// Give back a page to the pool and decrease the reference counter. There must not be any pointers anymore into
