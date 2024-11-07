@@ -103,8 +103,8 @@ class JSRootMenu {
    }
 
    /** @summary Add menu header - must be first entry */
-   header(name) {
-      this.add(sHeader + name);
+   header(name, title) {
+      this.add(sHeader + name, undefined, undefined, title);
    }
 
    /** @summary Add draw sub-menu with draw options
@@ -744,8 +744,10 @@ class JSRootMenu {
       });
       this.addchk(faxis.TestBit(EAxisBits.kCenterTitle), 'Center',
             arg => { faxis.InvertBit(EAxisBits.kCenterTitle); painter.interactiveRedraw('pad', `exec:CenterTitle(${arg})`, kind); });
-      this.addchk(faxis.TestBit(EAxisBits.kOppositeTitle), 'Opposite',
-             () => { faxis.InvertBit(EAxisBits.kOppositeTitle); painter.redrawPad(); });
+      if (!painter?.snapid) {
+         this.addchk(faxis.TestBit(EAxisBits.kOppositeTitle), 'Opposite',
+                () => { faxis.InvertBit(EAxisBits.kOppositeTitle); painter.redrawPad(); });
+      }
       this.addchk(faxis.TestBit(EAxisBits.kRotateTitle), 'Rotate',
             arg => { faxis.InvertBit(EAxisBits.kRotateTitle); painter.interactiveRedraw('pad', is_gaxis ? `exec:SetBit(TAxis::kRotateTitle, ${arg})` : `exec:RotateTitle(${arg})`, kind); });
       if (is_gaxis) {
@@ -1173,7 +1175,7 @@ class StandaloneMenu extends JSRootMenu {
          return curr.push({ divider: true });
 
       if (name.indexOf(sHeader) === 0)
-         return curr.push({ text: name.slice(sHeader.length), header: true });
+         return curr.push({ text: name.slice(sHeader.length), header: true, title });
 
       if (name === sEndsub) {
          this.stack.pop();
@@ -1281,16 +1283,50 @@ class StandaloneMenu extends JSRootMenu {
 
          if (d.header) {
             item.style = 'background-color: lightblue; padding: 3px 7px; font-weight: bold; border-bottom: 1px;';
-            item.innerHTML = d.text;
+
+            let url = '', title = '';
+            if (d.title) {
+               const p = d.title.indexOf('https://');
+               if (p >= 0) {
+                  url = d.title.slice(p);
+                  title = d.title.slice(0, p);
+               } else
+                  title = d.title;
+            }
+            if (!url)
+               item.innerHTML = d.text;
+            else {
+               item.style.display = 'flex';
+               item.style['justify-content'] = 'space-between';
+
+               const txt = doc.createElement('span');
+               txt.innerHTML = d.text;
+               txt.style = 'display: inline-block; margin: 0;';
+               item.appendChild(txt);
+
+               const anchor = doc.createElement('span');
+               anchor.style = 'margin: 0; color: blue; opacity: 0.1; margin-left: 7px; right: 3px; display: inline-block; cursor: pointer;';
+               anchor.textContent = '?';
+               anchor.title = url;
+               anchor.addEventListener('click', () => {
+                  const cp = this.painter?.getCanvPainter();
+                  if (cp?.canSendWebSocket())
+                     cp.sendWebsocket(`SHOWURL:${url}`);
+                  else
+                     window.open(url);
+               });
+               anchor.addEventListener('mouseenter', () => { anchor.style.opacity = 1; });
+               anchor.addEventListener('mouseleave', () => { anchor.style.opacity = 0.1; });
+               item.appendChild(anchor);
+            }
+            if (title)
+               item.setAttribute('title', title);
+
             return;
          }
 
          const hovArea = doc.createElement('div');
-         hovArea.style.width = '100%';
-         hovArea.style.height = '100%';
-         hovArea.style.display = 'flex';
-         hovArea.style.justifyContent = 'space-between';
-         hovArea.style.cursor = 'pointer';
+         hovArea.style = 'width: 100%; height: 100%; display: flex; justify-content: space-between; cursor: pointer;';
          if (d.title) hovArea.setAttribute('title', d.title);
 
          item.appendChild(hovArea);
@@ -1347,7 +1383,7 @@ class StandaloneMenu extends JSRootMenu {
          if (d.extraText || d.sub) {
             const extraText = doc.createElement('span');
             extraText.className = 'jsroot_ctxt_extraText';
-            extraText.style = 'margin: 0; padding: 3px 7px; color: rgb(0, 0, 0, 0.6);';
+            extraText.style = 'margin: 0; padding: 3px 7px; color: rgba(0, 0, 0, 0.6);';
             extraText.textContent = d.sub ? '\u25B6' : d.extraText;
             hovArea.appendChild(extraText);
 

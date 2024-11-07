@@ -1,4 +1,4 @@
-import { gStyle, settings, internals, create, isFunc, isStr, clTAxis, nsREX } from '../core.mjs';
+import { gStyle, settings, internals, create, isFunc, isStr, clTAxis, nsREX, urlClassPrefix } from '../core.mjs';
 import { pointer as d3_pointer } from '../d3.mjs';
 import { getSvgLineStyle } from '../base/TAttLineHandler.mjs';
 import { makeTranslate } from '../base/BasePainter.mjs';
@@ -1062,7 +1062,7 @@ class RFramePainter extends RObjectPainter {
          const handle = this[kind+'_handle'],
                faxis = obj || this[kind+'axis'];
          if (!handle) return false;
-         menu.header(`${kind.toUpperCase()} axis`);
+         menu.header(`${kind.toUpperCase()} axis`, `${urlClassPrefix}ROOT_1_1Experimental_1_1RAxisBase.html`);
 
          if (isFunc(faxis?.TestBit)) {
             const main = this.getMainPainter(true);
@@ -1076,7 +1076,7 @@ class RFramePainter extends RObjectPainter {
       const alone = menu.size() === 0;
 
       if (alone)
-         menu.header('Frame');
+         menu.header('Frame', `${urlClassPrefix}ROOT_1_1Experimental_1_1RFrame.html`);
       else
          menu.separator();
 

@@ -1,5 +1,5 @@
-import { gStyle, settings, browser, constants, internals, addMethods,
-         isPromise, getPromise, postponePromise, isBatchMode, isObject, isFunc, isStr, clTPad, clTFrame, nsREX } from '../core.mjs';
+import { gStyle, settings, browser, constants, internals, addMethods, isPromise, getPromise, postponePromise,
+         isBatchMode, isObject, isFunc, isStr, clTPad, clTFrame, nsREX, nsSVG, urlClassPrefix } from '../core.mjs';
 import { ColorPalette, addColor, getRootColors, convertColor } from '../base/colors.mjs';
 import { RObjectPainter } from '../base/RObjectPainter.mjs';
 import { prSVG, getElementRect, getAbsPosInCanvas, DrawOptions, compressSVG, makeTranslate, svgToImage } from '../base/BasePainter.mjs';
@@ -316,16 +316,16 @@ class RPadPainter extends RObjectPainter {
    /** @summary Generate pad events, normally handled by GED
      * @desc in pad painter, while pad may be drawn without canvas
      * @private */
-   producePadEvent(what, padpainter, painter, position, place) {
+   producePadEvent(what, padpainter, painter, position) {
       if ((what === 'select') && isFunc(this.selectActivePad))
          this.selectActivePad(padpainter, painter, position);
 
-      if (this.pad_events_receiver)
-         this.pad_events_receiver({ what, padpainter, painter, position, place });
+      if (isFunc(this.pad_events_receiver))
+         this.pad_events_receiver({ what, padpainter, painter, position });
    }
 
    /** @summary method redirect call to pad events receiver */
-   selectObjectPainter(painter, pos, place) {
+   selectObjectPainter(painter, pos) {
       const istoppad = (this.iscan || !this.has_canvas),
           canp = istoppad ? this : this.getCanvPainter();
 
@@ -336,7 +336,7 @@ class RPadPainter extends RObjectPainter {
 
       selectActivePad({ pp: this, active: true });
 
-      canp.producePadEvent('select', this, painter, pos, place);
+      canp.producePadEvent('select', this, painter, pos);
    }
 
    /** @summary Set fast drawing property depending on the size
@@ -749,7 +749,9 @@ class RPadPainter extends RObjectPainter {
    /** @summary Fill pad context menu
      * @private */
    fillContextMenu(menu) {
-      menu.header(this.iscan ? 'RCanvas' : 'RPad');
+      const clname = this.iscan ? 'RCanvas' : 'RPad';
+
+      menu.header(clname, `${urlClassPrefix}ROOT_1_1Experimental_1_1${clname}.html`);
 
       menu.addchk(this.isTooltipAllowed(), 'Show tooltips', () => this.setTooltipAllowed('toggle'));
 
@@ -1433,7 +1435,7 @@ class RPadPainter extends RObjectPainter {
 
       const arg = (file_format === 'pdf')
          ? { node: elem.node(), width, height, reset_tranform: use_frame }
-         : compressSVG(`<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">${elem.node().innerHTML}</svg>`);
+         : compressSVG(`<svg width="${width}" height="${height}" xmlns="${nsSVG}">${elem.node().innerHTML}</svg>`);
 
       return svgToImage(arg, file_format, args).then(res => {
          for (let k = 0; k < items.length; ++k) {
