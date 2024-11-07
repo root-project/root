@@ -203,6 +203,62 @@ static bool IsPyCArgObject(PyObject* pyobject)
     return Py_TYPE(pyobject) == pycarg_type;
 }
 
+#if PY_VERSION_HEX < 0x30d0000
+static bool IsCTypesArrayOrPointer(PyObject* pyobject)
+{
+    static PyTypeObject* cstgdict_type = nullptr;
+    if (!cstgdict_type) {
+    // get any pointer type to initialize the extended dictionary type
+        PyTypeObject* ct_int = GetCTypesType(ct_c_int);
+        if (ct_int && ct_int->tp_dict) {
+            cstgdict_type = Py_TYPE(ct_int->tp_dict);
+        }
+    }
+
+    PyTypeObject* pytype = Py_TYPE(pyobject);
+    if (pytype->tp_dict && Py_TYPE(pytype->tp_dict) == cstgdict_type)
+        return true;
+    return false;
+}
+#else
+// the internals of ctypes have been redone, requiring a more complex checking
+namespace {
+
+typedef struct {
+    PyTypeObject *DictRemover_Type;
+    PyTypeObject *PyCArg_Type;
+    PyTypeObject *PyCField_Type;
+    PyTypeObject *PyCThunk_Type;
+    PyTypeObject *StructParam_Type;
+    PyTypeObject *PyCType_Type;
+    PyTypeObject *PyCStructType_Type;
+    PyTypeObject *UnionType_Type;
+    PyTypeObject *PyCPointerType_Type;
+// ... unused fields omitted ...
+} _cppyy_ctypes_state;
+
+} // unnamed namespace
+
+static bool IsCTypesArrayOrPointer(PyObject* pyobject)
+{
+    static _cppyy_ctypes_state* state = nullptr;
+    if (!state) {
+        PyObject* ctmod = PyImport_AddModule("_ctypes");   // the extension module, not the Python one
+        if (ctmod)
+            state = (_cppyy_ctypes_state*)PyModule_GetState(ctmod);
+    }
+
+    // verify for object types that have a C payload
+    if (state && (PyObject_IsInstance((PyObject*)Py_TYPE(pyobject), (PyObject*)state->PyCType_Type) ||
+                  PyObject_IsInstance((PyObject*)Py_TYPE(pyobject), (PyObject*)state->PyCPointerType_Type))) {
+        return true;
+    }
+
+    return false;
+}
+#endif
+
+
 //- helper to establish life lines -------------------------------------------
 static inline bool SetLifeLine(PyObject* holder, PyObject* target, intptr_t ref)
 {
@@ -1488,6 +1544,16 @@ bool CPyCppyy::VoidArrayConverter::SetArg(
         return true;
     }
 
+// allow any other ctypes pointer type
+    if (IsCTypesArrayOrPointer(pyobject)) {
+        void** payload = (void**)((CPyCppyy_tagCDataObject*)pyobject)->b_ptr;
+        if (payload) {
+            para.fValue.fVoidp = *payload;
+            para.fTypeCode = 'p';
+            return true;
+        }
+    }
+
 // final try: attempt to get buffer
     Py_ssize_t buflen = Utility::GetBuffer(pyobject, '*', 1, para.fValue.fVoidp, false);
 
@@ -1597,6 +1663,11 @@ bool CPyCppyy::name##ArrayConverter::SetArg(                                 \
     /* 2-dim case: ptr-ptr types */                                          \
     if (fShape.ndim() == 2) {                                                \
         if (Py_TYPE(pyobject) == GetCTypesPtrType(ct_##ctype)) {             \
+            para.fValue.fVoidp = (void*)((CPyCppyy_tagCDataObject*)pyobject)->b_ptr;\
+            para.fTypeCode = 'p';                                            \
+            convOk = true;                                                   \
+        } else if (Py_TYPE(pyobject) == GetCTypesType(ct_c_void_p)) {        \
+        /* special case: pass address of c_void_p buffer to return the address */\
             para.fValue.fVoidp = (void*)((CPyCppyy_tagCDataObject*)pyobject)->b_ptr;\
             para.fTypeCode = 'p';                                            \
             convOk = true;                                                   \

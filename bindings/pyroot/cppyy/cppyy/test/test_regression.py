@@ -9,8 +9,12 @@ class TestREGRESSION:
     def setup_class(cls):
         import cppyy
 
-        def stringpager(text, cls=cls):
-            cls.helpout.append(text)
+        if sys.hexversion < 0x30d0000:
+            def stringpager(text, cls=cls):
+                cls.helpout.append(text)
+        else:
+            def stringpager(text, title='', cls=cls):
+                cls.helpout.append(text)
 
         import pydoc
         pydoc.pager = stringpager
