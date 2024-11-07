@@ -19,8 +19,10 @@
 #include <cstdint>
 
 #include <string>
+#include <string_view>
 #include <variant>
 
+#include <ROOT/RError.hxx>
 #include <ROOT/RLogger.hxx>
 #include <ROOT/RNTupleReadOptions.hxx>
 
@@ -270,6 +272,9 @@ inline constexpr ENTupleStructure kTestFutureFieldStructure =
 
 inline constexpr RNTupleLocator::ELocatorType kTestLocatorType = static_cast<RNTupleLocator::ELocatorType>(0x7e);
 static_assert(kTestLocatorType < RNTupleLocator::ELocatorType::kLastSerializableType);
+
+/// Check whether a given string is a valid name according to the RNTuple specification
+RResult<void> EnsureValidNameForRNTuple(std::string_view name, std::string_view where);
 
 } // namespace Internal
 
