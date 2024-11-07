@@ -159,6 +159,9 @@ REveManager::REveManager()
    // !!! AMT increase threshold to enable color pick on client
    TColor::SetColorThreshold(0.1);
 
+   // allow multiple connections
+   ROOT::RWebWindowsManager::SetSingleConnMode(false);
+
    fWebWindow = ROOT::RWebWindow::Create();
    fWebWindow->UseServerThreads();
    fWebWindow->SetDefaultPage("file:rootui5sys/eve7/index.html");
