@@ -98,9 +98,23 @@ def _TF1_EvalPar(self, vars, params):
     ROOT.Internal.EvalParMultiDim(self, out, x, x_size, nrows, params)
     return numpy.frombuffer(out, dtype=numpy.float64, count=nrows) 
 
+
+def _TF1_Constructor(self, *args, **kwargs):
+    """
+    Forward the arguments to the C++ constructor and retain ownership. This
+    helps avoiding double deletes due to ROOT automatic memory management.
+    """
+    self._cpp_constructor(*args, **kwargs)
+    import ROOT
+    ROOT.SetOwnership(self, False)
+
+
 @pythonization('TF1')
 def pythonize_tf1(klass):
 
     # Pythonizations for TH1::EvalPar
     klass._EvalPar = klass.EvalPar
     klass.EvalPar = _TF1_EvalPar
+
+    klass._cpp_constructor = klass.__init__
+    klass.__init__ = _TF1_Constructor
