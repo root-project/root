@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphics
 /// \notebook -js
-/// Draw ellipses.
+/// \preview Draw ellipses.
 ///
 /// \macro_image
 /// \macro_code
