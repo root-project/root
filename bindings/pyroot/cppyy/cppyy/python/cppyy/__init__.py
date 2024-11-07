@@ -305,18 +305,27 @@ if not ispypy:
 
     if apipath_extra is None:
         try:
-            import pkg_resources as pr
+            if 0x30a0000 <= sys.hexversion:
+                import importlib.metadata as m
 
-            d = pr.get_distribution('CPyCppyy')
-            for line in d.get_metadata_lines('RECORD'):
-                if 'API.h' in line:
-                    part = line[0:line.find(',')]
+                for p in m.files('CPyCppyy'):
+                    if p.match('API.h'):
+                        ape = p.locate()
+                        break
+                del p, m
+            else:
+                import pkg_resources as pr
 
-            ape = os.path.join(d.location, part)
+                d = pr.get_distribution('CPyCppyy')
+                for line in d.get_metadata_lines('RECORD'):
+                    if 'API.h' in line:
+                        ape = os.path.join(d.location, line[0:line.find(',')])
+                        break
+                del line, d, pr
+
             if os.path.exists(ape):
                 apipath_extra = os.path.dirname(os.path.dirname(ape))
-
-            del part, d, pr
+            del ape
         except Exception:
             pass
 

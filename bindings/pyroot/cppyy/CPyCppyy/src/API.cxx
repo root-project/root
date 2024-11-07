@@ -413,7 +413,16 @@ void CPyCppyy::ExecScript(const std::string& name, const std::vector<std::string
                           << std::endl;
             }
          };
+
+#if PY_VERSION_HEX < 0x30d00f0
          WideStringListAppendHelper(&fConfig.argv, Py_GetProgramName());
+#else
+         PyObject* progname = PySys_GetObject("executable");    // borrowed
+         wchar_t buf[4096];
+         Py_ssize_t sz = CPyCppyy_PyUnicode_AsWideChar(progname, buf, 4095);
+         if (0 < sz)
+             WideStringListAppendHelper(&fConfig.argv, buf);
+#endif
          for (const auto &iarg : argv2) {
             WideStringListAppendHelper(&fConfig.argv, iarg.c_str());
          }

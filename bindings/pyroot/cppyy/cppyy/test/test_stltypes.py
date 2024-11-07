@@ -1704,9 +1704,9 @@ class TestSTLDEQUE:
         """Return by value of a deque used to crash"""
 
         import cppyy
-        assert cppyy.cppdef("""std::deque<long double> f() {
+        assert cppyy.cppdef("""std::deque<long double> emptyf() {
             std::deque<long double> d; d.push_back(0); return d ; }""")
-        x = cppyy.gbl.f()
+        x = cppyy.gbl.emptyf()
         assert x
         del x
 
