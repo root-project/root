@@ -24,6 +24,7 @@
 ROOT::Experimental::Internal::RPageRef ROOT::Experimental::Internal::RPagePool::RegisterPage(RPage page, RKey key)
 {
    std::lock_guard<std::mutex> lockGuard(fLock);
+   fLookupByBuffer[page.GetBuffer()] = fPages.size();
    fPages.emplace_back(std::move(page));
    RPageInfo pageInfo;
    pageInfo.fKey = key;
@@ -35,6 +36,7 @@ ROOT::Experimental::Internal::RPageRef ROOT::Experimental::Internal::RPagePool::
 void ROOT::Experimental::Internal::RPagePool::PreloadPage(RPage page, RKey key)
 {
    std::lock_guard<std::mutex> lockGuard(fLock);
+   fLookupByBuffer[page.GetBuffer()] = fPages.size();
    fPages.emplace_back(std::move(page));
    RPageInfo pageInfo;
    pageInfo.fKey = key;
@@ -47,19 +49,21 @@ void ROOT::Experimental::Internal::RPagePool::ReleasePage(const RPage &page)
    if (page.IsNull()) return;
    std::lock_guard<std::mutex> lockGuard(fLock);
 
-   unsigned int N = fPages.size();
-   for (unsigned i = 0; i < N; ++i) {
-      if (fPages[i] != page) continue;
+   const auto idx = fLookupByBuffer.at(page.GetBuffer());
+   const auto N = fPages.size();
 
-      if (--fPageInfos[i].fRefCounter == 0) {
-         fPages[i] = std::move(fPages[N - 1]);
-         fPageInfos[i] = fPageInfos[N - 1];
-         fPages.resize(N - 1);
-         fPageInfos.resize(N - 1);
+   if (--fPageInfos[idx].fRefCounter == 0) {
+      fLookupByBuffer.erase(page.GetBuffer());
+
+      if (idx != (N - 1)) {
+         fLookupByBuffer[fPages[N - 1].GetBuffer()] = idx;
+         fPages[idx] = std::move(fPages[N - 1]);
+         fPageInfos[idx] = fPageInfos[N - 1];
       }
-      return;
+
+      fPages.resize(N - 1);
+      fPageInfos.resize(N - 1);
    }
-   R__ASSERT(false);
 }
 
 ROOT::Experimental::Internal::RPageRef
