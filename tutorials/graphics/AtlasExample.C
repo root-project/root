@@ -1,6 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphics
 /// \notebook -js
+/// \preview
 /// Show how ATLAS Style looks like. It is based on a style file from BaBar.
 ///
 /// \macro_image

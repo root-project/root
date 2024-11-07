@@ -432,7 +432,7 @@ void FilterTutorial()
          ReplaceAll(gLineString, "\\macro_code", StringFormat("\\include %s",gMacroName.c_str()));
       }
 
-      // notebook found
+      // \notebook found
       if (gLineString.find("\\notebook") != string::npos) {
          // Notebooks are generated in dedicated step:
          worklist_py << "converttonotebook.py " << gFileName << " " << gOutDir << "/notebooks/" << std::endl;
@@ -444,6 +444,11 @@ void FilterTutorial()
              gLineString = "/// ";
          }
          gLineString += StringFormat( "\\htmlonly <a href=\"https://nbviewer.jupyter.org/url/root.cern/doc/master/notebooks/%s.nbconvert.ipynb\" target=\"_blank\"><img src= notebook.gif alt=\"View in nbviewer\" style=\"height:1.5em\" ></a> <a href=\"https://cern.ch/swanserver/cgi-bin/go?projurl=https://root.cern/doc/master/notebooks/%s.nbconvert.ipynb\" target=\"_blank\"><img src=\"https://swanserver.web.cern.ch/swanserver/images/badge_swan_white_150.png\"  alt=\"Open in SWAN\" style=\"height:1.5em\" ></a> <br/>\\endhtmlonly \n", gMacroName.c_str() , gMacroName.c_str());
+      }
+
+      // \preview found
+      if (gLineString.find("\\preview") != string::npos) {
+         ReplaceAll(gLineString, "\\preview", StringFormat("\\htmlonly <img src=\"pict1_%s.png\" valign=\"middle\" width=\"120\"/>\\endhtmlonly",gMacroName.c_str()));
       }
 
       // \macro_output found

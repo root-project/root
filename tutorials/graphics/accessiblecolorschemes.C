@@ -1,14 +1,14 @@
 /// \file
 /// \ingroup tutorial_graphics
 /// \notebook
-/// Choosing an appropriate color scheme is essential for making results easy to understand and
-/// interpret. Factors like colorblindness and converting colors to grayscale for publications
+/// \preview Choosing an appropriate color scheme is essential for making results easy to understand and interpret.
+/// Factors like colorblindness and converting colors to grayscale for publications
 /// can impact accessibility. Furthermore, results should be aesthetically pleasing. The following
 /// three color schemes, recommended by M. Petroff in [arXiv:2107.02270v2](https://arxiv.org/pdf/2107.02270)
 /// and available on [GitHub](https://github.com/mpetroff/accessible-color-cycles)
 /// under the MIT License, meet these criteria.
 ///
-/// \macro_image
+/// \macro_image Hello !!
 /// \macro_code
 ///
 /// \author Olivier Couet
