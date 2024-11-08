@@ -13,32 +13,12 @@
 #include "PyROOTWrapper.h"
 #include "TMemoryRegulator.h"
 
-// Cppyy
-#include "CPyCppyy/API.h"
-
 // ROOT
 #include "TROOT.h"
-#include "TSystem.h"
-#include "TClass.h"
-#include "TInterpreter.h"
-#include "DllImport.h"
 
 namespace PyROOT {
 R__EXTERN PyObject *gRootModule;
 }
-
-using namespace PyROOT;
-
-namespace {
-
-static void AddToGlobalScope(const char *label, TObject *obj, const char *classname)
-{
-   // Bind the given object with the given class in the global scope with the
-   // given label for its reference.
-   PyModule_AddObject(gRootModule, label, CPyCppyy::Instance_FromVoidPtr(obj, classname));
-}
-
-} // unnamed namespace
 
 PyROOT::RegulatorCleanup &GetRegulatorCleanup()
 {
@@ -59,9 +39,4 @@ void PyROOT::Init()
 
    // Memory management
    gROOT->GetListOfCleanups()->Add(&GetRegulatorCleanup());
-
-   // Bind ROOT globals that will be needed in ROOT.py
-   AddToGlobalScope("gROOT", gROOT, gROOT->IsA()->GetName());
-   AddToGlobalScope("gSystem", gSystem, gSystem->IsA()->GetName());
-   AddToGlobalScope("gInterpreter", gInterpreter, gInterpreter->IsA()->GetName());
 }

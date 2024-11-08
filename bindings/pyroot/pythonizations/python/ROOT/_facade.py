@@ -8,8 +8,6 @@ import cppyy
 
 import cppyy.ll
 
-from libROOTPythonizations import gROOT
-
 from ._application import PyROOTApplication
 from ._numbadeclare import _NumbaDeclareDecorator
 
@@ -36,7 +34,7 @@ class _gROOTWrapper(object):
 
     def __init__(self, facade):
         self.__dict__["_facade"] = facade
-        self.__dict__["_gROOT"] = gROOT
+        self.__dict__["_gROOT"] = cppyy.gbl.ROOT.GetROOT()
 
     def __getattr__(self, name):
         if name != "SetBatch" and self._facade.__dict__["gROOT"] != self._gROOT:
@@ -158,7 +156,7 @@ class ROOTFacade(types.ModuleType):
         elif hasattr(cppyy.gbl.ROOT, name):
             return getattr(cppyy.gbl.ROOT, name)
         else:
-            res = gROOT.FindObject(name)
+            res = self.gROOT.FindObject(name)
             if res:
                 return res
         raise AttributeError("Failed to get attribute {} from ROOT".format(name))
@@ -204,7 +202,7 @@ class ROOTFacade(types.ModuleType):
 
     def _finalSetup(self):
         # Prevent this method from being re-entered through the gROOT wrapper
-        self.__dict__["gROOT"] = gROOT
+        self.__dict__["gROOT"] = cppyy.gbl.ROOT.GetROOT()
 
         # Setup interactive usage from Python
         self.__dict__["app"] = PyROOTApplication(self.PyConfig, self._is_ipython)
@@ -387,7 +385,7 @@ class ROOTFacade(types.ModuleType):
         from ._pythonization import _tmva
 
         ns = self._fallback_getattr("TMVA")
-        hasRDF = "dataframe" in gROOT.GetConfigFeatures()
+        hasRDF = "dataframe" in self.gROOT.GetConfigFeatures()
         if hasRDF:
             try:
                 from ._pythonization._tmva import inject_rbatchgenerator, _AsRTensor, SaveXGBoost
