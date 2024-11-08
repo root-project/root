@@ -668,9 +668,14 @@ class RFramePainter extends RObjectPainter {
       this._frame_height = h;
       this._frame_rotate = rotate;
       this._frame_fixpos = fixpos;
+      this._frame_trans = trans;
 
-      if (this.mode3d) return this; // no need for real draw in mode3d
+      return this.mode3d ? this : this.createFrameG();
+   }
 
+   /** @summary Create frame element and update all attributes
+     * @private */
+   createFrameG() {
       // this is svg:g object - container for every other items belonging to frame
       this.draw_g = this.getFrameSvg();
 
@@ -699,20 +704,20 @@ class RFramePainter extends RObjectPainter {
 
       this.axes_drawn = false;
 
-      this.draw_g.attr('transform', trans);
+      this.draw_g.attr('transform', this._frame_trans);
 
       top_rect.attr('x', 0)
               .attr('y', 0)
-              .attr('width', w)
-              .attr('height', h)
+              .attr('width', this._frame_width)
+              .attr('height', this._frame_height)
               .attr('rx', this.lineatt.rx || null)
               .attr('ry', this.lineatt.ry || null)
               .call(this.fillatt.func)
               .call(this.lineatt.func);
 
-      main_svg.attr('width', w)
-              .attr('height', h)
-              .attr('viewBox', `0 0 ${w} ${h}`);
+      main_svg.attr('width', this._frame_width)
+              .attr('height', this._frame_height)
+              .attr('viewBox', `0 0 ${this._frame_width} ${this._frame_height}`);
 
       let pr = Promise.resolve(true);
 
