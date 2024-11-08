@@ -507,6 +507,9 @@ function create3DScene(render3d, x3dscale, y3dscale, orthographic) {
 
       this.mode3d = false;
 
+      if (this.draw_g)
+         this.createFrameG();
+
       return;
    }
 
@@ -936,7 +939,9 @@ function drawXYZ(toplevel, AxisPainter, opts) {
    top.axis_draw = true; // mark element as axis drawing
    toplevel.add(top);
 
-   let ticks = [], lbls = [], maxtextheight = 0;
+   let ticks = [], lbls = [], maxtextheight = 0, maxtextwidth = 0;
+   const center_x = this.x_handle.isCenteredLabels(),
+         rotate_x = this.x_handle.isRotateLabels();
 
    while (xticks.next()) {
       const grx = xticks.grpos;
@@ -949,7 +954,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
          is_major = false; lbl = '';
       }
 
-      if (is_major && lbl && opts.draw) {
+      if (is_major && lbl && opts.draw && (!center_x || !xticks.last_major())) {
          const mod = xticks.get_modifier();
          if (mod?.fLabText) lbl = mod.fLabText;
 
@@ -961,6 +966,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
 
          text3d.offsety = this.x_handle.labelsOffset + (grmaxy - grminy) * 0.005;
 
+         maxtextwidth = Math.max(maxtextwidth, draw_width);
          maxtextheight = Math.max(maxtextheight, draw_height);
 
          if (mod?.fTextColor) text3d.color = this.getColor(mod.fTextColor);
@@ -973,8 +979,10 @@ function drawXYZ(toplevel, AxisPainter, opts) {
             if ((draw_width > 0) && (space > 0))
                text_scale = Math.min(text_scale, 0.9*space/draw_width);
          }
+         if (rotate_x)
+            text3d.rotate = 1;
 
-         if (this.x_handle.isCenteredLabels()) {
+         if (center_x) {
             if (!space) space = Math.min(grx - grminx, grmaxx - grx);
             text3d.grx += space/2;
          }
@@ -991,6 +999,9 @@ function drawXYZ(toplevel, AxisPainter, opts) {
       text3d.offsety = 1.6 * this.x_handle.titleOffset + (grmaxy - grminy) * 0.005;
       text3d.grx = (grminx + grmaxx)/2; // default position for centered title
       text3d.kind = 'title';
+      if (this.x_handle.isRotateTitle())
+         text3d.rotate = 2;
+
       lbls.push(text3d);
    }
 
@@ -1117,17 +1128,28 @@ function drawXYZ(toplevel, AxisPainter, opts) {
    }
 
    lbls.forEach(lbl => {
-      const w = lbl.boundingBox.max.x - lbl.boundingBox.min.x,
-          posx = lbl.center ? lbl.grx - w/2 : (lbl.opposite ? grminx : grmaxx - w),
-          m = new THREE.Matrix4();
+      const dx = lbl.boundingBox.max.x - lbl.boundingBox.min.x,
+            dy = lbl.boundingBox.max.y - lbl.boundingBox.min.y,
+            w = (lbl.rotate === 1) ? dy : dx,
+            posx = lbl.center ? lbl.grx - w/2 : (lbl.opposite ? grminx : grmaxx - w),
+            posy = -text_scale * (lbl.rotate === 1 ? maxtextwidth : maxtextheight) - this.x_handle.ticksSize - lbl.offsety,
+            m = new THREE.Matrix4();
 
       // matrix to swap y and z scales and shift along z to its position
       m.set(text_scale, 0, 0, posx,
-            0, text_scale, 0, -maxtextheight*text_scale - this.x_handle.ticksSize - lbl.offsety,
+            0, text_scale, 0, posy,
             0, 0, 1, 0,
             0, 0, 0, 1);
 
       const mesh = new THREE.Mesh(lbl, getTextMaterial(this.x_handle, lbl.kind, lbl.color));
+
+      if (lbl.rotate)
+         mesh.rotateZ(lbl.rotate * Math.PI / 2);
+      if (lbl.rotate === 1)
+         mesh.translateY(-dy);
+      if (lbl.rotate === 2)
+         mesh.translateX(-dx);
+
       mesh.applyMatrix4(m);
       xcont.add(mesh);
    });
@@ -1145,16 +1167,26 @@ function drawXYZ(toplevel, AxisPainter, opts) {
       xcont.add(new THREE.LineSegments(xtickslines.geometry, xtickslines.material));
 
    lbls.forEach(lbl => {
-      const w = lbl.boundingBox.max.x - lbl.boundingBox.min.x,
-            posx = (lbl.center ? lbl.grx + w/2 : lbl.opposite ? grminx + w : grmaxx),
+      const dx = lbl.boundingBox.max.x - lbl.boundingBox.min.x,
+            dy = lbl.boundingBox.max.y - lbl.boundingBox.min.y,
+            w = (lbl.rotate === 1) ? dy : dx,
+            posx = lbl.center ? lbl.grx + w/2 : (lbl.opposite ? grminx + w: grmaxx),
+            posy = -text_scale * (lbl.rotate === 1 ? maxtextwidth : maxtextheight) - this.x_handle.ticksSize - lbl.offsety,
             m = new THREE.Matrix4();
 
       // matrix to swap y and z scales and shift along z to its position
       m.set(-text_scale, 0, 0, posx,
-            0, text_scale, 0, -maxtextheight*text_scale - this.x_handle.ticksSize - lbl.offsety,
+            0, text_scale, 0, posy,
             0, 0, -1, 0,
             0, 0, 0, 1);
+
       const mesh = new THREE.Mesh(lbl, getTextMaterial(this.x_handle, lbl.kind, lbl.color));
+      if (lbl.rotate)
+         mesh.rotateZ(lbl.rotate * Math.PI / 2);
+      if (lbl.rotate === 1)
+         mesh.translateY(-dy);
+      if (lbl.rotate === 2)
+         mesh.translateX(-dx);
       mesh.applyMatrix4(m);
       xcont.add(mesh);
    });
@@ -1164,7 +1196,13 @@ function drawXYZ(toplevel, AxisPainter, opts) {
       xcont.add(createZoomMesh('x', this.size_x3d));
    top.add(xcont);
 
-   lbls = []; text_scale = 1; maxtextheight = 0; ticks = [];
+   lbls = [];
+   text_scale = 1;
+   maxtextwidth = maxtextheight = 0;
+   ticks = [];
+
+   const center_y = this.y_handle.isCenteredLabels(),
+         rotate_y = this.y_handle.isRotateLabels();
 
    while (yticks.next()) {
       const gry = yticks.grpos;
@@ -1177,16 +1215,17 @@ function drawXYZ(toplevel, AxisPainter, opts) {
          is_major = false; lbl = '';
       }
 
-      if (is_major && lbl && opts.draw) {
+      if (is_major && lbl && opts.draw && (!center_y || !yticks.last_major())) {
          const mod = yticks.get_modifier();
          if (mod?.fLabText) lbl = mod.fLabText;
 
          const text3d = createLatexGeometry(this, lbl, this.y_handle.labelsFont.size);
          text3d.computeBoundingBox();
          const draw_width = text3d.boundingBox.max.x - text3d.boundingBox.min.x,
-             draw_height = text3d.boundingBox.max.y - text3d.boundingBox.min.y;
+               draw_height = text3d.boundingBox.max.y - text3d.boundingBox.min.y;
          text3d.center = true;
 
+         maxtextwidth = Math.max(maxtextwidth, draw_width);
          maxtextheight = Math.max(maxtextheight, draw_height);
 
          if (mod?.fTextColor) text3d.color = this.getColor(mod.fTextColor);
@@ -1200,10 +1239,12 @@ function drawXYZ(toplevel, AxisPainter, opts) {
             if (draw_width > 0)
                text_scale = Math.min(text_scale, 0.9*space/draw_width);
          }
-         if (this.y_handle.isCenteredLabels()) {
+         if (center_y) {
             if (!space) space = Math.min(gry - grminy, grmaxy - gry);
             text3d.gry += space/2;
          }
+         if (rotate_y)
+            text3d.rotate = 1;
       }
       ticks.push(0, gry, 0, this.y_handle.ticksSize*(is_major ? -1 : -0.6), gry, 0);
    }
@@ -1216,6 +1257,8 @@ function drawXYZ(toplevel, AxisPainter, opts) {
       text3d.offsetx = 1.6 * this.y_handle.titleOffset + (grmaxx - grminx) * 0.005;
       text3d.gry = (grminy + grmaxy)/2; // default position for centered title
       text3d.kind = 'title';
+      if (this.y_handle.isRotateTitle())
+         text3d.rotate = 2;
       lbls.push(text3d);
    }
 
@@ -1230,16 +1273,25 @@ function drawXYZ(toplevel, AxisPainter, opts) {
       }
 
       lbls.forEach(lbl => {
-         const w = lbl.boundingBox.max.x - lbl.boundingBox.min.x,
-             posy = lbl.center ? lbl.gry + w/2 : (lbl.opposite ? grminy + w : grmaxy),
-             m = new THREE.Matrix4();
-         // matrix to swap y and z scales and shift along z to its position
-         m.set(0, text_scale, 0, -maxtextheight*text_scale - this.y_handle.ticksSize - lbl.offsetx,
+         const dx = lbl.boundingBox.max.x - lbl.boundingBox.min.x,
+               dy = lbl.boundingBox.max.y - lbl.boundingBox.min.y,
+               w = (lbl.rotate === 1) ? dy : dx,
+               posx = -text_scale * (lbl.rotate === 1 ? maxtextwidth : maxtextheight) - this.y_handle.ticksSize - lbl.offsetx,
+               posy = lbl.center ? lbl.gry + w/2 : (lbl.opposite ? grminy + w : grmaxy),
+               m = new THREE.Matrix4();
+         m.set(0, text_scale, 0, posx,
                -text_scale, 0, 0, posy,
                0, 0, 1, 0,
                0, 0, 0, 1);
 
          const mesh = new THREE.Mesh(lbl, getTextMaterial(this.y_handle, lbl.kind, lbl.color));
+         if (lbl.rotate)
+            mesh.rotateZ(lbl.rotate * Math.PI / 2);
+         if (lbl.rotate === 1)
+            mesh.translateY(-dy);
+         if (lbl.rotate === 2)
+            mesh.translateX(-dx);
+
          mesh.applyMatrix4(m);
          ycont.add(mesh);
       });
@@ -1257,15 +1309,26 @@ function drawXYZ(toplevel, AxisPainter, opts) {
          ycont.add(new THREE.LineSegments(yticksline.geometry, yticksline.material));
 
       lbls.forEach(lbl => {
-         const w = lbl.boundingBox.max.x - lbl.boundingBox.min.x,
-             posy = lbl.center ? lbl.gry - w/2 : (lbl.opposite ? grminy : grmaxy - w),
-             m = new THREE.Matrix4();
-         m.set(0, text_scale, 0, -maxtextheight*text_scale - this.y_handle.ticksSize - lbl.offsetx,
+         const dx = lbl.boundingBox.max.x - lbl.boundingBox.min.x,
+               dy = lbl.boundingBox.max.y - lbl.boundingBox.min.y,
+               w = (lbl.rotate === 1) ? dy : dx,
+               posx = -text_scale * (lbl.rotate === 1 ? maxtextwidth : maxtextheight) - this.y_handle.ticksSize - lbl.offsetx,
+               posy = lbl.center ? lbl.gry - w/2 : (lbl.opposite ? grminy : grmaxy - w),
+               m = new THREE.Matrix4();
+
+         m.set(0, text_scale, 0, posx,
                text_scale, 0, 0, posy,
                0, 0, -1, 0,
                0, 0, 0, 1);
 
          const mesh = new THREE.Mesh(lbl, getTextMaterial(this.y_handle, lbl.kind, lbl.color));
+         if (lbl.rotate)
+            mesh.rotateZ(lbl.rotate * Math.PI / 2);
+         if (lbl.rotate === 1)
+            mesh.translateY(-dy);
+         if (lbl.rotate === 2)
+            mesh.translateX(-dx);
+
          mesh.applyMatrix4(m);
          ycont.add(mesh);
       });
@@ -1279,6 +1342,9 @@ function drawXYZ(toplevel, AxisPainter, opts) {
 
    let zgridx = null, zgridy = null, lastmajorz = null, maxzlblwidth = 0;
 
+   const center_z = this.z_handle.isCenteredLabels(),
+         rotate_z = this.z_handle.isRotateLabels();
+
    if (this.size_z3d && opts.drawany) {
       zgridx = []; zgridy = [];
    }
@@ -1290,14 +1356,14 @@ function drawXYZ(toplevel, AxisPainter, opts) {
 
       if (lbl === null) { is_major = false; lbl = ''; }
 
-      if (is_major && lbl && opts.draw) {
+      if (is_major && lbl && opts.draw && (!center_z || !zticks.last_major())) {
          const mod = zticks.get_modifier();
          if (mod?.fLabText) lbl = mod.fLabText;
 
          const text3d = createLatexGeometry(this, lbl, this.z_handle.labelsFont.size);
          text3d.computeBoundingBox();
          const draw_width = text3d.boundingBox.max.x - text3d.boundingBox.min.x,
-             draw_height = text3d.boundingBox.max.y - text3d.boundingBox.min.y;
+               draw_height = text3d.boundingBox.max.y - text3d.boundingBox.min.y;
          text3d.translate(-draw_width, -draw_height/2, 0);
 
         if (mod?.fTextColor) text3d.color = this.getColor(mod.fTextColor);
@@ -1359,10 +1425,12 @@ function drawXYZ(toplevel, AxisPainter, opts) {
       zcont.push(new THREE.Object3D());
 
       lbls.forEach((lbl, indx) => {
-         const m = new THREE.Matrix4();
+         const m = new THREE.Matrix4(),
+               dx = lbl.boundingBox.max.x - lbl.boundingBox.min.x;
+
          let grz = lbl.grz;
 
-         if (this.z_handle.isCenteredLabels()) {
+         if (center_z) {
             if (indx < lbls.length - 1)
                grz = (grz + lbls[indx+1].grz) / 2;
             else if (indx > 0)
@@ -1374,6 +1442,8 @@ function drawXYZ(toplevel, AxisPainter, opts) {
                          0, 0, 1, 0,
                          0, text_scale, 0, grz);
          const mesh = new THREE.Mesh(lbl, getTextMaterial(this.z_handle));
+         if (rotate_z)
+            mesh.rotateZ(-Math.PI/2).translateX(dx/2);
          mesh.applyMatrix4(m);
          zcont[n].add(mesh);
       });
@@ -1381,16 +1451,19 @@ function drawXYZ(toplevel, AxisPainter, opts) {
       if (this.z_handle.fTitle && opts.draw) {
          const text3d = createLatexGeometry(this, this.z_handle.fTitle, this.z_handle.titleFont.size);
          text3d.computeBoundingBox();
-         const draw_width = text3d.boundingBox.max.x - text3d.boundingBox.min.x,
-             posz = this.z_handle.titleCenter ? (grmaxz + grminz - draw_width)/2 : (this.z_handle.titleOpposite ? grminz : grmaxz - draw_width);
+         const dx = text3d.boundingBox.max.x - text3d.boundingBox.min.x,
+               dy = text3d.boundingBox.max.y - text3d.boundingBox.min.y,
+               rotate = this.z_handle.isRotateTitle(),
+               posz = this.z_handle.titleCenter ? (grmaxz + grminz - dx)/2 : (this.z_handle.titleOpposite ? grminz : grmaxz - dx) + (rotate ? dx : 0),
+               m = new THREE.Matrix4();
 
-         text3d.rotateZ(Math.PI/2);
-
-         const m = new THREE.Matrix4();
          m.set(-text_scale, 0, 0, this.z_handle.ticksSize + (grmaxx - grminx) * 0.005 + maxzlblwidth + this.z_handle.titleOffset,
                          0, 0, 1, 0,
                          0, text_scale, 0, posz);
          const mesh = new THREE.Mesh(text3d, getTextMaterial(this.z_handle, 'title'));
+         mesh.rotateZ(Math.PI*(rotate ? 1.5 : 0.5));
+         if (rotate) mesh.translateY(-dy);
+
          mesh.applyMatrix4(m);
          zcont[n].add(mesh);
       }

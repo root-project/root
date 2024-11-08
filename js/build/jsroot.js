@@ -12,7 +12,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '7/11/2024',
+version_date = '8/11/2024',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -9388,6 +9388,7 @@ class FontHandler {
 
       this.size = Math.round(size || 11);
       this.scale = scale;
+      this.index = 0;
 
       this.func = this.setFont.bind(this);
 
@@ -9395,8 +9396,11 @@ class FontHandler {
 
       if (fontIndex && isObject(fontIndex))
          cfg = fontIndex;
-      else
-         cfg = root_fonts[(fontIndex && Number.isInteger(fontIndex)) ? Math.floor(fontIndex / 10) : 0];
+      else {
+         if (fontIndex && Number.isInteger(fontIndex))
+            this.index = Math.floor(fontIndex / 10);
+         cfg = root_fonts[this.index];
+      }
 
       if (cfg) {
          this.cfg = cfg;
@@ -63193,6 +63197,16 @@ class TAxisPainter extends ObjectPainter {
       return this.getObject()?.TestBit(EAxisBits.kCenterLabels);
    }
 
+   /** @summary Is labels should be rotated */
+   isRotateLabels() {
+      return this.getObject()?.TestBit(EAxisBits.kLabelsVert);
+   }
+
+   /** @summary Is title should be rotated */
+   isRotateTitle() {
+      return this.getObject()?.TestBit(EAxisBits.kRotateTitle);
+   }
+
    /** @summary Add interactive elements to draw axes title */
    addTitleDrag(title_g, vertical, offset_k, reverse, axis_length) {
       if (!settings.MoveResize || this.isBatchMode()) return;
@@ -63396,7 +63410,7 @@ class TAxisPainter extends ObjectPainter {
             label_g = [axis_g.append('svg:g').attr('class', 'axis_labels')],
             lbl_pos = handle.lbl_pos || handle.major,
             tilt_angle = gStyle.AxisTiltAngle ?? 25;
-      let rotate_lbls = axis.TestBit(EAxisBits.kLabelsVert),
+      let rotate_lbls = this.isRotateLabels(),
           textscale = 1, flipscale = 1, maxtextlen = 0, applied_scale = 0,
           lbl_tilt = false, any_modified = false, max_textwidth = 0, max_tiltsize = 0;
 
@@ -63696,9 +63710,6 @@ class TAxisPainter extends ObjectPainter {
       if (this.is_gaxis)
          draw_lines = axis.fLineColor !== 0;
 
-      // indicate that attributes created not for TAttLine, therefore cannot be updated as TAttLine in GED
-      this.lineatt.not_standard = true;
-
       if (!this.is_gaxis || (this.name === 'zaxis')) {
          axis_g = layer.selectChild(`.${this.name}_container`);
          if (axis_g.empty())
@@ -63786,7 +63797,7 @@ class TAxisPainter extends ObjectPainter {
          if (!title_g)
             return;
 
-         const rotate = axis.TestBit(EAxisBits.kRotateTitle) ? -1 : 1,
+         const rotate = this.isRotateTitle() ? -1 : 1,
                xor_reverse = swap_side ^ this.titleOpposite, myxor = (rotate < 0) ^ xor_reverse;
 
          let title_offest_k = side;
@@ -66313,9 +66324,14 @@ class TFramePainter extends ObjectPainter {
       this._frame_height = h;
       this._frame_rotate = rotate;
       this._frame_fixpos = fixpos;
+      this._frame_trans = trans;
 
-      if (this.mode3d) return this; // no need to create any elements in 3d mode
+      return this.mode3d ? this : this.createFrameG();
+   }
 
+   /** @summary Create frame element and update all attributes
+    * @private */
+   createFrameG() {
       // this is svg:g object - container for every other items belonging to frame
       this.draw_g = this.getFrameSvg();
 
@@ -66345,15 +66361,15 @@ class TFramePainter extends ObjectPainter {
 
       this.axes_drawn = this.axes2_drawn = false;
 
-      this.draw_g.attr('transform', trans);
+      this.draw_g.attr('transform', this._frame_trans);
 
-      top_rect.attr('d', `M0,0H${w}V${h}H0Z`)
+      top_rect.attr('d', `M0,0H${this._frame_width}V${this._frame_height}H0Z`)
               .call(this.fillatt.func)
               .call(this.lineatt.func);
 
-      main_svg.attr('width', w)
-              .attr('height', h)
-              .attr('viewBox', `0 0 ${w} ${h}`);
+      main_svg.attr('width', this._frame_width)
+              .attr('height', this._frame_height)
+              .attr('viewBox', `0 0 ${this._frame_width} ${this._frame_height}`);
 
       return this;
    }
@@ -80038,6 +80054,9 @@ function create3DScene(render3d, x3dscale, y3dscale, orthographic) {
 
       this.mode3d = false;
 
+      if (this.draw_g)
+         this.createFrameG();
+
       return;
    }
 
@@ -80467,7 +80486,9 @@ function drawXYZ(toplevel, AxisPainter, opts) {
    top.axis_draw = true; // mark element as axis drawing
    toplevel.add(top);
 
-   let ticks = [], lbls = [], maxtextheight = 0;
+   let ticks = [], lbls = [], maxtextheight = 0, maxtextwidth = 0;
+   const center_x = this.x_handle.isCenteredLabels(),
+         rotate_x = this.x_handle.isRotateLabels();
 
    while (xticks.next()) {
       const grx = xticks.grpos;
@@ -80480,7 +80501,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
          is_major = false; lbl = '';
       }
 
-      if (is_major && lbl && opts.draw) {
+      if (is_major && lbl && opts.draw && (!center_x || !xticks.last_major())) {
          const mod = xticks.get_modifier();
          if (mod?.fLabText) lbl = mod.fLabText;
 
@@ -80492,6 +80513,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
 
          text3d.offsety = this.x_handle.labelsOffset + (grmaxy - grminy) * 0.005;
 
+         maxtextwidth = Math.max(maxtextwidth, draw_width);
          maxtextheight = Math.max(maxtextheight, draw_height);
 
          if (mod?.fTextColor) text3d.color = this.getColor(mod.fTextColor);
@@ -80504,8 +80526,10 @@ function drawXYZ(toplevel, AxisPainter, opts) {
             if ((draw_width > 0) && (space > 0))
                text_scale = Math.min(text_scale, 0.9*space/draw_width);
          }
+         if (rotate_x)
+            text3d.rotate = 1;
 
-         if (this.x_handle.isCenteredLabels()) {
+         if (center_x) {
             if (!space) space = Math.min(grx - grminx, grmaxx - grx);
             text3d.grx += space/2;
          }
@@ -80522,6 +80546,9 @@ function drawXYZ(toplevel, AxisPainter, opts) {
       text3d.offsety = 1.6 * this.x_handle.titleOffset + (grmaxy - grminy) * 0.005;
       text3d.grx = (grminx + grmaxx)/2; // default position for centered title
       text3d.kind = 'title';
+      if (this.x_handle.isRotateTitle())
+         text3d.rotate = 2;
+
       lbls.push(text3d);
    }
 
@@ -80648,17 +80675,28 @@ function drawXYZ(toplevel, AxisPainter, opts) {
    }
 
    lbls.forEach(lbl => {
-      const w = lbl.boundingBox.max.x - lbl.boundingBox.min.x,
-          posx = lbl.center ? lbl.grx - w/2 : (lbl.opposite ? grminx : grmaxx - w),
-          m = new THREE.Matrix4();
+      const dx = lbl.boundingBox.max.x - lbl.boundingBox.min.x,
+            dy = lbl.boundingBox.max.y - lbl.boundingBox.min.y,
+            w = (lbl.rotate === 1) ? dy : dx,
+            posx = lbl.center ? lbl.grx - w/2 : (lbl.opposite ? grminx : grmaxx - w),
+            posy = -text_scale * (lbl.rotate === 1 ? maxtextwidth : maxtextheight) - this.x_handle.ticksSize - lbl.offsety,
+            m = new THREE.Matrix4();
 
       // matrix to swap y and z scales and shift along z to its position
       m.set(text_scale, 0, 0, posx,
-            0, text_scale, 0, -maxtextheight*text_scale - this.x_handle.ticksSize - lbl.offsety,
+            0, text_scale, 0, posy,
             0, 0, 1, 0,
             0, 0, 0, 1);
 
       const mesh = new THREE.Mesh(lbl, getTextMaterial(this.x_handle, lbl.kind, lbl.color));
+
+      if (lbl.rotate)
+         mesh.rotateZ(lbl.rotate * Math.PI / 2);
+      if (lbl.rotate === 1)
+         mesh.translateY(-dy);
+      if (lbl.rotate === 2)
+         mesh.translateX(-dx);
+
       mesh.applyMatrix4(m);
       xcont.add(mesh);
    });
@@ -80676,16 +80714,26 @@ function drawXYZ(toplevel, AxisPainter, opts) {
       xcont.add(new THREE.LineSegments(xtickslines.geometry, xtickslines.material));
 
    lbls.forEach(lbl => {
-      const w = lbl.boundingBox.max.x - lbl.boundingBox.min.x,
-            posx = (lbl.center ? lbl.grx + w/2 : lbl.opposite ? grminx + w : grmaxx),
+      const dx = lbl.boundingBox.max.x - lbl.boundingBox.min.x,
+            dy = lbl.boundingBox.max.y - lbl.boundingBox.min.y,
+            w = (lbl.rotate === 1) ? dy : dx,
+            posx = lbl.center ? lbl.grx + w/2 : (lbl.opposite ? grminx + w: grmaxx),
+            posy = -text_scale * (lbl.rotate === 1 ? maxtextwidth : maxtextheight) - this.x_handle.ticksSize - lbl.offsety,
             m = new THREE.Matrix4();
 
       // matrix to swap y and z scales and shift along z to its position
       m.set(-text_scale, 0, 0, posx,
-            0, text_scale, 0, -maxtextheight*text_scale - this.x_handle.ticksSize - lbl.offsety,
+            0, text_scale, 0, posy,
             0, 0, -1, 0,
             0, 0, 0, 1);
+
       const mesh = new THREE.Mesh(lbl, getTextMaterial(this.x_handle, lbl.kind, lbl.color));
+      if (lbl.rotate)
+         mesh.rotateZ(lbl.rotate * Math.PI / 2);
+      if (lbl.rotate === 1)
+         mesh.translateY(-dy);
+      if (lbl.rotate === 2)
+         mesh.translateX(-dx);
       mesh.applyMatrix4(m);
       xcont.add(mesh);
    });
@@ -80695,7 +80743,13 @@ function drawXYZ(toplevel, AxisPainter, opts) {
       xcont.add(createZoomMesh('x', this.size_x3d));
    top.add(xcont);
 
-   lbls = []; text_scale = 1; maxtextheight = 0; ticks = [];
+   lbls = [];
+   text_scale = 1;
+   maxtextwidth = maxtextheight = 0;
+   ticks = [];
+
+   const center_y = this.y_handle.isCenteredLabels(),
+         rotate_y = this.y_handle.isRotateLabels();
 
    while (yticks.next()) {
       const gry = yticks.grpos;
@@ -80708,16 +80762,17 @@ function drawXYZ(toplevel, AxisPainter, opts) {
          is_major = false; lbl = '';
       }
 
-      if (is_major && lbl && opts.draw) {
+      if (is_major && lbl && opts.draw && (!center_y || !yticks.last_major())) {
          const mod = yticks.get_modifier();
          if (mod?.fLabText) lbl = mod.fLabText;
 
          const text3d = createLatexGeometry(this, lbl, this.y_handle.labelsFont.size);
          text3d.computeBoundingBox();
          const draw_width = text3d.boundingBox.max.x - text3d.boundingBox.min.x,
-             draw_height = text3d.boundingBox.max.y - text3d.boundingBox.min.y;
+               draw_height = text3d.boundingBox.max.y - text3d.boundingBox.min.y;
          text3d.center = true;
 
+         maxtextwidth = Math.max(maxtextwidth, draw_width);
          maxtextheight = Math.max(maxtextheight, draw_height);
 
          if (mod?.fTextColor) text3d.color = this.getColor(mod.fTextColor);
@@ -80731,10 +80786,12 @@ function drawXYZ(toplevel, AxisPainter, opts) {
             if (draw_width > 0)
                text_scale = Math.min(text_scale, 0.9*space/draw_width);
          }
-         if (this.y_handle.isCenteredLabels()) {
+         if (center_y) {
             if (!space) space = Math.min(gry - grminy, grmaxy - gry);
             text3d.gry += space/2;
          }
+         if (rotate_y)
+            text3d.rotate = 1;
       }
       ticks.push(0, gry, 0, this.y_handle.ticksSize*(is_major ? -1 : -0.6), gry, 0);
    }
@@ -80747,6 +80804,8 @@ function drawXYZ(toplevel, AxisPainter, opts) {
       text3d.offsetx = 1.6 * this.y_handle.titleOffset + (grmaxx - grminx) * 0.005;
       text3d.gry = (grminy + grmaxy)/2; // default position for centered title
       text3d.kind = 'title';
+      if (this.y_handle.isRotateTitle())
+         text3d.rotate = 2;
       lbls.push(text3d);
    }
 
@@ -80761,16 +80820,25 @@ function drawXYZ(toplevel, AxisPainter, opts) {
       }
 
       lbls.forEach(lbl => {
-         const w = lbl.boundingBox.max.x - lbl.boundingBox.min.x,
-             posy = lbl.center ? lbl.gry + w/2 : (lbl.opposite ? grminy + w : grmaxy),
-             m = new THREE.Matrix4();
-         // matrix to swap y and z scales and shift along z to its position
-         m.set(0, text_scale, 0, -maxtextheight*text_scale - this.y_handle.ticksSize - lbl.offsetx,
+         const dx = lbl.boundingBox.max.x - lbl.boundingBox.min.x,
+               dy = lbl.boundingBox.max.y - lbl.boundingBox.min.y,
+               w = (lbl.rotate === 1) ? dy : dx,
+               posx = -text_scale * (lbl.rotate === 1 ? maxtextwidth : maxtextheight) - this.y_handle.ticksSize - lbl.offsetx,
+               posy = lbl.center ? lbl.gry + w/2 : (lbl.opposite ? grminy + w : grmaxy),
+               m = new THREE.Matrix4();
+         m.set(0, text_scale, 0, posx,
                -text_scale, 0, 0, posy,
                0, 0, 1, 0,
                0, 0, 0, 1);
 
          const mesh = new THREE.Mesh(lbl, getTextMaterial(this.y_handle, lbl.kind, lbl.color));
+         if (lbl.rotate)
+            mesh.rotateZ(lbl.rotate * Math.PI / 2);
+         if (lbl.rotate === 1)
+            mesh.translateY(-dy);
+         if (lbl.rotate === 2)
+            mesh.translateX(-dx);
+
          mesh.applyMatrix4(m);
          ycont.add(mesh);
       });
@@ -80788,15 +80856,26 @@ function drawXYZ(toplevel, AxisPainter, opts) {
          ycont.add(new THREE.LineSegments(yticksline.geometry, yticksline.material));
 
       lbls.forEach(lbl => {
-         const w = lbl.boundingBox.max.x - lbl.boundingBox.min.x,
-             posy = lbl.center ? lbl.gry - w/2 : (lbl.opposite ? grminy : grmaxy - w),
-             m = new THREE.Matrix4();
-         m.set(0, text_scale, 0, -maxtextheight*text_scale - this.y_handle.ticksSize - lbl.offsetx,
+         const dx = lbl.boundingBox.max.x - lbl.boundingBox.min.x,
+               dy = lbl.boundingBox.max.y - lbl.boundingBox.min.y,
+               w = (lbl.rotate === 1) ? dy : dx,
+               posx = -text_scale * (lbl.rotate === 1 ? maxtextwidth : maxtextheight) - this.y_handle.ticksSize - lbl.offsetx,
+               posy = lbl.center ? lbl.gry - w/2 : (lbl.opposite ? grminy : grmaxy - w),
+               m = new THREE.Matrix4();
+
+         m.set(0, text_scale, 0, posx,
                text_scale, 0, 0, posy,
                0, 0, -1, 0,
                0, 0, 0, 1);
 
          const mesh = new THREE.Mesh(lbl, getTextMaterial(this.y_handle, lbl.kind, lbl.color));
+         if (lbl.rotate)
+            mesh.rotateZ(lbl.rotate * Math.PI / 2);
+         if (lbl.rotate === 1)
+            mesh.translateY(-dy);
+         if (lbl.rotate === 2)
+            mesh.translateX(-dx);
+
          mesh.applyMatrix4(m);
          ycont.add(mesh);
       });
@@ -80810,6 +80889,9 @@ function drawXYZ(toplevel, AxisPainter, opts) {
 
    let zgridx = null, zgridy = null, lastmajorz = null, maxzlblwidth = 0;
 
+   const center_z = this.z_handle.isCenteredLabels(),
+         rotate_z = this.z_handle.isRotateLabels();
+
    if (this.size_z3d && opts.drawany) {
       zgridx = []; zgridy = [];
    }
@@ -80821,14 +80903,14 @@ function drawXYZ(toplevel, AxisPainter, opts) {
 
       if (lbl === null) { is_major = false; lbl = ''; }
 
-      if (is_major && lbl && opts.draw) {
+      if (is_major && lbl && opts.draw && (!center_z || !zticks.last_major())) {
          const mod = zticks.get_modifier();
          if (mod?.fLabText) lbl = mod.fLabText;
 
          const text3d = createLatexGeometry(this, lbl, this.z_handle.labelsFont.size);
          text3d.computeBoundingBox();
          const draw_width = text3d.boundingBox.max.x - text3d.boundingBox.min.x,
-             draw_height = text3d.boundingBox.max.y - text3d.boundingBox.min.y;
+               draw_height = text3d.boundingBox.max.y - text3d.boundingBox.min.y;
          text3d.translate(-draw_width, -draw_height/2, 0);
 
         if (mod?.fTextColor) text3d.color = this.getColor(mod.fTextColor);
@@ -80890,10 +80972,12 @@ function drawXYZ(toplevel, AxisPainter, opts) {
       zcont.push(new THREE.Object3D());
 
       lbls.forEach((lbl, indx) => {
-         const m = new THREE.Matrix4();
+         const m = new THREE.Matrix4(),
+               dx = lbl.boundingBox.max.x - lbl.boundingBox.min.x;
+
          let grz = lbl.grz;
 
-         if (this.z_handle.isCenteredLabels()) {
+         if (center_z) {
             if (indx < lbls.length - 1)
                grz = (grz + lbls[indx+1].grz) / 2;
             else if (indx > 0)
@@ -80905,6 +80989,8 @@ function drawXYZ(toplevel, AxisPainter, opts) {
                          0, 0, 1, 0,
                          0, text_scale, 0, grz);
          const mesh = new THREE.Mesh(lbl, getTextMaterial(this.z_handle));
+         if (rotate_z)
+            mesh.rotateZ(-Math.PI/2).translateX(dx/2);
          mesh.applyMatrix4(m);
          zcont[n].add(mesh);
       });
@@ -80912,16 +80998,19 @@ function drawXYZ(toplevel, AxisPainter, opts) {
       if (this.z_handle.fTitle && opts.draw) {
          const text3d = createLatexGeometry(this, this.z_handle.fTitle, this.z_handle.titleFont.size);
          text3d.computeBoundingBox();
-         const draw_width = text3d.boundingBox.max.x - text3d.boundingBox.min.x,
-             posz = this.z_handle.titleCenter ? (grmaxz + grminz - draw_width)/2 : (this.z_handle.titleOpposite ? grminz : grmaxz - draw_width);
+         const dx = text3d.boundingBox.max.x - text3d.boundingBox.min.x,
+               dy = text3d.boundingBox.max.y - text3d.boundingBox.min.y,
+               rotate = this.z_handle.isRotateTitle(),
+               posz = this.z_handle.titleCenter ? (grmaxz + grminz - dx)/2 : (this.z_handle.titleOpposite ? grminz : grmaxz - dx) + (rotate ? dx : 0),
+               m = new THREE.Matrix4();
 
-         text3d.rotateZ(Math.PI/2);
-
-         const m = new THREE.Matrix4();
          m.set(-text_scale, 0, 0, this.z_handle.ticksSize + (grmaxx - grminx) * 0.005 + maxzlblwidth + this.z_handle.titleOffset,
                          0, 0, 1, 0,
                          0, text_scale, 0, posz);
          const mesh = new THREE.Mesh(text3d, getTextMaterial(this.z_handle, 'title'));
+         mesh.rotateZ(Math.PI*(rotate ? 1.5 : 0.5));
+         if (rotate) mesh.translateY(-dy);
+
          mesh.applyMatrix4(m);
          zcont[n].add(mesh);
       }
@@ -83430,7 +83519,7 @@ function drawTH2PolyLego(painter) {
       geometry.setAttribute('position', new THREE.BufferAttribute(pos, 3));
       geometry.computeVertexNormals();
 
-      const material = new THREE.MeshBasicMaterial(getMaterialArgs(painter._color_palette?.getColor(colindx), { vertexColors: false })),
+      const material = new THREE.MeshBasicMaterial(getMaterialArgs(painter._color_palette?.getColor(colindx), { vertexColors: false, side: THREE.DoubleSide })),
             mesh = new THREE.Mesh(geometry, material);
 
       pmain.add3DMesh(mesh);
@@ -148524,7 +148613,7 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
              rect = { x1: -5, x2: 5, y1: -5, y2: 5 };
 
           const matchx = (pnt.x >= d.grx1 + rect.x1) && (pnt.x <= d.grx1 + rect.x2),
-              matchy = (pnt.y >= d.gry1 + rect.y1) && (pnt.y <= d.gry1 + rect.y2);
+                matchy = (pnt.y >= d.gry1 + rect.y1) && (pnt.y <= d.gry1 + rect.y2);
 
           if (matchx && (matchy || (pnt.nproc > 1))) {
              best_dist2 = dist2;
@@ -156715,6 +156804,9 @@ class RAxisPainter extends RObjectPainter {
       return this.v7EvalAttr('labels_center', false);
    }
 
+   /** @summary Is labels should be rotated */
+   isRotateLabels() { return false; }
+
    /** @summary Used to move axis labels instead of zooming
      * @private */
    processLabelsMove(arg, pos) {
@@ -158122,9 +158214,14 @@ class RFramePainter extends RObjectPainter {
       this._frame_height = h;
       this._frame_rotate = rotate;
       this._frame_fixpos = fixpos;
+      this._frame_trans = trans;
 
-      if (this.mode3d) return this; // no need for real draw in mode3d
+      return this.mode3d ? this : this.createFrameG();
+   }
 
+   /** @summary Create frame element and update all attributes
+     * @private */
+   createFrameG() {
       // this is svg:g object - container for every other items belonging to frame
       this.draw_g = this.getFrameSvg();
 
@@ -158153,20 +158250,20 @@ class RFramePainter extends RObjectPainter {
 
       this.axes_drawn = false;
 
-      this.draw_g.attr('transform', trans);
+      this.draw_g.attr('transform', this._frame_trans);
 
       top_rect.attr('x', 0)
               .attr('y', 0)
-              .attr('width', w)
-              .attr('height', h)
+              .attr('width', this._frame_width)
+              .attr('height', this._frame_height)
               .attr('rx', this.lineatt.rx || null)
               .attr('ry', this.lineatt.ry || null)
               .call(this.fillatt.func)
               .call(this.lineatt.func);
 
-      main_svg.attr('width', w)
-              .attr('height', h)
-              .attr('viewBox', `0 0 ${w} ${h}`);
+      main_svg.attr('width', this._frame_width)
+              .attr('height', this._frame_height)
+              .attr('viewBox', `0 0 ${this._frame_width} ${this._frame_height}`);
 
       let pr = Promise.resolve(true);
 

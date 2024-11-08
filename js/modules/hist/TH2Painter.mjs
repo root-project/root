@@ -165,7 +165,7 @@ function drawTH2PolyLego(painter) {
       geometry.setAttribute('position', new THREE.BufferAttribute(pos, 3));
       geometry.computeVertexNormals();
 
-      const material = new THREE.MeshBasicMaterial(getMaterialArgs(painter._color_palette?.getColor(colindx), { vertexColors: false })),
+      const material = new THREE.MeshBasicMaterial(getMaterialArgs(painter._color_palette?.getColor(colindx), { vertexColors: false, side: THREE.DoubleSide })),
             mesh = new THREE.Mesh(geometry, material);
 
       pmain.add3DMesh(mesh);

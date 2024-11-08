@@ -4,18 +4,18 @@
 1. Let use custom time zone for time display, support '&utc' and '&cet' in URL parameters
 2. Support gStyle.fLegendFillStyle
 3. Let change histogram min/max values via context menu
-4. Support Z-scale zooming with TScatter
+4. Support Z-scale zooming with `TScatter`
 5. Implement "haxis" draw option for histogram to draw only axes for hbar
 6. Implement "axisg" and "haxisg" to draw axes with grids
-7. Support TH1 marker, text and line drawing superimposed with "haxis"
+7. Support `TH1` marker, text and line drawing superimposed with "haxis"
 8. Support `TBox`, `TLatex`, `TLine`, `TMarker` drawing on "frame", support drawing on swapped axes
 9. `TProfile` and `TProfile2D` projections https://github.com/root-project/root/issues/15851
-10. Draw total histogram from TEfficiency when draw option starts with 'b'
-11. Let redraw TEfficiency, THStack and TMultiGraph with different draw options via hist context menu
-12. Support 'pads' draw options for TMultiGraph, support context menu for it
-13. Let drop object on sub-pads
+10. Draw total histogram from `TEfficiency` when draw option starts with 'b'
+11. Let redraw `TEfficiency`, `THStack` and `TMultiGraph` with different draw options via hist context menu
+12. Support 'pads' draw options for `TMultiGraph`, support context menu for it
+13. Let drop objects on sub-pads
 14. Properly loads ES6 modules for web canvas
-15. Improve performance of TH3/RH3 drawing by using THREE.InstancedMesh
+15. Improve performance of `TH3`/`RH3` drawing by using THREE.InstancedMesh
 16. Implement batch mode with '&batch' URL parameter to create SVG/PNG images with default GUI
 17. Adjust node.js implementation to produce identical output with normal browser
 18. Create necessary infrastructure for testing with 'puppeteer'
@@ -29,15 +29,16 @@
 26. Create unified svg2pdf/jspdf ES6 modules, integrate in jsroot builds
 27. Let create multipage PDF document - in TWebCanvas batch mode
 28. Let add external links via `#url[link]{label}` syntax - including jsPDF support
-29. Support TAttMarker style with line width bigger than 1
+29. Support `TAttMarker` style with line width bigger than 1
 30. Provide link to ROOT class documentation from context menus
-31. Internals - upgrade to eslint 9
-32. Internals - do not select pad (aka gPad) for objects drawing, always use assigned pad painter
-33. Fix - properly save zoomed ranges in drawingJSON()
-34. Fix - properly redraw `TMultiGraph`
-35. Fix - show empty bin in `TProfile2D` if it has entries #316
-36. Fix - unzooming on log scale was extending range forevever
-37. Fix - display empty hist bin if fSumw2 not zero
+31. Implement axis labels and title rotations on lego plots
+32. Internals - upgrade to eslint 9
+33. Internals - do not select pad (aka gPad) for objects drawing, always use assigned pad painter
+34. Fix - properly save zoomed ranges in drawingJSON()
+35. Fix - properly redraw `TMultiGraph`
+36. Fix - show empty bin in `TProfile2D` if it has entries #316
+37. Fix - unzooming on log scale was extending range forevever
+38. Fix - display empty hist bin if fSumw2 not zero
 
 
 ## Changes in 7.7.5

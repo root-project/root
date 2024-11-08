@@ -2492,9 +2492,14 @@ class TFramePainter extends ObjectPainter {
       this._frame_height = h;
       this._frame_rotate = rotate;
       this._frame_fixpos = fixpos;
+      this._frame_trans = trans;
 
-      if (this.mode3d) return this; // no need to create any elements in 3d mode
+      return this.mode3d ? this : this.createFrameG();
+   }
 
+   /** @summary Create frame element and update all attributes
+    * @private */
+   createFrameG() {
       // this is svg:g object - container for every other items belonging to frame
       this.draw_g = this.getFrameSvg();
 
@@ -2524,15 +2529,15 @@ class TFramePainter extends ObjectPainter {
 
       this.axes_drawn = this.axes2_drawn = false;
 
-      this.draw_g.attr('transform', trans);
+      this.draw_g.attr('transform', this._frame_trans);
 
-      top_rect.attr('d', `M0,0H${w}V${h}H0Z`)
+      top_rect.attr('d', `M0,0H${this._frame_width}V${this._frame_height}H0Z`)
               .call(this.fillatt.func)
               .call(this.lineatt.func);
 
-      main_svg.attr('width', w)
-              .attr('height', h)
-              .attr('viewBox', `0 0 ${w} ${h}`);
+      main_svg.attr('width', this._frame_width)
+              .attr('height', this._frame_height)
+              .attr('viewBox', `0 0 ${this._frame_width} ${this._frame_height}`);
 
       return this;
    }

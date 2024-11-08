@@ -100,6 +100,7 @@ class FontHandler {
 
       this.size = Math.round(size || 11);
       this.scale = scale;
+      this.index = 0;
 
       this.func = this.setFont.bind(this);
 
@@ -107,8 +108,11 @@ class FontHandler {
 
       if (fontIndex && isObject(fontIndex))
          cfg = fontIndex;
-      else
-         cfg = root_fonts[(fontIndex && Number.isInteger(fontIndex)) ? Math.floor(fontIndex / 10) : 0];
+      else {
+         if (fontIndex && Number.isInteger(fontIndex))
+            this.index = Math.floor(fontIndex / 10);
+         cfg = root_fonts[this.index];
+      }
 
       if (cfg) {
          this.cfg = cfg;

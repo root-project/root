@@ -355,6 +355,9 @@ class RAxisPainter extends RObjectPainter {
       return this.v7EvalAttr('labels_center', false);
    }
 
+   /** @summary Is labels should be rotated */
+   isRotateLabels() { return false; }
+
    /** @summary Used to move axis labels instead of zooming
      * @private */
    processLabelsMove(arg, pos) {
