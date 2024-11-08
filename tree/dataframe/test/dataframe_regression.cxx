@@ -274,6 +274,53 @@ TEST_P(RDFRegressionTests, UseAfterDeleteOfSampleCallbacks)
    df.Count().GetValue();
 }
 
+// #16475
+struct DatasetGuard {
+   DatasetGuard(std::string_view treeName, std::string_view fileName) : fTreeName(treeName), fFileName(fileName)
+   {
+      TFile f{fFileName.c_str(), "recreate"};
+      TTree t{fTreeName.c_str(), fTreeName.c_str()};
+      int x{};
+      t.Branch("x", &x, "x/I");
+      for (auto i = 0; i < 10; i++) {
+         x = i;
+         t.Fill();
+      }
+      f.Write();
+   }
+   DatasetGuard(const DatasetGuard &) = delete;
+   DatasetGuard &operator=(const DatasetGuard &) = delete;
+   DatasetGuard(DatasetGuard &&) = delete;
+   DatasetGuard &operator=(DatasetGuard &&) = delete;
+   ~DatasetGuard() { std::remove(fFileName.c_str()); }
+   std::string fTreeName;
+   std::string fFileName;
+};
+
+TEST_P(RDFRegressionTests, FileNameQuery)
+{
+   DatasetGuard dataset{"events", "dataframe_regression_filenamequery.root"};
+   constexpr auto fileNameWithQuery{"dataframe_regression_filenamequery.root?myq=xyz"};
+   ROOT::RDataFrame df{dataset.fTreeName, fileNameWithQuery};
+   EXPECT_EQ(df.Count().GetValue(), 10);
+}
+
+TEST_P(RDFRegressionTests, FileNameWildcardQuery)
+{
+   DatasetGuard dataset{"events", "dataframe_regression_filenamewildcardquery.root"};
+   constexpr auto fileNameWithQuery{"dataframe_regress?on_filenamewildcardquery.root?myq=xyz"};
+   ROOT::RDataFrame df{dataset.fTreeName, fileNameWithQuery};
+   EXPECT_EQ(df.Count().GetValue(), 10);
+}
+
+TEST_P(RDFRegressionTests, FileNameQueryNoExt)
+{
+   DatasetGuard dataset{"events", "dataframe_regression_filenamequerynoext"};
+   constexpr auto fileNameWithQuery{"dataframe_regression_filenamequerynoext?myq=xyz"};
+   ROOT::RDataFrame df{dataset.fTreeName, fileNameWithQuery};
+   EXPECT_EQ(df.Count().GetValue(), 10);
+}
+
 // run single-thread tests
 INSTANTIATE_TEST_SUITE_P(Seq, RDFRegressionTests, ::testing::Values(false));
 
