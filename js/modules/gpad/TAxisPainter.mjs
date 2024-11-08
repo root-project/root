@@ -793,6 +793,16 @@ class TAxisPainter extends ObjectPainter {
       return this.getObject()?.TestBit(EAxisBits.kCenterLabels);
    }
 
+   /** @summary Is labels should be rotated */
+   isRotateLabels() {
+      return this.getObject()?.TestBit(EAxisBits.kLabelsVert);
+   }
+
+   /** @summary Is title should be rotated */
+   isRotateTitle() {
+      return this.getObject()?.TestBit(EAxisBits.kRotateTitle);
+   }
+
    /** @summary Add interactive elements to draw axes title */
    addTitleDrag(title_g, vertical, offset_k, reverse, axis_length) {
       if (!settings.MoveResize || this.isBatchMode()) return;
@@ -996,7 +1006,7 @@ class TAxisPainter extends ObjectPainter {
             label_g = [axis_g.append('svg:g').attr('class', 'axis_labels')],
             lbl_pos = handle.lbl_pos || handle.major,
             tilt_angle = gStyle.AxisTiltAngle ?? 25;
-      let rotate_lbls = axis.TestBit(EAxisBits.kLabelsVert),
+      let rotate_lbls = this.isRotateLabels(),
           textscale = 1, flipscale = 1, maxtextlen = 0, applied_scale = 0,
           lbl_tilt = false, any_modified = false, max_textwidth = 0, max_tiltsize = 0;
 
@@ -1296,9 +1306,6 @@ class TAxisPainter extends ObjectPainter {
       if (this.is_gaxis)
          draw_lines = axis.fLineColor !== 0;
 
-      // indicate that attributes created not for TAttLine, therefore cannot be updated as TAttLine in GED
-      this.lineatt.not_standard = true;
-
       if (!this.is_gaxis || (this.name === 'zaxis')) {
          axis_g = layer.selectChild(`.${this.name}_container`);
          if (axis_g.empty())
@@ -1386,7 +1393,7 @@ class TAxisPainter extends ObjectPainter {
          if (!title_g)
             return;
 
-         const rotate = axis.TestBit(EAxisBits.kRotateTitle) ? -1 : 1,
+         const rotate = this.isRotateTitle() ? -1 : 1,
                xor_reverse = swap_side ^ this.titleOpposite, myxor = (rotate < 0) ^ xor_reverse;
 
          let title_offest_k = side;
