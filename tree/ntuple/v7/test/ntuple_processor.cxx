@@ -2,20 +2,75 @@
 
 #include <ROOT/RNTupleProcessor.hxx>
 
-TEST(RNTupleProcessor, Basic)
-{
-   FileRaii fileGuard("test_ntuple_processor_basic.root");
-   {
-      auto model = RNTupleModel::Create();
-      auto fldX = model->MakeField<float>("x");
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+class RNTupleChainProcessorTest : public testing::Test {
+protected:
+   const std::array<std::string, 4> fFileNames{"test_ntuple_chain_processor1.root", "test_ntuple_chain_processor2.root",
+                                               "test_ntuple_chain_processor3.root",
+                                               "test_ntuple_chain_processor4.root"};
 
-      for (unsigned i = 0; i < 10; ++i) {
-         *fldX = static_cast<float>(i);
-         ntuple->Fill();
+   const std::string fNTupleName = "ntuple";
+
+   void SetUp() override
+   {
+      {
+         auto model = RNTupleModel::Create();
+         auto fldX = model->MakeField<float>("x");
+         auto fldY = model->MakeField<std::vector<float>>("y");
+         auto ntuple = RNTupleWriter::Recreate(std::move(model), fNTupleName, fFileNames[0]);
+
+         for (unsigned i = 0; i < 5; i++) {
+            *fldX = static_cast<float>(i);
+            *fldY = {static_cast<float>(i), static_cast<float>(i * 2)};
+            ntuple->Fill();
+         }
+      }
+      {
+         auto model = RNTupleModel::Create();
+         auto fldX = model->MakeField<float>("x");
+         auto fldY = model->MakeField<std::vector<float>>("y");
+         auto ntuple = RNTupleWriter::Recreate(std::move(model), fNTupleName, fFileNames[1]);
+
+         for (unsigned i = 5; i < 8; i++) {
+            *fldX = static_cast<float>(i);
+            *fldY = {static_cast<float>(i), static_cast<float>(i * 2)};
+            ntuple->Fill();
+         }
+      }
+      {
+         auto model = RNTupleModel::Create();
+         auto fldX = model->MakeField<float>("x");
+         // missing field y
+         auto ntuple = RNTupleWriter::Recreate(std::move(model), fNTupleName, fFileNames[2]);
+
+         for (unsigned i = 8; i < 15; i++) {
+            *fldX = static_cast<float>(i);
+            ntuple->Fill();
+         }
+      }
+      {
+         auto model = RNTupleModel::Create();
+         auto fldX = model->MakeField<float>("x");
+         auto fldY = model->MakeField<int>("y"); // different type for y
+         auto ntuple = RNTupleWriter::Recreate(std::move(model), fNTupleName, fFileNames[3]);
+
+         for (unsigned i = 15; i < 20; i++) {
+            *fldX = static_cast<float>(i);
+            *fldY = i * 2;
+            ntuple->Fill();
+         }
       }
    }
 
+   void TearDown() override
+   {
+      for (const auto &fileName : fFileNames) {
+         std::remove(fileName.c_str());
+      }
+   }
+};
+
+TEST(RNTupleChainProcessor, EmptySpec)
+{
    std::vector<RNTupleOpenSpec> ntuples;
    try {
       auto proc = RNTupleProcessor::CreateChain(ntuples);
@@ -23,8 +78,11 @@ TEST(RNTupleProcessor, Basic)
    } catch (const RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("at least one RNTuple must be provided"));
    }
+}
 
-   ntuples = {{"ntuple", fileGuard.GetPath()}};
+TEST_F(RNTupleChainProcessorTest, SingleNTuple)
+{
+   std::vector<RNTupleOpenSpec> ntuples = {{fNTupleName, fFileNames[0]}};
 
    int nEntries = 0;
    auto proc = RNTupleProcessor::CreateChain(ntuples);
@@ -34,105 +92,13 @@ TEST(RNTupleProcessor, Basic)
       EXPECT_EQ(proc->GetNEntriesProcessed(), proc->GetLocalEntryNumber());
       ++nEntries;
    }
-   EXPECT_EQ(nEntries, 10);
+   EXPECT_EQ(nEntries, 5);
    EXPECT_EQ(nEntries, proc->GetNEntriesProcessed());
 }
 
-TEST(RNTupleProcessor, WithModel)
+TEST_F(RNTupleChainProcessorTest, Basic)
 {
-   FileRaii fileGuard("test_ntuple_processor_basic_with_model.root");
-   {
-      auto model = RNTupleModel::Create();
-      auto fldX = model->MakeField<float>("x");
-      auto fldY = model->MakeField<float>("y");
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
-
-      for (unsigned i = 0; i < 10; ++i) {
-         *fldX = static_cast<float>(i);
-         *fldY = static_cast<float>(i) * 2.f;
-         ntuple->Fill();
-      }
-   }
-
-   auto model = RNTupleModel::Create();
-   auto fldY = model->MakeField<float>("y");
-
-   std::vector<RNTupleOpenSpec> ntuples = {{"ntuple", fileGuard.GetPath()}};
-
-   auto proc = RNTupleProcessor::CreateChain(ntuples, std::move(model));
-   for (const auto &entry : *proc) {
-      try {
-         auto x = entry.GetPtr<float>("x");
-         FAIL() << "field \"x\" should not be present in the processor entry";
-      } catch (const RException &err) {
-         EXPECT_THAT(err.what(), testing::HasSubstr("invalid field name: x"));
-      }
-      EXPECT_FLOAT_EQ(static_cast<float>(proc->GetNEntriesProcessed()) * 2.f, *fldY);
-   }
-}
-
-TEST(RNTupleProcessor, WithBareModel)
-{
-   FileRaii fileGuard("test_ntuple_processor_basic_with_model.root");
-   {
-      auto model = RNTupleModel::Create();
-      auto fldX = model->MakeField<float>("x");
-      auto fldY = model->MakeField<float>("y");
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
-
-      for (unsigned i = 0; i < 10; ++i) {
-         *fldX = static_cast<float>(i);
-         *fldY = static_cast<float>(i) * 2.f;
-         ntuple->Fill();
-      }
-   }
-
-   auto model = RNTupleModel::CreateBare();
-   model->MakeField<float>("y");
-   std::vector<RNTupleOpenSpec> ntuples = {{"ntuple", fileGuard.GetPath()}};
-
-   auto proc = RNTupleProcessor::CreateChain(ntuples, std::move(model));
-   for (const auto &entry : *proc) {
-      try {
-         auto x = entry.GetPtr<float>("x");
-         FAIL() << "field \"x\" should not be present in the processor entry";
-      } catch (const RException &err) {
-         EXPECT_THAT(err.what(), testing::HasSubstr("invalid field name: x"));
-      }
-      EXPECT_FLOAT_EQ(static_cast<float>(proc->GetNEntriesProcessed()) * 2.f, *entry.GetPtr<float>("y"));
-   }
-}
-
-TEST(RNTupleProcessor, SimpleChain)
-{
-   FileRaii fileGuard1("test_ntuple_processor_simple_chain1.root");
-   {
-      auto model = RNTupleModel::Create();
-      auto fldX = model->MakeField<float>("x");
-      auto fldY = model->MakeField<std::vector<float>>("y");
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath());
-
-      for (unsigned i = 0; i < 5; ++i) {
-         *fldX = static_cast<float>(i);
-         *fldY = {static_cast<float>(i), static_cast<float>(i * 2)};
-         ntuple->Fill();
-      }
-   }
-   FileRaii fileGuard2("test_ntuple_processor_simple_chain2.root");
-   {
-      auto model = RNTupleModel::Create();
-      auto fldX = model->MakeField<float>("x");
-      auto fldY = model->MakeField<std::vector<float>>("y");
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
-
-      for (unsigned i = 5; i < 8; ++i) {
-         *fldX = static_cast<float>(i);
-         *fldY = {static_cast<float>(i), static_cast<float>(i * 2)};
-         ntuple->Fill();
-      }
-   }
-
-   std::vector<RNTupleOpenSpec> ntuples = {{"ntuple", fileGuard1.GetPath()}, {"ntuple", fileGuard2.GetPath()}};
+   std::vector<RNTupleOpenSpec> ntuples = {{fNTupleName, fFileNames[0]}, {fNTupleName, fFileNames[1]}};
 
    std::uint64_t nEntries = 0;
    auto proc = RNTupleProcessor::CreateChain(ntuples);
@@ -156,101 +122,82 @@ TEST(RNTupleProcessor, SimpleChain)
    EXPECT_EQ(nEntries, proc->GetNEntriesProcessed());
 }
 
-TEST(RNTupleProcessor, SimpleChainWithModel)
+TEST_F(RNTupleChainProcessorTest, WithModel)
 {
-   FileRaii fileGuard1("test_ntuple_processor_simple_chain_with_model1.root");
-   {
-      auto model = RNTupleModel::Create();
-      auto fldX = model->MakeField<float>("x", 1.f);
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath());
-      ntuple->Fill();
-   }
-   FileRaii fileGuard2("test_ntuple_processor_simple_chain_with_model2.root");
-   {
-      auto model = RNTupleModel::Create();
-      auto fldX = model->MakeField<float>("x", 2.f);
-      auto fldY = model->MakeField<int>("y", 404);
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
-      ntuple->Fill();
-   }
-   FileRaii fileGuard3("test_ntuple_processor_simple_chain_with_model3.root");
-   {
-      auto model = RNTupleModel::Create();
-      auto fldX = model->MakeField<float>("x", 3.f);
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard3.GetPath());
-      ntuple->Fill();
-   }
-
    auto model = RNTupleModel::Create();
    auto fldX = model->MakeField<float>("x");
 
-   std::vector<RNTupleOpenSpec> ntuples = {
-      {"ntuple", fileGuard1.GetPath()}, {"ntuple", fileGuard2.GetPath()}, {"ntuple", fileGuard3.GetPath()}};
+   std::vector<RNTupleOpenSpec> ntuples = {{fNTupleName, fFileNames[0]}, {fNTupleName, fFileNames[1]}};
 
    auto proc = RNTupleProcessor::CreateChain(ntuples, std::move(model));
-   auto entry = proc->begin();
-   *entry;
-   EXPECT_EQ(1.f, *fldX);
-   entry++;
-   EXPECT_EQ(2.f, *fldX);
-   try {
-      (*entry).GetPtr<int>("y");
-      FAIL() << "fields not specified by the provided model shoud not be part of the entry";
-   } catch (const RException &err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("invalid field name: y"));
+   for (const auto &entry : *proc) {
+      auto x = entry.GetPtr<float>("x");
+      EXPECT_EQ(static_cast<float>(proc->GetNEntriesProcessed()), *x);
+
+      try {
+         entry.GetPtr<std::vector<float>>("y");
+         FAIL() << "fields not specified by the provided model shoud not be part of the entry";
+      } catch (const RException &err) {
+         EXPECT_THAT(err.what(), testing::HasSubstr("invalid field name: y"));
+      }
    }
-   ++entry;
-   EXPECT_EQ(3.f, *fldX);
 }
 
-TEST(RNTupleProcessor, EmptyNTuples)
+TEST_F(RNTupleChainProcessorTest, WithBareModel)
 {
-   FileRaii fileGuard1("test_ntuple_processor_empty_ntuples1.root");
-   {
-      auto model = RNTupleModel::Create();
-      auto fldX = model->MakeField<float>("x");
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath());
-   }
-   FileRaii fileGuard2("test_ntuple_processor_empty_ntuples2.root");
-   {
-      auto model = RNTupleModel::Create();
-      auto fldX = model->MakeField<float>("x");
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
+   auto model = RNTupleModel::CreateBare();
+   auto fldY = model->MakeField<std::vector<float>>("y");
 
-      for (unsigned i = 0; i < 2; ++i) {
-         *fldX = static_cast<float>(i);
-         ntuple->Fill();
+   std::vector<RNTupleOpenSpec> ntuples = {{fNTupleName, fFileNames[0]}, {fNTupleName, fFileNames[1]}};
+
+   auto proc = RNTupleProcessor::CreateChain(ntuples, std::move(model));
+   for (const auto &entry : *proc) {
+      auto y = entry.GetPtr<std::vector<float>>("y");
+      std::vector<float> yExp = {static_cast<float>(proc->GetNEntriesProcessed()),
+                                 static_cast<float>(proc->GetNEntriesProcessed() * 2)};
+      EXPECT_EQ(yExp, *y);
+
+      try {
+         entry.GetPtr<float>("x");
+         FAIL() << "fields not specified by the provided model shoud not be part of the entry";
+      } catch (const RException &err) {
+         EXPECT_THAT(err.what(), testing::HasSubstr("invalid field name: x"));
       }
    }
-   FileRaii fileGuard3("test_ntuple_processor_empty_ntuples3.root");
-   {
-      auto model = RNTupleModel::Create();
-      auto fldX = model->MakeField<float>("x");
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard3.GetPath());
-   }
-   FileRaii fileGuard4("test_ntuple_processor_empty_ntuples4.root");
-   {
-      auto model = RNTupleModel::Create();
-      auto fldX = model->MakeField<float>("x");
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard4.GetPath());
+}
 
-      for (unsigned i = 2; i < 5; ++i) {
-         *fldX = static_cast<float>(i);
-         ntuple->Fill();
-      }
-   }
-   FileRaii fileGuard5("test_ntuple_processor_empty_ntuples5.root");
-   {
-      auto model = RNTupleModel::Create();
-      auto fldX = model->MakeField<float>("x");
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard5.GetPath());
+TEST_F(RNTupleChainProcessorTest, MissingFields)
+{
+   std::vector<RNTupleOpenSpec> ntuples = {{fNTupleName, fFileNames[0]}, {fNTupleName, fFileNames[2]}};
+
+   auto proc = RNTupleProcessor::CreateChain(ntuples);
+   auto entry = proc->begin();
+
+   while (proc->GetNEntriesProcessed() < 4) {
+      auto x = (*entry).GetPtr<float>("x");
+      EXPECT_EQ(static_cast<float>(proc->GetNEntriesProcessed()), *x);
+      entry++;
    }
 
-   std::vector<RNTupleOpenSpec> ntuples = {{"ntuple", fileGuard1.GetPath()},
-                                           {"ntuple", fileGuard2.GetPath()},
-                                           {"ntuple", fileGuard3.GetPath()},
-                                           {"ntuple", fileGuard4.GetPath()},
-                                           {"ntuple", fileGuard5.GetPath()}};
+   try {
+      entry++;
+      FAIL() << "having missing fields in subsequent ntuples should throw";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("field \"y\" not found in current RNTuple"));
+   }
+}
+
+TEST_F(RNTupleChainProcessorTest, EmptyNTuples)
+{
+   FileRaii fileGuard("test_ntuple_processor_empty_ntuples.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto fldX = model->MakeField<float>("x");
+      auto fldY = model->MakeField<std::vector<float>>("y");
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), fNTupleName, fileGuard.GetPath());
+   }
+
+   std::vector<RNTupleOpenSpec> ntuples = {{fNTupleName, fileGuard.GetPath()}, {fNTupleName, fFileNames[0]}};
 
    std::uint64_t nEntries = 0;
 
@@ -261,10 +208,8 @@ TEST(RNTupleProcessor, EmptyNTuples)
       EXPECT_THAT(err.what(), testing::HasSubstr("first RNTuple does not contain any entries"));
    }
 
-   ntuples = {{"ntuple", fileGuard2.GetPath()},
-              {"ntuple", fileGuard3.GetPath()},
-              {"ntuple", fileGuard4.GetPath()},
-              {"ntuple", fileGuard5.GetPath()}};
+   // Empty ntuples in the middle are just skipped (as long as their model complies)
+   ntuples = {{fNTupleName, fFileNames[0]}, {fNTupleName, fileGuard.GetPath()}, {fNTupleName, fFileNames[1]}};
 
    auto proc = RNTupleProcessor::CreateChain(ntuples);
    for (const auto &entry : *proc) {
@@ -272,41 +217,6 @@ TEST(RNTupleProcessor, EmptyNTuples)
       EXPECT_EQ(static_cast<float>(nEntries), *x);
       ++nEntries;
    }
-   EXPECT_EQ(nEntries, 5);
+   EXPECT_EQ(nEntries, 8);
    EXPECT_EQ(nEntries, proc->GetNEntriesProcessed());
-}
-
-TEST(RNTupleProcessor, ChainUnalignedModels)
-{
-   FileRaii fileGuard1("test_ntuple_processor_chain_unaligned_models1.root");
-   {
-      auto model = RNTupleModel::Create();
-      auto fldX = model->MakeField<float>("x", 0.);
-      auto fldY = model->MakeField<char>("y", 'a');
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath());
-      ntuple->Fill();
-   }
-   FileRaii fileGuard2("test_ntuple_processor_chain_unaligned_models2.root");
-   {
-      auto model = RNTupleModel::Create();
-      auto fldX = model->MakeField<float>("x", 1.);
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
-      ntuple->Fill();
-   }
-
-   std::vector<RNTupleOpenSpec> ntuples = {{"ntuple", fileGuard1.GetPath()}, {"ntuple", fileGuard2.GetPath()}};
-
-   auto proc = RNTupleProcessor::CreateChain(ntuples);
-   auto entry = proc->begin();
-   auto x = (*entry).GetPtr<float>("x");
-   auto y = (*entry).GetPtr<char>("y");
-   EXPECT_EQ(0., *x);
-   EXPECT_EQ('a', *y);
-
-   try {
-      entry++;
-      FAIL() << "trying to connect a new page source which doesn't have all initial fields is not supported";
-   } catch (const RException &err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("field \"y\" not found in current RNTuple"));
-   }
 }
