@@ -171,6 +171,7 @@ sap.ui.define([
 
          let data = {
              is_gaxis: painter?.is_gaxis,
+             mode2d: !painter.hist_painter?.options.Mode3D,
              specialRefresh: 'setAxisModel',
              axis: obj,
              axis_chopt,
@@ -179,9 +180,11 @@ sap.ui.define([
              color_label: this.currentPadPainter.getColor(obj.fLabelColor),
              center_label: obj.TestBit(this.getAxisBit('kCenterLabels')),
              vert_label: obj.TestBit(this.getAxisBit('kLabelsVert')),
+             font_label: painter.labelsFont?.index || 0,
              color_title,
              center_title: obj.TestBit(this.getAxisBit('kCenterTitle')),
              rotate_title: obj.TestBit(this.getAxisBit('kRotateTitle')),
+             font_title: painter.titleFont?.index || 0,
          };
 
          model.setData(data);
@@ -195,7 +198,7 @@ sap.ui.define([
              is_gaxis = handle?.is_gaxis,
              kind = '',
              exec = '',
-             col;
+             col, fontid;
 
          // while axis painter is temporary object, we should not try change it attributes
          if (!this.currentPadPainter || !axis)
@@ -228,6 +231,11 @@ sap.ui.define([
                axis.InvertBit(this.getAxisBit('kLabelsVert'));
                exec = `exec:SetBit(TAxis::kLabelsVert, ${pars.value ? true : false})`;
                break;
+            case 'font_label':
+               fontid = parseInt(pars.value)*10 + 2;
+               axis.fLabelFont = fontid;
+               exec = `exec:SetLabelFont(${fontid})`;
+               break;
             case 'axis/fLabelOffset':
                exec = `exec:SetLabelOffset(${pars.value})`;
                break;
@@ -249,6 +257,14 @@ sap.ui.define([
             case 'rotate_title':
                axis.InvertBit(this.getAxisBit('kRotateTitle'));
                exec = is_gaxis ? `exec:SetBit(TAxis::kRotateTitle, ${pars.value ? true : false})` : `exec:RotateTitle(${pars.value ? true : false})`;
+               break;
+            case 'font_title':
+               fontid = parseInt(pars.value)*10 + 2;
+               if (is_gaxis)
+                  axis.fTextFont = fontid;
+               else
+                  axis.fTitleFont = fontid;
+               exec = `exec:SetTitleFont(${fontid})`;
                break;
             case 'axis_ticksize':
                if (is_gaxis)
@@ -284,7 +300,8 @@ sap.ui.define([
 
          let data = {
             logbase: handle.logbase || 0,
-            handle: handle,
+            handle,
+            mode2d: true,
             ticks_size: handle.ticksSize/handle.scaling_size,
             labels_offset: handle.labelsOffset/handle.scaling_size,
             labels_rotate: handle.labelsFont.angle != 0,
@@ -377,7 +394,8 @@ sap.ui.define([
             return;
          }
 
-         if (painter.lineatt?.used && !painter.lineatt.not_standard) {
+         if (painter.lineatt?.used && (selectedClass !== 'TAxis') && (selectedClass !== 'TGaxis')) {
+            console.log('Assign line attributes', painter.getObject()._typename, 'not_standard', painter.lineatt.not_standard);
             let model = new JSONModel( { attline: painter.lineatt } );
             model.attachPropertyChange({ _kind: 'TAttLine', _painter: painter, _handle: painter.lineatt }, this.modelPropertyChange, this);
             await this.addFragment(oPage, 'TAttLine', model);
