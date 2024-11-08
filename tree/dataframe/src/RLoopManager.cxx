@@ -1173,15 +1173,35 @@ void RLoopManager::ChangeBeginAndEndEntries(Long64_t begin, Long64_t end)
  */
 std::unique_ptr<TFile> OpenFileWithSanityChecks(std::string_view fileNameGlob)
 {
-   bool fileIsGlob = [&fileNameGlob]() {
-      const std::vector<std::string_view> wildcards = {"[", "]", "*", "?"}; // Wildcards accepted by TChain::Add
-      return std::any_of(wildcards.begin(), wildcards.end(),
-                         [&fileNameGlob](const auto &wc) { return fileNameGlob.find(wc) != std::string_view::npos; });
+   // Follow same logic in TChain::Add to find the correct string to look for globbing:
+   // - If the extension ".root" is present in the file name, pass along the basename.
+   // - If not, use the "?" token to delimit the part of the string which represents the basename.
+   // - Otherwise, pass the full filename.
+   auto &&baseNameAndQuery = [&fileNameGlob]() {
+      constexpr std::string_view delim{".root"};
+      if (auto &&it = std::find_end(fileNameGlob.begin(), fileNameGlob.end(), delim.begin(), delim.end());
+          it != fileNameGlob.end()) {
+         auto &&distanceToEndOfDelim = std::distance(fileNameGlob.begin(), it + delim.length());
+         return std::make_pair(fileNameGlob.substr(0, distanceToEndOfDelim), fileNameGlob.substr(distanceToEndOfDelim));
+      } else if (auto &&lastQuestionMark = fileNameGlob.find_last_of('?'); lastQuestionMark != std::string_view::npos)
+         return std::make_pair(fileNameGlob.substr(0, lastQuestionMark), fileNameGlob.substr(lastQuestionMark));
+      else
+         return std::make_pair(fileNameGlob, std::string_view{});
+   }();
+   // Captured structured bindings variable are only valid since C++20
+   auto &&baseName = baseNameAndQuery.first;
+   auto &&query = baseNameAndQuery.second;
+
+   const auto nameHasWildcard = [&baseName]() {
+      constexpr std::array<char, 4> wildCards{'[', ']', '*', '?'}; // Wildcards accepted by TChain::Add
+      return std::any_of(wildCards.begin(), wildCards.end(),
+                         [&baseName](auto &&wc) { return baseName.find(wc) != std::string_view::npos; });
    }();
 
    // Open first file in case of glob, suppose all files in the glob use the same data format
-   std::string fileToOpen{fileIsGlob ? ROOT::Internal::TreeUtils::ExpandGlob(std::string{fileNameGlob})[0]
-                                     : fileNameGlob};
+   std::string fileToOpen{nameHasWildcard
+                             ? ROOT::Internal::TreeUtils::ExpandGlob(std::string{baseName})[0] + std::string{query}
+                             : fileNameGlob};
 
    ::TDirectory::TContext ctxt; // Avoid changing gDirectory;
    std::unique_ptr<TFile> inFile{TFile::Open(fileToOpen.c_str(), "READ_WITHOUT_GLOBALREGISTRATION")};
