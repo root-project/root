@@ -401,15 +401,15 @@ void TMarker::Streamer(TBuffer &R__b)
 
 Rectangle_t TMarker::GetBBox()
 {
-   Double_t size = this->GetMarkerSize();
-
-   Rectangle_t BBox{0,0,0,0};
-   if (!gPad) return BBox;
-   BBox.fX = gPad->XtoPixel(fX)+(Int_t)(2*size);
-   BBox.fY = gPad->YtoPixel(fY)-(Int_t)(2*size);
-   BBox.fWidth = 2*size;
-   BBox.fHeight = 2*size;
-   return (BBox);
+   Rectangle_t BBox{0, 0, 0, 0};
+   if (gPad) {
+      Double_t size = GetMarkerSize();
+      BBox.fX = gPad->XtoPixel(fX) + (Int_t)(2 * size);
+      BBox.fY = gPad->YtoPixel(fY) - (Int_t)(2 * size);
+      BBox.fWidth = 2 * size;
+      BBox.fHeight = 2 * size;
+   }
+   return BBox;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -417,11 +417,12 @@ Rectangle_t TMarker::GetBBox()
 
 TPoint TMarker::GetBBoxCenter()
 {
-   TPoint p(0,0);
-   if (!gPad) return (p);
-   p.SetX(gPad->XtoPixel(fX));
-   p.SetY(gPad->YtoPixel(fY));
-   return(p);
+   TPoint p(0, 0);
+   if (gPad) {
+      p.SetX(gPad->XtoPixel(fX));
+      p.SetY(gPad->YtoPixel(fY));
+   }
+   return p;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

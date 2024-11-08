@@ -517,16 +517,15 @@ Bool_t TCurlyArc::GetDefaultIsCurly()
 
 Rectangle_t TCurlyArc::GetBBox()
 {
-   Rectangle_t BBox{0,0,0,0};
-   if (!gPad) return BBox;
-
-   Double_t R2 = fR1 * TMath::Abs(gPad->GetY2()-gPad->GetY1())/TMath::Abs(gPad->GetX2()-gPad->GetX1());
-
-   BBox.fX = gPad->XtoPixel(fX1-fR1);
-   BBox.fY = gPad->YtoPixel(fY1+R2);
-   BBox.fWidth = gPad->XtoPixel(fX1+fR1)-gPad->XtoPixel(fX1-fR1);
-   BBox.fHeight = gPad->YtoPixel(fY1-R2)-gPad->YtoPixel(fY1+R2);
-   return (BBox);
+   Rectangle_t BBox{0, 0, 0, 0};
+   if (gPad) {
+      Double_t R2 = fR1 * TMath::Abs(gPad->GetY2() - gPad->GetY1()) / TMath::Abs(gPad->GetX2() - gPad->GetX1());
+      BBox.fX = gPad->XtoPixel(fX1 - fR1);
+      BBox.fY = gPad->YtoPixel(fY1 + R2);
+      BBox.fWidth = gPad->XtoPixel(fX1 + fR1) - gPad->XtoPixel(fX1 - fR1);
+      BBox.fHeight = gPad->YtoPixel(fY1 - R2) - gPad->YtoPixel(fY1 + R2);
+   }
+   return BBox;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -535,10 +534,11 @@ Rectangle_t TCurlyArc::GetBBox()
 TPoint TCurlyArc::GetBBoxCenter()
 {
    TPoint p(0,0);
-   if (!gPad) return (p);
-   p.SetX(gPad->XtoPixel(fX1));
-   p.SetY(gPad->YtoPixel(fY1));
-   return(p);
+   if (gPad) {
+      p.SetX(gPad->XtoPixel(fX1));
+      p.SetY(gPad->YtoPixel(fY1));
+   }
+   return p;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
