@@ -1011,7 +1011,7 @@ class TGraphPainter extends ObjectPainter {
              rect = { x1: -5, x2: 5, y1: -5, y2: 5 };
 
           const matchx = (pnt.x >= d.grx1 + rect.x1) && (pnt.x <= d.grx1 + rect.x2),
-              matchy = (pnt.y >= d.gry1 + rect.y1) && (pnt.y <= d.gry1 + rect.y2);
+                matchy = (pnt.y >= d.gry1 + rect.y1) && (pnt.y <= d.gry1 + rect.y2);
 
           if (matchx && (matchy || (pnt.nproc > 1))) {
              best_dist2 = dist2;
