@@ -7270,27 +7270,31 @@ TVirtualPadPainter *TPad::GetPainter()
 
 Rectangle_t TPad::GetBBox()
 {
-   Rectangle_t BBox;
-   BBox.fX = gPad->XtoPixel(fXlowNDC*(gPad->GetX2()-gPad->GetX1()) + gPad->GetX1());
-   BBox.fY = gPad->YtoPixel((fYlowNDC+fHNDC)*(gPad->GetY2()-gPad->GetY1()) + gPad->GetY1());
-   BBox.fWidth = gPad->XtoPixel((fXlowNDC+fWNDC)*(gPad->GetX2()-gPad->GetX1()) + gPad->GetX1()) - gPad->XtoPixel(fXlowNDC*(gPad->GetX2()-gPad->GetX1()) + gPad->GetX1());
-   BBox.fHeight = gPad->YtoPixel((fYlowNDC)*(gPad->GetY2()-gPad->GetY1()) + gPad->GetY1()) - gPad->YtoPixel((fYlowNDC+fHNDC)*(gPad->GetY2()-gPad->GetY1()) + gPad->GetY1());
-   return (BBox);
+   Rectangle_t BBox{0, 0, 0, 0};
+   if (gPad) {
+      BBox.fX = gPad->XtoPixel(fXlowNDC * (gPad->GetX2() - gPad->GetX1()) + gPad->GetX1());
+      BBox.fY = gPad->YtoPixel((fYlowNDC + fHNDC) * (gPad->GetY2() - gPad->GetY1()) + gPad->GetY1());
+      BBox.fWidth = gPad->XtoPixel((fXlowNDC + fWNDC) * (gPad->GetX2() - gPad->GetX1()) + gPad->GetX1()) -
+                    gPad->XtoPixel(fXlowNDC * (gPad->GetX2() - gPad->GetX1()) + gPad->GetX1());
+      BBox.fHeight = gPad->YtoPixel((fYlowNDC) * (gPad->GetY2() - gPad->GetY1()) + gPad->GetY1()) -
+                     gPad->YtoPixel((fYlowNDC + fHNDC) * (gPad->GetY2() - gPad->GetY1()) + gPad->GetY1());
+   }
+   return BBox;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the center of the Pad as TPoint in pixels
 
 TPoint TPad::GetBBoxCenter()
 {
-   TPoint p;
-   Double_t x = ((fXlowNDC+0.5*fWNDC)*(gPad->GetX2()-gPad->GetX1())) + gPad->GetX1();
-   Double_t y = ((fYlowNDC+0.5*fHNDC)*(gPad->GetY2()-gPad->GetY1())) + gPad->GetY1();
-
-   p.SetX(gPad->XtoPixel(x));
-   p.SetY(gPad->YtoPixel(y));
-   return(p);
+   TPoint p(0, 0);
+   if (gPad) {
+      Double_t x = ((fXlowNDC + 0.5 * fWNDC) * (gPad->GetX2() - gPad->GetX1())) + gPad->GetX1();
+      Double_t y = ((fYlowNDC + 0.5 * fHNDC) * (gPad->GetY2() - gPad->GetY1())) + gPad->GetY1();
+      p.SetX(gPad->XtoPixel(x));
+      p.SetY(gPad->YtoPixel(y));
+   }
+   return p;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -7298,8 +7302,11 @@ TPoint TPad::GetBBoxCenter()
 
 void TPad::SetBBoxCenter(const TPoint &p)
 {
-   fXlowNDC = (gPad->PixeltoX(p.GetX()) - gPad->GetX1())/(gPad->GetX2()-gPad->GetX1())-0.5*fWNDC;
-   fYlowNDC = (gPad->PixeltoY(p.GetY()-gPad->VtoPixel(0)) - gPad->GetY1())/(gPad->GetY2()-gPad->GetY1())-0.5*fHNDC;
+   if (!gPad)
+      return;
+   fXlowNDC = (gPad->PixeltoX(p.GetX()) - gPad->GetX1()) / (gPad->GetX2() - gPad->GetX1()) - 0.5 * fWNDC;
+   fYlowNDC =
+      (gPad->PixeltoY(p.GetY() - gPad->VtoPixel(0)) - gPad->GetY1()) / (gPad->GetY2() - gPad->GetY1()) - 0.5 * fHNDC;
    ResizePad();
 }
 
@@ -7308,6 +7315,8 @@ void TPad::SetBBoxCenter(const TPoint &p)
 
 void TPad::SetBBoxCenterX(const Int_t x)
 {
+   if (!gPad)
+      return;
    fXlowNDC = (gPad->PixeltoX(x) - gPad->GetX1())/(gPad->GetX2()-gPad->GetX1())-0.5*fWNDC;
    ResizePad();
 }
@@ -7317,7 +7326,9 @@ void TPad::SetBBoxCenterX(const Int_t x)
 
 void TPad::SetBBoxCenterY(const Int_t y)
 {
-   fYlowNDC = (gPad->PixeltoY(y-gPad->VtoPixel(0)) - gPad->GetY1())/(gPad->GetY2()-gPad->GetY1())-0.5*fHNDC;
+   if (!gPad)
+      return;
+   fYlowNDC = (gPad->PixeltoY(y - gPad->VtoPixel(0)) - gPad->GetY1()) / (gPad->GetY2() - gPad->GetY1()) - 0.5 * fHNDC;
    ResizePad();
 }
 
@@ -7327,7 +7338,9 @@ void TPad::SetBBoxCenterY(const Int_t y)
 
 void TPad::SetBBoxX1(const Int_t x)
 {
-   fXlowNDC = (gPad->PixeltoX(x) - gPad->GetX1())/(gPad->GetX2()-gPad->GetX1());
+   if (!gPad)
+      return;
+   fXlowNDC = (gPad->PixeltoX(x) - gPad->GetX1()) / (gPad->GetX2() - gPad->GetX1());
    fWNDC = fXUpNDC - fXlowNDC;
    ResizePad();
 }
@@ -7338,7 +7351,9 @@ void TPad::SetBBoxX1(const Int_t x)
 
 void TPad::SetBBoxX2(const Int_t x)
 {
-   fWNDC = (gPad->PixeltoX(x) - gPad->GetX1())/(gPad->GetX2()-gPad->GetX1())-fXlowNDC;
+   if (!gPad)
+      return;
+   fWNDC = (gPad->PixeltoX(x) - gPad->GetX1()) / (gPad->GetX2() - gPad->GetX1()) - fXlowNDC;
    ResizePad();
 }
 
@@ -7347,7 +7362,9 @@ void TPad::SetBBoxX2(const Int_t x)
 
 void TPad::SetBBoxY1(const Int_t y)
 {
-   fHNDC = (gPad->PixeltoY(y-gPad->VtoPixel(0)) - gPad->GetY1())/(gPad->GetY2()-gPad->GetY1())-fYlowNDC;
+   if (!gPad)
+      return;
+   fHNDC = (gPad->PixeltoY(y - gPad->VtoPixel(0)) - gPad->GetY1()) / (gPad->GetY2() - gPad->GetY1()) - fYlowNDC;
    ResizePad();
 }
 
@@ -7357,7 +7374,9 @@ void TPad::SetBBoxY1(const Int_t y)
 
 void TPad::SetBBoxY2(const Int_t y)
 {
-   fYlowNDC = (gPad->PixeltoY(y-gPad->VtoPixel(0)) - gPad->GetY1())/(gPad->GetY2()-gPad->GetY1());
+   if (!gPad)
+      return;
+   fYlowNDC = (gPad->PixeltoY(y - gPad->VtoPixel(0)) - gPad->GetY1()) / (gPad->GetY2() - gPad->GetY1());
    fHNDC = fYUpNDC - fYlowNDC;
    ResizePad();
 }
