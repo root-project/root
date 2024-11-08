@@ -11,8 +11,8 @@
 
 // Bindings
 #include "PyROOTPythonize.h"
-#include "PyROOTWrapper.h"
 #include "RPyROOTApplication.h"
+#include "TMemoryRegulator.h"
 
 // Cppyy
 #include "CPyCppyy/API.h"
@@ -61,6 +61,20 @@ PyObject *RegisterExecutorAlias(PyObject * /*self*/, PyObject *args)
 }
 
 } // namespace PyROOT
+
+namespace {
+
+PyROOT::RegulatorCleanup &GetRegulatorCleanup()
+{
+   // The object is thread-local because it can happen that we call into
+   // C++ code (from the PyROOT CPython extension, from CPyCppyy or from cling)
+   // from different Python threads. A notable example is within a distributed
+   // RDataFrame application running on Dask.
+   thread_local PyROOT::RegulatorCleanup m;
+   return m;
+}
+
+} // namespace
 
 // Methods offered by the interface
 static PyMethodDef gPyROOTMethods[] = {
@@ -144,8 +158,13 @@ extern "C" PyObject *PyInit_libROOTPythonizations()
    // keep gRootModule, but do not increase its reference count even as it is borrowed,
    // or a self-referencing cycle would be created
 
-   // setup PyROOT
-   PyROOT::Init();
+   // Initialize and acquire the GIL to allow for threading in ROOT
+#if PY_VERSION_HEX < 0x03090000
+   PyEval_InitThreads();
+#endif
+
+   // Memory management
+   gROOT->GetListOfCleanups()->Add(&GetRegulatorCleanup());
 
    // signal policy: don't abort interpreter in interactive mode
    CallContext::SetGlobalSignalPolicy(!gROOT->IsBatch());
