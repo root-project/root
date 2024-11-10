@@ -5,7 +5,7 @@ A cluster contains all the data of a given event range.
 As clusters are usually compressed and tied to event boundaries, an exact size cannot be enforced.
 Instead, RNTuple uses a *target size* for the compressed data as a guideline for when to flush a cluster.
 
-The default cluster target size is 100 MB of compressed data.
+The default cluster target size is 128 MiB of compressed data.
 The default can be changed by the `RNTupleWriteOptions`.
 The default should work well in the majority of cases.
 In general, larger clusters provide room for more and larger pages and should improve compression ratio and speed.
@@ -13,7 +13,7 @@ However, clusters also need to be buffered during write and (partially) during r
 so larger clusters increase the memory footprint.
 
 A second option in `RNTupleWriteOptions` specifies the maximum uncompressed cluster size.
-The default is 1 GiB.
+The default is 10x the default cluster target size, i.e. ~1.2 GiB.
 This setting acts as an "emergency break" and should prevent very compressible clusters from growing too large.
 
 Given the two settings, writing works as follows:
