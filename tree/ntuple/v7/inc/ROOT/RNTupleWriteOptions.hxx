@@ -61,10 +61,10 @@ public:
 protected:
    int fCompression{RCompressionSetting::EDefaults::kUseGeneralPurpose};
    /// Approximation of the target compressed cluster size
-   std::size_t fApproxZippedClusterSize = 100 * 1000 * 1000;
+   std::size_t fApproxZippedClusterSize = 128 * 1024 * 1024;
    /// Memory limit for committing a cluster: with very high compression ratio, we need a limit
    /// on how large the I/O buffer can grow during writing.
-   std::size_t fMaxUnzippedClusterSize = 1024 * 1024 * 1024;
+   std::size_t fMaxUnzippedClusterSize = 10 * fApproxZippedClusterSize;
    /// Initially, columns start with a page large enough to hold the given number of elements. The initial
    /// page size is the given number of elements multiplied by the column's element size.
    /// If more elements are needed, pages are increased up until the byte limit given by fMaxUnzippedPageSize
