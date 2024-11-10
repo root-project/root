@@ -1049,8 +1049,8 @@ This section summarizes default settings of `RNTupleWriteOptions`.
 
 | Default                                | Value                        |
 |----------------------------------------|------------------------------|
-| Approximate Zipped Cluster             | 100 MB                       |
-| Max Unzipped Cluster                   | 1 GiB                        |
+| Approximate Zipped Cluster             | 128 MiB                      |
+| Max Unzipped Cluster                   | 1280 MiB                     |
 | Max Unzipped Page                      | 1 MiB                        |
 
 ## Glossary
