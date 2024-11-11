@@ -1091,7 +1091,7 @@ TEST(RNTupleMerger, DifferentCompatibleRepresentations)
 
    {
       auto &fieldFooDbl = clonedModel->GetMutableField("foo");
-      fieldFooDbl.SetColumnRepresentatives({{ EColumnType::kReal32 }});
+      fieldFooDbl.SetColumnRepresentatives({{EColumnType::kReal32}});
       auto ntuple = RNTupleWriter::Recreate(std::move(clonedModel), "ntuple", fileGuard2.GetPath());
       auto e = ntuple->CreateEntry();
       auto pFoo = e->GetPtr<double>("foo");
@@ -1115,7 +1115,7 @@ TEST(RNTupleMerger, DifferentCompatibleRepresentations)
       }
 
       auto sourcePtrs2 = sourcePtrs;
-      
+
       // Now Merge the inputs. Do both with and without compression change
       RNTupleMerger merger;
       {
@@ -1123,12 +1123,71 @@ TEST(RNTupleMerger, DifferentCompatibleRepresentations)
          auto opts = RNTupleMergeOptions();
          opts.fCompressionSettings = 0;
          auto res = merger.Merge(sourcePtrs, *destination, opts);
-         EXPECT_TRUE(bool(res));
+         // TODO(gparolini): we want to support this in the future
+         EXPECT_FALSE(bool(res));
+         if (res.GetError())
+            EXPECT_THAT(res.GetError()->GetReport(), testing::HasSubstr("different column type"));
+         // EXPECT_TRUE(bool(res));
       }
       {
          auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuard4.GetPath(), RNTupleWriteOptions());
          auto res = merger.Merge(sourcePtrs, *destination);
-         EXPECT_TRUE(bool(res));
+         // TODO(gparolini): we want to support this in the future
+         EXPECT_FALSE(bool(res));
+         if (res.GetError())
+            EXPECT_THAT(res.GetError()->GetReport(), testing::HasSubstr("different column type"));
+         // EXPECT_TRUE(bool(res));
+      }
+   }
+}
+
+TEST(RNTupleMerger, MultipleRepresentations)
+{
+   // verify that we properly handle ntuples with multiple column representations
+   FileRaii fileGuard1("test_ntuple_merge_multirep_in_1.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto fldPx = RFieldBase::Create("px", "float").Unwrap();
+      fldPx->SetColumnRepresentatives({{EColumnType::kReal32}, {EColumnType::kReal16}});
+      model->AddField(std::move(fldPx));
+      auto ptrPx = model->GetDefaultEntry().GetPtr<float>("px");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath());
+      *ptrPx = 1.0;
+      writer->Fill();
+      writer->CommitCluster();
+      ROOT::Experimental::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
+         const_cast<RFieldBase &>(writer->GetModel().GetConstField("px")), 1);
+      *ptrPx = 2.0;
+      writer->Fill();
+   }
+
+   // Now merge the inputs
+   FileRaii fileGuard2("test_ntuple_merge_multirep_out.root");
+   {
+      // Gather the input sources
+      std::vector<std::unique_ptr<RPageSource>> sources;
+      sources.push_back(RPageSource::Create("ntuple", fileGuard1.GetPath()));
+      sources.push_back(RPageSource::Create("ntuple", fileGuard1.GetPath()));
+      std::vector<RPageSource *> sourcePtrs;
+      for (const auto &s : sources) {
+         sourcePtrs.push_back(s.get());
+      }
+
+      auto sourcePtrs2 = sourcePtrs;
+
+      RNTupleMerger merger;
+      {
+         auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuard2.GetPath(), RNTupleWriteOptions());
+         auto opts = RNTupleMergeOptions();
+         opts.fCompressionSettings = 0;
+         auto res = merger.Merge(sourcePtrs, *destination, opts);
+         // TODO(gparolini): we want to support this in the future
+         // XXX: this currently fails because of a mismatch in the number of columns of dst vs src.
+         // Is this correct? Anyway the situation will likely change once we properly support different representation
+         // indices...
+         EXPECT_FALSE(bool(res));
+         // EXPECT_TRUE(bool(res));
       }
    }
 }

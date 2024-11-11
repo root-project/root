@@ -162,6 +162,7 @@ public:
       RValueRange(std::pair<double, double> range) : fMin(range.first), fMax(range.second) {}
 
       bool operator==(RValueRange other) const { return fMin == other.fMin && fMax == other.fMax; }
+      bool operator!=(RValueRange other) const { return !(*this == other); }
    };
 
 private:
