@@ -1714,7 +1714,7 @@ class TGeoPainter extends ObjectPainter {
    ensureBloom(on) {
       if (on === undefined) {
          if (this.ctrl.highlight_bloom === 0)
-             this.ctrl.highlight_bloom = this._webgl && ((typeof navigator === 'undefined') || !/android/i.test(navigator.userAgent));
+             this.ctrl.highlight_bloom = this._webgl && !browser.android;
 
          on = this.ctrl.highlight_bloom && this.ctrl.getMaterialCfg()?.emissive;
       }
@@ -2755,7 +2755,7 @@ class TGeoPainter extends ObjectPainter {
 
          this._webgl = (r.jsroot_render3d === constants.Render3D.WebGL);
 
-         if (isFunc(r.setPixelRatio) && !isNodeJs())
+         if (isFunc(r.setPixelRatio) && !isNodeJs() && !browser.android)
             r.setPixelRatio(window.devicePixelRatio);
          r.setSize(w, h, !this._fit_main_area);
          r.localClippingEnabled = true;
