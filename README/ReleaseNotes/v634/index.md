@@ -107,8 +107,7 @@ The following interfaces are deprecated and will be removed in future releases:
   (scaled integer representation).
 * Link RNTuple self-description to the common ROOT streamer infrastructure. As a result, `TFile::MakeProject()`
   properly creates header files for classes used in RNTuple data.
-* First version of the new `RNTupleProcessor` class. The `RNTupleProcessor` supports iteration of joined RNTuple
-  data sets (à la friends and chains).
+* First version of the new `RNTupleProcessor` class. The `RNTupleProcessor` will support iteration of composed RNTuple data sets (comparable to and improving upon TTree friends and chains). This release supports chained (vertically composed) RNTuples. Other types of concatenations will be added in subsequent releases.
 * Support for cluster staging in the `RNTupleParallelWriter`. Cluster staging enables users to enforce a certain
   logical cluster ordering in the presence of parallel cluster writing.
 * Support for Direct I/O for writing. This gives access to the peak performance of modern NVMe drives.
