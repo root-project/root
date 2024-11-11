@@ -80,6 +80,7 @@ protected:
    // clang-format on
    class RFieldContext {
       friend class RNTupleProcessor;
+      friend class RNTupleSingleProcessor;
       friend class RNTupleChainProcessor;
       friend class RNTupleJoinProcessor;
 
@@ -224,6 +225,9 @@ public:
    RIterator begin() { return RIterator(*this, 0); }
    RIterator end() { return RIterator(*this, kInvalidNTupleIndex); }
 
+   static std::unique_ptr<RNTupleProcessor> Create(const RNTupleOpenSpec &ntuple);
+   static std::unique_ptr<RNTupleProcessor> Create(const RNTupleOpenSpec &ntuple, RNTupleModel &model);
+
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Create a new RNTuple processor chain for vertical concatenation of RNTuples.
    ///
@@ -254,6 +258,30 @@ public:
    static std::unique_ptr<RNTupleProcessor> CreateJoin(const std::vector<RNTupleOpenSpec> &ntuples,
                                                        const std::vector<std::string> &joinFields,
                                                        std::vector<std::unique_ptr<RNTupleModel>> models = {});
+};
+
+// clang-format off
+/**
+\class ROOT::Experimental::RNTupleSingleProcessor
+\ingroup NTuple
+\brief Processor specializiation for processing a single RNTuple.
+*/
+// clang-format on
+class RNTupleSingleProcessor : public RNTupleProcessor {
+   friend class RNTupleProcessor;
+
+private:
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Constructs a new RNTupleProcessor for processing a single RNTuple.
+   ///
+   /// \param[in] ntuple The source specification (name and storage location) for the RNTuple to process.
+   /// \param[in] model The model that specifies which fields should be read by the processor.
+   RNTupleSingleProcessor(const RNTupleOpenSpec &ntuple, RNTupleModel &model);
+
+   NTupleSize_t Advance() final;
+
+public:
+   void LoadEntry() { fEntry->Read(fLocalEntryNumber); }
 };
 
 // clang-format off

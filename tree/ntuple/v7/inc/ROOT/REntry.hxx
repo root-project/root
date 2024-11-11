@@ -34,6 +34,7 @@ namespace ROOT {
 namespace Experimental {
 
 class RNTupleProcessor;
+class RNTupleSingleProcessor;
 class RNTupleChainProcessor;
 class RNTupleJoinProcessor;
 
@@ -52,6 +53,7 @@ class REntry {
    friend class RNTupleReader;
    friend class RNTupleFillContext;
    friend class RNTupleProcessor;
+   friend class RNTupleSingleProcessor;
    friend class RNTupleChainProcessor;
    friend class RNTupleJoinProcessor;
 
