@@ -43,6 +43,7 @@ The following people have contributed to this new version:
  Andrea Maria Ola Mejicanos, Berea College,\
  Alaettin Serhan Mete, Argonne,\
  Thomas Madlener, DESY,\
+ Vedant Mehra, GSOC, \
  Lorenzo Moneta, CERN/EP-SFT,\
  Alja Mrak Tadel, UCSD/CMS,\
  Axel Naumann, CERN/EP-SFT,\
@@ -154,6 +155,24 @@ They should be replaced with the suitable alternatives interfaces:
     - `RooAbsArg::dependentOverlaps()`: use `observableOverlaps()`
     - `RooAbsArg::checkDependents()`: use `checkObservables()`
     - `RooAbsArg::recursiveCheckDependents()`: use `recursiveCheckObservables()`
+
+## TMVA
+### SOFIE
+The support for new ONNX operators has been included in the SOFIE ONNX parser and in RModel in order to generate inference code for new types of models.
+The full list of currently supported operators is available [here](https://github.com/root-project/root/blob/master/tmva/sofie/README.md#supported-onnx-operators)
+
+The list of operators added for this release is the following:
+   - Constant and ConstantOfShape
+   - If
+   - Range
+   - ReduceSum
+   - Split
+   - Tile
+   - TopK
+
+In addition support in RModel has been added to generate the code with dynamic input shape parameter, such as the batch size. These input shape parameters can be specified at run time when evaluating the model.
+Since not all ONNX operators in SOFIE support yet dynamic input parameters, it is possible to initialize a parsed dynamic model with fixed values. For this, a new member function, `RModel::Initialize(const std::map<std::string,size_t> & inputParams, bool verbose = false)` has been added.
+The RModel class has been extended to support sub-graph (needed for operator `If`), dynamic tensors and constant tensors (for example those defined by the operator `Constant`).
 
 ## Graphics Backends
 
@@ -279,7 +298,7 @@ More than 160 items were addressed for this release. The full list is:
 * [[#16236](https://github.com/root-project/root/issues/16236)] - [ntuple] Improve field token usage for parallel writing
 * [[#16219](https://github.com/root-project/root/issues/16219)] - Module map on the new XCode version for macos15-beta
 * [[#16190](https://github.com/root-project/root/issues/16190)] - TFileMerger behaviour when the directory structure contains repeated names
-* [[#16184](https://github.com/root-project/root/issues/16184)] - Serialisation (and therefore I/O) issues with TF1 and TFitResultPtr 
+* [[#16184](https://github.com/root-project/root/issues/16184)] - Serialisation (and therefore I/O) issues with TF1 and TFitResultPtr
 * [[#16167](https://github.com/root-project/root/issues/16167)] - TGeomPainter Web not behaving the same way as TGeomPainter ROOT
 * [[#16149](https://github.com/root-project/root/issues/16149)] - CMake and xrootd builtin
 * [[#16135](https://github.com/root-project/root/issues/16135)] - [ntuple] Cannot create RFieldBase for signed char
@@ -303,13 +322,13 @@ More than 160 items were addressed for this release. The full list is:
 * [[#15756](https://github.com/root-project/root/issues/15756)] - [RF][HS3] ATLAS ttbar workspaces roundtrip
 * [[#15740](https://github.com/root-project/root/issues/15740)] - `THStack` does not automatically shows negative bins
 * [[#15738](https://github.com/root-project/root/issues/15738)] - Segmentation violation during build on ix86 (32 bit intel)
-* [[#15736](https://github.com/root-project/root/issues/15736)] - [df] ProgressBar reporting on number of files is now broken 
+* [[#15736](https://github.com/root-project/root/issues/15736)] - [df] ProgressBar reporting on number of files is now broken
 * [[#15727](https://github.com/root-project/root/issues/15727)] - Windows CMake project cannot find_library() after integrating with ROOT.
 * [[#15703](https://github.com/root-project/root/issues/15703)] - Leaking memory though strings in PyROOT
 * [[#15686](https://github.com/root-project/root/issues/15686)] - JITted code changes the execution order of computation graph nodes
 * [[#15666](https://github.com/root-project/root/issues/15666)] - [ntuple][doc] document RNTuple Anchor format
 * [[#15661](https://github.com/root-project/root/issues/15661)] - [ntuple] Cannot properly read late model extension (meta)data
-* [[#15643](https://github.com/root-project/root/issues/15643)] - TGFileContainer crashes in pyroot 
+* [[#15643](https://github.com/root-project/root/issues/15643)] - TGFileContainer crashes in pyroot
 * [[#15617](https://github.com/root-project/root/issues/15617)] - `RDF::Describe` returns an incorrect file count
 * [[#15590](https://github.com/root-project/root/issues/15590)] - Infinite recursion in TFile::Open
 * [[#15537](https://github.com/root-project/root/issues/15537)] - [cling] Crash when non-void function does not return a value
@@ -354,7 +373,7 @@ More than 160 items were addressed for this release. The full list is:
 * [[#14055](https://github.com/root-project/root/issues/14055)] - Failing build with `-Dasan=ON` and memory leak in minimal build
 * [[#13729](https://github.com/root-project/root/issues/13729)] - [math] Contour method has some problems with Minuit2
 * [[#13677](https://github.com/root-project/root/issues/13677)] - [Cling] Potential unloading issue which breaks distributed execution
-* [[#13511](https://github.com/root-project/root/issues/13511)] - TMapFile can't work 
+* [[#13511](https://github.com/root-project/root/issues/13511)] - TMapFile can't work
 * [[#13498](https://github.com/root-project/root/issues/13498)] - Assertion failure in TMVA `can't dereference value-initialized vector iterator`
 * [[#13481](https://github.com/root-project/root/issues/13481)] - Update doc to express deprecation of genreflex and usage of rootcling as a replacement
 * [[#13432](https://github.com/root-project/root/issues/13432)] - TCling::AutoLoad may not work if a pcm linked to the library is not preloaded
