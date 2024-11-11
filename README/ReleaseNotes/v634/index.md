@@ -96,6 +96,25 @@ The following interfaces are deprecated and will be removed in future releases:
 
 ## I/O Libraries
 
+## RNTuple Libraries
+
+* The first version of the `RNTuple` on-disk binary format is finalized. Future versions of ROOT will be able to read back
+  RNTuple data written as of this release. Please note that this version breaks compatibility with experimental RNTuple
+  data written with releases up to v6.34. Please also note that the RNTuple API is not yet moving out of
+  `ROOT::Experimental`.
+* Support for low-precision on-disk floating point representation. This can be enabled through
+  `RField<float|double>::SetTruncated()` (truncated mantissa) and `RField<float|double>::SetQuantized()`
+  (scaled integer representation).
+* Link RNTuple self-description to the common ROOT streamer infrastructure. As a result, `TFile::MakeProject()`
+  properly creates header files for classes used in RNTuple data.
+* First version of the new `RNTupleProcessor` class. The `RNTupleProcessor` will support iteration of composed RNTuple data sets (comparable to and improving upon TTree friends and chains). This release supports chained (vertically composed) RNTuples. Other types of concatenations will be added in subsequent releases.
+* Support for cluster staging in the `RNTupleParallelWriter`. Cluster staging enables users to enforce a certain
+  logical cluster ordering in the presence of parallel cluster writing.
+* Support for Direct I/O for writing. This gives access to the peak performance of modern NVMe drives.
+* Support for a "streamer field" that can wrap classic ROOT I/O serialized data for RNTuple in cases where native
+  RNTuple support is not possible (e.g., recursive data structures). Use of the streamer field can be enforced
+  through the LinkDef option `rntupleStreamerMode(true)`.  This features is similar to the unsplit/level-0-split branch in `TTree`.
+* Many additional bug fixes and improvements.
 
 ## TTree Libraries
 
@@ -279,7 +298,7 @@ More than 160 items were addressed for this release. The full list is:
 * [[#16236](https://github.com/root-project/root/issues/16236)] - [ntuple] Improve field token usage for parallel writing
 * [[#16219](https://github.com/root-project/root/issues/16219)] - Module map on the new XCode version for macos15-beta
 * [[#16190](https://github.com/root-project/root/issues/16190)] - TFileMerger behaviour when the directory structure contains repeated names
-* [[#16184](https://github.com/root-project/root/issues/16184)] - Serialisation (and therefore I/O) issues with TF1 and TFitResultPtr 
+* [[#16184](https://github.com/root-project/root/issues/16184)] - Serialisation (and therefore I/O) issues with TF1 and TFitResultPtr
 * [[#16167](https://github.com/root-project/root/issues/16167)] - TGeomPainter Web not behaving the same way as TGeomPainter ROOT
 * [[#16149](https://github.com/root-project/root/issues/16149)] - CMake and xrootd builtin
 * [[#16135](https://github.com/root-project/root/issues/16135)] - [ntuple] Cannot create RFieldBase for signed char
@@ -303,13 +322,13 @@ More than 160 items were addressed for this release. The full list is:
 * [[#15756](https://github.com/root-project/root/issues/15756)] - [RF][HS3] ATLAS ttbar workspaces roundtrip
 * [[#15740](https://github.com/root-project/root/issues/15740)] - `THStack` does not automatically shows negative bins
 * [[#15738](https://github.com/root-project/root/issues/15738)] - Segmentation violation during build on ix86 (32 bit intel)
-* [[#15736](https://github.com/root-project/root/issues/15736)] - [df] ProgressBar reporting on number of files is now broken 
+* [[#15736](https://github.com/root-project/root/issues/15736)] - [df] ProgressBar reporting on number of files is now broken
 * [[#15727](https://github.com/root-project/root/issues/15727)] - Windows CMake project cannot find_library() after integrating with ROOT.
 * [[#15703](https://github.com/root-project/root/issues/15703)] - Leaking memory though strings in PyROOT
 * [[#15686](https://github.com/root-project/root/issues/15686)] - JITted code changes the execution order of computation graph nodes
 * [[#15666](https://github.com/root-project/root/issues/15666)] - [ntuple][doc] document RNTuple Anchor format
 * [[#15661](https://github.com/root-project/root/issues/15661)] - [ntuple] Cannot properly read late model extension (meta)data
-* [[#15643](https://github.com/root-project/root/issues/15643)] - TGFileContainer crashes in pyroot 
+* [[#15643](https://github.com/root-project/root/issues/15643)] - TGFileContainer crashes in pyroot
 * [[#15617](https://github.com/root-project/root/issues/15617)] - `RDF::Describe` returns an incorrect file count
 * [[#15590](https://github.com/root-project/root/issues/15590)] - Infinite recursion in TFile::Open
 * [[#15537](https://github.com/root-project/root/issues/15537)] - [cling] Crash when non-void function does not return a value
@@ -354,7 +373,7 @@ More than 160 items were addressed for this release. The full list is:
 * [[#14055](https://github.com/root-project/root/issues/14055)] - Failing build with `-Dasan=ON` and memory leak in minimal build
 * [[#13729](https://github.com/root-project/root/issues/13729)] - [math] Contour method has some problems with Minuit2
 * [[#13677](https://github.com/root-project/root/issues/13677)] - [Cling] Potential unloading issue which breaks distributed execution
-* [[#13511](https://github.com/root-project/root/issues/13511)] - TMapFile can't work 
+* [[#13511](https://github.com/root-project/root/issues/13511)] - TMapFile can't work
 * [[#13498](https://github.com/root-project/root/issues/13498)] - Assertion failure in TMVA `can't dereference value-initialized vector iterator`
 * [[#13481](https://github.com/root-project/root/issues/13481)] - Update doc to express deprecation of genreflex and usage of rootcling as a replacement
 * [[#13432](https://github.com/root-project/root/issues/13432)] - TCling::AutoLoad may not work if a pcm linked to the library is not preloaded
