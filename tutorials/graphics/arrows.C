@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphics
 /// \notebook -js
-/// Draw arrows.
+/// \preview Draw arrows.
 ///
 /// \macro_image (tcanvas_js)
 /// \macro_code
