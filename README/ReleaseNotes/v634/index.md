@@ -43,6 +43,7 @@ The following people have contributed to this new version:
  Andrea Maria Ola Mejicanos, Berea College,\
  Alaettin Serhan Mete, Argonne,\
  Thomas Madlener, DESY,\
+ Vedant Mehra, GSOC, \
  Lorenzo Moneta, CERN/EP-SFT,\
  Alja Mrak Tadel, UCSD/CMS,\
  Axel Naumann, CERN/EP-SFT,\
@@ -173,6 +174,24 @@ They should be replaced with the suitable alternatives interfaces:
     - `RooAbsArg::dependentOverlaps()`: use `observableOverlaps()`
     - `RooAbsArg::checkDependents()`: use `checkObservables()`
     - `RooAbsArg::recursiveCheckDependents()`: use `recursiveCheckObservables()`
+
+## TMVA
+### SOFIE
+The support for new ONNX operators has been included in the SOFIE ONNX parser and in RModel in order to generate inference code for new types of models.
+The full list of currently supported operators is available [here](https://github.com/root-project/root/blob/master/tmva/sofie/README.md#supported-onnx-operators)
+
+The list of operators added for this release is the following:
+   - Constant and ConstantOfShape
+   - If
+   - Range
+   - ReduceSum
+   - Split
+   - Tile
+   - TopK
+
+In addition support in RModel has been added to generate the code with dynamic input shape parameter, such as the batch size. These input shape parameters can be specified at run time when evaluating the model.
+Since not all ONNX operators in SOFIE support yet dynamic input parameters, it is possible to initialize a parsed dynamic model with fixed values. For this, a new member function, `RModel::Initialize(const std::map<std::string,size_t> & inputParams, bool verbose = false)` has been added.
+The RModel class has been extended to support sub-graph (needed for operator `If`), dynamic tensors and constant tensors (for example those defined by the operator `Constant`).
 
 ## Graphics Backends
 
