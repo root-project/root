@@ -136,10 +136,12 @@ The [TUnfold package](https://www.desy.de/~sschmitt/tunfold.html) inside ROOT is
 
 ## Math Libraries
 
-### Usage of `std::span<const double>` in Minuit 2 interfaces
+### Minuit2 
 
-To avoid forcing the user to do manual memory allocations via `std::vector`, the interfaces of Minuit 2 function adapter classes like `ROOT::Minuit2::FCNBase` or `ROOT::Minuit2::FCNGradientBase` were changed to accept `std::span<const double>` arguments instead of `std::vector<double> const&`.
+* **Usage of `std::span<const double>`in the interface**: To avoid forcing the user to do manual memory allocations via `std::vector`, the interfaces of Minuit 2 function adapter classes like `ROOT::Minuit2::FCNBase` or `ROOT::Minuit2::FCNGradientBase` were changed to accept `std::span<const double>` arguments instead of `std::vector<double> const&`.
 This should have minimal impact on users, since one should usual use Minuit 2 via the `ROOT::Math::Minimizer` interface, which is unchanged.
+
+* **Initial error/covariance matrix values for Hessian matrix**: Initial error/covariance matrix values can be passed for initializating the Hessian matrix to be used in minimization algorithms by attaching the covariance matrix to the `ROOT::Minuit2::MnUserParameterState` instance used for seeding via the method `AddCovariance(const MnUserCovariance &);`.
 
 ## RooFit Libraries
 
@@ -150,6 +152,8 @@ This should have minimal impact on users, since one should usual use Minuit 2 vi
 * The function `RooFit::bindFunction()` now supports arbitrary many input variables when binding a Python function.
 
 * The `ExportOnly()` attribute of the `RooStats::HistFactory::Measurement` object is now switched on by default, and the associated getter and setter functions are deprecated. They will be removed in ROOT 6.36. If you want to fit the model as well instead of just exporting it to a RooWorkspace, please do so with your own code as demonstrated in the `hf001` tutorial.
+
+* Initial error values can be used for initializating the Hessian matrix to be used in Minuit2 minimization algorithms by setting the `RooMinimizer::Config` option `setInitialCovariance` to `true`. These values correspond to the diagonal entries of the initial covariance matrix.
 
 ### Deprecations
 
