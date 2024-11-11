@@ -728,6 +728,19 @@ inline double bernsteinIntegral(double xlo, double xhi, double xmin, double xmax
    return norm * (xmax - xmin);
 }
 
+inline double multiVarGaussian(int n, const double *x, const double *mu, const double *covI)
+{
+   double result = 0.0;
+
+   // Compute the bilinear form (x-mu)^T * covI * (x-mu)
+   for (int i = 0; i < n; ++i) {
+      for (int j = 0; j < n; ++j) {
+         result += (x[i] - mu[i]) * covI[i * n + j] * (x[j] - mu[j]);
+      }
+   }
+   return std::exp(-0.5 * result);
+}
+
 } // namespace MathFuncs
 
 } // namespace Detail
