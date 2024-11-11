@@ -1,6 +1,6 @@
 # JSROOT changelog
 
-## Changes in dev
+## Changes in 7.8.0
 1. Let use custom time zone for time display, support '&utc' and '&cet' in URL parameters
 2. Support gStyle.fLegendFillStyle
 3. Let change histogram min/max values via context menu
@@ -15,20 +15,20 @@
 12. Support 'pads' draw options for `TMultiGraph`, support context menu for it
 13. Let drop objects on sub-pads
 14. Properly loads ES6 modules for web canvas
-15. Improve performance of `TH3`/`RH3` drawing by using THREE.InstancedMesh
+15. Improve performance of `TH3`/`RH3` drawing by using `THREE.InstancedMesh`
 16. Implement batch mode with '&batch' URL parameter to create SVG/PNG images with default GUI
 17. Adjust node.js implementation to produce identical output with normal browser
 18. Create necessary infrastructure for testing with 'puppeteer'
-19. Support inject of ES6 modules via '&inject=path.mjs'
+19. Support injection of ES6 modules via '&inject=path.mjs'
 20. Using importmap for 'jsroot' in all major HTML files and in demos
 21. Implement `settings.CutAxisLabels` flag to remove labels which may exceed graphical range
-22. Let disable usage of TAxis custom labels via context menu
-23. Let configure default draw options via context menu, they can be preserved in the local storage
+22. Let disable usage of `TAxis` custom labels via context menu
+23. Let configure default draw options via context menu, preserved in the local storage
 24. Let save canvas as JSON file from context menu, object as JSON from inspector
 25. Upgrade three.js r162 -> r168, use r162 only in node.js because of "gl" module
 26. Create unified svg2pdf/jspdf ES6 modules, integrate in jsroot builds
-27. Let create multipage PDF document - in TWebCanvas batch mode
-28. Let add external links via `#url[link]{label}` syntax - including jsPDF support
+27. Let create multi-page PDF document - in `TWebCanvas` batch mode
+28. Let add in latex external links via `#url[link]{label}` syntax - including jsPDF support
 29. Support `TAttMarker` style with line width bigger than 1
 30. Provide link to ROOT class documentation from context menus
 31. Implement axis labels and title rotations on lego plots
@@ -37,8 +37,9 @@
 34. Fix - properly save zoomed ranges in drawingJSON()
 35. Fix - properly redraw `TMultiGraph`
 36. Fix - show empty bin in `TProfile2D` if it has entries #316
-37. Fix - unzooming on log scale was extending range forevever
+37. Fix - unzooming on log scale was extending range forever
 38. Fix - display empty hist bin if fSumw2 not zero
+39. Fix - geometry display on android devices
 
 
 ## Changes in 7.7.5
