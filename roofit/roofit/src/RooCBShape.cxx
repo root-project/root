@@ -14,11 +14,75 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-/** \class RooCBShape
-    \ingroup Roofit
+/** 
+ * \class RooCBShape
+ * \ingroup Roofit
+ * 
+ * \brief The RooCBShape class represents the Crystal Ball distribution.
+ * 
+ * This class implements the Crystal Ball distribution, which is widely used in high-energy physics for fitting 
+ * asymmetric distributions. The Crystal Ball function consists of a Gaussian core and a power-law tail on the left side.
+ * 
+ * \section CrystalBallDistribution Crystal Ball Distribution
+ * 
+ * The general equation for the Crystal Ball distribution is:
+ * 
+ * \f[
+ * f(x; \alpha, \beta, \mu, \sigma) = 
+ * \begin{cases} 
+ * \exp\left(-\frac{(x-\mu)^2}{2\sigma^2}\right) & \text{for} \quad \frac{x-\mu}{\sigma} > -\alpha, \\
+ * A \left(B - \frac{x-\mu}{\sigma}\right)^{-n} & \text{for} \quad \frac{x-\mu}{\sigma} \leq -\alpha 
+ * \end{cases} 
+ * \f]
+ * 
+ * where:
+ * 
+ * \f[
+ * \begin{aligned}
+ * n &= \frac{\alpha^2}{\beta}, \\
+ * A &= \left(\frac{n}{|\alpha|}\right)^n \exp\left(-\frac{\alpha^2}{2}\right), \\
+ * B &= \frac{n}{|\alpha|} - |\alpha| 
+ * \end{aligned}
+ * \f]
+ * 
+ * In this equation:
+ * - \f$\mu\f$: The mean or peak of the distribution.
+ * - \f$\sigma\f$: The standard deviation, which determines the width of the Gaussian core.
+ * - \f$\alpha\f$: Controls the transition between the Gaussian core and the power-law tail.
+ * - \f$\beta\f$: Controls the slope of the power-law tail.
+ * 
+ * The parameters and their effects on the distribution's shape are discussed in detail below.
+ * 
+ * \subsection ParameterDescriptions Parameter Descriptions
+ * 
+ * \paragraph{Sigma (\f$\sigma\f$)}
+ * The parameter \f$\sigma\f$ determines the scale of the Crystal Ball distribution:
+ * 
+ * \image html combined_sigmas.png "Effect of varying sigma on the Crystal Ball distribution."
+ * 
+ * As \f$\sigma\f$ increases, the distribution becomes wider and more spread out, indicating greater variability. 
+ * Conversely, as \f$\sigma\f$ decreases, the distribution becomes narrower and more concentrated around the mean \f$\mu\f$.
+ * 
+ * \paragraph{Alpha (\f$\alpha\f$)}
+ * The parameter \f$\alpha\f$ controls the transition point between the Gaussian core and the power-law tail:
+ * 
+ * \image html combined_alphas.png "Effect of varying alpha on the Crystal Ball distribution."
+ * 
+ * Higher values of \f$\alpha\f$ result in a steeper left tail, while lower values of \f$\alpha\f$ create a smoother transition.
+ * This parameter significantly influences the steepness and shape of the left tail of the distribution.
+ * 
+ * \paragraph{Beta (\f$\beta\f$)}
+ * The parameter \f$\beta\f$ determines the power of the tail:
+ * 
+ * \image html combined_betas.png "Effect of varying beta on the Crystal Ball distribution."
+ * 
+ * Higher values of \f$\beta\f$ lead to a fatter tail, indicating a higher probability of extreme values. Lower values 
+ * of \f$\beta\f$ result in a thinner tail. This parameter affects the thickness and extent of the tail on the left 
+ * side of the distribution.
+ * 
+ * \note The figures included in this documentation visually represent the effects of varying \f$\sigma\f$, \f$\alpha\f$, and \f$\beta\f$ on the shape of the Crystal Ball distribution.
+ */
 
-PDF implementing the Crystal Ball line shape.
-**/
 
 #include "RooCBShape.h"
 
