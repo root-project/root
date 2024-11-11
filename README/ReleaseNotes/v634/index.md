@@ -113,7 +113,7 @@ The following interfaces are deprecated and will be removed in future releases:
 * Support for Direct I/O for writing. This gives access to the peak performance of modern NVMe drives.
 * Support for a "streamer field" that can wrap classic ROOT I/O serialized data for RNTuple in cases where native
   RNTuple support is not possible (e.g., recursive data structures). Use of the streamer field can be enforced
-  through the LinkDef option `rntupleStreamerMode(true)`.
+  through the LinkDef option `rntupleStreamerMode(true)`.  This features is similar to the unsplit/level-0-split branch in `TTree`.
 * Many additional bug fixes and improvements.
 
 ## TTree Libraries
