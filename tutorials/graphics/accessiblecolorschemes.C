@@ -8,7 +8,7 @@
 /// and available on [GitHub](https://github.com/mpetroff/accessible-color-cycles)
 /// under the MIT License, meet these criteria.
 ///
-/// \macro_image Hello !!
+/// \macro_image
 /// \macro_code
 ///
 /// \author Olivier Couet

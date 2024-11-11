@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphics
 /// \notebook
-/// Plot the Amplitude of a Hydrogen Atom.
+/// \preview Plot the Amplitude of a Hydrogen Atom.
 ///
 /// Visualize the Amplitude of a Hydrogen Atom in the n = 2, l = 0, m = 0 state.
 /// Demonstrates how TH2F can be used in Quantum Mechanics.
