@@ -43,7 +43,7 @@ hint1.SetLineColor(ROOT.kRed)
 hint1.Scale(scale)
 hint1.Draw("same")
 
-axis = ROOT.TGaxis(ROOT.gPad.GetUxmax(),ROOT.gPad.GetUymin(),
+axis = ROOT.TGaxis(ROOT.gPad.GetUxmin(),ROOT.gPad.GetUymin(),
       ROOT.gPad.GetUxmax(), ROOT.gPad.GetUymax(),0,rightmax,510,"+L")
 axis.SetLineColor(ROOT.kRed)
 axis.SetLabelColor(ROOT.kRed)
