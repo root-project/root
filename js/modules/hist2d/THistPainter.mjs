@@ -2423,8 +2423,8 @@ class THistPainter extends ObjectPainter {
       }
 
       //  find min/max values in selected range
-
-      this.maxbin = this.minbin = this.minposbin = null;
+      let is_first = true;
+      this.minposbin = 0;
 
       for (i = res.i1; i < res.i2; ++i) {
          for (j = res.j1; j < res.j2; ++j) {
@@ -2434,19 +2434,23 @@ class THistPainter extends ObjectPainter {
                binarea = (res.grx[i+1]-res.grx[i])*(res.gry[j]-res.gry[j+1]);
                if (binarea <= 0) continue;
                res.max = Math.max(res.max, binz);
-               if ((binz > 0) && ((binz<res.min) || (res.min === 0))) res.min = binz;
+               if ((binz > 0) && ((binz < res.min) || (res.min === 0))) res.min = binz;
                binz = binz/binarea;
             }
-            if (this.maxbin === null)
+            if (is_first) {
                this.maxbin = this.minbin = binz;
-             else {
+               is_first = false;
+            } else {
                this.maxbin = Math.max(this.maxbin, binz);
                this.minbin = Math.min(this.minbin, binz);
             }
-            if (binz > 0)
-               if ((this.minposbin === null) || (binz < this.minposbin)) this.minposbin = binz;
+            if ((binz > 0) && ((this.minposbin === 0) || (binz < this.minposbin)))
+               this.minposbin = binz;
          }
       }
+
+      if (is_first)
+         this.maxbin = this.minbin = 0;
 
       // force recalculation of z levels
       this.fContour = null;

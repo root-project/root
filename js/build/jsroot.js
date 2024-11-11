@@ -1,4 +1,4 @@
-// https://root.cern/js/ v7.7.99
+// https://root.cern/js/ v7.8.0
 (function (global, factory) {
 typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
 typeof define === 'function' && define.amd ? define(['exports'], factory) :
@@ -8,11 +8,11 @@ typeof define === 'function' && define.amd ? define(['exports'], factory) :
 var _documentCurrentScript = typeof document !== 'undefined' ? document.currentScript : null;
 /** @summary version id
   * @desc For the JSROOT release the string in format 'major.minor.patch' like '7.0.0' */
-const version_id = 'dev',
+const version_id = '7.8.0',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '8/11/2024',
+version_date = '11/11/2024',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -109,6 +109,7 @@ if ((typeof document !== 'undefined') && (typeof window !== 'undefined') && (typ
       browser.chromeVersion = (browser.isChrome || browser.isChromeHeadless) ? parseInt(navigator.userAgent.match(/Chrom(?:e|ium)\/([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)/)[1]) : 0;
       browser.isWin = navigator.userAgent.indexOf('Windows') >= 0;
    }
+   browser.android = /android/i.test(navigator.userAgent);
    browser.touches = ('ontouchend' in document); // identify if touch events are supported
    browser.screenWidth = window.screen?.width ?? 1200;
 }
@@ -76146,8 +76147,8 @@ class THistPainter extends ObjectPainter {
       }
 
       //  find min/max values in selected range
-
-      this.maxbin = this.minbin = this.minposbin = null;
+      let is_first = true;
+      this.minposbin = 0;
 
       for (i = res.i1; i < res.i2; ++i) {
          for (j = res.j1; j < res.j2; ++j) {
@@ -76157,19 +76158,23 @@ class THistPainter extends ObjectPainter {
                binarea = (res.grx[i+1]-res.grx[i])*(res.gry[j]-res.gry[j+1]);
                if (binarea <= 0) continue;
                res.max = Math.max(res.max, binz);
-               if ((binz > 0) && ((binz<res.min) || (res.min === 0))) res.min = binz;
+               if ((binz > 0) && ((binz < res.min) || (res.min === 0))) res.min = binz;
                binz = binz/binarea;
             }
-            if (this.maxbin === null)
+            if (is_first) {
                this.maxbin = this.minbin = binz;
-             else {
+               is_first = false;
+            } else {
                this.maxbin = Math.max(this.maxbin, binz);
                this.minbin = Math.min(this.minbin, binz);
             }
-            if (binz > 0)
-               if ((this.minposbin === null) || (binz < this.minposbin)) this.minposbin = binz;
+            if ((binz > 0) && ((this.minposbin === 0) || (binz < this.minposbin)))
+               this.minposbin = binz;
          }
       }
+
+      if (is_first)
+         this.maxbin = this.minbin = 0;
 
       // force recalculation of z levels
       this.fContour = null;
@@ -78708,7 +78713,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
       if (this.maxbin > 0.7) factor = 0.7/this.maxbin;
 
       const nlevels = Math.round(handle.max - handle.min),
-          cntr = this.createContour((nlevels > 50) ? 50 : nlevels, this.minposbin, this.maxbin, this.minposbin);
+            cntr = this.createContour((nlevels > 50) ? 50 : nlevels, this.minposbin, this.maxbin, this.minposbin);
 
       // now start build
       for (i = handle.i1; i < handle.i2; ++i) {
@@ -78907,11 +78912,12 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
          if (this.options.Circular > 11) {
             for (let i = 0; i < nbins - 1; ++i) {
                for (let j = i+1; j < nbins; ++j) {
-               const cont = hist.getBinContent(i+1, j+1);
-               if (cont > 0) {
-                  max_value = Math.max(max_value, cont);
-                  if (!min_value || (cont < min_value)) min_value = cont;
-               }
+                  const cont = hist.getBinContent(i+1, j+1);
+                  if (cont > 0) {
+                     max_value = Math.max(max_value, cont);
+                     if (!min_value || (cont < min_value))
+                        min_value = cont;
+                  }
                }
             }
          }
@@ -79118,9 +79124,8 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
             histo = this.getHisto();
 
       return [this.getObjectHint(),
-              p.swapXY
-                 ? 'y = ' + funcs.axisAsText('y', histo.fYaxis.GetBinLowEdge(p.bin+1))
-                 : 'x = ' + funcs.axisAsText('x', histo.fXaxis.GetBinLowEdge(p.bin+1)),
+              p.swapXY ? 'y = ' + funcs.axisAsText('y', histo.fYaxis.GetBinLowEdge(p.bin+1))
+                       : 'x = ' + funcs.axisAsText('x', histo.fXaxis.GetBinLowEdge(p.bin+1)),
               'm-25%  = ' + floatToString(p.fBoxDown, gStyle.fStatFormat),
               'median = ' + floatToString(p.fMedian, gStyle.fStatFormat),
               'm+25%  = ' + floatToString(p.fBoxUp, gStyle.fStatFormat)];
@@ -79376,13 +79381,16 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
          return null;
       }
 
-      const res = { name: histo.fName, title: histo.fTitle,
-                  x: pnt.x, y: pnt.y,
-                  color1: this.lineatt?.color ?? 'green',
-                  color2: this.fillatt?.getFillColorAlt('blue') ?? 'blue',
-                  lines: this.getBinTooltips(i, j), exact: true, menu: true };
+      const res = {
+         name: histo.fName, title: histo.fTitle,
+         x: pnt.x, y: pnt.y,
+         color1: this.lineatt?.color ?? 'green',
+         color2: this.fillatt?.getFillColorAlt('blue') ?? 'blue',
+         lines: this.getBinTooltips(i, j), exact: true, menu: true
+      };
 
-      if (this.options.Color) res.color2 = this.getHistPalette().getColor(colindx);
+      if (this.options.Color)
+         res.color2 = this.getHistPalette().getColor(colindx);
 
       if (pnt.disabled && !this.is_projection) {
          ttrect.remove();
@@ -93377,7 +93385,7 @@ class TGeoPainter extends ObjectPainter {
    ensureBloom(on) {
       if (on === undefined) {
          if (this.ctrl.highlight_bloom === 0)
-             this.ctrl.highlight_bloom = this._webgl && ((typeof navigator === 'undefined') || !/android/i.test(navigator.userAgent));
+             this.ctrl.highlight_bloom = this._webgl && !browser.android;
 
          on = this.ctrl.highlight_bloom && this.ctrl.getMaterialCfg()?.emissive;
       }
@@ -94418,7 +94426,7 @@ class TGeoPainter extends ObjectPainter {
 
          this._webgl = (r.jsroot_render3d === constants$1.Render3D.WebGL);
 
-         if (isFunc(r.setPixelRatio) && !isNodeJs())
+         if (isFunc(r.setPixelRatio) && !isNodeJs() && !browser.android)
             r.setPixelRatio(window.devicePixelRatio);
          r.setSize(w, h, !this._fit_main_area);
          r.localClippingEnabled = true;
@@ -163046,7 +163054,8 @@ class RHistPainter extends RObjectPainter {
       }
 
       //  find min/max values in selected range
-      this.maxbin = this.minbin = this.minposbin = null;
+      let is_first = true;
+      this.minposbin = 0;
 
       for (i = res.i1; i < res.i2; i += res.stepi) {
          for (j = res.j1; j < res.j2; j += res.stepj) {
@@ -163060,16 +163069,20 @@ class RHistPainter extends RObjectPainter {
                if ((binz > 0) && ((binz < res.min) || (res.min === 0))) res.min = binz;
                binz = binz/binarea;
             }
-            if (this.maxbin === null)
+            if (is_first) {
                this.maxbin = this.minbin = binz;
-            else {
+               is_first = false;
+            } else {
                this.maxbin = Math.max(this.maxbin, binz);
                this.minbin = Math.min(this.minbin, binz);
             }
-            if (binz > 0)
-               if ((this.minposbin === null) || (binz < this.minposbin)) this.minposbin = binz;
+            if ((binz > 0) && ((this.minposbin === 0) || (binz < this.minposbin)))
+               this.minposbin = binz;
          }
       }
+
+      if (is_first)
+         this.maxbin = this.minbin = 0;
 
       res.palette = pmain.getHistPalette();
 

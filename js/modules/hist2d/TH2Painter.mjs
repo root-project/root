@@ -2488,7 +2488,7 @@ class TH2Painter extends THistPainter {
       if (this.maxbin > 0.7) factor = 0.7/this.maxbin;
 
       const nlevels = Math.round(handle.max - handle.min),
-          cntr = this.createContour((nlevels > 50) ? 50 : nlevels, this.minposbin, this.maxbin, this.minposbin);
+            cntr = this.createContour((nlevels > 50) ? 50 : nlevels, this.minposbin, this.maxbin, this.minposbin);
 
       // now start build
       for (i = handle.i1; i < handle.i2; ++i) {
@@ -2687,11 +2687,12 @@ class TH2Painter extends THistPainter {
          if (this.options.Circular > 11) {
             for (let i = 0; i < nbins - 1; ++i) {
                for (let j = i+1; j < nbins; ++j) {
-               const cont = hist.getBinContent(i+1, j+1);
-               if (cont > 0) {
-                  max_value = Math.max(max_value, cont);
-                  if (!min_value || (cont < min_value)) min_value = cont;
-               }
+                  const cont = hist.getBinContent(i+1, j+1);
+                  if (cont > 0) {
+                     max_value = Math.max(max_value, cont);
+                     if (!min_value || (cont < min_value))
+                        min_value = cont;
+                  }
                }
             }
          }
@@ -2898,9 +2899,8 @@ class TH2Painter extends THistPainter {
             histo = this.getHisto();
 
       return [this.getObjectHint(),
-              p.swapXY
-                 ? 'y = ' + funcs.axisAsText('y', histo.fYaxis.GetBinLowEdge(p.bin+1))
-                 : 'x = ' + funcs.axisAsText('x', histo.fXaxis.GetBinLowEdge(p.bin+1)),
+              p.swapXY ? 'y = ' + funcs.axisAsText('y', histo.fYaxis.GetBinLowEdge(p.bin+1))
+                       : 'x = ' + funcs.axisAsText('x', histo.fXaxis.GetBinLowEdge(p.bin+1)),
               'm-25%  = ' + floatToString(p.fBoxDown, gStyle.fStatFormat),
               'median = ' + floatToString(p.fMedian, gStyle.fStatFormat),
               'm+25%  = ' + floatToString(p.fBoxUp, gStyle.fStatFormat)];
@@ -3156,13 +3156,16 @@ class TH2Painter extends THistPainter {
          return null;
       }
 
-      const res = { name: histo.fName, title: histo.fTitle,
-                  x: pnt.x, y: pnt.y,
-                  color1: this.lineatt?.color ?? 'green',
-                  color2: this.fillatt?.getFillColorAlt('blue') ?? 'blue',
-                  lines: this.getBinTooltips(i, j), exact: true, menu: true };
+      const res = {
+         name: histo.fName, title: histo.fTitle,
+         x: pnt.x, y: pnt.y,
+         color1: this.lineatt?.color ?? 'green',
+         color2: this.fillatt?.getFillColorAlt('blue') ?? 'blue',
+         lines: this.getBinTooltips(i, j), exact: true, menu: true
+      };
 
-      if (this.options.Color) res.color2 = this.getHistPalette().getColor(colindx);
+      if (this.options.Color)
+         res.color2 = this.getHistPalette().getColor(colindx);
 
       if (pnt.disabled && !this.is_projection) {
          ttrect.remove();

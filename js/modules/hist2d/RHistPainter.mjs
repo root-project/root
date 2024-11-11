@@ -814,7 +814,8 @@ class RHistPainter extends RObjectPainter {
       }
 
       //  find min/max values in selected range
-      this.maxbin = this.minbin = this.minposbin = null;
+      let is_first = true;
+      this.minposbin = 0;
 
       for (i = res.i1; i < res.i2; i += res.stepi) {
          for (j = res.j1; j < res.j2; j += res.stepj) {
@@ -828,16 +829,20 @@ class RHistPainter extends RObjectPainter {
                if ((binz > 0) && ((binz < res.min) || (res.min === 0))) res.min = binz;
                binz = binz/binarea;
             }
-            if (this.maxbin === null)
+            if (is_first) {
                this.maxbin = this.minbin = binz;
-            else {
+               is_first = false;
+            } else {
                this.maxbin = Math.max(this.maxbin, binz);
                this.minbin = Math.min(this.minbin, binz);
             }
-            if (binz > 0)
-               if ((this.minposbin === null) || (binz < this.minposbin)) this.minposbin = binz;
+            if ((binz > 0) && ((this.minposbin === 0) || (binz < this.minposbin)))
+               this.minposbin = binz;
          }
       }
+
+      if (is_first)
+         this.maxbin = this.minbin = 0;
 
       res.palette = pmain.getHistPalette();
 
