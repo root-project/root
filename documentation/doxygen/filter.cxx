@@ -87,6 +87,7 @@ using std::string, std::ios_base, std::unique_ptr;
 void   FilterClass();
 void   FilterTutorial();
 void   GetClassName();
+void   CreateTutorialImage(bool);
 int    NumberOfImages();
 string ImagesList(string&);
 void   ExecuteMacro();
@@ -114,6 +115,7 @@ string gOutputName;    // File containing a macro std::out
 bool   gHeader;        // True if the input file is a header
 bool   gSource;        // True if the input file is a source file
 bool   gPython;        // True if the input file is a Python script.
+bool   gImageGenerated;// True if the PNG image has been generated.
 bool   gImageSource;   // True the source of the current macro should be shown
 int    gInMacro;       // >0 if parsing a macro in a class documentation.
 int    gImageID;       // Image Identifier.
@@ -131,6 +133,7 @@ int main(int argc, char *argv[])
    gSource        = false;
    gPython        = false;
    gImageSource   = false;
+   gImageGenerated= false;
    gInMacro       = 0;
    gImageID       = 0;
    gMacroID       = 0;
@@ -300,6 +303,34 @@ void FilterClass()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Create PNG tutorial image
+
+void CreateTutorialImage(bool nobatch) {
+   if (gPython) {
+      if (nobatch) {
+         ExecuteCommand(StringFormat("%s makeimage.py %s %s %s 0 1 0",
+                                    gPythonExec.c_str(),
+                                    gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
+      } else {
+         ExecuteCommand(StringFormat("%s makeimage.py %s %s %s 0 1 1",
+                                    gPythonExec.c_str(),
+                                    gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
+      }
+   } else {
+      if (nobatch) {
+         ExecuteCommand(
+            StringFormat("root -l -q \"makeimage.C+O(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false)\"",
+                         gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
+      } else {
+         ExecuteCommand(
+            StringFormat("root -l -b -q \"makeimage.C+O(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false)\"",
+                         gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
+      }
+   }
+   gImageGenerated = true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Filter ROOT tutorials for Doxygen.
 
 void FilterTutorial()
@@ -324,6 +355,7 @@ void FilterTutorial()
    } else {
       i2 = gFileName.rfind('C');
    }
+   gImageGenerated = false;
    gMacroName  = gFileName.substr(i1,i2-i1+1);
    gImageName  = StringFormat("%s.%s", gMacroName.c_str(), gImageType.c_str()); // Image name
    gOutputName = StringFormat("%s.out", gMacroName.c_str()); // output name
@@ -399,27 +431,7 @@ void FilterTutorial()
                gFileName.c_str(), IN.c_str(), gOutDir.c_str(), gPython));
             ReplaceAll(gLineString, "macro_image", StringFormat("htmlinclude %s.html",IN.c_str()));
          } else {
-            if (gPython) {
-               if (nobatch) {
-                  ExecuteCommand(StringFormat("%s makeimage.py %s %s %s 0 1 0",
-                                             gPythonExec.c_str(),
-                                             gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
-               } else {
-                  ExecuteCommand(StringFormat("%s makeimage.py %s %s %s 0 1 1",
-                                             gPythonExec.c_str(),
-                                             gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
-               }
-            } else {
-               if (nobatch) {
-                  ExecuteCommand(
-                     StringFormat("root -l -q \"makeimage.C+O(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false)\"",
-                                  gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
-               } else {
-                  ExecuteCommand(
-                     StringFormat("root -l -b -q \"makeimage.C+O(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false)\"",
-                                  gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
-               }
-            }
+            if (!gImageGenerated) CreateTutorialImage(nobatch);
             ReplaceAll(gLineString, "\\macro_image", ImagesList(gImageName));
             remove(gOutputName.c_str());
          }
@@ -448,8 +460,9 @@ void FilterTutorial()
 
       // \preview found
       if (gLineString.find("\\preview") != string::npos) {
+         if (!gImageGenerated) CreateTutorialImage(false);
          string name = gMacroName;
-         int width = 120;
+         int width = 150;
          ReplaceAll(name,".C","_8C.html");
          ReplaceAll(gLineString, "\\preview", StringFormat("\\htmlonly <a href=\"%s\"><img src=\"pict1_%s.png\" valign=\"middle\" width=\"%d\"/></a>\\endhtmlonly",name.c_str(),gMacroName.c_str(),width));
       }
