@@ -1,10 +1,10 @@
 /** @summary version id
   * @desc For the JSROOT release the string in format 'major.minor.patch' like '7.0.0' */
-const version_id = 'dev',
+const version_id = '7.8.0',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '8/11/2024',
+version_date = '11/11/2024',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -101,6 +101,7 @@ if ((typeof document !== 'undefined') && (typeof window !== 'undefined') && (typ
       browser.chromeVersion = (browser.isChrome || browser.isChromeHeadless) ? parseInt(navigator.userAgent.match(/Chrom(?:e|ium)\/([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)/)[1]) : 0;
       browser.isWin = navigator.userAgent.indexOf('Windows') >= 0;
    }
+   browser.android = /android/i.test(navigator.userAgent);
    browser.touches = ('ontouchend' in document); // identify if touch events are supported
    browser.screenWidth = window.screen?.width ?? 1200;
 }
