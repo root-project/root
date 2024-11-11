@@ -283,17 +283,13 @@ CompareDescriptorStructure(const RNTupleDescriptor &dst, const RNTupleDescriptor
    std::vector<std::string> errors;
    RDescriptorsComparison res;
 
-   struct RCommonField {
-      const RFieldDescriptor *fDst;
-      const RFieldDescriptor *fSrc;
-   };
    std::vector<RCommonField> commonFields;
 
    for (const auto &dstField : dst.GetTopLevelFields()) {
       const auto srcFieldId = src.FindFieldId(dstField.GetFieldName());
       if (srcFieldId != kInvalidDescriptorId) {
          const auto &srcField = src.GetFieldDescriptor(srcFieldId);
-         commonFields.push_back({&dstField, &srcField});
+         commonFields.push_back({&srcField, &dstField});
       } else {
          res.fExtraDstFields.emplace_back(&dstField);
       }
@@ -428,7 +424,7 @@ CompareDescriptorStructure(const RNTupleDescriptor &dst, const RNTupleDescriptor
       return R__FAIL(errMsg);
 
    res.fCommonFields.reserve(commonFields.size());
-   for (const auto &[dstField, srcField] : commonFields) {
+   for (const auto &[srcField, dstField] : commonFields) {
       res.fCommonFields.emplace_back(srcField, dstField);
    }
 

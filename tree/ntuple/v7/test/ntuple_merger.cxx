@@ -1094,9 +1094,9 @@ TEST(RNTupleMerger, DifferentCompatibleRepresentations)
       fieldFooDbl.SetColumnRepresentatives({{EColumnType::kReal32}});
       auto ntuple = RNTupleWriter::Recreate(std::move(clonedModel), "ntuple", fileGuard2.GetPath());
       auto e = ntuple->CreateEntry();
-      auto pFoo = e->GetPtr<double>("foo");
+      auto pFoo2 = e->GetPtr<double>("foo");
       for (size_t i = 0; i < 10; ++i) {
-         *pFoo = i * 567;
+         *pFoo2 = i * 567;
          ntuple->Fill();
       }
    }
@@ -1125,8 +1125,9 @@ TEST(RNTupleMerger, DifferentCompatibleRepresentations)
          auto res = merger.Merge(sourcePtrs, *destination, opts);
          // TODO(gparolini): we want to support this in the future
          EXPECT_FALSE(bool(res));
-         if (res.GetError())
+         if (res.GetError()) {
             EXPECT_THAT(res.GetError()->GetReport(), testing::HasSubstr("different column type"));
+         }
          // EXPECT_TRUE(bool(res));
       }
       {
@@ -1134,8 +1135,9 @@ TEST(RNTupleMerger, DifferentCompatibleRepresentations)
          auto res = merger.Merge(sourcePtrs, *destination);
          // TODO(gparolini): we want to support this in the future
          EXPECT_FALSE(bool(res));
-         if (res.GetError())
+         if (res.GetError()) {
             EXPECT_THAT(res.GetError()->GetReport(), testing::HasSubstr("different column type"));
+         }
          // EXPECT_TRUE(bool(res));
       }
    }
