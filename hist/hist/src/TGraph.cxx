@@ -108,7 +108,6 @@ End_Macro
 TGraph::TGraph() : TAttFill(0, 1000)
 {
    fNpoints = -1;  //will be reset to 0 in CtorAllocate
-   if (!CtorAllocate()) return;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -121,78 +120,6 @@ TGraph::TGraph(Int_t n)
    fNpoints = n;
    if (!CtorAllocate()) return;
    FillZero(0, fNpoints);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Graph normal constructor with ints.
-
-TGraph::TGraph(Int_t n, const Int_t *x, const Int_t *y)
-   : TNamed("Graph", "Graph"), TAttFill(0, 1000)
-{
-   if (!x || !y) {
-      fNpoints = 0;
-   } else {
-      fNpoints = n;
-   }
-   if (!CtorAllocate()) return;
-   for (Int_t i = 0; i < n; i++) {
-      fX[i] = (Double_t)x[i];
-      fY[i] = (Double_t)y[i];
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Graph normal constructor with floats.
-
-TGraph::TGraph(Int_t n, const Float_t *x, const Float_t *y)
-   : TNamed("Graph", "Graph"), TAttFill(0, 1000)
-{
-   if (!x || !y) {
-      fNpoints = 0;
-   } else {
-      fNpoints = n;
-   }
-   if (!CtorAllocate()) return;
-   for (Int_t i = 0; i < n; i++) {
-      fX[i] = x[i];
-      fY[i] = y[i];
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Default X-Points constructor. The points along the x-axis get the default
-/// values `start`, `start+step`, `start+2*step`, `start+3*step`, etc ...
-
-TGraph::TGraph(Int_t n, const Double_t *y, Double_t start, Double_t step)
-   : TNamed("Graph", "Graph"), TAttFill(0, 1000)
-{
-   if (!y) {
-      fNpoints = 0;
-   } else {
-      fNpoints = n;
-   }
-   if (!CtorAllocate()) return;
-   for (Int_t i = 0; i < n; i++) {
-      fX[i] = start+i*step;
-      fY[i] = y[i];
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Graph normal constructor with doubles.
-
-TGraph::TGraph(Int_t n, const Double_t *x, const Double_t *y)
-   : TNamed("Graph", "Graph"), TAttFill(0, 1000)
-{
-   if (!x || !y) {
-      fNpoints = 0;
-   } else {
-      fNpoints = n;
-   }
-   if (!CtorAllocate()) return;
-   n = fNpoints * sizeof(Double_t);
-   memcpy(fX, x, n);
-   memcpy(fY, y, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

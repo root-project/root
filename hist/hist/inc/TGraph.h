@@ -82,9 +82,33 @@ public:
 
    TGraph();
    TGraph(Int_t n);
-   TGraph(Int_t n, const Int_t *x, const Int_t *y);
-   TGraph(Int_t n, const Float_t *x, const Float_t *y);
-   TGraph(Int_t n, const Double_t *x, const Double_t *y);
+
+   /// Graph normal constructor.
+   template<class Tx, class Ty>
+   TGraph(Int_t n, const Tx *x, const Ty *y) : TNamed("Graph", "Graph"), TAttFill(0, 1000)
+   {
+      fNpoints = !x || !y ? 0 : n;
+      if (!CtorAllocate())
+         return;
+      for (Int_t i = 0; i < n; i++) {
+         fX[i] = static_cast<Double_t>(x[i]);
+         fY[i] = static_cast<Double_t>(y[i]);
+      }
+   }
+
+   /// Default X-Points constructor. The points along the x-axis get the default
+   /// values `start`, `start+step`, `start+2*step`, `start+3*step`, etc ...
+   template<class Ty>
+   TGraph(Int_t n, const Ty *y, Double_t start, Double_t step) : TNamed("Graph", "Graph"), TAttFill(0, 1000)
+   {
+      fNpoints = !y ? 0 : n;
+      if (!CtorAllocate()) return;
+      for (Int_t i = 0; i < n; i++) {
+         fX[i] = start+i*step;
+         fY[i] = static_cast<Double_t>(y[i]);
+      }
+   }
+
    TGraph(Int_t n, const Double_t *y, Double_t start=0., Double_t step=1.);
    TGraph(const TGraph &gr);
    TGraph& operator=(const TGraph&);

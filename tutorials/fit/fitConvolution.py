@@ -11,15 +11,21 @@
 
 import ROOT
 
+n = 1000000
+
 # Construction of histogram to fit.
 h_ExpGauss = ROOT.TH1F("h_ExpGauss", "Exponential convoluted by Gaussian", 100, 0.0, 5.0)
-for i in range(1000000):
+for i in range(n):
     # Gives a alpha of -0.3 in the exp.
     x = ROOT.gRandom.Exp(1.0 / 0.3)
     x += ROOT.gRandom.Gaus(0.0, 3.0)
     # Probability density function of the addition of two variables is the
     # convolution of two density functions.
     h_ExpGauss.Fill(x)
+
+rng = ROOT.gRandom.vec # to be decided
+
+h.Fill(rng.Exp(n, 1.0 / 0.3) + rng.Gaus(n, 0.0, 3.0))
 
 f_conv = ROOT.TF1Convolution("expo", "gaus", -1, 6, True)
 f_conv.SetRange(-1.0, 6.0)
