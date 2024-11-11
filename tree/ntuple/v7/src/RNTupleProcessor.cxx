@@ -33,6 +33,21 @@ void EnsureUniqueNTupleNames(const std::vector<RNTupleOpenSpec> &ntuples)
 } // anonymous namespace
 
 std::unique_ptr<ROOT::Experimental::RNTupleProcessor>
+ROOT::Experimental::RNTupleProcessor::Create(const RNTupleOpenSpec &ntuple)
+{
+   auto pageSource = Internal::RPageSource::Create(ntuple.fNTupleName, ntuple.fStorage);
+   pageSource->Attach();
+   auto model = pageSource->GetSharedDescriptorGuard()->CreateModel();
+   return RNTupleProcessor::Create(ntuple, *model);
+}
+
+std::unique_ptr<ROOT::Experimental::RNTupleProcessor>
+ROOT::Experimental::RNTupleProcessor::Create(const RNTupleOpenSpec &ntuple, RNTupleModel &model)
+{
+   return std::unique_ptr<RNTupleSingleProcessor>(new RNTupleSingleProcessor(ntuple, model));
+}
+
+std::unique_ptr<ROOT::Experimental::RNTupleProcessor>
 ROOT::Experimental::RNTupleProcessor::CreateChain(const std::vector<RNTupleOpenSpec> &ntuples,
                                                   std::unique_ptr<RNTupleModel> model)
 {
@@ -101,6 +116,54 @@ void ROOT::Experimental::RNTupleProcessor::ConnectField(RFieldContext &fieldCont
    auto valuePtr = entry.GetPtr<void>(fieldContext.fToken);
    auto value = fieldContext.fConcreteField->BindValue(valuePtr);
    entry.UpdateValue(fieldContext.fToken, value);
+}
+
+//------------------------------------------------------------------------------
+
+ROOT::Experimental::RNTupleSingleProcessor::RNTupleSingleProcessor(const RNTupleOpenSpec &ntuple, RNTupleModel &model)
+   : RNTupleProcessor({ntuple})
+{
+   fPageSource = Internal::RPageSource::Create(ntuple.fNTupleName, ntuple.fStorage);
+   fPageSource->Attach();
+
+   if (fPageSource->GetNEntries() == 0) {
+      throw RException(R__FAIL("specified RNTuple \"" + ntuple.fNTupleName + "\" at path \"" + ntuple.fStorage +
+                               "\" does not contain any entries"));
+   }
+
+   model.Freeze();
+   fEntry = model.CreateEntry();
+
+   for (const auto &value : *fEntry) {
+      auto &field = value.GetField();
+      auto token = fEntry->GetToken(field.GetFieldName());
+
+      // If the model has a default entry, use the value pointers from the entry in the entry managed by the
+      // processor. This way, the pointers returned by RNTupleModel::MakeField can be used in the processor loop to
+      // access the corresponding field values.
+      if (!model.IsBare()) {
+         auto valuePtr = model.GetDefaultEntry().GetPtr<void>(token);
+         fEntry->BindValue(token, valuePtr);
+      }
+
+      auto fieldContext = RFieldContext(field.Clone(field.GetFieldName()), token);
+      ConnectField(fieldContext, *fPageSource, *fEntry);
+      fFieldContexts.try_emplace(field.GetFieldName(), std::move(fieldContext));
+   }
+}
+
+ROOT::Experimental::NTupleSize_t ROOT::Experimental::RNTupleSingleProcessor::Advance()
+{
+   ++fNEntriesProcessed;
+
+   if (fNEntriesProcessed >= fPageSource->GetNEntries()) {
+      return kInvalidNTupleIndex;
+   }
+
+   ++fLocalEntryNumber;
+   LoadEntry();
+
+   return fNEntriesProcessed;
 }
 
 //------------------------------------------------------------------------------
