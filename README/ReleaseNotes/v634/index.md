@@ -98,7 +98,7 @@ The following interfaces are deprecated and will be removed in future releases:
 
 ## RNTuple Libraries
 
-* The first version of the on-disk binary format is finalized. Future versions of ROOT will be able to read back
+* The first version of the `RNTuple` on-disk binary format is finalized. Future versions of ROOT will be able to read back
   RNTuple data written as of this release. Please note that this version breaks compatibility with experimental RNTuple
   data written with releases up to v6.34. Please also note that the RNTuple API is not yet moving out of
   `ROOT::Experimental`.
