@@ -187,7 +187,11 @@ double RooMultiVarGaussian::evaluate() const
   return exp(-0.5*alpha) ;
 }
 
-
+void RooMultiVarGaussian::translate(RooFit::Detail::CodeSquashContext &ctx) const
+{
+   std::span<const double> covISpan{_covI.GetMatrixArray(), static_cast<size_t>(_covI.GetNoElements())};
+   ctx.addResult(this, ctx.buildCall("RooFit::Detail::MathFuncs::multiVarGaussian", _x.size(), _x, _mu, covISpan));
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -309,6 +313,19 @@ double RooMultiVarGaussian::analyticalIntegral(Int_t code, const char* /*rangeNa
   return ret ;
 }
 
+
+std::string RooMultiVarGaussian::buildCallToAnalyticIntegral(Int_t code, const char *rangeName,
+                                                             RooFit::Detail::CodeSquashContext & /*ctx*/) const
+{
+   if (code != -1) {
+      std::stringstream errorMsg;
+      errorMsg << "Partial integrals over RooMultiVarGaussian are not supported.";
+      coutE(Minimization) << errorMsg.str() << std::endl;
+      throw std::runtime_error(errorMsg.str().c_str());
+   }
+
+   return std::to_string(analyticalIntegral(code, rangeName));
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
