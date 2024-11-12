@@ -1193,3 +1193,88 @@ TEST(RNTupleMerger, MultipleRepresentations)
       }
    }
 }
+
+TEST(RNTupleMerger, Double32)
+{
+   // Verify that we can merge two RNTuples with fields that have different, but compatible, column representations.
+   FileRaii fileGuard1("test_ntuple_merge_d32_in_1.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto pFoo = model->MakeField<Double32_t>("foo", 0);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath());
+      for (size_t i = 0; i < 10; ++i) {
+         *pFoo = i * 123;
+         ntuple->Fill();
+      }
+   }
+
+   FileRaii fileGuard2("test_ntuple_merge_d32_in_2.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto pFoo = model->MakeField<double>("foo", 0);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
+      for (size_t i = 0; i < 10; ++i) {
+         *pFoo = i * 321;
+         ntuple->Fill();
+      }
+   }
+
+   // Now merge the inputs
+   FileRaii fileGuard3("test_ntuple_merge_d32_out1.root");
+   FileRaii fileGuard4("test_ntuple_merge_d32_out2.root");
+   {
+      // Gather the input sources
+      std::vector<std::unique_ptr<RPageSource>> sources;
+      sources.push_back(RPageSource::Create("ntuple", fileGuard1.GetPath()));
+      sources.push_back(RPageSource::Create("ntuple", fileGuard2.GetPath()));
+      std::vector<RPageSource *> sourcePtrs;
+      for (const auto &s : sources) {
+         sourcePtrs.push_back(s.get());
+      }
+
+      auto sourcePtrs2 = sourcePtrs;
+
+      // Now Merge the inputs. Do both with and without compression change
+      RNTupleMerger merger;
+      {
+         auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuard3.GetPath(), RNTupleWriteOptions());
+         auto opts = RNTupleMergeOptions();
+         opts.fCompressionSettings = 0;
+         auto res = merger.Merge(sourcePtrs, *destination, opts);
+         EXPECT_TRUE(bool(res));
+      }
+      {
+         auto ntuple = RNTupleReader::Open("ntuple", fileGuard3.GetPath());
+         auto foo = ntuple->GetModel().GetDefaultEntry().GetPtr<Double32_t>("foo");
+
+         for (int i = 0; i < 10; ++i) {
+            ntuple->LoadEntry(i);
+            ASSERT_DOUBLE_EQ(*foo, i * 123);
+         }
+         for (int i = 10; i < 20; ++i) {
+            ntuple->LoadEntry(i);
+            ASSERT_DOUBLE_EQ(*foo, (i - 10) * 321);
+         }
+      }
+      {
+         auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuard4.GetPath(), RNTupleWriteOptions());
+         auto res = merger.Merge(sourcePtrs, *destination);
+         EXPECT_TRUE(bool(res));
+      }
+      {
+         auto ntuple = RNTupleReader::Open("ntuple", fileGuard4.GetPath());
+         auto foo = ntuple->GetModel().GetDefaultEntry().GetPtr<double>("foo");
+
+         for (int i = 0; i < 10; ++i) {
+            ntuple->LoadEntry(i);
+            ASSERT_DOUBLE_EQ(*foo, i * 123);
+         }
+         for (int i = 10; i < 20; ++i) {
+            ntuple->LoadEntry(i);
+            ASSERT_DOUBLE_EQ(*foo, (i - 10) * 321);
+         }
+      }
+   }
+}
