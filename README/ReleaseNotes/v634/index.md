@@ -199,6 +199,28 @@ The RModel class has been extended to support sub-graph (needed for operator `If
 
 ## Graphics Backends
 
+### Web-based TWebCanvas
+
+Support "haxis" draw option for histograms, allows superposition of several histograms drawn on the same pad with horizontal ty axis. Add `tutorials\webcanv\haxis.cxx` macro demonstrating new feature.
+
+Support "frame" draw option for several primitives like `TBox`, `TLine`, `TLatex`. This enforce clipping of such objects by
+frame border. Provide demo in `tutorials\webcanv\inframe.cxx` macro
+
+Provide batch mode for image production with headless browser. In such mode data for several canvases collected together (in batch) and then N images are produced with single invocation of the web browser (chrome or firefox). For instance after `TWebCanvas::BatchImageMode(100)` next 99 calls to `TCanvas::SaveAs(filename)` method will not lead to image files creation. But with following call all 100 images will be produced together. Alternatively one can use `TCanvas::SaveAll()` static method which allows to create images for several canvases at once.
+
+Support multi-page PDF file creation with web-based canvas using `svg2pdf.js` library. Both with native and web-baed graphics one can do now:
+```c++
+c1->SaveAs("file.pdf[")
+c2->SaveAs("file.pdf+")
+c3->SaveAs("file.pdf+")
+c4->SaveAs("file.pdf]")
+```
+Or same can be achieved with:
+```c++
+TCanvas::SaveAll({c1, c2, c3, c4}, "file.pdf");
+```
+
+
 ## 2D Graphics Libraries
 
 
@@ -215,6 +237,16 @@ The RModel class has been extended to support sub-graph (needed for operator `If
 
 
 ## GUI Libraries
+
+
+## Web-based GUIs
+
+Adjust `rootssh` script to be usable on MacOS. Fixing problem to start more than one web widget on remote node.
+
+Fix `rootbrowse` script to be able properly use it with all kinds of web widgets. Provide `--web=<type>` argument as for
+regular root executable.
+
+Update openui5 library to version 1.128.0. Requires use of modern web-browsers, skipping IE support.
 
 
 ## Montecarlo Libraries
@@ -265,6 +297,50 @@ std::cout << std::any_cast<std::string>(result) << std::endl;
 
 
 ## JavaScript ROOT
+
+Upgrade to JSROOT 7.8.0 with following new features and fixes:
+
+1. Let use custom time zone for time display, support '&utc' and '&cet' in URL parameters
+2. Support gStyle.fLegendFillStyle
+3. Let change histogram min/max values via context menu
+4. Support Z-scale zooming with `TScatter`
+5. Implement "haxis" draw option for histogram to draw only axes for hbar
+6. Implement "axisg" and "haxisg" to draw axes with grids
+7. Support `TH1` marker, text and line drawing superimposed with "haxis"
+8. Support `TBox`, `TLatex`, `TLine`, `TMarker` drawing on "frame", support drawing on swapped axes
+9. Implement `TProfile` and `TProfile2D` projections https://github.com/root-project/root/issues/15851
+10. Draw total histogram from `TEfficiency` when draw option starts with 'b'
+11. Let redraw `TEfficiency`, `THStack` and `TMultiGraph` with different draw options via hist context menu
+12. Support 'pads' draw options for `TMultiGraph`, support context menu for it
+13. Let drop objects on sub-pads
+14. Properly loads ES6 modules for web canvas
+15. Improve performance of `TH3`/`RH3` drawing by using `THREE.InstancedMesh`
+16. Implement batch mode with '&batch' URL parameter to create SVG/PNG images with default GUI
+17. Adjust node.js implementation to produce identical output with normal browser
+18. Create necessary infrastructure for testing with 'puppeteer'
+19. Support injection of ES6 modules via '&inject=path.mjs'
+20. Using importmap for 'jsroot' in all major HTML files and in demos
+21. Implement `settings.CutAxisLabels` flag to remove labels which may exceed graphical range
+22. Let disable usage of `TAxis` custom labels via context menu
+23. Let configure default draw options via context menu, preserved in the local storage
+24. Let save canvas as JSON file from context menu, object as JSON from inspector
+25. Upgrade three.js r162 -> r168, use r162 only in node.js because of "gl" module
+26. Create unified svg2pdf/jspdf ES6 modules, integrate in jsroot builds
+27. Let create multi-page PDF document - in `TWebCanvas` batch mode
+28. Let add in latex external links via `#url[link]{label}` syntax - including jsPDF support
+29. Support `TAttMarker` style with line width bigger than 1
+30. Provide link to ROOT class documentation from context menus
+31. Implement axis labels and title rotations on lego plots
+32. Internals - upgrade to eslint 9
+33. Internals - do not select pad (aka gPad) for objects drawing, always use assigned pad painter
+34. Fix - properly save zoomed ranges in drawingJSON()
+35. Fix - properly redraw `TMultiGraph`
+36. Fix - show empty bin in `TProfile2D` if it has entries #316
+37. Fix - unzooming on log scale was extending range forever
+38. Fix - display empty hist bin if fSumw2 not zero
+39. Fix - geometry display on android devices
+
+JSROOT is now used as default display in `jupyter`.
 
 
 ## Tutorials
