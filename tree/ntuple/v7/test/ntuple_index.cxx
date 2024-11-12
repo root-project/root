@@ -54,7 +54,7 @@ TEST(RNTupleIndex, DeferBuild)
       index->GetFirstEntryNumber<std::uint64_t>(0);
       FAIL() << "querying an unbuilt index should not be possible";
    } catch (const RException &err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("Index has not been built yet"));
+      EXPECT_THAT(err.what(), testing::HasSubstr("index has not been built yet"));
    }
 
    index->Build();
@@ -90,7 +90,7 @@ TEST(RNTupleIndex, InvalidTypes)
       EXPECT_THAT(
          err.what(),
          testing::HasSubstr(
-            "Cannot use field \"fldFloat\" with type \"float\" for indexing. Only integral types are allowed."));
+            "cannot use field \"fldFloat\" with type \"float\" for indexing: only integral types are allowed"));
    }
 
    try {
@@ -100,15 +100,15 @@ TEST(RNTupleIndex, InvalidTypes)
       EXPECT_THAT(
          err.what(),
          testing::HasSubstr(
-            "Cannot use field \"fldString\" with type \"std::string\" for indexing. Only integral types are allowed."));
+            "cannot use field \"fldString\" with type \"std::string\" for indexing: only integral types are allowed"));
    }
 
    try {
       RNTupleIndex::Create({"fldStruct"}, *pageSource);
       FAIL() << "non-integral-type field should not be allowed as index fields";
    } catch (const RException &err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("Cannot use field \"fldStruct\" with type \"CustomStruct\" for "
-                                                 "indexing. Only integral types are allowed."));
+      EXPECT_THAT(err.what(), testing::HasSubstr("cannot use field \"fldStruct\" with type \"CustomStruct\" for "
+                                                 "indexing: only integral types are allowed"));
    }
 }
 
@@ -210,14 +210,14 @@ TEST(RNTupleIndex, MultipleFields)
       index->GetAllEntryNumbers<std::int16_t, std::uint64_t, std::uint64_t>(0, 2, 3);
       FAIL() << "querying the index with more values than index values should not be possible";
    } catch (const RException &err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("Number of values must match number of indexed fields."));
+      EXPECT_THAT(err.what(), testing::HasSubstr("number of values must match number of indexed fields"));
    }
 
    try {
       index->GetAllEntryNumbers({0});
       FAIL() << "querying the index with fewer values than index values should not be possible";
    } catch (const RException &err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("Number of value pointers must match number of indexed fields."));
+      EXPECT_THAT(err.what(), testing::HasSubstr("number of value pointers must match number of indexed fields"));
    }
 }
 

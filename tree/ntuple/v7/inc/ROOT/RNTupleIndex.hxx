@@ -160,7 +160,7 @@ public:
    NTupleSize_t GetFirstEntryNumber(Ts... values) const
    {
       if (sizeof...(Ts) != fIndexFields.size())
-         throw RException(R__FAIL("Number of values must match number of indexed fields."));
+         throw RException(R__FAIL("number of values must match number of indexed fields"));
 
       std::vector<void *> valuePtrs;
       valuePtrs.reserve(sizeof...(Ts));
@@ -186,7 +186,7 @@ public:
    const std::vector<NTupleSize_t> *GetAllEntryNumbers(Ts... values) const
    {
       if (sizeof...(Ts) != fIndexFields.size())
-         throw RException(R__FAIL("Number of values must match number of indexed fields."));
+         throw RException(R__FAIL("number of values must match number of indexed fields"));
 
       std::vector<void *> valuePtrs;
       valuePtrs.reserve(sizeof...(Ts));
