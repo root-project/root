@@ -20,6 +20,7 @@
 #include "../../cppyy/CPyCppyy/src/ProxyWrappers.h"
 
 // ROOT
+#include "TInterpreter.h"
 #include "TROOT.h"
 #include "TSystem.h"
 #include "RConfigure.h"
@@ -165,6 +166,9 @@ extern "C" PyObject *PyInit_libROOTPythonizations()
 
    // Memory management
    gROOT->GetListOfCleanups()->Add(&GetRegulatorCleanup());
+
+   // Make sure the interpreter is initialized once gROOT has been initialized
+   TInterpreter::Instance();
 
    // signal policy: don't abort interpreter in interactive mode
    CallContext::SetGlobalSignalPolicy(!gROOT->IsBatch());
