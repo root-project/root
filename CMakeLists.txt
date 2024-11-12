@@ -99,7 +99,8 @@ function(relatedrepo_GetClosestMatch)
 
   set(${__FETCHURL_VARIABLE} ${__UPSTREAM_PREFIX}/${__REPO_NAME} PARENT_SCOPE)
 
-  if(NOT IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/.git)
+  # .git is usually a directory but can also be a file, for example in the case of clone created via `worktree`
+  if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/.git)
     set(${__FETCHREF_VARIABLE} v${ROOT_MAJOR_VERSION}-${ROOT_MINOR_VERSION}-${ROOT_PATCH_VERSION} PARENT_SCOPE)
     return()
   endif()
