@@ -305,13 +305,13 @@ static char *RealToStr(char *text, const RealInfo_t & ri)
    StrInt(p, TMath::Abs(ri.fIntNum), 0);
    p += strlen(p);
    if ((ri.fStyle == kRSFrac) || (ri.fStyle == kRSFracExpo)) {
-      strlcpy(p, ".", 256-strlen(p));
+      strlcpy(p, ".", 256-strlen(text));
       p++;
       StrInt(p, TMath::Abs(ri.fFracNum), ri.fFracDigits);
       p += strlen(p);
    }
    if ((ri.fStyle == kRSExpo) || (ri.fStyle == kRSFracExpo)) {
-      strlcpy(p, "e", 256-strlen(p));
+      strlcpy(p, "e", 256-strlen(text));
       p++;
       StrInt(p, ri.fExpoNum, 0);
       p += strlen(p);
