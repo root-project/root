@@ -2,9 +2,14 @@
 % 2024-11
 <a name="TopOfPage"></a>
 
+## Important note about this development release
+
+6.34 is a short term support cycle not meant to be used for data taking. It will be superseded by the 6.36 cycle, which is foreseen to start with 6.36.00 in the second quarter of 2025. Patch releases of the 6.36 cycle will be provided until June 30th 2025.
+
+
 ## Introduction
 
-ROOT version 6.34.00 is scheduled for release at the end of November 2024.
+The development ROOT version 6.34.00 is scheduled for release at the end of November 2024.
 
 For more information, see:
 
@@ -68,9 +73,6 @@ The following people have contributed to this new version:
  Wouter Verkerke, NIKHEF/ATLAS,\
  Stefan Wunsch\
 
-
-The release 6.34 is a short term support cycle release: it will be superseded by ROOT 6.36 in May 2025 and patches will be provided until July 2025. It is not intended to be used for data taking.
-
 ## Removal and Deprecation
 
 The following interfaces have been removed:
@@ -90,6 +92,7 @@ The following interfaces are deprecated and will be removed in future releases:
 
 ## Core Libraries
 
+* The Cling C++ interpreter now relies on LLVM version 18.
 * The `rootcling` invocation corresponding to a `genreflex` invocation can be obtained with the new `genreflex`
   command line argument `--print-rootcling-invocation`. This can be useful when migrating from genreflex to
   rootcling.
@@ -179,8 +182,7 @@ They should be replaced with the suitable alternatives interfaces:
     - `RooAbsArg::checkDependents()`: use `checkObservables()`
     - `RooAbsArg::recursiveCheckDependents()`: use `recursiveCheckObservables()`
 
-## TMVA
-### SOFIE
+## TMVA SOFIE
 The support for new ONNX operators has been included in the SOFIE ONNX parser and in RModel in order to generate inference code for new types of models.
 The full list of currently supported operators is available [here](https://github.com/root-project/root/blob/master/tmva/sofie/README.md#supported-onnx-operators)
 
@@ -220,24 +222,14 @@ Or same can be achieved with:
 TCanvas::SaveAll({c1, c2, c3, c4}, "file.pdf");
 ```
 
-
 ## 2D Graphics Libraries
 
 
 ## 3D Graphics Libraries
 
-
 ## Geometry Libraries
 
-
-## Database Libraries
-
-
-## Networking Libraries
-
-
-## GUI Libraries
-
+The geometry package is now optional and activated by default in the CMake configuration. To disable it, use the `-Dgeometry=OFF` CMake option.
 
 ## Web-based GUIs
 
@@ -248,14 +240,7 @@ regular root executable.
 
 Update openui5 library to version 1.128.0. Requires use of modern web-browsers, skipping IE support.
 
-
-## Montecarlo Libraries
-
-
-## PROOF Libraries
-
-
-## PyROOT
+## Python Interface
 
 ### Typesafe `TTree::SetBranchAddress()` for array inputs
 
@@ -292,10 +277,6 @@ std::any result;
 TPython::Exec("_anyresult = ROOT.std.make_any['std::string']('done')", &result);
 std::cout << std::any_cast<std::string>(result) << std::endl;
 ```
-
-## Language Bindings
-
-
 ## JavaScript ROOT
 
 Upgrade to JSROOT 7.8.0 with following new features and fixes:
