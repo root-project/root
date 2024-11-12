@@ -204,6 +204,9 @@ class ROOTFacade(types.ModuleType):
         # Prevent this method from being re-entered through the gROOT wrapper
         self.__dict__["gROOT"] = cppyy.gbl.ROOT.GetROOT()
 
+        # Make sure the interpreter is initialized once gROOT has been initialized
+        cppyy.gbl.TInterpreter.Instance()
+
         # Setup interactive usage from Python
         self.__dict__["app"] = PyROOTApplication(self.PyConfig, self._is_ipython)
         if not self.gROOT.IsBatch() and self.PyConfig.StartGUIThread:
