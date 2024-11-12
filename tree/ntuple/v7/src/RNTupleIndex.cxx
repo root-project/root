@@ -45,7 +45,8 @@ ROOT::Experimental::Internal::RNTupleIndex::RNTupleIndex(const std::vector<std::
    for (const auto &fieldName : fieldNames) {
       auto fieldId = desc->FindFieldId(fieldName);
       if (fieldId == kInvalidDescriptorId)
-         throw RException(R__FAIL("Could not find field \"" + std::string(fieldName) + "."));
+         throw RException(R__FAIL("could not find join field \"" + std::string(fieldName) + "\" in RNTuple \"" +
+                                  fPageSource->GetNTupleName() + "\""));
 
       const auto &fieldDesc = desc->GetFieldDescriptor(fieldId);
       auto field = fieldDesc.CreateField(desc.GetRef());
@@ -59,7 +60,7 @@ ROOT::Experimental::Internal::RNTupleIndex::RNTupleIndex(const std::vector<std::
 void ROOT::Experimental::Internal::RNTupleIndex::EnsureBuilt() const
 {
    if (!fIsBuilt)
-      throw RException(R__FAIL("Index has not been built yet"));
+      throw RException(R__FAIL("index has not been built yet"));
 }
 
 std::unique_ptr<ROOT::Experimental::Internal::RNTupleIndex>
@@ -88,8 +89,8 @@ void ROOT::Experimental::Internal::RNTupleIndex::Build()
 
    for (const auto &field : fIndexFields) {
       if (allowedTypes.find(field->GetTypeName()) == allowedTypes.end()) {
-         throw RException(R__FAIL("Cannot use field \"" + field->GetFieldName() + "\" with type \"" +
-                                  field->GetTypeName() + "\" for indexing. Only integral types are allowed."));
+         throw RException(R__FAIL("cannot use field \"" + field->GetFieldName() + "\" with type \"" +
+                                  field->GetTypeName() + "\" for indexing: only integral types are allowed"));
       }
       fieldValues.emplace_back(field->CreateValue());
    }
@@ -125,7 +126,7 @@ const std::vector<ROOT::Experimental::NTupleSize_t> *
 ROOT::Experimental::Internal::RNTupleIndex::GetAllEntryNumbers(const std::vector<void *> &valuePtrs) const
 {
    if (valuePtrs.size() != fIndexFields.size())
-      throw RException(R__FAIL("Number of value pointers must match number of indexed fields."));
+      throw RException(R__FAIL("number of value pointers must match number of indexed fields"));
 
    EnsureBuilt();
 
