@@ -51,6 +51,7 @@ The following people have contributed to this new version:
  Vincenzo Eduardo Padulano, CERN/EP-SFT,\
  Giacomo Parolini, CERN/EP-SFT,\
  Danilo Piparo, CERN/EP-SFT,\
+ Kristupas Pranckietis, Vilnius University,\
  Fons Rademakers, CERN/IT,\
  Jonas Rembser, CERN/EP-SFT,\
  Andrea Rizzi, University of Pisa,\
@@ -115,9 +116,26 @@ The following interfaces are deprecated and will be removed in future releases:
 * Support for a "streamer field" that can wrap classic ROOT I/O serialized data for RNTuple in cases where native
   RNTuple support is not possible (e.g., recursive data structures). Use of the streamer field can be enforced
   through the LinkDef option `rntupleStreamerMode(true)`.  This features is similar to the unsplit/level-0-split branch in `TTree`.
+* Naming rules have been established for the strings representing the name of an RNTuple and the name of a field. The
+  allowed character set is restricted to Unicode characters encoded as UTF-8, with the following exceptions: control
+  codes, full stop, space, backslash, slash. See a full description in the RNTuple specification. The naming rules are
+  also enforced when creating a new RNTuple or field for writing.
 * Many additional bug fixes and improvements.
 
 ## TTree Libraries
+* TTreeReader can now detect whether there is a mismatched number of entries between the main trees and the friend tree
+  and act accordingly in two distinct scenarios. In the first scenario, at least one of the friend trees is shorter than
+  the main tree, i.e. it has less entries. When the reader is trying to load an entry from the main tree which is beyond
+  the last entry of the shorter friend, this will result in an error and stop execution. In the second scenario, at
+  least one friend is longer than the main tree, i.e. it has more entries. Once the reader arrives at the end of the
+  main tree, it will issue a warning informing the user that there are still entries to be read from the longer friend.
+* TTreeReader can now detect whether a branch, which was previously expected to exist in the dataset, has disappeared
+  due to e.g. a branch missing when switching to the next file in a chain of files.
+* TTreeReader can now detect whether an entry being read is incomplete due to one of the following scenarios:
+  * When switching to a new tree in the chain, a branch that was expected to be found is not available.
+  * When doing event matching with TTreeIndex, one or more of the friend trees did not match the index value for
+    the current entry.
+
 
 ## RDataFrame
 
@@ -127,6 +145,39 @@ The following interfaces are deprecated and will be removed in future releases:
   code that was not yet available on the user's local application, but that would only become available in the
   distributed worker. Now a call such as `df.Define("mycol", "return run_my_fun();")` needs to be at least declarable
   to the interpreter also locally so that the column can be properly tracked.
+* The order of execution of operations within the same branch of the computation graph is now guaranteed to be top to
+  bottom. For example, the following code:
+  ~~~{.cpp}
+  ROOT::RDataFrame df{1};
+  auto df1 = df.Define("x", []{ return 11; });
+  auto df2 = df1.Define("y", []{ return 22; });
+  auto graph = df2.Graph<int, int>("x","y");
+  ~~~
+  will first execute the operation `Define` of the column `x`, then the one of the column `y`, when filling the graph.
+* The `DefinePerSample` operation now works also in the case when a TTree is stored in a subdirectory of a TFile.
+* The memory usage of distributed RDataFrame was drastically reduced by better managing caches of the computation graph
+  artifacts. Large applications which previously had issues with killed executors due to being out of memory now show a
+  minimal memory footprint. See https://github.com/root-project/root/pull/16094#issuecomment-2252273470 for more details.
+* RDataFrame can now read TTree branches of type `std::array` on disk explicitly as `std::array` values in memory.
+* New parts of the API were added to allow dealing with missing data in a TTree-based dataset:
+  * DefaultValueFor(colname, defaultval): lets the user provide one default value for the current entry of the input
+    column, in case the value is missing.
+  * FilterAvailable(colname): works in the same way as the traditional Filter operation, where the "expression" is "is
+    the value available?". If so, the entry is kept, if not, it is discarded.
+  * FilterMissing(colname): works in the same way as the traditional Filter operation, where the "expression" is "is
+    the value missing?". If so, the entry is kept, if not, it is discarded.
+  The tutorials `df036_missingBranches` and `df037_TTreeEventMatching` show example usage of the new functionalities.
+* The automatic conversion of `std::vector` to `ROOT::RVec` which happens in memory within a JIT-ted RDataFrame
+  computation graph meant that the result of a `Snapshot` operation would implicitly change the type of the input branch.
+  A new option available as the data member `fVector2RVec` of the `RSnapshotOptions` struct can be used to prevent
+  RDataFrame from making this implicit conversion.
+* RDataFrame does not take a lock anymore to check reading of supported types when there is a mismatch, see
+  https://github.com/root-project/root/pull/16528.
+* Complexity of lookups during internal checks for type matching has been made constant on average, see the discussions
+  at https://github.com/root-project/root/pull/16559 and https://github.com/root-project/root/pull/16559.
+* Major improvements have been brought to the experimental feature that allows lazily loading ROOT data into batches for
+  machine learning model training pipelines. For a full description, see the presentation at CHEP 2024
+  https://indico.cern.ch/event/1338689/contributions/6015940/.
 
 ## Histogram Libraries
 
