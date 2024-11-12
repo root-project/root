@@ -3,6 +3,7 @@
   \brief This program will merge compatible ROOT objects, such as histograms, Trees and RNTuples,
          from a list of root files and write them to a target root file.
          In order for a ROOT object to be mergeable, it must implement the Merge() function.
+         Non-mergeable objects will have all instances copied as-is into the target file.
          The target file must not be identical to one of the source files.
 
   Syntax:
@@ -37,7 +38,7 @@
    The flags are as follows:
 
   \param -a                Append to the output
-  \param -cachesize <SIZE> Resize the prefetching cache use to speed up I/O operations (use 0 to disable).
+  \param -cachesize <SIZE> Resize the prefetching cache used to speed up I/O operations (use 0 to disable).
   \param -d <DIR>          Carry out the partial multiprocess execution in the specified directory
   \param -dbg              Enable verbosity. If -j was specified, do not not delete partial files
                            stored inside working directory.
@@ -53,7 +54,8 @@
   \param -j [N_JOBS]   Parallelise the execution in `N_JOBS` processes. If the number of processes is not specified,
                        or is 0, use the system maximum.
   \param -k            Skip corrupt or non-existent files, do not exit
-  \param -n <N_FILES>  Open at most `N` files at once (use 0 to request to use the system maximum)
+  \param -n <N_FILES>  Open at most `N` files at once (use 0 to request to use the system maximum - which is also
+                       the default)
   \param -O            Re-optimize basket size when merging TTree
   \param -T            Do not merge Trees
   \param -v [LEVEL]    Explicitly set the verbosity level: 0 request no output, 99 is the default
