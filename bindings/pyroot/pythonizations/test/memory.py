@@ -43,6 +43,15 @@ class MemoryStlString(unittest.TestCase):
         delta = after - before
         self.assertLess(delta, 16)
 
+    def test_tstyle_memory_management(self):
+        """Regression test for https://github.com/root-project/root/issues/16918"""
+
+        h1 = ROOT.TH1F("h1", "", 100, 0, 10)
+
+        style = ROOT.TStyle("NewSTYLE", "")
+        groot = ROOT.ROOT.GetROOT()
+        groot.SetStyle(style.GetName())
+        groot.ForceStyle()
 
 if __name__ == '__main__':
     unittest.main()

@@ -80,13 +80,13 @@ set(py_sources
   ROOT/_facade.py
   ROOT/__init__.py
   ROOT/_numbadeclare.py
+  ROOT/_pythonization/__init__.py
   ROOT/_pythonization/_cppinstance.py
   ROOT/_pythonization/_drawables.py
   ROOT/_pythonization/_generic.py
-  ROOT/_pythonization/__init__.py
   ROOT/_pythonization/_pyz_utils.py
-  ROOT/_pythonization/_rvec.py
   ROOT/_pythonization/_runtime_error.py
+  ROOT/_pythonization/_rvec.py
   ROOT/_pythonization/_stl_vector.py
   ROOT/_pythonization/_tarray.py
   ROOT/_pythonization/_tclass.py
@@ -94,11 +94,11 @@ set(py_sources
   ROOT/_pythonization/_tcollection.py
   ROOT/_pythonization/_tcomplex.py
   ROOT/_pythonization/_tcontext.py
-  ROOT/_pythonization/_tdirectoryfile.py
   ROOT/_pythonization/_tdirectory.py
+  ROOT/_pythonization/_tdirectoryfile.py
+  ROOT/_pythonization/_tf1.py
   ROOT/_pythonization/_tfile.py
   ROOT/_pythonization/_tformula.py
-  ROOT/_pythonization/_tf1.py
   ROOT/_pythonization/_tgraph.py
   ROOT/_pythonization/_th1.py
   ROOT/_pythonization/_titer.py
@@ -106,6 +106,7 @@ set(py_sources
   ROOT/_pythonization/_tobjstring.py
   ROOT/_pythonization/_tseqcollection.py
   ROOT/_pythonization/_tstring.py
+  ROOT/_pythonization/_tstyle.py
   ROOT/_pythonization/_ttree.py
   ROOT/_pythonization/_tvector3.py
   ROOT/_pythonization/_tvectort.py
