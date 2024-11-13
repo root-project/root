@@ -184,13 +184,15 @@ The following interfaces are deprecated and will be removed in future releases:
 
 ## Histogram Libraries
 
+* `THStack:GetMinimum()` was not correct in case of negative contents.
+
 ### Upgrade TUnfold to version 17.9
 
 The [TUnfold package](https://www.desy.de/~sschmitt/tunfold.html) inside ROOT is upgraded from version 17.6 to version 17.9.
 
 ## Math Libraries
 
-### Minuit2 
+### Minuit2
 
 * **Usage of `std::span<const double>`in the interface**: To avoid forcing the user to do manual memory allocations via `std::vector`, the interfaces of Minuit 2 function adapter classes like `ROOT::Minuit2::FCNBase` or `ROOT::Minuit2::FCNGradientBase` were changed to accept `std::span<const double>` arguments instead of `std::vector<double> const&`.
 This should have minimal impact on users, since one should usual use Minuit 2 via the `ROOT::Math::Minimizer` interface, which is unchanged.
@@ -274,7 +276,15 @@ TCanvas::SaveAll({c1, c2, c3, c4}, "file.pdf");
 ```
 
 ## 2D Graphics Libraries
+* In `TGraphErrors` `TGraphAsymmErrors` and `TGraphBentErrors`, the error bars were drawn inside the marker when the marker was bigger than the error bars. This produced a weird plot. This is now fixed.
 
+* When error-bars exceeded the y range limits the end of error bars were nevertheless displayed was not correcton the x-bottom and top axis. So it looked like the total error bar while it was indeed not.
+
+* Choosing an appropriate color scheme is essential for making results easy to understand and interpret. Factors like colorblindness and converting colors to grayscale for publications can impact accessibility. Furthermore, results should be aesthetically pleasing. The following three color schemes, recommended by M. Petroff in [arXiv:2107.02270v2](https://arxiv.org/pdf/2107.02270) and available on [GitHub](https://github.com/mpetroff/accessible-color-cycles) under the MIT License, meet these criteria.
+
+* Implement properly the TScatter palette attributes as requested [here](https://github.com/root-project/root/issues/15922).
+
+* Add `TStyle::SetLegendFillStyle`
 
 ## 3D Graphics Libraries
 
@@ -377,6 +387,7 @@ JSROOT is now used as default display in `jupyter`.
 
 ## Tutorials
 
+* New tutorials [accessiblecolorschemes.C](https://root.cern/doc/master/accessiblecolorschemes_8C.html) and [hstackcolorscheme.C](https://root.cern/doc/master/thstackcolorscheme_8C.html).
 
 ## Class Reference Guide
 
