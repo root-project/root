@@ -578,8 +578,6 @@ OBJ: TList	TList	Doubly linked list : 0
 
 TH1::Class()->GetMenuItems():
 OBJ: TList	TList	Doubly linked list : 0
- OBJ: TMethod	Divide	*MENU* : 0
-      Bool_t TH1::Divide(const TH1* h1, const TH1* h2, Double_t c1 = 1, Double_t c2 = 1, Option_t* option = "")
  OBJ: TMethod	DrawPanel	*MENU* : 0
       void TH1::DrawPanel()
  OBJ: TMethod	Fit	*MENU* : 0
