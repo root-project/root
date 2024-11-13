@@ -267,6 +267,9 @@ auto MakeAliasedSharedPtr(T *rawPtr)
    return std::shared_ptr<T>(fgRawPtrCtrlBlock, rawPtr);
 }
 
+inline constexpr EColumnType kTestFutureType =
+   static_cast<EColumnType>(std::numeric_limits<std::underlying_type_t<EColumnType>>::max() - 1);
+
 inline constexpr ENTupleStructure kTestFutureFieldStructure =
    static_cast<ENTupleStructure>(std::numeric_limits<std::underlying_type_t<ENTupleStructure>>::max() - 1);
 
