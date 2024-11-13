@@ -8,8 +8,6 @@
 #include <memory>
 #include <cstdio>
 
-#include "../src/RColumnElement.hxx"
-
 TEST(RNTupleCompat, Epoch)
 {
    FileRaii fileGuard("test_ntuple_compat_epoch.root");
@@ -165,7 +163,7 @@ protected:
    }
    const RColumnRepresentations &GetColumnRepresentations() const final
    {
-      static const RColumnRepresentations representations{{{kTestFutureType}}, {}};
+      static const RColumnRepresentations representations{{{Internal::kTestFutureType}}, {}};
       return representations;
    }
 

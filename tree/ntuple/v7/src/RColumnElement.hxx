@@ -317,11 +317,8 @@ inline void CastZigzagSplitUnpack(void *destination, const void *source, std::si
 namespace {
 
 using ROOT::Experimental::EColumnType;
+using ROOT::Experimental::Internal::kTestFutureType;
 using ROOT::Experimental::Internal::RColumnElementBase;
-
-// testing value for an unknown future column type
-inline constexpr EColumnType kTestFutureType =
-   static_cast<EColumnType>(std::numeric_limits<std::underlying_type_t<EColumnType>>::max() - 1);
 
 template <typename CppT, EColumnType>
 class RColumnElement;

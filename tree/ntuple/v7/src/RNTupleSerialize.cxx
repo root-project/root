@@ -20,8 +20,6 @@
 #include <ROOT/RNTupleSerialize.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 
-#include "RColumnElement.hxx"
-
 #include <RVersion.h>
 #include <TBufferFile.h>
 #include <TClass.h>
