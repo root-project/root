@@ -112,8 +112,8 @@ public:
       }
    }
 
-   std::string Generate(std::string OpName){
-      OpName = "op_" + OpName;
+   std::string Generate(std::string opName){
+      opName = "op_" + opName;
       if (fShapeX.empty() || fShapeY.empty()) {
          throw std::runtime_error("TMVA SOFIE Reduce Op called to Generate without being initialized first");
       }
@@ -134,40 +134,85 @@ public:
       // don't need to divide by last stride s[n-1] since it is 1 by definition
 
       std::stringstream out;
-      out << "\n//----  operator " << Name() << "  " << OpName << "\n";
-      // check where is reduced axes are last one. In this case we can do a faster implementation
-      bool reduceLastDims = true;
+      out << "\n//----  operator " << Name() << "  " << opName << "\n";
+      // check where is reduced axes are first or last one. In these case we can do a faster implementation
+      enum EReduceDim {kFirst, kLast, kMiddle};
+      EReduceDim reduceDims = kLast;
       int kmin = fShapeX.size()-fAttrAxes.size();
       for (int k = fShapeX.size()-1; k >= kmin; k--) {
          // if k is not a reduced axis is not last ones
          if (std::find(fAttrAxes.begin(), fAttrAxes.end(), k) == fAttrAxes.end()) {
-            reduceLastDims = false;
+            reduceDims = kMiddle;
             break;
          }
       }
+      if (reduceDims == kMiddle) {
+         reduceDims = kFirst;
+         // check if at the beginning
+         for (size_t k = 0; k < fAttrAxes.size(); k++) {
+            // if k is not a reduced axis is not first ones
+            if (std::find(fAttrAxes.begin(), fAttrAxes.end(), k) == fAttrAxes.end()) {
+               reduceDims = kMiddle;
+               break;
+            }
+         }
+      }
       size_t reducedLength = inputLength / outputLength;
-      if (reduceLastDims) {
+      if (reduceDims == kLast) {
+         //std::cout << "reduction for operator " << opName << " is last" << std::endl;
          // new faster implementation using a single loop
+         // faster to loop first on reduced dimension and then output
+         // reset output tensors
+
+         // loop on output dimensions
          out << SP << "for (size_t i = 0; i < " << outputLength << "; i++) {\n";
+         // loop on reduce dimensions
          std::string startingValue = (fReduceOpMode == ReduceProd) ? "1" : "0";
-         out << SP << SP << ConvertTypeToString(GetTemplatedType<T>(T())) << " reducedValue = " << startingValue << ";\n";
-         // loop on reduced axis
+         out << SP << SP << "tensor_" << fNY << "[i] = " << startingValue << ";\n";
          out << SP << SP << "for (size_t j = 0; j < " << reducedLength << "; j++) {\n";
+
          if (fReduceOpMode == ReduceProd)
-            out << SP << SP << SP << "reducedValue *= tensor_" << fNX << "[i * " << reducedLength << " + j];\n";
+            out << SP << SP << SP <<  "tensor_" << fNY << "[i] *= tensor_" << fNX << "[i * " << reducedLength << " + j];\n";
          else if (fReduceOpMode == ReduceSum || fReduceOpMode == ReduceMean)
-            out << SP << SP << SP << "reducedValue += tensor_" << fNX << "[i * " << reducedLength << " + j];\n";
+            out << SP << SP << SP <<  "tensor_" << fNY << "[i] += tensor_" << fNX << "[i * " << reducedLength << " + j];\n";
          else if(fReduceOpMode == ReduceSumsquare)
-            out << SP << SP << SP << "reducedValue += tensor_" << fNX << "[i * " << reducedLength << " + j] * tensor_"
+            out << SP << SP << SP <<  "tensor_" << fNY << "[i] += tensor_" << fNX << "[i * " << reducedLength << " + j] * tensor_"
                                     << fNX << "[i * " << reducedLength << " + j];\n";
          out << SP << SP << "}\n"; // end j loop
          if(fReduceOpMode == ReduceMean)
-            out << SP << SP << "reducedValue /= static_cast<float>(" << reducedLength << ");\n";
-         out << SP << SP << "tensor_" << fNY << "[i] = reducedValue;\n";
-         out << SP << "}\n"; // end i loop
-      } else
-      { // standard case
+            out << SP << SP << "tensor_" << fNY << "[i] /= static_cast<float>(" << reducedLength << ");\n";
 
+         out << SP << "}\n"; // end i loop
+      } else if (reduceDims == kFirst) {
+         //std::cout << "reduction for operator " << opName << " is first" << std::endl;
+         // case reduction is at beginning
+         // reset output tensors
+         if (fReduceOpMode == ReduceProd)
+            out << SP << "fTensor_" << fNY << ".assign(" << outputLength << ",1);\n";
+         else
+            out << SP << "fTensor_" << fNY << ".assign(" << outputLength << ",0);\n";
+
+         out << SP << "for (size_t i = 0; i < " << reducedLength << "; i++) {\n";
+         out << SP << SP << "for (size_t j = 0; j < " << outputLength << "; j++) {\n";
+
+         if (fReduceOpMode == ReduceProd)
+            out << SP << SP << SP << "tensor_" << fNY << "[j] *= tensor_" << fNX << "[i * " << outputLength << " + j];\n";
+         else if (fReduceOpMode == ReduceSum || fReduceOpMode == ReduceMean)
+            out << SP << SP << SP << "tensor_" << fNY << "[j] += tensor_" << fNX << "[i * " << outputLength << " + j];\n";
+         else if(fReduceOpMode == ReduceSumsquare)
+            out << SP << SP << SP << "tensor_" << fNY << "[j] += tensor_" << fNX << "[i * " << outputLength << " + j] * tensor_"
+                                    << fNX << "[i * " << outputLength << " + j];\n";
+         out << SP << SP << "}\n"; // end j loop
+         out << SP  << "}\n"; // end i loop
+         if(fReduceOpMode == ReduceMean) {
+            out << SP  << "for (size_t j = 0; i < " << outputLength << "; j++) {\n";
+            out << SP << SP << "tensor_" << fNY << "[j] /= static_cast<float>(" << reducedLength << ");\n";
+            out << SP << "}\n"; // end j loop
+         }
+      }
+      else
+      { // standard case
+         //std::cout << "reduction for operator " << opName << " is middle" << std::endl;
          // reset output tensors
          if (fReduceOpMode == ReduceProd)
             out << SP << "fTensor_" << fNY << ".assign(" << outputLength << ",1);\n";
