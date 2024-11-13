@@ -175,7 +175,7 @@ namespace TStreamerInfoActions {
 
    typedef std::vector<TConfiguredAction> ActionContainer_t;
    class TActionSequence : public TObject {
-      TActionSequence() {};
+      TActionSequence() = delete;
    public:
       enum class EStatusBits {
          kVectorPtrLooper = BIT(14)
