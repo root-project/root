@@ -64,7 +64,7 @@ public:
       std::stringstream out;
       size_t length = ConvertShapeToLength(fShape);
 
-      out << SP << "float " << OpName << "_alpha = " << std::setprecision(std::numeric_limits<float>::max_digits10) << falpha << ";\n";
+      out << SP << "constexpr float " << OpName << "_alpha = " << std::setprecision(std::numeric_limits<float>::max_digits10) << falpha << ";\n";
 
       out << "\n//------ LEAKY RELU\n";
       out << SP << "for (int id = 0; id < " << length << " ; id++){\n";
