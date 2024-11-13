@@ -77,7 +77,36 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  git_diff:
+    name: Detect changes in Cling
+    # https://www.meziantou.net/executing-github-actions-jobs-or-steps-only-when-specific-files-change.htm
+    runs-on: ubuntu-latest
+    # Declare output for next jobs
+    outputs:
+      interpreter_changed: ${{ steps.check_file_changed.outputs.interpreter_changed }}
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        # Checkout as many commits as needed for the diff
+        fetch-depth: 2
+    - shell: pwsh
+      id: check_file_changed
+      run: |
+        # Diff HEAD with the latest commit of master
+        $diff = git diff --name-only HEAD^ HEAD
+        # (works with HEAD^ as the last commit fetched is virtual merge commit by GH which shows the full diff for the PR.)
+
+        # Check if a file under interpreter/ has changed
+        $SourceDiff = $diff | Where-Object { $_ -match '^interpreter/' }
+        $HasDiff = $SourceDiff.Length -gt 0
+
+        # Set the output named "interpreter_changed"
+        Write-Host "::set-output name=interpreter_changed::$HasDiff"
+        #echo "interpreter_changed=$HasDiff" >> $GITHUB_OUTPUT
+        echo "interpreter_changed=$HasDiff"
+
   build-macos:
+    needs: [ git_diff ]
     # For any event that is not a PR, the CI will always run. In PRs, the CI
     # can be skipped if the tag [skip-ci] or [skip ci] is written in the title.
     if: |
@@ -95,18 +124,19 @@ jobs:
         # Common configs: {Release,Debug,RelWithDebInfo)
         # Build options: https://root.cern/install/build_from_source/#all-build-options
         include:
-          - platform: mac13   
+          - platform: mac13
             arch: ARM64
             overrides: ["LLVM_ENABLE_ASSERTIONS=On", "builtin_zlib=ON"]
           - platform: mac14
             arch: X64
-            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
+            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20", "clingtest=${{needs.git_diff.outputs.interpreter_changed == 'true' && 'ON' || 'OFF'}}"]
           - platform: mac15
             arch: ARM64
             overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
           - platform: mac-beta
             arch: ARM64
             overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
+            # https://stackoverflow.com/questions/76292948/github-action-boolean-input-with-default-value
 
     runs-on: # Using '[self-hosted, ..., ...]' does not work for some reason :)
       - self-hosted
@@ -115,7 +145,7 @@ jobs:
       - ${{ matrix.platform }}
 
     name: |
-      ${{ matrix.platform }} ${{ matrix.arch }} 
+      ${{ matrix.platform }} ${{ matrix.arch }}
       ${{ (github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' && join( matrix.overrides, ', ' )) || '' }}
 
     steps:
@@ -338,6 +368,7 @@ jobs:
 
 
   build-linux:
+    needs: [ git_diff ]
     # For any event that is not a PR, the CI will always run. In PRs, the CI
     # can be skipped if the tag [skip-ci] or [skip ci] is written in the title.
     if: |
@@ -350,6 +381,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # https://github.com/orgs/community/discussions/26253
+        # https://stackoverflow.com/questions/65384420/how-do-i-make-a-github-action-matrix-element-conditional
+        # https://stackoverflow.com/questions/68994484/how-to-skip-a-configuration-of-a-matrix-with-github-actions
+        # https://github.com/joaomcteixeira/python-project-skeleton/pull/31/files        
+
         # Specify image + (optional) build option overrides
         #
         # Available images: https://github.com/root-project/root-ci-images
@@ -363,7 +399,8 @@ jobs:
           - image: alma8
             overrides: ["LLVM_ENABLE_ASSERTIONS=On"]
           - image: alma9
-            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_BUILD_TYPE=Debug"]
+            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_BUILD_TYPE=Debug", "clingtest=${{needs.git_diff.outputs.interpreter_changed == 'true' && 'ON' || 'OFF'}}"]
+            # https://stackoverflow.com/questions/76292948/github-action-boolean-input-with-default-value
           - image: ubuntu22
             overrides: ["imt=Off", "LLVM_ENABLE_ASSERTIONS=On", "CMAKE_BUILD_TYPE=Debug"]
           - image: ubuntu2404
