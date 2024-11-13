@@ -167,7 +167,7 @@ TEST(RNTuple, RandomAccess)
    FileRaii fileGuard("test_ntuple_random_access.root");
 
    auto modelWrite = RNTupleModel::Create();
-   auto wrValue   = modelWrite->MakeField<std::int32_t>("value", 42);
+   auto wrValue = modelWrite->MakeField<std::int32_t>("value");
 
    constexpr unsigned int nEvents = 1000000;
    {
@@ -176,8 +176,10 @@ TEST(RNTuple, RandomAccess)
       options.SetEnablePageChecksums(false);
       options.SetApproxZippedClusterSize(nEvents * sizeof(std::int32_t) / 10);
       auto ntuple = RNTupleWriter::Recreate(std::move(modelWrite), "myNTuple", fileGuard.GetPath(), options);
-      for (unsigned int i = 0; i < nEvents; ++i)
+      for (unsigned int i = 0; i < nEvents; ++i) {
+         *wrValue = i;
          ntuple->Fill();
+      }
    }
 
    RNTupleReadOptions options;
@@ -187,14 +189,16 @@ TEST(RNTuple, RandomAccess)
 
    auto viewValue = ntuple->GetView<std::int32_t>("value");
 
-   std::int32_t sum = 0;
-   constexpr unsigned int nSamples = 1000;
+   std::int64_t sum = 0;
+   std::int64_t expected = 0;
+   constexpr unsigned int nSamples = 10000;
    TRandom3 rnd(42);
-   for (unsigned int i = 0; i < 1000; ++i) {
+   for (unsigned int i = 0; i < nSamples; ++i) {
       auto entryId = floor(rnd.Rndm() * (nEvents - 1));
+      expected += entryId;
       sum += viewValue(entryId);
    }
-   EXPECT_EQ(42 * nSamples, sum);
+   EXPECT_EQ(expected, sum);
 }
 
 
