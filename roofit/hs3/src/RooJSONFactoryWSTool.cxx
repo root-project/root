@@ -686,7 +686,7 @@ void importAnalysis(const JSONNode &rootnode, const JSONNode &analysisNode, cons
    for (const auto &p : pars) {
       if (mc->GetParametersOfInterest()->find(*p))
          continue;
-      if (p->isConstant() && !mainPars.find(*p)) {
+      if (p->isConstant() && !mainPars.find(*p) && domainPars.find(*p)) {
          globs.add(*p);
       } else if (domainPars.find(*p)) {
          nps.add(*p);
@@ -1790,6 +1790,16 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(JSONNode &rootnode, RooStats:
          npDomain.readVariable(*np);
       }
       npDomain.writeJSON(appendNamedChild(domainsNode, npDomainName));
+   }
+
+   if (mc.GetGlobalObservables()) {
+      std::string globDomainName = analysisName + "_global_observables";
+      domains.append_child() << globDomainName;
+      RooFit::JSONIO::Detail::Domains::ProductDomain globDomain;
+      for (auto *glob : static_range_cast<const RooRealVar *>(*mc.GetGlobalObservables())) {
+         globDomain.readVariable(*glob);
+      }
+      globDomain.writeJSON(appendNamedChild(domainsNode, globDomainName));
    }
 
    if (mc.GetParametersOfInterest()) {
