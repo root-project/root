@@ -93,17 +93,18 @@ public:
       std::stringstream out;
       out << SP << "\n//------ Expand Op" << "\n";
       size_t length = ConvertShapeToLength(fShapeY);
-      // No need to broadcast A if it's an initialized tensor
-      if (fInitialized) {
+      // No need to broadcast A if it's an initialized tensor or shapes are the same
+      if (fInitialized || fShapeX == fShapeY) {
          out << "// Copying initialized tensor " << fNX << " to " << fNY << "\n";
          out << SP << "std::copy(tensor_" << fNX << ", " << "tensor_" << fNX << " + " << length << ", tensor_" << fNY << ");\n";
       } else {
          out << SP << "// Broadcasting uninitialized tensor " << fNX << "\n";
-         out << SP << "{\n";
-         out << SP << SP << "float* data = TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<float>(tensor_" << fNX << ", " << ConvertShapeToString(fShapeX) << ", " << ConvertShapeToString(fShapeY) << ");\n";
-         out << SP << SP << "std::copy(data, data + " << length << ", tensor_" << fNY << ");\n";
-         out << SP << SP << "delete[] data;\n";
-         out << SP << "}\n";
+         //out << SP << "{\n";
+         out << SP << "TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<float>(tensor_" << fNX << ", " << ConvertShapeToString(fShapeX) << ", " << ConvertShapeToString(fShapeY)
+                   << ", fTensor_" << fNY << ");\n";
+         //out << SP << SP << "std::copy(data, data + " << length << ", tensor_" << fNY << ");\n";
+         //out << SP << SP << "delete[] data;\n";
+         //out << SP << "}\n";
       }
       return out.str();
    }
