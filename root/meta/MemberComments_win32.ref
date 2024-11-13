@@ -578,8 +578,6 @@ OBJ: TList	TList	Doubly linked list : 0
 
 TH1::Class()->GetMenuItems():
 OBJ: TList	TList	Doubly linked list : 0
- OBJ: TMethod	Add	*MENU* : 0
-      Bool_t TH1::Add(const TH1* h, const TH1* h2, Double_t c1 = 1, Double_t c2 = 1)
  OBJ: TMethod	Divide	*MENU* : 0
       Bool_t TH1::Divide(const TH1* h1, const TH1* h2, Double_t c1 = 1, Double_t c2 = 1, Option_t* option = "")
  OBJ: TMethod	DrawPanel	*MENU* : 0
@@ -588,8 +586,6 @@ OBJ: TList	TList	Doubly linked list : 0
       TFitResultPtr TH1::Fit(const char* formula, Option_t* option = "", Option_t* goption = "", Double_t xmin = 0, Double_t xmax = 0)
  OBJ: TMethod	FitPanel	*MENU* : 0
       void TH1::FitPanel()
- OBJ: TMethod	Multiply	*MENU* : 0
-      Bool_t TH1::Multiply(const TH1* h1, const TH1* h2, Double_t c1 = 1, Double_t c2 = 1, Option_t* option = "")
  OBJ: TMethod	Rebin	*MENU* : 0
       TH1* TH1::Rebin(Int_t ngroup = 2, const char* newname = "", const Double_t* xbins = nullptr)
  OBJ: TMethod	Scale	*MENU* : 0
