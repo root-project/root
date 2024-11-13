@@ -106,12 +106,15 @@ void ROOT::Experimental::Internal::RClusterPool::ExecReadClusters()
                                      [thisClusterId = clusters[i]->GetId()](auto &inFlight) {
                                         return inFlight.fClusterKey.fClusterId == thisClusterId && inFlight.fIsExpired;
                                      });
+               // If we discard the cluster, we must set the promise under lock to make sure
+               // that the main thread will not mistakely treat the cluster as "to be expected".
+               if (discard) {
+                  clusters[i].reset();
+                  // clusters[i] is now nullptr; also return this via the promise.
+                  readItems[i].fPromise.set_value(nullptr);
+               }
             }
-            if (discard) {
-               clusters[i].reset();
-               // clusters[i] is now nullptr; also return this via the promise.
-               readItems[i].fPromise.set_value(nullptr);
-            } else {
+            if (!discard) {
                readItems[i].fPromise.set_value(std::move(clusters[i]));
             }
          }
