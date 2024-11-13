@@ -1381,7 +1381,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
             //  Backward compatibility. Some TStreamerElement's where without
             //  Streamer but were not removed from element list
             UInt_t start,count;
-            Version_t v = b.ReadVersion(&start, &count, cle);
+            Version_t v = b.ReadVersion(&start, &count, this->IsA());
             if (fOldVersion<3){   // case of old TStreamerInfo
                if (aElement->IsBase() && aElement->IsA()!=TStreamerBase::Class()) {
                   b.SetBufferOffset(start);  //it was no byte count
