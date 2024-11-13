@@ -311,10 +311,6 @@ inline void CastZigzagSplitUnpack(void *destination, const void *source, std::si
       dst[i] = sval;
    }
 }
-} // namespace
-
-// anonymous namespace because these definitions are not meant to be exported.
-namespace {
 
 using ROOT::Experimental::EColumnType;
 using ROOT::Experimental::Internal::RColumnElementBase;
@@ -1092,6 +1088,8 @@ public:
 
    RColumnElementQuantized() : RColumnElementBase(kSize, 0) {}
 
+   #pragma GCC diagnostic push
+   #pragma GCC diagnostic ignored "-Wunused-function"
    void SetBitsOnStorage(std::size_t bitsOnStorage) final
    {
       const auto [minBits, maxBits] = GetValidBitRange(EColumnType::kReal32Quant);
@@ -1105,6 +1103,7 @@ public:
       R__ASSERT(max <= std::numeric_limits<T>::max());
       fValueRange = {min, max};
    }
+   #pragma GCC diagnostic pop
 
    bool IsMappable() const final { return kIsMappable; }
 
