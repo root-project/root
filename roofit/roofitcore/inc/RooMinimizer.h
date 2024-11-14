@@ -60,6 +60,7 @@ public:
       double Edm() const { return fEdm; }
       bool IsValid() const { return fValid; }
       int Status() const { return fStatus; }
+      void GetCovarianceMatrix(TMatrixDSym &cov) const;
 
       bool isParameterFixed(unsigned int ipar) const;
 
