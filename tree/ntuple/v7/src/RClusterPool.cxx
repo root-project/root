@@ -97,26 +97,7 @@ void ROOT::Experimental::Internal::RClusterPool::ExecReadClusters()
 
          auto clusters = fPageSource.LoadClusters(clusterKeys);
          for (std::size_t i = 0; i < clusters.size(); ++i) {
-            // Meanwhile, the user might have requested clusters outside the look-ahead window, so that we don't
-            // need the cluster anymore, in which case we simply discard it right away, before moving it to the pool
-            bool discard;
-            {
-               std::unique_lock<std::mutex> lock(fLockWorkQueue);
-               discard = std::any_of(fInFlightClusters.begin(), fInFlightClusters.end(),
-                                     [thisClusterId = clusters[i]->GetId()](auto &inFlight) {
-                                        return inFlight.fClusterKey.fClusterId == thisClusterId && inFlight.fIsExpired;
-                                     });
-               // If we discard the cluster, we must set the promise under lock to make sure
-               // that the main thread will not mistakely treat the cluster as "to be expected".
-               if (discard) {
-                  clusters[i].reset();
-                  // clusters[i] is now nullptr; also return this via the promise.
-                  readItems[i].fPromise.set_value(nullptr);
-               }
-            }
-            if (!discard) {
-               readItems[i].fPromise.set_value(std::move(clusters[i]));
-            }
+            readItems[i].fPromise.set_value(std::move(clusters[i]));
          }
          readItems.erase(readItems.begin(), readItems.begin() + clusters.size());
       }
@@ -266,9 +247,6 @@ ROOT::Experimental::Internal::RClusterPool::GetCluster(DescriptorId_t clusterId,
 
       for (auto itr = fInFlightClusters.begin(); itr != fInFlightClusters.end(); ) {
          R__ASSERT(itr->fFuture.valid());
-         itr->fIsExpired =
-            !provide.Contains(itr->fClusterKey.fClusterId) && (keep.count(itr->fClusterKey.fClusterId) == 0);
-
          if (itr->fFuture.wait_for(std::chrono::seconds(0)) != std::future_status::ready) {
             // Remove the set of columns that are already scheduled for being loaded
             provide.Erase(itr->fClusterKey.fClusterId, itr->fClusterKey.fPhysicalColumnSet);
@@ -277,8 +255,11 @@ ROOT::Experimental::Internal::RClusterPool::GetCluster(DescriptorId_t clusterId,
          }
 
          auto cptr = itr->fFuture.get();
-         // If cptr is nullptr, the cluster expired previously and was released by the I/O thread
-         if (!cptr || itr->fIsExpired) {
+         R__ASSERT(cptr);
+
+         const bool isExpired =
+            !provide.Contains(itr->fClusterKey.fClusterId) && (keep.count(itr->fClusterKey.fClusterId) == 0);
+         if (isExpired) {
             cptr.reset();
             itr = fInFlightClusters.erase(itr);
             continue;
