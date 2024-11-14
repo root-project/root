@@ -4820,6 +4820,10 @@ void TStreamerInfo::AddWriteAction(TStreamerInfoActions::TActionSequence *writeS
      case TStreamerInfo::kTObject: writeSequence->AddAction( WriteTObject, new TConfiguration(this, i, compinfo, compinfo->fOffset) );    break;
      case TStreamerInfo::kTString: writeSequence->AddAction( WriteTString, new TConfiguration(this, i, compinfo, compinfo->fOffset) );    break;
 
+      case TStreamerInfo::kStreamLoop:
+      case TStreamerInfo::kOffsetL + TStreamerInfo::kStreamLoop:
+         writeSequence->AddAction( WriteStreamerLoop<false>, new TGenericConfiguration(this, i, compinfo, compinfo->fOffset) );
+         break;
       case TStreamerInfo::kBase:
          if (compinfo->fStreamer)
             writeSequence->AddAction( WriteStreamerCase, new TGenericConfiguration(this,i,compinfo, compinfo->fOffset) );
