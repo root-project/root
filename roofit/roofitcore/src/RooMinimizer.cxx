@@ -1179,3 +1179,14 @@ bool RooMinimizer::FitResult::isParameterFixed(unsigned int ipar) const
 {
    return fFixedParams.find(ipar) != fFixedParams.end();
 }
+
+void RooMinimizer::FitResult::GetCovarianceMatrix(TMatrixDSym &covs) const
+{
+   const size_t nParams = fParams.size();
+   covs.ResizeTo(nParams, nParams);
+   for (std::size_t ic = 0; ic < nParams; ic++) {
+      for (std::size_t ii = 0; ii < nParams; ii++) {
+         covs(ic, ii) = covMatrix(fCovMatrix, ic, ii);
+      }
+   }
+}
