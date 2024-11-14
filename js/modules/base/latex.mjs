@@ -555,7 +555,7 @@ function parseLatex(node, arg, label, curr) {
             elem.attr('fill', curr.color || arg.color || null);
 
             // set font size directly to element to avoid complex control
-            if (curr.fisze !== curr.font.size)
+            if (curr.fsize)
                elem.attr('font-size', Math.round(curr.fsize));
 
             if (curr.font && curr.font.isSymbol)
@@ -903,6 +903,7 @@ function parseLatex(node, arg, label, curr) {
             subpos.color = curr.painter.getColor(foundarg);
          else if (found.name === '#font[') {
             subpos.font = new FontHandler(foundarg);
+            subpos.font.setUseFullStyle(true); // while embedding - need to enforce full style
             subpos.ufont = true; // mark that custom font is applied
          } else
             subpos.fsize *= foundarg;

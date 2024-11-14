@@ -312,6 +312,11 @@ class TGraphPainter extends ObjectPainter {
       let uxmin = xmin - dx, uxmax = xmax + dx,
           minimum = ymin - dy, maximum = ymax + dy;
 
+      if ((ymin > 0) && (minimum <= 0))
+         minimum = (1 - margin) * ymin;
+      if ((ymax < 0) && (maximum >= 0))
+         maximum = (1 - margin) * ymax;
+
       if (!this._not_adjust_hrange) {
          const pad_logx = this.getPadPainter()?.getPadLog('x');
 
@@ -337,7 +342,10 @@ class TGraphPainter extends ObjectPainter {
 
       if (graph.fMinimum !== kNoZoom) minimum = ymin = graph.fMinimum;
       if (graph.fMaximum !== kNoZoom) maximum = graph.fMaximum;
-      if ((minimum < 0) && (ymin >= 0)) minimum = (1 - margin)*ymin;
+      if ((minimum < 0) && (ymin >= 0))
+         minimum = (1 - margin)*ymin;
+      if ((ymax < 0) && (maximum >= 0))
+         maximum = (1 - margin) * ymax;
 
       setHistogramTitle(histo, this.getObject().fTitle);
 

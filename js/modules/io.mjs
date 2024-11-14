@@ -2029,10 +2029,23 @@ async function R__unzip(arr, tgtsize, noalert, src_shift) {
          const tgt8arr = new Uint8Array(tgtbuf, fullres);
 
          if (fmt === 'ZSTD') {
-            const promise = internals._ZstdStream
-                            ? Promise.resolve(internals._ZstdStream)
-                            : (isNodeJs() ? import('@oneidentity/zstd-js') : import(/* webpackIgnore: true */ './base/zstd.mjs'))
-                              .then(({ ZstdInit }) => ZstdInit()).then(({ ZstdStream }) => { internals._ZstdStream = ZstdStream; return ZstdStream; });
+            let promise;
+            if (internals._ZstdStream)
+               promise = Promise.resolve(internals._ZstdStream);
+            else if (internals._ZstdInit !== undefined)
+               promise = new Promise(resolveFunc => { internals._ZstdInit.push(resolveFunc); });
+            else {
+               internals._ZstdInit = [];
+               promise = (isNodeJs() ? import('@oneidentity/zstd-js') : import('./base/zstd.mjs'))
+                   .then(({ ZstdInit }) => ZstdInit())
+                   .then(({ ZstdStream }) => {
+                     internals._ZstdStream = ZstdStream;
+                     internals._ZstdInit.forEach(func => func(ZstdStream));
+                     delete internals._ZstdInit;
+                     return ZstdStream;
+                  });
+            }
+
             return promise.then(ZstdStream => {
                const data2 = ZstdStream.decompress(uint8arr),
                      reslen = data2.length;
@@ -2045,7 +2058,7 @@ async function R__unzip(arr, tgtsize, noalert, src_shift) {
                return nextPortion();
             });
          } else if (fmt === 'LZMA') {
-            return import(/* webpackIgnore: true */ './base/lzma.mjs').then(lzma => {
+            return import('./base/lzma.mjs').then(lzma => {
                const expected_len = (getCode(curr + 6) & 0xff) | ((getCode(curr + 7) & 0xff) << 8) | ((getCode(curr + 8) & 0xff) << 16),
                      reslen = lzma.decompress(uint8arr, tgt8arr, expected_len);
                fullres += reslen;
@@ -2883,7 +2896,7 @@ class TFile {
          // multipart messages requires special handling
 
          const indx = hdr.indexOf('boundary=');
-         let boundary = '', n = first, o = 0;
+         let boundary = '', n = first, o = 0, normal_order = true;
          if (indx > 0) {
             boundary = hdr.slice(indx + 9);
             if ((boundary[0] === '"') && (boundary[boundary.length - 1] === '"'))
@@ -2937,11 +2950,33 @@ class TFile {
                blobs.push(new DataView(res, o, place[n + 1]));
                o += place[n + 1];
                n += 2;
-            } else {
+            } else if (normal_order) {
+               const n0 = n;
                while ((n < last) && (place[n] >= segm_start) && (place[n] + place[n + 1] - 1 <= segm_last)) {
                   blobs.push(new DataView(res, o + place[n] - segm_start, place[n + 1]));
                   n += 2;
                }
+
+               if (n > n0)
+                  o += (segm_last - segm_start + 1);
+               else
+                  normal_order = false;
+            }
+
+            if (!normal_order) {
+               // special situation when server reorder segments in the reply
+               let isany = false;
+               for (let n1 = n; n1 < last; n1 += 2) {
+                  if ((place[n1] >= segm_start) && (place[n1] + place[n1 + 1] - 1 <= segm_last)) {
+                     blobs[n1/2] = new DataView(res, o + place[n1] - segm_start, place[n1 + 1]);
+                     isany = true;
+                  }
+               }
+               if (!isany)
+                  return rejectFunc(Error(`Provided fragment ${segm_start} - ${segm_last} out of requested multi-range request`));
+
+               while (blobs[n/2])
+                  n += 2;
 
                o += (segm_last - segm_start + 1);
             }
@@ -3173,7 +3208,7 @@ class TFile {
      * @private */
    async readKeys() {
       // with the first readbuffer we read bigger amount to create header cache
-      return this.readBuffer([0, 1024]).then(blob => {
+      return this.readBuffer([0, 400]).then(blob => {
          const buf = new TBuffer(blob, 0, this);
          if (buf.substring(0, 4) !== 'root')
             return Promise.reject(Error(`Not a ROOT file ${this.fURL}`));
@@ -3549,6 +3584,11 @@ function readMapElement(buf) {
    }
 
    const n = buf.ntoi4(), res = new Array(n);
+
+   // no extra data written for empty map
+   if (n === 0)
+      return res;
+
    if (this.member_wise && (buf.remain() >= 6)) {
       if (buf.ntoi2() === kStreamedMemberWise)
          buf.shift(4); // skip checksum

@@ -1056,7 +1056,7 @@ class TH2Painter extends THistPainter {
          res.wmax = 0;
       res.integral = stat_sum0;
 
-      if (histo.fEntries > 1)
+      if (histo.fEntries > 0)
          res.entries = histo.fEntries;
 
       res.eff_entries = stat_sumw2 ? stat_sum0*stat_sum0/stat_sumw2 : Math.abs(stat_sum0);
@@ -1610,7 +1610,7 @@ class TH2Painter extends THistPainter {
                if (draw_colors && (colindx !== null))
                   item.style('fill', this._color_palette.getColor(colindx));
                else if (draw_fill)
-                  item.call('fill', this.createAttFill(gr).func);
+                  item.call(this.createAttFill(gr).func);
                else
                   item.style('fill', 'none');
                if (draw_lines)

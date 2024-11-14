@@ -525,7 +525,8 @@ class TAxisPainter extends ObjectPainter {
             this.nticks2 = 1;
          }
          this.noexp = axis?.TestBit(EAxisBits.kNoExponent);
-         if ((this.scale_max < 300) && (this.scale_min > 0.3) && !this.noexp_changed) this.noexp = true;
+         if ((this.scale_max < 300) && (this.scale_min > 0.3) && !this.noexp_changed && (this.log === 1))
+            this.noexp = true;
          this.moreloglabels = axis?.TestBit(EAxisBits.kMoreLogLabels);
          this.format = this.formatLog;
       } else if (this.kind === kAxisLabels) {
@@ -1266,7 +1267,7 @@ class TAxisPainter extends ObjectPainter {
                             .style('cursor', 'crosshair');
 
             if (this.vertical) {
-               const rw = (labelsMaxWidth || 2*labelSize) + 3;
+               const rw = Math.max(labelsMaxWidth, 2*labelSize) + 3;
                r.attr('x', (side > 0) ? -rw : 0).attr('y', 0)
                 .attr('width', rw).attr('height', h);
             } else {

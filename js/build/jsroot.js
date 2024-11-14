@@ -1,17 +1,18 @@
-// https://root.cern/js/ v7.7.2
+// https://root.cern/js/ v7.7.5
 (function (global, factory) {
 typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
 typeof define === 'function' && define.amd ? define(['exports'], factory) :
 (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.JSROOT = global.JSROOT || {}));
 })(this, (function (exports) { 'use strict';
 
+var _documentCurrentScript = typeof document !== 'undefined' ? document.currentScript : null;
 /** @summary version id
   * @desc For the JSROOT release the string in format 'major.minor.patch' like '7.0.0' */
-const version_id = '7.7.2',
+const version_id = '7.7.5',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '19/06/2024',
+version_date = '31/10/2024',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -29,7 +30,8 @@ internals = {
    id_counter: 1
 },
 
-_src = (typeof document === 'undefined' && typeof location === 'undefined' ? undefined : typeof document === 'undefined' ? location.href : (document.currentScript && document.currentScript.src || new URL('jsroot.js', document.baseURI).href));
+_src = (typeof document === 'undefined' && typeof location === 'undefined' ? require('u' + 'rl').pathToFileURL(__filename).href : typeof document === 'undefined' ? location.href : (_documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === 'SCRIPT' && _documentCurrentScript.src || new URL('jsroot.js', document.baseURI).href));
+
 
 /** @summary Location of JSROOT modules
   * @desc Automatically detected and used to dynamically load other modules
@@ -8016,6 +8018,11 @@ class FontHandler {
       this.painter = painter;
    }
 
+   /** @summary Force setting of style and weight, used in latex */
+   setUseFullStyle(flag) {
+      this.full_style = flag;
+   }
+
    /** @summary Assigns font-related attributes */
    addCustomFontToSvg(svg) {
       if (!this.base64 || !this.name)
@@ -8042,8 +8049,8 @@ class FontHandler {
       selection.attr('font-family', this.name)
                .attr('font-size', this.size)
                .attr('xml:space', 'preserve')
-               .attr('font-weight', this.weight || null)
-               .attr('font-style', this.style || null);
+               .attr('font-weight', this.weight || (this.full_style ? 'normal' : null))
+               .attr('font-style', this.style || (this.full_style ? 'normal' : null));
    }
 
    /** @summary Set font size (optional) */
@@ -8709,7 +8716,7 @@ function parseLatex(node, arg, label, curr) {
             elem.attr('fill', curr.color || arg.color || null);
 
             // set font size directly to element to avoid complex control
-            if (curr.fisze !== curr.font.size)
+            if (curr.fsize)
                elem.attr('font-size', Math.round(curr.fsize));
 
             if (curr.font && curr.font.isSymbol)
@@ -9057,6 +9064,7 @@ function parseLatex(node, arg, label, curr) {
             subpos.color = curr.painter.getColor(foundarg);
          else if (found.name === '#font[') {
             subpos.font = new FontHandler(foundarg);
+            subpos.font.setUseFullStyle(true); // while embedding - need to enforce full style
             subpos.ufont = true; // mark that custom font is applied
          } else
             subpos.fsize *= foundarg;
@@ -62289,7 +62297,8 @@ class TAxisPainter extends ObjectPainter {
             this.nticks2 = 1;
          }
          this.noexp = axis?.TestBit(EAxisBits.kNoExponent);
-         if ((this.scale_max < 300) && (this.scale_min > 0.3) && !this.noexp_changed) this.noexp = true;
+         if ((this.scale_max < 300) && (this.scale_min > 0.3) && !this.noexp_changed && (this.log === 1))
+            this.noexp = true;
          this.moreloglabels = axis?.TestBit(EAxisBits.kMoreLogLabels);
          this.format = this.formatLog;
       } else if (this.kind === kAxisLabels) {
@@ -63030,7 +63039,7 @@ class TAxisPainter extends ObjectPainter {
                             .style('cursor', 'crosshair');
 
             if (this.vertical) {
-               const rw = (labelsMaxWidth || 2*labelSize) + 3;
+               const rw = Math.max(labelsMaxWidth, 2*labelSize) + 3;
                r.attr('x', (side > 0) ? -rw : 0).attr('y', 0)
                 .attr('width', rw).attr('height', h);
             } else {
@@ -70034,15 +70043,23 @@ class TPadPainter extends ObjectPainter {
             btns.remove();
          }
 
-         const main = pp.getFramePainter();
-         if (!isFunc(main?.render3D) || !isFunc(main?.access3dKind)) return;
+         const fp = pp.getFramePainter();
+         if (!isFunc(fp?.access3dKind)) return;
 
-         const can3d = main.access3dKind();
+         const can3d = fp.access3dKind();
          if ((can3d !== constants$1.Embed3D.Overlay) && (can3d !== constants$1.Embed3D.Embed)) return;
 
-         const sz2 = main.getSizeFor3d(constants$1.Embed3D.Embed), // get size and position of DOM element as it will be embed
+         let main, canvas;
+         if (isFunc(fp.render3D)) {
+            main = fp;
+            canvas = fp.renderer?.domElement;
+         } else {
+            main = fp.getMainPainter();
+            canvas = main?._renderer?.domElement;
+         }
+         if (!isFunc(main?.render3D) || !isObject(canvas)) return;
 
-         canvas = main.renderer.domElement;
+         const sz2 = fp.getSizeFor3d(constants$1.Embed3D.Embed); // get size and position of DOM element as it will be embed
          main.render3D(0); // WebGL clears buffers, therefore we should render scene and convert immediately
          const dataUrl = canvas.toDataURL('image/png');
 
@@ -72651,10 +72668,10 @@ class TPavePainter extends ObjectPainter {
             } else if ((opt === 'postitle') || painter.isDummyPos(pave)) {
                const st = gStyle, fp = painter.getFramePainter();
                if (st && fp) {
-                  const midx = st.fTitleX, y2 = st.fTitleY;
+                  const midx = st.fTitleX, y2 = st.fTitleY, fsz = st.fTitleFontSize;
                   let w = st.fTitleW, h = st.fTitleH;
 
-                  if (!h) h = (y2 - fp.fY2NDC) * 0.7;
+                  if (!h) h = Math.max((y2 - fp.fY2NDC) * 0.7, (fsz < 1) ? 1.1 * fsz : 1.1 * fsz / fp.getFrameWidth());
                   if (!w) w = fp.fX2NDC - fp.fX1NDC;
                   if (!Number.isFinite(h) || (h <= 0)) h = 0.06;
                   if (!Number.isFinite(w) || (w <= 0)) w = 0.44;
@@ -76201,7 +76218,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
          res.wmax = 0;
       res.integral = stat_sum0;
 
-      if (histo.fEntries > 1)
+      if (histo.fEntries > 0)
          res.entries = histo.fEntries;
 
       res.eff_entries = stat_sumw2 ? stat_sum0*stat_sum0/stat_sumw2 : Math.abs(stat_sum0);
@@ -76754,7 +76771,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
                if (draw_colors && (colindx !== null))
                   item.style('fill', this._color_palette.getColor(colindx));
                else if (draw_fill)
-                  item.call('fill', this.createAttFill(gr).func);
+                  item.call(this.createAttFill(gr).func);
                else
                   item.style('fill', 'none');
                if (draw_lines)
@@ -80822,7 +80839,7 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
       else
          hsum += histo.getBinContent(0) + histo.getBinContent(this.nbinsx + 1);
 
-      this.stat_entries = (histo.fEntries > 1) ? histo.fEntries : hsum;
+      this.stat_entries = hsum;
 
       this.hmin = hmin;
       this.hmax = hmax;
@@ -80933,7 +80950,8 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
             right = this.getSelectIndex('x', 'right'),
             fp = this.getFramePainter(),
             res = { name: histo.fName, meanx: 0, meany: 0, rmsx: 0, rmsy: 0, integral: 0,
-                    entries: this.stat_entries, eff_entries: 0, xmax: 0, wmax: 0, skewx: 0, skewd: 0, kurtx: 0, kurtd: 0 },
+                    entries: (histo.fEntries > 0) ? histo.fEntries : this.stat_entries,
+                    eff_entries: 0, xmax: 0, wmax: 0, skewx: 0, skewd: 0, kurtx: 0, kurtd: 0 },
             has_counted_stat = !fp.isAxisZoomed('x') && (Math.abs(histo.fTsumw) > 1e-300);
       let stat_sumw = 0, stat_sumw2 = 0, stat_sumwx = 0, stat_sumwx2 = 0, stat_sumwy = 0, stat_sumwy2 = 0,
           i, xx = 0, w = 0, xmax = null, wmax = null;
@@ -81257,9 +81275,7 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
 
       if (show_markers) {
          // draw markers also when e2 option was specified
-         let style = this.options.MarkStyle;
-         if (!style && (histo.fMarkerStyle === 1)) style = 8; // as in recent ROOT changes
-         this.createAttMarker({ attr: histo, style }); // when style not configured, it will be ignored
+         this.createAttMarker({ attr: histo, style: this.options.MarkStyle }); // when style not configured, it will be ignored
          if (this.markeratt.size > 0) {
             // simply use relative move from point, can optimize in the future
             path_marker = '';
@@ -82474,7 +82490,7 @@ class TH3Painter extends THistPainter {
 
       res.integral = stat_sum0;
 
-      if (histo.fEntries > 1)
+      if (histo.fEntries > 0)
          res.entries = histo.fEntries;
 
       res.eff_entries = stat_sumw2 ? stat_sum0*stat_sum0/stat_sumw2 : Math.abs(stat_sum0);
@@ -92179,7 +92195,7 @@ class TGeoPainter extends ObjectPainter {
    ensureBloom(on) {
       if (on === undefined) {
          if (this.ctrl.highlight_bloom === 0)
-             this.ctrl.highlight_bloom = this._webgl;
+             this.ctrl.highlight_bloom = this._webgl && ((typeof navigator === 'undefined') || !/android/i.test(navigator.userAgent));
 
          on = this.ctrl.highlight_bloom && this.ctrl.getMaterialCfg()?.emissive;
       }
@@ -98421,10 +98437,23 @@ async function R__unzip(arr, tgtsize, noalert, src_shift) {
          const tgt8arr = new Uint8Array(tgtbuf, fullres);
 
          if (fmt === 'ZSTD') {
-            const promise = internals._ZstdStream
-                            ? Promise.resolve(internals._ZstdStream)
-                            : (isNodeJs() ? Promise.resolve().then(function () { return _rollup_plugin_ignore_empty_module_placeholder$1; }) : Promise.resolve().then(function () { return _rollup_plugin_ignore_empty_module_placeholder$1; }))
-                              .then(({ ZstdInit }) => ZstdInit()).then(({ ZstdStream }) => { internals._ZstdStream = ZstdStream; return ZstdStream; });
+            let promise;
+            if (internals._ZstdStream)
+               promise = Promise.resolve(internals._ZstdStream);
+            else if (internals._ZstdInit !== undefined)
+               promise = new Promise(resolveFunc => { internals._ZstdInit.push(resolveFunc); });
+            else {
+               internals._ZstdInit = [];
+               promise = (isNodeJs() ? Promise.resolve().then(function () { return _rollup_plugin_ignore_empty_module_placeholder$1; }) : Promise.resolve().then(function () { return _rollup_plugin_ignore_empty_module_placeholder$1; }))
+                   .then(({ ZstdInit }) => ZstdInit())
+                   .then(({ ZstdStream }) => {
+                     internals._ZstdStream = ZstdStream;
+                     internals._ZstdInit.forEach(func => func(ZstdStream));
+                     delete internals._ZstdInit;
+                     return ZstdStream;
+                  });
+            }
+
             return promise.then(ZstdStream => {
                const data2 = ZstdStream.decompress(uint8arr),
                      reslen = data2.length;
@@ -99275,7 +99304,7 @@ class TFile {
          // multipart messages requires special handling
 
          const indx = hdr.indexOf('boundary=');
-         let boundary = '', n = first, o = 0;
+         let boundary = '', n = first, o = 0, normal_order = true;
          if (indx > 0) {
             boundary = hdr.slice(indx + 9);
             if ((boundary[0] === '"') && (boundary[boundary.length - 1] === '"'))
@@ -99329,11 +99358,33 @@ class TFile {
                blobs.push(new DataView(res, o, place[n + 1]));
                o += place[n + 1];
                n += 2;
-            } else {
+            } else if (normal_order) {
+               const n0 = n;
                while ((n < last) && (place[n] >= segm_start) && (place[n] + place[n + 1] - 1 <= segm_last)) {
                   blobs.push(new DataView(res, o + place[n] - segm_start, place[n + 1]));
                   n += 2;
                }
+
+               if (n > n0)
+                  o += (segm_last - segm_start + 1);
+               else
+                  normal_order = false;
+            }
+
+            if (!normal_order) {
+               // special situation when server reorder segments in the reply
+               let isany = false;
+               for (let n1 = n; n1 < last; n1 += 2) {
+                  if ((place[n1] >= segm_start) && (place[n1] + place[n1 + 1] - 1 <= segm_last)) {
+                     blobs[n1/2] = new DataView(res, o + place[n1] - segm_start, place[n1 + 1]);
+                     isany = true;
+                  }
+               }
+               if (!isany)
+                  return rejectFunc(Error(`Provided fragment ${segm_start} - ${segm_last} out of requested multi-range request`));
+
+               while (blobs[n/2])
+                  n += 2;
 
                o += (segm_last - segm_start + 1);
             }
@@ -99565,7 +99616,7 @@ class TFile {
      * @private */
    async readKeys() {
       // with the first readbuffer we read bigger amount to create header cache
-      return this.readBuffer([0, 1024]).then(blob => {
+      return this.readBuffer([0, 400]).then(blob => {
          const buf = new TBuffer(blob, 0, this);
          if (buf.substring(0, 4) !== 'root')
             return Promise.reject(Error(`Not a ROOT file ${this.fURL}`));
@@ -99900,6 +99951,11 @@ function readMapElement(buf) {
    }
 
    const n = buf.ntoi4(), res = new Array(n);
+
+   // no extra data written for empty map
+   if (n === 0)
+      return res;
+
    if (this.member_wise && (buf.remain() >= 6)) {
       if (buf.ntoi2() === kStreamedMemberWise)
          buf.shift(4); // skip checksum
@@ -106388,7 +106444,7 @@ class HierarchyPainter extends BasePainter {
    async listServerDir(dirname) {
       return httpRequest(dirname, 'text').then(res => {
          if (!res) return false;
-         const h = { _name: 'Files', _kind: kTopFolder, _childs: [], _isopen: true };
+         const h = { _name: 'Files', _kind: kTopFolder, _childs: [], _isopen: true }, fmap = {};
          let p = 0;
          while (p < res.length) {
             p = res.indexOf('a href="', p+1);
@@ -106399,6 +106455,10 @@ class HierarchyPainter extends BasePainter {
 
             const fname = res.slice(p, p2);
             p = p2 + 1;
+
+            if (fmap[fname]) continue;
+            fmap[fname] = true;
+
             if ((fname.lastIndexOf('.root') === fname.length - 5) && (fname.length > 5)) {
                h._childs.push({
                   _name: fname, _title: dirname + fname, _url: dirname + fname, _kind: kindTFile,
@@ -108693,6 +108753,11 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
       let uxmin = xmin - dx, uxmax = xmax + dx,
           minimum = ymin - dy, maximum = ymax + dy;
 
+      if ((ymin > 0) && (minimum <= 0))
+         minimum = (1 - margin) * ymin;
+      if ((ymax < 0) && (maximum >= 0))
+         maximum = (1 - margin) * ymax;
+
       if (!this._not_adjust_hrange) {
          const pad_logx = this.getPadPainter()?.getPadLog('x');
 
@@ -108718,7 +108783,10 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
 
       if (graph.fMinimum !== kNoZoom) minimum = ymin = graph.fMinimum;
       if (graph.fMaximum !== kNoZoom) maximum = graph.fMaximum;
-      if ((minimum < 0) && (ymin >= 0)) minimum = (1 - margin)*ymin;
+      if ((minimum < 0) && (ymin >= 0))
+         minimum = (1 - margin)*ymin;
+      if ((ymax < 0) && (maximum >= 0))
+         maximum = (1 - margin) * ymax;
 
       setHistogramTitle(histo, this.getObject().fTitle);
 
@@ -110134,7 +110202,7 @@ TDrawSelector.prototype.ShowProgress = function(value) {
       msg = `TTree draw ${(value * 100).toFixed(ndig)} % `;
    }
 
-   showProgress(msg, -1, () => { this._break = 1; });
+   showProgress(msg, 0, () => { this._break = 1; });
    return ret;
 };
 
@@ -126735,9 +126803,6 @@ class RH3Painter extends RHistPainter {
       }
 
       res.integral = stat_sum0;
-
-      if (histo.fEntries > 1)
-         res.entries = histo.fEntries;
 
       return res;
    }

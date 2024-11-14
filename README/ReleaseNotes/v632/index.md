@@ -52,6 +52,7 @@ The following people have contributed to this new version:
  Ianna Osborne, Princeton University,\
  Vincenzo Eduardo Padulano, CERN/EP-SFT,\
  Danilo Piparo, CERN/EP-SFT,\
+ Huilin Qu, CERN/EP-CMG,\
  Fons Rademakers, CERN/IT,\
  Jonas Rembser, CERN/EP-SFT,\
  Andrea Rizzi, University of Pisa,\
@@ -811,5 +812,18 @@ This is the first ROOT release supporting macOS 15 Sequoia.
 * [[#16219](https://github.com/root-project/root/issues/16219)] - Module map on the new XCode version for macos15-beta
 * [[#16249](https://github.com/root-project/root/issues/16249)] - Iterating with a range for does one extra iteration
 * [[ROOT-10902](https://its.cern.ch/jira/browse/ROOT-10902)] - SMatrix read from TTree contains all zeroes
+
+## Release 6.32.08
+
+Published on November 14, 2024
+
+### Items addressed in this release
+
+Besides the fixes listed below, a scaling problem RDataFrame was fixed.
+
+* [[10239](https://github.com/root-project/root/issues/10239)] - "?" wildcard broken in TChain::Add()
+* [[16475](https://github.com/root-project/root/issues/16475)] - Unable to use EOS tokens with RDataFrame since 6.32
+* [[16562](https://github.com/root-project/root/issues/16562)] - TTreeViewer save session absolute path	
+* [[16771](https://github.com/root-project/root/issues/16771)] - Copying a default constructed `TH2Poly` fails.	
 
 ## HEAD of the v6-32-00-patches branch

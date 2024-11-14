@@ -70,6 +70,11 @@ class FontHandler {
       this.painter = painter;
    }
 
+   /** @summary Force setting of style and weight, used in latex */
+   setUseFullStyle(flag) {
+      this.full_style = flag;
+   }
+
    /** @summary Assigns font-related attributes */
    addCustomFontToSvg(svg) {
       if (!this.base64 || !this.name)
@@ -96,8 +101,8 @@ class FontHandler {
       selection.attr('font-family', this.name)
                .attr('font-size', this.size)
                .attr('xml:space', 'preserve')
-               .attr('font-weight', this.weight || null)
-               .attr('font-style', this.style || null);
+               .attr('font-weight', this.weight || (this.full_style ? 'normal' : null))
+               .attr('font-style', this.style || (this.full_style ? 'normal' : null));
    }
 
    /** @summary Set font size (optional) */
