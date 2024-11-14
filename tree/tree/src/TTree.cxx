@@ -7326,7 +7326,7 @@ void TTree::Print(Option_t* option) const
          if (count[l] < 0) continue;
          leaf = (TLeaf *)const_cast<TTree*>(this)->GetListOfLeaves()->At(l);
          br   = leaf->GetBranch();
-         Printf("branch: %-20s %9lld\n",br->GetName(),count[l]);
+         Printf("branch: %-20s %9lld",br->GetName(),count[l]);
       }
       delete [] count;
    } else {
