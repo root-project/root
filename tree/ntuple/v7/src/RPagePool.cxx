@@ -26,12 +26,7 @@ void ROOT::Experimental::Internal::RPagePool::AddPage(const RPage &page, const R
 {
    assert(fLookupByBuffer.count(page.GetBuffer()) == 0);
    fLookupByBuffer[page.GetBuffer()] = index;
-   auto itr = fLookupByKey.find(key);
-   if (itr == fLookupByKey.end()) {
-      fLookupByKey.emplace(key, std::vector<size_t>({index}));
-   } else {
-      itr->second.emplace_back(index);
-   }
+   fLookupByKey[key].emplace_back(index);
 }
 
 ROOT::Experimental::Internal::RPageRef ROOT::Experimental::Internal::RPagePool::RegisterPage(RPage page, RKey key)
