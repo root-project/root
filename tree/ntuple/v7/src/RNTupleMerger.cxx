@@ -516,10 +516,10 @@ void RNTupleMerger::MergeCommonColumns(RClusterPool &clusterPool, DescriptorId_t
          Info("RNTuple::Merge", "Column %s: changing source compression from %d to %d", column.fColumnName.c_str(),
               colRangeCompressionSettings, mergeData.fMergeOpts.fCompressionSettings);
 
-      // If the column range is already uncompressed we don't need to allocate any new buffer, so we don't
-      // bother reserving memory for them.
       size_t pageBufferBaseIdx = sealedPageData.fBuffers.size();
-      if (colRangeCompressionSettings != 0)
+      // If the column range already has the right compression we don't need to allocate any new buffer, so we don't
+      // bother reserving memory for them.
+      if (needsCompressionChange)
          sealedPageData.fBuffers.resize(sealedPageData.fBuffers.size() + pages.fPageInfos.size());
 
       // Loop over the pages
