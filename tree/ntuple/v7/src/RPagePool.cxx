@@ -55,6 +55,7 @@ void ROOT::Experimental::Internal::RPagePool::ReleasePage(const RPage &page)
    const auto idx = itrLookup->second;
    const auto N = fEntries.size();
 
+   assert(fEntries[idx].fRefCounter >= 1);
    if (--fEntries[idx].fRefCounter == 0) {
       fLookupByBuffer.erase(itrLookup);
 
