@@ -4820,6 +4820,27 @@ void TStreamerInfo::AddWriteAction(TStreamerInfoActions::TActionSequence *writeS
      case TStreamerInfo::kTObject: writeSequence->AddAction( WriteTObject, new TConfiguration(this, i, compinfo, compinfo->fOffset) );    break;
      case TStreamerInfo::kTString: writeSequence->AddAction( WriteTString, new TConfiguration(this, i, compinfo, compinfo->fOffset) );    break;
 
+      case TStreamerInfo::kBase:
+         if (compinfo->fStreamer)
+            writeSequence->AddAction( WriteStreamerCase, new TGenericConfiguration(this,i,compinfo, compinfo->fOffset) );
+         else {
+            auto base = dynamic_cast<TStreamerBase*>(element);
+            auto onfileBaseCl = base ? base->GetClassPointer() : nullptr;
+            auto memoryBaseCl = base && base->GetNewBaseClass() ? base->GetNewBaseClass() : onfileBaseCl;
+
+            if(!base || !memoryBaseCl ||
+               memoryBaseCl->GetStreamer() ||
+               memoryBaseCl->GetStreamerFunc() || memoryBaseCl->GetConvStreamerFunc())
+            {
+               // Unusual Case.
+               writeSequence->AddAction( GenericWriteAction, new TGenericConfiguration(this,i,compinfo) );
+            }
+            else {
+               writeSequence->AddAction( WriteViaClassBuffer,
+                  new TConfObject(this, i, compinfo, compinfo->fOffset, onfileBaseCl, memoryBaseCl) );
+            }
+         }
+         break;
 
        // case TStreamerInfo::kBits:    writeSequence->AddAction( WriteBasicType<BitsMarker>, new TConfiguration(this,i,compinfo,compinfo->fOffset) );    break;
      /*case TStreamerInfo::kFloat16: {
