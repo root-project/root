@@ -2371,8 +2371,7 @@ RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooArgSet& params, bool showCo
     auto var = static_cast<const RooRealVar*>(param);
     if(var->isConstant() && !showConstants) continue;
 
-    std::unique_ptr<TString> formatted{formatCmd ? var->format(*formatCmd) : var->format(2, "NELU")};
-    box->AddText(formatted->Data());
+    box->AddText((formatCmd ? var->format(*formatCmd) : var->format(2, "NELU")).c_str());
   }
 
   // add the optional label if specified

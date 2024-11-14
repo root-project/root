@@ -44,6 +44,13 @@ The following people have contributed to this new version:
 
 ## RooFit
 
+### Breaking function signature changes
+
+  * The `RooRealVar::format()` function was changed to return a `std::string` instead of a `TString *`.
+    The former return type was not memory safe, since the caller had to delete the `TString`.
+    This pattern was not appropriate for a modern C++ library.
+    If you absolutely need the old return type, wrap the call to `format()` inside `new TString{var.format(..)}`. However, this is not recommended.
+
 ## IO
 
 ## RDataFrame
