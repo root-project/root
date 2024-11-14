@@ -4845,42 +4845,6 @@ void TStreamerInfo::AddWriteAction(TStreamerInfoActions::TActionSequence *writeS
         }
         break;
      } */
-     /*case TStreamerInfo::kSTL: {
-        TClass *newClass = element->GetNewClass();
-        TClass *oldClass = element->GetClassPointer();
-        Bool_t isSTLbase = element->IsBase() && element->IsA()!=TStreamerBase::Class();
-
-        if (element->GetArrayLength() <= 1) {
-           if (newClass && newClass != oldClass) {
-              if (element->GetStreamer()) {
-                 writeSequence->AddAction(WriteSTL<WriteSTLMemberWiseChangedClass,WriteSTLObjectWiseStreamer>, new TConfigSTL(false, this,i,compinfo,compinfo->fOffset,1,oldClass,newClass,element->GetStreamer(),element->GetTypeName(),isSTLbase));
-              } else {
-                 writeSequence->AddAction(WriteSTL<WriteSTLMemberWiseChangedClass,WriteSTLObjectWiseFastArray>, new TConfigSTL(false, this,i,compinfo,compinfo->fOffset,1,oldClass,newClass,element->GetTypeName(),isSTLbase));
-              }
-           } else {
-              if (element->GetStreamer()) {
-                 writeSequence->AddAction(WriteSTL<WriteSTLMemberWiseSameClass,WriteSTLObjectWiseStreamer>, new TConfigSTL(false, this,i,compinfo,compinfo->fOffset,1,oldClass,element->GetStreamer(),element->GetTypeName(),isSTLbase));
-              } else {
-                 writeSequence->AddAction(WriteSTL<WriteSTLMemberWiseSameClass,WriteSTLObjectWiseFastArray>, new TConfigSTL(false, this,i,compinfo,compinfo->fOffset,1,oldClass,element->GetTypeName(),isSTLbase));
-              }
-           }
-        } else {
-           if (newClass && newClass != oldClass) {
-              if (element->GetStreamer()) {
-                 writeSequence->AddAction(WriteSTL<WriteArraySTLMemberWiseChangedClass,WriteSTLObjectWiseStreamer>, new TConfigSTL(false, this,i,compinfo,compinfo->fOffset,element->GetArrayLength(),oldClass,newClass,element->GetStreamer(),element->GetTypeName(),isSTLbase));
-              } else {
-                 writeSequence->AddAction(WriteSTL<WriteArraySTLMemberWiseChangedClass,WriteSTLObjectWiseFastArray>, new TConfigSTL(false, this,i,compinfo,compinfo->fOffset,element->GetArrayLength(),oldClass,newClass,element->GetTypeName(),isSTLbase));
-              }
-           } else {
-              if (element->GetStreamer()) {
-                 writeSequence->AddAction(WriteSTL<WriteArraySTLMemberWiseSameClass,WriteSTLObjectWiseStreamer>, new TConfigSTL(false, this,i,compinfo,compinfo->fOffset,element->GetArrayLength(),oldClass,element->GetStreamer(),element->GetTypeName(),isSTLbase));
-              } else {
-                 writeSequence->AddAction(WriteSTL<WriteArraySTLMemberWiseSameClass,WriteSTLObjectWiseFastArray>, new TConfigSTL(false, this,i,compinfo,compinfo->fOffset,element->GetArrayLength(),oldClass,element->GetTypeName(),isSTLbase));
-              }
-           }
-        }
-        break;
-     } */
       default:
          writeSequence->AddAction( GenericWriteAction, new TGenericConfiguration(this,i,compinfo) );
          break;
