@@ -4895,13 +4895,6 @@ void TStreamerInfo::AddWriteAction(TStreamerInfoActions::TActionSequence *writeS
          writeSequence->AddAction( GenericWriteAction, new TGenericConfiguration(this,i,compinfo) );
          break;
    }
-#if defined(CDJ_NO_COMPILE)
-   if (element->TestBit(TStreamerElement::kCache)) {
-      TConfiguredAction action( writeSequence->fActions.back() );  // Action is moved, we must pop it next.
-      writeSequence->fActions.pop_back();
-      writeSequence->AddAction( UseCache, new TConfigurationUseCache(this,action,element->TestBit(TStreamerElement::kRepeat)) );
-   }
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4993,88 +4986,6 @@ void TStreamerInfo::AddWriteTextAction(TStreamerInfoActions::TActionSequence *wr
       writeSequence->AddAction(WriteStreamerCase, new TGenericConfiguration(this, i, compinfo));
       break;
 
-   // case TStreamerInfo::kBits:    writeSequence->AddAction( WriteBasicType<BitsMarker>, new
-   // TConfiguration(this,i,compinfo,compinfo->fOffset) );    break;
-   /*case TStreamerInfo::kFloat16: {
-       if (element->GetFactor() != 0) {
-          writeSequence->AddAction( WriteBasicType_WithFactor<float>, new
-    TConfWithFactor(this,i,compinfo,compinfo->fOffset,element->GetFactor(),element->GetXmin()) );
-       } else {
-          Int_t nbits = (Int_t)element->GetXmin();
-          if (!nbits) nbits = 12;
-          writeSequence->AddAction( WriteBasicType_NoFactor<float>, new
-    TConfNoFactor(this,i,compinfo,compinfo->fOffset,nbits) );
-       }
-       break;
-    } */
-   /*case TStreamerInfo::kDouble32: {
-      if (element->GetFactor() != 0) {
-         writeSequence->AddAction( WriteBasicType_WithFactor<double>, new
-   TConfWithFactor(this,i,compinfo,compinfo->fOffset,element->GetFactor(),element->GetXmin()) );
-      } else {
-         Int_t nbits = (Int_t)element->GetXmin();
-         if (!nbits) {
-            writeSequence->AddAction( ConvertBasicType<float,double>, new
-   TConfiguration(this,i,compinfo,compinfo->fOffset) );
-         } else {
-            writeSequence->AddAction( WriteBasicType_NoFactor<double>, new
-   TConfNoFactor(this,i,compinfo,compinfo->fOffset,nbits) );
-         }
-      }
-      break;
-   } */
-   // case TStreamerInfo::kTNamed:  writeSequence->AddAction( WriteTNamed, new
-   // TConfiguration(this,i,compinfo,compinfo->fOffset) );    break;
-   // Idea: We should calculate the CanIgnoreTObjectStreamer here and avoid calling the
-   // Streamer alltogether.
-   // case TStreamerInfo::kTObject: writeSequence->AddAction( WriteTObject, new
-   // TConfiguration(this,i,compinfo,compinfo->fOffset) );    break;
-   // case TStreamerInfo::kTString: writeSequence->AddAction( WriteTString, new
-   // TConfiguration(this,i,compinfo,compinfo->fOffset) );    break;
-   /*case TStreamerInfo::kSTL: {
-      TClass *newClass = element->GetNewClass();
-      TClass *oldClass = element->GetClassPointer();
-      Bool_t isSTLbase = element->IsBase() && element->IsA()!=TStreamerBase::Class();
-
-      if (element->GetArrayLength() <= 1) {
-         if (newClass && newClass != oldClass) {
-            if (element->GetStreamer()) {
-               writeSequence->AddAction(WriteSTL<WriteSTLMemberWiseChangedClass,WriteSTLObjectWiseStreamer>, new
-   TConfigSTL(false, this,i,compinfo,compinfo->fOffset,1,oldClass,newClass,element->GetStreamer(),element->GetTypeName(),isSTLbase));
-            } else {
-               writeSequence->AddAction(WriteSTL<WriteSTLMemberWiseChangedClass,WriteSTLObjectWiseFastArray>, new
-   TConfigSTL(false, this,i,compinfo,compinfo->fOffset,1,oldClass,newClass,element->GetTypeName(),isSTLbase));
-            }
-         } else {
-            if (element->GetStreamer()) {
-               writeSequence->AddAction(WriteSTL<WriteSTLMemberWiseSameClass,WriteSTLObjectWiseStreamer>, new
-   TConfigSTL(false, this,i,compinfo,compinfo->fOffset,1,oldClass,element->GetStreamer(),element->GetTypeName(),isSTLbase));
-            } else {
-               writeSequence->AddAction(WriteSTL<WriteSTLMemberWiseSameClass,WriteSTLObjectWiseFastArray>, new
-   TConfigSTL(false, this,i,compinfo,compinfo->fOffset,1,oldClass,element->GetTypeName(),isSTLbase));
-            }
-         }
-      } else {
-         if (newClass && newClass != oldClass) {
-            if (element->GetStreamer()) {
-               writeSequence->AddAction(WriteSTL<WriteArraySTLMemberWiseChangedClass,WriteSTLObjectWiseStreamer>, new
-   TConfigSTL(false, this,i,compinfo,compinfo->fOffset,element->GetArrayLength(),oldClass,newClass,element->GetStreamer(),element->GetTypeName(),isSTLbase));
-            } else {
-               writeSequence->AddAction(WriteSTL<WriteArraySTLMemberWiseChangedClass,WriteSTLObjectWiseFastArray>, new
-   TConfigSTL(false, this,i,compinfo,compinfo->fOffset,element->GetArrayLength(),oldClass,newClass,element->GetTypeName(),isSTLbase));
-            }
-         } else {
-            if (element->GetStreamer()) {
-               writeSequence->AddAction(WriteSTL<WriteArraySTLMemberWiseSameClass,WriteSTLObjectWiseStreamer>, new
-   TConfigSTL(false, this,i,compinfo,compinfo->fOffset,element->GetArrayLength(),oldClass,element->GetStreamer(),element->GetTypeName(),isSTLbase));
-            } else {
-               writeSequence->AddAction(WriteSTL<WriteArraySTLMemberWiseSameClass,WriteSTLObjectWiseFastArray>, new
-   TConfigSTL(false, this,i,compinfo,compinfo->fOffset,element->GetArrayLength(),oldClass,element->GetTypeName(),isSTLbase));
-            }
-         }
-      }
-      break;
-   } */
    default: generic = kTRUE; break;
    }
 
@@ -5090,15 +5001,6 @@ void TStreamerInfo::AddWriteTextAction(TStreamerInfoActions::TActionSequence *wr
       // use generic write action when special handling is not provided
       if (generic)
          writeSequence->AddAction(GenericWriteAction, new TGenericConfiguration(this, i, compinfo));
-
-#if defined(CDJ_NO_COMPILE)
-   if (element->TestBit(TStreamerElement::kCache)) {
-      TConfiguredAction action(writeSequence->fActions.back()); // Action is moved, we must pop it next.
-      writeSequence->fActions.pop_back();
-      writeSequence->AddAction(UseCache,
-                               new TConfigurationUseCache(this, action, element->TestBit(TStreamerElement::kRepeat)));
-   }
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
