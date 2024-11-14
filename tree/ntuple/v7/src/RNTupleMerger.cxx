@@ -849,7 +849,9 @@ RNTupleMerger::Merge(std::span<RPageSource *> sources, RPageSink &destination, c
 
       // Create sink from the input model if not initialized
       if (!destination.IsInitialized()) {
-         model = srcDescriptor->CreateModel();
+         auto opts = RNTupleDescriptor::RCreateModelOptions();
+         opts.fReconstructProjections = true;
+         model = srcDescriptor->CreateModel(opts);
          destination.Init(*model);
       }
 
