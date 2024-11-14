@@ -1015,7 +1015,27 @@ namespace TStreamerInfoActions
       return 0;
    }
 
+   inline Int_t WriteTString(TBuffer &buf, void *addr, const TConfiguration *config)
+   {
+      // Read in a TString object.
+
+      // Idea: We could separate the TString Streamer in its two parts and
+      // avoid the if (buf.IsReading()) and try having it inlined.
+      ((TString*)(((char*)addr)+config->fOffset))->TString::Streamer(buf);
+      return 0;
+   }
+
    INLINE_TEMPLATE_ARGS Int_t ReadTObject(TBuffer &buf, void *addr, const TConfiguration *config)
+   {
+      // Read in a TObject object part.
+
+      // Idea: We could separate the TObject Streamer in its two parts and
+      // avoid the if (buf.IsReading()).
+      ((TObject*)(((char*)addr)+config->fOffset))->TObject::Streamer(buf);
+      return 0;
+   }
+
+   inline Int_t WriteTObject(TBuffer &buf, void *addr, const TConfiguration *config)
    {
       // Read in a TObject object part.
 
@@ -1035,6 +1055,18 @@ namespace TStreamerInfoActions
       // code.
       static const TClass *TNamed_cl = TNamed::Class();
       return buf.ReadClassBuffer(TNamed_cl,(((char*)addr)+config->fOffset));
+   }
+
+   inline Int_t WriteTNamed(TBuffer &buf, void *addr, const TConfiguration *config)
+   {
+      // Read in a TNamed object part.
+      // Since the TNamed streamer is solely delegating back to the StreamerInfo we
+      // can skip the streamer.
+
+      // Idea: We could extract the code from ReadClassBuffer and avoid one function
+      // code.
+      static const TClass *TNamed_cl = TNamed::Class();
+      return buf.WriteClassBuffer(TNamed_cl,(((char*)addr)+config->fOffset));
    }
 
    class TConfigSTL : public TConfiguration {
@@ -4782,6 +4814,12 @@ void TStreamerInfo::AddWriteAction(TStreamerInfoActions::TActionSequence *writeS
          break;
       }
 
+     case TStreamerInfo::kTNamed:  writeSequence->AddAction( WriteTNamed, new TConfiguration(this, i, compinfo, compinfo->fOffset) );    break;
+        // Idea: We should calculate the CanIgnoreTObjectStreamer here and avoid calling the
+        // Streamer alltogether.
+     case TStreamerInfo::kTObject: writeSequence->AddAction( WriteTObject, new TConfiguration(this, i, compinfo, compinfo->fOffset) );    break;
+     case TStreamerInfo::kTString: writeSequence->AddAction( WriteTString, new TConfiguration(this, i, compinfo, compinfo->fOffset) );    break;
+
 
        // case TStreamerInfo::kBits:    writeSequence->AddAction( WriteBasicType<BitsMarker>, new TConfiguration(this,i,compinfo,compinfo->fOffset) );    break;
      /*case TStreamerInfo::kFloat16: {
@@ -4807,11 +4845,6 @@ void TStreamerInfo::AddWriteAction(TStreamerInfoActions::TActionSequence *writeS
         }
         break;
      } */
-     //case TStreamerInfo::kTNamed:  writeSequence->AddAction( WriteTNamed, new TConfiguration(this,i,compinfo,compinfo->fOffset) );    break;
-        // Idea: We should calculate the CanIgnoreTObjectStreamer here and avoid calling the
-        // Streamer alltogether.
-     //case TStreamerInfo::kTObject: writeSequence->AddAction( WriteTObject, new TConfiguration(this,i,compinfo,compinfo->fOffset) );    break;
-     //case TStreamerInfo::kTString: writeSequence->AddAction( WriteTString, new TConfiguration(this,i,compinfo,compinfo->fOffset) );    break;
      /*case TStreamerInfo::kSTL: {
         TClass *newClass = element->GetNewClass();
         TClass *oldClass = element->GetClassPointer();
