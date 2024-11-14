@@ -90,7 +90,7 @@ private:
    std::mutex fLock; ///< The page pool is accessed concurrently due to parallel decompression
 
    /// Add a new page to the fLookupByBuffer and fLookupByKey data structures.
-   void AddPage(const RPage &page, const RKey &key, std::size_t index);
+   REntry &AddPage(RPage page, const RKey &key, std::int64_t initialRefCounter);
 
    /// Give back a page to the pool and decrease the reference counter. There must not be any pointers anymore into
    /// this page. If the reference counter drops to zero, the page pool might decide to call the deleter given in
