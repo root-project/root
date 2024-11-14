@@ -67,9 +67,6 @@ private:
    struct RInFlightCluster {
       std::future<std::unique_ptr<RCluster>> fFuture;
       RCluster::RKey fClusterKey;
-      /// By the time a cluster has been loaded, this cluster might not be necessary anymore. This can happen if
-      /// there are jumps in the access pattern (i.e. the access pattern deviates from linear access).
-      bool fIsExpired = false;
 
       bool operator ==(const RInFlightCluster &other) const {
          return (fClusterKey.fClusterId == other.fClusterKey.fClusterId) &&
