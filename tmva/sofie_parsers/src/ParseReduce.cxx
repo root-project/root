@@ -16,8 +16,8 @@ std::unique_ptr<ROperator> ParseReduce(RModelParser_ONNX &parser, const onnx::No
 
    if (nodeproto.op_type() == "ReduceMean")
       op_mode = ReduceMean;
-   else if (nodeproto.op_type() == "ReduceSumsquare")
-      op_mode = ReduceSumsquare;
+   else if (nodeproto.op_type() == "ReduceSumSquare")
+      op_mode = ReduceSumSquare;
    else if (nodeproto.op_type() == "ReduceProd")
       op_mode = ReduceProd;
    else if (nodeproto.op_type() == "ReduceSum")
@@ -77,9 +77,9 @@ ParserFuncSignature ParseReduceMean = [](RModelParser_ONNX &parser, const onnx::
    return ParseReduce<EReduceOpMode::ReduceMean>(parser, nodeproto);
 };
 
-// Parse ReduceSumsquare
-ParserFuncSignature ParseReduceSumsquare = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
-   return ParseReduce<EReduceOpMode::ReduceSumsquare>(parser, nodeproto);
+// Parse ReduceSumSquare
+ParserFuncSignature ParseReduceSumSquare = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
+   return ParseReduce<EReduceOpMode::ReduceSumSquare>(parser, nodeproto);
 };
 
 // Parse ReduceProd
