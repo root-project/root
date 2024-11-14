@@ -16,7 +16,7 @@ namespace TMVA{
 namespace Experimental{
 namespace SOFIE{
 
-enum EReduceOpMode { ReduceMean, ReduceSum, ReduceSumsquare, ReduceProd, InvalidReduceOp };
+enum EReduceOpMode { ReduceMean, ReduceSum, ReduceSumSquare, ReduceProd, InvalidReduceOp };
 
 template <typename T, EReduceOpMode Op>
 class ROperator_Reduce final : public ROperator
@@ -38,7 +38,7 @@ public:
 
    std::string Name() {
       if (fReduceOpMode == ReduceMean)  return "ReduceMean";
-      else if (fReduceOpMode == ReduceSumsquare )  return "ReduceSumsquare";
+      else if (fReduceOpMode == ReduceSumSquare )  return "ReduceSumSquare";
       else if (fReduceOpMode == ReduceProd ) return "ReduceProd";
       else if (fReduceOpMode == ReduceSum) return "ReduceSum";
       return "Invalid";
@@ -175,7 +175,7 @@ public:
             out << SP << SP << SP <<  "tensor_" << fNY << "[i] *= tensor_" << fNX << "[i * " << reducedLength << " + j];\n";
          else if (fReduceOpMode == ReduceSum || fReduceOpMode == ReduceMean)
             out << SP << SP << SP <<  "tensor_" << fNY << "[i] += tensor_" << fNX << "[i * " << reducedLength << " + j];\n";
-         else if(fReduceOpMode == ReduceSumsquare)
+         else if(fReduceOpMode == ReduceSumSquare)
             out << SP << SP << SP <<  "tensor_" << fNY << "[i] += tensor_" << fNX << "[i * " << reducedLength << " + j] * tensor_"
                                     << fNX << "[i * " << reducedLength << " + j];\n";
          out << SP << SP << "}\n"; // end j loop
@@ -199,7 +199,7 @@ public:
             out << SP << SP << SP << "tensor_" << fNY << "[j] *= tensor_" << fNX << "[i * " << outputLength << " + j];\n";
          else if (fReduceOpMode == ReduceSum || fReduceOpMode == ReduceMean)
             out << SP << SP << SP << "tensor_" << fNY << "[j] += tensor_" << fNX << "[i * " << outputLength << " + j];\n";
-         else if(fReduceOpMode == ReduceSumsquare)
+         else if(fReduceOpMode == ReduceSumSquare)
             out << SP << SP << SP << "tensor_" << fNY << "[j] += tensor_" << fNX << "[i * " << outputLength << " + j] * tensor_"
                                     << fNX << "[i * " << outputLength << " + j];\n";
          out << SP << SP << "}\n"; // end j loop
@@ -238,7 +238,7 @@ public:
             out << SP << SP << "tensor_" << fNY << "[outputIndex] *= tensor_" << fNX << "[i];\n";
          else if (fReduceOpMode == ReduceSum || fReduceOpMode == ReduceMean)
             out << SP << SP << "tensor_" << fNY << "[outputIndex] += tensor_" << fNX << "[i];\n";
-         else if (fReduceOpMode == ReduceSumsquare) {
+         else if (fReduceOpMode == ReduceSumSquare) {
             out << SP << SP << "tensor_" << fNY << "[outputIndex] += tensor_" << fNX << "[i] * tensor_" << fNX
                 << "[i];\n";
          }

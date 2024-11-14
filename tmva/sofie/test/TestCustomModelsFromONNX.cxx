@@ -33,7 +33,10 @@
 #include "ReduceProd_FromONNX.hxx"
 #include "input_models/references/ReduceProd.ref.hxx"
 
-#include "ReduceSum_FromONNX.hxx"  // hardcode reference
+// hardcode reference
+#include "ReduceSum_FromONNX.hxx"
+
+#include "ReduceSumSquare_FromONNX.hxx"
 
 #include "Shape_FromONNX.hxx"
 #include "input_models/references/Shape.ref.hxx"
@@ -1201,6 +1204,33 @@ TEST(ONNX, ReduceSum){
    EXPECT_EQ(output.size(), 1);
 
    float correct[] = {24};
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ONNX, ReduceSumSquare){
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+
+   // Preparing the standard  input
+   std::vector<float> input({
+      5, 2, 3,
+      5, 5, 4
+   });
+
+   // reduce on last axis and do not keep dimension
+   // output should be [1,2] and [25+4+9, 25+25+16]
+
+
+   TMVA_SOFIE_ReduceSumSquare::Session s("ReduceSumSquare_FromONNX.dat");
+   std::vector<float> output = s.infer(input.data());
+   // Checking output size
+   EXPECT_EQ(output.size(), 2);
+
+   float correct[] = {38, 66};
 
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); ++i) {
