@@ -42,3 +42,9 @@ ROOTTEST_ADD_TEST(test_MergeNestedSameName
                   COMMAND ${ROOT_root_CMD} -q -b -l "hadd_check_nested_same_name.C"
                   OUTREF hadd_check_nested_same_name.ref
 )
+
+ROOTTEST_ADD_TEST(test_MergeCMSOpenDataRNTuples
+                  COPY_TO_BUILDDIR hadd_check_cms.C cms_opendata_0_100.root cms_opendata_100_200.root cms_opendata_0_200.root
+                  COMMAND ${ROOT_hadd_CMD} -f cms_opendata_merged.root cms_opendata_0_100.root cms_opendata_100_200.root
+                  POSTCMD ${ROOT_root_CMD} -q -b -l "hadd_check_cms.C(\"cms_opendata_merged.root\", \"cms_opendata_0_200.root\")"
+)
