@@ -1456,9 +1456,9 @@ void RooAbsCollection::printLatex(std::ostream& ofs, Int_t ncol, const char* opt
    RooRealVar* par = static_cast<RooRealVar*>((static_cast<RooArgList*>(listListRRV.At(k)))->at(i+j*nrow)) ;
    if (par) {
      if (option) {
-       ofs << *std::unique_ptr<TString>{par->format(sigDigit,(k==0)?option:sibOption.Data())};
+       ofs << par->format(sigDigit,(k==0)?option:sibOption.Data());
      } else {
-       ofs << *std::unique_ptr<TString>{par->format((k==0)?*formatCmd:sibFormatCmd)};
+       ofs << par->format((k==0)?*formatCmd:sibFormatCmd);
      }
    }
    if (!(j==ncol-1 && k==nlist-1)) {

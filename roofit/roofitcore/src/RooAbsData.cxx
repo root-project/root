@@ -1243,21 +1243,12 @@ RooPlot* RooAbsData::statOn(RooPlot* frame, const char* what, const char *label,
   meanv->setPlotLabel("Mean") ;
   std::unique_ptr<RooRealVar> rms{rmsVar(*static_cast<RooRealVar*>(frame->getPlotVar()),cutSpec,cutRange)};
   rms->setPlotLabel("RMS") ;
-  std::unique_ptr<TString> rmsText;
-  std::unique_ptr<TString> meanText;
-  std::unique_ptr<TString> NText;
-  if (options) {
-    rmsText.reset(rms->format(sigDigits,options));
-    meanText.reset(meanv->format(sigDigits,options));
-    NText.reset(N.format(sigDigits,options));
-  } else {
-    rmsText.reset(rms->format(*formatCmd));
-    meanText.reset(meanv->format(*formatCmd));
-    NText.reset(N.format(*formatCmd));
-  }
-  if (showR) box->AddText(rmsText->Data());
-  if (showM) box->AddText(meanText->Data());
-  if (showN) box->AddText(NText->Data());
+  std::string rmsText = options ? rms->format(sigDigits,options) : rms->format(*formatCmd);
+  std::string meanText = options ? meanv->format(sigDigits,options) : meanv->format(*formatCmd);
+  std::string NText = options ? N.format(sigDigits,options) : N.format(*formatCmd);
+  if (showR) box->AddText(rmsText.c_str());
+  if (showM) box->AddText(meanText.c_str());
+  if (showN) box->AddText(NText.c_str());
 
   // add the optional label if specified
   if(showLabel) box->AddText(label);

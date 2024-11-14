@@ -1033,8 +1033,8 @@ void fitGaussToPulls(RooPlot& frame, RooDataSet& fitParData)
    const char * options = "ELU";
    std::stringstream ss;
    ss << "Fit parameters:\n"
-      << "#mu: " << *std::unique_ptr<TString>{pullMean.format(sigDigits, options)}
-      << "\n#sigma: " << *std::unique_ptr<TString>{pullSigma.format(sigDigits, options)};
+      << "#mu: " << pullMean.format(sigDigits, options)
+      << "\n#sigma: " << pullSigma.format(sigDigits, options);
    // We set the parameters constant to disable the default label. Still, we
    // use param() on as a wrapper for the text box generation.
    pullMean.setConstant(true);

@@ -118,8 +118,8 @@ public:
   Int_t defaultPrintContents(Option_t* opt) const override ;
 
 
-  TString* format(const RooCmdArg& formatArg) const ;
-  TString* format(Int_t sigDigits, const char *options) const ;
+  std::string format(const RooCmdArg& formatArg) const ;
+  std::string format(Int_t sigDigits, const char *options) const ;
 
   static void printScientific(bool flag=false) ;
   static void printSigDigits(Int_t ndig=5) ;
