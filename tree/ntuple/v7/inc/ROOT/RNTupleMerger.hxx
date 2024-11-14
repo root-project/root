@@ -81,7 +81,7 @@ class RNTupleMerger final {
    std::optional<TTaskGroup> fTaskGroup;
 
    void MergeCommonColumns(RClusterPool &clusterPool, DescriptorId_t clusterId,
-                           std::span<RColumnMergeInfo> commonColumns, RCluster::ColumnSet_t commonColumnSet,
+                           std::span<RColumnMergeInfo> commonColumns, const RCluster::ColumnSet_t &commonColumnSet,
                            RSealedPageMergeData &sealedPageData, const RNTupleMergeData &mergeData);
 
    void MergeSourceClusters(RPageSource &source, std::span<RColumnMergeInfo> commonColumns,
