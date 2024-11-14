@@ -59,12 +59,17 @@ class MemoryStlString(unittest.TestCase):
         # application does not segfault
         f2 = ROOT.TF2("f2", "sin(x)*sin(y)/x/y")
 
-
     def test_tf3_memory_regulation(self):
         """Make sure TF3 is properly managed by the memory regulation logic"""
         # The test is just that the memory regulation works correctly and the
         # application does not segfault
         f3 = ROOT.TF3("f3","[0] * sin(x) + [1] * cos(y) + [2] * z",0,10,0,10,0,10)
+
+    def test_tcolor_memory_regulation(self):
+        """Make sure TColor is properly managed by the memory regulation logic"""
+        # The test is just that the memory regulation works correctly and the
+        # application does not segfault
+        c = ROOT.TColor(42, 42, 42)
 
 if __name__ == '__main__':
     unittest.main()
