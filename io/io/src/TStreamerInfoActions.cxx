@@ -3611,11 +3611,14 @@ static TConfiguredAction GetCollectionReadAction(TVirtualStreamerInfo *info, TSt
          }
          break;
       }
-      case TStreamerInfo::kTNamed:  return TConfiguredAction( Looper::template LoopOverCollection<ReadTNamed >, new TConfiguration(info,i,compinfo,offset) );    break;
+      case TStreamerInfo::kTNamed:
+         return TConfiguredAction( Looper::template LoopOverCollection<ReadTNamed >, new TConfiguration(info, i, compinfo, offset) );
          // Idea: We should calculate the CanIgnoreTObjectStreamer here and avoid calling the
          // Streamer alltogether.
-      case TStreamerInfo::kTObject: return TConfiguredAction( Looper::template LoopOverCollection<ReadTObject >, new TConfiguration(info,i,compinfo,offset) );    break;
-      case TStreamerInfo::kTString: return TConfiguredAction( Looper::template LoopOverCollection<ReadTString >, new TConfiguration(info,i,compinfo,offset) );    break;
+      case TStreamerInfo::kTObject:
+         return TConfiguredAction( Looper::template LoopOverCollection<ReadTObject >, new TConfiguration(info, i, compinfo,offset) );
+      case TStreamerInfo::kTString:
+         return TConfiguredAction( Looper::template LoopOverCollection<ReadTString >, new TConfiguration(info, i, compinfo,offset) );
       case TStreamerInfo::kArtificial:
       case TStreamerInfo::kCacheNew:
       case TStreamerInfo::kCacheDelete:
@@ -3916,6 +3919,12 @@ static TConfiguredAction GetCollectionWriteAction(TVirtualStreamerInfo *info, TS
          }
          break;
       }
+      case TStreamerInfo::kTNamed:  return TConfiguredAction( Looper::template LoopOverCollection<WriteTNamed >, new TConfiguration(info,i,compinfo,offset) );    break;
+         // Idea: We should calculate the CanIgnoreTObjectStreamer here and avoid calling the
+         // Streamer alltogether.
+      case TStreamerInfo::kTObject: return TConfiguredAction( Looper::template LoopOverCollection<WriteTObject >, new TConfiguration(info,i,compinfo,offset) );    break;
+      case TStreamerInfo::kTString: return TConfiguredAction( Looper::template LoopOverCollection<WriteTString >, new TConfiguration(info,i,compinfo,offset) );    break;
+
       default:
          return TConfiguredAction( Looper::GenericWrite, new TConfiguration(info,i,compinfo,0 /* 0 because we call the legacy code */) );
    }
@@ -3950,11 +3959,11 @@ static TConfiguredAction GetNumericCollectionWriteAction(Int_t type, TConfigSTL 
          delete conf;
          return TConfiguredAction( Looper::WriteCollectionFloat16, alternate );
          // if (element->GetFactor() != 0) {
-         //    return TConfiguredAction( Looper::template WriteAction<WriteBasicType_WithFactor<float> >, new TConfWithFactor(info,i,compinfo,offset,element->GetFactor(),element->GetXmin()) );
+         //    return TConfiguredAction( Looper::template LoopOverCollection<WriteBasicType_WithFactor<float> >, new TConfWithFactor(info,i,compinfo,offset,element->GetFactor(),element->GetXmin()) );
          // } else {
          //    Int_t nbits = (Int_t)element->GetXmin();
          //    if (!nbits) nbits = 12;
-         //    return TConfiguredAction( Looper::template WriteAction<WriteBasicType_NoFactor<float> >, new TConfNoFactor(info,i,compinfo,offset,nbits) );
+         //    return TConfiguredAction( Looper::template LoopOverCollection<WriteBasicType_NoFactor<float> >, new TConfNoFactor(info,i,compinfo,offset,nbits) );
          // }
          break;
       }
@@ -3963,13 +3972,13 @@ static TConfiguredAction GetNumericCollectionWriteAction(Int_t type, TConfigSTL 
          delete conf;
          return TConfiguredAction( Looper::WriteCollectionDouble32, alternate );
          // if (element->GetFactor() != 0) {
-         //    return TConfiguredAction( Looper::template WriteAction<WriteBasicType_WithFactor<double> >, new TConfWithFactor(info,i,compinfo,offset,element->GetFactor(),element->GetXmin()) );
+         //    return TConfiguredAction( Looper::template LoopOverCollection<WriteBasicType_WithFactor<double> >, new TConfWithFactor(info,i,compinfo,offset,element->GetFactor(),element->GetXmin()) );
          // } else {
          //    Int_t nbits = (Int_t)element->GetXmin();
          //    if (!nbits) {
-         //       return TConfiguredAction( Looper::template WriteAction<ConvertBasicType<float,double> >, new TConfiguration(info,i,compinfo,offset) );
+         //       return TConfiguredAction( Looper::template LoopOverCollection<ConvertBasicType<float,double> >, new TConfiguration(info,i,compinfo,offset) );
          //    } else {
-         //       return TConfiguredAction( Looper::template WriteAction<WriteBasicType_NoFactor<double> >, new TConfNoFactor(info,i,compinfo,offset,nbits) );
+         //       return TConfiguredAction( Looper::template LoopOverCollection<WriteBasicType_NoFactor<double> >, new TConfNoFactor(info,i,compinfo,offset,nbits) );
          //    }
          // }
          break;
