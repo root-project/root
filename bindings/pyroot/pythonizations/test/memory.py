@@ -53,5 +53,18 @@ class MemoryStlString(unittest.TestCase):
         groot.SetStyle(style.GetName())
         groot.ForceStyle()
 
+    def test_tf2_memory_regulation(self):
+        """Regression test for https://github.com/root-project/root/issues/16942"""
+        # The test is just that the memory regulation works correctly and the
+        # application does not segfault
+        f2 = ROOT.TF2("f2", "sin(x)*sin(y)/x/y")
+
+
+    def test_tf3_memory_regulation(self):
+        """Make sure TF3 is properly managed by the memory regulation logic"""
+        # The test is just that the memory regulation works correctly and the
+        # application does not segfault
+        f3 = ROOT.TF3("f3","[0] * sin(x) + [1] * cos(y) + [2] * z",0,10,0,10,0,10)
+
 if __name__ == '__main__':
     unittest.main()

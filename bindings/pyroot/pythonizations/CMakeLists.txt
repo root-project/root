@@ -97,6 +97,8 @@ set(py_sources
   ROOT/_pythonization/_tdirectory.py
   ROOT/_pythonization/_tdirectoryfile.py
   ROOT/_pythonization/_tf1.py
+  ROOT/_pythonization/_tf2.py
+  ROOT/_pythonization/_tf3.py
   ROOT/_pythonization/_tfile.py
   ROOT/_pythonization/_tformula.py
   ROOT/_pythonization/_tgraph.py
