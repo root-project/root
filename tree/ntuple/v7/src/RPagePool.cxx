@@ -50,11 +50,13 @@ void ROOT::Experimental::Internal::RPagePool::ReleasePage(const RPage &page)
    if (page.IsNull()) return;
    std::lock_guard<std::mutex> lockGuard(fLock);
 
-   const auto idx = fLookupByBuffer.at(page.GetBuffer());
+   auto itrLookup = fLookupByBuffer.find(page.GetBuffer());
+   assert(itrLookup != fLookupByBuffer.end());
+   const auto idx = itrLookup->second;
    const auto N = fEntries.size();
 
    if (--fEntries[idx].fRefCounter == 0) {
-      fLookupByBuffer.erase(page.GetBuffer());
+      fLookupByBuffer.erase(itrLookup);
 
       auto itrPageSet = fLookupByKey.find(fEntries[idx].fKey);
       assert(itrPageSet != fLookupByKey.end());
