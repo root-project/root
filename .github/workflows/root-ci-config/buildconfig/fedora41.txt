@@ -3,3 +3,4 @@ builtin_zlib=ON
 builtin_nlohmannjson=On
 builtin_vdt=On
 pythia8=Off
+ccache=On

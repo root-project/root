@@ -2,3 +2,4 @@ builtin_nlohmannjson=ON
 builtin_vdt=On
 tmva-sofie=On
 BLA_VENDOR=OpenBLAS
+ccache=On

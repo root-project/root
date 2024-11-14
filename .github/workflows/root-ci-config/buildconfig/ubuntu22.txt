@@ -2,3 +2,4 @@ builtin_vdt=ON
 pythia8=OFF
 r=ON
 tmva-sofie=ON
+ccache=On
