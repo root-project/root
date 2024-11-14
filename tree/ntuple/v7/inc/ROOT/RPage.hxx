@@ -18,6 +18,7 @@
 
 #include <ROOT/RNTupleUtil.hxx>
 
+#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
@@ -152,6 +153,7 @@ public:
    /// return value is ignored.
    void *GrowUnchecked(ClusterSize_t::ValueType nElements)
    {
+      assert(fNElements + nElements <= fMaxElements);
       auto offset = GetNBytes();
       fNElements += nElements;
       return static_cast<unsigned char *>(fBuffer) + offset;
