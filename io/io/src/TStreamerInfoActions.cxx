@@ -2121,7 +2121,7 @@ namespace TStreamerInfoActions
       };
 
       template <Int_t (*iter_action)(TBuffer&,void *,const TConfiguration*)>
-      static INLINE_TEMPLATE_ARGS Int_t ReadAction(TBuffer &buf, void *start, const void *end, const TLoopConfiguration *loopconfig, const TConfiguration *config)
+      static INLINE_TEMPLATE_ARGS Int_t LoopOverCollection(TBuffer &buf, void *start, const void *end, const TLoopConfiguration *loopconfig, const TConfiguration *config)
       {
          const Int_t incr = ((TVectorLoopConfig*)loopconfig)->fIncrement;
          //Idea: can we factor out the addition of fOffset
@@ -2587,7 +2587,7 @@ namespace TStreamerInfoActions
       };
 
       template <Int_t (*action)(TBuffer&,void *,const TConfiguration*)>
-      static INLINE_TEMPLATE_ARGS Int_t ReadAction(TBuffer &buf, void *start, const void *end, const TConfiguration *config)
+      static INLINE_TEMPLATE_ARGS Int_t LoopOverCollection(TBuffer &buf, void *start, const void *end, const TConfiguration *config)
       {
          for(void *iter = start; iter != end; iter = (char*)iter + sizeof(void*) ) {
             action(buf, *(void**)iter, config);
@@ -2943,7 +2943,7 @@ public:
       };
 
       template <Int_t (*iter_action)(TBuffer&,void *,const TConfiguration*)>
-      static INLINE_TEMPLATE_ARGS Int_t ReadAction(TBuffer &buf, void *start, const void *end, const TLoopConfiguration *loopconf, const TConfiguration *config)
+      static INLINE_TEMPLATE_ARGS Int_t LoopOverCollection(TBuffer &buf, void *start, const void *end, const TLoopConfiguration *loopconf, const TConfiguration *config)
       {
          TGenericLoopConfig *loopconfig = (TGenericLoopConfig*)loopconf;
 
@@ -3448,11 +3448,11 @@ static TConfiguredAction GetNumericCollectionReadAction(Int_t type, TConfigSTL *
          delete conf;
          return TConfiguredAction( Looper::ReadCollectionFloat16, alternate );
          // if (element->GetFactor() != 0) {
-         //    return TConfiguredAction( Looper::template ReadAction<ReadBasicType_WithFactor<float> >, new TConfWithFactor(info,i,compinfo,offset,element->GetFactor(),element->GetXmin()) );
+         //    return TConfiguredAction( Looper::template LoopOverCollection<ReadBasicType_WithFactor<float> >, new TConfWithFactor(info,i,compinfo,offset,element->GetFactor(),element->GetXmin()) );
          // } else {
          //    Int_t nbits = (Int_t)element->GetXmin();
          //    if (!nbits) nbits = 12;
-         //    return TConfiguredAction( Looper::template ReadAction<ReadBasicType_NoFactor<float> >, new TConfNoFactor(info,i,compinfo,offset,nbits) );
+         //    return TConfiguredAction( Looper::template LoopOverCollection<ReadBasicType_NoFactor<float> >, new TConfNoFactor(info,i,compinfo,offset,nbits) );
          // }
          break;
       }
@@ -3461,13 +3461,13 @@ static TConfiguredAction GetNumericCollectionReadAction(Int_t type, TConfigSTL *
          delete conf;
          return TConfiguredAction( Looper::ReadCollectionDouble32, alternate );
          // if (element->GetFactor() != 0) {
-         //    return TConfiguredAction( Looper::template ReadAction<ReadBasicType_WithFactor<double> >, new TConfWithFactor(info,i,compinfo,offset,element->GetFactor(),element->GetXmin()) );
+         //    return TConfiguredAction( Looper::template LoopOverCollection<ReadBasicType_WithFactor<double> >, new TConfWithFactor(info,i,compinfo,offset,element->GetFactor(),element->GetXmin()) );
          // } else {
          //    Int_t nbits = (Int_t)element->GetXmin();
          //    if (!nbits) {
-         //       return TConfiguredAction( Looper::template ReadAction<ConvertBasicType<float,double> >, new TConfiguration(info,i,compinfo,offset) );
+         //       return TConfiguredAction( Looper::template LoopOverCollection<ConvertBasicType<float,double> >, new TConfiguration(info,i,compinfo,offset) );
          //    } else {
-         //       return TConfiguredAction( Looper::template ReadAction<ReadBasicType_NoFactor<double> >, new TConfNoFactor(info,i,compinfo,offset,nbits) );
+         //       return TConfiguredAction( Looper::template LoopOverCollection<ReadBasicType_NoFactor<double> >, new TConfNoFactor(info,i,compinfo,offset,nbits) );
          //    }
          // }
          break;
@@ -3587,35 +3587,35 @@ static TConfiguredAction GetCollectionReadAction(TVirtualStreamerInfo *info, TSt
       case TStreamerInfo::kUInt:    return TConfiguredAction( Looper::template ReadBasicType<UInt_t>,   new TConfiguration(info,i,compinfo,offset) );    break;
       case TStreamerInfo::kULong:   return TConfiguredAction( Looper::template ReadBasicType<ULong_t>,  new TConfiguration(info,i,compinfo,offset) );   break;
       case TStreamerInfo::kULong64: return TConfiguredAction( Looper::template ReadBasicType<ULong64_t>, new TConfiguration(info,i,compinfo,offset) ); break;
-      case TStreamerInfo::kBits: return TConfiguredAction( Looper::template ReadAction<TStreamerInfoActions::ReadBasicType<BitsMarker> > , new TBitsConfiguration(info,i,compinfo,offset) ); break;
+      case TStreamerInfo::kBits: return TConfiguredAction( Looper::template LoopOverCollection<TStreamerInfoActions::ReadBasicType<BitsMarker> > , new TBitsConfiguration(info,i,compinfo,offset) ); break;
       case TStreamerInfo::kFloat16: {
          if (element->GetFactor() != 0) {
-            return TConfiguredAction( Looper::template ReadAction<ReadBasicType_WithFactor<float> >, new TConfWithFactor(info,i,compinfo,offset,element->GetFactor(),element->GetXmin()) );
+            return TConfiguredAction( Looper::template LoopOverCollection<ReadBasicType_WithFactor<float> >, new TConfWithFactor(info,i,compinfo,offset,element->GetFactor(),element->GetXmin()) );
          } else {
             Int_t nbits = (Int_t)element->GetXmin();
             if (!nbits) nbits = 12;
-            return TConfiguredAction( Looper::template ReadAction<ReadBasicType_NoFactor<float> >, new TConfNoFactor(info,i,compinfo,offset,nbits) );
+            return TConfiguredAction( Looper::template LoopOverCollection<ReadBasicType_NoFactor<float> >, new TConfNoFactor(info,i,compinfo,offset,nbits) );
          }
          break;
       }
       case TStreamerInfo::kDouble32: {
          if (element->GetFactor() != 0) {
-            return TConfiguredAction( Looper::template ReadAction<ReadBasicType_WithFactor<double> >, new TConfWithFactor(info,i,compinfo,offset,element->GetFactor(),element->GetXmin()) );
+            return TConfiguredAction( Looper::template LoopOverCollection<ReadBasicType_WithFactor<double> >, new TConfWithFactor(info,i,compinfo,offset,element->GetFactor(),element->GetXmin()) );
          } else {
             Int_t nbits = (Int_t)element->GetXmin();
             if (!nbits) {
-               return TConfiguredAction( Looper::template ReadAction<ConvertBasicType<float,double>::Action >, new TConfiguration(info,i,compinfo,offset) );
+               return TConfiguredAction( Looper::template LoopOverCollection<ConvertBasicType<float,double>::Action >, new TConfiguration(info,i,compinfo,offset) );
             } else {
-               return TConfiguredAction( Looper::template ReadAction<ReadBasicType_NoFactor<double> >, new TConfNoFactor(info,i,compinfo,offset,nbits) );
+               return TConfiguredAction( Looper::template LoopOverCollection<ReadBasicType_NoFactor<double> >, new TConfNoFactor(info,i,compinfo,offset,nbits) );
             }
          }
          break;
       }
-      case TStreamerInfo::kTNamed:  return TConfiguredAction( Looper::template ReadAction<ReadTNamed >, new TConfiguration(info,i,compinfo,offset) );    break;
+      case TStreamerInfo::kTNamed:  return TConfiguredAction( Looper::template LoopOverCollection<ReadTNamed >, new TConfiguration(info,i,compinfo,offset) );    break;
          // Idea: We should calculate the CanIgnoreTObjectStreamer here and avoid calling the
          // Streamer alltogether.
-      case TStreamerInfo::kTObject: return TConfiguredAction( Looper::template ReadAction<ReadTObject >, new TConfiguration(info,i,compinfo,offset) );    break;
-      case TStreamerInfo::kTString: return TConfiguredAction( Looper::template ReadAction<ReadTString >, new TConfiguration(info,i,compinfo,offset) );    break;
+      case TStreamerInfo::kTObject: return TConfiguredAction( Looper::template LoopOverCollection<ReadTObject >, new TConfiguration(info,i,compinfo,offset) );    break;
+      case TStreamerInfo::kTString: return TConfiguredAction( Looper::template LoopOverCollection<ReadTString >, new TConfiguration(info,i,compinfo,offset) );    break;
       case TStreamerInfo::kArtificial:
       case TStreamerInfo::kCacheNew:
       case TStreamerInfo::kCacheDelete:
