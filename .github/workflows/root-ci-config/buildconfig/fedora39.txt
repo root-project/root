@@ -1,2 +1,3 @@
 builtin_nlohmannjson=On
 builtin_vdt=On
+ccache=On

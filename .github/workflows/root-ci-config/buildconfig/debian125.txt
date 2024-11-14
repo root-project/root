@@ -1,2 +1,3 @@
 pythia8=OFF
 mysql=OFF
+ccache=On
