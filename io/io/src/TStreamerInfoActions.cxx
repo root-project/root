@@ -4845,6 +4845,13 @@ void TStreamerInfo::AddWriteAction(TStreamerInfoActions::TActionSequence *writeS
             }
          }
          break;
+      case TStreamerInfo::kStreamer:
+         if (fOldVersion >= 3)
+            writeSequence->AddAction( WriteStreamerCase, new TGenericConfiguration(this,i,compinfo, compinfo->fOffset) );
+         else
+            // Use the slower path for legacy files
+            writeSequence->AddAction( GenericWriteAction, new TGenericConfiguration(this,i,compinfo) );
+         break;
       case TStreamerInfo::kAny:
          if (compinfo->fStreamer)
             writeSequence->AddAction( WriteViaExtStreamer, new TGenericConfiguration(this, i, compinfo, compinfo->fOffset) );
