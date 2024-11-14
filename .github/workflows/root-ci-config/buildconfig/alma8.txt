@@ -4,3 +4,4 @@ builtin_tbb=ON
 builtin_vdt=On
 fortran=OFF
 tmva-sofie=On
+ccache=On
