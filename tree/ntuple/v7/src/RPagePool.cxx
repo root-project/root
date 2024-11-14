@@ -22,28 +22,27 @@
 #include <cstdlib>
 #include <utility>
 
-void ROOT::Experimental::Internal::RPagePool::AddPage(const RPage &page, const RKey &key, std::size_t index)
+ROOT::Experimental::Internal::RPagePool::REntry &
+ROOT::Experimental::Internal::RPagePool::AddPage(RPage page, const RKey &key, std::int64_t initialRefCounter)
 {
    assert(fLookupByBuffer.count(page.GetBuffer()) == 0);
+   const auto index = fEntries.size();
+   auto &entry = fEntries.emplace_back(REntry{std::move(page), key, initialRefCounter});
    fLookupByBuffer[page.GetBuffer()] = index;
    fLookupByKey[key].emplace_back(index);
+   return entry;
 }
 
 ROOT::Experimental::Internal::RPageRef ROOT::Experimental::Internal::RPagePool::RegisterPage(RPage page, RKey key)
 {
    std::lock_guard<std::mutex> lockGuard(fLock);
-   auto index = fEntries.size();
-   auto &entry = fEntries.emplace_back(REntry{std::move(page), key, 1});
-   AddPage(page, key, index);
-   return RPageRef(entry.fPage, this);
+   return RPageRef(AddPage(std::move(page), key, 1).fPage, this);
 }
 
 void ROOT::Experimental::Internal::RPagePool::PreloadPage(RPage page, RKey key)
 {
    std::lock_guard<std::mutex> lockGuard(fLock);
-   auto index = fEntries.size();
-   fEntries.emplace_back(REntry{std::move(page), key, 0});
-   AddPage(page, key, index);
+   AddPage(std::move(page), key, 0);
 }
 
 void ROOT::Experimental::Internal::RPagePool::ReleasePage(const RPage &page)
