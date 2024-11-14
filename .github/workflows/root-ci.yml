@@ -424,8 +424,17 @@ jobs:
         CONTAINER_OPTIONS: "--security-opt label=disable --rm ${{ matrix.property == 'gpu' && '--device nvidia.com/gpu=all' || '' }}" #KEEP IN SYNC WITH ABOVE
 
     steps:
-      - name: ccache info
+      - name: Configure large ccache
+        if: ${{ matrix.is_special }}
         run: |
+          ccache -o max_size=5G
+          ccache -p || true
+          ccache -s || true
+
+      - name: Configure small ccache
+        if: ${{ !matrix.is_special }}
+        run: |
+          ccache -o max_size=1.5G
           ccache -p || true
           ccache -s || true
 
@@ -555,7 +564,6 @@ jobs:
 
       - name: ccache info (post)
         run: |
-          ccache -p || true
           ccache -s || true
 
   event_file:
