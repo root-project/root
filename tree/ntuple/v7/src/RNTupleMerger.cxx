@@ -476,7 +476,8 @@ static void ExtendDestinationModel(std::span<const RFieldDescriptor *> newFields
 // Merges all columns appearing both in the source and destination RNTuples, just copying them if their
 // compression matches ("fast merge") or by unsealing and resealing them with the proper compression.
 void RNTupleMerger::MergeCommonColumns(RClusterPool &clusterPool, DescriptorId_t clusterId,
-                                       std::span<RColumnMergeInfo> commonColumns, RCluster::ColumnSet_t commonColumnSet,
+                                       std::span<RColumnMergeInfo> commonColumns,
+                                       const RCluster::ColumnSet_t &commonColumnSet,
                                        RSealedPageMergeData &sealedPageData, const RNTupleMergeData &mergeData)
 {
    assert(commonColumns.size() == commonColumnSet.size());
@@ -511,7 +512,6 @@ void RNTupleMerger::MergeCommonColumns(RClusterPool &clusterPool, DescriptorId_t
       const auto colRangeCompressionSettings = clusterDesc.GetColumnRange(columnId).fCompressionSettings;
       const bool needsCompressionChange = mergeData.fMergeOpts.fCompressionSettings != kUnknownCompressionSettings &&
                                           colRangeCompressionSettings != mergeData.fMergeOpts.fCompressionSettings;
-
       if (needsCompressionChange && mergeData.fMergeOpts.fExtraVerbose)
          Info("RNTuple::Merge", "Column %s: changing source compression from %d to %d", column.fColumnName.c_str(),
               colRangeCompressionSettings, mergeData.fMergeOpts.fCompressionSettings);
@@ -759,7 +759,7 @@ static void AddColumnsFromField(std::vector<RColumnMergeInfo> &columns, const RN
       const auto &srcColumn = srcDesc.GetColumnDescriptor(srcColumnId);
       RColumnMergeInfo info{};
       info.fColumnName = name + '.' + std::to_string(srcColumn.GetIndex());
-      info.fInputId = srcColumnId;
+      info.fInputId = srcColumn.GetPhysicalId();
       // Since the parent field is only relevant for extra dst columns, the choice of src or dstFieldDesc as a parent
       // is arbitrary (they're the same field).
       info.fParentField = &dstFieldDesc;
