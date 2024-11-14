@@ -76,7 +76,7 @@ private:
    struct REntry {
       RPage fPage;
       RKey fKey;
-      std::int32_t fRefCounter = 0;
+      std::int64_t fRefCounter = 0;
    };
 
    std::vector<REntry> fEntries; ///< All cached pages in the page pool
