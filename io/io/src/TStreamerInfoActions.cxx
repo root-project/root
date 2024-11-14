@@ -4845,6 +4845,20 @@ void TStreamerInfo::AddWriteAction(TStreamerInfoActions::TActionSequence *writeS
             }
          }
          break;
+      case TStreamerInfo::kAny:
+         if (compinfo->fStreamer)
+            writeSequence->AddAction( WriteViaExtStreamer, new TGenericConfiguration(this, i, compinfo, compinfo->fOffset) );
+         else {
+            if (compinfo->fNewClass && compinfo->fNewClass->fStreamerImpl == &TClass::StreamerStreamerInfo)
+              writeSequence->AddAction( WriteViaClassBuffer,
+                 new TConfObject(this, i, compinfo, compinfo->fOffset, compinfo->fClass, compinfo->fNewClass) );
+            else if (compinfo->fClass && compinfo->fClass->fStreamerImpl == &TClass::StreamerStreamerInfo)
+              writeSequence->AddAction( WriteViaClassBuffer,
+                 new TConfObject(this, i, compinfo, compinfo->fOffset, compinfo->fClass, nullptr) );
+            else // Use the slower path for unusual cases
+              writeSequence->AddAction( GenericWriteAction, new TGenericConfiguration(this, i, compinfo) );
+         }
+         break;
 
        // case TStreamerInfo::kBits:    writeSequence->AddAction( WriteBasicType<BitsMarker>, new TConfiguration(this,i,compinfo,compinfo->fOffset) );    break;
      /*case TStreamerInfo::kFloat16: {
