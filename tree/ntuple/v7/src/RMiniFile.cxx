@@ -209,8 +209,6 @@ struct RTFKey {
       } fInfoLong;
    };
 
-   std::uint32_t fKeyHeaderSize{18 + sizeof(fInfoShort)}; // not part of serialization
-
    RTFKey() : fInfoShort() {}
    RTFKey(std::uint64_t seekKey, std::uint64_t seekPdir, const RTFString &clName, const RTFString &objName,
           const RTFString &titleName, std::size_t szObjInMem, std::size_t szObjOnDisk = 0)
@@ -220,17 +218,14 @@ struct RTFKey {
       fObjLen = szObjInMem;
       if ((seekKey > static_cast<unsigned int>(std::numeric_limits<std::int32_t>::max())) ||
           (seekPdir > static_cast<unsigned int>(std::numeric_limits<std::int32_t>::max()))) {
-         fKeyHeaderSize = 18 + sizeof(fInfoLong);
-         fKeyLen = fKeyHeaderSize + clName.GetSize() + objName.GetSize() + titleName.GetSize();
+         fVersion = fVersion + 1000;
          fInfoLong.fSeekKey = seekKey;
          fInfoLong.fSeekPdir = seekPdir;
-         fVersion = fVersion + 1000;
       } else {
-         fKeyHeaderSize = 18 + sizeof(fInfoShort);
-         fKeyLen = fKeyHeaderSize + clName.GetSize() + objName.GetSize() + titleName.GetSize();
          fInfoShort.fSeekKey = seekKey;
          fInfoShort.fSeekPdir = seekPdir;
       }
+      fKeyLen = GetHeaderSize() + clName.GetSize() + objName.GetSize() + titleName.GetSize();
       fNbytes = fKeyLen + ((szObjOnDisk == 0) ? szObjInMem : szObjOnDisk);
    }
 
@@ -242,7 +237,6 @@ struct RTFKey {
       std::uint32_t seekPdir = fInfoShort.fSeekPdir;
       fInfoLong.fSeekKey = seekKey;
       fInfoLong.fSeekPdir = seekPdir;
-      fKeyHeaderSize = fKeyHeaderSize + sizeof(fInfoLong) - sizeof(fInfoShort);
       fKeyLen = fKeyLen + sizeof(fInfoLong) - sizeof(fInfoShort);
       fNbytes = fNbytes + sizeof(fInfoLong) - sizeof(fInfoShort);
       fVersion = fVersion + 1000;
@@ -984,7 +978,7 @@ std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::RFileSimple::Writ
    RTFString strTitle{title};
 
    RTFKey key(fKeyOffset, directoryOffset, strClass, strObject, strTitle, len, nbytes);
-   Write(&key, key.fKeyHeaderSize, fKeyOffset);
+   Write(&key, key.GetHeaderSize(), fKeyOffset);
    Write(&strClass, strClass.GetSize());
    Write(&strObject, strObject.GetSize());
    Write(&strTitle, strTitle.GetSize());
@@ -1026,8 +1020,8 @@ ROOT::Experimental::Internal::RNTupleFileWriter::RFileProper::WriteKey(const voi
    // Follow the fact that RKeyBlob is a big key unconditionally (see above)
    keyHeader.MakeBigKey();
 
-   Write(&keyHeader, keyHeader.fKeyHeaderSize, offset);
-   offset += keyHeader.fKeyHeaderSize;
+   Write(&keyHeader, keyHeader.GetHeaderSize(), offset);
+   offset += keyHeader.GetHeaderSize();
    Write(&strClass, strClass.GetSize(), offset);
    offset += strClass.GetSize();
    Write(&strObject, strObject.GetSize(), offset);
@@ -1366,12 +1360,12 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::WriteTFileKeysList()
    RTFKeyList keyList{1};
    RTFKey keyKeyList(fFileSimple.fControlBlock->fFileRecord.GetSeekKeys(), 100, strEmpty, strFileName, strEmpty,
                      keyList.GetSize() + keyRNTuple.fKeyLen);
-   fFileSimple.Write(&keyKeyList, keyKeyList.fKeyHeaderSize, fFileSimple.fControlBlock->fFileRecord.GetSeekKeys());
+   fFileSimple.Write(&keyKeyList, keyKeyList.GetHeaderSize(), fFileSimple.fControlBlock->fFileRecord.GetSeekKeys());
    fFileSimple.Write(&strEmpty, strEmpty.GetSize());
    fFileSimple.Write(&strFileName, strFileName.GetSize());
    fFileSimple.Write(&strEmpty, strEmpty.GetSize());
    fFileSimple.Write(&keyList, keyList.GetSize());
-   fFileSimple.Write(&keyRNTuple, keyRNTuple.fKeyHeaderSize);
+   fFileSimple.Write(&keyRNTuple, keyRNTuple.GetHeaderSize());
    // Write class name, object name, and title for this key.
    fFileSimple.Write(&strRNTupleClass, strRNTupleClass.GetSize());
    fFileSimple.Write(&strRNTupleName, strRNTupleName.GetSize());
@@ -1435,7 +1429,7 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::WriteTFileSkeleton(int def
    fFileSimple.fControlBlock->fFileRecord.fNBytesName = nbytesName;
    fFileSimple.fControlBlock->fHeader.SetNbytesName(nbytesName);
 
-   fFileSimple.Write(&keyRoot, keyRoot.fKeyHeaderSize, 100);
+   fFileSimple.Write(&keyRoot, keyRoot.GetHeaderSize(), 100);
    // Write class name, object name, and title for the TFile key.
    fFileSimple.Write(&strTFile, strTFile.GetSize());
    fFileSimple.Write(&strFileName, strFileName.GetSize());
