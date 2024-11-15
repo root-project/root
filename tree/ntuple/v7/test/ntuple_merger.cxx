@@ -1274,3 +1274,58 @@ TEST(RNTupleMerger, Double32)
       }
    }
 }
+
+TEST(RNTupleMerger, MergeProjectedFields)
+{
+   // Verify that the projected fields get treated properly by the merge (i.e. we don't try and merge the alias columns
+   // but we preserve the projections)
+   FileRaii fileGuard1("test_ntuple_merge_proj_in_1.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto fieldFoo = model->MakeField<int>("foo", 0);
+      auto projBar = RFieldBase::Create("bar", "int").Unwrap();
+      model->AddProjectedField(std::move(projBar), [](const std::string &) { return "foo"; });
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath());
+      for (size_t i = 0; i < 10; ++i) {
+         *fieldFoo = i * 123;
+         ntuple->Fill();
+      }
+   }
+
+   FileRaii fileGuard2("test_ntuple_merge_proj_out.root");
+   {
+      // Gather the input sources
+      std::vector<std::unique_ptr<RPageSource>> sources;
+      sources.push_back(RPageSource::Create("ntuple", fileGuard1.GetPath(), RNTupleReadOptions()));
+      sources.push_back(RPageSource::Create("ntuple", fileGuard1.GetPath(), RNTupleReadOptions()));
+      std::vector<RPageSource *> sourcePtrs;
+      for (const auto &s : sources) {
+         sourcePtrs.push_back(s.get());
+      }
+
+      // Now Merge the inputs
+      auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuard2.GetPath(), RNTupleWriteOptions());
+      RNTupleMerger merger;
+      auto res = merger.Merge(sourcePtrs, *destination);
+      EXPECT_TRUE(bool(res));
+   }
+
+   {
+      auto ntuple1 = RNTupleReader::Open("ntuple", fileGuard1.GetPath());
+      auto ntuple2 = RNTupleReader::Open("ntuple", fileGuard2.GetPath());
+      ASSERT_EQ(ntuple1->GetNEntries() + ntuple1->GetNEntries(), ntuple2->GetNEntries());
+
+      auto foo1 = ntuple1->GetModel().GetDefaultEntry().GetPtr<int>("foo");
+      auto foo2 = ntuple2->GetModel().GetDefaultEntry().GetPtr<int>("foo");
+
+      auto bar1 = ntuple1->GetModel().GetDefaultEntry().GetPtr<int>("bar");
+      auto bar2 = ntuple2->GetModel().GetDefaultEntry().GetPtr<int>("bar");
+
+      for (auto i = 0u; i < ntuple2->GetNEntries(); ++i) {
+         ntuple1->LoadEntry(i % ntuple1->GetNEntries());
+         ntuple2->LoadEntry(i);
+         ASSERT_EQ(*foo1, *foo2);
+         ASSERT_EQ(*bar1, *bar2);
+      }
+   }
+}
