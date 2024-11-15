@@ -884,8 +884,21 @@ RNTupleMerger::RNTupleMerger()
 }
 
 RResult<void>
-RNTupleMerger::Merge(std::span<RPageSource *> sources, RPageSink &destination, const RNTupleMergeOptions &mergeOpts)
+RNTupleMerger::Merge(std::span<RPageSource *> sources, RPageSink &destination, const RNTupleMergeOptions &mergeOptsIn)
 {
+   RNTupleMergeOptions mergeOpts = mergeOptsIn;
+   {
+      const auto dstCompSettings = destination.GetWriteOptions().GetCompression();
+      if (mergeOpts.fCompressionSettings == kUnknownCompressionSettings) {
+         mergeOpts.fCompressionSettings = dstCompSettings;
+      } else if (mergeOpts.fCompressionSettings != dstCompSettings) {
+         return R__FAIL(std::string("The compression given to RNTupleMergeOptions is different from that of the "
+                                    "sink! (opts: ") +
+                        std::to_string(mergeOpts.fCompressionSettings) + ", sink: " + std::to_string(dstCompSettings) +
+                        ") This is currently unsupported.");
+      }
+   }
+
    RNTupleMergeData mergeData{sources, destination, mergeOpts};
 
    std::unique_ptr<RNTupleModel> model; // used to initialize the schema of the output RNTuple
