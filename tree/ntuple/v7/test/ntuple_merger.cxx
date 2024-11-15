@@ -848,6 +848,7 @@ TEST(RNTupleMerger, ChangeCompression)
    constexpr auto kNewComp = 404;
    FileRaii fileGuardOutChecksum("test_ntuple_merge_changecomp_out.root");
    FileRaii fileGuardOutNoChecksum("test_ntuple_merge_changecomp_out_nock.root");
+   FileRaii fileGuardOutDiffComp("test_ntuple_merge_changecomp_out_diff.root");
    FileRaii fileGuardOutUncomp("test_ntuple_merge_changecomp_out_uncomp.root");
    {
       // Gather the input sources
@@ -861,6 +862,7 @@ TEST(RNTupleMerger, ChangeCompression)
       // Create the output
       auto writeOpts = RNTupleWriteOptions{};
       writeOpts.SetEnablePageChecksums(true);
+      auto destinationDifferentComp = std::make_unique<RPageSinkFile>("ntuple", fileGuardOutDiffComp.GetPath(), writeOpts);
       writeOpts.SetCompression(kNewComp);
       auto destinationChecksum = std::make_unique<RPageSinkFile>("ntuple", fileGuardOutChecksum.GetPath(), writeOpts);
       auto destinationNoChecksum =
@@ -872,7 +874,10 @@ TEST(RNTupleMerger, ChangeCompression)
       RNTupleMerger merger;
       auto opts = RNTupleMergeOptions{};
       opts.fCompressionSettings = kNewComp;
-      auto res = merger.Merge(sourcePtrs, *destinationChecksum, opts);
+      // This should fail because we specified a different compression than the sink
+      auto res = merger.Merge(sourcePtrs, *destinationDifferentComp, opts);
+      EXPECT_FALSE(bool(res));
+      res = merger.Merge(sourcePtrs, *destinationChecksum, opts);
       EXPECT_TRUE(bool(res));
       res = merger.Merge(sourcePtrs, *destinationNoChecksum, opts);
       EXPECT_TRUE(bool(res));
