@@ -321,6 +321,16 @@ TEST_P(RDFRegressionTests, FileNameQueryNoExt)
    EXPECT_EQ(df.Count().GetValue(), 10);
 }
 
+TEST_P(RDFRegressionTests, EmptyFileList)
+{
+   try {
+      ROOT::RDataFrame df{"", {}};
+   } catch (const std::invalid_argument &e) {
+      const std::string expected{"RDataFrame: empty list of input files."};
+      EXPECT_EQ(e.what(), expected);
+   }
+}
+
 // run single-thread tests
 INSTANTIATE_TEST_SUITE_P(Seq, RDFRegressionTests, ::testing::Values(false));
 
