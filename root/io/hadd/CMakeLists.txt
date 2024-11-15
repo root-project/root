@@ -5,11 +5,29 @@ if(ROOT_pyroot_FOUND)
                       MACRO input_validation.py)
 endif()
 
-ROOTTEST_ADD_TEST(test_MergeChangeComp
+# merge 2 RNTuples passing an explicit compression
+ROOTTEST_ADD_TEST(test_MergeChangeComp_explicit
                   COPY_TO_BUILDDIR merge_gen_input_tuples.C merge_changeComp_check_output.C
                   PRECMD ${ROOT_root_CMD} -q -b -l "merge_gen_input_tuples.C(\"test_comp_in1.root\", \"test_comp_in2.root\")"
                   COMMAND ${ROOT_hadd_CMD} -f404 test_comp_out.root test_comp_in1.root test_comp_in2.root
                   POSTCMD ${ROOT_root_CMD} -q -b -l "merge_changeComp_check_output.C(404, \"test_comp_out.root\", \"test_comp_in1.root\", \"test_comp_in2.root\")"
+)
+
+# merge 2 RNTuples without passing a compression
+ROOTTEST_ADD_TEST(test_MergeChangeComp_default
+                  DEPENDS test_MergeChangeComp_explicit
+                  PRECMD ${ROOT_root_CMD} -q -b -l "merge_gen_input_tuples.C(\"test_comp_in_def_1.root\", \"test_comp_in_def_2.root\")"
+                  COMMAND ${ROOT_hadd_CMD} -f test_comp_out_def.root test_comp_in_def_1.root test_comp_in_def_2.root
+                  POSTCMD ${ROOT_root_CMD} -q -b -l "merge_changeComp_check_output.C(505, \"test_comp_out_def.root\", \"test_comp_in_def_1.root\", \"test_comp_in_def_2.root\")"
+)
+
+# merge 2 RNTuples using the first tuple's compression
+# NOTE: merge_gen_input_tuples.C generates the first tuple as 505 and the second as 101
+ROOTTEST_ADD_TEST(test_MergeChangeComp_first
+                  DEPENDS test_MergeChangeComp_explicit
+                  PRECMD ${ROOT_root_CMD} -q -b -l "merge_gen_input_tuples.C(\"test_comp_in_ff_1.root\", \"test_comp_in_ff_2.root\")"
+                  COMMAND ${ROOT_hadd_CMD} -ff test_comp_out_ff.root test_comp_in_ff_2.root test_comp_in_ff_1.root
+                  POSTCMD ${ROOT_root_CMD} -q -b -l "merge_changeComp_check_output.C(101, \"test_comp_out_ff.root\", \"test_comp_in_ff_1.root\", \"test_comp_in_ff_2.root\")"
 )
 
 ROOTTEST_ADD_TEST(test_TreeChangeComp
