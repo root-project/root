@@ -207,6 +207,17 @@ namespace TStreamerInfoActions
       TConfiguration *Copy() override { return new TConfObject(*this); }
    };
 
+   struct TConfStreamerLoop : public TConfiguration {
+      bool fIsPtrPtr = false; // Which are we, an array of objects or an array of pointers to objects?
+
+      TConfStreamerLoop(TVirtualStreamerInfo *info, UInt_t id, TCompInfo_t *compinfo, Int_t offset, bool isPtrPtr)
+         : TConfiguration(info, id, compinfo, offset), fIsPtrPtr(isPtrPtr)
+      {
+      }
+
+      TConfiguration *Copy() override { return new TConfStreamerLoop(*this); };
+   };
+
    Int_t GenericReadAction(TBuffer &buf, void *addr, const TConfiguration *config)
    {
       char *obj = (char*)addr;
@@ -1609,405 +1620,447 @@ namespace TStreamerInfoActions
          return 0;
       }
 
-      /** Direct copy of code from TStreamerInfo::WriteBufferAux,
-       * potentially can be used later for non-text streaming */
+      static inline Int_t StreamerLoopExternal(TBuffer &buf, void *addr, const TConfiguration *actionConfig) {
+         UInt_t ioffset = actionConfig->fOffset;
+         // Get any private streamer which was set for the data member.
+         TMemberStreamer* pstreamer = actionConfig->fCompInfo->fStreamer;
+         Int_t* counter = (Int_t*) ((char *) addr /*entry pointer*/ + actionConfig->fCompInfo->fMethod /*counter offset*/);
+         // And call the private streamer, passing it the buffer, the object, and the counter.
+         (*pstreamer)(buf, (char *) addr /*entry pointer*/ + ioffset /*object offset*/, *counter);
+         return 0;
+      };
+
       template<bool kIsTextT>
-      static INLINE_TEMPLATE_ARGS Int_t WriteStreamerLoop(TBuffer &buf, void *addr, const TConfiguration *config)
-      {
-         UInt_t eoffset = 0; // extra parameter of TStreamerInfo::WriteBufferAux, 0 for all kind of objects writing
-         UInt_t ioffset = eoffset + config->fOffset;
-
-         if (!kIsTextT && config->fCompInfo->fStreamer) {
-            // Get any private streamer which was set for the data member.
-            TMemberStreamer* pstreamer = config->fCompInfo->fStreamer;
-            // -- We have a private streamer.
-            UInt_t pos = buf.WriteVersion(config->fInfo->IsA(), kTRUE);
-            // Loop over the entries in the clones array or the STL container.
-            //for (int k = 0; k < narr; ++k) {
-               // Get a pointer to the counter for the varying length array.
-               Int_t* counter = (Int_t*) ((char *) addr /*entry pointer*/ + eoffset /*entry offset*/ + config->fCompInfo->fMethod /*counter offset*/);
-
-               // And call the private streamer, passing it the buffer, the object, and the counter.
-               (*pstreamer)(buf, (char *) addr /*entry pointer*/ + ioffset /*object offset*/, *counter);
-            //} for k
-            buf.SetByteCount(pos, kTRUE);
-            // We are done, next streamer element.
-            return 0;
-         }
-
+      static Int_t WriteStreamerLoopPoly(TBuffer &buf, void *addr, const TConfiguration *config) {
          // Get the class of the data member.
          TClass* cl = config->fCompInfo->fClass;
-         // Which are we, an array of objects or an array of pointers to objects?
-         Bool_t isPtrPtr = (strstr(config->fCompInfo->fElem->GetTypeName(), "**") != 0);
+         UInt_t ioffset = config->fOffset;
+         bool isPtrPtr = ((TConfStreamerLoop*)config)->fIsPtrPtr;
 
-         // By default assume the file version is the newest.
-         Int_t fileVersion = kMaxInt;
+         // Get the counter for the varying length array.
+         Int_t vlen = *((Int_t*) ((char *) addr /*entry pointer*/ + config->fCompInfo->fMethod /*counter offset*/));
 
-         if (!kIsTextT) {
-            // At this point we do *not* have a private streamer.
-            // Get the version of the file we are writing to.
-            TFile* file = (TFile*) buf.GetParent();
-            if (file) {
-               fileVersion = file->GetVersion();
-            }
-         }
-         // Write the class version to the buffer.
-         UInt_t pos = buf.WriteVersion(config->fInfo->IsA(), kTRUE);
-         if (fileVersion > 51508) {
-            // -- Newer versions allow polymorphic pointers to objects.
-            // Loop over the entries in the clones array or the STL container.
-            //for (int k = 0; k < narr; ++k) {
-               // Get the counter for the varying length array.
-               Int_t vlen = *((Int_t*) ((char *) addr /*entry pointer*/ + eoffset /*entry offset*/ + config->fCompInfo->fMethod /*counter offset*/));
-
-               //b << vlen;
-               if (vlen) {
-                  // Get a pointer to the array of pointers.
-                  char** pp = (char**) ((char *) addr /*entry pointer*/ + ioffset /*object offset*/);
-                  // Loop over each element of the array of pointers to varying-length arrays.
-                  for (Int_t ndx = 0; ndx < config->fCompInfo->fLength; ++ndx) {
-                     if (!pp[ndx]) {
-                        // -- We do not have a pointer to a varying-length array.
-                        // Error("WriteBufferAux", "The pointer to element %s::%s type %d (%s) is null\n", GetName(), aElement->GetFullName(), compinfo[i]->fType, aElement->GetTypeName());
-                        // ::ErrorHandler(kError, "::WriteStreamerLoop", Form("The pointer to element %s::%s type %d (%s) is null\n", config->fInfo->GetName(), config->fCompInfo->fElem->GetFullName(), config->fCompInfo->fType, config->fCompInfo->fElem->GetTypeName()));
-                        printf("WriteStreamerLoop - The pointer to element %s::%s type %d (%s) is null\n", config->fInfo->GetName(), config->fCompInfo->fElem->GetFullName(), config->fCompInfo->fType, config->fCompInfo->fElem->GetTypeName());
-                        continue;
-                     }
-                     if (!isPtrPtr) {
-                        // -- We are a varying-length array of objects.
-                        // Write the entire array of objects to the buffer.
-                        // Note: Polymorphism is not allowed here.
-                        buf.WriteFastArray(pp[ndx], cl, vlen, nullptr);
-                     } else {
-                        // -- We are a varying-length array of pointers to objects.
-                        // Write the entire array of object pointers to the buffer.
-                        // Note: The object pointers are allowed to be polymorphic.
-                        buf.WriteFastArray((void **)pp[ndx], cl, vlen, kFALSE, nullptr);
-                     } // isPtrPtr
-                  } // ndx
-               } else // vlen
-               if (kIsTextT) {
-                  // special handling for the text-based streamers
-                  for (Int_t ndx = 0; ndx < config->fCompInfo->fLength; ++ndx)
-                     buf.WriteFastArray((void *)nullptr, cl, -1, nullptr);
+         //b << vlen;
+         if (vlen) {
+            // Get a pointer to the array of pointers.
+            char** pp = (char**) ((char *) addr /*entry pointer*/ + ioffset /*object offset*/);
+            // Loop over each element of the array of pointers to varying-length arrays.
+            for (Int_t ndx = 0; ndx < config->fCompInfo->fLength; ++ndx) {
+               if (!pp[ndx]) {
+                  // -- We do not have a pointer to a varying-length array.
+                  // Error("WriteBufferAux", "The pointer to element %s::%s type %d (%s) is null\n", GetName(), aElement->GetFullName(), compinfo[i]->fType, aElement->GetTypeName());
+                  // ::ErrorHandler(kError, "::WriteStreamerLoop", Form("The pointer to element %s::%s type %d (%s) is null\n", config->fInfo->GetName(), config->fCompInfo->fElem->GetFullName(), config->fCompInfo->fType, config->fCompInfo->fElem->GetTypeName()));
+                  printf("WriteStreamerLoop - The pointer to element %s::%s type %d (%s) is null\n", config->fInfo->GetName(), config->fCompInfo->fElem->GetFullName(), config->fCompInfo->fType, config->fCompInfo->fElem->GetTypeName());
+                  continue;
                }
-               //} // k
+               if (!isPtrPtr) {
+                  // -- We are a varying-length array of objects.
+                  // Write the entire array of objects to the buffer.
+                  // Note: Polymorphism is not allowed here.
+                  buf.WriteFastArray(pp[ndx], cl, vlen, nullptr);
+               } else {
+                  // -- We are a varying-length array of pointers to objects.
+                  // Write the entire array of object pointers to the buffer.
+                  // Note: The object pointers are allowed to be polymorphic.
+                  buf.WriteFastArray((void **)pp[ndx], cl, vlen, kFALSE, nullptr);
+               } // isPtrPtr
+            } // ndx
+         } else // vlen
+         if (kIsTextT) {
+            // special handling for the text-based streamers
+            for (Int_t ndx = 0; ndx < config->fCompInfo->fLength; ++ndx)
+               buf.WriteFastArray((void *)nullptr, cl, -1, nullptr);
          }
-         else {
-            // -- Older versions do *not* allow polymorphic pointers to objects.
-            // Loop over the entries in the clones array or the STL container.
-            //for (int k = 0; k < narr; ++k) {
-               // Get the counter for the varying length array.
-               Int_t vlen = *((Int_t*) ((char *) addr /*entry pointer*/ + eoffset /*entry offset*/ + config->fCompInfo->fMethod /*counter offset*/));
-               //b << vlen;
-               if (vlen) {
-                  // Get a pointer to the array of pointers.
-                  char** pp = (char**) ((char *) addr /*entry pointer*/ + ioffset /*object offset*/);
-                  // -- Older versions do *not* allow polymorphic pointers to objects.
-                  // Loop over each element of the array of pointers to varying-length arrays.
-                  for (Int_t ndx = 0; ndx < config->fCompInfo->fLength; ++ndx) {
-                     if (!pp[ndx]) {
-                        // -- We do not have a pointer to a varying-length array.
-                        //Error("WriteBufferAux", "The pointer to element %s::%s type %d (%s) is null\n", GetName(), aElement->GetFullName(), compinfo[i]->fType, aElement->GetTypeName());
-                        // ::ErrorHandler(kError, "::WriteTextStreamerLoop", Form("The pointer to element %s::%s type %d (%s) is null\n", config->fInfo->GetName(), config->fCompInfo->fElem->GetFullName(), config->fCompInfo->fType, config->fCompInfo->fElem->GetTypeName()));
-                        printf("WriteStreamerLoop - The pointer to element %s::%s type %d (%s) is null\n", config->fInfo->GetName(), config->fCompInfo->fElem->GetFullName(), config->fCompInfo->fType, config->fCompInfo->fElem->GetTypeName());
-                        continue;
-                     }
-                     if (!isPtrPtr) {
-                        // -- We are a varying-length array of objects.
-                        // Loop over the elements of the varying length array.
-                        for (Int_t v = 0; v < vlen; ++v) {
-                           // Write the object to the buffer.
-                           cl->Streamer(pp[ndx] + (v * cl->Size()), buf);
-                        } // v
-                     }
-                     else {
-                        // -- We are a varying-length array of pointers to objects.
-                        // Loop over the elements of the varying length array.
-                        for (Int_t v = 0; v < vlen; ++v) {
-                           // Get a pointer to the object pointer.
-                           char** r = (char**) pp[ndx];
-                           // Write the object to the buffer.
-                           cl->Streamer(r[v], buf);
-                        } // v
-                     } // isPtrPtr
-                  } // ndx
-               } // vlen
-            //} // k
-         } // fileVersion
-         // Backpatch the byte count into the buffer.
-         buf.SetByteCount(pos, kTRUE);
-
          return 0;
       }
 
-      /** Direct copy of code from TStreamerInfo::WriteBufferAux,
-       * potentially can be used later for non-text streaming */
-      template<bool kIsTextT>
-      static INLINE_TEMPLATE_ARGS Int_t ReadStreamerLoop(TBuffer &buf, void *addr, const TConfiguration *config)
-      {
-         UInt_t eoffset = 0; // extra parameter of TStreamerInfo::WriteBufferAux, 0 for all kind of objects writing
-         UInt_t ioffset = eoffset + config->fOffset;
-
+      static Int_t WriteStreamerLoopStatic(TBuffer &buf, void *addr, const TConfiguration *config) {
          // Get the class of the data member.
          TClass* cl = config->fCompInfo->fClass;
+         UInt_t ioffset = config->fOffset;
+         bool isPtrPtr = ((TConfStreamerLoop*)config)->fIsPtrPtr;
 
-         // Check for a private streamer.
-         if (!kIsTextT && config->fCompInfo->fStreamer) {
-            // Get any private streamer which was set for the data member.
-            TMemberStreamer* pstreamer = config->fCompInfo->fStreamer;
-            // -- We have a private streamer.
+         // Get the counter for the varying length array.
+         Int_t vlen = *((Int_t*) ((char *) addr /*entry pointer*/ + config->fCompInfo->fMethod /*counter offset*/));
+         //b << vlen;
+         if (vlen) {
+            // Get a pointer to the array of pointers.
+            char** pp = (char**) ((char *) addr /*entry pointer*/ + ioffset /*object offset*/);
+            // -- Older versions do *not* allow polymorphic pointers to objects.
+            // Loop over each element of the array of pointers to varying-length arrays.
+            for (Int_t ndx = 0; ndx < config->fCompInfo->fLength; ++ndx) {
+               if (!pp[ndx]) {
+                  // -- We do not have a pointer to a varying-length array.
+                  //Error("WriteBufferAux", "The pointer to element %s::%s type %d (%s) is null\n", GetName(), aElement->GetFullName(), compinfo[i]->fType, aElement->GetTypeName());
+                  // ::ErrorHandler(kError, "::WriteTextStreamerLoop", Form("The pointer to element %s::%s type %d (%s) is null\n", config->fInfo->GetName(), config->fCompInfo->fElem->GetFullName(), config->fCompInfo->fType, config->fCompInfo->fElem->GetTypeName()));
+                  printf("WriteStreamerLoop - The pointer to element %s::%s type %d (%s) is null\n", config->fInfo->GetName(), config->fCompInfo->fElem->GetFullName(), config->fCompInfo->fType, config->fCompInfo->fElem->GetTypeName());
+                  continue;
+               }
+               if (!isPtrPtr) {
+                  // -- We are a varying-length array of objects.
+                  // Loop over the elements of the varying length array.
+                  for (Int_t v = 0; v < vlen; ++v) {
+                     // Write the object to the buffer.
+                     cl->Streamer(pp[ndx] + (v * cl->Size()), buf);
+                  } // v
+               }
+               else {
+                  // -- We are a varying-length array of pointers to objects.
+                  // Loop over the elements of the varying length array.
+                  for (Int_t v = 0; v < vlen; ++v) {
+                     // Get a pointer to the object pointer.
+                     char** r = (char**) pp[ndx];
+                     // Write the object to the buffer.
+                     cl->Streamer(r[v], buf);
+                  } // v
+               } // isPtrPtr
+            } // ndx
+         } // vlen
+         return 0;
+      }
+
+      template<bool kIsTextT, typename... Ts>
+      struct WriteStreamerLoop {
+         static INLINE_TEMPLATE_ARGS Int_t Action(TBuffer &buf, void *start, Ts... args, const TConfiguration *config)
+         {
+            if (!kIsTextT && config->fCompInfo->fStreamer) {
+               // -- We have a private streamer.
+               UInt_t pos = buf.WriteVersion(config->fInfo->IsA(), kTRUE);
+
+               // Loop over the entries in the clones array or the STL container.
+               Looper::template LoopOverCollection< StreamerLoopExternal > (buf, start, args..., config);
+
+               buf.SetByteCount(pos, kTRUE);
+               // We are done, next streamer element.
+               return 0;
+            }
+
+            // By default assume the file version is the newest.
+            Int_t fileVersion = kMaxInt;
+
+            if (!kIsTextT) {
+               // At this point we do *not* have a private streamer.
+               // Get the version of the file we are writing to.
+               TFile* file = (TFile*) buf.GetParent();
+               if (file) {
+                  fileVersion = file->GetVersion();
+               }
+            }
+            // Write the class version to the buffer.
+            UInt_t pos = buf.WriteVersion(config->fInfo->IsA(), kTRUE);
+            if (fileVersion > 51508) {
+               // -- Newer versions allow polymorphic pointers to objects.
+               // Loop over the entries in the clones array or the STL container.
+               Looper::template LoopOverCollection< WriteStreamerLoopPoly<kIsTextT> > (buf, start, args..., config);
+            }
+            else {
+               // -- Older versions do *not* allow polymorphic pointers to objects.
+               // Loop over the entries in the clones array or the STL container.
+               Looper::template LoopOverCollection< ReadStreamerLoopStatic > (buf, start, args..., config);
+            } // fileVersion
+            // Backpatch the byte count into the buffer.
+            buf.SetByteCount(pos, kTRUE);
+
+            return 0;
+         }
+      };
+
+      template<bool kIsTextT>
+      static Int_t ReadStreamerLoopPoly(TBuffer &buf, void *addr, const TConfiguration *config) {
+         // Get the class of the data member.
+         TClass* cl = config->fCompInfo->fClass;
+         UInt_t ioffset = config->fOffset;
+         // Which are we, an array of objects or an array of pointers to objects?
+         bool isPtrPtr = ((TConfStreamerLoop*)config)->fIsPtrPtr;
+
+         // Get the counter for the varying length array.
+         Int_t vlen = *((Int_t *)((char *)addr /*entry pointer*/ +
+                                 config->fCompInfo->fMethod /*counter offset*/));
+         // Int_t realLen;
+         // b >> realLen;
+         // if (realLen != vlen) {
+         //   fprintf(stderr, "read vlen: %d  realLen: %s\n", vlen, realLen);
+         //}
+         // Get a pointer to the array of pointers.
+         char **pp = (char **)((char *)addr /*entry pointer*/ + ioffset /*object offset*/);
+         // Loop over each element of the array of pointers to varying-length arrays.
+         // if (!pp) {
+         //   continue;
+         // }
+
+         if (pp) // SL: place it here instead of continue, which is related to for(k) loop
+            for (Int_t ndx = 0; ndx < config->fCompInfo->fLength; ++ndx) {
+               // if (!pp[ndx]) {
+               // -- We do not have a pointer to a varying-length array.
+               // Error("ReadBuffer", "The pointer to element %s::%s type %d (%s) is null\n", thisVar->GetName(),
+               // aElement->GetFullName(), compinfo[i]->fType, aElement->GetTypeName());
+               // continue;
+               //}
+               // Delete any memory at pp[ndx].
+               if (!isPtrPtr) {
+                  cl->DeleteArray(pp[ndx]);
+                  pp[ndx] = 0;
+               } else {
+                  // Using vlen is wrong here because it has already
+                  // been overwritten with the value needed to read
+                  // the current record.  Fixing this will require
+                  // doing a pass over the object at the beginning
+                  // of the I/O and releasing all the buffer memory
+                  // for varying length arrays before we overwrite
+                  // the counter values.
+                  //
+                  // For now we will just leak memory, just as we
+                  // have always done in the past.  Fix this.
+                  //
+                  // char** r = (char**) pp[ndx];
+                  // if (r) {
+                  //   for (Int_t v = 0; v < vlen; ++v) {
+                  //      cl->Destructor(r[v]);
+                  //      r[v] = 0;
+                  //   }
+                  //}
+                  delete[] pp[ndx];
+                  pp[ndx] = 0;
+               }
+               if (!vlen) {
+                  if (kIsTextT) {
+                     // special handling for the text-based streamers - keep calling to shift array index
+                     buf.ReadFastArray((void *)nullptr, cl, -1, nullptr);
+                  }
+                  continue;
+               }
+               // Note: We now have pp[ndx] is null.
+               // Allocate memory to read into.
+               if (!isPtrPtr) {
+                  // -- We are a varying-length array of objects.
+                  // Note: Polymorphism is not allowed here.
+                  // Allocate a new array of objects to read into.
+                  pp[ndx] = (char *)cl->NewArray(vlen);
+                  if (!pp[ndx]) {
+                     Error("ReadBuffer", "Memory allocation failed!\n");
+                     continue;
+                  }
+               } else {
+                  // -- We are a varying-length array of pointers to objects.
+                  // Note: The object pointers are allowed to be polymorphic.
+                  // Allocate a new array of pointers to objects to read into.
+                  pp[ndx] = (char *)new char *[vlen];
+                  if (!pp[ndx]) {
+                     Error("ReadBuffer", "Memory allocation failed!\n");
+                     continue;
+                  }
+                  // And set each pointer to null.
+                  memset(pp[ndx], 0, vlen * sizeof(char *)); // This is the right size we really have a char**: pp[ndx]
+                                                            // = (char*) new char*[vlen];
+               }
+               if (!isPtrPtr) {
+                  // -- We are a varying-length array of objects.
+                  buf.ReadFastArray(pp[ndx], cl, vlen, nullptr);
+               } else {
+                  // -- We are a varying-length array of object pointers.
+                  buf.ReadFastArray((void **)pp[ndx], cl, vlen, kFALSE, nullptr);
+               } // isPtrPtr
+            }    // ndx
+         return 0;
+      }; // StreamerLoopPoly
+
+      static Int_t ReadStreamerLoopStatic(TBuffer &buf, void *addr, const TConfiguration *config) {
+         // Get the class of the data member.
+         TClass* cl = config->fCompInfo->fClass;
+         UInt_t ioffset = config->fOffset;
+         // Which are we, an array of objects or an array of pointers to objects?
+         bool isPtrPtr = ((TConfStreamerLoop*)config)->fIsPtrPtr;
+
+         // Get the counter for the varying length array.
+         Int_t vlen = *((Int_t *)((char *)addr /*entry pointer*/ +
+                                 config->fCompInfo->fMethod /*counter offset*/));
+         // Int_t realLen;
+         // b >> realLen;
+         // if (realLen != vlen) {
+         //   fprintf(stderr, "read vlen: %d  realLen: %s\n", vlen, realLen);
+         //}
+         // Get a pointer to the array of pointers.
+         char **pp = (char **)((char *)addr /*entry pointer*/ + ioffset /*object offset*/);
+         // if (!pp) {
+         //   continue;
+         //}
+
+         if (pp) // SL: place it here instead of continue, which is related to for(k) loop
+
+            // Loop over each element of the array of pointers to varying-length arrays.
+            for (Int_t ndx = 0; ndx < config->fCompInfo->fLength; ++ndx) {
+               // if (!pp[ndx]) {
+               // -- We do not have a pointer to a varying-length array.
+               // Error("ReadBuffer", "The pointer to element %s::%s type %d (%s) is null\n", thisVar->GetName(),
+               // aElement->GetFullName(), compinfo[i]->fType, aElement->GetTypeName());
+               // continue;
+               //}
+               // Delete any memory at pp[ndx].
+               if (!isPtrPtr) {
+                  cl->DeleteArray(pp[ndx]);
+                  pp[ndx] = 0;
+               } else {
+                  // Using vlen is wrong here because it has already
+                  // been overwritten with the value needed to read
+                  // the current record.  Fixing this will require
+                  // doing a pass over the object at the beginning
+                  // of the I/O and releasing all the buffer memory
+                  // for varying length arrays before we overwrite
+                  // the counter values.
+                  //
+                  // For now we will just leak memory, just as we
+                  // have always done in the past.  Fix this.
+                  //
+                  // char** r = (char**) pp[ndx];
+                  // if (r) {
+                  //   for (Int_t v = 0; v < vlen; ++v) {
+                  //      cl->Destructor(r[v]);
+                  //      r[v] = 0;
+                  //   }
+                  //}
+                  delete[] pp[ndx];
+                  pp[ndx] = 0;
+               }
+               if (!vlen) {
+                  continue;
+               }
+               // Note: We now have pp[ndx] is null.
+               // Allocate memory to read into.
+               if (!isPtrPtr) {
+                  // -- We are a varying-length array of objects.
+                  // Note: Polymorphism is not allowed here.
+                  // Allocate a new array of objects to read into.
+                  pp[ndx] = (char *)cl->NewArray(vlen);
+                  if (!pp[ndx]) {
+                     Error("ReadBuffer", "Memory allocation failed!\n");
+                     continue;
+                  }
+               } else {
+                  // -- We are a varying-length array of pointers to objects.
+                  // Note: The object pointers are allowed to be polymorphic.
+                  // Allocate a new array of pointers to objects to read into.
+                  pp[ndx] = (char *)new char *[vlen];
+                  if (!pp[ndx]) {
+                     Error("ReadBuffer", "Memory allocation failed!\n");
+                     continue;
+                  }
+                  // And set each pointer to null.
+                  memset(pp[ndx], 0, vlen * sizeof(char *)); // This is the right size we really have a char**: pp[ndx]
+                                                            // = (char*) new char*[vlen];
+               }
+               if (!isPtrPtr) {
+                  // -- We are a varying-length array of objects.
+                  // Loop over the elements of the varying length array.
+                  for (Int_t v = 0; v < vlen; ++v) {
+                     // Read the object from the buffer.
+                     cl->Streamer(pp[ndx] + (v * cl->Size()), buf);
+                  } // v
+               } else {
+                  // -- We are a varying-length array of object pointers.
+                  // Get a pointer to the object pointer array.
+                  char **r = (char **)pp[ndx];
+                  // Loop over the elements of the varying length array.
+                  for (Int_t v = 0; v < vlen; ++v) {
+                     // Allocate an object to read into.
+                     r[v] = (char *)cl->New();
+                     if (!r[v]) {
+                        // Do not print a second error message here.
+                        // Error("ReadBuffer", "Memory allocation failed!\n");
+                        continue;
+                     }
+                     // Read the object from the buffer.
+                     cl->Streamer(r[v], buf);
+                  } // v
+               }    // isPtrPtr
+            }       // ndx
+         return 0;
+      }; // action
+
+      template<bool kIsTextT, typename... Ts>
+      struct ReadStreamerLoop {
+         static INLINE_TEMPLATE_ARGS Int_t Action(TBuffer &buf, void *start, Ts... args, const TConfiguration *config)
+         {
+            // Check for a private streamer.
+            if (!kIsTextT && config->fCompInfo->fStreamer) {
+               // -- We have a private streamer.
+               // Read the class version and byte count from the buffer.
+               UInt_t pos = 0;
+               UInt_t count = 0;
+               buf.ReadVersion(&pos, &count, config->fInfo->IsA());
+
+               // Loop over the entries in the clones array or the STL container.
+               Looper::template LoopOverCollection< StreamerLoopExternal > (buf, start, args..., config);
+
+               buf.CheckByteCount(pos, count, config->fCompInfo->fElem->GetFullName());
+               // We are done, next streamer element.
+               return 0;
+            }
+
+            // By default assume the file version is the newest.
+            Int_t fileVersion = kMaxInt;
+            if (!kIsTextT) {
+               // At this point we do *not* have a private streamer.
+               // Get the version of the file we are reading from.
+               TFile* file = (TFile*) buf.GetParent();
+               if (file) {
+                  fileVersion = file->GetVersion();
+               }
+            }
             // Read the class version and byte count from the buffer.
-            UInt_t start = 0;
+            UInt_t pos = 0;
             UInt_t count = 0;
             buf.ReadVersion(&pos, &count, config->fInfo->IsA());
+            if (fileVersion > 51508) {
+               // -- Newer versions allow polymorphic pointers.
 
-               Int_t* counter = (Int_t*) ((char *) addr /*entry pointer*/ + eoffset /*entry offset*/ + config->fCompInfo->fMethod /*counter offset*/);
-               // And call the private streamer, passing it the buffer, the object, and the counter.
-               (*pstreamer)(buf, (char *) addr /*entry pointer*/ + ioffset /*object offset*/, *counter);
+               // Loop over the entries in the clones array or the STL container.
+               Looper::template LoopOverCollection< ReadStreamerLoopPoly<kIsTextT> > (buf, start, args..., config);
+            } else {
+               // -- Older versions do *not* allow polymorphic pointers.
 
-            // } // for k
-            buf.CheckByteCount(start, count, config->fCompInfo->fElem->GetFullName());
-            // We are done, next streamer element.
+               // Loop over the entries in the clones array or the STL container.
+               Looper::template LoopOverCollection< ReadStreamerLoopStatic > (buf, start, args..., config);
+            } // fileVersion
+            buf.CheckByteCount(pos, count, config->fCompInfo->fElem->GetFullName());
             return 0;
          }
-
-         // Which are we, an array of objects or an array of pointers to objects?
-         Bool_t isPtrPtr = (strstr(config->fCompInfo->fElem->GetTypeName(), "**") != 0);
-
-         // By default assume the file version is the newest.
-         Int_t fileVersion = kMaxInt;
-         if (!kIsTextT) {
-            // At this point we do *not* have a private streamer.
-            // Get the version of the file we are reading from.
-            TFile* file = (TFile*) buf.GetParent();
-            if (file) {
-               fileVersion = file->GetVersion();
-            }
-         }
-         // Read the class version and byte count from the buffer.
-         UInt_t start = 0;
-         UInt_t count = 0;
-         buf.ReadVersion(&start, &count, config->fInfo->IsA());
-         if (fileVersion > 51508) {
-            // -- Newer versions allow polymorphic pointers.
-            // Loop over the entries in the clones array or the STL container.
-            // for (Int_t k = 0; k < narr; ++k) {
-            // Get the counter for the varying length array.
-            Int_t vlen = *((Int_t *)((char *)addr /*entry pointer*/ + eoffset /*entry offset*/ +
-                                    config->fCompInfo->fMethod /*counter offset*/));
-            // Int_t realLen;
-            // b >> realLen;
-            // if (realLen != vlen) {
-            //   fprintf(stderr, "read vlen: %d  realLen: %s\n", vlen, realLen);
-            //}
-            // Get a pointer to the array of pointers.
-            char **pp = (char **)((char *)addr /*entry pointer*/ + ioffset /*object offset*/);
-            // Loop over each element of the array of pointers to varying-length arrays.
-            // if (!pp) {
-            //   continue;
-            // }
-
-            if (pp) // SL: place it here instead of continue, which is related to for(k) loop
-               for (Int_t ndx = 0; ndx < config->fCompInfo->fLength; ++ndx) {
-                  // if (!pp[ndx]) {
-                  // -- We do not have a pointer to a varying-length array.
-                  // Error("ReadBuffer", "The pointer to element %s::%s type %d (%s) is null\n", thisVar->GetName(),
-                  // aElement->GetFullName(), compinfo[i]->fType, aElement->GetTypeName());
-                  // continue;
-                  //}
-                  // Delete any memory at pp[ndx].
-                  if (!isPtrPtr) {
-                     cl->DeleteArray(pp[ndx]);
-                     pp[ndx] = 0;
-                  } else {
-                     // Using vlen is wrong here because it has already
-                     // been overwritten with the value needed to read
-                     // the current record.  Fixing this will require
-                     // doing a pass over the object at the beginning
-                     // of the I/O and releasing all the buffer memory
-                     // for varying length arrays before we overwrite
-                     // the counter values.
-                     //
-                     // For now we will just leak memory, just as we
-                     // have always done in the past.  Fix this.
-                     //
-                     // char** r = (char**) pp[ndx];
-                     // if (r) {
-                     //   for (Int_t v = 0; v < vlen; ++v) {
-                     //      cl->Destructor(r[v]);
-                     //      r[v] = 0;
-                     //   }
-                     //}
-                     delete[] pp[ndx];
-                     pp[ndx] = 0;
-                  }
-                  if (!vlen) {
-                     if (kIsTextT) {
-                        // special handling for the text-based streamers - keep calling to shift array index
-                        buf.ReadFastArray((void *)nullptr, cl, -1, nullptr);
-                     }
-                     continue;
-                  }
-                  // Note: We now have pp[ndx] is null.
-                  // Allocate memory to read into.
-                  if (!isPtrPtr) {
-                     // -- We are a varying-length array of objects.
-                     // Note: Polymorphism is not allowed here.
-                     // Allocate a new array of objects to read into.
-                     pp[ndx] = (char *)cl->NewArray(vlen);
-                     if (!pp[ndx]) {
-                        Error("ReadBuffer", "Memory allocation failed!\n");
-                        continue;
-                     }
-                  } else {
-                     // -- We are a varying-length array of pointers to objects.
-                     // Note: The object pointers are allowed to be polymorphic.
-                     // Allocate a new array of pointers to objects to read into.
-                     pp[ndx] = (char *)new char *[vlen];
-                     if (!pp[ndx]) {
-                        Error("ReadBuffer", "Memory allocation failed!\n");
-                        continue;
-                     }
-                     // And set each pointer to null.
-                     memset(pp[ndx], 0, vlen * sizeof(char *)); // This is the right size we really have a char**: pp[ndx]
-                                                               // = (char*) new char*[vlen];
-                  }
-                  if (!isPtrPtr) {
-                     // -- We are a varying-length array of objects.
-                     buf.ReadFastArray(pp[ndx], cl, vlen, nullptr);
-                  } else {
-                     // -- We are a varying-length array of object pointers.
-                     buf.ReadFastArray((void **)pp[ndx], cl, vlen, kFALSE, nullptr);
-                  } // isPtrPtr
-               }    // ndx
-                  // } // k
-         } else {
-            // -- Older versions do *not* allow polymorphic pointers.
-            // Loop over the entries in the clones array or the STL container.
-            // for (Int_t k = 0; k < narr; ++k) {
-            // Get the counter for the varying length array.
-            Int_t vlen = *((Int_t *)((char *)addr /*entry pointer*/ + eoffset /*entry offset*/ +
-                                    config->fCompInfo->fMethod /*counter offset*/));
-            // Int_t realLen;
-            // b >> realLen;
-            // if (realLen != vlen) {
-            //   fprintf(stderr, "read vlen: %d  realLen: %s\n", vlen, realLen);
-            //}
-            // Get a pointer to the array of pointers.
-            char **pp = (char **)((char *)addr /*entry pointer*/ + ioffset /*object offset*/);
-            // if (!pp) {
-            //   continue;
-            //}
-
-            if (pp) // SL: place it here instead of continue, which is related to for(k) loop
-
-               // Loop over each element of the array of pointers to varying-length arrays.
-               for (Int_t ndx = 0; ndx < config->fCompInfo->fLength; ++ndx) {
-                  // if (!pp[ndx]) {
-                  // -- We do not have a pointer to a varying-length array.
-                  // Error("ReadBuffer", "The pointer to element %s::%s type %d (%s) is null\n", thisVar->GetName(),
-                  // aElement->GetFullName(), compinfo[i]->fType, aElement->GetTypeName());
-                  // continue;
-                  //}
-                  // Delete any memory at pp[ndx].
-                  if (!isPtrPtr) {
-                     cl->DeleteArray(pp[ndx]);
-                     pp[ndx] = 0;
-                  } else {
-                     // Using vlen is wrong here because it has already
-                     // been overwritten with the value needed to read
-                     // the current record.  Fixing this will require
-                     // doing a pass over the object at the beginning
-                     // of the I/O and releasing all the buffer memory
-                     // for varying length arrays before we overwrite
-                     // the counter values.
-                     //
-                     // For now we will just leak memory, just as we
-                     // have always done in the past.  Fix this.
-                     //
-                     // char** r = (char**) pp[ndx];
-                     // if (r) {
-                     //   for (Int_t v = 0; v < vlen; ++v) {
-                     //      cl->Destructor(r[v]);
-                     //      r[v] = 0;
-                     //   }
-                     //}
-                     delete[] pp[ndx];
-                     pp[ndx] = 0;
-                  }
-                  if (!vlen) {
-                     continue;
-                  }
-                  // Note: We now have pp[ndx] is null.
-                  // Allocate memory to read into.
-                  if (!isPtrPtr) {
-                     // -- We are a varying-length array of objects.
-                     // Note: Polymorphism is not allowed here.
-                     // Allocate a new array of objects to read into.
-                     pp[ndx] = (char *)cl->NewArray(vlen);
-                     if (!pp[ndx]) {
-                        Error("ReadBuffer", "Memory allocation failed!\n");
-                        continue;
-                     }
-                  } else {
-                     // -- We are a varying-length array of pointers to objects.
-                     // Note: The object pointers are allowed to be polymorphic.
-                     // Allocate a new array of pointers to objects to read into.
-                     pp[ndx] = (char *)new char *[vlen];
-                     if (!pp[ndx]) {
-                        Error("ReadBuffer", "Memory allocation failed!\n");
-                        continue;
-                     }
-                     // And set each pointer to null.
-                     memset(pp[ndx], 0, vlen * sizeof(char *)); // This is the right size we really have a char**: pp[ndx]
-                                                               // = (char*) new char*[vlen];
-                  }
-                  if (!isPtrPtr) {
-                     // -- We are a varying-length array of objects.
-                     // Loop over the elements of the varying length array.
-                     for (Int_t v = 0; v < vlen; ++v) {
-                        // Read the object from the buffer.
-                        cl->Streamer(pp[ndx] + (v * cl->Size()), buf);
-                     } // v
-                  } else {
-                     // -- We are a varying-length array of object pointers.
-                     // Get a pointer to the object pointer array.
-                     char **r = (char **)pp[ndx];
-                     // Loop over the elements of the varying length array.
-                     for (Int_t v = 0; v < vlen; ++v) {
-                        // Allocate an object to read into.
-                        r[v] = (char *)cl->New();
-                        if (!r[v]) {
-                           // Do not print a second error message here.
-                           // Error("ReadBuffer", "Memory allocation failed!\n");
-                           continue;
-                        }
-                        // Read the object from the buffer.
-                        cl->Streamer(r[v], buf);
-                     } // v
-                  }    // isPtrPtr
-               }       // ndx
-            // } // k
-         } // fileVersion
-         buf.CheckByteCount(start, count, config->fCompInfo->fElem->GetFullName());
-         return 0;
-      }
+      };
 
    };
 
    // The Scalar 'looper' only process one element.
    struct ScalarLooper : public CollectionLooper<ScalarLooper>
    {
+      using LoopAction_t = Int_t (*)(TBuffer &, void*, const TConfiguration*);
+
       template <Int_t (*iter_action)(TBuffer&,void *,const TConfiguration*)>
-      static INLINE_TEMPLATE_ARGS Int_t LoopOverCollection(TBuffer &buf, void *start, const void * /* end */, const TLoopConfiguration *, const TConfiguration *config)
+      static INLINE_TEMPLATE_ARGS Int_t LoopOverCollection(TBuffer &buf, void *start, const TConfiguration *config)
       {
          iter_action(buf, start, config);
          return 0;
       }
    };
 
-   struct VectorLooper : public CollectionLooper<VectorLooper> {
+   struct VectorLooper : public CollectionLooper<VectorLooper>
+   {
+      using LoopAction_t = Int_t (*)(TBuffer &, void*, const void *end, const TLoopConfiguration *loopconfig, const TConfiguration*);
+
+      template <bool kIsText>
+      using ReadStreamerLoop = CollectionLooper<VectorLooper>::ReadStreamerLoop<kIsText, const void *, const TLoopConfiguration *>;
+      template <bool kIsText>
+      using WriteStreamerLoop = CollectionLooper<VectorLooper>::WriteStreamerLoop<kIsText, const void *, const TLoopConfiguration *>;
+
+      template <Int_t (*iter_action)(TBuffer&,void *,const TConfiguration*)>
+      static INLINE_TEMPLATE_ARGS Int_t LoopOverCollection(TBuffer &buf, void *start, const void *end, const TLoopConfiguration *loopconfig, const TConfiguration *config)
+      {
+         const Int_t incr = ((TVectorLoopConfig*)loopconfig)->fIncrement;
+         //Idea: can we factor out the addition of fOffset
+         //  iter = (char*)iter + config->fOffset;
+         for(void *iter = start; iter != end; iter = (char*)iter + incr ) {
+            iter_action(buf, iter, config);
+         }
+         return 0;
+      }
 
       template <typename T>
       static INLINE_TEMPLATE_ARGS Int_t ReadBasicType(TBuffer &buf, void *iter, const void *end, const TLoopConfiguration *loopconfig, const TConfiguration *config)
@@ -2159,18 +2212,6 @@ namespace TStreamerInfoActions
             return 0;
          }
       };
-
-      template <Int_t (*iter_action)(TBuffer&,void *,const TConfiguration*)>
-      static INLINE_TEMPLATE_ARGS Int_t LoopOverCollection(TBuffer &buf, void *start, const void *end, const TLoopConfiguration *loopconfig, const TConfiguration *config)
-      {
-         const Int_t incr = ((TVectorLoopConfig*)loopconfig)->fIncrement;
-         //Idea: can we factor out the addition of fOffset
-         //  iter = (char*)iter + config->fOffset;
-         for(void *iter = start; iter != end; iter = (char*)iter + incr ) {
-            iter_action(buf, iter, config);
-         }
-         return 0;
-      }
 
       static INLINE_TEMPLATE_ARGS Int_t ReadBase(TBuffer &buf, void *start, const void *end, const TLoopConfiguration * loopconfig, const TConfiguration *config)
       {
@@ -2483,9 +2524,25 @@ namespace TStreamerInfoActions
       };
    };
 
-   struct VectorPtrLooper {
+   struct VectorPtrLooper : public CollectionLooper<VectorPtrLooper> {
       // Can not inherit/use CollectionLooper<VectorPtrLooper>, because this looper's
       // function do not take a `TLoopConfiguration`.
+
+      using LoopAction_t = Int_t (*)(TBuffer &, void *start, const void *end, const TConfiguration*);
+
+      template <bool kIsText>
+      using ReadStreamerLoop = CollectionLooper<VectorPtrLooper>::ReadStreamerLoop<kIsText, const void *>;
+      template <bool kIsText>
+      using WriteStreamerLoop = CollectionLooper<VectorPtrLooper>::WriteStreamerLoop<kIsText, const void *>;
+
+      template <Int_t (*action)(TBuffer&,void *,const TConfiguration*)>
+      static INLINE_TEMPLATE_ARGS Int_t LoopOverCollection(TBuffer &buf, void *start, const void *end, const TConfiguration *config)
+      {
+         for(void *iter = start; iter != end; iter = (char*)iter + sizeof(void*) ) {
+            action(buf, *(void**)iter, config);
+         }
+         return 0;
+      }
 
       template <typename T>
       static INLINE_TEMPLATE_ARGS Int_t ReadBasicType(TBuffer &buf, void *iter, const void *end, const TConfiguration *config)
@@ -2628,15 +2685,6 @@ namespace TStreamerInfoActions
          }
       };
 
-      template <Int_t (*action)(TBuffer&,void *,const TConfiguration*)>
-      static INLINE_TEMPLATE_ARGS Int_t LoopOverCollection(TBuffer &buf, void *start, const void *end, const TConfiguration *config)
-      {
-         for(void *iter = start; iter != end; iter = (char*)iter + sizeof(void*) ) {
-            action(buf, *(void**)iter, config);
-         }
-         return 0;
-      }
-
       static INLINE_TEMPLATE_ARGS Int_t ReadBase(TBuffer &buf, void *start, const void *end, const TConfiguration *config)
       {
          // Well the implementation is non trivial since we do not have a proxy for the container of _only_ the base class.  For now
@@ -2683,6 +2731,8 @@ namespace TStreamerInfoActions
    };
 
    struct AssociativeLooper {
+      using LoopAction_t = void (*)(TBuffer&, void *, const void *, Next_t, Int_t, const TStreamerElement *elem);
+
 protected:
 
       template <typename T>
@@ -2938,6 +2988,12 @@ public:
     };
 
    struct GenericLooper : public CollectionLooper<GenericLooper> {
+      using LoopAction_t = Int_t (*)(TBuffer &, void*, const void *end, const TLoopConfiguration *loopconfig, const TConfiguration*);
+
+      template <bool kIsText>
+      using ReadStreamerLoop = CollectionLooper<GenericLooper>::ReadStreamerLoop<kIsText, const void *, const TLoopConfiguration *>;
+      template <bool kIsText>
+      using WriteStreamerLoop = CollectionLooper<GenericLooper>::WriteStreamerLoop<kIsText, const void *, const TLoopConfiguration *>;
 
       template <typename T>
       static INLINE_TEMPLATE_ARGS Int_t ReadBasicType(TBuffer &buf, void *start, const void *end, const TLoopConfiguration *loopconf, const TConfiguration *config)
@@ -3685,6 +3741,12 @@ static TConfiguredAction GetCollectionReadAction(TVirtualStreamerInfo *info, TSt
       case TStreamerInfo::kCacheDelete:
       case TStreamerInfo::kSTL:  return TConfiguredAction( Looper::GenericRead, new TGenericConfiguration(info, i, compinfo) );
       case TStreamerInfo::kBase: return TConfiguredAction( Looper::ReadBase, new TGenericConfiguration(info, i, compinfo) );
+      case TStreamerInfo::kStreamLoop:
+      case TStreamerInfo::kOffsetL + TStreamerInfo::kStreamLoop: {
+         bool isPtrPtr = (strstr(compinfo->fElem->GetTypeName(), "**") != 0);
+         return TConfiguredAction(Looper::template ReadStreamerLoop<false>::Action,
+                                  new TConfStreamerLoop(info, i, compinfo, offset, isPtrPtr));
+      }
       case TStreamerInfo::kStreamer:
          if (info->GetOldVersion() >= 3)
             return TConfiguredAction( Looper::ReadStreamerCase, new TGenericConfiguration(info, i, compinfo) );
@@ -4568,9 +4630,12 @@ void TStreamerInfo::AddReadAction(TStreamerInfoActions::TActionSequence *readSeq
          break;
       }
       case TStreamerInfo::kStreamLoop:
-      case TStreamerInfo::kOffsetL + TStreamerInfo::kStreamLoop:
-         readSequence->AddAction( ScalarLooper::ReadStreamerLoop<false>, new TGenericConfiguration(this, i, compinfo, compinfo->fOffset) );
+      case TStreamerInfo::kOffsetL + TStreamerInfo::kStreamLoop: {
+         bool isPtrPtr = (strstr(compinfo->fElem->GetTypeName(), "**") != 0);
+         readSequence->AddAction(ScalarLooper::ReadStreamerLoop<false>::Action,
+                                 new TConfStreamerLoop(this, i, compinfo, compinfo->fOffset, isPtrPtr));
          break;
+      }
       case TStreamerInfo::kBase:
          if (compinfo->fStreamer)
             readSequence->AddAction( ReadStreamerCase, new TGenericConfiguration(this,i,compinfo, compinfo->fOffset) );
@@ -4666,10 +4731,12 @@ void TStreamerInfo::AddReadTextAction(TStreamerInfoActions::TActionSequence *rea
       break;
 
    case TStreamerInfo::kStreamLoop:
-   case TStreamerInfo::kOffsetL + TStreamerInfo::kStreamLoop:
-      readSequence->AddAction(ScalarLooper::ReadStreamerLoop<true>, new TConfiguration(this, i, compinfo, compinfo->fOffset));
+   case TStreamerInfo::kOffsetL + TStreamerInfo::kStreamLoop: {
+      bool isPtrPtr = (strstr(compinfo->fElem->GetTypeName(), "**") != 0);
+      readSequence->AddAction(ScalarLooper::ReadStreamerLoop<true>::Action,
+                              new TConfStreamerLoop(this, i, compinfo, compinfo->fOffset, isPtrPtr));
       break;
-
+   }
    case TStreamerInfo::kBase: isBase = kTRUE; break;
 
    case TStreamerInfo::kStreamer:
@@ -4892,9 +4959,12 @@ void TStreamerInfo::AddWriteAction(TStreamerInfoActions::TActionSequence *writeS
      case TStreamerInfo::kTString: writeSequence->AddAction( WriteTString, new TConfiguration(this, i, compinfo, compinfo->fOffset) );    break;
 
       case TStreamerInfo::kStreamLoop:
-      case TStreamerInfo::kOffsetL + TStreamerInfo::kStreamLoop:
-         writeSequence->AddAction( ScalarLooper::WriteStreamerLoop<false>, new TGenericConfiguration(this, i, compinfo, compinfo->fOffset) );
+      case TStreamerInfo::kOffsetL + TStreamerInfo::kStreamLoop: {
+         bool isPtrPtr = (strstr(compinfo->fElem->GetTypeName(), "**") != 0);
+         writeSequence->AddAction(ScalarLooper::WriteStreamerLoop<false>::Action,
+                                  new TConfStreamerLoop(this, i, compinfo, compinfo->fOffset, isPtrPtr));
          break;
+      }
       case TStreamerInfo::kBase:
          if (compinfo->fStreamer)
             writeSequence->AddAction( WriteStreamerCase, new TGenericConfiguration(this,i,compinfo, compinfo->fOffset) );
@@ -5047,10 +5117,11 @@ void TStreamerInfo::AddWriteTextAction(TStreamerInfoActions::TActionSequence *wr
       break;
 
    case TStreamerInfo::kStreamLoop:
-   case TStreamerInfo::kOffsetL + TStreamerInfo::kStreamLoop:
-      writeSequence->AddAction(ScalarLooper::WriteStreamerLoop<true>, new TConfiguration(this, i, compinfo, compinfo->fOffset));
+   case TStreamerInfo::kOffsetL + TStreamerInfo::kStreamLoop: {
+      bool isPtrPtr = (strstr(compinfo->fElem->GetTypeName(), "**") != 0);
+      writeSequence->AddAction(ScalarLooper::WriteStreamerLoop<true>::Action, new TConfStreamerLoop(this, i, compinfo, compinfo->fOffset, isPtrPtr));
       break;
-
+   }
    case TStreamerInfo::kBase: isBase = kTRUE; break;
 
    case TStreamerInfo::kStreamer:
