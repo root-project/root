@@ -752,6 +752,10 @@ static void AddColumnsFromField(std::vector<RColumnMergeInfo> &columns, const RN
    // NOTE: here we can match the src and dst columns by column index because we forbid merging fields with
    // different column representations.
    for (auto i = 0u; i < srcFieldDesc.GetLogicalColumnIds().size(); ++i) {
+      // We don't want to try and merge alias columns
+      if (srcFieldDesc.IsProjectedField())
+         continue;
+
       auto srcColumnId = srcFieldDesc.GetLogicalColumnIds()[i];
       const auto &srcColumn = srcDesc.GetColumnDescriptor(srcColumnId);
       RColumnMergeInfo info{};
