@@ -44,6 +44,12 @@ using namespace TStreamerInfoActions;
 
 namespace TStreamerInfoActions
 {
+   enum class EMode
+   {
+      kRead,
+      kWrite
+   };
+
    bool IsDefaultVector(TVirtualCollectionProxy &proxy)
    {
       const auto props = proxy.GetProperties();
