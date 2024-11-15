@@ -13,7 +13,15 @@ int merge_changeComp_check_output(int expectedCompression, const char *fnameOut,
 {
    using namespace ROOT::Experimental;
 
-   auto noPrereleaseWarning = RLogScopedVerbosity(NTupleLog(), ROOT::Experimental::ELogLevel::kError);
+   // Check compression of the tfile
+   {
+      auto f1 = std::unique_ptr<TFile>(TFile::Open(fnameOut, "READ"));
+      if (f1->GetCompressionSettings() != expectedCompression) {
+         std::cerr << "Expected TFile compression to be " << expectedCompression << " but it is "
+                   << f1->GetCompressionSettings() << "\n";
+         return 1;
+      }
+   }
 
    Internal::RPageSourceFile source("ntpl", fnameOut, RNTupleReadOptions());
    source.Attach();
