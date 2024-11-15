@@ -1973,7 +1973,12 @@ namespace TStreamerInfoActions
       }
    }
 
-   struct VectorLooper {
+   template<typename Looper>
+   struct CollectionLooper {
+
+   };
+
+   struct VectorLooper : public CollectionLooper<VectorLooper> {
 
       template <typename T>
       static INLINE_TEMPLATE_ARGS Int_t ReadBasicType(TBuffer &buf, void *iter, const void *end, const TLoopConfiguration *loopconfig, const TConfiguration *config)
@@ -2450,6 +2455,8 @@ namespace TStreamerInfoActions
    };
 
    struct VectorPtrLooper {
+      // Can not inherit/use CollectionLooper<VectorPtrLooper>, because this looper's
+      // function do not take a `TLoopConfiguration`.
 
       template <typename T>
       static INLINE_TEMPLATE_ARGS Int_t ReadBasicType(TBuffer &buf, void *iter, const void *end, const TConfiguration *config)
@@ -2880,7 +2887,7 @@ public:
 
     };
 
-   struct GenericLooper {
+   struct GenericLooper : public CollectionLooper<GenericLooper> {
 
       template <typename T>
       static INLINE_TEMPLATE_ARGS Int_t ReadBasicType(TBuffer &buf, void *start, const void *end, const TLoopConfiguration *loopconf, const TConfiguration *config)
