@@ -209,37 +209,20 @@ struct RTFKey {
       } fInfoLong;
    };
 
-   RTFKey() : fInfoShort() {}
+   RTFKey() : fInfoLong() {}
    RTFKey(std::uint64_t seekKey, std::uint64_t seekPdir, const RTFString &clName, const RTFString &objName,
           const RTFString &titleName, std::size_t szObjInMem, std::size_t szObjOnDisk = 0)
    {
       R__ASSERT(szObjInMem <= std::numeric_limits<std::uint32_t>::max());
       R__ASSERT(szObjOnDisk <= std::numeric_limits<std::uint32_t>::max());
+      // For writing, we alywas produce "big" keys with 64-bit SeekKey and SeekPdir.
+      fVersion = fVersion + 1000;
       fObjLen = szObjInMem;
-      if ((seekKey > static_cast<unsigned int>(std::numeric_limits<std::int32_t>::max())) ||
-          (seekPdir > static_cast<unsigned int>(std::numeric_limits<std::int32_t>::max()))) {
-         fVersion = fVersion + 1000;
-         fInfoLong.fSeekKey = seekKey;
-         fInfoLong.fSeekPdir = seekPdir;
-      } else {
-         fInfoShort.fSeekKey = seekKey;
-         fInfoShort.fSeekPdir = seekPdir;
-      }
       fKeyLen = GetHeaderSize() + clName.GetSize() + objName.GetSize() + titleName.GetSize();
-      fNbytes = fKeyLen + ((szObjOnDisk == 0) ? szObjInMem : szObjOnDisk);
-   }
-
-   void MakeBigKey()
-   {
-      if (fVersion >= 1000)
-         return;
-      std::uint32_t seekKey = fInfoShort.fSeekKey;
-      std::uint32_t seekPdir = fInfoShort.fSeekPdir;
       fInfoLong.fSeekKey = seekKey;
       fInfoLong.fSeekPdir = seekPdir;
-      fKeyLen = fKeyLen + sizeof(fInfoLong) - sizeof(fInfoShort);
-      fNbytes = fNbytes + sizeof(fInfoLong) - sizeof(fInfoShort);
-      fVersion = fVersion + 1000;
+      // Depends on fKeyLen being set
+      fNbytes = fKeyLen + ((szObjOnDisk == 0) ? szObjInMem : szObjOnDisk);
    }
 
    std::uint32_t GetSize() const
@@ -1017,8 +1000,6 @@ ROOT::Experimental::Internal::RNTupleFileWriter::RFileProper::WriteKey(const voi
    RTFString strObject;
    RTFString strTitle;
    RTFKey keyHeader(offset, offset, strClass, strObject, strTitle, len, nbytes);
-   // Follow the fact that RKeyBlob is a big key unconditionally (see above)
-   keyHeader.MakeBigKey();
 
    Write(&keyHeader, keyHeader.GetHeaderSize(), offset);
    offset += keyHeader.GetHeaderSize();
