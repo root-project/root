@@ -1976,6 +1976,27 @@ namespace TStreamerInfoActions
    template<typename Looper>
    struct CollectionLooper {
 
+      static inline Int_t ReadStreamerCase(TBuffer &buf, void *start, const void *end, const TLoopConfiguration * loopconfig, const TConfiguration *config)
+      {
+         UInt_t pos, count;
+         /* Version_t v = */ buf.ReadVersion(&pos, &count, config->fInfo->IsA());
+
+         Looper::template LoopOverCollection< ReadViaExtStreamer >(buf, start, end, loopconfig, config);
+
+         buf.CheckByteCount(pos, count, config->fCompInfo->fElem->GetFullName());
+         return 0;
+      }
+
+      static inline Int_t WriteStreamerCase(TBuffer &buf, void *start, const void *end, const TLoopConfiguration * loopconfig, const TConfiguration *config)
+      {
+         UInt_t pos = buf.WriteVersion(config->fInfo->IsA(), kTRUE);
+
+         Looper::template LoopOverCollection< WriteViaExtStreamer >(buf, start, end, loopconfig, config);
+
+         buf.SetByteCount(pos, kTRUE);
+         return 0;
+      }
+
    };
 
    // The Scalar 'looper' only process one element.
@@ -2625,6 +2646,27 @@ namespace TStreamerInfoActions
          // punt.
 
          return GenericRead(buf,start,end,config);
+      }
+
+      static inline Int_t ReadStreamerCase(TBuffer &buf, void *start, const void *end, const TConfiguration *config)
+      {
+         UInt_t pos, count;
+         /* Version_t v = */ buf.ReadVersion(&pos, &count, config->fInfo->IsA());
+
+         LoopOverCollection< ReadViaExtStreamer >(buf, start, end, config);
+
+         buf.CheckByteCount(pos, count, config->fCompInfo->fElem->GetFullName());
+         return 0;
+      }
+
+      static inline Int_t WriteStreamerCase(TBuffer &buf, void *start, const void *end, const TConfiguration *config)
+      {
+         UInt_t pos = buf.WriteVersion(config->fInfo->IsA(), kTRUE);
+
+         LoopOverCollection< WriteViaExtStreamer >(buf, start, end, config);
+
+         buf.SetByteCount(pos, kTRUE);
+         return 0;
       }
 
       static INLINE_TEMPLATE_ARGS Int_t GenericRead(TBuffer &buf, void *iter, const void *end, const TConfiguration *config)
@@ -3646,6 +3688,11 @@ static TConfiguredAction GetCollectionReadAction(TVirtualStreamerInfo *info, TSt
       case TStreamerInfo::kCacheDelete:
       case TStreamerInfo::kSTL:  return TConfiguredAction( Looper::GenericRead, new TGenericConfiguration(info, i, compinfo) );
       case TStreamerInfo::kBase: return TConfiguredAction( Looper::ReadBase, new TGenericConfiguration(info, i, compinfo) );
+      case TStreamerInfo::kStreamer:
+         if (info->GetOldVersion() >= 3)
+            return TConfiguredAction( Looper::ReadStreamerCase, new TGenericConfiguration(info, i, compinfo) );
+         else
+            return TConfiguredAction( Looper::GenericRead, new TGenericConfiguration(info, i, compinfo) );
 
       // Conversions.
       case TStreamerInfo::kConv + TStreamerInfo::kBool:
