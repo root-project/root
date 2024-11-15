@@ -2065,3 +2065,27 @@ function(generateManual name input output)
 
   install(FILES ${output} DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
 endfunction()
+
+# ---------------------------------------------------------------------------------------
+# search_for_libuuid
+# 
+# Tries looking for libuuid with PkgConfig, fallback to our custom Findlibuuid.cmake
+# ---------------------------------------------------------------------------------------
+function(search_for_libuuid)
+  if(fail-on-missing)
+    set(libuuid_REQUIRED REQUIRED)
+  endif()
+
+  if(NOT MSVC)
+    find_package(PkgConfig)
+  endif()
+  if(PkgConfig_FOUND)
+    message(STATUS "Looking for libuuid using pkg-config")
+    pkg_check_modules(libuuid ${libuuid_REQUIRED} uuid)
+  else()
+    message(STATUS "Looking for libuuid")
+    find_package(libuuid ${libuuid_REQUIRED} uuid)
+    set(libuuid_LIBRARIES ${UUID_LIBRARIES})
+  endif()
+endfunction()
+

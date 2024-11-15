@@ -103,7 +103,7 @@ if(daos OR daos_mock)
   target_compile_definitions(ROOTNTuple PRIVATE R__ENABLE_DAOS)
 
   target_include_directories(ROOTNTuple PRIVATE ${UUID_INCLUDE_DIR})
-  target_link_libraries(ROOTNTuple PRIVATE ${UUID_LIBRARY})
+  target_link_libraries(ROOTNTuple PRIVATE ${libuuid_LIBRARIES})
   if(daos_mock)
     target_include_directories(ROOTNTuple PRIVATE v7/inc/ROOT/libdaos_mock/)
     target_sources(ROOTNTuple PRIVATE v7/src/libdaos_mock/libdaos_mock.cxx)
