@@ -986,9 +986,10 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
             TString gropt = iter.GetOption();
             gropt.ToUpper();
             Bool_t zscale = gropt.Contains("TRI1") || gropt.Contains("TRI2") || gropt.Contains("COL");
-            Bool_t real_draw = gropt.Contains("TRI") || gropt.Contains("LINE") || gropt.Contains("ERR") || gropt.Contains("P0");
+            Bool_t cont5_draw = gropt.Contains("CONT5");
+            Bool_t real_draw = gropt.Contains("TRI") || gropt.Contains("LINE") || gropt.Contains("ERR") || gropt.Contains("P") || cont5_draw;
 
-            TString hopt = !real_draw ? iter.GetOption() : (zscale ? "lego2z" : "lego2");
+            TString hopt = !real_draw ? iter.GetOption() : (cont5_draw ? "" : (zscale ? "lego2z" : "lego2"));
             if (title) hopt.Append(";;use_pad_title");
 
             // if gr2d not draw - let create histogram with correspondent content
