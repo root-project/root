@@ -78,22 +78,25 @@ try {
       // pointer we just got.
    }
 
-   // The "fast" option is present if and only if we don't want to change compression.
-   const int compression =
-      mergeInfo->fOptions.Contains("fast") ? kUnknownCompressionSettings : outFile->GetCompressionSettings();
-
-   RNTupleWriteOptions writeOpts;
-   writeOpts.SetUseBufferedWrite(false);
-   if (compression != kUnknownCompressionSettings)
-      writeOpts.SetCompression(compression);
-   auto destination = std::make_unique<RPageSinkFile>(ntupleName, *outFile, writeOpts);
-
-   // If we already have an existing RNTuple, copy over its descriptor to support incremental merging
-   if (outNTuple) {
-      auto source = RPageSourceFile::CreateFromAnchor(*outNTuple);
-      source->Attach();
-      auto desc = source->GetSharedDescriptorGuard();
-      destination->InitFromDescriptor(desc.GetRef());
+   const bool defaultComp = mergeInfo->fOptions.Contains("default_compression");
+   const bool firstSrcComp = mergeInfo->fOptions.Contains("first_source_compression");
+   if (defaultComp && firstSrcComp) {
+      // this should never happen through hadd, but a user may call RNTuple::Merge() from custom code...
+      Warning(
+         "RNTuple::Merge",
+         "Passed both options \"default_compression\" and \"first_source_compression\": only the latter will apply.");
+   }
+   int compression = kUnknownCompressionSettings;
+   if (firstSrcComp) {
+      // user passed -ff or -fk: use the same compression as the first RNTuple we find in the sources.
+      // (do nothing here, the compression will be fetched below)
+   } else if (!defaultComp) {
+      // compression was explicitly passed by the user: use it.
+      compression = outFile->GetCompressionSettings();
+   } else {
+      // user passed no compression-related options: use default
+      compression = RCompressionSetting::EDefaults::kUseGeneralPurpose;
+      Info("RNTuple::Merge", "Using the default compression: %d", compression);
    }
 
    // The remaining entries are the input files
@@ -108,7 +111,50 @@ try {
                inFile->GetName());
          return -1;
       }
-      sources.push_back(RPageSourceFile::CreateFromAnchor(*anchor));
+
+      auto source = RPageSourceFile::CreateFromAnchor(*anchor);
+      if (compression == kUnknownCompressionSettings) {
+         // Get the compression of this RNTuple and use it as the output compression.
+         // We currently assume all column ranges have the same compression, so we just peek at the first one.
+         source->Attach();
+         auto descriptor = source->GetSharedDescriptorGuard();
+         auto clusterIter = descriptor->GetClusterIterable();
+         auto firstCluster = clusterIter.begin();
+         if (firstCluster == clusterIter.end()) {
+            Error("RNTuple::Merge",
+                  "Asked to use the first source's compression as the output compression, but the "
+                  "first source (file '%s') has an empty RNTuple, therefore the output compression could not be "
+                  "determined.",
+                  inFile->GetName());
+            return -1;
+         }
+         auto colRangeIter = (*firstCluster).GetColumnRangeIterable();
+         auto firstColRange = colRangeIter.begin();
+         if (firstColRange == colRangeIter.end()) {
+            Error("RNTuple::Merge",
+                  "Asked to use the first source's compression as the output compression, but the "
+                  "first source (file '%s') has an empty RNTuple, therefore the output compression could not be "
+                  "determined.",
+                  inFile->GetName());
+            return -1;
+         }
+         compression = (*firstColRange).fCompressionSettings;
+         Info("RNTuple::Merge", "Using the first RNTuple's compression: %d", compression);
+      }
+      sources.push_back(std::move(source));
+   }
+
+   RNTupleWriteOptions writeOpts;
+   assert(compression != kUnknownCompressionSettings);
+   writeOpts.SetCompression(compression);
+   auto destination = std::make_unique<RPageSinkFile>(ntupleName, *outFile, writeOpts);
+
+   // If we already have an existing RNTuple, copy over its descriptor to support incremental merging
+   if (outNTuple) {
+      auto source = RPageSourceFile::CreateFromAnchor(*outNTuple);
+      source->Attach();
+      auto desc = source->GetSharedDescriptorGuard();
+      destination->InitFromDescriptor(desc.GetRef());
    }
 
    // Interface conversion
@@ -508,8 +554,7 @@ void RNTupleMerger::MergeCommonColumns(RClusterPool &clusterPool, DescriptorId_t
 
       // Each column range potentially has a distinct compression settings
       const auto colRangeCompressionSettings = clusterDesc.GetColumnRange(columnId).fCompressionSettings;
-      const bool needsCompressionChange = mergeData.fMergeOpts.fCompressionSettings != kUnknownCompressionSettings &&
-                                          colRangeCompressionSettings != mergeData.fMergeOpts.fCompressionSettings;
+      const bool needsCompressionChange = colRangeCompressionSettings != mergeData.fMergeOpts.fCompressionSettings;
       if (needsCompressionChange && mergeData.fMergeOpts.fExtraVerbose)
          Info("RNTuple::Merge", "Column %s: changing source compression from %d to %d", column.fColumnName.c_str(),
               colRangeCompressionSettings, mergeData.fMergeOpts.fCompressionSettings);
