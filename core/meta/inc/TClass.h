@@ -406,6 +406,7 @@ public:
    void               ForceReload (TClass* oldcl);
    Bool_t             HasDataMemberInfo() const { return fIsSyntheticPair || fHasRootPcmInfo || HasInterpreterInfo(); }
    Bool_t             HasDefaultConstructor(Bool_t testio = kFALSE) const;
+   Bool_t             HasDirectStreamerInfoUse() const { return fStreamerImpl == &TClass::StreamerStreamerInfo; }
    Bool_t             HasInterpreterInfoInMemory() const { return nullptr != fClassInfo; }
    Bool_t             HasInterpreterInfo() const { return fCanLoadClassInfo || fClassInfo; }
    UInt_t             GetCheckSum(ECheckSum code = kCurrentCheckSum) const;
