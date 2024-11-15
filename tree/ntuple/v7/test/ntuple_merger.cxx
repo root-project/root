@@ -862,7 +862,8 @@ TEST(RNTupleMerger, ChangeCompression)
       // Create the output
       auto writeOpts = RNTupleWriteOptions{};
       writeOpts.SetEnablePageChecksums(true);
-      auto destinationDifferentComp = std::make_unique<RPageSinkFile>("ntuple", fileGuardOutDiffComp.GetPath(), writeOpts);
+      auto destinationDifferentComp =
+         std::make_unique<RPageSinkFile>("ntuple", fileGuardOutDiffComp.GetPath(), writeOpts);
       writeOpts.SetCompression(kNewComp);
       auto destinationChecksum = std::make_unique<RPageSinkFile>("ntuple", fileGuardOutChecksum.GetPath(), writeOpts);
       auto destinationNoChecksum =
@@ -889,6 +890,71 @@ TEST(RNTupleMerger, ChangeCompression)
    // Check that compression is the right one
    EXPECT_TRUE(VerifyPageCompression(fileGuardOutChecksum.GetPath(), kNewComp));
    EXPECT_TRUE(VerifyPageCompression(fileGuardOutNoChecksum.GetPath(), kNewComp));
+   EXPECT_TRUE(VerifyPageCompression(fileGuardOutUncomp.GetPath(), 0));
+}
+
+TEST(RNTupleMerger, ChangeCompressionMixed)
+{
+   FileRaii fileGuard("test_ntuple_merge_changecomp_mixed_in.root");
+   fileGuard.PreserveFile();
+   {
+      auto model = RNTupleModel::Create();
+      auto fieldFoo = model->MakeField<std::string>("foo");
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+      // Craft the input so that we have one column that ends up compressed (the indices) and one that is not (the
+      // chars)
+      for (size_t i = 0; i < 10; ++i) {
+         *fieldFoo = (char)(i + 'A');
+         ntuple->Fill();
+      }
+   }
+
+   FileRaii fileGuardOutChecksum("test_ntuple_merge_changecomp_mixed_out.root");
+   FileRaii fileGuardOutDiffComp("test_ntuple_merge_changecomp_mixed_out_diff.root");
+   fileGuardOutChecksum.PreserveFile();
+   FileRaii fileGuardOutNoChecksum("test_ntuple_merge_changecomp_mixed_out_nock.root");
+   FileRaii fileGuardOutUncomp("test_ntuple_merge_changecomp_mixed_out_uncomp.root");
+   {
+      // Gather the input sources
+      std::vector<std::unique_ptr<RPageSource>> sources;
+      sources.push_back(RPageSource::Create("ntuple", fileGuard.GetPath(), RNTupleReadOptions()));
+      sources.push_back(RPageSource::Create("ntuple", fileGuard.GetPath(), RNTupleReadOptions()));
+      std::vector<RPageSource *> sourcePtrs;
+      for (const auto &s : sources) {
+         sourcePtrs.push_back(s.get());
+      }
+
+      // Create the output
+      auto writeOpts = RNTupleWriteOptions{};
+      writeOpts.SetEnablePageChecksums(true);
+      auto destinationChecksum = std::make_unique<RPageSinkFile>("ntuple", fileGuardOutChecksum.GetPath(), writeOpts);
+      auto destinationNoChecksum =
+         std::make_unique<RPageSinkFile>("ntuple", fileGuardOutNoChecksum.GetPath(), writeOpts);
+      writeOpts.SetCompression(101);
+      auto destinationDifferentComp =
+         std::make_unique<RPageSinkFile>("ntuple", fileGuardOutDiffComp.GetPath(), writeOpts);
+      writeOpts.SetCompression(0);
+      auto destinationUncomp = std::make_unique<RPageSinkFile>("ntuple", fileGuardOutUncomp.GetPath(), writeOpts);
+      writeOpts.SetEnablePageChecksums(false);
+
+      RNTupleMerger merger;
+      auto opts = RNTupleMergeOptions{};
+      auto res = merger.Merge(sourcePtrs, *destinationChecksum, opts);
+      EXPECT_TRUE(bool(res));
+      res = merger.Merge(sourcePtrs, *destinationNoChecksum, opts);
+      EXPECT_TRUE(bool(res));
+      opts.fCompressionSettings = 101;
+      res = merger.Merge(sourcePtrs, *destinationDifferentComp, opts);
+      EXPECT_TRUE(bool(res));
+      opts.fCompressionSettings = 0;
+      res = merger.Merge(sourcePtrs, *destinationUncomp, opts);
+      EXPECT_TRUE(bool(res));
+   }
+
+   // Check that compression is the right one
+   EXPECT_TRUE(VerifyPageCompression(fileGuardOutChecksum.GetPath(), 505));
+   EXPECT_TRUE(VerifyPageCompression(fileGuardOutNoChecksum.GetPath(), 505));
+   EXPECT_TRUE(VerifyPageCompression(fileGuardOutDiffComp.GetPath(), 101));
    EXPECT_TRUE(VerifyPageCompression(fileGuardOutUncomp.GetPath(), 0));
 }
 
