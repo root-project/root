@@ -3693,6 +3693,19 @@ static TConfiguredAction GetCollectionReadAction(TVirtualStreamerInfo *info, TSt
             return TConfiguredAction( Looper::ReadStreamerCase, new TGenericConfiguration(info, i, compinfo) );
          else
             return TConfiguredAction( Looper::GenericRead, new TGenericConfiguration(info, i, compinfo) );
+      case TStreamerInfo::kAny:
+         if (compinfo->fStreamer)
+            return TConfiguredAction( Looper::template LoopOverCollection<ReadViaExtStreamer >, new TConfiguration(info, i, compinfo,offset) );
+         else {
+            if (compinfo->fNewClass && compinfo->fNewClass->HasDirectStreamerInfoUse())
+              return TConfiguredAction( Looper::template LoopOverCollection<ReadViaClassBuffer>,
+                                        new TConfObject(info, i, compinfo, compinfo->fOffset, compinfo->fClass, compinfo->fNewClass) );
+            else if (compinfo->fClass && compinfo->fClass->HasDirectStreamerInfoUse())
+              return TConfiguredAction( Looper::template LoopOverCollection<ReadViaClassBuffer>,
+                                        new TConfObject(info, i, compinfo, compinfo->fOffset, compinfo->fClass, nullptr) );
+            else // Use the slower path for unusual cases
+              return TConfiguredAction( Looper::GenericRead, new TGenericConfiguration(info, i, compinfo) );
+         }
 
       // Conversions.
       case TStreamerInfo::kConv + TStreamerInfo::kBool:
