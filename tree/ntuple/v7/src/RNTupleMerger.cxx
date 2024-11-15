@@ -778,6 +778,16 @@ static void AddColumnsFromField(std::vector<RColumnMergeInfo> &columns, const RN
          info.fColumnType = dstColumn.GetType();
          mergeData.fColumnIdMap[info.fColumnName] = {info.fOutputId, info.fColumnType};
       }
+
+      if (mergeData.fMergeOpts.fExtraVerbose) {
+         Info("RNTuple::Merge",
+              "Adding column %s with log.id %" PRIu64 ", phys.id %" PRIu64 ", type %s "
+              " -> log.id %" PRIu64 ", type %s",
+              info.fColumnName.c_str(), srcColumnId, srcColumn.GetPhysicalId(),
+              RColumnElementBase::GetColumnTypeName(srcColumn.GetType()), info.fOutputId,
+              RColumnElementBase::GetColumnTypeName(info.fColumnType));
+      }
+
       // Since we disallow merging fields of different types, src and dstFieldDesc must have the same type name.
       assert(srcFieldDesc.GetTypeName() == dstFieldDesc.GetTypeName());
       info.fInMemoryType = ColumnInMemoryType(srcFieldDesc.GetTypeName(), info.fColumnType);
