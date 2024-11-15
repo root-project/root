@@ -3574,20 +3574,20 @@ static TConfiguredAction GetCollectionReadAction(TVirtualStreamerInfo *info, TSt
 {
    switch (type) {
       // Read basic types.
-      case TStreamerInfo::kBool:    return TConfiguredAction( Looper::template ReadBasicType<Bool_t>, new TConfiguration(info,i,compinfo,offset) );    break;
-      case TStreamerInfo::kChar:    return TConfiguredAction( Looper::template ReadBasicType<Char_t>, new TConfiguration(info,i,compinfo,offset) );    break;
-      case TStreamerInfo::kShort:   return TConfiguredAction( Looper::template ReadBasicType<Short_t>,new TConfiguration(info,i,compinfo,offset) );   break;
-      case TStreamerInfo::kInt:     return TConfiguredAction( Looper::template ReadBasicType<Int_t>,  new TConfiguration(info,i,compinfo,offset) );     break;
-      case TStreamerInfo::kLong:    return TConfiguredAction( Looper::template ReadBasicType<Long_t>, new TConfiguration(info,i,compinfo,offset) );    break;
-      case TStreamerInfo::kLong64:  return TConfiguredAction( Looper::template ReadBasicType<Long64_t>, new TConfiguration(info,i,compinfo,offset) );  break;
-      case TStreamerInfo::kFloat:   return TConfiguredAction( Looper::template ReadBasicType<Float_t>,  new TConfiguration(info,i,compinfo,offset) );   break;
-      case TStreamerInfo::kDouble:  return TConfiguredAction( Looper::template ReadBasicType<Double_t>, new TConfiguration(info,i,compinfo,offset) );  break;
-      case TStreamerInfo::kUChar:   return TConfiguredAction( Looper::template ReadBasicType<UChar_t>,  new TConfiguration(info,i,compinfo,offset) );   break;
-      case TStreamerInfo::kUShort:  return TConfiguredAction( Looper::template ReadBasicType<UShort_t>, new TConfiguration(info,i,compinfo,offset) );  break;
-      case TStreamerInfo::kUInt:    return TConfiguredAction( Looper::template ReadBasicType<UInt_t>,   new TConfiguration(info,i,compinfo,offset) );    break;
-      case TStreamerInfo::kULong:   return TConfiguredAction( Looper::template ReadBasicType<ULong_t>,  new TConfiguration(info,i,compinfo,offset) );   break;
-      case TStreamerInfo::kULong64: return TConfiguredAction( Looper::template ReadBasicType<ULong64_t>, new TConfiguration(info,i,compinfo,offset) ); break;
-      case TStreamerInfo::kBits: return TConfiguredAction( Looper::template LoopOverCollection<TStreamerInfoActions::ReadBasicType<BitsMarker> > , new TBitsConfiguration(info,i,compinfo,offset) ); break;
+      case TStreamerInfo::kBool:    return TConfiguredAction( Looper::template ReadBasicType<Bool_t>, new TConfiguration(info,i,compinfo,offset) );
+      case TStreamerInfo::kChar:    return TConfiguredAction( Looper::template ReadBasicType<Char_t>, new TConfiguration(info,i,compinfo,offset) );
+      case TStreamerInfo::kShort:   return TConfiguredAction( Looper::template ReadBasicType<Short_t>,new TConfiguration(info,i,compinfo,offset) );
+      case TStreamerInfo::kInt:     return TConfiguredAction( Looper::template ReadBasicType<Int_t>,  new TConfiguration(info,i,compinfo,offset) );
+      case TStreamerInfo::kLong:    return TConfiguredAction( Looper::template ReadBasicType<Long_t>, new TConfiguration(info,i,compinfo,offset) );
+      case TStreamerInfo::kLong64:  return TConfiguredAction( Looper::template ReadBasicType<Long64_t>, new TConfiguration(info,i,compinfo,offset) );
+      case TStreamerInfo::kFloat:   return TConfiguredAction( Looper::template ReadBasicType<Float_t>,  new TConfiguration(info,i,compinfo,offset) );
+      case TStreamerInfo::kDouble:  return TConfiguredAction( Looper::template ReadBasicType<Double_t>, new TConfiguration(info,i,compinfo,offset) );
+      case TStreamerInfo::kUChar:   return TConfiguredAction( Looper::template ReadBasicType<UChar_t>,  new TConfiguration(info,i,compinfo,offset) );
+      case TStreamerInfo::kUShort:  return TConfiguredAction( Looper::template ReadBasicType<UShort_t>, new TConfiguration(info,i,compinfo,offset) );
+      case TStreamerInfo::kUInt:    return TConfiguredAction( Looper::template ReadBasicType<UInt_t>,   new TConfiguration(info,i,compinfo,offset) );
+      case TStreamerInfo::kULong:   return TConfiguredAction( Looper::template ReadBasicType<ULong_t>,  new TConfiguration(info,i,compinfo,offset) );
+      case TStreamerInfo::kULong64: return TConfiguredAction( Looper::template ReadBasicType<ULong64_t>, new TConfiguration(info,i,compinfo,offset) );
+      case TStreamerInfo::kBits: return TConfiguredAction( Looper::template LoopOverCollection<TStreamerInfoActions::ReadBasicType<BitsMarker> > , new TBitsConfiguration(info,i,compinfo,offset) );
       case TStreamerInfo::kFloat16: {
          if (element->GetFactor() != 0) {
             return TConfiguredAction( Looper::template LoopOverCollection<ReadBasicType_WithFactor<float> >, new TConfWithFactor(info,i,compinfo,offset,element->GetFactor(),element->GetXmin()) );
@@ -3596,7 +3596,6 @@ static TConfiguredAction GetCollectionReadAction(TVirtualStreamerInfo *info, TSt
             if (!nbits) nbits = 12;
             return TConfiguredAction( Looper::template LoopOverCollection<ReadBasicType_NoFactor<float> >, new TConfNoFactor(info,i,compinfo,offset,nbits) );
          }
-         break;
       }
       case TStreamerInfo::kDouble32: {
          if (element->GetFactor() != 0) {
@@ -3609,7 +3608,6 @@ static TConfiguredAction GetCollectionReadAction(TVirtualStreamerInfo *info, TSt
                return TConfiguredAction( Looper::template LoopOverCollection<ReadBasicType_NoFactor<double> >, new TConfNoFactor(info,i,compinfo,offset,nbits) );
             }
          }
-         break;
       }
       case TStreamerInfo::kTNamed:
          return TConfiguredAction( Looper::template LoopOverCollection<ReadTNamed >, new TConfiguration(info, i, compinfo, offset) );
@@ -3622,52 +3620,38 @@ static TConfiguredAction GetCollectionReadAction(TVirtualStreamerInfo *info, TSt
       case TStreamerInfo::kArtificial:
       case TStreamerInfo::kCacheNew:
       case TStreamerInfo::kCacheDelete:
-      case TStreamerInfo::kSTL:  return TConfiguredAction( Looper::GenericRead, new TGenericConfiguration(info,i,compinfo) ); break;
-      case TStreamerInfo::kBase: return TConfiguredAction( Looper::ReadBase, new TGenericConfiguration(info,i,compinfo) ); break;
+      case TStreamerInfo::kSTL:  return TConfiguredAction( Looper::GenericRead, new TGenericConfiguration(info, i, compinfo) );
+      case TStreamerInfo::kBase: return TConfiguredAction( Looper::ReadBase, new TGenericConfiguration(info, i, compinfo) );
 
       // Conversions.
       case TStreamerInfo::kConv + TStreamerInfo::kBool:
          return GetCollectionReadConvertAction<Looper,Bool_t>(element->GetNewType(), new TConfiguration(info,i,compinfo,offset) );
-         break;
       case TStreamerInfo::kConv + TStreamerInfo::kChar:
          return GetCollectionReadConvertAction<Looper,Char_t>(element->GetNewType(), new TConfiguration(info,i,compinfo,offset) );
-         break;
       case TStreamerInfo::kConv + TStreamerInfo::kShort:
          return GetCollectionReadConvertAction<Looper,Short_t>(element->GetNewType(), new TConfiguration(info,i,compinfo,offset) );
-         break;
       case TStreamerInfo::kConv + TStreamerInfo::kInt:
          return GetCollectionReadConvertAction<Looper,Int_t>(element->GetNewType(), new TConfiguration(info,i,compinfo,offset) );
-         break;
       case TStreamerInfo::kConv + TStreamerInfo::kLong:
          return GetCollectionReadConvertAction<Looper,Long_t>(element->GetNewType(), new TConfiguration(info,i,compinfo,offset) );
-         break;
       case TStreamerInfo::kConv + TStreamerInfo::kLong64:
          return GetCollectionReadConvertAction<Looper,Long64_t>(element->GetNewType(), new TConfiguration(info,i,compinfo,offset) );
-         break;
       case TStreamerInfo::kConv + TStreamerInfo::kFloat:
          return GetCollectionReadConvertAction<Looper,Float_t>( element->GetNewType(), new TConfiguration(info,i,compinfo,offset) );
-         break;
       case TStreamerInfo::kConv + TStreamerInfo::kDouble:
          return GetCollectionReadConvertAction<Looper,Double_t>(element->GetNewType(), new TConfiguration(info,i,compinfo,offset) );
-         break;
       case TStreamerInfo::kConv + TStreamerInfo::kUChar:
          return GetCollectionReadConvertAction<Looper,UChar_t>(element->GetNewType(), new TConfiguration(info,i,compinfo,offset) );
-         break;
       case TStreamerInfo::kConv + TStreamerInfo::kUShort:
          return GetCollectionReadConvertAction<Looper,UShort_t>(element->GetNewType(), new TConfiguration(info,i,compinfo,offset) );
-         break;
       case TStreamerInfo::kConv + TStreamerInfo::kUInt:
          return GetCollectionReadConvertAction<Looper,UInt_t>(element->GetNewType(), new TConfiguration(info,i,compinfo,offset) );
-         break;
       case TStreamerInfo::kConv + TStreamerInfo::kULong:
          return GetCollectionReadConvertAction<Looper,ULong_t>(element->GetNewType(), new TConfiguration(info,i,compinfo,offset) );
-         break;
       case TStreamerInfo::kConv + TStreamerInfo::kULong64:
          return GetCollectionReadConvertAction<Looper,ULong64_t>(element->GetNewType(), new TConfiguration(info,i,compinfo,offset) );
-         break;
       case TStreamerInfo::kConv + TStreamerInfo::kBits:
          return GetCollectionReadConvertAction<Looper,BitsMarker>(element->GetNewType(), new TBitsConfiguration(info,i,compinfo,offset) );
-         break;
       case TStreamerInfo::kConv + TStreamerInfo::kFloat16: {
          if (element->GetFactor() != 0) {
             return GetCollectionReadConvertAction<Looper,WithFactorMarker<float> >(element->GetNewType(), new TConfWithFactor(info,i,compinfo,offset,element->GetFactor(),element->GetXmin()) );
@@ -3676,7 +3660,6 @@ static TConfiguredAction GetCollectionReadAction(TVirtualStreamerInfo *info, TSt
             if (!nbits) nbits = 12;
             return GetCollectionReadConvertAction<Looper,NoFactorMarker<float> >(element->GetNewType(), new TConfNoFactor(info,i,compinfo,offset,nbits) );
          }
-         break;
       }
       case TStreamerInfo::kConv + TStreamerInfo::kDouble32: {
          if (element->GetFactor() != 0) {
@@ -3689,11 +3672,9 @@ static TConfiguredAction GetCollectionReadAction(TVirtualStreamerInfo *info, TSt
                return GetCollectionReadConvertAction<Looper,NoFactorMarker<double> >(element->GetNewType(), new TConfNoFactor(info,i,compinfo,offset,nbits) );
             }
          }
-         break;
       }
       default:
          return TConfiguredAction( Looper::GenericRead, new TGenericConfiguration(info,i,compinfo) );
-         break;
    }
    R__ASSERT(0); // We should never be here
    return TConfiguredAction();
@@ -3703,20 +3684,20 @@ template <typename Looper, typename From>
 static TConfiguredAction GetConvertCollectionWriteActionFrom(Int_t onfileType, TConfiguration *conf)
 {
    switch (onfileType) {
-      case TStreamerInfo::kBool:    return TConfiguredAction( Looper::template WriteConvertCollectionBasicType<From,bool>::Action, conf ); break;
-      case TStreamerInfo::kChar:    return TConfiguredAction( Looper::template WriteConvertCollectionBasicType<From,char>::Action, conf ); break;
-      case TStreamerInfo::kShort:   return TConfiguredAction( Looper::template WriteConvertCollectionBasicType<From,short>::Action, conf );  break;
-      case TStreamerInfo::kInt:     return TConfiguredAction( Looper::template WriteConvertCollectionBasicType<From,Int_t>::Action, conf ); break;
-      case TStreamerInfo::kLong:    return TConfiguredAction( Looper::template WriteConvertCollectionBasicType<From,Long_t>::Action, conf ); break;
-      case TStreamerInfo::kLong64:  return TConfiguredAction( Looper::template WriteConvertCollectionBasicType<From,Long64_t>::Action, conf ); break;
-      case TStreamerInfo::kFloat:   return TConfiguredAction( Looper::template WriteConvertCollectionBasicType<From,float>::Action, conf ); break;
-      case TStreamerInfo::kDouble:  return TConfiguredAction( Looper::template WriteConvertCollectionBasicType<From,double>::Action, conf ); break;
-      case TStreamerInfo::kUChar:   return TConfiguredAction( Looper::template WriteConvertCollectionBasicType<From,UChar_t>::Action, conf ); break;
-      case TStreamerInfo::kUShort:  return TConfiguredAction( Looper::template WriteConvertCollectionBasicType<From,UShort_t>::Action, conf ); break;
-      case TStreamerInfo::kUInt:    return TConfiguredAction( Looper::template WriteConvertCollectionBasicType<From,UInt_t>::Action, conf ); break;
-      case TStreamerInfo::kULong:   return TConfiguredAction( Looper::template WriteConvertCollectionBasicType<From,ULong_t>::Action, conf ); break;
-      case TStreamerInfo::kULong64: return TConfiguredAction( Looper::template WriteConvertCollectionBasicType<From,ULong64_t>::Action, conf );  break;
-      case TStreamerInfo::kBits:    return TConfiguredAction( Looper::template WriteConvertCollectionBasicType<From,UInt_t>::Action, conf );  break;
+      case TStreamerInfo::kBool:    return TConfiguredAction( Looper::template WriteConvertCollectionBasicType<From,bool>::Action, conf );
+      case TStreamerInfo::kChar:    return TConfiguredAction( Looper::template WriteConvertCollectionBasicType<From,char>::Action, conf );
+      case TStreamerInfo::kShort:   return TConfiguredAction( Looper::template WriteConvertCollectionBasicType<From,short>::Action, conf );
+      case TStreamerInfo::kInt:     return TConfiguredAction( Looper::template WriteConvertCollectionBasicType<From,Int_t>::Action, conf );
+      case TStreamerInfo::kLong:    return TConfiguredAction( Looper::template WriteConvertCollectionBasicType<From,Long_t>::Action, conf );
+      case TStreamerInfo::kLong64:  return TConfiguredAction( Looper::template WriteConvertCollectionBasicType<From,Long64_t>::Action, conf );
+      case TStreamerInfo::kFloat:   return TConfiguredAction( Looper::template WriteConvertCollectionBasicType<From,float>::Action, conf );
+      case TStreamerInfo::kDouble:  return TConfiguredAction( Looper::template WriteConvertCollectionBasicType<From,double>::Action, conf );
+      case TStreamerInfo::kUChar:   return TConfiguredAction( Looper::template WriteConvertCollectionBasicType<From,UChar_t>::Action, conf );
+      case TStreamerInfo::kUShort:  return TConfiguredAction( Looper::template WriteConvertCollectionBasicType<From,UShort_t>::Action, conf );
+      case TStreamerInfo::kUInt:    return TConfiguredAction( Looper::template WriteConvertCollectionBasicType<From,UInt_t>::Action, conf );
+      case TStreamerInfo::kULong:   return TConfiguredAction( Looper::template WriteConvertCollectionBasicType<From,ULong_t>::Action, conf );
+      case TStreamerInfo::kULong64: return TConfiguredAction( Looper::template WriteConvertCollectionBasicType<From,ULong64_t>::Action, conf );
+      case TStreamerInfo::kBits:    return TConfiguredAction( Looper::template WriteConvertCollectionBasicType<From,UInt_t>::Action, conf );
 
       // Supporting this requires adding TBuffer::WiteFastArrayWithNbits
       // and the proper struct WriteConvertCollectionBasicType<Memory, NoFactorMarker<Onfile>> here
