@@ -1536,8 +1536,10 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
                                                        llvmResourceDir, extensions,
                                                        interpLibHandle);
 
-   if (!fInterpreter->getCI()) // Compiler instance could not be created. See https://its.cern.ch/jira/browse/ROOT-10239
-      exit(1);
+   if (!fInterpreter->getCI()) { // Compiler instance could not be created. See https://its.cern.ch/jira/browse/ROOT-10239
+      std::cerr << "Exiting now since compiler instance is not available." << std::endl;
+      exit(EXIT_FAILURE);
+   }
    // Don't check whether modules' files exist.
    fInterpreter->getCI()->getPreprocessorOpts().DisablePCHOrModuleValidation =
       DisableValidationForModuleKind::All;
