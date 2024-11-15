@@ -1233,6 +1233,8 @@ std::shared_ptr<ROOT::Detail::RDF::RLoopManager>
 ROOT::Detail::RDF::CreateLMFromTTree(std::string_view datasetName, const std::vector<std::string> &fileNameGlobs,
                                      const std::vector<std::string> &defaultColumns, bool checkFile)
 {
+   if (fileNameGlobs.size() == 0)
+      throw std::invalid_argument("RDataFrame: empty list of input files.");
    // Introduce the same behaviour as in CreateLMFromFile for consistency.
    // Creating an RDataFrame with a non-existing file will throw early rather
    // than wait for the start of the graph execution.
@@ -1287,6 +1289,9 @@ std::shared_ptr<ROOT::Detail::RDF::RLoopManager>
 ROOT::Detail::RDF::CreateLMFromFile(std::string_view datasetName, const std::vector<std::string> &fileNameGlobs,
                                     const ROOT::RDF::ColumnNames_t &defaultColumns)
 {
+
+   if (fileNameGlobs.size() == 0)
+      throw std::invalid_argument("RDataFrame: empty list of input files.");
 
    auto inFile = OpenFileWithSanityChecks(fileNameGlobs[0]);
 
