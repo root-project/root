@@ -14,6 +14,7 @@ ROOT_GENERATE_DICTIONARY(
 ROOTTEST_GENERATE_EXECUTABLE(
   write_ttree
   write_ttree.cxx eventDict.cxx
+  DEPENDS ${GENERATE_DICTIONARY_TEST}
   LIBRARIES Core RIO Tree
   FIXTURES_SETUP write_ttree_executable)
 ROOTTEST_ADD_TEST(write_ttree
