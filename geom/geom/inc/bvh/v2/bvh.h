@@ -146,10 +146,12 @@ restart:
                     stack.push(far_index);
                 }
                 top = near_index;
-            } else if (hit_right)
+            } else if (hit_right) {
                 top = right.index;
-            else [[unlikely]]
+            }
+            else [[unlikely]] {
                 goto restart;
+            }
         }
 
         [[maybe_unused]] auto was_hit = leaf_fn(top.first_id(), top.first_id() + top.prim_count());
@@ -163,19 +165,18 @@ template <typename Node>
 template <bool IsAnyHit, bool IsRobust, typename Stack, typename LeafFn, typename InnerFn>
 void Bvh<Node>::intersect(const Ray& ray, Index start, Stack& stack, LeafFn&& leaf_fn, InnerFn&& inner_fn) const {
     auto inv_dir = ray.template get_inv_dir<!IsRobust>();
-    auto inv_org = -inv_dir * ray.org;
-    auto inv_dir_pad = ray.pad_inv_dir(inv_dir);
+    auto inv_dir_pad_or_inv_org = IsRobust ? ray.pad_inv_dir(inv_dir) : -inv_dir * ray.org;
     auto octant = ray.get_octant();
 
     traverse_top_down<IsAnyHit>(start, stack, leaf_fn, [&] (const Node& left, const Node& right) {
         inner_fn(left, right);
         std::pair<Scalar, Scalar> intr_left, intr_right;
         if constexpr (IsRobust) {
-            intr_left  = left .intersect_robust(ray, inv_dir, inv_dir_pad, octant);
-            intr_right = right.intersect_robust(ray, inv_dir, inv_dir_pad, octant);
+            intr_left  = left .intersect_robust(ray, inv_dir, inv_dir_pad_or_inv_org, octant);
+            intr_right = right.intersect_robust(ray, inv_dir, inv_dir_pad_or_inv_org, octant);
         } else {
-            intr_left  = left .intersect_fast(ray, inv_dir, inv_org, octant);
-            intr_right = right.intersect_fast(ray, inv_dir, inv_org, octant);
+            intr_left  = left .intersect_fast(ray, inv_dir, inv_dir_pad_or_inv_org, octant);
+            intr_right = right.intersect_fast(ray, inv_dir, inv_dir_pad_or_inv_org, octant);
         }
         return std::make_tuple(
             intr_left.first <= intr_left.second,
