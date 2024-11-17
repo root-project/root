@@ -2144,10 +2144,15 @@ bool Font::load_ttf_file( const char *filename ) {
     fseek( f, 0, SEEK_SET );
 
     uint8_t *ttf = (unsigned char*) malloc( fsize );
-    fread( ttf, 1, fsize, f );
+    size_t result = fread( ttf, 1, fsize, f );
+    bool res = false;
+    if (result != fsize) {
+        perror("Error reading file");
+    } else {
+        res = load_ttf_mem( ttf );
+    }
     fclose( f );
 
-    bool res = load_ttf_mem( ttf );
     free( ttf );
     return res;
 }
