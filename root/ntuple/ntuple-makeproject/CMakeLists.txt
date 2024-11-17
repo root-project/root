@@ -1,5 +1,6 @@
-# The following CMake code does not work on Windows at the moment
-if(NOT ROOT_root7_FOUND OR (MSVC AND NOT win_broken_tests))
+if(NOT ROOT_root7_FOUND OR # The following CMake code does not work on Windows at the moment
+   (MSVC AND NOT win_broken_tests) OR
+   ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang") AND UNIX AND NOT APPLE) # Necessary for a crash that occurs when compiling the dictionary with clang on linux
   return()
 endif()
 
@@ -14,7 +15,6 @@ ROOT_GENERATE_DICTIONARY(
 ROOTTEST_GENERATE_EXECUTABLE(
   write_ttree
   write_ttree.cxx eventDict.cxx
-  DEPENDS ${GENERATE_DICTIONARY_TEST}
   LIBRARIES Core RIO Tree
   FIXTURES_SETUP write_ttree_executable)
 ROOTTEST_ADD_TEST(write_ttree
