@@ -1336,7 +1336,7 @@ static void RegisterPreIncludedHeaders(cling::Interpreter &clingInterp)
 
 TCling::TCling(const char *name, const char *title, const char* const argv[], void *interpLibHandle)
 : TInterpreter(name, title), fGlobalsListSerial(-1), fMapfile(nullptr),
-  fRootmapFiles(nullptr), fLockProcessLine(true), fNormalizedCtxt(nullptr),
+  fRootmapFiles(nullptr), fLockProcessLine(true), fNormalizedCtxt(nullptr), fLookupHelper(nullptr),
   fPrevLoadedDynLibInfo(nullptr), fClingCallbacks(nullptr), fAutoLoadCallBack(nullptr),
   fTransactionCount(0), fHeaderParsingOnDemand(true), fIsAutoParsingSuspended(kFALSE)
 {
@@ -1537,8 +1537,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
                                                        interpLibHandle);
 
    if (!fInterpreter->getCI()) { // Compiler instance could not be created. See https://its.cern.ch/jira/browse/ROOT-10239
-      std::cerr << "Exiting now since compiler instance is not available." << std::endl;
-      exit(EXIT_FAILURE);
+      return;
    }
    // Don't check whether modules' files exist.
    fInterpreter->getCI()->getPreprocessorOpts().DisablePCHOrModuleValidation =
@@ -1639,6 +1638,8 @@ TCling::~TCling()
 
 void TCling::Initialize()
 {
+   if (!fClingCallbacks) // Compiler instance could not be created. See https://its.cern.ch/jira/browse/ROOT-10239
+      return;
    fClingCallbacks->Initialize();
 
    // We are set up. Enable ROOT's AutoLoading.
