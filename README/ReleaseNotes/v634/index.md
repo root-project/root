@@ -287,6 +287,30 @@ TCanvas::SaveAll({c1, c2, c3, c4}, "file.pdf");
 * Add `TStyle::SetLegendFillStyle`
 
 ## 3D Graphics Libraries
+### REve
+
+* Update RenderCore rendering engine to version 1.6 with improved
+implementation of Signed Distance Field (SDF) fonts.
+
+* Implement REveText element to draw text with SDF fonts in screen or
+world coordinates. See the new example in tutorials/eve7/texts.C
+
+*  Add initial version of REve overlays: a 2D area in screen coordinates
+that can draw text and frames in relative proportions; support position
+and scale editing on the client side.
+
+* Draw axis labels with SDF fonts in the mixed space-screen coordinate
+system.
+
+* Introduce REveGeoTopNode: a wrapper over a TGeoNode, possibly
+displaced with a global transformation stored in REveElement. It holds a
+pointer to TGeoManager and controls for steering of TGeoPainter
+(fVisOption, fVisLevel and fMaxVisNodes).
+
+* Integrate JSRoot hierarchical node browser in REve as REveGeoTable
+element. The demonstration of this feature is included in example
+tutorial/eve7/eveGeoBrowser.C
+
 
 ## Geometry Libraries
 
