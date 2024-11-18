@@ -19,6 +19,8 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
+#include <limits>
+#include <iomanip>
 
 #include "TROOT.h"
 #include "TBuffer.h"
@@ -7270,7 +7272,9 @@ void TH1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    static Int_t nyaxis = 0;
    static Int_t nzaxis = 0;
    TString sxaxis="xAxis",syaxis="yAxis",szaxis="zAxis";
-
+   const auto old_precision{std::out.precision()};
+   constexpr auto max_precision{std::numeric_limits<double>::digits10 + 1}; 
+   out << std::setprecision(max_precision);
    // Check if the histogram has equidistant X bins or not.  If not, we
    // create an array holding the bins.
    if (GetXaxis()->GetXbins()->fN && GetXaxis()->GetXbins()->fArray) {
@@ -7392,6 +7396,7 @@ void TH1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    }
 
    TH1::SavePrimitiveHelp(out, hname, option);
+   out << std::setprecision(old_precision);
    this->SetName(savedName.Data());
 }
 
