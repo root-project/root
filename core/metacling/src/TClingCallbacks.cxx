@@ -84,78 +84,6 @@ extern "C" {
    void TCling__UnlockCompilationDuringUserCodeExecution(void *state);
 }
 
-class AutoloadLibraryMU : public llvm::orc::MaterializationUnit {
-   std::string fLibrary;
-   llvm::orc::SymbolNameVector fSymbols;
-public:
-   AutoloadLibraryMU(const std::string &Library, const llvm::orc::SymbolNameVector &Symbols)
-      : MaterializationUnit({getSymbolFlagsMap(Symbols), nullptr}), fLibrary(Library), fSymbols(Symbols)
-   {
-   }
-
-   StringRef getName() const override { return "<Symbols from Autoloaded Library>"; }
-
-   void materialize(std::unique_ptr<llvm::orc::MaterializationResponsibility> R) override
-   {
-      llvm::orc::SymbolMap loadedSymbols;
-      llvm::orc::SymbolNameSet failedSymbols;
-      bool loadedLibrary = false;
-
-      for (auto symbol : fSymbols) {
-         std::string symbolStr = (*symbol).str();
-         std::string nameForDlsym = ROOT::TMetaUtils::DemangleNameForDlsym(symbolStr);
-
-         // Check if the symbol is available without loading the library.
-         void *addr = llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(nameForDlsym);
-
-         if (!addr && !loadedLibrary) {
-            // Try to load the library which should provide the symbol definition.
-            // TODO: Should this interface with the DynamicLibraryManager directly?
-            if (TCling__LoadLibrary(fLibrary.c_str()) < 0) {
-               ROOT::TMetaUtils::Error("AutoloadLibraryMU", "Failed to load library %s", fLibrary.c_str());
-            }
-
-            // Only try loading the library once.
-            loadedLibrary = true;
-
-            addr = llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(nameForDlsym);
-         }
-
-         if (addr) {
-            loadedSymbols[symbol] = {llvm::orc::ExecutorAddr::fromPtr(addr), llvm::JITSymbolFlags::Exported};
-         } else {
-            // Collect all failing symbols, delegate their responsibility and then
-            // fail their materialization. R->defineNonExistent() sounds like it
-            // should do that, but it's not implemented?!
-            failedSymbols.insert(symbol);
-         }
-      }
-
-      if (!failedSymbols.empty()) {
-         auto failingMR = R->delegate(failedSymbols);
-         if (failingMR) {
-            (*failingMR)->failMaterialization();
-         }
-      }
-
-      if (!loadedSymbols.empty()) {
-         llvm::cantFail(R->notifyResolved(loadedSymbols));
-         llvm::cantFail(R->notifyEmitted());
-      }
-   }
-
-   void discard(const llvm::orc::JITDylib &JD, const llvm::orc::SymbolStringPtr &Name) override {}
-
-private:
-   static llvm::orc::SymbolFlagsMap getSymbolFlagsMap(const llvm::orc::SymbolNameVector &Symbols)
-   {
-      llvm::orc::SymbolFlagsMap map;
-      for (auto symbolName : Symbols)
-         map[symbolName] = llvm::JITSymbolFlags::Exported;
-      return map;
-   }
-};
-
 class AutoloadLibraryGenerator : public llvm::orc::DefinitionGenerator {
    const TClingCallbacks &fCallbacks;
    cling::Interpreter *fInterpreter;
@@ -200,10 +128,27 @@ public:
             found[libName].push_back(name);
       }
 
-      for (auto &&KV : found) {
-         auto MU = std::make_unique<AutoloadLibraryMU>(KV.first, std::move(KV.second));
-         if (auto Err = JD.define(MU))
-            return Err;
+      llvm::orc::SymbolMap loadedSymbols;
+      for (const auto &KV : found) {
+         // Try to load the library which should provide the symbol definition.
+         // TODO: Should this interface with the DynamicLibraryManager directly?
+         if (TCling__LoadLibrary(KV.first.c_str()) < 0) {
+            ROOT::TMetaUtils::Error("AutoloadLibraryMU", "Failed to load library %s", KV.first.c_str());
+         }
+
+         for (const auto &symbol : KV.second) {
+            std::string symbolStr = (*symbol).str();
+            std::string nameForDlsym = ROOT::TMetaUtils::DemangleNameForDlsym(symbolStr);
+
+            void *addr = llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(nameForDlsym);
+            if (addr) {
+               loadedSymbols[symbol] = {llvm::orc::ExecutorAddr::fromPtr(addr), llvm::JITSymbolFlags::Exported};
+            }
+         }
+      }
+
+      if (!loadedSymbols.empty()) {
+         return JD.define(absoluteSymbols(std::move(loadedSymbols)));
       }
 
       return llvm::Error::success();
