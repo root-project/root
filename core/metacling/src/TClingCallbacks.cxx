@@ -174,7 +174,7 @@ public:
                              const llvm::orc::SymbolLookupSet &Symbols) override
    {
       if (!fCallbacks.IsAutoLoadingEnabled())
-         llvm::Error::success();
+         return llvm::Error::success();
 
       // If we get here, the symbols have not been found in the current process,
       // so no need to check that again. Instead search for the library that
