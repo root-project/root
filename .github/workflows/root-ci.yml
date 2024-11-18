@@ -389,7 +389,7 @@ jobs:
           - image: alma9-clang
             is_special: true
             property: clang
-            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_C_COMPILER=clang", "CMAKE_CXX_COMPILER=clang++"]
+            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_C_COMPILER=clang", "CMAKE_CXX_COMPILER=clang++", "libcxx=ON", "builtin_tbb=ON"]
           # Disabled until DNS problems in containers are solved
          #- image: ubuntu2404-cuda
          #  is_special: true
