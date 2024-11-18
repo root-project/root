@@ -7272,7 +7272,8 @@ void TH1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    static Int_t nyaxis = 0;
    static Int_t nzaxis = 0;
    TString sxaxis="xAxis",syaxis="yAxis",szaxis="zAxis";
-   const auto old_precision{std::out.precision()};
+
+   const auto old_precision{out.precision()};
    constexpr auto max_precision{std::numeric_limits<double>::digits10 + 1}; 
    out << std::setprecision(max_precision);
    // Check if the histogram has equidistant X bins or not.  If not, we
