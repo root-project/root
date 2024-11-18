@@ -8,16 +8,16 @@
 
 #include <TSystem.h>
 
-int merge_changeComp_check_output(int expectedCompression, const char *fnameOut, const char *fnameIn1,
-                                  const char *fnameIn2)
+int merge_changeComp_check_output(int expectedCompressionRNT, int expectedCompressionTFile,
+                                  const char *fnameOut, const char *fnameIn1, const char *fnameIn2)
 {
    using namespace ROOT::Experimental;
 
    // Check compression of the tfile
    {
       auto f1 = std::unique_ptr<TFile>(TFile::Open(fnameOut, "READ"));
-      if (f1->GetCompressionSettings() != expectedCompression) {
-         std::cerr << "Expected TFile compression to be " << expectedCompression << " but it is "
+      if (f1->GetCompressionSettings() != expectedCompressionTFile) {
+         std::cerr << "Expected TFile compression to be " << expectedCompressionTFile << " but it is "
                    << f1->GetCompressionSettings() << "\n";
          return 1;
       }
@@ -28,14 +28,14 @@ int merge_changeComp_check_output(int expectedCompression, const char *fnameOut,
 
    Internal::RClusterPool pool{source};
 
-   const auto expCompAlgo = ROOT::RCompressionSetting::AlgorithmFromCompressionSettings(expectedCompression);
+   const auto expCompAlgo = ROOT::RCompressionSetting::AlgorithmFromCompressionSettings(expectedCompressionRNT);
    const auto &desc = source.GetSharedDescriptorGuard();
    auto clusterIter = desc->GetClusterIterable();
    for (const auto &clusterDesc : clusterIter) {
       // check advertised compression
       int advertisedCompression = clusterDesc.GetColumnRange(0).fCompressionSettings;
-      if (advertisedCompression != expectedCompression) {
-         std::cerr << "Expected advertised compression to be " << expectedCompression << " but it is "
+      if (advertisedCompression != expectedCompressionRNT) {
+         std::cerr << "Expected advertised compression to be " << expectedCompressionRNT << " but it is "
                    << advertisedCompression << "\n";
          return 1;
       }
