@@ -191,7 +191,7 @@ TEST(RNTuple, RandomAccess)
 
    std::int64_t sum = 0;
    std::int64_t expected = 0;
-   constexpr unsigned int nSamples = 10000;
+   constexpr unsigned int nSamples = 50000;
    TRandom3 rnd(42);
    for (unsigned int i = 0; i < nSamples; ++i) {
       auto entryId = floor(rnd.Rndm() * (nEvents - 1));
