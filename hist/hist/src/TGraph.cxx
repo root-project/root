@@ -40,6 +40,8 @@
 #include <fstream>
 #include <cstring>
 #include <numeric>
+#include <limits>
+#include <iomanip>
 
 #include "HFitInterface.h"
 #include "Fit/DataRange.h"
@@ -2180,6 +2182,9 @@ TString TGraph::SaveArray(std::ostream &out, const char *suffix, Int_t frameNumb
    TString arrname = TString::Format("%s_%s%d", name.Data(), suffix, frameNumber);
 
    out << "   Double_t " << arrname << "[" << fNpoints << "] = { ";
+   const auto old_precision{out.precision()};
+   constexpr auto max_precision{std::numeric_limits<double>::digits10 + 1}; 
+   out << std::setprecision(max_precision);
    for (Int_t i = 0; i < fNpoints-1; i++) {
       out << arr[i] << ",";
       if (i && (i % 16 == 0))
@@ -2188,7 +2193,7 @@ TString TGraph::SaveArray(std::ostream &out, const char *suffix, Int_t frameNumb
          out << " ";
    }
    out << arr[fNpoints-1] << " };" << std::endl;
-
+   out << std::setprecision(old_precision);
    return arrname;
 }
 
