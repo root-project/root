@@ -23,6 +23,7 @@ TEST(Pages, Pool)
 
    RPage::RClusterInfo clusterInfo(2, 40);
    auto page = allocator.NewPage(1, 10);
+   auto pageBuffer = page.GetBuffer();
    page.GrowUnchecked(10);
    EXPECT_EQ(page.GetMaxElements(), page.GetNElements());
    page.SetWindow(50, clusterInfo);
@@ -55,6 +56,12 @@ TEST(Pages, Pool)
             pool.GetPage(RPagePool::RKey{1, std::type_index(typeid(void))}, ROOT::Experimental::RClusterIndex(2, 15));
          EXPECT_FALSE(pageRef2.Get().IsNull());
       }
+
+      auto newPage = allocator.NewPage(1, 10);
+      newPage.GrowUnchecked(10);
+      newPage.SetWindow(50, clusterInfo);
+      auto newPageRef = pool.RegisterPage(std::move(newPage), RPagePool::RKey{1, std::type_index(typeid(void))});
+      EXPECT_EQ(pageBuffer, newPageRef.Get().GetBuffer());
    }
    auto pageRef = pool.GetPage(RPagePool::RKey{1, std::type_index(typeid(void))}, 55);
    EXPECT_TRUE(pageRef.Get().IsNull());

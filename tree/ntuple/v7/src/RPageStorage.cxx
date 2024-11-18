@@ -263,8 +263,7 @@ void ROOT::Experimental::Internal::RPageSource::UnzipClusterImpl(RCluster *clust
          std::uint64_t pageNo = 0;
          std::uint64_t firstInPage = 0;
          for (const auto &pi : pageRange.fPageInfos) {
-            ROnDiskPage::Key key(columnId, pageNo);
-            auto onDiskPage = cluster->GetOnDiskPage(key);
+            auto onDiskPage = cluster->GetOnDiskPage(ROnDiskPage::Key{columnId, pageNo});
             RSealedPage sealedPage;
             sealedPage.SetNElements(pi.fNElements);
             sealedPage.SetHasChecksum(pi.fHasChecksum);
@@ -275,6 +274,7 @@ void ROOT::Experimental::Internal::RPageSource::UnzipClusterImpl(RCluster *clust
             auto taskFunc = [this, columnId, clusterId, firstInPage, sealedPage, element = allElements.back().get(),
                              &foundChecksumFailure,
                              indexOffset = clusterDescriptor.GetColumnRange(columnId).fFirstElementIndex]() {
+               const RPagePool::RKey keyPagePool{columnId, element->GetIdentifier().fInMemoryType};
                auto rv = UnsealPage(sealedPage, *element);
                if (!rv) {
                   foundChecksumFailure = true;
@@ -284,8 +284,7 @@ void ROOT::Experimental::Internal::RPageSource::UnzipClusterImpl(RCluster *clust
                fCounters->fSzUnzip.Add(element->GetSize() * sealedPage.GetNElements());
 
                newPage.SetWindow(indexOffset + firstInPage, RPage::RClusterInfo(clusterId, indexOffset));
-               fPagePool.PreloadPage(std::move(newPage),
-                                     RPagePool::RKey{columnId, element->GetIdentifier().fInMemoryType});
+               fPagePool.PreloadPage(std::move(newPage), keyPagePool);
             };
 
             fTaskScheduler->AddTask(taskFunc);

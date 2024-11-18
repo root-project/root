@@ -26,11 +26,26 @@ ROOT::Experimental::Internal::RPagePool::REntry &
 ROOT::Experimental::Internal::RPagePool::AddPage(RPage page, const RKey &key, std::int64_t initialRefCounter)
 {
    assert(fLookupByBuffer.count(page.GetBuffer()) == 0);
-   const auto index = fEntries.size();
-   auto &entry = fEntries.emplace_back(REntry{std::move(page), key, initialRefCounter});
-   fLookupByBuffer[page.GetBuffer()] = index;
-   fLookupByKey[key].emplace_back(index);
-   return entry;
+
+   const auto entryIndex = fEntries.size();
+
+   auto itrPageSet = fLookupByKey.find(key);
+   if (itrPageSet != fLookupByKey.end()) {
+      auto [itrEntryIdx, isNew] = itrPageSet->second.emplace(RPagePosition(page), entryIndex);
+      if (!isNew) {
+         assert(itrEntryIdx->second < fEntries.size());
+         // We require that pages cover pairwise distinct element ranges of the column
+         assert(fEntries[itrEntryIdx->second].fPage.GetGlobalRangeLast() == page.GetGlobalRangeLast());
+         fEntries[itrEntryIdx->second].fRefCounter += initialRefCounter;
+         return fEntries[itrEntryIdx->second];
+      }
+   } else {
+      fLookupByKey.emplace(key, std::map<RPagePosition, std::size_t>{{RPagePosition(page), entryIndex}});
+   }
+
+   fLookupByBuffer[page.GetBuffer()] = entryIndex;
+
+   return fEntries.emplace_back(REntry{std::move(page), key, initialRefCounter});
 }
 
 ROOT::Experimental::Internal::RPageRef ROOT::Experimental::Internal::RPagePool::RegisterPage(RPage page, RKey key)
@@ -54,6 +69,7 @@ void ROOT::Experimental::Internal::RPagePool::ReleasePage(const RPage &page)
    assert(itrLookup != fLookupByBuffer.end());
    const auto idx = itrLookup->second;
    const auto N = fEntries.size();
+   assert(idx < N);
 
    assert(fEntries[idx].fRefCounter >= 1);
    if (--fEntries[idx].fRefCounter == 0) {
@@ -61,7 +77,7 @@ void ROOT::Experimental::Internal::RPagePool::ReleasePage(const RPage &page)
 
       auto itrPageSet = fLookupByKey.find(fEntries[idx].fKey);
       assert(itrPageSet != fLookupByKey.end());
-      itrPageSet->second.erase(std::find(itrPageSet->second.begin(), itrPageSet->second.end(), idx));
+      itrPageSet->second.erase(RPagePosition(page));
       if (itrPageSet->second.empty())
          fLookupByKey.erase(itrPageSet);
 
@@ -69,9 +85,9 @@ void ROOT::Experimental::Internal::RPagePool::ReleasePage(const RPage &page)
          fLookupByBuffer[fEntries[N - 1].fPage.GetBuffer()] = idx;
          itrPageSet = fLookupByKey.find(fEntries[N - 1].fKey);
          assert(itrPageSet != fLookupByKey.end());
-         auto itrPageIdx = std::find(itrPageSet->second.begin(), itrPageSet->second.end(), N - 1);
-         assert(itrPageIdx != itrPageSet->second.end());
-         *itrPageIdx = idx;
+         auto itrEntryIdx = itrPageSet->second.find(RPagePosition(fEntries[N - 1].fPage));
+         assert(itrEntryIdx != itrPageSet->second.end());
+         itrEntryIdx->second = idx;
          fEntries[idx] = std::move(fEntries[N - 1]);
       }
 
@@ -86,12 +102,16 @@ ROOT::Experimental::Internal::RPagePool::GetPage(RKey key, NTupleSize_t globalIn
    auto itrPageSet = fLookupByKey.find(key);
    if (itrPageSet == fLookupByKey.end())
       return RPageRef();
+   assert(!itrPageSet->second.empty());
 
-   for (auto idx : itrPageSet->second) {
-      if (fEntries[idx].fPage.Contains(globalIndex)) {
-         fEntries[idx].fRefCounter++;
-         return RPageRef(fEntries[idx].fPage, this);
-      }
+   auto itrEntryIdx = itrPageSet->second.upper_bound(RPagePosition(globalIndex));
+   if (itrEntryIdx == itrPageSet->second.begin())
+      return RPageRef();
+
+   --itrEntryIdx;
+   if (fEntries[itrEntryIdx->second].fPage.Contains(globalIndex)) {
+      fEntries[itrEntryIdx->second].fRefCounter++;
+      return RPageRef(fEntries[itrEntryIdx->second].fPage, this);
    }
    return RPageRef();
 }
@@ -103,12 +123,16 @@ ROOT::Experimental::Internal::RPagePool::GetPage(RKey key, RClusterIndex cluster
    auto itrPageSet = fLookupByKey.find(key);
    if (itrPageSet == fLookupByKey.end())
       return RPageRef();
+   assert(!itrPageSet->second.empty());
 
-   for (auto idx : itrPageSet->second) {
-      if (fEntries[idx].fPage.Contains(clusterIndex)) {
-         fEntries[idx].fRefCounter++;
-         return RPageRef(fEntries[idx].fPage, this);
-      }
+   auto itrEntryIdx = itrPageSet->second.upper_bound(RPagePosition(clusterIndex));
+   if (itrEntryIdx == itrPageSet->second.begin())
+      return RPageRef();
+
+   --itrEntryIdx;
+   if (fEntries[itrEntryIdx->second].fPage.Contains(clusterIndex)) {
+      fEntries[itrEntryIdx->second].fRefCounter++;
+      return RPageRef(fEntries[itrEntryIdx->second].fPage, this);
    }
    return RPageRef();
 }
