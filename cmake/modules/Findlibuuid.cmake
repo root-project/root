@@ -1,76 +1,92 @@
-# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
-# All rights reserved.
-#
-# For the licensing terms see $ROOTSYS/LICENSE.
-# For the list of contributors see $ROOTSYS/README/CREDITS.
+# Distributed under the OSI-approved BSD 3-Clause License.  See accompanying
+# file Copyright.txt or https://cmake.org/licensing for details.
 
-#.rst:
-# Findlibuuid
-# -----------
-#
-# Find libuuid, DCE compatible Universally Unique Identifier library.
-#
-# Imported Targets
-# ^^^^^^^^^^^^^^^^
-#
-# This module defines :prop_tgt:`IMPORTED` target:
-#
-# ``uuid::uuid``
-#   The libuuid library, if found.
-#
-# Result Variables
-# ^^^^^^^^^^^^^^^^
-#
-# This module will set the following variables in your project:
-#
-# ``UUID_FOUND``
-#   True if libuuid has been found.
-# ``UUID_INCLUDE_DIRS``
-#   Where to find uuid/uuid.h.
-# ``UUID_LIBRARIES``
-#   The libraries to link against to use libuuid.
-#
-# Obsolete variables
-# ^^^^^^^^^^^^^^^^^^
-#
-# The following variables may also be set, for backwards compatibility:
-#
-# ``UUID_LIBRARY``
-#   where to find the libuuid library (same as UUID_LIBRARIES).
-# ``UUID_INCLUDE_DIR``
-#   where to find the uuid/uuid.h header (same as UUID_INCLUDE_DIRS).
+#[=======================================================================[.rst:
+FindLibUUID
+------------
 
-include(CheckCXXSymbolExists)
-include(CheckLibraryExists)
-include(FindPackageHandleStandardArgs)
+Find LibUUID include directory and library.
 
-if(NOT UUID_INCLUDE_DIR)
-  find_path(UUID_INCLUDE_DIR uuid/uuid.h)
+Imported Targets
+^^^^^^^^^^^^^^^^
+
+An :ref:`imported target <Imported targets>` named
+``LibUUID::LibUUID`` is provided if LibUUID has been found.
+
+Result Variables
+^^^^^^^^^^^^^^^^
+
+This module defines the following variables:
+
+``LibUUID_FOUND``
+  True if LibUUID was found, false otherwise.
+``LibUUID_INCLUDE_DIRS``
+  Include directories needed to include LibUUID headers.
+``LibUUID_LIBRARIES``
+  Libraries needed to link to LibUUID.
+
+Cache Variables
+^^^^^^^^^^^^^^^
+
+This module uses the following cache variables:
+
+``LibUUID_LIBRARY``
+  The location of the LibUUID library file.
+``LibUUID_INCLUDE_DIR``
+  The location of the LibUUID include directory containing ``uuid/uuid.h``.
+
+The cache variables should not be used by project code.
+They may be set by end users to point at LibUUID components.
+#]=======================================================================]
+
+#-----------------------------------------------------------------------------
+if(MSYS)
+  # Note: on current version of MSYS2, linking to libuuid.dll.a doesn't
+  #       import the right symbols sometimes. Fix this by linking directly
+  #       to the DLL that provides the symbols, instead.
+  find_library(LibUUID_LIBRARY
+    NAMES msys-uuid-1.dll
+    )
+elseif(CYGWIN)
+  # Note: on current version of Cygwin, linking to libuuid.dll.a doesn't
+  #       import the right symbols sometimes. Fix this by linking directly
+  #       to the DLL that provides the symbols, instead.
+  set(old_suffixes ${CMAKE_FIND_LIBRARY_SUFFIXES})
+  set(CMAKE_FIND_LIBRARY_SUFFIXES .dll)
+  find_library(LibUUID_LIBRARY
+    NAMES cyguuid-1.dll
+    )
+  set(CMAKE_FIND_LIBRARY_SUFFIXES ${old_suffixes})
+else()
+  find_library(LibUUID_LIBRARY
+    NAMES uuid
+    )
 endif()
+mark_as_advanced(LibUUID_LIBRARY)
 
-if(EXISTS UUID_INCLUDE_DIR)
-  set(UUID_INCLUDE_DIRS ${UUID_INCLUDE_DIR})
-  set(CMAKE_REQUIRED_INCLUDES ${UUID_INCLUDE_DIRS})
-  check_cxx_symbol_exists("uuid_generate_random" "uuid/uuid.h" _uuid_header_only)
-endif()
+find_path(LibUUID_INCLUDE_DIR
+  NAMES uuid/uuid.h
+  )
+mark_as_advanced(LibUUID_INCLUDE_DIR)
 
-if(NOT _uuid_header_only AND NOT UUID_LIBRARY)
-  check_library_exists("uuid" "uuid_generate_random" "" _have_libuuid)
-  if(_have_libuuid)
-    set(UUID_LIBRARY "uuid")
-    set(UUID_LIBRARIES ${UUID_LIBRARY})
+#-----------------------------------------------------------------------------
+include(${CMAKE_CURRENT_LIST_DIR}/../../Modules/FindPackageHandleStandardArgs.cmake)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(LibUUID
+  FOUND_VAR LibUUID_FOUND
+  REQUIRED_VARS LibUUID_LIBRARY LibUUID_INCLUDE_DIR
+  )
+set(LIBUUID_FOUND ${LibUUID_FOUND})
+
+#-----------------------------------------------------------------------------
+# Provide documented result variables and targets.
+if(LibUUID_FOUND)
+  set(LibUUID_INCLUDE_DIRS ${LibUUID_INCLUDE_DIR})
+  set(LibUUID_LIBRARIES ${LibUUID_LIBRARY})
+  if(NOT TARGET LibUUID::LibUUID)
+    add_library(LibUUID::LibUUID UNKNOWN IMPORTED)
+    set_target_properties(LibUUID::LibUUID PROPERTIES
+      IMPORTED_LOCATION "${LibUUID_LIBRARY}"
+      INTERFACE_INCLUDE_DIRECTORIES "${LibUUID_INCLUDE_DIRS}"
+      )
   endif()
 endif()
-
-unset(CMAKE_REQUIRED_INCLUDES)
-unset(_uuid_header_only)
-unset(_have_libuuid)
-
-if(NOT TARGET uuid::uuid)
-  add_library(uuid::uuid INTERFACE IMPORTED)
-  set_property(TARGET uuid::uuid PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${UUID_INCLUDE_DIRS}")
-  set_property(TARGET uuid::uuid PROPERTY INTERFACE_LINK_LIBRARIES "${UUID_LIBRARIES}")
-endif()
-
-find_package_handle_standard_args(libuuid DEFAULT_MSG UUID_INCLUDE_DIR)
-mark_as_advanced(UUID_INCLUDE_DIR UUID_LIBRARY)
