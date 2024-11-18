@@ -267,6 +267,7 @@ endmacro(ROOTTEST_COMPILE_MACRO)
 #                                    [LINKDEF linkdef]
 #                                    [DEPENDS deps]
 #                                    [OPTIONS opts]
+#                                    [FIXTURES_SETUP ...] [FIXTURES_CLEANUP ...] [FIXTURES_REQUIRED ...]
 #                                    [files ...]      )
 #
 # This macro generates a dictionary <dictname> from the provided <files>.
@@ -276,7 +277,7 @@ endmacro(ROOTTEST_COMPILE_MACRO)
 #
 #-------------------------------------------------------------------------------
 macro(ROOTTEST_GENERATE_DICTIONARY dictname)
-  CMAKE_PARSE_ARGUMENTS(ARG "NO_ROOTMAP;NO_CXXMODULE" "" "LINKDEF;DEPENDS;OPTIONS" ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "NO_ROOTMAP;NO_CXXMODULE" "FIXTURES_SETUP;FIXTURES_CLEANUP;FIXTURES_REQUIRED" "LINKDEF;DEPENDS;OPTIONS" ${ARGN})
 
   set(CMAKE_ROOTTEST_DICT ON)
 
@@ -338,6 +339,21 @@ macro(ROOTTEST_GENERATE_DICTIONARY dictname)
   set_property(TEST ${GENERATE_DICTIONARY_TEST} PROPERTY ENVIRONMENT ${ROOTTEST_ENVIRONMENT})
   if(CMAKE_GENERATOR MATCHES Ninja AND NOT MSVC)
     set_property(TEST ${GENERATE_DICTIONARY_TEST} PROPERTY RUN_SERIAL true)
+  endif()
+
+  if (ARG_FIXTURES_SETUP)
+    set_property(TEST ${GENERATE_DICTIONARY_TEST} PROPERTY
+      FIXTURES_SETUP ${ARG_FIXTURES_SETUP})
+  endif()
+
+  if (ARG_FIXTURES_CLEANUP)
+    set_property(TEST ${GENERATE_DICTIONARY_TEST} PROPERTY
+      FIXTURES_CLEANUP ${ARG_FIXTURES_CLEANUP})
+  endif()
+
+  if (ARG_FIXTURES_REQUIRED)
+    set_property(TEST ${GENERATE_DICTIONARY_TEST} PROPERTY
+      FIXTURES_REQUIRED ${ARG_FIXTURES_REQUIRED})
   endif()
 
   if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
