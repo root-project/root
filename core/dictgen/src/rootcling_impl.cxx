@@ -4396,7 +4396,7 @@ int RootClingMain(int argc,
       const char ** &extraArgs = *gDriverConfig->fTROOT__GetExtraInterpreterArgs();
       extraArgs = &clingArgsC[1]; // skip binary name
       interpPtr = gDriverConfig->fTCling__GetInterpreter();
-      if (!interpPtr->getCI()) // // Compiler instance could not be created. See https://its.cern.ch/jira/browse/ROOT-10239
+      if (!interpPtr->getCI()) // Compiler instance could not be created. See https://its.cern.ch/jira/browse/ROOT-10239
          return 1;
       if (!isGenreflex && !gOptGeneratePCH) {
          std::unique_ptr<TRootClingCallbacks> callBacks (new TRootClingCallbacks(interpPtr, filesIncludedByLinkdef));
