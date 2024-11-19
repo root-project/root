@@ -67,7 +67,7 @@ TEST(Pages, Pool)
    EXPECT_TRUE(pageRef.Get().IsNull());
 }
 
-TEST(Pages, Evict)
+TEST(Pages, EvictBasics)
 {
    RPageAllocatorHeap allocator;
    RPagePool pool;
@@ -102,3 +102,33 @@ TEST(Pages, Evict)
    pageRef = pool.GetPage(RPagePool::RKey{1, std::type_index(typeid(void))}, 55);
    EXPECT_TRUE(pageRef.Get().IsNull());
 }
+
+#ifdef R__USE_IMT
+TEST(Pages, EvictExpiredClusters)
+{
+   IMTRAII _;
+   FileRaii fileGuard("test_ntuple_pages_evict_expired_clusters.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto ptrPt = model->MakeField<float>("pt");
+      auto ptrE = model->MakeField<float>("E");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+
+      for (unsigned i = 0; i < 2; ++i) {
+         writer->Fill();
+         writer->CommitCluster();
+      }
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   reader->EnableMetrics();
+   auto viewPt = reader->GetView<float>("pt");
+   auto viewE = reader->GetView<float>("E");
+   viewPt(0);
+   viewPt(1); // should evict the unused page for E in cluster 0
+   EXPECT_EQ(4, reader->GetMetrics().GetCounter("RNTupleReader.RPageSourceFile.nPageUnsealed")->GetValueAsInt());
+   viewE(0);
+   EXPECT_EQ(6, reader->GetMetrics().GetCounter("RNTupleReader.RPageSourceFile.nPageUnsealed")->GetValueAsInt());
+}
+#endif // R__USE_IMT
