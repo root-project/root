@@ -65,19 +65,19 @@ ROOT::Experimental::RNTupleProcessor::CreateJoin(const std::vector<RNTupleOpenSp
 
    std::unique_ptr<RNTupleJoinProcessor> processor;
    if (models.size() > 0) {
-      processor =
-         std::unique_ptr<RNTupleJoinProcessor>(new RNTupleJoinProcessor(ntuples[0], joinFields, std::move(models[0])));
+      processor = std::unique_ptr<RNTupleJoinProcessor>(new RNTupleJoinProcessor(ntuples[0], std::move(models[0])));
    } else {
-      processor = std::unique_ptr<RNTupleJoinProcessor>(new RNTupleJoinProcessor(ntuples[0], joinFields));
+      processor = std::unique_ptr<RNTupleJoinProcessor>(new RNTupleJoinProcessor(ntuples[0]));
    }
 
    for (unsigned i = 1; i < ntuples.size(); ++i) {
       if (models.size() > 0)
-         processor->AddAuxiliary(ntuples[i], std::move(models[i]));
+         processor->AddAuxiliary(ntuples[i], joinFields, std::move(models[i]));
       else
-         processor->AddAuxiliary(ntuples[i]);
+         processor->AddAuxiliary(ntuples[i], joinFields);
    }
 
+   processor->SetJoinFieldTokens(joinFields);
    processor->ConnectFields();
 
    return processor;
@@ -185,9 +185,8 @@ ROOT::Experimental::NTupleSize_t ROOT::Experimental::RNTupleChainProcessor::Adva
 //------------------------------------------------------------------------------
 
 ROOT::Experimental::RNTupleJoinProcessor::RNTupleJoinProcessor(const RNTupleOpenSpec &mainNTuple,
-                                                               const std::vector<std::string> &joinFields,
                                                                std::unique_ptr<RNTupleModel> model)
-   : RNTupleProcessor({mainNTuple}), fJoinFieldNames(joinFields)
+   : RNTupleProcessor({mainNTuple})
 {
    fPageSource = Internal::RPageSource::Create(mainNTuple.fNTupleName, mainNTuple.fStorage);
    fPageSource->Attach();
@@ -222,6 +221,7 @@ ROOT::Experimental::RNTupleJoinProcessor::RNTupleJoinProcessor(const RNTupleOpen
 }
 
 void ROOT::Experimental::RNTupleJoinProcessor::AddAuxiliary(const RNTupleOpenSpec &auxNTuple,
+                                                            const std::vector<std::string> &joinFields,
                                                             std::unique_ptr<RNTupleModel> model)
 {
    assert(fNEntriesProcessed == 0 && "cannot add auxiliary ntuples after processing has started");
@@ -308,8 +308,9 @@ void ROOT::Experimental::RNTupleJoinProcessor::AddAuxiliary(const RNTupleOpenSpe
 
    fEntry.swap(newEntry);
 
-   if (IsUsingIndex())
-      fJoinIndices.emplace_back(Internal::RNTupleIndex::Create(fJoinFieldNames, *pageSource, true /* deferBuild */));
+   // If no join fields have been specified, an aligned join is assumed and an index won't be necessary.
+   if (joinFields.size() > 0)
+      fJoinIndices.emplace_back(Internal::RNTupleIndex::Create(joinFields, *pageSource, true /* deferBuild */));
 
    fAuxiliaryPageSources.emplace_back(std::move(pageSource));
 }
@@ -340,10 +341,10 @@ ROOT::Experimental::NTupleSize_t ROOT::Experimental::RNTupleJoinProcessor::Advan
 void ROOT::Experimental::RNTupleJoinProcessor::LoadEntry()
 {
    std::vector<void *> valPtrs;
-   valPtrs.reserve(fJoinFieldNames.size());
+   valPtrs.reserve(fJoinFieldTokens.size());
 
-   for (const auto &fieldName : fJoinFieldNames) {
-      auto ptr = fEntry->GetPtr<void>(fieldName);
+   for (const auto &token : fJoinFieldTokens) {
+      auto ptr = fEntry->GetPtr<void>(token);
       valPtrs.push_back(ptr.get());
    }
 
