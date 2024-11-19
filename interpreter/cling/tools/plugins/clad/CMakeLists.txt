@@ -83,7 +83,7 @@ endif()
 ExternalProject_Add(
   clad
   GIT_REPOSITORY https://github.com/vgvassilev/clad.git
-  GIT_TAG v1.7
+  GIT_TAG master
   UPDATE_COMMAND ""
   PATCH_COMMAND ${_clad_patch_command}
   CMAKE_ARGS -G ${CMAKE_GENERATOR}
