@@ -123,7 +123,20 @@ public:
 
    auto const &outputSizes() const { return _nodeOutputSizes; }
 
+   struct ScopeRAII {
+      std::string _fn;
+      CodegenContext &_ctx;
+      RooAbsArg const *_arg;
+
+   public:
+      ScopeRAII(RooAbsArg const *arg, CodegenContext &ctx);
+      ~ScopeRAII();
+   };
+   ScopeRAII OutputScopeRangeComment(RooAbsArg const *arg) { return {arg, *this}; }
+
 private:
+   void pushScope();
+   void popScope();
    template <class T>
    std::string buildArgSpanImpl(std::span<const T> arr);
 
@@ -177,23 +190,16 @@ private:
 
    /// @brief Map of node names to their result strings.
    std::unordered_map<const TNamed *, std::string> _nodeNames;
-   /// @brief Block of code that is placed before the rest of the function body.
-   std::string _globalScope;
    /// @brief A map to keep track of the observable indices if they are non scalar.
    std::unordered_map<const TNamed *, int> _vecObsIndices;
    /// @brief Map of node output sizes.
    std::map<RooFit::Detail::DataKey, std::size_t> _nodeOutputSizes;
-   /// @brief Stores the squashed code body.
-   std::string _code;
-   /// @brief The current number of for loops the started.
-   int _loopLevel = 0;
+   /// @brief The code layered by lexical scopes used as a stack.
+   std::vector<std::string> _code;
+   /// @brief The indentation level for pretty-printing.
+   unsigned _indent = 0;
    /// @brief Index to get unique names for temporary variables.
    mutable int _tmpVarIdx = 0;
-   /// @brief Keeps track of the position to go back and insert code to.
-   int _scopePtr = -1;
-   /// @brief Stores code that eventually gets injected into main code body.
-   /// Mainly used for placing decls outside of loops.
-   std::string _tempScope;
    /// @brief A map to keep track of list names as assigned by addResult.
    std::unordered_map<RooFit::UniqueId<RooAbsCollection>::Value_t, std::string> _listNames;
    std::vector<double> _xlArr;
