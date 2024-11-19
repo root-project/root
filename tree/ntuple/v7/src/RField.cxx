@@ -43,7 +43,6 @@
 #include <TVirtualStreamerInfo.h>
 
 #include <algorithm>
-#include <cctype> // for isspace
 #include <charconv>
 #include <cstdint>
 #include <cstdlib> // for malloc, free
