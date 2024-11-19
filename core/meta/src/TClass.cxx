@@ -751,7 +751,9 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, con
                line[kvalue] = 0;
             }
          } else {
-            strncpy(&line[kvalue], membertype->AsString(p3pointer), TMath::Min(kline-1-kvalue,(int)strlen(membertype->AsString(p3pointer))));
+            line[kvalue] = '-';
+            line[kvalue+1] = '>';
+            strncpy(&line[kvalue+2], membertype->AsString(p3pointer), TMath::Min(kline-1-kvalue-2,(int)strlen(membertype->AsString(p3pointer))));
          }
       } else if (!strcmp(memberFullTypeName, "char*") ||
                  !strcmp(memberFullTypeName, "const char*")) {
