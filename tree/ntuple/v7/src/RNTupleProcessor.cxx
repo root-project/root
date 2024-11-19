@@ -100,10 +100,9 @@ void ROOT::Experimental::RNTupleProcessor::ConnectField(RFieldContext &fieldCont
    fieldContext.fConcreteField->SetOnDiskId(fieldId);
    Internal::CallConnectPageSourceOnField(*fieldContext.fConcreteField, pageSource);
 
-   auto token = entry.GetToken(fieldContext.GetQualifiedFieldName());
-   auto valuePtr = entry.GetPtr<void>(token);
+   auto valuePtr = entry.GetPtr<void>(fieldContext.fToken);
    auto value = fieldContext.fConcreteField->BindValue(valuePtr);
-   entry.UpdateValue(token, value);
+   entry.UpdateValue(fieldContext.fToken, value);
 }
 
 //------------------------------------------------------------------------------
@@ -140,8 +139,8 @@ ROOT::Experimental::RNTupleChainProcessor::RNTupleChainProcessor(const std::vect
          fEntry->BindValue(token, valuePtr);
       }
 
-      const auto &[fieldContext, _] = fFieldContexts.try_emplace(
-         field.GetFieldName(), field.Clone(field.GetFieldName()), token, fPageSource->GetNTupleName());
+      const auto &[fieldContext, _] =
+         fFieldContexts.try_emplace(field.GetFieldName(), field.Clone(field.GetFieldName()), token);
       ConnectField(fieldContext->second, *fPageSource, *fEntry);
    }
 }
@@ -192,6 +191,7 @@ ROOT::Experimental::RNTupleJoinProcessor::RNTupleJoinProcessor(const RNTupleOpen
                                                                std::unique_ptr<RNTupleModel> model)
    : RNTupleProcessor({mainNTuple}), fJoinFieldNames(joinFields)
 {
+   fNTuples.emplace_back(mainNTuple);
    fPageSource = Internal::RPageSource::Create(mainNTuple.fNTupleName, mainNTuple.fStorage);
    fPageSource->Attach();
 
@@ -218,8 +218,8 @@ ROOT::Experimental::RNTupleJoinProcessor::RNTupleJoinProcessor(const RNTupleOpen
          fEntry->BindValue(fieldName, valuePtr);
       }
 
-      const auto &[fieldContext, _] = fFieldContexts.try_emplace(fieldName, field.Clone(fieldName),
-                                                                 fEntry->GetToken(fieldName), mainNTuple.fNTupleName);
+      const auto &[fieldContext, _] =
+         fFieldContexts.try_emplace(fieldName, field.Clone(fieldName), fEntry->GetToken(fieldName));
       ConnectField(fieldContext->second, *fPageSource, *fEntry);
    }
 }
@@ -228,6 +228,8 @@ void ROOT::Experimental::RNTupleJoinProcessor::AddAuxiliary(const RNTupleOpenSpe
                                                             std::unique_ptr<RNTupleModel> model)
 {
    assert(fNEntriesProcessed == 0 && "cannot add auxiliary ntuples after processing has started");
+
+   fNTuples.emplace_back(auxNTuple);
 
    auto [res, _] = fAuxiliaryPageSources.try_emplace(
       auxNTuple.fNTupleName, Internal::RPageSource::Create(auxNTuple.fNTupleName, auxNTuple.fStorage));
@@ -298,7 +300,7 @@ void ROOT::Experimental::RNTupleJoinProcessor::AddAuxiliary(const RNTupleOpenSpe
 
          auto token = newEntry->GetToken(field.GetQualifiedFieldName());
          fFieldContexts.try_emplace(field.GetQualifiedFieldName(), field.Clone(field.GetFieldName()), token,
-                                    auxNTuple.fNTupleName, true /* isAuxiliary */);
+                                    fNTuples.size() - 1);
       } else {
          auto valuePtr = fEntry->GetPtr<void>(fieldContext->second.fToken);
          auto newToken = newEntry->GetToken(field.GetQualifiedFieldName());
@@ -318,8 +320,9 @@ void ROOT::Experimental::RNTupleJoinProcessor::AddAuxiliary(const RNTupleOpenSpe
 void ROOT::Experimental::RNTupleJoinProcessor::ConnectFields()
 {
    for (auto &[_, fieldContext] : fFieldContexts) {
-      Internal::RPageSource &pageSource =
-         fieldContext.IsAuxiliary() ? *fAuxiliaryPageSources.at(fieldContext.GetNTupleName()) : *fPageSource;
+      Internal::RPageSource &pageSource = fieldContext.IsAuxiliary()
+                                             ? *fAuxiliaryPageSources.at(fNTuples[fieldContext.fNTupleIdx].fNTupleName)
+                                             : *fPageSource;
       ConnectField(fieldContext, pageSource, *fEntry);
    }
 }
@@ -349,13 +352,13 @@ void ROOT::Experimental::RNTupleJoinProcessor::LoadEntry()
    }
 
    for (auto &[fieldName, fieldContext] : fFieldContexts) {
-      if (!fieldContext.fIsAuxiliary || !IsUsingIndex()) {
+      if (!fieldContext.IsAuxiliary() || !IsUsingIndex()) {
          auto &value = fEntry->GetValue(fieldContext.fToken);
          value.Read(fLocalEntryNumber);
          continue;
       }
 
-      auto joinIndex = fJoinIndices.find(fieldContext.GetNTupleName());
+      auto joinIndex = fJoinIndices.find(fNTuples[fieldContext.fNTupleIdx].fNTupleName);
       if (joinIndex != fJoinIndices.end()) {
          if (!joinIndex->second->IsBuilt())
             joinIndex->second->Build();

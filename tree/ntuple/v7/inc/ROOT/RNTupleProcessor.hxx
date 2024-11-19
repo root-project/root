@@ -87,13 +87,13 @@ protected:
       std::unique_ptr<RFieldBase> fProtoField;
       std::unique_ptr<RFieldBase> fConcreteField;
       REntry::RFieldToken fToken;
-      std::string fNTupleName;
-      bool fIsAuxiliary;
+      // Which RNTuple the field belongs to, in case the field belongs to an auxiliary RNTuple, according to the order
+      // in which it was specified. For chained RNTuples, this value will always be 0.
+      std::size_t fNTupleIdx;
 
    public:
-      RFieldContext(std::unique_ptr<RFieldBase> protoField, REntry::RFieldToken token, std::string_view ntupleName,
-                    bool isAuxiliary = false)
-         : fProtoField(std::move(protoField)), fToken(token), fNTupleName(ntupleName), fIsAuxiliary(isAuxiliary)
+      RFieldContext(std::unique_ptr<RFieldBase> protoField, REntry::RFieldToken token, std::size_t ntupleIdx = 0)
+         : fProtoField(std::move(protoField)), fToken(token), fNTupleIdx(ntupleIdx)
       {
       }
 
@@ -101,14 +101,7 @@ protected:
       /// Concrete pages need to be reset explicitly before the page source they belong to is destroyed.
       void ResetConcreteField() { fConcreteField.reset(); }
       void SetConcreteField() { fConcreteField = fProtoField->Clone(fProtoField->GetFieldName()); }
-      bool IsAuxiliary() const { return fIsAuxiliary; }
-      const std::string &GetNTupleName() const { return fNTupleName; }
-      std::string GetQualifiedFieldName() const
-      {
-         if (fIsAuxiliary)
-            return fNTupleName + "." + fProtoField->GetFieldName();
-         return fProtoField->GetFieldName();
-      }
+      bool IsAuxiliary() const { return fNTupleIdx > 0; }
    };
 
    std::vector<RNTupleOpenSpec> fNTuples;
