@@ -896,7 +896,6 @@ TEST(RNTupleMerger, ChangeCompression)
 TEST(RNTupleMerger, ChangeCompressionMixed)
 {
    FileRaii fileGuard("test_ntuple_merge_changecomp_mixed_in.root");
-   fileGuard.PreserveFile();
    {
       auto model = RNTupleModel::Create();
       auto fieldFoo = model->MakeField<std::string>("foo");
@@ -911,7 +910,6 @@ TEST(RNTupleMerger, ChangeCompressionMixed)
 
    FileRaii fileGuardOutChecksum("test_ntuple_merge_changecomp_mixed_out.root");
    FileRaii fileGuardOutDiffComp("test_ntuple_merge_changecomp_mixed_out_diff.root");
-   fileGuardOutChecksum.PreserveFile();
    FileRaii fileGuardOutNoChecksum("test_ntuple_merge_changecomp_mixed_out_nock.root");
    FileRaii fileGuardOutUncomp("test_ntuple_merge_changecomp_mixed_out_uncomp.root");
    {
@@ -1386,3 +1384,96 @@ TEST(RNTupleMerger, MergeProjectedFields)
       }
    }
 }
+
+struct RNTupleMergerCheckEncoding : public ::testing::TestWithParam<std::tuple<int, int, int, bool>> {};
+
+TEST_P(RNTupleMergerCheckEncoding, CorrectEncoding)
+{
+   const auto [compInput0, compInput1, compOutput, useDefaultComp] = GetParam();
+   int expectedComp = useDefaultComp ? 505 : compOutput;
+
+   // Verify that if the encoding of the inputs' fields is properly converted to match the output file's compression
+   // (e.g. if we merge a compressed RNTuple with SplitInts and output to an uncompressed one, these should map to
+   // Ints).
+   FileRaii fileGuard1("test_ntuple_merger_enc_in_1.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto fieldInt = model->MakeField<int>("int");
+      auto fieldFloat = model->MakeField<float>("float");
+      auto fieldVec = model->MakeField<std::vector<size_t>>("vec");
+      auto writeOpts = RNTupleWriteOptions();
+      writeOpts.SetCompression(compInput0);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath(), writeOpts);
+      for (size_t i = 0; i < 100; ++i) {
+         *fieldInt = i * 123;
+         *fieldFloat = i * 123;
+         *fieldVec = std::vector<size_t>{i, 2 * i, 3 * i};
+         ntuple->Fill();
+      }
+   }
+
+   FileRaii fileGuard2("test_ntuple_merger_enc_in_2.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto fieldFloat = model->MakeField<float>("float");
+      auto fieldVec = model->MakeField<std::vector<size_t>>("vec");
+      auto fieldInt = model->MakeField<int>("int");
+      auto writeOpts = RNTupleWriteOptions();
+      writeOpts.SetCompression(compInput1);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath(), writeOpts);
+      for (size_t i = 0; i < 100; ++i) {
+         *fieldInt = i * 567;
+         *fieldFloat = i * 567;
+         *fieldVec = std::vector<size_t>{4 * i, 5 * i, 6 * i};
+         ntuple->Fill();
+      }
+   }
+
+   FileRaii fileGuard3("test_ntuple_merger_enc_out_3.root");
+   {
+      auto nt1 = std::unique_ptr<TFile>(TFile::Open(fileGuard1.GetPath().c_str()));
+      auto nt2 = std::unique_ptr<TFile>(TFile::Open(fileGuard2.GetPath().c_str()));
+      TFileMerger fileMerger(kFALSE, kFALSE);
+      fileMerger.OutputFile(fileGuard3.GetPath().c_str(), "RECREATE", compOutput);
+      fileMerger.AddFile(nt1.get());
+      fileMerger.AddFile(nt2.get());
+      // If `useDefaultComp` is true, it's as if we were calling hadd without a -f* flag
+      if (useDefaultComp)
+         fileMerger.SetMergeOptions(TString("default_compression"));
+      fileMerger.Merge();
+
+      EXPECT_TRUE(VerifyPageCompression(fileGuard3.GetPath(), expectedComp));
+   }
+
+   {
+      auto reader = RNTupleReader::Open("ntuple", fileGuard3.GetPath());
+      auto pInt = reader->GetView<int>("int");
+      auto pFloat = reader->GetView<float>("float");
+      auto pVec = reader->GetView<std::vector<size_t>>("vec");
+
+      for (size_t i = 0; i < 100; ++i) {
+         EXPECT_EQ(pInt(i), i * 123);
+         EXPECT_FLOAT_EQ(pFloat(i), i * 123);
+         std::vector<size_t> v{i, 2 * i, 3 * i};
+         EXPECT_EQ(pVec(i), v);
+      }
+      for (size_t j = 100; j < 200; ++j) {
+         size_t i = j - 100;
+         EXPECT_EQ(pInt(j), i * 567);
+         EXPECT_FLOAT_EQ(pFloat(j), i * 567);
+         std::vector<size_t> v{4 * i, 5 * i, 6 * i};
+         EXPECT_EQ(pVec(j), v);
+      }
+   }
+}
+
+INSTANTIATE_TEST_SUITE_P(Seq, RNTupleMergerCheckEncoding,
+                         ::testing::Combine(
+                            // compression of source 1
+                            ::testing::Values(0, 101, 207, 404, 505),
+                            // compression of source 2
+                            ::testing::Values(0, 101, 207, 404, 505),
+                            // compression of output TFile
+                            ::testing::Values(0, 101, 207, 404, 505),
+                            // use default compression
+                            ::testing::Values(true, false)));
