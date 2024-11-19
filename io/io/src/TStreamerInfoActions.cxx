@@ -1978,6 +1978,17 @@ namespace TStreamerInfoActions
 
    };
 
+   // The Scalar 'looper' only process one element.
+   struct ScalarLooper : public CollectionLooper<ScalarLooper>
+   {
+      template <Int_t (*iter_action)(TBuffer&,void *,const TConfiguration*)>
+      static INLINE_TEMPLATE_ARGS Int_t LoopOverCollection(TBuffer &buf, void *start, const void * /* end */, const TLoopConfiguration *, const TConfiguration *config)
+      {
+         iter_action(buf, start, config);
+         return 0;
+      }
+   };
+
    struct VectorLooper : public CollectionLooper<VectorLooper> {
 
       template <typename T>
