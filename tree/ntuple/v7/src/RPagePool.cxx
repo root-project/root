@@ -57,7 +57,35 @@ ROOT::Experimental::Internal::RPageRef ROOT::Experimental::Internal::RPagePool::
 void ROOT::Experimental::Internal::RPagePool::PreloadPage(RPage page, RKey key)
 {
    std::lock_guard<std::mutex> lockGuard(fLock);
-   AddPage(std::move(page), key, 0);
+   const auto &entry = AddPage(std::move(page), key, 0);
+   if (entry.fRefCounter == 0)
+      fUnusedPages[entry.fPage.GetClusterInfo().GetId()].emplace(entry.fPage.GetBuffer());
+}
+
+void ROOT::Experimental::Internal::RPagePool::ErasePage(std::size_t entryIdx,
+                                                        decltype(fLookupByBuffer)::iterator lookupByBufferItr)
+{
+   fLookupByBuffer.erase(lookupByBufferItr);
+
+   auto itrPageSet = fLookupByKey.find(fEntries[entryIdx].fKey);
+   assert(itrPageSet != fLookupByKey.end());
+   itrPageSet->second.erase(RPagePosition(fEntries[entryIdx].fPage));
+   if (itrPageSet->second.empty())
+      fLookupByKey.erase(itrPageSet);
+
+   const auto N = fEntries.size();
+   assert(entryIdx < N);
+   if (entryIdx != (N - 1)) {
+      fLookupByBuffer[fEntries[N - 1].fPage.GetBuffer()] = entryIdx;
+      itrPageSet = fLookupByKey.find(fEntries[N - 1].fKey);
+      assert(itrPageSet != fLookupByKey.end());
+      auto itrEntryIdx = itrPageSet->second.find(RPagePosition(fEntries[N - 1].fPage));
+      assert(itrEntryIdx != itrPageSet->second.end());
+      itrEntryIdx->second = entryIdx;
+      fEntries[entryIdx] = std::move(fEntries[N - 1]);
+   }
+
+   fEntries.resize(N - 1);
 }
 
 void ROOT::Experimental::Internal::RPagePool::ReleasePage(const RPage &page)
@@ -68,30 +96,20 @@ void ROOT::Experimental::Internal::RPagePool::ReleasePage(const RPage &page)
    auto itrLookup = fLookupByBuffer.find(page.GetBuffer());
    assert(itrLookup != fLookupByBuffer.end());
    const auto idx = itrLookup->second;
-   const auto N = fEntries.size();
-   assert(idx < N);
 
    assert(fEntries[idx].fRefCounter >= 1);
    if (--fEntries[idx].fRefCounter == 0) {
-      fLookupByBuffer.erase(itrLookup);
+      ErasePage(idx, itrLookup);
+   }
+}
 
-      auto itrPageSet = fLookupByKey.find(fEntries[idx].fKey);
-      assert(itrPageSet != fLookupByKey.end());
-      itrPageSet->second.erase(RPagePosition(page));
-      if (itrPageSet->second.empty())
-         fLookupByKey.erase(itrPageSet);
-
-      if (idx != (N - 1)) {
-         fLookupByBuffer[fEntries[N - 1].fPage.GetBuffer()] = idx;
-         itrPageSet = fLookupByKey.find(fEntries[N - 1].fKey);
-         assert(itrPageSet != fLookupByKey.end());
-         auto itrEntryIdx = itrPageSet->second.find(RPagePosition(fEntries[N - 1].fPage));
-         assert(itrEntryIdx != itrPageSet->second.end());
-         itrEntryIdx->second = idx;
-         fEntries[idx] = std::move(fEntries[N - 1]);
-      }
-
-      fEntries.resize(N - 1);
+void ROOT::Experimental::Internal::RPagePool::RemoveFromUnusedPages(const RPage &page)
+{
+   auto itr = fUnusedPages.find(page.GetClusterInfo().GetId());
+   if (itr != fUnusedPages.end()) {
+      itr->second.erase(page.GetBuffer());
+      if (itr->second.empty())
+         fUnusedPages.erase(itr);
    }
 }
 
@@ -110,6 +128,8 @@ ROOT::Experimental::Internal::RPagePool::GetPage(RKey key, NTupleSize_t globalIn
 
    --itrEntryIdx;
    if (fEntries[itrEntryIdx->second].fPage.Contains(globalIndex)) {
+      if (fEntries[itrEntryIdx->second].fRefCounter == 0)
+         RemoveFromUnusedPages(fEntries[itrEntryIdx->second].fPage);
       fEntries[itrEntryIdx->second].fRefCounter++;
       return RPageRef(fEntries[itrEntryIdx->second].fPage, this);
    }
@@ -131,8 +151,28 @@ ROOT::Experimental::Internal::RPagePool::GetPage(RKey key, RClusterIndex cluster
 
    --itrEntryIdx;
    if (fEntries[itrEntryIdx->second].fPage.Contains(clusterIndex)) {
+      if (fEntries[itrEntryIdx->second].fRefCounter == 0)
+         RemoveFromUnusedPages(fEntries[itrEntryIdx->second].fPage);
       fEntries[itrEntryIdx->second].fRefCounter++;
       return RPageRef(fEntries[itrEntryIdx->second].fPage, this);
    }
    return RPageRef();
+}
+
+void ROOT::Experimental::Internal::RPagePool::Evict(DescriptorId_t clusterId)
+{
+   std::lock_guard<std::mutex> lockGuard(fLock);
+   auto itr = fUnusedPages.find(clusterId);
+   if (itr == fUnusedPages.end())
+      return;
+
+   for (auto pageBuffer : itr->second) {
+      const auto itrLookupByBuffer = fLookupByBuffer.find(pageBuffer);
+      assert(itrLookupByBuffer != fLookupByBuffer.end());
+      const auto entryIdx = itrLookupByBuffer->second;
+      assert(fEntries[entryIdx].fRefCounter == 0);
+      ErasePage(entryIdx, itrLookupByBuffer);
+   }
+
+   fUnusedPages.erase(itr);
 }

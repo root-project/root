@@ -66,3 +66,39 @@ TEST(Pages, Pool)
    auto pageRef = pool.GetPage(RPagePool::RKey{1, std::type_index(typeid(void))}, 55);
    EXPECT_TRUE(pageRef.Get().IsNull());
 }
+
+TEST(Pages, Evict)
+{
+   RPageAllocatorHeap allocator;
+   RPagePool pool;
+
+   RPage::RClusterInfo clusterInfo(2, 40);
+   auto page = allocator.NewPage(1, 10);
+   page.GrowUnchecked(10);
+   page.SetWindow(50, clusterInfo);
+
+   pool.Evict(2); // should be a noop, pool is empty
+
+   pool.PreloadPage(std::move(page), RPagePool::RKey{1, std::type_index(typeid(void))});
+   {
+      auto pageRef1 = pool.GetPage(RPagePool::RKey{1, std::type_index(typeid(void))}, 55);
+      EXPECT_FALSE(pageRef1.Get().IsNull());
+
+      pool.Evict(2); // should be a noop, page is used
+      auto pageRef2 = pool.GetPage(RPagePool::RKey{1, std::type_index(typeid(void))}, 55);
+      EXPECT_FALSE(pageRef2.Get().IsNull());
+   }
+
+   auto pageRef = pool.GetPage(RPagePool::RKey{1, std::type_index(typeid(void))}, 55);
+   EXPECT_TRUE(pageRef.Get().IsNull());
+
+   page = allocator.NewPage(1, 10);
+   page.GrowUnchecked(10);
+   page.SetWindow(50, clusterInfo);
+   pool.PreloadPage(std::move(page), RPagePool::RKey{1, std::type_index(typeid(void))});
+
+   pool.Evict(2); // should remove the preloaded page
+
+   pageRef = pool.GetPage(RPagePool::RKey{1, std::type_index(typeid(void))}, 55);
+   EXPECT_TRUE(pageRef.Get().IsNull());
+}
