@@ -26,6 +26,7 @@
 #include <typeindex>
 #include <typeinfo>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace ROOT {
@@ -121,6 +122,11 @@ private:
    /// and sorted by the position of the page in the column (map's key). Thus, access to pages of the page set
    /// has logarithmic complexity.
    std::unordered_map<RKey, std::map<RPagePosition, std::size_t>, RKeyHasher> fLookupByKey;
+   /// Remembers pages with reference counter 0, organized by the page's cluster id. The pages are identified
+   /// by their page buffer address. The fLookupByBuffer map can be used to resolve the address to a page.
+   /// Once a page gets used, it is removed from the unused pages list. Evict will remove all unused pages
+   /// from a given cluster id.
+   std::unordered_map<DescriptorId_t, std::unordered_set<void *>> fUnusedPages;
    std::mutex fLock; ///< The page pool is accessed concurrently due to parallel decompression
 
    /// Add a new page to the fLookupByBuffer and fLookupByKey data structures.
@@ -131,6 +137,12 @@ private:
    /// during registration. Called by the RPageRef destructor.
    void ReleasePage(const RPage &page);
 
+   /// Called by GetPage(), when the reference counter increases from zero to one
+   void RemoveFromUnusedPages(const RPage &page);
+
+   /// Called both by ReleasePage() and by Evict() to remove an unused page from the pool
+   void ErasePage(std::size_t entryIdx, decltype(fLookupByBuffer)::iterator lookupByBufferItr);
+
 public:
    RPagePool() = default;
    RPagePool(const RPagePool&) = delete;
@@ -140,8 +152,12 @@ public:
    /// Adds a new page to the pool. Upon registration, the page pool takes ownership of the page's memory.
    /// The new page has its reference counter set to 1.
    RPageRef RegisterPage(RPage page, RKey key);
-   /// Like RegisterPage() but the reference counter is initialized to 0
+   /// Like RegisterPage() but the reference counter is initialized to 0. In addition, the page is added
+   /// to the set of unused pages of the page's cluster (see Evict()).
    void PreloadPage(RPage page, RKey key);
+   /// Removes unused pages (pages with reference counter 0) from the page pool. Users of PreloadPage() should
+   /// use Evict() appropriately to avoid accumulation of unused pages.
+   void Evict(DescriptorId_t clusterId);
    /// Tries to find the page corresponding to column and index in the cache. If the page is found, its reference
    /// counter is increased
    RPageRef GetPage(RKey key, NTupleSize_t globalIndex);
