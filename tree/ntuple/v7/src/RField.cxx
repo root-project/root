@@ -21,6 +21,7 @@
 #include <ROOT/RLogger.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleSerialize.hxx>
+#include <ROOT/RNTupleUtil.hxx>
 
 #include <TBaseClass.h>
 #include <TBufferFile.h>
@@ -53,7 +54,6 @@
 #include <memory>
 #include <new> // hardware_destructive_interference_size
 #include <type_traits>
-#include "ROOT/RNTupleUtil.hxx"
 #include <unordered_map>
 
 namespace {
