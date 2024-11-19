@@ -151,9 +151,9 @@ try {
 
    // If we already have an existing RNTuple, copy over its descriptor to support incremental merging
    if (outNTuple) {
-      auto source = RPageSourceFile::CreateFromAnchor(*outNTuple);
-      source->Attach();
-      auto desc = source->GetSharedDescriptorGuard();
+      auto outSource = RPageSourceFile::CreateFromAnchor(*outNTuple);
+      outSource->Attach();
+      auto desc = outSource->GetSharedDescriptorGuard();
       destination->InitFromDescriptor(desc.GetRef());
    }
 
