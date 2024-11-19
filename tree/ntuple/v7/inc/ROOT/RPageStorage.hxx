@@ -35,6 +35,7 @@
 #include <cstddef>
 #include <deque>
 #include <functional>
+#include <map>
 #include <memory>
 #include <mutex>
 #include <set>
@@ -606,6 +607,18 @@ private:
    REntryRange fEntryRange;    ///< Used by the cluster pool to prevent reading beyond the given range
    bool fHasStructure = false; ///< Set to true once `LoadStructure()` is called
    bool fIsAttached = false;   ///< Set to true once `Attach()` is called
+
+   /// Remembers the last cluster id from which a page was requested
+   DescriptorId_t fLastUsedCluster = kInvalidDescriptorId;
+   /// Clusters from where pages got preloaded in UnzipClusterImpl(), ordered by first entry number
+   /// of the clusters. If the last used cluster changes in LoadPage(), all unused pages from
+   /// previous clusters are evicted from the page pool.
+   std::map<NTupleSize_t, DescriptorId_t> fPreloadedClusters;
+
+   /// Does nothing if fLastUsedCluster == clusterId. Otherwise, updated fLastUsedCluster
+   /// and evict unused paged from the page pool of all previous clusters.
+   /// Must not be called when the descriptor guard is taken.
+   void UpdateLastUsedCluster(DescriptorId_t clusterId);
 
 protected:
    /// Default I/O performance counters that get registered in `fMetrics`
