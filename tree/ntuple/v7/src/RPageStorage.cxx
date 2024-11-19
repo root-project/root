@@ -244,6 +244,8 @@ void ROOT::Experimental::Internal::RPageSource::UnzipClusterImpl(RCluster *clust
    auto descriptorGuard = GetSharedDescriptorGuard();
    const auto &clusterDescriptor = descriptorGuard->GetClusterDescriptor(clusterId);
 
+   fPreloadedClusters[clusterDescriptor.GetFirstEntryIndex()] = clusterId;
+
    std::atomic<bool> foundChecksumFailure{false};
 
    std::vector<std::unique_ptr<RColumnElementBase>> allElements;
@@ -330,14 +332,31 @@ void ROOT::Experimental::Internal::RPageSource::PrepareLoadCluster(
    }
 }
 
+void ROOT::Experimental::Internal::RPageSource::UpdateLastUsedCluster(DescriptorId_t clusterId)
+{
+   if (fLastUsedCluster == clusterId)
+      return;
+
+   NTupleSize_t firstEntryIndex = GetSharedDescriptorGuard()->GetClusterDescriptor(clusterId).GetFirstEntryIndex();
+   auto itr = fPreloadedClusters.begin();
+   while ((itr != fPreloadedClusters.end()) && (itr->first < firstEntryIndex)) {
+      fPagePool.Evict(itr->second);
+      itr = fPreloadedClusters.erase(itr);
+   }
+
+   fLastUsedCluster = clusterId;
+}
+
 ROOT::Experimental::Internal::RPageRef
 ROOT::Experimental::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex)
 {
    const auto columnId = columnHandle.fPhysicalId;
    const auto columnElementId = columnHandle.fColumn->GetElement()->GetIdentifier();
    auto cachedPageRef = fPagePool.GetPage(RPagePool::RKey{columnId, columnElementId.fInMemoryType}, globalIndex);
-   if (!cachedPageRef.Get().IsNull())
+   if (!cachedPageRef.Get().IsNull()) {
+      UpdateLastUsedCluster(cachedPageRef.Get().GetClusterInfo().GetId());
       return cachedPageRef;
+   }
 
    std::uint64_t idxInCluster;
    RClusterInfo clusterInfo;
@@ -362,6 +381,7 @@ ROOT::Experimental::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle,
    if (clusterInfo.fPageInfo.fLocator.fType == RNTupleLocator::kTypeUnknown)
       throw RException(R__FAIL("tried to read a page with an unknown locator"));
 
+   UpdateLastUsedCluster(clusterInfo.fClusterId);
    return LoadPageImpl(columnHandle, clusterInfo, idxInCluster);
 }
 
@@ -373,8 +393,10 @@ ROOT::Experimental::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle,
    const auto columnId = columnHandle.fPhysicalId;
    const auto columnElementId = columnHandle.fColumn->GetElement()->GetIdentifier();
    auto cachedPageRef = fPagePool.GetPage(RPagePool::RKey{columnId, columnElementId.fInMemoryType}, clusterIndex);
-   if (!cachedPageRef.Get().IsNull())
+   if (!cachedPageRef.Get().IsNull()) {
+      UpdateLastUsedCluster(clusterId);
       return cachedPageRef;
+   }
 
    if (clusterId == kInvalidDescriptorId)
       throw RException(R__FAIL("entry out of bounds"));
@@ -395,6 +417,7 @@ ROOT::Experimental::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle,
    if (clusterInfo.fPageInfo.fLocator.fType == RNTupleLocator::kTypeUnknown)
       throw RException(R__FAIL("tried to read a page with an unknown locator"));
 
+   UpdateLastUsedCluster(clusterInfo.fClusterId);
    return LoadPageImpl(columnHandle, clusterInfo, idxInCluster);
 }
 
