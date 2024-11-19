@@ -7525,7 +7525,7 @@ ROOT::NewArrFunc_t TClass::GetNewArray() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the wrapper around delete ThiObject.
+/// Return the wrapper around delete ThisObject.
 
 ROOT::DelFunc_t TClass::GetDelete() const
 {
@@ -7533,7 +7533,7 @@ ROOT::DelFunc_t TClass::GetDelete() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the wrapper around delete [] ThiObject.
+/// Return the wrapper around delete [] ThisObject.
 
 ROOT::DelArrFunc_t TClass::GetDeleteArray() const
 {
