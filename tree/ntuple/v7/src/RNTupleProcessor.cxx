@@ -347,6 +347,18 @@ void ROOT::Experimental::RNTupleJoinProcessor::LoadEntry()
       valPtrs.push_back(ptr.get());
    }
 
+   std::vector<NTupleSize_t> indexEntryNumbers;
+   indexEntryNumbers.reserve(fJoinIndices.size());
+   if (IsUsingIndex()) {
+      for (unsigned i = 0; i < fJoinIndices.size(); ++i) {
+         auto &joinIndex = fJoinIndices[i];
+         if (!joinIndex->IsBuilt())
+            joinIndex->Build();
+
+         indexEntryNumbers[i] = joinIndex->GetFirstEntryNumber(valPtrs);
+      }
+   }
+
    for (auto &[fieldName, fieldContext] : fFieldContexts) {
       if (!fieldContext.IsAuxiliary() || !IsUsingIndex()) {
          auto &value = fEntry->GetValue(fieldContext.fToken);
@@ -354,21 +366,14 @@ void ROOT::Experimental::RNTupleJoinProcessor::LoadEntry()
          continue;
       }
 
-      auto &joinIndex = fJoinIndices.at(fieldContext.fNTupleIdx - 1);
-
-      if (!joinIndex->IsBuilt())
-         joinIndex->Build();
-
-      auto joinIdx = joinIndex->GetFirstEntryNumber(valPtrs);
-
       auto &value = fEntry->GetValue(fieldContext.fToken);
-      if (joinIdx == kInvalidNTupleIndex) {
+      if (indexEntryNumbers[fieldContext.fNTupleIdx - 1] == kInvalidNTupleIndex) {
          // No matching entry exists, so we reset the field's value to a default value.
          // TODO(fdegeus): further consolidate how non-existing join matches should be handled. N.B.: in case
          // ConstructValue is not used anymore in the future, remove friend in RFieldBase.
          fieldContext.fProtoField->ConstructValue(value.GetPtr<void>().get());
       } else {
-         value.Read(joinIdx);
+         value.Read(indexEntryNumbers[fieldContext.fNTupleIdx - 1]);
       }
    }
 }
