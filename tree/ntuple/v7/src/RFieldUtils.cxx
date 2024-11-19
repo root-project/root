@@ -145,7 +145,7 @@ std::tuple<std::string, std::vector<size_t>> ROOT::Experimental::Internal::Parse
    return std::make_tuple(std::string{typeName}, sizeVec);
 }
 
-std::vector<std::string> ROOT::Experimental::Internal::TokenizeTypeList(std::string templateType)
+std::vector<std::string> ROOT::Experimental::Internal::TokenizeTypeList(std::string_view templateType)
 {
    std::vector<std::string> result;
    if (templateType.empty())
