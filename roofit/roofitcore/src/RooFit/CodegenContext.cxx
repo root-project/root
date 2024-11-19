@@ -12,6 +12,7 @@
  */
 
 #include <RooFit/CodegenContext.h>
+#include <RooAbsArg.h>
 
 #include "RooFitImplHelpers.h"
 
@@ -73,6 +74,8 @@ std::string const &CodegenContext::getResult(RooAbsArg const &arg)
       throw std::runtime_error("You requested the result of a vector observable outside a loop scope for it!");
    }
 
+   auto RAII(OutputScopeRangeComment(&arg));
+
    // Now, recursively call translate into the current argument to load the correct result.
    codegen(const_cast<RooAbsArg &>(arg), *this);
 
@@ -84,7 +87,8 @@ std::string const &CodegenContext::getResult(RooAbsArg const &arg)
 /// @param str The string to add to the global scope.
 void CodegenContext::addToGlobalScope(std::string const &str)
 {
-   _globalScope += str;
+   // Introduce proper indentation for multiline strings.
+   _code[0] += str;
 }
 
 /// @brief Since the squashed code represents all observables as a single flattened array, it is important
@@ -118,12 +122,24 @@ void CodegenContext::addToCodeBody(RooAbsArg const *klass, std::string const &in
 /// @param isScopeIndep The value determining if the input is scope dependent.
 void CodegenContext::addToCodeBody(std::string const &in, bool isScopeIndep /* = false */)
 {
+   TString indented = in;
+   indented = indented.Strip(TString::kBoth); // trim
+
+   std::string indent_str = "";
+   for (unsigned i = 0; i < _indent; ++i)
+      indent_str += "  ";
+   indented = indented.Prepend(indent_str);
+
+   // FIXME: Multiline input.
+   // indent_str += "\n";
+   // indented = indented.ReplaceAll("\n", indent_str);
+
    // If we are in a loop and the value is scope independent, save it at the top of the loop.
    // else, just save it in the current scope.
-   if (_scopePtr != -1 && isScopeIndep) {
-      _tempScope += in;
+   if (_code.size() > 2 && isScopeIndep) {
+      _code[_code.size() - 2] += indented;
    } else {
-      _code += in;
+      _code.back() += indented;
    }
 }
 
@@ -132,7 +148,9 @@ void CodegenContext::addToCodeBody(std::string const &in, bool isScopeIndep /* =
 /// @param in A pointer to the calling class, used to determine the loop dependent variables.
 std::unique_ptr<CodegenContext::LoopScope> CodegenContext::beginLoop(RooAbsArg const *in)
 {
-   std::string idx = "loopIdx" + std::to_string(_loopLevel);
+   pushScope();
+   unsigned loopLevel = _code.size() - 2; // substract global + function scope.
+   std::string idx = "loopIdx" + std::to_string(loopLevel);
 
    std::vector<TNamed const *> vars;
    // set the results of the vector observables
@@ -156,31 +174,22 @@ std::unique_ptr<CodegenContext::LoopScope> CodegenContext::beginLoop(RooAbsArg c
       numEntries = std::max(n, numEntries);
    }
 
-   // Save the current size of the code array so that we can insert the code at the right position.
-   _scopePtr = _code.size();
-
    // Make sure that the name of this variable doesn't clash with other stuff
    addToCodeBody(in, "for(int " + idx + " = 0; " + idx + " < " + std::to_string(numEntries) + "; " + idx + "++) {\n");
 
-   ++_loopLevel;
    return std::make_unique<LoopScope>(*this, std::move(vars));
 }
 
 void CodegenContext::endLoop(LoopScope const &scope)
 {
-   _code += "}\n";
-
-   // Insert the temporary code into the correct code position.
-   _code.insert(_scopePtr, _tempScope);
-   _tempScope.erase();
-   _scopePtr = -1;
+   addToCodeBody("}\n");
 
    // clear the results of the loop variables if they were vector observables
    for (auto const &ptr : scope.vars()) {
       if (_vecObsIndices.find(ptr) != _vecObsIndices.end())
          _nodeNames.erase(ptr);
    }
-   --_loopLevel;
+   popScope();
 }
 
 /// @brief Get a unique variable name to be used in the generated code.
@@ -256,6 +265,36 @@ std::string CodegenContext::buildArg(std::span<const double> arr)
    return "xlArr + " + offset;
 }
 
+CodegenContext::ScopeRAII::ScopeRAII(RooAbsArg const *arg, CodegenContext &ctx) : _ctx(ctx), _arg(arg)
+{
+   std::ostringstream os;
+   Option_t *opts = nullptr;
+   arg->printStream(os, _arg->defaultPrintContents(opts), _arg->defaultPrintStyle(opts));
+   _fn = os.str();
+   const std::string info = "// Begin -- " + _fn;
+   _ctx._indent++;
+   _ctx.addToCodeBody(_arg, info);
+}
+
+CodegenContext::ScopeRAII::~ScopeRAII()
+{
+   const std::string info = "// End -- " + _fn + "\n";
+   _ctx.addToCodeBody(_arg, info);
+   _ctx._indent--;
+}
+
+void CodegenContext::pushScope()
+{
+   _code.push_back("");
+}
+
+void CodegenContext::popScope()
+{
+   std::string active_scope = _code.back();
+   _code.pop_back();
+   _code.back() += active_scope;
+}
+
 bool CodegenContext::isScopeIndependent(RooAbsArg const *in) const
 {
    return !in->isReducerNode() && outputSize(in->namePtr()) == 1;
@@ -275,6 +314,7 @@ std::string
 CodegenContext::buildFunction(RooAbsArg const &arg, std::map<RooFit::Detail::DataKey, std::size_t> const &outputSizes)
 {
    CodegenContext ctx;
+   ctx.pushScope(); // push our global scope.
    ctx._nodeOutputSizes = outputSizes;
    ctx._vecObsIndices = _vecObsIndices;
    // We only want to take over parameters and observables
@@ -289,8 +329,10 @@ CodegenContext::buildFunction(RooAbsArg const &arg, std::map<RooFit::Detail::Dat
    static int iCodegen = 0;
    auto funcName = "roo_codegen_" + std::to_string(iCodegen++);
 
+   ctx.pushScope();
    std::string funcBody = ctx.getResult(arg);
-   funcBody = ctx._globalScope + ctx._code + "\n return " + funcBody + ";\n";
+   ctx.popScope();
+   funcBody = ctx._code[0] + "\n return " + funcBody + ";\n";
 
    // Declare the function
    std::stringstream bodyWithSigStrm;
