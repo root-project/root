@@ -306,11 +306,11 @@ class RNTupleJoinProcessor : public RNTupleProcessor {
 private:
    std::unique_ptr<RNTupleModel> fJoinModel;
    std::vector<std::unique_ptr<Internal::RPageSource>> fAuxiliaryPageSources;
-
-   std::vector<std::string> fJoinFieldNames;
+   /// Tokens representing the join fields present in the main RNTuple
+   std::vector<REntry::RFieldToken> fJoinFieldTokens;
    std::vector<std::unique_ptr<Internal::RNTupleIndex>> fJoinIndices;
 
-   bool IsUsingIndex() const { return fJoinFieldNames.size() > 0; }
+   bool IsUsingIndex() const { return fJoinIndices.size() > 0; }
 
    NTupleSize_t Advance() final;
 
@@ -325,18 +325,31 @@ private:
    /// \param[in] model The model that specifies which fields should be read by the processor. The pointer returned by
    /// RNTupleModel::MakeField can be used to access a field's value during the processor iteration. When no model is
    /// specified, it is created from the RNTuple's descriptor.
-   RNTupleJoinProcessor(const RNTupleOpenSpec &mainNTuple, const std::vector<std::string> &joinFields,
-                        std::unique_ptr<RNTupleModel> model = nullptr);
+   RNTupleJoinProcessor(const RNTupleOpenSpec &mainNTuple, std::unique_ptr<RNTupleModel> model = nullptr);
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Add an auxiliary RNTuple to the processor.
    ///
    /// \param[in] auxNTuple The source specification (name and storage location) of the auxiliary RNTuple.
+   /// \param[in] joinFields The names of the fields used in the join.
    /// \param[in] model The model that specifies which fields should be read by the processor. The pointer returned by
    /// RNTupleModel::MakeField can be used to access a field's value during the processor iteration. When no model is
    /// specified, it is created from the RNTuple's descriptor.
-   void AddAuxiliary(const RNTupleOpenSpec &auxNTuple, std::unique_ptr<RNTupleModel> model = nullptr);
+   void AddAuxiliary(const RNTupleOpenSpec &auxNTuple, const std::vector<std::string> &joinFields,
+                     std::unique_ptr<RNTupleModel> model = nullptr);
    void ConnectFields();
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Populate fJoinFieldTokens with tokens for join fields belonging to the main RNTuple in the join model.
+   ///
+   /// \param[in] joinFields The names of the fields used in the join.
+   void SetJoinFieldTokens(const std::vector<std::string> &joinFields)
+   {
+      fJoinFieldTokens.reserve(joinFields.size());
+      for (const auto &fieldName : joinFields) {
+         fJoinFieldTokens.emplace_back(fEntry->GetToken(fieldName));
+      }
+   }
 
 public:
    RNTupleJoinProcessor(const RNTupleJoinProcessor &) = delete;
