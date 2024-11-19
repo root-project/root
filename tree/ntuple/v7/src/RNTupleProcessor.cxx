@@ -191,7 +191,6 @@ ROOT::Experimental::RNTupleJoinProcessor::RNTupleJoinProcessor(const RNTupleOpen
                                                                std::unique_ptr<RNTupleModel> model)
    : RNTupleProcessor({mainNTuple}), fJoinFieldNames(joinFields)
 {
-   fNTuples.emplace_back(mainNTuple);
    fPageSource = Internal::RPageSource::Create(mainNTuple.fNTupleName, mainNTuple.fStorage);
    fPageSource->Attach();
 
@@ -231,17 +230,15 @@ void ROOT::Experimental::RNTupleJoinProcessor::AddAuxiliary(const RNTupleOpenSpe
 
    fNTuples.emplace_back(auxNTuple);
 
-   auto [res, _] = fAuxiliaryPageSources.try_emplace(
-      auxNTuple.fNTupleName, Internal::RPageSource::Create(auxNTuple.fNTupleName, auxNTuple.fStorage));
-   auto &pageSource = *res->second;
-   pageSource.Attach();
+   auto pageSource = Internal::RPageSource::Create(auxNTuple.fNTupleName, auxNTuple.fStorage);
+   pageSource->Attach();
 
-   if (pageSource.GetNEntries() == 0) {
+   if (pageSource->GetNEntries() == 0) {
       throw RException(R__FAIL("provided RNTuple is empty"));
    }
 
    if (!model)
-      model = pageSource.GetSharedDescriptorGuard()->CreateModel();
+      model = pageSource->GetSharedDescriptorGuard()->CreateModel();
 
    model->Freeze();
    auto entry = model->CreateBareEntry();
@@ -283,8 +280,10 @@ void ROOT::Experimental::RNTupleJoinProcessor::AddAuxiliary(const RNTupleOpenSpe
       const auto &field = value.GetField();
 
       // Skip if the field is the untyped record that holds the fields of auxiliary ntuples.
-      if (fAuxiliaryPageSources.find(field.GetFieldName()) != fAuxiliaryPageSources.end())
+      const auto fnIsNTuple = [&field](RNTupleOpenSpec n) { return n.fNTupleName == field.GetFieldName(); };
+      if (std::find_if(fNTuples.cbegin(), fNTuples.cend(), fnIsNTuple) != fNTuples.end()) {
          continue;
+      }
 
       auto fieldContext = fFieldContexts.find(field.GetQualifiedFieldName());
       // If the field belongs to the auxiliary ntuple currently being added, apart from assigning its entry value the
@@ -311,18 +310,17 @@ void ROOT::Experimental::RNTupleJoinProcessor::AddAuxiliary(const RNTupleOpenSpe
 
    fEntry.swap(newEntry);
 
-   if (IsUsingIndex()) {
-      fJoinIndices.try_emplace(auxNTuple.fNTupleName,
-                               Internal::RNTupleIndex::Create(fJoinFieldNames, pageSource, true /* deferBuild */));
-   }
+   if (IsUsingIndex())
+      fJoinIndices.emplace_back(Internal::RNTupleIndex::Create(fJoinFieldNames, *pageSource, true /* deferBuild */));
+
+   fAuxiliaryPageSources.emplace_back(std::move(pageSource));
 }
 
 void ROOT::Experimental::RNTupleJoinProcessor::ConnectFields()
 {
    for (auto &[_, fieldContext] : fFieldContexts) {
-      Internal::RPageSource &pageSource = fieldContext.IsAuxiliary()
-                                             ? *fAuxiliaryPageSources.at(fNTuples[fieldContext.fNTupleIdx].fNTupleName)
-                                             : *fPageSource;
+      Internal::RPageSource &pageSource =
+         fieldContext.IsAuxiliary() ? *fAuxiliaryPageSources.at(fieldContext.fNTupleIdx - 1) : *fPageSource;
       ConnectField(fieldContext, pageSource, *fEntry);
    }
 }
@@ -358,22 +356,21 @@ void ROOT::Experimental::RNTupleJoinProcessor::LoadEntry()
          continue;
       }
 
-      auto joinIndex = fJoinIndices.find(fNTuples[fieldContext.fNTupleIdx].fNTupleName);
-      if (joinIndex != fJoinIndices.end()) {
-         if (!joinIndex->second->IsBuilt())
-            joinIndex->second->Build();
+      auto &joinIndex = fJoinIndices.at(fieldContext.fNTupleIdx - 1);
 
-         auto joinIdx = joinIndex->second->GetFirstEntryNumber(valPtrs);
+      if (!joinIndex->IsBuilt())
+         joinIndex->Build();
 
-         auto &value = fEntry->GetValue(fieldContext.fToken);
-         if (joinIdx == kInvalidNTupleIndex) {
-            // No matching entry exists, so we reset the field's value to a default value.
-            // TODO(fdegeus): further consolidate how non-existing join matches should be handled. N.B.: in case
-            // ConstructValue is not used anymore in the future, remove friend in RFieldBase.
-            fieldContext.fProtoField->ConstructValue(value.GetPtr<void>().get());
-         } else {
-            value.Read(joinIdx);
-         }
+      auto joinIdx = joinIndex->GetFirstEntryNumber(valPtrs);
+
+      auto &value = fEntry->GetValue(fieldContext.fToken);
+      if (joinIdx == kInvalidNTupleIndex) {
+         // No matching entry exists, so we reset the field's value to a default value.
+         // TODO(fdegeus): further consolidate how non-existing join matches should be handled. N.B.: in case
+         // ConstructValue is not used anymore in the future, remove friend in RFieldBase.
+         fieldContext.fProtoField->ConstructValue(value.GetPtr<void>().get());
+      } else {
+         value.Read(joinIdx);
       }
    }
 }
