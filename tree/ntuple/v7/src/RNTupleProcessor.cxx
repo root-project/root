@@ -21,15 +21,13 @@ namespace {
 using ROOT::Experimental::RNTupleOpenSpec;
 void EnsureUniqueNTupleNames(const std::vector<RNTupleOpenSpec> &ntuples)
 {
-   auto sortedNTuples = std::vector<RNTupleOpenSpec>(ntuples.begin(), ntuples.end());
-   std::sort(sortedNTuples.begin(), sortedNTuples.end(), [](const RNTupleOpenSpec &left, const RNTupleOpenSpec &right) {
-      return left.fNTupleName < right.fNTupleName;
-   });
-   auto newEnd = std::unique(
-      sortedNTuples.begin(), sortedNTuples.end(),
-      [](const RNTupleOpenSpec &left, const RNTupleOpenSpec &right) { return left.fNTupleName == right.fNTupleName; });
-   if (newEnd != sortedNTuples.end()) {
-      throw ROOT::Experimental::RException(R__FAIL("horizontal joining of RNTuples with the same name is not allowed"));
+   std::unordered_set<std::string> uniqueNTupleNames;
+   for (const auto &ntuple : ntuples) {
+      auto res = uniqueNTupleNames.emplace(ntuple.fNTupleName);
+      if (!res.second) {
+         throw ROOT::Experimental::RException(
+            R__FAIL("horizontal joining of RNTuples with the same name is not allowed"));
+      }
    }
 }
 } // anonymous namespace
