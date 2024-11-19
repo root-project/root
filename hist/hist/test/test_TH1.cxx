@@ -4,6 +4,7 @@
 #include "TH1F.h"
 #include "THLimitsFinder.h"
 
+
 #include <vector>
 
 // StatOverflows TH1
@@ -62,4 +63,15 @@ TEST(TH1, SmoothArrayCrossCheck)
       EXPECT_FLOAT_EQ(arr1[i], i);
       EXPECT_FLOAT_EQ(arr2[i], 1.0);
    }
+}
+
+// ROOT-5439
+TEST(TH1, DumpOutput)
+{
+   TH1F h;
+   const auto line_fArray = "*fArray                       ->0";
+   testing::internal::CaptureStdout();
+   h.Dump();
+   const std::string output = testing::internal::GetCapturedStdout();
+   EXPECT_TRUE(output.find(line_fArray) != std::string::npos) << "Could not find '" << line_fArray << "' in the multiline output '" << output;
 }
