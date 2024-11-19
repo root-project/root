@@ -305,12 +305,10 @@ class RNTupleJoinProcessor : public RNTupleProcessor {
 
 private:
    std::unique_ptr<RNTupleModel> fJoinModel;
-   /// Mapping of the auxiliary RNTuple name to its page source
-   std::unordered_map<std::string, std::unique_ptr<Internal::RPageSource>> fAuxiliaryPageSources;
+   std::vector<std::unique_ptr<Internal::RPageSource>> fAuxiliaryPageSources;
 
    std::vector<std::string> fJoinFieldNames;
-   /// Mapping of the auxiliary RNTuple name to its join index
-   std::unordered_map<std::string, std::unique_ptr<Internal::RNTupleIndex>> fJoinIndices;
+   std::vector<std::unique_ptr<Internal::RNTupleIndex>> fJoinIndices;
 
    bool IsUsingIndex() const { return fJoinFieldNames.size() > 0; }
 
