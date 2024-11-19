@@ -39,7 +39,7 @@ std::tuple<std::string, std::vector<size_t>> ParseArrayType(std::string_view typ
 
 /// Used in RFieldBase::Create() in order to get the comma-separated list of template types
 /// E.g., gets {"int", "std::variant<double,int>"} from "int,std::variant<double,int>"
-std::vector<std::string> TokenizeTypeList(std::string templateType);
+std::vector<std::string> TokenizeTypeList(std::string_view templateType);
 
 } // namespace Internal
 
