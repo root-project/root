@@ -22,6 +22,7 @@
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleSerialize.hxx>
 #include <ROOT/RNTupleUtil.hxx>
+#include "RFieldUtils.hxx"
 
 #include <TBaseClass.h>
 #include <TBufferFile.h>
@@ -29,7 +30,6 @@
 #include <TClassEdit.h>
 #include <TCollection.h>
 #include <TDataMember.h>
-#include <TDictAttributeMap.h>
 #include <TEnum.h>
 #include <TError.h>
 #include <TList.h>
@@ -43,7 +43,6 @@
 #include <TVirtualStreamerInfo.h>
 
 #include <algorithm>
-#include <charconv>
 #include <cstdint>
 #include <cstdlib> // for malloc, free
 #include <cstring> // for memset
@@ -53,96 +52,8 @@
 #include <memory>
 #include <new> // hardware_destructive_interference_size
 #include <type_traits>
-#include <unordered_map>
 
 namespace {
-
-const std::unordered_map<std::string_view, std::string_view> typeTranslationMap{
-   {"Bool_t", "bool"},
-   {"Float_t", "float"},
-   {"Double_t", "double"},
-   {"string", "std::string"},
-
-   {"byte", "std::byte"},
-   {"Char_t", "char"},
-   {"int8_t", "std::int8_t"},
-   {"UChar_t", "unsigned char"},
-   {"uint8_t", "std::uint8_t"},
-
-   {"Short_t", "short"},
-   {"int16_t", "std::int16_t"},
-   {"UShort_t", "unsigned short"},
-   {"uint16_t", "std::uint16_t"},
-
-   {"Int_t", "int"},
-   {"int32_t", "std::int32_t"},
-   {"UInt_t", "unsigned int"},
-   {"unsigned", "unsigned int"},
-   {"uint32_t", "std::uint32_t"},
-
-   // Long_t and ULong_t follow the platform's size of long and unsigned long: They are 64 bit on 64-bit Linux and
-   // macOS, but 32 bit on 32-bit platforms and Windows (regardless of pointer size).
-   {"Long_t", "long"},
-   {"ULong_t", "unsigned long"},
-
-   {"Long64_t", "long long"},
-   {"int64_t", "std::int64_t"},
-   {"ULong64_t", "unsigned long long"},
-   {"uint64_t", "std::uint64_t"}};
-
-/// Used in CreateField() in order to get the comma-separated list of template types
-/// E.g., gets {"int", "std::variant<double,int>"} from "int,std::variant<double,int>"
-std::vector<std::string> TokenizeTypeList(std::string templateType)
-{
-   std::vector<std::string> result;
-   if (templateType.empty())
-      return result;
-
-   const char *eol = templateType.data() + templateType.length();
-   const char *typeBegin = templateType.data();
-   const char *typeCursor = templateType.data();
-   unsigned int nestingLevel = 0;
-   while (typeCursor != eol) {
-      switch (*typeCursor) {
-      case '<': ++nestingLevel; break;
-      case '>': --nestingLevel; break;
-      case ',':
-         if (nestingLevel == 0) {
-            result.push_back(std::string(typeBegin, typeCursor - typeBegin));
-            typeBegin = typeCursor + 1;
-         }
-         break;
-      }
-      typeCursor++;
-   }
-   result.push_back(std::string(typeBegin, typeCursor - typeBegin));
-   return result;
-}
-
-/// Parse a type name of the form `T[n][m]...` and return the base type `T` and a vector that contains,
-/// in order, the declared size for each dimension, e.g. for `unsigned char[1][2][3]` it returns the tuple
-/// `{"unsigned char", {1, 2, 3}}`. Extra whitespace in `typeName` should be removed before calling this function.
-///
-/// If `typeName` is not an array type, it returns a tuple `{T, {}}`. On error, it returns a default-constructed tuple.
-std::tuple<std::string, std::vector<size_t>> ParseArrayType(std::string_view typeName)
-{
-   std::vector<size_t> sizeVec;
-
-   // Only parse outer array definition, i.e. the right `]` should be at the end of the type name
-   while (typeName.back() == ']') {
-      auto posRBrace = typeName.size() - 1;
-      auto posLBrace = typeName.find_last_of('[', posRBrace);
-      if (posLBrace == std::string_view::npos)
-         return {};
-
-      size_t size;
-      if (std::from_chars(typeName.data() + posLBrace + 1, typeName.data() + posRBrace, size).ec != std::errc{})
-         return {};
-      sizeVec.insert(sizeVec.begin(), size);
-      typeName.remove_suffix(typeName.size() - posLBrace);
-   }
-   return std::make_tuple(std::string{typeName}, sizeVec);
-}
 
 /// Return the canonical name of a type, resolving typedefs to their underlying types if needed.  A canonical type has
 /// typedefs stripped out from the type name.
@@ -153,56 +64,6 @@ std::string GetCanonicalTypeName(const std::string &typeName)
       return typeName;
 
    return TClassEdit::ResolveTypedef(typeName.c_str());
-}
-
-/// Applies type name normalization rules that lead to the final name used to create a RField, e.g. transforms
-/// `const vector<T>` to `std::vector<T>`.  Specifically, `const` / `volatile` qualifiers are removed and `std::` is
-/// added to fully qualify known types in the `std` namespace.  The same happens to `ROOT::RVec` which is normalized to
-/// `ROOT::VecOps::RVec`.
-std::string GetNormalizedTypeName(const std::string &typeName)
-{
-   std::string normalizedType{TClassEdit::CleanType(typeName.c_str(), /*mode=*/2)};
-
-   if (auto it = typeTranslationMap.find(normalizedType); it != typeTranslationMap.end())
-      normalizedType = it->second;
-
-   if (normalizedType.substr(0, 7) == "vector<")
-      normalizedType = "std::" + normalizedType;
-   if (normalizedType.substr(0, 6) == "array<")
-      normalizedType = "std::" + normalizedType;
-   if (normalizedType.substr(0, 8) == "variant<")
-      normalizedType = "std::" + normalizedType;
-   if (normalizedType.substr(0, 5) == "pair<")
-      normalizedType = "std::" + normalizedType;
-   if (normalizedType.substr(0, 6) == "tuple<")
-      normalizedType = "std::" + normalizedType;
-   if (normalizedType.substr(0, 7) == "bitset<")
-      normalizedType = "std::" + normalizedType;
-   if (normalizedType.substr(0, 11) == "unique_ptr<")
-      normalizedType = "std::" + normalizedType;
-   if (normalizedType.substr(0, 4) == "set<")
-      normalizedType = "std::" + normalizedType;
-   if (normalizedType.substr(0, 14) == "unordered_set<")
-      normalizedType = "std::" + normalizedType;
-   if (normalizedType.substr(0, 9) == "multiset<")
-      normalizedType = "std::" + normalizedType;
-   if (normalizedType.substr(0, 19) == "unordered_multiset<")
-      normalizedType = "std::" + normalizedType;
-   if (normalizedType.substr(0, 4) == "map<")
-      normalizedType = "std::" + normalizedType;
-   if (normalizedType.substr(0, 14) == "unordered_map<")
-      normalizedType = "std::" + normalizedType;
-   if (normalizedType.substr(0, 9) == "multimap<")
-      normalizedType = "std::" + normalizedType;
-   if (normalizedType.substr(0, 19) == "unordered_multimap<")
-      normalizedType = "std::" + normalizedType;
-   if (normalizedType.substr(0, 7) == "atomic<")
-      normalizedType = "std::" + normalizedType;
-
-   if (normalizedType.substr(0, 11) == "ROOT::RVec<")
-      normalizedType = "ROOT::VecOps::RVec<" + normalizedType.substr(11);
-
-   return normalizedType;
 }
 
 /// Used as a thread local context storage for Create(); steers the behavior of the Create() call stack
@@ -335,28 +196,6 @@ void DestroyRVecWithChecks(std::size_t alignOfT, void **beginPtr, char *begin, s
    const bool owns = (*capacityPtr != -1);
    if (!isSmall && owns)
       free(begin);
-}
-
-/// Possible settings for the "rntuple.streamerMode" class attribute in the dictionary.
-enum class ERNTupleSerializationMode { kForceNativeMode, kForceStreamerMode, kUnset };
-
-ERNTupleSerializationMode GetRNTupleSerializationMode(TClass *cl)
-{
-   auto am = cl->GetAttributeMap();
-   if (!am || !am->HasKey("rntuple.streamerMode"))
-      return ERNTupleSerializationMode::kUnset;
-
-   std::string value = am->GetPropertyAsString("rntuple.streamerMode");
-   std::transform(value.begin(), value.end(), value.begin(), ::toupper);
-   if (value == "TRUE") {
-      return ERNTupleSerializationMode::kForceStreamerMode;
-   } else if (value == "FALSE") {
-      return ERNTupleSerializationMode::kForceNativeMode;
-   } else {
-      R__LOG_WARNING(ROOT::Experimental::NTupleLog()) << "invalid setting for 'rntuple.streamerMode' class attribute: "
-                                                      << am->GetPropertyAsString("rntuple.streamerMode");
-      return ERNTupleSerializationMode::kUnset;
-   }
 }
 
 // Depending on the compiler, the variant tag is stored either in a trailing char or in a trailing unsigned int
@@ -581,16 +420,16 @@ std::string ROOT::Experimental::RFieldBase::GetQualifiedFieldName() const
 ROOT::Experimental::RResult<std::unique_ptr<ROOT::Experimental::RFieldBase>>
 ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::string &typeName)
 {
-   auto typeAlias = GetNormalizedTypeName(typeName);
-   auto canonicalType = GetNormalizedTypeName(GetCanonicalTypeName(typeAlias));
+   auto typeAlias = Internal::GetNormalizedTypeName(typeName);
+   auto canonicalType = Internal::GetNormalizedTypeName(GetCanonicalTypeName(typeAlias));
    return R__FORWARD_RESULT(RFieldBase::Create(fieldName, canonicalType, typeAlias));
 }
 
 std::vector<ROOT::Experimental::RFieldBase::RCheckResult>
 ROOT::Experimental::RFieldBase::Check(const std::string &fieldName, const std::string &typeName)
 {
-   auto typeAlias = GetNormalizedTypeName(typeName);
-   auto canonicalType = GetNormalizedTypeName(GetCanonicalTypeName(typeAlias));
+   auto typeAlias = Internal::GetNormalizedTypeName(typeName);
+   auto canonicalType = Internal::GetNormalizedTypeName(GetCanonicalTypeName(typeAlias));
 
    RFieldZero fieldZero;
    fieldZero.Attach(RFieldBase::Create(fieldName, canonicalType, typeAlias, true /* continueOnError */).Unwrap());
@@ -632,7 +471,7 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
    // try-catch block to intercept any exception that may be thrown by Unwrap() so that this
    // function never throws but returns RResult::Error instead.
    try {
-      if (auto [arrayBaseType, arraySizes] = ParseArrayType(canonicalType); !arraySizes.empty()) {
+      if (auto [arrayBaseType, arraySizes] = Internal::ParseArrayType(canonicalType); !arraySizes.empty()) {
          std::unique_ptr<RFieldBase> arrayField = Create("_0", arrayBaseType).Unwrap();
          for (int i = arraySizes.size() - 1; i >= 0; --i) {
             arrayField =
@@ -707,7 +546,7 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
          auto itemField = Create("_0", itemTypeName);
          result = std::make_unique<RRVecField>(fieldName, itemField.Unwrap());
       } else if (canonicalType.substr(0, 11) == "std::array<") {
-         auto arrayDef = TokenizeTypeList(canonicalType.substr(11, canonicalType.length() - 12));
+         auto arrayDef = Internal::TokenizeTypeList(canonicalType.substr(11, canonicalType.length() - 12));
          if (arrayDef.size() != 2) {
             return R__FORWARD_RESULT(fnFail("the template list for std::array must have exactly two elements"));
          }
@@ -715,7 +554,7 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
          auto itemField = Create("_0", arrayDef[0]);
          result = std::make_unique<RArrayField>(fieldName, itemField.Unwrap(), arrayLength);
       } else if (canonicalType.substr(0, 13) == "std::variant<") {
-         auto innerTypes = TokenizeTypeList(canonicalType.substr(13, canonicalType.length() - 14));
+         auto innerTypes = Internal::TokenizeTypeList(canonicalType.substr(13, canonicalType.length() - 14));
          std::vector<std::unique_ptr<RFieldBase>> items;
          items.reserve(innerTypes.size());
          for (unsigned int i = 0; i < innerTypes.size(); ++i) {
@@ -723,7 +562,7 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
          }
          result = std::make_unique<RVariantField>(fieldName, std::move(items));
       } else if (canonicalType.substr(0, 10) == "std::pair<") {
-         auto innerTypes = TokenizeTypeList(canonicalType.substr(10, canonicalType.length() - 11));
+         auto innerTypes = Internal::TokenizeTypeList(canonicalType.substr(10, canonicalType.length() - 11));
          if (innerTypes.size() != 2) {
             return R__FORWARD_RESULT(fnFail("the type list for std::pair must have exactly two elements"));
          }
@@ -731,7 +570,7 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
                                                           Create("_1", innerTypes[1]).Unwrap()};
          result = std::make_unique<RPairField>(fieldName, std::move(items));
       } else if (canonicalType.substr(0, 11) == "std::tuple<") {
-         auto innerTypes = TokenizeTypeList(canonicalType.substr(11, canonicalType.length() - 12));
+         auto innerTypes = Internal::TokenizeTypeList(canonicalType.substr(11, canonicalType.length() - 12));
          std::vector<std::unique_ptr<RFieldBase>> items;
          items.reserve(innerTypes.size());
          for (unsigned int i = 0; i < innerTypes.size(); ++i) {
@@ -778,7 +617,7 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
          result = std::make_unique<RSetField>(fieldName, "std::unordered_multiset<" + normalizedInnerTypeName + ">",
                                               std::move(itemField));
       } else if (canonicalType.substr(0, 9) == "std::map<") {
-         auto innerTypes = TokenizeTypeList(canonicalType.substr(9, canonicalType.length() - 10));
+         auto innerTypes = Internal::TokenizeTypeList(canonicalType.substr(9, canonicalType.length() - 10));
          if (innerTypes.size() != 2) {
             return R__FORWARD_RESULT(fnFail("the type list for std::map must have exactly two elements"));
          }
@@ -793,7 +632,7 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
          result = std::make_unique<RMapField>(fieldName, "std::map<" + keyTypeName + "," + valueTypeName + ">",
                                               std::move(itemField));
       } else if (canonicalType.substr(0, 19) == "std::unordered_map<") {
-         auto innerTypes = TokenizeTypeList(canonicalType.substr(19, canonicalType.length() - 20));
+         auto innerTypes = Internal::TokenizeTypeList(canonicalType.substr(19, canonicalType.length() - 20));
          if (innerTypes.size() != 2)
             return R__FORWARD_RESULT(fnFail("the type list for std::unordered_map must have exactly two elements"));
 
@@ -807,7 +646,7 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
          result = std::make_unique<RMapField>(
             fieldName, "std::unordered_map<" + keyTypeName + "," + valueTypeName + ">", std::move(itemField));
       } else if (canonicalType.substr(0, 14) == "std::multimap<") {
-         auto innerTypes = TokenizeTypeList(canonicalType.substr(14, canonicalType.length() - 15));
+         auto innerTypes = Internal::TokenizeTypeList(canonicalType.substr(14, canonicalType.length() - 15));
          if (innerTypes.size() != 2)
             return R__FORWARD_RESULT(fnFail("the type list for std::multimap must have exactly two elements"));
 
@@ -821,7 +660,7 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
          result = std::make_unique<RMapField>(fieldName, "std::multimap<" + keyTypeName + "," + valueTypeName + ">",
                                               std::move(itemField));
       } else if (canonicalType.substr(0, 24) == "std::unordered_multimap<") {
-         auto innerTypes = TokenizeTypeList(canonicalType.substr(24, canonicalType.length() - 25));
+         auto innerTypes = Internal::TokenizeTypeList(canonicalType.substr(24, canonicalType.length() - 25));
          if (innerTypes.size() != 2)
             return R__FORWARD_RESULT(
                fnFail("the type list for std::unordered_multimap must have exactly two elements"));
@@ -842,7 +681,7 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
          result = std::make_unique<RAtomicField>(fieldName, "std::atomic<" + normalizedInnerTypeName + ">",
                                                  std::move(itemField));
       } else if (canonicalType.substr(0, 25) == "ROOT::RNTupleCardinality<") {
-         auto innerTypes = TokenizeTypeList(canonicalType.substr(25, canonicalType.length() - 26));
+         auto innerTypes = Internal::TokenizeTypeList(canonicalType.substr(25, canonicalType.length() - 26));
          if (innerTypes.size() != 1)
             return R__FORWARD_RESULT(fnFail("invalid cardinality template: " + canonicalType));
          if (innerTypes[0] == "std::uint32_t") {
@@ -868,7 +707,8 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
             if (cl->GetCollectionProxy()) {
                result = std::make_unique<RProxiedCollectionField>(fieldName, canonicalType);
             } else {
-               if (GetRNTupleSerializationMode(cl) == ERNTupleSerializationMode::kForceStreamerMode) {
+               if (Internal::GetRNTupleSerializationMode(cl) ==
+                   Internal::ERNTupleSerializationMode::kForceStreamerMode) {
                   result = std::make_unique<RStreamerField>(fieldName, canonicalType);
                } else {
                   result = std::make_unique<RClassField>(fieldName, canonicalType);
@@ -1806,10 +1646,10 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::st
    // Classes with, e.g., custom streamers are not supported through this field. Empty classes, however, are.
    // Can be overwritten with the "rntuple.streamerMode=true" class attribute
    if (!fClass->CanSplit() && fClass->Size() > 1 &&
-       GetRNTupleSerializationMode(fClass) != ERNTupleSerializationMode::kForceNativeMode) {
+       Internal::GetRNTupleSerializationMode(fClass) != Internal::ERNTupleSerializationMode::kForceNativeMode) {
       throw RException(R__FAIL(std::string(className) + " cannot be stored natively in RNTuple"));
    }
-   if (GetRNTupleSerializationMode(fClass) == ERNTupleSerializationMode::kForceStreamerMode) {
+   if (Internal::GetRNTupleSerializationMode(fClass) == Internal::ERNTupleSerializationMode::kForceStreamerMode) {
       throw RException(
          R__FAIL(std::string(className) + " has streamer mode enforced, not supported as native RNTuple class"));
    }
@@ -1843,8 +1683,8 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::st
          continue;
       }
 
-      std::string typeName{GetNormalizedTypeName(dataMember->GetTrueTypeName())};
-      std::string typeAlias{GetNormalizedTypeName(dataMember->GetFullTypeName())};
+      std::string typeName{Internal::GetNormalizedTypeName(dataMember->GetTrueTypeName())};
+      std::string typeAlias{Internal::GetNormalizedTypeName(dataMember->GetFullTypeName())};
 
       // For C-style arrays, complete the type name with the size for each dimension, e.g. `int[4][2]`
       if (dataMember->Property() & kIsArray) {
@@ -2325,7 +2165,7 @@ ROOT::Experimental::RProxiedCollectionField::RProxiedCollectionField(std::string
       throw RException(R__FAIL("collection proxies whose value type is a pointer are not supported"));
    if (!fProxy->GetCollectionClass()->HasDictionary()) {
       throw RException(R__FAIL("dictionary not available for type " +
-                               GetNormalizedTypeName(fProxy->GetCollectionClass()->GetName())));
+                               Internal::GetNormalizedTypeName(fProxy->GetCollectionClass()->GetName())));
    }
 
    fIFuncsRead = RCollectionIterableOnce::GetIteratorFuncs(fProxy.get(), true /* readFromDisk */);
