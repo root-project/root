@@ -201,8 +201,9 @@ public: // Public Interface
    Int_t   AutoLoad(const std::type_info& typeinfo, Bool_t knowDictNotLoaded = kFALSE) final;
    Int_t   AutoParse(const char* cls) final;
    void*   LazyFunctionCreatorAutoload(const std::string& mangled_name);
-   bool   LibraryLoadingFailed(const std::string&, const std::string&, bool, bool);
+   bool    LibraryLoadingFailed(const std::string&, const std::string&, bool, bool);
    Bool_t  IsAutoLoadNamespaceCandidate(const clang::NamespaceDecl* nsDecl);
+   bool    IsValid() const;
    void    ClearFileBusy() final;
    void    ClearStack() final; // Delete existing temporary values
    Bool_t  Declare(const char* code) final;
