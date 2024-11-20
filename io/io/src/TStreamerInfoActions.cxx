@@ -5353,72 +5353,72 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
 
 TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::CreateWriteMemberWiseActions(TVirtualStreamerInfo *info, TVirtualCollectionProxy &proxy)
 {
-      if (info == 0) {
-         return new TStreamerInfoActions::TActionSequence(0,0);
+   if (info == 0) {
+      return new TStreamerInfoActions::TActionSequence(0,0);
+   }
+
+   UInt_t ndata = info->GetElements()->GetEntriesFast();
+   TStreamerInfo *sinfo = static_cast<TStreamerInfo*>(info);
+   TStreamerInfoActions::TActionSequence *sequence = new TStreamerInfoActions::TActionSequence(info,ndata);
+
+   if (IsDefaultVector(proxy))
+   {
+      if (proxy.HasPointers()) {
+         // Instead of the creating a new one let's copy the one from the StreamerInfo.
+         delete sequence;
+
+         sequence = sinfo->GetWriteMemberWiseActions(kTRUE)->CreateCopy();
+
+         return sequence;
       }
 
-      UInt_t ndata = info->GetElements()->GetEntriesFast();
-      TStreamerInfo *sinfo = static_cast<TStreamerInfo*>(info);
-      TStreamerInfoActions::TActionSequence *sequence = new TStreamerInfoActions::TActionSequence(info,ndata);
-
-      if (IsDefaultVector(proxy))
-      {
-         if (proxy.HasPointers()) {
-            // Instead of the creating a new one let's copy the one from the StreamerInfo.
-            delete sequence;
-
-            sequence = sinfo->GetWriteMemberWiseActions(kTRUE)->CreateCopy();
-
-            return sequence;
-         }
-
-         // We can speed up the iteration in case of vector.  We also know that all emulated collection are stored internally as a vector.
-         Long_t increment = proxy.GetIncrement();
-         sequence->fLoopConfig = new TVectorLoopConfig(&proxy, increment, /* read */ kFALSE);
-      } else {
-         sequence->fLoopConfig = new TGenericLoopConfig(&proxy, /* read */ kFALSE);
+      // We can speed up the iteration in case of vector.  We also know that all emulated collection are stored internally as a vector.
+      Long_t increment = proxy.GetIncrement();
+      sequence->fLoopConfig = new TVectorLoopConfig(&proxy, increment, /* read */ kFALSE);
+   } else {
+      sequence->fLoopConfig = new TGenericLoopConfig(&proxy, /* read */ kFALSE);
+   }
+   for (UInt_t i = 0; i < ndata; ++i) {
+      TStreamerElement *element = (TStreamerElement*) info->GetElements()->At(i);
+      if (!element) {
+         break;
       }
-      for (UInt_t i = 0; i < ndata; ++i) {
-         TStreamerElement *element = (TStreamerElement*) info->GetElements()->At(i);
-         if (!element) {
-            break;
-         }
-         if (element->GetType() < 0) {
-            // -- Skip an ignored TObject base class.
-            // Note: The only allowed negative value here is -1, and signifies that Build() has found a TObject
-            // base class and TClass::IgnoreTObjectStreamer() was called.  In this case the compiled version of the
-            // elements omits the TObject base class element, which has to be compensated for by TTree::Bronch()
-            // when it is making branches for a split object.
-            continue;
-         }
-         if (element->TestBit(TStreamerElement::kCache) && !element->TestBit(TStreamerElement::kWrite)) {
-            // Skip element cached for reading purposes.
-            continue;
-         }
-         if (element->GetType() >= TVirtualStreamerInfo::kArtificial &&  !element->TestBit(TStreamerElement::kWrite)) {
-            // Skip artificial element used for reading purposes.
-            continue;
-         }
-         TStreamerInfo::TCompInfo *compinfo = sinfo->fCompFull[i];
-         Int_t oldType = element->GetType();
-         Int_t offset = element->GetOffset();
-         switch (SelectLooper(proxy)) {
-         case kAssociativeLooper:
-            sequence->AddAction( GetCollectionWriteAction<GenericLooper>(info,element,oldType,i,compinfo,offset) );
-            break;
-         case kVectorLooper:
-            sequence->AddAction( GetCollectionWriteAction<VectorLooper>(info,element,oldType,i,compinfo,offset) );
-            break;
-         case kVectorPtrLooper:
-            sequence->AddAction( GetCollectionWriteAction<VectorPtrLooper>(info,element,oldType,i,compinfo,offset) );
-            break;
-         case kGenericLooper:
-         default:
-            sequence->AddAction( GetCollectionWriteAction<GenericLooper>(info,element,oldType,i,compinfo,offset) );
-            break;
-         }
+      if (element->GetType() < 0) {
+         // -- Skip an ignored TObject base class.
+         // Note: The only allowed negative value here is -1, and signifies that Build() has found a TObject
+         // base class and TClass::IgnoreTObjectStreamer() was called.  In this case the compiled version of the
+         // elements omits the TObject base class element, which has to be compensated for by TTree::Bronch()
+         // when it is making branches for a split object.
+         continue;
       }
-      return sequence;
+      if (element->TestBit(TStreamerElement::kCache) && !element->TestBit(TStreamerElement::kWrite)) {
+         // Skip element cached for reading purposes.
+         continue;
+      }
+      if (element->GetType() >= TVirtualStreamerInfo::kArtificial &&  !element->TestBit(TStreamerElement::kWrite)) {
+         // Skip artificial element used for reading purposes.
+         continue;
+      }
+      TStreamerInfo::TCompInfo *compinfo = sinfo->fCompFull[i];
+      Int_t oldType = element->GetType();
+      Int_t offset = element->GetOffset();
+      switch (SelectLooper(proxy)) {
+      case kAssociativeLooper:
+         sequence->AddAction( GetCollectionWriteAction<GenericLooper>(info,element,oldType,i,compinfo,offset) );
+         break;
+      case kVectorLooper:
+         sequence->AddAction( GetCollectionWriteAction<VectorLooper>(info,element,oldType,i,compinfo,offset) );
+         break;
+      case kVectorPtrLooper:
+         sequence->AddAction( GetCollectionWriteAction<VectorPtrLooper>(info,element,oldType,i,compinfo,offset) );
+         break;
+      case kGenericLooper:
+      default:
+         sequence->AddAction( GetCollectionWriteAction<GenericLooper>(info,element,oldType,i,compinfo,offset) );
+         break;
+      }
+   }
+   return sequence;
 }
 
 void TStreamerInfoActions::TActionSequence::AddToOffset(Int_t delta)
