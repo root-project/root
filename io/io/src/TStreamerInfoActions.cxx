@@ -265,6 +265,34 @@ namespace TStreamerInfoActions
       return 0;
    }
 
+   // Read a full object objectwise including reading the version and
+   // selecting any conversion.
+   Int_t ReadViaClassBuffer(TBuffer &buf, void *addr, const TConfiguration *config)
+   {
+      auto conf = (TConfObject*)config;
+      auto memoryClass = conf->fInMemoryClass;
+      auto onfileClass = conf->fOnfileClass;
+
+      char * const where = (((char*)addr)+config->fOffset);
+      buf.ReadClassBuffer( memoryClass, where, onfileClass );
+      return 0;
+   }
+
+   // Write a full object objectwise including reading the version and
+   // selecting any conversion.
+   Int_t WriteViaClassBuffer(TBuffer &buf, void *addr, const TConfiguration *config)
+   {
+      auto conf = (TConfObject*)config;
+      [[maybe_unused]] auto memoryClass = conf->fInMemoryClass;
+      auto onfileClass = conf->fOnfileClass;
+      assert((memoryClass == nullptr || memoryClass == onfileClass)
+       && "Need to new TBufferFile::WriteClassBuffer overload to support this case");
+
+      char * const where = (((char*)addr)+config->fOffset);
+      buf.WriteClassBuffer( onfileClass, where);
+      return 0;
+   }
+
    template <>
    INLINE_TEMPLATE_ARGS Int_t ReadBasicType<BitsMarker>(TBuffer &buf, void *addr, const TConfiguration *config)
    {
@@ -4423,6 +4451,26 @@ void TStreamerInfo::AddReadAction(TStreamerInfoActions::TActionSequence *readSeq
       case TStreamerInfo::kStreamLoop:
       case TStreamerInfo::kOffsetL + TStreamerInfo::kStreamLoop:
          readSequence->AddAction( ReadStreamerLoop<false>, new TGenericConfiguration(this, i, compinfo, compinfo->fOffset) );
+         break;
+      case TStreamerInfo::kBase:
+         if (compinfo->fStreamer)
+            readSequence->AddAction( ReadStreamerCase, new TGenericConfiguration(this,i,compinfo, compinfo->fOffset) );
+         else {
+            auto base = dynamic_cast<TStreamerBase*>(element);
+            auto onfileBaseCl = base ? base->GetClassPointer() : nullptr;
+            auto memoryBaseCl = base && base->GetNewBaseClass() ? base->GetNewBaseClass() : onfileBaseCl;
+
+            if(!base || !memoryBaseCl ||
+               memoryBaseCl->GetStreamer() ||
+               memoryBaseCl->GetStreamerFunc() || memoryBaseCl->GetConvStreamerFunc())
+            {
+               // Unusual Case.
+               readSequence->AddAction( GenericReadAction, new TGenericConfiguration(this,i,compinfo) );
+            }
+            else
+               readSequence->AddAction( ReadViaClassBuffer,
+                  new TConfObject(this, i, compinfo, compinfo->fOffset, onfileBaseCl, memoryBaseCl) );
+         }
          break;
       case TStreamerInfo::kStreamer:
          if (fOldVersion >= 3)
