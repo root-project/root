@@ -1160,7 +1160,7 @@ void ROOT::Experimental::Internal::RPagePersistentSink::CommitClusterGroup()
    for (auto i = fNextClusterInGroup; i < nClusters; ++i) {
       clusterIds.emplace_back(i);
    }
-   cgBuilder.AddClusters(clusterIds);
+   cgBuilder.AddSortedClusters(clusterIds);
    fDescriptorBuilder.AddClusterGroup(cgBuilder.MoveDescriptor().Unwrap());
    fSerializationContext.MapClusterGroupId(clusterGroupId);
 
