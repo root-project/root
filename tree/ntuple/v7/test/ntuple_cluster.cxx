@@ -62,12 +62,10 @@ public:
                                    .MoveDescriptor()
                                    .Unwrap());
       }
-      descBuilder.AddClusterGroup(ROOT::Experimental::Internal::RClusterGroupDescriptorBuilder()
-                                     .ClusterGroupId(0)
-                                     .MinEntry(0)
-                                     .EntrySpan(6)
-                                     .MoveDescriptor()
-                                     .Unwrap());
+      ROOT::Experimental::Internal::RClusterGroupDescriptorBuilder cgBuilder;
+      cgBuilder.ClusterGroupId(0).MinEntry(0).EntrySpan(6).NClusters(6);
+      cgBuilder.AddSortedClusters({0, 1, 2, 3, 4, 5});
+      descBuilder.AddClusterGroup(cgBuilder.MoveDescriptor().Unwrap());
       auto descriptorGuard = GetExclDescriptorGuard();
       descriptorGuard.MoveIn(descBuilder.MoveDescriptor());
    }
