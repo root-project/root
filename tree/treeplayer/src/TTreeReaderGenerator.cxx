@@ -31,49 +31,18 @@
 #include "TObjString.h"
 #include "TVirtualCollectionProxy.h"
 #include "TVirtualStreamerInfo.h"
+#include "TInterpreter.h"
 
 namespace ROOT {
 namespace Internal {
 
    /**
     * @brief Convert a valid TTree branch name or filename into a valid C++ variable name
-    * @param name the original name
-    * @return the converted name valid to use as C++ variable in a script
+    * @param name a TString with the original name
+    * @return a TString with the converted name valid to use as C++ variable in a script
     */
    TString GetCppName(TString name) {
-      name.ReplaceAll('+',"pL");
-      name.ReplaceAll('-',"mI");
-      name.ReplaceAll('*',"mU");
-      name.ReplaceAll('/',"dI");
-      name.ReplaceAll('&',"aN");
-      name.ReplaceAll('%',"pE");
-      name.ReplaceAll('|',"oR");
-      name.ReplaceAll('^',"hA");
-      name.ReplaceAll('>',"gR");
-      name.ReplaceAll('<',"lE");
-      name.ReplaceAll('=',"eQ");
-      name.ReplaceAll('~',"wA");
-      name.ReplaceAll('.',"dO");
-      name.ReplaceAll('(',"oP");
-      name.ReplaceAll(')',"cP");
-      name.ReplaceAll('[',"oB");
-      name.ReplaceAll(']',"cB");
-      name.ReplaceAll('{',"lB");
-      name.ReplaceAll('}',"rB");
-      name.ReplaceAll(';',"sC");
-      name.ReplaceAll('#',"hS");
-      name.ReplaceAll('?',"qM");
-      name.ReplaceAll('`',"bT");
-      name.ReplaceAll('!',"nO");
-      name.ReplaceAll(',',"cO");
-      name.ReplaceAll('$',"dA");
-      name.ReplaceAll(' ',"sP");
-      name.ReplaceAll(':',"cL");
-      name.ReplaceAll('"',"dQ");
-      name.ReplaceAll('@',"aT");
-      name.ReplaceAll('\'',"sQ");
-      name.ReplaceAll('\\',"fI");
-      return name;
+      return gInterpreter->MapCppName(name.Data());
    }
 
    ////////////////////////////////////////////////////////////////////////////////
