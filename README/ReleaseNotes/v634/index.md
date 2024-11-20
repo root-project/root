@@ -123,6 +123,8 @@ The following interfaces are deprecated and will be removed in future releases:
   allowed character set is restricted to Unicode characters encoded as UTF-8, with the following exceptions: control
   codes, full stop, space, backslash, slash. See a full description in the RNTuple specification. The naming rules are
   also enforced when creating a new RNTuple or field for writing.
+* Many fixes to RNTuple merging, both through `hadd` and when using the `RNTupleMerger` class directly. Most notable
+  of these fixes is the proper handling of projected fields.
 * Many additional bug fixes and improvements.
 
 ## TTree Libraries
@@ -210,6 +212,8 @@ This should have minimal impact on users, since one should usual use Minuit 2 vi
 * The `ExportOnly()` attribute of the `RooStats::HistFactory::Measurement` object is now switched on by default, and the associated getter and setter functions are deprecated. They will be removed in ROOT 6.36. If you want to fit the model as well instead of just exporting it to a RooWorkspace, please do so with your own code as demonstrated in the `hf001` tutorial.
 
 * Initial error values can be used for initializating the Hessian matrix to be used in Minuit2 minimization algorithms by setting the `RooMinimizer::Config` option `setInitialCovariance` to `true`. These values correspond to the diagonal entries of the initial covariance matrix.
+
+* Fixed a bug where in some circumstances `hadd` would not correctly merge objects in nested folders of a ROOT file.
 
 ### Deprecations
 
