@@ -203,7 +203,7 @@ namespace TStreamerInfoActions
                   TClass *onfileClass, TClass *inMemoryClass) :
                   TConfiguration(info, id, compinfo, offset),
                   fOnfileClass(onfileClass),
-                  fInMemoryClass(inMemoryClass ? inMemoryClass : onfileClass)  {};
+                  fInMemoryClass(inMemoryClass ? inMemoryClass : onfileClass)  {}
       TConfiguration *Copy() override { return new TConfObject(*this); }
    };
 
