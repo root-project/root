@@ -3814,7 +3814,19 @@ GetCollectionReadAction(TVirtualStreamerInfo *info, TLoopConfiguration *loopConf
       case TStreamerInfo::kCacheNew:
       case TStreamerInfo::kCacheDelete:
       case TStreamerInfo::kSTL:  return TConfiguredAction( Looper::GenericRead, new TGenericConfiguration(info, i, compinfo) );
-      case TStreamerInfo::kBase: return TConfiguredAction( Looper::ReadBase, new TGenericConfiguration(info, i, compinfo) );
+      case TStreamerInfo::kBase: {
+         TStreamerBase *baseEl = dynamic_cast<TStreamerBase*>(element);
+         if (baseEl) {
+            auto baseinfo = (TStreamerInfo *)baseEl->GetBaseStreamerInfo();
+            assert(baseinfo);
+            TLoopConfiguration *baseLoopConfig = loopConfig ? loopConfig->Copy() : nullptr;
+            auto baseActions = Looper::CreateActionSquence(*baseinfo, baseLoopConfig);
+            baseActions->AddToOffset(baseEl->GetOffset());
+            return TConfiguredAction( Looper::SubSequenceAction, new TConfSubSequence(info, i, compinfo, 0, std::move(baseActions)));
+
+         } else
+            return TConfiguredAction( Looper::ReadBase, new TGenericConfiguration(info, i, compinfo) );
+      }
       case TStreamerInfo::kStreamLoop:
       case TStreamerInfo::kOffsetL + TStreamerInfo::kStreamLoop: {
          bool isPtrPtr = (strstr(compinfo->fElem->GetTypeName(), "**") != 0);
