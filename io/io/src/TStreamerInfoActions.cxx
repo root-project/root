@@ -244,6 +244,22 @@ namespace TStreamerInfoActions
       }
    }
 
+   inline Int_t ReadViaExtStreamer(TBuffer &buf, void *addr, const TConfiguration *config)
+   {
+      void *x = (void *)(((char *)addr) + config->fOffset);
+      TMemberStreamer *pstreamer = config->fCompInfo->fStreamer;
+      (*pstreamer)(buf, x, config->fCompInfo->fLength);
+      return 0;
+   }
+
+   inline Int_t WriteViaExtStreamer(TBuffer &buf, void *addr, const TConfiguration *config)
+   {
+      void *x = (void *)(((char *)addr) + config->fOffset);
+      TMemberStreamer *pstreamer = config->fCompInfo->fStreamer;
+      (*pstreamer)(buf, x, config->fCompInfo->fLength);
+      return 0;
+   }
+
    Int_t ReadStreamerCase(TBuffer &buf, void *addr, const TConfiguration *config)
    {
       UInt_t start, count;
@@ -4478,6 +4494,20 @@ void TStreamerInfo::AddReadAction(TStreamerInfoActions::TActionSequence *readSeq
          else
             // Use the slower path for legacy files
             readSequence->AddAction( GenericReadAction, new TGenericConfiguration(this,i,compinfo) );
+         break;
+      case TStreamerInfo::kAny:
+         if (compinfo->fStreamer)
+            readSequence->AddAction( ReadViaExtStreamer, new TGenericConfiguration(this, i, compinfo, compinfo->fOffset) );
+         else {
+            if (compinfo->fNewClass && compinfo->fNewClass->HasDirectStreamerInfoUse())
+              readSequence->AddAction( ReadViaClassBuffer,
+                 new TConfObject(this, i, compinfo, compinfo->fOffset, compinfo->fClass, compinfo->fNewClass) );
+            else if (compinfo->fClass && compinfo->fClass->HasDirectStreamerInfoUse())
+              readSequence->AddAction( ReadViaClassBuffer,
+                 new TConfObject(this, i, compinfo, compinfo->fOffset, compinfo->fClass, nullptr) );
+            else // Use the slower path for unusual cases
+              readSequence->AddAction( GenericReadAction, new TGenericConfiguration(this, i, compinfo) );
+         }
          break;
       default:
          readSequence->AddAction( GenericReadAction, new TGenericConfiguration(this,i,compinfo) );
