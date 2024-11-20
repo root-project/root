@@ -39,6 +39,18 @@ TEST(RNTupleMakeProject, ReadBackRNTuple)
 {
    auto ntuple = RNTupleReader::Open("events", "ntuple_makeproject_stl_example_rntuple.root");
 
+#ifdef _MSC_VER
+   // The Microsoft linker uses an optimization such that a library is not going
+   // to be linked against even if it was explicitly requested in case that its
+   // objects are not explicitly used in the program. In this particular test,
+   // the class MySTLEvent is used as the template argument for GetView, but
+   // this apparently does not qualify as usage for the linker. In fact, without
+   // the following line which just instantiates a dummy MySTLEvent object, this
+   // executable would not be linked against the shared library created by the
+   // TFile::MakeProject call.
+   [[maybe_unused]] MySTLEvent dummy;
+#endif
+
    auto viewEvent = ntuple->GetView<MySTLEvent>("test");
 
    const auto &event = viewEvent(0);
