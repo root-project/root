@@ -427,6 +427,7 @@ class RClusterGroupDescriptor {
 private:
    DescriptorId_t fClusterGroupId = kInvalidDescriptorId;
    /// The cluster IDs can be empty if the corresponding page list is not loaded.
+   /// Otherwise, cluster ids are sorted by first entry number.
    std::vector<DescriptorId_t> fClusterIds;
    /// The page list that corresponds to the cluster group
    RNTupleLocator fPageListLocator;
@@ -1306,7 +1307,7 @@ public:
       fClusterGroup.fNClusters = nClusters;
       return *this;
    }
-   void AddClusters(const std::vector<DescriptorId_t> &clusterIds)
+   void AddSortedClusters(const std::vector<DescriptorId_t> &clusterIds)
    {
       if (clusterIds.size() != fClusterGroup.GetNClusters())
          throw RException(R__FAIL("mismatch of number of clusters"));
