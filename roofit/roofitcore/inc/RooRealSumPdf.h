@@ -43,6 +43,7 @@ public:
 
   const RooArgList& funcList() const { return _funcList ; }
   const RooArgList& coefList() const { return _coefList ; }
+  const RooArgList& funcIntListFromCache(Int_t code) const ;
 
   ExtendMode extendMode() const override ;
 

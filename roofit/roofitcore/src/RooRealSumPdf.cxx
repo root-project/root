@@ -194,6 +194,21 @@ RooRealSumPdf::RooRealSumPdf(const RooRealSumPdf& other, const char* name) :
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const RooArgList& RooRealSumPdf::funcIntListFromCache(Int_t code) const 
+{
+  // Get cache, like analyticalIntegralWN
+  auto* cache = static_cast<CacheElem*>(_normIntMgr.getObjByIndex(code-1));
+  if (cache==nullptr) { // revive the (sterilized) cache
+      RooArgSet vars;
+      getParameters(nullptr, vars);
+      RooArgSet iset = _normIntMgr.selectFromSet2(vars, code-1);
+      RooArgSet nset = _normIntMgr.selectFromSet1(vars, code-1);
+      cache = static_cast<CacheElem*>(_normIntMgr.getObjByIndex(code-1)) ;
+  }
+  return cache->_funcIntList;
+}
+
+
 RooAbsPdf::ExtendMode RooRealSumPdf::extendMode() const
 {
   return (_extended && (_funcList.size()==_coefList.size())) ? CanBeExtended : CanNotBeExtended ;

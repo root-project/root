@@ -838,6 +838,12 @@ std::string codegenIntegralImpl(RooPolynomial &arg, int, const char *rangeName, 
    return ctx.buildCall(mathFunc("polynomialIntegral<true>"), arg.coefList(), sz, arg.lowestOrder(), xmin, xmax);
 }
 
+std::string codegenIntegralImpl(RooRealSumPdf &arg, int code, const char *, CodegenContext &ctx)
+{
+   // Re-use translate, since integration is linear.
+   return realSumPdfTranslateImpl(ctx, arg, arg.funcIntListFromCache(code), arg.coefList(), false);
+}
+
 std::string codegenIntegralImpl(RooUniform &arg, int code, const char *rangeName, CodegenContext &)
 {
    // The integral of a uniform distribution is static, so we can just hardcode
