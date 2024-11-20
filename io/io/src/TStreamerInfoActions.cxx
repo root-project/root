@@ -4178,6 +4178,12 @@ GetCollectionWriteAction(TVirtualStreamerInfo *info, TLoopConfiguration *loopCon
          } else
             return TConfiguredAction( Looper::WriteBase, new TGenericConfiguration(info, i, compinfo) );
       }
+      case TStreamerInfo::kStreamLoop:
+      case TStreamerInfo::kOffsetL + TStreamerInfo::kStreamLoop: {
+         bool isPtrPtr = (strstr(compinfo->fElem->GetTypeName(), "**") != 0);
+         return TConfiguredAction(Looper::template WriteStreamerLoop<false>::Action,
+                                  new TConfStreamerLoop(info, i, compinfo, offset, isPtrPtr));
+      }
       case TStreamerInfo::kStreamer:
          if (info->GetOldVersion() >= 3)
             return TConfiguredAction( Looper::WriteStreamerCase, new TGenericConfiguration(info, i, compinfo) );
