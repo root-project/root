@@ -1638,7 +1638,7 @@ namespace TStreamerInfoActions
    struct CollectionLooper {
 
       static std::unique_ptr<TStreamerInfoActions::TActionSequence>
-         CreateActionSquence(TStreamerInfo &info, TLoopConfiguration *loopConfig)
+         CreateReadActionSquence(TStreamerInfo &info, TLoopConfiguration *loopConfig)
       {
          TLoopConfiguration *localLoopConfig = loopConfig ? loopConfig->Copy() : nullptr;
          std::unique_ptr<TStreamerInfoActions::TActionSequence> actions(
@@ -2592,7 +2592,7 @@ namespace TStreamerInfoActions
       using WriteStreamerLoop = CollectionLooper<VectorPtrLooper>::WriteStreamerLoop<kIsText, const void *>;
 
       static std::unique_ptr<TStreamerInfoActions::TActionSequence>
-         CreateActionSquence(TStreamerInfo &info, TLoopConfiguration *)
+         CreateReadActionSquence(TStreamerInfo &info, TLoopConfiguration *)
       {
          using unique_ptr = std::unique_ptr<TStreamerInfoActions::TActionSequence>;
          return unique_ptr(info.GetReadMemberWiseActions(kTRUE)->CreateCopy());
@@ -3820,7 +3820,7 @@ GetCollectionReadAction(TVirtualStreamerInfo *info, TLoopConfiguration *loopConf
             auto baseinfo = (TStreamerInfo *)baseEl->GetBaseStreamerInfo();
             assert(baseinfo);
             TLoopConfiguration *baseLoopConfig = loopConfig ? loopConfig->Copy() : nullptr;
-            auto baseActions = Looper::CreateActionSquence(*baseinfo, baseLoopConfig);
+            auto baseActions = Looper::CreateReadActionSquence(*baseinfo, baseLoopConfig);
             baseActions->AddToOffset(baseEl->GetOffset());
             return TConfiguredAction( Looper::SubSequenceAction, new TConfSubSequence(info, i, compinfo, 0, std::move(baseActions)));
 
