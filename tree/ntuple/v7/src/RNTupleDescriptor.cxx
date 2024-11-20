@@ -372,13 +372,58 @@ ROOT::Experimental::RNTupleDescriptor::FindPhysicalColumnId(DescriptorId_t field
 ROOT::Experimental::DescriptorId_t
 ROOT::Experimental::RNTupleDescriptor::FindClusterId(DescriptorId_t physicalColumnId, NTupleSize_t index) const
 {
-   // TODO(jblomer): binary search?
-   for (const auto &cd : fClusterDescriptors) {
-      if (!cd.second.ContainsColumn(physicalColumnId))
+   if (GetNClusterGroups() == 0)
+      return kInvalidDescriptorId;
+
+   // Binary search in the cluster group list, followed by a binary search in the clusters of that cluster group
+
+   std::size_t cgLeft = 0;
+   std::size_t cgRight = GetNClusterGroups() - 1;
+   while (cgLeft <= cgRight) {
+      const std::size_t cgMidpoint = (cgLeft + cgRight) / 2;
+      const auto &clusterIds = GetClusterGroupDescriptor(fSortedClusterGroupIds[cgMidpoint]).GetClusterIds();
+      R__ASSERT(!clusterIds.empty());
+
+      const auto firstElementInGroup =
+         GetClusterDescriptor(clusterIds.front()).GetColumnRange(physicalColumnId).fFirstElementIndex;
+      if (firstElementInGroup > index) {
+         // Look into the lower half of cluster groups
+         R__ASSERT(cgMidpoint > 0);
+         cgRight = cgMidpoint - 1;
          continue;
-      auto columnRange = cd.second.GetColumnRange(physicalColumnId);
-      if (columnRange.Contains(index))
-         return cd.second.GetId();
+      }
+
+      const auto &lastColumnRange = GetClusterDescriptor(clusterIds.back()).GetColumnRange(physicalColumnId);
+      if ((lastColumnRange.fFirstElementIndex + lastColumnRange.fNElements) <= index) {
+         // Look into the upper half of cluster groups
+         cgLeft = cgMidpoint + 1;
+         continue;
+      }
+
+      // Binary search in the current cluster group; since we already checked the element range boundaries,
+      // the element must be in that cluster group.
+      std::size_t clusterLeft = 0;
+      std::size_t clusterRight = clusterIds.size() - 1;
+      while (clusterLeft <= clusterRight) {
+         const std::size_t clusterMidpoint = (clusterLeft + clusterRight) / 2;
+         const auto clusterId = clusterIds[clusterMidpoint];
+         const auto &columnRange = GetClusterDescriptor(clusterId).GetColumnRange(physicalColumnId);
+
+         if (columnRange.Contains(index))
+            return clusterId;
+
+         if (columnRange.fFirstElementIndex > index) {
+            R__ASSERT(clusterMidpoint > 0);
+            clusterRight = clusterMidpoint - 1;
+            continue;
+         }
+
+         if (columnRange.fFirstElementIndex + columnRange.fNElements <= index) {
+            clusterLeft = clusterMidpoint + 1;
+            continue;
+         }
+      }
+      R__ASSERT(false);
    }
    return kInvalidDescriptorId;
 }
