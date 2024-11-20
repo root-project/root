@@ -41,6 +41,8 @@
 #include "TEnv.h"
 #include "TError.h"
 #include "TGraph.h"
+#include "TGraphPolar.h"
+#include "TGraphPolargram.h"
 #include "TGraph2D.h"
 #include "TGaxis.h"
 #include "TScatter.h"
@@ -672,7 +674,7 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
    TObject *obj = nullptr;
    TFrame *frame = nullptr;
    TPaveText *title = nullptr;
-   bool need_frame = false, has_histo = false, need_palette = false;
+   bool need_frame = false, has_histo = false, has_polar = false, need_palette = false;
    std::string need_title;
 
    auto checkNeedPalette = [](TH1* hist, const TString &opt) {
@@ -728,6 +730,10 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
             need_title = obj->GetTitle();
          if (checkNeedPalette(static_cast<TH1*>(obj), opt))
             need_palette = true;
+      } else if (obj->InheritsFrom(TGraphPolar::Class())) {
+         if (!has_polar)
+            need_title = obj->GetTitle();
+         has_polar = true;
       } else if (obj->InheritsFrom(TGraph::Class())) {
          if (opt.Contains("A")) {
             need_frame = true;
@@ -955,6 +961,25 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
 
          if (hist->GetDimension() == 2)
             check_cutg_in_options(iter.GetOption());
+
+         first_obj = false;
+      } else if (obj->InheritsFrom(TGraphPolar::Class())) {
+         flush_master();
+
+         TGraphPolar *polar = static_cast<TGraphPolar *>(obj);
+
+         check_graph_funcs(polar);
+
+         TString gropt = iter.GetOption();
+
+         if (!IsReadOnly() && (first_obj || (gropt.Index("A", 0, TString::kIgnoreCase) != kNPOS) || polar->GetOptionAxis()) && !polar->GetPolargram()) {
+            auto gram = new TGraphPolargram("Polargram",0, 10, 0, 2*TMath::Pi());
+            gram->SetBit(TGraphPolargram::kLabelOrtho, gropt.Index("O", 0, TString::kIgnoreCase) != kNPOS);
+            polar->SetPolargram(gram);
+            polar->SetOptionAxis(kFALSE);
+         }
+
+         paddata.NewPrimitive(obj, gropt.Data()).SetSnapshot(TWebSnapshot::kObject, obj);
 
          first_obj = false;
       } else if (obj->InheritsFrom(TGraph::Class())) {
@@ -2838,6 +2863,9 @@ TObject *TWebCanvas::FindPrimitive(const std::string &sid, int idcnt, TPad *pad,
                obj = col->FindObject(funcname.c_str());
             else
                obj = col->At(std::stoi(funcname));
+         } else if (kind.compare("polargram") == 0) {
+            auto polar = dynamic_cast<TGraphPolar *>(obj);
+            obj = polar ? polar->GetPolargram() : nullptr;
          } else if (kind.compare(0,7,"graphs_") == 0) {
             TList *graphs = mg ? mg->GetListOfGraphs() : nullptr;
             obj = graphs ? graphs->At(std::stoi(kind.substr(7))) : nullptr;
