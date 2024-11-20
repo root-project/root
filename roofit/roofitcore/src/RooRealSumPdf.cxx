@@ -193,26 +193,27 @@ RooRealSumPdf::RooRealSumPdf(const RooRealSumPdf& other, const char* name) :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Collect the list of functions to be integrated from the cache
 
-const RooArgList &RooRealSumPdf::funcIntListFromCache(Int_t code) const
+const RooArgList &RooRealSumPdf::funcIntListFromCache(Int_t code, const char *rangeName) const
 {
-   // Get cache, like analyticalIntegralWN
-   auto *cache = static_cast<CacheElem *>(_normIntMgr.getObjByIndex(code - 1));
-   if (cache == nullptr) { // revive the (sterilized) cache
-      RooArgSet vars;
-      getParameters(nullptr, vars);
-      RooArgSet iset = _normIntMgr.selectFromSet2(vars, code - 1);
-      RooArgSet nset = _normIntMgr.selectFromSet1(vars, code - 1);
-      cache = static_cast<CacheElem *>(_normIntMgr.getObjByIndex(code - 1));
-   }
-   return cache->_funcIntList;
+   return getCacheElem(*this, _normIntMgr, code, rangeName)->_funcIntList;
 }
+
+const RooArgList &RooRealSumPdf::funcIntListFromCache(RooAbsReal const &caller, RooObjCacheManager &normIntMgr,
+                                                      Int_t code, const char *rangeName)
+{
+   return getCacheElem(caller, normIntMgr, code, rangeName)->_funcIntList;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 RooAbsPdf::ExtendMode RooRealSumPdf::extendMode() const
 {
   return (_extended && (_funcList.size()==_coefList.size())) ? CanBeExtended : CanNotBeExtended ;
 }
 
+////////////////////////////////////////////////////////////////////////////////
 
 double RooRealSumPdf::evaluate(RooAbsReal const& caller,
                                RooArgList const& funcList,
@@ -410,8 +411,31 @@ Int_t RooRealSumPdf::getAnalyticalIntegralWN(RooAbsReal const& caller, RooObjCac
   return code+1 ;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Collect cache elements for given code to use in codegen
 
+const RooRealSumPdf::CacheElem *
+RooRealSumPdf::getCacheElem(RooAbsReal const &caller, RooObjCacheManager &normIntMgr, Int_t code, const char *rangeName)
+{
+   // WVE needs adaptation for rangeName feature
+   auto *cache = static_cast<CacheElem *>(normIntMgr.getObjByIndex(code - 1));
+   if (cache == nullptr) { // revive the (sterilized) cache
+      // cout <<
+      // "RooRealSumPdf("<<this<<")::analyticalIntegralWN:"<<GetName()<<"("<<code<<","<<(normSet2?*normSet2:RooArgSet())<<","<<(rangeName?rangeName:"<none>")
+      // << ": reviving cache "<< endl;
+      RooArgSet vars;
+      caller.getParameters(nullptr, vars);
+      RooArgSet iset = normIntMgr.selectFromSet2(vars, code - 1);
+      RooArgSet nset = normIntMgr.selectFromSet1(vars, code - 1);
+      RooArgSet dummy;
+      Int_t code2 = caller.getAnalyticalIntegralWN(iset, dummy, &nset, rangeName);
+      R__ASSERT(code == code2); // must have revived the right (sterilized) slot...
+      cache = static_cast<CacheElem *>(normIntMgr.getObjByIndex(code - 1));
+      R__ASSERT(cache != nullptr);
+   }
 
+   return cache;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Implement analytical integrations by deferring integration of component
@@ -430,21 +454,8 @@ double RooRealSumPdf::analyticalIntegralWN(RooAbsReal const& caller, RooObjCache
   // Handle trivial passthrough scenario
   if (code==0) return caller.getVal(normSet2) ;
 
-
-  // WVE needs adaptation for rangeName feature
-  auto* cache = static_cast<CacheElem*>(normIntMgr.getObjByIndex(code-1));
-  if (cache==nullptr) { // revive the (sterilized) cache
-    //cout << "RooRealSumPdf("<<this<<")::analyticalIntegralWN:"<<GetName()<<"("<<code<<","<<(normSet2?*normSet2:RooArgSet())<<","<<(rangeName?rangeName:"<none>") << ": reviving cache "<< endl;
-    RooArgSet vars;
-    caller.getParameters(nullptr, vars);
-    RooArgSet iset = normIntMgr.selectFromSet2(vars, code-1);
-    RooArgSet nset = normIntMgr.selectFromSet1(vars, code-1);
-    RooArgSet dummy;
-    Int_t code2 = caller.getAnalyticalIntegralWN(iset,dummy,&nset,rangeName);
-    R__ASSERT(code==code2); // must have revived the right (sterilized) slot...
-    cache = static_cast<CacheElem*>(normIntMgr.getObjByIndex(code-1)) ;
-    R__ASSERT(cache!=nullptr);
-  }
+  // Retrieve cache element
+  const CacheElem *cache = getCacheElem(caller, normIntMgr, code, rangeName);
 
   double value(0) ;
 
