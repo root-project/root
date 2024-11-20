@@ -572,6 +572,9 @@ private:
    std::vector<RExtraTypeInfoDescriptor> fExtraTypeInfoDescriptors;
    std::unique_ptr<RHeaderExtension> fHeaderExtension;
 
+   // We don't expose this publicy because when we add sharded clusters, this interface does not make sense anymore
+   DescriptorId_t FindClusterId(NTupleSize_t entryIdx) const;
+
 public:
    static constexpr unsigned int kFeatureFlagTest = 137; // Bit reserved for forward-compatibility testing
 

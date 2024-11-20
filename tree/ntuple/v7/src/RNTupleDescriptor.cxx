@@ -428,30 +428,73 @@ ROOT::Experimental::RNTupleDescriptor::FindClusterId(DescriptorId_t physicalColu
    return kInvalidDescriptorId;
 }
 
-// TODO(jblomer): fix for cases of sharded clasters
+ROOT::Experimental::DescriptorId_t ROOT::Experimental::RNTupleDescriptor::FindClusterId(NTupleSize_t entryIdx) const
+{
+   if (GetNClusterGroups() == 0)
+      return kInvalidDescriptorId;
+
+   // Binary search in the cluster group list, followed by a binary search in the clusters of that cluster group
+
+   std::size_t cgLeft = 0;
+   std::size_t cgRight = GetNClusterGroups() - 1;
+   while (cgLeft <= cgRight) {
+      const std::size_t cgMidpoint = (cgLeft + cgRight) / 2;
+      const auto &cgDesc = GetClusterGroupDescriptor(fSortedClusterGroupIds[cgMidpoint]);
+
+      if (cgDesc.GetMinEntry() > entryIdx) {
+         R__ASSERT(cgMidpoint > 0);
+         cgRight = cgMidpoint - 1;
+         continue;
+      }
+
+      if (cgDesc.GetMinEntry() + cgDesc.GetEntrySpan() <= entryIdx) {
+         cgLeft = cgMidpoint + 1;
+         continue;
+      }
+
+      // Binary search in the current cluster group; since we already checked the element range boundaries,
+      // the element must be in that cluster group.
+      const auto &clusterIds = cgDesc.GetClusterIds();
+      R__ASSERT(!clusterIds.empty());
+      std::size_t clusterLeft = 0;
+      std::size_t clusterRight = clusterIds.size() - 1;
+      while (clusterLeft <= clusterRight) {
+         const std::size_t clusterMidpoint = (clusterLeft + clusterRight) / 2;
+         const auto &clusterDesc = GetClusterDescriptor(clusterIds[clusterMidpoint]);
+
+         if (clusterDesc.GetFirstEntryIndex() > entryIdx) {
+            R__ASSERT(clusterMidpoint > 0);
+            clusterRight = clusterMidpoint - 1;
+            continue;
+         }
+
+         if (clusterDesc.GetFirstEntryIndex() + clusterDesc.GetNEntries() <= entryIdx) {
+            clusterLeft = clusterMidpoint + 1;
+            continue;
+         }
+
+         return clusterIds[clusterMidpoint];
+      }
+      R__ASSERT(false);
+   }
+   return kInvalidDescriptorId;
+}
+
 ROOT::Experimental::DescriptorId_t
 ROOT::Experimental::RNTupleDescriptor::FindNextClusterId(DescriptorId_t clusterId) const
 {
    const auto &clusterDesc = GetClusterDescriptor(clusterId);
-   auto firstEntryInNextCluster = clusterDesc.GetFirstEntryIndex() + clusterDesc.GetNEntries();
-   // TODO(jblomer): binary search?
-   for (const auto &cd : fClusterDescriptors) {
-      if (cd.second.GetFirstEntryIndex() == firstEntryInNextCluster)
-         return cd.second.GetId();
-   }
-   return kInvalidDescriptorId;
+   const auto firstEntryInNextCluster = clusterDesc.GetFirstEntryIndex() + clusterDesc.GetNEntries();
+   return FindClusterId(firstEntryInNextCluster);
 }
 
 ROOT::Experimental::DescriptorId_t
 ROOT::Experimental::RNTupleDescriptor::FindPrevClusterId(DescriptorId_t clusterId) const
 {
    const auto &clusterDesc = GetClusterDescriptor(clusterId);
-   // TODO(jblomer): binary search?
-   for (const auto &cd : fClusterDescriptors) {
-      if (cd.second.GetFirstEntryIndex() + cd.second.GetNEntries() == clusterDesc.GetFirstEntryIndex())
-         return cd.second.GetId();
-   }
-   return kInvalidDescriptorId;
+   if (clusterDesc.GetFirstEntryIndex() == 0)
+      return kInvalidDescriptorId;
+   return FindClusterId(clusterDesc.GetFirstEntryIndex() - 1);
 }
 
 std::vector<ROOT::Experimental::DescriptorId_t>
