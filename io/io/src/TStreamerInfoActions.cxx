@@ -4189,6 +4189,19 @@ GetCollectionWriteAction(TVirtualStreamerInfo *info, TLoopConfiguration *loopCon
             return TConfiguredAction( Looper::WriteStreamerCase, new TGenericConfiguration(info, i, compinfo) );
          else
             return TConfiguredAction( Looper::GenericWrite, new TGenericConfiguration(info, i, compinfo) );
+      case TStreamerInfo::kAny:
+         if (compinfo->fStreamer)
+            return TConfiguredAction( Looper::template LoopOverCollection<WriteViaExtStreamer >, new TConfiguration(info, i, compinfo,offset) );
+         else {
+            if (compinfo->fNewClass && compinfo->fNewClass->HasDirectStreamerInfoUse())
+              return TConfiguredAction( Looper::template LoopOverCollection<WriteViaClassBuffer>,
+                                        new TConfObject(info, i, compinfo, compinfo->fOffset, compinfo->fClass, compinfo->fNewClass) );
+            else if (compinfo->fClass && compinfo->fClass->HasDirectStreamerInfoUse())
+              return TConfiguredAction( Looper::template LoopOverCollection<WriteViaClassBuffer>,
+                                        new TConfObject(info, i, compinfo, compinfo->fOffset, compinfo->fClass, nullptr) );
+            else // Use the slower path for unusual cases
+              return TConfiguredAction( Looper::GenericWrite, new TGenericConfiguration(info, i, compinfo) );
+         }
       default:
          return TConfiguredAction( Looper::GenericWrite, new TConfiguration(info,i,compinfo,0 /* 0 because we call the legacy code */) );
    }
