@@ -3076,6 +3076,14 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Check if constructor exited correctly, ie the instance is in a valid state
+/// \return true if there is a compiler instance available, false otherwise
+bool TCling::IsValid() const
+{
+   return fInterpreter->getCI() != nullptr;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Reset the interpreter internal state in case a previous action was not correctly
 /// terminated.
 
