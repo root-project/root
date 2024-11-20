@@ -130,6 +130,15 @@ const TGPicture *TGPicturePool::GetPicture(const char *name)
    return pic;
 }
 
+const TGPicture *TGPicturePool::GetPictureOrEmpty(const char *name)
+{
+   static const TGPicture fEmptyPic { "Empty" };
+   const TGPicture *pic = GetPicture(name);
+   if (!pic)
+      pic = &fEmptyPic;
+   return pic;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Get picture with specified size from pool (picture will be scaled if
 /// necessary). Picture must be freed using TGPicturePool::FreePicture(). If

@@ -125,6 +125,7 @@ public:
 
    TGPicturePool   *GetPicturePool() const { return fPicturePool; }
    const TGPicture *GetPicture(const char *name);
+   const TGPicture *GetPictureOrEmpty(const char *name);
    const TGPicture *GetPicture(const char *name, UInt_t new_width, UInt_t new_height);
    void             FreePicture(const TGPicture *pic);
 
