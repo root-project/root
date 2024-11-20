@@ -2295,6 +2295,23 @@ namespace TStreamerInfoActions
          return 0;
       }
 
+      static INLINE_TEMPLATE_ARGS Int_t WriteBase(TBuffer &buf, void *start, const void *end, const TLoopConfiguration * loopconfig, const TConfiguration *config)
+      {
+         // Well the implementation is non trivial since we do not have a proxy for the container of _only_ the base class.  For now
+         // punt.
+
+         UInt_t incr = ((TVectorLoopConfig*)loopconfig)->fIncrement;
+         UInt_t n = (((char*)end)-((char*)start))/incr;
+         char **arrptr = new char*[n];
+         UInt_t i = 0;
+         for(void *iter = start; iter != end; iter = (char*)iter + incr, ++i ) {
+            arrptr[i] = (char*)iter;
+         }
+         ((TStreamerInfo*)config->fInfo)->WriteBufferAux(buf, arrptr, &(config->fCompInfo), /*first*/ 0, /*last*/ 1, /*narr*/ n, config->fOffset, 1|2 );
+         delete [] arrptr;
+         return 0;
+      }
+
       static INLINE_TEMPLATE_ARGS Int_t GenericRead(TBuffer &buf, void *start, const void *end, const TLoopConfiguration * loopconfig, const TConfiguration *config)
       {
          // Well the implementation is non trivial. For now punt.
@@ -2758,6 +2775,14 @@ namespace TStreamerInfoActions
          // punt.
 
          return GenericRead(buf,start,end,config);
+      }
+
+      static INLINE_TEMPLATE_ARGS Int_t WriteBase(TBuffer &buf, void *start, const void *end, const TConfiguration *config)
+      {
+         // Well the implementation is non trivial since we do not have a proxy for the container of _only_ the base class.  For now
+         // punt.
+
+         return GenericWrite(buf,start,end,config);
       }
 
       static inline Int_t ReadStreamerCase(TBuffer &buf, void *start, const void *end, const TConfiguration *config)
@@ -3393,6 +3418,14 @@ public:
          // punt.
 
          return GenericRead(buf,start,end,loopconfig, config);
+      }
+
+      static INLINE_TEMPLATE_ARGS Int_t WriteBase(TBuffer &buf, void *start, const void *end, const TLoopConfiguration * loopconfig, const TConfiguration *config)
+      {
+         // Well the implementation is non trivial since we do not have a proxy for the container of _only_ the base class.  For now
+         // punt.
+
+         return GenericWrite(buf,start,end,loopconfig, config);
       }
 
       static INLINE_TEMPLATE_ARGS Int_t GenericRead(TBuffer &buf, void *, const void *, const TLoopConfiguration * loopconf, const TConfiguration *config)
@@ -4132,7 +4165,19 @@ GetCollectionWriteAction(TVirtualStreamerInfo *info, TLoopConfiguration *loopCon
          // Streamer alltogether.
       case TStreamerInfo::kTObject: return TConfiguredAction( Looper::template LoopOverCollection<WriteTObject >, new TConfiguration(info,i,compinfo,offset) );    break;
       case TStreamerInfo::kTString: return TConfiguredAction( Looper::template LoopOverCollection<WriteTString >, new TConfiguration(info,i,compinfo,offset) );    break;
+      case TStreamerInfo::kBase: {
+         TStreamerBase *baseEl = dynamic_cast<TStreamerBase*>(element);
+         if (baseEl) {
+            auto baseinfo = (TStreamerInfo *)baseEl->GetBaseStreamerInfo();
+            assert(baseinfo);
+            TLoopConfiguration *baseLoopConfig = loopConfig ? loopConfig->Copy() : nullptr;
+            auto baseActions = Looper::CreateWriteActionSquence(*baseinfo, baseLoopConfig);
+            baseActions->AddToOffset(baseEl->GetOffset());
+            return TConfiguredAction( Looper::SubSequenceAction, new TConfSubSequence(info, i, compinfo, 0, std::move(baseActions)));
 
+         } else
+            return TConfiguredAction( Looper::WriteBase, new TGenericConfiguration(info, i, compinfo) );
+      }
       default:
          return TConfiguredAction( Looper::GenericWrite, new TConfiguration(info,i,compinfo,0 /* 0 because we call the legacy code */) );
    }
