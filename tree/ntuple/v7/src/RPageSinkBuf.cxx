@@ -153,7 +153,7 @@ void ROOT::Experimental::Internal::RPageSinkBuf::CommitPage(ColumnHandle_t colum
    auto &sealedPage = fBufferedColumns.at(colId).RegisterSealedPage();
 
    auto allocateBuf = [&zipItem, maxSealedPageBytes]() {
-      zipItem.fBuf = std::make_unique<unsigned char[]>(maxSealedPageBytes);
+      zipItem.fBuf = MakeUninitArray<unsigned char>(maxSealedPageBytes);
       R__ASSERT(zipItem.fBuf);
    };
    auto shrinkSealedPage = [&zipItem, maxSealedPageBytes, &sealedPage]() {
@@ -161,7 +161,7 @@ void ROOT::Experimental::Internal::RPageSinkBuf::CommitPage(ColumnHandle_t colum
       // sealed page content to save memory.
       auto sealedBufferSize = sealedPage.GetBufferSize();
       if (sealedBufferSize < maxSealedPageBytes) {
-         auto buf = std::make_unique<unsigned char[]>(sealedBufferSize);
+         auto buf = MakeUninitArray<unsigned char>(sealedBufferSize);
          memcpy(buf.get(), sealedPage.GetBuffer(), sealedBufferSize);
          zipItem.fBuf = std::move(buf);
          sealedPage.SetBuffer(zipItem.fBuf.get());

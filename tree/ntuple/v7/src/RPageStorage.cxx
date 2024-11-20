@@ -876,7 +876,7 @@ void ROOT::Experimental::Internal::RPagePersistentSink::InitImpl(RNTupleModel &m
    UpdateSchema(initialChangeset, 0U);
 
    fSerializationContext = RNTupleSerializer::SerializeHeader(nullptr, descriptor);
-   auto buffer = std::make_unique<unsigned char[]>(fSerializationContext.GetHeaderSize());
+   auto buffer = MakeUninitArray<unsigned char>(fSerializationContext.GetHeaderSize());
    fSerializationContext = RNTupleSerializer::SerializeHeader(buffer.get(), descriptor);
    InitImpl(buffer.get(), fSerializationContext.GetHeaderSize());
 
@@ -1108,7 +1108,7 @@ void ROOT::Experimental::Internal::RPagePersistentSink::CommitClusterGroup()
    }
 
    auto szPageList = RNTupleSerializer::SerializePageList(nullptr, descriptor, physClusterIDs, fSerializationContext);
-   auto bufPageList = std::make_unique<unsigned char[]>(szPageList);
+   auto bufPageList = MakeUninitArray<unsigned char>(szPageList);
    RNTupleSerializer::SerializePageList(bufPageList.get(), descriptor, physClusterIDs, fSerializationContext);
 
    const auto clusterGroupId = descriptor.GetNClusterGroups();
@@ -1148,7 +1148,7 @@ void ROOT::Experimental::Internal::RPagePersistentSink::CommitDatasetImpl()
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
 
    auto szFooter = RNTupleSerializer::SerializeFooter(nullptr, descriptor, fSerializationContext);
-   auto bufFooter = std::make_unique<unsigned char[]>(szFooter);
+   auto bufFooter = MakeUninitArray<unsigned char>(szFooter);
    RNTupleSerializer::SerializeFooter(bufFooter.get(), descriptor, fSerializationContext);
 
    CommitDatasetImpl(bufFooter.get(), szFooter);

@@ -70,7 +70,7 @@ ROOT::Experimental::Internal::RPageSinkFile::~RPageSinkFile() {}
 
 void ROOT::Experimental::Internal::RPageSinkFile::InitImpl(unsigned char *serializedHeader, std::uint32_t length)
 {
-   auto zipBuffer = std::make_unique<unsigned char[]>(length);
+   auto zipBuffer = MakeUninitArray<unsigned char>(length);
    auto szZipHeader = fCompressor->Zip(serializedHeader, length, GetWriteOptions().GetCompression(),
                                        RNTupleCompressor::MakeMemCopyWriter(zipBuffer.get()));
    fWriter->WriteNTupleHeader(zipBuffer.get(), szZipHeader, length);
@@ -227,7 +227,7 @@ ROOT::Experimental::RNTupleLocator
 ROOT::Experimental::Internal::RPageSinkFile::CommitClusterGroupImpl(unsigned char *serializedPageList,
                                                                     std::uint32_t length)
 {
-   auto bufPageListZip = std::make_unique<unsigned char[]>(length);
+   auto bufPageListZip = MakeUninitArray<unsigned char>(length);
    auto szPageListZip = fCompressor->Zip(serializedPageList, length, GetWriteOptions().GetCompression(),
                                          RNTupleCompressor::MakeMemCopyWriter(bufPageListZip.get()));
 
@@ -241,7 +241,7 @@ void ROOT::Experimental::Internal::RPageSinkFile::CommitDatasetImpl(unsigned cha
                                                                     std::uint32_t length)
 {
    fWriter->UpdateStreamerInfos(fDescriptorBuilder.BuildStreamerInfos());
-   auto bufFooterZip = std::make_unique<unsigned char[]>(length);
+   auto bufFooterZip = MakeUninitArray<unsigned char>(length);
    auto szFooterZip = fCompressor->Zip(serializedFooter, length, GetWriteOptions().GetCompression(),
                                        RNTupleCompressor::MakeMemCopyWriter(bufFooterZip.get()));
    fWriter->WriteNTupleFooter(bufFooterZip.get(), szFooterZip, length);
@@ -324,7 +324,7 @@ void ROOT::Experimental::Internal::RPageSourceFile::LoadStructureImpl()
    // Reserve enough space for the compressed and the uncompressed header/footer (see AttachImpl)
    const auto bufSize = fAnchor->GetNBytesHeader() + fAnchor->GetNBytesFooter() +
                         std::max(fAnchor->GetLenHeader(), fAnchor->GetLenFooter());
-   fStructureBuffer.fBuffer = std::make_unique<unsigned char[]>(bufSize);
+   fStructureBuffer.fBuffer = MakeUninitArray<unsigned char>(bufSize);
    fStructureBuffer.fPtrHeader = fStructureBuffer.fBuffer.get();
    fStructureBuffer.fPtrFooter = fStructureBuffer.fBuffer.get() + fAnchor->GetNBytesHeader();
 
@@ -439,7 +439,7 @@ ROOT::Experimental::Internal::RPageSourceFile::LoadPageImpl(ColumnHandle_t colum
    std::unique_ptr<unsigned char[]> directReadBuffer; // only used if cluster pool is turned off
 
    if (fOptions.GetClusterCache() == RNTupleReadOptions::EClusterCache::kOff) {
-      directReadBuffer = std::unique_ptr<unsigned char[]>(new unsigned char[sealedPage.GetBufferSize()]);
+      directReadBuffer = MakeUninitArray<unsigned char>(sealedPage.GetBufferSize());
       {
          Detail::RNTupleAtomicTimer timer(fCounters->fTimeWallRead, fCounters->fTimeCpuRead);
          fReader.ReadBuffer(directReadBuffer.get(), sealedPage.GetBufferSize(),

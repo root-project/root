@@ -267,6 +267,16 @@ auto MakeAliasedSharedPtr(T *rawPtr)
    return std::shared_ptr<T>(fgRawPtrCtrlBlock, rawPtr);
 }
 
+/// Make an array of default-initialized elements. This is useful for buffers that do not need to be initialized.
+///
+/// With C++20, this function can be replaced by std::make_unique_for_overwrite<T[]>.
+template <typename T>
+std::unique_ptr<T[]> MakeUninitArray(std::size_t size)
+{
+   // DO NOT use std::make_unique<T[]>, the array elements are value-initialized!
+   return std::unique_ptr<T[]>(new T[size]);
+}
+
 inline constexpr EColumnType kTestFutureType =
    static_cast<EColumnType>(std::numeric_limits<std::underlying_type_t<EColumnType>>::max() - 1);
 

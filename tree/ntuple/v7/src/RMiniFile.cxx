@@ -722,7 +722,7 @@ ROOT::Experimental::Internal::RMiniFileReader::GetNTupleProper(std::string_view 
    }
    // The object length can be smaller than the size of RTFNTuple if it comes from a past RNTuple class version,
    // or larger than it if it comes from a future RNTuple class version.
-   auto bufAnchor = std::make_unique<unsigned char[]>(std::max<size_t>(key.fObjLen, sizeof(RTFNTuple)));
+   auto bufAnchor = MakeUninitArray<unsigned char>(std::max<size_t>(key.fObjLen, sizeof(RTFNTuple)));
    RTFNTuple *ntuple = new (bufAnchor.get()) RTFNTuple;
 
    auto objNbytes = key.GetSize() - key.fKeyLen;
@@ -800,7 +800,7 @@ void ROOT::Experimental::Internal::RMiniFileReader::ReadBuffer(void *buffer, siz
       bufCur += nbytesFirstChunk;
       nread -= nbytesChunkOffsets;
 
-      const auto chunkOffsets = std::make_unique<std::uint64_t[]>(nChunks - 1);
+      const auto chunkOffsets = MakeUninitArray<std::uint64_t>(nChunks - 1);
       memcpy(chunkOffsets.get(), bufCur, nbytesChunkOffsets);
 
       size_t remainingBytes = nbytes - nbytesFirstChunk;
@@ -1203,7 +1203,7 @@ std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::WriteBlob(const v
    const uint8_t *chunkData = reinterpret_cast<const uint8_t *>(data) + nbytesFirstChunk;
    size_t remainingBytes = nbytes - nbytesFirstChunk;
 
-   const auto chunkOffsetsToWrite = std::make_unique<std::uint64_t[]>(nChunks - 1);
+   const auto chunkOffsetsToWrite = MakeUninitArray<std::uint64_t>(nChunks - 1);
    std::uint64_t chunkOffsetIdx = 0;
 
    do {
@@ -1327,7 +1327,7 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::WriteTFileStreamerInfo()
    const auto lenPayload = buffer.Length() - keyLen;
 
    RNTupleCompressor compressor;
-   auto zipStreamerInfos = std::make_unique<unsigned char[]>(lenPayload);
+   auto zipStreamerInfos = MakeUninitArray<unsigned char>(lenPayload);
    auto szZipStreamerInfos = compressor.Zip(bufPayload, lenPayload, 1, zipStreamerInfos.get());
 
    fFileSimple.WriteKey(zipStreamerInfos.get(), szZipStreamerInfos, lenPayload,
