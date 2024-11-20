@@ -2283,27 +2283,6 @@ namespace TStreamerInfoActions
          }
          ((TStreamerInfo*)config->fInfo)->ReadBuffer(buf, arrptr, &(config->fCompInfo), /*first*/ 0, /*last*/ 1, /*narr*/ n, config->fOffset, 1|2 );
          delete [] arrptr;
-
-         //      // Idea: need to cache this result!
-         //      TStreamerInfo *info = (TStreamerInfo*)config->fInfo;
-         //      TStreamerElement *aElement = (TStreamerElement*)info->GetElem(config->fElemId);
-         //
-         //      *Int_t clversion = ((TStreamerBase*)aElement)->Get BaseVersion();
-         //      *TClass *cle = aElement->GetNewBaseClass();
-         //      *(TSequence *actions = CreateReadMemberWiseActions( cle->GetStreamerInfo(clversion), ???? );
-         //
-         //      TSequence *actions = CreateReadMemberWiseActions( ((TStreamerBase*)aElement)->GetBaseStreamerInfo(), ???? );
-         //
-         //      actions->ReadBuffer(b,start,end);
-         //      delete actions;
-
-         //      const Int_t incr = ((TVectorLoopConfig*)loopconfig)->fIncrement;
-         //      for(void *iter = start; iter != end; iter = (char*)iter + incr )
-         //      {
-         //         ((TStreamerInfo*)(((TStreamerBase*)aElement)->GetBaseStreamerInfo())->ReadBuffer(b,arr,-1,narr,ioffset,arrayMode);
-         //
-         //         ((TStreamerInfo*)config->fInfo)->ReadBuffer(buf, (char**)&iter, config->fElemId, 1, config->fOffset, 1|2 );
-         //      }
          return 0;
       }
 
@@ -5245,19 +5224,7 @@ void TStreamerInfo::AddWriteMemberWiseVecPtrAction(TStreamerInfoActions::TAction
       // Skip artificial element used for reading purposes.
       return;
    }
-
-#if defined(CDJ_NO_COMPILE)
-   if (element->TestBit(TStreamerElement::kCache)) {
-      TConfiguredAction action( GetCollectionWriteAction<VectorLooper>(this,element,compinfo->fType,i,compinfo,compinfo->fOffset) );
-      writeSequence->AddAction( UseCacheVectorPtrLoop, new TConfigurationUseCache(this,action,element->TestBit(TStreamerElement::kRepeat)) );
-   } else {
-      writeSequence->Addaction( GetCollectionWriteAction<VectorPtrLooper>(this,element,compinfo->fType,i,compinfo,compinfo->fOffset) );
-   }
-#else
    writeSequence->AddAction( GetCollectionWriteAction<VectorPtrLooper>(this,element,compinfo->fType,i,compinfo,compinfo->fOffset) );
-   // writeSequence->AddAction( VectorPtrLooper::GenericWrite, new TGenericConfiguration(this,i,compinfo) );
-#endif
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -5408,12 +5375,6 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
          // We can speed up the iteration in case of vector.  We also know that all emulated collection are stored internally as a vector.
          Long_t increment = proxy.GetIncrement();
          sequence->fLoopConfig = new TVectorLoopConfig(&proxy, increment, /* read */ kFALSE);
-      /*} else if (proxy.GetCollectionType() == ROOT::kSTLset || proxy.GetCollectionType() == ROOT::kSTLmultiset
-                 || proxy.GetCollectionType() == ROOT::kSTLmap || proxy.GetCollectionType() == ROOT::kSTLmultimap)
-      {
-         Long_t increment = proxy.GetIncrement();
-         sequence->fLoopConfig = new TVectorLoopConfig(increment);
-         // sequence->fLoopConfig = new TAssocLoopConfig(proxy); */
       } else {
          sequence->fLoopConfig = new TGenericLoopConfig(&proxy, /* read */ kFALSE);
       }
@@ -5441,105 +5402,6 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
          TStreamerInfo::TCompInfo *compinfo = sinfo->fCompFull[i];
          Int_t oldType = element->GetType();
          Int_t offset = element->GetOffset();
-#if defined(CDJ_NO_COMPILE)
-         Int_t newType = element->GetNewType();
-
-         if (newType != oldType) {
-            if (newType > 0) {
-               if (oldType != TVirtualStreamerInfo::kCounter) {
-                  oldType += TVirtualStreamerInfo::kConv;
-               }
-            } else {
-               oldType += TVirtualStreamerInfo::kSkip;
-            }
-         }
-         if ( IsDefaultVector(proxy)
-               /*|| (proxy.GetCollectionType() == ROOT::kSTLset || proxy.GetCollectionType() == ROOT::kSTLmultiset
-               || proxy.GetCollectionType() == ROOT::kSTLmap || proxy.GetCollectionType() == ROOT::kSTLmultimap) */ )
-         {
-
-            // We can speed up the iteration in case of vector.  We also know that all emulated collection are stored internally as a vector.
-            if (element->TestBit(TStreamerElement::kCache)) {
-               TConfiguredAction action( GetCollectionWriteAction<VectorLooper>(info,element,oldType,i,compinfo,offset) );
-               sequence->AddAction( UseCacheVectorLoop,  new TConfigurationUseCache(info,action,element->TestBit(TStreamerElement::kRepeat)) );
-            } else {
-               sequence->AddAction(GetCollectionWriteAction<VectorLooper>(info,element,oldType,i,compinfo,offset));
-            }
-
-   //         } else if (proxy.GetCollectionType() == ROOT::kSTLset || proxy.GetCollectionType() == ROOT::kSTLmultiset
-   //                    || proxy.GetCollectionType() == ROOT::kSTLmap || proxy.GetCollectionType() == ROOT::kSTLmultimap) {
-   //            sequence->AddAction( GenericAssocCollectionAction, new TConfigSTL(false, info,i,compinfo,offset,0,proxy.GetCollectionClass(),0,0) );
-         } else {
-            // The usual collection case.
-            if (element->TestBit(TStreamerElement::kCache)) {
-               TConfiguredAction action( GetWriteAction<VectorLooper>(info,element,oldType,i,compinfo,offset) );
-               sequence->AddAction( UseCacheGenericCollection, new TConfigurationUseCache(info,action,element->TestBit(TStreamerElement::kRepeat)) );
-            } else {
-               switch (oldType) {
-                     // read basic types
-                  case TVirtualStreamerInfo::kBool:    sequence->AddAction( WriteBasicTypeGenericLoop<Bool_t>, new TConfiguration(info,i,compinfo,offset) );    break;
-                  case TVirtualStreamerInfo::kChar:    sequence->AddAction( WriteBasicTypeGenericLoop<Char_t>, new TConfiguration(info,i,compinfo,offset) );    break;
-                  case TVirtualStreamerInfo::kShort:   sequence->AddAction( WriteBasicTypeGenericLoop<Short_t>, new TConfiguration(info,i,compinfo,offset) );   break;
-                  case TVirtualStreamerInfo::kInt:     sequence->AddAction( WriteBasicTypeGenericLoop<Int_t>, new TConfiguration(info,i,compinfo,offset) );     break;
-                  case TVirtualStreamerInfo::kLong:    sequence->AddAction( WriteBasicTypeGenericLoop<Long_t>, new TConfiguration(info,i,compinfo,offset) );    break;
-                  case TVirtualStreamerInfo::kLong64:  sequence->AddAction( WriteBasicTypeGenericLoop<Long64_t>, new TConfiguration(info,i,compinfo,offset) );  break;
-                  case TVirtualStreamerInfo::kFloat:   sequence->AddAction( WriteBasicTypeGenericLoop<Float_t>, new TConfiguration(info,i,compinfo,offset) );   break;
-                  case TVirtualStreamerInfo::kDouble:  sequence->AddAction( WriteBasicTypeGenericLoop<Double_t>, new TConfiguration(info,i,compinfo,offset) );  break;
-                  case TVirtualStreamerInfo::kUChar:   sequence->AddAction( WriteBasicTypeGenericLoop<UChar_t>, new TConfiguration(info,i,compinfo,offset) );   break;
-                  case TVirtualStreamerInfo::kUShort:  sequence->AddAction( WriteBasicTypeGenericLoop<UShort_t>, new TConfiguration(info,i,compinfo,offset) );  break;
-                  case TVirtualStreamerInfo::kUInt:    sequence->AddAction( WriteBasicTypeGenericLoop<UInt_t>, new TConfiguration(info,i,compinfo,offset) );    break;
-                  case TVirtualStreamerInfo::kULong:   sequence->AddAction( WriteBasicTypeGenericLoop<ULong_t>, new TConfiguration(info,i,compinfo,offset) );   break;
-                  case TVirtualStreamerInfo::kULong64: sequence->AddAction( WriteBasicTypeGenericLoop<ULong64_t>, new TConfiguration(info,i,compinfo,offset) ); break;
-                  // case TVirtualStreamerInfo::kBits:    sequence->AddAction( WriteBasicTypeGenericLoop<BitsMarker>, new TConfiguration(info,i,compinfo,offset) );    break;
-                  case TVirtualStreamerInfo::kFloat16: {
-                     if (element->GetFactor() != 0) {
-                        sequence->AddAction( GenericLooper<WriteBasicType_WithFactor<float> >, new TConfWithFactor(info,i,compinfo,offset,element->GetFactor(),element->GetXmin()) );
-                     } else {
-                        Int_t nbits = (Int_t)element->GetXmin();
-                        if (!nbits) nbits = 12;
-                        sequence->AddAction( GenericLooper<WriteBasicType_NoFactor<float> >, new TConfNoFactor(info,i,compinfo,offset,nbits) );
-                     }
-                     break;
-                  }
-                  case TVirtualStreamerInfo::kDouble32: {
-                     if (element->GetFactor() != 0) {
-                        sequence->AddAction( GenericLooper<WriteBasicType_WithFactor<double> >, new TConfWithFactor(info,i,compinfo,offset,element->GetFactor(),element->GetXmin()) );
-                     } else {
-                        Int_t nbits = (Int_t)element->GetXmin();
-                        if (!nbits) {
-                           sequence->AddAction( GenericLooper<ConvertBasicType<float,double> >, new TConfiguration(info,i,compinfo,offset) );
-                        } else {
-                           sequence->AddAction( GenericLooper<WriteBasicType_NoFactor<double> >, new TConfNoFactor(info,i,compinfo,offset,nbits) );
-                        }
-                     }
-                     break;
-                  }
-                  case TVirtualStreamerInfo::kTNamed:  sequence->AddAction( GenericLooper<WriteTNamed >, new TConfiguration(info,i,compinfo,offset) );    break;
-                     // Idea: We should calculate the CanIgnoreTObjectStreamer here and avoid calling the
-                     // Streamer alltogether.
-                  case TVirtualStreamerInfo::kTObject: sequence->AddAction( GenericLooper<WriteTObject >, new TConfiguration(info,i,compinfo,offset) );    break;
-                  case TVirtualStreamerInfo::kTString: sequence->AddAction( GenericLooper<WriteTString >, new TConfiguration(info,i,compinfo,offset) );    break;
-                  default:
-                     sequence->AddAction( GenericCollectionWriteAction, new TConfigSTL(false, info,i,0 /* the offset will be used from TStreamerInfo */,0,proxy.GetCollectionClass(),0,0) );
-                     break;
-               }
-            }
-         }
-#else
-#if 0
-         if ( IsDefaultVector(proxy)
-               /*|| (proxy.GetCollectionType() == ROOT::kSTLset || proxy.GetCollectionType() == ROOT::kSTLmultiset
-                || proxy.GetCollectionType() == ROOT::kSTLmap || proxy.GetCollectionType() == ROOT::kSTLmultimap)*/ )
-         {
-            sequence->AddAction( GetCollectionWriteAction<VectorLooper>(info,element,oldType,i,compinfo,offset) );
-         } else {
-            // NOTE: TBranch::FillLeavesCollection[Member] is not yet ready to handle the sequence
-            // as it does not create/use a TStaging as expected ... but then again it might
-            // not be the right things to expect ...
-            // sequence->AddAction( GetCollectionWriteAction<GenericLooper>(info,element,oldType,i,compinfo,offset) );
-            sequence->AddAction( GenericLooper::GenericWrite, new TConfigSTL(false, info,i,compinfo,0 /* the offset will be used from TStreamerInfo */,0,proxy.GetCollectionClass(),0,0) );
-         }
-#else
          switch (SelectLooper(proxy)) {
          case kAssociativeLooper:
             sequence->AddAction( GetCollectionWriteAction<GenericLooper>(info,element,oldType,i,compinfo,offset) );
@@ -5555,8 +5417,6 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
             sequence->AddAction( GetCollectionWriteAction<GenericLooper>(info,element,oldType,i,compinfo,offset) );
             break;
          }
-#endif
-#endif
       }
       return sequence;
 }
