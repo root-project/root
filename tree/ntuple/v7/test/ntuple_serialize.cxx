@@ -697,7 +697,7 @@ TEST(RNTuple, SerializeFooter)
    cgLocator.fBytesOnStorage = 42;
    cgBuilder.ClusterGroupId(256).PageListLength(137).PageListLocator(cgLocator).NClusters(1).EntrySpan(100);
    std::vector<DescriptorId_t> clusterIds{84};
-   cgBuilder.AddClusters(clusterIds);
+   cgBuilder.AddSortedClusters(clusterIds);
    builder.AddClusterGroup(cgBuilder.MoveDescriptor().Unwrap());
 
    auto desc = builder.MoveDescriptor();
@@ -1026,7 +1026,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentation)
 
    RClusterGroupDescriptorBuilder cgBuilder;
    cgBuilder.ClusterGroupId(137).NClusters(2).EntrySpan(2);
-   cgBuilder.AddClusters({13, 17});
+   cgBuilder.AddSortedClusters({13, 17});
    builder.AddClusterGroup(cgBuilder.MoveDescriptor().Unwrap());
 
    auto desc = builder.MoveDescriptor();
@@ -1212,7 +1212,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationProjection)
 
    RClusterGroupDescriptorBuilder cgBuilder;
    cgBuilder.ClusterGroupId(137).NClusters(2).EntrySpan(2);
-   cgBuilder.AddClusters({13, 17});
+   cgBuilder.AddSortedClusters({13, 17});
    builder.AddClusterGroup(cgBuilder.MoveDescriptor().Unwrap());
 
    auto desc = builder.MoveDescriptor();
@@ -1337,7 +1337,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationDeferred)
 
    RClusterGroupDescriptorBuilder cgBuilder;
    cgBuilder.ClusterGroupId(137).NClusters(3).EntrySpan(4);
-   cgBuilder.AddClusters({13, 17, 19});
+   cgBuilder.AddSortedClusters({13, 17, 19});
    builder.AddClusterGroup(cgBuilder.MoveDescriptor().Unwrap());
 
    auto desc = builder.MoveDescriptor();
@@ -1461,7 +1461,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationIncremental)
 
    RClusterGroupDescriptorBuilder cgBuilder;
    cgBuilder.ClusterGroupId(137).NClusters(2).EntrySpan(2);
-   cgBuilder.AddClusters({13, 17});
+   cgBuilder.AddSortedClusters({13, 17});
    builder.AddClusterGroup(cgBuilder.MoveDescriptor().Unwrap());
 
    auto desc = builder.MoveDescriptor();
