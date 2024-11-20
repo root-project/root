@@ -4178,6 +4178,11 @@ GetCollectionWriteAction(TVirtualStreamerInfo *info, TLoopConfiguration *loopCon
          } else
             return TConfiguredAction( Looper::WriteBase, new TGenericConfiguration(info, i, compinfo) );
       }
+      case TStreamerInfo::kStreamer:
+         if (info->GetOldVersion() >= 3)
+            return TConfiguredAction( Looper::WriteStreamerCase, new TGenericConfiguration(info, i, compinfo) );
+         else
+            return TConfiguredAction( Looper::GenericWrite, new TGenericConfiguration(info, i, compinfo) );
       default:
          return TConfiguredAction( Looper::GenericWrite, new TConfiguration(info,i,compinfo,0 /* 0 because we call the legacy code */) );
    }
