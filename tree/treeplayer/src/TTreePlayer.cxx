@@ -736,7 +736,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    const TString fileNameStem = classname ? classname : fTree->GetName();
    const TString cppClassName = ROOT::Internal::GetCppName(fileNameStem);
    if (cppClassName != fileNameStem)
-      Warning("TTreePlayer::MakeClass", "The %s name provided ('%s') is not a valid C++ identifier and will be converted to '%s', the code produced will likely fail to compile.",(classname ? "class" : "tree"), fileNameStem.Data(), cppClassName.Data());
+      Warning("TTreePlayer::MakeClass", "The %s name provided ('%s') is not a valid C++ identifier and will be converted to '%s'.",(classname ? "class" : "tree"), fileNameStem.Data(), cppClassName.Data());
 
    TString thead;
    thead.Form("%s.h", fileNameStem.Data());
