@@ -5398,6 +5398,8 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
 
       Int_t offset = element->GetOffset();
       if (newType != oldType) {
+         // This 'prevents' the switch from base class (kBase (0)) to
+         // anything else.
          if (newType > 0) {
             if (oldType != TVirtualStreamerInfo::kCounter) {
                oldType += TVirtualStreamerInfo::kConv;
@@ -5495,21 +5497,46 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
       }
       TStreamerInfo *sinfo = static_cast<TStreamerInfo*>(&info);
       TStreamerInfo::TCompInfo *compinfo = sinfo->fCompFull[i];
-      Int_t oldType = element->GetType();
+      Int_t onfileType = element->GetType();
+      Int_t memoryType = element->GetNewType();
+      if (memoryType != onfileType) {
+         // This 'prevents' the switch from base class (kBase (0)) to
+         // anything else.
+         if (memoryType > 0) {
+            if (onfileType != TVirtualStreamerInfo::kCounter) {
+               onfileType += TVirtualStreamerInfo::kConv;
+            }
+         } else {
+            // When reading we need to consume the data in the onfile buffer,
+            // so we do create a 'Skip' action for the missing elements.
+            // When writing we should probably write a default value, for
+            // now let's just ignore the request.
+            // We could issue an error here but we might too often issue a
+            // 'false positive' if the user only reads.
+            // FIXME: The 'right' solution is to add a new action that first print
+            // once the following error message:
+            //
+            // info.Error("TActionSequence::CreateWriteMemberWiseActions",
+            //       "Ignoring request to write the missing data member %s in %s version %d checksum 0x%x",
+            //       element->GetName(), info.GetName(), info.GetClassVersion(), info.GetCheckSum());
+            continue;
+         }
+      }
+
       Int_t offset = element->GetOffset();
       switch (SelectLooper(loopConfig ? loopConfig->fProxy : nullptr)) {
       case kAssociativeLooper:
-         sequence->AddAction( GetCollectionWriteAction<GenericLooper>(&info,loopConfig,element,oldType,i,compinfo,offset) );
+         sequence->AddAction( GetCollectionWriteAction<GenericLooper>(&info,loopConfig,element,onfileType,i,compinfo,offset) );
          break;
       case kVectorLooper:
-         sequence->AddAction( GetCollectionWriteAction<VectorLooper>(&info,loopConfig,element,oldType,i,compinfo,offset) );
+         sequence->AddAction( GetCollectionWriteAction<VectorLooper>(&info,loopConfig,element,onfileType,i,compinfo,offset) );
          break;
       case kVectorPtrLooper:
-         sequence->AddAction( GetCollectionWriteAction<VectorPtrLooper>(&info,loopConfig,element,oldType,i,compinfo,offset) );
+         sequence->AddAction( GetCollectionWriteAction<VectorPtrLooper>(&info,loopConfig,element,onfileType,i,compinfo,offset) );
          break;
       case kGenericLooper:
       default:
-         sequence->AddAction( GetCollectionWriteAction<GenericLooper>(&info,loopConfig,element,oldType,i,compinfo,offset) );
+         sequence->AddAction( GetCollectionWriteAction<GenericLooper>(&info,loopConfig,element,onfileType,i,compinfo,offset) );
          break;
       }
    }
