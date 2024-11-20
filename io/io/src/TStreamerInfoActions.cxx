@@ -188,6 +188,19 @@ namespace TStreamerInfoActions
 
    };
 
+   struct TConfObject : public TConfiguration
+   {
+      TClassRef fOnfileClass;
+      TClassRef fInMemoryClass;
+
+      TConfObject(TVirtualStreamerInfo *info, UInt_t id, TCompInfo_t *compinfo, Int_t offset,
+                  TClass *onfileClass, TClass *inMemoryClass) :
+                  TConfiguration(info, id, compinfo, offset),
+                  fOnfileClass(onfileClass),
+                  fInMemoryClass(inMemoryClass ? inMemoryClass : onfileClass)  {};
+      TConfiguration *Copy() override { return new TConfObject(*this); }
+   };
+
    Int_t GenericReadAction(TBuffer &buf, void *addr, const TConfiguration *config)
    {
       char *obj = (char*)addr;
