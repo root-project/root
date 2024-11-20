@@ -133,6 +133,28 @@ void codegenImpl(RooFit::Detail::RooFixedProdPdf &arg, CodegenContext &ctx)
    }
 }
 
+void codegenImpl(RooFit::Detail::RooSimNLL &arg, CodegenContext &ctx)
+{
+   if (arg.terms().empty()) {
+      ctx.addResult(&arg, "0.0");
+   }
+
+   std::string resName = RooFit::Detail::makeValidVarName(arg.GetName()) + "Result";
+   ctx.addResult(&arg, resName);
+   ctx.addToGlobalScope("double " + resName + " = 0.0;\n");
+
+   std::stringstream ss;
+
+   std::size_t i = 0;
+   for (auto *component : static_range_cast<RooAbsReal *>(arg.terms())) {
+
+      // TODO: support channel masking here
+      ss << resName << " += " << ctx.buildFunction(*component, ctx.outputSizes()) << "(params, obs, xlArr);\n";
+      ++i;
+   }
+   ctx.addToGlobalScope(ss.str());
+}
+
 void codegenImpl(ParamHistFunc &arg, CodegenContext &ctx)
 {
    std::string const &idx = arg.dataHist().calculateTreeIndexForCodeSquash(&arg, ctx, arg.dataVars(), true);
@@ -251,15 +273,7 @@ void codegenImpl(RooAddition &arg, CodegenContext &ctx)
 
    std::size_t i = 0;
    for (auto *component : static_range_cast<RooAbsReal *>(arg.list())) {
-
-      if (!dynamic_cast<RooFit::Detail::RooNLLVarNew *>(component) || arg.list().size() == 1) {
-         result += ctx.getResult(*component);
-         ++i;
-         if (i < arg.list().size())
-            result += '+';
-         continue;
-      }
-      result += ctx.buildFunction(*component, ctx.outputSizes()) + "(params, obs, xlArr)";
+      result += ctx.getResult(*component);
       ++i;
       if (i < arg.list().size())
          result += '+';

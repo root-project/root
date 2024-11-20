@@ -25,14 +25,15 @@ computation times.
 
 #include "RooFit/Detail/RooNLLVarNew.h"
 
-#include <RooHistPdf.h>
+#include <RooAbsCategoryLValue.h>
 #include <RooBatchCompute.h>
-#include <RooDataHist.h>
-#include <RooNaNPacker.h>
 #include <RooConstVar.h>
+#include <RooDataHist.h>
+#include <RooFit/Detail/MathFuncs.h>
+#include <RooHistPdf.h>
+#include <RooNaNPacker.h>
 #include <RooRealVar.h>
 #include <RooSetProxy.h>
-#include <RooFit/Detail/MathFuncs.h>
 
 #include "RooFitImplHelpers.h"
 
@@ -47,6 +48,7 @@ computation times.
 #include <vector>
 
 ClassImp(RooFit::Detail::RooNLLVarNew);
+ClassImp(RooFit::Detail::RooSimNLL);
 
 namespace RooFit {
 namespace Detail {
@@ -334,6 +336,57 @@ void RooNLLVarNew::finalizeResult(RooFit::EvalContext &ctx, ROOT::Math::KahanSum
       }
    }
    ctx.setOutputWithOffset(this, result, _offset);
+}
+
+RooSimNLL::RooSimNLL(const char *name, const char *title, const RooArgSet &terms, RooAbsCategoryLValue const &indexCat,
+                     bool channelMasking)
+   : RooAbsReal(name, title), _set("!set", "set of components", this), _mask("!mask", "set of masks", this)
+{
+   _set.addTyped<RooAbsReal>(terms);
+
+   if (channelMasking) {
+      for (auto const &catState : indexCat) {
+         std::string const &catName = catState.first;
+         std::string maskName = "mask_" + catName;
+         _mask.addOwned(std::make_unique<RooRealVar>(maskName.c_str(), maskName.c_str(), 0.0));
+      }
+   }
+}
+
+RooSimNLL::RooSimNLL(const RooSimNLL &other, const char *name)
+   : RooAbsReal(other, name), _set("!set", this, other._set), _mask("!mask", this, other._set)
+{
+}
+
+double RooSimNLL::evaluate() const
+{
+   double sum(0);
+   const RooArgSet *nset = _set.nset();
+
+   std::size_t i = 0;
+   for (auto *comp : static_range_cast<RooAbsReal *>(_set)) {
+      if (_mask.empty() || static_cast<RooAbsReal const *>(_mask[i])->getVal() == 0.0) {
+         sum += comp->getVal(nset);
+      }
+      ++i;
+   }
+   return sum;
+}
+
+void RooSimNLL::doEval(RooFit::EvalContext &ctx) const
+{
+   double result = 0.;
+   for (std::size_t i = 0; i < _set.size(); ++i) {
+      if (_mask.empty() || ctx.at(_mask[i])[0] == 0.0) {
+         result += ctx.at(_set[i])[0];
+      }
+   }
+   ctx.output()[0] = result;
+}
+
+double RooSimNLL::defaultErrorLevel() const
+{
+   return static_cast<RooNLLVarNew *>(_set[0])->defaultErrorLevel();
 }
 
 } // namespace Detail

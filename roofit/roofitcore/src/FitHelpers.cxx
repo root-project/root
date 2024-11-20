@@ -51,6 +51,7 @@
 #endif
 
 using RooFit::Detail::RooNLLVarNew;
+using RooFit::Detail::RooSimNLL;
 
 namespace {
 
@@ -357,7 +358,7 @@ std::unique_ptr<RooAbsArg> createSimultaneousNLL(RooSimultaneous const &simPdf, 
    }
 
    // Time to sum the NLLs
-   auto nll = std::make_unique<RooAddition>("mynll", "mynll", nllTerms);
+   auto nll = std::make_unique<RooSimNLL>("mynll", "mynll", nllTerms, simCat, true);
    nll->addOwnedComponents(std::move(nllTerms));
    return nll;
 }

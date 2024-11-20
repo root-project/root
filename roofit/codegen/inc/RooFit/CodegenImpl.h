@@ -67,6 +67,7 @@ namespace Detail {
 class RooFixedProdPdf;
 class RooNLLVarNew;
 class RooNormalizedPdf;
+class RooSimNLL;
 } // namespace Detail
 
 namespace Experimental {
@@ -76,6 +77,7 @@ class CodegenContext;
 void codegenImpl(RooFit::Detail::RooFixedProdPdf &arg, CodegenContext &ctx);
 void codegenImpl(RooFit::Detail::RooNLLVarNew &arg, CodegenContext &ctx);
 void codegenImpl(RooFit::Detail::RooNormalizedPdf &arg, CodegenContext &ctx);
+void codegenImpl(RooFit::Detail::RooSimNLL &arg, CodegenContext &ctx);
 void codegenImpl(ParamHistFunc &arg, CodegenContext &ctx);
 void codegenImpl(PiecewiseInterpolation &arg, CodegenContext &ctx);
 void codegenImpl(RooAbsArg &arg, CodegenContext &ctx);
