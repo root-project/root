@@ -734,7 +734,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
 
    // Connect output files
    if (!classname) classname = fTree->GetName();
-   const TString vclassname = ROOT::Internal::GetCppName(classname).Data();
+   const TString vclassname = ROOT::Internal::GetCppName(classname);
 
    TString thead;
    thead.Form("%s.h", classname);
