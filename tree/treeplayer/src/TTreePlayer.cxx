@@ -733,18 +733,20 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    opt.ToLower();
 
    // Connect output files
-   if (!classname) classname = fTree->GetName();
-   const TString vclassname = ROOT::Internal::GetCppName(classname);
+   const TString fileNameStem = classname ? classname : fTree->GetName();
+   const TString cppClassName = ROOT::Internal::GetCppName(fileNameStem);
+   if (cppClassName != fileNameStem)
+      Warning("TTreePlayer::MakeClass", "The %s name provided ('%s') is not a valid C++ identifier and will be converted to '%s', the code produced will likely fail to compile.",(classname ? "class" : "tree"), fileNameStem.Data(), cppClassName.Data());
 
    TString thead;
-   thead.Form("%s.h", classname);
+   thead.Form("%s.h", fileNameStem.Data());
    FILE *fp = fopen(thead, "w");
    if (!fp) {
       Error("MakeClass","cannot open output file %s", thead.Data());
       return 3;
    }
    TString tcimp;
-   tcimp.Form("%s.C", classname);
+   tcimp.Form("%s.C", fileNameStem.Data());
    FILE *fpc = fopen(tcimp, "w");
    if (!fpc) {
       Error("MakeClass","cannot open output file %s", tcimp.Data());
@@ -781,8 +783,8 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    }
    fprintf(fp,"//////////////////////////////////////////////////////////\n");
    fprintf(fp,"\n");
-   fprintf(fp,"#ifndef %s_h\n",vclassname.Data());
-   fprintf(fp,"#define %s_h\n",vclassname.Data());
+   fprintf(fp,"#ifndef %s_h\n",cppClassName.Data());
+   fprintf(fp,"#define %s_h\n",cppClassName.Data());
    fprintf(fp,"\n");
    fprintf(fp,"#include <TROOT.h>\n");
    fprintf(fp,"#include <TChain.h>\n");
@@ -859,11 +861,11 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
 
    fprintf(fp,"\n");
    if (opt.Contains("selector")) {
-      fprintf(fp,"class %s : public TSelector {\n",vclassname.Data());
+      fprintf(fp,"class %s : public TSelector {\n",cppClassName.Data());
       fprintf(fp,"public :\n");
       fprintf(fp,"   TTree          *fChain;   //!pointer to the analyzed TTree or TChain\n");
    } else {
-      fprintf(fp,"class %s {\n",vclassname.Data());
+      fprintf(fp,"class %s {\n",cppClassName.Data());
       fprintf(fp,"public :\n");
       fprintf(fp,"   TTree          *fChain;   //!pointer to the analyzed TTree or TChain\n");
       fprintf(fp,"   Int_t           fCurrent; //!current Tree number in a TChain\n");
@@ -1105,8 +1107,8 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
 // generate class member functions prototypes
    if (opt.Contains("selector")) {
       fprintf(fp,"\n");
-      fprintf(fp,"   %s(TTree * /*tree*/ =0) : fChain(0) { }\n",vclassname.Data()) ;
-      fprintf(fp,"   ~%s() override { }\n",vclassname.Data());
+      fprintf(fp,"   %s(TTree * /*tree*/ =0) : fChain(0) { }\n",cppClassName.Data()) ;
+      fprintf(fp,"   ~%s() override { }\n",cppClassName.Data());
       fprintf(fp,"   Int_t  Version() const override { return 2; }\n");
       fprintf(fp,"   void   Begin(TTree *tree) override;\n");
       fprintf(fp,"   void   SlaveBegin(TTree *tree) override;\n");
@@ -1120,15 +1122,15 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fp,"   TList* GetOutputList() const override { return fOutput; }\n");
       fprintf(fp,"   void   SlaveTerminate() override;\n");
       fprintf(fp,"   void   Terminate() override;\n\n");
-      fprintf(fp,"   ClassDefOverride(%s,0);\n",vclassname.Data());
+      fprintf(fp,"   ClassDefOverride(%s,0);\n",cppClassName.Data());
       fprintf(fp,"};\n");
       fprintf(fp,"\n");
       fprintf(fp,"#endif\n");
       fprintf(fp,"\n");
    } else {
       fprintf(fp,"\n");
-      fprintf(fp,"   %s(TTree *tree=0);\n",vclassname.Data());
-      fprintf(fp,"   virtual ~%s();\n",vclassname.Data());
+      fprintf(fp,"   %s(TTree *tree=0);\n",cppClassName.Data());
+      fprintf(fp,"   virtual ~%s();\n",cppClassName.Data());
       fprintf(fp,"   virtual Int_t    Cut(Long64_t entry);\n");
       fprintf(fp,"   virtual Int_t    GetEntry(Long64_t entry);\n");
       fprintf(fp,"   virtual Long64_t LoadTree(Long64_t entry);\n");
@@ -1142,9 +1144,9 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fp,"\n");
    }
 // generate code for class constructor
-   fprintf(fp,"#ifdef %s_cxx\n",vclassname.Data());
+   fprintf(fp,"#ifdef %s_cxx\n",cppClassName.Data());
    if (!opt.Contains("selector")) {
-      fprintf(fp,"%s::%s(TTree *tree) : fChain(0) \n",vclassname.Data(),vclassname.Data());
+      fprintf(fp,"%s::%s(TTree *tree) : fChain(0) \n",cppClassName.Data(),cppClassName.Data());
       fprintf(fp,"{\n");
       fprintf(fp,"// if parameter tree is not specified (or zero), connect the file\n");
       fprintf(fp,"// used to generate this class and read the Tree.\n");
@@ -1200,7 +1202,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
 
 // generate code for class destructor()
    if (!opt.Contains("selector")) {
-      fprintf(fp,"%s::~%s()\n",vclassname.Data(),vclassname.Data());
+      fprintf(fp,"%s::~%s()\n",cppClassName.Data(),cppClassName.Data());
       fprintf(fp,"{\n");
       fprintf(fp,"   if (!fChain) return;\n");
       if (isHbook) {
@@ -1213,7 +1215,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    }
 // generate code for class member function GetEntry()
    if (!opt.Contains("selector")) {
-      fprintf(fp,"Int_t %s::GetEntry(Long64_t entry)\n",vclassname.Data());
+      fprintf(fp,"Int_t %s::GetEntry(Long64_t entry)\n",cppClassName.Data());
       fprintf(fp,"{\n");
       fprintf(fp,"// Read contents of entry.\n");
 
@@ -1223,7 +1225,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    }
 // generate code for class member function LoadTree()
    if (!opt.Contains("selector")) {
-      fprintf(fp,"Long64_t %s::LoadTree(Long64_t entry)\n",vclassname.Data());
+      fprintf(fp,"Long64_t %s::LoadTree(Long64_t entry)\n",cppClassName.Data());
       fprintf(fp,"{\n");
       fprintf(fp,"// Set the environment to read one entry\n");
       fprintf(fp,"   if (!fChain) return -5;\n");
@@ -1239,7 +1241,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    }
 
 // generate code for class member function Init(), first pass = get branch pointer
-   fprintf(fp,"void %s::Init(TTree *tree)\n",vclassname.Data());
+   fprintf(fp,"void %s::Init(TTree *tree)\n",cppClassName.Data());
    fprintf(fp,"{\n");
    fprintf(fp,"   // The Init() function is called when the selector needs to initialize\n"
               "   // a new tree or chain. Typically here the branch addresses and branch\n"
@@ -1352,7 +1354,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    fprintf(fp,"\n");
 
 // generate code for class member function Notify()
-   fprintf(fp,"bool %s::Notify()\n",vclassname.Data());
+   fprintf(fp,"bool %s::Notify()\n",cppClassName.Data());
    fprintf(fp,"{\n");
    fprintf(fp,"   // The Notify() function is called when a new file is opened. This\n"
               "   // can be either for a new TTree in a TChain or when when a new TTree\n"
@@ -1365,7 +1367,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
 
 // generate code for class member function Show()
    if (!opt.Contains("selector")) {
-      fprintf(fp,"void %s::Show(Long64_t entry)\n",vclassname.Data());
+      fprintf(fp,"void %s::Show(Long64_t entry)\n",cppClassName.Data());
       fprintf(fp,"{\n");
       fprintf(fp,"// Print contents of entry.\n");
       fprintf(fp,"// If entry is not specified, print current entry\n");
@@ -1376,7 +1378,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    }
 // generate code for class member function Cut()
    if (!opt.Contains("selector")) {
-      fprintf(fp,"Int_t %s::Cut(Long64_t entry)\n",classname);
+      fprintf(fp,"Int_t %s::Cut(Long64_t entry)\n",cppClassName.Data());
       fprintf(fp,"{\n");
       fprintf(fp,"// This function may be called from Loop.\n");
       fprintf(fp,"// returns  1 if entry is accepted.\n");
@@ -1385,22 +1387,22 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fp,"   return 1;\n");
       fprintf(fp,"}\n");
    }
-   fprintf(fp,"#endif // #ifdef %s_cxx\n",vclassname.Data());
+   fprintf(fp,"#endif // #ifdef %s_cxx\n",cppClassName.Data());
 
 //======================Generate classname.C=====================
    if (!opt.Contains("selector")) {
       // generate code for class member function Loop()
-      fprintf(fpc,"#define %s_cxx\n",vclassname.Data());
+      fprintf(fpc,"#define %s_cxx\n",cppClassName.Data());
       fprintf(fpc,"#include \"%s\"\n",thead.Data());
       fprintf(fpc,"#include <TH2.h>\n");
       fprintf(fpc,"#include <TStyle.h>\n");
       fprintf(fpc,"#include <TCanvas.h>\n");
       fprintf(fpc,"\n");
-      fprintf(fpc,"void %s::Loop()\n",vclassname.Data());
+      fprintf(fpc,"void %s::Loop()\n",cppClassName.Data());
       fprintf(fpc,"{\n");
       fprintf(fpc,"//   In a ROOT session, you can do:\n");
-      fprintf(fpc,"//      root> .L %s.C\n",classname);
-      fprintf(fpc,"//      root> %s t\n",vclassname.Data());
+      fprintf(fpc,"//      root> .L %s.C\n",fileNameStem.Data());
+      fprintf(fpc,"//      root> %s t\n",cppClassName.Data());
       fprintf(fpc,"//      root> t.GetEntry(12); // Fill t data members with entry number 12\n");
       fprintf(fpc,"//      root> t.Show();       // Show values of entry 12\n");
       fprintf(fpc,"//      root> t.Show(16);     // Read and show values of entry 16\n");
@@ -1433,8 +1435,8 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    }
    if (opt.Contains("selector")) {
       // generate usage comments and list of includes
-      fprintf(fpc,"#define %s_cxx\n",vclassname.Data());
-      fprintf(fpc,"// The class definition in %s.h has been generated automatically\n",classname);
+      fprintf(fpc,"#define %s_cxx\n",cppClassName.Data());
+      fprintf(fpc,"// The class definition in %s.h has been generated automatically\n",fileNameStem.Data());
       fprintf(fpc,"// by the ROOT utility TTree::MakeSelector(). This class is derived\n");
       fprintf(fpc,"// from the ROOT class TSelector. For more information on the TSelector\n"
                   "// framework see $ROOTSYS/README/README.SELECTOR or the ROOT User Manual.\n\n");
@@ -1452,9 +1454,9 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fpc,"//\n");
       fprintf(fpc,"// To use this file, try the following session on your Tree T:\n");
       fprintf(fpc,"//\n");
-      fprintf(fpc,"// root> T->Process(\"%s.C\")\n",classname);
-      fprintf(fpc,"// root> T->Process(\"%s.C\",\"some options\")\n",classname);
-      fprintf(fpc,"// root> T->Process(\"%s.C+\")\n",classname);
+      fprintf(fpc,"// root> T->Process(\"%s.C\")\n",fileNameStem.Data());
+      fprintf(fpc,"// root> T->Process(\"%s.C\",\"some options\")\n",fileNameStem.Data());
+      fprintf(fpc,"// root> T->Process(\"%s.C+\")\n",fileNameStem.Data());
       fprintf(fpc,"//\n\n");
       fprintf(fpc,"#include \"%s\"\n",thead.Data());
       fprintf(fpc,"#include <TH2.h>\n");
@@ -1462,7 +1464,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fpc,"\n");
       // generate code for class member function Begin
       fprintf(fpc,"\n");
-      fprintf(fpc,"void %s::Begin(TTree * /*tree*/)\n",vclassname.Data());
+      fprintf(fpc,"void %s::Begin(TTree * /*tree*/)\n",cppClassName.Data());
       fprintf(fpc,"{\n");
       fprintf(fpc,"   // The Begin() function is called at the start of the query.\n");
       fprintf(fpc,"   // When running with PROOF Begin() is only called on the client.\n");
@@ -1473,7 +1475,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fpc,"}\n");
       // generate code for class member function SlaveBegin
       fprintf(fpc,"\n");
-      fprintf(fpc,"void %s::SlaveBegin(TTree * /*tree*/)\n",vclassname.Data());
+      fprintf(fpc,"void %s::SlaveBegin(TTree * /*tree*/)\n",cppClassName.Data());
       fprintf(fpc,"{\n");
       fprintf(fpc,"   // The SlaveBegin() function is called after the Begin() function.\n");
       fprintf(fpc,"   // When running with PROOF SlaveBegin() is called on each slave server.\n");
@@ -1484,7 +1486,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fpc,"}\n");
       // generate code for class member function Process
       fprintf(fpc,"\n");
-      fprintf(fpc,"bool %s::Process(Long64_t entry)\n",vclassname.Data());
+      fprintf(fpc,"bool %s::Process(Long64_t entry)\n",cppClassName.Data());
       fprintf(fpc,"{\n");
       fprintf(fpc,"   // The Process() function is called for each entry in the tree (or possibly\n"
                   "   // keyed object in the case of PROOF) to be processed. The entry argument\n"
@@ -1502,13 +1504,13 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
                   "   //\n"
                   "   // Use fStatus to set the return value of TTree::Process().\n"
                   "   //\n"
-                  "   // The return value is currently not used.\n\n", vclassname.Data());
+                  "   // The return value is currently not used.\n\n", cppClassName.Data());
       fprintf(fpc,"\n");
       fprintf(fpc,"   return true;\n");
       fprintf(fpc,"}\n");
       // generate code for class member function SlaveTerminate
       fprintf(fpc,"\n");
-      fprintf(fpc,"void %s::SlaveTerminate()\n",vclassname.Data());
+      fprintf(fpc,"void %s::SlaveTerminate()\n",cppClassName.Data());
       fprintf(fpc,"{\n");
       fprintf(fpc,"   // The SlaveTerminate() function is called after all entries or objects\n"
                   "   // have been processed. When running with PROOF SlaveTerminate() is called\n"
@@ -1518,7 +1520,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fpc,"}\n");
       // generate code for class member function Terminate
       fprintf(fpc,"\n");
-      fprintf(fpc,"void %s::Terminate()\n",vclassname.Data());
+      fprintf(fpc,"void %s::Terminate()\n",cppClassName.Data());
       fprintf(fpc,"{\n");
       fprintf(fpc,"   // The Terminate() function is the last function to be called during\n"
                   "   // a query. It always runs on the client, it can be used to present\n"
