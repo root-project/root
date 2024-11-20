@@ -3315,7 +3315,7 @@ void ROOT::TMetaUtils::GetCppName(std::string &out, const char *in)
    }
 
    // If out is empty, or if it starts with a number, it's not a valid C++ variable. Prepend a "_"
-   if (out.empty() || is_digit(out[0]))
+   if (out.empty() || isdigit(out[0]))
       out.insert(out.begin(), '_');
 }
 
