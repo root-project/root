@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unordered_set>
+#include <cctype>
 
 #include "RConfigure.h"
 #include <ROOT/RConfig.hxx>
@@ -3313,10 +3314,9 @@ void ROOT::TMetaUtils::GetCppName(std::string &out, const char *in)
          out.push_back(c);
    }
 
-   // Remove initial numbers if any
-   auto firstNonNumber = out.find_first_not_of("0123456789");
-   if (firstNonNumber != std::string::npos)
-      out.replace(0,firstNonNumber,"");
+   // If out is empty, or if it starts with a number, it's not a valid C++ variable. Prepend a "_"
+   if (out.empty() || std::is_digit(out[0]))
+      out.insert(out.begin(), "_");
 }
 
 static clang::SourceLocation
