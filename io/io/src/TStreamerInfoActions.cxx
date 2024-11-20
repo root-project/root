@@ -244,6 +244,27 @@ namespace TStreamerInfoActions
       }
    }
 
+   Int_t ReadStreamerCase(TBuffer &buf, void *addr, const TConfiguration *config)
+   {
+      UInt_t start, count;
+      /* Version_t v = */ buf.ReadVersion(&start, &count, config->fInfo->IsA());
+
+      ReadViaExtStreamer(buf, addr, config);
+
+      buf.CheckByteCount(start, count, config->fCompInfo->fElem->GetFullName());
+      return 0;
+   }
+
+   Int_t WriteStreamerCase(TBuffer &buf, void *addr, const TConfiguration *config)
+   {
+      UInt_t pos = buf.WriteVersion(config->fInfo->IsA(), kTRUE);
+
+      WriteViaExtStreamer(buf, addr, config);
+
+      buf.SetByteCount(pos, kTRUE);
+      return 0;
+   }
+
    template <>
    INLINE_TEMPLATE_ARGS Int_t ReadBasicType<BitsMarker>(TBuffer &buf, void *addr, const TConfiguration *config)
    {
@@ -305,16 +326,6 @@ namespace TStreamerInfoActions
       return 0;
    }
 
-   INLINE_TEMPLATE_ARGS Int_t WriteTextStreamer(TBuffer &buf, void *addr, const TConfiguration *config)
-   {
-      void *x = (void *)(((char *)addr) + config->fOffset);
-      TMemberStreamer *pstreamer = config->fCompInfo->fStreamer;
-      UInt_t pos = buf.WriteVersion(config->fInfo->IsA(), kTRUE);
-      (*pstreamer)(buf, x, config->fCompInfo->fLength);
-      buf.SetByteCount(pos, kTRUE);
-      return 0;
-   }
-
    INLINE_TEMPLATE_ARGS Int_t ReadTextObject(TBuffer &buf, void *addr, const TConfiguration *config)
    {
       void *x = (void *)(((char *)addr) + config->fOffset);
@@ -334,18 +345,6 @@ namespace TStreamerInfoActions
       void *x = (void *)(((char *)addr) + config->fOffset);
       // Idea: Implement buf.ReadBasic/Primitive to avoid the return value
       ((TBufferText *)&buf)->ReadBaseClass(x, (TStreamerBase *)config->fCompInfo->fElem);
-      return 0;
-   }
-
-   INLINE_TEMPLATE_ARGS Int_t ReadTextStreamer(TBuffer &buf, void *addr, const TConfiguration *config)
-   {
-      void *x = (void *)(((char *)addr) + config->fOffset);
-      TMemberStreamer *pstreamer = config->fCompInfo->fStreamer;
-
-      UInt_t start, count;
-      /* Version_t v = */ buf.ReadVersion(&start, &count, config->fCompInfo->fClass);
-      (*pstreamer)(buf, x, config->fCompInfo->fLength);
-      buf.CheckByteCount(start, count, config->fCompInfo->fElem->GetFullName());
       return 0;
    }
 
@@ -4421,6 +4420,13 @@ void TStreamerInfo::AddReadAction(TStreamerInfoActions::TActionSequence *readSeq
          }
          break;
       }
+      case TStreamerInfo::kStreamer:
+         if (fOldVersion >= 3)
+            readSequence->AddAction( ReadStreamerCase, new TGenericConfiguration(this,i,compinfo, compinfo->fOffset) );
+         else
+            // Use the slower path for legacy files
+            readSequence->AddAction( GenericReadAction, new TGenericConfiguration(this,i,compinfo) );
+         break;
       default:
          readSequence->AddAction( GenericReadAction, new TGenericConfiguration(this,i,compinfo) );
          break;
@@ -4482,7 +4488,7 @@ void TStreamerInfo::AddReadTextAction(TStreamerInfoActions::TActionSequence *rea
    case TStreamerInfo::kBase: isBase = kTRUE; break;
 
    case TStreamerInfo::kStreamer:
-      readSequence->AddAction(ReadTextStreamer, new TGenericConfiguration(this, i, compinfo));
+      readSequence->AddAction(ReadStreamerCase, new TGenericConfiguration(this, i, compinfo));
       break;
 
    default: generic = kTRUE; break;
@@ -4490,7 +4496,7 @@ void TStreamerInfo::AddReadTextAction(TStreamerInfoActions::TActionSequence *rea
 
    if (isBase) {
       if (compinfo->fStreamer) {
-         readSequence->AddAction(ReadTextStreamer, new TGenericConfiguration(this, i, compinfo));
+         readSequence->AddAction(ReadStreamerCase, new TGenericConfiguration(this, i, compinfo));
       } else {
          readSequence->AddAction(ReadTextBaseClass, new TGenericConfiguration(this, i, compinfo));
       }
@@ -4859,7 +4865,7 @@ void TStreamerInfo::AddWriteTextAction(TStreamerInfoActions::TActionSequence *wr
    case TStreamerInfo::kBase: isBase = kTRUE; break;
 
    case TStreamerInfo::kStreamer:
-      writeSequence->AddAction(WriteTextStreamer, new TGenericConfiguration(this, i, compinfo));
+      writeSequence->AddAction(WriteStreamerCase, new TGenericConfiguration(this, i, compinfo));
       break;
 
    // case TStreamerInfo::kBits:    writeSequence->AddAction( WriteBasicType<BitsMarker>, new
@@ -4949,7 +4955,7 @@ void TStreamerInfo::AddWriteTextAction(TStreamerInfoActions::TActionSequence *wr
 
    if (isBase) {
       if (compinfo->fStreamer) {
-         writeSequence->AddAction(WriteTextStreamer, new TGenericConfiguration(this, i, compinfo));
+         writeSequence->AddAction(WriteStreamerCase, new TGenericConfiguration(this, i, compinfo));
       } else {
          writeSequence->AddAction(WriteTextBaseClass, new TGenericConfiguration(this, i, compinfo));
       }
