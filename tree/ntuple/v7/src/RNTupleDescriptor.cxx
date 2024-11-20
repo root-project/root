@@ -179,21 +179,32 @@ ROOT::Experimental::RColumnDescriptor ROOT::Experimental::RColumnDescriptor::Clo
 ROOT::Experimental::RClusterDescriptor::RPageRange::RPageInfoExtended
 ROOT::Experimental::RClusterDescriptor::RPageRange::Find(ClusterSize_t::ValueType idxInCluster) const
 {
-   // TODO(jblomer): binary search
-   RPageInfo pageInfo;
-   decltype(idxInCluster) firstInPage = 0;
-   NTupleSize_t pageNo = 0;
-   for (const auto &pi : fPageInfos) {
-      if (firstInPage + pi.fNElements > idxInCluster) {
-         pageInfo = pi;
-         break;
+   const auto N = fCumulativeNElements.size();
+   R__ASSERT(N > 0);
+   R__ASSERT(N == fPageInfos.size());
+
+   std::size_t left = 0;
+   std::size_t right = N - 1;
+   std::size_t midpoint = N;
+   while (left <= right) {
+      midpoint = (left + right) / 2;
+      if (fCumulativeNElements[midpoint] <= idxInCluster) {
+         left = midpoint + 1;
+         continue;
       }
-      firstInPage += pi.fNElements;
-      ++pageNo;
+
+      if ((midpoint == 0) || (fCumulativeNElements[midpoint - 1] <= idxInCluster))
+         break;
+
+      right = midpoint - 1;
    }
+   R__ASSERT(midpoint < N);
+
+   auto pageInfo = fPageInfos[midpoint];
+   decltype(idxInCluster) firstInPage = (midpoint == 0) ? 0 : fCumulativeNElements[midpoint - 1];
    R__ASSERT(firstInPage <= idxInCluster);
    R__ASSERT((firstInPage + pageInfo.fNElements) > idxInCluster);
-   return RPageInfoExtended{pageInfo, firstInPage, pageNo};
+   return RPageInfoExtended{pageInfo, firstInPage, midpoint};
 }
 
 std::size_t
@@ -824,9 +835,16 @@ ROOT::Experimental::Internal::RClusterDescriptorBuilder::MoveDescriptor()
       return R__FAIL("unset cluster ID");
    if (fCluster.fNEntries == 0)
       return R__FAIL("empty cluster");
-   for (const auto &pr : fCluster.fPageRanges) {
+   for (auto &pr : fCluster.fPageRanges) {
       if (fCluster.fColumnRanges.count(pr.first) == 0) {
          return R__FAIL("missing column range");
+      }
+      pr.second.fCumulativeNElements.clear();
+      pr.second.fCumulativeNElements.reserve(pr.second.fPageInfos.size());
+      NTupleSize_t sum = 0;
+      for (const auto &pi : pr.second.fPageInfos) {
+         sum += pi.fNElements;
+         pr.second.fCumulativeNElements.emplace_back(sum);
       }
    }
    RClusterDescriptor result;

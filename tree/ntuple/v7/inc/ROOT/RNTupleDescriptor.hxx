@@ -279,6 +279,10 @@ public:
       std::size_t ExtendToFitColumnRange(const RColumnRange &columnRange, const Internal::RColumnElementBase &element,
                                          std::size_t pageSize);
 
+      /// Has the same length than fPageInfos and stores the sum of the number of elements of all the pages
+      /// up to and including a given index. Used for binary search in Find().
+      std::vector<NTupleSize_t> fCumulativeNElements;
+
    public:
       /// We do not need to store the element size / uncompressed page size because we know to which column
       /// the page belongs
@@ -319,6 +323,7 @@ public:
          RPageRange clone;
          clone.fPhysicalColumnId = fPhysicalColumnId;
          clone.fPageInfos = fPageInfos;
+         clone.fCumulativeNElements = fCumulativeNElements;
          return clone;
       }
 
