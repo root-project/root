@@ -207,6 +207,35 @@ namespace TStreamerInfoActions
       TConfiguration *Copy() override { return new TConfObject(*this); }
    };
 
+   struct TConfSubSequence : public TConfiguration
+   {
+      std::unique_ptr<TStreamerInfoActions::TActionSequence> fActions;
+
+      TConfSubSequence(TVirtualStreamerInfo *info, UInt_t id, TCompInfo_t *compinfo, Int_t offset,
+                       std::unique_ptr<TStreamerInfoActions::TActionSequence> actions) :
+                       TConfiguration(info, id, compinfo, offset),
+                       fActions(std::move(actions))
+      {}
+
+      TConfSubSequence(const TConfSubSequence &input) : TConfiguration(input),
+         fActions(input.fActions->CreateCopy())
+      {}
+
+      void AddToOffset(Int_t delta) override
+      {
+         // Add the (potentially negative) delta to all the configuration's offset.  This is used by
+         // TBranchElement in the case of split sub-object.
+
+         if (fOffset != TVirtualStreamerInfo::kMissing) {
+            fOffset += delta;
+            if (fActions)
+               fActions->AddToOffset(delta);
+         }
+      }
+
+      TConfiguration *Copy() override { return new TConfSubSequence(*this); };
+   };
+
    struct TConfStreamerLoop : public TConfiguration {
       bool fIsPtrPtr = false; // Which are we, an array of objects or an array of pointers to objects?
 
@@ -1596,8 +1625,35 @@ namespace TStreamerInfoActions
       }
    }
 
+   ESelectLooper SelectLooper(TVirtualCollectionProxy *proxy)
+   {
+      if (proxy)
+         return SelectLooper(*proxy);
+      else
+         return kVectorPtrLooper;
+   }
+
+
    template<typename Looper>
    struct CollectionLooper {
+
+      static std::unique_ptr<TStreamerInfoActions::TActionSequence>
+         CreateActionSquence(TStreamerInfo &info, TLoopConfiguration *loopConfig)
+      {
+         TLoopConfiguration *localLoopConfig = loopConfig ? loopConfig->Copy() : nullptr;
+         std::unique_ptr<TStreamerInfoActions::TActionSequence> actions(
+            TActionSequence::CreateReadMemberWiseActions(info, localLoopConfig));
+         return actions;
+      }
+
+      static inline Int_t SubSequenceAction(TBuffer &buf, void *start, const void *end, const TLoopConfiguration * /* loopconfig */, const TConfiguration *config)
+      {
+         auto conf = (TConfSubSequence*)config;
+         auto actions = conf->fActions.get();
+         // FIXME: need to update the signature of ApplySequence.
+         buf.ApplySequence(*actions, start, const_cast<void*>(end));
+         return 0;
+      }
 
       static inline Int_t ReadStreamerCase(TBuffer &buf, void *start, const void *end, const TLoopConfiguration * loopconfig, const TConfiguration *config)
       {
@@ -2535,12 +2591,28 @@ namespace TStreamerInfoActions
       template <bool kIsText>
       using WriteStreamerLoop = CollectionLooper<VectorPtrLooper>::WriteStreamerLoop<kIsText, const void *>;
 
+      static std::unique_ptr<TStreamerInfoActions::TActionSequence>
+         CreateActionSquence(TStreamerInfo &info, TLoopConfiguration *)
+      {
+         using unique_ptr = std::unique_ptr<TStreamerInfoActions::TActionSequence>;
+         return unique_ptr(info.GetReadMemberWiseActions(kTRUE)->CreateCopy());
+      }
+
       template <Int_t (*action)(TBuffer&,void *,const TConfiguration*)>
       static INLINE_TEMPLATE_ARGS Int_t LoopOverCollection(TBuffer &buf, void *start, const void *end, const TConfiguration *config)
       {
          for(void *iter = start; iter != end; iter = (char*)iter + sizeof(void*) ) {
             action(buf, *(void**)iter, config);
          }
+         return 0;
+      }
+
+      static inline Int_t SubSequenceAction(TBuffer &buf, void *start, const void *end, const TConfiguration *config)
+      {
+         auto conf = (TConfSubSequence*)config;
+         auto actions = conf->fActions.get();
+         // FIXME: need to update the signature of ApplySequence.
+         buf.ApplySequenceVecPtr(*actions, start, const_cast<void*>(end));
          return 0;
       }
 
@@ -3689,7 +3761,9 @@ static TConfiguredAction GetConvertCollectionReadAction(Int_t oldtype, Int_t new
 }
 
 template <class Looper>
-static TConfiguredAction GetCollectionReadAction(TVirtualStreamerInfo *info, TStreamerElement *element, Int_t type, UInt_t i, TStreamerInfo::TCompInfo_t *compinfo, Int_t offset)
+static TConfiguredAction
+GetCollectionReadAction(TVirtualStreamerInfo *info, TLoopConfiguration *loopConfig, TStreamerElement *element,
+                        Int_t type, UInt_t i, TStreamerInfo::TCompInfo_t *compinfo, Int_t offset)
 {
    switch (type) {
       // Read basic types.
@@ -4767,10 +4841,10 @@ void TStreamerInfo::AddReadMemberWiseVecPtrAction(TStreamerInfoActions::TActionS
    if (element->TestBit(TStreamerElement::kWrite)) return;
 
    if (element->TestBit(TStreamerElement::kCache)) {
-      TConfiguredAction action( GetCollectionReadAction<VectorLooper>(this,element,compinfo->fType,i,compinfo,compinfo->fOffset) );
+      TConfiguredAction action( GetCollectionReadAction<VectorLooper>(this,nullptr,element,compinfo->fType,i,compinfo,compinfo->fOffset) );
       readSequence->AddAction( UseCacheVectorPtrLoop, new TConfigurationUseCache(this,action,element->TestBit(TStreamerElement::kRepeat)) );
    } else {
-      readSequence->AddAction( GetCollectionReadAction<VectorPtrLooper>(this,element,compinfo->fType,i,compinfo,compinfo->fOffset) );
+      readSequence->AddAction( GetCollectionReadAction<VectorPtrLooper>(this,nullptr,element,compinfo->fType,i,compinfo,compinfo->fOffset) );
    }
 }
 
@@ -5183,37 +5257,44 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
       return new TStreamerInfoActions::TActionSequence(0,0);
    }
 
-   TStreamerInfo *sinfo = static_cast<TStreamerInfo*>(info);
-
-   UInt_t ndata = info->GetElements()->GetEntriesFast();
-   TStreamerInfoActions::TActionSequence *sequence = new TStreamerInfoActions::TActionSequence(info,ndata);
+   TLoopConfiguration *loopConfig = nullptr;
    if (IsDefaultVector(proxy))
    {
       if (proxy.HasPointers()) {
+         TStreamerInfo *sinfo = static_cast<TStreamerInfo*>(info);
          // Instead of the creating a new one let's copy the one from the StreamerInfo.
-         delete sequence;
-
-         sequence = sinfo->GetReadMemberWiseActions(kTRUE)->CreateCopy();
-
-         return sequence;
+         return sinfo->GetReadMemberWiseActions(kTRUE)->CreateCopy();
       }
 
       // We can speed up the iteration in case of vector.  We also know that all emulated collection are stored internally as a vector.
       Long_t increment = proxy.GetIncrement();
-      sequence->fLoopConfig = new TVectorLoopConfig(&proxy, increment, /* read */ kTRUE);
+      loopConfig = new TVectorLoopConfig(&proxy, increment, /* read */ kTRUE);
    } else if (proxy.GetCollectionType() == ROOT::kSTLset || proxy.GetCollectionType() == ROOT::kSTLunorderedset
               || proxy.GetCollectionType() == ROOT::kSTLmultiset || proxy.GetCollectionType() == ROOT::kSTLunorderedmultiset
               || proxy.GetCollectionType() == ROOT::kSTLmap || proxy.GetCollectionType() == ROOT::kSTLmultimap
               || proxy.GetCollectionType() == ROOT::kSTLunorderedmap || proxy.GetCollectionType() == ROOT::kSTLunorderedmultimap)
    {
       Long_t increment = proxy.GetIncrement();
-      sequence->fLoopConfig = new TVectorLoopConfig(&proxy, increment, /* read */ kTRUE);
+      loopConfig = new TVectorLoopConfig(&proxy, increment, /* read */ kTRUE);
       // sequence->fLoopConfig = new TAssocLoopConfig(proxy);
    } else {
-      sequence->fLoopConfig = new TGenericLoopConfig(&proxy, /* read */ kTRUE);
+      loopConfig = new TGenericLoopConfig(&proxy, /* read */ kTRUE);
    }
+
+   return CreateReadMemberWiseActions(*info, loopConfig);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Create the bundle of the actions necessary for the streaming memberwise of the content described by 'info' into the collection described by 'proxy'
+
+TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::CreateReadMemberWiseActions(TVirtualStreamerInfo &info, TLoopConfiguration *loopConfig)
+{
+   UInt_t ndata = info.GetElements()->GetEntriesFast();
+   TStreamerInfoActions::TActionSequence *sequence = new TStreamerInfoActions::TActionSequence(&info, ndata);
+   sequence->fLoopConfig = loopConfig;
+
    for (UInt_t i = 0; i < ndata; ++i) {
-      TStreamerElement *element = (TStreamerElement*) info->GetElements()->At(i);
+      TStreamerElement *element = (TStreamerElement*) info.GetElements()->At(i);
       if (!element) {
          break;
       }
@@ -5242,6 +5323,7 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
          }
       }
 
+      TStreamerInfo *sinfo = static_cast<TStreamerInfo*>(&info);
       TStreamerInfo::TCompInfo_t *compinfo = sinfo->fCompFull[i];
 
       Int_t oldType = element->GetType();
@@ -5257,7 +5339,7 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
             oldType += TVirtualStreamerInfo::kSkip;
          }
       }
-      switch (SelectLooper(proxy)) {
+      switch (SelectLooper(loopConfig ? loopConfig->fProxy : nullptr)) {
       case kAssociativeLooper:
 //         } else if (proxy.GetCollectionType() == ROOT::kSTLset || proxy.GetCollectionType() == ROOT::kSTLmultiset
 //                    || proxy.GetCollectionType() == ROOT::kSTLmap || proxy.GetCollectionType() == ROOT::kSTLmultimap) {
@@ -5266,20 +5348,20 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
       case kVectorPtrLooper:
          // We can speed up the iteration in case of vector.  We also know that all emulated collection are stored internally as a vector.
          if (element->TestBit(TStreamerElement::kCache)) {
-            TConfiguredAction action( GetCollectionReadAction<VectorLooper>(info,element,oldType,i,compinfo,offset) );
-            sequence->AddAction( UseCacheVectorLoop,  new TConfigurationUseCache(info,action,element->TestBit(TStreamerElement::kRepeat)) );
+            TConfiguredAction action( GetCollectionReadAction<VectorLooper>(&info,loopConfig,element,oldType,i,compinfo,offset) );
+            sequence->AddAction( UseCacheVectorLoop,  new TConfigurationUseCache(&info,action,element->TestBit(TStreamerElement::kRepeat)) );
          } else {
-            sequence->AddAction( GetCollectionReadAction<VectorLooper>(info,element,oldType,i,compinfo,offset));
+            sequence->AddAction( GetCollectionReadAction<VectorLooper>(&info,loopConfig,element,oldType,i,compinfo,offset));
          }
          break;
       case kGenericLooper:
       default:
          // The usual collection case.
          if (element->TestBit(TStreamerElement::kCache)) {
-            TConfiguredAction action( GetCollectionReadAction<VectorLooper>(info,element,oldType,i,compinfo,offset) );
-            sequence->AddAction( UseCacheGenericCollection, new TConfigurationUseCache(info,action,element->TestBit(TStreamerElement::kRepeat)) );
+            TConfiguredAction action( GetCollectionReadAction<VectorLooper>(&info,loopConfig,element,oldType,i,compinfo,offset) );
+            sequence->AddAction( UseCacheGenericCollection, new TConfigurationUseCache(&info,action,element->TestBit(TStreamerElement::kRepeat)) );
          } else {
-            sequence->AddAction( GetCollectionReadAction<GenericLooper>(info,element,oldType,i,compinfo,offset) );
+            sequence->AddAction( GetCollectionReadAction<GenericLooper>(&info,loopConfig,element,oldType,i,compinfo,offset) );
          }
          break;
       }
