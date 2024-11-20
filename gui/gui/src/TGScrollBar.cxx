@@ -430,13 +430,9 @@ TGHScrollBar::TGHScrollBar(const TGWindow *p, UInt_t w, UInt_t h,
                            UInt_t options, ULong_t back) :
     TGScrollBar(p, w, h, options, back)
 {
-   fHeadPic = fClient->GetPicture("arrow_left.xpm");
-   fTailPic = fClient->GetPicture("arrow_right.xpm");
+   fHeadPic = fClient->GetPictureOrEmpty("arrow_left.xpm");
+   fTailPic = fClient->GetPictureOrEmpty("arrow_right.xpm");
 
-   if (!fHeadPic || !fTailPic) {
-      Error("TGHScrollBar", "arrow_*.xpm not found");
-      return;
-   }
    fHead   = new TGScrollBarElement(this, fHeadPic, fgScrollBarWidth, fgScrollBarWidth,
                                     kRaisedFrame);
    fTail   = new TGScrollBarElement(this, fTailPic, fgScrollBarWidth, fgScrollBarWidth,
@@ -687,13 +683,9 @@ TGVScrollBar::TGVScrollBar(const TGWindow *p, UInt_t w, UInt_t h,
                            UInt_t options, ULong_t back) :
     TGScrollBar(p, w, h, options, back)
 {
-   fHeadPic = fClient->GetPicture("arrow_up.xpm");
-   fTailPic = fClient->GetPicture("arrow_down.xpm");
+   fHeadPic = fClient->GetPictureOrEmpty("arrow_up.xpm");
+   fTailPic = fClient->GetPictureOrEmpty("arrow_down.xpm");
 
-   if (!fHeadPic || !fTailPic) {
-      Error("TGVScrollBar", "arrow_*.xpm not found");
-      return;
-   }
    fHead   = new TGScrollBarElement(this, fHeadPic, fgScrollBarWidth, fgScrollBarWidth,
                                     kRaisedFrame);
    fTail   = new TGScrollBarElement(this, fTailPic, fgScrollBarWidth, fgScrollBarWidth,
