@@ -587,7 +587,7 @@ void RNTupleMerger::MergeCommonColumns(RClusterPool &clusterPool, DescriptorId_t
          if (needsCompressionChange) {
             const auto uncompressedSize = srcColElement->GetSize() * sealedPage.GetNElements();
             auto &buffer = sealedPageData.fBuffers[pageBufferBaseIdx + pageIdx];
-            buffer = std::make_unique<std::uint8_t[]>(uncompressedSize + checksumSize);
+            buffer = MakeUninitArray<std::uint8_t>(uncompressedSize + checksumSize);
             RChangeCompressionFunc compressTask{
                *srcColElement, *dstColElement, mergeData.fMergeOpts, sealedPage, *fPageAlloc, buffer.get(),
             };
