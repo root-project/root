@@ -4420,6 +4420,10 @@ void TStreamerInfo::AddReadAction(TStreamerInfoActions::TActionSequence *readSeq
          }
          break;
       }
+      case TStreamerInfo::kStreamLoop:
+      case TStreamerInfo::kOffsetL + TStreamerInfo::kStreamLoop:
+         readSequence->AddAction( ReadStreamerLoop<false>, new TGenericConfiguration(this, i, compinfo, compinfo->fOffset) );
+         break;
       case TStreamerInfo::kStreamer:
          if (fOldVersion >= 3)
             readSequence->AddAction( ReadStreamerCase, new TGenericConfiguration(this,i,compinfo, compinfo->fOffset) );
