@@ -397,7 +397,6 @@ ROOT::Experimental::RNTupleDescriptor::FindNextClusterId(DescriptorId_t clusterI
    return kInvalidDescriptorId;
 }
 
-// TODO(jblomer): fix for cases of sharded clasters
 ROOT::Experimental::DescriptorId_t
 ROOT::Experimental::RNTupleDescriptor::FindPrevClusterId(DescriptorId_t clusterId) const
 {
@@ -554,6 +553,7 @@ std::unique_ptr<ROOT::Experimental::RNTupleDescriptor> ROOT::Experimental::RNTup
       clone->fColumnDescriptors.emplace(d.first, d.second.Clone());
    for (const auto &d : fClusterGroupDescriptors)
       clone->fClusterGroupDescriptors.emplace(d.first, d.second.Clone());
+   clone->fSortedClusterGroupIds = fSortedClusterGroupIds;
    for (const auto &d : fClusterDescriptors)
       clone->fClusterDescriptors.emplace(d.first, d.second.Clone());
    for (const auto &d : fExtraTypeInfoDescriptors)
@@ -827,6 +827,15 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleDescripto
 ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Internal::RNTupleDescriptorBuilder::MoveDescriptor()
 {
    EnsureValidDescriptor().ThrowOnError();
+   fDescriptor.fSortedClusterGroupIds.reserve(fDescriptor.fClusterGroupDescriptors.size());
+   for (const auto &[id, _] : fDescriptor.fClusterGroupDescriptors)
+      fDescriptor.fSortedClusterGroupIds.emplace_back(id);
+   std::sort(fDescriptor.fSortedClusterGroupIds.begin(), fDescriptor.fSortedClusterGroupIds.end(),
+             [this](DescriptorId_t a, DescriptorId_t b)
+             {
+               return fDescriptor.fClusterGroupDescriptors[a].GetMinEntry() <
+                      fDescriptor.fClusterGroupDescriptors[b].GetMinEntry();
+             });
    RNTupleDescriptor result;
    std::swap(result, fDescriptor);
    return result;
