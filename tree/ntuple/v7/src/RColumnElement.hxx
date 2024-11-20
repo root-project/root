@@ -318,6 +318,7 @@ namespace {
 
 using ROOT::Experimental::EColumnType;
 using ROOT::Experimental::Internal::kTestFutureType;
+using ROOT::Experimental::Internal::MakeUninitArray;
 using ROOT::Experimental::Internal::RColumnElementBase;
 
 template <typename CppT, EColumnType>
@@ -903,7 +904,7 @@ public:
 #if R__LITTLE_ENDIAN == 0
       // TODO(gparolini): to avoid this extra allocation we might want to perform byte swapping
       // directly in the Pack/UnpackBits functions.
-      auto bswapped = std::make_unique<float[]>(count);
+      auto bswapped = MakeUninitArray<float>(count);
       CopyBswap<sizeof(float)>(bswapped.get(), src, count);
       const auto *srcLe = bswapped.get();
 #else
@@ -936,7 +937,7 @@ public:
 
       // Cast doubles to float before packing them
       // TODO(gparolini): avoid this allocation
-      auto srcFloat = std::make_unique<float[]>(count);
+      auto srcFloat = MakeUninitArray<float>(count);
       const double *srcDouble = reinterpret_cast<const double *>(src);
       for (std::size_t i = 0; i < count; ++i)
          srcFloat[i] = static_cast<float>(srcDouble[i]);
@@ -944,7 +945,7 @@ public:
 #if R__LITTLE_ENDIAN == 0
       // TODO(gparolini): to avoid this extra allocation we might want to perform byte swapping
       // directly in the Pack/UnpackBits functions.
-      auto bswapped = std::make_unique<float[]>(count);
+      auto bswapped = MakeUninitArray<float>(count);
       CopyBswap<sizeof(float)>(bswapped.get(), srcFloat.get(), count);
       const float *srcLe = bswapped.get();
 #else
@@ -960,7 +961,7 @@ public:
       R__ASSERT(GetPackedSize(count) == MinBufSize(count, fBitsOnStorage));
 
       // TODO(gparolini): avoid this allocation
-      auto dstFloat = std::make_unique<float[]>(count);
+      auto dstFloat = MakeUninitArray<float>(count);
       UnpackBits(dstFloat.get(), src, count, sizeof(float), fBitsOnStorage);
 #if R__LITTLE_ENDIAN == 0
       InPlaceBswap<sizeof(float)>(dstFloat.get(), count);
@@ -1110,7 +1111,7 @@ public:
       using namespace ROOT::Experimental;
 
       // TODO(gparolini): see if we can avoid this allocation
-      auto quantized = std::make_unique<Quantize::Quantized_t[]>(count);
+      auto quantized = MakeUninitArray<Quantize::Quantized_t>(count);
       assert(fValueRange);
       const auto [min, max] = *fValueRange;
       const int nOutOfRange =
@@ -1128,7 +1129,7 @@ public:
       using namespace ROOT::Experimental;
 
       // TODO(gparolini): see if we can avoid this allocation
-      auto quantized = std::make_unique<Quantize::Quantized_t[]>(count);
+      auto quantized = MakeUninitArray<Quantize::Quantized_t>(count);
       assert(fValueRange);
       const auto [min, max] = *fValueRange;
       Internal::BitPacking::UnpackBits(quantized.get(), src, count, sizeof(Quantize::Quantized_t), fBitsOnStorage);
