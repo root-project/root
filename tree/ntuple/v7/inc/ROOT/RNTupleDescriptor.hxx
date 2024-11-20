@@ -561,6 +561,10 @@ private:
    std::unordered_map<DescriptorId_t, RFieldDescriptor> fFieldDescriptors;
    std::unordered_map<DescriptorId_t, RColumnDescriptor> fColumnDescriptors;
    std::unordered_map<DescriptorId_t, RClusterGroupDescriptor> fClusterGroupDescriptors;
+   /// References cluster groups sorted by entry range and thus allows for binary search.
+   /// Note that this list is empty during the descriptor building process and will only be
+   /// created when the final descriptor is extracted from the builder.
+   std::vector<DescriptorId_t> fSortedClusterGroupIds;
    /// May contain only a subset of all the available clusters, e.g. the clusters of the current file
    /// from a chain of files
    std::unordered_map<DescriptorId_t, RClusterDescriptor> fClusterDescriptors;
