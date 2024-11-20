@@ -20,6 +20,7 @@ The following people have contributed to this new version:
  Guilherme Amadio, CERN/IT,\
  Bertrand Bellenot, CERN/EP-SFT,\
  Jakob Blomer, CERN/EP-SFT,\
+ Patrick Bos, Netherlands eScience Center,\
  Rene Brun,\
  Carsten Burgard, DESY\
  Will Buttinger, RAL,\
@@ -203,6 +204,14 @@ This should have minimal impact on users, since one should usual use Minuit 2 vi
 
 ## RooFit Libraries
 
+### Error handling in MultiProcess-enabled fits
+
+The `MultiProcess`-based fitting stack now handles errors during fits.
+Error signaling in (legacy) RooFit happens through two mechanisms: `logEvalError` calls and `RooNaNPacker`-enhanced NaN doubles.
+Both are now implemented and working for `MultiProcess`-based fits as well.
+See [this PR](https://github.com/root-project/root/pull/15797) for more details.
+This enables the latest ATLAS Higgs combination fits to complete successfully, and also other fits that encounter NaN values or other expected errors.
+
 ### Miscellaneous
 
 * Setting `useHashMapForFind(true)` is not supported for RooArgLists anymore, since hash-assisted finding by name hash can be ambiguous: a RooArgList is allowed to have different elements with the same name. If you want to do fast lookups by name, convert your RooArgList to a RooArgSet.
@@ -214,6 +223,8 @@ This should have minimal impact on users, since one should usual use Minuit 2 vi
 * Initial error values can be used for initializating the Hessian matrix to be used in Minuit2 minimization algorithms by setting the `RooMinimizer::Config` option `setInitialCovariance` to `true`. These values correspond to the diagonal entries of the initial covariance matrix.
 
 * Fixed a bug where in some circumstances `hadd` would not correctly merge objects in nested folders of a ROOT file.
+
+* `RooFit::MultiProcess`-enabled fitting developer/advanced documentation -- [available through GitHub](https://github.com/root-project/root/blob/master/roofit/doc/developers/test_statistics.md) -- was updated. It now contains the most up to date usage instructions for optimizing load balancing (and hence run speed) using this backend.
 
 ### Deprecations
 
