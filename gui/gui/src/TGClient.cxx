@@ -291,6 +291,12 @@ const TGPicture *TGClient::GetPicture(const char *name)
    return fPicturePool->GetPicture(name);
 }
 
+const TGPicture *TGClient::GetPictureOrEmpty(const char *name)
+{
+   return fPicturePool->GetPictureOrEmpty(name);
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Get picture with specified size from pool (picture will be scaled if
 /// necessary). Picture must be freed using TGClient::FreePicture(). If
