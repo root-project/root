@@ -304,7 +304,13 @@ Bool_t TGScrollBarElement::HandleCrossing(Event_t *event)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
-
+/// \param p The parent window
+/// \param w The scrollbar width
+/// \param h The scrollbar height
+/// \param options A bitmask of options (\see EFrameType)
+/// \param back The background color
+/// \param headPicName Filename of the "head" picture (e.g. left arrow for a horizontal scrollbar)
+/// \param tailPicName Filename of the "tail" picture (e.g. right arrow for a horizontal scrollbar)
 TGScrollBar::TGScrollBar(const TGWindow *p, UInt_t w, UInt_t h,
                          UInt_t options, Pixel_t back, const char *headPicName, const char *tailPicName) :
    TGFrame(p, w, h, options | kOwnBackground, back),
