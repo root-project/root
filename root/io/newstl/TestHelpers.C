@@ -6,9 +6,8 @@
 #include "TObjString.h"
 #include <utility>
 
-void fillListOfDir(TList &l) {
+void fillListOfDir(TString directory, TList &l) {
    
-   TString directory = ".";
    void *dir = gSystem->OpenDirectory(directory);
 
    const char *file = 0;
@@ -24,13 +23,15 @@ void fillListOfDir(TList &l) {
          if (strcmp(file,"latest")==0) continue;
 
          TString s = file;
-//          cout << "found the directory " << file << endl;
          if ( (basename!=file) && s.Index(re) == kNPOS) continue;
 
-         TString vfile = gSystem->ConcatFileName(file,"vector.root");
+	 TString dirname = file;
+	 if (directory != ".")
+	    dirname = gSystem->ConcatFileName(directory, file);
+
+         TString vfile = gSystem->ConcatFileName(dirname, "vector.root");
          if (gSystem->GetPathInfo(vfile,(Long_t*)0,(Long_t*)0,(Long_t*)0,0)==0) {
-//             cout << "found vector in " << file << endl;
-            l.Add(new TObjString(file));
+            l.Add(new TObjString(dirname));
          } else {
 //             cout << "did not find vector in " << file << endl;
          }
@@ -38,17 +39,29 @@ void fillListOfDir(TList &l) {
       }
       gSystem->FreeDirectory(dir);
 
-      //sort the files in alphanumeric order
-      l.Sort();
+   }
+}
 
+void fillListOfDir(TList &l) {
+   fillListOfDir(".", l);
+   fillListOfDir("ArchivedDataFiles", l);
+   const char *otherdir = gSystem->Getenv("ROOT_NEWSTL_DATAFILE_DIR");
+   if (otherdir && otherdir[0])
+      fillListOfDir(otherdir, l);
+
+   // Sort the files in alphanumeric order
+   l.Sort();
+
+   if (gDebug > 3) {
       TIter next(&l);
       TObjString *obj;
       while ((obj = (TObjString*)next())) {
-         file = obj->GetName();
-//          cout << "found the directory " << obj->GetName() << endl;
+         const char *file = obj->GetName();
+         cout << "found the directory " << obj->GetName() << endl;
       }
    }
 }
+
 #ifdef __MAKECINT__
 #pragma link C++ function DebugTest;
 //#pragma link C++ class pair<float,int>+;

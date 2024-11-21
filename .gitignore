@@ -487,7 +487,9 @@ AutoDict_*.cxx
 /root/io/newstl/4-*
 /root/io/newstl/5-*
 /root/io/newstl/6-*
+/root/io/newstl/7-*
 /root/io/newstl/*.root
+/root/io/newstl/ArchivedDataFiles
 
 # /root/io/perf/
 /root/io/perf/*.root
