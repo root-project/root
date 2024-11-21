@@ -372,6 +372,13 @@ namespace TStreamerInfoActions
    }
 
    template <typename T>
+   static INLINE_TEMPLATE_ARGS Int_t WriteBasicZero(TBuffer &buf, void *, const TConfiguration *)
+   {
+      buf << T{0};
+      return 0;
+   }
+
+   template <typename T>
    INLINE_TEMPLATE_ARGS Int_t WriteBasicType(TBuffer &buf, void *addr, const TConfiguration *config)
    {
       T *x = (T *)(((char *)addr) + config->fOffset);
@@ -4056,6 +4063,33 @@ GetCollectionWriteAction(TVirtualStreamerInfo *info, TLoopConfiguration *loopCon
       case TStreamerInfo::kULong64: return TConfiguredAction( Looper::template WriteBasicType<ULong64_t>,new TConfiguration(info,i,compinfo,offset) );
       // the simple type missing are kBits and kCounter.
 
+      // Handling of the error case where we are asked to write a missing data member.
+      case TStreamerInfo::kBool + TStreamerInfo::kSkip:
+         return TConfiguredAction( Looper::template LoopOverCollection<WriteBasicZero<Bool_t>>,  new TConfiguration(info,i,compinfo,offset) );
+      case TStreamerInfo::kChar + TStreamerInfo::kSkip:
+         return TConfiguredAction( Looper::template LoopOverCollection<WriteBasicZero<Char_t>>,  new TConfiguration(info,i,compinfo,offset) );
+      case TStreamerInfo::kShort + TStreamerInfo::kSkip:
+         return TConfiguredAction( Looper::template LoopOverCollection<WriteBasicZero<Short_t>>,  new TConfiguration(info,i,compinfo,offset) );
+      case TStreamerInfo::kInt + TStreamerInfo::kSkip:
+         return TConfiguredAction( Looper::template LoopOverCollection<WriteBasicZero<Int_t>>,  new TConfiguration(info,i,compinfo,offset) );
+      case TStreamerInfo::kLong + TStreamerInfo::kSkip:
+         return TConfiguredAction( Looper::template LoopOverCollection<WriteBasicZero<Long_t>>,  new TConfiguration(info,i,compinfo,offset) );
+      case TStreamerInfo::kLong64 + TStreamerInfo::kSkip:
+         return TConfiguredAction( Looper::template LoopOverCollection<WriteBasicZero<Long64_t>>,  new TConfiguration(info,i,compinfo,offset) );
+      case TStreamerInfo::kFloat + TStreamerInfo::kSkip:
+         return TConfiguredAction( Looper::template LoopOverCollection<WriteBasicZero<Float_t>>,  new TConfiguration(info,i,compinfo,offset) );
+      case TStreamerInfo::kDouble + TStreamerInfo::kSkip:
+         return TConfiguredAction( Looper::template LoopOverCollection<WriteBasicZero<Double_t>>,  new TConfiguration(info,i,compinfo,offset) );
+      case TStreamerInfo::kUChar + TStreamerInfo::kSkip:
+         return TConfiguredAction( Looper::template LoopOverCollection<WriteBasicZero<UChar_t>>,  new TConfiguration(info,i,compinfo,offset) );
+      case TStreamerInfo::kUShort + TStreamerInfo::kSkip:
+         return TConfiguredAction( Looper::template LoopOverCollection<WriteBasicZero<UShort_t>>,  new TConfiguration(info,i,compinfo,offset) );
+      case TStreamerInfo::kUInt + TStreamerInfo::kSkip:
+         return TConfiguredAction( Looper::template LoopOverCollection<WriteBasicZero<UInt_t>>,  new TConfiguration(info,i,compinfo,offset) );
+      case TStreamerInfo::kULong + TStreamerInfo::kSkip:
+         return TConfiguredAction( Looper::template LoopOverCollection<WriteBasicZero<ULong_t>>,  new TConfiguration(info,i,compinfo,offset) );
+      case TStreamerInfo::kULong64 + TStreamerInfo::kSkip:
+         return TConfiguredAction( Looper::template LoopOverCollection<WriteBasicZero<ULong64_t>>,  new TConfiguration(info,i,compinfo,offset) );
 
       // Conversions.
       case TStreamerInfo::kConv + TStreamerInfo::kBool:
@@ -5470,6 +5504,9 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
             //       "Ignoring request to write the missing data member %s in %s version %d checksum 0x%x",
             //       element->GetName(), info.GetName(), info.GetClassVersion(), info.GetCheckSum());
             continue;
+            //
+            // Instead of skipping the field we could write a zero there with:
+            // onfileType += TVirtualStreamerInfo::kSkip;
          }
       }
 
