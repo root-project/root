@@ -291,6 +291,9 @@ const TGPicture *TGClient::GetPicture(const char *name)
    return fPicturePool->GetPicture(name);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// @copydoc TGPicturePool::GetPictureOrEmpty(const char*)
+
 const TGPicture *TGClient::GetPictureOrEmpty(const char *name)
 {
    return fPicturePool->GetPictureOrEmpty(name);
