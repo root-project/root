@@ -490,9 +490,13 @@ ROOT::Experimental::RVectorField::CloneImpl(std::string_view newName) const
 std::size_t ROOT::Experimental::RVectorField::AppendImpl(const void *from)
 {
    auto typedValue = static_cast<const std::vector<char> *>(from);
+   // The order is important here: Profiling showed that the integer division is on the critical path. By moving the
+   // computation of count before R__ASSERT, the compiler can use the result of a single instruction (on x86) also for
+   // the modulo operation. Otherwise, it must perform the division twice because R__ASSERT expands to an external call
+   // of Fatal() in case of failure, which could have side effects that the compiler cannot analyze.
+   auto count = typedValue->size() / fItemSize;
    R__ASSERT((typedValue->size() % fItemSize) == 0);
    std::size_t nbytes = 0;
-   auto count = typedValue->size() / fItemSize;
 
    if (fSubFields[0]->IsSimple() && count) {
       GetPrincipalColumnOf(*fSubFields[0])->AppendV(typedValue->data(), count);
