@@ -14,9 +14,9 @@
 // ./tree/ntuple/v7/test/ntuple_limits --gtest_also_run_disabled_tests --gtest_filter=*Limits_ManyClusters
 // ```
 
-TEST(RNTuple, DISABLED_Limits_ManyFields)
+TEST(RNTuple, Limits_ManyFields)
 {
-   // Writing and reading a model with 100k integer fields takes around 2s and seems to have more than linear
+   // Writing and reading a model with 100k integer fields takes around 2.2s and seems to have slightly more than linear
    // complexity (200k fields take 7.5s).
    FileRaii fileGuard("test_ntuple_limits_manyFields.root");
 
@@ -49,13 +49,13 @@ TEST(RNTuple, DISABLED_Limits_ManyFields)
    }
 }
 
-TEST(RNTuple, DISABLED_Limits_ManyClusters)
+TEST(RNTuple, Limits_ManyClusters)
 {
-   // Writing and reading 100k clusters takes between 80s - 100s and seems to have more than quadratic complexity
-   // (50k clusters take less than 15s).
+   // Writing and reading 500k clusters takes around 3.3s and seems to have benign scaling behavior.
+   // (1M clusters take around 6.6s).
    FileRaii fileGuard("test_ntuple_limits_manyClusters.root");
 
-   static constexpr int NumClusters = 100'000;
+   static constexpr int NumClusters = 500'000;
 
    {
       auto model = RNTupleModel::Create();
@@ -84,13 +84,13 @@ TEST(RNTuple, DISABLED_Limits_ManyClusters)
    }
 }
 
-TEST(RNTuple, DISABLED_Limits_ManyClusterGroups)
+TEST(RNTuple, Limits_ManyClusterGroups)
 {
-   // Writing and reading 100k cluster groups takes between 100s - 110s and seems to have more than quadratic complexity
-   // (50k cluster groups takes less than 20s).
+   // Writing and reading 25k cluster groups takes around 1.7s and seems to have quadratic complexity
+   // (50k cluster groups takes around 6.5s).
    FileRaii fileGuard("test_ntuple_limits_manyClusterGroups.root");
 
-   static constexpr int NumClusterGroups = 100'000;
+   static constexpr int NumClusterGroups = 25'000;
 
    {
       auto model = RNTupleModel::Create();
@@ -119,13 +119,13 @@ TEST(RNTuple, DISABLED_Limits_ManyClusterGroups)
    }
 }
 
-TEST(RNTuple, DISABLED_Limits_ManyPages)
+TEST(RNTuple, Limits_ManyPages)
 {
-   // Writing and reading 200k pages (of two elements each) takes around 13s and seems to have more than quadratic
-   // complexity (400k pages take 100s).
+   // Writing and reading 1M pages (of two elements each) takes around 1.3 and seems to have benign scaling behavior
+   // (2M pages take 2.6s).
    FileRaii fileGuard("test_ntuple_limits_manyPages.root");
 
-   static constexpr int NumPages = 200'000;
+   static constexpr int NumPages = 1'000'000;
    static constexpr int NumEntries = NumPages * 2;
 
    {
@@ -160,13 +160,13 @@ TEST(RNTuple, DISABLED_Limits_ManyPages)
    }
 }
 
-TEST(RNTuple, DISABLED_Limits_ManyPagesOneEntry)
+TEST(RNTuple, Limits_ManyPagesOneEntry)
 {
-   // Writing and reading 200k pages (of four elements each) takes around 13s and seems to have more than quadratic
-   // complexity (400k pages take around 100s).
+   // Writing and reading 1M pages (of four elements each) takes around 2.4s and seems to have benign scaling behavior
+   // (2M pages take around 4.8s).
    FileRaii fileGuard("test_ntuple_limits_manyPagesOneEntry.root");
 
-   static constexpr int NumPages = 200'000;
+   static constexpr int NumPages = 1'000'000;
    static constexpr int NumElements = NumPages * 4;
 
    {
