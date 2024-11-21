@@ -1946,6 +1946,8 @@ Int_t TDirectoryFile::WriteTObject(const TObject *obj, const char *name, Option_
    Int_t nch = strlen(oname);
    char *newName = nullptr;
    if (nch && oname[nch-1] == ' ') {
+      Warning("WriteTObject", "The key name '%s' will be stored in file without the trailing blanks.", obj->GetName());
+      // See https://github.com/root-project/root/issues/17003
       newName = new char[nch+1];
       strlcpy(newName,oname,nch+1);
       for (Int_t i=0;i<nch;i++) {
