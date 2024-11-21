@@ -130,6 +130,10 @@ const TGPicture *TGPicturePool::GetPicture(const char *name)
    return pic;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Like TGPicturePool::GetPicture() but, instead of returning null when the 
+/// picture is not found, it returns a valid empty picture.
+
 const TGPicture *TGPicturePool::GetPictureOrEmpty(const char *name)
 {
    static const TGPicture fEmptyPic { "Empty" };
