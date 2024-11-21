@@ -380,3 +380,12 @@ endif()
 if ((NOT builtin_llvm) AND (NOT builtin_clang))
   target_compile_definitions(clingInterpreter PUBLIC "LLVM_PATH=\"${LLVM_BINARY_DIR}\"")
 endif()
+
+if (adaptivecpp)
+  # Include directory for AdaptiveCPP binary
+  include_directories(${CMAKE_BINARY_DIR}/tools/plugins/adaptivecpp)
+
+  install(FILES ${CMAKE_BINARY_DIR}/tools/plugins/adaptivecpp/AdaptiveCppConfig.h
+    DESTINATION include
+  )
+endif()

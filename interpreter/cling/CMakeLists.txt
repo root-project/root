@@ -527,3 +527,7 @@ set(CLING_ORDER_FILE "" CACHE FILEPATH
   "Order file to use when compiling cling in order to improve startup time.")
 
 add_subdirectory(cmake/modules)
+
+if(adaptivecpp)
+  add_subdirectory(tools/plugins/adaptivecpp)
+endif()
