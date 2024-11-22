@@ -397,11 +397,12 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type, Bool_t silent,
             } else {
                fSize = fundType->Size();
             }
-         } else if (TEnum::GetEnum( intype.c_str(), TEnum::kNone) ) {
+         } else if (auto e = TEnum::GetEnum( intype.c_str(), TEnum::kNone) ) {
+            R__ASSERT(e->IsValid());
             // This is a known enum.
             fCase = kIsEnum;
-            fSize = sizeof(Int_t);
-            fKind = kInt_t;
+            fSize = TDataType::GetDataType(e->GetUnderlyingType())->Size();
+            fKind = e->GetUnderlyingType();
             if (isPointer) {
                fCase |= kIsPointer;
                fSize = sizeof(void*);
