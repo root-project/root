@@ -123,6 +123,9 @@ void TEnum::AddConstant(TEnumConstant *constant)
 
 Bool_t TEnum::IsValid()
 {
+   if (TestBit(kBitIsValid))
+      return true;
+
    // Register the transaction when checking the validity of the object.
    if (!fInfo && UpdateInterpreterStateMarker()) {
       DeclId_t newId = gInterpreter->GetEnum(fClass, fName);
@@ -158,6 +161,7 @@ void TEnum::Update(DeclId_t id)
    if (fInfo)
       gInterpreter->ClassInfo_Delete(fInfo);
    if (!id) {
+      ResetBit(kBitIsValid);
       fInfo = nullptr;
       return;
    }
@@ -167,6 +171,9 @@ void TEnum::Update(DeclId_t id)
    if (fInfo) {
       SetBit(kBitIsScopedEnum, gInterpreter->ClassInfo_IsScopedEnum(fInfo));
       fUnderlyingType = gInterpreter->ClassInfo_GetUnderlyingType(fInfo);
+      SetBit(kBitIsValid);
+   } else {
+      ResetBit(kBitIsValid);
    }
 }
 
