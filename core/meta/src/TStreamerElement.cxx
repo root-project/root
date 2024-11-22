@@ -1889,19 +1889,17 @@ TClass *TStreamerSTL::GetClassPointer() const
    TClass *cl = TClass::GetClass(className, kTRUE, quiet);
 
    auto proxy = cl->GetCollectionProxy();
-   if (fNewClass && proxy->GetValueClass() == nullptr) {
+   if (!fNewClass && proxy && proxy->GetValueClass() == nullptr) {
       // Collection of numerical type, let check if it is an enum.
       TClassEdit::TSplitType arglist(fTypeName, TClassEdit::kDropStlDefault);
       if ( arglist.fElements[1].size() >= 2 ) {
          auto enumdesc = TEnum::GetEnum(arglist.fElements[1].c_str());
          if (enumdesc || gCling->ClassInfo_IsEnum(arglist.fElements[1].c_str())) {
-            if (fNewClass == nullptr) {
-               ((TStreamerElement*)this)->fNewClass = cl;
-               if (proxy->HasPointers())
-                  cl = TClass::GetClass("vector<Int_t*>");
-               else
-                  cl = TClass::GetClass("vector<Int_t>");
-            }
+            ((TStreamerElement*)this)->fNewClass = cl;
+            if (proxy->HasPointers())
+               cl = TClass::GetClass("vector<Int_t*>");
+            else
+               cl = TClass::GetClass("vector<Int_t>");
          }
       }
    }

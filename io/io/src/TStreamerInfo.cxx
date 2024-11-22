@@ -640,6 +640,15 @@ void TStreamerInfo::Build(Bool_t isTransient)
             // Here we treat data members such as int, float, double[4]
             element = new TStreamerBasicType(dmName, dmTitle, offset, dtype, dmFull);
          }
+         if (dm->IsEnum()) {
+            if (auto enumdesc = TEnum::GetEnum(dm->GetFullTypeName(), TEnum::kNone))
+            {
+               // NOTE: We might simplify this by having the dm->fDataType being 'correct'.
+               // If we do we need to also make sure to update the old type accordingly
+               element->SetNewType(enumdesc->GetUnderlyingType());
+               element->SetType(TStreamerInfo::kInt);
+            }
+         }
       } else {
          // try STL container or string
          static const char* full_string_name = "basic_string<char,char_traits<char>,allocator<char> >";
@@ -2310,6 +2319,13 @@ void TStreamerInfo::BuildOld()
             } else {
                // All the values of EDataType have the same semantic in EReadWrite
                newType = (EReadWrite)theType->GetType();
+            }
+            if (dm->IsEnum()) {
+               if (auto enumdesc = TEnum::GetEnum(dm->GetFullTypeName(), TEnum::kNone))
+               {
+                  // NOTE: We might simplify this by having the dm->fDataType being 'correct'.
+                  newType = enumdesc->GetUnderlyingType();
+               }
             }
             if ((newType == ::kChar_t) && dmIsPtr && !isArray && !hasCount) {
                newType = ::kCharStar;
