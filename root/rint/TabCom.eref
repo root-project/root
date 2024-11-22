@@ -10,3 +10,27 @@ MyClass::fgPrivateM
 ROOT_prompt_10:1:16: error: no member named 'SetTi' in 'TAxis'
 h->GetXaxis()->SetTi
 ~~~~~~~~~~~~~  ^
+ROOT_prompt_12:2:1: error: expected unqualified-id
+;
+^
+ROOT_prompt_14:2:1: error: expected unqualified-id
+;
+^
+ROOT_prompt_16:2:1: error: expected unqualified-id
+;
+^
+ROOT_prompt_18:2:1: error: expected unqualified-id
+;
+^
+ROOT_prompt_20:2:1: error: expected unqualified-id
+;
+^
+ROOT_prompt_22:2:1: error: expected unqualified-id
+;
+^
+ROOT_prompt_24:2:1: error: expected unqualified-id
+;
+^
+ROOT_prompt_26:2:1: error: expected unqualified-id
+;
+^
