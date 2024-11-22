@@ -901,7 +901,7 @@ TEST(Packing, Real32QuantFloat)
       element.SetValueRange(-10.f, 10.f);
 
       float f1 = -5.f;
-      unsigned char out[1];
+      unsigned char out[4];
       element.Pack(out, &f1, 1);
       float f2;
       element.Unpack(&f2, out, 1);
@@ -1027,7 +1027,7 @@ TEST(Packing, Real32QuantDouble)
       element.SetValueRange(-10.f, 10.f);
 
       double f1 = -5.f;
-      unsigned char out[1];
+      unsigned char out[4];
       element.Pack(out, &f1, 1);
       double f2;
       element.Unpack(&f2, out, 1);
