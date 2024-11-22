@@ -65,12 +65,11 @@ protected:
    /// Memory limit for committing a cluster: with very high compression ratio, we need a limit
    /// on how large the I/O buffer can grow during writing.
    std::size_t fMaxUnzippedClusterSize = 10 * fApproxZippedClusterSize;
-   /// Initially, columns start with a page large enough to hold the given number of elements. The initial
-   /// page size is the given number of elements multiplied by the column's element size.
-   /// If more elements are needed, pages are increased up until the byte limit given by fMaxUnzippedPageSize
-   /// or until the total page buffer limit is reached (as a sum of all page buffers).
+   /// Initially, columns start with a page of this size. The default value is chosen to accomodate at least 32 elements
+   /// of 64 bits, or 64 elements of 32 bits. If more elements are needed, pages are increased up until the byte limit
+   /// given by fMaxUnzippedPageSize or until the total page buffer limit is reached (as a sum of all page buffers).
    /// The total write buffer limit needs to be large enough to hold the initial pages of all columns.
-   std::size_t fInitialNElementsPerPage = 64;
+   std::size_t fInitialUnzippedPageSize = 256;
    /// Pages can grow only to the given limit in bytes.
    std::size_t fMaxUnzippedPageSize = 1024 * 1024;
    /// The maximum size that the sum of all page buffers used for writing into a persistent sink are allowed to use.
@@ -115,8 +114,8 @@ public:
    std::size_t GetMaxUnzippedClusterSize() const { return fMaxUnzippedClusterSize; }
    void SetMaxUnzippedClusterSize(std::size_t val);
 
-   std::size_t GetInitialNElementsPerPage() const { return fInitialNElementsPerPage; }
-   void SetInitialNElementsPerPage(std::size_t val);
+   std::size_t GetInitialUnzippedPageSize() const { return fInitialUnzippedPageSize; }
+   void SetInitialUnzippedPageSize(std::size_t val);
 
    std::size_t GetMaxUnzippedPageSize() const { return fMaxUnzippedPageSize; }
    void SetMaxUnzippedPageSize(std::size_t val);
