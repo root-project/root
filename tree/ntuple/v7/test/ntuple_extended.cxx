@@ -120,8 +120,8 @@ TEST(RNTuple, MultiColumnExpansion)
       auto model = RNTupleModel::Create();
       model->AddField(RFieldBase::Create("pt", "Double32_t").Unwrap());
       RNTupleWriteOptions options;
+      options.SetInitialUnzippedPageSize(8);
       options.SetMaxUnzippedPageSize(32);
-      options.SetInitialNElementsPerPage(1);
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath(), options);
 
       auto ptrPt = writer->GetModel().GetDefaultEntry().GetPtr<double>("pt");

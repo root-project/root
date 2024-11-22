@@ -528,10 +528,7 @@ std::size_t ROOT::Experimental::RNTupleModel::EstimateWriteMemoryUsage(const RNT
    for (auto &&field : *fFieldZero) {
       for (const auto &r : field.GetColumnRepresentatives()) {
          nColumns += r.size();
-         for (auto columnType : r) {
-            minPageBufferSize +=
-               options.GetInitialNElementsPerPage() * Internal::RColumnElementBase::Generate(columnType)->GetSize();
-         }
+         minPageBufferSize += r.size() * options.GetInitialUnzippedPageSize();
       }
    }
    bytes = std::min(options.GetPageBufferBudget(), nColumns * options.GetMaxUnzippedPageSize());

@@ -133,7 +133,7 @@ TEST(RNTuple, DISABLED_Limits_ManyPages)
       auto id = model->MakeField<int>("id");
       RNTupleWriteOptions options;
       // Two elements per page.
-      options.SetInitialNElementsPerPage(1);
+      options.SetInitialUnzippedPageSize(8);
       options.SetMaxUnzippedPageSize(8);
 
       auto writer = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath(), options);
@@ -174,7 +174,7 @@ TEST(RNTuple, DISABLED_Limits_ManyPagesOneEntry)
       auto ids = model->MakeField<std::vector<int>>("ids");
       RNTupleWriteOptions options;
       // Four elements per page (must fit two 64-bit indices!)
-      options.SetInitialNElementsPerPage(1);
+      options.SetInitialUnzippedPageSize(16);
       options.SetMaxUnzippedPageSize(16);
 
       auto writer = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath(), options);

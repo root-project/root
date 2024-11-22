@@ -50,10 +50,12 @@ private:
    RPageStorage::ColumnHandle_t fHandleSink;
    RPageStorage::ColumnHandle_t fHandleSource;
    /// The page into which new elements are being written. The page will initially be small
-   /// (just enough to hold RNTupleWriteOptions::fInitialNElementsPerPage elements) and expand as needed and
+   /// (RNTupleWriteOptions::fInitialUnzippedPageSize, which corresponds to fInitialElements) and expand as needed and
    /// as memory for page buffers is still available (RNTupleWriteOptions::fPageBufferBudget) or the maximum page
    /// size is reached (RNTupleWriteOptions::fMaxUnzippedPageSize).
    RPage fWritePage;
+   /// The initial number of elements in a page
+   NTupleSize_t fInitialNElements = 1;
    /// The number of elements written resp. available in the column
    NTupleSize_t fNElements = 0;
    /// The currently mapped page for reading
