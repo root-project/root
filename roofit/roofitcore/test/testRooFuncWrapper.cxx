@@ -657,7 +657,10 @@ auto testValues = testing::Values(
    makeTestParams("RooLandau2", "Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[2.1, 0.01, 50.])", false),
    makeTestParams("RooLandau3", "Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[10., 0.01, 50.])", false),
    makeTestParams("RooLandau4", "Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[0.3, 0.01, 50.])", false),
-   makeTestParams("RooLandau5", "Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[0.07, 0.01, 50.])", false));
+   makeTestParams("RooLandau5", "Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[0.07, 0.01, 50.])", false),
+   makeTestParams("RooRealSumPdf1",
+                  "RealSumPdf::model({Gaussian::gx(x[-10,10],m[0],1.0), Chebychev::ch(x,{0.1,0.2,-0.3})}, {f[0,1]})",
+                  false));
 
 INSTANTIATE_TEST_SUITE_P(RooFuncWrapper, FactoryTest, testValues,
                          [](testing::TestParamInfo<FactoryTest::ParamType> const &paramInfo) {

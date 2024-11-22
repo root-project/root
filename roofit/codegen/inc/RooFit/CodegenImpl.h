@@ -131,6 +131,7 @@ std::string codegenIntegralImpl(RooMultiVarGaussian &arg, int code, const char *
 std::string codegenIntegralImpl(RooPoisson &arg, int code, const char *rangeName, CodegenContext &ctx);
 std::string codegenIntegralImpl(RooPolyVar &arg, int code, const char *rangeName, CodegenContext &ctx);
 std::string codegenIntegralImpl(RooPolynomial &arg, int code, const char *rangeName, CodegenContext &ctx);
+std::string codegenIntegralImpl(RooRealSumPdf &arg, int code, const char *rangeName, CodegenContext &ctx);
 std::string codegenIntegralImpl(RooUniform &arg, int code, const char *rangeName, CodegenContext &ctx);
 
 template <class Arg_t, int P>
