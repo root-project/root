@@ -29,6 +29,7 @@
 #include <TDataMember.h>
 #include <TEnum.h>
 #include <TObject.h>
+#include <TObjArray.h>
 #include <TObjString.h>
 #include <TRealData.h>
 #include <TSchemaRule.h>
