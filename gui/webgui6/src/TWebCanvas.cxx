@@ -826,7 +826,7 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
 
    auto create_stats = [&]() {
       TPaveStats *stats = nullptr;
-      if ((gStyle->GetOptStat() > 0) && CanCreateObject("TPaveStats")) {
+      if (CanCreateObject("TPaveStats")) {
          stats = new TPaveStats(
                         gStyle->GetStatX() - gStyle->GetStatW(),
                         gStyle->GetStatY() - gStyle->GetStatH(),
@@ -875,9 +875,11 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
         }
       }
 
-      if (!stats && has_tf1 && gr && !gr->TestBit(TGraph::kNoStats)) {
+      if (!stats && has_tf1 && gr && !gr->TestBit(TGraph::kNoStats) && (gStyle->GetOptFit() > 0)) {
          stats = create_stats();
          if (stats) {
+            stats->SetOptStat(0);
+            stats->SetOptFit(gStyle->GetOptFit());
             stats->SetParent(funcs);
             funcs->Add(stats);
          }
@@ -941,7 +943,7 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          TString o = hopt;
          o.ToUpper();
 
-         if (!stats && (first_obj || o.Contains("SAMES"))) {
+         if (!stats && (first_obj || o.Contains("SAMES")) && (gStyle->GetOptStat() > 0)) {
             stats = create_stats();
             if (stats) {
                 stats->SetParent(hist);
