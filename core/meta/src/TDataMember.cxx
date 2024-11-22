@@ -507,8 +507,15 @@ Longptr_t TDataMember::GetOffsetCint() const
 Int_t TDataMember::GetUnitSize() const
 {
    if (IsaPointer()) return sizeof(void*);
-   if (IsEnum()    ) return sizeof(Int_t);
-   if (IsBasic()   ) return GetDataType()->Size();
+   if (IsEnum())
+   {
+      auto e = TEnum::GetEnum(GetTypeName());
+      if (e)
+         return TDataType::GetDataType(e->GetUnderlyingType())->Size();
+      else
+         return sizeof(Int_t);
+   }
+   if (IsBasic()) return GetDataType()->Size();
 
    TClass *cl = TClass::GetClass(GetTypeName());
    if (!cl) cl = TClass::GetClass(GetTrueTypeName());
