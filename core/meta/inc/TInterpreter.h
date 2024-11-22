@@ -167,6 +167,7 @@ public:
    virtual void     InspectMembers(TMemberInspector&, const void* obj, const TClass* cl, Bool_t isTransient) = 0;
    virtual Bool_t   IsLoaded(const char *filename) const = 0;
    virtual Bool_t   IsLibraryLoaded(const char *libname) const = 0;
+   virtual bool     IsValid() const = 0;
    virtual Bool_t   HasPCMForLibrary(const char *libname) const = 0;
    virtual Int_t    Load(const char *filenam, Bool_t system = kFALSE) = 0;
    virtual void     LoadMacro(const char *filename, EErrorCode *error = nullptr) = 0;
