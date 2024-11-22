@@ -43,6 +43,7 @@ public:
 
   const RooArgList& funcList() const { return _funcList ; }
   const RooArgList& coefList() const { return _coefList ; }
+  const RooArgList &funcIntListFromCache(Int_t code, const char *rangeName = nullptr) const;
 
   ExtendMode extendMode() const override ;
 
@@ -110,6 +111,9 @@ private:
   static bool checkObservables(RooAbsReal const &caller, RooArgSet const *nset, RooArgList const &funcList,
                                RooArgList const &coefList);
 
+  static const RooArgList &
+  funcIntListFromCache(RooAbsReal const &caller, RooObjCacheManager &normIntMgr, Int_t code, const char *rangeName);
+
   static Int_t getAnalyticalIntegralWN(RooAbsReal const& caller, RooObjCacheManager & normIntMgr,
                                        RooArgList const& funcList, RooArgList const& coefList,
                                        RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet, const char* rangeName);
@@ -117,6 +121,9 @@ private:
                                      RooArgList const& funcList, RooArgList const& coefList,
                                      Int_t code, const RooArgSet* normSet, const char* rangeName,
                                      bool hasWarnedBefore);
+
+  static const CacheElem *
+  getCacheElem(RooAbsReal const &caller, RooObjCacheManager &normIntMgr, Int_t code, const char *rangeName);
 
   static std::list<double>* binBoundaries(
           RooArgList const& funcList, RooAbsRealLValue& /*obs*/, double /*xlo*/, double /*xhi*/);
