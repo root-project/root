@@ -169,6 +169,7 @@ endif()
 
 # We will not fix llvm or clang.
 string(REPLACE "-Werror " "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ")
+ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-nonnull)
 # Turn off coverage - we don't need this for llvm.
 string(REPLACE "${GCC_COVERAGE_COMPILE_FLAGS}" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 
