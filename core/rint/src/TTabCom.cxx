@@ -874,11 +874,9 @@ TString TTabCom::DetermineClass(const char varName[])
    if (type.EndsWith(" *const"))
       type.Remove(type.Length() - 5);
    // we strip off left qualifiers
-   if (type.BeginsWith("const volatile "))
-      type.Remove(0, 15);
-   else if (type.BeginsWith("const "))
+   if (type.BeginsWith("const "))
       type.Remove(0, 6);
-   else if (type.BeginsWith("volatile "))
+   if (type.BeginsWith("volatile ")) // this automatically takes care of variant "const volatile"
       type.Remove(0, 9);
 
 cleanup:
