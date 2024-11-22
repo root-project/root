@@ -40,16 +40,16 @@ ROOT::Experimental::Internal::RColumn::~RColumn()
 void ROOT::Experimental::Internal::RColumn::ConnectPageSink(DescriptorId_t fieldId, RPageSink &pageSink,
                                                             NTupleSize_t firstElementIndex)
 {
-   if (pageSink.GetWriteOptions().GetInitialNElementsPerPage() * fElement->GetSize() >
-       pageSink.GetWriteOptions().GetMaxUnzippedPageSize()) {
-      throw RException(R__FAIL("maximum page size to small for the initial number of elements per page"));
+   fInitialNElements = pageSink.GetWriteOptions().GetInitialUnzippedPageSize() / fElement->GetSize();
+   if (fInitialNElements < 1) {
+      throw RException(R__FAIL("initial page size is too small for at least one element"));
    }
 
    fPageSink = &pageSink;
    fFirstElementIndex = firstElementIndex;
    fHandleSink = fPageSink->AddColumn(fieldId, *this);
    fOnDiskId = fPageSink->GetColumnId(fHandleSink);
-   fWritePage = fPageSink->ReservePage(fHandleSink, fPageSink->GetWriteOptions().GetInitialNElementsPerPage());
+   fWritePage = fPageSink->ReservePage(fHandleSink, fInitialNElements);
    if (fWritePage.IsNull())
       throw RException(R__FAIL("page buffer memory budget too small"));
 }
@@ -72,7 +72,7 @@ void ROOT::Experimental::Internal::RColumn::Flush()
       return;
 
    fPageSink->CommitPage(fHandleSink, fWritePage);
-   fWritePage = fPageSink->ReservePage(fHandleSink, fPageSink->GetWriteOptions().GetInitialNElementsPerPage());
+   fWritePage = fPageSink->ReservePage(fHandleSink, fInitialNElements);
    R__ASSERT(!fWritePage.IsNull());
    fWritePage.Reset(fNElements);
 }
