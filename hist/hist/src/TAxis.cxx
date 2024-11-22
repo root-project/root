@@ -536,11 +536,14 @@ Double_t TAxis::GetBinUpEdge(Int_t bin) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return bin width
+///
+/// If `bin > fNbins` (overflow bin) or `bin < 1` (underflow bin), the returned bin width is `(fXmax - fXmin) / fNbins`.
 
 Double_t TAxis::GetBinWidth(Int_t bin) const
 {
    if (fNbins <= 0) return 0;
-   if (fXbins.fN <= 0 || bin >fNbins || bin <1) return (fXmax - fXmin) / Double_t(fNbins);
+   if (fXbins.fN <= 0 || bin >fNbins || bin <1)
+      return (fXmax - fXmin) / Double_t(fNbins);
    return fXbins.fArray[bin] - fXbins.fArray[bin-1];
 }
 
