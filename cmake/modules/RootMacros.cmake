@@ -2092,3 +2092,11 @@ function(generateManual name input output)
 
   install(FILES ${output} DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
 endfunction()
+
+
+
+function(root_add_subdirectory subdirectory)
+	if(ROOT_ENABLE_PROJECTS STREQUAL "All" OR (ROOT_ENABLE_PROJECTS STREQUAL "Essentials" AND ${subdirectory} IN_LIST ROOT_ESSENTIAL_PROJECTS ))
+		add_subdirectory(${subdirectory})
+	endif()
+endfunction()
