@@ -422,10 +422,6 @@ bool RooSimultaneous::addPdf(const RooAbsPdf& pdf, const char* catLabel)
   return false ;
 }
 
-
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Examine the pdf components and check if one of them can be extended or must be extended.
 /// It is enough to have one component that can be extended or must be extended to return the flag in
@@ -433,39 +429,16 @@ bool RooSimultaneous::addPdf(const RooAbsPdf& pdf, const char* catLabel)
 
 RooAbsPdf::ExtendMode RooSimultaneous::extendMode() const
 {
-  bool anyCanExtend(false) ;
-  bool anyMustExtend(false) ;
+   bool anyCanExtend = false;
 
-  for (Int_t i=0 ; i<_numPdf ; i++) {
-    RooRealProxy* proxy = static_cast<RooRealProxy*>(_pdfProxyList.At(i));
-    if (proxy) {
-      RooAbsPdf* pdf = static_cast<RooAbsPdf*>(proxy->absArg()) ;
-      //cout << " now processing pdf " << pdf->GetName() << endl;
-      if (pdf->canBeExtended()) {
-         //cout << "RooSim::extendedMode(" << GetName() << ") component " << pdf->GetName() << " can be extended"
-         //     << endl;
-         anyCanExtend = true;
-      }
-      if (pdf->mustBeExtended()) {
-         //cout << "RooSim::extendedMode(" << GetName() << ") component " << pdf->GetName() << " MUST be extended" << endl;
-         anyMustExtend = true;
-      }
-    }
-  }
-  if (anyMustExtend) {
-    //cout << "RooSim::extendedMode(" << GetName() << ") returning MustBeExtended" << endl ;
-    return MustBeExtended ;
-  }
-  if (anyCanExtend) {
-    //cout << "RooSim::extendedMode(" << GetName() << ") returning CanBeExtended" << endl ;
-    return CanBeExtended ;
-  }
-  //cout << "RooSim::extendedMode(" << GetName() << ") returning CanNotBeExtended" << endl ;
-  return CanNotBeExtended ;
+   for (auto *proxy : static_range_cast<RooRealProxy *>(_pdfProxyList)) {
+      auto &pdf = static_cast<RooAbsPdf const&>(proxy->arg());
+      if (pdf.mustBeExtended())
+         return MustBeExtended;
+      anyCanExtend |= pdf.canBeExtended();
+   }
+   return anyCanExtend ? CanBeExtended : CanNotBeExtended;
 }
-
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the current value:
@@ -473,29 +446,31 @@ RooAbsPdf::ExtendMode RooSimultaneous::extendMode() const
 
 double RooSimultaneous::evaluate() const
 {
-  // Retrieve the proxy by index name
-  RooRealProxy* proxy = static_cast<RooRealProxy*>(_pdfProxyList.FindObject(_indexCat.label())) ;
+   // Retrieve the proxy by index name
+   RooRealProxy *proxy = static_cast<RooRealProxy *>(_pdfProxyList.FindObject(_indexCat.label()));
 
-  //assert(proxy!=0) ;
-  if (proxy==nullptr) return 0 ;
+   double nEvtTot = 1.0;
+   double nEvtCat = 1.0;
 
-  // Calculate relative weighting factor for sim-pdfs of all extendable components
-  double catFrac(1) ;
-  if (canBeExtended()) {
-    double nEvtCat = (static_cast<RooAbsPdf*>(proxy->absArg()))->expectedEvents(_normSet) ;
+   // Calculate relative weighting factor for sim-pdfs of all extendable components
+   if (canBeExtended()) {
+      auto &pdf = static_cast<RooAbsPdf const &>(proxy->arg());
 
-    double nEvtTot(0) ;
-    for(auto * proxy2 : static_range_cast<RooRealProxy*>(_pdfProxyList)) {
-      nEvtTot += (static_cast<RooAbsPdf*>(proxy2->absArg()))->expectedEvents(_normSet) ;
-    }
-    catFrac=nEvtCat/nEvtTot ;
-  }
+      for (auto *proxy2 : static_range_cast<RooRealProxy *>(_pdfProxyList)) {
+         auto &pdf2 = static_cast<RooAbsPdf const &>(proxy2->arg());
+         const double nEvt = pdf2.expectedEvents(_normSet);
+         nEvtTot += nEvt;
+         if (&pdf2 == &pdf) {
+            nEvtCat += nEvt;
+         }
+      }
+   }
+   double catFrac = nEvtCat / nEvtTot;
 
-  // Return the selected PDF value, normalized by the number of index states
-  return (static_cast<RooAbsPdf*>(proxy->absArg()))->getVal(_normSet)*catFrac ;
+   // Return the selected PDF value, normalized by the relative number of
+   // expected events if applicable.
+   return *proxy * catFrac;
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the number of expected events: If the index is in nset,
