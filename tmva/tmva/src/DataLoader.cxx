@@ -277,6 +277,13 @@ void TMVA::DataLoader::AddTestEvent( const TString& className, const std::vector
 void TMVA::DataLoader::AddEvent( const TString& className, Types::ETreeType tt,
                                  const std::vector<Double_t>& event, Double_t weight )
 {
+   if (event.size() > fATreeEvent.size()) {
+      Error("TMVA::DataLoader::AddEvent", "Number of variables defined through DataLoader::AddVariable (%zu) is inconsistent"
+       "with number of variables given to DataLoader::Add*Event (%zu)."
+       "Please check your variable definitions and statement ordering."
+       "This event will not be added.", fATreeEvent.size(), event.size());
+      return;
+   }
    ClassInfo* theClass = DefaultDataSetInfo().AddClass(className); // returns class (creates it if necessary)
    UInt_t clIndex = theClass->GetNumber();
 
