@@ -512,7 +512,7 @@ set(returncode_1 math/fit/fit2a.C
                  hist/th2polyBoxes.C
                  hist/statsEditing.C
                  hist/cumulative.C
-                 hist/hlabels1.C
+                 hist/hist004_TH1_labels.C
                  hist/hlabels2.C
                  io/tree/h1analysis.C
                  math/chi2test.C
