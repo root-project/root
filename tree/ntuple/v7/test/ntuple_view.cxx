@@ -9,8 +9,8 @@ TEST(RNTuple, View)
    FileRaii fileGuard("test_ntuple_view.root");
 
    auto model = RNTupleModel::Create();
-   auto fieldPt = model->MakeField<float>("pt", 42.0);
-   auto fieldTag = model->MakeField<std::string>("tag", "xyz");
+   *model->MakeField<float>("pt") = 42.0;
+   *model->MakeField<std::string>("tag") = "xyz";
    auto fieldJets = model->MakeField<std::vector<std::int32_t>>("jets");
    fieldJets->push_back(1);
    fieldJets->push_back(2);
@@ -62,13 +62,17 @@ TEST(RNTuple, ViewCast)
    FileRaii fileGuard("test_ntuple_view_cast.root");
 
    auto model = RNTupleModel::Create();
-   auto fieldF = model->MakeField<float>("f", 1.0);
-   auto fieldD = model->MakeField<double>("d", 2.0);
-   auto field32 = model->MakeField<std::uint32_t>("u32", 32);
-   auto field64 = model->MakeField<std::int64_t>("i64", -64);
+   auto fieldF = model->MakeField<float>("f");
+   auto fieldD = model->MakeField<double>("d");
+   auto field32 = model->MakeField<std::uint32_t>("u32");
+   auto field64 = model->MakeField<std::int64_t>("i64");
 
    {
       auto writer = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath());
+      *fieldF = 1.0;
+      *fieldD = 2.0;
+      *field32 = 32;
+      *field64 = -64;
       writer->Fill();
       *fieldF = -42.0;
       *fieldD = -63.0;
@@ -100,11 +104,12 @@ TEST(RNTuple, DirectAccessView)
    FileRaii fileGuard("test_ntuple_direct_access_view.root");
 
    auto model = RNTupleModel::Create();
-   auto fieldPt = model->MakeField<float>("pt", 42.0);
+   auto fieldPt = model->MakeField<float>("pt");
    auto fieldVec = model->MakeField<std::vector<float>>("vec");
    {
       RNTupleWriteOptions opt;
       auto writer = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath(), opt);
+      *fieldPt = 42.0;
       writer->Fill();
       writer->CommitCluster();
       *fieldPt = 137.0;
@@ -132,7 +137,7 @@ TEST(RNTuple, VoidView)
    FileRaii fileGuard("test_ntuple_voidview.root");
 
    auto model = RNTupleModel::Create();
-   auto fieldPt = model->MakeField<float>("pt", 42.0);
+   *model->MakeField<float>("pt") = 42.0;
 
    {
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
@@ -190,7 +195,7 @@ TEST(RNTuple, ViewWithExternalAddress)
    FileRaii fileGuard("test_ntuple_viewexternal.root");
 
    auto model = RNTupleModel::Create();
-   auto fieldPt = model->MakeField<float>("pt", 42.0);
+   *model->MakeField<float>("pt") = 42.0;
 
    {
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
@@ -295,16 +300,16 @@ TEST(RNTuple, ViewStandardIntegerTypes)
 
    {
       auto model = RNTupleModel::Create();
-      auto c = model->MakeField<char>("c", 'a');
-      auto uc = model->MakeField<unsigned char>("uc", 1);
-      auto s = model->MakeField<short>("s", 2);
-      auto us = model->MakeField<unsigned short>("us", 3);
-      auto i = model->MakeField<int>("i", 4);
-      auto ui = model->MakeField<unsigned int>("ui", 5);
-      auto l = model->MakeField<long>("l", 6);
-      auto ul = model->MakeField<unsigned long>("ul", 7);
-      auto ll = model->MakeField<long long>("ll", 8);
-      auto ull = model->MakeField<unsigned long long>("ull", 9);
+      *model->MakeField<char>("c") = 'a';
+      *model->MakeField<unsigned char>("uc") = 1;
+      *model->MakeField<short>("s") = 2;
+      *model->MakeField<unsigned short>("us") = 3;
+      *model->MakeField<int>("i") = 4;
+      *model->MakeField<unsigned int>("ui") = 5;
+      *model->MakeField<long>("l") = 6;
+      *model->MakeField<unsigned long>("ul") = 7;
+      *model->MakeField<long long>("ll") = 8;
+      *model->MakeField<unsigned long long>("ull") = 9;
 
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       writer->Fill();

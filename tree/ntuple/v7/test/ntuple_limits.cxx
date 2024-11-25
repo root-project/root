@@ -27,7 +27,7 @@ TEST(RNTuple, DISABLED_Limits_ManyFields)
 
       for (int i = 0; i < NumFields; i++) {
          std::string name = "f" + std::to_string(i);
-         model->MakeField<int>(name, i);
+         *model->MakeField<int>(name) = i;
       }
 
       auto writer = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath());

@@ -5,8 +5,8 @@ TEST(RNTupleProjection, Basics)
    FileRaii fileGuard("test_ntuple_projection_basics.root");
 
    auto model = RNTupleModel::Create();
-   model->MakeField<float>("met", 42.0);
-   model->MakeField<std::atomic<int>>("atomicNumber", 7);
+   *model->MakeField<float>("met") = 42.0;
+   *model->MakeField<std::atomic<int>>("atomicNumber") = 7;
    auto fvec = model->MakeField<std::vector<float>>("vec");
    fvec->emplace_back(1.0);
    fvec->emplace_back(2.0);
@@ -73,7 +73,7 @@ TEST(RNTupleProjection, CatchInvalidMappings)
    FileRaii fileGuard("test_ntuple_projection_catch_invalid_mappings.root");
 
    auto model = RNTupleModel::Create();
-   model->MakeField<float>("met", 42.0);
+   model->MakeField<float>("met");
    model->MakeField<std::vector<float>>("vec");
    model->MakeField<std::variant<int, float>>("variant");
    model->MakeField<std::vector<std::vector<float>>>("nnlo");
@@ -165,7 +165,7 @@ TEST(RNTupleProjection, CatchReaderWithProjectedFields)
    FileRaii fileGuard("test_ntuple_projection_catch_reader_with_projected_fields.root");
 
    auto model = RNTupleModel::Create();
-   model->MakeField<float>("met", 42.0);
+   model->MakeField<float>("met");
 
    auto f1 = RFieldBase::Create("missingE", "float").Unwrap();
    model->AddProjectedField(std::move(f1), [](const std::string &) { return "met"; });

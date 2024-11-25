@@ -75,7 +75,7 @@ TEST(RNTupleInspector, UnknownCompression)
    {
       auto model = RNTupleModel::Create();
 
-      auto vecFld = model->MakeField<std::vector<float>>("vecFld", refVec);
+      *model->MakeField<std::vector<float>>("vecFld") = refVec;
 
       RNTupleWriteOptions opts;
       opts.SetCompression(505);
@@ -87,7 +87,7 @@ TEST(RNTupleInspector, UnknownCompression)
       auto modelUpdater = ntuple->CreateModelUpdater();
 
       modelUpdater->BeginUpdate();
-      auto extVecField = modelUpdater->MakeField<std::vector<float>>("extVecFld", refVec);
+      *modelUpdater->MakeField<std::vector<float>>("extVecFld") = refVec;
       modelUpdater->CommitUpdate();
 
       ntuple->Fill();

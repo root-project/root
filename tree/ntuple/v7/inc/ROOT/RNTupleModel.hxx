@@ -176,10 +176,10 @@ public:
       /// Upon completion, `BeginUpdate()` can be called again to begin a new set of changes.
       void CommitUpdate();
 
-      template <typename T, typename... ArgsT>
-      std::shared_ptr<T> MakeField(const NameWithDescription_t &fieldNameDesc, ArgsT &&...args)
+      template <typename T>
+      std::shared_ptr<T> MakeField(const NameWithDescription_t &fieldNameDesc)
       {
-         auto objPtr = fOpenChangeset.fModel.MakeField<T>(fieldNameDesc, std::forward<ArgsT>(args)...);
+         auto objPtr = fOpenChangeset.fModel.MakeField<T>(fieldNameDesc);
          auto fieldZero = fOpenChangeset.fModel.fFieldZero.get();
          auto it = std::find_if(fieldZero->begin(), fieldZero->end(),
                                 [&](const auto &f) { return f.GetFieldName() == fieldNameDesc.fName; });
@@ -247,7 +247,7 @@ public:
    static std::unique_ptr<RNTupleModel> CreateBare(std::unique_ptr<RFieldZero> fieldZero);
 
    /// Creates a new field given a `name` or `{name, description}` pair and a
-   /// corresponding value that is managed by a shared pointer.
+   /// corresponding, default-constructed value that is managed by a shared pointer.
    ///
    /// **Example: create some fields and fill an %RNTuple**
    /// ~~~ {.cpp}
@@ -273,15 +273,6 @@ public:
    /// }
    /// ~~~
    ///
-   /// **Example: create a field with an initial value**
-   /// ~~~ {.cpp}
-   /// #include <ROOT/RNTupleModel.hxx>
-   /// using ROOT::Experimental::RNTupleModel;
-   ///
-   /// auto model = RNTupleModel::Create();
-   /// // pt's initial value is 42.0
-   /// auto pt = model->MakeField<float>("pt", 42.0);
-   /// ~~~
    /// **Example: create a field with a description**
    /// ~~~ {.cpp}
    /// #include <ROOT/RNTupleModel.hxx>
@@ -292,8 +283,8 @@ public:
    ///    "hadronFlavour", "flavour from hadron ghost clustering"
    /// });
    /// ~~~
-   template <typename T, typename... ArgsT>
-   std::shared_ptr<T> MakeField(const NameWithDescription_t &fieldNameDesc, ArgsT &&...args)
+   template <typename T>
+   std::shared_ptr<T> MakeField(const NameWithDescription_t &fieldNameDesc)
    {
       EnsureNotFrozen();
       EnsureValidFieldName(fieldNameDesc.fName);
@@ -301,7 +292,7 @@ public:
       field->SetDescription(fieldNameDesc.fDescription);
       std::shared_ptr<T> ptr;
       if (fDefaultEntry)
-         ptr = fDefaultEntry->AddValue<T>(*field, std::forward<ArgsT>(args)...);
+         ptr = fDefaultEntry->AddValue<T>(*field);
       fFieldNames.insert(field->GetFieldName());
       fFieldZero->Attach(std::move(field));
       return ptr;
