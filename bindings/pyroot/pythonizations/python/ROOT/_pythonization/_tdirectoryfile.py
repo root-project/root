@@ -13,10 +13,10 @@ r"""
 \class TDirectoryFile
 \brief \parblock \endparblock
 \htmlonly
+<details open>
+<summary  style="font-size:20px; color: #425788;"><b>Python interface</b></summary>
 <div class="pyrootbox">
 \endhtmlonly
-\anchor python
-## PyROOT
 
 In the same way as for TDirectory, it is possible to inspect the content of a
 TDirectoryFile object from Python as if the subdirectories and objects it
@@ -52,6 +52,7 @@ d.WriteObject(obj, 'keyName')
 \endcode
 \htmlonly
 </div>
+</details>
 \endhtmlonly
 */
 """
