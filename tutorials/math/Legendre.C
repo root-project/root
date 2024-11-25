@@ -35,7 +35,7 @@ void Legendre()
    {
          L[nu]= new TF1("L_0", "ROOT::Math::legendre([0],x)", -1, 1);
          L[nu]->SetParameters(nu, 0.0);
-         L[nu]->SetLineStyle(1);
+         L[nu]->SetLineStyle(kSolid);
          L[nu]->SetLineWidth(2);
          L[nu]->SetLineColor(nu+1);
    }

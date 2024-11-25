@@ -1356,7 +1356,7 @@ void DrawPadTruth(TH1 *histMcsigGen,TH1 *histDataGen,TH1 *histDataUnfold,
    DrawOverflowX(histMcsigGen,0.5);
 
    if(f) {
-      f->SetLineStyle(1);
+      f->SetLineStyle(kSolid);
       f->Draw("SAME");
    }
 

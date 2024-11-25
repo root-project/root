@@ -19,7 +19,7 @@
 
    //
    TArrow ardash(2,15,2,3.5,0.015,"|>");
-   ardash.SetLineStyle(2);
+   ardash.SetLineStyle(kDashed);
    ardash.SetFillColor(1);
    ardash.Draw();
    TLine l1(2.5,4.5,15.5,4.5);
