@@ -20,7 +20,7 @@ L = []
 for nu in range(5):
     f = ROOT.TF1("L_0", "ROOT::Math::legendre([0],x)", -1, 1)
     f.SetParameters(nu, 0.0)
-    f.SetLineStyle(1)
+    f.SetLineStyle(ROOT.kSolid)
     f.SetLineWidth(2)
     f.SetLineColor(nu+1)
     L.append(f)

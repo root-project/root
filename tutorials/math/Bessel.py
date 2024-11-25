@@ -19,6 +19,7 @@
 ##
 ## \author Juan Fernando Jaramillo Botero
 
+import ROOT
 from ROOT import TCanvas, TF1, gSystem, gPad, TLegend, TPaveLabel, kBlack
 
 
@@ -41,7 +42,7 @@ for nu in range(n):
     jbessel = TF1("J_0", "ROOT::Math::cyl_bessel_j([0],x)", 0, 10)
     jbessel.SetParameters(nu, 0.0)
     jbessel.SetTitle("")
-    jbessel.SetLineStyle(1)
+    jbessel.SetLineStyle(ROOT.kSolid)
     jbessel.SetLineWidth(3)
     jbessel.SetLineColor(nu + 1)
     JBessel.append(jbessel)
@@ -80,7 +81,7 @@ for nu in range(n):
     kbessel = TF1("J_0", "ROOT::Math::cyl_bessel_k([0],x)", 0, 10)
     kbessel.SetParameters(nu, 0.0)
     kbessel.SetTitle("Bessel K functions")
-    kbessel.SetLineStyle(1)
+    kbessel.SetLineStyle(ROOT.kSolid)
     kbessel.SetLineWidth(3)
     kbessel.SetLineColor(nu+1)
     KBessel.append(kbessel)
@@ -116,7 +117,7 @@ for nu in range(5):
     ibessel = TF1("J_0", "ROOT::Math::cyl_bessel_i([0],x)", 0, 10)
     ibessel.SetParameters(nu, 0.0)
     ibessel.SetTitle("Bessel I functions")
-    ibessel.SetLineStyle(1)
+    ibessel.SetLineStyle(ROOT.kSolid)
     ibessel.SetLineWidth(3)
     ibessel.SetLineColor(nu + 1)
     iBessel.append(ibessel)
@@ -153,7 +154,7 @@ for nu in range(5):
     jbessel = TF1("J_0", "ROOT::Math::sph_bessel([0],x)", 0, 10)
     jbessel.SetParameters(nu, 0.0)
     jbessel.SetTitle("Bessel j functions")
-    jbessel.SetLineStyle(1)
+    jbessel.SetLineStyle(ROOT.kSolid)
     jbessel.SetLineWidth(3)
     jbessel.SetLineColor(nu+1)
     jBessel.append(jbessel)

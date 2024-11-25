@@ -174,13 +174,13 @@ void TSVDUnfoldExample()
    frame->GetYaxis()->SetTitleOffset( 1.29 );
    frame->Draw();
 
-   data->SetLineStyle(2);
+   data->SetLineStyle(kDashed);
    data->SetLineColor(4);
    data->SetLineWidth(2);
    unfres->SetMarkerStyle(20);
    datatrue->SetLineColor(2);
    datatrue->SetLineWidth(2);
-   xini->SetLineStyle(2);
+   xini->SetLineStyle(kDashed);
    xini->SetLineColor(8);
    xini->SetLineWidth(2);
    // ------------------------------------------------------------
@@ -215,7 +215,7 @@ void TSVDUnfoldExample()
    c3->SetLogy();
 
    TLine *line = new TLine( 0.,1.,40.,1. );
-   line->SetLineStyle(2);
+   line->SetLineStyle(kDashed);
 
    TH1D* dframe = new TH1D( *ddist );
    dframe->SetTitle( "TSVDUnfold |d_{i}|" );
