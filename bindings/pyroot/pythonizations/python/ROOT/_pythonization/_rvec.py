@@ -15,6 +15,7 @@ r"""
 \htmlonly
 <div class="pyrootbox">
 \endhtmlonly
+\anchor python
 ## PyROOT
 
 The ROOT::RVec class has additional features in Python, which allow to adopt memory
