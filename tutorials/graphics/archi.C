@@ -165,12 +165,12 @@ void archi() {
 
    TBox *box1 = new TBox(0.2,9.2,14.25,17.8);
    box1->SetFillStyle(0);
-   box1->SetLineStyle(2);
+   box1->SetLineStyle(kDashed);
    box1->Draw();
 
    TBox *box2 = new TBox(10.2,18.7,20.2,23.6);
    box2->SetFillStyle(0);
-   box2->SetLineStyle(3);
+   box2->SetLineStyle(kDotted);
    box2->Draw();
 
    ar1.DrawArrow(2.5,17.5,2.5,18.9,0.012,"|>");

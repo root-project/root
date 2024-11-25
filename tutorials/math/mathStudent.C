@@ -30,7 +30,7 @@ void mathStudent()
 
    TF1* fgaus = new TF1("gaus", "TMath::Gaus(x, [0], [1], [2])", -5, 5);
    fgaus->SetTitle("Student density");
-   fgaus->SetLineStyle(2);
+   fgaus->SetLineStyle(kDashed);
    fgaus->SetLineWidth(1);
    fgaus->SetParameters(0, 1, kTRUE);
    leg->AddEntry(fgaus->DrawCopy(), "Normal(0,1)", "l");

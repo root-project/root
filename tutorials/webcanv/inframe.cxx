@@ -70,7 +70,7 @@ void inframe()
    auto b2_dash = new TBox(6, 1, 10.5, 3);
    b2_dash->SetFillStyle(0);
    b2_dash->SetLineColor(kRed);
-   b2_dash->SetLineStyle(3);
+   b2_dash->SetLineStyle(kDotted);
    b2_dash->SetLineWidth(3);
    c1->Add(b2_dash); // show clipped
 
