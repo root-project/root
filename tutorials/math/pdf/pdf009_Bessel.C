@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_math
+/// \ingroup tutorial_pdf
 /// \notebook
 /// Show the different kinds of Bessel functions available in ROOT
 /// To execute the macro type in:
@@ -31,7 +31,7 @@
 #include "TAxis.h"
 #include "TPaveLabel.h"
 
-void Bessel()
+void pdf009_Bessel()
 {
    TCanvas *DistCanvas = new TCanvas("DistCanvas", "Bessel functions example", 10, 10, 800, 600);
    DistCanvas->SetFillColor(17);

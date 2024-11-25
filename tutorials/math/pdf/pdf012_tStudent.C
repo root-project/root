@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_math
+/// \ingroup tutorial_pdf
 /// \notebook
 /// Example macro describing the student t distribution
 ///
@@ -23,7 +23,7 @@
 #include "Math/DistFunc.h"
 
 
-void tStudent()
+void pdf012_tStudent()
 {
 
    /* gSystem->Load("libMathMore");*/

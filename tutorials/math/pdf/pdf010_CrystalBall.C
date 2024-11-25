@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_math
+/// \ingroup tutorial_pdf
 /// \notebook
 /// Example of CrystalBall Function and its distribution (pdf and cdf)
 ///
@@ -8,7 +8,7 @@
 ///
 /// \author Lorenzo Moneta
 
-void CrystalBall()  {
+void pdf010_CrystalBall()  {
 
    auto c1 = new TCanvas();
    c1->Divide(1,3);

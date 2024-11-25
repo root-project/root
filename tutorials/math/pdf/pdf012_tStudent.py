@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_math
+## \ingroup tutorial_pdf
 ## \notebook
 ## Example macro describing the student t distribution
 ##

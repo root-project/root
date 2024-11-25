@@ -82,14 +82,6 @@ The `$ROOTSYS/tutorials` directory includes several sub-directories:
 \ingroup Tutorials
 \brief Various ROOT geometry package examples.
 
-\defgroup tutorial_fft Fast Fourier Transforms tutorials
-\ingroup Tutorials
-\brief Example showing the Fast Fourier Transforms interface in ROOT.
-
-\defgroup tutorial_fit Fit Tutorials
-\ingroup Tutorials
-\brief These tutorials illustrate the main fitting features. Their names are related to the aspect which is treated in the code.
-
 \defgroup tutorial_roofit RooFit Tutorials
 \ingroup Tutorials
 \brief These tutorials illustrate the main features of [RooFit](group__Roofitmain.html): the name of the examples and their short description help in figuring out their objective.
@@ -134,9 +126,9 @@ The `$ROOTSYS/tutorials` directory includes several sub-directories:
 \ingroup Tutorials
 \brief Examples showing the Math classes.
 
-\defgroup tutorial_matrix Matrix tutorials
+\defgroup tutorial_mc Monte Carlo tutorials
 \ingroup Tutorials
-\brief Examples showing how to use TMatrix.
+\brief Monte Carlo examples.
 
 \defgroup tutorial_multicore Multicore tutorials
 \ingroup Tutorials
@@ -150,13 +142,9 @@ The `$ROOTSYS/tutorials` directory includes several sub-directories:
 \ingroup Tutorials
 \brief Selected examples illustrating how to use ROOT's Python interface: PyROOT.
 
-\defgroup tutorial_quadp Quadratic programming package.
+\defgroup tutorial_pythia Pythia tutorials
 \ingroup Tutorials
-\brief Example showing the usage of the quadratic programming package quadp.
-
-\defgroup tutorial_r R tutorials
-\ingroup Tutorials
-\brief Examples showing the R interface.
+\brief Examples showing the pythia usage.
 
 \defgroup tutorial_roostats RooStats Tutorials
 \ingroup Tutorials
@@ -181,14 +169,6 @@ The `$ROOTSYS/tutorials` directory includes several sub-directories:
 \defgroup tutorial_unfold TUnfold tutorials
 \ingroup Tutorials
 \brief Test programs for the classes TUnfold and related
-
-\defgroup tutorial_unuran Unuran tutorials
-\ingroup Tutorials
-\brief Examples showing unuran capabilities.
-
-\defgroup tutorial_vecops VecOps tutorials
-\ingroup Tutorials
-\brief These examples show the functionalities of the VecOps utilities.
 
 \defgroup tutorial_FITS FITS files interface tutorials
 \ingroup Tutorials
