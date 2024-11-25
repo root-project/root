@@ -138,10 +138,6 @@ The `$ROOTSYS/tutorials` directory includes several sub-directories:
 \ingroup Tutorials
 \brief Examples showing the net classes.
 
-\defgroup tutorial_physics Physics tutorials
-\ingroup Tutorials
-\brief Physics examples.
-
 \defgroup tutorial_pyroot PyRoot tutorials
 \ingroup Tutorials
 \brief Selected examples illustrating how to use ROOT's Python interface: PyROOT.
