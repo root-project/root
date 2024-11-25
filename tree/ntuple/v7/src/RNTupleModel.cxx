@@ -502,6 +502,19 @@ ROOT::Experimental::RFieldBase::RBulk ROOT::Experimental::RNTupleModel::CreateBu
    return f->CreateBulk();
 }
 
+void ROOT::Experimental::RNTupleModel::Retire()
+{
+   switch (fModelState) {
+   case EState::kRetired: return;
+   case EState::kBuilding: throw RException(R__FAIL("invalid attempt to retire unfrozen model"));
+   case EState::kFrozen: break;
+   }
+
+   // Ensure that Fill() does not work anymore
+   fModelId = 0;
+   fModelState = EState::kRetired;
+}
+
 void ROOT::Experimental::RNTupleModel::Unfreeze()
 {
    switch (fModelState) {
