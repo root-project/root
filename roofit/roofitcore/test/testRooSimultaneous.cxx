@@ -407,3 +407,19 @@ TEST(RooSimultaneous, ConditionalProdPdf)
    // RooSimultaneous, and one for the RooCategory.
    EXPECT_EQ(countGraphNodes(*compiledSim), countGraphNodes(*compiled) + 2);
 }
+
+// Test that we can evaluate a RooSimultaneous also if only a fraction of the
+// channels can be extended.
+TEST(RooSimultaneous, PartiallyExtendedPdfs)
+{
+   RooWorkspace ws;
+   ws.factory("Gaussian::pdfA(x_a[-10, 10], mu_a[0, -10, 10], sigma_a[2.0, 0.1, 10.0])");
+   ws.factory("Gaussian::pdfB(x_b[-10, 10], mu_b[0, -10, 10], sigma_b[2.0, 0.1, 10.0])");
+   ws.factory("PROD::pdfAprod(pdfA)");
+   ws.factory("ExtendPdf::pdfBext(pdfB, n_b[1000., 100., 10000.])");
+   ws.factory("SIMUL::simPdf( cat[A=0,B=1], A=pdfAprod, B=pdfBext)");
+
+   RooArgSet observables{*ws.var("x_a"), *ws.var("x_b")};
+
+   std::cout << ws.pdf("simPdf")->getVal() << std::endl;
+}
