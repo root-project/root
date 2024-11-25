@@ -15,6 +15,7 @@ r"""
 \htmlonly
 <div class="pyrootbox">
 \endhtmlonly
+\anchor python
 ## PyROOT
 
 In the same way as for TDirectory, it is possible to inspect the content of a

@@ -15,6 +15,7 @@ r'''
 \htmlonly
 <div class="pyrootbox">
 \endhtmlonly
+\anchor python
 ## PyROOT
 
 When used from Python, the subclasses of TArray (TArrayC, TArrayS, TArrayI, TArrayL, TArrayF and TArrayD) benefit from the following extra features:

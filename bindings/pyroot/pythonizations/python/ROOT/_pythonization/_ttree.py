@@ -15,6 +15,7 @@ r"""
 \htmlonly
 <div class="pyrootbox">
 \endhtmlonly
+\anchor python
 ## PyROOT
 
 The TTree class has several additions for its use from Python, which are also

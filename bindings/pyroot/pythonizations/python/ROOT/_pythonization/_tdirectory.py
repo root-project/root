@@ -15,6 +15,7 @@ r"""
 \htmlonly
 <div class="pyrootbox">
 \endhtmlonly
+\anchor python
 ## PyROOT
 
 It is possible to retrieve the content of a TDirectory object
