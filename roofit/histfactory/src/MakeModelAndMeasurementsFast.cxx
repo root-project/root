@@ -42,7 +42,7 @@
   <p>
   The user needs to provide histograms (in picobarns per bin) and configure the job
   with XML.  The configuration XML is defined in the file `$ROOTSYS/config/HistFactorySchema.dtd`, but essentially
-  it is organized as follows (see the examples in `${ROOTSYS}/tutorials/histfactory/`)</p>
+  it is organized as follows (see the examples in `${ROOTSYS}/tutorials/roofit/histfactory/`)</p>
 
   <ul>
   <li> a top level 'Combination' that is composed of:</li>

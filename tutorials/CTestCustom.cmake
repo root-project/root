@@ -15,15 +15,15 @@ endif()
 if (CTEST_BUILD_NAME MATCHES aarch64 AND CTEST_BUILD_NAME MATCHES dbg)
   # these tutorials are disabled as they timeout
   list(APPEND CTEST_CUSTOM_TESTS_IGNORE
-       tutorial-roostats-StandardBayesianNumericalDemo
-       tutorial-roostats-OneSidedFrequentistUpperLimitWithBands
+       tutorial-roofit-roostats-StandardBayesianNumericalDemo
+       tutorial-roofit-roostats-OneSidedFrequentistUpperLimitWithBands
        tutorial-machine_learning-TMVAClassification
        tutorial-machine_learning-TMVARegression
        tutorial-machine_learning-TMVAMulticlass
        tutorial-machine_learning-TMVAMulticlassApplication
        tutorial-machine_learning-TMVARegressionApplication
        tutorial-machine_learning-TMVAClassificationApplication
-       tutorial-roostats-TwoSidedFrequentistUpperLimitWithBands)
+       tutorial-roofit-roostats-TwoSidedFrequentistUpperLimitWithBands)
 endif()
 
 if (CTEST_BUILD_NAME MATCHES aarch64)
