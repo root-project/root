@@ -10,29 +10,24 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date November 2024
 /// \author Advait Dhingra
 
-#include "TH2F.h"
-#include "TRandom.h"
-#include "TCanvas.h"
-
-void NormalizeHistogram()
+void hist009_TH1_normalize()
 {
-
-   std::array<double, 6> binsx{0, 5, 10, 20, 50, 100};
-   TH1F *orig = new TH1F("orig", "Original histogram before normalization", binsx.size() - 1, &binsx[0]);
+   const std::array<double, 6> binsx{0, 5, 10, 20, 50, 100};
+   TH1D *orig = new TH1D("orig", "Original histogram before normalization", binsx.size() - 1, binsx.data());
 
    gStyle->SetTitleFontSize(0.06);
 
-   TRandom2 rand;
-
    // Filling histogram with random entries
-   for (int i = 0; i < 100'000; ++i) {
+   TRandom2 rand;
+   for (int i = 0; i < 100000; ++i) {
       double r = rand.Rndm() * 100;
       orig->Fill(r);
    }
 
-   TH1F *norm = (TH1F *)orig->Clone("norm");
+   TH1D *norm = static_cast<TH1D *>(orig->Clone("norm"));
    norm->SetTitle("Normalized Histogram");
 
    // Normalizing the Histogram by scaling by 1 / the integral and taking width into account
