@@ -508,7 +508,7 @@ set(returncode_1 math/fit/fit2a.C
                  visualisation/graphs/exclusiongraph.C
                  visualisation/graphs/graphstruct.C
                  hist/ContourList.C
-                 hist/hbars.C
+                 hist/hist006_TH1_bar_charts.C
                  hist/th2polyBoxes.C
                  hist/statsEditing.C
                  hist/cumulative.C
