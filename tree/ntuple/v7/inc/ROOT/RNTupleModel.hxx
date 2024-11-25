@@ -372,6 +372,7 @@ public:
 
    void Freeze();
    void Unfreeze();
+   void Retire();
    bool IsFrozen() const { return (fModelState == EState::kFrozen) || (fModelState == EState::kRetired); }
    bool IsBare() const { return !fDefaultEntry; }
    std::uint64_t GetModelId() const { return fModelId; }
