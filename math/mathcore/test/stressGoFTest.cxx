@@ -72,11 +72,7 @@ struct GoFTStress {
 
       printf("*****************************************************************************************\n");
       gBenchmark->Print("GoFTestStress");
-#ifdef __CINT__
-      Double_t reftime = 0.02 ; // slc4rabacal interpreted (CPU time taken to run complete tests with ACLiC)
-#else
       Double_t reftime = 0.04; // slc4rabacal compiled (CPU time taken to run complete tests)
-#endif
 
       Double_t rootmarks = 800. * reftime / gBenchmark->GetCpuTime("GoFTestStress");
 
@@ -555,7 +551,7 @@ Int_t stressGoFTest(Int_t argc = 1 , Char_t* argv[] = nullptr) {
    return RunTests(argc, argv);
 }
 
-#if !defined(__CINT__) && !defined(__MAKECINT__)
+#if !defined(__CLING__)
 Int_t main(Int_t argc, Char_t* argv[]) {
    return RunTests(argc, argv);
 }

@@ -210,7 +210,9 @@ from the painting package.
 This method is drawing the daughters of the volume containing the point one
 level down, printing the path to the deepest physical node holding this point.
 It also computes the closest distance to any boundary. The point will be drawn
-in red.
+in red, as well as a sphere having this closest distance as radius. In case a
+non-zero distance is given by the user as fifth argument of CheckPoint, this
+distance will be used as radius of the safety sphere.
 
 \image html geom_checkpoint.jpg
 
@@ -2914,9 +2916,9 @@ Int_t TGeoManager::GetByteCount(Option_t * /*option*/)
 TVirtualGeoPainter *TGeoManager::GetGeomPainter()
 {
    if (!fPainter) {
-      const char *kind = "root";
-      if (gROOT->IsWebDisplay() && !gROOT->IsWebDisplayBatch())
-         kind = "web";
+      const char *kind = gEnv->GetValue("GeomPainter.Name", "");
+      if (!kind || !*kind)
+         kind = (gROOT->IsWebDisplay() && !gROOT->IsWebDisplayBatch()) ? "web" : "root";
       if (auto h = gROOT->GetPluginManager()->FindHandler("TVirtualGeoPainter", kind)) {
          if (h->LoadPlugin() == -1) {
             Error("GetGeomPainter", "could not load plugin for %s geo_painter", kind);
@@ -3765,9 +3767,9 @@ void TGeoManager::CheckBoundaryReference(Int_t icheck)
 ////////////////////////////////////////////////////////////////////////////////
 /// Classify a given point. See TGeoChecker::CheckPoint().
 
-void TGeoManager::CheckPoint(Double_t x, Double_t y, Double_t z, Option_t *option)
+void TGeoManager::CheckPoint(Double_t x, Double_t y, Double_t z, Option_t *option, Double_t safety)
 {
-   GetGeomPainter()->CheckPoint(x, y, z, option);
+   GetGeomPainter()->CheckPoint(x, y, z, option, safety);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

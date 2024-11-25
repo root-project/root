@@ -1,22 +1,18 @@
 #ifndef CPPYY_TEST_DATATYPES_H
 #define CPPYY_TEST_DATATYPES_H
 
-#ifndef CPPYY_DUMMY_BACKEND
-#include "RtypesCore.h"
+#ifdef _WIN32
+typedef __int64          Long64_t;
+typedef unsigned __int64 ULong64_t;
 #else
-// copied from RtypesCore.h ...
-#if defined(R__WIN32) && !defined(__CINT__)
-typedef __int64          Long64_t;  //Portable signed long integer 8 bytes
-typedef unsigned __int64 ULong64_t; //Portable unsigned long integer 8 bytes
-#else
-typedef long long          Long64_t; //Portable signed long integer 8 bytes
-typedef unsigned long long ULong64_t;//Portable unsigned long integer 8 bytes
-#endif
+typedef long long          Long64_t;
+typedef unsigned long long ULong64_t;
 #endif
 #include <cstddef>
 #include <cstdint>
 #include <complex>
 #include <functional>
+#include <memory>
 #include <vector>
 #include <wchar.h>
 #include <sys/types.h>
@@ -85,6 +81,11 @@ private:
 //===========================================================================
 typedef std::complex<double> complex_t; // maps to Py_complex
 typedef std::complex<int> icomplex_t;   // no equivalent
+#ifndef _WIN32
+typedef _Complex double  ccomplex_t;    // C-style complex, maps to Py_complex
+#else
+typedef _C_double_complex ccomplex_t;   // id.
+#endif
 
 class CppyyTestData {
 public:
@@ -126,6 +127,7 @@ public:
     long double          get_ldouble_def(long double ld = 1);
     complex_t            get_complex();
     icomplex_t           get_icomplex();
+    ccomplex_t           get_ccomplex();
     EWhat                get_enum();
     void*                get_voidp();
 
@@ -139,6 +141,10 @@ public:
     std::byte*      get_byte_array();
     std::byte*      get_byte_array2();
 #endif
+    int8_t*         get_int8_array();
+    int8_t*         get_int8_array2();
+    uint8_t*        get_uint8_array();
+    uint8_t*        get_uint8_array2();
     short*          get_short_array();
     short*          get_short_array2();
     unsigned short* get_ushort_array();
@@ -158,6 +164,8 @@ public:
     double*     get_double_array2();
     complex_t*  get_complex_array();
     complex_t*  get_complex_array2();
+    ccomplex_t* get_ccomplex_array();
+    ccomplex_t* get_ccomplex_array2();
 
     CppyyTestPod get_pod_val();                 // for m_pod
     CppyyTestPod* get_pod_val_ptr();
@@ -194,6 +202,7 @@ public:
     const long double&        get_ldouble_cr();
     const complex_t&          get_complex_cr();
     const icomplex_t&         get_icomplex_cr();
+    const ccomplex_t&         get_ccomplex_cr();
     const EWhat&              get_enum_cr();
 
 // getters ref
@@ -224,6 +233,7 @@ public:
     long double&        get_ldouble_r();
     complex_t&          get_complex_r();
     icomplex_t&         get_icomplex_r();
+    ccomplex_t&         get_ccomplex_r();
     EWhat&              get_enum_r();
 
 // setters
@@ -254,6 +264,7 @@ public:
     void set_ldouble(long double);
     void set_complex(complex_t);
     void set_icomplex(icomplex_t);
+    void set_ccomplex(ccomplex_t);
     void set_enum(EWhat);
     void set_voidp(void*);
 
@@ -296,6 +307,7 @@ public:
     void set_ldouble_cr(const long double&);
     void set_complex_cr(const complex_t&);
     void set_icomplex_cr(const icomplex_t&);
+    void set_ccomplex_cr(const ccomplex_t&);
     void set_enum_cr(const EWhat&);
 
 // setters ref
@@ -332,6 +344,8 @@ public:
 #if __cplusplus > 201402L
     void set_byte_p(std::byte*);
 #endif
+    void set_int8_p(int8_t*);
+    void set_uint8_p(uint8_t*);
     void set_short_p(short*);
     void set_ushort_p(unsigned short*);
     void set_int_p(int*);
@@ -355,6 +369,8 @@ public:
 #if __cplusplus > 201402L
     void set_byte_ppa(std::byte**);
 #endif
+    void set_int8_ppa(int8_t**);
+    void set_uint8_ppa(uint8_t**);
     void set_short_ppa(short**);
     void set_ushort_ppa(unsigned short**);
     void set_int_ppa(int**);
@@ -407,6 +423,7 @@ public:
     void set_ldouble_rv(long double&&);
     void set_complex_rv(complex_t&&);
     void set_icomplex_rv(icomplex_t&&);
+    void set_ccomplex_rv(ccomplex_t&&);
     void set_enum_rv(EWhat&&);
 
 // passers
@@ -420,6 +437,7 @@ public:
     float*          pass_array(float*);
     double*         pass_array(double*);
     complex_t*      pass_array(complex_t*);
+    ccomplex_t*     pass_array(ccomplex_t*);
 
     unsigned char*  pass_void_array_B(void* a) { return pass_array((unsigned char*)a); }
     short*          pass_void_array_h(void* a) { return pass_array((short*)a); }
@@ -431,6 +449,7 @@ public:
     float*          pass_void_array_f(void* a) { return pass_array((float*)a); }
     double*         pass_void_array_d(void* a) { return pass_array((double*)a); }
     complex_t*      pass_void_array_Z(void* a) { return pass_array((complex_t*)a); }
+    ccomplex_t*     pass_void_array_cZ(void* a) { return pass_array((ccomplex_t*)a); }
 
 // strings
     const char*     get_valid_string(const char* in);
@@ -472,6 +491,7 @@ public:
     long double          m_ldouble;
     complex_t            m_complex;
     icomplex_t           m_icomplex;
+    ccomplex_t           m_ccomplex;
     EWhat                m_enum;
     void*                m_voidp;
 
@@ -486,6 +506,10 @@ public:
     std::byte       m_byte_array[N];
     std::byte*      m_byte_array2;
 #endif
+    int8_t          m_int8_array[N];
+    int8_t*         m_int8_array2;
+    uint8_t         m_uint8_array[N];
+    uint8_t*        m_uint8_array2;
     short           m_short_array[N];
     short*          m_short_array2;
     unsigned short  m_ushort_array[N];
@@ -507,6 +531,8 @@ public:
     complex_t*  m_complex_array2;
     icomplex_t  m_icomplex_array[N];
     icomplex_t* m_icomplex_array2;
+    ccomplex_t  m_ccomplex_array[N];
+    ccomplex_t* m_ccomplex_array2;
 
 // object types
     CppyyTestPod m_pod;
@@ -540,8 +566,11 @@ public:
     static long double             s_ldouble;
     static complex_t               s_complex;
     static icomplex_t              s_icomplex;
+    static ccomplex_t              s_ccomplex;
     static EWhat                   s_enum;
     static void*                   s_voidp;
+    static std::string             s_strv;
+    static std::string*            s_strp;
 
 private:
     bool m_owns_arrays;
@@ -582,6 +611,7 @@ extern double             g_double;
 extern long double        g_ldouble;
 extern complex_t          g_complex;
 extern icomplex_t         g_icomplex;
+extern ccomplex_t         g_ccomplex;
 extern EFruit             g_enum;
 extern void*              g_voidp;
 
@@ -612,6 +642,7 @@ static const double             g_c_double  = -699.;
 static const long double        g_c_ldouble = -799.l;
 static const complex_t          g_c_complex = {1., 2.};
 static const icomplex_t         g_c_icomplex = {3, 4};
+static const ccomplex_t         g_c_ccomplex = {5., 6.};
 static const EFruit             g_c_enum    = kApple;
 static const void*              g_c_voidp   = nullptr;
 
@@ -701,5 +732,134 @@ public:
     void set_callable(const std::function<double(double, double)>&);
     double operator()(double, double);
 };
+
+
+//= array of struct variants ================================================
+namespace ArrayOfStruct {
+
+struct Foo {
+    int fVal;
+};
+
+struct Bar1 {
+    Bar1() : fArr(new Foo[2]) { fArr[0].fVal = 42; fArr[1].fVal = 13; }
+    Bar1(const Bar1&) = delete;
+    Bar1& operator=(const Bar1&) = delete;
+    ~Bar1() { delete[] fArr; }
+    Foo* fArr;
+};
+
+struct Bar2 {
+    Bar2(int num_foo) : fArr(std::unique_ptr<Foo[]>{new Foo[num_foo]}) {
+        for (int i = 0; i < num_foo; ++i) fArr[i].fVal = 2*i;
+    }
+    std::unique_ptr<Foo[]> fArr;
+};
+
+} // namespace ArrayOfStruct
+
+
+//= array of C strings passing ==============================================
+namespace ArrayOfCStrings {
+    std::vector<std::string> takes_array_of_cstrings(const char* args[], int len);
+}
+
+
+//= aggregate testing ======================================================
+namespace AggregateTest {
+
+struct Aggregate1 {
+   static int sInt;
+};
+
+struct Aggregate2 {
+   static int sInt;
+   int fInt = 42;
+};
+
+} // namespace AggregateTest
+
+
+//= multi-dim arrays =======================================================
+namespace MultiDimArrays {
+
+struct DataHolder {
+    DataHolder();
+    ~DataHolder();
+
+    short**                  m_short2a;
+    unsigned short**         m_unsigned_short2a;
+    int**                    m_int2a;
+    unsigned int**           m_unsigned_int2a;
+    long**                   m_long2a;
+    unsigned long**          m_unsigned_long2a;
+    long long**              m_long_long2a;
+    unsigned long long**     m_unsigned_long_long2a;
+    float**                  m_float2a;
+    double**                 m_double2a;
+
+    short**                  m_short2b;
+    short**                  new_short2d(int N, int M);
+    unsigned short**         m_unsigned_short2b;
+    unsigned short**         new_ushort2d(int N, int M);
+    int**                    m_int2b;
+    int**                    new_int2d(int N, int M);
+    unsigned int**           m_unsigned_int2b;
+    unsigned int**           new_uint2d(int N, int M);
+    long**                   m_long2b;
+    long**                   new_long2d(int N, int M);
+    unsigned long**          m_unsigned_long2b;
+    unsigned long**          new_ulong2d(int N, int M);
+    long long**              m_long_long2b;
+    long long**              new_llong2d(int N, int M);
+    unsigned long long**     m_unsigned_long_long2b;
+    unsigned long long**     new_ullong2d(int N, int M);
+    float**                  m_float2b;
+    float**                  new_float2d(int N, int M);
+    double**                 m_double2b;
+    double**                 new_double2d(int N, int M);
+
+    short                    m_short2c[3][5];
+    unsigned short           m_unsigned_short2c[3][5];
+    int                      m_int2c[3][5];
+    unsigned int             m_unsigned_int2c[3][5];
+    long                     m_long2c[3][5];
+    unsigned long            m_unsigned_long2c[3][5];
+    long long                m_long_long2c[3][5];
+    unsigned long long       m_unsigned_long_long2c[3][5];
+    float                    m_float2c[3][5];
+    double                   m_double2c[3][5];
+
+    short***                 m_short3a;
+    unsigned short***        m_unsigned_short3a;
+    int***                   m_int3a;
+    unsigned int***          m_unsigned_int3a;
+    long***                  m_long3a;
+    unsigned long***         m_unsigned_long3a;
+    long long***             m_long_long3a;
+    unsigned long long***    m_unsigned_long_long3a;
+    float***                 m_float3a;
+    double***                m_double3a;
+
+    short                    m_short3c[3][5][7];
+    unsigned short           m_unsigned_short3c[3][5][7];
+    int                      m_int3c[3][5][7];
+    unsigned int             m_unsigned_int3c[3][5][7];
+    long                     m_long3c[3][5][7];
+    unsigned long            m_unsigned_long3c[3][5][7];
+    long long                m_long_long3c[3][5][7];
+    unsigned long long       m_unsigned_long_long3c[3][5][7];
+    float                    m_float3c[3][5][7];
+    double                   m_double3c[3][5][7];
+};
+
+} // namespace MultiDimArrays
+
+
+//= int8_t/uint8_t arrays ===================================================
+namespace Int8_Uint8_Arrays {
+    extern  int8_t  test[6];
+    extern uint8_t utest[6];
+}
 
 #endif // !CPPYY_TEST_DATATYPES_H

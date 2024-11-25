@@ -61,7 +61,7 @@ REX::REvePointSet *getPointSet(int npoints = 2, float s=2, int color=28)
        ps->SetNextPoint(r.Uniform(-s,s), r.Uniform(-s,s), r.Uniform(-s,s));
 
    ps->SetMarkerColor(color);
-   ps->SetMarkerSize(8 + r.Uniform(1, 8));
+   ps->SetMarkerSize(8);
    ps->SetMarkerStyle(4);
    return ps;
 }
@@ -148,6 +148,7 @@ void addJets()
    event->AddElement(jetHolder);
 }
 
+
 void makeEventScene()
 {
    addPoints();
@@ -167,6 +168,9 @@ void makeGeometryScene()
    // Debug of surface fill in RPhi (index buffer screwed).
    // b1->SetNSegments(3);
    b1->SetNSegments(40);
+
+   // an example of axis guides
+   eveMng->GetDefaultViewer()->SetAxesType(REX::REveViewer::EAxesType::kAxesOrigin);
 }
 
 
@@ -238,8 +242,6 @@ private:
    bool fAutoplay{false};
    int  fPlayDelay{10};
    int  fCount{0};
-
-   std::chrono::time_point<std::chrono::system_clock> fPrevTime;
    std::chrono::duration<double> fDeltaTime{1};
 
    std::thread* fTimerThread{nullptr};

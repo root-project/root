@@ -5,10 +5,10 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : ResultsRegression                                                     *
- *                                             *
+ *                                                                                *
  *                                                                                *
  * Description:                                                                   *
- *      Base-class for result-vectors                                             *
+ *      Derived-class for result-vectors                                          *
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
@@ -23,7 +23,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (see tmva/doc/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                                         *
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_ResultsRegression
@@ -33,7 +33,7 @@
 //                                                                      //
 // ResultsRegression                                                    //
 //                                                                      //
-// Class that is the base-class for a vector of result                  //
+// Class that is the derived-class for a vector of results              //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -47,44 +47,40 @@
 
 namespace TMVA {
 
-   class MsgLogger;
+class MsgLogger;
 
-   class ResultsRegression : public Results {
+class ResultsRegression : public Results {
 
-   public:
+public:
+   ResultsRegression(const DataSetInfo *dsi, TString resultsName);
+   ~ResultsRegression();
 
-      ResultsRegression( const DataSetInfo* dsi, TString resultsName  );
-      ~ResultsRegression();
+   // setters
+   void SetValue(std::vector<Float_t> &value, Int_t ievt);
+   void Resize(Int_t entries) { fRegValues.resize(entries); }
 
-      // setters
-      void     SetValue( std::vector<Float_t>& value, Int_t ievt );
-      void     Resize( Int_t entries )  { fRegValues.resize( entries ); }
+   using TObject::Clear;
+   void Clear(Option_t *) override { fRegValues.clear(); }
 
-      using TObject::Clear;
-      virtual void     Clear(Option_t *)  { fRegValues.clear(); }
+   // getters
+   Long64_t GetSize() const { return fRegValues.size(); }
+   const std::vector<Float_t> &operator[](Int_t ievt) const override { return fRegValues.at(ievt); }
+   std::vector<std::vector<Float_t>> *GetValueVector() { return &fRegValues; }
 
-      // getters
-      Long64_t GetSize() const        { return fRegValues.size(); }
-      virtual const std::vector< Float_t >& operator [] ( Int_t ievt ) const { return fRegValues.at(ievt); }
-      std::vector<std::vector< Float_t> >* GetValueVector()  { return &fRegValues; }
+   TH2F *DeviationAsAFunctionOf(UInt_t varNum, UInt_t tgtNum);
+   TH1F *QuadraticDeviation(UInt_t tgtNum, Bool_t truncate = false, Double_t truncvalue = 0.);
+   void CreateDeviationHistograms(TString prefix);
 
-      TH2F*  DeviationAsAFunctionOf( UInt_t varNum, UInt_t tgtNum );
-      TH1F*  QuadraticDeviation( UInt_t tgtNum, Bool_t truncate = false, Double_t truncvalue = 0. );
-      void   CreateDeviationHistograms( TString prefix );
+   Types::EAnalysisType GetAnalysisType() override { return Types::kRegression; }
 
-      Types::EAnalysisType  GetAnalysisType() { return Types::kRegression; }
+private:
+   mutable std::vector<std::vector<Float_t>> fRegValues; ///< mva values (Results)
+   mutable MsgLogger *fLogger;                           ///<! message logger
+   MsgLogger &Log() const { return *fLogger; }
 
-
-   private:
-
-      mutable std::vector<std::vector< Float_t> >  fRegValues;        ///< mva values (Results)
-      mutable MsgLogger* fLogger;                                     ///<! message logger
-      MsgLogger& Log() const { return *fLogger; }
-   protected:
-
-       ClassDef(ResultsRegression,2);
-
-   };
-}
+protected:
+   ClassDefOverride(ResultsRegression, 3);
+};
+} // namespace TMVA
 
 #endif

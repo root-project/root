@@ -131,8 +131,11 @@ public:
          {
             RCaloTower* tower = (RCaloTower*) fCollection->GetDataPtr(t);
             if (tower->fEta > cd.fEtaMin && tower->fEta < cd.fEtaMax &&
-                tower->fPhi > cd.fPhiMin && tower->fPhi < cd.fPhiMax)
-               item_set.insert(t);
+                tower->fPhi > cd.fPhiMin && tower->fPhi < cd.fPhiMax &&
+                fCollection->GetDataItem(t)->GetVisible())
+                {
+                   item_set.insert(t);
+                }
          }
       }
       REveSelection* sel = (REveSelection*)eveMng->FindElementById(selectionId);
@@ -842,6 +845,7 @@ void collection_proxies(bool proj=true)
    auto b1 = new REveGeoShape("Barrel 1");
    b1->SetShape(new TGeoTube(kR_min, kR_max, kZ_d));
    b1->SetMainColor(kCyan);
+   b1->SetMainTransparency(90);
    eveMng->GetGlobalScene()->AddElement(b1);
 
    rhoZEventScene = eveMng->SpawnNewScene("RhoZ Scene","Projected");

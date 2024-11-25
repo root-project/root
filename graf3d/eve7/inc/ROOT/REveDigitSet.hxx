@@ -59,7 +59,7 @@ protected:
    TRefArray        *fDigitIds{nullptr};  //  Array holding references to external objects.
 
    Int_t             fDefaultValue;   //  Default signal value.
-   Bool_t            fValueIsColor;   //  Interpret signal value as RGBA color.
+   Bool_t            fValueIsColor{false};   //  Interpret signal value as RGBA color.
    Bool_t            fSingleColor;    //  Use the same color for all digits.
    Bool_t            fAntiFlick;      // Make extra render pass to avoid flickering when quads are too small.
 

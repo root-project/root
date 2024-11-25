@@ -18,16 +18,13 @@
 
 #include "Math/MinimizerOptions.h"
 
-#include <map>
-
 namespace RooFit {
 namespace TestStatistics {
 
 class LikelihoodSerial : public LikelihoodWrapper {
 public:
-   LikelihoodSerial(std::shared_ptr<RooAbsL> likelihood,
-                    std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean);
-   inline LikelihoodSerial *clone() const override { return new LikelihoodSerial(*this); }
+   LikelihoodSerial(std::shared_ptr<RooAbsL> _likelihood,
+                    std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean, SharedOffset offset);
 
    void initVars();
 
@@ -39,8 +36,6 @@ private:
 
    RooArgList _vars;     ///< Variables
    RooArgList _saveVars; ///< Copy of variables
-
-   LikelihoodType likelihood_type;
 };
 
 } // namespace TestStatistics

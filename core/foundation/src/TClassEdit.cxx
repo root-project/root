@@ -29,7 +29,7 @@
 
 #include "TSpinLockGuard.h"
 
-using namespace std;
+using std::string, std::string_view, std::vector, std::set;
 
 namespace {
    static TClassEdit::TInterpreterLookupHelper *gInterpreterHelper = nullptr;
@@ -2062,6 +2062,7 @@ public:
          // ROOT-9933: we remove const if present.
          TClassEdit::TSplitType tst(name.c_str());
          tst.ShortType(name, 1);
+         name += "*";
          fHasChanged = true;
          return name;
       }
@@ -2106,7 +2107,7 @@ std::string TClassEdit::GetNameForIO(const std::string& templateInstanceName,
    auto nameForIO = node.ToString();
    if (hasChanged) {
       *hasChanged = node.HasChanged();
-      }
+   }
    return nameForIO;
 }
 

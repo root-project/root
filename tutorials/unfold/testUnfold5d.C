@@ -64,7 +64,6 @@
 
 #include <iostream>
 #include <cmath>
-#include <map>
 #include <TMath.h>
 #include <TCanvas.h>
 #include <TStyle.h>
@@ -73,7 +72,7 @@
 #include <TH1.h>
 #include "TUnfoldDensity.h"
 
-using namespace std;
+using std::cout;
 
 // #define PRINT_MATRIX_L
 
@@ -156,8 +155,8 @@ void testUnfold5d()
   TUnfoldDensity unfold(histMCGenRec,TUnfold::kHistMapOutputHoriz,
                         regMode,constraintMode,densityFlags,
                         generatorBinning,detectorBinning,
-			REGULARISATION_DISTRIBUTION,
-			REGULARISATION_AXISSTEERING);
+            REGULARISATION_DISTRIBUTION,
+            REGULARISATION_AXISSTEERING);
 
   // define the input vector (the measured data distribution)
 

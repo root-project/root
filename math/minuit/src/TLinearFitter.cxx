@@ -37,6 +37,8 @@ std::map<TString,TFormula*> TLinearFitter::fgFormulaMap;
 
 \class TLinearFitter
 
+\note An alternative to this class is to use ROOT::Fit::Fitter, calling the LinearFit() method.
+
 \ingroup MinuitOld
 
 The Linear Fitter - For fitting functions that are LINEAR IN PARAMETERS
@@ -224,22 +226,6 @@ fitters and doesn't require to set the initial values of parameters.
 ///run the function StoreData(kFALSE) after constructor
 
 TLinearFitter::TLinearFitter() :
-TVirtualFitter(),
-   fParams(),
-   fParCovar(),
-   fTValues(),
-   fDesign(),
-   fDesignTemp(),
-   fDesignTemp2(),
-   fDesignTemp3(),
-   fAtb(),
-   fAtbTemp(),
-   fAtbTemp2(),
-   fAtbTemp3(),
-   fFunctions(),
-   fY(),
-   fX(),
-   fE(),
    fVal()
 {
    fChisquare =0;

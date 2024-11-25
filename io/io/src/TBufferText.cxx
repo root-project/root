@@ -659,7 +659,7 @@ void TBufferText::WriteArrayDouble32(const Double_t *d, Int_t n, TStreamerElemen
 ////////////////////////////////////////////////////////////////////////////////
 /// Write array of Float16_t to buffer
 
-void TBufferText::WriteFastArrayFloat16(const Float_t *f, Int_t n, TStreamerElement * /*ele*/)
+void TBufferText::WriteFastArrayFloat16(const Float_t *f, Long64_t n, TStreamerElement * /*ele*/)
 {
    WriteFastArray(f, n);
 }
@@ -667,7 +667,7 @@ void TBufferText::WriteFastArrayFloat16(const Float_t *f, Int_t n, TStreamerElem
 ////////////////////////////////////////////////////////////////////////////////
 /// Write array of Double32_t to buffer
 
-void TBufferText::WriteFastArrayDouble32(const Double_t *d, Int_t n, TStreamerElement * /*ele*/)
+void TBufferText::WriteFastArrayDouble32(const Double_t *d, Long64_t n, TStreamerElement * /*ele*/)
 {
    WriteFastArray(d, n);
 }

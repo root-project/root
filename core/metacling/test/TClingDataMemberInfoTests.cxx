@@ -214,11 +214,11 @@ protected:
 
    ASSERT_TRUE(TClass::GetClass("DMLookup::Outer")->GetListOfDataMembers()->FindObject("InnerPrivate"));
    auto *dmInnerPrivate = (TDataMember*)TClass::GetClass("DMLookup::Outer")->GetListOfDataMembers()->FindObject("InnerPrivate");
-   EXPECT_EQ(dmInnerPrivate->Property(), kIsPrivate | kIsClass);
+   EXPECT_EQ(dmInnerPrivate->Property(), kIsPrivate | kIsClass | kIsNotReacheable);
 
    ASSERT_TRUE(TClass::GetClass("DMLookup::Outer")->GetListOfDataMembers()->FindObject("InnerProtected"));
    auto *dmInnerProtected = (TDataMember*)TClass::GetClass("DMLookup::Outer")->GetListOfDataMembers()->FindObject("InnerProtected");
-   EXPECT_EQ(dmInnerProtected->Property(), kIsProtected | kIsClass);
+   EXPECT_EQ(dmInnerProtected->Property(), kIsProtected | kIsClass | kIsNotReacheable);
 }
 
 TEST(TClingDataMemberInfo, Offset)

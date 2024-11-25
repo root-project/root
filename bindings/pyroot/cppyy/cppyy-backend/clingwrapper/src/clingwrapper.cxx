@@ -53,6 +53,12 @@ typedef CPyCppyy::Parameter Parameter;
 // small number that allows use of stack for argument passing
 const int SMALL_ARGS_N = 8;
 
+// convention to pass flag for direct calls (similar to Python's vector calls)
+#define DIRECT_CALL ((size_t)1 << (8 * sizeof(size_t) - 1))
+static inline size_t CALL_NARGS(size_t nargs) {
+    return nargs & ~DIRECT_CALL;
+}
+
 // data for life time management ---------------------------------------------
 typedef std::vector<TClassRef> ClassRefs_t;
 static ClassRefs_t g_classrefs(1);
@@ -378,9 +384,16 @@ bool is_missclassified_stl(const std::string& name)
 
 
 // direct interpreter access -------------------------------------------------
-bool Cppyy::Compile(const std::string& code)
+bool Cppyy::Compile(const std::string& code, bool /*silent*/)
 {
     return gInterpreter->Declare(code.c_str());
+}
+
+std::string Cppyy::ToString(TCppType_t klass, TCppObject_t obj)
+{
+    if (klass && obj && !IsNamespace((TCppScope_t)klass))
+        return gInterpreter->ToString(GetScopedFinalName(klass).c_str(), (void*)obj);
+    return "";
 }
 
 
@@ -612,7 +625,8 @@ Cppyy::TCppType_t Cppyy::GetActualClass(TCppType_t klass, TCppObject_t obj)
 #endif
 
     TClass* clActual = cr->GetActualClass((void*)obj);
-    if (clActual && clActual != cr.GetClass()) {
+    // The additional check using TClass::GetClassInfo is to prevent returning classes of which the Interpreter has no info
+    if (clActual && clActual != cr.GetClass() && clActual->GetClassInfo()) {
         auto itt = g_name2classrefidx.find(clActual->GetName());
         if (itt != g_name2classrefidx.end())
             return (TCppType_t)itt->second;
@@ -669,7 +683,7 @@ bool Cppyy::IsComplete(const std::string& type_name)
 Cppyy::TCppObject_t Cppyy::Allocate(TCppType_t type)
 {
     TClassRef& cr = type_from_handle(type);
-    return (TCppObject_t)malloc(gInterpreter->ClassInfo_Size(cr->GetClassInfo()));
+    return (TCppObject_t)::operator new(gInterpreter->ClassInfo_Size(cr->GetClassInfo()));
 }
 
 void Cppyy::Deallocate(TCppType_t /* type */, TCppObject_t instance)
@@ -677,10 +691,12 @@ void Cppyy::Deallocate(TCppType_t /* type */, TCppObject_t instance)
     ::operator delete(instance);
 }
 
-Cppyy::TCppObject_t Cppyy::Construct(TCppType_t type)
+Cppyy::TCppObject_t Cppyy::Construct(TCppType_t type, void* arena)
 {
     TClassRef& cr = type_from_handle(type);
-    return (TCppObject_t)cr->New();
+    if (arena)
+        return (TCppObject_t)cr->New(arena, TClass::kRealNew);
+    return (TCppObject_t)cr->New(TClass::kRealNew);
 }
 
 static std::map<Cppyy::TCppType_t, bool> sHasOperatorDelete;
@@ -695,10 +711,11 @@ void Cppyy::Destruct(TCppType_t type, TCppObject_t instance)
         else {
             auto ib = sHasOperatorDelete.find(type);
             if (ib == sHasOperatorDelete.end()) {
-                sHasOperatorDelete[type] = (bool)cr->GetListOfAllPublicMethods()->FindObject("operator delete");
-                ib = sHasOperatorDelete.find(type);
+               TFunction *f = (TFunction *)cr->GetMethodAllAny("operator delete");
+               sHasOperatorDelete[type] = (bool)(f && (f->Property() & kIsPublic));
+               ib = sHasOperatorDelete.find(type);
             }
-            ib->second ? cr->Destructor((void*)instance) : free((void*)instance);
+            ib->second ? cr->Destructor((void *)instance) : ::operator delete((void *)instance);
         }
     }
 }
@@ -771,6 +788,8 @@ void release_args(Parameter* args, size_t nargs) {
 static inline bool WrapperCall(Cppyy::TCppMethod_t method, size_t nargs, void* args_, void* self, void* result)
 {
     Parameter* args = (Parameter*)args_;
+    //bool is_direct = nargs & DIRECT_CALL;
+    nargs = CALL_NARGS(nargs);
 
     CallWrapper* wrap = (CallWrapper*)method;
     const TInterpreter::CallFuncIFacePtr_t& faceptr = wrap->fFaceptr.fGeneric ? wrap->fFaceptr : GetCallFunc(method);
@@ -1000,6 +1019,15 @@ bool Cppyy::IsAggregate(TCppType_t klass)
     if (cr.GetClass())
         return cr->ClassProperty() & kClassIsAggregate;
     return false;
+}
+
+bool Cppyy::IsDefaultConstructable(TCppType_t type)
+{
+// Test if this type has a default constructor or is a "plain old data" type
+    TClassRef& cr = type_from_handle(type);
+    if (cr.GetClass())
+        return cr->HasDefaultConstructor() || (cr->ClassProperty() & kClassIsAggregate);
+    return true;
 }
 
 // helpers for stripping scope names
@@ -1404,6 +1432,13 @@ void Cppyy::AddSmartPtrType(const std::string& type_name)
     gSmartPtrTypes.insert(ResolveName(type_name));
 }
 
+void Cppyy::AddTypeReducer(const std::string& /*reducable*/, const std::string& /*reduced*/)
+{
+    // This function is deliberately left empty, because it is not used in
+    // PyROOT, and synchronizing it with cppyy-backend upstream would require
+    // patches to ROOT meta.
+}
+
 
 // type offsets --------------------------------------------------------------
 ptrdiff_t Cppyy::GetBaseOffset(TCppType_t derived, TCppType_t base,
@@ -1447,10 +1482,13 @@ ptrdiff_t Cppyy::GetBaseOffset(TCppType_t derived, TCppType_t base,
 
 
 // method/function reflection information ------------------------------------
-Cppyy::TCppIndex_t Cppyy::GetNumMethods(TCppScope_t scope)
+Cppyy::TCppIndex_t Cppyy::GetNumMethods(TCppScope_t scope, bool accept_namespace)
 {
-    if (IsNamespace(scope))
+    if (!accept_namespace && IsNamespace(scope))
         return (TCppIndex_t)0;     // enforce lazy
+
+    if (scope == GLOBAL_HANDLE)
+        return gROOT->GetListOfGlobalFunctions(true)->GetSize();
 
     TClassRef& cr = type_from_handle(scope);
     if (cr.GetClass() && cr->GetListOfMethods(true)) {
@@ -1460,14 +1498,9 @@ Cppyy::TCppIndex_t Cppyy::GetNumMethods(TCppScope_t scope)
             if (clName.find('<') != std::string::npos) {
             // chicken-and-egg problem: TClass does not know about methods until
             // instantiation, so force it
-                if (clName.find("std::", 0, 5) == std::string::npos && \
-                        is_missclassified_stl(clName)) {
-                // TODO: this is too simplistic for template arguments missing std::
-                    clName = "std::" + clName;
-                }
                 std::ostringstream stmt;
                 stmt << "template class " << clName << ";";
-                gInterpreter->Declare(stmt.str().c_str());
+                gInterpreter->Declare(stmt.str().c_str()/*, silent = true*/);
 
             // now reload the methods
                 return (TCppIndex_t)cr->GetListOfMethods(true)->GetSize();
@@ -1716,9 +1749,12 @@ bool Cppyy::IsConstMethod(TCppMethod_t method)
     return false;
 }
 
-Cppyy::TCppIndex_t Cppyy::GetNumTemplatedMethods(TCppScope_t scope)
+Cppyy::TCppIndex_t Cppyy::GetNumTemplatedMethods(TCppScope_t scope, bool accept_namespace)
 {
-    if (scope == (TCppScope_t)GLOBAL_HANDLE) {
+    if (!accept_namespace && IsNamespace(scope))
+        return (TCppIndex_t)0;     // enforce lazy
+
+    if (scope == GLOBAL_HANDLE) {
         TCollection* coll = gROOT->GetListOfFunctionTemplates();
         if (coll) return (TCppIndex_t)coll->GetSize();
     } else {
@@ -1969,20 +2005,17 @@ bool Cppyy::IsStaticMethod(TCppMethod_t method)
 }
 
 // data member reflection information ----------------------------------------
-Cppyy::TCppIndex_t Cppyy::GetNumDatamembers(TCppScope_t scope)
+Cppyy::TCppIndex_t Cppyy::GetNumDatamembers(TCppScope_t scope, bool accept_namespace)
 {
-    if (IsNamespace(scope))
+    if (!accept_namespace && IsNamespace(scope))
         return (TCppIndex_t)0;     // enforce lazy
 
+    if (scope == GLOBAL_HANDLE)
+        return gROOT->GetListOfGlobals(true)->GetSize();
+
     TClassRef& cr = type_from_handle(scope);
-    if (cr.GetClass()) {
-        Cppyy::TCppIndex_t sum = 0;
-        if (cr->GetListOfDataMembers())
-            sum = cr->GetListOfDataMembers()->GetSize();
-        if (cr->GetListOfUsingDataMembers())
-            sum += cr->GetListOfUsingDataMembers()->GetSize();
-        return sum;
-    }
+    if (cr.GetClass() && cr->GetListOfDataMembers())
+        return cr->GetListOfDataMembers()->GetSize();
 
     return (TCppIndex_t)0;         // unknown class?
 }
@@ -2016,11 +2049,10 @@ std::string Cppyy::GetDatamemberType(TCppScope_t scope, TCppIndex_t idata)
         TGlobal* gbl = g_globalvars[idata];
         std::string fullType = gbl->GetFullTypeName();
 
-        if ((int)gbl->GetArrayDim() > 1)
-            fullType.append("*");
-        else if ((int)gbl->GetArrayDim() == 1) {
+        if ((int)gbl->GetArrayDim()) {
             std::ostringstream s;
-            s << '[' << gbl->GetMaxIndex(0) << ']' << std::ends;
+            for (int i = 0; i < (int)gbl->GetArrayDim(); ++i)
+                s << '[' << gbl->GetMaxIndex(i) << ']';
             fullType.append(s.str());
         }
         return fullType;
@@ -2040,11 +2072,10 @@ std::string Cppyy::GetDatamemberType(TCppScope_t scope, TCppIndex_t idata)
                 fullType = trueName;
         }
 
-        if ((int)m->GetArrayDim() > 1 || (!m->IsBasic() && m->IsaPointer()))
-            fullType.append("*");
-        else if ((int)m->GetArrayDim() == 1) {
+        if ((int)m->GetArrayDim()) {
             std::ostringstream s;
-            s << '[' << m->GetMaxIndex(0) << ']' << std::ends;
+            for (int i = 0; i < (int)m->GetArrayDim(); ++i)
+                s << '[' << m->GetMaxIndex(i) << ']';
             fullType.append(s.str());
         }
         return fullType;

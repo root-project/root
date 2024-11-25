@@ -42,7 +42,7 @@ public:
 
 protected:
   double evaluate() const override;
-  void computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;
+  void doEval(RooFit::EvalContext &) const override;
   inline bool canComputeBatchWithCuda() const override { return true; }
 
 private:

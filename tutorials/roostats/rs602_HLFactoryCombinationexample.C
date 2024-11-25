@@ -23,14 +23,10 @@
 // use this order for safety on library loading
 using namespace RooFit;
 using namespace RooStats;
-using namespace std;
+using std::ofstream;
 
 void rs602_HLFactoryCombinationexample()
 {
-
-   using namespace RooStats;
-   using namespace RooFit;
-
    // create a card
    TString card_name("HLFavtoryCombinationexample.rs");
    ofstream ofile(card_name);

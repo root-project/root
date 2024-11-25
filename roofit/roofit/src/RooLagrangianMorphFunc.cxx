@@ -73,7 +73,8 @@ describe the same process or not.
 #include <type_traits>
 #include <typeinfo>
 
-using namespace std;
+using std::cerr, std::string, std::make_unique, std::vector;
+
 ClassImp(RooLagrangianMorphFunc);
 
 //#define _DEBUG_

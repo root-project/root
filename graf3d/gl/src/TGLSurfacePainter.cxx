@@ -155,7 +155,6 @@ void TGLSurfacePainter::Pan(Int_t px, Int_t py)
 
 void TGLSurfacePainter::AddOption(const TString &option)
 {
-   using namespace std;
    const Ssiz_t surfPos = option.Index("surf");//"surf" _already_ _exists_ in a string.
    if (surfPos + 4 < option.Length() && isdigit(option[surfPos + 4])) {
       switch (option[surfPos + 4] - '0') {
@@ -863,7 +862,6 @@ void TGLSurfacePainter::DrawProjections()const
 
 void TGLSurfacePainter::DrawSectionXOZ()const
 {
-   using namespace std;
    //XOZ parallel section.
    Int_t binY = -1;
    for (Int_t j = 0, e = fCoord->GetNYBins() - 1; j < e; ++j) {
@@ -914,7 +912,6 @@ void TGLSurfacePainter::DrawSectionXOZ()const
 
 void TGLSurfacePainter::DrawSectionYOZ()const
 {
-   using namespace std;
    //YOZ parallel section.
    Int_t binX = -1;
    for (Int_t i = 0, e = fCoord->GetNXBins() - 1; i < e; ++i) {
@@ -965,7 +962,6 @@ void TGLSurfacePainter::DrawSectionYOZ()const
 
 void TGLSurfacePainter::DrawSectionXOY()const
 {
-   using namespace std;
    //XOY parallel section.
    const Int_t nX = fCoord->GetNXBins();
    const Int_t nY = fCoord->GetNYBins();

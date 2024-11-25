@@ -22,14 +22,10 @@
 
 #include "gtest/gtest.h"
 
-// Backward compatibility for gtest version < 1.10.0
-#ifndef TYPED_TEST_SUITE
-#define TYPED_TEST_SUITE TYPED_TEST_CASE
-#endif
-
 #include <chrono>
 #include <iostream>
 #include <string>
+#include <iomanip>
 
 int printLevel = 0;
 

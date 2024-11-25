@@ -14,9 +14,6 @@
 #include <ROOT/REveElement.hxx>
 #include <ROOT/REveManager.hxx>
 
-R__LOAD_LIBRARY(libGeom);
-R__LOAD_LIBRARY(libROOTEve);
-
 namespace REX = ROOT::Experimental;
 
 void makeEveGeoShape(TGeoNode* n, REX::REveTrans& trans, REX::REveElement* holder)
@@ -27,7 +24,6 @@ void makeEveGeoShape(TGeoNode* n, REX::REveTrans& trans, REX::REveElement* holde
    b1s->RefMainTrans().SetFrom(trans.Array());
    b1s->SetShape(gss);
    b1s->SetMainColor(kCyan);
-   b1s->SetMainTransparency(30);
    holder->AddElement(b1s);
 }
 

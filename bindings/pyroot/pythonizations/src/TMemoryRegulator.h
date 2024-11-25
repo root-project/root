@@ -1,8 +1,9 @@
 
 // Author: Enric Tejedor CERN  08/2019
+// Author: Vincenzo Eduardo Padulano CERN 05/2024
 
 /*************************************************************************
- * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2024, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -14,14 +15,14 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TMemoryRegulator                                                     //
+// RegulatorCleanup                                                     //
 //                                                                      //
 // Sets hooks in Cppyy's MemoryRegulator to keep track of the TObjects  //
 // that are constructed and destructed. For those objects, a map is     //
 // filled, where the key is the address of the object and the value is  //
 // the class to which the object belongs.                               //
 //                                                                      //
-// The TMemoryRegulator object, created in PyROOTWrapper.cxx, is added  //
+// The RegulatorCleanup object, created in PyROOTWrapper.cxx, is added  //
 // to the list of cleanups and its RecursiveRemove method is called by  //
 // ROOT to manage the memory of TObjects being deleted.                 //
 // In RecursiveRemove, the object being deleted is already a TNamed, so //
@@ -39,29 +40,27 @@
 
 // ROOT
 #include "TObject.h"
-#include "TClass.h"
 
 // Stl
 #include <unordered_map>
+#include <utility>
 
 namespace PyROOT {
 
-typedef std::unordered_map<Cppyy::TCppObject_t, Cppyy::TCppType_t> ObjectMap_t;
+void CallCppyyRecursiveRemove(TObject *object);
 
-class TMemoryRegulator : public TObject {
-private:
-   static ObjectMap_t fObjectMap; // key: object address; value: object class id
-
-   static std::pair<bool, bool> RegisterHook(Cppyy::TCppObject_t, Cppyy::TCppType_t);
-
-   static std::pair<bool, bool> UnregisterHook(Cppyy::TCppObject_t, Cppyy::TCppType_t);
-
-public:
-   TMemoryRegulator();
-
-   virtual void RecursiveRemove(TObject *);
-
-   void ClearProxiedObjects();
+/// A TObject-derived class to inject the memory regulation logic in the ROOT list of cleanups.
+///
+/// This class is responsible to keep track of the creation of the objects
+/// that need further memory management within ROOT. The `CallCppyyRecursiveRemove`
+/// is called as part of the global list of cleanups object destruction.
+///
+/// \note This class is not thread-safe on its own. We create one thread-local
+///       object in PyROOTWrapper.cxx.
+struct RegulatorCleanup final : public TObject {
+   RegulatorCleanup();
+   void RecursiveRemove(TObject *object) final { CallCppyyRecursiveRemove(object); }
+   ClassDefInlineNV(RegulatorCleanup, 0);
 };
 
 } // namespace PyROOT

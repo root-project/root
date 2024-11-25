@@ -12,6 +12,8 @@
 ## Systematic errors for the MC scale factors are computed and the Vary function of RDataFrame is used for plotting.
 ## The analysis is translated to an RDataFrame workflow processing about 300 MB of simulated events and data.
 ##
+## See the [corresponding spec json file](https://github.com/root-project/root/blob/master/tutorials/dataframe/df106_HiggsToFourLeptons_spec.json).
+##
 ## \macro_image
 ## \macro_code
 ## \macro_output
@@ -139,6 +141,9 @@ float ComputeInvariantMass(RVecF pt, RVecF eta, RVecF phi, RVecF e)
 
 df = df.Define("m4l", "ComputeInvariantMass(goodlep_pt, goodlep_eta, goodlep_phi, goodlep_E)")
 
+# Save data for statistical analysis tutorial (rf618_mixture_models.py) 
+df.Snapshot("tree", ROOT.gROOT.GetTutorialDir().Data() + "/dataframe/df106_HiggsToFourLeptons.root", ["m4l", "sample_category", "weight"])
+
 # Book histograms for the four different samples: data, higgs, zz and other (this is specific to this particular analysis)
 histos = []
 for sample_category in ["data", "higgs", "zz", "other"]:
@@ -168,7 +173,7 @@ class VaryHelper
     const std::vector<double> x{5.50e3, 5.52e3, 12.54e3, 17.43e3, 22.40e3, 27.48e3, 30e3, 10000e3};
     const std::vector<double> y{0.06628, 0.06395, 0.06396, 0.03372, 0.02441, 0.01403, 0, 0};
     TGraph graph;
-    
+
 public:
     VaryHelper() : graph(x.size(), x.data(), y.data()) {}
     RVec<double> operator()(const double &w, const RVecF &pt, const RVec<unsigned int> &type)
@@ -208,20 +213,6 @@ for i in range(0, histos_mc["nominal"].GetXaxis().GetNbins()):
 # Set styles
 ROOT.gROOT.SetStyle("ATLAS")
 
-
-# Function to add ATLAS label
-def draw_atlas_label():
-    text = ROOT.TLatex()
-    text.SetNDC()
-    text.SetTextFont(72)
-    text.SetTextSize(0.04)
-    text.DrawLatex(0.19, 0.85, "ATLAS")
-    text.SetTextFont(42)
-    text.DrawLatex(0.19 + 0.15, 0.85, "Open Data")
-    text.SetTextSize(0.035)
-    text.DrawLatex(0.21, 0.80, "#sqrt{s} = 13 TeV, 10 fb^{-1}")
-
-
 # Create canvas with pad
 c1 = ROOT.TCanvas("c", "", 600, 600)
 pad = ROOT.TPad("upper_pad", "", 0, 0, 1, 1)
@@ -234,11 +225,12 @@ pad.cd()
 stack = ROOT.THStack()
 
 # Retrieve values of the data and MC histograms in order to plot them.
+# Draw cloned histograms to preserve graphics when original objects goes out of scope
 # Note: GetValue() action operation is performed after all lazy actions of the RDF were defined first.
-h_data = histos[0].GetValue()
-h_higgs = histos[1].GetValue()
-h_zz = histos[2].GetValue()
-h_other = histos[3].GetValue()
+h_data = histos[0].GetValue().Clone()
+h_higgs = histos[1].GetValue().Clone()
+h_zz = histos[2].GetValue().Clone()
+h_other = histos[3].GetValue().Clone()
 
 for h, color in zip([h_other, h_zz, h_higgs], [ROOT.kViolet - 9, ROOT.kAzure - 9, ROOT.kRed + 2]):
     h.SetLineWidth(1)
@@ -256,28 +248,22 @@ stack.GetYaxis().SetTitleSize(0.045)
 stack.GetYaxis().SetTitle("Events")
 stack.SetMaximum(35)
 stack.GetYaxis().ChangeLabel(1, -1, 0)
-stack.DrawClone(
-    "HIST"
-)  # DrawClone() method is necessary to draw a TObject in case the original object goes out of scope, needed for the interactive root session
 
 # Draw MC scale factor and variations
-histos_mc["nominal"].SetStats(0)
 histos_mc["nominal"].SetFillColor(ROOT.kBlack)
 histos_mc["nominal"].SetFillStyle(3254)
-histos_mc["nominal"].DrawClone("E2 sames")
-histos_mc["weight:up"].SetStats(0)
+h_nominal = histos_mc["nominal"].DrawClone("E2 same")
 histos_mc["weight:up"].SetLineColor(ROOT.kGreen + 2)
-histos_mc["weight:up"].DrawClone("HIST SAME")
+h_weight_up = histos_mc["weight:up"].DrawClone("HIST SAME")
 histos_mc["weight:down"].SetLineColor(ROOT.kBlue + 2)
-histos_mc["weight:down"].SetStats(0)
-histos_mc["weight:down"].DrawClone("HIST SAME")
+h_weight_down = histos_mc["weight:down"].DrawClone("HIST SAME")
 
 # Draw data histogram
 h_data.SetMarkerStyle(20)
 h_data.SetMarkerSize(1.2)
 h_data.SetLineWidth(2)
 h_data.SetLineColor(ROOT.kBlack)
-h_data.DrawClone("E SAME")  # Draw raw data with errorbars
+h_data.Draw("E SAME")  # Draw raw data with errorbars
 
 # Add legend
 legend = ROOT.TLegend(0.57, 0.65, 0.94, 0.94)
@@ -290,12 +276,19 @@ legend.AddEntry(h_data, "Data", "lep")
 legend.AddEntry(h_higgs, "Higgs MC", "f")
 legend.AddEntry(h_zz, "ZZ MC", "f")
 legend.AddEntry(h_other, "Other MC", "f")
-legend.AddEntry((histos_mc["weight:down"]), "Total MC Variations Down", "l")
-legend.AddEntry((histos_mc["weight:up"]), "Total MC Variations Up", "l")
-legend.AddEntry((histos_mc["nominal"]), "Total MC Uncertainty", "f")
-legend.Draw("SAME")
+legend.AddEntry(h_weight_down, "Total MC Variations Down", "l")
+legend.AddEntry(h_weight_up, "Total MC Variations Up", "l")
+legend.AddEntry(h_nominal, "Total MC Uncertainty", "f")
+legend.Draw()
 
-draw_atlas_label()
+text = ROOT.TLatex()
+text.SetTextFont(72)
+text.SetTextSize(0.04)
+text.DrawLatexNDC(0.19, 0.85, "ATLAS")
+text.SetTextFont(42)
+text.DrawLatexNDC(0.19 + 0.15, 0.85, "Open Data")
+text.SetTextSize(0.035)
+text.DrawLatexNDC(0.21, 0.80, "#sqrt{s} = 13 TeV, 10 fb^{-1}")
 
 c1.Update()
 

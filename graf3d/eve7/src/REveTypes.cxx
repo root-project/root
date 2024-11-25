@@ -11,11 +11,15 @@
 
 #include <ROOT/REveTypes.hxx>
 #include <ROOT/RLogger.hxx>
-#include <iostream>
+#include "TString.h"
 
 using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;
 
+/**
+ * \defgroup REve Event display with ROOT7
+ * \brief Modern version of "Event display" using ROOT7
+ */
 
 /** \class REveException
 \ingroup REve
@@ -49,4 +53,3 @@ REX::RLogChannel &REX::REveLog()
    static RLogChannel sLog("ROOT.Eve");
    return sLog;
 }
-

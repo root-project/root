@@ -2,11 +2,16 @@
 #define ROOT7_RNTuple_Test_CustomStruct
 
 #include <RtypesCore.h> // for Double32_t
+#include <TObject.h>
 #include <TRootIOCtor.h>
+#include <TVirtualCollectionProxy.h>
 
+#include <chrono>
+#include <stdexcept>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <random>
 #include <string>
 #include <variant>
 #include <vector>
@@ -31,7 +36,7 @@ struct CustomStruct {
    std::vector<float> v1;
    std::vector<std::vector<float>> v2;
    std::string s;
-   std::byte b{0};
+   std::byte b{};
 
    bool operator<(const CustomStruct &c) const { return a < c.a && v1 < c.v1 && v2 < c.v2 && s < c.s; }
 
@@ -199,9 +204,105 @@ struct StructWithTransientString {
 struct StructWithIORules : StructWithIORulesBase {
    StructWithTransientString s;
    float c = 0.0f; //! transient member
+   float checksumA = 0.0f;   //! transient member, edited by checksum based rule
+   float checksumB = 137.0f; //! transient member, skipped by checksum based rule due to checksum mismatch
 
    StructWithIORules() = default;
    StructWithIORules(float _a, char _c[4]) : StructWithIORulesBase{_a, 0.0f}, s{{_c[0], _c[1], _c[2], _c[3]}, {}} {}
+};
+
+struct Cyclic {
+   std::vector<Cyclic> fMember;
+};
+
+// Test cyclic collection proxy: we set up this class such that it is its own collection proxy inner class.
+// This does not actually need to be a working collection proxy.
+struct CyclicCollectionProxy : public TVirtualCollectionProxy {
+   // The following three functions are required by RProxiedCollectionField
+   static void Func_CreateIterators(void *, void **, void **, TVirtualCollectionProxy *) {}
+   static void *Func_Next(void *, const void *) { return nullptr; }
+   static void Func_DeleteTwoIterators(void *, void *) {}
+
+public:
+   CyclicCollectionProxy();
+   TVirtualCollectionProxy *Generate() const final { return new CyclicCollectionProxy(); }
+   Int_t GetCollectionType() const final { return 0; }
+   ULong_t GetIncrement() const final { return 0; }
+   UInt_t Sizeof() const final { return 0; }
+   bool HasPointers() const final { return false; }
+   TClass *GetValueClass() const final;
+   EDataType GetType() const final { return EDataType::kOther_t; }
+   void PushProxy(void *) final {}
+   void PopProxy() final {}
+   void *At(UInt_t) final { return nullptr; }
+   void Clear(const char * = "") final {}
+   UInt_t Size() const final { return 0; }
+   void *Allocate(UInt_t, bool) final { return nullptr; }
+   void Commit(void *) final {}
+   void Insert(const void *, void *, size_t) final {}
+   TStreamerInfoActions::TActionSequence *GetConversionReadMemberWiseActions(TClass *, Int_t) final { return nullptr; }
+   TStreamerInfoActions::TActionSequence *GetReadMemberWiseActions(Int_t) final { return nullptr; }
+   TStreamerInfoActions::TActionSequence *GetWriteMemberWiseActions() final { return nullptr; }
+   CreateIterators_t GetFunctionCreateIterators(bool = true) final { return &Func_CreateIterators; }
+   CopyIterator_t GetFunctionCopyIterator(bool = true) final { return nullptr; }
+   Next_t GetFunctionNext(bool = true) final { return &Func_Next; }
+   DeleteIterator_t GetFunctionDeleteIterator(bool = true) final { return nullptr; }
+   DeleteTwoIterators_t GetFunctionDeleteTwoIterators(bool = true) final { return &Func_DeleteTwoIterators; }
+};
+
+struct Unsupported {
+   float a;
+   std::chrono::time_point<std::chrono::system_clock> timestamp;
+   float b;
+   std::random_device rd;
+   float z;
+};
+
+struct BaseA {
+   float a = 0.0;
+};
+
+struct DiamondVirtualB : virtual public BaseA {
+   float b = 0.0;
+};
+
+struct DiamondVirtualC : virtual public BaseA {
+   float c = 0.0;
+};
+
+struct DiamondVirtualD : public DiamondVirtualB, public DiamondVirtualC {
+   float d = 0.0;
+};
+
+struct DuplicateBaseB : public BaseA {
+   float b = 0.0;
+};
+
+struct DuplicateBaseC : public BaseA {
+   float c = 0.0;
+};
+
+struct DuplicateBaseD : public DuplicateBaseB, public DuplicateBaseC {
+   float d = 0.0;
+};
+
+class Left {
+public:
+   float x = 1.0;
+   virtual ~Left() = default;
+   ClassDef(Left, 1)
+};
+
+class DerivedFromLeftAndTObject : public Left, public TObject {
+public:
+   virtual ~DerivedFromLeftAndTObject() = default;
+   ClassDefOverride(DerivedFromLeftAndTObject, 1)
+};
+
+struct ThrowForVariant {
+   ThrowForVariant() = default;
+   ThrowForVariant(const ThrowForVariant &) { throw std::runtime_error("copy ctor"); }
+   ThrowForVariant &operator=(const ThrowForVariant &) = default;
 };
 
 #endif

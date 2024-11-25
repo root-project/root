@@ -15,22 +15,26 @@
 
 #include <ROOT/RNTupleParallelWriter.hxx>
 
-#include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleModel.hxx>
+#include <ROOT/RNTupleWriter.hxx>
 #include <ROOT/RPageSinkBuf.hxx>
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RPageStorageFile.hxx>
+
+#include <TError.h>
 
 namespace {
 
 using ROOT::Experimental::DescriptorId_t;
 using ROOT::Experimental::NTupleSize_t;
 using ROOT::Experimental::RException;
+using ROOT::Experimental::RExtraTypeInfoDescriptor;
+using ROOT::Experimental::RNTupleDescriptor;
 using ROOT::Experimental::RNTupleModel;
-using ROOT::Experimental::Detail::RColumn;
-using ROOT::Experimental::Detail::RNTupleModelChangeset;
-using ROOT::Experimental::Detail::RPage;
-using ROOT::Experimental::Detail::RPageSink;
+using ROOT::Experimental::Internal::RColumn;
+using ROOT::Experimental::Internal::RNTupleModelChangeset;
+using ROOT::Experimental::Internal::RPage;
+using ROOT::Experimental::Internal::RPageSink;
 
 /// An internal RPageSink that enables multiple RNTupleFillContext to write into a single common RPageSink.
 ///
@@ -67,13 +71,20 @@ public:
    RPageSynchronizingSink(const RPageSynchronizingSink &) = delete;
    RPageSynchronizingSink &operator=(const RPageSynchronizingSink &) = delete;
 
-   ColumnHandle_t AddColumn(DescriptorId_t, const RColumn &) final { return {}; }
-   void Init(RNTupleModel &) final {}
+   const RNTupleDescriptor &GetDescriptor() const final { return fInnerSink->GetDescriptor(); }
+
+   ColumnHandle_t AddColumn(DescriptorId_t, RColumn &) final { return {}; }
+   void InitImpl(RNTupleModel &) final {}
    void UpdateSchema(const RNTupleModelChangeset &, NTupleSize_t) final
    {
       throw RException(R__FAIL("UpdateSchema not supported via RPageSynchronizingSink"));
    }
+   void UpdateExtraTypeInfo(const RExtraTypeInfoDescriptor &) final
+   {
+      throw RException(R__FAIL("UpdateExtraTypeInfo not supported via RPageSynchronizingSink"));
+   }
 
+   void CommitSuppressedColumn(ColumnHandle_t handle) final { fInnerSink->CommitSuppressedColumn(handle); }
    void CommitPage(ColumnHandle_t, const RPage &) final
    {
       throw RException(R__FAIL("should never commit single pages via RPageSynchronizingSink"));
@@ -87,17 +98,16 @@ public:
       fInnerSink->CommitSealedPageV(ranges);
    }
    std::uint64_t CommitCluster(NTupleSize_t nNewEntries) final { return fInnerSink->CommitCluster(nNewEntries); }
+   RStagedCluster StageCluster(NTupleSize_t nNewEntries) final { return fInnerSink->StageCluster(nNewEntries); }
+   void CommitStagedClusters(std::span<RStagedCluster> clusters) final { fInnerSink->CommitStagedClusters(clusters); }
    void CommitClusterGroup() final
    {
       throw RException(R__FAIL("should never commit cluster group via RPageSynchronizingSink"));
    }
-   void CommitDataset() final { throw RException(R__FAIL("should never commit dataset via RPageSynchronizingSink")); }
-
-   RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final
+   void CommitDatasetImpl() final
    {
-      return fInnerSink->ReservePage(columnHandle, nElements);
+      throw RException(R__FAIL("should never commit dataset via RPageSynchronizingSink"));
    }
-   void ReleasePage(RPage &page) final { fInnerSink->ReleasePage(page); }
 
    RSinkGuard GetSinkGuard() final { return RSinkGuard(fMutex); }
 };
@@ -105,9 +115,12 @@ public:
 } // namespace
 
 ROOT::Experimental::RNTupleParallelWriter::RNTupleParallelWriter(std::unique_ptr<RNTupleModel> model,
-                                                                 std::unique_ptr<Detail::RPageSink> sink)
+                                                                 std::unique_ptr<Internal::RPageSink> sink)
    : fSink(std::move(sink)), fModel(std::move(model)), fMetrics("RNTupleParallelWriter")
 {
+   if (fModel->GetRegisteredSubfields().size() > 0) {
+      throw RException(R__FAIL("cannot create an RNTupleWriter from a model with registered subfields"));
+   }
    fModel->Freeze();
    fSink->Init(*fModel.get());
    fMetrics.ObserveMetrics(fSink->GetMetrics());
@@ -139,7 +152,7 @@ ROOT::Experimental::RNTupleParallelWriter::Recreate(std::unique_ptr<RNTupleModel
       throw RException(R__FAIL("parallel writing requires buffering"));
    }
 
-   auto sink = Detail::RPagePersistentSink::Create(ntupleName, storage, options);
+   auto sink = Internal::RPagePersistentSink::Create(ntupleName, storage, options);
    // Cannot use std::make_unique because the constructor of RNTupleParallelWriter is private.
    return std::unique_ptr<RNTupleParallelWriter>(new RNTupleParallelWriter(std::move(model), std::move(sink)));
 }
@@ -152,7 +165,7 @@ ROOT::Experimental::RNTupleParallelWriter::Append(std::unique_ptr<RNTupleModel> 
       throw RException(R__FAIL("parallel writing requires buffering"));
    }
 
-   auto sink = std::make_unique<Detail::RPageSinkFile>(ntupleName, file, options);
+   auto sink = std::make_unique<Internal::RPageSinkFile>(ntupleName, file, options);
    // Cannot use std::make_unique because the constructor of RNTupleParallelWriter is private.
    return std::unique_ptr<RNTupleParallelWriter>(new RNTupleParallelWriter(std::move(model), std::move(sink)));
 }
@@ -165,7 +178,7 @@ std::shared_ptr<ROOT::Experimental::RNTupleFillContext> ROOT::Experimental::RNTu
 
    // TODO: Think about honoring RNTupleWriteOptions::SetUseBufferedWrite(false); this requires synchronization on every
    // call to CommitPage() *and* preparing multiple cluster descriptors in parallel!
-   auto sink = std::make_unique<Detail::RPageSinkBuf>(std::make_unique<RPageSynchronizingSink>(*fSink, fSinkMutex));
+   auto sink = std::make_unique<Internal::RPageSinkBuf>(std::make_unique<RPageSynchronizingSink>(*fSink, fSinkMutex));
 
    // Cannot use std::make_shared because the constructor of RNTupleFillContext is private. Also it would mean that the
    // (direct) memory of all contexts stays around until the vector of weak_ptr's is cleared.

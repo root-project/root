@@ -15,6 +15,7 @@
 #include "RooMinimizer.h"
 #include "RooMsgService.h"
 #include "RooAbsPdf.h"
+#include "RooNaNPacker.h"
 
 #include <iomanip> // std::setprecision
 
@@ -30,7 +31,7 @@ public:
 
    ROOT::Math::IMultiGradFunction *Clone() const override { return new MinuitGradFunctor(_fcn); }
 
-   unsigned int NDim() const override { return _fcn.NDim(); }
+   unsigned int NDim() const override { return _fcn.getNDim(); }
 
    void Gradient(const double *x, double *grad) const override { return _fcn.Gradient(x, grad); }
 
@@ -47,7 +48,7 @@ private:
 
    double DoDerivative(double const * /*x*/, unsigned int /*icoord*/) const override
    {
-      throw std::runtime_error("MinuitFcnGrad::DoDerivative is not implemented, please use Gradient instead.");
+      throw std::runtime_error("MinuitGradFunctor::DoDerivative is not implemented, please use Gradient instead.");
    }
 
    MinuitFcnGrad const &_fcn;
@@ -83,21 +84,28 @@ MinuitFcnGrad::MinuitFcnGrad(const std::shared_ptr<RooFit::TestStatistics::RooAb
                              std::vector<ROOT::Fit::ParameterSettings> &parameters, LikelihoodMode likelihoodMode,
                              LikelihoodGradientMode likelihoodGradientMode)
    : RooAbsMinimizerFcn(*absL->getParameters(), context),
-     _minuitInternalX(NDim(), 0),
-     _minuitExternalX(NDim(), 0),
+     _minuitInternalX(getNDim(), 0),
+     _minuitExternalX(getNDim(), 0),
      _multiGenFcn{std::make_unique<MinuitGradFunctor>(*this)}
 {
    synchronizeParameterSettings(parameters, true);
 
    _calculationIsClean = std::make_unique<WrapperCalculationCleanFlags>();
 
-   _likelihood = LikelihoodWrapper::create(likelihoodMode, absL, _calculationIsClean);
+   SharedOffset shared_offset;
+
    if (likelihoodMode == LikelihoodMode::multiprocess &&
        likelihoodGradientMode == LikelihoodGradientMode::multiprocess) {
-      _likelihoodInGradient = LikelihoodWrapper::create(LikelihoodMode::serial, absL, _calculationIsClean);
+      _likelihood = LikelihoodWrapper::create(likelihoodMode, absL, _calculationIsClean, shared_offset);
+      _likelihoodInGradient =
+         LikelihoodWrapper::create(LikelihoodMode::serial, absL, _calculationIsClean, shared_offset);
+   } else {
+      _likelihood = LikelihoodWrapper::create(likelihoodMode, absL, _calculationIsClean, shared_offset);
+      _likelihoodInGradient = _likelihood;
    }
-   _gradient =
-      LikelihoodGradientWrapper::create(likelihoodGradientMode, absL, _calculationIsClean, getNDim(), _context);
+
+   _gradient = LikelihoodGradientWrapper::create(likelihoodGradientMode, absL, _calculationIsClean, getNDim(), _context,
+                                                 shared_offset);
 
    applyToLikelihood([&](auto &l) { l.synchronizeParameterSettings(parameters); });
    _gradient->synchronizeParameterSettings(getMultiGenFcn(), parameters);
@@ -108,59 +116,35 @@ MinuitFcnGrad::MinuitFcnGrad(const std::shared_ptr<RooFit::TestStatistics::RooAb
    _gradient->synchronizeWithMinimizer(ROOT::Math::MinimizerOptions());
 }
 
+/// Make sure the offsets are up to date
+///
+/// If the offsets need to be updated, this function triggers a likelihood evaluation.
+/// The likelihood will make sure the offset is set correctly in their shared_ptr
+/// offsets object, that is also shared with possible other LikelihoodWrapper members
+/// of MinuitFcnGrad and also the LikelihoodGradientWrapper member. Other necessary
+/// synchronization steps are also performed from the Wrapper child classes (e.g.
+/// sending the values to workers from MultiProcess::Jobs).
+void MinuitFcnGrad::syncOffsets() const
+{
+   if (_likelihood->isOffsetting() && (_evalCounter == 0 || offsets_reset_)) {
+      _likelihoodInGradient->evaluate();
+      offsets_reset_ = false;
+   }
+}
+
 double MinuitFcnGrad::operator()(const double *x) const
 {
-   bool parameters_changed = syncParameterValuesFromMinuitCalls(x, false);
+   syncParameterValuesFromMinuitCalls(x, false);
+
+   syncOffsets();
 
    // Calculate the function for these parameters
-   //   RooAbsReal::setHideOffset(false);
    auto &likelihoodHere(_likelihoodInGradient && _gradient->isCalculating() ? *_likelihoodInGradient : *_likelihood);
    likelihoodHere.evaluate();
    double fvalue = likelihoodHere.getResult().Sum();
    _calculationIsClean->likelihood = true;
-   //   RooAbsReal::setHideOffset(true);
 
-   if (!parameters_changed) {
-      return fvalue;
-   }
-
-   if (!std::isfinite(fvalue) || RooAbsReal::numEvalErrors() > 0 || fvalue > 1e30) {
-
-      if (cfg().printEvalErrors >= 0) {
-
-         if (cfg().doEEWall) {
-            oocoutW(nullptr, Eval) << "MinuitFcnGrad: Minimized function has error status." << std::endl
-                                   << "Returning maximum FCN so far (" << _maxFCN
-                                   << ") to force MIGRAD to back out of this region. Error log follows" << std::endl;
-         } else {
-            oocoutW(nullptr, Eval) << "MinuitFcnGrad: Minimized function has error status but is ignored" << std::endl;
-         }
-
-         bool first(true);
-         ooccoutW(nullptr, Eval) << "Parameter values: ";
-         for (auto *var : static_range_cast<const RooRealVar *>(*_floatParamList)) {
-            if (first) {
-               first = false;
-            } else {
-               ooccoutW(nullptr, Eval) << ", ";
-            }
-            ooccoutW(nullptr, Eval) << var->GetName() << "=" << var->getVal();
-         }
-         ooccoutW(nullptr, Eval) << std::endl;
-
-         RooAbsReal::printEvalErrors(ooccoutW(nullptr, Eval), cfg().printEvalErrors);
-         ooccoutW(nullptr, Eval) << std::endl;
-      }
-
-      if (cfg().doEEWall) {
-         fvalue = _maxFCN + 1;
-      }
-
-      RooAbsReal::clearEvalErrorLog();
-      _numBadNLL++;
-   } else if (fvalue > _maxFCN) {
-      _maxFCN = fvalue;
-   }
+   fvalue = applyEvalErrorHandling(fvalue);
 
    // Optional logging
    if (cfg().verbose) {
@@ -219,7 +203,7 @@ bool MinuitFcnGrad::syncParameterValuesFromMinuitCalls(const double *x, bool min
                                 "are defined in Minuit-internal parameter space.");
       }
 
-      for (std::size_t ix = 0; ix < NDim(); ++ix) {
+      for (std::size_t ix = 0; ix < getNDim(); ++ix) {
          bool parameter_changed = (x[ix] != _minuitInternalX[ix]);
          if (parameter_changed) {
             _minuitInternalX[ix] = x[ix];
@@ -235,7 +219,7 @@ bool MinuitFcnGrad::syncParameterValuesFromMinuitCalls(const double *x, bool min
    } else {
       bool aParamIsMismatched = false;
 
-      for (std::size_t ix = 0; ix < NDim(); ++ix) {
+      for (std::size_t ix = 0; ix < getNDim(); ++ix) {
          // Note: the return value of SetPdfParamVal does not always mean that the parameter's value in the RooAbsReal
          // changed since last time! If the value was out of range bin, setVal was still called, but the value was not
          // updated.
@@ -246,8 +230,7 @@ bool MinuitFcnGrad::syncParameterValuesFromMinuitCalls(const double *x, bool min
          // we log in the flag below whether they are different so that calculators can use this information.
          bool parameter_changed = (x[ix] != _minuitExternalX[ix]);
          aParamWasUpdated |= parameter_changed;
-         aParamIsMismatched |=
-            (static_cast<RooRealVar const *>(_floatParamList->at(ix))->getVal() != _minuitExternalX[ix]);
+         aParamIsMismatched |= (floatableParam(ix).getVal() != _minuitExternalX[ix]);
       }
 
       _minuitInternalRooFitXMismatch = aParamIsMismatched;
@@ -265,6 +248,7 @@ void MinuitFcnGrad::Gradient(const double *x, double *grad) const
 {
    _calculatingGradient = true;
    syncParameterValuesFromMinuitCalls(x, returnsInMinuit2ParameterSpace());
+   syncOffsets();
    _gradient->fillGradient(grad);
    _calculatingGradient = false;
 }
@@ -274,6 +258,7 @@ void MinuitFcnGrad::GradientWithPrevResult(const double *x, double *grad, double
 {
    _calculatingGradient = true;
    syncParameterValuesFromMinuitCalls(x, returnsInMinuit2ParameterSpace());
+   syncOffsets();
    _gradient->fillGradientWithPrevResult(grad, previous_grad, previous_g2, previous_gstep);
    _calculatingGradient = false;
 }

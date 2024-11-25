@@ -35,7 +35,7 @@ void TestClassVector(const char *fname)
    auto reader = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
    EXPECT_EQ(3U, reader->GetNEntries());
 
-   auto viewKlassVec = reader->GetViewCollection("klassVec");
+   auto viewKlassVec = reader->GetCollectionView("klassVec");
    auto viewKlass = viewKlassVec.GetView<CustomStruct>("_0");
    auto viewKlassA = viewKlassVec.GetView<float>("_0.a");
    auto viewKlassV1 = viewKlassVec.GetView<std::vector<float>>("_0.v1");
@@ -121,19 +121,19 @@ TEST(RNTuple, InsideCollection)
    ASSERT_NE(idKlass, ROOT::Experimental::kInvalidDescriptorId);
    auto idA = source->GetSharedDescriptorGuard()->FindFieldId("a", idKlass);
    ASSERT_NE(idA, ROOT::Experimental::kInvalidDescriptorId);
-   auto fieldInner = std::unique_ptr<RFieldBase>(RFieldBase::Create("klassVec.a", "float").Unwrap());
+   auto fieldInner = std::unique_ptr<RFieldBase>(RFieldBase::Create("klassVec_a", "float").Unwrap());
    fieldInner->SetOnDiskId(idA);
 
    auto field = std::make_unique<ROOT::Experimental::RVectorField>("klassVec", std::move(fieldInner));
    field->SetOnDiskId(idKlassVec);
-   field->ConnectPageSource(*source);
+   ROOT::Experimental::Internal::CallConnectPageSourceOnField(*field, *source);
 
-   auto fieldCardinality64 = RFieldBase::Create("", "ROOT::Experimental::RNTupleCardinality<std::uint64_t>").Unwrap();
+   auto fieldCardinality64 = RFieldBase::Create("", "ROOT::RNTupleCardinality<std::uint64_t>").Unwrap();
    fieldCardinality64->SetOnDiskId(idKlassVec);
-   fieldCardinality64->ConnectPageSource(*source);
-   auto fieldCardinality32 = RFieldBase::Create("", "ROOT::Experimental::RNTupleCardinality<std::uint32_t>").Unwrap();
+   ROOT::Experimental::Internal::CallConnectPageSourceOnField(*fieldCardinality64, *source);
+   auto fieldCardinality32 = RFieldBase::Create("", "ROOT::RNTupleCardinality<std::uint32_t>").Unwrap();
    fieldCardinality32->SetOnDiskId(idKlassVec);
-   fieldCardinality32->ConnectPageSource(*source);
+   ROOT::Experimental::Internal::CallConnectPageSourceOnField(*fieldCardinality32, *source);
 
    auto value = field->CreateValue();
    value.Read(0);
@@ -427,4 +427,70 @@ TEST(RNTuple, ComplexRVec)
       EXPECT_EQ(1u, rdV->size());
    }
    EXPECT_EQ(10111u, ComplexStruct::GetNCallDestructor());
+}
+
+TEST(RNTuple, VectorOfString)
+{
+   FileRaii fileGuard("test_ntuple_vector_of_string.root");
+
+   auto model = RNTupleModel::Create();
+   auto ptrVecOfStr = model->MakeField<std::vector<std::string>>("f");
+   auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+   ptrVecOfStr->emplace_back("abc");
+   ptrVecOfStr->emplace_back("");
+   ptrVecOfStr->emplace_back("de");
+   ptrVecOfStr->emplace_back(std::string(1024, 'x'));
+   writer->Fill();
+   writer->CommitCluster();
+   ptrVecOfStr->clear();
+   writer->Fill();
+   writer->CommitCluster();
+   ptrVecOfStr->emplace_back("xyz");
+   writer->Fill();
+   writer.reset();
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   ptrVecOfStr = reader->GetModel().GetDefaultEntry().GetPtr<std::vector<std::string>>("f");
+   EXPECT_EQ(3u, reader->GetNEntries());
+   reader->LoadEntry(0);
+   EXPECT_EQ(4u, ptrVecOfStr->size());
+   EXPECT_STREQ("abc", ptrVecOfStr->at(0).c_str());
+   EXPECT_STREQ("de", ptrVecOfStr->at(2).c_str());
+   EXPECT_EQ(std::string(1024, 'x'), ptrVecOfStr->at(3));
+   EXPECT_TRUE(ptrVecOfStr->at(1).empty());
+   reader->LoadEntry(1);
+   EXPECT_TRUE(ptrVecOfStr->empty());
+   reader->LoadEntry(2);
+   EXPECT_EQ(1u, ptrVecOfStr->size());
+   EXPECT_STREQ("xyz", ptrVecOfStr->at(0).c_str());
+}
+
+TEST(RNTuple, VectorOfBitset)
+{
+   FileRaii fileGuard("test_ntuple_vector_of_bitset.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto ptrVecOfBitset = model->MakeField<std::vector<std::bitset<3>>>("f");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      ptrVecOfBitset->emplace_back("101");
+      ptrVecOfBitset->emplace_back("010");
+      writer->Fill();
+      writer->CommitCluster();
+      ptrVecOfBitset->clear();
+      ptrVecOfBitset->emplace_back("111");
+      ptrVecOfBitset->emplace_back("000");
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   auto ptrVecOfBitset = reader->GetModel().GetDefaultEntry().GetPtr<std::vector<std::bitset<3>>>("f");
+   reader->LoadEntry(0);
+   EXPECT_EQ(2u, ptrVecOfBitset->size());
+   EXPECT_EQ("101", ptrVecOfBitset->at(0).to_string());
+   EXPECT_EQ("010", ptrVecOfBitset->at(1).to_string());
+   reader->LoadEntry(1);
+   EXPECT_EQ(2u, ptrVecOfBitset->size());
+   EXPECT_EQ("111", ptrVecOfBitset->at(0).to_string());
+   EXPECT_EQ("000", ptrVecOfBitset->at(1).to_string());
 }

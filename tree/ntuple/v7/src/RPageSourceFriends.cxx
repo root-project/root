@@ -16,15 +16,14 @@
 #include <ROOT/RCluster.hxx>
 #include <ROOT/RError.hxx>
 #include <ROOT/RLogger.hxx>
-#include <ROOT/RNTupleOptions.hxx>
+#include <ROOT/RNTupleReadOptions.hxx>
 #include <ROOT/RPageSourceFriends.hxx>
 
 #include <utility>
 
-ROOT::Experimental::Detail::RPageSourceFriends::RPageSourceFriends(
-   std::string_view ntupleName, std::span<std::unique_ptr<RPageSource>> sources)
-   : RPageSource(ntupleName, RNTupleReadOptions())
-   , fMetrics(std::string(ntupleName))
+ROOT::Experimental::Internal::RPageSourceFriends::RPageSourceFriends(std::string_view ntupleName,
+                                                                     std::span<std::unique_ptr<RPageSource>> sources)
+   : RPageSource(ntupleName, RNTupleReadOptions()), fMetrics(std::string(ntupleName))
 {
    for (auto &s : sources) {
       fSources.emplace_back(std::move(s));
@@ -32,20 +31,17 @@ ROOT::Experimental::Detail::RPageSourceFriends::RPageSourceFriends(
    }
 }
 
-ROOT::Experimental::Detail::RPageSourceFriends::~RPageSourceFriends() = default;
+ROOT::Experimental::Internal::RPageSourceFriends::~RPageSourceFriends() = default;
 
-void ROOT::Experimental::Detail::RPageSourceFriends::AddVirtualField(const RNTupleDescriptor &originDesc,
-                                                                     std::size_t originIdx,
-                                                                     const RFieldDescriptor &originField,
-                                                                     DescriptorId_t virtualParent,
-                                                                     const std::string &virtualName)
+void ROOT::Experimental::Internal::RPageSourceFriends::AddVirtualField(const RNTupleDescriptor &originDesc,
+                                                                       std::size_t originIdx,
+                                                                       const RFieldDescriptor &originField,
+                                                                       DescriptorId_t virtualParent,
+                                                                       const std::string &virtualName)
 {
    auto virtualFieldId = fNextId++;
-   auto virtualField = Internal::RFieldDescriptorBuilder(originField)
-                          .FieldId(virtualFieldId)
-                          .FieldName(virtualName)
-                          .MakeDescriptor()
-                          .Unwrap();
+   auto virtualField =
+      RFieldDescriptorBuilder(originField).FieldId(virtualFieldId).FieldName(virtualName).MakeDescriptor().Unwrap();
    fBuilder.AddField(virtualField);
    fBuilder.AddFieldLink(virtualParent, virtualFieldId);
    fIdBiMap.Insert({originIdx, originField.GetId()}, virtualFieldId);
@@ -53,20 +49,28 @@ void ROOT::Experimental::Detail::RPageSourceFriends::AddVirtualField(const RNTup
    for (const auto &f : originDesc.GetFieldIterable(originField))
       AddVirtualField(originDesc, originIdx, f, virtualFieldId, f.GetFieldName());
 
-   for (const auto &c: originDesc.GetColumnIterable(originField)) {
-      auto physicalId = c.IsAliasColumn() ? fIdBiMap.GetVirtualId({originIdx, c.GetPhysicalId()}) : fNextId;
-      fBuilder.AddColumn(fNextId, physicalId, virtualFieldId, c.GetModel(), c.GetIndex());
-      fIdBiMap.Insert({originIdx, c.GetLogicalId()}, fNextId);
+   for (const auto &c : originDesc.GetColumnIterable(originField)) {
+      auto physicalId = c.IsAliasColumn() ? fColumnMap.GetVirtualId({originIdx, c.GetPhysicalId()}) : fNextId;
+      RColumnDescriptorBuilder columnBuilder;
+      columnBuilder.LogicalColumnId(fNextId)
+         .PhysicalColumnId(physicalId)
+         .FieldId(virtualFieldId)
+         .BitsOnStorage(c.GetBitsOnStorage())
+         .ValueRange(c.GetValueRange())
+         .Type(c.GetType())
+         .Index(c.GetIndex())
+         .RepresentationIndex(c.GetRepresentationIndex());
+      fBuilder.AddColumn(columnBuilder.MakeDescriptor().Unwrap()).ThrowOnError();
+      fColumnMap.Insert({originIdx, c.GetLogicalId()}, fNextId);
       fNextId++;
    }
 }
 
-
-ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFriends::AttachImpl()
+ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Internal::RPageSourceFriends::AttachImpl()
 {
    fBuilder.SetNTuple(fNTupleName, "");
    fBuilder.AddField(
-      Internal::RFieldDescriptorBuilder().FieldId(0).Structure(ENTupleStructure::kRecord).MakeDescriptor().Unwrap());
+      RFieldDescriptorBuilder().FieldId(0).Structure(ENTupleStructure::kRecord).MakeDescriptor().Unwrap());
 
    for (std::size_t i = 0; i < fSources.size(); ++i) {
       fSources[i]->Attach();
@@ -74,6 +78,7 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFri
       if (fSources[i]->GetNEntries() != fSources[0]->GetNEntries()) {
          fNextId = 1;
          fIdBiMap.Clear();
+         fColumnMap.Clear();
          fBuilder.Reset();
          throw RException(R__FAIL("mismatch in the number of entries of friend RNTuples"));
       }
@@ -83,6 +88,7 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFri
          if (fSources[j]->GetSharedDescriptorGuard()->GetName() == descriptorGuard->GetName()) {
             fNextId = 1;
             fIdBiMap.Clear();
+            fColumnMap.Clear();
             fBuilder.Reset();
             throw RException(R__FAIL("duplicate names of friend RNTuples"));
          }
@@ -98,19 +104,23 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFri
       }
 
       for (const auto &c : descriptorGuard->GetClusterIterable()) {
-         Internal::RClusterDescriptorBuilder clusterBuilder;
+         RClusterDescriptorBuilder clusterBuilder;
          clusterBuilder.ClusterId(fNextId).FirstEntryIndex(c.GetFirstEntryIndex()).NEntries(c.GetNEntries());
-         for (auto originColumnId : c.GetColumnIds()) {
-            DescriptorId_t virtualColumnId = fIdBiMap.GetVirtualId({i, originColumnId});
+         for (const auto &originColumnRange : c.GetColumnRangeIterable()) {
+            DescriptorId_t virtualColumnId = fColumnMap.GetVirtualId({i, originColumnRange.fPhysicalColumnId});
+            if (originColumnRange.fIsSuppressed) {
+               clusterBuilder.MarkSuppressedColumnRange(virtualColumnId);
+            } else {
+               auto pageRange = c.GetPageRange(originColumnRange.fPhysicalColumnId).Clone();
+               pageRange.fPhysicalColumnId = virtualColumnId;
 
-            auto pageRange = c.GetPageRange(originColumnId).Clone();
-            pageRange.fPhysicalColumnId = virtualColumnId;
+               auto firstElementIndex = originColumnRange.fFirstElementIndex;
+               auto compressionSettings = originColumnRange.fCompressionSettings;
 
-            auto firstElementIndex = c.GetColumnRange(originColumnId).fFirstElementIndex;
-            auto compressionSettings = c.GetColumnRange(originColumnId).fCompressionSettings;
-
-            clusterBuilder.CommitColumnRange(virtualColumnId, firstElementIndex, compressionSettings, pageRange);
+               clusterBuilder.CommitColumnRange(virtualColumnId, firstElementIndex, compressionSettings, pageRange);
+            }
          }
+         clusterBuilder.CommitSuppressedColumnRanges(fBuilder.GetDescriptor()).ThrowOnError();
          fBuilder.AddCluster(clusterBuilder.MoveDescriptor().Unwrap());
          fIdBiMap.Insert({i, c.GetId()}, fNextId);
          fNextId++;
@@ -121,92 +131,84 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFri
    return fBuilder.MoveDescriptor();
 }
 
-
-std::unique_ptr<ROOT::Experimental::Detail::RPageSource>
-ROOT::Experimental::Detail::RPageSourceFriends::Clone() const
+std::unique_ptr<ROOT::Experimental::Internal::RPageSource>
+ROOT::Experimental::Internal::RPageSourceFriends::CloneImpl() const
 {
    std::vector<std::unique_ptr<RPageSource>> cloneSources;
    cloneSources.reserve(fSources.size());
    for (const auto &f : fSources)
       cloneSources.emplace_back(f->Clone());
-   return std::make_unique<RPageSourceFriends>(fNTupleName, cloneSources);
+   auto clone = std::make_unique<RPageSourceFriends>(fNTupleName, cloneSources);
+   clone->fIdBiMap = fIdBiMap;
+   clone->fColumnMap = fColumnMap;
+   return clone;
 }
 
-
-ROOT::Experimental::Detail::RPageStorage::ColumnHandle_t
-ROOT::Experimental::Detail::RPageSourceFriends::AddColumn(DescriptorId_t fieldId, const RColumn &column)
+ROOT::Experimental::Internal::RPageStorage::ColumnHandle_t
+ROOT::Experimental::Internal::RPageSourceFriends::AddColumn(DescriptorId_t fieldId, RColumn &column)
 {
    auto originFieldId = fIdBiMap.GetOriginId(fieldId);
    fSources[originFieldId.fSourceIdx]->AddColumn(originFieldId.fId, column);
    return RPageSource::AddColumn(fieldId, column);
 }
 
-void ROOT::Experimental::Detail::RPageSourceFriends::DropColumn(ColumnHandle_t columnHandle)
+void ROOT::Experimental::Internal::RPageSourceFriends::DropColumn(ColumnHandle_t columnHandle)
 {
    RPageSource::DropColumn(columnHandle);
-   auto originColumnId = fIdBiMap.GetOriginId(columnHandle.fPhysicalId);
+   auto originColumnId = fColumnMap.GetOriginId(columnHandle.fPhysicalId);
    columnHandle.fPhysicalId = originColumnId.fId;
    fSources[originColumnId.fSourceIdx]->DropColumn(columnHandle);
 }
 
-
-ROOT::Experimental::Detail::RPage
-ROOT::Experimental::Detail::RPageSourceFriends::PopulatePage(
-   ColumnHandle_t columnHandle, NTupleSize_t globalIndex)
+ROOT::Experimental::Internal::RPageRef
+ROOT::Experimental::Internal::RPageSourceFriends::LoadPage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex)
 {
    auto virtualColumnId = columnHandle.fPhysicalId;
-   auto originColumnId = fIdBiMap.GetOriginId(virtualColumnId);
+   auto originColumnId = fColumnMap.GetOriginId(virtualColumnId);
    columnHandle.fPhysicalId = originColumnId.fId;
 
-   auto page = fSources[originColumnId.fSourceIdx]->PopulatePage(columnHandle, globalIndex);
+   auto pageRef = fSources[originColumnId.fSourceIdx]->LoadPage(columnHandle, globalIndex);
+   // Suppressed column
+   if (pageRef.Get().IsNull())
+      return RPageRef();
 
-   auto virtualClusterId = fIdBiMap.GetVirtualId({originColumnId.fSourceIdx, page.GetClusterInfo().GetId()});
-   page.ChangeIds(virtualColumnId, virtualClusterId);
+   auto virtualClusterId = fIdBiMap.GetVirtualId({originColumnId.fSourceIdx, pageRef.Get().GetClusterInfo().GetId()});
+   pageRef.ChangeClusterId(virtualClusterId);
 
-   return page;
+   return pageRef;
 }
 
-ROOT::Experimental::Detail::RPage
-ROOT::Experimental::Detail::RPageSourceFriends::PopulatePage(ColumnHandle_t columnHandle, RClusterIndex clusterIndex)
+ROOT::Experimental::Internal::RPageRef
+ROOT::Experimental::Internal::RPageSourceFriends::LoadPage(ColumnHandle_t columnHandle, RClusterIndex clusterIndex)
 {
    auto virtualColumnId = columnHandle.fPhysicalId;
-   auto originColumnId = fIdBiMap.GetOriginId(virtualColumnId);
-   RClusterIndex originClusterIndex(
-      fIdBiMap.GetOriginId(clusterIndex.GetClusterId()).fId,
-      clusterIndex.GetIndex());
+   auto originColumnId = fColumnMap.GetOriginId(virtualColumnId);
+   RClusterIndex originClusterIndex(fIdBiMap.GetOriginId(clusterIndex.GetClusterId()).fId, clusterIndex.GetIndex());
    columnHandle.fPhysicalId = originColumnId.fId;
 
-   auto page = fSources[originColumnId.fSourceIdx]->PopulatePage(columnHandle, originClusterIndex);
+   auto pageRef = fSources[originColumnId.fSourceIdx]->LoadPage(columnHandle, originClusterIndex);
+   // Suppressed column
+   if (pageRef.Get().IsNull())
+      return RPageRef();
 
-   page.ChangeIds(virtualColumnId, clusterIndex.GetClusterId());
-   return page;
+   pageRef.ChangeClusterId(clusterIndex.GetClusterId());
+   return pageRef;
 }
 
-void ROOT::Experimental::Detail::RPageSourceFriends::LoadSealedPage(DescriptorId_t physicalColumnId,
-                                                                    RClusterIndex clusterIndex, RSealedPage &sealedPage)
+void ROOT::Experimental::Internal::RPageSourceFriends::LoadSealedPage(DescriptorId_t physicalColumnId,
+                                                                      RClusterIndex clusterIndex,
+                                                                      RSealedPage &sealedPage)
 {
-   auto originColumnId = fIdBiMap.GetOriginId(physicalColumnId);
-   RClusterIndex originClusterIndex(
-      fIdBiMap.GetOriginId(clusterIndex.GetClusterId()).fId,
-      clusterIndex.GetIndex());
+   auto originColumnId = fColumnMap.GetOriginId(physicalColumnId);
+   RClusterIndex originClusterIndex(fIdBiMap.GetOriginId(clusterIndex.GetClusterId()).fId, clusterIndex.GetIndex());
 
    fSources[originColumnId.fSourceIdx]->LoadSealedPage(physicalColumnId, originClusterIndex, sealedPage);
 }
 
-
-void ROOT::Experimental::Detail::RPageSourceFriends::ReleasePage(RPage &page)
-{
-   if (page.IsNull())
-      return;
-   auto sourceIdx = fIdBiMap.GetOriginId(page.GetClusterInfo().GetId()).fSourceIdx;
-   fSources[sourceIdx]->ReleasePage(page);
-}
-
-
-std::vector<std::unique_ptr<ROOT::Experimental::Detail::RCluster>>
-ROOT::Experimental::Detail::RPageSourceFriends::LoadClusters(std::span<RCluster::RKey> clusterKeys)
+std::vector<std::unique_ptr<ROOT::Experimental::Internal::RCluster>>
+ROOT::Experimental::Internal::RPageSourceFriends::LoadClusters(std::span<RCluster::RKey> clusterKeys)
 {
    // The virtual friends page source does not pre-load any clusters itself. However, the underlying page sources
    // that are combined may well do it.
-   return std::vector<std::unique_ptr<ROOT::Experimental::Detail::RCluster>>(clusterKeys.size());
+   return std::vector<std::unique_ptr<ROOT::Experimental::Internal::RCluster>>(clusterKeys.size());
 }

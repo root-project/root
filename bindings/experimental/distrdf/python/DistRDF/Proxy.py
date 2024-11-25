@@ -12,6 +12,7 @@
 from __future__ import annotations
 
 import logging
+import textwrap
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from functools import singledispatch
@@ -56,6 +57,10 @@ def execute_graph(node: Node) -> None:
             # the workers is contained in the head node
             node.get_head().execute_graph()
 
+def _update_internal_df_with_transformation(node:Node, operation: Operation) -> None:
+    """Propagate transform operations to the headnode internal RDataFrame"""
+    rdf_operation = getattr(node.get_head()._localdf, operation.name)
+    node.get_head()._localdf = rdf_operation(*operation.args, **operation.kwargs)
 
 def _create_new_node(parent: Node, operation: Operation.Operation) -> Node:
     """Creates a new node and inserts it in the computation graph"""
@@ -151,10 +156,13 @@ class ResultMapProxy(Proxy):
             # TODO:
             # The event loop has not been triggered yet. Currently we can't retrieve
             # the list of variation names without starting the distributed computations
-            raise RuntimeError("The list of variation names cannot be (yet) retrieved without starting the "
-                               "distributed computation graph. Please try to retrieve at least one variation value, "
-                               "then the list of variation names will be available. In the future, it will be possible "
-                               "to get the names without triggering.")
+            raise RuntimeError(textwrap.dedent(
+                """
+                A list of names of systematic variations was requested, but the corresponding map of variations is not
+                present. The variation names cannot be retrieved unless the computation graph has properly run and
+                finished. Something may have gone wrong in the distributed execution, or no variation values were
+                explicitly requested. In the future, it will be possible to get the variation names without triggering.
+                """))
         else:
             if self._keys is None:
                 self._keys = [str(key) for key in self.proxied_node.value.GetKeys()]
@@ -243,6 +251,14 @@ class NodeProxy(Proxy):
                     )
                 raise AttributeError(msg)
 
+    def GetColumnNames(self):
+        """Forward call to the internal RDataFrame object"""
+        return self.proxied_node.get_head()._localdf.GetColumnNames()
+    
+    def GetColumnType(self, column):
+        """Forward call to the internal RDataFrame object"""
+        return self.proxied_node.get_head()._localdf.GetColumnType(column)
+
     def _create_new_op(self, *args, **kwargs):
         """
         Handles an operation call to the current node and returns the new node
@@ -256,6 +272,7 @@ class NodeProxy(Proxy):
 @singledispatch
 def get_proxy_for(operation: Operation.Transformation, node: Node) -> NodeProxy:
     """"Returns appropriate proxy for the input node"""
+    _update_internal_df_with_transformation(node, operation)
     return NodeProxy(node)
 
 

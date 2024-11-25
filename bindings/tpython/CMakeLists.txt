@@ -23,16 +23,12 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTPython
   DEPENDENCIES
     Core
   LIBRARIES
-    cppyy${PYTHON_UNDER_VERSION_STRING}
+    cppyy
     # We link libTPython against Python libraries to compensate for the fact that libcppyy
     # is built with unresolved symbols. If we didn't do this, invoking TPython from C++
     # would not work.
-    ${PYTHON_LIBRARIES}
+    Python3::Python
 )
-
-if(APPLE)
-    target_link_options(ROOTTPython PRIVATE ${PYTHON_LINK_OPTIONS})
-endif()
 
 # Disables warnings originating from deprecated register keyword in Python
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND CMAKE_CXX_STANDARD GREATER_EQUAL 11)
@@ -42,3 +38,5 @@ if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" AND CMAKE_CXX_STANDARD GREATER_EQU
     target_compile_options(ROOTTPython PRIVATE -Wno-register)
     target_compile_options(ROOTTPython PRIVATE -Wno-deprecated-register)
 endif()
+
+ROOT_ADD_TEST_SUBDIRECTORY(test)

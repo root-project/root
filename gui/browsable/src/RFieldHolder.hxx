@@ -11,7 +11,7 @@
 
 #include <ROOT/Browsable/RHolder.hxx>
 
-#include <ROOT/RNTuple.hxx>
+#include <ROOT/RNTupleReader.hxx>
 #include <ROOT/RMiniFile.hxx>
 
 #include "TClass.h"
@@ -37,7 +37,7 @@ public:
    {
    }
 
-   const TClass *GetClass() const override { return TClass::GetClass<ROOT::Experimental::RNTuple>(); }
+   const TClass *GetClass() const override { return TClass::GetClass<ROOT::RNTuple>(); }
 
    /** Returns direct (temporary) object pointer */
    const void *GetObject() const override { return nullptr; }

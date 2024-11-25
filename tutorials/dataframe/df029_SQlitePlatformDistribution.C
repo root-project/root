@@ -45,14 +45,13 @@ void df029_SQlitePlatformDistribution() {
 
    rdf.Foreach( fillRootPlatform, { "Platform" } );
 
-   auto PlatformDistributionHistogram = new TCanvas();
-
+   auto c1 = new TCanvas();
+   c1->SetLogy(1);
    hRootPlatform.GetXaxis()->LabelsOption("a");
    hRootPlatform.LabelsDeflate("X");
    hRootPlatform.DrawClone();
 
-   auto shortPlatformDistributionHistogram = new TCanvas();
-
+   auto c2 = new TCanvas();
    hShortRootPlatform.GetXaxis()->LabelsOption("a");
    hShortRootPlatform.LabelsDeflate("X");
    hShortRootPlatform.DrawClone();

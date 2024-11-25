@@ -30,7 +30,7 @@ range and values of the arguments.
 #include "RooRealVar.h"
 #include "RooBatchCompute.h"
 
-#include <RooFit/Detail/AnalyticalIntegrals.h>
+#include <RooFit/Detail/MathFuncs.h>
 
 #include <algorithm>
 #include <cmath>
@@ -68,10 +68,10 @@ double RooExponential::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of Exponential distribution.
-void RooExponential::computeBatch(double *output, size_t nEvents, RooFit::Detail::DataMap const &dataMap) const
+void RooExponential::doEval(RooFit::EvalContext &ctx) const
 {
    auto computer = _negateCoefficient ? RooBatchCompute::ExponentialNeg : RooBatchCompute::Exponential;
-   RooBatchCompute::compute(dataMap.config(this), computer, output, nEvents, {dataMap.at(x), dataMap.at(c)});
+   RooBatchCompute::compute(ctx.config(this), computer, ctx.output(), {ctx.at(x), ctx.at(c)});
 }
 
 Int_t RooExponential::getAnalyticalIntegral(RooArgSet &allVars, RooArgSet &analVars, const char * /*rangeName*/) const
@@ -108,45 +108,5 @@ double RooExponential::analyticalIntegral(Int_t code, const char *rangeName) con
       max = -max;
    }
 
-   return RooFit::Detail::AnalyticalIntegrals::exponentialIntegral(min, max, constant);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void RooExponential::translate(RooFit::Detail::CodeSquashContext &ctx) const
-{
-   // Build a call to the stateless exponential defined later.
-   std::string coef;
-   if (_negateCoefficient) {
-      coef += "-";
-   }
-   coef += ctx.getResult(c);
-   ctx.addResult(this, "std::exp(" + coef + " * " + ctx.getResult(x) + ")");
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-std::string RooExponential::buildCallToAnalyticIntegral(Int_t code, const char *rangeName,
-                                                        RooFit::Detail::CodeSquashContext &ctx) const
-{
-   bool isOverX = code == 1;
-
-   std::string constant;
-   if (_negateCoefficient && isOverX) {
-      constant += "-";
-   }
-   constant += ctx.getResult(isOverX ? c : x);
-
-   auto &integrand = isOverX ? x : c;
-
-   double min = integrand.min(rangeName);
-   double max = integrand.max(rangeName);
-
-   if (!isOverX && _negateCoefficient) {
-      std::swap(min, max);
-      min = -min;
-      max = -max;
-   }
-
-   return ctx.buildCall("RooFit::Detail::AnalyticalIntegrals::exponentialIntegral", min, max, constant);
+   return RooFit::Detail::MathFuncs::exponentialIntegral(min, max, constant);
 }

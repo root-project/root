@@ -86,7 +86,7 @@ ClassImp(RooStats::MCMCInterval);
 
 using namespace RooFit;
 using namespace RooStats;
-using namespace std;
+using std::endl;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -295,14 +295,14 @@ void MCMCInterval::CreateKeysPdf()
       fProduct = nullptr;
       return;
    }
+   
+   std::unique_ptr<RooAbsData> chain{fChain->GetAsConstDataSet()->reduce(SelectVars(fParameters), EventRange(fNumBurnInSteps, fChain->Size()))};
 
-   std::unique_ptr<RooDataSet> chain{fChain->GetAsDataSet(SelectVars(fParameters),
-         EventRange(fNumBurnInSteps, fChain->Size()))};
    RooArgList* paramsList = new RooArgList();
    for (Int_t i = 0; i < fDimension; i++)
       paramsList->add(*fAxes[i]);
 
-   fKeysPdf = new RooNDKeysPdf("keysPDF", "Keys PDF", *paramsList, *chain, "a");
+   fKeysPdf = new RooNDKeysPdf("keysPDF", "Keys PDF", *paramsList, static_cast<RooDataSet&>(*chain), "a");
    fCutoffVar = new RooRealVar("cutoff", "cutoff", 0);
    fHeaviside = new Heaviside("heaviside", "Heaviside", *fKeysPdf, *fCutoffVar);
    fProduct = new RooProduct("product", "Keys PDF & Heaviside Product",
@@ -449,8 +449,8 @@ void MCMCInterval::CreateDataHist()
       return;
    }
 
-   fDataHist = std::unique_ptr<RooDataHist>{fChain->GetAsDataHist(SelectVars(fParameters),
-         EventRange(fNumBurnInSteps, fChain->Size()))}.release();
+   std::unique_ptr<RooAbsData> data{fChain->GetAsConstDataSet()->reduce(SelectVars(fParameters), EventRange(fNumBurnInSteps, fChain->Size()))};
+   fDataHist = static_cast<RooDataSet &>(*data).binnedClone();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -613,8 +613,8 @@ void MCMCInterval::DetermineTailFractionInterval()
       x = fChain->Get(fVector[i])->getRealValue(name);
       w = fChain->Weight();
 
-      if (TMath::Abs(leftTailSum + w - leftTailCutoff) <
-          TMath::Abs(leftTailSum - leftTailCutoff)) {
+      if (std::abs(leftTailSum + w - leftTailCutoff) <
+          std::abs(leftTailSum - leftTailCutoff)) {
          // moving the lower limit to x would bring us closer to the desired
          // left tail size
          ll = x;
@@ -628,8 +628,8 @@ void MCMCInterval::DetermineTailFractionInterval()
       x = fChain->Get(fVector[i])->getRealValue(name);
       w = fChain->Weight();
 
-      if (TMath::Abs(rightTailSum + w - rightTailCutoff) <
-          TMath::Abs(rightTailSum - rightTailCutoff)) {
+      if (std::abs(rightTailSum + w - rightTailCutoff) <
+          std::abs(rightTailSum - rightTailCutoff)) {
          // moving the lower limit to x would bring us closer to the desired
          // left tail size
          ul = x;
@@ -1406,14 +1406,14 @@ RooArgSet* MCMCInterval::GetParameters() const
 
 bool MCMCInterval::AcceptableConfLevel(double confLevel)
 {
-   return (TMath::Abs(confLevel - fConfidenceLevel) < fEpsilon);
+   return (std::abs(confLevel - fConfidenceLevel) < fEpsilon);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCMCInterval::WithinDeltaFraction(double a, double b)
 {
-   return (TMath::Abs(a - b) < TMath::Abs(fDelta * (a + b)/2));
+   return (std::abs(a - b) < std::abs(fDelta * (a + b)/2));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

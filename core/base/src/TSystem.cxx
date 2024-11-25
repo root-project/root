@@ -57,6 +57,7 @@ allows a simple partial implementation for new OS'es.
 
 #ifdef WIN32
 #include <io.h>
+#include "Windows4Root.h"
 #endif
 
 const char *gRootDir = nullptr;
@@ -256,6 +257,18 @@ const char *TSystem::GetError()
       return GetLastErrorString().Data();
    return Form("errno: %d", GetErrno());
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return cryptographic random number
+/// Fill provided buffer with random values
+/// Returns number of bytes written to buffer or -1 in case of error
+
+Int_t TSystem::GetCryptoRandom(void * /* buf */, Int_t /* len */)
+{
+   Error("GetCryptoRandom", "Not implemented");
+   return -1;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Static function returning system error number.
@@ -1476,12 +1489,14 @@ const char *TSystem::TempDirectory() const
 /// Create a secure temporary file by appending a unique
 /// 6 letter string to base. The file will be created in
 /// a standard (system) directory or in the directory
-/// provided in dir. The full filename is returned in base
+/// provided in dir. Optionally one can provide suffix
+/// append to the final name - like extension ".txt" or ".html".
+/// The full filename is returned in base
 /// and a filepointer is returned for safely writing to the file
 /// (this avoids certain security problems). Returns 0 in case
 /// of error.
 
-FILE *TSystem::TempFileName(TString &, const char *)
+FILE *TSystem::TempFileName(TString &, const char *, const char *)
 {
    AbstractMethod("TempFileName");
    return nullptr;
@@ -2811,6 +2826,12 @@ static void R__WriteDependencyFile(const TString & build_loc, const TString &dep
 ///
 /// (the ... have to be replaced by the actual values and are here only to
 /// shorten this comment).
+///
+/// Note that the default behavior is to remove libraries when closing ROOT,
+/// ie TSystem::CleanCompiledMacros() is called in the TROOT destructor.
+/// The default behavior of .L script.C+ is the opposite one, leaving things
+/// after closing, without removing. In other words, .L always passes the 'k'
+/// option behind the scenes.
 
 int TSystem::CompileMacro(const char *filename, Option_t *opt,
                           const char *library_specified,
@@ -3034,11 +3055,12 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 
    // Calculate the -I lines
    TString includes = GetIncludePath();
+   includes.ReplaceAll("-I ", "-I");
    includes.Prepend(' ');
 
    {
       // I need to replace the -Isomerelativepath by -I../ (or -I..\ on NT)
-      TRegexp rel_inc(" -I[^\"/\\$%-][^:-]+");
+      TRegexp rel_inc(" -I[^\"/\\\\$\\%-][^:\\s]+");
       Int_t len,pos;
       pos = rel_inc.Index(includes,&len);
       while( len != 0 ) {
@@ -3046,15 +3068,16 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
          sub.Remove(0,3); // Remove ' -I'
          AssignAndDelete( sub, ConcatFileName( WorkingDirectory(), sub ) );
          sub.Prepend(" -I\"");
-         sub.Chop(); // Remove trailing space (i.e between the -Is ...
+         if (sub.EndsWith(" "))
+            sub.Chop(); // Remove trailing space (i.e between the -Is ...
          sub.Append("\" ");
          includes.Replace(pos,len,sub);
          pos = rel_inc.Index(includes,&len);
       }
    }
    {
-       // I need to replace the -I"somerelativepath" by -I"$cwd/ (or -I"$cwd\ on NT)
-      TRegexp rel_inc(" -I\"[^/\\$%-][^:-]+");
+      // I need to replace the -I"somerelativepath" by -I"$cwd/ (or -I"$cwd\ on NT)
+      TRegexp rel_inc(" -I\"[^/\\\\$\\%-][^:\\s]+");
       Int_t len,pos;
       pos = rel_inc.Index(includes,&len);
       while( len != 0 ) {
@@ -3316,7 +3339,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 
    // FIXME: Switch to generic polymorphic when we make c++14 default.
    auto ForeachSharedLibDep = [](const char *lib, std::function<bool(const char *)> f) {
-      using namespace std;
+      using std::string, std::vector, std::istringstream, std::istream_iterator;
       string deps = gInterpreter->GetSharedLibDeps(lib, /*tryDyld*/ true);
       istringstream iss(deps);
       vector<string> libs{istream_iterator<std::string>{iss}, istream_iterator<string>{}};
@@ -3504,7 +3527,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    // ======= Generate the rootcling command line
    TString rcling = "rootcling";
    PrependPathName(TROOT::GetBinDir(), rcling);
-   rcling += " -v0 \"--lib-list-prefix=";
+   rcling += " \"--lib-list-prefix=";
    rcling += mapfile;
    rcling += "\" -f \"";
    rcling.Append(dict).Append("\" ");
@@ -4340,14 +4363,30 @@ TString TSystem::SplitAclicMode(const char *filename, TString &aclicMode,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Remove the shared libs produced by the CompileMacro() function.
+/// Remove the shared libs produced by the CompileMacro() function, together
+/// with their rootmaps, linkdefs, and pcms (and some more on Windows).
 
 void TSystem::CleanCompiledMacros()
 {
    TIter next(fCompiled);
    TNamed *lib;
+   const char *extensions[] = {".lib", ".exp", ".d", ".def", ".rootmap", "_ACLiC_linkdef.h", "_ACLiC_dict_rdict.pcm"};
    while ((lib = (TNamed*)next())) {
-      if (lib->TestBit(kMustCleanup)) Unlink(lib->GetTitle());
+      if (lib->TestBit(kMustCleanup)) {
+         TString libname = lib->GetTitle();
+#ifdef WIN32
+         // On Windows, we need to unload the dll before deleting it
+         if (gInterpreter->IsLibraryLoaded(libname))
+            ::FreeLibrary(::GetModuleHandle(libname));
+#endif
+         Unlink(libname);
+         TString target, soExt = "." + fSoExt;
+         libname.ReplaceAll(soExt, "");
+         for (const char *ext : extensions) {
+            target = libname + ext;
+            Unlink(target);
+         }
+      }
    }
 }
 

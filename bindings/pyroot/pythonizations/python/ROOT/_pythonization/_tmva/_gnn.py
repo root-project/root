@@ -139,7 +139,7 @@ def add_weights(gin, weights, function_target):
         shape_as_list = i.shape.as_list()
         for j in shape_as_list:
             shape.push_back(j)
-        model_block.GetFunctionBlock().AddInitializedTensor['float'](i.name, gbl_namespace.TMVA.Experimental.SOFIE.ETensorType.FLOAT, shape, i.numpy())
+        model_block.GetFunctionBlock().AddInitializedTensor['float'](i.name, shape, i.numpy())
 
 def add_aggregate_function(gin, reducer, relation):
     """
@@ -257,6 +257,8 @@ class RModel_GNN:
         blas_routines.push_back("Axpy")
         blas_routines.push_back("Gemv")
         gnn_model.AddBlasRoutines(blas_routines)
+        gnn_model.AddNeededStdLib("algorithm")
+        gnn_model.AddNeededStdLib("cmath")
         return gnn_model
 
 
@@ -323,6 +325,8 @@ class RModel_GraphIndependent:
         blas_routines = gbl_namespace.std.vector['std::string']()
         blas_routines.push_back("Gemm")
         graph_independent_model.AddBlasRoutines(blas_routines)
+        graph_independent_model.AddNeededStdLib("algorithm")
+        graph_independent_model.AddNeededStdLib("cmath")
         return graph_independent_model
 
 

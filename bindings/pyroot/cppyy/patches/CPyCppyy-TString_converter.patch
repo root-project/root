@@ -1,0 +1,57 @@
+From 1e235725934294f6c85197d07103f0b48ce55f83 Mon Sep 17 00:00:00 2001
+From: Jonas Rembser <jonas.rembser@cern.ch>
+Date: Sat, 10 Aug 2024 15:44:23 +0200
+Subject: [PATCH] [CPyCppyy] Add `TString` converters
+
+---
+ bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx      | 4 ++++
+ bindings/pyroot/cppyy/CPyCppyy/src/DeclareConverters.h | 4 ++++
+ 2 files changed, 8 insertions(+)
+
+diff --git a/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx b/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx
+index dd1752ff629..0a8bce36923 100644
+--- a/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx
++++ b/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx
+@@ -1889,6 +1889,7 @@ bool CPyCppyy::name##Converter::ToMemory(                                    \
+     return InstanceConverter::ToMemory(value, address, ctxt);                \
+ }
+ 
++CPPYY_IMPL_STRING_AS_PRIMITIVE_CONVERTER(TString, TString, Data, Length)
+ CPPYY_IMPL_STRING_AS_PRIMITIVE_CONVERTER(STLString, std::string, c_str, size)
+ 
+ 
+@@ -3503,6 +3504,9 @@ public:
+         gf[CCOMPLEX_D " ptr"] =             gf["std::complex<double> ptr"];
+ 
+     // factories for special cases
++        gf["TString"] =                     (cf_t)+[](cdims_t) { return new TStringConverter{}; };
++        gf["TString&"] =                    gf["TString"];
++        gf["const TString&"] =              gf["TString"];
+         gf["nullptr_t"] =                   (cf_t)+[](cdims_t) { static NullptrConverter c{};        return &c;};
+         gf["const char*"] =                 (cf_t)+[](cdims_t) { return new CStringConverter{}; };
+         gf["const signed char*"] =          gf["const char*"];
+diff --git a/bindings/pyroot/cppyy/CPyCppyy/src/DeclareConverters.h b/bindings/pyroot/cppyy/CPyCppyy/src/DeclareConverters.h
+index 5fab4ad6ebf..609e130e2fc 100644
+--- a/bindings/pyroot/cppyy/CPyCppyy/src/DeclareConverters.h
++++ b/bindings/pyroot/cppyy/CPyCppyy/src/DeclareConverters.h
+@@ -9,6 +9,9 @@
+ #include <complex>
+ #include <string>
+ 
++// ROOT
++#include "ROOT/RStringView.hxx"
++#include "TString.h"
+ 
+ namespace CPyCppyy {
+ 
+@@ -365,6 +368,7 @@ protected:                                                                   \
+     strtype fBuffer;                                                         \
+ }
+ 
++CPPYY_DECLARE_STRING_CONVERTER(TString, TString);
+ CPPYY_DECLARE_STRING_CONVERTER(STLString, std::string);
+ CPPYY_DECLARE_STRING_CONVERTER(STLWString, std::wstring);
+ #if __cplusplus > 201402L
+-- 
+2.46.0
+

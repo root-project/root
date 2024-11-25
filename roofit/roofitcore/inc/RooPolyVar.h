@@ -34,9 +34,9 @@ public:
    Int_t getAnalyticalIntegral(RooArgSet &allVars, RooArgSet &analVars, const char *rangeName = nullptr) const override;
    double analyticalIntegral(Int_t code, const char *rangeName = nullptr) const override;
 
-   void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
-   std::string buildCallToAnalyticIntegral(Int_t code, const char *rangeName,
-                                           RooFit::Detail::CodeSquashContext &ctx) const override;
+   RooRealProxy const &x() const { return _x; }
+   RooArgList const &coefList() const { return _coefList; }
+   int lowestOrder() const { return _lowestOrder; }
 
 protected:
    RooRealProxy _x;
@@ -46,7 +46,7 @@ protected:
    mutable std::vector<double> _wksp; ///<! do not persist
 
    double evaluate() const override;
-   void computeBatch(double *output, size_t nEvents, RooFit::Detail::DataMap const &) const override;
+   void doEval(RooFit::EvalContext &) const override;
 
    // It doesn't make sense to use the GPU if the polynomial has no terms.
    inline bool canComputeBatchWithCuda() const override { return !_coefList.empty(); }
@@ -54,8 +54,8 @@ protected:
 private:
    friend class RooPolynomial;
 
-   static void computeBatchImpl(RooAbsArg const* caller, double *output, size_t nEvents, RooFit::Detail::DataMap const &,
-                                RooAbsReal const &x, RooArgList const &coefs, int lowestOrder);
+   static void doEvalImpl(RooAbsArg const* caller, RooFit::EvalContext &,
+                          RooAbsReal const &x, RooArgList const &coefs, int lowestOrder);
 
    static void fillCoeffValues(std::vector<double> &wksp, RooListProxy const &coefList);
 

@@ -422,9 +422,17 @@ void TBufferSQL::WriteCharP(const Char_t *str)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// WriteFastArray SQL implementation.
+/// \note Due to the current limit of the buffer size, the function aborts execution of the program in case of underflow or overflow. See https://github.com/root-project/root/issues/6734 for more details.
 
-void TBufferSQL::WriteFastArray(const bool *b, Int_t n)
+void TBufferSQL::WriteFastArray(const bool *b, Long64_t n)
 {
+   constexpr Int_t dataWidth = 2; // 2 chars
+   const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;
+   if (n < 0 || n > maxElements)
+   {
+      Fatal("WriteFastArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", n, maxElements);
+      return; // In case the user re-routes the error handler to not die when Fatal is called
+   }
    for(int i=0; i<n; ++i) {
       (*fInsertQuery) += b[i];
       (*fInsertQuery) += ",";
@@ -434,9 +442,17 @@ void TBufferSQL::WriteFastArray(const bool *b, Int_t n)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// WriteFastArray SQL implementation.
+/// \note Due to the current limit of the buffer size, the function aborts execution of the program in case of underflow or overflow. See https://github.com/root-project/root/issues/6734 for more details.
 
-void TBufferSQL::WriteFastArray(const Char_t *c, Int_t n)
+void TBufferSQL::WriteFastArray(const Char_t *c, Long64_t n)
 {
+   constexpr Int_t dataWidth = 2; // at least 2 chars, but could be more
+   const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;
+   if (n < 0 || n > maxElements)
+   {
+      Fatal("WriteFastArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", n, maxElements);
+      return; // In case the user re-routes the error handler to not die when Fatal is called
+   }
    for(int i=0; i<n; ++i) {
       (*fInsertQuery) += (Short_t)c[i];
       (*fInsertQuery) += ",";
@@ -446,9 +462,17 @@ void TBufferSQL::WriteFastArray(const Char_t *c, Int_t n)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// WriteFastArray SQL implementation.
+/// \note Due to the current limit of the buffer size, the function aborts execution of the program in case of underflow or overflow. See https://github.com/root-project/root/issues/6734 for more details.
 
-void TBufferSQL::WriteFastArrayString(const Char_t *c, Int_t /* n */)
+void TBufferSQL::WriteFastArrayString(const Char_t *c, Long64_t /* n */)
 {
+   constexpr Int_t dataWidth = 4; // 4 chars
+   const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;
+   if (maxElements < 1)
+   {
+      Fatal("WriteFastArrayString", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", 1LL, maxElements);
+      return; // In case the user re-routes the error handler to not die when Fatal is called
+   }
    (*fInsertQuery) += "\"";
    (*fInsertQuery) += c;
    (*fInsertQuery) += "\",";
@@ -457,9 +481,17 @@ void TBufferSQL::WriteFastArrayString(const Char_t *c, Int_t /* n */)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// WriteFastArray SQL implementation.
+/// \note Due to the current limit of the buffer size, the function aborts execution of the program in case of underflow or overflow. See https://github.com/root-project/root/issues/6734 for more details.
 
-void TBufferSQL::WriteFastArray(const UChar_t *uc, Int_t n)
+void TBufferSQL::WriteFastArray(const UChar_t *uc, Long64_t n)
 {
+   constexpr Int_t dataWidth = 2; // at least 2 chars, but could be more.
+   const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;
+   if (n < 0 || n > maxElements)
+   {
+      Fatal("WriteFastArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", n, maxElements);
+      return; // In case the user re-routes the error handler to not die when Fatal is called
+   }
    for(int i=0; i<n; ++i) {
       (*fInsertQuery) += uc[i];
       (*fInsertQuery) += ",";
@@ -469,9 +501,17 @@ void TBufferSQL::WriteFastArray(const UChar_t *uc, Int_t n)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// WriteFastArray SQL implementation.
+/// \note Due to the current limit of the buffer size, the function aborts execution of the program in case of underflow or overflow. See https://github.com/root-project/root/issues/6734 for more details.
 
-void TBufferSQL::WriteFastArray(const Short_t *h, Int_t n)
+void TBufferSQL::WriteFastArray(const Short_t *h, Long64_t n)
 {
+   constexpr Int_t dataWidth = 2; // at least 2 chars, but could be more.
+   const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;
+   if (n < 0 || n > maxElements)
+   {
+      Fatal("WriteFastArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", n, maxElements);
+      return; // In case the user re-routes the error handler to not die when Fatal is called
+   }
    for(int i=0; i<n; ++i) {
       (*fInsertQuery) += h[i];
       (*fInsertQuery) += ",";
@@ -481,9 +521,18 @@ void TBufferSQL::WriteFastArray(const Short_t *h, Int_t n)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// WriteFastArray SQL implementation.
+/// \note Due to the current limit of the buffer size, the function aborts execution of the program in case of underflow or overflow. See https://github.com/root-project/root/issues/6734 for more details.
 
-void TBufferSQL::WriteFastArray(const UShort_t *us, Int_t n)
+
+void TBufferSQL::WriteFastArray(const UShort_t *us, Long64_t n)
 {
+   constexpr Int_t dataWidth = 2; // at least 2 chars, but could be more.
+   const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;
+   if (n < 0 || n > maxElements)
+   {
+      Fatal("WriteFastArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", n, maxElements);
+      return; // In case the user re-routes the error handler to not die when Fatal is called
+   }
    for(int i=0; i<n; ++i) {
       (*fInsertQuery) += us[i];
       (*fInsertQuery) += ",";
@@ -493,9 +542,17 @@ void TBufferSQL::WriteFastArray(const UShort_t *us, Int_t n)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// WriteFastArray SQL implementation.
+/// \note Due to the current limit of the buffer size, the function aborts execution of the program in case of underflow or overflow. See https://github.com/root-project/root/issues/6734 for more details.
 
-void TBufferSQL::WriteFastArray(const Int_t     *ii, Int_t n)
+void TBufferSQL::WriteFastArray(const Int_t     *ii, Long64_t n)
 {
+   constexpr Int_t dataWidth = 2; // at least 2 chars, but could be more.
+   const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;
+   if (n < 0 || n > maxElements)
+   {
+      Fatal("WriteFastArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", n, maxElements);
+      return; // In case the user re-routes the error handler to not die when Fatal is called
+   }
     //   std::cerr << "Column: " <<*fIter << "   i:" << *ii << std::endl;
    for(int i=0; i<n; ++i) {
       (*fInsertQuery) += ii[i];
@@ -506,9 +563,17 @@ void TBufferSQL::WriteFastArray(const Int_t     *ii, Int_t n)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// WriteFastArray SQL implementation.
+/// \note Due to the current limit of the buffer size, the function aborts execution of the program in case of underflow or overflow. See https://github.com/root-project/root/issues/6734 for more details.
 
-void TBufferSQL::WriteFastArray(const UInt_t *ui, Int_t n)
+void TBufferSQL::WriteFastArray(const UInt_t *ui, Long64_t n)
 {
+   constexpr Int_t dataWidth = 2; // at least 2 chars, but could be more.
+   const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;
+   if (n < 0 || n > maxElements)
+   {
+      Fatal("WriteFastArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", n, maxElements);
+      return; // In case the user re-routes the error handler to not die when Fatal is called
+   }
    for(int i=0; i<n; ++i) {
       (*fInsertQuery) += ui[i];
       (*fInsertQuery) += ",";
@@ -518,9 +583,17 @@ void TBufferSQL::WriteFastArray(const UInt_t *ui, Int_t n)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// WriteFastArray SQL implementation.
+/// \note Due to the current limit of the buffer size, the function aborts execution of the program in case of underflow or overflow. See https://github.com/root-project/root/issues/6734 for more details.
 
-void TBufferSQL::WriteFastArray(const Long_t    *l, Int_t n)
+void TBufferSQL::WriteFastArray(const Long_t    *l, Long64_t n)
 {
+   constexpr Int_t dataWidth = 2; // at least 2 chars, but could be more.
+   const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;
+   if (n < 0 || n > maxElements)
+   {
+      Fatal("WriteFastArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", n, maxElements);
+      return; // In case the user re-routes the error handler to not die when Fatal is called
+   }
    for(int i=0; i<n; ++i) {
       (*fInsertQuery)+= l[i];
       (*fInsertQuery)+= ",";
@@ -530,9 +603,17 @@ void TBufferSQL::WriteFastArray(const Long_t    *l, Int_t n)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// WriteFastArray SQL implementation.
+/// \note Due to the current limit of the buffer size, the function aborts execution of the program in case of underflow or overflow. See https://github.com/root-project/root/issues/6734 for more details.
 
-void TBufferSQL::WriteFastArray(const ULong_t   *ul, Int_t n)
+void TBufferSQL::WriteFastArray(const ULong_t   *ul, Long64_t n)
 {
+   constexpr Int_t dataWidth = 2; // at least 2 chars, but could be more.
+   const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;
+   if (n < 0 || n > maxElements)
+   {
+      Fatal("WriteFastArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", n, maxElements);
+      return; // In case the user re-routes the error handler to not die when Fatal is called
+   }
    for(int i=0; i<n; ++i) {
       (*fInsertQuery) += ul[i];
       (*fInsertQuery) += ",";
@@ -542,9 +623,17 @@ void TBufferSQL::WriteFastArray(const ULong_t   *ul, Int_t n)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// WriteFastArray SQL implementation.
+/// \note Due to the current limit of the buffer size, the function aborts execution of the program in case of underflow or overflow. See https://github.com/root-project/root/issues/6734 for more details.
 
-void TBufferSQL::WriteFastArray(const Long64_t  *l, Int_t n)
+void TBufferSQL::WriteFastArray(const Long64_t  *l, Long64_t n)
 {
+   constexpr Int_t dataWidth = 2; // at least 2 chars, but could be more.
+   const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;
+   if (n < 0 || n > maxElements)
+   {
+      Fatal("WriteFastArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", n, maxElements);
+      return; // In case the user re-routes the error handler to not die when Fatal is called
+   }
    for(int i=0; i<n; ++i) {
       (*fInsertQuery) += l[i];
       (*fInsertQuery) += ",";
@@ -554,9 +643,17 @@ void TBufferSQL::WriteFastArray(const Long64_t  *l, Int_t n)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// WriteFastArray SQL implementation.
+/// \note Due to the current limit of the buffer size, the function aborts execution of the program in case of underflow or overflow. See https://github.com/root-project/root/issues/6734 for more details.
 
-void TBufferSQL::WriteFastArray(const ULong64_t *ul, Int_t n)
+void TBufferSQL::WriteFastArray(const ULong64_t *ul, Long64_t n)
 {
+   constexpr Int_t dataWidth = 2; // at least 2 chars, but could be more.
+   const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;
+   if (n < 0 || n > maxElements)
+   {
+      Fatal("WriteFastArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", n, maxElements);
+      return; // In case the user re-routes the error handler to not die when Fatal is called
+   }
    for(int i=0; i<n; ++i) {
       (*fInsertQuery) += ul[i];
       (*fInsertQuery) += ",";
@@ -566,9 +663,17 @@ void TBufferSQL::WriteFastArray(const ULong64_t *ul, Int_t n)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// WriteFastArray SQL implementation.
+/// \note Due to the current limit of the buffer size, the function aborts execution of the program in case of underflow or overflow. See https://github.com/root-project/root/issues/6734 for more details.
 
-void TBufferSQL::WriteFastArray(const Float_t   *f, Int_t n)
+void TBufferSQL::WriteFastArray(const Float_t   *f, Long64_t n)
 {
+   constexpr Int_t dataWidth = 2; // at least 2 chars, but could be more.
+   const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;
+   if (n < 0 || n > maxElements)
+   {
+      Fatal("WriteFastArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", n, maxElements);
+      return; // In case the user re-routes the error handler to not die when Fatal is called
+   }
    for(int i=0; i<n; ++i) {
       (*fInsertQuery) += f[i];
       (*fInsertQuery) += ",";
@@ -578,9 +683,17 @@ void TBufferSQL::WriteFastArray(const Float_t   *f, Int_t n)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// WriteFastArray SQL implementation.
+/// \note Due to the current limit of the buffer size, the function aborts execution of the program in case of underflow or overflow. See https://github.com/root-project/root/issues/6734 for more details.
 
-void TBufferSQL::WriteFastArray(const Double_t  *d, Int_t n)
+void TBufferSQL::WriteFastArray(const Double_t  *d, Long64_t n)
 {
+   constexpr Int_t dataWidth = 2; // at least 2 chars, but could be more.
+   const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;
+   if (n < 0 || n > maxElements)
+   {
+      Fatal("WriteFastArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", n, maxElements);
+      return; // In case the user re-routes the error handler to not die when Fatal is called
+   }
    for(int i=0; i<n; ++i) {
       (*fInsertQuery) += d[i];
       (*fInsertQuery )+= ",";
@@ -590,18 +703,20 @@ void TBufferSQL::WriteFastArray(const Double_t  *d, Int_t n)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// WriteFastArray SQL implementation.
+// \note Due to the current limit of the buffer size, the function aborts execution of the program in case of underflow or overflow. See https://github.com/root-project/root/issues/6734 for more details.
 
-void TBufferSQL::WriteFastArray(void*, const TClass*, Int_t, TMemberStreamer *)
+void TBufferSQL::WriteFastArray(void*, const TClass*, Long64_t, TMemberStreamer *)
 {
-   Fatal("WriteFastArray(void*, const TClass*, Int_t, TMemberStreamer *)","Not implemented yet");
+   Fatal("WriteFastArray(void*, const TClass*, Long64_t, TMemberStreamer *)","Not implemented yet");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// WriteFastArray SQL implementation.
+// \note Due to the current limit of the buffer size, the function aborts execution of the program in case of underflow or overflow. See https://github.com/root-project/root/issues/6734 for more details.
 
-Int_t TBufferSQL::WriteFastArray(void **, const TClass*, Int_t, bool, TMemberStreamer*)
+Int_t TBufferSQL::WriteFastArray(void **, const TClass*, Long64_t, bool, TMemberStreamer*)
 {
-   Fatal("WriteFastArray(void **, const TClass*, Int_t, bool, TMemberStreamer*)","Not implemented yet");
+   Fatal("WriteFastArray(void **, const TClass*, Long64_t, bool, TMemberStreamer*)","Not implemented yet");
    return 0;
 }
 

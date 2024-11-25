@@ -30,8 +30,6 @@ static const int kMAX_READ_SIZE    = 2;   //maximum size of the read list of blo
 
 inline int xtod(char c) { return (c>='0' && c<='9') ? c-'0' : ((c>='A' && c<='F') ? c-'A'+10 : ((c>='a' && c<='f') ? c-'a'+10 : 0)); }
 
-using namespace std;
-
 ClassImp(TFilePrefetch);
 
 /**

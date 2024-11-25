@@ -13,8 +13,8 @@ These are mapped to their Standard Template Library equivalents instead.
 
 The C++ code used for the examples below can be found
 :doc:`here <cppyy_features_header>`, and it is assumed that that code is
-loaded at the start of any session.
-Download it, save it under the name ``features.h``, and load it:
+loaded before running any of the example code snippets.
+Download it, save it under the name ``features.h``, and simply include it:
 
   .. code-block:: python
 
@@ -48,8 +48,13 @@ For example, a C++ ``unsigned int`` becomes a Python2 ``long`` or Python3
     ValueError: cannot convert negative integer to unsigned
     >>>
 
+On some platforms, 8-bit integer types such as ``int8_t`` and ``uint8_t`` are
+represented as `char` types.
+For consistency, these are mapped onto Python `int`.
+
 Some types are builtin in Python, but (STL) classes in C++.
-Examples are ``str`` vs. ``std::string`` and ``complex`` vs. ``std::complex``.
+Examples are ``str`` vs. ``std::string`` (see also the
+:doc:`Strings <strings>` section) and ``complex`` vs. ``std::complex``.
 These classes have been pythonized to behave the same wherever possible.
 For example, string comparison work directly, and ``std::complex`` has
 ``real`` and ``imag`` properties:

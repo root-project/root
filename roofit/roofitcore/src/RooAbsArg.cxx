@@ -96,7 +96,7 @@ for single nodes.
 #include <fstream>
 #include <sstream>
 
-using namespace std;
+using std::cout, std::endl, std::ostream, std::string, std::set, std::map, std::istream, std::pair, std::ofstream, std::make_pair;
 
 ClassImp(RooAbsArg);
 
@@ -651,7 +651,7 @@ std::size_t RooAbsArg::getParametersSizeEstimate(const RooArgSet* nset) const
 /// ourself as top node that don't match any of the names the args in the
 /// supplied argset. Returns `true` only if something went wrong.
 /// The complement of this function is getObservables().
-/// \param[in] observables Set of leafs to ignore because they are observables and not parameters.
+/// \param[in] observables Set of leaves to ignore because they are observables and not parameters.
 /// \param[out] outputSet Output set.
 /// \param[in] stripDisconnected Allow pdf to strip parameters from list before adding it.
 
@@ -745,7 +745,7 @@ RooFit::OwningPtr<RooArgSet> RooAbsArg::getObservables(const RooArgSet* dataList
 /// The complement of this function is getParameters().
 /// \param[in] dataList Set of leaf nodes to match.
 /// \param[out] outputSet Output set.
-/// \param[in] valueOnly If this parameter is true, we only match leafs that
+/// \param[in] valueOnly If this parameter is true, we only match leaves that
 ///                      depend on the value of any arg in `dataList`.
 
 bool RooAbsArg::getObservables(const RooAbsCollection* dataList, RooArgSet& outputSet, bool valueOnly) const
@@ -774,25 +774,6 @@ bool RooAbsArg::getObservables(const RooAbsCollection* dataList, RooArgSet& outp
   }
 
   return false;
-}
-
-
-/// \deprecated Use getObservables()
-RooFit::OwningPtr<RooArgSet> RooAbsArg::getDependents(const RooArgSet &set) const
-{
-   return getObservables(set);
-}
-
-/// \deprecated Use getObservables()
-RooFit::OwningPtr<RooArgSet> RooAbsArg::getDependents(const RooAbsData *set) const
-{
-   return getObservables(set);
-}
-
-/// \deprecated Use getObservables()
-RooFit::OwningPtr<RooArgSet> RooAbsArg::getDependents(const RooArgSet *depList) const
-{
-   return getObservables(depList);
 }
 
 
@@ -2533,23 +2514,6 @@ std::unique_ptr<RooAbsArg> RooAbsArg::compileForNormSet(RooArgSet const & normSe
    return newArg;
 }
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// This function defines a translation for each RooAbsReal based object that can be used
-/// to express the class as simple C++ code. The function adds the code represented by
-/// each class as an std::string (that is later concatenated with code strings from translate calls)
-/// to form the C++ code that AD tools can understand. Any class that wants to support AD, has to
-/// implement this function.
-///
-/// \param[in] ctx An object to manage auxiliary information for code-squashing. Also takes the
-/// code string that this class outputs into the squashed code through the 'addToCodeBody' function.
-void RooAbsArg::translate(RooFit::Detail::CodeSquashContext & /*ctx*/) const
-{
-   std::stringstream errorMsg;
-   errorMsg << "Translate function for class \"" << ClassName() << "\" has not yet been implemented.";
-   coutE(Minimization) << errorMsg.str() << std::endl;
-   throw std::runtime_error(errorMsg.str().c_str());
-}
 
 /// Sets the token for retrieving results in the BatchMode. For internal use only.
 void RooAbsArg::setDataToken(std::size_t index)

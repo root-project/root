@@ -64,7 +64,7 @@ RooFit messages can be evaluated or suppressed.
 #include <fstream>
 #include <iomanip>
 
-using namespace std;
+using std::cout, std::endl, std::ofstream, std::ostream, std::string, std::vector, std::map;
 using namespace RooFit;
 
 ClassImp(RooMsgService);

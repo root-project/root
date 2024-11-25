@@ -10,9 +10,11 @@
 #---------------------------------------------------------------------------------------------------
 
 #---------------------------------------------------------------------------------------------------
-# Package up needed system libraries - only for WIN32?
+# Package up needed system libraries - except for WIN32
 #
-include(InstallRequiredSystemLibraries)
+if(NOT WIN32)
+  include(InstallRequiredSystemLibraries)
+endif()
 
 #----------------------------------------------------------------------------------------------------
 # General packaging setup - variable relavant to all package formats
@@ -37,11 +39,12 @@ if (APPLE)
   # convert to HTML instead.
   find_program(CONVERTER textutil)
   if (NOT CONVERTER)
-    message(FATAL_ERROR "textutil executable not found")
+    message(STATUS "The textutil executable was not found: CPACK_PACKAGE_DESCRIPTION_FILE and CPACK_RESOURCE_FILE_README will not be set")
+  else()
+    execute_process(COMMAND ${CONVERTER} -convert html "${CMAKE_SOURCE_DIR}/README.md" -output "${CMAKE_BINARY_DIR}/README.html")
+    set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_BINARY_DIR}/README.html")
+    set(CPACK_RESOURCE_FILE_README "${CMAKE_BINARY_DIR}/README.html")
   endif()
-  execute_process(COMMAND ${CONVERTER} -convert html "${CMAKE_SOURCE_DIR}/README.md" -output "${CMAKE_BINARY_DIR}/README.html")
-  set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_BINARY_DIR}/README.html")
-  set(CPACK_RESOURCE_FILE_README "${CMAKE_BINARY_DIR}/README.html")
 else()
   configure_file(README.md README.md COPYONLY)
   set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_BINARY_DIR}/README.md")
@@ -76,12 +79,12 @@ if(MSVC)
     math(EXPR VS_VERSION "${VC_MAJOR} - 4")
   elseif(MSVC_VERSION LESS 1930)
     math(EXPR VS_VERSION "${VC_MAJOR} - 3")
-  elseif(MSVC_VERSION LESS 1940)
+  elseif(MSVC_VERSION LESS 1950)
     math(EXPR VS_VERSION "${VC_MAJOR} - 2")
   else()
     message(FATAL_ERROR "MSVC_VERSION ${MSVC_VERSION} not implemented")
   endif()
-  set(COMPILER_NAME_VERSION ".vc${VS_VERSION}")
+  set(COMPILER_NAME_VERSION ".python${Python3_VERSION_MAJOR}${Python3_VERSION_MINOR}.vc${VS_VERSION}")
 else()
   if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     set(COMPILER_NAME_VERSION "-gcc${CXX_MAJOR}.${CXX_MINOR}")
@@ -121,6 +124,10 @@ else()
   string(REGEX REPLACE " linux$" "" osid "${osid}")
   if(osid MATCHES ubuntu)
     string(REGEX REPLACE "([0-9]+[.][0-9]+)[.].*" "\\1" osvers "${osvers}")
+  endif()
+  # "debian gnu/linux12" => "debian12"
+  if(osid MATCHES debian)
+    string(REPLACE " gnu/linux" "" osid "${osid}")
   endif()
   set(OS_NAME_VERSION Linux-${osid}${osvers}-${arch})
 endif()

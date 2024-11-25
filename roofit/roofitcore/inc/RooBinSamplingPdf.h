@@ -60,6 +60,10 @@ public:
   double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override {
     return _pdf->analyticalIntegral(code, rangeName);
   }
+  /// Forwards to the PDF's implementation.
+  std::unique_ptr<RooAbsReal> createExpectedEventsFunc(const RooArgSet *nset) const override {
+    return _pdf->createExpectedEventsFunc(nset);
+  }
 
   /// Forwards to the PDF's implementation.
   bool selfNormalized() const override { return true; }
@@ -106,7 +110,7 @@ public:
   const RooAbsPdf& pdf() const { return _pdf.arg(); }
   const RooAbsReal& observable() const { return _observable.arg(); }
 
-  void computeBatch(double* output, size_t size, RooFit::Detail::DataMap const&) const override;
+  void doEval(RooFit::EvalContext &) const override;
 
 protected:
   double evaluate() const override;

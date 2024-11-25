@@ -16,7 +16,7 @@ namespace ROOT {
 
 namespace Minuit2 {
 
-std::vector<double> FumiliStandardChi2FCN::Elements(const std::vector<double> &par) const
+std::vector<double> FumiliStandardChi2FCN::Elements(std::vector<double> const &par) const
 {
    // Calculate the f(i) contribution to the Chi2. Chi2 = Sum[f(i)**2]
 
@@ -54,7 +54,7 @@ int FumiliStandardChi2FCN::GetNumberOfMeasurements() const
    return fPositions.size();
 }
 
-void FumiliStandardChi2FCN::EvaluateAll(const std::vector<double> &par)
+void FumiliStandardChi2FCN::EvaluateAll(std::vector<double> const &par)
 {
    // Evaluate chi2 value, gradient and hessian all in a single
    // loop on the measurements

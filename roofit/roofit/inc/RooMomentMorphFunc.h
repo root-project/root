@@ -51,7 +51,7 @@ public:
       return true;
    }
 
-   virtual double getVal(const RooArgSet *set = nullptr) const;
+   double getValV(const RooArgSet *set = nullptr) const override;
    RooAbsReal *sumFunc(const RooArgSet *nset);
    const RooAbsReal *sumFunc(const RooArgSet *nset) const;
 
@@ -78,7 +78,7 @@ protected:
       void calculateFractions(const RooMomentMorphFunc &self, bool verbose = true) const;
    };
    mutable RooObjCacheManager _cacheMgr; //! The cache manager
-   mutable RooArgSet *_curNormSet;       //! Current normalization set
+   mutable RooArgSet *_curNormSet = nullptr; //! Current normalization set
 
    friend class CacheElem; // Cache needs to be able to clear _norm pointer
 
@@ -94,13 +94,13 @@ protected:
    RooRealProxy m;
    RooSetProxy _varList;
    RooListProxy _pdfList;
-   mutable TVectorD *_mref;
+   mutable TVectorD *_mref = nullptr;
 
-   mutable TMatrixD *_M; //
+   mutable TMatrixD *_M = nullptr;
 
    Setting _setting;
 
-   bool _useHorizMorph;
+   bool _useHorizMorph = true;
 
    ClassDefOverride(RooMomentMorphFunc, 3);
 };

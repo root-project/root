@@ -22,7 +22,7 @@
 #include "RooArgList.h"
 #include "RooNameReg.h"
 #include "RooFit/UniqueId.h"
-#include "RooFit/Detail/DataMap.h"
+#include "RooFit/EvalContext.h"
 
 #include <ROOT/RSpan.hxx>
 
@@ -68,11 +68,11 @@ public:
 
   // Reduction methods
   RooFit::OwningPtr<RooAbsData> reduce(const RooCmdArg& arg1,const RooCmdArg& arg2={},const RooCmdArg& arg3={},const RooCmdArg& arg4={},
-                     const RooCmdArg& arg5={},const RooCmdArg& arg6={},const RooCmdArg& arg7={},const RooCmdArg& arg8={}) ;
-  RooFit::OwningPtr<RooAbsData> reduce(const char* cut) ;
-  RooFit::OwningPtr<RooAbsData> reduce(const RooFormulaVar& cutVar) ;
-  RooFit::OwningPtr<RooAbsData> reduce(const RooArgSet& varSubset, const char* cut=nullptr) ;
-  RooFit::OwningPtr<RooAbsData> reduce(const RooArgSet& varSubset, const RooFormulaVar& cutVar) ;
+                     const RooCmdArg& arg5={},const RooCmdArg& arg6={},const RooCmdArg& arg7={},const RooCmdArg& arg8={}) const;
+  RooFit::OwningPtr<RooAbsData> reduce(const char* cut) const;
+  RooFit::OwningPtr<RooAbsData> reduce(const RooFormulaVar& cutVar) const;
+  RooFit::OwningPtr<RooAbsData> reduce(const RooArgSet& varSubset, const char* cut=nullptr) const;
+  RooFit::OwningPtr<RooAbsData> reduce(const RooArgSet& varSubset, const RooFormulaVar& cutVar) const;
 
   RooAbsDataStore* store() { return _dstore.get(); }
   const RooAbsDataStore* store() const { return _dstore.get(); }
@@ -340,7 +340,7 @@ protected:
   virtual void attachCache(const RooAbsArg* newOwner, const RooArgSet& cachedVars) ;
 
   virtual std::unique_ptr<RooAbsData> reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange=nullptr,
-                           std::size_t nStart = 0, std::size_t = std::numeric_limits<std::size_t>::max()) = 0 ;
+                           std::size_t nStart = 0, std::size_t = std::numeric_limits<std::size_t>::max()) const = 0 ;
 
   RooRealVar* dataRealVar(const char* methodname, const RooRealVar& extVar) const ;
 

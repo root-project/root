@@ -34,11 +34,13 @@ ClassImp(TH3);
 \class TH3S
 \brief 3-D histogram with a short per channel (see TH1 documentation)
 \class TH3I
-\brief 3-D histogram with an int per channel (see TH1 documentation)}
+\brief 3-D histogram with an int per channel (see TH1 documentation)
+\class TH3L
+\brief 3-D histogram with a long64 per channel (see TH1 documentation)
 \class TH3F
-\brief 3-D histogram with a float per channel (see TH1 documentation)}
+\brief 3-D histogram with a float per channel (see TH1 documentation)
 \class TH3D
-\brief 3-D histogram with a double per channel (see TH1 documentation)}
+\brief 3-D histogram with a double per channel (see TH1 documentation)
 @}
 */
 
@@ -50,11 +52,19 @@ Drawing is currently restricted to one single option.
 A cloud of points is drawn. The number of points is proportional to
 cell content.
 
--   TH3C a 3-D histogram with one byte per cell (char)
--   TH3S a 3-D histogram with two bytes per cell (short integer)
--   TH3I a 3-D histogram with four bytes per cell (32 bits integer)
--   TH3F a 3-D histogram with four bytes per cell (float)
--   TH3D a 3-D histogram with eight bytes per cell (double)
+- TH3C a 3-D histogram with one byte per cell (char). Maximum bin content = 127
+- TH3S a 3-D histogram with two bytes per cell (short integer). Maximum bin content = 32767
+- TH3I a 3-D histogram with four bytes per cell (32 bit integer). Maximum bin content = INT_MAX (\ref intmax3 "*")
+- TH3L a 3-D histogram with eight bytes per cell (64 bit integer). Maximum bin content = LLONG_MAX (\ref llongmax3 "**")
+- TH3F a 3-D histogram with four bytes per cell (float). Maximum precision 7 digits, maximum integer bin content = +/-16777216 (\ref floatmax3 "***")
+- TH3D a 3-D histogram with eight bytes per cell (double). Maximum precision 14 digits, maximum integer bin content = +/-9007199254740992 (\ref doublemax3 "****")
+
+<sup>
+\anchor intmax3 (*) INT_MAX = 2147483647 is the [maximum value for a variable of type int.](https://docs.microsoft.com/en-us/cpp/c-language/cpp-integer-limits)<br>
+\anchor llongmax3 (**) LLONG_MAX = 9223372036854775807 is the [maximum value for a variable of type long64.](https://docs.microsoft.com/en-us/cpp/c-language/cpp-integer-limits)<br>
+\anchor floatmax3 (***) 2^24 = 16777216 is the [maximum integer that can be properly represented by a float32 with 23-bit mantissa.](https://stackoverflow.com/a/3793950/7471760)<br>
+\anchor doublemax3 (****) 2^53 = 9007199254740992 is the [maximum integer that can be properly represented by a double64 with 52-bit mantissa.](https://stackoverflow.com/a/3793950/7471760)
+</sup>
 */
 
 
@@ -91,8 +101,7 @@ TH3::TH3()
 TH3::TH3(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
                                      ,Int_t nbinsy,Double_t ylow,Double_t yup
                                      ,Int_t nbinsz,Double_t zlow,Double_t zup)
-     :TH1(name,title,nbinsx,xlow,xup),
-      TAtt3D()
+     :TH1(name,title,nbinsx,xlow,xup)
 {
    fDimension   = 3;
    if (nbinsy <= 0) {
@@ -133,8 +142,7 @@ TH3::TH3(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t 
 TH3::TH3(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
                                            ,Int_t nbinsy,const Float_t *ybins
                                            ,Int_t nbinsz,const Float_t *zbins)
-     :TH1(name,title,nbinsx,xbins),
-      TAtt3D()
+     :TH1(name,title,nbinsx,xbins)
 {
    fDimension   = 3;
    if (nbinsy <= 0) {Warning("TH3","nbinsy is <=0 - set to nbinsy = 1"); nbinsy = 1; }
@@ -171,8 +179,7 @@ TH3::TH3(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
 TH3::TH3(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
                                            ,Int_t nbinsy,const Double_t *ybins
                                            ,Int_t nbinsz,const Double_t *zbins)
-     :TH1(name,title,nbinsx,xbins),
-      TAtt3D()
+     :TH1(name,title,nbinsx,xbins)
 {
    fDimension   = 3;
    if (nbinsy <= 0) {Warning("TH3","nbinsy is <=0 - set to nbinsy = 1"); nbinsy = 1; }
@@ -210,6 +217,41 @@ void TH3::Copy(TObject &obj) const
    ((TH3&)obj).fTsumwyz     = fTsumwyz;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Increment bin content by 1.
+/// Passing an out-of-range bin leads to undefined behavior
+
+void TH3::AddBinContent(Int_t)
+{
+   AbstractMethod("AddBinContent");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Increment bin content by a weight w.
+/// Passing an out-of-range bin leads to undefined behavior
+
+void TH3::AddBinContent(Int_t, Double_t)
+{
+   AbstractMethod("AddBinContent");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Increment 3D bin content by 1.
+/// Passing an out-of-range bin leads to undefined behavior
+
+void TH3::AddBinContent(Int_t, Int_t, Int_t)
+{
+   AbstractMethod("AddBinContent");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Increment 3D bin content by a weight w.
+/// Passing an out-of-range bin leads to undefined behavior
+
+void TH3::AddBinContent(Int_t, Int_t, Int_t, Double_t)
+{
+   AbstractMethod("AddBinContent");
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill histogram with all entries in the buffer.
@@ -1975,6 +2017,9 @@ TH1D *TH3::DoProject1D(const char* name, const char * title, const TAxis* projX,
    if (useUF && !out2->TestBit(TAxis::kAxisRange) )  out2min -= 1;
    if (useOF && !out2->TestBit(TAxis::kAxisRange) )  out2max += 1;
 
+   // if the out axis has labels and is extendable, temporary make it non-extendable to avoid adding extra bins
+   Bool_t extendable = projX->CanExtend();
+   if ( labels && extendable ) h1->GetXaxis()->SetCanExtend(kFALSE);
    for (ixbin=0;ixbin<=1+projX->GetNbins();ixbin++) {
       if ( projX->TestBit(TAxis::kAxisRange) && ( ixbin < ixmin || ixbin > ixmax )) continue;
 
@@ -2002,6 +2047,7 @@ TH1D *TH3::DoProject1D(const char* name, const char * title, const TAxis* projX,
       totcont += cont;
 
    }
+   if ( labels ) h1->GetXaxis()->SetCanExtend(extendable);
 
    // since we use a combination of fill and SetBinError we need to reset and recalculate the statistics
    // for weighted histograms otherwise sumw2 will be wrong.
@@ -2602,6 +2648,30 @@ TProfile2D *TH3::DoProjectProfile2D(const char* name, const char * title, const 
          } else {
             p2 = new TProfile2D(name,title,ny,&ybins->fArray[iymin-1],nx,&xbins->fArray[ixmin-1]);
          }
+      }
+   }
+
+   // Copy the axis attributes and the axis labels if needed
+   p2->GetXaxis()->ImportAttributes(projY);
+   p2->GetYaxis()->ImportAttributes(projX);
+   THashList* labelsX = projY->GetLabels();
+   if (labelsX) {
+      TIter iL(labelsX);
+      TObjString* lb;
+      Int_t i = 1;
+      while ((lb=(TObjString*)iL())) {
+         p2->GetXaxis()->SetBinLabel(i,lb->String().Data());
+         ++i;
+      }
+   }
+   THashList* labelsY = projX->GetLabels();
+   if (labelsY) {
+      TIter iL(labelsY);
+      TObjString* lb;
+      Int_t i = 1;
+      while ((lb=(TObjString*)iL())) {
+         p2->GetYaxis()->SetBinLabel(i,lb->String().Data());
+         ++i;
       }
    }
 
@@ -3457,7 +3527,7 @@ ClassImp(TH3C);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TH3C::TH3C(): TH3(), TArrayC()
+TH3C::TH3C()
 {
    SetBinsLength(27);
    if (fgDefaultSumw2) Sumw2();
@@ -3528,6 +3598,7 @@ TH3C::TH3C(const TH3C &h3c) : TH3(), TArrayC()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment bin content by 1.
+/// Passing an out-of-range bin leads to undefined behavior
 
 void TH3C::AddBinContent(Int_t bin)
 {
@@ -3537,6 +3608,8 @@ void TH3C::AddBinContent(Int_t bin)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment bin content by w.
+/// \warning The value of w is cast to `Int_t` before being added.
+/// Passing an out-of-range bin leads to undefined behavior
 
 void TH3C::AddBinContent(Int_t bin, Double_t w)
 {
@@ -3655,7 +3728,7 @@ TH3C& TH3C::operator=(const TH3C &h3c)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator *
 
-TH3C operator*(Float_t c1, TH3C &h3c)
+TH3C operator*(Float_t c1, TH3C const &h3c)
 {
    TH3C hnew = h3c;
    hnew.Scale(c1);
@@ -3667,7 +3740,7 @@ TH3C operator*(Float_t c1, TH3C &h3c)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator +
 
-TH3C operator+(TH3C &h1, TH3C &h2)
+TH3C operator+(TH3C const &h1, TH3C const &h2)
 {
    TH3C hnew = h1;
    hnew.Add(&h2,1);
@@ -3679,7 +3752,7 @@ TH3C operator+(TH3C &h1, TH3C &h2)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator -
 
-TH3C operator-(TH3C &h1, TH3C &h2)
+TH3C operator-(TH3C const &h1, TH3C const &h2)
 {
    TH3C hnew = h1;
    hnew.Add(&h2,-1);
@@ -3691,7 +3764,7 @@ TH3C operator-(TH3C &h1, TH3C &h2)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator *
 
-TH3C operator*(TH3C &h1, TH3C &h2)
+TH3C operator*(TH3C const &h1, TH3C const &h2)
 {
    TH3C hnew = h1;
    hnew.Multiply(&h2);
@@ -3703,7 +3776,7 @@ TH3C operator*(TH3C &h1, TH3C &h2)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator /
 
-TH3C operator/(TH3C &h1, TH3C &h2)
+TH3C operator/(TH3C const &h1, TH3C const &h2)
 {
    TH3C hnew = h1;
    hnew.Divide(&h2);
@@ -3723,7 +3796,7 @@ ClassImp(TH3S);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TH3S::TH3S(): TH3(), TArrayS()
+TH3S::TH3S()
 {
    SetBinsLength(27);
    if (fgDefaultSumw2) Sumw2();
@@ -3794,6 +3867,7 @@ TH3S::TH3S(const TH3S &h3s) : TH3(), TArrayS()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment bin content by 1.
+/// Passing an out-of-range bin leads to undefined behavior
 
 void TH3S::AddBinContent(Int_t bin)
 {
@@ -3803,6 +3877,8 @@ void TH3S::AddBinContent(Int_t bin)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment bin content by w.
+/// \warning The value of w is cast to `Int_t` before being added.
+/// Passing an out-of-range bin leads to undefined behavior
 
 void TH3S::AddBinContent(Int_t bin, Double_t w)
 {
@@ -3892,7 +3968,7 @@ TH3S& TH3S::operator=(const TH3S &h3s)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator *
 
-TH3S operator*(Float_t c1, TH3S &h3s)
+TH3S operator*(Float_t c1, TH3S const &h3s)
 {
    TH3S hnew = h3s;
    hnew.Scale(c1);
@@ -3904,7 +3980,7 @@ TH3S operator*(Float_t c1, TH3S &h3s)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator +
 
-TH3S operator+(TH3S &h1, TH3S &h2)
+TH3S operator+(TH3S const &h1, TH3S const &h2)
 {
    TH3S hnew = h1;
    hnew.Add(&h2,1);
@@ -3916,7 +3992,7 @@ TH3S operator+(TH3S &h1, TH3S &h2)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator -
 
-TH3S operator-(TH3S &h1, TH3S &h2)
+TH3S operator-(TH3S const &h1, TH3S const &h2)
 {
    TH3S hnew = h1;
    hnew.Add(&h2,-1);
@@ -3928,7 +4004,7 @@ TH3S operator-(TH3S &h1, TH3S &h2)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator *
 
-TH3S operator*(TH3S &h1, TH3S &h2)
+TH3S operator*(TH3S const &h1, TH3S const &h2)
 {
    TH3S hnew = h1;
    hnew.Multiply(&h2);
@@ -3940,7 +4016,7 @@ TH3S operator*(TH3S &h1, TH3S &h2)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator /
 
-TH3S operator/(TH3S &h1, TH3S &h2)
+TH3S operator/(TH3S const &h1, TH3S const &h2)
 {
    TH3S hnew = h1;
    hnew.Divide(&h2);
@@ -3951,7 +4027,7 @@ TH3S operator/(TH3S &h1, TH3S &h2)
 
 //______________________________________________________________________________
 //                     TH3I methods
-//  TH3I a 3-D histogram with four bytes per cell (32 bits integer)
+//  TH3I a 3-D histogram with four bytes per cell (32 bit integer)
 //______________________________________________________________________________
 
 ClassImp(TH3I);
@@ -3960,7 +4036,7 @@ ClassImp(TH3I);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TH3I::TH3I(): TH3(), TArrayI()
+TH3I::TH3I()
 {
    SetBinsLength(27);
    if (fgDefaultSumw2) Sumw2();
@@ -4031,6 +4107,7 @@ TH3I::TH3I(const TH3I &h3i) : TH3(), TArrayI()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment bin content by 1.
+/// Passing an out-of-range bin leads to undefined behavior
 
 void TH3I::AddBinContent(Int_t bin)
 {
@@ -4040,6 +4117,8 @@ void TH3I::AddBinContent(Int_t bin)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment bin content by w.
+/// \warning The value of w is cast to `Long64_t` before being added.
+/// Passing an out-of-range bin leads to undefined behavior
 
 void TH3I::AddBinContent(Int_t bin, Double_t w)
 {
@@ -4096,7 +4175,7 @@ TH3I& TH3I::operator=(const TH3I &h3i)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator *
 
-TH3I operator*(Float_t c1, TH3I &h3i)
+TH3I operator*(Float_t c1, TH3I const &h3i)
 {
    TH3I hnew = h3i;
    hnew.Scale(c1);
@@ -4108,7 +4187,7 @@ TH3I operator*(Float_t c1, TH3I &h3i)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator +
 
-TH3I operator+(TH3I &h1, TH3I &h2)
+TH3I operator+(TH3I const &h1, TH3I const &h2)
 {
    TH3I hnew = h1;
    hnew.Add(&h2,1);
@@ -4120,7 +4199,7 @@ TH3I operator+(TH3I &h1, TH3I &h2)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator _
 
-TH3I operator-(TH3I &h1, TH3I &h2)
+TH3I operator-(TH3I const &h1, TH3I const &h2)
 {
    TH3I hnew = h1;
    hnew.Add(&h2,-1);
@@ -4132,7 +4211,7 @@ TH3I operator-(TH3I &h1, TH3I &h2)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator *
 
-TH3I operator*(TH3I &h1, TH3I &h2)
+TH3I operator*(TH3I const &h1, TH3I const &h2)
 {
    TH3I hnew = h1;
    hnew.Multiply(&h2);
@@ -4144,7 +4223,7 @@ TH3I operator*(TH3I &h1, TH3I &h2)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator /
 
-TH3I operator/(TH3I &h1, TH3I &h2)
+TH3I operator/(TH3I const &h1, TH3I const &h2)
 {
    TH3I hnew = h1;
    hnew.Divide(&h2);
@@ -4154,8 +4233,215 @@ TH3I operator/(TH3I &h1, TH3I &h2)
 
 
 //______________________________________________________________________________
+//                     TH3L methods
+//  TH3L a 3-D histogram with eight bytes per cell (64 bit integer)
+//______________________________________________________________________________
+
+ClassImp(TH3L);
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
+TH3L::TH3L()
+{
+   SetBinsLength(27);
+   if (fgDefaultSumw2) Sumw2();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
+TH3L::~TH3L()
+{
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for fix bin size 3-D histograms
+/// (see TH3::TH3 for explanation of parameters)
+
+TH3L::TH3L(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
+           ,Int_t nbinsy,Double_t ylow,Double_t yup
+           ,Int_t nbinsz,Double_t zlow,Double_t zup)
+   :TH3(name,title,nbinsx,xlow,xup,nbinsy,ylow,yup,nbinsz,zlow,zup)
+{
+   TH3L::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
+
+   if (xlow >= xup || ylow >= yup || zlow >= zup) SetBuffer(fgBufferSize);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for variable bin size 3-D histograms
+/// (see TH3::TH3 for explanation of parameters)
+
+TH3L::TH3L(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
+           ,Int_t nbinsy,const Float_t *ybins
+           ,Int_t nbinsz,const Float_t *zbins)
+   :TH3(name,title,nbinsx,xbins,nbinsy,ybins,nbinsz,zbins)
+{
+   TArrayL64::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for variable bin size 3-D histograms
+/// (see TH3::TH3 for explanation of parameters)
+
+TH3L::TH3L(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
+           ,Int_t nbinsy,const Double_t *ybins
+           ,Int_t nbinsz,const Double_t *zbins)
+   :TH3(name,title,nbinsx,xbins,nbinsy,ybins,nbinsz,zbins)
+{
+   TArrayL64::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
+/// The list of functions is not copied. (Use Clone() if needed)
+
+TH3L::TH3L(const TH3L &h3l) : TH3(), TArrayL64()
+{
+   h3l.TH3L::Copy(*this);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Increment bin content by 1.
+/// Passing an out-of-range bin leads to undefined behavior
+
+void TH3L::AddBinContent(Int_t bin)
+{
+   if (fArray[bin] < LLONG_MAX) fArray[bin]++;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Increment bin content by w.
+/// \warning The value of w is cast to `Long64_t` before being added.
+/// Passing an out-of-range bin leads to undefined behavior
+
+void TH3L::AddBinContent(Int_t bin, Double_t w)
+{
+   Long64_t newval = fArray[bin] + Long64_t(w);
+   if (newval > -LLONG_MAX && newval < LLONG_MAX) {fArray[bin] = Int_t(newval); return;}
+   if (newval < -LLONG_MAX) fArray[bin] = -LLONG_MAX;
+   if (newval >  LLONG_MAX) fArray[bin] =  LLONG_MAX;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Copy this 3-D histogram structure to newth3.
+
+void TH3L::Copy(TObject &newth3) const
+{
+   TH3::Copy(newth3);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Reset this histogram: contents, errors, etc.
+
+void TH3L::Reset(Option_t *option)
+{
+   TH3::Reset(option);
+   TArrayL64::Reset();
+   // should also reset statistics once statistics are implemented for TH3
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set total number of bins including under/overflow
+/// Reallocate bin contents array
+
+void TH3L::SetBinsLength(Int_t n)
+{
+   if (n < 0) n = (fXaxis.GetNbins()+2)*(fYaxis.GetNbins()+2)*(fZaxis.GetNbins()+2);
+   fNcells = n;
+   TArrayL64::Set(n);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Operator =
+
+TH3L& TH3L::operator=(const TH3L &h3l)
+{
+   if (this != &h3l)
+      h3l.TH3L::Copy(*this);
+   return *this;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Operator *
+
+TH3L operator*(Float_t c1, TH3L const &h3l)
+{
+   TH3L hnew = h3l;
+   hnew.Scale(c1);
+   hnew.SetDirectory(nullptr);
+   return hnew;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Operator +
+
+TH3L operator+(TH3L const &h1, TH3L const &h2)
+{
+   TH3L hnew = h1;
+   hnew.Add(&h2,1);
+   hnew.SetDirectory(nullptr);
+   return hnew;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Operator _
+
+TH3L operator-(TH3L const &h1, TH3L const &h2)
+{
+   TH3L hnew = h1;
+   hnew.Add(&h2,-1);
+   hnew.SetDirectory(nullptr);
+   return hnew;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Operator *
+
+TH3L operator*(TH3L const &h1, TH3L const &h2)
+{
+   TH3L hnew = h1;
+   hnew.Multiply(&h2);
+   hnew.SetDirectory(nullptr);
+   return hnew;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Operator /
+
+TH3L operator/(TH3L const &h1, TH3L const &h2)
+{
+   TH3L hnew = h1;
+   hnew.Divide(&h2);
+   hnew.SetDirectory(nullptr);
+   return hnew;
+}
+
+
+//______________________________________________________________________________
 //                     TH3F methods
-//  TH3F a 3-D histogram with four bytes per cell (float)
+//  TH3F a 3-D histogram with four bytes per cell (float). Maximum precision 7 digits, maximum integer bin content = +/-16777216
 //______________________________________________________________________________
 
 ClassImp(TH3F);
@@ -4164,7 +4450,7 @@ ClassImp(TH3F);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TH3F::TH3F(): TH3(), TArrayF()
+TH3F::TH3F()
 {
    SetBinsLength(27);
    if (fgDefaultSumw2) Sumw2();
@@ -4312,7 +4598,7 @@ TH3F& TH3F::operator=(const TH3F &h3f)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator *
 
-TH3F operator*(Float_t c1, TH3F &h3f)
+TH3F operator*(Float_t c1, TH3F const &h3f)
 {
    TH3F hnew = h3f;
    hnew.Scale(c1);
@@ -4324,7 +4610,7 @@ TH3F operator*(Float_t c1, TH3F &h3f)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator +
 
-TH3F operator+(TH3F &h1, TH3F &h2)
+TH3F operator+(TH3F const &h1, TH3F const &h2)
 {
    TH3F hnew = h1;
    hnew.Add(&h2,1);
@@ -4336,7 +4622,7 @@ TH3F operator+(TH3F &h1, TH3F &h2)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator -
 
-TH3F operator-(TH3F &h1, TH3F &h2)
+TH3F operator-(TH3F const &h1, TH3F const &h2)
 {
    TH3F hnew = h1;
    hnew.Add(&h2,-1);
@@ -4348,7 +4634,7 @@ TH3F operator-(TH3F &h1, TH3F &h2)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator *
 
-TH3F operator*(TH3F &h1, TH3F &h2)
+TH3F operator*(TH3F const &h1, TH3F const &h2)
 {
    TH3F hnew = h1;
    hnew.Multiply(&h2);
@@ -4360,7 +4646,7 @@ TH3F operator*(TH3F &h1, TH3F &h2)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator /
 
-TH3F operator/(TH3F &h1, TH3F &h2)
+TH3F operator/(TH3F const &h1, TH3F const &h2)
 {
    TH3F hnew = h1;
    hnew.Divide(&h2);
@@ -4371,7 +4657,7 @@ TH3F operator/(TH3F &h1, TH3F &h2)
 
 //______________________________________________________________________________
 //                     TH3D methods
-//  TH3D a 3-D histogram with eight bytes per cell (double)
+//  TH3D a 3-D histogram with eight bytes per cell (double). Maximum precision 14 digits, maximum integer bin content = +/-9007199254740992
 //______________________________________________________________________________
 
 ClassImp(TH3D);
@@ -4380,7 +4666,7 @@ ClassImp(TH3D);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TH3D::TH3D(): TH3(), TArrayD()
+TH3D::TH3D()
 {
    SetBinsLength(27);
    if (fgDefaultSumw2) Sumw2();
@@ -4530,7 +4816,7 @@ TH3D& TH3D::operator=(const TH3D &h3d)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator *
 
-TH3D operator*(Float_t c1, TH3D &h3d)
+TH3D operator*(Float_t c1, TH3D const &h3d)
 {
    TH3D hnew = h3d;
    hnew.Scale(c1);
@@ -4542,7 +4828,7 @@ TH3D operator*(Float_t c1, TH3D &h3d)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator +
 
-TH3D operator+(TH3D &h1, TH3D &h2)
+TH3D operator+(TH3D const &h1, TH3D const &h2)
 {
    TH3D hnew = h1;
    hnew.Add(&h2,1);
@@ -4554,7 +4840,7 @@ TH3D operator+(TH3D &h1, TH3D &h2)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator -
 
-TH3D operator-(TH3D &h1, TH3D &h2)
+TH3D operator-(TH3D const &h1, TH3D const &h2)
 {
    TH3D hnew = h1;
    hnew.Add(&h2,-1);
@@ -4566,7 +4852,7 @@ TH3D operator-(TH3D &h1, TH3D &h2)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator *
 
-TH3D operator*(TH3D &h1, TH3D &h2)
+TH3D operator*(TH3D const &h1, TH3D const &h2)
 {
    TH3D hnew = h1;
    hnew.Multiply(&h2);
@@ -4578,7 +4864,7 @@ TH3D operator*(TH3D &h1, TH3D &h2)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator /
 
-TH3D operator/(TH3D &h1, TH3D &h2)
+TH3D operator/(TH3D const &h1, TH3D const &h2)
 {
    TH3D hnew = h1;
    hnew.Divide(&h2);

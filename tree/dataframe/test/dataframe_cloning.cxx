@@ -9,13 +9,14 @@
 #include <ROOT/RResultPtr.hxx> // CloneResultAndAction
 #include <ROOT/RSnapshotOptions.hxx>
 #include <ROOT/RDF/RDatasetSpec.hxx>
-#include <ROOT/RDF/RInterface.hxx> // ChangeEmptyEntryRange, ChangeSpec
+#include <ROOT/RDF/RInterface.hxx> // ChangeEmptyEntryRange, ChangeBeginAndEndEntries, ChangeSpec
 #include <ROOT/RDF/RResultMap.hxx> // CloneResultAndAction
 #include <RtypesCore.h>            // ULong64_t
 #include <TSystem.h>               // AccessPathName
 
 #include <gtest/gtest.h>
 
+using ROOT::Internal::RDF::ChangeBeginAndEndEntries;
 using ROOT::Internal::RDF::ChangeEmptyEntryRange;
 using ROOT::Internal::RDF::ChangeSpec;
 using ROOT::Internal::RDF::CloneResultAndAction;
@@ -371,6 +372,34 @@ TEST(RDataFrameCloning, ChangeEmptyEntryRange)
    EXPECT_VEC_EQ(*take3, {8, 9});
 
    EXPECT_EQ(df.GetNRuns(), 3);
+}
+
+TEST(RDataFrameCloning, ChangeBeginAndEndEntries)
+{
+   auto treeName{"events"};
+   auto firstFile{"test_rdataframe_cloneactions_ChangeEmptyRange.root"};
+   {
+      ROOT::RDataFrame df{10};
+      df.Define("x", [](ULong64_t e) { return e; }, {"rdfentry_"}).Snapshot(treeName, firstFile);
+   }
+
+   ROOT::RDataFrame df{treeName, firstFile};
+
+   ChangeBeginAndEndEntries(df, 0, 3);
+   auto take1 = df.Take<ULong64_t>("x");
+   EXPECT_VEC_EQ(*take1, {0, 1, 2});
+
+   ChangeBeginAndEndEntries(df, 3, 7);
+   auto take2 = CloneResultAndAction(take1);
+   EXPECT_VEC_EQ(*take2, {3, 4, 5, 6});
+
+   ChangeBeginAndEndEntries(df, 7, 10);
+   auto take3 = CloneResultAndAction(take2);
+   EXPECT_VEC_EQ(*take3, {7, 8, 9});
+
+   EXPECT_EQ(df.GetNRuns(), 3);
+
+   gSystem->Unlink(firstFile);
 }
 
 TEST(RDataFrameCloning, ChangeSpec)

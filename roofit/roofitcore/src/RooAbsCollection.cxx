@@ -178,6 +178,10 @@ RooAbsCollection::~RooAbsCollection()
   if(_ownCont){
     deleteList() ;
   }
+  if (_hashAssistedFind) {
+    delete _hashAssistedFind;
+  }
+  _hashAssistedFind = nullptr;
 }
 
 
@@ -189,6 +193,9 @@ RooAbsCollection::~RooAbsCollection()
 
 void RooAbsCollection::deleteList()
 {
+  if (_hashAssistedFind) {
+    delete _hashAssistedFind;
+  }
   _hashAssistedFind = nullptr;
 
   // Built-in delete remaining elements
@@ -389,8 +396,10 @@ bool RooAbsCollection::addOwned(RooAbsArg& var, bool silent)
 bool RooAbsCollection::addOwned(std::unique_ptr<RooAbsArg> var, bool silent) {
   bool result = addOwned(*var.release(), silent);
   if(!result) {
-    throw std::runtime_error(std::string("RooAbsCollection::addOwned could not add the argument to the")
-                             + " collection! The ownership would not be well defined if we ignore this.");
+    auto errMsg = std::string("RooAbsCollection::addOwned could not add the argument to the")
+                             + " collection! The ownership would not be well defined if we ignore this.";
+    coutE(ObjectHandling) << errMsg << std::endl;
+    throw std::runtime_error(errMsg);
   }
   return result;
 }
@@ -492,15 +501,17 @@ bool RooAbsCollection::addOwned(const RooAbsCollection& list, bool silent)
 bool RooAbsCollection::addOwned(RooAbsCollection&& list, bool silent)
 {
   if(list.isOwning()) {
-    list.releaseOwnership();
+    list._ownCont = false;
   }
   if(list.empty()) return false;
 
   bool result = addOwned(list, silent);
 
   if(!result) {
-    throw std::runtime_error(std::string("RooAbsCollection::addOwned could not add the argument to the")
-                             + " collection! The ownership would not be well defined if we ignore this.");
+    auto errMsg = std::string("RooAbsCollection::addOwned could not add the argument to the")
+                             + " collection! The ownership would not be well defined if we ignore this.";
+    coutE(ObjectHandling) << errMsg << std::endl;
+    throw std::runtime_error(errMsg);
   }
 
   // So far, comps has only released the ownership, but it is still valid.
@@ -536,8 +547,11 @@ bool RooAbsCollection::replace(const RooAbsCollection &other)
 {
   // check that this isn't a copy of a list
   if(_ownCont) {
-    coutE(ObjectHandling) << "RooAbsCollection: cannot replace variables in a copied list" << std::endl;
-    return false;
+    std::stringstream errMsg;
+    errMsg << "RooAbsCollection: cannot replace variables in a copied list";
+    coutE(ObjectHandling) << errMsg.str() << std::endl;
+    // better than returning "false" and leaving the collection in a broken state:
+    throw std::invalid_argument(errMsg.str());
   }
 
   // loop over elements in the other list
@@ -550,21 +564,8 @@ bool RooAbsCollection::replace(const RooAbsCollection &other)
 }
 
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Replace var1 with var2 and return true for success. Fails if
-/// this list is a copy of another, if var1 is not already in this set,
-/// or if var2 is already in this set. var1 and var2 do not need to have
-/// the same name.
-
-bool RooAbsCollection::replace(const RooAbsArg& var1, const RooAbsArg& var2)
+bool RooAbsCollection::replaceImpl(const RooAbsArg& var1, const RooAbsArg& var2)
 {
-  // check that this isn't a copy of a list
-  if(_ownCont) {
-    coutE(ObjectHandling) << "RooAbsCollection: cannot replace variables in a copied list" << std::endl;
-    return false;
-  }
-
   // is var1 already in this list?
   const char *name= var1.GetName();
   auto var1It = std::find(_list.begin(), _list.end(), &var1);
@@ -592,13 +593,58 @@ bool RooAbsCollection::replace(const RooAbsArg& var1, const RooAbsArg& var2)
   }
   *var1It = const_cast<RooAbsArg*>(&var2); //FIXME try to get rid of const_cast
 
-  if (_allRRV && dynamic_cast<const RooRealVar*>(&var2)==nullptr) {
+  if (_allRRV && dynamic_cast<const RooRealVar*>(&var2) == nullptr) {
     _allRRV=false ;
   }
 
   return true;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Replace var1 with var2 and return true for success. Fails if
+/// this list is a copy of another, if var1 is not already in this set,
+/// or if var2 is already in this set. var1 and var2 do not need to have
+/// the same name.
+
+bool RooAbsCollection::replace(const RooAbsArg &var1, const RooAbsArg &var2)
+{
+   // check that this isn't a copy of a list
+   if (_ownCont) {
+      std::string errMsg = "RooAbsCollection: cannot replace variables in a copied list";
+      coutE(ObjectHandling) << errMsg << std::endl;
+      throw std::runtime_error(errMsg);
+   }
+
+   return replaceImpl(var1, var2);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Replace var1 with var2 and return true for success. Fails if
+/// this list is a copy of another, if var1 is not already in this set,
+/// or if var2 is already in this set. var1 and var2 do not need to have
+/// the same name.
+
+bool RooAbsCollection::replace(RooAbsArg *var1, std::unique_ptr<RooAbsArg> var2)
+{
+   // To accept an owning var2, the collection must be owning.
+   if (!_ownCont) {
+      std::string errMsg =
+         "RooAbsCollection::replace(RooAbsArg *, std::unique_ptr<RooAbsArg>) can't be used on a non-owning collection!";
+      coutE(ObjectHandling) << errMsg << std::endl;
+      throw std::runtime_error(errMsg);
+   }
+
+   bool success = replaceImpl(*var1, *var2.release());
+   if (!success) {
+      auto errMsg = std::string("RooAbsCollection::replace(RooAbsArg *, std::unique_ptr<RooAbsArg>) did not succeed!") +
+                    "The ownership would not be well defined if we ignore this.";
+      coutE(ObjectHandling) << errMsg << std::endl;
+      throw std::runtime_error(errMsg);
+   }
+   delete var1;
+   return success;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -709,6 +755,9 @@ bool RooAbsCollection::remove(const RooAbsCollection& list, bool /*silent*/, boo
 
 void RooAbsCollection::removeAll()
 {
+  if (_hashAssistedFind) {
+    delete _hashAssistedFind;
+  }
   _hashAssistedFind = nullptr;
 
   if(_ownCont) {
@@ -881,7 +930,7 @@ RooAbsArg * RooAbsCollection::find(const char *name) const
 
   if (_hashAssistedFind || _list.size() >= _sizeThresholdForMapSearch) {
     if (!_hashAssistedFind || !_hashAssistedFind->isValid()) {
-      _hashAssistedFind = std::make_unique<HashAssistedFind>(_list.begin(), _list.end());
+      _hashAssistedFind = new HashAssistedFind{_list.begin(), _list.end()};
     }
 
     return _hashAssistedFind->find(nptr);
@@ -901,7 +950,7 @@ RooAbsArg * RooAbsCollection::find(const RooAbsArg& arg) const
 
   if (_hashAssistedFind || _list.size() >= _sizeThresholdForMapSearch) {
     if (!_hashAssistedFind || !_hashAssistedFind->isValid()) {
-      _hashAssistedFind = std::make_unique<HashAssistedFind>(_list.begin(), _list.end());
+      _hashAssistedFind = new HashAssistedFind{_list.begin(), _list.end()};
     }
 
     return _hashAssistedFind->find(nptr);
@@ -1534,18 +1583,6 @@ void RooAbsCollection::sortTopologically() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Factory for legacy iterators.
-
-std::unique_ptr<RooAbsCollection::LegacyIterator_t> RooAbsCollection::makeLegacyIterator (bool forward) const {
-   if (!forward) {
-      ccoutE(DataHandling) << "The legacy RooFit collection iterators don't support reverse iterations, any more. "
-                           << "Use begin() and end()" << std::endl;
-   }
-  return std::make_unique<LegacyIterator_t>(_list);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
 /// Insert an element into the owned collections.
 void RooAbsCollection::insert(RooAbsArg* item) {
   _list.push_back(item);
@@ -1562,9 +1599,29 @@ void RooAbsCollection::insert(RooAbsArg* item) {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// \param[in] flag Switch hash map on or off.
-void RooAbsCollection::useHashMapForFind(bool flag) const {
-  if (flag && !_hashAssistedFind) _hashAssistedFind = std::make_unique<HashAssistedFind>(_list.begin(), _list.end());
-  if (!flag) _hashAssistedFind = nullptr;
+void RooAbsCollection::useHashMapForFind(bool flag) const
+{
+// Use a ROOT version macro for behavior-changing code in ROOT 6.33, so se can
+// keep the same RooFit code base in master and in the 6.32 patch release
+// branch for now.
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6, 33, 00)
+   if (flag && !dynamic_cast<RooArgSet const *>(this)) {
+      // RooArgLists can have duplicate object, so we can't do hash-assisted lookups.
+      std::stringstream msg;
+      msg << "RooAbsCollection::useHashMapForFind() ERROR: this collection is not a RooArgSet but a RooArgList, so "
+             "hash-assisted finding can't be enabled!"
+          << std::endl;
+      oocoutE(nullptr, ObjectHandling) << msg.str() << std::endl;
+      throw std::runtime_error(msg.str());
+   }
+#endif
+   if (flag && !_hashAssistedFind) {
+      _hashAssistedFind = new HashAssistedFind{_list.begin(), _list.end()};
+   }
+   if (!flag && _hashAssistedFind) {
+      delete _hashAssistedFind;
+      _hashAssistedFind = nullptr;
+   }
 }
 
 

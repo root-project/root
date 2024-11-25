@@ -36,7 +36,7 @@ ClassImp(TH1K);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TH1K::TH1K(): TH1(), TArrayF()
+TH1K::TH1K()
 {
    fDimension = 1;
    fNIn   = 0;

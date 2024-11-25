@@ -31,10 +31,10 @@ TString stime(time_t* t, bool utc = false, bool display_time_zone = true) {
 }
 
 
-TCanvas *timeonaxis3() {
+void timeonaxis3() {
    double f = 1.8;
 
-   TCanvas* c = new TCanvas;
+   auto c = new TCanvas;
 
    TLatex tex1;
    tex1.SetNDC();
@@ -90,22 +90,21 @@ TCanvas *timeonaxis3() {
 
          char buf[256];
          if (offset[i] < t[i]) {
-            sprintf(buf, "#splitline{%s, %s}{offset: %ld, option %s}",
+            snprintf(buf, 256, "#splitline{%s, %s}{offset: %ld, option %s}",
                     stime(t+i).Data(), stime(t+i, true).Data(), offset[i], opt);
          } else {
             int h = t[i] / 3600;
             int m = (t[i] - 3600 * h) / 60 ;
             int s = (t[i] - h * 3600 - m * 60);
-            sprintf(buf, "#splitline{%d h %d m %d s}{offset: %s, option %s}",
+            snprintf(buf, 256, "#splitline{%d h %d m %d s}{offset: %s, option %s}",
                     h, m, s, stime(offset + i, gmt).Data(), opt);
          }
          tex1.DrawLatex(.01, .75, buf);
          tex2.DrawLatex(.01, .50, offsettimeformat);
          time_t t_ = t[i] + offset[i];
-         sprintf(buf, "Expecting:    #color[2]{%s}", stime(&t_, gmt, false).Data());
+         snprintf(buf, 256, "Expecting:    #color[2]{%s}", stime(&t_, gmt, false).Data());
          tex3.DrawLatex(.01, .24, buf);
          if(i > 0) l.DrawLine(0, 0.95, 1, 0.95);
       }
    }
-   return c;
 }

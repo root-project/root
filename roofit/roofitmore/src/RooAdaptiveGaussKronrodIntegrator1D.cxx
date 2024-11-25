@@ -55,7 +55,7 @@ can be selected to speed up the convergence of these integrals.
 #include "TMath.h"
 #include "RooMsgService.h"
 
-using namespace std ;
+using std::endl;
 
 
 // --- From GSL_MATH.h -------------------------------------------
@@ -995,7 +995,7 @@ rescale_error (double err, const double result_abs, const double result_asc)
 
   if (result_asc != 0 && err != 0)
       {
-        double scale = TMath::Power((200 * err / result_asc), 1.5) ;
+        double scale = std::pow((200 * err / result_asc), 1.5) ;
 
         if (scale < 1)
           {

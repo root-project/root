@@ -57,7 +57,7 @@ The following macro gives an example:
 
 Begin_Macro(source)
 {
-   cV3D = new TCanvas("cV3D","PolyLine3D & PolyMarker3D Window",200,10,500,500);
+   auto cV3D = new TCanvas("cV3D","PolyLine3D & PolyMarker3D Window",200,10,500,500);
 
    // Creating a view
    TView3D *view = (TView3D*) TView::CreateView(1);

@@ -25,11 +25,13 @@
 #include "TApplication.h"
 #include "TTimer.h"
 #include "TRandom.h"
+#include "TError.h"
 #include "TROOT.h"
 #include "TEnv.h"
 #include "TExec.h"
 #include "TSocket.h"
 #include "TThread.h"
+#include "TObjArray.h"
 
 #include <thread>
 #include <chrono>
@@ -90,6 +92,8 @@ std::shared_ptr<RWebWindowsManager> &RWebWindowsManager::Instance()
 
 static std::thread::id gWebWinMainThrd = std::this_thread::get_id();
 static bool gWebWinMainThrdSet = true;
+static bool gWebWinLoopbackMode = true;
+static bool gWebWinUseSessionKey = true;
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Returns true when called from main process
@@ -116,12 +120,173 @@ void RWebWindowsManager::AssignMainThrd()
    gWebWinMainThrd = std::this_thread::get_id();
 }
 
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Set loopback mode for THttpServer used for web widgets
+/// By default is on. Only local communication via localhost address is possible
+/// Disable it only if really necessary - it may open unauthorized access to your application from external nodes!!
+
+void RWebWindowsManager::SetLoopbackMode(bool on)
+{
+   gWebWinLoopbackMode = on;
+   if (!on) {
+      printf("\nWARNING!\n");
+      printf("Disabling loopback mode may leads to security problem.\n");
+      printf("See https://root.cern/about/security/ for more information.\n\n");
+      if (!gWebWinUseSessionKey) {
+         printf("Enforce session key to safely work on public network.\n");
+         printf("One may call RWebWindowsManager::SetUseSessionKey(false); to disable it.\n");
+         gWebWinUseSessionKey = true;
+      }
+   }
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Returns true if loopback mode used by THttpServer for web widgets
+
+bool RWebWindowsManager::IsLoopbackMode()
+{
+   return gWebWinLoopbackMode;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Enable or disable usage of session key (default on)
+/// If enabled, secrete session key used to calculate hash sum of each packet send to or from server
+/// This protects ROOT http server from anauthorized usage
+
+void RWebWindowsManager::SetUseSessionKey(bool on)
+{
+   gWebWinUseSessionKey = on;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Enable or disable usage of connection key (default on)
+/// If enabled, each connection (and reconnection) to widget requires unique key
+/// Connection key used together with session key to calculate hash sum of each packet send to or from server
+/// This protects ROOT http server from anauthorized usage
+
+void RWebWindowsManager::SetUseConnectionKey(bool on)
+{
+   gEnv->SetValue("WebGui.OnetimeKey", on ? "yes" : "no");
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Enable or disable single connection mode (default on)
+/// If enabled, one connection only with any web widget is possible
+/// Any attempt to establish more connections will fail
+/// if this mode is disabled some widgets like geom viewer or web canvas will be able to
+/// to serve several clients - only when they are connected with required authentication keys
+
+void RWebWindowsManager::SetSingleConnMode(bool on)
+{
+   gEnv->SetValue("WebGui.SingleConnMode", on ? "yes" : "no");
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Configure server location which can be used for loading of custom scripts or files
+/// When THttpServer instance of RWebWindowsManager will be created,
+/// THttpServer::AddLocation() method with correspondent arguments will be invoked.
+
+void RWebWindowsManager::AddServerLocation(const std::string &server_prefix, const std::string &files_path)
+{
+   if (server_prefix.empty() || files_path.empty())
+      return;
+   auto loc = GetServerLocations();
+   std::string prefix = server_prefix;
+   if (prefix.back() != '/')
+      prefix.append("/");
+   loc[prefix] = files_path;
+
+   // now convert back to plain string
+   TString cfg;
+   for (auto &entry : loc) {
+      if (cfg.Length() > 0)
+         cfg.Append(";");
+      cfg.Append(entry.first.c_str());
+      cfg.Append(":");
+      cfg.Append(entry.second.c_str());
+   }
+
+   gEnv->SetValue("WebGui.ServerLocations", cfg);
+
+   auto serv = Instance()->GetServer();
+   if (serv)
+      serv->AddLocation(prefix.c_str(), files_path.c_str());
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Returns server locations as <std::string, std::string>
+/// Key is location name (with slash at the end) and value is file path
+
+std::map<std::string, std::string> RWebWindowsManager::GetServerLocations()
+{
+   std::map<std::string, std::string> res;
+
+   TString cfg = gEnv->GetValue("WebGui.ServerLocations","");
+   auto arr = cfg.Tokenize(";");
+   if (arr) {
+      TIter next(arr);
+      while(auto obj = next()) {
+         TString arg = obj->GetName();
+
+         auto p = arg.First(":");
+         if (p == kNPOS) continue;
+
+         TString prefix = arg(0, p);
+         if (!prefix.EndsWith("/"))
+            prefix.Append("/");
+         TString path = arg(p+1, arg.Length() - p);
+
+         res[prefix.Data()] = path.Data();
+      }
+      delete arr;
+   }
+   return res;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Clear all server locations
+/// Does not change configuration of already running HTTP server
+
+void RWebWindowsManager::ClearServerLocations()
+{
+   gEnv->SetValue("WebGui.ServerLocations", "");
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Static method to generate cryptographic key
+/// Parameter keylen defines length of cryptographic key in bytes
+/// Output string will be hex formatted and includes "-" separator after every 4 bytes
+/// Example for 16 bytes: "fca45856-41bee066-ff74cc96-9154d405"
+
+std::string RWebWindowsManager::GenerateKey(int keylen)
+{
+   std::vector<unsigned char> buf(keylen, 0);
+   auto res = gSystem->GetCryptoRandom(buf.data(), keylen);
+
+   R__ASSERT(res == keylen && "Error in gSystem->GetCryptoRandom");
+
+   std::string key;
+   for (int n = 0; n < keylen; n++) {
+      if ((n > 0) && (n % 4 == 0))
+         key.append("-");
+      auto t = TString::Itoa(buf[n], 16);
+      if (t.Length() == 1)
+         key.append("0");
+      key.append(t.Data());
+   }
+   return key;
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////
 /// window manager constructor
 /// Required here for correct usage of unique_ptr<THttpServer>
 
 RWebWindowsManager::RWebWindowsManager()
 {
+   fSessionKey = GenerateKey(32);
+   fUseSessionKey = gWebWinUseSessionKey;
+
    fExternalProcessEvents = RWebWindowWSHandler::GetBoolEnv("WebGui.ExternalProcessEvents") == 1;
    if (fExternalProcessEvents)
       RWebWindowsManager::AssignMainThrd();
@@ -266,6 +431,13 @@ bool RWebWindowsManager::InformListener(const std::string &msg)
 ///
 ///      WebGui.FastCgiServer: https://your_apache_server.com/root_cgi_path
 ///
+/// For some custom applications one requires to load JavaScript modules or other files.
+/// For such applications one may require to load files from other locations which can be configured
+/// with AddServerLocation() method or directly via:
+///
+///      WebGui.ServerLocations: location1:/file/path/to/location1;location2:/file/path/to/location2
+
+
 
 bool RWebWindowsManager::CreateServer(bool with_http)
 {
@@ -314,6 +486,10 @@ bool RWebWindowsManager::CreateServer(bool with_http)
       }
 
       fServer->AddLocation("rootui5sys/", ui5dir.Data());
+
+      auto loc = GetServerLocations();
+      for (auto &entry : loc)
+         fServer->AddLocation(entry.first.c_str(), entry.second.c_str());
    }
 
    if (!with_http || fServer->IsAnyEngine())
@@ -331,8 +507,7 @@ bool RWebWindowsManager::CreateServer(bool with_http)
    int fcgi_thrds = gEnv->GetValue("WebGui.FastCgiThreads", 10);
    const char *fcgi_serv = gEnv->GetValue("WebGui.FastCgiServer", "");
    fLaunchTmout = gEnv->GetValue("WebGui.LaunchTmout", 30.);
-   // always use loopback
-   bool assign_loopback = true; // RWebWindowWSHandler::GetBoolEnv("WebGui.HttpLoopback", 1) == 1;
+   bool assign_loopback = gWebWinLoopbackMode;
    const char *http_bind = gEnv->GetValue("WebGui.HttpBind", "");
    bool use_secure = RWebWindowWSHandler::GetBoolEnv("WebGui.UseHttps", 0) == 1;
    const char *ssl_cert = gEnv->GetValue("WebGui.ServerCert", "rootserver.pem");
@@ -413,17 +588,17 @@ bool RWebWindowsManager::CreateServer(bool with_http)
             }
          }
 
-         engine.Append(TString::Format("webgui&thrds=%d&websocket_timeout=%d", http_thrds, http_wstmout));
+         engine.Append(TString::Format("webgui&top=remote&thrds=%d&websocket_timeout=%d", http_thrds, http_wstmout));
 
          if (http_maxage >= 0)
             engine.Append(TString::Format("&max_age=%d", http_maxage));
 
-         if (use_secure) {
+         if (use_secure && !strchr(ssl_cert,'&')) {
             engine.Append("&ssl_cert=");
             engine.Append(ssl_cert);
          }
 
-         if (extra_args && strlen(extra_args) > 0) {
+         if (!use_unix_socket && !assign_loopback && extra_args && strlen(extra_args) > 0) {
             engine.Append("&");
             engine.Append(extra_args);
          }
@@ -512,12 +687,15 @@ void RWebWindowsManager::Unregister(RWebWindow &win)
 {
    if (win.fWSHandler)
       fServer->UnregisterWS(win.fWSHandler);
+
+   if (fDeleteCallback)
+      fDeleteCallback(win);
 }
 
 //////////////////////////////////////////////////////////////////////////
 /// Provide URL address to access specified window from inside or from remote
 
-std::string RWebWindowsManager::GetUrl(const RWebWindow &win, bool remote)
+std::string RWebWindowsManager::GetUrl(RWebWindow &win, bool remote, std::string *produced_key)
 {
    if (!fServer) {
       R__LOG_ERROR(WebGUILog()) << "Server instance not exists when requesting window URL";
@@ -525,19 +703,46 @@ std::string RWebWindowsManager::GetUrl(const RWebWindow &win, bool remote)
    }
 
    std::string addr = "/";
-
    addr.append(win.fWSHandler->GetName());
-
    addr.append("/");
 
+   bool qmark = false;
+
+   std::string key;
+
+   if (win.IsRequireAuthKey() || produced_key) {
+      key = win.GenerateKey();
+      R__ASSERT(!key.empty());
+      addr.append("?key=");
+      addr.append(key);
+      qmark = true;
+      std::unique_ptr<ROOT::RWebDisplayHandle> dummy;
+      win.AddDisplayHandle(false, key, dummy);
+   }
+
+   auto token = win.GetConnToken();
+   if (!token.empty()) {
+      addr.append(qmark ? "&" : "?");
+      addr.append("token=");
+      addr.append(token);
+   }
+
    if (remote) {
-      if (!CreateServer(true)) {
+      if (!CreateServer(true) || fAddr.empty()) {
          R__LOG_ERROR(WebGUILog()) << "Fail to start real HTTP server when requesting URL";
+         if (!key.empty())
+            win.RemoveKey(key);
          return "";
       }
 
       addr = fAddr + addr;
+
+      if (!key.empty() && !fSessionKey.empty() && fUseSessionKey && win.IsRequireAuthKey())
+         addr += "#"s + fSessionKey;
    }
+
+   if (produced_key)
+      *produced_key = key;
 
    return addr;
 }
@@ -558,7 +763,8 @@ std::string RWebWindowsManager::GetUrl(const RWebWindow &win, bool remote)
 /// Following parameters can be configured in rootrc file:
 ///
 ///      WebGui.Display: kind of display like chrome or firefox or browser, can be overwritten by --web=value command line argument
-///      WebGui.OnetimeKey: if configured requires unique key every time window is connected (default no)
+///      WebGui.OnetimeKey: if configured requires unique key every time window is connected (default yes)
+///      WebGui.SingleConnMode: if configured the only connection and the only user of any widget is possible (default yes)
 ///      WebGui.Chrome: full path to Google Chrome executable
 ///      WebGui.ChromeBatch: command to start chrome in batch, used for image production, like "$prog --headless --disable-gpu $geometry $url"
 ///      WebGui.ChromeHeadless: command to start chrome in headless mode, like "fork: --headless --disable-gpu $geometry $url"
@@ -576,7 +782,7 @@ std::string RWebWindowsManager::GetUrl(const RWebWindow &win, bool remote)
 ///      WebGui.ForceHttp: 0 - off (default), 1 - always create real http server to run web window
 ///      WebGui.Console: -1 - output only console.error(), 0 - add console.warn(), 1  - add console.log() output
 ///      WebGui.ConnCredits: 10 - number of packets which can be send by server or client without acknowledge from receiving side
-///      WebGui.openui5src: alternative location for openui5 like https://openui5.hana.ondemand.com/
+///      WebGui.openui5src: alternative location for openui5 like https://openui5.hana.ondemand.com/1.128.0/
 ///      WebGui.openui5libs: list of pre-loaded ui5 libs like sap.m, sap.ui.layout, sap.ui.unified
 ///      WebGui.openui5theme: openui5 theme like sap_belize (default) or sap_fiori_3
 ///
@@ -602,20 +808,8 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &
          return 0;
       }
 
-   // place here while involves conn mutex
-   auto token = win.GetConnToken();
-
-   // we book manager mutex for a longer operation,
-   std::lock_guard<std::recursive_mutex> grd(fMutex);
-
    if (!fServer) {
       R__LOG_ERROR(WebGUILog()) << "Server instance not exists to show window";
-      return 0;
-   }
-
-   std::string key = win.GenerateKey();
-   if (key.empty()) {
-      R__LOG_ERROR(WebGUILog()) << "Fail to create unique key for the window";
       return 0;
    }
 
@@ -626,6 +820,22 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &
       return 0;
    }
 
+   bool normal_http = RWebDisplayHandle::NeedHttpServer(args);
+   if (!normal_http && (gEnv->GetValue("WebGui.ForceHttp", 0) == 1))
+      normal_http = true;
+
+   std::string key;
+
+   std::string url = GetUrl(win, normal_http, &key);
+   // empty url indicates failure, which already printed by GetUrl method
+   if (url.empty())
+      return 0;
+
+   // we book manager mutex for a longer operation,
+   std::lock_guard<std::recursive_mutex> grd(fMutex);
+
+   args.SetUrl(url);
+
    if (args.GetWidth() <= 0)
       args.SetWidth(win.GetWidth());
    if (args.GetHeight() <= 0)
@@ -635,32 +845,13 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &
    if (args.GetY() < 0)
       args.SetY(win.GetY());
 
-   bool normal_http = !args.IsLocalDisplay();
-   if (!normal_http && (gEnv->GetValue("WebGui.ForceHttp", 0) == 1))
-      normal_http = true;
-
-   std::string url = GetUrl(win, normal_http);
-   if (url.empty()) {
-      R__LOG_ERROR(WebGUILog()) << "Cannot create URL for the window";
-      return 0;
-   }
-   if (normal_http && fAddr.empty()) {
-      R__LOG_WARNING(WebGUILog()) << "Full URL cannot be produced for window " << url << " to start web browser";
-      return 0;
-   }
-
-   args.SetUrl(url);
-
-   args.AppendUrlOpt(std::string("key=") + key);
    if (args.IsHeadless())
       args.AppendUrlOpt("headless"); // used to create holder request
-   if (!token.empty())
-      args.AppendUrlOpt(std::string("token=") + token);
 
    if (!args.IsHeadless() && normal_http) {
       auto winurl = args.GetUrl();
       winurl.erase(0, fAddr.length());
-      InformListener(std::string("win:") + winurl);
+      InformListener(std::string("win:") + winurl + "\n");
    }
 
    if (!args.IsHeadless() && ((args.GetBrowserKind() == RWebDisplayArgs::kServer) || gROOT->IsWebDisplayBatch()) /*&& (RWebWindowWSHandler::GetBoolEnv("WebGui.OnetimeKey") != 1)*/) {
@@ -682,7 +873,7 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &
                "ROOT web-based widget started in the session where DISPLAY set to " << displ << "\n" <<
                "Means web browser will be displayed on remote X11 server which is usually very inefficient\n"
                "One can start ROOT session in server mode like \"root -b --web=server:8877\" and forward http port to display node\n"
-               "Or one can use rootssh script to configure pore forwarding and display web widgets automatically\n"
+               "Or one can use rootssh script to configure port forwarding and display web widgets automatically\n"
                "Find more info on https://root.cern/for_developers/root7/#rbrowser\n"
                "This message can be disabled by setting \"" << varname << ": no\" in .rootrc file\n";
          }
@@ -690,13 +881,20 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &
    }
 #endif
 
+   auto server = GetServer();
+
+   if (win.IsUseCurrentDir())
+      server->AddLocation("currentdir/", ".");
+
    if (!normal_http)
-      args.SetHttpServer(GetServer());
+      args.SetHttpServer(server);
 
    auto handle = RWebDisplayHandle::Display(args);
 
    if (!handle) {
       R__LOG_ERROR(WebGUILog()) << "Cannot display window in " << args.GetBrowserName();
+      if (!key.empty())
+         win.RemoveKey(key);
       return 0;
    }
 
@@ -753,6 +951,9 @@ void RWebWindowsManager::Terminate()
 {
    if (fServer)
       fServer->SetTerminate();
+
+   // set flag which sometimes checked in TSystem::ProcessEvents
+   gROOT->SetInterrupt(kTRUE);
 
    if (gApplication)
       TTimer::SingleShot(100, "TApplication",  gApplication, "Terminate()");

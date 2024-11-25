@@ -18,6 +18,8 @@ ROOT_ADD_GTEST(dataframe_nodes dataframe_nodes.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_regression dataframe_regression.cxx LIBRARIES Physics ROOTDataFrame GenVector)
 ROOT_ADD_GTEST(dataframe_utils dataframe_utils.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_report dataframe_report.cxx LIBRARIES ROOTDataFrame)
+ROOT_ADD_GTEST(dataframe_incomplete_entries dataframe_incomplete_entries.cxx LIBRARIES ROOTDataFrame)
+
 
 if(MSVC)
   set_property(TARGET dataframe_cache APPEND_STRING PROPERTY LINK_FLAGS " -STACK:10000000")
@@ -26,7 +28,7 @@ endif()
 
 ROOT_ADD_GTEST(dataframe_splitcoll_arrayview dataframe_splitcoll_arrayview.cxx LIBRARIES ROOTDataFrame)
 target_include_directories(dataframe_splitcoll_arrayview PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-ROOT_GENERATE_DICTIONARY(TwoFloatsDict ${CMAKE_CURRENT_SOURCE_DIR}/TwoFloats.h MODULE dataframe_splitcoll_arrayview LINKDEF TwoFloatsLinkDef.h OPTIONS -inlineInputHeader)
+ROOT_GENERATE_DICTIONARY(TwoFloatsDict ${CMAKE_CURRENT_SOURCE_DIR}/TwoFloats.h MODULE dataframe_splitcoll_arrayview LINKDEF TwoFloatsLinkDef.h OPTIONS -inlineInputHeader DEPENDENCIES RIO)
 
 ROOT_ADD_GTEST(dataframe_redefine dataframe_redefine.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_definepersample dataframe_definepersample.cxx LIBRARIES ROOTDataFrame)
@@ -39,12 +41,22 @@ if(NOT MSVC OR win_broken_tests)
 endif()
 ROOT_ADD_GTEST(dataframe_vecops dataframe_vecops.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_helpers dataframe_helpers.cxx LIBRARIES ROOTDataFrame)
+if(MSVC)
+  set_source_files_properties(dataframe_helpers.cxx PROPERTIES COMPILE_FLAGS /bigobj)
+  set_source_files_properties(dataframe_cache.cxx PROPERTIES COMPILE_FLAGS /bigobj)
+endif()
 
 if(NOT (MSVC OR (APPLE AND CMAKE_SYSTEM_PROCESSOR MATCHES arm64)) OR win_broken_tests OR M1_BROKEN_TESTS)
   ROOT_ADD_GTEST(dataframe_snapshot dataframe_snapshot.cxx LIBRARIES ROOTDataFrame)
 endif()
 
 ROOT_ADD_GTEST(dataframe_datasetspec dataframe_datasetspec.cxx LIBRARIES ROOTDataFrame)
+if(builtin_nlohmannjson)
+  target_include_directories(dataframe_datasetspec PRIVATE ${CMAKE_SOURCE_DIR}/builtins)
+else()
+  target_link_libraries(dataframe_datasetspec nlohmann_json::nlohmann_json)
+endif()
+
 ROOT_ADD_GTEST(dataframe_display dataframe_display.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_ranges dataframe_ranges.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_leaves dataframe_leaves.cxx LIBRARIES ROOTDataFrame)
@@ -54,6 +66,7 @@ ROOT_ADD_GTEST(dataframe_entrylist dataframe_entrylist.cxx LIBRARIES ROOTDataFra
 ROOT_ADD_GTEST(dataframe_merge_results dataframe_merge_results.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_samplecallback dataframe_samplecallback.cxx CounterHelper.h LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_vary dataframe_vary.cxx LIBRARIES ROOTDataFrame)
+ROOT_ADD_GTEST(dataframe_compgraph dataframe_compgraph.cxx LIBRARIES ROOTDataFrame)
 
 #### TESTS FOR DIFFERENT DATASOURCES ####
 if(MSVC AND MSVC_VERSION GREATER_EQUAL 1925 AND MSVC_VERSION LESS 1929 OR CMAKE_CXX_STANDARD LESS 17)
@@ -72,6 +85,7 @@ configure_file(RCsvDS_test_empty.csv . COPYONLY)
 configure_file(RCsvDS_test_win.csv . COPYONLY)
 configure_file(RCsvDS_test_NaNs.csv . COPYONLY)
 configure_file(spec.json . COPYONLY)
+configure_file(pyspec.json . COPYONLY)
 configure_file(spec_ordering_samples_withFriends.json . COPYONLY)
 ROOT_ADD_GTEST(datasource_csv datasource_csv.cxx LIBRARIES ROOTDataFrame)
 if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 8)
@@ -98,7 +112,7 @@ if(root7)
                                 LINKDEF NTupleStructLinkDef.h
                                 DEPENDENCIES RIO)
   configure_file(NTupleStruct.hxx . COPYONLY)
-  if(MSVC)
+  if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
     add_custom_command(TARGET NTupleStruct POST_BUILD
       COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libNTupleStruct.dll
                                        ${CMAKE_CURRENT_BINARY_DIR}/libNTupleStruct.dll)

@@ -34,9 +34,7 @@ Moreover it provides tools for the combination of models and datasets.
 
 */
 
-using namespace std;
-
-ClassImp(RooStats::HLFactory); ;
+ClassImp(RooStats::HLFactory);
 
 
 using namespace RooStats;

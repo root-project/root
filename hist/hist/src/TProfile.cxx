@@ -44,7 +44,7 @@ ClassImp(TProfile);
   \begin{align}
        H(j)  &=  \sum w \cdot Y \\
        E(j)  &=  \sum w \cdot Y^2 \\
-       W(j)  &=  \sum w \\
+       W(j)  &=  \sum w                   & &\text{if weights different from 1, the number of bin effective entries is used} \\
        h(j)  &=  H(j) / W(j)              & &\text{mean of Y,} \\
        s(j)  &=  \sqrt{E(j)/W(j)- h(j)^2} & &\text{standard deviation of Y} \\
        e(j)  &=  s(j)/\sqrt{W(j)}         & &\text{standard error on the mean} \\
@@ -89,7 +89,7 @@ ClassImp(TProfile);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for Profile histograms
 
-TProfile::TProfile() : TH1D()
+TProfile::TProfile()
 {
    BuildOptions(0,0,"");
 }
@@ -302,7 +302,10 @@ Bool_t TProfile::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
       Error("Add","Attempt to add a non-profile object");
       return kFALSE;
    }
-   return TProfileHelper::Add(this, h1, h2, c1, c2);
+   Bool_t ret = TProfileHelper::Add(this, h1, h2, c1, c2);
+   if (c1 < 0 || c2 < 0)
+      ResetStats();
+   return ret;
 }
 
 
@@ -1634,7 +1637,7 @@ void TProfile::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    //histogram pointer has by default the histogram name.
    //however, in case histogram has no directory, it is safer to add a incremental suffix
    static Int_t hcounter = 0;
-   TString histName = GetName();
+   TString histName = gInterpreter->MapCppName(GetName());
    if (!fDirectory) {
       hcounter++;
       histName += "__";
@@ -1642,8 +1645,8 @@ void TProfile::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    }
    const char *hname = histName.Data();
 
-   out<<hname<<" = new "<<ClassName()<<"("<<quote<<GetName()<<quote<<","<<quote<<GetTitle()<<quote
-   <<","<<GetXaxis()->GetNbins();
+   out << hname << " = new " << ClassName() << "(" << quote << hname << quote << "," << quote << GetTitle() << quote
+       << "," << GetXaxis()->GetNbins();
    if (nonEqiX)
       out << ", xAxis";
    else

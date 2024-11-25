@@ -134,7 +134,7 @@ void Fitter::SetFunction(const IGradModel1DFunction & func, bool useGradient)
 }
 
 
-bool Fitter::DoSetFCN(bool extFcn, const ROOT::Math::IMultiGenFunction & fcn, const double * params, unsigned int dataSize, bool chi2fit) {
+bool Fitter::DoSetFCN(bool extFcn, const ROOT::Math::IMultiGenFunction & fcn, const double * params, unsigned int dataSize, int fitType) {
    // Set the objective function for the fit. First parameter specifies if function object is managed external or internal.
    // In case of an internal function object we need to clone because it is a temporary one
    // if params is not NULL create the parameter settings
@@ -144,7 +144,7 @@ bool Fitter::DoSetFCN(bool extFcn, const ROOT::Math::IMultiGenFunction & fcn, co
       MATH_ERROR_MSG("Fitter::SetFCN","FCN function has zero parameters ");
       return false;
    }
-   if (params != nullptr || fConfig.ParamsSettings().size() == 0)
+   if (params != nullptr || fConfig.ParamsSettings().empty())
       fConfig.SetParamsSettings(npar, params);
    else {
       if ( fConfig.ParamsSettings().size() != npar) {
@@ -152,9 +152,9 @@ bool Fitter::DoSetFCN(bool extFcn, const ROOT::Math::IMultiGenFunction & fcn, co
          return false;
       }
    }
+   fFitType = fitType;
+   fBinFit = (fFitType == ROOT::Math::FitMethodFunction::kLeastSquare || fFitType == ROOT::Math::FitMethodFunction::kPoissonLikelihood);
 
-   fBinFit = chi2fit;
-   if (chi2fit) fFitType = static_cast<int>(ROOT::Math::FitMethodFunction::kLeastSquare);
    fDataSize = dataSize;
 
    // store external provided FCN without cloning it
@@ -176,32 +176,30 @@ bool Fitter::DoSetFCN(bool extFcn, const ROOT::Math::IMultiGenFunction & fcn, co
 
    return true;
 }
-bool Fitter::SetFCN(const ROOT::Math::IMultiGenFunction & fcn, const double * params, unsigned int dataSize, bool chi2fit) {
+bool Fitter::SetFCN(const ROOT::Math::IMultiGenFunction & fcn, const double * params, unsigned int dataSize, int fitType) {
    // set the objective function for the fit
-   return DoSetFCN(true, fcn, params, dataSize, chi2fit);
+   return DoSetFCN(true, fcn, params, dataSize, fitType);
 }
-bool Fitter::SetFCN(const ROOT::Math::IMultiGenFunction &fcn, const IModelFunction & func, const double *params, unsigned int dataSize, bool chi2fit) {
+bool Fitter::SetFCN(const ROOT::Math::IMultiGenFunction &fcn, const IModelFunction & func, const double *params, unsigned int dataSize, int fitType) {
    // set the objective function for the fit and a model function
-   if (!SetFCN(fcn, params, dataSize, chi2fit) ) return false;
-   // need to set fFunc afterwards because SetFCN could reset fFUnc
+   if (!SetFCN(fcn, params, dataSize, fitType) ) return false;
+   // need to set fFunc afterwards because SetFCN could reset fFunc
    fFunc = std::unique_ptr<IModelFunction>(dynamic_cast<IModelFunction *>(func.Clone()));
    if(fFunc) {
       fUseGradient = fcn.HasGradient();
       return true;
    }
    return false;
-   return (fFunc != nullptr);
 }
 
 bool Fitter::SetFCN(const ROOT::Math::FitMethodFunction &fcn, const double *params)
 {
    // set the objective function for the fit
    // if params is not NULL create the parameter settings
-   bool chi2fit = (fcn.Type() == ROOT::Math::FitMethodFunction::kLeastSquare);
-   if (!SetFCN(fcn, params, fcn.NPoints(), chi2fit))
+   int fitType = static_cast<int>(fcn.Type());
+   if (!SetFCN(fcn, params, fcn.NPoints(), fitType))
       return false;
    fUseGradient = false;
-   fFitType = fcn.Type();
    return true;
 }
 
@@ -209,19 +207,18 @@ bool Fitter::SetFCN(const ROOT::Math::FitMethodGradFunction &fcn, const double *
 {
    // set the objective function for the fit
    // if params is not NULL create the parameter settings
-   bool chi2fit = (fcn.Type() == ROOT::Math::FitMethodGradFunction::kLeastSquare);
-   if (!SetFCN(fcn, params, fcn.NPoints(), chi2fit))
+   int fitType  = static_cast<int>(fcn.Type());
+   if (!SetFCN(fcn, params, fcn.NPoints(), fitType))
       return false;
    fUseGradient = true;
-   fFitType = fcn.Type();
    return true;
 }
 
-bool Fitter::FitFCN(const BaseFunc &fcn, const double *params, unsigned int dataSize, bool chi2fit)
+bool Fitter::FitFCN(const BaseFunc &fcn, const double *params, unsigned int dataSize, int fitType)
 {
    // fit a user provided FCN function
    // create fit parameter settings
-   if (!SetFCN(fcn, params, dataSize, chi2fit))
+   if (!SetFCN(fcn, params, dataSize, fitType))
       return false;
    return FitFCN();
 }
@@ -242,7 +239,7 @@ bool Fitter::FitFCN(const ROOT::Math::FitMethodGradFunction &fcn, const double *
    return FitFCN();
 }
 
-bool Fitter::SetFCN(MinuitFCN_t fcn, int npar, const double *params, unsigned int dataSize, bool chi2fit)
+bool Fitter::SetFCN(MinuitFCN_t fcn, int npar, const double *params, unsigned int dataSize, int fitType)
 {
    // set TMinuit style FCN type (global function pointer)
    // create corresponding objective function from that function
@@ -256,14 +253,14 @@ bool Fitter::SetFCN(MinuitFCN_t fcn, int npar, const double *params, unsigned in
    }
 
    ROOT::Fit::FcnAdapter newFcn(fcn, npar);
-   return DoSetFCN(false,newFcn, params, dataSize, chi2fit);
+   return DoSetFCN(false,newFcn, params, dataSize, fitType);
 }
 
-bool Fitter::FitFCN(MinuitFCN_t fcn, int npar, const double *params, unsigned int dataSize, bool chi2fit)
+bool Fitter::FitFCN(MinuitFCN_t fcn, int npar, const double *params, unsigned int dataSize, int fitType)
 {
    // fit using Minuit style FCN type (global function pointer)
-   // create corresponfing objective function from that function
-   if (!SetFCN(fcn, npar, params, dataSize, chi2fit))
+   // create corresponding objective function from that function
+   if (!SetFCN(fcn, npar, params, dataSize, fitType))
       return false;
    fUseGradient = false;
    return FitFCN();
@@ -300,7 +297,7 @@ bool Fitter::EvalFCN()
       return false;
    }
    // create a Fit result from the fit configuration
-   fResult = std::make_shared<ROOT::Fit::FitResult>(fConfig);
+   fResult = std::make_unique<ROOT::Fit::FitResult>(fConfig);
    // evaluate one time the FCN
    double fcnval = (*ObjFunction())(fResult->GetParams());
    // update fit result
@@ -572,7 +569,7 @@ bool Fitter::CalculateHessErrors() {
    // update minimizer results with what comes out from Hesse
    // in case is empty - create from a FitConfig
    if (fResult->IsEmpty() )
-      fResult.reset(new ROOT::Fit::FitResult(fConfig) );
+      fResult = std::make_unique<ROOT::Fit::FitResult>(fConfig );
 
    // update obj function in case it was an external one
    if (fExtObjFunction) fObjFunction.reset(fExtObjFunction->Clone());
@@ -610,7 +607,7 @@ bool Fitter::CalculateMinosErrors() {
        return false;
    }
 
-   if (fFitType == 2 && fConfig.UseWeightCorrection() ) {
+   if (fFitType == ROOT::Math::FitMethodFunction::kLogLikelihood && fConfig.UseWeightCorrection() ) {
       MATH_ERROR_MSG("Fitter::CalculateMinosErrors","Computation of MINOS errors not implemented for weighted likelihood fits");
       return false;
    }
@@ -711,7 +708,7 @@ bool Fitter::DoInitMinimizer() {
    // create first Minimizer
    // using an auto_Ptr will delete the previous existing one
    fMinimizer = std::shared_ptr<ROOT::Math::Minimizer> ( fConfig.CreateMinimizer() );
-   if (fMinimizer.get() == nullptr) {
+   if (fMinimizer == nullptr) {
       MATH_ERROR_MSG("Fitter::DoInitMinimizer","Minimizer cannot be created");
       return false;
    }
@@ -729,7 +726,7 @@ bool Fitter::DoInitMinimizer() {
          const ROOT::Math::FitMethodGradFunction *fitGradFcn =
             dynamic_cast<const ROOT::Math::FitMethodGradFunction *>(gradfcn);
          if (fitGradFcn && fitGradFcn->HasHessian()) {
-            auto hessFcn = [=](const std::vector<double> &x, double *hess) {
+            auto hessFcn = [=](std::span<const double> x, double *hess) {
                unsigned int ndim = x.size();
                unsigned int nh = ndim * (ndim + 1) / 2;
                std::vector<double> h(nh);
@@ -802,7 +799,7 @@ bool Fitter::DoMinimization(const ROOT::Math::IMultiGenFunction * chi2func) {
 
    bool isValid = fMinimizer->Minimize();
 
-   if (!fResult) fResult = std::make_shared<FitResult>();
+   if (!fResult) fResult = std::make_unique<FitResult>();
 
    fResult->FillResult(fMinimizer,fConfig, fFunc, isValid, fDataSize, fFitType, chi2func );
 
@@ -894,7 +891,7 @@ bool Fitter::ApplyWeightCorrection(const ROOT::Math::IMultiGenFunction & loglw2,
    // - the objective function is a likelihood function and Likelihood::UseSumOfWeightSquare()
    //    has been called before
 
-   if (fMinimizer.get() == nullptr) {
+   if (fMinimizer == nullptr) {
       MATH_ERROR_MSG("Fitter::ApplyWeightCorrection","Must perform first a fit before applying the correction");
       return false;
    }

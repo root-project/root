@@ -81,11 +81,31 @@ that they are accessible either through the class or through an instance,
 just like Python's ``staticmethod``.
 
 
-`Methods`
----------
+`Instance methods`
+------------------
 
 For class methods, see the :ref:`methods section <sec-methods-label>` under
 the :doc:`classes heading<classes>`.
+
+
+`Lambda's`
+----------
+
+C++ lambda functions are supported by first binding to a ``std::function``,
+then providing a proxy to that on the Python side.
+Example::
+
+    >>> cppyy.cppdef("""\
+    ... auto create_lambda(int a) {
+    ...     return [a](int b) { return a+b; };
+    ... }""")
+    True
+    >>> l = cppyy.gbl.create_lambda(4)
+    >>> type(l)
+    <class cppyy.gbl.std.function<int(int)> at 0x11505b830>
+    >>> l(2)
+    6
+    >>> 
 
 
 `Operators`
@@ -119,27 +139,27 @@ Examples, using multiply from :doc:`features.h <cppyy_features_header>`:
 
   .. code-block:: python
 
-   >>> mul = cppyy.gbl.multiply
-   >>> mul(1, 2)
-   2
-   >>> mul(1., 5)
-   5.0
-   >>> mul[int](1, 1)
-   1
-   >>> mul[int, int](1, 1)
-   1
-   >>> mul[int, int, float](1, 1)
-   1.0
-   >>> mul[int, int](1, 'a')
-    TypeError: Template method resolution failed:
-    none of the 6 overloaded methods succeeded. Full details:
-    int ::multiply(int a, int b) =>
-      TypeError: could not convert argument 2 (int/long conversion expects an integer object)
-    ...
-    Failed to instantiate "multiply(int,std::string)"
-   >>> mul['double, double, double'](1., 5)
-   5.0
-   >>>
+    >>> mul = cppyy.gbl.multiply
+    >>> mul(1, 2)
+    2
+    >>> mul(1., 5)
+    5.0
+    >>> mul[int](1, 1)
+    1
+    >>> mul[int, int](1, 1)
+    1
+    >>> mul[int, int, float](1, 1)
+    1.0
+    >>> mul[int, int](1, 'a')
+     TypeError: Template method resolution failed:
+     none of the 6 overloaded methods succeeded. Full details:
+     int ::multiply(int a, int b) =>
+       TypeError: could not convert argument 2 (int/long conversion expects an integer object)
+     ...
+     Failed to instantiate "multiply(int,std::string)"
+    >>> mul['double, double, double'](1., 5)
+    5.0
+    >>>
 
 
 `Overloading`
@@ -147,7 +167,7 @@ Examples, using multiply from :doc:`features.h <cppyy_features_header>`:
 
 C++ supports overloading, whereas Python supports "duck typing", thus C++
 overloads have to be selected dynamically in response to the available
-"ducks".
+"ducks."
 This may lead to additional lookups or template instantiations.
 However, pre-existing methods (incl. auto-instantiated methods) are always
 preferred over new template instantiations:
@@ -161,46 +181,170 @@ preferred over new template instantiations:
     >>>
 
 C++ does a static dispatch at compile time based on the argument types.
-The dispatch is a selection among overloads (incl. templates) visible at that
-point in the *translation unit*.
+The dispatch is a selection among overloads (incl. templates) visible at the
+current parse location in the *translation unit*.
 Bound C++ in Python does a dynamic dispatch: it considers all overloads
-visible *globally* at that point in the execution.
-Because the dispatch is fundamentally different (albeit in line with the
-expectation of the respective languages), differences can occur.
-Especially if overloads live in different header files and are only an
-implicit conversion apart, or if types that have no direct equivalent in
+visible *globally* at the time of execution.
+These two approaches, even if completely in line with the expectations of the
+respective languages, are fundamentally different and there can thus be
+discrepancies in overload selection.
+For example, if overloads live in different header files and are only an
+implicit conversion apart; or if types that have no direct equivalent in
 Python, such as e.g. ``unsigned short``, are used.
 
-There are two rounds to finding an overload.
-If all overloads fail argument conversion during the first round, where
-implicit conversions are not allowed, _and_ at least one converter has
-indicated that it can do implicit conversions, a second round is tried.
-In this second round, implicit conversions are allowed, including class
-instantiation of temporaries.
-During some template calls, implicit conversions are not allowed at all, to
-make sure new instantiations happen instead.
-
-In the rare occasion where the automatic overload selection fails, the
-``__overload__`` function can be called to access a specific overload
-matching a specific function signature:
+It is implicitly assumed that the Python code is correct as-written and there
+are no warnings or errors for overloads that C++ would consider ambiguous,
+but only if every possible overload fails.
+For example, the following overload would be ambiguous in C++ (the value
+provided is an integer, but can not be passed through a 4-byte ``int`` type),
+but instead ``cppyy`` silently accepts promotion to ``double``:
 
   .. code-block:: python
 
-     >>> global_function.__overload__('double')(1)   # int implicitly converted
-     2.718281828459045
-     >>>
+    >>> cppyy.cppdef(r"""\
+    ...   void process_data(double) { std::cerr << "processing double\n"; }
+    ...   void process_data(int32_t) { std::cerr << "processing int\n"; }""")
+    True
+    >>> cppyy.gbl.process_data(2**32)  # too large for int32_t type
+    processing double
+    >>>
 
-Note that ``__overload__`` only does a lookup; it performs no (implicit)
-conversions.
-To see all available overloads, use ``help()`` or look at the ``__doc__``
-string of the function:
+There are two rounds to run-time overload resolution.
+The first round considers all overloads in sorted order, with promotion but
+no implicit conversion allowed.
+The sorting is based on priority scores of each overload.
+Higher priority is given to overloads with argument types that can be
+promoted or align better with Python types.
+E.g. ``int`` is preferred over ``double`` and ``double`` is preferred over
+``float``.
+If argument conversion fails for all overloads during this round *and* at
+least one argument converter has indicated that it can do implicit
+conversion, a second round is tried where implicit conversion, including
+instantiation of temporaries, is allowed.
+The implicit creation of temporaries, although convenient, can be costly in
+terms of run-time performance.
+
+During some template calls, implicit conversion is not allowed, giving
+preference to new instantiations (as is the case in C++).
+If, however, a previously instantiated overload is available and would match
+with promotion, it is preferred over a (costly) new instantiation, unless a
+template overload is explicitly selected using template arguments.
+For example:
 
   .. code-block:: python
 
-     >>> print(global_function.__doc__)
-     int ::global_function(int)
-     double ::global_function(double)
-     >>>
+    >>> cppyy.cppdef(r"""\
+    ...   template<typename T>
+    ...   T process_T(T t) { return t; }""")
+    True
+    >>> type(cppyy.gbl.process_T(1.0))
+    <class 'float'>
+    >>> type(cppyy.gbl.process_T(1))        # selects available "double" overload
+    <class 'float'>
+    >>> type(cppyy.gbl.process_T[int](1))   # explicit selection of "int" overload
+    <class 'int'>
+    >>>
+
+The template parameters used for instantiation can depend on the argument
+values.
+For example, if the type of an argument is Python ``int``, but its value is
+too large for a 4-byte C++ ``int``, the template may be instantiated with,
+for example, an ``int64_t`` instead (if available on the platform).
+Since Python does not have unsigned types, the instantiation mechanism
+strongly prefers signed types.
+However, if an argument value is too large to fit in a signed integer type,
+but would fit in an unsigned type, then that will be used.
+
+If it is important that a specific overload is selected, then use the
+``__overload__`` method to match a specific function signature.
+An optional boolean second parameter can be used to restrict the selected
+method to be const (if ``True``) or non-const (if ``False``).
+The return value of which is a first-class callable object, that can be
+stored to by-pass the overload resolution:
+
+  .. code-block:: python
+
+    >>> gf_double = global_function.__overload__('double')
+    >>> gf_double(1)        # int implicitly promoted
+    2.718281828459045
+    >>>
+
+The ``__overload__`` method only does a lookup; it performs no (implicit)
+conversions and the types in the signature to match should be the fully
+resolved ones (no typedefs).
+To see all overloads available for selection, use ``help()`` on the function
+or look at its ``__doc__`` string:
+
+  .. code-block:: python
+
+    >>> print(global_function.__doc__)
+    int ::global_function(int)
+    double ::global_function(double)
+    >>>
+
+For convenience, the ``:any:`` signature allows matching any overload, for
+example to reduce a method to its ``const`` overload only, use:
+
+  .. code-block:: python
+
+     MyClass.some_method = MyClass.some_method.__overload__(':any:', True)
+
+
+`Overloads and exceptions`
+--------------------------
+
+Python error reporting is done using exceptions.
+Failed argument conversion during overload resolution can lead to different
+types of exceptions coming from respective attempted overloads.
+The final error report issued if all overloads fail, is a summary of the
+individual errors, but by Python language requirements it has to have a
+single exception type.
+If all the exception types match, that type is used, but if there is an
+amalgam of types, the exception type chosen will be ``TypeError``.
+For example, attempting to pass a too large value through ``uint8_t`` will
+uniquely raise a ``ValueError``
+
+  .. code-block:: python
+
+    >>> cppyy.cppdef("void somefunc(uint8_t) {}")
+    True
+    >>> cppyy.gbl.somefunc(2**16)
+    Traceback (most recent call last):
+      File "<stdin>", line 1, in <module>
+    ValueError: void ::somefunc(uint8_t) =>
+        ValueError: could not convert argument 1 (integer to character: value 65536 not in range [0,255])
+    >>>
+
+But if other overloads are present that fail in a different way, the error
+report will be a ``TypeError``:
+
+  .. code-block:: python
+
+    >>> cppyy.cppdef(r"""
+    ...   void somefunc(uint8_t) {}
+    ...   void somefunc(std::string) {}""")
+    True
+    >>> cppyy.gbl.somefunc(2**16)
+    Traceback (most recent call last):
+      File "<stdin>", line 1, in <module>
+    TypeError: none of the 2 overloaded methods succeeded. Full details:
+      void ::somefunc(std::string) =>
+        TypeError: could not convert argument 1
+      void ::somefunc(uint8_t) =>
+        ValueError: could not convert argument 1 (integer to character: value 65536 not in range [0,255])
+    >>>
+
+Since C++ exceptions are converted to Python ones, there is an interplay
+possible between the two as part of overload resolution and ``cppyy``
+allows C++ exceptions as such, enabling detailed type disambiguation and
+input validation.
+(The original use case was for filling database fields, requiring an exact
+field label and data type match.)
+
+If, however, all methods fail and there is only one C++ exception (the other
+exceptions originating from argument conversion, never succeeding to call
+into C++), this C++ exception will be preferentially reported and will have
+the original C++ type.
 
 
 `Return values`
@@ -218,7 +362,7 @@ Well-written APIs will have clear clues in their naming convention about the
 ownership rules.
 For example, functions called ``New...``, ``Clone...``, etc.  can be expected
 to return freshly allocated objects.
-A simple name-matching in the pythonization then makes it simple to mark all
+A basic name-matching in the pythonization then makes it simple to mark all
 these functions as creators.
 
 The return values are :ref:`auto-casted <sec-auto-casting-label>`.
@@ -285,3 +429,40 @@ Example:
     21
     >>>
 
+Python functions can be used to instantiate C++ templates, assuming the
+type information of the arguments and return types can be inferred.
+If this can not be done directly from the template arguments, then it can
+be provided through Python annotations, by explicitly adding the
+``__annotations__`` special data member (e.g. for older versions of Python
+that do not support annotations), or by the function having been bound by
+``cppyy`` in the first place.
+For example:
+
+  .. code-block:: python
+
+    >>> import cppyy
+    >>> cppyy.cppdef("""\
+    ... template<typename R, typename... U, typename... A>
+    ... R callT(R(*f)(U...), A&&... a) {
+    ...    return f(a...);
+    ... }""")
+    True
+    >>> def f(a: 'int') -> 'double':
+    ...     return 3.1415*a
+    ...
+    >>> cppyy.gbl.callT(f, 2)
+    6.283
+    >>> def f(a: 'int', b: 'int') -> 'int':
+    ...     return 3*a*b
+    ...
+    >>> cppyy.gbl.callT(f, 6, 7)
+    126
+    >>>
+
+
+`extern "C"`
+------------
+
+Functions with C linkage are supported and are simply represented as
+overloads of a single function.
+Such functions are allowed both globally as well as in namespaces.

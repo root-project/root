@@ -23,7 +23,7 @@ class RooRealVar;
 
 class RooCBShape : public RooAbsPdf {
 public:
-  RooCBShape() {} ;
+  RooCBShape() {}
   RooCBShape(const char *name, const char *title, RooAbsReal& _m,
         RooAbsReal& _m0, RooAbsReal& _sigma,
         RooAbsReal& _alpha, RooAbsReal& _n);
@@ -32,11 +32,17 @@ public:
   TObject* clone(const char* newname) const override { return new RooCBShape(*this,newname); }
 
   Int_t getAnalyticalIntegral( RooArgSet& allVars,  RooArgSet& analVars, const char* rangeName=nullptr ) const override;
-  double analyticalIntegral( Int_t code, const char* rangeName=nullptr ) const override;
+  double analyticalIntegral(Int_t, const char *rangeName = nullptr) const override;
 
   // Optimized accept/reject generator support
   Int_t getMaxVal(const RooArgSet& vars) const override ;
   double maxVal(Int_t code) const override ;
+
+  RooAbsReal const& getM() const { return m.arg(); }
+  RooAbsReal const& getM0() const { return m0.arg(); }
+  RooAbsReal const& getSigma() const { return sigma.arg(); }
+  RooAbsReal const& getAlpha() const { return alpha.arg(); }
+  RooAbsReal const& getN() const { return n.arg(); }
 
 protected:
 
@@ -49,7 +55,7 @@ protected:
   RooRealProxy n;
 
   double evaluate() const override;
-  void computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;
+  void doEval(RooFit::EvalContext &) const override;
   inline bool canComputeBatchWithCuda() const override { return true; }
 
 

@@ -5,6 +5,9 @@
 #include <TRandom3.h>
 #include <TROOT.h>
 
+#include <algorithm>
+#include <random>
+
 TEST(RNTuple, RealWorld1)
 {
 #ifdef R__USE_IMT
@@ -73,6 +76,87 @@ TEST(RNTuple, RealWorld1)
    EXPECT_EQ(chksumRead, chksumWrite);
 }
 
+TEST(RNTuple, Double32IMT)
+{
+   // Tests if parallel decompression correctly compresses the on-disk float to an in-memory double
+#ifdef R__USE_IMT
+   IMTRAII _;
+#endif
+   FileRaii fileGuard("test_ntuple_double32_imt.root");
+
+   constexpr int kNEvents = 10;
+
+   {
+      auto model = RNTupleModel::Create();
+      model->AddField(RFieldBase::Create("pt", "Double32_t").Unwrap());
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+
+      auto ptrPt = writer->GetModel().GetDefaultEntry().GetPtr<double>("pt");
+
+      for (int i = 0; i < kNEvents; ++i) {
+         *ptrPt = i;
+         writer->Fill();
+      }
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   auto viewPt = reader->GetView<double>("pt");
+   for (int i = 0; i < kNEvents; ++i) {
+      EXPECT_DOUBLE_EQ(i, viewPt(i));
+   }
+}
+
+TEST(RNTuple, MultiColumnExpansion)
+{
+   // Tests if on-disk columns that expand to multiple in-memory types are correctly handled
+#ifdef R__USE_IMT
+   IMTRAII _;
+#endif
+   FileRaii fileGuard("test_ntuple_multi_column_expansion.root");
+
+   constexpr int kNEvents = 1000;
+
+   {
+      auto model = RNTupleModel::Create();
+      model->AddField(RFieldBase::Create("pt", "Double32_t").Unwrap());
+      RNTupleWriteOptions options;
+      options.SetMaxUnzippedPageSize(32);
+      options.SetInitialNElementsPerPage(1);
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath(), options);
+
+      auto ptrPt = writer->GetModel().GetDefaultEntry().GetPtr<double>("pt");
+
+      for (int i = 0; i < kNEvents; ++i) {
+         *ptrPt = i;
+         writer->Fill();
+         if (i % 50 == 0)
+            writer->CommitCluster();
+      }
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   auto viewPt = reader->GetView<double>("pt");
+   auto viewPtAsFloat = reader->GetView<float>("pt");
+
+   std::random_device rd;
+   std::mt19937 gen(rd());
+   std::vector<unsigned int> indexes;
+   indexes.reserve(kNEvents);
+   for (unsigned int i = 0; i < kNEvents; ++i)
+      indexes.emplace_back(i);
+   std::shuffle(indexes.begin(), indexes.end(), gen);
+
+   std::bernoulli_distribution dist(0.5);
+   for (auto idx : indexes) {
+      if (dist(gen)) {
+         EXPECT_DOUBLE_EQ(idx, viewPt(idx));
+         EXPECT_DOUBLE_EQ(idx, viewPtAsFloat(idx));
+      } else {
+         EXPECT_DOUBLE_EQ(idx, viewPtAsFloat(idx));
+         EXPECT_DOUBLE_EQ(idx, viewPt(idx));
+      }
+   }
+}
 
 // Stress test the asynchronous cluster pool by a deliberately unfavourable read pattern
 TEST(RNTuple, RandomAccess)
@@ -83,16 +167,19 @@ TEST(RNTuple, RandomAccess)
    FileRaii fileGuard("test_ntuple_random_access.root");
 
    auto modelWrite = RNTupleModel::Create();
-   auto wrValue   = modelWrite->MakeField<std::int32_t>("value", 42);
+   auto wrValue = modelWrite->MakeField<std::int32_t>("value");
 
    constexpr unsigned int nEvents = 1000000;
    {
       RNTupleWriteOptions options;
       options.SetCompression(0);
+      options.SetEnablePageChecksums(false);
       options.SetApproxZippedClusterSize(nEvents * sizeof(std::int32_t) / 10);
       auto ntuple = RNTupleWriter::Recreate(std::move(modelWrite), "myNTuple", fileGuard.GetPath(), options);
-      for (unsigned int i = 0; i < nEvents; ++i)
+      for (unsigned int i = 0; i < nEvents; ++i) {
+         *wrValue = i;
          ntuple->Fill();
+      }
    }
 
    RNTupleReadOptions options;
@@ -102,14 +189,16 @@ TEST(RNTuple, RandomAccess)
 
    auto viewValue = ntuple->GetView<std::int32_t>("value");
 
-   std::int32_t sum = 0;
-   constexpr unsigned int nSamples = 1000;
+   std::int64_t sum = 0;
+   std::int64_t expected = 0;
+   constexpr unsigned int nSamples = 10000;
    TRandom3 rnd(42);
-   for (unsigned int i = 0; i < 1000; ++i) {
+   for (unsigned int i = 0; i < nSamples; ++i) {
       auto entryId = floor(rnd.Rndm() * (nEvents - 1));
+      expected += entryId;
       sum += viewValue(entryId);
    }
-   EXPECT_EQ(42 * nSamples, sum);
+   EXPECT_EQ(expected, sum);
 }
 
 
@@ -164,7 +253,8 @@ TEST(RNTuple, LargeFile1)
    {
       auto f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "READ"));
       EXPECT_TRUE(f);
-      auto reader = RNTupleReader::Open(f->Get<RNTuple>("myNTuple"));
+      auto ntuple = std::unique_ptr<ROOT::RNTuple>(f->Get<ROOT::RNTuple>("myNTuple"));
+      auto reader = RNTupleReader::Open(*ntuple);
       auto rdEnergy  = reader->GetView<double>("energy");
 
       double chksumRead = 0.0;
@@ -254,11 +344,13 @@ TEST(RNTuple, LargeFile2)
       auto s2 = f->Get<std::string>("s2");
       EXPECT_EQ("two", *s2);
 
-      auto reader = RNTupleReader::Open(f->Get<RNTuple>("small"));
+      auto small = std::unique_ptr<ROOT::RNTuple>(f->Get<ROOT::RNTuple>("small"));
+      auto reader = RNTupleReader::Open(*small);
       reader->LoadEntry(0);
       EXPECT_EQ(42.0f, *reader->GetModel().GetDefaultEntry().GetPtr<float>("pt"));
 
-      reader = RNTupleReader::Open(f->Get<RNTuple>("large"));
+      auto large = std::unique_ptr<ROOT::RNTuple>(f->Get<ROOT::RNTuple>("large"));
+      reader = RNTupleReader::Open(*large);
       auto viewE = reader->GetView<double>("E");
       double chksumRead = 0.0;
       for (auto i : reader->GetEntryRange()) {
@@ -269,73 +361,40 @@ TEST(RNTuple, LargeFile2)
 }
 #endif
 
-// FIXME: apparently, this test continues to be broken for some CI configs, which needs to be investigated carefully;
-// thus disable temporarily.
-#if 0
-TEST(RNTuple, SmallClusters)
+TEST(RNTuple, LargePages)
 {
-   FileRaii fileGuard("test_ntuple_small_clusters.root");
+   FileRaii fileGuard("test_ntuple_large_pages.root");
 
-   {
-      auto model = RNTupleModel::Create();
-      auto fldVec = model->MakeField<std::vector<float>>("vec");
-      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
-      fldVec->push_back(1.0);
-      writer->Fill();
-   }
-   {
+   for (const auto useBufferedWrite : {true, false}) {
+      {
+         auto model = RNTupleModel::Create();
+         auto fldRnd = model->MakeField<std::uint32_t>("rnd");
+         RNTupleWriteOptions options;
+         // Larger than the 16MB compression block limit
+         options.SetMaxUnzippedPageSize(32 * 1024 * 1024);
+         options.SetUseBufferedWrite(useBufferedWrite);
+         auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath(), options);
+
+         std::mt19937 gen;
+         std::uniform_int_distribution<std::uint32_t> distrib;
+         for (int i = 0; i < 25 * 1000 * 1000; ++i) { // 100 MB of int data
+            *fldRnd = distrib(gen);
+            writer->Fill();
+         }
+         writer.reset();
+      }
+
       auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
-      auto desc = reader->GetDescriptor();
-      auto colId = desc->FindLogicalColumnId(desc->FindFieldId("vec"), 0);
-      EXPECT_EQ(EColumnType::kSplitIndex64, desc->GetColumnDescriptor(colId).GetModel().GetType());
-      reader->LoadEntry(0);
-      auto entry = reader->GetModel()->GetDefaultEntry();
-      EXPECT_EQ(1u, entry->Get<std::vector<float>>("vec")->size());
-      EXPECT_FLOAT_EQ(1.0, entry->Get<std::vector<float>>("vec")->at(0));
-   }
+      const auto &desc = reader->GetDescriptor();
+      const auto rndColId = desc.FindPhysicalColumnId(desc.FindFieldId("rnd"), 0, 0);
+      const auto &clusterDesc = desc.GetClusterDescriptor(desc.FindClusterId(rndColId, 0));
+      EXPECT_GT(clusterDesc.GetPageRange(rndColId).Find(0).fLocator.fBytesOnStorage, kMAXZIPBUF);
 
-   {
-      auto model = RNTupleModel::Create();
-      auto fldVec = model->MakeField<std::vector<float>>("vec");
-      RNTupleWriteOptions options;
-      options.SetHasSmallClusters(true);
-      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath(), options);
-      fldVec->push_back(1.0);
-      writer->Fill();
+      auto viewRnd = reader->GetView<std::uint32_t>("rnd");
+      std::mt19937 gen;
+      std::uniform_int_distribution<std::uint32_t> distrib;
+      for (const auto i : reader->GetEntryRange()) {
+         EXPECT_EQ(distrib(gen), viewRnd(i));
+      }
    }
-   {
-      auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
-      auto desc = reader->GetDescriptor();
-      auto colId = desc->FindLogicalColumnId(desc->FindFieldId("vec"), 0);
-      EXPECT_EQ(EColumnType::kSplitIndex32, desc->GetColumnDescriptor(colId).GetModel().GetType());
-      reader->LoadEntry(0);
-      auto entry = reader->GetModel()->GetDefaultEntry();
-      EXPECT_EQ(1u, entry->Get<std::vector<float>>("vec")->size());
-      EXPECT_FLOAT_EQ(1.0, entry->Get<std::vector<float>>("vec")->at(0));
-   }
-
-   // Throw on attempt to commit cluster > 512MB
-   auto model = RNTupleModel::Create();
-   auto fldVec = model->MakeField<std::vector<float>>("vec");
-   RNTupleWriteOptions options;
-   options.SetHasSmallClusters(true);
-   options.SetCompression(0);
-   options.SetMaxUnzippedClusterSize(1000 * 1000 * 1000); // 1GB
-   options.SetApproxZippedClusterSize(1000 * 1000 * 1000); // 1GB
-   auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath(), options);
-   fldVec->push_back(1.0);
-   // One float and one 32bit integer per entry
-   constexpr std::size_t nEntries = RNTupleWriteOptions::kMaxSmallClusterSize / (sizeof(float) + sizeof(std::int32_t));
-   for (unsigned int i = 0; i < nEntries; ++i) {
-      writer->Fill();
-   }
-   writer->Fill();
-   EXPECT_THROW(writer->CommitCluster(), ROOT::Experimental::RException);
-
-   // On destruction of the writer, the exception in CommitCluster() produces an error log
-   ROOT::TestSupport::CheckDiagsRAII diagRAII;
-   diagRAII.requiredDiag(kError, "[ROOT.NTuple]",
-      "failure committing ntuple: invalid attempt to write a cluster > 512MiB", false /* matchFullMessage */);
-   writer = nullptr;
 }
-#endif

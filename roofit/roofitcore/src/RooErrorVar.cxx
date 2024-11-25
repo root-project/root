@@ -33,7 +33,7 @@ error, such as calculating the pull value.
 #include "RooMsgService.h"
 #include "RooUniformBinning.h"
 
-using namespace std;
+using std::endl, std::istream, std::ostream;
 
 ClassImp(RooErrorVar);
 
@@ -171,10 +171,8 @@ void RooErrorVar::setBinning(const RooAbsBinning& binning, const char* name)
   } else {
 
     // Remove any old binning with this name
-    RooAbsBinning* oldBinning = static_cast<RooAbsBinning*>(_altBinning.FindObject(name)) ;
-    if (oldBinning) {
-      _altBinning.Remove(oldBinning) ;
-      delete oldBinning ;
+    if (std::unique_ptr<RooAbsBinning> oldBinning{static_cast<RooAbsBinning*>(_altBinning.FindObject(name))}) {
+      _altBinning.Remove(oldBinning.get()) ;
     }
 
     // Insert new binning in list of alternative binnings

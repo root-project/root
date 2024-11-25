@@ -11,7 +11,7 @@
 /// measurement.
 ///
 /// Documentation for these utilities can be found here:
-/// http://root.cern/root/html/RooStats__NumberCountingUtils.html
+/// https://root.cern.ch/doc/master/namespaceNumberCountingUtils.html
 ///
 ///
 /// This problem is often called a proto-type problem for high energy physics.
@@ -41,7 +41,7 @@
 
 using namespace RooFit;
 using namespace RooStats; // the utilities are in the RooStats namespace
-using namespace std;
+using std::cout, std::endl;
 
 void rs_numbercountingutils()
 {

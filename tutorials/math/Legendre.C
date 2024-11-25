@@ -26,8 +26,6 @@
 
 void Legendre()
 {
-   R__LOAD_LIBRARY(libMathMore);
-
    TCanvas *Canvas = new TCanvas("DistCanvas", "Legendre polynomials example", 10, 10, 750, 600);
    Canvas->SetGrid();
    TLegend *leg = new TLegend(0.5, 0.7, 0.4, 0.89);
@@ -53,4 +51,3 @@ void Legendre()
 
    Canvas->cd();
 }
-

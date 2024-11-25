@@ -16,6 +16,9 @@
 
 #include <cling/Interpreter/Visibility.h>
 
+#if __cplusplus >= 201703L
+#include <filesystem>
+#endif
 #include <memory>
 #if __cplusplus >= 202002L
 #include <version>
@@ -200,7 +203,8 @@ namespace cling {
         typename std::enable_if<
             std::is_reference<decltype(*std::begin(*obj))>::value>::type* = 0)
         -> decltype(std::end(*obj), std::string()) {
-      auto iter = obj->begin(), iterEnd = obj->end();
+      auto iter = obj->begin();
+      auto iterEnd = obj->end();
       if (iter == iterEnd) return valuePrinterInternal::kEmptyCollection;
 
       const void* M = TypeTest::isMap(obj);
@@ -221,7 +225,8 @@ namespace cling {
         typename std::enable_if<
             !std::is_reference<decltype(*(obj->begin()))>::value>::type* = 0)
         -> decltype(++(obj->begin()), obj->end(), std::string()) {
-      auto iter = obj->begin(), iterEnd = obj->end();
+      auto iter = obj->begin();
+      auto iterEnd = obj->end();
       if (iter == iterEnd) return valuePrinterInternal::kEmptyCollection;
 
       std::string str("{ ");
@@ -240,6 +245,13 @@ namespace cling {
   -> decltype(collectionPrinterInternal::printValue_impl(obj), std::string()) {
     return collectionPrinterInternal::printValue_impl(obj);
   }
+
+#if __cplusplus >= 201703L
+  // For std::filesystem::path
+  inline std::string printValue(const std::filesystem::path* obj) {
+    return obj->string();
+  }
+#endif
 
   // Arrays
   template<typename T, size_t N>

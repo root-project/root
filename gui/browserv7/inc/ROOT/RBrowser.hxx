@@ -49,7 +49,7 @@ protected:
    std::vector<std::vector<std::string>> fPostponed; ///<! postponed messages, handled in timer
 
    std::shared_ptr<RBrowserWidget> AddWidget(const std::string &kind);
-   std::shared_ptr<RBrowserWidget> AddCatchedWidget(const std::string &url, const std::string &kind);
+   std::shared_ptr<RBrowserWidget> AddCatchedWidget(RWebWindow *win, const std::string &kind);
    std::shared_ptr<RBrowserWidget> FindWidget(const std::string &name, const std::string &kind = "") const;
    std::shared_ptr<RBrowserWidget> GetActiveWidget() const { return FindWidget(fActiveWidgetName); }
 
@@ -71,7 +71,7 @@ protected:
 
    void AddInitWidget(const std::string &kind);
 
-   void CheckWidgtesModified();
+   void CheckWidgtesModified(unsigned connid);
 
    void ProcessPostponedRequests();
 
@@ -90,6 +90,8 @@ public:
 
    /// hide Browser
    void Hide();
+
+   std::string GetWindowUrl(bool remote);
 
    void SetWorkingPath(const std::string &path);
 

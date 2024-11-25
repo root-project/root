@@ -10,8 +10,13 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#include "RooNormalizedPdf.h"
+#include "RooFit/Detail/RooNormalizedPdf.h"
+
 #include "RooBatchCompute.h"
+
+#include <array>
+
+ClassImp(RooFit::Detail::RooNormalizedPdf);
 
 /**
  * \class RooNormalizedPdf
@@ -20,15 +25,18 @@
  * normalization set into a new self-normalized pdf.
  */
 
-void RooNormalizedPdf::computeBatch(double *output, size_t nEvents, RooFit::Detail::DataMap const &dataMap) const
+namespace RooFit {
+namespace Detail {
+
+void RooNormalizedPdf::doEval(RooFit::EvalContext &ctx) const
 {
-   auto nums = dataMap.at(_pdf);
-   auto integralSpan = dataMap.at(_normIntegral);
+   auto nums = ctx.at(_pdf);
+   auto integralSpan = ctx.at(_normIntegral);
 
    // We use the extraArgs as output parameter to count evaluation errors.
-   RooBatchCompute::ArgVector extraArgs{0.0, 0.0, 0.0};
+   std::array<double, 3> extraArgs{0.0, 0.0, 0.0};
 
-   RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::NormalizedPdf, output, nEvents, {nums, integralSpan},
+   RooBatchCompute::compute(ctx.config(this), RooBatchCompute::NormalizedPdf, ctx.output(), {nums, integralSpan},
                             extraArgs);
 
    std::size_t nEvalErrorsType0 = extraArgs[0];
@@ -46,8 +54,5 @@ void RooNormalizedPdf::computeBatch(double *output, size_t nEvents, RooFit::Deta
    }
 }
 
-void RooNormalizedPdf::translate(RooFit::Detail::CodeSquashContext &ctx) const
-{
-   // For now just return function/normalization integral.
-   ctx.addResult(this, ctx.getResult(_pdf) + "/" + ctx.getResult(_normIntegral));
-}
+} // namespace Detail
+} // namespace RooFit

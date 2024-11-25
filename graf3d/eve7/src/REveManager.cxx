@@ -20,6 +20,8 @@
 #include <ROOT/RWebWindow.hxx>
 #include <ROOT/RLogger.hxx>
 #include <ROOT/REveSystem.hxx>
+#include <ROOT/RWebWindowsManager.hxx>
+#include <ROOT/REveGeoTopNode.hxx>
 
 #include "TGeoManager.h"
 #include "TGeoMatrix.h"
@@ -68,7 +70,10 @@ thread_local MIR_TL_Data_t gMIRData;
 
 /** \class REveManager
 \ingroup REve
-Central application manager for Eve.
+\ingroup webwidgets
+
+\brief Central application manager for web-based REve.
+
 Manages elements, GUI, GL scenes and GL viewers.
 
 Following parameters can be specified in .rootrc file
@@ -153,6 +158,9 @@ REveManager::REveManager()
 
    // !!! AMT increase threshold to enable color pick on client
    TColor::SetColorThreshold(0.1);
+
+   // allow multiple connections
+   ROOT::RWebWindowsManager::SetSingleConnMode(false);
 
    fWebWindow = ROOT::RWebWindow::Create();
    fWebWindow->UseServerThreads();
@@ -601,6 +609,27 @@ TGeoManager *REveManager::GetDefaultGeometry()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Get the default viewer.
+///
+
+REveViewer *REveManager::GetDefaultViewer() const
+{
+   return dynamic_cast<REveViewer*>(fViewers->FirstChild());
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Utility function to allow remote RWebWindow connections.
+/// Disable loopback when use remote client.
+/// Authentification key has to be disabled in the case of multiple connections.
+/// The default arguments prevent remote connections for the security reasons.
+//
+void REveManager::AllowMultipleRemoteConnections(bool loopBack, bool requireAuthKey)
+{
+   ROOT::RWebWindowsManager::SetLoopbackMode(loopBack);
+   fWebWindow->SetRequireAuthKey(requireAuthKey);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Register 'name' as an alias for geometry file 'filename'.
 /// The old aliases are silently overwritten.
 /// After that the geometry can be retrieved also by calling:
@@ -616,11 +645,7 @@ void REveManager::RegisterGeometryAlias(const TString &alias, const TString &fil
 
 void REveManager::ClearROOTClassSaved()
 {
-   TIter nextcl(gROOT->GetListOfClasses());
-   TClass *cls;
-   while ((cls = (TClass *)nextcl())) {
-      cls->ResetBit(TClass::kClassSaved);
-   }
+   gROOT->ResetClassSaved();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -851,8 +876,26 @@ void REveManager::WindowData(unsigned connid, const std::string &arg)
    }
    else if (ROOT::RWebWindow::IsFileDialogMessage(arg))
    {
-      // file dialog
-      ROOT::RWebWindow::EmbedFileDialog(fWebWindow, connid, arg);
+      if (fHttpPublic)
+      {
+           R__LOG_INFO(REveLog()) << "REveManager::WindowData, file dialog is not allowed in restriced public mode";
+      }
+      else
+      {
+          ROOT::RWebWindow::EmbedFileDialog(fWebWindow, connid, arg);
+      }
+      return;
+   }
+   else if (arg.compare(0, 11, "SETCHANNEL:") == 0) {
+      std::string s = arg.substr(11);
+      auto p = s.find(",");
+      int eveid = std::stoi(s.substr(0, p));
+      int chid = std::stoi(s.substr(p+1));
+
+      REveElement* n = FindElementById(eveid);
+      auto nn = dynamic_cast<REveGeoTopNodeData*>(n);
+      if (nn) nn->SetChannel(connid, chid);
+
       return;
    }
 
@@ -886,10 +929,12 @@ void REveManager::ScheduleMIR(const std::string &cmd, ElementId_t id, const std:
 //____________________________________________________________________
 void REveManager::ExecuteMIR(std::shared_ptr<MIR> mir)
 {
-   static const REveException eh("REveManager::ExecuteMIR ");
+   static const REveException eh(""); // Empty -- all errors go to R__LOG
 
    //if (gDebug > 0)
       ::Info("REveManager::ExecuteCommand", "MIR cmd %s", mir->fCmd.c_str());
+
+   std::string tag = mir->fCtype + "::<to-be-determined>";
 
    try {
       REveElement *el = FindElementById(mir->fId);
@@ -911,9 +956,9 @@ void REveManager::ExecuteMIR(std::shared_ptr<MIR> mir)
       if ( ! el_casted)
          throw eh + "Dynamic cast from REveElement to '" + mir->fCtype + "' failed.";
 
-      std::string tag(mir->fCtype + "::" + m.str(1));
-      std::shared_ptr<TMethodCall> mc;
+      tag = mir->fCtype + "::" + m.str(1);
 
+      std::shared_ptr<TMethodCall> mc;
       auto mmi = fMethCallMap.find(tag);
       if (mmi != fMethCallMap.end())
       {
@@ -928,8 +973,15 @@ void REveManager::ExecuteMIR(std::shared_ptr<MIR> mir)
          fMethCallMap.insert(std::make_pair(tag, mc));
       }
 
+      REveElement::SetMirContext(el);
+
       R__LOCKGUARD_CLING(gInterpreterMutex);
       mc->Execute(el_casted, m.str(2).c_str());
+
+      if (REveElement::stlMirError) {
+         R__LOG_ERROR(REveLog()) << eh << "error executing " << tag << ":" << REveElement::stlMirErrorString << " (code " << REveElement::stlMirError << ").";
+      }
+      REveElement::ClearMirContext();
 
       // Alternative implementation through Cling. "Leaks" 200 kB per call.
       // This might be needed for function calls that involve data-types TMethodCall
@@ -939,9 +991,9 @@ void REveManager::ExecuteMIR(std::shared_ptr<MIR> mir)
       // std::cout << cmd.str() << std::endl;
       // gROOT->ProcessLine(cmd.str().c_str());
    } catch (std::exception &e) {
-      R__LOG_ERROR(REveLog()) << "REveManager::ExecuteCommand " << e.what() << std::endl;
+      R__LOG_ERROR(REveLog()) << "caught exception executing " << tag << ": " << e.what();
    } catch (...) {
-      R__LOG_ERROR(REveLog()) << "REveManager::ExecuteCommand unknow execption \n";
+      R__LOG_ERROR(REveLog()) << "caught unknown execption.";
    }
 }
 
@@ -985,6 +1037,7 @@ void REveManager::SendSceneChanges()
       jobj["log"] = nlohmann::json::array();
       std::stringstream strm;
       for (auto entry : gEveLogEntries) {
+         strm.str("");
          nlohmann::json item = {};
          item["lvl"] = entry.fLevel;
          int cappedLevel = std::min(static_cast<int>(entry.fLevel), numLevels - 1);
@@ -995,11 +1048,9 @@ void REveManager::SendSceneChanges()
          strm << " " << entry.fMessage;
          item["msg"] = strm.str();
          jobj["log"].push_back(item);
-         strm.clear();
       }
       gEveLogEntries.clear();
    }
-
    fWebWindow->Send(0, jobj.dump());
 }
 
@@ -1032,14 +1083,17 @@ void REveManager::MIRExecThread()
 
          lock.unlock();
 
-         // allow scenes to accept changes in the element
+         // Ideally, as in gled, MIR execution would be steered by scenes themselves.
+         // But this requires alpha/beta/gamma MIR elements and scene dependenices,
+         // so dependent scenes can be locked, too.
+         // On top of that, one could also implements authorization framework, as in gled.
+
          gEve->GetWorld()->BeginAcceptingChanges();
-         gEve->GetScenes()->AcceptChanges(true);
+         gEve->GetScenes()->BeginAcceptingChanges();
 
          ExecuteMIR(mir);
 
-         // disable scene's element changing
-         gEve->GetScenes()->AcceptChanges(false);
+         gEve->GetScenes()->EndAcceptingChanges();
          gEve->GetWorld()->EndAcceptingChanges();
 
          StreamSceneChangesToJson();
@@ -1152,14 +1206,14 @@ void REveManager::BeginChange()
       fServerState.fVal = ServerState::UpdatingScenes;
    }
    GetWorld()->BeginAcceptingChanges();
-   GetScenes()->AcceptChanges(true);
+   GetScenes()->BeginAcceptingChanges();
 }
 
 //____________________________________________________________________
 void REveManager::EndChange()
 {
    // tag scene to disable accepting chages, write the change json
-   GetScenes()->AcceptChanges(false);
+   GetScenes()->EndAcceptingChanges();
    GetWorld()->EndAcceptingChanges();
 
    StreamSceneChangesToJson();
@@ -1203,7 +1257,7 @@ REveManager::ChangeGuard::~ChangeGuard()
    gEve->EndChange();
 }
 
-// Error handler streams error-level messages to client log
+// gInterpreter error handlder
 void REveManager::ErrorHandler(Int_t level, Bool_t abort, const char * location, const char *msg)
 {
    if (level >= kError)
@@ -1238,9 +1292,20 @@ TStdExceptionHandler::EStatus REveManager::RExceptionHandler::Handle(std::except
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Utility to stream loggs to client.
+/// Return false to supress further emission
 
 bool REveManager::Logger::Handler::Emit(const RLogEntry &entry)
 {
    gEveLogEntries.emplace_back(entry);
-   return true;
+   return false;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Restrict functionality for this server when open to public
+
+void REveManager::SetHttpPublic(bool x)
+{
+   R__LOG_INFO(REveLog()) << "Set public mode to " << x <<".";
+   fHttpPublic = x;
 }

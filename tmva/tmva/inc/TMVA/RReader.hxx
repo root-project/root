@@ -177,6 +177,9 @@ public:
    /// Compute model prediction on vector
    std::vector<float> Compute(const std::vector<float> &x)
    {
+      // Take lock to protect model evaluation
+      R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
+
       if (x.size() != (fVariables.size()+fSpectators.size()))
          throw std::runtime_error("Size of input vector is not equal to number of variables.");
 
@@ -188,9 +191,6 @@ public:
       for (std::size_t i = 0; i != fSpectators.size(); ++i) {
          fSpectatorValues[i] = x[nVars+i];
       }
-
-      // Take lock to protect model evaluation
-      R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
 
       // Evaluate TMVA model
       // Classification
@@ -235,6 +235,7 @@ public:
 
       // Fill output tensor
       const auto nVars = fVariables.size(); // number of non-spectator variables
+      R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
       for (std::size_t i = 0; i < numEntries; i++) {
          for (std::size_t j = 0; j < nVars; j++) {
             fVariableValues[j] = x(i, j);
@@ -242,7 +243,6 @@ public:
          for (std::size_t j = 0; j < fSpectators.size(); ++j) {
             fSpectatorValues[j] = x(i, nVars+j);
          }
-         R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
          // Classification
          if (fAnalysisType == Internal::AnalysisType::Classification) {
             y(i) = fReader->EvaluateMVA(name);

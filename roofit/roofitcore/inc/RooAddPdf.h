@@ -93,8 +93,6 @@ public:
   CacheMode canNodeBeCached() const override { return RooAbsArg::NotAdvised ; };
   void setCacheAndTrackHints(RooArgSet&) override;
 
-  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
-
   std::unique_ptr<RooAbsArg> compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext & ctx) const override;
 
   protected:
@@ -122,7 +120,7 @@ public:
       return getValV(nullptr);
   }
   double getValV(const RooArgSet* set=nullptr) const override ;
-  void computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;
+  void doEval(RooFit::EvalContext &) const override;
   inline bool canComputeBatchWithCuda() const override { return true; }
 
 
@@ -132,7 +130,7 @@ public:
   RooListProxy _coefList ;  ///<  List of coefficients
   mutable RooArgList* _snormList{nullptr};  ///<!  List of supplemental normalization factors
 
-  bool _haveLastCoef = false;  ///<  Flag indicating if last PDFs coefficient was supplied in the ctor
+  bool _haveLastCoef = false;  ///<  Flag indicating if last PDFs coefficient was supplied in the constructor
   bool _allExtendable = false; ///<  Flag indicating if all PDF components are extendable
   bool _recursive = false;     ///<  Flag indicating is fractions are treated recursively
 

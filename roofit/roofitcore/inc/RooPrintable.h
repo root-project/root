@@ -65,8 +65,6 @@ namespace RooFit {
 std::ostream& operator<<(std::ostream& os, const RooPrintable& rp) ;
 }
 
-#ifndef __CINT__
 using RooFit::operator<< ;
-#endif
 
 #endif

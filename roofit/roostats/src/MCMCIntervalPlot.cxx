@@ -56,7 +56,7 @@ plotted for the 1-D case.
 
 ClassImp(RooStats::MCMCIntervalPlot);
 
-using namespace std;
+using std::endl;
 using namespace RooStats;
 
 ////////////////////////////////////////////////////////////////////////////////

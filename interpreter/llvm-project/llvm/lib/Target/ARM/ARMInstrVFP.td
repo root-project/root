@@ -1201,7 +1201,7 @@ def VMOVSR : AVConv4I<0b11100000, 0b1010,
   let D = VFPNeonDomain;
 }
 } // isMoveReg
-def : Pat<(arm_vmovsr GPR:$Rt), (VMOVSR GPR:$Rt)>, Requires<[HasVFP2, UseVMOVSR]>;
+def : Pat<(arm_vmovsr GPR:$Rt), (VMOVSR GPR:$Rt)>, Requires<[HasFPRegs, UseVMOVSR]>;
 
 let hasSideEffects = 0 in {
 def VMOVRRD  : AVConv3I<0b11000101, 0b1011,
@@ -2669,6 +2669,13 @@ def : Pat<(f32 (vfp_f32f16imm:$imm)),
           (f32 (COPY_TO_REGCLASS (f16 (FCONSTH (vfp_f32f16imm_xform (f32 $imm)))), SPR))> {
   let Predicates = [HasFullFP16];
 }
+
+// Floating-point environment management.
+def : Pat<(get_fpenv), (VMRS)>;
+def : Pat<(set_fpenv GPRnopc:$Rt), (VMSR GPRnopc:$Rt)>;
+def : Pat<(reset_fpenv), (VMSR (MOVi 0))>, Requires<[IsARM]>;
+def : Pat<(reset_fpenv), (VMSR (tMOVi8 0))>, Requires<[IsThumb]>;
+def : Pat<(get_fpmode), (VMRS)>;
 
 //===----------------------------------------------------------------------===//
 // Assembler aliases.

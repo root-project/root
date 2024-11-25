@@ -397,7 +397,7 @@ void RooAbsData::setDirtyProp(bool flag)
 /// </table>
 
 RooFit::OwningPtr<RooAbsData> RooAbsData::reduce(const RooCmdArg& arg1,const RooCmdArg& arg2,const RooCmdArg& arg3,const RooCmdArg& arg4,
-                const RooCmdArg& arg5,const RooCmdArg& arg6,const RooCmdArg& arg7,const RooCmdArg& arg8)
+                const RooCmdArg& arg5,const RooCmdArg& arg6,const RooCmdArg& arg7,const RooCmdArg& arg8) const
 {
   // Define configuration for this method
   RooCmdConfig pc("RooAbsData::reduce(" + std::string(GetName()) + ")");
@@ -469,7 +469,7 @@ RooFit::OwningPtr<RooAbsData> RooAbsData::reduce(const RooCmdArg& arg1,const Roo
 /// other variables, such as intermediate formula objects, use the equivalent
 /// reduce method specifying the as a RooFormulVar reference.
 
-RooFit::OwningPtr<RooAbsData> RooAbsData::reduce(const char* cut)
+RooFit::OwningPtr<RooAbsData> RooAbsData::reduce(const char* cut) const
 {
   RooFormulaVar cutVar(cut,cut,*get()) ;
   auto ret = reduceEng(*get(),&cutVar,nullptr,0,std::numeric_limits<std::size_t>::max()) ;
@@ -482,7 +482,7 @@ RooFit::OwningPtr<RooAbsData> RooAbsData::reduce(const char* cut)
 /// The 'cutVar' formula variable is used to select the subset of data points to be
 /// retained in the reduced data collection.
 
-RooFit::OwningPtr<RooAbsData> RooAbsData::reduce(const RooFormulaVar& cutVar)
+RooFit::OwningPtr<RooAbsData> RooAbsData::reduce(const RooFormulaVar& cutVar) const
 {
   auto ret = reduceEng(*get(),&cutVar,nullptr,0,std::numeric_limits<std::size_t>::max()) ;
   ret->copyGlobalObservables(*this);
@@ -497,7 +497,7 @@ RooFit::OwningPtr<RooAbsData> RooAbsData::reduce(const RooFormulaVar& cutVar)
 /// other variables, such as intermediate formula objects, use the equivalent
 /// reduce method specifying the as a RooFormulVar reference.
 
-RooFit::OwningPtr<RooAbsData> RooAbsData::reduce(const RooArgSet& varSubset, const char* cut)
+RooFit::OwningPtr<RooAbsData> RooAbsData::reduce(const RooArgSet& varSubset, const char* cut) const
 {
   // Make sure varSubset doesn't contain any variable not in this dataset
   RooArgSet varSubset2(varSubset) ;
@@ -527,7 +527,7 @@ RooFit::OwningPtr<RooAbsData> RooAbsData::reduce(const RooArgSet& varSubset, con
 /// The 'cutVar' formula variable is used to select the subset of data points to be
 /// retained in the reduced data collection.
 
-RooFit::OwningPtr<RooAbsData> RooAbsData::reduce(const RooArgSet& varSubset, const RooFormulaVar& cutVar)
+RooFit::OwningPtr<RooAbsData> RooAbsData::reduce(const RooArgSet& varSubset, const RooFormulaVar& cutVar) const
 {
   // Make sure varSubset doesn't contain any variable not in this dataset
   RooArgSet varSubset2(varSubset) ;
@@ -717,30 +717,28 @@ TH1 *RooAbsData::createHistogram(const char *name, const RooAbsRealLValue& xvar,
   }
 
   if (yvar) {
-    RooCmdArg* autoRDY = static_cast<RooCmdArg*>((static_cast<RooCmdArg*>(argList.find("YVar")))->subArgs().find("AutoRangeData")) ;
+    std::unique_ptr<RooCmdArg> autoRDY{static_cast<RooCmdArg*>((static_cast<RooCmdArg*>(argList.find("YVar")))->subArgs().find("AutoRangeData"))};
     if (autoRDY) {
        double ymin;
        double ymax;
        if (!getRange(static_cast<RooRealVar &>(*yvar), ymin, ymax, autoRDY->getDouble(0), autoRDY->getInt(0))) {
         RooCmdArg *bincmd = static_cast<RooCmdArg *>(RooFit::Binning(autoRDY->getInt(1), ymin, ymax).Clone());
         // ownedCmds.Add(bincmd) ;
-        (static_cast<RooCmdArg *>(argList.find("YVar")))->subArgs().Replace(autoRDY, bincmd);
+        (static_cast<RooCmdArg *>(argList.find("YVar")))->subArgs().Replace(autoRDY.get(), bincmd);
       }
-      delete autoRDY ;
     }
   }
 
   if (zvar) {
-    RooCmdArg* autoRDZ = static_cast<RooCmdArg*>((static_cast<RooCmdArg*>(argList.find("ZVar")))->subArgs().find("AutoRangeData")) ;
+    std::unique_ptr<RooCmdArg> autoRDZ{static_cast<RooCmdArg*>((static_cast<RooCmdArg*>(argList.find("ZVar")))->subArgs().find("AutoRangeData"))};
     if (autoRDZ) {
       double zmin;
       double zmax;
       if (!getRange(static_cast<RooRealVar&>(*zvar),zmin,zmax,autoRDZ->getDouble(0),autoRDZ->getInt(0))) {
          RooCmdArg* bincmd = static_cast<RooCmdArg*>(RooFit::Binning(autoRDZ->getInt(1),zmin,zmax).Clone()) ;
          //ownedCmds.Add(bincmd) ;
-         (static_cast<RooCmdArg*>(argList.find("ZVar")))->subArgs().Replace(autoRDZ,bincmd) ;
+         (static_cast<RooCmdArg*>(argList.find("ZVar")))->subArgs().Replace(autoRDZ.get(),bincmd) ;
       }
-      delete autoRDZ ;
     }
   }
 
@@ -833,7 +831,7 @@ double RooAbsData::standMoment(const RooRealVar &var, double order, const char* 
   if (order==1) return 0 ;
   if (order==2) return 1 ;
 
-  return moment(var,order,cutSpec,cutRange) / TMath::Power(sigma(var,cutSpec,cutRange),order) ;
+  return moment(var,order,cutSpec,cutRange) / std::pow(sigma(var,cutSpec,cutRange),order) ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -895,7 +893,7 @@ double RooAbsData::moment(const RooRealVar& var, double order, double offset, co
     if (select && select->eval()==0) continue ;
     if (cutRange && vars->allInRange(cutRange)) continue ;
 
-    sum += weight() * TMath::Power(varPtr->getVal() - offset,order);
+    sum += weight() * std::pow(varPtr->getVal() - offset,order);
   }
 
   return sum.Sum()/sumEntries(cutSpec, cutRange);
@@ -1012,40 +1010,40 @@ RooFit::OwningPtr<TMatrixDSym> RooAbsData::corrcovMatrix(const RooArgList& vars,
     if (select && select->eval()==0) continue ;
     if (cutRange && dvars->allInRange(cutRange)) continue ;
 
-    for(std::size_t ix = 0; ix < varList.size(); ++ix) {
-      auto varx = static_cast<RooRealVar const&>(varList[ix]);
-      xsum[ix] += weight() * varx.getVal() ;
+    for(std::size_t iX = 0; iX < varList.size(); ++iX) {
+      auto varx = static_cast<RooRealVar const&>(varList[iX]);
+      xsum[iX] += weight() * varx.getVal() ;
       if (corr) {
-        x2sum[ix] += weight() * varx.getVal() * varx.getVal();
+        x2sum[iX] += weight() * varx.getVal() * varx.getVal();
       }
 
-      for(std::size_t iy = ix; iy < varList.size(); ++iy) {
-        auto vary = static_cast<RooRealVar const&>(varList[iy]);
-        xysum(ix,iy) += weight() * varx.getVal() * vary.getVal();
-        xysum(iy,ix) = xysum(ix,iy) ;
+      for(std::size_t iY = iX; iY < varList.size(); ++iY) {
+        auto vary = static_cast<RooRealVar const&>(varList[iY]);
+        xysum(iX,iY) += weight() * varx.getVal() * vary.getVal();
+        xysum(iY,iX) = xysum(iX,iY) ;
       }
     }
 
   }
 
   // Normalize sums
-  for (std::size_t ix=0 ; ix<varList.size() ; ix++) {
-    xsum[ix] /= sumEntries(cutSpec, cutRange) ;
+  for (std::size_t iX=0 ; iX<varList.size() ; iX++) {
+    xsum[iX] /= sumEntries(cutSpec, cutRange) ;
     if (corr) {
-      x2sum[ix] /= sumEntries(cutSpec, cutRange) ;
+      x2sum[iX] /= sumEntries(cutSpec, cutRange) ;
     }
-    for (std::size_t iy=0 ; iy<varList.size() ; iy++) {
-      xysum(ix,iy) /= sumEntries(cutSpec, cutRange) ;
+    for (std::size_t iY=0 ; iY<varList.size() ; iY++) {
+      xysum(iX,iY) /= sumEntries(cutSpec, cutRange) ;
     }
   }
 
   // Calculate covariance matrix
   auto C = std::make_unique<TMatrixDSym>(varList.size()) ;
-  for (std::size_t ix=0 ; ix<varList.size() ; ix++) {
-    for (std::size_t iy=0 ; iy<varList.size() ; iy++) {
-      (*C)(ix,iy) = xysum(ix,iy)-xsum[ix]*xsum[iy] ;
+  for (std::size_t iX=0 ; iX<varList.size() ; iX++) {
+    for (std::size_t iY=0 ; iY<varList.size() ; iY++) {
+      (*C)(iX,iY) = xysum(iX,iY)-xsum[iX]*xsum[iY] ;
       if (corr) {
-   (*C)(ix,iy) /= std::sqrt((x2sum[ix]-(xsum[ix]*xsum[ix]))*(x2sum[iy]-(xsum[iy]*xsum[iy]))) ;
+   (*C)(iX,iY) /= std::sqrt((x2sum[iX]-(xsum[iX]*xsum[iX]))*(x2sum[iY]-(xsum[iY]*xsum[iY]))) ;
       }
     }
   }
@@ -1414,19 +1412,19 @@ TH1 *RooAbsData::fillHistogram(TH1 *hist, const RooArgList &plotVars, const char
     }
 
 
-    double error2 = TMath::Power(hist->GetBinError(bin),2)-TMath::Power(weight(),2)  ;
+    double error2 = std::pow(hist->GetBinError(bin),2)-std::pow(weight(),2)  ;
     double we = weightError(RooAbsData::SumW2) ;
     if (we==0) we = weight() ;
-    error2 += TMath::Power(we,2) ;
+    error2 += std::pow(we,2) ;
 
 
 //     double we = weightError(RooAbsData::SumW2) ;
 //     double error2(0) ;
 //     if (we==0) {
 //       we = weight() ; //sqrt(weight()) ;
-//       error2 = TMath::Power(hist->GetBinError(bin),2)-TMath::Power(weight(),2) + TMath::Power(we,2) ;
+//       error2 = std::pow(hist->GetBinError(bin),2)-std::pow(weight(),2) + std::pow(we,2) ;
 //     } else {
-//       error2 = TMath::Power(hist->GetBinError(bin),2)-TMath::Power(weight(),2) + TMath::Power(we,2) ;
+//       error2 = std::pow(hist->GetBinError(bin),2)-std::pow(weight(),2) + std::pow(we,2) ;
 //     }
     //hist->AddBinContent(bin,weight());
     hist->SetBinError(bin,sqrt(error2)) ;
@@ -2533,8 +2531,6 @@ double RooAbsData::sumEntriesW2() const {
 /// Write information to retrieve data columns into `evalData.spans`.
 /// All spans belonging to variables of this dataset are overwritten. Spans to other
 /// variables remain intact.
-/// \param[out] evalData Store references to all data batches in this struct's `spans`.
-/// The key to retrieve an item is the pointer of the variable that owns the data.
 /// \param begin Index of first event that ends up in the batch.
 /// \param len   Number of events in each batch.
 RooAbsData::RealSpans RooAbsData::getBatches(std::size_t begin, std::size_t len) const {

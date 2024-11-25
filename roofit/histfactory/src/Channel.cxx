@@ -30,7 +30,7 @@
 
 #include "RooStats/HistFactory/HistFactoryException.h"
 
-using namespace std;
+using std::ofstream;
 
 RooStats::HistFactory::Channel::Channel(std::string ChanName, std::string ChanInputFile) :
   fName( ChanName ), fInputFile( ChanInputFile )

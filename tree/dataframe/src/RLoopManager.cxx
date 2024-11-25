@@ -12,10 +12,12 @@
 #include "ROOT/InternalTreeUtils.hxx" // GetTreeFullPaths
 #include "ROOT/RDF/RActionBase.hxx"
 #include "ROOT/RDF/RDefineBase.hxx"
+#include "ROOT/RDF/RDefineReader.hxx" // RDefinesWithReaders
 #include "ROOT/RDF/RFilterBase.hxx"
 #include "ROOT/RDF/RLoopManager.hxx"
 #include "ROOT/RDF/RRangeBase.hxx"
 #include "ROOT/RDF/RVariationBase.hxx"
+#include "ROOT/RDF/RVariationReader.hxx" // RVariationsWithReaders
 #include "ROOT/RLogger.hxx"
 #include "RtypesCore.h" // Long64_t
 #include "TStopwatch.h"
@@ -25,7 +27,7 @@
 #include "TEntryList.h"
 #include "TFile.h"
 #include "TFriendElement.h"
-#include "TROOT.h" // IsImplicitMTEnabled
+#include "TROOT.h" // IsImplicitMTEnabled, gCoreMutex, R__*_LOCKGUARD
 #include "TTreeReader.h"
 #include "TTree.h" // For MaxTreeSizeRAII. Revert when #6640 will be solved.
 
@@ -37,7 +39,6 @@
 
 #ifdef R__HAS_ROOT7
 #include "ROOT/RNTuple.hxx"
-#include "ROOT/RPageStorage.hxx"
 #include "ROOT/RNTupleDS.hxx"
 #endif
 
@@ -349,10 +350,13 @@ ColumnNames_t ROOT::Internal::RDF::GetBranchNames(TTree &t, bool allowDuplicates
 }
 
 RLoopManager::RLoopManager(TTree *tree, const ColumnNames_t &defaultBranches)
-   : fTree(std::shared_ptr<TTree>(tree, [](TTree *) {})), fDefaultColumns(defaultBranches),
+   : fTree(std::shared_ptr<TTree>(tree, [](TTree *) {})),
+     fDefaultColumns(defaultBranches),
      fNSlots(RDFInternal::GetNSlots()),
      fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kROOTFilesMT : ELoopType::kROOTFiles),
-     fNewSampleNotifier(fNSlots), fSampleInfos(fNSlots), fDatasetColumnReaders(fNSlots)
+     fNewSampleNotifier(fNSlots),
+     fSampleInfos(fNSlots),
+     fDatasetColumnReaders(fNSlots)
 {
 }
 
@@ -378,9 +382,13 @@ RLoopManager::RLoopManager(ULong64_t nEmptyEntries)
 }
 
 RLoopManager::RLoopManager(std::unique_ptr<RDataSource> ds, const ColumnNames_t &defaultBranches)
-   : fDefaultColumns(defaultBranches), fNSlots(RDFInternal::GetNSlots()),
+   : fDefaultColumns(defaultBranches),
+     fNSlots(RDFInternal::GetNSlots()),
      fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kDataSourceMT : ELoopType::kDataSource),
-     fDataSource(std::move(ds)), fNewSampleNotifier(fNSlots), fSampleInfos(fNSlots), fDatasetColumnReaders(fNSlots)
+     fDataSource(std::move(ds)),
+     fNewSampleNotifier(fNSlots),
+     fSampleInfos(fNSlots),
+     fDatasetColumnReaders(fNSlots)
 {
    fDataSource->SetNSlots(fNSlots);
 }
@@ -512,6 +520,31 @@ void RLoopManager::RunEmptySource()
    }
 }
 
+namespace {
+/// Return true on succesful entry read.
+///
+/// TTreeReader encodes successful reads in the `kEntryValid` enum value, but
+/// there can be other situations where the read is still valid. For now, these
+/// are:
+/// - If there was no match of the current entry in one or more friend trees
+///   according to their respective indexes.
+/// - If there was a missing branch at the start of a new tree in the dataset.
+///
+/// In such situations, although the entry is not complete, the processing
+/// should not be aborted and nodes of the computation graph will take action
+/// accordingly.
+bool validTTreeReaderRead(TTreeReader &treeReader)
+{
+   treeReader.Next();
+   switch (treeReader.GetEntryStatus()) {
+   case TTreeReader::kEntryValid: return true;
+   case TTreeReader::kIndexedFriendNoMatch: return true;
+   case TTreeReader::kMissingBranchWhenSwitchingTree: return true;
+   default: return false;
+   }
+}
+} // namespace
+
 /// Run event loop over one or multiple ROOT files, in parallel.
 void RLoopManager::RunTreeProcessorMT()
 {
@@ -520,9 +553,11 @@ void RLoopManager::RunTreeProcessorMT()
       return;
    ROOT::Internal::RSlotStack slotStack(fNSlots);
    const auto &entryList = fTree->GetEntryList() ? *fTree->GetEntryList() : TEntryList();
-   auto tp = (fBeginEntry != 0 || fEndEntry != std::numeric_limits<Long64_t>::max())
-                ? std::make_unique<ROOT::TTreeProcessorMT>(*fTree, fNSlots, std::make_pair(fBeginEntry, fEndEntry))
-                : std::make_unique<ROOT::TTreeProcessorMT>(*fTree, entryList, fNSlots);
+   auto tp =
+      (fBeginEntry != 0 || fEndEntry != std::numeric_limits<Long64_t>::max())
+         ? std::make_unique<ROOT::TTreeProcessorMT>(*fTree, fNSlots, std::make_pair(fBeginEntry, fEndEntry),
+                                                    fSuppressErrorsForMissingBranches)
+         : std::make_unique<ROOT::TTreeProcessorMT>(*fTree, entryList, fNSlots, fSuppressErrorsForMissingBranches);
 
    std::atomic<ULong64_t> entryCount(0ull);
 
@@ -537,7 +572,7 @@ void RLoopManager::RunTreeProcessorMT()
       auto count = entryCount.fetch_add(nEntries);
       try {
          // recursive call to check filters and conditionally execute actions
-         while (r.Next()) {
+         while (validTTreeReaderRead(r)) {
             if (fNewSampleNotifier.CheckFlag(slot)) {
                UpdateSampleInfo(slot, r);
             }
@@ -561,7 +596,8 @@ void RLoopManager::RunTreeProcessorMT()
 /// Run event loop over one or multiple ROOT files, in sequence.
 void RLoopManager::RunTreeReader()
 {
-   TTreeReader r(fTree.get(), fTree->GetEntryList());
+   TTreeReader r(fTree.get(), fTree->GetEntryList(), /*warnAboutLongerFriends*/ true,
+                 fSuppressErrorsForMissingBranches);
    if (0 == fTree->GetEntriesFast() || fBeginEntry == fEndEntry)
       return;
    // Apply the range if there is any
@@ -578,7 +614,7 @@ void RLoopManager::RunTreeReader()
    // recursive call to check filters and conditionally execute actions
    // in the non-MT case processing can be stopped early by ranges, hence the check on fNStopsReceived
    try {
-      while (r.Next() && fNStopsReceived < fNChildren) {
+      while (validTTreeReaderRead(r) && fNStopsReceived < fNChildren) {
          if (fNewSampleNotifier.CheckFlag(0)) {
             UpdateSampleInfo(/*slot*/0, r);
          }
@@ -737,8 +773,15 @@ void RLoopManager::UpdateSampleInfo(unsigned int slot, TTreeReader &r) {
    if (range.second == -1) {
       range.second = tree->GetEntries(); // convert '-1', i.e. 'until the end', to the actual entry number
    }
-   const std::string &id = fname + '/' + treename;
-   fSampleInfos[slot] = fSampleMap.empty() ? RSampleInfo(id, range) : RSampleInfo(id, range, fSampleMap[id]);
+   // If the tree is stored in a subdirectory, treename will be the full path to it starting with the root directory '/'
+   const std::string &id = fname + (treename.rfind('/', 0) == 0 ? "" : "/") + treename;
+   if (fSampleMap.empty()) {
+      fSampleInfos[slot] = RSampleInfo(id, range);
+   } else {
+      if (fSampleMap.find(id) == fSampleMap.end())
+         throw std::runtime_error("Full sample identifier '" + id + "' cannot be found in the available samples.");
+      fSampleInfos[slot] = RSampleInfo(id, range, fSampleMap[id]);
+   }
 }
 
 /// Initialize all nodes of the functional graph before running the event loop.
@@ -804,14 +847,18 @@ void RLoopManager::CleanUpTask(TTreeReader *r, unsigned int slot)
 /// This method also clears the contents of GetCodeToJit().
 void RLoopManager::Jit()
 {
-   // TODO this should be a read lock unless we find GetCodeToJit non-empty
-   R__LOCKGUARD(gROOTMutex);
-
-   const std::string code = std::move(GetCodeToJit());
-   if (code.empty()) {
-      R__LOG_INFO(RDFLogChannel()) << "Nothing to jit and execute.";
-      return;
+   {
+      R__READ_LOCKGUARD(ROOT::gCoreMutex);
+      if (GetCodeToJit().empty()) {
+         R__LOG_INFO(RDFLogChannel()) << "Nothing to jit and execute.";
+         return;
+      }
    }
+
+   const std::string code = []() {
+      R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
+      return std::move(GetCodeToJit());
+   }();
 
    TStopwatch s;
    s.Start();
@@ -979,7 +1026,7 @@ void RLoopManager::SetTree(std::shared_ptr<TTree> tree)
 
 void RLoopManager::ToJitExec(const std::string &code) const
 {
-   R__LOCKGUARD(gROOTMutex);
+   R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
    GetCodeToJit().append(code);
 }
 
@@ -1030,6 +1077,8 @@ std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> RLoopManager::GetG
       name = fDataSource->GetLabel();
    } else if (fTree) {
       name = fTree->GetName();
+      if (name.empty())
+         name = fTree->ClassName();
    } else {
       name = "Empty source\\nEntries: " + std::to_string(GetNEmptyEntries());
    }
@@ -1111,6 +1160,12 @@ void RLoopManager::SetEmptyEntryRange(std::pair<ULong64_t, ULong64_t> &&newRange
    fEmptyEntryRange = std::move(newRange);
 }
 
+void RLoopManager::ChangeBeginAndEndEntries(Long64_t begin, Long64_t end)
+{
+   fBeginEntry = begin;
+   fEndEntry = end;
+}
+
 /**
  * \brief Helper function to open a file (or the first file from a glob).
  * This function is used at construction time of an RDataFrame, to check the
@@ -1118,18 +1173,38 @@ void RLoopManager::SetEmptyEntryRange(std::pair<ULong64_t, ULong64_t> &&newRange
  */
 std::unique_ptr<TFile> OpenFileWithSanityChecks(std::string_view fileNameGlob)
 {
-   bool fileIsGlob = [&fileNameGlob]() {
-      const std::vector<std::string_view> wildcards = {"[", "]", "*", "?"}; // Wildcards accepted by TChain::Add
-      return std::any_of(wildcards.begin(), wildcards.end(),
-                         [&fileNameGlob](const auto &wc) { return fileNameGlob.find(wc) != std::string_view::npos; });
+   // Follow same logic in TChain::Add to find the correct string to look for globbing:
+   // - If the extension ".root" is present in the file name, pass along the basename.
+   // - If not, use the "?" token to delimit the part of the string which represents the basename.
+   // - Otherwise, pass the full filename.
+   auto &&baseNameAndQuery = [&fileNameGlob]() {
+      constexpr std::string_view delim{".root"};
+      if (auto &&it = std::find_end(fileNameGlob.begin(), fileNameGlob.end(), delim.begin(), delim.end());
+          it != fileNameGlob.end()) {
+         auto &&distanceToEndOfDelim = std::distance(fileNameGlob.begin(), it + delim.length());
+         return std::make_pair(fileNameGlob.substr(0, distanceToEndOfDelim), fileNameGlob.substr(distanceToEndOfDelim));
+      } else if (auto &&lastQuestionMark = fileNameGlob.find_last_of('?'); lastQuestionMark != std::string_view::npos)
+         return std::make_pair(fileNameGlob.substr(0, lastQuestionMark), fileNameGlob.substr(lastQuestionMark));
+      else
+         return std::make_pair(fileNameGlob, std::string_view{});
+   }();
+   // Captured structured bindings variable are only valid since C++20
+   auto &&baseName = baseNameAndQuery.first;
+   auto &&query = baseNameAndQuery.second;
+
+   const auto nameHasWildcard = [&baseName]() {
+      constexpr std::array<char, 4> wildCards{'[', ']', '*', '?'}; // Wildcards accepted by TChain::Add
+      return std::any_of(wildCards.begin(), wildCards.end(),
+                         [&baseName](auto &&wc) { return baseName.find(wc) != std::string_view::npos; });
    }();
 
    // Open first file in case of glob, suppose all files in the glob use the same data format
-   std::string fileToOpen{fileIsGlob ? ROOT::Internal::TreeUtils::ExpandGlob(std::string{fileNameGlob})[0]
-                                     : fileNameGlob};
+   std::string fileToOpen{nameHasWildcard
+                             ? ROOT::Internal::TreeUtils::ExpandGlob(std::string{baseName})[0] + std::string{query}
+                             : fileNameGlob};
 
    ::TDirectory::TContext ctxt; // Avoid changing gDirectory;
-   std::unique_ptr<TFile> inFile{TFile::Open(fileToOpen.c_str(), "READ_WITHOUT_GLOBAL_REGISTRATION")};
+   std::unique_ptr<TFile> inFile{TFile::Open(fileToOpen.c_str(), "READ_WITHOUT_GLOBALREGISTRATION")};
    if (!inFile || inFile->IsZombie())
       throw std::invalid_argument("RDataFrame: could not open file \"" + fileToOpen + "\".");
 
@@ -1158,6 +1233,8 @@ std::shared_ptr<ROOT::Detail::RDF::RLoopManager>
 ROOT::Detail::RDF::CreateLMFromTTree(std::string_view datasetName, const std::vector<std::string> &fileNameGlobs,
                                      const std::vector<std::string> &defaultColumns, bool checkFile)
 {
+   if (fileNameGlobs.size() == 0)
+      throw std::invalid_argument("RDataFrame: empty list of input files.");
    // Introduce the same behaviour as in CreateLMFromFile for consistency.
    // Creating an RDataFrame with a non-existing file will throw early rather
    // than wait for the start of the graph execution.
@@ -1200,7 +1277,7 @@ ROOT::Detail::RDF::CreateLMFromFile(std::string_view datasetName, std::string_vi
 
    if (inFile->Get<TTree>(datasetName.data())) {
       return CreateLMFromTTree(datasetName, fileNameGlob, defaultColumns, /*checkFile=*/false);
-   } else if (inFile->Get<ROOT::Experimental::RNTuple>(datasetName.data())) {
+   } else if (inFile->Get<ROOT::RNTuple>(datasetName.data())) {
       return CreateLMFromRNTuple(datasetName, fileNameGlob, defaultColumns);
    }
 
@@ -1213,11 +1290,14 @@ ROOT::Detail::RDF::CreateLMFromFile(std::string_view datasetName, const std::vec
                                     const ROOT::RDF::ColumnNames_t &defaultColumns)
 {
 
+   if (fileNameGlobs.size() == 0)
+      throw std::invalid_argument("RDataFrame: empty list of input files.");
+
    auto inFile = OpenFileWithSanityChecks(fileNameGlobs[0]);
 
    if (inFile->Get<TTree>(datasetName.data())) {
       return CreateLMFromTTree(datasetName, fileNameGlobs, defaultColumns, /*checkFile=*/false);
-   } else if (inFile->Get<ROOT::Experimental::RNTuple>(datasetName.data())) {
+   } else if (inFile->Get<ROOT::RNTuple>(datasetName.data())) {
       return CreateLMFromRNTuple(datasetName, fileNameGlobs, defaultColumns);
    }
 

@@ -12,7 +12,7 @@
 
 /**
 \file ComputeFunctions.cxx
-\ingroup Roobatchcompute
+\ingroup roofit_dev_docs_batchcompute
 
 This file contains vectorizable computation functions for PDFs and other Roofit objects.
 The same source file can also be compiled with nvcc. All functions have a single `Batches`
@@ -32,6 +32,8 @@ https://developer.nvidia.com/blog/cuda-pro-tip-write-flexible-kernels-grid-strid
 
 #include <RooHeterogeneousMath.h>
 
+#include <vector>
+
 #ifdef __CUDACC__
 #define BEGIN blockDim.x *blockIdx.x + threadIdx.x
 #define STEP blockDim.x *gridDim.x
@@ -43,64 +45,66 @@ https://developer.nvidia.com/blog/cuda-pro-tip-write-flexible-kernels-grid-strid
 namespace RooBatchCompute {
 namespace RF_ARCH {
 
-__rooglobal__ void computeAddPdf(BatchesHandle batches)
+__rooglobal__ void computeAddPdf(Batches &batches)
 {
-   const int nPdfs = batches.getNExtraArgs();
-   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
-      batches._output[i] = batches.extraArg(0) * batches[0][i];
+   const int nPdfs = batches.nExtra;
+   for (size_t i = BEGIN; i < batches.nEvents; i += STEP) {
+      batches.output[i] = batches.extra[0] * batches.args[0][i];
+   }
    for (int pdf = 1; pdf < nPdfs; pdf++) {
-      for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
-         batches._output[i] += batches.extraArg(pdf) * batches[pdf][i];
-   }
-}
-
-__rooglobal__ void computeArgusBG(BatchesHandle batches)
-{
-   Batch m = batches[0];
-   Batch m0 = batches[1];
-   Batch c = batches[2];
-   Batch p = batches[3];
-   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
-      const double t = m[i] / m0[i];
-      const double u = 1 - t * t;
-      batches._output[i] = c[i] * u + p[i] * fast_log(u);
-   }
-   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
-      if (m[i] >= m0[i]) {
-         batches._output[i] = 0.0;
-      } else {
-         batches._output[i] = m[i] * fast_exp(batches._output[i]);
+      for (size_t i = BEGIN; i < batches.nEvents; i += STEP) {
+         batches.output[i] += batches.extra[pdf] * batches.args[pdf][i];
       }
    }
 }
 
-__rooglobal__ void computeBMixDecay(BatchesHandle batches)
+__rooglobal__ void computeArgusBG(Batches &batches)
 {
-   Batch coef0 = batches[0];
-   Batch coef1 = batches[1];
-   Batch tagFlav = batches[2];
-   Batch delMistag = batches[3];
-   Batch mixState = batches[4];
-   Batch mistag = batches[5];
+   Batch m = batches.args[0];
+   Batch m0 = batches.args[1];
+   Batch c = batches.args[2];
+   Batch p = batches.args[3];
+   for (size_t i = BEGIN; i < batches.nEvents; i += STEP) {
+      const double t = m[i] / m0[i];
+      const double u = 1 - t * t;
+      batches.output[i] = c[i] * u + p[i] * fast_log(u);
+   }
+   for (size_t i = BEGIN; i < batches.nEvents; i += STEP) {
+      if (m[i] >= m0[i]) {
+         batches.output[i] = 0.0;
+      } else {
+         batches.output[i] = m[i] * fast_exp(batches.output[i]);
+      }
+   }
+}
 
-   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
-      batches._output[i] =
+__rooglobal__ void computeBMixDecay(Batches &batches)
+{
+   Batch coef0 = batches.args[0];
+   Batch coef1 = batches.args[1];
+   Batch tagFlav = batches.args[2];
+   Batch delMistag = batches.args[3];
+   Batch mixState = batches.args[4];
+   Batch mistag = batches.args[5];
+
+   for (size_t i = BEGIN; i < batches.nEvents; i += STEP) {
+      batches.output[i] =
          coef0[i] * (1.0 - tagFlav[i] * delMistag[0]) + coef1[i] * (mixState[i] * (1.0 - 2.0 * mistag[0]));
    }
 }
 
-__rooglobal__ void computeBernstein(BatchesHandle batches)
+__rooglobal__ void computeBernstein(Batches &batches)
 {
-   const int nCoef = batches.getNExtraArgs() - 2;
+   const int nCoef = batches.nExtra - 2;
    const int degree = nCoef - 1;
-   const double xmin = batches.extraArg(nCoef);
-   const double xmax = batches.extraArg(nCoef + 1);
-   Batch xData = batches[0];
+   const double xmin = batches.extra[nCoef];
+   const double xmax = batches.extra[nCoef + 1];
+   Batch xData = batches.args[0];
 
    // apply binomial coefficient in-place so we don't have to allocate new memory
    double binomial = 1.0;
    for (int k = 0; k < nCoef; k++) {
-      batches.setExtraArg(k, batches.extraArg(k) * binomial);
+      batches.extra[k] = batches.extra[k] * binomial;
       binomial = (binomial * (degree - k)) / (k + 1);
    }
 
@@ -109,31 +113,31 @@ __rooglobal__ void computeBernstein(BatchesHandle batches)
       double _1_X[bufferSize];
       double powX[bufferSize];
       double pow_1_X[bufferSize];
-      for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
+      for (size_t i = BEGIN; i < batches.nEvents; i += STEP) {
          powX[i] = pow_1_X[i] = 1.0;
          X[i] = (xData[i] - xmin) / (xmax - xmin);
          _1_X[i] = 1 - X[i];
-         batches._output[i] = 0.0;
+         batches.output[i] = 0.0;
       }
 
       // raising 1-x to the power of degree
       for (int k = 2; k <= degree; k += 2) {
-         for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
+         for (size_t i = BEGIN; i < batches.nEvents; i += STEP)
             pow_1_X[i] *= _1_X[i] * _1_X[i];
       }
 
       if (degree % 2 == 1) {
-         for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
+         for (size_t i = BEGIN; i < batches.nEvents; i += STEP)
             pow_1_X[i] *= _1_X[i];
       }
 
       // inverting 1-x ---> 1/(1-x)
-      for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
+      for (size_t i = BEGIN; i < batches.nEvents; i += STEP)
          _1_X[i] = 1 / _1_X[i];
 
       for (int k = 0; k < nCoef; k++) {
-         for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
-            batches._output[i] += batches.extraArg(k) * powX[i] * pow_1_X[i];
+         for (size_t i = BEGIN; i < batches.nEvents; i += STEP) {
+            batches.output[i] += batches.extra[k] * powX[i] * pow_1_X[i];
 
             // calculating next power for x and 1-x
             powX[i] *= X[i];
@@ -141,8 +145,8 @@ __rooglobal__ void computeBernstein(BatchesHandle batches)
          }
       }
    } else {
-      for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
-         batches._output[i] = 0.0;
+      for (size_t i = BEGIN; i < batches.nEvents; i += STEP) {
+         batches.output[i] = 0.0;
          const double X = (xData[i] - xmin) / (xmax - xmin);
          double powX = 1.0;
          double pow_1_X = 1.0;
@@ -150,7 +154,7 @@ __rooglobal__ void computeBernstein(BatchesHandle batches)
             pow_1_X *= 1 - X;
          const double _1_X = 1 / (1 - X);
          for (int k = 0; k < nCoef; k++) {
-            batches._output[i] += batches.extraArg(k) * powX * pow_1_X;
+            batches.output[i] += batches.extra[k] * powX * pow_1_X;
             powX *= X;
             pow_1_X *= _1_X;
          }
@@ -160,52 +164,52 @@ __rooglobal__ void computeBernstein(BatchesHandle batches)
    // reset extraArgs values so we don't mutate the Batches object
    binomial = 1.0;
    for (int k = 0; k < nCoef; k++) {
-      batches.setExtraArg(k, batches.extraArg(k) / binomial);
+      batches.extra[k] = batches.extra[k] / binomial;
       binomial = (binomial * (degree - k)) / (k + 1);
    }
 }
 
-__rooglobal__ void computeBifurGauss(BatchesHandle batches)
+__rooglobal__ void computeBifurGauss(Batches &batches)
 {
-   Batch X = batches[0];
-   Batch M = batches[1];
-   Batch SL = batches[2];
-   Batch SR = batches[3];
-   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
+   Batch X = batches.args[0];
+   Batch M = batches.args[1];
+   Batch SL = batches.args[2];
+   Batch SR = batches.args[3];
+   for (size_t i = BEGIN; i < batches.nEvents; i += STEP) {
       double arg = X[i] - M[i];
       if (arg < 0) {
          arg /= SL[i];
       } else {
          arg /= SR[i];
       }
-      batches._output[i] = fast_exp(-0.5 * arg * arg);
+      batches.output[i] = fast_exp(-0.5 * arg * arg);
    }
 }
 
-__rooglobal__ void computeBreitWigner(BatchesHandle batches)
+__rooglobal__ void computeBreitWigner(Batches &batches)
 {
-   Batch X = batches[0];
-   Batch M = batches[1];
-   Batch W = batches[2];
-   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
+   Batch X = batches.args[0];
+   Batch M = batches.args[1];
+   Batch W = batches.args[2];
+   for (size_t i = BEGIN; i < batches.nEvents; i += STEP) {
       const double arg = X[i] - M[i];
-      batches._output[i] = 1 / (arg * arg + 0.25 * W[i] * W[i]);
+      batches.output[i] = 1 / (arg * arg + 0.25 * W[i] * W[i]);
    }
 }
 
-__rooglobal__ void computeBukin(BatchesHandle batches)
+__rooglobal__ void computeBukin(Batches &batches)
 {
-   Batch X = batches[0];
-   Batch XP = batches[1];
-   Batch SP = batches[2];
-   Batch XI = batches[3];
-   Batch R1 = batches[4];
-   Batch R2 = batches[5];
+   Batch X = batches.args[0];
+   Batch XP = batches.args[1];
+   Batch SP = batches.args[2];
+   Batch XI = batches.args[3];
+   Batch R1 = batches.args[4];
+   Batch R2 = batches.args[5];
    const double r3 = log(2.0);
    const double r6 = exp(-6.0);
    const double r7 = 2 * sqrt(2 * log(2.0));
 
-   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
+   for (size_t i = BEGIN; i < batches.nEvents; i += STEP) {
       const double r1 = XI[i] * fast_isqrt(XI[i] * XI[i] + 1);
       const double r4 = 1 / fast_isqrt(XI[i] * XI[i] + 1);
       const double hp = 1 / (SP[i] * r7);
@@ -229,61 +233,61 @@ __rooglobal__ void computeBukin(BatchesHandle batches)
          rho = R2[i];
       }
 
-      batches._output[i] = rho * y * y / Yp / Yp - r3 + factor * 4 * r3 * y * hp * r5 * r4 / yi / yi;
+      batches.output[i] = rho * y * y / Yp / Yp - r3 + factor * 4 * r3 * y * hp * r5 * r4 / yi / yi;
       if (X[i] >= x1 && X[i] < x2) {
-         batches._output[i] =
+         batches.output[i] =
             fast_log(1 + 4 * XI[i] * r4 * (X[i] - XP[i]) * hp) / fast_log(1 + 2 * XI[i] * (XI[i] - r4));
-         batches._output[i] *= -batches._output[i] * r3;
+         batches.output[i] *= -batches.output[i] * r3;
       }
       if (X[i] >= x1 && X[i] < x2 && XI[i] < r6 && XI[i] > -r6)
-         batches._output[i] = -4 * r3 * (X[i] - XP[i]) * (X[i] - XP[i]) * hp * hp;
+         batches.output[i] = -4 * r3 * (X[i] - XP[i]) * (X[i] - XP[i]) * hp * hp;
    }
-   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
-      batches._output[i] = fast_exp(batches._output[i]);
+   for (size_t i = BEGIN; i < batches.nEvents; i += STEP)
+      batches.output[i] = fast_exp(batches.output[i]);
 }
 
-__rooglobal__ void computeCBShape(BatchesHandle batches)
+__rooglobal__ void computeCBShape(Batches &batches)
 {
-   Batch M = batches[0];
-   Batch M0 = batches[1];
-   Batch S = batches[2];
-   Batch A = batches[3];
-   Batch N = batches[4];
-   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
+   Batch M = batches.args[0];
+   Batch M0 = batches.args[1];
+   Batch S = batches.args[2];
+   Batch A = batches.args[3];
+   Batch N = batches.args[4];
+   for (size_t i = BEGIN; i < batches.nEvents; i += STEP) {
       const double t = (M[i] - M0[i]) / S[i];
       if ((A[i] > 0 && t >= -A[i]) || (A[i] < 0 && -t >= A[i])) {
-         batches._output[i] = -0.5 * t * t;
+         batches.output[i] = -0.5 * t * t;
       } else {
-         batches._output[i] = N[i] / (N[i] - A[i] * A[i] - A[i] * t);
-         batches._output[i] = fast_log(batches._output[i]);
-         batches._output[i] *= N[i];
-         batches._output[i] -= 0.5 * A[i] * A[i];
+         batches.output[i] = N[i] / (N[i] - A[i] * A[i] - A[i] * t);
+         batches.output[i] = fast_log(batches.output[i]);
+         batches.output[i] *= N[i];
+         batches.output[i] -= 0.5 * A[i] * A[i];
       }
    }
-   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
-      batches._output[i] = fast_exp(batches._output[i]);
+   for (size_t i = BEGIN; i < batches.nEvents; i += STEP)
+      batches.output[i] = fast_exp(batches.output[i]);
 }
 
-__rooglobal__ void computeChebychev(BatchesHandle batches)
+__rooglobal__ void computeChebychev(Batches &batches)
 {
-   Batch xData = batches[0];
-   const int nCoef = batches.getNExtraArgs() - 2;
-   const double xmin = batches.extraArg(nCoef);
-   const double xmax = batches.extraArg(nCoef + 1);
+   Batch xData = batches.args[0];
+   const int nCoef = batches.nExtra - 2;
+   const double xmin = batches.extra[nCoef];
+   const double xmax = batches.extra[nCoef + 1];
 
    if (STEP == 1) {
       double prev[bufferSize][2];
       double X[bufferSize];
 
-      for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
+      for (size_t i = BEGIN; i < batches.nEvents; i += STEP) {
          // set a0-->prev[i][0] and a1-->prev[i][1]
          // and x tranfsformed to range[-1..1]-->X[i]
-         prev[i][0] = batches._output[i] = 1.0;
+         prev[i][0] = batches.output[i] = 1.0;
          prev[i][1] = X[i] = 2 * (xData[i] - 0.5 * (xmax + xmin)) / (xmax - xmin);
       }
       for (int k = 0; k < nCoef; k++) {
-         for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
-            batches._output[i] += prev[i][1] * batches.extraArg(k);
+         for (size_t i = BEGIN; i < batches.nEvents; i += STEP) {
+            batches.output[i] += prev[i][1] * batches.extra[k];
 
             // compute next order
             const double next = 2 * X[i] * prev[i][1] - prev[i][0];
@@ -292,13 +296,13 @@ __rooglobal__ void computeChebychev(BatchesHandle batches)
          }
       }
    } else {
-      for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
+      for (size_t i = BEGIN; i < batches.nEvents; i += STEP) {
          double prev0 = 1.0;
          double prev1 = 2 * (xData[i] - 0.5 * (xmax + xmin)) / (xmax - xmin);
          double X = prev1;
-         batches._output[i] = 1.0;
+         batches.output[i] = 1.0;
          for (int k = 0; k < nCoef; k++) {
-            batches._output[i] += prev1 * batches.extraArg(k);
+            batches.output[i] += prev1 * batches.extra[k];
 
             // compute next order
             const double next = 2 * X * prev1 - prev0;
@@ -309,127 +313,127 @@ __rooglobal__ void computeChebychev(BatchesHandle batches)
    }
 }
 
-__rooglobal__ void computeChiSquare(BatchesHandle batches)
+__rooglobal__ void computeChiSquare(Batches &batches)
 {
-   Batch X = batches[0];
-   const double ndof = batches.extraArg(0);
+   Batch X = batches.args[0];
+   const double ndof = batches.extra[0];
    const double gamma = 1 / std::tgamma(ndof / 2.0);
-   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
-      batches._output[i] = gamma;
+   for (size_t i = BEGIN; i < batches.nEvents; i += STEP)
+      batches.output[i] = gamma;
 
    constexpr double ln2 = 0.693147180559945309417232121458;
-   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
+   for (size_t i = BEGIN; i < batches.nEvents; i += STEP) {
       double arg = (ndof - 2) * fast_log(X[i]) - X[i] - ndof * ln2;
-      batches._output[i] *= fast_exp(0.5 * arg);
+      batches.output[i] *= fast_exp(0.5 * arg);
    }
 }
 
-__rooglobal__ void computeDeltaFunction(BatchesHandle batches)
+__rooglobal__ void computeDeltaFunction(Batches &batches)
 {
-   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
-      batches._output[i] = 0.0 + (batches[0][i] == 1.0);
+   for (size_t i = BEGIN; i < batches.nEvents; i += STEP) {
+      batches.output[i] = 0.0 + (batches.args[0][i] == 1.0);
    }
 }
 
-__rooglobal__ void computeDstD0BG(BatchesHandle batches)
+__rooglobal__ void computeDstD0BG(Batches &batches)
 {
-   Batch DM = batches[0];
-   Batch DM0 = batches[1];
-   Batch C = batches[2];
-   Batch A = batches[3];
-   Batch B = batches[4];
-   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
+   Batch DM = batches.args[0];
+   Batch DM0 = batches.args[1];
+   Batch C = batches.args[2];
+   Batch A = batches.args[3];
+   Batch B = batches.args[4];
+   for (size_t i = BEGIN; i < batches.nEvents; i += STEP) {
       const double ratio = DM[i] / DM0[i];
       const double arg1 = (DM0[i] - DM[i]) / C[i];
       const double arg2 = A[i] * fast_log(ratio);
-      batches._output[i] = (1 - fast_exp(arg1)) * fast_exp(arg2) + B[i] * (ratio - 1);
+      batches.output[i] = (1 - fast_exp(arg1)) * fast_exp(arg2) + B[i] * (ratio - 1);
    }
 
-   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
-      if (batches._output[i] < 0)
-         batches._output[i] = 0;
+   for (size_t i = BEGIN; i < batches.nEvents; i += STEP) {
+      if (batches.output[i] < 0)
+         batches.output[i] = 0;
    }
 }
 
-__rooglobal__ void computeExpPoly(BatchesHandle batches)
+__rooglobal__ void computeExpPoly(Batches &batches)
 {
-   int lowestOrder = batches.extraArg(0);
-   int nTerms = batches.extraArg(1);
-   auto x = batches[0];
+   int lowestOrder = batches.extra[0];
+   int nTerms = batches.extra[1];
+   auto x = batches.args[0];
 
-   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
-      batches._output[i] = 0.0;
+   for (size_t i = BEGIN; i < batches.nEvents; i += STEP) {
+      batches.output[i] = 0.0;
       double xTmp = std::pow(x[i], lowestOrder);
       for (int k = 0; k < nTerms; ++k) {
-         batches._output[i] += batches[k + 1][i] * xTmp;
+         batches.output[i] += batches.args[k + 1][i] * xTmp;
          xTmp *= x[i];
       }
-      batches._output[i] = std::exp(batches._output[i]);
+      batches.output[i] = std::exp(batches.output[i]);
    }
 }
 
-__rooglobal__ void computeExponential(BatchesHandle batches)
+__rooglobal__ void computeExponential(Batches &batches)
 {
-   Batch x = batches[0];
-   Batch c = batches[1];
-   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
-      batches._output[i] = fast_exp(x[i] * c[i]);
+   Batch x = batches.args[0];
+   Batch c = batches.args[1];
+   for (size_t i = BEGIN; i < batches.nEvents; i += STEP) {
+      batches.output[i] = fast_exp(x[i] * c[i]);
    }
 }
 
-__rooglobal__ void computeExponentialNeg(BatchesHandle batches)
+__rooglobal__ void computeExponentialNeg(Batches &batches)
 {
-   Batch x = batches[0];
-   Batch c = batches[1];
-   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
-      batches._output[i] = fast_exp(-x[i] * c[i]);
+   Batch x = batches.args[0];
+   Batch c = batches.args[1];
+   for (size_t i = BEGIN; i < batches.nEvents; i += STEP) {
+      batches.output[i] = fast_exp(-x[i] * c[i]);
    }
 }
 
-__rooglobal__ void computeGamma(BatchesHandle batches)
+__rooglobal__ void computeGamma(Batches &batches)
 {
-   Batch X = batches[0];
-   Batch G = batches[1];
-   Batch B = batches[2];
-   Batch M = batches[3];
+   Batch X = batches.args[0];
+   Batch G = batches.args[1];
+   Batch B = batches.args[2];
+   Batch M = batches.args[3];
    double gamma = -std::lgamma(G[0]);
-   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
+   for (size_t i = BEGIN; i < batches.nEvents; i += STEP) {
       if (X[i] == M[i]) {
-         batches._output[i] = (G[i] == 1.0) / B[i];
-      } else if (G.isItVector()) {
-         batches._output[i] = -std::lgamma(G[i]);
+         batches.output[i] = (G[i] == 1.0) / B[i];
+      } else if (G._isVector) {
+         batches.output[i] = -std::lgamma(G[i]);
       } else {
-         batches._output[i] = gamma;
+         batches.output[i] = gamma;
       }
    }
 
-   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
+   for (size_t i = BEGIN; i < batches.nEvents; i += STEP) {
       if (X[i] != M[i]) {
          const double invBeta = 1 / B[i];
          double arg = (X[i] - M[i]) * invBeta;
-         batches._output[i] -= arg;
+         batches.output[i] -= arg;
          arg = fast_log(arg);
-         batches._output[i] += arg * (G[i] - 1);
-         batches._output[i] = fast_exp(batches._output[i]);
-         batches._output[i] *= invBeta;
+         batches.output[i] += arg * (G[i] - 1);
+         batches.output[i] = fast_exp(batches.output[i]);
+         batches.output[i] *= invBeta;
       }
    }
 }
 
-__rooglobal__ void computeGaussModelExpBasis(BatchesHandle batches)
+__rooglobal__ void computeGaussModelExpBasis(Batches &batches)
 {
    const double root2 = std::sqrt(2.);
    const double root2pi = std::sqrt(2. * std::atan2(0., -1.));
 
-   const bool isMinus = batches.extraArg(0) < 0.0;
-   const bool isPlus = batches.extraArg(0) > 0.0;
+   const bool isMinus = batches.extra[0] < 0.0;
+   const bool isPlus = batches.extra[0] > 0.0;
 
-   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
+   for (size_t i = BEGIN; i < batches.nEvents; i += STEP) {
 
-      const double x = batches[0][i];
-      const double mean = batches[1][i] * batches[2][i];
-      const double sigma = batches[3][i] * batches[4][i];
-      const double tau = batches[5][i];
+      const double x = batches.args[0][i];
+      const double mean = batches.args[1][i] * batches.args[2][i];
+      const double sigma = batches.args[3][i] * batches.args[4][i];
+      const double tau = batches.args[5][i];
 
       if (tau == 0.0) {
          // Straight Gaussian, used for unconvoluted PDF or expBasis with 0 lifetime
@@ -437,7 +441,7 @@ __rooglobal__ void computeGaussModelExpBasis(BatchesHandle batches)
          double result = std::exp(-0.5 * xprime * xprime) / (sigma * root2pi);
          if (!isMinus && !isPlus)
             result *= 2;
-         batches._output[i] = result;
+         batches.output[i] = result;
       } else {
          // Convolution with exp(-t/tau)
          const double xprime = (x - mean) / tau;
@@ -449,52 +453,52 @@ __rooglobal__ void computeGaussModelExpBasis(BatchesHandle batches)
             result += RooHeterogeneousMath::evalCerf(0, -u, c).real();
          if (!isPlus)
             result += RooHeterogeneousMath::evalCerf(0, u, c).real();
-         batches._output[i] = result;
+         batches.output[i] = result;
       }
    }
 }
 
-__rooglobal__ void computeGaussian(BatchesHandle batches)
+__rooglobal__ void computeGaussian(Batches &batches)
 {
-   auto x = batches[0];
-   auto mean = batches[1];
-   auto sigma = batches[2];
-   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
+   auto x = batches.args[0];
+   auto mean = batches.args[1];
+   auto sigma = batches.args[2];
+   for (size_t i = BEGIN; i < batches.nEvents; i += STEP) {
       const double arg = x[i] - mean[i];
       const double halfBySigmaSq = -0.5 / (sigma[i] * sigma[i]);
-      batches._output[i] = fast_exp(arg * arg * halfBySigmaSq);
+      batches.output[i] = fast_exp(arg * arg * halfBySigmaSq);
    }
 }
 
-__rooglobal__ void computeIdentity(BatchesHandle batches)
+__rooglobal__ void computeIdentity(Batches &batches)
 {
-   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
-      batches._output[i] = batches[0][i];
+   for (size_t i = BEGIN; i < batches.nEvents; i += STEP) {
+      batches.output[i] = batches.args[0][i];
    }
 }
 
-__rooglobal__ void computeNegativeLogarithms(BatchesHandle batches)
+__rooglobal__ void computeNegativeLogarithms(Batches &batches)
 {
-   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
-      batches._output[i] = -fast_log(batches[0][i]);
+   for (size_t i = BEGIN; i < batches.nEvents; i += STEP)
+      batches.output[i] = -fast_log(batches.args[0][i]);
    // Multiply by weights if they exist
-   if (batches.extraArg(0)) {
-      for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
-         batches._output[i] *= batches[1][i];
+   if (batches.extra[0]) {
+      for (size_t i = BEGIN; i < batches.nEvents; i += STEP)
+         batches.output[i] *= batches.args[1][i];
    }
 }
 
-__rooglobal__ void computeJohnson(BatchesHandle batches)
+__rooglobal__ void computeJohnson(Batches &batches)
 {
-   Batch mass = batches[0];
-   Batch mu = batches[1];
-   Batch lambda = batches[2];
-   Batch gamma = batches[3];
-   Batch delta = batches[4];
+   Batch mass = batches.args[0];
+   Batch mu = batches.args[1];
+   Batch lambda = batches.args[2];
+   Batch gamma = batches.args[3];
+   Batch delta = batches.args[4];
    const double sqrtTwoPi = std::sqrt(TMath::TwoPi());
-   const double massThreshold = batches.extraArg(0);
+   const double massThreshold = batches.extra[0];
 
-   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
+   for (size_t i = BEGIN; i < batches.nEvents; i += STEP) {
       const double arg = (mass[i] - mu[i]) / lambda[i];
 #ifdef R__HAS_VDT
       const double asinh_arg = fast_log(arg + 1 / fast_isqrt(arg * arg + 1));
@@ -506,7 +510,7 @@ __rooglobal__ void computeJohnson(BatchesHandle batches)
          delta[i] * fast_exp(-0.5 * expo * expo) * fast_isqrt(1. + arg * arg) / (sqrtTwoPi * lambda[i]);
 
       const double passThrough = mass[i] >= massThreshold;
-      batches._output[i] = result * passThrough;
+      batches.output[i] = result * passThrough;
    }
 }
 
@@ -514,7 +518,7 @@ __rooglobal__ void computeJohnson(BatchesHandle batches)
  * Code copied from function landau_pdf (math/mathcore/src/PdfFuncMathCore.cxx)
  * and rewritten to enable vectorization.
  */
-__rooglobal__ void computeLandau(BatchesHandle batches)
+__rooglobal__ void computeLandau(Batches &batches)
 {
    auto case0 = [](double x) {
       const double a1[3] = {0.04166666667, -0.01996527778, 0.02709538966};
@@ -567,82 +571,82 @@ __rooglobal__ void computeLandau(BatchesHandle batches)
       return u * u * (1 + (a2[0] + a2[1] * u) * u);
    };
 
-   Batch X = batches[0];
-   Batch M = batches[1];
-   Batch S = batches[2];
+   Batch X = batches.args[0];
+   Batch M = batches.args[1];
+   Batch S = batches.args[2];
 
-   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
-      batches._output[i] = (X[i] - M[i]) / S[i];
+   for (size_t i = BEGIN; i < batches.nEvents; i += STEP)
+      batches.output[i] = (X[i] - M[i]) / S[i];
 
-   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
+   for (size_t i = BEGIN; i < batches.nEvents; i += STEP) {
       if (S[i] <= 0.0) {
-         batches._output[i] = 0;
-      } else if (batches._output[i] < -5.5) {
-         batches._output[i] = case0(batches._output[i]);
-      } else if (batches._output[i] < -1.0) {
-         batches._output[i] = case1(batches._output[i]);
-      } else if (batches._output[i] < 1.0) {
-         batches._output[i] = case2(batches._output[i]);
-      } else if (batches._output[i] < 5.0) {
-         batches._output[i] = case3(batches._output[i]);
-      } else if (batches._output[i] < 12.0) {
-         batches._output[i] = case4(batches._output[i]);
-      } else if (batches._output[i] < 50.0) {
-         batches._output[i] = case5(batches._output[i]);
-      } else if (batches._output[i] < 300.) {
-         batches._output[i] = case6(batches._output[i]);
+         batches.output[i] = 0;
+      } else if (batches.output[i] < -5.5) {
+         batches.output[i] = case0(batches.output[i]);
+      } else if (batches.output[i] < -1.0) {
+         batches.output[i] = case1(batches.output[i]);
+      } else if (batches.output[i] < 1.0) {
+         batches.output[i] = case2(batches.output[i]);
+      } else if (batches.output[i] < 5.0) {
+         batches.output[i] = case3(batches.output[i]);
+      } else if (batches.output[i] < 12.0) {
+         batches.output[i] = case4(batches.output[i]);
+      } else if (batches.output[i] < 50.0) {
+         batches.output[i] = case5(batches.output[i]);
+      } else if (batches.output[i] < 300.) {
+         batches.output[i] = case6(batches.output[i]);
       } else {
-         batches._output[i] = case7(batches._output[i]);
+         batches.output[i] = case7(batches.output[i]);
       }
    }
 }
 
-__rooglobal__ void computeLognormal(BatchesHandle batches)
+__rooglobal__ void computeLognormal(Batches &batches)
 {
-   Batch X = batches[0];
-   Batch M0 = batches[1];
-   Batch K = batches[2];
+   Batch X = batches.args[0];
+   Batch M0 = batches.args[1];
+   Batch K = batches.args[2];
    constexpr double rootOf2pi = 2.506628274631000502415765284811;
-   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
+   for (size_t i = BEGIN; i < batches.nEvents; i += STEP) {
       double lnxOverM0 = fast_log(X[i] / M0[i]);
       double lnk = fast_log(K[i]);
       if (lnk < 0)
          lnk = -lnk;
       double arg = lnxOverM0 / lnk;
       arg *= -0.5 * arg;
-      batches._output[i] = fast_exp(arg) / (X[i] * lnk * rootOf2pi);
+      batches.output[i] = fast_exp(arg) / (X[i] * lnk * rootOf2pi);
    }
 }
 
-__rooglobal__ void computeLognormalStandard(BatchesHandle batches)
+__rooglobal__ void computeLognormalStandard(Batches &batches)
 {
-   Batch X = batches[0];
-   Batch M0 = batches[1];
-   Batch K = batches[2];
+   Batch X = batches.args[0];
+   Batch M0 = batches.args[1];
+   Batch K = batches.args[2];
    constexpr double rootOf2pi = 2.506628274631000502415765284811;
-   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
+   for (size_t i = BEGIN; i < batches.nEvents; i += STEP) {
       double lnxOverM0 = fast_log(X[i]) - M0[i];
       double lnk = K[i];
       if (lnk < 0)
          lnk = -lnk;
       double arg = lnxOverM0 / lnk;
       arg *= -0.5 * arg;
-      batches._output[i] = fast_exp(arg) / (X[i] * lnk * rootOf2pi);
+      batches.output[i] = fast_exp(arg) / (X[i] * lnk * rootOf2pi);
    }
 }
 
-__rooglobal__ void computeNormalizedPdf(BatchesHandle batches)
+__rooglobal__ void computeNormalizedPdf(Batches &batches)
 {
-   auto rawVal = batches[0];
-   auto normVal = batches[1];
+   auto rawVal = batches.args[0];
+   auto normVal = batches.args[1];
 
    int nEvalErrorsType0 = 0;
    int nEvalErrorsType1 = 0;
    int nEvalErrorsType2 = 0;
 
-   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
+   for (size_t i = BEGIN; i < batches.nEvents; i += STEP) {
       double out = 0.0;
-      // batches._output[i] = rawVal[i] / normVar[i];
+      // batches.output[i] = rawVal[i] / normVar[i];
       if (normVal[i] < 0. || (normVal[i] == 0. && rawVal[i] != 0)) {
          // Unreasonable normalisations. A zero integral can be tolerated if the function vanishes, though.
          out = RooNaNPacker::packFloatIntoNaN(-normVal[i] + (rawVal[i] < 0. ? -rawVal[i] : 0.));
@@ -658,15 +662,15 @@ __rooglobal__ void computeNormalizedPdf(BatchesHandle batches)
       } else {
          out = (rawVal[i] == 0. && normVal[i] == 0.) ? 0. : rawVal[i] / normVal[i];
       }
-      batches._output[i] = out;
+      batches.output[i] = out;
    }
 
    if (nEvalErrorsType0 > 0)
-      batches.setExtraArg(0, batches.extraArg(0) + nEvalErrorsType0);
+      batches.extra[0] = batches.extra[0] + nEvalErrorsType0;
    if (nEvalErrorsType1 > 1)
-      batches.setExtraArg(1, batches.extraArg(1) + nEvalErrorsType1);
+      batches.extra[1] = batches.extra[1] + nEvalErrorsType1;
    if (nEvalErrorsType2 > 2)
-      batches.setExtraArg(2, batches.extraArg(2) + nEvalErrorsType2);
+      batches.extra[2] = batches.extra[2] + nEvalErrorsType2;
 }
 
 /* TMath::ASinH(x) needs to be replaced with ln( x + sqrt(x^2+1))
@@ -677,240 +681,244 @@ __rooglobal__ void computeNormalizedPdf(BatchesHandle batches)
  * ln is the logarithm that was solely present in the initial
  * formula, that is before the asinh replacement
  */
-__rooglobal__ void computeNovosibirsk(BatchesHandle batches)
+__rooglobal__ void computeNovosibirsk(Batches &batches)
 {
-   Batch X = batches[0];
-   Batch P = batches[1];
-   Batch W = batches[2];
-   Batch T = batches[3];
+   Batch X = batches.args[0];
+   Batch P = batches.args[1];
+   Batch W = batches.args[2];
+   Batch T = batches.args[3];
    constexpr double xi = 2.3548200450309494; // 2 Sqrt( Ln(4) )
-   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
+   for (size_t i = BEGIN; i < batches.nEvents; i += STEP) {
       double argasinh = 0.5 * xi * T[i];
       double argln = argasinh + 1 / fast_isqrt(argasinh * argasinh + 1);
       double asinh = fast_log(argln);
 
       double argln2 = 1 - (X[i] - P[i]) * T[i] / W[i];
       double ln = fast_log(argln2);
-      batches._output[i] = ln / asinh;
-      batches._output[i] *= -0.125 * xi * xi * batches._output[i];
-      batches._output[i] -= 2.0 / xi / xi * asinh * asinh;
+      batches.output[i] = ln / asinh;
+      batches.output[i] *= -0.125 * xi * xi * batches.output[i];
+      batches.output[i] -= 2.0 / xi / xi * asinh * asinh;
    }
 
    // faster if you exponentiate in a separate loop (dark magic!)
-   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
-      batches._output[i] = fast_exp(batches._output[i]);
+   for (size_t i = BEGIN; i < batches.nEvents; i += STEP)
+      batches.output[i] = fast_exp(batches.output[i]);
 }
 
-__rooglobal__ void computePoisson(BatchesHandle batches)
+__rooglobal__ void computePoisson(Batches &batches)
 {
-   Batch x = batches[0];
-   Batch mean = batches[1];
-   bool protectNegative = batches.extraArg(0);
-   bool noRounding = batches.extraArg(1);
-   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
+   Batch x = batches.args[0];
+   Batch mean = batches.args[1];
+   bool protectNegative = batches.extra[0];
+   bool noRounding = batches.extra[1];
+   for (size_t i = BEGIN; i < batches.nEvents; i += STEP) {
       const double x_i = noRounding ? x[i] : floor(x[i]);
-      batches._output[i] = std::lgamma(x_i + 1.);
+      batches.output[i] = std::lgamma(x_i + 1.);
    }
 
-   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
+   for (size_t i = BEGIN; i < batches.nEvents; i += STEP) {
       const double x_i = noRounding ? x[i] : floor(x[i]);
       const double logMean = fast_log(mean[i]);
-      const double logPoisson = x_i * logMean - mean[i] - batches._output[i];
-      batches._output[i] = fast_exp(logPoisson);
+      const double logPoisson = x_i * logMean - mean[i] - batches.output[i];
+      batches.output[i] = fast_exp(logPoisson);
 
       // Cosmetics
       if (x_i < 0) {
-         batches._output[i] = 0;
+         batches.output[i] = 0;
       } else if (x_i == 0) {
-         batches._output[i] = 1 / fast_exp(mean[i]);
+         batches.output[i] = 1 / fast_exp(mean[i]);
       }
 
       if (protectNegative && mean[i] < 0)
-         batches._output[i] = 1.E-3;
+         batches.output[i] = 1.E-3;
    }
 }
 
-__rooglobal__ void computePolynomial(BatchesHandle batches)
+__rooglobal__ void computePolynomial(Batches &batches)
 {
-   const int nCoef = batches.extraArg(0);
-   const std::size_t nEvents = batches.getNEvents();
-   Batch x = batches[nCoef];
+   const int nCoef = batches.extra[0];
+   const std::size_t nEvents = batches.nEvents;
+   Batch x = batches.args[nCoef];
 
    for (size_t i = BEGIN; i < nEvents; i += STEP) {
-      batches._output[i] = batches[nCoef - 1][i];
+      batches.output[i] = batches.args[nCoef - 1][i];
    }
 
    // Indexes are in range 0..nCoef-1 but coefList[nCoef-1] has already been
    // processed.
    for (int k = nCoef - 2; k >= 0; k--) {
       for (size_t i = BEGIN; i < nEvents; i += STEP) {
-         batches._output[i] = batches[k][i] + x[i] * batches._output[i];
+         batches.output[i] = batches.args[k][i] + x[i] * batches.output[i];
       }
    }
 }
 
-__rooglobal__ void computePower(BatchesHandle batches)
+__rooglobal__ void computePower(Batches &batches)
 {
-   const int nCoef = batches.extraArg(0);
-   Batch x = batches[0];
+   const int nCoef = batches.extra[0];
+   Batch x = batches.args[0];
 
-   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
-      batches._output[i] = 0.0;
+   for (size_t i = BEGIN; i < batches.nEvents; i += STEP) {
+      batches.output[i] = 0.0;
       for (int k = 0; k < nCoef; ++k) {
-         batches._output[i] += batches[2 * k + 1][i] * std::pow(x[i], batches[2 * k + 2][i]);
+         batches.output[i] += batches.args[2 * k + 1][i] * std::pow(x[i], batches.args[2 * k + 2][i]);
       }
    }
 }
 
-__rooglobal__ void computeProdPdf(BatchesHandle batches)
+__rooglobal__ void computeProdPdf(Batches &batches)
 {
-   const int nPdfs = batches.extraArg(0);
-   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
-      batches._output[i] = 1.;
+   const int nPdfs = batches.extra[0];
+   for (size_t i = BEGIN; i < batches.nEvents; i += STEP) {
+      batches.output[i] = 1.;
    }
    for (int pdf = 0; pdf < nPdfs; pdf++) {
-      for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
-         batches._output[i] *= batches[pdf][i];
+      for (size_t i = BEGIN; i < batches.nEvents; i += STEP) {
+         batches.output[i] *= batches.args[pdf][i];
       }
    }
 }
 
-__rooglobal__ void computeRatio(BatchesHandle batches)
+__rooglobal__ void computeRatio(Batches &batches)
 {
-   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
-      batches._output[i] = batches[0][i] / batches[1][i];
+   for (size_t i = BEGIN; i < batches.nEvents; i += STEP) {
+      batches.output[i] = batches.args[0][i] / batches.args[1][i];
    }
 }
 
-__rooglobal__ void computeTruthModelExpBasis(BatchesHandle batches)
+__rooglobal__ void computeTruthModelExpBasis(Batches &batches)
 {
 
-   const bool isMinus = batches.extraArg(0) < 0.0;
-   const bool isPlus = batches.extraArg(0) > 0.0;
-   for (std::size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
-      double x = batches[0][i];
+   const bool isMinus = batches.extra[0] < 0.0;
+   const bool isPlus = batches.extra[0] > 0.0;
+   for (std::size_t i = BEGIN; i < batches.nEvents; i += STEP) {
+      double x = batches.args[0][i];
       // Enforce sign compatibility
       const bool isOutOfSign = (isMinus && x > 0.0) || (isPlus && x < 0.0);
-      batches._output[i] = isOutOfSign ? 0.0 : fast_exp(-std::abs(x) / batches[1][i]);
+      batches.output[i] = isOutOfSign ? 0.0 : fast_exp(-std::abs(x) / batches.args[1][i]);
    }
 }
 
-__rooglobal__ void computeTruthModelSinBasis(BatchesHandle batches)
+__rooglobal__ void computeTruthModelSinBasis(Batches &batches)
 {
-   const bool isMinus = batches.extraArg(0) < 0.0;
-   const bool isPlus = batches.extraArg(0) > 0.0;
-   for (std::size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
-      double x = batches[0][i];
+   const bool isMinus = batches.extra[0] < 0.0;
+   const bool isPlus = batches.extra[0] > 0.0;
+   for (std::size_t i = BEGIN; i < batches.nEvents; i += STEP) {
+      double x = batches.args[0][i];
       // Enforce sign compatibility
       const bool isOutOfSign = (isMinus && x > 0.0) || (isPlus && x < 0.0);
-      batches._output[i] = isOutOfSign ? 0.0 : fast_exp(-std::abs(x) / batches[1][i]) * fast_sin(x * batches[2][i]);
+      batches.output[i] =
+         isOutOfSign ? 0.0 : fast_exp(-std::abs(x) / batches.args[1][i]) * fast_sin(x * batches.args[2][i]);
    }
 }
 
-__rooglobal__ void computeTruthModelCosBasis(BatchesHandle batches)
+__rooglobal__ void computeTruthModelCosBasis(Batches &batches)
 {
-   const bool isMinus = batches.extraArg(0) < 0.0;
-   const bool isPlus = batches.extraArg(0) > 0.0;
-   for (std::size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
-      double x = batches[0][i];
+   const bool isMinus = batches.extra[0] < 0.0;
+   const bool isPlus = batches.extra[0] > 0.0;
+   for (std::size_t i = BEGIN; i < batches.nEvents; i += STEP) {
+      double x = batches.args[0][i];
       // Enforce sign compatibility
       const bool isOutOfSign = (isMinus && x > 0.0) || (isPlus && x < 0.0);
-      batches._output[i] = isOutOfSign ? 0.0 : fast_exp(-std::abs(x) / batches[1][i]) * fast_cos(x * batches[2][i]);
+      batches.output[i] =
+         isOutOfSign ? 0.0 : fast_exp(-std::abs(x) / batches.args[1][i]) * fast_cos(x * batches.args[2][i]);
    }
 }
 
-__rooglobal__ void computeTruthModelLinBasis(BatchesHandle batches)
+__rooglobal__ void computeTruthModelLinBasis(Batches &batches)
 {
-   const bool isMinus = batches.extraArg(0) < 0.0;
-   const bool isPlus = batches.extraArg(0) > 0.0;
-   for (std::size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
-      double x = batches[0][i];
+   const bool isMinus = batches.extra[0] < 0.0;
+   const bool isPlus = batches.extra[0] > 0.0;
+   for (std::size_t i = BEGIN; i < batches.nEvents; i += STEP) {
+      double x = batches.args[0][i];
       // Enforce sign compatibility
       const bool isOutOfSign = (isMinus && x > 0.0) || (isPlus && x < 0.0);
       if (isOutOfSign) {
-         batches._output[i] = 0.0;
+         batches.output[i] = 0.0;
       } else {
-         const double tscaled = std::abs(x) / batches[1][i];
-         batches._output[i] = fast_exp(-tscaled) * tscaled;
+         const double tscaled = std::abs(x) / batches.args[1][i];
+         batches.output[i] = fast_exp(-tscaled) * tscaled;
       }
    }
 }
 
-__rooglobal__ void computeTruthModelQuadBasis(BatchesHandle batches)
+__rooglobal__ void computeTruthModelQuadBasis(Batches &batches)
 {
-   const bool isMinus = batches.extraArg(0) < 0.0;
-   const bool isPlus = batches.extraArg(0) > 0.0;
-   for (std::size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
-      double x = batches[0][i];
+   const bool isMinus = batches.extra[0] < 0.0;
+   const bool isPlus = batches.extra[0] > 0.0;
+   for (std::size_t i = BEGIN; i < batches.nEvents; i += STEP) {
+      double x = batches.args[0][i];
       // Enforce sign compatibility
       const bool isOutOfSign = (isMinus && x > 0.0) || (isPlus && x < 0.0);
       if (isOutOfSign) {
-         batches._output[i] = 0.0;
+         batches.output[i] = 0.0;
       } else {
-         const double tscaled = std::abs(x) / batches[1][i];
-         batches._output[i] = fast_exp(-tscaled) * tscaled * tscaled;
+         const double tscaled = std::abs(x) / batches.args[1][i];
+         batches.output[i] = fast_exp(-tscaled) * tscaled * tscaled;
       }
    }
 }
 
-__rooglobal__ void computeTruthModelSinhBasis(BatchesHandle batches)
+__rooglobal__ void computeTruthModelSinhBasis(Batches &batches)
 {
-   const bool isMinus = batches.extraArg(0) < 0.0;
-   const bool isPlus = batches.extraArg(0) > 0.0;
-   for (std::size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
-      double x = batches[0][i];
+   const bool isMinus = batches.extra[0] < 0.0;
+   const bool isPlus = batches.extra[0] > 0.0;
+   for (std::size_t i = BEGIN; i < batches.nEvents; i += STEP) {
+      double x = batches.args[0][i];
       // Enforce sign compatibility
       const bool isOutOfSign = (isMinus && x > 0.0) || (isPlus && x < 0.0);
-      batches._output[i] = isOutOfSign ? 0.0 : fast_exp(-std::abs(x) / batches[1][i]) * sinh(x * batches[2][i] * 0.5);
+      batches.output[i] =
+         isOutOfSign ? 0.0 : fast_exp(-std::abs(x) / batches.args[1][i]) * sinh(x * batches.args[2][i] * 0.5);
    }
 }
 
-__rooglobal__ void computeTruthModelCoshBasis(BatchesHandle batches)
+__rooglobal__ void computeTruthModelCoshBasis(Batches &batches)
 {
-   const bool isMinus = batches.extraArg(0) < 0.0;
-   const bool isPlus = batches.extraArg(0) > 0.0;
-   for (std::size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
-      double x = batches[0][i];
+   const bool isMinus = batches.extra[0] < 0.0;
+   const bool isPlus = batches.extra[0] > 0.0;
+   for (std::size_t i = BEGIN; i < batches.nEvents; i += STEP) {
+      double x = batches.args[0][i];
       // Enforce sign compatibility
       const bool isOutOfSign = (isMinus && x > 0.0) || (isPlus && x < 0.0);
-      batches._output[i] = isOutOfSign ? 0.0 : fast_exp(-std::abs(x) / batches[1][i]) * cosh(x * batches[2][i] * .5);
+      batches.output[i] =
+         isOutOfSign ? 0.0 : fast_exp(-std::abs(x) / batches.args[1][i]) * cosh(x * batches.args[2][i] * .5);
    }
 }
 
-__rooglobal__ void computeVoigtian(BatchesHandle batches)
+__rooglobal__ void computeVoigtian(Batches &batches)
 {
-   Batch X = batches[0];
-   Batch M = batches[1];
-   Batch W = batches[2];
-   Batch S = batches[3];
+   Batch X = batches.args[0];
+   Batch M = batches.args[1];
+   Batch W = batches.args[2];
+   Batch S = batches.args[3];
    const double invSqrt2 = 0.707106781186547524400844362105;
-   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
+   for (size_t i = BEGIN; i < batches.nEvents; i += STEP) {
       const double arg = (X[i] - M[i]) * (X[i] - M[i]);
       if (S[i] == 0.0 && W[i] == 0.0) {
-         batches._output[i] = 1.0;
+         batches.output[i] = 1.0;
       } else if (S[i] == 0.0) {
-         batches._output[i] = 1 / (arg + 0.25 * W[i] * W[i]);
+         batches.output[i] = 1 / (arg + 0.25 * W[i] * W[i]);
       } else if (W[i] == 0.0) {
-         batches._output[i] = fast_exp(-0.5 * arg / (S[i] * S[i]));
+         batches.output[i] = fast_exp(-0.5 * arg / (S[i] * S[i]));
       } else {
-         batches._output[i] = invSqrt2 / S[i];
+         batches.output[i] = invSqrt2 / S[i];
       }
    }
 
-   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
+   for (size_t i = BEGIN; i < batches.nEvents; i += STEP) {
       if (S[i] != 0.0 && W[i] != 0.0) {
-         if (batches._output[i] < 0)
-            batches._output[i] = -batches._output[i];
+         if (batches.output[i] < 0)
+            batches.output[i] = -batches.output[i];
          const double factor = W[i] > 0.0 ? 0.5 : -0.5;
-         RooHeterogeneousMath::STD::complex<double> z(batches._output[i] * (X[i] - M[i]),
-                                                      factor * batches._output[i] * W[i]);
-         batches._output[i] *= RooHeterogeneousMath::faddeeva(z).real();
+         RooHeterogeneousMath::STD::complex<double> z(batches.output[i] * (X[i] - M[i]),
+                                                      factor * batches.output[i] * W[i]);
+         batches.output[i] *= RooHeterogeneousMath::faddeeva(z).real();
       }
    }
 }
 
 /// Returns a std::vector of pointers to the compute functions in this file.
-std::vector<void (*)(BatchesHandle)> getFunctions()
+std::vector<void (*)(Batches &)> getFunctions()
 {
    return {computeAddPdf,
            computeArgusBG,

@@ -37,17 +37,18 @@ public:
 
   void selectNormalizationRange(const char* rangeName=nullptr, bool force=false) override ;
 
-  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
-  std::string
-  buildCallToAnalyticIntegral(Int_t code, const char *rangeName, RooFit::Detail::CodeSquashContext &ctx) const override;
+  RooAbsReal const &x() const { return *_x; }
+  RooArgList const &coefList() const { return _coefList; }
 
-  private:
+  const char *refRangeName() const { return RooNameReg::str(_refRangeName); }
+
+private:
   RooRealProxy _x;
   RooListProxy _coefList ;
   mutable TNamed* _refRangeName = nullptr;
 
   double evaluate() const override;
-  void computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;
+  void doEval(RooFit::EvalContext &) const override;
   inline bool canComputeBatchWithCuda() const override { return true; }
 
   double evalAnaInt(const double a, const double b) const;

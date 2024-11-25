@@ -89,15 +89,6 @@ namespace cling {
     //  Tell the parser to not attempt spelling correction.
     //
     const_cast<LangOptions&>(PP.getLangOpts()).SpellChecking = 0;
-    //
-    //  Turn on ignoring of the main file eof token.
-    //
-    //  Note: We need this because token readahead in the following
-    //        routine calls ends up parsing it multiple times.
-    //
-    if (!PP.isIncrementalProcessingEnabled()) {
-      PP.enableIncrementalProcessing();
-    }
     assert(!code.empty() &&
            "prepareForParsing should only be called when need");
 
@@ -320,11 +311,11 @@ namespace cling {
   {
     bool issigned = false;
     bool isunsigned = false;
-    if (typeName.startswith("signed ")) {
+    if (typeName.starts_with("signed ")) {
       issigned = true;
       typeName = StringRef(typeName.data()+7, typeName.size()-7);
     }
-    if (!issigned && typeName.startswith("unsigned ")) {
+    if (!issigned && typeName.starts_with("unsigned ")) {
       isunsigned = true;
       typeName = StringRef(typeName.data()+9, typeName.size()-9);
     }
@@ -386,7 +377,7 @@ namespace cling {
     llvm::StringRef quickTypeName = typeName.trim();
     bool innerConst = false;
     bool outerConst = false;
-    if (quickTypeName.startswith("const ")) {
+    if (quickTypeName.starts_with("const ")) {
       // Use this syntax to avoid the redudant tests in substr.
       quickTypeName = StringRef(quickTypeName.data()+6,
                                 quickTypeName.size()-6);
@@ -395,7 +386,7 @@ namespace cling {
 
     enum PointerType { kPointerType, kLRefType, kRRefType, };
 
-    if (quickTypeName.endswith("const")) {
+    if (quickTypeName.ends_with("const")) {
       if (quickTypeName.size() < 6) return true;
       auto c = quickTypeName[quickTypeName.size()-6];
       if (c==' ' || c=='&' || c=='*') {
@@ -503,7 +494,7 @@ namespace cling {
                                    clang::AS_none, 0, &Attrs));
     if (Res.isUsable()) {
       // Accept it only if the whole name was parsed.
-      if (P.NextToken().getKind() == clang::tok::eof) {
+      if (P.NextToken().getKind() == clang::tok::annot_repl_input_end) {
         TypeSourceInfo* TSI = 0;
         TheQT = clang::Sema::GetTypeFromParser(Res.get(), &TSI);
       }
@@ -642,7 +633,7 @@ namespace cling {
         NestedNameSpecifier* NNS = SS.getScopeRep();
         NestedNameSpecifier::SpecifierKind Kind = NNS->getKind();
         // Only accept the parse if we consumed all of the name.
-        if (P.NextToken().getKind() == clang::tok::eof) {
+        if (P.NextToken().getKind() == clang::tok::annot_repl_input_end) {
           //
           //  Be careful, not all nested name specifiers refer to classes
           //  and namespaces, and those are the only things we want.
@@ -677,10 +668,11 @@ namespace cling {
                 // Note: Do we need to check for a dependent type here?
                 NestedNameSpecifier *prefix = NNS->getPrefix();
                 if (prefix) {
-                   QualType temp
-                     = Context.getElaboratedType(ETK_None,prefix,
-                                                 QualType(NNS->getAsType(),0));
-                   *setResultType = temp.getTypePtr();
+                  QualType temp =
+                      Context.getElaboratedType(ElaboratedTypeKeyword::None,
+                                                prefix,
+                                                QualType(NNS->getAsType(), 0));
+                  *setResultType = temp.getTypePtr();
                 } else {
                    *setResultType = NNS->getAsType();
                 }
@@ -749,7 +741,7 @@ namespace cling {
     //
     //  Cleanup after failed parse as a nested-name-specifier.
     //
-    P.SkipUntil(clang::tok::eof);
+    P.SkipUntil(clang::tok::annot_repl_input_end);
     // Doesn't reset the diagnostic mappings
     S.getDiagnostics().Reset(/*soft=*/true);
     //
@@ -777,7 +769,7 @@ namespace cling {
     if (P.getCurToken().getKind() == tok::annot_typename) {
       TypeResult T = P.getTypeAnnotation(const_cast<Token&>(P.getCurToken()));
       // Only accept the parse if we consumed all of the name.
-      if (P.NextToken().getKind() == clang::tok::eof)
+      if (P.NextToken().getKind() == clang::tok::annot_repl_input_end)
         if (!T.get().get().isNull()) {
           TypeSourceInfo *TSI = 0;
           clang::QualType QT =
@@ -1680,7 +1672,7 @@ namespace cling {
       // ParseTypeName might trigger deserialization.
       Interpreter::PushTransactionRAII TforDeser(Interp);
       unsigned int nargs = 0;
-      while (P.getCurToken().isNot(tok::eof)) {
+      while (P.getCurToken().isNot(tok::annot_repl_input_end)) {
         TypeResult Res(P.ParseTypeName());
         if (!Res.isUsable()) {
           // Bad parse, done.
@@ -1714,14 +1706,14 @@ namespace cling {
         Expr* val = (OpaqueValueExpr*)( &ExprMemory[slot] );
         GivenArgs.push_back(val);
       }
-      if (P.getCurToken().isNot(tok::eof)) {
+      if (P.getCurToken().isNot(tok::annot_repl_input_end)) {
         // We did not consume all of the prototype, bad parse.
         return false;
       }
       //
       //  Cleanup after prototype parse.
       //
-      P.SkipUntil(clang::tok::eof);
+      P.SkipUntil(clang::tok::annot_repl_input_end);
       // Doesn't reset the diagnostic mappings
       Sema& S = P.getActions();
       S.getDiagnostics().Reset(/*soft=*/true);
@@ -1958,7 +1950,7 @@ namespace cling {
       std::string proto;
       {
         bool first_time = true;
-        while (P.getCurToken().isNot(tok::eof)) {
+        while (P.getCurToken().isNot(tok::annot_repl_input_end)) {
           ExprResult Res = P.ParseAssignmentExpression();
           if (Res.isUsable()) {
             Expr* expr = Res.get();
@@ -1982,14 +1974,14 @@ namespace cling {
       }
       // For backward compatibility with CINT accept (for now?) a trailing close
       // parenthesis.
-      if (P.getCurToken().isNot(tok::eof) && P.getCurToken().isNot(tok::r_paren) ) {
+      if (P.getCurToken().isNot(tok::annot_repl_input_end) && P.getCurToken().isNot(tok::r_paren) ) {
         // We did not consume all of the arg list, bad parse.
         return false;
       }
       //
       //  Cleanup after the arg list parse.
       //
-      P.SkipUntil(clang::tok::eof);
+      P.SkipUntil(clang::tok::annot_repl_input_end);
       // Doesn't reset the diagnostic mappings
       S.getDiagnostics().Reset(/*soft=*/true);
       return true;
@@ -2033,7 +2025,7 @@ namespace cling {
     //
     {
       bool hasUnusableResult = false;
-      while (P.getCurToken().isNot(tok::eof)) {
+      while (P.getCurToken().isNot(tok::annot_repl_input_end)) {
         ExprResult Res = P.ParseAssignmentExpression();
         if (Res.isUsable()) {
           argExprs.push_back(Res.get());

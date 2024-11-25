@@ -40,6 +40,8 @@
 #include <fstream>
 #include <cstring>
 #include <numeric>
+#include <limits>
+#include <iomanip>
 
 #include "HFitInterface.h"
 #include "Fit/DataRange.h"
@@ -105,7 +107,7 @@ End_Macro
 ////////////////////////////////////////////////////////////////////////////////
 /// Graph default constructor.
 
-TGraph::TGraph(): TNamed(), TAttLine(), TAttFill(0, 1000), TAttMarker()
+TGraph::TGraph() : TAttFill(0, 1000)
 {
    fNpoints = -1;  //will be reset to 0 in CtorAllocate
    if (!CtorAllocate()) return;
@@ -116,7 +118,7 @@ TGraph::TGraph(): TNamed(), TAttLine(), TAttFill(0, 1000), TAttMarker()
 /// the arrays x and y will be set later
 
 TGraph::TGraph(Int_t n)
-   : TNamed("Graph", "Graph"), TAttLine(), TAttFill(0, 1000), TAttMarker()
+   : TNamed("Graph", "Graph"), TAttFill(0, 1000)
 {
    fNpoints = n;
    if (!CtorAllocate()) return;
@@ -127,7 +129,7 @@ TGraph::TGraph(Int_t n)
 /// Graph normal constructor with ints.
 
 TGraph::TGraph(Int_t n, const Int_t *x, const Int_t *y)
-   : TNamed("Graph", "Graph"), TAttLine(), TAttFill(0, 1000), TAttMarker()
+   : TNamed("Graph", "Graph"), TAttFill(0, 1000)
 {
    if (!x || !y) {
       fNpoints = 0;
@@ -145,7 +147,7 @@ TGraph::TGraph(Int_t n, const Int_t *x, const Int_t *y)
 /// Graph normal constructor with floats.
 
 TGraph::TGraph(Int_t n, const Float_t *x, const Float_t *y)
-   : TNamed("Graph", "Graph"), TAttLine(), TAttFill(0, 1000), TAttMarker()
+   : TNamed("Graph", "Graph"), TAttFill(0, 1000)
 {
    if (!x || !y) {
       fNpoints = 0;
@@ -164,7 +166,7 @@ TGraph::TGraph(Int_t n, const Float_t *x, const Float_t *y)
 /// values `start`, `start+step`, `start+2*step`, `start+3*step`, etc ...
 
 TGraph::TGraph(Int_t n, const Double_t *y, Double_t start, Double_t step)
-   : TNamed("Graph", "Graph"), TAttLine(), TAttFill(0, 1000), TAttMarker()
+   : TNamed("Graph", "Graph"), TAttFill(0, 1000)
 {
    if (!y) {
       fNpoints = 0;
@@ -182,7 +184,7 @@ TGraph::TGraph(Int_t n, const Double_t *y, Double_t start, Double_t step)
 /// Graph normal constructor with doubles.
 
 TGraph::TGraph(Int_t n, const Double_t *x, const Double_t *y)
-   : TNamed("Graph", "Graph"), TAttLine(), TAttFill(0, 1000), TAttMarker()
+   : TNamed("Graph", "Graph"), TAttFill(0, 1000)
 {
    if (!x || !y) {
       fNpoints = 0;
@@ -295,7 +297,7 @@ TGraph& TGraph::operator=(const TGraph &gr)
 /// in vx and vy.
 
 TGraph::TGraph(const TVectorF &vx, const TVectorF &vy)
-   : TNamed("Graph", "Graph"), TAttLine(), TAttFill(0, 1000), TAttMarker()
+   : TNamed("Graph", "Graph"), TAttFill(0, 1000)
 {
    fNpoints = TMath::Min(vx.GetNrows(), vy.GetNrows());
    if (!CtorAllocate()) return;
@@ -314,7 +316,7 @@ TGraph::TGraph(const TVectorF &vx, const TVectorF &vy)
 /// in vx and vy.
 
 TGraph::TGraph(const TVectorD &vx, const TVectorD &vy)
-   : TNamed("Graph", "Graph"), TAttLine(), TAttFill(0, 1000), TAttMarker()
+   : TNamed("Graph", "Graph"), TAttFill(0, 1000)
 {
    fNpoints = TMath::Min(vx.GetNrows(), vy.GetNrows());
    if (!CtorAllocate()) return;
@@ -330,7 +332,7 @@ TGraph::TGraph(const TVectorD &vx, const TVectorD &vy)
 /// Graph constructor importing its parameters from the TH1 object passed as argument
 
 TGraph::TGraph(const TH1 *h)
-   : TNamed("Graph", "Graph"), TAttLine(), TAttFill(0, 1000), TAttMarker()
+   : TNamed("Graph", "Graph"), TAttFill(0, 1000)
 {
    if (!h) {
       Error("TGraph", "Pointer to histogram is null");
@@ -372,7 +374,7 @@ TGraph::TGraph(const TH1 *h)
 ///                at the fNpx+1 points of f and the integral is normalized to 1.
 
 TGraph::TGraph(const TF1 *f, Option_t *option)
-   : TNamed("Graph", "Graph"), TAttLine(), TAttFill(0, 1000), TAttMarker()
+   : TNamed("Graph", "Graph"), TAttFill(0, 1000)
 {
    char coption = ' ';
    if (!f) {
@@ -422,6 +424,7 @@ TGraph::TGraph(const TF1 *f, Option_t *option)
 /// `filename` is assumed to contain at least two columns of numbers.
 /// The string format is by default `"%lg %lg"`.
 /// This is a standard c formatting for `scanf()`.
+/// For example, set format to  `"%lg,%lg"` for a comma-separated file.
 ///
 /// If columns of numbers should be skipped, a `"%*lg"` or `"%*s"` for each column
 /// can be added,  e.g. `"%lg %*lg %lg"` would read x-values from the first and
@@ -436,7 +439,7 @@ TGraph::TGraph(const TF1 *f, Option_t *option)
 /// Note in that case, the instantiation is about two times slower.
 
 TGraph::TGraph(const char *filename, const char *format, Option_t *option)
-   : TNamed("Graph", filename), TAttLine(), TAttFill(0, 1000), TAttMarker()
+   : TNamed("Graph", filename), TAttFill(0, 1000)
 {
    Double_t x, y;
    TString fname = filename;
@@ -553,6 +556,10 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *option)
       delete token ;
    }
    infile.close();
+   if (fNpoints == 0) {
+      Warning("TGraph", "No points were found in file %s with the specified input format %s", filename, format);
+      return;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -605,6 +612,23 @@ Double_t** TGraph::AllocateArrays(Int_t Narrays, Int_t arraySize)
    }
    fMaxSize = arraySize;
    return newarrays;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Performs the operation: `y = y + c1*f(x,y)`
+/// Errors are not recalculated.
+///
+/// \param f may be a 1-D function TF1 or 2-d function TF2
+/// \param c1 a scaling factor, 1 by default
+
+void TGraph::Add(TF1 *f, Double_t c1)
+{
+   if (fHistogram) SetBit(kResetHisto);
+
+   for (Int_t i = 0; i < fNpoints; i++) {
+      fY[i] += c1*f->Eval(fX[i], fY[i]);
+   }
+   if (gPad) gPad->Modified();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -823,13 +847,17 @@ void TGraph::Draw(Option_t *option)
       opt.Replace(pos, 1, "p");
    }
 
-   // If no option is specified, it is defined as "alp" in case there
-   // no current pad or if the current pad as no axis defined.
-   if (!option || !strlen(option)) {
+   // If no option is specified, it is defined as "alp" in case there is
+   // no current pad or if the current pad has no axis defined and if there is
+   // no default option set using TGraph::SetOption. If fOption is set using
+   // TGraph::SetOption, it is used as default option.
+   if ((!option || !strlen(option))) {
+      Option_t *topt = (!fOption.IsNull()) ? fOption.Data() : "alp";
       if (gPad) {
-         if (!gPad->GetListOfPrimitives()->FindObject("TFrame")) opt = "alp";
+         if (!gPad->GetListOfPrimitives()->FindObject("TFrame"))
+            opt = topt;
       } else {
-         opt = "alp";
+         opt = topt;
       }
    }
 
@@ -2148,12 +2176,15 @@ void TGraph::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
 TString TGraph::SaveArray(std::ostream &out, const char *suffix, Int_t frameNumber, Double_t *arr)
 {
-   const char *name = GetName();
-   if (!name || !*name)
+   TString name = gInterpreter->MapCppName(GetName());
+   if (name.IsNull())
       name = "Graph";
-   TString arrname = TString::Format("%s_%s%d", name, suffix, frameNumber);
+   TString arrname = TString::Format("%s_%s%d", name.Data(), suffix, frameNumber);
 
    out << "   Double_t " << arrname << "[" << fNpoints << "] = { ";
+   const auto old_precision{out.precision()};
+   constexpr auto max_precision{std::numeric_limits<double>::digits10 + 1}; 
+   out << std::setprecision(max_precision);
    for (Int_t i = 0; i < fNpoints-1; i++) {
       out << arr[i] << ",";
       if (i && (i % 16 == 0))
@@ -2162,7 +2193,7 @@ TString TGraph::SaveArray(std::ostream &out, const char *suffix, Int_t frameNumb
          out << " ";
    }
    out << arr[fNpoints-1] << " };" << std::endl;
-
+   out << std::setprecision(old_precision);
    return arrname;
 }
 
@@ -2185,7 +2216,8 @@ void TGraph::SaveHistogramAndFunctions(std::ostream &out, const char *varname, I
       TString hname = fHistogram->GetName();
       fHistogram->SetName(TString::Format("Graph_%s%d", hname.Data(), frameNumber).Data());
       fHistogram->SavePrimitive(out, "nodraw");
-      out << "   "<<varname<<"->SetHistogram(" << fHistogram->GetName() << ");" << std::endl;
+      out << "   " <<varname << "->SetHistogram(" << gInterpreter->MapCppName(fHistogram->GetName()) << ");"
+          << std::endl;
       out << "   " << std::endl;
       fHistogram->SetName(hname.Data());
    }

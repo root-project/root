@@ -40,7 +40,7 @@
 #include <algorithm>
 #include <map>
 
-using namespace std;
+using std::cout, std::endl, std::string, std::vector;
 
 ClassImp(RooMomentMorphFuncND);
 ClassImp(RooMomentMorphFuncND::Grid2);
@@ -53,7 +53,7 @@ RooMomentMorphFuncND::RooMomentMorphFuncND() : _cacheMgr(this, 10, true, true), 
 
 //_____________________________________________________________________________
 RooMomentMorphFuncND::RooMomentMorphFuncND(const char *name, const char *title, const RooArgList &parList, const RooArgList &obsList,
-                       const Grid2 &referenceGrid, const Setting &setting)
+                       const Grid2 &referenceGrid, Setting setting)
    : RooMomentMorphFuncND::Base_t(name, title),
      _cacheMgr(this, 10, true, true),
      _parList("parList", "List of morph parameters", this),
@@ -181,7 +181,8 @@ RooMomentMorphFuncND::RooMomentMorphFuncND(const RooMomentMorphFuncND &other, co
      _referenceGrid(other._referenceGrid),
      _pdfList("pdfList", this, other._pdfList),
      _setting(other._setting),
-     _useHorizMorph(other._useHorizMorph)
+     _useHorizMorph(other._useHorizMorph),
+     _isPdfMode{other._isPdfMode}
 {
    // general initialization
    initialize();
@@ -207,7 +208,7 @@ void RooMomentMorphFuncND::initialize()
    int nDim = _referenceGrid._grid.size();
    int nPdf = _referenceGrid._pdfList.size();
    int nRef = _referenceGrid._nref.size();
-   int depth = TMath::Power(2, nPar);
+   int depth = std::pow(2, nPar);
 
    if (nPar != nDim) {
       coutE(InputArguments) << "RooMomentMorphFuncND::initialize(" << GetName() << ") ERROR: nPar != nDim"
@@ -257,7 +258,7 @@ void RooMomentMorphFuncND::initialize()
             double tmpDm = 1.0;
             for (int ix = 0; ix < nPar; ix++) {
                double delta = dm[k][ix];
-               tmpDm *= TMath::Power(delta, static_cast<double>(output[i][ix]));
+               tmpDm *= std::pow(delta, static_cast<double>(output[i][ix]));
             }
             M(k, nperm) = tmpDm;
             nperm++;
@@ -269,8 +270,8 @@ void RooMomentMorphFuncND::initialize()
    }
 
    // Resize transformation vectors
-   _squareVec.resize(TMath::Power(2, nPar));
-   _squareIdx.resize(TMath::Power(2, nPar));
+   _squareVec.resize(std::pow(2, nPar));
+   _squareIdx.resize(std::pow(2, nPar));
 }
 
 //_____________________________________________________________________________
@@ -592,7 +593,7 @@ void RooMomentMorphFuncND::CacheElem::calculateFractions(const RooMomentMorphFun
          double tmpDm = 1.0;
          for (int ix = 0; ix < nPar; ix++) {
             double delta = dm2[ix];
-            tmpDm *= TMath::Power(delta, static_cast<double>(output[i][ix]));
+            tmpDm *= std::pow(delta, static_cast<double>(output[i][ix]));
          }
          deltavec[nperm] = tmpDm;
          nperm++;
@@ -655,7 +656,7 @@ void RooMomentMorphFuncND::CacheElem::calculateFractions(const RooMomentMorphFun
 
       self.findShape(mtmp); // this sets _squareVec and _squareIdx quantities
 
-      int depth = TMath::Power(2, nPar);
+      int depth = std::pow(2, nPar);
       vector<double> deltavec(depth, 1.0);
 
       int nperm = 0;
@@ -724,7 +725,7 @@ void RooMomentMorphFuncND::findShape(const vector<double> &x) const
 
    // cout << "isEnclosed = " << isEnclosed << endl;
 
-   int depth = TMath::Power(2, nPar);
+   int depth = std::pow(2, nPar);
 
    vector<vector<double>> boundaries(nPar);
    for (int idim = 0; idim < nPar; idim++) {

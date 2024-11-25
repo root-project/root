@@ -54,10 +54,7 @@ combined in the main thread.
 #include <string>
 #include <stdexcept>
 
-using namespace std;
-
-ClassImp(RooAbsTestStatistic);
-
+using std::endl, std::ostream;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a test statistic from the given function and the data.

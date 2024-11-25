@@ -48,10 +48,6 @@ public:
    // pdf is a reducer node because it doesn't depend on the observables.
    bool isReducerNode() const override { return _coefList.empty(); }
 
-   void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
-   std::string buildCallToAnalyticIntegral(Int_t code, const char *rangeName,
-                                           RooFit::Detail::CodeSquashContext &ctx) const override;
-
 protected:
    RooRealProxy _x;
    RooListProxy _coefList;
@@ -61,7 +57,7 @@ protected:
 
    /// Evaluation
    double evaluate() const override;
-   void computeBatch(double *output, size_t nEvents, RooFit::Detail::DataMap const &) const override;
+   void doEval(RooFit::EvalContext &) const override;
 
    // It doesn't make sense to use the GPU if the polynomial has no terms.
    inline bool canComputeBatchWithCuda() const override { return !_coefList.empty(); }

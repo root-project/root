@@ -15,20 +15,7 @@ if(roofit_multiprocess)
   list(APPEND EXTRA_DEPENDENCIES Minuit2)
 endif()
 
-if(cuda)
-  list(APPEND EXTRA_LIBRARIES RooFitCuda)
-endif()
-
 if(roofit_legacy_eval_backend)
-  set(LegacyEvalBackendHeaders
-    RooAbsOptTestStatistic.h
-    RooAbsTestStatistic.h
-    RooChi2Var.h
-    RooNLLVar.h
-    RooRealMPFE.h
-    RooXYChi2Var.h
-  )
-
   set(LegacyEvalBackendSources
     src/BidirMMapPipe.cxx
     src/BidirMMapPipe.h
@@ -61,6 +48,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooAbsCategoryLValue.h
     RooAbsCollection.h
     RooAbsData.h
+    RooAbsDataHelper.h
     RooAbsDataStore.h
     RooAbsFunc.h
     RooAbsGenContext.h
@@ -128,13 +116,13 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooFactoryWSTool.h
     RooFirstMoment.h
     RooFit.h
+    RooFit/CodegenContext.h
     RooFit/Config.h
-    RooFit/Detail/AnalyticalIntegrals.h
-    RooFit/Detail/BatchModeDataHelpers.h
-    RooFit/Detail/CodeSquashContext.h
-    RooFit/Detail/DataMap.h
-    RooFit/Detail/EvaluateFuncs.h
+    RooFit/Detail/MathFuncs.h
     RooFit/Detail/NormalizationHelpers.h
+    RooFit/Detail/RooNLLVarNew.h
+    RooFit/Detail/RooNormalizedPdf.h
+    RooFit/EvalContext.h
     RooFit/Evaluator.h
     RooFit/Floats.h
     RooFit/ModelConfig.h
@@ -146,6 +134,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooFit/TestStatistics/RooSubsidiaryL.h
     RooFit/TestStatistics/RooSumL.h
     RooFit/TestStatistics/RooUnbinnedL.h
+    RooFit/TestStatistics/SharedOffset.h
     RooFit/TestStatistics/buildLikelihood.h
     RooFitLegacy/RooCatTypeLegacy.h
     RooFitLegacy/RooCategorySharedProperties.h
@@ -247,10 +236,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooWorkspace.h
     RooWorkspaceHandle.h
     RooWrapperPdf.h
-    ${LegacyEvalBackendHeaders}
   SOURCES
     src/BatchModeDataHelpers.cxx
-    src/Buffers.cxx
     src/ConstraintHelpers.cxx
     src/FitHelpers.cxx
     src/Initialisation.cxx
@@ -269,6 +256,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooAbsCategoryLValue.cxx
     src/RooAbsCollection.cxx
     src/RooAbsData.cxx
+    src/RooAbsDataHelper.cxx
     src/RooAbsDataStore.cxx
     src/RooAbsFunc.cxx
     src/RooAbsGenContext.cxx
@@ -338,8 +326,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooFFTConvPdf.cxx
     src/RooFactoryWSTool.cxx
     src/RooFirstMoment.cxx
-    src/RooFit/Detail/CodeSquashContext.cxx
-    src/RooFit/Detail/DataMap.cxx
+    src/RooFit/CodegenContext.cxx
+    src/RooFit/EvalContext.cxx
     src/RooFit/Evaluator.cxx
     src/RooFitImplHelpers.cxx
     src/RooFitLegacy/RooCatTypeLegacy.cxx
@@ -455,6 +443,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/TestStatistics/RooSumL.cxx
     src/TestStatistics/RooUnbinnedL.cxx
     src/TestStatistics/buildLikelihood.cxx
+    src/TestStatistics/SharedOffset.cxx
     ${LegacyEvalBackendSources}
     ${RooFitMPTestStatisticsSources}
   DICTIONARY_OPTIONS
@@ -489,6 +478,10 @@ if(roofit_multiprocess)
   target_compile_definitions(RooFitCore PUBLIC ROOFIT_MULTIPROCESS)
 endif()
 
+if(clad)
+  target_compile_definitions(RooFitCore PUBLIC ROOFIT_CLAD)
+endif()
+
 if(cuda)
   target_compile_definitions(RooFitCore PUBLIC ROOFIT_CUDA)
 endif()
@@ -501,7 +494,7 @@ endif()
 # RooFit has to include them to build the documentation.
 target_compile_definitions(RooFitCore PUBLIC ROOFIT_BUILDS_ITSELF)
 
-target_include_directories(RooFitCore INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/res>)
+target_include_directories(RooFitCore PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/res>)
 
 # For recent clang, this can facilitate auto-vectorisation.
 # In RooFit, the errno side effect is not needed, anyway:

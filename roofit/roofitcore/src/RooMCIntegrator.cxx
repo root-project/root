@@ -39,7 +39,7 @@ based on a C version from the 0.9 beta release of the GNU scientific library.
 #include <cmath>
 
 
-using namespace std;
+using std::endl;
 
 
 // Register this class with RooNumIntFactory
@@ -192,7 +192,7 @@ double RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, doub
     if(_mode != ImportanceOnly) {
       // calculate the largest number of equal subdivisions ("boxes") along each
       // axis that results in an average of no more than 2 integrand calls per cell
-      boxes = (UInt_t)floor(TMath::Power(calls/2.0,1.0/dim));
+      boxes = (UInt_t)floor(std::pow(calls/2.0,1.0/dim));
       // use stratified sampling if we are allowed enough calls (or equivalently,
       // if the dimension is low enough)
       _mode = Importance;
@@ -213,7 +213,7 @@ double RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, doub
     }
 
     // calculate the total number of n-dim boxes for this step
-    double tot_boxes = TMath::Power((double)boxes,(double)dim);
+    double tot_boxes = std::pow((double)boxes,(double)dim);
 
     // increase the total number of calls to get at least 2 calls per box, if necessary
     _calls_per_box = (UInt_t)(calls/tot_boxes);
@@ -221,7 +221,7 @@ double RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, doub
     calls= (UInt_t)(_calls_per_box*tot_boxes);
 
     // calculate the Jacobean factor: volume/(avg # of calls/bin)
-    _jac = _grid.getVolume()*TMath::Power((double)bins,(double)dim)/calls;
+    _jac = _grid.getVolume()*std::pow((double)bins,(double)dim)/calls;
 
     // setup our grid to use the calculated number of boxes and bins
     _grid.setNBoxes(boxes);

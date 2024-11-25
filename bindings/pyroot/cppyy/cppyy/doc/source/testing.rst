@@ -12,7 +12,7 @@ in the template tests (see file ``test_templates.py``).
 To run the tests, first install cppyy by any usual means, then clone the
 cppyy repo, and enter the ``test`` directory::
 
- $ git clone https://bitbucket.org/wlav/cppyy.git
+ $ git clone https://github.com/wlav/cppyy.git
  $ cd cppyy/test
 
 Next, build the dictionaries, the manner of which depends on your platform.

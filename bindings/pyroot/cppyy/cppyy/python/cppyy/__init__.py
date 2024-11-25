@@ -35,86 +35,36 @@ __author__ = 'Wim Lavrijsen <WLavrijsen@lbl.gov>'
 
 __all__ = [
     'cppdef',                 # declare C++ source to Cling
+    'cppexec',                # execute a C++ statement
+    'macro',                  # attempt to evaluate a cpp macro
     'include',                # load and jit a header file
     'c_include',              # load and jit a C header file
     'load_library',           # load a shared library
     'nullptr',                # unique pointer representing NULL
     'sizeof',                 # size of a C++ type
     'typeid',                 # typeid of a C++ type
+    'multi',                  # helper for multiple inheritance
     'add_include_path',       # add a path to search for headers
     'add_library_path',       # add a path to search for headers
     'add_autoload_map',       # explicitly include an autoload map
+    'set_debug',              # enable/disable debug output
     ]
 
 from ._version import __version__
 
-import os, sys, sysconfig, warnings
-import importlib
-
-# import libcppyy with Python version number
-major, minor = sys.version_info[0:2]
-py_version_str = '{}_{}'.format(major, minor)
-libcppyy_mod_name = 'libcppyy' + py_version_str
-
-try:
-    importlib.import_module(libcppyy_mod_name)
-except ImportError:
-    raise ImportError(
-            'Failed to import {}. Please check that ROOT has been built for Python {}.{}'.format(
-                libcppyy_mod_name, major, minor))
-
-# ensure 'import libcppyy' will find the versioned module
-sys.modules['libcppyy'] = sys.modules[libcppyy_mod_name]
-
-# tell cppyy that libcppyy_backend is versioned
-def _check_py_version(lib_name, cbl_var):
-    import re
-    if re.match('^libcppyy_backend\d+_\d+$', lib_name):
-       # library name already has version
-       if lib_name.endswith(py_version_str):
-           return ''
-       else:
-           raise RuntimeError('CPPYY_BACKEND_LIBRARY variable ({})'
-                              ' does not match Python version {}.{}'
-                              .format(cbl_var, major, minor))
-    else:
-       return py_version_str
-
-if 'CPPYY_BACKEND_LIBRARY' in os.environ:
-    clean_cbl = False
-    cbl_var = os.environ['CPPYY_BACKEND_LIBRARY']
-    start = 0
-    last_sep = cbl_var.rfind(os.path.sep)
-    if last_sep >= 0:
-        start = last_sep + 1
-    first_dot = cbl_var.find('.', start)
-    if first_dot >= 0:
-        # lib_name = [/path/to/]libcppyy_backend[py_version_str]
-        # suffix = so | ...
-        lib_name = cbl_var[:first_dot]
-        suff = cbl_var[first_dot+1:]
-        ver = _check_py_version(lib_name[start:], cbl_var)
-        os.environ['CPPYY_BACKEND_LIBRARY'] = '.'.join([
-            lib_name + ver, suff])
-    else:
-        ver = _check_py_version(cbl_var[start:], cbl_var)
-        os.environ['CPPYY_BACKEND_LIBRARY'] += ver
-else:
-    clean_cbl = True
-    if not any(var in os.environ for var in ('LD_LIBRARY_PATH','DYLD_LIBRARY_PATH')):
-        # macOS SIP can prevent DYLD_LIBRARY_PATH from having any effect.
-        # Set cppyy env variable here to make sure libraries are found.
-        _lib_dir = os.path.dirname(os.path.dirname(__file__))
-        _lcb_path = os.path.join(_lib_dir, 'libcppyy_backend')
-        os.environ['CPPYY_BACKEND_LIBRARY'] = _lcb_path + py_version_str
-    else:
-        os.environ['CPPYY_BACKEND_LIBRARY'] = 'libcppyy_backend' + py_version_str
+import ctypes, os, sys, sysconfig, warnings
 
 if not 'CLING_STANDARD_PCH' in os.environ:
-    local_pch = os.path.join(os.path.dirname(__file__), 'allDict.cxx.pch')
-    if os.path.exists(local_pch):
-        os.putenv('CLING_STANDARD_PCH', local_pch)
-        os.environ['CLING_STANDARD_PCH'] = local_pch
+    def _set_pch():
+        try:
+            import cppyy_backend as cpb
+            local_pch = os.path.join(os.path.dirname(__file__), 'allDict.cxx.pch.'+str(cpb.__version__))
+            if os.path.exists(local_pch):
+                os.putenv('CLING_STANDARD_PCH', local_pch)
+                os.environ['CLING_STANDARD_PCH'] = local_pch
+        except (ImportError, AttributeError):
+            pass
+    _set_pch(); del _set_pch
 
 try:
     import __pypy__
@@ -129,8 +79,6 @@ if ispypy:
     from ._pypy_cppyy import *
 else:
     from ._cpython_cppyy import *
-if clean_cbl:
-    del os.environ['CPPYY_BACKEND_LIBRARY'] # we set it, so clean it
 
 
 #- allow importing from gbl --------------------------------------------------
@@ -140,7 +88,13 @@ sys.modules['cppyy.gbl.std'] = gbl.std
 
 #- external typemap ----------------------------------------------------------
 from . import _typemap
-_typemap.initialize(_backend)
+_typemap.initialize(_backend)               # also creates (u)int8_t mapper
+
+try:
+    gbl.std.int8_t  = gbl.int8_t            # ensures same _integer_ type
+    gbl.std.uint8_t = gbl.uint8_t
+except (AttributeError, TypeError):
+    pass
 
 
 #- pythonization factories ---------------------------------------------------
@@ -148,8 +102,9 @@ from . import _pythonization as py
 py._set_backend(_backend)
 
 def _standard_pythonizations(pyclass, name):
-  # pythonization of tuple; TODO: placed here for convenience, but verify that decision
-    if name.find('std::tuple<', 0, 11) == 0 or name.find('tuple<', 0, 6) == 0:
+  # pythonization of tuple; TODO: placed here for convenience, but a custom case
+  # for tuples on each platform can be made much more performant ...
+    if name.find('tuple<', 0, 6) == 0:
         import cppyy
         pyclass._tuple_len = cppyy.gbl.std.tuple_size(pyclass).value
         def tuple_len(self):
@@ -157,74 +112,176 @@ def _standard_pythonizations(pyclass, name):
         pyclass.__len__ = tuple_len
         def tuple_getitem(self, idx, get=cppyy.gbl.std.get):
             if idx < self.__class__._tuple_len:
-                return get[idx](self)
+                res = get[idx](self)
+                try:
+                    res.__life_line = self
+                except Exception:
+                    pass
+                return res
             raise IndexError(idx)
         pyclass.__getitem__ = tuple_getitem
 
+  # pythonization of std::string; placed here because it's simpler to write the
+  # custom "npos" object (to allow easy result checking of find/rfind) in Python
+    elif pyclass.__cpp_name__ == "std::string":
+        class NPOS(0x3000000 <= sys.hexversion and int or long):
+            def __eq__(self, other):
+                return other == -1 or  int(self) == other
+            def __ne__(self, other):
+                return other != -1 and int(self) != other
+        del pyclass.__class__.npos          # drop b/c is const data
+        pyclass.npos = NPOS(pyclass.npos)
+
+    return True
+
 if not ispypy:
-    py.add_pythonization(_standard_pythonizations)   # should live on std only
+    py.add_pythonization(_standard_pythonizations, "std")
 # TODO: PyPy still has the old-style pythonizations, which require the full
 # class name (not possible for std::tuple ...)
 
-# std::make_shared creates needless templates: rely on Python's introspection
+# std::make_shared/unique create needless templates: rely on Python's introspection
 # instead. This also allows Python derived classes to be handled correctly.
-class py_make_shared(object):
-    def __init__(self, cls):
-        self.cls = cls
+class py_make_smartptr(object):
+    __slots__ = ['cls', 'ptrcls']
+    def __init__(self, cls, ptrcls):
+        self.cls    = cls
+        self.ptrcls = ptrcls
     def __call__(self, *args):
         if len(args) == 1 and type(args[0]) == self.cls:
             obj = args[0]
         else:
             obj = self.cls(*args)
-        obj.__python_owns__ = False     # C++ to take ownership
-        return gbl.std.shared_ptr[self.cls](obj)
+        return self.ptrcls[self.cls](obj)   # C++ takes ownership
 
-class make_shared(object):
+class make_smartptr(object):
+    __slots__ = ['ptrcls', 'maker']
+    def __init__(self, ptrcls, maker):
+        self.ptrcls = ptrcls
+        self.maker  = maker
+    def __call__(self, ptr):
+        return py_make_smartptr(type(ptr), self.ptrcls)(ptr)
     def __getitem__(self, cls):
-        return py_make_shared(cls)
+        try:
+            if not cls.__module__ == int.__module__:
+                return py_make_smartptr(cls, self.ptrcls)
+        except AttributeError:
+            pass
+        if type(cls) == str and not cls in ('int', 'float'):
+            return py_make_smartptr(getattr(gbl, cls), self.ptrcls)
+        return self.maker[cls]
 
-gbl.std.make_shared = make_shared()
-del make_shared
+gbl.std.make_shared = make_smartptr(gbl.std.shared_ptr, gbl.std.make_shared)
+gbl.std.make_unique = make_smartptr(gbl.std.unique_ptr, gbl.std.make_unique)
+del make_smartptr
 
 
-#--- CFFI style interface ----------------------------------------------------
+#--- interface to Cling ------------------------------------------------------
+class _stderr_capture(object):
+    def __init__(self):
+       self._capture = not gbl.gDebug and True or False
+       self.err = ""
+
+    def __enter__(self):
+        if self._capture:
+           _begin_capture_stderr()
+        return self
+
+    def __exit__(self, tp, val, trace):
+        if self._capture:
+            self.err = _end_capture_stderr()
+
 def cppdef(src):
     """Declare C++ source <src> to Cling."""
-    if not gbl.gInterpreter.Declare(src):
-        return False
+    with _stderr_capture() as err:
+        errcode = gbl.gInterpreter.Declare(src)
+    if not errcode or err.err:
+        if 'warning' in err.err.lower() and not 'error' in err.err.lower():
+            warnings.warn(err.err, SyntaxWarning)
+            return True
+        raise SyntaxError('Failed to parse the given C++ code%s' % err.err)
     return True
+
+def cppexec(stmt):
+    """Execute C++ statement <stmt> in Cling's global scope."""
+    if stmt and stmt[-1] != ';':
+        stmt += ';'
+
+  # capture stderr, but note that ProcessLine could legitimately be writing to
+  # std::cerr, in which case the captured output needs to be printed as normal
+    with _stderr_capture() as err:
+        errcode = ctypes.c_int(0)
+        try:
+            gbl.gInterpreter.ProcessLine(stmt, ctypes.pointer(errcode))
+        except Exception as e:
+            sys.stderr.write("%s\n\n" % str(e))
+            if not errcode.value: errcode.value = 1
+
+    if errcode.value:
+        raise SyntaxError('Failed to parse the given C++ code%s' % err.err)
+    elif err.err and err.err[1:] != '\n':
+        sys.stderr.write(err.err[1:])
+
+    return True
+
+def macro(cppm):
+    """Attempt to evalute a C/C++ pre-processor macro as a constant"""
+
+    try:
+        macro_val = getattr(getattr(gbl, '__cppyy_macros', None), cppm+'_', None)
+        if macro_val is None:
+            cppdef("namespace __cppyy_macros { auto %s_ = %s; }" % (cppm, cppm))
+        return getattr(getattr(gbl, '__cppyy_macros'), cppm+'_')
+    except Exception:
+        pass
+
+    raise ValueError('Failed to evaluate macro %s', cppm)
+
 
 def load_library(name):
     """Explicitly load a shared library."""
-    gSystem = gbl.gSystem
-    if name[:3] != 'lib':
-        if not gSystem.FindDynamicLibrary(gbl.TString(name), True) and\
-               gSystem.FindDynamicLibrary(gbl.TString('lib'+name), True):
-            name = 'lib'+name
-    sc = gSystem.Load(name)
+    with _stderr_capture() as err:
+        gSystem = gbl.gSystem
+        if name[:3] != 'lib':
+            if not gSystem.FindDynamicLibrary(gbl.TString(name), True) and\
+                   gSystem.FindDynamicLibrary(gbl.TString('lib'+name), True):
+                name = 'lib'+name
+        sc = gSystem.Load(name)
     if sc == -1:
-        raise RuntimeError("Unable to load library "+name)
+      # special case for Windows as of python3.8: use winmode=0, otherwise the default
+      # will not consider regular search paths (such as $PATH)
+        if 0x3080000 <= sys.hexversion and 'win32' in sys.platform and os.path.isabs(name):
+            return ctypes.CDLL(name, ctypes.RTLD_GLOBAL, winmode=0)  # raises on error
+        raise RuntimeError('Unable to load library "%s"%s' % (name, err.err))
+    return True
 
 def include(header):
     """Load (and JIT) header file <header> into Cling."""
-    gbl.gInterpreter.Declare('#include "%s"' % header)
+    with _stderr_capture() as err:
+        errcode = gbl.gInterpreter.Declare('#include "%s"' % header)
+    if not errcode:
+        raise ImportError('Failed to load header file "%s"%s' % (header, err.err))
+    return True
 
 def c_include(header):
     """Load (and JIT) header file <header> into Cling."""
-    gbl.gInterpreter.Declare("""extern "C" {
+    with _stderr_capture() as err:
+        errcode = gbl.gInterpreter.Declare("""extern "C" {
 #include "%s"
 }""" % header)
+    if not errcode:
+        raise ImportError('Failed to load header file "%s"%s' % (header, err.err))
+    return True
 
 def add_include_path(path):
     """Add a path to the include paths available to Cling."""
     if not os.path.isdir(path):
-        raise OSError("no such directory: %s" % path)
+        raise OSError('No such directory: %s' % path)
     gbl.gInterpreter.AddIncludePath(path)
 
 def add_library_path(path):
     """Add a path to the library search paths available to Cling."""
     if not os.path.isdir(path):
-        raise OSError("no such directory: %s" % path)
+        raise OSError('No such directory: %s' % path)
     gbl.gSystem.AddDynamicPath(path)
 
 # add access to Python C-API headers
@@ -239,33 +296,72 @@ elif ispypy:
 
 # add access to extra headers for dispatcher (CPyCppyy only (?))
 if not ispypy:
-    if 'CPPYY_API_PATH' in os.environ:
+    try:
         apipath_extra = os.environ['CPPYY_API_PATH']
-    else:
-        apipath_extra = os.path.join(os.path.dirname(apipath), 'site', 'python'+sys.version[:3])
+        if os.path.basename(apipath_extra) == 'CPyCppyy':
+            apipath_extra = os.path.dirname(apipath_extra)
+    except KeyError:
+        apipath_extra = None
+
+    if apipath_extra is None:
+        try:
+            if 0x30a0000 <= sys.hexversion:
+                import importlib.metadata as m
+
+                for p in m.files('CPyCppyy'):
+                    if p.match('API.h'):
+                        ape = p.locate()
+                        break
+                del p, m
+            else:
+                import pkg_resources as pr
+
+                d = pr.get_distribution('CPyCppyy')
+                for line in d.get_metadata_lines('RECORD'):
+                    if 'API.h' in line:
+                        ape = os.path.join(d.location, line[0:line.find(',')])
+                        break
+                del line, d, pr
+
+            if os.path.exists(ape):
+                apipath_extra = os.path.dirname(os.path.dirname(ape))
+            del ape
+        except Exception:
+            pass
+
+    if apipath_extra is None:
+        ldversion = sysconfig.get_config_var('LDVERSION')
+        if not ldversion: ldversion = sys.version[:3]
+
+        apipath_extra = os.path.join(os.path.dirname(apipath), 'site', 'python'+ldversion)
         if not os.path.exists(os.path.join(apipath_extra, 'CPyCppyy')):
             import glob, libcppyy
-            apipath_extra = os.path.dirname(libcppyy.__file__)
-          # a "normal" structure finds the include directory 3 levels up,
-          # ie. from lib/pythonx.y/site-packages
+            ape = os.path.dirname(libcppyy.__file__)
+          # a "normal" structure finds the include directory up to 3 levels up,
+          # ie. dropping lib/pythonx.y[md]/site-packages
             for i in range(3):
-                if not os.path.exists(os.path.join(apipath_extra, 'include')):
-                    apipath_extra = os.path.dirname(apipath_extra)
-
-            apipath_extra = os.path.join(apipath_extra, 'include')
-          # add back pythonx.y or site/pythonx.y if available
-            for p in glob.glob(os.path.join(apipath_extra, 'python'+sys.version[:3]+'*'))+\
-                     glob.glob(os.path.join(apipath_extra, '*', 'python'+sys.version[:3]+'*')):
-                if os.path.exists(os.path.join(p, 'CPyCppyy')):
-                    apipath_extra = p
+                if os.path.exists(os.path.join(ape, 'include')):
                     break
+                ape = os.path.dirname(ape)
 
-    cpycppyy_path = os.path.join(apipath_extra, 'CPyCppyy')
+            ape = os.path.join(ape, 'include')
+            if os.path.exists(os.path.join(ape, 'CPyCppyy')):
+                apipath_extra = ape
+            else:
+              # add back pythonx.y or site/pythonx.y if present
+                for p in glob.glob(os.path.join(ape, 'python'+sys.version[:3]+'*'))+\
+                         glob.glob(os.path.join(ape, '*', 'python'+sys.version[:3]+'*')):
+                    if os.path.exists(os.path.join(p, 'CPyCppyy')):
+                        apipath_extra = p
+                        break
+
     if apipath_extra.lower() != 'none':
-        if not os.path.exists(cpycppyy_path):
-            warnings.warn("CPyCppyy API path not found (tried: %s); set CPPYY_API_PATH to fix" % os.path.dirname(cpycppyy_path))
+        if not os.path.exists(os.path.join(apipath_extra, 'CPyCppyy')):
+            warnings.warn("CPyCppyy API not found (tried: %s); set CPPYY_API_PATH envar to the 'CPyCppyy' API directory to fix" % apipath_extra)
         else:
             add_include_path(apipath_extra)
+
+    del apipath_extra
 
 if os.getenv('CONDA_PREFIX'):
   # MacOS, Linux
@@ -277,7 +373,7 @@ if os.getenv('CONDA_PREFIX'):
     if os.path.exists(include_path): add_include_path(include_path)
 
 # assuming that we are in PREFIX/lib/python/site-packages/cppyy, add PREFIX/include to the search path
-include_path = os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir, os.path.pardir, os.path.pardir, os.path.pardir, 'include'))
+include_path = os.path.abspath(os.path.join(os.path.dirname(__file__), *(4*[os.path.pardir]+['include'])))
 if os.path.exists(include_path): add_include_path(include_path)
 
 del include_path, apipath, ispypy
@@ -287,6 +383,13 @@ def add_autoload_map(fname):
     if not os.path.isfile(fname):
         raise OSError("no such file: %s" % fname)
     gbl.gInterpreter.LoadLibraryMap(fname)
+
+def set_debug(enable=True):
+    """Enable/disable debug output."""
+    if enable:
+        gbl.gDebug = 10
+    else:
+        gbl.gDebug =  0
 
 def _get_name(tt):
     if type(tt) == str:
@@ -305,7 +408,10 @@ def sizeof(tt):
     try:
         return _sizes[tt]
     except KeyError:
-        sz = gbl.gInterpreter.ProcessLine("sizeof(%s);" % (_get_name(tt),))
+        try:
+            sz = ctypes.sizeof(tt)
+        except TypeError:
+            sz = gbl.gInterpreter.ProcessLine("sizeof(%s);" % (_get_name(tt),))
         _sizes[tt] = sz
         return sz
 
@@ -324,3 +430,12 @@ def typeid(tt):
         tid = getattr(gbl._cppyy_internal, tidname)
         _typeids[tt] = tid
         return tid
+
+def multi(*bases):      # after six, see also _typemap.py
+    """Resolve metaclasses for multiple inheritance."""
+  # contruct a "no conflict" meta class; the '_meta' is needed by convention
+    nc_meta = type.__new__(type, 'cppyy_nc_meta', tuple(type(b) for b in bases if type(b) is not type), {})
+    class faux_meta(type):
+        def __new__(cls, name, this_bases, d):
+            return nc_meta(name, bases, d)
+    return type.__new__(faux_meta, 'faux_meta', (), {})

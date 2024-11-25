@@ -36,8 +36,6 @@ is store in the summary dataset.
 #include "TMath.h"
 #include "RooGlobalFunc.h"
 
-using namespace std;
-
 ClassImp(RooChi2MCSModule);
 
 ////////////////////////////////////////////////////////////////////////////////

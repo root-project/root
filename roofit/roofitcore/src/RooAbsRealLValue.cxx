@@ -55,7 +55,7 @@ interpreted as a parameter.
 
 #include <cmath>
 
-using namespace std;
+using std::endl, std::istream, std::ostream;
 
 ClassImp(RooAbsRealLValue);
 

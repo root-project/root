@@ -16,7 +16,6 @@
 #include <exception>
 #include <stdexcept>
 #include <cmath>
-using namespace std;
 
 #include "CommonDefs.h"
 

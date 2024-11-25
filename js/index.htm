@@ -4,13 +4,21 @@
       <meta charset="utf-8">
       <title>Read a ROOT file</title>
       <link rel="shortcut icon" href="img/RootIcon.ico"/>
+      <script type="importmap">
+         {
+            "imports": {
+               "jsroot": "./modules/main.mjs"
+            }
+         }
+      </script>
+
    </head>
    <body>
       <div id="simpleGUI" path="../files/" files="ct.root;exclusion.root;fillrandom.root;glbox.root;graph.root;hsimple.root;legends.root;rf107.root;stacks.root;zdemo.root">
-         loading scripts ...
+         loading modules ...
       </div>
       <script type="module">
-         import { buildGUI } from './modules/gui.mjs';
+         import { buildGUI } from 'jsroot';
          buildGUI('simpleGUI');
       </script>
    </body>
@@ -33,6 +41,11 @@ Several URL parameters could be specified when opening page:
    palette   - id of default color palette, 51..123 - new ROOT6 palette  (default 57)
    style     - TStyle object itemname or JSON file name
    toolbar   - configure position and orientation of pad toolbar, combine 'right','vert','off'
+   optdate   - plot specified date on the canvas, 1 - current time, 2 - file creation date, 3 - file modification date
+   optfile   - plot file name on the canvas, 1 - file name, 2 - full file URL, 3 - object item name
+   datex     - X position of date
+   datey     - Y position of date
+   opttitle  - plot item name on the canvas
    dark      - enables dark mode
 
 Example:

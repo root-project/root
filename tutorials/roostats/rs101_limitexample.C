@@ -88,13 +88,13 @@ void rs101_limitexample()
 
    // Create an example dataset with 160 observed events
    obs->setVal(160.);
-   RooDataSet data{"exampleData", "exampleData", *obs};
-   data.add(*obs);
+   RooDataSet dataOrig{"exampleData", "exampleData", *obs};
+   dataOrig.add(*obs);
 
    RooArgSet all(*s, *ratioBkgEff, *ratioSigEff);
 
    // not necessary
-   modelWithConstraints->fitTo(data, Constrain({*ratioSigEff, *ratioBkgEff}), PrintLevel(-1));
+   modelWithConstraints->fitTo(dataOrig, Constrain({*ratioSigEff, *ratioBkgEff}), PrintLevel(-1));
 
    // Now let's make some confidence intervals for s, our parameter of interest
    RooArgSet paramOfInterest(*s);
@@ -107,9 +107,12 @@ void rs101_limitexample()
    modelConfig.SetGlobalObservables(RooArgSet(*gSigEff, *gSigBkg));
    modelConfig.SetName("ModelConfig");
    wspace.import(modelConfig);
-   wspace.import(data);
+   wspace.import(dataOrig);
    wspace.SetName("w");
-   wspace.writeToFile("rs101_ws.root");
+   // wspace.writeToFile("rs101_ws.root");
+
+   // Make sure we reference the data in the workspace from now on
+   RooDataSet &data = static_cast<RooDataSet &>(*wspace.data(dataOrig.GetName()));
 
    // First, let's use a Calculator based on the Profile Likelihood Ratio
    // ProfileLikelihoodCalculator plc(data, *modelWithConstraints, paramOfInterest);

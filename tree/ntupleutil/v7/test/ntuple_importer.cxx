@@ -202,7 +202,11 @@ TEST(RNTupleImporter, ConvertDotsInBranchNames)
       std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
       auto tree = std::make_unique<TTree>("tree", "");
       Int_t a = 42;
+      Int_t muons_length = 1;
+      float muon_pt[1] = {3.14};
       tree->Branch("a.a", &a);
+      tree->Branch("muon.length", &muons_length);
+      tree->Branch("muon.pt", muon_pt, "muon.pt[muon.length]");
       tree->Fill();
       tree->Write();
    }
@@ -218,6 +222,50 @@ TEST(RNTupleImporter, ConvertDotsInBranchNames)
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    reader->LoadEntry(0);
    EXPECT_EQ(42, *reader->GetModel().GetDefaultEntry().GetPtr<std::int32_t>("a_a"));
+
+   auto viewMuon = reader->GetCollectionView("_collection0");
+   auto viewMuonPt = viewMuon.GetView<float>("_0.muon_pt");
+   EXPECT_EQ(1, viewMuon(0));
+   EXPECT_FLOAT_EQ(3.14, viewMuonPt(0));
+}
+
+TEST(RNTupleImporter, FieldModifier)
+{
+   using ROOT::Experimental::EColumnType;
+   using ROOT::Experimental::RFieldBase;
+
+   FileRaii fileGuard("test_ntuple_importer_column_modifier.root");
+   {
+      std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+      auto tree = std::make_unique<TTree>("tree", "");
+      float a = 1.0;
+      float b = 2.0;
+      tree->Branch("a", &a);
+      tree->Branch("b", &b);
+      tree->Fill();
+      tree->Write();
+   }
+
+   auto fnLowPrecisionFloatModifier = [](RFieldBase &field) {
+      if (field.GetFieldName() == "a")
+         field.SetColumnRepresentatives({{EColumnType::kReal16}});
+   };
+
+   auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath());
+   importer->SetIsQuiet(true);
+   importer->SetNTupleName("ntuple");
+   importer->SetFieldModifier(fnLowPrecisionFloatModifier);
+   importer->Import();
+
+   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   reader->LoadEntry(0);
+   EXPECT_FLOAT_EQ(1.0, *reader->GetModel().GetDefaultEntry().GetPtr<float>("a"));
+   EXPECT_FLOAT_EQ(2.0, *reader->GetModel().GetDefaultEntry().GetPtr<float>("b"));
+
+   EXPECT_EQ(RFieldBase::ColumnRepresentation_t{EColumnType::kReal16},
+             reader->GetModel().GetConstField("a").GetColumnRepresentatives()[0]);
+   EXPECT_EQ(RFieldBase::ColumnRepresentation_t{EColumnType::kSplitReal32},
+             reader->GetModel().GetConstField("b").GetColumnRepresentatives()[0]);
 }
 
 TEST(RNTupleImporter, CString)
@@ -378,6 +426,9 @@ TEST(RNTupleImporter, LeafCountArray)
    importer->Import();
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   // Ensure that it's possible to get a ptr to the projected RVec fields.
+   reader->GetModel().GetDefaultEntry().GetPtr<ROOT::RVec<float>>("jet_pt");
+
    EXPECT_EQ(3U, reader->GetNEntries());
    auto viewBegin = reader->GetView<std::int32_t>("begin");
    auto viewMiddle = reader->GetView<std::int32_t>("middle");
@@ -385,15 +436,15 @@ TEST(RNTupleImporter, LeafCountArray)
    EXPECT_EQ(1, viewBegin(0));
    EXPECT_EQ(2, viewMiddle(0));
    EXPECT_EQ(3, viewEnd(0));
-   auto viewJets = reader->GetViewCollection("_collection0");
-   auto viewJetPt = viewJets.GetView<float>("jet_pt");
-   auto viewJetEta = viewJets.GetView<float>("jet_eta");
-   auto viewMuons = reader->GetViewCollection("_collection1");
-   auto viewMuonPt = viewMuons.GetView<float>("muon_pt");
-   auto viewProjectedNjets = reader->GetView<ROOT::Experimental::RNTupleCardinality<std::uint32_t>>("njets");
+   auto viewJets = reader->GetCollectionView("_collection0");
+   auto viewJetPt = viewJets.GetView<float>("_0.jet_pt");
+   auto viewJetEta = viewJets.GetView<float>("_0.jet_eta");
+   auto viewMuons = reader->GetCollectionView("_collection1");
+   auto viewMuonPt = viewMuons.GetView<float>("_0.muon_pt");
+   auto viewProjectedNjets = reader->GetView<ROOT::RNTupleCardinality<std::uint32_t>>("njets");
    auto viewProjectedJetPt = reader->GetView<ROOT::RVec<float>>("jet_pt");
    auto viewProjectedJetEta = reader->GetView<ROOT::RVec<float>>("jet_eta");
-   auto viewProjectedNmuons = reader->GetView<ROOT::Experimental::RNTupleCardinality<std::uint32_t>>("nmuons");
+   auto viewProjectedNmuons = reader->GetView<ROOT::RNTupleCardinality<std::uint32_t>>("nmuons");
    auto viewProjectedMuonPt = reader->GetView<ROOT::RVec<float>>("muon_pt");
 
    // Entry 0: 1 jet, 1 muon

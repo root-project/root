@@ -42,8 +42,9 @@ class TStyle;
 #include "RooLinkedList.h"
 #include "RooCmdArg.h"
 #include "TQObject.h"
+#include "TMatrixDSym.h"
 
-BEGIN_XROOFIT_NAMESPACE;
+BEGIN_XROOFIT_NAMESPACE
 
 class xRooNode;
 class xRooNLLVar;
@@ -55,10 +56,12 @@ public:
    // e.g. f = ratio would be simply orig/nom
    // bool indicates if should be symmetrized
    static std::map<std::string, std::tuple<std::function<double(double, double, double)>, bool>> auxFunctions;
+   /** @private */
    static void SetAuxFunction(const char *title, const std::function<double(double, double, double)> &func,
                               bool symmetrize = false);
 
    // this function is here because couldn't figure out how to check a null shared_ptr in pyroot
+   /** @private */
    static inline bool isNull(const std::shared_ptr<xRooNode> &x) { return x == nullptr; }
 
    // name of the node needn't match the name of the component that it points to
@@ -66,6 +69,8 @@ public:
    // In c++17 for constructors with a Node2& parent, could look at using shared_from_this and if it throws except then
    // construct make_shared<Node2>(parent)
    xRooNode(const char *type, const char *name, const char *title = "");
+
+   /** @private */
    template <typename T>
    xRooNode(const char *name, const char *title) : TNamed(name, title), fComp(std::make_shared<T>())
    {
@@ -75,43 +80,56 @@ public:
    }
    xRooNode(const char *name = "", const std::shared_ptr<TObject> &comp = nullptr,
             const std::shared_ptr<xRooNode> &parent = nullptr);
+
+   /** @private */
    xRooNode(const char *name, const std::shared_ptr<TObject> &comp, const xRooNode &parent)
       : xRooNode(name, comp, std::make_shared<xRooNode>(parent))
    {
    }
+
+   /** @private */
    xRooNode(const char *name, const TObject &comp, const std::shared_ptr<xRooNode> &parent)
       : xRooNode(name, std::shared_ptr<TObject>(const_cast<TObject *>(&comp), [](TObject *) {}), parent)
    {
    } // needed to ensure passing a shared_ptr<Node2> for the parent doesnt become Node2(shared_ptr<Node2>) as parent
      // because of Node2(shared_ptr<TObject>) constructor
+   /** @private */
    xRooNode(const char *name, const TObject &comp, const xRooNode &parent)
       : xRooNode(name, std::shared_ptr<TObject>(const_cast<TObject *>(&comp), [](TObject *) {}), parent)
    {
    }
+   /** @private */
    xRooNode(const TObject &comp, const std::shared_ptr<xRooNode> &parent = nullptr);
+   /** @private */
    xRooNode(const TObject &comp, const xRooNode &parent) : xRooNode(comp, std::make_shared<xRooNode>(parent)) {}
+   /** @private */
    xRooNode(const std::shared_ptr<TObject> &comp, const std::shared_ptr<xRooNode> &parent = nullptr);
    template <typename T>
+   /** @private */
    xRooNode(const std::shared_ptr<T> &comp, const std::shared_ptr<xRooNode> &parent = nullptr)
       : xRooNode(std::dynamic_pointer_cast<TObject>(comp), parent)
    {
    }
+   /** @private */
    template <typename T>
    xRooNode(const std::shared_ptr<T> &comp, const xRooNode &parent)
       : xRooNode(std::dynamic_pointer_cast<TObject>(comp), std::make_shared<xRooNode>(parent))
    {
    }
+   /** @private */
    template <typename T>
    xRooNode(const std::shared_ptr<const T> &comp, const std::shared_ptr<xRooNode> &parent = nullptr)
       : xRooNode(std::dynamic_pointer_cast<TObject>(std::const_pointer_cast<T>(comp)), parent)
    {
    }
+   /** @private */
    template <typename T>
    xRooNode(const std::shared_ptr<const T> &comp, const xRooNode &parent)
       : xRooNode(std::dynamic_pointer_cast<TObject>(std::const_pointer_cast<T>(comp)),
                  std::make_shared<xRooNode>(parent))
    {
    }
+   /** @private */
    xRooNode(double value);
 
    ~xRooNode() override;
@@ -119,8 +137,10 @@ public:
    void SetName(const char *name) override;   // *MENU*
    void SetTitle(const char *title) override; // *MENU*
 
+   /** @private */
    const char *GetNodeType() const;
 
+   /** @private */
    explicit operator bool() const { return strlen(GetName()) || get(); } // the 'null' Component is the empty string
 
    // at doesn't do an initial browse of the object, unlike [] operator
@@ -151,7 +171,7 @@ public:
          : std::vector<std::shared_ptr<xRooNode>>::const_iterator(itr)
       {
       }
-      decltype(auto) operator*() const
+      std::iterator_traits<const std::shared_ptr<xRooNode> *>::reference operator*() const
       {
          const std::shared_ptr<xRooNode> &out = std::vector<std::shared_ptr<xRooNode>>::const_iterator::operator*();
          if (out->get() && out->empty()) {
@@ -191,12 +211,16 @@ public:
    //   }
 
    void Browse(TBrowser *b = nullptr) override; // will browse the children that aren't "null" nodes
+   /** @private */
    bool IsFolder() const override;
+   /** @private */
    const char *GetIconName() const override;
    void Inspect() const override; // *MENU*
 
+   /** @private */
    xRooNode &browse(); // refreshes child nodes
 
+   /** @private */
    std::string GetPath() const;
    void Print(Option_t *opt = "") const override; // *MENU*
    // void Reverse() {
@@ -210,6 +234,7 @@ public:
    {
       return dynamic_cast<T *>(get());
    }
+   /** @private */
    TObject *xget() const { return xget<TObject>(); }
    template <typename T>
    T *xget() const
@@ -225,14 +250,18 @@ public:
    TObject *operator->() const { return get(); }
 
    RooWorkspace *ws() const;
+
+   /** @private */
    std::shared_ptr<TObject>
    acquire(const std::shared_ptr<TObject> &arg, bool checkFactory = false, bool mustBeNew = false);
    // common pattern for 'creating' an acquired object
+   /** @private */
    template <typename T, typename... Args>
    std::shared_ptr<T> acquire(Args &&...args)
    {
       return std::dynamic_pointer_cast<T>(acquire(std::make_shared<T>(std::forward<Args>(args)...)));
    }
+   /** @private */
    template <typename T, typename T2, typename... Args>
    // looser version of above ... first template type says what type to return
    // allows returning different type to the one requested in T2 (e.g. ok to get RooConstVar when acquire a RooRealVar)
@@ -240,20 +269,24 @@ public:
    {
       return std::dynamic_pointer_cast<T>(acquire(std::make_shared<T2>(std::forward<Args>(args)...)));
    }
+   /** @private */
    template <typename T, typename... Args>
    std::shared_ptr<T> acquireNew(Args &&...args)
    {
       return std::dynamic_pointer_cast<T>(acquire(std::make_shared<T>(std::forward<Args>(args)...), false, true));
    }
+   /** @private */
    std::shared_ptr<TObject> getObject(const std::string &name, const std::string &type = "") const;
+   /** @private */
    template <typename T>
    std::shared_ptr<T> getObject(const std::string &name) const
    {
       return std::dynamic_pointer_cast<T>(getObject(name, T::Class_Name()));
    }
 
+   /** @private */
    xRooNode shallowCopy(const std::string &name, std::shared_ptr<xRooNode> parent = nullptr);
-
+   /** @private */
    std::shared_ptr<TObject> convertForAcquisition(xRooNode &acquirer, const char *opt = "") const;
 
    xRooNode vars() const;   // obs,pars
@@ -295,12 +328,17 @@ public:
       const; // return a node representing reduced version of this node, will use the SetRange to reduce if blank
 
    // following versions are for the menu in the GUI
-   void _Add_(const char *name, const char *opt);                     // *MENU*
-   xRooNode _Multiply_(const char *what) { return Multiply(what); }   // *MENU*
-   void _Vary_(const char *what);                                     // *MENU*
+   /** @private */
+   void _Add_(const char *name, const char *opt); // *MENU*
+   /** @private */
+   xRooNode _Multiply_(const char *what) { return Multiply(what); } // *MENU*
+   /** @private */
+   void _Vary_(const char *what); // *MENU*
+   /** @private */
    xRooNode _Constrain_(const char *what) { return Constrain(what); } // *MENU*
-
+   /** @private */
    void _ShowVars_(bool set = true); // *TOGGLE* *GETTER=_IsShowVars_
+   /** @private */
    bool _IsShowVars_() const;
 
    void SetHidden(bool set = true); // *TOGGLE* *GETTER=IsHidden
@@ -311,7 +349,7 @@ public:
       operator=(obj);
       return true;
    } // populates the node's comp (creating if necessary)  from given object
-   bool SetData(const TObject &obj, const char *dataName = "obsData");
+   bool SetData(const TObject &obj, const xRooNode &data = "obsData");
 
    bool SetContent(double value);                                     // uses a RooConst
    bool SetContent(double value, const char *par, double parVal = 1); // shortcut to setting a variation content
@@ -322,9 +360,11 @@ public:
    }
    bool SetBinError(int bin, double value);
    bool SetBinContent(int bin, double value, const char *par = nullptr, double parVal = 1);
-   bool SetBinData(int bin, double value, const char *dataName = "obsData"); // only valid for pdf nodes
+   bool SetBinData(int bin, double value, const xRooNode &data = "obsData"); // only valid for pdf nodes
 
-   void _SetContent_(double value);                                                      // *MENU*
+   /** @private */
+   void _SetContent_(double value); // *MENU*
+   /** @private */
    void _SetBinContent_(int bin, double value, const char *par = "", double parVal = 1); // *MENU*
 
    bool SetXaxis(const RooAbsBinning &binning);
@@ -343,7 +383,7 @@ public:
 
    TAxis *GetXaxis() const;
 
-   double GetBinData(int bin, const char *dataName = "obsData");
+   double GetBinData(int bin, const xRooNode &data = "obsData");
    double GetBinContent(int bin) const { return GetBinContents(bin, bin).at(0); }
    std::vector<double> GetBinContents(int binStart = 1, int binEnd = 0) const; // default will get all bins
    double GetBinError(int bin, const xRooNode &fr = "") const;
@@ -356,7 +396,11 @@ public:
    {
       return (fBinNumber == -1) ? IntegralAndError(fr).second : GetBinError(fBinNumber, fr);
    }
-   double GetData(const char *dataName = "obsData") { return GetBinData(fBinNumber, dataName); }
+   double GetData(const xRooNode &data = "obsData") { return GetBinData(fBinNumber, data); }
+
+   // methods to access content and covariances of the CHILDREN of a node
+   std::vector<double> contents() const;
+   TMatrixDSym covariances(const xRooNode &fr = "") const;
 
    xRooNLLVar nll(const xRooNode &_data, std::initializer_list<RooCmdArg> nllOpts) const;
    xRooNLLVar nll(const xRooNode &_data, const RooLinkedList &nllOpts) const;
@@ -371,8 +415,11 @@ public:
    generate(const xRooNode &fr = "", bool expected = false,
             int seed = 0); // generate a dataset from a pdf node using given fr - if none given will use current fit
 
-   void _fit_(const char *constParValues = "");                   // *MENU*
+   /** @private */
+   void _fit_(const char *constParValues = ""); // *MENU*
+   /** @private */
    void _generate_(const char *name = "", bool expected = false); // *MENU*
+   /** @private */
    void _scan_(const char *what = "plr", double nToys = 0, const char *xvar = "", int nPointsX = 0, double lowX = 0,
                double highX = 0 /*, const char* yvar="", int nBinsY=0, double lowY=0, double highY=0*/,
                const char *constParValues = ""); // *MENU*
@@ -395,7 +442,9 @@ public:
    void Checked(TObject *obj, bool val);
    void SetChecked(bool val = true) { Checked(this, val); }
 
+   /** @private */
    xRooNode histo(const xRooNode &vars = "x", const xRooNode &fr = "", bool content = true, bool errors = true) const;
+   /** @private */
    xRooNode filter(const xRooNode &range) const;
 
    TGraph *BuildGraph(RooAbsLValue *v = nullptr, bool includeZeros = false, TVirtualPad *fromPad = nullptr) const;
@@ -406,7 +455,9 @@ public:
 
    void SaveAs(const char *filename = "", Option_t *option = "") const override; // *MENU*
 
+   /** @private */
    TGListTreeItem *GetTreeItem(TBrowser *b) const;
+   /** @private */
    TGListTree *GetListTree(TBrowser *b) const;
 
    static void Interactive_PLLPlot();
@@ -440,16 +491,22 @@ public:
 
    std::shared_ptr<xRooNode> parentPdf() const; // find first parent that is a pdf
 
+   /** @private */
    void sterilize() const;
 
    std::vector<std::shared_ptr<xRooNode>> fBrowsables;   // will appear in the browser tree but are not actual children
    std::function<xRooNode(xRooNode *)> fBrowseOperation; // a way to specify a custom browsing operation
 
+   /** @private */
    std::shared_ptr<xRooNode> getBrowsable(const char *name) const;
 
    ClassDefOverride(xRooNode, 0)
 };
 
-END_XROOFIT_NAMESPACE;
+namespace cling {
+std::string printValue(const xRooNode *val);
+}
+
+END_XROOFIT_NAMESPACE
 
 #endif // include guard

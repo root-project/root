@@ -46,14 +46,19 @@ protected:
 
   // Elementary constructors
    void AMultB (const TMatrixTSparse<Element> &a,const TMatrixTSparse<Element> &b,Int_t constr=0) {
-                const TMatrixTSparse<Element> bt(TMatrixTSparse::kTransposed,b); AMultBt(a,bt,constr); }
+      conservative_sparse_sparse_product_impl(b, a, constr);
+   }
    void AMultB (const TMatrixTSparse<Element> &a,const TMatrixT<Element>       &b,Int_t constr=0) {
                 const TMatrixTSparse<Element> bsp = b;
                 const TMatrixTSparse<Element> bt(TMatrixTSparse::kTransposed,bsp); AMultBt(a,bt,constr); }
    void AMultB (const TMatrixT<Element>       &a,const TMatrixTSparse<Element> &b,Int_t constr=0) {
                 const TMatrixTSparse<Element> bt(TMatrixTSparse::kTransposed,b); AMultBt(a,bt,constr); }
 
-   void AMultBt(const TMatrixTSparse<Element> &a,const TMatrixTSparse<Element> &b,Int_t constr=0);
+   void AMultBt(const TMatrixTSparse<Element> &a, const TMatrixTSparse<Element> &b, Int_t constr = 0)
+   {
+      const TMatrixTSparse<Element> bt(TMatrixTSparse::kTransposed, b);
+      conservative_sparse_sparse_product_impl(bt, a, constr);
+   }
    void AMultBt(const TMatrixTSparse<Element> &a,const TMatrixT<Element>       &b,Int_t constr=0);
    void AMultBt(const TMatrixT<Element>       &a,const TMatrixTSparse<Element> &b,Int_t constr=0);
 
@@ -65,6 +70,11 @@ protected:
    void AMinusB(const TMatrixTSparse<Element> &a,const TMatrixT<Element>       &b,Int_t constr=0);
    void AMinusB(const TMatrixT<Element>       &a,const TMatrixTSparse<Element> &b,Int_t constr=0);
 
+   void conservative_sparse_sparse_product_impl(const TMatrixTSparse<Element> &lhs, const TMatrixTSparse<Element> &rhs,
+                                                Int_t constr = 0);
+
+   Int_t ReduceSparseMatrix(Int_t nr, Int_t *row, Int_t *col, Element *data);
+
 public:
 
    enum EMatrixCreatorsOp1 { kZero,kUnit,kTransposed,kAtA };
@@ -72,9 +82,10 @@ public:
 
    TMatrixTSparse() { fElements = nullptr; fRowIndex = nullptr; fColIndex = nullptr; }
    TMatrixTSparse(Int_t nrows,Int_t ncols);
-   TMatrixTSparse(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb);
+   TMatrixTSparse(Int_t row_lwb, Int_t row_upb, Int_t col_lwb, Int_t col_upb, Int_t nr_nonzeros = 0);
    TMatrixTSparse(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Int_t nr_nonzeros,
                   Int_t *row, Int_t *col,Element *data);
+   TMatrixTSparse(Int_t row_lwb, Int_t row_upb, Int_t col_lwb, Int_t col_upb, Int_t *rowptr, Int_t *col, Element *data);
    TMatrixTSparse(const TMatrixTSparse<Element> &another);
    TMatrixTSparse(const TMatrixT<Element>       &another);
 
@@ -106,6 +117,8 @@ public:
    TMatrixTBase<Element>   &SetMatrixArray  (const Element *data,Option_t * /*option*/="") override
                                                     { memcpy(fElements,data,this->fNelems*sizeof(Element)); return *this; }
    virtual TMatrixTBase<Element>   &SetMatrixArray  (Int_t nr_nonzeros,Int_t *irow,Int_t *icol,Element *data);
+   virtual TMatrixTBase<Element> &
+   SetMatrixArray(Int_t nr_nonzeros, Int_t nrows, Int_t ncols, Int_t *irow, Int_t *icol, Element *data);
    TMatrixTBase<Element>   &InsertRow       (Int_t row,Int_t col,const Element *v,Int_t n=-1) override;
    void                     ExtractRow      (Int_t row,Int_t col,      Element *v,Int_t n=-1) const override;
 
@@ -202,7 +215,6 @@ public:
    ClassDefOverride(TMatrixTSparse,3) // Template of Sparse Matrix class
 };
 
-#ifndef __CINT__
 // When building with -fmodules, it instantiates all pending instantiations,
 // instead of delaying them until the end of the translation unit.
 // We 'got away with' probably because the use and the definition of the
@@ -211,7 +223,6 @@ public:
 // In case we are building with -fmodules, we need to forward declare the
 // specialization in order to compile the dictionary G__Matrix.cxx.
 template <> TClass *TMatrixTSparse<double>::Class();
-#endif // __CINT__
 
 template <class Element> inline const Element *TMatrixTSparse<Element>::GetMatrixArray  () const { return fElements; }
 template <class Element> inline       Element *TMatrixTSparse<Element>::GetMatrixArray  ()       { return fElements; }

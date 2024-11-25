@@ -37,9 +37,6 @@ namespace ROOT {
 class TProcessExecutor : public TExecutorCRTP<TProcessExecutor>, private TMPClient {
    friend TExecutorCRTP;
 
-   template <typename F, typename... Args>
-   using InvokeResult_t = ROOT::TypeTraits::InvokeResult_t<F, Args...>;
-
 public:
    explicit TProcessExecutor(unsigned nWorkers = 0); //default number of workers is the number of processors
    ~TProcessExecutor() = default;
@@ -55,11 +52,11 @@ public:
    // Redefinition of the MapReduce classes of the base class, to adapt them to
    // TProcessExecutor's logic
    using TExecutorCRTP<TProcessExecutor>::MapReduce;
-   template<class F, class R, class Cond = noReferenceCond<F>>
+   template<class F, class R, class Cond = validMapReturnCond<F>>
    auto MapReduce(F func, unsigned nTimes, R redfunc) -> InvokeResult_t<F>;
-   template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
+   template<class F, class T, class R, class Cond = validMapReturnCond<F, T>>
    auto MapReduce(F func, std::vector<T> &args, R redfunc) -> InvokeResult_t<F, T>;
-   template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
+   template<class F, class T, class R, class Cond = validMapReturnCond<F, T>>
    auto MapReduce(F func, const std::vector<T> &args, R redfunc) -> InvokeResult_t<F, T>;
 
    // Reduce
@@ -77,13 +74,13 @@ public:
 private:
    // Implementation of the Map functions declared in the parent class (TExecutorCRTP)
    //
-   template<class F, class Cond = noReferenceCond<F>>
+   template<class F, class Cond = validMapReturnCond<F>>
    auto MapImpl(F func, unsigned nTimes) -> std::vector<InvokeResult_t<F>>;
-   template<class F, class INTEGER, class Cond = noReferenceCond<F, INTEGER>>
+   template<class F, class INTEGER, class Cond = validMapReturnCond<F, INTEGER>>
    auto MapImpl(F func, ROOT::TSeq<INTEGER> args) -> std::vector<InvokeResult_t<F, INTEGER>>;
-   template<class F, class T, class Cond = noReferenceCond<F, T>>
+   template<class F, class T, class Cond = validMapReturnCond<F, T>>
    auto MapImpl(F func, std::vector<T> &args) -> std::vector<InvokeResult_t<F, T>>;
-   template<class F, class T, class Cond = noReferenceCond<F, T>>
+   template<class F, class T, class Cond = validMapReturnCond<F, T>>
    auto MapImpl(F func, const std::vector<T> &args) -> std::vector<InvokeResult_t<F, T>>;
 
    template<class T> void Collect(std::vector<T> &reslist);

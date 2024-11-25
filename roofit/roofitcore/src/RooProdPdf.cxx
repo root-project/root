@@ -62,16 +62,18 @@ have to appear in any specific place in the list.
 #include "RooFitImplHelpers.h"
 #include "strtok.h"
 
+#include <algorithm>
+#include <array>
 #include <cstring>
 #include <sstream>
-#include <algorithm>
 
 #ifndef _WIN32
 #include <strings.h>
 #endif
 
-using namespace std;
+using std::endl, std::string, std::vector, std::list, std::ostream, std::map, std::ostringstream;
 
+ClassImp(RooFit::Detail::RooFixedProdPdf);
 ClassImp(RooProdPdf);
 
 
@@ -409,23 +411,21 @@ double RooProdPdf::calculate(const RooProdPdf::CacheElem& cache, bool /*verbose*
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate product of PDFs in batch mode.
-void RooProdPdf::calculateBatch(RooAbsArg const *caller, const RooProdPdf::CacheElem &cache, double *output,
-                                size_t nEvents, RooFit::Detail::DataMap const &dataMap) const
+void RooProdPdf::doEvalImpl(RooAbsArg const *caller, const RooProdPdf::CacheElem &cache, RooFit::EvalContext &ctx) const
 {
    if (cache._isRearranged) {
-      auto numerator = dataMap.at(cache._rearrangedNum.get());
-      auto denominator = dataMap.at(cache._rearrangedDen.get());
-      RooBatchCompute::compute(dataMap.config(caller), RooBatchCompute::Ratio, output, nEvents,
-                               {numerator, denominator});
+      auto numerator = ctx.at(cache._rearrangedNum.get());
+      auto denominator = ctx.at(cache._rearrangedDen.get());
+      RooBatchCompute::compute(ctx.config(caller), RooBatchCompute::Ratio, ctx.output(), {numerator, denominator});
    } else {
-      RooBatchCompute::VarVector factors;
+      std::vector<std::span<const double>> factors;
       factors.reserve(cache._partList.size());
       for (const RooAbsArg *i : cache._partList) {
-         auto span = dataMap.at(i);
+         auto span = ctx.at(i);
          factors.push_back(span);
       }
-      RooBatchCompute::ArgVector special{static_cast<double>(factors.size())};
-      RooBatchCompute::compute(dataMap.config(caller), RooBatchCompute::ProdPdf, output, nEvents, factors, special);
+      std::array<double, 1> special{static_cast<double>(factors.size())};
+      RooBatchCompute::compute(ctx.config(caller), RooBatchCompute::ProdPdf, ctx.output(), factors, special);
    }
 }
 
@@ -1322,7 +1322,7 @@ void RooProdPdf::groupProductTerms(std::list<std::vector<RooArgSet*>>& groupedTe
   }
 
   outerIntDeps.removeAll() ;
-  outerIntDeps.add(*std::unique_ptr<RooArgSet>{static_cast<RooArgSet*>(allIntDeps.selectCommon(allImpDeps))});
+  outerIntDeps.add(*std::unique_ptr<RooArgSet>{allIntDeps.selectCommon(allImpDeps)});
 
   // Now iteratively merge groups that should be (partially) integrated together
   for(RooAbsArg * outerIntDep : outerIntDeps) {
@@ -1959,13 +1959,12 @@ bool sortedNamePtrsOverlap(std::vector<TNamed const*> const& ptrsA, std::vector<
 /// The observables set is required to distinguish unambiguously p.d.f in terms
 /// of observables and parameters, which are not constraints, and p.d.fs in terms
 /// of parameters only, which can serve as constraints p.d.f.s
+/// The pdfParams output parameter communicates to the caller which parameter
+/// are used in the pdfs that are not constraints.
 
-RooArgSet* RooProdPdf::getConstraints(const RooArgSet& observables, RooArgSet& constrainedParams,
-                                      bool stripDisconnected, bool removeConstraintsFromPdf) const
+RooArgSet* RooProdPdf::getConstraints(const RooArgSet& observables, RooArgSet const& constrainedParams, RooArgSet &pdfParams) const
 {
-  RooArgSet constraints ;
-  RooArgSet pdfParams;
-  RooArgSet conParams;
+  auto constraints = new RooArgSet{"constraints"};
 
   // For the optimized implementation of checking if two collections overlap by name.
   auto observablesNamePtrs = sortedNamePtrs(observables);
@@ -2000,8 +1999,7 @@ RooArgSet* RooProdPdf::getConstraints(const RooArgSet& observables, RooArgSet& c
                      sortedNamePtrsOverlap(tmpNamePtrs, constrainedParamsNamePtrs);
     }
     if (isConstraint) {
-      constraints.add(*pdf) ;
-      conParams.add(tmp,true) ;
+      constraints->add(*pdf) ;
     } else {
       // We only want to add parameter, not observables. Since a call like
       // `pdf->getParameters(&observables)` would be expensive, we take the set
@@ -2013,31 +2011,7 @@ RooArgSet* RooProdPdf::getConstraints(const RooArgSet& observables, RooArgSet& c
     }
   }
 
-  // Remove the constraints now from the PDF if the caller requested it
-  if(removeConstraintsFromPdf) {
-    const_cast<RooProdPdf*>(this)->removePdfs(constraints);
-  }
-
-  // Strip any constraints that are completely decoupled from the other product terms
-  RooArgSet* finalConstraints = new RooArgSet("constraints") ;
-  for(auto * pdf : static_range_cast<RooAbsPdf*>(constraints)) {
-    if (pdf->dependsOnValue(pdfParams) || !stripDisconnected) {
-      finalConstraints->add(*pdf) ;
-    } else {
-      coutI(Minimization) << "RooProdPdf::getConstraints(" << GetName() << ") omitting term " << pdf->GetName()
-           << " as constraint term as it does not share any parameters with the other pdfs in product. "
-           << "To force inclusion in likelihood, add an explicit Constrain() argument for the target parameter" << endl ;
-    }
-  }
-
-  // Now remove from constrainedParams all parameters that occur exclusively in constraint term and not in regular pdf term
-
-  RooArgSet cexl;
-  conParams.selectCommon(constrainedParams, cexl);
-  cexl.remove(pdfParams,true,true) ;
-  constrainedParams.remove(cexl,true,true) ;
-
-  return finalConstraints ;
+  return constraints;
 }
 
 
@@ -2266,11 +2240,8 @@ bool RooProdPdf::redirectServersHook(const RooAbsCollection& newServerList, bool
   for(std::unique_ptr<RooArgSet> const& normSet : _pdfNSetList) {
     for(RooAbsArg * arg : *normSet) {
       if(RooAbsArg * newArg = arg->findNewServer(newServerList, nameChange)) {
-        // Need to do some tricks here because it's not possible to replace in
-        // an owning RooAbsCollection.
-        normSet->releaseOwnership();
-        normSet->replace(*std::unique_ptr<RooAbsArg>{arg}, *newArg->cloneTree());
-        normSet->takeOwnership();
+        // Since normSet is owning, the original arg is now deleted.
+        normSet->replace(arg, std::unique_ptr<RooAbsArg>{newArg->cloneTree()});
       }
     }
   }
@@ -2341,90 +2312,6 @@ std::unique_ptr<RooArgSet> RooProdPdf::fillNormSetForServer(RooArgSet const &nor
    }
 }
 
-/// A RooProdPdf with a fixed normalization set can be replaced by this class.
-/// Its purpose is to provide the right client-server interface for the
-/// evaluation of RooProdPdf cache elements that were created for a given
-/// normalization set.
-class RooFixedProdPdf : public RooAbsPdf {
-public:
-   RooFixedProdPdf(std::unique_ptr<RooProdPdf> &&prodPdf, RooArgSet const &normSet)
-      : RooAbsPdf(prodPdf->GetName(), prodPdf->GetTitle()), _normSet{normSet},
-        _servers("!servers", "List of servers", this), _prodPdf{std::move(prodPdf)}
-   {
-      initialize();
-   }
-   RooFixedProdPdf(const RooFixedProdPdf &other, const char *name = nullptr)
-      : RooAbsPdf(other, name), _normSet{other._normSet},
-        _servers("!servers", "List of servers", this), _prodPdf{static_cast<RooProdPdf *>(other._prodPdf->Clone())}
-   {
-      initialize();
-   }
-   TObject *clone(const char *newname) const override { return new RooFixedProdPdf(*this, newname); }
-
-   bool selfNormalized() const override { return true; }
-
-   inline bool canComputeBatchWithCuda() const override { return true; }
-
-   void computeBatch(double *output, size_t nEvents,
-                     RooFit::Detail::DataMap const &dataMap) const override
-   {
-      _prodPdf->calculateBatch(this, *_cache, output, nEvents, dataMap);
-   }
-
-   ExtendMode extendMode() const override { return _prodPdf->extendMode(); }
-   double expectedEvents(const RooArgSet * /*nset*/) const override { return _prodPdf->expectedEvents(&_normSet); }
-   std::unique_ptr<RooAbsReal> createExpectedEventsFunc(const RooArgSet * /*nset*/) const override
-   {
-      return _prodPdf->createExpectedEventsFunc(&_normSet);
-   }
-
-   // Analytical Integration handling
-   bool forceAnalyticalInt(const RooAbsArg &dep) const override { return _prodPdf->forceAnalyticalInt(dep); }
-   Int_t getAnalyticalIntegralWN(RooArgSet &allVars, RooArgSet &analVars, const RooArgSet *normSet,
-                                 const char *rangeName = nullptr) const override
-   {
-      return _prodPdf->getAnalyticalIntegralWN(allVars, analVars, normSet, rangeName);
-   }
-   Int_t getAnalyticalIntegral(RooArgSet &allVars, RooArgSet &numVars, const char *rangeName = nullptr) const override
-   {
-      return _prodPdf->getAnalyticalIntegral(allVars, numVars, rangeName);
-   }
-   double analyticalIntegralWN(Int_t code, const RooArgSet *normSet, const char *rangeName) const override
-   {
-      return _prodPdf->analyticalIntegralWN(code, normSet, rangeName);
-   }
-   double analyticalIntegral(Int_t code, const char *rangeName = nullptr) const override
-   {
-      return _prodPdf->analyticalIntegral(code, rangeName);
-   }
-
-private:
-   void initialize()
-   {
-      _cache = _prodPdf->createCacheElem(&_normSet, nullptr);
-      auto &cache = *_cache;
-
-      // The actual servers for a given normalization set depend on whether the
-      // cache is rearranged or not. See RooProdPdf::calculateBatch to see
-      // which args in the cache are used directly.
-      if (cache._isRearranged) {
-         _servers.add(*cache._rearrangedNum);
-         _servers.add(*cache._rearrangedDen);
-      } else {
-         for (std::size_t i = 0; i < cache._partList.size(); ++i) {
-            _servers.add(cache._partList[i]);
-         }
-      }
-   }
-
-   double evaluate() const override { return _prodPdf->calculate(*_cache); }
-
-   RooArgSet _normSet;
-   std::unique_ptr<RooProdPdf::CacheElem> _cache;
-   RooSetProxy _servers;
-   std::unique_ptr<RooProdPdf> _prodPdf;
-};
-
 std::unique_ptr<RooAbsArg>
 RooProdPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext &ctx) const
 {
@@ -2448,8 +2335,50 @@ RooProdPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileC
       ctx.compileServer(*server, *prodPdfClone, depList);
    }
 
-   auto fixedProdPdf = std::make_unique<RooFixedProdPdf>(std::move(prodPdfClone), normSet);
+   auto fixedProdPdf = std::make_unique<RooFit::Detail::RooFixedProdPdf>(std::move(prodPdfClone), normSet);
    ctx.markAsCompiled(*fixedProdPdf);
 
    return fixedProdPdf;
 }
+
+namespace RooFit {
+namespace Detail {
+
+RooFixedProdPdf::RooFixedProdPdf(std::unique_ptr<RooProdPdf> &&prodPdf, RooArgSet const &normSet)
+   : RooAbsPdf(prodPdf->GetName(), prodPdf->GetTitle()),
+     _normSet{normSet},
+     _servers("!servers", "List of servers", this),
+     _prodPdf{std::move(prodPdf)}
+{
+   initialize();
+}
+
+RooFixedProdPdf::RooFixedProdPdf(const RooFixedProdPdf &other, const char *name)
+   : RooAbsPdf(other, name),
+     _normSet{other._normSet},
+     _servers("!servers", "List of servers", this),
+     _prodPdf{static_cast<RooProdPdf *>(other._prodPdf->Clone())}
+{
+   initialize();
+}
+
+void RooFixedProdPdf::initialize()
+{
+   _cache = _prodPdf->createCacheElem(&_normSet, nullptr);
+   auto &cache = *_cache;
+
+   // The actual servers for a given normalization set depend on whether the
+   // cache is rearranged or not. See RooProdPdf::calculateBatch to see
+   // which args in the cache are used directly.
+   if (cache._isRearranged) {
+      _servers.add(*cache._rearrangedNum);
+      _servers.add(*cache._rearrangedDen);
+   } else {
+      for (std::size_t i = 0; i < cache._partList.size(); ++i) {
+         _servers.add(cache._partList[i]);
+      }
+   }
+}
+
+} // namespace Detail
+} // namespace RooFit

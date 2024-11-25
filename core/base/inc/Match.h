@@ -19,9 +19,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#if !defined(__CINT__)
 #include <sys/types.h>
-#endif
 
 typedef unsigned short Pattern_t;
 

@@ -13,9 +13,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include <ROOT/RColumnElementBase.hxx>
 #include <ROOT/RError.hxx>
 #include <ROOT/RPageStorageFile.hxx>
-#include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleInspector.hxx>
 #include <ROOT/RError.hxx>
@@ -30,7 +30,7 @@
 #include <iostream>
 
 ROOT::Experimental::RNTupleInspector::RNTupleInspector(
-   std::unique_ptr<ROOT::Experimental::Detail::RPageSource> pageSource)
+   std::unique_ptr<ROOT::Experimental::Internal::RPageSource> pageSource)
    : fPageSource(std::move(pageSource))
 {
    fPageSource->Attach();
@@ -41,18 +41,23 @@ ROOT::Experimental::RNTupleInspector::RNTupleInspector(
    CollectFieldTreeInfo(fDescriptor->GetFieldZeroId());
 }
 
+// NOTE: outlined to avoid including RPageStorage in the header
+ROOT::Experimental::RNTupleInspector::~RNTupleInspector() = default;
+
 void ROOT::Experimental::RNTupleInspector::CollectColumnInfo()
 {
    fCompressedSize = 0;
    fUncompressedSize = 0;
 
    for (const auto &colDesc : fDescriptor->GetColumnIterable()) {
+      if (colDesc.IsAliasColumn())
+         continue;
+
       auto colId = colDesc.GetPhysicalId();
 
       // We generate the default memory representation for the given column type in order
       // to report the size _in memory_ of column elements.
-      auto colType = colDesc.GetModel().GetType();
-      std::uint32_t elemSize = ROOT::Experimental::Detail::RColumnElementBase::Generate(colType)->GetSize();
+      std::uint32_t elemSize = ROOT::Experimental::Internal::RColumnElementBase::Generate(colDesc.GetType())->GetSize();
       std::uint64_t nElems = 0;
       std::vector<std::uint64_t> compressedPageSizes{};
 
@@ -62,17 +67,22 @@ void ROOT::Experimental::RNTupleInspector::CollectColumnInfo()
          }
 
          auto columnRange = clusterDescriptor.GetColumnRange(colId);
+         if (columnRange.fIsSuppressed)
+            continue;
+
          nElems += columnRange.fNElements;
 
          if (fCompressionSettings == -1) {
             fCompressionSettings = columnRange.fCompressionSettings;
-         } else if (fCompressionSettings != columnRange.fCompressionSettings) {
+         } else if (fCompressionSettings != columnRange.fCompressionSettings &&
+                    columnRange.fCompressionSettings != kUnknownCompressionSettings) {
             // Note that currently all clusters and columns are compressed with the same settings and it is not yet
             // possible to do otherwise. This means that currently, this exception should never be thrown, but this
             // could change in the future.
             throw RException(R__FAIL("compression setting mismatch between column ranges (" +
                                      std::to_string(fCompressionSettings) + " vs " +
-                                     std::to_string(columnRange.fCompressionSettings) + ")"));
+                                     std::to_string(columnRange.fCompressionSettings) +
+                                     ") for column with physical ID " + std::to_string(colId)));
          }
 
          const auto &pageRange = clusterDescriptor.GetPageRange(colId);
@@ -83,7 +93,7 @@ void ROOT::Experimental::RNTupleInspector::CollectColumnInfo()
          }
       }
 
-      fCompressedSize += std::accumulate(compressedPageSizes.begin(), compressedPageSizes.end(), 0);
+      fCompressedSize += std::accumulate(compressedPageSizes.begin(), compressedPageSizes.end(), static_cast<std::uint64_t>(0));
       fColumnInfo.emplace(colId, RColumnInspector(colDesc, compressedPageSizes, elemSize, nElems));
    }
 }
@@ -141,20 +151,16 @@ ROOT::Experimental::RNTupleInspector::GetColumnsByFieldId(DescriptorId_t fieldId
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleInspector>
-ROOT::Experimental::RNTupleInspector::Create(ROOT::Experimental::RNTuple *sourceNTuple)
+ROOT::Experimental::RNTupleInspector::Create(const ROOT::RNTuple &sourceNTuple)
 {
-   if (!sourceNTuple) {
-      throw RException(R__FAIL("provided RNTuple is null"));
-   }
-
-   auto pageSource = Detail::RPageSourceFile::CreateFromAnchor(*sourceNTuple);
+   auto pageSource = Internal::RPageSourceFile::CreateFromAnchor(sourceNTuple);
    return std::unique_ptr<RNTupleInspector>(new RNTupleInspector(std::move(pageSource)));
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleInspector>
 ROOT::Experimental::RNTupleInspector::Create(std::string_view ntupleName, std::string_view sourceFileName)
 {
-   auto pageSource = ROOT::Experimental::Detail::RPageSource::Create(ntupleName, sourceFileName);
+   auto pageSource = ROOT::Experimental::Internal::RPageSource::Create(ntupleName, sourceFileName);
    return std::unique_ptr<RNTupleInspector>(new RNTupleInspector(std::move(pageSource)));
 }
 
@@ -242,7 +248,7 @@ void ROOT::Experimental::RNTupleInspector::PrintColumnTypeInfo(ENTupleInspectorP
       output << " column type    | count   | # elements      | compressed bytes  | uncompressed bytes\n"
              << "----------------|---------|-----------------|-------------------|--------------------" << std::endl;
       for (const auto &[colType, typeInfo] : colTypeInfo) {
-         output << std::setw(15) << Detail::RColumnElementBase::GetTypeName(colType) << " |" << std::setw(8)
+         output << std::setw(15) << Internal::RColumnElementBase::GetColumnTypeName(colType) << " |" << std::setw(8)
                 << typeInfo.count << " |" << std::setw(16) << typeInfo.nElems << " |" << std::setw(18)
                 << typeInfo.compressedSize << " |" << std::setw(18) << typeInfo.uncompressedSize << " " << std::endl;
       }
@@ -250,8 +256,8 @@ void ROOT::Experimental::RNTupleInspector::PrintColumnTypeInfo(ENTupleInspectorP
    case ENTupleInspectorPrintFormat::kCSV:
       output << "columnType,count,nElements,compressedSize,uncompressedSize" << std::endl;
       for (const auto &[colType, typeInfo] : colTypeInfo) {
-         output << Detail::RColumnElementBase::GetTypeName(colType) << "," << typeInfo.count << "," << typeInfo.nElems
-                << "," << typeInfo.compressedSize << "," << typeInfo.uncompressedSize << std::endl;
+         output << Internal::RColumnElementBase::GetColumnTypeName(colType) << "," << typeInfo.count << ","
+                << typeInfo.nElems << "," << typeInfo.compressedSize << "," << typeInfo.uncompressedSize << std::endl;
       }
       break;
    default: throw RException(R__FAIL("Invalid print format"));
@@ -294,7 +300,7 @@ ROOT::Experimental::RNTupleInspector::GetColumnTypeInfoAsHist(ROOT::Experimental
       default: throw RException(R__FAIL("Unknown histogram type"));
       }
 
-      hist->AddBinContent(hist->GetXaxis()->FindBin(Detail::RColumnElementBase::GetTypeName(colInfo.GetType()).c_str()),
+      hist->AddBinContent(hist->GetXaxis()->FindBin(Internal::RColumnElementBase::GetColumnTypeName(colInfo.GetType())),
                           data);
    }
 
@@ -316,9 +322,10 @@ ROOT::Experimental::RNTupleInspector::GetPageSizeDistribution(ROOT::Experimental
                                                               std::string histName, std::string histTitle, size_t nBins)
 {
    if (histName.empty())
-      histName = "pageSizeHistCol" + Detail::RColumnElementBase::GetTypeName(colType);
+      histName = "pageSizeHistCol" + std::string{Internal::RColumnElementBase::GetColumnTypeName(colType)};
    if (histTitle.empty())
-      histTitle = "Page size distribution for columns with type " + Detail::RColumnElementBase::GetTypeName(colType);
+      histTitle = "Page size distribution for columns with type " +
+                  std::string{Internal::RColumnElementBase::GetColumnTypeName(colType)};
 
    auto perTypeHist = GetPageSizeDistribution({colType}, histName, histTitle, nBins);
 
@@ -408,8 +415,8 @@ std::unique_ptr<THStack> ROOT::Experimental::RNTupleInspector::GetPageSizeDistri
 
    for (const auto &[colType, pageSizesForColType] : pageSizes) {
       auto hist = std::make_unique<TH1D>(
-         TString::Format("%s%s", histName.c_str(), Detail::RColumnElementBase::GetTypeName(colType).c_str()),
-         Detail::RColumnElementBase::GetTypeName(colType).c_str(), nBins, histMin,
+         TString::Format("%s%s", histName.c_str(), Internal::RColumnElementBase::GetColumnTypeName(colType)),
+         Internal::RColumnElementBase::GetColumnTypeName(colType), nBins, histMin,
          histMax + ((histMax - histMin) / static_cast<double>(nBins)));
 
       for (const auto pageSize : pageSizesForColType) {

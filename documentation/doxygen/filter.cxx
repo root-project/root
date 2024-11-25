@@ -81,12 +81,13 @@
 #include <stdarg.h>
 #include <memory>
 
-using namespace std;
+using std::string, std::ios_base, std::unique_ptr;
 
 // Auxiliary functions
 void   FilterClass();
 void   FilterTutorial();
 void   GetClassName();
+void   CreateTutorialImage(bool);
 int    NumberOfImages();
 string ImagesList(string&);
 void   ExecuteMacro();
@@ -114,6 +115,7 @@ string gOutputName;    // File containing a macro std::out
 bool   gHeader;        // True if the input file is a header
 bool   gSource;        // True if the input file is a source file
 bool   gPython;        // True if the input file is a Python script.
+bool   gImageGenerated;// True if the PNG image has been generated.
 bool   gImageSource;   // True the source of the current macro should be shown
 int    gInMacro;       // >0 if parsing a macro in a class documentation.
 int    gImageID;       // Image Identifier.
@@ -131,6 +133,7 @@ int main(int argc, char *argv[])
    gSource        = false;
    gPython        = false;
    gImageSource   = false;
+   gImageGenerated= false;
    gInMacro       = 0;
    gImageID       = 0;
    gMacroID       = 0;
@@ -155,7 +158,7 @@ int main(int argc, char *argv[])
    ReplaceAll(gSourceDir,"\"","");
 
    // Retrieve the python executable
-   gPythonExec = getenv("PYTHON_EXECUTABLE");
+   gPythonExec = getenv("Python3_EXECUTABLE");
    ReplaceAll(gPythonExec,"\"","");
 
    // Open the input file name.
@@ -300,6 +303,34 @@ void FilterClass()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Create PNG tutorial image
+
+void CreateTutorialImage(bool nobatch) {
+   if (gPython) {
+      if (nobatch) {
+         ExecuteCommand(StringFormat("%s makeimage.py %s %s %s 0 1 0",
+                                    gPythonExec.c_str(),
+                                    gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
+      } else {
+         ExecuteCommand(StringFormat("%s makeimage.py %s %s %s 0 1 1",
+                                    gPythonExec.c_str(),
+                                    gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
+      }
+   } else {
+      if (nobatch) {
+         ExecuteCommand(
+            StringFormat("root -l -q \"makeimage.C+O(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false)\"",
+                         gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
+      } else {
+         ExecuteCommand(
+            StringFormat("root -l -b -q \"makeimage.C+O(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false)\"",
+                         gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
+      }
+   }
+   gImageGenerated = true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Filter ROOT tutorials for Doxygen.
 
 void FilterTutorial()
@@ -324,9 +355,19 @@ void FilterTutorial()
    } else {
       i2 = gFileName.rfind('C');
    }
+   gImageGenerated = false;
    gMacroName  = gFileName.substr(i1,i2-i1+1);
    gImageName  = StringFormat("%s.%s", gMacroName.c_str(), gImageType.c_str()); // Image name
    gOutputName = StringFormat("%s.out", gMacroName.c_str()); // output name
+   if (gPython) {
+      FILE *cn = fopen("CleanNamespaces.sh", "a");
+      string name = gMacroName;
+      ReplaceAll(name,".py","");
+      ReplaceAll(name,"_","__");
+      if (cn)
+         fprintf(cn,"./modifyNamespacesWebpage.sh %s\n",name.c_str());
+      fclose(cn);
+   }
 
    // Parse the source and generate the image if needed
    while (fgets(gLine,255,f)) {
@@ -336,10 +377,25 @@ void FilterTutorial()
       if (gLineString.find("\\macro_image") != string::npos) {
          bool nobatch = (gLineString.find("(nobatch)") != string::npos);
          ReplaceAll(gLineString,"(nobatch)","");
-         bool tcanvas_js = (gLineString.find("(tcanvas_js)") != string::npos);
-         ReplaceAll(gLineString,"(tcanvas_js)","");
-         bool rcanvas_js = (gLineString.find("(rcanvas_js)") != string::npos);
-         ReplaceAll(gLineString,"(rcanvas_js)","");
+         bool tcanvas_js = false, rcanvas_js = false;
+         int tcanvas_aclic = 0;
+
+         if (gLineString.find("(tcanvas_js)") != string::npos) {
+            tcanvas_js = true;
+            tcanvas_aclic = 0;
+            ReplaceAll(gLineString,"(tcanvas_js)", "");
+         }
+
+         if (gLineString.find("(tcanvas_jsp)") != string::npos) {
+            tcanvas_js = true;
+            tcanvas_aclic = 1;
+            ReplaceAll(gLineString,"(tcanvas_jsp)", "");
+         }
+
+         if (gLineString.find("(rcanvas_js)") != string::npos) {
+            rcanvas_js = true;
+            ReplaceAll(gLineString,"(rcanvas_js)", "");
+         }
 
          bool image_created_by_macro = (gLineString.find(".png)") != string::npos) ||
                                        (gLineString.find(".svg)") != string::npos) ||
@@ -362,8 +418,8 @@ void FilterTutorial()
             IN = gImageName;
             int i = IN.find(".");
             IN.erase(i,IN.length());
-            ExecuteCommand(StringFormat("root -l -b -q \"MakeTCanvasJS.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,%d)\"",
-                                         gFileName.c_str(), IN.c_str(), gOutDir.c_str(), gPython));
+            ExecuteCommand(StringFormat("root -l -b -q \"MakeTCanvasJS.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,%d,%d)\"",
+                                         gFileName.c_str(), IN.c_str(), gOutDir.c_str(), gPython, tcanvas_aclic));
             ReplaceAll(gLineString, "macro_image", StringFormat("htmlinclude %s.html",IN.c_str()));
          } else if (rcanvas_js) {
             string IN;
@@ -375,27 +431,7 @@ void FilterTutorial()
                gFileName.c_str(), IN.c_str(), gOutDir.c_str(), gPython));
             ReplaceAll(gLineString, "macro_image", StringFormat("htmlinclude %s.html",IN.c_str()));
          } else {
-            if (gPython) {
-               if (nobatch) {
-                  ExecuteCommand(StringFormat("%s makeimage.py %s %s %s 0 1 0",
-                                             gPythonExec.c_str(),
-                                             gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
-               } else {
-                  ExecuteCommand(StringFormat("%s makeimage.py %s %s %s 0 1 1",
-                                             gPythonExec.c_str(),
-                                             gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
-               }
-            } else {
-               if (nobatch) {
-                  ExecuteCommand(
-                     StringFormat("root -l -q \"makeimage.C+O(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false)\"",
-                                  gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
-               } else {
-                  ExecuteCommand(
-                     StringFormat("root -l -b -q \"makeimage.C+O(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false)\"",
-                                  gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
-               }
-            }
+            if (!gImageGenerated) CreateTutorialImage(nobatch);
             ReplaceAll(gLineString, "\\macro_image", ImagesList(gImageName));
             remove(gOutputName.c_str());
          }
@@ -408,7 +444,7 @@ void FilterTutorial()
          ReplaceAll(gLineString, "\\macro_code", StringFormat("\\include %s",gMacroName.c_str()));
       }
 
-      // notebook found
+      // \notebook found
       if (gLineString.find("\\notebook") != string::npos) {
          // Notebooks are generated in dedicated step:
          worklist_py << "converttonotebook.py " << gFileName << " " << gOutDir << "/notebooks/" << std::endl;
@@ -420,6 +456,15 @@ void FilterTutorial()
              gLineString = "/// ";
          }
          gLineString += StringFormat( "\\htmlonly <a href=\"https://nbviewer.jupyter.org/url/root.cern/doc/master/notebooks/%s.nbconvert.ipynb\" target=\"_blank\"><img src= notebook.gif alt=\"View in nbviewer\" style=\"height:1.5em\" ></a> <a href=\"https://cern.ch/swanserver/cgi-bin/go?projurl=https://root.cern/doc/master/notebooks/%s.nbconvert.ipynb\" target=\"_blank\"><img src=\"https://swanserver.web.cern.ch/swanserver/images/badge_swan_white_150.png\"  alt=\"Open in SWAN\" style=\"height:1.5em\" ></a> <br/>\\endhtmlonly \n", gMacroName.c_str() , gMacroName.c_str());
+      }
+
+      // \preview found
+      if (gLineString.find("\\preview") != string::npos) {
+         if (!gImageGenerated) CreateTutorialImage(false);
+         string name = gMacroName;
+         int width = 150;
+         ReplaceAll(name,".C","_8C.html");
+         ReplaceAll(gLineString, "\\preview", StringFormat("\\htmlonly <a href=\"%s\"><img src=\"pict1_%s.png\" valign=\"middle\" width=\"%d\"/></a>\\endhtmlonly",name.c_str(),gMacroName.c_str(),width));
       }
 
       // \macro_output found

@@ -23,7 +23,7 @@ file(COPY ${cppyy_backendPySrcDir}
 
 file(RELATIVE_PATH PYTHONDIR_TO_LIBDIR "${CMAKE_INSTALL_FULL_PYTHONDIR}" "${CMAKE_INSTALL_FULL_LIBDIR}")
 
-set(libname cppyy_backend${PYTHON_UNDER_VERSION_STRING})
+set(libname cppyy_backend)
 
 add_library(${libname} SHARED clingwrapper/src/clingwrapper.cxx)
 if(MSVC)
@@ -52,8 +52,8 @@ endif()
 
 # Compile .py files
 foreach(py_source ${py_sources})
-  install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} -m py_compile ${localruntimedir}/${py_source})")
-  install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} -O -m py_compile ${localruntimedir}/${py_source})")
+  install(CODE "execute_process(COMMAND ${Python3_EXECUTABLE} -m py_compile ${localruntimedir}/${py_source})")
+  install(CODE "execute_process(COMMAND ${Python3_EXECUTABLE} -O -m py_compile ${localruntimedir}/${py_source})")
 endforeach()
 
 

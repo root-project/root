@@ -28,12 +28,12 @@ ClassImp(TGraphSmooth);
 
 //______________________________________________________________________
 /** \class TGraphSmooth
-    \ingroup Graph
+    \ingroup Graphs
 A helper class to smooth TGraph.
 see examples in $ROOTSYS/tutorials/graphs/motorcycle.C and approx.C
 */
 
-TGraphSmooth::TGraphSmooth(): TNamed()
+TGraphSmooth::TGraphSmooth()
 {
    fNin  = 0;
    fNout = 0;

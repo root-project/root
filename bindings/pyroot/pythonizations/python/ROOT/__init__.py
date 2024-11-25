@@ -23,17 +23,8 @@ environ["CPPYY_NO_ROOT_FILTER"] = "1"
 from . import _asan
 
 import cppyy
-
-# import libROOTPythonizations with Python version number
 import sys, importlib
-import warnings
-
-major, minor = sys.version_info[0:2]
-librootpyz_mod_name = "libROOTPythonizations{}_{}".format(major, minor)
-importlib.import_module(librootpyz_mod_name)
-
-# ensure 'import libROOTPythonizations' will find the versioned module
-sys.modules["libROOTPythonizations"] = sys.modules[librootpyz_mod_name]
+import libROOTPythonizations
 
 # Build cache of commonly used python strings (the cache is python intern, so
 # all strings are shared python-wide, not just in PyROOT).
@@ -48,10 +39,7 @@ from ._pythonization import _register_pythonizations
 _register_pythonizations()
 
 # Check if we are in the IPython shell
-if major == 3:
-    import builtins
-else:
-    import __builtin__ as builtins
+import builtins
 
 _is_ipython = hasattr(builtins, "__IPYTHON__")
 
@@ -183,7 +171,7 @@ if _is_ipython:
     ip = get_ipython()
     if hasattr(ip, "kernel"):
         import JupyROOT
-        import JsMVA
+        from . import JsMVA
 
 # Register cleanup
 import atexit
@@ -197,11 +185,6 @@ def cleanup():
         facade.__dict__["app"].process_root_events.join()
 
     if "libROOTPythonizations" in sys.modules:
-        backend = sys.modules["libROOTPythonizations"]
-
-        # Make sure all the objects regulated by PyROOT are deleted and their
-        # Python proxies are properly nonified.
-        backend.ClearProxiedObjects()
 
         from ROOT import PyConfig
 
@@ -209,7 +192,7 @@ def cleanup():
             # Hard teardown: run part of the gROOT shutdown sequence.
             # Running it here ensures that it is done before any ROOT libraries
             # are off-loaded, with unspecified order of static object destruction.
-            backend.gROOT.EndOfProcessCleanups()
+            facade.gROOT.EndOfProcessCleanups()
 
 
 atexit.register(cleanup)

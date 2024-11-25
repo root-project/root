@@ -15,6 +15,27 @@
 #define CPPYY_IMPORT extern
 #endif
 
+// some more types; assumes Cppyy.h follows Python.h
+#ifndef PY_LONG_LONG
+#ifdef _WIN32
+typedef __int64 PY_LONG_LONG;
+#else
+typedef long long PY_LONG_LONG;
+#endif
+#endif
+
+#ifndef PY_ULONG_LONG
+#ifdef _WIN32
+typedef unsigned __int64   PY_ULONG_LONG;
+#else
+typedef unsigned long long PY_ULONG_LONG;
+#endif
+#endif
+
+#ifndef PY_LONG_DOUBLE
+typedef long double PY_LONG_DOUBLE;
+#endif
+
 
 namespace Cppyy {
 
@@ -29,7 +50,9 @@ namespace Cppyy {
 
 // direct interpreter access -------------------------------------------------
     CPPYY_IMPORT
-    bool Compile(const std::string& code);
+    bool Compile(const std::string& code, bool silent = false);
+    CPPYY_IMPORT
+    std::string ToString(TCppType_t klass, TCppObject_t obj);
 
 // name to opaque C++ scope representation -----------------------------------
     CPPYY_IMPORT
@@ -59,7 +82,7 @@ namespace Cppyy {
     CPPYY_IMPORT
     void         Deallocate(TCppType_t type, TCppObject_t instance);
     CPPYY_IMPORT
-    TCppObject_t Construct(TCppType_t type);
+    TCppObject_t Construct(TCppType_t type, void* arena = nullptr);
     CPPYY_IMPORT
     void         Destruct(TCppType_t type, TCppObject_t instance);
 
@@ -77,13 +100,13 @@ namespace Cppyy {
     CPPYY_IMPORT
     long          CallL(TCppMethod_t method, TCppObject_t self, size_t nargs, void* args);
     CPPYY_IMPORT
-    Long64_t      CallLL(TCppMethod_t method, TCppObject_t self, size_t nargs, void* args);
+    PY_LONG_LONG  CallLL(TCppMethod_t method, TCppObject_t self, size_t nargs, void* args);
     CPPYY_IMPORT
     float         CallF(TCppMethod_t method, TCppObject_t self, size_t nargs, void* args);
     CPPYY_IMPORT
     double        CallD(TCppMethod_t method, TCppObject_t self, size_t nargs, void* args);
     CPPYY_IMPORT
-    LongDouble_t  CallLD(TCppMethod_t method, TCppObject_t self, size_t nargs, void* args);
+    PY_LONG_DOUBLE CallLD(TCppMethod_t method, TCppObject_t self, size_t nargs, void* args);
     CPPYY_IMPORT
     void*         CallR(TCppMethod_t method, TCppObject_t self, size_t nargs, void* args);
     CPPYY_IMPORT
@@ -117,6 +140,10 @@ namespace Cppyy {
     bool IsAbstract(TCppType_t type);
     CPPYY_IMPORT
     bool IsEnum(const std::string& type_name);
+    CPPYY_IMPORT
+    bool IsAggregate(TCppType_t type);
+    CPPYY_IMPORT
+    bool IsDefaultConstructable(TCppType_t type);
 
     CPPYY_IMPORT
     void GetAllCppNames(TCppScope_t scope, std::set<std::string>& cppnames);
@@ -149,6 +176,9 @@ namespace Cppyy {
     CPPYY_IMPORT
     void        AddSmartPtrType(const std::string&);
 
+    CPPYY_IMPORT
+    void        AddTypeReducer(const std::string& reducable, const std::string& reduced);
+
 // calculate offsets between declared and actual type, up-cast: direction > 0; down-cast: direction < 0
     CPPYY_IMPORT
     ptrdiff_t GetBaseOffset(
@@ -156,7 +186,7 @@ namespace Cppyy {
 
 // method/function reflection information ------------------------------------
     CPPYY_IMPORT
-    TCppIndex_t GetNumMethods(TCppScope_t scope);
+    TCppIndex_t GetNumMethods(TCppScope_t scope, bool accept_namespace = false);
     CPPYY_IMPORT
     std::vector<TCppIndex_t> GetMethodIndicesFromName(TCppScope_t scope, const std::string& name);
 
@@ -191,7 +221,7 @@ namespace Cppyy {
     bool        IsConstMethod(TCppMethod_t);
 
     CPPYY_IMPORT
-    TCppIndex_t GetNumTemplatedMethods(TCppScope_t scope);
+    TCppIndex_t GetNumTemplatedMethods(TCppScope_t scope, bool accept_namespace = false);
     CPPYY_IMPORT
     std::string GetTemplatedMethodName(TCppScope_t scope, TCppIndex_t imeth);
     CPPYY_IMPORT
@@ -222,7 +252,7 @@ namespace Cppyy {
 
 // data member reflection information ----------------------------------------
     CPPYY_IMPORT
-    TCppIndex_t GetNumDatamembers(TCppScope_t scope);
+    TCppIndex_t GetNumDatamembers(TCppScope_t scope, bool accept_namespace = false);
     CPPYY_IMPORT
     std::string GetDatamemberName(TCppScope_t scope, TCppIndex_t idata);
     CPPYY_IMPORT

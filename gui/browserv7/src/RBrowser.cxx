@@ -235,20 +235,22 @@ public:
 class RBrowserCatchedWidget : public RBrowserWidget {
 public:
 
-   std::string fUrl;   // url of catched widget
+   RWebWindow  *fWindow{nullptr};   // catched widget, TODO: to be changed to shared_ptr
    std::string fCatchedKind;  // kind of catched widget
 
    void Show(const std::string &) override {}
 
    std::string GetKind() const override { return "catched"s; }
 
-   std::string GetUrl() override { return fUrl; }
+   std::string GetUrl() override { return fWindow ? fWindow->GetUrl(false) : ""s; }
 
    std::string GetTitle() override { return fCatchedKind; }
 
-   RBrowserCatchedWidget(const std::string &name, const std::string &url, const std::string &kind) :
+   bool IsValid() override { return fWindow != nullptr; }
+
+   RBrowserCatchedWidget(const std::string &name, RWebWindow *win, const std::string &kind) :
       RBrowserWidget(name),
-      fUrl(url),
+      fWindow(win),
       fCatchedKind(kind)
    {
    }
@@ -261,6 +263,8 @@ using namespace ROOT;
 
 /** \class ROOT::RBrowser
 \ingroup rbrowser
+\ingroup webwidgets
+
 \brief Web-based %ROOT files and objects browser
 
 \image html v7_rbrowser.png
@@ -312,14 +316,20 @@ RBrowser::RBrowser(bool use_rcanvas)
 
       if (!fWebWindow || !fCatchWindowShow || kind.empty()) return false;
 
-      std::string url = fWebWindow->GetRelativeAddr(win);
-
-      auto widget = AddCatchedWidget(url, kind);
+      auto widget = AddCatchedWidget(&win, kind);
 
       if (widget && fWebWindow && (fWebWindow->NumConnections() > 0))
          fWebWindow->Send(0, NewWidgetMsg(widget));
 
       return widget ? true : false;
+   });
+
+   fWebWindow->GetManager()->SetDeleteCallback([this](RWebWindow &win) -> void {
+      for (auto &widget : fWidgets) {
+         auto catched = dynamic_cast<RBrowserCatchedWidget *>(widget.get());
+         if (catched && (catched->fWindow == &win))
+            catched->fWindow = nullptr;
+      }
    });
 
    Show();
@@ -341,8 +351,10 @@ RBrowser::RBrowser(bool use_rcanvas)
 
 RBrowser::~RBrowser()
 {
-   if (fWebWindow)
+   if (fWebWindow) {
       fWebWindow->GetManager()->SetShowCallback(nullptr);
+      fWebWindow->GetManager()->SetDeleteCallback(nullptr);
+   }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -524,6 +536,18 @@ void RBrowser::Hide()
       fWebWindow->CloseConnections();
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+/// Return URL parameter for the window showing ROOT Browser
+/// See \ref ROOT::RWebWindow::GetUrl docu for more details
+
+std::string RBrowser::GetWindowUrl(bool remote)
+{
+   if (fWebWindow)
+      return fWebWindow->GetUrl(remote);
+
+   return ""s;
+}
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// Creates new widget
@@ -560,13 +584,13 @@ std::shared_ptr<RBrowserWidget> RBrowser::AddWidget(const std::string &kind)
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// Add widget catched from external scripts
 
-std::shared_ptr<RBrowserWidget> RBrowser::AddCatchedWidget(const std::string &url, const std::string &kind)
+std::shared_ptr<RBrowserWidget> RBrowser::AddCatchedWidget(RWebWindow *win, const std::string &kind)
 {
-   if (url.empty()) return nullptr;
+   if (!win || kind.empty()) return nullptr;
 
    std::string name = "catched"s + std::to_string(++fWidgetCnt);
 
-   auto widget = std::make_shared<RBrowserCatchedWidget>(name, url, kind);
+   auto widget = std::make_shared<RBrowserCatchedWidget>(name, win, kind);
 
    fWidgets.emplace_back(widget);
 
@@ -667,7 +691,7 @@ void RBrowser::SendInitMsg(unsigned connid)
 
    for (auto &widget : fWidgets) {
       widget->ResetConn();
-      reply.emplace_back(std::vector<std::string>({ widget->GetKind(), widget->GetUrl(), widget->GetName(), widget->GetTitle() }));
+      reply.emplace_back(std::vector<std::string>({ widget->GetKind(), ".."s + widget->GetUrl(), widget->GetName(), widget->GetTitle() }));
    }
 
    if (!fActiveWidgetName.empty())
@@ -731,7 +755,7 @@ std::string RBrowser::GetCurrentWorkingDirectory()
 
 std::string RBrowser::NewWidgetMsg(std::shared_ptr<RBrowserWidget> &widget)
 {
-   std::vector<std::string> arr = { widget->GetKind(), widget->GetUrl(), widget->GetName(), widget->GetTitle(),
+   std::vector<std::string> arr = { widget->GetKind(), ".."s + widget->GetUrl(), widget->GetName(), widget->GetTitle(),
                                     Browsable::RElement::GetPathAsString(widget->GetPath()) };
    return "NEWWIDGET:"s + TBufferJSON::ToJSON(&arr, TBufferJSON::kNoSpaces).Data();
 }
@@ -739,8 +763,20 @@ std::string RBrowser::NewWidgetMsg(std::shared_ptr<RBrowserWidget> &widget)
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// Check if any widget was modified and update if necessary
 
-void RBrowser::CheckWidgtesModified()
+void RBrowser::CheckWidgtesModified(unsigned connid)
 {
+   std::vector<std::string> del_names;
+
+   for (auto &widget : fWidgets)
+      if (!widget->IsValid())
+         del_names.push_back(widget->GetName());
+
+   if (!del_names.empty())
+      fWebWindow->Send(connid, "CLOSE_WIDGETS:"s + TBufferJSON::ToJSON(&del_names, TBufferJSON::kNoSpaces).Data());
+
+   for (auto name : del_names)
+      CloseTab(name);
+
    for (auto &widget : fWidgets)
       widget->CheckModified();
 }
@@ -857,7 +893,7 @@ void RBrowser::ProcessMsg(unsigned connid, const std::string &arg0)
             widget->RefreshFromLogs(sPrompt + msg, GetRootLogs());
       }
 
-      CheckWidgtesModified();
+      CheckWidgtesModified(connid);
    } else if (kind == "GETHISTORY") {
 
       auto history = GetRootHistory();
@@ -886,6 +922,7 @@ void RBrowser::ProcessMsg(unsigned connid, const std::string &arg0)
             if ((arr->size() == 6) && (arr->at(5) == "RUN")) {
                ProcessSaveFile(editor->fFileName, editor->fContent);
                ProcessRunMacro(editor->fFileName);
+               CheckWidgtesModified(connid);
             }
          }
       }

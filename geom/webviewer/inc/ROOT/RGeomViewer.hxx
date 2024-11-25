@@ -60,6 +60,8 @@ public:
 
    std::string GetWindowAddr() const;
 
+   std::string GetWindowUrl(bool remote);
+
    void SetGeometry(TGeoManager *mgr, const std::string &volname = "");
 
    void SelectVolume(const std::string &volname);

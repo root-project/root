@@ -44,8 +44,6 @@ Cranmer KS, Kernel Estimation in High-Energy Physics.
 
 #include "TError.h"
 
-using namespace std;
-
 ClassImp(RooKeysPdf);
 
 const double RooKeysPdf::_nSigma = std::sqrt(-2. *

@@ -39,7 +39,7 @@ given a Print() option string.
 #include "TNamed.h"
 #include "TClass.h"
 
-using namespace std;
+using std::ostream, std::cout, std::endl, std::setw;
 
 ClassImp(RooPrintable);
 

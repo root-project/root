@@ -333,47 +333,60 @@ TEST(RNTupleShow, Objects)
 
 TEST(RNTupleShow, Collections)
 {
+   using ROOT::Experimental::RRecordField;
+   using ROOT::Experimental::RVectorField;
+
    std::string rootFileName{"test_ntuple_show_collection.root"};
    std::string ntupleName{"Collections"};
    FileRaii fileGuard(rootFileName);
    {
+      struct MyStruct {
+         short myShort;
+         float myFloat;
+      };
+
       auto model = RNTupleModel::Create();
-      auto collection_model = RNTupleModel::Create();
-      auto int_field = collection_model->MakeField<int>("myInt");
-      auto float_field = collection_model->MakeField<float>("myFloat");
-      auto collection = model->MakeCollection("collection", std::move(collection_model));
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), ntupleName, rootFileName);
-      *int_field = 0;
-      *float_field = 10.0;
-      collection->Fill();
-      *int_field = 1;
-      *float_field = 20.0;
-      collection->Fill();
-      ntuple->Fill();
+      std::vector<std::unique_ptr<RFieldBase>> leafFields;
+      leafFields.emplace_back(std::make_unique<RField<short>>("myShort"));
+      leafFields.emplace_back(std::make_unique<RField<float>>("myFloat"));
+      auto recordField = std::make_unique<RRecordField>("_0", std::move(leafFields));
+      EXPECT_EQ(offsetof(MyStruct, myShort), recordField->GetOffsets()[0]);
+      EXPECT_EQ(offsetof(MyStruct, myFloat), recordField->GetOffsets()[1]);
+
+      auto collectionField = RVectorField::CreateUntyped("myCollection", std::move(recordField));
+      model->AddField(std::move(collectionField));
+      model->Freeze();
+
+      auto v = std::static_pointer_cast<std::vector<MyStruct>>(model->GetDefaultEntry().GetPtr<void>("myCollection"));
+      auto writer = RNTupleWriter::Recreate(std::move(model), ntupleName, rootFileName);
+
+      v->emplace_back(MyStruct({1, 10.0}));
+      v->emplace_back(MyStruct({2, 20.0}));
+      writer->Fill();
    }
 
-   auto ntuple = RNTupleReader::Open(ntupleName, rootFileName);
+   auto reader = RNTupleReader::Open(ntupleName, rootFileName);
    std::ostringstream osData;
-   ntuple->Show(0, osData);
+   reader->Show(0, osData);
    // clang-format off
    std::string outputData{ std::string("")
       + "{\n"
-      + "  \"collection\": [{\"myInt\": 0, \"myFloat\": 10}, {\"myInt\": 1, \"myFloat\": 20}]\n"
+      + "  \"myCollection\": [{\"myShort\": 1, \"myFloat\": 10}, {\"myShort\": 2, \"myFloat\": 20}]\n"
       + "}\n" };
    // clang-format on
    EXPECT_EQ(outputData, osData.str());
 
    std::ostringstream osFields;
-   ntuple->PrintInfo(ROOT::Experimental::ENTupleInfo::kSummary, osFields);
+   reader->PrintInfo(ROOT::Experimental::ENTupleInfo::kSummary, osFields);
    // clang-format off
    std::string outputFields{ std::string("")
       + "************************************ NTUPLE ************************************\n"
       + "* N-Tuple : Collections                                                        *\n"
       + "* Entries : 1                                                                  *\n"
       + "********************************************************************************\n"
-      + "* Field 1           : collection (std::vector<>)                               *\n"
+      + "* Field 1           : myCollection                                             *\n"
       + "*   Field 1.1       : _0                                                       *\n"
-      + "*     Field 1.1.1   : myInt (std::int32_t)                                     *\n"
+      + "*     Field 1.1.1   : myShort (std::int16_t)                                   *\n"
       + "*     Field 1.1.2   : myFloat (float)                                          *\n"
       + "********************************************************************************\n" };
    // clang-format on
@@ -604,4 +617,43 @@ TEST(RNTupleShow, Enum)
       + "}\n";
    // clang-format on
    EXPECT_EQ(os1.str(), expected);
+}
+
+TEST(RNTupleShow, Friends)
+{
+   FileRaii fileGuard1("test_ntuple_show_friends1.ntuple");
+   {
+      auto model = RNTupleModel::Create();
+      auto foo = model->MakeField<float>("foo");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl1", fileGuard1.GetPath());
+      *foo = 3.14;
+      writer->Fill();
+   }
+
+   FileRaii fileGuard2("test_ntuple_show_friends2.ntuple");
+   {
+      auto model = RNTupleModel::Create();
+      auto bar = model->MakeField<float>("bar");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl2", fileGuard2.GetPath());
+      *bar = 2.72;
+      writer->Fill();
+   }
+
+   std::vector<RNTupleOpenSpec> friends = {{"ntpl1", fileGuard1.GetPath()}, {"ntpl2", fileGuard2.GetPath()}};
+   auto ntuple = RNTupleReader::OpenFriends(friends);
+   std::ostringstream os;
+   ntuple->Show(0, os);
+   // clang-format off
+   std::string expected{std::string("")
+      + "{\n"
+      + "  \"ntpl1\": {\n"
+      + "    \"foo\": 3.14\n"
+      + "  },\n"
+      + "  \"ntpl2\": {\n"
+      + "    \"bar\": 2.72\n"
+      + "  }\n"
+      + "}\n"
+   };
+   // clang-format on
+   EXPECT_EQ(os.str(), expected);
 }

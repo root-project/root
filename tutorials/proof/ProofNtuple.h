@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_proofntuple
+/// \ingroup tutorial_legacy
 ///
 /// Selector to fill a simple ntuple
 ///

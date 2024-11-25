@@ -127,6 +127,28 @@ Short_t TTF::CharToUnicode(UInt_t code)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Compute the trailing blanks width. It is use to compute the text width in GetTextExtent
+/// `n` is the number of trailing blanks in a string.
+
+void TTF::ComputeTrailingBlanksWidth(Int_t n)
+{
+   fgTBlankW = 0;
+   if (n) {
+      FT_Face face = fgFace[fgCurFontIdx];
+      char space = ' ';
+      FT_UInt load_flags = FT_LOAD_DEFAULT;
+      if (!fgHinting) load_flags |= FT_LOAD_NO_HINTING;
+      FT_Load_Char(face, space, load_flags);
+
+      FT_GlyphSlot slot      = face->glyph;
+      FT_Pos advance_x       = slot->advance.x;
+      Int_t advance_x_pixels = advance_x >> 6;
+
+      fgTBlankW = advance_x_pixels * n;
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Get width (w) and height (h) when text is horizontal.
 
 void TTF::GetTextExtent(UInt_t &w, UInt_t &h, char *text)
@@ -138,7 +160,7 @@ void TTF::GetTextExtent(UInt_t &w, UInt_t &h, char *text)
    LayoutGlyphs();
    Int_t Xoff = 0; if (fgCBox.xMin < 0) Xoff = -fgCBox.xMin;
    Int_t Yoff = 0; if (fgCBox.yMin < 0) Yoff = -fgCBox.yMin;
-   w = fgCBox.xMax + Xoff + fgTBlankW;
+   w = fgCBox.xMax + Xoff + GetTrailingBlanksWidth();
    h = fgCBox.yMax + Yoff;
 }
 
@@ -167,7 +189,7 @@ void TTF::GetTextExtent(UInt_t &w, UInt_t &h, wchar_t *text)
    LayoutGlyphs();
    Int_t Xoff = 0; if (fgCBox.xMin < 0) Xoff = -fgCBox.xMin;
    Int_t Yoff = 0; if (fgCBox.yMin < 0) Yoff = -fgCBox.yMin;
-   w = fgCBox.xMax + Xoff + fgTBlankW;
+   w = fgCBox.xMax + Xoff + GetTrailingBlanksWidth();
    h = fgCBox.yMax + Yoff;
 }
 
@@ -254,7 +276,6 @@ void TTF::PrepareString(const char *string)
    UInt_t index;       // Unicode value
    Int_t NbTBlank = 0; // number of trailing blanks
 
-   fgTBlankW   = 0;
    fgNumGlyphs = 0;
    while (*p) {
       index = CharToUnicode((FT_ULong)*p);
@@ -272,14 +293,7 @@ void TTF::PrepareString(const char *string)
       p++;
    }
 
-   // compute the trailing blanks width. It is use to compute the text
-   // width in GetTextExtent
-   if (NbTBlank) {
-      FT_UInt load_flags = FT_LOAD_DEFAULT;
-      if (!fgHinting) load_flags |= FT_LOAD_NO_HINTING;
-      if (FT_Load_Glyph(fgFace[fgCurFontIdx], 3, load_flags)) return;
-      fgTBlankW = (Int_t)((fgFace[fgCurFontIdx]->glyph->advance.x)>>6)*NbTBlank;
-   }
+   ComputeTrailingBlanksWidth(NbTBlank);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -292,7 +306,6 @@ void TTF::PrepareString(const wchar_t *string)
    UInt_t index;       // Unicode value
    Int_t NbTBlank = 0; // number of trailing blanks
 
-   fgTBlankW   = 0;
    fgNumGlyphs = 0;
    while (*p) {
       index = FT_Get_Char_Index(fgFace[fgCurFontIdx], (FT_ULong)*p);
@@ -310,14 +323,7 @@ void TTF::PrepareString(const wchar_t *string)
       p++;
    }
 
-   // compute the trailing blanks width. It is use to compute the text
-   // width in GetTextExtent
-   if (NbTBlank) {
-      FT_UInt load_flags = FT_LOAD_DEFAULT;
-      if (!fgHinting) load_flags |= FT_LOAD_NO_HINTING;
-      if (FT_Load_Glyph(fgFace[fgCurFontIdx], 3, load_flags)) return;
-      fgTBlankW = (Int_t)((fgFace[fgCurFontIdx]->glyph->advance.x)>>6)*NbTBlank;
-   }
+   ComputeTrailingBlanksWidth(NbTBlank);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -475,10 +481,10 @@ Int_t TTF::SetTextFont(const char *fontname, Int_t italic)
 /// |      1      |   Free Serif Italic       |    Times-Italic               |
 /// |      2      |   Free Serif Bold         |    Times-Bold                 |
 /// |      3      |   Free Serif Bold Italic  |    Times-BoldItalic           |
-/// |      4      |   Free Sans               |    Helvetica                  |
-/// |      5      |   Free Sans Oblique       |    Helvetica-Oblique          |
-/// |      6      |   Free Sans Bold          |    Helvetica-Bold             |
-/// |      7      |   Free Sans Bold Oblique  |    Helvetica-BoldOblique      |
+/// |      4      |   Tex Gyre Regular        |    Helvetica                  |
+/// |      5      |   Tex Gyre Italic         |    Helvetica-Oblique          |
+/// |      6      |   Tex Gyre Bold           |    Helvetica-Bold             |
+/// |      7      |   Tex Gyre Bold Italic    |    Helvetica-BoldOblique      |
 /// |      8      |   Free Mono               |    Courier                    |
 /// |      9      |   Free Mono Oblique       |    Courier-Oblique            |
 /// |     10      |   Free Mono Bold          |    Courier-Bold               |
@@ -497,10 +503,10 @@ void TTF::SetTextFont(Font_t fontnumber)
      { "Root.TTFont.1", "FreeSerifItalic.otf" },
      { "Root.TTFont.2", "FreeSerifBold.otf" },
      { "Root.TTFont.3", "FreeSerifBoldItalic.otf" },
-     { "Root.TTFont.4", "FreeSans.otf" },
-     { "Root.TTFont.5", "FreeSansOblique.otf" },
-     { "Root.TTFont.6", "FreeSansBold.otf" },
-     { "Root.TTFont.7", "FreeSansBoldOblique.otf" },
+     { "Root.TTFont.4", "texgyreheros-regular.otf" },
+     { "Root.TTFont.5", "texgyreheros-italic.otf" },
+     { "Root.TTFont.6", "texgyreheros-bold.otf" },
+     { "Root.TTFont.7", "texgyreheros-bolditalic.otf" },
      { "Root.TTFont.8", "FreeMono.otf" },
      { "Root.TTFont.9", "FreeMonoOblique.otf" },
      { "Root.TTFont.10", "FreeMonoBold.otf" },
@@ -570,8 +576,10 @@ void TTF::SetTextSize(Float_t textsize)
    }
 
    Int_t tsize = (Int_t)(textsize*kScale+0.5) << 6;
-   if (FT_Set_Char_Size(fgFace[fgCurFontIdx], tsize, tsize, 72, 72))
-      Error("TTF::SetTextSize", "error in FT_Set_Char_Size");
+   FT_Error err = FT_Set_Char_Size(fgFace[fgCurFontIdx], tsize, tsize, 72, 72);
+   if (err)
+      Error("TTF::SetTextSize", "error in FT_Set_Char_Size: 0x%x (input size %f, calc. size 0x%x)", err, textsize,
+            tsize);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -585,63 +593,70 @@ void TTF::Version(Int_t &major, Int_t &minor, Int_t &patch)
 
 Bool_t TTF::GetHinting()
 {
-    return fgHinting;
+   return fgHinting;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 Bool_t TTF::GetKerning()
 {
-    return fgKerning;
+   return fgKerning;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 Bool_t TTF::GetSmoothing()
 {
-    return fgSmoothing;
+   return fgSmoothing;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 Bool_t TTF::IsInitialized()
 {
-    return fgInit;
+   return fgInit;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 Int_t  TTF::GetWidth()
 {
-    return fgWidth;
+   return fgWidth;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 Int_t  TTF::GetAscent()
 {
-    return fgAscent;
+   return fgAscent;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 Int_t  TTF::GetNumGlyphs()
 {
-    return fgNumGlyphs;
+   return fgNumGlyphs;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 FT_Matrix *TTF::GetRotMatrix()
 {
-    return fgRotMatrix;
+   return fgRotMatrix;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+Int_t  TTF::GetTrailingBlanksWidth()
+{
+   return fgTBlankW;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 const FT_BBox &TTF::GetBox()
 {
-    return fgCBox;
+   return fgCBox;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -121,7 +121,7 @@
 
 using namespace RooFit;
 using namespace RooStats;
-using namespace std;
+using std::cout, std::endl;
 
 bool useProof = false; // flag to control whether to use Proof
 int nworkers = 0;      // number of workers (default use all available cores)
@@ -164,34 +164,17 @@ void TwoSidedFrequentistUpperLimitWithBands(const char *infile = "", const char 
    // Try to open the file
    TFile *inputFile = TFile::Open(filename);
 
-   // if input file was specified byt not found, quit
-   if (!inputFile) {
-      cout << "StandardRooStatsDemoMacro: Input file " << filename << " is not found" << endl;
-      return;
-   }
-
    // -------------------------------------------------------
    // Now get the data and workspace
 
    // get the workspace out of the file
    RooWorkspace *w = (RooWorkspace *)inputFile->Get(workspaceName);
-   if (!w) {
-      cout << "workspace not found" << endl;
-      return;
-   }
 
    // get the modelConfig out of the file
    ModelConfig *mc = (ModelConfig *)w->obj(modelConfigName);
 
    // get the modelConfig out of the file
    RooAbsData *data = w->data(dataName);
-
-   // make sure ingredients are found
-   if (!data || !mc) {
-      w->Print();
-      cout << "data or ModelConfig was not found" << endl;
-      return;
-   }
 
    cout << "Found data and ModelConfig:" << endl;
    mc->Print();

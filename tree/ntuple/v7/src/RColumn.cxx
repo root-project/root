@@ -14,97 +14,115 @@
  *************************************************************************/
 
 #include <ROOT/RColumn.hxx>
-#include <ROOT/RColumnModel.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RPageStorage.hxx>
 
 #include <TError.h>
 
-ROOT::Experimental::Detail::RColumn::RColumn(const RColumnModel& model, std::uint32_t index)
-   : fModel(model), fIndex(index)
+#include <algorithm>
+#include <cassert>
+#include <utility>
+
+ROOT::Experimental::Internal::RColumn::RColumn(EColumnType type, std::uint32_t columnIndex,
+                                               std::uint16_t representationIndex)
+   : fType(type), fIndex(columnIndex), fRepresentationIndex(representationIndex), fTeam({this})
 {
 }
 
-ROOT::Experimental::Detail::RColumn::~RColumn()
+ROOT::Experimental::Internal::RColumn::~RColumn()
 {
-   if (!fWritePage[0].IsNull())
-      fPageSink->ReleasePage(fWritePage[0]);
-   if (!fWritePage[1].IsNull())
-      fPageSink->ReleasePage(fWritePage[1]);
-   if (!fReadPage.IsNull())
-      fPageSource->ReleasePage(fReadPage);
    if (fHandleSink)
       fPageSink->DropColumn(fHandleSink);
    if (fHandleSource)
       fPageSource->DropColumn(fHandleSource);
 }
 
-void ROOT::Experimental::Detail::RColumn::Connect(DescriptorId_t fieldId, RPageStorage *pageStorage,
-                                                  NTupleSize_t firstElementIndex)
+void ROOT::Experimental::Internal::RColumn::ConnectPageSink(DescriptorId_t fieldId, RPageSink &pageSink,
+                                                            NTupleSize_t firstElementIndex)
 {
-   switch (pageStorage->GetType()) {
-   case EPageStorageType::kSink:
-      fFirstElementIndex = firstElementIndex;
-      fPageSink = static_cast<RPageSink*>(pageStorage); // the page sink initializes fWritePage on AddColumn
-      fHandleSink = fPageSink->AddColumn(fieldId, *this);
-      fApproxNElementsPerPage = fPageSink->GetWriteOptions().GetApproxUnzippedPageSize() / fElement->GetSize();
-      if (fApproxNElementsPerPage < 2)
-         throw RException(R__FAIL("page size too small for writing"));
-      // We now have 0 < fApproxNElementsPerPage / 2 < fApproxNElementsPerPage
-      fWritePage[0] = fPageSink->ReservePage(fHandleSink, fApproxNElementsPerPage + fApproxNElementsPerPage / 2);
-      fWritePage[1] = fPageSink->ReservePage(fHandleSink, fApproxNElementsPerPage + fApproxNElementsPerPage / 2);
-      break;
-   case EPageStorageType::kSource:
-      fPageSource = static_cast<RPageSource*>(pageStorage);
-      fHandleSource = fPageSource->AddColumn(fieldId, *this);
-      fNElements = fPageSource->GetNElements(fHandleSource);
-      fColumnIdSource = fPageSource->GetColumnId(fHandleSource);
-      {
-         auto descriptorGuard = fPageSource->GetSharedDescriptorGuard();
-         fFirstElementIndex = descriptorGuard->GetColumnDescriptor(fColumnIdSource).GetFirstElementIndex();
-      }
-      break;
-   default:
-      R__ASSERT(false);
+   if (pageSink.GetWriteOptions().GetInitialNElementsPerPage() * fElement->GetSize() >
+       pageSink.GetWriteOptions().GetMaxUnzippedPageSize()) {
+      throw RException(R__FAIL("maximum page size to small for the initial number of elements per page"));
+   }
+
+   fPageSink = &pageSink;
+   fFirstElementIndex = firstElementIndex;
+   fHandleSink = fPageSink->AddColumn(fieldId, *this);
+   fOnDiskId = fPageSink->GetColumnId(fHandleSink);
+   fWritePage = fPageSink->ReservePage(fHandleSink, fPageSink->GetWriteOptions().GetInitialNElementsPerPage());
+   if (fWritePage.IsNull())
+      throw RException(R__FAIL("page buffer memory budget too small"));
+}
+
+void ROOT::Experimental::Internal::RColumn::ConnectPageSource(DescriptorId_t fieldId, RPageSource &pageSource)
+{
+   fPageSource = &pageSource;
+   fHandleSource = fPageSource->AddColumn(fieldId, *this);
+   fNElements = fPageSource->GetNElements(fHandleSource);
+   fOnDiskId = fPageSource->GetColumnId(fHandleSource);
+   {
+      auto descriptorGuard = fPageSource->GetSharedDescriptorGuard();
+      fFirstElementIndex = descriptorGuard->GetColumnDescriptor(fOnDiskId).GetFirstElementIndex();
    }
 }
 
-void ROOT::Experimental::Detail::RColumn::Flush()
+void ROOT::Experimental::Internal::RColumn::Flush()
 {
-   auto otherIdx = 1 - fWritePageIdx;
-   if (fWritePage[fWritePageIdx].IsEmpty() && fWritePage[otherIdx].IsEmpty())
+   if (fWritePage.GetNElements() == 0)
       return;
 
-   if ((fWritePage[fWritePageIdx].GetNElements() < fApproxNElementsPerPage / 2) && !fWritePage[otherIdx].IsEmpty()) {
-      // Small tail page: merge with previously used page; we know that there is enough space in the shadow page
-      auto &thisPage = fWritePage[fWritePageIdx];
-      void *dst = fWritePage[otherIdx].GrowUnchecked(thisPage.GetNElements());
-      memcpy(dst, thisPage.GetBuffer(), thisPage.GetNBytes());
-      thisPage.Reset(0);
-      std::swap(fWritePageIdx, otherIdx);
+   fPageSink->CommitPage(fHandleSink, fWritePage);
+   fWritePage = fPageSink->ReservePage(fHandleSink, fPageSink->GetWriteOptions().GetInitialNElementsPerPage());
+   R__ASSERT(!fWritePage.IsNull());
+   fWritePage.Reset(fNElements);
+}
+
+void ROOT::Experimental::Internal::RColumn::CommitSuppressed()
+{
+   fPageSink->CommitSuppressedColumn(fHandleSink);
+}
+
+bool ROOT::Experimental::Internal::RColumn::TryMapPage(NTupleSize_t globalIndex)
+{
+   const auto nTeam = fTeam.size();
+   std::size_t iTeam = 1;
+   do {
+      fReadPageRef = fPageSource->LoadPage(fTeam.at(fLastGoodTeamIdx)->GetHandleSource(), globalIndex);
+      if (!fReadPageRef.Get().IsNull())
+         break;
+      fLastGoodTeamIdx = (fLastGoodTeamIdx + 1) % nTeam;
+      iTeam++;
+   } while (iTeam <= nTeam);
+
+   return fReadPageRef.Get().Contains(globalIndex);
+}
+
+bool ROOT::Experimental::Internal::RColumn::TryMapPage(RClusterIndex clusterIndex)
+{
+   const auto nTeam = fTeam.size();
+   std::size_t iTeam = 1;
+   do {
+      fReadPageRef = fPageSource->LoadPage(fTeam.at(fLastGoodTeamIdx)->GetHandleSource(), clusterIndex);
+      if (!fReadPageRef.Get().IsNull())
+         break;
+      fLastGoodTeamIdx = (fLastGoodTeamIdx + 1) % nTeam;
+      iTeam++;
+   } while (iTeam <= nTeam);
+
+   return fReadPageRef.Get().Contains(clusterIndex);
+}
+
+void ROOT::Experimental::Internal::RColumn::MergeTeams(RColumn &other)
+{
+   // We are working on very small vectors here, so quadratic complexity works
+   for (auto *c : other.fTeam) {
+      if (std::find(fTeam.begin(), fTeam.end(), c) == fTeam.end())
+         fTeam.emplace_back(c);
    }
 
-   R__ASSERT(fWritePage[otherIdx].IsEmpty());
-   fPageSink->CommitPage(fHandleSink, fWritePage[fWritePageIdx]);
-   fWritePage[fWritePageIdx].Reset(fNElements);
-}
-
-void ROOT::Experimental::Detail::RColumn::MapPage(const NTupleSize_t index)
-{
-   fPageSource->ReleasePage(fReadPage);
-   // Set fReadPage to an empty page before populating it to prevent double destruction of the previously page in case
-   // the page population fails.
-   fReadPage = RPage();
-   fReadPage = fPageSource->PopulatePage(fHandleSource, index);
-   R__ASSERT(fReadPage.Contains(index));
-}
-
-void ROOT::Experimental::Detail::RColumn::MapPage(RClusterIndex clusterIndex)
-{
-   fPageSource->ReleasePage(fReadPage);
-   // Set fReadPage to an empty page before populating it to prevent double destruction of the previously page in case
-   // the page population fails.
-   fReadPage = RPage();
-   fReadPage = fPageSource->PopulatePage(fHandleSource, clusterIndex);
-   R__ASSERT(fReadPage.Contains(clusterIndex));
+   for (auto c : fTeam) {
+      if (c == this)
+         continue;
+      c->fTeam = fTeam;
+   }
 }

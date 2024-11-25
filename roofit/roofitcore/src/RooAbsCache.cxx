@@ -30,8 +30,6 @@ mode changes and constant term optimization management calls.
 #include "RooAbsArg.h"
 #include "RooArgList.h"
 
-using namespace std;
-
 ClassImp(RooAbsCache);
 
 

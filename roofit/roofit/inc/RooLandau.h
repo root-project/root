@@ -37,9 +37,9 @@ public:
   Int_t getAnalyticalIntegral(RooArgSet &allVars, RooArgSet &analVars, const char *rangeName = nullptr) const override;
   double analyticalIntegral(Int_t code, const char *rangeName) const override;
 
-  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
-  std::string
-  buildCallToAnalyticIntegral(Int_t code, const char *rangeName, RooFit::Detail::CodeSquashContext &ctx) const override;
+  RooAbsReal const& getX() const { return *x; }
+  RooAbsReal const& getMean() const { return *mean; }
+  RooAbsReal const& getSigma() const { return *sigma; }
 
 protected:
 
@@ -48,7 +48,7 @@ protected:
   RooRealProxy sigma ;
 
   double evaluate() const override ;
-  void computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;
+  void doEval(RooFit::EvalContext &) const override;
   inline bool canComputeBatchWithCuda() const override { return true; }
 
 private:

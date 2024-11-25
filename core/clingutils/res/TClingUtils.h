@@ -197,21 +197,30 @@ private:
    std::string fRequestedName;
    std::string fNormalizedName;
    std::string fDemangledTypeInfo;
+   // clang-format off
    bool fRequestStreamerInfo;
    bool fRequestNoStreamer;
    bool fRequestNoInputOperator;
    bool fRequestOnlyTClass;
    int  fRequestedVersionNumber;
+   int  fRequestedRNTupleSerializationMode;
+   // clang-format on
 
 public:
+   // clang-format off
    enum ERootFlag {
-      kNoStreamer      = 0x01,
+      kNoStreamer = 0x01,
       kNoInputOperator = 0x02,
-      kUseByteCount    = 0x04,
-      kStreamerInfo    = 0x04,
-      kHasVersion      = 0x08
+      kUseByteCount = 0x04,
+      kStreamerInfo = 0x04,
+      kHasVersion = 0x08,
+      // kHasCustomStreamerMember = 0x10 (see TClingUtils.cxx and TClassTable.h)
+      kNtplForceNativeMode = 0x20,
+      kNtplForceStreamerMode = 0x40
    };
+   // clang-format on
 
+   // clang-format off
    AnnotatedRecordDecl(long index,
                        const clang::RecordDecl *decl,
                        bool rStreamerInfo,
@@ -219,6 +228,7 @@ public:
                        bool rRequestNoInputOperator,
                        bool rRequestOnlyTClass,
                        int rRequestedVersionNumber,
+                       int rRequestedRNTupleSerializationMode,
                        const cling::Interpreter &interpret,
                        const TNormalizedCtxt &normCtxt);
 
@@ -230,6 +240,7 @@ public:
                        bool rRequestNoInputOperator,
                        bool rRequestOnlyTClass,
                        int rRequestedVersionNumber,
+                       int rRequestedRNTupleSerializationMode,
                        const cling::Interpreter &interpret,
                        const TNormalizedCtxt &normCtxt);
 
@@ -242,6 +253,7 @@ public:
                        bool rRequestNoInputOperator,
                        bool rRequestOnlyTClass,
                        int rRequestedVersionNumber,
+                       int rRequestedRNTupleSerializationMode,
                        const cling::Interpreter &interpret,
                        const TNormalizedCtxt &normCtxt);
 
@@ -255,8 +267,10 @@ public:
                        bool rRequestNoInputOperator,
                        bool rRequestOnlyTClass,
                        int rRequestedVersionNumber,
+                       int rRequestedRNTupleSerializationMode,
                        const cling::Interpreter &interpret,
                        const TNormalizedCtxt &normCtxt);
+   // clang-format on
 
    ~AnnotatedRecordDecl() {
       // Nothing to do we do not own the pointer;
@@ -273,10 +287,13 @@ public:
       // Equivalent to CINT's cl.RootFlag() & G__USEBYTECOUNT
       return fRequestStreamerInfo;
    }
+   // clang-format off
    bool RequestNoInputOperator() const { return fRequestNoInputOperator; }
    bool RequestNoStreamer() const { return fRequestNoStreamer; }
    bool RequestOnlyTClass() const { return fRequestOnlyTClass; }
    int  RequestedVersionNumber() const { return fRequestedVersionNumber; }
+   int  RequestedRNTupleSerializationMode() const { return fRequestedRNTupleSerializationMode; }
+   // clang-format on
    int  RootFlag() const {
       // Return the request (streamerInfo, has_version, etc.) combined in a single
       // int.  See RScanner::AnnotatedRecordDecl::ERootFlag.
@@ -285,6 +302,12 @@ public:
       if (fRequestNoInputOperator) result |= kNoInputOperator;
       if (fRequestStreamerInfo) result |= kStreamerInfo;
       if (fRequestedVersionNumber > -1) result |= kHasVersion;
+      switch (fRequestedRNTupleSerializationMode) {
+      case 0: break;
+      case 1: result |= kNtplForceNativeMode; break;
+      case -1: result |= kNtplForceStreamerMode; break;
+      default: assert(false && "invalid setting of fRequestedRNTupleSerializationMode");
+      }
       return result;
    }
    const clang::RecordDecl* GetRecordDecl() const { return fDecl; }
@@ -675,6 +698,16 @@ const clang::TypedefNameDecl* GetAnnotatedRedeclarable(const clang::TypedefNameD
 //______________________________________________________________________________
 // Overload the template for tags, because we only check definitions.
 const clang::TagDecl* GetAnnotatedRedeclarable(const clang::TagDecl* TND);
+
+//______________________________________________________________________________
+// Return true if the DeclContext is representing an entity reacheable from the
+// global namespace
+bool IsCtxtReacheable(const clang::DeclContext &ctxt);
+
+//______________________________________________________________________________
+// Return true if the decl is representing an entity reacheable from the
+// global namespace
+bool IsDeclReacheable(const clang::Decl &decl);
 
 //______________________________________________________________________________
 // Return true if the decl is part of the std namespace.

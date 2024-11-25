@@ -102,6 +102,13 @@ using namespace ROOT;
 using namespace std::string_literals;
 
 
+/** \class ROOT::RTreeViewer
+\ingroup webwidgets
+
+\brief Web-based %ROOT TTree viewer
+*/
+
+
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
@@ -227,11 +234,20 @@ void RTreeViewer::Show(const RWebDisplayArgs &args, bool always_start_new_browse
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
-/// Return URL address of web window used for tree viewer
+/// Return address of web window used for tree viewer
 
 std::string RTreeViewer::GetWindowAddr() const
 {
    return fWebWindow ? fWebWindow->GetAddr() : ""s;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Return URL of web window used for tree viewer
+/// See \ref ROOT::RWebWindow::GetUrl docu for more details
+
+std::string RTreeViewer::GetWindowUrl(bool remote)
+{
+   return fWebWindow ? fWebWindow->GetUrl(remote) : ""s;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////

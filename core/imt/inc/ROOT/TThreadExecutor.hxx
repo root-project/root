@@ -41,9 +41,6 @@ namespace ROOT {
    class TThreadExecutor: public TExecutorCRTP<TThreadExecutor> {
       friend TExecutorCRTP;
 
-      template <typename F, typename... Args>
-      using InvokeResult_t = ROOT::TypeTraits::InvokeResult_t<F, Args...>;
-
    public:
 
       explicit TThreadExecutor(UInt_t nThreads = 0u);
@@ -77,21 +74,21 @@ namespace ROOT {
       // other than checking that func is compatible with the type of arguments.
       // a static_assert check in TThreadExecutor::Reduce is used to check that redfunc is compatible with the type returned by func
       using TExecutorCRTP<TThreadExecutor>::MapReduce;
-      template <class F, class R, class Cond = noReferenceCond<F>>
+      template <class F, class R, class Cond = validMapReturnCond<F>>
       auto MapReduce(F func, unsigned nTimes, R redfunc) -> InvokeResult_t<F>;
-      template <class F, class R, class Cond = noReferenceCond<F>>
+      template <class F, class R, class Cond = validMapReturnCond<F>>
       auto MapReduce(F func, unsigned nTimes, R redfunc, unsigned nChunks) -> InvokeResult_t<F>;
-      template <class F, class INTEGER, class R, class Cond = noReferenceCond<F, INTEGER>>
+      template <class F, class INTEGER, class R, class Cond = validMapReturnCond<F, INTEGER>>
       auto MapReduce(F func, ROOT::TSeq<INTEGER> args, R redfunc, unsigned nChunks) -> InvokeResult_t<F, INTEGER>;
-      template <class F, class T, class R, class Cond = noReferenceCond<F, T>>
+      template <class F, class T, class R, class Cond = validMapReturnCond<F, T>>
       auto MapReduce(F func, std::initializer_list<T> args, R redfunc, unsigned nChunks) -> InvokeResult_t<F, T>;
-      template <class F, class T, class R, class Cond = noReferenceCond<F, T>>
+      template <class F, class T, class R, class Cond = validMapReturnCond<F, T>>
       auto MapReduce(F func, std::vector<T> &args, R redfunc) -> InvokeResult_t<F, T>;
-      template <class F, class T, class R, class Cond = noReferenceCond<F, T>>
+      template <class F, class T, class R, class Cond = validMapReturnCond<F, T>>
       auto MapReduce(F func, const std::vector<T> &args, R redfunc) -> InvokeResult_t<F, T>;
-      template <class F, class T, class R, class Cond = noReferenceCond<F, T>>
+      template <class F, class T, class R, class Cond = validMapReturnCond<F, T>>
       auto MapReduce(F func, std::vector<T> &args, R redfunc, unsigned nChunks) -> InvokeResult_t<F, T>;
-      template <class F, class T, class R, class Cond = noReferenceCond<F, T>>
+      template <class F, class T, class R, class Cond = validMapReturnCond<F, T>>
       auto MapReduce(F func, const std::vector<T> &args, R redfunc, unsigned nChunks) -> InvokeResult_t<F, T>;
 
       using TExecutorCRTP<TThreadExecutor>::Reduce;
@@ -103,27 +100,27 @@ namespace ROOT {
    private:
       // Implementation of the Map functions declared in the parent class (TExecutorCRTP)
       //
-      template <class F, class Cond = noReferenceCond<F>>
+      template <class F, class Cond = validMapReturnCond<F>>
       auto MapImpl(F func, unsigned nTimes) -> std::vector<InvokeResult_t<F>>;
-      template <class F, class INTEGER, class Cond = noReferenceCond<F, INTEGER>>
+      template <class F, class INTEGER, class Cond = validMapReturnCond<F, INTEGER>>
       auto MapImpl(F func, ROOT::TSeq<INTEGER> args) -> std::vector<InvokeResult_t<F, INTEGER>>;
-      template <class F, class T, class Cond = noReferenceCond<F, T>>
+      template <class F, class T, class Cond = validMapReturnCond<F, T>>
       auto MapImpl(F func, std::vector<T> &args) -> std::vector<InvokeResult_t<F, T>>;
-      template <class F, class T, class Cond = noReferenceCond<F, T>>
+      template <class F, class T, class Cond = validMapReturnCond<F, T>>
       auto MapImpl(F func, const std::vector<T> &args) -> std::vector<InvokeResult_t<F, T>>;
 
       // Extension of the Map interfaces with chunking, specific to this class and
       // only available from a MapReduce call.
-      template <class F, class R, class Cond = noReferenceCond<F>>
+      template <class F, class R, class Cond = validMapReturnCond<F>>
       auto Map(F func, unsigned nTimes, R redfunc, unsigned nChunks) -> std::vector<InvokeResult_t<F>>;
-      template <class F, class INTEGER, class R, class Cond = noReferenceCond<F, INTEGER>>
+      template <class F, class INTEGER, class R, class Cond = validMapReturnCond<F, INTEGER>>
       auto Map(F func, ROOT::TSeq<INTEGER> args, R redfunc, unsigned nChunks)
          -> std::vector<InvokeResult_t<F, INTEGER>>;
-      template <class F, class T, class R, class Cond = noReferenceCond<F, T>>
+      template <class F, class T, class R, class Cond = validMapReturnCond<F, T>>
       auto Map(F func, std::initializer_list<T> args, R redfunc, unsigned nChunks) -> std::vector<InvokeResult_t<F, T>>;
-      template <class F, class T, class R, class Cond = noReferenceCond<F, T>>
+      template <class F, class T, class R, class Cond = validMapReturnCond<F, T>>
       auto Map(F func, std::vector<T> &args, R redfunc, unsigned nChunks) -> std::vector<InvokeResult_t<F, T>>;
-      template <class F, class T, class R, class Cond = noReferenceCond<F, T>>
+      template <class F, class T, class R, class Cond = validMapReturnCond<F, T>>
       auto Map(F func, const std::vector<T> &args, R redfunc, unsigned nChunks) -> std::vector<InvokeResult_t<F, T>>;
 
       // Functions that interface with the parallel library used as a backend

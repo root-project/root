@@ -37,13 +37,10 @@
 #include "TMVA/PDEFoamVect.h"
 
 #include <iostream>
-#include <ostream>
 
 #include "Rtypes.h"
 #include "TObject.h"
 #include "TRef.h"
-
-using namespace std;
 
 ClassImp(TMVA::PDEFoamCell);
 
@@ -249,19 +246,19 @@ void TMVA::PDEFoamCell::Print(Option_t *option) const
    std::cout <<  " Volume= "<<     fVolume   <<",";
    std::cout <<  " TrueInteg= " << fIntegral <<",";
    std::cout <<  " DriveInteg= "<< fDrive    <<",";
-   std::cout << std::endl;;
+   std::cout << std::endl;
    std::cout <<  " Xdiv= "<<fXdiv<<",";
    std::cout <<  " Best= "<<fBest<<",";
    std::cout <<  " Parent=  {"<< (GetPare() ? GetPare()->GetSerial() : -1) <<"} "; // extra DEBUG
    std::cout <<  " Daught0= {"<< (GetDau0() ? GetDau0()->GetSerial() : -1 )<<"} "; // extra DEBUG
    std::cout <<  " Daught1= {"<< (GetDau1() ? GetDau1()->GetSerial()  : -1 )<<"} "; // extra DEBUG
-   std::cout << std::endl;;
+   std::cout << std::endl;
    //
    //
    if (fDim>0 ) {
       PDEFoamVect cellPosi(fDim); PDEFoamVect cellSize(fDim);
       GetHcub(cellPosi,cellSize);
-      std::cout <<"   Posi= "; cellPosi.Print("1"); std::cout<<","<< std::endl;;
-      std::cout <<"   Size= "; cellSize.Print("1"); std::cout<<","<< std::endl;;
+      std::cout <<"   Posi= "; cellPosi.Print("1"); std::cout<<","<< std::endl;
+      std::cout <<"   Size= "; cellSize.Print("1"); std::cout<<","<< std::endl;
    }
 }

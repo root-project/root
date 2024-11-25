@@ -1,7 +1,13 @@
 import { select as d3_select } from '../d3.mjs';
-import { settings, internals, isNodeJs, isFunc, isStr, isObject, btoa_func, getDocument, source_dir, loadScript } from '../core.mjs';
-import { detectFont } from './FontHandler.mjs';
-import { approximateLabelWidth } from './latex.mjs';
+import { settings, internals, isNodeJs, isFunc, isStr, isObject, btoa_func, getDocument } from '../core.mjs';
+import { getColor } from './colors.mjs';
+
+/** @summary Standard prefix for SVG file context as data url
+ * @private */
+const prSVG = 'data:image/svg+xml;charset=utf-8,',
+/** @summary Standard prefix for JSON file context as data url
+ * @private */
+      prJSON = 'data:application/json;charset=utf-8,';
 
 
 /** @summary Returns visible rect of element
@@ -72,41 +78,58 @@ function getAbsPosInCanvas(sel, pos) {
   * @param {boolean} [ret_fmt] - when true returns array with value and actual format like ['0.1','6.4f']
   * @return {string|Array} - converted value or array with value and actual format
   * @private */
-function floatToString(value, fmt, ret_fmt) {
-   if (!fmt) fmt = '6.4g';
+function floatToString(value, fmt, ret_fmt, significance) {
+   if (!fmt)
+      fmt = '6.4g';
+   else if (fmt === 'g')
+      fmt = '8.6g';
+   else if (fmt === 'c')
+      fmt = '8.6c';
 
    fmt = fmt.trim();
    const len = fmt.length;
    if (len < 2)
       return ret_fmt ? [value.toFixed(4), '6.4f'] : value.toFixed(4);
-   const last = fmt[len-1];
+   const kind = fmt[len-1].toLowerCase();
    fmt = fmt.slice(0, len-1);
    let isexp, prec = fmt.indexOf('.');
    prec = (prec < 0) ? 4 : parseInt(fmt.slice(prec+1));
    if (!Number.isInteger(prec) || (prec <= 0)) prec = 4;
 
-   let significance = false;
-   if ((last === 'e') || (last === 'E')) isexp = true; else
-   if (last === 'Q') { isexp = true; significance = true; } else
-   if ((last === 'f') || (last === 'F')) isexp = false; else
-   if (last === 'W') { isexp = false; significance = true; } else
-   if ((last === 'g') || (last === 'G')) {
-      const se = floatToString(value, fmt+'Q', true);
-      let sg = floatToString(value, fmt+'W', true);
-      if (se[0].length < sg[0].length) sg = se;
-      return ret_fmt ? sg : sg[0];
-   } else {
-      isexp = false;
-      prec = 4;
+   switch (kind) {
+      case 'e':
+         isexp = true;
+         break;
+      case 'f':
+         isexp = false;
+         break;
+      case 'c':
+      case 'g': {
+         const se = floatToString(value, fmt+'e', true, true);
+         let sg = floatToString(value, fmt+'f', true, true);
+         const pnt = sg[0].indexOf('.');
+         if ((kind === 'c') && (pnt > 0)) {
+            let len = sg[0].length;
+            while ((len > pnt) && (sg[0][len-1] === '0'))
+               len--;
+            if (len === pnt) len--;
+            sg[0] = sg[0].slice(0, len);
+         }
+         if (se[0].length < sg[0].length) sg = se;
+         return ret_fmt ? sg : sg[0];
+      }
+      default:
+         isexp = false;
+         prec = 4;
    }
 
    if (isexp) {
-      // for exponential representation only one significant digit befor point
+      // for exponential representation only one significant digit before point
       if (significance) prec--;
       if (prec < 0) prec = 0;
 
       const se = value.toExponential(prec);
-      return ret_fmt ? [se, `5.${prec}e`] : se;
+      return ret_fmt ? [se, `${prec+2}.${prec}e`] : se;
    }
 
    let sg = value.toFixed(prec);
@@ -133,7 +156,7 @@ function floatToString(value, fmt, ret_fmt) {
       }
    }
 
-   return ret_fmt ? [sg, '5.'+prec+'f'] : sg;
+   return ret_fmt ? [sg, `${prec+2}.${prec}f`] : sg;
 }
 
 
@@ -146,7 +169,7 @@ class DrawOptions {
       this.part = '';
    }
 
-   /** @summary Returns true if remaining options are empty or contain only seperators symbols. */
+   /** @summary Returns true if remaining options are empty or contain only separators symbols. */
    empty() {
       if (this.opt.length === 0) return true;
       return this.opt.replace(/[ ;_,]/g, '').length === 0;
@@ -169,7 +192,19 @@ class DrawOptions {
          this.part = this.opt.slice(pos, pos2);
          this.opt = this.opt.slice(0, pos) + this.opt.slice(pos2);
       }
-      return true;
+
+      if (postpart !== 'color')
+         return true;
+
+      this.color = this.partAsInt(1) - 1;
+      if (this.color >= 0) return true;
+      for (let col = 0; col < 8; ++col) {
+         if (getColor(col).toUpperCase() === this.part) {
+            this.color = col;
+            return true;
+         }
+      }
+      return false;
    }
 
    /** @summary Returns remaining part of found option as integer. */
@@ -229,7 +264,7 @@ class TRandom {
 } // class TRandom
 
 
-/** @summary Build smooth SVG curve uzing Bezier
+/** @summary Build smooth SVG curve using Bezier
   * @desc Reuse code from https://stackoverflow.com/questions/62855310
   * @private */
 function buildSvgCurve(p, args) {
@@ -392,11 +427,13 @@ function compressSVG(svg) {
             .replace(/ class="\w*"/g, '')                              // remove all classes
             .replace(/ pad="\w*"/g, '')                                // remove all pad ids
             .replace(/ title=""/g, '')                                 // remove all empty titles
+            .replace(/ style=""/g, '')                                 // remove all empty styles
             .replace(/<g objname="\w*" objtype="\w*"/g, '<g')          // remove object ids
             .replace(/<g transform="translate\(\d+,\d+\)"><\/g>/g, '') // remove all empty groups with transform
+            .replace(/<g transform="translate\(\d+,\d+\)" style="display: none;"><\/g>/g, '') // remove hidden title
             .replace(/<g><\/g>/g, '');                                 // remove all empty groups
 
-   // remove all empty frame svgs, typically appears in 3D drawings, maybe should be improved in frame painter itself
+   // remove all empty frame svg, typically appears in 3D drawings, maybe should be improved in frame painter itself
    svg = svg.replace(/<svg x="0" y="0" overflow="hidden" width="\d+" height="\d+" viewBox="0 0 \d+ \d+"><\/svg>/g, '');
 
    return svg;
@@ -434,7 +471,7 @@ class BasePainter {
    }
 
    /** @summary Selects main HTML element assigned for drawing
-     * @desc if main element was layouted, returns main element inside layout
+     * @desc if main element was layout, returns main element inside layout
      * @param {string} [is_direct] - if 'origin' specified, returns original element even if actual drawing moved to some other place
      * @return {object} d3.select object for main element for drawing */
    selectDom(is_direct) {
@@ -614,7 +651,7 @@ class BasePainter {
          enlarge = d3_select(doc.body)
             .append('div')
             .attr('id', 'jsroot_enlarge_div')
-            .attr('style', 'position: fixed; margin: 0px; border: 0px; padding: 0px; inset: 1px; background: white; opacity: 0.95; z-index: 100; overflow: hidden;');
+            .attr('style', 'position: fixed; margin: 0px; border: 0px; padding: 0px; left: 1px; top: 1px; bottom: 1px; right: 1px; background: white; opacity: 0.95; z-index: 100; overflow: hidden;');
 
          const rect1 = getElementRect(main),
                rect2 = getElementRect(enlarge);
@@ -657,7 +694,7 @@ class BasePainter {
          this._hitemname = name;
       else
          delete this._hitemname;
-      // only upate draw option, never delete.
+      // only update draw option, never delete.
       if (isStr(opt))
          this._hdrawopt = opt;
 
@@ -714,125 +751,33 @@ function addHighlightStyle(elem, drag) {
    }
 }
 
-/** @summary Create pdf for existing SVG element
-  * @return {Promise} with produced PDF file as url string
-  * @private */
-async function svgToPDF(args, as_buffer) {
-   const nodejs = isNodeJs();
-   let _jspdf, _svg2pdf;
-
-   const pr = nodejs
-      ? import('jspdf').then(h => { _jspdf = h; return import('svg2pdf.js'); }).then(h => { _svg2pdf = h.default; })
-      : loadScript(source_dir + 'scripts/jspdf.umd.min.js').then(() => loadScript(source_dir + 'scripts/svg2pdf.umd.min.js')).then(() => { _jspdf = globalThis.jspdf; _svg2pdf = globalThis.svg2pdf; }),
-        restore_fonts = [], restore_dominant = [], node_transform = args.node.getAttribute('transform'), custom_fonts = {};
-
-   if (args.reset_tranform)
-      args.node.removeAttribute('transform');
-
-   return pr.then(() => {
-      d3_select(args.node).selectAll('g').each(function() {
-         if (this.hasAttribute('font-family')) {
-            const name = this.getAttribute('font-family');
-            if (name === 'Courier New') {
-               this.setAttribute('font-family', 'courier');
-               if (!args.can_modify) restore_fonts.push(this); // keep to restore it
-            }
-         }
-      });
-
-      d3_select(args.node).selectAll('text').each(function() {
-         if (this.hasAttribute('dominant-baseline')) {
-            this.setAttribute('dy', '.2em'); // slightly different as in plain text
-            this.removeAttribute('dominant-baseline');
-            if (!args.can_modify) restore_dominant.push(this); // keep to restore it
-         } else if (args.can_modify && nodejs && this.getAttribute('dy') === '.4em')
-            this.setAttribute('dy', '.2em'); // better allignment in PDF
-      });
-
-      if (nodejs) {
-         const doc = internals.nodejs_document;
-         doc.oldFunc = doc.createElementNS;
-         globalThis.document = doc;
-         doc.createElementNS = function(ns, kind) {
-            const res = doc.oldFunc(ns, kind);
-            res.getBBox = function() {
-               let width = 50, height = 10;
-               if (this.tagName === 'text') {
-                  const font = detectFont(this);
-                  width = approximateLabelWidth(this.textContent, font);
-                  height = font.size;
-               }
-
-               return { x: 0, y: 0, width, height };
-            };
-            return res;
-         };
-      }
-
-      // eslint-disable-next-line new-cap
-      const doc = new _jspdf.jsPDF({
-         orientation: 'landscape',
-         unit: 'px',
-         format: [args.width + 10, args.height + 10]
-      });
-
-      // add custom fonts to PDF document, only TTF format supported
-      d3_select(args.node).selectAll('style').each(function() {
-         const fh = this.$fonthandler;
-         if (!fh || custom_fonts[fh.name] || (fh.format !== 'ttf')) return;
-         const filename = fh.name.toLowerCase().replace(/\s/g, '') + '.ttf';
-         doc.addFileToVFS(filename, fh.base64);
-         doc.addFont(filename, fh.name, 'normal');
-         custom_fonts[fh.name] = true;
-      });
-
-      return _svg2pdf.svg2pdf(args.node, doc, { x: 5, y: 5, width: args.width, height: args.height })
-         .then(() => {
-            if (args.reset_tranform && !args.can_modify && node_transform)
-               args.node.setAttribute('transform', node_transform);
-
-            restore_fonts.forEach(node => node.setAttribute('font-family', 'Courier New'));
-            restore_dominant.forEach(node => {
-               node.setAttribute('dominant-baseline', 'middle');
-               node.removeAttribute('dy');
-            });
-            const res = as_buffer ? doc.output('arraybuffer') : doc.output('dataurlstring');
-            if (nodejs) {
-               globalThis.document = undefined;
-               internals.nodejs_document.createElementNS = internals.nodejs_document.oldFunc;
-               if (as_buffer) return Buffer.from(res);
-            }
-            return res;
-         });
-   });
-}
-
-
 /** @summary Create image based on SVG
   * @param {string} svg - svg code of the image
   * @param {string} [image_format] - image format like 'png', 'jpeg' or 'webp'
-  * @param {boolean} [as_buffer] - return Buffer object for image
+  * @param {Objects} [args] - optional arguments
+  * @param {boolean} [args.as_buffer] - return image as buffer
   * @return {Promise} with produced image in base64 form or as Buffer (or canvas when no image_format specified)
   * @private */
-async function svgToImage(svg, image_format, as_buffer) {
+async function svgToImage(svg, image_format, args) {
+   if ((args === true) || (args === false))
+      args = { as_buffer: args };
+
    if (image_format === 'svg')
       return svg;
 
    if (image_format === 'pdf')
-      return svgToPDF(svg, as_buffer);
+      return internals.makePDF ? internals.makePDF(svg, args) : null;
 
-   if (!isNodeJs()) {
-      // required with df104.py/df105.py example with RCanvas
-      const doctype = '<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">';
-      svg = encodeURIComponent(doctype + svg);
-      svg = svg.replace(/%([0-9A-F]{2})/g, (match, p1) => {
-          const c = String.fromCharCode('0x'+p1);
-          return c === '%' ? '%25' : c;
-      });
-      svg = decodeURIComponent(svg);
-   }
+   // required with df104.py/df105.py example with RCanvas or any special symbols in TLatex
+   const doctype = '<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">';
+   svg = encodeURIComponent(doctype + svg);
+   svg = svg.replace(/%([0-9A-F]{2})/g, (match, p1) => {
+       const c = String.fromCharCode('0x'+p1);
+       return c === '%' ? '%25' : c;
+   });
 
-   const img_src = 'data:image/svg+xml;base64,' + btoa_func(svg);
+   // Cannot use prSVG because of some special cases like RCanvas/rh2
+   const img_src = 'data:image/svg+xml;base64,' + btoa_func(decodeURIComponent(svg));
 
    if (isNodeJs()) {
       return import('canvas').then(async handle => {
@@ -841,7 +786,7 @@ async function svgToImage(svg, image_format, as_buffer) {
 
             canvas.getContext('2d').drawImage(img, 0, 0, img.width, img.height);
 
-            if (as_buffer) return canvas.toBuffer('image/' + image_format);
+            if (args?.as_buffer) return canvas.toBuffer('image/' + image_format);
 
             return image_format ? canvas.toDataURL('image/' + image_format) : canvas;
          });
@@ -858,7 +803,7 @@ async function svgToImage(svg, image_format, as_buffer) {
 
          canvas.getContext('2d').drawImage(image, 0, 0);
 
-         if (as_buffer && image_format)
+         if (args?.as_buffer && image_format)
             canvas.toBlob(blob => blob.arrayBuffer().then(resolveFunc), 'image/' + image_format);
          else
             resolveFunc(image_format ? canvas.toDataURL('image/' + image_format) : canvas);
@@ -872,6 +817,33 @@ async function svgToImage(svg, image_format, as_buffer) {
    });
 }
 
-export { getElementRect, getAbsPosInCanvas,
+/** @summary Convert ROOT TDatime object into Date
+ * @desc Always use UTC to avoid any variation between timezones */
+function getTDatime(dt) {
+   const y = (dt.fDatime >>> 26) + 1995,
+         m = ((dt.fDatime << 6) >>> 28) - 1,
+         d = (dt.fDatime << 10) >>> 27,
+         h = (dt.fDatime << 15) >>> 27,
+         min = (dt.fDatime << 20) >>> 26,
+         s = (dt.fDatime << 26) >>> 26;
+   return new Date(Date.UTC(y, m, d, h, min, s));
+}
+
+/** @summary Convert Date object into string used configured time zone
+ * @desc Time zone stored in settings.TimeZone */
+function convertDate(dt) {
+   let res = '';
+
+   if (settings.TimeZone && isStr(settings.TimeZone)) {
+     try {
+        res = dt.toLocaleString('en-GB', { timeZone: settings.TimeZone });
+     } catch (err) {
+        res = '';
+     }
+   }
+   return res || dt.toLocaleString('en-GB');
+}
+
+export { prSVG, prJSON, getElementRect, getAbsPosInCanvas, getTDatime, convertDate,
          DrawOptions, TRandom, floatToString, buildSvgCurve, compressSVG,
          BasePainter, _loadJSDOM, makeTranslate, addHighlightStyle, svgToImage };

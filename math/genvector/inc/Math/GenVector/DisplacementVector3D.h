@@ -268,6 +268,14 @@ namespace ROOT {
       // ------ Individual element access, in various coordinate systems ------
 
       /**
+          Dimension
+      */
+      unsigned int Dimension() const
+      {
+         return fDimension;
+      };
+
+      /**
           Cartesian X, converting if necessary from internal coordinate system.
       */
       Scalar X() const { return fCoordinates.X(); }
@@ -525,6 +533,7 @@ namespace ROOT {
     private:
 
        CoordSystem fCoordinates;  // internal coordinate system
+       static constexpr unsigned int fDimension = CoordinateType::Dimension;
 
 #ifdef NOT_SURE_THIS_SHOULD_BE_FORBIDDEN
       /**
@@ -595,8 +604,6 @@ namespace ROOT {
                DisplacementVector3D<CoordSystem2,U> const & v2) {
       return v1 -= v2;
     }
-
-    //#endif // not __CINT__
 
     /**
        Multiplication of a displacement vector by real number  a*v

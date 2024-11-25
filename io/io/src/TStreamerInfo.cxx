@@ -380,7 +380,7 @@ void TStreamerInfo::Build(Bool_t isTransient)
                   // Flag the element to be ignored by setting its type to -1.
                   // This flag will be used later by Compile() to prevent this
                   // element from being inserted into the compiled info.
-                  element->SetType(-1);
+                  element->SetType(TVirtualStreamerInfo::kNoType);
                }
                if (!isTransient && !clm->IsLoaded() && !(isCollection || isString)) {
                   // Don't complain about the base classes of collections nor of
@@ -437,10 +437,11 @@ void TStreamerInfo::Build(Bool_t isTransient)
       bool nameChanged;
       trueTypeNameBuf = typeNameBuf = TClassEdit::GetNameForIO(dmFull, TClassEdit::EModType::kNone, &nameChanged);
       if (nameChanged) {
-         if (TClassEdit::IsUniquePtr(dmFull)) {
+         if (trueTypeNameBuf.back() == '*') {
             dmIsPtr = true;
+            typeNameBuf.pop_back();
+            while(typeNameBuf.back() == '*') typeNameBuf.pop_back();
          }
-         while(typeNameBuf.back() == '*') typeNameBuf.pop_back();
          dmFull = trueTypeNameBuf.c_str();
          dmType = typeNameBuf.c_str();
       }
@@ -621,8 +622,10 @@ void TStreamerInfo::Build(Bool_t isTransient)
       if (!streamer) {
          Int_t k = element->GetType();
          if (k == kStreamer) {
-            //if ((k == kSTL) || (k == kSTL + kOffsetL) || (k == kStreamer) || (k == kStreamLoop))
-            element->SetType(-1);
+            // if ((k == kSTL) || (k == kSTL + kOffsetL) || (k == kStreamer) || (k == kStreamLoop))
+            // This is odd.  Either we need to update the doc for TVirtualStreamerInfo::kNoType
+            // or change this value.
+            element->SetType(TVirtualStreamerInfo::kNoType);
          }
       }
 
@@ -734,7 +737,6 @@ void TStreamerInfo::BuildCheck(TFile *file /* = 0 */, Bool_t load /* = kTRUE */)
       // of the StreamerInfo is 'hard' (for forward compatibility), so
       // leave it as is for now.
       fClass = new TClass(GetName(), (Version_t)fClassVersion);
-      fClass->SetBit(TClass::kIsEmulation);
 
       // Case of a custom collection (the user provided a CollectionProxy
       // for a class that is not an STL collection).
@@ -795,7 +797,7 @@ void TStreamerInfo::BuildCheck(TFile *file /* = 0 */, Bool_t load /* = kTRUE */)
       const TObjArray *array = fClass->GetStreamerInfos();
       TStreamerInfo* info = 0;
 
-      if (fClass->TestBit(TClass::kIsEmulation) && array->IsEmpty()) {
+      if (fClass->GetState() == TClass::kNoInfo && array->IsEmpty()) {
          // We have an emulated class that has no TStreamerInfo, this
          // means it was created to insert a (default) rule.  Consequently
          // the error message about the missing dictionary was not printed.
@@ -1790,7 +1792,7 @@ void TStreamerInfo::BuildOld()
 
    if (ruleSet) rules = ruleSet->FindRules( GetName(), fOnFileClassVersion, fCheckSum );
 
-   Bool_t shouldHaveInfoLoc = fClass->TestBit(TClass::kIsEmulation) && !TClassEdit::IsStdClass(fClass->GetName());
+   Bool_t shouldHaveInfoLoc = fClass->GetState() == TClass::kEmulated && !TClassEdit::IsStdClass(fClass->GetName());
    Int_t virtualInfoLocAlloc = 0;
    fNVirtualInfoLoc = 0;
    delete [] fVirtualInfoLoc;
@@ -1831,7 +1833,7 @@ void TStreamerInfo::BuildOld()
             // We do not have this base class - check if we're renaming
             ////////////////////////////////////////////////////////////////////
 
-            if( !baseclass && !fClass->TestBit( TClass::kIsEmulation ) ) {
+            if( !baseclass && fClass->GetState() > TClass::kEmulated ) {
                const ROOT::TSchemaRule* rule = (rules ? rules.GetRuleWithSource( base->GetName() ) : 0);
 
                //---------------------------------------------------------------
@@ -1903,7 +1905,7 @@ void TStreamerInfo::BuildOld()
             // Force the StreamerInfo "Compilation" of the base classes first. This is necessary in
             // case the base class contains a member used as an array dimension in the derived classes.
             TStreamerInfo* infobase;
-            if (fClass->TestBit(TClass::kIsEmulation) && (baseclass->Property() & kIsAbstract)) {
+            if (fClass->GetState() == TClass::kEmulated && (baseclass->Property() & kIsAbstract)) {
                Int_t version = base->GetBaseVersion();
                if (version >= 0 || base->GetBaseCheckSum() == 0) {
                   infobase = (TStreamerInfo*)baseclass->GetStreamerInfoAbstractEmulated(version);
@@ -1920,7 +1922,7 @@ void TStreamerInfo::BuildOld()
                infobase->BuildOld();
             }
 
-            if (infobase && shouldHaveInfoLoc && baseclass->TestBit(TClass::kIsEmulation) ) {
+            if (infobase && shouldHaveInfoLoc && baseclass->GetState() == TClass::kEmulated ) {
                if ( (fNVirtualInfoLoc + infobase->fNVirtualInfoLoc) > virtualInfoLocAlloc ) {
                   ULong_t *store = fVirtualInfoLoc;
                   virtualInfoLocAlloc = 16 * ( (fNVirtualInfoLoc + infobase->fNVirtualInfoLoc) / 16 + 1);
@@ -1939,7 +1941,7 @@ void TStreamerInfo::BuildOld()
 
             {
                if (baseOffset < 0) {
-                  element->SetNewType(-1);
+                  element->SetNewType(TVirtualStreamerInfo::kNoType);
                }
             }
             element->SetOffset(baseOffset);
@@ -1971,7 +1973,7 @@ void TStreamerInfo::BuildOld()
                   // Error("BuildOld", "Could not find STL base class: %s for %s\n", element->GetName(), GetName());
                   offset = kMissing;
                   element->SetOffset(kMissing);
-                  element->SetNewType(-1);
+                  element->SetNewType(TVirtualStreamerInfo::kNoType);
                   continue;
                } else if (bc->GetClassPointer()->GetCollectionProxy()
                           && !bc->GetClassPointer()->IsLoaded()
@@ -1979,13 +1981,13 @@ void TStreamerInfo::BuildOld()
                   Error("BuildOld","The class \"%s\" is compiled and its base class \"%s\" is a collection and we do not have a dictionary for it, we will not be able to read or write this base class.",GetName(),bc->GetName());
                   offset = kMissing;
                   element->SetOffset(kMissing);
-                  element->SetNewType(-1);
+                  element->SetNewType(TVirtualStreamerInfo::kNoType);
                   continue;
                }
                baseOffset = bc->GetDelta();
                asize = bc->GetClassPointer()->Size();
 
-            } else if (fClass->TestBit( TClass::kIsEmulation )) {
+            } else if (fClass->GetState() == TClass::kEmulated) {
                // Do a search for the classname and some of its alternatives spelling.
 
                TStreamerInfo* newInfo = (TStreamerInfo*) fClass->GetStreamerInfos()->At(fClass->GetClassVersion());
@@ -2016,7 +2018,7 @@ void TStreamerInfo::BuildOld()
             if (baseOffset == -1) {
                TClass* cb = element->GetClassPointer();
                if (!cb) {
-                  element->SetNewType(-1);
+                  element->SetNewType(TVirtualStreamerInfo::kNoType);
                   continue;
                }
                asize = cb->Size();
@@ -2025,7 +2027,7 @@ void TStreamerInfo::BuildOld()
 
             //  we know how to read but do we know where to read?
             if (baseOffset < 0) {
-               element->SetNewType(-1);
+               element->SetNewType(TVirtualStreamerInfo::kNoType);
                continue;
             }
             element->SetOffset(baseOffset);
@@ -2045,7 +2047,7 @@ void TStreamerInfo::BuildOld()
 
       TDataMember* dm = 0;
 
-      std::string typeNameBuf;
+      std::string typeNameBuf;  // Keep underlying buffer alive until actually used.
       const char* dmType = nullptr;
       Bool_t dmIsPtr = false;
       TDataType* dt(nullptr);
@@ -2083,7 +2085,11 @@ void TStreamerInfo::BuildOld()
             Bool_t nameChanged;
             typeNameBuf = TClassEdit::GetNameForIO(dmType, TClassEdit::EModType::kNone, &nameChanged);
             if (nameChanged) {
-               dmIsPtr = TClassEdit::IsUniquePtr(dmType);
+               if (typeNameBuf.back() == '*') {
+                  dmIsPtr = true;
+                  typeNameBuf.pop_back();
+                  while(typeNameBuf.back() == '*') typeNameBuf.pop_back();
+               }
                dmType = typeNameBuf.c_str();
             }
             if ((isStdArray = TClassEdit::IsStdArray(dmType))){ // We tackle the std array case
@@ -2107,7 +2113,7 @@ void TStreamerInfo::BuildOld()
                Error("BuildOld","The class \"%s\" is compiled and for its data member \"%s\", we do not have a dictionary for the collection \"%s\", we will not be able to read or write this data member.",GetName(),dm->GetName(),elemDm->GetName());
                offset = kMissing;
                element->SetOffset(kMissing);
-               element->SetNewType(-1);
+               element->SetNewType(TVirtualStreamerInfo::kNoType);
             }
             element->SetStreamer(streamer);
             int narr = element->GetArrayLength();
@@ -2212,7 +2218,7 @@ void TStreamerInfo::BuildOld()
          // Case of a numerical type
          if (element->GetType() >= TStreamerInfo::kObject) {
             // Old type was not a numerical type.
-            element->SetNewType(-2);
+            element->SetNewType(TVirtualStreamerInfo::kUnsupportedConversion);
          } else if (element->GetType() != newType) {
             element->SetNewType(newType);
             if (gDebug > 0) {
@@ -2258,7 +2264,7 @@ void TStreamerInfo::BuildOld()
                   Warning("BuildOld","element: %s::%s %s has new type %s", GetName(), element->GetTypeName(), element->GetName(), newClass->GetName());
                }
             } else {
-               element->SetNewType(-2);
+               element->SetNewType(TVirtualStreamerInfo::kUnsupportedConversion);
             }
          } else if (oldClass && oldClass->GetCollectionProxy() && newClass->GetCollectionProxy()) {
             {
@@ -2287,7 +2293,7 @@ void TStreamerInfo::BuildOld()
                            //case TStreamerInfo::kSTLvarp:           // Variable size array of STL containers.
                         case TStreamerInfo::kSTLp:                // Pointer to container with no virtual table (stl) and no comment
                         case TStreamerInfo::kSTLp + TStreamerInfo::kOffsetL:     // array of pointers to container with no virtual table (stl) and no comment
-                           element->SetNewType(-2);
+                           element->SetNewType(TVirtualStreamerInfo::kUnsupportedConversion);
                            break;
                         case TStreamerInfo::kSTL:             // container with no virtual table (stl) and no comment
                         case TStreamerInfo::kSTL + TStreamerInfo::kOffsetL:  // array of containers with no virtual table (stl) and no comment
@@ -2301,7 +2307,7 @@ void TStreamerInfo::BuildOld()
 
                } else if ( (newkind==ROOT::kSTLmap || newkind==ROOT::kSTLmultimap) &&
                            (oldkind!=ROOT::kSTLmap && oldkind!=ROOT::kSTLmultimap) ) {
-                  element->SetNewType(-2);
+                  element->SetNewType(TVirtualStreamerInfo::kUnsupportedConversion);
                } else {
                   element->Update(oldClass, newClass.GetClass());
                }
@@ -2326,7 +2332,7 @@ void TStreamerInfo::BuildOld()
 
                element->SetNewClass( newClass );
             } else {
-               element->SetNewType(-2);
+               element->SetNewType(TVirtualStreamerInfo::kUnsupportedConversion);
             }
 
          } else if(oldClass &&
@@ -2339,11 +2345,11 @@ void TStreamerInfo::BuildOld()
 
             element->SetNewClass( newClass );
          } else {
-            element->SetNewType(-2);
+            element->SetNewType(TVirtualStreamerInfo::kUnsupportedConversion);
          }
          // Humm we still need to make sure we have the same 'type' (pointer, embedded object, array, etc..)
          Bool_t cannotConvert = kFALSE;
-         if (element->GetNewType() != -2) {
+         if (element->GetNewType() != TVirtualStreamerInfo::kUnsupportedConversion) {
             if (dm) {
                if (dmIsPtr) {
                   if (strncmp(dm->GetTitle(),"->",2)==0) {
@@ -2447,14 +2453,14 @@ void TStreamerInfo::BuildOld()
             }
          }
          if (cannotConvert) {
-            element->SetNewType(-2);
+            element->SetNewType(TVirtualStreamerInfo::kUnsupportedConversion);
             if (gDebug > 0) {
                // coverity[mixed_enums] - All the values of EDataType have the same semantic in EReadWrite
                Info("BuildOld", "element: %s %s::%s has new type: %s/%d", element->GetTypeName(), GetName(), element->GetName(), dm ? dm->GetFullTypeName() : TDataType::GetTypeName((EDataType)newType), newType);
             }
          }
       } else {
-         element->SetNewType(-1);
+         element->SetNewType(TVirtualStreamerInfo::kNoType);
          offset = kMissing;
          element->SetOffset(kMissing);
       }
@@ -2552,7 +2558,7 @@ void TStreamerInfo::BuildOld()
          }
       }
 
-      if (element->GetNewType() == -2) {
+      if (element->GetNewType() == TVirtualStreamerInfo::kUnsupportedConversion) {
          Warning("BuildOld", "Cannot convert %s::%s from type: %s to type: %s, skip element", GetName(), element->GetName(), element->GetTypeName(), newClass ? newClass->GetName() : (dm ? dm->GetFullTypeName() : "unknown") );
       }
    }
@@ -4653,7 +4659,8 @@ void TStreamerInfo::InsertArtificialElements(std::vector<const ROOT::TSchemaRule
       if (loc == -1) {
          // Verify if the last one is not 'skipped'.
          for(Int_t i = fElements->GetLast(); i >= 0 && (i+1) >= loc; --i) {
-            if ( ((TStreamerElement*)fElements->UncheckedAt(i))->GetNewType() != -2 ) {
+            if (((TStreamerElement *)fElements->UncheckedAt(i))->GetNewType() !=
+                TVirtualStreamerInfo::kUnsupportedConversion) {
                break;
             }
             loc = i;

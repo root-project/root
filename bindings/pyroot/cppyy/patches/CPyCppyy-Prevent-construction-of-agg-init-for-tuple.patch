@@ -1,0 +1,27 @@
+From 3b62eaa9ec2dfabccca52910d8239af7d9e56c9a Mon Sep 17 00:00:00 2001
+From: maximusron <aaronjomyjoseph@gmail.com>
+Date: Sun, 29 Sep 2024 09:32:17 +0200
+Subject: [PATCH] [PyROOT] Prevent construction of aggregate initializer for
+ std::tuple
+
+---
+ bindings/pyroot/cppyy/CPyCppyy/src/Pythonize.cxx | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/bindings/pyroot/cppyy/CPyCppyy/src/Pythonize.cxx b/bindings/pyroot/cppyy/CPyCppyy/src/Pythonize.cxx
+index b5d5290e46..2196b94ff3 100644
+--- a/bindings/pyroot/cppyy/CPyCppyy/src/Pythonize.cxx
++++ b/bindings/pyroot/cppyy/CPyCppyy/src/Pythonize.cxx
+@@ -1720,7 +1720,8 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
+     }
+ #endif
+ 
+-    if (Cppyy::IsAggregate(((CPPClass*)pyclass)->fCppType) && name.compare(0, 5, "std::", 5) != 0) {
++    if (Cppyy::IsAggregate(((CPPClass*)pyclass)->fCppType) && name.compare(0, 5, "std::", 5) != 0 &&
++        name.compare(0, 6, "tuple<", 6) != 0) {
+     // create a pseudo-constructor to allow initializer-style object creation
+         Cppyy::TCppType_t kls = ((CPPClass*)pyclass)->fCppType;
+         Cppyy::TCppIndex_t ndata = Cppyy::GetNumDatamembers(kls);
+-- 
+2.47.0
+

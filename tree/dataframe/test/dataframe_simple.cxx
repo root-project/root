@@ -1,11 +1,6 @@
 /****** Run RDataFrame tests both with and without IMT enabled *******/
 #include <gtest/gtest.h>
 
-// Backward compatibility for gtest version < 1.10.0
-#ifndef INSTANTIATE_TEST_SUITE_P
-#define INSTANTIATE_TEST_SUITE_P INSTANTIATE_TEST_CASE_P
-#endif
-
 #include <ROOT/TestSupport.hxx>
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/TSeq.hxx>
@@ -26,6 +21,7 @@
 #include <set>
 #include <random>
 
+#include "Compression.h"
 #include "MaxSlotHelper.h"
 #include "SimpleFiller.h"
 
@@ -52,29 +48,35 @@ protected:
 // Create file `filename` containing a test tree `treeName` with `nevents` events
 void FillTree(const char *filename, const char *treeName, int nevents = 0)
 {
-   TFile f(filename, "RECREATE");
-   TTree t(treeName, treeName);
-   t.SetAutoFlush(1); // yes, one event per cluster: to make MT more meaningful
+   // NOTE(gparolini): these TFile and TTree are created on the heap to work around a know bug that can
+   // cause a TObject to be incorrectly marked as "on heap" and attempted to be freed despite
+   // living on the stack.
+   // The bug is caused by the magic bit pattern `kObjectAllocMemValue` used by TStorage to
+   // mark a heap object appearing by chance on the stack.
+   // This is not a problem with a clear solution and in fact the whole heap detection system relies on UB,
+   // so for now we are forced to work around the bug rather than fixing it.
+   auto f = std::make_unique<TFile>(filename, "RECREATE");
+   auto t = std::make_unique<TTree>(treeName, treeName);
+   t->SetAutoFlush(1); // yes, one event per cluster: to make MT more meaningful
    double b1;
    int b2;
    double b3[2];
    unsigned int n;
    int b4[2] = {21, 42};
-   t.Branch("b1", &b1);
-   t.Branch("b2", &b2);
-   t.Branch("b3", b3, "b3[2]/D");
-   t.Branch("n", &n);
-   t.Branch("b4", b4, "b4[n]/I");
+   t->Branch("b1", &b1);
+   t->Branch("b2", &b2);
+   t->Branch("b3", b3, "b3[2]/D");
+   t->Branch("n", &n);
+   t->Branch("b4", b4, "b4[n]/I");
    for (int i = 0; i < nevents; ++i) {
       b1 = i;
       b2 = i * i;
       b3[0] = b1;
       b3[1] = -b1;
       n = i % 2 + 1;
-      t.Fill();
+      t->Fill();
    }
-   t.Write();
-   f.Close();
+   t->Write();
 }
 
 TEST_P(RDFSimpleTests, CreateEmpty)
@@ -192,8 +194,8 @@ struct RFoo {};
 TEST_P(RDFSimpleTests, Define_jitted_type_unknown_to_interpreter)
 {
    RDataFrame tdf(10);
-   auto d = tdf.Define("foo", [](){return RFoo();});
-   auto d2 = tdf.Define("foo2", [](){return std::array<RFoo, 2>();});
+   auto d = tdf.Define("foo", []() { return RFoo(); });
+   auto d2 = tdf.Define("foo2", []() { return std::array<RFoo, 2>(); });
 
    // We check that if nothing is done with RFoo in jitted strings everything works fine
    EXPECT_EQ(10U, *d.Count());
@@ -542,8 +544,6 @@ TEST_P(RDFSimpleTests, Aggregate)
    EXPECT_EQ(*r2, 120);
 }
 
-
-
 TEST_P(RDFSimpleTests, AggregateGraph)
 {
    auto d = RDataFrame(20).DefineSlotEntry("x", [](unsigned int, ULong64_t e) { return static_cast<double>(e); });
@@ -592,7 +592,7 @@ TEST_P(RDFSimpleTests, Graph)
    EXPECT_STREQ(dfGraph->GetXaxis()->GetTitle(), "x1");
    EXPECT_STREQ(dfGraph->GetYaxis()->GetTitle(), "x2");
 
-   //To perform the test, it's easier to sort
+   // To perform the test, it's easier to sort
    dfGraph->Sort();
 
    Double_t x, y;
@@ -607,7 +607,7 @@ TEST_P(RDFSimpleTests, BookCustomAction)
 {
    RDataFrame d(1);
    const auto nWorkers = std::max(1u, ROOT::GetThreadPoolSize());
-   const auto expected = nWorkers-1;
+   const auto expected = nWorkers - 1;
 
    auto maxSlot0 = d.Book<unsigned int>(MaxSlotHelper(nWorkers), {"tdfslot_"});
    auto maxSlot1 = d.Book<unsigned int>(MaxSlotHelper(nWorkers), {"rdfslot_"});
@@ -619,7 +619,7 @@ TEST_P(RDFSimpleTests, BookCustomActionJitted)
 {
    RDataFrame d(1);
    const auto nWorkers = std::max(1u, ROOT::GetThreadPoolSize());
-   const auto expected = nWorkers-1;
+   const auto expected = nWorkers - 1;
 
    auto maxSlot0 = d.Book(MaxSlotHelper(nWorkers), {"tdfslot_"});
    auto maxSlot1 = d.Book(MaxSlotHelper(nWorkers), {"rdfslot_"});
@@ -737,7 +737,7 @@ TEST_P(RDFSimpleTests, StandardDeviationEmpty)
 
 /*
 /// This test was deactivated because it is not possible to Sum Strings using a Kahan Sum.
-/// The reason is that there is no minus operator for that case. 
+/// The reason is that there is no minus operator for that case.
 TEST(RDFSimpleTests, SumOfStrings)
 {
    auto df = RDataFrame(2).Define("str", []() -> std::string { return "bla"; });
@@ -792,16 +792,16 @@ TEST(RDFSimpleTests, GenVector)
    // The leading underscore of "_hh" tests against ROOT-10305.
    using MVector = ROOT::Math::PtEtaPhiMVector;
    ROOT::RDataFrame t(1);
-   auto aa = t.Define("_hh", []() { return MVector(1, 1, 1, 1); })
-              .Define("h", [](MVector &v) { return v.Rapidity(); }, {"_hh"});
+   auto aa = t.Define("_hh", []() {
+                 return MVector(1, 1, 1, 1);
+              }).Define("h", [](MVector &v) { return v.Rapidity(); }, {"_hh"});
    auto m = aa.Mean<double>("h");
    EXPECT_TRUE(0 != *m);
 }
 
 TEST(RDFSimpleTests, AutomaticNamesOfHisto1DAndGraph)
 {
-   auto df = RDataFrame(1).Define("x", [](){return 1;})
-                          .Define("y", [](){return 1;});
+   auto df = RDataFrame(1).Define("x", []() { return 1; }).Define("y", []() { return 1; });
    auto hx = df.Histo1D<int>("x");
    auto hxy = df.Histo1D<int, int>("x", "y");
    auto gxy = df.Graph<int, int>("x", "y");
@@ -818,7 +818,6 @@ TEST(RDFSimpleTests, AutomaticNamesOfHisto1DAndGraph)
    EXPECT_STREQ(gxy->GetTitle(), "y vs x");
    EXPECT_STREQ(gxy->GetXaxis()->GetTitle(), "x");
    EXPECT_STREQ(gxy->GetYaxis()->GetTitle(), "y");
-
 }
 
 TEST_P(RDFSimpleTests, DifferentTreesInDifferentThreads)
@@ -829,7 +828,8 @@ TEST_P(RDFSimpleTests, DifferentTreesInDifferentThreads)
       auto df = RDataFrame(64)
                    .Define("x", []() { return 1; })
                    .Define("y", []() { return 1; })
-                   .Snapshot<int, int>(treename, filename, {"x", "y"}, {"RECREATE", ROOT::kZLIB, 4, 2, 99, false});
+                   .Snapshot<int, int>(treename, filename, {"x", "y"},
+                                       {"RECREATE", ROOT::RCompressionSetting::EAlgorithm::kZLIB, 4, 2, 99, false});
    }
 
    TFile f(filename);
@@ -846,16 +846,18 @@ TEST_P(RDFSimpleTests, HistosOneWeightPerEvent)
 {
    using floats = std::vector<float>;
    auto df = RDataFrame(1);
-   auto d = df.Define("v0", [](){floats v({1,2,3});return v;})
-              .Define("v1", [](){floats v({4,5,6});return v;})
-              .Define("v2", [](){floats v({7,8,9});return v;})
-              .Define("w",[](){return 3;});
+   // clang-format off
+   auto d = df.Define("v0", []() { floats v({1, 2, 3}); return v; })
+              .Define("v1", []() { floats v({4, 5, 6}); return v; })
+              .Define("v2", []() { floats v({7, 8, 9}); return v; })
+              .Define("w",  []() { return 3; });
+   // clang-format on
 
-   auto h1 = d.Histo1D<floats, int>("v0","w");
+   auto h1 = d.Histo1D<floats, int>("v0", "w");
    EXPECT_DOUBLE_EQ(h1->GetMean(), 2.);
-   auto h2 = d.Histo2D<floats, floats, int>({"","",16,0,16,16,0,16}, "v0", "v1", "w");
+   auto h2 = d.Histo2D<floats, floats, int>({"", "", 16, 0, 16, 16, 0, 16}, "v0", "v1", "w");
    EXPECT_DOUBLE_EQ(h2->GetMean(), 2.);
-   auto h3 = d.Histo3D<floats, floats, floats, int>({"","",16,0,16,16,0,16,16,0,16},"v0", "v1", "v2", "w");
+   auto h3 = d.Histo3D<floats, floats, floats, int>({"", "", 16, 0, 16, 16, 0, 16, 16, 0, 16}, "v0", "v1", "v2", "w");
    EXPECT_DOUBLE_EQ(h3->GetMean(), 2.);
 }
 
@@ -863,10 +865,12 @@ TEST_P(RDFSimpleTests, ManyRangesPerWorker)
 {
    auto filename = "ManyRangesPerWorker_file.root";
    {
-      ROOT::RDataFrame(184).Define("i",[](){return 0;})
-        .Snapshot<int>("t",filename,{"i"},{"RECREATE", ROOT::kZLIB, 1, 1, 99, false});
+      ROOT::RDataFrame(184)
+         .Define("i", []() { return 0; })
+         .Snapshot<int>("t", filename, {"i"},
+                        {"RECREATE", ROOT::RCompressionSetting::EAlgorithm::kZLIB, 1, 1, 99, false});
    }
-   ROOT::RDataFrame("t",filename).Mean<int>("i");
+   ROOT::RDataFrame("t", filename).Mean<int>("i");
    gSystem->Unlink(filename);
 }
 
@@ -896,8 +900,9 @@ TEST_P(RDFSimpleTests, NonExistingFileInChain)
    // in the single-thread case the error happens when TTreeReader is calling LoadTree the first time
    // otherwise we notice the file does not exist beforehand, e.g. in TTreeProcessorMT
    if (!ROOT::IsImplicitMTEnabled())
-      diagRAII.requiredDiag(kWarning, "TTreeReader::SetEntryBase()", "There was an issue opening the last file associated "
-                                                                     "to the TChain being processed.");
+      diagRAII.requiredDiag(kWarning, "TTreeReader::SetEntryBase()",
+                            "There was an issue opening the last file associated "
+                            "to the TChain being processed.");
 
    bool exceptionCaught = false;
    try {
@@ -918,12 +923,14 @@ TEST_P(RDFSimpleTests, NonExistingFileInChain)
 TEST_P(RDFSimpleTests, Stats)
 {
    ROOT::RDataFrame r(256);
-   auto rr = r.Define("v", [](ULong64_t e){return e;}, {"rdfentry_"})
-              .Define("vec_v", [](ULong64_t e){return std::vector<ULong64_t>({e, e+1, e+2});}, {"v"})
-              .Define("w", [](ULong64_t e){return 1./(e+1);}, {"v"})
-              .Define("vec_w", [](double w){return std::vector<double>({w, w+1, w+2});}, {"w"})
-              .Define("one", [](){return 1.;})
-              .Define("ones", [](){return std::vector<double>({1.,1.,1.});});
+   // clang-format off
+   auto rr = r.Define("v", [](ULong64_t e) { return e; }, {"rdfentry_"})
+               .Define("vec_v", [](ULong64_t e) { return std::vector<ULong64_t>({e, e + 1, e + 2}); }, {"v"})
+               .Define("w", [](ULong64_t e) { return 1. / (e + 1); }, {"v"})
+               .Define("vec_w", [](double w) { return std::vector<double>({w, w + 1, w + 2}); }, {"w"})
+               .Define("one", []() { return 1.; })
+               .Define("ones", []() { return std::vector<double>({1., 1., 1.}); });
+   // clang-format on
 
    auto s0 = rr.Stats("v");
    auto s0c = rr.Stats<ULong64_t>("v");
@@ -1040,10 +1047,45 @@ TEST_P(RDFSimpleTests, FillWithCustomClassJitted)
    EXPECT_EQ(h.GetEntries(), 10);
 }
 
+TEST_P(RDFSimpleTests, ReadStdArray)
+{
+   struct ArrayDataset {
+      std::string treename{"rdf_simple_array_dataset"};
+      std::string filename{"rdf_simple_array_dataset.root"};
+      std::string branchname{"arr"};
+      std::array<int, 6> arr{11, 22, 33, 44, 55, 66};
+      ArrayDataset()
+      {
+         TFile f{filename.c_str(), "recreate"};
+         TTree t{treename.c_str(), treename.c_str()};
+         t.Branch(branchname.c_str(), &arr);
+         t.Fill();
+         f.WriteObject(&t, treename.c_str());
+      }
+      ~ArrayDataset() { std::remove(filename.c_str()); }
+   } dataset;
+
+   ROOT::RDataFrame df{dataset.treename, dataset.filename};
+
+   auto col = df.Take<std::array<int, 6>>(dataset.branchname);
+   EXPECT_EQ(col->size(), 1);
+   std::array<int, 6> value = col->at(0);
+   for (unsigned i = 0; i < 6; i++) {
+      EXPECT_EQ(value[i], dataset.arr[i]);
+   }
+
+   auto colrvec = df.Take<ROOT::RVec<int>>(dataset.branchname);
+   EXPECT_EQ(colrvec->size(), 1);
+   ROOT::RVec<int> valuervec = colrvec->at(0);
+   for (unsigned i = 0; i < 6; i++) {
+      EXPECT_EQ(valuervec[i], dataset.arr[i]);
+   }
+}
+
 // run single-thread tests
 INSTANTIATE_TEST_SUITE_P(Seq, RDFSimpleTests, ::testing::Values(false));
 
 // run multi-thread tests
 #ifdef R__USE_IMT
-   INSTANTIATE_TEST_SUITE_P(MT, RDFSimpleTests, ::testing::Values(true));
+INSTANTIATE_TEST_SUITE_P(MT, RDFSimpleTests, ::testing::Values(true));
 #endif

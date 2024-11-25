@@ -17,7 +17,7 @@
 #define ROOT7_RPageNullSink
 
 #include <ROOT/RColumn.hxx>
-#include <ROOT/RField.hxx>
+#include <ROOT/RFieldBase.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RPageStorage.hxx>
 
@@ -33,25 +33,24 @@ namespace Internal {
 The RPageNullSink class is for internal testing only and can be used to measure the software overhead of serializing
 elements into pages, without actually writing them onto disk or even serializing the RNTuple headers and footers.
 */
-class RPageNullSink : public Detail::RPageSink {
-   RPageAllocatorHeap fPageAllocator{};
+class RPageNullSink : public RPageSink {
    DescriptorId_t fNColumns = 0;
+   std::uint64_t fNBytesCurrentCluster = 0;
 
 public:
    RPageNullSink(std::string_view ntupleName, const RNTupleWriteOptions &options) : RPageSink(ntupleName, options) {}
 
-   ColumnHandle_t AddColumn(DescriptorId_t, const Detail::RColumn &column) final { return {fNColumns++, &column}; }
+   ColumnHandle_t AddColumn(DescriptorId_t, RColumn &column) final { return {fNColumns++, &column}; }
 
-   Detail::RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final
+   const RNTupleDescriptor &GetDescriptor() const final
    {
-      auto elementSize = columnHandle.fColumn->GetElement()->GetSize();
-      return fPageAllocator.NewPage(columnHandle.fPhysicalId, elementSize, nElements);
+      static RNTupleDescriptor descriptor;
+      return descriptor;
    }
-   void ReleasePage(Detail::RPage &page) final { fPageAllocator.DeletePage(page); }
 
    void ConnectFields(const std::vector<RFieldBase *> &fields, NTupleSize_t firstEntry)
    {
-      auto connectField = [&](RFieldBase &f) { f.ConnectPageSink(*this, firstEntry); };
+      auto connectField = [&](RFieldBase &f) { CallConnectPageSinkOnField(f, *this, firstEntry); };
       for (auto *f : fields) {
          connectField(*f);
          for (auto &descendant : *f) {
@@ -59,19 +58,42 @@ public:
          }
       }
    }
-   void Init(RNTupleModel &model) final { ConnectFields(model.GetFieldZero().GetSubFields(), 0); }
-   void UpdateSchema(const Detail::RNTupleModelChangeset &changeset, NTupleSize_t firstEntry) final
+   void InitImpl(RNTupleModel &model) final
+   {
+      auto &fieldZero = GetFieldZeroOfModel(model);
+      ConnectFields(fieldZero.GetSubFields(), 0);
+   }
+   void UpdateSchema(const RNTupleModelChangeset &changeset, NTupleSize_t firstEntry) final
    {
       ConnectFields(changeset.fAddedFields, firstEntry);
    }
+   void UpdateExtraTypeInfo(const RExtraTypeInfoDescriptor &) final {}
 
-   void CommitPage(ColumnHandle_t, const Detail::RPage &) final {}
-   void CommitSealedPage(DescriptorId_t, const RSealedPage &) final {}
-   void CommitSealedPageV(std::span<RSealedPageGroup>) final {}
+   void CommitSuppressedColumn(ColumnHandle_t) final {}
+   void CommitPage(ColumnHandle_t, const RPage &page) final { fNBytesCurrentCluster += page.GetNBytes(); }
+   void CommitSealedPage(DescriptorId_t, const RSealedPage &page) final
+   {
+      fNBytesCurrentCluster += page.GetBufferSize();
+   }
+   void CommitSealedPageV(std::span<RSealedPageGroup> ranges) final
+   {
+      for (auto &range : ranges) {
+         for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt) {
+            fNBytesCurrentCluster += sealedPageIt->GetBufferSize();
+         }
+      }
+   }
 
-   std::uint64_t CommitCluster(NTupleSize_t) final { return 0; }
+   RStagedCluster StageCluster(NTupleSize_t) final
+   {
+      RStagedCluster stagedCluster;
+      stagedCluster.fNBytesWritten = fNBytesCurrentCluster;
+      fNBytesCurrentCluster = 0;
+      return stagedCluster;
+   }
+   void CommitStagedClusters(std::span<RStagedCluster>) final {}
    void CommitClusterGroup() final {}
-   void CommitDataset() final {}
+   void CommitDatasetImpl() final {}
 };
 
 } // namespace Internal

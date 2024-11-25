@@ -38,10 +38,10 @@ store the interval.
 
 #include <TMath.h>
 
-ClassImp(RooStats::ConfidenceBelt); ;
+ClassImp(RooStats::ConfidenceBelt);
 
 using namespace RooStats;
-using namespace std;
+using std::cout, std::endl, std::vector;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Alternate constructor

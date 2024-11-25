@@ -61,8 +61,8 @@ TEST(RNTuple, ModelExtensionSimple)
    auto ntuple = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
    EXPECT_EQ(4U, ntuple->GetNEntries());
    EXPECT_EQ(4U, ntuple->GetDescriptor().GetNFields());
-   EXPECT_EQ(0U, GetFirstEntry(ntuple->GetModel().GetField("pt")));
-   EXPECT_EQ(2U, GetFirstEntry(ntuple->GetModel().GetField("array")));
+   EXPECT_EQ(0U, GetFirstEntry(ntuple->GetModel().GetConstField("pt")));
+   EXPECT_EQ(2U, GetFirstEntry(ntuple->GetModel().GetConstField("array")));
 
    auto pt = ntuple->GetView<float>("pt");
    auto array = ntuple->GetView<std::array<double, 2>>("array");
@@ -155,11 +155,11 @@ TEST(RNTuple, ModelExtensionMultiple)
    auto ntuple = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
    EXPECT_EQ(5U, ntuple->GetNEntries());
    EXPECT_EQ(7U, ntuple->GetDescriptor().GetNFields());
-   EXPECT_EQ(0U, GetFirstEntry(ntuple->GetModel().GetField("pt")));
-   EXPECT_EQ(3U, GetFirstEntry(ntuple->GetModel().GetField("vec")));
-   EXPECT_EQ(3U, GetFirstEntry(ntuple->GetModel().GetField("f")));
-   EXPECT_EQ(3U, GetFirstEntry(ntuple->GetModel().GetField("u8")));
-   EXPECT_EQ(3U, GetFirstEntry(ntuple->GetModel().GetField("str")));
+   EXPECT_EQ(0U, GetFirstEntry(ntuple->GetModel().GetConstField("pt")));
+   EXPECT_EQ(3U, GetFirstEntry(ntuple->GetModel().GetConstField("vec")));
+   EXPECT_EQ(3U, GetFirstEntry(ntuple->GetModel().GetConstField("f")));
+   EXPECT_EQ(3U, GetFirstEntry(ntuple->GetModel().GetConstField("u8")));
+   EXPECT_EQ(3U, GetFirstEntry(ntuple->GetModel().GetConstField("str")));
 
    auto pt = ntuple->GetView<float>("pt");
    auto vec = ntuple->GetView<std::vector<std::uint32_t>>("vec");
@@ -197,13 +197,52 @@ TEST(RNTuple, ModelExtensionMultiple)
    EXPECT_EQ("abcdefABCDEF1234567890!@#$%^&*()", str(4));
 }
 
-TEST(RNTuple, ModelExtensionProject)
+TEST(RNTuple, ModelExtensionProjectSimple)
 {
-   FileRaii fileGuard("test_ntuple_modelext_project.root");
+   FileRaii fileGuard("test_ntuple_modelext_project_simple.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto fieldPt = model->MakeField<float>("pt", 42.0);
+      model->AddProjectedField(std::make_unique<RField<float>>("aliasPt"), [](const std::string &) { return "pt"; });
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      auto modelUpdater = writer->CreateModelUpdater();
+      modelUpdater->BeginUpdate();
+      auto fieldE = modelUpdater->MakeField<float>("E", 1.0);
+      modelUpdater->CommitUpdate();
+
+      writer->Fill();
+      *fieldPt = 137.0;
+      *fieldE = 2.0;
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   EXPECT_EQ(2U, reader->GetNEntries());
+   EXPECT_EQ(4U, reader->GetDescriptor().GetNFields());
+
+   auto pt = reader->GetView<float>("pt");
+   auto aliasPt = reader->GetView<float>("aliasPt");
+   auto E = reader->GetView<float>("E");
+   EXPECT_FLOAT_EQ(42.0, pt(0));
+   EXPECT_FLOAT_EQ(137.0, pt(1));
+   EXPECT_FLOAT_EQ(42.0, aliasPt(0));
+   EXPECT_FLOAT_EQ(137.0, aliasPt(1));
+   EXPECT_FLOAT_EQ(1.0, E(0));
+   EXPECT_FLOAT_EQ(2.0, E(1));
+}
+
+TEST(RNTuple, ModelExtensionProjectComplex)
+{
+   FileRaii fileGuard("test_ntuple_modelext_project_complex.root");
    std::vector<std::uint32_t> refVec{0x00, 0xff, 0x55, 0xaa};
    {
       auto model = RNTupleModel::Create();
       auto fieldPt = model->MakeField<float>("pt", 42.0);
+      model->AddProjectedField(std::make_unique<RField<float>>("aliasPt"), [](const std::string &) { return "pt"; });
+      model->AddProjectedField(std::make_unique<RField<float>>("al2Pt"), [](const std::string &) { return "pt"; });
+      auto fieldE = model->MakeField<float>("E", 1.0);
+      model->AddProjectedField(std::make_unique<RField<float>>("aliasE"), [](const std::string &) { return "E"; });
 
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath());
       auto modelUpdater = ntuple->CreateModelUpdater();
@@ -223,20 +262,84 @@ TEST(RNTuple, ModelExtensionProject)
 
       ntuple->Fill();
       *fieldPt = 12.0;
+      *fieldE = 2.0;
       *fieldVec = refVec;
       ntuple->Fill();
    }
 
    auto ntuple = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
    EXPECT_EQ(2U, ntuple->GetNEntries());
-   EXPECT_EQ(6U, ntuple->GetDescriptor().GetNFields());
+   EXPECT_EQ(10U, ntuple->GetDescriptor().GetNFields());
 
    auto pt = ntuple->GetView<float>("pt");
+   auto aliasPt = ntuple->GetView<float>("aliasPt");
+   auto al2Pt = ntuple->GetView<float>("al2Pt");
    auto aliasVec = ntuple->GetView<std::vector<std::uint32_t>>("aliasVec");
-   EXPECT_EQ(42.0, pt(0));
-   EXPECT_EQ(12.0, pt(1));
+   auto E = ntuple->GetView<float>("E");
+   auto aliasE = ntuple->GetView<float>("aliasE");
+   EXPECT_FLOAT_EQ(42.0, pt(0));
+   EXPECT_FLOAT_EQ(12.0, pt(1));
+   EXPECT_FLOAT_EQ(42.0, aliasPt(0));
+   EXPECT_FLOAT_EQ(12.0, aliasPt(1));
+   EXPECT_FLOAT_EQ(42.0, al2Pt(0));
+   EXPECT_FLOAT_EQ(12.0, al2Pt(1));
+   EXPECT_FLOAT_EQ(1.0, E(0));
+   EXPECT_FLOAT_EQ(2.0, E(1));
+   EXPECT_FLOAT_EQ(1.0, aliasE(0));
+   EXPECT_FLOAT_EQ(2.0, aliasE(1));
    EXPECT_EQ(std::vector<std::uint32_t>{}, aliasVec(0));
    EXPECT_EQ(refVec, aliasVec(1));
+}
+
+TEST(RNTuple, ModelExtensionSubFields)
+{
+   FileRaii fileGuard("test_ntuple_modelext_cluster_boundaries.root");
+   CustomStruct refStruct{42.0, {1., 2., 3.}, {{4., 5.}, {}, {6.}}, "foo"};
+   {
+      auto model = RNTupleModel::Create();
+
+      auto structFld = model->MakeField<CustomStruct>("structFld", refStruct);
+
+      RNTupleWriteOptions opts;
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath());
+
+      for (unsigned i = 0; i < 2; ++i) {
+         for (unsigned j = 0; j < 3; ++j) {
+            ntuple->Fill();
+         }
+         ntuple->CommitCluster();
+      }
+
+      ntuple->Fill();
+
+      auto modelUpdater = ntuple->CreateModelUpdater();
+
+      modelUpdater->BeginUpdate();
+      auto extStructField = modelUpdater->MakeField<CustomStruct>("extStructFld", refStruct);
+      modelUpdater->CommitUpdate();
+
+      ntuple->Fill();
+   }
+
+   auto ntuple = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
+   auto &desc = ntuple->GetDescriptor();
+
+   EXPECT_EQ(3, desc.GetNClusters());
+   EXPECT_EQ(8, desc.GetNEntries());
+
+   auto structFldView = ntuple->GetView<CustomStruct>("structFld");
+   auto extStructFldView = ntuple->GetView<CustomStruct>("extStructFld");
+
+   EXPECT_EQ(structFldView(7), extStructFldView(7));
+
+   // Check that the column ranges for model-extended subfields are properly constructed by iterating over their view.
+   // For improper column ranges, the global field range would go until the value of kInvalidClusterIndex and result in
+   // an out-of-bounds error.
+   auto vecStructElemView = ntuple->GetView<float>("structFld.v2._0._0");
+   auto extVecStructElemView = ntuple->GetView<float>("extStructFld.v2._0._0");
+   for (const auto i : extVecStructElemView.GetFieldRange()) {
+      EXPECT_EQ(vecStructElemView(i), extVecStructElemView(i));
+   }
 }
 
 // Based on the RealWorld1 test in `ntuple_extended.cxx`, but here some fields are added after the fact
@@ -365,8 +468,8 @@ TEST(RNTuple, ModelExtensionComplex)
          ntuple->Fill();
       }
 
-      // Force the serialization of a page list which will not know about the deferred columns coming later.
-      // `RClusterDescriptorBuilder::AddDeferredColumnRanges()` should thus make up page ranges for the missing columns
+      // Force the serialization of a page list which will not know about the extended columns coming later.
+      // `RClusterDescriptorBuilder::AddExtendedColumnRanges()` should thus make up page ranges for the missing columns
       ntuple->CommitCluster(true /* commitClusterGroup */);
 
       modelUpdater->BeginUpdate();
@@ -441,4 +544,36 @@ TEST(RNTuple, ModelExtensionComplex)
    // The floating point arithmetic should have been executed in the same order for reading and writing,
    // thus we expect the checksums to be bitwise identical
    EXPECT_EQ(chksumRead, chksumWrite);
+}
+
+TEST(RNTuple, ModelExtensionNullableField)
+{
+   FileRaii fileGuard("test_ntuple_modelext_nullablefield.root");
+
+   {
+      auto writer = RNTupleWriter::Recreate(RNTupleModel::Create(), "ntpl", fileGuard.GetPath());
+      writer->Fill();
+
+      auto modelUpdater = writer->CreateModelUpdater();
+      modelUpdater->BeginUpdate();
+      auto fieldA = std::make_unique<RField<std::optional<float>>>("A");
+      modelUpdater->AddField(std::move(fieldA));
+      modelUpdater->CommitUpdate();
+
+      auto ptrA = writer->GetModel().GetDefaultEntry().GetPtr<std::optional<float>>("A");
+
+      *ptrA = 1.0;
+      writer->Fill();
+
+      ptrA->reset();
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   EXPECT_EQ(3u, reader->GetNEntries());
+   auto viewA = reader->GetView<std::optional<float>>("A");
+
+   EXPECT_FALSE(viewA(0).has_value());
+   EXPECT_FLOAT_EQ(1.0, viewA(1).value());
+   EXPECT_FALSE(viewA(2).has_value());
 }

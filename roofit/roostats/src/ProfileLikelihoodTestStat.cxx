@@ -39,7 +39,7 @@ either use:
 
 #include "RooStats/RooStatsUtils.h"
 
-using namespace std;
+using std::cout, std::endl;
 
 bool RooStats::ProfileLikelihoodTestStat::fgAlwaysReuseNll = true ;
 
@@ -311,14 +311,14 @@ std::unique_ptr<RooFitResult> RooStats::ProfileLikelihoodTestStat::GetMinNLL() {
          minim.minimize(minimizer,"Scan");
          if (tries == 2) {
             if (fStrategy == 0 ) {
-               cout << "    ----> trying with strategy = 1" << endl;;
+               cout << "    ----> trying with strategy = 1" << endl;
                minim.setStrategy(1);
             }
             else
                tries++; // skip this trial if strategy is already 1
          }
          if (tries == 3) {
-            cout << "    ----> trying with improve" << endl;;
+            cout << "    ----> trying with improve" << endl;
             minimizer = "Minuit";
             algorithm = "migradimproved";
          }

@@ -73,12 +73,12 @@ double pass_double_through_const_ref(const double& d) { return d; }
 
 
 // for math conversions testing
-bool operator==(const some_comparable& c1, const some_comparable& c2 )
+bool operator==(const some_comparable& c1, const some_comparable& c2)
 {
    return &c1 != &c2;              // the opposite of a pointer comparison
 }
 
-bool operator!=( const some_comparable& c1, const some_comparable& c2 )
+bool operator!=(const some_comparable& c1, const some_comparable& c2)
 {
    return &c1 == &c2;              // the opposite of a pointer comparison
 }
@@ -94,6 +94,9 @@ const char* my_global_string3[3] = {"aap", "noot", "mies"};
 some_int_holder my_global_int_holders[5] = {
     some_int_holder(13), some_int_holder(42), some_int_holder(88),
     some_int_holder(-1), some_int_holder(17) };
+
+some_abstract_class* g_abstract_ptr = nullptr;
+
 
 // for life-line and identity testing
 int some_class_with_data::some_data::s_num_data = 0;

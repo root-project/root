@@ -90,7 +90,7 @@
 - [The error bars options](\ref HP09)
 - [The bar chart option](\ref HP100)
 - [The "BAR" and "HBAR" options](\ref HP10)
-- [The SCATter plot option](\ref HP11)
+- [The SCATter plot option (legacy draw option)](\ref HP11)
 - [The ARRow option](\ref HP12)
 - [The BOX option](\ref HP13)
 - [The COLor option  (default for 2D and 3D histograms)](\ref HP14)
@@ -324,7 +324,7 @@ using `TH1::GetOption`:
 | "FB"         | With LEGO or SURFACE, suppress the Front-Box.|
 | "BB"         | With LEGO or SURFACE, suppress the Back-Box.|
 | "A"          | With LEGO or SURFACE, suppress the axis.|
-| "SCAT"       | Draw a scatter-plot (deprecated option).|
+| "SCAT"       | Draw a scatter-plot (legacy draw option).|
 | "[cutg]"     | Draw only the sub-range selected by the TCutG named "cutg".|
 
 
@@ -835,7 +835,7 @@ the option `SAME`. They allow to plot the histograms next to each other.
 
 
 \anchor HP11
-### The SCATter plot option
+### The SCATter plot option (legacy draw option)
 
 \attention
 Use of option `SCAT` has been deprecated. It was the default drawing option for 2D and
@@ -863,7 +863,7 @@ Begin_Macro(source)
       hscat->Fill(px,5*py);
       hscat->Fill(3+0.5*px,2*py-10.);
    }
-   hscat->Draw("scat=0.5");
+   hscat->Draw("scat=0.5"); // This a legacy draw option. Please consider using TScatter
 }
 End_Macro
 
@@ -959,7 +959,7 @@ Begin_Macro(source)
 End_Macro
 
 When the option `SAME` (or "SAMES") is used with the option `BOX`,
-the boxes' sizes are computing taking the previous plots into account. The range
+the boxes' sizes are computed taking the previous plots into account. The range
 along the Z axis is imposed by the first plot (the one without option
 `SAME`); therefore the order in which the plots are done is relevant.
 
@@ -1134,7 +1134,7 @@ End_Macro
 \since **ROOT version 6.09/01:**
 
 When the option SAME (or "SAMES") is used with the option COL, the boxes' color
-are computing taking the previous plots into account. The range along the Z axis
+are computed taking the previous plots into account. The range along the Z axis
 is imposed by the first plot (the one without option SAME); therefore the order
 in which the plots are done is relevant. Same as [in the `BOX` option](\ref HP13), one can use
 `SAME0` (or `SAMES0`) to opt out of this imposition.
@@ -2335,7 +2335,7 @@ The following options are supported:
 
 | Option   | Description                                                       |
 |----------|-------------------------------------------------------------------|
-| "SCAT"   | Draw a scatter plot (deprecated).|
+| "SCAT"   | Draw a scatter plot (legacy draw option).|
 | "COL"    | Draw a color plot. All the bins are painted even the empty bins (default).|
 | "COLZ"   | Same as "COL". In addition the color palette is also drawn.|
 | "0"      | When used with any COL options, the empty bins are not drawn.|
@@ -2579,7 +2579,7 @@ End_Macro
 
 | Option   | Description                                                       |
 |----------|-------------------------------------------------------------------|
-| "SCAT"   | Draw a scatter plot (deprecated).|
+| "SCAT"   | Draw a scatter plot (legacy draw option).|
 | "ISO"    | Draw a Gouraud shaded 3d iso surface through a 3d histogram. It paints one surface at the value computed as follow: `SumOfWeights/(NbinsX*NbinsY*NbinsZ)`|
 | "BOX"    | Draw a for each cell with volume proportional to the content's absolute value. An hidden line removal algorithm is used|
 | "BOX1"   | Same as BOX but an hidden surface removal algorithm is used|
@@ -2604,7 +2604,7 @@ Begin_Macro(source)
       z = x*x + y*y;
       h3scat->Fill(x,y,z);
    }
-   h3scat->Draw();
+   h3scat->Draw("SCAT"); // This a legacy draw option
 }
 End_Macro
 
@@ -5075,7 +5075,6 @@ void THistPainter::PaintBar(Option_t *)
       } else {
          umin = xmin + bar*(xmax-xmin)/10.;
          umax = xmax - bar*(xmax-xmin)/10.;
-         //box.SetFillColor(hcolor+150); //bright
          box.SetFillColor(TColor::GetColorBright(hcolor)); //bright
          box.PaintBox(xmin,ymin,umin,ymax);
          box.SetFillColor(hcolor);
@@ -6785,7 +6784,7 @@ void THistPainter::PaintFrame()
    if (Hoption.Lego || Hoption.Surf || Hoption.Tri ||
        Hoption.Contour == 14 || Hoption.Error >= 100) {
       TObject *frame = gPad->FindObject("TFrame");
-      if (frame) gPad->GetListOfPrimitives()->Remove(frame);
+      if (frame) gPad->Remove(frame);
       return;
    }
 
@@ -9533,6 +9532,10 @@ void THistPainter::PaintTriangles(Option_t *option)
       fYbuf[1] = rmax[1];
       fXbuf[2] = rmin[2];
       fYbuf[2] = rmax[2];
+      fH->SetMaximum(rmax[2]);
+      fH->SetMinimum(rmin[2]);
+      fH->GetXaxis()->SetRangeUser(rmin[0],rmax[0]);
+      fH->GetYaxis()->SetRangeUser(rmin[1],rmax[1]);
    } else {
       fXbuf[0] = Hparam.xmin;
       fYbuf[0] = Hparam.xmax;
@@ -9744,12 +9747,12 @@ void THistPainter::PaintTH2PolyBins(Option_t *option)
          g->TAttFill::Modify();
          if (line) {
             Int_t fs = g->GetFillStyle();
-            Int_t fc = g->GetFillColor();
+            Int_t db = gStyle->GetDrawBorder();
             g->SetFillStyle(0);
-            g->SetFillColor(g->GetLineColor());
+            gStyle->SetDrawBorder(1);
             g->Paint("F");
+            gStyle->SetDrawBorder(db);
             g->SetFillStyle(fs);
-            g->SetFillColor(fc);
          }
          if (fill) g->Paint("F");
          if (mark) g->Paint("P");
@@ -9768,12 +9771,12 @@ void THistPainter::PaintTH2PolyBins(Option_t *option)
             g->TAttFill::Modify();
             if (line) {
                Int_t fs = g->GetFillStyle();
-               Int_t fc = g->GetFillColor();
+               Int_t db = gStyle->GetDrawBorder();
                g->SetFillStyle(0);
-               g->SetFillColor(g->GetLineColor());
+               gStyle->SetDrawBorder(1);
                g->Paint("F");
+               gStyle->SetDrawBorder(db);
                g->SetFillStyle(fs);
-               g->SetFillColor(fc);
             }
             if (fill) g->Paint("F");
             if (mark) g->Paint("P");

@@ -60,8 +60,11 @@ public:
 
 class aa_ol {};
 class bb_ol;
+bb_ol* get_bb_ol();
 class cc_ol {};
 class dd_ol;
+dd_ol* get_dd_ol();
+
 
 class more_overloads {
 public:
@@ -106,3 +109,11 @@ double calc_mean(long n, const double* a);
 double calc_mean(long n, const int* a);
 double calc_mean(long n, const short* a);
 double calc_mean(long n, const long* a);
+
+class more_overloads3 {
+public:
+     std::string slice(size_t) const;
+     std::string slice(size_t);
+     std::string slice(size_t, size_t);
+     std::string slice(size_t, size_t) const;
+};

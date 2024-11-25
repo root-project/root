@@ -15,6 +15,8 @@
 
 #include <ROOT/RWebDisplayHandle.hxx>
 
+#include "ROOT/RConfig.hxx"
+
 #include <memory>
 #include <vector>
 #include <string>
@@ -69,8 +71,10 @@ private:
    struct WebConn {
       unsigned fConnId{0};                 ///<! connection id (unique inside the window)
       bool fHeadlessMode{false};           ///<! indicate if connection represent batch job
+      bool fWasFirst{false};               ///<! indicate if this was first connection, will be reinjected also on first place
       std::string fKey;                    ///<! key value supplied to the window (when exists)
       int fKeyUsed{0};                     ///<! key value used to verify connection
+      std::string fNewKey;                 ///<! new key if connection request reload
       std::unique_ptr<RWebDisplayHandle> fDisplayHandle;  ///<! handle assigned with started web display (when exists)
       std::shared_ptr<THttpCallArg> fHold; ///<! request used to hold headless browser
       timestamp_t fSendStamp;              ///<! last server operation, always used from window thread
@@ -83,6 +87,8 @@ private:
       int fSendCredits{0};                 ///<! how many send operation can be performed without confirmation from other side
       int fClientCredits{0};               ///<! number of credits received from client
       bool fDoingSend{false};              ///<! true when performing send operation
+      unsigned long fRecvSeq{0};           ///<! sequence id of last received packet
+      unsigned long fSendSeq{1};           ///<! sequence id of last send packet
       std::queue<QueueItem> fQueue;        ///<! output queue
       std::map<int,std::shared_ptr<RWebWindow>> fEmbed; ///<! map of embed window for that connection, key value is channel id
       WebConn() = default;
@@ -105,6 +111,8 @@ private:
          fDoingSend = false;
          fSendCredits = 0;
          fClientCredits = 0;
+         fRecvSeq = 0;
+         fSendSeq = 1;
          while (!fQueue.empty())
             fQueue.pop();
       }
@@ -138,6 +146,7 @@ private:
    bool fUseProcessEvents{false};                   ///<! all window functionality will run through process events
    bool fProcessMT{false};                          ///<! if window event processing performed in dedicated thread
    bool fSendMT{false};                             ///<! true is special threads should be used for sending data
+   bool fRequireAuthKey{true};                      ///<! defines if authentication key always required when connect to the widget
    std::shared_ptr<RWebWindowWSHandler> fWSHandler; ///<! specialize websocket handler for all incoming connections
    unsigned fConnCnt{0};                            ///<! counter of new connections to assign ids
    ConnectionsList_t fPendingConn;                  ///<! list of pending connection with pre-assigned keys
@@ -146,6 +155,7 @@ private:
    unsigned fConnLimit{1};                          ///<! number of allowed active connections
    std::string fConnToken;                          ///<! value of "token" URL parameter which should be provided for connecting window
    bool fNativeOnlyConn{false};                     ///<! only native connection are allowed, created by Show() method
+   bool fUseCurrentDir{false};                      ///<! if window can access local files via currentdir/ path of http server
    unsigned fMaxQueueLength{10};                    ///<! maximal number of queue entries
    WebWindowConnectCallback_t fConnCallback;        ///<! callback for connect event
    WebWindowDataCallback_t fDataCallback;           ///<! main callback when data over channel 1 is arrived
@@ -176,14 +186,12 @@ private:
 
    ConnectionsList_t GetWindowConnections(unsigned connid = 0, bool only_active = false) const;
 
-   std::shared_ptr<WebConn> FindOrCreateConnection(unsigned wsid, bool make_new, const char *query);
-
    /// Find connection with specified websocket id
-   std::shared_ptr<WebConn> FindConnection(unsigned wsid) { return FindOrCreateConnection(wsid, false, nullptr); }
+   std::shared_ptr<WebConn> FindConnection(unsigned wsid);
 
    std::shared_ptr<WebConn> RemoveConnection(unsigned wsid);
 
-   std::shared_ptr<WebConn> _FindConnWithKey(const std::string &key) const;
+   bool _CanTrustIn(std::shared_ptr<WebConn> &conn, const std::string &key, const std::string &ntry, bool remote, bool test_first_time);
 
    std::string _MakeSendHeader(std::shared_ptr<WebConn> &conn, bool txt, const std::string &data, int chid);
 
@@ -197,7 +205,9 @@ private:
 
    void CheckDataToSend(bool only_once = false);
 
-   bool HasKey(const std::string &key) const;
+   bool HasKey(const std::string &key, bool also_newkey = false) const;
+
+   void RemoveKey(const std::string &key);
 
    std::string GenerateKey() const;
 
@@ -228,6 +238,8 @@ private:
    static std::function<bool(const std::shared_ptr<RWebWindow> &, unsigned, const std::string &)> gStartDialogFunc;
 
    static void SetStartDialogFunc(std::function<bool(const std::shared_ptr<RWebWindow> &, unsigned, const std::string &)>);
+
+   static std::string HMAC(const std::string &key, const std::string &sessionKey, const char *msg, int msglen);
 
 public:
 
@@ -302,6 +314,22 @@ public:
    /// returns true if only native (own-created) connections are allowed
    bool IsNativeOnlyConn() const { return fNativeOnlyConn; }
 
+   /////////////////////////////////////////////////////////////////////////
+   /// Configure if authentication key in connection string is required
+   void SetRequireAuthKey(bool on) { fRequireAuthKey = on; }
+
+   /////////////////////////////////////////////////////////////////////////
+   /// returns true if authentication string is required
+   bool IsRequireAuthKey() const { return fRequireAuthKey; }
+
+   /////////////////////////////////////////////////////////////////////////
+   /// Configure if window can access local files via currentdir/ path of http server
+   void SetUseCurrentDir(bool on = true) { fUseCurrentDir = on; }
+
+   /////////////////////////////////////////////////////////////////////////
+   /// returns true if window can access local files via currentdir/ path of http server
+   bool IsUseCurrentDir() const { return fUseCurrentDir; }
+
    void SetClientVersion(const std::string &vers);
 
    std::string GetClientVersion() const;
@@ -357,8 +385,10 @@ public:
 
    std::string GetAddr() const;
 
+   _R__DEPRECATED_LATER("Use GetUrl() to get valid connection URL")
    std::string GetRelativeAddr(const std::shared_ptr<RWebWindow> &win) const;
 
+   _R__DEPRECATED_LATER("Use GetAddr() to get valid connection URL")
    std::string GetRelativeAddr(const RWebWindow &win) const;
 
    void SetCallBacks(WebWindowConnectCallback_t conn, WebWindowDataCallback_t data, WebWindowConnectCallback_t disconn = nullptr);

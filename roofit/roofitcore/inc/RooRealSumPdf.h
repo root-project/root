@@ -35,7 +35,7 @@ public:
   double evaluate() const override ;
   bool checkObservables(const RooArgSet* nset) const override ;
 
-  void computeBatch(double* output, size_t size, RooFit::Detail::DataMap const&) const override;
+  void doEval(RooFit::EvalContext &) const override;
 
   bool forceAnalyticalInt(const RooAbsArg& arg) const override { return arg.isFundamental() ; }
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet, const char* rangeName=nullptr) const override ;
@@ -43,6 +43,7 @@ public:
 
   const RooArgList& funcList() const { return _funcList ; }
   const RooArgList& coefList() const { return _coefList ; }
+  const RooArgList &funcIntListFromCache(Int_t code, const char *rangeName = nullptr) const;
 
   ExtendMode extendMode() const override ;
 
@@ -70,8 +71,6 @@ public:
   std::unique_ptr<RooAbsArg> compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext & ctx) const override;
 
   std::unique_ptr<RooAbsReal> createExpectedEventsFunc(const RooArgSet* nset) const override;
-
-  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
 
 protected:
 
@@ -109,11 +108,11 @@ private:
                          bool doFloor,
                          bool & hasWarnedBefore);
 
-  static void translateImpl(RooFit::Detail::CodeSquashContext &ctx, RooAbsArg const *klass, RooArgList const &funcList,
-                            RooArgList const &coefList);
-
   static bool checkObservables(RooAbsReal const &caller, RooArgSet const *nset, RooArgList const &funcList,
                                RooArgList const &coefList);
+
+  static const RooArgList &
+  funcIntListFromCache(RooAbsReal const &caller, RooObjCacheManager &normIntMgr, Int_t code, const char *rangeName);
 
   static Int_t getAnalyticalIntegralWN(RooAbsReal const& caller, RooObjCacheManager & normIntMgr,
                                        RooArgList const& funcList, RooArgList const& coefList,
@@ -122,6 +121,9 @@ private:
                                      RooArgList const& funcList, RooArgList const& coefList,
                                      Int_t code, const RooArgSet* normSet, const char* rangeName,
                                      bool hasWarnedBefore);
+
+  static const CacheElem *
+  getCacheElem(RooAbsReal const &caller, RooObjCacheManager &normIntMgr, Int_t code, const char *rangeName);
 
   static std::list<double>* binBoundaries(
           RooArgList const& funcList, RooAbsRealLValue& /*obs*/, double /*xlo*/, double /*xhi*/);

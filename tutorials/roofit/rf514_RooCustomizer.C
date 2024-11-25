@@ -56,14 +56,14 @@ void rf514_RooCustomizer() {
   // ---------------------------------------------------------------------------
 
   // We need two sets for bookkeeping of PDF nodes:
-  RooArgSet newLeafs;           // This set collects leafs that are created in the process.
-  RooArgSet allCustomiserNodes; // This set lists leafs that have been used in a replacement operation.
+  RooArgSet newLeaves;           // This set collects leaves that are created in the process.
+  RooArgSet allCustomiserNodes; // This set lists leaves that have been used in a replacement operation.
 
 
   // 1. Each sample should have its own mean for the gaussian
   // The customiser will make copies of `meanG` for each category.
-  // These will all appear in the set `newLeafs`, which will own the new nodes.
-  RooCustomizer cust(model, sample, newLeafs, &allCustomiserNodes);
+  // These will all appear in the set `newLeaves`, which will own the new nodes.
+  RooCustomizer cust(model, sample, newLeaves, &allCustomiserNodes);
   cust.splitArg(meanG, sample);
 
 
@@ -96,8 +96,8 @@ void rf514_RooCustomizer() {
   std::cout << "\nPDF 3 with a free yield:" << std::endl;
   pdf3->Print("T");
 
-  std::cout << "\nThe following leafs have been created automatically while customising:" << std::endl;
-  newLeafs.Print("V");
+  std::cout << "\nThe following leaves have been created automatically while customising:" << std::endl;
+  newLeaves.Print("V");
 
 
   // If we needed to set reasonable values for the means of the gaussians, this could be done as follows:
@@ -106,7 +106,7 @@ void rf514_RooCustomizer() {
   auto& meanG2 = static_cast<RooRealVar&>(allCustomiserNodes["meanG_Sample2"]);
   meanG2.setVal(300);
 
-  std::cout << "\nThe following leafs have been used while customising"
+  std::cout << "\nThe following leaves have been used while customising"
     << "\n\t(partial overlap with the set of automatically created leaves."
     << "\n\ta new customiser for a different PDF could reuse them if necessary.):" << std::endl;
   allCustomiserNodes.Print("V");

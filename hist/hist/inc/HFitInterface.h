@@ -58,8 +58,6 @@ namespace ROOT {
 
 
 
-      //#ifndef __CINT__  // does not link on Windows (why ??)
-
       /**
          Decode list of options into fitOption
        */
@@ -187,6 +185,3 @@ namespace ROOT {
 
 
 #endif /* ROOT_Fit_TH1Interface */
-
-
-//#endif  /* not CINT OR MAKE_CINT */

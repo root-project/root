@@ -22,9 +22,6 @@ namespace RooStats{
             HistoToWorkspaceFactoryFast::Configuration const& cfg={}
     );
 
-    void FormatFrameForLikelihood(RooPlot* frame, std::string xTitle=std::string("#sigma / #sigma_{SM}"), std::string yTitle=std::string("-log likelihood"));
-    void FitModel(RooWorkspace *, std::string data_name="obsData");
-    void FitModelAndPlot(const std::string& measurementName, const std::string& fileNamePrefix, RooWorkspace &, std::string, std::string, TFile&, std::ostream&);
   }
 }
 

@@ -81,7 +81,7 @@ TMVA::DecisionTreeNode::DecisionTreeNode()
    }
    else {
       //std::cout << "**Node constructor WITHOUT TrainingINFO"<<std::endl;
-      fTrainInfo = 0;
+      fTrainInfo = nullptr;
    }
 }
 
@@ -105,7 +105,7 @@ TMVA::DecisionTreeNode::DecisionTreeNode(TMVA::Node* p, char pos)
    }
    else {
       //std::cout << "**Node constructor WITHOUT TrainingINFO"<<std::endl;
-      fTrainInfo = 0;
+      fTrainInfo = nullptr;
    }
 }
 
@@ -138,7 +138,7 @@ TMVA::DecisionTreeNode::DecisionTreeNode(const TMVA::DecisionTreeNode &n,
    }
    else {
       //std::cout << "**Node constructor WITHOUT TrainingINFO"<<std::endl;
-      fTrainInfo = 0;
+      fTrainInfo = nullptr;
    }
 }
 
@@ -399,6 +399,7 @@ void TMVA::DecisionTreeNode::PrintRecPrune( std::ostream& os ) const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set CC, if traininfo defined, otherwise Log Fatal
 
 void TMVA::DecisionTreeNode::SetCC(Double_t cc)
 {
@@ -408,7 +409,8 @@ void TMVA::DecisionTreeNode::SetCC(Double_t cc)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// return the minimum of variable ivar from the training sample
-/// that pass/end up in this node
+/// that pass/end up in this node, if traininfo defined, otherwise Log Fatal
+/// and return -9999
 
 Float_t TMVA::DecisionTreeNode::GetSampleMin(UInt_t ivar) const {
    if (fTrainInfo && ivar < fTrainInfo->fSampleMin.size()) return fTrainInfo->fSampleMin[ivar];
@@ -419,7 +421,8 @@ Float_t TMVA::DecisionTreeNode::GetSampleMin(UInt_t ivar) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// return the maximum of variable ivar from the training sample
-/// that pass/end up in this node
+/// that pass/end up in this node, if traininfo defined, otherwise Log Fatal and 
+/// return 9999
 
 Float_t TMVA::DecisionTreeNode::GetSampleMax(UInt_t ivar) const {
    if (fTrainInfo && ivar < fTrainInfo->fSampleMin.size()) return fTrainInfo->fSampleMax[ivar];
@@ -430,7 +433,7 @@ Float_t TMVA::DecisionTreeNode::GetSampleMax(UInt_t ivar) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// set the minimum of variable ivar from the training sample
-/// that pass/end up in this node
+/// that pass/end up in this node, if traininfo defined
 
 void TMVA::DecisionTreeNode::SetSampleMin(UInt_t ivar, Float_t xmin){
    if ( fTrainInfo) {
@@ -441,7 +444,7 @@ void TMVA::DecisionTreeNode::SetSampleMin(UInt_t ivar, Float_t xmin){
 
 ////////////////////////////////////////////////////////////////////////////////
 /// set the maximum of variable ivar from the training sample
-/// that pass/end up in this node
+/// that pass/end up in this node, if traininfo defined
 
 void TMVA::DecisionTreeNode::SetSampleMax(UInt_t ivar, Float_t xmax){
    if( ! fTrainInfo ) return;

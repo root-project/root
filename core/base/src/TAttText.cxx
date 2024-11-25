@@ -223,10 +223,10 @@ in the `.rootrc` file:
        1 :       "Free Serif Italic"         "Times-Italic"
        2 :       "Free Serif Bold"           "Times-Bold"
        3 :       "Free Serif Bold Italic"    "Times-BoldItalic"
-       4 :       "Free Sans"                 "Helvetica"
-       5 :       "Free Sans Oblique"         "Helvetica-Oblique"
-       6 :       "Free Sans Bold"            "Helvetica-Bold"
-       7 :       "Free Sans Bold Oblique"    "Helvetica-BoldOblique"
+       4 :       "Tex Gyre Regular"          "Helvetica"
+       5 :       "Tex Gyre Italic"           "Helvetica-Oblique"
+       6 :       "Tex Gyre Bold"             "Helvetica-Bold"
+       7 :       "Tex Gyre Bold Italic"      "Helvetica-BoldOblique"
        8 :       "Free Mono"                 "Courier"
        9 :       "Free Mono Oblique"         "Courier-Oblique"
       10 :       "Free Mono Bold"            "Courier-Bold"
@@ -405,7 +405,7 @@ void TAttText::SetTextAttributes()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set a transparent text color. 
+/// Set a transparent text color.
 /// \param tcolor defines the text color
 /// \param talpha defines the percentage of opacity from 0. (fully transparent) to 1. (fully opaque).
 /// \note talpha is ignored (treated as 1) if the TCanvas has no GL support activated.

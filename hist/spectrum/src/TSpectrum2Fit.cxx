@@ -6,7 +6,7 @@
     \brief Advanced 2-dimensional spectra fitting functions
     \author Miroslav Morhac
 
- \legacy{TSpectrum2Fit}
+ \legacy{TSpectrum2Fit, For modeling a spectrum fitting and estimating the background one can use RooFit while for deconvolution and unfolding one can use TUnfold.}
 
 Class for fitting 2D spectra using AWMI (algorithm without matrix
 inversion) and conjugate gradient algorithms for symmetrical

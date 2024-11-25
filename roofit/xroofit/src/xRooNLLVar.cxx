@@ -23,7 +23,7 @@ This xRooNLLVar object has several special methods, e.g. for fitting and toy dat
 #define protected public
 #endif
 #include "RooFitResult.h"
-#include "RooNLLVar.h"
+#include "../../roofitcore/src/RooNLLVar.h"
 #ifdef protected
 #undef protected
 #endif
@@ -93,7 +93,7 @@ This xRooNLLVar object has several special methods, e.g. for fitting and toy dat
 #include "TKey.h"
 #include "TRegexp.h"
 
-BEGIN_XROOFIT_NAMESPACE;
+BEGIN_XROOFIT_NAMESPACE
 
 std::set<int> xRooNLLVar::xRooHypoPoint::allowedStatusCodes = {0};
 
@@ -293,7 +293,7 @@ xRooNLLVar::xRooNLLVar(const std::shared_ptr<RooAbsPdf> &pdf,
    //        fGlobs->setAttribAll("Constant",true);
    //        const_cast<RooArgSet*>(globs->getSet(0))->replace(*fGlobs);*/
    //    }
-};
+}
 
 xRooNLLVar::xRooNLLVar(const std::shared_ptr<RooAbsPdf> &pdf, const std::shared_ptr<RooAbsData> &data,
                        const RooLinkedList &opts)
@@ -691,6 +691,52 @@ double xRooNLLVar::getEntryVal(size_t entry) const
    return -_data->weight() * _pdf->getLogVal(_data->get());
 }
 
+std::set<std::string> xRooNLLVar::binnedChannels() const
+{
+   std::set<std::string> out;
+
+   auto binnedOpt = dynamic_cast<RooCmdArg *>(fOpts->find("Binned")); // the binned option, if explicitly specified
+
+   if (auto s = dynamic_cast<RooSimultaneous *>(pdf().get())) {
+      xRooNode simPdf(*s);
+      bool allChannels = true;
+      for (auto c : simPdf.bins()) {
+         // see if there's a RooRealSumPdf in the channel - if there is, if it has BinnedLikelihood set
+         // then assume is a BinnedLikelihood channel
+         RooArgSet nodes;
+         c->get<RooAbsArg>()->treeNodeServerList(&nodes, nullptr, true, false);
+         bool isBinned = false;
+         for (auto a : nodes) {
+            if (a->InheritsFrom("RooRealSumPdf") &&
+                ((binnedOpt && binnedOpt->getInt(0)) || (!binnedOpt && a->getAttribute("BinnedLikelihood")))) {
+               TString chanName(c->GetName());
+               out.insert(chanName(chanName.Index("=") + 1, chanName.Length()).Data());
+               isBinned = true;
+               break;
+            }
+         }
+         if (!isBinned) {
+            allChannels = false;
+         }
+      }
+      if (allChannels) {
+         out.clear();
+         out.insert("*");
+      }
+   } else {
+      RooArgSet nodes;
+      pdf()->treeNodeServerList(&nodes, nullptr, true, false);
+      for (auto a : nodes) {
+         if (a->InheritsFrom("RooRealSumPdf") &&
+             ((binnedOpt && binnedOpt->getInt(0)) || (!binnedOpt && a->getAttribute("BinnedLikelihood")))) {
+            out.insert("*");
+            break;
+         }
+      }
+   }
+   return out;
+}
+
 double xRooNLLVar::getEntryBinWidth(size_t entry) const
 {
 
@@ -700,15 +746,16 @@ double xRooNLLVar::getEntryBinWidth(size_t entry) const
    if (size_t(_data->numEntries()) <= entry)
       return 0;
    auto _pdf = pdf().get();
-   *std::unique_ptr<RooAbsCollection>(_pdf->getObservables(_data->get())) = *_data->get(entry); // only set robs
+   std::unique_ptr<RooAbsCollection> _robs(_pdf->getObservables(_data->get()));
+   *_robs = *_data->get(entry); // only set robs
    if (auto s = dynamic_cast<RooSimultaneous *>(_pdf); s) {
       _pdf = s->getPdf(s->indexCat().getCurrentLabel());
    }
-   std::unique_ptr<RooAbsCollection> _robs(_pdf->getObservables(_data->get()));
    double volume = 1.;
    for (auto o : *_robs) {
 
-      if (auto a = dynamic_cast<RooAbsRealLValue *>(o); a) {
+      if (auto a = dynamic_cast<RooAbsRealLValue *>(o);
+          a && _pdf->dependsOn(*a)) { // dependsOn check needed until ParamHistFunc binBoundaries method fixed
          std::unique_ptr<std::list<double>> bins(
             _pdf->binBoundaries(*a, -std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity()));
          if (bins) {
@@ -742,6 +789,11 @@ double xRooNLLVar::saturatedConstraintTerm() const
       return 0;
 
    for (auto c : cTerm->list()) {
+      if (std::string(c->ClassName()) == "RooAbsPdf") {
+         // in ROOT 6.32 the constraintTerm is full of RooNormalizedPdfs which aren't public
+         // in that case use the first server
+         c = c->servers()[0];
+      }
       if (auto gaus = dynamic_cast<RooGaussian *>(c)) {
          auto v = dynamic_cast<RooAbsReal *>(fGlobs->find(gaus->getX().GetName()));
          if (!v) {
@@ -764,7 +816,7 @@ double xRooNLLVar::saturatedConstraintTerm() const
 
 double xRooNLLVar::ndof() const
 {
-   return data()->numEntries() + (globs() ? globs()->size() : 0) -
+   return data()->numEntries() + (fFuncGlobs ? fFuncGlobs->size() : 0) -
           std::unique_ptr<RooAbsCollection>(pars()->selectByAttrib("Constant", false))->size();
 }
 
@@ -775,45 +827,77 @@ double xRooNLLVar::pgof() const
    return TMath::Prob(2. * (get()->getVal() - saturatedVal()), ndof());
 }
 
-double xRooNLLVar::saturatedVal() const
+double xRooNLLVar::mainTermNdof() const
 {
-   return saturatedNllTerm() + saturatedConstraintTerm();
+   // need to count number of floating unconstrained parameters
+   // which are floating parameters not featured in the constraintTerm
+   std::unique_ptr<RooAbsCollection> _floats(pars()->selectByAttrib("Constant", false));
+   if (auto _constraintTerm = constraintTerm()) {
+      _floats->remove(*std::unique_ptr<RooAbsCollection>(_constraintTerm->getVariables()));
+   }
+   return data()->numEntries() - _floats->size();
 }
 
-double xRooNLLVar::saturatedNllTerm() const
+double xRooNLLVar::mainTermPgof() const
+{
+   // using totVal - constraintTerm while new evalbackend causes mainTerm() to return nullptr
+   double val = get()->getVal();
+   if (auto _constraintTerm = constraintTerm()) {
+      val -= _constraintTerm->getVal();
+   }
+
+   return TMath::Prob(2. * (val - saturatedMainTerm()), mainTermNdof());
+}
+
+double xRooNLLVar::saturatedVal() const
+{
+   return saturatedMainTerm() + saturatedConstraintTerm();
+}
+
+double xRooNLLVar::saturatedMainTerm() const
 {
 
    // Use this term to create a goodness-of-fit metric, which is approx chi2 distributed with numEntries (data) d.o.f:
-   // prob = TMath::Prob( 2.*(nll.nllTerm()->getVal() - nll.saturatedNllTerm()), nll.data()->numEntries() )
+   // prob = TMath::Prob( 2.*(nll.mainTerm()->getVal() - nll.saturatedNllTerm()), nll.data()->numEntries() )
 
    // note that need to construct nll with explicit Binned(1 or 0) option otherwise will pick up nll eval
-   // from attributes in model already, so many get binned nllTerm eval when thinking not binned because didnt specify
+   // from attributes in model already, so many get binned mainTerm eval when thinking not binned because didnt specify
    // Binned(1)
 
    auto _data = data();
    if (!_data)
       return std::numeric_limits<double>::quiet_NaN();
 
-   bool isBinned = false;
-   if (auto a = dynamic_cast<RooCmdArg *>(fOpts->find("Binned")); a) {
-      isBinned = a->getInt(0);
-   }
+   std::set<std::string> _binnedChannels = binnedChannels();
 
-   // for binned case each entry is: -(-N + Nlog(N) - TMath::LnGamma(N+1))
+   // for binned case each entry is: -(-N + Nlog(N) - std::lgamma(N+1))
    // for unbinned case each entry is: -(N*log(N/(sumN*binW))) = -N*logN + N*log(sumN) + N*log(binW)
    // but unbinned gets extendedTerm = sumN - sumN*log(sumN)
    // so resulting sum is just sumN - sum[ N*logN - N*log(binW) ]
    // which is the same as the binned case without the LnGamma part and with the extra sum[N*log(binW)] part
+
+   const RooAbsCategoryLValue *cat = (dynamic_cast<RooSimultaneous *>(pdf().get()))
+                                        ? &dynamic_cast<RooSimultaneous *>(pdf().get())->indexCat()
+                                        : nullptr;
 
    double out = _data->sumEntries();
    for (int i = 0; i < _data->numEntries(); i++) {
       _data->get(i);
       double w = _data->weight();
       out -= w * std::log(w);
-      if (isBinned) {
-         out += TMath::LnGamma(w + 1);
-      } else {
+      if (_binnedChannels.count("*")) {
+         out += std::lgamma(w + 1);
+      } else if (_binnedChannels.empty()) {
          out += w * std::log(getEntryBinWidth(i));
+      } else if (cat) {
+         // need to determine which channel we are in for this entry to decide if binned or unbinned active
+         if (_binnedChannels.count(_data->get()->getCatLabel(cat->GetName()))) {
+            out += std::lgamma(w + 1);
+         } else {
+            out += w * std::log(getEntryBinWidth(i));
+         }
+      } else {
+         throw std::runtime_error("Cannot determine category of RooSimultaneous pdf");
       }
    }
 
@@ -1059,8 +1143,18 @@ bool xRooNLLVar::setData(const std::pair<std::shared_ptr<RooAbsData>, std::share
    }
 
    try {
-      if (!kReuseNLL || nllTerm()->operMode() == RooAbsTestStatistic::MPMaster) {
-         throw std::runtime_error("not supported");
+      if (!kReuseNLL || !mainTerm() || mainTerm()->operMode() == RooAbsTestStatistic::MPMaster) {
+         // happens when using MP need to rebuild the nll instead
+         // also happens if there's no mainTerm(), which is the case in 6.32 where RooNLLVar is partially deprecated
+         AutoRestorer snap(*fFuncVars);
+         // ensure the const state is back where it was at nll construction time;
+         fFuncVars->setAttribAll("Constant", false);
+         fConstVars->setAttribAll("Constant", true);
+         std::shared_ptr<RooAbsData> __data = fData; // do this just to keep fData alive while killing previous NLLVar
+                                                     // (can't kill data while NLL constructed with it)
+         fData = _data.first;
+         reinitialize();
+         return true;
       }
       bool out = false;
       if (_data.first) {
@@ -1068,8 +1162,8 @@ bool xRooNLLVar::setData(const std::pair<std::shared_ptr<RooAbsData>, std::share
             // replace in all terms
             get()->setData(*_data.first, false);
          } else {
-            // replace just in nllTerm ... note to self: why not just replace in all like above? should test!
-            out = nllTerm()->setData(*_data.first, false /* clone data? */);
+            // replace just in mainTerm ... note to self: why not just replace in all like above? should test!
+            out = mainTerm()->setData(*_data.first, false /* clone data? */);
          }
       } else {
          reset();
@@ -1078,6 +1172,7 @@ bool xRooNLLVar::setData(const std::pair<std::shared_ptr<RooAbsData>, std::share
       return out;
    } catch (std::runtime_error &) {
       // happens when using MP need to rebuild the nll instead
+      // also happens if there's no mainTerm(), which is the case in 6.32 where RooNLLVar is partially deprecated
       AutoRestorer snap(*fFuncVars);
       // ensure the const state is back where it was at nll construction time;
       fFuncVars->setAttribAll("Constant", false);
@@ -1127,7 +1222,7 @@ void xRooNLLVar::AddOption(const RooCmdArg &opt)
 
 RooAbsData *xRooNLLVar::data() const
 {
-   auto _nll = nllTerm();
+   auto _nll = mainTerm();
    if (!_nll)
       return fData.get();
    RooAbsData *out = &_nll->data();
@@ -1136,7 +1231,7 @@ RooAbsData *xRooNLLVar::data() const
    return out;
 }
 
-RooNLLVar *xRooNLLVar::nllTerm() const
+RooNLLVar *xRooNLLVar::mainTerm() const
 {
    auto _func = func();
    if (auto a = dynamic_cast<RooNLLVar *>(_func.get()); a)
@@ -1171,7 +1266,7 @@ double xRooNLLVar::binnedDataTerm() const
    double out = 0;
    for (int i = 0; i < fData->numEntries(); i++) {
       fData->get(i);
-      out += TMath::LnGamma(fData->weight() + 1) - fData->weight() * std::log(getEntryBinWidth(i));
+      out += std::lgamma(fData->weight() + 1) - fData->weight() * std::log(getEntryBinWidth(i));
    }
 
    return out;
@@ -1185,6 +1280,11 @@ RooConstraintSum *xRooNLLVar::constraintTerm() const
    for (auto s : _func->servers()) {
       if (auto a = dynamic_cast<RooConstraintSum *>(s); a)
          return a;
+      // allow one more depth to support 6.32 (where sum is hidden inside the first server)
+      for (auto s2 : s->servers()) {
+         if (auto a2 = dynamic_cast<RooConstraintSum *>(s2); a2)
+            return a2;
+      }
    }
    return nullptr;
 }
@@ -1195,7 +1295,7 @@ RooConstraintSum *xRooNLLVar::constraintTerm() const
     return *fFunc;
 }*/
 
-std::pair<double, double> xRooNLLVar::xRooHypoPoint::getVal(const char *what)
+xRooNLLVar::xValueWithError xRooNLLVar::xRooHypoPoint::getVal(const char *what)
 {
    TString sWhat(what);
    sWhat.ToLower();
@@ -1494,13 +1594,13 @@ std::shared_ptr<xRooNLLVar::xRooHypoPoint> xRooNLLVar::xRooHypoPoint::asimov(boo
    return fAsimov;
 }
 
-std::pair<double, double> xRooNLLVar::xRooHypoPoint::pNull_asymp(double nSigma)
+xRooNLLVar::xValueWithError xRooNLLVar::xRooHypoPoint::pNull_asymp(double nSigma)
 {
    if (fPllType != xRooFit::Asymptotics::Uncapped && ts_asymp(nSigma).first == 0)
-      return std::pair(1, 0);
+      return std::pair<double, double>(1, 0);
    auto first_poi = dynamic_cast<RooRealVar *>(poi().first());
    if (!first_poi)
-      return std::pair(std::numeric_limits<double>::quiet_NaN(), 0);
+      return std::pair<double, double>(std::numeric_limits<double>::quiet_NaN(), 0);
    auto _sigma_mu = sigma_mu();
    double nom = xRooFit::Asymptotics::PValue(fPllType, ts_asymp(nSigma).first, fNullVal(), fNullVal(), _sigma_mu.first,
                                              first_poi->getMin("physical"), first_poi->getMax("physical"));
@@ -1513,13 +1613,13 @@ std::pair<double, double> xRooNLLVar::xRooHypoPoint::pNull_asymp(double nSigma)
    return std::pair(nom, std::max(std::abs(up - nom), std::abs(down - nom)));
 }
 
-std::pair<double, double> xRooNLLVar::xRooHypoPoint::pAlt_asymp(double nSigma)
+xRooNLLVar::xValueWithError xRooNLLVar::xRooHypoPoint::pAlt_asymp(double nSigma)
 {
    if (fPllType != xRooFit::Asymptotics::Uncapped && ts_asymp(nSigma).first == 0)
-      return std::pair(1, 0);
+      return std::pair<double, double>(1, 0);
    auto first_poi = dynamic_cast<RooRealVar *>(poi().first());
    if (!first_poi)
-      return std::pair(std::numeric_limits<double>::quiet_NaN(), 0);
+      return std::pair<double, double>(std::numeric_limits<double>::quiet_NaN(), 0);
    auto _sigma_mu = sigma_mu();
    double nom = xRooFit::Asymptotics::PValue(fPllType, ts_asymp(nSigma).first, fNullVal(), fAltVal(), _sigma_mu.first,
                                              first_poi->getMin("physical"), first_poi->getMax("physical"));
@@ -1533,16 +1633,16 @@ std::pair<double, double> xRooNLLVar::xRooHypoPoint::pAlt_asymp(double nSigma)
    return std::pair(nom, std::max(std::abs(up - nom), std::abs(down - nom)));
 }
 
-std::pair<double, double> xRooNLLVar::xRooHypoPoint::pCLs_asymp(double nSigma)
+xRooNLLVar::xValueWithError xRooNLLVar::xRooHypoPoint::pCLs_asymp(double nSigma)
 {
    if (fNullVal() == fAltVal())
-      return std::pair(1, 0); // by construction
+      return std::pair<double, double>(1, 0); // by construction
 
    if (fPllType != xRooFit::Asymptotics::Uncapped && ts_asymp(nSigma).first == 0)
-      return std::pair(1, 0);
+      return std::pair<double, double>(1, 0);
    auto first_poi = dynamic_cast<RooRealVar *>(poi().first());
    if (!first_poi)
-      return std::pair(std::numeric_limits<double>::quiet_NaN(), 0);
+      return std::pair<double, double>(std::numeric_limits<double>::quiet_NaN(), 0);
 
    auto _ts_asymp = ts_asymp(nSigma);
    auto _sigma_mu = sigma_mu();
@@ -1567,17 +1667,17 @@ std::pair<double, double> xRooNLLVar::xRooHypoPoint::pCLs_asymp(double nSigma)
    auto up = (up1 == 0) ? 0 : up1 / up2;
    auto down = (down1 == 0) ? 0 : down1 / down2;
 
-   return std::make_pair(nom, std::max(std::abs(up - nom), std::abs(down - nom)));
+   return std::pair(nom, std::max(std::abs(up - nom), std::abs(down - nom)));
 }
 
-std::pair<double, double> xRooNLLVar::xRooHypoPoint::ts_asymp(double nSigma)
+xRooNLLVar::xValueWithError xRooNLLVar::xRooHypoPoint::ts_asymp(double nSigma)
 {
    if (std::isnan(nSigma))
       return pll();
    auto first_poi = dynamic_cast<RooRealVar *>(poi().first());
    auto _sigma_mu = sigma_mu();
    if (!first_poi || (!std::isnan(nSigma) && std::isnan(_sigma_mu.first)))
-      return std::pair(std::numeric_limits<double>::quiet_NaN(), 0);
+      return std::pair<double, double>(std::numeric_limits<double>::quiet_NaN(), 0);
    double nom = xRooFit::Asymptotics::k(fPllType, ROOT::Math::gaussian_cdf(nSigma), fNullVal(), fAltVal(),
                                         _sigma_mu.first, first_poi->getMin("physical"), first_poi->getMax("physical"));
    double up = xRooFit::Asymptotics::k(fPllType, ROOT::Math::gaussian_cdf(nSigma), fNullVal(), fAltVal(),
@@ -1589,7 +1689,7 @@ std::pair<double, double> xRooNLLVar::xRooHypoPoint::ts_asymp(double nSigma)
    return std::pair<double, double>(nom, std::max(std::abs(nom - up), std::abs(nom - down)));
 }
 
-std::pair<double, double> xRooNLLVar::xRooHypoPoint::ts_toys(double nSigma)
+xRooNLLVar::xValueWithError xRooNLLVar::xRooHypoPoint::ts_toys(double nSigma)
 {
    if (std::isnan(nSigma))
       return pll();
@@ -1598,25 +1698,24 @@ std::pair<double, double> xRooNLLVar::xRooHypoPoint::ts_toys(double nSigma)
    while (firstToy < altToys.size() && std::isnan(std::get<1>(altToys[firstToy])))
       firstToy++;
    if (firstToy >= altToys.size())
-      return std::make_pair(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN());
+      return std::pair(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN());
    int targetIdx =
       (altToys.size() - firstToy) * ROOT::Math::gaussian_cdf(nSigma) + firstToy; // TODO: Account for weights
-   return std::make_pair(
-      std::get<1>(altToys[targetIdx]),
-      (std::get<1>(altToys[std::min(int(altToys.size()), targetIdx)]) - std::get<1>(altToys[std::max(0, targetIdx)])) /
-         2.);
+   return std::pair(std::get<1>(altToys[targetIdx]), (std::get<1>(altToys[std::min(int(altToys.size()), targetIdx)]) -
+                                                      std::get<1>(altToys[std::max(0, targetIdx)])) /
+                                                        2.);
 }
 
-std::pair<double, double> xRooNLLVar::xRooHypoPoint::pll(bool readOnly)
+xRooNLLVar::xValueWithError xRooNLLVar::xRooHypoPoint::pll(bool readOnly)
 {
    auto _ufit = ufit(readOnly);
    if (!_ufit) {
       if (hypoTestResult)
-         return std::make_pair(hypoTestResult->GetTestStatisticData(), 0);
-      return std::make_pair(std::numeric_limits<double>::quiet_NaN(), 0);
+         return std::pair<double, double>(hypoTestResult->GetTestStatisticData(), 0);
+      return std::pair<double, double>(std::numeric_limits<double>::quiet_NaN(), 0);
    }
    if (allowedStatusCodes.find(_ufit->status()) == allowedStatusCodes.end()) {
-      return std::make_pair(std::numeric_limits<double>::quiet_NaN(), 0);
+      return std::pair<double, double>(std::numeric_limits<double>::quiet_NaN(), 0);
    }
    if (auto _first_poi = dynamic_cast<RooRealVar *>(poi().first());
        _first_poi && _first_poi->getMin("physical") > _first_poi->getMin() &&
@@ -1624,19 +1723,19 @@ std::pair<double, double> xRooNLLVar::xRooHypoPoint::pll(bool readOnly)
       // replace _ufit with fit "boundary" conditional fit
       _ufit = cfit_lbound(readOnly);
       if (!_ufit) {
-         return std::make_pair(std::numeric_limits<double>::quiet_NaN(), 0);
+         return std::pair<double, double>(std::numeric_limits<double>::quiet_NaN(), 0);
       }
    }
    auto cFactor = (fPllType == xRooFit::Asymptotics::TwoSided)
                      ? 1.
                      : xRooFit::Asymptotics::CompatFactor(fPllType, fNullVal(), mu_hat().getVal());
    if (cFactor == 0)
-      return std::make_pair(0, 0);
+      return std::pair<double, double>(0, 0);
    if (!cfit_null(readOnly) || allowedStatusCodes.find(cfit_null(readOnly)->status()) == allowedStatusCodes.end())
-      return std::make_pair(std::numeric_limits<double>::quiet_NaN(), 0);
+      return std::pair<double, double>(std::numeric_limits<double>::quiet_NaN(), 0);
    // std::cout << cfit->minNll() << ":" << cfit->edm() << " " << ufit->minNll() << ":" << ufit->edm() << std::endl;
-   return std::make_pair(2. * cFactor * (cfit_null(readOnly)->minNll() - _ufit->minNll()),
-                         2. * cFactor * sqrt(pow(cfit_null(readOnly)->edm(), 2) + pow(_ufit->edm(), 2)));
+   return std::pair<double, double>(2. * cFactor * (cfit_null(readOnly)->minNll() - _ufit->minNll()),
+                                    2. * cFactor * sqrt(pow(cfit_null(readOnly)->edm(), 2) + pow(_ufit->edm(), 2)));
    // return 2.*cFactor*(cfit->minNll()+cfit->edm() - ufit->minNll()+ufit->edm());
 }
 
@@ -1676,6 +1775,7 @@ std::shared_ptr<const RooFitResult> xRooNLLVar::xRooHypoPoint::retrieveFit(int t
          rfit->setStatus(fit->getRealValue("status"));
          rfit->setMinNLL(fit->getRealValue("minNll"));
          rfit->setEDM(fit->getRealValue("edm"));
+         rfit->setCovQual(fit->getRealValue("covQual"));
          if (type == 0) {
             std::unique_ptr<RooAbsCollection> par_hats(
                hypoTestResult->GetFitInfo()->getGlobalObservables()->selectByName(coords->contentsString().c_str()));
@@ -1930,27 +2030,28 @@ std::shared_ptr<const RooFitResult> xRooNLLVar::xRooHypoPoint::cfit_alt(bool rea
    return (fAlt_cfit = nllVar->minimize());
 }
 
-std::pair<double, double> xRooNLLVar::xRooHypoPoint::sigma_mu(bool readOnly)
+xRooNLLVar::xValueWithError xRooNLLVar::xRooHypoPoint::sigma_mu(bool readOnly)
 {
 
    auto asi = asimov(readOnly);
 
    if (!asi) {
-      return std::make_pair(std::numeric_limits<double>::quiet_NaN(), 0);
+      return std::pair<double, double>(std::numeric_limits<double>::quiet_NaN(), 0);
    }
 
    auto out = asi->pll(readOnly);
-   return std::make_pair(std::abs(fNullVal() - fAltVal()) / sqrt(out.first),
-                         out.second * 0.5 * std::abs(fNullVal() - fAltVal()) / (out.first * sqrt(out.first)));
+   return std::pair<double, double>(std::abs(fNullVal() - fAltVal()) / sqrt(out.first),
+                                    out.second * 0.5 * std::abs(fNullVal() - fAltVal()) /
+                                       (out.first * sqrt(out.first)));
 }
 
-std::pair<double, double> xRooNLLVar::xRooHypoPoint::pX_toys(bool alt, double nSigma)
+xRooNLLVar::xValueWithError xRooNLLVar::xRooHypoPoint::pX_toys(bool alt, double nSigma)
 {
    auto _ts = ts_toys(nSigma);
    if (std::isnan(_ts.first))
       return _ts;
    if (fPllType != xRooFit::Asymptotics::Uncapped && _ts.first == 0)
-      return std::pair(1, 0); // don't need toys to compute this point!
+      return std::pair<double, double>(1, 0); // don't need toys to compute this point!
 
    TEfficiency eff("", "", 1, 0, 1);
 
@@ -1997,18 +2098,18 @@ std::pair<double, double> xRooNLLVar::xRooHypoPoint::pX_toys(bool alt, double nS
 
    // add to the result_err (in quadrature) the uncert due to limited stats
    result_err = sqrt(result_err * result_err + eff.GetEfficiencyErrorUp(1) * eff.GetEfficiencyErrorUp(1));
-   return std::make_pair(result, result_err);
+   return std::pair<double, double>(result, result_err);
 }
 
-std::pair<double, double> xRooNLLVar::xRooHypoPoint::pNull_toys(double nSigma)
+xRooNLLVar::xValueWithError xRooNLLVar::xRooHypoPoint::pNull_toys(double nSigma)
 {
    return pX_toys(false, nSigma);
 }
 
-std::pair<double, double> xRooNLLVar::xRooHypoPoint::pAlt_toys(double nSigma)
+xRooNLLVar::xValueWithError xRooNLLVar::xRooHypoPoint::pAlt_toys(double nSigma)
 {
    if (!std::isnan(nSigma)) {
-      return std::pair(ROOT::Math::gaussian_cdf(nSigma), 0); // by construction
+      return std::pair<double, double>(ROOT::Math::gaussian_cdf(nSigma), 0); // by construction
    }
    return pX_toys(true, nSigma);
 }
@@ -2710,7 +2811,6 @@ xRooNLLVar::xRooHypoSpace xRooNLLVar::hypoSpace(const char *parName, int nPoints
 
       auto out = hypoSpace(parName, pllType, alt_val);
 
-
       // TODO: things like the physical range and alt value can't be stored on the poi
       // because if they change they will change for all hypoSpaces at once, so cannot have
       // two hypoSpace with e.g. different physical ranges.
@@ -2719,12 +2819,12 @@ xRooNLLVar::xRooHypoSpace xRooNLLVar::hypoSpace(const char *parName, int nPoints
          if (tsType == xRooFit::TestStatistic::qmutilde) {
             dynamic_cast<RooRealVar *>(p)->setRange("physical", 0, std::numeric_limits<double>::infinity());
             Info("xRooNLLVar::hypoSpace", "Setting physical range of %s to [0,inf]", p->GetName());
-         } else if(dynamic_cast<RooRealVar *>(p)->hasRange("physical")) {
+         } else if (dynamic_cast<RooRealVar *>(p)->hasRange("physical")) {
             dynamic_cast<RooRealVar *>(p)->removeRange("physical");
-            Info("xRooNLLVar::hypoSpace", "Setting physical range of %s to [-inf,inf] (i.e. removed range)", p->GetName());
+            Info("xRooNLLVar::hypoSpace", "Setting physical range of %s to [-inf,inf] (i.e. removed range)",
+                 p->GetName());
          }
       }
-
 
       // ensure pll type is set explicitly if known at this point
       if (tsType == xRooFit::TestStatistic::qmutilde || tsType == xRooFit::TestStatistic::qmu) {
@@ -2739,8 +2839,10 @@ xRooNLLVar::xRooHypoSpace xRooNLLVar::hypoSpace(const char *parName, int nPoints
       if (int(low + 0.5) > 0) {
          out.AddPoints(parName, int(low + 0.5), high, alt_value);
       } else {
-         for (auto p : out.poi()) {
-            dynamic_cast<RooRealVar *>(p)->setRange("scan", high, alt_value);
+         if (!std::isnan(high) && !std::isnan(alt_value) && !(std::isinf(high) && std::isinf(alt_value))) {
+            for (auto p : out.poi()) {
+               dynamic_cast<RooRealVar *>(p)->setRange("scan", high, alt_value);
+            }
          }
       }
       return out;
@@ -2750,8 +2852,10 @@ xRooNLLVar::xRooHypoSpace xRooNLLVar::hypoSpace(const char *parName, int nPoints
    if (nPoints > 0)
       hs.AddPoints(parName, nPoints, low, high);
    else {
-      for (auto p : hs.poi()) {
-         dynamic_cast<RooRealVar *>(p)->setRange("scan", low, high);
+      if (!std::isnan(low) && !std::isnan(high) && !(std::isinf(low) && std::isinf(high))) {
+         for (auto p : hs.poi()) {
+            dynamic_cast<RooRealVar *>(p)->setRange("scan", low, high);
+         }
       }
    }
    return hs;
@@ -2834,6 +2938,7 @@ RooStats::HypoTestResult xRooNLLVar::xRooHypoPoint::result()
                                     {"cfit_lbound", 6}}));
    // fitDetails.addClone(RooStringVar("name", "Fit Name", "")); -- not supported properly in ROOT yet
    fitDetails.addClone(RooRealVar("status", "status", 0));
+   fitDetails.addClone(RooRealVar("covQual", "covQual", 0));
    fitDetails.addClone(RooRealVar("minNll", "minNll", 0));
    fitDetails.addClone(RooRealVar("edm", "edm", 0));
    auto fitDS = new RooDataSet("fits", "fit summary data", fitDetails);
@@ -2858,6 +2963,7 @@ RooStats::HypoTestResult xRooNLLVar::xRooHypoPoint::result()
          fitDetails.setRealValue("status", fit->status());
          fitDetails.setRealValue("minNll", fit->minNll());
          fitDetails.setRealValue("edm", fit->edm());
+         fitDetails.setRealValue("covQual", fit->covQual());
          fitDS->add(fitDetails);
       }
    }
@@ -2956,4 +3062,22 @@ RooStats::HypoTestResult xRooNLLVar::xRooHypoPoint::result()
    return out;
 }
 
-END_XROOFIT_NAMESPACE;
+std::string cling::printValue(const xRooNLLVar::xValueWithError *v)
+{
+   if (!v)
+      return "xValueWithError: nullptr\n";
+   return Form("%f +/- %f", v->first, v->second);
+}
+std::string cling::printValue(const std::map<std::string, xRooNLLVar::xValueWithError> *m)
+{
+   if (!m)
+      return "nullptr\n";
+   std::string out = "{\n";
+   for (auto [k, v] : *m) {
+      out += "\"" + k + "\" => " + printValue(&v) + "\n";
+   }
+   out += "}\n";
+   return out;
+}
+
+END_XROOFIT_NAMESPACE

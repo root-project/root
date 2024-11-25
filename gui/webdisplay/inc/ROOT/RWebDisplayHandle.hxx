@@ -43,24 +43,26 @@ protected:
       std::string fExec;  ///< standard execute line
       std::string fHeadlessExec; ///< headless execute line
       std::string fBatchExec; ///< batch execute line
-
       void TestProg(const std::string &nexttry, bool check_std_paths = false);
-
       virtual void ProcessGeometry(std::string &, const RWebDisplayArgs &) {}
       virtual std::string MakeProfile(std::string &, bool) { return ""; }
-
    public:
-
       BrowserCreator(bool custom = true, const std::string &exec = "");
-
       std::unique_ptr<RWebDisplayHandle> Display(const RWebDisplayArgs &args) override;
-
       ~BrowserCreator() override = default;
+   };
+
+   class SafariCreator : public BrowserCreator {
+   public:
+      SafariCreator();
+      ~SafariCreator() override = default;
+      bool IsActive() const override;
    };
 
    class ChromeCreator : public BrowserCreator {
       bool fEdge{false};
       std::string fEnvPrefix; // rc parameters prefix
+      int fChromeVersion{-1}; // major version in chrome browser
    public:
       ChromeCreator(bool is_edge = false);
       ~ChromeCreator() override = default;
@@ -103,15 +105,24 @@ public:
    /// resize web window - if possible
    virtual bool Resize(int, int) { return false; }
 
+   static bool NeedHttpServer(const RWebDisplayArgs &args);
+
    static std::unique_ptr<RWebDisplayHandle> Display(const RWebDisplayArgs &args);
 
    static bool DisplayUrl(const std::string &url);
 
    static bool CanProduceImages(const std::string &browser = "");
 
+   static std::string GetImageFormat(const std::string &fname);
+
    static bool ProduceImage(const std::string &fname, const std::string &json, int width = 800, int height = 600, const char *batch_file = nullptr);
 
    static bool ProduceImages(const std::string &fname, const std::vector<std::string> &jsons, const std::vector<int> &widths, const std::vector<int> &heights, const char *batch_file = nullptr);
+
+   static std::vector<std::string> ProduceImagesNames(const std::string &fname, unsigned nfiles = 1);
+
+   static bool ProduceImages(const std::vector<std::string> &fnames, const std::vector<std::string> &jsons, const std::vector<int> &widths, const std::vector<int> &heights, const char *batch_file = nullptr);
+
 };
 
 } // namespace ROOT

@@ -13,6 +13,7 @@
 #include "TH2Poly.h"
 #include "TMultiGraph.h"
 #include "TGraph.h"
+#include "TInterpreter.h"
 #include "Riostream.h"
 #include "TList.h"
 #include "TMath.h"
@@ -178,6 +179,13 @@ TH2Poly::TH2Poly(const char *name,const char *title,
    SetFloat(kFALSE);
 }
 
+/////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+TH2Poly::TH2Poly(const TH2Poly & rhs) : TH2(), fCells(nullptr),
+fIsEmpty(nullptr), fCompletelyInside(nullptr), fBins(nullptr) {
+    rhs.Copy(*this);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
 
@@ -189,6 +197,73 @@ TH2Poly::~TH2Poly()
    // delete at the end the bin List since it owns the objects
    delete fBins;
 }
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator
+TH2Poly & TH2Poly::operator=(const TH2Poly & rhs) {
+   if (this != &rhs)
+       rhs.Copy(*this);
+   return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Copy function for TH2Poly
+
+void TH2Poly::Copy(TObject &newobj) const
+{
+   // copy first TH2 information
+   TH2::Copy(newobj);
+   auto & newth2p = dynamic_cast<TH2Poly &>(newobj);
+   newth2p.SetName(GetName());
+   newth2p.SetTitle(GetTitle());
+
+   newth2p.fCellX = fCellX;
+   newth2p.fCellY = fCellY;
+   newth2p.fNCells = fNCells;
+   newth2p.fStepX = fStepX;
+   newth2p.fStepY = fStepY;
+
+   // deallocate previous arrays, if existing
+   delete[] newth2p.fCells;
+   delete[] newth2p.fIsEmpty;
+   delete[] newth2p.fCompletelyInside;
+   // allocate arrays
+   newth2p.fCells  = new TList [fNCells];
+   newth2p.fIsEmpty = new Bool_t [fNCells]; // Empty partition
+   newth2p.fCompletelyInside = new Bool_t [fNCells]; // Cell is completely inside bin
+   // Initializes the flags
+   for (int i = 0; i<fNCells; i++) {
+      newth2p.fIsEmpty[i] = fIsEmpty[i];
+      newth2p.fCompletelyInside[i] = fCompletelyInside[i];
+   }
+   // need to use Clone to copy the contained bin list
+   delete newth2p.fBins; // in case there was something before there
+   if (!fBins) {
+       newth2p.fBins = nullptr;
+   }
+   else {
+      newth2p.fBins = dynamic_cast<TList *>(fBins->Clone());
+      if (!newth2p.fBins)
+         Error("Copy","Error cloning the TH2Poly bin list");
+      else {
+         // add bins in the fCells partition. We need to add the TH2PolyBin objects
+         // of the new copied histograms. For this we call AddBinToPartition
+         // we could probably optimize this by implementing a copy of the partition
+         for (auto bin : *(newth2p.fBins)) {
+            newth2p.AddBinToPartition(dynamic_cast<TH2PolyBin*>(bin));
+         }
+      }
+   }
+   // copy overflow contents
+   for(int i = 0; i < kNOverflow; i++ ) {
+      newth2p.fOverflow[i] = fOverflow[i];
+   }
+   // copy other data members
+   newth2p.fFloat = fFloat;
+   newth2p.fNewBinAdded = fNewBinAdded;
+   newth2p.fBinContentChanged = fBinContentChanged;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create appropriate histogram bin.
@@ -752,7 +827,8 @@ Double_t TH2Poly::Integral(Option_t* option) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the content of the input bin
-/// For the overflow/underflow/sea bins:
+/// Bin numbers are from [1,nbins] and
+/// for the overflow/underflow/sea bins the range is [-9,-1]:
 ///~~~ {.cpp}
 /// -1 | -2 | -3
 /// ---+----+----
@@ -796,6 +872,16 @@ Double_t TH2Poly::GetBinError(Int_t bin) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return the number of bins :
+/// it should be the size of the bin list
+Int_t  TH2Poly::GetNumberOfBins() const {
+   Int_t nbins =  fNcells-kNOverflow;
+   if (nbins != (fBins ? fBins->GetSize() : 0))
+      Fatal("GetNumberOfBins","Object has an invalid number of bins");
+   return nbins;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Set the bin Error.
 /// Re-implementation for TH2Poly given the different bin indexing in the
 /// stored squared error array.
@@ -822,7 +908,7 @@ void TH2Poly::SetBinError(Int_t bin, Double_t error)
 const char *TH2Poly::GetBinName(Int_t bin) const
 {
    if (bin > GetNumberOfBins())  return "";
-   if (bin < 0)          return "";
+   if (bin <= 0)          return "";
    return ((TH2PolyBin*) fBins->At(bin-1))->GetPolygon()->GetName();
 }
 
@@ -832,7 +918,7 @@ const char *TH2Poly::GetBinName(Int_t bin) const
 const char *TH2Poly::GetBinTitle(Int_t bin) const
 {
    if (bin > GetNumberOfBins())  return "";
-   if (bin < 0)          return "";
+   if (bin <= 0)          return "";
    return ((TH2PolyBin*) fBins->At(bin-1))->GetPolygon()->GetTitle();
 }
 
@@ -1259,7 +1345,8 @@ void TH2Poly::SavePrimitive(std::ostream &out, Option_t *option)
       histName += "__";
       histName += hcounter;
    }
-   const char *hname = histName.Data();
+
+   TString hname = gInterpreter->MapCppName(histName.Data());
 
    //Construct the class initialization
    out << hname << " = new " << ClassName() << "(\"" << hname << "\", \""
@@ -1275,8 +1362,7 @@ void TH2Poly::SavePrimitive(std::ostream &out, Option_t *option)
 
    while((obj = next())){
       th2pBin = (TH2PolyBin*) obj;
-      th2pBin->GetPolygon()->SavePrimitive(out,
-                                           TString::Format("th2poly%s",histName.Data()));
+      th2pBin->GetPolygon()->SavePrimitive(out, TString::Format("th2poly%s",hname.Data()));
    }
 
    // save bin contents
@@ -1610,7 +1696,7 @@ Bool_t TH2PolyBin::IsInside(Double_t x, Double_t y) const
 /// NOT IMPLEMENTED for TH2Poly
 Bool_t TH2Poly::Add(TF1 *, Double_t, Option_t *)
 {
-   Error("Add","Not implement for TH2Poly");
+   Error("Add", "Not implemented for TH2Poly");
    return kFALSE;
 }
 
@@ -1618,7 +1704,7 @@ Bool_t TH2Poly::Add(TF1 *, Double_t, Option_t *)
 /// NOT IMPLEMENTED for TH2Poly
 Bool_t TH2Poly::Add(const TH1 *, const TH1 *, Double_t, Double_t)
 {
-   Error("Add","Not implement for TH2Poly");
+   Error("Add", "Not implemented for TH2Poly");
    return kFALSE;
 }
 
@@ -1626,7 +1712,7 @@ Bool_t TH2Poly::Add(const TH1 *, const TH1 *, Double_t, Double_t)
 /// NOT IMPLEMENTED for TH2Poly
 Bool_t TH2Poly::Divide(TF1 *, Double_t)
 {
-   Error("Divide","Not implement for TH2Poly");
+   Error("Divide", "Not implemented for TH2Poly");
    return kFALSE;
 }
 
@@ -1634,34 +1720,34 @@ Bool_t TH2Poly::Divide(TF1 *, Double_t)
 /// NOT IMPLEMENTED for TH2Poly
 Bool_t TH2Poly::Multiply(TF1 *, Double_t)
 {
-   Error("Multiply","Not implement for TH2Poly");
+   Error("Multiply", "Not implemented for TH2Poly");
    return kFALSE;
 }
 ////////////////////////////////////////////////////////////////////////////////
 /// NOT IMPLEMENTED for TH2Poly
 Double_t TH2Poly::ComputeIntegral(Bool_t )
 {
-   Error("ComputeIntegral","Not implement for TH2Poly");
+   Error("ComputeIntegral", "Not implemented for TH2Poly");
    return TMath::QuietNaN();
 }
 ////////////////////////////////////////////////////////////////////////////////
 /// NOT IMPLEMENTED for TH2Poly
 TH1 * TH2Poly::FFT(TH1*, Option_t * )
 {
-   Error("FFT","Not implement for TH2Poly");
+   Error("FFT", "Not implemented for TH2Poly");
    return nullptr;
 }
 ////////////////////////////////////////////////////////////////////////////////
 /// NOT IMPLEMENTED for TH2Poly
 TH1 * TH2Poly::GetAsymmetry(TH1* , Double_t,  Double_t)
 {
-   Error("GetAsymmetry","Not implement for TH2Poly");
+   Error("GetAsymmetry", "Not implemented for TH2Poly");
    return nullptr;
 }
 ////////////////////////////////////////////////////////////////////////////////
 /// NOT IMPLEMENTED for TH2Poly
 Double_t TH2Poly::Interpolate(Double_t, Double_t)
 {
-   Error("Interpolate","Not implement for TH2Poly");
+   Error("Interpolate", "Not implemented for TH2Poly");
    return TMath::QuietNaN();
 }

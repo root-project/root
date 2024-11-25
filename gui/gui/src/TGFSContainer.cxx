@@ -465,7 +465,7 @@ void TGFileItem::SetDNDData(TDNDData *data)
 {
    if (fDNDData.fDataLength > 0)
       free(fDNDData.fData);
-   fDNDData.fData = calloc(sizeof(unsigned char), data->fDataLength);
+   fDNDData.fData = calloc(data->fDataLength, sizeof(unsigned char));
    if (fDNDData.fData)
       memcpy(fDNDData.fData, data->fData, data->fDataLength);
    fDNDData.fDataLength = data->fDataLength;
@@ -631,8 +631,12 @@ void TGFileContainer::Sort(EFSSortMode sortType)
 
    fList->Sort();
 
-   TGCanvas *canvas = (TGCanvas *) this->GetParent()->GetParent();
-   canvas->Layout();
+   const TGWindow *parent = this->GetParent();
+   if (parent) {
+      TGCanvas *canvas = (TGCanvas *)parent->GetParent();
+      if (canvas)
+         canvas->Layout();
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -813,7 +817,7 @@ TGFileItem *TGFileContainer::AddFile(const char *name,  const TGPicture *ipic,
    if (gSystem->GetPathInfo(name, sbuf)) {
       if (sbuf.fIsLink) {
          Info("AddFile", "Broken symlink of %s.", name);
-      } else {
+      } else if (errno != ENOENT) {
          TString msg;
          msg.Form("Can't read file attributes of \"%s\": %s.",
                   name, gSystem->GetError());

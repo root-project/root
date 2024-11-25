@@ -280,13 +280,6 @@ public:
     RooArgSet _sandboxNodes; ///<! Sandbox for incoming objects in a transaction
 
     ClassDefOverride(RooWorkspace, 8) // Persistable project container for (composite) pdfs, functions, variables and datasets
-
-public:
-   // The deprecated functions need to come last, because the R__DEPRECATED
-   // macro is beaking doxygen in some cases.
-   TIterator *componentIterator() const R__DEPRECATED(6, 34,
-                                                      "Better iterate over RooWorkspace::components() with range-based "
-                                                      "loop instead of using RooWorkspace::componentIterator().");
 } ;
 
 #endif

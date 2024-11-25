@@ -10,19 +10,19 @@
 /// \author The ROOT Team
 
 // NOTE: The RNTuple classes are experimental at this point.
-// Functionality, interface, and data format is still subject to changes.
-// Do not use for real data!
+// Functionality and interface are still subject to changes.
 
-#include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleModel.hxx>
+#include <ROOT/RNTupleReader.hxx>
+#include <ROOT/RNTupleWriter.hxx>
 
+#include <TCanvas.h>
 #include <TH1F.h>
 #include <TRandom.h>
 
 #include <cstdint>
 
 // Import classes from experimental namespace for the time being.
-using ROOT::Experimental::RNTuple;
 using ROOT::Experimental::RNTupleModel;
 using ROOT::Experimental::RNTupleReader;
 using ROOT::Experimental::RNTupleWriter;

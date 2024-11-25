@@ -3,34 +3,40 @@
        xmlns:l="sap.ui.layout"
        xmlns:core="sap.ui.core">
    <VBox>
-      <RadioButtonGroup selectedIndex="{/opts/Mode3Dindx}" columns="2"
+      <RadioButtonGroup selectedIndex="{/opts/Mode3Dindx}" columns="2" visible="{= ${/opts/ndim} === 1 || ${/opts/ndim} === 2 }"
          width="100%">
          <buttons>
             <RadioButton text="2-D" />
             <RadioButton text="3-D" />
          </buttons>
       </RadioButtonGroup>
-      <Panel visible="{= ${/opts/Mode3Dindx} === 0  &amp;&amp; ${/opts/ndim} === 1}">
-         <Label text="Error:" class="sapUiSmallMarginEnd" labelFor="ErrorsSelectTh1" />
-         <Select selectedKey="{/opts/ErrorKind}" enabled="{/opts/Error}" tooltip="Error kinds" id="ErrorsSelectTh1">
-            <items>
-               <core:Item text="Simple" key="-1" />
-               <core:Item text="E0" key="0"/>
-               <core:Item text="E1" key="1"/>
-               <core:Item text="E2" key="2"/>
-               <core:Item text="E3" key="3"/>
-               <core:Item text="E4" key="4"/>
-            </items>
-         </Select>
-         <Label text="Style:" class="sapUiSmallMarginEnd" labelFor="StyleSelectTh1" />
-         <Select selectedKey="{/opts/Style}" tooltip="Contor" id="StyleSelectTh1">
-            <items>
-               <core:Item text="No" key="0" />
-               <core:Item text="Simple" key="1" />
-               <core:Item text="Strooth" key="2" />
-               <core:Item text="Fill" key="3" />
-            </items>
-         </Select>
+
+      <Panel visible="{= ${/opts/Mode3Dindx} === 0  &amp;&amp; ${/opts/ndim} === 1 }">
+         <HBox alignItems="Center">
+            <Label text="Error:" class="sapUiTinyMarginEnd" labelFor="ErrorsSelectTh1"/>
+            <Select selectedKey="{/opts/ErrorKind}" enabled="{/opts/Error}" tooltip="Error kinds" id="ErrorsSelectTh1">
+               <items>
+                  <core:Item text="Simple" key="-1" />
+                  <core:Item text="E0" key="0"/>
+                  <core:Item text="E1" key="1"/>
+                  <core:Item text="E2" key="2"/>
+                  <core:Item text="E3" key="3"/>
+                  <core:Item text="E4" key="4"/>
+               </items>
+            </Select>
+         </HBox>
+
+         <HBox alignItems="Center">
+            <Label text="Style:" class="sapUiTinyMarginEnd" labelFor="StyleSelectTh1" />
+            <Select selectedKey="{/opts/Style}" tooltip="Style" id="StyleSelectTh1">
+               <items>
+                  <core:Item text="No" key="0" />
+                  <core:Item text="Simple" key="1" />
+                  <core:Item text="Strooth" key="2" />
+                  <core:Item text="Fill" key="3" />
+               </items>
+            </Select>
+         </HBox>
 
          <CheckBox text="Simple drawing" selected="true" enabled="false" />
          <CheckBox text="Show errors" selected="{/opts/Error}" />
@@ -39,60 +45,113 @@
          <CheckBox text="Draw bar chart" selected="{/opts/Bar}" />
          <CheckBox text="Bar option" selected="false" enabled="false"/>
       </Panel>
-      
-      <Panel visible="{= ${/opts/Mode3Dindx} === 1 &amp;&amp; ${/opts/ndim} === 1}">
-         <Label text="Type" labelFor="LegoSelectTh1" />
-         <Select selectedKey="{/opts/Lego}" tooltip="Contor" id="LegoSelectTh1">
-            <items>
-               <core:Item text="NoLego" key="0" />
-               <core:Item text="Lego" key="1" />
-               <core:Item text="Lego1" key="11" />
-               <core:Item text="Lego2" key="12" />
-               <core:Item text="Lego3" key="13" />
-               <core:Item text="Lego4" key="14" />
-            </items>
-         </Select>
-      </Panel>
-      
-      <Panel visible="{= ${/opts/Mode3Dindx} === 0 &amp;&amp; ${/opts/ndim} === 2}">
-         <Label text="Contor" labelFor="ContorSelectTh2" />
-         <Select selectedKey="{/opts/Contor}" tooltip="Contor" id="ContorSelectTh2">
-            <items>
-               <core:Item text="none" key="0"/>
-               <core:Item text="Cont" key="1"/>
-               <core:Item text="Cont1" key="11"/>
-               <core:Item text="Cont2" key="12"/>
-               <core:Item text="Cont3" key="13"/>
-               <core:Item text="Cont4" key="14"/>
-            </items>
-         </Select>
 
+      <Panel visible="{= ${/opts/Mode3Dindx} === 1 &amp;&amp; ${/opts/ndim} === 1 }">
+         <HBox alignItems="Center">
+            <Label text="Type" labelFor="LegoSelectTh1" class="sapUiTinyMarginEnd"/>
+            <Select selectedKey="{/opts/Lego}" tooltip="Lego kinds" id="LegoSelectTh1">
+               <items>
+                  <core:Item text="none" key="0" />
+                  <core:Item text="Lego" key="1" />
+                  <core:Item text="Lego1" key="11" />
+                  <core:Item text="Lego2" key="12" />
+                  <core:Item text="Lego3" key="13" />
+                  <core:Item text="Lego4" key="14" />
+               </items>
+            </Select>
+         </HBox>
+      </Panel>
+
+      <Panel visible="{= ${/opts/Mode3Dindx} === 0 &amp;&amp; ${/opts/ndim} === 2 }">
+         <HBox alignItems="Center">
+            <Label text="Type" labelFor="ContourSelectTh2" class="sapUiTinyMarginEnd"/>
+            <Select selectedKey="{/opts/Contour}" tooltip="Contour kind" id="ContourSelectTh2">
+               <items>
+                  <core:Item text="No contour" key="0"/>
+                  <core:Item text="Cont" key="1"/>
+                  <core:Item text="Cont1" key="11"/>
+                  <core:Item text="Cont2" key="12"/>
+                  <core:Item text="Cont3" key="13"/>
+                  <core:Item text="Cont4" key="14"/>
+               </items>
+            </Select>
+         </HBox>
          <CheckBox text="Scat" selected="{/opts/Scat}" />
          <CheckBox text="Col" selected="{/opts/Color}" />
          <CheckBox text="Arrow" selected="{/opts/Arrow}" />
          <CheckBox text="Box" selected="{/opts/Box}" />
          <CheckBox text="Text" selected="{/opts/Text}" />
          <CheckBox text="Zero" selected="{/opts/Zero}" />
-         <CheckBox text="Palette" selected="{/opts/Zscale}" />
+         <CheckBox text="Palette" selected="{/opts/Zscale}" title="Drawing color palette"/>
+         <CheckBox text="Vert" selected="{/opts/Zvert}" title="Drawing color palette in vertical direction"/>
       </Panel>
-      
-      <Panel visible="{= ${/opts/Mode3Dindx} === 1 &amp;&amp; ${/opts/ndim} === 2}">
-         <Label text="Type" labelFor="LegoSelectTh2" />
-         <Select selectedKey="{/opts/Lego}" tooltip="Contor" id="LegoSelectTh2">
-            <items>
-               <core:Item text="NoLego" key="0" />
-               <core:Item text="Lego" key="1" />
-               <core:Item text="Lego1" key="11" />
-               <core:Item text="Lego2" key="12" />
-               <core:Item text="Lego3" key="13" />
-               <core:Item text="Lego4" key="14" />
-            </items>
-         </Select>
+
+      <Panel visible="{= ${/opts/Mode3Dindx} === 1 &amp;&amp; ${/opts/ndim} === 2 }">
+         <HBox alignItems="Center">
+            <Label text="Type" labelFor="LegoSelectTh2" class="sapUiTinyMarginEnd"/>
+            <Select selectedKey="{/opts/Lego}" tooltip="Lego kind" id="LegoSelectTh2">
+               <items>
+                  <core:Item text="None" key="0" />
+                  <core:Item text="Lego" key="1" />
+                  <core:Item text="Lego1" key="11" />
+                  <core:Item text="Lego2" key="12" />
+                  <core:Item text="Lego3" key="13" />
+                  <core:Item text="Lego4" key="14" />
+               </items>
+            </Select>
+         </HBox>
+         <HBox alignItems="Center">
+            <Label text="Type" labelFor="SurfSelectTh2" class="sapUiTinyMarginEnd"/>
+            <Select selectedKey="{/opts/Surf}" tooltip="Surface kind" id="SurfSelectTh2">
+               <items>
+                  <core:Item text="None" key="0"/>
+                  <core:Item text="Surf" key="1"/>
+                  <core:Item text="Surf1" key="11"/>
+                  <core:Item text="Surf2" key="12"/>
+                  <core:Item text="Surf3" key="13"/>
+                  <core:Item text="Surf4" key="14"/>
+                  <core:Item text="Surf5" key="15"/>
+                  <core:Item text="Surf6" key="16"/>
+                  <core:Item text="Surf7" key="17"/>
+               </items>
+            </Select>
+         </HBox>
 
          <CheckBox text="Front" selected="{/opts/FrontBox}" />
          <CheckBox text="Back" selected="{/opts/BackBox}" />
          <CheckBox text="Errors" selected="{/opts/Error}" />
-         <CheckBox text="Palette" selected="{/opts/Zscale}" />
+         <CheckBox text="Palette" selected="{/opts/Zscale}"  title="Drawing color palette"/>
       </Panel>
+
+      <Panel visible="{= ${/opts/ndim} === 3 }">
+         <HBox alignItems="Center">
+            <Label text="gl:" class="sapUiTinyMarginEnd" labelFor="GlBoxTh3"/>
+            <Select selectedKey="{/opts/GLBox}" tooltip="GL box draw options" id="GlBoxTh3">
+               <items>
+                  <core:Item text="none" key="0" />
+                  <core:Item text="glbox" key="10"/>
+                  <core:Item text="glbox1" key="11"/>
+                  <core:Item text="glbox2" key="12"/>
+               </items>
+            </Select>
+         </HBox>
+         <HBox alignItems="Center">
+            <Label text="bx:" class="sapUiTinyMarginEnd" labelFor="BoxTh3"/>
+            <Select selectedKey="{/opts/BoxStyle}" tooltip="box draw options" id="BoxTh3">
+               <items>
+                  <core:Item text="none" key="0" />
+                  <core:Item text="box" key="10"/>
+                  <core:Item text="box1" key="11"/>
+                  <core:Item text="box2" key="12"/>
+                  <core:Item text="box3" key="13"/>
+               </items>
+            </Select>
+         </HBox>
+
+         <CheckBox text="Scat" selected="{/opts/Scat}"/>
+         <CheckBox text="Glcol" selected="{/opts/GLColor}"/>
+         <CheckBox text="Palette" selected="{/opts/Zscale}" title="Drawing color palette"/>
+      </Panel>
+
    </VBox>
 </core:FragmentDefinition>

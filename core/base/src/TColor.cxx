@@ -63,6 +63,7 @@ The color creation and management class.
   - [Basic colors](\ref C01)
   - [The color wheel](\ref C02)
   - [Bright and dark colors](\ref C03)
+  - [Accessible Color Schemes](\ref C031)
   - [Gray scale view of of canvas with colors](\ref C04)
   - [Color palettes](\ref C05)
   - [High quality predefined palettes](\ref C06)
@@ -96,7 +97,7 @@ A new color can be created the following way:
 
 ~~~ {.cpp}
    Int_t ci = 1756; // color index
-   TColor *color = new TColor(ci, 0.1, 0.2, 0.3);
+   auto color = new TColor(ci, 0.1, 0.2, 0.3);
 ~~~
 
 \since **6.07/07:**
@@ -105,7 +106,7 @@ unused color index:
 
 ~~~ {.cpp}
    Int_t ci = TColor::GetFreeColorIndex();
-   TColor *color = new TColor(ci, 0.1, 0.2, 0.3);
+   auto color = new TColor(ci, 0.1, 0.2, 0.3);
 ~~~
 
 Two sets of colors are initialized;
@@ -119,7 +120,7 @@ The following image displays the 50 basic colors.
 
 Begin_Macro(source)
 {
-   TCanvas *c = new TCanvas("c","Fill Area colors",0,0,500,200);
+   auto c = new TCanvas("c","Fill Area colors",0,0,500,200);
    c->DrawColorTable();
    return c;
 }
@@ -154,8 +155,8 @@ to use these keywords in user code instead of hardcoded color numbers, e.g.:
 
 Begin_Macro(source)
 {
-   TColorWheel *w = new TColorWheel();
-   cw = new TCanvas("cw","cw",0,0,400,400);
+   auto w  = new TColorWheel();
+   auto cw = new TCanvas("cw","cw",0,0,400,400);
    w->SetCanvas(cw);
    w->Draw();
 }
@@ -181,18 +182,35 @@ simplest is to define an other white color not attached to the color index 0:
 
 \anchor C03
 ## Bright and dark colors
-The dark and bright color are used to give 3-D effects when drawing various
-boxes (see TWbox, TPave, TPaveText, TPaveLabel, etc).
+Dark and bright colors are used to add 3D effects to graphical objects like
+TWbox, TPave, TPaveText, TPaveLabel, etc. and in colored lego plots.
 
-  - The dark colors have an index = color_index+100
-  - The bright colors have an index = color_index+150
-  - Two static functions return the bright and dark color number
-    corresponding to a color index. If the bright or dark color does not
-    exist, they are created:
-   ~~~ {.cpp}
-      Int_t dark   = TColor::GetColorDark(color_index);
-      Int_t bright = TColor::GetColorBright(color_index);
-   ~~~
+Two static functions are available that return the bright or dark color number corresponding
+to a given color index. If these variants don't already exist, they are created as needed:
+~~~ {.cpp}
+   Int_t dark   = TColor::GetColorDark(color_index);
+   Int_t bright = TColor::GetColorBright(color_index);
+~~~
+
+\anchor C031
+## Accessible Color Schemes
+Choosing an appropriate color scheme is essential for making results easy to understand and
+interpret. Factors like colorblindness and converting colors to grayscale for publications
+can impact accessibility. Furthermore, results should be aesthetically pleasing. The following
+three color schemes, recommended by M. Petroff in [arXiv:2107.02270v2](https://arxiv.org/pdf/2107.02270)
+and available on [GitHub](https://github.com/mpetroff/accessible-color-cycles)
+under the MIT License, meet these criteria.
+
+These three color schemes are available as color sets with 6, 8, and 10 colors, named
+`kP[6, 8, 10]ColorName`. For example, `kP6Red` represents the red color within the P6 color scheme
+(`P` for Petroff or Preferred).
+
+Begin_Macro
+../../../tutorials/graphics/accessiblecolorschemes.C
+End_Macro
+
+The example thstackcolorscheme.C illustrates how to use these color schemes in THStack drawings.
+It also demonstrates that they are effective in grayscale.
 
 \anchor C04
 ## Grayscale view of of canvas with colors
@@ -204,8 +222,8 @@ image below shows the ROOT color wheel in grayscale mode.
 
 Begin_Macro(source)
 {
-   TColorWheel *w = new TColorWheel();
-   cw = new TCanvas("cw","cw",0,0,400,400);
+   auto w  = new TColorWheel();
+   auto cw = new TCanvas("cw","cw",0,0,400,400);
    cw->GetCanvas()->SetGrayscale();
    w->SetCanvas(cw);
    w->Draw();
@@ -228,7 +246,7 @@ example demonstrates how to define and use the color palette:
 
 Begin_Macro(source)
 {
-   TCanvas *c1  = new TCanvas("c1","c1",0,0,600,400);
+   auto c1 = new TCanvas("c1","c1",0,0,600,400);
    TF2 *f1 = new TF2("f1","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",1,3,1,3);
    Int_t palette[5];
    palette[0] = 15;
@@ -248,8 +266,8 @@ The following example demonstrates how to proceed:
 
 Begin_Macro(source)
 {
-   TCanvas *c2  = new TCanvas("c2","c2",0,0,600,400);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",1,3,1,3);
+   auto c2 = new TCanvas("c2","c2",0,0,600,400);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",1,3,1,3);
    const Int_t Number = 3;
    Double_t Red[Number]    = { 1.00, 0.00, 0.00};
    Double_t Green[Number]  = { 0.00, 1.00, 0.00};
@@ -372,8 +390,8 @@ if with "colz".
 <tr><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kBird);
    f2->Draw("surf2Z"); f2->SetTitle("kBird (default)");
 }
@@ -381,8 +399,8 @@ End_Macro
 </td><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kGreyScale);
    f2->Draw("surf2Z"); f2->SetTitle("kGreyScale");
 }
@@ -390,8 +408,8 @@ End_Macro
 </td><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kDarkBodyRadiator);
    f2->Draw("surf2Z"); f2->SetTitle("kDarkBodyRadiator");
 }
@@ -400,8 +418,8 @@ End_Macro
 <tr><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kBlueYellow);
    f2->Draw("surf2Z"); f2->SetTitle("kBlueYellow");
 }
@@ -409,8 +427,8 @@ End_Macro
 </td><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kWaterMelon);
    f2->Draw("surf2Z"); f2->SetTitle("kWaterMelon");
 }
@@ -418,8 +436,8 @@ End_Macro
 </td><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kInvertedDarkBodyRadiator);
    f2->Draw("surf2Z"); f2->SetTitle("kInvertedDarkBodyRadiator");
 }
@@ -428,8 +446,8 @@ End_Macro
 <tr><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kDeepSea);
    f2->Draw("surf2Z"); f2->SetTitle("kDeepSea");
 }
@@ -437,8 +455,8 @@ End_Macro
 </td><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kCubehelix);
    f2->Draw("surf2Z"); f2->SetTitle("kCubehelix");
 }
@@ -446,8 +464,8 @@ End_Macro
 </td><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kGreenRedViolet);
    f2->Draw("surf2Z"); f2->SetTitle("kGreenRedViolet");
 }
@@ -456,8 +474,8 @@ End_Macro
 <tr><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kBlueRedYellow);
    f2->Draw("surf2Z"); f2->SetTitle("kBlueRedYellow");
 }
@@ -465,8 +483,8 @@ End_Macro
 </td><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kOcean);
    f2->Draw("surf2Z"); f2->SetTitle("kOcean");
 }
@@ -474,8 +492,8 @@ End_Macro
 </td><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kCool);
    f2->Draw("surf2Z"); f2->SetTitle("kCool");
 }
@@ -484,8 +502,8 @@ End_Macro
 <tr><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kAlpine);
    f2->Draw("surf2Z"); f2->SetTitle("kAlpine");
 }
@@ -493,8 +511,8 @@ End_Macro
 </td><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kPigeon);
    f2->Draw("surf2Z"); f2->SetTitle("kPigeon");
 }
@@ -502,8 +520,8 @@ End_Macro
 </td><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kPlum);
    f2->Draw("surf2Z"); f2->SetTitle("kPlum");
 }
@@ -512,8 +530,8 @@ End_Macro
 <tr><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kGistEarth);
    f2->Draw("surf2Z"); f2->SetTitle("kGistEarth");
 }
@@ -521,8 +539,8 @@ End_Macro
 </td><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kViridis);
    f2->Draw("surf2Z"); f2->SetTitle("kViridis");
 }
@@ -530,8 +548,8 @@ End_Macro
 </td><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kAvocado);
    f2->Draw("surf2Z"); f2->SetTitle("kAvocado");
 }
@@ -540,8 +558,8 @@ End_Macro
 <tr><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kRust);
    f2->Draw("surf2Z"); f2->SetTitle("kRust");
 }
@@ -549,8 +567,8 @@ End_Macro
 </td><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kCopper);
    f2->Draw("surf2Z"); f2->SetTitle("kCopper");
 }
@@ -558,8 +576,8 @@ End_Macro
 </td><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kBlueGreenYellow);
    f2->Draw("surf2Z"); f2->SetTitle("kBlueGreenYellow");
 }
@@ -568,8 +586,8 @@ End_Macro
 <tr><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kSienna);
    f2->Draw("surf2Z"); f2->SetTitle("kSienna");
 }
@@ -577,8 +595,8 @@ End_Macro
 </td><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kSolar);
    f2->Draw("surf2Z"); f2->SetTitle("kSolar");
 }
@@ -586,8 +604,8 @@ End_Macro
 </td><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kCandy);
    f2->Draw("surf2Z"); f2->SetTitle("kCandy");
 }
@@ -596,8 +614,8 @@ End_Macro
 <tr><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kCherry);
    f2->Draw("surf2Z"); f2->SetTitle("kCherry");
 }
@@ -605,8 +623,8 @@ End_Macro
 </td><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kCoffee);
    f2->Draw("surf2Z"); f2->SetTitle("kCoffee");
 }
@@ -614,8 +632,8 @@ End_Macro
 </td><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kSouthWest);
    f2->Draw("surf2Z"); f2->SetTitle("kSouthWest");
 }
@@ -624,8 +642,8 @@ End_Macro
 <tr><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kStarryNight);
    f2->Draw("surf2Z"); f2->SetTitle("kStarryNight");
 }
@@ -633,8 +651,8 @@ End_Macro
 </td><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kFall);
    f2->Draw("surf2Z"); f2->SetTitle("kFall");
 }
@@ -642,8 +660,8 @@ End_Macro
 </td><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kFruitPunch);
    f2->Draw("surf2Z"); f2->SetTitle("kFruitPunch");
 }
@@ -652,8 +670,8 @@ End_Macro
 <tr><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kFuchsia);
    f2->Draw("surf2Z"); f2->SetTitle("kFuchsia");
 }
@@ -661,8 +679,8 @@ End_Macro
 </td><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kGreyYellow);
    f2->Draw("surf2Z"); f2->SetTitle("kGreyYellow");
 }
@@ -670,8 +688,8 @@ End_Macro
 </td><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kGreenBrownTerrain);
    f2->Draw("surf2Z"); f2->SetTitle("kGreenBrownTerrain");
 }
@@ -680,8 +698,8 @@ End_Macro
 <tr><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kSunset);
    f2->Draw("surf2Z"); f2->SetTitle("kSunset");
 }
@@ -689,8 +707,8 @@ End_Macro
 </td><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kNeon);
    f2->Draw("surf2Z"); f2->SetTitle("kNeon");
 }
@@ -698,8 +716,8 @@ End_Macro
 </td><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kLake);
    f2->Draw("surf2Z"); f2->SetTitle("kLake");
 }
@@ -708,8 +726,8 @@ End_Macro
 <tr><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kValentine);
    f2->Draw("surf2Z"); f2->SetTitle("kValentine");
 }
@@ -717,8 +735,8 @@ End_Macro
 </td><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kLightTerrain);
    f2->Draw("surf2Z"); f2->SetTitle("kLightTerrain");
 }
@@ -726,8 +744,8 @@ End_Macro
 </td><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kCividis);
    f2->Draw("surf2Z"); f2->SetTitle("kCividis");
 }
@@ -742,8 +760,8 @@ End_Macro
 <tr><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kIsland);
    f2->Draw("surf2Z"); f2->SetTitle("kIsland");
 }
@@ -751,8 +769,8 @@ End_Macro
 </td><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kRainBow);
    f2->Draw("surf2Z"); f2->SetTitle("kRainBow");
 }
@@ -760,8 +778,8 @@ End_Macro
 </td><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kColorPrintableOnGrey);
    f2->Draw("surf2Z"); f2->SetTitle("kColorPrintableOnGrey");
 }
@@ -770,8 +788,8 @@ End_Macro
 <tr><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kAquamarine);
    f2->Draw("surf2Z"); f2->SetTitle("kAquamarine");
 }
@@ -779,8 +797,8 @@ End_Macro
 </td><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kArmy);
    f2->Draw("surf2Z"); f2->SetTitle("kArmy");
 }
@@ -788,8 +806,8 @@ End_Macro
 </td><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kAtlantic);
    f2->Draw("surf2Z"); f2->SetTitle("kAtlantic");
 }
@@ -798,8 +816,8 @@ End_Macro
 <tr><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kAurora);
    f2->Draw("surf2Z"); f2->SetTitle("kAurora");
 }
@@ -807,8 +825,8 @@ End_Macro
 </td><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kBeach);
    f2->Draw("surf2Z"); f2->SetTitle("kBeach");
 }
@@ -816,8 +834,8 @@ End_Macro
 </td><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kBlackBody);
    f2->Draw("surf2Z"); f2->SetTitle("kBlackBody");
 }
@@ -826,8 +844,8 @@ End_Macro
 <tr><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kBrownCyan);
    f2->Draw("surf2Z"); f2->SetTitle("kBrownCyan");
 }
@@ -835,8 +853,8 @@ End_Macro
 </td><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kCMYK);
    f2->Draw("surf2Z"); f2->SetTitle("kCMYK");
 }
@@ -844,8 +862,8 @@ End_Macro
 </td><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kDarkRainBow);
    f2->Draw("surf2Z"); f2->SetTitle("kDarkRainBow");
 }
@@ -854,8 +872,8 @@ End_Macro
 <tr><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kDarkTerrain);
    f2->Draw("surf2Z"); f2->SetTitle("kDarkTerrain");
 }
@@ -863,8 +881,8 @@ End_Macro
 </td><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kGreenPink);
    f2->Draw("surf2Z"); f2->SetTitle("kGreenPink");
 }
@@ -872,8 +890,8 @@ End_Macro
 </td><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kRedBlue);
    f2->Draw("surf2Z"); f2->SetTitle("kRedBlue");
 }
@@ -882,8 +900,8 @@ End_Macro
 <tr><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kRose);
    f2->Draw("surf2Z"); f2->SetTitle("kRose");
 }
@@ -891,8 +909,8 @@ End_Macro
 </td><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kLightTemperature);
    f2->Draw("surf2Z"); f2->SetTitle("kLightTemperature");
 }
@@ -900,8 +918,8 @@ End_Macro
 </td><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kMint);
    f2->Draw("surf2Z"); f2->SetTitle("kMint");
 }
@@ -910,8 +928,8 @@ End_Macro
 <tr><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kPastel);
    f2->Draw("surf2Z"); f2->SetTitle("kPastel");
 }
@@ -919,8 +937,8 @@ End_Macro
 </td><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kPearl);
    f2->Draw("surf2Z"); f2->SetTitle("kPearl");
 }
@@ -928,8 +946,8 @@ End_Macro
 </td><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kSandyTerrain);
    f2->Draw("surf2Z"); f2->SetTitle("kSandyTerrain");
 }
@@ -938,8 +956,8 @@ End_Macro
 <tr><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kTemperatureMap);
    f2->Draw("surf2Z"); f2->SetTitle("kTemperatureMap");
 }
@@ -947,8 +965,8 @@ End_Macro
 </td><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kThermometer);
    f2->Draw("surf2Z"); f2->SetTitle("kThermometer");
 }
@@ -956,8 +974,8 @@ End_Macro
 </td><td>
 Begin_Macro
 {
-   c  = new TCanvas("c","c",0,0,300,300);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto c  = new TCanvas("c","c",0,0,300,300);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kVisibleSpectrum);
    f2->Draw("surf2Z"); f2->SetTitle("kVisibleSpectrum");
 }
@@ -973,7 +991,7 @@ method TColor::InvertPalette. The top of the palette becomes the bottom and vice
 Begin_Macro(source)
 {
    auto c  = new TCanvas("c","c",0,0,600,400);
-   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   auto f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kCherry);
    TColor::InvertPalette();
    f2->Draw("surf2Z"); f2->SetTitle("kCherry inverted");
@@ -996,7 +1014,7 @@ A new color can be created transparent the following way:
 
 ~~~ {.cpp}
    Int_t ci = 1756;
-   TColor *color = new TColor(ci, 0.1, 0.2, 0.3, "", 0.5); // alpha = 0.5
+   auto color = new TColor(ci, 0.1, 0.2, 0.3, "", 0.5); // alpha = 0.5
 ~~~
 
 An example of transparency usage with parallel coordinates can be found
@@ -1051,6 +1069,7 @@ TColor::TColor(): TNamed()
 ////////////////////////////////////////////////////////////////////////////////
 /// Normal color constructor. Initialize a color structure.
 /// Compute the RGB and HLS color components.
+/// The color title is set to its hexadecimal value.
 
 TColor::TColor(Int_t color, Float_t r, Float_t g, Float_t b, const char *name,
                Float_t a)
@@ -1090,6 +1109,7 @@ TColor::TColor(Int_t color, Float_t r, Float_t g, Float_t b, const char *name,
    SetRGB(r, g, b);
    fAlpha = a;
    gDefinedColors++;
+   SetTitle(AsHexString());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1216,6 +1236,38 @@ void TColor::InitializeColors()
       new TColor(19,.95,.95,.95,"grey19");
       new TColor(50, 0.83,0.35,0.33);
 
+      // define the Petroff color schemes
+      new TColor(kGrape,    111./255.,  45./255., 168./255., "kGrape");
+      new TColor(kBrown,    165./255.,  42./255.,  42./255., "kBrown");
+      new TColor(kAsh,      178./255., 190./255., 181./255., "kAsh");
+
+      new TColor(kP6Blue,    87./255., 144./255., 252./255., "kP6Blue");
+      new TColor(kP6Yellow, 248./255., 156./255.,  32./255., "kP6Yellow");
+      new TColor(kP6Red,    228./255.,  37./255.,  54./255., "kP6Red");
+      new TColor(kP6Grape,  150./255.,  74./255., 139./255., "kP6Grape");
+      new TColor(kP6Gray,   156./255., 156./255., 161./255., "kP6Gray");
+      new TColor(kP6Violet, 112./255.,  33./255., 221./255., "kP6Violet");
+
+      new TColor(kP8Blue,    24./255.,  69./255., 251./255., "kP8Blue");
+      new TColor(kP8Orange,        1.,  94./255.,   2./255., "kP8Orange");
+      new TColor(kP8Red,    201./255.,  31./255.,  22./255., "kP8Red");
+      new TColor(kP8Pink,   200./255.,  73./255., 169./255., "kP8Pink");
+      new TColor(kP8Green,  173./255., 173./255., 125./255., "kP8Green");
+      new TColor(kP8Cyan,   134./255., 200./255., 221./255., "kP8Cyan");
+      new TColor(kP8Azure,   87./255., 141./255., 255./255., "kP8Azure");
+      new TColor(kP8Gray,   101./255.,  99./255., 100./255., "kP8Gray");
+
+      new TColor(kP10Blue,    63./255., 144./255., 218./255., "kP10Blue");
+      new TColor(kP10Yellow,        1., 169./255.,  14./255., "kP10Yellow");
+      new TColor(kP10Red,    189./255.,  31./255.,   1./255., "kP10Red");
+      new TColor(kP10Gray,   148./255., 164./255., 162./255., "kP10Gray");
+      new TColor(kP10Violet, 131./255.,  45./255., 182./255., "kP10Violet");
+      new TColor(kP10Brown,  169./255., 107./255.,  89./255., "kP10Brown");
+      new TColor(kP10Orange, 231./255.,  99./255.,        0., "kP10Orange");
+      new TColor(kP10Green,  185./255., 172./255., 112./255., "kP10Green");
+      new TColor(kP10Ash,    113./255., 117./255., 129./255., "kP10Ash");
+      new TColor(kP10Cyan,   146./255., 218./255., 221./255., "kP10Cyan");
+
       // Initialize the Pretty Palette Spectrum Violet->Red
       //   The color model used here is based on the HLS model which
       //   is much more suitable for creating palettes than RGB.
@@ -1332,7 +1384,6 @@ void TColor::CreateColorsCircle(Int_t offset, const char *name, UChar_t *rgb)
       TColor *color = gROOT->GetColor(colorn);
       if (!color) {
          color = new TColor(colorn,rgb[3*n]/255.,rgb[3*n+1]/255.,rgb[3*n+2]/255.);
-         color->SetTitle(color->AsHexString());
          if      (n>10) colorname.Form("%s+%d",name,n-10);
          else if (n<10) colorname.Form("%s-%d",name,10-n);
          else           colorname.Form("%s",name);
@@ -1352,7 +1403,6 @@ void TColor::CreateColorsRectangle(Int_t offset, const char *name, UChar_t *rgb)
       TColor *color = gROOT->GetColor(colorn);
       if (!color) {
          color = new TColor(colorn,rgb[3*n]/255.,rgb[3*n+1]/255.,rgb[3*n+2]/255.);
-         color->SetTitle(color->AsHexString());
          if      (n>9) colorname.Form("%s+%d",name,n-9);
          else if (n<9) colorname.Form("%s-%d",name,9-n);
          else          colorname.Form("%s",name);
@@ -1769,8 +1819,34 @@ void TColor::RGB2HLS(Int_t r, Int_t g, Int_t b, Int_t &h, Int_t &l, Int_t &s)
    s = (Int_t) (satur * 255.0f);
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// Initialize this color and its associated colors.
+/// Set the color name and change also the name of the "dark" and "bright" associated
+/// colors if they exist.
+
+void TColor::SetName(const char* name)
+{
+   Int_t nd = GetColorByName(TString::Format("%s_dark",fName.Data()).Data());
+   Int_t nb = GetColorByName(TString::Format("%s_bright",fName.Data()).Data());
+
+   fName = name;
+
+   auto colors = (TObjArray*) gROOT->GetListOfColors();
+
+   if (nd >= 0) {
+      TColor *colord = (TColor*)colors->At(nd);
+      colord->TNamed::SetName(TString::Format("%s_dark",fName.Data()).Data());
+   }
+
+   if (nb >= 0) {
+      TColor *colorb = (TColor*)colors->At(nb);
+      colorb->TNamed::SetName(TString::Format("%s_bright",fName.Data()).Data());
+   }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize this color and its "dark" and "bright" associated colors.
 
 void TColor::SetRGB(Float_t r, Float_t g, Float_t b)
 {
@@ -1782,6 +1858,7 @@ void TColor::SetRGB(Float_t r, Float_t g, Float_t b)
    if (fRed < 0) return;
 
    RGBtoHLS(r, g, b, fHue, fLight, fSaturation);
+   SetTitle(AsHexString());
 
    Int_t nplanes = 16;
    if (gVirtualX) gVirtualX->GetPlanes(nplanes);
@@ -1793,26 +1870,32 @@ void TColor::SetRGB(Float_t r, Float_t g, Float_t b)
 #endif
       Allocate();
 
-   if (fNumber > 50) return;
-
-   // now define associated colors for WBOX shading
+   // change the dark and bright associated colors if they exist
    Float_t dr, dg, db, lr, lg, lb;
 
+   // get the list of all defined colors
+   auto colors = (TObjArray*) gROOT->GetListOfColors();
+
    // set dark color
-   HLStoRGB(fHue, 0.7f*fLight, fSaturation, dr, dg, db);
-   TColor *dark = gROOT->GetColor(100+fNumber);
-   if (dark) {
-      if (nplanes > 8) dark->SetRGB(dr, dg, db);
-      else             dark->SetRGB(0.3f,0.3f,0.3f);
+   Int_t nd = GetColorByName(TString::Format("%s_dark",GetName()).Data());
+   if (nd >= 0) {
+      HLStoRGB(fHue, 0.7f*fLight, fSaturation, dr, dg, db);
+      TColor *colord = (TColor*)colors->At(nd);
+      if (nplanes > 8) colord->SetRGB(dr, dg, db);
+      else             colord->SetRGB(0.3f,0.3f,0.3f);
+      colord->SetTitle(colord->AsHexString());
    }
 
-   // set light color
-   HLStoRGB(fHue, 1.2f*fLight, fSaturation, lr, lg, lb);
-   TColor *light = gROOT->GetColor(150+fNumber);
-   if (light) {
-      if (nplanes > 8) light->SetRGB(lr, lg, lb);
-      else             light->SetRGB(0.8f,0.8f,0.8f);
+   // set bright color
+   Int_t nb = GetColorByName(TString::Format("%s_bright",GetName()).Data());
+   if (nb >= 0) {
+      HLStoRGB(fHue, 1.2f*fLight, fSaturation, lr, lg, lb);
+      TColor *colorb = (TColor*)colors->At(nb);
+      if (nplanes > 8) colorb->SetRGB(lr, lg, lb);
+      else             colorb->SetRGB(0.8f,0.8f,0.8f);
+      colorb->SetTitle(colorb->AsHexString());
    }
+
    gDefinedColors++;
 }
 
@@ -1822,7 +1905,6 @@ void TColor::SetRGB(Float_t r, Float_t g, Float_t b)
 void TColor::Allocate()
 {
    if (gVirtualX && !gROOT->IsBatch())
-
       gVirtualX->SetRGB(fNumber, GetRed(), GetGreen(), GetBlue());
 }
 
@@ -1985,65 +2067,102 @@ Int_t TColor::GetColor(Int_t r, Int_t g, Int_t b, Float_t a)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Static method returning color index for a color specified by name.
+/// The list of defined colors and their names is given by TColor::ListColors.
+/// If the specified color name does not exist -1 is returned.
+
+Int_t TColor::GetColorByName(const char *colorname)
+{
+   TObjArray *colors = (TObjArray*) gROOT->GetListOfColors();
+   if (auto color = static_cast<TColor *>(colors->FindObject(colorname))) {
+      return color->GetNumber();
+   } else {
+     return -1;
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Static function: Returns the bright color number corresponding to n
-/// If the TColor object does not exist, it is created.
-/// The convention is that the bright color nb = n+150
+/// If the TColor object does not exist, it is created at a free color index.
 
 Int_t TColor::GetColorBright(Int_t n)
 {
    if (n < 0) return -1;
 
    // Get list of all defined colors
-   TObjArray *colors = (TObjArray*) gROOT->GetListOfColors();
+   auto colors = (TObjArray*) gROOT->GetListOfColors();
    Int_t ncolors = colors->GetSize();
+
    // Get existing color at index n
    TColor *color = nullptr;
    if (n < ncolors) color = (TColor*)colors->At(n);
    if (!color) return -1;
 
+   // in case color is not named, assign a unique name.
+   if (strlen(color->GetName()) == 0)
+      color->SetName(TString::Format("Color%d",n).Data());
+
+   // check if the bright color already exists, if yes return it
+   TString nameb = TString::Format("%s_bright",color->GetName()).Data();
+   Int_t nb = GetColorByName(nameb.Data());
+   TColor *colorb = nullptr;
+   if (nb >= 0) {
+      colorb = (TColor*)colors->At(nb);
+      return colorb->GetNumber();
+   }
+
    //Get the rgb of the new bright color corresponding to color n
    Float_t r,g,b;
    HLStoRGB(color->GetHue(), 1.2f*color->GetLight(), color->GetSaturation(), r, g, b);
 
-   //Build the bright color (unless the slot nb is already used)
-   Int_t nb = n+150;
-   TColor *colorb = nullptr;
-   if (nb < ncolors) colorb = (TColor*)colors->At(nb);
-   if (colorb) return nb;
+   //Build the bright color
+   nb = GetFirstFreeColorIndex();
    colorb = new TColor(nb,r,g,b);
-   colorb->SetName(TString::Format("%s_bright",color->GetName()).Data());
+   colorb->SetName(nameb.Data());
+   colorb->SetTitle(colorb->AsHexString());
    colors->AddAtAndExpand(colorb,nb);
    return nb;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Static function: Returns the dark color number corresponding to n
-/// If the TColor object does not exist, it is created.
-/// The convention is that the dark color nd = n+100
+/// If the TColor object does not exist, it is created at a free color index.
 
 Int_t TColor::GetColorDark(Int_t n)
 {
    if (n < 0) return -1;
 
    // Get list of all defined colors
-   TObjArray *colors = (TObjArray*) gROOT->GetListOfColors();
+   auto colors = (TObjArray*) gROOT->GetListOfColors();
    Int_t ncolors = colors->GetSize();
+
    // Get existing color at index n
    TColor *color = nullptr;
    if (n < ncolors) color = (TColor*)colors->At(n);
    if (!color) return -1;
 
+   // in case color is not named, assign a unique name.
+   if (strlen(color->GetName()) == 0)
+      color->SetName(TString::Format("Color%d",n).Data());
+
+   // check if the dark color already exists, if yes return it
+   TString named = TString::Format("%s_dark",color->GetName()).Data();
+   Int_t nd = GetColorByName(named.Data());
+   TColor *colord = nullptr;
+   if (nd >= 0) {
+      colord = (TColor*)colors->At(nd);
+      return colord->GetNumber();
+   }
+
    //Get the rgb of the new dark color corresponding to color n
    Float_t r,g,b;
    HLStoRGB(color->GetHue(), 0.7f*color->GetLight(), color->GetSaturation(), r, g, b);
 
-   //Build the dark color (unless the slot nd is already used)
-   Int_t nd = n+100;
-   TColor *colord = nullptr;
-   if (nd < ncolors) colord = (TColor*)colors->At(nd);
-   if (colord) return nd;
+   //Build the dark color
+   nd = GetFirstFreeColorIndex();
    colord = new TColor(nd,r,g,b);
-   colord->SetName(TString::Format("%s_dark",color->GetName()).Data());
+   colord->SetName(named.Data());
+   colord->SetTitle(colord->AsHexString());
    colors->AddAtAndExpand(colord,nd);
    return nd;
 }
@@ -2234,17 +2353,80 @@ Int_t TColor::GetRadialGradient(Double_t radius, const std::vector<Int_t> &color
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Static function: Returns a free color index which can be used to define
-/// a user custom color.
+/// Static function: Returns the free color index greater than the highest defined color
+/// index. All the color indices after this index are also free. It can be used to
+/// define a user custom color.
 ///
 /// ~~~ {.cpp}
 ///   Int_t ci = TColor::GetFreeColorIndex();
-///   TColor *color = new TColor(ci, 0.1, 0.2, 0.3);
+///   auto color = new TColor(ci, 0.1, 0.2, 0.3);
 /// ~~~
 
 Int_t TColor::GetFreeColorIndex()
 {
    return gHighestColorIndex+1;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Static function: Returns the first free color greater in the list of colors.
+/// index. It can be used to define a user custom color.
+///
+/// ~~~ {.cpp}
+///   Int_t ci = TColor::GetFirstFreeColorIndex();
+///   auto color = new TColor(ci, 0.1, 0.2, 0.3);
+/// ~~~
+
+Int_t TColor::GetFirstFreeColorIndex()
+{
+   TObjArray *colors = (TObjArray*) gROOT->GetListOfColors();
+   const Int_t ncolors = colors->GetSize();
+   TColor *color = nullptr;
+   for (Int_t i = kP10Cyan+1; i<ncolors; i++) {
+      color = (TColor*)colors->At(i);
+      if (!color) return i;
+   }
+   return -1;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// List `nb` colors from the color index `ci`.
+/// If `nb=0` all the colors are printed.
+/// If showEmpty is set to kTRUE, empty color indices are also printed
+
+void TColor::ListColors(Int_t ci, Int_t nb, Bool_t showEmpty)
+{
+   TObjArray *colors = (TObjArray*) gROOT->GetListOfColors();
+   const Int_t ncolors = colors->GetSize();
+   Int_t last = ci+nb;
+   if (nb==0 || last>=ncolors) last = ncolors;
+   TColor *color = 0;
+   Int_t nc =0 ;
+
+   printf("   +------+-------+-------+-------+-------+--------------------+--------------------+\n");
+   printf("   | Idx  | Red   | Green | Blue  | Alpha |     Color Name     |    Color Title     |\n");
+   printf("   +------+-------+-------+-------+-------+--------------------+--------------------+\n");
+
+   for (Int_t i = ci; i<last; i++) {
+      color = (TColor*)colors->At(i);
+      if (color) {
+         printf("   | %4d | %5.3f | %5.3f | %5.3f | %5.3f | %18s | %18s |\n", i,
+                                                           color->GetRed(),
+                                                           color->GetGreen(),
+                                                           color->GetBlue(),
+                                                           color->GetAlpha(),
+                                                           color->GetName(),
+                                                           color->GetTitle());
+         nc++;
+      } else if (showEmpty) {
+         printf("   | %4d |   ?   |   ?   |   ?   |   ?   |                  ? |                  ? |\n",i);
+      }
+   }
+   printf("   +------+-------+-------+-------+-------+--------------------+--------------------+\n");
+   printf("   | Number of possible colors = %4d                                               |\n",ncolors);
+   printf("   | Number of defined colors between %4d and %4d = %4d                          |\n",ci,last,nc);
+   printf("   | Number of free indeces between %4d and %4d   = %4d                          |\n",ci,last,last-ci-nc);
+   printf("   +--------------------------------------------------------------------------------+\n\n");
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////

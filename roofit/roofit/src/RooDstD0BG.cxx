@@ -73,17 +73,17 @@ double RooDstD0BG::evaluate() const
    if (arg <= 0)
       return 0;
    double ratio = dm / dm0;
-   double val = (1 - std::exp(-arg / C)) * TMath::Power(ratio, A) + B * (ratio - 1);
+   double val = (1 - std::exp(-arg / C)) * std::pow(ratio, A) + B * (ratio - 1);
 
    return (val > 0 ? val : 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of D*-D0 mass difference distribution.
-void RooDstD0BG::computeBatch(double *output, size_t nEvents, RooFit::Detail::DataMap const &dataMap) const
+void RooDstD0BG::doEval(RooFit::EvalContext & ctx) const
 {
-   RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::DstD0BG, output, nEvents,
-                            {dataMap.at(dm), dataMap.at(dm0), dataMap.at(C), dataMap.at(A), dataMap.at(B)});
+   RooBatchCompute::compute(ctx.config(this), RooBatchCompute::DstD0BG, ctx.output(),
+          {ctx.at(dm), ctx.at(dm0), ctx.at(C), ctx.at(A), ctx.at(B)});
 }
 
 ////////////////////////////////////////////////////////////////////////////////

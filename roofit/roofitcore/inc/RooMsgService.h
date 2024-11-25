@@ -235,7 +235,7 @@ protected:
 
   Int_t _errorCount ;
 
-  // Private ctor -- singleton class
+  // Private constructor -- singleton class
   RooMsgService() ;
   RooMsgService(const RooMsgService&) ;
 

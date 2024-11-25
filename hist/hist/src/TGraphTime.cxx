@@ -13,6 +13,7 @@
 #include "TVirtualPad.h"
 #include "TH1.h"
 #include "TROOT.h"
+#include "TTimer.h"
 #include "TObjArray.h"
 #include "TSystem.h"
 
@@ -29,16 +30,8 @@ see example of use in $ROOTSYS/tutorials/graphs/gtime.C
 ////////////////////////////////////////////////////////////////////////////////
 /// default constructor.
 
-TGraphTime::TGraphTime(): TNamed()
+TGraphTime::TGraphTime()
 {
-   fSleepTime = 0;
-   fNsteps    = 0;
-   fXmin      = 0;
-   fXmax      = 1;
-   fYmin      = 0;
-   fYmax      = 1;
-   fSteps     = nullptr;
-   fFrame     = nullptr;
 }
 
 
@@ -46,10 +39,9 @@ TGraphTime::TGraphTime(): TNamed()
 /// Create a TGraphTime with nsteps in range [xmin,xmax][ymin,ymax]
 
 TGraphTime::TGraphTime(Int_t nsteps, Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax)
-      :TNamed()
 {
    if (nsteps <= 0) {
-      Warning("TGraphTime", "Number of steps %d changed to 100",nsteps);
+      Warning("TGraphTime", "Number of steps %d changed to 100", nsteps);
       nsteps = 100;
    }
    fSleepTime = 0;
@@ -59,7 +51,7 @@ TGraphTime::TGraphTime(Int_t nsteps, Double_t xmin, Double_t ymin, Double_t xmax
    fYmin      = ymin;
    fYmax      = ymax;
    fSteps     = new TObjArray(nsteps+1);
-   fFrame     = new TH1D("frame","",100,fXmin,fXmax);
+   fFrame = new TH1D("frame", "", 100, fXmin, fXmax);
    fFrame->SetMinimum(ymin);
    fFrame->SetMaximum(ymax);
    fFrame->SetStats(false);
@@ -71,9 +63,13 @@ TGraphTime::TGraphTime(Int_t nsteps, Double_t xmin, Double_t ymin, Double_t xmax
 
 TGraphTime::~TGraphTime()
 {
-   if (!fSteps) return;
-   fSteps->Delete();
-   delete fSteps; fSteps=nullptr;
+   Animate(kFALSE);
+
+   if (fSteps) {
+      fSteps->Delete();
+      delete fSteps;
+      fSteps = nullptr;
+   }
 }
 
 
@@ -83,13 +79,13 @@ TGraphTime::~TGraphTime()
 TGraphTime::TGraphTime(const TGraphTime &gtime) : TNamed(gtime)
 {
    fSleepTime = gtime.fSleepTime;
-   fNsteps    = gtime.fNsteps;
-   fXmin      = gtime.fXmin;
-   fXmax      = gtime.fXmax;
-   fYmin      = gtime.fYmin;
-   fYmax      = gtime.fYmax;
-   fSteps     = new TObjArray(fNsteps+1);
-   fFrame     = new TH1D("frame","",100,fXmin,fXmax);
+   fNsteps = gtime.fNsteps;
+   fXmin = gtime.fXmin;
+   fXmax = gtime.fXmax;
+   fYmin = gtime.fYmin;
+   fYmax = gtime.fYmax;
+   fSteps = new TObjArray(fNsteps + 1);
+   fFrame = new TH1D("frame", "", 100, fXmin, fXmax);
    fFrame->SetMinimum(fYmin);
    fFrame->SetMaximum(fYmax);
    fFrame->SetStats(false);
@@ -106,7 +102,8 @@ Int_t TGraphTime::Add(const TObject *obj, Int_t slot, Option_t *option)
       fNsteps = 100;
       fSteps = new TObjArray(fNsteps+1);
    }
-   if (slot < 0 || slot >= fNsteps) return -1;
+   if (slot < 0 || slot >= fNsteps)
+      return -1;
    TList *list = (TList*)fSteps->UncheckedAt(slot);
    if (!list) {
       list = new TList();
@@ -116,12 +113,45 @@ Int_t TGraphTime::Add(const TObject *obj, Int_t slot, Option_t *option)
    return slot;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Start animation of TGraphTime.
+/// Triggers drawing of steps - but does not block macro execution which will continues
+
+void TGraphTime::Animate(Bool_t enable)
+{
+   if (!enable) {
+      fAnimateCnt = -1;
+      if (fAnimateTimer) {
+         fAnimateTimer->Stop();
+         delete fAnimateTimer;
+         fAnimateTimer = nullptr;
+      }
+      return;
+   }
+
+   if (!gPad) {
+      gROOT->MakeDefCanvas();
+      gPad->SetFillColor(41);
+      gPad->SetFrameFillColor(19);
+      gPad->SetGrid();
+   }
+   if (fFrame)
+      fFrame->SetTitle(GetTitle());
+
+   fAnimateCnt = 0;
+   if (!fAnimateTimer) {
+      fAnimateTimer = new TTimer(this, fSleepTime > 0 ? fSleepTime : 1);
+      fAnimateTimer->Start();
+   }
+
+   Notify();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this TGraphTime.
 /// for each time step the list of objects added to this step are drawn.
 
-void TGraphTime::Draw(Option_t *option)
+void TGraphTime::Draw(Option_t *)
 {
    if (!gPad) {
       gROOT->MakeDefCanvas();
@@ -129,42 +159,73 @@ void TGraphTime::Draw(Option_t *option)
       gPad->SetFrameFillColor(19);
       gPad->SetGrid();
    }
-   if (fFrame) {
+   if (fFrame)
       fFrame->SetTitle(GetTitle());
-      fFrame->Draw();
-   }
-   Paint(option);
 
+   for (Int_t s = 0; s < fNsteps; s++) {
+      if (DrawStep(s)) {
+         gPad->Update();
+         if (fSleepTime > 0)
+            gSystem->Sleep(fSleepTime);
+      }
+   }
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw single step
+
+Bool_t TGraphTime::DrawStep(Int_t nstep) const
+{
+   if (!fSteps)
+      return kFALSE;
+
+   auto list = static_cast<TList *>(fSteps->UncheckedAt(nstep));
+   if (!list)
+      return kFALSE;
+
+   if (fFrame)
+      gPad->Remove(fFrame);
+   gPad->GetListOfPrimitives()->Clear();
+   if (fFrame)
+      gPad->Add(fFrame);
+
+   auto lnk = list->FirstLink();
+   while(lnk) {
+      gPad->Add(lnk->GetObject(), lnk->GetAddOption());
+      lnk = lnk->Next();
+   }
+
+   return kTRUE;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Method used for implementing animation of TGraphTime
+
+Bool_t TGraphTime::HandleTimer(TTimer *)
+{
+   if ((fAnimateCnt < 0) || !fSteps || !gPad)
+      return kTRUE;
+
+   if (fAnimateCnt > fSteps->GetLast())
+      fAnimateCnt = 0;
+
+   if (DrawStep(fAnimateCnt++))
+      gPad->Update();
+
+   return kTRUE;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint all objects added to each time step
 
-void TGraphTime::Paint(Option_t *option)
+void TGraphTime::Paint(Option_t *)
 {
-   TString opt = option;
-   opt.ToLower();
-   TObject *frame = gPad->GetPrimitive("frame");
-   TList *list = nullptr;
-   TObjLink *lnk;
-
-   for (Int_t s=0;s<fNsteps;s++) {
-      list = (TList*)fSteps->UncheckedAt(s);
-      if (list) {
-         gPad->GetListOfPrimitives()->Remove(frame);
-         gPad->GetListOfPrimitives()->Clear();
-         if (frame) gPad->GetListOfPrimitives()->Add(frame);
-         lnk = list->FirstLink();
-         while(lnk) {
-            TObject *obj = lnk->GetObject();
-            obj->Draw(lnk->GetAddOption());
-            lnk = lnk->Next();
-         }
-         gPad->Update();
-         if (fSleepTime > 0) gSystem->Sleep(fSleepTime);
-      }
-   }
+   Error("Paint", "Not implemented, use Draw() instead");
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save this object to filename as an animated gif file
@@ -173,29 +234,20 @@ void TGraphTime::Paint(Option_t *option)
 
 void TGraphTime::SaveAnimatedGif(const char *filename) const
 {
-   TObject *frame = gPad->GetPrimitive("frame");
-   TList *list = nullptr;
-   TObjLink *lnk;
+   if (!gPad) {
+      Error("SaveAnimatedGif", "Not possible to create animated GIF without gPad");
+      return;
+   }
 
-   for (Int_t s=0;s<fNsteps;s++) {
-      list = (TList*)fSteps->UncheckedAt(s);
-      if (list) {
-         gPad->GetListOfPrimitives()->Remove(frame);
-         gPad->GetListOfPrimitives()->Clear();
-         if (frame) gPad->GetListOfPrimitives()->Add(frame);
-         lnk = list->FirstLink();
-         while(lnk) {
-            TObject *obj = lnk->GetObject();
-            obj->Draw(lnk->GetAddOption());
-            lnk = lnk->Next();
-         }
-         gPad->Update();
-         if (filename && strlen(filename) > 0)
-            gPad->Print(TString::Format("%s+", filename));
-         else
-            gPad->Print(TString::Format("%s+", GetName()));
-         if (fSleepTime > 0)
-            gSystem->Sleep(fSleepTime);
-      }
+   if (gPad->IsWeb()) {
+      Error("SaveAnimatedGif", "Not possible to create animated GIF with web canvas");
+      return;
+   }
+
+   TString farg = TString::Format("%s+", filename && *filename ? filename : GetName());
+
+   for (Int_t s = 0; s < fNsteps; s++) {
+      if (DrawStep(s))
+         gPad->Print(farg.Data());
    }
 }

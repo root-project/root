@@ -10,9 +10,7 @@
 #include "TFile.h"
 #include "TGeoTube.h"
 
-const char* histFile =
-   "http://amraktad.web.cern.ch/amraktad/cms_calo_hist.root";
-
+const char* histFile ="http://root.cern/files/cms_calo_hist.root";
 
 const Double_t kR_min = 128;
 const Double_t kR_max = 129;
@@ -75,6 +73,7 @@ void calorimeters()
    auto b1 = new REveGeoShape("Barrel 1");
    b1->SetShape(new TGeoTube(kR_min, kR_max, kZ_d));
    b1->SetMainColor(kCyan);
+   b1->SetMainTransparency(90);
    b1->SetNSegments(80);
    eveMng->GetGlobalScene()->AddElement(b1);
 

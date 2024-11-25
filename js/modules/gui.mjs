@@ -1,22 +1,34 @@
-import { decodeUrl, settings, constants, gStyle, internals, browser, findFunction, parse, isFunc, isStr, isObject } from './core.mjs';
+import { decodeUrl, settings, constants, gStyle, internals, browser,
+         findFunction, parse, isFunc, isStr, isObject, isBatchMode, setBatchMode } from './core.mjs';
 import { select as d3_select } from './d3.mjs';
 import { HierarchyPainter } from './gui/HierarchyPainter.mjs';
-import { readSettings, readStyle } from './gui/utils.mjs';
+import { setStoragePrefix, readSettings, readStyle } from './gui/utils.mjs';
+import { setDefaultDrawOpt } from './draw.mjs';
+import { createMenu, closeMenu } from './gui/menu.mjs';
 
 
 /** @summary Read style and settings from URL
   * @private */
 function readStyleFromURL(url) {
-   // first try to read settings from coockies
-   readSettings();
+   // first try to read settings from local storage
+   const d = decodeUrl(url),
+         prefix = d.get('storage_prefix');
+
+   if (isStr(prefix) && prefix)
+      setStoragePrefix(prefix);
+
+   if (readSettings())
+      setDefaultDrawOpt(settings._dflt_drawopt);
+
    readStyle();
 
-   const d = decodeUrl(url);
-
-   function get_bool(name, field) {
+   function get_bool(name, field, special) {
       if (d.has(name)) {
          const val = d.get(name);
-         settings[field] = (val !== '0') && (val !== 'false') && (val !== 'off');
+         if (special && (val === special))
+            settings[field] = special;
+         else
+            settings[field] = (val !== '0') && (val !== 'false') && (val !== 'off');
       }
    }
 
@@ -30,9 +42,17 @@ function readStyleFromURL(url) {
       }
    }
 
+   const b = d.get('batch');
+   if (b !== undefined) {
+      setBatchMode(d !== 'off');
+      if (b === 'png')
+         internals.batch_png = true;
+   }
+
    get_bool('lastcycle', 'OnlyLastCycle');
    get_bool('usestamp', 'UseStamp');
    get_bool('dark', 'DarkMode');
+   get_bool('approx_text_size', 'ApproxTextSize');
 
    let mr = d.get('maxranges');
    if (mr) {
@@ -90,11 +110,16 @@ function readStyleFromURL(url) {
       settings.Latex = constants.Latex.fromString(latex);
 
    if (d.has('nomenu')) settings.ContextMenu = false;
-   if (d.has('noprogress')) settings.ProgressBox = false;
+   if (d.has('noprogress'))
+      settings.ProgressBox = false;
+   else
+      get_bool('progress', 'ProgressBox', 'modal');
+
    if (d.has('notouch')) browser.touches = false;
    if (d.has('adjframe')) settings.CanAdjustFrame = true;
 
-   if (d.has('toolbar')) {
+   const has_toolbar = d.has('toolbar');
+   if (has_toolbar) {
       const toolbar = d.get('toolbar', '');
       let val = null;
       if (toolbar.indexOf('popup') >= 0) val = 'popup';
@@ -133,15 +158,40 @@ function readStyleFromURL(url) {
          gStyle[field] = 0;
       else
          gStyle[field] = parseInt(val);
+      return gStyle[field] !== 0;
+   }
+   function get_float_style(name, field) {
+      if (!d.has(name)) return;
+      const val = d.get(name),
+            flt = Number.parseFloat(val);
+      if (Number.isFinite(flt))
+         gStyle[field] = flt;
    }
 
    if (d.has('histzero')) gStyle.fHistMinimumZero = true;
    if (d.has('histmargin')) gStyle.fHistTopMargin = parseFloat(d.get('histmargin'));
    get_int_style('optstat', 'fOptStat', 1111);
    get_int_style('optfit', 'fOptFit', 0);
-   get_int_style('optdate', 'fOptDate', 1);
-   get_int_style('optfile', 'fOptFile', 1);
+   const has_date = get_int_style('optdate', 'fOptDate', 1),
+         has_file = get_int_style('optfile', 'fOptFile', 1);
+   if ((has_date || has_file) && !has_toolbar)
+      settings.ToolBarVert = true;
+   get_float_style('datex', 'fDateX');
+   get_float_style('datey', 'fDateY');
+
    get_int_style('opttitle', 'fOptTitle', 1);
+   if (d.has('utc'))
+      settings.TimeZone = 'UTC';
+   if (d.has('cet'))
+      settings.TimeZone = 'Europe/Berlin';
+   else if (d.has('timezone')) {
+      settings.TimeZone = d.get('timezone');
+      if ((settings.TimeZone === 'default') || (settings.TimeZone === 'dflt'))
+         settings.TimeZone = 'Europe/Berlin';
+      else if (settings.TimeZone === 'local')
+         settings.TimeZone = '';
+   }
+
    gStyle.fStatFormat = d.get('statfmt', gStyle.fStatFormat);
    gStyle.fFitFormat = d.get('fitfmt', gStyle.fFitFormat);
 }
@@ -162,7 +212,14 @@ async function buildGUI(gui_element, gui_kind = '') {
 
    myDiv.html(''); // clear element
 
-   const d = decodeUrl();
+   const d = decodeUrl(), getSize = name => {
+      const res = d.has(name) ? d.get(name).split('x') : [];
+      if (res.length !== 2)
+         return null;
+      res[0] = parseInt(res[0]);
+      res[1] = parseInt(res[1]);
+      return res[0] > 0 && res[1] > 0 ? res : null;
+   };
    let online = (gui_kind === 'online'), nobrowser = false, drawing = false;
 
    if (gui_kind === 'draw')
@@ -175,25 +232,30 @@ async function buildGUI(gui_element, gui_kind = '') {
 
    readStyleFromURL();
 
-   if (nobrowser) {
-      let guisize = d.get('divsize');
-      if (guisize) {
-         guisize = guisize.split('x');
-         if (guisize.length !== 2) guisize = null;
-      }
+   if (isBatchMode())
+      nobrowser = true;
 
-      if (guisize)
-         myDiv.style('position', 'relative').style('width', guisize[0] + 'px').style('height', guisize[1] + 'px');
-      else {
-         d3_select('html').style('height', '100%');
-         d3_select('body').style('min-height', '100%').style('margin', 0).style('overflow', 'hidden');
-         myDiv.style('position', 'absolute').style('inset', '0px').style('padding', '1px');
-      }
+   const divsize = getSize('divsize'), canvsize = getSize('canvsize'), smallpad = getSize('smallpad');
+   if (divsize)
+      myDiv.style('position', 'relative').style('width', divsize[0] + 'px').style('height', divsize[1] + 'px');
+   else if (!isBatchMode()) {
+      d3_select('html').style('height', '100%');
+      d3_select('body').style('min-height', '100%').style('margin', 0).style('overflow', 'hidden');
+      myDiv.style('position', 'absolute').style('left', 0).style('top', 0).style('bottom', 0).style('right', 0).style('padding', '1px');
+   }
+   if (canvsize) {
+      settings.CanvasWidth = canvsize[0];
+      settings.CanvasHeight = canvsize[1];
+   }
+   if (smallpad) {
+      settings.SmallPad.width = smallpad[0];
+      settings.SmallPad.height = smallpad[1];
    }
 
    const hpainter = new HierarchyPainter('root', null);
    if (online) hpainter.is_online = drawing ? 'draw' : 'online';
-   if (drawing) hpainter.exclude_browser = true;
+   if (drawing || isBatchMode())
+      hpainter.exclude_browser = true;
    hpainter.start_without_browser = nobrowser;
 
    return hpainter.startGUI(myDiv).then(() => {
@@ -212,4 +274,4 @@ async function buildGUI(gui_element, gui_kind = '') {
    }).then(() => hpainter);
 }
 
-export { buildGUI, internals, readStyleFromURL, HierarchyPainter };
+export { buildGUI, internals, readStyleFromURL, HierarchyPainter, createMenu, closeMenu };

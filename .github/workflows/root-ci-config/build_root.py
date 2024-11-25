@@ -16,12 +16,12 @@
 import argparse
 import datetime
 import os
+import platform
 import re
 import shutil
 import subprocess
 import sys
 import tarfile
-from hashlib import sha1
 
 import openstack
 
@@ -29,6 +29,7 @@ from build_utils import (
     die,
     github_log_group,
     load_config,
+    calc_options_hash,
     subprocess_with_log,
     subprocess_with_capture,
     upload_file
@@ -57,7 +58,7 @@ def main():
 
     args = parse_args()
 
-    build_utils.log = build_utils.Tracer(args.image, args.dockeropts)
+    build_utils.log = build_utils.Tracer(args.platform, args.dockeropts)
 
     pull_request = args.head_ref and args.head_ref != args.base_ref
 
@@ -75,9 +76,6 @@ def main():
         **load_config(f'{this_script_dir}/buildconfig/{args.platform}.txt')
     }
 
-    if args.binaries:
-        options_dict = remove_gpl_options(options_dict)
-
     options = build_utils.cmake_options_from_dict(options_dict)
 
     if WINDOWS:
@@ -86,10 +84,20 @@ def main():
         if args.architecture == 'x86':
             options = "-AWin32 " + options
 
-    # The sha1 of the build option string is used to find existing artifacts
+    # The hash of the build option string is used to find existing artifacts
     # with matching build options on s3 storage.
-    option_hash = sha1(options.encode('utf-8')).hexdigest()
-    obj_prefix = f'{args.platform}/{args.base_ref}/{args.buildtype}/{option_hash}'
+    options_hash = calc_options_hash(options)
+
+    # Differentiate between macos versions: it's possible to have the same label
+    # for different macos versions, especially different minor versions.
+    macos_version_prefix = ''
+    if 'Darwin' == platform.system():
+        macos_version_tuple = platform.mac_ver()
+        macos_version = macos_version_tuple[0]
+        macos_version_prefix = f'{macos_version}/'
+    platform_machine = platform.machine()
+
+    obj_prefix = f'{args.platform}/{macos_version_prefix}{args.base_ref}/{args.buildtype}_{platform_machine}/{options_hash}'
 
     # Make testing of CI in forks not impact artifacts
     if 'root-project/root' not in args.repository:
@@ -151,7 +159,7 @@ def main():
     if testing:
         extra_ctest_flags = ""
         if WINDOWS:
-            extra_ctest_flags += "--repeat until-pass:3 "
+            extra_ctest_flags += "--repeat until-pass:5 "
             extra_ctest_flags += "--build-config " + args.buildtype
 
         ctest_returncode = run_ctest(extra_ctest_flags)
@@ -184,7 +192,6 @@ def parse_args():
     # true/false for boolean arguments instead.
     parser = argparse.ArgumentParser()
     parser.add_argument("--platform",                           help="Platform to build on")
-    parser.add_argument("--image",           default=None,      help="Container image, if any")
     parser.add_argument("--dockeropts",      default=None,      help="Extra docker options, if any")
     parser.add_argument("--incremental",     default="false",   help="Do incremental build")
     parser.add_argument("--buildtype",       default="Release", help="Release|Debug|RelWithDebInfo")
@@ -214,13 +221,6 @@ def parse_args():
 
 def print_trace():
     build_utils.log.print()
-
-def remove_gpl_options(options_dict: dict):
-    gpl_options = ['fftw3', 'mathmore', 'pythia6', 'pythia8', 'unuran']
-    for opt in gpl_options:
-        options_dict[opt] = 'off'
-    return options_dict
-
 
 @github_log_group("Clean up from previous runs")
 def cleanup_previous_build():
@@ -376,10 +376,11 @@ def dump_requested_config(options):
 @github_log_group("Build")
 def cmake_build(buildtype):
     generator_flags = "-- '-verbosity:minimal'" if WINDOWS else ""
+    parallel_jobs = "4" if WINDOWS else str(os.cpu_count())
 
     builddir = os.path.join(WORKDIR, "build")
     result = subprocess_with_log(f"""
-        cmake --build '{builddir}' --config '{buildtype}' --parallel '{os.cpu_count()}' {generator_flags}
+        cmake --build '{builddir}' --config '{buildtype}' --parallel '{parallel_jobs}' {generator_flags}
     """)
 
     if result != 0:

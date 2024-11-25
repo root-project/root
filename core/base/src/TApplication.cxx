@@ -375,6 +375,9 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
       } else if (!strcmp(argv[i], "-config")) {
          fprintf(stderr, "ROOT ./configure options:\n%s\n", gROOT->GetConfigOptions());
          Terminate(0);
+      } else if (!strcmp(argv[i], "-a")) {
+         fprintf(stderr, "ROOT splash screen is not visible with root.exe, use root instead.\n");
+         Terminate(0);
       } else if (!strcmp(argv[i], "-b")) {
          MakeBatch();
          argv[i] = null;
@@ -473,10 +476,12 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
          Long_t id, flags, modtime;
          char *arg = strchr(argv[i], '(');
          if (arg) *arg = '\0';
-         char *dir = gSystem->ExpandPathName(argv[i]);
-         // ROOT-9959: we do not continue if we could not expand the path
-         if (!dir) continue;
-         TUrl udir(dir, kTRUE);
+         TString expandedDir(argv[i]);
+         if (gSystem->ExpandPathName(expandedDir)) {
+            // ROOT-9959: we do not continue if we could not expand the path
+            continue;
+         }
+         TUrl udir(expandedDir, kTRUE);
          // remove options and anchor to check the path
          TString sfx = udir.GetFileAndOptions();
          TString fln = udir.GetFile();
@@ -493,11 +498,11 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
                // if directory set it in fWorkDir
                if (pwd == "") {
                   pwd = gSystem->WorkingDirectory();
-                  fWorkDir = dir;
-                  gSystem->ChangeDirectory(dir);
+                  fWorkDir = expandedDir;
+                  gSystem->ChangeDirectory(expandedDir);
                   argv[i] = null;
                } else if (!strcmp(gROOT->GetName(), "Rint")) {
-                  Warning("GetOptions", "only one directory argument can be specified (%s)", dir);
+                  Warning("GetOptions", "only one directory argument can be specified (%s)", expandedDir.Data());
                }
             } else if (size > 0) {
                // if file add to list of files to be processed
@@ -505,7 +510,7 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
                fFiles->Add(new TObjString(path.Data()));
                argv[i] = null;
             } else {
-               Warning("GetOptions", "file %s has size 0, skipping", dir);
+               Warning("GetOptions", "file %s has size 0, skipping", expandedDir.Data());
             }
          } else {
             if (TString(udir.GetFile()).EndsWith(".root")) {
@@ -513,7 +518,7 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
                   // file ending on .root but does not exist, likely a typo
                   // warn user if plain root...
                   if (!strcmp(gROOT->GetName(), "Rint"))
-                     Warning("GetOptions", "file %s not found", dir);
+                     Warning("GetOptions", "file %s not found", expandedDir.Data());
                } else {
                   // remote file, give it the benefit of the doubt and add it to list of files
                   if (!fFiles) fFiles = new TObjArray;
@@ -522,7 +527,7 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
                }
             } else {
                TString mode,fargs,io;
-               TString fname = gSystem->SplitAclicMode(dir,mode,fargs,io);
+               TString fname = gSystem->SplitAclicMode(expandedDir,mode,fargs,io);
                char *mac;
                if (!fFiles) fFiles = new TObjArray;
                if ((mac = gSystem->Which(TROOT::GetMacroPath(), fname,
@@ -536,12 +541,15 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
                   fFiles->Add(new TNamed("NOT FOUND!", argv[i]));
                   // only warn if we're plain root,
                   // other progs might have their own params
-                  if (!strcmp(gROOT->GetName(), "Rint"))
-                     Warning("GetOptions", "macro %s not found", fname.Data());
+                  if (!strcmp(gROOT->GetName(), "Rint")) {
+                     Error("GetOptions", "macro %s not found", fname.Data());
+                     // Return 2 as the Python interpreter does in case the macro
+                     // is not found.
+                     Terminate(2);
+                  }
                }
             }
          }
-         delete [] dir;
       }
       // ignore unknown options
    }
@@ -1028,10 +1036,8 @@ Steps to reproduce the behavior:
 -->
 
 ### Setup
-```
 )"+GetSetup()+
-R"(```
-
+R"(
 <!--
 Please specify also how you obtained ROOT, such as `dnf install` / binary download / you built it yourself.
 -->
@@ -1239,7 +1245,8 @@ void TApplication::Help(const char *line)
       Printf(" ==============================================================================");
       Printf("   .L <filename>[flags]: load the given file with optional flags like\n"
              "                         + to compile or ++ to force recompile.\n"
-             "                         Type .? TSystem::CompileMacro for a list of all flags.");
+             "                         Type .? TSystem::CompileMacro for a list of all flags.\n"
+             "                         <filename> can also be a shared library; skip flags.");
       Printf("   .(x|X) <filename>[flags](args) :\n"
              "                         same as .L <filename>[flags] and runs then a function\n"
              "                         with signature: ret_type filename(args).");
@@ -1252,6 +1259,7 @@ void TApplication::Help(const char *line)
              "                         Specifying '::Member' is optional.");
       Printf("   .help edit          : show line editing shortcuts (or .?)");
       Printf("   .license            : show license");
+      Printf("   .libraries          : show loaded libraries");
       Printf("   .ls                 : list contents of current TDirectory");
       Printf("   .pwd                : show current TDirectory, pad and style");
       Printf("   .quit (or .exit)    : quit ROOT (long form of .q)");
@@ -1721,6 +1729,12 @@ Longptr_t TApplication::ProcessLine(const char *line, Bool_t sync, Int_t *err)
       gROOT->GetListOfClasses()->Delete();
       // fall through
 #endif
+   }
+
+   if (!strcmp(line, ".libraries")) {
+      // List the loaded libraries
+      gSystem->ListLibraries();
+      return 0;
    }
 
    if (sync)

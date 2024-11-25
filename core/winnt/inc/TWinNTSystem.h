@@ -24,17 +24,8 @@
 #include "TSystem.h"
 #include <string>
 
-#if !defined(__CINT__)
- #include "Windows4Root.h"
- #include <commctrl.h>
-#else
- typedef void* HANDLE;
- struct WIN32_FIND_DATA;
- typedef void* HIMAGELIST;
- typedef void* HICON;
- typedef UChar_t BOOL;
- struct FILE;
-#endif
+#include "Windows4Root.h"
+#include <commctrl.h>
 
 #ifndef MAX_SID_SIZE
 #define MAX_SID_SIZE   1024
@@ -118,6 +109,7 @@ public:
    const char       *BaseName(const char *name) override;
    void              SetProgname(const char *name) override;
    const char       *GetError() override;
+   Int_t             GetCryptoRandom(void *buf, Int_t len) override;
    const char       *HostName() override;
    void             *GetGUIThreadHandle() const {return fGUIThreadHandle;}
    ULong_t           GetGUIThreadId() const {return fGUIThreadId;}
@@ -152,7 +144,7 @@ public:
    FILE             *OpenPipe(const char *shellcmd, const char *mode) override;
    int               ClosePipe(FILE *pipe) override;
    int               GetPid() override;
-   
+
    [[ noreturn ]] void Exit (int code, Bool_t mode = kTRUE) override;
    [[ noreturn ]] void Abort (int code = 0) override;
 
@@ -175,7 +167,7 @@ public:
    const char       *HomeDirectory(const char *userName=0) override;
    std::string       GetHomeDirectory(const char *userName = nullptr) const override;
    const char       *TempDirectory() const override;
-   FILE             *TempFileName(TString &base, const char *dir = nullptr) override;
+   FILE             *TempFileName(TString &base, const char *dir = nullptr, const char *suffix = nullptr) override;
 
    //---- Users & Groups ---------------------------------------
    Int_t             GetUid(const char *user = nullptr) override;

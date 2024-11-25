@@ -1,0 +1,96 @@
+From 70ee90389088b4c62962769d2cafbe185c467972 Mon Sep 17 00:00:00 2001
+From: Jonas Rembser <jonas.rembser@cern.ch>
+Date: Fri, 15 Mar 2024 15:35:26 +0100
+Subject: [PATCH] [CPyCppyy] Always convert returned `std::string` to Python
+ string
+
+---
+ .../pyroot/cppyy/CPyCppyy/src/Executors.cxx   | 24 +++++++------------
+ .../pyroot/cppyy/CPyCppyy/src/Pythonize.cxx   |  4 ++++
+ 2 files changed, 13 insertions(+), 15 deletions(-)
+
+diff --git a/bindings/pyroot/cppyy/CPyCppyy/src/Executors.cxx b/bindings/pyroot/cppyy/CPyCppyy/src/Executors.cxx
+index 1f3e43152e..70d8f72596 100644
+--- a/bindings/pyroot/cppyy/CPyCppyy/src/Executors.cxx
++++ b/bindings/pyroot/cppyy/CPyCppyy/src/Executors.cxx
+@@ -389,17 +389,9 @@ PyObject* CPyCppyy::STLStringRefExecutor::Execute(
+     Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, CallContext* ctxt)
+ {
+ // execute <method> with argument <self, ctxt>, return python string return value
+-    static Cppyy::TCppScope_t sSTLStringScope = Cppyy::GetScope("std::string");
+-
+     std::string* result = (std::string*)GILCallR(method, self, ctxt);
+     if (!fAssignable) {
+-        std::string* rescp = new std::string{*result};
+-        return BindCppObjectNoCast((void*)rescp, sSTLStringScope, CPPInstance::kIsOwner);
+-    }
+-
+-    if (!CPyCppyy_PyText_Check(fAssignable)) {
+-        PyErr_Format(PyExc_TypeError, "wrong type in assignment (string expected)");
+-        return nullptr;
++        return CPyCppyy_PyText_FromStringAndSize(result->c_str(), result->size());
+     }
+ 
+     *result = std::string(
+@@ -567,14 +559,16 @@ PyObject* CPyCppyy::STLStringExecutor::Execute(
+ // TODO: make use of GILLCallS (?!)
+     static Cppyy::TCppScope_t sSTLStringScope = Cppyy::GetScope("std::string");
+     std::string* result = (std::string*)GILCallO(method, self, ctxt, sSTLStringScope);
+-    if (!result)
+-        result = new std::string{};
+-    else if (PyErr_Occurred()) {
+-        delete result;
+-        return nullptr;
++    if (!result) {
++        Py_INCREF(PyStrings::gEmptyString);
++        return PyStrings::gEmptyString;
+     }
+ 
+-    return BindCppObjectNoCast((void*)result, sSTLStringScope, CPPInstance::kIsOwner);
++    PyObject* pyresult =
++        CPyCppyy_PyText_FromStringAndSize(result->c_str(), result->size());
++    delete result; // Cppyy::CallO allocates and constructs a string, so it must be properly destroyed
++
++    return pyresult;
+ }
+ 
+ //----------------------------------------------------------------------------
+diff --git a/bindings/pyroot/cppyy/CPyCppyy/src/Pythonize.cxx b/bindings/pyroot/cppyy/CPyCppyy/src/Pythonize.cxx
+index 3ab4c8b3a1..ae0e31cac8 100644
+--- a/bindings/pyroot/cppyy/CPyCppyy/src/Pythonize.cxx
++++ b/bindings/pyroot/cppyy/CPyCppyy/src/Pythonize.cxx
+@@ -1327,6 +1327,7 @@ PyObject* STLStringGetAttr(CPPInstance* self, PyObject* attr_name)
+ }
+ 
+ 
++#if 0
+ PyObject* UTF8Repr(PyObject* self)
+ {
+ // force C++ string types conversion to Python str per Python __repr__ requirements
+@@ -1348,6 +1349,7 @@ PyObject* UTF8Str(PyObject* self)
+     Py_DECREF(res);
+     return str_res;
+ }
++#endif
+ 
+ Py_hash_t STLStringHash(PyObject* self)
+ {
+@@ -1695,6 +1697,7 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
+         PyObject_SetAttr(pyclass, PyStrings::gNe, top_ne);
+     }
+ 
++#if 0
+     if (HasAttrDirect(pyclass, PyStrings::gRepr, true)) {
+     // guarantee that the result of __repr__ is a Python string
+         Utility::AddToClass(pyclass, "__cpp_repr", "__repr__");
+@@ -1706,6 +1709,7 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
+         Utility::AddToClass(pyclass, "__cpp_str", "__str__");
+         Utility::AddToClass(pyclass, "__str__", (PyCFunction)UTF8Str, METH_NOARGS);
+     }
++#endif
+ 
+     if (Cppyy::IsAggregate(((CPPClass*)pyclass)->fCppType) && name.compare(0, 5, "std::", 5) != 0) {
+     // create a pseudo-constructor to allow initializer-style object creation
+-- 
+2.44.0
+

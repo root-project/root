@@ -250,7 +250,7 @@ TPrincipal::TPrincipal()
 ///
 /// The created object is  named "principal" by default.
 
-TPrincipal::TPrincipal(Int_t nVariables, Option_t *opt)
+TPrincipal::TPrincipal(Long64_t nVariables, Option_t *opt)
   : fMeanValues(nVariables),
     fSigmas(nVariables),
     fCovarianceMatrix(nVariables,nVariables),
@@ -260,7 +260,11 @@ TPrincipal::TPrincipal(Int_t nVariables, Option_t *opt)
     fStoreData(kFALSE)
 {
    if (nVariables <= 1) {
-      Error("TPrincipal", "You can't be serious - nVariables == 1!!!");
+      Error("TPrincipal", "You can't be serious - nVariables <= 1!!!");
+      return;
+   }
+   if (nVariables > std::numeric_limits<Int_t>::max()) {
+      Error("TPrincipal", "`nVariables` input parameter %lld is larger than the allowed maximum %d", nVariables, std::numeric_limits<Int_t>::max());
       return;
    }
 
@@ -411,6 +415,10 @@ void TPrincipal::AddRow(const Double_t *p)
 {
    if (!p)
       return;
+   if (fNumberOfDataPoints == std::numeric_limits<Int_t>::max()) {
+      Error("AddRow", "`fNumberOfDataPoints` has reached its allowed maximum %d, cannot add new row.", fNumberOfDataPoints);
+      return;
+   }
 
    // Increment the data point counter
    Int_t i,j;
@@ -510,7 +518,7 @@ void TPrincipal::Clear(Option_t *opt)
 /// It's up to the user to delete the returned array.
 /// Row 0 is the first row;
 
-const Double_t *TPrincipal::GetRow(Int_t row)
+const Double_t *TPrincipal::GetRow(Long64_t row)
 {
    if (row >= fNumberOfDataPoints)
       return nullptr;
@@ -518,7 +526,11 @@ const Double_t *TPrincipal::GetRow(Int_t row)
    if (!fStoreData)
       return nullptr;
 
-   Int_t index   = row  * fNumberOfVariables;
+   Long64_t index   = row  * fNumberOfVariables;
+   if (index > std::numeric_limits<Int_t>::max()) {
+      Error("GetRow", "Input parameter `row` %lld x fNumberOfVariables %d goes into overflow (%lld>%d), returning nullptr.", row, fNumberOfVariables, index,  std::numeric_limits<Int_t>::max());
+      return nullptr;
+   }
    return &fUserData(index);
 }
 
@@ -939,15 +951,12 @@ void TPrincipal::MakeRealCode(const char *filename, const char *classname,
       << "// See TPrincipal class documentation for more "
       << "information " << std::endl << "// " << std::endl;
    // Header files
-   outFile << "#ifndef __CINT__" << std::endl;
    if (isMethod)
       // If these are methods, we need the class header
       outFile << "#include \"" << classname << ".h\"" << std::endl;
    else
       // otherwise, we need the typedefs of Int_t and Double_t
       outFile << "#include <Rtypes.h> // needed for Double_t etc" << std::endl;
-   // Finish the preprocessor block
-   outFile << "#endif" << std::endl << std::endl;
 
    //
    // Now for the data

@@ -13,12 +13,11 @@ public:
     using CPPMethod::CPPMethod;
 
     virtual PyCallable* Clone() { return new CPPFunction(*this); }
-
-    virtual PyObject* Call(
-        CPPInstance*&, PyObject* args, PyObject* kwds, CallContext* ctx = nullptr);
+    virtual PyObject* Call(CPPInstance*& self,
+        CPyCppyy_PyArgs_t args, size_t nargsf, PyObject* kwds, CallContext* ctxt = nullptr);
 
 protected:
-    virtual PyObject* PreProcessArgs(CPPInstance*& self, PyObject* args, PyObject* kwds);
+    virtual bool ProcessArgs(PyCallArgs& args);
 };
 
 // Wrapper for global binary operators that swap arguments
@@ -27,13 +26,15 @@ public:
     using CPPFunction::CPPFunction;
 
     virtual PyCallable* Clone() { return new CPPFunction(*this); }
-
-    virtual PyObject* Call(
-        CPPInstance*&, PyObject* args, PyObject* kwds, CallContext* ctx = nullptr);
+    virtual PyObject* Call(CPPInstance*& self,
+        CPyCppyy_PyArgs_t args, size_t nargsf, PyObject* kwds, CallContext* ctxt = nullptr);
 
 protected:
-    virtual PyObject* PreProcessArgs(CPPInstance*& self, PyObject* args, PyObject* kwds);
+    virtual bool ProcessArgs(PyCallArgs& args);
 };
+
+// Helper to add self to the arguments tuple if rebound
+bool AdjustSelf(PyCallArgs& cargs);
 
 } // namespace CPyCppyy
 

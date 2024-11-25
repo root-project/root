@@ -17,13 +17,13 @@
 #define ROO_ABS_REAL
 
 #include "RooAbsArg.h"
+#include "RooArgList.h"
+#include "RooArgSet.h"
 #include "RooCmdArg.h"
 #include "RooCurve.h"
-#include "RooArgSet.h"
-#include "RooArgList.h"
+#include "RooFit/CodegenContext.h"
+#include "RooFit/EvalContext.h"
 #include "RooGlobalFunc.h"
-#include "RooFit/Detail/DataMap.h"
-#include "RooFit/Detail/CodeSquashContext.h"
 
 #include <ROOT/RSpan.hxx>
 
@@ -275,10 +275,6 @@ public:
 
   enum ScaleType { Raw, Relative, NumEvent, RelativeExpected } ;
 
-  // Forwarder function for backward compatibility
-  virtual RooPlot *plotSliceOn(RooPlot *frame, const RooArgSet& sliceSet, Option_t* drawOptions="L",
-                double scaleFactor=1.0, ScaleType stype=Relative, const RooAbsData* projData=nullptr) const;
-
   // Fill an existing histogram
   TH1 *fillHistogram(TH1 *hist, const RooArgList &plotVars,
            double scaleFactor= 1, const RooArgSet *projectedVars= nullptr, bool scaling=true,
@@ -341,11 +337,8 @@ public:
   static void logEvalError(const RooAbsReal* originator, const char* origName, const char* message, const char* serverValueString=nullptr) ;
   static void printEvalErrors(std::ostream&os=std::cout, Int_t maxPerNode=10000000) ;
   static Int_t numEvalErrors() ;
-  static Int_t numEvalErrorItems() ;
-
-
-  typedef std::map<const RooAbsArg*,std::pair<std::string,std::list<EvalError> > >::const_iterator EvalErrorIter ;
-  static EvalErrorIter evalErrorIter() ;
+  static Int_t numEvalErrorItems();
+  static std::map<const RooAbsArg *, std::pair<std::string, std::list<RooAbsReal::EvalError>>>::iterator evalErrorIter();
 
   static void clearEvalErrorLog() ;
 
@@ -389,15 +382,12 @@ public:
   const RooAbsReal* createPlotProjection(const RooArgSet& depVars, const RooArgSet& projVars, RooArgSet*& cloneSet) const ;
   const RooAbsReal *createPlotProjection(const RooArgSet &dependentVars, const RooArgSet *projectedVars,
                      RooArgSet *&cloneSet, const char* rangeName=nullptr, const RooArgSet* condObs=nullptr) const;
-  virtual void computeBatch(double* output, size_t size, RooFit::Detail::DataMap const&) const;
+  virtual void doEval(RooFit::EvalContext &) const;
 
   virtual bool hasGradient() const { return false; }
   virtual void gradient(double *) const {
     if(!hasGradient()) throw std::runtime_error("RooAbsReal::gradient(double *) not implemented by this class!");
   }
-
-  virtual std::string
-  buildCallToAnalyticIntegral(Int_t code, const char *rangeName, RooFit::Detail::CodeSquashContext &ctx) const;
 
   // PlotOn with command list
   virtual RooPlot* plotOn(RooPlot* frame, RooLinkedList& cmdList) const ;
@@ -412,7 +402,7 @@ protected:
   friend class RooAddPdf;
   friend class RooAddModel;
   friend class AddCacheElem;
-  friend class RooFit::Detail::DataMap;
+  friend class RooFit::EvalContext;
 
   // Hook for objects with normalization-dependent parameters interpretation
   virtual void selectNormalization(const RooArgSet* depSet=nullptr, bool force=false) ;
@@ -545,13 +535,10 @@ private:
    TString _label;                                         ///< Plot label for objects value
    bool _forceNumInt = false;                              ///< Force numerical integration if flag set
    std::unique_ptr<RooNumIntConfig> _specIntegratorConfig; // Numeric integrator configuration specific for this object
-   std::unique_ptr<TreeReadBuffer> _treeReadBuffer;        //! A buffer for reading values from trees
+   TreeReadBuffer *_treeReadBuffer = nullptr;              //! A buffer for reading values from trees
    bool _selectComp = true;                                //! Component selection flag for RooAbsPdf::plotCompOn
    mutable RooFit::UniqueId<RooArgSet>::Value_t _lastNormSetId = RooFit::UniqueId<RooArgSet>::nullval; ///<!
 
-   static ErrorLoggingMode _evalErrorMode;
-   static std::map<const RooAbsArg *, std::pair<std::string, std::list<EvalError>>> _evalErrorList;
-   static Int_t _evalErrorCount;
    static bool _globalSelectComp; // Global activation switch for component selection
    static bool _hideOffset;       ///< Offset hiding flag
 

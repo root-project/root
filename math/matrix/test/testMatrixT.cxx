@@ -12,6 +12,7 @@
 #include <TMatrixDSym.h>
 #include <TMatrixF.h>
 #include <TMatrixFSym.h>
+#include <TMatrixDEigen.h>
 
 #include <gtest/gtest.h>
 
@@ -157,4 +158,62 @@ TYPED_TEST(testMatrix, Invert)
    TypeParam c(TestFixture::m1, TypeParam::kMult, b);
 
    CompareTMatrix(c, TestFixture::eye);
+}
+
+TYPED_TEST(testMatrix, SetElement)
+{
+   TypeParam b(n, n);
+   TypeParam c(n, n);
+
+   for (int i = 0; i < n; i++)
+      for (int j = 0; j < n; j++)
+         b(i, j) = n * i + j + 1 * (i == j);
+
+   for (int i = 0; i < n; i++)
+      for (int j = 0; j < n; j++)
+         c.SetElement(i, j, n * i + j + 1 * (i == j));
+
+   CompareTMatrix(b, c);
+}
+
+class testMatrixD : public testing::Test {
+protected:
+   void SetUp() override
+   {
+      A.ResizeTo(4, 4);
+
+      A(0, 0) = 0.9901;
+      A(0, 1) = -0.04032;
+      A(0, 2) = -0.0669;
+      A(0, 3) = -0.1163;
+      A(1, 0) = 0.02073;
+      A(1, 1) = 0.9891;
+      A(1, 2) = -0.0546;
+      A(1, 3) = -0.1351;
+      A(2, 0) = 0.05771;
+      A(2, 1) = 0.04076;
+      A(2, 2) = 0.9931;
+      A(2, 3) = -0.09409;
+      A(3, 0) = 0.1259;
+      A(3, 1) = 0.1355;
+      A(3, 2) = 0.07992;
+      A(3, 3) = 0.9795;
+   }
+
+   TMatrixD A;
+};
+
+TEST_F(testMatrixD, Eigen)
+{
+   TMatrixDEigen DE(A);
+   TMatrixD B = DE.GetEigenValues();
+   TMatrixD C(4, 4);
+   C(0, 0) = 1.0000211760782869;
+   C(1, 1) = 0.9759052775448657;
+   C(2, 2) = 0.9759052775448657;
+   C(3, 3) = 0.9999682688319808;
+   C(1, 2) = 0.2182389465192604;
+   C(2, 1) = -0.2182389465192604;
+
+   CompareTMatrix(B, C);
 }

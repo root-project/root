@@ -126,7 +126,7 @@ Int_t TCurlyArc::DistancetoPrimitive(Int_t px, Int_t py)
    // Compute distance of point to center of arc
    Int_t pxc    = gPad->XtoAbsPixel(fX1);
    Int_t pyc    = gPad->YtoAbsPixel(fY1);
-   Double_t dist = TMath::Sqrt(Double_t((pxc-px)*(pxc-px)+(pyc-py)*(pyc-py)));
+   Double_t dist = TMath::Sqrt(Long64_t(pxc-px)*(pxc-px)+Long64_t(pyc-py)*(pyc-py));
    Double_t cosa = (px - pxc)/dist;
    Double_t sina = (pyc - py)/dist;
    Double_t phi  = TMath::ATan2(sina,cosa);
@@ -517,16 +517,15 @@ Bool_t TCurlyArc::GetDefaultIsCurly()
 
 Rectangle_t TCurlyArc::GetBBox()
 {
-   Rectangle_t BBox{0,0,0,0};
-   if (!gPad) return BBox;
-
-   Double_t R2 = fR1 * TMath::Abs(gPad->GetY2()-gPad->GetY1())/TMath::Abs(gPad->GetX2()-gPad->GetX1());
-
-   BBox.fX = gPad->XtoPixel(fX1-fR1);
-   BBox.fY = gPad->YtoPixel(fY1+R2);
-   BBox.fWidth = gPad->XtoPixel(fX1+fR1)-gPad->XtoPixel(fX1-fR1);
-   BBox.fHeight = gPad->YtoPixel(fY1-R2)-gPad->YtoPixel(fY1+R2);
-   return (BBox);
+   Rectangle_t BBox{0, 0, 0, 0};
+   if (gPad) {
+      Double_t R2 = fR1 * TMath::Abs(gPad->GetY2() - gPad->GetY1()) / TMath::Abs(gPad->GetX2() - gPad->GetX1());
+      BBox.fX = gPad->XtoPixel(fX1 - fR1);
+      BBox.fY = gPad->YtoPixel(fY1 + R2);
+      BBox.fWidth = gPad->XtoPixel(fX1 + fR1) - gPad->XtoPixel(fX1 - fR1);
+      BBox.fHeight = gPad->YtoPixel(fY1 - R2) - gPad->YtoPixel(fY1 + R2);
+   }
+   return BBox;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -535,10 +534,11 @@ Rectangle_t TCurlyArc::GetBBox()
 TPoint TCurlyArc::GetBBoxCenter()
 {
    TPoint p(0,0);
-   if (!gPad) return (p);
-   p.SetX(gPad->XtoPixel(fX1));
-   p.SetY(gPad->YtoPixel(fY1));
-   return(p);
+   if (gPad) {
+      p.SetX(gPad->XtoPixel(fX1));
+      p.SetY(gPad->YtoPixel(fY1));
+   }
+   return p;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -234,7 +234,7 @@ class PointerCheckInjector : public RecursiveASTVisitor<PointerCheckInjector> {
         return true;
       else if (Ann->getAnnotation() == "__cling__ptrcheck(on)")
         return false;
-      else if (Ann->getAnnotation().startswith("__cling__ptrcheck(")) {
+      else if (Ann->getAnnotation().starts_with("__cling__ptrcheck(")) {
         DiagnosticsEngine& Diags = S->getDiagnostics();
         Diags.Report(Ann->getLocation(),
                     Diags.getCustomDiagID(
@@ -284,7 +284,7 @@ namespace cling {
     if (FID.isInvalid())
       return false;
 
-    auto FE = SM.getFileEntryForID(FID);
+    auto FE = SM.getFileEntryRefForID(FID);
     if (!FE)
       return false;
 
@@ -296,7 +296,7 @@ namespace cling {
     if (IterAndInserted.second == false)
       return IterAndInserted.first->second;
 
-    if (llvm::sys::fs::can_write(Dir->getName()))
+    if (llvm::sys::fs::can_write(Dir.getName()))
       return true; // `true` is already emplaced above.
 
     // Remember that this dir is not writable and should not be visited.

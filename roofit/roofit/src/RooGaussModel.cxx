@@ -34,6 +34,8 @@ for analytical convolutions with classes inheriting from RooAbsAnaConvPdf
 
 #include <RooHeterogeneousMath.h>
 
+#include <array>
+
 namespace {
 
 enum RooGaussBasis {
@@ -167,20 +169,22 @@ double RooGaussModel::evaluate() const
    return evaluate(x, mean * msf, sigma * ssf, param1, param2, _basisCode);
 }
 
-void RooGaussModel::computeBatch(double *output, size_t size,
-                                 RooFit::Detail::DataMap const &dataMap) const
+void RooGaussModel::doEval(RooFit::EvalContext &ctx) const
 {
-   auto xVals = dataMap.at(x);
-   auto meanVals = dataMap.at(mean);
-   auto meanSfVals = dataMap.at(msf);
-   auto sigmaVals = dataMap.at(sigma);
-   auto sigmaSfVals = dataMap.at(ssf);
+   std::span<double> output = ctx.output();
+   std::size_t size = output.size();
+
+   auto xVals = ctx.at(x);
+   auto meanVals = ctx.at(mean);
+   auto meanSfVals = ctx.at(msf);
+   auto sigmaVals = ctx.at(sigma);
+   auto sigmaSfVals = ctx.at(ssf);
 
    auto param1 = static_cast<RooAbsReal *>(basis().getParameter(1));
    auto param2 = static_cast<RooAbsReal *>(basis().getParameter(2));
    const double zeroVal = 0.0;
-   auto param1Vals = param1 ? dataMap.at(param1) : std::span<const double>{&zeroVal, 1};
-   auto param2Vals = param2 ? dataMap.at(param2) : std::span<const double>{&zeroVal, 1};
+   auto param1Vals = param1 ? ctx.at(param1) : std::span<const double>{&zeroVal, 1};
+   auto param2Vals = param2 ? ctx.at(param2) : std::span<const double>{&zeroVal, 1};
 
    BasisType basisType = getBasisType(_basisCode);
    double basisSign = _basisCode - 10 * (basisType - 1) - 2;
@@ -190,8 +194,8 @@ void RooGaussModel::computeBatch(double *output, size_t size,
    // arises, they can be implemented following this example. Remember to also
    // adapt RooGaussModel::canComputeBatchWithCuda().
    if (basisType == expBasis) {
-      RooBatchCompute::ArgVector extraArgs{basisSign};
-      RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::GaussModelExpBasis, output, size,
+      std::array<double, 1> extraArgs{basisSign};
+      RooBatchCompute::compute(ctx.config(this), RooBatchCompute::GaussModelExpBasis, output,
                         {xVals, meanVals, meanSfVals, sigmaVals, sigmaSfVals, param1Vals}, extraArgs);
       return;
    }
@@ -199,7 +203,7 @@ void RooGaussModel::computeBatch(double *output, size_t size,
    // For now, if the arrays don't have the expected input shape, fall back to the scalar mode
    if (xVals.size() != size || meanVals.size() != 1 || meanSfVals.size() != 1 || sigmaVals.size() != 1 ||
        sigmaSfVals.size() != 1 || param1Vals.size() != 1 || param2Vals.size() != 1) {
-      return RooAbsPdf::computeBatch(output, size, dataMap);
+      return RooAbsPdf::doEval(ctx);
    }
 
    for (unsigned int i = 0; i < size; ++i) {

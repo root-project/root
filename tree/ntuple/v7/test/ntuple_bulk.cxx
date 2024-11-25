@@ -75,16 +75,13 @@ TEST(RNTupleBulk, Complex)
 
 TEST(RNTupleBulk, CardinalityField)
 {
-   using RNTupleCardinality32 = ROOT::Experimental::RNTupleCardinality<std::uint32_t>;
-   using RNTupleCardinality64 = ROOT::Experimental::RNTupleCardinality<std::uint64_t>;
-
    FileRaii fileGuard("test_ntuple_bulk_cardinality.root");
    {
       auto model = RNTupleModel::Create();
       auto fldVec = model->MakeField<ROOT::RVec<int>>("vint");
-      model->AddProjectedField(std::make_unique<RField<RNTupleCardinality32>>("card32"),
+      model->AddProjectedField(std::make_unique<RField<ROOT::RNTupleCardinality<std::uint32_t>>>("card32"),
                                [](const std::string &) { return "vint"; });
-      model->AddProjectedField(std::make_unique<RField<RNTupleCardinality64>>("card64"),
+      model->AddProjectedField(std::make_unique<RField<ROOT::RNTupleCardinality<std::uint64_t>>>("card64"),
                                [](const std::string &) { return "vint"; });
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       for (int i = 0; i < 10; ++i) {
@@ -168,6 +165,58 @@ TEST(RNTupleBulk, RVec)
          for (std::size_t k = 0; k < viArr[i].at(j).size(); ++k) {
             EXPECT_EQ(k, viArr[i][j][k]);
          }
+      }
+   }
+}
+
+TEST(RNTupleBulk, Adopted)
+{
+   FileRaii fileGuard("test_ntuple_bulk_adopted.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto fldVecI = model->MakeField<ROOT::RVecI>("vint");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      for (int i = 0; i < 10; ++i) {
+         fldVecI->resize(i);
+         for (int j = 0; j < i; ++j) {
+            fldVecI->at(j) = j;
+         }
+         writer->Fill();
+      }
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   RFieldBase::RBulk bulkI = reader->GetModel().CreateBulk("vint");
+
+   auto mask = std::make_unique<bool[]>(10);
+   std::fill(mask.get(), mask.get() + 10, true);
+
+   auto iArr = static_cast<ROOT::RVecI *>(bulkI.ReadBulk(RClusterIndex(0, 0), mask.get(), 10));
+   for (int i = 0; i < 10; ++i) {
+      EXPECT_EQ(i, iArr[i].size());
+      for (std::size_t j = 0; j < iArr[i].size(); ++j) {
+         EXPECT_EQ(j, iArr[i].at(j));
+      }
+   }
+
+   auto buf1 = std::make_unique<ROOT::RVecI[]>(10);
+   bulkI.AdoptBuffer(buf1.get(), 10);
+   bulkI.ReadBulk(RClusterIndex(0, 0), mask.get(), 10);
+   for (int i = 0; i < 10; ++i) {
+      EXPECT_EQ(i, buf1[i].size());
+      for (std::size_t j = 0; j < buf1[i].size(); ++j) {
+         EXPECT_EQ(j, buf1[i].at(j));
+      }
+   }
+
+   auto buf2 = std::make_unique<ROOT::RVecI[]>(10);
+   bulkI.AdoptBuffer(buf2.get(), 5);
+   EXPECT_THROW(bulkI.ReadBulk(RClusterIndex(0, 0), mask.get(), 10), RException);
+   bulkI.ReadBulk(RClusterIndex(0, 0), mask.get(), 5);
+   for (int i = 0; i < 5; ++i) {
+      EXPECT_EQ(i, buf2[i].size());
+      for (std::size_t j = 0; j < buf2[i].size(); ++j) {
+         EXPECT_EQ(j, buf2[i].at(j));
       }
    }
 }

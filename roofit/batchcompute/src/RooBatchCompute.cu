@@ -13,50 +13,53 @@
 /**
 \file RooBatchCompute.cu
 \class RbcClass
-\ingroup Roobatchcompute
+\ingroup roofit_dev_docs_batchcompute
 
 This file contains the code for cuda computations using the RooBatchCompute library.
 **/
 
 #include "RooBatchCompute.h"
 #include "Batches.h"
-
-#include <ROOT/RConfig.hxx>
-#include <TError.h>
+#include "CudaInterface.h"
 
 #include <algorithm>
-
-#ifndef RF_ARCH
-#error "RF_ARCH should always be defined"
-#endif
-
-namespace CudaInterface = RooFit::Detail::CudaInterface;
+#include <cassert>
+#include <functional>
+#include <map>
+#include <queue>
+#include <vector>
 
 namespace RooBatchCompute {
-namespace RF_ARCH {
+namespace CUDA {
 
 constexpr int blockSize = 512;
 
 namespace {
 
-void fillBatches(Batches &batches, RestrictArr output, size_t nEvents, std::size_t nBatches, std::size_t nExtraArgs)
+void fillBatches(Batches &batches, double *output, size_t nEvents, std::size_t nBatches, std::size_t nExtraArgs)
 {
-   batches._nEvents = nEvents;
-   batches._nBatches = nBatches;
-   batches._nExtraArgs = nExtraArgs;
-   batches._output = output;
+   batches.nEvents = nEvents;
+   batches.nBatches = nBatches;
+   batches.nExtra = nExtraArgs;
+   batches.output = output;
 }
 
-void fillArrays(Batch *arrays, const VarVector &vars, double *buffer, double *bufferDevice)
+void fillArrays(Batch *arrays, VarSpan vars, double *buffer, double *bufferDevice, std::size_t nEvents)
 {
    for (int i = 0; i < vars.size(); i++) {
       const std::span<const double> &span = vars[i];
-      if (span.size() == 1) {
+      arrays[i]._isVector = span.empty() || span.size() >= nEvents;
+      if (!arrays[i]._isVector) {
+         // In the scalar case, the value is not on the GPU yet, so we have to
+         // copy the value to the GPU buffer.
          buffer[i] = span[0];
-         arrays[i].set(bufferDevice + i, false);
+         arrays[i]._array = bufferDevice + i;
       } else {
+         // In the vector input cases, they are already on the GPU, so we can
+         // fill be buffer with some dummy value and set the input span
+         // directly.
          buffer[i] = 0.0;
-         arrays[i].set(span.data(), true);
+         arrays[i]._array = span.data();
       }
    }
 }
@@ -80,13 +83,11 @@ int getGridSize(std::size_t n)
 
 } // namespace
 
-std::vector<void (*)(BatchesHandle)> getFunctions();
+std::vector<void (*)(Batches &)> getFunctions();
 
 /// This class overrides some RooBatchComputeInterface functions, for the
 /// purpose of providing a cuda specific implementation of the library.
 class RooBatchComputeClass : public RooBatchComputeInterface {
-private:
-   const std::vector<void (*)(BatchesHandle)> _computeFunctions;
 
 public:
    RooBatchComputeClass() : _computeFunctions(getFunctions())
@@ -94,27 +95,22 @@ public:
       dispatchCUDA = this; // Set the dispatch pointer to this instance of the library upon loading
    }
 
-   Architecture architecture() const override { return Architecture::RF_ARCH; };
-   std::string architectureName() const override
-   {
-      // transform to lower case to match the original architecture name passed to the compiler
-      std::string out = _QUOTE_(RF_ARCH);
-      std::transform(out.begin(), out.end(), out.begin(), [](unsigned char c) { return std::tolower(c); });
-      return out;
-   };
+   Architecture architecture() const override { return Architecture::CUDA; }
+   std::string architectureName() const override { return "cuda"; }
 
    /** Compute multiple values using cuda kernels.
    This method creates a Batches object and passes it to the correct compute function.
    The compute function is launched as a cuda kernel.
    \param computer An enum specifying the compute function to be used.
    \param output The array where the computation results are stored.
-   \param nEvents The number of events to be processed.
-   \param vars A std::vector containing pointers to the variables involved in the computation.
-   \param extraArgs An optional std::vector containing extra double values that may participate in the computation. **/
-   void compute(RooBatchCompute::Config const &cfg, Computer computer, RestrictArr output, size_t nEvents,
-                const VarVector &vars, ArgVector &extraArgs) override
+   \param vars A std::span containing pointers to the variables involved in the computation.
+   \param extraArgs An optional std::span containing extra double values that may participate in the computation. **/
+   void compute(RooBatchCompute::Config const &cfg, Computer computer, std::span<double> output, VarSpan vars,
+                ArgSpan extraArgs) override
    {
-      using namespace RooFit::Detail::CudaInterface;
+      using namespace CudaInterface;
+
+      std::size_t nEvents = output.size();
 
       const std::size_t memSize = sizeof(Batches) + vars.size() * sizeof(Batch) + vars.size() * sizeof(double) +
                                   extraArgs.size() * sizeof(double);
@@ -131,13 +127,13 @@ public:
       auto scalarBufferDevice = reinterpret_cast<double *>(arraysDevice + vars.size());
       auto extraArgsDevice = reinterpret_cast<double *>(scalarBufferDevice + vars.size());
 
-      fillBatches(*batches, output, nEvents, vars.size(), extraArgs.size());
-      fillArrays(arrays, vars, scalarBuffer, scalarBufferDevice);
-      batches->_arrays = arraysDevice;
+      fillBatches(*batches, output.data(), nEvents, vars.size(), extraArgs.size());
+      fillArrays(arrays, vars, scalarBuffer, scalarBufferDevice, nEvents);
+      batches->args = arraysDevice;
 
       if (!extraArgs.empty()) {
          std::copy(std::cbegin(extraArgs), std::cend(extraArgs), extraArgsHost);
-         batches->_extraArgs = extraArgsDevice;
+         batches->extra = extraArgsDevice;
       }
 
       copyHostToDevice(hostMem.data(), deviceMem.data(), hostMem.size(), cfg.cudaStream());
@@ -156,6 +152,30 @@ public:
    double reduceSum(RooBatchCompute::Config const &cfg, InputArr input, size_t n) override;
    ReduceNLLOutput reduceNLL(RooBatchCompute::Config const &cfg, std::span<const double> probas,
                              std::span<const double> weights, std::span<const double> offsetProbas) override;
+
+   std::unique_ptr<AbsBufferManager> createBufferManager() const;
+
+   CudaInterface::CudaEvent *newCudaEvent(bool forTiming) const override
+   {
+      return new CudaInterface::CudaEvent{forTiming};
+   }
+   CudaInterface::CudaStream *newCudaStream() const override { return new CudaInterface::CudaStream{}; }
+   void deleteCudaEvent(CudaInterface::CudaEvent *event) const override { delete event; }
+   void deleteCudaStream(CudaInterface::CudaStream *stream) const override { delete stream; }
+
+   void cudaEventRecord(CudaInterface::CudaEvent *event, CudaInterface::CudaStream *stream) const override
+   {
+      CudaInterface::cudaEventRecord(*event, *stream);
+   }
+   void cudaStreamWaitForEvent(CudaInterface::CudaStream *stream, CudaInterface::CudaEvent *event) const override
+   {
+      stream->waitForEvent(*event);
+   }
+   bool cudaStreamIsActive(CudaInterface::CudaStream *stream) const override { return stream->isActive(); }
+
+private:
+   const std::vector<void (*)(Batches &)> _computeFunctions;
+
 }; // End class RooBatchComputeClass
 
 inline __device__ void kahanSumUpdate(double &sum, double &carry, double a, double otherCarry)
@@ -255,6 +275,8 @@ __global__ void nllSumKernel(const double *__restrict__ probas, const double *__
 
 double RooBatchComputeClass::reduceSum(RooBatchCompute::Config const &cfg, InputArr input, size_t n)
 {
+   if (n == 0)
+      return 0.0;
    const int gridSize = getGridSize(n);
    cudaStream_t stream = *cfg.cudaStream();
    CudaInterface::DeviceArray<double> devOut(2 * gridSize);
@@ -270,10 +292,21 @@ ReduceNLLOutput RooBatchComputeClass::reduceNLL(RooBatchCompute::Config const &c
                                                 std::span<const double> weights, std::span<const double> offsetProbas)
 {
    ReduceNLLOutput out;
+   if (probas.empty()) {
+      return out;
+   }
    const int gridSize = getGridSize(probas.size());
    CudaInterface::DeviceArray<double> devOut(2 * gridSize);
    cudaStream_t stream = *cfg.cudaStream();
    constexpr int shMemSize = 2 * blockSize * sizeof(double);
+
+#ifndef NDEBUG
+   for (auto span : {probas, weights, offsetProbas}) {
+      cudaPointerAttributes attr;
+      assert(span.size() == 0 || span.data() == nullptr ||
+             (cudaPointerGetAttributes(&attr, span.data()) == cudaSuccess && attr.type == cudaMemoryTypeDevice));
+   }
+#endif
 
    nllSumKernel<<<gridSize, blockSize, shMemSize, stream>>>(
       probas.data(), weights.size() == 1 ? nullptr : weights.data(),
@@ -296,8 +329,229 @@ ReduceNLLOutput RooBatchComputeClass::reduceNLL(RooBatchCompute::Config const &c
    return out;
 }
 
+namespace {
+
+class ScalarBufferContainer {
+public:
+   ScalarBufferContainer() {}
+   ScalarBufferContainer(std::size_t size)
+   {
+      if (size != 1)
+         throw std::runtime_error("ScalarBufferContainer can only be of size 1");
+   }
+
+   double const *hostReadPtr() const { return &_val; }
+   double const *deviceReadPtr() const { return &_val; }
+
+   double *hostWritePtr() { return &_val; }
+   double *deviceWritePtr() { return &_val; }
+
+   void assignFromHost(std::span<const double> input) { _val = input[0]; }
+   void assignFromDevice(std::span<const double> input)
+   {
+      CudaInterface::copyDeviceToHost(input.data(), &_val, input.size(), nullptr);
+   }
+
+private:
+   double _val;
+};
+
+class CPUBufferContainer {
+public:
+   CPUBufferContainer(std::size_t size) : _vec(size) {}
+
+   double const *hostReadPtr() const { return _vec.data(); }
+   double const *deviceReadPtr() const
+   {
+      throw std::bad_function_call();
+      return nullptr;
+   }
+
+   double *hostWritePtr() { return _vec.data(); }
+   double *deviceWritePtr()
+   {
+      throw std::bad_function_call();
+      return nullptr;
+   }
+
+   void assignFromHost(std::span<const double> input) { _vec.assign(input.begin(), input.end()); }
+   void assignFromDevice(std::span<const double> input)
+   {
+      CudaInterface::copyDeviceToHost(input.data(), _vec.data(), input.size(), nullptr);
+   }
+
+private:
+   std::vector<double> _vec;
+};
+
+class GPUBufferContainer {
+public:
+   GPUBufferContainer(std::size_t size) : _arr(size) {}
+
+   double const *hostReadPtr() const
+   {
+      throw std::bad_function_call();
+      return nullptr;
+   }
+   double const *deviceReadPtr() const { return _arr.data(); }
+
+   double *hostWritePtr() const
+   {
+      throw std::bad_function_call();
+      return nullptr;
+   }
+   double *deviceWritePtr() const { return const_cast<double *>(_arr.data()); }
+
+   void assignFromHost(std::span<const double> input)
+   {
+      CudaInterface::copyHostToDevice(input.data(), deviceWritePtr(), input.size(), nullptr);
+   }
+   void assignFromDevice(std::span<const double> input)
+   {
+      CudaInterface::copyDeviceToDevice(input.data(), deviceWritePtr(), input.size(), nullptr);
+   }
+
+private:
+   CudaInterface::DeviceArray<double> _arr;
+};
+
+class PinnedBufferContainer {
+public:
+   PinnedBufferContainer(std::size_t size) : _arr{size}, _gpuBuffer{size} {}
+   std::size_t size() const { return _arr.size(); }
+
+   void setCudaStream(CudaInterface::CudaStream *stream) { _cudaStream = stream; }
+
+   double const *hostReadPtr() const
+   {
+
+      if (_lastAccess == LastAccessType::GPU_WRITE) {
+         CudaInterface::copyDeviceToHost(_gpuBuffer.deviceReadPtr(), const_cast<double *>(_arr.data()), size(),
+                                         _cudaStream);
+      }
+
+      _lastAccess = LastAccessType::CPU_READ;
+      return const_cast<double *>(_arr.data());
+   }
+   double const *deviceReadPtr() const
+   {
+
+      if (_lastAccess == LastAccessType::CPU_WRITE) {
+         CudaInterface::copyHostToDevice(_arr.data(), _gpuBuffer.deviceWritePtr(), size(), _cudaStream);
+      }
+
+      _lastAccess = LastAccessType::GPU_READ;
+      return _gpuBuffer.deviceReadPtr();
+   }
+
+   double *hostWritePtr()
+   {
+      _lastAccess = LastAccessType::CPU_WRITE;
+      return _arr.data();
+   }
+   double *deviceWritePtr()
+   {
+      _lastAccess = LastAccessType::GPU_WRITE;
+      return _gpuBuffer.deviceWritePtr();
+   }
+
+   void assignFromHost(std::span<const double> input) { std::copy(input.begin(), input.end(), hostWritePtr()); }
+   void assignFromDevice(std::span<const double> input)
+   {
+      CudaInterface::copyDeviceToDevice(input.data(), deviceWritePtr(), input.size(), _cudaStream);
+   }
+
+private:
+   enum class LastAccessType { CPU_READ, GPU_READ, CPU_WRITE, GPU_WRITE };
+
+   CudaInterface::PinnedHostArray<double> _arr;
+   GPUBufferContainer _gpuBuffer;
+   CudaInterface::CudaStream *_cudaStream = nullptr;
+   mutable LastAccessType _lastAccess = LastAccessType::CPU_READ;
+};
+
+template <class Container>
+class BufferImpl : public AbsBuffer {
+public:
+   using Queue = std::queue<std::unique_ptr<Container>>;
+
+   BufferImpl(std::size_t size, Queue &queue) : _queue{queue}
+   {
+      if (_queue.empty()) {
+         _vec = std::make_unique<Container>(size);
+      } else {
+         _vec = std::move(_queue.front());
+         _queue.pop();
+      }
+   }
+
+   ~BufferImpl() override { _queue.emplace(std::move(_vec)); }
+
+   double const *hostReadPtr() const override { return _vec->hostReadPtr(); }
+   double const *deviceReadPtr() const override { return _vec->deviceReadPtr(); }
+
+   double *hostWritePtr() override { return _vec->hostWritePtr(); }
+   double *deviceWritePtr() override { return _vec->deviceWritePtr(); }
+
+   void assignFromHost(std::span<const double> input) override { _vec->assignFromHost(input); }
+   void assignFromDevice(std::span<const double> input) override { _vec->assignFromDevice(input); }
+
+   Container &vec() { return *_vec; }
+
+private:
+   std::unique_ptr<Container> _vec;
+   Queue &_queue;
+};
+
+using ScalarBuffer = BufferImpl<ScalarBufferContainer>;
+using CPUBuffer = BufferImpl<CPUBufferContainer>;
+using GPUBuffer = BufferImpl<GPUBufferContainer>;
+using PinnedBuffer = BufferImpl<PinnedBufferContainer>;
+
+struct BufferQueuesMaps {
+   std::map<std::size_t, ScalarBuffer::Queue> scalarBufferQueuesMap;
+   std::map<std::size_t, CPUBuffer::Queue> cpuBufferQueuesMap;
+   std::map<std::size_t, GPUBuffer::Queue> gpuBufferQueuesMap;
+   std::map<std::size_t, PinnedBuffer::Queue> pinnedBufferQueuesMap;
+};
+
+class BufferManager : public AbsBufferManager {
+
+public:
+   BufferManager() : _queuesMaps{std::make_unique<BufferQueuesMaps>()} {}
+
+   std::unique_ptr<AbsBuffer> makeScalarBuffer() override
+   {
+      return std::make_unique<ScalarBuffer>(1, _queuesMaps->scalarBufferQueuesMap[1]);
+   }
+   std::unique_ptr<AbsBuffer> makeCpuBuffer(std::size_t size) override
+   {
+      return std::make_unique<CPUBuffer>(size, _queuesMaps->cpuBufferQueuesMap[size]);
+   }
+   std::unique_ptr<AbsBuffer> makeGpuBuffer(std::size_t size) override
+   {
+      return std::make_unique<GPUBuffer>(size, _queuesMaps->gpuBufferQueuesMap[size]);
+   }
+   std::unique_ptr<AbsBuffer> makePinnedBuffer(std::size_t size, CudaInterface::CudaStream *stream = nullptr) override
+   {
+      auto out = std::make_unique<PinnedBuffer>(size, _queuesMaps->pinnedBufferQueuesMap[size]);
+      out->vec().setCudaStream(stream);
+      return out;
+   }
+
+private:
+   std::unique_ptr<BufferQueuesMaps> _queuesMaps;
+};
+
+} // namespace
+
+std::unique_ptr<AbsBufferManager> RooBatchComputeClass::createBufferManager() const
+{
+   return std::make_unique<BufferManager>();
+}
+
 /// Static object to trigger the constructor which overwrites the dispatch pointer.
 static RooBatchComputeClass computeObj;
 
-} // End namespace RF_ARCH
+} // End namespace CUDA
 } // End namespace RooBatchCompute

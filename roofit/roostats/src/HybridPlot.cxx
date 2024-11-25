@@ -30,7 +30,6 @@ http://www-ekp.physik.uni-karlsruhe.de/~schott/roostats/hybridplot_example.png
 #include <algorithm>
 
 /// To build the THtml documentation
-using namespace std;
 
 ClassImp(RooStats::HybridPlot);
 
@@ -269,7 +268,7 @@ double HybridPlot::GetHistoCenter(TH1* histo_orig, double n_rms, bool display_re
    double skewness = histo->GetSkewness();
 
    x_min = mean - n_rms*sigma - sigma*skewness/2;
-   x_max = mean + n_rms*sigma - sigma*skewness/2;;
+   x_max = mean + n_rms*sigma - sigma*skewness/2;
 
    TF1* gauss2 = new TF1("mygauss2", "gauss", x_min, x_max);
    gauss2->SetParameter("Mean",mean);

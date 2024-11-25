@@ -49,6 +49,7 @@ public:
   void generateEvent(Int_t code) override;
 
   const TMatrixDSym& covarianceMatrix() const { return _cov ; }
+  const TMatrixDSym& covarianceMatrixInverse() const { return _covI ; }
   const RooArgList& xVec() const { return _x;}
   const RooArgList& muVec() const { return _mu; }
 

@@ -34,8 +34,6 @@
 
 void LegendreAssoc()
 {
-   R__LOAD_LIBRARY(libMathMore);
-
    std::cout <<"Drawing associate Legendre Polynomials.." << std::endl;
    TCanvas *Canvas = new TCanvas("DistCanvas", "Associate Legendre polynomials", 10, 10, 800, 500);
    Canvas->Divide(2,1);
@@ -108,4 +106,3 @@ void LegendreAssoc()
       std::cout <<"Integral [-1,1] for Associated Legendre Polynomial of Degree " << nu << "\t = \t" << integral[nu] <<  std::endl;
    }
 }
-

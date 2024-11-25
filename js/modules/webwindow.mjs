@@ -1,7 +1,33 @@
 import { httpRequest, createHttpRequest, loadScript, decodeUrl,
          browser, setBatchMode, isBatchMode, isObject, isFunc, isStr, btoa_func } from './core.mjs';
 import { closeCurrentWindow, showProgress, loadOpenui5 } from './gui/utils.mjs';
+import { sha256, sha256_2 } from './base/sha256.mjs';
 
+
+// secret session key used for hashing connections keys
+// only if set, all messages from and to server signed with HMAC hash
+let sessionKey = '';
+
+/** @summary HMAC implementation
+ * @desc see https://en.wikipedia.org/wiki/HMAC for more details
+ * @private */
+function HMAC(key, m, o) {
+   const kbis = sha256(sessionKey + key),
+         block_size = 64,
+         opad = 0x5c, ipad = 0x36,
+         ko = [], ki = [];
+   while (kbis.length < block_size)
+      kbis.push(0);
+   for (let i = 0; i < kbis.length; ++i) {
+      const code = kbis[i];
+      ko.push(code ^ opad);
+      ki.push(code ^ ipad);
+   }
+
+   const hash = sha256_2(ki, (o === undefined) ? m : new Uint8Array(m, o));
+
+   return sha256_2(ko, hash, true);
+}
 
 /**
  * @summary Class emulating web socket with long-poll http requests
@@ -11,12 +37,13 @@ import { closeCurrentWindow, showProgress, loadOpenui5 } from './gui/utils.mjs';
 
 class LongPollSocket {
 
-   constructor(addr, _raw, _args) {
+   constructor(addr, _raw, _handle, _counter) {
       this.path = addr;
       this.connid = null;
       this.req = null;
       this.raw = _raw;
-      this.args = _args;
+      this.handle = _handle;
+      this.counter = _counter;
 
       this.nextRequest('', 'connect');
    }
@@ -26,18 +53,19 @@ class LongPollSocket {
       let url = this.path, reqmode = 'buf', post = null;
       if (kind === 'connect') {
          url += this.raw ? '?raw_connect' : '?txt_connect';
-         if (this.args) url += '&' + this.args;
-         console.log(`longpoll connect ${url} raw = ${this.raw}`);
+         if (this.handle) url += '&' + this.handle.getConnArgs(this.counter++);
          this.connid = 'connect';
       } else if (kind === 'close') {
          if ((this.connid === null) || (this.connid === 'close')) return;
          url += `?connection=${this.connid}&close`;
+         if (this.handle) url += '&' + this.handle.getConnArgs(this.counter++);
          this.connid = 'close';
          reqmode = 'text;sync'; // use sync mode to close connection before browser window closed
       } else if ((this.connid === null) || (typeof this.connid !== 'number')) {
-         if (!browser.qt5) console.error('No connection');
+         if (!browser.qt5 && !browser.qt6) console.error('No connection');
       } else {
          url += '?connection=' + this.connid;
+         if (this.handle) url += '&' + this.handle.getConnArgs(this.counter++);
          if (kind === 'dummy') url += '&dummy';
       }
 
@@ -65,12 +93,12 @@ class LongPollSocket {
             // raw mode - all kind of reply data packed into binary buffer
             // first 4 bytes header 'txt:' or 'bin:'
             // after the 'bin:' there is length of optional text argument like 'bin:14  :optional_text'
-            // and immedaitely after text binary data. Server sends binary data so, that offset should be multiple of 8
+            // and immediately after text binary data. Server sends binary data so, that offset should be multiple of 8
 
             const u8Arr = new Uint8Array(res);
             let str = '', i = 0, offset = u8Arr.length;
             if (offset < 4) {
-               if (!browser.qt5) console.error(`longpoll got short message in raw mode ${offset}`);
+               if (!browser.qt5 && !browser.qt6) console.error(`longpoll got short message in raw mode ${offset}`);
                return this.handle.processRequest(null);
             }
 
@@ -197,7 +225,7 @@ class FileDumpSocket {
       this.nextOperation();
    }
 
-   /** @summary Emulate send - just cound operation */
+   /** @summary Emulate send - just count operation */
    send(/* str */) {
       if (this.protocol[this.cnt] === 'send') {
          this.cnt++;
@@ -243,9 +271,11 @@ class WebWindowHandle {
    constructor(socket_kind, credits) {
       this.kind = socket_kind;
       this.state = 0;
-      this.credits = credits || 10;
+      this.credits = Math.max(3, credits || 10);
       this.cansend = this.credits;
-      this.ackn = this.credits;
+      this.ackn = this.credits; // this number will be send to server with first message
+      this.send_seq = 1; // sequence counter of send messages
+      this.recv_seq = 0; // sequence counter of received messages
    }
 
    /** @summary Returns arguments specified in the RWebWindow::SetUserArgs() method
@@ -265,7 +295,7 @@ class WebWindowHandle {
 
    /** @summary Set callbacks receiver.
      * @param {object} obj - object with receiver functions
-     * @param {function} obj.onWebsocketMsg - called when new data receieved from RWebWindow
+     * @param {function} obj.onWebsocketMsg - called when new data received from RWebWindow
      * @param {function} obj.onWebsocketOpened - called when connection established
      * @param {function} obj.onWebsocketClosed - called when connection closed
      * @param {function} obj.onWebsocketError - called when get error via the connection */
@@ -391,11 +421,15 @@ class WebWindowHandle {
 
       if (this.cansend <= 0) console.error(`should be queued before sending cansend: ${this.cansend}`);
 
-      const prefix = `${this.ackn}:${this.cansend}:${chid}:`;
+      const prefix = `${this.send_seq++}:${this.ackn}:${this.cansend}:${chid}:`;
       this.ackn = 0;
       this.cansend--; // decrease number of allowed send packets
 
-      this._websocket.send(prefix + msg);
+      let hash = 'none';
+      if (this.key && sessionKey)
+         hash = HMAC(this.key, `${prefix}${msg}`);
+
+      this._websocket.send(`${hash}:${prefix}${msg}`);
 
       if ((this.kind === 'websocket') || (this.kind === 'longpoll')) {
          if (this.timerid) clearTimeout(this.timerid);
@@ -406,7 +440,7 @@ class WebWindowHandle {
    }
 
    /** @summary Send only last message of specified kind during defined time interval.
-     * @desc Idea is to prvent sending multiple messages of similar kind and overload connection
+     * @desc Idea is to prevent sending multiple messages of similar kind and overload connection
      * Instead timeout is started after which only last specified message will be send
      * @private */
    sendLast(kind, tmout, msg) {
@@ -435,7 +469,7 @@ class WebWindowHandle {
    }
 
    /** @summary Send keep-alive message.
-     * @desc Only for internal use, only when used with websockets
+     * @desc Only for internal use, only when used with web sockets
      * @private */
    keepAlive() {
       delete this.timerid;
@@ -445,7 +479,7 @@ class WebWindowHandle {
    /** @summary Request server to resize window
      * @desc For local displays like CEF or qt5 only server can do this */
    resizeWindow(w, h) {
-      if (browser.qt5 || browser.cef3)
+      if (browser.qt5 || browser.qt6 || browser.cef3)
          this.send(`RESIZE=${w},${h}`, 0);
       else if ((typeof window !== 'undefined') && isFunc(window?.resizeTo))
          window.resizeTo(w, h);
@@ -487,9 +521,14 @@ class WebWindowHandle {
    setHRef(path) {
       if (isStr(path) && (path.indexOf('?') > 0)) {
          this.href = path.slice(0, path.indexOf('?'));
-         this.key = decodeUrl(path).get('key');
-      } else
+         const d = decodeUrl(path);
+         this.key = d.get('key');
+         this.token = d.get('token');
+      } else {
          this.href = path;
+         delete this.key;
+         delete this.token;
+      }
    }
 
    /** @summary Return href part
@@ -508,22 +547,41 @@ class WebWindowHandle {
       return addr;
    }
 
-   /** @summary Create configured socket for current object.
+   /** @summary provide connection args for the web socket
+    * @private */
+   getConnArgs(ntry) {
+      let args = '';
+      if (this.key) {
+         const k = HMAC(this.key, `attempt_${ntry}`);
+         args += `key=${k}&ntry=${ntry}`;
+      }
+      if (this.token) {
+         if (args) args += '&';
+         args += `token=${this.token}`;
+      }
+      return args;
+   }
+
+   /** @summary Connect to the server
+     * @param [href] - optional URL to widget, use document URL instead
      * @private */
    connect(href) {
       this.close();
-      if (!href && this.href) href = this.href;
 
-      let ntry = 0, args = (this.key ? ('key=' + this.key) : '');
-      if (this.token) {
-         if (args) args += '&';
-         args += 'token=' + this.token;
+      if (href) {
+         this._secondary = true;
+         this.setHRef(href);
       }
+
+      href = this.href;
+
+      let ntry = 0;
 
       const retry_open = first_time => {
          if (this.state !== 0) return;
 
-         if (!first_time) console.log(`try connect window again ${new Date().toString()}`);
+         if (!first_time)
+            console.log(`try connect window again ${new Date().toString()}`);
 
          if (this._websocket) {
             this._websocket.close();
@@ -532,8 +590,10 @@ class WebWindowHandle {
 
          if (!href) {
             href = window.location.href;
-            if (href && href.indexOf('#') > 0) href = href.slice(0, href.indexOf('#'));
-            if (href && href.lastIndexOf('/') > 0) href = href.slice(0, href.lastIndexOf('/') + 1);
+            if (href && href.indexOf('#') > 0)
+               href = href.slice(0, href.indexOf('#'));
+            if (href && href.lastIndexOf('/') > 0)
+               href = href.slice(0, href.lastIndexOf('/') + 1);
          }
          this.href = href;
          ntry++;
@@ -550,13 +610,13 @@ class WebWindowHandle {
             console.log(`configure protocol log ${path}`);
          } else if ((this.kind === 'websocket') && first_time) {
             path = path.replace('http://', 'ws://').replace('https://', 'wss://') + 'root.websocket';
-            if (args) path += '?' + args;
             console.log(`configure websocket ${path}`);
+            path += '?' + this.getConnArgs(ntry);
             this._websocket = new WebSocket(path);
          } else {
             path += 'root.longpoll';
             console.log(`configure longpoll ${path}`);
-            this._websocket = new LongPollSocket(path, (this.kind === 'rawlongpoll'), args);
+            this._websocket = new LongPollSocket(path, (this.kind === 'rawlongpoll'), this, ntry);
          }
 
          if (!this._websocket) return;
@@ -565,8 +625,8 @@ class WebWindowHandle {
             if (ntry > 2) showProgress();
             this.state = 1;
 
-            const key = this.key || '';
-            this.send(`READY=${key}`, 0); // need to confirm connection
+            const reply = (this._secondary ? '' : 'generate_key;') + (this.key || '');
+            this.send(`READY=${reply}`, 0); // need to confirm connection and request new key
             this.invokeReceiver(false, 'onWebsocketOpened');
          };
 
@@ -574,18 +634,39 @@ class WebWindowHandle {
             let msg = e.data;
 
             if (this.next_binary) {
-               const binchid = this.next_binary;
+               const binchid = this.next_binary,
+                     server_hash = this.next_binary_hash;
                delete this.next_binary;
+               delete this.next_binary_hash;
 
                if (msg instanceof Blob) {
                   // convert Blob object to BufferArray
                   const reader = new FileReader(), qitem = this.reserveQueueItem();
                   // The file's text will be printed here
-                  reader.onload = event => this.markQueueItemDone(qitem, event.target.result, 0);
+                  reader.onload = event => {
+                     let result = event.target.result;
+                     if (this.key && sessionKey) {
+                        const hash = HMAC(this.key, result, 0);
+                        if (hash !== server_hash) {
+                           console.log('Discard binary buffer because of HMAC mismatch');
+                           result = new ArrayBuffer(0);
+                        }
+                     }
+
+                     this.markQueueItemDone(qitem, result, 0);
+                  };
                   reader.readAsArrayBuffer(msg, e.offset || 0);
                } else {
                   // this is from CEF or LongPoll handler
-                  this.provideData(binchid, msg, e.offset || 0);
+                  let result = msg;
+                  if (this.key && sessionKey) {
+                     const hash = HMAC(this.key, result, e.offset || 0);
+                     if (hash !== server_hash) {
+                        console.log('Discard binary buffer because of HMAC mismatch');
+                        result = new ArrayBuffer(0);
+                     }
+                  }
+                  this.provideData(binchid, result, e.offset || 0);
                }
 
                return;
@@ -594,38 +675,56 @@ class WebWindowHandle {
             if (!isStr(msg))
                return console.log(`unsupported message kind: ${typeof msg}`);
 
-            const i1 = msg.indexOf(':'),
-                  credit = parseInt(msg.slice(0, i1)),
+            const i0 = msg.indexOf(':'),
+                  server_hash = msg.slice(0, i0),
+                  i1 = msg.indexOf(':', i0 + 1),
+                  seq_id = Number.parseInt(msg.slice(i0 + 1, i1)),
                   i2 = msg.indexOf(':', i1 + 1),
-                  // cansend = parseInt(msg.slice(i1 + 1, i2)),  // TODO: take into account when sending messages
+                  credit = Number.parseInt(msg.slice(i1 + 1, i2)),
                   i3 = msg.indexOf(':', i2 + 1),
-                  chid = parseInt(msg.slice(i2 + 1, i3));
+                  // cansend = parseInt(msg.slice(i2 + 1, i3)),  // TODO: take into account when sending messages
+                  i4 = msg.indexOf(':', i3 + 1),
+                  chid = Number.parseInt(msg.slice(i3 + 1, i4));
 
+            // for authentication HMAC checksum and sequence id is important
+            // HMAC used to authenticate server
+            // sequence id is necessary to exclude submission of same packet again
+            if (this.key && sessionKey) {
+               const client_hash = HMAC(this.key, msg.slice(i0+1));
+               if (server_hash !== client_hash)
+                  return console.log(`Failure checking server HMAC sum ${server_hash}`);
+            }
+
+            if (seq_id <= this.recv_seq)
+               return console.log(`Failure with packet sequence ${seq_id} <= ${this.recv_seq}`);
+
+            this.recv_seq = seq_id; // sequence id of received packet
             this.ackn++;            // count number of received packets,
             this.cansend += credit; // how many packets client can send
 
-            msg = msg.slice(i3 + 1);
+            msg = msg.slice(i4 + 1);
 
             if (chid === 0) {
-               console.log(`GET chid=0 message ${msg}`);
+               // console.log(`GET chid=0 message ${msg}`);
                if (msg === 'CLOSE') {
                   this.close(true); // force closing of socket
                   this.invokeReceiver(true, 'onWebsocketClosed');
                } else if (msg.indexOf('NEW_KEY=') === 0) {
-                  const newkey = msg.slice(8);
-                  this.close(true);
-                  if (typeof sessionStorage !== 'undefined')
-                     sessionStorage.setItem('RWebWindow_Key', newkey);
-                  location.reload(true);
+                  this.new_key = msg.slice(8);
+                  console.log('get new key', this.new_key);
+                  this.storeKeyInUrl();
+                  if (this._ask_reload)
+                     this.askReload(true);
                }
-            } else if (msg === '$$binary$$')
+            } else if (msg.slice(0, 10) === '$$binary$$') {
                this.next_binary = chid;
-            else if (msg === '$$nullbinary$$')
+               this.next_binary_hash = msg.slice(10);
+            } else if (msg === '$$nullbinary$$')
                this.provideData(chid, new ArrayBuffer(0), 0);
             else
                this.provideData(chid, msg);
 
-            if (this.ackn > 7)
+            if (this.ackn > Math.max(2, this.credits*0.7))
                this.send('READY', 0); // send dummy message to server
          };
 
@@ -654,21 +753,33 @@ class WebWindowHandle {
       retry_open(true); // call for the first time
    }
 
-   /** @summary Send newkey request to application
-     * @desc If server creates newkey and response - webpage will be reaload
-     * After key generation done, connection will not be working any longer
-     * WARNING - only call when you know that you are doing
+   /** @summary Ask to reload web widget
+     * @desc If new key already exists - reload immediately
+     * Otherwise request server to generate new key - and then reload page
+     * WARNING - call only when knowing that you are doing
      * @private */
-   askReload() {
-      this.send('GENERATE_KEY', 0);
+   askReload(force) {
+      if (this.new_key || force) {
+         this.close(true);
+         if (typeof location !== 'undefined')
+            location.reload(true);
+      } else {
+         this._ask_reload = true;
+         this.send('GENERATE_KEY', 0);
+      }
    }
 
-   /** @summary Instal Ctrl-R handler to realod web window
+   /** @summary Instal Ctrl-R handler to reload web window
      * @desc Instead of default window reload invokes {@link askReload} method
      * WARNING - only call when you know that you are doing
      * @private */
    addReloadKeyHandler() {
-      if (this.kind === 'file') return;
+      if ((this.kind === 'file') || this._handling_reload)
+         return;
+
+      // this websocket will handle reload
+      // embed widgets should not call this method
+      this._handling_reload = true;
 
       window.addEventListener('keydown', evnt => {
          if (((evnt.key === 'R') || (evnt.key === 'r')) && evnt.ctrlKey) {
@@ -678,6 +789,44 @@ class WebWindowHandle {
             this.askReload();
           }
       });
+   }
+
+   /** @summary Replace widget URL with new key
+     * @private */
+   storeKeyInUrl() {
+      // do not modify document URLs by secondary widgets
+      if (this._secondary)
+         return;
+
+      let href = (typeof document !== 'undefined') ? document.URL : null;
+
+      if (this._can_modify_url && isStr(href) && (typeof window !== 'undefined')) {
+         let prefix = '&key=', p = href.indexOf(prefix);
+         if (p < 0) {
+            prefix = '?key=';
+            p = href.indexOf(prefix);
+         }
+         if ((p > 0) && this.new_key) {
+            const p1 = href.indexOf('#', p+1), p2 = href.indexOf('&', p+1),
+                  pp = (p1 < 0) ? p2 : (p2 < 0 ? p1 : Math.min(p1, p2));
+            href = href.slice(0, p) + prefix + this.new_key + (pp < 0 ? '' : href.slice(pp));
+            window.history?.replaceState(window.history.state, undefined, href);
+         }
+      }
+
+      if (typeof sessionStorage !== 'undefined') {
+         sessionStorage.setItem('RWebWindow_SessionKey', sessionKey);
+         sessionStorage.setItem('RWebWindow_Key', this.new_key);
+      }
+   }
+
+   /** @summary Create new instance of same kind
+    * @private */
+   createNewInstance(url) {
+      const handle = new WebWindowHandle(this.kind);
+      handle._secondary = true;
+      handle.setHRef(this.getHRef(url));
+      return handle;
    }
 
 } // class WebWindowHandle
@@ -700,37 +849,68 @@ async function connectWebWindow(arg) {
    else if (!isObject(arg))
       arg = {};
 
-   const d = decodeUrl();
-   let new_key;
+   let d_key, d_token, new_key;
 
-   if (typeof sessionStorage !== 'undefined') {
-      new_key = sessionStorage.getItem('RWebWindow_Key');
-      sessionStorage.removeItem('RWebWindow_Key');
-      if (new_key) console.log(`Use key ${new_key} from session storage`);
+   if (!arg.href) {
+      let href = (typeof document !== 'undefined') ? document.URL : '', s_key;
+      const p = href.indexOf('#');
+      if (p > 0) {
+         s_key = href.slice(p + 1);
+         href = href.slice(0, p);
+      }
+
+      const d = decodeUrl(href);
+      d_key = d.get('key');
+      d_token = d.get('token');
+
+      if (d_key && s_key && (s_key.length > 20)) {
+         sessionKey = s_key;
+
+         if (typeof window !== 'undefined')
+            window.history?.replaceState(window.history.state, undefined, href);
+      }
+
+      if (typeof sessionStorage !== 'undefined') {
+         new_key = sessionStorage.getItem('RWebWindow_Key');
+         sessionStorage.removeItem('RWebWindow_Key');
+
+         if (sessionKey)
+            sessionStorage.setItem('RWebWindow_SessionKey', sessionKey);
+         else
+            sessionKey = sessionStorage.getItem('RWebWindow_SessionKey') || '';
+      }
+
+      // special holder script, prevents headless chrome browser from too early exit
+      if (d.has('headless') && d_key && (browser.isChromeHeadless || browser.isChrome) && !arg.ignore_chrome_batch_holder)
+         loadScript('root_batch_holder.js?key=' + (new_key || d_key));
+
+      if (!arg.platform)
+         arg.platform = d.get('platform');
+
+      if (arg.platform === 'qt5')
+         browser.qt5 = true;
+      else if (arg.platform === 'qt6')
+         browser.qt6 = true;
+      else if (arg.platform === 'cef3')
+         browser.cef3 = true;
+
+      if (arg.batch === undefined)
+         arg.batch = d.has('headless');
+
+      if (arg.batch) setBatchMode(true);
+
+      if (!arg.socket_kind)
+         arg.socket_kind = d.get('ws');
+
+      if (!new_key && arg.winW && arg.winH && !isBatchMode() && isFunc(window?.resizeTo))
+         window.resizeTo(arg.winW, arg.winH);
+
+      if (!new_key && arg.winX && arg.winY && !isBatchMode() && isFunc(window?.moveTo))
+         window.moveTo(arg.winX, arg.winY);
    }
 
-   // special holder script, prevents headless chrome browser from too early exit
-   if (d.has('headless') && d.get('key') && (browser.isChromeHeadless || browser.isChrome) && !arg.ignore_chrome_batch_holder)
-      loadScript('root_batch_holder.js?key=' + (new_key || d.get('key')));
-
-   if (!arg.platform)
-      arg.platform = d.get('platform');
-
-   if (arg.platform === 'qt5')
-      browser.qt5 = true;
-   else if (arg.platform === 'cef3')
-      browser.cef3 = true;
-
-   if (arg.batch === undefined)
-      arg.batch = d.has('headless');
-
-   if (arg.batch) setBatchMode(true);
-
-   if (!arg.socket_kind)
-      arg.socket_kind = d.get('ws');
-
    if (!arg.socket_kind) {
-      if (browser.qt5)
+      if (browser.qt5 || browser.qt6)
          arg.socket_kind = 'rawlongpoll';
       else if (browser.cef3)
          arg.socket_kind = 'longpoll';
@@ -738,27 +918,24 @@ async function connectWebWindow(arg) {
          arg.socket_kind = 'websocket';
    }
 
-   if (!new_key && arg.winW && arg.winH && !isBatchMode() && isFunc(window?.resizeTo))
-      window.resizeTo(arg.winW, arg.winH);
-
-   if (!new_key && arg.winX && arg.winY && !isBatchMode() && isFunc(window?.moveTo))
-      window.moveTo(arg.winX, arg.winY);
-
    // only for debug purposes
    // arg.socket_kind = 'longpoll';
 
    const main = new Promise(resolveFunc => {
       const handle = new WebWindowHandle(arg.socket_kind, arg.credits);
       handle.setUserArgs(arg.user_args);
-      if (arg.href) handle.setHRef(arg.href); // apply href now  while connect can be called from other place
-
-      if (window) {
-         window.onbeforeunload = () => handle.close(true);
-         if (browser.qt5) window.onqt5unload = window.onbeforeunload;
+      handle._can_modify_url = !!d_key; // if key appears in URL, we can put there new key
+      if (arg.href)
+         handle.setHRef(arg.href); // apply href now  while connect can be called from other place
+      else {
+         handle.key = new_key || d_key;
+         handle.token = d_token;
       }
 
-      handle.key = new_key || d.get('key');
-      handle.token = d.get('token');
+      if (typeof window !== 'undefined') {
+         window.onbeforeunload = () => handle.close(true);
+         if (browser.qt5 || browser.qt6) window.onqt5unload = window.onbeforeunload;
+      }
 
       if (arg.receiver) {
          // when receiver exists, it handles itself callbacks

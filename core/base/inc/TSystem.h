@@ -22,13 +22,11 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef __CINT__
 #include <cstdio>
 #include <cctype>
 #include <fcntl.h>
 #ifndef _WIN32
 #include <unistd.h>
-#endif
 #endif
 
 #include "TNamed.h"
@@ -180,13 +178,19 @@ struct MemInfo_t {
    Int_t     fMemTotal;    // total RAM in MB
    Int_t     fMemUsed;     // used RAM in MB
    Int_t     fMemFree;     // free RAM in MB
+   Int_t     fMemAvailable; // available RAM in MB
+   Int_t     fMemCached; // cached RAM in MB
+   Int_t     fMemBuffer; // buffer RAM in MB
+   Int_t     fMemShared; // shared RAM in MB
    Int_t     fSwapTotal;   // total swap in MB
    Int_t     fSwapUsed;    // used swap in MB
    Int_t     fSwapFree;    // free swap in MB
-   MemInfo_t() : fMemTotal(0), fMemUsed(0), fMemFree(0),
-                 fSwapTotal(0), fSwapUsed(0), fSwapFree(0) { }
+   Int_t     fSwapCached; // cached swap in MB
+   Int_t     fSReclaimable; // slab that might be reclaimed
+   MemInfo_t() : fMemTotal(0), fMemUsed(0), fMemFree(0), fMemAvailable(0), fMemCached(0), fMemBuffer(0), fMemShared(0),
+                 fSwapTotal(0), fSwapUsed(0), fSwapFree(0), fSwapCached(0), fSReclaimable(0){ }
    virtual ~MemInfo_t() { }
-   ClassDef(MemInfo_t, 1); // Memory utilization information.
+   ClassDef(MemInfo_t, 2); // Memory utilization information.
 };
 
 struct ProcInfo_t {
@@ -232,11 +236,7 @@ enum ESendRecvOptions {
    kDontBlock          // send/recv as much data as possible without blocking
 };
 
-#ifdef __CINT__
-typedef void *Func_t;
-#else
 typedef void (*Func_t)();
-#endif
 
 R__EXTERN const char  *gRootDir;
 R__EXTERN const char  *gProgName;
@@ -349,6 +349,7 @@ public:
    void                    SetErrorStr(const char *errstr);
    const char             *GetErrorStr() const { return GetLastErrorString(); }
    virtual const char     *GetError();
+   virtual Int_t           GetCryptoRandom(void *buf, Int_t len);
    void                    RemoveOnExit(TObject *obj);
    virtual const char     *HostName();
    virtual void            NotifyApplicationCreated();
@@ -422,7 +423,7 @@ public:
    Bool_t                  cd(const char *path) { return ChangeDirectory(path); }
    const char             *pwd() { return WorkingDirectory(); }
    virtual const char     *TempDirectory() const;
-   virtual FILE           *TempFileName(TString &base, const char *dir = nullptr);
+   virtual FILE           *TempFileName(TString &base, const char *dir = nullptr, const char *suffix = nullptr);
 
    //---- Paths & Files
    virtual const char     *BaseName(const char *pathname);

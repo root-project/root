@@ -173,11 +173,7 @@ void TestConv( std::string type, int nbatches, bool useBN = false, int ngroups =
    for (size_t i = 0; i < refValue.size(); ++i) {
       f >> refValue[i];
       if (verbose) std::cout << " result " << result.at(i) << " reference " << refValue[i] << std::endl;
-      if (std::abs(refValue[i]) > 0.5)
-         EXPECT_FLOAT_EQ(result.at(i), refValue[i]);
-      else
-         // expect float fails for small values
-         EXPECT_NEAR(result.at(i), refValue[i], 10 * std::numeric_limits<float>::epsilon());
+      EXPECT_NEAR(result.at(i), refValue[i], 10 * std::numeric_limits<float>::epsilon());
    }
 }
 
@@ -249,11 +245,7 @@ void TestRecurrent(std::string type, int nbatches, int inputSize = 5, int seqSiz
       f >> refValue[i];
       if (verbose)
          std::cout << " result " << result.at(i) << " reference " << refValue[i] << std::endl;
-      if (std::abs(refValue[i]) > 0.5)
-         EXPECT_FLOAT_EQ(result.at(i), refValue[i]);
-      else
-         // expect float fails for small values
-         EXPECT_NEAR(result.at(i), refValue[i], 10 * std::numeric_limits<float>::epsilon());
+      EXPECT_NEAR(result.at(i), refValue[i], 10 * std::numeric_limits<float>::epsilon());
    }
 }
 
@@ -332,11 +324,7 @@ void TestConvTranspose( std::string type, int nbatches, bool useBN = false, int 
    for (size_t i = 0; i < refValue.size(); ++i) {
       f >> refValue[i];
       if (verbose) std::cout << " result " << result.at(i) << " reference " << refValue[i] << std::endl;
-      if (std::abs(refValue[i]) > 0.5)
-         EXPECT_FLOAT_EQ(result.at(i), refValue[i]);
-      else
-         // expect float fails for small values
-         EXPECT_NEAR(result.at(i), refValue[i], 10 * std::numeric_limits<float>::epsilon());
+      EXPECT_NEAR(result.at(i), refValue[i], 10 * std::numeric_limits<float>::epsilon());
    }
 }
 

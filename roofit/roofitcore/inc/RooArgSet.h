@@ -21,45 +21,8 @@
 class RooAbsArg ;
 class RooArgList ;
 
-// # Original comment on USEMEMPOOLFORARGSET:
-//
-// Use a memory pool for RooArgSet.
-// RooFit assumes (e.g. for caching results) that arg sets that have the same pointer have
-// the same contents. Trying to remove that memory pool lead to wrong results, because the
-// OS *occasionally* returns the same address, and the caching goes wrong.
-// It's hard to track down, so disable this only when e.g. looking for memory leaks!
-//
-// # Update April 2022:
-//
-// Using pointers comparisons for caching RooFit results caused too many bugs,
-// even with the memory pool. For example, if the RooArgSet is created on the
-// stack, there is no guarantee that memory is not reused. Also, pointer
-// comparisons still work if the RooArgSets for the cache entry are already out
-// of scope, which can also cause problems. Therefore, when RooArgSets are used
-// for caching, RooFit now uses the `RooArgSet::uniqueId()` as of PR [1].
-//
-// Since pointers are not used as cache keys anymore, the custom memory pool
-// is not necessary anymore. It was decided to deactivate it, because it also
-// caused quite some trouble on its own. It caused unexpected memory increases,
-// possibly because of heap fragmentation [2], and overloading `operator new`
-// and `delete` caused PyROOT issues on some platforms.
-//
-// [1] https://github.com/root-project/root/pull/10333
-// [2] https://github.com/root-project/root/issues/8323
-
-// #define USEMEMPOOLFORARGSET
-
-template <class RooSet_t, size_t>
-class MemPoolForRooSets;
-
 class RooArgSet : public RooAbsCollection {
 public:
-
-#ifdef USEMEMPOOLFORARGSET
-  void* operator new (size_t bytes);
-  void* operator new (size_t bytes, void* ptr) noexcept;
-  void operator delete (void *ptr);
-#endif
 
   // Constructors, assignment etc.
   RooArgSet();
@@ -174,14 +137,22 @@ public:
 
   bool isInRange(const char* rangeSpec) ;
 
-  /// Use RooAbsCollection::snapshot(), but return as RooArgSet.
-  RooArgSet * snapshot(bool deepCopy = true) const {
-    return static_cast<RooArgSet*>(RooAbsCollection::snapshot(deepCopy));
+  using RooAbsCollection::selectCommon;
+  using RooAbsCollection::snapshot;
+
+  /// Use RooAbsCollection::selectByName(), but return as RooArgSet.
+  inline RooArgSet* selectByName(const char* nameList, bool verbose=false) const {
+    return static_cast<RooArgSet*>(RooAbsCollection::selectByName(nameList, verbose));
   }
 
-  /// \copydoc RooAbsCollection::snapshot()
-  bool snapshot(RooAbsCollection& output, bool deepCopy=true) const {
-    return RooAbsCollection::snapshot(output, deepCopy);
+  /// Use RooAbsCollection::selecCommon(), but return as RooArgSet.
+  inline RooArgSet* selectCommon(const RooAbsCollection& refColl) const {
+    return static_cast<RooArgSet*>(RooAbsCollection::selectCommon(refColl));
+  }
+
+  /// Use RooAbsCollection::snapshot(), but return as RooArgSet.
+  inline RooArgSet * snapshot(bool deepCopy = true) const {
+    return static_cast<RooArgSet*>(RooAbsCollection::snapshot(deepCopy));
   }
 
 protected:
@@ -213,14 +184,6 @@ private:
   // templated function with the failing static_assert for r-value references
   void processArg(RooAbsCollection && coll) { processArg(coll); }
   void processArg(const RooArgList& list);
-
-#ifdef USEMEMPOOLFORARGSET
-  typedef MemPoolForRooSets<RooArgSet, 10*600> MemPool; //600 = about 100 kb
-  //Initialise a static mem pool. It has to happen inside a function to solve the
-  //static initialisation order fiasco. At the end of the program, this might have
-  //to leak depending if RooArgSets are still alive. This depends on the order of destructions.
-  static MemPool* memPool();
-#endif
 
   ClassDefOverride(RooArgSet,1) // Set of RooAbsArg objects
 };

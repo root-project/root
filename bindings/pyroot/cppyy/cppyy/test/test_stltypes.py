@@ -1,14 +1,7 @@
 # -*- coding: UTF-8 -*-
-import py, os, sys
-from pytest import raises
-from .support import setup_make, pylong, pyunicode, maxvalue
-
-try:
-    import __pypy__
-    is_pypy = True
-except ImportError:
-    is_pypy = False
-
+import py, sys
+from pytest import raises, skip
+from .support import setup_make, pylong, pyunicode, maxvalue, ispypy
 
 currpath = py.path.local(__file__).dirpath()
 test_dct = str(currpath.join("stltypesDict"))
@@ -228,7 +221,7 @@ class TestSTLVECTOR:
             assert tv1 is tv2
             assert tv1.iterator is cppyy.gbl.std.vector(p_type).iterator
 
-            #----- 
+            #-----
             v = tv1()
             assert not v
             v += range(self.N)
@@ -363,6 +356,10 @@ class TestSTLVECTOR:
         assert v[7] == 8
         assert v[8] == 9
 
+        sz = len(v)
+        v += []
+        assert len(v) == sz
+
     def test06_vector_indexing(self):
         """Test python-style indexing to an std::vector<int>"""
 
@@ -413,20 +410,21 @@ class TestSTLVECTOR:
 
         import cppyy
 
-        # TODO: would like to use cppyy.gbl.VecTestEnum but that's an int
         assert cppyy.gbl.VecTestEnum
-        ve = cppyy.gbl.std.vector['VecTestEnum']()
-        ve.push_back(cppyy.gbl.EVal1);
-        assert ve[0] == 1
-        ve[0] = cppyy.gbl.EVal2
-        assert ve[0] == 3
+        for tp in ['VecTestEnum', cppyy.gbl.VecTestEnum]:
+            ve = cppyy.gbl.std.vector[tp]()
+            ve.push_back(cppyy.gbl.EVal1);
+            assert ve[0] == 1
+            ve[0] = cppyy.gbl.EVal2
+            assert ve[0] == 3
 
         assert cppyy.gbl.VecTestEnumNS.VecTestEnum
-        ve = cppyy.gbl.std.vector['VecTestEnumNS::VecTestEnum']()
-        ve.push_back(cppyy.gbl.VecTestEnumNS.EVal1);
-        assert ve[0] == 5
-        ve[0] = cppyy.gbl.VecTestEnumNS.EVal2
-        assert ve[0] == 42
+        for tp in ['VecTestEnumNS::VecTestEnum', cppyy.gbl.VecTestEnumNS.VecTestEnum]:
+            ve = cppyy.gbl.std.vector['VecTestEnumNS::VecTestEnum']()
+            ve.push_back(cppyy.gbl.VecTestEnumNS.EVal1);
+            assert ve[0] == 5
+            ve[0] = cppyy.gbl.VecTestEnumNS.EVal2
+            assert ve[0] == 42
 
     def test09_vector_of_string(self):
         """Adverse effect of implicit conversion on vector<string>"""
@@ -509,6 +507,7 @@ class TestSTLVECTOR:
             int x;
         };
         auto foo() { return std::vector<C<int>>({C<int>(1337)}); }
+        auto bar() { return std::vector<std::string>{1024, "hello"}; }
         }""")
 
         assert cppyy.gbl.Lifeline.count == 0
@@ -520,6 +519,10 @@ class TestSTLVECTOR:
         import gc
         gc.collect()
         assert cppyy.gbl.Lifeline.count == 0
+
+        l = list(cppyy.gbl.Lifeline.bar())
+        for val in l:
+            assert hasattr(val, '__lifeline')
 
     def test13_vector_smartptr_iteration(self):
         """Iteration over smart pointers"""
@@ -602,6 +605,190 @@ class TestSTLVECTOR:
 
         constructors_cpython_test(cppyy.gbl.std.vector[int])
 
+    def test17_vector_cpp17_style(self):
+        """C++17 style initialization of std::vector"""
+
+        import cppyy
+
+        l = [1.0, 2.0, 3.0]
+        v = cppyy.gbl.std.vector(l)
+        assert list(l) == l
+
+    def test18_array_interface(self):
+        """Test usage of __array__ from numpy"""
+
+        import cppyy
+
+        try:
+            import numpy as np
+        except ImportError:
+            skip('numpy is not installed')
+
+        a = cppyy.gbl.std.vector[int]((1, 2, 3))
+
+        b = np.array(a)
+        assert len(a) == len(b)
+        a[0] = 4
+        assert a[0] == 4
+        assert b[0] == 1
+
+        b = np.array(a, copy=False)
+        assert b[0] == 4
+        a[0] = 1
+        assert b[0] == 1
+
+        b = np.array(a, dtype=np.int32, copy=False)
+        assert b[0] == 1
+        a[0] = 5
+        assert b[0] == 5
+
+        cppyy.cppdef("""\
+        namespace ImplicitVector {
+        int func(std::vector<int> v) {
+            return std::accumulate(v.begin(), v.end(), 0);
+        } }""")
+
+        ns = cppyy.gbl.ImplicitVector
+
+        v = np.array(range(10), dtype=np.intc)
+        assert ns.func(v) == sum(v)
+
+        v = np.array(range(10), dtype=np.uint8)
+        with raises(TypeError):
+            ns.func(v)
+
+        v = np.array(v, dtype=np.intc)
+        assert ns.func(v) == sum(v)
+
+    def test19_vector_point3d(self):
+        """Iteration over a vector of by-value objects"""
+
+        import cppyy
+
+        N = 10
+
+        cppyy.cppdef("""namespace vector_point3d {
+        class Point3D {
+            double x, y, z;
+
+        public:
+            Point3D(double x, double y, double z) : x(x), y(y), z(z) {}
+            double square() { return x*x+y*y+z*z; }
+        }; }""")
+
+        Point3D = cppyy.gbl.vector_point3d.Point3D
+        v = cppyy.gbl.std.vector[Point3D]()
+        for i in range(N):
+            v.emplace_back(i, i*2, i*3)
+
+        pysum = 0.
+        for x in range(N):
+            pysum += 14*x**2
+
+        cppsum = 0.
+        for p in v:
+            cppsum += p.square()
+
+        assert cppsum == pysum
+
+    def test20_vector_cstring(self):
+        """Usage of a vector of const char*"""
+
+        import cppyy
+
+        cppyy.cppdef("""\
+        namespace VectorConstCharStar {
+            std::vector<const char*> test = {"hello"};
+        }""")
+
+        ns = cppyy.gbl.VectorConstCharStar
+
+        assert len(ns.test) == 1
+        assert ns.test[0] == "hello"
+
+        ns.test.push_back("world")
+        assert len(ns.test) == 2
+        assert ns.test[0] == "hello"
+        assert ns.test[1] == "world"
+
+    def test21_vector_of_structs_data(self):
+        """Vector of structs data() should return array-like"""
+
+        import cppyy
+        import cppyy.ll
+
+        cppyy.cppdef("""\
+        namespace ArrayLike {
+        struct __attribute__((__packed__)) Vector3f {
+            float x, y, z;
+        }; }""")
+
+        N = 5
+
+        v = cppyy.gbl.std.vector['ArrayLike::Vector3f'](N)
+
+        for i in range(N):
+            d = v[i]
+            d.x, d.y, d.z = i, i*N, i*N**2
+
+        data = v.data()
+        for i in range(N):
+            d = data[i]
+            assert d.x == float(i)
+            assert d.y == float(i*N)
+            assert d.z == float(i*N**2)
+
+      # the following should not raise
+        mv = cppyy.ll.as_memoryview(data)
+
+      # length of the view is in bytes
+        assert len(mv) == len(v)
+        assert mv.itemsize == cppyy.sizeof(cppyy.gbl.ArrayLike.Vector3f)
+        assert mv.nbytes   == cppyy.sizeof(cppyy.gbl.ArrayLike.Vector3f) * len(v)
+
+    def test22_polymorphic(self):
+        """Vector of polymorphic types should auto-cast"""
+
+        import cppyy
+
+        cppyy.cppdef("""\
+        namespace Polymorphic {
+        class vertex {
+        public:
+          virtual ~vertex() {}
+        };
+
+        class Mvertex : public vertex {};
+
+        class vCont {
+        public:
+          virtual ~vCont() { for (auto& v: verts) delete v; }
+          std::vector<vertex*> verts { new vertex(), new Mvertex() };
+          const std::vector<vertex*>& vertices() { return verts; }
+        }; }""")
+
+        ns = cppyy.gbl.Polymorphic
+        cont = ns.vCont()
+        verts = cont.vertices()
+
+        assert len([x for x in verts if isinstance(x, ns.Mvertex)]) == 1
+
+    def test23_copy_conversion(self):
+        """Vector given an array of different type should copy convert"""
+
+        import cppyy
+
+        try:
+            import numpy as np
+        except ImportError:
+            skip('numpy is not installed')
+
+        x = np.array([5., 25., 125.])
+        v = cppyy.gbl.std.vector('float')(x)
+
+        for f, d in zip(x, v):
+            assert f == d
+
 
 class TestSTLSTRING:
     def setup_class(cls):
@@ -680,8 +867,8 @@ class TestSTLSTRING:
         assert s == c.get_string1()
 
         assert std.string('ab\0c')       == 'ab\0c'
-        assert repr(std.string('ab\0c')) == repr('ab\0c')
-        assert str(std.string('ab\0c'))  == 'ab\0c'
+        assert repr(std.string('ab\0c')) == repr(b'ab\0c')
+        assert str(std.string('ab\0c'))  == str('ab\0c')
 
     def test04_array_of_strings(self):
         """Access to global arrays of strings"""
@@ -729,8 +916,12 @@ class TestSTLSTRING:
         assert str(uas.get_string_cr('ℕ'))  == 'ℕ'
         assert str(uas.get_string_cc('ℕ'))  == 'ℕ'
 
-        assert uas.get_string_w('ℕ').encode(encoding='UTF-8')   == 'ℕ'
-        assert uas.get_string_wcr('ℕ').encode(encoding='UTF-8') == 'ℕ'
+        if sys.hexversion >= 0x3000000:
+            assert uas.get_string_w('ℕ')   == 'ℕ'
+            assert uas.get_string_wcr('ℕ') == 'ℕ'
+        else:
+            assert uas.get_string_w('ℕ').encode(encoding='UTF-8')   == 'ℕ'
+            assert uas.get_string_wcr('ℕ').encode(encoding='UTF-8') == 'ℕ'
 
         bval = u'ℕ'.encode(encoding='UTF-8')
         actlen = len(bval)
@@ -741,6 +932,158 @@ class TestSTLSTRING:
         assert str(uas.get_string(bval))    == 'ℕ'
         assert str(uas.get_string_cr(bval)) == 'ℕ'
         assert str(uas.get_string_cc(bval)) == 'ℕ'
+
+    def test06_stlstring_bytes_and_text(self):
+        """Mixing of bytes and str"""
+
+        import cppyy
+
+        cppyy.cppdef("""\
+        namespace PyBytesTest {
+        std::string string_field = "";
+        }""")
+
+        ns = cppyy.gbl.PyBytesTest
+        assert type(ns.string_field) == cppyy.gbl.std.string
+
+        ns.string_field = b'\xe9'
+        assert repr(ns.string_field) == repr(b'\xe9')
+        assert str(ns.string_field)  == str(b'\xe9')       # b/c fails to decode
+
+    def test07_stlstring_in_dictionaries(self):
+        """Mixing str and std::string as dictionary keys"""
+
+        import cppyy
+
+        x = cppyy.gbl.std.string("x")
+        d = { x : 0 }
+
+        assert d[x] == 0
+        assert d['x'] == 0
+
+    def test08_string_operators(self):
+        """Mixing of C++ and Python types in global operators"""
+
+        import cppyy
+
+      # note order in these checks: the first is str then unicode, the other is
+      # the reverse; this exercises both paths (once resolved, the operator+ can
+      # handle both str and unicde
+        s1 = cppyy.gbl.std.string("Hello")
+        s2 = ", World!"
+
+        assert s1+s2 == "Hello, World!"
+        assert s2+s1 == ", World!Hello"
+
+        s2 = u", World!"
+        assert s1+s2 == "Hello, World!"
+        assert s2+s1 == ", World!Hello"
+
+        s1 = cppyy.gbl.std.wstring("Hello")
+
+        assert s1+s2 == "Hello, World!"
+        assert s2+s1 == ", World!Hello"
+
+        s2 = ", World!"
+        assert s1+s2 == "Hello, World!"
+        assert s2+s1 == ", World!Hello"
+
+    def test09_string_as_str_bytes(self):
+        """Python-style methods of str/bytes on std::string"""
+
+        import cppyy
+
+        S = cppyy.gbl.std.string
+
+      # check that object.method(*args) returns result
+        def EQ(result, init, methodname, *args):
+            assert getattr(S(init), methodname)(*args) == result
+
+      # npos plays a dual role: both C++ and Python type checking
+        assert S.npos == -1
+        assert S.npos !=  0
+        assert S.npos == S.size_type(-1)
+
+      # -- method decode
+        s = S(u'\xe9')
+        assert s.decode('utf-8')           == u'\xe9'
+        assert s.decode('utf-8', "strict") == u'\xe9'
+        assert s.decode(encoding='utf-8')  == u'\xe9'
+
+      # -- method split (only Python)
+        assert S("a b c").split() == ['a', 'b', 'c']
+
+      # -- method replace (from Python's string tests)
+
+      # Operations on the empty string
+        EQ("", "", "replace", "", "")
+        EQ("A", "", "replace", "", "A")
+        EQ("", "", "replace", "A", "")
+        EQ("", "", "replace", "A", "A")
+        EQ("", "", "replace", "", "", 100)
+        EQ("", "", "replace", "", "", sys.maxsize)
+
+      # interleave (from=="", 'to' gets inserted everywhere)
+        EQ("A", "A", "replace", "", "")
+        EQ("*A*", "A", "replace", "", "*")
+        EQ("*1A*1", "A", "replace", "", "*1")
+        EQ("*-#A*-#", "A", "replace", "", "*-#")
+        EQ("*-A*-A*-", "AA", "replace", "", "*-")
+        EQ("*-A*-A*-", "AA", "replace", "", "*-", -1)
+        EQ("*-A*-A*-", "AA", "replace", "", "*-", sys.maxsize)
+        EQ("*-A*-A*-", "AA", "replace", "", "*-", 4)
+        EQ("*-A*-A*-", "AA", "replace", "", "*-", 3)
+        EQ("*-A*-A", "AA", "replace", "", "*-", 2)
+        EQ("*-AA", "AA", "replace", "", "*-", 1)
+        EQ("AA", "AA", "replace", "", "*-", 0)
+
+      # -- methods find and rfind
+        s = S('aap')
+
+      # Python style
+        assert s.find('a')  == 0
+        assert s.find('a')  != s.npos
+        assert s.rfind('a') == 1
+        assert s.rfind('a') != s.npos
+        assert s.find('c')   < 0
+        assert s.find('c')  == s.npos
+        assert s.rfind('c')  < 0
+        assert s.rfind('c') == s.npos
+
+    def test10_string_in_repr_and_str_bytes(self):
+        """Special cases for __str__/__repr__"""
+
+        import cppyy
+
+        cppyy.cppdef(r"""\
+        namespace ReprAndStr {
+
+        struct Test1 {
+            const char* __repr__() const { return "Test1"; }
+            const char* __str__()  const { return "Test1"; }
+        };
+
+        struct Test2 {
+            std::string __repr__() const { return "Test2"; }
+            std::string __str__()  const { return "Test2"; }
+        };
+
+        struct Test3 {
+            std::wstring __repr__() const { return L"Test3"; }
+            std::wstring __str__()  const { return L"Test3"; }
+        };
+        }""")
+
+        ns = cppyy.gbl.ReprAndStr
+
+        assert str (ns.Test1()) == "Test1"
+        assert repr(ns.Test1()) == "Test1"
+
+        assert str (ns.Test2()) == "Test2"
+        assert repr(ns.Test2()) == "Test2"
+
+        assert str (ns.Test3()) == "Test3"
+        assert repr(ns.Test3()) == "Test3"
 
 
 class TestSTLLIST:
@@ -809,7 +1152,9 @@ class TestSTLLIST:
             }""")
 
         a = cppyy.gbl.std.list[int]()
-        a.begin().__class__.__eq__ = cppyy.gbl.cont_eq[cppyy.gbl.std.list[int]]
+        icls = a.begin().__class__
+        oldeq = icls.__eq__
+        icls.__eq__ = cppyy.gbl.cont_eq[cppyy.gbl.std.list[int]]
         assert not (a.begin() == a.end())
 
         a = cppyy.gbl.std.list[float]()
@@ -817,6 +1162,44 @@ class TestSTLLIST:
         assert not cppyy.gbl.cont_eq[cppyy.gbl.std.list[float]](a.begin(), a.begin())
         a.push_back(1)
         assert     cppyy.gbl.cont_eq[cppyy.gbl.std.list[float]](a.begin(), a.end())
+
+        icls.__eq__ = oldeq
+
+    def test04_iter_of_iter(self):
+        """Iteration using iter()"""
+
+        import cppyy
+
+        l = cppyy.gbl.std.list['int']((1, 2, 3))
+        assert [x for x in l] == [1, 2, 3]
+
+        i = 1
+        for a in iter(l):
+            assert a == i
+            i += 1
+
+    def test05_list_cpp17_style(self):
+        """C++17 style initialization of std::list"""
+
+        import cppyy
+
+        l = [1.0, 2.0, 3.0]
+        v = cppyy.gbl.std.list(l)
+        assert list(l) == l
+
+    def test06_convert_list_of_strings(self):
+        """Convert list of strings from C++ to Python types"""
+
+        import cppyy
+
+        contents = ["aap", "noot", "mies"]
+
+        l = cppyy.gbl.std.list[str]()
+        l += contents
+
+      # the following used to fail on Windows (TODO: currently worked around in
+      # cppyy-backend/clingwrapper; need to see whether Clang9 solves the issue)
+        assert [str(x) for x in l] == contents
 
 
 class TestSTLMAP:
@@ -832,28 +1215,37 @@ class TestSTLMAP:
         import cppyy
         std = cppyy.gbl.std
 
-        a = std.map(int, int)()
-        for i in range(self.N):
-            a[i] = i
-            assert a[i] == i
+        for mtype in (std.map, std.unordered_map):
+            a = mtype(int, int)()
+            for i in range(self.N):
+                a[i] = i
+                assert a[i] == i
 
-        assert len(a) == self.N
+            assert len(a) == self.N
 
-        for key, value in a:
-            assert key == value
-        assert key   == self.N-1
-        assert value == self.N-1
+            itercount = 0
+            for key, value in a:
+                assert key == value
+                itercount += 1
+            assert itercount == len(a)
+            if mtype == std.map:            # ordered
+                assert key   == self.N-1
+                assert value == self.N-1
 
-        # add a variation, just in case
-        m = std.map(int, int)()
-        for i in range(self.N):
-            m[i] = i*i
-            assert m[i] == i*i
+            # add a variation, just in case
+            m = mtype(int, int)()
+            for i in range(self.N):
+                m[i] = i*i
+                assert m[i] == i*i
 
-        for key, value in m:
-            assert key*key == value
-        assert key   == self.N-1
-        assert value == (self.N-1)*(self.N-1)
+            itercount = 0
+            for key, value in m:
+                assert key*key == value
+                itercount += 1
+            assert itercount == len(m)
+            if mtype == std.map:            # ordered
+                assert key   == self.N-1
+                assert value == (self.N-1)*(self.N-1)
 
     def test02_keyed_maptype(self):
         """Test access to a map<std::string,int>"""
@@ -861,12 +1253,13 @@ class TestSTLMAP:
         import cppyy
         std = cppyy.gbl.std
 
-        a = std.map(std.string, int)()
-        assert not a
-        for i in range(self.N):
-            a[str(i)] = i
-            assert a[str(i)] == i
-        assert a
+        for mtype in (std.map, std.unordered_map):
+            a = mtype(std.string, int)()
+            assert not a
+            for i in range(self.N):
+                a[str(i)] = i
+                assert a[str(i)] == i
+            assert a
 
         assert len(a) == self.N
 
@@ -876,10 +1269,11 @@ class TestSTLMAP:
         import cppyy
         std = cppyy.gbl.std
 
-        m = std.map(int, int)()
-        assert not m
-        for key, value in m:
-            pass
+        for mtype in (std.map, std.unordered_map):
+            m = mtype(int, int)()
+            assert not m
+            for key, value in m:
+                pass
 
     def test04_unsignedvalue_typemap_types(self):
         """Test assignability of maps with unsigned value types"""
@@ -887,52 +1281,26 @@ class TestSTLMAP:
         import cppyy, math, sys
         std = cppyy.gbl.std
 
-        mui = std.map(str, 'unsigned int')()
-        mui['one'] = 1
-        assert mui['one'] == 1
-        raises(ValueError, mui.__setitem__, 'minus one', -1)
+        for mtype in (std.map, std.unordered_map):
+            mui = mtype(str, 'unsigned int')()
+            mui['one'] = 1
+            assert mui['one'] == 1
+            raises(ValueError, mui.__setitem__, 'minus one', -1)
 
-        # UInt_t is always 32b, maxvalue is sys.maxint/maxsize and follows system int
-        maxint32 = int(math.pow(2,31)-1)
-        mui['maxint'] = maxint32 + 3
-        assert mui['maxint'] == maxint32 + 3
+            # UInt_t is always 32b, maxvalue is sys.maxint/maxsize and follows system int
+            maxint32 = int(math.pow(2,31)-1)
+            mui['maxint'] = maxint32 + 3
+            assert mui['maxint'] == maxint32 + 3
 
-        mul = std.map(str, 'unsigned long')()
-        mul['two'] = 2
-        assert mul['two'] == 2
-        mul['maxint'] = maxvalue + 3
-        assert mul['maxint'] == maxvalue + 3
+            mul = mtype(str, 'unsigned long')()
+            mul['two'] = 2
+            assert mul['two'] == 2
+            mul['maxint'] = maxvalue + 3
+            assert mul['maxint'] == maxvalue + 3
 
-        raises(ValueError, mul.__setitem__, 'minus two', -2)
+            raises(ValueError, mul.__setitem__, 'minus two', -2)
 
-    def test05_bool_typemap(self):
-        """Test mapping of bool type typedefs"""
-
-        import cppyy
-
-        cppyy.cppdef("""
-        struct BoolTypeMapTest {
-            typedef bool BoolType;
-        };
-        """)
-
-        bt = cppyy.gbl.BoolTypeMapTest.BoolType
-
-        assert bt.__name__ == 'BoolType'
-        assert bt.__cpp_name__ == 'BoolTypeMapTest::BoolType'
-        assert bt(1)
-        assert bt(1) == True
-        assert bt(1) != False
-        assert bt(1) is True
-        assert bt() == bt(0)
-        assert not bt()
-        assert bt() == False
-        assert bt() != True
-        assert bt() is False
-        assert str(bt(1)) == 'True'
-        assert str(bt(0)) == 'False'
-
-    def test06_STL_like_class_indexing_overloads(self):
+    def test05_STL_like_class_indexing_overloads(self):
         """Test overloading of operator[] in STL like class"""
 
         import cppyy
@@ -942,35 +1310,74 @@ class TestSTLMAP:
         assert a["some string" ] == 'string'
         assert a[3.1415] == 'double'
 
-    def test07_STL_like_class_iterators(self):
-        """Test the iterator protocol mapping for an STL like class"""
+    def test06_initialize_from_dict(self):
+        """Test std::map initializion from Python dict"""
 
         import cppyy
+        std = cppyy.gbl.std
 
-        a = cppyy.gbl.stl_like_class(int)()
-        assert len(a) == 4
-        for i, j in enumerate(a):
-            assert i == j
+        for mtype in (std.map, std.unordered_map):
+            m = mtype[str, int]({'1' : 1, '2' : 2})
 
-        assert i == len(a)-1
+            assert m['1'] == 1
+            assert m['2'] == 2
 
-        for cls in [cppyy.gbl.stl_like_class2, cppyy.gbl.stl_like_class3]:
-            b = cls[float, 2]()
-            b[0] = 27; b[1] = 42
-            limit = len(b)+1
-            for x in b:
-                limit -= 1
-                assert limit and "iterated too far!"
-                assert x in [27, 42]
-            assert x == 42
-            del x, b
+            with raises(TypeError):
+                m = mtype[int, str]({'1' : 1, '2' : 2})
 
-        for num in [4, 5, 6, 7]:
-            cls = getattr(cppyy.gbl, 'stl_like_class%d' % num)
-            count = 0
-            for i in cls():
-                count += 1
-            assert count == 10
+    def test07_map_cpp17_style(self):
+        """C++17 style initialization of std::map"""
+
+        if ispypy:
+            skip('emulated class crash')
+
+        import cppyy
+        std = cppyy.gbl.std
+
+        for mtype in (std.map, std.unordered_map):
+            m = mtype({'1': 2, '2':1})
+            assert m['1'] == 2
+            assert m['2'] == 1
+
+    def test08_map_derived_objects(self):
+        """Enter derived objects through an initializer list"""
+
+        import cppyy
+        std = cppyy.gbl.std
+
+        cppyy.cppdef("""\
+        namespace MapInitializer {
+        class Base {
+        public:
+            virtual ~Base() {}
+        };
+
+        class Derived : public Base { };
+        } """)
+
+        ns = cppyy.gbl.MapInitializer
+
+        for mtype in (std.map, std.unordered_map):
+          # dictionary style initializer; allow derived through assignment (this may slice
+          # but that is the choice of the program; in this case it's fine as both are the
+          # same size
+            m = mtype['std::string', ns.Base]({"aap": ns.Base(), "noot": ns.Base()})
+            assert len(m) == 2
+
+            m = mtype['std::string', ns.Base]({"aap": ns.Derived(), "noot": ns.Derived()})
+            assert len(m) == 2
+
+          # similar but now initialize through the initializer_list of pairs style
+            m = mtype['std::string', ns.Base]((("aap", ns.Base()),))
+            assert len(m) == 1
+            m = mtype['std::string', ns.Base]([("aap", ns.Base()),])   # list instead of tuple
+            assert len(m) == 1
+
+            m = mtype['std::string', ns.Base]((("aap", ns.Base()), ("noot", ns.Base())))
+            assert len(m) == 2
+
+            m = mtype['std::string', ns.Base]((("aap", ns.Derived()), ("noot", ns.Derived())))
+            assert len(m) == 2
 
 
 class TestSTLITERATOR:
@@ -1006,6 +1413,134 @@ class TestSTLITERATOR:
         assert b1 != b2
         assert b1 == e2
 
+    def test02_STL_like_class_iterators(self):
+        """Test the iterator protocol mapping for an STL like class"""
+
+        import cppyy
+
+        a = cppyy.gbl.stl_like_class(int)()
+        assert len(a) == 4
+        for i, j in enumerate(a):
+            assert i == j
+
+        assert i == len(a)-1
+
+        for cls in [cppyy.gbl.stl_like_class2, cppyy.gbl.stl_like_class3]:
+            b = cls[float, 2]()
+            b[0] = 27; b[1] = 42
+            limit = len(b)+1
+            for x in b:
+                limit -= 1
+                assert limit and "iterated too far!"
+                assert x in [27, 42]
+            assert x == 42
+            del x, b
+
+        for num in [4, 5, 6, 7]:
+            cls = getattr(cppyy.gbl, 'stl_like_class%d' % num)
+            count = 0
+            for i in cls():
+                count += 1
+            assert count == 10
+
+        for cls in [cppyy.gbl.stl_like_class8, cppyy.gbl.stl_like_class9]:
+            b = cls()
+            for i in [1, 2, 3]:
+                b.push_back(i)
+
+            assert len(b) == 3
+            assert sum(b) == 6
+
+    def test03_stllike_preinc(self):
+        """STL-like class with preinc by-ref returns"""
+
+        import cppyy
+
+        cppyy.cppdef("""\
+        namespace PreIncrement {
+        struct Token {
+            int value;
+        };
+
+        struct Iterator {
+            Token current;
+
+            bool operator!=(const Iterator& rhs) {
+                return rhs.current.value != current.value; }
+            const Token& operator*() { return current; }
+            Iterator& operator++() {
+                current.value++;
+                return *this;
+            }
+        };
+
+        struct Stream {
+            Iterator begin() { return Iterator(); }
+            Iterator end() { return Iterator{10}; }
+        }; }""")
+
+        ns = cppyy.gbl.PreIncrement
+
+        stream = ns.Stream()
+        assert [x.value for x in stream] == list(range(10))
+
+        stream = ns.Stream()
+        it = iter(stream)
+        assert next(it).value == 0
+        assert next(it).value == 1
+        assert next(it).value == 2
+
+    def test04_stllike_confusing_name(self):
+        """Having "iterator" in the container name used to fail"""
+
+        import cppyy
+
+        cppyy.cppdef("""\
+        namespace ConstainerOfIterators {
+        template<typename TI>
+        class iterator_range {
+        public:
+            iterator_range(TI b, TI e) : m_begin(b), m_end(e) {}
+
+            TI begin() const { return m_begin; }
+            TI end() const { return m_end; }
+
+        private:
+            TI m_begin;
+            TI m_end;
+        };
+
+        class iterator {
+        public:
+            iterator(const int* first) : current(first) {}
+
+            bool operator==(const iterator& other) const { return current == other.current; }
+            const int& operator*() { return *current; }
+            iterator& operator++() { ++current; return *this; }
+
+        private:
+            const int* current;
+        };
+
+        class A {
+        public:
+            A() : fArray{1, 2, 3, 4} {}
+
+            iterator_range<iterator> members() {
+                return iterator_range<iterator>(&fArray[0], &fArray[3]+1);
+            }
+
+        private:
+            std::array<int, 4> fArray;
+        }; }""")
+
+        ns = cppyy.gbl.ConstainerOfIterators
+
+        a = ns.A()
+        m = a.members()
+
+        assert [x for x in m] == [1, 2, 3, 4]
+
 
 class TestSTLARRAY:
     def setup_class(cls):
@@ -1040,7 +1575,7 @@ class TestSTLARRAY:
             a[i].py = i**2
             assert a[i].py == i**2
 
-        if is_pypy:
+        if ispypy:
             raise RuntimeError("test fails with crash")
         # test assignment
         assert a[2]
@@ -1062,7 +1597,7 @@ class TestSTLARRAY:
 
         a = std.array['ArrayTest::Point*', 4]()
         assert len(a) == 4
-        if is_pypy:
+        if ispypy:
             raise RuntimeError("test fails with crash")
         for i in range(len(a)):
             a[i] = ll[i]
@@ -1077,6 +1612,21 @@ class TestSTLARRAY:
 
             assert gbl.ArrayTest.get_pa_px(a.data(), i) == 13*i
             assert gbl.ArrayTest.get_pa_py(a.data(), i) == 42*i
+
+    def test04_array_from_aggregate(self):
+        """Initialize an array from an aggregate contructor"""
+
+        import cppyy
+
+        l = [1.0, 1.0, 1.0]
+        t = cppyy.gbl.std.array["double",3](l)
+        assert list(t) == l
+
+        with raises(ValueError):
+            cppyy.gbl.std.array["double",3]([1.0, 1.0, 1.0, 1.0])
+
+        with raises(TypeError):
+            cppyy.gbl.std.array["double",3](['a', 1.0, 1.0])
 
 
 class TestSTLSTRING_VIEW:
@@ -1105,6 +1655,43 @@ class TestSTLSTRING_VIEW:
         assert countit(v)    == 4
         assert countit_cr(v) == 4
 
+    def test02_string_view_from_unicode(self):
+        """Life-time management of converted unicode strings"""
+
+        import cppyy, gc
+
+        # view on (converted) unicode
+        text = cppyy.gbl.std.string_view('''\
+        The standard Lorem Ipsum passage, used since the 1500s
+
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
+         tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
+         quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+         consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
+         cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat
+         non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."\
+        ''')
+
+        gc.collect()    # likely erases Python-side temporary
+
+        assert "Lorem ipsum dolor sit amet" in str(text)
+
+        # view on bytes
+        text = cppyy.gbl.std.string_view(b'''\
+        The standard Lorem Ipsum passage, used since the 1500s
+
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
+         tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
+         quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+         consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
+         cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat
+         non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."\
+        ''')
+
+        gc.collect()    # id.
+
+        assert "Lorem ipsum dolor sit amet" in str(text)
+
 
 class TestSTLDEQUE:
     def setup_class(cls):
@@ -1117,11 +1704,20 @@ class TestSTLDEQUE:
         """Return by value of a deque used to crash"""
 
         import cppyy
-        assert cppyy.cppdef("""std::deque<long double> f() {
+        assert cppyy.cppdef("""std::deque<long double> emptyf() {
             std::deque<long double> d; d.push_back(0); return d ; }""")
-        x = cppyy.gbl.f()
+        x = cppyy.gbl.emptyf()
         assert x
         del x
+
+    def test02_deque_cpp17_style(self):
+        """C++17 style initialization of std::deque"""
+
+        import cppyy
+
+        l = [1.0, 2.0, 3.0]
+        v = cppyy.gbl.std.deque(l)
+        assert list(l) == l
 
 
 class TestSTLSET:
@@ -1170,6 +1766,51 @@ class TestSTLSET:
         assert s.begin().__preinc__()  == s.end()
         assert s.rbegin() != s.rend()
         assert s.rbegin().__preinc__() == s.rend()
+
+    def test03_initialize_from_set(self):
+        """Test std::set initializion from Python set"""
+
+        import cppyy
+
+        N = 10
+
+        s = cppyy.gbl.std.set[int](set(range(N)))
+        assert list(range(N)) == list(s)
+
+        s = cppyy.gbl.std.set[int](range(10))
+        assert list(range(N)) == list(s)
+
+        with raises(TypeError):
+            s = cppyy.gbl.std.set[int](set([1, "2"]))
+
+        with raises(TypeError):
+            s = cppyy.gbl.std.set[int](set(["aap", "noot", "mies"]))
+
+    def test04_set_cpp17_style(self):
+        """C++17 style initialization of std::set"""
+
+        import cppyy
+
+        l = [1.0, 2.0, 3.0]
+        v = cppyy.gbl.std.set(l)
+        assert list(l) == l
+
+    def test05_contains(self):
+        """Contains check should not iterate and compare"""
+
+        import cppyy
+
+        assert '__contains__' in cppyy.gbl.std.set[int].__dict__
+
+        S = cppyy.gbl.std.set[int](range(2**20))
+
+        assert 1337 in S
+        assert not (2**30 in S)
+
+      # not a true test, but this'll take a noticable amount of time (>1min) if
+      # there is a regression somehow
+        for i in range(100):
+            assert not (2**30 in S)
 
 
 class TestSTLTUPLE:
@@ -1235,6 +1876,31 @@ class TestSTLTUPLE:
         assert a == 1
         assert b == '2'
         assert c == 5.
+
+    def test04_tuple_lifeline(self):
+        """Tuple memory management"""
+
+        import cppyy, gc
+        std = cppyy.gbl.std
+
+        cppyy.cppdef("""\
+        namespace TupleLifeLine {
+        struct Simple {
+          Simple() : fInt(42) {}
+          Simple(const Simple&) = default;
+          Simple& operator=(const Simple&) = default;
+          ~Simple() { fInt = -1; }
+          int fInt;
+        }; }""")
+
+        Simple = cppyy.gbl.TupleLifeLine.Simple
+
+        s1, s2 = std.make_tuple(Simple(), Simple())
+
+        gc.collect()
+
+        assert s1.fInt == 42
+        assert s2.fInt == 42
 
 
 class TestSTLPAIR:
@@ -1385,6 +2051,9 @@ class TestSTLEXCEPTION:
 
     def test04_from_cpp(self):
         """Catch C++ exceptiosn from C++"""
+
+        if ispypy:
+            skip('currently terminates')
 
         import cppyy, gc
 

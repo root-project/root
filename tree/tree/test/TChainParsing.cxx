@@ -5,6 +5,8 @@
 #include "TFile.h"
 #include "TSystem.h"
 #include "TTree.h"
+#include "TROOT.h"
+#include "TPluginManager.h"
 
 #include "ROOT/InternalTreeUtils.hxx"
 #include <ROOT/FoundationUtils.hxx>
@@ -238,6 +240,7 @@ TEST(TChainParsing, RecursiveGlob)
    TChain none;
    TChain nested;
    TChain globDir;
+   TChain regex;
 
    nodir.Add("*");
    const auto *nodirFiles = nodir.GetListOfFiles();
@@ -272,12 +275,29 @@ TEST(TChainParsing, RecursiveGlob)
    for (std::size_t i = 0; i < expectedFileNamesGlobDir.size(); i++) {
       EXPECT_EQ(globDirChainFileNames[i], expectedFileNamesGlobDir[i]);
    }
+
+   regex.Add("test*/subdir?/[0-9]?.root?#events");
+   const auto *regexChainFiles = regex.GetListOfFiles();
+   ASSERT_TRUE(regexChainFiles);
+   EXPECT_EQ(regexChainFiles->GetEntries(), 3);
+   std::vector<std::string> expectedFileNamesRegex{ConcatUnixFileName(cwd, "testglob/subdir1/1a.root"),
+                                                   ConcatUnixFileName(cwd, "testglob/subdir1/1b.root"),
+                                                   ConcatUnixFileName(cwd, "testglob/subdir3/3a.root")};
+   auto regexChainFileNames = GetFileNamesVec(regexChainFiles);
+   EXPECT_VEC_EQ(regexChainFileNames, expectedFileNamesRegex);
 }
 
 #if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
 // No XRootD support on Windows
 TEST(TChainParsing, RemoteGlob)
 {
+
+   // Check if xrootd is enabled.
+   if (nullptr == TClass::GetClass(gROOT->GetPluginManager()->FindHandler("TFile", "root://")->GetClass()))
+   {
+      GTEST_SKIP();
+   }
+
    TChain c;
    c.Add("root://eospublic.cern.ch//eos/root-eos/cms_opendata_2012_nanoaod/Run*");
    const auto *chainFiles = c.GetListOfFiles();
@@ -294,4 +314,18 @@ TEST(TChainParsing, RemoteGlob)
    auto chainFileNames = GetFileNamesVec(chainFiles);
    EXPECT_VEC_EQ(chainFileNames, expectedFileNames);
 }
+
+TEST(TChainParsing, DoubleSlash)
+{
+   // Check if xrootd is enabled.
+   if (nullptr == TClass::GetClass(gROOT->GetPluginManager()->FindHandler("TFile", "root://")->GetClass()))
+   {
+      GTEST_SKIP();
+   }
+   // Tests #7159
+   TChain c("Events");
+   c.Add("root://eospublic.cern.ch//eos/root-eos/cms_opendata_2012_nanoaod//ZZTo2e2mu.root");
+   EXPECT_EQ(c.GetEntries(), 1497445);
+}
+
 #endif

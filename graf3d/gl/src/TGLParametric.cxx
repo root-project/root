@@ -40,7 +40,6 @@ namespace
 
    void ReplaceUVNames(TString &equation)
    {
-      using namespace std;
       const Ssiz_t len = equation.Length();
       //TF2 requires 'y' in formula.
       //'v' <=> 'y', so if none 'v' was found, I'll append "+0*y" to the equation.

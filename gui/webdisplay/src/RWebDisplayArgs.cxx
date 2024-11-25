@@ -143,16 +143,18 @@ bool RWebDisplayArgs::SetPosAsStr(const std::string &str)
 ///
 /// Recognized values:
 ///
-///      chrome - use Google Chrome web browser, supports headless mode from v60, default
-///     firefox - use Mozilla Firefox browser, supports headless mode from v57
-///      native - (or empty string) either chrome or firefox, only these browsers support batch (headless) mode
-///     browser - default system web-browser, no batch mode
-///      safari - Safari browser on Mac
+///      chrome - use Google Chrome web browser
+///     firefox - use Mozilla Firefox web browser
+///        edge - use Microsoft Edge web browser (Windows only)
+///      native - either chrome/edge or firefox, only these browsers support batch (headless) mode
+///     default - default system web-browser, no batch mode
 ///         cef - Chromium Embeded Framework, local display, local communication
 ///         qt5 - Qt5 QWebEngine, local display, local communication
 ///         qt6 - Qt6 QWebEngineCore, local display, local communication
 ///       local - either cef or qt5 or qt6
-///    `<prog>` - any program name which will be started instead of default browser, like /usr/bin/opera
+///         off - disable web display
+///          on - first try "local", then "native", then "default" (default option)
+///    `<prog>` - any program name which will be started to open widget URL, like "/usr/bin/opera"
 
 RWebDisplayArgs &RWebDisplayArgs::SetBrowserKind(const std::string &_kind)
 {
@@ -210,12 +212,18 @@ RWebDisplayArgs &RWebDisplayArgs::SetBrowserKind(const std::string &_kind)
       SetBrowserKind(kLocal);
    else if (kind == "native")
       SetBrowserKind(kNative);
-   else if (kind.empty() || (kind == "dflt") || (kind == "default") || (kind == "browser"))
+   else if (kind.empty() || (kind == "on"))
+      SetBrowserKind(kOn);
+   else if ((kind == "dflt") || (kind == "default") || (kind == "browser"))
       SetBrowserKind(kDefault);
    else if (kind == "firefox")
       SetBrowserKind(kFirefox);
    else if ((kind == "chrome") || (kind == "chromium"))
       SetBrowserKind(kChrome);
+#ifdef R__MACOSX
+   else if (kind == "safari")
+      SetBrowserKind(kSafari);
+#endif
 #ifdef _MSC_VER
    else if ((kind == "edge") || (kind == "msedge"))
       SetBrowserKind(kEdge);
@@ -246,6 +254,7 @@ std::string RWebDisplayArgs::GetBrowserName() const
    switch (GetBrowserKind()) {
       case kChrome: return "chrome";
       case kEdge: return "edge";
+      case kSafari: return "safari";
       case kFirefox: return "firefox";
       case kNative: return "native";
       case kCEF: return "cef";
@@ -256,6 +265,7 @@ std::string RWebDisplayArgs::GetBrowserName() const
       case kServer: return "server";
       case kEmbedded: return "embed";
       case kOff: return "off";
+      case kOn: return "on";
       case kCustom:
           auto pos = fExec.find(" ");
           return (pos == std::string::npos) ? fExec : fExec.substr(0,pos);

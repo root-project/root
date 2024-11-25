@@ -30,44 +30,11 @@ class TDirectory;
 
 #include <list>
 
-
-//#define USEMEMPOOLFORDATASET
-
-// In the past, a custom memory pool was used for RooDataSet objects on the
-// heap. This memoy pool guaranteed that no memory addresses were reused for
-// different RooDataSets, making it possible to uniquely identify manually
-// allocated RooDataSets by their memory address.
-//
-// However, the memoy pool for RooArgSets caused unexpected memory usage
-// increases, even if no memory leaks were present [1]. It was suspected that
-// the memory allocation pattern with the memory pool might cause some heap
-// fragmentation, which did not happen when the standard allocator was used.
-//
-// To solve that problem, the memory pool was disabled. It is not clear what
-// RooFit code actually relied on the unique memory addresses, but an
-// alternative mechanism to uniquely identify RooDataSet objects was
-// implemented for these usecases (see RooAbsData::uniqueId()) [2].
-//
-// [1] https://github.com/root-project/root/issues/8323
-// [2] https://github.com/root-project/root/pull/8324
-
-template <class RooSet_t, size_t>
-class MemPoolForRooSets;
-
 class RooDataSet : public RooAbsData, public RooDirItem {
 public:
 
-#ifdef USEMEMPOOLFORDATASET
-  void* operator new (size_t bytes);
-  void operator delete (void *ptr);
-#endif
-
-
   // Constructors, factory methods etc.
   RooDataSet() ;
-
-  RooDataSet(RooStringView name, RooStringView title, const RooArgSet& vars, const char* wgtVarName)
-     R__DEPRECATED(6,34, "Use RooDataSet(name, title, vars, RooFit::WeightVar(wgtVarName)).");
 
   // Universal constructor
   RooDataSet(RooStringView name, RooStringView title, const RooArgSet& vars, const RooCmdArg& arg1={}, const RooCmdArg& arg2={},
@@ -79,18 +46,6 @@ public:
              const char *cuts=nullptr, const char* wgtVarName=nullptr);
   RooDataSet(RooStringView name, RooStringView title, RooDataSet *data, const RooArgSet& vars,
              const RooFormulaVar& cutVar, const char* wgtVarName=nullptr) ;
-
-
-  // Constructor importing data from external ROOT Tree
-  RooDataSet(RooStringView name, RooStringView title, TTree *tree, const RooArgSet& vars,
-             const char *cuts=nullptr, const char* wgtVarName=nullptr)
-#ifndef ROOFIT_BUILDS_ITSELF // need to guard because this is used in the implementation of other deprecated constructors
-     R__DEPRECATED(6,34, "Use RooDataSet(name, title, vars, Import(*tree), Cut(cuts), WeightVar(wgtVarName)).")
-#endif
-  ;
-  RooDataSet(RooStringView name, RooStringView title, TTree *tree, const RooArgSet& vars,
-             const RooFormulaVar& cutVar, const char* wgtVarName=nullptr)
-     R__DEPRECATED(6,34, "Use RooDataSet(name, title, vars, Import(*tree), Cut(cutVar), WeightVar(wgtVarName)).");
 
   RooDataSet(RooDataSet const & other, const char* newname=nullptr) ;
   TObject* Clone(const char* newname = "") const override {
@@ -170,7 +125,7 @@ protected:
 
   // Cache copy feature is not publicly accessible
   std::unique_ptr<RooAbsData> reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange=nullptr,
-                        std::size_t nStart=0, std::size_t nStop = std::numeric_limits<std::size_t>::max()) override;
+                        std::size_t nStart=0, std::size_t nStop = std::numeric_limits<std::size_t>::max()) const override;
 
   RooArgSet _varsNoWgt;          ///< Vars without weight variable
   RooRealVar *_wgtVar = nullptr; ///< Pointer to weight variable (if set)
@@ -180,10 +135,6 @@ private:
   void loadValuesFromSlices(RooCategory &indexCat, std::map<std::string, RooAbsData *> const &slices,
                             const char *rangeName, RooFormulaVar const *cutVar, const char *cutSpec);
 
-#ifdef USEMEMPOOLFORDATASET
-  typedef MemPoolForRooSets<RooDataSet, 5*150> MemPool; ///< 150 = about 100kb
-  static MemPool * memPool();
-#endif
   unsigned short _errorMsgCount{0}; ///<! Counter to silence error messages when filling dataset.
   bool _doWeightErrorCheck{true};   ///<! When adding events with weights, check that weights can actually be stored.
 

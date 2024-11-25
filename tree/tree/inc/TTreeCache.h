@@ -162,7 +162,7 @@ public:
    virtual void         ResetCache();
    void                 ResetMissCache(); // Reset the miss cache.
    void                 SetAutoCreated(bool val) {fAutoCreated = val;}
-   Int_t                SetBufferSize(Int_t buffersize) override;
+   Int_t                SetBufferSize(Long64_t buffersize) override;
    virtual void         SetEntryRange(Long64_t emin,   Long64_t emax);
    void                 SetFile(TFile *file, TFile::ECacheAction action=TFile::kDisconnect) override;
    virtual void         SetLearnPrefill(EPrefillType type = kNoPrefill);

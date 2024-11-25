@@ -50,11 +50,13 @@ to be merged, like the standalone hadd program.
 #endif
 
 #include <cstring>
+#include <map>
 
 ClassImp(TFileMerger);
 
 TClassRef R__TH1_Class("TH1");
 TClassRef R__TTree_Class("TTree");
+TClassRef R__RNTuple_Class("ROOT::RNTuple");
 
 static const Int_t kCpProgress = BIT(14);
 static const Int_t kCintFileNumber = 100;
@@ -131,7 +133,7 @@ Bool_t TFileMerger::AddFile(const char *url, Bool_t cpProgress)
       Printf("%s Source file %d: %s", fMsgPrefix.Data(), fFileList.GetEntries() + fExcessFiles.GetEntries() + 1, url);
    }
 
-   TFile *newfile = 0;
+   TFile *newfile = nullptr;
    TString localcopy;
 
    if (fFileList.GetEntries() >= (fMaxOpenedFiles-1)) {
@@ -163,7 +165,7 @@ Bool_t TFileMerger::AddFile(const char *url, Bool_t cpProgress)
    // Zombie files should also be skipped
    if (newfile && newfile->IsZombie()) {
       delete newfile;
-      newfile = 0;
+      newfile = nullptr;
    }
 
    if (!newfile) {
@@ -174,7 +176,8 @@ Bool_t TFileMerger::AddFile(const char *url, Bool_t cpProgress)
          Error("AddFile", "cannot open file %s", url);
       return kFALSE;
    } else {
-      if (fOutputFile && fOutputFile->GetCompressionLevel() != newfile->GetCompressionLevel()) fCompressionChange = kTRUE;
+      if (fOutputFile && fOutputFile->GetCompressionSettings() != newfile->GetCompressionSettings())
+         fCompressionChange = kTRUE;
 
       newfile->SetBit(kCanDelete);
       fFileList.Add(newfile);
@@ -374,18 +377,6 @@ Bool_t TFileMerger::Merge(Bool_t)
 
 namespace {
 
-/// Merge a list of RNTuples
-Long64_t MergeRNTuples(TClass* rntupleHandle, const TString& /* target */, const TList& /* sources */) {
-   if (!rntupleHandle) {
-      return Long64_t(-1);
-   }
-   // todo(max) implement rntuple merger
-   // [ ] build complete list of sources (some sources may actually be a directory with RNTuples inside)
-   // [ ] merge them
-   ROOT::MergeFunc_t func = rntupleHandle->GetMerge();
-   return func(static_cast<void*>(rntupleHandle), nullptr, nullptr);
-}
-
 Bool_t IsMergeable(TClass *cl)
 {
    return (cl->GetMerge() || cl->InheritsFrom(TDirectory::Class()) ||
@@ -494,7 +485,6 @@ Bool_t TFileMerger::MergeOne(TDirectory *target, TList *sourcelist, Int_t type, 
    }
    // Check if only the listed objects are to be merged
    if (type & kOnlyListed) {
-      onlyListed = kFALSE;
       oldkeyname = keyname;
       oldkeyname += " ";
       onlyListed = fObjectNames.Contains(oldkeyname);
@@ -553,17 +543,19 @@ Bool_t TFileMerger::MergeOne(TDirectory *target, TList *sourcelist, Int_t type, 
    }
    Bool_t canBeMerged = kTRUE;
 
-   TList dirtodelete;
-   auto getDirectory = [&dirtodelete](TDirectory *parent, const char *name, const TString &pathname)
-   {
-      TDirectory *result = dynamic_cast<TDirectory*>(parent->GetList()->FindObject(name));
-      if (!result) {
-         result = parent->GetDirectory(pathname);
-         if (result && result != parent)
-            dirtodelete.Add(result);
+   std::map<std::tuple<std::string, std::string, std::string>, TDirectory*> dirtodelete;
+   auto getDirectory = [&dirtodelete](TDirectory *parent, const char *name, const TString &pathname) {
+      auto mapkey = std::make_tuple(parent->GetName(), name, pathname.Data());
+      auto result = dirtodelete.find(mapkey);
+      if (result != dirtodelete.end()) {
+         return result->second;
       }
 
-      return result;
+      auto dir = dynamic_cast<TDirectory *>(parent->GetDirectory(pathname));
+      if (dir)
+         dirtodelete[mapkey] = dir;
+
+      return dir;
    };
 
    if ( cl->InheritsFrom( TDirectory::Class() ) ) {
@@ -591,17 +583,32 @@ Bool_t TFileMerger::MergeOne(TDirectory *target, TList *sourcelist, Int_t type, 
       // If this folder is a onlyListed object, merge everything inside.
       if (onlyListed) type &= ~kOnlyListed;
       status = MergeRecursive(newdir, sourcelist, type);
+      // Delete newdir directory after having written it (merged)
+      if (!(type&kIncremental)) delete newdir;
       if (onlyListed) type |= kOnlyListed;
       if (!status) return kFALSE;
    } else if (!cl->IsTObject() && cl->GetMerge()) {
       // merge objects that don't derive from TObject
-      if (std::string(keyclassname) == "ROOT::Experimental::RNTuple") {
-         Warning("MergeRecursive", "merging RNTuples is experimental");
-         // todo(max): check if this works when a TDirectory is passed as the first
-         // input argument
-         Long64_t mergeResult = MergeRNTuples(cl, *path, *sourcelist);
-         if (mergeResult < 0) {
-            Error("MergeRecursive", "error merging RNTuples");
+      if (cl->InheritsFrom(R__RNTuple_Class)) {
+         Warning("MergeRecursive", "Merging RNTuples is experimental");
+
+         // Collect all the data to be passed on to the merger
+         TList mergeData;
+         // First entry is the TKey of the ntuple
+         mergeData.Add(key);
+         // Second entry is the output file
+         mergeData.Add(target->GetFile());
+         // Remaining entries are the input files
+         TIter nextFile(sourcelist);
+         while (const auto &inFile = nextFile()) {
+            mergeData.Add(inFile);
+         }
+         // Get the merge fuction and pass the data
+         ROOT::MergeFunc_t func = cl->GetMerge();
+         Long64_t result = func(obj, &mergeData, &info);
+         mergeData.Clear("nodelete");
+         if (result < 0) {
+            Error("MergeRecursive", "Could NOT merge RNTuples!");
             return kFALSE;
          }
       } else {
@@ -782,8 +789,7 @@ Bool_t TFileMerger::MergeOne(TDirectory *target, TList *sourcelist, Int_t type, 
       // Let's also delete the directory from the other source (thanks to the 'allNames'
       // mechanism above we will not process the directories when tranversing the next
       // files).
-      TIter deliter(&dirtodelete);
-      while(TObject *ndir = deliter()) {
+      for (const auto &[_, ndir] : dirtodelete) {
          // For consistency (and performance), we reset the MustCleanup be also for those
          // 'key' retrieved indirectly.
          ndir->ResetBit(kMustCleanup);
@@ -800,7 +806,6 @@ Bool_t TFileMerger::MergeOne(TDirectory *target, TList *sourcelist, Int_t type, 
       }
    }
    info.Reset();
-   dirtodelete.Clear("nodelete");  // If needed the delete is done explicitly above.
    return kTRUE;
 }
 
@@ -905,14 +910,18 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
 /// the file "FileMerger.root" in the working directory. Returns true
 /// on success, false in case of error.
 /// The type is defined by the bit values in EPartialMergeType:
-///   kRegular      : normal merge, overwritting the output file
-///   kIncremental  : merge the input file with the content of the output file (if already exising) (default)
-///   kAll          : merge all type of objects (default)
-///   kResetable    : merge only the objects with a MergeAfterReset member function.
-///   kNonResetable : merge only the objects without a MergeAfterReset member function.
+///   kRegular        : normal merge, overwritting the output file
+///   kIncremental    : merge the input file with the content of the output file (if already exising) (default)
+///   kResetable      : merge only the objects with a MergeAfterReset member function.
+///   kNonResetable   : merge only the objects without a MergeAfterReset member function.
+///   kDelayWrite     : delay the TFile write (to reduce the number of write when reusing the file)
+///   kAll            : merge all type of objects (default)
+///   kAllIncremental : merge incrementally all type of objects.
+///   kOnlyListed     : merge only the objects specified in fObjectNames list
+///   kSkipListed     : skip objects specified in fObjectNames list
+///   kKeepCompression: keep compression level unchanged for each input
 ///
-/// If the type is set to kIncremental the output file is done deleted at the end of
-/// this operation.  If the type is not set to kIncremental, the output file is closed.
+/// If the type is not set to kIncremental, the output file is deleted at the end of this operation.
 
 Bool_t TFileMerger::PartialMerge(Int_t in_type)
 {
@@ -929,9 +938,9 @@ Bool_t TFileMerger::PartialMerge(Int_t in_type)
       }
    }
 
-   // Special treament for the single file case ...
+   // Special treament for the single file case to improve efficiency...
    if ((fFileList.GetEntries() == 1) && !fExcessFiles.GetEntries() &&
-      !(in_type & kIncremental) && !fCompressionChange && !fExplicitCompLevel) {
+      !(in_type & (kIncremental | kOnlyListed | kSkipListed | kResetable | kNonResetable)) && !fCompressionChange && !fExplicitCompLevel) {
       fOutputFile->Close();
       SafeDelete(fOutputFile);
 

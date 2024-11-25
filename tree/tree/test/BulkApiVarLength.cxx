@@ -24,15 +24,15 @@ public:
 protected:
    void SetUp() override
    {
-      auto hfile = new TFile(fFileName.c_str(), "RECREATE", "TTree float micro benchmark ROOT file");
-      hfile->SetCompressionLevel(0); // No compression at all.
+      TFile hfile{fFileName.c_str(), "RECREATE", "TTree float micro benchmark ROOT file"};
+      hfile.SetCompressionLevel(0); // No compression at all.
 
-      auto tree = new TTree("T", "A ROOT tree of variable-length primitive branches.");
-      tree->SetBit(TTree::kOnlyFlushAtCluster);
-      tree->SetAutoFlush(fClusterSize);
+      TTree tree{"T", "A ROOT tree of variable-length primitive branches."};
+      tree.SetBit(TTree::kOnlyFlushAtCluster);
+      tree.SetAutoFlush(fClusterSize);
       ROOT::TIOFeatures features;
       features.Set(ROOT::Experimental::EIOFeatures::kGenerateOffsetMap);
-      tree->SetIOFeatures(features);
+      tree.SetIOFeatures(features);
 
       float f_counter = 0;
       float f[10];
@@ -40,10 +40,10 @@ protected:
       int i[10];
       int myLen = 0;
 
-      tree->Branch("myLen", &myLen, "myLen/I", 32000);
-      auto branch2 = tree->Branch("f", &f, "f[myLen]/F", 32000);
-      auto branch3 = tree->Branch("d", &d, "d[myLen]/D", 32000);
-      auto branch4 = tree->Branch("i", &i, "i[myLen]/I", 32000);
+      tree.Branch("myLen", &myLen, "myLen/I", 32000);
+      auto branch2 = tree.Branch("f", &f, "f[myLen]/F", 32000);
+      auto branch3 = tree.Branch("d", &d, "d[myLen]/D", 32000);
+      auto branch4 = tree.Branch("i", &i, "i[myLen]/I", 32000);
       branch2->SetAutoDelete(false);
       branch3->SetAutoDelete(false);
       branch4->SetAutoDelete(false);
@@ -56,14 +56,12 @@ protected:
          }
 
          myLen = ev % 10;
-         tree->Fill();
-      } 
-      hfile = tree->GetCurrentFile();
-      hfile->Write();
-      tree->Print();
+         tree.Fill();
+      }
+      auto *curfile = tree.GetCurrentFile();
+      curfile->Write();
+      tree.Print();
       printf("Successful write of all events.\n");
-
-      delete hfile;
    }
 };
 
@@ -72,13 +70,13 @@ constexpr Long64_t BulkApiVariableTest::fEventCount;
 
 TEST_F(BulkApiVariableTest, stdRead)
 {
-   auto hfile = TFile::Open(fFileName.c_str());
+   std::unique_ptr<TFile> hfile{TFile::Open(fFileName.c_str())};
    printf("Starting read of file %s.\n", fFileName.c_str());
    TStopwatch sw;
 
    printf("Using standard read APIs.\n");
 
-   TTreeReader myReader("T", hfile);
+   TTreeReader myReader("T", hfile.get());
    TTreeReaderArray<float> myF(myReader, "f");
    TTreeReaderArray<double> myD(myReader, "d");
    TTreeReaderValue<int> myI(myReader, "myLen");
@@ -126,8 +124,7 @@ TEST_F(BulkApiVariableTest, stdRead)
       }
       ev++;
    }
-   ASSERT_EQ(ev, events+1);
-   delete hfile;
+   ASSERT_EQ(ev, events + 1);
 
    sw.Stop();
    printf("TTreeReader: Successful read of all events.\n");
@@ -136,7 +133,7 @@ TEST_F(BulkApiVariableTest, stdRead)
 
 TEST_F(BulkApiVariableTest, serializedRead)
 {
-   auto hfile = TFile::Open(fFileName.c_str());
+   std::unique_ptr<TFile> hfile{TFile::Open(fFileName.c_str())};
    printf("Starting read of file %s.\n", fFileName.c_str());
    TStopwatch sw;
 

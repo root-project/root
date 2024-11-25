@@ -14,7 +14,6 @@
 #include "ROOT/EExecutionPolicy.hxx"
 #include "ROOT/TExecutorCRTP.hxx"
 #include "ROOT/TSeq.hxx"
-#include "ROOT/TypeTraits.hxx" // InvokeResult_t
 
 #include <initializer_list>
 #include <numeric> //std::accumulate
@@ -25,9 +24,6 @@ namespace ROOT {
 
    class TSequentialExecutor: public TExecutorCRTP<TSequentialExecutor> {
       friend TExecutorCRTP;
-
-      template <typename F, typename... Args>
-      using InvokeResult_t = ROOT::TypeTraits::InvokeResult_t<F, Args...>;
 
    public:
 
@@ -71,13 +67,13 @@ namespace ROOT {
    private:
        // Implementation of the Map functions declared in the parent class (TExecutorCRTP)
       //
-      template<class F, class Cond = noReferenceCond<F>>
+      template<class F, class Cond = validMapReturnCond<F>>
       auto MapImpl(F func, unsigned nTimes) -> std::vector<InvokeResult_t<F>>;
-      template<class F, class INTEGER, class Cond = noReferenceCond<F, INTEGER>>
+      template<class F, class INTEGER, class Cond = validMapReturnCond<F, INTEGER>>
       auto MapImpl(F func, ROOT::TSeq<INTEGER> args) -> std::vector<InvokeResult_t<F, INTEGER>>;
-      template<class F, class T, class Cond = noReferenceCond<F, T>>
+      template<class F, class T, class Cond = validMapReturnCond<F, T>>
       auto MapImpl(F func, std::vector<T> &args) -> std::vector<InvokeResult_t<F, T>>;
-      template<class F, class T, class Cond = noReferenceCond<F, T>>
+      template<class F, class T, class Cond = validMapReturnCond<F, T>>
       auto MapImpl(F func, const std::vector<T> &args) -> std::vector<InvokeResult_t<F, T>>;
    };
 

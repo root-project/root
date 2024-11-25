@@ -14,16 +14,9 @@
 /// \author The ROOT Team
 
 // NOTE: The RNTuple classes are experimental at this point.
-// Functionality, interface, and data format is still subject to changes.
-// Do not use for real data!
-
-// Until C++ runtime modules are universally used, we explicitly load the ntuple library.  Otherwise
-// triggering autoloading from the use of templated types would require an exhaustive enumeration
-// of "all" template instances in the LinkDef file.
-R__LOAD_LIBRARY(ROOTNTuple)
+// Functionality and interface are still subject to changes.
 
 #include <ROOT/RDataFrame.hxx>
-#include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleDS.hxx>
 #include <ROOT/RVec.hxx>
 
@@ -41,10 +34,9 @@ R__LOAD_LIBRARY(ROOTNTuple)
 #include <utility>
 
 // Import classes from experimental namespace for the time being
-using RNTupleReader = ROOT::Experimental::RNTupleReader;
 using RNTupleDS = ROOT::Experimental::RNTupleDS;
 
-constexpr char const* kNTupleFileName = "http://root.cern/files/tutorials/ntpl004_dimuon_v1rc2.root";
+constexpr char const *kNTupleFileName = "http://root.cern/files/tutorials/ntpl004_dimuon_v1.root";
 
 using namespace ROOT::VecOps;
 
@@ -52,7 +44,7 @@ void ntpl004_dimuon() {
    // Use all available CPU cores
    ROOT::EnableImplicitMT();
 
-   auto df = ROOT::RDF::Experimental::FromRNTuple("Events", kNTupleFileName);
+   ROOT::RDataFrame df("Events", kNTupleFileName);
 
    // The tutorial is identical to df102_NanoAODDimuonAnalysis except the use of RNTuple.
 

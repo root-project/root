@@ -17,7 +17,7 @@
 #define ROOT7_RNTupleParallelWriter
 
 #include <ROOT/RNTupleMetrics.hxx>
-#include <ROOT/RNTupleOptions.hxx>
+#include <ROOT/RNTupleWriteOptions.hxx>
 
 #include <memory>
 #include <mutex>
@@ -29,9 +29,9 @@ class TFile;
 namespace ROOT {
 namespace Experimental {
 
-namespace Detail {
+namespace Internal {
 class RPageSink;
-} // namespace Detail
+} // namespace Internal
 
 class RNTupleFillContext;
 class RNTupleModel;
@@ -45,6 +45,12 @@ Compared to the sequential RNTupleWriter, a parallel writer enables the creation
 RNTupleParallelWriter::CreateFillContext).  Each fill context prepares independent clusters that are appended to the
 common ntuple with internal synchronization.  Before destruction, all fill contexts must have flushed their data and
 been destroyed (or data could be lost!).
+
+For user convenience, RNTupleParallelWriter::CreateFillContext is thread-safe and may be called from multiple threads
+in parallel at any time, also after some data has already been written.  Internally, the original model is cloned and
+ownership is passed to a newly created RNTupleFillContext.  For that reason, it is recommended to use
+RNTupleModel::CreateBare when creating the model for parallel writing and avoid the allocation of a useless default
+REntry per context.
 
 Note that the sequence of independently prepared clusters is indeterminate and therefore entries are only partially
 ordered:  Entries from one context are totally ordered as they were filled.  However, there is no orderering with other
@@ -62,14 +68,14 @@ private:
    /// A mutex to synchronize the final page sink.
    std::mutex fSinkMutex;
    /// The final RPageSink that represents the synchronization point.
-   std::unique_ptr<Detail::RPageSink> fSink;
+   std::unique_ptr<Internal::RPageSink> fSink;
    /// The original RNTupleModel connected to fSink; needs to be destructed before it.
    std::unique_ptr<RNTupleModel> fModel;
    Detail::RNTupleMetrics fMetrics;
    /// List of all created helpers. They must be destroyed before this RNTupleParallelWriter is destructed.
    std::vector<std::weak_ptr<RNTupleFillContext>> fFillContexts;
 
-   RNTupleParallelWriter(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Detail::RPageSink> sink);
+   RNTupleParallelWriter(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Internal::RPageSink> sink);
    RNTupleParallelWriter(const RNTupleParallelWriter &) = delete;
    RNTupleParallelWriter &operator=(const RNTupleParallelWriter &) = delete;
 
@@ -86,7 +92,8 @@ public:
    ~RNTupleParallelWriter();
 
    /// Create a new RNTupleFillContext that can be used to fill entries and prepare clusters in parallel. This method is
-   /// thread-safe and may be called from multiple threads in parallel.
+   /// thread-safe and may be called from multiple threads in parallel at any time, also after some data has already
+   /// been written.
    ///
    /// Note that all fill contexts must be destroyed before the RNTupleParallelWriter is destructed.
    std::shared_ptr<RNTupleFillContext> CreateFillContext();

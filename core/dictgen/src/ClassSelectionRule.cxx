@@ -157,6 +157,11 @@ void ClassSelectionRule::SetRequestedVersionNumber(int version)
    fRequestedVersionNumber = version;
 }
 
+void ClassSelectionRule::SetRequestedRNTupleSerializationMode(int serializationMode)
+{
+   fRequestedRNTupleSerializationMode = serializationMode;
+}
+
 bool ClassSelectionRule::RequestOnlyTClass() const
 {
    return fRequestOnlyTClass;
@@ -175,4 +180,9 @@ bool ClassSelectionRule::RequestPrivate() const
 int ClassSelectionRule::RequestedVersionNumber() const
 {
    return fRequestedVersionNumber;
+}
+
+int ClassSelectionRule::RequestedRNTupleSerializationMode() const
+{
+   return fRequestedRNTupleSerializationMode;
 }

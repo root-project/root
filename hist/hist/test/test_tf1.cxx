@@ -7,8 +7,6 @@
 
 #include <iostream>
 
-using namespace std;
-
 class MyClass {
 public:
    double operator()(double *x, double *p) { return *x + *p; };

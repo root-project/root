@@ -16,6 +16,7 @@
 #include "RooFit/MultiProcess/Job.h"
 #include "RooFit/MultiProcess/types.h"
 #include "RooFit/TestStatistics/LikelihoodWrapper.h"
+#include "LikelihoodSerial.h"
 #include "RooArgList.h"
 
 #include "Math/MinimizerOptions.h"
@@ -25,11 +26,12 @@
 namespace RooFit {
 namespace TestStatistics {
 
+class LikelihoodSerial;
+
 class LikelihoodJob : public MultiProcess::Job, public LikelihoodWrapper {
 public:
    LikelihoodJob(std::shared_ptr<RooAbsL> _likelihood,
-                 std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean /*, RooMinimizer *minimizer*/);
-   LikelihoodJob *clone() const override;
+                 std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean, SharedOffset offset);
 
    void init_vars();
 
@@ -55,6 +57,7 @@ public:
       std::size_t job_id; // job ID must always be the first part of any result message/type
       double value;
       double carry;
+      bool has_errors;
    };
 
    void send_back_task_result_from_worker(std::size_t task) override;
@@ -69,7 +72,6 @@ private:
    RooArgList vars_;      // Variables
    RooArgList save_vars_; // Copy of variables
 
-   LikelihoodType likelihood_type_;
    std::size_t n_tasks_at_workers_ = 0;
 
    // warning: don't use the following values directly, use the getters instead!
@@ -77,6 +79,9 @@ private:
    std::size_t n_component_tasks_;
    std::size_t getNEventTasks();
    std::size_t getNComponentTasks();
+
+   SharedOffset::OffsetVec offsets_previous_;
+   LikelihoodSerial likelihood_serial_;
 };
 
 std::ostream &operator<<(std::ostream &out, const LikelihoodJob::update_state_mode value);
@@ -84,4 +89,4 @@ std::ostream &operator<<(std::ostream &out, const LikelihoodJob::update_state_mo
 } // namespace TestStatistics
 } // namespace RooFit
 
-#endif // ROOT_ROOFIT_LikelihoodJob
+#endif // ROOT_ROOFIT_TESTSTATISTICS_LikelihoodJob

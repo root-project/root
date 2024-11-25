@@ -29,7 +29,7 @@ static PyObject* ep_new(PyTypeObject* subtype, PyObject* args, PyObject* kwds)
         PyObject* ulc = PyObject_GetAttr((PyObject*)subtype, PyStrings::gUnderlying);
         excobj->fCppInstance = PyType_Type.tp_call(ulc, args, kwds);
         if (!excobj->fCppInstance) {
-        // if this fails, then the contruction may have been attempted from a string
+        // if this fails, then the construction may have been attempted from a string
         // (e.g. from PyErr_Format); if so, drop the proxy and use fTopMessage instead
             PyErr_Clear();
             if (PyTuple_GET_SIZE(args) == 1) {
@@ -229,10 +229,10 @@ PyTypeObject CPPExcInstance_Type = {
     sizeof(CPPExcInstance),        // tp_basicsize
     0,                             // tp_itemsize
     (destructor)ep_dealloc,        // tp_dealloc
-    0,                             // tp_print
+    0,                             // tp_vectorcall_offset / tp_print
     0,                             // tp_getattr
     0,                             // tp_setattr
-    0,                             // tp_compare
+    0,                             // tp_as_async / tp_compare
     (reprfunc)ep_repr,             // tp_repr
     &ep_as_number,                 // tp_as_number
     0,                             // tp_as_sequence
@@ -281,6 +281,15 @@ PyTypeObject CPPExcInstance_Type = {
 #endif
 #if PY_VERSION_HEX >= 0x03040000
     , 0                            // tp_finalize
+#endif
+#if PY_VERSION_HEX >= 0x03080000
+    , 0                            // tp_vectorcall
+#endif
+#if PY_VERSION_HEX >= 0x030c0000
+    , 0                            // tp_watched
+#endif
+#if PY_VERSION_HEX >= 0x030d0000
+    , 0                            // tp_versions_used
 #endif
 };
 

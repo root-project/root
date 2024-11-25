@@ -14,19 +14,16 @@
  *************************************************************************/
 
 #include <ROOT/RPage.hxx>
+#include <ROOT/RPageAllocator.hxx>
 
-namespace ROOT {
-namespace Experimental {
+ROOT::Experimental::Internal::RPage::~RPage()
+{
+   if (fPageAllocator)
+      fPageAllocator->DeletePage(*this);
+}
 
-namespace Detail {
-
-const void *RPage::GetPageZeroBuffer()
+const void *ROOT::Experimental::Internal::RPage::GetPageZeroBuffer()
 {
    static const auto pageZero = std::make_unique<unsigned char[]>(kPageZeroSize);
    return pageZero.get();
 }
-
-} // namespace Detail
-
-} // namespace Experimental
-} // namespace ROOT

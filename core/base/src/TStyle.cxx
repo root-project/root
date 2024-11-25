@@ -60,8 +60,8 @@ referenced via the global variable `gStyle` (in TStyle.h).
 ROOT provides two styles called "Default" and "Plain". The "Default"
 style is created simply by:
 
-~~~ .cpp
-auto default = new TStyle("Default","Default Style");
+~~~ {.cpp}
+    auto default = new TStyle("Default","Default Style");
 ~~~
 
 The `Plain` style can be used if you are working on a monochrome display or
@@ -248,6 +248,7 @@ TStyle::TStyle(const char *name, const char *title)
       SetHistLineColor(kBlue+2);
       SetLegendBorderSize(1);
       SetLegendFillColor(0);
+      SetLegendFillStyle(1001);
       SetLegendFont(42);
       SetLegendTextSize(0.);
       SetFuncWidth(2);
@@ -525,7 +526,7 @@ void TStyle::BuildStyles()
 {
    TColor *col = new TColor(); // force the initialisation of fgPalette
    new TStyle("Plain",  "Plain Style (no colors/fill areas)");
-   new TStyle("Bold",   "Bold Style");;
+   new TStyle("Bold",   "Bold Style");
    new TStyle("Video",  "Style for video presentation histograms");
    new TStyle("Pub",    "Style for Publications");
    new TStyle("Classic","Classic Style");
@@ -649,6 +650,7 @@ void TStyle::Copy(TObject &obj) const
    ((TStyle&)obj).fNumberContours   = fNumberContours;
    ((TStyle&)obj).fLegendBorderSize = fLegendBorderSize;
    ((TStyle&)obj).fLegendFillColor  = fLegendFillColor;
+   ((TStyle&)obj).fLegendFillStyle  = fLegendFillStyle;
    ((TStyle&)obj).fLegendFont       = fLegendFont;
    ((TStyle&)obj).fLegendTextSize   = fLegendTextSize;
 
@@ -795,6 +797,7 @@ void TStyle::Reset(Option_t *opt)
    fLegendFont      = 62;
    fLegendTextSize  = 0.,
    fLegendFillColor = 0;
+   fLegendFillStyle = 1001;
    fImageScaling    = 1.;
 
    SetDateX();
@@ -874,6 +877,7 @@ void TStyle::Reset(Option_t *opt)
       SetHistLineColor(kBlue+2);
       SetLegendBorderSize(1);
       SetLegendFillColor(0);
+      SetLegendFillStyle(1001);
       SetLegendFont(42);
       SetLegendTextSize(0.);
       SetFuncWidth(2);
@@ -1997,11 +2001,11 @@ void TStyle::SaveSource(const char *filename, Option_t *option)
    char quote = '"';
 
    // Writes include.
-   out << "#if !defined( __CINT__) || defined (__MAKECINT__)" << std::endl << std::endl;
+   out << std::endl << std::endl;
    out << "#ifndef ROOT_TStyle" << std::endl;
    out << "#include " << quote << "TStyle.h" << quote << std::endl;
    out << "#endif" << std::endl;
-   out << std::endl << "#endif" << std::endl;
+   out << std::endl << std::endl;
 
    // Writes the macro entry point equal to the fname
    out << std::endl;
@@ -2102,6 +2106,7 @@ void TStyle::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    out<<pre<<"tmpStyle->SetGridWidth("       <<GetGridWidth()       <<");"<<std::endl;
    out<<pre<<"tmpStyle->SetLegendBorderSize("<<GetLegendBorderSize()<<");"<<std::endl;
    out<<pre<<"tmpStyle->SetLegendFillColor(" <<GetLegendFillColor() <<");"<<std::endl;
+   out<<pre<<"tmpStyle->SetLegendFillStyle(" <<GetLegendFillStyle() <<");"<<std::endl;
    out<<pre<<"tmpStyle->SetLegendFont("      <<GetLegendFont()      <<");"<<std::endl;
    out<<pre<<"tmpStyle->SetLegendTextSize("  <<GetLegendTextSize()  <<");"<<std::endl;
    out<<pre<<"tmpStyle->SetHatchesLineWidth("<<GetHatchesLineWidth()<<");"<<std::endl;

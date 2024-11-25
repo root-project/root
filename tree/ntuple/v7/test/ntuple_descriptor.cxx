@@ -1,5 +1,7 @@
 #include "ntuple_test.hxx"
 
+#include <TVirtualStreamerInfo.h>
+
 TEST(RFieldDescriptorBuilder, MakeDescriptorErrors)
 {
    // minimum requirements for making a field descriptor from scratch
@@ -67,6 +69,67 @@ TEST(RNTupleDescriptorBuilder, CatchBadLinks)
    }
 }
 
+TEST(RNTupleDescriptorBuilder, CatchBadProjections)
+{
+   RNTupleDescriptorBuilder descBuilder;
+   descBuilder.AddField(
+      RFieldDescriptorBuilder().FieldId(0).Structure(ENTupleStructure::kRecord).MakeDescriptor().Unwrap());
+   descBuilder.AddField(RFieldDescriptorBuilder()
+                           .FieldId(1)
+                           .FieldName("field")
+                           .TypeName("int32_t")
+                           .Structure(ENTupleStructure::kLeaf)
+                           .MakeDescriptor()
+                           .Unwrap());
+   descBuilder.AddField(RFieldDescriptorBuilder()
+                           .FieldId(2)
+                           .FieldName("projField")
+                           .TypeName("int32_t")
+                           .Structure(ENTupleStructure::kLeaf)
+                           .MakeDescriptor()
+                           .Unwrap());
+   descBuilder.AddField(RFieldDescriptorBuilder()
+                           .FieldId(3)
+                           .FieldName("projField")
+                           .TypeName("int32_t")
+                           .Structure(ENTupleStructure::kLeaf)
+                           .MakeDescriptor()
+                           .Unwrap());
+
+   try {
+      descBuilder.AddFieldProjection(1, 4);
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("doesn't exist"));
+   }
+   try {
+      descBuilder.AddFieldProjection(4, 2);
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("doesn't exist"));
+   }
+   try {
+      descBuilder.AddFieldProjection(1, 0);
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("cannot make FieldZero a projected field"));
+   }
+   try {
+      descBuilder.AddFieldProjection(2, 2);
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("projection of itself"));
+   }
+
+   descBuilder.AddFieldProjection(1, 2);
+   try {
+      descBuilder.AddFieldProjection(2, 1);
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("projection of an already projected field"));
+   }
+   try {
+      descBuilder.AddFieldProjection(3, 2);
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("has already a projection source"));
+   }
+}
+
 TEST(RNTupleDescriptorBuilder, CatchBadColumnDescriptors)
 {
    RNTupleDescriptorBuilder descBuilder;
@@ -88,13 +151,13 @@ TEST(RNTupleDescriptorBuilder, CatchBadColumnDescriptors)
                            .Unwrap());
    descBuilder.AddFieldLink(0, 1);
    descBuilder.AddFieldLink(0, 2);
-   RColumnModel colModel(EColumnType::kInt32, false);
+   EColumnType colType{EColumnType::kInt32};
    RColumnDescriptorBuilder colBuilder1;
-   colBuilder1.LogicalColumnId(0).PhysicalColumnId(0).Model(colModel).FieldId(1).Index(0);
+   colBuilder1.LogicalColumnId(0).PhysicalColumnId(0).BitsOnStorage(32).Type(colType).FieldId(1).Index(0);
    descBuilder.AddColumn(colBuilder1.MakeDescriptor().Unwrap()).ThrowOnError();
 
    RColumnDescriptorBuilder colBuilder2;
-   colBuilder2.LogicalColumnId(1).PhysicalColumnId(0).Model(colModel).FieldId(42).Index(0);
+   colBuilder2.LogicalColumnId(1).PhysicalColumnId(0).BitsOnStorage(32).Type(colType).FieldId(42).Index(0);
    try {
       descBuilder.AddColumn(colBuilder2.MakeDescriptor().Unwrap()).ThrowOnError();
    } catch (const RException &err) {
@@ -102,7 +165,7 @@ TEST(RNTupleDescriptorBuilder, CatchBadColumnDescriptors)
    }
 
    RColumnDescriptorBuilder colBuilder3;
-   colBuilder3.LogicalColumnId(0).PhysicalColumnId(0).Model(colModel).FieldId(2).Index(0);
+   colBuilder3.LogicalColumnId(0).PhysicalColumnId(0).BitsOnStorage(32).Type(colType).FieldId(1).Index(0);
    try {
       descBuilder.AddColumn(colBuilder3.MakeDescriptor().Unwrap()).ThrowOnError();
    } catch (const RException &err) {
@@ -110,7 +173,7 @@ TEST(RNTupleDescriptorBuilder, CatchBadColumnDescriptors)
    }
 
    RColumnDescriptorBuilder colBuilder4;
-   colBuilder4.LogicalColumnId(1).PhysicalColumnId(0).Model(colModel).FieldId(2).Index(1);
+   colBuilder4.LogicalColumnId(1).PhysicalColumnId(0).BitsOnStorage(32).Type(colType).FieldId(2).Index(1);
    try {
       descBuilder.AddColumn(colBuilder4.MakeDescriptor().Unwrap()).ThrowOnError();
    } catch (const RException &err) {
@@ -118,8 +181,8 @@ TEST(RNTupleDescriptorBuilder, CatchBadColumnDescriptors)
    }
 
    RColumnDescriptorBuilder colBuilder5;
-   RColumnModel falseModel(EColumnType::kInt64, false);
-   colBuilder5.LogicalColumnId(1).PhysicalColumnId(0).Model(falseModel).FieldId(2).Index(0);
+   EColumnType falseType(EColumnType::kInt64);
+   colBuilder5.LogicalColumnId(1).PhysicalColumnId(0).BitsOnStorage(64).Type(falseType).FieldId(2).Index(0);
    try {
       descBuilder.AddColumn(colBuilder5.MakeDescriptor().Unwrap()).ThrowOnError();
    } catch (const RException &err) {
@@ -127,7 +190,7 @@ TEST(RNTupleDescriptorBuilder, CatchBadColumnDescriptors)
    }
 
    RColumnDescriptorBuilder colBuilder6;
-   colBuilder6.LogicalColumnId(1).PhysicalColumnId(0).Model(colModel).FieldId(2).Index(0);
+   colBuilder6.LogicalColumnId(1).PhysicalColumnId(0).BitsOnStorage(32).Type(colType).FieldId(2).Index(0);
    descBuilder.AddColumn(colBuilder6.MakeDescriptor().Unwrap()).ThrowOnError();
 }
 
@@ -149,6 +212,7 @@ TEST(RNTupleDescriptorBuilder, CatchInvalidDescriptors)
 TEST(RFieldDescriptorBuilder, HeaderExtension)
 {
    RNTupleDescriptorBuilder descBuilder;
+   descBuilder.SetNTuple("ntpl", "");
    descBuilder.AddField(
       RFieldDescriptorBuilder().FieldId(0).Structure(ENTupleStructure::kRecord).MakeDescriptor().Unwrap());
    descBuilder.AddField(RFieldDescriptorBuilder()
@@ -161,7 +225,8 @@ TEST(RFieldDescriptorBuilder, HeaderExtension)
    descBuilder.AddColumn(RColumnDescriptorBuilder()
                             .LogicalColumnId(0)
                             .PhysicalColumnId(0)
-                            .Model(RColumnModel{EColumnType::kInt32, false})
+                            .BitsOnStorage(32)
+                            .Type(EColumnType::kInt32)
                             .FieldId(1)
                             .Index(0)
                             .MakeDescriptor()
@@ -188,7 +253,8 @@ TEST(RFieldDescriptorBuilder, HeaderExtension)
    descBuilder.AddColumn(RColumnDescriptorBuilder()
                             .LogicalColumnId(1)
                             .PhysicalColumnId(1)
-                            .Model(RColumnModel{EColumnType::kInt64, false})
+                            .BitsOnStorage(64)
+                            .Type(EColumnType::kInt64)
                             .FieldId(3)
                             .Index(0)
                             .FirstElementIndex(1002)
@@ -206,7 +272,8 @@ TEST(RFieldDescriptorBuilder, HeaderExtension)
    descBuilder.AddColumn(RColumnDescriptorBuilder()
                             .LogicalColumnId(2)
                             .PhysicalColumnId(2)
-                            .Model(RColumnModel{EColumnType::kBit, false})
+                            .BitsOnStorage(1)
+                            .Type(EColumnType::kBit)
                             .FieldId(4)
                             .Index(0)
                             .FirstElementIndex(1100)
@@ -223,7 +290,8 @@ TEST(RFieldDescriptorBuilder, HeaderExtension)
    descBuilder.AddColumn(RColumnDescriptorBuilder()
                             .LogicalColumnId(3)
                             .PhysicalColumnId(1)
-                            .Model(RColumnModel{EColumnType::kInt64, false})
+                            .BitsOnStorage(64)
+                            .Type(EColumnType::kInt64)
                             .FieldId(5)
                             .Index(0)
                             .MakeDescriptor()
@@ -479,4 +547,86 @@ TEST(RNTupleDescriptor, Clone)
    const auto &desc = ntuple->GetDescriptor();
    auto clone = desc.Clone();
    EXPECT_EQ(desc, *clone);
+}
+
+TEST(RNTupleDescriptor, BuildStreamerInfos)
+{
+   auto fnBuildStreamerInfosOf = [](const RFieldBase &field) -> RNTupleSerializer::StreamerInfoMap_t {
+      RNTupleDescriptorBuilder descBuilder;
+      descBuilder.SetNTuple("test", "");
+      descBuilder.AddField(
+         RFieldDescriptorBuilder().FieldId(0).Structure(ENTupleStructure::kRecord).MakeDescriptor().Unwrap());
+      auto fieldBuilder = RFieldDescriptorBuilder::FromField(field);
+      descBuilder.AddField(fieldBuilder.FieldId(1).MakeDescriptor().Unwrap());
+      descBuilder.AddFieldLink(0, 1);
+      int i = 2;
+      // In this test, we only support field hierarchies up to 2 levels
+      for (const auto &child : field.GetSubFields()) {
+         fieldBuilder = RFieldDescriptorBuilder::FromField(*child);
+         descBuilder.AddField(fieldBuilder.FieldId(i).MakeDescriptor().Unwrap());
+         descBuilder.AddFieldLink(1, i);
+         const auto childId = i;
+         i++;
+         for (const auto &grandChild : child->GetSubFields()) {
+            fieldBuilder = RFieldDescriptorBuilder::FromField(*grandChild);
+            descBuilder.AddField(fieldBuilder.FieldId(i).MakeDescriptor().Unwrap());
+            descBuilder.AddFieldLink(childId, i);
+            i++;
+         }
+      }
+      return descBuilder.BuildStreamerInfos();
+   };
+
+   RNTupleSerializer::StreamerInfoMap_t streamerInfoMap;
+
+   streamerInfoMap = fnBuildStreamerInfosOf(*RFieldBase::Create("f", "float").Unwrap());
+   EXPECT_TRUE(streamerInfoMap.empty());
+
+   streamerInfoMap = fnBuildStreamerInfosOf(*RFieldBase::Create("f", "std::vector<float>").Unwrap());
+   EXPECT_TRUE(streamerInfoMap.empty());
+
+   streamerInfoMap = fnBuildStreamerInfosOf(*RFieldBase::Create("f", "std::pair<float, float>").Unwrap());
+   EXPECT_TRUE(streamerInfoMap.empty());
+
+   streamerInfoMap = fnBuildStreamerInfosOf(*RFieldBase::Create("f", "std::map<int, float>").Unwrap());
+   EXPECT_TRUE(streamerInfoMap.empty());
+
+   streamerInfoMap = fnBuildStreamerInfosOf(*RFieldBase::Create("f", "std::unordered_map<int, float>").Unwrap());
+   EXPECT_TRUE(streamerInfoMap.empty());
+
+   std::vector<std::unique_ptr<RFieldBase>> itemFields;
+   streamerInfoMap = fnBuildStreamerInfosOf(ROOT::Experimental::RRecordField("f", std::move(itemFields)));
+   EXPECT_TRUE(streamerInfoMap.empty());
+
+   streamerInfoMap = fnBuildStreamerInfosOf(*RFieldBase::Create("f", "CustomStruct").Unwrap());
+   EXPECT_EQ(1u, streamerInfoMap.size());
+   EXPECT_STREQ("CustomStruct", streamerInfoMap.begin()->second->GetName());
+
+   streamerInfoMap = fnBuildStreamerInfosOf(*RFieldBase::Create("f", "std::vector<CustomStruct>").Unwrap());
+   EXPECT_EQ(1u, streamerInfoMap.size());
+   EXPECT_STREQ("CustomStruct", streamerInfoMap.begin()->second->GetName());
+
+   streamerInfoMap = fnBuildStreamerInfosOf(*RFieldBase::Create("f", "std::map<int, CustomStruct>").Unwrap());
+   EXPECT_EQ(1u, streamerInfoMap.size());
+   EXPECT_STREQ("CustomStruct", streamerInfoMap.begin()->second->GetName());
+
+   streamerInfoMap = fnBuildStreamerInfosOf(*RFieldBase::Create("f", "DerivedA").Unwrap());
+   EXPECT_EQ(2u, streamerInfoMap.size());
+   std::vector<std::string> typeNames;
+   for (const auto &[_, si] : streamerInfoMap) {
+      typeNames.emplace_back(si->GetName());
+   }
+   std::sort(typeNames.begin(), typeNames.end());
+   EXPECT_STREQ("CustomStruct", typeNames[0].c_str());
+   EXPECT_STREQ("DerivedA", typeNames[1].c_str());
+
+   streamerInfoMap = fnBuildStreamerInfosOf(*RFieldBase::Create("f", "std::pair<CustomStruct, DerivedA>").Unwrap());
+   EXPECT_EQ(2u, streamerInfoMap.size());
+   typeNames.clear();
+   for (const auto &[_, si] : streamerInfoMap) {
+      typeNames.emplace_back(si->GetName());
+   }
+   std::sort(typeNames.begin(), typeNames.end());
+   EXPECT_STREQ("CustomStruct", typeNames[0].c_str());
+   EXPECT_STREQ("DerivedA", typeNames[1].c_str());
 }

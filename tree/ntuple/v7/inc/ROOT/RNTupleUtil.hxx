@@ -19,49 +19,14 @@
 #include <cstdint>
 
 #include <string>
+#include <string_view>
 #include <variant>
 
+#include <ROOT/RError.hxx>
 #include <ROOT/RLogger.hxx>
+#include <ROOT/RNTupleReadOptions.hxx>
 
 namespace ROOT {
-namespace Experimental {
-
-class RLogChannel;
-/// Log channel for RNTuple diagnostics.
-RLogChannel &NTupleLog();
-
-/**
- * The fields in the ntuple model tree can carry different structural information about the type system.
- * Leaf fields contain just data, collection fields resolve to offset columns, record fields have no
- * materialization on the primitive column layer.
- */
-enum ENTupleStructure {
-   kLeaf,
-   kCollection,
-   kRecord,
-   kVariant,
-   kReference, // unimplemented so far
-   kInvalid,
-};
-
-/// Integer type long enough to hold the maximum number of entries in a column
-using NTupleSize_t = std::uint64_t;
-constexpr NTupleSize_t kInvalidNTupleIndex = std::uint64_t(-1);
-/// Wrap the integer in a struct in order to avoid template specialization clash with std::uint64_t
-struct RClusterSize {
-   using ValueType = std::uint64_t;
-
-   RClusterSize() : fValue(0) {}
-   explicit constexpr RClusterSize(ValueType value) : fValue(value) {}
-   RClusterSize& operator =(const ValueType value) { fValue = value; return *this; }
-   RClusterSize& operator +=(const ValueType value) { fValue += value; return *this; }
-   RClusterSize operator++(int) { auto result = *this; fValue++; return result; }
-   operator ValueType() const { return fValue; }
-
-   ValueType fValue;
-};
-using ClusterSize_t = RClusterSize;
-constexpr ClusterSize_t kInvalidClusterIndex(std::uint64_t(-1));
 
 /// Helper types to present an offset column as array of collection sizes.
 /// See RField<RNTupleCardinality<SizeT>> for details.
@@ -84,6 +49,104 @@ struct RNTupleCardinality {
    ValueType fValue;
 };
 
+namespace Experimental {
+
+class RLogChannel;
+/// Log channel for RNTuple diagnostics.
+RLogChannel &NTupleLog();
+
+// clang-format off
+/**
+\class ROOT::Experimental::EColumnType
+\ingroup NTuple
+\brief The available trivial, native content types of a column
+
+More complex types, such as classes, get translated into columns of such simple types by the RField.
+When changed, remember to update
+  - RColumnElement::Generate()
+  - RColumnElement::GetTypeName()
+  - RColumnElement::GetValidBitRange()
+  - RColumnElement template specializations / packing & unpacking
+  - If necessary, endianess handling for the packing + unit test in ntuple_endian
+  - RNTupleSerializer::[Des|S]erializeColumnType
+*/
+// clang-format on
+enum class EColumnType {
+   kUnknown = 0,
+   // type for root columns of (nested) collections; offsets are relative to the current cluster
+   kIndex64,
+   kIndex32,
+   // 96 bit column that is a pair of a kIndex64 and a 32bit dispatch tag to a column ID;
+   // used to serialize std::variant.
+   kSwitch,
+   kByte,
+   kChar,
+   kBit,
+   kReal64,
+   kReal32,
+   kReal16,
+   kInt64,
+   kUInt64,
+   kInt32,
+   kUInt32,
+   kInt16,
+   kUInt16,
+   kInt8,
+   kUInt8,
+   kSplitIndex64,
+   kSplitIndex32,
+   kSplitReal64,
+   kSplitReal32,
+   kSplitInt64,
+   kSplitUInt64,
+   kSplitInt32,
+   kSplitUInt32,
+   kSplitInt16,
+   kSplitUInt16,
+   kReal32Trunc,
+   kReal32Quant,
+   kMax,
+};
+
+/// The fields in the ntuple model tree can carry different structural information about the type system.
+/// Leaf fields contain just data, collection fields resolve to offset columns, record fields have no
+/// materialization on the primitive column layer.
+enum ENTupleStructure : std::uint16_t { kInvalid, kLeaf, kCollection, kRecord, kVariant, kStreamer, kUnknown };
+
+/// Integer type long enough to hold the maximum number of entries in a column
+using NTupleSize_t = std::uint64_t;
+constexpr NTupleSize_t kInvalidNTupleIndex = std::uint64_t(-1);
+/// Wrap the integer in a struct in order to avoid template specialization clash with std::uint64_t
+struct RClusterSize {
+   using ValueType = std::uint64_t;
+
+   RClusterSize() : fValue(0) {}
+   explicit constexpr RClusterSize(ValueType value) : fValue(value) {}
+   RClusterSize &operator=(const ValueType value)
+   {
+      fValue = value;
+      return *this;
+   }
+   RClusterSize &operator+=(const ValueType value)
+   {
+      fValue += value;
+      return *this;
+   }
+   RClusterSize operator++(int)
+   {
+      auto result = *this;
+      fValue++;
+      return result;
+   }
+   operator ValueType() const { return fValue; }
+
+   ValueType fValue;
+};
+using ClusterSize_t = RClusterSize;
+constexpr ClusterSize_t kInvalidClusterIndex(std::uint64_t(-1));
+
+constexpr int kUnknownCompressionSettings = -1;
+
 /// Holds the index and the tag of a kSwitch column
 class RColumnSwitch {
 private:
@@ -92,7 +155,7 @@ private:
 
 public:
    RColumnSwitch() = default;
-   RColumnSwitch(ClusterSize_t index, std::uint32_t tag) : fIndex(index), fTag(tag) { }
+   RColumnSwitch(ClusterSize_t index, std::uint32_t tag) : fIndex(index), fTag(tag) {}
    ClusterSize_t GetIndex() const { return fIndex; }
    std::uint32_t GetTag() const { return fTag; }
 };
@@ -110,17 +173,29 @@ class RClusterIndex {
 private:
    DescriptorId_t fClusterId = kInvalidDescriptorId;
    ClusterSize_t::ValueType fIndex = kInvalidClusterIndex;
+
 public:
    RClusterIndex() = default;
    RClusterIndex(const RClusterIndex &other) = default;
-   RClusterIndex &operator =(const RClusterIndex &other) = default;
+   RClusterIndex &operator=(const RClusterIndex &other) = default;
    constexpr RClusterIndex(DescriptorId_t clusterId, ClusterSize_t::ValueType index)
-      : fClusterId(clusterId), fIndex(index) {}
+      : fClusterId(clusterId), fIndex(index)
+   {
+   }
 
-   RClusterIndex  operator+(ClusterSize_t::ValueType off) const { return RClusterIndex(fClusterId, fIndex + off); }
-   RClusterIndex  operator-(ClusterSize_t::ValueType off) const { return RClusterIndex(fClusterId, fIndex - off); }
-   RClusterIndex  operator++(int) /* postfix */        { auto r = *this; fIndex++; return r; }
-   RClusterIndex& operator++()    /* prefix */         { ++fIndex; return *this; }
+   RClusterIndex operator+(ClusterSize_t::ValueType off) const { return RClusterIndex(fClusterId, fIndex + off); }
+   RClusterIndex operator-(ClusterSize_t::ValueType off) const { return RClusterIndex(fClusterId, fIndex - off); }
+   RClusterIndex operator++(int) /* postfix */
+   {
+      auto r = *this;
+      fIndex++;
+      return r;
+   }
+   RClusterIndex &operator++() /* prefix */
+   {
+      ++fIndex;
+      return *this;
+   }
    bool operator==(RClusterIndex other) const { return fClusterId == other.fClusterId && fIndex == other.fIndex; }
    bool operator!=(RClusterIndex other) const { return !(*this == other); }
 
@@ -142,27 +217,30 @@ struct RNTupleLocatorObject64 {
 /// TODO(jblomer): consider moving this to `RNTupleDescriptor`
 struct RNTupleLocator {
    /// Values for the _Type_ field in non-disk locators.  Serializable types must have the MSb == 0; see
-   /// `doc/specifications.md` for details
+   /// `doc/BinaryFormatSpecification.md` for details
    enum ELocatorType : std::uint8_t {
+      // The kTypeFile locator may translate to an on-disk standard locator (type 0x00) or a large locator (type 0x01),
+      // if the size of the referenced data block is >2GB
       kTypeFile = 0x00,
-      kTypeURI = 0x01,
       kTypeDAOS = 0x02,
 
       kLastSerializableType = 0x7f,
       kTypePageZero = kLastSerializableType + 1,
+      kTypeUnknown,
    };
 
+   std::uint64_t fBytesOnStorage = 0;
    /// Simple on-disk locators consisting of a 64-bit offset use variant type `uint64_t`; extended locators have
    /// `fPosition.index()` > 0
-   std::variant<std::uint64_t, std::string, RNTupleLocatorObject64> fPosition;
-   std::uint32_t fBytesOnStorage = 0;
+   std::variant<std::uint64_t, RNTupleLocatorObject64> fPosition{};
    /// For non-disk locators, the value for the _Type_ field. This makes it possible to have different type values even
    /// if the payload structure is identical.
    ELocatorType fType = kTypeFile;
    /// Reserved for use by concrete storage backends
    std::uint8_t fReserved = 0;
 
-   bool operator==(const RNTupleLocator &other) const {
+   bool operator==(const RNTupleLocator &other) const
+   {
       return fPosition == other.fPosition && fBytesOnStorage == other.fBytesOnStorage && fType == other.fType;
    }
    template <typename T>
@@ -171,6 +249,47 @@ struct RNTupleLocator {
       return std::get<T>(fPosition);
    }
 };
+
+/// Used to specify the underlying RNTuples in RNTupleProcessor and RNTupleReader::OpenFriends()
+struct RNTupleOpenSpec {
+   std::string fNTupleName;
+   std::string fStorage;
+   RNTupleReadOptions fOptions;
+
+   RNTupleOpenSpec(std::string_view n, std::string_view s) : fNTupleName(n), fStorage(s) {}
+};
+
+namespace Internal {
+template <typename T>
+auto MakeAliasedSharedPtr(T *rawPtr)
+{
+   const static std::shared_ptr<T> fgRawPtrCtrlBlock;
+   return std::shared_ptr<T>(fgRawPtrCtrlBlock, rawPtr);
+}
+
+/// Make an array of default-initialized elements. This is useful for buffers that do not need to be initialized.
+///
+/// With C++20, this function can be replaced by std::make_unique_for_overwrite<T[]>.
+template <typename T>
+std::unique_ptr<T[]> MakeUninitArray(std::size_t size)
+{
+   // DO NOT use std::make_unique<T[]>, the array elements are value-initialized!
+   return std::unique_ptr<T[]>(new T[size]);
+}
+
+inline constexpr EColumnType kTestFutureType =
+   static_cast<EColumnType>(std::numeric_limits<std::underlying_type_t<EColumnType>>::max() - 1);
+
+inline constexpr ENTupleStructure kTestFutureFieldStructure =
+   static_cast<ENTupleStructure>(std::numeric_limits<std::underlying_type_t<ENTupleStructure>>::max() - 1);
+
+inline constexpr RNTupleLocator::ELocatorType kTestLocatorType = static_cast<RNTupleLocator::ELocatorType>(0x7e);
+static_assert(kTestLocatorType < RNTupleLocator::ELocatorType::kLastSerializableType);
+
+/// Check whether a given string is a valid name according to the RNTuple specification
+RResult<void> EnsureValidNameForRNTuple(std::string_view name, std::string_view where);
+
+} // namespace Internal
 
 } // namespace Experimental
 } // namespace ROOT

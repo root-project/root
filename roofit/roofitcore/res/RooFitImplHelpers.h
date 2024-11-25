@@ -16,9 +16,10 @@
 #include <RooAbsReal.h>
 
 #include <sstream>
-#include <vector>
 #include <string>
+#include <string_view>
 #include <utility>
+#include <vector>
 
 class RooAbsPdf;
 class RooAbsData;
@@ -99,6 +100,8 @@ namespace RooFit {
 namespace Detail {
 
 std::string makeValidVarName(std::string const &in);
+
+void replaceAll(std::string &inOut, std::string_view what, std::string_view with);
 
 } // namespace Detail
 } // namespace RooFit

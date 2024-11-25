@@ -32,8 +32,6 @@ of the unblind parameter
 #include "RooArgSet.h"
 #include "RooUnblindOffset.h"
 
-using namespace std;
-
 ClassImp(RooUnblindOffset);
 
 ////////////////////////////////////////////////////////////////////////////////

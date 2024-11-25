@@ -16,13 +16,14 @@
 #define RooFit_RooEvaluatorWrapper_h
 
 #include <RooAbsData.h>
-#include "RooFit/Detail/DataMap.h"
+#include <RooFit/EvalContext.h>
+#include <RooFit/Evaluator.h>
 #include <RooGlobalFunc.h>
 #include <RooHelpers.h>
 #include <RooRealProxy.h>
-#include <RooFit/Evaluator.h>
+#include <RooSetProxy.h>
 
-#include "RooFit/Detail/Buffers.h"
+#include "RooFit/BatchModeDataHelpers.h"
 
 #include <chrono>
 #include <memory>
@@ -30,12 +31,12 @@
 
 class RooAbsArg;
 class RooAbsCategory;
-class RooSimultaneous;
+class RooAbsPdf;
 
 class RooEvaluatorWrapper final : public RooAbsReal {
 public:
-   RooEvaluatorWrapper(RooAbsReal &topNode, std::unique_ptr<RooFit::Evaluator> evaluator, std::string const &rangeName,
-                       RooSimultaneous const *simPdf, bool takeGlobalObservablesFromData);
+   RooEvaluatorWrapper(RooAbsReal &topNode, RooAbsData *data, bool useGPU, std::string const &rangeName,
+                       RooAbsPdf const *simPdf, bool takeGlobalObservablesFromData);
 
    RooEvaluatorWrapper(const RooEvaluatorWrapper &other, const char *name = nullptr);
 
@@ -61,17 +62,18 @@ public:
    void constOptimizeTestStatistic(ConstOpCode /*opcode*/, bool /*doAlsoTrackingOpt*/) override {}
 
 protected:
-   double evaluate() const override { return _evaluator ? _evaluator->run()[0] : 0.0; }
+   double evaluate() const override;
 
 private:
    std::shared_ptr<RooFit::Evaluator> _evaluator;
    RooRealProxy _topNode;
    RooAbsData *_data = nullptr;
-   RooArgSet _parameters;
+   RooSetProxy _paramSet;
    std::string _rangeName;
-   RooSimultaneous const *_simPdf = nullptr;
+   RooAbsPdf const *_pdf = nullptr;
    const bool _takeGlobalObservablesFromData;
    std::stack<std::vector<double>> _vectorBuffers; // used for preserving resources
+   std::map<RooFit::Detail::DataKey, std::span<const double>> _dataSpans;
 };
 
 #endif

@@ -234,7 +234,7 @@ TF1NormSum::TF1NormSum(const TString &formula, Double_t xmin, Double_t xmax)
       if (!functions[i])
          Error("TF1NormSum", "Function %s does not exist", funcstringall[k].Data());
       // (set range for first function, which determines range of whole TF1NormSum)
-      if (i == 0) {
+      else if (i == 0) {
          functions[i]->GetRange(old_xmin, old_xmax);
          functions[i]->SetRange(xmin, xmax);
       }

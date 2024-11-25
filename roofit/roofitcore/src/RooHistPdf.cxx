@@ -80,7 +80,7 @@ RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgSet& var
 
   // Adjust ranges of _histObsList to those of _dataHist
   for (const auto hobs : _histObsList) {
-    // Guaranteed to succeed, since checked above in ctor
+    // Guaranteed to succeed, since checked above in constructor
     RooAbsArg* dhobs = dhist.get()->find(hobs->GetName()) ;
     RooRealVar* dhreal = dynamic_cast<RooRealVar*>(dhobs) ;
     if (dhreal){
@@ -135,7 +135,7 @@ RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgList& pd
 
   // Adjust ranges of _histObsList to those of _dataHist
   for (const auto hobs : _histObsList) {
-    // Guaranteed to succeed, since checked above in ctor
+    // Guaranteed to succeed, since checked above in constructor
     RooAbsArg* dhobs = dhist.get()->find(hobs->GetName()) ;
     RooRealVar* dhreal = dynamic_cast<RooRealVar*>(dhobs) ;
     if (dhreal){
@@ -181,16 +181,18 @@ RooDataHist* RooHistPdf::cloneAndOwnDataHist(const char* newname) {
    return _dataHist;
 }
 
-void RooHistPdf::computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const {
+void RooHistPdf::doEval(RooFit::EvalContext &ctx) const
+{
+   std::span<double> output = ctx.output();
 
-  // For interpolation and histograms of higher dimension, use base function
-  if(_pdfObsList.size() > 1) {
-      RooAbsReal::computeBatch(output, nEvents, dataMap);
+   // For interpolation and histograms of higher dimension, use base function
+   if (_pdfObsList.size() > 1) {
+      RooAbsReal::doEval(ctx);
       return;
-  }
+   }
 
-  auto xVals = dataMap.at(_pdfObsList[0]);
-  _dataHist->weights(output, xVals, _intOrder, true, _cdfBoundaries);
+   auto xVals = ctx.at(_pdfObsList[0]);
+   _dataHist->weights(output.data(), xVals, _intOrder, true, _cdfBoundaries);
 }
 
 
@@ -218,26 +220,6 @@ double RooHistPdf::evaluate() const
   double ret = _dataHist->weightFast(_histObsList, _intOrder, !_unitNorm, _cdfBoundaries);
 
   return std::max(ret, 0.0);
-}
-
-void RooHistPdf::rooHistTranslateImpl(RooAbsArg const *klass, RooFit::Detail::CodeSquashContext &ctx, int intOrder,
-                                      RooDataHist const *dataHist, const RooArgSet &obs, bool correctForBinSize)
-{
-   if (intOrder != 0) {
-      ooccoutE(klass, InputArguments) << "RooHistPdf::weight(" << klass->GetName()
-                                      << ") ERROR: Code Squashing currently only supports non-interpolation cases."
-                                      << std::endl;
-      return;
-   }
-
-   std::string const &idxName = dataHist->calculateTreeIndexForCodeSquash(klass, ctx, obs);
-   std::string const &weightName = dataHist->declWeightArrayForCodeSquash(klass, ctx, correctForBinSize);
-   ctx.addResult(klass, weightName + "[" + idxName + "]");
-}
-
-void RooHistPdf::translate(RooFit::Detail::CodeSquashContext &ctx) const
-{
-   rooHistTranslateImpl(this, ctx, _intOrder, _dataHist, _pdfObsList, !_unitNorm);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -383,24 +365,6 @@ double RooHistPdf::analyticalIntegral(Int_t code,
                               dataHist.sum(intSet,histObsList,true,!histFuncMode, ranges);
 
   return ret ;
-}
-
-std::string RooHistPdf::rooHistIntegralTranslateImpl(int code, RooAbsArg const *klass, RooDataHist const *dataHist,
-                                                     const RooArgSet &obs, bool histFuncMode)
-{
-   if (((2 << obs.size()) - 1) != code) {
-      oocoutE(klass, InputArguments)
-         << "RooHistPdf::integral(" << klass->GetName()
-         << ") ERROR: AD currently only supports integrating over all histogram observables." << std::endl;
-      return "";
-   }
-   return std::to_string(dataHist->sum(histFuncMode));
-}
-
-std::string RooHistPdf::buildCallToAnalyticIntegral(int code, const char * /*rangeName */,
-                                                    RooFit::Detail::CodeSquashContext & /* ctx */) const
-{
-   return rooHistIntegralTranslateImpl(code, this, _dataHist, _pdfObsList, false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

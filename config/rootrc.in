@@ -214,8 +214,6 @@ Gui.TooltipForegroundColor:  black
 Gui.MimeTypeFile:            $(HOME)/.root.mimes
 # If above does not exists defaults to this:
 #Gui.MimeTypeFile:            @etcdir@/root.mimes
-# Type of tree viewer: TTreeViewer or RTreeViewer
-TreeViewer.Name:             TTreeViewer
 # Type of Browser: TRootBrowser or TRootBrowserLite
 Browser.Name:                @root_browser_class@
 # Browser Options (plugins)
@@ -235,6 +233,12 @@ Browser.ExpandDirectories    yes
 # Start URL for the TRootBrowser embedded HTML renderer
 Browser.StartUrl:            http://root.cern.ch/root/html/ClassIndex.html
 
+# Type of tree viewer: TTreeViewer or RTreeViewer
+TreeViewer.Name:             @root_treeviewer_class@
+
+# Type of geometry painter: root or web
+GeomPainter.Name:            @root_geompainter_type@
+
 # THttpServer specific settings
 # location of JavaScript ROOT sources
 #HttpServ.JSRootPath:        @jsrootdir@
@@ -249,6 +253,10 @@ WebGui.HttpPortMax:         9800
 WebGui.HttpBind:
 # Use only loopback address to bind http server (default - yes)
 WebGui.HttpLoopback:        yes
+# Require unique single-time token (key) for connecting with widget (default - yes)
+WebGui.OnetimeKey:          yes
+# Only single connection allowed to any web widget
+WebGui.SingleConnMode:      yes
 # Use https protocol for the http server (default - no)
 WebGui.UseHttps:            no
 WebGui.ServerCert:          rootserver.pem
@@ -256,6 +264,8 @@ WebGui.ServerCert:          rootserver.pem
 WebGui.WaitForTmout:        100.0
 # name of executable for firefox and chrome
 WebGui.Chrome:             @chromeexe@
+WebGui.ChromeVersion:      @chromemajor@
+WebGui.Edge:               @edgeexe@
 WebGui.Firefox:            @firefoxexe@
 # location of OpenUi5 applications for ROOT like canvas, eve, fitpanel, ...
 #WebGui.RootUi5Path:        @openui5dir@
@@ -452,7 +462,7 @@ RSA.KeyType:  1
 # UsrPwd: check of host equivalence via /etc/hosts.equiv or $HOME/.rhosts.
 #SrvAuth.CheckHostsEquivalence: 1
 
-# Force file opening via TNetFile (TXNetFile) if a hostname is specified
+# Force file opening via TNetFile (TNetXNGFile) if a hostname is specified
 # in the Url.
 # By default, for local files TFile::Open() invokes directly TFile
 #TFile.ForceRemote:  yes
@@ -473,6 +483,12 @@ RSA.KeyType:  1
 # Enable cross-protocol redirects
 TFile.CrossProtocolRedirects:  yes
 
+# Force the producing of files forward compatible with (unpatched) version
+# of ROOT older than v6.30 by recording the internal bits kIsOnHeap and
+# kNotDeleted; Older releases were not explicitly setting those bits to the
+# correct value but instead used verbatim the value stored in the file.
+# TFile.v630forwardCompatibility: no
+
 # List of S3 servers known to support multi-range HTTP GET requests.
 # This is the value sent back by the S3 server in the 'Server:' header
 # of the HTTP response.
@@ -486,7 +502,7 @@ TS3WebFile.Root.MultiRangeServer:  Huawei OBS
 # In case the file namespace descriptor ends with - the namespace
 # is not a part of the filename.
 # Extend in private .rootrc with a +Url.Special line.
-Url.Special:         file: hpss: gfal: dcache:
+Url.Special:         file: hpss: dcache:
 +Url.Special:        /alien/-
 
 # PROOF XRD client variables
@@ -495,8 +511,6 @@ Url.Special:         file: hpss: gfal: dcache:
 # Socket read timeout [in secs: default 10 secs]
 # XProof.ReadTimeout: 10
 
-# The following controls the verbosity of the TXNetFile XRootD client
-#
 # XNet.Debug            - log verbosity level (default 0)
 #                         (0 = nothing,
 #                          1 = Info  (messages of interest to the user)
@@ -505,104 +519,14 @@ Url.Special:         file: hpss: gfal: dcache:
 #                          4 = Dump+ (adds dump of data received/sent at the lower
 #                                     level)
 
-# The following env vars are handled by TXNetFile and related classes
-# (module netx, libNetx.so).
-#
-# XNet.ConnectTimeout   - maximum time to wait before server's
-#                         response on a connect [120 s]
-# XNet.RequestTimeout   - maximum time to wait before considering
-#                         a read/write failure [300 s]
-# XNet.ConnectDomainAllowRE
-#                       - sequence of TRegexp regular expressions
-#                         separated by a |.
-#                         A domain is granted access to for the
-#                         first connection if it matches one of these
-#                         regexps. Example:
-#                         slac.stanford.edu|pd.infn.it|fe.infn.it
-# XNet.ConnectDomainDenyRE
-#                       - sequence of TRegexp regular expressions
-#                         separated by a |.
-#                         A domain is denied access to for the
-#                         first connection if it matches one of these
-#                         regexps. Example:
-#                         slac.stanford.edu|pd.infn.it|fe.infn.it
-# XNet.RedirDomainAllowRE
-#                       - sequence of TRegexp regular expressions
-#                         separated by a |.
-#                         A domain is granted access to for a
-#                         redirection if it matches one of these
-#                         regexps. Example:
-#                         slac.stanford.edu|pd.infn.it|fe.infn.it
-# XNet.RedirDomainDenyRE
-#                       - sequence of TRegexp regular expressions
-#                         separated by a |.
-#                         A domain is denied access to for a
-#                         redirection if it matches one of these
-#                         regexps. Example:
-#                         slac.stanford.edu|pd.infn.it|fe.infn.it
-# XNet.MaxRedirectCount - maximum number of redirections from
-#                         server [16]
-# XNet.ReconnectWait    - sleep-time before going back to the
-#                         load balancer (or rebouncing to the same
-#                         failing host) after a read/write error
-#                         [5 s]
-# XNet.ReadAheadSize    - read ahead value, in bytes, to use with the XrdClient
-#                         internal caching scheme
-#                         Generally not much useful together with the TFile cache,
-#                         which will disable the readahead as soon it starts operating,
-#                         i.e. requesting async data through XrdClient.
-#                         Note that we cannot suppose that the TFile cache
-#                         will start working at the beginning of the data processing.
-#                         Setting a read ahead size > 0 will involve this phase,
-#                         sometimes it could be an advantage, sometimes not.
-#                         If > 0, TXNetFile will switch it on again if it sees that
-#                         synchronous ReadBuffer requests are issued again
-
-XNet.ReadAheadSize: 0
-
-# XNet.ReadCacheSize    - Default read cache size inside XrdClient, in bytes.
-#                         TXNetFile/TFileReadCache automatically sets this to a
-#                         'correct' value when needed.
-#                         Set a value here to override a *minimum*
-#                         size. It is not preallocated.
-#                         TFile/TXNetFile can anyway make it grow
-#                         automatically when needed.
-
-XNet.ReadCacheSize: 10000000
-
-# XNet.FirstConnectMaxCnt
-#                       - Number of connect retries to the first host
-
 # XNet.PrintTAG         - Print a particular string the developers
 #                         can choose to quickly recognize the
 #                         version at run time [0]
 
-# XNet.ParStreamsPerPhyConn
-#                       - Number of additional TCP streams to use per
-#                         each physical connection
-#                         0=monostream mode
-#                         1-15=multistream mode
-
-XNet.ParStreamsPerPhyConn: 0
-
-# XNet.DfltTcpWindowSize
-#                       - Default size of the TCP window; set to 0 to use the
-#                         system default, which means automatic scaling under Linux
-#                         and MacOsX (at least). Value in bytes [0]
-# XNet.DfltTcpWindowSize  262144
-
-# XNet.TransactionTimeout
-#                       - The maximum amount of time either a request or a server
-#                         wait request can be before the client declares an error.
-# XNet.TransactionTimeout: 28800
-
 # The following env vars are handled by TNetXNGFile (new xrootd client interface)
 # and related classes (module netxng, libNetxNG.so).
 
-# Use the old xrootd client (libNetx) instead of the new (libNetxNG)
-XNet.UseOldClient: @useoldnetx@
-
-# The following controls the verbosity of the TXNetNGFile XRootD client
+# The following controls the verbosity of the TNetXNGFile XRootD client
 #
 # NetXNG.Debug            - ""       use default level
 #                         "Info"   messages of interest to the user

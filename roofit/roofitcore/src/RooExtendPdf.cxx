@@ -49,7 +49,7 @@ the nominal integration range \f$ \mathrm{normRegion}[x] \f$.
 
 
 
-using namespace std;
+using std::endl;
 
 ClassImp(RooExtendPdf);
 
@@ -171,11 +171,4 @@ std::unique_ptr<RooAbsReal> RooExtendPdf::createExpectedEventsFunc(const RooArgS
       out->addOwnedComponents(std::move(pdfExpectedEvents));
    }
    return out;
-}
-
-
-void RooExtendPdf::translate(RooFit::Detail::CodeSquashContext &ctx) const
-{
-   // Use the result of the underlying pdf.
-   ctx.addResult(this, ctx.getResult(_pdf));
 }

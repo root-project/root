@@ -1,0 +1,51 @@
+#!/usr/bin/bash
+
+# Please run in this directory.
+
+# We will keep our own CMakeLists.txt files
+
+mv CPyCppyy/CMakeLists.txt CPyCppyy_CMakeLists.txt
+mv cppyy/CMakeLists.txt cppyy_CMakeLists.txt
+
+rm -rf CPyCppyy
+rm -rf cppyy
+
+git clone https://github.com/wlav/CPyCppyy.git
+git clone https://github.com/wlav/cppyy.git
+
+# In case you want to merge other branches first:
+
+cd CPyCppyy
+
+git remote rename origin wlav
+git remote add guitargeek https://github.com/guitargeek/CPyCppyy.git
+git fetch guitargeek
+
+git checkout -b sync
+
+rebase_topic () {
+  git rebase sync $1 && git branch -D sync && git checkout -b sync
+}
+
+rebase_topic guitargeek/string_converters
+
+cd ..
+
+rm -rf CPyCppyy/.git
+rm -rf cppyy/.git
+
+# Move back CMakeLists.txt files
+
+mv CPyCppyy_CMakeLists.txt CPyCppyy/CMakeLists.txt
+mv cppyy_CMakeLists.txt cppyy/CMakeLists.txt
+
+# Apply patches (they were created with git format-patch -1 HEAD)
+# Alternatively, one can also use "git am" to create individual commits
+git apply patches/CPyCppyy-Adapt-to-no-std-in-ROOT.patch
+git apply patches/CPyCppyy-Always-convert-returned-std-string.patch
+git apply patches/CPyCppyy-Disable-implicit-conversion-to-smart-ptr.patch
+git apply patches/CPyCppyy-TString_converter.patch
+git apply patches/CPyCppyy-Prevent-construction-of-agg-init-for-tuple.patch
+git apply patches/cppyy-No-CppyyLegacy-namespace.patch
+git apply patches/cppyy-Remove-Windows-workaround.patch
+git apply patches/cppyy-Don-t-enable-cling-autoloading.patch

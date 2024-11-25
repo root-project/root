@@ -27,6 +27,8 @@ class RooAbsData(object):
     data.plotOn(frame, CutRange="r1")
     \endcode
     """
+    
+    __cpp_name__ = 'RooAbsData'
 
     @cpp_signature(
         "RooPlot *RooAbsData::plotOn(RooPlot* frame,"

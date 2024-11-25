@@ -82,19 +82,13 @@ double RooLognormal::evaluate() const
    return ROOT::Math::lognormal_pdf(x, ln_m0, ln_k);
 }
 
-void RooLognormal::translate(RooFit::Detail::CodeSquashContext &ctx) const
-{
-   std::string funcName = _useStandardParametrization ? "logNormalEvaluateStandard" : "logNormalEvaluate";
-   ctx.addResult(this, ctx.buildCall("RooFit::Detail::EvaluateFuncs::" + funcName, x, k, m0));
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of Lognormal distribution.
-void RooLognormal::computeBatch(double *output, size_t nEvents, RooFit::Detail::DataMap const &dataMap) const
+void RooLognormal::doEval(RooFit::EvalContext &ctx) const
 {
    auto computer = _useStandardParametrization ? RooBatchCompute::LognormalStandard : RooBatchCompute::Lognormal;
-   RooBatchCompute::compute(dataMap.config(this), computer, output, nEvents,
-                            {dataMap.at(x), dataMap.at(m0), dataMap.at(k)});
+   RooBatchCompute::compute(ctx.config(this), computer, ctx.output(),
+                            {ctx.at(x), ctx.at(m0), ctx.at(k)});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -114,13 +108,6 @@ double RooLognormal::analyticalIntegral(Int_t /*code*/, const char *rangeName) c
    double scaledMin = _useStandardParametrization ? std::log(x.min(rangeName)) - m0 : std::log(x.min(rangeName) / m0);
    double scaledMax = _useStandardParametrization ? std::log(x.max(rangeName)) - m0 : std::log(x.max(rangeName) / m0);
    return 0.5 * (RooMath::erf(scaledMax / (root2 * ln_k)) - RooMath::erf(scaledMin / (root2 * ln_k)));
-}
-
-std::string RooLognormal::buildCallToAnalyticIntegral(int /*code*/, const char *rangeName,
-                                                      RooFit::Detail::CodeSquashContext &ctx) const
-{
-   std::string funcName = _useStandardParametrization ? "logNormalIntegralStandard" : "logNormalIntegral";
-   return ctx.buildCall("RooFit::Detail::AnalyticalIntegrals::" + funcName, x.min(rangeName), x.max(rangeName), m0, k);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

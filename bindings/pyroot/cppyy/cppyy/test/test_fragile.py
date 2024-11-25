@@ -1,6 +1,7 @@
 import py, os, sys
-from pytest import raises
-from .support import setup_make, IS_WINDOWS
+from pytest import raises, skip
+from .support import setup_make, ispypy, IS_WINDOWS, IS_MAC_ARM
+
 
 currpath = py.path.local(__file__).dirpath()
 test_dct = str(currpath.join("fragileDict"))
@@ -84,9 +85,9 @@ class TestFRAGILE:
 
         e = fragile.E()
         raises(TypeError, e.overload, None)
-        # allowing access to e.m_pp_no_such is debatable, but it provides a raw pointer
-        # which may be useful ...
-        assert e.m_pp_no_such[0] == 0xdead
+        # allowing access to e.m_pp_no_such is debatable, but it allows a typed address
+        # to be passed back into C++, which may be useful ...
+        assert cppyy.addressof(e.m_pp_no_such[0]) == 0xdead
 
     def test05_wrong_arg_addressof(self):
         """Test addressof() error reporting"""
@@ -225,8 +226,59 @@ class TestFRAGILE:
 
         # TODO: think this through ... probably want this, but interferes with
         # the (new) policy of lazy lookups
-        #assert 'fglobal' in members          # function
-        #assert 'gI'in members                # variable
+        #assert 'fglobal' in members         # function
+        assert 'gI'in members                # variable
+
+      # GetAllCppNames() behaves differently from python dir() but providing the full
+      # set, which is then filtered in dir(); check both
+        cppyy.cppdef("""\
+        #ifdef _MSC_VER
+        #define CPPYY_IMPORT extern __declspec(dllimport)
+        #else
+        #define CPPYY_IMPORT extern
+        #endif
+
+        namespace Cppyy {
+
+        typedef size_t TCppScope_t;
+
+        CPPYY_IMPORT TCppScope_t GetScope(const std::string& scope_name);
+        CPPYY_IMPORT void GetAllCppNames(TCppScope_t scope, std::set<std::string>& cppnames);
+
+        }""")
+
+        cppyy.cppdef("""\
+        namespace GG {
+        struct S {
+          int _a;
+          int _c;
+          S(int a, int c): _a{a}, _c{c} { }
+          S(): _a{0}, _c{0} { }
+          bool operator<(int i) { return i < (_a+_c); }
+        }; }""");
+
+
+        assert 'S' in dir(cppyy.gbl.GG)
+
+        handle = cppyy.gbl.Cppyy.GetScope("GG::S")
+        assert handle
+
+        cppnames = cppyy.gbl.std.set[str]()
+        cppyy.gbl.Cppyy.GetAllCppNames(handle, cppnames)
+
+        assert 'S' in cppnames
+        assert '_a' in cppnames
+        assert '_c' in cppnames
+
+        assert 'operator<' in cppnames
+
+        dirS = dir(cppyy.gbl.GG.S)
+
+        assert 'S' not in dirS # is __init__
+        assert '_a' in dirS
+        assert '_c' in dirS
+
+        assert 'operator<' not in dirS
 
     def test12_imports(self):
         """Test ability to import from namespace (or fail with ImportError)"""
@@ -380,7 +432,17 @@ class TestFRAGILE:
     def test17_interactive(self):
         """Test the usage of 'from cppyy.interactive import *'"""
 
-        import assert_interactive
+        import sys
+
+        if 0x030b0000 <= sys.hexversion:
+            skip('"from cppyy.interactive import *" is no longer supported')
+
+        oldsp = sys.path[:]
+        sys.path.append('.')
+        try:
+            import assert_interactive
+        finally:
+            sys.path = oldsp
 
     def test18_overload(self):
         """Test usage of __overload__"""
@@ -388,18 +450,17 @@ class TestFRAGILE:
         import cppyy
 
         cppyy.cppdef("""struct Variable {
-            Variable(double lb, double ub, double value, bool binary, bool integer, const string& name) {}
+            Variable(double lb, double ub, double value, bool binary, bool integer, const std::string& name) {}
             Variable(int) {}
         };""")
 
-        for sig in ['double, double, double, bool, bool, const string&',
-                    'double,double,double,bool,bool,const string&',
-                    'double lb, double ub, double value, bool binary, bool integer, const string& name']:
+        for sig in ['double, double, double, bool, bool, const std::string&',
+                    'double,double,double,bool,bool,const std::string&',
+                    'double lb, double ub, double value, bool binary, bool integer, const std::string& name']:
             assert cppyy.gbl.Variable.__init__.__overload__(sig)
 
     def test19_gbl_contents(self):
         """Assure cppyy.gbl is mostly devoid of ROOT thingies"""
-
 
         import cppyy
 
@@ -408,6 +469,190 @@ class TestFRAGILE:
         assert not 'TCanvasImp' in dd
         assert not 'ESysConstants' in dd
         assert not 'kDoRed' in dd
+
+    def test20_capture_output(self):
+        """Capture cerr into a string"""
+
+        if IS_MAC_ARM:
+            skip("crashes in clang::Sema::FindInstantiatedDecl for rdbuf()")
+
+        import cppyy
+
+        cppyy.cppdef(r"""\
+        namespace capture {
+        void say_hello() {
+           std::cerr << "Hello, World\n";
+        }
+
+        void rdbuf_wa(std::ostream& o, std::basic_stringbuf<char>* b) {
+           o.rdbuf(b);
+        } }""")
+
+        capture = cppyy.gbl.std.ostringstream()
+        oldbuf = cppyy.gbl.std.cerr.rdbuf()
+
+        try:
+            cppyy.gbl.capture.rdbuf_wa(cppyy.gbl.std.cerr, capture.rdbuf())
+            cppyy.gbl.capture.say_hello()
+        finally:
+            cppyy.gbl.std.cerr.rdbuf(oldbuf)
+
+        assert capture.str() == "Hello, World\n"
+
+    def test21_failing_cppcode(self):
+        """Check error behavior of failing C++ code"""
+
+        import cppyy, string, re
+
+        allspace = re.compile(r'\s+')
+        def get_errmsg(exc, allspace=allspace):
+            err = str(exc.value)
+            return re.sub(allspace, '', err)
+
+        with raises(ImportError) as include_exc:
+            cppyy.include("doesnotexist.h")
+        err = get_errmsg(include_exc)
+        assert "Failedtoloadheaderfile\"doesnotexist.h\"" in err
+        assert "fatalerror:" in err
+        assert "\'doesnotexist.h\'filenotfound" in err
+
+        with raises(ImportError) as c_include_exc:
+            cppyy.c_include("doesnotexist.h")
+        err = get_errmsg(c_include_exc)
+        assert "Failedtoloadheaderfile\"doesnotexist.h\"" in err
+        assert "fatalerror:" in err
+        assert "\'doesnotexist.h\'filenotfound" in err
+
+        with raises(SyntaxError) as cppdef_exc:
+            cppyy.cppdef("1aap = 42;")
+        err = get_errmsg(cppdef_exc)
+        assert "FailedtoparsethegivenC++code" in err
+        assert "error:" in err
+        assert "invaliddigit" in err
+        assert "1aap=42;" in err
+
+    def test22_cppexec(self):
+        """Interactive access to the Cling global scope"""
+
+        import cppyy
+
+        cppyy.cppexec("int interactive_b = 4")
+        assert cppyy.gbl.interactive_b == 4
+
+        with raises(SyntaxError):
+            cppyy.cppexec("doesnotexist");
+
+    def test23_set_debug(self):
+        """Setting of global gDebug variable"""
+
+        import cppyy
+
+        cppyy.set_debug()
+        assert cppyy.gbl.CppyyLegacy.gDebug == 10
+        cppyy.set_debug(False)
+        assert cppyy.gbl.CppyyLegacy.gDebug ==  0
+        cppyy.set_debug(True)
+        assert cppyy.gbl.CppyyLegacy.gDebug == 10
+        cppyy.set_debug(False)
+        assert cppyy.gbl.CppyyLegacy.gDebug ==  0
+
+    def test24_asan(self):
+        """Check availability of ASAN with gcc"""
+
+        import cppyy
+        import sys
+
+        if not 'linux' in sys.platform:
+            return
+
+        cppyy.include('sanitizer/asan_interface.h')
+
+    def test25_cppdef_error_reporting(self):
+        """Check error reporting of cppyy.cppdef"""
+
+        import cppyy, warnings
+
+        assert cppyy.gbl.fragile.add42(1) == 43     # brings in symbol from library
+
+        with raises(SyntaxError):
+          # redefine symbol, leading to duplicate
+            cppyy.cppdef("""\
+            namespace fragile {
+                int add42(int i) { return i + 42; }
+            }""")
+
+        with warnings.catch_warnings(record=True) as w:
+          # missing return statement
+            cppyy.cppdef("""\
+            namespace fragile {
+                double add42d(double d) { d + 42.; return d; }
+            }""")
+
+        assert len(w) == 1
+        assert issubclass(w[-1].category, SyntaxWarning)
+        assert "return" in str(w[-1].message)
+
+      # mix of error and warning
+        with raises(SyntaxError):
+          # redefine symbol, leading to duplicate
+            cppyy.cppdef("""\
+            namespace fragile {
+                float add42f(float d) { d + 42.f; }
+                int add42(int i) { return i + 42; }
+            }""")
+
+    def test26_macro(self):
+        """Test access to C++ pre-processor macro's"""
+
+        import cppyy
+
+        cppyy.cppdef('#define HELLO "Hello, World!"')
+        assert cppyy.macro("HELLO") == "Hello, World!"
+
+        with raises(ValueError):
+            cppyy.macro("SOME_INT")
+
+        cppyy.cppdef('#define SOME_INT 42')
+        assert cppyy.macro("SOME_INT") == 42
+
+    def test27_pickle_enums(self):
+        """Pickling of enum types"""
+
+        import cppyy
+        import pickle
+
+        cppyy.cppdef("""
+        enum MyPickleEnum { PickleFoo, PickleBar };
+        namespace MyPickleNamespace {
+          enum MyPickleEnum { PickleFoo, PickleBar };
+        }""")
+
+        e1 = cppyy.gbl.MyPickleEnum
+        assert e1.__module__ == 'cppyy.gbl'
+        assert pickle.dumps(e1.PickleFoo)
+
+        e2 = cppyy.gbl.MyPickleNamespace.MyPickleEnum
+        assert e2.__module__ == 'cppyy.gbl.MyPickleNamespace'
+        assert pickle.dumps(e2.PickleBar)
+
+    def test28_memoryview_of_empty(self):
+        """memoryview of an empty array"""
+
+        import cppyy, array
+
+        cppyy.cppdef("void f(unsigned char const *buf) {}")
+        try:
+            cppyy.gbl.f(memoryview(array.array('B', [])))
+        except TypeError:
+            pass        # used to crash in PyObject_CheckBuffer on Linux
+
+    def test29_vector_datamember(self):
+        """Offset calculation of vector datamember"""
+
+        import cppyy
+
+        cppyy.cppdef("struct VectorDatamember { std::vector<unsigned> v; };")
+        cppyy.gbl.VectorDatamember     # used to crash on Mac arm64
 
 
 class TestSIGNALS:
@@ -418,6 +663,15 @@ class TestSIGNALS:
 
     def test01_abortive_signals(self):
         """Conversion from abortive signals to Python exceptions"""
+
+        if ispypy:
+            skip('signals not yet implemented')
+
+        if IS_MAC_ARM:
+            skip("JIT exceptions from signals not supported on Mac ARM")
+
+        if IS_WINDOWS:
+            skip("abortive signals crash on most Windows platforms")
 
         import cppyy
         import cppyy.ll
@@ -441,7 +695,8 @@ class TestSIGNALS:
                 f.sigabort()
 
       # can only recover once from each error on Windows, which is functionally
-      # enough, but precludes further testing here
+      # enough, but precludes further testing here (change: now drop all, see above,
+      # as on some MSVC builds, no signals are caught ??)
         if not IS_WINDOWS:
             cppyy.ll.set_signals_as_exception(True)
             with raises((cppyy.ll.SegmentationViolation, cppyy.ll.IllegalInstruction)):
@@ -457,3 +712,87 @@ class TestSIGNALS:
             f.sigabort.__sig2exc__ = True
             with raises(cppyy.ll.AbortSignal):
                 f.sigabort()
+
+
+class TestSTDNOTINGLOBAL:
+    def setup_class(cls):
+        import cppyy
+        cls.has_byte = 201402 < cppyy.gbl.gInterpreter.ProcessLine("__cplusplus;")
+
+    def test01_stl_in_std(self):
+        """STL classes should live in std:: only"""
+
+        import cppyy
+
+        names = ['array', 'function', 'list', 'set', 'vector']
+        if self.has_byte:
+            names.append('byte')
+
+        for name in names:
+            getattr(cppyy.gbl.std, name)
+            with raises(AttributeError):
+                getattr(cppyy.gbl, name)
+
+      # inject a vector in the global namespace
+        cppyy.cppdef("class vector{};")
+        v = cppyy.gbl.vector()
+        assert cppyy.gbl.vector is not cppyy.gbl.std.vector
+
+    def test02_ctypes_in_both(self):
+        """Standard int types live in both global and std::"""
+
+        import cppyy
+
+        for name in ['int8_t', 'uint8_t']:
+            getattr(cppyy.gbl.std, name)
+            getattr(cppyy.gbl, name)
+
+        # TODO: get the types to match exactly as well
+        assert cppyy.gbl.std.int8_t(-42) == cppyy.gbl.int8_t(-42)
+        assert cppyy.gbl.std.uint8_t(42) == cppyy.gbl.uint8_t(42)
+
+    def test03_clashing_using_in_global(self):
+        """Redefines of std:: typedefs should be possible in global"""
+
+        import cppyy
+
+        cppyy.cppdef("""
+            using uint   = unsigned int;
+            using ushort = unsigned short;
+            using uchar  = unsigned char;
+            using byte   = unsigned char;
+        """ )
+
+        for name in ['int', 'uint', 'ushort', 'uchar', 'byte']:
+            getattr(cppyy.gbl, name)
+
+    def test04_no_legacy(self):
+        """Test some functions that previously crashed"""
+
+        import cppyy
+
+        cppyy.cppdef("""
+        enum ELogLevel {
+          kLogEmerg          = 0,
+          kLogAlert          = 1,
+          kLogCrit           = 2,
+          kLogErr            = 3,
+          kLogWarning        = 4,
+          kLogNotice         = 5,
+          kLogInfo           = 6,
+          kLogDebug          = 7
+        };""")
+
+        assert cppyy.gbl.ELogLevel != cppyy.gbl.CppyyLegacy.ELogLevel
+
+    def test05_span_compatibility(self):
+        """Test compatibility of span under C++2a compilers that support it"""
+
+        import cppyy
+
+        cppyy.cppdef("""\
+        #if __has_include(<span>)
+        #include <span>
+        std::span<int> my_test_span1;
+        #endif
+        """)

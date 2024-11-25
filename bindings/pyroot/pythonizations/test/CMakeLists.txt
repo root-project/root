@@ -14,11 +14,6 @@ endif()
 # Test ROOT module
 ROOT_ADD_PYUNITTEST(pyroot_root_module root_module.py)
 
-# Test versions of Python dependencies
-if(NOT MSVC)
-    ROOT_ADD_PYUNITTEST(pyroot_dependency_versions dependency_versions.py)
-endif()
-
 # @pythonization decorator
 ROOT_ADD_PYUNITTEST(pyroot_pyz_decorator pythonization_decorator.py)
 
@@ -26,8 +21,9 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_decorator pythonization_decorator.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_pretty_printing pretty_printing.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_array_interface array_interface.py PYTHON_DEPS numpy)
 
-# STL vector pythonizations
+# STL containers pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_stl_vector stl_vector.py)
+ROOT_ADD_PYUNITTEST(pyroot_pyz_stl_set stl_set.py)
 
 # TObject and subclasses pythonisations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tobject_contains tobject_contains.py)
@@ -110,9 +106,7 @@ if (dataframe)
         ROOT_ADD_PYUNITTEST(pyroot_pyz_rdataframe_makenumpy rdataframe_makenumpy.py PYTHON_DEPS numpy)
     endif()
     if(NOT MSVC OR win_broken_tests OR CMAKE_CXX_STANDARD GREATER 14)
-        if(NOT MSVC OR llvm13_broken_tests)
-            ROOT_ADD_PYUNITTEST(pyroot_pyz_rdataframe_asnumpy rdataframe_asnumpy.py PYTHON_DEPS numpy)
-        endif()
+        ROOT_ADD_PYUNITTEST(pyroot_pyz_rdataframe_asnumpy rdataframe_asnumpy.py PYTHON_DEPS numpy)
         ROOT_ADD_PYUNITTEST(pyroot_pyz_rdataframe_histo_profile rdataframe_histo_profile.py)
     endif()
 endif()
@@ -124,7 +118,7 @@ endif()
 
 # SOFIE-GNN pythonizations
 if (tmva)
-    if(NOT MSVC OR CMAKE_SIZEOF_VOID_P EQUAL 4 OR win_broken_tests AND (PYTHON_VERSION_STRING VERSION_GREATER_EQUAL 3.8))
+    if(NOT MSVC OR CMAKE_SIZEOF_VOID_P EQUAL 4 OR win_broken_tests)
         find_python_module(sonnet QUIET)
         find_python_module(graph_nets QUIET)
         if (PY_SONNET_FOUND AND PY_GRAPH_NETS_FOUND)
@@ -144,23 +138,20 @@ endif()
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tf_pycallables tf_pycallables.py)
 
 if(roofit)
-  # RooAbsCollection and subclasses pythonizations
+
+  ROOT_ADD_PYUNITTEST(pyroot_roofit_rooabspdf_fitto roofit/rooabspdf_fitto.py)
+  ROOT_ADD_PYUNITTEST(pyroot_roofit_rooabsreal_ploton roofit/rooabsreal_ploton.py)
+  ROOT_ADD_PYUNITTEST(pyroot_roofit_rooarglist roofit/rooarglist.py)
+  ROOT_ADD_PYUNITTEST(pyroot_roofit_roocmdarg roofit/roocmdarg.py)
+  ROOT_ADD_PYUNITTEST(pyroot_roofit_roodatahist_numpy roofit/roodatahist_numpy.py PYTHON_DEPS numpy)
+  ROOT_ADD_PYUNITTEST(pyroot_roofit_roodatahist_ploton roofit/roodatahist_ploton.py)
+  ROOT_ADD_PYUNITTEST(pyroot_roofit_roodataset roofit/roodataset.py)
+  ROOT_ADD_PYUNITTEST(pyroot_roofit_roodataset_numpy roofit/roodataset_numpy.py PYTHON_DEPS numpy)
+  ROOT_ADD_PYUNITTEST(pyroot_roofit_roolinkedlist roofit/roolinkedlist.py)
+
   if(NOT MSVC OR CMAKE_SIZEOF_VOID_P EQUAL 4 OR win_broken_tests)
     ROOT_ADD_PYUNITTEST(pyroot_roofit_rooabscollection roofit/rooabscollection.py)
   endif()
-  ROOT_ADD_PYUNITTEST(pyroot_roofit_rooarglist roofit/rooarglist.py)
-
-  # RooDataHist pythonisations
-  ROOT_ADD_PYUNITTEST(pyroot_roofit_roodatahist_ploton roofit/roodatahist_ploton.py)
-
-  # RooDataSet pythonisations
-  ROOT_ADD_PYUNITTEST(pyroot_roofit_roodataset roofit/roodataset.py)
-
-  # RooWorkspace pythonizations
-  ROOT_ADD_PYUNITTEST(pyroot_roofit_rooabspdf_fitto roofit/rooabspdf_fitto.py)
-  ROOT_ADD_PYUNITTEST(pyroot_roofit_rooabsreal_ploton roofit/rooabsreal_ploton.py)
-
-  ROOT_ADD_PYUNITTEST(pyroot_roofit_roolinkedlist roofit/roolinkedlist.py)
 
   if(NOT MSVC OR win_broken_tests)
     # Test pythonizations for the RooFitHS3 package, which is not built on Windows.
@@ -173,10 +164,6 @@ if(roofit)
     # RooWorkspace pythonization that fails on Windows
     ROOT_ADD_PYUNITTEST(pyroot_roofit_rooworkspace roofit/rooworkspace.py)
   endif()
-
-  # NumPy compatibility
-  ROOT_ADD_PYUNITTEST(pyroot_roofit_roodataset_numpy roofit/roodataset_numpy.py PYTHON_DEPS numpy)
-  ROOT_ADD_PYUNITTEST(pyroot_roofit_roodatahist_numpy roofit/roodatahist_numpy.py PYTHON_DEPS numpy)
 
 endif()
 
@@ -195,3 +182,13 @@ endif()
 
 # TComplex pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_tcomplex tcomplex_operators.py)
+
+# Tests with memory usage
+ROOT_ADD_PYUNITTEST(pyroot_memory memory.py)
+
+# rbatchgenerator tests
+# TODO: We currently do not support TensorFlow for Python >= 3.12 (see requirements.txt)
+# Update here once that is fixed.
+if (NOT MSVC AND Python3_VERSION VERSION_LESS 3.12)
+  ROOT_ADD_PYUNITTEST(batchgen rbatchgenerator_completeness.py PYTHON_DEPS numpy tensorflow torch)
+endif()

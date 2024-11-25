@@ -172,12 +172,15 @@ sap.ui.define(['sap/ui/core/Component',
          let main = this;
          // create missing view
          console.log("Creating view", viewid);
-
+ 
+         // TODO: Generalize instantiation without  the if/else statements
          let vtype = "rootui5.eve7.view.GL";
          if (elem.fName === "Table")
-            vtype = "rootui5.eve7.view.EveTable"; // AMT temporary solution
+            vtype = "rootui5.eve7.view.EveTable";
          else if (elem.fName === "Lego")
-            vtype = "rootui5.eve7.view.Lego"; // AMT temporary solution
+            vtype = "rootui5.eve7.view.Lego";
+         else if (elem.fName === "GeoTable")
+               vtype = "rootui5.eve7.view.GeoTable";
 
          let oOwnerComponent = Component.getOwnerComponentFor(this.getView());
          let view = oOwnerComponent.runAsOwner(function() {
@@ -331,7 +334,7 @@ sap.ui.define(['sap/ui/core/Component',
             bar.removeContent(bar.getContent().length - 1);
 
          var bb = new sap.m.Button({
-            type: sap.m.ButtonType.Default,
+            type: MobileLibrary.ButtonType.Default,
             text: "Back",
             enabled: true,
             press: function () {

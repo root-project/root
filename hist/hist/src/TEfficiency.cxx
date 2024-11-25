@@ -66,6 +66,7 @@ ClassImp(TEfficiency);
    - [VI.1 Information about the internal histograms](\ref EFF061)
    - [VI.2 Fitting](\ref EFF062)
    - [VI.3 Draw a TEfficiency object](\ref EFF063)
+   - [VI.4 TEfficiency object's axis customisation](\ref EFF064)
 
 \anchor EFF01
 ## I. Overview
@@ -633,6 +634,52 @@ At the moment drawing is only supported for 1- and 2-dimensional TEfficiency obj
 In the 1-dimensional case, you can use the same options as for the TGraphAsymmErrors::Draw
 method. For 2-dimensional TEfficiency objects, you can pass the same options as
 for a TH2::Draw object.
+
+\anchor EFF064
+### VI.4 TEfficiency object's axis customisation
+The axes of a TEfficiency object can be accessed and customised by calling the
+GetPaintedGraph method and then GetXaxis() or GetYaxis() and the corresponding TAxis
+methods.
+Note that in order to access the painted graph via GetPaintedGraph(), one should either
+call Paint or, better, gPad->Update().
+
+Begin_Macro(source)
+{
+   //canvas only needed for this documentation
+   TCanvas* c1 = new TCanvas("example","",600,400);
+   c1->SetFillStyle(1001);
+   c1->SetFillColor(kWhite);
+   c1->Divide(2,1);
+
+   //create one-dimensional TEfficiency object with fixed bin size
+   TEfficiency* pEff = new TEfficiency("eff","my efficiency;x;#epsilon",20,0,10);
+   TRandom3 rand3;
+
+   bool bPassed;
+   double x;
+   for(int i=0; i<10000; ++i)
+   {
+      //simulate events with variable under investigation
+      x = rand3.Uniform(10);
+      //check selection: bPassed = DoesEventPassSelection(x)
+      bPassed = rand3.Rndm() < TMath::Gaus(x,5,4);
+      pEff->Fill(bPassed,x);
+   }
+   c1->cd(1);
+   pEff->Draw("AP");
+   c1->cd(2);
+   pEff->Draw("AP");
+   gPad->Update();
+   pEff->GetPaintedGraph()->GetXaxis()->SetTitleSize(0.05);
+   pEff->GetPaintedGraph()->GetXaxis()->SetLabelFont(42);
+   pEff->GetPaintedGraph()->GetXaxis()->SetLabelSize(0.05);
+   pEff->GetPaintedGraph()->GetYaxis()->SetTitleOffset(0.85);
+   pEff->GetPaintedGraph()->GetYaxis()->SetTitleSize(0.05);
+   pEff->GetPaintedGraph()->GetYaxis()->SetLabelFont(42);
+   pEff->GetPaintedGraph()->GetYaxis()->SetLabelSize(0.05);
+   pEff->GetPaintedGraph()->GetXaxis()->SetRangeUser(3,7);
+}
+End_Macro
 
 */
 
@@ -3216,7 +3263,7 @@ void TEfficiency::SavePrimitive(std::ostream& out,Option_t* opt)
    << std::endl;
    out << indent << name << "->SetBetaBeta(" << fBeta_beta << ");" << std::endl;
    out << indent << name << "->SetWeight(" << fWeight << ");" << std::endl;
-   out << indent << name << "->SetStatisticOption(" << fStatisticOption << ");"
+   out << indent << name << "->SetStatisticOption(static_cast<EStatOption>(" << fStatisticOption << "));"
    << std::endl;
    out << indent << name << "->SetPosteriorMode(" << TestBit(kPosteriorMode) << ");" << std::endl;
    out << indent << name << "->SetShortestInterval(" << TestBit(kShortestInterval) << ");" << std::endl;
@@ -3710,14 +3757,14 @@ void TEfficiency::SetTitle(const char* title)
 ///
 /// Note: - requires: fPassedHistogram->GetBinContent(bin) <= events
 
-Bool_t TEfficiency::SetTotalEvents(Int_t bin,Int_t events)
+Bool_t TEfficiency::SetTotalEvents(Int_t bin, Double_t events)
 {
    if(events >= fPassedHistogram->GetBinContent(bin)) {
       fTotalHistogram->SetBinContent(bin,events);
       return true;
    }
    else {
-      Error("SetTotalEvents(Int_t,Int_t)","passed number of events (%.1lf) in bin %i is bigger than given number of total events %i",fPassedHistogram->GetBinContent(bin),bin,events);
+      Error("SetTotalEvents(Int_t,Double_t)","passed number of events (%.1lf) in bin %i is bigger than given number of total events %.1lf",fPassedHistogram->GetBinContent(bin),bin,events);
       return false;
    }
 }

@@ -27,10 +27,12 @@ if(dataframe)
     # RReader
     ROOT_ADD_GTEST(rreader rreader.cxx LIBRARIES ROOTVecOps TMVA ROOTDataFrame)
     # Tree inference system and user interface
-    if(NOT MSVC OR llvm13_broken_tests)
-        ROOT_ADD_GTEST(branchlessForest branchlessForest.cxx LIBRARIES TMVA)
-        ROOT_ADD_GTEST(rbdt rbdt.cxx LIBRARIES ROOTVecOps TMVAUtils)
-    endif()
+    # Commented out right now because RBDT doesn't provide low-level interfaces
+    # since the sync with FastForest. Only the construction from XGBoost models
+    # is supported. If this feature becomes necessary to implement, one can
+    # resurrect these tests.
+    # ROOT_ADD_GTEST(branchlessForest branchlessForest.cxx LIBRARIES TMVA)
+    # ROOT_ADD_GTEST(rbdt rbdt.cxx LIBRARIES ROOTVecOps TMVAUtils)
 endif()
 
 if(dataframe)
@@ -44,12 +46,13 @@ endif()
 
 ROOT_EXECUTABLE(stressTMVA stressTMVA.cxx LIBRARIES TMVA)
 
-if(tmva-gpu)
-  target_compile_definitions(stressTMVA PRIVATE DNNCUDA)
-endif()
+ROOT_ADD_TEST(test-stresstmva COMMAND stressTMVA -b LABELS longtest TIMEOUT 1800)
 
 if(tmva-cpu)
   target_compile_definitions(stressTMVA PRIVATE DNNCPU)
 endif()
 
-ROOT_ADD_TEST(test-stresstmva COMMAND stressTMVA -b LABELS longtest TIMEOUT 1800)
+if(tmva-gpu)
+  target_compile_definitions(stressTMVA PRIVATE DNNCUDA)
+  set_property(TEST test-stresstmva PROPERTY RESOURCE_LOCK GPU)
+endif()

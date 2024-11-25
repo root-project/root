@@ -9,7 +9,7 @@
 #include "Math/SpecFuncMathCore.h"
 #include <cstdio>
 #include <limits>
-using namespace std;
+
 namespace ROOT {
 namespace Math {
 

@@ -29,7 +29,7 @@
 #include <RooDataHist.h>
 #include <RooRealSumPdf.h>
 #ifdef ROOFIT_LEGACY_EVAL_BACKEND
-#include <RooNLLVar.h>
+#include "../../src/RooNLLVar.h"
 #endif
 #include <RooRealVar.h>
 
@@ -139,7 +139,6 @@ TEST_P(RooRealL, getValRooAddition)
    count_NLL_components(nll.get());
 }
 
-#if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
 TEST_P(RooRealL, getValRooConstraintSumAddition)
 {
    // modified from
@@ -179,12 +178,9 @@ TEST_P(RooRealL, getValRooConstraintSumAddition)
    w.import(*dh_sig_down);
    w.factory("HistFunc::hf_sig(x,dh_sig)");
    w.factory("HistFunc::hf_bkg(x,dh_bkg)");
-   w.factory("HistFunc::hf_sig_up(x,dh_sig_up)");
-   w.factory("HistFunc::hf_sig_down(x,dh_sig_down)");
-   w.factory("PiecewiseInterpolation::pi_sig(hf_sig,hf_sig_down,hf_sig_up,alpha[-5,5])");
 
-   w.factory("ASUM::model(mu[1,0,5]*pi_sig,nu[1]*hf_bkg)");
-   w.factory("Gaussian::constraint(alpha,0,1)");
+   w.factory("ASUM::model(mu[1,0,5]*hf_sig,nu[1]*hf_bkg)");
+   w.factory("Gaussian::constraint(mu,2.,1.)");
    w.factory("PROD::model2(model,constraint)");
 
    RooAbsPdf *pdf = w.pdf("model2");
@@ -195,8 +191,6 @@ TEST_P(RooRealL, getValRooConstraintSumAddition)
    check_NLL_type(nll.get());
    count_NLL_components(nll.get());
 }
-#endif // !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
-#endif // ROOFIT_LEGACY_EVAL_BACKEND
 
 TEST_P(RooRealL, setVal)
 {
@@ -209,7 +203,12 @@ TEST_P(RooRealL, setVal)
    auto x = w.var("x");
    RooAbsPdf *pdf = w.pdf("g");
    std::unique_ptr<RooDataSet> data{pdf->generate(*x, 10000)};
-   std::unique_ptr<RooAbsReal> nll{pdf->createNLL(*data)};
+
+   // The reference likelihood is using the legacy evaluation backend, because
+   // the multiprocess test statistics classes were designed to give values
+   // that are bit-by-bit identical with the old test statistics based on
+   // RooAbsTestStatistic.
+   std::unique_ptr<RooAbsReal> nll{pdf->createNLL(*data, RooFit::EvalBackend::Legacy())};
 
    RooFit::TestStatistics::RooRealL nll_new("nll_new", "new style NLL",
                                             std::make_unique<RooFit::TestStatistics::RooUnbinnedL>(pdf, data.get()));
@@ -239,11 +238,13 @@ TEST_P(RooRealL, setVal)
       std::cout << "failed test had seed = " << std::get<0>(GetParam()) << std::endl;
    }
 }
+#endif // ROOFIT_LEGACY_EVAL_BACKEND
 
 INSTANTIATE_TEST_SUITE_P(NworkersModeSeed, RooRealL, ::testing::Values(2, 3)); // random seed
 
 class RealLVsMPFE : public ::testing::TestWithParam<std::tuple<std::size_t>> {};
 
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
 TEST_P(RealLVsMPFE, getVal)
 {
    // Compare our MP NLL to actual RooRealMPFE results using the same strategies.
@@ -261,7 +262,11 @@ TEST_P(RealLVsMPFE, getVal)
    RooAbsPdf *pdf = w.pdf("g");
    std::unique_ptr<RooDataSet> data{pdf->generate(*x, 10000)};
 
-   std::unique_ptr<RooAbsReal> nll_mpfe{pdf->createNLL(*data)};
+   // The reference likelihood is using the legacy evaluation backend, because
+   // the multiprocess test statistics classes were designed to give values
+   // that are bit-by-bit identical with the old test statistics based on
+   // RooAbsTestStatistic.
+   std::unique_ptr<RooAbsReal> nll_mpfe{pdf->createNLL(*data, RooFit::EvalBackend::Legacy())};
 
    auto mpfe_result = nll_mpfe->getVal();
 
@@ -275,6 +280,7 @@ TEST_P(RealLVsMPFE, getVal)
       std::cout << "failed test had seed = " << std::get<0>(GetParam()) << std::endl;
    }
 }
+#endif // ROOFIT_LEGACY_EVAL_BACKEND
 
 TEST_P(RealLVsMPFE, minimize)
 {

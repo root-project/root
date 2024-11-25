@@ -11,6 +11,7 @@
 #include "TBranch.h" // Usage of TBranch in ClearMustCleanupBits
 #include "TChain.h"
 #include "TCollection.h" // TRangeStaticCast
+#include "TDirectory.h"  // TDirectory::TContext
 #include "TFile.h"
 #include "TFriendElement.h"
 #include "TObjString.h"
@@ -395,11 +396,15 @@ std::vector<std::unique_ptr<TChain>> MakeFriends(const ROOT::TreeUtils::RFriendI
          }
       }
 
-      auto &treeIndex = finfo.fTreeIndexInfos[i];
+      const auto &treeIndex = finfo.fTreeIndexInfos[i];
       if (treeIndex) {
-         auto *copyOfIndex = static_cast<TVirtualIndex *>(treeIndex->Clone());
-         copyOfIndex->SetTree(frChain.get());
-         frChain->SetTreeIndex(copyOfIndex);
+         // The call to TChain::BuildIndex does much more than just copying
+         // the indices that may have been already present in the trees of the
+         // chain. Notably, it calls `LoadTree` for every tree in the chain
+         // making sure that all branches, indices and relationships are
+         // properly set. In order to avoid unexpected behaviours, we always
+         // let the task-local friend chain rebuild its index.
+         frChain->BuildIndex(treeIndex->GetMajorName(), treeIndex->GetMinorName());
       }
 
       friends.emplace_back(std::move(frChain));
@@ -519,6 +524,56 @@ std::vector<std::string> ExpandGlob(const std::string &glob)
    }
 
    return ret;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// \brief Returns the cluster boundaries and number of entries of the input tree.
+/// \param[in] treename Name of the tree.
+/// \param[in] filename Path to the file.
+/// \return a pair (cluster_boundaries, n_entries). The vector of cluster
+///         of cluster boundaries contains the beginning entry of the first
+///         cluster up to the ending entry of the last cluster, e.g. for a tree
+///         with 3 clusters of 10 entries each, this will return [0, 10, 20, 30]
+std::pair<std::vector<Long64_t>, Long64_t> GetClustersAndEntries(std::string_view treename, std::string_view path)
+{
+   ::TDirectory::TContext ctxt; // Avoid changing gDirectory;
+   std::unique_ptr<TFile> inFile{TFile::Open(path.data(), "READ_WITHOUT_GLOBALREGISTRATION")};
+   if (!inFile || inFile->IsZombie())
+      throw std::invalid_argument("GetClustersAndEntries: could not open file \"" + std::string(path) + "\".");
+   std::unique_ptr<TTree> tree{inFile->Get<TTree>(treename.data())};
+   if (!tree)
+      throw std::invalid_argument("GetClustersAndEntries: could not find tree \"" + std::string(treename) +
+                                  "\" in file \"" + std::string(path) + "\".");
+   // One TTree in one file, we can assume GetEntriesFast returns the correct number of entries
+   auto nEntries{tree->GetEntriesFast()};
+
+   auto clusterIt{tree->GetClusterIterator(0)};
+   auto clusterBegin{clusterIt()};
+   std::vector boundaries{clusterBegin};
+   while (clusterBegin < nEntries) {
+      clusterBegin = clusterIt();
+      boundaries.push_back(clusterBegin);
+   }
+
+   return std::make_pair(std::move(boundaries), std::move(nEntries));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// \brief Check whether the input tree is using any TTreeIndex
+/// \param[in] tree The input TTree/TChain.
+/// \return A pair. The first item is a boolean telling whether the tree is using
+///         an index. The second item is a string with the name of the first
+///         friend tree found with a connected index.
+std::pair<bool, std::string> TreeUsesIndexedFriends(const TTree &tree)
+{
+   if (auto friends = tree.GetListOfFriends(); friends && friends->GetEntries() > 0) {
+      for (auto *fr : ROOT::Detail::TRangeStaticCast<TFriendElement>(friends)) {
+         auto *frTree = fr->GetTree();
+         if (frTree->GetTreeIndex())
+            return {true, frTree->GetName()};
+      }
+   }
+   return {false, ""};
 }
 
 } // namespace TreeUtils

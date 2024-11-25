@@ -301,6 +301,20 @@ sap.ui.define([
          this.makeNumberSetter(el.fNDiv, "NDiv");
       },
 
+      buildREveTextSetter : function(el)
+      {
+         this.buildREveElementSetter(el);
+         // write editor only for screen coordinates
+         this.makeStringSetter(el.fText, "Text");
+         if (el.fMode) {
+            let gedFrame = this.getView().byId("GED");
+            this.makeNumberSetter(el.fFont, "FontType", "SetFont");
+            this.makeNumberSetter(el.fFontSize, "FontSize");
+            this.makeNumberSetter(el.fPosX, "PosX", "SetPosX");
+            this.makeNumberSetter(el.fPosY, "PosY", "SetPosY");
+         }
+      },
+
       buildREveTrackSetter : function(el)
       {
          this.buildREveElementSetter(el);
@@ -485,6 +499,116 @@ sap.ui.define([
          }
       },
 
+      buildREveBoxSetSetter : function(el)
+      {
+         this.buildREveElementSetter(el);
+         this.makeBoolSetter(el.coneCap, "DrawConeCap");
+      },
+   
+      buildREveRGBAPaletteSetter: function (el) {
+         let  gedFrame =  this.getView().byId("GED");
+
+         // fix color
+         this.makeBoolSetter(el.fixRng, "FixColorRange");
+         this.makeBoolSetter(el.interpolate, "Interpolate");
+
+         // modes
+         var sheetNames = { myList: [{ Name: "Cut", Key: 0 }, { Name: "Mark", Key: 1 },{ Name: "Clip", Key : 2 }, { Name: "Wrap", Key : 3 } ] };
+         var sheets = new sap.ui.model.json.JSONModel(sheetNames);
+
+         // underflow
+         {
+            let oa_label = new mText({ text: "UnderFlowAction" });
+            gedFrame.addContent(oa_label);
+            let comboBox = new sap.m.ComboBox({
+               showSecondaryValues: true,
+               items: {
+                  path: "/myList",
+                  template: new sap.ui.core.ListItem({ key: "{Key}", text: "{Name}" })
+               },
+
+               selectionChange: function (oControlEvent) {
+                  var oSelectedItem = oControlEvent.getParameter("selectedItem");
+                  oSelectedItem = oSelectedItem.getKey();
+                  let mir = "SetUnderflowAction(" + oSelectedItem + ")";
+                  gcm.mgr.SendMIR(mir, gcm.editorElement.fElementId, gcm.editorElement._typename);
+               }
+            });
+            comboBox.setModel(sheets);
+            let ci = comboBox.getItems();
+            comboBox.setSelectedItem(el.oAction, true);
+
+            let tagg = sheetNames.myList[el.oAction].Name;
+            comboBox.setPlaceholder(tagg);
+            gedFrame.addContent(comboBox);
+         }
+         this.makeColorSetter(el.uColor, "UnderColor", "SetUnderColorRGBA");
+
+         // overflow
+         {
+            let oa_label = new mText({ text: "OverFlowAction" });
+            gedFrame.addContent(oa_label);
+            let comboBox = new sap.m.ComboBox({
+               showSecondaryValues: true,
+               items: {
+                  path: "/myList",
+                  template: new sap.ui.core.ListItem({ key: "{Key}", text: "{Name}" })
+               },
+
+               selectionChange: function (oControlEvent) {
+                  var oSelectedItem = oControlEvent.getParameter("selectedItem");
+                  oSelectedItem = oSelectedItem.getKey();
+                  let mir = "SetOverflowAction(" + oSelectedItem + ")";
+                  gcm.mgr.SendMIR(mir, gcm.editorElement.fElementId, gcm.editorElement._typename);
+               }
+            });
+            comboBox.setModel(sheets);
+            let ci = comboBox.getItems();
+            let tagg = sheetNames.myList[el.oAction].Name;
+                        comboBox.setPlaceholder(tagg);
+            comboBox.setSelectedItem(el.oAction, true);
+
+            gedFrame.addContent(comboBox);
+         }
+         this.makeColorSetter(el.oColor, "OverColor", "SetOverColorRGBA");
+
+         // range
+         let label = new mText({ text: "Range" });
+         label.addStyleClass("sapUiTinyMargin");
+         gedFrame.addContent(label);
+
+         let gcm = this;
+         let s = new sap.m.RangeSlider({
+            min:el.lowLimit,
+            max:el.highLimit,
+            enableTickmarks: true,
+            width: "80%",
+            scale: new sap.m.ResponsiveScale({tickmarksBetweenLabels: 5}),
+            range: [el.min, el.max],
+            liveChange: function (oControlEvent) { // change range
+               // AMT tmp workaround / event queue not enabled
+               if (gcm.mgr.busyProcessingChanges)
+                   return;
+               
+               let minv = this.getValue();
+               let maxv = this.getValue2();
+               let mir = "SetMinMax(" + minv + "," + maxv + ")";
+               gcm.mgr.SendMIR(mir, gcm.editorElement.fElementId, gcm.editorElement._typename );
+            },
+            change: function (oControlEvent) { // change only min or max side
+               // AMT tmp workaround / event queue not enabled
+               if (gcm.mgr.busyProcessingChanges)
+               return;
+               let minv = this.getValue();
+               let maxv = this.getValue2();
+               let mir = "SetMinMax(" + minv + "," + maxv + ")";
+               gcm.mgr.SendMIR(mir, gcm.editorElement.fElementId, gcm.editorElement._typename );
+            }
+         });
+
+         gedFrame.addContent(s);
+      },
+
       makeBoolSetter : function(val, labelName, funcName, gedFrame)
       {
          if (!gedFrame)
@@ -566,7 +690,7 @@ sap.ui.define([
             change: function (event)
             {
                let value = event.getParameter("value");
-               let mir =  funcName + "( " + value + " )";
+               let mir =  funcName + "(" + value + " )";
                gcm.mgr.SendMIR(mir, gcm.editorElement.fElementId, gcm.editorElement._typename );
             }
          });
@@ -578,6 +702,7 @@ sap.ui.define([
             content : [widget, label]
          });
          gedFrame.addContent(frame);
+         return widget;
       },
 
       makeStringSetter : function(val, labelName, funcName, gedFrame)

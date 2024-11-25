@@ -861,12 +861,7 @@ void TEveManager::SetStatusLine(const char* text)
 
 void TEveManager::ClearROOTClassSaved()
 {
-   TIter   nextcl(gROOT->GetListOfClasses());
-   TClass *cls;
-   while((cls = (TClass *)nextcl()))
-   {
-      cls->ResetBit(TClass::kClassSaved);
-   }
+   gROOT->ResetClassSaved();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

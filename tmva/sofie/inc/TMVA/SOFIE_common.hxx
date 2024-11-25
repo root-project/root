@@ -3,6 +3,8 @@
 
 #include "TMVA/RTensor.hxx"
 
+#include "ROOT/RSpan.hxx"
+
 #include <stdexcept>
 #include <type_traits>
 #include <cstdint>
@@ -32,11 +34,22 @@ ETensorType ConvertStringToType(std::string type);
 
 struct Dim{
    bool isParam = false;
-   size_t dim;
+   size_t dim = 0;
    std::string param;
-};
 
-std::vector<Dim> ConvertShapeToDim(std::vector<size_t> shape);
+    // default constructor (for I/O)
+   Dim() {}
+
+   // constructor for a parametric dimension with the option to pass a default dim value
+   Dim(const std::string & p, size_t d = 0) : isParam(true), dim(d), param(p) {}
+
+   // constructor for a non-parametric dimension
+   Dim(size_t d) : dim(d) {}
+
+   std::string GetVal() const {
+      return (isParam) ? param : std::to_string(dim);
+   }
+};
 
 
 struct InputTensorInfo{
@@ -49,70 +62,117 @@ struct TensorInfo{
    std::vector<size_t> shape;
 };
 
+struct DynamicTensorInfo{
+   ETensorType type;
+   std::vector<Dim> shape;
+};
+
+std::vector<Dim> ConvertShapeToDim(std::vector<size_t> shape);
+
+std::vector<size_t> ConvertShapeToInt(std::vector<Dim> shape);
+
 std::size_t ConvertShapeToLength(std::vector<size_t> shape);
 
 std::string ConvertShapeToString(std::vector<size_t> shape);
+std::string ConvertDynamicShapeToString(std::vector<Dim> shape);
+// std::string ConvertShapeToString(std::vector<Dim> shape) {
+//    return ConvertDynamicShapeToString(shape);
+// }
 
-struct InitializedTensor{
-   ETensorType fType;
-   std::vector<std::size_t> fShape;
-   std::shared_ptr<void> fData;     //! Transient
-   int fSize=1;
-   char* fPersistentData=nullptr;   //[fSize] Persistent
+std::string ConvertDynamicShapeToLength(std::vector<Dim> shape);
 
-   void CastSharedToPersistent(){
-      for(auto item:fShape){
-         fSize*=(int)item;
-      }
-      switch(fType){
-         case ETensorType::FLOAT: fSize*=sizeof(float); break;
-         case ETensorType::DOUBLE: fSize*=sizeof(double); break;
-         case ETensorType::INT32: fSize*=sizeof(int32_t); break;
-         case ETensorType::INT64: fSize*=sizeof(int64_t); break;
-         case ETensorType::BOOL:  fSize*=sizeof(bool); break;
-         default:
-          throw std::runtime_error("TMVA::SOFIE doesn't yet supports serialising data-type " + ConvertTypeToString(fType));
-      }
-      fPersistentData=(char*)fData.get();
+// convert list of values in a string
+template<class T>
+std::string ConvertValuesToString(size_t n, const T * data) {
+   std::stringstream ret;
+   ret << "[ ";
+   for (size_t i = 0; i < n; i++) {
+      ret << data[i];
+      if (i < n-1) ret << ", ";
    }
-   void CastPersistentToShared(){
+   ret << "]";
+   return ret.str();
+}
+template<class T>
+std::string ConvertValuesToString(const std::vector<T> & data) {
+  return ConvertValuesToString(data.size(), data.data());
+}
+
+class InitializedTensor {
+public:
+   InitializedTensor() = default;
+   InitializedTensor(ETensorType type, std::span<std::size_t> shape, std::shared_ptr<void> data, bool typeConstant = false)
+      : fConstant(typeConstant), fType{type}, fShape{shape.begin(), shape.end()}, fData{data}
+   {
+   }
+
+   ETensorType const &type() const { return fType; }
+   std::vector<std::size_t> const &shape() const { return fShape; }
+   std::shared_ptr<void> const &sharedptr() const { return fData; }
+   // query if tensor comes from a Constant operator
+   bool IsConstantTensor() const { return fConstant;}
+   // query if tensor needs to be written in a weight file. Constant tensors are not written in a file
+   bool IsWeightTensor() const { return !fConstant && !fIsNotWritable;}
+
+   void SetNotWritable() { fIsNotWritable = true;}
+
+   template <class T = void>
+   T const *data() const
+   {
+      return static_cast<T const *>(fData.get());
+   }
+
+   void CastSharedToPersistent()
+   {
+      // We only calculate fSize here, because it is only used for IO to know
+      // the size of the persistent data.
+      fSize = 1;
+      for (std::size_t item : fShape) {
+         fSize *= static_cast<int>(item);
+      }
       switch (fType) {
-      case ETensorType::FLOAT: {
-          std::shared_ptr<void> tData(malloc(fSize * sizeof(float)), free);
-          std::memcpy(tData.get(), fPersistentData, fSize * sizeof(float));
-          fData = tData;
-          break;
+      case ETensorType::FLOAT: fSize *= sizeof(float); break;
+      case ETensorType::DOUBLE: fSize *= sizeof(double); break;
+      case ETensorType::INT32: fSize *= sizeof(int32_t); break;
+      case ETensorType::INT64: fSize *= sizeof(int64_t); break;
+      case ETensorType::BOOL: fSize *= sizeof(bool); break;
+      default:
+         throw std::runtime_error("TMVA::SOFIE doesn't yet supports serialising data-type " +
+                                  ConvertTypeToString(fType));
       }
-      case ETensorType::DOUBLE: {
-          std::shared_ptr<void> tData(malloc(fSize * sizeof(double)), free);
-          std::memcpy(tData.get(), fPersistentData, fSize * sizeof(double));
-          fData = tData;
-          break;
-      }
-      case ETensorType::INT32: {
-          std::shared_ptr<void> tData(malloc(fSize * sizeof(int32_t)), free);
-          std::memcpy(tData.get(), fPersistentData, fSize * sizeof(int32_t));
-          fData = tData;
-          break;
-      }
-      case ETensorType::INT64: {
-          std::shared_ptr<void> tData(malloc(fSize * sizeof(int64_t)), free);
-          std::memcpy(tData.get(), fPersistentData, fSize * sizeof(int64_t));
-          fData = tData;
-          break;
-      }
-      case ETensorType::BOOL: {
-          std::shared_ptr<void> tData(malloc(fSize * sizeof(bool)), free);
-          std::memcpy(tData.get(), fPersistentData, fSize * sizeof(bool));
-          fData = tData;
-          break;
-      }
-      default: {
-          throw std::runtime_error("TMVA::SOFIE doesn't yet supports serialising data-type " +
-                                   ConvertTypeToString(fType));
-      }
-      }
+      fPersistentData = static_cast<char *>(fData.get());
    }
+   void CastPersistentToShared()
+   {
+      // If there is no persistent data, do nothing
+      if (fSize == 0 || fPersistentData == nullptr) {
+         return;
+      }
+
+      // Nothing to be done if the pointed-to data is the same
+      if (fPersistentData == static_cast<char *>(fData.get())) {
+         return;
+      }
+
+      // Initialize the shared_ptr
+      fData = std::shared_ptr<void>{malloc(fSize), free};
+      std::memcpy(fData.get(), fPersistentData, fSize);
+
+      // Make sure the data read from disk doesn't leak and delete the
+      // persistent data
+      delete[] fPersistentData;
+      fPersistentData = nullptr;
+      fSize = 0;
+   }
+
+private:
+   bool  fConstant = false;      ///< Flag specifying if tensor is a Constant one (coming from a Constant operator)
+   bool  fIsNotWritable = false; ///< Flag to indicate that tensor values do not need to be written as weight or generated code
+   ETensorType fType;               ///< Encodes the type of the data
+   std::vector<std::size_t> fShape; ///< The shape of the data in terms of elements in each dimension
+   std::shared_ptr<void> fData;     ///<! Transient shared data
+   int fSize = 0;                   ///< The size of the persistent data in bytes (not number of elements!)
+   char *fPersistentData = nullptr; ///<[fSize] Persistent version of the data
 };
 
 template <typename T>
@@ -136,6 +196,9 @@ ETensorType GetTemplatedType(T /*obj*/ ){
 namespace UTILITY{
 // Check if two shapes are equal
 bool AreSameShape(const std::vector<size_t>&, const std::vector<size_t>&);
+bool AreSameShape(const std::vector<size_t>&, const std::vector<Dim>&);
+bool AreSameShape(const std::vector<Dim>&, const std::vector<Dim>&);
+
 
 // Multidirectional broadcast a list of tensors to the same shape
 std::vector<size_t> MultidirectionalBroadcastShape(std::vector<std::vector<size_t>>);
@@ -255,6 +318,7 @@ T* UnidirectionalBroadcast(const T* data, const std::vector<size_t>& shape, cons
 
 /// compute stride of a tensor given its shape (assume layout is row-major)
 std::vector<size_t> ComputeStrideFromShape(const std::vector<size_t> & shape);
+std::vector<Dim> ComputeStrideFromShape(const std::vector<Dim> & shape);
 
 /// function to check if a >> 0 and a < MAX using a single comparison
 //// use trick casting to unsigned values so it becomes a single comparison

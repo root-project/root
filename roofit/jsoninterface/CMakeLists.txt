@@ -12,8 +12,14 @@
 # If RapidYAML can be found on the system, we will also compile the RapidYAML backend besides the
 # nlohmann-json backend. Like this we can also convert to yaml.
 
-message(STATUS "Looking for RapidYAML (used by RooFit)")
-find_package(ryml)
+# The RapidYAML backend is always disabled because it doesn't work anymore for
+# RooFitHS3. The nlohmann_json interface is always used and works well, hence
+# rapidyaml was not tested anymore. The relevant code is still left in the
+# CMakeLists.txt in case someone wants to revive the RapilYAML backend.
+
+# message(STATUS "Looking for RapidYAML (used by RooFit)")
+# find_package(ryml)
+
 if(${RYML_FOUND})
   message(STATUS "RapidYAML found, compiling also RooFit JSON Interface with RapidYAML parser")
   set(ParserSources src/JSONParser.cxx src/RYMLParser.cxx)

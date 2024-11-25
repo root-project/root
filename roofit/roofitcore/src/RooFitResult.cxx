@@ -54,7 +54,7 @@
 #include "RooMultiVarGaussian.h"
 
 
-using namespace std;
+using std::cout, std::endl, std::ostream, std::string, std::pair, std::vector, std::setw;
 
 ClassImp(RooFitResult);
 
@@ -660,7 +660,7 @@ void RooFitResult::fillLegacyCorrMatrix() const
     }
   }
 
-  for (unsigned int i = 0; i < (unsigned int)_CM->GetNcols() ; ++i) {
+  for (unsigned int i = 0; i < static_cast<unsigned int>(_corrMatrix.GetSize()) ; ++i) {
 
     // Find the next global correlation slot to fill, skipping fixed parameters
     auto& gcVal = static_cast<RooRealVar&>((*_globalCorr)[i]);
@@ -668,7 +668,7 @@ void RooFitResult::fillLegacyCorrMatrix() const
 
     // Fill a row of the correlation matrix
     auto corrMatrixCol = static_cast<RooArgList const&>(*_corrMatrix.At(i));
-    for (unsigned int it = 0; it < (unsigned int)_CM->GetNcols() ; ++it) {
+    for (unsigned int it = 0; it < corrMatrixCol.size() ; ++it) {
       auto& cVal = static_cast<RooRealVar&>(corrMatrixCol[it]);
       double value = (*_CM)(i,it) ;
       cVal.setVal(value);
@@ -724,11 +724,11 @@ void RooFitResult::fillCorrMatrix()
   for (i = 1; i <= gMinuit->fNpar; ++i) {
     ndi = i*(i + 1) / 2;
     for (j = 1; j <= gMinuit->fNpar; ++j) {
-      m    = TMath::Max(i,j);
-      n    = TMath::Min(i,j);
+      m    = std::max(i,j);
+      n    = std::min(i,j);
       ndex = m*(m-1) / 2 + n;
       ndj  = j*(j + 1) / 2;
-      gMinuit->fMATUvline[j-1] = gMinuit->fVhmat[ndex-1] / TMath::Sqrt(TMath::Abs(gMinuit->fVhmat[ndi-1]*gMinuit->fVhmat[ndj-1]));
+      gMinuit->fMATUvline[j-1] = gMinuit->fVhmat[ndex-1] / std::sqrt(std::abs(gMinuit->fVhmat[ndi-1]*gMinuit->fVhmat[ndj-1]));
     }
 
     (*_GC)(i-1) = gMinuit->fGlobcc[i-1] ;

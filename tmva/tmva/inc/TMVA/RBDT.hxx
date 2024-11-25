@@ -1,14 +1,15 @@
 /**********************************************************************************
  * Project: ROOT - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
- *                                             *
+ *                                                                                *
  *                                                                                *
  * Description:                                                                   *
  *                                                                                *
  * Authors:                                                                       *
  *      Stefan Wunsch (stefan.wunsch@cern.ch)                                     *
+ *      Jonas Rembser (jonas.rembser@cern.ch)                                     *
  *                                                                                *
- * Copyright (c) 2019:                                                            *
+ * Copyright (c) 2024:                                                            *
  *      CERN, Switzerland                                                         *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -19,108 +20,80 @@
 #ifndef TMVA_RBDT
 #define TMVA_RBDT
 
-#include "TMVA/RTensor.hxx"
-#include "TMVA/TreeInference/Forest.hxx"
-#include "TFile.h"
+#include <Rtypes.h>
+#include <ROOT/RSpan.hxx>
+#include <TMVA/RTensor.hxx>
 
-#include <vector>
+#include <array>
+#include <istream>
 #include <string>
-#include <sstream> // std::stringstream
-#include <memory>
+#include <unordered_map>
+#include <vector>
 
 namespace TMVA {
+
 namespace Experimental {
 
-/// Fast boosted decision tree inference
-template <typename Backend = BranchlessJittedForest<float>>
-class RBDT {
+class RBDT final {
 public:
-   using Value_t = typename Backend::Value_t;
-   using Backend_t = Backend;
+   typedef float Value_t;
 
-private:
-   int fNumOutputs;
-   bool fNormalizeOutputs;
-   std::vector<Backend_t> fBackends;
+   /// IO constructor (both for ROOT IO and LoadText()).
+   RBDT() = default;
 
-public:
-   /// Construct backends from model in ROOT file
-   RBDT(const std::string &key, const std::string &filename)
-   {
-      // Get number of output nodes of the forest
-      std::unique_ptr<TFile> file{TFile::Open(filename.c_str(),"READ")};
-      if (!file || file->IsZombie()) {
-         throw std::runtime_error("Failed to open input file " + filename);
-      }
-      auto numOutputs = Internal::GetObjectSafe<std::vector<int>>(file.get(), filename, key + "/num_outputs");
-      fNumOutputs = numOutputs->at(0);
-      delete numOutputs;
+   /// Construct backends from model in ROOT file.
+   RBDT(const std::string &key, const std::string &filename);
 
-      // Get objective and decide whether to normalize output nodes for example in the multiclass case
-      auto objective = Internal::GetObjectSafe<std::string>(file.get(), filename, key + "/objective");
-      if (objective->compare("softmax") == 0)
-         fNormalizeOutputs = true;
-      else
-         fNormalizeOutputs = false;
-      delete objective;
-      file->Close();
-
-      // Initialize backends
-      fBackends = std::vector<Backend_t>(fNumOutputs);
-      for (int i = 0; i < fNumOutputs; i++)
-         fBackends[i].Load(key, filename, i);
-   }
-
-   /// Compute model prediction on a single event
+   /// Compute model prediction on a single event.
    ///
    /// The method is intended to be used with std::vectors-like containers,
    /// for example RVecs.
    template <typename Vector>
-   Vector Compute(const Vector &x)
+   Vector Compute(const Vector &x) const
    {
-      Vector y;
-      y.resize(fNumOutputs);
-      for (int i = 0; i < fNumOutputs; i++)
-         fBackends[i].Inference(&x[0], 1, true, &y[i]);
-      if (fNormalizeOutputs) {
-         Value_t s = 0.0;
-         for (int i = 0; i < fNumOutputs; i++)
-            s += y[i];
-         for (int i = 0; i < fNumOutputs; i++)
-            y[i] /= s;
-      }
+      std::size_t nOut = fBaseResponses.size() > 2 ? fBaseResponses.size() : 1;
+      Vector y(nOut);
+      ComputeImpl(x.data(), y.data());
       return y;
    }
 
-   /// Compute model prediction on a single event
-   std::vector<Value_t> Compute(const std::vector<Value_t> &x) { return this->Compute<std::vector<Value_t>>(x); }
+   /// Compute model prediction on a single event.
+   inline std::vector<Value_t> Compute(std::vector<Value_t> const &x) const { return Compute<std::vector<Value_t>>(x); }
 
-   /// Compute model prediction on input RTensor
-   RTensor<Value_t> Compute(const RTensor<Value_t> &x)
-   {
-      const auto rows = x.GetShape()[0];
-      RTensor<Value_t> y({rows, static_cast<std::size_t>(fNumOutputs)}, MemoryLayout::ColumnMajor);
-      const bool layout = x.GetMemoryLayout() == MemoryLayout::ColumnMajor ? false : true;
-      for (int i = 0; i < fNumOutputs; i++)
-         fBackends[i].Inference(x.GetData(), rows, layout, &y(0, i));
-      if (fNormalizeOutputs) {
-         Value_t s;
-         for (int i = 0; i < static_cast<int>(rows); i++) {
-            s = 0.0;
-            for (int j = 0; j < fNumOutputs; j++)
-               s += y(i, j);
-            for (int j = 0; j < fNumOutputs; j++)
-               y(i, j) /= s;
-         }
-      }
-      return y;
-   }
+   RTensor<Value_t> Compute(RTensor<Value_t> const &x) const;
+
+   static RBDT LoadText(std::string const &txtpath, std::vector<std::string> &features, int nClasses, bool logistic,
+                        Value_t baseScore);
+
+private:
+   /// Map from XGBoost to RBDT indices.
+   using IndexMap = std::unordered_map<int, int>;
+
+   void Softmax(const Value_t *array, Value_t *out) const;
+   void ComputeImpl(const Value_t *array, Value_t *out) const;
+   Value_t EvaluateBinary(const Value_t *array) const;
+   static void correctIndices(std::span<int> indices, IndexMap const &nodeIndices, IndexMap const &leafIndices);
+   static void terminateTree(TMVA::Experimental::RBDT &ff, int &nPreviousNodes, int &nPreviousLeaves,
+                             IndexMap &nodeIndices, IndexMap &leafIndices, int &treesSkipped);
+   static RBDT
+   LoadText(std::istream &is, std::vector<std::string> &features, int nClasses, bool logistic, Value_t baseScore);
+
+   std::vector<int> fRootIndices;
+   std::vector<unsigned int> fCutIndices;
+   std::vector<Value_t> fCutValues;
+   std::vector<int> fLeftIndices;
+   std::vector<int> fRightIndices;
+   std::vector<Value_t> fResponses;
+   std::vector<int> fTreeNumbers;
+   std::vector<Value_t> fBaseResponses;
+   Value_t fBaseScore = 0.0;
+   bool fLogistic = false;
+
+   ClassDefNV(RBDT, 1);
 };
 
-extern template class TMVA::Experimental::RBDT<TMVA::Experimental::BranchlessForest<float>>;
-extern template class TMVA::Experimental::RBDT<TMVA::Experimental::BranchlessJittedForest<float>>;
-
 } // namespace Experimental
+
 } // namespace TMVA
 
 #endif // TMVA_RBDT

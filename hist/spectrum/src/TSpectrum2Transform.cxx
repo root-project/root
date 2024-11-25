@@ -6,7 +6,7 @@
     \brief Advanced 2-dimensional orthogonal transform functions
     \author Miroslav Morhac
 
- \legacy{TSpectrum2Transform}
+ \legacy{TSpectrum2Transform, For modeling a spectrum fitting and estimating the background one can use RooFit while for deconvolution and unfolding one can use TUnfold.}
 
  Class to carry out transforms of 2D spectra, its filtering and
  enhancement. It allows to calculate classic Fourier, Cosine, Sin,
@@ -56,7 +56,7 @@ TSpectrum2Transform::TSpectrum2Transform()
 /// The constructor creates TSpectrum2Transform object. Its sizes must be > than zero and must be power of 2.
 /// It sets default transform type to be Cosine transform. Transform parameters can be changed using setter functions.
 
-TSpectrum2Transform::TSpectrum2Transform(Int_t sizeX, Int_t sizeY) :TObject()
+TSpectrum2Transform::TSpectrum2Transform(Int_t sizeX, Int_t sizeY)
 {
    Int_t n;
    if (sizeX <= 0 || sizeY <= 0){

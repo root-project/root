@@ -36,8 +36,7 @@ public:
    // destructor
    ~TGeoBBox() override;
    // methods
-   static Bool_t
-   AreOverlapping(const TGeoBBox *box1, const TGeoMatrix *mat1, const TGeoBBox *box2, const TGeoMatrix *mat2);
+   
    Double_t Capacity() const override;
    void ComputeBBox() override;
    void ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) override;

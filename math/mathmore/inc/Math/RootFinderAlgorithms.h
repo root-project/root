@@ -60,13 +60,6 @@ namespace Roots {
 
       Bisection();
       ~Bisection() override;
-
-   private:
-      // usually copying is non trivial, so we make this unaccessible
-
-      Bisection(const Bisection &);
-      Bisection & operator = (const Bisection &);
-
    };
 
 //________________________________________________________________________________________________________
@@ -82,12 +75,6 @@ namespace Roots {
 
       FalsePos();
       ~FalsePos() override;
-
-   private:
-      // usually copying is non trivial, so we make this unaccessible
-      FalsePos(const FalsePos &);
-      FalsePos & operator = (const FalsePos &);
-
    };
 
 
@@ -107,12 +94,6 @@ namespace Roots {
 
       Brent();
       ~Brent() override;
-
-   private:
-      // usually copying is non trivial, so we make this unaccessible
-      Brent(const Brent &);
-      Brent & operator = (const Brent &);
-
    };
 
 
@@ -135,12 +116,6 @@ namespace Roots {
 
       Newton();
       ~Newton() override;
-
-   private:
-      // usually copying is non trivial, so we make this unaccessible
-      Newton(const Newton &);
-      Newton & operator = (const Newton &);
-
    };
 
 
@@ -158,12 +133,6 @@ namespace Roots {
 
       Secant();
       ~Secant() override;
-
-   private:
-      // usually copying is non trivial, so we make this unaccessible
-      Secant(const Secant &);
-      Secant & operator = (const Secant &);
-
    };
 
 //________________________________________________________________________________________________________
@@ -181,12 +150,6 @@ namespace Roots {
 
       Steffenson();
       ~Steffenson() override;
-
-   private:
-      // usually copying is non trivial, so we make this unaccessible
-      Steffenson(const Steffenson &);
-      Steffenson & operator = (const Steffenson &);
-
    };
 
 

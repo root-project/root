@@ -80,7 +80,10 @@ public:
    Int_t GetNproperties() const { return fProperties.GetSize(); }
    Int_t GetNconstProperties() const { return fConstProperties.GetSize(); }
    const char *GetPropertyRef(const char *property) const;
-   const char *GetPropertyRef(Int_t i) const { return (fProperties.At(i) ? fProperties.At(i)->GetTitle() : nullptr); }
+   const char *GetPropertyRef(Int_t i) const
+   {
+      return (fProperties.At(i) ? fProperties.At(i)->GetTitle() : nullptr);
+   }
    Double_t GetConstProperty(const char *property, Bool_t *error = nullptr) const;
    Double_t GetConstProperty(Int_t i, Bool_t *error = nullptr) const;
    const char *GetConstPropertyRef(const char *property) const;

@@ -5,6 +5,7 @@
 #include "PyCallable.h"
 
 // Standard
+#include <map>
 #include <string>
 #include <utility>
 #include <vector>
@@ -13,16 +14,16 @@
 namespace CPyCppyy {
 
 // signature hashes are also used by TemplateProxy
-inline uint64_t HashSignature(PyObject* args)
+inline uint64_t HashSignature(CPyCppyy_PyArgs_t args, size_t nargsf)
 {
 // Build a hash from the types of the given python function arguments.
     uint64_t hash = 0;
 
-    int nargs = (int)PyTuple_GET_SIZE(args);
-    for (int i = 0; i < nargs; ++i) {
+    Py_ssize_t nargs = CPyCppyy_PyArgs_GET_SIZE(args, nargsf);
+    for (Py_ssize_t i = 0; i < nargs; ++i) {
     // TODO: hashing in the ref-count is for moves; resolve this together with the
     // improved overloads for implicit conversions
-        PyObject* pyobj = PyTuple_GET_ITEM(args, i);
+        PyObject* pyobj = CPyCppyy_PyArgs_GET_ITEM(args, i);
         hash += (uint64_t)Py_TYPE(pyobj);
         hash += (uint64_t)(pyobj->ob_refcnt == 1 ? 1 : 0);
         hash += (hash << 10); hash ^= (hash >> 6);
@@ -39,13 +40,15 @@ public:
     typedef std::vector<PyCallable*> Methods_t;
 
     struct MethodInfo_t {
-        MethodInfo_t() : fFlags(CallContext::kNone) { fRefCount = new int(1); }
+        MethodInfo_t() : fDoc(nullptr), fFlags(CallContext::kNone)
+            { fRefCount = new int(1); }
         ~MethodInfo_t();
 
         std::string                 fName;
         CPPOverload::DispatchMap_t  fDispatchMap;
         CPPOverload::Methods_t      fMethods;
-        uint64_t                    fFlags;
+        PyObject*                   fDoc;
+        uint32_t                    fFlags;
 
         int* fRefCount;
 
@@ -70,6 +73,10 @@ public:                 // public, as the python C-API works with C structs
     PyObject_HEAD
     CPPInstance*   fSelf;         // must be first (same layout as TemplateProxy)
     MethodInfo_t*  fMethodInfo;
+    uint32_t       fFlags;
+#if PY_VERSION_HEX >= 0x03080000
+    vectorcallfunc fVectorCall;
+#endif
 
 private:
     CPPOverload() = delete;

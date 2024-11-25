@@ -35,6 +35,12 @@ else()                       # testing using an installation
   enable_testing()
 endif()
 
+# Set the environment for the tutorials, which is the eventual ROOT_environ
+# plus some environment variables related to limiting the number of threads
+# used by NumPy.
+# See: https://stackoverflow.com/questions/30791550/limit-number-of-threads-in-numpy
+set(TUTORIAL_ENV ${ROOT_environ} OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1)
+
 #---Copy the CTestCustom.cmake file into the build directory--------
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/CTestCustom.cmake ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
 
@@ -55,29 +61,41 @@ Rint.History:  .root_hist
 ACLiC.LinkLibs:  1
 ")
 
-#---Definition of the helper function--------------------------------
-function(ROOT_ADD_TUTORIAL macrofile rc)
-  string(REPLACE ".C" "" name ${macrofile})
-  string(REPLACE "/" "-" name ${name})
-  ROOT_ADD_TEST(tutorial-${name} COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/${macrofile}
-                PASSRC ${rc} FAILREGEX "Error in" "error:" LABELS tutorial)
-endfunction()
+#---Tutorials that need substantial network to work------------------
+set(need_network dataframe/df027_SQliteDependencyOverVersion.C)
 
 #---Tutorials disabled depending on the build components-------------
 
 if(NOT clad)
-  set(clad_veto fit/minuit2GausFit.C)
+  set(clad_veto fit/minuit2GausFit.C
+                # TODO: the next veto should not be necessary!
+                # The tutorial should also work without clad.
+                # See https://github.com/root-project/root/issues/15091.
+                fit/exampleFit3D.C
+  )
 endif()
 
-# RBatchGenerator tutorials need Python 3.8+.
-# Also, they don't work on Windows at the moment.
-if (PYTHON_VERSION_STRING VERSION_LESS 3.8 OR
-    (MSVC AND NOT win_broken_tests))
+if(MSVC AND NOT win_broken_tests)
+  # RBatchGenerator tutorials don't work on Windows at the moment.
   list(APPEND dataframe_veto tmva/RBatchGenerator_NumPy.py)
   list(APPEND dataframe_veto tmva/RBatchGenerator_TensorFlow.py)
   list(APPEND dataframe_veto tmva/RBatchGenerator_PyTorch.py)
   list(APPEND dataframe_veto tmva/RBatchGenerator_filters_vectors.py)
+  # df036* and df037* seem to trigger OS errors when trying to delete the
+  # test files created in the tutorials. It is unclear why.
+  list(APPEND dataframe_veto dataframe/df036_missingBranches.C)
+  list(APPEND dataframe_veto dataframe/df036_missingBranches.py)
+  list(APPEND dataframe_veto dataframe/df037_TTreeEventMatching.C)
+  list(APPEND dataframe_veto dataframe/df037_TTreeEventMatching.py)
+  # The RooFit SBI tutorials fail on Windows for unknown reasons
+  list(APPEND roofit_veto roofit/rf617_simulation_based_inference_multidimensional.py)
 endif()
+
+# TODO: fix the problem and re-enable the tutorial test. The rf615 tutorial
+# occasionally fails on cleanup on different platforms, hinting to a PyROOT
+# issue. We disable the rf617 tutorial for now. as the covered RooFit
+# functionality is also covered by rf617 (the multidimensional case).
+list(APPEND roofit_veto roofit/rf615_simulation_based_inference.py)
 
 if (NOT dataframe)
     # RDataFrame
@@ -95,17 +113,6 @@ if (NOT dataframe)
     list(APPEND dataframe_veto tmva/RBatchGenerator_filters_vectors.py)
     # RooFit tutorial depending on RDataFrame
     list(APPEND dataframe_veto roofit/rf408*)
-elseif(MSVC AND NOT win_broken_tests)
-    if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-      list(APPEND dataframe_veto dataframe/df002_dataModel.py)
-      list(APPEND dataframe_veto dataframe/df016_vecOps.py)
-      list(APPEND dataframe_veto dataframe/df017_vecOpsHEP.py)
-    endif()
-
-    # Why do we need to veto these tutorials on Windows with C++17?
-    list(APPEND dataframe_veto dataframe/df032_RDFFromNumpy.py)
-    list(APPEND dataframe_veto dataframe/df033_Describe.py)
-
 endif()
 
 if(NOT sqlite)
@@ -123,10 +130,8 @@ if(MACOSX_VERSION VERSION_EQUAL 10.13)
    list(APPEND dataframe_veto dataframe/df103_NanoAODHiggsAnalysis.*)
 endif()
 
-if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 8 AND NOT win_broken_tests)
-    list(APPEND dataframe_veto dataframe/df002_dataModel.C)
-    list(APPEND dataframe_veto dataframe/df016_vecOps.C)
-    list(APPEND dataframe_veto dataframe/df017_vecOpsHEP.C)
+if(NOT geom)
+  set(geom_veto geom/*.C)
 endif()
 
 if(NOT ROOT_proof_FOUND)
@@ -142,16 +147,11 @@ if(NOT ROOT_roofit_FOUND)
                   roostats/*.C roostats/*.py
                   histfactory/*.C histfactory/*.py)
 else()
-  if(MSVC AND NOT win_broken_tests)
-    set(roofit_veto roofit/rf401_importttreethx.py roofit/rf708_bphysics.py roofit/rf501_simultaneouspdf.py)
-    if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-      list(APPEND roofit_veto roofit/rf409_NumPyPandasToRooFit.py)
-    else()
-      # The following tutorials are failing with this error:
-      # IncrementalExecutor::executeFunction: symbol '__std_find_trivial_4@12' unresolved while linking [cling interface function]!
-      # on Windows 32 bit and Visual Studio v17.8
-      list(APPEND roofit_veto roofit/rf509_wsinteractive.C roofit/rf614_binned_fit_problems.C)
-    endif()
+  if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 4 AND NOT llvm13_broken_tests)
+    # The following tutorials are failing with this error:
+    # IncrementalExecutor::executeFunction: symbol '__std_find_trivial_4@12' unresolved while linking [cling interface function]!
+    # on Windows 32 bit and Visual Studio v17.8
+    list(APPEND roofit_veto roofit/rf509_wsinteractive.C roofit/rf614_binned_fit_problems.C)
   endif()
 endif()
 
@@ -189,8 +189,9 @@ if(NOT xrootd)
                   dataframe/df105_WBosonAnalysis.py
                   dataframe/df106_HiggsToFourLeptons.py
                   dataframe/df107_SingleTopAnalysis.py
-                  v7/df104.py
-                  v7/df105.py
+                  roofit/rf618_mixture_models.py # depends on df106_HiggsToFourLeptons.py
+                  rcanvas/df104.py
+                  rcanvas/df105.py
                   )
 endif()
 
@@ -217,6 +218,7 @@ if(NOT ROOT_mathmore_FOUND)
       math/tStudent.C
       math/normalDist.C
       roostats/TestNonCentral.C
+      roostats/TestNonCentral.py
       math/Legendre.py
       math/Bessel.py
       math/tStudent.py)
@@ -281,7 +283,12 @@ set(gui_veto fit/fitpanel_playback.C
              roostats/ModelInspector.C
              tree/tvdemo.C
              eve/*.C
-             webgui/panel/server.cxx webgui/webwindow/server.cxx)
+             webgui/geom/geom_threejs.cxx
+             webgui/panel/webpanel.cxx
+             webgui/webwindow/webwindow.cxx)
+if (NOT webgui)
+  list(APPEND gui_veto graphics/save_batch.C rcanvas/df104.py rcanvas/df105.py)
+endif()
 
 if (NOT ROOT_tmva_FOUND)
   list(APPEND tmva_veto tmva/*.C tmva/*.py tmva/envelope/*.C tmva/keras/*.C tmva/keras/*.py tmva/pytorch/*.py )
@@ -292,11 +299,13 @@ else()
     list(APPEND tmva_veto tmva/envelope/classification.C)
   endif()
   #these depends on external packages
-  find_python_module(torch QUIET)
-  find_python_module(keras QUIET)
-  find_python_module(sonnet QUIET)
-  find_python_module(graph_nets QUIET)
-  find_python_module(sklearn QUIET)
+  if (tmva-pymva)
+    find_python_module(torch QUIET)
+    find_python_module(keras QUIET)
+    find_python_module(sonnet QUIET)
+    find_python_module(graph_nets QUIET)
+    find_python_module(sklearn QUIET)
+  endif()
   if (NOT PY_KERAS_FOUND)
     list(APPEND tmva_veto tmva/TMVA_SOFIE_Keras.C)
     list(APPEND tmva_veto tmva/TMVA_SOFIE_Keras_HiggsModel.C)
@@ -319,7 +328,6 @@ else()
   list(APPEND tmva_veto tmva/TMVA_SOFIE_GNN_Parser.py)
   if (NOT PY_SONNET_FOUND OR NOT PY_GRAPH_NETS_FOUND)
     list(APPEND tmva_veto tmva/TMVA_SOFIE_GNN.py)
-    list(APPEND tmva_veto tmva/TMVA_SOFIE_GNN_Parser.py)
     list(APPEND tmva_veto tmva/TMVA_SOFIE_GNN_Application.C)
   endif()
   if (NOT tmva-sofie)
@@ -331,18 +339,15 @@ else()
 
 endif()
 
-if (NOT ROOT_pythia6_FOUND)
-  set(pythia_veto pythia/pythiaExample.C)
-endif()
 if (NOT ROOT_pythia8_FOUND)
-  set(pythia_veto ${pythia_veto} pythia/pythia8.C)
+  set(pythia_veto pythia/pythia8.C)
 else()
   if("$ENV{PYTHIA8}" STREQUAL "")
     get_filename_component(pythia8dir "${PYTHIA8_INCLUDE_DIR}" DIRECTORY)
-    list(APPEND ROOT_environ PYTHIA8=${pythia8dir})
+    list(APPEND TUTORIAL_ENV PYTHIA8=${pythia8dir})
   endif()
   if("$ENV{PYTHIA8DATA}" STREQUAL "" AND PYTHIA8_DATA)
-    list(APPEND ROOT_environ PYTHIA8DATA=${PYTHIA8_DATA})
+    list(APPEND TUTORIAL_ENV PYTHIA8DATA=${PYTHIA8_DATA})
   endif()
 endif()
 
@@ -358,12 +363,11 @@ if(root7)
                  v7/fitpanel6.cxx
       )
   if(NOT davix)
-    list(APPEND root7_veto v7/ntuple/ntpl003_lhcbOpenData.C)
     list(APPEND root7_veto v7/ntuple/ntpl004_dimuon.C)
-    list(APPEND root7_veto v7/global_temperatures.cxx)
+    list(APPEND root7_veto v7/ntuple/ntpl011_global_temperatures.C)
   endif()
   if(NOT dataframe)
-    list(APPEND root7_veto v7/global_temperatures.cxx)
+    list(APPEND root7_veto v7/ntuple/ntpl011_global_temperatures.C)
     list(APPEND root7_veto v7/ntuple/ntpl004_dimuon.C)
     list(APPEND root7_veto v7/ntuple/ntpl008_import.C)
     list(APPEND root7_veto rcanvas/df104.py)
@@ -416,30 +420,23 @@ set(extra_veto
   r/rootlogon.C)
 
 if(MSVC AND NOT llvm13_broken_tests)
- list(APPEND extra_veto
-      dataframe/df002_dataModel.C
-      dataframe/df007_snapshot.C
-      dataframe/df016_vecOps.C
-      dataframe/df017_vecOpsHEP.C
-      fit/NumericalMinimization.C
-      fit/fit2.C
-      fit/fit2a.C
-      fit/fit2dHist.C
-      graphics/earth.C
-      graphs/motorcycle.C
-      math/exampleFunction.py
-      math/multidimSampling.C
-      math/multivarGaus.C
-      tree/basic.C
-      unfold/testUnfold5b.C
-      unfold/testUnfold5c.C
-      unfold/testUnfold5d.C
-      unuran/unuranDemo.C
-      v7/ntuple/ntpl001_staff.C
-      v7/perfcomp.cxx
-      dataframe/df002_dataModel.py
-      dataframe/df016_vecOps.py
-      dataframe/df017_vecOpsHEP.py)
+  list(APPEND extra_veto
+       math/exampleFunction.py
+       dataframe/df002_dataModel.C
+       dataframe/df016_vecOps.C
+       dataframe/df017_vecOpsHEP.C
+       dataframe/df002_dataModel.py
+       dataframe/df016_vecOps.py
+       dataframe/df017_vecOpsHEP.py
+       dataframe/df032_RDFFromNumpy.py
+       dataframe/df035_RDFFromPandas.py)
+  if(CMAKE_SIZEOF_VOID_P EQUAL 4)
+    list(APPEND extra_veto
+         dataframe/df007_snapshot.C
+         graphics/earth.C
+         graphs/motorcycle.C
+         v7/ntuple/ntpl001_staff.C)
+  endif()
 endif()
 
 set(all_veto hsimple.C
@@ -463,6 +460,7 @@ set(all_veto hsimple.C
              ${tbb_veto}
              ${imt_veto}
              ${classic_veto}
+             ${geom_veto}
              ${pythia_veto}
              ${vecgeom_veto}
              ${root7_veto}
@@ -475,6 +473,10 @@ set(all_veto hsimple.C
              )
 
 file(GLOB_RECURSE tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.C)
+if(webgui)
+  file(GLOB_RECURSE tutorials_webcanv RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} webcanv/*.cxx)
+  list(APPEND tutorials ${tutorials_webcanv})
+endif()
 if(root7 AND webgui)
   file(GLOB_RECURSE tutorials_v7 RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} v7/*.cxx)
   list(APPEND tutorials ${tutorials_v7})
@@ -502,9 +504,6 @@ set(returncode_1 fit/fit2a.C
                  graphics/earth.C
                  graphics/pavetext.C
                  graphics/tmathtext.C graphics/tmathtext2.C
-                 graphs/timeonaxis.C
-                 graphs/timeonaxis2.C
-                 graphs/timeonaxis3.C
                  graphs/exclusiongraph.C
                  graphs/graphstruct.C
                  hist/ContourList.C
@@ -589,11 +588,11 @@ if (PY_TORCH_FOUND)
   set (tmva-pytorch-ApplicationRegressionPyTorch-depends tutorial-tmva-pytorch-RegressionPyTorch-py)
 endif()
 if (PY_KERAS_FOUND)
-  set (tmva-TMVA_SOFIE_Keras_HiggsModel-depends tutorial-tmva-TMVA_Higgs_Classification)
-  set (tmva-TMVA_SOFIE_RDataFrame-depends tutorial-tmva-TMVA_SOFIE_Keras_HiggsModel)
-  set (tmva-TMVA_SOFIE_RDataFrame_JIT-depends tutorial-tmva-TMVA_SOFIE_Keras_HiggsModel)
-  set (tmva-TMVA_SOFIE_Inference-depends tutorial-tmva-TMVA_Higgs_Classification)
   set (tmva-TMVA_SOFIE_RSofieReader-depends tutorial-tmva-TMVA_Higgs_Classification)
+  set (tmva-TMVA_SOFIE_RDataFrame_JIT-depends tutorial-tmva-TMVA_SOFIE_RSofieReader)
+  set (tmva-TMVA_SOFIE_Keras_HiggsModel-depends tutorial-tmva-TMVA_SOFIE_RDataFrame_JIT)
+  set (tmva-TMVA_SOFIE_RDataFrame-depends tutorial-tmva-TMVA_SOFIE_Keras_HiggsModel)
+  set (tmva-TMVA_SOFIE_Inference-depends tutorial-tmva-TMVA_SOFIE_RDataFrame)
   if (PY_TORCH_FOUND)
     set (tmva-keras-RegressionKeras-depends tutorial-tmva-pytorch-RegressionPyTorch-py)
     set (tmva-keras-ClassificationKeras-depends tutorial-tmva-pytorch-ClassificationPyTorch-py)
@@ -601,10 +600,6 @@ if (PY_KERAS_FOUND)
   set (tmva-keras-ApplicationRegressionKeras-depends tutorial-tmva-keras-RegressionKeras-py)
   set (tmva-keras-ApplicationClassificationKeras-depends tutorial-tmva-keras-ClassificationKeras-py)
 endif()
-#if (PY_SONNET_FOUND AND PY_GRAPH_NETS_FOUND)
-#   set (tmva-TMVA_SOFIE_GNN_Application-depends tutorial-tmva-TMVA_SOFIE_GNN_Parser-py)
-#endif()
-
 
 #--List long-running tutorials to label them as "longtest"
 set (long_running
@@ -612,8 +607,13 @@ set (long_running
      multicore/mp103*)
 file(GLOB long_running RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${long_running})
 #--List multithreaded tutorials to run them serially
-set (multithreaded
+set(NProcessors 4)
+set (multithreaded_all_cores
      dataframe/df10[2-7]*
+     rcanvas/df10*
+    )
+set (multithreaded
+     ${multithreaded_all_cores}
      multicore/mp103*
      tmva/TMVAMulticlass.C
      tmva/TMVA_CNN_Classification.C
@@ -623,20 +623,24 @@ set (multithreaded
      tmva/TMVA_Higgs_Classification.py
      tmva/TMVA_RNN_Classification.py
      )
+file(GLOB multithreaded_all_cores RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${multithreaded_all_cores})
 file(GLOB multithreaded RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${multithreaded})
 
 #---Loop over all tutorials and define the corresponding test---------
 
 #---Define the primordial tutorials-----------------------------------
 ROOT_ADD_TEST(tutorial-hsimple COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/hsimple.C
-                PASSRC 255 FAILREGEX "Error in" "error:" LABELS tutorial)
-ROOT_ADD_TEST(tutorial-geom-geometry COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/geom/geometry.C
-                FAILREGEX "Error in" "error:" LABELS tutorial)
+    PASSRC 255 FAILREGEX "Error in" "error:" "warning: Failed to call" LABELS tutorial ENVIRONMENT ${TUTORIAL_ENV})
+if(ROOT_geom_FOUND)
+  ROOT_ADD_TEST(tutorial-geom-geometry COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/geom/geometry.C
+                FAILREGEX "Error in" "error:" "warning: Failed to call" LABELS tutorial ENVIRONMENT ${TUTORIAL_ENV})
+endif()
 # define Python GNN parsing tutorial needed to run before
 if (PY_SONNET_FOUND AND PY_GRAPH_NETS_FOUND)
-  ROOT_ADD_TEST(tutorial-tmva-TMVA_SOFIE_GNN_Parser COMMAND ${PYTHON_EXECUTABLE}
+  ROOT_ADD_TEST(tutorial-tmva-TMVA_SOFIE_GNN_Parser COMMAND ${Python3_EXECUTABLE}
   ${CMAKE_CURRENT_SOURCE_DIR}/tmva/TMVA_SOFIE_GNN_Parser.py
-  PASSRC 0 FAILREGEX "Error in" ": error:" LABELS tutorial ENVIRONMENT ${ROOT_environ})
+  PASSRC 0 FAILREGEX "Error in" ": error:" LABELS tutorial ENVIRONMENT ${TUTORIAL_ENV})
+  set (tmva-TMVA_SOFIE_GNN_Application-depends tutorial-tmva-TMVA_SOFIE_GNN_Parser)
 endif()
 
 #---Loop over all tutorials and define the corresponding test---------
@@ -656,6 +660,18 @@ foreach(t ${tutorials})
   endif()
   if(${t} IN_LIST multithreaded)
     list(APPEND labels multithreaded)
+    # If this is not a TMVA tutorial, we want to limit the size of the thread
+    # pool in case the tutorial invokes ROOT::EnableImplicitMT(), which by
+    # default creates a thread pool of the size of the total number of cores.
+    if(${t} IN_LIST multithreaded_all_cores)
+      set(createThreadPool "-e \"ROOT::EnableImplicitMT(${NProcessors})\"")
+    endif()
+  else()
+    unset(createThreadPool)
+  endif()
+
+  if(${t} IN_LIST need_network)
+    list(APPEND labels needs_network)
   endif()
 
    # These tests on ARM64 need much more than 20 minutes - increase the timeout
@@ -666,18 +682,18 @@ foreach(t ${tutorials})
    endif()
 
   ROOT_ADD_TEST(tutorial-${tname}
-                COMMAND ${ROOT_root_CMD} -b -l -q ${CMAKE_CURRENT_SOURCE_DIR}/${t}${${tname}-aclic}
-                PASSRC ${rc} FAILREGEX "Error in <" ": error:" "segmentation violation" "FROM HESSE     STATUS=FAILED"
+                COMMAND ${ROOT_root_CMD} -b -l -q ${createThreadPool} ${CMAKE_CURRENT_SOURCE_DIR}/${t}${${tname}-aclic}
+                PASSRC ${rc} FAILREGEX "Error in <" ": error:" "segmentation violation" "FROM HESSE     STATUS=FAILED" "warning: Failed to call"
                 LABELS ${labels}
                 DEPENDS tutorial-hsimple ${${tname}-depends}
-                ENVIRONMENT ${ROOT_environ}
+                ENVIRONMENT ${TUTORIAL_ENV}
                 TIMEOUT ${thisTestTimeout})
 
   if(${t} IN_LIST multithreaded)
     # Makes sure that this doesn't run in parallel with other multithreaded tutorials, and that cmake doesn't start too
     # many other tests. That we use 4 processors is actually a lie, because IMT takes whatever it finds.
     # However, even this poor indication of MT behaviour is a good hint for cmake to reduce congestion.
-    set_tests_properties(tutorial-${tname} PROPERTIES RESOURCE_LOCK multithreaded PROCESSORS 4)
+    set_tests_properties(tutorial-${tname} PROPERTIES RESOURCE_LOCK multithreaded PROCESSORS ${NProcessors})
   endif()
 endforeach()
 
@@ -701,10 +717,10 @@ foreach(t ${mpi_tutorials})
 
   ROOT_ADD_TEST(tutorial-${tname}
     COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 4 ${ROOT_root_CMD} -b -l -q ${CMAKE_CURRENT_SOURCE_DIR}/${t}${${tname}-aclic}
-                PASSRC ${rc} FAILREGEX "Error in <" ": error:" "segmentation violation" "FROM HESSE     STATUS=FAILED"
+                PASSRC ${rc} FAILREGEX "Error in <" ": error:" "segmentation violation" "FROM HESSE     STATUS=FAILED" "warning: Failed to call"
                 LABELS tutorial
                 DEPENDS tutorial-hsimple ${${tname}-depends}
-                ENVIRONMENT ${ROOT_environ}
+                ENVIRONMENT ${TUTORIAL_ENV}
                 TIMEOUT ${thisTestTimeout})
 endforeach()
 
@@ -713,6 +729,8 @@ if(ROOT_pyroot_FOUND)
 
   # Copy .rootlogon.py file into the build directory. It disables graphics for the Python tutorials
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/.rootlogon.py ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
+  # Copy .enableImplicitMTWrapper.py file into the build directory. It can limit the size of the thread pool
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/.enableImplicitMTWrapper.py ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
 
   file(GLOB_RECURSE pytutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.py)
 
@@ -726,13 +744,13 @@ if(ROOT_pyroot_FOUND)
              pyroot/parse_CSV_file_with_TTree_ReadStream.py # not a tutorial
              pyroot/numberEntry.py  # requires GUI
              legacy/pyroot/*py      # legacy ...
-             histfactory/example.py # not a tutorial
              histfactory/makeQuickModel.py # not a tutorial
              eve/lineset.py         # requires GUI
              sql/sqlcreatedb.py     # same as the C++ case
              sql/sqlfilldb.py       # same as the C++ case
              sql/sqlselect.py       # same as the C++ case
              launcher.py            # Not a tutorial
+             .enableImplicitMTWrapper.py # Not a tutorial
              )
 
   if(NOT dataframe
@@ -756,7 +774,7 @@ if(ROOT_pyroot_FOUND)
   endif()
   # Use main Python executable to run in PySpark driver and executors
   if(test_distrdf_pyspark)
-    list(APPEND ROOT_environ PYSPARK_PYTHON=${PYTHON_EXECUTABLE})
+    list(APPEND TUTORIAL_ENV PYSPARK_PYTHON=${Python3_EXECUTABLE})
     if(MACOSX_VERSION VERSION_GREATER_EQUAL 10.13)
       # MacOS has changed rules about forking processes after 10.13
       # Running pyspark tests with XCode Python3 throws crashes with errors like:
@@ -766,7 +784,7 @@ if(ROOT_pyroot_FOUND)
       # specifically the XCode Python executable that triggers this.
       # For now, there seems no other way than this workaround,
       # which effectively sets the behaviour of `fork` back to MacOS 10.12
-      list(APPEND ROOT_environ OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES)
+      list(APPEND TUTORIAL_ENV OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES)
     endif()
   endif()
   # These lists keep track of distrdf tutorials, so we can add specific properties later
@@ -782,7 +800,6 @@ if(ROOT_pyroot_FOUND)
     list(APPEND pyveto ${tmva_veto_py})
   endif()
 
-  find_python_module(keras QUIET)
   if(NOT PY_KERAS_FOUND)
     file(GLOB tmva_veto_py RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} tmva/keras/*.py)
     list(APPEND pyveto ${tmva_veto_py})
@@ -793,13 +810,20 @@ if(ROOT_pyroot_FOUND)
     list(APPEND pyveto tmva/keras/MultiClassKeras.py)
   endif()
 
-  find_python_module(torch QUIET)
+  if (PY_KERAS_FOUND)
+    set (tmva-TMVA_SOFIE_RDataFrame-py-depends tutorial-tmva-TMVA_SOFIE_Keras_HiggsModel)
+  endif()
+
   if(NOT PY_TORCH_FOUND)
     file(GLOB tmva_veto_py RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} tmva/pytorch/*.py)
     list(APPEND pyveto ${tmva_veto_py})
   endif()
   # disable PyTorch model file used by TMVA_CNN_Classification.C
   list(APPEND pyveto tmva/PyTorch_Generate_CNN_Model.py)
+
+  if(NOT ROOT_geom_FOUND)
+    list(APPEND pyveto pyroot/geometry.py)
+  endif()
 
   # Now glob all vetos for pyroot
   file(GLOB pyveto RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${pyveto})
@@ -820,14 +844,15 @@ if(ROOT_pyroot_FOUND)
                                 tutorial-pyroot-na49view-py
                                 tutorial-pyroot-h1ReadAndDraw-py
                                 tutorial-pyroot-ntuple1-py)
-  set(pyroot-fit1-depends tutorial-pyroot-fillrandom-py)
+  set(pyroot-fit1-depends tutorial-hist-fillrandom-py)
   set(pyroot-na49view-depends tutorial-pyroot-geometry-py)
   set(roofit-rf503_wspaceread-depends tutorial-roofit-rf502_wspacewrite-py)
+  set(roofit-rf618_mixture_models-depends tutorial-dataframe-df106_HiggsToFourLeptons-py)
 
-  # Avoid a race condition: make sure Python tutorial is ran after C++ tutorial
+  # Avoid a race condition: make sure Python tutorial is run after C++ tutorial
   set(roofit-rf104_classfactory-depends tutorial-roofit-rf104_classfactory)
   set(roofit-rf512_wsfactory_oper-depends tutorial-roofit-rf512_wsfactory_oper)
-  set (tmva-Higgs_CNN_Classification-depends tutorial-tmva-TMVA_Higgs_Classification)
+  set (tmva-TMVA_Higgs_Classification-depends tutorial-tmva-TMVA_Higgs_Classification)
   set (tmva-TMVA_CNN_Classification-depends tutorial-tmva-TMVA_CNN_Classification)
   set (tmva-TMVA_RNN_Classification-depends tutorial-tmva-TMVA_RNN_Classification)
 
@@ -864,6 +889,16 @@ if(ROOT_pyroot_FOUND)
     endif()
     if(${t} IN_LIST multithreaded)
       list(APPEND labels multithreaded)
+      # If this is not a TMVA tutorial, we want to limit the size of the thread
+      # pool in case the tutorial invokes ROOT::EnableImplicitMT(), which by
+      # default creates a thread pool of the size of the total number of cores.
+      if(${t} IN_LIST multithreaded_all_cores)
+        set(setThreadPoolSize ".enableImplicitMTWrapper.py")
+        set(thisTestPoolSize ${NProcessors})
+      endif()
+    else()
+      unset(setThreadPoolSize)
+      unset(thisTestPoolSize)
     endif()
 
     string(REPLACE ".py" "" tname ${t})
@@ -889,11 +924,11 @@ if(ROOT_pyroot_FOUND)
     endforeach()
 
     ROOT_ADD_TEST(${tutorial_name}
-                COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/${t}
+                COMMAND ${Python3_EXECUTABLE} ${setThreadPoolSize} ${thisTestPoolSize} ${CMAKE_CURRENT_SOURCE_DIR}/${t}
                 PASSRC ${rc} FAILREGEX "Error in" ": error:" "segmentation violation"
                 LABELS ${labels}
                 DEPENDS ${${tname}-depends}
-                ENVIRONMENT ${ROOT_environ}
+                ENVIRONMENT ${TUTORIAL_ENV}
                 PYTHON_DEPS ${python_deps}
                 ${py_will_fail})
 
@@ -901,19 +936,19 @@ if(ROOT_pyroot_FOUND)
       # Makes sure that this doesn't run in parallel with other multithreaded tutorials, and that cmake doesn't start too
       # many other tests. That we use 4 processors is actually a lie, because IMT takes whatever it finds.
       # However, even this poor indication of MT behaviour is a good hint for cmake to reduce congestion.
-      set_tests_properties(${tutorial_name} PROPERTIES RESOURCE_LOCK multithreaded PROCESSORS 4)
+      set_tests_properties(${tutorial_name} PROPERTIES RESOURCE_LOCK multithreaded PROCESSORS ${NProcessors})
     endif()
 
     if(${t} IN_LIST distrdf_spark_tutorials)
       # Create a resource lock for the creation of a Spark cluster. This is also used in roottest.
       # Also signal 4 processors to cmake to give the tutorial some room (it uses 2 cores).
-      set_tests_properties(${tutorial_name} PROPERTIES RESOURCE_LOCK spark_resource_lock PROCESSORS 4)
+      set_tests_properties(${tutorial_name} PROPERTIES RESOURCE_LOCK spark_resource_lock PROCESSORS ${NProcessors})
     endif()
 
     if(${t} IN_LIST distrdf_dask_tutorials)
       # Create a resource lock for the creation of a Dask cluster. This is also used in roottest.
       # Also signal 4 processors to cmake to give the tutorial some room (it uses 2 cores).
-      set_tests_properties(${tutorial_name} PROPERTIES RESOURCE_LOCK dask_resource_lock PROCESSORS 4)
+      set_tests_properties(${tutorial_name} PROPERTIES RESOURCE_LOCK dask_resource_lock PROCESSORS ${NProcessors})
     endif()
 
   endforeach()

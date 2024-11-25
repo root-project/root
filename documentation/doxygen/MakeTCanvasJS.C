@@ -7,12 +7,16 @@
 #include "TBufferJSON.h"
 #include <fstream>
 
-void MakeTCanvasJS(const char *MacroName, const char *IN, const char *OutDir, bool cp, bool py)
+void MakeTCanvasJS(const char *MacroName, const char *IN, const char *OutDir, bool cp, bool py, bool aclic)
 {
 
    // Execute the macro as a C++ one or a Python one.
-   if (!py) gROOT->ProcessLine(TString::Format(".x %s",MacroName));
-   else     gROOT->ProcessLine(TString::Format("TPython::ExecScript(\"%s\");",MacroName));
+   if (py)
+      gROOT->ProcessLine(TString::Format("TPython::ExecScript(\"%s\");",MacroName));
+   else if (aclic)
+      gROOT->ProcessLine(TString::Format(".x %s+",MacroName));
+   else
+      gROOT->ProcessLine(TString::Format(".x %s",MacroName));
 
    // If needed, copy the macro in the documentation directory.
    if (cp) {
@@ -36,29 +40,19 @@ void MakeTCanvasJS(const char *MacroName, const char *IN, const char *OutDir, bo
    fprintf(fh,"<center>\n");
    while ((canvas = (TCanvas*) next()) != nullptr) {
       ImageNum++;
-      json_codes.push_back(TBufferJSON::ToJSON(canvas, TBufferJSON::kNoSpaces + TBufferJSON::kSameSuppression));
-      fprintf(fh,"   <div id=\"draw_pict%d_%s\" style=\"width:%dpx; height:%dpx\"></div>\n",
+      json_codes.push_back(TWebCanvas::CreateCanvasJSON(canvas, TBufferJSON::kNoSpaces + TBufferJSON::kSameSuppression, kTRUE));
+      fprintf(fh,"   <div id=\"draw_pict%d_%s\" style=\"position: relative; width: %dpx; height: %dpx;\"></div>\n",
                   ImageNum,IN,canvas->GetWindowWidth(),canvas->GetWindowHeight());
    }
    fprintf(fh,"</center>\n");
 
-   fprintf(fh,"<script type=\"text/javascript\">\n");
-   fprintf(fh,"   function load_jsroot_%s() {\n", IN);
-   fprintf(fh,"      return new Promise(resolveFunc => {\n");
-   fprintf(fh,"         if (typeof JSROOT != 'undefined') return resolveFunc(true);\n");
-   fprintf(fh,"         let script = document.createElement('script');\n");
-   fprintf(fh,"         script.src = './js/scripts/JSRoot.core.js';\n");
-   fprintf(fh,"         script.onload = resolveFunc;\n");
-   fprintf(fh,"         document.head.appendChild(script);\n");
-   fprintf(fh,"      });\n");
-   fprintf(fh,"   }\n");
-   fprintf(fh,"   load_jsroot_%s().then(() => {\n", IN);
-   fprintf(fh,"      JSROOT.settings.HandleKeys = false;\n");
+   fprintf(fh,"<script type=\"module\">\n");
+   fprintf(fh,"   import { settings, parse, draw } from './js/modules/main.mjs';\n");
+   fprintf(fh,"   settings.HandleKeys = false;\n");
    for (int i=1; i<=ImageNum; i++) {
-      fprintf(fh,"      let obj%d = JSROOT.parse(%s);\n", i, json_codes[i-1].Data());
-      fprintf(fh,"      JSROOT.draw(\"draw_pict%d_%s\", obj%d, \"\");\n", i,IN,i);
+      fprintf(fh,"   let obj%d = parse(%s);\n", i, json_codes[i-1].Data());
+      fprintf(fh,"   draw('draw_pict%d_%s', obj%d, \"\");\n", i,IN,i);
    }
-   fprintf(fh,"   });\n");
    fprintf(fh,"</script>\n");
 
    fclose(fh);

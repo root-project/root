@@ -28,10 +28,6 @@ public:
    Int_t getGenerator(const RooArgSet &directVars, RooArgSet &generateVars, bool staticInitOK = true) const override;
    void generateEvent(Int_t code) override;
 
-   void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
-   std::string
-   buildCallToAnalyticIntegral(int code, const char *rangeName, RooFit::Detail::CodeSquashContext &ctx) const override;
-
    /// Get the x variable.
    RooAbsReal const &getX() const { return x.arg(); }
 
@@ -50,7 +46,7 @@ protected:
    bool _useStandardParametrization = false;
 
    double evaluate() const override;
-   void computeBatch(double *output, size_t nEvents, RooFit::Detail::DataMap const &) const override;
+   void doEval(RooFit::EvalContext &) const override;
    inline bool canComputeBatchWithCuda() const override { return true; }
 
 private:

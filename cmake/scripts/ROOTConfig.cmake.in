@@ -74,7 +74,7 @@ set(ROOT_CXX_STANDARD @CMAKE_CXX_STANDARD@)
 @ROOT_CMAKE_DIR_SETUP@
 
 # Python version used to build ROOT
-set(ROOT_PYTHON_VERSION @PYTHON_VERSION_STRING@)
+set(ROOT_PYTHON_VERSION @Python3_VERSION@)
 
 #----------------------------------------------------------------------------
 # Include RootMacros.cmake to get ROOT's CMake macros
@@ -112,10 +112,11 @@ if (NOT ROOT_builtin_nlohmannjson_FOUND)
           set(_need_json TRUE)
        endif()
     endforeach()
-  else()
-    # if components not specified - suppose all
-    set(_need_json TRUE)
   endif()
+  # If components are not specified, we assume json is not required.
+  # Propagating the dependency on nlohmann_json just for the sake of one small
+  # ROOT feature that might be used is unreasonable. We can expect from the
+  # users that link against ROOTEve to list this component explicitly.
 endif()
 
 if(_need_json)
@@ -145,6 +146,8 @@ endif()
 # Now set them to ROOT_LIBRARIES
 set(ROOT_LIBRARIES)
 if(MSVC)
+  set(SAVED_FIND_LIBRARY_PREFIXES ${CMAKE_FIND_LIBRARY_PREFIXES})
+  set(SAVED_FIND_LIBRARY_SUFFIXES ${CMAKE_FIND_LIBRARY_SUFFIXES})
   set(CMAKE_FIND_LIBRARY_PREFIXES "lib")
   set(CMAKE_FIND_LIBRARY_SUFFIXES ".lib" ".dll")
 endif()
@@ -158,6 +161,10 @@ foreach(_cpt Core Imt RIO Net Hist Graf Graf3d Gpad ROOTDataFrame Tree TreePlaye
 endforeach()
 if(ROOT_LIBRARIES)
   list(REMOVE_DUPLICATES ROOT_LIBRARIES)
+endif()
+if(MSVC)
+  set(CMAKE_FIND_LIBRARY_PREFIXES ${SAVED_FIND_LIBRARY_PREFIXES})
+  set(CMAKE_FIND_LIBRARY_SUFFIXES ${SAVED_FIND_LIBRARY_SUFFIXES})
 endif()
 
 #----------------------------------------------------------------------------

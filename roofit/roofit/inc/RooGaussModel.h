@@ -46,7 +46,7 @@ public:
 
   void advertiseAymptoticIntegral(bool flag) { _asympInt = flag ; }  // added FMV,07/24/03
 
-  void computeBatch(double* output, size_t size, RooFit::Detail::DataMap const&) const override;
+  void doEval(RooFit::EvalContext &) const override;
 
   bool canComputeBatchWithCuda() const override;
 

@@ -68,11 +68,11 @@ generating the toys (either via a histogram or via an independent model that is 
 #include "Math/MinimizerOptions.h"
 
 
-ClassImp(RooStats::BernsteinCorrection); ;
+ClassImp(RooStats::BernsteinCorrection);
 
 using namespace RooFit;
 using namespace RooStats;
-using namespace std;
+using std::cout, std::endl, std::vector;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -181,7 +181,7 @@ Int_t BernsteinCorrection::ImportCorrectedPdf(RooWorkspace* wks,
      << " -log L("<<degree-1<<") = " << lastNll
      << " -log L(" << degree <<") = " << result->minNll()
      << " q = " << q
-     << " P(chi^2_1 > q) = " << TMath::Prob(q,1) << endl;;
+     << " P(chi^2_1 > q) = " << TMath::Prob(q,1) << endl;
     }
 
     // update last result for next iteration in loop

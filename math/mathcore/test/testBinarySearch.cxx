@@ -4,7 +4,7 @@
 #include <TRandom2.h>
 #include <TMath.h>
 
-using namespace std;
+using std::cout, std::endl;
 
 const int nn = 20;
 const int maxint = 10;

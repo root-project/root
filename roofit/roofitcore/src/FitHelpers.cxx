@@ -35,19 +35,22 @@
 #include <RooMinimizer.h>
 #include <RooRealVar.h>
 #include <RooSimultaneous.h>
+#include <RooFormulaVar.h>
 
 #include <Math/CholeskyDecomp.h>
 
 #include "ConstraintHelpers.h"
 #include "RooEvaluatorWrapper.h"
 #include "RooFitImplHelpers.h"
-#include "RooNLLVarNew.h"
+#include "RooFit/Detail/RooNLLVarNew.h"
 
 #ifdef ROOFIT_LEGACY_EVAL_BACKEND
 #include "RooChi2Var.h"
 #include "RooNLLVar.h"
 #include "RooXYChi2Var.h"
 #endif
+
+using RooFit::Detail::RooNLLVarNew;
 
 namespace {
 
@@ -66,6 +69,21 @@ constexpr int extendedFitDefault = 2;
 /// \param[in] data The dataset that was used for the fit.
 int calcAsymptoticCorrectedCovariance(RooAbsReal &pdf, RooMinimizer &minimizer, RooAbsData const &data)
 {
+   RooFormulaVar logpdf("logpdf", "log(pdf)", "log(@0)", pdf);
+   RooArgSet obs;
+   logpdf.getObservables(data.get(), obs);
+
+   // Warning if the dataset is binned. TODO: in some cases,
+   // people also use RooDataSet to encode binned data,
+   // e.g. for simultaneous fits. It would be useful to detect
+   // this in this future as well.
+   if (dynamic_cast<RooDataHist const *>(&data)) {
+      oocoutW(&pdf, InputArguments)
+         << "RooAbsPdf::fitTo(" << pdf.GetName()
+         << ") WARNING: Asymptotic error correction is requested for a binned data set. "
+            "This method is not designed to handle binned data. A standard chi2 fit will likely be more suitable.";
+   };
+
    // Calculated corrected errors for weighted likelihood fits
    std::unique_ptr<RooFitResult> rw(minimizer.save());
    // Weighted inverse Hessian matrix
@@ -83,17 +101,42 @@ int calcAsymptoticCorrectedCovariance(RooAbsReal &pdf, RooMinimizer &minimizer, 
          num(k, l) = 0.0;
       }
    }
-   RooArgSet obs;
-   pdf.getObservables(data.get(), obs);
+
    // Create derivative objects
    std::vector<std::unique_ptr<RooDerivative>> derivatives;
    const RooArgList &floated = rw->floatParsFinal();
-   std::unique_ptr<RooArgSet> floatingparams{
-      static_cast<RooArgSet *>(pdf.getParameters(data)->selectByAttrib("Constant", false))};
+   RooArgSet allparams;
+   logpdf.getParameters(data.get(), allparams);
+   std::unique_ptr<RooArgSet> floatingparams{static_cast<RooArgSet *>(allparams.selectByAttrib("Constant", false))};
+
+   const double eps = 1.0e-4;
+
+   // Calculate derivatives of logpdf
    for (const auto paramresult : floated) {
       auto paraminternal = static_cast<RooRealVar *>(floatingparams->find(*paramresult));
       assert(floatingparams->find(*paramresult)->IsA() == RooRealVar::Class());
-      derivatives.emplace_back(pdf.derivative(*paraminternal, obs, 1));
+      double error = static_cast<RooRealVar *>(paramresult)->getError();
+      derivatives.emplace_back(logpdf.derivative(*paraminternal, obs, 1, eps * error));
+   }
+
+   // Calculate derivatives for number of expected events, needed for extended ML fit
+   RooAbsPdf *extended_pdf = dynamic_cast<RooAbsPdf *>(&pdf);
+   std::vector<double> diffs_expected(floated.size(), 0.0);
+   if (extended_pdf && extended_pdf->expectedEvents(obs) != 0.0) {
+      for (std::size_t k = 0; k < floated.size(); k++) {
+         const auto paramresult = static_cast<RooRealVar *>(floated.at(k));
+         auto paraminternal = static_cast<RooRealVar *>(floatingparams->find(*paramresult));
+
+         *paraminternal = paramresult->getVal();
+         double error = paramresult->getError();
+         paraminternal->setVal(paramresult->getVal() + eps * error);
+         double expected_plus = log(extended_pdf->expectedEvents(obs));
+         paraminternal->setVal(paramresult->getVal() - eps * error);
+         double expected_minus = log(extended_pdf->expectedEvents(obs));
+         *paraminternal = paramresult->getVal();
+         double diff = (expected_plus - expected_minus) / (2.0 * eps * error);
+         diffs_expected[k] = diff;
+      }
    }
 
    // Loop over data
@@ -111,11 +154,11 @@ int calcAsymptoticCorrectedCovariance(RooAbsReal &pdf, RooMinimizer &minimizer, 
          *paraminternal = paramresult->getVal();
          diffs[k] = diff;
       }
+
       // Fill numerator matrix
-      double prob = pdf.getVal(&obs);
       for (std::size_t k = 0; k < floated.size(); k++) {
          for (std::size_t l = 0; l < floated.size(); l++) {
-            num(k, l) += data.weightSquared() * diffs[k] * diffs[l] / (prob * prob);
+            num(k, l) += data.weightSquared() * (diffs[k] + diffs_expected[k]) * (diffs[l] + diffs_expected[l]);
          }
       }
    }
@@ -324,9 +367,6 @@ std::unique_ptr<RooAbsReal> createNLLNew(RooAbsPdf &pdf, RooAbsData &data, std::
                                          double integrateOverBinsPrecision, RooFit::OffsetMode offset)
 {
    if (constraints) {
-      // Redirect the global observables to the ones from the dataset if applicable.
-      constraints->setData(data, false);
-
       // The computation graph for the constraints is very small, no need to do
       // the tracking of clean and dirty nodes here.
       constraints->setOperMode(RooAbsArg::ADirty);
@@ -670,7 +710,7 @@ std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, const Ro
    // Lambda function to create the correct constraint term for a PDF. In old
    // RooFit, we use this PDF itself as the argument, for the new BatchMode
    // we're passing a clone.
-   auto createConstr = [&](bool removeConstraintsFromPdf = false) -> std::unique_ptr<RooAbsReal> {
+   auto createConstr = [&]() -> std::unique_ptr<RooAbsReal> {
       return createConstraintTerm(baseName + "_constr",                    // name
                                   pdf,                                     // pdf
                                   data,                                    // data
@@ -678,8 +718,7 @@ std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, const Ro
                                   pc.getSet("extCons"),                    // ExternalConstraints RooCmdArg
                                   pc.getSet("glObs"),                      // GlobalObservables RooCmdArg
                                   pc.getString("globstag", nullptr, true), // GlobalObservablesTag RooCmdArg
-                                  takeGlobalObservablesFromData,           // From GlobalObservablesSource RooCmdArg
-                                  removeConstraintsFromPdf);
+                                  takeGlobalObservablesFromData);          // From GlobalObservablesSource RooCmdArg
    };
 
    auto evalBackend = static_cast<RooFit::EvalBackend::Value>(pc.getInt("EvalBackend"));
@@ -736,14 +775,14 @@ std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, const Ro
           evalBackend == RooFit::EvalBackend::Value::CodegenNoGrad) {
          bool createGradient = evalBackend == RooFit::EvalBackend::Value::Codegen;
          auto simPdf = dynamic_cast<RooSimultaneous const *>(pdfClone.get());
-         nllWrapper = std::make_unique<RooFuncWrapper>("nll_func_wrapper", "nll_func_wrapper", *nll, normSet, &data,
-                                                       simPdf, createGradient);
+         nllWrapper = std::make_unique<RooFit::Experimental::RooFuncWrapper>("nll_func_wrapper", "nll_func_wrapper",
+                                                                             *nll, &data, simPdf, createGradient);
+         if (createGradient)
+            static_cast<Experimental::RooFuncWrapper &>(*nllWrapper).createGradient();
       } else {
-         auto evaluator = std::make_unique<RooFit::Evaluator>(*nll, evalBackend == RooFit::EvalBackend::Value::Cuda);
-         nllWrapper = std::make_unique<RooEvaluatorWrapper>(*nll, std::move(evaluator), rangeName ? rangeName : "",
-                                                            dynamic_cast<RooSimultaneous *>(pdfClone.get()),
-                                                            takeGlobalObservablesFromData);
-         nllWrapper->setData(data, false);
+         nllWrapper = std::make_unique<RooEvaluatorWrapper>(
+            *nll, &data, evalBackend == RooFit::EvalBackend::Value::Cuda, rangeName ? rangeName : "", pdfClone.get(),
+            takeGlobalObservablesFromData);
       }
 
       nllWrapper->addOwnedComponents(std::move(nll));

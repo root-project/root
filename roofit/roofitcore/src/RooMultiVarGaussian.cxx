@@ -35,7 +35,7 @@ Multivariate Gaussian p.d.f. with correlations
 #include "TDecompChol.h"
 #include "RooFitResult.h"
 
-using namespace std;
+using std::string, std::list, std::map, std::vector, std::cout, std::endl;
 
 ClassImp(RooMultiVarGaussian);
 
@@ -187,8 +187,6 @@ double RooMultiVarGaussian::evaluate() const
   return exp(-0.5*alpha) ;
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 
 Int_t RooMultiVarGaussian::getAnalyticalIntegral(RooArgSet& allVarsIn, RooArgSet& analVars, const char* rangeName) const
@@ -308,7 +306,6 @@ double RooMultiVarGaussian::analyticalIntegral(Int_t code, const char* /*rangeNa
 
   return ret ;
 }
-
 
 
 ////////////////////////////////////////////////////////////////////////////////

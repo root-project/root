@@ -19,7 +19,7 @@
 #include "TMVA/GeneticFitter.h"
 #include "TMVA/IFitterTarget.h"
 
-using namespace std;
+using std::vector, std::cout, std::endl;
 
 namespace TMVA {
 

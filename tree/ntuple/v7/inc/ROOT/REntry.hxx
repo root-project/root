@@ -22,13 +22,20 @@
 
 #include <TError.h>
 
+#include <algorithm>
+#include <iterator>
 #include <memory>
 #include <type_traits>
 #include <utility>
 #include <vector>
+#include <unordered_map>
 
 namespace ROOT {
 namespace Experimental {
+
+class RNTupleProcessor;
+class RNTupleChainProcessor;
+class RNTupleJoinProcessor;
 
 // clang-format off
 /**
@@ -41,31 +48,67 @@ that are associated to values are managed.
 */
 // clang-format on
 class REntry {
-   friend class RCollectionNTupleWriter;
    friend class RNTupleModel;
    friend class RNTupleReader;
    friend class RNTupleFillContext;
+   friend class RNTupleProcessor;
+   friend class RNTupleChainProcessor;
+   friend class RNTupleJoinProcessor;
 
-   /// The entry must be linked to a specific model (or one if its clones), identified by a model ID
+public:
+   /// The field token identifies a (sub)field in this entry. It can be used for fast indexing in REntry's methods, e.g.
+   /// BindValue. The field token can also be created by the model.
+   class RFieldToken {
+      friend class REntry;
+      friend class RNTupleModel;
+
+      std::size_t fIndex = 0;                      ///< The index in fValues that belongs to the field
+      std::uint64_t fSchemaId = std::uint64_t(-1); ///< Safety check to prevent tokens from other models being used
+      RFieldToken(std::size_t index, std::uint64_t schemaId) : fIndex(index), fSchemaId(schemaId) {}
+
+   public:
+      RFieldToken() = default; // The default constructed token cannot be used by any entry
+   };
+
+private:
+   /// The entry must be linked to a specific model, identified by a model ID
    std::uint64_t fModelId = 0;
-   /// Corresponds to the top-level fields of the linked model
+   /// The entry and its tokens are also linked to a specific schema, identified by a schema ID
+   std::uint64_t fSchemaId = 0;
+   /// Corresponds to the fields of the linked model
    std::vector<RFieldBase::RValue> fValues;
+   /// For fast lookup of token IDs given a (sub)field name present in the entry
+   std::unordered_map<std::string, std::size_t> fFieldName2Token;
 
    // Creation of entries is done by the RNTupleModel class
 
    REntry() = default;
-   explicit REntry(std::uint64_t modelId) : fModelId(modelId) {}
+   explicit REntry(std::uint64_t modelId, std::uint64_t schemaId) : fModelId(modelId), fSchemaId(schemaId) {}
 
-   void AddValue(RFieldBase::RValue &&value) { fValues.emplace_back(std::move(value)); }
+   void AddValue(RFieldBase::RValue &&value)
+   {
+      fFieldName2Token[value.GetField().GetQualifiedFieldName()] = fValues.size();
+      fValues.emplace_back(std::move(value));
+   }
 
    /// While building the entry, adds a new value to the list and return the value's shared pointer
    template <typename T, typename... ArgsT>
    std::shared_ptr<T> AddValue(RField<T> &field, ArgsT &&...args)
    {
+      fFieldName2Token[field.GetQualifiedFieldName()] = fValues.size();
       auto ptr = std::make_shared<T>(std::forward<ArgsT>(args)...);
       fValues.emplace_back(field.BindValue(ptr));
       return ptr;
    }
+
+   /// Update the RValue for a field in the entry. To be used when its underlying RFieldBase changes, which typically
+   /// happens when page source the field values are read from changes.
+   void UpdateValue(RFieldToken token, RFieldBase::RValue &&value) { std::swap(fValues.at(token.fIndex), value); }
+   void UpdateValue(RFieldToken token, RFieldBase::RValue &value) { std::swap(fValues.at(token.fIndex), value); }
+
+   /// Return the RValue currently bound to the provided field.
+   RFieldBase::RValue &GetValue(RFieldToken token) { return fValues.at(token.fIndex); }
+   RFieldBase::RValue &GetValue(std::string_view fieldName) { return GetValue(GetToken(fieldName)); }
 
    void Read(NTupleSize_t index)
    {
@@ -83,6 +126,26 @@ class REntry {
       return bytesWritten;
    }
 
+   void EnsureMatchingModel(RFieldToken token) const
+   {
+      if (fSchemaId != token.fSchemaId) {
+         throw RException(R__FAIL("invalid token for this entry, "
+                                  "make sure to use a token from a model with the same schema as this entry."));
+      }
+   }
+
+   template <typename T>
+   void EnsureMatchingType(RFieldToken token [[maybe_unused]]) const
+   {
+      if constexpr (!std::is_void_v<T>) {
+         const auto &v = fValues[token.fIndex];
+         if (v.GetField().GetTypeName() != RField<T>::TypeName()) {
+            throw RException(R__FAIL("type mismatch for field " + v.GetField().GetQualifiedFieldName() + ": " +
+                                     v.GetField().GetTypeName() + " vs. " + RField<T>::TypeName()));
+         }
+      }
+   }
+
 public:
    using ConstIterator_t = decltype(fValues)::const_iterator;
 
@@ -92,51 +155,68 @@ public:
    REntry &operator=(REntry &&other) = default;
    ~REntry() = default;
 
+   /// The ordinal of the (sub)field fieldName; can be used in other methods to address the corresponding value
+   RFieldToken GetToken(std::string_view fieldName) const
+   {
+      auto it = fFieldName2Token.find(std::string(fieldName));
+      if (it == fFieldName2Token.end()) {
+         throw RException(R__FAIL("invalid field name: " + std::string(fieldName)));
+      }
+      return RFieldToken(it->second, fSchemaId);
+   }
+
+   void EmplaceNewValue(RFieldToken token)
+   {
+      EnsureMatchingModel(token);
+      fValues[token.fIndex].EmplaceNew();
+   }
+
+   void EmplaceNewValue(std::string_view fieldName) { EmplaceNewValue(GetToken(fieldName)); }
+
+   template <typename T>
+   void BindValue(RFieldToken token, std::shared_ptr<T> objPtr)
+   {
+      EnsureMatchingModel(token);
+      EnsureMatchingType<T>(token);
+      fValues[token.fIndex].Bind(objPtr);
+   }
+
    template <typename T>
    void BindValue(std::string_view fieldName, std::shared_ptr<T> objPtr)
    {
-      for (auto &v : fValues) {
-         if (v.GetField().GetFieldName() != fieldName)
-            continue;
+      BindValue<T>(GetToken(fieldName), objPtr);
+   }
 
-         if constexpr (!std::is_void_v<T>) {
-            if (v.GetField().GetTypeName() != RField<T>::TypeName()) {
-               throw RException(R__FAIL("type mismatch for field " + std::string(fieldName) + ": " +
-                                        v.GetField().GetTypeName() + " vs. " + RField<T>::TypeName()));
-            }
-         }
-         v.Bind(objPtr);
-         return;
-      }
-      throw RException(R__FAIL("invalid field name: " + std::string(fieldName)));
+   template <typename T>
+   void BindRawPtr(RFieldToken token, T *rawPtr)
+   {
+      EnsureMatchingModel(token);
+      EnsureMatchingType<T>(token);
+      fValues[token.fIndex].BindRawPtr(rawPtr);
    }
 
    template <typename T>
    void BindRawPtr(std::string_view fieldName, T *rawPtr)
    {
-      BindValue(fieldName, std::shared_ptr<T>(rawPtr, [](T *) {}));
+      BindRawPtr<void>(GetToken(fieldName), rawPtr);
+   }
+
+   template <typename T>
+   std::shared_ptr<T> GetPtr(RFieldToken token) const
+   {
+      EnsureMatchingModel(token);
+      EnsureMatchingType<T>(token);
+      return std::static_pointer_cast<T>(fValues[token.fIndex].GetPtr<void>());
    }
 
    template <typename T>
    std::shared_ptr<T> GetPtr(std::string_view fieldName) const
    {
-      for (auto &v : fValues) {
-         if (v.GetField().GetFieldName() != fieldName)
-            continue;
-
-         if constexpr (std::is_void_v<T>)
-            return v.GetPtr<void>();
-
-         if (v.GetField().GetTypeName() != RField<T>::TypeName()) {
-            throw RException(R__FAIL("type mismatch for field " + std::string(fieldName) + ": " +
-                                     v.GetField().GetTypeName() + " vs. " + RField<T>::TypeName()));
-         }
-         return std::static_pointer_cast<T>(v.GetPtr<void>());
-      }
-      throw RException(R__FAIL("invalid field name: " + std::string(fieldName)));
+      return GetPtr<T>(GetToken(fieldName));
    }
 
    std::uint64_t GetModelId() const { return fModelId; }
+   std::uint64_t GetSchemaId() const { return fSchemaId; }
 
    ConstIterator_t begin() const { return fValues.cbegin(); }
    ConstIterator_t end() const { return fValues.cend(); }

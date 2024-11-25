@@ -39,6 +39,7 @@ TPaveLabel::TPaveLabel(): TPave(), TAttText()
 /// a PaveLabel is a Pave with a label centered in the Pave
 /// The Pave is by default defined bith bordersize=5 and option ="br".
 /// The text size is automatically computed as a function of the pave size.
+/// To remove the shadow or border of a TPaveLabel, use the function TPave::SetBorderSize
 
 TPaveLabel::TPaveLabel(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, const char *label, Option_t *option)
            :TPave(x1,y1,x2,y2,3,option), TAttText(22,0,1,gStyle->GetTextFont(),0.99)

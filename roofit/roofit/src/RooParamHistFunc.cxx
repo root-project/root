@@ -23,88 +23,38 @@
  * See also the tutorial rf709_BarlowBeeston.C
  */
 
-#include "Riostream.h"
-#include "RooParamHistFunc.h"
-#include "RooAbsCategory.h"
-#include "RooRealVar.h"
-#include "RooFitImplHelpers.h"
-#include <cmath>
-#include "TMath.h"
-
-
-using namespace std ;
+#include <RooParamHistFunc.h>
+#include <RooRealVar.h>
+#include <RooFitImplHelpers.h>
 
 ClassImp(RooParamHistFunc);
 
-////////////////////////////////////////////////////////////////////////////////
-/// Populate x with observables
-
-RooParamHistFunc::RooParamHistFunc(const char *name, const char *title, RooDataHist& dh, bool paramRelative) :
-  RooAbsReal(name,title),
-  _x("x","x",this),
-  _p("p","p",this),
-  _dh(dh),
-  _relParam(paramRelative)
+RooParamHistFunc::RooParamHistFunc(const char *name, const char *title, RooDataHist &dh, const RooAbsArg &x,
+                                   const RooParamHistFunc *paramSource, bool paramRelative)
+   : RooAbsReal(name, title), _x("x", "x", this), _p("p", "p", this), _dh(dh), _relParam(paramRelative)
 {
-  _x.add(*_dh.get()) ;
+   // Populate x with observables
+   _x.add(x);
 
-  // Now populate p with parameters
-  RooArgSet allVars ;
-  for (Int_t i=0 ; i<_dh.numEntries() ; i++) {
-    _dh.get(i) ;
+   if (paramSource) {
+      // Now populate p with existing parameters
+      _p.add(paramSource->_p);
+      return;
+   }
 
-    const char* vname = Form("%s_gamma_bin_%i",GetName(),i) ;
-    RooRealVar* var = new RooRealVar(vname,vname,0,1000) ;
-    var->setVal(_relParam ? 1 : _dh.weight()) ;
-    var->setError(_relParam ? 1 / sqrt(_dh.weight()) : sqrt(_dh.weight()));
-    var->setConstant(true) ;
-    allVars.add(*var) ;
-    _p.add(*var) ;
-  }
-  addOwnedComponents(allVars) ;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Populate x with observables
-
-RooParamHistFunc::RooParamHistFunc(const char *name, const char *title, const RooAbsArg& /*x*/, RooDataHist& dh, bool paramRelative) :
-  RooAbsReal(name,title),
-  _x("x","x",this),
-  _p("p","p",this),
-  _dh(dh),
-  _relParam(paramRelative)
-{
-  _x.add(*_dh.get()) ;
-
-  // Now populate p with parameters
-  RooArgSet allVars ;
-  for (Int_t i=0 ; i<_dh.numEntries() ; i++) {
-    _dh.get(i) ;
-    const char* vname = Form("%s_gamma_bin_%i",GetName(),i) ;
-    RooRealVar* var = new RooRealVar(vname,vname,0,1000) ;
-    var->setVal(_relParam ? 1 : _dh.weight()) ;
-    var->setError(_relParam ? 1 / sqrt(_dh.weight()) : sqrt(_dh.weight()));
-    var->setConstant(true) ;
-    allVars.add(*var) ;
-    _p.add(*var) ;
-  }
-  addOwnedComponents(allVars) ;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-RooParamHistFunc::RooParamHistFunc(const char *name, const char *title, RooDataHist& dh, const RooParamHistFunc& paramSource, bool paramRelative) :
-  RooAbsReal(name,title),
-  _x("x","x",this),
-  _p("p","p",this),
-  _dh(dh),
-  _relParam(paramRelative)
-{
-  // Populate x with observables
-  _x.add(*_dh.get()) ;
-
-  // Now populate p with existing parameters
-  _p.add(paramSource._p) ;
+   // Now populate p with parameters
+   RooArgSet allVars;
+   for (Int_t i = 0; i < _dh.numEntries(); i++) {
+      _dh.get(i);
+      const char *vname = Form("%s_gamma_bin_%i", GetName(), i);
+      RooRealVar *var = new RooRealVar(vname, vname, 0, 1000);
+      var->setVal(_relParam ? 1 : _dh.weight());
+      var->setError(_relParam ? 1 / sqrt(_dh.weight()) : sqrt(_dh.weight()));
+      var->setConstant(true);
+      allVars.add(*var);
+      _p.add(*var);
+   }
+   addOwnedComponents(allVars);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -124,26 +74,7 @@ double RooParamHistFunc::evaluate() const
 {
   Int_t idx = ((RooDataHist&)_dh).getIndex(_x,true) ;
   double ret = (static_cast<RooAbsReal*>(_p.at(idx)))->getVal() ;
-  if (_relParam) {
-    double nom = getNominal(idx) ;
-    ret *= nom ;
-  }
-  return  ret ;
-}
-
-void RooParamHistFunc::translate(RooFit::Detail::CodeSquashContext &ctx) const
-{
-   std::string const &idx = _dh.calculateTreeIndexForCodeSquash(this, ctx, _x);
-   std::string arrName = ctx.buildArg(_p);
-   std::string result = arrName + "[" + idx + "]";
-   if (_relParam) {
-      // get weight[idx] * binv[idx]. Here we get the bin volume for the first element as we assume the distribution to
-      // be binned uniformly.
-      std::string const &weightName = _dh.declWeightArrayForCodeSquash(this, ctx, false);
-      std::string nominalVal = weightName + "[" + idx + "] * " + std::to_string(_dh.binVolume(0));
-      result += " * " + nominalVal;
-   }
-   ctx.addResult(this, result);
+  return _relParam ? ret * getNominal(idx) : ret;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -181,7 +112,7 @@ double RooParamHistFunc::getNominalError(Int_t ibin) const
 /// as the recursive division strategy of RooCurve cannot deal efficiently
 /// with the vertical lines that occur in a non-interpolated histogram
 
-list<double>* RooParamHistFunc::plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const
+std::list<double>* RooParamHistFunc::plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const
 {
   // Check that observable is in dataset, if not no hint is generated
   RooAbsLValue* lvarg = dynamic_cast<RooAbsLValue*>(_dh.get()->find(obs.GetName())) ;
@@ -193,7 +124,7 @@ list<double>* RooParamHistFunc::plotSamplingHint(RooAbsRealLValue& obs, double x
   const RooAbsBinning* binning = lvarg->getBinningPtr(nullptr);
   double* boundaries = binning->array() ;
 
-  list<double>* hint = new list<double> ;
+  std::list<double>* hint = new std::list<double> ;
 
   // Widen range slightly
   xlo = xlo - 0.01*(xhi-xlo) ;
@@ -230,7 +161,7 @@ std::list<double>* RooParamHistFunc::binBoundaries(RooAbsRealLValue& obs, double
   const RooAbsBinning* binning = lvarg->getBinningPtr(nullptr);
   double* boundaries = binning->array() ;
 
-  list<double>* hint = new list<double> ;
+  std::list<double>* hint = new std::list<double> ;
 
   // Construct array with pairs of points positioned epsilon to the left and
   // right of the bin boundaries

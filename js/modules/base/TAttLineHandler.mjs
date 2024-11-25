@@ -4,9 +4,9 @@ import { getColor, findColor } from './colors.mjs';
 
 
 const root_line_styles = [
-      '', '', '3,3', '1,2',
-      '3,4,1,4', '5,3,1,3', '5,3,1,3,1,3,1,3', '5,5',
-      '5,3,1,3,1,3', '20,5', '20,10,1,10', '1,3'];
+   '', '', '3, 3', '1, 2',
+   '3, 4, 1, 4', '5, 3, 1, 3', '5, 3, 1, 3, 1, 3, 1, 3', '5, 5',
+   '5, 3, 1, 3, 1, 3', '20, 5', '20, 10, 1, 10', '1, 3'];
 
 /**
   * @summary Handle for line attributes
@@ -112,15 +112,17 @@ class TAttLineHandler {
    applyBorder(selection) {
       this.used = true;
       if (this.empty()) {
-         selection.style('stroke', null)
+         selection.attr('rx', null)
+                  .attr('ry', null)
+                  .style('stroke', null)
                   .style('stroke-width', null)
-                  .style('stroke-dasharray', null)
-                  .attr('rx', null).attr('ry', null);
+                  .style('stroke-dasharray', null);
       } else {
-         selection.style('stroke', this.color)
+         selection.attr('rx', this.rx || null)
+                  .attr('ry', this.ry || null)
+                  .style('stroke', this.color)
                   .style('stroke-width', this.width)
-                  .style('stroke-dasharray', this.pattern)
-                  .attr('rx', this.rx || null).attr('ry', this.ry || null);
+                  .style('stroke-dasharray', this.pattern);
       }
    }
 

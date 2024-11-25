@@ -15,11 +15,6 @@ if(dataframe)
         ROOT/_pythonization/_rdfdescription.py
         ROOT/_pythonization/_rdf_conversion_maps.py
         ROOT/_pythonization/_rdf_pyz.py)
-    list(APPEND PYROOT_EXTRA_CPP_SOURCES
-        src/RDataFramePyz.cxx
-        src/RTensorPyz.cxx)
-    list(APPEND PYROOT_EXTRA_HEADERS
-        inc/RNumpyDS.hxx)
 endif()
 
 if(roofit)
@@ -47,6 +42,7 @@ if(roofit)
         ROOT/_pythonization/_roofit/_roorealvar.py
         ROOT/_pythonization/_roofit/_roosimultaneous.py
         ROOT/_pythonization/_roofit/_roosimwstool.py
+        ROOT/_pythonization/_roofit/_roostats.py
         ROOT/_pythonization/_roofit/_roovectordatastore.py
         ROOT/_pythonization/_roofit/_rooworkspace.py
         ROOT/_pythonization/_roofit/_utils.py)
@@ -73,28 +69,39 @@ list(APPEND PYROOT_EXTRA_HEADERS
      inc/TPyDispatcher.h)
 
 set(py_sources
+  ROOT/JsMVA/DataLoader.py
+  ROOT/JsMVA/Factory.py
+  ROOT/JsMVA/JPyInterface.py
+  ROOT/JsMVA/JsMVAMagic.py
+  ROOT/JsMVA/OutputTransformer.py
+  ROOT/JsMVA/__init__.py
   ROOT/_application.py
   ROOT/_asan.py
   ROOT/_facade.py
   ROOT/__init__.py
   ROOT/_numbadeclare.py
+  ROOT/_pythonization/__init__.py
   ROOT/_pythonization/_cppinstance.py
   ROOT/_pythonization/_drawables.py
   ROOT/_pythonization/_generic.py
-  ROOT/_pythonization/__init__.py
   ROOT/_pythonization/_pyz_utils.py
-  ROOT/_pythonization/_rvec.py
   ROOT/_pythonization/_runtime_error.py
+  ROOT/_pythonization/_rvec.py
   ROOT/_pythonization/_stl_vector.py
   ROOT/_pythonization/_tarray.py
   ROOT/_pythonization/_tclass.py
   ROOT/_pythonization/_tclonesarray.py
   ROOT/_pythonization/_tcollection.py
+  ROOT/_pythonization/_tcolor.py
   ROOT/_pythonization/_tcomplex.py
   ROOT/_pythonization/_tcontext.py
-  ROOT/_pythonization/_tdirectoryfile.py
   ROOT/_pythonization/_tdirectory.py
+  ROOT/_pythonization/_tdirectoryfile.py
+  ROOT/_pythonization/_tf1.py
+  ROOT/_pythonization/_tf2.py
+  ROOT/_pythonization/_tf3.py
   ROOT/_pythonization/_tfile.py
+  ROOT/_pythonization/_tformula.py
   ROOT/_pythonization/_tgraph.py
   ROOT/_pythonization/_th1.py
   ROOT/_pythonization/_titer.py
@@ -102,6 +109,7 @@ set(py_sources
   ROOT/_pythonization/_tobjstring.py
   ROOT/_pythonization/_tseqcollection.py
   ROOT/_pythonization/_tstring.py
+  ROOT/_pythonization/_tstyle.py
   ROOT/_pythonization/_ttree.py
   ROOT/_pythonization/_tvector3.py
   ROOT/_pythonization/_tvectort.py
@@ -110,20 +118,15 @@ set(py_sources
 
 set(cpp_sources
     src/PyROOTModule.cxx
-    src/PyROOTWrapper.cxx
     src/RPyROOTApplication.cxx
     src/GenericPyz.cxx
-    src/RVecPyz.cxx
     src/TClassPyz.cxx
     src/TMemoryRegulator.cxx
     src/TObjectPyz.cxx
     src/TTreePyz.cxx
-    src/PyzCppHelpers.cxx
-    src/PyzPythonHelpers.cxx
     src/CPPInstancePyz.cxx
     src/TPyDispatcher.cxx
     inc/TPyDispatcher.h
-    ${PYROOT_EXTRA_CPP_SOURCES}
 )
 
 set(ROOTPySrcDir python/ROOT)
@@ -149,7 +152,7 @@ add_custom_target(ROOTPythonizationsPySources ALL DEPENDS ${py_sources_in_localr
 # Copy headers inside build_dir/include/ROOT
 file(COPY ${ROOT_headers_dir}/ DESTINATION ${CMAKE_BINARY_DIR}/include/ROOT)
 
-set(libname ROOTPythonizations${PYTHON_UNDER_VERSION_STRING})
+set(libname ROOTPythonizations)
 
 add_library(${libname} SHARED ${cpp_sources})
 
@@ -157,19 +160,19 @@ add_library(${libname} SHARED ${cpp_sources})
 add_dependencies(${libname} ROOTPythonizationsPySources)
 
 # Set the suffix to '.so' and the prefix to 'lib'
-set_target_properties(${libname} PROPERTIES  ${ROOT_LIBRARY_PROPERTIES})
+set_target_properties(${libname} PROPERTIES ${ROOT_LIBRARY_PROPERTIES_NO_VERSION})
 if(MSVC)
   set_target_properties(${libname} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
   set_target_properties(${libname} PROPERTIES SUFFIX ".pyd")
-  target_link_libraries(${libname} PUBLIC Core Tree cppyy${PYTHON_UNDER_VERSION_STRING})
+  target_link_libraries(${libname} PUBLIC Core Tree cppyy)
 elseif(APPLE)
-  target_link_libraries(${libname} PUBLIC -Wl,-bind_at_load -Wl,-w -Wl,-undefined -Wl,dynamic_lookup Core Tree cppyy${PYTHON_UNDER_VERSION_STRING})
+  target_link_libraries(${libname} PUBLIC -Wl,-bind_at_load -Wl,-w -Wl,-undefined -Wl,dynamic_lookup Core Tree cppyy)
 else()
-  target_link_libraries(${libname} PUBLIC -Wl,--unresolved-symbols=ignore-all Core Tree cppyy${PYTHON_UNDER_VERSION_STRING})
+  target_link_libraries(${libname} PUBLIC -Wl,--unresolved-symbols=ignore-all Core Tree cppyy)
 endif()
 
 target_include_directories(${libname}
-    SYSTEM PRIVATE ${PYTHON_INCLUDE_DIRS})
+    SYSTEM PRIVATE ${Python3_INCLUDE_DIRS})
 
 target_include_directories(${libname}
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>)
@@ -183,16 +186,16 @@ endif()
 # Compile .py files
 foreach(py_source ${py_sources})
   add_custom_command(TARGET ${libname}
-                      COMMAND ${PYTHON_EXECUTABLE} -m py_compile ${localruntimedir}/${py_source}
-                      COMMAND ${PYTHON_EXECUTABLE} -O -m py_compile ${localruntimedir}/${py_source}
+                      COMMAND ${Python3_EXECUTABLE} -m py_compile ${localruntimedir}/${py_source}
+                      COMMAND ${Python3_EXECUTABLE} -O -m py_compile ${localruntimedir}/${py_source}
                       DEPENDS ${localruntimedir}/${py_source}
-                      COMMENT "Compiling PyROOT source ${py_source} for Python ${PYTHON_VERSION_STRING}")
+                      COMMENT "Compiling PyROOT source ${py_source} for Python ${Python3_VERSION}")
 endforeach()
 
 # Create meta-target PyROOT3 (INTERFACE library)
 # Export of targets are not supported for custom targets(add_custom_targets())
-add_library(PyROOT${PYTHON_UNDER_VERSION_STRING} INTERFACE)
-target_link_libraries(PyROOT${PYTHON_UNDER_VERSION_STRING} INTERFACE cppyy_backend${PYTHON_UNDER_VERSION_STRING} cppyy${PYTHON_UNDER_VERSION_STRING} ROOTPythonizations${PYTHON_UNDER_VERSION_STRING})
+add_library(PyROOT INTERFACE)
+target_link_libraries(PyROOT INTERFACE cppyy_backend cppyy ROOTPythonizations)
 
 # Install library
 install(TARGETS ${libname} EXPORT ${CMAKE_PROJECT_NAME}Exports
@@ -202,7 +205,7 @@ install(TARGETS ${libname} EXPORT ${CMAKE_PROJECT_NAME}Exports
 
 # Install meta-target PyROOT3 (INTERFACE library)
 # Install library
-install(TARGETS PyROOT${PYTHON_UNDER_VERSION_STRING} EXPORT ${CMAKE_PROJECT_NAME}Exports
+install(TARGETS PyROOT EXPORT ${CMAKE_PROJECT_NAME}Exports
                             RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries
                             LIBRARY DESTINATION ${CMAKE_INSTALL_PYTHONDIR} COMPONENT libraries
                             ARCHIVE DESTINATION ${CMAKE_INSTALL_PYTHONDIR} COMPONENT libraries)

@@ -417,8 +417,8 @@ Histograms' axis can be defined as "time axis". To do that it is enough to activ
 the TAxis::SetTimeDisplay attribute on a given axis. If `h` is an histogram, it is
 done the following way:
 
-~~~ .cpp
-h->GetXaxis()->SetTimeDisplay(1);  // The X axis is a time axis
+~~~ {.cpp}
+    h->GetXaxis()->SetTimeDisplay(1);  // The X axis is a time axis
 ~~~
 
 Two parameters can be adjusted in order to define time axis:
@@ -447,8 +447,8 @@ It's a string containing the following formatting characters:
  The other characters are output as is. For example to have a format like
  `dd/mm/yyyy` one should do:
 
-~~~ .cpp
-h->GetXaxis()->SetTimeFormat("%d\/%m\/%Y");
+~~~ {.cpp}
+    h->GetXaxis()->SetTimeFormat("%d\/%m\/%Y");
 ~~~
 
 ### The time offset:
@@ -460,9 +460,9 @@ three ways to define the time offset:
 
 #### By setting the global default time offset:
 
-~~~ .cpp
-TDatime da(2003,02,28,12,00,00);
-gStyle->SetTimeOffset(da.Convert());
+~~~ {.cpp}
+    TDatime da(2003,02,28,12,00,00);
+    gStyle->SetTimeOffset(da.Convert());
 ~~~
 
   If no time offset is defined for a particular axis, the default time offset
@@ -471,9 +471,9 @@ gStyle->SetTimeOffset(da.Convert());
 
 #### By setting a time offset to a particular axis:
 
-~~~ .cpp
-TDatime dh(2001,09,23,15,00,00);
-h->GetXaxis()->SetTimeOffset(dh.Convert());
+~~~ {.cpp}
+    TDatime dh(2001,09,23,15,00,00);
+    h->GetXaxis()->SetTimeOffset(dh.Convert());
 ~~~
 
 #### Together with the time format using TAxis::SetTimeFormat:
@@ -484,8 +484,8 @@ the normal time format. **%F** is followed by the date in the format:
 
 Example:
 
-~~~ .cpp
-h->GetXaxis()->SetTimeFormat("%d\/%m\/%y%F2000-02-28 13:00:01");
+~~~ {.cpp}
+    h->GetXaxis()->SetTimeFormat("%d\/%m\/%y%F2000-02-28 13:00:01");
 ~~~
 
 
@@ -589,8 +589,8 @@ and maximum values (in seconds) of the axis. Let's take again an example. Having
 defined "2003, February 28 at 12h" we would like to see the axis a day before and
 a day after. A TGaxis can be created the following way (a day has 86400 seconds):
 
-~~~ .cpp
-TGaxis *axis = new TGaxis(x1,y1,x2,y2,-100000,150000,2405,"t");
+~~~ {.cpp}
+    TGaxis *axis = new TGaxis(x1,y1,x2,y2,-100000,150000,2405,"t");
 ~~~
 
 the `t` option (in lower case) means it is a "time axis". The axis goes form
@@ -600,7 +600,7 @@ So the complete macro is:
 
 Begin_Macro(source)
 {
-   c1 = new TCanvas("c1","Examples of TGaxis",10,10,700,100);
+   auto c1 = new TCanvas("c1","Examples of TGaxis",10,10,700,100);
    c1->Range(-10,-1,10,1);
 
    TGaxis *axis = new TGaxis(-8,0.,8,0.,-100000,150000,2405,"tS");
@@ -619,16 +619,16 @@ End_Macro
 Thanks to the TLatex directive `#splitline` it is possible to write the time
 labels on two lines. In the previous example changing the `SetTimeFormat` line by
 
-~~~ .cpp
-   axis->SetLabelOffset(0.15);
-   axis->SetTimeFormat("#splitline{%Y}{%d\/%m}");
+~~~ {.cpp}
+    axis->SetLabelOffset(0.15);
+    axis->SetTimeFormat("#splitline{%Y}{%d\/%m}");
 ~~~
 
 will produce the following axis:
 
 Begin_Macro
 {
-   c1 = new TCanvas("c1","Examples of TGaxis",10,10,700,100);
+   auto c1 = new TCanvas("c1","Examples of TGaxis",10,10,700,100);
    c1->Range(-10,-1,10,1);
 
    TGaxis *axis = new TGaxis(-8,0.,8,0.,-100000,150000,2405,"tS");
@@ -2795,11 +2795,11 @@ void TGaxis::ChangeLabel(Int_t labNum, Double_t labAngle, Double_t labSize,
 ///   axis->SetTickSize(0.15);
 ///   axis->SetTitleColor(kBlue);
 ///   axis->SetTitleFont(42);
-///   axis->ChangeLabelByValue(-5.,-1,-1,-1,2);
-///   axis->ChangeLabelByValue(-3.,-1,0.);
-///   axis->ChangeLabelByValue(0.,30.,-1,0);
-///   axis->ChangeLabelByValue(3.,-1,-1,-1,3,-1,"label for 3.");
-///   axis->ChangeValue(5.,-2,-1,-1,-1,3,-1,"label for 5.");
+///   axis->ChangeLabelByValue(0., -1, -1, -1, kRed);
+///   axis->ChangeLabelByValue(20., -1, 0);
+///   axis->ChangeLabelByValue(40., 30.);
+///   axis->ChangeLabelByValue(50., -1, -1, -1, kBlue, -1, "blue for 50.");
+///   axis->ChangeLabelByValue(90., -1, -1, -1, kGreen, -1, "green for 90.");
 ///   axis->Draw();
 /// }
 /// End_Macro
@@ -2807,8 +2807,7 @@ void TGaxis::ChangeLabel(Int_t labNum, Double_t labAngle, Double_t labSize,
 ///  #### Notes:
 ///
 ///  - If an attribute should not be changed just give the value "-1".
-///  - If labnum=0 the list of modified labels is reset.
-///  - To erase a label set labSize to 0.
+///  - To erase a label set labSize to 0
 ///  - If labText is not specified or is an empty string, the text label is not changed.
 
 void TGaxis::ChangeLabelByValue(Double_t labValue, Double_t labAngle, Double_t labSize,

@@ -17,8 +17,9 @@
 #define ROOT7_RMiniFile
 
 #include <ROOT/RError.hxx>
-#include <ROOT/RNTupleAnchor.hxx>
-#include <ROOT/RNTupleOptions.hxx>
+#include <ROOT/RNTuple.hxx>
+#include <ROOT/RNTupleSerialize.hxx>
+#include <ROOT/RSpan.hxx>
 #include <string_view>
 
 #include <cstdint>
@@ -29,6 +30,7 @@
 class TCollection;
 class TFile;
 class TFileMergeInfo;
+class TVirtualStreamerInfo;
 
 namespace ROOT {
 
@@ -37,6 +39,8 @@ class RRawFile;
 }
 
 namespace Experimental {
+
+class RNTupleWriteOptions;
 
 namespace Internal {
 /// Holds status information of an open ROOT file during writing
@@ -58,15 +62,15 @@ private:
    ROOT::Internal::RRawFile *fRawFile = nullptr;
    /// Indicates whether the file is a TFile container or an RNTuple bare file
    bool fIsBare = false;
+   /// If `fMaxKeySize > 0` and ReadBuffer attempts to read `nbytes > maxKeySize`, it will assume the
+   /// blob being read is chunked and read all the chunks into the buffer. This is symmetrical to
+   /// what happens in `RNTupleFileWriter::WriteBlob()`.
+   std::uint64_t fMaxKeySize = 0;
+
    /// Used when the file container turns out to be a bare file
    RResult<RNTuple> GetNTupleBare(std::string_view ntupleName);
    /// Used when the file turns out to be a TFile container
    RResult<RNTuple> GetNTupleProper(std::string_view ntupleName);
-
-   RNTuple CreateAnchor(std::uint16_t versionEpoch, std::uint16_t versionMajor, std::uint16_t versionMinor,
-                        std::uint16_t versionPatch, std::uint64_t seekHeader, std::uint64_t nbytesHeader,
-                        std::uint64_t lenHeader, std::uint64_t seekFooter, std::uint64_t nbytesFooter,
-                        std::uint64_t lenFooter, std::uint64_t checksum);
 
 public:
    RMiniFileReader() = default;
@@ -74,10 +78,15 @@ public:
    explicit RMiniFileReader(ROOT::Internal::RRawFile *rawFile);
    /// Extracts header and footer location for the RNTuple identified by ntupleName
    RResult<RNTuple> GetNTuple(std::string_view ntupleName);
-   /// Reads a given byte range from the file into the provided memory buffer
+   /// Reads a given byte range from the file into the provided memory buffer.
+   /// If `nbytes > fMaxKeySize` it will perform chunked read from multiple blobs,
+   /// whose addresses are listed at the end of the first chunk.
    void ReadBuffer(void *buffer, size_t nbytes, std::uint64_t offset);
-};
 
+   std::uint64_t GetMaxKeySize() const { return fMaxKeySize; }
+   /// If the reader is not used to retrieve the anchor, we need to set the max key size manually
+   void SetMaxKeySize(std::uint64_t maxKeySize) { fMaxKeySize = maxKeySize; }
+};
 
 // clang-format off
 /**
@@ -103,8 +112,25 @@ private:
    };
 
    struct RFileSimple {
+      /// Direct I/O requires that all buffers and write lengths are aligned. It seems 512 byte alignment is the minimum
+      /// for Direct I/O to work, but further testing showed that it results in worse performance than 4kB.
+      static constexpr int kBlockAlign = 4096;
+      /// During commit, WriteTFileKeysList() updates fNBytesKeys and fSeekKeys of the RTFFile located at
+      /// fSeekFileRecord. Given that the TFile key starts at offset 100 and the file name, which is written twice,
+      /// is shorter than 255 characters, we should need at most ~600 bytes. However, the header also needs to be
+      /// aligned to kBlockAlign...
+      static constexpr std::size_t kHeaderBlockSize = 4096;
+
+      // fHeaderBlock and fBlock are raw pointers because we have to manually call operator new and delete.
+      unsigned char *fHeaderBlock = nullptr;
+      std::size_t fBlockSize = 0;
+      std::uint64_t fBlockOffset = 0;
+      unsigned char *fBlock = nullptr;
+
       /// For the simplest cases, a C file stream can be used for writing
       FILE *fFile = nullptr;
+      /// Whether the C file stream has been opened with Direct I/O, introducing alignment requirements.
+      bool fDirectIO = false;
       /// Keeps track of the seek offset
       std::uint64_t fFilePos = 0;
       /// Keeps track of the next key offset
@@ -112,22 +138,23 @@ private:
       /// Keeps track of TFile control structures, which need to be updated on committing the data set
       std::unique_ptr<ROOT::Experimental::Internal::RTFileControlBlock> fControlBlock;
 
-      RFileSimple() = default;
+      RFileSimple();
       RFileSimple(const RFileSimple &other) = delete;
       RFileSimple(RFileSimple &&other) = delete;
-      RFileSimple &operator =(const RFileSimple &other) = delete;
-      RFileSimple &operator =(RFileSimple &&other) = delete;
+      RFileSimple &operator=(const RFileSimple &other) = delete;
+      RFileSimple &operator=(RFileSimple &&other) = delete;
       ~RFileSimple();
+
+      void AllocateBuffers(std::size_t bufferSize);
+      void Flush();
 
       /// Writes bytes in the open stream, either at fFilePos or at the given offset
       void Write(const void *buffer, size_t nbytes, std::int64_t offset = -1);
       /// Writes a TKey including the data record, given by buffer, into fFile; returns the file offset to the payload.
       /// The payload is already compressed
       std::uint64_t WriteKey(const void *buffer, std::size_t nbytes, std::size_t len, std::int64_t offset = -1,
-                             std::uint64_t directoryOffset = 100,
-                             const std::string &className = "",
-                             const std::string &objectName = "",
-                             const std::string &title = "");
+                             std::uint64_t directoryOffset = 100, const std::string &className = "",
+                             const std::string &objectName = "", const std::string &title = "");
       operator bool() const { return fFile; }
    };
 
@@ -145,8 +172,11 @@ private:
    std::string fFileName;
    /// Header and footer location of the ntuple, written on Commit()
    RNTuple fNTupleAnchor;
+   /// Set of streamer info records that should be written to the file.
+   /// The RNTuple class description is always present.
+   RNTupleSerializer::StreamerInfoMap_t fStreamerInfoMap;
 
-   explicit RNTupleFileWriter(std::string_view name);
+   explicit RNTupleFileWriter(std::string_view name, std::uint64_t maxKeySize);
 
    /// For a TFile container written by a C file stream, write the header and TFile object
    void WriteTFileSkeleton(int defaultCompression);
@@ -162,17 +192,24 @@ private:
    void WriteBareFileSkeleton(int defaultCompression);
 
 public:
+   /// For testing purposes, RNTuple data can be written into a bare file container instead of a ROOT file
+   enum class EContainerFormat {
+      kTFile, // ROOT TFile
+      kBare,  // A thin envelope supporting a single RNTuple only
+   };
+
    /// Create or truncate the local file given by path with the new empty RNTuple identified by ntupleName.
    /// Uses a C stream for writing
-   static RNTupleFileWriter *Recreate(std::string_view ntupleName, std::string_view path, int defaultCompression,
-                                      ENTupleContainerFormat containerFormat);
+   static std::unique_ptr<RNTupleFileWriter> Recreate(std::string_view ntupleName, std::string_view path,
+                                                      EContainerFormat containerFormat,
+                                                      const RNTupleWriteOptions &options);
    /// Add a new RNTuple identified by ntupleName to the existing TFile.
-   static RNTupleFileWriter *Append(std::string_view ntupleName, TFile &file);
+   static std::unique_ptr<RNTupleFileWriter> Append(std::string_view ntupleName, TFile &file, std::uint64_t maxKeySize);
 
    RNTupleFileWriter(const RNTupleFileWriter &other) = delete;
    RNTupleFileWriter(RNTupleFileWriter &&other) = delete;
-   RNTupleFileWriter &operator =(const RNTupleFileWriter &other) = delete;
-   RNTupleFileWriter &operator =(RNTupleFileWriter &&other) = delete;
+   RNTupleFileWriter &operator=(const RNTupleFileWriter &other) = delete;
+   RNTupleFileWriter &operator=(RNTupleFileWriter &&other) = delete;
    ~RNTupleFileWriter();
 
    /// Writes the compressed header and registeres its location; lenHeader is the size of the uncompressed header.
@@ -186,6 +223,8 @@ public:
    /// Write into a reserved record; the caller is responsible for making sure that the written byte range is in the
    /// previously reserved key.
    void WriteIntoReservedBlob(const void *buffer, size_t nbytes, std::int64_t offset);
+   /// Ensures that the streamer info records passed as argument are written to the file
+   void UpdateStreamerInfos(const RNTupleSerializer::StreamerInfoMap_t &streamerInfos);
    /// Writes the RNTuple key to the file so that the header and footer keys can be found
    void Commit();
 };

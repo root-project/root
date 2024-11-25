@@ -65,7 +65,6 @@ ClassImp(RooStats::PdfProposal);
 
 using namespace RooFit;
 using namespace RooStats;
-using namespace std;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// By default, PdfProposal does NOT own the PDF that serves as the

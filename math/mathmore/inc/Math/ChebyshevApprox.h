@@ -98,11 +98,13 @@ private:
    */
    ChebyshevApprox(size_t n);
 
-// usually copying is non trivial, so we make this unaccessible
-   ChebyshevApprox(const ChebyshevApprox &);
-   ChebyshevApprox & operator = (const ChebyshevApprox &);
-
 public:
+
+// usually copying is non trivial, so we delete this
+   ChebyshevApprox(const ChebyshevApprox &) = delete;
+   ChebyshevApprox & operator = (const ChebyshevApprox &) = delete;
+   ChebyshevApprox(ChebyshevApprox &&) = delete;
+   ChebyshevApprox & operator = (ChebyshevApprox &&) = delete;
 
    /**
        Evaluate the series at a given point x

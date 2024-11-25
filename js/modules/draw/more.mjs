@@ -1,6 +1,5 @@
-import { BIT, isFunc, clTLatex, clTMathText, clTAnnotation, clTPolyLine } from '../core.mjs';
-import { rgb as d3_rgb, select as d3_select } from '../d3.mjs';
-import { BasePainter, makeTranslate } from '../base/BasePainter.mjs';
+import { BIT, isFunc, clTLatex, clTMathText, clTAnnotation } from '../core.mjs';
+import { BasePainter, makeTranslate, DrawOptions } from '../base/BasePainter.mjs';
 import { addMoveHandler } from '../gui/utils.mjs';
 import { assignContextMenu, kToFront } from '../gui/menu.mjs';
 
@@ -12,8 +11,9 @@ async function drawText() {
          pp = this.getPadPainter(),
          w = pp.getPadWidth(),
          h = pp.getPadHeight(),
-         fp = this.getFramePainter();
-   let pos_x = text.fX, pos_y = text.fY,
+         fp = this.getFramePainter(),
+         is_url = text.fName.startsWith('http://') || text.fName.startsWith('https://');
+   let pos_x = text.fX, pos_y = text.fY, use_frame = false,
        fact = 1,
        annot = this.matchObjectType(clTAnnotation);
 
@@ -29,7 +29,9 @@ async function drawText() {
       // NDC coordinates
       this.isndc = true;
    } else if (pp.getRootPad(true)) {
-      // force pad coordiantes
+      // force pad coordinates
+      const d = new DrawOptions(this.getDrawOpt());
+      use_frame = d.check('FRAME');
    } else {
       // place in the middle
       this.isndc = true;
@@ -37,12 +39,16 @@ async function drawText() {
       text.fTextAlign = 22;
    }
 
-   this.createG();
+   this.createG(use_frame ? 'frame2d' : undefined, is_url);
 
-   this.draw_g.attr('transform', null); // remove transofrm from interactive changes
+   this.draw_g.attr('transform', null); // remove transform from interactive changes
 
    this.pos_x = this.axisToSvg('x', pos_x, this.isndc);
    this.pos_y = this.axisToSvg('y', pos_y, this.isndc);
+   this.swap_xy = use_frame && fp?.swap_xy;
+
+   if (this.swap_xy)
+      [this.pos_x, this.pos_y] = [this.pos_y, this.pos_x];
 
    const arg = this.textatt.createArg({ x: this.pos_x, y: this.pos_y, text: text.fTitle, latex: 0 });
 
@@ -54,11 +60,16 @@ async function drawText() {
       fact = 0.8;
    }
 
-   this.startTextDrawing(this.textatt.font, this.textatt.getSize(w, h, fact, 0.05));
+   if (is_url) {
+      this.draw_g.attr('href', text.fName);
+      if (!this.isBatchMode())
+         this.draw_g.append('svg:title').text(`link on ${text.fName}`);
+   }
 
-   this.drawText(arg);
-
-   return this.finishTextDrawing().then(() => {
+   return this.startTextDrawingAsync(this.textatt.font, this.textatt.getSize(w, h, fact, 0.05))
+              .then(() => this.drawText(arg))
+              .then(() => this.finishTextDrawing())
+              .then(() => {
       if (this.isBatchMode()) return this;
 
       this.pos_dx = this.pos_dy = 0;
@@ -75,14 +86,19 @@ async function drawText() {
          this.moveEnd = function(not_changed) {
             if (not_changed) return;
             const text = this.getObject();
-            text.fX = this.svgToAxis('x', this.pos_x + this.pos_dx, this.isndc);
-            text.fY = this.svgToAxis('y', this.pos_y + this.pos_dy, this.isndc);
-            this.submitCanvExec(`SetX(${text.fX});;SetY(${text.fY});;`);
+            let fx = this.svgToAxis('x', this.pos_x + this.pos_dx, this.isndc),
+                fy = this.svgToAxis('y', this.pos_y + this.pos_dy, this.isndc);
+            if (this.swap_xy)
+               [fx, fy] = [fy, fx];
+
+            text.fX = fx;
+            text.fY = fy;
+            this.submitCanvExec(`SetX(${fx});;SetY(${fy});;`);
          };
       }
 
       if (annot !== '3d')
-         addMoveHandler(this);
+         addMoveHandler(this, true, is_url);
       else {
          fp.processRender3D = true;
          this.handleRender3D = () => {
@@ -95,69 +111,15 @@ async function drawText() {
 
       assignContextMenu(this, kToFront);
 
+      this.fillContextMenuItems = function(menu) {
+         menu.add('Change text', () => menu.input('Enter new text', text.fTitle).then(t => {
+            text.fTitle = t;
+            this.interactiveRedraw('pad', `exec:SetTitle("${t}")`);
+         }));
+      };
+
       return this;
    });
-}
-
-
-/** @summary Draw TPolyLine
-  * @private */
-function drawPolyLine() {
-   this.createG();
-
-   const polyline = this.getObject(),
-         kPolyLineNDC = BIT(14),
-         isndc = polyline.TestBit(kPolyLineNDC),
-         opt = this.getDrawOpt() || polyline.fOption,
-         dofill = (polyline._typename === clTPolyLine) && ((opt === 'f') || (opt === 'F')),
-         func = this.getAxisToSvgFunc(isndc);
-
-   this.createAttLine({ attr: polyline });
-   this.createAttFill({ attr: polyline });
-
-   let cmd = '';
-   for (let n = 0; n <= polyline.fLastPoint; ++n)
-      cmd += `${n>0?'L':'M'}${func.x(polyline.fX[n])},${func.y(polyline.fY[n])}`;
-
-   if (dofill)
-      cmd += 'Z';
-
-   const elem = this.draw_g.append('svg:path').attr('d', cmd);
-
-   if (dofill)
-      elem.call(this.fillatt.func);
-   else
-      elem.call(this.lineatt.func).style('fill', 'none');
-
-   assignContextMenu(this, kToFront);
-
-   addMoveHandler(this);
-
-   this.dx = this.dy = 0;
-   this.isndc = isndc;
-
-   this.moveDrag = function(dx, dy) {
-      this.dx += dx;
-      this.dy += dy;
-      makeTranslate(this.draw_g.select('path'), this.dx, this.dy);
-   };
-
-   this.moveEnd = function(not_changed) {
-      if (not_changed) return;
-      const polyline = this.getObject(),
-            func = this.getAxisToSvgFunc(this.isndc);
-      let exec = '';
-
-      for (let n = 0; n <= polyline.fLastPoint; ++n) {
-         const x = this.svgToAxis('x', func.x(polyline.fX[n]) + this.dx, this.isndc),
-               y = this.svgToAxis('y', func.y(polyline.fY[n]) + this.dy, this.isndc);
-         polyline.fX[n] = x;
-         polyline.fY[n] = y;
-         exec += `SetPoint(${n},${x},${y});;`;
-      }
-      this.submitCanvExec(exec + 'Notify();;');
-      this.redraw();
-   };
 }
 
 /** @summary Draw TEllipse
@@ -306,103 +268,6 @@ function drawPie() {
    }
 }
 
-/** @summary Draw TBox
-  * @private */
-function drawBox() {
-   const box = this.getObject(),
-         opt = this.getDrawOpt(),
-         draw_line = (opt.toUpperCase().indexOf('L') >= 0);
-
-   this.createAttLine({ attr: box });
-   this.createAttFill({ attr: box });
-
-   // if box filled, contour line drawn only with 'L' draw option:
-   if (!this.fillatt.empty() && !draw_line)
-      this.lineatt.color = 'none';
-
-   this.createG();
-
-   this.x1 = this.axisToSvg('x', box.fX1);
-   this.x2 = this.axisToSvg('x', box.fX2);
-   this.y1 = this.axisToSvg('y', box.fY1);
-   this.y2 = this.axisToSvg('y', box.fY2);
-   this.borderMode = (box.fBorderMode && box.fBorderSize && this.fillatt.hasColor()) ? box.fBorderMode : 0;
-   this.borderSize = box.fBorderSize;
-
-   this.getPathes = () => {
-      const xx = Math.min(this.x1, this.x2), yy = Math.min(this.y1, this.y2),
-            ww = Math.abs(this.x2 - this.x1), hh = Math.abs(this.y1 - this.y2),
-            path = `M${xx},${yy}h${ww}v${hh}h${-ww}z`;
-      if (!this.borderMode)
-         return [path];
-      const pww = this.borderSize, phh = this.borderSize,
-            side1 = `M${xx},${yy}h${ww}l${-pww},${phh}h${2*pww-ww}v${hh-2*phh}l${-pww},${phh}z`,
-            side2 = `M${xx+ww},${yy+hh}v${-hh}l${-pww},${phh}v${hh-2*phh}h${2*pww-ww}l${-pww},${phh}z`;
-
-      return (this.borderMode > 0) ? [path, side1, side2] : [path, side2, side1];
-   };
-
-   const paths = this.getPathes();
-
-   this.draw_g
-       .append('svg:path')
-       .attr('d', paths[0])
-       .call(this.lineatt.func)
-       .call(this.fillatt.func);
-
-   if (this.borderMode) {
-      this.draw_g.append('svg:path')
-                 .attr('d', paths[1])
-                 .call(this.fillatt.func)
-                 .style('fill', d3_rgb(this.fillatt.color).brighter(0.5).formatHex());
-
-      this.draw_g.append('svg:path')
-                 .attr('d', paths[2])
-                 .call(this.fillatt.func)
-                 .style('fill', d3_rgb(this.fillatt.color).darker(0.5).formatHex());
-   }
-
-   assignContextMenu(this, kToFront);
-
-   addMoveHandler(this);
-
-   this.moveStart = function(x, y) {
-      const ww = Math.abs(this.x2 - this.x1), hh = Math.abs(this.y1 - this.y2);
-
-      this.c_x1 = Math.abs(x - this.x2) > ww*0.1;
-      this.c_x2 = Math.abs(x - this.x1) > ww*0.1;
-      this.c_y1 = Math.abs(y - this.y2) > hh*0.1;
-      this.c_y2 = Math.abs(y - this.y1) > hh*0.1;
-      if (this.c_x1 !== this.c_x2 && this.c_y1 && this.c_y2)
-         this.c_y1 = this.c_y2 = false;
-      if (this.c_y1 !== this.c_y2 && this.c_x1 && this.c_x2)
-         this.c_x1 = this.c_x2 = false;
-   };
-
-   this.moveDrag = function(dx, dy) {
-      if (this.c_x1) this.x1 += dx;
-      if (this.c_x2) this.x2 += dx;
-      if (this.c_y1) this.y1 += dy;
-      if (this.c_y2) this.y2 += dy;
-
-      const nodes = this.draw_g.selectAll('path').nodes(),
-            pathes = this.getPathes();
-
-      pathes.forEach((path, i) => d3_select(nodes[i]).attr('d', path));
-   };
-
-   this.moveEnd = function(not_changed) {
-      if (not_changed) return;
-      const box = this.getObject();
-      let exec = '';
-      if (this.c_x1) { box.fX1 = this.svgToAxis('x', this.x1); exec += `SetX1(${box.fX1});;`; }
-      if (this.c_x2) { box.fX2 = this.svgToAxis('x', this.x2); exec += `SetX2(${box.fX2});;`; }
-      if (this.c_y1) { box.fY1 = this.svgToAxis('y', this.y1); exec += `SetY1(${box.fY1});;`; }
-      if (this.c_y2) { box.fY2 = this.svgToAxis('y', this.y2); exec += `SetY2(${box.fY2});;`; }
-      this.submitCanvExec(exec + 'Notify();;');
-   };
-}
-
 /** @summary Draw TMarker
   * @private */
 function drawMarker() {
@@ -411,13 +276,19 @@ function drawMarker() {
 
    this.isndc = marker.TestBit(kMarkerNDC);
 
+   const use_frame = this.isndc ? false : new DrawOptions(this.getDrawOpt()).check('FRAME'),
+         swap_xy = use_frame && this.getFramePainter()?.swap_xy;
+
    this.createAttMarker({ attr: marker });
 
-   this.createG();
+   this.createG(use_frame ? 'frame2d' : undefined);
 
-   const x = this.axisToSvg('x', marker.fX, this.isndc),
-         y = this.axisToSvg('y', marker.fY, this.isndc),
-         path = this.markeratt.create(x, y);
+   let x = this.axisToSvg('x', marker.fX, this.isndc),
+       y = this.axisToSvg('y', marker.fY, this.isndc);
+   if (swap_xy)
+      [x, y] = [y, x];
+
+   const path = this.markeratt.create(x, y);
 
    if (path) {
       this.draw_g.append('svg:path')
@@ -440,9 +311,13 @@ function drawMarker() {
    this.moveEnd = function(not_changed) {
       if (not_changed) return;
       const marker = this.getObject();
-      marker.fX = this.svgToAxis('x', this.axisToSvg('x', marker.fX, this.isndc) + this.dx, this.isndc);
-      marker.fY = this.svgToAxis('y', this.axisToSvg('y', marker.fY, this.isndc) + this.dy, this.isndc);
-      this.submitCanvExec(`SetX(${marker.fX});;SetY(${marker.fY});;Notify();;`);
+      let fx = this.svgToAxis('x', this.axisToSvg('x', marker.fX, this.isndc) + this.dx, this.isndc),
+          fy = this.svgToAxis('y', this.axisToSvg('y', marker.fY, this.isndc) + this.dy, this.isndc);
+      if (swap_xy)
+         [fx, fy] = [fy, fx];
+      marker.fX = fx;
+      marker.fY = fy;
+      this.submitCanvExec(`SetX(${fx});;SetY(${fy});;Notify();;`);
       this.redraw();
    };
 }
@@ -516,5 +391,4 @@ function drawJSImage(dom, obj, opt) {
    return painter;
 }
 
-export { drawText, drawPolyLine, drawEllipse, drawPie, drawBox,
-         drawMarker, drawPolyMarker, drawJSImage };
+export { drawText, drawEllipse, drawPie, drawMarker, drawPolyMarker, drawJSImage };

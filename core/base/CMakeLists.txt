@@ -101,6 +101,7 @@ set(BASE_HEADERS
   TVirtualFFT.h
   TVirtualGL.h
   TVirtualMonitoring.h
+  TVirtualMapFile.h
   TVirtualMutex.h
   TVirtualPadEditor.h
   TVirtualPad.h
@@ -215,7 +216,14 @@ target_include_directories(Core PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/v7/inc>
 )
 
-target_link_libraries(Core PRIVATE PCRE::PCRE)
+if(PCRE2_FOUND)
+  target_link_libraries(Core PRIVATE PCRE2::PCRE2)
+  set_source_files_properties(src/TPRegexp.cxx
+    TARGET_DIRECTORY Core
+    PROPERTIES COMPILE_DEFINITIONS USE_PCRE2)
+else()
+  target_link_libraries(Core PRIVATE PCRE::PCRE)
+endif()
 
 ROOT_INSTALL_HEADERS(${BASE_HEADER_DIRS})
 
@@ -225,9 +233,6 @@ if(NOT MSVC)
 #---addRootC++CmdMan-------------------------------------------------------------------------
 generateManual(rootMan ${CMAKE_CURRENT_SOURCE_DIR}/src/root-argparse.py ${CMAKE_BINARY_DIR}/man/root.1)
 generateManual(haddMan ${CMAKE_SOURCE_DIR}/main/src/hadd-argparse.py ${CMAKE_BINARY_DIR}/man/hadd.1)
-if (roofit)
-generateManual(hist2workspaceMan ${CMAKE_SOURCE_DIR}/roofit/histfactory/src/hist2workspace-argparse.py ${CMAKE_BINARY_DIR}/man/hist2workspace.1)
-endif()
 generateManual(rootclingMan ${CMAKE_SOURCE_DIR}/core/dictgen/src/rootcling-argparse.py ${CMAKE_BINARY_DIR}/man/rootcling.1)
 
 #---addRootPyCmdMan---------------------------------------------------------------------------

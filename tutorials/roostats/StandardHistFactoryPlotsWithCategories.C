@@ -54,7 +54,7 @@
 
 using namespace RooFit;
 using namespace RooStats;
-using namespace std;
+using std::cout, std::endl;
 
 void StandardHistFactoryPlotsWithCategories(const char *infile = "", const char *workspaceName = "combined",
                                             const char *modelConfigName = "ModelConfig",
@@ -172,9 +172,7 @@ void StandardHistFactoryPlotsWithCategories(const char *infile = "", const char 
    int nPlots = 0;
    if (!simPdf) {
 
-      TIter it = mc->GetNuisanceParameters()->createIterator();
-      RooRealVar *var = NULL;
-      while ((var = (RooRealVar *)it.Next()) != NULL) {
+      for (auto *var : static_range_cast<RooRealVar *>(*mc->GetNuisanceParameters())) {
          RooPlot *frame = obs->frame();
          frame->SetYTitle(var->GetName());
          data->plotOn(frame, MarkerSize(1));
@@ -208,9 +206,9 @@ void StandardHistFactoryPlotsWithCategories(const char *infile = "", const char 
 
          obs = ((RooRealVar *)obstmp->first());
 
-         TIter it = mc->GetNuisanceParameters()->createIterator();
-         RooRealVar *var = NULL;
-         while (nPlots < nPlotsMax && (var = (RooRealVar *)it.Next())) {
+         for (auto *var : static_range_cast<RooRealVar*>(*mc->GetNuisanceParameters())) {
+            if (nPlots == nPlotsMax) break;
+
             TCanvas *c2 = new TCanvas("c2");
             RooPlot *frame = obs->frame();
             frame->SetName(Form("frame%d", nPlots));

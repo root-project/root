@@ -111,6 +111,7 @@ int websocket_connect_handler(const struct mg_connection *conn, void *)
    auto arg = std::make_shared<THttpCallArg>();
    arg->SetPathAndFileName(request_info->local_uri); // path and file name
    arg->SetQuery(request_info->query_string);        // query arguments
+   arg->SetTopName(engine->GetTopName());
    arg->SetWSId(TString::Hash((void *)&conn, sizeof(void *)));
    arg->SetMethod("WS_CONNECT");
 
@@ -140,6 +141,7 @@ void websocket_ready_handler(struct mg_connection *conn, void *)
    auto arg = std::make_shared<THttpCallArg>();
    arg->SetPathAndFileName(request_info->local_uri); // path and file name
    arg->SetQuery(request_info->query_string);        // query arguments
+   arg->SetTopName(engine->GetTopName());
    arg->SetMethod("WS_READY");
 
    // delegate ownership to the arg, id will be automatically set
@@ -169,6 +171,7 @@ void websocket_close_handler(const struct mg_connection *conn, void *)
    auto arg = std::make_shared<THttpCallArg>();
    arg->SetPathAndFileName(request_info->local_uri); // path and file name
    arg->SetQuery(request_info->query_string);        // query arguments
+   arg->SetTopName(engine->GetTopName());
    arg->SetWSId(TString::Hash((void *)&conn, sizeof(void *)));
    arg->SetMethod("WS_CLOSE");
 
@@ -235,6 +238,7 @@ int websocket_data_handler(struct mg_connection *conn, int code, char *data, siz
    auto arg = std::make_shared<THttpCallArg>();
    arg->SetPathAndFileName(request_info->local_uri); // path and file name
    arg->SetQuery(request_info->query_string);        // query arguments
+   arg->SetTopName(engine->GetTopName());
    arg->SetWSId(TString::Hash((void *)&conn, sizeof(void *)));
    arg->SetMethod("WS_DATA");
 
@@ -265,14 +269,14 @@ static int log_message_handler(const struct mg_connection *conn, const char *mes
       return engine->ProcessLog(message);
 
    // provide debug output
-   if ((gDebug > 0) || (strstr(message, "cannot bind to") != 0))
+   if ((gDebug > 0) || strstr(message, "cannot bind to"))
       fprintf(stderr, "Error in <TCivetweb::Log> %s\n", message);
 
    return 0;
 }
 
 struct TEngineHolder {
-   TCivetweb *fEngine;
+   TCivetweb *fEngine{nullptr};
    TEngineHolder(TCivetweb *engine)
    {
       fEngine = engine;

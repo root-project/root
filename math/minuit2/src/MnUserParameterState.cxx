@@ -19,39 +19,40 @@ namespace Minuit2 {
 //
 // construct from user parameters (before minimization)
 //
-MnUserParameterState::MnUserParameterState(const std::vector<double> &par, const std::vector<double> &err)
+MnUserParameterState::MnUserParameterState(std::span<const double> par, std::span<const double> err)
    : fValid(true), fCovarianceValid(false), fGCCValid(false), fCovStatus(-1), fFVal(0.), fEDM(0.), fNFcn(0),
-     fParameters(MnUserParameters(par, err)), fCovariance(MnUserCovariance()), fGlobalCC(MnGlobalCorrelationCoeff()),
-     fIntParameters(par), fIntCovariance(MnUserCovariance())
+     fParameters(MnUserParameters(par, err)),
+     fIntParameters(par.begin(), par.end())
 {
 }
 
 MnUserParameterState::MnUserParameterState(const MnUserParameters &par)
    : fValid(true), fCovarianceValid(false), fGCCValid(false), fCovStatus(-1), fFVal(0.), fEDM(0.), fNFcn(0),
-     fParameters(par), fCovariance(MnUserCovariance()), fGlobalCC(MnGlobalCorrelationCoeff()),
-     fIntParameters(std::vector<double>()), fIntCovariance(MnUserCovariance())
+     fParameters(par)
 {
    // construct from user parameters (before minimization)
 
-   for (std::vector<MinuitParameter>::const_iterator ipar = MinuitParameters().begin();
-        ipar != MinuitParameters().end(); ++ipar) {
-      if ((*ipar).IsConst() || (*ipar).IsFixed())
+   for (auto const &ipar : MinuitParameters()) {
+      if (ipar.IsConst() || ipar.IsFixed())
          continue;
-      if ((*ipar).HasLimits())
-         fIntParameters.push_back(Ext2int((*ipar).Number(), (*ipar).Value()));
+      if (ipar.HasLimits())
+         fIntParameters.push_back(Ext2int(ipar.Number(), ipar.Value()));
       else
-         fIntParameters.push_back((*ipar).Value());
+         fIntParameters.push_back(ipar.Value());
    }
 }
 
 //
 // construct from user parameters + errors (before minimization)
 //
-MnUserParameterState::MnUserParameterState(const std::vector<double> &par, const std::vector<double> &cov,
-                                           unsigned int nrow)
-   : fValid(true), fCovarianceValid(true), fGCCValid(false), fCovStatus(-1), fFVal(0.), fEDM(0.), fNFcn(0),
-     fParameters(MnUserParameters()), fCovariance(MnUserCovariance(cov, nrow)), fGlobalCC(MnGlobalCorrelationCoeff()),
-     fIntParameters(par), fIntCovariance(MnUserCovariance(cov, nrow))
+MnUserParameterState::MnUserParameterState(std::span<const double> par, std::span<const double> cov, unsigned int nrow)
+   : fValid(true),
+     fGCCValid(false),
+     fCovStatus(-1),
+     fFVal(0.),
+     fEDM(0.),
+     fNFcn(0),
+     fIntParameters(par.begin(), par.end())
 {
    // construct from user parameters + errors (before minimization) using std::vector for parameter error and    // an
    // std::vector of size n*(n+1)/2 for the covariance matrix  and n (rank of cov matrix)
@@ -63,13 +64,17 @@ MnUserParameterState::MnUserParameterState(const std::vector<double> &par, const
       err.push_back(std::sqrt(fCovariance(i, i)));
    }
    fParameters = MnUserParameters(par, err);
-   assert(fCovariance.Nrow() == VariableParameters());
+   MnUserParameterState::AddCovariance({cov, nrow});
 }
 
-MnUserParameterState::MnUserParameterState(const std::vector<double> &par, const MnUserCovariance &cov)
-   : fValid(true), fCovarianceValid(true), fGCCValid(false), fCovStatus(-1), fFVal(0.), fEDM(0.), fNFcn(0),
-     fParameters(MnUserParameters()), fCovariance(cov), fGlobalCC(MnGlobalCorrelationCoeff()), fIntParameters(par),
-     fIntCovariance(cov)
+MnUserParameterState::MnUserParameterState(std::span<const double> par, const MnUserCovariance &cov)
+   : fValid(true),
+     fGCCValid(false),
+     fCovStatus(-1),
+     fFVal(0.),
+     fEDM(0.),
+     fNFcn(0),
+     fIntParameters(par.begin(), par.end())
 {
    // construct from user parameters + errors (before minimization) using std::vector (params) and MnUserCovariance
    // class
@@ -81,77 +86,68 @@ MnUserParameterState::MnUserParameterState(const std::vector<double> &par, const
       err.push_back(std::sqrt(fCovariance(i, i)));
    }
    fParameters = MnUserParameters(par, err);
-   assert(fCovariance.Nrow() == VariableParameters());
+   MnUserParameterState::AddCovariance(cov);
 }
 
 MnUserParameterState::MnUserParameterState(const MnUserParameters &par, const MnUserCovariance &cov)
-   : fValid(true), fCovarianceValid(true), fGCCValid(false), fCovStatus(-1), fFVal(0.), fEDM(0.), fNFcn(0),
-     fParameters(par), fCovariance(cov), fGlobalCC(MnGlobalCorrelationCoeff()), fIntParameters(std::vector<double>()),
-     fIntCovariance(cov)
+   : fValid(true), fGCCValid(false), fCovStatus(-1), fFVal(0.), fEDM(0.), fNFcn(0), fParameters(par)
 {
    // construct from user parameters + errors (before minimization) using
    // MnUserParameters and MnUserCovariance objects
 
-   fIntCovariance.Scale(0.5);
-   for (std::vector<MinuitParameter>::const_iterator ipar = MinuitParameters().begin();
-        ipar != MinuitParameters().end(); ++ipar) {
-      if ((*ipar).IsConst() || (*ipar).IsFixed())
+   for (auto const &ipar : MinuitParameters()) {
+      if (ipar.IsConst() || ipar.IsFixed())
          continue;
-      if ((*ipar).HasLimits())
-         fIntParameters.push_back(Ext2int((*ipar).Number(), (*ipar).Value()));
+      if (ipar.HasLimits())
+         fIntParameters.push_back(Ext2int(ipar.Number(), ipar.Value()));
       else
-         fIntParameters.push_back((*ipar).Value());
+         fIntParameters.push_back(ipar.Value());
    }
-   assert(fCovariance.Nrow() == VariableParameters());
-   //
-   // need to Fix that in case of limited parameters
-   //   fIntCovariance = MnUserCovariance();
-   //
+
+   MnUserParameterState::AddCovariance(cov);
 }
 
 //
 //
 MnUserParameterState::MnUserParameterState(const MinimumState &st, double up, const MnUserTransformation &trafo)
    : fValid(st.IsValid()), fCovarianceValid(false), fGCCValid(false), fCovStatus(-1), fFVal(st.Fval()), fEDM(st.Edm()),
-     fNFcn(st.NFcn()), fParameters(MnUserParameters()), fCovariance(MnUserCovariance()),
-     fGlobalCC(MnGlobalCorrelationCoeff()), fIntParameters(std::vector<double>()), fIntCovariance(MnUserCovariance())
+     fNFcn(st.NFcn())
 {
    //
    // construct from internal parameters (after minimization)
    //
    // std::cout << "build a MnUserParameterState after minimization.." << std::endl;
 
-   for (std::vector<MinuitParameter>::const_iterator ipar = trafo.Parameters().begin();
-        ipar != trafo.Parameters().end(); ++ipar) {
-      if ((*ipar).IsConst()) {
-         Add((*ipar).GetName(), (*ipar).Value());
-      } else if ((*ipar).IsFixed()) {
-         Add((*ipar).GetName(), (*ipar).Value(), (*ipar).Error());
-         if ((*ipar).HasLimits()) {
-            if ((*ipar).HasLowerLimit() && (*ipar).HasUpperLimit())
-               SetLimits((*ipar).GetName(), (*ipar).LowerLimit(), (*ipar).UpperLimit());
-            else if ((*ipar).HasLowerLimit() && !(*ipar).HasUpperLimit())
-               SetLowerLimit((*ipar).GetName(), (*ipar).LowerLimit());
+   for (auto const &ipar : trafo.Parameters()) {
+      if (ipar.IsConst()) {
+         Add(ipar.GetName(), ipar.Value());
+      } else if (ipar.IsFixed()) {
+         Add(ipar.GetName(), ipar.Value(), ipar.Error());
+         if (ipar.HasLimits()) {
+            if (ipar.HasLowerLimit() && ipar.HasUpperLimit())
+               SetLimits(ipar.GetName(), ipar.LowerLimit(), ipar.UpperLimit());
+            else if (ipar.HasLowerLimit() && !ipar.HasUpperLimit())
+               SetLowerLimit(ipar.GetName(), ipar.LowerLimit());
             else
-               SetUpperLimit((*ipar).GetName(), (*ipar).UpperLimit());
+               SetUpperLimit(ipar.GetName(), ipar.UpperLimit());
          }
-         Fix((*ipar).GetName());
-      } else if ((*ipar).HasLimits()) {
-         unsigned int i = trafo.IntOfExt((*ipar).Number());
+         Fix(ipar.GetName());
+      } else if (ipar.HasLimits()) {
+         unsigned int i = trafo.IntOfExt(ipar.Number());
          double err =
             st.Error().IsValid() ? std::sqrt(2. * up * st.Error().InvHessian()(i, i)) : st.Parameters().Dirin()(i);
-         Add((*ipar).GetName(), trafo.Int2ext(i, st.Vec()(i)), trafo.Int2extError(i, st.Vec()(i), err));
-         if ((*ipar).HasLowerLimit() && (*ipar).HasUpperLimit())
-            SetLimits((*ipar).GetName(), (*ipar).LowerLimit(), (*ipar).UpperLimit());
-         else if ((*ipar).HasLowerLimit() && !(*ipar).HasUpperLimit())
-            SetLowerLimit((*ipar).GetName(), (*ipar).LowerLimit());
+         Add(ipar.GetName(), trafo.Int2ext(i, st.Vec()(i)), trafo.Int2extError(i, st.Vec()(i), err));
+         if (ipar.HasLowerLimit() && ipar.HasUpperLimit())
+            SetLimits(ipar.GetName(), ipar.LowerLimit(), ipar.UpperLimit());
+         else if (ipar.HasLowerLimit() && !ipar.HasUpperLimit())
+            SetLowerLimit(ipar.GetName(), ipar.LowerLimit());
          else
-            SetUpperLimit((*ipar).GetName(), (*ipar).UpperLimit());
+            SetUpperLimit(ipar.GetName(), ipar.UpperLimit());
       } else {
-         unsigned int i = trafo.IntOfExt((*ipar).Number());
+         unsigned int i = trafo.IntOfExt(ipar.Number());
          double err =
             st.Error().IsValid() ? std::sqrt(2. * up * st.Error().InvHessian()(i, i)) : st.Parameters().Dirin()(i);
-         Add((*ipar).GetName(), st.Vec()(i), err);
+         Add(ipar.GetName(), st.Vec()(i), err);
       }
    }
 
@@ -167,9 +163,7 @@ MnUserParameterState::MnUserParameterState(const MinimumState &st, double up, co
    if (fCovarianceValid) {
       fCovariance = trafo.Int2extCovariance(st.Vec(), st.Error().InvHessian());
       fIntCovariance =
-         MnUserCovariance(std::vector<double>(st.Error().InvHessian().Data(),
-                                              st.Error().InvHessian().Data() + st.Error().InvHessian().size()),
-                          st.Error().InvHessian().Nrow());
+         MnUserCovariance({st.Error().InvHessian().Data(), st.Error().InvHessian().size()}, st.Error().InvHessian().Nrow());
       fCovariance.Scale(2. * up);
       fGlobalCC = MnGlobalCorrelationCoeff(st.Error().InvHessian());
       fGCCValid = fGlobalCC.IsValid();
@@ -292,6 +286,37 @@ void MnUserParameterState::Add(const std::string &name, double val)
       fValid = true;
    else
       SetValue(name, val);
+}
+
+void MnUserParameterState::AddCovariance(const MnUserCovariance &cov)
+{
+
+   unsigned int nrow = VariableParameters();
+   assert(cov.Nrow() >= nrow);
+
+   // add external covariance matrix
+   fCovariance = cov;
+
+   // compute and add internal covariance matrix
+   MnUserCovariance covsqueezed;
+   if (cov.Nrow() > nrow)
+      covsqueezed = MnCovarianceSqueeze()(cov, nrow);
+   else if (cov.Nrow() == nrow)
+      covsqueezed = cov;
+
+   MnAlgebraicVector params(nrow);
+   for (unsigned int i = 0; i < nrow; i++)
+      params(i) = fParameters.Params()[i];
+
+   MnAlgebraicSymMatrix covmat(nrow);
+   for (unsigned int i = 0; i < nrow; i++)
+      for (unsigned int j = i; j < nrow; j++)
+         covmat(i, j) = covsqueezed(i, j);
+
+   fIntCovariance = fParameters.Trafo().Ext2intCovariance(params, covmat);
+   fIntCovariance.Scale(0.5); //?
+   fCovarianceValid = true;
+   fCovStatus = 0; //?
 }
 
 // interaction via external number of Parameter

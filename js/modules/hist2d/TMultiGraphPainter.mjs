@@ -1,10 +1,13 @@
-import { create, createHistogram, isFunc, clTH1I, clTH2I, clTObjString, clTHashList, kNoZoom, kNoStats } from '../core.mjs';
+import { create, createHistogram, clTH1I, clTH2I, clTObjString, clTHashList, kNoZoom, kNoStats, BIT } from '../core.mjs';
 import { DrawOptions } from '../base/BasePainter.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
 import { FunctionsHandler } from './THistPainter.mjs';
 import { TH1Painter, PadDrawOptions } from './TH1Painter.mjs';
 import { TGraphPainter } from './TGraphPainter.mjs';
+import { ensureTCanvas } from '../gpad/TCanvasPainter.mjs';
 
+
+const kResetHisto = BIT(17);
 
 /**
  * @summary Painter for TMultiGraph object.
@@ -20,19 +23,19 @@ class TMultiGraphPainter extends ObjectPainter {
    constructor(dom, mgraph) {
       super(dom, mgraph);
       this.firstpainter = null;
-      this.autorange = false;
       this.painters = []; // keep painters to be able update objects
    }
 
-   /** @summary Cleanup multigraph painter */
+   /** @summary Cleanup TMultiGraph painter */
    cleanup() {
       this.painters = [];
       super.cleanup();
    }
 
-   /** @summary Update multigraph object */
+   /** @summary Update TMultiGraph object */
    updateObject(obj) {
-      if (!this.matchObjectType(obj)) return false;
+      if (!this.matchObjectType(obj))
+         return false;
 
       const mgraph = this.getObject(),
             graphs = obj.fGraphs,
@@ -42,18 +45,16 @@ class TMultiGraphPainter extends ObjectPainter {
 
       let isany = false;
       if (this.firstpainter) {
-         let histo = obj.fHistogram;
-         if (this.autorange && !histo)
-            histo = this.scanGraphsRange(graphs);
-
+         const histo = this.scanGraphsRange(graphs, obj.fHistogram, pp?.getRootPad(true), true);
          if (this.firstpainter.updateObject(histo))
             isany = true;
       }
 
       const ngr = Math.min(graphs.arr.length, this.painters.length);
 
+      // TODO: handle changing number of graphs
       for (let i = 0; i < ngr; ++i) {
-         if (this.painters[i].updateObject(graphs.arr[i], graphs.opt[i]))
+         if (this.painters[i].updateObject(graphs.arr[i], (graphs.opt[i] || this._restopt) + this._auto))
             isany = true;
       }
 
@@ -62,7 +63,7 @@ class TMultiGraphPainter extends ObjectPainter {
       return isany;
    }
 
-   /** @summary Redraw multigraph
+   /** @summary Redraw TMultiGraph
      * @desc may redraw histogram which was used to draw axes
      * @return {Promise} for ready */
     async redraw(reason) {
@@ -82,37 +83,35 @@ class TMultiGraphPainter extends ObjectPainter {
 
    /** @summary Scan graphs range
      * @return {object} histogram for axes drawing */
-   scanGraphsRange(graphs, histo, pad) {
+   scanGraphsRange(graphs, histo, pad, reset_histo) {
       const mgraph = this.getObject(),
-            rw = { xmin: 0, xmax: 0, ymin: 0, ymax: 0, first: true };
+            rw = { xmin: 0, xmax: 0, ymin: 0, ymax: 0, first: true },
+            test = (v1, v2) => { return Math.abs(v2-v1) < 1e-6; };
       let maximum, minimum, logx = false, logy = false,
-          time_display = false, time_format = '';
+          src_hist, dummy_histo = false;
 
       if (pad) {
          logx = pad.fLogx;
          logy = pad.fLogv ?? pad.fLogy;
-         rw.xmin = pad.fUxmin;
-         rw.xmax = pad.fUxmax;
-         rw.ymin = pad.fUymin;
-         rw.ymax = pad.fUymax;
-         rw.first = false;
       }
 
-      // ignore existing histo in 3d case
+      // ignore existing histogram in 3d case
       if (this._3d && histo && !histo.fXaxis.fLabels)
          histo = null;
 
-      if (!histo) {
-         this.autorange = true;
-
-         if (graphs.arr[0]?.fHistogram?.fXaxis?.fTimeDisplay) {
-            time_display = true;
-            time_format = graphs.arr[0].fHistogram.fXaxis.fTimeFormat;
-         }
+      if (!histo)
+         src_hist = graphs.arr[0]?.fHistogram;
+      else {
+         dummy_histo = test(histo.fMinimum, -0.05) && test(histo.fMaximum, 1.05) &&
+                       test(histo.fXaxis.fXmin, -0.05) && test(histo.fXaxis.fXmax, 1.05);
+         src_hist = histo;
       }
 
       graphs.arr.forEach(gr => {
-         if (gr.fNpoints === 0) return;
+         if (gr.fNpoints === 0)
+            return;
+         if (gr.TestBit(kResetHisto))
+            reset_histo = true;
          if (rw.first) {
             rw.xmin = rw.xmax = gr.fX[0];
             rw.ymin = rw.ymax = gr.fY[0];
@@ -132,6 +131,7 @@ class TMultiGraphPainter extends ObjectPainter {
          rw.ymax += 1;
       const dx = 0.05 * (rw.xmax - rw.xmin),
             dy = 0.05 * (rw.ymax - rw.ymin);
+
       let uxmin = rw.xmin - dx,
           uxmax = rw.xmax + dx;
       if (logy) {
@@ -148,7 +148,7 @@ class TMultiGraphPainter extends ObjectPainter {
       if (maximum > 0 && rw.ymax <= 0)
          maximum = 0;
 
-       const glob_minimum = minimum, glob_maximum = maximum;
+      const glob_minimum = minimum, glob_maximum = maximum;
 
       if (uxmin < 0 && rw.xmin >= 0)
          uxmin = logx ? 0.9 * rw.xmin : 0;
@@ -172,7 +172,7 @@ class TMultiGraphPainter extends ObjectPainter {
          uxmin = (uxmax > 1000) ? 1 : 0.001 * uxmax;
 
       // Create a temporary histogram to draw the axis (if necessary)
-      if (!histo) {
+      if (!histo || reset_histo || dummy_histo) {
          let xaxis, yaxis;
          if (this._3d) {
             histo = createHistogram(clTH2I, graphs.arr.length, 10);
@@ -193,6 +193,14 @@ class TMultiGraphPainter extends ObjectPainter {
             xaxis = histo.fXaxis;
             yaxis = histo.fYaxis;
          }
+
+         if (src_hist) {
+            xaxis.fTimeDisplay = src_hist.fXaxis.fTimeDisplay;
+            xaxis.fTimeFormat = src_hist.fXaxis.fTimeFormat;
+            xaxis.fTitle = src_hist.fXaxis.fTitle;
+            yaxis.fTitle = src_hist.fYaxis.fTitle;
+         }
+
          histo.fTitle = mgraph.fTitle;
          if (histo.fTitle.indexOf(';') >= 0) {
             const t = histo.fTitle.split(';');
@@ -200,106 +208,138 @@ class TMultiGraphPainter extends ObjectPainter {
             if (t[1]) xaxis.fTitle = t[1];
             if (t[2]) yaxis.fTitle = t[2];
          }
-
          xaxis.fXmin = uxmin;
          xaxis.fXmax = uxmax;
-         xaxis.fTimeDisplay = time_display;
-         if (time_display) xaxis.fTimeFormat = time_format;
       }
 
       const axis = this._3d ? histo.fZaxis : histo.fYaxis;
       axis.fXmin = Math.min(minimum, glob_minimum);
       axis.fXmax = Math.max(maximum, glob_maximum);
-      histo.fMinimum = minimum;
-      histo.fMaximum = maximum;
+      if (histo.fMinimum === kNoZoom)
+         histo.fMinimum = minimum;
+      if (histo.fMaximum === kNoZoom)
+         histo.fMaximum = maximum;
       histo.fBits |= kNoStats;
 
       return histo;
    }
 
-   /** @summary draw speical histogram for axis
+   /** @summary draw special histogram for axis
      * @return {Promise} when ready */
    async drawAxisHist(histo, hopt) {
-      return TH1Painter.draw(this.getDom(), histo, hopt);
+      return TH1Painter.draw(this.getDrawDom(), histo, hopt);
    }
 
    /** @summary Draw graph  */
-   async drawGraph(gr, opt /*, pos3d */) {
-      return TGraphPainter.draw(this.getDom(), gr, opt);
+   async drawGraph(dom, gr, opt /* , pos3d */) {
+      return TGraphPainter.draw(dom, gr, opt);
    }
 
    /** @summary method draws next graph  */
-   async drawNextGraph(indx, opt) {
+   async drawNextGraph(indx, pad_painter) {
       const graphs = this.getObject().fGraphs;
-      let exec = '';
 
       // at the end of graphs drawing draw functions (if any)
-      if (indx >= graphs.arr.length) {
-         this._pfc = this._plc = this._pmc = false; // disable auto coloring at the end
+      if (indx >= graphs.arr.length)
          return this;
+
+      const gr = graphs.arr[indx],
+            draw_opt = (graphs.opt[indx] || this._restopt) + this._auto,
+            pos3d = graphs.arr.length - indx,
+            subid = `graphs_${indx}`;
+
+      // handling of 'pads' draw option
+      if (pad_painter) {
+         const subpad_painter = pad_painter.getSubPadPainter(indx+1);
+         if (!subpad_painter)
+            return this;
+
+         subpad_painter.cleanPrimitives(true);
+
+         return this.drawGraph(subpad_painter, gr, draw_opt, pos3d).then(subp => {
+            if (subp) {
+               subp.setSecondaryId(this, subid);
+               this.painters.push(subp);
+            }
+            return this.drawNextGraph(indx+1, pad_painter);
+         });
       }
 
-      const gr = graphs.arr[indx], o = graphs.opt[indx] || opt || '';
+      // used in automatic colors numbering
+      if (this._auto)
+         gr.$num_graphs = graphs.arr.length;
 
-      // if there is auto colors assignment, try to provide it
-      if (this._pfc || this._plc || this._pmc) {
-         const mp = this.getMainPainter();
-         if (isFunc(mp?.createAutoColor)) {
-            const icolor = mp.createAutoColor(graphs.arr.length);
-            if (this._pfc) { gr.fFillColor = icolor; exec += `SetFillColor(${icolor});;`; }
-            if (this._plc) { gr.fLineColor = icolor; exec += `SetLineColor(${icolor});;`; }
-            if (this._pmc) { gr.fMarkerColor = icolor; exec += `SetMarkerColor(${icolor});;`; }
-         }
-      }
-
-      return this.drawGraph(gr, o, graphs.arr.length - indx).then(subp => {
+      return this.drawGraph(this.getPadPainter(), gr, draw_opt, pos3d).then(subp => {
          if (subp) {
-            subp.setSecondaryId(this, `graphs_${indx}`);
+            subp.setSecondaryId(this, subid);
             this.painters.push(subp);
-            subp._auto_exec = exec;
          }
 
-         return this.drawNextGraph(indx+1, opt);
+         return this.drawNextGraph(indx+1);
       });
    }
 
-   /** @summary Draw multigraph object using painter instance
+   /** @summary Fill TMultiGraph context menu */
+   fillContextMenuItems(menu) {
+      menu.addRedrawMenu(this);
+   }
+
+   /** @summary Redraw TMultiGraph object using provided option
      * @private */
-   static async _drawMG(painter, opt) {
-      const d = new DrawOptions(opt);
+   async redrawWith(opt, skip_cleanup) {
+      if (!skip_cleanup) {
+         this.firstpainter = null;
+         this.painters = [];
+         const pp = this.getPadPainter();
+         pp?.removePrimitive(this, true);
+         if (this._pads)
+            pp?.divide(0, 0);
+      }
 
-      painter._3d = d.check('3D');
-      painter._pfc = d.check('PFC');
-      painter._plc = d.check('PLC');
-      painter._pmc = d.check('PMC');
+      const d = new DrawOptions(opt),
+            mgraph = this.getObject();
 
-      let hopt = '';
-      if (d.check('FB') && painter._3d) hopt += 'FB'; // will be directly combined with LEGO
+      this._3d = d.check('3D');
+      this._auto = ''; // extra options for auto colors
+      this._pads = d.check('PADS');
+      ['PFC', 'PLC', 'PMC'].forEach(f => { if (d.check(f)) this._auto += ' ' + f; });
+
+      let hopt = '', pad_painter = null;
+      if (d.check('FB') && this._3d) hopt += 'FB'; // will be directly combined with LEGO
       PadDrawOptions.forEach(name => { if (d.check(name)) hopt += ';' + name; });
 
-      let promise = Promise.resolve(true);
-      if (d.check('A') || !painter.getMainPainter()) {
-          const mgraph = painter.getObject(),
-                histo = painter.scanGraphsRange(mgraph.fGraphs, mgraph.fHistogram, painter.getPadPainter()?.getRootPad(true));
+      this._restopt = d.remain();
 
-         promise = painter.drawAxisHist(histo, hopt).then(ap => {
-            ap.setSecondaryId(painter, 'hist'); // mark that axis painter generated from mg
-            painter.firstpainter = ap;
+      let promise = Promise.resolve(true);
+      if (this._pads) {
+         promise = ensureTCanvas(this, false).then(() => {
+            pad_painter = this.getPadPainter();
+            return pad_painter.divide(mgraph.fGraphs.arr.length, 0, true);
+         });
+      } else if (d.check('A') || !this.getMainPainter()) {
+         const histo = this.scanGraphsRange(mgraph.fGraphs, mgraph.fHistogram, this.getPadPainter()?.getRootPad(true));
+
+         promise = this.drawAxisHist(histo, hopt).then(ap => {
+            ap.setSecondaryId(this, 'hist'); // mark that axis painter generated from mg
+            this.firstpainter = ap;
          });
       }
 
       return promise.then(() => {
-         painter.addToPadPrimitives();
-         return painter.drawNextGraph(0, d.remain());
+         this.addToPadPrimitives();
+         return this.drawNextGraph(0, pad_painter);
       }).then(() => {
-         const handler = new FunctionsHandler(painter, painter.getPadPainter(), painter.getObject().fFunctions, true);
+         if (this._pads)
+            return this;
+         const handler = new FunctionsHandler(this, this.getPadPainter(), this.getObject().fFunctions, true);
          return handler.drawNext(0); // returns painter
       });
    }
 
    /** @summary Draw TMultiGraph object */
    static async draw(dom, mgraph, opt) {
-      return TMultiGraphPainter._drawMG(new TMultiGraphPainter(dom, mgraph), opt);
+      const painter = new TMultiGraphPainter(dom, mgraph, opt);
+      return painter.redrawWith(opt, true);
    }
 
 } // class TMultiGraphPainter

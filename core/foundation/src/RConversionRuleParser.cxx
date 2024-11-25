@@ -195,6 +195,20 @@ namespace ROOT
          ///////////////////////////////////////////////////////////////////////
 
          if( key == "code" ) {
+            // Cleaning of the input command:
+            // - Trim whitespaces at the borders
+            // - Get the inner command (i.e. the part between quotes)
+            // - Trim whitespaces again
+            // - Stitch back together
+            auto clean_command = [](const std::string &c) {
+               auto first_trim = TSchemaRuleProcessor::Trim(c);
+               auto inner_command =
+                  first_trim.substr(first_trim.find_first_of('"') + 1, first_trim.find_last_of('"') - 1);
+               auto second_trim = TSchemaRuleProcessor::Trim(inner_command);
+               return '"' + second_trim + '"';
+            };
+            command = clean_command(command);
+
             if( command[1] != '{' ) {
                error_string = "Parsing error while processing key: code\n";
                error_string += "Expected \"{ at the beginning of the value.";

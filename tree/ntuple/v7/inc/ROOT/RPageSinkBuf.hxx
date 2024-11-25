@@ -22,28 +22,26 @@
 #include <ROOT/RPageStorage.hxx>
 
 #include <deque>
+#include <functional>
 #include <iterator>
 #include <memory>
 #include <tuple>
 
 namespace ROOT {
 namespace Experimental {
-namespace Detail {
+namespace Internal {
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::RPageSinkBuf
+\class ROOT::Experimental::Internal::RPageSinkBuf
 \ingroup NTuple
 \brief Wrapper sink that coalesces cluster column page writes
-*
-* TODO(jblomer): The interplay of derived class and RPageSink is not yet optimally designed for page storage wrapper
-* classes like this one. Header and footer serialization, e.g., are done twice.  To be revised.
 */
 // clang-format on
 class RPageSinkBuf : public RPageSink {
 private:
-   /// A buffered column. The column is not responsible for RPage memory management (i.e.
-   /// ReservePage/ReleasePage), which is handled by the enclosing RPageSinkBuf.
+   /// A buffered column. The column is not responsible for RPage memory management (i.e. ReservePage),
+   /// which is handled by the enclosing RPageSinkBuf.
    class RColumnBuf {
    public:
       struct RPageZipItem {
@@ -52,10 +50,6 @@ private:
          std::unique_ptr<unsigned char[]> fBuf;
          RPageStorage::RSealedPage *fSealedPage = nullptr;
          bool IsSealed() const { return fSealedPage != nullptr; }
-         void AllocateSealedPageBuf(std::size_t nBytes)
-         {
-            fBuf = std::unique_ptr<unsigned char[]>(new unsigned char[nBytes]);
-         }
       };
    public:
       RColumnBuf() = default;
@@ -66,7 +60,7 @@ private:
       ~RColumnBuf() { DropBufferedPages(); }
 
       /// Returns a reference to the newly buffered page. The reference remains
-      /// valid until the return value of DrainBufferedPages() is destroyed.
+      /// valid until DropBufferedPages().
       RPageZipItem &BufferPage(RPageStorage::ColumnHandle_t columnHandle)
       {
          if (!fCol) {
@@ -81,18 +75,6 @@ private:
       bool HasSealedPagesOnly() const { return fBufferedPages.size() == fSealedPages.size(); }
       const RPageStorage::SealedPageSequence_t &GetSealedPages() const { return fSealedPages; }
 
-      using BufferedPages_t = std::tuple<std::deque<RPageZipItem>, RPageStorage::SealedPageSequence_t>;
-      /// When the return value of DrainBufferedPages() is destroyed, all references
-      /// returned by GetBuffer are invalidated.
-      /// This function gives up on the ownership of the buffered pages.  Thus, `ReleasePage()` must be called
-      /// accordingly.
-      BufferedPages_t DrainBufferedPages()
-      {
-         BufferedPages_t drained;
-         std::swap(fBufferedPages, std::get<decltype(fBufferedPages)>(drained));
-         std::swap(fSealedPages, std::get<decltype(fSealedPages)>(drained));
-         return drained;
-      }
       void DropBufferedPages();
 
       // The returned reference points to a default-constructed RSealedPage. It can be used
@@ -117,9 +99,11 @@ private:
 private:
    /// I/O performance counters that get registered in fMetrics
    struct RCounters {
-      RNTuplePlainCounter &fParallelZip;
-      RNTuplePlainCounter &fTimeWallCriticalSection;
-      RNTupleTickCounter<RNTuplePlainCounter> &fTimeCpuCriticalSection;
+      Detail::RNTuplePlainCounter &fParallelZip;
+      Detail::RNTupleAtomicCounter &fTimeWallZip;
+      Detail::RNTuplePlainCounter &fTimeWallCriticalSection;
+      Detail::RNTupleTickCounter<Detail::RNTupleAtomicCounter> &fTimeCpuZip;
+      Detail::RNTupleTickCounter<Detail::RNTuplePlainCounter> &fTimeCpuCriticalSection;
    };
    std::unique_ptr<RCounters> fCounters;
    /// The inner sink, responsible for actually performing I/O.
@@ -129,10 +113,13 @@ private:
    std::unique_ptr<RNTupleModel> fInnerModel;
    /// Vector of buffered column pages. Indexed by column id.
    std::vector<RColumnBuf> fBufferedColumns;
+   /// Columns committed as suppressed are stored and passed to the inner sink at cluster commit
+   std::vector<ColumnHandle_t> fSuppressedColumns;
    DescriptorId_t fNFields = 0;
    DescriptorId_t fNColumns = 0;
 
    void ConnectFields(const std::vector<RFieldBase *> &fields, NTupleSize_t firstEntry);
+   void FlushClusterImpl(std::function<void(void)> FlushClusterFn);
 
 public:
    explicit RPageSinkBuf(std::unique_ptr<RPageSink> inner);
@@ -142,23 +129,28 @@ public:
    RPageSinkBuf& operator=(RPageSinkBuf&&) = default;
    ~RPageSinkBuf() override;
 
-   ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) final;
+   ColumnHandle_t AddColumn(DescriptorId_t fieldId, RColumn &column) final;
 
-   void Init(RNTupleModel &model) final;
+   const RNTupleDescriptor &GetDescriptor() const final;
+
+   void InitImpl(RNTupleModel &model) final;
    void UpdateSchema(const RNTupleModelChangeset &changeset, NTupleSize_t firstEntry) final;
+   void UpdateExtraTypeInfo(const RExtraTypeInfoDescriptor &extraTypeInfo) final;
 
+   void CommitSuppressedColumn(ColumnHandle_t columnHandle) final;
    void CommitPage(ColumnHandle_t columnHandle, const RPage &page) final;
    void CommitSealedPage(DescriptorId_t physicalColumnId, const RSealedPage &sealedPage) final;
    void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup> ranges) final;
    std::uint64_t CommitCluster(NTupleSize_t nNewEntries) final;
+   RStagedCluster StageCluster(NTupleSize_t nNewEntries) final;
+   void CommitStagedClusters(std::span<RStagedCluster> clusters) final;
    void CommitClusterGroup() final;
-   void CommitDataset() final;
+   void CommitDatasetImpl() final;
 
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final;
-   void ReleasePage(RPage &page) final;
-};
+}; // RPageSinkBuf
 
-} // namespace Detail
+} // namespace Internal
 } // namespace Experimental
 } // namespace ROOT
 

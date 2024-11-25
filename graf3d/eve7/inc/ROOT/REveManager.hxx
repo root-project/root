@@ -158,6 +158,9 @@ protected:
    REveServerStatus  fServerStatus;
    bool              fIsRCore{false};
 
+   // restricted functionality for public use
+   bool              fHttpPublic{false};
+
    void WindowConnect(unsigned connid);
    void WindowData(unsigned connid, const std::string &arg);
    void WindowDisconnect(unsigned connid);
@@ -185,8 +188,12 @@ public:
 
    REveScene *GetWorld() const { return fWorld; }
 
+   REveViewer* GetDefaultViewer() const;
+
    REveViewer *SpawnNewViewer(const char *name, const char *title = "");
    REveScene  *SpawnNewScene (const char *name, const char *title = "");
+
+   void AllowMultipleRemoteConnections(bool loopBack = true, bool useAuthKey = true);
 
    void BeginChange();
    void EndChange();
@@ -277,6 +284,9 @@ public:
 
    void GetServerStatus(REveServerStatus&);
    bool IsRCore() const { return fIsRCore; }
+
+   bool GetHttpPublic() { return fHttpPublic;}
+   void SetHttpPublic(bool);
 };
 
 R__EXTERN REveManager* gEve;

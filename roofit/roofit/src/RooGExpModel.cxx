@@ -519,7 +519,7 @@ double RooGExpModel::calcDecayConv(double sign, double tau, double sig, double r
 
     cFly=1./(MeanTau*MeanTau*root2pi) *
       exp(-(-xp/MeanTau-sig*sig/(2*MeanTau*MeanTau)))
-      *(sig*exp(-1/(2*sig*sig)*TMath::Power((sig*sig/MeanTau+xp),2))
+      *(sig*exp(-1/(2*sig*sig)*std::pow((sig*sig/MeanTau+xp),2))
    -(sig*sig/MeanTau+xp)*(rootpi/root2)*RooMath::erfc(sig/(root2*MeanTau)+xp/(root2*sig)));
 
     if(_nlo) {
@@ -531,14 +531,14 @@ double RooGExpModel::calcDecayConv(double sign, double tau, double sig, double r
    (exp(-a*a)*(sig/MeanTau*root2/rootpi
           -(4*a*sig*sig)/(2*rootpi*MeanTau*MeanTau)
           +(-4/rootpi+8*a*a/rootpi)/6
-          *TMath::Power(sig/(root2*MeanTau),3)
+          *std::pow(sig/(root2*MeanTau),3)
           +2/rootpi*(sig*sig/(MeanTau*MeanTau)+xp/MeanTau)*
           (sig/(root2*MeanTau)-a*(sig*sig)/(2*MeanTau*MeanTau))
           +2/rootpi*((3*sig*sig)/(2*MeanTau*MeanTau)+xp/MeanTau+
-                0.5*TMath::Power(sig*sig/(MeanTau*MeanTau)+xp/MeanTau,2))*sig/(root2*MeanTau))
+                0.5*std::pow(sig*sig/(MeanTau*MeanTau)+xp/MeanTau,2))*sig/(root2*MeanTau))
     -(2*sig*sig/(MeanTau*MeanTau)+xp/MeanTau+(sig*sig/(MeanTau*MeanTau)+xp/MeanTau)*
       (3*sig*sig/(2*MeanTau*MeanTau)+xp/MeanTau)
-      +TMath::Power(sig*sig/(MeanTau*MeanTau)+xp/MeanTau,3)/6)*RooMath::erfc(a));
+      +std::pow(sig*sig/(MeanTau*MeanTau)+xp/MeanTau,3)/6)*RooMath::erfc(a));
     }
 
   } else {
@@ -551,12 +551,12 @@ double RooGExpModel::calcDecayConv(double sign, double tau, double sig, double r
     if (expArg1<300) {
       term1 = exp(expArg1) *RooMath::erfc(sig/(root2*tau)-sign*xp/(root2*sig)) ;
     } else {
-      term1 = exp(expArg1+logErfC(sig/(root2*tau)-sign*xp/(root2*sig))) ; ;
+      term1 = exp(expArg1+logErfC(sig/(root2*tau)-sign*xp/(root2*sig))) ;
     }
     if (expArg2<300) {
       term2 = exp(expArg2) *RooMath::erfc(sig/(root2*rtau)+xp/(root2*sig)) ;
     } else {
-      term2 = exp(expArg2+logErfC(sig/(root2*rtau)+xp/(root2*sig))) ; ;
+      term2 = exp(expArg2+logErfC(sig/(root2*rtau)+xp/(root2*sig))) ;
     }
 
     cFly=(term1+sign*term2)/(2*(tau+sign*rtau));
@@ -603,7 +603,7 @@ double RooGExpModel::calcCoshConv(double sign, double tau, double dgamma, double
     +tau2*(exp(sig*sig/(2*tau2*tau2)-sign*xp/tau2)
      *RooMath::erfc(sig/(root2*tau2)-sign*xp/(root2*sig))
      +sign*exp(sig*sig/(2*rtau*rtau)+xp/rtau)
-     *RooMath::erfc(sig/(root2*rtau)+xp/(root2*sig)))/(2*(tau2+sign*rtau));;
+     *RooMath::erfc(sig/(root2*rtau)+xp/(root2*sig)))/(2*(tau2+sign*rtau));
   return cFly;
 }
 */
@@ -638,7 +638,7 @@ double RooGExpModel::calcSinhConv(double sign, double sign1, double sign2, doubl
     +sign2*tau2*(exp(sig*sig/(2*tau2*tau2)-sign*xp/tau2)
      *RooMath::erfc(sig/(root2*tau2)-sign*xp/(root2*sig))
      +sign*exp(sig*sig/(2*rtau*rtau)+xp/rtau)
-     *RooMath::erfc(sig/(root2*rtau)+xp/(root2*sig)))/(2*(tau2+sign*rtau));;
+     *RooMath::erfc(sig/(root2*rtau)+xp/(root2*sig)))/(2*(tau2+sign*rtau));
   return cFly;
 }
 */

@@ -458,9 +458,15 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout, TTree * data,
    fData = data;
    fCurrentTree = -1;
    fCurrentTreeWeight = 1;
-   fTraining = new TEventList(Form("fTrainingList_%zu",(size_t)this));
+   {
+      TDirectory::TContext ctxt;
+      fTraining = new TEventList(Form("fTrainingList_%zu",(size_t)this));
+   }
    fTrainingOwner = true;
-   fTest = new TEventList(Form("fTestList_%zu",(size_t)this));
+   {
+      TDirectory::TContext ctxt;
+      fTest = new TEventList(Form("fTestList_%zu",(size_t)this));
+   }
    fTestOwner = true;
    fWeight = "1";
    TString testcut = test;
@@ -531,9 +537,15 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout,
    fData = data;
    fCurrentTree = -1;
    fCurrentTreeWeight = 1;
-   fTraining = new TEventList(Form("fTrainingList_%zu",(size_t)this));
+   {
+      TDirectory::TContext ctxt;
+      fTraining = new TEventList(Form("fTrainingList_%zu",(size_t)this));
+   }
    fTrainingOwner = true;
-   fTest = new TEventList(Form("fTestList_%zu",(size_t)this));
+   {
+      TDirectory::TContext ctxt;
+      fTest = new TEventList(Form("fTestList_%zu",(size_t)this));
+   }
    fTestOwner = true;
    fWeight = weight;
    TString testcut = test;
@@ -633,7 +645,10 @@ void TMultiLayerPerceptron::SetTestDataSet(TEventList* test)
 void TMultiLayerPerceptron::SetTrainingDataSet(const char * train)
 {
    if(fTraining && fTrainingOwner) delete fTraining;
-   fTraining = new TEventList(Form("fTrainingList_%zu",(size_t)this));
+   {
+      TDirectory::TContext ctxt;
+      fTraining = new TEventList(Form("fTrainingList_%zu",(size_t)this));
+   }
    fTrainingOwner = true;
    if (fData) {
       fData->Draw(Form(">>fTrainingList_%zu",(size_t)this),train,"goff");
@@ -652,7 +667,10 @@ void TMultiLayerPerceptron::SetTestDataSet(const char * test)
 {
    if(fTest && fTestOwner) {delete fTest; fTest=nullptr;}
    if(fTest) if(strncmp(fTest->GetName(),Form("fTestList_%zu",(size_t)this),10)) delete fTest;
-   fTest = new TEventList(Form("fTestList_%zu",(size_t)this));
+   {
+      TDirectory::TContext ctxt;
+      fTest = new TEventList(Form("fTestList_%zu",(size_t)this));
+   }
    fTestOwner = true;
    if (fData) {
       fData->Draw(Form(">>fTestList_%zu",(size_t)this),test,"goff");

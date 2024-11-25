@@ -61,15 +61,13 @@ public:
   void setPositiveDefinite(bool flag=true){_positiveDefinite=flag;}
   bool positiveDefinite() const {return _positiveDefinite;}
 
-  void setInterpCode(RooAbsReal& param, int code, bool silent=false);
+  void setInterpCode(RooAbsReal& param, int code, bool silent=true);
   void setAllInterpCodes(int code);
   void printAllInterpCodes();
 
   std::list<double>* binBoundaries(RooAbsRealLValue& /*obs*/, double /*xlo*/, double /*xhi*/) const override ;
   std::list<double>* plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const override ;
   bool isBinnedDistribution(const RooArgSet& obs) const override ;
-
-  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
 
 protected:
 
@@ -100,7 +98,11 @@ protected:
   std::vector<int> _interpCode;
 
   double evaluate() const override;
-  void computeBatch(double* output, size_t size, RooFit::Detail::DataMap const&) const override;
+  void doEval(RooFit::EvalContext &) const override;
+
+private:
+
+  void setInterpCodeForParam(int iParam, int code);
 
   ClassDefOverride(PiecewiseInterpolation,4) // Sum of RooAbsReal objects
 };

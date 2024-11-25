@@ -653,10 +653,10 @@ namespace cling {
       // They will seriously confuse the Parser when entering the next
       // source file. So lex until we are EOF.
       Token Tok;
-      Tok.setKind(tok::eof);
+      Tok.setKind(tok::annot_repl_input_end);
       do {
         getCI()->getSema().getPreprocessor().Lex(Tok);
-      } while (Tok.isNot(tok::eof));
+      } while (Tok.isNot(tok::annot_repl_input_end));
 #endif
 
       ParseResultTransaction nestedPRT = endTransaction(nestedT);
@@ -870,10 +870,10 @@ namespace cling {
              nullptr, SourceLocation());
     }
     assert(PP.isIncrementalProcessingEnabled() && "Not in incremental mode!?");
-    PP.enableIncrementalProcessing();
 
     smallstream source_name;
-    source_name << "input_line_" << (m_MemoryBuffers.size() + 1);
+    // FIXME: Pre-increment to avoid failing tests.
+    source_name << "input_line_" << ++InputCount;
 
     // Create an uninitialized memory buffer, copy code in and append "\n"
     size_t InputSize = input.size(); // don't include trailing 0
@@ -891,15 +891,13 @@ namespace cling {
     // candidates for example
     SourceLocation NewLoc = getNextAvailableUniqueSourceLoc();
 
-    llvm::MemoryBuffer* MBNonOwn = MB.get();
-
     // Create FileID for the current buffer.
     FileID FID;
     // Create FileEntry and FileID for the current buffer.
     // Enabling the completion point only works on FileEntries.
-    const clang::FileEntry* FE
-      = SM.getFileManager().getVirtualFile(source_name.str(), InputSize,
-                                           0 /* mod time*/);
+    FileEntryRef FE =
+        SM.getFileManager().getVirtualFileRef(source_name.str(), InputSize,
+                                              0 /* mod time*/);
     SM.overrideFileContents(FE, std::move(MB));
     FID = SM.createFileID(FE, NewLoc, SrcMgr::C_User);
     if (CO.CodeCompletionOffset != -1) {
@@ -909,83 +907,105 @@ namespace cling {
                                 CO.CodeCompletionOffset+1/* 1-based column*/);
     }
 
-    m_MemoryBuffers.push_back(std::make_pair(MBNonOwn, FID));
-
     // NewLoc only used for diags.
     PP.EnterSourceFile(FID, /*DirLookup*/nullptr, NewLoc);
     m_Consumer->getTransaction()->setBufferFID(FID);
 
-    DiagnosticsEngine& Diags = getCI()->getDiagnostics();
+    if (!ParseOrWrapTopLevelDecl())
+      return kFailed;
 
-    FilteringDiagConsumer::RAAI RAAITmp(*m_DiagConsumer, CO.IgnorePromptDiags);
-
-    DiagnosticErrorTrap Trap(Diags);
-    // FIXME: SavePendingInstantiationsRAII should be obsolvete as
-    // GlobalEagerInstantiationScope and LocalEagerInstantiationScope do the
-    // same thing.
-    Sema::SavePendingInstantiationsRAII SavedPendingInstantiations(S);
-    Sema::GlobalEagerInstantiationScope GlobalInstantiations(S, /*Enabled=*/true);
-    Sema::LocalEagerInstantiationScope LocalInstantiations(S);
-
-    Parser::DeclGroupPtrTy ADecl;
-    Sema::ModuleImportState IS = Sema::ModuleImportState::NotACXX20Module;
-    while (!m_Parser->ParseTopLevelDecl(ADecl, IS)) {
-      // If we got a null return and something *was* parsed, ignore it.  This
-      // is due to a top-level semicolon, an action override, or a parse error
-      // skipping something.
-      if (Trap.hasErrorOccurred())
-        m_Consumer->getTransaction()->setIssuedDiags(Transaction::kErrors);
-      if (ADecl)
-        m_Consumer->HandleTopLevelDecl(ADecl.get());
-    };
-    // If never entered the while block, there's a chance an error occured
-    if (Trap.hasErrorOccurred())
-      m_Consumer->getTransaction()->setIssuedDiags(Transaction::kErrors);
-
-    if (CO.CodeCompletionOffset != -1) {
-      assert((int)SM.getFileOffset(PP.getCodeCompletionLoc())
-             == CO.CodeCompletionOffset
-             && "Completion point wrongly set!");
-      assert(PP.isCodeCompletionReached()
-             && "Code completion set but not reached!");
-
-      // Let's ignore this transaction:
-      m_Consumer->getTransaction()->setIssuedDiags(Transaction::kErrors);
-
-      return kSuccess;
+    if (PP.getLangOpts().DelayedTemplateParsing) {
+      // Microsoft-specific:
+      // Late parsed templates can leave unswallowed "macro"-like tokens.
+      // They will seriously confuse the Parser when entering the next
+      // source file. So lex until we are EOF.
+      Token Tok;
+      do {
+        PP.Lex(Tok);
+      } while (Tok.isNot(tok::annot_repl_input_end));
     }
-    LocalInstantiations.perform();
-    GlobalInstantiations.perform();
-#ifdef _WIN32
-    // Microsoft-specific:
-    // Late parsed templates can leave unswallowed "macro"-like tokens.
-    // They will seriously confuse the Parser when entering the next
-    // source file. So lex until we are EOF.
-    Token Tok;
-    Tok.setKind(tok::eof);
-    do {
-      PP.Lex(Tok);
-    } while (Tok.isNot(tok::eof));
-#endif
 
-#ifndef NDEBUG
     Token AssertTok;
     PP.Lex(AssertTok);
-    assert(AssertTok.is(tok::eof) && "Lexer must be EOF when starting incremental parse!");
-#endif
+    assert(AssertTok.is(tok::annot_repl_input_end) &&
+           "Lexer must be EOF when starting incremental parse!");
 
-    // Process any TopLevelDecls generated by #pragma weak.
-    for (llvm::SmallVector<Decl*,2>::iterator I = S.WeakTopLevelDecls().begin(),
-         E = S.WeakTopLevelDecls().end(); I != E; ++I) {
-      m_Consumer->HandleTopLevelDecl(DeclGroupRef(*I));
-    }
-
+    DiagnosticsEngine& Diags = getCI()->getDiagnostics();
     if (m_Consumer->getTransaction()->getIssuedDiags() == Transaction::kErrors)
       return kFailed;
     else if (Diags.getNumWarnings())
       return kSuccessWithWarnings;
 
     return kSuccess;
+  }
+
+  llvm::Expected<bool> IncrementalParser::ParseOrWrapTopLevelDecl() {
+    // Recover resources if we crash before exiting this method.
+    Sema& S = getCI()->getSema();
+    DiagnosticsEngine& Diags = getCI()->getDiagnostics();
+
+    const CompilationOptions& CO =
+        m_Consumer->getTransaction()->getCompilationOpts();
+    FilteringDiagConsumer::RAAI RAAITmp(*m_DiagConsumer, CO.IgnorePromptDiags);
+
+    llvm::CrashRecoveryContextCleanupRegistrar<Sema> CleanupSema(&S);
+    Sema::GlobalEagerInstantiationScope GlobalInstantiations(S, /*Enabled=*/true);
+    Sema::LocalEagerInstantiationScope LocalInstantiations(S);
+
+    // Skip previous eof due to last incremental input.
+    if (m_Parser->getCurToken().is(tok::annot_repl_input_end)) {
+      m_Parser->ConsumeAnyToken();
+    }
+
+    Parser::DeclGroupPtrTy ADecl;
+    Sema::ModuleImportState ImportState;
+    for (bool AtEOF = m_Parser->ParseFirstTopLevelDecl(ADecl, ImportState);
+         !AtEOF; AtEOF = m_Parser->ParseTopLevelDecl(ADecl, ImportState)) {
+      if (ADecl && !m_Consumer->HandleTopLevelDecl(ADecl.get())) {
+        m_Consumer->getTransaction()->setIssuedDiags(Transaction::kErrors);
+        return llvm::make_error<llvm::StringError>(
+            "Parsing failed. "
+            "The consumer rejected a decl",
+            std::error_code());
+      }
+    }
+
+    // If never entered the while block, there's a chance an error occured
+    if (Diags.hasErrorOccurred()) {
+      m_Consumer->getTransaction()->setIssuedDiags(Transaction::kErrors);
+      // Diags.Reset(/*soft=*/true);
+      // Diags.getClient()->clear();
+      return llvm::make_error<llvm::StringError>("Parsing failed.",
+                                                 std::error_code());
+    }
+
+    if (CO.CodeCompletionOffset != -1) {
+#ifndef NDEBUG
+      Preprocessor& PP = m_CI->getPreprocessor();
+      SourceManager& SM = getCI()->getSourceManager();
+      assert((int)SM.getFileOffset(PP.getCodeCompletionLoc())
+             == CO.CodeCompletionOffset
+             && "Completion point wrongly set!");
+      assert(PP.isCodeCompletionReached()
+             && "Code completion set but not reached!");
+#endif
+
+      // Let's ignore this transaction:
+      m_Consumer->getTransaction()->setIssuedDiags(Transaction::kErrors);
+
+      return true;
+    }
+
+    // Process any TopLevelDecls generated by #pragma weak.
+    for (Decl* D : S.WeakTopLevelDecls()) {
+      DeclGroupRef DGR(D);
+      m_Consumer->HandleTopLevelDecl(DGR);
+    }
+
+    LocalInstantiations.perform();
+    GlobalInstantiations.perform();
+
+    return true;
   }
 
   void IncrementalParser::printTransactionStructure() const {

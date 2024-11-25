@@ -18,7 +18,7 @@ from functools import singledispatch
 from typing import Iterable, Set, Tuple
 
 import ROOT
-from ROOT._pythonization._rdataframe import AsNumpyResult
+from ROOT._pythonization._rdataframe import AsNumpyResult, _clone_asnumpyresult
 
 from DistRDF.PythonMergeables import SnapshotResult
 
@@ -254,11 +254,7 @@ def clone_action(result_promise, _):
 
 @clone_action.register(AsNumpyResult)
 def _(asnumpyres, _):
-    asnumpyres._result_ptrs = {
-        col: ROOT.Internal.RDF.CloneResultAndAction(ptr)
-        for (col, ptr) in asnumpyres._result_ptrs.items()
-    }
-    return asnumpyres
+    return _clone_asnumpyresult(asnumpyres)
 
 
 @clone_action.register(SnapshotResult)

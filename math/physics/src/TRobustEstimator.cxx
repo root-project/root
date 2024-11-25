@@ -10,6 +10,7 @@
  *************************************************************************/
 
 /** \class TRobustEstimator
+    \note Despite being in the group of Legacy statistics classes, TRobustEstimator is still useful and no drop-in replacement exists for it.
     \ingroup Physics
 Minimum Covariance Determinant Estimator - a Fast Algorithm
 invented by Peter J.Rousseeuw and Katrien Van Dreissen
