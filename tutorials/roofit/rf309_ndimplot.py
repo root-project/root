@@ -42,7 +42,7 @@ hh_data = data.createHistogram("x,y", x, Binning=20, YVar=dict(var=y, Binning=20
 # Create and fill ROOT 2D histogram (50x50 bins) with sampling of pdf
 # hh_pdf = model.createHistogram("hh_model", x, Binning=50, YVar=dict(var=y, Binning=50))
 hh_pdf = model.createHistogram("x,y", 50, 50)
-hh_pdf.SetLineColor(ROOT.kBlue)
+hh_pdf.SetLineColor("kBlue")
 
 # Create 3D model and dataset
 # -----------------------------------------------------
@@ -76,7 +76,7 @@ hh_pdf3 = model3.createHistogram(
     YVar=dict(var=y, Binning=20),
     ZVar=dict(var=z, Binning=20),
 )
-hh_pdf3.SetFillColor(ROOT.kBlue)
+hh_pdf3.SetFillColor("kBlue")
 
 c1 = ROOT.TCanvas("rf309_2dimplot", "rf309_2dimplot", 800, 800)
 c1.Divide(2, 2)

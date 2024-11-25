@@ -80,8 +80,8 @@ hh_data = data2.createHistogram("hh_data", x, Binning=10, YVar=dict(var=y, Binni
 # Create histogram of the 2d kernel estimation pdfs
 hh_pdf = kest4.createHistogram("hh_pdf", x, Binning=25, YVar=dict(var=y, Binning=25))
 hh_pdf2 = kest5.createHistogram("hh_pdf2", x, Binning=25, YVar=dict(var=y, Binning=25))
-hh_pdf.SetLineColor(ROOT.kBlue)
-hh_pdf2.SetLineColor(ROOT.kMagenta)
+hh_pdf.SetLineColor("kBlue")
+hh_pdf2.SetLineColor("kMagenta")
 
 c = ROOT.TCanvas("rf707_kernelestimation", "rf707_kernelestimation", 800, 800)
 c.Divide(2, 2)

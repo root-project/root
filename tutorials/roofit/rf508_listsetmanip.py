@@ -68,7 +68,7 @@ aptr = s.find("a")
 subset1 = s.selectByName("a,b,c")
 
 # Construct asubset by attribute
-subset2 = s.selectByAttrib("Constant", ROOT.kTRUE)
+subset2 = s.selectByAttrib("Constant", True)
 
 # Construct the subset of overlapping contents with another set
 s1 = ROOT.RooArgSet(a, b, c)

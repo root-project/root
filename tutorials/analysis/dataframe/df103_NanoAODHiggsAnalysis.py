@@ -206,23 +206,23 @@ def plot(sig, bkg, data, x_label, filename):
     h_cmb.GetXaxis().SetTitleSize(0.04)
     h_cmb.GetYaxis().SetTitle("N_{Events}")
     h_cmb.GetYaxis().SetTitleSize(0.04)
-    h_cmb.SetLineColor(ROOT.kRed)
+    h_cmb.SetLineColor("kRed")
     h_cmb.SetLineWidth(2)
     h_cmb.SetMaximum(18)
     h_cmb.SetStats(False)
 
     h_bkg.SetLineWidth(2)
     h_bkg.SetFillStyle(1001)
-    h_bkg.SetLineColor(ROOT.kBlack)
-    h_bkg.SetFillColor(ROOT.kAzure - 9)
+    h_bkg.SetLineColor("black")
+    h_bkg.SetFillColor("kAzure-9")
 
     # Get histogram of data points
     h_data = data.Clone()
     h_data.SetLineWidth(1)
     h_data.SetMarkerStyle(20)
     h_data.SetMarkerSize(1.0)
-    h_data.SetMarkerColor(ROOT.kBlack)
-    h_data.SetLineColor(ROOT.kBlack)
+    h_data.SetMarkerColor("black")
+    h_data.SetLineColor("black")
 
     # Draw histograms
     h_cmb.Draw("HIST")

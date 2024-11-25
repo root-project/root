@@ -77,7 +77,7 @@ hh_eff = effFunc.createHistogram("hh_eff", x, Binning=50, YVar=dict(var=y, Binni
 hh_data_all.SetMinimum(0)
 hh_data_sel.SetMinimum(0)
 hh_eff.SetMinimum(0)
-hh_eff.SetLineColor(ROOT.kBlue)
+hh_eff.SetLineColor("kBlue")
 
 # Draw all frames on a canvas
 ca = ROOT.TCanvas("rf702_efficiency_2D", "rf702_efficiency_2D", 1200, 400)

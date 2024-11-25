@@ -63,7 +63,7 @@ hh = model.createHistogram(
     ConditionalObservables={mean},
 )
 hh.SetTitle("histogram of model(x|mean)")
-hh.SetLineColor(ROOT.kBlue)
+hh.SetLineColor("kBlue")
 
 # Draw frame on canvas
 c = ROOT.TCanvas("rf211_paramconv", "rf211_paramconv", 800, 400)

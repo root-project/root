@@ -54,7 +54,7 @@ decay_gm.fitTo(data, ConditionalObservables={dterr}, PrintLevel=-1)
 
 # Make two-dimensional plot of conditional pdf in (dt,dterr)
 hh_decay = decay_gm.createHistogram("hh_decay", dt, Binning=50, YVar=dict(var=dterr, Binning=50))
-hh_decay.SetLineColor(ROOT.kBlue)
+hh_decay.SetLineColor("kBlue")
 
 # Plot decay_gm(dt|dterr) at various values of dterr
 frame = dt.frame(Title="Slices of decay(dt|dterr) at various dterr")

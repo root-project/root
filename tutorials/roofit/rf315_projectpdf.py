@@ -67,7 +67,7 @@ modelx.plotOn(frame)
 
 # Make 2D histogram of model(x,y)
 hh = model.createHistogram("x,y")
-hh.SetLineColor(ROOT.kBlue)
+hh.SetLineColor("kBlue")
 
 c = ROOT.TCanvas("rf315_projectpdf", "rf315_projectpdf", 800, 400)
 c.Divide(2)

@@ -51,7 +51,7 @@ model.plotOn(yframe)
 
 # Make two-dimensional plot in x vs y
 hh_model = model.createHistogram("hh_model", x, Binning=50, YVar=dict(var=y, Binning=50))
-hh_model.SetLineColor(ROOT.kBlue)
+hh_model.SetLineColor("kBlue")
 
 # Make canvas and draw ROOT.RooPlots
 c = ROOT.TCanvas("rf301_composition", "rf301_composition", 1200, 400)

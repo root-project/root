@@ -232,7 +232,7 @@ h_higgs = histos[1].GetValue().Clone()
 h_zz = histos[2].GetValue().Clone()
 h_other = histos[3].GetValue().Clone()
 
-for h, color in zip([h_other, h_zz, h_higgs], [ROOT.kViolet - 9, ROOT.kAzure - 9, ROOT.kRed + 2]):
+for h, color in zip([h_other, h_zz, h_higgs], ["kViolet-9", "kAzure-9", "kRed+2"]):
     h.SetLineWidth(1)
     h.SetLineColor(1)
     h.SetFillColor(color)
@@ -250,19 +250,19 @@ stack.SetMaximum(35)
 stack.GetYaxis().ChangeLabel(1, -1, 0)
 
 # Draw MC scale factor and variations
-histos_mc["nominal"].SetFillColor(ROOT.kBlack)
+histos_mc["nominal"].SetFillColor("black")
 histos_mc["nominal"].SetFillStyle(3254)
 h_nominal = histos_mc["nominal"].DrawClone("E2 same")
-histos_mc["weight:up"].SetLineColor(ROOT.kGreen + 2)
+histos_mc["weight:up"].SetLineColor("kGreen+2")
 h_weight_up = histos_mc["weight:up"].DrawClone("HIST SAME")
-histos_mc["weight:down"].SetLineColor(ROOT.kBlue + 2)
+histos_mc["weight:down"].SetLineColor("kBlue+2")
 h_weight_down = histos_mc["weight:down"].DrawClone("HIST SAME")
 
 # Draw data histogram
 h_data.SetMarkerStyle(20)
 h_data.SetMarkerSize(1.2)
 h_data.SetLineWidth(2)
-h_data.SetLineColor(ROOT.kBlack)
+h_data.SetLineColor("black")
 h_data.Draw("E SAME")  # Draw raw data with errorbars
 
 # Add legend
