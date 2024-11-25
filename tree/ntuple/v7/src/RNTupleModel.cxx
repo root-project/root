@@ -269,12 +269,12 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleMod
    cloneModel->fModelId = GetNewModelId();
    // For a frozen model, we can keep the schema id because adding new fields is forbidden. It is reset in Unfreeze()
    // if called by the user.
-   if (fIsFrozen) {
+   if (IsFrozen()) {
       cloneModel->fSchemaId = fSchemaId;
    } else {
       cloneModel->fSchemaId = cloneModel->fModelId;
    }
-   cloneModel->fIsFrozen = fIsFrozen;
+   cloneModel->fModelState = fModelState;
    cloneModel->fFieldNames = fFieldNames;
    cloneModel->fDescription = fDescription;
    cloneModel->fProjectedFields = fProjectedFields->Clone(*cloneModel);
@@ -504,12 +504,12 @@ void ROOT::Experimental::RNTupleModel::Unfreeze()
       fDefaultEntry->fModelId = fModelId;
       fDefaultEntry->fSchemaId = fSchemaId;
    }
-   fIsFrozen = false;
+   fModelState = EState::kBuilding;
 }
 
 void ROOT::Experimental::RNTupleModel::Freeze()
 {
-   fIsFrozen = true;
+   fModelState = EState::kFrozen;
 }
 
 void ROOT::Experimental::RNTupleModel::SetDescription(std::string_view description)

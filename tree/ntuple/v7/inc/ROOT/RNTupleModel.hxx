@@ -194,6 +194,12 @@ public:
    };
 
 private:
+   // The states a model can be in. Possible transitions are between kBuilding and kFrozen.
+   enum class EState {
+      kBuilding,
+      kFrozen
+   };
+
    /// Hierarchy of fields consisting of simple types and collections (sub trees)
    std::unique_ptr<RFieldZero> fFieldZero;
    /// Contains field values corresponding to the created top-level fields, as well as registered subfields
@@ -212,7 +218,7 @@ private:
    /// Models have a separate schema ID to remember that the clone of a frozen model still has the same schema.
    std::uint64_t fSchemaId = 0;
    /// Changed by Freeze() / Unfreeze() and by the RUpdater.
-   bool fIsFrozen = false;
+   EState fModelState = EState::kBuilding;
 
    /// Checks that user-provided field names are valid in the context of this RNTuple model.
    /// Throws an RException for invalid names, empty names (which is reserved for the zero field) and duplicate field
@@ -361,7 +367,7 @@ public:
 
    void Freeze();
    void Unfreeze();
-   bool IsFrozen() const { return fIsFrozen; }
+   bool IsFrozen() const { return fModelState == EState::kFrozen; }
    bool IsBare() const { return !fDefaultEntry; }
    std::uint64_t GetModelId() const { return fModelId; }
    std::uint64_t GetSchemaId() const { return fSchemaId; }
