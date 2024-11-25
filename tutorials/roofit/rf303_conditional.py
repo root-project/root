@@ -17,6 +17,9 @@ import ROOT
 
 
 def makeFakeDataXY():
+
+    trnd = ROOT.TRandom3()
+
     x = ROOT.RooRealVar("x", "x", -10, 10)
     y = ROOT.RooRealVar("y", "y", -10, 10)
     coord = {x, y}
@@ -24,8 +27,8 @@ def makeFakeDataXY():
     d = ROOT.RooDataSet("d", "d", coord)
 
     for i in range(10000):
-        tmpy = ROOT.gRandom.Gaus(0, 10)
-        tmpx = ROOT.gRandom.Gaus(0.5 * tmpy, 1)
+        tmpy = trnd.Gaus(0, 10)
+        tmpx = trnd.Gaus(0.5 * tmpy, 1)
         if (abs(tmpy) < 10) and (abs(tmpx) < 10):
             x.setVal(tmpx)
             y.setVal(tmpy)

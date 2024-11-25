@@ -14,6 +14,7 @@
 import ROOT
 import math
 
+trnd = ROOT.TRandom3()
 
 # Create dataset with X and Y values
 # -------------------------------------------------------------------
@@ -35,7 +36,7 @@ for i in range(10):
     x.setError((0.5 / 1.0) if (i < 5) else (1.0 / 1.0))
 
     # Set Y value and error
-    y.setVal(x.getVal() * x.getVal() + 4 * abs(ROOT.gRandom.Gaus()))
+    y.setVal(x.getVal() * x.getVal() + 4 * abs(trnd.Gaus()))
     y.setError(math.sqrt(y.getVal()))
 
     dxy.add({x, y})
