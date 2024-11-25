@@ -39,91 +39,128 @@ a tree as described above if performance is not an issue or when dealing with
 a small dataset. To read and process the entries of a tree in a much faster
 way, please use ROOT::RDataFrame.
 
-Second, a couple of TTree methods have been modified to facilitate their use
-from Python: TTree::Branch and TTree::SetBranchAddress.
+Two methods of TTree have been pythonised to facilitate their: TTree::Branch and 
+TTree::SetBranchAddress.
 
-Regarding TTree::Branch, the following example shows how we can create
-different types of branches of a TTree. Note that `Branch` will just link
-the new branch with a given Python object, so it is still necessary to fill
-such object with the desired content before calling TTree::Fill.
+### Pythonisation of TTree::Branch
+
+The following example shows how we can create different types of branches of a TTree. 
+`Branch` links the new branch with a given Python object. It is therefore possible to 
+fill such object with the desired content before calling TTree::Fill.
+
 \code{.py}
 from array import array
 import numpy as np
 import ROOT
-from ROOT import addressof
 
-# Basic type branch (float) - use array of length 1
-n = array('f', [ 1.5 ])
-t.Branch('floatb', n, 'floatb/F')
+# We create the file and the tree
+with ROOT.TFile("outfile.root", "RECREATE") as ofile:
+    t = ROOT.TTree("mytree", "mytree")
 
-# Array branch - use array of length N
-N = 10
-a = array('d', N*[ 0. ])
-t.Branch('arrayb', a, 'arrayb[' + str(N) + ']/D')
+    # Basic type branch (float) - use array of length 1
+    n = array('f', [ 1.5 ])
+    t.Branch('floatb', n, 'floatb/F')
 
-# Array branch - use NumPy array of length N
-npa = np.array(N*[ 0. ])
-t.Branch('nparrayb', npa, 'nparrayb[' + str(N) + ']/D')
+    # Array branch - use array of length N
+    N = 10
+    a = array('d', N*[ 0. ])
+    t.Branch('arrayb', a, 'arrayb[' + str(N) + ']/D')
 
-# std::vector branch
-v = ROOT.std.vector('double')(N*[ 0. ])
-t.Branch('vectorb0', v)
+    # Array branch - use NumPy array of length N
+    npa = np.array(N*[ 0. ])
+    t.Branch('nparrayb', npa, 'nparrayb[' + str(N) + ']/D')
 
-# Class branch / struct in single branch
-cb = ROOT.MyClass()
-t.Branch('classb', cb)
+    # std::vector branch
+    v = ROOT.std.vector('double')(N*[ 0. ])
+    t.Branch('vectorb0', v)
 
-# Struct as leaflist
-# Assuming:
-# struct MyStruct {
-#   int myint;
-#   float myfloat;
-# };
-ms = ROOT.MyStruct()
-t.Branch('structll', ms, 'myint/I:myfloat/F')
+    # Class branch / struct in single branch
+    cb = ROOT.TH1D("myHisto", "myHisto", 64, -4, 4)
+    # This could have been any class known to ROOT, also custom
+    #cb = ROOT.MyCustomClass()
+    t.Branch('classb', cb)
 
-# Store struct members individually
-ms = ROOT.MyStruct()
-# Use `addressof` to get the address of the struct members
-t.Branch('myintb', addressof(ms, 'myint'), 'myint/I')
-t.Branch('myfloatb', addressof(ms, 'myfloat'), 'myfloat/F')
+    # Struct as leaflist. This is interpreted on the fly,
+    # but could be known to ROOT by other means, such as 
+    # header inclusion or dictionary load.
+    ROOT.gInterpreter.Declare('''
+    struct MyStruct {
+    int myint;
+    float myfloat;
+    };
+    ''')
+    ms = ROOT.MyStruct()
+    t.Branch('structll', ms, 'myint/I:myfloat/F')
+
+    # Store struct members individually
+    ms = ROOT.MyStruct()
+    # Use the `addressof` function in the ROOT module 
+    # to get the address of the struct members
+    t.Branch('myintb', ROOT.addressof(ms, 'myint'), 'myint/I')
+    t.Branch('myfloatb', ROOT.addressof(ms, 'myfloat'), 'myfloat/F')
+
+    # Let's write one entry in our tree
+    t.Fill()
+    # Finally flush the content of the tree to the file
+    t.Write()
 \endcode
 
-Concerning TTree::SetBranchAddress, below is an example of prepare
-the reading of different types of branches of a TTree. Note that
-`SetBranchAddress` will just link a given branch with a certain
-Python object; after that, in order to read the content of such
+### Pythonisation of TTree::SetBranchAddress
+
+This section is to be considered for advanced users. Simple event 
+loops reading tree entries in Python can be performed as shown above.
+
+Below an example is shown of reading different types tree branches.
+Note that `SetBranchAddress` will just link a given branch with a 
+certain Python object; after that, in order to read the content of such
 branch for a given TTree entry `x`, TTree::GetEntry(x) must be
 invoked.
+
 \code{.py}
 from array import array
 import numpy as np
 import ROOT
 
-# Basic type branch (float) - use array of length 1
-n = array('f', [ 0. ])
-t.SetBranchAddress('floatb', n)
+with ROOT.TFile('outfile.root') as infile:
 
-# Array branch - use array of length N
-N = 10
-a = array('d', N*[ 0. ])
-t.SetBranchAddress('arrayb', a)
+    t = infile['mytree']
 
-# Array branch - use NumPy array of length N
-npa = np.array(N*[ 0. ])
-t.SetBranchAddress('nparrayb', a)
+    # Basic type branch (float) - use array of length 1
+    n = array('f', [ 0. ])
+    t.SetBranchAddress('floatb', n)
 
-# std::vector branch
-v = ROOT.std.vector('double')()
-t.SetBranchAddress('vectorb', v)
+    # Array branch - use array of length N
+    N = 10
+    a = array('d', N*[ 0. ])
+    t.SetBranchAddress('arrayb', a)
 
-# Class branch
-cb = ROOT.MyClass()
-t.SetBranchAddress('classb', cb)
+    # Array branch - use NumPy array of length N
+    npa = np.array(N*[ 0. ])
+    t.SetBranchAddress('nparrayb', a)
 
-# Struct branch (both single-branch and leaf list)
-ms = ROOT.MyStruct()
-ds.SetBranchAddress('structb', ms)
+    # std::vector branch
+    v = ROOT.std.vector('double')()
+    t.SetBranchAddress('vectorb', v)
+
+    # Class branch
+    cb = ROOT.TH1D()
+    # Any other class known to ROOT would have worked
+    #cb = ROOT.MyClass()
+    t.SetBranchAddress('classb', cb)
+
+    # Struct as leaflist. This is interpreted on the fly,
+    # but could be known to ROOT by other means, such as 
+    # header inclusion or dictionary load.
+    ROOT.gInterpreter.Declare('''
+    struct MyStruct {
+    int myint;
+    float myfloat;
+    };
+    ''')
+    ms = ROOT.MyStruct()
+    t.SetBranchAddress('structll', ms)
+
+    t.GetEntry(0)
 \endcode
 \htmlonly
 </div>
