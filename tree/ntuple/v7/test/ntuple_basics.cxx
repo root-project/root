@@ -4,11 +4,11 @@ TEST(RNTuple, ReconstructModel)
 {
    FileRaii fileGuard("test_ntuple_reconstruct.root");
    auto model = RNTupleModel::Create();
-   auto fieldPt = model->MakeField<float>("pt", 42.0);
-   auto fieldNnlo = model->MakeField<std::vector<std::vector<float>>>("nnlo");
-   auto fieldKlass = model->MakeField<CustomStruct>("klass");
-   auto fieldArray = model->MakeField<std::array<double, 2>>("array");
-   auto fieldVariant = model->MakeField<std::variant<double, std::variant<std::string, double>>>("variant");
+   *model->MakeField<float>("pt") = 42.0;
+   model->MakeField<std::vector<std::vector<float>>>("nnlo");
+   model->MakeField<CustomStruct>("klass");
+   model->MakeField<std::array<double, 2>>("array");
+   model->MakeField<std::variant<double, std::variant<std::string, double>>>("variant");
    model->Freeze();
    {
       RPageSinkFile sink("myNTuple", fileGuard.GetPath(), RNTupleWriteOptions());
@@ -63,13 +63,13 @@ TEST(RNTuple, MultipleInFile)
    auto file = TFile::Open(fileGuard.GetPath().c_str(), "RECREATE");
    {
       auto model = RNTupleModel::Create();
-      auto fieldPt = model->MakeField<float>("pt", 42.0);
+      *model->MakeField<float>("pt") = 42.0;
       auto ntuple = RNTupleWriter::Append(std::move(model), "first", *file);
       ntuple->Fill();
    }
    {
       auto model = RNTupleModel::Create();
-      auto fieldPt = model->MakeField<float>("E", 1.0);
+      *model->MakeField<float>("E") = 1.0;
       auto ntuple = RNTupleWriter::Append(std::move(model), "second", *file);
       ntuple->Fill();
    }
@@ -100,10 +100,10 @@ TEST(RNTuple, WriteRead)
    FileRaii fileGuard("test_ntuple_writeread.root");
 
    auto modelWrite = RNTupleModel::Create();
-   auto wrSignal = modelWrite->MakeField<bool>("signal", true);
-   auto wrPt = modelWrite->MakeField<float>("pt", 42.0);
-   auto wrEnergy = modelWrite->MakeField<float>("energy", 7.0);
-   auto wrTag = modelWrite->MakeField<std::string>("tag", "xyz");
+   *modelWrite->MakeField<bool>("signal") = true;
+   *modelWrite->MakeField<float>("pt") = 42.0;
+   *modelWrite->MakeField<float>("energy") = 7.0;
+   *modelWrite->MakeField<std::string>("tag") = "xyz";
    auto wrJets = modelWrite->MakeField<std::vector<float>>("jets");
    wrJets->push_back(1.0);
    wrJets->push_back(2.0);
@@ -204,14 +204,14 @@ TEST(RNTuple, FileAnchor)
 
    {
       auto model = RNTupleModel::Create();
-      model->MakeField<int>("a", 42);
+      *model->MakeField<int>("a") = 42;
       auto writer = RNTupleWriter::Recreate(std::move(model), "A", fileGuard.GetPath());
       writer->Fill();
    }
 
    {
       auto model = RNTupleModel::Create();
-      model->MakeField<int>("b", 137);
+      *model->MakeField<int>("b") = 137;
       auto f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "UPDATE"));
       {
          auto writer = RNTupleWriter::Append(std::move(model), "B", *f);
@@ -242,8 +242,8 @@ TEST(RNTuple, Clusters)
    FileRaii fileGuard("test_ntuple_clusters.root");
 
    auto modelWrite = RNTupleModel::Create();
-   auto wrPt = modelWrite->MakeField<float>("pt", 42.0);
-   auto wrTag = modelWrite->MakeField<std::string>("tag", "xyz");
+   auto wrPt = modelWrite->MakeField<float>("pt");
+   auto wrTag = modelWrite->MakeField<std::string>("tag");
    auto wrNnlo = modelWrite->MakeField<std::vector<std::vector<float>>>("nnlo");
    auto wrFourVec = modelWrite->MakeField<std::array<float, 4>>("fourVec");
    wrNnlo->push_back(std::vector<float>());
@@ -259,6 +259,8 @@ TEST(RNTuple, Clusters)
 
    {
       auto writer = RNTupleWriter::Recreate(std::move(modelWrite), "myNTuple", fileGuard.GetPath());
+      *wrPt = 42.0;
+      *wrTag = "xyz";
       writer->Fill();
       writer->CommitCluster();
       *wrPt = 24.0;
@@ -317,7 +319,7 @@ TEST(RNTuple, ClusterEntries)
 {
    FileRaii fileGuard("test_ntuple_cluster_entries.root");
    auto model = RNTupleModel::Create();
-   auto field = model->MakeField<float>({"pt", "transverse momentum"}, 42.0);
+   *model->MakeField<float>({"pt", "transverse momentum"}) = 42.0;
 
    {
       RNTupleWriteOptions opt;
@@ -338,7 +340,7 @@ TEST(RNTuple, ClusterEntriesAuto)
 {
    FileRaii fileGuard("test_ntuple_cluster_entries_auto.root");
    auto model = RNTupleModel::Create();
-   auto field = model->MakeField<float>({"pt", "transverse momentum"}, 42.0);
+   model->MakeField<float>({"pt", "transverse momentum"});
 
    {
       RNTupleWriteOptions options;
@@ -362,7 +364,7 @@ TEST(RNTuple, ClusterEntriesAutoStatus)
    FileRaii fileGuard("test_ntuple_cluster_entries_auto_status.root");
    {
       auto model = RNTupleModel::CreateBare();
-      auto field = model->MakeField<float>({"pt", "transverse momentum"}, 42.0);
+      model->MakeField<float>({"pt", "transverse momentum"});
 
       int FlushClusterCalled = 0;
       RNTupleFillStatus status;
@@ -393,7 +395,7 @@ TEST(RNTuple, PageSize)
 {
    FileRaii fileGuard("test_ntuple_elements_per_page.root");
    auto model = RNTupleModel::Create();
-   auto field = model->MakeField<float>({"pt", "transverse momentum"}, 42.0);
+   *model->MakeField<float>({"pt", "transverse momentum"}) = 42.0;
 
    {
       RNTupleWriteOptions opt;
@@ -596,7 +598,7 @@ TEST(RNTuple, ReadCallback)
    FileRaii fileGuard("test_ntuple_readcb.ntuple");
    {
       auto model = RNTupleModel::Create();
-      auto fieldI32 = model->MakeField<std::int32_t>("i32", 0);
+      auto fieldI32 = model->MakeField<std::int32_t>("i32");
       auto fieldKlass = model->MakeField<CustomStruct>("klass");
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
       fieldKlass->a = 42.0;

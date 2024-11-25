@@ -42,10 +42,10 @@ TEST(RPageStorageFriends, Basic)
    FileRaii fileGuard2("test_ntuple_friends_basic2.root");
 
    auto model1 = RNTupleModel::Create();
-   auto fieldPt = model1->MakeField<float>("pt", 42.0);
+   auto fieldPt = model1->MakeField<float>("pt");
 
    auto model2 = RNTupleModel::Create();
-   auto fieldEta = model2->MakeField<float>("eta", 24.0);
+   auto fieldEta = model2->MakeField<float>("eta");
 
    {
       auto ntuple = RNTupleWriter::Recreate(std::move(model1), "ntpl1", fileGuard1.GetPath());
@@ -127,7 +127,7 @@ TEST(RPageStorageFriends, FailOnEntryCountMismatch)
    FileRaii fileGuard2("test_ntuple_friends_count2.root");
 
    auto model1 = RNTupleModel::Create();
-   auto fieldPt = model1->MakeField<float>("pt", 42.0);
+   auto fieldPt = model1->MakeField<float>("pt");
    auto model2 = RNTupleModel::Create();
 
    {

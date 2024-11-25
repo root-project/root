@@ -8,9 +8,9 @@ void CreateCorruptedRNTuple(const std::string &uri)
    options.SetCompression(0);
 
    auto model = RNTupleModel::Create();
-   model->MakeField<float>("px", 1.0);
-   model->MakeField<float>("py", 2.0);
-   model->MakeField<float>("pz", 3.0);
+   *model->MakeField<float>("px") = 1.0;
+   *model->MakeField<float>("py") = 2.0;
+   *model->MakeField<float>("pz") = 3.0;
    model->Freeze();
    auto modelClone = model->Clone(); // required later to write the corrupted version
    auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", uri, options);
