@@ -1294,7 +1294,6 @@ try_again:
          // chrome creates dummy html file with mostly no content
          // problem running chrome from /tmp directory, lets try work from home directory
 
-         printf("Handle chrome workaround\n");
          chrome_tmp_workaround = true;
          goto try_again;
       }
@@ -1315,29 +1314,34 @@ try_again:
             p = p2 + 6;
             std::ofstream ofs(fnames[n]);
             if ((p1 != std::string::npos) && (p2 != std::string::npos) && (p1 < p2)) {
-               ofs << dumpcont.substr(p1, p2-p1+6);
-               ::Info("ProduceImages", "SVG file %s size %d bytes has been created", fnames[n].c_str(), (int) (p2-p1+6));
+               if (p2 - p1 > 10) {
+                  ofs << dumpcont.substr(p1, p2 - p1 + 6);
+                  ::Info("ProduceImages", "SVG file %s size %d bytes has been created", fnames[n].c_str(), (int) (p2 - p1 + 6));
+               } else {
+                  ::Error("ProduceImages", "Failure producing %s", fnames[n].c_str());
+               }
             } else {
-               R__LOG_ERROR(WebGUILog()) << "Fail to extract SVG from HTML dump " << dump_name;
-               ofs << "Failure!!!\n" << dumpcont;
+               ::Error("ProduceImages", "Fail to extract %s from HTML dump", fnames[n].c_str());
                return false;
             }
          } else {
-            auto p1 = dumpcont.find(";base64,", p);
+            auto p0 = dumpcont.find("<img src=", p);
+            auto p1 = dumpcont.find(";base64,", p0 + 8);
             auto p2 = dumpcont.find("></div>", p1 + 4);
             p = p2 + 5;
 
-            if ((p1 != std::string::npos) && (p2 != std::string::npos) && (p1 < p2)) {
+            if ((p0 != std::string::npos) && (p1 != std::string::npos) && (p2 != std::string::npos) && (p1 < p2)) {
                auto base64 = dumpcont.substr(p1+8, p2-p1-9);
-               auto binary = TBase64::Decode(base64.c_str());
-
-               std::ofstream ofs(fnames[n], std::ios::binary);
-               ofs.write(binary.Data(), binary.Length());
-
-               ::Info("ProduceImages", "Image file %s size %d bytes has been created", fnames[n].c_str(), (int) binary.Length());
+               if ((base64 == "failure") || (base64.length() < 10)) {
+                  ::Error("ProduceImages", "Failure producing %s", fnames[n].c_str());
+               } else {
+                  auto binary = TBase64::Decode(base64.c_str());
+                  std::ofstream ofs(fnames[n], std::ios::binary);
+                  ofs.write(binary.Data(), binary.Length());
+                  ::Info("ProduceImages", "Image file %s size %d bytes has been created", fnames[n].c_str(), (int) binary.Length());
+               }
             } else {
-               R__LOG_ERROR(WebGUILog()) << "Fail to extract image from dump HTML code " << dump_name;
-
+               ::Error("ProduceImages", "Fail to extract %s from HTML dump", fnames[n].c_str());
                return false;
             }
          }
