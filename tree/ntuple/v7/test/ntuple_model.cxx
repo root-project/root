@@ -316,3 +316,51 @@ TEST(RNTupleModel, CloneRegisteredSubfield)
    auto clone = model->Clone();
    EXPECT_TRUE(clone->GetDefaultEntry().GetPtr<float>("struct.a"));
 }
+
+TEST(RNTupleModel, Retire)
+{
+   auto model = RNTupleModel::Create();
+   model->MakeField<CustomStruct>("struct")->a = 1.0;
+
+   try {
+      model->Retire();
+      FAIL() << "attempting retire unfrozen model should fail";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("invalid attempt to retire unfrozen model"));
+   }
+
+   model->Freeze();
+   model->Retire();
+
+   EXPECT_EQ(0u, model->GetModelId());
+   EXPECT_NE(0, model->GetSchemaId());
+   auto clone = model->Clone();
+   EXPECT_NE(0, clone->GetModelId());
+   EXPECT_EQ(model->GetSchemaId(), clone->GetSchemaId());
+
+   auto token = model->GetToken("struct");
+   EXPECT_FLOAT_EQ(1.0, model->GetDefaultEntry().GetPtr<CustomStruct>(token)->a);
+
+   EXPECT_TRUE(model->GetRegisteredSubfields().empty());
+   EXPECT_TRUE(model->GetDescription().empty());
+
+   EXPECT_THROW(model->MakeField<float>("E"), RException);
+   EXPECT_THROW(model->AddField(RFieldBase::Create("E", "float").Unwrap()), RException);
+   EXPECT_THROW(model->RegisterSubfield("struct.a"), RException);
+   EXPECT_THROW(model->AddProjectedField(RFieldBase::Create("a", "float").Unwrap(),
+                                         [](const std::string &) { return "struct.a"; }),
+                RException);
+   EXPECT_THROW(model->CreateEntry(), RException);
+   EXPECT_THROW(model->CreateBareEntry(), RException);
+   EXPECT_THROW(model->CreateBulk("struct"), RException);
+   EXPECT_THROW(model->GetMutableFieldZero(), RException);
+   EXPECT_THROW(model->GetMutableField("struct"), RException);
+   EXPECT_THROW(model->SetDescription("x"), RException);
+
+   FileRaii fileGuard("test_ntuple_model_retire.root");
+   EXPECT_THROW(RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath()), RException);
+   auto writer = RNTupleWriter::Recreate(std::move(clone), "ntpl", fileGuard.GetPath());
+   writer.reset();
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   EXPECT_EQ(0u, reader->GetNEntries());
+}
