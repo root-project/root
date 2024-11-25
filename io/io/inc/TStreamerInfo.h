@@ -251,7 +251,7 @@ public:
    Int_t               WriteBufferAux      (TBuffer &b, const T &arr, TCompInfo *const*const compinfo, Int_t first, Int_t last, Int_t narr,Int_t eoffset,Int_t mode);
 
    //WARNING this class version must be the same as TVirtualStreamerInfo
-   ClassDefOverride(TStreamerInfo,9)  //Streamer information for one class version
+   ClassDefOverride(TStreamerInfo, 10)  //Streamer information for one class version
 };
 
 
