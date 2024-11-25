@@ -43,6 +43,11 @@ compile_commands.json
 documentation/doxygen/*.eps
 documentation/doxygen/*.pcm
 documentation/doxygen/*.jpg
+documentation/doxygen/*.root
+documentation/doxygen/*.csv
+documentation/doxygen/*.png
+documentation/doxygen/*.pdf
+documentation/doxygen/*.dot
 
 # Pycache
 __pycache__
