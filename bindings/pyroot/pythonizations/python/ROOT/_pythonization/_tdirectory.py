@@ -13,10 +13,10 @@ r"""
 \class TDirectory
 \brief \parblock \endparblock
 \htmlonly
+<details open>
+<summary  style="font-size:20px; color: #425788;"><b>Python interface</b></summary>
 <div class="pyrootbox">
 \endhtmlonly
-\anchor python
-## PyROOT
 
 It is possible to retrieve the content of a TDirectory object
 just like getting items from a Python dictionary.
@@ -47,6 +47,7 @@ and TFile, which inherit it. Please refer to the documentation of those classes
 for more information.
 \htmlonly
 </div>
+</details>
 \endhtmlonly
 */
 """
