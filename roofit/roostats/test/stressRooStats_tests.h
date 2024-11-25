@@ -1187,7 +1187,7 @@ public:
       regValue(htr->Significance(), TString::Format("thtc2_significance_%s_%s", kECalculatorTypeString[fCalculatorType],
                                                     kETestStatTypeString[fTestStatType]));
 
-      // corresponding visual plots (in verbose mode) - from tutorials/roostats/StandardHypoTestDemo.C
+      // corresponding visual plots (in verbose mode) - from tutorials/roofit/roostats/StandardHypoTestDemo.C
       if (_verb >= 1) {
          if (fCalculatorType != kAsymptotic) {
             TCanvas *c = new TCanvas("thtc2_canvas", "THTC2 Canvas");

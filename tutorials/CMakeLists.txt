@@ -88,14 +88,14 @@ if(MSVC AND NOT win_broken_tests)
   list(APPEND dataframe_veto analysis/dataframe/df037_TTreeEventMatching.C)
   list(APPEND dataframe_veto analysis/dataframe/df037_TTreeEventMatching.py)
   # The RooFit SBI tutorials fail on Windows for unknown reasons
-  list(APPEND roofit_veto roofit/rf617_simulation_based_inference_multidimensional.py)
+  list(APPEND roofit_veto roofit/roofit/rf617_simulation_based_inference_multidimensional.py)
 endif()
 
 # TODO: fix the problem and re-enable the tutorial test. The rf615 tutorial
 # occasionally fails on cleanup on different platforms, hinting to a PyROOT
 # issue. We disable the rf617 tutorial for now. as the covered RooFit
 # functionality is also covered by rf617 (the multidimensional case).
-list(APPEND roofit_veto roofit/rf615_simulation_based_inference.py)
+list(APPEND roofit_veto roofit/roofit/rf615_simulation_based_inference.py)
 
 if (NOT dataframe)
     # RDataFrame
@@ -112,7 +112,7 @@ if (NOT dataframe)
     list(APPEND dataframe_veto machine_learning/RBatchGenerator_PyTorch.py)
     list(APPEND dataframe_veto machine_learning/RBatchGenerator_filters_vectors.py)
     # RooFit tutorial depending on RDataFrame
-    list(APPEND dataframe_veto roofit/rf408*)
+    list(APPEND dataframe_veto roofit/roofit/rf408*)
 endif()
 
 if(NOT sqlite)
@@ -135,7 +135,7 @@ if(NOT geom)
 endif()
 
 if(NOT ROOT_proof_FOUND)
-   set(proof_veto roostats/StandardFrequentistDiscovery.C)
+   set(proof_veto roofit/roostats/StandardFrequentistDiscovery.C)
 endif()
 
 if(NOT ROOT_spectrum_FOUND)
@@ -143,15 +143,15 @@ if(NOT ROOT_spectrum_FOUND)
 endif()
 
 if(NOT ROOT_roofit_FOUND)
-  set(roofit_veto roofit/*.C roofit/*.py
-                  roostats/*.C roostats/*.py
-                  histfactory/*.C histfactory/*.py)
+  set(roofit_veto roofit/roofit/*.C roofit/roofit/*.py
+                  roofit/roostats/*.C roofit/roostats/*.py
+                  roofit/histfactory/*.C roofit/histfactory/*.py)
 else()
   if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 4 AND NOT llvm13_broken_tests)
     # The following tutorials are failing with this error:
     # IncrementalExecutor::executeFunction: symbol '__std_find_trivial_4@12' unresolved while linking [cling interface function]!
     # on Windows 32 bit and Visual Studio v17.8
-    list(APPEND roofit_veto roofit/rf509_wsinteractive.C roofit/rf614_binned_fit_problems.C)
+    list(APPEND roofit_veto roofit/roofit/rf614_binned_fit_problems.C)
   endif()
 endif()
 
@@ -162,10 +162,10 @@ endif()
 
 if(NOT ROOT_xml_FOUND)
   set(xml_veto  io/xml/*.C
-                histfactory/*.C   # histfactory requires xml
-                histfactory/*.py
-                roostats/*.C      # most roostats tutorials require xml too,
-                roostats/*.py)    # because they create test data with histfactory
+                roofit/histfactory/*.C   # histfactory requires xml
+                roofit/histfactory/*.py
+                roofit/roostats/*.C      # most roostats tutorials require xml too,
+                roofit/roostats/*.py)    # because they create test data with histfactory
 endif()
 
 if(NOT ROOT_unfold_FOUND)
@@ -189,7 +189,7 @@ if(NOT xrootd)
                   analysis/dataframe/df105_WBosonAnalysis.py
                   analysis/dataframe/df106_HiggsToFourLeptons.py
                   analysis/dataframe/df107_SingleTopAnalysis.py
-                  roofit/rf618_mixture_models.py # depends on df106_HiggsToFourLeptons.py
+                  roofit/roofit/rf618_mixture_models.py # depends on df106_HiggsToFourLeptons.py
                   experimental/rcanvas/df104.py
                   experimental/rcanvas/df105.py
                   )
@@ -200,7 +200,7 @@ if(NOT ROOT_r_FOUND)
   set(r_veto  math/r/*.C)
 endif()
 
-set(histfactory_veto histfactory/makeExample.C)
+set(histfactory_veto roofit/histfactory/makeExample.C)
 
 if(NOT ROOT_fitsio_FOUND)
   set(fitsio_veto  io/fitsio/*.C)
@@ -217,22 +217,22 @@ if(NOT ROOT_mathmore_FOUND)
       math/pdf/pdf007_multivarGaus.C
       math/pdf/pdf012_tStudent.C
       math/pdf/pdf001_Nornal.C
-      roostats/TestNonCentral.C
-      roostats/TestNonCentral.py
+      roofit/roostats/TestNonCentral.C
+      roofit/roostats/TestNonCentral.py
       math/Legendre.py
       math/pdf/pdf009_Bessel.py
       math/pdf/pdf012_tStudent.py)
 endif()
 
 if(NOT ROOT_fftw3_FOUND)
-  set(fftw3_veto roofit/rf208_convolution.C
-                 roofit/rf210_angularconv.C
-                 roofit/rf211_paramconv.C
-                 roofit/rf512_wsfactory_oper.C
-                 roofit/rf208_convolution.py
-                 roofit/rf210_angularconv.py
-                 roofit/rf211_paramconv.py
-                 roofit/rf512_wsfactory_oper.py
+  set(fftw3_veto roofit/roofit/rf208_convolution.C
+                 roofit/roofit/rf210_angularconv.C
+                 roofit/roofit/rf211_paramconv.C
+                 roofit/roofit/rf512_wsfactory_oper.C
+                 roofit/roofit/rf208_convolution.py
+                 roofit/roofit/rf210_angularconv.py
+                 roofit/roofit/rf211_paramconv.py
+                 roofit/roofit/rf512_wsfactory_oper.py
                  math/fft/FFT.C
                  math/fit/fitConvolution.C
                  math/fit/fitConvolution.py)
@@ -280,8 +280,8 @@ set(gui_veto math/fit/fitpanel_playback.C
              visualisation/image/*.C
              visualisation/graphics/psview.C visualisation/graphics/gtime.C
              visualisation/graphics/graph_edit_playback.C
-             roostats/ModelInspector.C
-             roostats/ModelInspector.py
+             roofit/roostats/ModelInspector.C
+             roofit/roostats/ModelInspector.py
              legacy/tree/tvdemo.C
              visualisation/eve7/eve/*.C
              visualisation/webgui/geom/geom_threejs.cxx
@@ -409,9 +409,9 @@ set(extra_veto
   io/tree/tree103_tree.C
   io/tree/tree106_tree.C
   io/tree/tree108_tree.C
-  roostats/rs401d_FeldmanCousins.C  # Takes too much time
-  roostats/rs401d_FeldmanCousins.py  # Takes too much time
-  histfactory/ModifyInterpolation.C
+  roofit/roostats/rs401d_FeldmanCousins.C  # Takes too much time
+  roofit/roostats/rs401d_FeldmanCousins.py
+  roofit/histfactory/ModifyInterpolation.C
   io/tree/tree110_copy.C
   io/tree/tree111_copy.C
   io/tree/tree112_copy.C
@@ -532,7 +532,7 @@ set(analysis-unfold-testUnfold7c-depends tutorial-analysis-unfold-testUnfold7b)
 set(analysis-unfold-testUnfold7b-depends tutorial-analysis-unfold-testUnfold7a)
 set(io-xml-xmlmodifyfile-depends tutorial-io-xml-xmlnewfile)
 set(io-xml-xmlreadfile-depends tutorial-io-xml-xmlnewfile)
-set(roofit-rf503_wspaceread-depends tutorial-roofit-rf502_wspacewrite)
+set(roofit-roofit-rf503_wspaceread-depends tutorial-roofit-roofit-rf502_wspacewrite)
 set(io-readCode-depends tutorial-io-importCode)
 set(math-fit-fit1-depends tutorial-hist-hist001_TH1_fillrandom)
 set(math-fit-myfit-depends tutorial-math-fit-fitslicesy)
@@ -556,22 +556,22 @@ set(io-tree-mt_readNtuplesFillHistosAndFit-depends tutorial-io-tree-mt_fillNtupl
 set(io-tree-mp_readNtuplesFillHistosAndFit-depends tutorial-io-tree-mp_fillNtuples)
 
 #--many histfactory and roostats tutorials depending on having creating the file first with histfactory and example_combined_GaussExample_model.root
-foreach(tname histfactory-hf001_example
-              roostats-ModelInspector
-              roostats-OneSidedFrequentistUpperLimitWithBands
-              roostats-OneSidedFrequentistUpperLimitWithBands
-              roostats-StandardBayesianMCMCDemo
-              roostats-StandardBayesianNumericalDemo
-              roostats-StandardFeldmanCousinsDemo
-              roostats-StandardFrequentistDiscovery
-              roostats-StandardHistFactoryPlotsWithCategories
-              roostats-StandardHypoTestDemo
-              roostats-StandardHypoTestInvDemo
-              roostats-StandardProfileInspectorDemo
-              roostats-StandardProfileLikelihoodDemo
-              roostats-StandardTestStatDistributionDemo
-              roostats-TwoSidedFrequentistUpperLimitWithBands)
-  set(${tname}-depends tutorial-roostats-CreateExampleFile-py)
+foreach(tname roofit-histfactory-hf001_example
+              roofit-roostats-ModelInspector
+              roofit-roostats-OneSidedFrequentistUpperLimitWithBands
+              roofit-roostats-OneSidedFrequentistUpperLimitWithBands
+              roofit-roostats-StandardBayesianMCMCDemo
+              roofit-roostats-StandardBayesianNumericalDemo
+              roofit-roostats-StandardFeldmanCousinsDemo
+              roofit-roostats-StandardFrequentistDiscovery
+              roofit-roostats-StandardHistFactoryPlotsWithCategories
+              roofit-roostats-StandardHypoTestDemo
+              roofit-roostats-StandardHypoTestInvDemo
+              roofit-roostats-StandardProfileInspectorDemo
+              roofit-roostats-StandardProfileLikelihoodDemo
+              roofit-roostats-StandardTestStatDistributionDemo
+              roofit-roostats-TwoSidedFrequentistUpperLimitWithBands)
+  set(${tname}-depends tutorial-roofit-roostats-CreateExampleFile-py)
 endforeach()
 
 #--dependency for TMVA tutorials
@@ -749,7 +749,7 @@ if(ROOT_pyroot_FOUND)
              io/tree/csv2tree_ReadStream.py # not a tutorial
              visualisation/gui/numberEntry.py  # requires GUI
              legacy/pyroot/*py      # legacy ...
-             histfactory/makeQuickModel.py # not a tutorial
+             roofit/histfactory/makeQuickModel.py # not a tutorial
              visualisation/eve7/eve/lineset.py         # requires GUI
              io/sql/sqlcreatedb.py     # same as the C++ case
              io/sql/sqlfilldb.py       # same as the C++ case
@@ -851,16 +851,16 @@ if(ROOT_pyroot_FOUND)
                                 tutorial-io-tree-ntuple1-py)
   set(math-fit-fit1-depends tutorial-hist-hist001_TH1_fillrandom-py)
   set(visualisation-geom-na49view-depends tutorial-visualisation-geom-geometry-py)
-  set(roofit-rf503_wspaceread-depends tutorial-roofit-rf502_wspacewrite-py)
-  set(roofit-rf618_mixture_models-depends tutorial-analysis-dataframe-df106_HiggsToFourLeptons-py)
+  set(roofit-roofit-rf503_wspaceread-depends tutorial-roofit-roofit-rf502_wspacewrite-py)
+  set(roofit-roofit-rf618_mixture_models-depends tutorial-analysis-dataframe-df106_HiggsToFourLeptons-py)
 
   # Avoid a race condition: make sure Python tutorial is run after C++ tutorial
-  set(roofit-rf104_classfactory-depends tutorial-roofit-rf104_classfactory)
-  set(roofit-rf512_wsfactory_oper-depends tutorial-roofit-rf512_wsfactory_oper)
+  set(roofit-roofit-rf104_classfactory-depends tutorial-roofit-roofit-rf104_classfactory)
+  set(roofit-roofit-rf512_wsfactory_oper-depends tutorial-roofit-roofit-rf512_wsfactory_oper)
   set(machine_learning-TMVA_Higgs_Classification-depends tutorial-machine_learning-TMVA_Higgs_Classification)
   set(machine_learning-TMVA_CNN_Classification-depends tutorial-machine_learning-TMVA_CNN_Classification)
   set(machine_learning-TMVA_RNN_Classification-depends tutorial-machine_learning-TMVA_RNN_Classification)
-  set(roostats-CreateExampleFile-depends tutorial-roostats-CreateExampleFile)
+  set(roofit-roostats-CreateExampleFile-depends tutorial-roofit-roostats-CreateExampleFile)
 
   #----------------------------------------------------------------------
   # List requirements for python tutorials.
@@ -872,12 +872,12 @@ if(ROOT_pyroot_FOUND)
       math/fit/combinedFit.py
       math/fit/multifit.py
       math/fit/NumericalMinimization.py
-      roofit/rf409_NumPyPandasToRooFit.py)
+      roofit/roofit/rf409_NumPyPandasToRooFit.py)
   file(GLOB requires_numba   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} analysis/dataframe/df038_NumbaDeclare.py)
   file(GLOB requires_pandas  RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
       analysis/dataframe/df026_AsNumpyArrays.py
       analysis/dataframe/df035_RDFFromPandas.py
-      roofit/rf409_NumPyPandasToRooFit.py)
+      roofit/roofit/rf409_NumPyPandasToRooFit.py)
   file(GLOB requires_keras   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} machine_learning/keras/*.py)
   file(GLOB requires_torch   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} machine_learning/pytorch/*.py)
   file(GLOB requires_xgboost RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} machine_learning/tmva10*.py)

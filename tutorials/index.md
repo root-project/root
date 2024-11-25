@@ -66,13 +66,13 @@ The `$ROOTSYS/tutorials` directory includes several sub-directories:
 \ingroup Tutorials
 \brief Examples showing event generation with pythia and Monte Carlo.
 
-\defgroup tutorial_roofit RooFit Tutorials
+\defgroup tutorial_geom Geometry tutorials
 \ingroup Tutorials
-\brief These tutorials illustrate the main features of [RooFit](group__Roofitmain.html): the name of the examples and their short description help in figuring out their objective.
+\brief Various ROOT geometry package examples.
 
-\defgroup tutorial_histfactory HistFactory Tutorials
+\defgroup tutorial_roofit RooFit packages tutorials
 \ingroup Tutorials
-\brief These tutorials illustrate the usage of the histfactory.
+\brief These tutorials illustrate the main features of RooFit, HistFactory and RooStats.
 
 \defgroup tutorial_http HTTP tutorials
 \ingroup Tutorials
@@ -85,10 +85,6 @@ The `$ROOTSYS/tutorials` directory includes several sub-directories:
 \defgroup tutorial_math Math tutorials
 \ingroup Tutorials
 \brief Examples showing the Math classes.
-
-\defgroup tutorial_roostats RooStats Tutorials
-\ingroup Tutorials
-\brief These tutorials illustrate the main features of RooStats.
 
 \defgroup tutorial_ml Machine Learning tutorials
 \ingroup Tutorials
