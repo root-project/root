@@ -899,7 +899,7 @@ You can also include a global callback function that will be applied to all plot
 
 ~~~{.py}
 def set_fill_color(hist):
-    hist.SetFillColor(ROOT.kBlue)
+    hist.SetFillColor("kBlue")
 
 LiveVisualize([h_gaus, h_exp, h_random], set_fill_color)
 ~~~

@@ -81,9 +81,9 @@ for i in range(parameterScan.numEntries()):
 
     mark = ROOT.TMarker(tmpPoint.getRealValue("mu"), 1, 25)
     if interval.IsInInterval(tmpPoint):
-        mark.SetMarkerColor(ROOT.kBlue)
+        mark.SetMarkerColor("kBlue")
     else:
-        mark.SetMarkerColor(ROOT.kRed)
+        mark.SetMarkerColor("kRed")
 
     mark.Draw("s")
     marks.append(mark)

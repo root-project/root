@@ -22,6 +22,6 @@ h1.GetXaxis().SetTitle("x")
 h1.GetYaxis().SetTitle("y")
 
 rp1 = ROOT.TRatioPlot(h1)
-rp1.SetConfidenceIntervalColors(ROOT.kBlue, ROOT.kRed)
+rp1.SetConfidenceIntervalColors("kBlue", "kRed")
 rp1.Draw()
 c1.Update()

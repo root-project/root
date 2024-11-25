@@ -90,9 +90,9 @@ for i in range(0,dataset_size):
 
 c1 = ROOT.TCanvas()
 ROOT.gStyle.SetOptStat(0)
-hs.SetLineColor(ROOT.kRed)
+hs.SetLineColor("kRed")
 hs.Draw()
-hb.SetLineColor(ROOT.kBlue)
+hb.SetLineColor("kBlue")
 hb.Draw("SAME")
 c1.BuildLegend()
 c1.Draw()

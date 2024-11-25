@@ -81,8 +81,8 @@ pullMeanFrame = mcs2.plotPull(mean)
 # are calculated by ROOT.RooChiMCSModule
 hist2_chi2 = mcs2.fitParDataSet().createHistogram("chi2", AutoBinning=nBins)
 hist2_prob = mcs2.fitParDataSet().createHistogram("prob", AutoBinning=nBins)
-hist2_chi2.SetLineColor(ROOT.kRed)
-hist2_prob.SetLineColor(ROOT.kRed)
+hist2_chi2.SetLineColor("kRed")
+hist2_prob.SetLineColor("kRed")
 
 c = ROOT.TCanvas("rf802_mcstudy_addons", "rf802_mcstudy_addons", 800, 400)
 c.Divide(3)

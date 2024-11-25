@@ -151,8 +151,8 @@ for i in range(0,x_test.shape[0]):
       hb3.Fill(result3)
 
 def PlotHistos(hs,hb):
-   hs.SetLineColor(ROOT.kRed)
-   hb.SetLineColor(ROOT.kBlue)
+   hs.SetLineColor("kRed")
+   hb.SetLineColor("kBlue")
    hs.Draw()
    hb.Draw("same")
 
@@ -189,15 +189,15 @@ def MakeROCCurve(hs, hb) :
 c2 = ROOT.TCanvas()
 
 r1,curve1 = MakeROCCurve(hs1,hb1)
-curve1.SetLineColor(ROOT.kRed)
+curve1.SetLineColor("kRed")
 curve1.Draw("AC")
 
 r2,curve2 = MakeROCCurve(hs2,hb2)
-curve2.SetLineColor(ROOT.kBlue)
+curve2.SetLineColor("kBlue")
 curve2.Draw("C")
 
 r3,curve3 = MakeROCCurve(hs3,hb3)
-curve3.SetLineColor(ROOT.kGreen)
+curve3.SetLineColor("kGreen")
 curve3.Draw("C")
 
 c2.Draw()

@@ -67,7 +67,7 @@ model.fitTo(data, PrintLevel=-1)
 
 # Make two-dimensional plot of conditional pdf in (dt,dterr)
 hh_model = model.createHistogram("hh_model", dt, Binning=50, YVar=dict(var=dterr, Binning=50))
-hh_model.SetLineColor(ROOT.kBlue)
+hh_model.SetLineColor("kBlue")
 
 # Make projection of data an dt
 frame = dt.frame(Title="Projection of model(dt|dterr) on dt")

@@ -74,7 +74,7 @@ lmorph.plotOn(frame1, LineColor="r")
 
 # Create 2D histogram
 hh = lmorph.createHistogram("hh", x, Binning=40, YVar=dict(var=alpha, Binning=40))
-hh.SetLineColor(ROOT.kBlue)
+hh.SetLineColor("kBlue")
 
 # Fit pdf to dataset with alpha=0.8
 # -----------------------------------------------------------------
