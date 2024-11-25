@@ -458,6 +458,13 @@ double RooSimultaneous::evaluate() const
 
       for (auto *proxy2 : static_range_cast<RooRealProxy *>(_pdfProxyList)) {
          auto &pdf2 = static_cast<RooAbsPdf const &>(proxy2->arg());
+         if(!pdf2.canBeExtended()) {
+            // If one of the pdfs can't be expected, reset the normalization
+            // factor to one and break out of the loop.
+            nEvtTot = 1.0;
+            nEvtCat = 1.0;
+            break;
+         }
          const double nEvt = pdf2.expectedEvents(_normSet);
          nEvtTot += nEvt;
          if (&pdf2 == &pdf) {
