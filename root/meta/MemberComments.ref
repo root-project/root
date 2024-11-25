@@ -417,6 +417,8 @@ OBJ: TList	TList	Doubly linked list : 0
       void TAttFill::SetFillAttributes()
  OBJ: TMethod	SetFillColor	Set the fill area color : 0
       void TAttFill::SetFillColor(Color_t fcolor)
+ OBJ: TMethod	SetFillColor	 : 0
+      void TAttFill::SetFillColor(TColorNumber)
  OBJ: TMethod	SetFillColorAlpha	 : 0
       void TAttFill::SetFillColorAlpha(Color_t fcolor, Float_t falpha)
  OBJ: TMethod	SetFillStyle	Set the fill area style : 0
@@ -427,6 +429,8 @@ OBJ: TList	TList	Doubly linked list : 0
       void TAttLine::SetLineAttributes()
  OBJ: TMethod	SetLineColor	Set the line color : 0
       void TAttLine::SetLineColor(Color_t lcolor)
+ OBJ: TMethod	SetLineColor	 : 0
+      void TAttLine::SetLineColor(TColorNumber lcolor)
  OBJ: TMethod	SetLineColorAlpha	 : 0
       void TAttLine::SetLineColorAlpha(Color_t lcolor, Float_t lalpha)
  OBJ: TMethod	SetLineStyle	Set the line style : 0
