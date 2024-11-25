@@ -131,6 +131,9 @@ Models have a unique model identifier that faciliates checking whether entries a
 
 A model is subject to a state transition during its lifetime: it starts in a building state, in which fields can be
 added and modified.  Once the schema is finalized, the model gets frozen.  Only frozen models can create entries.
+From frozen, models move into a retired state.  In this state, the model is only partially usable: it can be cloned
+and queried, but it can't be unfrozen anymore and no new entries can be created.  This state is used for models
+that were used for writing and are no longer connected to a page sink.
 */
 // clang-format on
 class RNTupleModel {
@@ -194,10 +197,12 @@ public:
    };
 
 private:
-   // The states a model can be in. Possible transitions are between kBuilding and kFrozen.
+   // The states a model can be in. Possible transitions are between kBuilding and kFrozen
+   // and from kFrozen to kRetired.
    enum class EState {
       kBuilding,
-      kFrozen
+      kFrozen,
+      kRetired
    };
 
    /// Hierarchy of fields consisting of simple types and collections (sub trees)
@@ -213,7 +218,7 @@ private:
    /// Keeps track of which subfields have been registered to be included in entries belonging to this model.
    std::unordered_set<std::string> fRegisteredSubfields;
    /// Every model has a unique ID to distinguish it from other models. Entries are linked to models via the ID.
-   /// Cloned models get a new model ID.
+   /// Cloned models get a new model ID. Retired models are cloned into frozen models.
    std::uint64_t fModelId = 0;
    /// Models have a separate schema ID to remember that the clone of a frozen model still has the same schema.
    std::uint64_t fSchemaId = 0;
@@ -367,7 +372,7 @@ public:
 
    void Freeze();
    void Unfreeze();
-   bool IsFrozen() const { return fModelState == EState::kFrozen; }
+   bool IsFrozen() const { return (fModelState == EState::kFrozen) || (fModelState == EState::kRetired); }
    bool IsBare() const { return !fDefaultEntry; }
    std::uint64_t GetModelId() const { return fModelId; }
    std::uint64_t GetSchemaId() const { return fSchemaId; }
