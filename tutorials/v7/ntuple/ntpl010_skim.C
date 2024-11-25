@@ -88,7 +88,7 @@ void ntpl010_skim()
    }
 
    // Add an additional field to the skimmed dataset
-   auto ptrSkip = skimModel->MakeField<std::uint16_t>("skip", 0);
+   auto ptrSkip = skimModel->MakeField<std::uint16_t>("skip");
 
    auto writer = RNTupleWriter::Recreate(std::move(skimModel), kNTupleOutputName, kNTupleOutputFileName);
 

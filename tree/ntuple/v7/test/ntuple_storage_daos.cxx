@@ -48,13 +48,14 @@ TEST_F(RPageStorageDaos, Basics)
    std::string daosUri = RegisterLabel("ntuple-test-basics");
    const std::string_view ntupleName("ntuple");
    auto model = RNTupleModel::Create();
-   auto wrPt = model->MakeField<float>("pt", 42.0);
+   auto wrPt = model->MakeField<float>("pt");
 
    {
       RNTupleWriteOptionsDaos options;
       options.SetMaxCageSize(0); // Disable caging mechanism.
       auto ntuple = RNTupleWriter::Recreate(std::move(model), ntupleName, daosUri, options);
 
+      *wrPt = 42.0;
       ntuple->Fill();
       ntuple->CommitCluster();
       *wrPt = 24.0;
@@ -143,7 +144,7 @@ TEST_F(RPageStorageDaos, Options)
 
    {
       auto model = RNTupleModel::Create();
-      auto wrPt = model->MakeField<float>("pt", 42.0);
+      model->MakeField<float>("pt");
 
       RNTupleWriteOptionsDaos options;
       options.SetMaxCageSize(0);
@@ -172,16 +173,18 @@ TEST_F(RPageStorageDaos, MultipleNTuplesPerContainer)
 
    {
       auto model1 = RNTupleModel::Create();
-      auto wrPt = model1->MakeField<float>("pt", 34.0);
+      auto wrPt = model1->MakeField<float>("pt");
       auto ntuple = RNTupleWriter::Recreate(std::move(model1), ntupleName1, daosUri, options);
+      *wrPt = 34.0;
       ntuple->Fill();
       *wrPt = 160.0;
       ntuple->Fill();
    }
    {
       auto model2 = RNTupleModel::Create();
-      auto wrPt = model2->MakeField<float>("pt", 81.0);
+      auto wrPt = model2->MakeField<float>("pt");
       auto ntuple = RNTupleWriter::Recreate(std::move(model2), ntupleName2, daosUri, options);
+      *wrPt = 81.0;
       ntuple->Fill();
       *wrPt = 96.0;
       ntuple->Fill();
@@ -220,8 +223,8 @@ TEST_F(RPageStorageDaos, DisabledSamePageMerging)
 {
    std::string daosUri = RegisterLabel("ntuple-test-disabled-same-page-merging");
    auto model = RNTupleModel::Create();
-   model->MakeField<float>("px", 1.0);
-   model->MakeField<float>("py", 1.0);
+   *model->MakeField<float>("px") = 1.0;
+   *model->MakeField<float>("py") = 1.0;
    RNTupleWriteOptionsDaos options;
    options.SetEnablePageChecksums(true);
    auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", daosUri, options);

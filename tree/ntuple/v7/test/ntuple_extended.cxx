@@ -275,7 +275,7 @@ TEST(RNTuple, LargeFile2)
 
    // Start out with a mini-file created small file
    auto model = RNTupleModel::Create();
-   auto pt = model->MakeField<float>("pt", 42.0);
+   *model->MakeField<float>("pt") = 42.0;
    auto writer = RNTupleWriter::Recreate(std::move(model), "small", fileGuard.GetPath());
    writer->Fill();
    writer = nullptr;

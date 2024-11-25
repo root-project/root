@@ -6,23 +6,23 @@ TEST(RNTupleModel, EnforceValidFieldNames)
 
    // MakeField
    try {
-      auto field3 = model->MakeField<float>("", 42.0);
+      auto field3 = model->MakeField<float>("");
       FAIL() << "empty string as field name should throw";
    } catch (const RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("name cannot be empty string"));
    }
    try {
-      auto field3 = model->MakeField<float>("pt.pt", 42.0);
+      auto field3 = model->MakeField<float>("pt.pt");
       FAIL() << "field name with periods should throw";
    } catch (const RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("name 'pt.pt' cannot contain character '.'"));
    }
 
    // Previous failures to create 'pt' should not block the name
-   auto field = model->MakeField<float>("pt", 42.0);
+   auto field = model->MakeField<float>("pt");
 
    try {
-      auto field2 = model->MakeField<float>("pt", 42.0);
+      model->MakeField<float>("pt");
       FAIL() << "repeated field names should throw";
    } catch (const RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("field name 'pt' already exists"));
@@ -42,7 +42,7 @@ TEST(RNTupleModel, FieldDescriptions)
    FileRaii fileGuard("test_ntuple_field_descriptions.root");
    auto model = RNTupleModel::Create();
 
-   auto pt = model->MakeField<float>({"pt", "transverse momentum"}, 42.0);
+   model->MakeField<float>({"pt", "transverse momentum"});
 
    auto charge = std::make_unique<RField<float>>(RField<float>("charge"));
    charge->SetDescription("electric charge");
@@ -176,13 +176,13 @@ TEST(RNTupleModel, RegisterSubfield)
    FileRaii fileGuard("test_rentry_subfields.root");
    {
       auto model = RNTupleModel::Create();
-      model->MakeField<float>("a", 3.14f);
-      model->MakeField<CustomStruct>("struct", CustomStruct{1.f, {2.f, 3.f}, {{4.f}, {5.f, 6.f, 7.f}}, "foo"});
-      model->MakeField<std::vector<CustomStruct>>(
-         "structVec", std::vector{CustomStruct{.1f, {.2f, .3f}, {{.4f}, {.5f, .6f, .7f}}, "bar"},
-                                  CustomStruct{-1.f, {-2.f, -3.f}, {{-4.f}, {-5.f, -6.f, -7.f}}, "baz"}});
-      model->MakeField<std::pair<CustomStruct, int>>(
-         "structPair", std::pair{CustomStruct{.1f, {.2f, .3f}, {{.4f}, {.5f, .6f, .7f}}, "bar"}, 42});
+      *model->MakeField<float>("a") = 3.14f;
+      *model->MakeField<CustomStruct>("struct") = CustomStruct{1.f, {2.f, 3.f}, {{4.f}, {5.f, 6.f, 7.f}}, "foo"};
+      *model->MakeField<std::vector<CustomStruct>>("structVec") =
+         std::vector{CustomStruct{.1f, {.2f, .3f}, {{.4f}, {.5f, .6f, .7f}}, "bar"},
+                     CustomStruct{-1.f, {-2.f, -3.f}, {{-4.f}, {-5.f, -6.f, -7.f}}, "baz"}};
+      *model->MakeField<std::pair<CustomStruct, int>>("structPair") =
+         std::pair{CustomStruct{.1f, {.2f, .3f}, {{.4f}, {.5f, .6f, .7f}}, "bar"}, 42};
 
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
       ntuple->Fill();

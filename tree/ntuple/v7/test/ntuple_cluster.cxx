@@ -315,11 +315,12 @@ TEST(PageStorageFile, LoadClusters)
    FileRaii fileGuard("test_pagestoragefile_loadclusters.root");
 
    auto modelWrite = ROOT::Experimental::RNTupleModel::Create();
-   auto wrPt = modelWrite->MakeField<float>("pt", 42.0);
-   auto wrTag = modelWrite->MakeField<std::int32_t>("tag", 0);
+   auto wrPt = modelWrite->MakeField<float>("pt");
+   auto wrTag = modelWrite->MakeField<std::int32_t>("tag");
 
    {
       auto writer = ROOT::Experimental::RNTupleWriter::Recreate(std::move(modelWrite), "myNTuple", fileGuard.GetPath());
+      *wrPt = 42.0;
       writer->Fill();
       writer->CommitCluster();
       *wrPt = 24.0;
@@ -376,7 +377,7 @@ TEST(PageStorageFile, LoadClustersIMT)
 
    {
       auto model = ROOT::Experimental::RNTupleModel::Create();
-      auto wrPt = model->MakeField<float>("pt", 42.0);
+      *model->MakeField<float>("pt") = 42.0;
 
       auto writer = ROOT::Experimental::RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath());
       writer->Fill();
