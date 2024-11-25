@@ -49,7 +49,11 @@
 ///
 /// \author Rene Brun
 
-R__LOAD_LIBRARY($ROOTSYS/test/libEvent.so)
+#ifdef R__WIN32
+  R__LOAD_LIBRARY($ROOTSYS/test/libEvent.dll)
+#else
+  R__LOAD_LIBRARY($ROOTSYS/test/libEvent.so)
+#endif
 
 #include "TFile.h"
 #include "TTree.h"
