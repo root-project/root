@@ -107,6 +107,7 @@ set(py_sources
   ROOT/_pythonization/_titer.py
   ROOT/_pythonization/_tobject.py
   ROOT/_pythonization/_tobjstring.py
+  ROOT/_pythonization/_tscatter.py
   ROOT/_pythonization/_tseqcollection.py
   ROOT/_pythonization/_tstring.py
   ROOT/_pythonization/_tstyle.py
