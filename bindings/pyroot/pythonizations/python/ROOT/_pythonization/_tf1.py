@@ -14,10 +14,10 @@ r"""
 \class TF1
 \brief \parblock \endparblock
 \htmlonly
+<details open>
+<summary  style="font-size:20px; color: #425788;"><b>Python interface</b></summary>
 <div class="pyrootbox">
 \endhtmlonly
-\anchor python
-## PyROOT
 
 The TF1 class has several additions for its use from Python, which are also
 available in its subclasses TF2 and TF3.
@@ -64,11 +64,11 @@ params = np.array([
 
 # Slice to avoid the dummy column of 10's
 res = rtf1_coulomb.EvalPar(x[:, ::2], params)
-        
-\endcode
 
+\endcode
 \htmlonly
 </div>
+</details>
 \endhtmlonly
 */
 """
@@ -95,9 +95,9 @@ def _TF1_EvalPar(self, vars, params):
         self.SetNdim(x_size)
 
     out = numpy.zeros(len(x))
-    
+
     ROOT.Internal.EvalParMultiDim(self, out, x, x_size, nrows, params)
-    return numpy.frombuffer(out, dtype=numpy.float64, count=nrows) 
+    return numpy.frombuffer(out, dtype=numpy.float64, count=nrows)
 
 
 def _TF1_Constructor(self, *args, **kwargs):

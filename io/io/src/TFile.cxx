@@ -17,7 +17,6 @@
 \sa \ref IO
 \sa \ref rootio (or `io/doc/TFile` folder in your codebase)
 
-<details>
 <summary>ROOT file data format specification</summary>
 
 A ROOT file is composed of a header, followed by consecutive data records
@@ -78,8 +77,6 @@ Begin_Macro
 End_Macro
 
 The structure of a directory is shown in TDirectoryFile::TDirectoryFile
-
-</details>
 */
 
 #include <ROOT/RConfig.hxx>

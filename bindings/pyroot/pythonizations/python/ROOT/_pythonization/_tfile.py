@@ -14,10 +14,10 @@ r'''
 \class TFile
 \brief \parblock \endparblock
 \htmlonly
+<details open>
+<summary  style="font-size:20px; color: #425788;"><b>Python interface</b></summary>
 <div class="pyrootbox">
 \endhtmlonly
-\anchor python
-## PyROOT
 
 In the same way as for TDirectory, it is possible to get the content of a
 TFile object with the familiar item-getting syntax.
@@ -69,6 +69,7 @@ statement, you can use the context manager functionality offered by TContext.
 
 \htmlonly
 </div>
+</details>
 \endhtmlonly
 */
 '''

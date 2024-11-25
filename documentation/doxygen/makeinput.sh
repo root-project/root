@@ -8,6 +8,11 @@
 # This line is mandatory. Do not comment it
 echo "INPUT = ./mainpage.md                    \\" > Doxyfile_INPUT
 
+# Add to the list of files to be analyzed the .pyzdoc files created by extract_docstrings.py
+# and print_roofit_pyz_doctrings.py
+ls $DOXYGEN_PYZDOC_PATH/*.pyzdoc | sed -e "s/$/ \\\\/"  \
+>> Doxyfile_INPUT
+
 echo "        ../../core/base/                 \\" >> Doxyfile_INPUT
 echo "        ../../core/dictgen/              \\" >> Doxyfile_INPUT
 echo "        ../../core/cont/                 \\" >> Doxyfile_INPUT
@@ -82,10 +87,4 @@ echo "        ../../bindings/r/                \\" >> Doxyfile_INPUT
 # echo "        ../../graf3d/x3d/                \\" >> Doxyfile_INPUT
 # echo "        ../../net/rootd/                 \\" >> Doxyfile_INPUT
 # echo "        ../../net/rpdutils/              \\" >> Doxyfile_INPUT
-
-
-# Add to the list of files to be analyzed the .pyzdoc files created by extract_docstrings.py
-# and print_roofit_pyz_doctrings.py
-ls $DOXYGEN_PYZDOC_PATH/*.pyzdoc | sed -e "s/$/ \\\\/"  \
->> Doxyfile_INPUT
 
