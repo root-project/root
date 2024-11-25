@@ -15,6 +15,7 @@ r'''
 \htmlonly
 <div class="pyrootbox">
 \endhtmlonly
+\anchor python
 ## PyROOT
 
 The functionality offered by TContext can be used in PyROOT with a context manager. Here are a few examples:
