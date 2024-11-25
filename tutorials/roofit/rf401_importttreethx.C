@@ -26,18 +26,20 @@
 
 using namespace RooFit;
 
-TH1 *makeTH1(const char *name, double mean, double sigma);
-TTree *makeTTree();
+TH1 *makeTH1(TRandom &trnd, const char *name, double mean, double sigma);
+TTree *makeTTree(TRandom &trnd);
 
 void rf401_importttreethx()
 {
+   TRandom3 trnd{};
+
    // I m p o r t  m u l t i p l e   T H 1   i n t o   a   R o o D a t a H i s t
    // --------------------------------------------------------------------------
 
    // Create thee ROOT TH1 histograms
-   TH1 *hh_1 = makeTH1("hh1", 0, 3);
-   TH1 *hh_2 = makeTH1("hh2", -3, 1);
-   TH1 *hh_3 = makeTH1("hh3", +3, 4);
+   TH1 *hh_1 = makeTH1(trnd, "hh1", 0, 3);
+   TH1 *hh_2 = makeTH1(trnd, "hh2", -3, 1);
+   TH1 *hh_3 = makeTH1(trnd, "hh3", +3, 4);
 
    // Declare observable x
    RooRealVar x("x", "x", -10, 10);
@@ -61,7 +63,7 @@ void rf401_importttreethx()
    // I m p o r t i n g   a   T T r e e   i n t o   a   R o o D a t a S e t   w i t h   c u t s
    // -----------------------------------------------------------------------------------------
 
-   TTree *tree = makeTTree();
+   TTree *tree = makeTTree(trnd);
 
    // Define observables y,z
    RooRealVar y("y", "y", -10, 10);
@@ -108,18 +110,18 @@ void rf401_importttreethx()
    dsABC.Print();
 }
 
-TH1 *makeTH1(const char *name, double mean, double sigma)
+TH1 *makeTH1(TRandom &trnd, const char *name, double mean, double sigma)
 {
    // Create ROOT TH1 filled with a Gaussian distribution
 
    TH1D *hh = new TH1D(name, name, 100, -10, 10);
    for (int i = 0; i < 1000; i++) {
-      hh->Fill(gRandom->Gaus(mean, sigma));
+      hh->Fill(trnd.Gaus(mean, sigma));
    }
    return hh;
 }
 
-TTree *makeTTree()
+TTree *makeTTree(TRandom &trnd)
 {
    // Create ROOT TTree filled with a Gaussian distribution in x and a uniform distribution in y
 
@@ -133,9 +135,9 @@ TTree *makeTTree()
    tree->Branch("z", pz, "z/D");
    tree->Branch("i", pi, "i/I");
    for (int i = 0; i < 100; i++) {
-      *px = gRandom->Gaus(0, 3);
-      *py = gRandom->Uniform() * 30 - 15;
-      *pz = gRandom->Gaus(0, 5);
+      *px = trnd.Gaus(0, 3);
+      *py = trnd.Uniform() * 30 - 15;
+      *pz = trnd.Gaus(0, 5);
       *pi = i % 3;
       tree->Fill();
    }
