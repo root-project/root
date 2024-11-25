@@ -13,9 +13,9 @@
 
 // Load the library at macro parsing time: we need this to use its content in the code
 #ifdef R__WIN32
-  R__LOAD_LIBRARY($ROOTSYS/test/libEvent.dll)
+R__LOAD_LIBRARY($ROOTSYS/test/libEvent.dll)
 #else
-  R__LOAD_LIBRARY($ROOTSYS/test/libEvent.so)
+R__LOAD_LIBRARY($ROOTSYS/test/libEvent.so)
 #endif
 
 void copytree2()

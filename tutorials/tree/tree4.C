@@ -50,9 +50,9 @@
 /// \author Rene Brun
 
 #ifdef R__WIN32
-  R__LOAD_LIBRARY($ROOTSYS/test/libEvent.dll)
+R__LOAD_LIBRARY($ROOTSYS/test/libEvent.dll)
 #else
-  R__LOAD_LIBRARY($ROOTSYS/test/libEvent.so)
+R__LOAD_LIBRARY($ROOTSYS/test/libEvent.so)
 #endif
 
 #include "TFile.h"
