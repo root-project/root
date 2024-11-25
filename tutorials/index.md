@@ -102,10 +102,6 @@ The `$ROOTSYS/tutorials` directory includes several sub-directories:
 \ingroup Tutorials
 \brief Example code which illustrates how to use the ROOT GUI.
 
-\defgroup tutorial_histfactory HistFactory Tutorials
-\ingroup Tutorials
-\brief These tutorials illustrate the usage of the histfactory.
-
 \defgroup tutorial_http HTTP tutorials
 \ingroup Tutorials
 \brief Examples showing the HTTP interface.
@@ -157,10 +153,6 @@ The `$ROOTSYS/tutorials` directory includes several sub-directories:
 \defgroup tutorial_r R tutorials
 \ingroup Tutorials
 \brief Examples showing the R interface.
-
-\defgroup tutorial_roostats RooStats Tutorials
-\ingroup Tutorials
-\brief These tutorials illustrate the main features of RooStats.
 
 \defgroup tutorial_spectrum Spectrum tutorials
 \ingroup Tutorials
