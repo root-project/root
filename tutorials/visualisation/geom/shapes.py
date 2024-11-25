@@ -61,9 +61,9 @@ cone.SetLineColor( 2 )
 cons.SetLineColor( 3 )
 pcon.SetLineColor( 6 )
 pgon.SetLineColor( 2 )
-sphe.SetLineColor( ROOT.kRed )
-sphe1.SetLineColor( ROOT.kBlack )
-sphe2.SetLineColor( ROOT.kBlue )
+sphe.SetLineColor("kRed")
+sphe1.SetLineColor("black")
+sphe2.SetLineColor("kBlue")
 
 #  Build the geometry hierarchy
 node1 = ROOT.TNode( 'NODE1', 'NODE1', 'BRIK' )

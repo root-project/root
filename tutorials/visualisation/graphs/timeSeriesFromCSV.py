@@ -39,7 +39,7 @@ c.SetLeftMargin(0.07)
 c.SetRightMargin(0.04)
 c.SetGrid()
 g.SetLineWidth(3)
-g.SetLineColor(ROOT.kBlue)
+g.SetLineColor("kBlue")
 g.Draw("al")
 g.GetYaxis().CenterTitle()
 

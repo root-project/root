@@ -55,8 +55,8 @@ pdf.fitTo(data, PrintLevel=-1)
 # Make 2D plots of amplitudes
 hh_cos = ampl1.createHistogram("hh_cos", t, Binning=50, YVar=dict(var=cosa, Binning=50))
 hh_sin = ampl2.createHistogram("hh_sin", t, Binning=50, YVar=dict(var=cosa, Binning=50))
-hh_cos.SetLineColor(ROOT.kBlue)
-hh_sin.SetLineColor(ROOT.kRed)
+hh_cos.SetLineColor("kBlue")
+hh_sin.SetLineColor("kRed")
 
 # Make projection on t, data, and its components
 # Note component projections may be larger than sum because amplitudes can

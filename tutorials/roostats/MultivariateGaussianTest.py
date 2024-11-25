@@ -108,7 +108,7 @@ plInt = plc.GetInterval()
 mcPlot = ROOT.RooStats.MCMCIntervalPlot(mcInt)
 
 c1 = ROOT.TCanvas()
-mcPlot.SetLineColor(ROOT.kGreen)
+mcPlot.SetLineColor("kGreen")
 mcPlot.SetLineWidth(2)
 mcPlot.Draw()
 

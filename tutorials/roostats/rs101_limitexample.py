@@ -127,15 +127,15 @@ if fcint:
     print("FC upper limit on s = ", fcul)
     fcllLine = ROOT.TLine(fcll, 0, fcll, 1)
     fculLine = ROOT.TLine(fcul, 0, fcul, 1)
-    fcllLine.SetLineColor(ROOT.kRed)
-    fculLine.SetLineColor(ROOT.kRed)
+    fcllLine.SetLineColor("kRed")
+    fculLine.SetLineColor("kRed")
     fcllLine.Draw("same")
     fculLine.Draw("same")
     dataCanvas.Update()
 
 # Plot MCMC interval and print some statistics
 mcPlot = ROOT.RooStats.MCMCIntervalPlot(mcInt)
-mcPlot.SetLineColor(ROOT.kMagenta)
+mcPlot.SetLineColor("kMagenta")
 mcPlot.SetLineWidth(2)
 mcPlot.Draw("same")
 
@@ -154,7 +154,7 @@ chainData = mcInt.GetChainAsDataSet()
 print("plotting the chain data - nentries = ", chainData.numEntries())
 chain = ROOT.RooStats.GetAsTTree("chainTreeData", "chainTreeData", chainData)
 chain.SetMarkerStyle(6)
-chain.SetMarkerColor(ROOT.kRed)
+chain.SetMarkerColor("kRed")
 
 chain.Draw("s:ratioSigEff:ratioBkgEff", "nll_MarkovChain_local_", "box")  # 3-d box proportional to posterior
 

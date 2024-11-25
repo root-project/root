@@ -53,7 +53,7 @@ d = parabPdf.generate({mean, sigma_g2, frac}, 100000)
 # Sample a 3-D histogram of the pdf to be visualized as an error
 # ellipsoid using the GLISO draw option
 hh_3d = parabPdf.createHistogram("mean,sigma_g2,frac", 25, 25, 25)
-hh_3d.SetFillColor(ROOT.kBlue)
+hh_3d.SetFillColor("kBlue")
 
 # Project 3D parameter pdf down to 3 permutations of two-dimensional pdfs
 # The integrations corresponding to these projections are performed analytically
@@ -66,9 +66,9 @@ pdf_mean_sigmag2 = parabPdf.createProjection({frac})
 hh_sigmag2_frac = pdf_sigmag2_frac.createHistogram("sigma_g2,frac", 50, 50)
 hh_mean_frac = pdf_mean_frac.createHistogram("mean,frac", 50, 50)
 hh_mean_sigmag2 = pdf_mean_sigmag2.createHistogram("mean,sigma_g2", 50, 50)
-hh_mean_frac.SetLineColor(ROOT.kBlue)
-hh_sigmag2_frac.SetLineColor(ROOT.kBlue)
-hh_mean_sigmag2.SetLineColor(ROOT.kBlue)
+hh_mean_frac.SetLineColor("kBlue")
+hh_sigmag2_frac.SetLineColor("kBlue")
+hh_mean_sigmag2.SetLineColor("kBlue")
 
 # Draw the 'sigar'
 ROOT.gStyle.SetCanvasPreferGL(True)

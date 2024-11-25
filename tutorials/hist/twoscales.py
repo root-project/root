@@ -39,12 +39,12 @@ for i in range(1,101) :
 
 rightmax = 1.1*hint1.GetMaximum()
 scale = ROOT.gPad.GetUymax()/rightmax
-hint1.SetLineColor(ROOT.kRed)
+hint1.SetLineColor("kRed")
 hint1.Scale(scale)
 hint1.Draw("same")
 
 axis = ROOT.TGaxis(ROOT.gPad.GetUxmax(),ROOT.gPad.GetUymin(),
       ROOT.gPad.GetUxmax(), ROOT.gPad.GetUymax(),0,rightmax,510,"+L")
-axis.SetLineColor(ROOT.kRed)
-axis.SetLabelColor(ROOT.kRed)
+axis.SetLineColor("kRed")
+axis.SetLabelColor("kRed")
 axis.Draw()

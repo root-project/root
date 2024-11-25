@@ -118,7 +118,7 @@ if checkSamplingDist:
     )
 
     c1.cd(2)
-    samplingDistExtra.SetLineColor(ROOT.kRed)
+    samplingDistExtra.SetLineColor("kRed")
     samplingDistExtra.Draw()
     samplingDist.Draw("same")
 

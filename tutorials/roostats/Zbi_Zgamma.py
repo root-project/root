@@ -29,7 +29,7 @@ c = ROOT.TCanvas()
 # plot it, blue is averaged model, red is b known exactly
 frame = w1["x"].frame()
 w1["averagedModel"].plotOn(frame)
-w1["px"].plotOn(frame, LineColor=ROOT.kRed)
+w1["px"].plotOn(frame, LineColor="kRed")
 frame.Draw()
 
 # compare analytic calculation of Z_Bi

@@ -55,13 +55,13 @@ data.statOn(frame, Layout=(0.55, 0.99, 0.8))
 # Add text to frame
 txt = ROOT.TText(2, 100, "Signal")
 txt.SetTextSize(0.04)
-txt.SetTextColor(ROOT.kRed)
+txt.SetTextColor("kRed")
 frame.addObject(txt)
 
 # Add arrow to frame
 arrow = ROOT.TArrow(2, 100, -1, 50, 0.01, "|>")
-arrow.SetLineColor(ROOT.kRed)
-arrow.SetFillColor(ROOT.kRed)
+arrow.SetLineColor("kRed")
+arrow.SetFillColor("kRed")
 arrow.SetLineWidth(3)
 frame.addObject(arrow)
 

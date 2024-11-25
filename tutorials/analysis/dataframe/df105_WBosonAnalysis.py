@@ -172,7 +172,7 @@ for h, color in zip(
         [singletop, diboson, ttbar, zjets, wjets],
         [(208, 240, 193), (195, 138, 145), (155, 152, 204), (248, 206, 104), (222, 90, 106)]):
     h.SetLineWidth(1)
-    h.SetLineColor(1)
+    h.SetLineColor("black")
     h.SetFillColor(ROOT.TColor.GetColor(*color))
     stack.Add(h)
 stack.Draw("HIST")
@@ -190,7 +190,7 @@ stack.SetMinimum(1)
 data.SetMarkerStyle(20)
 data.SetMarkerSize(1.2)
 data.SetLineWidth(2)
-data.SetLineColor(ROOT.kBlack)
+data.SetLineColor("black")
 data.Draw("E SAME")
 
 # Add legend

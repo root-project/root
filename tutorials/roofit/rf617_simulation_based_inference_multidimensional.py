@@ -253,9 +253,9 @@ frame1 = mu_vars[0].frame(
     Title="NLL of SBI vs. Morphing;#mu_{1};NLL",
     Range=(mu_observed[0] - 1, mu_observed[0] + 1),
 )
-nll_gauss.plotOn(frame1, ShiftToZero=True, LineColor="kP6Blue+1", Name="gauss")
+nll_gauss.plotOn(frame1, ShiftToZero=True, LineColor="kP6Yellow", Name="gauss")
 ROOT.RooAbsReal.setEvalErrorLoggingMode("Ignore")  # Silence some warnings
-nll_morph.plotOn(frame1, ShiftToZero=True, LineColor="kP6Blue+2", Name="morph")
+nll_morph.plotOn(frame1, ShiftToZero=True, LineColor="kP6Red", Name="morph")
 ROOT.RooAbsReal.setEvalErrorLoggingMode("PrintErrors")
 nllr_learned.plotOn(frame1, LineColor="kP6Blue", ShiftToZero=True, Name="learned")
 
@@ -276,7 +276,7 @@ lhr_calc_final.recursiveRedirectServers(norm_set)
 # Plot the likelihood ratio functions
 frame2 = x_vars[0].frame(Title="Likelihood ratio r(x_{1}|#mu_{1}=2.5);x_{1};p_{gauss}/p_{uniform}")
 lhr_learned.plotOn(frame2, LineColor="kP6Blue", Name="learned_ratio")
-lhr_calc_final.plotOn(frame2, LineColor="kP6Blue+1", Name="exact")
+lhr_calc_final.plotOn(frame2, LineColor="kP6Yellow", Name="exact")
 
 # Write the plots into one canvas to show, or into separate canvases for saving.
 single_canvas = True
@@ -290,8 +290,8 @@ if single_canvas:
 frame1.Draw()
 
 legend1 = ROOT.TLegend(0.43, 0.63, 0.8, 0.87)
-legend1.SetFillColor(ROOT.kWhite)
-legend1.SetLineColor(ROOT.kWhite)
+legend1.SetFillColor("background")
+legend1.SetLineColor("background")
 legend1.SetTextSize(0.04)
 legend1.AddEntry("learned", "learned (SBI)", "L")
 legend1.AddEntry("gauss", "true NLL", "L")
@@ -309,8 +309,8 @@ else:
 frame2.Draw()
 
 legend2 = ROOT.TLegend(0.53, 0.73, 0.87, 0.87)
-legend2.SetFillColor(ROOT.kWhite)
-legend2.SetLineColor(ROOT.kWhite)
+legend2.SetFillColor("background")
+legend2.SetLineColor("background")
 legend2.SetTextSize(0.04)
 legend2.AddEntry("learned_ratio", "learned (SBI)", "L")
 legend2.AddEntry("exact", "true ratio", "L")

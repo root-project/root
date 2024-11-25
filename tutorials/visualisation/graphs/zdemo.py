@@ -126,7 +126,7 @@ def zdemo():
 
     t = ROOT.TLatex()
     t.SetTextFont(32)
-    t.SetTextColor(1)
+    t.SetTextColor("black")
     t.SetTextSize(0.03)
     t.SetTextAlign(12)
     t.DrawLatex( 3.1, 15.5, 'M.Tokarev, E.Potrebenikova ')
@@ -175,9 +175,9 @@ def zdemo():
     t.DrawLatex( 0.18, 0.40, '(barn/Gev^{2})' )
 
     t.SetTextSize( 0.045 )
-    t.SetTextColor( ROOT.kBlue )
+    t.SetTextColor("kBlue")
     t.DrawLatex( 0.22, 0.260, '#sqrt{s} = 63(GeV)' )
-    t.SetTextColor( ROOT.kRed )
+    t.SetTextColor("kRed")
     t.DrawLatex( 0.22, 0.205,'#sqrt{s} = 200(GeV)' )
     t.SetTextColor( 6 )
     t.DrawLatex( 0.22, 0.15, '#sqrt{s} = 500(GeV)' )
@@ -190,7 +190,7 @@ def zdemo():
     gr1 = ROOT.TGraph( NLOOP, PT, INVSIG )
 
     gr1.SetLineColor( 38 )
-    gr1.SetMarkerColor( ROOT.kBlue )
+    gr1.SetMarkerColor("kBlue")
     gr1.SetMarkerStyle( 21 )
     gr1.SetMarkerSize( 1.1 )
     gr1.Draw( 'LP' )
@@ -210,7 +210,7 @@ def zdemo():
 
     gr2 = ROOT.TGraph( NLOOP, PT, INVSIG )
     gr2.SetLineColor( 38 )
-    gr2.SetMarkerColor( ROOT.kRed )
+    gr2.SetMarkerColor("kRed")
     gr2.SetMarkerStyle( 29 )
     gr2.SetMarkerSize( 1.5 )
     gr2.Draw( 'LP' )
@@ -238,7 +238,7 @@ def zdemo():
 
     dum = array( 'f', [0.] )
     graph = ROOT.TGraph( 1, dum, dum )
-    graph.SetMarkerColor( ROOT.kBlue )
+    graph.SetMarkerColor("kBlue")
     graph.SetMarkerStyle( 21 )
     graph.SetMarkerSize( 1.1 )
     graph.SetPoint( 0, 1.7, 1.e-16 )
@@ -246,7 +246,7 @@ def zdemo():
     saves[ 'graph' ] = graph
 
     graph = ROOT.TGraph( 1, dum, dum )
-    graph.SetMarkerColor( ROOT.kRed )
+    graph.SetMarkerColor("kRed")
     graph.SetMarkerStyle( 29 )
     graph.SetMarkerSize( 1.5 )
     graph.SetPoint( 0, 1.7, 2.e-17 )

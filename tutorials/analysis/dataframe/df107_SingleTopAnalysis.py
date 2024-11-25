@@ -211,7 +211,7 @@ for h, color in zip(
         [wjets, twtb, singletop],
         [(222, 90, 106), (155, 152, 204), (208, 240, 193)]):
     h.SetLineWidth(1)
-    h.SetLineColor(1)
+    h.SetLineColor("black")
     h.SetFillColor(ROOT.TColor.GetColor(*color))
     stack.Add(h)
 stack.Draw("HIST")
@@ -229,7 +229,7 @@ stack.GetYaxis().ChangeLabel(1, -1, 0)
 data.SetMarkerStyle(20)
 data.SetMarkerSize(1.2)
 data.SetLineWidth(2)
-data.SetLineColor(ROOT.kBlack)
+data.SetLineColor("black")
 data.Draw("E SAME")
 
 # Add legend

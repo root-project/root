@@ -109,7 +109,7 @@ cust.replaceArg(sig, sigsum)
 # The returned head node own all nodes that were cloned as part of
 # the build process so when cust_clone is deleted so will all other
 # nodes that were created in the process.
-cust_clone = cust.build(ROOT.kTRUE)
+cust_clone = cust.build(True)
 ROOT.SetOwnership(cust_clone, True)
 
 # Print structure of clone of model with sig.sigsum replacement.

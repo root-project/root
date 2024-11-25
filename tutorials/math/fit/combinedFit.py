@@ -121,14 +121,14 @@ ROOT.gStyle.SetOptFit(1111)
 
 fB.SetFitResult(result, iparB)
 fB.SetRange(rangeB().first, rangeB().second)
-fB.SetLineColor(ROOT.kBlue)
+fB.SetLineColor("kBlue")
 hB.GetListOfFunctions().Add(fB)
 hB.Draw()
 
 c1.cd(2)
 fSB.SetFitResult(result, iparSB)
 fSB.SetRange(rangeSB().first, rangeSB().second)
-fSB.SetLineColor(ROOT.kRed)
+fSB.SetLineColor("kRed")
 hSB.GetListOfFunctions().Add(fSB)
 hSB.Draw()
 

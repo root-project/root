@@ -50,8 +50,8 @@ ROOT.RDF.RunGraphs([h1, h2]);
 print("Number of signal entries",h1.GetEntries())
 print("Number of background entries",h2.GetEntries())
 
-h1.SetLineColor(ROOT.kRed)
-h2.SetLineColor(ROOT.kBlue)
+h1.SetLineColor("kRed")
+h2.SetLineColor("kBlue")
 
 c1 = ROOT.TCanvas()
 ROOT.gStyle.SetOptStat(0)

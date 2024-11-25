@@ -134,7 +134,7 @@ plot.Draw()
 # plot the MCMC interval
 canvas.cd(3)
 mcPlot = ROOT.RooStats.MCMCIntervalPlot(mcInt)
-mcPlot.SetLineColor(ROOT.kGreen)
+mcPlot.SetLineColor("kGreen")
 mcPlot.SetLineWidth(2)
 mcPlot.Draw()
 

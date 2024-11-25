@@ -78,7 +78,7 @@ gxy_cdf = gxy.createCdf({x, y})
 
 # Plot cdf of gx versus x
 hh_cdf = gxy_cdf.createHistogram("hh_cdf", x, Binning=40, YVar=dict(var=y, Binning=40))
-hh_cdf.SetLineColor(ROOT.kBlue)
+hh_cdf.SetLineColor("kBlue")
 
 c = ROOT.TCanvas("rf308_normintegration2d", "rf308_normintegration2d", 600, 600)
 ROOT.gPad.SetLeftMargin(0.15)

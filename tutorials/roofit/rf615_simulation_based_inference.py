@@ -206,15 +206,15 @@ ROOT.SetOwnership(nll_morph, True)
 # Plot the negative logarithmic summed likelihood
 frame1 = mu_var.frame(Title="NLL of SBI vs. Morphing;mu;NLL", Range=(2.2, 2.8))
 nllr_learned.plotOn(frame1, LineColor="kP6Blue", ShiftToZero=True, Name="learned")
-nll_gauss.plotOn(frame1, LineColor="kP6Blue+1", ShiftToZero=True, Name="gauss")
+nll_gauss.plotOn(frame1, LineColor="kP6Yellow", ShiftToZero=True, Name="gauss")
 ROOT.RooAbsReal.setEvalErrorLoggingMode("Ignore")  # Silence some warnings
-nll_morph.plotOn(frame1, LineColor="kP6Blue+2", ShiftToZero=True, Name="morphed")
+nll_morph.plotOn(frame1, LineColor="kP6Red", ShiftToZero=True, Name="morphed")
 ROOT.RooAbsReal.setEvalErrorLoggingMode("PrintErrors")
 
 # Plot the likelihood functions
 frame2 = x_var.frame(Title="Likelihood ratio r(x|#mu=2.5);x;p_{gauss}/p_{uniform}")
 llhr_learned.plotOn(frame2, LineColor="kP6Blue", Name="learned_ratio")
-llhr_calc.plotOn(frame2, LineColor="kP6Blue+1", Name="exact")
+llhr_calc.plotOn(frame2, LineColor="kP6Yellow", Name="exact")
 
 # Write the plots into one canvas to show, or into separate canvases for saving.
 single_canvas = True
@@ -228,8 +228,8 @@ if single_canvas:
 frame1.Draw()
 
 legend1 = ROOT.TLegend(0.43, 0.63, 0.8, 0.87)
-legend1.SetFillColor(ROOT.kWhite)
-legend1.SetLineColor(ROOT.kWhite)
+legend1.SetFillColor("kWhite")
+legend1.SetLineColor("kWhite")
 legend1.SetTextSize(0.04)
 legend1.AddEntry("learned", "learned (SBI)", "L")
 legend1.AddEntry("gauss", "true NLL", "L")
@@ -247,8 +247,8 @@ else:
 frame2.Draw()
 
 legend2 = ROOT.TLegend(0.53, 0.73, 0.87, 0.87)
-legend2.SetFillColor(ROOT.kWhite)
-legend2.SetLineColor(ROOT.kWhite)
+legend2.SetFillColor("kWhite")
+legend2.SetLineColor("kWhite")
 legend2.SetTextSize(0.04)
 legend2.AddEntry("learned_ratio", "learned (SBI)", "L")
 legend2.AddEntry("exact", "true ratio", "L")
