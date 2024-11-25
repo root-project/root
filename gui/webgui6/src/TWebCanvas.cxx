@@ -737,7 +737,7 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
       } else if (obj->InheritsFrom(TGraph::Class())) {
          if (opt.Contains("A")) {
             need_frame = true;
-            if (!has_histo && (strlen(obj->GetTitle()) > 0))
+            if (!has_histo && (strlen(obj->GetTitle()) > 0) && !obj->TestBit(TH1::kNoTitle))
                need_title = obj->GetTitle();
          }
       } else if (obj->InheritsFrom(TGraph2D::Class())) {
@@ -748,9 +748,11 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          if (strlen(obj->GetTitle()) > 0)
             need_title = obj->GetTitle();
       } else if (obj->InheritsFrom(TF1::Class())) {
-         need_frame = !obj->InheritsFrom(TF2::Class());
-         if (!has_histo && (strlen(obj->GetTitle()) > 0))
-            need_title = obj->GetTitle();
+         if (!opt.Contains("SAME")) {
+            need_frame = !obj->InheritsFrom(TF2::Class());
+            if (!has_histo && (strlen(obj->GetTitle()) > 0))
+               need_title = obj->GetTitle();
+         }
       } else if (obj->InheritsFrom(TPaveText::Class())) {
          if (strcmp(obj->GetName(), "title") == 0)
             title = static_cast<TPaveText *>(obj);

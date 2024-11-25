@@ -2710,7 +2710,8 @@ Bool_t TCanvas::SaveAll(const std::vector<TPad *> &pads, const char *filename, O
          return (Bool_t) gROOT->ProcessLine(cmd);
       }
 
-      ::Warning("TCanvas::SaveAll", "TWebCanvas does not support image format %s - use normal ROOT functionality", fname.Data());
+      if ((ext != "root") && (ext != "xml"))
+         ::Warning("TCanvas::SaveAll", "TWebCanvas does not support image format %s - using normal ROOT functionality", fname.Data());
    }
 
    // store all pads into single PDF/PS files
