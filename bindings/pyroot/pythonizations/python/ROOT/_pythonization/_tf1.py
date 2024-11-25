@@ -16,6 +16,7 @@ r"""
 \htmlonly
 <div class="pyrootbox">
 \endhtmlonly
+\anchor python
 ## PyROOT
 
 The TF1 class has several additions for its use from Python, which are also
