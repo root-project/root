@@ -1,3 +1,3 @@
-\defgroup tutorial_hist_legacy Histograms tutorials
+\defgroup tutorial_hist_legacy Legacy histogram tutorials
 \ingroup tutorial_legacy
-\brief Examples showing the "histograms' classes" usage.
+\brief Examples for ROOT's histograms (legacy)

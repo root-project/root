@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_hist
+/// \ingroup tutorial_hist_legacy
 /// \notebook -js
 /// Demo of Timers.
 ///
