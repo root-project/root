@@ -21,6 +21,7 @@
 #include "RooArgSet.h"
 
 #include "ROOT/RConfig.hxx"
+#include <TColor.h>
 
 #include <map>
 #include <string>
@@ -43,6 +44,7 @@ class RooConstVar ;
 class RooRealVar ;
 class RooAbsCategory ;
 class RooNumIntConfig ;
+
 class TH1 ;
 class TTree ;
 
@@ -102,13 +104,11 @@ RooCmdArg Range(const char* rangeName, bool adjustNorm=true) ;
 RooCmdArg Range(double lo, double hi, bool adjustNorm=true) ;
 RooCmdArg NormRange(const char* rangeNameList) ;
 RooCmdArg VLines() ;
-RooCmdArg LineColor(Color_t color) ;
-RooCmdArg LineColor(std::string const &color) ;
+RooCmdArg LineColor(TColorNumber color) ;
 RooCmdArg LineStyle(Style_t style) ;
 RooCmdArg LineStyle(std::string const &style) ;
 RooCmdArg LineWidth(Width_t width) ;
-RooCmdArg FillColor(Color_t color) ;
-RooCmdArg FillColor(std::string const &color) ;
+RooCmdArg FillColor(TColorNumber color) ;
 RooCmdArg FillStyle(Style_t style) ;
 RooCmdArg FillStyle(std::string const &style) ;
 RooCmdArg ProjectionRange(const char* rangeName) ;
@@ -141,8 +141,7 @@ RooCmdArg Binning(int nBins, double xlo=0.0, double xhi=0.0) ;
 RooCmdArg MarkerStyle(Style_t style) ;
 RooCmdArg MarkerStyle(std::string const &style) ;
 RooCmdArg MarkerSize(Size_t size) ;
-RooCmdArg MarkerColor(Color_t color) ;
-RooCmdArg MarkerColor(std::string const &color) ;
+RooCmdArg MarkerColor(TColorNumber color) ;
 RooCmdArg CutRange(const char* rangeName) ;
 RooCmdArg XErrorSize(double width) ;
 RooCmdArg RefreshNorm() ;
@@ -408,7 +407,7 @@ RooCmdArg BaseClassName(const char* name) ;
 RooCmdArg TagName(const char* name) ;
 RooCmdArg OutputStream(std::ostream& os) ;
 RooCmdArg Prefix(bool flag) ;
-RooCmdArg Color(Color_t color) ;
+RooCmdArg Color(TColorNumber color) ;
 
 // RooWorkspace::import() arguments
 RooCmdArg RenameConflictNodes(const char* suffix, bool renameOrigNodes=false) ;

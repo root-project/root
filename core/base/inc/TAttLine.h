@@ -15,6 +15,8 @@
 
 #include "Rtypes.h"
 
+class TColorNumber;
+
 class TAttLine {
 
 protected:
@@ -41,6 +43,8 @@ public:
    virtual void     SetLineColorAlpha(Color_t lcolor, Float_t lalpha);
    virtual void     SetLineStyle(Style_t lstyle) { fLineStyle = lstyle;} ///< Set the line style
    virtual void     SetLineWidth(Width_t lwidth) { fLineWidth = lwidth;} ///< Set the line width
+
+   void SetLineColor(TColorNumber lcolor);
 
    ClassDef(TAttLine,2);  //Line attributes
 };

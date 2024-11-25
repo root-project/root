@@ -366,3 +366,8 @@ void TAttAxis::Streamer(TBuffer &R__b)
       R__b.WriteClassBuffer(TAttAxis::Class(),this);
    }
 }
+
+void TAttAxis::SetLabelColor(TColorNumber lcolor)
+{
+   SetLabelColor(lcolor.number());
+}

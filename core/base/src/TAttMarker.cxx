@@ -379,3 +379,8 @@ void TAttMarker::SetMarkerColorAlpha(Color_t mcolor, Float_t malpha)
 {
    fMarkerColor = TColor::GetColorTransparent(mcolor, malpha);
 }
+
+void TAttMarker::SetMarkerColor(TColorNumber lcolor)
+{
+   SetMarkerColor(lcolor.number());
+}

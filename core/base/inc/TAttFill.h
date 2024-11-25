@@ -15,6 +15,7 @@
 
 #include "Rtypes.h"
 
+class TColorNumber;
 
 class TAttFill {
 
@@ -37,6 +38,8 @@ public:
    virtual void     SetFillColor(Color_t fcolor) { fFillColor = fcolor; } ///< Set the fill area color
    virtual void     SetFillColorAlpha(Color_t fcolor, Float_t falpha);
    virtual void     SetFillStyle(Style_t fstyle) { fFillStyle = fstyle; } ///< Set the fill area style
+
+   void SetFillColor(TColorNumber);
 
    ClassDef(TAttFill,2)  //Fill area attributes
 };

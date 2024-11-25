@@ -3080,3 +3080,8 @@ void TGaxis::Streamer(TBuffer &R__b)
       R__b.WriteClassBuffer(TGaxis::Class(),this);
    }
 }
+
+void TGaxis::SetLabelColor(TColorNumber lcolor)
+{
+   SetLineColor(lcolor.number());
+}

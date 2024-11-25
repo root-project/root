@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include "TRatioPlot.h"
+#include "TColor.h"
 #include "TROOT.h"
 #include "TBrowser.h"
 #include "TH1.h"
@@ -1701,6 +1702,16 @@ void TRatioPlot::SetConfidenceIntervalColors(Color_t ci1, Color_t ci2)
 {
    fCi1Color = ci1;
    fCi2Color = ci2;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set the confidence interval colors.
+
+void TRatioPlot::SetConfidenceIntervalColors(TColorNumber ci1, TColorNumber ci2)
+{
+   fCi1Color = ci1.number();
+   fCi2Color = ci2.number();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -27,6 +27,7 @@
 
 #include "TFitResultPtr.h"
 
+class TColorNumber;
 class TH1;
 class TPad;
 class TVirtualPad;
@@ -242,6 +243,7 @@ public:
    virtual void SetGridlines(std::vector<double> gridlines);
 
    void SetConfidenceIntervalColors(Color_t ci1 = kYellow, Color_t ci2 = kGreen);
+   void SetConfidenceIntervalColors(TColorNumber ci1, TColorNumber ci2);
 
    void SetC1(Double_t c1) { fC1 = c1; }
    void SetC2(Double_t c2) { fC2 = c2; }

@@ -267,3 +267,8 @@ void TAttFill::SetFillColorAlpha(Color_t fcolor, Float_t falpha)
 {
    fFillColor = TColor::GetColorTransparent(fcolor, falpha);
 }
+
+void TAttFill::SetFillColor(TColorNumber lcolor)
+{
+   SetFillColor(lcolor.number());
+}

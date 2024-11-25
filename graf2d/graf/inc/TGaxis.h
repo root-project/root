@@ -16,6 +16,8 @@
 #include "TAttText.h"
 #include "TString.h"
 
+
+class TColorNumber;
 class TF1;
 class TAxis;
 class TLatex;
@@ -132,6 +134,8 @@ public:
    void                SetWmin(Double_t wmin) {fWmin = wmin;}
    void                SetWmax(Double_t wmax) {fWmax = wmax;}
    static void         SetExponentOffset(Float_t xoff=0., Float_t yoff=0., Option_t *axis="xy");
+
+   void SetLabelColor(TColorNumber lcolor);
 
    ClassDefOverride(TGaxis,6)  //Graphics axis
 };

@@ -432,3 +432,8 @@ void TAttText::SetTextSizePixels(Int_t npixels)
       fTextSize = dy/(pad->GetY2() - pad->GetY1());
    }
 }
+
+void TAttText::SetTextColor(TColorNumber lcolor)
+{
+   SetTextColor(lcolor.number());
+}
