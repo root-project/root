@@ -274,7 +274,7 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleMod
    } else {
       cloneModel->fSchemaId = cloneModel->fModelId;
    }
-   cloneModel->fModelState = fModelState;
+   cloneModel->fModelState = (fModelState == EState::kRetired) ? EState::kFrozen : fModelState;
    cloneModel->fFieldNames = fFieldNames;
    cloneModel->fDescription = fDescription;
    cloneModel->fProjectedFields = fProjectedFields->Clone(*cloneModel);
@@ -442,8 +442,11 @@ const ROOT::Experimental::REntry &ROOT::Experimental::RNTupleModel::GetDefaultEn
 
 std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RNTupleModel::CreateEntry() const
 {
-   if (!IsFrozen())
-      throw RException(R__FAIL("invalid attempt to create entry of unfrozen model"));
+   switch (fModelState) {
+   case EState::kBuilding: throw RException(R__FAIL("invalid attempt to create entry of unfrozen model"));
+   case EState::kRetired: throw RException(R__FAIL("invalid attempt to create entry of retired model"));
+   case EState::kFrozen: break;
+   }
 
    auto entry = std::unique_ptr<REntry>(new REntry(fModelId, fSchemaId));
    for (const auto &f : fFieldZero->GetSubFields()) {
@@ -457,8 +460,11 @@ std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RNTupleModel::Cr
 
 std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RNTupleModel::CreateBareEntry() const
 {
-   if (!IsFrozen())
-      throw RException(R__FAIL("invalid attempt to create entry of unfrozen model"));
+   switch (fModelState) {
+   case EState::kBuilding: throw RException(R__FAIL("invalid attempt to create entry of unfrozen model"));
+   case EState::kRetired: throw RException(R__FAIL("invalid attempt to create entry of retired model"));
+   case EState::kFrozen: break;
+   }
 
    auto entry = std::unique_ptr<REntry>(new REntry(fModelId, fSchemaId));
    for (const auto &f : fFieldZero->GetSubFields()) {
@@ -484,8 +490,11 @@ ROOT::Experimental::REntry::RFieldToken ROOT::Experimental::RNTupleModel::GetTok
 
 ROOT::Experimental::RFieldBase::RBulk ROOT::Experimental::RNTupleModel::CreateBulk(std::string_view fieldName) const
 {
-   if (!IsFrozen())
-      throw RException(R__FAIL("invalid attempt to create bulk of unfrozen model"));
+   switch (fModelState) {
+   case EState::kBuilding: throw RException(R__FAIL("invalid attempt to create bulk of unfrozen model"));
+   case EState::kRetired: throw RException(R__FAIL("invalid attempt to create bulk of retired model"));
+   case EState::kFrozen: break;
+   }
 
    auto f = FindField(fieldName);
    if (!f)
@@ -495,8 +504,11 @@ ROOT::Experimental::RFieldBase::RBulk ROOT::Experimental::RNTupleModel::CreateBu
 
 void ROOT::Experimental::RNTupleModel::Unfreeze()
 {
-   if (!IsFrozen())
-      return;
+   switch (fModelState) {
+   case EState::kBuilding: return;
+   case EState::kRetired: throw RException(R__FAIL("invalid attempt to unfreeze retired model"));
+   case EState::kFrozen: break;
+   }
 
    fModelId = GetNewModelId();
    fSchemaId = fModelId;
@@ -509,6 +521,9 @@ void ROOT::Experimental::RNTupleModel::Unfreeze()
 
 void ROOT::Experimental::RNTupleModel::Freeze()
 {
+   if (fModelState == EState::kRetired)
+      throw RException(R__FAIL("invalid attempt to freeze retired model"));
+
    fModelState = EState::kFrozen;
 }
 
