@@ -19,22 +19,25 @@
 #include "TTree.h"
 #include "TH1D.h"
 #include "TRandom.h"
-using namespace RooFit;
 
-TH1 *makeTH1();
-TTree *makeTTree();
+TH1 *makeTH1(TRandom &trnd);
+TTree *makeTTree(TRandom &trnd);
 
 void rf102_dataimport()
 {
+   using namespace RooFit;
+
    // ---------------------------------------------------
    // I m p o r t i n g   R O O T   h i s t o g r a m s
    // ===================================================
+
+   TRandom3 trnd{};
 
    // I m p o r t   T H 1   i n t o   a   R o o D a t a H i s t
    // ---------------------------------------------------------
 
    // Create a ROOT TH1 histogram
-   TH1 *hh = makeTH1();
+   TH1 *hh = makeTH1(trnd);
 
    // Declare observable x
    RooRealVar x("x", "x", -10, 10);
@@ -80,7 +83,7 @@ void rf102_dataimport()
    // I m p o r t   T T r e e   i n t o   a   R o o D a t a S e t
    // -----------------------------------------------------------
 
-   TTree *tree = makeTTree();
+   TTree *tree = makeTTree(trnd);
 
    // Define 2nd observable y
    RooRealVar y("y", "y", -10, 10);
@@ -166,17 +169,17 @@ void rf102_dataimport()
 }
 
 // Create ROOT TH1 filled with a Gaussian distribution
-TH1 *makeTH1()
+TH1 *makeTH1(TRandom &trnd)
 {
    TH1D *hh = new TH1D("hh", "hh", 25, -10, 10);
    for (int i = 0; i < 100; i++) {
-      hh->Fill(gRandom->Gaus(0, 3));
+      hh->Fill(trnd.Gaus(0, 3));
    }
    return hh;
 }
 
 // Create ROOT TTree filled with a Gaussian distribution in x and a uniform distribution in y
-TTree *makeTTree()
+TTree *makeTTree(TRandom &trnd)
 {
    TTree *tree = new TTree("tree", "tree");
    double *px = new double;
@@ -184,8 +187,8 @@ TTree *makeTTree()
    tree->Branch("x", px, "x/D");
    tree->Branch("y", py, "y/D");
    for (int i = 0; i < 100; i++) {
-      *px = gRandom->Gaus(0, 3);
-      *py = gRandom->Uniform() * 30 - 15;
+      *px = trnd.Gaus(0, 3);
+      *py = trnd.Uniform() * 30 - 15;
       tree->Fill();
    }
    return tree;
