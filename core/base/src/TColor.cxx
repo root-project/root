@@ -20,10 +20,13 @@
 #include "TApplication.h"
 #include "TColorGradient.h"
 #include "snprintf.h"
+
 #include <algorithm>
 #include <cmath>
-#include <iostream>
 #include <fstream>
+#include <iostream>
+#include <sstream>
+#include <stdexcept>
 
 ClassImp(TColor);
 
@@ -2425,7 +2428,7 @@ void TColor::ListColors(Int_t ci, Int_t nb, Bool_t showEmpty)
    printf("   +------+-------+-------+-------+-------+--------------------+--------------------+\n");
    printf("   | Number of possible colors = %4d                                               |\n",ncolors);
    printf("   | Number of defined colors between %4d and %4d = %4d                          |\n",ci,last,nc);
-   printf("   | Number of free indeces between %4d and %4d   = %4d                          |\n",ci,last,last-ci-nc);
+   printf("   | Number of free indices between %4d and %4d   = %4d                          |\n",ci,last,last-ci-nc);
    printf("   +--------------------------------------------------------------------------------+\n\n");
 
 }
@@ -3646,4 +3649,40 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha)
 void TColor::InvertPalette()
 {
    std::reverse(fgPalette.fArray, fgPalette.fArray + fgPalette.GetSize());
+}
+
+/// The `color` string argument argument will be evaluated
+/// to get the actual ROOT color number, like `kRed`.
+/// Here is how the string is parsed:
+///
+///   1. Match against single-character color codes following the matplotlib convention.
+///      For example, to get red color (equivalent to `kRed`):
+///      ~~~ {.cxx}
+///      hist.SetLineColor("r")
+///      ~~~
+///   2. Check if the string matches an en existing TColor name (see TColor::GetColorByName()).
+///      For example:
+///      ~~~ {.cxx}
+///      hist.SetLineColor("kRed+1")
+///      ~~~
+///
+/// In case no corresponding color is found, a `std::invalid_argument` exception is thrown.
+TColorNumber::TColorNumber(std::string const &color)
+{
+   using Map = std::unordered_map<std::string, Int_t>;
+   // Color dictionary to define matplotlib conventions
+   static Map colorMap{{"r", kRed},   {"b", kBlue},  {"g", kGreen},   {"y", kYellow},
+                       {"w", kWhite}, {"k", kBlack}, {"m", kMagenta}, {"c", kCyan}};
+   auto found = colorMap.find(color);
+   if (found != colorMap.end()) {
+      fNumber = found->second;
+      return;
+   }
+
+   fNumber = TColor::GetColorByName(color.c_str());
+   if (fNumber == -1) {
+      std::stringstream msg;
+      msg << "\"" << color << "\" is not a valid color name";
+      throw std::invalid_argument(msg.str());
+   }
 }

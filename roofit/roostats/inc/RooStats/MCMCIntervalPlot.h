@@ -17,11 +17,13 @@
 
 #include "RooPrintable.h"
 #include "RooArgSet.h"
-#include "TNamed.h"
-#include "TH1.h"
 #include "RooStats/MCMCInterval.h"
 #include "RooNDKeysPdf.h"
 #include "RooProduct.h"
+
+#include <TColor.h>
+#include <TH1.h>
+#include <TNamed.h>
 
 namespace RooStats {
 
@@ -35,9 +37,9 @@ namespace RooStats {
       ~MCMCIntervalPlot() override;
 
       void SetMCMCInterval(MCMCInterval& interval);
-      void SetLineColor(Color_t color) {fLineColor = color;}
+      void SetLineColor(TColorNumber color) {fLineColor = color.number();}
       void SetLineWidth(Int_t width) {fLineWidth = width;}
-      void SetShadeColor(Color_t color) {fShadeColor = color;}
+      void SetShadeColor(TColorNumber color) {fShadeColor = color.number();}
       void SetShowBurnIn(bool showBurnIn) { fShowBurnIn = showBurnIn; }
 
       void Draw(const Option_t* options = nullptr) override;

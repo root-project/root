@@ -306,3 +306,8 @@ void TAttLine::SetLineColorAlpha(Color_t lcolor, Float_t lalpha)
 {
    fLineColor = TColor::GetColorTransparent(lcolor, lalpha);
 }
+
+void TAttLine::SetLineColor(TColorNumber lcolor)
+{
+   SetLineColor(lcolor.number());
+}
