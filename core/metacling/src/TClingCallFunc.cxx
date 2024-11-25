@@ -229,6 +229,19 @@ void TClingCallFunc::collect_type_info(QualType &QT, ostringstream &typedefbuf, 
    GetTypeAsString(QT, type_name, C, Policy);
 }
 
+static bool IsCopyConstructorDeleted(QualType QT)
+{
+   if (CXXRecordDecl *RD = QT->getAsCXXRecordDecl()) {
+      for (auto *Ctor : RD->ctors()) {
+         if (Ctor->isCopyConstructor()) {
+            return Ctor->isDeleted();
+         }
+      }
+   }
+
+   return false;
+}
+
 void TClingCallFunc::make_narg_ctor(const unsigned N, ostringstream &typedefbuf,
                                     ostringstream &callbuf, const string &class_name,
                                     int indent_level)
@@ -240,6 +253,10 @@ void TClingCallFunc::make_narg_ctor(const unsigned N, ostringstream &typedefbuf,
    const FunctionDecl *FD = GetDecl();
 
    callbuf << "new " << class_name << "(";
+
+   // IsCopyConstructorDeleted could trigger deserialization of decls.
+   cling::Interpreter::PushTransactionRAII RAII(fInterp);
+
    for (unsigned i = 0U; i < N; ++i) {
       const ParmVarDecl *PVD = FD->getParamDecl(i);
       QualType Ty = PVD->getType();
@@ -268,7 +285,17 @@ void TClingCallFunc::make_narg_ctor(const unsigned N, ostringstream &typedefbuf,
          callbuf << "*(" << type_name.c_str() << "**)args["
                  << i << "]";
       } else {
+         // By-value construction: Figure out if the type can be copy-constructed. This is tricky and cannot be done in
+         // a fully reliable way, also because std::vector<T> always defines a copy constructor, even if the type T is
+         // only moveable. As a heuristic, we only check if the copy constructor is deleted, or would be if implicit.
+         bool Move = IsCopyConstructorDeleted(QT);
+         if (Move) {
+            callbuf << "static_cast<" << type_name << "&&>(";
+         }
          callbuf << "*(" << type_name.c_str() << "*)args[" << i << "]";
+         if (Move) {
+            callbuf << ")";
+         }
       }
    }
    callbuf << ")";
@@ -354,6 +381,10 @@ void TClingCallFunc::make_narg_call(const std::string &return_type, const unsign
    if (ShouldCastFunction) callbuf << ")";
 
    callbuf << "(";
+
+   // IsCopyConstructorDeleted could trigger deserialization of decls.
+   cling::Interpreter::PushTransactionRAII RAII(fInterp);
+
    for (unsigned i = 0U; i < N; ++i) {
       const ParmVarDecl *PVD = FD->getParamDecl(i);
       QualType Ty = PVD->getType();
@@ -383,9 +414,17 @@ void TClingCallFunc::make_narg_call(const std::string &return_type, const unsign
          callbuf << "*(" << type_name.c_str() << "**)args["
                  << i << "]";
       } else {
-         // pointer falls back to non-pointer case; the argument preserves
-         // the "pointerness" (i.e. doesn't reference the value).
+         // By-value construction: Figure out if the type can be copy-constructed. This is tricky and cannot be done in
+         // a fully reliable way, also because std::vector<T> always defines a copy constructor, even if the type T is
+         // only moveable. As a heuristic, we only check if the copy constructor is deleted, or would be if implicit.
+         bool Move = IsCopyConstructorDeleted(QT);
+         if (Move) {
+            callbuf << "static_cast<" << type_name << "&&>(";
+         }
          callbuf << "*(" << type_name.c_str() << "*)args[" << i << "]";
+         if (Move) {
+            callbuf << ")";
+         }
       }
    }
    callbuf << ")";
