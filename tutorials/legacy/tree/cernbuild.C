@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_tree
+/// \ingroup tutorial_legacy_tree
 /// \notebook -nodraw
 /// Read data (CERN staff) from an ascii file and create a root file with a Tree.
 ///
@@ -25,7 +25,7 @@ TFile *cernbuild(Int_t getFile=0, Int_t print=1) {
    //from 1988
    TString filename = "cernstaff.root";
    TString dir = gROOT->GetTutorialDir();
-   dir.Append("/tree/");
+   dir.Append("/legacy/tree/");
    dir.ReplaceAll("/./","/");
    FILE *fp = fopen(Form("%scernstaff.dat",dir.Data()),"r");
 

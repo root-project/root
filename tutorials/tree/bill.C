@@ -40,8 +40,6 @@
 const Int_t N = 10000;       //number of events to be processed
 TStopwatch timer;
 
-
-
 void billw(const char *billname, Int_t compress) {
    //write N histograms as keys
    timer.Start();

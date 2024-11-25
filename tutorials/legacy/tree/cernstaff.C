@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_tree
+/// \ingroup tutorial_legacy_tree
 /// \notebook
 /// Playing with a Tree containing variables of type character
 ///
@@ -10,7 +10,7 @@
 
 void cernstaff () {
    TString dir = gROOT->GetTutorialDir();
-   dir.Append("/tree/cernstaff.C");
+   dir.Append("/legacy/tree/cernstaff.C");
    if (gSystem->AccessPathName("cernstaff.root")) {
       gROOT->SetMacroPath(dir);
       gROOT->ProcessLine(".x cernbuild.C");
