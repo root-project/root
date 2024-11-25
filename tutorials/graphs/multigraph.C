@@ -47,7 +47,7 @@ void multigraph()
    gr2->Fit("pol5","q");
    auto func2 = (TF1 *) gr2->GetListOfFunctions()->FindObject("pol5");
    func2->SetLineColor(kRed);
-   func2->SetLineStyle(2);
+   func2->SetLineStyle(kDashed);
 
    mg->Add(gr2);
 

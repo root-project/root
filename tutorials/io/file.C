@@ -31,7 +31,7 @@ void file(){
    lrh->DrawPave(10.5,8.5,11.3,11,1);
    lrh->DrawPave(14.5,8.5,15.3,11,1);
    TLine *ldot = new TLine(1,8.5,0.5,6.5);
-   ldot->SetLineStyle(2);
+   ldot->SetLineStyle(kDashed);
    ldot->Draw();
    ldot->DrawLine(2.5, 8.5, 9.4, 6.5);
    ldot->DrawLine(10.5, 8.5, 10, 6.5);

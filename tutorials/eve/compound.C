@@ -29,7 +29,7 @@ void compound()
 
    auto ml = new TEveLine;
    ml->SetMainColor(kRed);
-   ml->SetLineStyle(2);
+   ml->SetLineStyle(kDashed);
    ml->SetLineWidth(3);
    gEve->InsertVizDBEntry("BigLine", ml);
 

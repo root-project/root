@@ -49,7 +49,7 @@ void Bessel()
       JBessel[nu]= new TF1("J_0", "ROOT::Math::cyl_bessel_j([0],x)", 0, 10);
       JBessel[nu]->SetParameters(nu, 0.0);
       JBessel[nu]->SetTitle(""); //Bessel J functions");
-      JBessel[nu]->SetLineStyle(1);
+      JBessel[nu]->SetLineStyle(kSolid);
       JBessel[nu]->SetLineWidth(3);
       JBessel[nu]->SetLineColor(nu+1);
    }
@@ -86,7 +86,7 @@ void Bessel()
       KBessel[nu]= new TF1("J_0", "ROOT::Math::cyl_bessel_k([0],x)", 0, 10);
       KBessel[nu]->SetParameters(nu, 0.0);
       KBessel[nu]->SetTitle("Bessel K functions");
-      KBessel[nu]->SetLineStyle(1);
+      KBessel[nu]->SetLineStyle(kSolid);
       KBessel[nu]->SetLineWidth(3);
       KBessel[nu]->SetLineColor(nu+1);
    }
@@ -120,7 +120,7 @@ void Bessel()
       iBessel[nu]= new TF1("J_0", "ROOT::Math::cyl_bessel_i([0],x)", 0, 10);
       iBessel[nu]->SetParameters(nu, 0.0);
       iBessel[nu]->SetTitle("Bessel I functions");
-      iBessel[nu]->SetLineStyle(1);
+      iBessel[nu]->SetLineStyle(kSolid);
       iBessel[nu]->SetLineWidth(3);
       iBessel[nu]->SetLineColor(nu+1);
    }
@@ -155,7 +155,7 @@ void Bessel()
       jBessel[nu]= new TF1("J_0", "ROOT::Math::sph_bessel([0],x)", 0, 10);
       jBessel[nu]->SetParameters(nu, 0.0);
       jBessel[nu]->SetTitle("Bessel j functions");
-      jBessel[nu]->SetLineStyle(1);
+      jBessel[nu]->SetLineStyle(kSolid);
       jBessel[nu]->SetLineWidth(3);
       jBessel[nu]->SetLineColor(nu+1);
    }

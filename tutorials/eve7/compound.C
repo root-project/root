@@ -32,7 +32,7 @@ void compound()
    /*
    auto* ml = random_line(rnd, 20, 10);
    ml->SetMainColor(kRed);
-   ml->SetLineStyle(2);
+   ml->SetLineStyle(kDashed);
    ml->SetLineWidth(3);
    eveMng->InsertVizDBEntry("BigLine", ml);
    */
@@ -46,7 +46,7 @@ void compound()
 
    auto line = random_line(rnd, 20, 12);
    line->SetMainColor(kRed);
-   line->SetLineStyle(2);
+   line->SetLineStyle(kDashed);
    line->SetLineWidth(3);
    //  line->ApplyVizTag("BigLine");
    cmp->AddElement(line);

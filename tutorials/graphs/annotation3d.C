@@ -73,7 +73,7 @@ void annotation3d()
    g2->Draw();
 
    l2->SetLineColor(kRed);
-   l2->SetLineStyle(2);
+   l2->SetLineStyle(kDashed);
    l2->SetLineWidth(1);
    l2->Draw();
 

@@ -122,7 +122,7 @@ void tree() {
    ar1.DrawArrow(.43,.075,.54,.075,0.015,"|>");
    ar1.DrawArrow(.41,-.025,.54,-.025,0.015,"|>");
    TLine* ldot = new TLine(.95,.92,.99,.92);
-   ldot->SetLineStyle(3);
+   ldot->SetLineStyle(kDotted);
    ldot->Draw();
    ldot->DrawLine(.9,.805,.99,.805);
    ldot->DrawLine(.9,.275,.99,.275);

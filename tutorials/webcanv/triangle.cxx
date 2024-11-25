@@ -101,7 +101,7 @@ void triangle(bool ignore_jsmodule = false)
    auto tr2 = new TTriangle("tr2", "second triangle");
    tr2->SetPoints(0.2, 0.2, 0.2, 0.6, 0.5, 0.4);
    tr2->SetLineColor(kGreen);
-   tr2->SetLineStyle(2);
+   tr2->SetLineStyle(kDashed);
    tr2->SetFillColor(kYellow);
 
    auto tr3 = new TTriangle("tr3", "third triangle");

@@ -11,7 +11,7 @@
 void crown(){
    auto c1 = new TCanvas("c1","c1",400,400);
    auto cr1 = new TCrown(.5,.5,.3,.4);
-   cr1->SetLineStyle(2);
+   cr1->SetLineStyle(kDashed);
    cr1->SetLineWidth(4);
    cr1->Draw();
    auto cr2 = new TCrown(.5,.5,.2,.3,45,315);

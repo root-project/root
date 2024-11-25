@@ -87,7 +87,7 @@ void AtlasExample()
             return;
          }
          gpdf[ipdf][icut]->SetLineColor(2);
-         gpdf[ipdf][icut]->SetLineStyle(1);
+         gpdf[ipdf][icut]->SetLineStyle(kSolid);
          gpdf[ipdf][icut]->SetMarkerStyle(0);
          AddtoBand(gpdf[ipdf][icut],scalepdf[icut]);
       }
