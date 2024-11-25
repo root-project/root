@@ -40,18 +40,20 @@ TEST(RNTuple, ModelExtensionSimple)
    std::array<double, 2> refArray{1.0, 24.0};
    {
       auto model = RNTupleModel::Create();
-      auto fieldPt = model->MakeField<float>("pt", 42.0);
-
+      auto fieldPt = model->MakeField<float>("pt");
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath());
+
+      *fieldPt = 42.0;
       ntuple->Fill();
       *fieldPt = 12.0;
       ntuple->Fill();
 
       auto modelUpdater = ntuple->CreateModelUpdater();
       modelUpdater->BeginUpdate();
-      auto fieldArray = modelUpdater->MakeField<std::array<double, 2>>("array", refArray);
+      auto fieldArray = modelUpdater->MakeField<std::array<double, 2>>("array");
       modelUpdater->CommitUpdate();
 
+      *fieldArray = refArray;
       ntuple->Fill();
       *fieldPt = 1.0;
       fieldArray->at(1) = 1337.0;
@@ -83,7 +85,7 @@ TEST(RNTuple, ModelExtensionInvalidUse)
    FileRaii fileGuard("test_ntuple_modelext_invalid.root");
    {
       auto model = RNTupleModel::Create();
-      auto fieldPt = model->MakeField<float>("pt", 42.0);
+      *model->MakeField<float>("pt") = 42.0;
 
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath());
       auto entry = ntuple->GetModel().CreateEntry();
@@ -118,9 +120,10 @@ TEST(RNTuple, ModelExtensionMultiple)
    std::vector<std::uint32_t> refVec{0x00, 0xff, 0x55, 0xaa};
    {
       auto model = RNTupleModel::Create();
-      auto fieldPt = model->MakeField<float>("pt", 42.0);
-
+      auto fieldPt = model->MakeField<float>("pt");
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath());
+
+      *fieldPt = 42.0;
       ntuple->Fill();
       *fieldPt = 2.0;
       ntuple->Fill();
@@ -135,14 +138,17 @@ TEST(RNTuple, ModelExtensionMultiple)
       modelUpdater->CommitUpdate();
 
       modelUpdater->BeginUpdate();
-      auto fieldFloat = modelUpdater->MakeField<float>("f", 10);
+      auto fieldFloat = modelUpdater->MakeField<float>("f");
+      *fieldFloat = 10;
       modelUpdater->CommitUpdate();
 
       modelUpdater->BeginUpdate();
-      auto u8 = modelUpdater->MakeField<std::uint8_t>("u8", 0x7f);
-      auto str = modelUpdater->MakeField<std::string>("str", "default");
+      auto u8 = modelUpdater->MakeField<std::uint8_t>("u8");
+      auto str = modelUpdater->MakeField<std::string>("str");
       modelUpdater->CommitUpdate();
 
+      *u8 = 0x7f;
+      *str = "default";
       ntuple->Fill();
       *fieldPt = 12.0;
       *fieldFloat = 1.0;
@@ -202,15 +208,17 @@ TEST(RNTuple, ModelExtensionProjectSimple)
    FileRaii fileGuard("test_ntuple_modelext_project_simple.root");
    {
       auto model = RNTupleModel::Create();
-      auto fieldPt = model->MakeField<float>("pt", 42.0);
+      auto fieldPt = model->MakeField<float>("pt");
       model->AddProjectedField(std::make_unique<RField<float>>("aliasPt"), [](const std::string &) { return "pt"; });
 
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       auto modelUpdater = writer->CreateModelUpdater();
       modelUpdater->BeginUpdate();
-      auto fieldE = modelUpdater->MakeField<float>("E", 1.0);
+      auto fieldE = modelUpdater->MakeField<float>("E");
       modelUpdater->CommitUpdate();
 
+      *fieldPt = 42.0;
+      *fieldE = 1.0;
       writer->Fill();
       *fieldPt = 137.0;
       *fieldE = 2.0;
@@ -238,10 +246,10 @@ TEST(RNTuple, ModelExtensionProjectComplex)
    std::vector<std::uint32_t> refVec{0x00, 0xff, 0x55, 0xaa};
    {
       auto model = RNTupleModel::Create();
-      auto fieldPt = model->MakeField<float>("pt", 42.0);
+      auto fieldPt = model->MakeField<float>("pt");
       model->AddProjectedField(std::make_unique<RField<float>>("aliasPt"), [](const std::string &) { return "pt"; });
       model->AddProjectedField(std::make_unique<RField<float>>("al2Pt"), [](const std::string &) { return "pt"; });
-      auto fieldE = model->MakeField<float>("E", 1.0);
+      auto fieldE = model->MakeField<float>("E");
       model->AddProjectedField(std::make_unique<RField<float>>("aliasE"), [](const std::string &) { return "E"; });
 
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath());
@@ -260,6 +268,8 @@ TEST(RNTuple, ModelExtensionProjectComplex)
       });
       modelUpdater->CommitUpdate();
 
+      *fieldPt = 42.0;
+      *fieldE = 1.0;
       ntuple->Fill();
       *fieldPt = 12.0;
       *fieldE = 2.0;
@@ -298,7 +308,7 @@ TEST(RNTuple, ModelExtensionSubFields)
    {
       auto model = RNTupleModel::Create();
 
-      auto structFld = model->MakeField<CustomStruct>("structFld", refStruct);
+      *model->MakeField<CustomStruct>("structFld") = refStruct;
 
       RNTupleWriteOptions opts;
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath());
@@ -315,7 +325,7 @@ TEST(RNTuple, ModelExtensionSubFields)
       auto modelUpdater = ntuple->CreateModelUpdater();
 
       modelUpdater->BeginUpdate();
-      auto extStructField = modelUpdater->MakeField<CustomStruct>("extStructFld", refStruct);
+      *modelUpdater->MakeField<CustomStruct>("extStructFld") = refStruct;
       modelUpdater->CommitUpdate();
 
       ntuple->Fill();
@@ -497,7 +507,7 @@ TEST(RNTuple, ModelExtensionComplex)
       }
 
       modelUpdater->BeginUpdate();
-      auto b = modelUpdater->MakeField<bool>("b", false);
+      auto b = modelUpdater->MakeField<bool>("b");
       auto noColumns = modelUpdater->MakeField<EmptyStruct>("noColumns");
       modelUpdater->CommitUpdate();
       for (unsigned int i = 30000; i < 40000; ++i) {

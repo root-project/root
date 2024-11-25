@@ -67,10 +67,11 @@ TEST(RNTuple, Basics)
 
    {
       auto model = RNTupleModel::Create();
-      auto wrPt = model->MakeField<float>("pt", 42.0);
+      auto wrPt = model->MakeField<float>("pt");
 
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
       EXPECT_EQ(ntuple->GetNEntries(), 0);
+      *wrPt = 42.0;
       ntuple->Fill();
       EXPECT_EQ(ntuple->GetNEntries(), 1);
       EXPECT_EQ(ntuple->GetLastCommitted(), 0);
@@ -501,7 +502,7 @@ TEST(RNTuple, TMemFile)
 
    {
       auto model = RNTupleModel::Create();
-      auto pt = model->MakeField<float>("pt", 42.0);
+      *model->MakeField<float>("pt") = 42.0;
 
       auto writer = RNTupleWriter::Append(std::move(model), "ntpl", file);
       writer->Fill();
@@ -680,7 +681,7 @@ TEST(RPageSinkBuf, ParallelZipIMT)
          FileRaii fileGuard(filename);
 
          auto model = ROOT::Experimental::RNTupleModel::Create();
-         auto wrPt = model->MakeField<float>("pt", 42.0);
+         *model->MakeField<float>("pt") = 42.0;
 
          RNTupleWriteOptions options;
          options.SetInitialUnzippedPageSize(4);
@@ -763,7 +764,7 @@ TEST(RPageSink, Empty)
 
    {
       auto model = RNTupleModel::Create();
-      auto wrPt = model->MakeField<float>("pt", 42.0);
+      model->MakeField<float>("pt");
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
    }
 
@@ -779,8 +780,9 @@ TEST(RPageSink, MultipleClusterGroups)
 
    {
       auto model = RNTupleModel::Create();
-      auto wrPt = model->MakeField<float>("pt", 42.0);
+      auto wrPt = model->MakeField<float>("pt");
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
+      *wrPt = 42.0;
       ntuple->Fill();
       ntuple->CommitCluster();
       // This pattern should work: CommitCluster(false) followed by CommitCluster(true) and
@@ -1071,8 +1073,8 @@ TEST(RPageSink, SamePageMerging)
 
    for (auto enable : {true, false}) {
       auto model = RNTupleModel::Create();
-      model->MakeField<float>("px", 1.0);
-      model->MakeField<float>("py", 1.0);
+      *model->MakeField<float>("px") = 1.0;
+      *model->MakeField<float>("py") = 1.0;
       RNTupleWriteOptions options;
       options.SetEnablePageChecksums(enable);
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath(), options);

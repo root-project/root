@@ -68,11 +68,11 @@ TEST(RNTupleIndex, InvalidTypes)
    FileRaii fileGuard("test_ntuple_index_invalid_types.root");
    {
       auto model = RNTupleModel::Create();
-      auto fldInt = model->MakeField<std::int8_t>("fldInt", 99);
-      auto fldFloat = model->MakeField<float>("fldFloat", 2.5);
-      auto fldString = model->MakeField<std::string>("fldString", "foo");
-      auto fldStruct = model->MakeField<CustomStruct>(
-         "fldStruct", CustomStruct{0.1, {2.f, 4.f}, {{1.f}, {3.f, 5.f}}, "bar", std::byte(8)});
+      *model->MakeField<std::int8_t>("fldInt") = 99;
+      *model->MakeField<float>("fldFloat") = 2.5;
+      *model->MakeField<std::string>("fldString") = "foo";
+      *model->MakeField<CustomStruct>("fldStruct") =
+         CustomStruct{0.1, {2.f, 4.f}, {{1.f}, {3.f, 5.f}}, "bar", std::byte(8)};
 
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
       ntuple->Fill();

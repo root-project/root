@@ -51,15 +51,15 @@ protected:
 
    void SetUp() override {
       auto model = RNTupleModel::Create();
-      model->MakeField<float>("pt", 42.0);
-      model->MakeField<float>("energy", 7.0);
-      model->MakeField<std::string>("tag", "xyz");
-      model->MakeField<std::vector<float>>("jets", std::vector<float>{1.f, 2.f});
+      *model->MakeField<float>("pt") = 42;
+      *model->MakeField<float>("energy") = 7;
+      *model->MakeField<std::string>("tag") = "xyz";
+      *model->MakeField<std::vector<float>>("jets") = std::vector<float>{1.f, 2.f};
       auto fldNnlo = model->MakeField<std::vector<std::vector<float>>>("nnlo");
       fldNnlo->push_back(std::vector<float>());
       fldNnlo->push_back(std::vector<float>{1.0});
       fldNnlo->push_back(std::vector<float>{1.0, 2.0, 4.0, 8.0});
-      model->MakeField<ROOT::RVecI>("rvec", ROOT::RVecI{1, 2, 3});
+      *model->MakeField<ROOT::RVecI>("rvec") = ROOT::RVecI{1, 2, 3};
       auto fldElectron = model->MakeField<Electron>("electron");
       fldElectron->pt = 137.0;
       auto fldVecElectron = model->MakeField<std::vector<Electron>>("VecElectron");

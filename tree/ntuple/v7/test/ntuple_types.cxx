@@ -1138,7 +1138,7 @@ TEST(RNTuple, Byte)
 
    {
       auto model = RNTupleModel::Create();
-      auto f = model->MakeField<std::byte>("b", std::byte{137});
+      *model->MakeField<std::byte>("b") = std::byte{137};
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
       writer->Fill();
    }
@@ -1379,7 +1379,8 @@ TEST(RNTuple, Bitset)
    auto f1 = model->MakeField<std::bitset<66>>("f1");
    EXPECT_EQ(std::string("std::bitset<66>"), model->GetConstField("f1").GetTypeName());
    EXPECT_EQ(sizeof(std::bitset<66>), model->GetConstField("f1").GetValueSize());
-   auto f2 = model->MakeField<std::bitset<8>>("f2", "10101010");
+   auto f2 = model->MakeField<std::bitset<8>>("f2");
+   *f2 = std::bitset<8>("10101010");
 
    {
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());

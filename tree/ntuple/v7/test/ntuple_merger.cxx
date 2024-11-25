@@ -33,12 +33,13 @@ TEST(RPageStorage, ReadSealedPages)
    // Hence the second cluster should have more than a single page per column.  We write uncompressed
    // pages so that we can meaningfully peek into the content of read sealed pages later on.
    auto model = RNTupleModel::Create();
-   auto wrPt = model->MakeField<std::int32_t>("pt", 42);
+   auto wrPt = model->MakeField<std::int32_t>("pt");
    {
       RNTupleWriteOptions options;
       options.SetCompression(0);
       options.SetMaxUnzippedPageSize(4096);
       auto writer = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath(), options);
+      *wrPt = 42;
       writer->Fill();
       writer->CommitCluster();
       for (unsigned i = 0; i < 100000; ++i) {
@@ -94,8 +95,8 @@ TEST(RNTupleMerger, MergeSymmetric)
    FileRaii fileGuard1("test_ntuple_merge_in_1.root");
    {
       auto model = RNTupleModel::Create();
-      auto fieldFoo = model->MakeField<int>("foo", 0);
-      auto fieldBar = model->MakeField<int>("bar", 0);
+      auto fieldFoo = model->MakeField<int>("foo");
+      auto fieldBar = model->MakeField<int>("bar");
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath());
       for (size_t i = 0; i < 10; ++i) {
          *fieldFoo = i * 123;
@@ -107,8 +108,8 @@ TEST(RNTupleMerger, MergeSymmetric)
    FileRaii fileGuard2("test_ntuple_merge_in_2.root");
    {
       auto model = RNTupleModel::Create();
-      auto fieldBar = model->MakeField<int>("bar", 0);
-      auto fieldFoo = model->MakeField<int>("foo", 0);
+      auto fieldBar = model->MakeField<int>("bar");
+      auto fieldFoo = model->MakeField<int>("foo");
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
       for (size_t i = 0; i < 10; ++i) {
          *fieldFoo = i * 567;
@@ -202,7 +203,7 @@ TEST(RNTupleMerger, MergeAsymmetric1)
    FileRaii fileGuard1("test_ntuple_merge_in_1.root");
    {
       auto model = RNTupleModel::Create();
-      auto fieldFoo = model->MakeField<int>("foo", 0);
+      auto fieldFoo = model->MakeField<int>("foo");
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath());
       for (size_t i = 0; i < 10; ++i) {
          *fieldFoo = i * 123;
@@ -213,7 +214,7 @@ TEST(RNTupleMerger, MergeAsymmetric1)
    FileRaii fileGuard2("test_ntuple_merge_in_2.root");
    {
       auto model = RNTupleModel::Create();
-      auto fieldBar = model->MakeField<int>("bar", 0);
+      auto fieldBar = model->MakeField<int>("bar");
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
       for (size_t i = 0; i < 10; ++i) {
          *fieldBar = i * 765;
@@ -270,8 +271,8 @@ TEST(RNTupleMerger, MergeAsymmetric2)
    FileRaii fileGuard1("test_ntuple_merge_in_1.root");
    {
       auto model = RNTupleModel::Create();
-      auto fieldFoo = model->MakeField<int>("foo", 0);
-      auto fieldBar = model->MakeField<int>("bar", 0);
+      auto fieldFoo = model->MakeField<int>("foo");
+      auto fieldBar = model->MakeField<int>("bar");
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath());
       for (size_t i = 0; i < 10; ++i) {
          *fieldFoo = i * 123;
@@ -283,7 +284,7 @@ TEST(RNTupleMerger, MergeAsymmetric2)
    FileRaii fileGuard2("test_ntuple_merge_in_2.root");
    {
       auto model = RNTupleModel::Create();
-      auto fieldBar = model->MakeField<int>("bar", 0);
+      auto fieldBar = model->MakeField<int>("bar");
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
       for (size_t i = 0; i < 10; ++i) {
          *fieldBar = i * 765;
@@ -340,7 +341,7 @@ TEST(RNTupleMerger, MergeAsymmetric3)
    FileRaii fileGuard1("test_ntuple_merge_in_1.root");
    {
       auto model = RNTupleModel::Create();
-      auto fieldFoo = model->MakeField<int>("foo", 0);
+      auto fieldFoo = model->MakeField<int>("foo");
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath());
       for (size_t i = 0; i < 10; ++i) {
          *fieldFoo = i * 123;
@@ -351,8 +352,8 @@ TEST(RNTupleMerger, MergeAsymmetric3)
    FileRaii fileGuard2("test_ntuple_merge_in_2.root");
    {
       auto model = RNTupleModel::Create();
-      auto fieldFoo = model->MakeField<int>("foo", 0);
-      auto fieldBar = model->MakeField<int>("bar", 0);
+      auto fieldFoo = model->MakeField<int>("foo");
+      auto fieldBar = model->MakeField<int>("bar");
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
       for (size_t i = 0; i < 10; ++i) {
          *fieldFoo = i * 567;
@@ -521,7 +522,8 @@ TEST(RNTupleMerger, MergeInconsistentTypes)
    FileRaii fileGuard1("test_ntuple_merge_in_1.root");
    {
       auto model = RNTupleModel::Create();
-      auto fieldFoo = model->MakeField<std::string>("foo", "0");
+      auto fieldFoo = model->MakeField<std::string>("foo");
+      *fieldFoo = "0";
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath());
       for (size_t i = 0; i < 10; ++i) {
          *fieldFoo = std::to_string(i * 123);
@@ -532,7 +534,7 @@ TEST(RNTupleMerger, MergeInconsistentTypes)
    FileRaii fileGuard2("test_ntuple_merge_in_2.root");
    {
       auto model = RNTupleModel::Create();
-      auto fieldFoo = model->MakeField<float>("foo", 0);
+      auto fieldFoo = model->MakeField<float>("foo");
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
       for (size_t i = 0; i < 10; ++i) {
          *fieldFoo = i * 5.67;
@@ -577,8 +579,8 @@ TEST(RNTupleMerger, MergeThroughTFileMerger)
    FileRaii fileGuard1("test_ntuple_merge_in_1.root");
    {
       auto model = RNTupleModel::Create();
-      auto fieldFoo = model->MakeField<int>("foo", 0);
-      auto fieldBar = model->MakeField<int>("bar", 0);
+      auto fieldFoo = model->MakeField<int>("foo");
+      auto fieldBar = model->MakeField<int>("bar");
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath());
       for (size_t i = 0; i < 10; ++i) {
          *fieldFoo = i * 123;
@@ -590,8 +592,8 @@ TEST(RNTupleMerger, MergeThroughTFileMerger)
    FileRaii fileGuard2("test_ntuple_merge_in_2.root");
    {
       auto model = RNTupleModel::Create();
-      auto fieldBar = model->MakeField<int>("bar", 0);
-      auto fieldFoo = model->MakeField<int>("foo", 0);
+      auto fieldBar = model->MakeField<int>("bar");
+      auto fieldFoo = model->MakeField<int>("foo");
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
       for (size_t i = 0; i < 10; ++i) {
          *fieldFoo = i * 567;
@@ -662,8 +664,8 @@ TEST(RNTupleMerger, MergeThroughTFileMergerIncremental)
    FileRaii fileGuardIn("test_ntuple_merge_in.root");
    {
       auto model = RNTupleModel::Create();
-      auto fieldFoo = model->MakeField<int>("foo", 0);
-      auto fieldBar = model->MakeField<int>("bar", 0);
+      auto fieldFoo = model->MakeField<int>("foo");
+      auto fieldBar = model->MakeField<int>("bar");
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuardIn.GetPath());
       for (size_t i = 0; i < 10; ++i) {
          *fieldFoo = i * 123;
@@ -675,8 +677,8 @@ TEST(RNTupleMerger, MergeThroughTFileMergerIncremental)
    FileRaii fileGuardOut("test_ntuple_merge_out.root");
    {
       auto model = RNTupleModel::Create();
-      auto fieldBar = model->MakeField<int>("bar", 0);
-      auto fieldFoo = model->MakeField<int>("foo", 0);
+      auto fieldBar = model->MakeField<int>("bar");
+      auto fieldFoo = model->MakeField<int>("foo");
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuardOut.GetPath());
       for (size_t i = 0; i < 10; ++i) {
          *fieldFoo = i * 567;
@@ -743,8 +745,8 @@ TEST(RNTupleMerger, MergeThroughTFileMergerKey)
    FileRaii fileGuardIn("test_ntuple_merge_in.root");
    {
       auto model = RNTupleModel::Create();
-      auto fieldFoo = model->MakeField<int>("foo", 0);
-      auto fieldBar = model->MakeField<int>("bar", 0);
+      auto fieldFoo = model->MakeField<int>("foo");
+      auto fieldBar = model->MakeField<int>("bar");
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuardIn.GetPath());
       for (size_t i = 0; i < 10; ++i) {
          *fieldFoo = i * 123;
@@ -785,7 +787,7 @@ TEST(RNTupleMerger, MergeThroughTBufferMerger)
          auto file1 = merger.GetFile();
 
          auto model = RNTupleModel::Create();
-         auto pt = model->MakeField<float>("pt", 42.0);
+         *model->MakeField<float>("pt") = 42.0;
          auto writer = RNTupleWriter::Append(std::move(model), "ntpl", *file1);
          writer->Fill();
       }
@@ -837,7 +839,7 @@ TEST(RNTupleMerger, ChangeCompression)
    FileRaii fileGuard("test_ntuple_merge_changecomp_in.root");
    {
       auto model = RNTupleModel::Create();
-      auto fieldFoo = model->MakeField<int>("foo", 0);
+      auto fieldFoo = model->MakeField<int>("foo");
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
       for (size_t i = 0; i < 1000; ++i) {
          *fieldFoo = i * 123;
@@ -963,9 +965,9 @@ TEST(RNTupleMerger, MergeLateModelExtension)
    FileRaii fileGuard1("test_ntuple_merge_in_1.root");
    {
       auto model = RNTupleModel::Create();
-      auto fieldFoo = model->MakeField<std::unordered_map<std::string, int>>("foo", 0);
-      auto fieldVfoo = model->MakeField<std::vector<int>>("vfoo", 0);
-      auto fieldBar = model->MakeField<int>("bar", 0);
+      auto fieldFoo = model->MakeField<std::unordered_map<std::string, int>>("foo");
+      auto fieldVfoo = model->MakeField<std::vector<int>>("vfoo");
+      auto fieldBar = model->MakeField<int>("bar");
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath(), RNTupleWriteOptions());
       for (size_t i = 0; i < 10; ++i) {
          fieldFoo->insert(std::make_pair(std::to_string(i), i * 123));
@@ -978,9 +980,9 @@ TEST(RNTupleMerger, MergeLateModelExtension)
    FileRaii fileGuard2("test_ntuple_merge_in_2.root");
    {
       auto model = RNTupleModel::Create();
-      auto fieldBaz = model->MakeField<int>("baz", 0);
-      auto fieldFoo = model->MakeField<std::unordered_map<std::string, int>>("foo", 0);
-      auto fieldVfoo = model->MakeField<std::vector<int>>("vfoo", 0);
+      auto fieldBaz = model->MakeField<int>("baz");
+      auto fieldFoo = model->MakeField<std::unordered_map<std::string, int>>("foo");
+      auto fieldVfoo = model->MakeField<std::vector<int>>("vfoo");
       auto wopts = RNTupleWriteOptions();
       wopts.SetCompression(0);
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath(), wopts);
@@ -1048,8 +1050,8 @@ TEST(RNTupleMerger, MergeCompression)
    FileRaii fileGuard1("test_ntuple_merge_comp_in_1.root");
    {
       auto model = RNTupleModel::Create();
-      auto fieldFoo = model->MakeField<int>("foo", 0);
-      auto fieldBar = model->MakeField<int>("bar", 0);
+      auto fieldFoo = model->MakeField<int>("foo");
+      auto fieldBar = model->MakeField<int>("bar");
       auto writeOpts = RNTupleWriteOptions();
       writeOpts.SetCompression(505);
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath(), writeOpts);
@@ -1063,8 +1065,8 @@ TEST(RNTupleMerger, MergeCompression)
    FileRaii fileGuard2("test_ntuple_merge_comp_in_2.root");
    {
       auto model = RNTupleModel::Create();
-      auto fieldBar = model->MakeField<int>("bar", 0);
-      auto fieldFoo = model->MakeField<int>("foo", 0);
+      auto fieldBar = model->MakeField<int>("bar");
+      auto fieldFoo = model->MakeField<int>("foo");
       auto writeOpts = RNTupleWriteOptions();
       writeOpts.SetCompression(404);
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath(), writeOpts);
@@ -1124,7 +1126,7 @@ TEST(RNTupleMerger, DifferentCompatibleRepresentations)
    FileRaii fileGuard1("test_ntuple_merge_diff_rep_in_1.root");
 
    auto model = RNTupleModel::Create();
-   auto pFoo = model->MakeField<double>("foo", 0);
+   auto pFoo = model->MakeField<double>("foo");
    auto clonedModel = model->Clone();
    {
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath());
@@ -1250,7 +1252,7 @@ TEST(RNTupleMerger, Double32)
 
    {
       auto model = RNTupleModel::Create();
-      auto pFoo = model->MakeField<Double32_t>("foo", 0);
+      auto pFoo = model->MakeField<Double32_t>("foo");
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath());
       for (size_t i = 0; i < 10; ++i) {
          *pFoo = i * 123;
@@ -1262,7 +1264,7 @@ TEST(RNTupleMerger, Double32)
 
    {
       auto model = RNTupleModel::Create();
-      auto pFoo = model->MakeField<double>("foo", 0);
+      auto pFoo = model->MakeField<double>("foo");
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
       for (size_t i = 0; i < 10; ++i) {
          *pFoo = i * 321;
@@ -1337,7 +1339,7 @@ TEST(RNTupleMerger, MergeProjectedFields)
    FileRaii fileGuard1("test_ntuple_merge_proj_in_1.root");
    {
       auto model = RNTupleModel::Create();
-      auto fieldFoo = model->MakeField<int>("foo", 0);
+      auto fieldFoo = model->MakeField<int>("foo");
       auto projBar = RFieldBase::Create("bar", "int").Unwrap();
       model->AddProjectedField(std::move(projBar), [](const std::string &) { return "foo"; });
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath());
