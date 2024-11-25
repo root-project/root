@@ -198,10 +198,6 @@ The `$ROOTSYS/tutorials` directory includes several sub-directories:
 \ingroup Tutorials
 \brief XML examples.
 
-\defgroup tutorial_proof Proof tutorials
-\ingroup Tutorials
-\brief These examples aim to illustrate the usage of PROOF
-
 \defgroup tutorial_webcanv TWebCanvas tutorials
 \ingroup Tutorials
 \brief Examples showing the special features of web-based canvas
