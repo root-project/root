@@ -315,3 +315,77 @@ TEST(RNTupleModel, CloneRegisteredSubfield)
    auto clone = model->Clone();
    EXPECT_TRUE(clone->GetDefaultEntry().GetPtr<float>("struct.a"));
 }
+
+TEST(RNTupleModel, Expire)
+{
+   auto model = RNTupleModel::Create();
+   model->MakeField<CustomStruct>("struct")->a = 1.0;
+
+   try {
+      model->Expire();
+      FAIL() << "attempting expire unfrozen model should fail";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("invalid attempt to expire unfrozen model"));
+   }
+
+   model->Freeze();
+   model->Expire();
+
+   EXPECT_EQ(0u, model->GetModelId());
+   EXPECT_NE(0, model->GetSchemaId());
+   auto clone = model->Clone();
+   EXPECT_NE(0, clone->GetModelId());
+   EXPECT_EQ(model->GetSchemaId(), clone->GetSchemaId());
+
+   auto token = model->GetToken("struct");
+   EXPECT_FLOAT_EQ(1.0, model->GetDefaultEntry().GetPtr<CustomStruct>(token)->a);
+
+   EXPECT_TRUE(model->GetRegisteredSubfields().empty());
+   EXPECT_TRUE(model->GetDescription().empty());
+
+   EXPECT_THROW(model->MakeField<float>("E"), RException);
+   EXPECT_THROW(model->AddField(RFieldBase::Create("E", "float").Unwrap()), RException);
+   EXPECT_THROW(model->RegisterSubfield("struct.a"), RException);
+   EXPECT_THROW(model->AddProjectedField(RFieldBase::Create("a", "float").Unwrap(),
+                                         [](const std::string &) { return "struct.a"; }),
+                RException);
+   EXPECT_THROW(model->CreateEntry(), RException);
+   EXPECT_THROW(model->CreateBareEntry(), RException);
+   EXPECT_THROW(model->CreateBulk("struct"), RException);
+   EXPECT_THROW(model->GetMutableFieldZero(), RException);
+   EXPECT_THROW(model->GetMutableField("struct"), RException);
+   EXPECT_THROW(model->SetDescription("x"), RException);
+
+   FileRaii fileGuard("test_ntuple_model_expire.root");
+   EXPECT_THROW(RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath()), RException);
+   auto writer = RNTupleWriter::Recreate(std::move(clone), "ntpl", fileGuard.GetPath());
+   writer.reset();
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   EXPECT_EQ(0u, reader->GetNEntries());
+}
+
+TEST(RNTupleModel, ExpireWithWriter)
+{
+   FileRaii fileGuard("test_ntuple_model_expire_with_writer.root");
+
+   auto model = RNTupleModel::Create();
+   *model->MakeField<float>("pt") = 1.0;
+   auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+   writer->Fill();
+   writer->CommitDataset();
+
+   writer->CommitCluster(true); // noop
+   writer->FlushCluster();      // noop;
+   writer->CommitDataset();     // noop
+   EXPECT_EQ(1u, writer->GetNEntries());
+   EXPECT_EQ(1u, writer->GetLastFlushed());
+   EXPECT_EQ(1u, writer->GetLastCommitted());
+   EXPECT_EQ(1u, writer->GetLastCommittedClusterGroup());
+
+   EXPECT_THROW(writer->Fill(), RException);
+   EXPECT_THROW(writer->FlushColumns(), RException);
+   EXPECT_THROW(writer->CreateEntry(), RException);
+   EXPECT_THROW(writer->CreateModelUpdater(), RException);
+
+   EXPECT_FLOAT_EQ(1.0, *writer->GetModel().GetDefaultEntry().GetPtr<float>("pt"));
+}

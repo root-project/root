@@ -95,6 +95,9 @@ void ROOT::Experimental::RNTupleFillContext::CommitStagedClusters()
    if (fStagedClusters.empty()) {
       return;
    }
+   if (fModel->IsExpired()) {
+      throw RException(R__FAIL("invalid attempt to commit staged clusters after dataset was committed"));
+   }
 
    fSink->CommitStagedClusters(fStagedClusters);
    fStagedClusters.clear();

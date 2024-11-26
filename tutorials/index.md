@@ -54,10 +54,6 @@ The `$ROOTSYS/tutorials` directory includes several sub-directories:
 \ingroup Tutorials
 \brief Examples showing how to use FOAM.
 
-\defgroup tutorial_cont Containers tutorials
-\ingroup Tutorials
-\brief Examples showing the "containers' classes" usage.
-
 \defgroup tutorial_eve Event display tutorials
 \ingroup Tutorials
 \brief Examples showing the "Event display classes" usage.
@@ -138,10 +134,6 @@ The `$ROOTSYS/tutorials` directory includes several sub-directories:
 \ingroup Tutorials
 \brief Examples showing the net classes.
 
-\defgroup tutorial_physics Physics tutorials
-\ingroup Tutorials
-\brief Physics examples.
-
 \defgroup tutorial_pyroot PyRoot tutorials
 \ingroup Tutorials
 \brief Selected examples illustrating how to use ROOT's Python interface: PyROOT.
@@ -197,10 +189,6 @@ The `$ROOTSYS/tutorials` directory includes several sub-directories:
 \defgroup tutorial_xml XML tutorials
 \ingroup Tutorials
 \brief XML examples.
-
-\defgroup tutorial_proof Proof tutorials
-\ingroup Tutorials
-\brief These examples aim to illustrate the usage of PROOF
 
 \defgroup tutorial_webcanv TWebCanvas tutorials
 \ingroup Tutorials

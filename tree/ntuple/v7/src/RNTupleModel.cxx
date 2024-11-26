@@ -35,12 +35,18 @@ std::uint64_t GetNewModelId()
 ROOT::Experimental::RFieldZero &
 ROOT::Experimental::Internal::GetFieldZeroOfModel(ROOT::Experimental::RNTupleModel &model)
 {
+   if (model.IsExpired()) {
+      throw RException(R__FAIL("invalid use of expired model"));
+   }
    return *model.fFieldZero;
 }
 
 ROOT::Experimental::Internal::RProjectedFields &
 ROOT::Experimental::Internal::GetProjectedFieldsOfModel(ROOT::Experimental::RNTupleModel &model)
 {
+   if (model.IsExpired()) {
+      throw RException(R__FAIL("invalid use of expired model"));
+   }
    return *model.fProjectedFields;
 }
 
@@ -269,12 +275,12 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleMod
    cloneModel->fModelId = GetNewModelId();
    // For a frozen model, we can keep the schema id because adding new fields is forbidden. It is reset in Unfreeze()
    // if called by the user.
-   if (fIsFrozen) {
+   if (IsFrozen()) {
       cloneModel->fSchemaId = fSchemaId;
    } else {
       cloneModel->fSchemaId = cloneModel->fModelId;
    }
-   cloneModel->fIsFrozen = fIsFrozen;
+   cloneModel->fModelState = (fModelState == EState::kExpired) ? EState::kFrozen : fModelState;
    cloneModel->fFieldNames = fFieldNames;
    cloneModel->fDescription = fDescription;
    cloneModel->fProjectedFields = fProjectedFields->Clone(*cloneModel);
@@ -442,8 +448,11 @@ const ROOT::Experimental::REntry &ROOT::Experimental::RNTupleModel::GetDefaultEn
 
 std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RNTupleModel::CreateEntry() const
 {
-   if (!IsFrozen())
-      throw RException(R__FAIL("invalid attempt to create entry of unfrozen model"));
+   switch (fModelState) {
+   case EState::kBuilding: throw RException(R__FAIL("invalid attempt to create entry of unfrozen model"));
+   case EState::kExpired: throw RException(R__FAIL("invalid attempt to create entry of expired model"));
+   case EState::kFrozen: break;
+   }
 
    auto entry = std::unique_ptr<REntry>(new REntry(fModelId, fSchemaId));
    for (const auto &f : fFieldZero->GetSubFields()) {
@@ -457,8 +466,11 @@ std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RNTupleModel::Cr
 
 std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RNTupleModel::CreateBareEntry() const
 {
-   if (!IsFrozen())
-      throw RException(R__FAIL("invalid attempt to create entry of unfrozen model"));
+   switch (fModelState) {
+   case EState::kBuilding: throw RException(R__FAIL("invalid attempt to create entry of unfrozen model"));
+   case EState::kExpired: throw RException(R__FAIL("invalid attempt to create entry of expired model"));
+   case EState::kFrozen: break;
+   }
 
    auto entry = std::unique_ptr<REntry>(new REntry(fModelId, fSchemaId));
    for (const auto &f : fFieldZero->GetSubFields()) {
@@ -484,8 +496,11 @@ ROOT::Experimental::REntry::RFieldToken ROOT::Experimental::RNTupleModel::GetTok
 
 ROOT::Experimental::RFieldBase::RBulk ROOT::Experimental::RNTupleModel::CreateBulk(std::string_view fieldName) const
 {
-   if (!IsFrozen())
-      throw RException(R__FAIL("invalid attempt to create bulk of unfrozen model"));
+   switch (fModelState) {
+   case EState::kBuilding: throw RException(R__FAIL("invalid attempt to create bulk of unfrozen model"));
+   case EState::kExpired: throw RException(R__FAIL("invalid attempt to create bulk of expired model"));
+   case EState::kFrozen: break;
+   }
 
    auto f = FindField(fieldName);
    if (!f)
@@ -493,10 +508,26 @@ ROOT::Experimental::RFieldBase::RBulk ROOT::Experimental::RNTupleModel::CreateBu
    return f->CreateBulk();
 }
 
+void ROOT::Experimental::RNTupleModel::Expire()
+{
+   switch (fModelState) {
+   case EState::kExpired: return;
+   case EState::kBuilding: throw RException(R__FAIL("invalid attempt to expire unfrozen model"));
+   case EState::kFrozen: break;
+   }
+
+   // Ensure that Fill() does not work anymore
+   fModelId = 0;
+   fModelState = EState::kExpired;
+}
+
 void ROOT::Experimental::RNTupleModel::Unfreeze()
 {
-   if (!IsFrozen())
-      return;
+   switch (fModelState) {
+   case EState::kBuilding: return;
+   case EState::kExpired: throw RException(R__FAIL("invalid attempt to unfreeze expired model"));
+   case EState::kFrozen: break;
+   }
 
    fModelId = GetNewModelId();
    fSchemaId = fModelId;
@@ -504,12 +535,15 @@ void ROOT::Experimental::RNTupleModel::Unfreeze()
       fDefaultEntry->fModelId = fModelId;
       fDefaultEntry->fSchemaId = fSchemaId;
    }
-   fIsFrozen = false;
+   fModelState = EState::kBuilding;
 }
 
 void ROOT::Experimental::RNTupleModel::Freeze()
 {
-   fIsFrozen = true;
+   if (fModelState == EState::kExpired)
+      throw RException(R__FAIL("invalid attempt to freeze expired model"));
+
+   fModelState = EState::kFrozen;
 }
 
 void ROOT::Experimental::RNTupleModel::SetDescription(std::string_view description)

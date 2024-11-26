@@ -420,6 +420,7 @@ The following builtins have been updated:
 
 More than 200 items were addressed for this release. The full list is:
 
+* [[#17040](https://github.com/root-project/root/issues/17040)] - Small difference between kp6Violet implementation and official value from Petroff paper
 * [[#16976](https://github.com/root-project/root/issues/16976)] - Strange overflow bin bar when plotting TH1D with X1 option
 * [[#16946](https://github.com/root-project/root/issues/16946)] - Crash in RDF constructor with empty file list
 * [[#16942](https://github.com/root-project/root/issues/16942)] - another crash in finalization 

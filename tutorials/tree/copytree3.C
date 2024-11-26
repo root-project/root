@@ -12,7 +12,11 @@
 /// \date September 2018
 /// \author Rene Brun
 
+#ifdef R__WIN32
+R__LOAD_LIBRARY($ROOTSYS/test/libEvent.dll)
+#else
 R__LOAD_LIBRARY($ROOTSYS/test/libEvent.so)
+#endif
 
 void copytree3()
 {
