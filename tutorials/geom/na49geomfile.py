@@ -9,7 +9,7 @@
 import ROOT
 
 ROOT.gBenchmark.Start( 'geometry' )
-na = ROOT.TFile( 'py-na49.root', 'RECREATE' )
+na = ROOT.TFile( 'na49.root', 'RECREATE' )
 n49 = ROOT.gROOT.FindObject( 'na49' )
 n49.Write()
 na.Write()

@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_pyroot
+## \ingroup tutorial_hist
 ## \notebook -js
 ## Simple example illustrating how to use the C++ interpreter
 ##

@@ -31,7 +31,7 @@ na49title = ROOT.TPaveLabel( 0.04, 0.86, 0.96, 0.98, 'Two views of the NA49 dete
 na49title.SetFillColor( 32 )
 na49title.Draw()
 #
-nageom = ROOT.TFile( 'py-na49.root' )
+nageom = ROOT.TFile( 'na49.root' )
 n49 = ROOT.gROOT.FindObject( 'na49' )
 n49.SetBomb( 1.2 )
 n49.cd()     # Set current geometry
