@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_pyroot
+## \ingroup tutorial_tree
 ## \notebook -nodraw
 ## example of macro to read data from an ascii file and
 ## create a root file with a Tree.

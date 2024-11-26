@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_pyroot
+## \ingroup tutorial_geom
 ## This macro generates two views of the NA49 detector.
 ##
 ## To have a better and dynamic view of any of these pads,

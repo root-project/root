@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_pyroot
+## \ingroup tutorial_graphs
 ## \notebook -js
 ## A Simple Graph with error bars
 ##

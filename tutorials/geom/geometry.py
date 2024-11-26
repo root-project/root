@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_pyroot
+## \ingroup tutorial_geom
 ## \notebook -nodraw
 ## Geometry
 ##
