@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_math
 ## \notebook
-## Example macro describing the student t distribution
+## \preview  Example macro describing the student t distribution
 ##
 ## ~~~{.cpp}
 ## root[0]: .x tStudent.C
@@ -11,9 +11,10 @@
 ##
 ## based on Magdalena Slawinska's tStudent.C
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
 ## \macro_code
 ##
+## \date April 2019
 ## \author Juan Fernando Jaramillo Botero
 
 from ROOT import TH1D, TF1, TCanvas, kRed, kBlue

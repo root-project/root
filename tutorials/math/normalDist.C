@@ -1,11 +1,12 @@
 /// \file
 /// \ingroup tutorial_math
 /// \notebook
-/// Tutorial illustrating the new statistical distributions functions (pdf, cdf and quantile)
+/// \preview  Tutorial illustrating the new statistical distributions functions (pdf, cdf and quantile)
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date August 2016
 /// \author Anna Kreshuk
 
 #include "Math/DistFunc.h"

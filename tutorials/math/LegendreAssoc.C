@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_math
 /// \notebook
-/// Example describing the usage of different kinds of Associate Legendre Polynomials
+/// \preview  Example describing the usage of different kinds of Associate Legendre Polynomials
 /// To execute the macro type in:
 ///
 /// ~~~{.cpp}
@@ -13,10 +13,11 @@
 /// and Spherical Associate Legendre Polynomials
 /// Their integrals on the range [-1, 1] are calculated
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_output
 /// \macro_code
 ///
+/// \date November 2024
 /// \author Magdalena Slawinska
 
 

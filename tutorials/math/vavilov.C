@@ -1,11 +1,12 @@
 /// \file
 /// \ingroup tutorial_math
 /// \notebook
-/// Test of the TMath::Vavilov distribution
+/// \preview  Test of the TMath::Vavilov distribution
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date August 2016
 /// \author Anna Kreshuk
 
 #include "TMath.h"

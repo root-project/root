@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_math
 /// \notebook
-/// Example macro describing how to use the special mathematical functions
+/// \preview  Example macro describing how to use the special mathematical functions
 /// taking full advantage of the precision and speed of the C99 compliant
 /// environments. To execute the macro type in:
 ///
@@ -20,9 +20,10 @@
 /// The naming and numbering of the functions is taken from
 /// [Matt Austern, (Draft) Technical Report on Standard Library Extensions, N1687=04-0127, September 10, 2004](A HREF="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2004/n1687.pdf")
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date September 2017
 /// \author Andras Zsenei
 
 #include "TF1.h"

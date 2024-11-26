@@ -1,13 +1,14 @@
 ## \file
 ## \ingroup tutorial_math
 ## \notebook
-## Tutorial illustrating the new statistical distributions functions (pdf, cdf and quantile)
+## \preview  Tutorial illustrating the new statistical distributions functions (pdf, cdf and quantile)
 ##
 ## based on Anna Kreshuk's normalDist.C
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
 ## \macro_code
 ##
+## \date November 2023
 ## \author Juan Fernando Jaramillo Botero
 
 from ROOT import TF1, TCanvas, TSystem, TAxis, TLegend

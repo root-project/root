@@ -1,11 +1,12 @@
 /// \file
 /// \ingroup tutorial_math
 /// \notebook
-/// Tutorial illustrating the multivariate gaussian random number generation
+/// \preview  Tutorial illustrating the multivariate gaussian random number generation
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date November 2023
 /// \author Jorge Lopez
 
 void multivarGaus() {

@@ -1,11 +1,12 @@
 /// \file
 /// \ingroup tutorial_math
 /// \notebook
-/// Tutorial illustrating the use of TMath::GammaDist and TMath::LogNormal
+/// \preview  Tutorial illustrating the use of TMath::GammaDist and TMath::LogNormal
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date August 2016
 /// \author Anna Kreshuk
 
 void mathGammaNormal(){

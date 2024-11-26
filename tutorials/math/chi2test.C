@@ -1,16 +1,17 @@
 /// \file
 /// \ingroup tutorial_math
 /// \notebook
-/// Example to use chi2 test for comparing two histograms
+/// \preview  Example to use chi2 test for comparing two histograms
 /// One unweighted histogram is compared with a weighted histogram.
 /// The normalized residuals are retrieved and plotted in a simple graph.
 /// The QQ plot of the normalized residual using the
 /// normal distribution is also plotted.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_output
 /// \macro_code
 ///
+/// \date August 2016
 /// \author Nikolai Gagunashvili, Daniel Haertl, Lorenzo Moneta
 
 #include "TH1.h"

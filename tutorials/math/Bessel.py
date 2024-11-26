@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_math
 ## \notebook
-## Show the different kinds of Bessel functions available in ROOT
+## \preview  Show the different kinds of Bessel functions available in ROOT
 ## To execute the macro type in:
 ##
 ## ~~~{.cpp}
@@ -14,9 +14,10 @@
 ##
 ## Based on Bessel.C by Magdalena Slawinska
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
 ## \macro_code
 ##
+## \date November 2024
 ## \author Juan Fernando Jaramillo Botero
 
 import ROOT

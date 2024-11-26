@@ -1,11 +1,12 @@
 /// \file
 /// \ingroup tutorial_math
 /// \notebook
-/// Example of using the TKDE class (kernel density estimator)
+/// \preview  Example of using the TKDE class (kernel density estimator)
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date August 2016
 /// \authors Lorenzo Moneta, Bartolomeu Rabacal (Dec 2010)
 
 #include "TH1.h"

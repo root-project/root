@@ -1,12 +1,13 @@
 /// \file
 /// \ingroup tutorial_math
 /// \notebook
-/// Example of Chebyshev polynomials
+/// \preview  Example of Chebyshev polynomials
 /// using new TFormula pre-defined definitions of chebyshev polynomials
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date August 2016
 /// \author Lorenzo Moneta
 
 void ChebyshevPol() {
