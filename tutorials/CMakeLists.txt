@@ -739,10 +739,10 @@ if(ROOT_pyroot_FOUND)
              pyroot/fit1_py.py      # not a tutorial
              pyroot/gui_ex.py       # requires GUI
              pyroot/mrt.py          # not really a tutorial
-             pyroot/na49geomfile.py # ????
-             pyroot/na49visible.py  # ????
+             geom/na49geomfile.py # ????
+             geom/na49visible.py  # ????
              pyroot/parse_CSV_file_with_TTree_ReadStream.py # not a tutorial
-             pyroot/numberEntry.py  # requires GUI
+             guiui/numberEntry.py  # requires GUI
              legacy/pyroot/*py      # legacy ...
              histfactory/makeQuickModel.py # not a tutorial
              eve/lineset.py         # requires GUI
@@ -822,7 +822,7 @@ if(ROOT_pyroot_FOUND)
   list(APPEND pyveto tmva/PyTorch_Generate_CNN_Model.py)
 
   if(NOT ROOT_geom_FOUND)
-    list(APPEND pyveto pyroot/geometry.py)
+    list(APPEND pyveto geom/geometry.py)
   endif()
 
   # Now glob all vetos for pyroot
@@ -837,15 +837,15 @@ if(ROOT_pyroot_FOUND)
   message(STATUS "${nAfterVeto}/${nTotal} python tutorials have been activated.")
 
   #---Python tutorials dependencies--------------------------------------
-  set(pyroot-ntuple1-depends tutorial-pyroot-hsimple-py)
-  set(pyroot-h1ReadAndDraw-depends tutorial-pyroot-hsimple-py)
-  set(pyroot-benchmarks-depends tutorial-pyroot-hsimple-py
-                                tutorial-pyroot-fit1-py
-                                tutorial-pyroot-na49view-py
-                                tutorial-pyroot-h1ReadAndDraw-py
-                                tutorial-pyroot-ntuple1-py)
-  set(pyroot-fit1-depends tutorial-hist-fillrandom-py)
-  set(pyroot-na49view-depends tutorial-pyroot-geometry-py)
+  set(tree-ntuple1-depends tutorial-hsimple-py)
+  set(hist-h1ReadAndDraw-depends tutorial-hsimple-py)
+  set(pyroot-benchmarks-depends tutorial-hsimple-py
+                                tutorial-fit-fit1-py
+                                tutorial-geom-na49view-py
+                                tutorial-hist-h1ReadAndDraw-py
+                                tutorial-tree-ntuple1-py)
+  set(fit-fit1-depends tutorial-hist-fillrandom-py)
+  set(geom-na49view-depends tutorial-geom-geometry-py)
   set(roofit-rf503_wspaceread-depends tutorial-roofit-rf502_wspacewrite-py)
   set(roofit-rf618_mixture_models-depends tutorial-dataframe-df106_HiggsToFourLeptons-py)
 
