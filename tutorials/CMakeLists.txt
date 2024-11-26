@@ -281,7 +281,7 @@ set(gui_veto fit/fitpanel_playback.C
              graphics/psview.C graphics/gtime.C
              graphics/graph_edit_playback.C
              roostats/ModelInspector.C
-             tree/tvdemo.C
+             legacy/tree/tvdemo.C
              eve/*.C
              webgui/geom/geom_threejs.cxx
              webgui/panel/webpanel.cxx
@@ -530,9 +530,9 @@ set(io-readCode-depends tutorial-io-importCode)
 set(fit-fit1-depends tutorial-hist-fillrandom)
 set(fit-myfit-depends tutorial-fit-fitslicesy)
 set(foam-foam_demopers-depends tutorial-foam-foam_demo)
-set(tree-staff-depends  tutorial-tree-cernbuild)
-set(tree-cernstaff-depends  tutorial-tree-cernbuild)
-set(hist-hbars-depends  tutorial-tree-cernbuild)
+set(legacy-tree-staff-depends  tutorial-legacy-tree-cernbuild)
+set(legacy-tree-cernstaff-depends  tutorial-legacy-tree-cernbuild)
+set(hist-hbars-depends tutorial-legacy-tree-cernbuild)
 set(benchmarks-depends tutorial-hsimple
                        tutorial-fit-fit1
                        tutorial-fit-myfit
