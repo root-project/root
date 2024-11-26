@@ -6,7 +6,8 @@
 ## This tutorial shows the potential of the VecOps approach for treating collections
 ## stored in datasets, a situation very common in HEP data analysis.
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
+## \preview 
 ## \macro_code
 ##
 ## \date February 2018

@@ -7,7 +7,8 @@
 /// stored in datasets, a situation very common in HEP data analysis.
 ///
 /// \macro_code
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 ///
 /// \date February 2018
 /// \author Danilo Piparo (CERN)

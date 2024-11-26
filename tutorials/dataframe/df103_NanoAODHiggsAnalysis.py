@@ -28,7 +28,8 @@
 ## datasets with a total size of only 51MB. If the fast mode is disabled, the tutorial runs over
 ## the full dataset with a size of 12GB.
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
+## \preview 
 ## \macro_code
 ## \macro_output
 ##

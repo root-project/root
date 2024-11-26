@@ -11,7 +11,8 @@
 ## distributed computation progresses. 
 ##
 ## \macro_code
-## \macro_image
+## \macro_image (tcanvas_js)
+## \preview 
 ##
 ## \date August 2023
 ## \author Silia Taider

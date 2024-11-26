@@ -7,6 +7,8 @@
 /// data, generates a new column `x` with random numbers, and finally draws
 /// a histogram for `x`.
 ///
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 /// \macro_output
 ///

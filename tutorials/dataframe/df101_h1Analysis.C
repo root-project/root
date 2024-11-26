@@ -4,7 +4,8 @@
 /// Show how to express ROOT's standard H1 analysis with RDataFrame.
 ///
 /// \macro_code
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 ///
 /// \date December 2016
 /// \authors Axel Naumann, Danilo Piparo (CERN)

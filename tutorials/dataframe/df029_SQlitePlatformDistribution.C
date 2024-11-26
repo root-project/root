@@ -10,7 +10,8 @@
 /// with their specific demand regarding the platform's type.
 ///
 /// \macro_code
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 ///
 /// \date August 2018
 /// \author Alexandra-Maria Dobrescu

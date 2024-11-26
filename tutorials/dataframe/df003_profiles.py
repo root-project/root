@@ -8,7 +8,8 @@
 ## understand the analogy of this code with the example one.
 ##
 ## \macro_code
-## \macro_image
+## \macro_image (tcanvas_js)
+## \preview 
 ##
 ## \date February 2017
 ## \author Danilo Piparo (CERN)
