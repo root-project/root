@@ -229,7 +229,7 @@ gStyle->SetEndErrorSize(np);
 The four parameters of **`TGraphErrors`** are: `X, Y` (as in
 **`TGraph`**), `X`-errors, and `Y`-errors - the size of the errors
 in the `x` and `y` direction. Next example is
-`$ROOTSYS/tutorials/graphs/gerrors.C.`
+`$ROOTSYS/tutorials/visualisation/graphs/gerrors.C.`
 
 ``` {.cpp}
 {
@@ -670,7 +670,7 @@ produces the next figure.
 
 A **`TGraph2DErrors`** is a **`TGraph2D`** with errors. It is useful to
 perform fits with errors on a 2D graph. An example is the macro
-`$ROOTSYS/tutorials/graphs/graph2derrorsfit.C`.
+`$ROOTSYS/tutorials/visualisation/graphs/graph2derrorsfit.C`.
 
 ## Fitting a Graph
 

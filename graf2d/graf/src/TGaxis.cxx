@@ -98,7 +98,7 @@ Where:
 The example below generates various kind of axis.
 
 Begin_Macro(source)
-../../../tutorials/graphics/gaxis.C
+../../../tutorials/visualisation/graphics/gaxis.C
 End_Macro
 
 \anchor GA01
@@ -675,7 +675,7 @@ and `localtime` give with what gives `TGaxis`. It can be used
 as referenced test to check if the time option of `TGaxis` is working properly.
 
 Begin_Macro(source)
-../../../tutorials/graphs/timeonaxis3.C
+../../../tutorials/visualisation/graphs/timeonaxis3.C
 End_Macro
 
 
@@ -683,7 +683,7 @@ The following macro illustrates the use, with histograms axis, of the time mode 
 with different time intervals and time formats.
 
 Begin_Macro(source)
-../../../tutorials/graphs/timeonaxis.C
+../../../tutorials/visualisation/graphs/timeonaxis.C
 End_Macro
 
 */

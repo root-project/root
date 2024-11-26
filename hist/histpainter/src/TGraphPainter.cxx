@@ -118,14 +118,12 @@ Graphs can be drawn with the following options:
 | "*"      | A Star is plotted at each point |
 | "P"      | The current marker is plotted at each point |
 | "B"      | A Bar chart is drawn |
-| "1"      | When a graph is drawn as a bar chart, this option makes the bars start from the bottom of the pad. By default they start at 0. |
-| "X+"     | The X-axis is drawn on the top side of the plot. |
-| "Y+"     | The Y-axis is drawn on the right side of the plot. |
-| "PFC"    | Palette Fill Color: graph's fill color is taken in the current palette. |
-| "PLC"    | Palette Line Color: graph's line color is taken in the current palette. |
-| "PMC"    | Palette Marker Color: graph's marker color is taken in the current palette. |
-| "RX"     | Reverse the X axis. |
-| "RY"     | Reverse the Y axis. |
+| "1"      | When a graph is drawn as a bar chart, this option makes the bars start from the bottom of the pad. By
+default they start at 0. | | "X+"     | The X-axis is drawn on the top side of the plot. | | "Y+"     | The Y-axis is
+drawn on the right side of the plot. | | "PFC"    | Palette Fill Color: graph's fill color is taken in the current
+palette. | | "PLC"    | Palette Line Color: graph's line color is taken in the current palette. | | "PMC"    | Palette
+Marker Color: graph's marker color is taken in the current palette. | | "RX"     | Reverse the X axis. | | "RY"     |
+Reverse the Y axis. |
 
 Drawing options can be combined. In the following example the graph
 is drawn as a smooth curve (option "C") with markers (option "P") and
@@ -211,7 +209,7 @@ case the line width number is interpreted as:
 The current fill area attributes are used to draw the hatched zone.
 
 Begin_Macro(source)
-../../../tutorials/graphs/exclusiongraph.C
+../../../tutorials/visualisation/graphs/exclusiongraph.C
 End_Macro
 
 \anchor GrP3
@@ -222,17 +220,21 @@ The following drawing options are specific to graphs with error bars:
 
 | Option   | Description                                                       |
 |----------|-------------------------------------------------------------------|
-| "Z"      | Do not draw small horizontal and vertical lines the end of the error bars. Without "Z", the default is to draw these. |
-| ">"      | An arrow is drawn at the end of the error bars. The size of the arrow is set to 2/3 of the marker size. |
-| \"\|\>\" | A filled arrow is drawn at the end of the error bars. The size of the arrow is set to 2/3 of the marker size. |
-| "X"      | Do not draw error bars.  By default, graph classes that have errors are drawn with the errors (TGraph itself has no errors, and so this option has no effect.) |
-| \"\|\|\" | Draw only the small vertical/horizontal lines at the ends of the error bars, without drawing the bars themselves. This option is interesting to superimpose statistical-only errors on top of a graph with statistical+systematic errors. |
-| "[]"     | Does the same as option \"\|\|\" except that it draws additional marks at the ends of the small vertical/horizontal lines. It makes plots less ambiguous in case several graphs are drawn on the same picture. |
-| "0"      | By default, when a data point is outside the visible range along the Y axis, the error bars are not drawn. This option forces error bars' drawing for the data points outside the visible range along the Y axis (see example below). |
-| "2"      | Error rectangles are drawn. |
-| "3"      | A filled area is drawn through the end points of the vertical error bars. |
-| "4"      | A smoothed filled area is drawn through the end points of the vertical error bars. |
-| "5"      | Error rectangles are drawn like option "2". In addition the contour line around the boxes is drawn. This can be useful when boxes' fill colors are very light or in gray scale mode. |
+| "Z"      | Do not draw small horizontal and vertical lines the end of the error bars. Without "Z", the default is to
+draw these. | | ">"      | An arrow is drawn at the end of the error bars. The size of the arrow is set to 2/3 of the
+marker size. | | \"\|\>\" | A filled arrow is drawn at the end of the error bars. The size of the arrow is set to 2/3 of
+the marker size. | | "X"      | Do not draw error bars.  By default, graph classes that have errors are drawn with the
+errors (TGraph itself has no errors, and so this option has no effect.) | | \"\|\|\" | Draw only the small
+vertical/horizontal lines at the ends of the error bars, without drawing the bars themselves. This option is interesting
+to superimpose statistical-only errors on top of a graph with statistical+systematic errors. | | "[]"     | Does the
+same as option \"\|\|\" except that it draws additional marks at the ends of the small vertical/horizontal lines. It
+makes plots less ambiguous in case several graphs are drawn on the same picture. | | "0"      | By default, when a data
+point is outside the visible range along the Y axis, the error bars are not drawn. This option forces error bars'
+drawing for the data points outside the visible range along the Y axis (see example below). | | "2"      | Error
+rectangles are drawn. | | "3"      | A filled area is drawn through the end points of the vertical error bars. | | "4"
+| A smoothed filled area is drawn through the end points of the vertical error bars. | | "5"      | Error rectangles are
+drawn like option "2". In addition the contour line around the boxes is drawn. This can be useful when boxes' fill
+colors are very light or in gray scale mode. |
 
 
 `gStyle->SetErrorX(dx)` controls the size of the error along x.
@@ -437,8 +439,10 @@ In addition to the draw options of options of `TGraphAsymmErrors` the following 
 |----------|----------------|-------------------------------------------------------------------|
 | "X0"     | First one only | Do not draw errors for points with x = 0 |
 | "Y0"     | First one only | Do not draw errors for points with y = 0 |
-| "s=%f"   | Any            | Scales the x-Errors with %f similar to `gStyle->SetErrorX(dx)` but does not affect them directly (Useful when used in addition with box errors to make the box only half as wide as the x-Errors e.g. s=0.5) |
-| "S"      | First one only | Use individual TAttFill and TAttLine attributes for the different error dimensions instead of the global ones. |
+| "s=%f"   | Any            | Scales the x-Errors with %f similar to `gStyle->SetErrorX(dx)` but does not affect them
+directly (Useful when used in addition with box errors to make the box only half as wide as the x-Errors e.g. s=0.5) |
+| "S"      | First one only | Use individual TAttFill and TAttLine attributes for the different error dimensions instead
+of the global ones. |
 
 
 Per default the Fill and Line Styles of the Graph are being used for all error
@@ -456,10 +460,8 @@ Begin_Macro(source)
    double* aeylsys  = new double[5]  {0.5, 0.4, 0.8, 0.3, 1.2};
    double* aeyhsys  = new double[5]  {0.6, 0.7, 0.6, 0.4, 0.8};
 
-   TGraphMultiErrors* gme = new TGraphMultiErrors("gme", "TGraphMultiErrors Example", 5, ax, ay, aexl, aexh, aeylstat, aeyhstat);
-   gme->AddYError(5, aeylsys, aeyhsys);
-   gme->SetMarkerStyle(20);
-   gme->SetLineColor(kRed);
+   TGraphMultiErrors* gme = new TGraphMultiErrors("gme", "TGraphMultiErrors Example", 5, ax, ay, aexl, aexh, aeylstat,
+aeyhstat); gme->AddYError(5, aeylsys, aeyhsys); gme->SetMarkerStyle(20); gme->SetLineColor(kRed);
    gme->GetAttLine(0)->SetLineColor(kRed);
    gme->GetAttLine(1)->SetLineColor(kBlue);
    gme->GetAttFill(1)->SetFillStyle(0);
@@ -528,11 +530,11 @@ is determined according to the number of objects having palette coloring in
 the current pad.
 
 Begin_Macro(source)
-../../../tutorials/graphs/graphpalettecolor.C
+../../../tutorials/visualisation/graphs/graphpalettecolor.C
 End_Macro
 
 Begin_Macro(source)
-../../../tutorials/graphs/multigraphpalettecolor.C
+../../../tutorials/visualisation/graphs/multigraphpalettecolor.C
 End_Macro
 
 \anchor GrP6
@@ -631,14 +633,14 @@ graphically. Point will be highlighted as "point circle" (presented by
 marker object). Moreover, any highlight (change of point) emits signal
 `TCanvas::Highlighted()` which allows the user to react and call their own
 function. For a better understanding please see also the tutorials
-`$ROOTSYS/tutorials/graphs/hlGraph*.C` files.
+`$ROOTSYS/tutorials/visualisation/graphs/hlGraph*.C` files.
 
 Highlight mode is switched on/off by `TGraph::SetHighlight()` function
 or interactively from `TGraph` context menu. `TGraph::IsHighlight()` to verify
 whether the highlight mode enabled or disabled, default it is disabled.
 
 ~~~ {.cpp}
-    root [0] .x $ROOTSYS/tutorials/graphs/gerrors2.C
+    root [0] .x $ROOTSYS/tutorials/visualisation/graphs/gerrors2.C
     root [1] // try SetHighlight() interactively from TGraph context menu
 ~~~
 
@@ -660,7 +662,6 @@ NOTE all parameters of user function are taken from
 For more complex demo please see for example `$ROOTSYS/tutorials/math/hlquantiles.C` file.
 
 */
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
