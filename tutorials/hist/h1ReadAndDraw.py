@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_pyroot
+## \ingroup tutorial_hist
 ## \notebook -js
 ## A Simple histogram drawing example
 ##

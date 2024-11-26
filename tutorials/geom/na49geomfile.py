@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_pyroot
+## \ingroup tutorial_geom
 ## Before executing this macro, the file makegeometry.C must have been executed
 ##
 ## \macro_code
