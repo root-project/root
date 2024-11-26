@@ -65,6 +65,11 @@ if(tmva)
     endif()
 endif()
 
+if(root7)
+    list(APPEND PYROOT_EXTRA_PYTHON_SOURCES
+        ROOT/_pythonization/_rntuple.py)
+endif()
+
 list(APPEND PYROOT_EXTRA_HEADERS
      inc/TPyDispatcher.h)
 
