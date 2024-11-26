@@ -1,6 +1,6 @@
 ## \file
-## \ingroup tutorial_pyroot
-## To run, do "python <path-to>/demo.py"
+## \ingroup Tutorials
+## To run, do "python <path-to>/demos.py"
 ##
 ## \macro_code
 ##
