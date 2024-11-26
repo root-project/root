@@ -51,6 +51,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Event
                               SOURCES Event.cxx LINKDEF EventLinkDef.h
                               DEPENDENCIES Hist MathCore)
 if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
+  add_custom_command(TARGET Event POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libEvent.dll
+                                     ${CMAKE_CURRENT_BINARY_DIR}/libEvent.dll)
   if(NOT runtime_cxxmodules)
     add_custom_command(TARGET Event POST_BUILD
       COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/libEvent_rdict.pcm

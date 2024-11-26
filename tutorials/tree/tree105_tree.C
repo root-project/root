@@ -4,7 +4,7 @@
 /// This example illustrates how to make a Tree from variables or arrays
 /// in a C struct - without a dictionary, by creating the branches for
 /// builtin types (int, float, double) and arrays explicitly.
-/// See tree2a.C for the same example using a class with dictionary
+/// See tree106_tree.C for the same example using a class with dictionary
 /// instead of a C-struct.
 ///
 /// In this example, we are mapping a C struct to one of the Geant3
@@ -14,8 +14,8 @@
 ///
 /// to run the example, do:
 /// ~~~
-/// .x tree2.C   to execute with the Cling interpreter
-/// .x tree2.C++ to execute with native compiler
+/// .x tree105_tree.C   to execute with the Cling interpreter
+/// .x tree105_tree.C++ to execute with native compiler
 /// ~~~
 /// \macro_code
 ///
@@ -55,8 +55,8 @@ typedef struct {
 
 void helixStep(Float_t step, Float_t *vect, Float_t *vout)
 {
-  // extrapolate track in constant field
-   Float_t field = 20;      //magnetic field in kilogauss
+   // extrapolate track in constant field
+   Float_t field = 20;      // magnetic field in kilogauss
    enum Evect {kX,kY,kZ,kPX,kPY,kPZ,kPP};
    vout[kPP] = vect[kPP];
    Float_t h4    = field*2.99792e-4;
@@ -80,25 +80,25 @@ void helixStep(Float_t step, Float_t *vect, Float_t *vout)
    vout[kPZ]  = vect[kPZ] + (f4*vect[kPZ] + f6);
 }
 
-void tree2w()
+void tree105_write()
 {
-   //create a Tree file tree2.root
+   // create a Tree file tree105.root
 
-   //create the file, the Tree and a few branches with
-   //a subset of gctrak
-   TFile f("tree2.root","recreate");
-   TTree t2("t2","a Tree with data from a fake Geant3");
+   // create the file, the Tree and a few branches with
+   // a subset of gctrak
+   TFile f("tree105.root", "recreate");
+   TTree t2("t2", "a Tree with data from a fake Geant3");
    Gctrak_t gstep;
-   t2.Branch("vect",gstep.vect,"vect[7]/F");
-   t2.Branch("getot",&gstep.getot);
-   t2.Branch("gekin",&gstep.gekin);
-   t2.Branch("nmec",&gstep.nmec);
-   t2.Branch("lmec",gstep.lmec,"lmec[nmec]/I");
-   t2.Branch("destep",&gstep.destep);
-   t2.Branch("pid",&gstep.pid);
+   t2.Branch("vect", gstep.vect, "vect[7]/F");
+   t2.Branch("getot", &gstep.getot);
+   t2.Branch("gekin", &gstep.gekin);
+   t2.Branch("nmec", &gstep.nmec);
+   t2.Branch("lmec", gstep.lmec, "lmec[nmec]/I");
+   t2.Branch("destep", &gstep.destep);
+   t2.Branch("pid", &gstep.pid);
 
-   //Initialize particle parameters at first point
-   Float_t px,py,pz,p,charge=0;
+   // Initialize particle parameters at first point
+   Float_t px, py, pz, p, charge=0;
    Float_t vout[7];
    Float_t mass  = 0.137;
    Bool_t newParticle = kTRUE;
@@ -107,24 +107,26 @@ void tree2w()
    gstep.nmec    = 0;
    gstep.pid     = 0;
 
-   //transport particles
-   for (Int_t i=0;i<10000;i++) {
-      //generate a new particle if necessary
+   // transport particles
+   for (Int_t i=0; i<10000; i++) {
+      // generate a new particle if necessary
       if (newParticle) {
-         px = gRandom->Gaus(0,.02);
-         py = gRandom->Gaus(0,.02);
-         pz = gRandom->Gaus(0,.02);
-         p  = TMath::Sqrt(px*px+py*py+pz*pz);
-         charge = 1; if (gRandom->Rndm() < 0.5) charge = -1;
+         px = gRandom->Gaus(0, .02);
+         py = gRandom->Gaus(0, .02);
+         pz = gRandom->Gaus(0, .02);
+         p  = TMath::Sqrt(px * px + py *py + pz * pz);
+         charge = 1;
+         if (gRandom->Rndm() < 0.5)
+            charge = -1;
          gstep.pid    += 1;
          gstep.vect[0] = 0;
          gstep.vect[1] = 0;
          gstep.vect[2] = 0;
-         gstep.vect[3] = px/p;
-         gstep.vect[4] = py/p;
-         gstep.vect[5] = pz/p;
-         gstep.vect[6] = p*charge;
-         gstep.getot   = TMath::Sqrt(p*p + mass*mass);
+         gstep.vect[3] = px / p;
+         gstep.vect[4] = py / p;
+         gstep.vect[5] = pz / p;
+         gstep.vect[6] = p * charge;
+         gstep.getot   = TMath::Sqrt(p * p + mass * mass);
          gstep.gekin   = gstep.getot - mass;
          newParticle = kFALSE;
       }
@@ -132,61 +134,63 @@ void tree2w()
       // fill the Tree with current step parameters
       t2.Fill();
 
-      //transport particle in magnetic field
-      helixStep(gstep.step, gstep.vect, vout); //make one step
+      // transport particle in magnetic field
+      helixStep(gstep.step, gstep.vect, vout); // make one step
 
-      //apply energy loss
-      gstep.destep = gstep.step*gRandom->Gaus(0.0002,0.00001);
-      gstep.gekin -= gstep.destep;
+      // apply energy loss
+      gstep.destep  = gstep.step*gRandom->Gaus(0.0002, 0.00001);
+      gstep.gekin  -= gstep.destep;
       gstep.getot   = gstep.gekin + mass;
-      gstep.vect[6] = charge*TMath::Sqrt(gstep.getot*gstep.getot - mass*mass);
+      gstep.vect[6] = charge*TMath::Sqrt(gstep.getot * gstep.getot - mass * mass);
       gstep.vect[0] = vout[0];
       gstep.vect[1] = vout[1];
       gstep.vect[2] = vout[2];
       gstep.vect[3] = vout[3];
       gstep.vect[4] = vout[4];
       gstep.vect[5] = vout[5];
-      gstep.nmec    = (Int_t)(5*gRandom->Rndm());
-      for (Int_t l=0;l<gstep.nmec;l++) gstep.lmec[l] = l;
-      if (gstep.gekin < 0.001)            newParticle = kTRUE;
-      if (TMath::Abs(gstep.vect[2]) > 30) newParticle = kTRUE;
+      gstep.nmec    = (Int_t)(5 * gRandom->Rndm());
+      for (Int_t l=0; l<gstep.nmec; l++)
+         gstep.lmec[l] = l;
+      if (gstep.gekin < 0.001)
+         newParticle = kTRUE;
+      if (TMath::Abs(gstep.vect[2]) > 30)
+         newParticle = kTRUE;
    }
-
-   //save the Tree header. The file will be automatically closed
-   //when going out of the function scope
+   // save the Tree header. The file will be automatically closed
+   // when going out of the function scope
    t2.Write();
 }
 
-void tree2r()
+void tree105_read()
 {
-   //read the Tree generated by tree2w and fill one histogram
-   //we are only interested by the destep branch.
+   // read the Tree generated by tree2w and fill one histogram
+   // we are only interested by the destep branch.
 
-   //note that we use "new" to create the TFile and TTree objects !
-   //because we want to keep these objects alive when we leave
-   //this function.
-   TFile *f = new TFile("tree2.root");
-   TTree *t2 = (TTree*)f->Get("t2");
+   // note that we create the TFile and TTree objects on the heap
+   // because we want to keep these objects alive when we leave
+   // this function.
+   auto f = TFile::Open("tree105.root");
+   auto t2 = f->Get<TTree>("t2");
    static Float_t destep;
    TBranch *b_destep = t2->GetBranch("destep");
    b_destep->SetAddress(&destep);
 
-   //create one histogram
-   TH1F *hdestep   = new TH1F("hdestep","destep in Mev",100,1e-5,3e-5);
+   // create one histogram
+   auto hdestep = new TH1F("hdestep", "destep in Mev", 100, 1e-5, 3e-5);
 
-   //read only the destep branch for all entries
+   // read only the destep branch for all entries
    Long64_t nentries = t2->GetEntries();
-   for (Long64_t i=0;i<nentries;i++) {
+   for (Long64_t i=0; i<nentries; i++) {
       b_destep->GetEntry(i);
       hdestep->Fill(destep);
    }
 
-   //we do not close the file.
-   //We want to keep the generated histograms
-   //We fill a 3-d scatter plot with the particle step coordinates
-   TCanvas *c1 = new TCanvas("c1","c1",600,800);
+   // we do not close the file
+   // we want to keep the generated histograms
+   // we fill a 3-d scatter plot with the particle step coordinates
+   auto c1 = new TCanvas("c1", "c1", 600, 800);
    c1->SetFillColor(42);
-   c1->Divide(1,2);
+   c1->Divide(1, 2);
    c1->cd(1);
    hdestep->SetFillColor(45);
    hdestep->Fit("gaus");
@@ -199,7 +203,8 @@ void tree2r()
    t2->ResetBranchAddresses();
 }
 
-void tree2() {
-   tree2w();
-   tree2r();
+void tree105_tree()
+{
+   tree105_write();
+   tree105_read();
 }

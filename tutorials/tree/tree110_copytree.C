@@ -11,11 +11,14 @@
 /// \author Rene Brun
 
 // Load the library at macro parsing time: we need this to use its content in the code
+#ifdef R__WIN32
+R__LOAD_LIBRARY($ROOTSYS/test/libEvent.dll)
+#else
 R__LOAD_LIBRARY($ROOTSYS/test/libEvent.so)
+#endif
 
-void copytree()
+void tree110_copytree()
 {
-
    TString dir = "$ROOTSYS/test/Event.root";
    gSystem->ExpandPathName(dir);
    const auto filename = gSystem->AccessPathName(dir) ? "./Event.root" : "$ROOTSYS/test/Event.root";
@@ -32,7 +35,7 @@ void copytree()
       oldtree->SetBranchStatus(activeBranchName, 1);
 
    // Create a new file + a clone of old tree in new file
-   TFile newfile("small.root", "recreate");
+   TFile newfile("small110.root", "recreate");
    auto newtree = oldtree->CloneTree();
 
    newtree->Print();

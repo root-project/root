@@ -11,9 +11,13 @@
 ///
 /// \author Rene Brun
 
+#ifdef R__WIN32
+R__LOAD_LIBRARY($ROOTSYS/test/libEvent.dll)
+#else
 R__LOAD_LIBRARY($ROOTSYS/test/libEvent.so)
+#endif
 
-void copytree3()
+void tree112_copytree()
 {
    // Get old file, old tree and set top branch address
    TString dir = "$ROOTSYS/test/Event.root";
@@ -30,7 +34,7 @@ void copytree3()
    oldtree->SetBranchAddress("event", &event);
 
    // Create a new file + a clone of old tree in new file
-   TFile newfile("small.root", "recreate");
+   TFile newfile("small112.root", "recreate");
    auto newtree = oldtree->CloneTree(0);
 
    for (auto i : ROOT::TSeqI(nentries)) {

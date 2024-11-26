@@ -405,14 +405,14 @@ set(extra_veto
   proof/*.C
   sql/*.C
   tree/hsimpleProxy.C # A driver uses this macro which cannot be executed directly
-  tree/tree0.C
-  tree/tree2a.C
-  tree/tree4.C
+  tree/tree103_tree.C
+  tree/tree106_tree.C
+  tree/tree108_tree.C
   roostats/rs401d_FeldmanCousins.C  # Takes too much time
   histfactory/ModifyInterpolation.C
-  tree/copytree2.C
-  tree/copytree3.C
-  tree/copytree.C
+  tree/tree110_copytree.C
+  tree/tree111_copytree.C
+  tree/tree112_copytree.C
   tree/h1analysis*.C # these are not a tutorial but classes used in run_h1analysis.C
   tree/h1chain.C
   http/*.C

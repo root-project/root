@@ -27,29 +27,33 @@
 /// This example can be run in many different ways:
 ///  - way1 using the Cling interpreter:
 /// ~~~
-/// .x tree4.C
+/// .x tree108_tree.C
 /// ~~~
 ///  - way2 using the Cling interpreter:
 /// ~~~
-/// .L tree4.C
-/// tree4()
+/// .L tree108_tree.C
+/// tree108_tree()
 /// ~~~
 ///  - way3 using ACLIC:
 /// ~~~
 /// .L ../test/libEvent.so
-/// .x tree4.C++
+/// .x tree108_tree.C++
 /// ~~~
 /// One can also run the write and read parts in two separate sessions.
 /// For example following one of the sessions above, one can start the session:
 /// ~~~
-///   .L tree4.C
-///   tree4r();
+///   .L tree108_tree.C
+///   tree108_read();
 /// ~~~
 /// \macro_code
 ///
 /// \author Rene Brun
 
-R__LOAD_LIBRARY($ROOTSYS/test/libEvent.so)
+#ifdef R__WIN32
+  R__LOAD_LIBRARY($ROOTSYS/test/libEvent.dll)
+#else
+  R__LOAD_LIBRARY($ROOTSYS/test/libEvent.so)
+#endif
 
 #include "TFile.h"
 #include "TTree.h"
@@ -61,11 +65,11 @@ R__LOAD_LIBRARY($ROOTSYS/test/libEvent.so)
 #include "TROOT.h"
 #include "../test/Event.h"
 
-void tree4w()
+void tree108_write()
 {
 
-  //create a Tree file tree4.root
-  TFile f("tree4.root","RECREATE");
+  //create a Tree file tree108.root
+  TFile f("tree108.root","RECREATE");
 
   // Create a ROOT Tree
   TTree t4("t4","A Tree with Events");
@@ -123,13 +127,13 @@ void tree4w()
 }
 
 
-void tree4r()
+void tree108_read()
 {
-  // read the tree generated with tree4w
+  // read the tree generated with tree108_write
 
   //note that we use "new" to create the TFile and TTree objects !
   //because we want to keep these objects alive when we leave this function.
-  TFile *f = new TFile("tree4.root");
+  TFile *f = new TFile("tree108.root");
   TTree *t4 = (TTree*)f->Get("t4");
 
   // create a pointer to an event object. This will be used
@@ -167,9 +171,10 @@ void tree4r()
   t4->StartViewer();
 }
 
-void tree4() {
+void tree108_tree()
+{
    Event::Reset(); // Allow for re-run this script by cleaning static variables.
-   tree4w();
+   tree108_write();
    Event::Reset(); // Allow for re-run this script by cleaning static variables.
-   tree4r();
+   tree108_read();
 }

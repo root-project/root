@@ -12,11 +12,14 @@
 /// \author Rene Brun
 
 // Load the library at macro parsing time: we need this to use its content in the code
+#ifdef R__WIN32
+R__LOAD_LIBRARY($ROOTSYS/test/libEvent.dll)
+#else
 R__LOAD_LIBRARY($ROOTSYS/test/libEvent.so)
+#endif
 
-void copytree2()
+void tree111_copytree()
 {
-
    TString dir = "$ROOTSYS/test/Event.root";
    gSystem->ExpandPathName(dir);
    const auto filename = gSystem->AccessPathName(dir) ? "./Event.root" : "$ROOTSYS/test/Event.root";
@@ -31,7 +34,7 @@ void copytree2()
    }
 
    // Create a new file + a clone of old tree header. Do not copy events
-   TFile newfile("small.root", "recreate");
+   TFile newfile("small111.root", "recreate");
    auto newtree = oldtree->CloneTree(0);
 
    // Divert branch fH to a separate file and copy all events
