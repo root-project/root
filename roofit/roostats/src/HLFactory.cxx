@@ -50,7 +50,7 @@ HLFactory::HLFactory(const char *name, const char *fileName, bool isVerbose)
 {
    TString wsName(name);
    wsName += "_ws";
-   fWs = new RooWorkspace(wsName, true);
+   fWs = new RooWorkspace(wsName);
 
    fSigBkgPdfNames.SetOwner();
    fBkgPdfNames.SetOwner();
@@ -73,7 +73,7 @@ HLFactory::HLFactory(const char *name, RooWorkspace *externalWs, bool isVerbose)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-HLFactory::HLFactory() : TNamed("hlfactory", "hlfactory"), fWs(new RooWorkspace("hlfactory_ws", true)), fOwnWs(true)
+HLFactory::HLFactory() : TNamed("hlfactory", "hlfactory"), fWs(new RooWorkspace("hlfactory_ws")), fOwnWs(true)
 {
    fSigBkgPdfNames.SetOwner();
    fBkgPdfNames.SetOwner();
