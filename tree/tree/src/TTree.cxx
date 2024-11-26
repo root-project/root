@@ -136,7 +136,7 @@ It is strongly recommended to persistify those as objects rather than lists of l
   18 bits were sufficient, the syntax would become: `myArr[myArrSize]/d[0,twopi,18]`
 
 \anchor addingacolumnofstl
-## Adding a column holding STL collection instances (e.g. `std::vector`, `std::list`, `std::unordered_map`)
+## Adding a column holding STL collection instances (e.g. std::vector or std::list)
 
 ~~~ {.cpp}
     auto branch = tree.Branch( branchname, STLcollection, buffsize, splitlevel);
@@ -209,7 +209,7 @@ Even though in the first case an object is be allocated by `TTree::Branch`,
 the object will <b>not</b> be deleted when the `TTree` is deleted.
 
 \anchor addingacolumnoftclonesarray
-## Add a column holding `TClonesArray` instances
+## Add a column holding TClonesArray instances
 
 *The usage of `TClonesArray` should be abandoned in favour of `std::vector`, 
 for which `TTree` has been heavily optimised, as well as `RNTuple`.*
