@@ -18,6 +18,7 @@ r'''
 <summary  style="font-size:20px; color: #425788;"><b>Python interface</b></summary>
 <div class="pyrootbox">
 \endhtmlonly
+\anchor python
 
 In the same way as for TDirectory, it is possible to get the content of a
 TFile object with the familiar item-getting syntax.
