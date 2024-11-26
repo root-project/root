@@ -327,16 +327,27 @@ size_t RCsvDS::ParseValue(const std::string &line, std::vector<std::string> &col
 /// \param[in] linesChunkSize bunch of lines to read, use -1 to read all
 /// \param[in] colTypes Allows users to manually specify column types. Accepts an unordered map with keys being
 ///                     column names, values being type specifiers ('O' for boolean, 'D' for double, 'L' for
-///                     Long64_t, 'T' for std::string)
+///                     Long64_t, 'T' for std::string). Note that if you pass custom `colNames`, the keys used
+///                     for this map must match those names!
+/// \param[in] colNames Allows users to manually specify column names. This is only used if `readHeaders` is false.
+///                     It is an error to pass a number of colNames greater than 0 and different from the number
+///                     of columns found in the csv file.
 RCsvDS::RCsvDS(std::string_view fileName, bool readHeaders, char delimiter, Long64_t linesChunkSize,
-               std::unordered_map<std::string, char> &&colTypes)
-   : fReadHeaders(readHeaders), fCsvFile(ROOT::Internal::RRawFile::Create(fileName)), fDelimiter(delimiter),
-     fLinesChunkSize(linesChunkSize), fColTypes(std::move(colTypes))
+               std::unordered_map<std::string, char> &&colTypes, std::vector<std::string> &&colNames)
+   : fReadHeaders(readHeaders),
+     fCsvFile(ROOT::Internal::RRawFile::Create(fileName)),
+     fDelimiter(delimiter),
+     fLinesChunkSize(linesChunkSize),
+     fColTypes(std::move(colTypes))
 {
    std::string line;
 
    // Read the headers if present
    if (fReadHeaders) {
+      if (!colNames.empty()) {
+         throw std::runtime_error("Error: passed explicit column names to RCsvDS, but `readHeaders` is true. Pass "
+                                  "`readHeaders = false` if you want to override the column names.");
+      }
       if (fCsvFile->Readln(line)) {
          FillHeaders(line);
       } else {
@@ -356,7 +367,15 @@ RCsvDS::RCsvDS(std::string_view fileName, bool readHeaders, char delimiter, Long
 
       // Generate headers if not present
       if (!fReadHeaders) {
-         GenerateHeaders(columns.size());
+         if (colNames.empty()) {
+            GenerateHeaders(columns.size());
+         } else if (colNames.size() != columns.size()) {
+            auto msg = std::string("Error: passed ") + std::to_string(colNames.size()) +
+                       " column names for a CSV file containing " + std::to_string(columns.size()) + " columns!";
+            throw std::runtime_error(msg);
+         } else {
+            fHeaders = std::move(colNames);
+         }
       }
 
       // Ensure user is trying to set types only of existing columns
@@ -560,6 +579,14 @@ RDataFrame FromCSV(std::string_view fileName, bool readHeaders, char delimiter, 
 {
    ROOT::RDataFrame rdf(
       std::make_unique<RCsvDS>(fileName, readHeaders, delimiter, linesChunkSize, std::move(colTypes)));
+   return rdf;
+}
+
+RDataFrame FromCSV(std::string_view fileName, RCsvOptions &&options)
+{
+   ROOT::RDataFrame rdf(std::make_unique<RCsvDS>(fileName, options.fColNames.empty(), options.fDelimiter,
+                                                 options.fLinesChunkSize, std::move(options.fColTypes),
+                                                 std::move(options.fColNames)));
    return rdf;
 }
 

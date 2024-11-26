@@ -8,11 +8,11 @@
 
 using namespace ROOT::RDF;
 
-auto fileName0 = "RCsvDS_test_headers.csv";
-auto fileName1 = "RCsvDS_test_noheaders.csv";
-auto fileName2 = "RCsvDS_test_empty.csv";
-auto fileName3 = "RCsvDS_test_win.csv";
-auto fileName4 = "RCsvDS_test_NaNs.csv";
+auto fileNameHeaders = "RCsvDS_test_headers.csv";
+auto fileNameNoHeaders = "RCsvDS_test_noheaders.csv";
+auto fileNameEmpty = "RCsvDS_test_empty.csv";
+auto fileNameWin = "RCsvDS_test_win.csv";
+auto fileNameNans = "RCsvDS_test_NaNs.csv";
 
 // must use http: we cannot use https on macOS until we upgrade to the newest Davix
 // and turn on the macOS SecureTransport layer.
@@ -21,7 +21,7 @@ auto url0 = "http://root.cern/files/dataframe_test_datasource.csv";
 
 TEST(RCsvDS, ColTypeNames)
 {
-   RCsvDS tds(fileName0);
+   RCsvDS tds(fileNameHeaders);
    tds.SetNSlots(1);
 
    auto colNames = tds.GetColumnNames();
@@ -43,7 +43,7 @@ TEST(RCsvDS, ColTypeNames)
 
 TEST(RCsvDS, ColNamesNoHeaders)
 {
-   RCsvDS tds(fileName1, false);
+   RCsvDS tds(fileNameNoHeaders, false);
    tds.SetNSlots(1);
 
    auto colNames = tds.GetColumnNames();
@@ -57,20 +57,20 @@ TEST(RCsvDS, ColNamesNoHeaders)
 TEST(RCsvDS, EmptyFile)
 {
    // Cannot read headers
-   EXPECT_THROW(RCsvDS{fileName2}, std::runtime_error);
+   EXPECT_THROW(RCsvDS{fileNameEmpty}, std::runtime_error);
    // Cannot infer column types
-   EXPECT_THROW(RCsvDS(fileName2, false), std::runtime_error);
+   EXPECT_THROW(RCsvDS(fileNameEmpty, false), std::runtime_error);
 }
 
 TEST(RCsvDS, NFiles)
 {
-   RCsvDS tds(fileName1, false);
+   RCsvDS tds(fileNameNoHeaders, false);
    EXPECT_EQ(1, tds.GetNFiles());
 }
 
 TEST(RCsvDS, EntryRanges)
 {
-   RCsvDS tds(fileName0);
+   RCsvDS tds(fileNameHeaders);
    tds.SetNSlots(3U);
    tds.Initialize();
 
@@ -88,7 +88,7 @@ TEST(RCsvDS, EntryRanges)
 
 TEST(RCsvDS, ColumnReaders)
 {
-   RCsvDS tds(fileName0);
+   RCsvDS tds(fileNameHeaders);
    const auto nSlots = 3U;
    tds.SetNSlots(nSlots);
    auto vals = tds.GetColumnReaders<Long64_t>("Age");
@@ -109,7 +109,7 @@ TEST(RCsvDS, ColumnReaders)
 
 TEST(RCsvDS, ColumnReadersWrongType)
 {
-   RCsvDS tds(fileName0);
+   RCsvDS tds(fileNameHeaders);
    const auto nSlots = 3U;
    tds.SetNSlots(nSlots);
    int res = 1;
@@ -125,7 +125,7 @@ TEST(RCsvDS, ColumnReadersWrongType)
 
 TEST(RCsvDS, Snapshot)
 {
-   auto tdf = ROOT::RDF::FromCSV(fileName0);
+   auto tdf = ROOT::RDF::FromCSV(fileNameHeaders);
    auto snap = tdf.Snapshot<Long64_t>("data","csv2root.root", {"Age"});
    auto ages = *snap->Take<Long64_t>("Age");
    std::vector<Long64_t> agesRef {60LL, 50LL, 40LL, 30LL, 1LL, -1LL};
@@ -136,7 +136,7 @@ TEST(RCsvDS, Snapshot)
 
 TEST(RCsvDS, ColumnReadersString)
 {
-   RCsvDS tds(fileName0);
+   RCsvDS tds(fileNameHeaders);
    const auto nSlots = 3U;
    tds.SetNSlots(nSlots);
    auto vals = tds.GetColumnReaders<std::string>("Name");
@@ -158,7 +158,7 @@ TEST(RCsvDS, ColumnReadersString)
 TEST(RCsvDS, ProgressiveReadingEntryRanges)
 {
    auto chunkSize = 3LL;
-   RCsvDS tds(fileName0, true, ',', chunkSize);
+   RCsvDS tds(fileNameHeaders, true, ',', chunkSize);
    const auto nSlots = 3U;
    tds.SetNSlots(nSlots);
    auto vals = tds.GetColumnReaders<std::string>("Name");
@@ -192,13 +192,13 @@ TEST(RCsvDS, ProgressiveReadingRDF)
 {
    // Even chunks
    auto chunkSize = 2LL;
-   auto tdf = ROOT::RDF::FromCSV(fileName0, true, ',', chunkSize);
+   auto tdf = ROOT::RDF::FromCSV(fileNameHeaders, true, ',', chunkSize);
    auto c = tdf.Count();
    EXPECT_EQ(6U, *c);
 
    // Uneven chunks
    chunkSize = 4LL;
-   auto tdf2 = ROOT::RDF::FromCSV(fileName0, true, ',', chunkSize);
+   auto tdf2 = ROOT::RDF::FromCSV(fileNameHeaders, true, ',', chunkSize);
    auto c2 = tdf2.Count();
    EXPECT_EQ(6U, *c2);
 }
@@ -208,7 +208,7 @@ TEST(RCsvDS, ProgressiveReadingRDF)
 TEST(RCsvDS, SetNSlotsTwice)
 {
    auto theTest = []() {
-      RCsvDS tds(fileName0);
+      RCsvDS tds(fileNameHeaders);
       tds.SetNSlots(1);
       tds.SetNSlots(1);
    };
@@ -218,7 +218,7 @@ TEST(RCsvDS, SetNSlotsTwice)
 
 TEST(RCsvDS, FromARDF)
 {
-   std::unique_ptr<RDataSource> tds(new RCsvDS(fileName0));
+   std::unique_ptr<RDataSource> tds(new RCsvDS(fileNameHeaders));
    ROOT::RDataFrame tdf(std::move(tds));
    auto max = tdf.Max<double>("Height");
    auto min = tdf.Min<double>("Height");
@@ -231,7 +231,7 @@ TEST(RCsvDS, FromARDF)
 
 TEST(RCsvDS, FromARDFWithJitting)
 {
-   std::unique_ptr<RDataSource> tds(new RCsvDS(fileName0));
+   std::unique_ptr<RDataSource> tds(new RCsvDS(fileNameHeaders));
    ROOT::RDataFrame tdf(std::move(tds));
    auto max = tdf.Filter("Age<40").Max("Age");
    auto min = tdf.Define("Age2", "Age").Filter("Age2>30").Min("Age2");
@@ -242,7 +242,7 @@ TEST(RCsvDS, FromARDFWithJitting)
 
 TEST(RCsvDS, MultipleEventLoops)
 {
-   auto tdf = ROOT::RDF::FromCSV(fileName0, true, ',', 2LL);
+   auto tdf = ROOT::RDF::FromCSV(fileNameHeaders, true, ',', 2LL);
    EXPECT_EQ(6U, *tdf.Count());
    EXPECT_EQ(6U, *tdf.Count());
    EXPECT_EQ(6U, *tdf.Count());
@@ -251,7 +251,7 @@ TEST(RCsvDS, MultipleEventLoops)
 
 TEST(RCsvDS, WindowsLinebreaks)
 {
-   auto tdf = ROOT::RDF::FromCSV(fileName3);
+   auto tdf = ROOT::RDF::FromCSV(fileNameWin);
    EXPECT_EQ(6U, *tdf.Count());
 }
 
@@ -274,7 +274,7 @@ TEST(RCsvDS, DefineSlotCheckMT)
    ROOT::EnableImplicitMT(nSlots);
 
    std::vector<unsigned int> ids(nSlots, 0u);
-   std::unique_ptr<RDataSource> tds(new RCsvDS(fileName0));
+   std::unique_ptr<RDataSource> tds(new RCsvDS(fileNameHeaders));
    ROOT::RDataFrame d(std::move(tds));
    auto m = d.DefineSlot("x", [&](unsigned int slot) {
                 ids[slot] = 1u;
@@ -289,7 +289,7 @@ TEST(RCsvDS, DefineSlotCheckMT)
 
 TEST(RCsvDS, FromARDFMT)
 {
-   std::unique_ptr<RDataSource> tds(new RCsvDS(fileName0));
+   std::unique_ptr<RDataSource> tds(new RCsvDS(fileNameHeaders));
    ROOT::RDataFrame tdf(std::move(tds));
    auto max = tdf.Max<double>("Height");
    auto min = tdf.Min<double>("Height");
@@ -302,7 +302,7 @@ TEST(RCsvDS, FromARDFMT)
 
 TEST(RCsvDS, FromARDFWithJittingMT)
 {
-   std::unique_ptr<RDataSource> tds(new RCsvDS(fileName0));
+   std::unique_ptr<RDataSource> tds(new RCsvDS(fileNameHeaders));
    ROOT::RDataFrame tdf(std::move(tds));
    auto max = tdf.Filter("Age<40").Max("Age");
    auto min = tdf.Define("Age2", "Age").Filter("Age2>30").Min("Age2");
@@ -315,29 +315,29 @@ TEST(RCsvDS, ProgressiveReadingRDFMT)
 {
    // Even chunks
    auto chunkSize = 2LL;
-   auto tdf = ROOT::RDF::FromCSV(fileName0, true, ',', chunkSize);
+   auto tdf = ROOT::RDF::FromCSV(fileNameHeaders, true, ',', chunkSize);
    auto c = tdf.Count();
    EXPECT_EQ(6U, *c);
 
    // Uneven chunks
    chunkSize = 4LL;
-   auto tdf2 = ROOT::RDF::FromCSV(fileName0, true, ',', chunkSize);
+   auto tdf2 = ROOT::RDF::FromCSV(fileNameHeaders, true, ',', chunkSize);
    auto c2 = tdf2.Count();
    EXPECT_EQ(6U, *c2);
 }
 
 TEST(RCsvDS, SpecifyColumnTypes)
 {
-   RCsvDS tds0(fileName0, true, ',', -1LL, {{"Age", 'D'}, {"Name", 'T'}}); // with headers
+   RCsvDS tds0(fileNameHeaders, true, ',', -1LL, {{"Age", 'D'}, {"Name", 'T'}}); // with headers
    EXPECT_STREQ("double", tds0.GetTypeName("Age").c_str());
    EXPECT_STREQ("std::string", tds0.GetTypeName("Name").c_str());
 
-   RCsvDS tds1(fileName1, false, ',', -1LL, {{"Col1", 'T'}}); // without headers (Col0, ...)
+   RCsvDS tds1(fileNameNoHeaders, false, ',', -1LL, {{"Col1", 'T'}}); // without headers (Col0, ...)
    EXPECT_STREQ("std::string", tds1.GetTypeName("Col1").c_str());
 
    EXPECT_THROW(
       try {
-         ROOT::RDF::FromCSV(fileName1, false, ',', -1LL, {{"Col2", 'L'}, {"wrong", 'O'}});
+         ROOT::RDF::FromCSV(fileNameNoHeaders, false, ',', -1LL, {{"Col2", 'L'}, {"wrong", 'O'}});
       } catch (const std::runtime_error &err) {
          std::string msg = "There is no column with name \"wrong\".\n";
          msg += "Since the input csv file does not contain headers, valid column names are [\"Col0\", ..., \"Col3\"].";
@@ -348,7 +348,7 @@ TEST(RCsvDS, SpecifyColumnTypes)
 
    EXPECT_THROW(
       try {
-         ROOT::RDF::FromCSV(fileName1, false, ',', -1LL, {{"Col0", 'T'}, {"Col3", 'X'}});
+         ROOT::RDF::FromCSV(fileNameNoHeaders, false, ',', -1LL, {{"Col0", 'T'}, {"Col3", 'X'}});
       } catch (const std::runtime_error &err) {
          std::string msg = "Type alias 'X' is not supported.\n";
          msg += "Supported type aliases are 'O' for boolean, 'D' for double, 'L' for Long64_t, 'T' for std::string.";
@@ -357,16 +357,65 @@ TEST(RCsvDS, SpecifyColumnTypes)
       },
       std::runtime_error);
 
-   auto df = ROOT::RDF::FromCSV(fileName0, true, ',', -1LL, {{"Age", 'L'}, {"Height", 'D'}});
+   auto df = ROOT::RDF::FromCSV(fileNameHeaders, true, ',', -1LL, {{"Age", 'L'}, {"Height", 'D'}});
    auto maxHeight = df.Max<double>("Height");
    auto maxAge = df.Max<Long64_t>("Age");
    EXPECT_DOUBLE_EQ(maxHeight.GetValue(), 200.5);
    EXPECT_EQ(maxAge.GetValue(), 60);
 }
 
+TEST(RCsvDS, SpecifyColumnNames)
+{
+   {
+      ROOT::RDF::RCsvOptions opts;
+      // Normally: Name,Age,Height,Married
+      opts.fColNames = {"Surname", "Years", "Weight", "Single"};
+      opts.fColTypes = {{"Years", 'L'}, {"Weight", 'D'}};
+      auto df = ROOT::RDF::FromCSV(fileNameNoHeaders, std::move(opts));
+      auto maxWeight = df.Max<double>("Weight");
+      auto maxYears = df.Max<Long64_t>("Years");
+      EXPECT_DOUBLE_EQ(maxWeight.GetValue(), 200.5);
+      EXPECT_EQ(maxYears.GetValue(), 60);
+   }
+   {
+      // Trying to set col types with wrong names
+      ROOT::RDF::RCsvOptions opts;
+      opts.fColTypes = {{"Years", 'L'}, {"Weight", 'D'}};
+      EXPECT_THROW(ROOT::RDF::FromCSV(fileNameHeaders, std::move(opts)), std::runtime_error);
+   }
+   {
+      ROOT::RDF::RCsvOptions opts;
+      opts.fColTypes = {{"Age", 'L'}, {"Height", 'D'}};
+      auto df = ROOT::RDF::FromCSV(fileNameHeaders, std::move(opts));
+      auto maxHeight = df.Max<double>("Height");
+      auto maxAge = df.Max<Long64_t>("Age");
+      EXPECT_DOUBLE_EQ(maxHeight.GetValue(), 200.5);
+      EXPECT_EQ(maxAge.GetValue(), 60);
+   }
+   {
+      // Trying to override col names but not enough passed
+      ROOT::RDF::RCsvOptions opts;
+      opts.fColNames = {"Surname", "Years", "Weight"};
+      EXPECT_THROW(ROOT::RDF::FromCSV(fileNameNoHeaders, std::move(opts)), std::runtime_error);
+   }
+   {
+      // Trying to set col names but too many
+      ROOT::RDF::RCsvOptions opts;
+      opts.fColNames = {"Surname", "Years", "Weight", "Single", "Extra"};
+      EXPECT_THROW(ROOT::RDF::FromCSV(fileNameNoHeaders, std::move(opts)), std::runtime_error);
+   }
+   {
+      // Trying to pass col types but using original col names
+      ROOT::RDF::RCsvOptions opts;
+      opts.fColNames = {"Surname", "Years", "Weight", "Single"};
+      opts.fColTypes = {{"Age", 'L'}, {"Height", 'D'}};
+      EXPECT_THROW(ROOT::RDF::FromCSV(fileNameNoHeaders, std::move(opts)), std::runtime_error);
+   }
+}
+
 TEST(RCsvDS, NaNTypeIndentification)
 {
-   RCsvDS tds(fileName4);
+   RCsvDS tds(fileNameNans);
 
    EXPECT_STREQ("double", tds.GetTypeName("col1").c_str());
    EXPECT_STREQ("double", tds.GetTypeName("col2").c_str());
@@ -382,7 +431,7 @@ TEST(RCsvDS, NanWarningChecks)
 {
    ROOT::DisableImplicitMT(); // to allow usage of display
 
-   auto rdf = ROOT::RDF::FromCSV(fileName4);
+   auto rdf = ROOT::RDF::FromCSV(fileNameNans);
    auto d = rdf.Display<double, bool, Long64_t, std::string>({"col1", "col3", "col6", "col8"}, 12);
 
    const std::string Warn =

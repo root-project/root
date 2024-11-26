@@ -80,7 +80,7 @@ protected:
 
 public:
    RCsvDS(std::string_view fileName, bool readHeaders = true, char delimiter = ',', Long64_t linesChunkSize = -1LL,
-          std::unordered_map<std::string, char> &&colTypes = {});
+          std::unordered_map<std::string, char> &&colTypes = {}, std::vector<std::string> &&colNames = {});
    void Finalize() final;
    ~RCsvDS();
    std::size_t GetNFiles() const final { return 1; }
@@ -97,7 +97,8 @@ public:
 /// \brief Factory method to create a CSV RDataFrame.
 /// \param[in] fileName Path of the CSV file.
 /// \param[in] readHeaders `true` if the CSV file contains headers as first row, `false` otherwise
-///                        (default `true`).
+///                        (default `true`). If `readHeaders` is `false`, the columns will be named
+///                        `"Col0"`, `"Col1"`, etc.
 /// \param[in] delimiter Delimiter character (default ',').
 /// \param[in] linesChunkSize bunch of lines to read, use -1 to read all
 /// \param[in] colTypes Allow user to specify custom column types, accepts an unordered map with keys being
@@ -105,6 +106,24 @@ public:
 ///                      Long64_t, 'T' for std::string)
 RDataFrame FromCSV(std::string_view fileName, bool readHeaders = true, char delimiter = ',',
                    Long64_t linesChunkSize = -1LL, std::unordered_map<std::string, char> &&colTypes = {});
+
+struct RCsvOptions {
+   /// Names of the columns. These must be either 0 or as many as the columns in the file.
+   /// If this is empty, the CSV headers will be read and used as column names (if no headers are
+   /// found the columns will be named `"Col0"`, ..., `"ColN-1"`)
+   std::vector<std::string> fColNames;
+   /// \see FromCSV(std::string_view, bool, char, Long64_t, std::unordered_map<std::string, char> &&)
+   std::unordered_map<std::string, char> fColTypes;
+   /// \see FromCSV(std::string_view, bool, char, Long64_t, std::unordered_map<std::string, char> &&)
+   Long64_t fLinesChunkSize = -1LL;
+   /// \see FromCSV(std::string_view, bool, char, Long64_t, std::unordered_map<std::string, char> &&)
+   char fDelimiter = ',';
+};
+
+/// \see FromCSV(std::string_view, bool, char, Long64_t, std::unordered_map<std::string, char> &&)
+/// This overload allows to pass some extra parameters, such as `options.fColNames`.
+/// Note that if you pass custom `colNames`, the keys used for `fColTypes` must match those names!
+RDataFrame FromCSV(std::string_view fileName, RCsvOptions &&options);
 
 } // ns RDF
 
