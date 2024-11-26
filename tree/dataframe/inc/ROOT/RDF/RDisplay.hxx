@@ -289,6 +289,13 @@ private:
 
    void EnsureCurrentColumnWidth(size_t w);
 
+   struct AsStringInternalRet {
+      std::string fString;
+      std::vector<std::string> fMsgs;
+   };
+
+   AsStringInternalRet AsStringInternal() const;
+
 public:
    ////////////////////////////////////////////////////////////////////////////
    /// Creates an RDisplay to print the event values
