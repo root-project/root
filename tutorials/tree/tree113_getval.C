@@ -31,30 +31,33 @@
 ///
 /// \author Olivier Couet
 
-void treegetval() {
+void tree113_getval()
+{
    // create a simple TTree with 5 branches
    Int_t run, evt;
-   Float_t x,y,z;
-   TTree *T = new TTree("T","test friend trees");
-   T->Branch("Run",&run,"Run/I");
-   T->Branch("Event",&evt,"Event/I");
-   T->Branch("x",&x,"x/F");
-   T->Branch("y",&y,"y/F");
-   T->Branch("z",&z,"z/F");
+   Float_t x, y, z;
+   auto T = new TTree("T", "test friend trees");
+   T->Branch("Run", &run, "Run/I");
+   T->Branch("Event", &evt, "Event/I");
+   T->Branch("x", &x, "x/F");
+   T->Branch("y", &y, "y/F");
+   T->Branch("z", &z, "z/F");
    TRandom r;
-   for (Int_t i=0;i<10000;i++) {
-      if (i < 5000) run = 1;
-      else          run = 2;
+   for (Int_t i=0; i<10000; i++) {
+      if (i < 5000)
+         run = 1;
+      else
+         run = 2;
       evt = i;
-      x = r.Gaus(10,1);
-      y = r.Gaus(20,2);
-      z = r.Landau(2,1);
+      x = r.Gaus(10, 1);
+      y = r.Gaus(20, 2);
+      z = r.Landau(2, 1);
       T->Fill();
    }
 
    // Draw with option goff and generate seven variables
-   Int_t n = T->Draw("x:y:z:Run:Event:sin(x):cos(x)","Run==1","goff");
-   printf("The arrays' dimension is %d\n",n);
+   Int_t n = T->Draw("x:y:z:Run:Event:sin(x):cos(x)", "Run==1", "goff");
+   printf("The arrays' dimension is %d\n", n);
 
    // Retrieve variables 0, 5 et 6
    Double_t *vx  = T->GetVal(0);
@@ -62,8 +65,8 @@ void treegetval() {
    Double_t *vxc = T->GetVal(6);
 
    // Create and draw graphs
-   TGraph *gs = new TGraph(n,vx,vxs);
-   TGraph *gc = new TGraph(n,vx,vxc);
+   auto gs = new TGraph(n, vx, vxs);
+   auto gc = new TGraph(n, vx, vxc);
    gs->Draw("ap");
    gc->Draw("p");
 }
