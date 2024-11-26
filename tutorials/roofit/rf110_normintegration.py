@@ -11,7 +11,6 @@
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C++ version)
 
-from __future__ import print_function
 import ROOT
 
 # Set up model
