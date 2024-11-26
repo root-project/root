@@ -405,9 +405,9 @@ set(extra_veto
   legacy/proof/*.C
   sql/*.C
   tree/hsimpleProxy.C # A driver uses this macro which cannot be executed directly
-  tree/tree0.C
-  tree/tree2a.C
-  tree/tree4.C
+  tree/tree103_tree.C
+  tree/tree106_tree.C
+  tree/tree108_tree.C
   roostats/rs401d_FeldmanCousins.C  # Takes too much time
   histfactory/ModifyInterpolation.C
   tree/copytree2.C
