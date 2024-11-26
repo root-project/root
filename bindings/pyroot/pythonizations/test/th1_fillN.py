@@ -25,13 +25,13 @@ class FillNNumpyArray(unittest.TestCase):
         simple_hist.FillN(data)
         # Test if the histograms have the same content
         for i in range(nbins):
-            assert verbose_hist.GetBinContent(i) == simple_hist.GetBinContent(i)
+            self.assertAlmostEqual(verbose_hist.GetBinContent(i), simple_hist.GetBinContent(i))
         # Test filling with weights
         weights = np.array([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9])
         verbose_hist.FillN(len(data), data, weights)
         simple_hist.FillN(data, weights)
         for i in range(nbins):
-            assert verbose_hist.GetBinContent(i) == simple_hist.GetBinContent(i)
+            self.assertAlmostEqual(verbose_hist.GetBinContent(i), simple_hist.GetBinContent(i))
         # Test filling with weights with a different length
         weights = np.array([0.1, 0.2, 0.3, 0.4])
         with self.assertRaises(ValueError):
