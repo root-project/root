@@ -188,7 +188,7 @@ void DestroyRVecWithChecks(std::size_t alignOfT, void **beginPtr, char *begin, s
    auto paddingMiddle = dataMemberSz % alignOfT;
    if (paddingMiddle != 0)
       paddingMiddle = alignOfT - paddingMiddle;
-   const bool isSmall = (reinterpret_cast<void *>(begin) == (beginPtr + dataMemberSz + paddingMiddle));
+   const bool isSmall = (begin == (reinterpret_cast<char *>(beginPtr) + dataMemberSz + paddingMiddle));
 
    const bool owns = (*capacityPtr != -1);
    if (!isSmall && owns)
