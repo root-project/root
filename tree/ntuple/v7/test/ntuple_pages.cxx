@@ -115,7 +115,7 @@ TEST(Pages, EvictExpiredClusters)
       auto ptrE = model->MakeField<float>("E");
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
 
-      for (unsigned i = 0; i < 2; ++i) {
+      for (unsigned i = 0; i < 3; ++i) {
          writer->Fill();
          writer->CommitCluster();
       }
@@ -130,5 +130,11 @@ TEST(Pages, EvictExpiredClusters)
    EXPECT_EQ(4, reader->GetMetrics().GetCounter("RNTupleReader.RPageSourceFile.nPageUnsealed")->GetValueAsInt());
    viewE(0);
    EXPECT_EQ(6, reader->GetMetrics().GetCounter("RNTupleReader.RPageSourceFile.nPageUnsealed")->GetValueAsInt());
+
+   viewPt(2);
+   EXPECT_EQ(8, reader->GetMetrics().GetCounter("RNTupleReader.RPageSourceFile.nPageUnsealed")->GetValueAsInt());
+   viewPt(0); // should evice the unused page for E in cluster 2
+   viewE(2);
+   EXPECT_EQ(10, reader->GetMetrics().GetCounter("RNTupleReader.RPageSourceFile.nPageUnsealed")->GetValueAsInt());
 }
 #endif // R__USE_IMT
