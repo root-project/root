@@ -332,7 +332,7 @@ void print_reports()
       StatusPrint(e.psfile, 1, e.title, e.TestNum,
                   e.IPS ? FileSize(e.psfile) : AnalysePS(e.psfile), gPS1RefNb[e.TestNum-1], gPS1ErrNb[e.TestNum-1]);
 
-      StatusPrint(e.pdffile, 0, "  PDF output", e.TestNum, 
+      StatusPrint(e.pdffile, 0, "  PDF output", e.TestNum,
                   FileSize(e.pdffile), gPDFRefNb[e.TestNum-1], gPDFErrNb[e.TestNum-1]);
 
       StatusPrint(e.jpgfile, 0, "  JPG output", e.TestNum,
@@ -1075,7 +1075,6 @@ void tgaxis2()
    TestReport(C, "TGaxis 2");
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// 3rd TGaxis test.
 
@@ -1083,10 +1082,9 @@ void tgaxis3()
 {
    TCanvas *C = StartTest(700,900);
 
-   time_t script_time;
-   script_time = time(0);
-   script_time = 3600*(int)(script_time/3600);
-   gStyle->SetTimeOffset(script_time);
+   // set fixed offset to get reproducible results
+   TDatime T0(2007, 5, 12, 14, 0, 0);
+   gStyle->SetTimeOffset(T0.Convert());
    C->Divide(1,3);
    C->SetFillColor(28);
    int i;
@@ -1123,7 +1121,7 @@ void tgaxis3()
    float x2[10], t2[10];
    for (i=0;i<10;i++) {
       x2[i] = gRandom->Gaus(500,100)*i;
-      t2[i] = i*365*86400;
+      t2[i] = i*365.25*86400;
    }
    TGraph *gt2 = new TGraph(10,t2,x2);
    gt2->SetTitle("Number of monkeys on the moon");
@@ -1545,7 +1543,8 @@ void tgraph3()
    gPad->SetLogx();
    gPad->SetLogy();
    TGraph* g2 = new TGraph();
-   for (int i = 0; i < 10; i++) g2->SetPoint(i, i + 1, i + 1);
+   for (int i = 0; i < 10; i++)
+      g2->SetPoint(i, i + 1, i + 1);
    g2->SetTitle("2 log scales from 1e-2 to 1e2;x;y");
    g2->GetXaxis()->SetLimits(1e-2, 1e2);
    g2->GetHistogram()->SetMinimum(1e-2);
@@ -2484,7 +2483,6 @@ Double_t result(Double_t *x, Double_t *par)
 
 void waves()
 {
-   TF2 * finter;
    Double_t d = 3;
    Double_t lambda = 1;
    Double_t amp = 10;
@@ -2493,6 +2491,7 @@ void waves()
 
    C->Range(0, -10,  30, 10);
    C->SetFillColor(0);
+
    TPad *pad = new TPad("pr","pr",  0.5, 0 , 1., 1);
    pad->Range(0, -10,  15, 10);
    pad->Draw();
@@ -2500,16 +2499,16 @@ void waves()
    const Int_t colNum = 30;
    Int_t palette[colNum];
    Int_t color_offset = 2001;
-   for (Int_t i=0;i<colNum;i++) {
-      new TColor(color_offset+i
-      ,    pow(i/((colNum)*1.0),0.3)
-      ,    pow(i/((colNum)*1.0),0.3)
-      ,0.5*(i/((colNum)*1.0)),"");
-      palette[i] = color_offset+i;
+   for (Int_t i = 0; i < colNum; i++) {
+      new TColor(color_offset + i,
+                 pow(i / ((colNum) * 1.0), 0.3),
+                 pow(i / ((colNum) * 1.0), 0.3),
+                 0.5 * (i / ((colNum) * 1.0)), "");
+      palette[i] = color_offset + i;
    }
-   gStyle->SetPalette(colNum,palette);
+   gStyle->SetPalette(colNum, palette);
    C->cd();
-   TF2 * f0 = new TF2("ray_source",interference, 0.02, 15, -8, 8, 4);
+   TF2 *f0 = new TF2("ray_source",interference, 0.02, 15, -8, 8, 4);
 
    f0->SetParameters(amp, lambda, 0, 0);
    f0->SetNpx(200);
@@ -2540,8 +2539,7 @@ void waves()
    graph->SetPoint(3, 0, -0.1);
    graph->Draw("F");
 
-   TLine * line;
-   line = new TLine(15,-10, 15, 0 - 0.5*d -0.2);
+   TLine *line = new TLine(15,-10, 15, 0 - 0.5*d -0.2);
    line->SetLineWidth(10); line->Draw();
    line = new TLine(15, 0 - 0.5*d +0.2 ,15, 0 + 0.5*d -0.2);
    line->SetLineWidth(10); line->Draw();
@@ -2550,13 +2548,13 @@ void waves()
    line->SetLineWidth(10); line->Draw();
 
    pad ->cd();
-   finter = new TF2("interference",interference, 0.01, 14, -10, 10, 4);
+   TF2 *finter = new TF2("interference",interference, 0.01, 14, -10, 10, 4);
 
    finter->SetParameters(amp, lambda, d, 1);
    finter->SetNpx(200);
    finter->SetNpy(200);
    finter->SetContour(colNum-2);
-   finter->Draw("samecolorz");
+   finter->Draw("samecolz");
 
    TArc arc;
    arc.SetFillStyle(0);
@@ -2570,7 +2568,7 @@ void waves()
    }
 
    pad->cd();
-   TF2 *fresult = new TF2("result",result, 14, 15, -10, 10, 4);
+   TF2 *fresult = new TF2("result", result, 14, 15, -10, 10, 4);
 
    fresult->SetParameters(amp, lambda, d, 1);
    fresult->SetNpx(300);
@@ -2718,21 +2716,25 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
    waves         ();
    print_reports ();
 
+   start_block("High Level 3D Primitives", kTRUE);
+   options2d1    ();
+   options2d2    ();
+   options2d3    ();
    if (gSkip3D) {
-      gTestNum += 9;
+      gTestNum += 2;
    } else {
-      start_block("High Level 3D Primitives", kTRUE);
-      options2d1    ();
-      options2d2    ();
-      options2d3    ();
-      options2d4    ();
-      options2d5    ();
-      earth         ();
-      tgraph2d1     ();
-      tgraph2d2     ();
-      tgraph2d3     ();
-      print_reports ();
+      options2d4 ();
+      options2d5 ();
    }
+   earth         ();
+   if (gSkip3D) {
+      gTestNum += 2;
+   } else {
+      tgraph2d1  ();
+      tgraph2d2  ();
+   }
+   tgraph2d3     ();
+   print_reports ();
 
    start_block("complex drawing and TPad");
    if (gSkip3D) {
