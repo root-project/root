@@ -27,29 +27,33 @@
 /// This example can be run in many different ways:
 ///  - way1 using the Cling interpreter:
 /// ~~~
-/// .x tree4.C
+/// .x tree108_tree.C
 /// ~~~
 ///  - way2 using the Cling interpreter:
 /// ~~~
-/// .L tree4.C
-/// tree4()
+/// .L tree108_tree.C
+/// tree108_tree()
 /// ~~~
 ///  - way3 using ACLIC:
 /// ~~~
 /// .L ../test/libEvent.so
-/// .x tree4.C++
+/// .x tree108_tree.C++
 /// ~~~
 /// One can also run the write and read parts in two separate sessions.
 /// For example following one of the sessions above, one can start the session:
 /// ~~~
-///   .L tree4.C
-///   tree4r();
+///   .L tree108_tree.C
+///   tree108_read();
 /// ~~~
 /// \macro_code
 ///
 /// \author Rene Brun
 
+#ifdef R__WIN32
+R__LOAD_LIBRARY($ROOTSYS/test/libEvent.dll)
+#else
 R__LOAD_LIBRARY($ROOTSYS/test/libEvent.so)
+#endif
 
 #include "TFile.h"
 #include "TTree.h"
@@ -61,115 +65,117 @@ R__LOAD_LIBRARY($ROOTSYS/test/libEvent.so)
 #include "TROOT.h"
 #include "../test/Event.h"
 
-void tree4w()
+void tree108_write()
 {
+   // create a Tree file tree108.root
+   TFile f("tree108.root","RECREATE");
 
-  //create a Tree file tree4.root
-  TFile f("tree4.root","RECREATE");
+   // create a ROOT Tree
+   TTree t4("t4","A Tree with Events");
 
-  // Create a ROOT Tree
-  TTree t4("t4","A Tree with Events");
+   // create a pointer to an Event object
+   Event *event = new Event();
 
-  // Create a pointer to an Event object
-  Event *event = new Event();
+   // create two branches, split one.
+   t4.Branch("event_split", &event,16000,99);
+   t4.Branch("event_not_split", &event,16000,0);
 
-  // Create two branches, split one.
-  t4.Branch("event_split", &event,16000,99);
-  t4.Branch("event_not_split", &event,16000,0);
+   // a local variable for the event type
+   char etype[20];
 
-  // a local variable for the event type
-  char etype[20];
+   // fill the tree
+   for (Int_t ev = 0; ev < 100; ev++) {
+      Float_t sigmat, sigmas;
+      gRandom->Rannor(sigmat, sigmas);
+      Int_t ntrack = Int_t(600 + 600 * sigmat / 120.);
+      Float_t random = gRandom->Rndm(1);
+      sprintf(etype, "type%d", ev%5);
+      event->SetType(etype);
+      event->SetHeader(ev, 200, 960312, random);
+      event->SetNseg(Int_t(10 * ntrack + 20 * sigmas));
+      event->SetNvertex(Int_t(1 + 20 * gRandom->Rndm()));
+      event->SetFlag(UInt_t(random + 0.5));
+      event->SetTemperature(random + 20.);
 
-  // Fill the tree
-  for (Int_t ev = 0; ev <100; ev++) {
-    Float_t sigmat, sigmas;
-    gRandom->Rannor(sigmat,sigmas);
-    Int_t ntrack   = Int_t(600 + 600 *sigmat/120.);
-    Float_t random = gRandom->Rndm(1);
-    sprintf(etype,"type%d",ev%5);
-    event->SetType(etype);
-    event->SetHeader(ev, 200, 960312, random);
-    event->SetNseg(Int_t(10*ntrack+20*sigmas));
-    event->SetNvertex(Int_t(1+20*gRandom->Rndm()));
-    event->SetFlag(UInt_t(random+0.5));
-    event->SetTemperature(random+20.);
-
-    for(UChar_t m = 0; m < 10; m++) {
-      event->SetMeasure(m, Int_t(gRandom->Gaus(m,m+1)));
-    }
-
-    // fill the matrix
-    for(UChar_t i0 = 0; i0 < 4; i0++) {
-      for(UChar_t i1 = 0; i1 < 4; i1++) {
-        event->SetMatrix(i0,i1,gRandom->Gaus(i0*i1,1));
+      for (UChar_t m = 0; m < 10; m++) {
+         event->SetMeasure(m, Int_t(gRandom->Gaus(m, m + 1)));
       }
-    }
 
-    //  Create and fill the Track objects
-    for (Int_t t = 0; t < ntrack; t++) event->AddTrack(random);
+      // fill the matrix
+      for (UChar_t i0 = 0; i0 < 4; i0++) {
+         for(UChar_t i1 = 0; i1 < 4; i1++) {
+            event->SetMatrix(i0, i1, gRandom->Gaus(i0 * i1, 1));
+         }
+      }
 
-    // Fill the tree
-    t4.Fill();
+      // Create and fill the Track objects
+      for (Int_t t = 0; t < ntrack; t++) event->AddTrack(random);
 
-    // Clear the event before reloading it
-    event->Clear();
-  }
+      // Fill the tree
+      t4.Fill();
 
-  // Write the file header
-  f.Write();
+      // Clear the event before reloading it
+      event->Clear();
+   }
+   // Write the file header
+   f.Write();
 
-  // Print the tree contents
-  t4.Print();
+   // Print the tree contents
+   t4.Print();
 }
 
 
-void tree4r()
+void tree108_read()
 {
-  // read the tree generated with tree4w
+   // read the tree generated with tree108_write
 
-  //note that we use "new" to create the TFile and TTree objects !
-  //because we want to keep these objects alive when we leave this function.
-  TFile *f = new TFile("tree4.root");
-  TTree *t4 = (TTree*)f->Get("t4");
+   // note that we create the TFile and TTree objects on the heap !
+   // because we want to keep these objects alive when we leave this function.
+   auto f = TFile::Open("tree108.root");
+   auto t4 = f->Get<TTree>("t4");
 
-  // create a pointer to an event object. This will be used
-  // to read the branch values.
-  Event *event = new Event();
+   // create a pointer to an event object. This will be used
+   // to read the branch values.
+   auto event = new Event();
 
-  // get two branches and set the branch address
-  TBranch *bntrack = t4->GetBranch("fNtrack");
-  TBranch *branch  = t4->GetBranch("event_split");
-  branch->SetAddress(&event);
+   // get two branches and set the branch address
+   auto bntrack = t4->GetBranch("fNtrack");
+   auto branch  = t4->GetBranch("event_split");
+   branch->SetAddress(&event);
 
-  Long64_t nevent = t4->GetEntries();
-  Int_t nselected = 0;
-  Int_t nb = 0;
-  for (Long64_t i=0;i<nevent;i++) {
-    //read branch "fNtrack"only
-    bntrack->GetEntry(i);
+   Long64_t nevent = t4->GetEntries();
+   Int_t nselected = 0;
+   Int_t nb = 0;
+   for (Long64_t i=0; i<nevent; i++) {
+      // read branch "fNtrack"only
+      bntrack->GetEntry(i);
 
-    //reject events with more than 587 tracks
-    if (event->GetNtrack() > 587)continue;
+      // reject events with more than 587 tracks
+      if (event->GetNtrack() > 587)
+         continue;
 
-    //read complete accepted event in memory
-    nb += t4->GetEntry(i);
-    nselected++;
+      // read complete accepted event in memory
+      nb += t4->GetEntry(i);
+      nselected++;
 
-    //print the first accepted event
-    if (nselected == 1) t4->Show();
+      // print the first accepted event
+      if (nselected == 1)
+         t4->Show();
 
-    //clear tracks array
-    event->Clear();
-  }
+      // clear tracks array
+      event->Clear();
+   }
 
-  if (gROOT->IsBatch()) return;
-  new TBrowser();
-  t4->StartViewer();
+   if (gROOT->IsBatch())
+      return;
+   new TBrowser();
+   t4->StartViewer();
 }
 
-void tree4() {
+void tree108_tree()
+{
    Event::Reset(); // Allow for re-run this script by cleaning static variables.
-   tree4w();
+   tree108_write();
    Event::Reset(); // Allow for re-run this script by cleaning static variables.
-   tree4r();
+   tree108_read();
 }
