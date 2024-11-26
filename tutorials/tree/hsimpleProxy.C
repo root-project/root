@@ -14,8 +14,11 @@
 ///    ntuple->Draw("hsimpleProxy.C+");
 /// ~~~
 ///
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date October 2024
 /// \author Rene Brun
 
 double hsimpleProxy() {

@@ -18,8 +18,11 @@
 /// root -b -q "tcl.C(1)"
 /// root -b -q "tcl.C++(1)"
 /// ~~~
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date August 2018
 /// \author Rene Brun
 
 #include "TFile.h"

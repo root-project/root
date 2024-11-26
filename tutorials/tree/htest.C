@@ -12,9 +12,11 @@
 /// root > htr3()
 /// ~~~
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date November 2017
 /// \author Rene Brun
 
 void htw() {

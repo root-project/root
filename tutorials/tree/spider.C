@@ -3,8 +3,11 @@
 /// \notebook
 /// TSpider example.
 ///
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date September 2016
 /// \author Bastien Dallapiazza
 
 #include "TFile.h"

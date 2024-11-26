@@ -3,9 +3,11 @@
 /// \notebook
 /// Simple tree analysis.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date January 2017
 /// \author Rene Brun
 
 #include "TCanvas.h"

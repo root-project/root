@@ -3,9 +3,11 @@
 /// \notebook -nodraw
 /// Script illustrating the use of the TParallelCoord class
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date November 2023
 /// \author  Bastien Dallapiazza
 
 #include "TFile.h"

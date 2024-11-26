@@ -12,9 +12,11 @@
 ///    .L $ROOTSYS/tutorials/tree/drawsparse.C+
 /// ~~~
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date October 2023
 /// \author Axel Naumann
 
 

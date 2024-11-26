@@ -4,9 +4,11 @@
 /// Create a plot of the data in `cernstaff.root`
 /// To create `cernstaff.root`, execute tutorial `$ROOTSYS/tutorials/tree/cernbuild.C`
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date August 2020
 /// \author Rene Brun
 
 void staff() {

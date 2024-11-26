@@ -3,9 +3,11 @@
 /// \notebook
 /// Playing with a Tree containing variables of type character
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date January 2017
 /// \author Rene Brun
 
 void cernstaff () {

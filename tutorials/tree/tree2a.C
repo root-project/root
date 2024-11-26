@@ -13,8 +13,11 @@
 /// ~~~
 ///
 /// Note that since IO is involved, ACLiC has to be invoked to create the dictionary of class Gctrak.
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date October 2023
 /// \author Rene Brun
 
 #include "TROOT.h"

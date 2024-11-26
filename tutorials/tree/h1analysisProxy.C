@@ -101,8 +101,11 @@
 /// begin_html <a href="gif/h1analysis_dstar.gif" >the Dstar plot</a> end_html
 /// begin_html <a href="gif/h1analysis_tau.gif" >the Tau D0 plot</a> end_html
 ///
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date August 2020
 /// \author Philippe Canal from original h1analysis.C by Rene Brun
 
 TEntryList *elist;

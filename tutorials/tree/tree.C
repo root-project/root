@@ -3,9 +3,11 @@
 /// \notebook
 /// Display the Tree data structures
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date November 2024
 /// \author Rene Brun
 
 void tree() {

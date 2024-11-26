@@ -17,8 +17,11 @@
 /// .x tree2.C   to execute with the Cling interpreter
 /// .x tree2.C++ to execute with native compiler
 /// ~~~
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date October 2019
 /// \author Rene Brun
 
 #include "TFile.h"
