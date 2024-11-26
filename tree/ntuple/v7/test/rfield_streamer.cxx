@@ -214,7 +214,7 @@ TEST(RField, StreamerMerge)
    auto streamerInfoMap = RNTupleSerializer::DeserializeStreamerInfos(typeInfo.GetContent()).Unwrap();
    EXPECT_EQ(4u, streamerInfoMap.size());
    std::array<bool, 4> seenStreamerInfos{false, false, false, false};
-   for (const auto [_, streamerInfo] : streamerInfoMap) {
+   for (const auto &[_, streamerInfo] : streamerInfoMap) {
       if (strcmp(streamerInfo->GetName(), "PolyContainer") == 0)
          seenStreamerInfos[0] = true;
       else if (strcmp(streamerInfo->GetName(), "PolyBase") == 0)
