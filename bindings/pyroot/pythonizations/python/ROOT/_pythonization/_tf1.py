@@ -10,15 +10,7 @@
 ################################################################################
 
 r"""
-/**
-\class TF1
-\brief \parblock \endparblock
-\htmlonly
-<details open>
-<summary  style="font-size:20px; color: #425788;"><b>Python interface</b></summary>
-<div class="pyrootbox">
-\endhtmlonly
-\anchor python
+\pythondoc TF1
 
 The TF1 class has several additions for its use from Python, which are also
 available in its subclasses TF2 and TF3.
@@ -65,13 +57,9 @@ params = np.array([
 
 # Slice to avoid the dummy column of 10's
 res = rtf1_coulomb.EvalPar(x[:, ::2], params)
-
 \endcode
-\htmlonly
-</div>
-</details>
-\endhtmlonly
-*/
+
+\endpythondoc
 """
 
 from . import pythonization

@@ -9,14 +9,7 @@
 ################################################################################
 
 r'''
-/**
-\class TScatter
-\brief \parblock \endparblock
-\htmlonly
-<details open>
-<summary  style="font-size:20px; color: #425788;"><b>Python interface</b></summary>
-<div class="pyrootbox">
-\endhtmlonly
+\pythondoc TScatter
 
 The `TScatter` class in PyROOT can be used to create and visualize scatter plots dynamically. By integrating with NumPy, it allows efficient data management and customization.
 
@@ -64,9 +57,5 @@ scatter.Draw("AP")  # "A" for Axis, "P" for Points
 canvas.SaveAs("scatter_plot_example.png")
 \endcode
 
-\htmlonly
-</div>
-</details>
-\endhtmlonly
-*/
+\endpythondoc
 '''
