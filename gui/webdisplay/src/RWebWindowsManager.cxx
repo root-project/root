@@ -24,7 +24,7 @@
 #include "TString.h"
 #include "TApplication.h"
 #include "TTimer.h"
-#include "TRandom.h"
+#include "TRandom3.h"
 #include "TError.h"
 #include "TROOT.h"
 #include "TEnv.h"
@@ -534,13 +534,13 @@ bool RWebWindowsManager::CreateServer(bool with_http)
    if ((http_timer > 0) && !IsUseHttpThread())
       fServer->SetTimer(http_timer);
 
+   TRandom3 rnd;
+
    if (http_port < 0) {
       ntry = 0;
    } else {
-
       if (http_port == 0)
-         gRandom->SetSeed(0);
-
+         rnd.SetSeed(0);
       if (http_max - http_min < ntry)
          ntry = http_max - http_min;
    }
@@ -558,7 +558,7 @@ bool RWebWindowsManager::CreateServer(bool with_http)
             return false;
          }
 
-         http_port = (int)(http_min + (http_max - http_min) * gRandom->Rndm(1));
+         http_port = (int)(http_min + (http_max - http_min) * rnd.Rndm(1));
       }
 
       TString engine, url;

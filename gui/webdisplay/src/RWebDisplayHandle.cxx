@@ -16,7 +16,7 @@
 
 #include "RConfigure.h"
 #include "TSystem.h"
-#include "TRandom.h"
+#include "TRandom3.h"
 #include "TString.h"
 #include "TObjArray.h"
 #include "THttpServer.h"
@@ -563,7 +563,8 @@ std::string RWebDisplayHandle::ChromeCreator::MakeProfile(std::string &exec, boo
    if (chrome_profile && *chrome_profile) {
       profile_arg = chrome_profile;
    } else {
-      gRandom->SetSeed(0);
+      TRandom3 rnd;
+      rnd.SetSeed(0);
       profile_arg = gSystem->TempDirectory();
 #ifdef _MSC_VER
       char slash = '\\';
@@ -572,7 +573,7 @@ std::string RWebDisplayHandle::ChromeCreator::MakeProfile(std::string &exec, boo
 #endif
       if (!profile_arg.empty() && (profile_arg[profile_arg.length()-1] != slash))
          profile_arg += slash;
-      profile_arg += "root_chrome_profile_"s + std::to_string(gRandom->Integer(0x100000));
+      profile_arg += "root_chrome_profile_"s + std::to_string(rnd.Integer(0x100000));
 
       rmdir = profile_arg;
    }
@@ -644,8 +645,8 @@ std::string RWebDisplayHandle::FirefoxCreator::MakeProfile(std::string &exec, bo
    } else if (ff_profilepath && *ff_profilepath) {
       profile_arg = "-profile "s + ff_profilepath;
    } else if (ff_randomprofile > 0) {
-
-      gRandom->SetSeed(0);
+      TRandom3 rnd;
+      rnd.SetSeed(0);
       std::string profile_dir = gSystem->TempDirectory();
 
 #ifdef _MSC_VER
@@ -655,7 +656,7 @@ std::string RWebDisplayHandle::FirefoxCreator::MakeProfile(std::string &exec, bo
 #endif
       if (!profile_dir.empty() && (profile_dir[profile_dir.length()-1] != slash))
          profile_dir += slash;
-      profile_dir += "root_ff_profile_"s + std::to_string(gRandom->Integer(0x100000));
+      profile_dir += "root_ff_profile_"s + std::to_string(rnd.Integer(0x100000));
 
       profile_arg = "-profile "s + profile_dir;
 
@@ -1199,9 +1200,11 @@ try_again:
       if (chrome_tmp_workaround) {
          std::string homedir = gSystem->GetHomeDirectory();
          auto pos = html_name.Last('/');
-         if (pos == kNPOS)
-            html_name = TString::Format("/random%d.html", gRandom->Integer(1000000));
-         else
+         if (pos == kNPOS) {
+            TRandom3 rnd;
+            rnd.SetSeed(0);
+            html_name = TString::Format("/random%d.html", rnd.Integer(1000000));
+         } else
             html_name.Remove(0, pos);
          html_name = homedir + html_name.Data();
          gSystem->Unlink(html_name.Data());
