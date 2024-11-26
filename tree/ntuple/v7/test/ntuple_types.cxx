@@ -2000,8 +2000,9 @@ TEST(RNTuple, IOConstructor)
    FileRaii fileGuard("test_ntuple_ioconstructor.ntuple");
 
    auto model = RNTupleModel::Create();
-   auto fldObj = RFieldBase::Create("obj", "IOConstructor").Unwrap();
-   model->AddField(std::move(fldObj));
+   model->MakeField<IOConstructor>("obj1");
+   auto fldObj2 = RFieldBase::Create("obj2", "IOConstructor").Unwrap();
+   model->AddField(std::move(fldObj2));
    {
       auto writer = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
       writer->Fill();
@@ -2009,8 +2010,8 @@ TEST(RNTuple, IOConstructor)
 
    auto ntuple = RNTupleReader::Open("f", fileGuard.GetPath());
    EXPECT_EQ(1U, ntuple->GetNEntries());
-   auto obj = ntuple->GetModel().GetDefaultEntry().GetPtr<IOConstructor>("obj");
-   EXPECT_EQ(7, obj->a);
+   auto obj2 = ntuple->GetModel().GetDefaultEntry().GetPtr<IOConstructor>("obj2");
+   EXPECT_EQ(7, obj2->a);
 }
 
 TEST(RNTuple, TClassTemplateBased)
