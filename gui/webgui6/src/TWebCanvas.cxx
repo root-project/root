@@ -369,7 +369,7 @@ Bool_t TWebCanvas::IsJSSupportedClass(TObject *obj, Bool_t many_primitives)
 /// If custom path was configured in RWebWindowsManager::AddServerLocation, it can be used in module paths.
 /// If started with "load:" prefix, code will be loaded with `loadScript` function of JSROOT (old, deprecated way)
 /// Script also can be a plain JavaScript code which imports JSROOT and provides draw function for custom classes
-/// See tutorials/webgui/custom/custom.mjs demonstrating such example
+/// See tutorials/visualisation/webgui/custom/custom.mjs demonstrating such example
 
 void TWebCanvas::SetCustomScripts(const std::string &src)
 {

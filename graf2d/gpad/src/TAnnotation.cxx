@@ -50,7 +50,7 @@ End_Macro
 Another example:
 
 Begin_Macro(source)
-../../../tutorials/graphs/annotation3d.C
+../../../tutorials/visualisation/graphs/annotation3d.C
 End_Macro
 */
 

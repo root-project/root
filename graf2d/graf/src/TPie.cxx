@@ -37,7 +37,7 @@ Draw a Pie Chart,
 Example:
 
 Begin_Macro(source)
-../../../tutorials/graphics/piechart.C
+../../../tutorials/visualisation/graphics/piechart.C
 End_Macro
 */
 

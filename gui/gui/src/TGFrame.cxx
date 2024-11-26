@@ -940,7 +940,7 @@ Bool_t TGCompositeFrame::IsEditable() const
 ///    m->SetEditable();
 ///    gSystem->Load("$ROOTSYS/test/Aclock"); // load Aclock demo
 ///    Aclock a;
-///    gROOT->Macro("$ROOTSYS/tutorials/gui/guitest.C");
+///    gROOT->Macro("$ROOTSYS/tutorials/visualisation/gui/guitest.C");
 ///    m->SetEditable(0);
 ///    m->MapWindow();
 ///

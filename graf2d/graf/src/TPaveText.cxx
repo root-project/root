@@ -29,7 +29,6 @@
 
 ClassImp(TPaveText);
 
-
 /** \class TPaveText
 \ingroup BasicGraphics
 
@@ -50,7 +49,7 @@ of a line.
 
 Example:
 Begin_Macro(source)
-../../../tutorials/graphics/pavetext.C
+../../../tutorials/visualisation/graphics/pavetext.C
 End_Macro
 
 GetListOfLines can also be used to retrieve all the lines in the TPaveText as

@@ -39,7 +39,7 @@ color map and the fourth on the marker size.
 The following example demonstrates how it works:
 
 Begin_Macro(source)
-../../../tutorials/graphs/scatter.C
+../../../tutorials/visualisation/graphs/scatter.C
 End_Macro
 
 ### TScatter's plotting options
@@ -50,7 +50,6 @@ TScatter can be drawn with the following options:
 | "A"      | Produce a new plot with Axis around the graph |
 
 */
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TScatter default constructor.

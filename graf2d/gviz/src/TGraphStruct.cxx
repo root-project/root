@@ -49,7 +49,7 @@ three classes:
     a TGraphStruct.
 
 Begin_Macro(source)
-../../../tutorials/graphs/graphstruct.C
+../../../tutorials/visualisation/graphs/graphstruct.C
 End_Macro
 
 A graph structure can be dumped into a "dot" file using DumpAsDotFile.

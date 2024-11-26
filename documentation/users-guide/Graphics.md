@@ -1053,7 +1053,7 @@ The curly arc center is `(x1`, `y1)` and the radius is `rad`. The
 wavelength and the amplitude are given in percent of the line length.
 The parameters `phimin` and `phimax` are the starting and ending angle
 of the arc (given in degrees). Refer to
-`$ROOTSYS/tutorials/graphics/feynman.C` for the script that built the
+`$ROOTSYS/tutorials/visualisation/graphics/feynman.C` for the script that built the
 figure above.
 
 ### Text and Latex Mathematical Expressions
@@ -1188,7 +1188,7 @@ a -\> is obtained with `#vec{a}`
 
 #### Example 1
 
-The script `$ROOTSYS/tutorials/graphics/latex.C:`
+The script `$ROOTSYS/tutorials/visualisation/graphics/latex.C:`
 
 ``` {.cpp}
 {
@@ -1214,7 +1214,7 @@ latex.C](pictures/020000C1.jpg)
 
 #### Example 2
 
-The script `$ROOTSYS/tutorials/graphics/latex2.C:`
+The script `$ROOTSYS/tutorials/visualisation/graphics/latex2.C:`
 
 ``` {.cpp}
 {
@@ -1240,7 +1240,7 @@ latex2.C](pictures/020000C2.jpg)
 
 #### Example 3
 
-The script `$ROOTSYS/tutorials/graphics/latex3.C`:
+The script `$ROOTSYS/tutorials/visualisation/graphics/latex3.C`:
 
 ``` {.cpp}
 {
@@ -1344,7 +1344,7 @@ Int_t npaves, Option_t* option)
 TMathText's purpose is to write mathematical equations, exactly as TeX
 would do it. The syntax is the same as the TeX's one.
 
-The script `$ROOTSYS/tutorials/graphics/tmathtex.C`:
+The script `$ROOTSYS/tutorials/visualisation/graphics/tmathtex.C`:
 
 gives the following output:
 
@@ -3230,7 +3230,7 @@ code for it can be found under `$ROOTSYS/gl`.
 
 You can manipulate the viewer via the GUI or via the base
 **`TGLViewer`** object behind the interface. These are detailed below -
-see also `$ROOTSYS/tutorials/gl/glViewerExercise.C`.
+see also `$ROOTSYS/tutorials/visualisation/gl/glViewerExercise.C`.
 
 #### Projections Modes (Cameras)
 
@@ -3290,7 +3290,7 @@ calling the method `TGLViewer::SetCurrentCamera` with one of the
 v->SetCurrentCamera(TGLViewer::kCameraPerspXOZ);
 ```
 
-See also `$ROOTSYS/tutorials/gl/glViewerExercise.C`.
+See also `$ROOTSYS/tutorials/visualisation/gl/glViewerExercise.C`.
 
 #### Adjusting Cameras
 

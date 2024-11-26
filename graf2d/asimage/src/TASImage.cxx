@@ -54,7 +54,7 @@ palette can be modified with a GUI, just select StartPaletteEditor() from the
 context menu.
 
 Several examples showing how to use this class are available in the
-ROOT tutorials: `$ROOTSYS/tutorials/image/`
+ROOT tutorials: `$ROOTSYS/tutorials/visualisation/image/`
 */
 
 #include <ft2build.h>

@@ -51,8 +51,8 @@ interpreter/cling/tools/packaging @vgvassilev
 /graf2d/cocoa/ @couet
 /graf3d/eve/ @osschar
 /graf3d/eve7/ @osschar @linev
-/tutorials/eve/ @osschar
-/tutorials/eve7/ @osschar @linev
+/tutorials/visualisation/eve7/eve/ @osschar
+/tutorials/visualisation/eve7/ @osschar @linev
 
 #different http/webgui components
 /net/http/ @linev
@@ -72,7 +72,7 @@ interpreter/cling/tools/packaging @vgvassilev
 /geom/webviewer/ @linev
 /ui5/ @linev
 /tutorials/rcanvas/ @linev
-/tutorials/webgui/ @linev
+/tutorials/visualisation/webgui/ @linev
 
 /cmake/ @bellenot
 *.cmake @bellenot

@@ -560,7 +560,7 @@ This section presents all currently supported widgets in ROOT and their
 most useful methods. All of them can be considered as building blocks
 for an application, and most of them can be found in dialogs. Provided
 snippets of the code will give you practical guidelines where and how to
-use certain widgets. The macro `$ROOTSYS/tutorials/gui/guitest.C`
+use certain widgets. The macro `$ROOTSYS/tutorials/visualisation/gui/guitest.C`
 contains the complete source code.
 
 ![Widgets created by ROOT GUI classes](pictures/02000204.jpg)
