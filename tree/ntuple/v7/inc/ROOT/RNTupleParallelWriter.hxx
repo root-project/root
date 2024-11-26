@@ -95,8 +95,11 @@ public:
    /// thread-safe and may be called from multiple threads in parallel at any time, also after some data has already
    /// been written.
    ///
-   /// Note that all fill contexts must be destroyed before the RNTupleParallelWriter is destructed.
+   /// Note that all fill contexts must be destroyed before RNTupleParallelWriter::CommitDataset() is called.
    std::shared_ptr<RNTupleFillContext> CreateFillContext();
+
+   /// Automatically called by the destructor
+   void CommitDataset();
 
    void EnableMetrics() { fMetrics.Enable(); }
    const Detail::RNTupleMetrics &GetMetrics() const { return fMetrics; }

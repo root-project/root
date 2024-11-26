@@ -327,3 +327,22 @@ TEST(RNTupleFillContext, FlushColumns)
    EXPECT_EQ(pageInfos[0].fNElements, 1);
    EXPECT_EQ(pageInfos[1].fNElements, 1);
 }
+
+TEST(RNTupleParallelWriter, ExplicitCommit)
+{
+   FileRaii fileGuard("test_ntuple_parallel_explicit_commit.root");
+
+   auto model = RNTupleModel::CreateBare();
+   model->MakeField<float>("pt");
+   auto writer = RNTupleParallelWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
+
+   auto ctx = writer->CreateFillContext();
+   auto entry = ctx->CreateEntry();
+   ctx->Fill(*entry);
+
+   EXPECT_THROW(writer->CommitDataset(), RException);
+   ctx.reset();
+
+   writer->CommitDataset();
+   writer->CommitDataset(); // noop
+}

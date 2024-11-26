@@ -128,20 +128,28 @@ ROOT::Experimental::RNTupleParallelWriter::RNTupleParallelWriter(std::unique_ptr
 
 ROOT::Experimental::RNTupleParallelWriter::~RNTupleParallelWriter()
 {
+   try {
+      CommitDataset();
+   } catch (const RException &err) {
+      R__LOG_ERROR(NTupleLog()) << "failure committing ntuple: " << err.GetError().GetReport();
+   }
+}
+
+void ROOT::Experimental::RNTupleParallelWriter::CommitDataset()
+{
+   if (fModel->IsRetired())
+      return;
+
    for (const auto &context : fFillContexts) {
       if (!context.expired()) {
-         R__LOG_ERROR(NTupleLog()) << "RNTupleFillContext has not been destructed";
-         return;
+         throw RException(R__FAIL("RNTupleFillContext has not been destructed"));
       }
    }
 
    // Now commit all clusters as a cluster group and then the dataset.
-   try {
-      fSink->CommitClusterGroup();
-      fSink->CommitDataset();
-   } catch (const RException &err) {
-      R__LOG_ERROR(NTupleLog()) << "failure committing ntuple: " << err.GetError().GetReport();
-   }
+   fSink->CommitClusterGroup();
+   fSink->CommitDataset();
+   fModel->Retire();
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleParallelWriter>
