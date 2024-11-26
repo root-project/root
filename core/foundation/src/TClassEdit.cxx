@@ -621,6 +621,10 @@ static size_t findNameEnd(const std::string &full, size_t pos)
 bool TClassEdit::IsDefAlloc(const char *allocname, const char *classname)
 {
    string_view a( allocname );
+   const static int clalloclen = strlen("class ");
+   if (a.compare(0,clalloclen,"class ") == 0) {
+      a.remove_prefix(clalloclen);
+   }
    RemoveStd(a);
 
    if (a=="alloc")                              return true;
