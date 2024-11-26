@@ -11,9 +11,11 @@
 /// In this example four graphs are displayed with palette coloring for lines and
 /// and markers. The color of each graph is picked inside the default palette `kBird`.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date April 2022
 /// \author Olivier Couet
 
 void multigraphpalettecolor()

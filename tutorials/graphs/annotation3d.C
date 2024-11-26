@@ -5,9 +5,11 @@
 /// polylines. It also demonstrates how the axis labels can be modified.
 /// It was created for the book:
 /// [Statistical Methods for Data Analysis in Particle Physics](http://www.springer.com/la/book/9783319201757)
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date November 2024
 /// \author Luca Lista, Olivier Couet
 
 void annotation3d()

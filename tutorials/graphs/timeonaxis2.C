@@ -3,9 +3,11 @@
 /// \notebook
 /// Define the time offset as 2003, January 1st.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date May 2024
 /// \author Olivier Couet
 
 void timeonaxis2() {

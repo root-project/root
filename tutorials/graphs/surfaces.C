@@ -3,9 +3,11 @@
 /// \notebook
 /// Draw 2-Dim functions.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date August 2016
 /// \author Rene Brun
 
 void surfaces() {

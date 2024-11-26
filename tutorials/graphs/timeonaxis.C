@@ -16,9 +16,11 @@
 /// since it is a universal time. See the C time functions for converting this time
 /// into more useful structures.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date May 2024
 /// \author Damir Buskulic
 
 #include <time.h>

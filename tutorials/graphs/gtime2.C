@@ -4,9 +4,11 @@
 /// Example of TGraphTime showing how the class could be used to visualize
 /// a set of particles with their time stamp in a MonteCarlo program.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date June 2024
 /// \author Rene Brun
 
 #include "TRandom3.h"

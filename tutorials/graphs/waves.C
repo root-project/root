@@ -3,9 +3,11 @@
 /// \notebook
 /// Hint: Spherical waves
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date June 2022
 /// \author Otto Schaile
 
 #include "TROOT.h"

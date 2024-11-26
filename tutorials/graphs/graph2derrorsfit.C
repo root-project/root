@@ -3,9 +3,11 @@
 /// \notebook
 /// Draw and fit a TGraph2DErrors
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date July 2016
 /// \author Olivier Couet
 
 #include <TMath.h>

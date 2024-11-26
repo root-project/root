@@ -6,9 +6,11 @@
 /// therefore if the a graph's point is
 /// moved interactively, the text will be automatically updated.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date October 2019
 /// \author Olivier Couet
 
 void graphtext() {

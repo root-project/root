@@ -3,9 +3,11 @@
 /// \notebook
 /// Create and Draw a TMultiGraph.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date November 2024
 /// \author Rene Brun
 
 

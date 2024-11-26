@@ -3,9 +3,11 @@
 /// \notebook -js
 /// Bent error bars
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date August 2016
 /// \author Olivier Couet
 
 void bent() 

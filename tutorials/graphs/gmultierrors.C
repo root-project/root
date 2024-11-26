@@ -3,9 +3,11 @@
 /// \notebook -js
 /// Draw a graph with multiple y errors
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date December 2019
 /// \author Simon Spies
 
 void gmultierrors() {

@@ -4,9 +4,11 @@
 /// This example test all the various case of reverse graphs
 /// combined with logarithmic scale.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date May 2024
 /// \author Olivier Couet
 
 void graphreverse() {

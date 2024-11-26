@@ -5,9 +5,11 @@
 /// into adjacent subpads + axis labels on the top and right side
 /// of the pads.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date July 2016
 /// \author Rene Brun
 
 void zones() {

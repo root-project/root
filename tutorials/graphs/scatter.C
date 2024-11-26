@@ -3,9 +3,11 @@
 /// \notebook
 /// Draw a scatter plot.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date August 2024
 /// \author Olivier Couet
 
 void scatter()

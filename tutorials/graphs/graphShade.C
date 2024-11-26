@@ -3,9 +3,11 @@
 /// \notebook
 /// Show how to shade an area between two graphs
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date July 2016
 /// \author Rene Brun
 
 void graphShade() {
