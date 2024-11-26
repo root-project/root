@@ -6,9 +6,11 @@
 /// or `$PWD/hsimple.root`
 /// We draw one histogram in different formats.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date August 2021
 /// \author Rene Brun
 
 #include "TInterpreter.h"

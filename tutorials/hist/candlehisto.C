@@ -3,9 +3,11 @@
 /// \notebook
 /// Example showing how to combine the various candle plot options.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date December 2017
 /// \author Georg Troska
 
 void candlehisto()

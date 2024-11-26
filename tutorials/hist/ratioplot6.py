@@ -5,9 +5,11 @@
 ## The last label of the lower plot's y axis is hidden automatically.
 ## Inspired by the tutorial of Paul Gessinger.
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
+## \preview 
 ## \macro_code
 ##
+## \date June 2017
 ## \author Alberto Ferro
 
 import ROOT

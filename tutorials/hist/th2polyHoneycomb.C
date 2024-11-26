@@ -6,8 +6,10 @@
 /// an honeycomb binning.
 ///
 /// \macro_code
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 ///
+/// \date August 2023
 /// \author  Olivier Couet
 
 void th2polyHoneycomb(){

@@ -3,9 +3,11 @@
 /// \notebook
 /// Example showing an histogram with reverse axis.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date July 2016
 /// \author Olivier Couet
 
 void ReverseXAxis (TH1 *h);

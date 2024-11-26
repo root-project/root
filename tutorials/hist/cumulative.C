@@ -3,9 +3,11 @@
 /// \notebook -js
 /// Illustrate use of the TH1::GetCumulative method.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date July 2016
 /// \author M. Schiller
 
 #include <cassert>

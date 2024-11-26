@@ -5,9 +5,11 @@
 ## with different scales in the "same" pad.
 ## Inspired by work of Rene Brun.
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
+## \preview 
 ## \macro_code
 ##
+## \date October 2021
 ## \author Alberto Ferro
 
 #include "TCanvas.h"

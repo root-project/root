@@ -11,8 +11,10 @@
 /// political reality as of that time.
 ///
 /// \macro_code
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 ///
+/// \date February 2024
 /// \author Olivier Couet
 
 void th2polyUSA()

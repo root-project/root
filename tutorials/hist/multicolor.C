@@ -6,9 +6,11 @@
 ///  root > .x multicolor.C
 ///  root > .x multicolor.C(1)
 /// ~~~
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date August 2016
 /// \author Rene Brun
 
 #include "TCanvas.h"

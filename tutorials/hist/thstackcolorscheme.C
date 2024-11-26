@@ -5,9 +5,11 @@
 /// In this example, the color scheme with six colors is used.
 /// It also shows that the grayscale version is an acceptable alternative.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date October 2024
 /// \author Olivier Couet
 
 void thstackcolorscheme()

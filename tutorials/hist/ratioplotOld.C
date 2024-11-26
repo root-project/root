@@ -4,9 +4,11 @@
 /// class TRatioPlot. For ROOT version >= 6.08 TRatioPlot should be used. See
 /// the other ratio plots examples in this folder.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date May 2021
 /// \author Olivier Couet
 
 void ratioplotOld( ) {

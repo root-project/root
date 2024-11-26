@@ -6,9 +6,11 @@
 /// Since the lower plot is not created until `TRatioPlot::Draw` is called, you can only use the method
 /// afterwards.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date January 2020
 /// \author Paul Gessinger
 
 void ratioplot3()  {

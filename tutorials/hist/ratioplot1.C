@@ -7,9 +7,11 @@
 /// (`hist` and `E` in this case) and a drawing option for the output graph.
 /// The histograms drawing options can be changed with `SetH1DrawOpt` and `SetH2DrawOpt`.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date February 2023
 /// \author Paul Gessinger
 
 void ratioplot1() {

@@ -4,9 +4,11 @@
 /// Example showing a fit residual plot, where the separation margin has been set to 0.
 /// The last label of the lower plot's y axis is hidden automatically.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date January 2020
 /// \author Paul Gessinger
 
 void ratioplot6() {

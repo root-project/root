@@ -12,9 +12,11 @@
 /// and marker. The histograms are drawn with markers and error bars and one can see
 /// the color of each histogram is picked inside the default palette `kBird`.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date September 2023
 /// \author Olivier Couet
 
 void histpalettecolor()

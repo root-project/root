@@ -17,8 +17,11 @@
 /// to develop more powerful interactive applications exploiting CLING
 /// as a development engine.
 ///
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date February 2023
 /// \authors Rene Brun, Sergey Linev
 
 void exec2()

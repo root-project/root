@@ -9,9 +9,11 @@
 /// titles are modified.
 /// Confidence interval bands are automatically drawn on the bottom (but can be disabled by draw option `nobands`).
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date September 2023
 /// \author Paul Gessinger
 
 void ratioplot2() {

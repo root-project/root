@@ -4,9 +4,11 @@
 /// Example of macro illustrating how to superimpose two histograms
 /// with different scales in the "same" pad.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date July 2016
 /// \author Rene Brun
 
 #include "TCanvas.h"

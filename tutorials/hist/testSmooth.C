@@ -3,9 +3,11 @@
 /// \notebook
 /// Histogram smoothing.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date July 2016
 /// \author Rene Brun
 
 int ipad = 1;

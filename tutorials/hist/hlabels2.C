@@ -3,9 +3,11 @@
 /// \notebook
 /// 2-D histograms with alphanumeric labels.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date July 2016
 /// \author Rene Brun
 
 TCanvas *hlabels2()

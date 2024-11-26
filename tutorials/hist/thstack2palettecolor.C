@@ -11,9 +11,11 @@
 /// In this example four 2D histograms are displayed with palette coloring.
 /// The color of each graph is picked inside the palette number 1.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date November 2022
 /// \author Olivier Couet
 
 void thstack2palettecolor() 

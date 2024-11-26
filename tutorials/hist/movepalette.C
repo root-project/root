@@ -7,9 +7,11 @@
 /// width of the palette is larger than its height, the palette is automatically drawn
 /// horizontally.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date October 2024
 /// \author Olivier Couet
 
 void movepalette()

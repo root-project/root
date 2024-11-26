@@ -5,9 +5,11 @@
 /// Simple example illustrating how to use the C++ interpreter
 /// to fill histograms in a loop and show the graphics results
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date November 2022
 /// \author Rene Brun
 
 void hsum()

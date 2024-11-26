@@ -3,9 +3,11 @@
 /// \notebook -js
 /// Show the slice of a TH2 following the mouse position.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date November 2022
 /// \authors Rene Brun, Sergey Linev
 
 
