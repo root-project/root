@@ -106,11 +106,10 @@ void ROOT::Experimental::Internal::RPagePool::ReleasePage(const RPage &page)
 void ROOT::Experimental::Internal::RPagePool::RemoveFromUnusedPages(const RPage &page)
 {
    auto itr = fUnusedPages.find(page.GetClusterInfo().GetId());
-   if (itr != fUnusedPages.end()) {
-      itr->second.erase(page.GetBuffer());
-      if (itr->second.empty())
-         fUnusedPages.erase(itr);
-   }
+   assert(itr != fUnusedPages.end());
+   itr->second.erase(page.GetBuffer());
+   if (itr->second.empty())
+      fUnusedPages.erase(itr);
 }
 
 ROOT::Experimental::Internal::RPageRef
