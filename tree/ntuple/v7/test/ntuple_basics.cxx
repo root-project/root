@@ -695,6 +695,9 @@ TEST(REntry, Basics)
    EXPECT_THROW(e->GetToken("eta"), ROOT::Experimental::RException);
    EXPECT_THROW(model->GetToken("eta"), ROOT::Experimental::RException);
 
+   EXPECT_EQ("float", e->GetTypeName("pt"));
+   EXPECT_EQ("float", e->GetTypeName(model->GetToken("pt")));
+
    auto ptrPt = std::make_shared<float>();
    e->BindValue("pt", ptrPt);
    EXPECT_EQ(ptrPt.get(), e->GetPtr<float>("pt").get());
