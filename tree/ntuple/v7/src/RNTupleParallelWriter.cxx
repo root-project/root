@@ -137,7 +137,7 @@ ROOT::Experimental::RNTupleParallelWriter::~RNTupleParallelWriter()
 
 void ROOT::Experimental::RNTupleParallelWriter::CommitDataset()
 {
-   if (fModel->IsRetired())
+   if (fModel->IsExpired())
       return;
 
    for (const auto &context : fFillContexts) {
@@ -149,7 +149,7 @@ void ROOT::Experimental::RNTupleParallelWriter::CommitDataset()
    // Now commit all clusters as a cluster group and then the dataset.
    fSink->CommitClusterGroup();
    fSink->CommitDataset();
-   fModel->Retire();
+   fModel->Expire();
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleParallelWriter>
