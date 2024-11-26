@@ -9,9 +9,11 @@
 ///   root [0] .x mathcoreStatFunc.C
 /// ~~~
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date June 2017
 /// \author Andras Zsenei
 
 #include "TF2.h"

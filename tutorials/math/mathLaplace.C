@@ -3,9 +3,11 @@
 /// \notebook
 /// Test the TMath::LaplaceDist and TMath::LaplaceDistI functions
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date August 2016
 /// \author Anna Kreshuk
 
 #include "TMath.h"

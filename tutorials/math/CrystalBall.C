@@ -3,9 +3,11 @@
 /// \notebook
 /// Example of CrystalBall Function and its distribution (pdf and cdf)
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date August 2016
 /// \author Lorenzo Moneta
 
 void CrystalBall()  {

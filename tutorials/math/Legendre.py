@@ -3,9 +3,11 @@
 ## \notebook
 ## Example of first few Legendre Polynomials. Inspired by work of Lorenzo Moneta.
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
+## \preview 
 ## \macro_code
 ##
+## \date November 2024
 ## \author Alberto Ferro, Massimiliano Galli
 
 

@@ -9,9 +9,11 @@
 ///
 /// It draws the pdf, the cdf and then 10 quantiles of the t Student distribution
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date October 2023
 /// \author Magdalena Slawinska
 
 #include "TH1.h"

@@ -3,9 +3,11 @@
 /// \notebook -js
 /// Demo for quantiles
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date August 2016
 /// \authors Rene Brun, Eddy Offermann
 
 void quantiles() {

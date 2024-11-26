@@ -3,9 +3,11 @@
 /// \notebook
 /// Example of using the TKDE class (kernel density estimator)
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date August 2016
 /// \authors Lorenzo Moneta, Bartolomeu Rabacal (Dec 2010)
 
 #include "TH1.h"

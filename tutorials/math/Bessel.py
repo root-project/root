@@ -14,9 +14,11 @@
 ##
 ## Based on Bessel.C by Magdalena Slawinska
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
+## \preview 
 ## \macro_code
 ##
+## \date November 2024
 ## \author Juan Fernando Jaramillo Botero
 
 import ROOT

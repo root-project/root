@@ -13,10 +13,12 @@
 /// and Spherical Associate Legendre Polynomials
 /// Their integrals on the range [-1, 1] are calculated
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_output
 /// \macro_code
 ///
+/// \date November 2024
 /// \author Magdalena Slawinska
 
 

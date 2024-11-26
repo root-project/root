@@ -3,9 +3,11 @@
 /// \notebook
 /// Tutorial illustrating the use of the Student and F distributions
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date November 2024
 /// \author Anna Kreshuk
 
 #include "TMath.h"

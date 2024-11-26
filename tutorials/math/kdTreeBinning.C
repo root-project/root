@@ -6,10 +6,12 @@
 /// Using TKDTree wrapper class as a data binning structure
 ///  Plot the 2D data using the TH2Poly class
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_output
 /// \macro_code
 ///
+/// \date October 2023
 /// \author Bartolomeu Rabacal
 
 #include <cmath>

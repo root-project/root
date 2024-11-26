@@ -4,9 +4,11 @@
 /// Example of sampling a multi-dim distribution using the DistSampler class
 /// NOTE: This tutorial must be run with ACLIC
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date November 2023
 /// \author Lorenzo Moneta
 
 // function (a 4d gaussian)
