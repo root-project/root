@@ -13,6 +13,39 @@ from ._numbadeclare import _NumbaDeclareDecorator
 
 from ._pythonization import pythonization
 
+## ------------------------------------------------
+## ------------------------------------------------
+# TODO(lukas) Move this to a separate file
+class loc:
+    def __init__(self, value):
+        self.value = value
+        self.offset = 0 
+
+    def __add__(self, add_value):
+        print("loc add")
+        self.offset = self.offset + add_value
+        return self
+
+    def __sub__(self, sub_value):
+        self.offset = self.offset - sub_value
+        return self
+
+    def __call__(self, histogram):
+        return histogram.FindBin(self.value) + self.offset
+
+def underflow(histogram):
+    return 0
+
+def overflow(histogram):
+    return histogram.GetNcells() - 1
+
+## ------------------------------------------------
+## ------------------------------------------------
+
+def add_uhi_helper(module):
+    module.loc = loc
+    module.underflow = underflow
+    module.overflow = overflow
 
 class PyROOTConfiguration(object):
     """Class for configuring PyROOT"""
@@ -78,6 +111,7 @@ class ROOTFacade(types.ModuleType):
     def __init__(self, module, is_ipython):
         types.ModuleType.__init__(self, module.__name__)
 
+        add_uhi_helper(self)
         self.module = module
 
         self.__all__ = module.__all__
