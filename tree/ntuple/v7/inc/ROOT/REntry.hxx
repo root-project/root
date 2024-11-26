@@ -96,9 +96,9 @@ private:
    std::shared_ptr<T> AddValue(RField<T> &field)
    {
       fFieldName2Token[field.GetQualifiedFieldName()] = fValues.size();
-      auto ptr = std::make_shared<T>();
-      fValues.emplace_back(field.BindValue(ptr));
-      return ptr;
+      auto value = field.CreateValue();
+      fValues.emplace_back(value);
+      return value.template GetPtr<T>();
    }
 
    /// Update the RValue for a field in the entry. To be used when its underlying RFieldBase changes, which typically
