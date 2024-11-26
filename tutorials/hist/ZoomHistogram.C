@@ -1,16 +1,17 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook -js
-/// Changing the Range on the X-Axis of a Histogram
+/// \preview  Changing the Range on the X-Axis of a Histogram
 ///
 /// Image produced by `.x ZoomHistogram.C`
 ///
 /// This demonstrates how to zoom into a histogram by
 /// changing the range on one of the axes (or both).
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date November 2022
 /// \author Advait Dhingra
 
 void ZoomHistogram()

@@ -1,11 +1,12 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook
-/// Example of bar charts with 1-d histograms.
+/// \preview  Example of bar charts with 1-d histograms.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date November 2022
 /// \author Rene Brun
 
 TCanvas *hbars()

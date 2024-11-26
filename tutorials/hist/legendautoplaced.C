@@ -1,15 +1,16 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook
-/// The legend can be placed automatically in the current pad in an empty space
+/// \preview  The legend can be placed automatically in the current pad in an empty space
 /// found at painting time.
 ///
 /// The following example illustrate this facility. Only the width and height of the
 /// legend is specified in percentage of the pad size.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date January 2018
 /// \author Olivier Couet
 
 void legendautoplaced()

@@ -1,13 +1,14 @@
 ## \file
 ## \ingroup tutorial_hist
 ## \notebook
-## Example of macro illustrating how to superimpose two histograms
+## \preview  Example of macro illustrating how to superimpose two histograms
 ## with different scales in the "same" pad.
 ## Inspired by work of Rene Brun.
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
 ## \macro_code
 ##
+## \date October 2021
 ## \author Alberto Ferro
 
 #include "TCanvas.h"

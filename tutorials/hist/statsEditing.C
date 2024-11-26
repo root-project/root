@@ -1,15 +1,16 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook
-/// Edit statistics box.
+/// \preview  Edit statistics box.
 ///
 /// This example shows:
 ///  - how to remove a stat element from the stat box
 ///  - how to add a new one
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date August 2016
 /// \author  Olivier Couet
 
 TCanvas *statsEditing() {

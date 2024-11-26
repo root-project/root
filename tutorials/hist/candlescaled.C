@@ -1,12 +1,13 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook
-/// Candle Scaled, illustrates what scaling does on candle and violin charts.
+/// \preview  Candle Scaled, illustrates what scaling does on candle and violin charts.
 /// Please try to modify the static functions SetScaledCandle and SetScaledViolin
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date February 2023
 /// \author Georg Troska
 
 void candlescaled()

@@ -1,11 +1,12 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook -js
-/// Illustrate use of the TH1::GetCumulative method.
+/// \preview  Illustrate use of the TH1::GetCumulative method.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date July 2016
 /// \author M. Schiller
 
 #include <cassert>

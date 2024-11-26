@@ -1,16 +1,17 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook -js
-/// Rebin a variable bin-width histogram.
+/// \preview  Rebin a variable bin-width histogram.
 ///
 /// This tutorial illustrates how to:
 ///   - create a variable bin-width histogram with a binning such
 ///     that the population per bin is about the same.
 ///   - rebin a variable bin-width histogram into another one.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date July 2016
 /// \author Rene Brun
 
 #include "TH1.h"

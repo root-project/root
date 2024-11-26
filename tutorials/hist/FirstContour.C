@@ -1,14 +1,16 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook
-/// Make a contour plot and get the first contour in a TPolyMarker.
+/// \preview  Make a contour plot and get the first contour in a TPolyMarker.
 /// This macro generates a color contour plot by selecting entries
 /// from an ntuple file.
 /// The TGraph object corresponding to the first contour line is
 /// accessed and displayed into a separate canvas.
 ///
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date January 2017
 /// \author Rene Brun
 
 void FirstContour()

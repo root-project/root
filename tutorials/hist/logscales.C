@@ -1,11 +1,12 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook
-/// Draw parametric functions with log scales.
+/// \preview  Draw parametric functions with log scales.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date July 2016
 /// \author Olivier Couet
 
 void logscales() {

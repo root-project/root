@@ -1,12 +1,13 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook
-/// Example that shows how you can set the colors of the confidence interval bands by using
+/// \preview  Example that shows how you can set the colors of the confidence interval bands by using
 /// the method `TRatioPlot::SetConfidenceIntervalColors`.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date January 2020
 /// \author Paul Gessinger
 
 void ratioplot5()  {

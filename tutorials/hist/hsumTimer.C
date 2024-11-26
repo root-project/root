@@ -1,16 +1,17 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook -js
-/// Demo of Timers.
+/// \preview  Demo of Timers.
 ///
 /// Simple example illustrating how to use the C++ interpreter
 /// to fill histograms in a loop and show the graphics results
 /// This program is a variant of the tutorial "hsum".
 /// It illustrates the use of Timers.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date November 2022
 /// \author Rene Brun
 
 Float_t progressRatio = 0.;

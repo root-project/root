@@ -1,12 +1,13 @@
 /// \file
 /// \ingroup tutorial_hist
-/// Example displaying two histograms and their ratio. This macro does not use the
+/// \preview  Example displaying two histograms and their ratio. This macro does not use the
 /// class TRatioPlot. For ROOT version >= 6.08 TRatioPlot should be used. See
 /// the other ratio plots examples in this folder.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date May 2021
 /// \author Olivier Couet
 
 void ratioplotOld( ) {

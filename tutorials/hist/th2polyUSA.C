@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook -js
-/// This tutorial illustrates how to create an histogram with polygonal
+/// \preview  This tutorial illustrates how to create an histogram with polygonal
 /// bins (TH2Poly), fill it and draw it using the `col` option. The initial data
 /// are stored in TMultiGraphs. They represent the USA map. Such histograms can
 /// be rendered in 3D using the option `legogl`.
@@ -11,8 +11,9 @@
 /// political reality as of that time.
 ///
 /// \macro_code
-/// \macro_image
+/// \macro_image (tcanvas_js)
 ///
+/// \date February 2024
 /// \author Olivier Couet
 
 void th2polyUSA()

@@ -1,11 +1,12 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook
-/// Fill a 1-D histogram from a parametric function.
+/// \preview  Fill a 1-D histogram from a parametric function.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date October 2021
 /// \author Rene Brun
 
 void fillrandom(int plot=1) {

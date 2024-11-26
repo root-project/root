@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook
-/// Palette coloring for histogram is activated thanks to the options `PFC`
+/// \preview  Palette coloring for histogram is activated thanks to the options `PFC`
 /// (Palette Fill Color), `PLC` (Palette Line Color) and `AMC` (Palette Marker Color).
 /// When one of these options is given to `TH1::Draw` the histogram get its color
 /// from the current color palette defined by `gStyle->SetPalette(...)`. The color
@@ -12,9 +12,10 @@
 /// and marker. The histograms are drawn with markers and error bars and one can see
 /// the color of each histogram is picked inside the default palette `kBird`.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date September 2023
 /// \author Olivier Couet
 
 void histpalettecolor()

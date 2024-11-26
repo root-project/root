@@ -1,15 +1,16 @@
 ## \file
 ## \ingroup tutorial_hist
 ## \notebook
-## Example that shows custom dashed lines on the lower plot, specified by a vector of floats.
+## \preview  Example that shows custom dashed lines on the lower plot, specified by a vector of floats.
 ##
 ## By default, dashed lines are drawn at certain points. You can either disable them, or specify
 ## where you want them to appear.
 ## Inspired by the tutorial of Paul Gessinger.
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
 ## \macro_code
 ##
+## \date June 2017
 ## \author Alberto Ferro
 
 import ROOT

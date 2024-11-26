@@ -1,12 +1,13 @@
 /// \file
 /// \ingroup tutorial_hist
-///
+/// \preview 
 /// This tutorial demonstrates how the highlight mechanism can be used on an histogram.
 /// A 1D histogram is created.
 /// Then an highlight method is connected to the histogram. Moving the mouse
 /// on the histogram will open a new canvas showing in real time a zoom around
 /// the highlighted bin.
 ///
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
 /// \date March 2018

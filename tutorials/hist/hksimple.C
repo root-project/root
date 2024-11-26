@@ -1,11 +1,12 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook
-/// Illustrates the advantages of a TH1K histogram
+/// \preview  Illustrates the advantages of a TH1K histogram
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date November 2022
 /// \author Victor Perevovchikov
 
 void canvasRefresh(TCanvas *c1)

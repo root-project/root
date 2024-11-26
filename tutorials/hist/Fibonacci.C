@@ -2,7 +2,7 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook -js
-/// A TH2Poly build with Fibonacci numbers.
+/// \preview  A TH2Poly build with Fibonacci numbers.
 ///
 /// In mathematics, the Fibonacci sequence is a suite of integer in which
 /// every number is the sum of the two preceding one.
@@ -15,9 +15,10 @@
 /// producing the "Fibonacci spiral" created by drawing circular arcs connecting
 /// the opposite corners of squares in the Fibonacci tiling.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date September 2016
 /// \author Olivier Couet
 
 void Arc(int n, double a, double r, double *px, double *py);

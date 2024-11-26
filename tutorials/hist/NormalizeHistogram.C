@@ -1,15 +1,16 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook -js
-/// Normalizing a Histogram
+/// \preview  Normalizing a Histogram
 ///
 /// Image produced by `.x NormalizeHistogram.C`
 /// Two different methods of normalizing histograms
 /// are shown, each with the original histogram.
 /// next to the normalized one.
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date July 2021
 /// \author Advait Dhingra
 
 #include "TH2F.h"

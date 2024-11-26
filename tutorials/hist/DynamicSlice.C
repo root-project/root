@@ -1,11 +1,12 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook -js
-/// Show the slice of a TH2 following the mouse position.
+/// \preview  Show the slice of a TH2 following the mouse position.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date November 2022
 /// \authors Rene Brun, Sergey Linev
 
 

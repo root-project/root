@@ -1,14 +1,15 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook -js
-/// Read a 1-D histogram from a ROOT File and draw it.
+/// \preview  Read a 1-D histogram from a ROOT File and draw it.
 /// We attach (or generate) the ROOT file in `$ROOTSYS/tutorials/hsimple.root`
 /// or `$PWD/hsimple.root`
 /// We draw one histogram in different formats.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date August 2021
 /// \author Rene Brun
 
 #include "TInterpreter.h"

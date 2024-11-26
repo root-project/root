@@ -1,11 +1,12 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook
-/// Histogram smoothing.
+/// \preview  Histogram smoothing.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date July 2016
 /// \author Rene Brun
 
 int ipad = 1;

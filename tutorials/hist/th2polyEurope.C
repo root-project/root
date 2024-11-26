@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook -js
-/// This tutorial illustrates how to create an histogram with polygonal
+/// \preview  This tutorial illustrates how to create an histogram with polygonal
 /// bins (TH2Poly), fill it and draw it. The initial data are stored
 /// in TMultiGraphs. They represent the european countries.
 /// The histogram filling is done according to a Mercator projection,
@@ -16,10 +16,11 @@
 /// The number of points inside the countries should be proportional to the country surface
 /// The estimated surface is compared to the surfaces taken from wikipedia.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_output
 /// \macro_code
 ///
+/// \date August 2020
 /// \author Olivier Couet
 
 void th2polyEurope(Int_t npoints=500000)
