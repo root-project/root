@@ -9,15 +9,7 @@
 ################################################################################
 
 r'''
-/**
-\class ROOT::RDataFrame
-\brief \parblock \endparblock
-\htmlonly
-<details open>
-<summary  style="font-size:20px; color: #425788;"><b>Python interface</b></summary>
-<div class="pyrootbox">
-\endhtmlonly
-\anchor python
+\pythondoc ROOT::RDataFrame
 
 You can use RDataFrame in Python thanks to the dynamic Python/C++ translation of [PyROOT](https://root.cern/manual/python). In general, the interface
 is the same as for C++, a simple example follows.
@@ -208,13 +200,8 @@ df_transformed = ROOT.MyTransformation(ROOT.RDF.AsRNode(df))
 df2 = df.Filter("x > 42")
 df2_transformed = ROOT.MyTransformation(ROOT.RDF.AsRNode(df2))
 ~~~
-\htmlonly
-</div>
-</details>
-\endhtmlonly
 
-\anchor reference
-*/
+\endpythondoc
 '''
 import sys
 from . import pythonization

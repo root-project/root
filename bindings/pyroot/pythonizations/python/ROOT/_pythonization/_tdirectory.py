@@ -9,15 +9,7 @@
 ################################################################################
 
 r"""
-/**
-\class TDirectory
-\brief \parblock \endparblock
-\htmlonly
-<details open>
-<summary  style="font-size:20px; color: #425788;"><b>Python interface</b></summary>
-<div class="pyrootbox">
-\endhtmlonly
-\anchor python
+\pythondoc TDirectory
 
 It is possible to retrieve the content of a TDirectory object
 just like getting items from a Python dictionary.
@@ -46,11 +38,8 @@ on TDirectory::WriteObjectAny. This method is a no-op for TDirectory objects,
 but it is useful for objects of TDirectory subclasses such as TDirectoryFile
 and TFile, which inherit it. Please refer to the documentation of those classes
 for more information.
-\htmlonly
-</div>
-</details>
-\endhtmlonly
-*/
+
+\endpythondoc
 """
 
 import cppyy
