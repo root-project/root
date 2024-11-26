@@ -1,11 +1,12 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook
-/// Create and Draw a TMultiGraph.
+/// \preview  Create and Draw a TMultiGraph.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date November 2024
 /// \author Rene Brun
 
 

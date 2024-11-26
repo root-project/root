@@ -1,11 +1,12 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook -js
-/// Draw two graphs with error bars
+/// \preview  Draw two graphs with error bars
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date August 2016
 /// \author Rene Brun
 
 void gerrors2() {

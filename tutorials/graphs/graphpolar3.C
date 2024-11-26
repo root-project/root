@@ -1,11 +1,12 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook
-/// Create and draw a polar graph with PI axis using a TF1.
+/// \preview  Create and draw a polar graph with PI axis using a TF1.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date November 2022
 /// \author Olivier Couet
 
 void graphpolar3()

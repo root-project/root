@@ -1,11 +1,12 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook
-/// Draw a simple graph.
+/// \preview  Draw a simple graph.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date August 2016
 /// \author Rene Brun
 
 void graph() {

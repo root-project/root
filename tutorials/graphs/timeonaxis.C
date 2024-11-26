@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook -js
-/// This macro illustrates the use of the time mode on the axis
+/// \preview  This macro illustrates the use of the time mode on the axis
 /// with different time intervals and time formats.
 /// Through all this script, the time is expressed in UTC. some
 /// information about this format (and others like GPS) may be found at
@@ -16,9 +16,10 @@
 /// since it is a universal time. See the C time functions for converting this time
 /// into more useful structures.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date May 2024
 /// \author Damir Buskulic
 
 #include <time.h>

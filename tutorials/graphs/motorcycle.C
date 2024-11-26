@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook
-/// Macro to test scatterplot smoothers: ksmooth, lowess, supsmu
+/// \preview  Macro to test scatterplot smoothers: ksmooth, lowess, supsmu
 /// as described in:
 ///
 ///      Modern Applied Statistics with S-Plus, 3rd Edition
@@ -11,9 +11,10 @@
 /// Example is a set of data on 133 observations of acceleration against time
 /// for a simulated motorcycle accident, taken from Silverman (1985).
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date January 2017
 /// \author Christian Stratowa, Vienna, Austria
 
 #include "TString.h"

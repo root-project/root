@@ -1,13 +1,14 @@
 ## \file
 ## \ingroup tutorial_graphs
 ## \notebook -js
-## This macro illustrates the use of the time axis on a TGraph
+## \preview  This macro illustrates the use of the time axis on a TGraph
 ## with data read from a text file containing the SWAN usage
 ## statistics during July 2017.
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
 ## \macro_code
 ##
+## \date November 2017
 ## \authors Danilo Piparo, Olivier Couet
 
 import ROOT

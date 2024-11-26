@@ -1,11 +1,12 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook
-/// Setting alphanumeric labels.
+/// \preview  Setting alphanumeric labels.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date July 2016
 /// \author Rene Brun
 
 void labels2()

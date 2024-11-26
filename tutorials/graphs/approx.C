@@ -1,11 +1,12 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook -js
-/// Macro to test interpolation function Approx
+/// \preview  Macro to test interpolation function Approx
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date August 2016
 /// \author Christian Stratowa, Vienna, Austria.
 
 TCanvas *vC1;

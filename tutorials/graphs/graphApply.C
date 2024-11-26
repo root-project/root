@@ -1,15 +1,16 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook
-/// A macro to demonstrate the functionality of TGraph::Apply() method.
+/// \preview  A macro to demonstrate the functionality of TGraph::Apply() method.
 /// TGraph::Apply applies a function `f` to all the data TGraph points.
 /// `f` may be a 1-D function TF1 or 2-d function TF2.
 /// The Y values of the graph are replaced by the new values computed using
 /// the function.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date August 2016
 /// \author Miro Helbich
 
 void graphApply()

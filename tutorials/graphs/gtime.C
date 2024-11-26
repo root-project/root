@@ -1,11 +1,12 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook
-/// Example of TGraphTime.
+/// \preview  Example of TGraphTime.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date June 2024
 /// \author Rene Brun
 
 #include "TCanvas.h"

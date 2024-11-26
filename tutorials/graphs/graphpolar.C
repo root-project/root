@@ -1,11 +1,12 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook
-/// Create and draw a polar graph.
+/// \preview  Create and draw a polar graph.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date November 2022
 /// \author Olivier Couet
 
 void graphpolar()

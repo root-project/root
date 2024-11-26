@@ -1,11 +1,12 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook
-/// Draw three graphs with an exclusion zone.
+/// \preview  Draw three graphs with an exclusion zone.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date August 2016
 /// \author Olivier Couet
 
 TCanvas *exclusiongraph() {

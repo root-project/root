@@ -1,11 +1,12 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook
-/// Draw several graphs with an exclusion zones.
+/// \preview  Draw several graphs with an exclusion zones.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date July 2016
 /// \author Olivier Couet
 
 void exclusiongraph2()

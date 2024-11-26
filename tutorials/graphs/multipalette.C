@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook
-/// Draw color plots using different color palettes.
+/// \preview  Draw color plots using different color palettes.
 ///
 /// As only one palette is active, one need to use `TExec` to be able to
 /// display plots using different palettes on the same pad.
@@ -16,9 +16,10 @@
 ///
 /// The following macro illustrate this feature.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date November 2018
 /// \author Olivier Couet
 
 #include "TStyle.h"

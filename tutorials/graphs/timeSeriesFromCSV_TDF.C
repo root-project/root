@@ -1,14 +1,15 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook -js
-/// This macro illustrates the use of the time axis on a TGraph
+/// \preview  This macro illustrates the use of the time axis on a TGraph
 /// with data read from a text file containing the SWAN usage
 /// statistics during July 2017.
 /// We exploit the TDataFrame for reading from the file
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date December 2022
 /// \authors Danilo Piparo, Olivier Couet
 
 void timeSeriesFromCSV_TDF()

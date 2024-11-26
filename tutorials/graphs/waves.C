@@ -1,11 +1,12 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook
-/// Hint: Spherical waves
+/// \preview  Hint: Spherical waves
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date June 2022
 /// \author Otto Schaile
 
 #include "TROOT.h"
