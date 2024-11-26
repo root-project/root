@@ -231,15 +231,26 @@ void TClingCallFunc::collect_type_info(QualType &QT, ostringstream &typedefbuf, 
 
 static bool IsCopyConstructorDeleted(QualType QT)
 {
-   if (CXXRecordDecl *RD = QT->getAsCXXRecordDecl()) {
-      for (auto *Ctor : RD->ctors()) {
-         if (Ctor->isCopyConstructor()) {
-            return Ctor->isDeleted();
-         }
+   CXXRecordDecl *RD = QT->getAsCXXRecordDecl();
+   if (!RD) {
+      // For types that are not C++ records (such as PODs), we assume that they are copyable, ie their copy constructor
+      // is not deleted.
+      return false;
+   }
+
+   RD = RD->getDefinition();
+   assert(RD && "expecting a definition");
+
+   if (RD->hasSimpleCopyConstructor())
+      return false;
+
+   for (auto *Ctor : RD->ctors()) {
+      if (Ctor->isCopyConstructor()) {
+         return Ctor->isDeleted();
       }
    }
 
-   return false;
+   assert(0 && "did not find a copy constructor?");
 }
 
 void TClingCallFunc::make_narg_ctor(const unsigned N, ostringstream &typedefbuf,
