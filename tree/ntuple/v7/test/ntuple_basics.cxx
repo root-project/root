@@ -726,7 +726,12 @@ TEST(REntry, Basics)
    EXPECT_EQ(&pt, e->GetPtr<void>("pt").get());
 
    e->EmplaceNewValue(model->GetToken("pt"));
-   EXPECT_NE(&pt, e->GetPtr<void>("pt").get());
+   ptrPt = e->GetPtr<float>("pt");
+   EXPECT_NE(&pt, ptrPt.get());
+
+   // Tokens are standalone and can be used after model destruction
+   model.reset();
+   EXPECT_EQ(ptrPt, e->GetPtr<float>("pt"));
 }
 
 TEST(RFieldBase, CreateObject)
