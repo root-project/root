@@ -205,14 +205,14 @@ Reported cache size from chain: 0
 Chain reports 200 entries
 Getting last entry from first file in chain
 Reported AutoFlush from current tree: 50
-Reported cache size from chain: 1435418
-Reported cache size from current tree: 1435418
-Reported buffer size from TTreeCache: 1435418
+Reported cache size from chain: 1435581
+Reported cache size from current tree: 1435581
+Reported buffer size from TTreeCache: 1435581
 Getting first entry from second file in chain
 Reported AutoFlush from current tree: 57
-Reported cache size from chain: 1435418
-Reported cache size from current tree: 1435418
-Reported buffer size from TTreeCache: 1435418
+Reported cache size from chain: 1435581
+Reported cache size from current tree: 1435581
+Reported buffer size from TTreeCache: 1435581
 TTreeCache object pointer stayed the same
 
 --- Start of subtest 13
@@ -222,14 +222,14 @@ Reported cache size from chain: -1
 Chain reports 200 entries
 Getting last entry from first file in chain
 Reported AutoFlush from current tree: 50
-Reported cache size from chain: 1435418
-Reported cache size from current tree: 1435418
-Reported buffer size from TTreeCache: 1435418
+Reported cache size from chain: 1435581
+Reported cache size from current tree: 1435581
+Reported buffer size from TTreeCache: 1435581
 Getting first entry from second file in chain
 Reported AutoFlush from current tree: 57
-Reported cache size from chain: 1435418
-Reported cache size from current tree: 1435418
-Reported buffer size from TTreeCache: 1435418
+Reported cache size from chain: 1435581
+Reported cache size from current tree: 1435581
+Reported buffer size from TTreeCache: 1435581
 TTreeCache object pointer stayed the same
 
 * Writing two root files, second with AutoFlush 1.3 times the first
@@ -240,14 +240,14 @@ Reported cache size from chain: 0
 Chain reports 200 entries
 Getting last entry from first file in chain
 Reported AutoFlush from current tree: 50
-Reported cache size from chain: 1435418
-Reported cache size from current tree: 1435418
-Reported buffer size from TTreeCache: 1435418
+Reported cache size from chain: 1435581
+Reported cache size from current tree: 1435581
+Reported buffer size from TTreeCache: 1435581
 Getting first entry from second file in chain
 Reported AutoFlush from current tree: 65
-Reported cache size from chain: 1866043
-Reported cache size from current tree: 1866043
-Reported buffer size from TTreeCache: 1866043
+Reported cache size from chain: 1866256
+Reported cache size from current tree: 1866256
+Reported buffer size from TTreeCache: 1866256
 TTreeCache buffer size changed, object location not checked
 
 --- Start of subtest 15
@@ -257,14 +257,14 @@ Reported cache size from chain: -1
 Chain reports 200 entries
 Getting last entry from first file in chain
 Reported AutoFlush from current tree: 50
-Reported cache size from chain: 1435418
-Reported cache size from current tree: 1435418
-Reported buffer size from TTreeCache: 1435418
+Reported cache size from chain: 1435581
+Reported cache size from current tree: 1435581
+Reported buffer size from TTreeCache: 1435581
 Getting first entry from second file in chain
 Reported AutoFlush from current tree: 65
-Reported cache size from chain: 1435418
-Reported cache size from current tree: 1435418
-Reported buffer size from TTreeCache: 1435418
+Reported cache size from chain: 1435581
+Reported cache size from current tree: 1435581
+Reported buffer size from TTreeCache: 1435581
 TTreeCache object pointer stayed the same
 
 --- Start of subtest 16
@@ -322,15 +322,15 @@ TTreeCache object pointer stayed the same
 New TChain with two files, different cluster size, use a selector
 No call to chain.SetCacheSize()
 MySelector::Process called, entry=99
-Reported cache size from fChain: 1304925
+Reported cache size from fChain: 1305074
 Reported AutoFlush value for the TTree 50
-Reported cache size from TTree: 1304925
-Buffer size of TTreeCache: 1304925
+Reported cache size from TTree: 1305074
+Buffer size of TTreeCache: 1305074
 MySelector::Process called, entry=0
-Reported cache size from fChain: 1696403
+Reported cache size from fChain: 1696596
 Reported AutoFlush value for the TTree 65
-Reported cache size from TTree: 1696403
-Buffer size of TTreeCache: 1696403
+Reported cache size from TTree: 1696596
+Buffer size of TTreeCache: 1696596
 TTreeCache buffer size changed, object location not checked
 
 * env variable ROOT_TTREECACHE_SIZE=1.1
@@ -338,30 +338,30 @@ TTreeCache buffer size changed, object location not checked
 New TChain with two files, different cluster size, use a selector
 No call to chain.SetCacheSize()
 MySelector::Process called, entry=99
-Reported cache size from fChain: 1435418
+Reported cache size from fChain: 1435581
 Reported AutoFlush value for the TTree 50
-Reported cache size from TTree: 1435418
-Buffer size of TTreeCache: 1435418
+Reported cache size from TTree: 1435581
+Buffer size of TTreeCache: 1435581
 MySelector::Process called, entry=0
-Reported cache size from fChain: 1866043
+Reported cache size from fChain: 1866256
 Reported AutoFlush value for the TTree 65
-Reported cache size from TTree: 1866043
-Buffer size of TTreeCache: 1866043
+Reported cache size from TTree: 1866256
+Buffer size of TTreeCache: 1866256
 TTreeCache buffer size changed, object location not checked
 
 --- Start of subtest 21
 New TChain with two files, different cluster size, use a selector
 -> Calling chain.SetCacheSize(-1) <-
 MySelector::Process called, entry=99
-Reported cache size from fChain: 1435418
+Reported cache size from fChain: 1435581
 Reported AutoFlush value for the TTree 50
-Reported cache size from TTree: 1435418
-Buffer size of TTreeCache: 1435418
+Reported cache size from TTree: 1435581
+Buffer size of TTreeCache: 1435581
 MySelector::Process called, entry=0
-Reported cache size from fChain: 1435418
+Reported cache size from fChain: 1435581
 Reported AutoFlush value for the TTree 65
-Reported cache size from TTree: 1435418
-Buffer size of TTreeCache: 1435418
+Reported cache size from TTree: 1435581
+Buffer size of TTreeCache: 1435581
 TTreeCache object pointer stayed the same
 
 --- Start of subtest 22
