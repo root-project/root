@@ -274,3 +274,9 @@ TEST(TClassEdit, DefComp)
 {
    EXPECT_FALSE(TClassEdit::IsDefComp("std::less<>", "std::string"));
 }
+
+// https://github.com/root-project/root/issues/6607
+TEST(TClassEdit, DefAlloc)
+{
+   EXPECT_TRUE(TClassEdit::IsDefAlloc("class std::allocator<float>", "float"));
+}
