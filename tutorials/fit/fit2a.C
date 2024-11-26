@@ -16,13 +16,11 @@
 ///   root > .x fit2a.C++
 /// ~~~
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_output
 /// \macro_code
 ///
 /// \author Rene Brun
-/// \date January 2022
 
 #include "TF2.h"
 #include "TH2.h"

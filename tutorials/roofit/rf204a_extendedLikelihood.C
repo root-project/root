@@ -8,8 +8,6 @@
 ///  used for extension.
 ///  This can be solved by using a RooAddPdf for extending the model.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
 /// \macro_code
 /// \macro_output
 ///

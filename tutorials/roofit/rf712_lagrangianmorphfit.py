@@ -3,8 +3,7 @@
 ## \notebook -js
 ## Performing a simple fit with RooLagrangianMorphFunc
 ##
-## \macro_image (tcanvas_js)
-## \preview 
+## \macro_image
 ## \macro_code
 ## \macro_output
 ##

@@ -8,7 +8,6 @@
 /// \macro_code
 ///
 /// \author Rene Brun
-/// \date April 2017
 
 #ifdef __CLING__
 #pragma cling optimize(0)

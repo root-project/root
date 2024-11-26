@@ -6,7 +6,6 @@
 /// \macro_code
 ///
 /// \author Valeriy Onuchin
-/// \date August 2018
 
 #include <TGPicture.h>
 #include <TGMenu.h>

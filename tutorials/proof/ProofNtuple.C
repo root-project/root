@@ -3,12 +3,9 @@
 ///
 /// Selector to fill a simple ntuple
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
 /// \macro_code
 ///
 /// \author Gerardo Ganis (gerardo.ganis@cern.ch)
-/// \date May 2024
 
 #define ProofNtuple_cxx
 

@@ -3,8 +3,7 @@
 /// \notebook -js
 /// Basic functionality: importing data from ROOT TTrees and THx histograms.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 /// \macro_output
 ///

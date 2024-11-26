@@ -6,7 +6,6 @@
 /// You need to run that macro before this one
 ///
 /// \author Lorenzo Moneta
-/// \date March 2022
 
 using namespace TMVA::Experimental;
 

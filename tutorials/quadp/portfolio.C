@@ -113,13 +113,11 @@
 ///   index like the S&P and "hedge" this exposure away . A perfect hedge this can be added
 ///    as an equality constrain, otherwise add an inequality constrain .
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_output
 /// \macro_code
 ///
 /// \author Eddy Offermann
-/// \date August 2020
 
 #include "Riostream.h"
 #include "TCanvas.h"

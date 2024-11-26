@@ -4,12 +4,10 @@
 /// Example to illustrate the background estimator (class TSpectrum) including
 /// Compton edges.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \authors Miroslav Morhac, Olivier Couet
-/// \date August 2020
 
 void Background_compton() {
    Int_t i;

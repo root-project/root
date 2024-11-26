@@ -2,12 +2,10 @@
 /// \ingroup tutorial_geom
 /// The old geometry shapes (see script geodemo.C)
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Rene Brun
-/// \date September 2016
 
 #include "TGeometry.h"
 #include "TGeoManager.h"

@@ -5,12 +5,10 @@
 ///
 /// Draws a graph.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Lorenzo Moneta
-/// \date November 2024
 
 
 #include "TMath.h"

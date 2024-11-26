@@ -5,12 +5,9 @@
 /// provided to headless browser to produce image files. Let significantly
 /// increase performance. Important - disable batch mode for flushing remaining images
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
 /// \macro_code
 ///
 /// \author Sergey Linev
-/// \date September 2024
 
 void save_batch()
 {

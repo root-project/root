@@ -13,7 +13,6 @@
 /// \macro_code
 ///
 /// \author Fons Rademakers
-/// \date September 2016
 
 void pclient(int niter = 100, int bsize = 500000, int nsocks = 5)
 {

@@ -10,8 +10,7 @@
 ///
 /// Based on example of Kyle Cranmer https://gist.github.com/cranmer/b67830e46d53d5f7cf2d.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 /// \macro_output
 ///

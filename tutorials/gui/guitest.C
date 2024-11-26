@@ -9,12 +9,9 @@
 /// .x guitest.C++
 /// ~~~
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
 /// \macro_code
 ///
 /// \authors Ilka Antcheva, Bertrand Bellenot, Fons Rademakers, Valeri Onuchin
-/// \date May 2024
 
 #include <cstdlib>
 

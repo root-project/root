@@ -5,8 +5,7 @@
 ///
 /// #### Image produced by `.x ContourList.C`
 /// The contours values are drawn next to each contour.
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 ///
 /// #### Output produced by `.x ContourList.C`
 /// It shows that 6 contours and 12 graphs were found.
@@ -16,7 +15,6 @@
 /// \macro_code
 ///
 /// \authors Josh de Bever (CSI Medical Physics Group, The University of Western Ontario, London, Ontario, Canada), Olivier Couet
-/// \date November 2022
 
 Double_t SawTooth(Double_t x, Double_t WaveLen);
 

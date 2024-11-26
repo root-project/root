@@ -5,7 +5,6 @@
 ## \macro_code
 ##
 ## \author Wim Lavrijsen, Enric Tejedor
-## \date January 2024
 
 import os, sys
 import ROOT

@@ -3,13 +3,11 @@
 /// \notebook -js
 /// Example of generating quasi-random numbers
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_output
 /// \macro_code
 ///
 /// \author Lorenzo Moneta
-/// \date August 2016
 
 #include "Math/QuasiRandom.h"
 #include "Math/Random.h"

@@ -20,8 +20,7 @@
 ##
 ## For an introductory background see rf615_simulation_based_inference.py
 ##
-## \macro_image (tcanvas_js)
-## \preview 
+## \macro_image
 ## \macro_code
 ## \macro_output
 ##

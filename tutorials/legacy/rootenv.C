@@ -2,12 +2,10 @@
 /// \ingroup tutorial_legacy
 /// Produce a picture of the ROOT environment.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Rene Brun
-/// \date November 2024
 
 {
    gROOT->Reset();

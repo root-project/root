@@ -14,8 +14,7 @@
 /// DOI: [10.7483/OPENDATA.CMS.CB8H.MFFA](http://opendata.cern.ch/record/700).
 ///
 /// \macro_code
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 ///
 /// \date October 2017
 /// \author Enric Tejedor (CERN)

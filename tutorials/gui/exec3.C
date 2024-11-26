@@ -4,12 +4,9 @@
 /// Note that slots can be either functions or class methods.
 /// Compare this with tutorials $ROOTSYS/tutorials/hist/exec1.C and $ROOTSYS/tutorials/hist/exec2.C.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
 /// \macro_code
 ///
 /// \author Ilka Antcheva
-/// \date October 2023
 
 #include <TH1.h>
 #include <TCanvas.h>

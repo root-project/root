@@ -6,7 +6,6 @@
 /// \macro_code
 ///
 /// \author Bertrand Bellenot
-/// \date November 2015
 
 #include "TCanvas.h"
 #include "TStyle.h"

@@ -3,12 +3,9 @@
 ///
 /// Selector for generic processing with Event
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
 /// \macro_code
 ///
 /// \author Gerardo Ganis (gerardo.ganis@cern.ch)
-/// \date November 2015
 
 #define ProofEvent_cxx
 

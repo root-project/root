@@ -54,7 +54,6 @@
 /// \macro_output
 /// \macro_code
 /// \author Kim Albertsson (adapted from code originally by Andreas Hoecker)
-/// \date November 2023
 
 #include <cstdlib>
 #include <iostream>

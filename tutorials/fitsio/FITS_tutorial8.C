@@ -24,7 +24,6 @@
 /// \macro_output
 ///
 /// \author Cosimo Nigro
-/// \date October 2020
 
 void FITS_tutorial8()
 {

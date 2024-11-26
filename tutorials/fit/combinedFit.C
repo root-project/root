@@ -9,13 +9,11 @@
 ///
 /// N.B. this macro must be compiled with ACliC
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_output
 /// \macro_code
 ///
 /// \author Lorenzo Moneta
-/// \date January 2024
 
 #include <Fit/Fitter.h>
 #include <Fit/BinData.h>

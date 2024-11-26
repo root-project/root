@@ -3,12 +3,9 @@
 ///
 /// Selector to fill a set of histograms
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
 /// \macro_code
 ///
 /// \author Gerardo Ganis (gerardo.ganis@cern.ch)
-/// \date October 2023
 
 #define ProofSimple_cxx
 

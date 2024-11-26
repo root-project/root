@@ -3,12 +3,10 @@
 /// \notebook
 /// An example with basic graphics illustrating the Object Oriented User Interface of ROOT.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Rene Brun
-/// \date July 2016
 
 void framework() {
    TCanvas *c1 = new TCanvas("c1","The ROOT Framework",200,10,700,500);

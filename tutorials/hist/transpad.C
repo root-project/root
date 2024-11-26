@@ -4,12 +4,10 @@
 /// Example of a canvas showing two histograms with different scales.
 /// The second histogram is drawn in a transparent pad
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Rene Brun
-/// \date November 2022
 
 void transpad()
 {

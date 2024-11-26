@@ -7,8 +7,7 @@
 /// `Fill` method.
 ///
 /// \macro_code
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 ///
 /// \date March 2017
 /// \author Danilo Piparo (CERN)

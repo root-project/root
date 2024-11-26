@@ -324,12 +324,9 @@
 ///   the content of 'ins' will then be copied to the input list before processing.
 ///
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
 /// \macro_code
 ///
 /// \author Gerardo Ganis
-/// \date August 2020
 
 
 #include "TCanvas.h"

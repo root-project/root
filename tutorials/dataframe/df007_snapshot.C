@@ -5,8 +5,7 @@
 ///
 /// This tutorial shows how to write out datasets in ROOT format using RDataFrame.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \date April 2017

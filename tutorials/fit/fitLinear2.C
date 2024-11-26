@@ -11,7 +11,6 @@
 /// \macro_code
 ///
 /// \author Anna Kreshuk
-/// \date January 2022
 
 #include "TLinearFitter.h"
 #include "TF1.h"

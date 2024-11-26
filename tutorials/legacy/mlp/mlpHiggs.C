@@ -7,13 +7,11 @@
 /// some selection cuts. Here is a simplified version of this network,
 /// taking into account only WW events.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_output
 /// \macro_code
 ///
 /// \author Christophe Delaere
-/// \date August 2020
 
 void mlpHiggs(Int_t ntrain=100) {
    const char *fname = "mlpHiggs.root";

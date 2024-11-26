@@ -4,12 +4,10 @@
 /// Example to illustrate the influence of the clipping filter difference order
 /// on the estimated background.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \authors Miroslav Morhac, Olivier Couet
-/// \date August 2020
 
 void Background_order() {
    Int_t i;

@@ -3,8 +3,7 @@
 ## \notebook
 ## Multidimensional models: projecting pdf and data slices in discrete observables
 ##
-## \macro_image (tcanvas_js)
-## \preview 
+## \macro_image
 ## \macro_code
 ## \macro_output
 ##

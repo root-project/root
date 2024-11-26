@@ -11,8 +11,7 @@
 ## the created columns in the dataset.
 ##
 ## \macro_code
-## \macro_image (tcanvas_js)
-## \preview 
+## \macro_image
 ##
 ## \date March 2021
 ## \author Vincenzo Eduardo Padulano

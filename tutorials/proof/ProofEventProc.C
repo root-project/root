@@ -3,12 +3,9 @@
 ///
 /// Selector to process trees containing Event structures
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
 /// \macro_code
 ///
 /// \author Gerardo Ganis (gerardo.ganis@cern.ch)
-/// \date November 2015
 
 #define ProofEventProc_cxx
 

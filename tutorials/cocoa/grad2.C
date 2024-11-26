@@ -3,12 +3,9 @@
 /// Gradient fill with transparency and "SAME" option.
 /// Requires OS X and ROOT configured with --enable-cocoa.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
 /// \macro_code
 ///
 /// \author Timur Pocheptsov
-/// \date March 2017
 
 //Includes for ACLiC (cling does not need them).
 #include "TColorGradient.h"

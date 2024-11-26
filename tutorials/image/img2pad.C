@@ -3,12 +3,10 @@
 /// \notebook
 /// Display image in canvas and pad.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Valeriy Onuchin
-/// \date August 2016
 
 void img2pad()
 {

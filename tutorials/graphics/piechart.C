@@ -3,12 +3,10 @@
 /// \notebook
 /// Pie chart example.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \authors Olivier Couet, Guido Volpi
-/// \date July 2016
 
 void piechart()
 {

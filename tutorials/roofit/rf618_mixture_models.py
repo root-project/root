@@ -26,8 +26,7 @@
 ##
 ## If you wish to see an analysis done with template histograms see 'hf001_example.py'.
 ##
-## \macro_image (tcanvas_js)
-## \preview 
+## \macro_image
 ## \macro_code
 ## \macro_output
 ##

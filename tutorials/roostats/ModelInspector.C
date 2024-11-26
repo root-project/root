@@ -27,8 +27,6 @@
 ///  - a dialog to open the desired file
 ///  - ability to see the signal and background contributions?
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
 /// \macro_code
 ///
 ///  - Version 1, October 2011
@@ -37,7 +35,6 @@
 ///     - fixes from Bertrand Bellenot for scrolling window for many parameters
 ///
 /// \author Kyle Cranmer
-/// \date March 2024
 
 #include "TGButton.h"
 #include "TRootEmbeddedCanvas.h"

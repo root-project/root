@@ -3,8 +3,7 @@
 ## \notebook
 ## Special pdf's: histogram based pdfs and functions
 ##
-## \macro_image (tcanvas_js)
-## \preview 
+## \macro_image
 ## \macro_code
 ## \macro_output
 ##

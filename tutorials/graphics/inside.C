@@ -3,12 +3,10 @@
 /// \notebook -js
 /// \preview Test the IsInside methods of various graphics primitives.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Olivier Couet
-/// \date November 2024
 
 void inside() {
    auto el = new TEllipse(0.75, 0.25, .2,.15,45,315,62);

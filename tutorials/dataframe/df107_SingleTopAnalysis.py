@@ -14,8 +14,7 @@
 ##
 ## See the [corresponding spec json file](https://github.com/root-project/root/blob/master/tutorials/dataframe/df107_SingleTopAnalysis.json).
 ##
-## \macro_image (tcanvas_js)
-## \preview 
+## \macro_image
 ## \macro_code
 ## \macro_output
 ##

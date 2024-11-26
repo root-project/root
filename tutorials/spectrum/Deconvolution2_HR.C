@@ -3,12 +3,10 @@
 /// \notebook
 /// Example to illustrate boosted Gold deconvolution (class TSpectrum2).
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \authors Miroslav Morhac, Olivier Couet
-/// \date July 2019
 
 #include <TSpectrum2.h>
 

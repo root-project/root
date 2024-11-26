@@ -3,12 +3,10 @@
 /// \notebook -js
 /// This macro produces the flowchart of TFormula::Compile
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Rene Brun
-/// \date July 2016
 
 void compile(){
    TCanvas *c1 = new TCanvas("c1");

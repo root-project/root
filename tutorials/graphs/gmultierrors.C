@@ -3,12 +3,10 @@
 /// \notebook -js
 /// Draw a graph with multiple y errors
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Simon Spies
-/// \date December 2019
 
 void gmultierrors() {
    TCanvas *c1 = new TCanvas("c1", "A Simple Graph with multiple y-errors", 200, 10, 700, 500);

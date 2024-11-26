@@ -10,7 +10,6 @@
 /// \macro_code
 ///
 /// \author Fons Rademakers
-/// \date March 2024
 
 {
    gROOT->Reset();

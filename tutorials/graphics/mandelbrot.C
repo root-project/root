@@ -9,7 +9,6 @@
 /// Try it (in compiled mode!) with:   `root mandelbrot.C+`
 ///
 /// \macro_image (tcanvas_js)
-/// \preview 
 ///
 /// ### Details
 ///
@@ -23,7 +22,6 @@
 /// \macro_code
 ///
 /// \author Luigi Bardelli <bardelli@fi.infn.it>
-/// \date November 2024
 
 #include <TStyle.h>
 #include <TROOT.h>

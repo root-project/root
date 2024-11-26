@@ -5,12 +5,10 @@
 /// with data read from a text file containing the SWAN usage
 /// statistics during July 2017.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \authors Danilo Piparo, Olivier Couet
-/// \date November 2017
 
 void timeSeriesFromCSV()
 {

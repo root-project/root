@@ -3,12 +3,10 @@
 /// \notebook
 /// Examples of use of the spline classes.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Federico Carminati
-/// \date August 2016
 
 void splines_test(Int_t np=23, Double_t a=-0.5, Double_t b=31)
 {

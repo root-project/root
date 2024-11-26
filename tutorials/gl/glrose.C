@@ -4,12 +4,10 @@
 ///
 /// It defines and set a user's palette, and use polar system.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image(nobatch)
 /// \macro_code
 ///
 /// \author  Timur Pocheptsov
-/// \date January 2016
 
 void glrose()
 {

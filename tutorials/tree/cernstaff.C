@@ -3,12 +3,10 @@
 /// \notebook
 /// Playing with a Tree containing variables of type character
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Rene Brun
-/// \date January 2017
 
 void cernstaff () {
    TString dir = gROOT->GetTutorialDir();

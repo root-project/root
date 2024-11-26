@@ -1,12 +1,9 @@
 /// \file
 /// \ingroup tutorial_eve
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
 /// \macro_code
 ///
 /// \author Matevz Tadel
-/// \date November 2015
 
 void camera_restore(const char* fname, int mode = 0)
 {

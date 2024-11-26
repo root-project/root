@@ -7,12 +7,10 @@
 ///  - how to remove a stat element from the stat box
 ///  - how to add a new one
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author  Olivier Couet
-/// \date August 2016
 
 TCanvas *statsEditing() {
    // Create and plot a test histogram with stats

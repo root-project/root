@@ -3,12 +3,9 @@
 /// Demonstrates usage of EVE window-manager.
 ///
 /// \image html eve_window_manager.png
-/// \macro_image (tcanvas_js)
-/// \preview 
 /// \macro_code
 ///
 /// \author Matevz Tadel
-/// \date June 2018
 
 #include "TEveWindow.h"
 #include "TEveViewer.h"

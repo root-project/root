@@ -3,8 +3,7 @@
 ## \notebook
 ## Likelihood and minimization: demonstration of options of the RooFitResult class
 ##
-## \macro_image (tcanvas_js)
-## \preview 
+## \macro_image
 ## \macro_code
 ## \macro_output
 ##

@@ -6,7 +6,6 @@
 /// \macro_code
 ///
 /// \author Matevz Tadel
-/// \date August 2016
 
 #include "TCanvas.h"
 #include "TStyle.h"

@@ -3,12 +3,10 @@
 /// \notebook
 /// Tutorial illustrating the multivariate gaussian random number generation
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Jorge Lopez
-/// \date November 2023
 
 void multivarGaus() {
   ROOT::Math::GSLRandomEngine rnd;

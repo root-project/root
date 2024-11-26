@@ -4,13 +4,11 @@
 /// Open a FITS file and retrieve the first plane of the image array
 /// as a TImage object
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 /// \macro_output
 ///
 /// \author Claudi Martinez
-/// \date October 2020
 
 void FITS_tutorial1()
 {

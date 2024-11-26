@@ -21,13 +21,11 @@
 /// in many dimensions.  It is not as accurate as the BayesianCalculator
 /// for simple problems, but it scales to much more complicated cases.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_output
 /// \macro_code
 ///
 /// \author Kyle Cranmer
-/// \date March 2024
 
 #include "TFile.h"
 #include "TROOT.h"

@@ -7,8 +7,7 @@
 ##
 ## pdf = landau(t) (x) gauss(t)
 ##
-## \macro_image (tcanvas_js)
-## \preview 
+## \macro_image
 ## \macro_code
 ## \macro_output
 ##

@@ -6,7 +6,6 @@
 ## \macro_code
 ##
 ## \author Wim Lavrijsen
-## \date March 2021
 
 import ROOT
 

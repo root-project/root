@@ -3,12 +3,10 @@
 /// \notebook
 /// Draw 2-Dim functions.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Rene Brun
-/// \date August 2016
 
 void surfaces() {
    TCanvas *c1 = new TCanvas("c1","Surfaces Drawing Options",200,10,700,900);

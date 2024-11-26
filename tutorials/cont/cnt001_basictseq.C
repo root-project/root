@@ -7,7 +7,6 @@
 /// \macro_output
 ///
 /// \author Danilo Piparo
-/// \date March 2020
 
 using namespace ROOT;
 

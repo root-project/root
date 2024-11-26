@@ -35,7 +35,6 @@
 ## \macro_code
 ##
 ## \author Michael Marino
-## \date January 2020
 from __future__ import print_function
 
 import ROOT

@@ -12,7 +12,6 @@
 /// \macro_code
 ///
 /// \authors Rene Brun, Christian Holm Christensen
-/// \date November 2023
 
 #include "TPrincipal.h"
 

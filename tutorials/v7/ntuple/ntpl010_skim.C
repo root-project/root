@@ -3,8 +3,7 @@
 /// \notebook
 /// Example creating a derived RNTuple
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \date February 2024

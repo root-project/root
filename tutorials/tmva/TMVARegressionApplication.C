@@ -11,7 +11,6 @@
 /// \macro_output
 /// \macro_code
 /// \author Andreas Hoecker
-/// \date August 2020
 
 #include <cstdlib>
 #include <vector>

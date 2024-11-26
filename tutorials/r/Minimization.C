@@ -7,7 +7,6 @@
 /// \macro_code
 ///
 /// \author Omar Zapata
-/// \date August 2024
 
 #include<TRInterface.h>
 

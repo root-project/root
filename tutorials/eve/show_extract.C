@@ -7,7 +7,6 @@
 /// \macro_code
 ///
 /// \author Matevz Tadel
-/// \date August 2020
 
 void show_extract(const char* file="http://root.cern/files/alice_ESDgeometry.root")
 {

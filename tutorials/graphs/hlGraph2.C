@@ -3,8 +3,6 @@
 ///
 /// This tutorial demonstrates how to use the highlight mode on graph.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
 /// \macro_code
 ///
 /// \date March 2018

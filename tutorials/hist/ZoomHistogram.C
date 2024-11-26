@@ -8,12 +8,10 @@
 /// This demonstrates how to zoom into a histogram by
 /// changing the range on one of the axes (or both).
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Advait Dhingra
-/// \date November 2022
 
 void ZoomHistogram()
 {

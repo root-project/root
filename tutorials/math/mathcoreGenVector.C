@@ -22,7 +22,6 @@
 /// \macro_code
 ///
 /// \author Lorenzo Moneta
-/// \date November 2023
 
 #include "TMatrixD.h"
 #include "TVectorD.h"

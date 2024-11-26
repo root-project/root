@@ -4,12 +4,10 @@
 /// \preview
 /// Show how ATLAS Style looks like. It is based on a style file from BaBar.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author  M.Sutton
-/// \date November 2024
 
 const Int_t GMAX=864;
 

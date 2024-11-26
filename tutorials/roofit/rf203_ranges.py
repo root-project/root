@@ -3,8 +3,7 @@
 ## \notebook
 ## Addition and convolution: fitting and plotting in sub ranges
 ##
-## \macro_image (tcanvas_js)
-## \preview 
+## \macro_image
 ## \macro_code
 ## \macro_output
 ##

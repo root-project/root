@@ -2,12 +2,9 @@
 /// \ingroup tutorial_gl
 /// Simple `TStructViewer` tutorial
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
 /// \macro_code
 ///
 /// \author  Timur Pocheptsov
-/// \date November 2023
 
 #include "TRandom.h"
 #include "TList.h"

@@ -3,12 +3,10 @@
 /// \notebook
 /// Create and draw a polar graph.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Olivier Couet
-/// \date November 2022
 
 void graphpolar()
 {

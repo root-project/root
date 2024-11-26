@@ -12,7 +12,6 @@
 /// \macro_code
 ///
 /// \authors Rene Brun, Sergey Linev
-/// \date November 2022
 
 
 void exec1()

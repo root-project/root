@@ -13,7 +13,6 @@
 /// \macro_code
 ///
 /// \author Stascek Jadach
-/// \date February 2023
 
 
 #include "Riostream.h"

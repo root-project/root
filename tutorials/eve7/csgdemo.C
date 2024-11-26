@@ -9,12 +9,9 @@
 ///    `root show_extract.C("csg.root")`
 ///
 /// \image html eve_csgdemo.png
-/// \macro_image (tcanvas_js)
-/// \preview 
 /// \macro_code
 ///
 /// \author Andrei Gheata
-/// \date March 2019
 
 #include "TSystem.h"
 

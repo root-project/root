@@ -11,7 +11,6 @@
 ## \macro_code
 ##
 ## \author Wim Lavrijsen
-## \date April 2020
 
 import re, array, os
 import ROOT

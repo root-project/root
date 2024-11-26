@@ -6,7 +6,6 @@
 /// \macro_code
 ///
 /// \author Rene Brun
-/// \date July 2016
 
 void geometry() {
    TString dir = gSystem->UnixPathName(__FILE__);

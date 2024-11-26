@@ -11,7 +11,6 @@
 /// \macro_code
 ///
 /// \author Bertrand Bellenot  06/01/2015
-/// \date October 2023
 
 #include "TGButton.h"
 #include "TGButtonGroup.h"

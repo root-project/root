@@ -47,12 +47,10 @@
 /// The format [0,0,8] is also interesting when the range of x is infinite
 /// or unknown.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Rene Brun
-/// \date October 2023
 
 #include "ROOT/TSeq.hxx"
 #include "TCanvas.h"

@@ -9,7 +9,6 @@
 /// \macro_code
 ///
 /// \author Omar Zapata
-/// \date May 2020
 
 #include<TRInterface.h>
 #include<TRandom.h>

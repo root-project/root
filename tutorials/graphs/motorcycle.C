@@ -11,12 +11,10 @@
 /// Example is a set of data on 133 observations of acceleration against time
 /// for a simulated motorcycle accident, taken from Silverman (1985).
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Christian Stratowa, Vienna, Austria
-/// \date January 2017
 
 #include "TString.h"
 #include "TInterpreter.h"

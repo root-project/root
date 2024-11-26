@@ -5,7 +5,6 @@
 /// \macro_code
 ///
 /// \author
-/// \date September 2016
 
 void DataFrame()
 {

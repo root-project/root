@@ -3,13 +3,11 @@
 /// \notebook
 /// Demonstrate performance and usage of Minuit2 and Fumili2 for monodimensional fits.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_output
 /// \macro_code
 ///
 /// \author Lorenzo Moneta
-/// \date January 2022
 
 #include "TH1.h"
 #include "TF1.h"

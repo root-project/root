@@ -3,8 +3,7 @@
 ## \notebook
 ## Multidimensional models: marginizalization of multi-dimensional pdfs through integration
 ##
-## \macro_image (tcanvas_js)
-## \preview 
+## \macro_image
 ## \macro_code
 ## \macro_output
 ##

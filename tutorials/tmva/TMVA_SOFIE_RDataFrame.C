@@ -16,12 +16,9 @@
 /// root TMVA_SOFIE_RDataFrame.C
 /// ```
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
 /// \macro_code
 /// \macro_output
 /// \author Lorenzo Moneta
-/// \date August 2022
 
 using namespace TMVA::Experimental;
 

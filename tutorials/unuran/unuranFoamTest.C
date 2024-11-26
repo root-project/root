@@ -9,12 +9,9 @@
 /// it is an extension of tutorials foam_kanwa.C to compare
 /// generation of a 2D distribution with unuran and Foam
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
 /// \macro_code
 ///
 /// \author Lorenzo Moneta
-/// \date February 2020
 
 #include "TH2.h"
 #include "TF2.h"

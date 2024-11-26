@@ -3,8 +3,7 @@
 /// \notebook
 /// Special pdf's: using non-parametric (multi-dimensional) kernel estimation pdfs
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 /// \macro_output
 ///

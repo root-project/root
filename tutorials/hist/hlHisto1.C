@@ -7,8 +7,6 @@
 /// on the histogram will update the histogram title in real time according to
 /// the highlighted bin.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
 /// \macro_code
 ///
 /// \date March 2018

@@ -35,13 +35,11 @@
 /// since they are obtained directly from the fit without using the approximation of error propagation.
 /// This is possible in ROOT. when using the TF1NormSum class, see the tutorial fitNormSum.C
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_output
 /// \macro_code
 ///
 /// \author Lorenzo Moneta
-/// \date October 2023
 
 #include "TF1.h"
 #include "TH1D.h"

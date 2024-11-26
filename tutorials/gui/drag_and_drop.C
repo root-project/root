@@ -9,7 +9,6 @@
 /// \macro_code
 ///
 /// \author Bertrand Bellenot
-/// \date March 2021
 
 #include "TROOT.h"
 #include "TApplication.h"

@@ -3,8 +3,7 @@
 /// \notebook -js
 /// Likelihood and minimization: interactive minimization with MINUIT
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 /// \macro_output
 ///

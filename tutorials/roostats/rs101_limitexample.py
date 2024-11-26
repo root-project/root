@@ -5,8 +5,7 @@
 ##
 ## The usage of a Confidence Interval Calculator to set a limit on the signal is illustrated
 ##
-## \macro_image (tcanvas_js)
-## \preview 
+## \macro_image
 ## \macro_output
 ## \macro_code
 ##

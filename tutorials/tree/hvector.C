@@ -3,12 +3,10 @@
 /// \notebook
 /// Write and read STL vectors in a tree.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author The ROOT Team
-/// \date October 2023
 
 #include <vector>
 

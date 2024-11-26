@@ -8,13 +8,11 @@
 /// The example attempts to faithfully reproduce the toy example described in Feldman & Cousins'
 /// original paper, Phys.Rev.D57:3873-3889,1998.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_output
 /// \macro_code
 ///
 /// \author Kyle Cranmer
-/// \date November 2023
 
 #include "RooGlobalFunc.h"
 #include "RooStats/ConfInterval.h"

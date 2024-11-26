@@ -13,13 +13,11 @@
 /// and Spherical Associate Legendre Polynomials
 /// Their integrals on the range [-1, 1] are calculated
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_output
 /// \macro_code
 ///
 /// \author Magdalena Slawinska
-/// \date November 2024
 
 
 #include "TMath.h"

@@ -15,13 +15,11 @@
 ///   root[0]: .x  mathcoreVectorCollection.C
 /// ~~~
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_output
 /// \macro_code
 ///
 /// \author Andras Zsenei
-/// \date October 2023
 
 #include "TRandom.h"
 #include "TStopwatch.h"

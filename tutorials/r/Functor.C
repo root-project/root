@@ -6,7 +6,6 @@
 /// \macro_code
 ///
 /// \author Omar Zapata
-/// \date September 2016
 
 #include<TRInterface.h>
 #include<TMath.h>

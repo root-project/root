@@ -4,8 +4,7 @@
 ## Multidimensional models: working with parameterized ranges to define non-rectangular
 ## regions for fitting and integration
 ##
-## \macro_image (tcanvas_js)
-## \preview 
+## \macro_image
 ## \macro_code
 ## \macro_output
 ##

@@ -3,12 +3,10 @@
 /// This macro demonstrates semi-transparent pads.
 /// Requires OpenGL or Web-based canvas.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image(nobatch)
 /// \macro_code
 ///
 /// \authors Timur Pocheptsov, Sergey Linev
-/// \date November 2023
 
 //Includes for ACLiC (cling does not need them).
 #include "TCanvas.h"

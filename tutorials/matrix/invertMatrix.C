@@ -25,7 +25,6 @@
 /// \macro_code
 ///
 /// \author Eddy Offermann
-/// \date August 2016
 
 #include <iostream>
 #include "TMath.h"

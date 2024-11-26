@@ -8,12 +8,9 @@
 /// .x statusBar.C++
 /// ~~~
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
 /// \macro_code
 ///
 /// \author Ilka Antcheva   1/12/2006
-/// \date October 2023
 
 
 #include <TApplication.h>

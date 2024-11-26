@@ -6,12 +6,9 @@
 ///
 /// The equation by Paul Burke: http://paulbourke.net/geometry/
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
 /// \macro_code
 ///
 /// \author Timur Pocheptsov
-/// \date March 2017
 
 #include <cassert>
 #include <vector>

@@ -14,7 +14,6 @@
 /// \macro_code
 ///
 /// \author Victor Perevovchikov
-/// \date September 2023
 
 #include "TThread.h"
 #include <Riostream.h>

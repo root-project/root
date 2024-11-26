@@ -12,12 +12,10 @@
 /// root > htr3()
 /// ~~~
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Rene Brun
-/// \date November 2017
 
 void htw() {
    // Create a Tree with a few branches of type histogram

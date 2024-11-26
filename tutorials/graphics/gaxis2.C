@@ -3,12 +3,10 @@
 /// \notebook
 /// Example illustrating how to draw TGaxis with labels defined by a function.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author  Olivier Couet
-/// \date July 2016
 
 void gaxis2(){
    gStyle->SetOptStat(0);

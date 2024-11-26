@@ -2,12 +2,9 @@
 /// \ingroup tutorial_graphics
 /// Macro illustrating how to animate a picture using a Timer.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
 /// \macro_code
 ///
 /// \author Rene Brun
-/// \date August 2016
 
 #include "TStyle.h"
 #include "TCanvas.h"

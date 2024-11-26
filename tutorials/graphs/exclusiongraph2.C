@@ -3,12 +3,10 @@
 /// \notebook
 /// Draw several graphs with an exclusion zones.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Olivier Couet
-/// \date July 2016
 
 void exclusiongraph2()
 {

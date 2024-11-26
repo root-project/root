@@ -3,8 +3,7 @@
 /// \notebook
 /// Work with befriended RNTuples.  Adapted from tree3.C
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \date April 2020

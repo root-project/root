@@ -5,7 +5,6 @@
 /// \macro_code
 ///
 /// \author Gerhard E. Bruckner 2007-10-18
-/// \date May 2019
 
 #include <TUri.h>
 

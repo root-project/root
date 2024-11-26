@@ -4,8 +4,7 @@
 ## Basic functionality: examples on normalization and integration of pdfs, construction
 ## of cumulative distribution functions from monodimensional pdfs
 ##
-## \macro_image (tcanvas_js)
-## \preview 
+## \macro_image
 ## \macro_code
 ## \macro_output
 ##

@@ -3,8 +3,7 @@
 /// \notebook -js
 /// Numeric algorithm tuning: caching of slow numeric integrals and parameterization of slow numeric integrals
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 /// \macro_output
 ///

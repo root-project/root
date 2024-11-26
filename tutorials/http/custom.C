@@ -7,7 +7,6 @@
 /// \macro_code
 ///
 /// \author Sergey Linev
-/// \date March 2024
 
 #include "TH1.h"
 #include "TH2.h"

@@ -8,13 +8,11 @@
 /// This macro shows also how to annotate a picture, change
 /// some pad parameters.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_output
 /// \macro_code
 ///
 /// \author Rene Brun
-/// \date October 2023
 
 #include <TCanvas.h>
 #include <TFile.h>

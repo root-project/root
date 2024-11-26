@@ -4,12 +4,9 @@
 /// Lambdas used to check and fit the result of the H1 analysis.
 /// Used by mp104_processH1.C, mp105_processEntryList.C and roottest/root/multicore/tProcessExecutorH1Test.C
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
 /// \macro_code
 ///
 /// \author Gerardo Ganis
-/// \date December 2017
 
 // This function is used to check the result of the H1 analysis
 auto checkH1 = [](TList *out) {

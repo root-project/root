@@ -4,11 +4,9 @@
 /// \preview Draw arrows.
 ///
 /// \macro_image (tcanvas_js)
-/// \preview 
 /// \macro_code
 ///
 /// \author Rene Brun
-/// \date November 2024
 
 void arrows(){
    auto c1 = new TCanvas("c1");

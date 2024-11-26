@@ -4,12 +4,9 @@
 ///  configure online monitoring of geometry via THttpServer
 ///  Geometry regularly changed by the program and correspondent changes immediately seen in the browser
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
 /// \macro_code
 ///
 /// \author Sergey Linev
-/// \date July 2019
 
 #include "THttpServer.h"
 #include "TGeoManager.h"

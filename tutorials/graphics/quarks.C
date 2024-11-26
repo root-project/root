@@ -3,12 +3,10 @@
 /// \notebook
 /// Example illustrating divided pads and Latex.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Rene Brun
-/// \date August 2016
 
 void quarks () {
    TCanvas *c1 = new TCanvas("c1", "c1",10,10,630,760);

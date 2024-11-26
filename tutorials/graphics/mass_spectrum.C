@@ -11,12 +11,10 @@
 /// be more powerful than a GUI interface because it allows to generate very
 /// precise drawing and using computation to generate them.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Olivier Couet
-/// \date April 2018
 
 void hline (Double_t x, Double_t y)
 {

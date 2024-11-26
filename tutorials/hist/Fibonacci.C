@@ -15,12 +15,10 @@
 /// producing the "Fibonacci spiral" created by drawing circular arcs connecting
 /// the opposite corners of squares in the Fibonacci tiling.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Olivier Couet
-/// \date September 2016
 
 void Arc(int n, double a, double r, double *px, double *py);
 void AddFibonacciBin(TH2Poly *h2pf, double N);

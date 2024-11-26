@@ -12,7 +12,6 @@
 /// \macro_code
 ///
 /// \author Taylor Childers, Yunsong Wang
-/// \date February 2024
 
 #include "TMPIFile.h"
 

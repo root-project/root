@@ -18,7 +18,6 @@
 /// \macro_code
 ///
 /// \author Andrei Gheata
-/// \date October 2023
 
 #include "iterplugin.cxx"
 

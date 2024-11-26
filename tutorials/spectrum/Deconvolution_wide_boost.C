@@ -3,12 +3,10 @@
 /// \notebook
 /// Example to illustrate deconvolution function (class TSpectrum).
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \authors Miroslav Morhac, Olivier Couet
-/// \date August 2020
 
 void Deconvolution_wide_boost() {
    Int_t i;

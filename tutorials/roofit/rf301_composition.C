@@ -6,8 +6,7 @@
 ///
 ///  `pdf = gauss(x,f(y),s)` with `f(y) = a0 + a1*y`
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 /// \macro_output
 ///

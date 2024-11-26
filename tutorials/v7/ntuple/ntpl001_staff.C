@@ -5,8 +5,7 @@
 /// Illustrates the type-safe ntuple model interface, which is used to define a data model that is in a second step
 /// taken by an ntuple reader or writer.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \date April 2019

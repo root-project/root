@@ -3,12 +3,9 @@
 /// Example of a graph of data moving in time.
 /// Use the canvas "File/Quit ROOT" to exit from this example
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
 /// \macro_code
 ///
 /// \author  Olivier Couet
-/// \date May 2023
 
 void gtime()
 {

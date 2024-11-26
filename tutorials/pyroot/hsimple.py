@@ -9,12 +9,10 @@
 ##
 ##  These objects are filled with some random numbers and saved on a file.
 ##
-## \macro_image (tcanvas_js)
-## \preview 
+## \macro_image
 ## \macro_code
 ##
 ## \author Wim Lavrijsen, Enric Tejedor
-## \date November 2019
 
 from ROOT import TCanvas, TFile, TProfile, TNtuple, TH1F, TH2F
 from ROOT import gROOT, gBenchmark, gRandom, gSystem

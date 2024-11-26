@@ -3,12 +3,10 @@
 /// \notebook
 /// Create a canvas and save as png.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Valeriy Onuchin
-/// \date August 2016
 
 void pad2png()
 {

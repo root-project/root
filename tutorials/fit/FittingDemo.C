@@ -9,13 +9,11 @@
 /// root > .x FittingDemo.C+ (using the native complier via ACLIC)
 /// ~~~
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_output
 /// \macro_code
 ///
 /// \author Rene Brun
-/// \date October 2023
 
 #include "TH1.h"
 #include "TMath.h"

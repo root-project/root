@@ -3,12 +3,10 @@
 /// \notebook -js
 /// Show the slice of a TH2 following the mouse position.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \authors Rene Brun, Sergey Linev
-/// \date November 2022
 
 
 void DynamicSlice()

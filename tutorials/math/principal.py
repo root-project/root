@@ -14,7 +14,6 @@
 ## \macro_code
 ##
 ## \authors Juan Fernando, Jaramillo Botero
-## \date November 2023
 
 from ROOT import TPrincipal, gRandom, TBrowser, vector
 

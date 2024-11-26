@@ -3,12 +3,10 @@
 /// \notebook
 /// Different charges depending on region
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Filip Ilic
-/// \date November 2022
 
 #include <iostream>
 #include <fstream>

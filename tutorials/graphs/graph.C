@@ -3,12 +3,10 @@
 /// \notebook
 /// Draw a simple graph.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Rene Brun
-/// \date August 2016
 
 void graph() {
    TCanvas *c1 = new TCanvas("c1","A Simple Graph Example",200,10,700,500);

@@ -17,13 +17,11 @@
 ///  root > FitAwmi(); // re-run with another random set of peaks
 /// ~~~
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_output
 /// \macro_code
 ///
 /// \author
-/// \date October 2020
 
 #include "TROOT.h"
 #include "TMath.h"

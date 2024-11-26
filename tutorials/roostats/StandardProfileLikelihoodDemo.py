@@ -20,13 +20,11 @@
 ## and the asymptotic properties of the profile likelihood ratio
 ## (eg. that it is chi-square distributed for the true value).
 ##
-## \macro_image (tcanvas_js)
-## \preview 
+## \macro_image
 ## \macro_output
 ## \macro_code
 ##
 ## \authors Akeem Hart, Kyle Cranmer (C++ Version)
-## \date November 2023
 
 import ROOT
 

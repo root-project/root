@@ -5,7 +5,6 @@
 /// \macro_code
 ///
 /// \authors Ilka Antcheva, Fons Rademakers
-/// \date October 2023
 
 #include <cstdio>
 #include <cstdlib>

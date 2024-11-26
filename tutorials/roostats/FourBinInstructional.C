@@ -134,13 +134,11 @@
 ///  - write the workspace to a file
 ///  - use several of RooStats IntervalCalculators & compare results
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_output
 /// \macro_code
 ///
 /// \authors  authors: Kyle Cranmer, Tanja Rommerskirchen
-/// \date April 2024
 
 #include "TStopwatch.h"
 #include "TCanvas.h"

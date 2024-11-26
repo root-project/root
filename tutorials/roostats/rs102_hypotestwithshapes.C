@@ -11,13 +11,11 @@
 /// In this example, shape uncertainties are not taken into account, but
 /// normalization uncertainties are.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_output
 /// \macro_code
 ///
 /// \author Kyle Cranmer
-/// \date June 2023
 
 #include "RooDataSet.h"
 #include "RooRealVar.h"

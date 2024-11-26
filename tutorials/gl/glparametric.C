@@ -25,12 +25,10 @@
 ///     - place mouse cursor above surface (surface is selected in pad)
 ///     - press 's' or 'S'.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image(nobatch)
 /// \macro_code
 ///
 /// \author  Timur Pocheptsov
-/// \date August 2016
 
 void glparametric()
 {

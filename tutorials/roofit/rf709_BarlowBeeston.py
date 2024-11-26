@@ -4,8 +4,7 @@
 ## Implementing the Barlow-Beeston method for taking into account the statistical
 ## uncertainty of a Monte-Carlo fit template.
 ##
-## \macro_image (tcanvas_js)
-## \preview 
+## \macro_image
 ## \macro_code
 ## \macro_output
 ##

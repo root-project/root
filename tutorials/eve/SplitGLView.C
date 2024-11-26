@@ -2,12 +2,9 @@
 /// \ingroup tutorial_eve
 /// Helper classes for the alice_esd_split.C demo.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
 /// \macro_code
 ///
 /// \author Bertrand Bellenot
-/// \date October 2023
 
 #include "TApplication.h"
 #include "TSystem.h"

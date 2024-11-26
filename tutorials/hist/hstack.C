@@ -3,12 +3,10 @@
 /// \notebook
 /// Example of stacked histograms: class THStack.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Rene Brun
-/// \date December 2022
 
 void hstack()
 {

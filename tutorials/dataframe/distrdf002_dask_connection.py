@@ -11,8 +11,7 @@
 ## http://distributed.dask.org/en/stable .
 ##
 ## \macro_code
-## \macro_image (tcanvas_js)
-## \preview 
+## \macro_image
 ##
 ## \date February 2022
 ## \author Vincenzo Eduardo Padulano

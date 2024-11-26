@@ -4,8 +4,7 @@
 /// Organization and simultaneous fits: working with named parameter sets and parameter
 /// snapshots in workspaces
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 /// \macro_output
 ///

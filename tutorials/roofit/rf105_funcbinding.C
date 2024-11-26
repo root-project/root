@@ -3,8 +3,7 @@
 /// \notebook -js
 /// Basic functionality: binding ROOT math functions as RooFit functions and pdfs
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 /// \macro_output
 ///

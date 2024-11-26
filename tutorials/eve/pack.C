@@ -6,7 +6,6 @@
 /// \macro_code
 ///
 /// \author Matevz Tadel
-/// \date June 2018
 
 TGPack *hp = 0;
 TGPack *vp = 0;

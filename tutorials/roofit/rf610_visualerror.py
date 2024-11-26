@@ -3,8 +3,7 @@
 ## \notebook
 ## Likelihood and minimization: visualization of errors from a covariance matrix
 ##
-## \macro_image (tcanvas_js)
-## \preview 
+## \macro_image
 ## \macro_code
 ## \macro_output
 ##

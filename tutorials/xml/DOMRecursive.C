@@ -16,7 +16,6 @@
 /// \macro_code
 ///
 /// \author Sergey Linev
-/// \date May 2022
 
 #include <Riostream.h>
 #include <TDOMParser.h>

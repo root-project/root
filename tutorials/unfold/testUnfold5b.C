@@ -61,7 +61,6 @@
 ///  along with TUnfold.  If not, see <http://www.gnu.org/licenses/>.
 ///
 /// \author Stefan Schmitt DESY, 14.10.2008
-/// \date March 2024
 
 #include <iostream>
 #include <fstream>

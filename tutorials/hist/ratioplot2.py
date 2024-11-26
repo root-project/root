@@ -9,12 +9,10 @@
 ## titles are modified.
 ## Confidence interval bands are automatically drawn on the bottom (but can be disabled by draw option `nobands`).
 ## Inspired by the tutorial of Paul Gessinger.
-## \macro_image (tcanvas_js)
-## \preview 
+## \macro_image
 ## \macro_code
 ##
 ## \author Alberto Ferro
-## \date September 2023
 
 import ROOT
 

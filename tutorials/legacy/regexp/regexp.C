@@ -26,7 +26,6 @@
 /// \macro_code
 ///
 /// \author Eddy Offermann
-/// \date October 2023
 
 #include "Riostream.h"
 #include "TString.h"

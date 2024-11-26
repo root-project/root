@@ -14,8 +14,7 @@
 ##
 ## More details about the dataset can be found on [the CERN Open Data portal](http://opendata.web.cern.ch/record/12341).
 ##
-## \macro_image (tcanvas_js)
-## \preview 
+## \macro_image
 ## \macro_code
 ## \macro_output
 ##

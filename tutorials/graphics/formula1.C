@@ -3,12 +3,10 @@
 /// \notebook -js
 /// Display interpreted functions.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Rene Brun
-/// \date July 2016
 
 void formula1() {
    TCanvas *c1 = new TCanvas("c1","Example with Formula",200,10,700,500);

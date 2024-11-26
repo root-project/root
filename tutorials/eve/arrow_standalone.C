@@ -9,7 +9,6 @@
 /// \macro_code
 ///
 /// \author Matevz Tadel
-/// \date June 2018
 
 void arrow_standalone()
 {

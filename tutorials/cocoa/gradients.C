@@ -8,12 +8,9 @@
 ///  2. Transparent/semitransparent colours.
 ///  3. Shadows.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
 /// \macro_code
 ///
 /// \author Timur Pocheptsov
-/// \date April 2016
 
 //Includes for ACLiC:
 #include "TColorGradient.h"

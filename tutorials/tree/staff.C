@@ -4,12 +4,10 @@
 /// Create a plot of the data in `cernstaff.root`
 /// To create `cernstaff.root`, execute tutorial `$ROOTSYS/tutorials/tree/cernbuild.C`
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Rene Brun
-/// \date August 2020
 
 void staff() {
    auto f = TFile::Open("cernstaff.root");

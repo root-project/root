@@ -3,12 +3,10 @@
 /// \notebook
 /// \preview This macro displays the ROOT architecture.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Rene Brun
-/// \date November 2024
 
 void archi() {
    TCanvas *c1 = new TCanvas("c1","Dictionary Architecture",20,10,750,930);

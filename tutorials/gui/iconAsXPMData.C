@@ -5,7 +5,6 @@
 /// \macro_code
 ///
 /// \author Ilka Antcheva   27/09/2007
-/// \date October 2023
 
 #include <TGClient.h>
 #include <TGButton.h>

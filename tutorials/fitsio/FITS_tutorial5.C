@@ -8,7 +8,6 @@
 /// \macro_output
 ///
 /// \author Claudi Martinez
-/// \date October 2020
 
 using Upvd_t = std::unique_ptr<TVectorD>;
 

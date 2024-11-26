@@ -14,7 +14,6 @@
 /// \macro_code
 ///
 /// \author Lorenzo Moneta
-/// \date August 2016
 
 
 #include "TRandom2.h"

@@ -4,12 +4,10 @@
 /// custom colors, transparency.
 /// Requires OpenGL or Web-based canvas
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image(nobatch)
 /// \macro_code
 ///
 /// \authors Timur Pocheptsov, Sergey Linev
-/// \date November 2023
 
 //Includes for ACLiC:
 #include "TColorGradient.h"

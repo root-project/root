@@ -6,13 +6,11 @@
 ## This is an example of using a RNN in TMVA. We do classification using a toy time dependent data set
 ## that is generated when running this example macro
 ##
-## \macro_image (tcanvas_js)
-## \preview 
+## \macro_image
 ## \macro_output
 ## \macro_code
 ##
 ## \author Harshal Shende
-## \date February 2023
 
 
 # TMVA Classification Example Using a Recurrent Neural Network

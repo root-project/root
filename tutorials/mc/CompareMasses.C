@@ -9,7 +9,6 @@
 /// \macro_code
 ///
 /// \author Christian.Klein-Boesing
-/// \date April 2016
 
 #include "TDatabasePDG.h"
 #include "TParticlePDG.h"

@@ -8,7 +8,6 @@
 ## \macro_code
 ##
 ## \author Juan Fernando Jaramillo Botero
-## \date December 2017
 
 from ROOT import TSQLServer, TSQLResult, TStopwatch, gRandom
 

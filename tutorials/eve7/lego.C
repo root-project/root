@@ -2,8 +2,6 @@
 /// \ingroup tutorial_eve7
 ///  This example display only points in web browser
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
 /// \macro_code
 ///
 

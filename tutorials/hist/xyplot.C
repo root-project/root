@@ -4,12 +4,10 @@
 /// Example showing how to produce a plot with an orthogonal axis system
 /// centered at (0,0).
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Olivier Couet
-/// \date January 2017
 
 void xyplot()
 {

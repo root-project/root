@@ -10,7 +10,6 @@
 ## \macro_code
 ##
 ## \author Juan Fernando Jaramillo Botero
-## \date April 2022
 
 from ROOT import TSQLServer, TSQLResult, TSQLRow, TStopwatch
 

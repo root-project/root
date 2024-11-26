@@ -14,8 +14,7 @@
 /// <a href="http://www.maxmind.com">http://www.maxmind.com</a>.
 ///
 /// \macro_code
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 ///
 /// \date August 2018
 /// \author Alexandra-Maria Dobrescu

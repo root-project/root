@@ -5,12 +5,10 @@
 /// use TCutG object to select bins for drawing.
 /// Moving TCutG object one can change displayed region of histogram
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Sergey Linev
-/// \date January 2023
 
 void h2_cut()
 {

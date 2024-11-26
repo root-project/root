@@ -6,7 +6,6 @@
 /// \macro_code
 ///
 /// \author Bertrand Bellenot
-/// \date October 2023
 
 #include "TSystem.h"
 #include "TString.h"

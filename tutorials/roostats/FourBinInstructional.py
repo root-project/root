@@ -134,8 +134,7 @@
 ##  - write the workspace to a file
 ##  - use several of RooStats IntervalCalculators & compare results
 ##
-## \macro_image (tcanvas_js)
-## \preview 
+## \macro_image
 ## \macro_output
 ## \macro_code
 ##

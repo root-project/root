@@ -5,12 +5,9 @@
 ///
 /// Read data from hsimple.root (written by hsimple.C)
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
 /// \macro_code
 ///
 /// \author Anders Eie, 2013
-/// \date September 2016
 
 #include "TFile.h"
 #include "TH1F.h"

@@ -3,8 +3,7 @@
 /// \notebook -js
 /// Multidimensional models: projecting pdf and data ranges in continuous observables
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 /// \macro_output
 ///

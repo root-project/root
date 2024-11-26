@@ -8,12 +8,10 @@
 /// and available on [GitHub](https://github.com/mpetroff/accessible-color-cycles)
 /// under the MIT License, meet these criteria.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Olivier Couet
-/// \date November 2024
 
 void box(double x1, double y1, double x2, double y2,int col) {
    auto b1 = new TBox(x1, y1, x2, y2);

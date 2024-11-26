@@ -6,7 +6,6 @@
 /// \macro_code
 ///
 /// \author Matevz Tadel
-/// \date June 2018
 
 TEveStraightLineSet* lineset(Int_t nlines = 40, Int_t nmarkers = 4)
 {

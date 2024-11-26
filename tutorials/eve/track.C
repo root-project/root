@@ -19,12 +19,9 @@
 ///  6. Conceptual ILC detector, problematic track
 ///
 /// \image html eve_track.png
-/// \macro_image (tcanvas_js)
-/// \preview 
 /// \macro_code
 ///
 /// \author Alja Mrak-Tadel
-/// \date October 2023
 
 
 #include "TEveTrackPropagator.h"

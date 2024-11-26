@@ -9,8 +9,7 @@
 ///
 /// ### Images without and with transparency
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 ///
 /// ### Transparency works in PDF files
 ///
@@ -19,7 +18,6 @@
 /// \macro_code
 ///
 /// \author Olivier Couet
-/// \date January 2022
 
 #include "TFile.h"
 #include "TCanvas.h"

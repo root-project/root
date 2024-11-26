@@ -3,12 +3,10 @@
 /// \notebook -js
 /// Tutorial illustrating use and precision of the Float16_t data type.
 /// See the double32.C tutorial for all the details.
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Danilo Piparo
-/// \date October 2023
 
 #include "ROOT/TSeq.hxx"
 #include "TCanvas.h"

@@ -6,11 +6,9 @@
 /// an honeycomb binning.
 ///
 /// \macro_code
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 ///
 /// \author  Olivier Couet
-/// \date August 2023
 
 void th2polyHoneycomb(){
    TCanvas *C = new TCanvas("C", "C", 1200, 600);

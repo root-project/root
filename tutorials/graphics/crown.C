@@ -3,12 +3,10 @@
 /// \notebook
 /// Draw crowns.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Olivier Couet
-/// \date November 2024
 
 void crown(){
    auto c1 = new TCanvas("c1","c1",400,400);

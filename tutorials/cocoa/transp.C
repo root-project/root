@@ -5,12 +5,9 @@
 /// you can save canvas contents as pdf/png
 /// (and thus you'll have an image with transparency on every platform).
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
 /// \macro_code
 ///
 /// \author Timur Pocheptsov
-/// \date June 2016
 
 //Includes for ACLiC (cling does not need them).
 #include "TVirtualX.h"

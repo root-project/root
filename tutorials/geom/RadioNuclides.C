@@ -72,12 +72,10 @@
 /// material/mixture at TIME, while all resulting elements having a fractional
 /// weight less than PRECISION are excluded.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Mihaela Gheata
-/// \date January 2017
 
 void DrawPopulation(TObjArray *vect, TCanvas *can, Double_t tmin=0.,
                     Double_t tmax=0., Bool_t logx=kFALSE);

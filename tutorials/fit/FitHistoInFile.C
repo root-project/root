@@ -5,12 +5,10 @@
 /// This example can be executed as:
 ///     root > .x FitHistoInFile.C
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 /// \macro_output
 /// \author Author E. von Toerne
-/// \date January 2022
 /// Based on FittingDemo.C by Rene Brun
 
 #include "TH1.h"

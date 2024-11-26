@@ -11,8 +11,7 @@
 ##
 ## The analysis is translated to a RDataFrame workflow processing 1.7 GB of simulated events and data.
 ##
-## \macro_image (tcanvas_js)
-## \preview 
+## \macro_image
 ## \macro_code
 ## \macro_output
 ##

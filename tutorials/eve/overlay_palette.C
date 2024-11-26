@@ -4,7 +4,6 @@
 /// \macro_code
 ///
 /// \author Matevz Tadel
-/// \date June 2018
 
 void overlay_palette()
 {

@@ -10,7 +10,6 @@
 /// \macro_code
 ///
 /// \author Sergey Linev
-/// \date June 2024
 
 void hstackpads()
 {

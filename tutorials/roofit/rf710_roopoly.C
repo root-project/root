@@ -3,8 +3,7 @@
 /// \notebook -js
 /// Taylor expansion of RooFit functions using the taylorExpand function with RooPolyFunc
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 /// \macro_output
 ///

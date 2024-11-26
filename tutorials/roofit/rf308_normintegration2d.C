@@ -4,8 +4,7 @@
 /// Multidimensional models: normalization and integration of pdfs, construction of
 /// cumulative distribution functions from pdfs in two dimensions
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 /// \macro_output
 ///

@@ -10,7 +10,6 @@
 /// \macro_code
 ///
 /// \author Ilka Antcheva   1/12/2006
-/// \date October 2023
 
 #include <TApplication.h>
 #include <TGClient.h>

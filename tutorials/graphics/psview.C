@@ -18,12 +18,9 @@
 ///        "C:\Program Files\gs\gs8.13\bin"
 ///     8. click "OK" as much as needed.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
 /// \macro_code
 ///
 /// \author Valeriy Onoutchin
-/// \date January 2017
 
 #include "TROOT.h"
 #include "TCanvas.h"

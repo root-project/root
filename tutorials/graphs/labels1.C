@@ -3,12 +3,10 @@
 /// \notebook
 /// Setting alphanumeric labels in a 1-d histogram.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Rene Brun
-/// \date July 2016
 
 void labels1()
 {

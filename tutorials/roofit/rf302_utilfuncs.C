@@ -4,8 +4,7 @@
 /// Multidimensional models: utility functions classes available for use in tailoring of
 /// composite (multidimensional) pdfs
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 /// \macro_output
 ///

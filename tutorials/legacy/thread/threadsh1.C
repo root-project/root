@@ -3,12 +3,9 @@
 /// Example of a simple script creating 3 threads.
 /// This script can only be executed via ACliC .x threadsh1.C++.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
 /// \macro_code
 ///
 /// \author Victor Perevovchikov
-/// \date September 2023
 
 #include "TCanvas.h"
 #include "TFrame.h"

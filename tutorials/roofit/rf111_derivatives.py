@@ -7,8 +7,7 @@
 ## pdf = gauss(x,m,s)
 ## ```
 ##
-## \macro_image (tcanvas_js)
-## \preview 
+## \macro_image
 ## \macro_code
 ## \macro_output
 ##

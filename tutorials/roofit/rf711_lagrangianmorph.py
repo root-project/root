@@ -5,8 +5,7 @@
 ## A morphing function as a function of one coefficient is setup and can be used
 ## to obtain the distribution for any value of the coefficient.
 ##
-## \macro_image (tcanvas_js)
-## \preview 
+## \macro_image
 ## \macro_code
 ## \macro_output
 ##

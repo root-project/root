@@ -11,12 +11,10 @@
 /// It will create one canvas with the representation
 /// of the tgamma, lgamma, beta, erf and erfc functions
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Magdalena Slawinska
-/// \date November 2023
 
 #include "TMath.h"
 #include "TF1.h"

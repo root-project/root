@@ -37,11 +37,8 @@
 /// - Root Macro: TMVAClassification
 ///
 /// \macro_output
-/// \macro_image (tcanvas_js)
-/// \preview 
 /// \macro_code
 /// \author Andreas Hoecker
-/// \date April 2024
 
 
 #include <cstdlib>

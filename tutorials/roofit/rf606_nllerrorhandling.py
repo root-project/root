@@ -5,8 +5,7 @@
 ##
 ## Understanding and customizing error handling in likelihood evaluations
 ##
-## \macro_image (tcanvas_js)
-## \preview 
+## \macro_image
 ## \macro_code
 ## \macro_output
 ##

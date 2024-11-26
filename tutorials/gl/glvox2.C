@@ -25,12 +25,10 @@
 /// This macro is to be compiled: TF1 is extremely slow with interpreted function
 /// as an argument.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image(nobatch)
 /// \macro_code
 ///
 /// \author  Timur Pocheptsov
-/// \date November 2023
 
 
 #include "TStyle.h"

@@ -14,13 +14,11 @@
 ///  standard hist2workspace example and read the ROOT file
 ///  that it produces.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_output
 /// \macro_code
 ///
 /// \authors Sven Kreiss, Kyle Cranmer
-/// \date December 2022
 
 #include "TFile.h"
 #include "TROOT.h"

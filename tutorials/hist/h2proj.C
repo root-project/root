@@ -5,12 +5,10 @@
 /// A TExec allows to redraw automatically the projections when a zoom is performed
 /// on the 2D histogram.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Olivier Couet
-/// \date January 2023
 
 TH2F *h2;
 TH1D * projh2X;

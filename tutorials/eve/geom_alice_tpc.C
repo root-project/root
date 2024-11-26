@@ -6,7 +6,6 @@
 /// \macro_code
 ///
 /// \author Matevz Tadel
-/// \date August 2020
 
 void geom_alice_tpc()
 {

@@ -5,7 +5,6 @@
 /// \macro_code
 ///
 /// \author Andrei Gheata
-/// \date April 2016
 
 void na49geomfile() {
    gBenchmark->Start("geometry");

@@ -4,12 +4,9 @@
 /// A canvas with sub-pads is produced, stored to an sql data base and read back
 /// To run this macro, you need the hsimple.root file, produced by the hsimple.C macro
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
 /// \macro_code
 ///
 /// \author Sergey Linev
-/// \date September 2016
 
 // example configuration for MySQL 4.1
 const char* dbname = "mysql://host.domain/test";

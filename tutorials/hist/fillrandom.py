@@ -3,12 +3,10 @@
 ## \notebook
 ## Fill a 1-D histogram from a parametric function. Original tutorial by Rene Brun.
 ##
-## \macro_image (tcanvas_js)
-## \preview 
+## \macro_image
 ## \macro_code
 ##
 ## \author Alberto Ferro
-## \date April 2022
 
 import ROOT
 

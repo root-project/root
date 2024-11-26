@@ -17,12 +17,9 @@
 ///   - Execute in the first window: .x hserv2.C
 ///   - Execute in the second and third windows: .x hclient.C
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
 /// \macro_code
 ///
 /// \author Fons Rademakers
-/// \date September 2016
 
 {
    // Create canvas and pads to display the histograms

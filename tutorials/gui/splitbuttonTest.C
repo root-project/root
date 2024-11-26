@@ -6,7 +6,6 @@
 /// \macro_code
 ///
 /// \author Roel Aaij 13/07/2007
-/// \date October 2023
 
 #include <iostream>
 #include <TApplication.h>

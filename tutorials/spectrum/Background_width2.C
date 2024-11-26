@@ -4,12 +4,10 @@
 /// Example to illustrate the influence of the clipping window width on the
 /// estimated background.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \authors Miroslav Morhac, Olivier Couet
-/// \date March 2019
 
 void Background_width2() {
    Int_t i;

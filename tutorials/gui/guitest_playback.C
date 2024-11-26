@@ -7,7 +7,6 @@
 /// \macro_code
 ///
 /// \author Bertrand Bellenot
-/// \date August 2020
 
 #include "TSystem.h"
 #include "TSystemFile.h"

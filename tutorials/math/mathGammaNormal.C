@@ -3,12 +3,10 @@
 /// \notebook
 /// Tutorial illustrating the use of TMath::GammaDist and TMath::LogNormal
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Anna Kreshuk
-/// \date August 2016
 
 void mathGammaNormal(){
    TCanvas *myc = new TCanvas("c1","gamma and lognormal",10,10,600,800);

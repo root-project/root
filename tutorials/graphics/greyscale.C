@@ -3,12 +3,10 @@
 /// \notebook
 /// Create grey scale of `200 x 200` boxes.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Olivier Couet
-/// \date September 2017
 
 void greyscale()
 {

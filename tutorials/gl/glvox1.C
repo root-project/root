@@ -2,12 +2,10 @@
 /// \ingroup tutorial_gl
 /// This macro demonstrates how to use "glcol" option for TH3.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image(nobatch)
 /// \macro_code
 ///
 /// \author  Timur Pocheptsov
-/// \date August 2016
 
 void glvox1()
 {

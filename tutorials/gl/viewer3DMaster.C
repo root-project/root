@@ -9,12 +9,9 @@
 /// As we overload TObject::Paint which is called directly from compiled
 /// code, this script must also be compiled to work correctly.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
 /// \macro_code
 ///
 /// \author Richard Maunder
-/// \date October 2023
 
 
 #include "TVirtualViewer3D.h"

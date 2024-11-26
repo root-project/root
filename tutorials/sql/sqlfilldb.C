@@ -5,7 +5,6 @@
 /// \macro_code
 ///
 /// \author Sergey Linev
-/// \date September 2016
 
 void sqlfilldb(int nfiles = 1000)
 {

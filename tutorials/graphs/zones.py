@@ -5,12 +5,10 @@
 ## into adjacent subpads + axis labels on the top and right side
 ## of the pads. Original tutorial by Rene Brun.
 ##
-## \macro_image (tcanvas_js)
-## \preview 
+## \macro_image
 ## \macro_code
 ##
 ## \author Alberto Ferro
-## \date June 2017
 
 import ROOT
 

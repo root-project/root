@@ -18,7 +18,6 @@
 /// \macro_image (greek.svg)
 ///
 /// \author Rene Brun
-/// \date January 2022
 
 void latex4() {
    auto c1 = new TCanvas("greek","greek",600,700);

@@ -3,8 +3,7 @@
 /// \notebook -js
 /// Data and categories: tools for manipulation of (un)binned datasets
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 /// \macro_output
 ///

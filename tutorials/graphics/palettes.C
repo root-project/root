@@ -11,12 +11,10 @@
 /// can be taken within the enum given in the previous link. As an example
 /// `gStyle->SetPalette(kCividis)` will select the following palette.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Olivier Couet
-/// \date November 2022
 
 TCanvas *c = nullptr;
 

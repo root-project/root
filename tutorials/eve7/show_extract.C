@@ -4,12 +4,9 @@
 /// By default shows a simplified ALICE geometry.
 ///
 /// \image html eve_show_extract.png
-/// \macro_image (tcanvas_js)
-/// \preview 
 /// \macro_code
 ///
 /// \author Matevz Tadel
-/// \date October 2023
 
 #include "TFile.h"
 #include "TKey.h"

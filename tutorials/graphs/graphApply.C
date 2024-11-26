@@ -7,12 +7,10 @@
 /// The Y values of the graph are replaced by the new values computed using
 /// the function.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Miro Helbich
-/// \date August 2016
 
 void graphApply()
 {

@@ -7,7 +7,6 @@
 /// \macro_code
 ///
 /// \author Valeriy Onuchin
-/// \date February 2021
 
 #ifndef __RUN_GAMES__
 

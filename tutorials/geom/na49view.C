@@ -3,12 +3,10 @@
 /// This macro generates
 /// with 2 views of the NA49 detector using the old obsolete geometry package.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Rene Brun
-/// \date July 2020
 
 void na49view() {
    TCanvas *c1 = new TCanvas("c1","The NA49 canvas",200,10,700,780);

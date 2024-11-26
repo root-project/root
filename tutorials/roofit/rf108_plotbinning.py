@@ -3,8 +3,7 @@
 ## \notebook
 ## Basic functionality: plotting unbinned data with alternate and variable binnings
 ##
-## \macro_image (tcanvas_js)
-## \preview 
+## \macro_image
 ## \macro_code
 ## \macro_output
 ##

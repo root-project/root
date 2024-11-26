@@ -35,13 +35,11 @@
 /// First part of the tutorial shows how to transform the histograms
 /// Second part shows how to transform the data arrays directly
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_output
 /// \macro_code
 ///
 /// \authors Anna Kreshuk, Jens Hoffmann
-/// \date October 2023
 
 #include "TH1D.h"
 #include "TVirtualFFT.h"

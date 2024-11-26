@@ -6,7 +6,6 @@
 /// \macro_code
 ///
 /// \author Alja Mrak-Tadel
-/// \date September 2024
 
 #include "TEveProjections.h"
 #include "TSystem.h"

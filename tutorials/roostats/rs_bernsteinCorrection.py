@@ -19,8 +19,7 @@
 ##  - the best fit of the nominal model (blue)
 ##  - and the best fit corrected model.
 ##
-## \macro_image (tcanvas_js)
-## \preview 
+## \macro_image
 ## \macro_output
 ## \macro_code
 ##

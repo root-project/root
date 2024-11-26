@@ -2,12 +2,9 @@
 /// \ingroup tutorial_geom
 /// Combinatorial Solid Geometry example.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
 /// \macro_code
 ///
 /// \author Andrei Gheata
-/// \date December 2022
 
 Bool_t raytracing = kTRUE;
 

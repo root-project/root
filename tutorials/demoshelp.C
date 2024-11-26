@@ -2,12 +2,9 @@
 /// \ingroup Tutorials
 /// This macro shows help on running the Demos.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
 /// \macro_code
 ///
 /// \author Rene Brun
-/// \date July 2016
 
 void demoshelp() {
    //

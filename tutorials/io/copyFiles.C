@@ -15,7 +15,6 @@
 /// \macro_code
 ///
 /// \author Rene Brun
-/// \date January 2017
 
 #include "TROOT.h"
 #include "TKey.h"

@@ -7,7 +7,6 @@
 /// \macro_code
 ///
 /// \author Gerardo Ganis
-/// \date August 2020
 
 #include "TString.h"
 #include "TROOT.h"

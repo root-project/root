@@ -15,7 +15,6 @@
 /// \macro_code
 ///
 /// \author Lorenzo Moneta
-/// \date February 2023
 
 #include "TRandom.h"
 #include "TStopwatch.h"

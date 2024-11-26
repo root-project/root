@@ -3,8 +3,7 @@
 /// \notebook
 /// Example of multi-threaded writes using multiple REntry objects
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \date July 2021

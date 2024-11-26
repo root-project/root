@@ -12,12 +12,10 @@
 /// of the  cylindrical and spherical Bessel functions
 /// regular and modified
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Magdalena Slawinska
-/// \date November 2024
 
 #include "TMath.h"
 #include "TF1.h"

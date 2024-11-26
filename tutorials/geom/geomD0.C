@@ -10,12 +10,9 @@
 ///   - or       `.x geomD0.C(1)` top level detectors are visible
 ///
 /// \image html geom_geomD0.png width=800px
-/// \macro_image (tcanvas_js)
-/// \preview 
 /// \macro_code
 ///
 /// \authors Bertrand Bellenot, Rene Brun
-/// \date August 2020
 
 void RecursiveInvisible(TGeoVolume *vol);
 void RecursiveTransparency(TGeoVolume *vol, Int_t transp);

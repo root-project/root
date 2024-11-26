@@ -4,12 +4,10 @@
 /// class TRatioPlot. For ROOT version >= 6.08 TRatioPlot should be used. See
 /// the other ratio plots examples in this folder.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Olivier Couet
-/// \date May 2021
 
 void ratioplotOld( ) {
    // Define two gaussian histograms. Note the X and Y title are defined

@@ -10,8 +10,6 @@
 /// the days plot. Movements on the days' plot will display the exact temperature
 /// for a given day.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
 /// \macro_code
 ///
 /// \date March 2018

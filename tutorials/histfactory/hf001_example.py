@@ -2,13 +2,11 @@
 ## \ingroup tutorial_histfactory
 ## A ROOT script demonstrating  an example of writing and fitting a HistFactory model using Python.
 ##
-## \macro_image (tcanvas_js)
-## \preview 
+## \macro_image
 ## \macro_code
 ## \macro_output
 ##
 ## \author George Lewis
-## \date August 2024
 
 import ROOT
 

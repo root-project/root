@@ -3,12 +3,10 @@
 /// \notebook
 /// This macro displays the ROOT Directory data structure
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Rene Brun
-/// \date November 2024
 
 void fildir(){
 

@@ -3,8 +3,7 @@
 /// \notebook
 /// Multidimensional models: conditional pdf with per-event errors
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 /// \macro_output
 ///

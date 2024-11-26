@@ -68,7 +68,6 @@
 /// \macro_code
 ///
 /// \author Eddy Offermann
-/// \date February 2023
 
 #include "Riostream.h"
 #include "TMatrixD.h"

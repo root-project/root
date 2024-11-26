@@ -7,7 +7,6 @@
 /// \macro_code
 ///
 /// \author Rene Brun
-/// \date August 2016
 
 #include "TFile.h"
 #include "TKey.h"

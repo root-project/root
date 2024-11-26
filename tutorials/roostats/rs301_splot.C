@@ -17,13 +17,11 @@
 /// both Z and QCD.  This is only used to generate the toy data, and would
 /// not be needed if we had real data.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 /// \macro_output
 ///
 /// \author Kyle Cranmer
-/// \date June 2023
 
 #include "RooRealVar.h"
 #include "RooStats/SPlot.h"

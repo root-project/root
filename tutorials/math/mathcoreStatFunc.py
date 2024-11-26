@@ -10,12 +10,10 @@
 ## ~~~
 ##
 ## Original tutorial by Andras Zsenei.
-## \macro_image (tcanvas_js)
-## \preview 
+## \macro_image
 ## \macro_code
 ##
 ## \author Alberto Ferro
-## \date June 2017
 
 import ROOT
 

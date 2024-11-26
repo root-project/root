@@ -6,7 +6,6 @@
 /// \macro_code
 ///
 /// \author Alja Mrak-Tadel
-/// \date January 2024
 
 using namespace ROOT::Experimental;
 

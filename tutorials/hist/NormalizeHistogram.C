@@ -7,12 +7,10 @@
 /// Two different methods of normalizing histograms
 /// are shown, each with the original histogram.
 /// next to the normalized one.
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Advait Dhingra
-/// \date July 2021
 
 #include "TH2F.h"
 #include "TRandom.h"

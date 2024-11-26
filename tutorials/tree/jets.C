@@ -15,7 +15,6 @@
 /// \macro_code
 ///
 /// \author Rene Brun
-/// \date April 2017
 
 #ifdef JETS_SECOND_RUN
 

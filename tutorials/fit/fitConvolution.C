@@ -8,7 +8,6 @@
 /// \macro_code
 ///
 /// \author Aurelie Flandi
-/// \date October 2023
 
 #include <TCanvas.h>
 #include <TRandom.h>

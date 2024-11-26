@@ -13,12 +13,10 @@
 ///  - the new label color,
 ///  - the new label text.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author  Olivier Couet
-/// \date August 2023
 
 void gaxis3() {
    TCanvas* c1 = new TCanvas("c1","Examples of TGaxis",10,10,800,400);

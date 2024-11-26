@@ -4,8 +4,6 @@
 /// Illustrates merging with the power-of-two autobin algorithm
 ///
 /// \macro_output
-/// \macro_image (tcanvas_js)
-/// \preview 
 /// \macro_code
 ///
 /// \date November 2017

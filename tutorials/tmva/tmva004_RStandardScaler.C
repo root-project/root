@@ -4,8 +4,6 @@
 /// This tutorial illustrates the usage of the standard scaler as preprocessing
 /// method.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
 /// \macro_code
 /// \macro_output
 ///

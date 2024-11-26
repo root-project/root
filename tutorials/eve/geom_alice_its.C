@@ -6,7 +6,6 @@
 /// \macro_code
 ///
 /// \author Matevz Tadel
-/// \date August 2020
 
 #include "TEveManager.h"
 #include "TEveGeoNode.h"

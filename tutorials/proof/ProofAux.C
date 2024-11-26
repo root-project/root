@@ -6,7 +6,6 @@
 /// \macro_code
 ///
 /// \author Gerardo Ganis (gerardo.ganis@cern.ch)
-/// \date January 2020
 
 #define ProofAux_cxx
 

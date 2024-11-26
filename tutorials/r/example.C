@@ -6,7 +6,6 @@
 /// \macro_code
 ///
 /// \author
-/// \date June 2019
 
 #include "TMath.h"
 #include "Math/PdfFunc.h"

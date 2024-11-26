@@ -28,12 +28,10 @@
 /// ~~~
 ///
 /// \macro_output
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Rene Brun
-/// \date March 2018
 
 #include "TCanvas.h"
 #include "TMath.h"

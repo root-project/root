@@ -14,13 +14,11 @@
 ##  3. by the list of functions and coefficients (which are 1 by default)
 ##  4. by a std::vector for functions and coefficients
 ##
-## \macro_image (tcanvas_js)
-## \preview 
+## \macro_image
 ## \macro_output
 ## \macro_code
 ##
 ## \author Jonas Rembser, Lorenzo Moneta (C++ version)
-## \date January 2022
 
 import ROOT
 

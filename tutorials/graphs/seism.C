@@ -3,12 +3,10 @@
 /// \notebook -js
 /// Strip chart example.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Rene Brun
-/// \date October 2023
 
 #include "TStopwatch.h"
 #include "TDatime.h"

@@ -2,12 +2,9 @@
 /// \ingroup tutorial_geom
 /// GUI to draw the geometry shapes.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
 /// \macro_code
 ///
 /// \author Andrei Gheata
-/// \date December 2022
 
 #include "TMath.h"
 #include "TControlBar.h"

@@ -5,8 +5,7 @@
 ##
 ## Working with the profile likelihood estimator
 ##
-## \macro_image (tcanvas_js)
-## \preview 
+## \macro_image
 ## \macro_code
 ## \macro_output
 ##

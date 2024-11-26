@@ -12,8 +12,7 @@
 ///
 /// Thanks to Marc Escalier for asking how to do this correctly.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 /// \macro_output
 ///

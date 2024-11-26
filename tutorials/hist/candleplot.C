@@ -3,12 +3,10 @@
 /// \notebook
 /// Example of candle plot with 2-D histograms.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Georg Troska
-/// \date May 2024
 
 void candleplot() {
 

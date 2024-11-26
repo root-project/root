@@ -18,12 +18,9 @@
 /// root -b -q "tcl.C(1)"
 /// root -b -q "tcl.C++(1)"
 /// ~~~
-/// \macro_image (tcanvas_js)
-/// \preview 
 /// \macro_code
 ///
 /// \author Rene Brun
-/// \date August 2018
 
 #include "TFile.h"
 #include "TClonesArray.h"

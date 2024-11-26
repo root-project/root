@@ -39,7 +39,6 @@
 /// \macro_code
 ///
 /// \author Gerardo Ganis
-/// \date October 2023
 
 #include "Bytes.h"
 #include "Getline.h"

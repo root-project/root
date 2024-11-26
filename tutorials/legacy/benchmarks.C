@@ -2,13 +2,11 @@
 /// \ingroup tutorial_legacy
 /// This macro run several tests and produces an benchmark report.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_output
 /// \macro_code
 ///
 /// \author Rene Brun
-/// \date August 2021
 
 TCanvas* bench1 = 0;
 

@@ -3,8 +3,7 @@
 ## \notebook
 ## Special pdf's: using a pdf defined by a sum of real-valued amplitude components
 ##
-## \macro_image (tcanvas_js)
-## \preview 
+## \macro_image
 ## \macro_code
 ## \macro_output
 ##

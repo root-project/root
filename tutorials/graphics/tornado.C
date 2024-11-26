@@ -3,12 +3,10 @@
 /// \notebook
 /// Show 3-d polymarker.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Rene Brun
-/// \date August 2016
 
 void tornado() {
    gBenchmark->Start("tornado");

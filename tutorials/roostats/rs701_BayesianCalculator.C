@@ -3,13 +3,11 @@
 /// \notebook
 /// Bayesian calculator: basic example
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_output
 /// \macro_code
 ///
 /// \author Gregory Schott
-/// \date January 2024
 
 #include "RooRealVar.h"
 #include "RooWorkspace.h"

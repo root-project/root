@@ -5,8 +5,7 @@
 /// a morphing function is setup as a function of three variables and
 /// a fit is performed on a pseudo-dataset.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 /// \macro_output
 ///

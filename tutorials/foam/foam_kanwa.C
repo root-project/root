@@ -7,12 +7,9 @@
 ///      root -l foam_kanwa.C
 /// ~~~
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
 /// \macro_code
 ///
 /// \author Stascek Jadach
-/// \date February 2020
 
 #include "Riostream.h"
 #include "TFoam.h"

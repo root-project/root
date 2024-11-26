@@ -8,12 +8,9 @@
 /// directory, it is automatically read from the ROOT web site.
 ///
 /// \image html geom_geomAlice.png width=800px
-/// \macro_image (tcanvas_js)
-/// \preview 
 /// \macro_code
 ///
 /// \author Rene Brun
-/// \date August 2020
 
 void geomAlice()
 {

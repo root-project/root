@@ -4,8 +4,7 @@
 /// Basic functionality: normalization and integration of pdfs, construction of cumulative distribution
 /// monodimensional functions
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 /// \macro_output
 ///

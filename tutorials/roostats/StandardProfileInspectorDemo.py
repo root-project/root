@@ -22,13 +22,11 @@
 ## (aka. profiled value of nuisance parameter vs. parameter of interest)
 ## (aka. best fit nuisance parameter with p.o.i fixed vs. parameter of interest)
 ##
-## \macro_image (tcanvas_js)
-## \preview 
+## \macro_image
 ## \macro_output
 ## \macro_code
 ##
 ## \authors Akeem Hart, Kyle Cranmer (C++ Version)
-## \date November 2023
 
 import ROOT
 

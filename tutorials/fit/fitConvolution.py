@@ -8,7 +8,6 @@
 ## \macro_code
 ##
 ## \author Jonas Rembser, Aurelie Flandi (C++ version)
-## \date October 2023
 
 import ROOT
 

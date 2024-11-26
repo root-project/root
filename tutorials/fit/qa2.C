@@ -3,13 +3,11 @@
 /// \notebook -js
 /// Test generation of random numbers distributed according to a function defined by the user
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_output
 /// \macro_code
 ///
 /// \author Rene Brun
-/// \date October 2023
 
 #include <TBenchmark.h>
 #include <TCanvas.h>

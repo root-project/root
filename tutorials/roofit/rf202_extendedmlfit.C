@@ -3,8 +3,7 @@
 /// \notebook -js
 /// Setting up an extended maximum likelihood fit.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 /// \macro_output
 ///

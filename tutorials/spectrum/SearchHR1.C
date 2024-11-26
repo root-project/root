@@ -4,12 +4,10 @@
 /// Example to illustrate high resolution peak searching function (class TSpectrum).
 ///
 /// \macro_output
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \authors Miroslav Morhac, Olivier Couet
-/// \date January 2017
 
 void SearchHR1() {
    Double_t fPositionX[100];

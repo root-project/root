@@ -6,12 +6,9 @@
 /// fit the function to get the exponent (which must be near 3) and plot the points with noise,
 /// the known function and the fitted function
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
 /// \macro_code
 ///
 /// \author Omar Zapata
-/// \date April 2022
 
 #include<TRInterface.h>
 #include<TRandom.h>

@@ -11,7 +11,6 @@
 /// \macro_code
 ///
 /// \author Fons Rademakers
-/// \date September 2016
 
 void pserv()
 {

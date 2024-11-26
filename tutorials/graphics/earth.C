@@ -9,12 +9,10 @@
 ///   - "PARABOLIC"  : Draw a contour via an Parabolic projection
 ///   - "MOLLWEIDE"  : Draw a contour via an Mollweide projection
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Olivier Couet (from an original macro sent by Ernst-Jan Buis)
-/// \date November 2023
 
 TCanvas *earth(){
 

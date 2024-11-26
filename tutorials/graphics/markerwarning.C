@@ -3,8 +3,7 @@
 /// \notebook
 /// This script illustrates the danger of using asymmetric symbols.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 ///
 /// Non-symmetric symbols should be used carefully in plotting.
 /// These two graphs show how misleading a careless use of symbols can be.
@@ -12,7 +11,6 @@
 /// choice, the two plots on the top appear further apart than for the bottom
 /// example.
 /// \author Olivier Couet
-/// \date November 2022
 
 void markerwarning()
 {

@@ -7,8 +7,7 @@
 ##      which can be compiled on the fly (set to MyPdfV3 below).
 ##      To use MyPdfV1 or MyPdfV2, adjust lines below accordingly.
 ##
-## \macro_image (tcanvas_js)
-## \preview 
+## \macro_image
 ## \macro_code
 ## \macro_output
 ##

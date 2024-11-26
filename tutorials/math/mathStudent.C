@@ -3,12 +3,10 @@
 /// \notebook
 /// Tutorial illustrating the use of the Student and F distributions
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Anna Kreshuk
-/// \date November 2024
 
 #include "TMath.h"
 #include "TF1.h"

@@ -6,7 +6,6 @@
 /// \macro_code
 ///
 /// \author Matevz Tadel
-/// \date October 2023
 #include <ROOT/REveBox.hxx>
 #include <ROOT/REveScene.hxx>
 #include <ROOT/REveManager.hxx>

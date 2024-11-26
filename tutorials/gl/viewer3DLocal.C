@@ -24,12 +24,9 @@
 /// #else
 /// ~~~
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
 /// \macro_code
 ///
 /// \author Richard Maunder
-/// \date October 2023
 
 #include "TVirtualViewer3D.h"
 #include "TBuffer3D.h"

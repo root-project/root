@@ -15,13 +15,11 @@
 /// The ROOT configure will automatically find GSL if the script gsl-config (from GSL) is in your PATH,.
 /// otherwise you need to configure root with the options --gsl-incdir and --gsl-libdir.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_output
 /// \macro_code
 ///
 /// \authors M. Slawinska, L. Moneta
-/// \date November 2024
 
 #include "TMath.h"
 #include "TH1.h"

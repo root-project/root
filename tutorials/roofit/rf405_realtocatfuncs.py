@@ -3,8 +3,7 @@
 ## \notebook
 ## Data and categories: demonstration of real-discrete mapping functions
 ##
-## \macro_image (tcanvas_js)
-## \preview 
+## \macro_image
 ## \macro_code
 ## \macro_output
 ##

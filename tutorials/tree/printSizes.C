@@ -38,7 +38,6 @@
 /// \macro_code
 ///
 /// \author
-/// \date September 2016
 
 #include "TTree.h"
 #include "TBranch.h"

@@ -3,12 +3,10 @@
 /// \notebook
 /// Example of TGraphTime.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Rene Brun
-/// \date June 2024
 
 #include "TCanvas.h"
 #include "TRandom3.h"

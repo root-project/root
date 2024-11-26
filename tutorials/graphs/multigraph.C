@@ -3,12 +3,10 @@
 /// \notebook
 /// Create and Draw a TMultiGraph.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Rene Brun
-/// \date November 2024
 
 
 void multigraph()

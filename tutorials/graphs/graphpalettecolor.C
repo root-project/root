@@ -13,12 +13,10 @@
 /// the color of each graph is picked inside the palette `kSolar`. The
 /// same is visible on filled polygons in the automatically built legend.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Olivier Couet
-/// \date April 2022
 
 void graphpalettecolor () {
 

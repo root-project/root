@@ -25,12 +25,10 @@
 /// ~~~
 ///
 /// \macro_output
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Rene Brun
-/// \date August 2016
 
 
 #include "TTree.h"

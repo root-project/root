@@ -10,13 +10,11 @@
 /// In reality this function is usually not known, and the data comes e.g.
 /// from measurements.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_output
 /// \macro_code
 ///
 /// \author Axel Naumann, 2005-02-02
-/// \date June 2019
 
 Double_t theUnknownFunction(Double_t x, Double_t y) {
    return sin((1.7+x)*(x-0.3)-2.3*(y+0.7));

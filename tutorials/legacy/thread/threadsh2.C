@@ -4,12 +4,9 @@
 /// This script can only be executed via ACliC .x threadsh2.C++.
 /// The canvases are saved in a animated gif file.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
 /// \macro_code
 ///
 /// \author Victor Perevovchikov
-/// \date September 2023
 
 #include "TROOT.h"
 #include "TCanvas.h"

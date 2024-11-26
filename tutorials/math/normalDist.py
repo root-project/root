@@ -5,12 +5,10 @@
 ##
 ## based on Anna Kreshuk's normalDist.C
 ##
-## \macro_image (tcanvas_js)
-## \preview 
+## \macro_image
 ## \macro_code
 ##
 ## \author Juan Fernando Jaramillo Botero
-## \date November 2023
 
 from ROOT import TF1, TCanvas, TSystem, TAxis, TLegend
 from ROOT import kRed, kGreen, kBlue

@@ -3,12 +3,10 @@
 /// \notebook -js
 /// Draw a graph with error bars
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \author Rene Brun
-/// \date August 2016
 
 void gerrors() {
    TCanvas *c1 = new TCanvas("c1","A Simple Graph with error bars",200,10,700,500);

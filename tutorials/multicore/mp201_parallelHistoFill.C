@@ -5,8 +5,7 @@
 /// This tutorial shows how a histogram can be filled in parallel
 /// with a multiprocess approach.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \date January 2016

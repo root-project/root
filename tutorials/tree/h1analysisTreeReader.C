@@ -3,12 +3,9 @@
 ///
 /// H1 analysis example expressed in terms of TTreeReader (see h1analysis.C).
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
 /// \macro_code
 ///
 /// \author Anders Eie, 2013
-/// \date December 2023
 
 #include "h1analysisTreeReader.h"
 #include "TStyle.h"

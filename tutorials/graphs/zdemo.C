@@ -13,12 +13,10 @@
 /// Note that the way greek symbols, super/subscripts are obtained
 /// illustrate the current limitations of Root in this area.
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 ///
 /// \authors Michael Tokarev, Elena Potrebenikova (JINR Dubna)
-/// \date October 2023
 
 #include "TCanvas.h"
 #include "TPad.h"

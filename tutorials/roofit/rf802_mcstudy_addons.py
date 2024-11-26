@@ -5,8 +5,7 @@
 ##
 ## RooMCStudy: using separate fit and generator models, the chi^2 calculator model
 ##
-## \macro_image (tcanvas_js)
-## \preview 
+## \macro_image
 ## \macro_code
 ## \macro_output
 ##

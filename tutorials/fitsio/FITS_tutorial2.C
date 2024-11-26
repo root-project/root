@@ -4,13 +4,11 @@
 /// Open a FITS file whose primary array represents
 /// a spectrum (flux vs wavelength).
 ///
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 /// \macro_code
 /// \macro_output
 ///
 /// \author Claudi Martinez
-/// \date October 2020
 
 void FITS_tutorial2()
 {

@@ -3,12 +3,10 @@
 ## Tornado example.
 ## \notebook
 ##
-## \macro_image (tcanvas_js)
-## \preview 
+## \macro_image
 ## \macro_code
 ##
 ## \author Wim Lavrijsen
-## \date September 2016
 
 from ROOT import TCanvas, TView, TPolyMarker3D, TPaveText
 from ROOT import gROOT, gBenchmark

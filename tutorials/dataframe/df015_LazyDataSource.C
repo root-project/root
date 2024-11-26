@@ -14,8 +14,7 @@
 /// From the ROOT website: https://root.cern/files/tutorials/tdf014_CsvDataSource_MuRun2010B.csv
 ///
 /// \macro_code
-/// \macro_image (tcanvas_js)
-/// \preview 
+/// \macro_image
 ///
 /// \date February 2018
 /// \author Danilo Piparo (CERN)
