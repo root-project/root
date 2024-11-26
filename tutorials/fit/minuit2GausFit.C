@@ -3,10 +3,12 @@
 /// \notebook -js
 /// Perform fits with different configurations using Minuit2
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_output
 /// \macro_code
 ///
+/// \date May 2022
 /// \author Lorenzo Moneta
 
 #include "TH1.h"

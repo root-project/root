@@ -11,10 +11,12 @@
 ///   root > .x fitCircle.C++(100000);  with ACLIC
 /// ~~~
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_output
 /// \macro_code
 ///
+/// \date January 2022
 /// \author Rene Brun
 
 #include "TCanvas.h"

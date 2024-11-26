@@ -29,10 +29,12 @@
 ///           .x TestBinomial.C+(100, 1000)
 /// ~~~
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_output
 /// \macro_code
 ///
+/// \date October 2023
 /// \author Rene Brun
 
 #include <TBinomialEfficiencyFitter.h>

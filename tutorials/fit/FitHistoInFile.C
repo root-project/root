@@ -5,9 +5,11 @@
 /// This example can be executed as:
 ///     root > .x FitHistoInFile.C
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 /// \macro_output
+/// \date January 2022
 /// \author Author E. von Toerne
 /// Based on FittingDemo.C by Rene Brun
 

@@ -10,10 +10,12 @@
 /// The TGraph object is created via the interpreter. The user must cast it
 /// to a TGraph*
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_output
 /// \macro_code
 ///
+/// \date January 2022
 /// \author Rene Brun
 
 #include <TCanvas.h>

@@ -9,10 +9,12 @@
 /// root>.x line3Dfit.C+
 /// ~~~
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_output
 /// \macro_code
 ///
+/// \date October 2023
 /// \author Lorenzo Moneta
 
 #include <TMath.h>

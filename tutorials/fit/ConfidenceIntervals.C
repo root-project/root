@@ -4,9 +4,11 @@
 /// Illustrates TVirtualFitter::GetConfidenceIntervals
 /// This method computes confidence intervals for the fitted function
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
+/// \date January 2022
 /// \author Rene Brun
 
 #include "TGraphErrors.h"

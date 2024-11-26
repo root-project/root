@@ -3,10 +3,12 @@
 /// \notebook
 /// Simple fitting example (1-d histogram with an interpreted function)
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_output
 /// \macro_code
 ///
+/// \date October 2023
 /// \author Rene Brun
 
 #include "TCanvas.h"

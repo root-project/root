@@ -13,10 +13,12 @@
 ##  of parameters must be given. In this particular case, the initial values
 ##  are taken from the result of the individual fits.
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
+## \preview 
 ## \macro_output
 ## \macro_code
 ##
+## \date January 2022
 ## \authors Jonas Rembser, Rene Brun (C++ version)
 
 import ROOT

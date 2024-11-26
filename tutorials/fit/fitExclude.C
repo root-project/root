@@ -3,10 +3,12 @@
 /// \notebook -js
 /// Illustrates how to fit excluding points in a given range.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_output
 /// \macro_code
 ///
+/// \date January 2022
 /// \author Rene Brun
 
 #include <TH1.h>

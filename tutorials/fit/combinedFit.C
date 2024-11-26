@@ -9,10 +9,12 @@
 ///
 /// N.B. this macro must be compiled with ACliC
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_output
 /// \macro_code
 ///
+/// \date January 2024
 /// \author Lorenzo Moneta
 
 #include <Fit/Fitter.h>
