@@ -687,6 +687,7 @@ TEST(REntry, Basics)
 
    auto e = model->CreateEntry();
    EXPECT_EQ(e->GetModelId(), model->GetModelId());
+   EXPECT_EQ(e->GetSchemaId(), model->GetSchemaId());
    for (const auto &v : *e) {
       EXPECT_STREQ("pt", v.GetField().GetFieldName().c_str());
    }
