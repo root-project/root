@@ -41,6 +41,7 @@ The following people have contributed to this new version:
 * The build options `mysql`, `odbc`, `pgsql` and `qt5web` have been deprecated. Please complain with root-dev@cern.ch should you still need one!
 * The build option `html` has been removed.
 * The ClassImp macro and derived macros have no effect now and will be deprecated in ROOT 6.38.
+* The `RooStats::HLFactory` class was deprecated will be removed in ROOT 6.38. It provided little advantage over using the RooWorkspace directly or any of the other higher-level frameworks that exist in the RooFit ecosystem.
 
 ## Python Interface
 
