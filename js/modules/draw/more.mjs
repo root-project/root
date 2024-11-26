@@ -1,7 +1,7 @@
 import { BIT, isFunc, clTLatex, clTMathText, clTAnnotation } from '../core.mjs';
 import { BasePainter, makeTranslate, DrawOptions } from '../base/BasePainter.mjs';
 import { addMoveHandler } from '../gui/utils.mjs';
-import { assignContextMenu, kToFront } from '../gui/menu.mjs';
+import { assignContextMenu } from '../gui/menu.mjs';
 
 
 /** @summary Draw TText
@@ -52,10 +52,9 @@ async function drawText() {
 
    const arg = this.textatt.createArg({ x: this.pos_x, y: this.pos_y, text: text.fTitle, latex: 0 });
 
-   if ((text._typename === clTLatex) || annot) {
+   if ((text._typename === clTLatex) || annot)
       arg.latex = 1;
-      fact = 0.9;
-   } else if (text._typename === clTMathText) {
+   else if (text._typename === clTMathText) {
       arg.latex = 2;
       fact = 0.8;
    }
@@ -66,7 +65,7 @@ async function drawText() {
          this.draw_g.append('svg:title').text(`link on ${text.fName}`);
    }
 
-   return this.startTextDrawingAsync(this.textatt.font, this.textatt.getSize(w, h, fact, 0.05))
+   return this.startTextDrawingAsync(this.textatt.font, this.textatt.getSize(w, h, fact /* , 0.05 */))
               .then(() => this.drawText(arg))
               .then(() => this.finishTextDrawing())
               .then(() => {
@@ -109,7 +108,7 @@ async function drawText() {
          };
       }
 
-      assignContextMenu(this, kToFront);
+      assignContextMenu(this);
 
       this.fillContextMenuItems = function(menu) {
          menu.add('Change text', () => menu.input('Enter new text', text.fTitle).then(t => {
@@ -207,7 +206,7 @@ function drawEllipse() {
       .call(this.lineatt.func)
       .call(this.fillatt.func);
 
-   assignContextMenu(this, kToFront);
+   assignContextMenu(this);
 
    addMoveHandler(this);
 
@@ -296,7 +295,7 @@ function drawMarker() {
           .call(this.markeratt.func);
    }
 
-   assignContextMenu(this, kToFront);
+   assignContextMenu(this);
 
    addMoveHandler(this);
 
@@ -342,7 +341,7 @@ function drawPolyMarker() {
           .call(this.markeratt.func);
    }
 
-   assignContextMenu(this, kToFront);
+   assignContextMenu(this);
 
    addMoveHandler(this);
 

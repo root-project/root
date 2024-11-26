@@ -186,9 +186,10 @@ class TRatioPlotPainter extends ObjectPainter {
             });
          }
 
-         return Promise.all(arr).then(() => {
-            return low_fp.zoom(up_fp.scale_xmin, up_fp.scale_xmax);
-         });
+         return Promise.all(arr)
+                       .then(() => low_fp.zoomSingle('x', up_fp.scale_xmin, up_fp.scale_xmax))
+                       .then(changed => { return changed ? true : low_p.redrawPad(); })
+                       .then(() => this);
       });
    }
 

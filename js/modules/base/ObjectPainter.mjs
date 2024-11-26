@@ -225,7 +225,8 @@ class ObjectPainter extends BasePainter {
      * @param {string} [opt] - option which will be used for redrawing
      * @protected */
    updateObject(obj /* , opt */) {
-      if (!this.matchObjectType(obj)) return false;
+      if (!this.matchObjectType(obj))
+         return false;
       Object.assign(this.getObject(), obj);
       return true;
    }

@@ -3,7 +3,7 @@ import { DrawOptions } from '../base/BasePainter.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
 import { ensureTCanvas } from '../gpad/TCanvasPainter.mjs';
 import { addMoveHandler } from '../gui/utils.mjs';
-import { assignContextMenu, kToFront } from '../gui/menu.mjs';
+import { assignContextMenu } from '../gui/menu.mjs';
 
 
 const kLineNDC = BIT(14);
@@ -111,7 +111,7 @@ class TLinePainter extends ObjectPainter {
       else {
          this.addExtras(elem);
          addMoveHandler(this);
-         assignContextMenu(this, kToFront);
+         assignContextMenu(this);
       }
 
       return this;

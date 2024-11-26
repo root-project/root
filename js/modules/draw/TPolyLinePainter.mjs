@@ -3,7 +3,7 @@ import { makeTranslate } from '../base/BasePainter.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
 import { ensureTCanvas } from '../gpad/TCanvasPainter.mjs';
 import { addMoveHandler } from '../gui/utils.mjs';
-import { assignContextMenu, kToFront } from '../gui/menu.mjs';
+import { assignContextMenu } from '../gui/menu.mjs';
 
 
 const kPolyLineNDC = BIT(14);
@@ -77,7 +77,7 @@ class TPolyLinePainter extends ObjectPainter {
                  .call(dofill ? () => {} : this.lineatt.func)
                  .call(this.fillatt.func);
 
-      assignContextMenu(this, kToFront);
+      assignContextMenu(this);
 
       addMoveHandler(this);
 

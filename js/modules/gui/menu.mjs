@@ -9,7 +9,8 @@ import { FontHandler, kArial } from '../base/FontHandler.mjs';
 import { kAxisLabels } from '../base/ObjectPainter.mjs';
 
 
-const kToFront = '__front__', sDfltName = 'root_ctx_menu', sDfltDlg = '_dialog',
+const kToFront = '__front__', kNoReorder = '__no_reorder',
+      sDfltName = 'root_ctx_menu', sDfltDlg = '_dialog',
       sSub = 'sub:', sEndsub = 'endsub:', sSeparator = 'separator', sHeader = 'header:';
 
 /**
@@ -453,7 +454,7 @@ class JSRootMenu {
    /** @summary Add line style menu
      * @private */
    addLineStyleMenu(name, value, set_func) {
-      this.sub(''+name, () => this.input('Enter line style id (1-solid)', value, 'int', 1, 11).then(val => {
+      this.sub(name, () => this.input('Enter line style id (1-solid)', value, 'int', 1, 11).then(val => {
          if (getSvgLineStyle(val)) set_func(val);
       }));
       for (let n = 1; n < 11; ++n) {
@@ -579,12 +580,14 @@ class JSRootMenu {
             if (pp) changeObjectMember(pp, 'fFrameLineWidth', arg);
             painter.interactiveRedraw(redraw_arg, `exec:SetLineWidth(${arg})`);
          });
-         this.addColorMenu('color', painter.lineatt.color, arg => {
-            painter.lineatt.change(arg);
-            changeObjectMember(painter, 'fLineColor', arg, true);
-            if (pp) changeObjectMember(pp, 'fFrameLineColor', arg, true);
-            painter.interactiveRedraw(redraw_arg, getColorExec(arg, 'SetLineColor'));
-         });
+         if (!painter.lineatt.nocolor) {
+            this.addColorMenu('color', painter.lineatt.color, arg => {
+               painter.lineatt.change(arg);
+               changeObjectMember(painter, 'fLineColor', arg, true);
+               if (pp) changeObjectMember(pp, 'fFrameLineColor', arg, true);
+               painter.interactiveRedraw(redraw_arg, getColorExec(arg, 'SetLineColor'));
+            });
+         }
          this.addLineStyleMenu('style', painter.lineatt.style, id => {
             painter.lineatt.change(undefined, undefined, id);
             changeObjectMember(painter, 'fLineStyle', id);
@@ -1634,10 +1637,12 @@ function showPainterMenu(evnt, painter, kind) {
 
    createMenu(evnt, painter).then(menu => {
       painter.fillContextMenu(menu);
-      if ((kind === kToFront) && isFunc(painter.bringToFront)) {
-         menu.add('Bring to front', () => painter.bringToFront(true));
+      if (kind === kNoReorder)
          kind = undefined;
-      }
+      else if (isFunc(painter.bringToFront))
+         menu.add('Bring to front', () => painter.bringToFront(true));
+      if (kind === kToFront)
+         kind = undefined;
       return painter.fillObjectExecMenu(menu, kind);
    }).then(menu => menu.show());
 }
@@ -1666,6 +1671,6 @@ function assignContextMenu(painter, kind) {
       painter.draw_g.on('contextmenu', settings.ContextMenu ? evnt => showPainterMenu(evnt, painter, kind) : null);
 }
 
-Object.assign(internals.jsroot, { createMenu, closeMenu, assignContextMenu, kToFront });
+Object.assign(internals.jsroot, { createMenu, closeMenu, assignContextMenu, kToFront, kNoReorder });
 
-export { createMenu, closeMenu, showPainterMenu, assignContextMenu, hasMenu, kToFront };
+export { createMenu, closeMenu, showPainterMenu, assignContextMenu, hasMenu, kToFront, kNoReorder };

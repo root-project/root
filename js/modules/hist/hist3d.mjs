@@ -2162,8 +2162,13 @@ function drawBinsSurf3D(painter, is_v7 = false) {
        else if (palette)
          color = palette.calcColor(lvl, levels.length);
        else {
-         color = histo.fFillColor > 1 ? painter.getColor(histo.fFillColor) : 'white';
-         if ((painter.options.Surf === 14) && (histo.fFillColor < 2)) color = painter.getColor(48);
+         const indx = painter.options.histoFillColor || histo.fFillColor;
+         if (painter.options.Surf === 13)
+            color = 'white';
+         else if (painter.options.Surf === 14)
+            color = indx > 1 ? painter.getColor(indx) : 'grey';
+         else
+            color = indx > 1 ? painter.getColor(indx) : 'white';
       }
 
       if (!color) color = 'white';

@@ -1,6 +1,6 @@
 import { create, settings, isNodeJs, isStr, btoa_func, clTAxis, clTPaletteAxis, clTImagePalette, getDocument } from '../core.mjs';
 import { toColor } from '../base/colors.mjs';
-import { assignContextMenu } from '../gui/menu.mjs';
+import { assignContextMenu, kNoReorder } from '../gui/menu.mjs';
 import { DrawOptions } from '../base/BasePainter.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
 import { TPavePainter } from '../hist/TPavePainter.mjs';
@@ -294,7 +294,7 @@ class TASImagePainter extends ObjectPainter {
                img.style('cursor', 'pointer');
          }
 
-         assignContextMenu(this);
+         assignContextMenu(this, kNoReorder);
 
          if (!fp || !res.can_zoom)
             return this;
@@ -307,7 +307,7 @@ class TASImagePainter extends ObjectPainter {
       });
    }
 
-   /** @summary Fill TASImage context */
+   /** @summary Fill TASImage context menu */
    fillContextMenuItems(menu) {
       const obj = this.getObject();
       if (obj) {
