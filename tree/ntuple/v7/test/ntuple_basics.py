@@ -15,7 +15,8 @@ class RNTupleBasics(unittest.TestCase):
         model = RNTupleModel.Create()
         model.MakeField["int"]("f")
         writer = RNTupleWriter.Recreate(model, "ntpl", "test_ntuple_py_write_read.root")
-        writer.Fill()
+        entry = writer.CreateEntry()
+        writer.Fill(entry)
         del writer
 
         reader = RNTupleReader.Open("ntpl", "test_ntuple_py_write_read.root")
