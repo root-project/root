@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_dataframe
 ## \notebook -draw
-## Configure a Dask connection and visualize the filling of a 1D and 2D
+## \preview  Configure a Dask connection and visualize the filling of a 1D and 2D
 ## histograms distributedly.
 ##
 ## This tutorial showcases the process of setting up real-time data representation 
@@ -11,7 +11,7 @@
 ## distributed computation progresses. 
 ##
 ## \macro_code
-## \macro_image
+## \macro_image (tcanvas_js)
 ##
 ## \date August 2023
 ## \author Silia Taider

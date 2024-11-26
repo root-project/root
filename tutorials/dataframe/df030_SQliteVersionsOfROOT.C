@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook -js
-/// Read an sqlite3 databases with RDataFrame and plot statistics on ROOT downloads.
+/// \preview  Read an sqlite3 databases with RDataFrame and plot statistics on ROOT downloads.
 ///
 /// Plot the downloads of different ROOT versions reading a remote sqlite3 file with RSqliteDS.
 /// Then a TH1F histogram is created and filled
@@ -10,7 +10,7 @@
 /// The histogram shows the usage of the ROOT development version.
 ///
 /// \macro_code
-/// \macro_image
+/// \macro_image (tcanvas_js)
 ///
 /// \date August 2018
 /// \author Alexandra-Maria Dobrescu

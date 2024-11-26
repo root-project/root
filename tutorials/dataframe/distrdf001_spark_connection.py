@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_dataframe
 ## \notebook -draw
-## Configure a Spark connection and fill two histograms distributedly.
+## \preview  Configure a Spark connection and fill two histograms distributedly.
 ##
 ## This tutorial shows the ingredients needed to setup the connection to a Spark
 ## cluster, namely a SparkConf object holding configuration parameters and a
@@ -11,7 +11,7 @@
 ## the created columns in the dataset.
 ##
 ## \macro_code
-## \macro_image
+## \macro_image (tcanvas_js)
 ##
 ## \date March 2021
 ## \author Vincenzo Eduardo Padulano

@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_dataframe
 ## \notebook -draw
-## Configure a Dask connection and fill two histograms distributedly.
+## \preview  Configure a Dask connection and fill two histograms distributedly.
 ##
 ## This tutorial shows the ingredients needed to setup the connection to a Dask
 ## cluster (e.g. a `LocalCluster` for a single machine). After this initial
@@ -11,7 +11,7 @@
 ## http://distributed.dask.org/en/stable .
 ##
 ## \macro_code
-## \macro_image
+## \macro_image (tcanvas_js)
 ##
 ## \date February 2022
 ## \author Vincenzo Eduardo Padulano

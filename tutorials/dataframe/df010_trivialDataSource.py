@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_dataframe
 ## \notebook -draw
-## Use the "trivial data source", an example data source implementation.
+## \preview  Use the "trivial data source", an example data source implementation.
 ##
 ## This tutorial illustrates how use the RDataFrame in combination with a
 ## RDataSource. In this case we use a RTrivialDS, which is nothing more
@@ -11,6 +11,7 @@
 ## Note that RTrivialDS is only a demo data source implementation and superior alternatives
 ## typically exist for production use (e.g. constructing an empty RDataFrame as `RDataFrame(nEntries)`).
 ##
+## \macro_image (tcanvas_js)
 ## \macro_code
 ##
 ## \date September 2017

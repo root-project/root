@@ -1,10 +1,10 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook
-/// Show how to express ROOT's standard H1 analysis with RDataFrame.
+/// \preview  Show how to express ROOT's standard H1 analysis with RDataFrame.
 ///
 /// \macro_code
-/// \macro_image
+/// \macro_image (tcanvas_js)
 ///
 /// \date December 2016
 /// \authors Axel Naumann, Danilo Piparo (CERN)

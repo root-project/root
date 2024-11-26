@@ -1,13 +1,13 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook -draw
-/// Using the generic Fill action.
+/// \preview  Using the generic Fill action.
 ///
 /// This tutorial shows how to fill any object the class of which exposes a
 /// `Fill` method.
 ///
 /// \macro_code
-/// \macro_image
+/// \macro_image (tcanvas_js)
 ///
 /// \date March 2017
 /// \author Danilo Piparo (CERN)

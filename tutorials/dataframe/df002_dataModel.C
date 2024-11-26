@@ -1,13 +1,13 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook -draw
-/// Show how to work with non-flat data models, e.g. vectors of tracks.
+/// \preview  Show how to work with non-flat data models, e.g. vectors of tracks.
 ///
 /// This tutorial shows the possibility to use data models which are more
 /// complex than flat ntuples with RDataFrame.
 ///
 /// \macro_code
-/// \macro_image
+/// \macro_image (tcanvas_js)
 ///
 /// \date December 2016
 /// \author Danilo Piparo (CERN)

@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_dataframe
 ## \notebook -draw
-## Cache a processed RDataFrame in memory for further usage.
+## \preview  Cache a processed RDataFrame in memory for further usage.
 ##
 ## This tutorial shows how the content of a data frame can be cached in memory
 ## in form of a dataframe. The content of the columns is stored in memory in
@@ -18,7 +18,7 @@
 ## only when the event loop is triggered on it.
 ##
 ## \macro_code
-## \macro_image
+## \macro_image (tcanvas_js)
 ##
 ## \date June 2018
 ## \author Danilo Piparo (CERN)
