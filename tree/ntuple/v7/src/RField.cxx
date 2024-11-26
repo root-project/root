@@ -844,18 +844,14 @@ ROOT::Experimental::ROptionalField::ROptionalField(std::string_view fieldName, s
       fTraits |= kTraitTriviallyDestructible;
 }
 
-std::pair<void *, bool *> ROOT::Experimental::ROptionalField::GetValueAndEngagementPtrs(void *optionalPtr) const
+bool *ROOT::Experimental::ROptionalField::GetEngagementPtr(void *optionalPtr) const
 {
-   void *value = optionalPtr;
-   bool *engagement =
-      reinterpret_cast<bool *>(reinterpret_cast<unsigned char *>(optionalPtr) + fSubFields[0]->GetValueSize());
-   return {value, engagement};
+   return reinterpret_cast<bool *>(reinterpret_cast<unsigned char *>(optionalPtr) + fSubFields[0]->GetValueSize());
 }
 
-std::pair<const void *, const bool *>
-ROOT::Experimental::ROptionalField::GetValueAndEngagementPtrs(const void *optionalPtr) const
+const bool *ROOT::Experimental::ROptionalField::GetEngagementPtr(const void *optionalPtr) const
 {
-   return GetValueAndEngagementPtrs(const_cast<void *>(optionalPtr));
+   return GetEngagementPtr(const_cast<void *>(optionalPtr));
 }
 
 std::unique_ptr<ROOT::Experimental::RFieldBase>
@@ -867,9 +863,8 @@ ROOT::Experimental::ROptionalField::CloneImpl(std::string_view newName) const
 
 std::size_t ROOT::Experimental::ROptionalField::AppendImpl(const void *from)
 {
-   const auto [valuePtr, engagementPtr] = GetValueAndEngagementPtrs(from);
-   if (*engagementPtr) {
-      return AppendValue(valuePtr);
+   if (*GetEngagementPtr(from)) {
+      return AppendValue(from);
    } else {
       return AppendNull();
    }
@@ -877,40 +872,48 @@ std::size_t ROOT::Experimental::ROptionalField::AppendImpl(const void *from)
 
 void ROOT::Experimental::ROptionalField::ReadGlobalImpl(NTupleSize_t globalIndex, void *to)
 {
-   auto [valuePtr, engagementPtr] = GetValueAndEngagementPtrs(to);
+   auto engagementPtr = GetEngagementPtr(to);
    auto itemIndex = GetItemIndex(globalIndex);
    if (itemIndex.GetIndex() == kInvalidClusterIndex) {
+      if (*engagementPtr && !(fSubFields[0]->GetTraits() & kTraitTriviallyDestructible))
+         fItemDeleter->operator()(to, true /* dtorOnly */);
       *engagementPtr = false;
    } else {
-      CallReadOn(*fSubFields[0], itemIndex, valuePtr);
+      if (!(*engagementPtr) && !(fSubFields[0]->GetTraits() & kTraitTriviallyConstructible))
+         CallConstructValueOn(*fSubFields[0], to);
+      CallReadOn(*fSubFields[0], itemIndex, to);
       *engagementPtr = true;
    }
 }
 
 void ROOT::Experimental::ROptionalField::ConstructValue(void *where) const
 {
-   auto [valuePtr, engagementPtr] = GetValueAndEngagementPtrs(where);
-   CallConstructValueOn(*fSubFields[0], valuePtr);
-   *engagementPtr = false;
+   *GetEngagementPtr(where) = false;
 }
 
 void ROOT::Experimental::ROptionalField::ROptionalDeleter::operator()(void *objPtr, bool dtorOnly)
 {
-   fItemDeleter->operator()(objPtr, true /* dtorOnly */);
+   if (fItemDeleter) {
+      auto engagementPtr = reinterpret_cast<bool *>(reinterpret_cast<unsigned char *>(objPtr) + fEngagementPtrOffset);
+      if (*engagementPtr)
+         fItemDeleter->operator()(objPtr, true /* dtorOnly */);
+   }
    RDeleter::operator()(objPtr, dtorOnly);
 }
 
 std::unique_ptr<ROOT::Experimental::RFieldBase::RDeleter> ROOT::Experimental::ROptionalField::GetDeleter() const
 {
-   return std::make_unique<ROptionalDeleter>(GetDeleterOf(*fSubFields[0]));
+   return std::make_unique<ROptionalDeleter>(
+      (fSubFields[0]->GetTraits() & kTraitTriviallyDestructible) ? nullptr : GetDeleterOf(*fSubFields[0]),
+      fSubFields[0]->GetValueSize());
 }
 
 std::vector<ROOT::Experimental::RFieldBase::RValue>
 ROOT::Experimental::ROptionalField::SplitValue(const RValue &value) const
 {
    std::vector<RValue> result;
-   const auto [valuePtr, engagementPtr] = GetValueAndEngagementPtrs(value.GetPtr<void>().get());
-   if (*engagementPtr) {
+   const auto valuePtr = value.GetPtr<void>().get();
+   if (*GetEngagementPtr(valuePtr)) {
       result.emplace_back(fSubFields[0]->BindValue(std::shared_ptr<void>(value.GetPtr<void>(), valuePtr)));
    }
    return result;

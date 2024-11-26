@@ -194,20 +194,22 @@ public:
 class ROptionalField : public RNullableField {
    class ROptionalDeleter : public RDeleter {
    private:
-      std::unique_ptr<RDeleter> fItemDeleter;
+      std::unique_ptr<RDeleter> fItemDeleter; // nullptr for trivially destructible items
+      std::size_t fEngagementPtrOffset = 0;
 
    public:
-      explicit ROptionalDeleter(std::unique_ptr<RDeleter> itemDeleter) : fItemDeleter(std::move(itemDeleter)) {}
+      ROptionalDeleter(std::unique_ptr<RDeleter> itemDeleter, std::size_t engagementPtrOffset)
+         : fItemDeleter(std::move(itemDeleter)), fEngagementPtrOffset(engagementPtrOffset) {}
       void operator()(void *objPtr, bool dtorOnly) final;
    };
 
    std::unique_ptr<RDeleter> fItemDeleter;
 
-   /// Given a pointer to an std::optional<T> in `optionalPtr`, extract a pointer to the value T* and a pointer
-   /// to the engagement boolean. Assumes that an std::optional<T> is stored as
-   /// `struct { T t; bool engagement; };`
-   std::pair<const void *, const bool *> GetValueAndEngagementPtrs(const void *optionalPtr) const;
-   std::pair<void *, bool *> GetValueAndEngagementPtrs(void *optionalPtr) const;
+   /// Given a pointer to an std::optional<T> in `optionalPtr`, extract a pointer to the engagement boolean.
+   /// Assumes that an std::optional<T> is stored as `struct { T t; bool engagement; };`
+   const bool *GetEngagementPtr(const void *optionalPtr) const;
+   bool *GetEngagementPtr(void *optionalPtr) const;
+   std::size_t GetEngagementPtrOffset() const;
 
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
