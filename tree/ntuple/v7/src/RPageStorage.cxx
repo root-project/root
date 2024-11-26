@@ -343,6 +343,15 @@ void ROOT::Experimental::Internal::RPageSource::UpdateLastUsedCluster(Descriptor
       fPagePool.Evict(itr->second);
       itr = fPreloadedClusters.erase(itr);
    }
+   std::size_t poolWindow = 0;
+   while ((itr != fPreloadedClusters.end()) && (poolWindow < 2 * fOptions.GetClusterBunchSize())) {
+      ++itr;
+      ++poolWindow;
+   }
+   while (itr != fPreloadedClusters.end()) {
+      fPagePool.Evict(itr->second);
+      itr = fPreloadedClusters.erase(itr);
+   }
 
    fLastUsedCluster = clusterId;
 }
