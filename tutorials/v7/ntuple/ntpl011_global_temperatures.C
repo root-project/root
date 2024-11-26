@@ -17,6 +17,8 @@
 // Functionality and interface are still subject to changes.
 // During ROOT setup, configure the following flags:
 // `-DCMAKE_CXX_STANDARD=17 -Droot7=ON -Dwebgui=ON`
+// When running, make sure the ROOT web-based canvas is enabled,
+// e.g., by starting "root --web=on".
 
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RNTupleDS.hxx>
