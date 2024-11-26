@@ -1,10 +1,10 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook -js
-## Implementing the Barlow-Beeston method for taking into account the statistical
+## \preview  Implementing the Barlow-Beeston method for taking into account the statistical
 ## uncertainty of a Monte-Carlo fit template.
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
 ## \macro_code
 ## \macro_output
 ##

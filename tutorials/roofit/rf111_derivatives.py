@@ -1,13 +1,13 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## Basic functionality: numerical 1st, and 3rd order derivatives w.r.t. observables and parameters
+## \preview  Basic functionality: numerical 1st, and 3rd order derivatives w.r.t. observables and parameters
 ##
 ## ```
 ## pdf = gauss(x,m,s)
 ## ```
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
 ## \macro_code
 ## \macro_output
 ##

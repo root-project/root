@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-/// Likelihood and minimization: Recover from regions where the function is not defined.
+/// \preview  Likelihood and minimization: Recover from regions where the function is not defined.
 ///
 /// We demonstrate improved recovery from disallowed parameters. For this, we use a polynomial PDF of the form
 /// \f[
@@ -23,6 +23,7 @@
 /// before ROOT 6.24. Positive values activate the recovery. Values between 1. and 10. were found to be a
 /// good default. If no argument is passed, RooFit uses 10.
 ///
+/// \macro_image (tcanvas_js)
 /// \macro_code
 /// \macro_output
 ///

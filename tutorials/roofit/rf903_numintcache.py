@@ -1,9 +1,9 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## Numeric algorithm tuning: caching of slow numeric integrals and parameterizations of slow numeric integrals
+## \preview  Numeric algorithm tuning: caching of slow numeric integrals and parameterizations of slow numeric integrals
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
 ## \macro_code
 ## \macro_output
 ##

@@ -1,11 +1,11 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## Multidimensional models: simple uncorrelated multi-dimensional pdfs
+## \preview  Multidimensional models: simple uncorrelated multi-dimensional pdfs
 ##
 ## `pdf = gauss(x,mx,sx) * gauss(y,my,sy)`
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
 ## \macro_code
 ## \macro_output
 ##

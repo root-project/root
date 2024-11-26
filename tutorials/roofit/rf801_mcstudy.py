@@ -1,9 +1,9 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## Validation and MC studies: toy Monte Carlo study that perform cycles of event generation and fitting
+## \preview  Validation and MC studies: toy Monte Carlo study that perform cycles of event generation and fitting
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
 ## \macro_code
 ## \macro_output
 ##

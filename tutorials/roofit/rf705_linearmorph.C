@@ -1,9 +1,9 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook
-/// Special pdf's: linear interpolation between pdf shapes using the 'Alex Read' algorithm
+/// \preview  Special pdf's: linear interpolation between pdf shapes using the 'Alex Read' algorithm
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 /// \macro_output
 ///

@@ -1,8 +1,9 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## Multidimensional models: usage of full pdf with per-event errors
+## \preview  Multidimensional models: usage of full pdf with per-event errors
 ##
+## \macro_image (tcanvas_js)
 ## \macro_code
 ##
 ## \date February 2018

@@ -1,14 +1,14 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-/// Multidimensional models: working with parametrized ranges in a fit.
+/// \preview  Multidimensional models: working with parametrized ranges in a fit.
 /// This an example of a fit with an acceptance that changes per-event
 ///
 /// `pdf = exp(-t/tau)` with `t[tmin,5]`
 ///
 /// where `t` and `tmin` are both observables in the dataset
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 /// \macro_output
 ///

@@ -5,7 +5,7 @@
 ##
 ## Using RooMCStudy on models with constraints
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
 ## \macro_code
 ## \macro_output
 ##

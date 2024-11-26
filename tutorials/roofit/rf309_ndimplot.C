@@ -1,9 +1,9 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook
-/// Multidimensional models: making 2/3 dimensional plots of pdfs and datasets
+/// \preview  Multidimensional models: making 2/3 dimensional plots of pdfs and datasets
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 /// \macro_output
 ///

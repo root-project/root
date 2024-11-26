@@ -1,11 +1,11 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## 'DATA AND CATEGORIES' RooFit tutorial macro #403
+## \preview  'DATA AND CATEGORIES' RooFit tutorial macro #403
 ##
 ## Using weights in unbinned datasets
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
 ## \macro_code
 ## \macro_output
 ##

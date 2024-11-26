@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## Use of mixture models in RooFit.
+## \preview  Use of mixture models in RooFit.
 ##
 ## This tutorial shows, how to use mixture models for Likelihood Calculation in ROOT. Instead of directly
 ## calculating the likelihood we use simulation based inference (SBI) as shown in tutorial 'rf615_simulation_based_inference.py'.
@@ -26,7 +26,7 @@
 ##
 ## If you wish to see an analysis done with template histograms see 'hf001_example.py'.
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
 ## \macro_code
 ## \macro_output
 ##

@@ -1,13 +1,13 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## Addition and convolution: composite pdf with signal and background component
+## \preview  Addition and convolution: composite pdf with signal and background component
 ##
 ## ```
 ## pdf = f_bkg * bkg(x,a0,a1) + (1-fbkg) * (f_sig1 * sig1(x,m,s1 + (1-f_sig1) * sig2(x,m,s2)))
 ## ```
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
 ## \macro_code
 ## \macro_output
 ##

@@ -1,10 +1,10 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook
-/// Multidimensional models: normalization and integration of pdfs, construction of
+/// \preview  Multidimensional models: normalization and integration of pdfs, construction of
 /// cumulative distribution functions from pdfs in two dimensions
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 /// \macro_output
 ///

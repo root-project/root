@@ -1,13 +1,14 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-/// Extended maximum likelihood fit in multiple ranges.
+/// \preview  Extended maximum likelihood fit in multiple ranges.
 ///
 ///  When an extended pdf and multiple ranges are used, the
 ///  RooExtendPdf cannot correctly interpret the coefficients
 ///  used for extension.
 ///  This can be solved by using a RooAddPdf for extending the model.
 ///
+/// \macro_image (tcanvas_js)
 /// \macro_code
 /// \macro_output
 ///

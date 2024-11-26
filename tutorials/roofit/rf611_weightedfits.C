@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-/// Likelihood and minimization: Parameter uncertainties for weighted unbinned ML fits
+/// \preview  Likelihood and minimization: Parameter uncertainties for weighted unbinned ML fits
 ///
 /// ## Parameter uncertainties for weighted unbinned ML fits
 ///
@@ -51,7 +51,7 @@
 /// its uncertainty for pseudoexperiment number i. If the fit is unbiased and the parameter uncertainties are estimated
 /// correctly, the pull distribution should be a Gaussian centered around zero with a width of one.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 /// \macro_output
 ///

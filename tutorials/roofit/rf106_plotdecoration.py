@@ -1,12 +1,13 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## Basic functionality: adding boxes with parameters to RooPlots and decorating with arrows, etc...
+## \preview  Basic functionality: adding boxes with parameters to RooPlots and decorating with arrows, etc...
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
 ## \macro_code
 ## \macro_output
 ##
+## \date June 2023
 ## \authors Clemens Lange, Wouter Verkerke (C++ version)
 
 import ROOT

@@ -1,12 +1,12 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-/// Special pdf's: unbinned maximum likelihood fit of an efficiency eff(x) function
+/// \preview  Special pdf's: unbinned maximum likelihood fit of an efficiency eff(x) function
 ///
 /// to a dataset D(x,cut), where cut is a category encoding a selection, of which the
 /// efficiency as function of x should be described by eff(x)
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 /// \macro_output
 ///

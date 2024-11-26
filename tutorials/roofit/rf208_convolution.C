@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-/// Addition and convolution: one-dimensional numeric convolution
+/// \preview  Addition and convolution: one-dimensional numeric convolution
 ///
 /// ```
 /// pdf = landau(t) (x) gauss(t)
@@ -9,7 +9,7 @@
 ///
 /// This tutorial requires FFT3 to be enabled.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 /// \macro_output
 ///

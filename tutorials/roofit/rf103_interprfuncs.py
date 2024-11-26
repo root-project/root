@@ -1,9 +1,9 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## Basic functionality: interpreted functions and pdfs
+## \preview  Basic functionality: interpreted functions and pdfs
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
 ## \macro_code
 ## \macro_output
 ##

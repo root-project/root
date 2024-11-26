@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## Convolution in cyclical angular observables theta, and
+## \preview  Convolution in cyclical angular observables theta, and
 ## construction of p.d.f in terms of transformed angular
 ## coordinates, e.g. cos(theta), the convolution
 ## is performed in theta rather than cos(theta)
@@ -11,7 +11,7 @@
 ## pdf(theta)    = ROOT.T(theta)          (x) gauss(theta)
 ## pdf(cosTheta) = ROOT.T(acos(cosTheta)) (x) gauss(acos(cosTheta))
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
 ## \macro_code
 ## \macro_output
 ##

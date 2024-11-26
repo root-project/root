@@ -1,9 +1,9 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## Special pdf's: histogram based pdfs and functions
+## \preview  Special pdf's: histogram based pdfs and functions
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
 ## \macro_code
 ## \macro_output
 ##

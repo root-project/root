@@ -1,10 +1,10 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-/// Multidimensional models: working with parametrized ranges to define non-rectangular
+/// \preview  Multidimensional models: working with parametrized ranges to define non-rectangular
 /// regions for fitting and integration
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 /// \macro_output
 ///

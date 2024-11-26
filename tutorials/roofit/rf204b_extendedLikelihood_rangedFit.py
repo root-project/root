@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook -nodraw
-## This macro demonstrates how to set up a fit in two ranges for plain
+## \preview  This macro demonstrates how to set up a fit in two ranges for plain
 ## likelihoods and extended likelihoods.
 ##
 ##  ### 1. Shape fits (plain likelihood)
@@ -44,6 +44,7 @@
 ##  \macro_code
 ##  \macro_output
 ##
+## \date September 2023
 ## \authors Stephan Hageboeck, Wouter Verkerke
 
 import ROOT

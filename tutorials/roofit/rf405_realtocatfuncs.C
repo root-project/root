@@ -1,9 +1,9 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-/// Data and categories: demonstration of real-->discrete mapping functions
+/// \preview  Data and categories: demonstration of real-->discrete mapping functions
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 /// \macro_output
 ///

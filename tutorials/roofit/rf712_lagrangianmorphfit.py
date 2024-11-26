@@ -1,9 +1,9 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook -js
-## Performing a simple fit with RooLagrangianMorphFunc
+## \preview  Performing a simple fit with RooLagrangianMorphFunc
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
 ## \macro_code
 ## \macro_output
 ##

@@ -1,10 +1,10 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-/// Organisation and simultaneous fits: using simultaneous pdfs to describe simultaneous
+/// \preview  Organisation and simultaneous fits: using simultaneous pdfs to describe simultaneous
 /// fits to multiple datasets
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 /// \macro_output
 ///

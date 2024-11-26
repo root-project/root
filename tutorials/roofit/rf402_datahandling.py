@@ -1,9 +1,9 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## Data and categories: tools for manipulation of (un)binned datasets
+## \preview  Data and categories: tools for manipulation of (un)binned datasets
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
 ## \macro_code
 ## \macro_output
 ##

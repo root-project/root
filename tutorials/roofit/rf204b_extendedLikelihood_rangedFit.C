@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
-/// This macro demonstrates how to set up a fit in two ranges for plain
+/// \preview  This macro demonstrates how to set up a fit in two ranges for plain
 /// likelihoods and extended likelihoods.
 ///
 /// ### 1. Shape fits (plain likelihood)
@@ -40,10 +40,11 @@
 /// This requires that the likelihood model is extended using RooAddPdf in the
 /// form SumPdf = Nsig * sigPdf + Nbkg * bkgPdf.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 /// \macro_output
 ///
+/// \date August 2020
 /// \authors Stephan Hageboeck, Wouter Verkerke
 
 #include "RooRealVar.h"

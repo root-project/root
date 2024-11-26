@@ -1,9 +1,9 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-/// Data and categories: using weights in unbinned datasets
+/// \preview  Data and categories: using weights in unbinned datasets
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 /// \macro_output
 ///

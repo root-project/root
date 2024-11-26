@@ -1,10 +1,10 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook
-/// Multidimensional models: utility functions classes available for use in tailoring of
+/// \preview  Multidimensional models: utility functions classes available for use in tailoring of
 /// composite (multidimensional) pdfs
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 /// \macro_output
 ///

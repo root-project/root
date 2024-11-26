@@ -1,11 +1,11 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-/// Multidimensional models: use of tailored pdf as conditional pdfs.s
+/// \preview  Multidimensional models: use of tailored pdf as conditional pdfs.s
 ///
 /// `pdf = gauss(x,f(y),sx | y )` with `f(y) = a0 + a1*y`
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 /// \macro_output
 ///

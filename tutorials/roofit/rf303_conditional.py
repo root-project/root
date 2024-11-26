@@ -1,12 +1,12 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #303
+## \preview  'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #303
 ## Use of tailored p.d.f as conditional p.d.fs.s
 ##
 ## pdf = gauss(x,f(y),sx | y ) with f(y) = a0 + a1*y
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
 ## \macro_code
 ## \macro_output
 ##

@@ -1,11 +1,11 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## 'BASIC FUNCTIONALITY' RooFit tutorial macro #109
+## \preview  'BASIC FUNCTIONALITY' RooFit tutorial macro #109
 ## Calculating chi^2 from histograms and curves in ROOT.RooPlots,
 ## making histogram of residual and pull distributions
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
 ## \macro_code
 ## \macro_output
 ##

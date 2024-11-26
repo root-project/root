@@ -1,9 +1,9 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## Addition and convolution: fitting and plotting in sub ranges
+## \preview  Addition and convolution: fitting and plotting in sub ranges
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
 ## \macro_code
 ## \macro_output
 ##

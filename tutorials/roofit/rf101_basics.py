@@ -1,9 +1,9 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## This tutorial illustrates the basic features of RooFit.
+## \preview  This tutorial illustrates the basic features of RooFit.
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
 ## \macro_code
 ## \macro_output
 ##

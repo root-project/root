@@ -1,11 +1,11 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## 'LIKELIHOOD AND MINIMIZATION' RooFit tutorial macro #605
+## \preview  'LIKELIHOOD AND MINIMIZATION' RooFit tutorial macro #605
 ##
 ## Working with the profile likelihood estimator
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
 ## \macro_code
 ## \macro_output
 ##

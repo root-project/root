@@ -1,9 +1,9 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-/// Basic functionality: importing data from ROOT TTrees and THx histograms.
+/// \preview  Basic functionality: importing data from ROOT TTrees and THx histograms.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 /// \macro_output
 ///

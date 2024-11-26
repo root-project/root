@@ -1,10 +1,10 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## Likelihood and minimization: representing the parabolic approximation of the fit as a
+## \preview  Likelihood and minimization: representing the parabolic approximation of the fit as a
 ## multi-variate Gaussian on the parameters of the fitted pdf
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
 ## \macro_code
 ## \macro_output
 ##
