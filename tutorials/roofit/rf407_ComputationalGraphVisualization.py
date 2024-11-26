@@ -75,21 +75,6 @@ initParams = params.snapshot()
 data = model.generate({x}, 1000)
 model.fitTo(data, PrintLevel=-1)
 
-# Print composite tree in ASCII
-# -----------------------------------------------------------
-
-# Print tree to stdout
-model.Print("t")
-
-# Print tree to file
-model.printCompactTree("", "rf206_asciitree.txt")
-
-# Draw composite tree graphically
-# -------------------------------------------------------------
-
-# Print GraphViz DOT file with representation of tree
-model.graphVizTree("rf206_model.dot")
-
 # Print LateX table of parameters of pdf
 # --------------------------------------------------------------------------
 
