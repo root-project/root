@@ -113,20 +113,20 @@ void ROOT::Experimental::RNTupleWriter::CommitClusterGroup()
 
 ROOT::Experimental::RNTupleModel &ROOT::Experimental::RNTupleWriter::GetUpdatableModel()
 {
-   if (fFillContext.fModel->IsRetired()) {
-      throw RException(R__FAIL("invalid attempt to update retired model"));
+   if (fFillContext.fModel->IsExpired()) {
+      throw RException(R__FAIL("invalid attempt to update expired model"));
    }
    return *fFillContext.fModel;
 }
 
 void ROOT::Experimental::RNTupleWriter::CommitDataset()
 {
-   if (fFillContext.GetModel().IsRetired())
+   if (fFillContext.GetModel().IsExpired())
       return;
 
    CommitCluster(true /* commitClusterGroup */);
    fFillContext.fSink->CommitDataset();
-   fFillContext.fModel->Retire();
+   fFillContext.fModel->Expire();
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleWriter>

@@ -122,7 +122,7 @@ public:
       if (commitClusterGroup)
          CommitClusterGroup();
    }
-   /// Closes the underlying file (page sink) and retires the model. Automatically called on destruct.
+   /// Closes the underlying file (page sink) and expires the model. Automatically called on destruct.
    /// Once the dataset is committed, calls to Fill(), [Commit|Flush]Cluster(), FlushColumns(), CreateEntry(),
    /// and model updating fail.
    void CommitDataset();

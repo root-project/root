@@ -35,8 +35,8 @@ std::uint64_t GetNewModelId()
 ROOT::Experimental::RFieldZero &
 ROOT::Experimental::Internal::GetFieldZeroOfModel(ROOT::Experimental::RNTupleModel &model)
 {
-   if (model.IsRetired()) {
-      throw RException(R__FAIL("invalid use of retired model"));
+   if (model.IsExpired()) {
+      throw RException(R__FAIL("invalid use of expired model"));
    }
    return *model.fFieldZero;
 }
@@ -44,8 +44,8 @@ ROOT::Experimental::Internal::GetFieldZeroOfModel(ROOT::Experimental::RNTupleMod
 ROOT::Experimental::Internal::RProjectedFields &
 ROOT::Experimental::Internal::GetProjectedFieldsOfModel(ROOT::Experimental::RNTupleModel &model)
 {
-   if (model.IsRetired()) {
-      throw RException(R__FAIL("invalid use of retired model"));
+   if (model.IsExpired()) {
+      throw RException(R__FAIL("invalid use of expired model"));
    }
    return *model.fProjectedFields;
 }
@@ -280,7 +280,7 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleMod
    } else {
       cloneModel->fSchemaId = cloneModel->fModelId;
    }
-   cloneModel->fModelState = (fModelState == EState::kRetired) ? EState::kFrozen : fModelState;
+   cloneModel->fModelState = (fModelState == EState::kExpired) ? EState::kFrozen : fModelState;
    cloneModel->fFieldNames = fFieldNames;
    cloneModel->fDescription = fDescription;
    cloneModel->fProjectedFields = fProjectedFields->Clone(*cloneModel);
@@ -450,7 +450,7 @@ std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RNTupleModel::Cr
 {
    switch (fModelState) {
    case EState::kBuilding: throw RException(R__FAIL("invalid attempt to create entry of unfrozen model"));
-   case EState::kRetired: throw RException(R__FAIL("invalid attempt to create entry of retired model"));
+   case EState::kExpired: throw RException(R__FAIL("invalid attempt to create entry of expired model"));
    case EState::kFrozen: break;
    }
 
@@ -468,7 +468,7 @@ std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RNTupleModel::Cr
 {
    switch (fModelState) {
    case EState::kBuilding: throw RException(R__FAIL("invalid attempt to create entry of unfrozen model"));
-   case EState::kRetired: throw RException(R__FAIL("invalid attempt to create entry of retired model"));
+   case EState::kExpired: throw RException(R__FAIL("invalid attempt to create entry of expired model"));
    case EState::kFrozen: break;
    }
 
@@ -498,7 +498,7 @@ ROOT::Experimental::RFieldBase::RBulk ROOT::Experimental::RNTupleModel::CreateBu
 {
    switch (fModelState) {
    case EState::kBuilding: throw RException(R__FAIL("invalid attempt to create bulk of unfrozen model"));
-   case EState::kRetired: throw RException(R__FAIL("invalid attempt to create bulk of retired model"));
+   case EState::kExpired: throw RException(R__FAIL("invalid attempt to create bulk of expired model"));
    case EState::kFrozen: break;
    }
 
@@ -508,24 +508,24 @@ ROOT::Experimental::RFieldBase::RBulk ROOT::Experimental::RNTupleModel::CreateBu
    return f->CreateBulk();
 }
 
-void ROOT::Experimental::RNTupleModel::Retire()
+void ROOT::Experimental::RNTupleModel::Expire()
 {
    switch (fModelState) {
-   case EState::kRetired: return;
-   case EState::kBuilding: throw RException(R__FAIL("invalid attempt to retire unfrozen model"));
+   case EState::kExpired: return;
+   case EState::kBuilding: throw RException(R__FAIL("invalid attempt to expire unfrozen model"));
    case EState::kFrozen: break;
    }
 
    // Ensure that Fill() does not work anymore
    fModelId = 0;
-   fModelState = EState::kRetired;
+   fModelState = EState::kExpired;
 }
 
 void ROOT::Experimental::RNTupleModel::Unfreeze()
 {
    switch (fModelState) {
    case EState::kBuilding: return;
-   case EState::kRetired: throw RException(R__FAIL("invalid attempt to unfreeze retired model"));
+   case EState::kExpired: throw RException(R__FAIL("invalid attempt to unfreeze expired model"));
    case EState::kFrozen: break;
    }
 
@@ -540,8 +540,8 @@ void ROOT::Experimental::RNTupleModel::Unfreeze()
 
 void ROOT::Experimental::RNTupleModel::Freeze()
 {
-   if (fModelState == EState::kRetired)
-      throw RException(R__FAIL("invalid attempt to freeze retired model"));
+   if (fModelState == EState::kExpired)
+      throw RException(R__FAIL("invalid attempt to freeze expired model"));
 
    fModelState = EState::kFrozen;
 }
