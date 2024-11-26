@@ -115,12 +115,21 @@ def _TDirectory_WriteObject(self, obj, *args):
     return self.WriteObjectAny(obj, type(obj).__cpp_name__, *args)
 
 
+def _ipython_key_completions_(self):
+    r"""
+    Support tab completion for `__getitem__`, suggesting the names of all
+    objects in the file.
+    """
+    return [k.GetName() for k in self.GetListOfKeys()]
+
+
 def pythonize_tdirectory():
     klass = cppyy.gbl.TDirectory
     klass.__getitem__ = _TDirectory_getitem
     klass.__getattr__ = _TDirectory_getattr
     klass._WriteObject = klass.WriteObject
     klass.WriteObject = _TDirectory_WriteObject
+    klass._ipython_key_completions_ = _ipython_key_completions_
 
 
 # Instant pythonization (executed at `import ROOT` time), no need of a

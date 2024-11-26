@@ -110,6 +110,13 @@ class RooWorkspace(object):
             raise AttributeError('Resetting the "' + name + '" attribute of a RooWorkspace is not allowed!')
         object.__setattr__(self, name, value)
 
+    def _ipython_key_completions_(self):
+        r"""
+        Support tab completion for `__getitem__`, suggesting all components in
+        the workspace.
+        """
+        return [c.GetName() for c in self.components()]
+
 
 def RooWorkspace_import(self, *args, **kwargs):
     r"""The RooWorkspace::import function can't be used in PyROOT because `import` is a reserved python keyword.
