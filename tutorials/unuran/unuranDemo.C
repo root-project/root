@@ -17,9 +17,12 @@
 /// root[0]: .x  unuranDemo.C+
 /// ~~~
 ///
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Lorenzo Moneta
+/// \date March 2024
 
 
 #include "TStopwatch.h"

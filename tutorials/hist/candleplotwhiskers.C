@@ -3,11 +3,13 @@
 /// \notebook
 /// Example of candle plot showing the whiskers definition.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_output
 /// \macro_code
 ///
 /// \author Georg Troska
+/// \date June 2022
 
 void candleplotwhiskers() {
    auto c1 = new TCanvas("c1","Candle Presets",700,800);

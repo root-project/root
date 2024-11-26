@@ -3,10 +3,12 @@
 /// \notebook
 /// Example showing how to combine the various candle plot options.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Georg Troska
+/// \date December 2017
 
 void candleplotoption()
 {

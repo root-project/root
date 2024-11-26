@@ -18,7 +18,8 @@
 ## For N=4 and 2 parameters of interest it takes about 10-20 seconds
 ## and the acceptance rate is 37%
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
+## \preview 
 ## \macro_output
 ## \macro_code
 ##

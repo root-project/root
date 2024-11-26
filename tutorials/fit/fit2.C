@@ -20,6 +20,7 @@
 /// \macro_code
 ///
 /// \author Rene Brun
+/// \date October 2023
 
 #include "TF2.h"
 #include "TH2.h"

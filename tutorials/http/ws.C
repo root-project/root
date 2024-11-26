@@ -6,6 +6,7 @@
 /// \macro_code
 ///
 /// \author Sergey Linev
+/// \date April 2024
 
 #include "THttpServer.h"
 #include "THttpWSHandler.h"

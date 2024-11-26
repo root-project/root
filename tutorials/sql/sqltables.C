@@ -6,9 +6,12 @@
 /// Except for the specific TSQLFile configuration, the TSQLFile functionality
 /// is absolutely similar to a normal root TFile
 ///
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Sergey Linev
+/// \date September 2016
 
 // example configuration for MySQL 4.1
 const char* dbname = "mysql://host.domain/test";

@@ -3,10 +3,12 @@
 /// \notebook -js
 /// Example of use of TGenPhaseSpace
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Valerio Filippini
+/// \date September 2017
 
 void PhaseSpace() {
 

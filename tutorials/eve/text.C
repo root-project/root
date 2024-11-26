@@ -3,9 +3,12 @@
 /// Demonstrates usage of class TEveText - 2D & 3D text in GL.
 ///
 /// \image html eve_text.png
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Alja Mrak-Tadel
+/// \date June 2018
 
 TEveText* text()
 {

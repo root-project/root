@@ -6,6 +6,7 @@
 /// \macro_code
 ///
 /// \author Ilka Antcheva   06/07/2007
+/// \date October 2023
 
 #include <iostream>
 #include <TApplication.h>

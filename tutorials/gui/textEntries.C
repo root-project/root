@@ -10,6 +10,7 @@
 /// \macro_code
 ///
 /// \author Valeriy Onuchin   25/08/2007
+/// \date October 2016
 
 #include <TGTextEntry.h>
 #include <TGButtonGroup.h>

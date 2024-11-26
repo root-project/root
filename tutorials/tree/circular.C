@@ -11,6 +11,7 @@
 /// \macro_code
 ///
 /// \author Rene Brun
+/// \date September 2016
 
 void circular() {
    auto T = new TTree("T","test circular buffers");

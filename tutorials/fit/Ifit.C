@@ -21,6 +21,7 @@
 /// \macro_code
 ///
 /// \author Rene Brun
+/// \date January 2022
 
 #include "TMinuit.h"
 

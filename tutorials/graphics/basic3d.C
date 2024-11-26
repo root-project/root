@@ -3,10 +3,12 @@
 /// \notebook
 /// Show 3-D polylines and markers.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Rene Brun
+/// \date July 2016
 
 void basic3d(){
    TCanvas *c1 = new TCanvas("c1","PolyLine3D & PolyMarker3D Window",200,10,700,500);

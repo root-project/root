@@ -6,6 +6,7 @@
 /// \macro_code
 ///
 /// \author Alja Mrak-Tadel
+/// \date June 2018
 
 TEveBoxSet* boxset_cones(Float_t x=0, Float_t y=0, Float_t z=0,
                          Int_t num=100, Bool_t register=kTRUE)

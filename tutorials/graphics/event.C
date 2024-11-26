@@ -3,10 +3,12 @@
 /// \notebook -js
 /// Illustrate some basic primitives.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Rene Brun
+/// \date June 2022
 
 void event(){
    TCanvas *c1 = new TCanvas("c1","ROOT Event description",700,500);

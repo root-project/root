@@ -3,10 +3,12 @@
 /// \notebook
 /// Draw three graphs with an exclusion zone.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Olivier Couet
+/// \date August 2016
 
 TCanvas *exclusiongraph() {
    TCanvas *c1 = new TCanvas("c1","Exclusion graphs examples",200,10,600,400);

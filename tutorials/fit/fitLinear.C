@@ -5,11 +5,13 @@
 /// This example is for a TGraphErrors, but it can also be used
 /// when fitting a histogram, a TGraph2D or a TMultiGraph
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_output
 /// \macro_code
 ///
 /// \author Anna Kreshuk
+/// \date October 2023
 
 #include "TGraphErrors.h"
 #include "TF1.h"

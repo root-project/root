@@ -3,9 +3,12 @@
 ///
 /// Selector for generic processing with stdlib collections
 ///
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Gerardo Ganis (gerardo.ganis@cern.ch)
+/// \date October 2023
 
 #define ProofStdVect_cxx
 

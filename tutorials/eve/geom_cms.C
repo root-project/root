@@ -3,9 +3,12 @@
 /// Shows CMS geometry.
 ///
 /// \image html eve_geom_cms.png
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Matevz Tadel
+/// \date August 2020
 
 void geom_cms()
 {

@@ -21,6 +21,7 @@
 /// \macro_output
 /// \macro_code
 /// \author Kim Albertsson
+/// \date August 2020
 
 #include "TMVA/DataLoader.h"
 #include "TMVA/Factory.h"

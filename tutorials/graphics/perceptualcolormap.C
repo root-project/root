@@ -18,10 +18,12 @@
 /// Having these parameters this function defines two color maps: one above `val_cut` and one
 /// below.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Olivier Couet
+/// \date May 2021
 
 void Perceptual_Colormap(TH2D *h, Double_t val_cut) {
    Double_t max     = h->GetMaximum();         // Histogram's maximum

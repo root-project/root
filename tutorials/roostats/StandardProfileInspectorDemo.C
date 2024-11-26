@@ -22,11 +22,13 @@
 /// (aka. profiled value of nuisance parameter vs. parameter of interest)
 /// (aka. best fit nuisance parameter with p.o.i fixed vs. parameter of interest)
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_output
 /// \macro_code
 ///
 /// \author Kyle Cranmer
+/// \date November 2023
 
 #include "TFile.h"
 #include "TROOT.h"

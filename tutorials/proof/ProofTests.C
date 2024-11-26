@@ -6,6 +6,7 @@
 /// \macro_code
 ///
 /// \author Gerardo Ganis (gerardo.ganis@cern.ch)
+/// \date October 2023
 
 #define ProofTests_cxx
 

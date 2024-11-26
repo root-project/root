@@ -14,6 +14,7 @@
 /// \macro_image (mathsymb.svg)
 ///
 /// \author Rene Brun
+/// \date January 2022
 
 void latex5() {
    auto c1 = new TCanvas("mathsymb","Mathematical Symbols",600,600);

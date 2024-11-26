@@ -4,10 +4,12 @@
 /// This tutorial illustrates how to create an histogram with polygonal
 /// bins (TH2Poly). The bins are boxes.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Olivier Couet
+/// \date August 2016
 
 TCanvas *th2polyBoxes() {
    TCanvas *ch2p2 = new TCanvas("ch2p2","ch2p2",600,400);

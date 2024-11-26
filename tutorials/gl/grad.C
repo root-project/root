@@ -3,10 +3,12 @@
 /// This macro demonstrates how to create and use linear gradients to fill
 /// a histogram or a pad.
 ///
-/// \macro_image(nobatch)
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \authors  Timur Pocheptsov, Sergey Linev
+/// \date November 2023
 
 //Includes for ACLiC (cling does not need them).
 #include "TColorGradient.h"

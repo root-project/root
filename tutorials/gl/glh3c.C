@@ -2,10 +2,12 @@
 /// \ingroup tutorial_gl
 /// Display a 3D histogram using GL (box option).
 ///
-/// \macro_image(nobatch)
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author  Timur Pocheptsov
+/// \date December 2017
 
 void glh3c()
 {

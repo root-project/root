@@ -7,10 +7,12 @@
 /// an animated gif file. The option "++" makes an infinite animation.
 /// The animated file `hsumanim.gif` can be visualized within a web browser
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \authors Rene Brun, Valeriy Onuchin
+/// \date April 2022
 
 void hsumanim() {
    auto c1 = new TCanvas("c1","The HSUM example",200,10,600,400);

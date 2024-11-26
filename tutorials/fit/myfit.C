@@ -14,6 +14,7 @@
 /// \macro_code
 ///
 /// \author Rene Brun
+/// \date January 2022
 
 #include <TCanvas.h>
 #include <TF1.h>

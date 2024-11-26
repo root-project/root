@@ -2,9 +2,12 @@
 /// \ingroup tutorial_io
 /// \notebook
 /// Macro demonstrating the merging of containers.
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author The Root Team
+/// \date January 2017
 
 TFile *f;
 

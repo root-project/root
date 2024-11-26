@@ -11,10 +11,12 @@
 ##  These Figures were published in JINR preprint E2-98-64, Dubna,
 ##  1998 and submitted to CPC.
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
+## \preview 
 ## \macro_code
 ##
 ## \authors Michael Tokarev, Elena Potrebenikova (JINR Dubna)
+## \date December 2016
 
 import ROOT
 from array import array

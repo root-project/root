@@ -7,10 +7,12 @@
 /// The following example illustrate this facility. Only the width and height of the
 /// legend is specified in percentage of the pad size.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Olivier Couet
+/// \date January 2018
 
 void legendautoplaced()
 {

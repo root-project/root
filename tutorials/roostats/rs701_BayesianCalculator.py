@@ -3,7 +3,8 @@
 ## \notebook
 ## Bayesian calculator: basic example
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
+## \preview 
 ## \macro_output
 ## \macro_code
 ##

@@ -7,6 +7,8 @@
 /// on the histogram will open a new canvas showing in real time a zoom around
 /// the highlighted bin.
 ///
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \date March 2018

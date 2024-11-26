@@ -10,7 +10,8 @@
 /// method. This method is not thread safe: in presence of ROOT histograms, the
 /// system will not crash but the result is not uniquely defined.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \date January 2016

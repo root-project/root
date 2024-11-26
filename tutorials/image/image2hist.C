@@ -3,10 +3,12 @@
 /// \notebook
 /// Create a 2-D histogram from an image.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Olivier Couet
+/// \date August 2016
 
 void image2hist()
 {

@@ -23,6 +23,7 @@
 /// \macro_code
 ///
 /// \author Gerardo Ganis
+/// \date January 2020
 
 #include "Getline.h"
 #include "TChain.h"

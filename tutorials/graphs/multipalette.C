@@ -16,10 +16,12 @@
 ///
 /// The following macro illustrate this feature.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Olivier Couet
+/// \date November 2018
 
 #include "TStyle.h"
 #include "TColor.h"

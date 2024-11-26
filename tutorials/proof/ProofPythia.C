@@ -3,9 +3,12 @@
 ///
 /// Selector to generate Monte Carlo events with Pythia8
 ///
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Gerardo Ganis (gerardo.ganis@cern.ch)
+/// \date May 2024
 
 #define ProofPythia_cxx
 

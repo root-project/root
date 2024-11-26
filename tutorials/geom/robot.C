@@ -11,9 +11,12 @@
 /// We thank to Prof. Inkyu Park for his special lecture on ROOT and to all of ROOT team
 ///
 /// \image html geom_robot.png width=500px
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Jin Hui Hwang, Dept. of Physics, Univ. of Seoul
+/// \date October 2023
 
 #include "TGeoManager.h"
 

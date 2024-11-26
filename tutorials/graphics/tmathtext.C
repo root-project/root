@@ -7,6 +7,7 @@
 /// \macro_code
 ///
 /// \author Yue Shi Lai
+/// \date January 2022
 
 {
    TCanvas *c1 = new TCanvas("c1");

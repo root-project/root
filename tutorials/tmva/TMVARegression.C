@@ -23,8 +23,11 @@
 /// - Root Macro: TMVARegression
 ///
 /// \macro_output
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 /// \author Andreas Hoecker
+/// \date August 2020
 
 #include <cstdlib>
 #include <iostream>

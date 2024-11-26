@@ -3,10 +3,12 @@
 /// \notebook
 /// Candle Decay, illustrate a time development of a certain value.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Georg Troska
+/// \date December 2018
 
 void candledecay()
 {

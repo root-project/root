@@ -11,6 +11,7 @@
 /// \macro_code
 ///
 /// \author Victor Perevovchikov
+/// \date March 2024
 
 // STD
 #include <iostream>

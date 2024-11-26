@@ -6,6 +6,7 @@
 /// \macro_code
 ///
 /// \author Matevz Tadel
+/// \date August 2020
 
 void geom_default()
 {

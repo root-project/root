@@ -7,6 +7,7 @@
 /// \macro_code
 ///
 /// \authors Rene Brun, Christian Holm Christensen
+/// \date January 2022
 
 #include "Riostream.h"
 #include "TROOT.h"

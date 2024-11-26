@@ -3,9 +3,12 @@
 /// Demonstrates usage of geometry aliases - merge ALICE ITS with ATLAS MUON.
 ///
 /// \image html eve_geom_alias.png
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Matevz Tadel
+/// \date August 2020
 
 void geom_alias()
 {

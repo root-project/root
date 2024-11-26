@@ -4,9 +4,12 @@
 /// Updated by Timur Pocheptsov to use transparent text (12/10/2012).
 /// Requires OS X and ROOT configured with --enable-cocoa.
 ///
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Timur Pocheptsov
+/// \date October 2023
 
 //Includes for ACLiC (cling does not need them).
 #include "TVirtualX.h"

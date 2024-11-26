@@ -3,9 +3,12 @@
 ## \notebook
 ## Ntuple drawing example.
 ##
+## \macro_image (tcanvas_js)
+## \preview 
 ## \macro_code
 ##
 ## \author Wim Lavrijsen
+## \date August 2016
 
 from ROOT import TCanvas, TPad, TFile, TPaveText
 from ROOT import gBenchmark, gStyle, gROOT

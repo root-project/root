@@ -5,9 +5,12 @@
 /// This macro creates 100 canvases and store them in different images files using TCanvas::SaveAll() method.
 /// Demonstrated how different output format can be used in batch mode.
 ///
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Sergey Linev
+/// \date September 2024
 
 void saveall()
 {

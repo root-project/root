@@ -3,10 +3,12 @@
 ## \notebook -js
 ## Simple example illustrating how to use the C++ interpreter
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
+## \preview 
 ## \macro_code
 ##
 ## \author Wim Lavrijsen
+## \date September 2016
 
 from ROOT import TCanvas, TH1F, TSlider
 from ROOT import gROOT, gBenchmark, gRandom

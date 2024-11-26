@@ -25,11 +25,13 @@
 /// SetEstimate should be called if the expected number of selected rows
 /// is greater than 1000000.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_output
 /// \macro_code
 ///
 /// \author Olivier Couet
+/// \date January 2017
 
 void treegetval() {
    // create a simple TTree with 5 branches

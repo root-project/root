@@ -2,9 +2,12 @@
 /// \ingroup tutorial_geom
 /// Macro illustrating how to animate a geometry picture using a Timer
 ///
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Rene Brun
+/// \date April 2016
 
 Double_t pi;
 Float_t theta = 0;

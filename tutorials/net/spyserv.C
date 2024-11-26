@@ -9,9 +9,12 @@
 ///   - in the "spy" client windows click the "Connect" button and snoop
 ///     the histograms by clicking on the "hpx", "hpxpy" and "hprof"
 ///     buttons
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Fons Rademakers
+/// \date September 2022
 
 #include "TH1.h"
 #include "TH2.h"

@@ -3,11 +3,13 @@
 /// \notebook
 /// Example to illustrate high resolution peak searching function (class TSpectrum2).
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_output
 /// \macro_code
 ///
 /// \authors Miroslav Morhac, Olivier Couet
+/// \date June 2022
 
 #include <TSpectrum2.h>
 

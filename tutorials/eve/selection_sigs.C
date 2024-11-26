@@ -5,6 +5,7 @@
 /// \macro_code
 ///
 /// \author Matevz Tadel
+/// \date November 2015
 
 #include "TEveSelection.h" // To enforce auto-loading of libEve.
 

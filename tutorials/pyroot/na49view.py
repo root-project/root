@@ -13,9 +13,12 @@
 ##  - Stereo mode by clicking S (and you need special glasses)
 ##  - To leave x3d type Q
 ##
+## \macro_image (tcanvas_js)
+## \preview 
 ## \macro_code
 ##
 ## \author Wim Lavrijsen
+## \date December 2015
 
 import ROOT
 

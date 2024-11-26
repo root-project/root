@@ -5,6 +5,7 @@
 /// \macro_code
 ///
 /// \author Ilka antcheva
+/// \date December 2015
 
 {
    cl = gROOT->GetClass("TH1F");

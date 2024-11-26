@@ -6,10 +6,12 @@
 /// By default, dashed lines are drawn at certain points. You can either disable them, or specify
 /// where you want them to appear.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Paul Gessinger
+/// \date January 2020
 
 void ratioplot4()  {
    gStyle->SetOptStat(0);

@@ -7,7 +7,8 @@
 /// RDataFrame. See the documentation of TProfile and TProfile2D to better
 /// understand the analogy of this code with the example one.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \date February 2017

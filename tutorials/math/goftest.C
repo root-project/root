@@ -7,11 +7,13 @@
 /// 1 sample test is performed comparing data with a log-normal distribution
 /// and a 2 sample test is done comparing two gaussian data sets.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_output
 /// \macro_code
 ///
 /// \author Bartolomeu Rabacal
+/// \date November 2023
 
 #include <cassert>
 #include "TCanvas.h"

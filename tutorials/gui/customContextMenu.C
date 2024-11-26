@@ -2,9 +2,12 @@
 /// \ingroup tutorial_gui
 /// Example showing how to add a function to the class context menu
 ///
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Ilka Antcheva
+/// \date December 2015
 
 #include "TH1.h"
 #include "TClassMenuItem.h"

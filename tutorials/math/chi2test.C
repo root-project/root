@@ -7,11 +7,13 @@
 /// The QQ plot of the normalized residual using the
 /// normal distribution is also plotted.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_output
 /// \macro_code
 ///
 /// \author Nikolai Gagunashvili, Daniel Haertl, Lorenzo Moneta
+/// \date August 2016
 
 #include "TH1.h"
 #include "TH1D.h"

@@ -5,6 +5,8 @@
 /// We express parallelism with multiprocessing as it is done with multithreading
 /// in mt102_readNtuplesFillHistosAndFit.
 ///
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \date January 2016

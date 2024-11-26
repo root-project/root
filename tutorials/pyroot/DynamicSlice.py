@@ -13,10 +13,12 @@
 ## Note that a class is used to hold on to the canvas that display
 ## the selected slice.
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
+## \preview 
 ## \macro_code
 ##
 ## \author Rene Brun, Johann Cohen-Tanugi, Wim Lavrijsen, Enric Tejedor
+## \date November 2019
 
 import sys
 import ctypes

@@ -3,10 +3,12 @@
 /// \notebook
 /// Example to illustrate the Markov smoothing (class TSpectrum2).
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \authors Miroslav Morhac, Olivier Couet
+/// \date July 2019
 
 #include <TSpectrum2.h>
 

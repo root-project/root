@@ -4,9 +4,12 @@
 /// Create an image from a 2-D histogram and manipulate it.
 ///
 /// \image html image_hist2image.png
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Valeriy Onuchin
+/// \date August 2016
 
 #include <TAttImage.h>
 

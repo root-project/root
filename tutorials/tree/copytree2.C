@@ -10,6 +10,7 @@
 /// \macro_code
 ///
 /// \author Rene Brun
+/// \date September 2018
 
 // Load the library at macro parsing time: we need this to use its content in the code
 R__LOAD_LIBRARY($ROOTSYS/test/libEvent.so)

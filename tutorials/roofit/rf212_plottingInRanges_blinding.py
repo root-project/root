@@ -10,7 +10,8 @@
 ##
 ## In this tutorial, we show how to explicitly choose the normalisation when plotting using `NormRange()`.
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
+## \preview 
 ## \macro_code
 ## \macro_output
 ##

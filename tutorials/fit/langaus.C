@@ -18,11 +18,13 @@
 ///  root > .x langaus.C++
 /// ~~~
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_output
 /// \macro_code
 ///
 /// \authors H.Pernegger, Markus Friedl
+/// \date July 2022
 
 #include "TH1.h"
 #include "TF1.h"

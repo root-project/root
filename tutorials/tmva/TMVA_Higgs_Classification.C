@@ -7,11 +7,13 @@
 /// used in this paper: Baldi, P., P. Sadowski, and D. Whiteson. “Searching for Exotic Particles in High-energy Physics
 ///                     with Deep Learning.” Nature Communications 5 (July 2, 2014).
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_output
 /// \macro_code
 ///
 /// \author Lorenzo Moneta
+/// \date August 2020
 
 /***
 ## Declare Factory

@@ -14,10 +14,12 @@
 ##
 ## Based on Bessel.C by Magdalena Slawinska
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
+## \preview 
 ## \macro_code
 ##
 ## \author Juan Fernando Jaramillo Botero
+## \date November 2024
 
 import ROOT
 from ROOT import TCanvas, TF1, gSystem, gPad, TLegend, TPaveLabel, kBlack

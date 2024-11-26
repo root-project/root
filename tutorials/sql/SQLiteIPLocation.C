@@ -14,9 +14,12 @@
 /// This product includes GeoLite2 data created by MaxMind, available from
 /// <a href="http://www.maxmind.com">http://www.maxmind.com</a>.
 ///
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Alexandra-Maria Dobrescu 08/2018
+/// \date October 2024
 
 #include <TSQLiteServer.h>
 #include <TSQLiteResult.h>

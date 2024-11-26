@@ -3,10 +3,12 @@
 /// \notebook
 /// Setting alphanumeric labels.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Rene Brun
+/// \date July 2016
 
 void labels2()
 {

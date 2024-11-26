@@ -9,11 +9,13 @@
 /// the robust fitting coefficients, just use the TLinearFitter::EvalRobust
 /// function instead of TLinearFitter::Eval
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_output
 /// \macro_code
 ///
 /// \author Anna Kreshuk
+/// \date October 2023
 
 #include "TRandom.h"
 #include "TGraphErrors.h"

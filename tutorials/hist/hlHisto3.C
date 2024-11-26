@@ -6,6 +6,8 @@
 /// the mouse over the two 1D representation display the on 2D plot the events
 /// contributing to the highlighted bin.
 ///
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \date March 2018

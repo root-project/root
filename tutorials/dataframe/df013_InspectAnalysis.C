@@ -7,6 +7,8 @@
 /// the event-loop is running using `OnPartialResult` and `OnPartialResultSlot`.
 /// This tutorial is not meant to run in batch mode.
 ///
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \date September 2017

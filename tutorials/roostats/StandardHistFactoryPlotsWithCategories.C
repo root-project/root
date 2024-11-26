@@ -30,11 +30,13 @@
 ///  gs -q -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -sOutputFile=merged.pdf `ls *pdf`
 /// ~~~
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_output
 /// \macro_code
 ///
 /// \author Kyle Cranmer
+/// \date August 2024
 
 #include "TFile.h"
 #include "TROOT.h"

@@ -3,10 +3,12 @@
 /// \notebook -js
 /// Show some basic primitives.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Rene Brun
+/// \date February 2023
 
 void first() {
 

@@ -3,9 +3,12 @@
 /// Demonstrates usage of TGLAnnotation class.
 ///
 /// \image html eve_annotation.png
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Alja Mrak-Tadel
+/// \date October 2023
 
 #include <TEveManager.h>
 #include <TGLViewer.h>

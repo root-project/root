@@ -3,7 +3,8 @@
 /// \notebook
 /// Demonstrate the RNTupleProcessor using multiple RNTuples
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \date April 2024

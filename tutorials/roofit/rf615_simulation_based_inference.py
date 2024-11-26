@@ -26,7 +26,8 @@
 ##
 ## In the end we compare the negative logarithmic likelihoods of the learned, morphed and analytical likelihood with minuit and as a plot.
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
+## \preview 
 ## \macro_code
 ## \macro_output
 ##

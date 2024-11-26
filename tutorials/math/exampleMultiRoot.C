@@ -36,6 +36,7 @@
 /// \macro_code
 ///
 /// \author Lorenzo Moneta
+/// \date October 2023
 
 #include "RConfigure.h"
 

@@ -6,6 +6,7 @@
 /// \macro_code
 ///
 /// \author Matevz Tadel
+/// \date March 2020
 
 TEveBoxSet* boxset(Float_t x=0, Float_t y=0, Float_t z=0,
                    Int_t num=100, Bool_t registerSet=kTRUE)

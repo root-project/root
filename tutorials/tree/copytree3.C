@@ -10,6 +10,7 @@
 /// \macro_code
 ///
 /// \author Rene Brun
+/// \date September 2018
 
 R__LOAD_LIBRARY($ROOTSYS/test/libEvent.so)
 

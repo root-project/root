@@ -24,9 +24,12 @@
 ///   Root > plane3->cd();
 ///   Root > h3_90N->Draw();
 /// ~~~
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Rene Brun
+/// \date August 2016
 
 void dirs() {
    // create a new Root file

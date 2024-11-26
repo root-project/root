@@ -3,11 +3,13 @@
 /// \notebook -js
 /// Example illustrating how to fit a 2-d histogram of type y=f(x)
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_output
 /// \macro_code
 ///
 /// \author Rene Brun
+/// \date January 2022
 
 #include <TCanvas.h>
 #include <TCutG.h>

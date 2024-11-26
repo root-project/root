@@ -4,6 +4,7 @@
 /// This macro draw all possible symbols provided by TMathtext.
 /// \macro_image
 /// \author Olivier Couet
+/// \date August 2016
 
 TCanvas * tmathtext2()
 {

@@ -3,9 +3,12 @@
 /// Macro allowing to vizualize tessellations from Wavefront's .obj format.
 ///
 /// \image html geom_visualizeWavefrontObj.png width=500px
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Andrei Gheata
+/// \date July 2020
 
 #include <TROOT.h>
 #include <TColor.h>

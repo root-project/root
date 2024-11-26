@@ -22,11 +22,13 @@
 ///              = 3 Profile Likelihood one sided (i.e. = 0 if mu_hat < 0)
 /// ~~~
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_output
 /// \macro_code
 ///
 /// \author Lorenzo Moneta
+/// \date June 2023
 
 #include "TFile.h"
 #include "RooWorkspace.h"

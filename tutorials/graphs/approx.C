@@ -3,10 +3,12 @@
 /// \notebook -js
 /// Macro to test interpolation function Approx
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Christian Stratowa, Vienna, Austria.
+/// \date August 2016
 
 TCanvas *vC1;
 TGraph *grxy, *grin, *grout;

@@ -3,10 +3,12 @@
 /// \notebook
 /// Fill a 1-D histogram from a parametric function.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Rene Brun
+/// \date October 2021
 
 void fillrandom(int plot=1) {
    gBenchmark->Start("fillrandom");

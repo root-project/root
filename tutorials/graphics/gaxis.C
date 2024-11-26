@@ -3,10 +3,12 @@
 /// \notebook
 /// Simple example illustrating how to draw TGaxis objects in various formats.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \authors Rene Brun, Olivier Couet
+/// \date November 2022
 
 void gaxis(){
    auto c1 = new TCanvas("c1","Examples of TGaxis",10,10,700,500);

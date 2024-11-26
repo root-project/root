@@ -25,11 +25,13 @@
 ///  3. TestJeffreysGaussSigma -- validates Gaussian sigma case 1/sigma
 ///  4. TestJeffreysGaussMeanAndSigma -- demonstrates 2-d example
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_output
 /// \macro_code
 ///
 /// \author Kyle Cranmer
+/// \date June 2023
 
 #include "RooJeffreysPrior.h"
 

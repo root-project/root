@@ -23,10 +23,12 @@
 /// In the canvas "File" menu, select the option "Print" to produce
 /// a PostScript file with a copy of the canvas.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Rene Brun
+/// \date November 2024
 
 void canvas(){
    TCanvas *c1 = new TCanvas("c1","Canvas Example",200,10,600,480);

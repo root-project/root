@@ -143,9 +143,12 @@
 ///
 /// call Process as in step B. Of course this works also for local processing.
 ///
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Rene Brun
+/// \date August 2020
 
 #include "h1analysis.h"
 #include "TH2.h"

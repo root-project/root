@@ -10,9 +10,12 @@
 /// macro making use of the ROOT JITing capability
 ///
 ///
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 /// \macro_output
 /// \author Lorenzo Moneta
+/// \date April 2022
 
 using namespace TMVA::Experimental;
 

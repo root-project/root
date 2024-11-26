@@ -3,7 +3,8 @@
 /// \notebook -js
 /// Validation and MC studies: using RooMCStudy on models with constrains
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 /// \macro_output
 ///

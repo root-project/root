@@ -2,9 +2,12 @@
 /// \ingroup tutorial_gl
 /// Model of a nucleus built from TGeo classes.
 ///
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Otto Schaile
+/// \date January 2016
 
 void nucleus(Int_t nProtons  = 40,Int_t  nNeutrons = 60)
 {

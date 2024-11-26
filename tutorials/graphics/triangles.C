@@ -10,10 +10,12 @@
 ///
 /// When a triangle is clicked, a message displaying its unique number and color will be printed.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Rene Brun
+/// \date September 2024
 
 void triangles(int ntriangles=50)
 {

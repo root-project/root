@@ -14,9 +14,12 @@
 /// root TMVA_SOFIE_RSofieReader.C
 /// ```
 ///
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 /// \macro_output
 /// \author Lorenzo Moneta
+/// \date February 2023
 
 using namespace TMVA::Experimental;
 

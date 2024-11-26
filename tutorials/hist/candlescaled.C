@@ -4,10 +4,12 @@
 /// Candle Scaled, illustrates what scaling does on candle and violin charts.
 /// Please try to modify the static functions SetScaledCandle and SetScaledViolin
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Georg Troska
+/// \date February 2023
 
 void candlescaled()
 {

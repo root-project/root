@@ -16,11 +16,13 @@
 /// Thus the script allows the parameter to be negative so that the overlay chi-square is
 /// the correct asymptotic distribution.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_output
 /// \macro_code
 ///
 /// \author Kyle Cranmer
+/// \date December 2022
 
 #include "TFile.h"
 #include "TROOT.h"

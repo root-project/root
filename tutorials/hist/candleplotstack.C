@@ -3,10 +3,12 @@
 /// \notebook
 /// Example showing how a THStack with candle plot option.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \authors Georg Troska, Olivier Couet
+/// \date May 2024
 
 void candleplotstack()
 {

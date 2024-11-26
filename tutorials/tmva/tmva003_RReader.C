@@ -4,6 +4,8 @@
 /// This tutorial shows how to apply with the modern interfaces models saved in
 /// TMVA XML files.
 ///
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 /// \macro_output
 ///

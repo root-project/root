@@ -10,9 +10,12 @@
 ///   - Execute in the first window: .x hserv.C
 ///   - Execute in the second and third windows: .x hclient.C
 ///
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Fons Rademakers
+/// \date September 2016
 
 void hserv() {
    // Open a server socket looking for connections on a named service or

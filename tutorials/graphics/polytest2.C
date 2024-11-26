@@ -4,7 +4,8 @@
 /// This macro is testing the "compacting" algorithm in TPadPainter.
 /// It reduces the number of polygon's vertices using actual pixel coordinates.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 ///
 /// This macro is testing new "compacting" algorithm in TPadPainter
 /// (it reduces the number of polygon's vertices using actual pixel coordinates).
@@ -14,6 +15,7 @@
 /// \macro_code
 ///
 /// \author Timur Pocheptsov
+/// \date October 2023
 
 //Includes for ACLiC.
 #include <cassert>

@@ -70,11 +70,13 @@
 ///    Author: J. T. Linnemann
 ///    http://arxiv.org/abs/physics/0312059
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_output
 /// \macro_code
 ///
 /// \authors Kyle Cranmer, Wouter Verkerke, and Sven Kreiss
+/// \date March 2024
 
 #include "RooGlobalFunc.h"
 #include "RooRealVar.h"

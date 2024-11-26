@@ -15,6 +15,7 @@
 /// Alternatively accessors by name can also be used: GetSkinSurface(name)/GetBorderSurface(name)
 ///
 /// \author Andrei Gheata
+/// \date January 2019
 
 #include <cassert>
 #include <TObjArray.h>

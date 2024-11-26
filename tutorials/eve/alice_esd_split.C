@@ -71,6 +71,7 @@
 /// \macro_code
 ///
 /// \author Bertrand Bellenot
+/// \date August 2020
 
 void alice_esd_split()
 {

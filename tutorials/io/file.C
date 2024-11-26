@@ -3,10 +3,12 @@
 /// \notebook
 /// This macro displays the physical ROOT file structure
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Rene Brun
+/// \date November 2024
 
 void file(){
 

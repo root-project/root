@@ -71,6 +71,7 @@
 /// \macro_code
 ///
 /// \author Matevz Tadel
+/// \date August 2020
 
 void alice_esd()
 {

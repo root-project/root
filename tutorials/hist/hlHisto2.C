@@ -8,6 +8,8 @@
 /// on the histogram open a new canvas displaying the two X and Y projections
 /// at the highlighted bin.
 ///
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \date March 2018

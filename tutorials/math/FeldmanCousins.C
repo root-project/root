@@ -11,6 +11,7 @@
 /// \macro_code
 ///
 /// \author Adrian John Bevan <bevan@SLAC.Stanford.EDU>
+/// \date February 2024
 
 void FeldmanCousins()
 {

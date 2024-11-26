@@ -8,9 +8,12 @@
 ///  root > .x pythia8.C
 /// ~~~
 ///
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Andreas Morsch
+/// \date March 2019
 
 #include "TSystem.h"
 #include "TH1F.h"

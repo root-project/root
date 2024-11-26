@@ -2,9 +2,12 @@
 /// \ingroup tutorial_gl
 /// To set the Level Of Details when rendering geometry shapes.
 ///
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Richard Maunder
+/// \date May 2017
 
 void glViewerLOD(Int_t reqNodes = 1000, Bool_t randomDist = kTRUE,
                  Bool_t reqSpheres = kTRUE, Bool_t reqTubes = kTRUE)

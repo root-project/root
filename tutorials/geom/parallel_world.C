@@ -11,10 +11,12 @@
 /// This macro demonstrates how to use the "parallel world" feature to assign
 /// highest navigation priority to some physical paths in geometry.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Andrei Gheata
+/// \date July 2024
 
 void align();
 

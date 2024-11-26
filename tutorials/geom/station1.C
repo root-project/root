@@ -11,9 +11,12 @@
 /// We thank to Prof. Inkyu Park for his special lecture on ROOT and to all of ROOT team
 ///
 /// \image html geom_station1.png width=800px
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Chang Yeol Lee, Dept. of Physics, Univ. of Seoul
+/// \date October 2023
 
 #include "TGeoManager.h"
 

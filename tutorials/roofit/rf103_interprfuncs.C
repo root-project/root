@@ -3,7 +3,8 @@
 /// \notebook -js
 /// Basic functionality: interpreted functions and PDFs.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 /// \macro_output
 ///

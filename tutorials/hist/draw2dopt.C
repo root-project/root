@@ -3,10 +3,12 @@
 /// \notebook
 /// Display the various 2-d drawing options
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Rene Brun
+/// \date June 2022
 
 void draw2dopt()
 {

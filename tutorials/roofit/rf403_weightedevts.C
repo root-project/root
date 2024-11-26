@@ -3,7 +3,8 @@
 /// \notebook -js
 /// Data and categories: using weights in unbinned datasets
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 /// \macro_output
 ///

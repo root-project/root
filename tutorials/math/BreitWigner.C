@@ -9,10 +9,12 @@
 ///  root[0] .x BreitWigner.C
 /// ~~~
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Jack Lindon
+/// \date June 2022
 
 #include "TMath.h"
 

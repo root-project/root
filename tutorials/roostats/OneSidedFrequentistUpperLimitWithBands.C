@@ -98,11 +98,13 @@
 /// but that requires that those parameters are RooRealVars in the model.
 /// This version does not deal with this issue, but it will be addressed in a future version.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_output
 /// \macro_code
 ///
 /// \authors Kyle Cranmer, Haichen Wang, Daniel Whiteson
+/// \date September 2023
 
 #include "TFile.h"
 #include "TROOT.h"

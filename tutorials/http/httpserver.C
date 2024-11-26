@@ -12,9 +12,12 @@
 ///      http://localhost:8080
 /// ~~~
 ///
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Sergey Linev
+/// \date April 2024
 
 #include "TFile.h"
 #include "TMemFile.h"

@@ -3,9 +3,12 @@
 ## \notebook
 ## Display demo help.
 ##
+## \macro_image (tcanvas_js)
+## \preview 
 ## \macro_code
 ##
 ## \author Wim Lavrijsen
+## \date August 2016
 
 import os
 from ROOT import TCanvas, TPaveText

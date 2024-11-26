@@ -7,7 +7,8 @@
 /// complex than flat ntuples with RDataFrame.
 ///
 /// \macro_code
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 ///
 /// \date December 2016
 /// \author Danilo Piparo (CERN)

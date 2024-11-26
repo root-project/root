@@ -21,11 +21,13 @@
 /// with the profile likelihood.  This is equivalent to the method of MINOS.
 ///
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_output
 /// \macro_code
 ///
 /// \author Kyle Cranmer
+/// \date February 2024
 
 #include "RooStats/ProfileLikelihoodCalculator.h"
 #include "RooStats/NumberCountingPdfFactory.h"

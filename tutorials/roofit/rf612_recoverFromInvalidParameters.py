@@ -11,6 +11,8 @@
 ## this function can be negative, and hence, it cannot be used as a PDF. In this case, RooFit passes
 ## an error to the minimiser, which might try to recover.
 ##
+## \macro_image (tcanvas_js)
+## \preview 
 ## \macro_code
 ## \macro_output
 ##

@@ -21,6 +21,7 @@
 /// \macro_code
 ///
 /// \authors A. Tolosa-Delgado
+/// \date August 2024
 
 double f2(const double * x) {
    return x[0] + x[1];

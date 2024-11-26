@@ -18,7 +18,8 @@
 ## only when the event loop is triggered on it.
 ##
 ## \macro_code
-## \macro_image
+## \macro_image (tcanvas_js)
+## \preview 
 ##
 ## \date June 2018
 ## \author Danilo Piparo (CERN)

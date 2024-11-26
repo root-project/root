@@ -22,6 +22,7 @@
 /// \macro_code
 ///
 /// \author Rene Brun
+/// \date October 2023
 
 #include "TSpectrum2.h"
 #include "TCanvas.h"

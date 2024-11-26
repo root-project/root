@@ -7,6 +7,7 @@
 /// \macro_code
 ///
 /// \authors Anda Chelba, Gerardo Ganis
+/// \date August 2020
 
 #include "TString.h"
 #include "TROOT.h"

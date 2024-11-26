@@ -4,9 +4,12 @@
 /// custom colors, transparency.
 /// Requires ROOT built for OS X with --enable-cocoa.
 ///
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Timur Pocheptsov
+/// \date April 2016
 
 //Includes for ACLiC:
 #include <cassert>

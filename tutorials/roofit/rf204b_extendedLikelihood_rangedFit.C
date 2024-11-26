@@ -40,11 +40,13 @@
 /// This requires that the likelihood model is extended using RooAddPdf in the
 /// form SumPdf = Nsig * sigPdf + Nbkg * bkgPdf.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 /// \macro_output
 ///
 /// \authors Stephan Hageboeck, Wouter Verkerke
+/// \date August 2020
 
 #include "RooRealVar.h"
 #include "RooExponential.h"

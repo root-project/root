@@ -9,7 +9,8 @@
 ## with a step size of 0.075.
 ## The interval in Feldman & Cousins's original paper is [.29, 10.81] Phys.Rev.D57:3873-3889,1998.
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
+## \preview 
 ## \macro_output
 ## \macro_code
 ##

@@ -3,7 +3,8 @@
 /// \notebook
 /// Example of converting data stored in a TTree into an RNTuple
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \date December 2022

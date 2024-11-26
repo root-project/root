@@ -85,6 +85,7 @@
 ///      - Save as C file
 ///      - Close c2
 /// \author Olivier Couet
+/// \date August 2020
 
 Int_t file_size(const char *filename)
 {

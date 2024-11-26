@@ -3,10 +3,12 @@
 /// \notebook
 /// Define the time offset as 2003, January 1st.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Olivier Couet
+/// \date May 2024
 
 void timeonaxis2() {
    auto ct2 = new TCanvas("ct2","ct2",10,10,700,500);

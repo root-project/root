@@ -7,7 +7,8 @@
 /// in http://root.cern/files/NanoAOD_DoubleMuon_CMS2011OpenData.root
 /// Based on RDataFrame's df102_NanoAODDimuonAnalysis.C
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \date April 2019

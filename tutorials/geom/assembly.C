@@ -2,10 +2,12 @@
 /// \ingroup tutorial_geom
 /// Geometry detector assembly example
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Andrei Gheata
+/// \date September 2017
 
 void assembly()
 {

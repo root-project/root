@@ -2,10 +2,12 @@
 /// \ingroup tutorial_geom
 /// Definition of a simple geometry (the 4 ROOT characters)
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Andrei Gheata
+/// \date November 2018
 
 void rootgeom(bool vis = true)
 {

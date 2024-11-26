@@ -8,10 +8,12 @@
 /// This program is a variant of the tutorial "hsum".
 /// It illustrates the use of Timers.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Rene Brun
+/// \date November 2022
 
 Float_t progressRatio = 0.;
 TSlider *slider = nullptr;

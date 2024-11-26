@@ -3,10 +3,12 @@
 /// \notebook
 /// Display the Tree data structures
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Rene Brun
+/// \date November 2024
 
 void tree() {
    TCanvas* c1 = new TCanvas("c1","Tree Data Structure",200,10,750,940);

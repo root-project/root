@@ -3,10 +3,12 @@
 ## \notebook
 ## Surfaces example
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
+## \preview 
 ## \macro_code
 ##
 ## \author Wim Lavrijsen
+## \date August 2016
 
 from ROOT import TCanvas, TPaveText, TPad, TF2
 from ROOT import gROOT, gStyle

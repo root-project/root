@@ -3,11 +3,13 @@
 /// \notebook
 /// Example to fit two histograms at the same time.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_output
 /// \macro_code
 ///
 /// \author Rene Brun
+/// \date October 2023
 
 #include "TH2D.h"
 #include "TF2.h"

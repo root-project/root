@@ -16,11 +16,13 @@
 /// The number of points inside the countries should be proportional to the country surface
 /// The estimated surface is compared to the surfaces taken from wikipedia.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_output
 /// \macro_code
 ///
 /// \author Olivier Couet
+/// \date August 2020
 
 void th2polyEurope(Int_t npoints=500000)
 {

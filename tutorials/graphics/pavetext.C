@@ -12,10 +12,12 @@
 /// TText with GetLine and GetLineWith wich is also useful to modify the text
 /// attributes of a line.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Olivier Couet
+/// \date October 2016
 
 TCanvas *pavetext(){
    TCanvas *c = new TCanvas("c");

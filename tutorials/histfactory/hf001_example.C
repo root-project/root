@@ -2,11 +2,13 @@
 /// \ingroup tutorial_histfactory
 /// A ROOT script demonstrating  an example of writing and fitting a HistFactory model using C++ only.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 /// \macro_output
 ///
 /// \author George Lewis
+/// \date August 2024
 
 #include <RooStats/HistFactory/MakeModelAndMeasurementsFast.h>
 #include <RooStats/HistFactory/Measurement.h>

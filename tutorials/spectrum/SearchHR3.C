@@ -5,10 +5,12 @@
 /// in high resolution peak searching function (class TSpectrum).
 ///
 /// \macro_output
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \authors Miroslav Morhac, Olivier Couet
+/// \date August 2020
 
 void SearchHR3() {
    Double_t fPositionX[100];

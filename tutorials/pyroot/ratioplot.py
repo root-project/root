@@ -6,9 +6,12 @@
 ## This program illustrates how to plot two histograms and their
 ## ratio on the same canvas. Original macro by Olivier Couet.
 ##
+## \macro_image (tcanvas_js)
+## \preview 
 ## \macro_code
 ##
 ## \author Michael Moran
+## \date August 2016
 
 from ROOT import TCanvas, TColor, TGaxis, TH1F, TPad
 from ROOT import kBlack, kBlue, kRed

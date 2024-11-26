@@ -15,6 +15,7 @@
 /// \macro_code
 ///
 /// \author Sven A. Schmidt, sven.schmidt@cern.ch, 13.2.2001
+/// \date August 2016
 
 
 #include <string.h>

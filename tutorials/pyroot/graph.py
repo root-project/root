@@ -3,11 +3,13 @@
 ## \notebook
 ## A Simple Graph Example
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
+## \preview 
 ## \macro_output
 ## \macro_code
 ##
 ## \author Wim Lavrijsen
+## \date October 2020
 
 from __future__ import print_function
 from ROOT import TCanvas, TGraph

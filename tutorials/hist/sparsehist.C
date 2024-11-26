@@ -32,9 +32,12 @@
 ///  root[1] sparsehist()
 /// ~~~
 ///
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Axel.Naumann
+/// \date October 2023
 
 #include "TH1.h"
 #include "TH2.h"

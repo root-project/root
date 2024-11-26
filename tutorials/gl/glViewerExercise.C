@@ -5,6 +5,7 @@
 /// \macro_code
 ///
 /// \author Richard Maunder
+/// \date January 2016
 
 #include "TGLViewer.h"
 #include "TGLOrthoCamera.h"

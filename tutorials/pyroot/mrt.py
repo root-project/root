@@ -9,6 +9,7 @@
 ## \macro_code
 ##
 ## \author Wim Lavrijsen
+## \date June 2019
 
 import sys, os
 from ROOT import TFile, TNtuple, TROOT

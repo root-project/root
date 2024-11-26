@@ -7,6 +7,7 @@
 /// \macro_code
 ///
 /// \author Alja Mrak-Tadel
+/// \date June 2018
 
 #include "calorimeters.C"
 

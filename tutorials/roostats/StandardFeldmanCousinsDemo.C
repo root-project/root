@@ -23,11 +23,13 @@
 /// But unlike the ProfileLikelihoodCalculator, this tool explicitly
 /// builds the sampling distribution of the test statistic via toy Monte Carlo.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_output
 /// \macro_code
 ///
 /// \author Kyle Cranmer
+/// \date December 2022
 
 #include "TFile.h"
 #include "TROOT.h"

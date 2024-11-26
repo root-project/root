@@ -5,6 +5,7 @@
 /// \macro_code
 ///
 /// \author Matevz Tadel
+/// \date June 2018
 
 const Int_t Ns = 7;
 

@@ -13,6 +13,7 @@
 /// \macro_code
 ///
 /// \author Lorenzo Moneta
+/// \date July 2022
 
 #include <Math/MinimizerOptions.h>
 #include <TCanvas.h>

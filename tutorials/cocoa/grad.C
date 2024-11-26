@@ -4,9 +4,12 @@
 /// a histogram or a pad.
 /// Requires OS X and ROOT configured with --enable-cocoa.
 ///
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Timur Pocheptsov
+/// \date April 2016
 
 //Includes for ACLiC (cling does not need them).
 #include "TColorGradient.h"

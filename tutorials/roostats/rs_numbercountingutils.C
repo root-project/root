@@ -35,6 +35,7 @@
 /// \macro_code
 ///
 /// \author Kyle Cranmer
+/// \date August 2024
 
 #include "RooStats/RooStatsUtils.h"
 #include <iostream>

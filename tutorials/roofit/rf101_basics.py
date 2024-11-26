@@ -3,7 +3,8 @@
 ## \notebook
 ## This tutorial illustrates the basic features of RooFit.
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
+## \preview 
 ## \macro_code
 ## \macro_output
 ##

@@ -5,9 +5,12 @@
 /// otherwise a fatal error occurs.
 ///
 /// \image html eve_geom_cms_stereo.png
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Matevz Tadel
+/// \date August 2020
 
 void geom_cms_stereo(Bool_t quad_buf=kTRUE)
 {

@@ -93,11 +93,13 @@
 /// result is that the distribution of the test statistic can become very non-chi^2.
 /// This results in thresholds that become very large.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_output
 /// \macro_code
 ///
 /// \authors Kyle Cranmer,Contributions from Aaron Armbruster, Haoshuang Ji, Haichen Wang and Daniel Whiteson
+/// \date March 2024
 
 #include "TFile.h"
 #include "TROOT.h"

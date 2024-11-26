@@ -6,9 +6,12 @@
 /// in the pads (sleeping for 0.1 seconds before starting a new read-out
 /// cycle). This script runs in an infinite loop, so use ctrl-c to stop it.
 ///
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Fons Rademakers
+/// \date February 2024
 
 {
    gROOT->Reset();

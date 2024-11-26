@@ -9,10 +9,12 @@
 ///   root [0] .x mathcoreCDF.C
 /// ~~~
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Lorenzo Moneta
+/// \date September 2017
 
 #include "TSystem.h"
 #include "TF2.h"

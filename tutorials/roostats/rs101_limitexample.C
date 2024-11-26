@@ -5,11 +5,13 @@
 ///
 /// The usage of a Confidence Interval Calculator to set a limit on the signal is illustrated
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_output
 /// \macro_code
 ///
 /// \author Kyle Cranmer
+/// \date April 2024
 
 #include "RooProfileLL.h"
 #include "RooAbsPdf.h"

@@ -6,6 +6,7 @@
 /// \macro_code
 ///
 /// \author Matevz Tadel
+/// \date February 2020
 #include <ROOT/REveBox.hxx>
 #include <ROOT/REveScene.hxx>
 #include <ROOT/REveManager.hxx>

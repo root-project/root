@@ -6,6 +6,7 @@
 /// \macro_code
 ///
 /// \author Matevz Tadel
+/// \date July 2022
 
 TGFileBrowser *g_hlt_browser = 0;
 TCanvas       *g_hlt_canvas  = 0;

@@ -4,10 +4,12 @@
 /// Create can ntuple reading data from an ascii file.
 /// This macro is a variant of basic.C
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Rene Brun
+/// \date January 2017
 
 void basic2() {
    TString dir = gROOT->GetTutorialDir();

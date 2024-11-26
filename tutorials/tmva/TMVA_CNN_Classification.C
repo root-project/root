@@ -6,11 +6,13 @@
 /// This is an example of using a CNN in TMVA. We do classification using a toy image data set
 /// that is generated when running the example macro
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_output
 /// \macro_code
 ///
 /// \author Lorenzo Moneta
+/// \date January 2024
 
 /***
 

@@ -3,7 +3,8 @@
 ## \notebook -js
 ## High Level Factory: creation of a simple model
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
+## \preview 
 ## \macro_output
 ## \macro_code
 ##

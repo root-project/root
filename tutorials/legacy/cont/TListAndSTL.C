@@ -10,6 +10,7 @@
 /// \macro_code
 ///
 /// \author Anar Manafov
+/// \date June 2019
 
 // STD
 #include <algorithm>

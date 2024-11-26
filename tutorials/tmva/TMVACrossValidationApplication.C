@@ -12,8 +12,11 @@
 /// - Root Macro: TMVACrossValidationApplication
 ///
 /// \macro_output
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 /// \author Kim Albertsson (adapted from code originally by Andreas Hoecker)
+/// \date February 2023
 
 #include <cstdlib>
 #include <iostream>

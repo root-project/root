@@ -2,8 +2,11 @@
 /// \ingroup tutorial_tmva
 /// Plot the variables.
 ///
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 /// \author Andreas Hoecker
+/// \date November 2023
 
 
 #include "TROOT.h"

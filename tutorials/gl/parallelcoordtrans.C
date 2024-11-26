@@ -5,10 +5,12 @@
 /// the second time with transparency. On the second plot, several clusters
 /// appear.
 ///
-/// \macro_image(nobatch)
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \authors Timur Pocheptsov, Olivier Couet
+/// \date October 2023
 
 //All these includes are (only) to make the macro
 //ACLiCable.

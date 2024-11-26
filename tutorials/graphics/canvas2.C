@@ -10,10 +10,12 @@
 /// In addition, XtoPad and YtoPad allow to place graphics objects like
 /// text in the right place in each sub-pads.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Olivier Couet
+/// \date November 2024
 
 void CanvasPartition(TCanvas *C,const Int_t Nx = 2,const Int_t Ny = 2,
                      Float_t lMargin = 0.15, Float_t rMargin = 0.05,

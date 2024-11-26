@@ -11,8 +11,11 @@
 /// - Executable: TMVAGAexample
 ///
 /// \macro_output
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 /// \author Andreas Hoecker
+/// \date March 2024
 
 
 #include <iostream> // Stream declarations

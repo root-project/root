@@ -3,10 +3,12 @@
 /// \notebook
 /// Show how to shade an area between two graphs
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Rene Brun
+/// \date July 2016
 
 void graphShade() {
    TCanvas *c1 = new TCanvas("c1",

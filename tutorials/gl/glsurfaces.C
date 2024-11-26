@@ -7,10 +7,12 @@
 /// The commands used are exactly the same as with a normal pad.
 /// The only command to add is: `gStyle->SetCanvasPreferGL(true);`
 ///
-/// \macro_image(nobatch)
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \authors Rene Brun, Timur Pocheptsov
+/// \date May 2017
 
 void glsurfaces()
 {

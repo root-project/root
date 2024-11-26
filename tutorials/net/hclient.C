@@ -19,6 +19,7 @@
 /// \macro_code
 ///
 /// \author Fons Rademakers
+/// \date August 2018
 
 void hclient(Bool_t evol=kFALSE)
 {

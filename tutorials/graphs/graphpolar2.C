@@ -3,10 +3,12 @@
 /// \notebook
 /// Create and draw a polar graph with PI axis
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Olivier Couet
+/// \date November 2022
 
 void graphpolar2()
 {

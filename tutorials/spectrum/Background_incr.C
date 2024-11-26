@@ -3,10 +3,12 @@
 /// \notebook
 /// Example to illustrate the background estimator (class TSpectrum).
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \authors Miroslav Morhac, Olivier Couet
+/// \date August 2020
 
 void Background_incr() {
    Int_t i;

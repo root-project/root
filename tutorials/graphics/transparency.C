@@ -18,10 +18,12 @@
 /// on Mac with the Cocoa backend. X11 does not support transparency. On the file
 /// output it is visible with PDF, PNG, Gif, JPEG, SVG, TeX ... but not PostScript.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Olivier Couet
+/// \date June 2019
 
 void transparency()
 {

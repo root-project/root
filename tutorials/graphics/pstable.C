@@ -6,6 +6,7 @@
 /// \macro_code
 ///
 /// \author Olivier Couet
+/// \date June 2022
 
 void table(Float_t x1, Float_t x2, Float_t yrange, TText &t, const char **symbol, Bool_t octal);
 

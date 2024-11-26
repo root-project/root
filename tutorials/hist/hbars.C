@@ -3,10 +3,12 @@
 /// \notebook
 /// Example of bar charts with 1-d histograms.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Rene Brun
+/// \date November 2022
 
 TCanvas *hbars()
 {

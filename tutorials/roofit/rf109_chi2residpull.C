@@ -4,7 +4,8 @@
 /// Basic functionality: Calculating chi^2 from histograms and curves in RooPlots, making
 /// histogram of residual and pull distributions
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 /// \macro_output
 ///

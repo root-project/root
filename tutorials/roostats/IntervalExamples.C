@@ -14,11 +14,13 @@
 ///  - bc   interval is     [-0.162918, 0.229076]
 ///  - mcmc interval is     [-0.166999, 0.230224]
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_output
 /// \macro_code
 ///
 /// \author Kyle Cranmer
+/// \date June 2023
 
 #include "RooStats/ConfInterval.h"
 #include "RooStats/PointSetInterval.h"

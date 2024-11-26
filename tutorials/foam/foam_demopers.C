@@ -9,6 +9,7 @@
 /// \macro_code
 ///
 /// \author Stascek Jadach
+/// \date February 2020
 
 #include "Riostream.h"
 #include "TFile.h"

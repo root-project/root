@@ -4,10 +4,12 @@
 /// Example that shows how you can set the colors of the confidence interval bands by using
 /// the method `TRatioPlot::SetConfidenceIntervalColors`.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Paul Gessinger
+/// \date January 2020
 
 void ratioplot5()  {
    gStyle->SetOptStat(0);

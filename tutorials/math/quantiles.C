@@ -3,10 +3,12 @@
 /// \notebook -js
 /// Demo for quantiles
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \authors Rene Brun, Eddy Offermann
+/// \date August 2016
 
 void quantiles() {
    const Int_t nq = 100;

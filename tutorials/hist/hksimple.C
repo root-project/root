@@ -3,10 +3,12 @@
 /// \notebook
 /// Illustrates the advantages of a TH1K histogram
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Victor Perevovchikov
+/// \date November 2022
 
 void canvasRefresh(TCanvas *c1)
 {

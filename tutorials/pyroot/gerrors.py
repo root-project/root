@@ -3,10 +3,12 @@
 ## \notebook -js
 ## A Simple Graph with error bars
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
+## \preview 
 ## \macro_code
 ##
 ## \author Wim Lavrijsen
+## \date August 2016
 
 from ROOT import TCanvas, TGraphErrors
 from ROOT import gROOT

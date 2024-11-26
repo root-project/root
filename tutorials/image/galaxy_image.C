@@ -4,9 +4,12 @@
 /// Importing an image and manipulating it.
 ///
 /// \image html image_galaxy_image.png
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Valeriy Onuchin
+/// \date August 2020
 
 void galaxy_image()
 {

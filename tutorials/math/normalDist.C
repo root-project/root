@@ -3,10 +3,12 @@
 /// \notebook
 /// Tutorial illustrating the new statistical distributions functions (pdf, cdf and quantile)
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Anna Kreshuk
+/// \date August 2016
 
 #include "Math/DistFunc.h"
 #include "TF1.h"

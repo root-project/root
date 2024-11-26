@@ -4,10 +4,12 @@
 /// Example of Chebyshev polynomials
 /// using new TFormula pre-defined definitions of chebyshev polynomials
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Lorenzo Moneta
+/// \date August 2016
 
 void ChebyshevPol() {
 

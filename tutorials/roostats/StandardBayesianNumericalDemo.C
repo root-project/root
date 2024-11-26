@@ -19,11 +19,13 @@
 /// The BayesianCalculator is based on Bayes's theorem
 /// and performs the integration using ROOT's numeric integration utilities
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_output
 /// \macro_code
 ///
 /// \author Kyle Cranmer
+/// \date September 2023
 
 #include "TFile.h"
 #include "TROOT.h"

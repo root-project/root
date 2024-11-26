@@ -3,10 +3,12 @@
 /// \notebook
 /// Display image in a new canvas and pad.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Valeriy Onuchin
+/// \date October 2023
 
 #include "TImage.h"
 #include "TCanvas.h"

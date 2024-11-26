@@ -8,7 +8,8 @@
 ##
 ## where `t` and `tmin` are both observables in the dataset
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
+## \preview 
 ## \macro_code
 ## \macro_output
 ##

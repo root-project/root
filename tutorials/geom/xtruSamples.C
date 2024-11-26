@@ -4,10 +4,12 @@
 ///
 /// Change Bool_t's to test alternative specifications
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Robert Hatcher (rhatcher@fnal.gov) 2000.09.06
+/// \date January 2017
 
 void xtruSamples()
 {

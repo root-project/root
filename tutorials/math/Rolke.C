@@ -12,6 +12,7 @@
 /// \macro_code
 ///
 /// \authors Jan Conrad, Johan Lundberg
+/// \date April 2022
 
 #include "TROOT.h"
 #include "TSystem.h"

@@ -2,9 +2,12 @@
 ## \ingroup tutorial_pyroot
 ## A Simple GUI Example
 ##
+## \macro_image (tcanvas_js)
+## \preview 
 ## \macro_code
 ##
 ## \author Wim Lavrijsen
+## \date March 2021
 from __future__ import print_function
 
 import os, sys, ROOT

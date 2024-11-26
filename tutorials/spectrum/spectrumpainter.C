@@ -3,10 +3,12 @@
 /// \notebook
 /// Examples showing how to use TSpectrum2Painter (the SPEC option)
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author: Olivier Couet, Miroslav Morhac
+/// \date August 2016
 
 void spectrumpainter()
 {

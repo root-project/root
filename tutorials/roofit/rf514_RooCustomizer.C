@@ -9,6 +9,7 @@
 /// \macro_output
 ///
 /// \author Stephan Hageboeck, CERN
+/// \date May 2024
 
 
 #include "RooRealVar.h"

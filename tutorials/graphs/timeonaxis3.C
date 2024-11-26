@@ -6,10 +6,12 @@
 /// is working properly.
 /// The original code was developed by Philippe Gras (CEA Saclay. IRFU/SEDI)
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \authors Philippe Gras, Bertrand Bellenot, Olivier Couet
+/// \date May 2024
 
 #include "TAxis.h"
 #include "TGaxis.h"

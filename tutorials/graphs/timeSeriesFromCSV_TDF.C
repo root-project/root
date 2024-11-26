@@ -6,10 +6,12 @@
 /// statistics during July 2017.
 /// We exploit the TDataFrame for reading from the file
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \authors Danilo Piparo, Olivier Couet
+/// \date December 2022
 
 void timeSeriesFromCSV_TDF()
 {

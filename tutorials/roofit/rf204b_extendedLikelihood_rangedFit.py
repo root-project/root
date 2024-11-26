@@ -45,6 +45,7 @@
 ##  \macro_output
 ##
 ## \authors Stephan Hageboeck, Wouter Verkerke
+## \date September 2023
 
 import ROOT
 

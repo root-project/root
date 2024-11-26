@@ -10,9 +10,12 @@
 ///     the histograms by clicking on the "hpx", "hpxpy" and "hprof"
 ///     buttons
 ///
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Fons Rademakers
+/// \date September 2016
 
 #include "TGButton.h"
 #include "TRootEmbeddedCanvas.h"

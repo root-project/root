@@ -6,10 +6,12 @@
 /// therefore if the a graph's point is
 /// moved interactively, the text will be automatically updated.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Olivier Couet
+/// \date October 2019
 
 void graphtext() {
    TCanvas *c = new TCanvas("c","A Simple Graph Example with Text",700,500);

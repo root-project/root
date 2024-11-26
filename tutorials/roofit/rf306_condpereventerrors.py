@@ -3,7 +3,8 @@
 ## \notebook
 ## Multidimensional models: complete example with use of conditional pdf with per-event errors
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
+## \preview 
 ## \macro_code
 ## \macro_output
 ##

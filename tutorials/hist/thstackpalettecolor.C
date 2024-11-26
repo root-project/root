@@ -11,10 +11,12 @@
 /// In this example four histograms are displayed with palette coloring.
 /// The color of each histogram is picked inside the palette `kOcean`.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Olivier Couet
+/// \date December 2018
 
 void thstackpalettecolor()
 {

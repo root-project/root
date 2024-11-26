@@ -10,10 +10,12 @@
 /// This macro was created for the evaluation of Computational Physics course in 2006.
 /// We thank to Prof. Inkyu Park for his special lecture on ROOT and to all of ROOT team
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Eun Young Kim, Dept. of Physics, Univ. of Seoul
+/// \date December 2022
 
 #include "TCanvas.h"
 #include "TPaveText.h"

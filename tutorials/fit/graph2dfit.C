@@ -3,11 +3,13 @@
 /// \notebook
 /// Fitting a TGraph2D
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_output
 /// \macro_code
 ///
 /// \author Olivier Couet
+/// \date December 2022
 
 #include <TMath.h>
 #include <TGraph2D.h>

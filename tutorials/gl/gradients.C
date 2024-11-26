@@ -4,10 +4,12 @@
 ///  1. Radial and linear gradients
 ///  2. Transparent/semitransparent colours.
 ///
-/// \macro_image(nobatch)
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \authors  Timur Pocheptsov, Sergey Linev
+/// \date November 2023
 
 //Includes for ACLiC:
 #include "TColorGradient.h"

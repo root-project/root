@@ -35,9 +35,12 @@
 ///   .class Det
 /// ~~~
 ///
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Heiko.Scheit@mpi-hd.mpg.de
+/// \date October 2023
 
 #include <TRandom.h>
 #include <TTree.h>

@@ -5,9 +5,12 @@
 /// It provides the infrastructure to run that code on an ntuple
 /// To be run from the tutorials directory
 ///
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Rene Brun
+/// \date October 2024
 
 void hsimpleProxyDriver()
 {

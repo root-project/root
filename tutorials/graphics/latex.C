@@ -7,6 +7,7 @@
 /// \macro_code
 ///
 /// \author Rene Brun
+/// \date July 2016
 
 void latex() {
    TCanvas *c1 = new TCanvas("c1","test",600,700);

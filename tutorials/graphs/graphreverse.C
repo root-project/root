@@ -4,10 +4,12 @@
 /// This example test all the various case of reverse graphs
 /// combined with logarithmic scale.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Olivier Couet
+/// \date May 2024
 
 void graphreverse() {
    auto c = new TCanvas("c","Reversed graphs",0,0,900,900);

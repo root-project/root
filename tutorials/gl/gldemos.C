@@ -2,9 +2,12 @@
 /// \ingroup tutorial_gl
 /// Menu for running GL demos.
 ///
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Timur Pocheptsov
+/// \date January 2016
 
 void gldemos()
 {

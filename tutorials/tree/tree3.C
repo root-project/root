@@ -10,9 +10,12 @@
 /// In the function treer, the first Tree is open.
 /// The second Tree is declared friend of the first tree.
 /// TTree::Draw is called with variables from both Trees.
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Rene Brun
+/// \date September 2016
 
 #include "TFile.h"
 #include "TTree.h"

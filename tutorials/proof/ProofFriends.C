@@ -3,9 +3,12 @@
 ///
 /// Selector to process tree friends
 ///
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Gerardo Ganis (gerardo.ganis@cern.ch)
+/// \date October 2023
 
 #define ProofFriends_cxx
 

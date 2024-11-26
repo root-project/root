@@ -3,10 +3,12 @@
 ## \notebook -js
 ## TF1 example.
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
+## \preview 
 ## \macro_code
 ##
 ## \author Wim Lavrijsen
+## \date August 2016
 
 from ROOT import TCanvas, TFormula, TF1
 from ROOT import gROOT, gObjectTable

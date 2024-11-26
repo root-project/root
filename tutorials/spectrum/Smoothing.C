@@ -3,10 +3,12 @@
 /// \notebook
 /// Example to illustrate smoothing using Markov algorithm (class TSpectrum).
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Miroslav Morhac
+/// \date January 2017
 
 void Smoothing() {
    Int_t i;

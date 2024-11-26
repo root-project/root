@@ -7,6 +7,8 @@
 ## DataFrame, and then it shows you how to create a RooDataSet from a Pandas
 ## DataFrame.
 ##
+## \macro_image (tcanvas_js)
+## \preview 
 ## \macro_code
 ## \macro_output
 ##

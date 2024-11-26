@@ -4,11 +4,13 @@
 ## Combined (simultaneous) fit of two histogram with separate functions
 ## and some common parameters
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
+## \preview 
 ## \macro_output
 ## \macro_code
 ##
 ## \author Jonas Rembser, Lorenzo Moneta (C++ version)
+## \date January 2022
 
 
 import ROOT

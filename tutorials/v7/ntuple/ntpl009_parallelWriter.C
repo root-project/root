@@ -3,7 +3,8 @@
 /// \notebook
 /// Example of multi-threaded writes using RNTupleParallelWriter.  Adapted from the ntpl007_mtFill tutorial.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \date Feburary 2024

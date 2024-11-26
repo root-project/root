@@ -3,11 +3,13 @@
 /// \notebook -js
 /// Demonstrates non central chi-square.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_output
 /// \macro_code
 ///
 /// \author Lorenzo Moneta
+/// \date October 2024
 
 using namespace RooFit;
 void TestNonCentral()

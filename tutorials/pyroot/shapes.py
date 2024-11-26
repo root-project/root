@@ -8,9 +8,12 @@
 ## once in x3d viewer, type m to see the menu.
 ## For example typing r will show a solid model of this geometry.
 ##
+## \macro_image (tcanvas_js)
+## \preview 
 ## \macro_code
 ##
 ## \author Wim Lavrijsen
+## \date September 2016
 
 import ROOT
 

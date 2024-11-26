@@ -4,6 +4,8 @@
 ## This tutorial illustrates how you can test a trained BDT model using the fast
 ## tree inference engine offered by TMVA and external tools such as scikit-learn.
 ##
+## \macro_image (tcanvas_js)
+## \preview 
 ## \macro_code
 ## \macro_output
 ##

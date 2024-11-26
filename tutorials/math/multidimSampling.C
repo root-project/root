@@ -4,10 +4,12 @@
 /// Example of sampling a multi-dim distribution using the DistSampler class
 /// NOTE: This tutorial must be run with ACLIC
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Lorenzo Moneta
+/// \date November 2023
 
 // function (a 4d gaussian)
 #include "TMath.h"

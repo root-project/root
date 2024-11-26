@@ -19,7 +19,8 @@
 /// See the [corresponding spec json file](https://github.com/root-project/root/blob/master/tutorials/dataframe/df106_HiggsToFourLeptons_spec.json).
 ///
 /// \macro_code
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 ///
 /// \date March 2020, August 2022, August 2023
 /// \authors Stefan Wunsch (KIT, CERN), Julia Mathe (CERN), Marta Czurylo (CERN)

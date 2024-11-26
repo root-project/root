@@ -10,7 +10,8 @@
 /// The histogram shows the usage of the ROOT development version.
 ///
 /// \macro_code
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 ///
 /// \date August 2018
 /// \author Alexandra-Maria Dobrescu

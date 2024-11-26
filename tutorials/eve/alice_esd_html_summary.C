@@ -5,6 +5,7 @@
 /// \macro_code
 ///
 /// \author Bertrand Bellenot
+/// \date November 2015
 
 class HtmlObjTable : public TObject
 {

@@ -7,6 +7,7 @@
 /// \macro_code
 ///
 /// \author Valeriy Onuchin
+/// \date August 2016
 
 void imgconv()
 {

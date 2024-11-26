@@ -9,10 +9,12 @@
 ///
 /// Example distribution and smearing model from Tim Adye (RAL)
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \authors Kerstin Tackmann, Andreas Hoecker, Heiko Lacker
+/// \date November 2024
 
 #include <iostream>
 

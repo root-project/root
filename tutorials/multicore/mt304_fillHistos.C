@@ -5,7 +5,8 @@
 /// Illustrates use of power-of-two autobin algorithm
 ///
 /// \macro_code
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 ///
 /// \date November 2017
 /// \author Gerardo Ganis

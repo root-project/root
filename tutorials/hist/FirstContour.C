@@ -7,9 +7,12 @@
 /// The TGraph object corresponding to the first contour line is
 /// accessed and displayed into a separate canvas.
 ///
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Rene Brun
+/// \date January 2017
 
 void FirstContour()
 {

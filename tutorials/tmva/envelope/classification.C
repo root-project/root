@@ -3,6 +3,8 @@
 /// \notebook -nodraw
 
 /// \macro_output
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 
 

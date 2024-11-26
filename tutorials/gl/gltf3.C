@@ -9,10 +9,12 @@
 ///  - kMaple2 - nice colour outlines.
 /// To switch between them, you can press 's' key.
 ///
-/// \macro_image(nobatch)
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Timur Pocheptsov
+/// \date April 2022
 
 void gltf3()
 {

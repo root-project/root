@@ -8,10 +8,12 @@
 ///     that the population per bin is about the same.
 ///   - rebin a variable bin-width histogram into another one.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Rene Brun
+/// \date July 2016
 
 #include "TH1.h"
 #include "TCanvas.h"

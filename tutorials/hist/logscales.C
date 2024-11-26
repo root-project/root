@@ -3,10 +3,12 @@
 /// \notebook
 /// Draw parametric functions with log scales.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Olivier Couet
+/// \date July 2016
 
 void logscales() {
    TCanvas *c1 = new TCanvas("c1", "Various options on LOG scales plots",0,0,700,900);

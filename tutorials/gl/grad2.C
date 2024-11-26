@@ -5,10 +5,12 @@
 /// either set OpenGL.CanvasPreferGL to 1 in $ROOTSYS/etc/system.rootrc;
 /// or call `gStyle->SetCanvasPreferGL(kTRUE);` before canvas created.
 ///
-/// \macro_image(nobatch)
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \authors  Timur Pocheptsov, Sergey Linev
+/// \date November 2023
 
 //Includes for ACLiC (cling does not need them).
 #include "TColorGradient.h"

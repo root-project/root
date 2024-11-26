@@ -45,7 +45,8 @@
 ///            - write many histograms, to compare various unfolding methods
 ///
 /// \macro_output
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 ///  **Version 17.6, in parallel to changes in TUnfold**
@@ -66,6 +67,7 @@
 ///  along with TUnfold.  If not, see <http://www.gnu.org/licenses/>.
 ///
 /// \author Stefan Schmitt DESY, 14.10.2008
+/// \date November 2024
 
 #include <iostream>
 #include <cmath>

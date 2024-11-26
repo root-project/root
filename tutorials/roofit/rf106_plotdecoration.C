@@ -3,7 +3,8 @@
 /// \notebook -js
 /// Basic functionality: adding boxes with parameters, statistics to RooPlots, decorating with arrows, text etc...
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 /// \macro_output
 ///

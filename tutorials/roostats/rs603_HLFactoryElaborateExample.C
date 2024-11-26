@@ -3,11 +3,13 @@
 /// \notebook -js
 /// High Level Factory: creating a complex combined model.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_output
 /// \macro_code
 ///
 /// \author Danilo Piparo
+/// \date March 2024
 
 #include <fstream>
 #include "TString.h"

@@ -3,11 +3,13 @@
 ## \notebook
 ## Fit example.
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
+## \preview 
 ## \macro_output
 ## \macro_code
 ##
 ## \author Wim Lavrijsen
+## \date October 2024
 
 import ROOT
 from os import path

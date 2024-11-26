@@ -13,11 +13,13 @@
 ///  The file "hsimple.root" is created in $ROOTSYS/tutorials if the caller has
 ///  write access to this directory, otherwise the file is created in $PWD
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_output
 /// \macro_code
 ///
 /// \author Rene Brun
+/// \date October 2023
 
 #include <TFile.h>
 #include <TNtuple.h>

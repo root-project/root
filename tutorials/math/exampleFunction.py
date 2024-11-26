@@ -5,6 +5,7 @@
 ## using the ROOT Functor class 
 ##
 ## \author Lorenzo Moneta
+## \date April 2022
 
 import ROOT
 import array

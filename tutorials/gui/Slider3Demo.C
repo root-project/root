@@ -2,9 +2,12 @@
 /// \ingroup tutorial_gui
 /// Simple macro showing capabilities of triple slider
 ///
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Bertrand Bellenot, Ilka Antcheva
+/// \date October 2023
 
 #include "TGButton.h"
 #include "TRootEmbeddedCanvas.h"

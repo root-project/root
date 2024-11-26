@@ -3,11 +3,13 @@
 ## \notebook -js
 ## A Simple histogram drawing example
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
+## \preview 
 ## \macro_output
 ## \macro_code
 ##
 ## \author Wim Lavrijsen
+## \date April 2022
 
 import ROOT
 from ROOT import TCanvas, TPad, TFile, TPaveLabel, TPaveText

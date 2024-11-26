@@ -11,10 +11,12 @@
 ##
 ## based on Magdalena Slawinska's tStudent.C
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
+## \preview 
 ## \macro_code
 ##
 ## \author Juan Fernando Jaramillo Botero
+## \date April 2019
 
 from ROOT import TH1D, TF1, TCanvas, kRed, kBlue
 import ROOT

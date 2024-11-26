@@ -6,6 +6,7 @@
 /// \macro_code
 ///
 /// \author Matevz Tadel
+/// \date June 2018
 
 void    quadset_callback(TEveDigitSet* ds, Int_t idx, TObject* obj);
 TString quadset_tooltip_callback(TEveDigitSet* ds, Int_t idx);

@@ -3,11 +3,13 @@
 /// \notebook -js
 /// Minuit2 fit 2D benchmark.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_output
 /// \macro_code
 ///
 /// \author Lorenzo Moneta
+/// \date October 2024
 
 #include "TH1.h"
 #include "TF1.h"

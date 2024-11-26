@@ -13,6 +13,7 @@
 /// \macro_code
 ///
 /// \author The ROOT Team
+/// \date June 2018
 
 #ifndef CLONESA_EVENT_SECOND_RUN
 

@@ -2,10 +2,12 @@
 /// \ingroup tutorial_math
 /// Demo for quantiles (with highlight mode)
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \authors Rene Brun, Eddy Offermann, Jan Musinsky
+/// \date January 2022
 
 TList *lq = nullptr;
 TGraph *gr = nullptr;

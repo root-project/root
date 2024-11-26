@@ -8,10 +8,12 @@
 ///
 /// The formula for Hydrogen in this energy state is \f$ \psi_{200} = \frac{1}{4\sqrt{2\pi}a_0 ^{\frac{3}{2}}}(2-\frac{\sqrt{x^2+y^2}}{a_0})e^{-\frac{\sqrt{x^2+y^2}}{2a_0}} \f$
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Advait Dhingra
+/// \date November 2024
 
 #include <cmath>
 

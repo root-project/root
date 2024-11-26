@@ -11,7 +11,8 @@
 /// greater than 100 MeV.
 ///
 /// \macro_code
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 ///
 /// \date March 2018
 /// \authors Danilo Piparo (CERN), Andre Vieira Silva

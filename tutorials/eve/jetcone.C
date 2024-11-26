@@ -6,6 +6,7 @@
 /// \macro_code
 ///
 /// \author Jochen Thaeder
+/// \date August 2020
 
 const char* esd_geom_file_name =
    "http://root.cern/files/alice_ESDgeometry.root";

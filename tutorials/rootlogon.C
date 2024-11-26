@@ -7,6 +7,7 @@
 /// \macro_code
 ///
 /// \author Rene Brun
+/// \date July 2016
 
 {
    printf("\nWelcome to the ROOT tutorials\n\n");

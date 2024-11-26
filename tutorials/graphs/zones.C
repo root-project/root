@@ -5,10 +5,12 @@
 /// into adjacent subpads + axis labels on the top and right side
 /// of the pads.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Rene Brun
+/// \date July 2016
 
 void zones() {
    TCanvas *c1 = new TCanvas("c1","multipads",900,700);

@@ -3,7 +3,8 @@
 /// \notebook
 /// Write and read STL vectors with RNTuple.  Adapted from the hvector tree tutorial.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \date April 2019

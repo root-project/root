@@ -5,10 +5,12 @@
 /// The graph layout is made using graphviz. This macro creates some
 /// nodes and edges and change a few graphical attributes on some of them.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 /// \note For this to work, ROOT has to be compiled with gviz ON
 /// \author Olivier Couet
+/// \date March 2022
 
 TCanvas* graphstruct()
 {

@@ -3,9 +3,12 @@
 /// \notebook
 /// TSpider example.
 ///
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Bastien Dallapiazza
+/// \date September 2016
 
 #include "TFile.h"
 #include "TCanvas.h"

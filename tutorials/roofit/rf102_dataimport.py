@@ -4,7 +4,8 @@
 ## 'BASIC FUNCTIONALITY' RooFit tutorial macro #102
 ## Importing data from ROOT TTrees and THx histograms
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
+## \preview 
 ## \macro_code
 ## \macro_output
 ##

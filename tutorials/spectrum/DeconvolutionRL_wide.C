@@ -3,10 +3,12 @@
 /// \notebook
 /// Example to illustrate deconvolution function (class TSpectrum).
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \authors Miroslav Morhac, Olivier Couet
+/// \date January 2017
 
 void DeconvolutionRL_wide() {
    Int_t i;

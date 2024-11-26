@@ -32,11 +32,13 @@
 ///  root "fit2dHist.C+(12)"
 /// ~~~
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_output
 /// \macro_code
 ///
 /// \authors: Lorenzo Moneta, Rene Brun 18/01/2006
+/// \date October 2024
 
 #include "TH2D.h"
 #include "TF2.h"

@@ -2,10 +2,12 @@
 /// \ingroup tutorial_geom
 /// Draw a "representative" TXTRU shape
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Robert Hatcher (rhatcher@fnal.gov) 2000.09.06
+/// \date April 2016
 
 void xtruDraw() {
   TCanvas *canvas = new TCanvas("xtru","Example XTRU object",200,10,640,640);

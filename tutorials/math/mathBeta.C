@@ -3,10 +3,12 @@
 /// \notebook
 /// Test the TMath::BetaDist and TMath::BetaDistI functions
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Anna Kreshuk
+/// \date August 2016
 
 #include "TMath.h"
 #include "TCanvas.h"

@@ -8,6 +8,8 @@
 /// STL algorithms is possible.
 ///
 /// \macro_output
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \date January 2016

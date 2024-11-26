@@ -15,11 +15,13 @@
 /// NOTE: This script requires a data file `$ROOTSYS/tutorials/splot/TestSPlot_toyMC.dat`.
 ///
 /// \notebook -js
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_output
 /// \macro_code
 ///
 /// \authors Anna Kreshuk, Muriel Pivc
+/// \date September 2016
 
 #include "TSPlot.h"
 #include "TTree.h"

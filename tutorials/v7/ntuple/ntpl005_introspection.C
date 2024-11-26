@@ -4,7 +4,8 @@
 /// Write and read an RNTuple from a user-defined class.  Adapted from tv3.C
 /// Illustrates various RNTuple introspection methods.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \date April 2020

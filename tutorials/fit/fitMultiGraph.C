@@ -4,11 +4,13 @@
 /// fitting a parabola to a multigraph of 3 partly overlapping graphs
 /// with different errors
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_output
 /// \macro_code
 ///
 /// \author Anna Kreshuk
+/// \date October 2023
 
 #include "TMultiGraph.h"
 #include "TRandom.h"

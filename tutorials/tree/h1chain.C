@@ -8,6 +8,7 @@
 /// \macro_code
 ///
 /// \author Rene Brun
+/// \date September 2016
 
 TChain chain("h42");
 

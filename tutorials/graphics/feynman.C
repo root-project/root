@@ -3,10 +3,12 @@
 /// \notebook
 /// Draw Feynman diagrams.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \author Otto Schaile
+/// \date July 2016
 
 void feynman()
 {
