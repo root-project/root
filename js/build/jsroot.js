@@ -1,4 +1,4 @@
-// https://root.cern/js/ v7.8.0
+// https://root.cern/js/ v7.8.99
 (function (global, factory) {
 typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
 typeof define === 'function' && define.amd ? define(['exports'], factory) :
@@ -8,11 +8,11 @@ typeof define === 'function' && define.amd ? define(['exports'], factory) :
 var _documentCurrentScript = typeof document !== 'undefined' ? document.currentScript : null;
 /** @summary version id
   * @desc For the JSROOT release the string in format 'major.minor.patch' like '7.0.0' */
-const version_id = '7.8.0',
+const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '11/11/2024',
+version_date = '26/11/2024',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -1157,7 +1157,7 @@ function create$1(typename, target) {
          break;
       case clTPave:
          create$1(clTBox, obj);
-         extend$1(obj, { fX1NDC: 0, fY1NDC: 0, fX2NDC: 1, fY2NDC: 1,
+         extend$1(obj, { fX1NDC: 0, fY1NDC: 0, fX2NDC: 0, fY2NDC: 0,
                        fBorderSize: 0, fInit: 1, fShadowColor: 1,
                        fCornerRadius: 0, fOption: 'brNDC', fName: '' });
          break;
@@ -1284,7 +1284,7 @@ function create$1(typename, target) {
          create$1(clTNamed, obj);
          create$1(clTAttText, obj);
          create$1(clTAttLine, obj);
-         extend$1(obj, { fRadian: true, fDegree: false, fGrad: false, fPolarLabelColor: 1, fRadialLabelColor: 1,
+         extend$1(obj, { fRadian: false, fDegree: false, fGrad: false, fPolarLabelColor: 1, fRadialLabelColor: 1,
                        fAxisAngle: 0, fPolarOffset: 0.04, fPolarTextSize: 0.04, fRadialOffset: 0.025, fRadialTextSize: 0.035,
                        fRwrmin: 0, fRwrmax: 1, fRwtmin: 0, fRwtmax: 2*Math.PI, fTickpolarSize: 0.02,
                        fPolarLabelFont: 62, fRadialLabelFont: 62, fCutRadial: 0, fNdivRad: 508, fNdivPol: 508 });
@@ -8524,23 +8524,32 @@ function getAbsPosInCanvas(sel, pos) {
   * @param {boolean} [ret_fmt] - when true returns array with value and actual format like ['0.1','6.4f']
   * @return {string|Array} - converted value or array with value and actual format
   * @private */
-function floatToString(value, fmt, ret_fmt, significance) {
+function floatToString(value, fmt, ret_fmt) {
    if (!fmt)
       fmt = '6.4g';
    else if (fmt === 'g')
-      fmt = '8.6g';
-   else if (fmt === 'c')
-      fmt = '8.6c';
+      fmt = '7.5g';
 
    fmt = fmt.trim();
    const len = fmt.length;
    if (len < 2)
       return ret_fmt ? [value.toFixed(4), '6.4f'] : value.toFixed(4);
-   const kind = fmt[len-1].toLowerCase();
-   fmt = fmt.slice(0, len-1);
+
+   const kind = fmt[len-1].toLowerCase(),
+         compact = (len > 1) && (fmt[len-2] === 'c') ? 'c' : '';
+   fmt = fmt.slice(0, len - (compact ? 2 : 1));
+
+   if (kind === 'g') {
+      const se = floatToString(value, fmt+'ce', true),
+            sg = floatToString(value, fmt+'cf', true),
+            res = se[0].length < sg[0].length || ((sg[0] === '0') && value) ? se : sg;
+      return ret_fmt ? res : res[0];
+   }
+
    let isexp, prec = fmt.indexOf('.');
    prec = (prec < 0) ? 4 : parseInt(fmt.slice(prec+1));
-   if (!Number.isInteger(prec) || (prec <= 0)) prec = 4;
+   if (!Number.isInteger(prec) || (prec <= 0))
+      prec = 4;
 
    switch (kind) {
       case 'e':
@@ -8549,45 +8558,37 @@ function floatToString(value, fmt, ret_fmt, significance) {
       case 'f':
          isexp = false;
          break;
-      case 'c':
-      case 'g': {
-         const se = floatToString(value, fmt+'e', true, true);
-         let sg = floatToString(value, fmt+'f', true, true);
-         const pnt = sg[0].indexOf('.');
-         if ((kind === 'c') && (pnt > 0)) {
-            let len = sg[0].length;
-            while ((len > pnt) && (sg[0][len-1] === '0'))
-               len--;
-            if (len === pnt) len--;
-            sg[0] = sg[0].slice(0, len);
-         }
-         if (se[0].length < sg[0].length) sg = se;
-         return ret_fmt ? sg : sg[0];
-      }
       default:
          isexp = false;
          prec = 4;
    }
 
    if (isexp) {
-      // for exponential representation only one significant digit before point
-      if (significance) prec--;
-      if (prec < 0) prec = 0;
+      let se = value.toExponential(prec);
 
-      const se = value.toExponential(prec);
-      return ret_fmt ? [se, `${prec+2}.${prec}e`] : se;
+      if (compact) {
+         const pnt = se.indexOf('.'),
+               pe = se.toLowerCase().indexOf('e');
+         if ((pnt > 0) && (pe > pnt)) {
+            let p = pe;
+            while ((p > pnt) && (se[p-1] === '0'))
+               p--;
+            if (p === pnt + 1)
+               p--;
+            if (p !== pe)
+               se = se.slice(0, p) + se.slice(pe);
+         }
+      }
+
+      return ret_fmt ? [se, `${prec+2}.${prec}${compact}e`] : se;
    }
 
    let sg = value.toFixed(prec);
 
-   if (significance) {
-      // when using fixed representation, one could get 0
-      if ((value !== 0) && (Number(sg) === 0) && (prec > 0)) {
-         prec = 20; sg = value.toFixed(prec);
-      }
-
+   if (compact) {
       let l = 0;
-      while ((l < sg.length) && (sg[l] === '0' || sg[l] === '-' || sg[l] === '.')) l++;
+      while ((l < sg.length) && (sg[l] === '0' || sg[l] === '-' || sg[l] === '.'))
+         l++;
 
       let diff = sg.length - l - prec;
       if (sg.indexOf('.') > l) diff--;
@@ -8600,9 +8601,22 @@ function floatToString(value, fmt, ret_fmt, significance) {
             prec = 20;
          sg = value.toFixed(prec);
       }
+
+      const pnt = sg.indexOf('.');
+      if (pnt > 0) {
+         let p = sg.length;
+         while ((p > pnt) && (sg[p-1] === '0'))
+            p--;
+         if (p === pnt + 1)
+            p--;
+         sg = sg.slice(0, p);
+      }
+
+      if (sg === '-0')
+         sg = '0';
    }
 
-   return ret_fmt ? [sg, `${prec+2}.${prec}f`] : sg;
+   return ret_fmt ? [sg, `${prec+2}.${prec}${compact}f`] : sg;
 }
 
 
@@ -9290,6 +9304,15 @@ function convertDate(dt) {
    return res || dt.toLocaleString('en-GB');
 }
 
+/** @summary Box decorations
+  * @private */
+function getBoxDecorations(xx, yy, ww, hh, bmode, pww, phh)
+{
+   const side1 = `M${xx},${yy}h${ww}l${-pww},${phh}h${2*pww-ww}v${hh-2*phh}l${-pww},${phh}z`,
+         side2 = `M${xx+ww},${yy+hh}v${-hh}l${-pww},${phh}v${hh-2*phh}h${2*pww-ww}l${-pww},${phh}z`;
+   return bmode > 0 ? [side1, side2] : [side2, side1];
+}
+
 const kArial = 'Arial', kTimes = 'Times New Roman', kCourier = 'Courier New', kVerdana = 'Verdana', kSymbol = 'RootSymbol', kWingdings = 'Wingdings',
     // average width taken from symbols.html, counted only for letters and digits
     root_fonts = [null,  // index 0 not exists
@@ -9387,7 +9410,7 @@ class FontHandler {
          this.scaled = true;
       }
 
-      this.size = Math.round(size || 11);
+      this.size = Math.round(size);
       this.scale = scale;
       this.index = 0;
 
@@ -9839,7 +9862,8 @@ const latex_features = [
    { name: '#tilde{', accent: '\u02DC', hasw: true }, // '\u0303'
    { name: '#slash{', accent: '\u2215' }, // '\u0337'
    { name: '#vec{', accent: '\u02ED', hasw: true }, // '\u0350' arrowhead
-   { name: '#frac{', twolines: 'line' },
+   { name: '#frac{', twolines: 'line', middle: true },
+   { name: '#splitmline{', twolines: true, middle: true },
    { name: '#splitline{', twolines: true },
    { name: '#sqrt[', arg: 'int', sqrt: true }, // root with arbitrary power
    { name: '#sqrt{', sqrt: true },             // square root
@@ -10102,7 +10126,7 @@ function parseLatex(node, arg, label, curr) {
    },
 
    createSubPos = fscale => {
-      return { lvl: curr.lvl + 1, x: 0, y: 0, fsize: curr.fsize*(fscale || 1), color: curr.color, font: curr.font, parent: curr, painter: curr.painter };
+      return { lvl: curr.lvl + 1, x: 0, y: 0, fsize: curr.fsize*(fscale || 1), color: curr.color, font: curr.font, parent: curr, painter: curr.painter, italic: curr.italic, bold: curr.bold };
    };
 
    while (label) {
@@ -10140,7 +10164,8 @@ function parseLatex(node, arg, label, curr) {
             const g = curr.g || (alone ? node : currG()),
                   elem = g.append('svg:text');
 
-            if (alone && !curr.g) curr.g = elem;
+            if (alone && !curr.g)
+               curr.g = elem;
 
             // apply font attributes only once, inherited by all other elements
             if (curr.ufont) {
@@ -10187,7 +10212,7 @@ function parseLatex(node, arg, label, curr) {
                elem.attr('text-decoration', curr.deco);
                delete curr.deco; // inform that decoration was applied
             } else
-               curr.xgap = xgap; // may be used in accent or somewere else
+               curr.xgap = xgap; // may be used in accent or somewhere else
          } else
             addSpaces(nendspaces);
       }
@@ -10247,15 +10272,16 @@ function parseLatex(node, arg, label, curr) {
          curr.twolines = true;
 
          const line1 = extractSubLabel(), line2 = extractSubLabel(true);
-         if ((line1 === -1) || (line2 === -1)) return false;
+         if ((line1 === -1) || (line2 === -1))
+            return false;
 
          const gg = createGG(),
-               fscale = (curr.parent && curr.parent.twolines) ? 0.7 : 1,
+               fscale = curr.parent?.twolines ? 0.7 : 1,
                subpos1 = createSubPos(fscale);
 
          parseLatex(gg, arg, line1, subpos1);
 
-         const path = (found.twolines === 'line') ? createPath(gg) : null,
+         const path = found.twolines === 'line' ? createPath(gg) : null,
                subpos2 = createSubPos(fscale);
 
          parseLatex(gg, arg, line2, subpos2);
@@ -10264,9 +10290,9 @@ function parseLatex(node, arg, label, curr) {
                dw = subpos1.rect.width - subpos2.rect.width,
                dy = -curr.fsize*0.35; // approximate position of middle line
 
-         positionGNode(subpos1, (dw < 0 ? -dw/2 : 0), dy - subpos1.rect.y2, true);
+         positionGNode(subpos1, found.middle && (dw < 0) ? -dw/2 : 0, dy - subpos1.rect.y2, true);
 
-         positionGNode(subpos2, (dw > 0 ? dw/2 : 0), dy - subpos2.rect.y1, true);
+         positionGNode(subpos2, found.middle && (dw > 0) ? dw/2 : 0, dy - subpos2.rect.y1, true);
 
          path?.attr('d', `M0,${Math.round(dy)}h${Math.round(w - curr.fsize*0.1)}`);
 
@@ -10449,11 +10475,7 @@ function parseLatex(node, arg, label, curr) {
 
          const subpos = createSubPos();
 
-         let value;
-         for (let c = curr; c && (value === undefined && c); c = c.parent)
-            value = c[found.bi];
-
-         subpos[found.bi] = !value;
+         subpos[found.bi] = !subpos[found.bi];
 
          parseLatex(currG(), arg, sublabel, subpos);
 
@@ -10531,7 +10553,7 @@ function parseLatex(node, arg, label, curr) {
          if (found.name === '#color[')
             subpos.color = curr.painter.getColor(foundarg);
          else if (found.name === '#font[') {
-            subpos.font = new FontHandler(foundarg);
+            subpos.font = new FontHandler(foundarg, subpos.fsize);
             // here symbols embedding not works, use replacement
             if ((subpos.font.name === kSymbol) && !subpos.font.isSymbol) {
                subpos.font.isSymbol = kSymbol;
@@ -11914,7 +11936,8 @@ class TAttLineHandler {
       if (args.width === undefined)
          args.width = (args.color && args.color !== 'none') ? 1 : 0;
 
-      this.color = (args.width === 0) ? 'none' : args.color;
+      this.nocolor = args.nocolor;
+      this.color = (args.width === 0) || this.nocolor ? 'none' : args.color;
       this.width = args.width;
       this.style = args.style;
       this.pattern = args.pattern || root_line_styles[this.style] || null;
@@ -12378,7 +12401,8 @@ class ObjectPainter extends BasePainter {
      * @param {string} [opt] - option which will be used for redrawing
      * @protected */
    updateObject(obj /* , opt */) {
-      if (!this.matchObjectType(obj)) return false;
+      if (!this.matchObjectType(obj))
+         return false;
       Object.assign(this.getObject(), obj);
       return true;
    }
@@ -57878,10 +57902,14 @@ class PointsCreator {
       let k = 1;
 
       // special dots
-      if (!args.style) k = 1.1; else
-      if (args.style === 1) k = 0.3; else
-      if (args.style === 6) k = 0.5; else
-      if (args.style === 7) k = 0.7;
+      if (!args.style)
+         k = 1.1;
+      else if (args.style === 1)
+         k = 0.3;
+      else if (args.style === 6)
+         k = 0.5;
+      else if (args.style === 7)
+         k = 0.7;
 
       const makePoints = texture => {
          const material_args = { size: 3*this.scale*k };
@@ -57906,7 +57934,7 @@ class PointsCreator {
       const handler = new TAttMarkerHandler({ style: args.style, color: args.color, size: 7 }),
             w = handler.fill ? 1 : 7,
             imgdata = `<svg width="64" height="64" xmlns="${nsSVG}">` +
-                      `<path d="${handler.create(32, 32)}" style="stroke: ${handler.getStrokeColor()}; stroke-width: ${w}; fill: ${handler.getFillColor()}"></path>`+
+                      `<path d="${handler.create(32, 32)}" style="stroke: ${handler.getStrokeColor()}; stroke-width: ${w}; fill: ${args.fill ?? handler.getFillColor()}"></path>`+
                       '</svg>',
             dataUrl = prSVG + (isNodeJs() ? imgdata : encodeURIComponent(imgdata));
       let promise;
@@ -60647,20 +60675,30 @@ let _saveFileFunc = null;
 /** @summary Returns image file content as it should be stored on the disc
   * @desc Replaces all kind of base64 coding
   * @private */
-
 function getBinFileContent(content) {
    if (content.indexOf(prSVG) === 0)
       return decodeURIComponent(content.slice(prSVG.length));
 
-   if (content.indexOf('data:image/') === 0) {
+   if (content.indexOf(prJSON) === 0)
+      return decodeURIComponent(content.slice(prJSON.length));
+
+   if ((content.indexOf('data:image/') === 0) || (content.indexOf('data:application/pdf') === 0)) {
       const p = content.indexOf('base64,');
-      if (p > 0) {
-         const base64 = content.slice(p + 7);
-         return atob_func(base64);
-      }
+      if (p > 0)
+         return atob_func(content.slice(p + 7));
    }
 
    return content;
+}
+
+/** @summary Returns type of file content
+  * @private */
+function getContentType(content) {
+   if (content.indexOf('data:') !== 0)
+      return '';
+
+   const p = content.indexOf(';');
+   return (p > 0) ? content.slice(5, p) : '';
 }
 
 /** @summary Function store content as file with filename
@@ -60673,18 +60711,39 @@ async function saveFile(filename, content) {
          fs.writeFileSync(filename, getBinFileContent(content));
          return true;
       });
-   } else if (typeof document !== 'undefined') {
-      const a = document.createElement('a');
-      a.download = filename;
-      a.href = content;
-      document.body.appendChild(a);
+   } else if (typeof document === 'undefined')
+      return false;
 
-      return new Promise(resolve => {
-         a.addEventListener('click', () => { a.parentNode.removeChild(a); resolve(true); });
-         a.click();
+   const a = document.createElement('a');
+   a.download = filename;
+   a.style.display = 'none';
+   let fileURL = '';
+   const contentType = getContentType(content);
+
+   if ((content.length > 1e6) && (contentType === 'application/pdf')) {
+      // large PDF files do not work in the browser with plain base64 coding
+      const bindata = getBinFileContent(content),
+            blob = new Blob([bindata], { type: contentType });
+      fileURL = URL.createObjectURL(blob);
+      a.href = fileURL;
+   } else
+      a.href = content;
+
+   document.body.appendChild(a);
+
+   return new Promise(resolve => {
+      a.addEventListener('click', () => {
+         if (fileURL) {
+            setTimeout(() => {
+               a.parentNode.removeChild(a);
+               URL.revokeObjectURL(fileURL);
+            }, 3000);
+         } else
+            a.parentNode.removeChild(a);
+         resolve(true);
       });
-   }
-   return false;
+      a.click();
+   });
 }
 
 /** @summary Function store content as file with filename
@@ -60753,7 +60812,8 @@ function changeObjectMember(painter, member, val, is_color) {
 
 Object.assign(internals.jsroot, { addMoveHandler, registerForResize });
 
-const kToFront = '__front__', sDfltName = 'root_ctx_menu', sDfltDlg = '_dialog',
+const kToFront = '__front__', kNoReorder = '__no_reorder',
+      sDfltName = 'root_ctx_menu', sDfltDlg = '_dialog',
       sSub = 'sub:', sEndsub = 'endsub:', sSeparator = 'separator', sHeader = 'header:';
 
 /**
@@ -61197,7 +61257,7 @@ class JSRootMenu {
    /** @summary Add line style menu
      * @private */
    addLineStyleMenu(name, value, set_func) {
-      this.sub(''+name, () => this.input('Enter line style id (1-solid)', value, 'int', 1, 11).then(val => {
+      this.sub(name, () => this.input('Enter line style id (1-solid)', value, 'int', 1, 11).then(val => {
          if (getSvgLineStyle(val)) set_func(val);
       }));
       for (let n = 1; n < 11; ++n) {
@@ -61323,12 +61383,14 @@ class JSRootMenu {
             if (pp) changeObjectMember(pp, 'fFrameLineWidth', arg);
             painter.interactiveRedraw(redraw_arg, `exec:SetLineWidth(${arg})`);
          });
-         this.addColorMenu('color', painter.lineatt.color, arg => {
-            painter.lineatt.change(arg);
-            changeObjectMember(painter, 'fLineColor', arg, true);
-            if (pp) changeObjectMember(pp, 'fFrameLineColor', arg, true);
-            painter.interactiveRedraw(redraw_arg, getColorExec(arg, 'SetLineColor'));
-         });
+         if (!painter.lineatt.nocolor) {
+            this.addColorMenu('color', painter.lineatt.color, arg => {
+               painter.lineatt.change(arg);
+               changeObjectMember(painter, 'fLineColor', arg, true);
+               if (pp) changeObjectMember(pp, 'fFrameLineColor', arg, true);
+               painter.interactiveRedraw(redraw_arg, getColorExec(arg, 'SetLineColor'));
+            });
+         }
          this.addLineStyleMenu('style', painter.lineatt.style, id => {
             painter.lineatt.change(undefined, undefined, id);
             changeObjectMember(painter, 'fLineStyle', id);
@@ -62378,10 +62440,12 @@ function showPainterMenu(evnt, painter, kind) {
 
    createMenu(evnt, painter).then(menu => {
       painter.fillContextMenu(menu);
-      if ((kind === kToFront) && isFunc(painter.bringToFront)) {
-         menu.add('Bring to front', () => painter.bringToFront(true));
+      if (kind === kNoReorder)
          kind = undefined;
-      }
+      else if (isFunc(painter.bringToFront))
+         menu.add('Bring to front', () => painter.bringToFront(true));
+      if (kind === kToFront)
+         kind = undefined;
       return painter.fillObjectExecMenu(menu, kind);
    }).then(menu => menu.show());
 }
@@ -62410,7 +62474,7 @@ function assignContextMenu(painter, kind) {
       painter.draw_g.on('contextmenu', settings.ContextMenu ? evnt => showPainterMenu(evnt, painter, kind) : null);
 }
 
-Object.assign(internals.jsroot, { createMenu, closeMenu, assignContextMenu, kToFront });
+Object.assign(internals.jsroot, { createMenu, closeMenu, assignContextMenu, kToFront, kNoReorder });
 
 /** @summary Return time offset value for given TAxis object
   * @private */
@@ -62589,7 +62653,7 @@ const AxisPainterMethods = {
          return res;
       }
 
-      return floatToString(val, fmt || 'c');
+      return floatToString(val, fmt || '8.6g');
    },
 
    /** @summary Provide label for exponential form */
@@ -63074,11 +63138,11 @@ class TAxisPainter extends ObjectPainter {
          const gr_range = Math.abs(this.func.range()[1] - this.func.range()[0]);
 
          // avoid black filling by middle-size
-         if ((handle.middle.length <= handle.major.length) || (handle.middle.length > gr_range/3.5))
+         if ((handle.middle.length <= handle.major.length) || (handle.middle.length > gr_range))
             handle.minor = handle.middle = handle.major;
           else if ((this.nticks3 > 1) && !this.log) {
             handle.minor = this.produceTicks(handle.middle.length, this.nticks3);
-            if ((handle.minor.length <= handle.middle.length) || (handle.minor.length > gr_range/1.7))
+            if ((handle.minor.length <= handle.middle.length) || (handle.minor.length > gr_range))
                handle.minor = handle.middle;
          }
       }
@@ -65781,6 +65845,7 @@ class TFramePainter extends ObjectPainter {
                                         ignore_labels: this.x_ignore_labels,
                                         noexp_changed: this.x_noexp_changed,
                                         symlog: this.swap_xy ? opts.symlog_y : opts.symlog_x,
+                                        log_min_nz: opts.xmin_nz && (opts.xmin_nz <= this.xmax) ? 0.9*opts.xmin_nz : 0,
                                         logcheckmin: (opts.ndim > 1) || !this.swap_xy,
                                         logminfactor: logminfactorX });
 
@@ -65884,7 +65949,8 @@ class TFramePainter extends ObjectPainter {
    getGrFuncs(second_x, second_y) {
       const use_x2 = second_x && this.grx2,
             use_y2 = second_y && this.gry2;
-      if (!use_x2 && !use_y2) return this;
+      if (!use_x2 && !use_y2)
+         return this;
 
       return {
          use_x2,
@@ -65910,7 +65976,9 @@ class TFramePainter extends ObjectPainter {
             if ((name === 'x') && this.use_x2) name = 'x2';
             if ((name === 'y') && this.use_y2) name = 'y2';
             return this.fp.axisAsText(name, v);
-         }
+         },
+         getFrameWidth() { return this.fp.getFrameWidth(); },
+         getFrameHeight() { return this.fp.getFrameHeight(); }
       };
    }
 
@@ -66141,8 +66209,8 @@ class TFramePainter extends ObjectPainter {
      * @private */
    updateAttributes(force) {
       const pp = this.getPadPainter(),
-          pad = pp?.getRootPad(true),
-          tframe = this.getObject();
+            pad = pp?.getRootPad(true),
+            tframe = this.getObject();
 
       if ((this.fX1NDC === undefined) || (force && !this.$modifiedNDC)) {
          if (!pad) {
@@ -66158,10 +66226,10 @@ class TFramePainter extends ObjectPainter {
          }
       }
 
-      if (this.fillatt === undefined) {
-         if (tframe)
-            this.createAttFill({ attr: tframe });
-         else if (pad?.fFrameFillColor)
+      if (tframe)
+         this.createAttFill({ attr: tframe });
+      else if (this.fillatt === undefined) {
+         if (pad?.fFrameFillColor)
             this.createAttFill({ pattern: pad.fFrameFillStyle, color: pad.fFrameFillColor });
          else if (pad)
             this.createAttFill({ attr: pad });
@@ -66371,6 +66439,22 @@ class TFramePainter extends ObjectPainter {
       main_svg.attr('width', this._frame_width)
               .attr('height', this._frame_height)
               .attr('viewBox', `0 0 ${this._frame_width} ${this._frame_height}`);
+
+      this.draw_g.selectAll('.frame_deco').remove();
+      const frame = this.getObject();
+      if (frame?.fBorderMode && this.fillatt.hasColor()) {
+         const paths = getBoxDecorations(0, 0, this._frame_width, this._frame_height, frame.fBorderMode, frame.fBorderSize || 2, frame.fBorderSize || 2);
+         this.draw_g.insert('svg:path', '.main_layer')
+                    .attr('class', 'frame_deco')
+                    .attr('d', paths[0])
+                    .call(this.fillatt.func)
+                    .style('fill', rgb(this.fillatt.color).brighter(0.5).formatRgb());
+         this.draw_g.insert('svg:path', '.main_layer')
+                    .attr('class', 'frame_deco')
+                    .attr('d', paths[1])
+                    .call(this.fillatt.func)
+                    .style('fill', rgb(this.fillatt.color).darker(0.5).formatRgb());
+      }
 
       return this;
    }
@@ -69245,7 +69329,7 @@ class TPadPainter extends ObjectPainter {
      * @private */
    setFastDrawing(w, h) {
       const was_fast = this._fast_drawing;
-      this._fast_drawing = settings.SmallPad && ((w < settings.SmallPad.width) || (h < settings.SmallPad.height));
+      this._fast_drawing = (this.snapid === undefined) && settings.SmallPad && ((w < settings.SmallPad.width) || (h < settings.SmallPad.height));
       if (was_fast !== this._fast_drawing)
          this.showPadButtons();
    }
@@ -69255,6 +69339,14 @@ class TPadPainter extends ObjectPainter {
    isGrayscale() {
       if (!this.iscan) return false;
       return this.pad?.TestBit(kIsGrayscale) ?? false;
+   }
+
+   /** @summary Returns true if default pad range is configured
+     * @private */
+   isDefaultPadRange() {
+      if (!this.pad)
+         return true;
+      return (this.pad.fX1 === 0) && (this.pad.fX2 === 1) && (this.pad.fY1 === 0) && (this.pad.fY2 === 1);
    }
 
    /** @summary Set grayscale mode for the canvas
@@ -70562,7 +70654,7 @@ class TPadPainter extends ObjectPainter {
 
          const mainid = this.selectDom().attr('id');
 
-         if (!this.isBatchMode() && !this.use_openui && !this.brlayout && mainid && isStr(mainid)) {
+         if (!this.isBatchMode() && !this.use_openui && !this.brlayout && mainid && isStr(mainid) && !getHPainter()) {
             this.brlayout = new BrowserLayout(mainid, null, this);
             this.brlayout.create(mainid, true);
             this.setDom(this.brlayout.drawing_divid()); // need to create canvas
@@ -71315,11 +71407,6 @@ class TCanvasPainter extends TPadPainter {
       super(dom, canvas, true);
       this._websocket = null;
       this.tooltip_allowed = settings.Tooltip;
-      if ((dom === null) && (canvas === null)) {
-         // for web canvas details are important
-         settings.SmallPad.width = 20;
-         settings.SmallPad.height = 10;
-      }
    }
 
    /** @summary Cleanup canvas painter */
@@ -72419,8 +72506,16 @@ class TPavePainter extends ObjectPainter {
                pt.fY2NDC = 0.9;
             }
          } else if (opt.indexOf('NDC') >= 0) {
-            pt.fX1NDC = pt.fX1; pt.fX2NDC = pt.fX2;
-            pt.fY1NDC = pt.fY1; pt.fY2NDC = pt.fY2;
+            // check if NDC was modified but fInit was not set
+            // happens in stressGraphics.cxx, sg30 where stats box not initialized when call C->Update() in batch mode
+            if (pt.fX1NDC < 1e-20 && pt.fX2NDC < 1e-20) {
+               pt.fX1NDC = pt.fX1;
+               pt.fX2NDC = pt.fX2;
+            }
+            if (pt.fY1NDC < 1e-20 && pt.fY2NDC < 1e-20) {
+               pt.fY1NDC = pt.fY1;
+               pt.fY2NDC = pt.fY2;
+            }
          } else if (pad && (pad.fX1 === 0) && (pad.fX2 === 1) && (pad.fY1 === 0) && (pad.fY2 === 1) && isStr(arg) && (arg.indexOf('postpone') >= 0)) {
             // special case when pad not yet initialized
             pt.fInit = 0; // do not init until axes drawn
@@ -72472,20 +72567,28 @@ class TPavePainter extends ObjectPainter {
                if (main.fillStatistic(this, dostat, dofit)) {
                   // adjust the size of the stats box with the number of lines
                   let nlines = pt.fLines?.arr.length || 0;
-                  if ((nlines > 0) && !this.moved_interactive && isDefaultStatPosition(pt)) {
-                     // in ROOT TH2 and TH3 always add full stats for fit parameters
-                     const extrah = this._has_fit && (this._fit_dim > 1) ? gStyle.fStatH : 0;
+                  const set_default = (nlines > 0) && !this.moved_interactive && isDefaultStatPosition(pt),
+                        // in ROOT TH2 and TH3 always add full stats for fit parameters
+                        extrah = this._has_fit && (this._fit_dim > 1) ? gStyle.fStatH : 0;
+                  if (extrah) nlines -= this._fit_cnt;
+                  let stath = gStyle.fStatH, statw = gStyle.fStatW;
+                  if (this._has_fit)
+                     statw = 1.8 * gStyle.fStatW;
+                  if ((gStyle.fStatFontSize <= 0) || (gStyle.fStatFont % 10 === 3))
+                     stath = nlines * 0.25 * gStyle.fStatH;
+                  else if (gStyle.fStatFontSize < 1)
+                     stath = nlines * gStyle.fStatFontSize;
+
+                  if (set_default) {
                      // but fit parameters not used in full size calculations
-                     if (extrah) nlines -= this._fit_cnt;
-                     let stath = gStyle.fStatH, statw = gStyle.fStatW;
-                     if (this._has_fit)
-                        statw = 1.8 * gStyle.fStatW;
-                     if ((gStyle.fStatFontSize <= 0) || (gStyle.fStatFont % 10 === 3))
-                        stath = nlines * 0.25 * gStyle.fStatH;
-                     else if (gStyle.fStatFontSize < 1)
-                        stath = nlines * gStyle.fStatFontSize;
-                     pt.fX1NDC = Math.max(0.02, pt.fX2NDC - statw);
-                     pt.fY1NDC = Math.max(0.02, pt.fY2NDC - stath - extrah);
+                     pt.fX1NDC = Math.max(0.005, pt.fX2NDC - statw);
+                     pt.fY1NDC = Math.max(0.005, pt.fY2NDC - stath - extrah);
+                  } else {
+                     // when some NDC values are set directly and not match with each other
+                     if (pt.fY1NDC > pt.fY2NDC)
+                        pt.fY2NDC = Math.min(0.995, pt.fY1NDC + stath + extrah);
+                     if (pt.fX1NDC > pt.fX2NDC)
+                        pt.fY2NDC = Math.min(0.995, pt.fX1NDC + statw);
                   }
                }
             }
@@ -72515,13 +72618,8 @@ class TPavePainter extends ObjectPainter {
             const h2 = Math.round(height/2), w2 = Math.round(width/2),
                   dpath = `l${w2},${-h2}l${w2},${h2}l${-w2},${h2}z`;
 
-            if ((brd > 1) && (pt.fShadowColor > 0) && (dx || dy) && !this.fillatt.empty() && !noborder) {
-                this.draw_g.append('svg:path')
-                    .attr('d', 'M0,'+(h2+brd) + dpath)
-                    .style('fill', this.getColor(pt.fShadowColor))
-                    .style('stroke', this.getColor(pt.fShadowColor))
-                    .style('stroke-width', '1px');
-            }
+            if (!this.fillatt.empty())
+               this.drawBorder(this.draw_g, width, height, dpath);
 
             interactive_element = this.draw_g.append('svg:path')
                                       .attr('d', 'M0,'+h2 +dpath)
@@ -72533,27 +72631,6 @@ class TPavePainter extends ObjectPainter {
 
             return this.drawPaveText(w2, h2, arg, text_g);
          } else {
-            // add shadow decoration before main rect
-            if ((brd > 1) && (pt.fShadowColor > 0) && !pt.fNpaves && (dx || dy) && !noborder) {
-               const scol = this.getColor(pt.fShadowColor);
-               let spath = '';
-
-               if ((dx < 0) && (dy < 0))
-                  spath = `M0,0v${height-brd}h${-brd}v${-height}h${width}v${brd}z`;
-               else if ((dx < 0) && (dy > 0))
-                  spath = `M0,${height}v${brd-height}h${-brd}v${height}h${width}v${-brd}z`;
-               else if ((dx > 0) && (dy < 0))
-                  spath = `M${brd},0v${-brd}h${width}v${height}h${-brd}v${brd-height}z`;
-               else
-                  spath = `M${width},${brd}h${brd}v${height}h${-width}v${-brd}h${width-brd}z`;
-
-               this.draw_g.append('svg:path')
-                          .attr('d', spath)
-                          .style('fill', scol)
-                          .style('stroke', scol)
-                          .style('stroke-width', '1px');
-            }
-
             if (pt.fNpaves) {
                for (let n = pt.fNpaves-1; n > 0; --n) {
                   this.draw_g.append('svg:path')
@@ -72561,7 +72638,8 @@ class TPavePainter extends ObjectPainter {
                       .call(this.fillatt.func)
                       .call(this.lineatt.func);
                }
-            }
+            } else
+               this.drawBorder(this.draw_g, width, height);
 
             if (!this.isBatchMode() || !this.fillatt.empty() || (!this.lineatt.empty() && !noborder)) {
                interactive_element = this.draw_g.append('svg:path')
@@ -72589,11 +72667,50 @@ class TPavePainter extends ObjectPainter {
          if (this.UseContextMenu && settings.ContextMenu)
              this.draw_g.on('contextmenu', evnt => this.paveContextMenu(evnt));
 
-         if (pt._typename === clTPaletteAxis)
+         if (this.isPalette())
             this.interactivePaletteAxis(width, height);
 
          return this;
       });
+   }
+
+   drawBorder(draw_g, width, height, diamond) {
+      const pt = this.getObject(),
+            opt = pt.fOption.toUpperCase(),
+            noborder = this.isPalette() || (opt.indexOf('NB') >= 0),
+            dx = (opt.indexOf('L') >= 0) ? -1 : ((opt.indexOf('R') >= 0) ? 1 : 0),
+            dy = (opt.indexOf('T') >= 0) ? -1 : ((opt.indexOf('B') >= 0) ? 1 : 0);
+
+      if ((pt.fBorderSize < 2) || (pt.fShadowColor === 0) || (!dx && !dy) || noborder)
+         return;
+
+      const scol = this.getColor(pt.fShadowColor),
+            brd = pt.fBorderSize;
+
+      if (diamond) {
+         draw_g.append('svg:path')
+               .attr('d', `M0,${Math.round(height/2)+brd}${diamond}`)
+               .style('fill', scol)
+               .style('stroke', scol)
+               .style('stroke-width', '1px');
+      } else {
+         let spath = '';
+
+         if ((dx < 0) && (dy < 0))
+            spath = `M0,0v${height-brd-1}h${-brd+1}v${-height+2}h${width-2}v${brd-1}z`;
+         else if ((dx < 0) && (dy > 0))
+            spath = `M0,${height}v${brd+1-height}h${-brd+1}v${height-2}h${width-2}v${-brd+1}z`;
+         else if ((dx > 0) && (dy < 0))
+            spath = `M${brd+1},0v${-brd+1}h${width-2}v${height-2}h${-brd+1}v${brd+1-height}z`;
+         else
+            spath = `M${width},${brd+1}h${brd-1}v${height-2}h${-width+2}v${-brd+1}h${width-brd-2}z`;
+
+         draw_g.append('svg:path')
+               .attr('d', spath)
+               .style('fill', scol)
+               .style('stroke', scol)
+               .style('stroke-width', '1px');
+      }
    }
 
    /** @summary Fill option object used in TWebCanvas */
@@ -72732,6 +72849,7 @@ class TPavePainter extends ObjectPainter {
             arr = pt.fLines?.arr || [],
             nlines = arr.length,
             pp = this.getPadPainter(),
+            pad_width = pp.getPadWidth(),
             pad_height = pp.getPadHeight(),
             draw_header = (pt.fLabel.length > 0),
             promises = [],
@@ -72758,7 +72876,7 @@ class TPavePainter extends ObjectPainter {
             num_custom++;
       });
 
-      const pr = (num_txt > num_custom) ? this.startTextDrawingAsync(this.textatt.font, 0.85*height/nlines, text_g, max_font_size) : Promise.resolve();
+      const pr = (num_txt > num_custom) ? this.startTextDrawingAsync(this.textatt.font, this.$postitle ? this.textatt.getSize(pad_width, pad_height, 1, 0.05) : 0.85*height/nlines, text_g, max_font_size) : Promise.resolve();
 
       return pr.then(() => {
          for (let nline = 0; nline < nlines; ++nline) {
@@ -72771,12 +72889,13 @@ class TPavePainter extends ObjectPainter {
 
                   let color = entry.fTextColor ? this.getColor(entry.fTextColor) : '';
                   if (!color) color = this.textatt.color;
+                  const align = entry.fTextAlign || this.textatt.align,
+                        valign = align % 10,
+                        halign = (align - valign) / 10;
+
                   if (entry.fX || entry.fY || entry.fTextSize) {
                      // individual positioning
-                     const align = entry.fTextAlign || this.textatt.align,
-                           halign = Math.floor(align/10),
-                           valign = align % 10,
-                           x = entry.fX ? entry.fX*width : (halign === 1 ? margin_x : (halign === 2 ? width / 2 : width - margin_x)),
+                     const x = entry.fX ? entry.fX*width : (halign === 1 ? margin_x : (halign === 2 ? width / 2 : width - margin_x)),
                            y = entry.fY ? (1 - entry.fY)*height : (texty + (valign === 2 ? stepy / 2 : (valign === 3 ? stepy : 0))),
                            draw_g = text_g.append('svg:g');
 
@@ -72785,10 +72904,29 @@ class TPavePainter extends ObjectPainter {
                                                                    latex: (entry._typename === clTText) ? 0 : 1, draw_g, fast }))
                                        .then(() => this.finishTextDrawing(draw_g)));
                   } else {
-                     this.drawText({ x: margin_x, y: texty, width: width - 2*margin_x, height: stepy,
-                                    align: entry.fTextAlign || this.textatt.align,
-                                    draw_g: text_g, latex: (entry._typename === clTText) ? 0 : 1,
-                                    text: entry.fTitle, color, fast });
+                     const arg = { x: 0, y: texty, draw_g: text_g,
+                                   latex: (entry._typename === clTText) ? 0 : 1,
+                                   text: entry.fTitle, color, fast };
+
+                     if (this.$postitle) {
+                        // remember box produced by title text
+                        arg.post_process = function(painter) {
+                           painter.$titlebox = this.box;
+                        };
+                     } else {
+                        arg.align = align;
+                        arg.x = (halign === 1) ? margin_x : 0;
+                        arg.width = (halign === 2) ? width : width - margin_x;
+                        arg.y = texty + 0.05 * stepy;
+                        arg.height = 0.9*stepy;
+                        // prevent expand of normal title on full width
+                        // if (this.isTitle()  && (halign === 2) && (arg.width > 0.1*pad_width) && (arg.width < 0.7*pad_width)) {
+                        //   arg.width -= 0.02*pad_width;
+                        //   arg.x = 0.01*pad_width;
+                        // }
+                     }
+
+                     this.drawText(arg);
                   }
                   break;
                }
@@ -72824,25 +72962,29 @@ class TPavePainter extends ObjectPainter {
          if (this.isTitle())
             this.draw_g.style('display', !num_txt ? 'none' : null);
 
-         if (draw_header) {
-            const x = Math.round(width*0.25),
-               y = Math.round(-height*0.02),
-               w = Math.round(width*0.5),
-               h = Math.round(height*0.04),
-               lbl_g = text_g.append('svg:g');
-
-            lbl_g.append('svg:path')
-                  .attr('d', `M${x},${y}h${w}v${h}h${-w}z`)
-                  .call(this.fillatt.func)
-                  .call(this.lineatt.func);
-
-            promises.push(this.startTextDrawingAsync(this.textatt.font, h/1.5, lbl_g)
-                              .then(() => this.drawText({ align: 22, x, y, width: w, height: h, text: pt.fLabel, color: this.textatt.color, draw_g: lbl_g }))
-                              .then(() => promises.push(this.finishTextDrawing(lbl_g))));
-         }
 
          return Promise.all(promises).then(() => this);
-      });
+      }).then(() => {
+         if (!draw_header)
+            return;
+
+         const x = Math.round(width*0.25),
+               y = Math.round(-pad_height*0.02),
+               w = Math.round(width*0.5),
+               h = Math.round(pad_height*0.04),
+               lbl_g = text_g.append('svg:g').attr('transform', makeTranslate(x, y));
+
+         this.drawBorder(lbl_g, w, h);
+
+         lbl_g.append('svg:path')
+               .attr('d', `M${0},${0}h${w}v${h}h${-w}z`)
+               .call(this.fillatt.func)
+               .call(this.lineatt.func);
+
+         return this.startTextDrawingAsync(this.textatt.font, 0.9*h, lbl_g)
+                    .then(() => this.drawText({ align: 22, x: 0, y: 0, width: w, height: h, text: pt.fLabel, color: this.textatt.color, draw_g: lbl_g }))
+                    .then(() => promises.push(this.finishTextDrawing(lbl_g)));
+      }).then(() => { return this; });
    }
 
    /** @summary Method used to convert value to string according specified format
@@ -72860,14 +73002,9 @@ class TPavePainter extends ObjectPainter {
                return value.toFixed(0);
             fmt = '14.7g';
             break;
-         case 'last': fmt = this.lastformat; break;
       }
 
-      const res = floatToString(value, fmt || '6.4g', true);
-
-      this.lastformat = res[1];
-
-      return res[0];
+      return floatToString(value, fmt || '6.4g');
    }
 
    /** @summary Draw TLegend object */
@@ -73355,6 +73492,29 @@ class TPavePainter extends ObjectPainter {
    fillContextMenuItems(menu) {
       const pave = this.getObject();
 
+      menu.sub('Shadow');
+      menu.addSizeMenu('size', 0, 12, 1, pave.fBorderSize, arg => {
+         pave.fBorderSize = arg;
+         this.interactiveRedraw(true, `exec:SetBorderSize(${arg})`);
+      });
+      menu.addColorMenu('color', pave.fShadowColor, arg => {
+         pave.fShadowColor = arg;
+         this.interactiveRedraw(true, getColorExec(arg, 'SetShadowColor'));
+      });
+      const posarr = ['nb', 'tr', 'tl', 'br', 'bl'];
+      let value = '', remain = pave.fOption;
+      posarr.forEach(nn => {
+         const p = remain.indexOf(nn);
+         if ((p >= 0) && !value) {
+            value = nn; remain = remain.slice(0, p) + remain.slice(p + nn.length);
+         }
+      });
+      menu.addSelectMenu('positon', posarr, value || 'nb', arg => {
+         pave.fOption = arg + remain;
+         this.interactiveRedraw(true, getColorExec(arg, `exec:SetOption("${pave.fOption}")`));
+      }, 'Direction of pave shadow or nb - off');
+      menu.endsub();
+
       if (this.isStats()) {
          menu.add('Default position', () => {
             pave.fX2NDC = gStyle.fStatX;
@@ -73444,7 +73604,7 @@ class TPavePainter extends ObjectPainter {
                if (res) this.interactiveRedraw(true, 'pave_moved');
             });
          });
-      } else if (pave.fName === kTitle) {
+      } else if (this.isTitle()) {
          menu.add('Default position', () => {
             pave.fX1NDC = gStyle.fTitleW > 0 ? gStyle.fTitleX - gStyle.fTitleW/2 : gStyle.fPadLeftMargin;
             pave.fY1NDC = gStyle.fTitleY - Math.min(gStyle.fTitleFontSize*1.1, 0.06);
@@ -73463,8 +73623,6 @@ class TPavePainter extends ObjectPainter {
             gStyle.fTitleFont = pave.fTextFont;
          }, 'Store title position and graphical attributes to gStyle');
       }
-
-      menu.add('Bring to front', () => this.bringToFront(!this.isStats() && !this.z_handle));
    }
 
    /** @summary Show pave context menu */
@@ -73482,6 +73640,11 @@ class TPavePainter extends ObjectPainter {
       return this.matchObjectType(clTPaveStats);
    }
 
+   /** @summary Returns true when stat box is drawn */
+   isPalette() {
+      return this.matchObjectType(clTPaletteAxis);
+   }
+
    /** @summary Returns true when title is drawn */
    isTitle() {
       return this.matchObjectType(clTPaveText) && (this.getObject()?.fName === kTitle);
@@ -73495,6 +73658,22 @@ class TPavePainter extends ObjectPainter {
    /** @summary Add text to pave */
    addText(txt) {
       this.getObject().AddText(txt);
+   }
+
+   /** @summary Remade version of THistPainter::GetBestFormat
+     * @private */
+   getBestFormat(tv, e) {
+      const ie = tv.indexOf('e'), id = tv.indexOf('.');
+
+      if (ie >= 0) {
+         if ((tv.indexOf('+') < 0) || (e >= 1))
+            return `.${ie-id-1}e`;
+         else
+            return '.1f';
+      } else if (id < 0)
+         return '.1f';
+
+      return `.${tv.length-id-1}f`;
    }
 
    /** @summary Fill function parameters */
@@ -73524,12 +73703,16 @@ class TPavePainter extends ObjectPainter {
          for (let n = 0; n < f1.GetNumPars(); ++n) {
             const parname = f1.GetParName(n);
             let parvalue = f1.GetParValue(n), parerr = f1.GetParError(n);
-
-            parvalue = (parvalue === undefined) ? '<not avail>' : this.format(Number(parvalue), 'fit');
-            if (parerr !== undefined) {
-               parerr = this.format(parerr, 'last');
-               if ((Number(parerr) === 0) && (f1.GetParError(n) !== 0))
-                  parerr = this.format(f1.GetParError(n), '4.2g');
+            if (parvalue === undefined) {
+               parvalue = '<not avail>';
+               parerr = null;
+            } else {
+               parvalue = this.format(Number(parvalue), 'fit');
+               if (print_ferrors && (parerr !== undefined)) {
+                  parerr = floatToString(parerr, this.getBestFormat(parvalue, parerr));
+                  if ((Number(parerr) === 0) && (f1.GetParError(n) !== 0))
+                     parerr = floatToString(f1.GetParError(n), '4.2g');
+               }
             }
 
             if (print_ferrors && parerr)
@@ -73638,12 +73821,46 @@ class TPavePainter extends ObjectPainter {
 
    /** @summary cleanup pave painter */
    cleanup() {
-      if (this.z_handle) {
-         this.z_handle.cleanup();
-         delete this.z_handle;
+      this.z_handle?.cleanup();
+      delete this.z_handle;
+      const pp = this.getObject();
+      if (pp)
+         delete pp.$main_painter;
+      super.cleanup();
+   }
+
+   /** @summary Set position of title
+     * @private */
+   setTitlePosition(pave, text_width, text_height) {
+      const posx = gStyle.fTitleX, posy = gStyle.fTitleY,
+            valign = gStyle.fTitleAlign % 10, halign = (gStyle.fTitleAlign - valign) / 10;
+      let w = gStyle.fTitleW, h = gStyle.fTitleH, need_readjust = false;
+
+      if (h <= 0) {
+         if (text_height)
+            h = 1.1 * text_height / this.getPadPainter().getPadHeight();
+         else {
+            h = 0.05;
+            need_readjust = true;
+         }
       }
 
-      super.cleanup();
+      if (w <= 0) {
+         if (text_width)
+            w = Math.min(0.7, 0.02 + text_width / this.getPadPainter().getPadWidth());
+         else {
+            w = 0.5;
+            need_readjust = true;
+         }
+      }
+
+      pave.fX1NDC = halign < 2 ? posx : (halign > 2 ? posx - w : posx - w/2);
+      pave.fY1NDC = valign < 2 ? posy : (valign > 2 ? posy - h : posy - h/2);
+      pave.fX2NDC = pave.fX1NDC + w;
+      pave.fY2NDC = pave.fY1NDC + h;
+      pave.fInit = 1;
+
+      return need_readjust;
    }
 
    /** @summary Returns true if object is supported */
@@ -73658,28 +73875,14 @@ class TPavePainter extends ObjectPainter {
       const painter = new TPavePainter(dom, pave);
 
       return ensureTCanvas(painter, false).then(() => {
-         if ((pave.fName === kTitle) && (pave._typename === clTPaveText)) {
-            const tpainter = painter.getPadPainter().findPainterFor(null, kTitle, clTPaveText);
-            if (tpainter && (tpainter !== painter)) {
-               tpainter.removeFromPadPrimitives();
-               tpainter.cleanup();
+         if (painter.isTitle()) {
+            const prev_painter = painter.getPadPainter().findPainterFor(null, kTitle, clTPaveText);
+            if (prev_painter && (prev_painter !== painter)) {
+               prev_painter.removeFromPadPrimitives();
+               prev_painter.cleanup();
             } else if ((opt === 'postitle') || painter.isDummyPos(pave)) {
-               const st = gStyle, fp = painter.getFramePainter();
-               if (st && fp) {
-                  const midx = st.fTitleX, y2 = st.fTitleY, fsz = st.fTitleFontSize;
-                  let w = st.fTitleW, h = st.fTitleH;
-
-                  if (!h) h = Math.max((y2 - fp.fY2NDC) * 0.7, (fsz < 1) ? 1.1 * fsz : 1.1 * fsz / fp.getFrameWidth());
-                  if (!w) w = fp.fX2NDC - fp.fX1NDC;
-                  if (!Number.isFinite(h) || (h <= 0)) h = 0.06;
-                  if (!Number.isFinite(w) || (w <= 0)) w = 0.44;
-
-                  pave.fX1NDC = midx - w/2;
-                  pave.fY1NDC = y2 - h;
-                  pave.fX2NDC = midx + w/2;
-                  pave.fY2NDC = y2;
-                  pave.fInit = 1;
-               }
+               if (painter.setTitlePosition(pave))
+                  painter.$postitle = true;
             }
          } else if (pave._typename === clTPaletteAxis) {
             pave.fBorderSize = 1;
@@ -73721,7 +73924,17 @@ class TPavePainter extends ObjectPainter {
                break;
          }
 
-         return painter.drawPave(opt);
+         return painter.drawPave(opt).then(() => {
+            const adjust_title = painter.$postitle && painter.$titlebox;
+
+            if (adjust_title)
+               painter.setTitlePosition(pave, painter.$titlebox.width, painter.$titlebox.height);
+
+            delete painter.$postitle;
+            delete painter.$titlebox;
+
+            return adjust_title ? painter.drawPave(opt) : painter;
+         });
       });
    }
 
@@ -73761,7 +73974,7 @@ class THistDrawOptions {
               GLBox: 0, GLColor: false, Project: '', ProfileProj: '', Profile2DProj: '', System: kCARTESIAN,
               AutoColor: false, NoStat: false, ForceStat: false, PadStats: false, PadTitle: false, AutoZoom: false,
               HighRes: 0, Zero: 1, Palette: 0, BaseLine: false, ShowEmpty: false,
-              Optimize: settings.OptimizeDraw, adjustFrame: false,
+              Optimize: settings.OptimizeDraw,
               Mode3D: false, x3dscale: 1, y3dscale: 1, SwapXY: false,
               Render3D: constants$1.Render3D.Default,
               FrontBox: true, BackBox: true,
@@ -73796,8 +74009,8 @@ class THistDrawOptions {
       if (this.ndim === 3)
          return this.BoxStyle === 12 || this.BoxStyle === 13 || this.GLBox === 12;
 
-      if (this.ndim !== 2)
-         return false;
+      if (this.ndim === 1)
+         return this.Lego === 12 || this.Lego === 14;
 
       if (this.Mode3D)
          return this.Lego === 12 || this.Lego === 14 || this.Surf === 11 || this.Surf === 12;
@@ -73877,8 +74090,6 @@ class THistDrawOptions {
       if (d.check('YTITLE:', true)) histo.fYaxis.fTitle = decodeURIComponent(d.part.toLowerCase());
       if (d.check('ZTITLE:', true)) histo.fZaxis.fTitle = decodeURIComponent(d.part.toLowerCase());
 
-      if (d.check('_ADJUST_FRAME_')) this.adjustFrame = true;
-
       if (d.check('SHOWEMPTY')) this.ShowEmpty = true;
 
       if (d.check('NOOPTIMIZE')) this.Optimize = 0;
@@ -73944,10 +74155,8 @@ class THistDrawOptions {
       if (d.check('YAXIS_', 'color'))
          histo.fYaxis.fAxisColor = histo.fYaxis.fLabelColor = histo.fYaxis.fTitleColor = d.color;
 
-      const has_main = painter ? !!painter.getMainPainter() : false;
-
-      if (d.check('X+')) { this.AxisPos = 10; this.second_x = has_main; }
-      if (d.check('Y+')) { this.AxisPos += 1; this.second_y = has_main; }
+      if (d.check('X+')) { this.AxisPos = 10; this.second_x = !!painter?.getMainPainter(); }
+      if (d.check('Y+')) { this.AxisPos += 1; this.second_y = !!painter?.getMainPainter(); }
 
       if (d.check('SAME0')) { this.Same = true; this.IgnoreMainScale = true; }
       if (d.check('SAMES')) { this.Same = true; this.ForceStat = true; }
@@ -74566,7 +74775,6 @@ class FunctionsHandler {
 
       return promise.then(fpainter => {
          fpainter.setSecondaryId(this.painter, func_secondary_id);
-
          return this.drawNext(indx+1);
       });
    }
@@ -74580,7 +74788,7 @@ const kUserContour = BIT(10), // user specified contour levels
 //      kCanRebin    = BIT(11), // can rebin axis
 //      kLogX        = BIT(15), // X-axis in log scale
       kIsZoomed$1 = BIT(16), // bit set when zooming on Y axis
-      kNoTitle = BIT(17); // don't draw the histogram title
+      kNoTitle$1 = BIT(17); // don't draw the histogram title
 //      kIsAverage   = BIT(18);  // Bin contents are average (used by Add)
 
 /**
@@ -74984,7 +75192,8 @@ class THistPainter extends ObjectPainter {
       const histo = this.getHisto();
 
       // artificially add y range to display axes
-      if (this.ymin === this.ymax) this.ymax += 1;
+      if (this.ymin === this.ymax)
+         this.ymax += 1;
 
       if (!this.isMainPainter()) {
          const opts = {
@@ -75003,34 +75212,6 @@ class THistPainter extends ObjectPainter {
          return fp.drawAxes2(opts.second_x, opts.second_y);
       }
 
-      if (this.options.adjustFrame) {
-         const pad = this.getPadPainter().getRootPad();
-         if (pad) {
-            if (pad.fUxmin < pad.fUxmax) {
-               fp.fX1NDC = (this.xmin - pad.fUxmin) / (pad.fUxmax - pad.fUxmin);
-               fp.fX2NDC = (this.xmax - pad.fUxmin) / (pad.fUxmax - pad.fUxmin);
-            }
-            if (pad.fUymin < pad.fUymax) {
-               fp.fY1NDC = (this.ymin - pad.fUymin) / (pad.fUymax - pad.fUymin);
-               fp.fY2NDC = (this.ymax - pad.fUymin) / (pad.fUymax - pad.fUymin);
-            }
-
-            pad.fLeftMargin = fp.fX1NDC;
-            pad.fRightMargin = 1 - fp.fX2NDC;
-            pad.fBottomMargin = fp.fY1NDC;
-            pad.fTopMargin = 1 - fp.fY2NDC;
-            pad.fFrameLineColor = 0;
-            pad.fFrameLineWidth = 0;
-            fp.setRootPadRange(pad);
-
-            fp.fillatt.setSolidColor('none');
-
-            fp.redraw();
-         }
-
-         this.options.adjustFrame = false;
-      }
-
       fp.setAxesRanges(histo.fXaxis, this.xmin, this.xmax, histo.fYaxis, this.ymin, this.ymax, histo.fZaxis, 0, 0);
 
       fp.createXY({ ndim: this.getDimension(),
@@ -75039,6 +75220,7 @@ class THistPainter extends ObjectPainter {
                     zoom_xmax: this.zoom_xmax,
                     zoom_ymin: this.zoom_ymin,
                     zoom_ymax: this.zoom_ymax,
+                    xmin_nz: histo.$xmin_nz,
                     ymin_nz: this.ymin_nz ?? histo.$ymin_nz,
                     swap_xy: this.options.swap_xy(),
                     reverse_x: this.options.RevX,
@@ -75086,9 +75268,9 @@ class THistPainter extends ObjectPainter {
       if (!this.isMainPainter() || !histo)
          return false;
       if (arg === 'only-check')
-         return !histo.TestBit(kNoTitle);
-      histo.InvertBit(kNoTitle);
-      this.updateHistTitle().then(() => this.processOnlineChange(`exec:SetBit(TH1::kNoTitle,${histo.TestBit(kNoTitle)?1:0})`));
+         return !histo.TestBit(kNoTitle$1);
+      histo.InvertBit(kNoTitle$1);
+      this.updateHistTitle().then(() => this.processOnlineChange(`exec:SetBit(TH1::kNoTitle,${histo.TestBit(kNoTitle$1)?1:0})`));
    }
 
    /** @summary Only redraw histogram title
@@ -75104,8 +75286,8 @@ class THistPainter extends ObjectPainter {
       if (!tpainter || !pt)
          return this;
 
-      const histo = this.getHisto(), st = gStyle,
-            draw_title = !histo.TestBit(kNoTitle) && (st.fOptTitle > 0);
+      const histo = this.getHisto(),
+            draw_title = !histo.TestBit(kNoTitle$1) && (gStyle.fOptTitle > 0);
 
       pt.Clear();
       if (draw_title) pt.AddText(histo.fTitle);
@@ -75120,22 +75302,24 @@ class THistPainter extends ObjectPainter {
          return this;
 
       const histo = this.getHisto(), st = gStyle,
-            draw_title = !histo.TestBit(kNoTitle) && (st.fOptTitle > 0),
+            draw_title = !histo.TestBit(kNoTitle$1) && (st.fOptTitle > 0),
             pp = this.getPadPainter();
 
       let pt = pp.findInPrimitives(kTitle, clTPaveText);
 
       if (pt) {
          pt.Clear();
-         if (draw_title) pt.AddText(histo.fTitle);
+         if (draw_title)
+            pt.AddText(histo.fTitle);
          return this;
       }
 
       pt = create$1(clTPaveText);
-      Object.assign(pt, { fName: kTitle, fFillColor: st.fTitleColor, fFillStyle: st.fTitleStyle, fBorderSize: st.fTitleBorderSize,
-                          fTextFont: st.fTitleFont, fTextSize: st.fTitleFontSize, fTextColor: st.fTitleTextColor, fTextAlign: st.fTitleAlign });
+      Object.assign(pt, { fName: kTitle, fOption: 'blNDC', fFillColor: st.fTitleColor, fFillStyle: st.fTitleStyle, fBorderSize: st.fTitleBorderSize,
+                          fTextFont: st.fTitleFont, fTextSize: st.fTitleFontSize, fTextColor: st.fTitleTextColor, fTextAlign: 22 });
+
       if (draw_title) pt.AddText(histo.fTitle);
-      return TPavePainter.draw(pp, pt, 'postitle').then(p => p?.setSecondaryId(this, kTitle));
+      return TPavePainter.draw(pp, pt, 'postitle').then(p => { p?.setSecondaryId(this, kTitle); return this; });
    }
 
    /** @summary Live change and update of title drawing
@@ -75228,7 +75412,8 @@ class THistPainter extends ObjectPainter {
    /** @summary Create stat box for histogram if required */
    createStat(force) {
       const histo = this.getHisto();
-      if (!histo) return null;
+      if (!histo)
+         return null;
 
       if (!force && !this.options.ForceStat) {
          if (this.options.NoStat || histo.TestBit(kNoStats) || !settings.AutoStat) return null;
@@ -75252,7 +75437,8 @@ class THistPainter extends ObjectPainter {
       } else
          optfit = st.fOptFit;
 
-      if (!stats && !optstat && !optfit) return null;
+      if (!stats && !optstat && !optfit)
+         return null;
 
       this.create_stats = true;
 
@@ -76024,16 +76210,40 @@ class THistPainter extends ObjectPainter {
       return this.interactiveRedraw('pad', 'drawopt');
    }
 
+   /** @summary Get graphics conversion functions for this histogram */
+   getHistGrFuncs(fp, rounding = true) {
+      if (!this._ignore_frame)
+         return fp?.getGrFuncs(this.options.second_x, this.options.second_y);
+
+      const funcs = this.getAxisToSvgFunc(false, rounding, false);
+      if (funcs) {
+         funcs.painter = this;
+         funcs.grx = funcs.x;
+         funcs.gry = funcs.y;
+         funcs.logx = funcs.pad?.fLogx;
+         funcs.logy = funcs.pad?.fLogy;
+         funcs.getFrameWidth = function() { return this.painter.getPadPainter().getPadWidth(); };
+         funcs.getFrameHeight = function() { return this.painter.getPadPainter().getPadHeight(); };
+         funcs.revertAxis = function(name, v) { return this.painter.svgToAxis(name, v); };
+         funcs.axisAsText = function(_name, v) { return v.toString(); };
+      }
+      return funcs;
+   }
+
    /** @summary Prepare handle for color draw */
    prepareDraw(args) {
-      if (!args) args = { rounding: true, extra: 0, middle: 0 };
+      if (!args)
+         args = { rounding: true, extra: 0, middle: 0 };
 
-      if (args.extra === undefined) args.extra = 0;
-      if (args.middle === undefined) args.middle = 0;
+      if (args.extra === undefined)
+         args.extra = 0;
+      if (args.middle === undefined)
+         args.middle = 0;
 
       const histo = this.getHisto(),
-            xaxis = histo.fXaxis, yaxis = histo.fYaxis,
-            pmain = this.getFramePainter(),
+            xaxis = histo.fXaxis,
+            yaxis = histo.fYaxis,
+            pmain = this._ignore_frame ? null : this.getFramePainter(),
             hdim = this.getDimension(),
             res = {
                i1: args.nozoom ? 0 : this.getSelectIndex('x', 'left', 0 - args.extra),
@@ -76089,22 +76299,28 @@ class THistPainter extends ObjectPainter {
          res.origy = new Float32Array(res.j2+1);
       }
 
-      if (args.pixel_density) args.rounding = true;
+      if (args.pixel_density)
+         args.rounding = true;
 
-      if (!pmain) {
-         console.warn('cannot draw histogram without frame');
+      const funcs = this.getHistGrFuncs(pmain, args.rounding);
+
+      if (!funcs) {
+         console.warn('cannot draw histogram without frame or pad');
          return res;
       }
-
-      const funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y);
 
       // calculate graphical coordinates in advance
       for (i = res.i1; i <= res.i2; ++i) {
          x = xaxis.GetBinCoord(i + args.middle);
-         if (funcs.logx && (x <= 0)) { res.i1 = i+1; continue; }
-         if (res.origx) res.origx[i] = x;
+         if (funcs.logx && (x <= 0)) {
+            res.i1 = i + 1;
+            continue;
+         }
+         if (res.origx)
+            res.origx[i] = x;
          res.grx[i] = funcs.grx(x);
-         if (args.rounding) res.grx[i] = Math.round(res.grx[i]);
+         if (args.rounding)
+            res.grx[i] = Math.round(res.grx[i]);
 
          if (args.use3d) {
             if (res.grx[i] < -pmain.size_x3d) {
@@ -76126,10 +76342,15 @@ class THistPainter extends ObjectPainter {
       } else {
          for (j = res.j1; j <= res.j2; ++j) {
             y = yaxis.GetBinCoord(j + args.middle);
-            if (funcs.logy && (y <= 0)) { res.j1 = j+1; continue; }
-            if (res.origy) res.origy[j] = y;
+            if (funcs.logy && (y <= 0)) {
+               res.j1 = j+1;
+               continue;
+            }
+            if (res.origy)
+               res.origy[j] = y;
             res.gry[j] = funcs.gry(y);
-            if (args.rounding) res.gry[j] = Math.round(res.gry[j]);
+            if (args.rounding)
+               res.gry[j] = Math.round(res.gry[j]);
 
             if (args.use3d) {
                if (res.gry[j] < -pmain.size_y3d) {
@@ -76204,8 +76425,11 @@ class THistPainter extends ObjectPainter {
      * @private */
    static async _drawHist(painter, opt) {
       return ensureTCanvas(painter).then(() => {
-         painter.setAsMainPainter();
          painter.decodeOptions(opt);
+         if (!painter.options.Same)
+            painter.setAsMainPainter();
+         else
+            painter._ignore_frame = !painter.getPadPainter()?.getMainPainter();
 
          if (painter.isTH2Poly()) {
             if (painter.options.Mode3D)
@@ -77189,7 +77413,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
 
       const histo = this.getHisto(), xaxis = histo.fXaxis, yaxis = histo.fYaxis,
             fp = this.getFramePainter(),
-            funcs = fp.getGrFuncs(this.options.second_x, this.options.second_y),
+            funcs = this.getHistGrFuncs(fp),
             res = { name: histo.fName, entries: 0, eff_entries: 0, integral: 0,
                     meanx: 0, meany: 0, rmsx: 0, rmsy: 0, matrix: [0, 0, 0, 0, 0, 0, 0, 0, 0],
                     xmax: 0, ymax: 0, wmax: null, skewx: 0, skewy: 0, skewd: 0, kurtx: 0, kurty: 0, kurtd: 0 },
@@ -77531,7 +77755,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
    drawBinsProjected() {
       const handle = this.prepareDraw({ rounding: false, nozoom: true, extra: 100, original: true }),
             main = this.getFramePainter(),
-            funcs = main.getGrFuncs(this.options.second_x, this.options.second_y),
+            funcs = this.getHistGrFuncs(main),
             ilevels = this.getContourLevels(),
             palette = this.getHistPalette(),
             func = main.getProjectionFunc();
@@ -77782,7 +78006,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
    async drawPolyBins() {
       const histo = this.getObject(),
             fp = this.getFramePainter(),
-            funcs = fp.getGrFuncs(this.options.second_x, this.options.second_y),
+            funcs = this.getHistGrFuncs(fp),
             draw_colors = this.options.Color || (!this.options.Line && !this.options.Fill && !this.options.Text && !this.options.Mark),
             draw_lines = this.options.Line || (this.options.Text && !draw_colors),
             draw_fill = this.options.Fill && !draw_colors,
@@ -77995,7 +78219,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
                   if (this.options.TextLine)
                      text += '\xB1' + lble;
                   else
-                     text = `#splitline{${text}}{#pm${lble}}`;
+                     text = `#splitmline{${text}}{#pm${lble}}`;
                }
 
                let x, y, width, height;
@@ -78164,12 +78388,9 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
                cross += `M${xx},${yy}l${ww},${hh}m0,${-hh}l${-ww},${hh}`;
 
             if ((this.options.BoxStyle === 11) && (ww > 5) && (hh > 5)) {
-               const pww = Math.round(ww*0.1),
-                     phh = Math.round(hh*0.1),
-                     side1 = `M${xx},${yy}h${ww}l${-pww},${phh}h${2*pww-ww}v${hh-2*phh}l${-pww},${phh}z`,
-                     side2 = `M${xx+ww},${yy+hh}v${-hh}l${-pww},${phh}v${hh-2*phh}h${2*pww-ww}l${-pww},${phh}z`;
-               btn1 += (binz < 0) ? side2 : side1;
-               btn2 += (binz < 0) ? side1 : side2;
+               const arr = getBoxDecorations(xx, yy, ww, hh, binz, Math.round(ww*0.1), Math.round(hh*0.1));
+               btn1 += arr[0];
+               btn2 += arr[1];
             }
          }
       }
@@ -78331,7 +78552,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
             handle = this.prepareDraw(),
             fp = this.getFramePainter(), // used for axis values conversions
             cp = this.getCanvPainter(),
-            funcs = fp.getGrFuncs(this.options.second_x, this.options.second_y),
+            funcs = this.getHistGrFuncs(fp),
             swapXY = isOption(kHorizontal);
       let bars = '', lines = '', dashed_lines = '',
           hists = '', hlines = '',
@@ -78811,14 +79032,15 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
       if (this._hide_frame && this.isMainPainter()) {
          this.getFrameSvg().style('display', null);
          delete this._hide_frame;
-      }
+      } else if (this.options.Same && this._ignore_frame)
+         this.getFrameSvg().style('display', 'none');
 
       if (!this.draw_content)
          return this.removeG();
 
       this.createHistDrawAttributes();
 
-      this.createG(true);
+      this.createG(!this._ignore_frame);
 
       let handle, pr;
 
@@ -79120,7 +79342,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
    /** @summary Provide text information (tooltips) for candle bin */
    getCandleTooltips(p) {
       const fp = this.getFramePainter(),
-            funcs = fp.getGrFuncs(this.options.second_x, this.options.second_y),
+            funcs = this.getHistGrFuncs(fp),
             histo = this.getHisto();
 
       return [this.getObjectHint(),
@@ -79136,7 +79358,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
       const histo = this.getHisto(),
             bin = histo.fBins.arr[binindx],
             fp = this.getFramePainter(),
-            funcs = fp.getGrFuncs(this.options.second_x, this.options.second_y),
+            funcs = this.getHistGrFuncs(fp),
             lines = [];
       let binname = bin.fPoly.fName, numpoints = 0;
 
@@ -79190,9 +79412,8 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
 
       if (h.poly) {
          // process tooltips from TH2Poly
-
          const fp = this.getFramePainter(),
-               funcs = fp.getGrFuncs(this.options.second_x, this.options.second_y),
+               funcs = this.getHistGrFuncs(fp),
                realx = funcs.revertAxis('x', pnt.x),
                realy = funcs.revertAxis('y', pnt.y);
          let foundindx = -1, bin;
@@ -79512,7 +79733,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
    async draw2D(/* reason */) {
       this.clear3DScene();
 
-      const need_palette = this.options.Zscale && this.options.canHavePalette();
+      const need_palette = this.options.Zscale && this.options.canHavePalette() && !this._ignore_frame;
 
       // draw new palette, resize frame if required
       return this.drawColorPalette(need_palette, true).then(async pp => {
@@ -81717,8 +81938,13 @@ function drawBinsSurf3D(painter, is_v7 = false) {
        else if (palette)
          color = palette.calcColor(lvl, levels.length);
        else {
-         color = histo.fFillColor > 1 ? painter.getColor(histo.fFillColor) : 'white';
-         if ((painter.options.Surf === 14) && (histo.fFillColor < 2)) color = painter.getColor(48);
+         const indx = painter.options.histoFillColor || histo.fFillColor;
+         if (painter.options.Surf === 13)
+            color = 'white';
+         else if (painter.options.Surf === 14)
+            color = indx > 1 ? painter.getColor(indx) : 'grey';
+         else
+            color = indx > 1 ? painter.getColor(indx) : 'white';
       }
 
       if (!color) color = 'white';
@@ -82776,7 +83002,7 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
             }
          }
 
-         const fill_for_interactive = want_tooltip && this.fillatt.empty() && draw_hist && !draw_markers && !show_line && !show_curve,
+         const fill_for_interactive = want_tooltip && this.fillatt.empty() && draw_hist && !draw_markers && !show_line && !show_curve && !this._ignore_frame,
          add_hist = () => {
             this.draw_g.append('svg:path')
                      .attr('d', res + ((!this.fillatt.empty() || fill_for_interactive) ? close_path : ''))
@@ -82861,16 +83087,20 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
    /** @summary Draw TH1 bins in SVG element
      * @return Promise or scalar value */
    draw1DBins() {
+      if (this.options.Same && this._ignore_frame)
+         this.getFrameSvg().style('display', 'none');
+
       this.createHistDrawAttributes();
 
       const pmain = this.getFramePainter(),
-          funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y),
-          width = pmain.getFrameWidth(), height = pmain.getFrameHeight();
+            funcs = this.getHistGrFuncs(pmain),
+            width = pmain.getFrameWidth(),
+            height = pmain.getFrameHeight();
 
       if (!this.draw_content || (width <= 0) || (height <= 0))
-          return this.removeG();
+         return this.removeG();
 
-      this.createG(true);
+      this.createG(!this._ignore_frame);
 
       if (this.options.Bar) {
          return this.drawBars(funcs, height).then(() => {
@@ -82890,7 +83120,7 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
       const tips = [],
             name = this.getObjectHint(),
             pmain = this.getFramePainter(),
-            funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y),
+            funcs = this.getHistGrFuncs(pmain),
             histo = this.getHisto(),
             x1 = histo.fXaxis.GetBinLowEdge(bin+1),
             x2 = histo.fXaxis.GetBinLowEdge(bin+2),
@@ -82925,7 +83155,7 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
       }
 
       const pmain = this.getFramePainter(),
-            funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y),
+            funcs = this.getHistGrFuncs(pmain),
             histo = this.getHisto(),
             left = this.getSelectIndex('x', 'left', -1),
             right = this.getSelectIndex('x', 'right', 2);
@@ -83349,7 +83579,7 @@ class TH1Painter extends TH1Painter$2 {
       }
 
       if (is_main)
-         pr = pr.then(() => this.drawColorPalette(this.options.Zscale && ((this.options.Lego === 12) || (this.options.Lego === 14))));
+         pr = pr.then(() => this.drawColorPalette(this.options.Zscale && this.options.canHavePalette()));
 
       return pr.then(() => this.updateFunctions())
                .then(() => this.updateHistTitle())
@@ -83575,7 +83805,8 @@ class TH2Painter extends TH2Painter$2 {
       let pr = Promise.resolve(true);
 
       if (reason === 'resize') {
-         if (is_main && main.resize3D()) main.render3D();
+         if (is_main && main.resize3D())
+            main.render3D();
       } else {
          const pad = this.getPadPainter().getRootPad(true),
                logz = pad?.fLogv ?? pad?.fLogz;
@@ -142116,18 +142347,20 @@ async function makePDF(svg, args) {
 
    let doc;
 
+   const orientation = (svg.width < svg.height) ? 'portrait' : 'landscape';
+
    if (args?.as_doc)
       doc = args?.doc;
 
    if (doc) {
       doc.addPage({
-         orientation: 'landscape',
+         orientation,
          unit: 'px',
          format: [svg.width + 10, svg.height + 10]
       });
    } else {
       doc = new jsPDF({
-         orientation: 'landscape',
+         orientation,
          unit: 'px',
          format: [svg.width + 10, svg.height + 10]
       });
@@ -147271,10 +147504,9 @@ async function drawText$1() {
 
    const arg = this.textatt.createArg({ x: this.pos_x, y: this.pos_y, text: text.fTitle, latex: 0 });
 
-   if ((text._typename === clTLatex) || annot) {
+   if ((text._typename === clTLatex) || annot)
       arg.latex = 1;
-      fact = 0.9;
-   } else if (text._typename === clTMathText) {
+   else if (text._typename === clTMathText) {
       arg.latex = 2;
       fact = 0.8;
    }
@@ -147285,7 +147517,7 @@ async function drawText$1() {
          this.draw_g.append('svg:title').text(`link on ${text.fName}`);
    }
 
-   return this.startTextDrawingAsync(this.textatt.font, this.textatt.getSize(w, h, fact, 0.05))
+   return this.startTextDrawingAsync(this.textatt.font, this.textatt.getSize(w, h, fact /* , 0.05 */))
               .then(() => this.drawText(arg))
               .then(() => this.finishTextDrawing())
               .then(() => {
@@ -147328,7 +147560,7 @@ async function drawText$1() {
          };
       }
 
-      assignContextMenu(this, kToFront);
+      assignContextMenu(this);
 
       this.fillContextMenuItems = function(menu) {
          menu.add('Change text', () => menu.input('Enter new text', text.fTitle).then(t => {
@@ -147426,7 +147658,7 @@ function drawEllipse() {
       .call(this.lineatt.func)
       .call(this.fillatt.func);
 
-   assignContextMenu(this, kToFront);
+   assignContextMenu(this);
 
    addMoveHandler(this);
 
@@ -147515,7 +147747,7 @@ function drawMarker$1() {
           .call(this.markeratt.func);
    }
 
-   assignContextMenu(this, kToFront);
+   assignContextMenu(this);
 
    addMoveHandler(this);
 
@@ -147561,7 +147793,7 @@ function drawPolyMarker() {
           .call(this.markeratt.func);
    }
 
-   assignContextMenu(this, kToFront);
+   assignContextMenu(this);
 
    addMoveHandler(this);
 
@@ -147898,6 +148130,12 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
             this.ymax = Math.max(this.ymax, bin.y);
          }
       }
+
+      // workaround, are there better way to show marker at 0,0 on the top of the frame?
+      this._frame_layer = true;
+      if ((this.xmin === 0) && (this.ymin === 0) && (npoints > 0) && (this.bins[0].x === 0) && (this.bins[0].y === 0) &&
+          this.options.Mark && !this.options.Line && !this.options.Curve && !this.options.Fill)
+         this._frame_layer = 'upper_layer';
    }
 
    /** @summary Return margins for histogram ranges */
@@ -147907,10 +148145,7 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
      * @desc graph bins should be created when calling this function
      * @param {boolean} [set_x] - set X axis range
      * @param {boolean} [set_y] - set Y axis range */
-   createHistogram(set_x, set_y) {
-      if (!set_x && !set_y)
-         set_x = set_y = true;
-
+   createHistogram(set_x = true, set_y = true) {
       const graph = this.getGraph(),
             xmin = this.xmin,
             margin = this.getHistRangeMargin();
@@ -147927,7 +148162,10 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
       if ((ymax < 0) && (maximum >= 0))
          maximum = (1 - margin) * ymax;
 
-      if (!this._not_adjust_hrange) {
+      const minimum0 = minimum, maximum0 = maximum;
+      let histo = this.getHistogram();
+
+      if (!this._not_adjust_hrange && !histo?.fXaxis.fTimeDisplay) {
          const pad_logx = this.getPadPainter()?.getPadLog('x');
 
          if ((uxmin < 0) && (xmin >= 0))
@@ -147935,9 +148173,6 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
          if ((uxmax > 0) && (xmax <= 0))
             uxmax = pad_logx ? (1 + margin) * xmax : 0;
       }
-
-      const minimum0 = minimum, maximum0 = maximum;
-      let histo = this.getHistogram();
 
       if (!histo) {
          histo = this._is_scatter ? createHistogram(clTH2I, 30, 30) : createHistogram(clTH1I, 100);
@@ -147950,10 +148185,12 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
          maximum = histo.fMaximum;
       }
 
-      if (graph.fMinimum !== kNoZoom) minimum = ymin = graph.fMinimum;
-      if (graph.fMaximum !== kNoZoom) maximum = graph.fMaximum;
+      if (graph.fMinimum !== kNoZoom)
+         minimum = ymin = graph.fMinimum;
+      if (graph.fMaximum !== kNoZoom)
+         maximum = graph.fMaximum;
       if ((minimum < 0) && (ymin >= 0))
-         minimum = (1 - margin)*ymin;
+         minimum = (1 - margin) * ymin;
       if ((ymax < 0) && (maximum >= 0))
          maximum = (1 - margin) * ymax;
 
@@ -147973,6 +148210,7 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
          }
       }
 
+      histo.$xmin_nz = xmin > 0 ? xmin : undefined;
       histo.$ymin_nz = ymin > 0 ? ymin : undefined;
 
       return histo;
@@ -147982,13 +148220,15 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
      * @desc Used when graph points covers larger range than provided histogram */
    unzoomUserRange(dox, doy /* , doz */) {
       const graph = this.getGraph();
-      if (this._own_histogram || !graph) return false;
+      if (this._own_histogram || !graph)
+         return false;
 
       const histo = this.getHistogram();
 
       dox = dox && histo && ((histo.fXaxis.fXmin > this.xmin) || (histo.fXaxis.fXmax < this.xmax));
       doy = doy && histo && ((histo.fYaxis.fXmin > this.ymin) || (histo.fYaxis.fXmax < this.ymax));
-      if (!dox && !doy) return false;
+      if (!dox && !doy)
+         return false;
 
       this.createHistogram(dox, doy);
       this.getMainPainter()?.extractAxesProperties(1); // just to enforce ranges extraction
@@ -148043,8 +148283,8 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
    /** @summary Returns tooltip for specified bin */
    getTooltips(d) {
       const pmain = this.get_main(), lines = [],
-          funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y),
-          gme = this.get_gme();
+            funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y),
+            gme = this.get_gme();
 
       lines.push(this.getObjectHint());
 
@@ -148071,42 +148311,43 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
    get_main() {
       let pmain = this.getFramePainter();
 
-      if (pmain?.grx && pmain?.gry) return pmain;
+      if (pmain?.grx && pmain?.gry)
+         return pmain;
 
       // FIXME: check if needed, can be removed easily
       const pp = this.getPadPainter(),
             rect = pp?.getPadRect() || { width: 800, height: 600 };
 
       pmain = {
-          pad_layer: true,
-          pad: pp?.getRootPad(true) ?? create$1(clTPad),
-          pw: rect.width,
-          ph: rect.height,
-          fX1NDC: 0.1, fX2NDC: 0.9, fY1NDC: 0.1, fY2NDC: 0.9,
-          getFrameWidth() { return this.pw; },
-          getFrameHeight() { return this.ph; },
-          grx(value) {
-             if (this.pad.fLogx)
-                value = (value > 0) ? Math.log10(value) : this.pad.fUxmin;
-             else
-                value = (value - this.pad.fX1) / (this.pad.fX2 - this.pad.fX1);
-             return value * this.pw;
-          },
-          gry(value) {
-             if (this.pad.fLogv ?? this.pad.fLogy)
-                value = (value > 0) ? Math.log10(value) : this.pad.fUymin;
-             else
-                value = (value - this.pad.fY1) / (this.pad.fY2 - this.pad.fY1);
-             return (1 - value) * this.ph;
-          },
-          revertAxis(name, v) {
+         pad_layer: true,
+         pad: pp?.getRootPad(true) ?? create$1(clTPad),
+         pw: rect.width,
+         ph: rect.height,
+         fX1NDC: 0.1, fX2NDC: 0.9, fY1NDC: 0.1, fY2NDC: 0.9,
+         getFrameWidth() { return this.pw; },
+         getFrameHeight() { return this.ph; },
+         grx(value) {
+            if (this.pad.fLogx)
+               value = (value > 0) ? Math.log10(value) : this.pad.fUxmin;
+            else
+               value = (value - this.pad.fX1) / (this.pad.fX2 - this.pad.fX1);
+            return value * this.pw;
+         },
+         gry(value) {
+            if (this.pad.fLogv ?? this.pad.fLogy)
+               value = (value > 0) ? Math.log10(value) : this.pad.fUymin;
+            else
+               value = (value - this.pad.fY1) / (this.pad.fY2 - this.pad.fY1);
+            return (1 - value) * this.ph;
+         },
+         revertAxis(name, v) {
             if (name === 'x')
                return v / this.pw * (this.pad.fX2 - this.pad.fX1) + this.pad.fX1;
             if (name === 'y')
                return (1 - v / this.ph) * (this.pad.fY2 - this.pad.fY1) + this.pad.fY1;
             return v;
-          },
-          getGrFuncs() { return this; }
+         },
+         getGrFuncs() { return this; }
       };
 
       return pmain.pad ? pmain : null;
@@ -148531,7 +148772,8 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
    drawGraph() {
       const pmain = this.get_main(),
             graph = this.getGraph();
-      if (!pmain || !this.options) return;
+      if (!pmain || !this.options)
+         return;
 
       // special mode for TMultiGraph 3d drawing
       if (this.options.pos3d)
@@ -148542,7 +148784,7 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
             w = pmain.getFrameWidth(),
             h = pmain.getFrameHeight();
 
-      this.createG(!pmain.pad_layer);
+      this.createG(pmain.pad_layer ? false : this._frame_layer);
 
       this.createGraphDrawAttributes();
 
@@ -148574,7 +148816,7 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
 
       if (!this.isBatchMode()) {
          addMoveHandler(this, this.testEditable());
-         assignContextMenu(this);
+         assignContextMenu(this, kNoReorder);
       }
    }
 
@@ -149034,6 +149276,11 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
       graph.fTitle = obj.fTitle;
       graph.fX = obj.fX;
       graph.fY = obj.fY;
+      ['fEX', 'fEY', 'fExL', 'fExH', 'fEXlow', 'fEXhigh', 'fEYlow', 'fEYhigh',
+        'fEXlowd', 'fEXhighd', 'fEYlowd', 'fEYhighd'].forEach(member => {
+         if (obj[member] !== undefined)
+            graph[member] = obj[member];
+      });
       graph.fNpoints = obj.fNpoints;
       graph.fMinimum = obj.fMinimum;
       graph.fMaximum = obj.fMaximum;
@@ -149060,7 +149307,8 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
 
    /** @summary Update TGraph object */
    updateObject(obj, opt) {
-      if (!this.matchObjectType(obj)) return false;
+      if (!this.matchObjectType(obj))
+         return false;
 
       if (opt && (opt !== this.options.original))
          this.decodeOptions(opt);
@@ -149129,20 +149377,23 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
    /** @summary Create stat box */
    createStat() {
       const func = this.findFunc();
-      if (!func) return null;
+      if (!func)
+         return null;
 
       let stats = this.findStat();
-      if (stats) return stats;
-
-      // do not create stats box when drawing canvas
-      if (this.getCanvPainter()?.normal_canvas) return null;
-
-      this.create_stats = true;
+      if (stats)
+         return stats;
 
       const st = gStyle;
 
+      // do not create stats box when drawing canvas
+      if (!st.fOptFit || this.getCanvPainter()?.normal_canvas)
+         return null;
+
+      this.create_stats = true;
+
       stats = create$1(clTPaveStats);
-      Object.assign(stats, { fName: 'stats', fOptStat: 0, fOptFit: st.fOptFit || 111, fBorderSize: 1,
+      Object.assign(stats, { fName: 'stats', fOptStat: 0, fOptFit: st.fOptFit, fBorderSize: 1,
                              fX1NDC: st.fStatX - st.fStatW, fY1NDC: st.fStatY - st.fStatH, fX2NDC: st.fStatX, fY2NDC: st.fStatY,
                              fFillColor: st.fStatColor, fFillStyle: st.fStatStyle });
 
@@ -149163,20 +149414,19 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
    /** @summary Fill statistic */
    fillStatistic(stat, _dostat, dofit) {
       const func = this.findFunc();
-
-      if (!func || !dofit) return false;
+      if (!func || !dofit)
+         return false;
 
       stat.clearPave();
-
       stat.fillFunctionStat(func, (dofit === 1) ? 111 : dofit, 1);
-
       return true;
    }
 
    /** @summary Draw axis histogram
      * @private */
    async drawAxisHisto() {
-      const histo = this.createHistogram();
+      const need_histo = !this.getHistogram(),
+            histo = this.createHistogram(need_histo, need_histo);
       return TH1Painter$2.draw(this.getDrawDom(), histo, this.options.Axis);
    }
 
@@ -151424,19 +151674,206 @@ class TGraphDelaunay {
       return thevalue;
    }
 
-   // Defines the number of triangles tested for a Delaunay triangle
-   // (number of iterations) before abandoning the search
-
+   /** @summary Defines the number of triangles tested for a Delaunay triangle
+    * @desc (number of iterations) before abandoning the search */
    SetMaxIter(n = 100000) {
       this.fAllTri = false;
       this.fMaxIter = n;
    }
 
-   // Sets the histogram bin height for points lying outside the convex hull ie:
-   // the bins in the margin.
-
+   /** @summary Sets the histogram bin height for points lying outside the convex hull ie:
+     * @desc the bins in the margin. */
    SetMarginBinsContent(z) {
       this.fZout = z;
+   }
+
+   /** @summary Returns the X and Y graphs building a contour.
+    * @desc A contour level may consist in several parts not connected to each other.
+    * This function finds them and returns them in a graphs' list. */
+   GetContourList(contour) {
+      if (!this.fNdt)
+         return null;
+
+      let graph = null,     // current graph
+          // Find all the segments making the contour
+          r21, r20, r10, p0, p1, p2, x0, y0, z0, x1, y1, z1, x2, y2, z2,
+          it, i0, i1, i2, nbSeg = 0,
+          // Allocate space to store the segments. They cannot be more than the
+          // number of triangles.
+          xs0c, ys0c, xs1c, ys1c;
+
+      const t = [0, 0, 0],
+            xs0 = new Array(this.fNdt).fill(0),
+            ys0 = new Array(this.fNdt).fill(0),
+            xs1 = new Array(this.fNdt).fill(0),
+            ys1 = new Array(this.fNdt).fill(0);
+
+      // Loop over all the triangles in order to find all the line segments
+      // making the contour.
+
+      // old implementation
+      for (it = 0; it < this.fNdt; it++) {
+         t[0] = this.fPTried[it];
+         t[1] = this.fNTried[it];
+         t[2] = this.fMTried[it];
+         p0 = t[0] - 1;
+         p1 = t[1] - 1;
+         p2 = t[2] - 1;
+         x0 = this.fX[p0]; x2 = this.fX[p0];
+         y0 = this.fY[p0]; y2 = this.fY[p0];
+         z0 = this.fZ[p0]; z2 = this.fZ[p0];
+
+         // Order along Z axis the points (xi,yi,zi) where "i" belongs to {0,1,2}
+         // After this z0 < z1 < z2
+         i0 = i1 = i2 = 0;
+         if (this.fZ[p1] <= z0) { z0 = this.fZ[p1]; x0 = this.fX[p1]; y0 = this.fY[p1]; i0 = 1; }
+         if (this.fZ[p1] > z2) { z2 = this.fZ[p1]; x2 = this.fX[p1]; y2 = this.fY[p1]; i2 = 1; }
+         if (this.fZ[p2] <= z0) { z0 = this.fZ[p2]; x0 = this.fX[p2]; y0 = this.fY[p2]; i0 = 2; }
+         if (this.fZ[p2] > z2) { z2 = this.fZ[p2]; x2 = this.fX[p2]; y2 = this.fY[p2]; i2 = 2; }
+         if (i0 === 0 && i2 === 0) {
+            console.error('GetContourList: wrong vertices ordering');
+            return nullptr;
+         }
+
+         i1 = 3 - i2 - i0;
+
+         x1 = this.fX[t[i1]-1];
+         y1 = this.fY[t[i1]-1];
+         z1 = this.fZ[t[i1]-1];
+
+         if (contour >= z0 && contour <=z2) {
+            r20 = (contour-z0)/(z2-z0);
+            xs0c = r20*(x2-x0)+x0;
+            ys0c = r20*(y2-y0)+y0;
+            if (contour >= z1 && contour <=z2) {
+               r21 = (contour-z1)/(z2-z1);
+               xs1c = r21*(x2-x1)+x1;
+               ys1c = r21*(y2-y1)+y1;
+            } else {
+               r10 = (contour-z0)/(z1-z0);
+               xs1c = r10*(x1-x0)+x0;
+               ys1c = r10*(y1-y0)+y0;
+            }
+            // do not take the segments equal to a point
+            if (xs0c !== xs1c || ys0c !== ys1c) {
+               nbSeg++;
+               xs0[nbSeg-1] = xs0c;
+               ys0[nbSeg-1] = ys0c;
+               xs1[nbSeg-1] = xs1c;
+               ys1[nbSeg-1] = ys1c;
+            }
+         }
+      }
+
+      const list = [], // list holding all the graphs
+            segUsed = new Array(this.fNdt).fill(false);
+
+      // Find all the graphs making the contour. There is two kind of graphs,
+      // either they are "opened" or they are "closed"
+
+      // Find the opened graphs
+      let xc=0, yc=0, xnc=0, ync=0,
+          findNew, s0, s1, is, js;
+
+      for (is = 0; is < nbSeg; is++) {
+         if (segUsed[is]) continue;
+         s0 = s1 = false;
+
+         // Find to which segment is is connected. It can be connected
+         // via 0, 1 or 2 vertices.
+         for (js = 0; js < nbSeg; js++) {
+            if (is === js) continue;
+            if (xs0[is] === xs0[js] && ys0[is] === ys0[js]) s0 = true;
+            if (xs0[is] === xs1[js] && ys0[is] === ys1[js]) s0 = true;
+            if (xs1[is] === xs0[js] && ys1[is] === ys0[js]) s1 = true;
+            if (xs1[is] === xs1[js] && ys1[is] === ys1[js]) s1 = true;
+         }
+
+         // Segment is is alone, not connected. It is stored in the
+         // list and the next segment is examined.
+         if (!s0 && !s1) {
+            graph = [];
+            graph.push(xs0[is], ys0[is]);
+            graph.push(xs1[is], ys1[is]);
+            segUsed[is] = true;
+            list.push(graph);
+            continue;
+         }
+
+         // Segment is is connected via 1 vertex only and can be considered
+         // as the starting point of an opened contour.
+         if (!s0 || !s1) {
+            // Find all the segments connected to segment is
+            graph = [];
+            if (s0) { xc = xs0[is]; yc = ys0[is]; xnc = xs1[is]; ync = ys1[is]; }
+            if (s1) { xc = xs1[is]; yc = ys1[is]; xnc = xs0[is]; ync = ys0[is]; }
+            graph.push(xnc, ync);
+            segUsed[is] = true;
+            js = 0;
+
+            while (true) {
+               findNew = false;
+               while (js < nbSeg && segUsed[js])
+                  js++;
+
+               if (xc === xs0[js] && yc === ys0[js]) {
+                  xc = xs1[js];
+                  yc = ys1[js];
+                  findNew = true;
+               } else if (xc === xs1[js] && yc === ys1[js]) {
+                  xc = xs0[js];
+                  yc = ys0[js];
+                  findNew = true;
+               }
+               if (findNew) {
+                  segUsed[js] = true;
+                  graph.push(xc, yc);
+                  js = 0;
+               } else if (++js >= nbSeg)
+                  break;
+            }
+            list.push(graph);
+         }
+      }
+
+
+      // Find the closed graphs. At this point all the remaining graphs
+      // are closed. Any segment can be used to start the search.
+      for (is = 0; is < nbSeg; is++) {
+         if (segUsed[is]) continue;
+
+         // Find all the segments connected to segment is
+         graph = [];
+         segUsed[is] = true;
+         xc = xs0[is];
+         yc = ys0[is];
+         js = 0;
+         graph.push(xc, yc);
+         while (true) {
+            while (js < nbSeg && segUsed[js])
+               js++;
+            findNew = false;
+            if (xc === xs0[js] && yc === ys0[js]) {
+               xc = xs1[js];
+               yc = ys1[js];
+               findNew = true;
+            } else if (xc === xs1[js] && yc === ys1[js]) {
+               xc = xs0[js];
+               yc = ys0[js];
+               findNew = true;
+            }
+            if (findNew) {
+               segUsed[js] = true;
+               graph.push(xc, yc);
+               js = 0;
+            } else if (++js >= nbSeg)
+               break;
+         }
+         graph.push(xs0[is], ys0[is]);
+         list.push(graph);
+      }
+
+      return list;
    }
 
 } // class TGraphDelaunay
@@ -151505,7 +151942,9 @@ class TGraph2DPainter extends ObjectPainter {
          gr2d.fLineColor = d.color;
 
       d.check('SAME');
-      if (d.check('TRI1'))
+      if (d.check('CONT5'))
+         res.Contour = 15;
+      else if (d.check('TRI1'))
          res.Triangles = 11; // wire-frame and colors
       else if (d.check('TRI2'))
          res.Triangles = 10; // only color triangles
@@ -151528,14 +151967,16 @@ class TGraph2DPainter extends ObjectPainter {
 
       if (!res.Markers) res.Color = false;
 
-      if (res.Color || res.Triangles >= 10)
+      if (res.Color || res.Triangles >= 10 || res.Contour)
          res.Zscale = d.check('Z');
 
       res.isAny = function() {
-         return this.Markers || this.Error || this.Circles || this.Line || this.Triangles;
+         return this.Markers || this.Error || this.Circles || this.Line || this.Triangles || res.Contour;
       };
 
-      if (res.isAny()) {
+      if (res.Contour)
+         res.Axis = '';
+      else if (res.isAny()) {
          res.Axis = 'lego2';
          if (res.Zscale) res.Axis += 'z';
       } else
@@ -151733,14 +152174,56 @@ class TGraph2DPainter extends ObjectPainter {
       return promise.then(() => this.drawGraph2D());
    }
 
+   async drawContour(fp, main, graph) {
+      const dulaunay = this.buildDelaunay(graph);
+      if (!dulaunay)
+         return this;
+
+      const cntr = main.getContour(),
+            palette = main.getHistPalette(),
+            levels = cntr.getLevels(),
+            funcs = fp.getGrFuncs();
+
+      this.createG(true);
+
+      this.createAttLine({ attr: graph, nocolor: true });
+
+      for (let k = 0; k < levels.length; ++k) {
+         const lst = dulaunay.GetContourList(levels[k]),
+               color = cntr.getPaletteColor(palette, levels[k]);
+         let path = '';
+         for (let i = 0; i < lst.length; ++i) {
+            const gr = lst[i], arr = [];
+            for (let n = 0; n < gr.length; n += 2)
+               arr.push({ grx: funcs.grx(gr[n]), gry: funcs.gry(gr[n+1]) });
+            path += buildSvgCurve(arr, { cmd: 'M', line: true });
+         }
+
+         this.lineatt.color = color;
+
+         this.draw_g.append('svg:path')
+             .attr('d', path)
+             .style('fill', 'none')
+             .call(this.lineatt.func);
+      }
+
+      return this;
+   }
+
    /** @summary Actual drawing of TGraph2D object
      * @return {Promise} for drawing ready */
    async drawGraph2D() {
-      const main = this.getMainPainter(),
-            fp = this.getFramePainter(),
+      const fp = this.getFramePainter(),
+            main = this.getMainPainter(),
             graph = this.getObject();
 
-      if (!graph || !main || !fp || !fp.mode3d)
+      if (!graph || !main || !fp)
+         return this;
+
+      if (this.options.Contour)
+         return this.drawContour(fp, main, graph);
+
+      if (!fp.mode3d)
          return this;
 
       fp.remove3DMeshes(this);
@@ -151919,7 +152402,7 @@ class TGraph2DPainter extends ObjectPainter {
             if (!this.options.Circles || this.options.Color)
                color = palette?.calcColor(lvl, levels.length) ?? this.getColor(graph.fMarkerColor);
 
-            const pr = pnts.createPoints({ color, style: this.options.Circles ? 4 : graph.fMarkerStyle }).then(mesh => {
+            const pr = pnts.createPoints({ color, fill: 'white', style: this.options.Circles ? 4 : graph.fMarkerStyle }).then(mesh => {
                mesh.graph = graph;
                mesh.fp = fp;
                mesh.tip_color = (graph.fMarkerColor === 3) ? 0xFF0000 : 0x00FF00;
@@ -151984,6 +152467,8 @@ __proto__: null,
 TGraph2DPainter: TGraph2DPainter
 });
 
+const kNoTitle = BIT(17);
+
 /**
  * @summary Painter for TGraphPolargram objects.
  *
@@ -151998,14 +152483,37 @@ class TGraphPolargramPainter extends ObjectPainter {
       super(dom, polargram);
       this.$polargram = true; // indicate that this is polargram
       this.zoom_rmin = this.zoom_rmax = 0;
+      this.t0 = 0;
+      this.mult = 1;
+   }
+
+   /** @summary Returns true if fixed coordinates are configured */
+   isNormalAngles() {
+      const polar = this.getObject();
+      return polar?.fRadian || polar?.fGrad || polar?.fDegree;
+   }
+
+   /** @summary Set angles range displayed by the polargram */
+   setAnglesRange(tmin, tmax, set_obj) {
+      if (tmin >= tmax)
+         tmax = tmin + 1;
+      if (set_obj) {
+         const polar = this.getObject();
+         polar.fRwtmin = tmin;
+         polar.fRwtmax = tmax;
+      }
+      this.t0 = tmin;
+      this.mult = 2*Math.PI/(tmax - tmin);
    }
 
    /** @summary Translate coordinates */
-   translate(angle, radius, keep_float) {
+   translate(input_angle, radius, keep_float) {
+      // recalculate angle
+      const angle = (input_angle - this.t0) * this.mult;
       let rx = this.r(radius),
           ry = rx/this.szx*this.szy,
-          grx = rx * Math.cos(-angle - this.angle),
-          gry = ry * Math.sin(-angle - this.angle);
+          grx = rx * Math.cos(-angle),
+          gry = ry * Math.sin(-angle);
 
       if (!keep_float) {
          grx = Math.round(grx);
@@ -152027,8 +152535,10 @@ class TGraphPolargramPainter extends ObjectPainter {
    /** @summary Convert axis values to text */
    axisAsText(axis, value) {
       if (axis === 'r') {
-         if (value === Math.round(value)) return value.toString();
-         if (this.ndig>10) return value.toExponential(4);
+         if (value === Math.round(value))
+            return value.toString();
+         if (this.ndig > 10)
+            return value.toExponential(4);
          return value.toFixed(this.ndig+2);
       }
 
@@ -152067,17 +152577,16 @@ class TGraphPolargramPainter extends ObjectPainter {
 
    /** @summary Process mouse event */
    mouseEvent(kind, evnt) {
-      const layer = this.getLayerSvg('primitives_layer'),
-            interactive = layer.select('.interactive_ellipse');
-      if (interactive.empty()) return;
+//      const layer = this.getLayerSvg('primitives_layer'),
+//            interactive = layer.select('.interactive_ellipse');
+//      if (interactive.empty()) return;
 
       let pnt = null;
 
       if (kind !== 'leave') {
-         const pos = pointer(evnt, interactive.node());
+         const pos = pointer(evnt, this.draw_g.node());
          pnt = { x: pos[0], y: pos[1], touch: false };
       }
-
       this.processFrameTooltipEvent(pnt);
    }
 
@@ -152102,7 +152611,8 @@ class TGraphPolargramPainter extends ObjectPainter {
       // rmin -= delta*range;
       rmax += delta*range;
 
-      if ((rmin<polar.fRwrmin) || (rmax>polar.fRwrmax)) rmin = rmax = 0;
+      if ((rmin < polar.fRwrmin) || (rmax > polar.fRwrmax))
+         rmin = rmax = 0;
 
       if ((this.zoom_rmin !== rmin) || (this.zoom_rmax !== rmax)) {
          this.zoom_rmin = rmin;
@@ -152133,7 +152643,16 @@ class TGraphPolargramPainter extends ObjectPainter {
       }
 
       this.r = linear().domain([this.scale_rmin, this.scale_rmax]).range([0, this.szx]);
-      this.angle = polar.fAxisAngle || 0;
+
+      if (polar.fRadian) {
+         polar.fRwtmin = 0; polar.fRwtmax = 2*Math.PI;
+      } else if (polar.fDegree) {
+         polar.fRwtmin = 0; polar.fRwtmax = 360;
+      } else if (polar.fGrad) {
+         polar.fRwtmin = 0; polar.fRwtmax = 200;
+      }
+
+      this.setAnglesRange(polar.fRwtmin, polar.fRwtmax);
 
       const ticks = this.r.ticks(5),
             fontsize = Math.round(polar.fPolarTextSize * this.szy * 2);
@@ -152143,7 +152662,8 @@ class TGraphPolargramPainter extends ObjectPainter {
          nmajor = 8;
 
       this.createAttLine({ attr: polar });
-      if (!this.gridatt) this.gridatt = this.createAttLine({ color: polar.fLineColor, style: 2, width: 1, std: false });
+      if (!this.gridatt)
+         this.gridatt = this.createAttLine({ color: polar.fLineColor, style: 2, width: 1, std: false });
 
       const range = Math.abs(polar.fRwrmax - polar.fRwrmin);
       this.ndig = (range <= 0) ? -3 : Math.round(Math.log10(ticks.length / range));
@@ -152161,6 +152681,7 @@ class TGraphPolargramPainter extends ObjectPainter {
       }
 
       let exclude_last = false;
+      const pointer_events = this.isBatchMode() ? null : 'visibleFill';
 
       if ((ticks[ticks.length-1] < polar.fRwrmax) && (this.zoom_rmin === this.zoom_rmax)) {
          ticks.push(polar.fRwrmax);
@@ -152169,13 +152690,15 @@ class TGraphPolargramPainter extends ObjectPainter {
 
       return this.startTextDrawingAsync(polar.fRadialLabelFont, Math.round(polar.fRadialTextSize * this.szy * 2)).then(() => {
          for (let n = 0; n < ticks.length; ++n) {
-            let rx = this.r(ticks[n]), ry = rx/this.szx*this.szy;
+            let rx = this.r(ticks[n]),
+                ry = rx / this.szx * this.szy;
             this.draw_g.append('ellipse')
                .attr('cx', 0)
                .attr('cy', 0)
                .attr('rx', Math.round(rx))
                .attr('ry', Math.round(ry))
                .style('fill', 'none')
+               .style('pointer-events', pointer_events)
                .call(this.lineatt.func);
 
             if ((n < ticks.length-1) || !exclude_last) {
@@ -152183,23 +152706,24 @@ class TGraphPolargramPainter extends ObjectPainter {
                               text: this.format(ticks[n]), color: this.getColor(polar.fRadialLabelColor), latex: 0 });
             }
 
-            if ((nminor>1) && ((n < ticks.length-1) || !exclude_last)) {
+            if ((nminor > 1) && ((n < ticks.length - 1) || !exclude_last)) {
                const dr = (ticks[1] - ticks[0]) / nminor;
                for (let nn = 1; nn < nminor; ++nn) {
                   const gridr = ticks[n] + dr*nn;
                   if (gridr > this.scale_rmax) break;
-                  rx = this.r(gridr); ry = rx/this.szx*this.szy;
+                  rx = this.r(gridr);
+                  ry = rx / this.szx * this.szy;
                   this.draw_g.append('ellipse')
                      .attr('cx', 0)
                      .attr('cy', 0)
                      .attr('rx', Math.round(rx))
                      .attr('ry', Math.round(ry))
                      .style('fill', 'none')
+                     .style('pointer-events', pointer_events)
                      .call(this.gridatt.func);
                }
             }
          }
-
 
          return this.finishTextDrawing();
       }).then(() => {
@@ -152209,7 +152733,7 @@ class TGraphPolargramPainter extends ObjectPainter {
          const aligns = [12, 11, 21, 31, 32, 33, 23, 13];
 
          for (let n = 0; n < nmajor; ++n) {
-            const angle = -n*2*Math.PI/nmajor - this.angle;
+            const angle = -n*2*Math.PI/nmajor;
             this.draw_g.append('svg:path')
                 .attr('d', `M0,0L${Math.round(this.szx*Math.cos(angle))},${Math.round(this.szy*Math.sin(angle))}`)
                 .call(this.lineatt.func);
@@ -152230,41 +152754,43 @@ class TGraphPolargramPainter extends ObjectPainter {
          if (nminor > 1) {
             for (let n = 0; n < nmajor*nminor; ++n) {
                if (n % nminor === 0) continue;
-               const angle = -n*2*Math.PI/nmajor/nminor - this.angle;
+               const angle = -n*2*Math.PI/nmajor/nminor;
                this.draw_g.append('svg:path')
                    .attr('d', `M0,0L${Math.round(this.szx*Math.cos(angle))},${Math.round(this.szy*Math.sin(angle))}`)
                    .call(this.gridatt.func);
             }
          }
 
-         if (this.isBatchMode()) return;
+         if (this.isBatchMode())
+            return;
 
          TooltipHandler.assign(this);
 
-         const layer = this.getLayerSvg('primitives_layer');
-         let interactive = layer.select('.interactive_ellipse');
+         assignContextMenu(this, kNoReorder);
 
-         if (interactive.empty()) {
-            interactive = layer.append('g')
-                               .classed('most_upper_primitives', true)
-                               .append('ellipse')
-                               .classed('interactive_ellipse', true)
-                               .attr('cx', 0)
-                               .attr('cy', 0)
-                               .style('fill', 'none')
-                               .style('pointer-events', 'visibleFill')
-                               .on('mouseenter', evnt => this.mouseEvent('enter', evnt))
-                               .on('mousemove', evnt => this.mouseEvent('move', evnt))
-                               .on('mouseleave', evnt => this.mouseEvent('leave', evnt));
-         }
-
-         interactive.attr('rx', this.szx).attr('ry', this.szy);
-
-         select(interactive.node().parentNode).attr('transform', this.draw_g.attr('transform'));
-
-         if (settings.Zooming && settings.ZoomWheel)
-            interactive.on('wheel', evnt => this.mouseWheel(evnt));
+         this.assignZoomHandler(this.draw_g);
       });
+   }
+
+   /** @summary Fill TGraphPolargram context menu */
+   fillContextMenuItems(menu) {
+      const pp = this.getObject();
+      menu.sub('Angle axis');
+      menu.addchk(pp.fRadian, 'Radian', flag => { pp.fRadian = flag; pp.fDegree = pp.fGrad = false; this.interactiveRedraw('pad', flag ? 'exec:SetToRadian()' : 'exec:SetTwoPi()'); }, 'Handle data angles as radian range 0..2*Pi');
+      menu.addchk(pp.fDegree, 'Degree', flag => { pp.fDegree = flag; pp.fRadian = pp.fGrad = false; this.interactiveRedraw('pad', flag ? 'exec:SetToDegree()' : 'exec:SetTwoPi()'); }, 'Handle data angles as degree range 0..360');
+      menu.addchk(pp.fGrad, 'Grad', flag => { pp.fGrad = flag; pp.fRadian = pp.fDegree = false; this.interactiveRedraw('pad', flag ? 'exec:SetToGrad()' : 'exec:SetTwoPi()'); }, 'Handle data angles as grad range 0..200');
+      menu.endsub();
+   }
+
+   /** @summary Assign zoom handler to element
+    * @private */
+   assignZoomHandler(elem) {
+      elem.on('mouseenter', evnt => this.mouseEvent('enter', evnt))
+          .on('mousemove', evnt => this.mouseEvent('move', evnt))
+          .on('mouseleave', evnt => this.mouseEvent('leave', evnt));
+
+      if (settings.Zooming && settings.ZoomWheel)
+         elem.on('wheel', evnt => this.mouseWheel(evnt));
    }
 
    /** @summary Draw TGraphPolargram */
@@ -152294,16 +152820,12 @@ class TGraphPolargramPainter extends ObjectPainter {
 
 class TGraphPolarPainter extends ObjectPainter {
 
-   /** @summary Redraw TGraphPolar */
-   redraw() {
-      this.drawGraphPolar();
-   }
-
    /** @summary Decode options for drawing TGraphPolar */
    decodeOptions(opt) {
       const d = new DrawOptions(opt || 'L');
 
-      if (!this.options) this.options = {};
+      if (!this.options)
+         this.options = {};
 
       Object.assign(this.options, {
           mark: d.check('P'),
@@ -152313,39 +152835,80 @@ class TGraphPolarPainter extends ObjectPainter {
           curve: d.check('C')
       });
 
+      if (d.check('A'))
+         this._draw_axis = true;
+
       this.storeDrawOpt(opt);
    }
 
+   /** @summary Update TGraphPolar with polargram */
+   updateObject(obj, opt) {
+      if (!this.matchObjectType(obj))
+         return false;
+
+      if (opt && (opt !== this.options.original))
+         this.decodeOptions(opt);
+
+      if (this._draw_axis && obj.fPolargram)
+         this.getMainPainter().updateObject(obj.fPolargram);
+
+      delete obj.fPolargram;
+      // copy all properties but not polargram
+      Object.assign(this.getObject(), obj);
+      return true;
+   }
+
+   /** @summary Redraw TGraphPolar */
+   redraw() {
+      return this.drawGraphPolar().then(() => this.updateTitle());
+   }
+
    /** @summary Drawing TGraphPolar */
-   drawGraphPolar() {
+   async drawGraphPolar() {
       const graph = this.getObject(),
             main = this.getMainPainter();
 
-      if (!graph || !main?.$polargram) return;
+      if (!graph || !main?.$polargram)
+         return;
 
-      if (this.options.mark) this.createAttMarker({ attr: graph });
-      if (this.options.err || this.options.line || this.options.curve) this.createAttLine({ attr: graph });
-      if (this.options.fill) this.createAttFill({ attr: graph });
+      if (this.options.mark)
+         this.createAttMarker({ attr: graph });
+      if (this.options.err || this.options.line || this.options.curve)
+         this.createAttLine({ attr: graph });
+      if (this.options.fill)
+         this.createAttFill({ attr: graph });
 
       this.createG();
+
+      if (this._draw_axis && !main.isNormalAngles()) {
+         const has_err = graph.fEX?.length;
+         let rwtmin = graph.fX[0],
+             rwtmax = graph.fX[0];
+         for (let n = 0; n < graph.fNpoints; ++n) {
+            rwtmin = Math.min(rwtmin, graph.fX[n] - (has_err ? graph.fEX[n] : 0));
+            rwtmax = Math.max(rwtmax, graph.fX[n] + (has_err ? graph.fEX[n] : 0));
+         }
+         rwtmax += (rwtmax - rwtmin) / graph.fNpoints;
+         main.setAnglesRange(rwtmin, rwtmax, true);
+      }
 
       this.draw_g.attr('transform', main.draw_g.attr('transform'));
 
       let mpath = '', epath = '';
-      const bins = [];
+      const bins = [], pointer_events = this.isBatchMode() ? null : 'visibleFill';
 
       for (let n = 0; n < graph.fNpoints; ++n) {
-         if (graph.fY[n] > main.scale_rmax) continue;
+         if (graph.fY[n] > main.scale_rmax)
+            continue;
 
          if (this.options.err) {
-            let pos1 = main.translate(graph.fX[n], graph.fY[n] - graph.fEY[n]),
-                pos2 = main.translate(graph.fX[n], graph.fY[n] + graph.fEY[n]);
-            epath += `M${pos1.grx},${pos1.gry}L${pos2.grx},${pos2.gry}`;
+            const p1 = main.translate(graph.fX[n], graph.fY[n] - graph.fEY[n]),
+                  p2 = main.translate(graph.fX[n], graph.fY[n] + graph.fEY[n]),
+                  p3 = main.translate(graph.fX[n] + graph.fEX[n], graph.fY[n]),
+                  p4 = main.translate(graph.fX[n] - graph.fEX[n], graph.fY[n]);
 
-            pos1 = main.translate(graph.fX[n] + graph.fEX[n], graph.fY[n]);
-            pos2 = main.translate(graph.fX[n] - graph.fEX[n], graph.fY[n]);
-
-            epath += `M${pos1.grx},${pos1.gry}A${pos2.rx},${pos2.ry},0,0,1,${pos2.grx},${pos2.gry}`;
+            epath += `M${p1.grx},${p1.gry}L${p2.grx},${p2.gry}` +
+                     `M${p3.grx},${p3.gry}A${p4.rx},${p4.ry},0,0,1,${p4.grx},${p4.gry}`;
          }
 
          const pos = main.translate(graph.fX[n], graph.fY[n]);
@@ -152362,6 +152925,7 @@ class TGraphPolarPainter extends ObjectPainter {
          if (this.options.fill) {
             this.draw_g.append('svg:path')
                 .attr('d', lpath + 'Z')
+                .style('pointer-events', pointer_events)
                 .call(this.fillatt.func);
          }
 
@@ -152369,6 +152933,7 @@ class TGraphPolarPainter extends ObjectPainter {
             this.draw_g.append('svg:path')
                 .attr('d', lpath)
                 .style('fill', 'none')
+                .style('pointer-events', pointer_events)
                 .call(this.lineatt.func);
          }
       }
@@ -152377,6 +152942,7 @@ class TGraphPolarPainter extends ObjectPainter {
          this.draw_g.append('svg:path')
                  .attr('d', buildSvgCurve(bins))
                  .style('fill', 'none')
+                 .style('pointer-events', pointer_events)
                  .call(this.lineatt.func);
       }
 
@@ -152384,31 +152950,39 @@ class TGraphPolarPainter extends ObjectPainter {
          this.draw_g.append('svg:path')
              .attr('d', epath)
              .style('fill', 'none')
+             .style('pointer-events', pointer_events)
              .call(this.lineatt.func);
       }
 
       if (mpath) {
          this.draw_g.append('svg:path')
                .attr('d', mpath)
+               .style('pointer-events', pointer_events)
                .call(this.markeratt.func);
+      }
+
+      if (!this.isBatchMode()) {
+         assignContextMenu(this, kNoReorder);
+         main.assignZoomHandler(this.draw_g);
       }
    }
 
    /** @summary Create polargram object */
-   createPolargram() {
-      const polargram = create$1('TGraphPolargram'),
-            gr = this.getObject();
+   createPolargram(gr) {
+      if (!gr.fPolargram)
+         gr.fPolargram = create$1('TGraphPolargram');
 
       let rmin = gr.fY[0] || 0, rmax = rmin;
+      const has_err = gr.fEY?.length;
       for (let n = 0; n < gr.fNpoints; ++n) {
-         rmin = Math.min(rmin, gr.fY[n] - gr.fEY[n]);
-         rmax = Math.max(rmax, gr.fY[n] + gr.fEY[n]);
+         rmin = Math.min(rmin, gr.fY[n] - (has_err ? gr.fEY[n] : 0));
+         rmax = Math.max(rmax, gr.fY[n] + (has_err ? gr.fEY[n] : 0));
       }
 
-      polargram.fRwrmin = rmin - (rmax-rmin)*0.1;
-      polargram.fRwrmax = rmax + (rmax-rmin)*0.1;
+      gr.fPolargram.fRwrmin = rmin - (rmax-rmin)*0.1;
+      gr.fPolargram.fRwrmax = rmax + (rmax-rmin)*0.1;
 
-      return polargram;
+      return gr.fPolargram;
    }
 
    /** @summary Provide tooltip at specified point */
@@ -152421,19 +152995,25 @@ class TGraphPolarPainter extends ObjectPainter {
 
       for (let n = 0; n < graph.fNpoints; ++n) {
          const pos = main.translate(graph.fX[n], graph.fY[n]),
-               dist2 = (pos.x-pnt.x)**2 + (pos.y-pnt.y)**2;
-         if (dist2 < best_dist2) { best_dist2 = dist2; bestindx = n; bestpos = pos; }
+               dist2 = (pos.grx - pnt.x)**2 + (pos.gry - pnt.y)**2;
+         if (dist2 < best_dist2) {
+            best_dist2 = dist2;
+            bestindx = n;
+            bestpos = pos;
+         }
       }
 
       let match_distance = 5;
-      if (this.markeratt?.used) match_distance = this.markeratt.getFullSize();
+      if (this.markeratt?.used)
+         match_distance = this.markeratt.getFullSize();
 
-      if (Math.sqrt(best_dist2) > match_distance) return null;
+      if (Math.sqrt(best_dist2) > match_distance)
+         return null;
 
       const res = {
          name: this.getObject().fName, title: this.getObject().fTitle,
-         x: bestpos.x, y: bestpos.y,
-         color1: this.markeratt?.used ? this.markeratt.color : this.lineatt.color,
+         x: bestpos.grx, y: bestpos.gry,
+         color1: (this.markeratt?.used ? this.markeratt.color : undefined) ?? (this.fillatt?.used ? this.fillatt.color : undefined) ?? this.lineatt?.color,
          exact: Math.sqrt(best_dist2) < 4,
          lines: [this.getObjectHint()],
          binindx: bestindx,
@@ -152451,6 +153031,59 @@ class TGraphPolarPainter extends ObjectPainter {
          res.lines.push(`error phi = ${main.axisAsText('phi', graph.fEX[bestindx])}`);
 
       return res;
+   }
+
+   /** @summary Only redraw histogram title
+     * @return {Promise} with painter */
+   async updateTitle() {
+      // case when histogram drawn over other histogram (same option)
+      if (!this._draw_axis)
+         return this;
+
+      const tpainter = this.getPadPainter()?.findPainterFor(null, kTitle, clTPaveText),
+            pt = tpainter?.getObject();
+
+      if (!tpainter || !pt)
+         return this;
+
+      const gr = this.getObject(),
+            draw_title = !gr.TestBit(kNoTitle) && (gStyle.fOptTitle > 0);
+
+      pt.Clear();
+      if (draw_title) pt.AddText(gr.fTitle);
+      return tpainter.redraw().then(() => this);
+   }
+
+
+   /** @summary Draw histogram title
+     * @return {Promise} with painter */
+   async drawTitle() {
+      // case when histogram drawn over other histogram (same option)
+      if (!this._draw_axis)
+         return this;
+
+      const gr = this.getObject(),
+            st = gStyle,
+            draw_title = !gr.TestBit(kNoTitle) && (st.fOptTitle > 0),
+            pp = this.getPadPainter();
+
+      let pt = pp.findInPrimitives(kTitle, clTPaveText);
+
+      if (pt) {
+         pt.Clear();
+         if (draw_title)
+            pt.AddText(gr.fTitle);
+         return this;
+      }
+
+      pt = create$1(clTPaveText);
+      Object.assign(pt, { fName: kTitle, fFillColor: st.fTitleColor, fFillStyle: st.fTitleStyle, fBorderSize: st.fTitleBorderSize,
+                           fTextFont: st.fTitleFont, fTextSize: st.fTitleFontSize, fTextColor: st.fTitleTextColor, fTextAlign: 22 });
+
+      if (draw_title)
+         pt.AddText(gr.fTitle);
+      return TPavePainter.draw(pp, pt, 'postitle')
+                         .then(p => { p?.setSecondaryId(this, kTitle); return this; });
    }
 
    /** @summary Show tooltip */
@@ -152484,7 +153117,8 @@ class TGraphPolarPainter extends ObjectPainter {
    /** @summary Process tooltip event */
    processTooltipEvent(pnt) {
       const hint = this.extractTooltip(pnt);
-      if (!pnt || !pnt.disabled) this.showTooltip(hint);
+      if (!pnt || !pnt.disabled)
+         this.showTooltip(hint);
       return hint;
    }
 
@@ -152501,16 +153135,16 @@ class TGraphPolarPainter extends ObjectPainter {
 
       let pr = Promise.resolve(null);
       if (!main) {
-         if (!graph.fPolargram)
-            graph.fPolargram = painter.createPolargram();
-         pr = TGraphPolargramPainter.draw(dom, graph.fPolargram);
+         // indicate that axis defined by this graph
+         painter._draw_axis = true;
+         pr = TGraphPolargramPainter.draw(dom, painter.createPolargram(graph));
       }
 
-      return pr.then(() => {
+      return pr.then(gram_painter => {
+         gram_painter?.setSecondaryId(painter, 'polargram');
          painter.addToPadPrimitives();
-         painter.drawGraphPolar();
-         return painter;
-      });
+         return painter.drawGraphPolar();
+      }).then(() => painter.drawTitle());
    }
 
 } // class TGraphPolarPainter
@@ -152585,7 +153219,8 @@ class TF1Painter extends TH1Painter$2 {
 
    /** @summary Update function */
    updateObject(obj /* , opt */) {
-      if (!obj || (this.getClassName() !== obj._typename)) return false;
+      if (!obj || (this.getClassName() !== obj._typename))
+         return false;
       delete obj.evalPar;
       const histo = this.getHisto();
 
@@ -153393,7 +154028,7 @@ class TLinePainter extends ObjectPainter {
       else {
          this.addExtras(elem);
          addMoveHandler(this);
-         assignContextMenu(this, kToFront);
+         assignContextMenu(this);
       }
 
       return this;
@@ -153594,9 +154229,10 @@ class TRatioPlotPainter extends ObjectPainter {
             });
          }
 
-         return Promise.all(arr).then(() => {
-            return low_fp.zoom(up_fp.scale_xmin, up_fp.scale_xmax);
-         });
+         return Promise.all(arr)
+                       .then(() => low_fp.zoomSingle('x', up_fp.scale_xmin, up_fp.scale_xmax))
+                       .then(changed => { return changed ? true : low_p.redrawPad(); })
+                       .then(() => this);
       });
    }
 
@@ -154486,16 +155122,6 @@ class TF2Painter extends TH2Painter {
       else if (d.opt === 'SAME')
          opt = 'cont2 same';
 
-      // workaround for old waves.C
-      const o2 = isStr(opt) ? opt.toUpperCase() : '';
-      if (o2 === 'SAMECOLORZ' || o2 === 'SAMECOLOR' || o2 === 'SAMECOLZ')
-         opt = 'samecol';
-
-      if ((opt.indexOf('same') === 0) || (opt.indexOf('SAME') === 0)) {
-         if (!getElementMainPainter(dom))
-            opt = 'A_ADJUST_FRAME_' + opt.slice(4);
-      }
-
       let hist;
 
       if (web.webcanv_hist) {
@@ -154513,6 +155139,7 @@ class TF2Painter extends TH2Painter {
       painter.$func = tf2;
       Object.assign(painter, web);
       painter.createTF2Histogram(tf2, hist);
+
       return THistPainter._drawHist(painter, opt);
    }
 
@@ -154779,11 +155406,6 @@ class TF3Painter extends TH2Painter {
          opt = 'surf1';
       else if (d.opt === 'SAME')
          opt = 'surf1 same';
-
-      if ((opt.indexOf('same') === 0) || (opt.indexOf('SAME') === 0)) {
-         if (!getElementMainPainter(dom))
-            opt = 'A_ADJUST_FRAME_' + opt.slice(4);
-      }
 
       let hist;
 
@@ -155296,7 +155918,7 @@ class TPolyLinePainter extends ObjectPainter {
                  .call(dofill ? () => {} : this.lineatt.func)
                  .call(this.fillatt.func);
 
-      assignContextMenu(this, kToFront);
+      assignContextMenu(this);
 
       addMoveHandler(this);
 
@@ -155444,13 +156066,13 @@ class TGaxisPainter extends TAxisPainter {
 
       return this.drawAxis(this.getG(), Math.abs(w), Math.abs(h), makeTranslate(this.gaxis_x, this.gaxis_y) || '').then(() => {
          addMoveHandler(this);
-         assignContextMenu(this);
+         assignContextMenu(this, kNoReorder);
          return this;
       });
    }
 
-   /** @summary Fill TGaxis context */
-   fillContextMenu(menu) {
+   /** @summary Fill TGaxis context menu items */
+   fillContextMenuItems(menu) {
       menu.addTAxisMenu(EAxisBits, this, this.getObject(), '');
    }
 
@@ -155553,10 +156175,10 @@ class TBoxPainter extends ObjectPainter {
    moveStart(x, y) {
       const ww = Math.abs(this.x2 - this.x1), hh = Math.abs(this.y1 - this.y2);
 
-      this.c_x1 = Math.abs(x - this.x2) > ww*0.1;
-      this.c_x2 = Math.abs(x - this.x1) > ww*0.1;
-      this.c_y1 = Math.abs(y - this.y2) > hh*0.1;
-      this.c_y2 = Math.abs(y - this.y1) > hh*0.1;
+      this.c_x1 = Math.abs(x - this.x2) > ww * 0.1;
+      this.c_x2 = Math.abs(x - this.x1) > ww * 0.1;
+      this.c_y1 = Math.abs(y - this.y2) > hh * 0.1;
+      this.c_y2 = Math.abs(y - this.y1) > hh * 0.1;
       if (this.c_x1 !== this.c_x2 && this.c_y1 && this.c_y2)
          this.c_y1 = this.c_y2 = false;
       if (this.c_y1 !== this.c_y2 && this.c_x1 && this.c_x2)
@@ -155610,14 +156232,10 @@ class TBoxPainter extends ObjectPainter {
             path = `M${xx},${yy}h${ww}v${hh}h${-ww}z`;
       if (!this.borderMode)
          return [path];
-      const pww = this.borderSize, phh = this.borderSize,
-            side1 = `M${xx},${yy}h${ww}l${-pww},${phh}h${2*pww-ww}v${hh-2*phh}l${-pww},${phh}z`,
-            side2 = `M${xx+ww},${yy+hh}v${-hh}l${-pww},${phh}v${hh-2*phh}h${2*pww-ww}l${-pww},${phh}z`;
-
-      return (this.borderMode > 0) ? [path, side1, side2] : [path, side2, side1];
+      return [path].concat(getBoxDecorations(xx, yy, ww, hh, this.borderMode, this.borderSize, this.borderSize));
    }
 
-   /** @summary Redraw line */
+   /** @summary Redraw box */
    redraw() {
       const box = this.getObject(),
             d = new DrawOptions(this.getDrawOpt()),
@@ -155643,8 +156261,8 @@ class TBoxPainter extends ObjectPainter {
       if (this.swap_xy)
          [this.x1, this.x2, this.y1, this.y2] = [this.y1, this.y2, this.x1, this.x2];
 
-      this.borderMode = (box.fBorderMode && box.fBorderSize && this.fillatt.hasColor()) ? box.fBorderMode : 0;
-      this.borderSize = box.fBorderSize;
+      this.borderMode = (box.fBorderMode && this.fillatt.hasColor()) ? box.fBorderMode : 0;
+      this.borderSize = box.fBorderSize || 2;
 
       const paths = this.getPathes();
 
@@ -155666,7 +156284,7 @@ class TBoxPainter extends ObjectPainter {
                     .style('fill', rgb(this.fillatt.color).darker(0.5).formatRgb());
       }
 
-      assignContextMenu(this, kToFront);
+      assignContextMenu(this);
 
       addMoveHandler(this);
 
@@ -155974,7 +156592,7 @@ class TASImagePainter extends ObjectPainter {
                img.style('cursor', 'pointer');
          }
 
-         assignContextMenu(this);
+         assignContextMenu(this, kNoReorder);
 
          if (!fp || !res.can_zoom)
             return this;
@@ -155987,7 +156605,7 @@ class TASImagePainter extends ObjectPainter {
       });
    }
 
-   /** @summary Fill TASImage context */
+   /** @summary Fill TASImage context menu */
    fillContextMenuItems(menu) {
       const obj = this.getObject();
       if (obj) {
@@ -156694,11 +157312,12 @@ class RAxisPainter extends RObjectPainter {
          const gr_range = Math.abs(this.func.range()[1] - this.func.range()[0]);
 
          // avoid black filling by middle-size
-         if ((handle.middle.length <= handle.major.length) || (handle.middle.length > gr_range/3.5))
+         if ((handle.middle.length <= handle.major.length) || (handle.middle.length > gr_range))
             handle.minor = handle.middle = handle.major;
           else if ((this.nticks3 > 1) && !this.log) {
             handle.minor = this.produceTicks(handle.middle.length, this.nticks3);
-            if ((handle.minor.length <= handle.middle.length) || (handle.minor.length > gr_range/1.7)) handle.minor = handle.middle;
+            if ((handle.minor.length <= handle.middle.length) || (handle.minor.length > gr_range))
+               handle.minor = handle.middle;
          }
       }
 
@@ -159077,7 +159696,7 @@ class RPadPainter extends RObjectPainter {
      * @private */
    setFastDrawing(w, h) {
       const was_fast = this._fast_drawing;
-      this._fast_drawing = settings.SmallPad && ((w < settings.SmallPad.width) || (h < settings.SmallPad.height));
+      this._fast_drawing = (this.snapid === undefined) && settings.SmallPad && ((w < settings.SmallPad.width) || (h < settings.SmallPad.height));
       if (was_fast !== this._fast_drawing)
          this.showPadButtons();
    }
@@ -159092,6 +159711,12 @@ class RPadPainter extends RObjectPainter {
      * @private */
    setGrayscale(/* flag */) {
       console.error('grayscale mode not implemented for RCanvas');
+   }
+
+   /** @summary Returns true if default pad range is configured
+     * @private */
+   isDefaultPadRange() {
+      return true;
    }
 
    /** @summary Create SVG element for the canvas */
@@ -159917,7 +160542,7 @@ class RPadPainter extends RObjectPainter {
 
          const mainid = this.selectDom().attr('id');
 
-         if (!this.isBatchMode() && !this.use_openui && !this.brlayout && mainid && isStr(mainid)) {
+         if (!this.isBatchMode() && !this.use_openui && !this.brlayout && mainid && isStr(mainid) && !getHPainter()) {
             this.brlayout = new BrowserLayout(mainid, null, this);
             this.brlayout.create(mainid, true);
             this.setDom(this.brlayout.drawing_divid()); // need to create canvas
@@ -160431,11 +161056,6 @@ class RCanvasPainter extends RPadPainter {
       this._websocket = null;
       this.tooltip_allowed = settings.Tooltip;
       this.v7canvas = true;
-      if ((dom === null) && (canvas === null)) {
-         // for web canvas details are important
-         settings.SmallPad.width = 20;
-         settings.SmallPad.height = 10;
-      }
    }
 
    /** @summary Cleanup canvas painter */
@@ -162062,25 +162682,6 @@ class RHistStatsPainter extends RPavePainter {
 
       // show lines which are exists, maybe server request will be received later
       return (this.stats_lines !== undefined);
-   }
-
-   /** @summary format float value as string
-     * @private */
-   format(value, fmt) {
-      if (!fmt) fmt = 'stat';
-
-      switch (fmt) {
-         case 'stat' : fmt = gStyle.fStatFormat; break;
-         case 'fit': fmt = gStyle.fFitFormat; break;
-         case 'entries': if ((Math.abs(value) < 1e9) && (Math.round(value) === value)) return value.toFixed(0); fmt = '14.7g'; break;
-         case 'last': fmt = this.lastformat; break;
-      }
-
-      const res = floatToString(value, fmt || '6.4g', true);
-
-      this.lastformat = res[1];
-
-      return res[0];
    }
 
    /** @summary Draw content */
@@ -166199,6 +166800,7 @@ exports.gStyle = gStyle;
 exports.geoCfg = geoCfg;
 exports.getAbsPosInCanvas = getAbsPosInCanvas;
 exports.getActivePad = getActivePad;
+exports.getBoxDecorations = getBoxDecorations;
 exports.getColor = getColor;
 exports.getDocument = getDocument;
 exports.getElementCanvPainter = getElementCanvPainter;
@@ -166225,6 +166827,7 @@ exports.kAxisLabels = kAxisLabels;
 exports.kAxisNormal = kAxisNormal;
 exports.kAxisTime = kAxisTime;
 exports.kInspect = kInspect;
+exports.kNoReorder = kNoReorder;
 exports.kNoStats = kNoStats;
 exports.kNoZoom = kNoZoom;
 exports.kTitle = kTitle;

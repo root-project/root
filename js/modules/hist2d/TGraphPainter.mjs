@@ -7,7 +7,7 @@ import { FunctionsHandler } from './THistPainter.mjs';
 import { TH1Painter, PadDrawOptions } from './TH1Painter.mjs';
 import { kBlack, kWhite } from '../base/colors.mjs';
 import { addMoveHandler } from '../gui/utils.mjs';
-import { assignContextMenu } from '../gui/menu.mjs';
+import { assignContextMenu, kNoReorder } from '../gui/menu.mjs';
 
 
 const kNotEditable = BIT(18),   // bit set if graph is non editable
@@ -288,6 +288,12 @@ class TGraphPainter extends ObjectPainter {
             this.ymax = Math.max(this.ymax, bin.y);
          }
       }
+
+      // workaround, are there better way to show marker at 0,0 on the top of the frame?
+      this._frame_layer = true;
+      if ((this.xmin === 0) && (this.ymin === 0) && (npoints > 0) && (this.bins[0].x === 0) && (this.bins[0].y === 0) &&
+          this.options.Mark && !this.options.Line && !this.options.Curve && !this.options.Fill)
+         this._frame_layer = 'upper_layer';
    }
 
    /** @summary Return margins for histogram ranges */
@@ -297,10 +303,7 @@ class TGraphPainter extends ObjectPainter {
      * @desc graph bins should be created when calling this function
      * @param {boolean} [set_x] - set X axis range
      * @param {boolean} [set_y] - set Y axis range */
-   createHistogram(set_x, set_y) {
-      if (!set_x && !set_y)
-         set_x = set_y = true;
-
+   createHistogram(set_x = true, set_y = true) {
       const graph = this.getGraph(),
             xmin = this.xmin,
             margin = this.getHistRangeMargin();
@@ -317,7 +320,10 @@ class TGraphPainter extends ObjectPainter {
       if ((ymax < 0) && (maximum >= 0))
          maximum = (1 - margin) * ymax;
 
-      if (!this._not_adjust_hrange) {
+      const minimum0 = minimum, maximum0 = maximum;
+      let histo = this.getHistogram();
+
+      if (!this._not_adjust_hrange && !histo?.fXaxis.fTimeDisplay) {
          const pad_logx = this.getPadPainter()?.getPadLog('x');
 
          if ((uxmin < 0) && (xmin >= 0))
@@ -325,9 +331,6 @@ class TGraphPainter extends ObjectPainter {
          if ((uxmax > 0) && (xmax <= 0))
             uxmax = pad_logx ? (1 + margin) * xmax : 0;
       }
-
-      const minimum0 = minimum, maximum0 = maximum;
-      let histo = this.getHistogram();
 
       if (!histo) {
          histo = this._is_scatter ? createHistogram(clTH2I, 30, 30) : createHistogram(clTH1I, 100);
@@ -340,10 +343,12 @@ class TGraphPainter extends ObjectPainter {
          maximum = histo.fMaximum;
       }
 
-      if (graph.fMinimum !== kNoZoom) minimum = ymin = graph.fMinimum;
-      if (graph.fMaximum !== kNoZoom) maximum = graph.fMaximum;
+      if (graph.fMinimum !== kNoZoom)
+         minimum = ymin = graph.fMinimum;
+      if (graph.fMaximum !== kNoZoom)
+         maximum = graph.fMaximum;
       if ((minimum < 0) && (ymin >= 0))
-         minimum = (1 - margin)*ymin;
+         minimum = (1 - margin) * ymin;
       if ((ymax < 0) && (maximum >= 0))
          maximum = (1 - margin) * ymax;
 
@@ -363,6 +368,7 @@ class TGraphPainter extends ObjectPainter {
          }
       }
 
+      histo.$xmin_nz = xmin > 0 ? xmin : undefined;
       histo.$ymin_nz = ymin > 0 ? ymin : undefined;
 
       return histo;
@@ -372,13 +378,15 @@ class TGraphPainter extends ObjectPainter {
      * @desc Used when graph points covers larger range than provided histogram */
    unzoomUserRange(dox, doy /* , doz */) {
       const graph = this.getGraph();
-      if (this._own_histogram || !graph) return false;
+      if (this._own_histogram || !graph)
+         return false;
 
       const histo = this.getHistogram();
 
       dox = dox && histo && ((histo.fXaxis.fXmin > this.xmin) || (histo.fXaxis.fXmax < this.xmax));
       doy = doy && histo && ((histo.fYaxis.fXmin > this.ymin) || (histo.fYaxis.fXmax < this.ymax));
-      if (!dox && !doy) return false;
+      if (!dox && !doy)
+         return false;
 
       this.createHistogram(dox, doy);
       this.getMainPainter()?.extractAxesProperties(1); // just to enforce ranges extraction
@@ -433,8 +441,8 @@ class TGraphPainter extends ObjectPainter {
    /** @summary Returns tooltip for specified bin */
    getTooltips(d) {
       const pmain = this.get_main(), lines = [],
-          funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y),
-          gme = this.get_gme();
+            funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y),
+            gme = this.get_gme();
 
       lines.push(this.getObjectHint());
 
@@ -461,42 +469,43 @@ class TGraphPainter extends ObjectPainter {
    get_main() {
       let pmain = this.getFramePainter();
 
-      if (pmain?.grx && pmain?.gry) return pmain;
+      if (pmain?.grx && pmain?.gry)
+         return pmain;
 
       // FIXME: check if needed, can be removed easily
       const pp = this.getPadPainter(),
             rect = pp?.getPadRect() || { width: 800, height: 600 };
 
       pmain = {
-          pad_layer: true,
-          pad: pp?.getRootPad(true) ?? create(clTPad),
-          pw: rect.width,
-          ph: rect.height,
-          fX1NDC: 0.1, fX2NDC: 0.9, fY1NDC: 0.1, fY2NDC: 0.9,
-          getFrameWidth() { return this.pw; },
-          getFrameHeight() { return this.ph; },
-          grx(value) {
-             if (this.pad.fLogx)
-                value = (value > 0) ? Math.log10(value) : this.pad.fUxmin;
-             else
-                value = (value - this.pad.fX1) / (this.pad.fX2 - this.pad.fX1);
-             return value * this.pw;
-          },
-          gry(value) {
-             if (this.pad.fLogv ?? this.pad.fLogy)
-                value = (value > 0) ? Math.log10(value) : this.pad.fUymin;
-             else
-                value = (value - this.pad.fY1) / (this.pad.fY2 - this.pad.fY1);
-             return (1 - value) * this.ph;
-          },
-          revertAxis(name, v) {
+         pad_layer: true,
+         pad: pp?.getRootPad(true) ?? create(clTPad),
+         pw: rect.width,
+         ph: rect.height,
+         fX1NDC: 0.1, fX2NDC: 0.9, fY1NDC: 0.1, fY2NDC: 0.9,
+         getFrameWidth() { return this.pw; },
+         getFrameHeight() { return this.ph; },
+         grx(value) {
+            if (this.pad.fLogx)
+               value = (value > 0) ? Math.log10(value) : this.pad.fUxmin;
+            else
+               value = (value - this.pad.fX1) / (this.pad.fX2 - this.pad.fX1);
+            return value * this.pw;
+         },
+         gry(value) {
+            if (this.pad.fLogv ?? this.pad.fLogy)
+               value = (value > 0) ? Math.log10(value) : this.pad.fUymin;
+            else
+               value = (value - this.pad.fY1) / (this.pad.fY2 - this.pad.fY1);
+            return (1 - value) * this.ph;
+         },
+         revertAxis(name, v) {
             if (name === 'x')
                return v / this.pw * (this.pad.fX2 - this.pad.fX1) + this.pad.fX1;
             if (name === 'y')
                return (1 - v / this.ph) * (this.pad.fY2 - this.pad.fY1) + this.pad.fY1;
             return v;
-          },
-          getGrFuncs() { return this; }
+         },
+         getGrFuncs() { return this; }
       };
 
       return pmain.pad ? pmain : null;
@@ -921,7 +930,8 @@ class TGraphPainter extends ObjectPainter {
    drawGraph() {
       const pmain = this.get_main(),
             graph = this.getGraph();
-      if (!pmain || !this.options) return;
+      if (!pmain || !this.options)
+         return;
 
       // special mode for TMultiGraph 3d drawing
       if (this.options.pos3d)
@@ -932,7 +942,7 @@ class TGraphPainter extends ObjectPainter {
             w = pmain.getFrameWidth(),
             h = pmain.getFrameHeight();
 
-      this.createG(!pmain.pad_layer);
+      this.createG(pmain.pad_layer ? false : this._frame_layer);
 
       this.createGraphDrawAttributes();
 
@@ -964,7 +974,7 @@ class TGraphPainter extends ObjectPainter {
 
       if (!this.isBatchMode()) {
          addMoveHandler(this, this.testEditable());
-         assignContextMenu(this);
+         assignContextMenu(this, kNoReorder);
       }
    }
 
@@ -1424,6 +1434,11 @@ class TGraphPainter extends ObjectPainter {
       graph.fTitle = obj.fTitle;
       graph.fX = obj.fX;
       graph.fY = obj.fY;
+      ['fEX', 'fEY', 'fExL', 'fExH', 'fEXlow', 'fEXhigh', 'fEYlow', 'fEYhigh',
+        'fEXlowd', 'fEXhighd', 'fEYlowd', 'fEYhighd'].forEach(member => {
+         if (obj[member] !== undefined)
+            graph[member] = obj[member];
+      });
       graph.fNpoints = obj.fNpoints;
       graph.fMinimum = obj.fMinimum;
       graph.fMaximum = obj.fMaximum;
@@ -1450,7 +1465,8 @@ class TGraphPainter extends ObjectPainter {
 
    /** @summary Update TGraph object */
    updateObject(obj, opt) {
-      if (!this.matchObjectType(obj)) return false;
+      if (!this.matchObjectType(obj))
+         return false;
 
       if (opt && (opt !== this.options.original))
          this.decodeOptions(opt);
@@ -1519,20 +1535,23 @@ class TGraphPainter extends ObjectPainter {
    /** @summary Create stat box */
    createStat() {
       const func = this.findFunc();
-      if (!func) return null;
+      if (!func)
+         return null;
 
       let stats = this.findStat();
-      if (stats) return stats;
-
-      // do not create stats box when drawing canvas
-      if (this.getCanvPainter()?.normal_canvas) return null;
-
-      this.create_stats = true;
+      if (stats)
+         return stats;
 
       const st = gStyle;
 
+      // do not create stats box when drawing canvas
+      if (!st.fOptFit || this.getCanvPainter()?.normal_canvas)
+         return null;
+
+      this.create_stats = true;
+
       stats = create(clTPaveStats);
-      Object.assign(stats, { fName: 'stats', fOptStat: 0, fOptFit: st.fOptFit || 111, fBorderSize: 1,
+      Object.assign(stats, { fName: 'stats', fOptStat: 0, fOptFit: st.fOptFit, fBorderSize: 1,
                              fX1NDC: st.fStatX - st.fStatW, fY1NDC: st.fStatY - st.fStatH, fX2NDC: st.fStatX, fY2NDC: st.fStatY,
                              fFillColor: st.fStatColor, fFillStyle: st.fStatStyle });
 
@@ -1553,20 +1572,19 @@ class TGraphPainter extends ObjectPainter {
    /** @summary Fill statistic */
    fillStatistic(stat, _dostat, dofit) {
       const func = this.findFunc();
-
-      if (!func || !dofit) return false;
+      if (!func || !dofit)
+         return false;
 
       stat.clearPave();
-
       stat.fillFunctionStat(func, (dofit === 1) ? 111 : dofit, 1);
-
       return true;
    }
 
    /** @summary Draw axis histogram
      * @private */
    async drawAxisHisto() {
-      const histo = this.createHistogram();
+      const need_histo = !this.getHistogram(),
+            histo = this.createHistogram(need_histo, need_histo);
       return TH1Painter.draw(this.getDrawDom(), histo, this.options.Axis);
    }
 

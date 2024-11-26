@@ -1,7 +1,8 @@
 import { gStyle, settings, internals, isFunc, isStr, postponePromise, browser,
          clTAxis, clTFrame, kNoZoom, urlClassPrefix } from '../core.mjs';
-import { select as d3_select, pointer as d3_pointer, pointers as d3_pointers, drag as d3_drag } from '../d3.mjs';
-import { getElementRect, getAbsPosInCanvas, makeTranslate, addHighlightStyle } from '../base/BasePainter.mjs';
+import { select as d3_select, pointer as d3_pointer,
+         pointers as d3_pointers, drag as d3_drag, rgb as d3_rgb } from '../d3.mjs';
+import { getElementRect, getAbsPosInCanvas, makeTranslate, addHighlightStyle, getBoxDecorations } from '../base/BasePainter.mjs';
 import { getActivePad, ObjectPainter, EAxisBits, kAxisLabels } from '../base/ObjectPainter.mjs';
 import { getSvgLineStyle } from '../base/TAttLineHandler.mjs';
 import { TAxisPainter } from './TAxisPainter.mjs';
@@ -1948,6 +1949,7 @@ class TFramePainter extends ObjectPainter {
                                         ignore_labels: this.x_ignore_labels,
                                         noexp_changed: this.x_noexp_changed,
                                         symlog: this.swap_xy ? opts.symlog_y : opts.symlog_x,
+                                        log_min_nz: opts.xmin_nz && (opts.xmin_nz <= this.xmax) ? 0.9*opts.xmin_nz : 0,
                                         logcheckmin: (opts.ndim > 1) || !this.swap_xy,
                                         logminfactor: logminfactorX });
 
@@ -2051,7 +2053,8 @@ class TFramePainter extends ObjectPainter {
    getGrFuncs(second_x, second_y) {
       const use_x2 = second_x && this.grx2,
             use_y2 = second_y && this.gry2;
-      if (!use_x2 && !use_y2) return this;
+      if (!use_x2 && !use_y2)
+         return this;
 
       return {
          use_x2,
@@ -2077,7 +2080,9 @@ class TFramePainter extends ObjectPainter {
             if ((name === 'x') && this.use_x2) name = 'x2';
             if ((name === 'y') && this.use_y2) name = 'y2';
             return this.fp.axisAsText(name, v);
-         }
+         },
+         getFrameWidth() { return this.fp.getFrameWidth(); },
+         getFrameHeight() { return this.fp.getFrameHeight(); }
       };
    }
 
@@ -2308,8 +2313,8 @@ class TFramePainter extends ObjectPainter {
      * @private */
    updateAttributes(force) {
       const pp = this.getPadPainter(),
-          pad = pp?.getRootPad(true),
-          tframe = this.getObject();
+            pad = pp?.getRootPad(true),
+            tframe = this.getObject();
 
       if ((this.fX1NDC === undefined) || (force && !this.$modifiedNDC)) {
          if (!pad) {
@@ -2325,10 +2330,10 @@ class TFramePainter extends ObjectPainter {
          }
       }
 
-      if (this.fillatt === undefined) {
-         if (tframe)
-            this.createAttFill({ attr: tframe });
-         else if (pad?.fFrameFillColor)
+      if (tframe)
+         this.createAttFill({ attr: tframe });
+      else if (this.fillatt === undefined) {
+         if (pad?.fFrameFillColor)
             this.createAttFill({ pattern: pad.fFrameFillStyle, color: pad.fFrameFillColor });
          else if (pad)
             this.createAttFill({ attr: pad });
@@ -2538,6 +2543,22 @@ class TFramePainter extends ObjectPainter {
       main_svg.attr('width', this._frame_width)
               .attr('height', this._frame_height)
               .attr('viewBox', `0 0 ${this._frame_width} ${this._frame_height}`);
+
+      this.draw_g.selectAll('.frame_deco').remove();
+      const frame = this.getObject();
+      if (frame?.fBorderMode && this.fillatt.hasColor()) {
+         const paths = getBoxDecorations(0, 0, this._frame_width, this._frame_height, frame.fBorderMode, frame.fBorderSize || 2, frame.fBorderSize || 2);
+         this.draw_g.insert('svg:path', '.main_layer')
+                    .attr('class', 'frame_deco')
+                    .attr('d', paths[0])
+                    .call(this.fillatt.func)
+                    .style('fill', d3_rgb(this.fillatt.color).brighter(0.5).formatRgb());
+         this.draw_g.insert('svg:path', '.main_layer')
+                    .attr('class', 'frame_deco')
+                    .attr('d', paths[1])
+                    .call(this.fillatt.func)
+                    .style('fill', d3_rgb(this.fillatt.color).darker(0.5).formatRgb());
+      }
 
       return this;
    }

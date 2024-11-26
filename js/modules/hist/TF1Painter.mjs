@@ -70,7 +70,8 @@ class TF1Painter extends TH1Painter {
 
    /** @summary Update function */
    updateObject(obj /* , opt */) {
-      if (!obj || (this.getClassName() !== obj._typename)) return false;
+      if (!obj || (this.getClassName() !== obj._typename))
+         return false;
       delete obj.evalPar;
       const histo = this.getHisto();
 

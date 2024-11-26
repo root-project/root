@@ -1,5 +1,16 @@
 # JSROOT changelog
 
+## Changes in dev
+1. Implement cont5 draw option for `TGraph2D` using Delaunay algorithm
+1. Adjust histogram title drawing with native implementation
+1. Improve float to string convertion when 'g' is specified
+1. Support "same" option for first histogram, draw direcly on pad
+1. Support different angle coordiantes in `TGraphPolargram`
+1. Fix - handle `TPave` NDC position also when fInit is not set
+1. Fix - correctly position title according to gStyle->GetTitleAlign()
+1. Fix - correctly handle tooltip events for `TGraphPolar`
+
+
 ## Changes in 7.8.0
 1. Let use custom time zone for time display, support '&utc' and '&cet' in URL parameters
 2. Support gStyle.fLegendFillStyle

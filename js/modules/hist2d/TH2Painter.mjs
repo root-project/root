@@ -2,7 +2,7 @@ import { gStyle, createHistogram, createTPolyLine, isFunc, isStr,
          clTMultiGraph, clTH1D, clTF2, clTProfile2D, kInspect } from '../core.mjs';
 import { rgb as d3_rgb, chord as d3_chord, arc as d3_arc, ribbon as d3_ribbon } from '../d3.mjs';
 import { kBlack } from '../base/colors.mjs';
-import { TRandom, floatToString, makeTranslate, addHighlightStyle } from '../base/BasePainter.mjs';
+import { TRandom, floatToString, makeTranslate, addHighlightStyle, getBoxDecorations } from '../base/BasePainter.mjs';
 import { EAxisBits } from '../base/ObjectPainter.mjs';
 import { THistPainter } from './THistPainter.mjs';
 
@@ -961,7 +961,7 @@ class TH2Painter extends THistPainter {
 
       const histo = this.getHisto(), xaxis = histo.fXaxis, yaxis = histo.fYaxis,
             fp = this.getFramePainter(),
-            funcs = fp.getGrFuncs(this.options.second_x, this.options.second_y),
+            funcs = this.getHistGrFuncs(fp),
             res = { name: histo.fName, entries: 0, eff_entries: 0, integral: 0,
                     meanx: 0, meany: 0, rmsx: 0, rmsy: 0, matrix: [0, 0, 0, 0, 0, 0, 0, 0, 0],
                     xmax: 0, ymax: 0, wmax: null, skewx: 0, skewy: 0, skewd: 0, kurtx: 0, kurty: 0, kurtd: 0 },
@@ -1303,7 +1303,7 @@ class TH2Painter extends THistPainter {
    drawBinsProjected() {
       const handle = this.prepareDraw({ rounding: false, nozoom: true, extra: 100, original: true }),
             main = this.getFramePainter(),
-            funcs = main.getGrFuncs(this.options.second_x, this.options.second_y),
+            funcs = this.getHistGrFuncs(main),
             ilevels = this.getContourLevels(),
             palette = this.getHistPalette(),
             func = main.getProjectionFunc();
@@ -1555,7 +1555,7 @@ class TH2Painter extends THistPainter {
    async drawPolyBins() {
       const histo = this.getObject(),
             fp = this.getFramePainter(),
-            funcs = fp.getGrFuncs(this.options.second_x, this.options.second_y),
+            funcs = this.getHistGrFuncs(fp),
             draw_colors = this.options.Color || (!this.options.Line && !this.options.Fill && !this.options.Text && !this.options.Mark),
             draw_lines = this.options.Line || (this.options.Text && !draw_colors),
             draw_fill = this.options.Fill && !draw_colors,
@@ -1768,7 +1768,7 @@ class TH2Painter extends THistPainter {
                   if (this.options.TextLine)
                      text += '\xB1' + lble;
                   else
-                     text = `#splitline{${text}}{#pm${lble}}`;
+                     text = `#splitmline{${text}}{#pm${lble}}`;
                }
 
                let x, y, width, height;
@@ -1937,12 +1937,9 @@ class TH2Painter extends THistPainter {
                cross += `M${xx},${yy}l${ww},${hh}m0,${-hh}l${-ww},${hh}`;
 
             if ((this.options.BoxStyle === 11) && (ww > 5) && (hh > 5)) {
-               const pww = Math.round(ww*0.1),
-                     phh = Math.round(hh*0.1),
-                     side1 = `M${xx},${yy}h${ww}l${-pww},${phh}h${2*pww-ww}v${hh-2*phh}l${-pww},${phh}z`,
-                     side2 = `M${xx+ww},${yy+hh}v${-hh}l${-pww},${phh}v${hh-2*phh}h${2*pww-ww}l${-pww},${phh}z`;
-               btn1 += (binz < 0) ? side2 : side1;
-               btn2 += (binz < 0) ? side1 : side2;
+               const arr = getBoxDecorations(xx, yy, ww, hh, binz, Math.round(ww*0.1), Math.round(hh*0.1));
+               btn1 += arr[0];
+               btn2 += arr[1];
             }
          }
       }
@@ -2104,7 +2101,7 @@ class TH2Painter extends THistPainter {
             handle = this.prepareDraw(),
             fp = this.getFramePainter(), // used for axis values conversions
             cp = this.getCanvPainter(),
-            funcs = fp.getGrFuncs(this.options.second_x, this.options.second_y),
+            funcs = this.getHistGrFuncs(fp),
             swapXY = isOption(kHorizontal);
       let bars = '', lines = '', dashed_lines = '',
           hists = '', hlines = '',
@@ -2586,14 +2583,15 @@ class TH2Painter extends THistPainter {
       if (this._hide_frame && this.isMainPainter()) {
          this.getFrameSvg().style('display', null);
          delete this._hide_frame;
-      }
+      } else if (this.options.Same && this._ignore_frame)
+         this.getFrameSvg().style('display', 'none');
 
       if (!this.draw_content)
          return this.removeG();
 
       this.createHistDrawAttributes();
 
-      this.createG(true);
+      this.createG(!this._ignore_frame);
 
       let handle, pr;
 
@@ -2895,7 +2893,7 @@ class TH2Painter extends THistPainter {
    /** @summary Provide text information (tooltips) for candle bin */
    getCandleTooltips(p) {
       const fp = this.getFramePainter(),
-            funcs = fp.getGrFuncs(this.options.second_x, this.options.second_y),
+            funcs = this.getHistGrFuncs(fp),
             histo = this.getHisto();
 
       return [this.getObjectHint(),
@@ -2911,7 +2909,7 @@ class TH2Painter extends THistPainter {
       const histo = this.getHisto(),
             bin = histo.fBins.arr[binindx],
             fp = this.getFramePainter(),
-            funcs = fp.getGrFuncs(this.options.second_x, this.options.second_y),
+            funcs = this.getHistGrFuncs(fp),
             lines = [];
       let binname = bin.fPoly.fName, numpoints = 0;
 
@@ -2965,9 +2963,8 @@ class TH2Painter extends THistPainter {
 
       if (h.poly) {
          // process tooltips from TH2Poly
-
          const fp = this.getFramePainter(),
-               funcs = fp.getGrFuncs(this.options.second_x, this.options.second_y),
+               funcs = this.getHistGrFuncs(fp),
                realx = funcs.revertAxis('x', pnt.x),
                realy = funcs.revertAxis('y', pnt.y);
          let foundindx = -1, bin;
@@ -3287,7 +3284,7 @@ class TH2Painter extends THistPainter {
    async draw2D(/* reason */) {
       this.clear3DScene();
 
-      const need_palette = this.options.Zscale && this.options.canHavePalette();
+      const need_palette = this.options.Zscale && this.options.canHavePalette() && !this._ignore_frame;
 
       // draw new palette, resize frame if required
       return this.drawColorPalette(need_palette, true).then(async pp => {

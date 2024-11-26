@@ -39,11 +39,6 @@ class TCanvasPainter extends TPadPainter {
       super(dom, canvas, true);
       this._websocket = null;
       this.tooltip_allowed = settings.Tooltip;
-      if ((dom === null) && (canvas === null)) {
-         // for web canvas details are important
-         settings.SmallPad.width = 20;
-         settings.SmallPad.height = 10;
-      }
    }
 
    /** @summary Cleanup canvas painter */

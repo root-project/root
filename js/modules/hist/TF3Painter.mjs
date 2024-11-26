@@ -264,11 +264,6 @@ class TF3Painter extends TH2Painter {
       else if (d.opt === 'SAME')
          opt = 'surf1 same';
 
-      if ((opt.indexOf('same') === 0) || (opt.indexOf('SAME') === 0)) {
-         if (!getElementMainPainter(dom))
-            opt = 'A_ADJUST_FRAME_' + opt.slice(4);
-      }
-
       let hist;
 
       if (web.webcanv_hist) {

@@ -1553,10 +1553,14 @@ class PointsCreator {
       let k = 1;
 
       // special dots
-      if (!args.style) k = 1.1; else
-      if (args.style === 1) k = 0.3; else
-      if (args.style === 6) k = 0.5; else
-      if (args.style === 7) k = 0.7;
+      if (!args.style)
+         k = 1.1;
+      else if (args.style === 1)
+         k = 0.3;
+      else if (args.style === 6)
+         k = 0.5;
+      else if (args.style === 7)
+         k = 0.7;
 
       const makePoints = texture => {
          const material_args = { size: 3*this.scale*k };
@@ -1581,7 +1585,7 @@ class PointsCreator {
       const handler = new TAttMarkerHandler({ style: args.style, color: args.color, size: 7 }),
             w = handler.fill ? 1 : 7,
             imgdata = `<svg width="64" height="64" xmlns="${nsSVG}">` +
-                      `<path d="${handler.create(32, 32)}" style="stroke: ${handler.getStrokeColor()}; stroke-width: ${w}; fill: ${handler.getFillColor()}"></path>`+
+                      `<path d="${handler.create(32, 32)}" style="stroke: ${handler.getStrokeColor()}; stroke-width: ${w}; fill: ${args.fill ?? handler.getFillColor()}"></path>`+
                       '</svg>',
             dataUrl = prSVG + (isNodeJs() ? imgdata : encodeURIComponent(imgdata));
       let promise;

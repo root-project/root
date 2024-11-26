@@ -803,7 +803,7 @@ class TH1Painter extends THistPainter {
             }
          }
 
-         const fill_for_interactive = want_tooltip && this.fillatt.empty() && draw_hist && !draw_markers && !show_line && !show_curve,
+         const fill_for_interactive = want_tooltip && this.fillatt.empty() && draw_hist && !draw_markers && !show_line && !show_curve && !this._ignore_frame,
          add_hist = () => {
             this.draw_g.append('svg:path')
                      .attr('d', res + ((!this.fillatt.empty() || fill_for_interactive) ? close_path : ''))
@@ -888,16 +888,20 @@ class TH1Painter extends THistPainter {
    /** @summary Draw TH1 bins in SVG element
      * @return Promise or scalar value */
    draw1DBins() {
+      if (this.options.Same && this._ignore_frame)
+         this.getFrameSvg().style('display', 'none');
+
       this.createHistDrawAttributes();
 
       const pmain = this.getFramePainter(),
-          funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y),
-          width = pmain.getFrameWidth(), height = pmain.getFrameHeight();
+            funcs = this.getHistGrFuncs(pmain),
+            width = pmain.getFrameWidth(),
+            height = pmain.getFrameHeight();
 
       if (!this.draw_content || (width <= 0) || (height <= 0))
-          return this.removeG();
+         return this.removeG();
 
-      this.createG(true);
+      this.createG(!this._ignore_frame);
 
       if (this.options.Bar) {
          return this.drawBars(funcs, height).then(() => {
@@ -917,7 +921,7 @@ class TH1Painter extends THistPainter {
       const tips = [],
             name = this.getObjectHint(),
             pmain = this.getFramePainter(),
-            funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y),
+            funcs = this.getHistGrFuncs(pmain),
             histo = this.getHisto(),
             x1 = histo.fXaxis.GetBinLowEdge(bin+1),
             x2 = histo.fXaxis.GetBinLowEdge(bin+2),
@@ -952,7 +956,7 @@ class TH1Painter extends THistPainter {
       }
 
       const pmain = this.getFramePainter(),
-            funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y),
+            funcs = this.getHistGrFuncs(pmain),
             histo = this.getHisto(),
             left = this.getSelectIndex('x', 'left', -1),
             right = this.getSelectIndex('x', 'right', 2);

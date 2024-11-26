@@ -78,23 +78,32 @@ function getAbsPosInCanvas(sel, pos) {
   * @param {boolean} [ret_fmt] - when true returns array with value and actual format like ['0.1','6.4f']
   * @return {string|Array} - converted value or array with value and actual format
   * @private */
-function floatToString(value, fmt, ret_fmt, significance) {
+function floatToString(value, fmt, ret_fmt) {
    if (!fmt)
       fmt = '6.4g';
    else if (fmt === 'g')
-      fmt = '8.6g';
-   else if (fmt === 'c')
-      fmt = '8.6c';
+      fmt = '7.5g';
 
    fmt = fmt.trim();
    const len = fmt.length;
    if (len < 2)
       return ret_fmt ? [value.toFixed(4), '6.4f'] : value.toFixed(4);
-   const kind = fmt[len-1].toLowerCase();
-   fmt = fmt.slice(0, len-1);
+
+   const kind = fmt[len-1].toLowerCase(),
+         compact = (len > 1) && (fmt[len-2] === 'c') ? 'c' : '';
+   fmt = fmt.slice(0, len - (compact ? 2 : 1));
+
+   if (kind === 'g') {
+      const se = floatToString(value, fmt+'ce', true),
+            sg = floatToString(value, fmt+'cf', true),
+            res = se[0].length < sg[0].length || ((sg[0] === '0') && value) ? se : sg;
+      return ret_fmt ? res : res[0];
+   }
+
    let isexp, prec = fmt.indexOf('.');
    prec = (prec < 0) ? 4 : parseInt(fmt.slice(prec+1));
-   if (!Number.isInteger(prec) || (prec <= 0)) prec = 4;
+   if (!Number.isInteger(prec) || (prec <= 0))
+      prec = 4;
 
    switch (kind) {
       case 'e':
@@ -103,45 +112,37 @@ function floatToString(value, fmt, ret_fmt, significance) {
       case 'f':
          isexp = false;
          break;
-      case 'c':
-      case 'g': {
-         const se = floatToString(value, fmt+'e', true, true);
-         let sg = floatToString(value, fmt+'f', true, true);
-         const pnt = sg[0].indexOf('.');
-         if ((kind === 'c') && (pnt > 0)) {
-            let len = sg[0].length;
-            while ((len > pnt) && (sg[0][len-1] === '0'))
-               len--;
-            if (len === pnt) len--;
-            sg[0] = sg[0].slice(0, len);
-         }
-         if (se[0].length < sg[0].length) sg = se;
-         return ret_fmt ? sg : sg[0];
-      }
       default:
          isexp = false;
          prec = 4;
    }
 
    if (isexp) {
-      // for exponential representation only one significant digit before point
-      if (significance) prec--;
-      if (prec < 0) prec = 0;
+      let se = value.toExponential(prec);
 
-      const se = value.toExponential(prec);
-      return ret_fmt ? [se, `${prec+2}.${prec}e`] : se;
+      if (compact) {
+         const pnt = se.indexOf('.'),
+               pe = se.toLowerCase().indexOf('e');
+         if ((pnt > 0) && (pe > pnt)) {
+            let p = pe;
+            while ((p > pnt) && (se[p-1] === '0'))
+               p--;
+            if (p === pnt + 1)
+               p--;
+            if (p !== pe)
+               se = se.slice(0, p) + se.slice(pe);
+         }
+      }
+
+      return ret_fmt ? [se, `${prec+2}.${prec}${compact}e`] : se;
    }
 
    let sg = value.toFixed(prec);
 
-   if (significance) {
-      // when using fixed representation, one could get 0
-      if ((value !== 0) && (Number(sg) === 0) && (prec > 0)) {
-         prec = 20; sg = value.toFixed(prec);
-      }
-
+   if (compact) {
       let l = 0;
-      while ((l < sg.length) && (sg[l] === '0' || sg[l] === '-' || sg[l] === '.')) l++;
+      while ((l < sg.length) && (sg[l] === '0' || sg[l] === '-' || sg[l] === '.'))
+         l++;
 
       let diff = sg.length - l - prec;
       if (sg.indexOf('.') > l) diff--;
@@ -154,9 +155,22 @@ function floatToString(value, fmt, ret_fmt, significance) {
             prec = 20;
          sg = value.toFixed(prec);
       }
+
+      const pnt = sg.indexOf('.');
+      if (pnt > 0) {
+         let p = sg.length;
+         while ((p > pnt) && (sg[p-1] === '0'))
+            p--;
+         if (p === pnt + 1)
+            p--;
+         sg = sg.slice(0, p);
+      }
+
+      if (sg === '-0')
+         sg = '0';
    }
 
-   return ret_fmt ? [sg, `${prec+2}.${prec}f`] : sg;
+   return ret_fmt ? [sg, `${prec+2}.${prec}${compact}f`] : sg;
 }
 
 
@@ -844,6 +858,16 @@ function convertDate(dt) {
    return res || dt.toLocaleString('en-GB');
 }
 
+/** @summary Box decorations
+  * @private */
+function getBoxDecorations(xx, yy, ww, hh, bmode, pww, phh)
+{
+   const side1 = `M${xx},${yy}h${ww}l${-pww},${phh}h${2*pww-ww}v${hh-2*phh}l${-pww},${phh}z`,
+         side2 = `M${xx+ww},${yy+hh}v${-hh}l${-pww},${phh}v${hh-2*phh}h${2*pww-ww}l${-pww},${phh}z`;
+   return bmode > 0 ? [side1, side2] : [side2, side1];
+}
+
+
 export { prSVG, prJSON, getElementRect, getAbsPosInCanvas, getTDatime, convertDate,
-         DrawOptions, TRandom, floatToString, buildSvgCurve, compressSVG,
+         DrawOptions, TRandom, floatToString, buildSvgCurve, compressSVG, getBoxDecorations,
          BasePainter, _loadJSDOM, makeTranslate, addHighlightStyle, svgToImage };

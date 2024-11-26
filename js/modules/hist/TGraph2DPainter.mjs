@@ -1,6 +1,6 @@
 import { settings, createHistogram, setHistogramTitle, kNoZoom,
          clTH2F, clTGraph2DErrors, clTGraph2DAsymmErrors, clTPaletteAxis, kNoStats } from '../core.mjs';
-import { DrawOptions } from '../base/BasePainter.mjs';
+import { buildSvgCurve, DrawOptions } from '../base/BasePainter.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
 import { TH2Painter } from './TH2Painter.mjs';
 import { Triangles3DHandler } from '../hist2d/TH2Painter.mjs';
@@ -803,19 +803,206 @@ class TGraphDelaunay {
       return thevalue;
    }
 
-   // Defines the number of triangles tested for a Delaunay triangle
-   // (number of iterations) before abandoning the search
-
+   /** @summary Defines the number of triangles tested for a Delaunay triangle
+    * @desc (number of iterations) before abandoning the search */
    SetMaxIter(n = 100000) {
       this.fAllTri = false;
       this.fMaxIter = n;
    }
 
-   // Sets the histogram bin height for points lying outside the convex hull ie:
-   // the bins in the margin.
-
+   /** @summary Sets the histogram bin height for points lying outside the convex hull ie:
+     * @desc the bins in the margin. */
    SetMarginBinsContent(z) {
       this.fZout = z;
+   }
+
+   /** @summary Returns the X and Y graphs building a contour.
+    * @desc A contour level may consist in several parts not connected to each other.
+    * This function finds them and returns them in a graphs' list. */
+   GetContourList(contour) {
+      if (!this.fNdt)
+         return null;
+
+      let graph = null,     // current graph
+          // Find all the segments making the contour
+          r21, r20, r10, p0, p1, p2, x0, y0, z0, x1, y1, z1, x2, y2, z2,
+          i, it, i0, i1, i2, nbSeg = 0,
+          // Allocate space to store the segments. They cannot be more than the
+          // number of triangles.
+          xs0c, ys0c, xs1c, ys1c;
+
+      const t = [0, 0, 0],
+            xs0 = new Array(this.fNdt).fill(0),
+            ys0 = new Array(this.fNdt).fill(0),
+            xs1 = new Array(this.fNdt).fill(0),
+            ys1 = new Array(this.fNdt).fill(0);
+
+      // Loop over all the triangles in order to find all the line segments
+      // making the contour.
+
+      // old implementation
+      for (it = 0; it < this.fNdt; it++) {
+         t[0] = this.fPTried[it];
+         t[1] = this.fNTried[it];
+         t[2] = this.fMTried[it];
+         p0 = t[0] - 1;
+         p1 = t[1] - 1;
+         p2 = t[2] - 1;
+         x0 = this.fX[p0]; x2 = this.fX[p0];
+         y0 = this.fY[p0]; y2 = this.fY[p0];
+         z0 = this.fZ[p0]; z2 = this.fZ[p0];
+
+         // Order along Z axis the points (xi,yi,zi) where "i" belongs to {0,1,2}
+         // After this z0 < z1 < z2
+         i0 = i1 = i2 = 0;
+         if (this.fZ[p1] <= z0) { z0 = this.fZ[p1]; x0 = this.fX[p1]; y0 = this.fY[p1]; i0 = 1; }
+         if (this.fZ[p1] > z2) { z2 = this.fZ[p1]; x2 = this.fX[p1]; y2 = this.fY[p1]; i2 = 1; }
+         if (this.fZ[p2] <= z0) { z0 = this.fZ[p2]; x0 = this.fX[p2]; y0 = this.fY[p2]; i0 = 2; }
+         if (this.fZ[p2] > z2) { z2 = this.fZ[p2]; x2 = this.fX[p2]; y2 = this.fY[p2]; i2 = 2; }
+         if (i0 === 0 && i2 === 0) {
+            console.error('GetContourList: wrong vertices ordering');
+            return nullptr;
+         }
+
+         i1 = 3 - i2 - i0;
+
+         x1 = this.fX[t[i1]-1];
+         y1 = this.fY[t[i1]-1];
+         z1 = this.fZ[t[i1]-1];
+
+         if (contour >= z0 && contour <=z2) {
+            r20 = (contour-z0)/(z2-z0);
+            xs0c = r20*(x2-x0)+x0;
+            ys0c = r20*(y2-y0)+y0;
+            if (contour >= z1 && contour <=z2) {
+               r21 = (contour-z1)/(z2-z1);
+               xs1c = r21*(x2-x1)+x1;
+               ys1c = r21*(y2-y1)+y1;
+            } else {
+               r10 = (contour-z0)/(z1-z0);
+               xs1c = r10*(x1-x0)+x0;
+               ys1c = r10*(y1-y0)+y0;
+            }
+            // do not take the segments equal to a point
+            if (xs0c !== xs1c || ys0c !== ys1c) {
+               nbSeg++;
+               xs0[nbSeg-1] = xs0c;
+               ys0[nbSeg-1] = ys0c;
+               xs1[nbSeg-1] = xs1c;
+               ys1[nbSeg-1] = ys1c;
+            }
+         }
+      }
+
+      const list = [], // list holding all the graphs
+            segUsed = new Array(this.fNdt).fill(false);
+
+      // Find all the graphs making the contour. There is two kind of graphs,
+      // either they are "opened" or they are "closed"
+
+      // Find the opened graphs
+      let xc=0, yc=0, xnc=0, ync=0,
+          findNew, s0, s1, is, js;
+
+      for (is = 0; is < nbSeg; is++) {
+         if (segUsed[is]) continue;
+         s0 = s1 = false;
+
+         // Find to which segment is is connected. It can be connected
+         // via 0, 1 or 2 vertices.
+         for (js = 0; js < nbSeg; js++) {
+            if (is === js) continue;
+            if (xs0[is] === xs0[js] && ys0[is] === ys0[js]) s0 = true;
+            if (xs0[is] === xs1[js] && ys0[is] === ys1[js]) s0 = true;
+            if (xs1[is] === xs0[js] && ys1[is] === ys0[js]) s1 = true;
+            if (xs1[is] === xs1[js] && ys1[is] === ys1[js]) s1 = true;
+         }
+
+         // Segment is is alone, not connected. It is stored in the
+         // list and the next segment is examined.
+         if (!s0 && !s1) {
+            graph = [];
+            graph.push(xs0[is], ys0[is]);
+            graph.push(xs1[is], ys1[is]);
+            segUsed[is] = true;
+            list.push(graph);
+            continue;
+         }
+
+         // Segment is is connected via 1 vertex only and can be considered
+         // as the starting point of an opened contour.
+         if (!s0 || !s1) {
+            // Find all the segments connected to segment is
+            graph = [];
+            if (s0) { xc = xs0[is]; yc = ys0[is]; xnc = xs1[is]; ync = ys1[is]; }
+            if (s1) { xc = xs1[is]; yc = ys1[is]; xnc = xs0[is]; ync = ys0[is]; }
+            graph.push(xnc, ync);
+            segUsed[is] = true;
+            js = 0;
+
+            while (true) {
+               findNew = false;
+               while (js < nbSeg && segUsed[js])
+                  js++;
+
+               if (xc === xs0[js] && yc === ys0[js]) {
+                  xc = xs1[js];
+                  yc = ys1[js];
+                  findNew = true;
+               } else if (xc === xs1[js] && yc === ys1[js]) {
+                  xc = xs0[js];
+                  yc = ys0[js];
+                  findNew = true;
+               }
+               if (findNew) {
+                  segUsed[js] = true;
+                  graph.push(xc, yc);
+                  js = 0;
+               } else if (++js >= nbSeg)
+                  break;
+            }
+            list.push(graph);
+         }
+      }
+
+
+      // Find the closed graphs. At this point all the remaining graphs
+      // are closed. Any segment can be used to start the search.
+      for (is = 0; is < nbSeg; is++) {
+         if (segUsed[is]) continue;
+
+         // Find all the segments connected to segment is
+         graph = [];
+         segUsed[is] = true;
+         xc = xs0[is];
+         yc = ys0[is];
+         js = 0;
+         graph.push(xc, yc);
+         while (true) {
+            while (js < nbSeg && segUsed[js])
+               js++;
+            findNew = false;
+            if (xc === xs0[js] && yc === ys0[js]) {
+               xc = xs1[js];
+               yc = ys1[js];
+               findNew = true;
+            } else if (xc === xs1[js] && yc === ys1[js]) {
+               xc = xs0[js];
+               yc = ys0[js];
+               findNew = true;
+            }
+            if (findNew) {
+               segUsed[js] = true;
+               graph.push(xc, yc);
+               js = 0;
+            } else if (++js >= nbSeg)
+               break;
+         }
+         graph.push(xs0[is], ys0[is]);
+         list.push(graph);
+      }
+
+      return list;
    }
 
 } // class TGraphDelaunay
@@ -884,7 +1071,9 @@ class TGraph2DPainter extends ObjectPainter {
          gr2d.fLineColor = d.color;
 
       d.check('SAME');
-      if (d.check('TRI1'))
+      if (d.check('CONT5'))
+         res.Contour = 15;
+      else if (d.check('TRI1'))
          res.Triangles = 11; // wire-frame and colors
       else if (d.check('TRI2'))
          res.Triangles = 10; // only color triangles
@@ -907,14 +1096,16 @@ class TGraph2DPainter extends ObjectPainter {
 
       if (!res.Markers) res.Color = false;
 
-      if (res.Color || res.Triangles >= 10)
+      if (res.Color || res.Triangles >= 10 || res.Contour)
          res.Zscale = d.check('Z');
 
       res.isAny = function() {
-         return this.Markers || this.Error || this.Circles || this.Line || this.Triangles;
+         return this.Markers || this.Error || this.Circles || this.Line || this.Triangles || res.Contour;
       };
 
-      if (res.isAny()) {
+      if (res.Contour)
+         res.Axis = '';
+      else if (res.isAny()) {
          res.Axis = 'lego2';
          if (res.Zscale) res.Axis += 'z';
       } else
@@ -1112,14 +1303,56 @@ class TGraph2DPainter extends ObjectPainter {
       return promise.then(() => this.drawGraph2D());
    }
 
+   async drawContour(fp, main, graph) {
+      const dulaunay = this.buildDelaunay(graph);
+      if (!dulaunay)
+         return this;
+
+      const cntr = main.getContour(),
+            palette = main.getHistPalette(),
+            levels = cntr.getLevels(),
+            funcs = fp.getGrFuncs();
+
+      this.createG(true);
+
+      this.createAttLine({ attr: graph, nocolor: true });
+
+      for (let k = 0; k < levels.length; ++k) {
+         const lst = dulaunay.GetContourList(levels[k]),
+               color = cntr.getPaletteColor(palette, levels[k]);
+         let path = '';
+         for (let i = 0; i < lst.length; ++i) {
+            const gr = lst[i], arr = [];
+            for (let n = 0; n < gr.length; n += 2)
+               arr.push({ grx: funcs.grx(gr[n]), gry: funcs.gry(gr[n+1]) });
+            path += buildSvgCurve(arr, { cmd: 'M', line: true });
+         }
+
+         this.lineatt.color = color;
+
+         this.draw_g.append('svg:path')
+             .attr('d', path)
+             .style('fill', 'none')
+             .call(this.lineatt.func);
+      }
+
+      return this;
+   }
+
    /** @summary Actual drawing of TGraph2D object
      * @return {Promise} for drawing ready */
    async drawGraph2D() {
-      const main = this.getMainPainter(),
-            fp = this.getFramePainter(),
+      const fp = this.getFramePainter(),
+            main = this.getMainPainter(),
             graph = this.getObject();
 
-      if (!graph || !main || !fp || !fp.mode3d)
+      if (!graph || !main || !fp)
+         return this;
+
+      if (this.options.Contour)
+         return this.drawContour(fp, main, graph);
+
+      if (!fp.mode3d)
          return this;
 
       fp.remove3DMeshes(this);
@@ -1298,7 +1531,7 @@ class TGraph2DPainter extends ObjectPainter {
             if (!this.options.Circles || this.options.Color)
                color = palette?.calcColor(lvl, levels.length) ?? this.getColor(graph.fMarkerColor);
 
-            const pr = pnts.createPoints({ color, style: this.options.Circles ? 4 : graph.fMarkerStyle }).then(mesh => {
+            const pr = pnts.createPoints({ color, fill: 'white', style: this.options.Circles ? 4 : graph.fMarkerStyle }).then(mesh => {
                mesh.graph = graph;
                mesh.fp = fp;
                mesh.tip_color = (graph.fMarkerColor === 3) ? 0xFF0000 : 0x00FF00;

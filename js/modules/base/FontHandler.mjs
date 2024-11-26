@@ -98,7 +98,7 @@ class FontHandler {
          this.scaled = true;
       }
 
-      this.size = Math.round(size || 11);
+      this.size = Math.round(size);
       this.scale = scale;
       this.index = 0;
 

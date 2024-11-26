@@ -328,25 +328,6 @@ class RHistStatsPainter extends RPavePainter {
       return (this.stats_lines !== undefined);
    }
 
-   /** @summary format float value as string
-     * @private */
-   format(value, fmt) {
-      if (!fmt) fmt = 'stat';
-
-      switch (fmt) {
-         case 'stat' : fmt = gStyle.fStatFormat; break;
-         case 'fit': fmt = gStyle.fFitFormat; break;
-         case 'entries': if ((Math.abs(value) < 1e9) && (Math.round(value) === value)) return value.toFixed(0); fmt = '14.7g'; break;
-         case 'last': fmt = this.lastformat; break;
-      }
-
-      const res = floatToString(value, fmt || '6.4g', true);
-
-      this.lastformat = res[1];
-
-      return res[0];
-   }
-
    /** @summary Draw content */
    async drawContent() {
       if (this.fillStatistic())
