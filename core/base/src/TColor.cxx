@@ -1246,7 +1246,7 @@ void TColor::InitializeColors()
       new TColor(kP6Red,    228./255.,  37./255.,  54./255., "kP6Red");
       new TColor(kP6Grape,  150./255.,  74./255., 139./255., "kP6Grape");
       new TColor(kP6Gray,   156./255., 156./255., 161./255., "kP6Gray");
-      new TColor(kP6Violet, 112./255.,  33./255., 221./255., "kP6Violet");
+      new TColor(kP6Violet, 122./255.,  33./255., 221./255., "kP6Violet");
 
       new TColor(kP8Blue,    24./255.,  69./255., 251./255., "kP8Blue");
       new TColor(kP8Orange,        1.,  94./255.,   2./255., "kP8Orange");
