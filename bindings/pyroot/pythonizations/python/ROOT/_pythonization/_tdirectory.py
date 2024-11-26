@@ -17,6 +17,7 @@ r"""
 <summary  style="font-size:20px; color: #425788;"><b>Python interface</b></summary>
 <div class="pyrootbox">
 \endhtmlonly
+\anchor python
 
 It is possible to retrieve the content of a TDirectory object
 just like getting items from a Python dictionary.
