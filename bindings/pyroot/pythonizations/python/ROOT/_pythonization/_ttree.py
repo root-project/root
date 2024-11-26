@@ -17,6 +17,7 @@ r"""
 <summary  style="font-size:20px; color: #425788;"><b>Python interface</b></summary>
 <div class="pyrootbox">
 \endhtmlonly
+\anchor python
 
 The TTree class has several additions for its use from Python, which are also
 available in its subclasses e.g. TChain and TNtuple.

@@ -18,6 +18,7 @@ r"""
 <summary  style="font-size:20px; color: #425788;"><b>Python interface</b></summary>
 <div class="pyrootbox">
 \endhtmlonly
+\anchor python
 
 The TF1 class has several additions for its use from Python, which are also
 available in its subclasses TF2 and TF3.
