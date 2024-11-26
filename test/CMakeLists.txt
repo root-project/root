@@ -168,7 +168,7 @@ if(ROOT_opengl_FOUND)
     configure_file(stressGraphics.ref stressGraphics.ref COPYONLY)
   endif()
   configure_file(stressGraphics_web.ref stressGraphics_web.ref COPYONLY)
-  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/../tutorials/graphics/earth.dat earth.dat COPYONLY)
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/../tutorials/visualisation/graphics/earth.dat earth.dat COPYONLY)
   ROOT_ADD_TEST(test-stressgraphics
                 ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}
                 COMMAND stressGraphics -b -k -p=sge

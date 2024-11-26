@@ -54,49 +54,21 @@ The `$ROOTSYS/tutorials` directory includes several sub-directories:
 \ingroup Tutorials
 \brief Various examples of data analysis workflows.
 
+\defgroup tutorial_visualisation Visualisation tutorials
+\ingroup Tutorials
+\brief All examples related to visually representing the data, including graphs, event displays, web graphics, GUIs and more. 
+
 \defgroup tutorial_exp Experimental API tutorials
 \ingroup Tutorials
 \brief Various examples showing the experimental API.
-
-\defgroup tutorial_eve Event display tutorials
-\ingroup Tutorials
-\brief Examples showing the "Event display classes" usage.
-
-\defgroup tutorial_eve7 Event display ROOT7 tutorials
-\ingroup Tutorials
-\brief Examples showing the "Event display classes" usage with ROOT7.
 
 \defgroup tutorial_evegen Event generation tutorials
 \ingroup Tutorials
 \brief Examples showing event generation with pythia and Monte Carlo.
 
-\defgroup tutorial_geom Geometry tutorials
-\ingroup Tutorials
-\brief Various ROOT geometry package examples.
-
 \defgroup tutorial_roofit RooFit Tutorials
 \ingroup Tutorials
 \brief These tutorials illustrate the main features of [RooFit](group__Roofitmain.html): the name of the examples and their short description help in figuring out their objective.
-
-\defgroup tutorial_graphs Graphs tutorials
-\ingroup Tutorials
-\brief Examples showing the "graphs classes" usage.
-
-\defgroup tutorial_graphics Graphics tutorials
-\ingroup Tutorials
-\brief Various examples showing the basic ROOT graphics.
-
-\defgroup tutorial_gl OpenGL tutorials
-\ingroup Tutorials
-\brief Various examples showing the OpenGL graphics in ROOT.
-
-\defgroup tutorial_cocoa Tutorials specific to Mac/Cocoa
-\ingroup Tutorials
-\brief Various examples showing graphics done with the Mac graphics system Cocoa.
-
-\defgroup tutorial_gui GUI tutorials
-\ingroup Tutorials
-\brief Example code which illustrates how to use the ROOT GUI.
 
 \defgroup tutorial_histfactory HistFactory Tutorials
 \ingroup Tutorials
@@ -105,10 +77,6 @@ The `$ROOTSYS/tutorials` directory includes several sub-directories:
 \defgroup tutorial_http HTTP tutorials
 \ingroup Tutorials
 \brief Examples showing the HTTP interface.
-
-\defgroup tutorial_image Image tutorials
-\ingroup Tutorials
-\brief Examples showing the TImage class usage.
 
 \defgroup tutorial_io IO tutorials
 \ingroup Tutorials
@@ -126,25 +94,17 @@ The `$ROOTSYS/tutorials` directory includes several sub-directories:
 \ingroup Tutorials
 \brief These tutorials illustrate the main features of RooStats.
 
-\defgroup tutorial_spectrum Spectrum tutorials
+\defgroup tutorial_sql SQL tutorials
 \ingroup Tutorials
-\brief Examples showing the TSpectrum and TSpectrumPainter usage.
-
-\defgroup tutorial_splot TSPlot tutorials
-\ingroup Tutorials
-\brief This tutorial illustrates the use of class TSPlot.
+\brief Examples showing the SQL classes.
 
 \defgroup tutorial_ml Machine Learning tutorials
 \ingroup Tutorials
 \brief Examples showing how to use Machine Learning from ROOT. 
 
-\defgroup tutorial_webcanv TWebCanvas tutorials
+\defgroup tutorial_geometry Geometry tutorials
 \ingroup Tutorials
-\brief Examples showing the special features of web-based canvas
-
-\defgroup tutorial_webgui Webgui tutorials
-\ingroup Tutorials
-\brief Webgui examples
+\brief Examples showing how to make use of geometry classes in ROOT.
 
 \defgroup tutorial_legacy Legacy tutorials
 \ingroup Tutorials

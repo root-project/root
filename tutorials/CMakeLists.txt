@@ -101,7 +101,7 @@ if (NOT dataframe)
     # RDataFrame
     list(APPEND dataframe_veto analysis/dataframe/*.C analysis/dataframe/*.py)
     # RDataFrame tutorial in graphs
-    list(APPEND dataframe_veto graphs/timeSeriesFromCSV_TDF.C)
+    list(APPEND dataframe_veto visualisation/graphs/timeSeriesFromCSV_TDF.C)
     # TMVA tutorials dependent on RDataFrame
     list(APPEND dataframe_veto machine_learning/tmva*.C)
     list(APPEND dataframe_veto machine_learning/TMVA_SOFIE_RDataFrame*.C)
@@ -131,7 +131,7 @@ if(MACOSX_VERSION VERSION_EQUAL 10.13)
 endif()
 
 if(NOT geom)
-  set(geom_veto geom/*.C)
+  set(geom_veto visualisation/geom/*.C geom/*.C)
 endif()
 
 if(NOT ROOT_proof_FOUND)
@@ -139,7 +139,7 @@ if(NOT ROOT_proof_FOUND)
 endif()
 
 if(NOT ROOT_spectrum_FOUND)
-   set(spectrum_veto spectrum/*.C)
+   set(spectrum_veto legacy/spectrum/*.C)
 endif()
 
 if(NOT ROOT_roofit_FOUND)
@@ -240,11 +240,11 @@ endif()
 
 if(NOT ROOT_opengl_FOUND)
   set(opengl_veto io/tree/staff.C
-                  gl/*.C)
+                  visualisation/gl/*.C)
 endif()
 
 if(NOT GRAPHVIZ_FOUND)
-  set(gviz_veto graphs/graphstruct.C)
+  set(gviz_veto visualisation/graphs/graphstruct.C)
 endif()
 
 if(NOT TBB_FOUND AND NOT builtin_tbb)
@@ -264,30 +264,30 @@ if(ROOT_CLASSIC_BUILD)
 endif()
 
 if(NOT gdml)
-  set(gdml_veto geom/gdml/testoptical.C)
+  set(gdml_veto visualisation/geom/gdml/testoptical.C)
 endif()
 
 #---These ones requires a display to run-----------------------------
 set(gui_veto math/fit/fitpanel_playback.C
-             cocoa/*.C
-             geom/building.C geom/cheongwadae.C geom/geom*.C geom/lego.C geom/robot.C geom/south_gate.C geom/station*.C geom/tank.C geom/webdemo.C geom/web_cms.cxx
-             gl/glViewerExercise.C gl/glViewerLOD.C gl/gviz3d.C gl/nucleus.C gl/viewer3DLocal.C gl/viewer3DMaster.C
-             gui/*.C
+             visualisation/cocoa/*.C
+             visualisation/geom/building.C visualisation/geom/cheongwadae.C visualisation/geom/geom*.C visualisation/geom/lego.C visualisation/geom/robot.C visualisation/geom/south_gate.C visualisation/geom/station*.C visualisation/geom/tank.C visualisation/geom/webdemo.C visualisation/geom/web_cms.cxx
+             visualisation/gl/glViewerExercise.C visualisation/gl/glViewerLOD.C visualisation/gl/gviz3d.C visualisation/gl/nucleus.C visualisation/gl/viewer3DLocal.C visualisation/gl/viewer3DMaster.C
+             visualisation/gui/*.C
              hist/exec1.C
              hist/exec2.C
              hist/tprofile2polyRealistic.C
              hist/tprofile2polyRealisticModuleError.C
-             image/*.C
-             graphics/psview.C graphics/gtime.C
-             graphics/graph_edit_playback.C
+             visualisation/image/*.C
+             visualisation/graphics/psview.C visualisation/graphics/gtime.C
+             visualisation/graphics/graph_edit_playback.C
              roostats/ModelInspector.C
              legacy/tree/tvdemo.C
-             eve/*.C
-             webgui/geom/geom_threejs.cxx
-             webgui/panel/webpanel.cxx
-             webgui/webwindow/webwindow.cxx)
+             visualisation/eve7/eve/*.C
+             visualisation/webgui/geom/geom_threejs.cxx
+             visualisation/webgui/panel/webpanel.cxx
+             visualisation/webgui/webwindow/webwindow.cxx)
 if (NOT webgui)
-  list(APPEND gui_veto graphics/save_batch.C experimental/rcanvas/df104.py experimental/rcanvas/df105.py)
+  list(APPEND gui_veto visualisation/graphics/save_batch.C experimental/rcanvas/df104.py experimental/rcanvas/df105.py)
 endif()
 
 if (NOT ROOT_tmva_FOUND)
@@ -352,7 +352,7 @@ else()
 endif()
 
 if (NOT ROOT_vecgeom_FOUND)
-  set(vecgeom_veto geom/tessellatedNav.C)
+  set(vecgeom_veto visualisation/geom/tessellatedNav.C)
 endif()
 
 if(root7)
@@ -416,7 +416,7 @@ set(extra_veto
   io/tree/h1analysis*.C # these are not a tutorial but classes used in run_h1analysis.C
   io/tree/h1chain.C
   http/*.C
-  eve7/*.C
+  visualisation/eve7/*.C
   math/r/rootlogon.C)
 
 if(MSVC AND NOT llvm13_broken_tests)
@@ -433,14 +433,14 @@ if(MSVC AND NOT llvm13_broken_tests)
   if(CMAKE_SIZEOF_VOID_P EQUAL 4)
     list(APPEND extra_veto
          analysis/dataframe/df007_snapshot.C
-         graphics/earth.C
-         graphs/motorcycle.C
+         visualisation/graphics/earth.C
+         visualisation/graphs/motorcycle.C
          io/ntuple/ntpl001_staff.C)
   endif()
 endif()
 
 set(all_veto hsimple.C
-             geom/geometry.C
+             visualisation/geom/geometry.C
              ${extra_veto}
              ${gdml_veto}
              ${gui_veto}
@@ -474,8 +474,8 @@ set(all_veto hsimple.C
 
 file(GLOB_RECURSE tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.C)
 if(webgui)
-  file(GLOB_RECURSE tutorials_webcanv RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} webcanv/*.cxx)
-  list(APPEND tutorials ${tutorials_webcanv})
+  file(GLOB_RECURSE visualisation/tutorials_webcanv RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} visualisation/webcanv/*.cxx)
+  list(APPEND tutorials ${visualisation/tutorials_webcanv})
 endif()
 if(root7 AND webgui)
   file(GLOB_RECURSE tutorials_exp RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} experimental/*.cxx)
@@ -499,11 +499,11 @@ endif()
 
 #---Special return code------------------------------------------------
 set(returncode_1 math/fit/fit2a.C
-                 graphics/earth.C
-                 graphics/pavetext.C
-                 graphics/tmathtext.C graphics/tmathtext2.C
-                 graphs/exclusiongraph.C
-                 graphs/graphstruct.C
+                 visualisation/graphics/earth.C
+                 visualisation/graphics/pavetext.C
+                 visualisation/graphics/tmathtext.C visualisation/graphics/tmathtext2.C
+                 visualisation/graphs/exclusiongraph.C
+                 visualisation/graphs/graphstruct.C
                  hist/ContourList.C
                  hist/hbars.C
                  hist/th2polyBoxes.C
@@ -536,13 +536,13 @@ set(benchmarks-depends tutorial-hsimple
                        tutorial-math-fit-myfit
                        tutorial-hist-h1ReadAndDraw
                        tutorial-hist-FirstContour
-                       tutorial-geom-na49view
+                       tutorial-visualisation-geom-na49view
                        tutorial-io-tree-tree120_ntuple.C
                        tutorial-io-tree-spider
                        tutorial-io-hadd
                        tutorial-io-loopdir
                        tutorial-io-copyFiles)
-set(geom-na49view-depends tutorial-geom-geometry)
+set(visualisation-geom-na49view-depends tutorial-visualisation-geom-geometry)
 set(multicore-mt102_readNtuplesFillHistosAndFit-depends tutorial-multicore-mt101_fillNtuples)
 set(multicore-mp102_readNtuplesFillHistosAndFit-depends tutorial-multicore-mp101_fillNtuples)
 set(multicore-mp105_processEntryList-depends tutorial-multicore-mp104_processH1)
@@ -630,7 +630,7 @@ file(GLOB multithreaded RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${multithreaded})
 ROOT_ADD_TEST(tutorial-hsimple COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/hsimple.C
     PASSRC 255 FAILREGEX "Error in" "error:" "warning: Failed to call" LABELS tutorial ENVIRONMENT ${TUTORIAL_ENV})
 if(ROOT_geom_FOUND)
-  ROOT_ADD_TEST(tutorial-geom-geometry COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/geom/geometry.C
+  ROOT_ADD_TEST(tutorial-visualisation-geom-geometry COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/visualisation/geom/geometry.C
                 FAILREGEX "Error in" "error:" "warning: Failed to call" LABELS tutorial ENVIRONMENT ${TUTORIAL_ENV})
 endif()
 # define Python GNN parsing tutorial needed to run before
@@ -735,15 +735,15 @@ if(ROOT_pyroot_FOUND)
   # Now python-specific vetos:
   set(pyveto demos.py         # requires GUI
              math/fit/fit1_py.py      # not a tutorial
-             gui/gui_simple.py       # requires GUI
+             visualisation/gui/gui_simple.py       # requires GUI
              io/tree/csv2tntuple.py          # not really a tutorial
-             geom/na49geomfile.py # ????
-             geom/na49visible.py  # ????
-             tutorials/io/tree/csv2tree_ReadStream.py # not a tutorial
-             gui/numberEntry.py  # requires GUI
+             visualisation/geom/na49geomfile.py # ????
+             visualisation/geom/na49visible.py  # ????
+             io/tree/csv2tree_ReadStream.py # not a tutorial
+             visualisation/gui/numberEntry.py  # requires GUI
              legacy/pyroot/*py      # legacy ...
              histfactory/makeQuickModel.py # not a tutorial
-             eve/lineset.py         # requires GUI
+             visualisation/eve7/eve/lineset.py         # requires GUI
              io/sql/sqlcreatedb.py     # same as the C++ case
              io/sql/sqlfilldb.py       # same as the C++ case
              io/sql/sqlselect.py       # same as the C++ case
@@ -839,11 +839,11 @@ if(ROOT_pyroot_FOUND)
   set(hist-h1ReadAndDraw-depends tutorial-hsimple-py)
   set(pyroot-benchmarks-depends tutorial-hsimple-py
                                 tutorial-math-fit-fit1-py
-                                tutorial-geom-na49view-py
+                                tutorial-visualisation-geom-na49view-py
                                 tutorial-hist-h1ReadAndDraw-py
                                 tutorial-tree-ntuple1-py)
   set(math-fit-fit1-depends tutorial-hist-fillrandom-py)
-  set(geom-na49view-depends tutorial-geom-geometry-py)
+  set(visualisation-geom-na49view-depends tutorial-visualisation-geom-geometry-py)
   set(roofit-rf503_wspaceread-depends tutorial-roofit-rf502_wspacewrite-py)
   set(roofit-rf618_mixture_models-depends tutorial-analysis-dataframe-df106_HiggsToFourLeptons-py)
 

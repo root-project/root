@@ -19,7 +19,6 @@
 
 ClassImp(TButton);
 
-
 /** \class TButton
 \ingroup gpad
 
@@ -68,8 +67,8 @@ void but() {
    but3->Draw();
 
 // Create last button with no name. Instead a graph is draw inside the button
-// Clicking on this button will invoke the macro $ROOTSYS/tutorials/graphs/graph.C
-   button = new TButton("",".x tutorials/graphs/graph.C",0.15,0.15,0.85,0.38);
+// Clicking on this button will invoke the macro $ROOTSYS/tutorials/visualisation/graphs/graph.C
+   button = new TButton("",".x tutorials/visualisation/graphs/graph.C",0.15,0.15,0.85,0.38);
    button->SetFillColor(42);
    button->Draw();
    button->SetEditable(kTRUE);

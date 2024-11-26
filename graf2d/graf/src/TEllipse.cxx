@@ -47,7 +47,7 @@ call the function `SetNoEdges()`. To remove completely the ellipse
 outline it is enough to specify 0 as line style.
 
 Begin_Macro(source)
-../../../tutorials/graphics/ellipse.C
+../../../tutorials/visualisation/graphics/ellipse.C
 End_Macro
 */
 

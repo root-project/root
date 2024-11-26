@@ -1,1 +1,1 @@
-This directory contains SDF fonts generated for REve. See REveText and tutorials/eve7/texts.C.
+This directory contains SDF fonts generated for REve. See REveText and tutorials/visualisation/eve7/texts.C.
