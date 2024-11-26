@@ -1,10 +1,12 @@
 /// \file
 /// \ingroup tutorial_tree
-///
+/// \preview 
 /// H1 analysis example expressed in terms of TTreeReader (see h1analysis.C).
 ///
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date December 2023
 /// \author Anders Eie, 2013
 
 #include "h1analysisTreeReader.h"

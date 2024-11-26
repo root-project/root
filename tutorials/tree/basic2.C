@@ -1,12 +1,13 @@
 /// \file
 /// \ingroup tutorial_tree
 /// \notebook -js
-/// Create can ntuple reading data from an ascii file.
+/// \preview  Create can ntuple reading data from an ascii file.
 /// This macro is a variant of basic.C
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date January 2017
 /// \author Rene Brun
 
 void basic2() {

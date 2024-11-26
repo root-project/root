@@ -8,6 +8,7 @@
 ///
 /// \macro_code
 ///
+/// \date September 2018
 /// \author Rene Brun
 
 // Load the library at macro parsing time: we need this to use its content in the code

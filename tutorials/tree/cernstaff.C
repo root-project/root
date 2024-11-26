@@ -1,11 +1,12 @@
 /// \file
 /// \ingroup tutorial_tree
 /// \notebook
-/// Playing with a Tree containing variables of type character
+/// \preview  Playing with a Tree containing variables of type character
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date January 2017
 /// \author Rene Brun
 
 void cernstaff () {

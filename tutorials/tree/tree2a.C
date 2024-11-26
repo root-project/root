@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_tree
 /// \notebook
-/// This example is the same as tree2.C, but uses a class instead of a C-struct.
+/// \preview  This example is the same as tree2.C, but uses a class instead of a C-struct.
 /// In this example, we are mapping a class to one of the Geant3
 /// common blocks /gctrak/. In the real life, this common will be filled
 /// by Geant3 at each step and only the Tree Fill function should be called.
@@ -13,8 +13,10 @@
 /// ~~~
 ///
 /// Note that since IO is involved, ACLiC has to be invoked to create the dictionary of class Gctrak.
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date October 2023
 /// \author Rene Brun
 
 #include "TROOT.h"

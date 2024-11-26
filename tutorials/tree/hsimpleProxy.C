@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_tree
 /// \notebook -nodraw
-/// Used by hsimpleProxyDriver.C.
+/// \preview  Used by hsimpleProxyDriver.C.
 ///
 /// To use this file, generate hsimple.root:
 /// ~~~ {.cpp}
@@ -14,8 +14,10 @@
 ///    ntuple->Draw("hsimpleProxy.C+");
 /// ~~~
 ///
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date October 2024
 /// \author Rene Brun
 
 double hsimpleProxy() {

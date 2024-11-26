@@ -1,10 +1,12 @@
 /// \file
 /// \ingroup tutorial_tree
 /// \notebook
-/// TSpider example.
+/// \preview  TSpider example.
 ///
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date September 2016
 /// \author Bastien Dallapiazza
 
 #include "TFile.h"

@@ -1,11 +1,12 @@
 /// \file
 /// \ingroup tutorial_tree
 /// \notebook
-/// Write and read STL vectors in a tree.
+/// \preview  Write and read STL vectors in a tree.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date October 2023
 /// \author The ROOT Team
 
 #include <vector>

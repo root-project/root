@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_tree
 /// \notebook
-/// Save histograms in Tree branches
+/// \preview  Save histograms in Tree branches
 ///
 /// To run this example, do
 /// ~~~{.cpp}
@@ -12,9 +12,10 @@
 /// root > htr3()
 /// ~~~
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date November 2017
 /// \author Rene Brun
 
 void htw() {

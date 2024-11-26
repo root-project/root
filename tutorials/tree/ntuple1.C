@@ -1,11 +1,12 @@
 /// \file
 /// \ingroup tutorial_tree
 /// \notebook
-/// Simple tree analysis.
+/// \preview  Simple tree analysis.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date January 2017
 /// \author Rene Brun
 
 #include "TCanvas.h"
