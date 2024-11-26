@@ -37,7 +37,7 @@ class THistDrawOptions {
               GLBox: 0, GLColor: false, Project: '', ProfileProj: '', Profile2DProj: '', System: kCARTESIAN,
               AutoColor: false, NoStat: false, ForceStat: false, PadStats: false, PadTitle: false, AutoZoom: false,
               HighRes: 0, Zero: 1, Palette: 0, BaseLine: false, ShowEmpty: false,
-              Optimize: settings.OptimizeDraw, adjustFrame: false,
+              Optimize: settings.OptimizeDraw,
               Mode3D: false, x3dscale: 1, y3dscale: 1, SwapXY: false,
               Render3D: constants.Render3D.Default,
               FrontBox: true, BackBox: true,
@@ -72,8 +72,8 @@ class THistDrawOptions {
       if (this.ndim === 3)
          return this.BoxStyle === 12 || this.BoxStyle === 13 || this.GLBox === 12;
 
-      if (this.ndim !== 2)
-         return false;
+      if (this.ndim === 1)
+         return this.Lego === 12 || this.Lego === 14;
 
       if (this.Mode3D)
          return this.Lego === 12 || this.Lego === 14 || this.Surf === 11 || this.Surf === 12;
@@ -153,8 +153,6 @@ class THistDrawOptions {
       if (d.check('YTITLE:', true)) histo.fYaxis.fTitle = decodeURIComponent(d.part.toLowerCase());
       if (d.check('ZTITLE:', true)) histo.fZaxis.fTitle = decodeURIComponent(d.part.toLowerCase());
 
-      if (d.check('_ADJUST_FRAME_')) this.adjustFrame = true;
-
       if (d.check('SHOWEMPTY')) this.ShowEmpty = true;
 
       if (d.check('NOOPTIMIZE')) this.Optimize = 0;
@@ -220,10 +218,8 @@ class THistDrawOptions {
       if (d.check('YAXIS_', 'color'))
          histo.fYaxis.fAxisColor = histo.fYaxis.fLabelColor = histo.fYaxis.fTitleColor = d.color;
 
-      const has_main = painter ? !!painter.getMainPainter() : false;
-
-      if (d.check('X+')) { this.AxisPos = 10; this.second_x = has_main; }
-      if (d.check('Y+')) { this.AxisPos += 1; this.second_y = has_main; }
+      if (d.check('X+')) { this.AxisPos = 10; this.second_x = !!painter?.getMainPainter(); }
+      if (d.check('Y+')) { this.AxisPos += 1; this.second_y = !!painter?.getMainPainter(); }
 
       if (d.check('SAME0')) { this.Same = true; this.IgnoreMainScale = true; }
       if (d.check('SAMES')) { this.Same = true; this.ForceStat = true; }
@@ -842,7 +838,6 @@ class FunctionsHandler {
 
       return promise.then(fpainter => {
          fpainter.setSecondaryId(this.painter, func_secondary_id);
-
          return this.drawNext(indx+1);
       });
    }
@@ -1260,7 +1255,8 @@ class THistPainter extends ObjectPainter {
       const histo = this.getHisto();
 
       // artificially add y range to display axes
-      if (this.ymin === this.ymax) this.ymax += 1;
+      if (this.ymin === this.ymax)
+         this.ymax += 1;
 
       if (!this.isMainPainter()) {
          const opts = {
@@ -1279,34 +1275,6 @@ class THistPainter extends ObjectPainter {
          return fp.drawAxes2(opts.second_x, opts.second_y);
       }
 
-      if (this.options.adjustFrame) {
-         const pad = this.getPadPainter().getRootPad();
-         if (pad) {
-            if (pad.fUxmin < pad.fUxmax) {
-               fp.fX1NDC = (this.xmin - pad.fUxmin) / (pad.fUxmax - pad.fUxmin);
-               fp.fX2NDC = (this.xmax - pad.fUxmin) / (pad.fUxmax - pad.fUxmin);
-            }
-            if (pad.fUymin < pad.fUymax) {
-               fp.fY1NDC = (this.ymin - pad.fUymin) / (pad.fUymax - pad.fUymin);
-               fp.fY2NDC = (this.ymax - pad.fUymin) / (pad.fUymax - pad.fUymin);
-            }
-
-            pad.fLeftMargin = fp.fX1NDC;
-            pad.fRightMargin = 1 - fp.fX2NDC;
-            pad.fBottomMargin = fp.fY1NDC;
-            pad.fTopMargin = 1 - fp.fY2NDC;
-            pad.fFrameLineColor = 0;
-            pad.fFrameLineWidth = 0;
-            fp.setRootPadRange(pad);
-
-            fp.fillatt.setSolidColor('none');
-
-            fp.redraw();
-         }
-
-         this.options.adjustFrame = false;
-      }
-
       fp.setAxesRanges(histo.fXaxis, this.xmin, this.xmax, histo.fYaxis, this.ymin, this.ymax, histo.fZaxis, 0, 0);
 
       fp.createXY({ ndim: this.getDimension(),
@@ -1315,6 +1283,7 @@ class THistPainter extends ObjectPainter {
                     zoom_xmax: this.zoom_xmax,
                     zoom_ymin: this.zoom_ymin,
                     zoom_ymax: this.zoom_ymax,
+                    xmin_nz: histo.$xmin_nz,
                     ymin_nz: this.ymin_nz ?? histo.$ymin_nz,
                     swap_xy: this.options.swap_xy(),
                     reverse_x: this.options.RevX,
@@ -1380,8 +1349,8 @@ class THistPainter extends ObjectPainter {
       if (!tpainter || !pt)
          return this;
 
-      const histo = this.getHisto(), st = gStyle,
-            draw_title = !histo.TestBit(kNoTitle) && (st.fOptTitle > 0);
+      const histo = this.getHisto(),
+            draw_title = !histo.TestBit(kNoTitle) && (gStyle.fOptTitle > 0);
 
       pt.Clear();
       if (draw_title) pt.AddText(histo.fTitle);
@@ -1403,15 +1372,17 @@ class THistPainter extends ObjectPainter {
 
       if (pt) {
          pt.Clear();
-         if (draw_title) pt.AddText(histo.fTitle);
+         if (draw_title)
+            pt.AddText(histo.fTitle);
          return this;
       }
 
       pt = create(clTPaveText);
-      Object.assign(pt, { fName: kTitle, fFillColor: st.fTitleColor, fFillStyle: st.fTitleStyle, fBorderSize: st.fTitleBorderSize,
-                          fTextFont: st.fTitleFont, fTextSize: st.fTitleFontSize, fTextColor: st.fTitleTextColor, fTextAlign: st.fTitleAlign });
+      Object.assign(pt, { fName: kTitle, fOption: 'blNDC', fFillColor: st.fTitleColor, fFillStyle: st.fTitleStyle, fBorderSize: st.fTitleBorderSize,
+                          fTextFont: st.fTitleFont, fTextSize: st.fTitleFontSize, fTextColor: st.fTitleTextColor, fTextAlign: 22 });
+
       if (draw_title) pt.AddText(histo.fTitle);
-      return TPavePainter.draw(pp, pt, 'postitle').then(p => p?.setSecondaryId(this, kTitle));
+      return TPavePainter.draw(pp, pt, 'postitle').then(p => { p?.setSecondaryId(this, kTitle); return this; });
    }
 
    /** @summary Live change and update of title drawing
@@ -1504,7 +1475,8 @@ class THistPainter extends ObjectPainter {
    /** @summary Create stat box for histogram if required */
    createStat(force) {
       const histo = this.getHisto();
-      if (!histo) return null;
+      if (!histo)
+         return null;
 
       if (!force && !this.options.ForceStat) {
          if (this.options.NoStat || histo.TestBit(kNoStats) || !settings.AutoStat) return null;
@@ -1528,7 +1500,8 @@ class THistPainter extends ObjectPainter {
       } else
          optfit = st.fOptFit;
 
-      if (!stats && !optstat && !optfit) return null;
+      if (!stats && !optstat && !optfit)
+         return null;
 
       this.create_stats = true;
 
@@ -2300,16 +2273,40 @@ class THistPainter extends ObjectPainter {
       return this.interactiveRedraw('pad', 'drawopt');
    }
 
+   /** @summary Get graphics conversion functions for this histogram */
+   getHistGrFuncs(fp, rounding = true) {
+      if (!this._ignore_frame)
+         return fp?.getGrFuncs(this.options.second_x, this.options.second_y);
+
+      const funcs = this.getAxisToSvgFunc(false, rounding, false);
+      if (funcs) {
+         funcs.painter = this;
+         funcs.grx = funcs.x;
+         funcs.gry = funcs.y;
+         funcs.logx = funcs.pad?.fLogx;
+         funcs.logy = funcs.pad?.fLogy;
+         funcs.getFrameWidth = function() { return this.painter.getPadPainter().getPadWidth(); };
+         funcs.getFrameHeight = function() { return this.painter.getPadPainter().getPadHeight(); };
+         funcs.revertAxis = function(name, v) { return this.painter.svgToAxis(name, v); };
+         funcs.axisAsText = function(_name, v) { return v.toString(); };
+      }
+      return funcs;
+   }
+
    /** @summary Prepare handle for color draw */
    prepareDraw(args) {
-      if (!args) args = { rounding: true, extra: 0, middle: 0 };
+      if (!args)
+         args = { rounding: true, extra: 0, middle: 0 };
 
-      if (args.extra === undefined) args.extra = 0;
-      if (args.middle === undefined) args.middle = 0;
+      if (args.extra === undefined)
+         args.extra = 0;
+      if (args.middle === undefined)
+         args.middle = 0;
 
       const histo = this.getHisto(),
-            xaxis = histo.fXaxis, yaxis = histo.fYaxis,
-            pmain = this.getFramePainter(),
+            xaxis = histo.fXaxis,
+            yaxis = histo.fYaxis,
+            pmain = this._ignore_frame ? null : this.getFramePainter(),
             hdim = this.getDimension(),
             res = {
                i1: args.nozoom ? 0 : this.getSelectIndex('x', 'left', 0 - args.extra),
@@ -2365,22 +2362,28 @@ class THistPainter extends ObjectPainter {
          res.origy = new Float32Array(res.j2+1);
       }
 
-      if (args.pixel_density) args.rounding = true;
+      if (args.pixel_density)
+         args.rounding = true;
 
-      if (!pmain) {
-         console.warn('cannot draw histogram without frame');
+      const funcs = this.getHistGrFuncs(pmain, args.rounding);
+
+      if (!funcs) {
+         console.warn('cannot draw histogram without frame or pad');
          return res;
       }
-
-      const funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y);
 
       // calculate graphical coordinates in advance
       for (i = res.i1; i <= res.i2; ++i) {
          x = xaxis.GetBinCoord(i + args.middle);
-         if (funcs.logx && (x <= 0)) { res.i1 = i+1; continue; }
-         if (res.origx) res.origx[i] = x;
+         if (funcs.logx && (x <= 0)) {
+            res.i1 = i + 1;
+            continue;
+         }
+         if (res.origx)
+            res.origx[i] = x;
          res.grx[i] = funcs.grx(x);
-         if (args.rounding) res.grx[i] = Math.round(res.grx[i]);
+         if (args.rounding)
+            res.grx[i] = Math.round(res.grx[i]);
 
          if (args.use3d) {
             if (res.grx[i] < -pmain.size_x3d) {
@@ -2402,10 +2405,15 @@ class THistPainter extends ObjectPainter {
       } else {
          for (j = res.j1; j <= res.j2; ++j) {
             y = yaxis.GetBinCoord(j + args.middle);
-            if (funcs.logy && (y <= 0)) { res.j1 = j+1; continue; }
-            if (res.origy) res.origy[j] = y;
+            if (funcs.logy && (y <= 0)) {
+               res.j1 = j+1;
+               continue;
+            }
+            if (res.origy)
+               res.origy[j] = y;
             res.gry[j] = funcs.gry(y);
-            if (args.rounding) res.gry[j] = Math.round(res.gry[j]);
+            if (args.rounding)
+               res.gry[j] = Math.round(res.gry[j]);
 
             if (args.use3d) {
                if (res.gry[j] < -pmain.size_y3d) {
@@ -2480,8 +2488,11 @@ class THistPainter extends ObjectPainter {
      * @private */
    static async _drawHist(painter, opt) {
       return ensureTCanvas(painter).then(() => {
-         painter.setAsMainPainter();
          painter.decodeOptions(opt);
+         if (!painter.options.Same)
+            painter.setAsMainPainter();
+         else
+            painter._ignore_frame = !painter.getPadPainter()?.getMainPainter();
 
          if (painter.isTH2Poly()) {
             if (painter.options.Mode3D)

@@ -259,7 +259,8 @@ const latex_features = [
    { name: '#tilde{', accent: '\u02DC', hasw: true }, // '\u0303'
    { name: '#slash{', accent: '\u2215' }, // '\u0337'
    { name: '#vec{', accent: '\u02ED', hasw: true }, // '\u0350' arrowhead
-   { name: '#frac{', twolines: 'line' },
+   { name: '#frac{', twolines: 'line', middle: true },
+   { name: '#splitmline{', twolines: true, middle: true },
    { name: '#splitline{', twolines: true },
    { name: '#sqrt[', arg: 'int', sqrt: true }, // root with arbitrary power
    { name: '#sqrt{', sqrt: true },             // square root
@@ -522,7 +523,7 @@ function parseLatex(node, arg, label, curr) {
    },
 
    createSubPos = fscale => {
-      return { lvl: curr.lvl + 1, x: 0, y: 0, fsize: curr.fsize*(fscale || 1), color: curr.color, font: curr.font, parent: curr, painter: curr.painter };
+      return { lvl: curr.lvl + 1, x: 0, y: 0, fsize: curr.fsize*(fscale || 1), color: curr.color, font: curr.font, parent: curr, painter: curr.painter, italic: curr.italic, bold: curr.bold };
    };
 
    while (label) {
@@ -560,7 +561,8 @@ function parseLatex(node, arg, label, curr) {
             const g = curr.g || (alone ? node : currG()),
                   elem = g.append('svg:text');
 
-            if (alone && !curr.g) curr.g = elem;
+            if (alone && !curr.g)
+               curr.g = elem;
 
             // apply font attributes only once, inherited by all other elements
             if (curr.ufont) {
@@ -607,7 +609,7 @@ function parseLatex(node, arg, label, curr) {
                elem.attr('text-decoration', curr.deco);
                delete curr.deco; // inform that decoration was applied
             } else
-               curr.xgap = xgap; // may be used in accent or somewere else
+               curr.xgap = xgap; // may be used in accent or somewhere else
          } else
             addSpaces(nendspaces);
       }
@@ -667,15 +669,16 @@ function parseLatex(node, arg, label, curr) {
          curr.twolines = true;
 
          const line1 = extractSubLabel(), line2 = extractSubLabel(true);
-         if ((line1 === -1) || (line2 === -1)) return false;
+         if ((line1 === -1) || (line2 === -1))
+            return false;
 
          const gg = createGG(),
-               fscale = (curr.parent && curr.parent.twolines) ? 0.7 : 1,
+               fscale = curr.parent?.twolines ? 0.7 : 1,
                subpos1 = createSubPos(fscale);
 
          parseLatex(gg, arg, line1, subpos1);
 
-         const path = (found.twolines === 'line') ? createPath(gg) : null,
+         const path = found.twolines === 'line' ? createPath(gg) : null,
                subpos2 = createSubPos(fscale);
 
          parseLatex(gg, arg, line2, subpos2);
@@ -684,9 +687,9 @@ function parseLatex(node, arg, label, curr) {
                dw = subpos1.rect.width - subpos2.rect.width,
                dy = -curr.fsize*0.35; // approximate position of middle line
 
-         positionGNode(subpos1, (dw < 0 ? -dw/2 : 0), dy - subpos1.rect.y2, true);
+         positionGNode(subpos1, found.middle && (dw < 0) ? -dw/2 : 0, dy - subpos1.rect.y2, true);
 
-         positionGNode(subpos2, (dw > 0 ? dw/2 : 0), dy - subpos2.rect.y1, true);
+         positionGNode(subpos2, found.middle && (dw > 0) ? dw/2 : 0, dy - subpos2.rect.y1, true);
 
          path?.attr('d', `M0,${Math.round(dy)}h${Math.round(w - curr.fsize*0.1)}`);
 
@@ -869,11 +872,7 @@ function parseLatex(node, arg, label, curr) {
 
          const subpos = createSubPos();
 
-         let value;
-         for (let c = curr; c && (value === undefined && c); c = c.parent)
-            value = c[found.bi];
-
-         subpos[found.bi] = !value;
+         subpos[found.bi] = !subpos[found.bi];
 
          parseLatex(currG(), arg, sublabel, subpos);
 
@@ -951,7 +950,7 @@ function parseLatex(node, arg, label, curr) {
          if (found.name === '#color[')
             subpos.color = curr.painter.getColor(foundarg);
          else if (found.name === '#font[') {
-            subpos.font = new FontHandler(foundarg);
+            subpos.font = new FontHandler(foundarg, subpos.fsize);
             // here symbols embedding not works, use replacement
             if ((subpos.font.name === kSymbol) && !subpos.font.isSymbol) {
                subpos.font.isSymbol = kSymbol;

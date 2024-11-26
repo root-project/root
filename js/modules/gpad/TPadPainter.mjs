@@ -562,7 +562,7 @@ class TPadPainter extends ObjectPainter {
      * @private */
    setFastDrawing(w, h) {
       const was_fast = this._fast_drawing;
-      this._fast_drawing = settings.SmallPad && ((w < settings.SmallPad.width) || (h < settings.SmallPad.height));
+      this._fast_drawing = (this.snapid === undefined) && settings.SmallPad && ((w < settings.SmallPad.width) || (h < settings.SmallPad.height));
       if (was_fast !== this._fast_drawing)
          this.showPadButtons();
    }
@@ -572,6 +572,14 @@ class TPadPainter extends ObjectPainter {
    isGrayscale() {
       if (!this.iscan) return false;
       return this.pad?.TestBit(kIsGrayscale) ?? false;
+   }
+
+   /** @summary Returns true if default pad range is configured
+     * @private */
+   isDefaultPadRange() {
+      if (!this.pad)
+         return true;
+      return (this.pad.fX1 === 0) && (this.pad.fX2 === 1) && (this.pad.fY1 === 0) && (this.pad.fY2 === 1);
    }
 
    /** @summary Set grayscale mode for the canvas
@@ -1879,7 +1887,7 @@ class TPadPainter extends ObjectPainter {
 
          const mainid = this.selectDom().attr('id');
 
-         if (!this.isBatchMode() && !this.use_openui && !this.brlayout && mainid && isStr(mainid)) {
+         if (!this.isBatchMode() && !this.use_openui && !this.brlayout && mainid && isStr(mainid) && !getHPainter()) {
             this.brlayout = new BrowserLayout(mainid, null, this);
             this.brlayout.create(mainid, true);
             this.setDom(this.brlayout.drawing_divid()); // need to create canvas

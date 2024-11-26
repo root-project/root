@@ -46,7 +46,8 @@ class TAttLineHandler {
       if (args.width === undefined)
          args.width = (args.color && args.color !== 'none') ? 1 : 0;
 
-      this.color = (args.width === 0) ? 'none' : args.color;
+      this.nocolor = args.nocolor;
+      this.color = (args.width === 0) || this.nocolor ? 'none' : args.color;
       this.width = args.width;
       this.style = args.style;
       this.pattern = args.pattern || root_line_styles[this.style] || null;

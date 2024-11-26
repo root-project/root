@@ -85,18 +85,20 @@ async function makePDF(svg, args) {
 
    let doc;
 
+   const orientation = (svg.width < svg.height) ? 'portrait' : 'landscape';
+
    if (args?.as_doc)
       doc = args?.doc;
 
    if (doc) {
       doc.addPage({
-         orientation: 'landscape',
+         orientation,
          unit: 'px',
          format: [svg.width + 10, svg.height + 10]
       });
    } else {
       doc = new jsPDF({
-         orientation: 'landscape',
+         orientation,
          unit: 'px',
          format: [svg.width + 10, svg.height + 10]
       });

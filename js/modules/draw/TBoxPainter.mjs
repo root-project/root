@@ -1,10 +1,9 @@
 import { rgb as d3_rgb, select as d3_select } from '../d3.mjs';
-import { DrawOptions } from '../base/BasePainter.mjs';
+import { DrawOptions, getBoxDecorations } from '../base/BasePainter.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
 import { ensureTCanvas } from '../gpad/TCanvasPainter.mjs';
 import { addMoveHandler } from '../gui/utils.mjs';
-import { assignContextMenu, kToFront } from '../gui/menu.mjs';
-
+import { assignContextMenu } from '../gui/menu.mjs';
 
 class TBoxPainter extends ObjectPainter {
 
@@ -13,10 +12,10 @@ class TBoxPainter extends ObjectPainter {
    moveStart(x, y) {
       const ww = Math.abs(this.x2 - this.x1), hh = Math.abs(this.y1 - this.y2);
 
-      this.c_x1 = Math.abs(x - this.x2) > ww*0.1;
-      this.c_x2 = Math.abs(x - this.x1) > ww*0.1;
-      this.c_y1 = Math.abs(y - this.y2) > hh*0.1;
-      this.c_y2 = Math.abs(y - this.y1) > hh*0.1;
+      this.c_x1 = Math.abs(x - this.x2) > ww * 0.1;
+      this.c_x2 = Math.abs(x - this.x1) > ww * 0.1;
+      this.c_y1 = Math.abs(y - this.y2) > hh * 0.1;
+      this.c_y2 = Math.abs(y - this.y1) > hh * 0.1;
       if (this.c_x1 !== this.c_x2 && this.c_y1 && this.c_y2)
          this.c_y1 = this.c_y2 = false;
       if (this.c_y1 !== this.c_y2 && this.c_x1 && this.c_x2)
@@ -70,14 +69,10 @@ class TBoxPainter extends ObjectPainter {
             path = `M${xx},${yy}h${ww}v${hh}h${-ww}z`;
       if (!this.borderMode)
          return [path];
-      const pww = this.borderSize, phh = this.borderSize,
-            side1 = `M${xx},${yy}h${ww}l${-pww},${phh}h${2*pww-ww}v${hh-2*phh}l${-pww},${phh}z`,
-            side2 = `M${xx+ww},${yy+hh}v${-hh}l${-pww},${phh}v${hh-2*phh}h${2*pww-ww}l${-pww},${phh}z`;
-
-      return (this.borderMode > 0) ? [path, side1, side2] : [path, side2, side1];
+      return [path].concat(getBoxDecorations(xx, yy, ww, hh, this.borderMode, this.borderSize, this.borderSize));
    }
 
-   /** @summary Redraw line */
+   /** @summary Redraw box */
    redraw() {
       const box = this.getObject(),
             d = new DrawOptions(this.getDrawOpt()),
@@ -103,8 +98,8 @@ class TBoxPainter extends ObjectPainter {
       if (this.swap_xy)
          [this.x1, this.x2, this.y1, this.y2] = [this.y1, this.y2, this.x1, this.x2];
 
-      this.borderMode = (box.fBorderMode && box.fBorderSize && this.fillatt.hasColor()) ? box.fBorderMode : 0;
-      this.borderSize = box.fBorderSize;
+      this.borderMode = (box.fBorderMode && this.fillatt.hasColor()) ? box.fBorderMode : 0;
+      this.borderSize = box.fBorderSize || 2;
 
       const paths = this.getPathes();
 
@@ -126,7 +121,7 @@ class TBoxPainter extends ObjectPainter {
                     .style('fill', d3_rgb(this.fillatt.color).darker(0.5).formatRgb());
       }
 
-      assignContextMenu(this, kToFront);
+      assignContextMenu(this);
 
       addMoveHandler(this);
 

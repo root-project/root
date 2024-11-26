@@ -26,11 +26,6 @@ class RCanvasPainter extends RPadPainter {
       this._websocket = null;
       this.tooltip_allowed = settings.Tooltip;
       this.v7canvas = true;
-      if ((dom === null) && (canvas === null)) {
-         // for web canvas details are important
-         settings.SmallPad.width = 20;
-         settings.SmallPad.height = 10;
-      }
    }
 
    /** @summary Cleanup canvas painter */
