@@ -31,6 +31,10 @@
 #include <stdlib.h>
 #include <Riostream.h>
 #include <time.h>
+#include <string>
+#include <map>
+#include <vector>
+
 #include <TString.h>
 #include <TROOT.h>
 #include <TError.h>
@@ -86,17 +90,7 @@ const int kMaxNumTests = 60;
 // Global variables.
 Int_t     gVerbose = 0;
 Int_t     gTestNum = 0;
-Int_t     gTestsFailed;
-Int_t     gPS1RefNb[kMaxNumTests];
-Int_t     gPS1ErrNb[kMaxNumTests];
-Int_t     gPDFRefNb[kMaxNumTests];
-Int_t     gPDFErrNb[kMaxNumTests];
-Int_t     gJPGRefNb[kMaxNumTests];
-Int_t     gJPGErrNb[kMaxNumTests];
-Int_t     gPNGRefNb[kMaxNumTests];
-Int_t     gPNGErrNb[kMaxNumTests];
-Int_t     gPS2RefNb[kMaxNumTests];
-Int_t     gPS2ErrNb[kMaxNumTests];
+Int_t     gTestsFailed = 0;
 Bool_t    gWebMode = kFALSE;
 Bool_t    gSkip3D = kFALSE;
 Bool_t    gOptionR = kFALSE;
@@ -108,15 +102,92 @@ const char *filePrefix = "sg";
 
 const TString kSkipCCode = "__skip_c_code_generation__";
 
+struct RefEntry {
+   Int_t ps1ref = 0, ps1err = 0, pdfref = 0, pdferr = 0, jpgref = 0, jpgerr = 0, pngref = 0, pngerr = 0, ps2ref = 0, ps2err = 0;
+   void UpdateMin(RefEntry &ref)
+   {
+      ps1ref = TMath::Min(ps1ref, ref.ps1ref);
+      pdfref = TMath::Min(pdfref, ref.pdfref);
+      jpgref = TMath::Min(jpgref, ref.jpgref);
+      pngref = TMath::Min(pngref, ref.pngref);
+      ps2ref = TMath::Min(ps2ref, ref.ps2ref);
+   }
+   void UpdateMax(RefEntry &ref)
+   {
+      ps1ref = TMath::Max(ps1ref, ref.ps1ref);
+      pdfref = TMath::Max(pdfref, ref.pdfref);
+      jpgref = TMath::Max(jpgref, ref.jpgref);
+      pngref = TMath::Max(pngref, ref.pngref);
+      ps2ref = TMath::Max(ps2ref, ref.ps2ref);
+   }
+
+   void CalcMeanError(RefEntry &ref)
+   {
+      auto mean_err = [](int &vmean, int &verr, int v2, int minerr) {
+         verr = TMath::Nint(TMath::Abs((vmean - v2) * 0.75));
+         vmean = (vmean + v2) / 2;
+         if ((verr < minerr) && (vmean > 0))
+            verr = minerr;
+      };
+
+      mean_err(ps1ref, ps1err, ref.ps1ref, 50);
+      mean_err(pdfref, pdferr, ref.pdfref, 50);
+      mean_err(jpgref, jpgerr, ref.jpgref, 500);
+      mean_err(pngref, pngerr, ref.pngref, 500);
+      mean_err(ps2ref, ps2err, ref.ps2ref, 50);
+   }
+};
+
+std::map<int, RefEntry> gRef;
+
 struct TestEntry {
-   Int_t TestNum;
+   Int_t TestNum = 0;
    TString title, psfile, ps2file, pdffile, jpgfile, pngfile, ccode;
-   Bool_t execute_ccode;
-   Int_t IPS;
+   Bool_t execute_ccode = kFALSE;
+   Int_t IPS = 0;
 };
 
 std::vector<TestEntry> gReports;
 
+
+int ReadRefFile(const char *fname, std::map<int, RefEntry> &entries)
+{
+   FILE *sg = fopen(fname, "r");
+   if (!sg) {
+      printf("Could not open %s\n", fname);
+      return 0;
+   }
+
+   entries.clear();
+
+   char line[160];
+   Int_t nline = 0, maxnum = 0;
+
+   while (fgets(line, 160, sg)) {
+      if (++nline == 1)
+         continue;
+      if ((strlen(line) < 20) || (line[0] == '#'))
+         continue;
+
+      RefEntry d;
+      int TestNum = 0;
+      if (11 != sscanf(line, "%d %d %d %d %d %d %d %d %d %d %d", &TestNum, &d.ps1ref, &d.ps1err, &d.pdfref, &d.pdferr, &d.jpgref, &d.jpgerr, &d.pngref, &d.pngerr, &d.ps2ref, &d.ps2err)) {
+         printf("Fail to read line %d from reference file %s\n", nline, fname);
+         return 0;
+      }
+
+      if ((TestNum < 1) || (TestNum >= kMaxNumTests)) {
+         printf("Wrong test number %d in line %d from reference file %s\n", TestNum, nline, fname);
+         return 0;
+      }
+
+      entries[TestNum] = d;
+      if (TestNum > maxnum)
+         maxnum = TestNum;
+   }
+   fclose(sg);
+   return maxnum;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Print test program number and its title
@@ -152,9 +223,9 @@ Int_t StatusPrint(const TString &filename, Int_t id, const char *title, Int_t te
          return 1;
       }
    } else {
-      if (id > 0)  printf("%5d%10d%10d",testnum,res,err);
-      if (id == 0) printf("%10d%10d",res,err);
-      if (id < 0)  printf("%10d%10d\n",res,err);
+      if (id > 0)  printf("%5d%10d%10d", testnum, res, err);
+      if (id == 0) printf("%10d%10d", res, err);
+      if (id < 0)  printf("%10d%10d\n", res, err);
    }
    return 0;
 }
@@ -329,21 +400,19 @@ void print_reports()
 
    for (auto &e : gReports) {
 
-      StatusPrint(e.psfile, 1, e.title, e.TestNum,
-                  e.IPS ? FileSize(e.psfile) : AnalysePS(e.psfile), gPS1RefNb[e.TestNum-1], gPS1ErrNb[e.TestNum-1]);
+      auto& ref = gRef[e.TestNum];
 
-      StatusPrint(e.pdffile, 0, "  PDF output", e.TestNum,
-                  FileSize(e.pdffile), gPDFRefNb[e.TestNum-1], gPDFErrNb[e.TestNum-1]);
+      StatusPrint(e.psfile, 1, e.title, e.TestNum, e.IPS ? FileSize(e.psfile) : AnalysePS(e.psfile), ref.ps1ref, ref.ps1err);
 
-      StatusPrint(e.jpgfile, 0, "  JPG output", e.TestNum,
-                  FileSize(e.jpgfile), gJPGRefNb[e.TestNum-1], gJPGErrNb[e.TestNum-1]);
+      StatusPrint(e.pdffile, 0, "  PDF output", e.TestNum, FileSize(e.pdffile), ref.pdfref, ref.pdferr);
 
-      StatusPrint(e.pngfile, 0, "  PNG output", e.TestNum,
-                  FileSize(e.pngfile), gPNGRefNb[e.TestNum-1], gPNGErrNb[e.TestNum-1]);
+      StatusPrint(e.jpgfile, 0, "  JPG output", e.TestNum, FileSize(e.jpgfile), ref.jpgref, ref.jpgerr);
+
+      StatusPrint(e.pngfile, 0, "  PNG output", e.TestNum, FileSize(e.pngfile), ref.pngref, ref.pngerr);
 
       if (e.execute_ccode) {
          Int_t ret_code = StatusPrint(e.psfile, -1, "  C file result", e.TestNum,
-                                    e.IPS ? FileSize(e.ps2file) : AnalysePS(e.ps2file), gPS2RefNb[e.TestNum-1], gPS2ErrNb[e.TestNum-1]);
+                                    e.IPS ? FileSize(e.ps2file) : AnalysePS(e.ps2file), ref.ps2ref, ref.ps2err);
 
 #ifndef __CLING__
          if (!gOptionK && !ret_code)
@@ -351,7 +420,7 @@ void print_reports()
 #endif
       } else {
          if (gOptionR)
-            printf("%10d%10d\n",0,0);
+            printf("%10d%10d\n", 0, 0);
       }
    }
 
@@ -2582,6 +2651,15 @@ void waves()
 }
 
 
+void PrintRefHeader()
+{
+   if (gWebMode)
+      printf("Test#   SVG1Ref#  SVG1Err#  PDFRef#   PDFErr#   JPGRef#   JPGErr#   PNGRef#   PNGErr#   SVG2Ref#  SVG2Err#\n");
+   else
+      printf("Test#   PS1Ref#   PS1Err#   PDFRef#   PDFErr#   JPGRef#   JPGErr#   PNGRef#   PNGErr#   PS2Ref#   PS2Err#\n");
+
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Run all graphics stress tests.
 
@@ -2637,37 +2715,14 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
       ref_name = "stressGraphics_builtinzlib.ref";
 #endif
    }
-   FILE *sg = fopen(ref_name, "r");
-   if (!sg) {
-      printf("Could not open %s\n", ref_name);
+
+   if (!ReadRefFile(ref_name, gRef))
       return;
-   }
-   char line[160];
-   Int_t i = -1;
-   while (fgets(line, 160, sg)) {
-      if ((i >= 0) && (i < kMaxNumTests)) {
-         sscanf(&line[7],  "%d", &gPS1RefNb[i]);
-         sscanf(&line[18], "%d", &gPS1ErrNb[i]);
-         sscanf(&line[28], "%d", &gPDFRefNb[i]);
-         sscanf(&line[38], "%d", &gPDFErrNb[i]);
-         sscanf(&line[48], "%d", &gJPGRefNb[i]);
-         sscanf(&line[58], "%d", &gJPGErrNb[i]);
-         sscanf(&line[68], "%d", &gPNGRefNb[i]);
-         sscanf(&line[78], "%d", &gPNGErrNb[i]);
-         sscanf(&line[87], "%d", &gPS2RefNb[i]);
-         sscanf(&line[98], "%d", &gPS2ErrNb[i]);
-      }
-      i++;
-   }
-   fclose(sg);
 
    gRandom->SetSeed(65539);
 
    if (gOptionR) {
-      if (gWebMode)
-         std::cout << "Test#   SVG1Ref#  SVG1Err#  PDFRef#   PDFErr#   JPGRef#   JPGErr#   PNGRef#   PNGErr#   SVG2Ref#  SVG2Err#" << std::endl;
-      else
-         std::cout << "Test#   PS1Ref#   PS1Err#   PDFRef#   PDFErr#   JPGRef#   JPGErr#   PNGRef#   PNGErr#   PS2Ref#   PS2Err#" << std::endl;
+      PrintRefHeader();
    } else {
       std::cout << "**********************************************************************" <<std::endl;
       std::cout << "*  Starting  Graphics - S T R E S S suite                            *" <<std::endl;
@@ -2808,6 +2863,51 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
 #ifndef __CLING__
 ////////////////////////////////////////////////////////////////////////////////
 
+void BuildReferenceFile(int argc, char *argv[], int arg_first)
+{
+   std::map<int, RefEntry> entries_min, entries_max;
+
+   int MaxTest = 0, NumFiles = 0;
+
+   for (int nfile = arg_first; nfile < argc; ++nfile) {
+      const char *fname = argv[nfile];
+
+      std::map<int, RefEntry> entries;
+
+      int ntest = ReadRefFile(fname, entries);
+      if (!ntest)
+         return;
+
+      NumFiles++;
+
+      MaxTest = TMath::Max(MaxTest, ntest);
+
+      if (nfile == 2) {
+         entries_min = entries;
+         entries_max = entries;
+      } else {
+         for(auto& e : entries) {
+            if (entries_min.count(e.first) == 0) {
+               entries_min[e.first] = e.second;
+               entries_max[e.first] = e.second;
+            } else {
+               entries_min[e.first].UpdateMin(e.second);
+               entries_max[e.first].UpdateMax(e.second);
+            }
+         }
+      }
+   }
+
+   PrintRefHeader();
+   for (int n = 1; n <= MaxTest; ++n) {
+      auto d = entries_min[n];
+      if (NumFiles > 1)
+         d.CalcMeanError(entries_max[n]);
+      printf("%5d%10d%10d%10d%10d%10d%10d%10d%10d%10d%10d\n", n, d.ps1ref, d.ps1err, d.pdfref, d.pdferr, d.jpgref, d.jpgerr, d.pngref, d.pngerr, d.ps2ref, d.ps2err);
+   }
+}
+
+
 int main(int argc, char *argv[])
 {
    Int_t verbose = 0;
@@ -2816,9 +2916,14 @@ int main(int argc, char *argv[])
    for (int i = 1; i < argc; ++i) {
       if (!strcmp(argv[i], "-v"))
          verbose++;
-      if (!strcmp(argv[i], "-r"))
+      else if (!strcmp(argv[i], "-r"))
          generate = kTRUE;
-      else if (!strcmp(argv[i], "-k"))
+      else if (!strncmp(argv[i], "--web", 5))
+         gWebMode = kTRUE;
+      else if (!strcmp(argv[i], "--build")) {
+         BuildReferenceFile(argc, argv, i+1);
+         return 0;
+      } else if (!strcmp(argv[i], "-k"))
          keep = kTRUE;
       else if (strstr(argv[i], "-p="))
          filePrefix = argv[i]+3;
@@ -2830,20 +2935,16 @@ int main(int argc, char *argv[])
          printf("  -r : Generate the reference output.\n");
          printf("       Redirect the output in the file \"stressGraphics.ref\"\n");
          printf("       to redefine the reference file.\n");
-         printf("\n");
          printf("  -k : Keep the output files even for passed tests.\n");
          printf("       By default output files for passed tests are deleted.\n");
-         printf("\n");
          printf("  -p=prefix: Provide custom prefix for generated files, default \"sg\"\n");
-         printf("\n");
          printf("  -skip3d : skip 3D testing.\n");
-         printf("\n");
          printf("  -v : increase verbosity.\n");
-         printf("\n");
          printf("  --web=chrome|firefox : Configure web mode\n");
-         printf("\n");
          printf("  -h : Print usage\n");
-         printf("\n");
+         printf("  --build file1.txt file2.tx file3.txt: Build ref file\n");
+         printf("      One run stressGraphics on different platforms with -r flag and store into text files.\n");
+         printf("      Based on these files one generate ref file which can be commited to repository\n");
          printf("  Any other option is ignored.\n");
          return 0;
       }
