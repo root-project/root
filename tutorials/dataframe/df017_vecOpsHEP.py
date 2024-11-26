@@ -27,7 +27,7 @@ def WithPyROOT(filename):
     f = ROOT.TFile(filename)
     h = ROOT.TH1F("pt", "With PyROOT", 16, 0, 4)
     for event in f[treename]:
-        h.FillN(
+        h.Fill(
             np.array(
                 [
                     sqrt(px * px + py * py)

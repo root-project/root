@@ -24,7 +24,7 @@ def _imul(self, c):
 
 # Fill with numpy array
 
-def _FillNWithNumpyArray(self, *args):
+def _FillWithNumpyArray(self, *args):
     """
     Fill histogram with numpy array.
     Parameters:
@@ -37,7 +37,7 @@ def _FillNWithNumpyArray(self, *args):
             Otherwise:
             - Arguments are passed directly to the original FillN method
     Returns:
-    - Result of FillN
+    - Result of FillN if numpy case is detected, otherwise result of Fill
     Raises:
     - ValueError: If weights length doesn't match data length
     """
@@ -50,9 +50,9 @@ def _FillNWithNumpyArray(self, *args):
             raise ValueError(
                 f"Length mismatch: data length ({len(data)}) != weights length ({len(weights)})"
             )
-        return self._FillN(len(data), data, weights)
+        return self.FillN(len(data), data, weights)
     else:
-        return self._FillN(*args)
+        return self._Fill(*args)
 
 
 @pythonization('TH1')
@@ -63,6 +63,6 @@ def pythonize_th1(klass):
     # Support hist *= scalar
     klass.__imul__ = _imul
 
-    # Support hist.FillN(numpy_array) and hist.FillN(numpy_array, numpy_array)
-    klass._FillN = klass.FillN
-    klass.FillN = _FillNWithNumpyArray
+    # Support hist.Fill(numpy_array) and hist.Fill(numpy_array, numpy_array)
+    klass._Fill = klass.Fill
+    klass.Fill = _FillWithNumpyArray

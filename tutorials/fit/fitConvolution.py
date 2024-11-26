@@ -14,7 +14,7 @@ import numpy as np
 
 # Construction of histogram to fit.
 h_ExpGauss = ROOT.TH1F("h_ExpGauss", "Exponential convoluted by Gaussian", 100, 0.0, 5.0)
-h_ExpGauss.FillN(
+h_ExpGauss.Fill(
     np.array(
         [
             # Gives a alpha of -0.3 in the exp.
