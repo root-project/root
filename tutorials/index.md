@@ -78,7 +78,7 @@ The `$ROOTSYS/tutorials` directory includes several sub-directories:
 \ingroup Tutorials
 \brief These tutorials illustrate the main fitting features. Their names are related to the aspect which is treated in the code.
 
-\defgroup tutorial_roofit RooFit Tutorials
+\defgroup tutorial_roofit_Histfactory_RooStats RooFit Tutorials
 \ingroup Tutorials
 \brief These tutorials illustrate the main features of [RooFit](group__Roofitmain.html). A more indepth description of the codes can be found at [RooFit Usermanual](https://root.cern/download/doc/RooFit_Users_Manual_2.91-33.pdf) 
 
