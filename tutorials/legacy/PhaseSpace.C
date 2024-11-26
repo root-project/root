@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_physics
+/// \ingroup tutorial_legacy
 /// \notebook -js
 /// Example of use of TGenPhaseSpace
 ///
