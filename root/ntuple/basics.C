@@ -22,7 +22,7 @@ void basics()
 
    {
       auto model = RNTupleModel::Create();
-      auto ptrE = model->MakeField<int>("E", 137);
+      *model->MakeField<int>("E") = 137;
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", kFileName);
       writer->Fill();
    }
