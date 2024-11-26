@@ -317,20 +317,20 @@ TEST(RNTupleModel, CloneRegisteredSubfield)
    EXPECT_TRUE(clone->GetDefaultEntry().GetPtr<float>("struct.a"));
 }
 
-TEST(RNTupleModel, Retire)
+TEST(RNTupleModel, Expire)
 {
    auto model = RNTupleModel::Create();
    model->MakeField<CustomStruct>("struct")->a = 1.0;
 
    try {
-      model->Retire();
-      FAIL() << "attempting retire unfrozen model should fail";
+      model->Expire();
+      FAIL() << "attempting expire unfrozen model should fail";
    } catch (const RException &err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("invalid attempt to retire unfrozen model"));
+      EXPECT_THAT(err.what(), testing::HasSubstr("invalid attempt to expire unfrozen model"));
    }
 
    model->Freeze();
-   model->Retire();
+   model->Expire();
 
    EXPECT_EQ(0u, model->GetModelId());
    EXPECT_NE(0, model->GetSchemaId());
@@ -357,7 +357,7 @@ TEST(RNTupleModel, Retire)
    EXPECT_THROW(model->GetMutableField("struct"), RException);
    EXPECT_THROW(model->SetDescription("x"), RException);
 
-   FileRaii fileGuard("test_ntuple_model_retire.root");
+   FileRaii fileGuard("test_ntuple_model_expire.root");
    EXPECT_THROW(RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath()), RException);
    auto writer = RNTupleWriter::Recreate(std::move(clone), "ntpl", fileGuard.GetPath());
    writer.reset();
@@ -365,9 +365,9 @@ TEST(RNTupleModel, Retire)
    EXPECT_EQ(0u, reader->GetNEntries());
 }
 
-TEST(RNTupleModel, RetireWithWriter)
+TEST(RNTupleModel, ExpireWithWriter)
 {
-   FileRaii fileGuard("test_ntuple_model_retire_with_writer.root");
+   FileRaii fileGuard("test_ntuple_model_expire_with_writer.root");
 
    auto model = RNTupleModel::Create();
    *model->MakeField<float>("pt") = 1.0;
