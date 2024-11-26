@@ -231,6 +231,14 @@ public:
       return GetPtr<T>(GetToken(fieldName));
    }
 
+   const std::string &GetTypeName(RFieldToken token) const
+   {
+      EnsureMatchingModel(token);
+      return fFieldTypes[token.fIndex];
+   }
+
+   const std::string &GetTypeName(std::string_view fieldName) const { return GetTypeName(GetToken(fieldName)); }
+
    std::uint64_t GetModelId() const { return fModelId; }
    std::uint64_t GetSchemaId() const { return fSchemaId; }
 
