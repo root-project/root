@@ -54,10 +54,6 @@ The `$ROOTSYS/tutorials` directory includes several sub-directories:
 \ingroup Tutorials
 \brief Examples showing how to use FOAM.
 
-\defgroup tutorial_cont Containers tutorials
-\ingroup Tutorials
-\brief Examples showing the "containers' classes" usage.
-
 \defgroup tutorial_eve Event display tutorials
 \ingroup Tutorials
 \brief Examples showing the "Event display classes" usage.
