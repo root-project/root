@@ -73,7 +73,7 @@ private:
 
    RNTupleWriter(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Internal::RPageSink> sink);
 
-   RNTupleModel &GetUpdatableModel() { return *fFillContext.fModel; }
+   RNTupleModel &GetUpdatableModel();
    Internal::RPageSink &GetSink() { return *fFillContext.fSink; }
 
    // Helper function that is called from CommitCluster() when necessary
@@ -122,6 +122,10 @@ public:
       if (commitClusterGroup)
          CommitClusterGroup();
    }
+   /// Closes the underlying file (page sink) and retires the model. Automatically called on destruct.
+   /// Once the dataset is committed, calls to Fill(), [Commit|Flush]Cluster(), FlushColumns(), CreateEntry(),
+   /// and model updating fail.
+   void CommitDataset();
 
    std::unique_ptr<REntry> CreateEntry() { return fFillContext.CreateEntry(); }
 

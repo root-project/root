@@ -364,3 +364,29 @@ TEST(RNTupleModel, Retire)
    auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
    EXPECT_EQ(0u, reader->GetNEntries());
 }
+
+TEST(RNTupleModel, RetireWithWriter)
+{
+   FileRaii fileGuard("test_ntuple_model_retire_with_writer.root");
+
+   auto model = RNTupleModel::Create();
+   *model->MakeField<float>("pt") = 1.0;
+   auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+   writer->Fill();
+   writer->CommitDataset();
+
+   writer->CommitCluster(true); // noop
+   writer->FlushCluster();      // noop;
+   writer->CommitDataset();     // noop
+   EXPECT_EQ(1u, writer->GetNEntries());
+   EXPECT_EQ(1u, writer->GetLastFlushed());
+   EXPECT_EQ(1u, writer->GetLastCommitted());
+   EXPECT_EQ(1u, writer->GetLastCommittedClusterGroup());
+
+   EXPECT_THROW(writer->Fill(), RException);
+   EXPECT_THROW(writer->FlushColumns(), RException);
+   EXPECT_THROW(writer->CreateEntry(), RException);
+   EXPECT_THROW(writer->CreateModelUpdater(), RException);
+
+   EXPECT_FLOAT_EQ(1.0, *writer->GetModel().GetDefaultEntry().GetPtr<float>("pt"));
+}
