@@ -44,21 +44,21 @@ auto ntuple = std::unique_ptr<RNTuple>(file->Get<RNTuple>("ntpl"));
 
 // Option 1: entire row
 // The reader creates a page source; the page source creates a model from the on-disk information
-auto reader = RNTupleReader::Open(ntuple);
+auto reader = RNTupleReader::Open(*ntuple);
 // Populate the objects that are used in the model's default entry
 reader->LoadEntry(0);
-std::shared_ptr<float> pt = reader->GetDefaultEntry().GetPtr<float>("pt");
+std::shared_ptr<float> pt = reader->GetModel().GetDefaultEntry().GetPtr<float>("pt");
 
 // Option 2: imposed model
 auto model = RNTupleModel::Create();
 auto pt = model->MakeField<float>("pt");
 // The reader checks the passed model for compatibility; only the subset of fields defined in the model is read
-auto reader = RNTupleReader::Open(std::move(model), ntuple);
+auto reader = RNTupleReader::Open(std::move(model), *ntuple);
 reader->LoadEntry(0);
 
 // Option 3: through views
 // Each view will only trigger reading of the related field, without reading other fields at the same entry number.
-auto reader = RNTupleReader::Open(ntuple);
+auto reader = RNTupleReader::Open(*ntuple);
 auto viewPt = reader->GetView<float>("pt");
 // Load the pt from the first entry
 auto pt = viewPt(0);
