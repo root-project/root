@@ -3,7 +3,8 @@
 ## \notebook
 ## Special pdf's: special decay pdf for B physics with mixing and/or CP violation
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
+## \preview 
 ## \macro_code
 ## \macro_output
 ##

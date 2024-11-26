@@ -3,7 +3,8 @@
 /// \notebook -js
 /// Validation and MC studies: RooMCStudy - Using the randomizer and profile likelihood add-on models
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 /// \macro_output
 ///

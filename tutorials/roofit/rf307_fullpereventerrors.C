@@ -3,6 +3,8 @@
 /// \notebook
 /// Multidimensional models: full pdf with per-event errors
 ///
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 ///
 /// \date July 2008

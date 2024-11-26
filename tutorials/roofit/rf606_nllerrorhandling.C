@@ -3,7 +3,8 @@
 /// \notebook -js
 /// Likelihood and minimization: understanding and customizing error handling in likelihood evaluations
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 /// \macro_output
 ///

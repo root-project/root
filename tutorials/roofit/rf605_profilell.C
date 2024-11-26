@@ -3,7 +3,8 @@
 /// \notebook -js
 /// Likelihood and minimization: working with the profile likelihood estimator
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 /// \macro_output
 ///

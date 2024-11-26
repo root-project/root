@@ -3,6 +3,8 @@
 ## \notebook
 ## Extended maximum likelihood fit in multiple ranges.
 ##
+## \macro_image (tcanvas_js)
+## \preview 
 ## \macro_code
 ## \macro_output
 ##

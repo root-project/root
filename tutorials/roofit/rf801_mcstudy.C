@@ -3,7 +3,8 @@
 /// \notebook -js
 /// Validation and MC studies: toy Monte Carlo study that perform cycles of event generation and fitting
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 /// \macro_output
 ///

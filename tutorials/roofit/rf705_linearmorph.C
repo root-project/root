@@ -3,7 +3,8 @@
 /// \notebook
 /// Special pdf's: linear interpolation between pdf shapes using the 'Alex Read' algorithm
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 /// \macro_output
 ///

@@ -4,7 +4,8 @@
 ## Multidimensional models: using the likelihood ratio technique to construct a signal
 ## enhanced one-dimensional projection of a multi-dimensional pdf
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
+## \preview 
 ## \macro_code
 ## \macro_output
 ##

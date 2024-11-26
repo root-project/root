@@ -3,7 +3,8 @@
 ## \notebook
 ## Addition and convolution: setting up an extended maximum likelihood fit
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
+## \preview 
 ## \macro_code
 ## \macro_output
 ##

@@ -11,7 +11,8 @@
 ## pdf(theta)    = ROOT.T(theta)          (x) gauss(theta)
 ## pdf(cosTheta) = ROOT.T(acos(cosTheta)) (x) gauss(acos(cosTheta))
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
+## \preview 
 ## \macro_code
 ## \macro_output
 ##

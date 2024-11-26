@@ -5,7 +5,8 @@
 /// RooMCStudy - using separate fit and generator models, using the chi^2 calculator model
 /// Running a biased fit model against an optimal fit.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 /// \macro_output
 ///

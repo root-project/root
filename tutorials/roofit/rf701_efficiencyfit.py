@@ -5,7 +5,8 @@
 ## dataset D(x,cut), cut is a category encoding a selection, which the efficiency as function
 ## of x should be described by eff(x)
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
+## \preview 
 ## \macro_code
 ## \macro_output
 ##

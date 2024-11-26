@@ -4,7 +4,8 @@
 /// Likelihood and minimization: setting up a chi^2 fit to an unbinned dataset with X,Y,err(Y)
 /// values (and optionally err(X) values)
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 /// \macro_output
 ///

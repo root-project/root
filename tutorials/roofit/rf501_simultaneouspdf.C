@@ -4,7 +4,8 @@
 /// Organisation and simultaneous fits: using simultaneous pdfs to describe simultaneous
 /// fits to multiple datasets
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
+/// \preview 
 /// \macro_code
 /// \macro_output
 ///

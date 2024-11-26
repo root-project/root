@@ -3,7 +3,8 @@
 ## \notebook
 ## Basic functionality: demonstration of various plotting styles of data, functions in a RooPlot
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
+## \preview 
 ## \macro_code
 ## \macro_output
 ##
